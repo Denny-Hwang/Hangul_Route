@@ -33,7 +33,7 @@ Phone (one column; about 3.5 screens in total, budget 2,900 px at 375 x 812):
 |  "Parent or teacher? Find your page" v  <- in-page link        -> #who
 |  three short facts (one line)        |     browser · nothing to install · the app works offline
 |                                      |
-|        [HOYA ART]  (bubble)          |  <- decorative, taught letter in the bubble
+|        [HOYA ART]  (bubble)          |  <- decorative, taught letter and its romanization in the bubble
 +--------------------------------------+  <- end of first screen at 375 x 812
 | H2 Who is it for?           (#who)   |  <- L1 persona chooser
 | +----------------------------------+ |
@@ -105,7 +105,7 @@ Exit to:    learner app (start) · app sign-in · `site/learners` · `site/paren
 ## States
 
 - **success**: as drawn; every claim off is the normal state today.
-- **claims on** (longest state, used for the word budget): step 3 shows the Learning Route line; the cost line shows the claim's wording ("Day 1 and Day 2 of the route…", "…at app.hangulroute.com"). No other block grows.
+- **claims on** (longest state, used for the word budget): step 3 shows the Learning Route line; the cost line shows the paid-plans wording ("…at app.hangulroute.com"); the free line stays "Stage 1 is free." in every state (F-ENT-003 OD-1). No other block grows.
 - **empty**: none of the blocks depends on data that can be missing.
 - **error**:
   - launch-news request fails or is offline → the form's existing inline error line and a retry; the rest of the page is unaffected.

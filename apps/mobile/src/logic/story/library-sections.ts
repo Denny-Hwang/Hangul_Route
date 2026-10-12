@@ -50,8 +50,8 @@ export function selectedSection(
   return requested !== undefined && visible.includes(requested) ? requested : 'cards';
 }
 
-/** The sections this build can draw; Culture joins with its section (F-STORY-004 PR 4.7). */
-export const DRAWN_LIBRARY_SECTIONS: ReadonlySet<LibrarySectionId> = new Set<LibrarySectionId>(['cards', 'story-time']);
+/** The sections this build can draw (Theme packs joins with F-VOC-003). */
+export const DRAWN_LIBRARY_SECTIONS: ReadonlySet<LibrarySectionId> = new Set<LibrarySectionId>(['cards', 'story-time', 'culture']);
 
 /**
  * The Library's tab row (§3.3): the offered sections this build draws, in

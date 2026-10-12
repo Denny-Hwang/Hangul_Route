@@ -3,8 +3,13 @@ import { SpaceKindSchema } from './space';
 
 /**
  * Entitlements — F-ENT-001 §3.1. Who paid for what; learners inherit through memberships.
- * Two products (owner decision #30, 2026-10-06): a family buys **once** for good,
- * a class or school pays **per year**; beyond the group caps it is a contract (`school_seat`).
+ * Two products (owner decision #30, 2026-10-06), both renewing **yearly** since the owner
+ * decision of 2026-10-11 (AMENDMENTS-BILLING-FAMILY-YEARLY): the Family Plan for a family,
+ * the Group License for a class or school; beyond the group caps it is a contract (`school_seat`).
+ *
+ * `family_lifetime` is the Family Plan's key. The name is historical: D1's CHECK on
+ * `entitlements.plan_key` fixes these three values and cannot change additively (BY-D1),
+ * so the key stays and its term comes from Stripe (`expiresAt` = the period end).
  */
 export const PlanKeySchema = z.enum(['family_lifetime', 'group_license', 'school_seat']);
 export type PlanKey = z.infer<typeof PlanKeySchema>;
@@ -56,17 +61,26 @@ export type PurchasablePlanKey = z.infer<typeof PurchasablePlanKeySchema>;
 
 export interface PlanPricing {
   amountUsd: number;
-  /** 'once' = one payment, no renewal; 'year' = renews yearly. */
+  /** 'year' = renews yearly (every plan sold today); 'once' = one payment, no renewal (none since 2026-10-11). */
   per: 'once' | 'year';
   label: string;
 }
 
 export const PLAN_PRICING: Record<PurchasablePlanKey, PlanPricing> = {
-  family_lifetime: { amountUsd: 15.3, per: 'once', label: '$15.30 once' },
+  family_lifetime: { amountUsd: 15.3, per: 'year', label: '$15.30 / year' },
   group_license: { amountUsd: 153, per: 'year', label: '$153 / year' },
 };
 
-/** A family lifetime plan covers one family space with up to this many learners. */
+/**
+ * A Stripe subscription id (`sub_…`): what the Billing Portal can manage. Both plans are
+ * subscriptions; a legacy one-time sandbox row (payment intent `pi_…` or session `cs_…`,
+ * AMENDMENTS-BILLING-FAMILY-YEARLY BY-D2) has nothing to manage.
+ */
+export function isStripeSubscriptionRef(ref: string | null | undefined): boolean {
+  return typeof ref === 'string' && ref.startsWith('sub_');
+}
+
+/** A Family Plan (key `family_lifetime`) covers one family space with up to this many learners. */
 export const FAMILY_LIFETIME_LEARNERS = 5;
 
 /**
@@ -90,7 +104,7 @@ export const PromoSchema = z.object({
   percentOff: z.number().min(0).max(100).nullable(),
   /** In cents, USD only. */
   amountOffCents: z.number().int().nonnegative().nullable(),
-  /** 'once' = one charge (the lifetime payment or the first year); 'forever' / 'repeating' = renewals too. */
+  /** 'once' = the first year only; 'forever' = every renewal; 'repeating' = a number of months. */
   duration: z.enum(['once', 'forever', 'repeating']),
 });
 export type Promo = z.infer<typeof PromoSchema>;

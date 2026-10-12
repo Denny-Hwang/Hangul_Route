@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Site states: S-D mock</title>
+<link rel="stylesheet" href="./site.css">
+</head>
+<body>
+<!-- F-SITE-002 S-D design mock. Strings: appendix B (landing.* keys of S-3). Links are placeholders. -->
+<a class="skip hit" href="#content">Skip to content</a>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand hit" href="./home.html"><span class="brand-mark" aria-hidden="true">HR</span><span class="brand-name">Hangul Route</span></a>
+    <a class="header-start hit" href="#learner-app">Start learning</a>
+    <nav class="site-nav" aria-label="Main">
+      <a class="nav-link hit" href="./learners.html">Learners</a>
+      <a class="nav-link hit" href="./parents.html">Parents</a>
+      <a class="nav-link hit" href="#teachers">Teachers</a>
+    </nav>
+    <a class="signin hit" href="#signin">Sign in</a>
+  </div>
+</header>
+<main id="content">
+<div class="wrap">
+  <h1 class="visually-hidden">Persona card and header states</h1>
+  <p class="mock-label">Persona card: rest</p>
+  <ul class="persona-list" style="grid-template-columns:minmax(0,1fr)"><li><a class="persona-card" href="#"><span><span class="t">Learners</span><span class="b">Five-minute quests, a guide who never scolds, and Korean culture cards to collect.</span></span><span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a></li></ul>
+  <p class="mock-label">Persona card: hover</p>
+  <ul class="persona-list" style="grid-template-columns:minmax(0,1fr)"><li><a class="persona-card is-hover" href="#"><span><span class="t">Parents and caregivers</span><span class="b">See what your learner practises, with a grown-up gate and no ads.</span></span><span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a></li></ul>
+  <p class="mock-label">Persona card: keyboard focus (focus-visible ring on the whole card)</p>
+  <ul class="persona-list" style="grid-template-columns:minmax(0,1fr)"><li><a class="persona-card is-focus" href="#"><span><span class="t">Teachers</span><span class="b">Students join with a class code. No student emails, no accounts.</span></span><span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a></li></ul>
+  <p class="mock-label">Persona card: pressed</p>
+  <ul class="persona-list" style="grid-template-columns:minmax(0,1fr)"><li><a class="persona-card is-pressed" href="#"><span><span class="t">Teachers</span><span class="b">Students join with a class code. No student emails, no accounts.</span></span><span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a></li></ul>
+  <p class="mock-label">Skip link, shown on focus (first Tab stop)</p>
+  <div style="position:relative;height:var(--spacing-jumbo)"><span class="skip hit is-shown" style="outline:var(--border-width-thick) solid var(--colors-border-focus);outline-offset:var(--spacing-xxs)">Skip to content</span></div>
+  <p class="mock-label">Fold: closed and open</p>
+  <div class="folds"><details><summary><span class="q">Is there a sign-in for learners?</span></summary><div class="answer">No email or password needed. Open the app and choose your profile, or enter your class or family code. Moving to a new device? Use your Rescue Code.</div></details><details open><summary><span class="q">Does it work offline?</span></summary><div class="answer">On most devices, yes: after your first visit the app opens without a connection. Letter sounds may need a Korean voice installed on your device.</div></details></div>
+  <p class="mock-label">Launch news band: the field with keyboard focus (on the band the ring is text.onPrimary)</p>
+  <div class="news-band"><div class="wl"><div class="wl-form"><label for="wl-focus" class="visually-hidden">Your email</label><input class="wl-input" id="wl-focus" type="email" placeholder="you@somewhere.com" style="outline:var(--border-width-thick) solid var(--colors-text-onPrimary);outline-offset:var(--spacing-xxs)"><button class="wl-button" type="button">Send me the invite</button></div></div></div>
+</div>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <p class="footer-tag"><strong>Hangul Route</strong> · Learn Hangul from zero, at any age.</p>
+    <div class="footer-groups">
+      <div class="footer-col">
+        <section class="footer-group"><h2>Guide</h2><ul>
+          <li><a class="hit" href="./learners.html">Learners</a></li><li><a class="hit" href="./parents.html">Parents</a></li><li><a class="hit" href="#teachers">Teachers</a></li></ul></section>
+        <section class="footer-group"><h2>App</h2><ul>
+          <li><a class="hit" href="#learner-app">Start learning</a></li><li><a class="hit" href="#signin">Sign in</a></li></ul></section>
+      </div>
+      <div class="footer-col">
+        <section class="footer-group"><h2>Company</h2><ul>
+          <li><a class="hit" href="#about">About</a></li><li><a class="hit" href="#privacy">Privacy</a></li><li><a class="hit" href="#terms">Terms</a></li><li><a class="hit" href="#contact">Contact</a></li></ul></section>
+      </div>
+    </div>
+    <p class="copyright">© 2026 Hangul Route</p>
+  </div>
+</footer>
+</body>
+</html>

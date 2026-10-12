@@ -8,6 +8,7 @@
     "@hangul-route/web#build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/content/stories/**"],
+      "env": ["CONSOLE_ORIGIN"],
       "outputs": [".next/**", "!.next/cache/**", "out/**"]
     },
     "lint": {

@@ -1,6 +1,6 @@
-import { borderWidth, colors, radii, touchTarget } from '../../tokens';
+import { borderWidth, colors, radii, spacing, touchTarget } from '../../tokens';
 import type { IconName } from '../Icon/types';
-import type { ChoiceCardState } from './types';
+import type { ChoiceCardState, ChoiceCardWrongMark } from './types';
 
 /**
  * Pure state styles behind `ChoiceCard` (F-STORY-003 §3.4). The component only
@@ -85,14 +85,29 @@ const LOOKS: Record<ChoiceCardState, StateLook> = {
   },
 };
 
+export interface ChoiceCardStyleOptions {
+  /** The mark of the `wrong` state: `replay` ("try another", the default) or `dash` (a locked miss with no retry). */
+  wrongMark?: ChoiceCardWrongMark;
+}
+
 /** The look of one state. An unknown state (persisted junk) reads as `idle`. */
-export function choiceCardStyle(state: ChoiceCardState): ChoiceCardStyle {
+export function choiceCardStyle(state: ChoiceCardState, options: ChoiceCardStyleOptions = {}): ChoiceCardStyle {
   const look = LOOKS[state] ?? LOOKS.idle;
+  const dash = state === 'wrong' && options.wrongMark === 'dash';
   return {
     ...look,
-    mark: look.mark === null ? null : { ...look.mark },
+    mark: look.mark === null ? null : { ...look.mark, ...(dash ? { icon: 'dash' as const } : null) },
     borderRadius: radii.lg,
     minHeight: touchTarget.child,
     textColor: colors.text.primary,
   };
+}
+
+/**
+ * The narrowest `layout="tile"` card for a picture `artSize` dp wide: the art, the horizontal padding and
+ * the thickest state border. The tile draws its status mark on the corner, so no width is kept for it
+ * (a `row` card adds the mark and its gap at the end of the row).
+ */
+export function choiceCardTileWidth(artSize: number): number {
+  return artSize + 2 * spacing.lg + 2 * borderWidth.thick;
 }

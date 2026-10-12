@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { CHOICE_CARD_STATES, choiceCardStyle } from '../components/ChoiceCard/style';
+import { CHOICE_CARD_STATES, choiceCardStyle, choiceCardTileWidth } from '../components/ChoiceCard/style';
 import type { ChoiceCardState } from '../components/ChoiceCard/types';
-import { borderWidth, colors, radii, touchTarget } from '../tokens';
+import { borderWidth, colors, radii, spacing, touchTarget } from '../tokens';
 
 describe('choiceCardStyle (F-STORY-003 PR 3.3)', () => {
   it('lists the five states of the spec, in order', () => {
@@ -99,5 +99,31 @@ describe('choiceCardStyle (F-STORY-003 PR 3.3)', () => {
     const a = choiceCardStyle('correct');
     expect(choiceCardStyle('correct')).toEqual(a);
     expect(choiceCardStyle('correct')).not.toBe(a);
+  });
+
+  it('wrongMark "dash": a locked miss with no retry carries the short dash instead of the try-another mark', () => {
+    const s = choiceCardStyle('wrong', { wrongMark: 'dash' });
+    expect(s.mark).toEqual({ icon: 'dash', color: colors.text.primary });
+    expect(s.backgroundColor).toBe(colors.feedback.nudgeLight);
+    expect(s.borderColor).toBe(colors.feedback.nudge);
+    expect(JSON.stringify(s)).not.toContain(colors.feedback.danger);
+    expect(choiceCardStyle('wrong', { wrongMark: 'replay' })).toEqual(choiceCardStyle('wrong'));
+  });
+
+  it('wrongMark changes only the wrong state', () => {
+    for (const state of CHOICE_CARD_STATES.filter((st) => st !== 'wrong')) {
+      expect(choiceCardStyle(state, { wrongMark: 'dash' }), state).toEqual(choiceCardStyle(state));
+    }
+  });
+});
+
+describe('choiceCardTileWidth (the tile layout: a picture card whose mark sits on the corner)', () => {
+  it('is the art plus the horizontal padding and the thickest border, with no room kept for the mark', () => {
+    expect(choiceCardTileWidth(touchTarget.hero)).toBe(touchTarget.hero + 2 * spacing.lg + 2 * borderWidth.thick);
+    expect(choiceCardTileWidth(96)).toBe(134);
+  });
+
+  it('two 96 dp tiles and an 8 dp gap fit the 288 dp column of a 320 wide phone', () => {
+    expect(2 * choiceCardTileWidth(touchTarget.hero) + spacing.sm).toBeLessThanOrEqual(320 - 2 * 16);
   });
 });

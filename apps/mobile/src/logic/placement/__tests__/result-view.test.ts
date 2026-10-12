@@ -266,7 +266,7 @@ describe('resultView: the weekly-plan strip matrix (AM-9)', () => {
     for (const locale of ['en', 'es', 'ko'] as const) expect(stripCopyProblems(getMessages(locale))).toEqual([]);
   });
 
-  it('See the whole map replaces See my route while the My route page is off', () => {
+  it('See the whole map replaces See Learning Route while the Learning Route page is off', () => {
     expect(resultView(input({ myRouteEnabled: false })).links[0]).toBe('seeMap');
   });
 });

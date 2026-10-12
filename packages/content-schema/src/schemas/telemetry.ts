@@ -117,6 +117,20 @@ export const TELEMETRY_EVENT_NAMES = [
   'shell.persona_chosen',
   'shell.grown_up_handoff',
   'shell.path_bounced',
+  // F-BROWSE-001 §9 (sent without profileId; content ids and codes only, never a person id)
+  'browse.opened',
+  'browse.item_viewed',
+  'browse.preview_started',
+  'browse.preview_ended',
+  'browse.plans_tapped',
+  // F-ENT-003 §3.12 (stage keys, codes and counts only; `day` is the internal route day; never a title, name, price or tier word)
+  'access.preview_opened',
+  'access.help_asked',
+  'access.free_end_reached',
+  'route.next_started',
+  'route.offplan_finished',
+  // F-REPORT-001 §3.13 (payload { scope, space, period }: codes only, never a profileId, space id, learner id or name)
+  'report.viewed',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);

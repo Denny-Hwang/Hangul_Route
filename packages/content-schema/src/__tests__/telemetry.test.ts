@@ -98,6 +98,17 @@ describe('telemetry event names (one list for the client type and the API whitel
         'shell.persona_chosen',
         'shell.grown_up_handoff',
         'shell.path_bounced',
+        'browse.opened',
+        'browse.item_viewed',
+        'browse.preview_started',
+        'browse.preview_ended',
+        'browse.plans_tapped',
+        'access.preview_opened',
+        'access.help_asked',
+        'access.free_end_reached',
+        'route.next_started',
+        'route.offplan_finished',
+        'report.viewed',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);
@@ -161,6 +172,30 @@ describe('telemetry event names (one list for the client type and the API whitel
       expect(isTelemetryEventName(name)).toBe(true);
     }
     expect(isTelemetryEventName('shell.persona_selected')).toBe(false);
+  });
+
+  it('lists the five browse names of F-BROWSE-001 section 9 (Worker first, BR-1)', () => {
+    for (const name of ['browse.opened', 'browse.item_viewed', 'browse.preview_started', 'browse.preview_ended', 'browse.plans_tapped']) {
+      expect(TELEMETRY_EVENT_NAMES.filter((n) => n === name)).toHaveLength(1);
+      expect(isTelemetryEventName(name)).toBe(true);
+    }
+    expect(isTelemetryEventName('browse.started')).toBe(false);
+  });
+
+  it('lists the five free-plan and next names of F-ENT-003 section 3.12 (Worker first, E3-1b)', () => {
+    for (const name of ['access.preview_opened', 'access.help_asked', 'access.free_end_reached', 'route.next_started', 'route.offplan_finished']) {
+      expect(TELEMETRY_EVENT_NAMES.filter((n) => n === name)).toHaveLength(1);
+      expect(isTelemetryEventName(name)).toBe(true);
+    }
+    expect(isTelemetryEventName('access.paywall_shown')).toBe(false);
+    expect(isTelemetryEventName('route.next_opened')).toBe(false);
+  });
+
+  it('lists the report name of F-REPORT-001 section 3.13 exactly once (Worker first, RP-W1)', () => {
+    expect(TELEMETRY_EVENT_NAMES.filter((n) => n === 'report.viewed')).toHaveLength(1);
+    expect(isTelemetryEventName('report.viewed')).toBe(true);
+    expect(isTelemetryEventName('report.opened')).toBe(false);
+    expect(TELEMETRY_EVENT_NAMES.filter((n) => n.startsWith('report.'))).toEqual(['report.viewed']);
   });
 
   it('narrows unknown input with isTelemetryEventName', () => {

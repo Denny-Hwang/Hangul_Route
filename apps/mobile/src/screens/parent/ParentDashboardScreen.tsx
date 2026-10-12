@@ -25,6 +25,7 @@ import { localizeStage } from '../../logic/content-locale';
 import { bandLabel } from '../../logic/placement/copy';
 import { startingSpotRow } from '../../logic/placement/report-page';
 import { LinkButton } from '../placement/parts';
+import { LearningRouteRow } from './LearningRouteRow';
 import type { RootStackParamList } from '../../navigation/types';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
@@ -103,6 +104,15 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
                   }
                   onOpen={() => navigation.navigate('PlacementReport', { profileId: p.id })}
                   testID={`dashboard-starting-spot-${p.id}`}
+                />
+              ) : null}
+              {flags.myRouteEnabled ? (
+                <LearningRouteRow
+                  profileId={p.id}
+                  name={p.displayName}
+                  stored={snap}
+                  showStarted={!flags.placementEnabled}
+                  testID={`dashboard-route-${p.id}`}
                 />
               ) : null}
               {snap && snap.quests.length > 0 ? (

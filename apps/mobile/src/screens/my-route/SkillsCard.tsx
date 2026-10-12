@@ -13,8 +13,8 @@ import type { SkillRowView } from '../../logic/my-route/view';
  * that count for it. Reading, listening and writing only.
  */
 
-/** Decoration only: the done disc carries its own check (PipRow spec). */
-const SKILL_ACCENT: Readonly<Record<Skill, string>> = { read: colors.stage.stage1, listen: colors.stage.stage4, write: colors.stage.stage7 };
+/** Decoration only: the done disc carries its own check (PipRow spec). Also the parent dashboard row's mini rows (R-9b). */
+export const SKILL_ACCENT: Readonly<Record<Skill, string>> = { read: colors.stage.stage1, listen: colors.stage.stage4, write: colors.stage.stage7 };
 
 function SkillSheet({ row, onClose }: { row: SkillRowView; onClose: () => void }): React.ReactElement {
   const m = useMessages();

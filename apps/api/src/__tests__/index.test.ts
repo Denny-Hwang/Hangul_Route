@@ -32,13 +32,15 @@ describe("apps/api router", () => {
     expect(JSON.parse(text)).toMatchObject({ status: "ok", bindings: { db: true, clerk: true } });
   });
 
-  it("mounts the class-move routes locked: 422 transfers_locked without CLASS_TRANSFER, before any binding is needed (F-SPACE-002 T-5a)", async () => {
+  it("mounts the class-move routes locked: 422 transfers_locked without CLASS_TRANSFER, before any binding is needed (F-SPACE-002 T-5a, T-5b)", async () => {
     for (const [method, path] of [
       ["POST", "/api/spaces/space:a/transfer-requests/preview"],
       ["POST", "/api/spaces/space:a/transfer-requests"],
       ["GET", "/api/spaces/space:a/transfer-requests"],
       ["POST", "/api/spaces/space:a/transfer-requests/transfer:x/decline"],
       ["POST", "/api/spaces/space:a/transfer-requests/transfer:x/cancel"],
+      ["POST", "/api/spaces/space:a/transfer-requests/transfer:x/approve"],
+      ["POST", "/api/spaces/space:a/transfer-requests/transfer:x/retry"],
       ["PUT", "/api/spaces/space:a/learners/profile:x/transfer-prefs"],
     ]) {
       const res = await app.request(path, { method });

@@ -1,8 +1,12 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const ORIGINAL_ENV = { ...process.env };
+
+function walk(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(join(dir, e.name)) : [join(dir, e.name)]));
+}
 
 async function reload(): Promise<typeof import('../flags')> {
   vi.resetModules();
@@ -73,6 +77,62 @@ describe('flags', () => {
     process.env.EXPO_PUBLIC_CONTENT_GATING_ENABLED = 'true';
     const mod = await reload();
     expect(mod.flags.contentGatingEnabled).toBe(true);
+  });
+
+  it('contentGatingEnabled is read by its literal name, so the web build can carry the switch (F-ENT-003 section 3.4)', async () => {
+    const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
+    expect(src).toContain('process.env.EXPO_PUBLIC_CONTENT_GATING_ENABLED');
+    process.env.EXPO_PUBLIC_CONTENT_GATING_ENABLED = '1';
+    let mod = await reload();
+    expect(mod.flags.contentGatingEnabled).toBe(true);
+    process.env.EXPO_PUBLIC_CONTENT_GATING_ENABLED = 'maybe';
+    mod = await reload();
+    expect(mod.flags.contentGatingEnabled).toBe(false);
+  });
+
+  it('gatingActive: the switch counts on the web only; ios and android are always off (F-ENT-003 section 3.4, OD-13)', async () => {
+    const { gatingActive } = await reload();
+    expect(gatingActive({ contentGatingEnabled: true }, 'web')).toBe(true);
+    expect(gatingActive({ contentGatingEnabled: false }, 'web')).toBe(false);
+    expect(gatingActive({ contentGatingEnabled: true }, 'ios')).toBe(false);
+    expect(gatingActive({ contentGatingEnabled: true }, 'android')).toBe(false);
+    expect(gatingActive({ contentGatingEnabled: false }, 'ios')).toBe(false);
+    expect(gatingActive({ contentGatingEnabled: false }, 'android')).toBe(false);
+    // An unknown bundle (tests, scripts) fails open, like the switch off.
+    expect(gatingActive({ contentGatingEnabled: true }, undefined)).toBe(false);
+  });
+
+  // Any mention of the flag in code (member access, index access, destructuring); comments do not count.
+  const readsRawFlag = (src: string): boolean =>
+    /\bcontentGatingEnabled\b/.test(src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, ''));
+
+  it('the raw-flag check sees every way of reading the flag, and ignores comments', () => {
+    expect(readsRawFlag('const on = flags.contentGatingEnabled;')).toBe(true);
+    expect(readsRawFlag('const { contentGatingEnabled } = flags;')).toBe(true);
+    expect(readsRawFlag("const on = flags['contentGatingEnabled'];")).toBe(true);
+    expect(readsRawFlag('/**\n * only with `contentGatingEnabled`, D5\n */\nexport const x = 1;')).toBe(false);
+    expect(readsRawFlag('// contentGatingEnabled is read by gatingActive\nexport const x = 1;')).toBe(false);
+  });
+
+  it('every access caller reads gatingActive, never the raw flag (F-ENT-003 section 3.4)', () => {
+    const root = join(__dirname, '../../..');
+    const files = [join(root, 'App.tsx'), ...walk(join(root, 'src'))].filter(
+      (f) => /\.tsx?$/.test(f) && !f.includes('__tests__') && !f.endsWith(join('config', 'flags.ts')),
+    );
+    const raw = files.filter((f) => readsRawFlag(readFileSync(f, 'utf8')));
+    expect(raw.map((f) => f.slice(root.length + 1))).toEqual([]);
+  });
+
+  it('bundleOs reads the platform the bundler inlines, by its literal name', async () => {
+    const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
+    expect(src).toContain('process.env.EXPO_OS');
+    const { bundleOs } = await reload();
+    process.env.EXPO_OS = 'web';
+    expect(bundleOs()).toBe('web');
+    process.env.EXPO_OS = 'ios';
+    expect(bundleOs()).toBe('ios');
+    delete process.env.EXPO_OS;
+    expect(bundleOs()).toBeUndefined();
   });
 
   it('showUnreviewedStories flips on with "1"', async () => {

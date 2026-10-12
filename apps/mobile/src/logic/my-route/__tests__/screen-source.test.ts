@@ -64,9 +64,86 @@ describe('screens/my-route sources', () => {
     expect(src.lastIndexOf('flags.myRouteEnabled ?', at)).toBeGreaterThan(0);
   });
 
-  it('PinEntry continues to the read-only page once the gate is open', () => {
+  it('PinEntry continues to the read-only page once the gate is open, as a grown-up', () => {
     const src = read(join(SRC, 'screens', 'parent', 'PinEntryScreen.tsx'));
-    expect(src).toContain("navigation.replace('MyRoute', { source: 'parent', profileId })");
+    expect(src).toContain("navigation.replace('MyRoute', { source: 'parent', profileId, viewer: 'grownup' })");
+  });
+
+  it('the screen forces read-only for a grown-up entry (amendment section 5.1)', () => {
+    const src = read(join(SCREEN_DIR, 'MyRouteScreen.tsx'));
+    expect(src).toContain("grownup: route.params?.viewer === 'grownup'");
+    // Read-only builds the grown-up view, which carries no episode, tile or stories link (view.test.ts).
+    expect(src).toContain("viewer: readOnly ? 'grownup' : 'self'");
+  });
+});
+
+/**
+ * The parent dashboard's Learning Route row (F-ROUTE-001 R-9b, section 3.12,
+ * amendment LR-A6; wireframes `journey/my-route-overview.md` H and
+ * `parent/learning-route.md` L1a).
+ */
+describe('parent dashboard Learning Route row sources', () => {
+  const ROW = join(SRC, 'screens', 'parent', 'LearningRouteRow.tsx');
+  const DASHBOARD = join(SRC, 'screens', 'parent', 'ParentDashboardScreen.tsx');
+  const row = read(ROW);
+  const dashboard = read(DASHBOARD);
+
+  it('the row shows only behind flags.myRouteEnabled', () => {
+    const at = dashboard.indexOf('<LearningRouteRow');
+    expect(at).toBeGreaterThan(0);
+    expect(dashboard.lastIndexOf('flags.myRouteEnabled ?', at)).toBeGreaterThan(0);
+  });
+
+  it('See Learning Route opens the root-stack page forced read-only, never the interactive one', () => {
+    expect(row).toContain("navigation.navigate('MyRoute', { source: 'parent', profileId, viewer: 'grownup' })");
+    for (const src of [row, dashboard]) {
+      for (const m of src.matchAll(/navigate\('MyRoute'[^)]*\)/g)) expect(m[0]).toContain("viewer: 'grownup'");
+    }
+  });
+
+  it('the row builds the same model as the page (the one routeModelInput) and never sends telemetry or writes seen', () => {
+    expect(row).toContain('buildMyRoute(routeModelInput(');
+    expect(row).toContain('localizedRouteContent(locale)');
+    expect(row).not.toContain('startRouteOf(');
+    expect(row).toContain('dashboardRowView(');
+    expect(row).not.toMatch(/track\(|writeSeen|viewedEvent|AsyncStorage|localStorage/);
+  });
+
+  it('no emoji-capable or arrow character, no colour literal, no ratio, no speaking UI', () => {
+    expect(row).not.toMatch(SYMBOL);
+    expect(row).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/);
+    expect(row).not.toMatch(/['"`][^'"`]*\d+\s*\/\s*\d+[^'"`]*['"`]/);
+    expect(row).not.toMatch(/voice-echo|VoiceEcho|microphone|speak/i);
+  });
+
+  it('names its design reference', () => {
+    expect(row).toMatch(/design\/(wireframes|components)\//);
+  });
+
+  it('draws the segments with the design system StageSegments (hidden from screen readers) and a text list reads them', () => {
+    expect(row).toContain('<StageSegments');
+    expect(row).not.toMatch(/pipParts|cursorMarkerParts|markerBand|<Svg/);
+    expect(row).toContain('role="listitem"');
+    expect(row).toContain('segment.a11yLabel');
+  });
+
+  it('waits for the snapshot before drawing a profile, so a child is never shown as a new learner first', () => {
+    expect(row).toContain('hydratedFor.has(profileId)');
+  });
+
+  it('content that cannot be read still leaves the title and See Learning Route, which opens the page and its retry', () => {
+    expect(row).toMatch(/view === null \?/);
+    expect(row).toContain('LearningRouteRowFallback');
+  });
+
+  it('the Started line is left to the Starting spot row when that row shows (one level check per card)', () => {
+    const at = dashboard.indexOf('<LearningRouteRow');
+    expect(dashboard.slice(at, dashboard.indexOf('/>', at))).toContain('showStarted={!flags.placementEnabled}');
+  });
+
+  it('the skill inks come from the page skills card, not a copy', () => {
+    expect(row).toContain("import { SKILL_ACCENT } from '../my-route/SkillsCard'");
+    expect(row).not.toMatch(/const SKILL_ACCENT/);
   });
 });
 

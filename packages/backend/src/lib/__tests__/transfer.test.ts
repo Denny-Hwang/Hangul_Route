@@ -465,18 +465,24 @@ describe('settle (§4.6)', () => {
     const result = await settle(db, t, new Date(CREATED.getTime() + TRANSFER_WINDOW_MS), ON);
     expect(result.request).toMatchObject({ status: 'expired', endReason: 'expired', endActor: 'system' });
     expect(await learnerSpaces()).toEqual([FAMILY, SOURCE].sort());
+    // the system's expiry is audited with the CAS, once (section 4.1 event list)
+    expect((await db.transferEvents(t.id)).filter((e) => e.event === 'expired')).toEqual([expect.objectContaining({ actorKind: 'system', actorRef: null, slot: null, detail: null })]);
+    await settle(db, t, new Date(CREATED.getTime() + TRANSFER_WINDOW_MS + 1), ON);
+    expect((await db.transferEvents(t.id)).filter((e) => e.event === 'expired')).toHaveLength(1);
   });
 
   it('step 3: an archived destination cancels (destination_archived)', async () => {
     const t = await learnerSide();
     await putSpace(DEST, { archivedAt: CREATED.toISOString() });
     expect((await settle(db, t, CREATED, ON)).request).toMatchObject({ status: 'cancelled', endReason: 'destination_archived', endActor: 'system' });
+    expect((await db.transferEvents(t.id)).filter((e) => e.event === 'cancelled')).toEqual([expect.objectContaining({ actorKind: 'system', actorRef: null, slot: null, detail: { reason: 'destination_archived' } })]);
   });
 
   it('step 3: a learner who left the source cancels (learner_left_source)', async () => {
     const t = await learnerSide();
     await db.removeMembership(SOURCE, 'learner', LEARNER);
     expect((await settle(db, t, CREATED, ON)).request).toMatchObject({ status: 'cancelled', endReason: 'learner_left_source', endActor: 'system' });
+    expect((await db.transferEvents(t.id)).filter((e) => e.event === 'cancelled')).toEqual([expect.objectContaining({ actorKind: 'system', actorRef: null, slot: null, detail: { reason: 'learner_left_source' } })]);
   });
 
   it('step 3: an archived source makes a pending source slot not_required and the move proceeds (behaviour 23)', async () => {
@@ -866,6 +872,20 @@ describe('executeTransfer (§4.6 over the Db)', () => {
     const t = await approved();
     expect((await executeTransfer(db, t, DUE)).executed).toBe(true);
     expect((await db.transferEvents(t.id)).find((e) => e.event === 'old_space_still_has_access')?.detail).toEqual({ count: 2 });
+  });
+
+  it('a plain teacher of the source school, or a source teacher who sees the learner through no family, is not counted', async () => {
+    await db.putAccount({ id: 'principal', email: null, displayName: null, consent: null, createdAt: T0 });
+    await db.putAccount({ id: 'colleague', email: null, displayName: null, consent: null, createdAt: T0 });
+    await db.putSpace({ ...(await space(SOURCE)), id: 'space:school', kind: 'school', ownerAccountId: 'principal' });
+    await join('space:school', 'account', 'principal', 'owner');
+    await join('space:school', 'account', 'colleague', 'teacher');
+    await putSpace(SOURCE, { parentSpaceId: 'space:school' });
+    // a school teacher holds no learner.transfer on the source, so a family link does not count them
+    await join(FAMILY, 'account', 'colleague', 'caregiver');
+    const t = await approved();
+    expect((await executeTransfer(db, t, DUE)).executed).toBe(true);
+    expect((await db.transferEvents(t.id)).some((e) => e.event === 'old_space_still_has_access')).toBe(false);
   });
 
   it('a cancel that lands first wins: the gate changes nothing (behaviour 15)', async () => {

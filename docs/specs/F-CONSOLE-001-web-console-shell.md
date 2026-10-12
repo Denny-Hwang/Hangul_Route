@@ -22,7 +22,7 @@ A teacher needs one place to make a class, read the code aloud, and see who prac
 ### 3.1 API reachable from browsers
 
 - The Worker answers CORS for `/api/*`: preflight `OPTIONS` → 204 with `Access-Control-Allow-Origin` echoing an **allowed** origin, `Allow-Headers: Content-Type, Authorization`, methods `GET POST PUT DELETE OPTIONS`, `Max-Age` 1 day. Disallowed origins get no `Allow-Origin` header (the browser blocks).
-- Allowed origins come from the Worker var `ALLOWED_ORIGINS` (comma-separated). Unset → the defaults: `https://hangulroute.com`, `https://www.hangulroute.com`, `https://app.hangulroute.com`, any `https://*.workers.dev`, and `http://localhost:*` / `http://127.0.0.1:*`. Pure `lib/cors.ts`, 100 % tested.
+- Allowed origins come from the Worker var `ALLOWED_ORIGINS` (comma-separated). Unset → the defaults: `https://hangulroute.com`, `https://www.hangulroute.com`, `https://app.hangulroute.com`, any `https://*.workers.dev`, and `http://localhost:*` / `http://127.0.0.1:*`. Pure `lib/cors.ts`, 100 % tested. The same list is also the Clerk `authorizedParties` for sign-in tokens (F-APP-001 A-9): a host left out loses console sign-in on the API (401).
 
 ### 3.2 Sign-in — `/teach` (`console/sign-in`)
 
@@ -49,7 +49,7 @@ A teacher needs one place to make a class, read the code aloud, and see who prac
 - Cap banner from **80 %** of the free cap (20) on classes; persistent at the cap.
 - Class roll-up computed client-side from summaries (`lib/console/rollup.ts`, pure): practiced this week (`minutesLast7d > 0`), Stage 1 anchor accuracy (mean of non-null), jamo to revisit together (most frequent `needsPractice`, ≤ 3), "haven't synced in 7+ days" count. No averages of time, no percentiles, no ranking.
 - Student cards sorted as the API returns them (most recent activity first): name, age, last active ("today" / "yesterday" / weekday / date), quests `done / total`, minutes this week, revisit jamo, "not synced yet" when there is no summary.
-- Empty: the code panel doubled in size + "Write it on the board — students join from Settings → Classes & family → Join a class." Plan / re-link / settings actions are visible but disabled with "coming with plans" (S4/S5).
+- Empty: the code panel doubled in size + "Write it on the board — students join from Profile → Classes & family → Join a class." Plan / re-link / settings actions are visible but disabled with "coming with plans" (S4/S5).
 - Copy on this surface passes the caregiver ban list (`lib/console/banned-text.ts`, mirror of `apps/mobile/src/logic/homework/banned-text.ts`), asserted in tests.
 
 ### 3.6 Landing

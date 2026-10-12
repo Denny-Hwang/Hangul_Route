@@ -182,8 +182,12 @@ test.describe('story Results (fixture bundle)', () => {
     await onboard(page);
     await playQuest(page);
     await page.getByTestId('story-results-episode').click();
-    // The story's episode page (the shelf episode), with this quest's stars on it.
-    await expect(page.getByRole('heading', { name: 'Quests' })).toBeVisible();
+    // The story variant of the episode page (F-STORY-004 §3.6): the finished tale row with its two buttons.
+    await expect(page.getByTestId('story-episode')).toBeVisible();
+    await expect(page.getByTestId('story-episode-title')).toHaveText('Hangul Day');
+    await expect(page.getByTestId(`story-episode-state-${STORY}`)).toHaveText('Finished');
+    await expect(page.getByTestId(`story-episode-play-again-${STORY}`)).toBeVisible();
+    await expect(page.getByTestId(`story-episode-read-again-${STORY}`)).toBeVisible();
     await expect(page.getByTestId('story-results-extras')).toBeHidden();
     await page.getByLabel('Go back').first().click();
     await expect(page.getByTestId('story-results-extras')).toBeVisible();
@@ -191,6 +195,31 @@ test.describe('story Results (fixture bundle)', () => {
     await expect(page.getByText('Hi, Dami!')).toBeVisible();
     const actions = (await storyEvents(page)).filter((e) => e.name === 'story.results.action').map((e) => e.payload?.action);
     expect(actions).toEqual(['episode', 'home']);
+  });
+
+  test('Episode page: its Culture notes line opens that story\'s notes, and a note links back to the page', async ({ page }) => {
+    await onboard(page);
+    await playQuest(page);
+    await page.getByTestId('story-results-episode').click();
+    // Screens under the top one stay in the page (hidden), so every lookup takes the visible one.
+    const shown = (testId: string): Locator => page.getByTestId(testId).filter({ visible: true });
+    const goBack = (): Promise<void> => page.getByLabel('Go back').filter({ visible: true }).first().click();
+    const line = shown('story-episode-notes');
+    await expect(line).toHaveText('Culture notes: 1 found');
+    await line.click();
+    await expect(shown('culture-notes')).toBeVisible();
+    await expect(shown('culture-notes-count')).toHaveText('1 found');
+    await expect(shown('culture-note-cn-hangul-day')).toBeVisible();
+    // From the story pushes the page on top; Back walks the same way back.
+    await shown('culture-note-story-cn-hangul-day').click();
+    await expect(shown('story-episode')).toBeVisible();
+    await expect(shown('culture-notes')).toHaveCount(0);
+    await goBack();
+    await expect(shown('culture-notes')).toBeVisible();
+    await shown('culture-notes-back').click();
+    await expect(shown('story-episode')).toBeVisible();
+    await goBack();
+    await expect(shown('story-results-extras')).toBeVisible();
   });
 
   for (const vp of [

@@ -67,7 +67,7 @@ export interface ResultViewInput {
   profileType: 'self' | 'child';
   /** `flags.routeEnabled` (F-PLAN-002 P2-7a). */
   routeEnabled: boolean;
-  /** `flags.myRouteEnabled` (F-ROUTE-001): "See my route", else "See the whole map". */
+  /** `flags.myRouteEnabled` (F-ROUTE-001): "See Learning Route", else "See the whole map". */
   myRouteEnabled: boolean;
   /** `proposeRoute` returned a proposal. */
   proposalAvailable: boolean;

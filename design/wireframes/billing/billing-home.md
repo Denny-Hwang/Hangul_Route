@@ -1,5 +1,7 @@
 # Billing/Home — one billing page for every grown-up persona (wireframe v2)
 
+> **Amended 2026-10-11 [BY]** (`docs/specs/AMENDMENTS-BILLING-FAMILY-YEARLY.md`): the family product is the **Family Plan**, $15.30 / year, renews yearly, cancel any time (was the one-time "Family Lifetime"). Lines below are updated.
+
 Spec: `docs/specs/F-BILL-002-billing-in-app-all-personas.md` §4.1-§4.6, §4.9, §4.12 · supersedes `console/billing.md` (F-ENT-001 §3.6) · promo box: F-ENT-002 §3.3 · frame: `shell/adult-frame.md` (F-APP-001 §3.8)
 Screen ID: `billing/billing-home` · URL: `https://app.hangulroute.com/account/billing` (`APP_ROUTES.billing`, F-APP-001)
 Audience: **parent** (family owner), **co-parent** (family caregiver), **teacher** (class owner, co-teacher, or teacher in a school), **school admin** (school owner or admin), **adult self-learner** (owner of their own family space). Grown-ups only; signed in with Clerk; inside F-APP-001's grown-up lock. Never a learner surface.
@@ -37,17 +39,18 @@ Phone (375), the most common case: one parent, one free family (offer inside the
 | | Free plan                     | |  <- plan line
 | | 2 of 5 learners               | |  <- usage line
 | |-------------------------------| |
-| | Family Lifetime               | |  <- the offer, inside the one buyable card
+| | Family Plan                   | |  <- the offer, inside the one buyable card
 | |  - Every lesson of every      | |  <- includes lines (base)
-| |    Stage, now and later       | |
+| |    Stage, new ones included   | |
 | |  - Up to 5 learners in one    | |
 | |    family                     | |
 | |  - Cloud save on every device | |
 | |  - Browse every lesson as     | |  <- only when SITE_CLAIMS.browseAsLearner
 | |    your learner sees it       | |
-| | <price> once (sandbox amount) | |  <- price line
+| | <price> / year (sandbox amt.) | |  <- price line
+| | Renews yearly. Cancel any time| |  <- renew line
 | | > Have a code?                | |  <- directly under the price it rewrites
-| | [[ GET FAMILY LIFETIME ]]     | |  <- the one primary button on the page
+| | [[ GET FAMILY PLAN ]]         | |  <- the one primary button on the page
 | | > Receipts                    | |  <- only when the space has receipts
 | +-------------------------------+ |
 |                                   |
@@ -106,9 +109,9 @@ Wide (1280), a teacher who pays for two classes and is a member of a school (sev
 Card variants (same box, different lines):
 
 ```
-Parent, lifetime          | Family · <name> | Family Lifetime · yours for good | 4 of 5 learners | > Receipts |
-Parent, lifetime, 0 learn.| Family · <name> | Family Lifetime · yours for good | 0 of 5 learners | Next: connect a learner to this family. | [ Connect a learner ] |
-Co-parent (caregiver)     | Family · <name> | Family Lifetime · yours for good | 4 of 5 learners | The person who set up this family manages this plan. |
+Parent, Family Plan       | Family · <name> | Family Plan · Renews on <date> | 4 of 5 learners | [ Manage subscription ] | > Receipts |
+Parent, plan, 0 learners  | Family · <name> | Family Plan · Renews on <date> | 0 of 5 learners | Next: connect a learner to this family. | [ Connect a learner ] |
+Co-parent (caregiver)     | Family · <name> | Family Plan · Renews on <date> | 4 of 5 learners | The person who set up this family manages this plan. |
 Co-teacher (class teacher)| Class · <name>  | Group License · Renews on <date> | 23 students | The class owner manages this plan. |
 Class in a school         | Class · <name>  | Covered by <school>'s license until <date> | 31 students | Your school manages this plan. |
 School owner / admin      | School · <name> | Group License · Renews on <date> | 212 of 300 students · 7 of 10 teachers | [ Manage subscription ] [ Contact us ] | > Receipts |
@@ -134,7 +137,7 @@ Rules shown above:
 
 ## Interaction points
 
-- `[[ GET FAMILY LIFETIME ]]` / `[[ GET GROUP LICENSE ]]` → `billing/step-up` when the sign-in is older than 10 minutes → Stripe Checkout (external) → back with `?checkout=` → `billing/checkout-return`
+- `[[ GET FAMILY PLAN ]]` / `[[ GET GROUP LICENSE ]]` → `billing/step-up` when the sign-in is older than 10 minutes → Stripe Checkout (external) → back with `?checkout=` → `billing/checkout-return`
 - `[ Manage subscription ]` → `billing/step-up` (if needed) → Stripe Billing Portal (external) → back to this screen
 - `[ Contact us ]` (school) → mail to hello@hangulroute.com with the subject "Hangul Route school contract" (no space name or id in the mail link)
 - `[ Connect a learner ]` → F-APP-001 family page `/parent/space?id=<spaceId>` (join code panel)

@@ -24,24 +24,26 @@ Then: one cell shows where to go next, the cells of the plan's coming items are 
 |  Letters  Life  Rites  Nature  Crafts      |  <- column labels (unchanged)
 |                                            |
 | (1) Hangul ......................[ Open ]  |  <- stage row: plain, never a button
-|  +------+ +------+ .------. .------. .------.
-|  | [pin]| |(====)| :      : :      : :      :
-|  |  L   | |  L   | :  R   : :  N   : :  C   :  <- cell initial (unchanged)
-|  +------+ +------+ '------' '------' '------'
-|   Next    In your   not open yet (label)   |
-|           plan                             |  <- words live in the a11y label;
+|  +------+ +------+ +------+ +------+ +------+
+|  | [pin]| |(====)| |      | |      | |      |
+|  |  L   | |  L   | |  R   | |  N   | |  C   |  <- cell initial (unchanged)
+|  +------+ +------+ +------+ +------+ +------+
+|   Next    In your   (all of Stage 1 is free:|
+|           plan       never a dotted ring)  |  <- words live in the a11y label;
 |                                            |     on regular / wide windows a
 | (2) Word .......................[ A taste ] |     caption row may show them
 |  +------+ .------. +------+ .------. +------+
-|  | soon | :      : | soon | :      : | soon |
+|  | soon | :  L   : | soon | :  N   : | soon |
 |  +------+ '------' +------+ '------' +------+
+|            not open yet (label)            |
 |  ...                                       |
 +--------------------------------------------+
 
 [pin]  = drawn pin glyph (R-2a), top-left of the cell: the routeNext cell, at most one
 (====) = solid ring (border.shape): a cell holding an In your plan item (leading source, inside the horizon)
 :....: = dotted ring around the cell art (the Learning Route "later" pip shape at cell scale):
-         free learner, switch on, no kept or promised quest in the cell. Art and colour stay.
+         free learner, switch on, a cell of Stage 2 onward with no kept quest (F-ENT-003 OD-1: all of
+         Stage 1 is free, so a Stage 1 cell never carries it). Art and colour stay.
 ```
 
 - Precedence on one cell: Next > In your plan > Not open yet. A closed cell is never Next and never In your plan.
@@ -65,10 +67,9 @@ Exit to: `episode/detail` (`EpisodeDetail { episodeId }`) · right pane of `jour
 
 - **Subscriber with a plan**: [pin] on the `routeNext` cell, solid rings on the leading source's cells inside the horizon, no dotted ring.
 - **No plan** (subscriber, or free with the switch off): [pin] on the default-route cursor cell, no solid ring, no dotted ring.
-- **Free, switch on, new learner**: [pin] on Meet the Letters; dotted rings on rites, nature, crafts, Stage 2 life and nature, Stage 4 rites.
-- **Free, switch on, profile started before the flip** (OD-12): no dotted ring on any Stage 1 cell; dotted rings on Stage 2 and Stage 4 cells.
-- **Free, switch on, free lessons finished** (`free-end`): no [pin]; dotted rings on the closed cells; letters and life cells show their completion tint.
-- **Free learner with kept quests past the free lessons**: no dotted ring on a cell that holds any kept quest.
+- **Free, switch on, any learner**: [pin] on the `routeNext` cell (Meet the Letters for a new learner); no dotted ring on any Stage 1 cell; dotted rings on Stage 2 life and nature and Stage 4 rites (the playable cells past Stage 1 today).
+- **Free, switch on, free lessons finished** (`free-end`, all of Stage 1 done): no [pin]; dotted rings on the closed cells; the Stage 1 cells show their completion tint.
+- **Free learner with kept quests past Stage 1** (a taste finished before the switch turned on): no dotted ring on a cell that holds any kept quest.
 - **Empty** (no playable episode, content failed to load): the existing coming-soon pane; no marks.
 - **Error** (tier cache or snapshot unreadable): fail open — treated as the switch-off state; no dotted ring, [pin] from the default route.
 
@@ -80,7 +81,7 @@ Exit to: `episode/detail` (`EpisodeDetail { episodeId }`) · right pane of `jour
 ## Data needs
 
 - `routeNext(...)` and `planView(...)` (pure, `logic/route-next.ts`) from the active profile's snapshot, plan sources, the bundle and `cursorContext` (now with `isQuestOpen`).
-- `useQuestAccess()` (`accessTier`, `gatingActive`, completed quest ids, Stage 1 promise).
+- `useQuestAccess()` (`accessTier`, `gatingActive`, completed quest ids).
 - No network call; works offline.
 
 ## Open questions

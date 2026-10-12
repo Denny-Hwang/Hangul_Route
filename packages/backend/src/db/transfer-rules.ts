@@ -55,7 +55,7 @@ export function assertTransferChecks(t: StoredTransfer): void {
 }
 
 /** True for the one form every Db-side `now` takes (`Date.toISOString()`); the SQL compares these as text. */
-const isCanonicalIso = (value: string): boolean => {
+export const isCanonicalIso = (value: string): boolean => {
   const ms = Date.parse(value);
   return Number.isFinite(ms) && new Date(ms).toISOString() === value;
 };

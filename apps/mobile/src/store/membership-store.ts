@@ -60,6 +60,8 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
     const sorted = [...rows].sort((a, b) => a.name.localeCompare(b.name));
     set((s) => ({ byLearner: { ...s.byLearner, [learnerId]: sorted } }));
     void writeJson(key(learnerId), sorted);
+    // Access fails open for a member the server has not answered for yet (F-ENT-003 section 3.4 rule 3).
+    useTierStore.getState().noteSpaces(learnerId, sorted.length);
     return sorted;
   };
 
@@ -70,7 +72,11 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       const existing = get().byLearner[learnerId];
       if (existing) return existing;
       const saved = (await readJson<LearnerMembership[]>(key(learnerId))) ?? [];
+      // Rows a refresh or a join put while the read was pending are newer than the saved copy.
+      const arrived = get().byLearner[learnerId];
+      if (arrived) return arrived;
       set((s) => ({ byLearner: { ...s.byLearner, [learnerId]: saved } }));
+      useTierStore.getState().noteSpaces(learnerId, saved.length);
       return saved;
     },
 
@@ -119,6 +125,9 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       const current = await get().hydrate(learnerId);
       put(learnerId, [...current.filter((m) => m.spaceId !== result.membership.spaceId), result.membership]);
       void track({ name: 'space.join.succeeded', profileId: learnerId, payload: { kind: result.membership.kind, alreadyMember: result.alreadyMember } });
+      // The join changes the server's tier and plans for this learner: read them now, not at the next sync
+      // (F-ENT-003 section 3.4). A failed read leaves the join as it is; the next sync tries again.
+      await get().refresh(learnerId);
       return { ok: true, alreadyMember: result.alreadyMember, membership: result.membership };
     },
 

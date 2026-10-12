@@ -112,10 +112,10 @@ describe('billing page (teach/billing/page.tsx, billing.ts)', () => {
   });
 
   it('keeps the plan names, what each includes and the contract price', () => {
-    expect(b.planTitle).toEqual({ free: 'Free', family_lifetime: 'Family Lifetime', group_license: 'Group License', school_seat: 'School Contract' });
+    expect(b.planTitle).toEqual({ free: 'Free', family_lifetime: 'Family Plan', group_license: 'Group License', school_seat: 'School Contract' });
     expect(b.includes.free(20)).toBe('Stage 1, local progress, Rescue Code, file backup; classes up to 20 students');
     expect(b.includes.free(25)).toBe('Stage 1, local progress, Rescue Code, file backup; classes up to 25 students');
-    expect(b.includes.family_lifetime(5)).toBe('Every Stage, now and later, for one family: up to 5 learners, cloud sync, grown-up dashboard and plans');
+    expect(b.includes.family_lifetime(5)).toBe('Every Stage, new ones included, for one family: up to 5 learners, cloud sync, grown-up dashboard and plans');
     expect(b.includes.group_license(10, 300, 20)).toBe('A class or school: every student premium while enrolled, no 20-student cap; a school holds up to 10 teachers / 300 students');
     expect(b.includes.group_license(10, 300, 25)).toContain('no 25-student cap');
     expect(b.includes.school_seat(300, 10)).toBe('Beyond 300 students or 10 teachers — seats by contract');

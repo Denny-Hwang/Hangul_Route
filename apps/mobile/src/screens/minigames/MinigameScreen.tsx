@@ -6,6 +6,7 @@ import { questById } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeScope } from '../../logic/content-locale';
 import { scopeFor } from '../../logic/minigame-config';
+import { resolveOptionalExit, resolveScreenExits, type ScreenExitProps } from '../../logic/navigation/screen-exits';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
 import { useQuestRunStore } from '../../store/quest-run-store';
@@ -25,9 +26,22 @@ import { TapRespondGame } from './TapRespondGame';
 import { TraceStrokeGame } from './TraceStrokeGame';
 import { VoiceEchoGame } from './VoiceEchoGame';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Minigame'>;
+/**
+ * The learner stack passes `route` and `navigation`; another host (All lessons, F-BROWSE-001 §4.7)
+ * passes `route` and the exits instead, so the screen never names a learner route there.
+ */
+type Props = {
+  route: { params: RootStackParamList['Minigame'] };
+  navigation?: Pick<NativeStackScreenProps<RootStackParamList, 'Minigame'>['navigation'], 'goBack' | 'push'>;
+  /**
+   * The story step's "More in Culture notes" (F-STORY-004 PR 4.7); the learner default pushes
+   * `CultureNotes { noteId, from: 'quest' }` (Back only, so the quest run is never unwound).
+   * `null`, or no learner stack, draws no button.
+   */
+  onOpenCultureNote?: ((noteId: string) => void) | null;
+} & ScreenExitProps;
 
-export function MinigameScreen({ route, navigation }: Props): React.ReactElement {
+export function MinigameScreen({ route, navigation, onOpenCultureNote, ...exitProps }: Props): React.ReactElement {
   const { questId, stepIndex } = route.params;
   const quest = questById(questId);
   const step = quest?.steps[stepIndex];
@@ -41,6 +55,13 @@ export function MinigameScreen({ route, navigation }: Props): React.ReactElement
   }, [ref, locale]);
   const activeProfileId = useProfileStore((s) => activeProfileSelector(s)?.id);
   const copy = useMessages().learner.minigame;
+  // Learner default: back to the quest player. A game has no home or link exit of its own.
+  const learnerBack = (): void => navigation?.goBack();
+  const exits = resolveScreenExits(exitProps, { back: learnerBack, home: learnerBack, openLink: () => undefined });
+  const openCultureNote = resolveOptionalExit(
+    onOpenCultureNote,
+    navigation ? (noteId: string): void => navigation.push('CultureNotes', { noteId, from: 'quest' }) : undefined,
+  );
 
   const close = (): void => {
     if (scope) {
@@ -50,7 +71,7 @@ export function MinigameScreen({ route, navigation }: Props): React.ReactElement
         payload: { kind: scope.kind, questId, stepIndex },
       });
     }
-    navigation.goBack();
+    exits.back();
   };
 
   // Every non-game state keeps a way out (wireframe minigame/shell: no dead ends).
@@ -58,7 +79,7 @@ export function MinigameScreen({ route, navigation }: Props): React.ReactElement
     <Screen>
       <Body>{message}</Body>
       <Spacer size="lg" />
-      <Button label={copy.backToQuest.cta} tone="secondary" size="md" onPress={() => navigation.goBack()} />
+      <Button label={copy.backToQuest.cta} tone="secondary" size="md" onPress={exits.back} />
     </Screen>
   );
 
@@ -98,15 +119,15 @@ export function MinigameScreen({ route, navigation }: Props): React.ReactElement
     case 'culture-quiz':
       return <CultureQuizGame scope={scope} onFinish={close} />;
     case 'listen-pick':
-      return <ListenPickGame scope={scope} host={host} onBack={() => navigation.goBack()} />;
+      return <ListenPickGame scope={scope} host={host} onBack={exits.back} />;
     case 'pic-word-match':
-      return <PicWordMatchGame scope={scope} host={host} onBack={() => navigation.goBack()} />;
+      return <PicWordMatchGame scope={scope} host={host} onBack={exits.back} />;
     case 'tap-respond':
       return <TapRespondGame scope={scope} onFinish={close} />;
     case 'story-read':
-      return <StoryReadGame scope={scope} onFinish={close} onBack={() => navigation.goBack()} />;
+      return <StoryReadGame scope={scope} onFinish={close} onBack={exits.back} onOpenCultureNote={openCultureNote} />;
     case 'story-check':
-      return <StoryCheckGame scope={scope} onFinish={close} onBack={() => navigation.goBack()} />;
+      return <StoryCheckGame scope={scope} onFinish={close} onBack={exits.back} />;
     default:
       return fallback(copy.comingSoon);
   }

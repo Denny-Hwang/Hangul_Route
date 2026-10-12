@@ -1,9 +1,12 @@
-import { TRANSFER_COOLING_OFF_MS, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type Space, type TransferBlockReason, type TransferEndReason, type TransferSlot } from '@hangul-route/content-schema';
+import { TRANSFER_COOLING_OFF_MS, type BillingEvent, type BillingEventKind, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type Space, type TransferBlockReason, type TransferEndReason, type TransferSlot } from '@hangul-route/content-schema';
 import { id, type Account, type Learner, type LearnerDevice, type SnapshotRecord } from '../store';
+import { assertBillingLimit, billingEventFields, newestBillingEvent, REFUNDABLE_BILLING_KINDS } from './billing-rules';
 import { allSlotsIn, assertNewTransfer, assertTransferChecks, assertTransferEventChecks, assertTransferPrefKey, assertTransferSlot, consentedLearnerSlot, finiteCap, isEndedTransfer, isOpenTransfer, teacherSlotsOf } from './transfer-rules';
 import {
   learnerRateKeys,
   mergeEntitlement,
+  type BillingEventInput,
+  type EntitlementMerge,
   type ConsentResetReason,
   type Db,
   type ExecuteTransferInput,
@@ -22,6 +25,7 @@ import {
 const deviceKey = (learnerId: string, deviceId: string): string => `${learnerId}|${deviceId}`;
 const membershipKey = (spaceId: string, kind: MemberKind, memberId: string): string => `${spaceId}|${kind}|${memberId}`;
 const entitlementKey = (kind: string, subjectId: string, planKey: string): string => `${kind}|${subjectId}|${planKey}`;
+const billingEventKey = (provider: string, providerRef: string, kind: string): string => `${provider}|${providerRef}|${kind}`;
 
 function clone<T>(value: T): T {
   return structuredClone(value);
@@ -58,6 +62,7 @@ export class MemoryDb implements Db {
   private transferPrefs = new Map<string, TransferPrefs>();
   private rateHits: Array<{ id: number; key: string; at: string }> = [];
   private rateHitSeq = 0;
+  private billingEvents = new Map<string, BillingEvent>();
 
   async getAccount(accountId: string): Promise<Account | null> {
     return clone(this.accounts.get(accountId) ?? null);
@@ -166,9 +171,9 @@ export class MemoryDb implements Db {
   async entitlementsFor(subjectKind: Entitlement['subjectKind'], subjectId: string): Promise<Entitlement[]> {
     return clone([...this.entitlements.values()].filter((e) => e.subjectKind === subjectKind && e.subjectId === subjectId));
   }
-  async applyEntitlement(input: EntitlementApply, now: Date): Promise<Entitlement> {
+  async applyEntitlement(input: EntitlementApply, now: Date, merge: EntitlementMerge = 'set'): Promise<Entitlement> {
     const k = entitlementKey(input.subjectKind, input.subjectId, input.planKey);
-    const next = mergeEntitlement(this.entitlements.get(k) ?? null, input, now, () => id('ent'));
+    const next = mergeEntitlement(this.entitlements.get(k) ?? null, input, now, () => id('ent'), merge);
     this.entitlements.set(k, next);
     return clone(next);
   }
@@ -215,23 +220,30 @@ export class MemoryDb implements Db {
     return 'created';
   }
 
-  async consentSlot(transferId: string, consent: TransferSlotConsent, now: Date): Promise<number> {
+  async consentSlot(transferId: string, consent: TransferSlotConsent, now: Date, events: ReadonlyArray<Omit<NewTransferEvent, 'transferId'>> = []): Promise<number> {
     const at = now.toISOString();
+    // The events are checked first (the CHECK of migration 0005), so a bad one changes nothing; they are
+    // written only by the call whose CAS changed the row (one transaction on D1).
+    for (const e of events) assertTransferEventChecks(e);
+    let changed: number;
     if (consent.kind === 'learner') {
       const executeAfter = new Date(now.getTime() + TRANSFER_COOLING_OFF_MS).toISOString();
-      return this.casTransfer(
+      changed = this.casTransfer(
         transferId,
         (t) => isOpenTransfer(t) && t.learner.state === 'pending',
         (t) => ({ ...t, learner: consentedLearnerSlot(consent.record, at), introduce: consent.introduce ?? t.introduce, executeAfter, updatedAt: at }),
       );
+    } else {
+      const slots = teacherSlotsOf(consent);
+      const filled = { state: 'consented' as const, at, accountId: consent.accountId, via: consent.via };
+      changed = this.casTransfer(
+        transferId,
+        (t) => isOpenTransfer(t) && (!slots.source || t.source.state === 'pending') && (!slots.destination || (t.destination.state === 'pending' && t.learner.state === 'consented')),
+        (t) => ({ ...t, source: slots.source ? { ...filled } : t.source, destination: slots.destination ? { ...filled } : t.destination, updatedAt: at }),
+      );
     }
-    const slots = teacherSlotsOf(consent);
-    const filled = { state: 'consented' as const, at, accountId: consent.accountId, via: consent.via };
-    return this.casTransfer(
-      transferId,
-      (t) => isOpenTransfer(t) && (!slots.source || t.source.state === 'pending') && (!slots.destination || (t.destination.state === 'pending' && t.learner.state === 'consented')),
-      (t) => ({ ...t, source: slots.source ? { ...filled } : t.source, destination: slots.destination ? { ...filled } : t.destination, updatedAt: at }),
-    );
+    if (changed === 1) for (const e of events) this.pushTransferEvent({ ...e, transferId });
+    return changed;
   }
 
   async declineSlot(transferId: string, slot: TransferSlot, endReason: TransferEndReason, endActor: TransferEndActor, now: Date, event?: Omit<NewTransferEvent, 'transferId'>): Promise<number> {
@@ -261,12 +273,14 @@ export class MemoryDb implements Db {
     return changed;
   }
 
-  async expireTransfer(transferId: string, now: Date): Promise<number> {
+  async expireTransfer(transferId: string, now: Date, event?: Omit<NewTransferEvent, 'transferId'>): Promise<number> {
     const at = now.toISOString();
-    return this.casTransfer(
-      transferId,
-      (t) => isOpenTransfer(t) && t.expiresAt <= at,
-      (t) => ({ ...t, status: 'expired', endReason: 'expired', endActor: 'system', endedAt: at, updatedAt: at }),
+    return this.endTransfer(transferId, event, () =>
+      this.casTransfer(
+        transferId,
+        (t) => isOpenTransfer(t) && t.expiresAt <= at,
+        (t) => ({ ...t, status: 'expired', endReason: 'expired', endActor: 'system', endedAt: at, updatedAt: at }),
+      ),
     );
   }
 
@@ -449,8 +463,36 @@ export class MemoryDb implements Db {
     this.transferPrefs.set(learnerId, { ...current, [which]: value, updatedAt: now.toISOString() });
   }
 
+  async recordBillingEvent(input: BillingEventInput, now: Date): Promise<BillingEvent> {
+    const row = billingEventFields(input);
+    const k = billingEventKey(row.provider, row.providerRef, row.kind);
+    const stored = this.billingEvents.get(k) ?? { ...row, id: id('bev'), createdAt: now.toISOString() };
+    const next = stored.paymentRef === null && row.paymentRef !== null ? { ...stored, paymentRef: row.paymentRef } : stored;
+    this.billingEvents.set(k, next);
+    return clone(next);
+  }
+  async billingEventsFor(subjectKind: BillingEvent['subjectKind'], subjectId: string, limit: number): Promise<BillingEvent[]> {
+    assertBillingLimit(limit);
+    return clone([...this.billingEvents.values()].filter((e) => e.subjectKind === subjectKind && e.subjectId === subjectId).sort(newestBillingEvent).slice(0, limit));
+  }
+  async billingEventById(eventId: string): Promise<BillingEvent | null> {
+    return clone([...this.billingEvents.values()].find((e) => e.id === eventId) ?? null);
+  }
+  async billingEventByRef(provider: BillingEvent['provider'], providerRef: string, kind?: BillingEventKind): Promise<BillingEvent | null> {
+    const rows = [...this.billingEvents.values()].filter((e) => e.provider === provider && e.providerRef === providerRef && (kind === undefined || e.kind === kind));
+    return clone(rows.sort(newestBillingEvent)[0] ?? null);
+  }
+  async billingEventByPaymentRef(paymentRef: string): Promise<BillingEvent | null> {
+    return clone([...this.billingEvents.values()].filter((e) => e.paymentRef === paymentRef && REFUNDABLE_BILLING_KINDS.includes(e.kind)).sort(newestBillingEvent)[0] ?? null);
+  }
+  async entitlementByProviderRef(provider: Entitlement['provider'], providerRef: string): Promise<Entitlement | null> {
+    const rows = [...this.entitlements.values()].filter((e) => e.provider === provider && e.providerRef === providerRef);
+    rows.sort((a, b) => (a.updatedAt === b.updatedAt ? (a.id < b.id ? 1 : a.id > b.id ? -1 : 0) : a.updatedAt < b.updatedAt ? 1 : -1));
+    return clone(rows[0] ?? null);
+  }
+
   async reset(): Promise<void> {
-    for (const m of [this.accounts, this.learners, this.devices, this.snapshots, this.spaces, this.memberships, this.plans, this.relinks, this.entitlements, this.waitlist, this.transfers, this.transferPrefs]) m.clear();
+    for (const m of [this.accounts, this.learners, this.devices, this.snapshots, this.spaces, this.memberships, this.plans, this.relinks, this.entitlements, this.waitlist, this.transfers, this.transferPrefs, this.billingEvents]) m.clear();
     this.transferEventRows = [];
     this.rateHits = [];
   }
