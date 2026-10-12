@@ -7,6 +7,7 @@ vi.mock('../../config/flags', () => ({
 const mem = vi.hoisted(() => new Map<string, unknown>());
 vi.mock('../storage', () => ({
   readJson: vi.fn(async (k: string) => mem.get(k) ?? null),
+  readJsonStrict: vi.fn(async (k: string) => mem.get(k) ?? null),
   writeJson: vi.fn(async (k: string, v: unknown) => {
     mem.set(k, v);
   }),
@@ -14,7 +15,7 @@ vi.mock('../storage', () => ({
 
 import { flags } from '../../config/flags';
 import { TELEMETRY_QUEUE_CAP } from '../../logic/telemetry/queue';
-import { writeJson } from '../storage';
+import { readJson, readJsonStrict, writeJson } from '../storage';
 import { addTelemetryListener, flushQueue, track } from '../telemetry';
 
 const ORIGINAL_FETCH = globalThis.fetch;
@@ -103,6 +104,10 @@ describe('track', () => {
 describe('offline queue (F-PWA-001 §3.2)', () => {
   beforeEach(() => {
     mem.clear();
+    // Drop any one-off read failure a test queued but did not use.
+    const fromMem = async (k: string): Promise<unknown> => mem.get(k) ?? null;
+    vi.mocked(readJson).mockReset().mockImplementation(fromMem as typeof readJson);
+    vi.mocked(readJsonStrict).mockReset().mockImplementation(fromMem as typeof readJsonStrict);
     flags.telemetryEnabled = true;
     flags.telemetryNetwork = true;
   });
@@ -165,18 +170,31 @@ describe('offline queue (F-PWA-001 §3.2)', () => {
       expect(queue.map((e) => e.payload.i)).toEqual(batch.map((_, i) => i));
     });
 
+    /**
+     * A fetch that starts a late track() on its first call and only answers
+     * once that event is in storage, so the flush's final write always runs
+     * after the late event was queued (no reliance on microtask order).
+     */
+    const holdUntilLateQueued = (status: number): ReturnType<typeof vi.fn<typeof fetch>> => {
+      let started = false;
+      return vi.fn<typeof fetch>(async () => {
+        if (!started) {
+          started = true;
+          void track({ name: 'quest.complete' }, { endpoint, fetchImpl: offline });
+          await vi.waitFor(() => {
+            expect(names()).toContain('quest.complete');
+          });
+        }
+        return new Response(null, { status });
+      });
+    };
+
     it('keeps an event queued while a flush is sending', async () => {
       mem.set('telemetry:queue', [
         { name: 'a', at: '1' },
         { name: 'b', at: '2' },
       ]);
-      let late: Promise<boolean> | null = null;
-      const online = vi.fn<typeof fetch>(async () => {
-        late ??= track({ name: 'quest.complete' }, { endpoint, fetchImpl: offline });
-        return new Response(null, { status: 201 });
-      });
-      expect(await flushQueue({ endpoint, fetchImpl: online })).toBe(2);
-      await late;
+      expect(await flushQueue({ endpoint, fetchImpl: holdUntilLateQueued(201) })).toBe(2);
       expect(names()).toEqual(['quest.complete']);
     });
 
@@ -185,30 +203,71 @@ describe('offline queue (F-PWA-001 §3.2)', () => {
         { name: 'a', at: '1' },
         { name: 'b', at: '2' },
       ]);
-      let late: Promise<boolean> | null = null;
-      const down = vi.fn<typeof fetch>(async () => {
-        late ??= track({ name: 'quest.complete' }, { endpoint, fetchImpl: offline });
-        return new Response(null, { status: 503 });
-      });
-      expect(await flushQueue({ endpoint, fetchImpl: down })).toBe(0);
-      await late;
+      expect(await flushQueue({ endpoint, fetchImpl: holdUntilLateQueued(503) })).toBe(0);
       expect(names()).toEqual(['a', 'b', 'quest.complete']);
     });
 
     it('keeps the newest events within the cap when a failed flush and new events overflow it', async () => {
       const full = Array.from({ length: TELEMETRY_QUEUE_CAP }, (_, i) => ({ name: `old${i}`, at: String(i) }));
       mem.set('telemetry:queue', full);
-      let late: Promise<boolean> | null = null;
-      const down = vi.fn<typeof fetch>(async () => {
-        late ??= track({ name: 'quest.complete' }, { endpoint, fetchImpl: offline });
-        return new Response(null, { status: 503 });
-      });
-      await flushQueue({ endpoint, fetchImpl: down });
-      await late;
+      await flushQueue({ endpoint, fetchImpl: holdUntilLateQueued(503) });
       const kept = names();
       expect(kept).toHaveLength(TELEMETRY_QUEUE_CAP);
       expect(kept[0]).toBe('old1');
       expect(kept.at(-1)).toBe('quest.complete');
+    });
+
+    it('keeps an event another tab queues while this tab flushes (shared IndexedDB)', async () => {
+      mem.set('telemetry:queue', [{ name: 'a', at: '1', id: 'a1' }]);
+      const online = vi.fn<typeof fetch>(async () => {
+        // Tab B appends straight to storage: this tab never counted it.
+        const stored = (mem.get('telemetry:queue') as unknown[] | undefined) ?? [];
+        if (stored.length === 1) mem.set('telemetry:queue', [...stored, { name: 'other.tab', at: '2', id: 'b1' }]);
+        return new Response(null, { status: 201 });
+      });
+      expect(await flushQueue({ endpoint, fetchImpl: online })).toBe(1);
+      expect(names()).toEqual(['other.tab']);
+    });
+
+    it('never sends the local event id over the wire', async () => {
+      mem.set('telemetry:queue', [{ name: 'a', at: '2026-10-11T00:00:00.000Z', id: 'a1' }]);
+      const online = vi.fn<typeof fetch>(async () => new Response(null, { status: 201 }));
+      await flushQueue({ endpoint, fetchImpl: online });
+      expect(JSON.parse(String(online.mock.calls[0]?.[1]?.body))).toEqual({ name: 'a', at: '2026-10-11T00:00:00.000Z' });
+    });
+
+    it('a queue read that fails never overwrites the stored events', async () => {
+      mem.set('telemetry:queue', [{ name: 'a', at: '1' }, { name: 'b', at: '2' }]);
+      // The lenient read reports a failure as "nothing stored".
+      vi.mocked(readJson).mockResolvedValueOnce(null);
+      vi.mocked(readJsonStrict).mockRejectedValueOnce(new Error('idb'));
+      await track({ name: 'quest.complete' }, { endpoint, fetchImpl: offline });
+      expect(names()).toEqual(['a', 'b']);
+    });
+
+    it('a failed read at the end of a flush leaves the stored queue as is instead of dropping late events', async () => {
+      mem.set('telemetry:queue', [{ name: 'a', at: '1', id: 'a1' }]);
+      const online = vi.fn<typeof fetch>(async () => {
+        mem.set('telemetry:queue', [{ name: 'a', at: '1', id: 'a1' }, { name: 'late', at: '2', id: 'l1' }]);
+        // The end-of-flush read is the next one.
+        vi.mocked(readJson).mockResolvedValueOnce(null);
+        vi.mocked(readJsonStrict).mockRejectedValueOnce(new Error('idb'));
+        return new Response(null, { status: 201 });
+      });
+      await flushQueue({ endpoint, fetchImpl: online });
+      expect(names()).toEqual(['a', 'late']);
+    });
+
+    it('takes the cross-tab queue lock around each read-modify-write when the browser has Web Locks', async () => {
+      const request = vi.fn(async (_name: string, cb: () => Promise<unknown>) => cb());
+      vi.stubGlobal('navigator', { locks: { request } });
+      try {
+        await track({ name: 'quest.complete' }, { endpoint, fetchImpl: offline });
+      } finally {
+        vi.unstubAllGlobals();
+      }
+      expect(request).toHaveBeenCalledWith('hr:telemetry:queue', expect.any(Function));
+      expect(names()).toEqual(['quest.complete']);
     });
 
     it('a storage failure never blocks the events queued after it', async () => {
