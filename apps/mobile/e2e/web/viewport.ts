@@ -47,3 +47,37 @@ export async function expectNoHorizontalOverflow(page: Page, what = 'horizontal 
   }));
   expect(scrollWidth, what).toBeLessThanOrEqual(innerWidth);
 }
+
+/**
+ * Runs in the page (`page.evaluate(controlsPastEdge)`), so it stays self-contained: every visible control
+ * whose box crosses the left or right side of the window, named (`role-or-tag "name" left..right`). RN-web
+ * screens sit in vertical ScrollViews, which clip a too-wide child instead of widening the document, so a
+ * long label pushing a button off screen never shows in `expectNoHorizontalOverflow`; this catches it.
+ * Controls inside a horizontal scroller (meant to be scrolled sideways), `aria-hidden` subtrees and the
+ * PWA overlay layer (the same one `measureTargets` leaves out) are skipped.
+ */
+export function controlsPastEdge(): string[] {
+  const OVERLAYS = '[data-testid="pwa-banners"], [data-testid="install-guide"], [data-testid="portrait-guard"]';
+  const selector =
+    'button, a[href], input, [role="button"], [role="link"], [role="checkbox"], [role="switch"], [role="radio"], [role="tab"], [role="menuitem"]';
+  const limit = window.innerWidth;
+  const inSideScroller = (el: Element): boolean => {
+    for (let node = el.parentElement; node && node !== document.body; node = node.parentElement) {
+      const overflowX = getComputedStyle(node).overflowX;
+      if ((overflowX === 'auto' || overflowX === 'scroll') && node.scrollWidth > node.clientWidth) return true;
+    }
+    return false;
+  };
+  const out: string[] = [];
+  for (const el of Array.from(document.querySelectorAll(selector))) {
+    if (el.closest('[aria-hidden="true"]') || el.closest(OVERLAYS)) continue;
+    if (typeof el.checkVisibility === 'function' && !el.checkVisibility({ checkOpacity: false, checkVisibilityCSS: true })) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 && r.height === 0) continue;
+    if (r.left >= -0.5 && r.right <= limit + 0.5) continue;
+    if (inSideScroller(el)) continue;
+    const name = (el.getAttribute('aria-label') ?? (el as HTMLElement).innerText ?? '').replace(/\s+/g, ' ').trim().slice(0, 40);
+    out.push(`${el.getAttribute('role') ?? el.tagName.toLowerCase()} "${name}" ${Math.round(r.left)}..${Math.round(r.right)}`);
+  }
+  return out;
+}
