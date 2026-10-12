@@ -89,6 +89,7 @@ export const CULTURE_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
 
   // bowl, red-orange sauce, white rice-cake pieces, a little spring onion, steam
   'culture-tteokbokki': [
+    groundShadow(50, 86, 34),
     path('M 38 30 Q 35 25 38 20 Q 41 15 38 10', { s: 'border.strong', sw: 3 }),
     path('M 56 30 Q 53 25 56 20 Q 59 15 56 10', { s: 'border.strong', sw: 3 }),
     path('M 12 54 Q 14 84 50 84 Q 86 84 88 54 Z', { f: 'surface.sunken', ...INK }),

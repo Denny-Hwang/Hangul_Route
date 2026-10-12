@@ -128,20 +128,20 @@ export const SPORT_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
     path('M 22 74 Q 28 70 34 74 M 56 76 Q 62 72 68 76', { s: 'surface.paper', sw: 2 }),
   ],
 
-  // figure in a white uniform (dobok), black belt, a high side kick
+  // figure in a white uniform (dobok), black belt, a high side kick (the foot at head height), barefoot
   'sport-taekwondo': [
     groundShadow(42, 87, 18),
     limb([44, 60], [40, 84], 10, { f: 'vocab.white', ...INK }),
-    limb([50, 58], [83, 44], 10, { f: 'vocab.white', ...INK }),
-    ellipse(86, 43, 5, 4, { f: 'surface.paper', ...INK }),
-    ellipse(39, 86, 5.5, 3, INK_FILL),
+    limb([50, 58], [78, 31], 10, { f: 'vocab.white', ...INK }),
+    ellipse(81, 28, 5, 4, { f: 'surface.paper', ...INK }),
+    ellipse(39, 86, 5.5, 3, { f: 'surface.paper', ...INK }),
     limb([38, 40], [30, 52], 8, { f: 'vocab.white', ...INK }),
     poly(pts(37, 36, 55, 36, 55, 61, 39, 61), { f: 'vocab.white', ...INK }, 4),
     path('M 41 36 L 46 48 L 51 36', DETAIL),
     poly(pts(38, 55, 56, 55, 56, 60, 38, 60), INK_FILL, 1),
     path('M 47 60 L 44 68 M 48 60 L 51 68', INK),
-    limb([54, 39], [64, 32], 8, { f: 'vocab.white', ...INK }),
-    hand([66, 31], 4),
+    limb([54, 39], [59, 32], 8, { f: 'vocab.white', ...INK }),
+    hand([60, 30], 4),
     hand([29, 54], 4),
     ...head(45, 24, 10, 'text.secondary'),
   ],

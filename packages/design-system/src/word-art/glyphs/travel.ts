@@ -120,14 +120,14 @@ export const TRAVEL_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
     circle(68, 36, 4, { f: 'surface.paper', ...DETAIL }),
   ],
 
-  // blue booklet, circle emblem, no letters
+  // blue booklet with a globe emblem (a meridian and the equator), no letters:
+  // no ring over a bar, which would read as the syllable 으 (C10)
   'travel-passport': [
     groundShadow(52, 87, 26),
     rect(31, 17, 44, 68, 5, { f: 'surface.paper', ...INK }),
     rect(26, 14, 44, 70, 5, { f: 'vocab.blue', ...INK }),
-    circle(48, 42, 11, { f: 'hoya.fur', ...DETAIL }),
-    circle(48, 42, 5.5, { f: 'vocab.blue', ...DETAIL }),
-    rect(38, 62, 20, 5, 2.5, { f: 'hoya.fur', ...DETAIL }),
+    circle(48, 47, 13, { f: 'hoya.fur', ...DETAIL }),
+    path('M 48 34 A 6 13 0 0 1 48 60 A 6 13 0 0 1 48 34 M 35 47 H 61', DETAIL),
   ],
 
   // ticket with a notch and a dashed line: a stub on the right, a star on the face
