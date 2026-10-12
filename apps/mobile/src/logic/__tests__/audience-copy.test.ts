@@ -51,7 +51,7 @@ describe('audienceCopy: neutral strings for both audiences (F-LEARN-001 §3.9)',
       });
       it('spaces and join codes', () => {
         expect(c.spacesNoClass).toBe('Not in a class yet. Got a code from a teacher or your family?');
-        expect(c.joinCodeFull).toBe("You're already in three classes. Leave one in Settings first.");
+        expect(c.joinCodeFull).toBe("You're already in three classes. Leave one under Classes & family in your Profile first.");
         expect(c.joinCodeNotForLearners).toBe("That code isn't for joining as a learner. Ask for a class code.");
       });
       it('paywall', () => {

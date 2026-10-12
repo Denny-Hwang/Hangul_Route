@@ -24,7 +24,7 @@ describe('caregiver.audience (the audience-copy block)', () => {
     expect(s.restoreSignInLabel).toBe('Sign in');
     expect(s.restoreCardsBack).toBe('Your cards come back with your rescue code.');
     expect(s.spacesNoClass).toBe('Not in a class yet. Got a code from a teacher or your family?');
-    expect(s.joinCodeFull).toBe("You're already in three classes. Leave one in Settings first.");
+    expect(s.joinCodeFull).toBe("You're already in three classes. Leave one under Classes & family in your Profile first.");
     expect(s.joinCodeNotForLearners).toBe("That code isn't for joining as a learner. Ask for a class code.");
     expect(s.promoHint).toBe('Have a promo or referral code? Enter it on the web console.');
     expect(s.paywallBuyOnWeb).toBe(

@@ -68,7 +68,7 @@ describe('siteMetadata (UF-01)', () => {
 
 describe('landing copy (UF-02)', () => {
   it('tagline speaks to any age', () => {
-    expect(SITE_TAGLINE).toBe('Learn Hangul from zero — at any age.');
+    expect(SITE_TAGLINE).toBe('Learn Hangul from zero, at any age.');
   });
 
   it('audience badges are all-ages, with no age range', () => {

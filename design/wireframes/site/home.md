@@ -33,7 +33,7 @@ Phone (one column; about 3.5 screens in total, budget 2,900 px at 375 x 812):
 |  "Parent or teacher? Find your page" v  <- in-page link        -> #who
 |  three short facts (one line)        |     browser · nothing to install · the app works offline
 |                                      |
-|        [HOYA ART]  (bubble)          |  <- decorative, taught letter in the bubble
+|        [HOYA ART]  (bubble)          |  <- decorative, taught letter and its romanization in the bubble
 +--------------------------------------+  <- end of first screen at 375 x 812
 | H2 Who is it for?           (#who)   |  <- L1 persona chooser
 | +----------------------------------+ |

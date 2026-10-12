@@ -33,7 +33,7 @@ Phone (4 sections with every claim off, 5 with the Learning Route claim on):
 |  - Listen  one line                  |
 |  - Write   one line (tracing)        |  (no speaking line, ever)
 +--------------------------------------+
-| H2 How a quest works                 |
+| H2 How most quests work              |
 |  1 Discover · one line               |
 |  2 Play     · one line               |
 |  3 Check    · one line (amber, never red)

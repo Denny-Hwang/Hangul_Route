@@ -42,7 +42,7 @@ export const consoleMsgs = {
   tryAgain: 'Try again',
   noSpaces: "You're not in any space yet.",
   createSpace: 'Create a space',
-  writeOnBoard: 'Write it on the board. Students join from Settings → Classes & family → Join a class.',
+  writeOnBoard: 'Write it on the board. Students join from Profile → Classes & family → Join a class.',
   oldCodeStops: 'The old code stops working the moment a new one is made.',
   notSyncedYet: 'not synced yet',
   comingWithPlans: 'Coming with plans',

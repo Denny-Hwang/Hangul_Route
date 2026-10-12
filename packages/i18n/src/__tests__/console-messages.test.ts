@@ -21,7 +21,7 @@ describe('console: the former COPY, keys and wording unchanged', () => {
   it('keeps every flat COPY key with its English text', () => {
     expect(c.kidsNoAccount).toBe("Kids don't need an account — they join with a code.");
     expect(c.tryAgain).toBe('Try again');
-    expect(c.writeOnBoard).toBe('Write it on the board. Students join from Settings → Classes & family → Join a class.');
+    expect(c.writeOnBoard).toBe('Write it on the board. Students join from Profile → Classes & family → Join a class.');
     expect(c.notSyncedYet).toBe('not synced yet');
     expect(c.readoutHint).toBe('Most recent activity first — not a ranking. "Not ready yet" means the learner has not unlocked that item.');
     expect(c.relinkCardsComeBack).toBe(
