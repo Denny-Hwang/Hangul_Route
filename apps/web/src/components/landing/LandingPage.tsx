@@ -112,13 +112,13 @@ export function LandingPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }):
             {t.nav.games}
           </Link>
           <Link href="#parents" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
-            {t.nav.parents}
+            {t.home.who.items.parents.linkLabel}
           </Link>
           <a href="/parent" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
             {t.nav.dashboard}
           </a>
           <a href="/teach" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
-            {t.nav.teachers}
+            {t.home.who.items.teachers.linkLabel}
           </a>
         </nav>
       </header>

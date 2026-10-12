@@ -220,6 +220,29 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
     }
   });
 
+  // F-SITE-002 §5 (PR S-3): the site header, the persona cards and the persona primary actions. Room for es / ko
+  // growth; "Sign in as a parent" must fit one line at 320 px.
+  describe('site budgets (F-SITE-002 S-3)', () => {
+    const SITE_BUDGETS: ReadonlyArray<[label: string, max: number, paths: readonly string[]]> = [
+      ['nav label', 14, ['landing.nav.learners', 'landing.nav.parents', 'landing.nav.teachers', 'landing.nav.signIn', 'landing.nav.start']],
+      ['persona card body', 90, ['landing.home.who.items.learners.body', 'landing.home.who.items.parents.body', 'landing.home.who.items.teachers.body']],
+      [
+        'persona primary action',
+        24,
+        ['landing.home.hero.start', 'landing.persona.parents.signIn', 'landing.persona.teachers.signIn', 'landing.persona.teachers.tryIt'],
+      ],
+    ];
+    for (const locale of LOCALES) {
+      for (const [label, max, paths] of SITE_BUDGETS) {
+        it.each(paths)(`${locale}: %s fits the ${label} budget (${max})`, (path) => {
+          const value = lookup(getMessages(locale), path);
+          expect(typeof value, path).toBe('string');
+          expect(String(value).length, String(value)).toBeLessThanOrEqual(max);
+        });
+      }
+    }
+  });
+
   it('budgets the fixed words of the plan button, which also holds a user-entered title', () => {
     // `console.space.openPlan.label` is not a `cta` leaf because the plan title is user data;
     // its own words leave room for a short title inside the cta budget, and the button wraps.

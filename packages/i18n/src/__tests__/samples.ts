@@ -145,6 +145,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'caregiver.join.done.already': [['Sunday Class A']],
   'landing.hero.lead': [['x']],
   'landing.hero.bubble': [['x']],
+  'landing.home.hero.bubble': [['x']],
+  'landing.persona.learners.cards.seeAll': [[24], [1]],
   'landing.how.steps.collect.body': [[24], [1]],
   'landing.cards.title': [[24], [1]],
   'landing.cards.body': [[24, 10, 8, 4, 2], [1, 1, 0, 0, 0]],

@@ -21,6 +21,19 @@
  */
 import { plural } from '../../plural';
 
+/**
+ * Two answers the old landing's questions block and the learners page (F-SITE-002 §3.4) share word for word.
+ * One object each, so the copies cannot drift; S-6 removes `faq` and these stay with `persona.learners.faq`.
+ */
+const FAQ_ADULT = {
+  q: 'I’m an adult beginner. Will it feel too young?',
+  a: 'No. Stage 1 teaches exactly what any beginner needs first — the letters and their sounds — with no baby talk. Hoya is friendly, and the culture cards are worth collecting at any age.',
+} as const;
+const FAQ_KOREAN = {
+  q: 'Do I need to know any Korean?',
+  a: 'No — starting from zero is what we built it for. Instructions are in plain, simple English. Korean only appears as the thing being learned.',
+} as const;
+
 /** Values the legal pages pass to the few sentences that name the contact address or the level labels. */
 export interface LegalValues {
   email: string;
@@ -37,20 +50,251 @@ export const landing = {
     keywords: ['learn Hangul', 'Korean alphabet', 'learn Korean', 'Korean for beginners', 'heritage Korean', 'K-culture learning', 'Hoya'],
     ogDescription: 'Heritage Journey + Korean culture cards + Hoya the tiger. Start Korean from zero, at any age. Stage 1 is free.',
     twitterDescription: 'Heritage Journey + Korean culture cards + Hoya the tiger. Start Korean from zero, at any age.',
+    /** Per-page `<title>` and description of the three persona pages (F-SITE-002 §3.12, S-4a / S-4b). No typed counts. */
+    pages: {
+      learners: {
+        title: 'For learners — Hangul Route',
+        description: 'Learn to read, hear and write Hangul from zero in five-minute quests with Hoya the tiger, and collect Korean culture cards. No ads.',
+      },
+      parents: {
+        title: 'For parents and caregivers — Hangul Route',
+        description: "Short, kind Hangul lessons with no ads and a grown-up gate. Create a free family space and see each learner's week.",
+      },
+      teachers: {
+        title: 'For teachers — Hangul Route',
+        description: 'Students join with a class code, with no student emails or accounts. Plan the week and see who practised. Never a ranking.',
+      },
+    },
   },
   /** The brand in the header and footer; the app name stays "Hangul Route" in every locale (§3.4 rule 6). */
   brand: {
     name: 'Hangul Route',
     mark: 'HR',
   },
+  /**
+   * The site header (F-SITE-002 §3.2). `learners`, `parents`, `teachers`, `signIn`, `start`, `skip` and `current`
+   * are the new header's; `playNow`, `cards`, `games` and `dashboard` are the old landing header's until S-6.
+   * `current` is the visually hidden suffix of the current page's link.
+   */
   nav: {
     label: 'Main',
     playNow: { cta: 'Play now' },
     cards: 'Cards',
     games: 'Games',
-    parents: 'For parents',
+    learners: 'Learners',
+    parents: 'Parents',
     dashboard: 'Dashboard',
-    teachers: 'For teachers',
+    teachers: 'Teachers',
+    signIn: 'Sign in',
+    start: 'Start learning',
+    skip: 'Skip to content',
+    current: '(current page)',
+  },
+  /**
+   * The layered home `/` (F-SITE-002 §3.3, appendix B.1). `hero.title` is the tagline; the taught letter in Hoya's
+   * bubble is passed in. `how.routeBody` replaces step 3's line only while the `learningRoute` claim is on.
+   * The promises are titles only; their explanations live on the persona pages.
+   */
+  home: {
+    hero: {
+      title: 'Learn Hangul from zero, at any age.',
+      lead: 'Short, playful quests teach you to read, hear and write the Korean alphabet, with Hoya the tiger as your guide.',
+      start: 'Start learning',
+      grownUps: 'Parent or teacher? Find your page',
+      facts: 'Runs in your browser · Nothing to install · The app works offline after your first visit',
+      bubble: (letter: string) => `Annyeong! Let's meet ${letter}.`,
+    },
+    who: {
+      title: 'Who is it for?',
+      items: {
+        learners: {
+          title: 'Learners',
+          body: 'Five-minute quests, a guide who never scolds, and Korean culture cards to collect.',
+          linkLabel: 'For learners',
+        },
+        parents: {
+          title: 'Parents and caregivers',
+          body: 'See what your learner practises, with a grown-up gate and no ads.',
+          linkLabel: 'For parents',
+        },
+        teachers: {
+          title: 'Teachers',
+          body: 'Students join with a class code. No student emails, no accounts.',
+          linkLabel: 'For teachers',
+        },
+      },
+    },
+    how: {
+      title: 'How it works',
+      steps: {
+        start: { title: 'Open the app', body: 'Choose who is learning and begin.' },
+        quests: { title: 'Learn in five-minute quests', body: 'Letters, sounds and first words, with sound and pictures on every screen.' },
+        collect: { title: 'Collect and keep going', body: 'Earn Korean culture cards. Your progress stays on your device.' },
+      },
+      routeBody: 'Earn Korean culture cards and see your whole Learning Route: where you are and what comes next.',
+    },
+    promises: {
+      /** The section's visually hidden heading. */
+      label: 'Our promises',
+      items: { ads: 'No ads, ever', safety: 'Child safety first', noRed: 'No red marks' },
+    },
+    news: {
+      title: 'Get the launch news',
+      body: "Leave your email and we'll send you the launch news. Nothing else.",
+    },
+  },
+  /**
+   * The only cost words on the site (F-SITE-002 §3.9, OD-6, OD-7): never a price. The page picks one `free` and one
+   * `paid` line from the `freePlan` and `paidPlans` claims; `firstDays` follows F-ENT-003 OD-8 ("Day 1 and Day 2
+   * of the route", never "your first two days").
+   */
+  plans: {
+    title: 'What does it cost?',
+    free: {
+      stage1: 'Stage 1 is free. More stages and classroom plans are coming.',
+      firstDays: 'Start free with Day 1 and Day 2 of the route and a few word topics. Lessons you finish stay open.',
+    },
+    paid: {
+      coming: 'Plans for families and classes are coming.',
+      inApp: 'Plans for families and classes are at app.hangulroute.com.',
+    },
+    managedInApp: 'Plans and billing are managed at app.hangulroute.com after you sign in.',
+  },
+  /**
+   * The three persona pages (F-SITE-002 §3.4 to §3.6, appendix B.2 to B.4). Lines named after a claim (`route`,
+   * `reports`, `notes`, `browse`, `lecture`) render only while that claim is on (§3.9); the `browse` lines also need
+   * paid plans on sale. The learners page shows no age and no price; the grown-up pages never show a price or a ranking.
+   */
+  persona: {
+    learners: {
+      title: 'For learners',
+      lead: 'Learn to read, hear and write Hangul, one five-minute quest at a time.',
+      learn: {
+        title: 'What you learn first',
+        body: 'Stage 1 is the Korean alphabet: the letters, their sounds and how they build syllables.',
+        /** Reading, listening and writing only: no speaking line (owner decision 2026-10-10). */
+        bullets: { read: 'Read letters and syllables', listen: 'Listen and match sounds', write: 'Write letters by tracing them' },
+      },
+      quest: {
+        title: 'How a quest works',
+        bullets: {
+          discover: 'Discover: see and hear a new letter.',
+          play: 'Play: short mini-games that use it.',
+          check: 'Check: a gentle round. Wrong answers get an amber nudge, never red.',
+        },
+        hoya: 'Hoya the tiger guides every quest and never says “wrong.”',
+        gamesFold: 'See the mini-games',
+      },
+      cards: {
+        title: 'Collect Korean culture',
+        body: 'Every letter you learn earns a card: a piece of Korean food, art or everyday life.',
+        /** The fold's summary; `cards` is `stage1Cards.length`, never a typed number. */
+        seeAll: (cards: number) => plural('en', cards, { one: `See the ${cards} Stage 1 card`, other: `See all ${cards} Stage 1 cards` }),
+      },
+      route: {
+        title: 'Your Learning Route',
+        body: 'One map shows where you started, where you are and what comes next.',
+      },
+      /** Folded questions, in page order. The join-code answer names the learner app's own labels. */
+      faq: {
+        signIn: {
+          q: 'Is there a sign-in for learners?',
+          a: 'No email or password needed. Open the app and choose your profile, or enter your class or family code. Moving to a new device? Use your Rescue Code.',
+        },
+        code: {
+          q: 'I have a join code. Where do I enter it?',
+          a: 'In the app: open Profiles & settings, then Classes & family, then Join a class.',
+        },
+        offline: {
+          q: 'Does it work offline?',
+          a: 'On most devices, yes: after your first visit the app opens without a connection. Letter sounds may need a Korean voice installed on your device.',
+        },
+        adult: FAQ_ADULT,
+        korean: FAQ_KOREAN,
+      },
+    },
+    parents: {
+      title: 'For parents and caregivers',
+      lead: "For parents, grandparents and every caregiver: short, kind lessons that keep your learner's data private.",
+      signIn: 'Sign in as a parent',
+      learn: {
+        title: 'What they learn',
+        body: 'The Korean alphabet first: reading, listening and writing, in five-minute quests.',
+        link: 'What learners do',
+      },
+      safe: {
+        title: 'Safe by design',
+        bullets: {
+          ads: 'No ads, and no data sold.',
+          /** True for class and family joins too (F-SPACE-001 §3.5); content and safety review in S-3. */
+          localFirst:
+            'Learning data stays on the device until a grown-up signs in or the learner joins a class or family with a code. Then only a short progress summary is shared with that space.',
+          gate: 'A grown-up gate guards anything that costs money or deletes data.',
+          siblings: 'Siblings can share a device. Each learner keeps their own stars and cards.',
+        },
+      },
+      follow: {
+        title: 'Follow along',
+        /** True today on the console's family space. */
+        body: "Create a free family space, share its code, and see each learner's week: time practised, quests done and letters to revisit together.",
+        reports: 'Reports for today, this week, this month and all time show what went well and what to practise next.',
+        route: "Open each learner's Learning Route to see where they are and what comes next.",
+        notes: 'Send a short note of encouragement that your learner sees in the app.',
+        browse: 'With a family plan, browse every lesson exactly as your learner sees it.',
+      },
+      /** "What can I see?" is answered by `follow.body`, plus `follow.reports` while its claim is on. */
+      faq: {
+        account: { q: 'Does my learner need an account?', a: 'No. Learners never need an email or a password.' },
+        learnAlong: { q: 'Can I learn alongside them?', a: 'Yes. Learning Korean yourself? Play the same quests.' },
+        whatSee: { q: 'What can I see?' },
+      },
+    },
+    teachers: {
+      title: 'For teachers',
+      lead: 'Students join with a code, you plan the week, and everyone learns at their own pace.',
+      signIn: 'Sign in as a teacher',
+      tryIt: 'Try it as a learner',
+      setup: {
+        title: 'Set up in minutes',
+        steps: {
+          space: 'Sign in and create a class space.',
+          code: 'Share the class code. Students enter it in the app; no student emails or accounts.',
+          devices: 'Students learn on any device with a browser.',
+        },
+      },
+      plan: {
+        title: 'Plan and assign',
+        bullets: {
+          pick: "Pick quests for the week. They appear on each student's homework list.",
+          planner: 'Or let the planner build a term route from your class level and rhythm.',
+        },
+      },
+      class: {
+        title: 'See how the class is doing',
+        /** True today (the weekly roll-up). */
+        body: 'A weekly view shows who practised and which letters to revisit together. Never a ranking.',
+        reports: 'Reports for each student and statistics for the whole class, by day, week, month or all time. Never a ranking.',
+        route: "Open each student's Learning Route to see where they are and what comes next.",
+        notes: 'Send students a short note of encouragement.',
+        browse: 'With a class or school plan, preview every lesson exactly as students see it.',
+        lecture: 'Teach from the front on a projector or TV.',
+      },
+      privacy: {
+        title: 'Privacy for classes',
+        bullets: { initials: 'Show initials only on the class list.', ads: 'No ads, and no data sold.' },
+      },
+      faq: {
+        students: { q: 'Do students need accounts?', a: 'No. They join with the class code inside the app.' },
+        ranking: { q: 'Is there a leaderboard?', a: 'No. Hangul Route never ranks students against each other.' },
+        try: { q: 'Can I try it first?', a: 'Yes. Open the app and play the first quests as a learner.' },
+      },
+    },
+    /** The one line above each persona page's closing action. */
+    closing: {
+      learners: 'Ready for your first letter?',
+      parents: "See your learner's week in one place.",
+      teachers: 'Bring Hangul to your class this week.',
+    },
   },
   hero: {
     badges: { allAges: 'All ages', heritage: 'Heritage families', fans: 'K-culture fans' },
@@ -156,18 +400,12 @@ export const landing = {
         q: 'Who is Hangul Route for?',
         a: 'Anyone learning Hangul from zero, at any age — kids, teens and adults, heritage families and K-culture fans. Everyone plays the same quests. Stage 1 (Hangul) works for confident readers and pre-readers alike — every screen has voice and visuals.',
       },
-      adult: {
-        q: 'I’m an adult beginner. Will it feel too young?',
-        a: 'No. Stage 1 teaches exactly what any beginner needs first — the letters and their sounds — with no baby talk. Hoya is friendly, and the culture cards are worth collecting at any age.',
-      },
+      adult: FAQ_ADULT,
       different: {
         q: 'What makes this different from other language apps?',
         a: 'Most apps start with vocabulary drills. We start with the alphabet and Korean culture — one collectable heritage card at a time. And no red feedback, ever.',
       },
-      korean: {
-        q: 'Do I need to know any Korean?',
-        a: 'No — starting from zero is what we built it for. Instructions are in plain, simple English. Korean only appears as the thing being learned.',
-      },
+      korean: FAQ_KOREAN,
       session: {
         q: 'How long is a session?',
         a: 'One quest takes about 5 minutes. Most learners do 1–3 quests per sitting. You can stop any time — no streak shame.',
@@ -186,6 +424,9 @@ export const landing = {
     devices: 'Works on iPhone, Android, iPad and Chromebook — any modern browser.',
   },
   footer: {
+    /** The new footer's group headings (F-SITE-002 §3.2); `product`, `cards`, `games`, `dashboard`, `console` go in S-6. */
+    guide: 'Guide',
+    app: 'App',
     product: 'Product',
     cards: 'Heritage cards',
     games: 'Mini-games',
@@ -440,6 +681,12 @@ export const landing = {
         },
       },
     },
+  },
+  /** Links on the exported 404 page (F-SITE-002 §3.7); English document, as today. */
+  notFound: {
+    body: 'We could not find this page.',
+    home: 'Go to the home page',
+    start: 'Start learning',
   },
   /**
    * The "View in <language>" banner on `/` (F-I18N-001 §3.3, PR 11c): shown when the browser prefers a
