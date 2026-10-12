@@ -87,7 +87,7 @@ Profile card entry (every tier; no PIN for Plan details):
 ## Interaction points
 
 - `[ Plan details ]` (Profile, every tier) → this screen, no PIN
-- `[ Open billing ]` (web only) → `profiles/pin-entry` with destination `Billing` (opens directly while a grown-up session is open, or on a self-only device without a PIN) → with F-APP-001's flag on: `openGrownUpArea({ via: 'paywall', target: APP_ROUTES.billing })`, the **same tab**, no "Grown-ups only" lock → `billing/billing-home`; flag off (before F-APP-001 A-6): today's console billing URL in the browser. Failure → one line with the address to type.
+- `[ Open billing ]` (web only) → `profiles/pin-entry` with destination `Billing` (opens directly while a grown-up session is open, or on a self-only device without a PIN) → with F-APP-001's flag on: `openGrownUpArea({ via: 'plan', target: APP_ROUTES.billing })`, the **same tab**, no "Grown-ups only" lock → `billing/billing-home`; flag off (before F-APP-001 A-6): today's console billing URL in the browser. Failure → one line with the address to type.
 - `[[ BACK TO JOURNEY ]]` → `journey/grid`
 - `[< back]` → where the learner came from (`profile/settings`, or the lesson page through the gate)
 
@@ -99,7 +99,7 @@ Exit to: `journey/grid` · `profile/settings` · `profiles/pin-entry` → `billi
 ## States
 
 - **free** (switch off / on), **full route**, **covered**: as drawn.
-- **offline / no cached tier**: the state the tier store gives (7-day grace; free when nothing is cached); nothing claims a purchase failed. Open billing then leads to F-APP-001's grown-up offline page.
+- **offline / no cached tier**: the state the tier store gives (7-day grace; free when nothing is cached); nothing claims a purchase failed. With F-APP-001's flag on, Open billing keeps its label, is disabled and has "Needs the internet" under it as its description, and re-enables online (F-APP-001 sections 3.6 and 3.12, design D18); with the flag off, a press shows "Opening billing needs a connection." and the address line (B-9).
 - **empty** (no active profile): "Your learner" stands in for the name.
 - **error** (billing could not be opened, web): "Open <address> in a browser."
 

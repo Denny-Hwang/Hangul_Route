@@ -62,8 +62,8 @@ describe('Plan screen (screens/paywall/PaywallScreen.tsx)', () => {
     expect(plan).toMatch(/pressableRef=\{openRef\}/);
   });
 
-  it('sends paywall.console_opened only through billingOpenedEvent (codes only, only when billing opened)', () => {
-    expect(plan).toContain('billingOpenedEvent(');
+  it('sends paywall.console_opened only through billingHandOffStep / billingOpenedEvent (codes only, only when billing opened)', () => {
+    expect(plan).toContain('billingHandOffStep(');
     expect(plan).not.toContain("'paywall.console_opened'");
   });
 
@@ -85,10 +85,45 @@ describe('Plan screen (screens/paywall/PaywallScreen.tsx)', () => {
   });
 
   it('F-APP-001 A-7: offline with the entries on, Open billing is disabled with "Needs the internet" (sections 3.6, 3.12)', () => {
-    expect(plan).toMatch(/planOpenBlocked\(grownUpEntriesOn\(flags\.grownUpHomeEnabled, bundleOs\(\)\), online\)/);
+    // The entries are on exactly where billing opens in this tab (web, flag on: billingOpensSameTab).
+    expect(plan).toMatch(/planOpenBlocked\(sameTab, online\)/);
     expect(plan).toContain('disabled={offline}');
     expect(plan).toContain('messages.learner.welcome.grownUps.needsInternet');
     expect(plan).toMatch(/if \(offline\) return;/);
+  });
+});
+
+describe('Plan screen same-tab billing hand-off (F-BILL-002 B-9b)', () => {
+  it('asks platform/billing-handoff whether billing opens in this tab (flag on, web) and passes it to openBilling', () => {
+    expect(plan).toMatch(/import \{[^}]*\bbillingOpensSameTab\b[^}]*\} from '\.\.\/\.\.\/platform\/billing-handoff'/);
+    expect(plan).toMatch(/const sameTab = billingOpensSameTab\(\)/);
+    expect(plan).toContain('openBilling(sameTab)');
+  });
+
+  it('never calls openGrownUpArea itself: the branch lives in billing-handoff', () => {
+    expect(plan).not.toContain('openGrownUpArea');
+    expect(plan).not.toContain("from '../../platform/grown-up-handoff'");
+  });
+
+  it('back from the Billing gate, a same-tab hand-off needs no extra tap (no new tab to be blocked)', () => {
+    expect(plan).toMatch(/pendingBillingStep\(\s*pending\.current,\s*gateOpensDirectlyNow\(\),\s*HAND_OFF_NEEDS_TAP && !sameTab\s*\)/);
+  });
+
+  it('acts on what the hand-off reported through billingHandOffStep, and a stale PIN opens the GrownUpArea PIN screen for billing', () => {
+    expect(plan).toContain('billingHandOffStep(');
+    expect(plan).toMatch(nav('PinEntry', "next:\\s*'Billing'"));
+    expect(plan).toMatch(/navigate\(\s*'PinEntry',\s*grownUpPinParams\(BILLING_HANDOFF\)\s*\)/);
+  });
+
+  it('a second press while a hand-off is under way does nothing (B-9b review: openGrownUpArea waits up to 1 s for its event)', () => {
+    expect(plan).toMatch(/const busy = useRef\(false\)/);
+    expect(plan).toMatch(/if \(busy\.current\) return;\s*busy\.current = true;/);
+    expect(plan).toMatch(/finally\s*\{\s*busy\.current = false;\s*\}/);
+  });
+
+  it('back from the gate while offline with the flag on, the waiting hand-off does not start (the live network state)', () => {
+    expect(plan).toContain("import { isOnline } from '../../platform/online'");
+    expect(plan).toMatch(/if \(planOpenBlocked\(sameTab, isOnline\(\)\)\) return;/);
   });
 });
 

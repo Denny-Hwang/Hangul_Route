@@ -143,6 +143,40 @@ export function billingOpenedEvent(
   return outcome === 'opened' ? { name: 'paywall.console_opened', payload: { state } } : null;
 }
 
+/**
+ * What the Plan screen's Open billing reported (`platform/billing-handoff.ts` `openBilling`):
+ * `browser` is B-9's console page in a new tab (flag off); `same-tab` is B-9b's hand-off to the
+ * grown-up area (`openGrownUpArea`, flag on), which either left (`opened`) or needs a fresh PIN
+ * first (`pin`).
+ */
+export type BillingOpenResult =
+  | { kind: 'browser'; outcome: OpenLinkOutcome; url: string }
+  | { kind: 'same-tab'; outcome: 'opened' | 'pin' };
+
+export interface BillingHandOffStep {
+  /** The line under Open billing, or null. */
+  note: string | null;
+  /** `paywall.console_opened`, for B-9's browser hand-off only. */
+  event: ReturnType<typeof billingOpenedEvent>;
+  /** Open the PIN screen for the grown-up area (destination `GrownUpArea`, verify only). */
+  askPin: boolean;
+}
+
+/**
+ * What the Plan screen does once Open billing reported back (section 4.7). The same-tab hand-off
+ * shows no line and sends no `paywall.console_opened` (`openGrownUpArea` sends
+ * `shell.grown_up_handoff`; TELEMETRY-NAMES-2 keeps `paywall.console_opened` for the flag off);
+ * on `pin` the PIN screen opens and hands off itself after a correct PIN (F-APP-001 section 3.9).
+ */
+export function billingHandOffStep(
+  result: BillingOpenResult,
+  state: PaywallState,
+  messages: Pick<Messages, 'caregiver'>,
+): BillingHandOffStep {
+  if (result.kind === 'same-tab') return { note: null, event: null, askPin: result.outcome === 'pin' };
+  return { note: billingNote(result.outcome, result.url, messages), event: billingOpenedEvent(result.outcome, state), askPin: false };
+}
+
 export interface PlanCardView {
   title: string;
   note: string;
