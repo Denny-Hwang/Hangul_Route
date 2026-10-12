@@ -112,7 +112,7 @@ regular (768 x 1024, portrait)                wide (1180 x 820, landscape)
 ```
 
 - A locked card in the detail pane shows the card silhouette and where it is earned (no paywall, no "Premium" pill; D5).
-- With F-STORY-004 in the build the master pane also holds the section tabs (Cards / Story time / Culture notes / Theme packs) and the Words card above the filter chips; only the Cards section has a detail pane, the other sections show their list at full width and open their screens as today.
+- With F-STORY-004 in the build the master pane also holds the section tabs (Cards / Story time / Culture notes / Words; Words is a section, not a card above the filter chips, F-VOC-003 T1); only the Cards section has a detail pane, the other sections show their list at full width and open their screens as today.
 - On regular the gallery has 3 columns and a tap opens the card screen; on compact 2 columns as today.
 
 ## E. Phone landscape: the soft portrait guard
