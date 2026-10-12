@@ -107,9 +107,14 @@ export interface Db {
   createTransfer(row: StoredTransfer, event: Omit<NewTransferEvent, 'transferId'>): Promise<'created' | 'already_open'>;
   /** Fill pending slot(s) of an open request. The destination slot needs the learner slot consented; a learner consent sets `executeAfter` = now + 48 h. */
   consentSlot(id: string, consent: TransferSlotConsent, now: Date): Promise<number>;
-  /** End an open request as `declined` by one slot. */
-  declineSlot(id: string, slot: TransferSlot, endReason: TransferEndReason, endActor: TransferEndActor, now: Date): Promise<number>;
-  cancelTransfer(id: string, endReason: TransferEndReason, endActor: TransferEndActor, now: Date): Promise<number>;
+  /**
+   * End an open request as `declined` by one slot. With `event` (the deciding account and its `via` / reason,
+   * which the row does not store), the audit row is written in the same transaction, only by the call whose
+   * CAS ended the request: a lost race writes no event, and an event that cannot be written undoes the end.
+   */
+  declineSlot(id: string, slot: TransferSlot, endReason: TransferEndReason, endActor: TransferEndActor, now: Date, event?: Omit<NewTransferEvent, 'transferId'>): Promise<number>;
+  /** End an open request as `cancelled`; `event` as for `declineSlot`. */
+  cancelTransfer(id: string, endReason: TransferEndReason, endActor: TransferEndActor, now: Date, event?: Omit<NewTransferEvent, 'transferId'>): Promise<number>;
   /** `expired` once `expiresAt <= now`. */
   expireTransfer(id: string, now: Date): Promise<number>;
   /** Archived source (section 4.13): a pending source slot becomes `not_required`. */
@@ -129,6 +134,12 @@ export interface Db {
   getTransfer(id: string): Promise<StoredTransfer | null>;
   /** Requests where the space is the source or the destination, newest first. */
   transfersOfSpace(spaceId: string, role: 'source' | 'destination', limit: number): Promise<StoredTransfer[]>;
+  /**
+   * Every open request where one of the spaces is the source (or the destination), newest first. No window:
+   * open rows are bounded by the rules (one per learner, `TRANSFER_MAX_OPEN_PER_DESTINATION`), so a list
+   * reads them apart from its history and newer ended rows can never push one out.
+   */
+  openTransfersOfSpaces(spaceIds: readonly string[], role: 'source' | 'destination'): Promise<StoredTransfer[]>;
   /** Every request of a learner, newest first. */
   transfersOfLearner(learnerId: string): Promise<StoredTransfer[]>;
   openTransferOf(learnerId: string): Promise<StoredTransfer | null>;
@@ -147,7 +158,8 @@ export interface Db {
   lastCooldownDecline(learnerId: string, destSpaceId: string, since: Date): Promise<StoredTransfer | null>;
   countTransfersCreatedBy(accountId: string, since: Date): Promise<number>;
   countTransfersCreatedForLearner(learnerId: string, since: Date): Promise<number>;
-  countOpenTransfersTo(spaceId: string): Promise<number>;
+  /** Open requests to the destination; with `now`, only those whose `expiresAt` is still ahead (an unsettled expired row is not waiting). */
+  countOpenTransfersTo(spaceId: string, now?: Date): Promise<number>;
   /** Oldest first. */
   transferEvents(transferId: string): Promise<TransferEvent[]>;
   addTransferEvent(event: NewTransferEvent): Promise<void>;

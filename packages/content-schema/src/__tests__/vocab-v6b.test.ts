@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -199,7 +199,7 @@ describe.each(TOPICS)('content/vocab/$key.json (F-VOC-001 V-6b)', (spec) => {
   });
 
   it('has no Korean overlay, like the merged topics', () => {
-    expect(() => readJson(`i18n/ko/vocab-${spec.key}.json`)).toThrow();
+    expect(existsSync(join(CONTENT, `i18n/ko/vocab-${spec.key}.json`))).toBe(false);
   });
 });
 

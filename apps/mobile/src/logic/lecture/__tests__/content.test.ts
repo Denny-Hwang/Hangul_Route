@@ -103,6 +103,22 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
     }
   });
 
+  it('a Pic-Word board teaches its words as vocab slides: life q1 shows the four food words (F-QUEST-002 §3.11)', () => {
+    const id = 'quest:stage1-life-q1';
+    const quest = questsAll.find((q) => q.id === id)!;
+    const apply = quest.steps.find((s) => s.minigameRef === 'minigame:s1-life-q1-apply')!;
+    const { slides, skipped, taught } = expandDeck(deck([{ kind: 'quest', id }]), lectureBundle('en'), { canPlayKorean: true });
+    const boardWords = slides.flatMap((s) => (s.kind === 'vocab' && s.key.startsWith(`${id}/${apply.id}/`) ? [s.word] : []));
+    expect(boardWords).toEqual([
+      { ko: '김치', romanization: 'gimchi', gloss: 'kimchi' },
+      { ko: '밥', romanization: 'bap', gloss: 'rice' },
+      { ko: '김밥', romanization: 'gimbap', gloss: 'kimbap' },
+      { ko: '젓가락', romanization: 'jeotgarak', gloss: 'chopsticks' },
+    ]);
+    expect(taught.filter((t) => t.kind === 'word').map((t) => t.ko)).toEqual(expect.arrayContaining(['김치', '밥', '김밥', '젓가락']));
+    expect(skipped.filter((s) => s.ref === 'minigame:s1-life-q1-apply')).toEqual([]);
+  });
+
   it('localizes content text through the overlays, never the Korean or its romanization', () => {
     const overlays: Overlays = {
       es: {

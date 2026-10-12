@@ -35,7 +35,7 @@ A vocabulary word's picture: a square, vector, drawn from data on a `0 0 100 100
 | Fills and strokes | the tone paths in the glyph data: any `colors.*` leaf except `feedback.danger`, `feedback.dangerLight`, `surface.overlay`, `surface.inkScrim` and `rarity.*`; `colors.vocab.*` only inside WordArt |
 | Outline | `text.primary`, 3 (main outline) and 2 (details); round caps and joins set by the renderer |
 | Silhouette | `border.strong` |
-| Background | none: the caller's tile (`surface.paper`, `border.subtle`, padding `spacing.xs`, border `borderWidth.thin`, radius `radii.lg`), the same tile `PictureArt` draws round card art (W-7) |
+| Background | none: the caller's tile (`surface.paper`, `border.subtle`, padding `spacing.xs`, border `borderWidth.thin`, radius `radii.lg`), the same tile `PictureArt` draws round card art (W-7); the art in it is never below 48 dp, so at a smaller requested side the tile grows outward |
 
 ## Accessibility
 

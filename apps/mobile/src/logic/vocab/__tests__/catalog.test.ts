@@ -77,6 +77,32 @@ describe('vocabTopics (draft hiding, V12)', () => {
   });
 });
 
+describe('visibleItems (draft words stay out of every learner pool, V12)', () => {
+  it('drops items whose primary topic is a draft by default', () => {
+    const { visibleItems } = createVocabCatalog(TOPICS, ITEMS);
+    const ids = visibleItems.map((i) => i.id);
+    expect(ids).not.toContain('vocab:eonni');
+    expect(ids).not.toContain('vocab:appa');
+    expect(ids).toContain('vocab:a');
+    expect(ids).toContain('vocab:red');
+  });
+
+  it('drops items whose primary topic has no topic file (no topic, nothing to show)', () => {
+    const { visibleItems } = createVocabCatalog(TOPICS, ITEMS);
+    expect(visibleItems.map((i) => i.id)).not.toContain('vocab:nun-eye');
+  });
+
+  it('keeps file order', () => {
+    const { visibleItems } = createVocabCatalog(TOPICS, ITEMS);
+    expect(visibleItems.map((i) => i.id)).toEqual(['vocab:c', 'vocab:a', 'vocab:b', 'vocab:d', 'vocab:red', 'vocab:blue']);
+  });
+
+  it('includes draft items when showDrafts is true', () => {
+    const { visibleItems } = createVocabCatalog(TOPICS, ITEMS, { showDrafts: true });
+    expect(visibleItems.map((i) => i.id)).toEqual(expect.arrayContaining(['vocab:eonni', 'vocab:nuna', 'vocab:appa']));
+  });
+});
+
 describe('vocabTopic', () => {
   const { vocabTopic } = createVocabCatalog(TOPICS, ITEMS);
 

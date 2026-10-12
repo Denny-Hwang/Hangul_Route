@@ -268,6 +268,35 @@ function transferContract(name: string, make: () => Db, dropLearnerRowOnly: Drop
         expect((await db.getTransfer(ID))?.endReason).toBe('cancelled_initiator');
       });
 
+      it('declineSlot and cancelTransfer write the deciding event with the CAS, once; a lost race writes none', async () => {
+        await db.createTransfer(learnerSideRow(), created);
+        const declined = { at: iso(HOUR), actorKind: 'account' as const, actorRef: 'teacher-b', event: 'declined' as const, slot: 'destination' as const, detail: { reason: 'no_room', via: 'school_admin' } };
+        expect(await db.declineSlot(ID, 'destination', 'declined_destination', 'destination', at(HOUR), declined)).toBe(1);
+        // the same decision again in the same millisecond: the CAS loses and no second event appears
+        expect(await db.declineSlot(ID, 'destination', 'declined_destination', 'destination', at(HOUR), { ...declined, actorRef: 'teacher-x' })).toBe(0);
+        expect(await db.cancelTransfer(ID, 'withdrawn_learner', 'family', at(HOUR), { ...declined, event: 'cancelled', slot: 'learner', detail: null })).toBe(0);
+        expect((await db.transferEvents(ID)).map((e) => [e.event, e.actorRef, e.slot, e.detail])).toEqual([
+          ['created', 'mom', null, null],
+          ['declined', 'teacher-b', 'destination', { reason: 'no_room', via: 'school_admin' }],
+        ]);
+
+        await db.createTransfer(sourceRow({ id: 'transfer:0002', createdAt: iso(2 * HOUR), updatedAt: iso(2 * HOUR) }), created);
+        const cancelled = { at: iso(3 * HOUR), actorKind: 'account' as const, actorRef: 'teacher-a', event: 'cancelled' as const, slot: 'source' as const, detail: { via: 'owner' } };
+        expect(await db.cancelTransfer('transfer:0002', 'cancelled_initiator', 'source', at(3 * HOUR), cancelled)).toBe(1);
+        expect(await db.cancelTransfer('transfer:0002', 'cancelled_initiator', 'source', at(3 * HOUR), cancelled)).toBe(0);
+        expect((await db.transferEvents('transfer:0002')).map((e) => e.event)).toEqual(['created', 'cancelled']);
+        expect(await db.getTransfer('transfer:0002')).toMatchObject({ status: 'cancelled', endReason: 'cancelled_initiator', endActor: 'source' });
+      });
+
+      it('an event that cannot be written rolls the decline or cancel back (one transaction)', async () => {
+        await db.createTransfer(learnerSideRow(), created);
+        const bad = { at: iso(HOUR), actorKind: 'robot' as never, actorRef: 'teacher-b', event: 'declined' as const, slot: 'destination' as const, detail: null };
+        await expect(db.declineSlot(ID, 'destination', 'declined_destination', 'destination', at(HOUR), bad)).rejects.toThrow(/CHECK/i);
+        await expect(db.cancelTransfer(ID, 'withdrawn_learner', 'family', at(HOUR), { ...bad, event: 'cancelled' })).rejects.toThrow(/CHECK/i);
+        expect(await db.getTransfer(ID)).toMatchObject({ status: 'requested', endReason: null, rev: 0 });
+        expect((await db.transferEvents(ID)).map((e) => e.event)).toEqual(['created']);
+      });
+
       it('expireTransfer acts only once expires_at has passed', async () => {
         await db.createTransfer(learnerSideRow(), created);
         expect(await db.expireTransfer(ID, at(TRANSFER_WINDOW_MS - 1))).toBe(0);
@@ -639,6 +668,26 @@ function transferContract(name: string, make: () => Db, dropLearnerRowOnly: Drop
         await db.cancelTransfer('transfer:0002', 'cancelled_initiator', 'family', at(HOUR));
         expect(await db.countOpenTransfersTo(DEST)).toBe(1);
         expect(await db.countOpenTransfersTo('space:class-d')).toBe(0);
+      });
+
+      it('countOpenTransfersTo with a time counts only open requests that have not passed expires_at (an unsettled expired row is not waiting)', async () => {
+        await db.putLearner(learner('profile:two'));
+        await db.createTransfer(learnerSideRow(), created);
+        await db.createTransfer(sourceRow({ id: 'transfer:0002', learnerId: 'profile:two', expiresAt: iso(TRANSFER_WINDOW_MS + HOUR) }), created);
+        expect(await db.countOpenTransfersTo(DEST, at(TRANSFER_WINDOW_MS - 1))).toBe(2);
+        expect(await db.countOpenTransfersTo(DEST, at(TRANSFER_WINDOW_MS))).toBe(1);
+        expect(await db.countOpenTransfersTo(DEST, at(TRANSFER_WINDOW_MS + HOUR))).toBe(0);
+        expect(await db.countOpenTransfersTo(DEST)).toBe(2);
+      });
+
+      it('openTransfersOfSpaces reads every open request of a set of spaces by role, newest first, with no window', async () => {
+        await three();
+        await db.cancelTransfer('transfer:0002', 'cancelled_initiator', 'family', at(HOUR));
+        expect((await db.openTransfersOfSpaces([SOURCE], 'source')).map((t) => t.id)).toEqual(['transfer:0003', 'transfer:0001']);
+        expect((await db.openTransfersOfSpaces([DEST, 'space:class-c'], 'destination')).map((t) => t.id)).toEqual(['transfer:0003', 'transfer:0001']);
+        expect((await db.openTransfersOfSpaces(['space:class-c'], 'destination')).map((t) => t.id)).toEqual(['transfer:0003']);
+        expect(await db.openTransfersOfSpaces([DEST], 'source')).toEqual([]);
+        expect(await db.openTransfersOfSpaces([], 'source')).toEqual([]);
       });
 
       it('transferEvents lists oldest first; addTransferEvent keeps codes and counts', async () => {

@@ -16,6 +16,21 @@ export async function readJson<T>(key: string): Promise<T | null> {
   }
 }
 
+/**
+ * Like `readJson`, but a failed read of the storage throws instead of looking
+ * like a missing key, so a read-modify-write can skip its write rather than
+ * overwrite data it could not see. A missing or unparsable value is null.
+ */
+export async function readJsonStrict<T>(key: string): Promise<T | null> {
+  const raw = await AsyncStorage.getItem(KEY_PREFIX + key);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
+}
+
 export async function writeJson<T>(key: string, value: T): Promise<void> {
   await AsyncStorage.setItem(KEY_PREFIX + key, JSON.stringify(value));
 }

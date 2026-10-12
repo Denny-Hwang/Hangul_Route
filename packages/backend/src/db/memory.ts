@@ -1,6 +1,6 @@
 import { TRANSFER_COOLING_OFF_MS, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type Space, type TransferBlockReason, type TransferEndReason, type TransferSlot } from '@hangul-route/content-schema';
 import { id, type Account, type Learner, type LearnerDevice, type SnapshotRecord } from '../store';
-import { allSlotsIn, assertNewTransfer, assertTransferChecks, assertTransferPrefKey, assertTransferSlot, consentedLearnerSlot, finiteCap, isEndedTransfer, isOpenTransfer, teacherSlotsOf } from './transfer-rules';
+import { allSlotsIn, assertNewTransfer, assertTransferChecks, assertTransferEventChecks, assertTransferPrefKey, assertTransferSlot, consentedLearnerSlot, finiteCap, isEndedTransfer, isOpenTransfer, teacherSlotsOf } from './transfer-rules';
 import {
   learnerRateKeys,
   mergeEntitlement,
@@ -234,21 +234,31 @@ export class MemoryDb implements Db {
     );
   }
 
-  async declineSlot(transferId: string, slot: TransferSlot, endReason: TransferEndReason, endActor: TransferEndActor, now: Date): Promise<number> {
+  async declineSlot(transferId: string, slot: TransferSlot, endReason: TransferEndReason, endActor: TransferEndActor, now: Date, event?: Omit<NewTransferEvent, 'transferId'>): Promise<number> {
     assertTransferSlot(slot);
     const at = now.toISOString();
-    return this.casTransfer(transferId, isOpenTransfer, (t) => {
-      const next: StoredTransfer = { ...t, status: 'declined', endReason, endActor, endedAt: at, updatedAt: at };
-      if (slot === 'learner') next.learner = { ...t.learner, state: 'declined' };
-      else if (slot === 'source') next.source = { ...t.source, state: 'declined' };
-      else if (slot === 'destination') next.destination = { ...t.destination, state: 'declined' };
-      return next;
-    });
+    return this.endTransfer(transferId, event, () =>
+      this.casTransfer(transferId, isOpenTransfer, (t) => {
+        const next: StoredTransfer = { ...t, status: 'declined', endReason, endActor, endedAt: at, updatedAt: at };
+        if (slot === 'learner') next.learner = { ...t.learner, state: 'declined' };
+        else if (slot === 'source') next.source = { ...t.source, state: 'declined' };
+        else if (slot === 'destination') next.destination = { ...t.destination, state: 'declined' };
+        return next;
+      }),
+    );
   }
 
-  async cancelTransfer(transferId: string, endReason: TransferEndReason, endActor: TransferEndActor, now: Date): Promise<number> {
+  async cancelTransfer(transferId: string, endReason: TransferEndReason, endActor: TransferEndActor, now: Date, event?: Omit<NewTransferEvent, 'transferId'>): Promise<number> {
     const at = now.toISOString();
-    return this.casTransfer(transferId, isOpenTransfer, (t) => ({ ...t, status: 'cancelled', endReason, endActor, endedAt: at, updatedAt: at }));
+    return this.endTransfer(transferId, event, () => this.casTransfer(transferId, isOpenTransfer, (t) => ({ ...t, status: 'cancelled', endReason, endActor, endedAt: at, updatedAt: at })));
+  }
+
+  /** The ending CAS and its event as one step: the event is checked first (the CHECK of migration 0005), so a bad one changes nothing. */
+  private endTransfer(transferId: string, event: Omit<NewTransferEvent, 'transferId'> | undefined, cas: () => number): number {
+    if (event) assertTransferEventChecks(event);
+    const changed = cas();
+    if (changed === 1 && event) this.pushTransferEvent({ ...event, transferId });
+    return changed;
   }
 
   async expireTransfer(transferId: string, now: Date): Promise<number> {
@@ -351,6 +361,10 @@ export class MemoryDb implements Db {
     const rows = [...this.transfers.values()].filter((t) => (role === 'source' ? t.sourceSpaceId : t.destSpaceId) === spaceId);
     return clone(rows.sort(newestFirst).slice(0, limit));
   }
+  async openTransfersOfSpaces(spaceIds: readonly string[], role: 'source' | 'destination'): Promise<StoredTransfer[]> {
+    const ids = new Set(spaceIds);
+    return clone([...this.transfers.values()].filter((t) => ids.has(role === 'source' ? t.sourceSpaceId : t.destSpaceId) && isOpenTransfer(t)).sort(newestFirst));
+  }
   async transfersOfLearner(learnerId: string): Promise<StoredTransfer[]> {
     return clone([...this.transfers.values()].filter((t) => t.learnerId === learnerId).sort(newestFirst));
   }
@@ -377,8 +391,9 @@ export class MemoryDb implements Db {
     const from = since.toISOString();
     return [...this.transfers.values()].filter((t) => t.learnerId === learnerId && t.createdAt >= from).length;
   }
-  async countOpenTransfersTo(spaceId: string): Promise<number> {
-    return [...this.transfers.values()].filter((t) => t.destSpaceId === spaceId && isOpenTransfer(t)).length;
+  async countOpenTransfersTo(spaceId: string, now?: Date): Promise<number> {
+    const at = now?.toISOString();
+    return [...this.transfers.values()].filter((t) => t.destSpaceId === spaceId && isOpenTransfer(t) && (at === undefined || t.expiresAt > at)).length;
   }
   async transferEvents(transferId: string): Promise<TransferEvent[]> {
     return clone(this.transferEventRows.filter((e) => e.transferId === transferId));

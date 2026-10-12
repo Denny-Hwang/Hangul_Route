@@ -119,11 +119,19 @@ const SpaceIdField = z.string().regex(/^space:[a-z0-9-]+$/);
  * The consent record a learner-side call sends. `locale` is any UI locale so
  * the Worker can answer `consent_locale_unavailable` for one without a
  * reviewed text, and any non-empty version so it can answer `consent_text_stale`.
+ * `termsDigest` is the digest the preview returned for the sheet the guardian
+ * saw (SHA-256 hex); a create whose live terms no longer match it answers
+ * `409 terms_changed` (§4.11). Optional until the clients send it; required on
+ * the family route before the flag flip.
  */
 export const TransferConsentSchema = z
   .object({
     textVersion: z.string().min(1).max(64),
     locale: UiLocaleSchema,
+    termsDigest: z
+      .string()
+      .regex(/^[0-9a-f]{64}$/)
+      .optional(),
   })
   .strict();
 export type TransferConsent = z.infer<typeof TransferConsentSchema>;

@@ -69,6 +69,54 @@ test('quest 4: Discover ㅈ ㅊ, the first Pic-Word board on card pictures, then
   expect(errors).toEqual([]);
 });
 
+/** Quest 5's Build a Letter syllables, in round order, as the tiles to tap. */
+const FAMILY_SYLLABLES = [
+  ['바', ['ㅂ', 'ㅏ']],
+  ['보', ['ㅂ', 'ㅗ']],
+  ['사', ['ㅅ', 'ㅏ']],
+  ['수', ['ㅅ', 'ㅜ']],
+] as const;
+
+test('quest 5: Family at the Table pages through a 3-page Discover with a pictured word, builds 바 보 사 수, then the Check', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  await openLifeEpisode(page);
+  await expect(page.getByText('Family at the Table', { exact: true })).toBeVisible();
+  await startQuest(page, 1);
+
+  // Discover: ㅂ ㅅ on page 1, 아버지 and 아기 on page 2, 엄마 and the pictured 가족 on page 3.
+  await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
+  await expect(page.getByText('Page 1 of 3', { exact: true })).toBeVisible();
+  await expect(page.getByText('바나나').first()).toBeVisible();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.getByText('Page 2 of 3', { exact: true })).toBeVisible();
+  await expect(page.getByText('아버지').first()).toBeVisible();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.getByText('Page 3 of 3', { exact: true })).toBeVisible();
+  await expect(page.getByText('엄마').first()).toBeVisible();
+  await expect(page.getByText('가족').first()).toBeVisible();
+  // 가족 carries the family-table card art (an svg), not the text-tile fallback.
+  await expect(page.getByTestId('discover-item-word:가족').locator('svg').first()).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath('life-q2-discover-page3.png'), fullPage: true });
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.getByText('Look and learn', { exact: true })).toHaveCount(0);
+
+  // Practice (Match Sound) is skipped; Build a Letter is played round by round.
+  await page.getByRole('button', { name: 'Skip for now' }).click();
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+  await expect(page.getByText('Build this letter')).toBeVisible();
+  for (const [syllable, parts] of FAMILY_SYLLABLES) {
+    await expect(page.getByTestId('build-letter-speaker')).toContainText(syllable);
+    for (const part of parts) await page.getByRole('button', { name: `Korean letter ${part}, tap to select` }).click();
+  }
+  // The last right block ends the game; the Check launcher follows.
+  await expect(page.getByRole('button', { name: 'Go', exact: true })).toBeVisible();
+  await playCheck(page);
+  await page.getByRole('button', { name: 'See results' }).click();
+  await expect(page.getByText('Next up')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
 test('quest 6: Picnic Snacks teaches ㅋ ㅌ as the puff-of-air twins of ㄱ ㄷ', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e)));
@@ -76,7 +124,7 @@ test('quest 6: Picnic Snacks teaches ㅋ ㅌ as the puff-of-air twins of ㄱ ㄷ
   await expect(page.getByText('Picnic Snacks', { exact: true })).toBeVisible();
   await startQuest(page, 2);
 
-  await expect(page.getByText('k is like g with a puff of air, and t is like d with a puff of air.')).toBeVisible();
+  await expect(page.getByText('Tap Hear it: k is like g with a puff of air, and t is like d with a puff of air.')).toBeVisible();
   await expect(page.getByText('쿠키').first()).toBeVisible();
   await expect(page.getByText('토마토').first()).toBeVisible();
   await page.screenshot({ path: test.info().outputPath('life-q3-discover.png'), fullPage: true });

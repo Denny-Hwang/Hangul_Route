@@ -3,6 +3,8 @@
 Spec: `docs/specs/F-PAR-001-parent-dashboard.md` §5 (listed as "Phase 2, optional in MVP")
 Audience: **parent**
 
+> **Superseded (2026-10-11)** for the web: the per-learner page for grown-ups is `reports/learner-report.md` (F-REPORT-001) inside the parent home of F-APP-001 (`shell/parent-home.md`), and the in-app drill-down is `reports/in-app-report.md`. Kept for history only.
+
 > Status note: wireframed now so `parent/dashboard` has a stable exit target;
 > may ship as MVP-thin (sections 1–2 only) or slip to Phase 2 without breaking
 > the dashboard flow.

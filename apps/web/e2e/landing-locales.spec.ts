@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { expect, test, type Page } from '@playwright/test';
+import { getMessages } from '@hangul-route/i18n';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import {
   allowedFor,
   baselinePage,
@@ -16,8 +17,8 @@ import {
 
 /**
  * F-I18N-001 PR 14 (§3.11, §5): the landing half of the locale layout matrix, over the static export.
- * `/`, `/about` and, on a build that shows every locale (`NEXT_PUBLIC_SHOW_ALL_LOCALES=1`, nightly / on
- * demand), `/es`, `/ko`, `/es/about` and `/ko/about`, each at 320 / 375 / 768: the right `<html lang>`, no
+ * `/`, `/about` and, on a build that shows every locale (`NEXT_PUBLIC_SHOW_ALL_LOCALES=1`, on demand: no
+ * pipeline runs it yet, F-I18N-001 §10), `/es`, `/ko`, `/es/about` and `/ko/about`, each at 320 / 375 / 768: the right `<html lang>`, no
  * sideways scroll, the primary CTA on screen without scrolling, and no control under `touchTarget.min`
  * beyond the ones listed today (`fixtures/landing-touch-allowlist.json`, a ratchet that only shrinks). The
  * es and ko dictionaries are empty until PR 15 / 16, so those pages still read English; the checks hold
@@ -34,11 +35,14 @@ interface LandingPage {
   path: string;
   lang: 'en' | 'es' | 'ko';
   /** The page's primary CTA: "Play now" on the landing, "Back home" on About. */
-  cta: string;
+  cta: (page: Page, lang: LandingPage['lang']) => Locator;
 }
 
-const PLAY_NOW = 'header a[href^="https://app.hangulroute.com"]';
-const BACK_HOME = 'main > a:first-child';
+/** The header's "Play now" (its class is pinned by `landing-layout.test.tsx`), whatever app origin it links to. */
+const PLAY_NOW = (page: Page): Locator => page.locator('header a.hr-landing-cta');
+/** About's "Back home" link, by its words in the page's locale. */
+const BACK_HOME = (page: Page, lang: LandingPage['lang']): Locator =>
+  page.getByRole('link', { name: getMessages(lang).landing.about.backHome, exact: true });
 const PAGES: readonly LandingPage[] = [
   { path: '/', lang: 'en', cta: PLAY_NOW },
   { path: '/about', lang: 'en', cta: BACK_HOME },
@@ -48,11 +52,24 @@ const PAGES: readonly LandingPage[] = [
   { path: '/ko/about', lang: 'ko', cta: BACK_HOME },
 ];
 
+/** The learner app's origin as this export links to it (`NEXT_PUBLIC_APP_URL` at build time), read off "Play now". */
+async function appOrigin(page: Page): Promise<string | null> {
+  const play = PLAY_NOW(page);
+  if ((await play.count()) === 0) return null;
+  const href = await play.first().getAttribute('href');
+  try {
+    return href ? new URL(href).origin : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Keys of the controls under the floor on the page as it is laid out now, repeats numbered. */
 async function smallKeys(page: Page): Promise<Map<string, string>> {
   const measured = await page.evaluate(measureControls);
   const small = measured.filter((c) => isSmall(c));
-  const keys = occurrenceKeys(small.map((c) => controlKey(c)));
+  const origin = await appOrigin(page);
+  const keys = occurrenceKeys(small.map((c) => controlKey(c, origin)));
   return new Map(keys.map((key, i) => [key, `${Math.round(small[i]?.width ?? 0)}x${Math.round(small[i]?.height ?? 0)}`]));
 }
 
@@ -77,7 +94,7 @@ for (const landing of PAGES) {
         expect(doc, `${landing.path} at ${width}px: document scrollWidth`).toBeLessThanOrEqual(width);
         expect(body, `${landing.path} at ${width}px: body scrollWidth`).toBeLessThanOrEqual(width);
 
-        const cta = page.locator(landing.cta).first();
+        const cta = landing.cta(page, landing.lang).first();
         await expect(cta).toBeVisible();
         const box = await cta.boundingBox();
         expect(box, `${landing.path} at ${width}px: primary CTA`).not.toBeNull();

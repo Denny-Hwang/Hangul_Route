@@ -92,12 +92,12 @@ export function buildRegistry(sources: readonly WordArtSource[], meta: WordArtMe
       const family = WORD_ART_KEY_RE.exec(key)?.[1] as WordArtFamily | undefined;
       if (family === undefined) throw new Error(`WordArt key outside the grammar: ${key}`);
       if (family !== sourceFamily) throw new Error(`WordArt key ${key} is filed under the ${sourceFamily} glyphs`);
-      if (Object.hasOwn(out, key)) throw new Error(`Duplicate WordArt key: ${key}`);
+      if (Object.prototype.hasOwnProperty.call(out, key)) throw new Error(`Duplicate WordArt key: ${key}`);
       const frozen: WordArtGlyph = Object.freeze(glyph.map((shape) => Object.freeze({ ...shape })));
       out[key] = Object.freeze({ glyph: frozen, meta: Object.freeze({ family, status: 'draft', ...meta[key] }) });
     }
   }
-  for (const key of Object.keys(meta)) if (!Object.hasOwn(out, key)) throw new Error(`WordArt meta for a key with no glyph: ${key}`);
+  for (const key of Object.keys(meta)) if (!Object.prototype.hasOwnProperty.call(out, key)) throw new Error(`WordArt meta for a key with no glyph: ${key}`);
   return Object.freeze(out);
 }
 
@@ -121,7 +121,7 @@ export const WORD_ART_KEYS: readonly string[] = Object.freeze(Object.keys(WORD_A
 
 /** The glyph for a key (without `word:`), or undefined: the caller falls back to the text tile (§3.7). */
 export function getWordArt(key: string): WordArtGlyph | undefined {
-  return Object.hasOwn(WORD_ART, key) ? WORD_ART[key]!.glyph : undefined;
+  return Object.prototype.hasOwnProperty.call(WORD_ART, key) ? WORD_ART[key]!.glyph : undefined;
 }
 
 /** `'word:food-apple'` -> `'food-apple'`; null for `card:*`, `swatch:*` or a malformed key. */

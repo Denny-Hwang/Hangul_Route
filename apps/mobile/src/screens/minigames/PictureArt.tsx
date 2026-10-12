@@ -11,17 +11,23 @@ import {
 } from '@hangul-route/design-system';
 import React from 'react';
 import { View } from 'react-native';
-import { resolvePictureArt, swatchColors, type PictureContext } from '../../logic/picture-ref';
+import { useMessages } from '../../i18n/use-messages';
+import { pictureName, pictureTile, resolvePictureArt, swatchColors, type PictureContext, type PictureTileMetrics } from '../../logic/picture-ref';
 
 /**
  * PictureArt — the one place that turns a `PictureRef` into art for every game
  * (F-QUEST-002 §3.11): `card:<id>` is heritage card art, `word:<key>` a
  * WordArt picture (F-VOC-002 §3.7, W-7), `swatch:<token>` a colour chip. An
  * unresolved or absent ref, or a word picture with a blank gloss, shows the
- * gloss in a plain tile. Never a blank tile.
+ * gloss in a plain tile, or the localized "Picture" when the gloss is blank.
+ * Never a blank tile.
  * Card art and WordArt sit in the same neutral tile (`surface.paper`,
  * `border.subtle`, same padding), so a style difference between the two never
  * identifies an answer when both appear in one question (F-VOC-002 §3.11).
+ * The art inside it is never drawn below 48 dp (F-VOC-002 §3.7): at a smaller
+ * requested side the tile grows outward (`pictureTile`).
+ * `decorative` hides the picture from assistive technology when the same card
+ * already names it in a KoreanText line (F-VOC-002 §3.7).
  * All art is SVG from the design system (D7); this adds none.
  * Design: design/wireframes/quest/discover.md (S5 picture options, S6 Pic-Word Match),
  * design/components/WordArt/spec.md (the caller's tile).
@@ -34,8 +40,8 @@ export const PICTURE_CONTEXT: PictureContext = {
   wordArtKeys: WORD_ART_KEYS,
 };
 
-/** Padding and border of the neutral art tile, per side. */
-const TILE_INSET = spacing.xs + borderWidth.thin;
+/** Padding and border of the neutral art tile, per side, and the smallest art (the tested minimum). */
+const TILE: PictureTileMetrics = { inset: spacing.xs + borderWidth.thin, minArt: spacing.xxxl };
 
 export interface PictureArtProps {
   /** `card:<id>`, `word:<key>` or `swatch:<token>`; absent shows the gloss. */
@@ -44,12 +50,24 @@ export interface PictureArtProps {
   gloss: string;
   /** Side of the square, in dp. */
   size: number;
+  /** Hidden from assistive technology: the same card already names the word in a KoreanText line. */
+  decorative?: boolean;
   testID?: string;
 }
 
-function ArtTile({ size, children }: { size: number; children: React.ReactNode }): React.ReactElement {
+/** Props that hide a view and everything in it on the web (`aria-hidden`), iOS and Android. */
+function hiddenProps(decorative: boolean): {
+  'aria-hidden'?: true;
+  accessibilityElementsHidden?: true;
+  importantForAccessibility?: 'no-hide-descendants';
+} {
+  return decorative ? { 'aria-hidden': true, accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants' } : {};
+}
+
+function ArtTile({ size, decorative, children }: { size: number; decorative: boolean; children: React.ReactNode }): React.ReactElement {
   return (
     <View
+      {...hiddenProps(decorative)}
       style={{
         width: size,
         height: size,
@@ -67,22 +85,28 @@ function ArtTile({ size, children }: { size: number; children: React.ReactNode }
   );
 }
 
-export function PictureArt({ pictureRef, gloss, size, testID }: PictureArtProps): React.ReactElement {
+export function PictureArt({ pictureRef, gloss, size, decorative = false, testID }: PictureArtProps): React.ReactElement {
+  const m = useMessages();
   const picture = resolvePictureArt(pictureRef, gloss, PICTURE_CONTEXT);
-  const artSize = Math.max(size - 2 * TILE_INSET, 0);
+  const name = pictureName(gloss, m.a11y.minigame.picture);
+  const tile = pictureTile(size, TILE);
 
   if (picture.kind === 'card') {
     return (
-      <ArtTile size={size}>
-        <HeritageCardArt cardId={picture.cardId} size={artSize} testID={testID} accessibilityLabel={gloss} />
+      <ArtTile size={tile.tile} decorative={decorative}>
+        <HeritageCardArt cardId={picture.cardId} size={tile.art} testID={testID} accessibilityLabel={name} />
       </ArtTile>
     );
   }
 
   if (picture.kind === 'word') {
     return (
-      <ArtTile size={size}>
-        <WordArt artKey={picture.key} size={artSize} testID={testID} accessibilityLabel={gloss} />
+      <ArtTile size={tile.tile} decorative={decorative}>
+        {decorative ? (
+          <WordArt artKey={picture.key} size={tile.art} testID={testID} decorative />
+        ) : (
+          <WordArt artKey={picture.key} size={tile.art} testID={testID} accessibilityLabel={name} />
+        )}
       </ArtTile>
     );
   }
@@ -91,9 +115,10 @@ export function PictureArt({ pictureRef, gloss, size, testID }: PictureArtProps)
     return (
       <View
         testID={testID}
-        accessible
-        accessibilityRole="image"
-        accessibilityLabel={gloss}
+        accessible={!decorative}
+        accessibilityRole={decorative ? undefined : 'image'}
+        accessibilityLabel={decorative ? undefined : name}
+        {...hiddenProps(decorative)}
         style={{
           width: size,
           height: size,
@@ -109,8 +134,9 @@ export function PictureArt({ pictureRef, gloss, size, testID }: PictureArtProps)
   return (
     <View
       testID={testID}
-      accessible
-      accessibilityLabel={gloss}
+      accessible={!decorative}
+      accessibilityLabel={decorative ? undefined : name}
+      {...hiddenProps(decorative)}
       style={{
         width: size,
         height: size,
@@ -122,7 +148,7 @@ export function PictureArt({ pictureRef, gloss, size, testID }: PictureArtProps)
       }}
     >
       <Body align="center" weight="medium">
-        {gloss}
+        {name}
       </Body>
     </View>
   );

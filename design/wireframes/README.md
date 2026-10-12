@@ -56,6 +56,7 @@
 | `console/school-admin.md` | P | roadmap S7 |
 | `console/account.md` · `console/billing.md` | P | roadmap §5.3 · §7 |
 | `billing/billing-home.md` · `checkout-return.md` · `receipts.md` · `step-up.md` · `plan-status.md` | R | F-BILL-002 (supersedes `console/billing.md`; `plan-status` supersedes the body of `paywall/upgrade.md`; page at `/account/billing` inside F-APP-001's frame) |
+| `reports/learner-report.md` · `reports/class-report.md` · `reports/print.md` (console, app.hangulroute.com) · `reports/in-app-report.md` (learner app, behind the grown-up gate); supersede `parent/learner-detail.md` and the web part of `parent/dashboard.md` | R | F-REPORT-001 (RP-0) |
 
 ### D. App shell — persona sign-in on app.hangulroute.com (F-APP-001)
 | 파일 | 상태 | 스펙 |
