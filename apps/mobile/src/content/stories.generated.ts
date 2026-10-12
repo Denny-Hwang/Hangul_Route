@@ -1488,8 +1488,47 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Golden rice fields under an autumn sky, persimmon trees heavy with orange fruit; Hoya stretching happily at the edge of the field."
+            "artBrief": "Golden rice fields under an autumn sky, persimmon trees heavy with orange fruit; Hoya stretching happily at the edge of the field.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:rice-field",
+                  "x": 200,
+                  "y": 300,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:persimmon-tree",
+                  "x": 70,
+                  "y": 256,
+                  "s": 1.2,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:persimmon-tree",
+                  "x": 340,
+                  "y": 240,
+                  "s": 0.9,
+                  "flip": true,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 262,
+                  "y": 226,
+                  "s": 0.45,
+                  "tint": "feedback.nudge"
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 190,
+                  "y": 294,
+                  "s": 0.95
+                }
+              ],
+              "altEn": "Golden rice fields and persimmon trees heavy with orange fruit at harvest time, as a farmer works and Hoya stretches up happily."
+            }
           },
           {
             "id": "s2",
@@ -1507,8 +1546,44 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A family in hanbok standing respectfully before a low table set with fruit and dishes; later a grassy hillside path; Hoya walking quietly with them."
+            "artBrief": "A family in hanbok standing respectfully before a low table set with fruit and dishes; later a grassy hillside path; Hoya walking quietly with them.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:feast-table",
+                  "x": 200,
+                  "y": 268,
+                  "s": 1.45
+                },
+                {
+                  "ref": "prop:fig-woman",
+                  "x": 92,
+                  "y": 290,
+                  "s": 1,
+                  "tint": "brand.secondaryLight"
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 262,
+                  "y": 294,
+                  "s": 0.85
+                },
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 318,
+                  "y": 290,
+                  "s": 1.05
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 38,
+                  "y": 296,
+                  "s": 0.55
+                }
+              ],
+              "altEn": "A family in hanbok stands quietly before a table of food set for the ancestors, the Chuseok charye, with Hoya beside them."
+            }
           },
           {
             "id": "s3",
@@ -1526,8 +1601,38 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Family members around a low table shaping small white, green and pink rice cakes; bowls of sesame, beans and chestnuts; Hoya pinching one closed."
+            "artBrief": "Family members around a low table shaping small white, green and pink rice cakes; bowls of sesame, beans and chestnuts; Hoya pinching one closed.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-elder-seated",
+                  "x": 62,
+                  "y": 272,
+                  "s": 1.15
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 140,
+                  "y": 296,
+                  "s": 0.58
+                },
+                {
+                  "ref": "prop:songpyeon",
+                  "x": 244,
+                  "y": 296,
+                  "s": 1.75
+                },
+                {
+                  "ref": "prop:fig-woman",
+                  "x": 368,
+                  "y": 286,
+                  "s": 0.95,
+                  "tint": "surface.sunken"
+                }
+              ],
+              "altEn": "The family shapes songpyeon together, a tray of white, green and yellow rice cakes between them, and Hoya helps."
+            }
           },
           {
             "id": "s4",
@@ -1545,8 +1650,25 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A bamboo steamer opened to reveal glossy rice cakes resting on green pine needles, wisps of steam; Hoya sniffing with closed eyes."
+            "artBrief": "A bamboo steamer opened to reveal glossy rice cakes resting on green pine needles, wisps of steam; Hoya sniffing with closed eyes.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:songpyeon",
+                  "x": 190,
+                  "y": 272,
+                  "s": 2.4
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 344,
+                  "y": 294,
+                  "s": 0.7
+                }
+              ],
+              "altEn": "Freshly steamed half-moon songpyeon rest on fragrant pine needles, and Hoya leans in to smell them."
+            }
           },
           {
             "id": "s5",
@@ -1565,8 +1687,31 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A huge glowing full moon rising over a quiet village of thatched and tiled roofs; Hoya sitting on a stone wall gazing up."
+            "artBrief": "A huge glowing full moon rising over a quiet village of thatched and tiled roofs; Hoya sitting on a stone wall gazing up.",
+            "art": {
+              "setting": "scene:village-lane",
+              "layers": [
+                {
+                  "ref": "prop:full-moon",
+                  "x": 320,
+                  "y": 98,
+                  "s": 1.8
+                },
+                {
+                  "ref": "prop:flat-rock",
+                  "x": 150,
+                  "y": 292,
+                  "s": 1.4
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 220,
+                  "y": 292,
+                  "s": 1
+                }
+              ],
+              "altEn": "A big round full moon rises over the village on Chuseok, and Hoya gazes up at it."
+            }
           },
           {
             "id": "s6",
@@ -1584,8 +1729,37 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Women in hanbok holding hands in a wide circle on a moonlit field, skirts swirling, one singer at the front; Hoya clapping along outside the circle."
+            "artBrief": "Women in hanbok holding hands in a wide circle on a moonlit field, skirts swirling, one singer at the front; Hoya clapping along outside the circle.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:night-sky",
+                  "x": 200,
+                  "y": 196,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:full-moon",
+                  "x": 320,
+                  "y": 96,
+                  "s": 1.5
+                },
+                {
+                  "ref": "prop:dance-circle",
+                  "x": 200,
+                  "y": 270,
+                  "s": 1.6
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 364,
+                  "y": 298,
+                  "s": 0.56
+                }
+              ],
+              "altEn": "Under the full moon at night, women hold hands in a wide circle for Ganggangsullae, and Hoya cheers along outside it."
+            }
           },
           {
             "id": "s7",
@@ -1605,8 +1779,52 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Dancers crouched in a line like ferns while a leader 'picks' them one by one; a coastline with small islands in the moonlight behind; Hoya scratching his head curiously."
+            "artBrief": "Dancers crouched in a line like ferns while a leader 'picks' them one by one; a coastline with small islands in the moonlight behind; Hoya scratching his head curiously.",
+            "art": {
+              "setting": "scene:seashore",
+              "layers": [
+                {
+                  "ref": "prop:night-sky",
+                  "x": 200,
+                  "y": 196,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:full-moon",
+                  "x": 80,
+                  "y": 96,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:fig-bowing",
+                  "x": 46,
+                  "y": 262,
+                  "s": 1.45,
+                  "flip": true
+                },
+                {
+                  "ref": "prop:fig-bowing",
+                  "x": 114,
+                  "y": 270,
+                  "s": 1.45,
+                  "flip": true
+                },
+                {
+                  "ref": "prop:fig-bowing",
+                  "x": 182,
+                  "y": 278,
+                  "s": 1.45,
+                  "flip": true
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 240,
+                  "y": 294,
+                  "s": 0.85
+                }
+              ],
+              "altEn": "By the sea at night, dancers sit low in a line for the fern-picking game, and Hoya wonders what ganggangsullae means."
+            }
           },
           {
             "id": "s8",
@@ -1624,8 +1842,44 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Hoya and the family sharing songpyeon and fruit on a wooden porch under the full moon, the dance circle glowing in the distance."
+            "artBrief": "Hoya and the family sharing songpyeon and fruit on a wooden porch under the full moon, the dance circle glowing in the distance.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:night-window",
+                  "x": 200,
+                  "y": 196,
+                  "s": 1.1
+                },
+                {
+                  "ref": "prop:fig-elder-seated",
+                  "x": 200,
+                  "y": 262,
+                  "s": 1.15
+                },
+                {
+                  "ref": "prop:soban",
+                  "x": 200,
+                  "y": 300,
+                  "s": 1.2,
+                  "tint": "feedback.nudgeLight"
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 318,
+                  "y": 288,
+                  "s": 1.1
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 84,
+                  "y": 294,
+                  "s": 0.65
+                }
+              ],
+              "altEn": "With the moon in the window at night, the family shares rice cakes and fruit, and Hoya joins them."
+            }
           }
         ],
         "checks": [
@@ -2068,7 +2322,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:dano-ssireum",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "단옷날의 그네, 탈, 씨름",
       "romanization": "Danonnarui geune, tal, ssireum",
@@ -2194,8 +2448,32 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Hoya in a light summer hanbok on a green hillside in early summer, rice paddies freshly planted below."
+            "artBrief": "Hoya in a light summer hanbok on a green hillside in early summer, rice paddies freshly planted below.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:rice-field",
+                  "x": 200,
+                  "y": 300,
+                  "s": 1,
+                  "tint": "feedback.successLight"
+                },
+                {
+                  "ref": "prop:leafy-tree",
+                  "x": 336,
+                  "y": 238,
+                  "s": 1
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 200,
+                  "y": 280,
+                  "s": 1
+                }
+              ],
+              "altEn": "Hoya waves on a green hillside in early summer, above rice paddies freshly planted, as Dano comes."
+            }
           },
           {
             "id": "s2",
@@ -2213,8 +2491,32 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Women by a stream rinsing long hair in a wooden basin; tall sword-shaped sweet-flag leaves at the water's edge; Hoya sniffing a leaf."
+            "artBrief": "Women by a stream rinsing long hair in a wooden basin; tall sword-shaped sweet-flag leaves at the water's edge; Hoya sniffing a leaf.",
+            "art": {
+              "setting": "scene:mountain-stream",
+              "layers": [
+                {
+                  "ref": "prop:changpo",
+                  "x": 140,
+                  "y": 282,
+                  "s": 1.1
+                },
+                {
+                  "ref": "prop:fig-woman",
+                  "x": 250,
+                  "y": 286,
+                  "s": 1.15,
+                  "tint": "brand.secondaryLight"
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 56,
+                  "y": 294,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "By a stream a woman stands beside tall sweet flag, the plant once boiled for Dano hair washing, and Hoya sniffs its leaves."
+            }
           },
           {
             "id": "s3",
@@ -2232,8 +2534,32 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A person in hanbok standing on a long rope swing hung from a big old tree, flying high; Hoya cheering below."
+            "artBrief": "A person in hanbok standing on a long rope swing hung from a big old tree, flying high; Hoya cheering below.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:leafy-tree",
+                  "x": 70,
+                  "y": 262,
+                  "s": 2.1,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:swing",
+                  "x": 196,
+                  "y": 276,
+                  "s": 1.3
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 330,
+                  "y": 294,
+                  "s": 0.8
+                }
+              ],
+              "altEn": "A woman in hanbok swings high on a rope swing hung from a big tree, and Hoya cheers below."
+            }
           },
           {
             "id": "s4",
@@ -2252,8 +2578,31 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Two wrestlers crouched shoulder to shoulder in a sand ring, each gripping the other's cloth thigh belt; Hoya as a referee."
+            "artBrief": "Two wrestlers crouched shoulder to shoulder in a sand ring, each gripping the other's cloth thigh belt; Hoya as a referee.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:sand-ring",
+                  "x": 200,
+                  "y": 292,
+                  "s": 1.4
+                },
+                {
+                  "ref": "prop:fig-wrestlers",
+                  "x": 200,
+                  "y": 264,
+                  "s": 1.6
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 338,
+                  "y": 294,
+                  "s": 0.7
+                }
+              ],
+              "altEn": "Two wrestlers grip each other's satba belts in a sand ring for ssireum, and Hoya watches closely like a referee."
+            }
           },
           {
             "id": "s5",
@@ -2271,8 +2620,46 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A smiling champion riding a calm brown ox around the sand ring while villagers clap; Hoya leading the ox by a rope."
+            "artBrief": "A smiling champion riding a calm brown ox around the sand ring while villagers clap; Hoya leading the ox by a rope.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:sand-ring",
+                  "x": 200,
+                  "y": 296,
+                  "s": 1.5
+                },
+                {
+                  "ref": "prop:crowd-seated",
+                  "x": 76,
+                  "y": 240,
+                  "s": 0.8,
+                  "z": "back",
+                  "tint": "feedback.nudgeLight"
+                },
+                {
+                  "ref": "prop:ox",
+                  "x": 190,
+                  "y": 286,
+                  "s": 1.5
+                },
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 310,
+                  "y": 286,
+                  "s": 1,
+                  "tint": "feedback.nudgeLight"
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 366,
+                  "y": 298,
+                  "s": 0.55
+                }
+              ],
+              "altEn": "The ssireum champion, the jangsa, stands beside his prize ox, a symbol of plenty, while villagers and Hoya cheer."
+            }
           },
           {
             "id": "s6",
@@ -2290,8 +2677,31 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A riverside festival ground with colorful paper lanterns and banners, a ritual table with offerings, mountains in the distance; Hoya in the crowd."
+            "artBrief": "A riverside festival ground with colorful paper lanterns and banners, a ritual table with offerings, mountains in the distance; Hoya in the crowd.",
+            "art": {
+              "setting": "scene:mountains",
+              "layers": [
+                {
+                  "ref": "prop:lanterns",
+                  "x": 200,
+                  "y": 300,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:feast-table",
+                  "x": 200,
+                  "y": 272,
+                  "s": 1.6
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 320,
+                  "y": 294,
+                  "s": 0.75
+                }
+              ],
+              "altEn": "Paper lanterns hang over a festival ground by the mountains for Gangneung Danoje, with a table of offerings, and Hoya joins in."
+            }
           },
           {
             "id": "s7",
@@ -2309,8 +2719,39 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Masked performers in a playful pose on an open-air stage: a long-bearded nobleman (yangban) mask and a white-faced young-lady (somae-gaksi) mask; the audience laughing, Hoya giggling."
+            "artBrief": "Masked performers in a playful pose on an open-air stage: a long-bearded nobleman (yangban) mask and a white-faced young-lady (somae-gaksi) mask; the audience laughing, Hoya giggling.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:fig-yangban-mask",
+                  "x": 156,
+                  "y": 262,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:fig-woman",
+                  "x": 248,
+                  "y": 262,
+                  "s": 1.15
+                },
+                {
+                  "ref": "prop:crowd-seated",
+                  "x": 200,
+                  "y": 300,
+                  "s": 1.3,
+                  "z": "front",
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 352,
+                  "y": 296,
+                  "s": 0.62
+                }
+              ],
+              "altEn": "In the Gwanno mask play a long-bearded nobleman and a young lady act without words, and the crowd and Hoya laugh."
+            }
           },
           {
             "id": "s8",
@@ -2329,8 +2770,38 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Hoya holding a glowing heritage card with a swing, a mask and two wrestlers on it, standing under festival lanterns."
+            "artBrief": "Hoya holding a glowing heritage card with a swing, a mask and two wrestlers on it, standing under festival lanterns.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 200,
+                  "y": 200,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:fig-yangban-mask",
+                  "x": 86,
+                  "y": 266,
+                  "s": 0.85
+                },
+                {
+                  "ref": "prop:fig-wrestlers",
+                  "x": 312,
+                  "y": 262,
+                  "s": 0.95,
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 200,
+                  "y": 292,
+                  "s": 1
+                }
+              ],
+              "altEn": "Hoya cheers between a mask-play nobleman and two ssireum wrestlers: Dano traditions on UNESCO's heritage list."
+            }
           }
         ],
         "checks": [
@@ -3664,8 +4135,39 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A hanok courtyard in late autumn with bare trees, stacks of napa cabbages and big clay jars; Hoya in a warm vest arriving with a basket."
+            "artBrief": "A hanok courtyard in late autumn with bare trees, stacks of napa cabbages and big clay jars; Hoya in a warm vest arriving with a basket.",
+            "art": {
+              "setting": "scene:village-lane",
+              "layers": [
+                {
+                  "ref": "prop:persimmon-tree",
+                  "x": 54,
+                  "y": 250,
+                  "s": 1.1,
+                  "z": "back",
+                  "tint": "feedback.nudge"
+                },
+                {
+                  "ref": "prop:kimchi-jars",
+                  "x": 206,
+                  "y": 262,
+                  "s": 1.15
+                },
+                {
+                  "ref": "prop:cabbages",
+                  "x": 328,
+                  "y": 292,
+                  "s": 1.3
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 104,
+                  "y": 294,
+                  "s": 0.72
+                }
+              ],
+              "altEn": "Hoya arrives in a village yard as winter nears, with napa cabbages piled up and big kimchi jars waiting for gimjang."
+            }
           },
           {
             "id": "s2",
@@ -3683,8 +4185,34 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Three small seasonal panels: spring jars of salted tiny shrimp, summer sacks of white sea salt, late-summer red chili peppers drying on mats in the sun."
+            "artBrief": "Three small seasonal panels: spring jars of salted tiny shrimp, summer sacks of white sea salt, late-summer red chili peppers drying on mats in the sun.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:kimchi-jars",
+                  "x": 82,
+                  "y": 272,
+                  "s": 1.05,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:basket",
+                  "x": 214,
+                  "y": 276,
+                  "s": 1.8,
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "prop:basket",
+                  "x": 334,
+                  "y": 276,
+                  "s": 1.8,
+                  "tint": "brand.primary"
+                }
+              ],
+              "altEn": "Gimjang starts months early: jars for salted shrimp, a basket of sea salt and a basket of dried red chili peppers."
+            }
           },
           {
             "id": "s3",
@@ -3702,8 +4230,41 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Neighbors in aprons and rubber gloves around big basins, rubbing red seasoning between cabbage leaves; garlic, ginger and green onions nearby; Hoya helping."
+            "artBrief": "Neighbors in aprons and rubber gloves around big basins, rubbing red seasoning between cabbage leaves; garlic, ginger and green onions nearby; Hoya helping.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:fig-woman",
+                  "x": 66,
+                  "y": 282,
+                  "s": 1,
+                  "tint": "brand.secondaryLight"
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 146,
+                  "y": 294,
+                  "s": 0.6
+                },
+                {
+                  "ref": "prop:cabbages",
+                  "x": 240,
+                  "y": 292,
+                  "s": 2,
+                  "tint": "brand.primary"
+                },
+                {
+                  "ref": "prop:fig-woman",
+                  "x": 344,
+                  "y": 282,
+                  "s": 1,
+                  "flip": true,
+                  "tint": "surface.paper"
+                }
+              ],
+              "altEn": "Neighbors gather for gimjang and rub red seasoning into salted napa cabbages, and Hoya helps."
+            }
           },
           {
             "id": "s4",
@@ -3721,8 +4282,33 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A simple map-shaped table runner (no labels) with bowls of pale and deep-red kimchi placed from top to bottom; Hoya comparing two bowls."
+            "artBrief": "A simple map-shaped table runner (no labels) with bowls of pale and deep-red kimchi placed from top to bottom; Hoya comparing two bowls.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:soban",
+                  "x": 86,
+                  "y": 292,
+                  "s": 1.4,
+                  "tint": "feedback.nudgeLight"
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 200,
+                  "y": 292,
+                  "s": 0.95
+                },
+                {
+                  "ref": "prop:soban",
+                  "x": 314,
+                  "y": 292,
+                  "s": 1.4,
+                  "tint": "brand.primary"
+                }
+              ],
+              "altEn": "Hoya compares two tables of kimchi: a milder, paler kind from the cold north and a saltier, redder kind from the south."
+            }
           },
           {
             "id": "s5",
@@ -3740,8 +4326,39 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Helpers seated around a low table with sliced boiled pork and pale yellow cabbage leaves; a child carrying a covered dish of kimchi to the house next door; Hoya waving."
+            "artBrief": "Helpers seated around a low table with sliced boiled pork and pale yellow cabbage leaves; a child carrying a covered dish of kimchi to the house next door; Hoya waving.",
+            "art": {
+              "setting": "scene:village-lane",
+              "layers": [
+                {
+                  "ref": "prop:crowd-seated",
+                  "x": 160,
+                  "y": 262,
+                  "s": 1.4,
+                  "tint": "brand.secondaryLight"
+                },
+                {
+                  "ref": "prop:soban",
+                  "x": 160,
+                  "y": 296,
+                  "s": 1.3,
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 262,
+                  "y": 296,
+                  "s": 0.6
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 336,
+                  "y": 286,
+                  "s": 1.1
+                }
+              ],
+              "altEn": "Helpers share boiled pork and cabbage leaves after gimjang, a child heads off to give kimchi next door, and Hoya waves."
+            }
           },
           {
             "id": "s6",
@@ -3759,8 +4376,38 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Rows of filled clay kimchi jars glowing in late-afternoon light, with Hoya proudly holding a heritage card showing cabbage and hands."
+            "artBrief": "Rows of filled clay kimchi jars glowing in late-afternoon light, with Hoya proudly holding a heritage card showing cabbage and hands.",
+            "art": {
+              "setting": "scene:village-lane",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 200,
+                  "y": 200,
+                  "s": 1.2
+                },
+                {
+                  "ref": "prop:kimchi-jars",
+                  "x": 160,
+                  "y": 268,
+                  "s": 1.2
+                },
+                {
+                  "ref": "prop:kimchi-jars",
+                  "x": 282,
+                  "y": 276,
+                  "s": 0.9,
+                  "flip": true
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 356,
+                  "y": 296,
+                  "s": 0.68
+                }
+              ],
+              "altEn": "Rows of filled kimchi jars glow in the late-afternoon sun, and Hoya cheers: gimjang is on UNESCO's heritage list."
+            }
           },
           {
             "id": "s7",
@@ -3777,8 +4424,25 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Grandma resting on the wooden porch at dusk, humming with eyes closed, musical notes drifting toward mountain ridges; Hoya leaning on her shoulder."
+            "artBrief": "Grandma resting on the wooden porch at dusk, humming with eyes closed, musical notes drifting toward mountain ridges; Hoya leaning on her shoulder.",
+            "art": {
+              "setting": "scene:mountains",
+              "layers": [
+                {
+                  "ref": "prop:fig-elder-seated",
+                  "x": 190,
+                  "y": 276,
+                  "s": 1.6
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 298,
+                  "y": 296,
+                  "s": 0.68
+                }
+              ],
+              "altEn": "As the day ends Grandma rests and hums Arirang, a folk song known all over Korea, with Hoya close beside her."
+            }
           },
           {
             "id": "s8",
@@ -3798,8 +4462,40 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A winding mountain pass with three small scenes along it (mountain valley, island coast, river town), each with people singing; Hoya walking the path."
+            "artBrief": "A winding mountain pass with three small scenes along it (mountain valley, island coast, river town), each with people singing; Hoya walking the path.",
+            "art": {
+              "setting": "scene:mountains",
+              "layers": [
+                {
+                  "ref": "prop:crowd-seated",
+                  "x": 90,
+                  "y": 234,
+                  "s": 0.55,
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "prop:fig-woman",
+                  "x": 262,
+                  "y": 232,
+                  "s": 0.45,
+                  "tint": "brand.secondaryLight"
+                },
+                {
+                  "ref": "prop:crowd-seated",
+                  "x": 330,
+                  "y": 222,
+                  "s": 0.5,
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 200,
+                  "y": 292,
+                  "s": 0.9
+                }
+              ],
+              "altEn": "Hoya walks a winding mountain path past little groups of people, each singing their own Arirang."
+            }
           }
         ],
         "checks": [
@@ -10506,7 +11202,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:pansori-tales",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "판소리로 듣는 흥부와 놀부, 토끼와 자라",
       "romanization": "Pansoriro deunneun Heungbuwa Nolbu, tokkiwa jara",
@@ -10637,8 +11333,46 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A singer in a white hanbok holding a folding fan, standing on a straw mat; a seated drummer with a round barrel drum beside her; Hoya in the audience."
+            "artBrief": "A singer in a white hanbok holding a folding fan, standing on a straw mat; a seated drummer with a round barrel drum beside her; Hoya in the audience.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:fig-writer-seated",
+                  "x": 318,
+                  "y": 262,
+                  "s": 1,
+                  "z": "back",
+                  "tint": "surface.sunken"
+                },
+                {
+                  "ref": "prop:fig-pansori",
+                  "x": 190,
+                  "y": 262,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:drum",
+                  "x": 302,
+                  "y": 272,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:crowd-seated",
+                  "x": 132,
+                  "y": 300,
+                  "s": 1.05,
+                  "z": "front"
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 40,
+                  "y": 298,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "A pansori singer with a fan stands beside a seated drummer and his barrel drum, and Hoya watches from the audience."
+            }
           },
           {
             "id": "s2",
@@ -10667,8 +11401,33 @@ export const storiesAll: Story[] = [
                 "timeRelative": false
               }
             ],
-            "artPending": true,
-            "artBrief": "The drummer mid-shout with one hand raised, the singer opening her fan; five small scroll shapes floating above, two of them glowing."
+            "artBrief": "The drummer mid-shout with one hand raised, the singer opening her fan; five small scroll shapes floating above, two of them glowing.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:fig-writer-seated",
+                  "x": 272,
+                  "y": 268,
+                  "s": 1.25,
+                  "z": "back",
+                  "tint": "surface.sunken"
+                },
+                {
+                  "ref": "prop:fig-pansori",
+                  "x": 140,
+                  "y": 272,
+                  "s": 1.45
+                },
+                {
+                  "ref": "prop:drum",
+                  "x": 252,
+                  "y": 280,
+                  "s": 1.1
+                }
+              ],
+              "altEn": "The drummer calls out chuimsae cheers like Eolssigu! as the singer opens her fan and sings on."
+            }
           },
           {
             "id": "s3",
@@ -10686,8 +11445,26 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A kind man in patched clothes cupping a baby swallow and tying a tiny strip of cloth around its leg outside a humble straw hut."
+            "artBrief": "A kind man in patched clothes cupping a baby swallow and tying a tiny strip of cloth around its leg outside a humble straw hut.",
+            "art": {
+              "setting": "scene:village-lane",
+              "layers": [
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 200,
+                  "y": 280,
+                  "s": 1.35,
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "prop:swallow",
+                  "x": 250,
+                  "y": 198,
+                  "s": 1.1
+                }
+              ],
+              "altEn": "Kind Heungbu gently binds the broken leg of a baby swallow outside his straw-roofed home."
+            }
           },
           {
             "id": "s4",
@@ -10705,8 +11482,38 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Huge round white gourds on a thatched roof; a family sawing one open with a two-person saw as rice and shining treasures spill out; a swallow circling."
+            "artBrief": "Huge round white gourds on a thatched roof; a family sawing one open with a two-person saw as rice and shining treasures spill out; a swallow circling.",
+            "art": {
+              "setting": "scene:village-lane",
+              "layers": [
+                {
+                  "ref": "prop:gourds",
+                  "x": 200,
+                  "y": 290,
+                  "s": 1.6
+                },
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 62,
+                  "y": 284,
+                  "s": 0.95
+                },
+                {
+                  "ref": "prop:fig-woman",
+                  "x": 338,
+                  "y": 284,
+                  "s": 0.95,
+                  "tint": "brand.secondaryLight"
+                },
+                {
+                  "ref": "prop:swallow",
+                  "x": 290,
+                  "y": 110,
+                  "s": 0.9
+                }
+              ],
+              "altEn": "Heungbu's family splits open a huge gourd and rice and gold coins pour out, while the swallow circles overhead."
+            }
           },
           {
             "id": "s5",
@@ -10724,8 +11531,35 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Two brothers in hanbok embracing in front of a modest house, one looking ashamed and grateful; a swallow perched on the eaves."
+            "artBrief": "Two brothers in hanbok embracing in front of a modest house, one looking ashamed and grateful; a swallow perched on the eaves.",
+            "art": {
+              "setting": "scene:village-lane",
+              "layers": [
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 170,
+                  "y": 280,
+                  "s": 1.25,
+                  "tint": "brand.secondaryLight"
+                },
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 236,
+                  "y": 280,
+                  "s": 1.25,
+                  "flip": true,
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "prop:swallow",
+                  "x": 318,
+                  "y": 128,
+                  "s": 0.8,
+                  "flip": true
+                }
+              ],
+              "altEn": "In well-known versions the greedy brother Nolbu is sorry, and the two brothers make peace while a swallow looks on."
+            }
           },
           {
             "id": "s6",
@@ -10744,8 +11578,26 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "An undersea palace of coral and seaweed; a dragon king resting on a cushion; a small soft-shelled turtle in an official's hat bowing and volunteering."
+            "artBrief": "An undersea palace of coral and seaweed; a dragon king resting on a cushion; a small soft-shelled turtle in an official's hat bowing and volunteering.",
+            "art": {
+              "setting": "scene:sea-palace",
+              "layers": [
+                {
+                  "ref": "prop:fig-king-seated",
+                  "x": 196,
+                  "y": 236,
+                  "s": 1.35
+                },
+                {
+                  "ref": "prop:turtle",
+                  "x": 300,
+                  "y": 282,
+                  "s": 1.25,
+                  "flip": true
+                }
+              ],
+              "altEn": "In the Dragon King's palace under the sea, a soft-shelled turtle in an official's hat offers to help the sick king."
+            }
           },
           {
             "id": "s7",
@@ -10763,8 +11615,39 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "The rabbit arriving wide-eyed in the undersea palace beside the turtle, fish courtiers watching; the king pointing; bubbles everywhere, nothing frightening."
+            "artBrief": "The rabbit arriving wide-eyed in the undersea palace beside the turtle, fish courtiers watching; the king pointing; bubbles everywhere, nothing frightening.",
+            "art": {
+              "setting": "scene:sea-palace",
+              "layers": [
+                {
+                  "ref": "prop:fig-king-seated",
+                  "x": 200,
+                  "y": 232,
+                  "s": 1.2
+                },
+                {
+                  "ref": "prop:fig-officials-kneeling",
+                  "x": 86,
+                  "y": 282,
+                  "s": 0.75
+                },
+                {
+                  "ref": "prop:turtle",
+                  "x": 282,
+                  "y": 288,
+                  "s": 1,
+                  "flip": true
+                },
+                {
+                  "ref": "prop:rabbit",
+                  "x": 346,
+                  "y": 286,
+                  "s": 1.05,
+                  "flip": true
+                }
+              ],
+              "altEn": "The rabbit arrives at the undersea palace beside the turtle, and the Dragon King and his courtiers look on."
+            }
           },
           {
             "id": "s8",
@@ -10782,8 +11665,46 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A rabbit bounding happily into a green forest from a sandy shore while the turtle watches from the waves; Hoya in the audience cheering with raised paws."
+            "artBrief": "A rabbit bounding happily into a green forest from a sandy shore while the turtle watches from the waves; Hoya in the audience cheering with raised paws.",
+            "art": {
+              "setting": "scene:seashore",
+              "layers": [
+                {
+                  "ref": "prop:leafy-tree",
+                  "x": 58,
+                  "y": 250,
+                  "s": 1.5,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:leafy-tree",
+                  "x": 126,
+                  "y": 232,
+                  "s": 1.1,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:rabbit",
+                  "x": 180,
+                  "y": 264,
+                  "s": 1.5,
+                  "flip": true
+                },
+                {
+                  "ref": "prop:turtle",
+                  "x": 296,
+                  "y": 210,
+                  "s": 0.9
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 336,
+                  "y": 296,
+                  "s": 0.68
+                }
+              ],
+              "altEn": "Back on the shore the clever rabbit hops off into the forest, the turtle watches from the waves, and Hoya cheers."
+            }
           }
         ],
         "checks": [
@@ -12142,7 +13063,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:seollal-new-year",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "호야의 설날 아침",
       "romanization": "Hoyaui Seollal achim",
@@ -12268,8 +13189,32 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Hoya the young tiger waving at the gate of a traditional hanok house on a crisp winter morning, a pale sunrise over snowy roof tiles."
+            "artBrief": "Hoya the young tiger waving at the gate of a traditional hanok house on a crisp winter morning, a pale sunrise over snowy roof tiles.",
+            "art": {
+              "setting": "scene:village-lane",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 200,
+                  "y": 150,
+                  "s": 0.7
+                },
+                {
+                  "ref": "prop:persimmon-tree",
+                  "x": 62,
+                  "y": 262,
+                  "s": 1.1,
+                  "tint": "feedback.nudge"
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 210,
+                  "y": 292,
+                  "s": 0.95
+                }
+              ],
+              "altEn": "On a crisp Seollal morning the sun rises over the village roofs, and Hoya waves hello for the Lunar New Year."
+            }
           },
           {
             "id": "s2",
@@ -12287,8 +13232,38 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A family in bright hanbok; a girl spreads her arms to show rainbow-striped saekdong sleeves while Hoya admires them."
+            "artBrief": "A family in bright hanbok; a girl spreads her arms to show rainbow-striped saekdong sleeves while Hoya admires them.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-woman",
+                  "x": 90,
+                  "y": 286,
+                  "s": 1,
+                  "tint": "brand.primary"
+                },
+                {
+                  "ref": "prop:fig-girl",
+                  "x": 200,
+                  "y": 288,
+                  "s": 1.6
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 292,
+                  "y": 286,
+                  "s": 1.15
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 360,
+                  "y": 294,
+                  "s": 0.62
+                }
+              ],
+              "altEn": "A family in new Seollal clothes: a girl holds out her rainbow-striped saekdong sleeves, and Hoya cheers."
+            }
           },
           {
             "id": "s3",
@@ -12306,8 +13281,49 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Two children bowing deeply on a heated wooden floor before smiling grandparents seated on cushions; Hoya bows beside them."
+            "artBrief": "Two children bowing deeply on a heated wooden floor before smiling grandparents seated on cushions; Hoya bows beside them.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-elder-seated",
+                  "x": 252,
+                  "y": 262,
+                  "s": 1.35
+                },
+                {
+                  "ref": "prop:fig-elder-seated",
+                  "x": 350,
+                  "y": 262,
+                  "s": 1.25,
+                  "flip": true,
+                  "tint": "brand.secondaryLight"
+                },
+                {
+                  "ref": "prop:fig-bowing",
+                  "x": 110,
+                  "y": 292,
+                  "s": 1.6,
+                  "flip": true,
+                  "tint": "brand.secondaryLight"
+                },
+                {
+                  "ref": "prop:fig-bowing",
+                  "x": 178,
+                  "y": 298,
+                  "s": 1.5,
+                  "flip": true,
+                  "tint": "feedback.nudgeLight"
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 40,
+                  "y": 296,
+                  "s": 0.52
+                }
+              ],
+              "altEn": "Two children kneel in a deep New Year bow, sebae, before their grandparents on floor cushions, as Hoya watches."
+            }
           },
           {
             "id": "s4",
@@ -12325,8 +13341,37 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Grandma smiling and handing a small envelope to a child; a plate of rice cakes and tangerines on a low table; Hoya beaming."
+            "artBrief": "Grandma smiling and handing a small envelope to a child; a plate of rice cakes and tangerines on a low table; Hoya beaming.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-elder-seated",
+                  "x": 150,
+                  "y": 268,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:soban",
+                  "x": 250,
+                  "y": 294,
+                  "s": 1.15
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 322,
+                  "y": 286,
+                  "s": 1.15
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 62,
+                  "y": 296,
+                  "s": 0.55
+                }
+              ],
+              "altEn": "Grandma shares kind New Year wishes with a child beside a low table of rice cakes and fruit, and Hoya cheers."
+            }
           },
           {
             "id": "s5",
@@ -12344,8 +13389,26 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Steaming bowls of clear soup with oval white rice-cake slices and egg garnish on a low table; Hoya holding a spoon happily."
+            "artBrief": "Steaming bowls of clear soup with oval white rice-cake slices and egg garnish on a low table; Hoya holding a spoon happily.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:soban",
+                  "x": 220,
+                  "y": 288,
+                  "s": 2,
+                  "tint": "surface.sunken"
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 78,
+                  "y": 292,
+                  "s": 0.8
+                }
+              ],
+              "altEn": "Two bowls of tteokguk, clear soup with white rice-cake slices, wait on a low table, and Hoya is ready for breakfast."
+            }
           },
           {
             "id": "s6",
@@ -12363,8 +13426,50 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Four wooden yut sticks tumbling in mid-air above a cloth game board with a circle-and-cross pattern; two teams cheering, Hoya on one team."
+            "artBrief": "Four wooden yut sticks tumbling in mid-air above a cloth game board with a circle-and-cross pattern; two teams cheering, Hoya on one team.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:yut-board",
+                  "x": 200,
+                  "y": 292,
+                  "s": 1.35
+                },
+                {
+                  "ref": "prop:yut-sticks",
+                  "x": 200,
+                  "y": 206,
+                  "s": 1.15
+                },
+                {
+                  "ref": "prop:fig-woman",
+                  "x": 62,
+                  "y": 282,
+                  "s": 0.95,
+                  "tint": "brand.primary"
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 112,
+                  "y": 296,
+                  "s": 0.6
+                },
+                {
+                  "ref": "prop:fig-girl",
+                  "x": 300,
+                  "y": 284,
+                  "s": 1.1
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 352,
+                  "y": 286,
+                  "s": 1.05
+                }
+              ],
+              "altEn": "Four yut sticks tumble above the yut board as two teams cheer, and Hoya cheers with his team."
+            }
           },
           {
             "id": "s7",
@@ -12382,8 +13487,19 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Five small panels in a row showing yut sticks landing in five different patterns, each with a matching number of footprints (1 to 5), no letters."
+            "artBrief": "Five small panels in a row showing yut sticks landing in five different patterns, each with a matching number of footprints (1 to 5), no letters.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:yut-throws",
+                  "x": 200,
+                  "y": 252,
+                  "s": 1.05
+                }
+              ],
+              "altEn": "Five ways the yut sticks land, from one flat side up to none, move a piece one to five spaces: do, gae, geol, yut and mo."
+            }
           },
           {
             "id": "s8",
@@ -12402,8 +13518,31 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Night scene of a big round full moon over a village, with Hoya bowing toward the viewer and a yut board resting nearby."
+            "artBrief": "Night scene of a big round full moon over a village, with Hoya bowing toward the viewer and a yut board resting nearby.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:night-window",
+                  "x": 302,
+                  "y": 196,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:yut-board",
+                  "x": 300,
+                  "y": 292,
+                  "s": 1
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 150,
+                  "y": 292,
+                  "s": 1
+                }
+              ],
+              "altEn": "The moon shines through the window at night, and Hoya wishes everyone a happy New Year beside the yut board."
+            }
           }
         ],
         "checks": [
@@ -16160,7 +17299,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:sun-and-moon",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "해님 달님",
       "romanization": "Haenim Dallim",
@@ -16306,8 +17445,26 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Hoya sitting cross-legged with an open folding screen behind him painted with a sun, a moon and mountains, winking at the viewer."
+            "artBrief": "Hoya sitting cross-legged with an open folding screen behind him painted with a sun, a moon and mountains, winking at the viewer.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:sun-moon-screen",
+                  "x": 200,
+                  "y": 232,
+                  "s": 1.4,
+                  "z": "back"
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 200,
+                  "y": 294,
+                  "s": 0.9
+                }
+              ],
+              "altEn": "Hoya sits ready for story time in front of a folding screen painted with the sun, the moon and five peaks."
+            }
           },
           {
             "id": "s2",
@@ -16325,8 +17482,27 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A winding hilltop path at sunset; a mother in hanbok with a covered bundle of rice cakes, and a comical roly-poly tiger with no scary teeth peeking from behind a boulder; a thatched cottage far below."
+            "artBrief": "A winding hilltop path at sunset; a mother in hanbok with a covered bundle of rice cakes, and a comical roly-poly tiger with no scary teeth peeking from behind a boulder; a thatched cottage far below.",
+            "art": {
+              "setting": "scene:mountains",
+              "layers": [
+                {
+                  "ref": "prop:fig-woman",
+                  "x": 136,
+                  "y": 264,
+                  "s": 1.1,
+                  "tint": "brand.secondaryLight"
+                },
+                {
+                  "ref": "prop:tiger-trickster",
+                  "x": 258,
+                  "y": 272,
+                  "s": 1.3,
+                  "flip": true
+                }
+              ],
+              "altEn": "On her way home over a hill, a mother carrying rice cakes meets a round, silly-looking tiger."
+            }
           },
           {
             "id": "s3",
@@ -16344,8 +17520,33 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A cottage door slightly ajar at dusk, two children peeking out with wide eyes; only a fuzzy striped paw and a shawl are visible outside, drawn comically rather than scary."
+            "artBrief": "A cottage door slightly ajar at dusk, two children peeking out with wide eyes; only a fuzzy striped paw and a shawl are visible outside, drawn comically rather than scary.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-girl",
+                  "x": 150,
+                  "y": 286,
+                  "s": 1.4
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 222,
+                  "y": 286,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:tiger-trickster",
+                  "x": 346,
+                  "y": 292,
+                  "s": 1,
+                  "flip": true,
+                  "tint": "brand.primary"
+                }
+              ],
+              "altEn": "Inside the house a brother and sister look toward the door, where a silly tiger pretends to be their mother."
+            }
           },
           {
             "id": "s4",
@@ -16372,8 +17573,45 @@ export const storiesAll: Story[] = [
                 "timeRelative": false
               }
             ],
-            "artPending": true,
-            "artBrief": "Two children perched high in a big tree beside a stone well under starlight, looking down calmly; a striped tail just visible behind the cottage; Hoya in a corner of the frame giving a thumbs-up."
+            "artBrief": "Two children perched high in a big tree beside a stone well under starlight, looking down calmly; a striped tail just visible behind the cottage; Hoya in a corner of the frame giving a thumbs-up.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:night-sky",
+                  "x": 200,
+                  "y": 196,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:leafy-tree",
+                  "x": 200,
+                  "y": 300,
+                  "s": 2.3,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 172,
+                  "y": 188,
+                  "s": 0.72
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 236,
+                  "y": 196,
+                  "s": 0.68,
+                  "tint": "brand.secondaryLight"
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 348,
+                  "y": 244,
+                  "s": 0.8
+                }
+              ],
+              "altEn": "Under the night stars the brother and sister sit safe up in a tall tree, and Hoya waves: it is only a story."
+            }
           },
           {
             "id": "s5",
@@ -16391,8 +17629,39 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "The tiger sliding comically down a shiny tree trunk with a little oil bottle beside it, the children giggling behind their hands."
+            "artBrief": "The tiger sliding comically down a shiny tree trunk with a little oil bottle beside it, the children giggling behind their hands.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:leafy-tree",
+                  "x": 200,
+                  "y": 300,
+                  "s": 2.3,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 172,
+                  "y": 188,
+                  "s": 0.72
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 236,
+                  "y": 196,
+                  "s": 0.68,
+                  "tint": "brand.secondaryLight"
+                },
+                {
+                  "ref": "prop:tiger-trickster",
+                  "x": 206,
+                  "y": 298,
+                  "s": 1.15
+                }
+              ],
+              "altEn": "The tiger slips and slides down the oily tree trunk, and the brother and sister giggle safely above."
+            }
           },
           {
             "id": "s6",
@@ -16409,8 +17678,44 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A thick golden rope descending from glowing clouds as the two children climb it; far below, a frayed grey rope snapping near the treetops."
+            "artBrief": "A thick golden rope descending from glowing clouds as the two children climb it; far below, a frayed grey rope snapping near the treetops.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 190,
+                  "y": 130,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:sky-rope",
+                  "x": 200,
+                  "y": 262,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 112,
+                  "y": 250,
+                  "s": 0.75
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 152,
+                  "y": 262,
+                  "s": 0.72,
+                  "tint": "brand.secondaryLight"
+                },
+                {
+                  "ref": "prop:leafy-tree",
+                  "x": 344,
+                  "y": 290,
+                  "s": 1.2
+                }
+              ],
+              "altEn": "A strong new rope comes down from the glowing sky for the brother and sister, while an old frayed rope snaps."
+            }
           },
           {
             "id": "s7",
@@ -16428,8 +17733,32 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A field of tall reddish sorghum stalks swaying, with only the tip of a striped tail sticking out among them; soft, funny mood."
+            "artBrief": "A field of tall reddish sorghum stalks swaying, with only the tip of a striped tail sticking out among them; soft, funny mood.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:sorghum",
+                  "x": 110,
+                  "y": 290,
+                  "s": 1.25
+                },
+                {
+                  "ref": "prop:sorghum",
+                  "x": 200,
+                  "y": 296,
+                  "s": 1.5
+                },
+                {
+                  "ref": "prop:sorghum",
+                  "x": 296,
+                  "y": 288,
+                  "s": 1.2,
+                  "flip": true
+                }
+              ],
+              "altEn": "Tall sorghum stalks sway in a field with red stems; storytellers say that is how sorghum turned red."
+            }
           },
           {
             "id": "s8",
@@ -16447,8 +17776,37 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A split sky: a warm smiling sun with the sister's face on one side and a gentle moon with the brother's face on the other, over sleeping mountains; Hoya waving goodbye."
+            "artBrief": "A split sky: a warm smiling sun with the sister's face on one side and a gentle moon with the brother's face on the other, over sleeping mountains; Hoya waving goodbye.",
+            "art": {
+              "setting": "scene:mountains",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 100,
+                  "y": 130,
+                  "s": 0.8
+                },
+                {
+                  "ref": "prop:full-moon",
+                  "x": 300,
+                  "y": 110,
+                  "s": 1.6
+                },
+                {
+                  "ref": "prop:flat-rock",
+                  "x": 282,
+                  "y": 292,
+                  "s": 1.3
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 190,
+                  "y": 292,
+                  "s": 0.9
+                }
+              ],
+              "altEn": "The sister now shines as the sun and the brother glows as the moon over the mountains, and Hoya waves goodbye."
+            }
           }
         ],
         "checks": [
