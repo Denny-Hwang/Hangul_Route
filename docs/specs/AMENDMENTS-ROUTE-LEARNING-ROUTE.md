@@ -176,14 +176,14 @@ Next: Family at the Table
 | plan goal, not reached | `Stage {n} · {title}` (or the collapsed line) | `From your class's weekly plan` / `From your school's weekly plan` / `From your family's weekly plan` / `From your own weekly plan` | the can-do line (`learner.myRoute.canDoLead` + `stage.canDo.<n>`), then the goal pips |
 | plan goal, reached | `Stage {n} · {title} · reached` | as above | "Keep going: {next title}" when a next quest exists; the goal pips (all filled) |
 | default goal, full stage (availability `open`) | `Stage {n} · {title}` (or collapsed) | `Hoya's suggestion` | can-do line, goal pips |
-| default goal, taste stage | `Explore Stage {n} · {title}` | `Hoya's suggestion` | "Try the first quests of this stage." (no can-do line: a taste does not teach the whole stage); goal pips |
+| default goal, taste stage | `Explore Stage {n} · {title}` (or collapsed: `goal.exploreInGoal`) | `Hoya's suggestion` | "Try the first quests of this stage." (no can-do line: a taste does not teach the whole stage); goal pips |
 | no goal (`null`) | — (the line is hidden) | — | the card's only sentence is "You reached the end of the open road. More is coming." (the `rest` sentence is dropped, so the card never says it twice) |
 
 - **Now** is the `here` stage of F-ROUTE-001 section 3.3, unchanged. A new learner with nothing done sees "Your Learning Route starts here." instead of a Now line.
 - **Goal pips.** The goal stage's quest pips as one fill-only row, the same `Pip` objects and shapes as the trail row of that stage (done, known, open, new, later, not open), with the `isCursor` marker when Next is in that stage. No digits, no "of", no bar that can drop. Accessibility label without digits: "Ready when you are" (none done), "Some quests done, more are ready" (some), "Every quest here is done" (all). Drafts; the dictionary has the final words.
 - **Hidden on learner screens:** the plan's dates, `endsOn`, any week count on the card, and any "N stages to go" or "days left".
 - **Weekly plan line.** The F-ROUTE-001 section 3.9 line under the card reads only "Week {n} of your weekly plan" with [Open plan] (the Home strip's `home.strip.week(n)` words). It never repeats a "Next" title on this page: the card owns Next, so two different "Next" items can never appear together.
-- **Trail marker.** The goal stage's row gets the tag **Your goal** with a drawn flag glyph (`Icon` `flag`, LR-2). It sits next to **You are here** and **You started here**. A stage can carry all three; at 320 x 568 with 200 % text they wrap to at most two lines (assumption f).
+- **Trail marker.** The goal stage's row gets the tag **Your goal** with a drawn flag glyph (`Icon` `flag`, LR-2). It sits after **You are here** and before **You started here** (where you are, where you are going, where you began). A stage can carry all three; at 320 x 568 they take at most two rows at the default text size, and at 200 % text one row each, with nothing cut off (assumption f, as revised by LR-D).
 - **Collapsed goal row.** When the goal stage is a compact `later` row, the tag still shows. That can only happen through a plan whose lessons reach a stage with no shipped content.
 - **First time a goal is reached.** When `reached` becomes true for a goal not yet in `seen.goalsReached` (section 4.5), Hoya takes the `cheering` pose and the card's Hoya line reads "You reached your goal. Hoya is proud!" for that visit only. `route_map.goal_reached` is sent (section 8). Never in read-only mode. No animation when motion is reduced.
 - **Free-end hero** (F-ENT-003 `free-end`, section 4.5): F-ENT-003's calm "open for you" words with one button, the Goal line kept under them, and no ask.
@@ -299,7 +299,7 @@ There are two read-only modes. Both use `viewer: 'grownup'` copy: third person, 
   3. **Otherwise:** "Next open stage: Stage {n} · {title}" (`pickGoal` over `summary.journey.stages` with no sources). It asserts nothing about the learner's goal.
   A class viewer never receives `routeGoal` or `selfRoute` (projection, section 9) and never reads another space's plans.
 - **Goal reached** (case 1): "{name} reached the goal: Stage {n} · {title}."
-- **Can-do line** under the goal: "By the end of this stage, {name} can:" + `learner.myRoute.stage.canDo.<n>` (the shared dictionary entry, read through `getMessages(locale)`, never copied).
+- **Can-do line** under the goal: "By the end of this stage, {name} can:" + `learner.myRoute.stage.canDo.<n>` (the shared dictionary entry, read through `getMessages(locale)`, never copied). Only while the goal is not reached: case 1 reached and case 2 with "{name} reached this stage." drop it, as the learner card does once a goal is reached (section 4.3; LR-D, `design/screens/learning-route/stage-list.md`).
 - **Plan end** (grown-up only, LR-OD-7): "Plan ends {date}" from the plan's `meta` (cases 1 with a family or self source, and 2), or from `selfRoute.endsOn` (case 1, `self`). A date, never "late" or "behind".
 - **No summary journey yet** (an old app build, or never synced): "The Learning Route appears after {name}'s next sync on the newest app." It is never worded as "no progress" (F-ROUTE-001 review, R-8 row).
 
@@ -320,7 +320,7 @@ There are two read-only modes. Both use `viewer: 'grownup'` copy: third person, 
 ### 6.2 Local read-only page (R-3, extended by LR-5a)
 
 The route card in the third person, from the device's own `pickGoal`, so it **is** the learner's goal and may say so:
-- "Now: {name} is on Stage {n}: {title}." (or the collapsed line "Stage {n} · {title}: {name} is in the goal stage");
+- "Now: {name} is on Stage {n}: {title}." (or the collapsed line "Stage {n} · {title}: {name} is in the goal stage", or for a taste goal "Explore Stage {n} · {title}: {name} is in the goal stage");
 - "Goal: Stage {n} · {title}" with the source line "From the class's weekly plan" / "From the school's weekly plan" / "From the family's weekly plan" / "From {name}'s own weekly plan" / "Hoya's suggestion";
 - "Plan ends {date}" (grown-up only);
 - the goal pips; "Next: {title}" as text.
@@ -418,8 +418,8 @@ Unchanged on purpose:
 ## 10. Accessibility
 
 - **Route card.** One `accessibilityRole="summary"` block; focus lands on it when the tab gains focus (it replaces the hero sentence of F-ROUTE-001 section 3.14). Its label reads in order: "Now: Stage 1, Hangul. Goal: Stage 2, Words. From your class's weekly plan. Some quests done, more are ready. Next: Family at the Table." (collapsed form: "Stage 1, Hangul: you are in your goal stage. ..."). The pin, flag and pip glyphs are hidden from screen readers; the goal pips are one label without digits.
-- **Stage rows.** A stage row's label gains "Your goal." (or "{name}'s goal." on grown-up pages) after the here and start parts. This is an additive argument to `a11y.myRoute.stage` and `stageGrownup`.
-- **Tab.** Label "Route", accessibility label "Learning Route". Selection state comes from the navigator.
+- **Stage rows.** A stage row's label gains "Your goal." (or "{name}'s goal." on grown-up pages) after the here part and before the start part, the order the tags show. This is an additive argument to `a11y.myRoute.stage` and `stageGrownup`: a trailing optional `goal = false` after `played`, so existing callers do not change, spoken between the here and start parts. LR-3b's copy test asserts "... You are here. Your goal. You started here. ..." (and "... Sam is here. Sam's goal. Sam started here. ..." for `stageGrownup`).
+- **Tab.** Label "Route", accessibility label "Learning Route". Selection state comes from the navigator. While the four-tab bar shows, the native tab label grows with the text size up to 1.3 x caption and then shrinks to fit rather than being cut off (`maxFontSizeMultiplier` 1.3, `numberOfLines` 1, `adjustsFontSizeToFit`; LR-D, `design/screens/learning-route/tab-bar.md`). The three-tab bar with the flag off is unchanged.
 - **Shapes and words.** Not-open pips share the dotted ring with coming-later pips; the words and the legend tell them apart, and colour is never the only cue.
 - **Adult views.**
   - The stage list is a real `<ol>` and each row is an `<li>` with text.
@@ -447,20 +447,21 @@ Unchanged on purpose:
 
 `learner.myRoute` (LR-3b, except `purpose` in LR-1):
 - labels and tags: `now.label` "Now" · `goal.label` "Goal" · `tag.goal` "Your goal" · `purpose` "Where you are and where you are going." · `legend.notOpen` "Not open yet" (equal to `learner.access.notOpen`)
-- goal line: `goal.stage(n, title)` "Stage {n} · {title}" · `goal.inGoal(n, title)` "Stage {n} · {title}: you are in your goal stage" · `goal.explore(n, title)` "Explore Stage {n} · {title}" · `goal.tasteLine` "Try the first quests of this stage." (the can-do lead is the existing `canDoLead` "By the end of this stage you can:")
+- goal line: `goal.stage(n, title)` "Stage {n} · {title}" · `goal.inGoal(n, title)` "Stage {n} · {title}: you are in your goal stage" · `goal.explore(n, title)` "Explore Stage {n} · {title}" · `goal.exploreInGoal(n, title)` "Explore Stage {n} · {title}: you are in your goal stage" (the collapsed taste line, LR-D) · `goal.tasteLine` "Try the first quests of this stage." (the can-do lead is the existing `canDoLead` "By the end of this stage you can:")
 - goal reached: `goal.reachedStage(n, title)` "Stage {n} · {title} · reached" · `goal.keepGoing(title)` "Keep going: {title}" · `goal.reachedHoya` "You reached your goal. Hoya is proud!"
 - end of road: `goal.endOfRoad` "You reached the end of the open road. More is coming."
+- content cannot be read (F-ROUTE-001 section 3.17, wireframe J; LR-D): `hero.error` "Hoya could not open your Learning Route." with the button `common.buttons.tryAgain`
 - source line: `goal.from.class` "From your class's weekly plan" · `goal.from.school` "From your school's weekly plan" · `goal.from.family` "From your family's weekly plan" · `goal.from.self` "From your own weekly plan" · `goal.from.default` "Hoya's suggestion"
 - reused from F-ENT-003 (not new here): `learner.access.notOpen`, `learner.access.openForYou`, `learner.access.practiceWords.cta`, `learner.routeNext.tag.inPlan`, `a11y.access.notOpen(title)`
 
 `caregiver.journey` (LR-3b; viewer `grownup`; `here(name, n, title)`, `canDoLead(name)`, `hereTag(name)` already exist):
-- `goal.inGoal(name, n, title)` "Stage {n} · {title}: {name} is in the goal stage"
+- `goal.inGoal(name, n, title)` "Stage {n} · {title}: {name} is in the goal stage" · `goal.exploreInGoal(name, n, title)` "Explore Stage {n} · {title}: {name} is in the goal stage" · `error(name)` "Hoya could not open {name}'s Learning Route." (LR-D)
 - source line: `goal.from.class` "From the class's weekly plan" · `goal.from.school` "From the school's weekly plan" · `goal.from.family` "From the family's weekly plan" · `goal.from.self(name)` "From {name}'s own weekly plan" · `goal.from.default` "Hoya's suggestion"
 - `goal.reached(name, n, title)` "{name} reached the goal: Stage {n} · {title}." · `planEnds(date)` "Plan ends {date}" · `goalTag(name)` "{name}'s goal" · `endOfRoad(name)` "{name} reached the end of the open road. More is coming."
 - shared with the learner (no "you"): `now.label`, `goal.label`, `goal.stage`, `goal.reachedStage`, `goal.explore`, `goal.tasteLine`
 
 `console.learningRoute` (LR-7):
-- heading and link: `title(name)` "{name}'s Learning Route" · `open` "Open Learning Route" · `section` "Learning Route"
+- heading and link: `title(name)` "{name}'s Learning Route" · `open` "Open Learning Route" · `section` "Learning Route" · `stagesTitle` "Stages" (the heading over the stage list, LR-D; LR-7 ships it, or LR-8 if LR-7 merged without it). A taste stage's row word is the learner's `learner.myRoute.state.taste` "A taste", read through `getMessages(locale)` (no console key); a merged later run uses the existing `console.journey.stages(from, to, text)` "Stages 5 to 7: Coming later"
 - back links: `back.report` "Back to the report" · `back.class` "Back to the class" · `back.family` "Back to the family"
 - card, case 1: `now(name, n, title)` "{name} is on Stage {n}: {title}." · `learnerGoal(name, n, title)` "{name}'s goal: Stage {n} · {title}" · `fromLead.class` "From the class's weekly plan" · `fromLead.school` "From the school's weekly plan" · `fromLead.family` "From your family's weekly plan" · `fromLead.self(name)` "From {name}'s own weekly plan" · `fromLead.default` "Hoya's suggestion: the next open stage" · `reached(name, n, title)` "{name} reached the goal: Stage {n} · {title}."
 - card, case 2: `planReaches.class(n, title)` "Your class's weekly plan reaches Stage {n} · {title}" · `planReaches.family(n, title)` "Your family's weekly plan reaches Stage {n} · {title}" · `stageReached(name)` "{name} reached this stage."
@@ -498,7 +499,7 @@ Counts are asserted on the frozen fixtures of F-ROUTE-001 section 5: `catalog-20
 | `apps/web/src/lib/console/__tests__/learning-route-view.test.ts` | unit, 100 % | rows from `summary.journey` (unknown stages and states ignored, `later` runs merged, zero parts omitted); goal cases 1 to 3 per viewer; a draft or archived plan never sets a goal; a plan targeted at another learner is ignored; newest `publishedAt` wins; a class viewer never reads `routeGoal` or `selfRoute`; secondary family-plan line only when the family plan does not lead; start stage via `placementStageNumber`; not-synced state; nothing exported that averages, sorts or compares |
 | `apps/web/src/lib/console/__tests__/class-goal-line.test.ts` | unit | whole-class plans only; newest `publishedAt`; targeted-only plans give no line; drafts give no line |
 | `apps/web/src/lib/console/__tests__/routing.test.ts` (extend) | unit | `learnerRoute(spaceId, learnerId, kind?)` encodes ids; `kind: 'family'` never yields `/teach`; omitted kind yields `/teach/space/route`; no name parameter exists |
-| `apps/mobile/e2e/web/my-route.spec.ts` (extend R-10's) | e2e | Route tab at 320 x 568, 375 x 667, 844 x 390, 1180 x 820: four tabs, no horizontal scroll, route card text, goal tag, three tags on one row wrap to at most two lines; a plan fixture shows "From your class's weekly plan" and Continue opens the same quest as Home card (2) |
+| `apps/mobile/e2e/web/my-route.spec.ts` (extend R-10's) | e2e | Route tab at 320 x 568, 375 x 667, 844 x 390, 1180 x 820: four tabs, no horizontal scroll, route card text, goal tag; at 320 x 568, three tags on one row take at most two rows at the default text size (assumption f); each tab label is no wider than its item, per shipped UI locale (`scrollWidth <= clientWidth`); Continue's box is fully above the tab bar's top edge with the longest Stage 1 quest title as Next; a plan fixture shows "From your class's weekly plan" and Continue opens the same quest as Home card (2) |
 | `apps/web/e2e/learning-route.spec.ts` | e2e | the stage list page under `/parent/space/route` and `/teach/space/route` on a mocked roster at 320 and 1280: `<ol>` of stages, can-do lines, no `/ \d+` ratio, no "0 quests", no "behind", no billing link, not-found state, back link; the report's At a glance card and its link (once RP-7a is in) |
 
 Coverage: `packages/content-schema` 100 %; `apps/mobile/src/logic/my-route/` 100 %; `apps/web` console logic 90 % or more (`learning-route-view.ts` 100 %).
@@ -561,12 +562,12 @@ These PRs edit their rows in F-ROUTE-001 instead of adding new PRs:
 
 | # | Assumption | Verified in |
 |---|---|---|
-| a | Four tab items fit at 320 dp with 200 % text: the label "Route" wraps to no more than one line | LR-4 e2e at 320 x 568 |
+| a | Four tab items fit at 320 dp with 200 % text: the label "Route" wraps to no more than one line. Met with the native label cap (1.3 x caption, then shrink to fit; LR-D, `design/screens/learning-route/tab-bar.md`). The web build's text is in px and does not follow the text size, so the web e2e checks the default size per locale and the 200 % case is checked on a device | LR-4 e2e at 320 x 568 (default size); LR-10 on a device at text size 200 % |
 | b | `route` and `flag` glyphs read clearly at tab size and at 20 dp in greyscale | LR-D, LR-2 |
 | c | Goldens A and B give `planGoalStage === stats.endsAtStage` | LR-3a |
 | d | The roster and plans responses the console already loads are enough for the summary views (no new request) | LR-8 |
 | e | F-ENT-003's `questOpenPredicate` is quest-level and `RouteNext` carries `episodeId` | LR-3b |
-| f | Three tags on one stage row ("You are here", "You started here", "Your goal") at 320 x 568 and 200 % text wrap to at most two lines | LR-10 |
+| f | Three tags on one stage row ("You are here", "Your goal", "You started here", in that order) at 320 x 568 take at most two rows at the default text size; at 200 % text each tag takes its own row (a tag may wrap inside itself), nothing is cut off and nothing scrolls sideways. Revised by LR-D: at 200 % no order or layout of these words fits two lines (`design/screens/learning-route/route-card.md`). The 200 % part is a native check: the web build's px text does not follow the text size, and the repo's web 200 % proxy (a halved viewport) would measure a 160 px window instead | LR-D (mock), LR-4 web e2e (default size), LR-10 on a device at text size 200 % |
 | g | A first-time learner tells Route and Journey apart from their purpose lines within 5 seconds | LR-10 (screenshot check or hallway test) |
 | h | "Not open yet" and "Coming later" pips, which share the dotted ring, are told apart by their words and the legend at 320 x 568 | LR-10 |
 
@@ -615,3 +616,7 @@ These PRs edit their rows in F-ROUTE-001 instead of adding new PRs:
 | R2 minor: `selfRoute.goalStage` erased by a pre-LR build | **resolved by removal.** The field is replaced by `summary.routeGoal`; the mixed-build behaviour is documented and falls back to honest wording | 9 |
 | R2 minor: undefined owner and start-stage predicates | **applied / moot.** Start stage = `placementStageNumber(summary.placement.level.stage)`. The owner predicate is no longer needed (no owner-only line) | 6.1 |
 | R2 minor: no design mock step for the card and the adult page | **applied.** LR-D row; LR-2, LR-5a and LR-8 depend on it | 13 |
+
+**2026-10-12, LR-D design pass** (#399). The mock measured assumption f at 320 (tag row 236 px). In the old order (here, start, goal) the three tags took three rows at the default text size. At 200 % text, "You are here" (173 px) and "Your goal" (152 px) cannot share a row, so no order or layout fits two lines. **Applied:** the goal tag sits between the here and start tags. That gives two rows at the default text size (here and goal 201 px of 236; 230 px with a wide fallback font) and up to 120 % text. Assumption f now asks for two rows at the default size, and one row per tag with nothing cut off at 200 % (sections 4.3, 10, 12, 14). **Also added** to section 11.1, because the mocks need them and no key existed: the collapsed taste line (`goal.exploreInGoal`, learner and grown-up; section 4.3's taste row), the error line of wireframe J (`hero.error`, grown-up `error(name)`), and the stage list heading (`console.learningRoute.stagesTitle`).
+
+**2026-10-12, LR-D review pass** (#399, two reviews). **Applied:** the grown-up card hides the can-do line once the goal is reached, as the learner card does (section 6.1); the spoken goal part of a stage row is a trailing optional `goal` argument, read between the here and start parts (section 10); the four-tab bar's native label grows up to 1.3 x caption and then shrinks to fit, measured with English and with ES and KO drafts, and the flag-off bar is unchanged (section 10, assumption a); assumptions a and f name how 200 % is checked (on a device; the web e2e checks the default size, per locale for the tab labels), and the my-route e2e row adds the tab label fit and Continue above the tab bar (section 12); the console stage list's taste word and later-run words are named (section 11.1).
