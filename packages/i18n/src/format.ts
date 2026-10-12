@@ -111,6 +111,46 @@ export function formatUsd(locale: UiLocale, amount: number, options: FormatUsdOp
   }
 }
 
+/**
+ * Stripe's zero-decimal currencies: their minor unit is the whole unit
+ * (https://docs.stripe.com/currencies#zero-decimal).
+ */
+const ZERO_DECIMAL_CURRENCIES: ReadonlySet<string> = new Set(['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF']);
+
+/** Stripe's three-decimal currencies (https://docs.stripe.com/currencies#three-decimal). */
+const THREE_DECIMAL_CURRENCIES: ReadonlySet<string> = new Set(['BHD', 'JOD', 'KWD', 'OMR', 'TND']);
+
+/**
+ * The digits of Stripe's minor unit for a currency. Stripe's own table, not
+ * `Intl`'s CLDR digits, which differ for some codes (HUF, ISK, COP and others
+ * read 0 in CLDR but are two-decimal in Stripe's API).
+ */
+function stripeMinorDigits(code: string): number {
+  if (ZERO_DECIMAL_CURRENCIES.has(code)) return 0;
+  return THREE_DECIMAL_CURRENCIES.has(code) ? 3 : 2;
+}
+
+/**
+ * An amount in a currency's minor unit, as Stripe stores it (F-BILL-002 section
+ * 4.10): cents for `usd` (1530 → "$15.30"), whole units for zero-decimal
+ * currencies (`krw` 20000 → "₩20,000"), thousandths for three-decimal ones
+ * (`kwd` 1234 → "KWD 1.234"). The digits follow Stripe's minor unit, never a
+ * fixed `/ 100`. `currency` is an ISO 4217 code in any case. Without `Intl`,
+ * or for a code it rejects: "15.30 EUR" ("$15.30" for US dollars).
+ */
+export function formatMinorAmount(locale: UiLocale, amountMinor: number, currency: string): string {
+  const code = currency.toUpperCase();
+  const digits = stripeMinorDigits(code);
+  const amount = amountMinor / 10 ** digits;
+  try {
+    return new Intl.NumberFormat(LOCALE_META[locale].speechLang, { style: 'currency', currency: code, minimumFractionDigits: digits, maximumFractionDigits: digits }).format(amount);
+  } catch {
+    const text = groupDigits(Math.abs(amount).toFixed(digits));
+    const sign = amountMinor < 0 ? '-' : '';
+    return code === 'USD' ? `${sign}$${text}` : `${sign}${text} ${code}`;
+  }
+}
+
 export interface RelativeDayWords {
   today: string;
   yesterday: string;
