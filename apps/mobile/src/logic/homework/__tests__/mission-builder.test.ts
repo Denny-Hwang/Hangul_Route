@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { episodesAll, questsAll } from '../../../content';
 import { questOpenPredicate } from '../../content-access';
 import { offerableQuests } from '../../next-quest';
+import type { RouteNextInput } from '../../route-next';
 import { scanLearnerCopy } from '../banned-text';
 import {
   buildTodaysMission,
@@ -603,5 +604,81 @@ describe('quest access: Home offers open quests only (F-ENT-003 section 3.6)', (
         }
       }
     });
+  });
+});
+
+describe('card ② follows routeNext (F-ENT-003 section 3.7, PR E3-4)', () => {
+  const P = 'profile:kid1';
+  const selfItem = (questId: string, targetDate: string, completedAt?: string): ProgressSnapshot['homework'][number] => ({
+    id: `route:mine#${questId}`,
+    profileId: P,
+    questId,
+    episodeId: EPISODES.find((e) => e.questIds.includes(questId))!.id,
+    assignedBy: 'system',
+    assignedAt: '2026-05-01T00:00:00.000Z',
+    targetDate,
+    ...(completedAt ? { completedAt } : {}),
+  });
+  const routeOf = (snap: ProgressSnapshot, over: Partial<RouteNextInput> = {}): RouteNextInput => ({
+    snapshot: snap,
+    profileId: P,
+    today: TODAY,
+    sources: [{ id: 'route:mine', kind: 'self', assignedAt: '2026-05-01T00:00:00.000Z', items: QUESTS.map((q) => ({ kind: 'quest' as const, id: q.id })), meta: null }],
+    quests: QUESTS,
+    episodes: EPISODES,
+    cursor: { isEntitled: () => true, skipQuestIds: undefined },
+    isQuestOpen: () => true,
+    gating: { active: false, tier: 'premium' },
+    ...over,
+  });
+
+  it('a plan item dated later this week is card ② with "Next in your plan"', () => {
+    const snap = { ...snapshot(), homework: [selfItem('quest:c', '2026-05-22')] };
+    const card = build({ snapshot: snap, route: routeOf(snap) }).cards.find((c) => c.slot === 2);
+    expect(card).toMatchObject({ kind: 'new', questId: 'quest:c', episodeId: 'episode:two', subtitle: 'nextInPlan' });
+    expect(missionCardText(card!, learner).subtitle).toBe('Next in your plan');
+  });
+
+  it('no plan: card ② is the cursor with today\'s "New" subtitle', () => {
+    const snap = snapshot();
+    const card = build({ snapshot: snap, route: routeOf(snap, { sources: [] }) }).cards.find((c) => c.slot === 2);
+    expect(card).toMatchObject({ questId: 'quest:a', subtitle: 'new' });
+  });
+
+  it('at rest (and until E3-7, at free-end) card ② keeps today\'s replay fallback among open quests', () => {
+    const all = snapshot(QUESTS.map((q) => done(q.id, YESTERDAY, 1)));
+    expect(build({ snapshot: all, route: routeOf(all, { sources: [] }) }).cards.find((c) => c.slot === 2)).toMatchObject({
+      questId: 'quest:c',
+      subtitle: 'new',
+    });
+    const freeEnd = routeOf(all, { sources: [], gating: { active: true, tier: 'free' }, isQuestOpen: (id) => id !== 'quest:c' });
+    expect(build({ snapshot: all, route: freeEnd, isQuestOpen: freeEnd.isQuestOpen }).cards.find((c) => c.slot === 2)).toMatchObject({
+      questId: 'quest:b',
+      subtitle: 'new',
+    });
+  });
+
+  it('a route quest this build does not list falls back to the replay fallback; no playable quest gives no card', () => {
+    const snap = snapshot();
+    const odd = routeOf(snap, { sources: [], quests: [quest('quest:z', 'Elsewhere'), ...QUESTS], episodes: [episode('episode:z', ['quest:z']), ...EPISODES] });
+    expect(build({ snapshot: snap, route: odd }).cards.find((c) => c.slot === 2)).toMatchObject({ questId: 'quest:c', subtitle: 'new' });
+    const none = routeOf(snap, { sources: [], episodes: [] });
+    expect(build({ snapshot: snap, episodes: [], route: none }).cards.find((c) => c.slot === 2)).toBeUndefined();
+  });
+
+  it('a pinned "Next in your plan" card re-pins like a "New" card when its quest closes', () => {
+    const snap = { ...snapshot(), homework: [selfItem('quest:c', '2026-05-22')] };
+    const pinned = build({ snapshot: snap, route: routeOf(snap) });
+    const closedC = (id: string): boolean => id !== 'quest:c';
+    const after = build({ snapshot: snap, pinned, route: routeOf(snap, { isQuestOpen: closedC }), isQuestOpen: closedC });
+    expect(after.cards.find((c) => c.slot === 2)).toMatchObject({ questId: 'quest:a', subtitle: 'new' });
+  });
+
+  it('a re-pin keeps the plan subtitle when the new next quest comes from the plan', () => {
+    const snap = { ...snapshot(), homework: [selfItem('quest:c', '2026-05-22'), selfItem('quest:b', '2026-05-23')] };
+    const pinned = build({ snapshot: snap, route: routeOf(snap) });
+    const closedC = (id: string): boolean => id !== 'quest:c';
+    const after = build({ snapshot: snap, pinned, route: routeOf(snap, { isQuestOpen: closedC }), isQuestOpen: closedC });
+    expect(after.cards.find((c) => c.slot === 2)).toMatchObject({ questId: 'quest:b', subtitle: 'nextInPlan' });
   });
 });

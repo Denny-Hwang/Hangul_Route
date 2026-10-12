@@ -1,4 +1,4 @@
-import type { Episode, Overlays, Quest } from '@hangul-route/content-schema';
+import type { Episode, Overlays, ProgressSnapshot, Quest } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { discoverQuest, episodeOf, plainQuest, snapshotWith } from '../stage1/__tests__/fixtures';
@@ -6,10 +6,13 @@ import { isStageEntitled } from '../entitlement';
 import {
   resultsActions,
   resultsTeaser,
+  teaserCaption,
   teaserCtaLabel,
+  teaserNextStartedEvent,
   teaserTappedEvent,
   type ResultsTeaser,
 } from '../quest-flow/results-teaser';
+import { planView, type RouteNextInput } from '../route-next';
 
 const nextUp = getMessages('en').learner.results.nextUp;
 const Q1 = discoverQuest('quest:q1', ['jamo:giyeok', 'jamo:nieun']);
@@ -234,5 +237,104 @@ describe('teaserTappedEvent', () => {
       fromQuestId: 'quest:q1',
       toQuestId: 'quest:q1',
     });
+  });
+});
+
+describe('resultsTeaser: the target is routeNext (F-ENT-003 section 3.8, PR E3-4)', () => {
+  const P = 'profile:p1';
+  const TODAY = '2026-10-12';
+  const learner = getMessages('en').learner;
+  const item = (questId: string, targetDate: string): ProgressSnapshot['homework'][number] => ({
+    id: `route:mine#${questId}`,
+    profileId: P,
+    questId,
+    episodeId: EPISODES.find((e) => e.questIds.includes(questId))!.id,
+    assignedBy: 'system',
+    assignedAt: '2026-10-01T00:00:00.000Z',
+    targetDate,
+  });
+  const route = (snapshot: ProgressSnapshot, over: Partial<RouteNextInput> = {}): RouteNextInput => ({
+    snapshot,
+    profileId: P,
+    today: TODAY,
+    sources: [{ id: 'route:mine', kind: 'self', assignedAt: '2026-10-01T00:00:00.000Z', items: [{ kind: 'quest', id: 'quest:q4' }], meta: null }],
+    quests: QUESTS,
+    episodes: EPISODES,
+    cursor: { isEntitled: () => true, skipQuestIds: undefined },
+    isQuestOpen: () => true,
+    gating: { active: false, tier: 'premium' },
+    ...over,
+  });
+  const withPlan = { ...done(), homework: [item('quest:q4', '2026-10-14')] };
+
+  it('names the plan\'s next quest with the caption "Next in your plan", counting the quest just played as done', () => {
+    const played = { ...withPlan, homework: [item('quest:q4', '2026-10-14'), item('quest:q2', '2026-10-15')] };
+    const r = route(played);
+    const t = resultsTeaser({ ...base, snapshot: played, questId: 'quest:q4', total: 5, route: r, planBefore: planView(r) });
+    expect(t).toMatchObject({ questId: 'quest:q2', caption: 'nextInPlan', source: 'self' });
+    expect(teaserCaption(t!, learner)).toBe('Next in your plan');
+  });
+
+  it('the last plan item played: the default route with "Next up"', () => {
+    const r = route(withPlan);
+    expect(resultsTeaser({ ...base, snapshot: withPlan, questId: 'quest:q4', total: 5, route: r, planBefore: planView(r) })).toMatchObject({
+      questId: 'quest:q1',
+      caption: 'nextUp',
+      source: 'cursor',
+    });
+  });
+
+  it('after a quest outside the plan: "Back to your plan" and the plan\'s next quest', () => {
+    const r = route(withPlan);
+    const before = planView(r);
+    const t = resultsTeaser({ ...base, snapshot: withPlan, questId: 'quest:q5', total: 5, route: r, planBefore: before });
+    expect(t).toMatchObject({ questId: 'quest:q4', caption: 'backToPlan', source: 'self' });
+    expect(teaserCaption(t!, learner)).toBe('Back to your plan');
+  });
+
+  it('no plan: the cursor with today\'s "Next up"', () => {
+    const r = route(done(), { sources: [] });
+    const t = resultsTeaser({ ...base, snapshot: done(), questId: 'quest:q1', total: 5, route: r, planBefore: planView(r) });
+    expect(t).toMatchObject({ questId: 'quest:q2', caption: 'nextUp', source: 'cursor' });
+    expect(teaserCaption(t!, learner)).toBe('Next up');
+  });
+
+  it('without a plan view from before the quest, an off-plan quest still reads "Next in your plan"', () => {
+    const t = resultsTeaser({ ...base, snapshot: withPlan, questId: 'quest:q5', total: 5, route: route(withPlan) });
+    expect(t).toMatchObject({ questId: 'quest:q4', caption: 'nextInPlan' });
+  });
+
+  it('free-end and rest: no teaser card (E3-7 draws the free-end card)', () => {
+    const all = done('q1', 'q2', 'q3', 'q4');
+    const freeEnd = route(all, { sources: [], gating: { active: true, tier: 'free' }, isQuestOpen: (id) => id !== 'quest:q5' });
+    expect(resultsTeaser({ ...base, snapshot: all, questId: 'quest:q4', total: 5, route: freeEnd })).toBeUndefined();
+    const rest = route(all, { sources: [] });
+    expect(resultsTeaser({ ...base, snapshot: all, questId: 'quest:q5', total: 5, route: rest })).toBeUndefined();
+  });
+
+  it('no teaser when routeNext names a quest this list does not hold', () => {
+    const r = route(done(), { sources: [], quests: [plainQuest('quest:q0'), ...QUESTS], episodes: [episodeOf('episode:zero', ['quest:q0']), ...EPISODES] });
+    expect(resultsTeaser({ ...base, snapshot: done(), questId: 'quest:q1', total: 5, route: r })).toBeUndefined();
+  });
+
+  it('every game skipped: the same quest again, unchanged, no plan caption', () => {
+    const r = route(withPlan);
+    const t = resultsTeaser({ ...base, snapshot: withPlan, questId: 'quest:q1', total: 0, route: r, planBefore: planView(r) });
+    expect(t).toMatchObject({ questId: 'quest:q1', again: true, caption: 'nextUp' });
+    expect(t?.source).toBeUndefined();
+  });
+
+  it('without route: today\'s cursor and the "Next up" caption', () => {
+    const t = resultsTeaser({ ...base, snapshot: done(), questId: 'quest:q1', total: 5 });
+    expect(t).toMatchObject({ caption: 'nextUp' });
+    expect(t?.source).toBeUndefined();
+  });
+
+  it('route.next_started when the teaser is the one next; none for "Try this one again"', () => {
+    const r = route(withPlan);
+    const t = resultsTeaser({ ...base, snapshot: withPlan, questId: 'quest:q5', total: 5, route: r, planBefore: planView(r) })!;
+    expect(teaserNextStartedEvent(P, t)).toEqual({ name: 'route.next_started', profileId: P, payload: { source: 'self', surface: 'results' } });
+    const again = resultsTeaser({ ...base, snapshot: withPlan, questId: 'quest:q1', total: 0, route: r })!;
+    expect(teaserNextStartedEvent(P, again)).toBeNull();
   });
 });
