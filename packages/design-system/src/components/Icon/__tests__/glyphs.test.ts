@@ -265,10 +265,11 @@ describe('notes glyphs (F-FEEDBACK-001 FB-6; design/components/Icon/spec.md)', (
     const lowest = Math.max(...path.map(([, y]) => y));
     const tips = new Set(path.filter(([, y]) => y === lowest).map(([x]) => x));
     expect([...tips]).toEqual([12]);
-    // a broad open shape (the no-fill rule above keeps it from reading as a game "life")
+    // a broad open shape (the no-fill rule above keeps it from reading as a game "life");
+    // this is the span of the path's points (ends and control points), not the drawn outline width
     const xs = path.map(([x]) => x);
-    const width = Math.max(...xs) - Math.min(...xs);
-    expect(width).toBeGreaterThanOrEqual(14);
+    const controlSpan = Math.max(...xs) - Math.min(...xs);
+    expect(controlSpan).toBeGreaterThanOrEqual(14);
   });
 
   it('note is a portrait sheet with a folded corner and two text lines that stay clear of its edges', () => {
