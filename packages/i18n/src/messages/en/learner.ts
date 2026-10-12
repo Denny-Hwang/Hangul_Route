@@ -986,7 +986,8 @@ export const learner = {
    */
   storyShelf: {
     /** Section tab labels, keyed by `LibrarySectionId` (`logic/story/library-sections.ts`). */
-    sections: { cards: 'Cards', 'story-time': 'Story Time', culture: 'Culture', 'theme-packs': 'Theme packs' },
+    /** `theme-packs` is the Words section (F-VOC-003 T1): its tab matches the Words screens. */
+    sections: { cards: 'Cards', 'story-time': 'Story Time', culture: 'Culture', 'theme-packs': 'Words' },
     /** Screen-reader name of the section tab row. */
     sectionsLabel: 'Library sections',
     pickedForYou: 'Picked for you',
@@ -1203,12 +1204,11 @@ export const learner = {
      * Counts only, never "n of m" or a percentage (D3); no streak line (T9); nothing tells a learner a card
      * was wrong (T3). `title` is the topic's English title (content).
      */
+    /** The Library's Words section (T1: the section tabs landed first, so it is a tab, not a card). */
     library: {
       title: 'Words',
       line: 'Pick a topic. Meet a few words at a time.',
       collected: (n: number) => `${n} collected`,
-      open: 'Open Words',
-      a11y: (n: number) => `Words. ${n} collected. Opens topics.`,
     },
     topics: {
       title: 'Words',
