@@ -341,7 +341,7 @@ CREATE INDEX IF NOT EXISTS idx_entitlements_provider_ref ON entitlements(provide
 | `GET /api/entitlements` | account | unchanged (the old page keeps working until B-8a; other console pages keep using it). |
 | `GET /health` | anyone | adds the booleans `bindings.stripeLive`, `bindings.billingLiveAllowed`. |
 
-`/api/billing/*` is a new Hono router mounted in `packages/backend/src/app.ts` next to `/api/entitlements`. CORS already allows `https://app.hangulroute.com` (`packages/backend/src/lib/cors.ts` defaults), and `verifyToken` has no `authorizedParties` (`lib/auth.ts:30-33`), so a Clerk token minted on the app origin is accepted with no change.
+`/api/billing/*` is a new Hono router mounted in `packages/backend/src/app.ts` next to `/api/entitlements`. CORS already allows `https://app.hangulroute.com` (`packages/backend/src/lib/cors.ts` defaults), and `verifyToken` checks `authorizedParties` against the same CORS allow-list (F-APP-001 A-9), which includes `https://app.hangulroute.com`, so a Clerk token minted on the app origin is accepted with no change.
 
 ### 5.4 Webhook history (`lib/billing-events.ts`, pure mapping + Db writes; Stripe lookups through the injected `fetch`)
 
