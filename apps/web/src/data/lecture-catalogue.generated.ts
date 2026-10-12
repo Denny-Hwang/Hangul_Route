@@ -36,5 +36,45 @@ export const LECTURE_VOCAB_TOPICS: readonly LectureCatalogueTopic[] = [
     "id": "vocab-topic:numbers",
     "titleEn": "Numbers",
     "words": 12
+  },
+  {
+    "id": "vocab-topic:family",
+    "titleEn": "Family",
+    "words": 12
+  },
+  {
+    "id": "vocab-topic:school",
+    "titleEn": "School",
+    "words": 12
+  },
+  {
+    "id": "vocab-topic:body",
+    "titleEn": "Body",
+    "words": 12
+  },
+  {
+    "id": "vocab-topic:nature",
+    "titleEn": "Nature",
+    "words": 12
+  },
+  {
+    "id": "vocab-topic:travel",
+    "titleEn": "Travel",
+    "words": 12
+  },
+  {
+    "id": "vocab-topic:sports",
+    "titleEn": "Sports",
+    "words": 12
+  },
+  {
+    "id": "vocab-topic:k-culture",
+    "titleEn": "K-Culture",
+    "words": 12
+  },
+  {
+    "id": "vocab-topic:science",
+    "titleEn": "Science",
+    "words": 12
   }
 ];
