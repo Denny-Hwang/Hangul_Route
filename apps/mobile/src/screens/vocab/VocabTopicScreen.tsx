@@ -15,11 +15,11 @@ import { romanizationShown } from '@hangul-route/i18n';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
-import { topicItems } from '../../content/vocab';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { contentWidth } from '../../logic/layout/pane-sizes';
-import { VOCAB_SCREENS, capabilities } from '../../logic/vocab/caps';
+import { backOrHome } from '../../logic/navigation/screen-exits';
+import { ACTIVITY_ROUTES, VOCAB_SCREENS, capabilities } from '../../logic/vocab/caps';
 import { vocabCopyOf } from '../../logic/vocab/copy';
 import { emptyVocab, vocabOf } from '../../logic/vocab/progress';
 import { suggestActivity, type VocabActivity } from '../../logic/vocab/suggest';
@@ -36,7 +36,7 @@ import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { BackButton } from './BackButton';
-import { pickerTopic, topicIntroMemory, topicWallWords } from './topic-data';
+import { pickerTopic, topicIntroMemory, topicWords } from './topic-data';
 import { WordWall } from './WordWall';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'VocabTopic'>;
@@ -57,11 +57,14 @@ const HIDDEN = { 'aria-hidden': true, accessibilityElementsHidden: true, importa
  */
 export function VocabTopicScreen({ route, navigation }: Props): React.ReactElement {
   const topic = pickerTopic(route.params.topicKey);
-  const back = (): void => {
-    if (navigation.canGoBack()) navigation.goBack();
-    else navigation.navigate('Main', { screen: 'Library' });
-  };
-  return topic ? <TopicPage source={topic} navigation={navigation} onBack={back} /> : <TopicNotFound onBack={back} />;
+  // With no history (a reload), Back lands on the Library's Words section (Cards when Words is not offered).
+  const back = (): void => backOrHome(navigation, () => navigation.navigate('Main', { screen: 'Library', params: { section: 'theme-packs' } }));
+  // Keyed by topic: a navigate to another topic over this one starts a fresh page (Hoya's memory, the reveal).
+  return topic ? (
+    <TopicPage key={topic.key} source={topic} navigation={navigation} onBack={back} />
+  ) : (
+    <TopicNotFound onBack={back} />
+  );
 }
 
 function TopicNotFound({ onBack }: { onBack: () => void }): React.ReactElement {
@@ -90,9 +93,8 @@ function TopicPage({ source, navigation, onBack }: { source: VocabTopic; navigat
   const [revealed, setRevealed] = useState(false);
   const titleShown = romanizationShown(romanizationMode, revealed);
 
-  // The flashcards' order (level, then file) for the chunks; the wall's file order for the tiles.
-  const items = useMemo(() => topicItems(topic.key), [topic.key]);
-  const wallWords = useMemo(() => topicWallWords(topic.key), [topic.key]);
+  // File order (the wall's); the chunks sort by level themselves (`chunksFor`).
+  const items = topicWords(topic.key);
   const counts = useMemo(() => topicState(topic.key, items.map((item) => item.id), progress), [topic.key, items, progress]);
   const level = profile ? levelOrder(profile.ageGroup) : null;
   const optionCount = optionCountFor(level);
@@ -109,8 +111,8 @@ function TopicPage({ source, navigation, onBack }: { source: VocabTopic; navigat
     [counts.collected, topic.key, progress, items, optionCount, copy],
   );
   const tiles = useMemo(
-    () => wallTileViews(wallWords, progress, { locale, romanizationMode, copy, koreanItem: messages.a11y.koreanItem }),
-    [wallWords, progress, locale, romanizationMode, copy, messages.a11y.koreanItem],
+    () => wallTileViews(items, progress, { locale, romanizationMode, copy, koreanItem: messages.a11y.koreanItem }),
+    [items, progress, locale, romanizationMode, copy, messages.a11y.koreanItem],
   );
 
   // Hoya's line once per topic per app session: decided when the page opens, remembered once shown.
@@ -124,13 +126,13 @@ function TopicPage({ source, navigation, onBack }: { source: VocabTopic; navigat
 
   const open = (activity: VocabActivity): void => {
     const topicKey = topic.key;
-    if (activity === 'learn') navigation.navigate('VocabCards', { topicKey });
-    else if (activity === 'speed') navigation.navigate('VocabSpeedRound', { topicKey });
-    else navigation.navigate('VocabMatch', { topicKey });
+    if (activity === 'learn') navigation.navigate(ACTIVITY_ROUTES.learn, { topicKey });
+    else if (activity === 'speed') navigation.navigate(ACTIVITY_ROUTES.speed, { topicKey });
+    else navigation.navigate(ACTIVITY_ROUTES.match, { topicKey });
   };
   const openWord = (id: string): void => {
     const target = cardsTarget(topic, items, level, id);
-    if (target) navigation.navigate('VocabCards', target);
+    if (target) navigation.navigate(ACTIVITY_ROUTES.learn, target);
   };
 
   return (

@@ -50,7 +50,7 @@ C  Topic page (5 of the words collected)          D  Not found                  
    - **Speed round**: "Catch the words you know." From as many collected words as the level has options (3 for Pictures first, 4 otherwise); below that the button stays and its line says "Learn 3 words first" (the words still to learn, never the threshold) and it opens Learn: never a dead end.
    - **Match**: "Match each word to its picture." Only when Pic-Word Match is in the build **and** 3 words are collected; before that it is not drawn (it has no "learn first" line of its own).
    - The suggested one (`suggestActivity`: Learn while words are new and the topic had no session today, or below the option count; otherwise Speed round; never Match) is `tone="primary"`, the others `tone="secondary"`.
-7. **Word wall** (`WordWall`): every word of the topic in file order (`topicItems`), never re-sorted, never a lock, never a count of what is left.
+7. **Word wall** (`WordWall`): every word of the topic in file order (`topicWords`: the catalogue's `visibleItems` filed under the topic, so a word whose own topic is still a draft never shows, V12), never re-sorted, never a lock, never a count of what is left.
 
 ## The word wall
 

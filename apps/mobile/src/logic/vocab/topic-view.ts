@@ -29,7 +29,7 @@ export function topicGridColumns(windowWidth: number): 1 | 2 | 3 {
 export interface TopicTileInput {
   /** In the UI language already (`localizedTopic`). */
   topic: VocabTopic;
-  /** The topic's words (`topicItems`). */
+  /** The topic's words (`wordsOfTopic` of the visible words). */
   items: readonly RuntimeVocabItem[];
   progress: VocabProgress;
   locale: UiLocale;
@@ -200,15 +200,14 @@ export function wallTileViews(items: readonly RuntimeVocabItem[], progress: Voca
 }
 
 /**
- * `items` in the order `all` lists them (the bundle's file order); a word
- * `all` does not list keeps its place after the others. `topicItems` sorts a
- * topic by level for the flashcards; the wall shows file order (section 3.4).
+ * A topic's words a learner may meet, in file order (the word wall's order,
+ * section 3.4): every word of `visible` filed under the topic, also as its
+ * second topic. Pass the catalogue's `visibleItems`, so a word whose own
+ * topic is still a draft never reaches a learner through another topic (V12).
+ * The flashcards sort by level themselves (`chunksFor`).
  */
-export function inFileOrder<T extends { id: string }>(items: readonly T[], all: readonly { id: string }[]): T[] {
-  const position = new Map(all.map((item, index) => [item.id, index]));
-  const rank = (item: T): number => position.get(item.id) ?? all.length;
-  // Array.prototype.sort is stable: words `all` does not list share one rank and keep their order.
-  return [...items].sort((a, b) => rank(a) - rank(b));
+export function wordsOfTopic<T extends Pick<RuntimeVocabItem, 'topics'>>(visible: readonly T[], topicKey: string): T[] {
+  return visible.filter((item) => (item.topics as readonly string[]).includes(topicKey));
 }
 
 export interface ActivityInput {

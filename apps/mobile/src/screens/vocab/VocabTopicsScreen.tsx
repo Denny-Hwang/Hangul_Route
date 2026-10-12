@@ -2,6 +2,7 @@ import { Body, Button, Card, Heading, Screen, Spacer } from '@hangul-route/desig
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
 import { useMessages } from '../../i18n/use-messages';
+import { backOrHome } from '../../logic/navigation/screen-exits';
 import { vocabCopyOf } from '../../logic/vocab/copy';
 import type { RootStackParamList } from '../../navigation/types';
 import { BackButton } from './BackButton';
@@ -19,10 +20,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'VocabTopics'>;
 export function VocabTopicsScreen({ navigation }: Props): React.ReactElement {
   const copy = vocabCopyOf(useMessages());
   const topics = pickerTopics();
-  const back = (): void => {
-    if (navigation.canGoBack()) navigation.goBack();
-    else navigation.navigate('Main', { screen: 'Library' });
-  };
+  // With no history (a reload), Back lands on the Library's Words section (Cards when Words is not offered).
+  const back = (): void => backOrHome(navigation, () => navigation.navigate('Main', { screen: 'Library', params: { section: 'theme-packs' } }));
 
   return (
     <Screen tone="canvas" scrollable testID="vocab-topics">
@@ -33,7 +32,7 @@ export function VocabTopicsScreen({ navigation }: Props): React.ReactElement {
       <Body tone="secondary">{copy.topics.line}</Body>
       <Spacer size="lg" />
       {topics.length > 0 ? (
-        <TopicGrid topics={topics} width="reading" />
+        <TopicGrid topics={topics} source="library" width="reading" />
       ) : (
         <Card padding="md" tone="paper" testID="vocab-topics-empty">
           <Body>{copy.topics.empty}</Body>

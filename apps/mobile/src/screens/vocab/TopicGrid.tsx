@@ -5,7 +5,6 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useMemo, useState } from 'react';
 import { View, type LayoutChangeEvent } from 'react-native';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
-import { topicItems } from '../../content/vocab';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { isContentLocked } from '../../logic/content-access';
@@ -13,13 +12,21 @@ import { contentWidth, gridCellWidth, gridRows } from '../../logic/layout/pane-s
 import { lockedStoryGate } from '../../logic/story/story-tile';
 import { vocabCopyOf } from '../../logic/vocab/copy';
 import { emptyVocab, vocabOf } from '../../logic/vocab/progress';
-import { localizedTopic, topicGridColumns, topicOpenedEvent, topicTileView, type TopicTileView } from '../../logic/vocab/topic-view';
+import {
+  localizedTopic,
+  topicGridColumns,
+  topicOpenedEvent,
+  topicTileView,
+  type TopicOpenSource,
+  type TopicTileView,
+} from '../../logic/vocab/topic-view';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useAccessTier } from '../../store/tier-store';
+import { topicWords } from './topic-data';
 import { TOPIC_TILE_CHROME, TopicTile } from './TopicTile';
 
 const GRID_GAP = spacing.sm;
@@ -36,9 +43,12 @@ const COVER = 96;
  */
 export function TopicGrid({
   topics,
+  source,
   width: screenWidth,
 }: {
   topics: readonly VocabTopic[];
+  /** Where the grid is, for `vocab.topic_opened` (section 3.7: the picker and the Library section are both `library`). */
+  source: TopicOpenSource;
   /** The width cap of the screen the grid sits in, for the first frame before the grid is measured. */
   width: 'reading' | 'full';
 }): React.ReactElement {
@@ -59,7 +69,7 @@ export function TopicGrid({
       topics.map((topic) =>
         topicTileView({
           topic: localizedTopic(topic, locale),
-          items: topicItems(topic.key),
+          items: topicWords(topic.key),
           progress,
           locale,
           romanizationMode,
@@ -89,7 +99,7 @@ export function TopicGrid({
       else navigation.navigate('PinEntry', gate.params);
       return;
     }
-    void track({ ...topicOpenedEvent(view.key, 'library'), profileId: profile?.id });
+    void track({ ...topicOpenedEvent(view.key, source), profileId: profile?.id });
     navigation.navigate('VocabTopic', { topicKey: view.key });
   };
 

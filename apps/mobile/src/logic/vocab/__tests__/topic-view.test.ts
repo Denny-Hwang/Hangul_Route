@@ -8,7 +8,6 @@ import {
   WALL_TILE_MIN,
   cardsTarget,
   createIntroMemory,
-  inFileOrder,
   localizedTopic,
   meterVariant,
   optionCountFor,
@@ -20,6 +19,7 @@ import {
   wallColumns,
   wallTileViews,
   wordsCollected,
+  wordsOfTopic,
   type ActivityInput,
 } from '../topic-view';
 import { progress, state, topic, word } from './fixtures';
@@ -255,16 +255,16 @@ describe('wallTileViews (the word wall)', () => {
   });
 });
 
-describe('inFileOrder (the wall is in file order; topicItems sorts by level)', () => {
-  it('orders a topic list by the position of each word in the bundle', () => {
-    const all = [word('x'), ...ITEMS, word('y')];
-    const byLevel = [ITEMS[0]!, ITEMS[2]!, ITEMS[1]!];
-    expect(inFileOrder(byLevel, all).map((i) => i.id)).toEqual(['vocab:a', 'vocab:b', 'vocab:c']);
+describe('wordsOfTopic (the words of a topic a learner may meet)', () => {
+  it('keeps file order and includes a word filed under the topic as its second topic', () => {
+    const visible = [word('x', { topics: ['animals'] }), ...ITEMS, word('y', { topics: ['animals', 'food'] })];
+    expect(wordsOfTopic(visible, 'food').map((i) => i.id)).toEqual(['vocab:a', 'vocab:b', 'vocab:c', 'vocab:y']);
+    expect(wordsOfTopic(visible, 'animals').map((i) => i.id)).toEqual(['vocab:x', 'vocab:y']);
   });
 
-  it('keeps a word the bundle does not list at the end, in the order given', () => {
-    const stray = word('q');
-    expect(inFileOrder([stray, ITEMS[1]!], ITEMS).map((i) => i.id)).toEqual(['vocab:b', 'vocab:q']);
+  it('only what it is given: a word left out of the visible list (its own topic a draft) never appears', () => {
+    expect(wordsOfTopic(ITEMS.slice(1), 'food').map((i) => i.id)).toEqual(['vocab:b', 'vocab:c']);
+    expect(wordsOfTopic([], 'food')).toEqual([]);
   });
 });
 
