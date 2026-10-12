@@ -23,6 +23,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AccessibilityInfo, Platform, Pressable, Text, View } from 'react-native';
 import { storyById } from '../../content/stories';
 import { useLocale, useMessages } from '../../i18n/use-messages';
+import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { localizeStory } from '../../logic/content-locale';
 import type { MinigameScope } from '../../logic/minigame-config';
 import {
@@ -137,7 +138,7 @@ export function StoryCheckGame({ scope, onFinish, onBack }: Props): React.ReactE
   const profile = useProfileStore(activeProfileSelector);
   const profileId = profile?.id ?? null;
   const settings = useLocaleStore((s) => (profileId === null ? undefined : s.byProfile[profileId]));
-  const romanizationMode = settings?.romanizationMode ?? 'always';
+  const romanizationMode = useRomanizationMode();
   const readToMe = effectiveReadToMe(settings?.readToMe, profile?.ageGroup ?? '');
   // No PromptPanel here: the only fallback this screen draws is the "Say it yourself" chip, reported below.
   const audio = useReaderAudio(STORY_CHECK_AUDIO_SOURCE, { reportFallback: false });
@@ -322,7 +323,6 @@ export function StoryCheckGame({ scope, onFinish, onBack }: Props): React.ReactE
             words={words}
             storyId={scope.story?.storyId ?? ''}
             profileId={profileId ?? undefined}
-            romanizationMode={romanizationMode}
             sayIt={sayIt}
             play={playAudio}
             onDone={() => dispatch({ type: 'finishRecap' })}
