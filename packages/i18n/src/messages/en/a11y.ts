@@ -162,11 +162,15 @@ export const a11y = {
   vocab: {
     question: {
       speaker: 'Play the word again',
-      right: (gloss: string) => `Right. ${gloss}.`,
+      /** The meaning starts the sentence, so its first letter is upper case ("Right. Apple."). */
+      right: (gloss: string) => `Right. ${gloss.charAt(0).toUpperCase()}${gloss.slice(1)}.`,
       reveal: (gloss: string) => `Not this one. The answer is ${gloss}.`,
       /** The quick check after a miss: the learner taps again. */
       tryAnother: 'Not this one. Try another.',
       topic: (title: string) => `Topic: ${title}`,
+      /** `right` / `reveal` for a question with no word to name (a degenerate question; never an empty name). */
+      rightPlain: 'Right.',
+      revealPlain: 'Not this one.',
     },
   },
 } as const;

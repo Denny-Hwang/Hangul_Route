@@ -1,4 +1,6 @@
+import type { Overlays, UiLocale } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
+import { localizeTitle } from '../content-locale';
 import type { VocabOption, VocabQuestion } from './question-builder';
 import { optionState, showsAnswer, type QuestionFlowMode, type QuestionFlowState } from './question-flow';
 
@@ -18,6 +20,11 @@ export interface QuestionViewContext {
   romanizationShown: boolean;
   /** A Korean voice can play (decided once by the host, S7). */
   canPlay: boolean;
+  /**
+   * The prompt slot shows its text (F-AUDIO-004 §3.8): sound is off, no Korean voice exists, or a play
+   * failed. A sound question then shows its word as text. Default `false`.
+   */
+  textFallback?: boolean;
   /** A word's meaning in the UI language (content), `undefined` when the catalogue does not know it. */
   glossOf(itemId: string): string | undefined;
   /** A topic's title (content), `undefined` for an unknown key. */
@@ -41,9 +48,9 @@ export interface PromptView {
   word: PromptWord | null;
   /** Picture to word: the picture, named by its meaning. */
   picture: { ref: string; gloss: string } | null;
-  /** `small` beside a word, `large` for a sound question, none when no voice can play. */
+  /** `small` beside a word, `large` for a sound question, none when the host says no voice can play. */
   speaker: 'small' | 'large' | null;
-  /** "No sound? Read it here." goes with the word (a sound question whose voice failed). */
+  /** "No sound? Read it here." goes with the word (a sound question with no sound: failed, off, or no voice). */
   readHere: boolean;
   /** The answer's topic title (a homonym prompt in a mixed pool). */
   topicChip: string | null;
@@ -97,7 +104,8 @@ export function promptView(q: VocabQuestion, state: QuestionFlowState, ctx: Ques
   const over = showsAnswer(state);
   const kind = q.prompt.kind;
   const base = answerWord(q);
-  const readHere = kind === 'audio' && state.textPrompt;
+  // A sound question never shows a bare speaker it cannot play: no voice this session, sound off or a failed play.
+  const readHere = kind === 'audio' && (state.textPrompt || !ctx.canPlay || ctx.textFallback === true);
 
   let word: PromptWord | null = null;
   if (base && over) {
@@ -109,7 +117,8 @@ export function promptView(q: VocabQuestion, state: QuestionFlowState, ctx: Ques
     word = { ...base, romanizationShown: true, gloss: undefined };
   }
 
-  const speaker = kind === 'audio' ? 'large' : kind === 'word' && ctx.canPlay ? 'small' : null;
+  // No speaker the host has said cannot play (canPlay false); a failed or muted play keeps it (tap to try again).
+  const speaker = !ctx.canPlay || kind === 'image' ? null : kind === 'audio' ? 'large' : 'small';
   const picture = kind === 'image' ? { ref: q.prompt.pictureRef ?? '', gloss: answerGloss(q, ctx) ?? '' } : null;
   const topicChip = q.topicChip === undefined ? null : (ctx.topicTitle(q.topicChip) ?? null);
   return { kind, word, picture, speaker, readHere, topicChip };
@@ -152,26 +161,52 @@ export function optionView(
 
 /**
  * Columns for the options in a column `width` dp wide (§3.6): four pictures
- * 2 x 2 when two cards fit, three pictures three across when three fit, else
- * one column; word options 2 x 2 from `NARROW_WORD_COLUMN`. Cards never shrink
+ * 2 x 2 (a tile card of a 96 dp picture is 134 dp, so two and the 8 dp gap fit
+ * the 288 dp column of a 320 wide phone); three pictures three across when
+ * three fit, else two to a row (2 + 1, wireframe B); one column only when two
+ * cannot fit. Word options 2 x 2 from `NARROW_WORD_COLUMN`. Cards never shrink
  * below their minimum: the host's screen scrolls instead.
  */
 export function optionColumns(q: VocabQuestion, width: number, sizes: { minPictureCard: number; gap: number }): 1 | 2 | 3 {
   if (!Number.isFinite(width) || width <= 0) return 1;
   const pictures = q.options.some((o) => o.pictureRef !== undefined);
   if (!pictures) return width >= NARROW_WORD_COLUMN ? 2 : 1;
-  const across = q.options.length === 3 ? 3 : 2;
-  return across * sizes.minPictureCard + (across - 1) * sizes.gap <= width ? across : 1;
+  const fits = (n: number): boolean => n * sizes.minPictureCard + (n - 1) * sizes.gap <= width;
+  if (q.options.length === 3 && fits(3)) return 3;
+  return fits(2) ? 2 : 1;
+}
+
+/** The miss mark per mode: the Speed Round's miss is locked and moves on (a dash); the quick check asks for another. */
+export function wrongMarkFor(mode: QuestionFlowMode): 'dash' | 'replay' {
+  return mode === 'speed' ? 'dash' : 'replay';
+}
+
+/** The homonym chip's topic title in the UI language: the locale overlay (F-I18N-001 §3.6), else the English title. */
+export function localizedTopicTitle(topic: { id: string; titleEn: string }, locale: UiLocale, overlays?: Overlays): string {
+  return localizeTitle({ titleEn: topic.titleEn }, topic.id, locale, overlays).titleEn;
 }
 
 /** The outcome in words for the polite live line (§3.8); `null` while nothing has happened. */
 export function announcement(q: VocabQuestion, state: QuestionFlowState, ctx: QuestionViewContext, say: QuestionSay): string | null {
-  // Every catalogue word has an English gloss; a question built without one names the Korean word instead.
-  const gloss = answerGloss(q, ctx) ?? answerWord(q)?.ko ?? '';
+  // Every catalogue word has an English gloss; a question built without one names the Korean word instead,
+  // and one with neither says the plain outcome (never an empty name).
+  const name = answerGloss(q, ctx) ?? answerWord(q)?.ko ?? '';
   if (showsAnswer(state)) {
-    return ctx.mode === 'speed' && state.chosenId !== q.answerId ? say.reveal(gloss) : say.right(gloss);
+    const missed = ctx.mode === 'speed' && state.chosenId !== q.answerId;
+    if (name === '') return missed ? say.revealPlain : say.rightPlain;
+    return missed ? say.reveal(name) : say.right(name);
   }
   return state.wrongIds.length > 0 ? say.tryAnother : null;
+}
+
+/**
+ * Which accepted tap the outcome line belongs to (`null` while nothing has happened). It changes on
+ * every accepted tap, so the view says the line again even when the words are the same (a second miss
+ * in check mode is "Not this one. Try another." again).
+ */
+export function outcomeKey(state: QuestionFlowState): string | null {
+  if (state.status === 'asking' && state.wrongIds.length === 0) return null;
+  return `${state.status}:${state.wrongIds.length}`;
 }
 
 /** What `playPrompt` says for the answer word. */

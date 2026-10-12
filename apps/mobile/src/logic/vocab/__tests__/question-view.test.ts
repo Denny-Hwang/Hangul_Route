@@ -6,10 +6,13 @@ import {
   NARROW_WORD_COLUMN,
   QUESTION_AUDIO_SOURCE,
   announcement,
+  localizedTopicTitle,
   optionColumns,
   optionView,
+  outcomeKey,
   promptView,
   speechFor,
+  wrongMarkFor,
   type QuestionViewContext,
 } from '../question-view';
 
@@ -104,6 +107,21 @@ describe('promptView: sound to picture (wireframe D)', () => {
     expect(view.speaker).toBe('large');
   });
 
+  it('no voice for this session (canPlay false): the word shows as text at once, and no speaker that cannot play', () => {
+    const view = promptView(AUDIO, startQuestionFlow(), ctx({ canPlay: false, romanizationShown: false }));
+    expect(view.readHere).toBe(true);
+    expect(view.speaker).toBeNull();
+    expect(view.word).toEqual({ ko: '사과', romanization: 'sagwa', romanizationShown: true, gloss: undefined });
+  });
+
+  it('sound off or no Korean voice (the prompt slot shows text): the word shows as text before any play', () => {
+    const view = promptView(AUDIO, startQuestionFlow(), ctx({ textFallback: true }));
+    // The speaker stays: a tap may still play (Turn sound on, Try again).
+    expect(view).toMatchObject({ readHere: true, speaker: 'large', word: { ko: '사과', gloss: undefined } });
+    // A word question already prints its Korean: the slot's text changes nothing there.
+    expect(promptView(WORD, startQuestionFlow(), ctx({ textFallback: true })).readHere).toBe(false);
+  });
+
   it('once over: the answer word with its meaning, with or without the failed voice', () => {
     expect(promptView(AUDIO, after(AUDIO, 'speed', ['vocab:sagwa']), ctx()).word).toEqual({
       ko: '사과',
@@ -151,6 +169,22 @@ describe('promptView: the topic chip (homonym in a mixed pool)', () => {
   it('names the answer topic only when the question carries a chip and the topic is known', () => {
     expect(promptView({ ...WORD, topicChip: 'food' }, startQuestionFlow(), ctx()).topicChip).toBe('Food');
     expect(promptView({ ...WORD, topicChip: 'unknown' }, startQuestionFlow(), ctx()).topicChip).toBeNull();
+  });
+});
+
+describe('localizedTopicTitle: the chip in the UI language', () => {
+  const food = { id: 'vocab-topic:food', titleEn: 'Food' };
+
+  it('reads the topic title from the locale overlay, else the English title', () => {
+    expect(localizedTopicTitle(food, 'en')).toBe('Food');
+    expect(localizedTopicTitle(food, 'es')).toBe('Comida');
+    expect(localizedTopicTitle({ id: 'vocab-topic:nowhere', titleEn: 'Nowhere' }, 'es')).toBe('Nowhere');
+  });
+
+  it('follows an overlay passed in (tests, a Korean overlay once it ships)', () => {
+    const overlays = { es: {}, ko: { 'vocab-topic:food': { title: '음식' } } };
+    expect(localizedTopicTitle(food, 'ko', overlays)).toBe('음식');
+    expect(localizedTopicTitle(food, 'es', overlays)).toBe('Food');
   });
 });
 
@@ -214,17 +248,23 @@ describe('optionView: words', () => {
 });
 
 describe('optionColumns (F-VOC-004 §3.6)', () => {
-  const sizes = { minPictureCard: 170, gap: 12 };
+  // A 96 dp picture in a tile card (choiceCardTileWidth) and the 8 dp gap of the spec.
+  const sizes = { minPictureCard: 134, gap: 8 };
   const three = { ...WORD, options: WORD.options.slice(0, 3) };
 
-  it('four pictures: 2 x 2 when two cards fit, else one column', () => {
-    expect(optionColumns(WORD, 361, sizes)).toBe(2);
-    expect(optionColumns(WORD, 288, sizes)).toBe(1);
+  it('four pictures: 2 x 2 at 320 wide (a 288 dp column) and on every common phone, one column only when two cannot fit', () => {
+    expect(optionColumns(WORD, 288, sizes)).toBe(2);
+    expect(optionColumns(WORD, 328, sizes)).toBe(2);
+    expect(optionColumns(WORD, 343, sizes)).toBe(2);
+    expect(optionColumns(WORD, 276, sizes)).toBe(2);
+    expect(optionColumns(WORD, 275, sizes)).toBe(1);
   });
 
-  it('three pictures: three across when three fit, else one column', () => {
-    expect(optionColumns(three, 600, sizes)).toBe(3);
-    expect(optionColumns(three, 361, sizes)).toBe(1);
+  it('three pictures: three across when three fit, else two to a row (2 + 1), else one column', () => {
+    expect(optionColumns(three, 418, sizes)).toBe(3);
+    expect(optionColumns(three, 417, sizes)).toBe(2);
+    expect(optionColumns(three, 288, sizes)).toBe(2);
+    expect(optionColumns(three, 275, sizes)).toBe(1);
   });
 
   it('four words: 2 x 2 from 340 dp, one column under it', () => {
@@ -244,8 +284,8 @@ describe('announcement: the outcome in words (F-VOC-004 §3.8)', () => {
     expect(announcement(WORD, startQuestionFlow(), ctx(), SAY)).toBeNull();
   });
 
-  it('a right first tap: "Right. apple."', () => {
-    expect(announcement(WORD, after(WORD, 'speed', ['vocab:sagwa']), ctx(), SAY)).toBe('Right. apple.');
+  it('a right first tap: "Right. Apple."', () => {
+    expect(announcement(WORD, after(WORD, 'speed', ['vocab:sagwa']), ctx(), SAY)).toBe('Right. Apple.');
   });
 
   it('a speed miss: "Not this one. The answer is apple."', () => {
@@ -255,22 +295,65 @@ describe('announcement: the outcome in words (F-VOC-004 §3.8)', () => {
   it('check mode: "Try another" after a miss, then "Right" on the right tap', () => {
     const check = ctx({ mode: 'check' });
     expect(announcement(WORD, after(WORD, 'check', ['vocab:bae'], false), check, SAY)).toBe('Not this one. Try another.');
-    expect(announcement(WORD, after(WORD, 'check', ['vocab:bae', 'vocab:sagwa']), check, SAY)).toBe('Right. apple.');
+    expect(announcement(WORD, after(WORD, 'check', ['vocab:bae', 'vocab:sagwa']), check, SAY)).toBe('Right. Apple.');
   });
 
   it('a question with no meaning anywhere names the Korean word instead', () => {
     const noGloss = ctx({ glossOf: () => undefined });
     const bare: VocabQuestion = { ...WORD, options: WORD.options.map(({ id, pictureRef }) => ({ id, pictureRef })) };
     expect(announcement(bare, after(bare, 'speed', ['vocab:sagwa']), noGloss, SAY)).toBe('Right. 사과.');
+  });
+
+  it('a question with no word to name at all says the plain outcome, never an empty name', () => {
+    const noGloss = ctx({ glossOf: () => undefined });
     const broken: VocabQuestion = { ...IMAGE, prompt: { kind: 'image' }, options: IMAGE.options.filter((o) => o.id !== 'vocab:sagwa') };
-    expect(announcement(broken, after(broken, 'speed', ['vocab:bae']), noGloss, SAY)).toBe('Not this one. The answer is .');
+    expect(announcement(broken, after(broken, 'speed', ['vocab:bae']), noGloss, SAY)).toBe('Not this one.');
+    const solved = { ...broken, answerId: 'vocab:bae' };
+    expect(announcement(solved, after(solved, 'speed', ['vocab:bae']), ctx({ glossOf: () => undefined }), SAY)).toBe('Right. Pear-en.');
+    const nothing: VocabQuestion = { ...broken, options: [{ id: 'vocab:bae' }], answerId: 'vocab:bae' };
+    expect(announcement(nothing, after(nothing, 'speed', ['vocab:bae']), noGloss, SAY)).toBe('Right.');
+  });
+
+  it('capitalises only the first letter of the meaning, and leaves Hangul as it is', () => {
+    expect(SAY.right('ice cream')).toBe('Right. Ice cream.');
+    expect(SAY.right('사과')).toBe('Right. 사과.');
+    expect(SAY.reveal('apple')).toBe('Not this one. The answer is apple.');
   });
 
   it('never uses failure words, a number of misses, a percentage or a fraction', () => {
-    const lines = [SAY.right('apple'), SAY.reveal('apple'), SAY.tryAnother, SAY.speaker, SAY.topic('Food')];
+    const lines = [SAY.right('apple'), SAY.reveal('apple'), SAY.tryAnother, SAY.speaker, SAY.topic('Food'), SAY.rightPlain, SAY.revealPlain];
     for (const line of lines) {
       expect(line).not.toMatch(/\b(wrong|fail\w*|miss\w*|lost|lose)\b|\d+\s*%|\d+\s*\/\s*\d+/i);
     }
+  });
+});
+
+describe('outcomeKey: one announcement per accepted tap (F-VOC-004 §3.8)', () => {
+  it('is null while nothing has happened', () => {
+    expect(outcomeKey(startQuestionFlow())).toBeNull();
+  });
+
+  it('changes on every accepted tap, so a second miss with the same words is said again', () => {
+    const one = after(WORD, 'check', ['vocab:bae']);
+    const two = after(WORD, 'check', ['vocab:bae', 'vocab:podo']);
+    const done = after(WORD, 'check', ['vocab:bae', 'vocab:podo', 'vocab:sagwa']);
+    const check = ctx({ mode: 'check' });
+    expect(announcement(WORD, one, check, SAY)).toBe(announcement(WORD, two, check, SAY));
+    const keys = [outcomeKey(one), outcomeKey(two), outcomeKey(done)];
+    expect(keys.every((k) => k !== null)).toBe(true);
+    expect(new Set(keys).size).toBe(3);
+  });
+
+  it('a speed answer has one key', () => {
+    expect(outcomeKey(after(WORD, 'speed', ['vocab:bae']))).not.toBeNull();
+    expect(outcomeKey(after(WORD, 'speed', ['vocab:sagwa']))).not.toEqual(outcomeKey(after(WORD, 'speed', ['vocab:bae'])));
+  });
+});
+
+describe('wrongMarkFor: the miss mark per mode (F-VOC-004 §3.6, §3.8)', () => {
+  it('speed: the dash (the miss is locked and the round moves on); check: try another (a retry follows)', () => {
+    expect(wrongMarkFor('speed')).toBe('dash');
+    expect(wrongMarkFor('check')).toBe('replay');
   });
 });
 
