@@ -71,6 +71,7 @@
     "apps/mobile/src/screens/profile/EditProfileScreen.tsx",
     "apps/mobile/src/screens/my-route/**",
     "apps/web/src/components/console/JourneyParts.tsx",
+    "apps/web/src/components/console/ClassGoalParts.tsx",
     "apps/mobile/src/screens/parent/PlacementReportScreen.tsx",
     "apps/mobile/src/screens/results/**",
     "apps/mobile/src/screens/quest/QuestPlayerView.tsx",

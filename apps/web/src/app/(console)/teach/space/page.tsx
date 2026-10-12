@@ -10,6 +10,7 @@ import { SchoolAdmin } from '@/components/console/SchoolAdmin';
 import { StartingSpot } from '@/components/console/PlacementParts';
 import { JourneyStrip } from '@/components/console/JourneyParts';
 import { FreeLessonsLine } from '@/components/console/FreeLessonsParts';
+import { ClassGoalLineView } from '@/components/console/ClassGoalParts';
 import { StudentWordsLines, WeekWordsRevisit } from '@/components/console/VocabWordsParts';
 import { useConsole } from '@/components/console/use-console';
 import type { PlanView, Roster, SpaceListItem } from '@/lib/console/api';
@@ -19,6 +20,8 @@ import { levelPillLabel } from '@/lib/console/level-label';
 import { capState, classRollup, codeExpiry, percent, relativeDay } from '@/lib/console/rollup';
 import { ownRouteLine, readoutLine as routeReadoutLine, spaceCoverage, type SpaceCoverage } from '@/lib/console/curriculum';
 import { rosterFreeLessonsLine } from '@/lib/console/free-lessons-line-view';
+import { classGoalLine } from '@/lib/console/class-goal-line';
+import { stageTitle } from '@/lib/console/stage-titles';
 import { dateKey, livePublished, planReaches, planReadout, readoutLine, rosterPlan } from '@/lib/console/plans';
 import { ROUTES, type SpaceError, spaceErrorText, spaceIdFrom } from '@/lib/console/routing';
 import { consoleWords, studentWords } from '@/lib/console/vocab-words';
@@ -106,6 +109,8 @@ function SpaceInner(): JSX.Element {
   const role = spaces?.find((item) => item.space.id === spaceId)?.role ?? null;
   const livePlans = gating ? livePublished(plans) : [];
   const today = dateKey(now);
+  // One line about the newest live whole-class plan (Learning Route section 6.3, LR-9); a class only, never about learners.
+  const goalLine = roster ? classGoalLine({ kind: roster.space.kind, plans, today, stageTitle, locale }) : null;
 
   return (
     <ConsoleShell onSignOut={signOut} title={roster ? c.space.title[roster.space.kind](roster.space.name, roster.learners.length) : c.space.loading}>
@@ -133,6 +138,8 @@ function SpaceInner(): JSX.Element {
             </div>
             {empty ? <Muted>{c.writeOnBoard}</Muted> : null}
           </section>
+
+          <ClassGoalLineView line={goalLine} />
 
           {cap?.warning ? (
             <Notice tone="nudge">
