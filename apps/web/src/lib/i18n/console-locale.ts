@@ -41,14 +41,30 @@ export function browserLanguages(
 }
 
 /**
- * Stored choice > browser languages > `en`, among `available` only: a stored or
- * detected locale that is hidden (not yet shipped, or rolled back) is ignored.
+ * The `?lang=` of a URL's query (F-I18N-001 hand-off convention; F-APP-001 section 3.7): a UI
+ * locale, or null when absent or not one.
+ */
+export function queryLocale(search: string): UiLocale | null {
+  try {
+    const parsed = UiLocaleSchema.safeParse(new URLSearchParams(search).get('lang'));
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * `?lang=` > stored choice > browser languages > `en`, among `available` only: a query, stored
+ * or detected locale that is hidden (not yet shipped, or rolled back) is ignored.
  */
 export function pickConsoleLocale(input: {
+  /** The page's `?lang=` (F-APP-001 section 3.7); the provider stores it as the choice. */
+  query?: UiLocale | null;
   stored: UiLocale | null;
   languages: readonly string[];
   available: readonly UiLocale[];
 }): UiLocale {
+  if (input.query != null && input.available.includes(input.query)) return input.query;
   if (input.stored !== null && input.available.includes(input.stored)) return input.stored;
   return detectLocale(input.languages, input.available);
 }

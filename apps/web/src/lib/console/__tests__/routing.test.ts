@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { SpaceListItem } from '../api';
-import { ROUTES, groupSpaces, isKnownSpaceKind, landingAfterCreate, landingAfterSignIn, loadErrorKey, prefillName, roleCards, spaceErrorText, spaceIdFrom, statusLine } from '../routing';
+import { ROUTES, groupSpaces, isKnownSpaceKind, landingAfterCreate, loadErrorKey, prefillName, presetKind, roleCards, spaceErrorText, spaceIdFrom, statusLine } from '../routing';
 
 const item = (id: string, kind: SpaceListItem['space']['kind'], createdAt: string, over: Partial<SpaceListItem> = {}, archivedAt: string | null = null): SpaceListItem => ({
   space: { id, kind, name: id, parentSpaceId: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt, createdAt },
@@ -14,9 +14,21 @@ const item = (id: string, kind: SpaceListItem['space']['kind'], createdAt: strin
 });
 
 describe('console routing (F-CONSOLE-001)', () => {
-  it('routes after sign-in and after creating a space', () => {
-    expect(landingAfterSignIn(0)).toBe(ROUTES.start);
-    expect(landingAfterSignIn(2)).toBe(ROUTES.home);
+  // F-APP-001 A-4b (section 3.7, OD-7): sign-in at /signin, the first space at /start; the router
+  // after sign-in is lib/console/signin-flow.ts (routerDestination).
+  it('names the app-host sign-in and first-space pages', () => {
+    expect(ROUTES.signIn).toBe('/signin');
+    expect(ROUTES.start).toBe('/start');
+    expect(ROUTES.home).toBe('/teach/home');
+  });
+
+  it('a persona hint preselects the matching role card on /start (section 3.5)', () => {
+    expect(presetKind('parent')).toBe('family');
+    expect(presetKind('teacher')).toBe('class');
+    expect(presetKind(null)).toBeNull();
+  });
+
+  it('routes after creating a space', () => {
     expect(landingAfterCreate('class', 'space:c', false)).toBe('/teach/space?id=space%3Ac');
     expect(ROUTES.spacePlan('space:c')).toBe('/teach/space/plan?id=space%3Ac');
     expect(ROUTES.spacePlan('space:c', 'plan:r1')).toBe('/teach/space/plan?id=space%3Ac&plan=plan%3Ar1');
