@@ -20,6 +20,7 @@ import {
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
+import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import {
   announcement,
   canSkip,
@@ -39,8 +40,6 @@ import {
 import type { MinigameScope } from '../../logic/minigame-config';
 import { playPrompt, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
-import { useLocaleStore } from '../../store/locale-store';
-import { useProfileStore } from '../../store/profile-store';
 import type { MinigameHost } from './host';
 import { PictureArt } from './PictureArt';
 
@@ -99,10 +98,7 @@ export function PicWordMatchGame({ scope, host, onBack }: Props): React.ReactEle
 
   const m = useMessages();
   const copy = m.learner.minigame;
-  const activeProfileId = useProfileStore((s) => s.activeId);
-  const romanizationMode = useLocaleStore((s) =>
-    activeProfileId === null ? 'always' : (s.byProfile[activeProfileId]?.romanizationMode ?? 'always'),
-  );
+  const romanizationMode = useRomanizationMode();
   // F-LAYOUT-001 §3.6, §3.12: the window from the layout class; the picture grows with its media scale.
   const { windowWidth, windowHeight } = useLayoutClass();
   const side = useMediaSize(touchTarget[pictureSide(windowWidth, windowHeight)]);

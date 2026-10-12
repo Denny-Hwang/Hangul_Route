@@ -47,15 +47,15 @@ Then: a subscriber sees which quest is next and which are in their plan, with ev
 ```
 +--------------------------------------------+
 | [<- back]                                  |
-| [ Stage 1 ] [ Rites ]                      |
-| New Year & Festivals (title)               |
+| [ Stage 2 ] [ Life ]                       |  <- a cell past Stage 1 (all of Stage 1 is free, OD-1)
+| Lunch Box Words (title)                    |
 | ( Hoya intro bubble )                      |
 |                                            |
 | Quests                                     |
 | +----------------------------------------+ |
-| | (1) Bow & Eat Tteokguk                 | |
+| | (1) Lunch Box Words                    | |
 | |     blurb                              | |
-| |     New letters: [ko chip] [ko chip]   | |  <- KoreanText with romanization
+| |     [ko chip] [ko chip]                | |  <- what it teaches, KoreanText with romanization (when it teaches any)
 | |     Not open yet                       | |  <- caption replaces Start
 | +----------------------------------------+ |
 | | (2) a kept quest           stars **    | |  <- finished before: stays open
@@ -91,7 +91,7 @@ Then: a subscriber sees which quest is next and which are in their plan, with ev
 - [ {ask} ] -> `access.help_asked { from: 'episode', audience }`, then the route in the table above.
 - Back to open lessons -> `episode/detail` of the `routeNext` episode; at `free-end` -> the first free word topic (or the Library when none is playable).
 - [<- back] -> where the learner came from.
-- Opening state B fires `access.preview_opened { stage, day, from }` once per open (`from: 'player'` when the quest player guard sent the learner here).
+- Opening state B fires `access.preview_opened { stage, theme, from }` once per open (`from: 'player'` when the quest player guard sent the learner here).
 
 ## Navigation graph
 
@@ -103,7 +103,8 @@ Exit to: `quest/player` · `profiles/pin-entry` -> `billing/plan-status-free-les
 - **A. subscriber with a plan**: as drawn (tags on next and plan quests; off-plan rows plain).
 - **A'. no plan**: only the Next tag (default route cursor); no In your plan tag.
 - **B. preview**: as drawn.
-- **B'. preview with every quest kept or promised**: no caption, no preview card — it is an open lesson.
+- **B'. preview with every quest kept**: no caption, no preview card — it is an open lesson.
+- **Stage 1 lessons** never show state B: all of Stage 1 is free (F-ENT-003 OD-1).
 - **Mixed episode** (one quest open by being finished, the rest closed): rows as drawn; the preview card shows.
 - **Coming soon** (preview cell, not shipped): unchanged coming-soon card from `episode/detail`; no access words (nothing to open).
 - **Empty** (episode not found): unchanged not-found line.
