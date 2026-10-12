@@ -111,7 +111,8 @@ notesRoutes.post('/:id/notes', async (c) => {
   const hold = await db.getSenderHold(account.id);
   if (hold && hold.liftedAt === null) return fail(c, 'sending_paused', 'Sending notes is paused for this account', 403);
   const brake = notesSendLimiter.check(account.id);
-  if (!brake.allowed) return fail(c, 'too_many', 'Too many notes, try again later', 429, { scope: 'account', retryAfter: brake.retryAfterSeconds });
+  // A short wait, answered like the other per-minute limiters (never a daily `scope`, so the console never words it as "tomorrow").
+  if (!brake.allowed) return fail(c, 'too_many_attempts', 'Too many notes in a minute, try again soon', 429, { retryAfterSeconds: brake.retryAfterSeconds });
 
   // Who receives it: the space's current students only (section 6.1 item 2).
   let learnerIds: string[];

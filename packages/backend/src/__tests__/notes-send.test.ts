@@ -261,11 +261,18 @@ describe('POST /api/spaces/:id/notes', () => {
     expect((await send(CLASS, 'teacher', basic())).status).toBe(201);
   });
 
-  it('brakes more than 10 sends a minute from one account (429)', async () => {
+  it('brakes more than 10 sends a minute from one account (429 too_many_attempts, a short wait like the other limiters, never a daily scope)', async () => {
     for (let i = 0; i < 10; i += 1) expect((await send(FAMILY, 'mom', basic({ presetId: 'warm_cheering' }))).status).toBe(201);
     const res = await send(FAMILY, 'mom', basic({ presetId: 'warm_cheering' }));
     expect(res.status).toBe(429);
-    expect(res.body.error).toMatchObject({ code: 'too_many', details: { scope: 'account' } });
+    expect(res.body.error).toMatchObject({ code: 'too_many_attempts', details: { retryAfterSeconds: expect.any(Number) } });
+    const seconds = res.body.error?.details?.retryAfterSeconds as number;
+    expect(seconds).toBeGreaterThan(0);
+    expect(seconds).toBeLessThanOrEqual(60);
+    expect(res.body.error?.details).not.toHaveProperty('scope');
+    // another account is not braked by mom's sends
+    await db.putSendGrant({ spaceId: FAMILY, accountId: 'dad', grantedBy: 'mom', grantedAt: T });
+    expect((await send(FAMILY, 'dad', basic({ presetId: 'warm_cheering' }))).status).toBe(201);
   });
 
   it('a held account cannot send (403 sending_paused); a lifted hold can; other accounts are unaffected', async () => {
