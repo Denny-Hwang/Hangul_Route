@@ -14,7 +14,7 @@ const SAMPLE_ARGS: Record<string, readonly (readonly unknown[])[]> = {
   'topics.collected': [[0], [5]],
   'topics.tileA11y': [['Food', 1], ['Food', 5]],
   'topic.collected': [[0], [5]],
-  'topic.speed.needMore': [[3], [4]],
+  'topic.speed.needMore': [[1], [3], [4]],
   'cards.summary.newlyCollected': [[0], [1], [3]],
   'speed.nudge.right.named': [['apple']],
   'speed.nudge.miss.first': [['apple']],
@@ -76,9 +76,12 @@ describe('copy helpers', () => {
     expect(summaryPrimaryLabel(copy, { kind: 'review', chunk: 0 })).toBe('Review these');
   });
 
-  it('the Speed round line asks for more words until it is available, never a dead end', () => {
-    expect(speedActivityLine(copy, true, 4)).toBe('Catch the words you know.');
-    expect(speedActivityLine(copy, false, 4)).toBe('Learn 4 words first');
-    expect(speedActivityLine(copy, false, 3)).toBe('Learn 3 words first');
+  it('the Speed round line names the words still to learn until it is available, never a dead end', () => {
+    expect(speedActivityLine(copy, 4, 4)).toBe('Catch the words you know.');
+    expect(speedActivityLine(copy, 6, 4)).toBe('Catch the words you know.');
+    expect(speedActivityLine(copy, 0, 4)).toBe('Learn 4 words first');
+    expect(speedActivityLine(copy, 1, 4)).toBe('Learn 3 words first');
+    expect(speedActivityLine(copy, 3, 4)).toBe('Learn 1 word first');
+    expect(speedActivityLine(copy, 0, 3)).toBe('Learn 3 words first');
   });
 });

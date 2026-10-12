@@ -6,7 +6,7 @@ import { progress, state, topicRow } from './fixtures';
 const NOW = new Date(2026, 9, 11, 12, 0, 0);
 const TODAY = '2026-10-11';
 const WORDS = Array.from({ length: 8 }, (_, i) => `vocab:w${i + 1}`);
-const caps = { wordIds: WORDS };
+const caps = { wordIds: WORDS, optionCount: 4 as const };
 const collected = (n: number, extra: Partial<Parameters<typeof state>[1]> = {}) =>
   Array.from({ length: n }, (_, i) => state(`w${i + 1}`, { due: '2026-10-20', ...extra }));
 
@@ -38,8 +38,17 @@ describe('suggestActivity (F-VOC-003 section 3.4, golden table)', () => {
   });
 
   it('a topic of fewer than 4 words stays on Learn', () => {
-    const small = { wordIds: WORDS.slice(0, 3) };
+    const small = { wordIds: WORDS.slice(0, 3), optionCount: 4 as const };
     expect(suggestActivity('food', progress(collected(3)), NOW, small)).toBe('learn');
+  });
+
+  it('at a 3-option level, 3 collected words are enough, matching activityAvailability', () => {
+    const small = { wordIds: WORDS.slice(0, 3), optionCount: 3 as const };
+    expect(suggestActivity('food', progress(collected(3)), NOW, small)).toBe('speed');
+    expect(suggestActivity('food', progress(collected(2)), NOW, small)).toBe('learn');
+    const big = { wordIds: WORDS, optionCount: 3 as const };
+    expect(suggestActivity('food', progress(collected(3), [topicRow('food', { last: TODAY })]), NOW, big)).toBe('speed');
+    expect(suggestActivity('food', progress(collected(3)), NOW, big)).toBe('learn');
   });
 
   it('never suggests Match', () => {

@@ -10,7 +10,7 @@ import { localDay } from './progress';
 
 export type VocabActivity = 'learn' | 'speed' | 'match';
 
-/** Collected words before the Speed round is suggested (4 options). */
+/** Collected words before the Speed round at a 4-option level; a 3-option level needs 3 (its `optionCount`). */
 export const SPEED_MIN_COLLECTED = 4;
 /** Collected words before Match is available. */
 export const MATCH_MIN_COLLECTED = 3;
@@ -18,10 +18,12 @@ export const MATCH_MIN_COLLECTED = 3;
 export interface SuggestTopic {
   /** The topic's word ids (`topicItems(key)`). */
   wordIds: readonly string[];
+  /** Options per question at the learner's level: the collected words the Speed round needs (as `activityAvailability`). */
+  optionCount: 3 | 4;
 }
 
 /**
- * `learn` while fewer than 4 words are collected, or while words remain to be
+ * `learn` while fewer than `optionCount` words (4, or 3 at a 3-option level) are collected, or while words remain to be
  * met and the topic had no session today; otherwise `speed` (every word is
  * collected, or the learner already practised this topic today). A due word
  * never pulls the learner away from new words on their first visit of the day.
@@ -37,7 +39,7 @@ export function suggestActivity(
   const today = localDay(now);
   const ids = new Set(topic.wordIds);
   const collected = progress.items.filter((s) => ids.has(s.id)).length;
-  if (collected < SPEED_MIN_COLLECTED) return 'learn';
+  if (collected < topic.optionCount) return 'learn';
   const moreToMeet = collected < ids.size;
   const sessionToday = progress.topics.some((t) => t.topic === topicKey && t.last === today);
   // What is left is "every word collected" or "practised today": the spec's third case (a word is due) adds

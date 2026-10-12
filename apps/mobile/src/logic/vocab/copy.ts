@@ -21,7 +21,12 @@ export function summaryPrimaryLabel(copy: VocabCopy, primary: SummaryPrimary): s
   return primary.kind === 'next' ? copy.cards.summary.next : copy.cards.summary.review;
 }
 
-/** The Speed round button's line: its description, or how many words to learn first (it then opens Learn). */
-export function speedActivityLine(copy: VocabCopy, available: boolean, minCollected: number): string {
-  return available ? copy.topic.speed.line : copy.topic.speed.needMore(minCollected);
+/**
+ * The Speed round button's line: its description once `collected` reaches
+ * `minCollected` (the level's option count), else how many words are still
+ * to learn (the button then opens Learn).
+ */
+export function speedActivityLine(copy: VocabCopy, collected: number, minCollected: number): string {
+  const left = minCollected - collected;
+  return left <= 0 ? copy.topic.speed.line : copy.topic.speed.needMore(left);
 }

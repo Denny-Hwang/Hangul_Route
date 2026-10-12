@@ -1190,7 +1190,8 @@ export const learner = {
       speed: {
         label: 'Speed round',
         line: 'Catch the words you know.',
-        needMore: (n: number) => `Learn ${n} words first`,
+        /** `n`: the words still to learn before the Speed round, never the threshold. */
+        needMore: (n: number) => plural('en', n, { one: 'Learn 1 word first', other: `Learn ${n} words first` }),
       },
       match: { label: 'Match', line: 'Match each word to its picture.' },
     },
