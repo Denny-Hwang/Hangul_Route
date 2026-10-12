@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson display states: F-BROWSE-001 mock</title>
+<link rel="stylesheet" href="./browse.css">
+</head>
+<body>
+<!-- F-BROWSE-001 design mock (design/screens/browse/README.md). Content is the shipped bundle read through logic/browse (BR-4); strings are the spec's section 6 drafts, the wireframes' placeholders or dictionary values (README, Strings). Links are placeholders. -->
+<div class="board">
+<h1>Lesson display: today and with three shipped locales</h1>
+<p class="note">F-BROWSE-001 section 4.9, wireframe browse/show-as.md. Today only English ships (LOCALE_STATUS), so the Language row is hidden. Frames are 320 wide.</p>
+<div class="row mt-lg">
+<figure class="frame-wrap"><figcaption class="note frame-label">Today: English only, no Language row</figcaption><iframe class="frame" title="Today: English only, no Language row" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;en&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;./browse.css&quot;&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;sheet&quot; style=&quot;position:static&quot;&gt;&lt;div class=&quot;handle&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;h2 class=&quot;h-prompt&quot; id=&quot;ld-title&quot;&gt;Lesson display&lt;/h2&gt;
+&lt;h3 class=&quot;body bold mt-lg&quot; id=&quot;ld-rom&quot;&gt;Romanization&lt;/h3&gt;
+&lt;div role=&quot;radiogroup&quot; aria-labelledby=&quot;ld-rom&quot;&gt;&lt;div class=&quot;option&quot; role=&quot;radio&quot; aria-checked=&quot;true&quot; tabindex=&quot;0&quot;&gt;&lt;span class=&quot;dot&quot; aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;Always shown&lt;/div&gt;&lt;div class=&quot;option&quot; role=&quot;radio&quot; aria-checked=&quot;false&quot; tabindex=&quot;-1&quot;&gt;&lt;span class=&quot;dot&quot; aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;Hidden until tap&lt;/div&gt;&lt;/div&gt;
+
+&lt;p class=&quot;body-sm t-secondary mt-lg&quot;&gt;These choices change only this preview. No learner's settings change.&lt;/p&gt;
+&lt;div class=&quot;actions&quot;&gt;&lt;button class=&quot;btn primary&quot; type=&quot;button&quot;&gt;Done&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;"></iframe></figure>
+<figure class="frame-wrap"><figcaption class="note frame-label">Korean and Spanish shipped: endonym chips</figcaption><iframe class="frame" title="Korean and Spanish shipped: endonym chips" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;en&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;&lt;link rel=&quot;stylesheet&quot; href=&quot;./browse.css&quot;&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;sheet&quot; style=&quot;position:static&quot;&gt;&lt;div class=&quot;handle&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+&lt;h2 class=&quot;h-prompt&quot; id=&quot;ld-title&quot;&gt;Lesson display&lt;/h2&gt;
+&lt;h3 class=&quot;body bold mt-lg&quot; id=&quot;ld-rom&quot;&gt;Romanization&lt;/h3&gt;
+&lt;div role=&quot;radiogroup&quot; aria-labelledby=&quot;ld-rom&quot;&gt;&lt;div class=&quot;option&quot; role=&quot;radio&quot; aria-checked=&quot;true&quot; tabindex=&quot;0&quot;&gt;&lt;span class=&quot;dot&quot; aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;Always shown&lt;/div&gt;&lt;div class=&quot;option&quot; role=&quot;radio&quot; aria-checked=&quot;false&quot; tabindex=&quot;-1&quot;&gt;&lt;span class=&quot;dot&quot; aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;Hidden until tap&lt;/div&gt;&lt;/div&gt;
+&lt;h3 class=&quot;body bold mt-lg&quot; id=&quot;ld-lang&quot;&gt;Language&lt;/h3&gt;&lt;div class=&quot;lang-chips mt-sm&quot; role=&quot;radiogroup&quot; aria-labelledby=&quot;ld-lang&quot;&gt;&lt;button class=&quot;lang&quot; type=&quot;button&quot; role=&quot;radio&quot; aria-checked=&quot;true&quot; lang=&quot;en&quot;&gt;English&lt;/button&gt;&lt;button class=&quot;lang&quot; type=&quot;button&quot; role=&quot;radio&quot; aria-checked=&quot;false&quot; lang=&quot;es&quot;&gt;Español&lt;/button&gt;&lt;button class=&quot;lang&quot; type=&quot;button&quot; role=&quot;radio&quot; aria-checked=&quot;false&quot; lang=&quot;ko&quot;&gt;한국어&lt;/button&gt;&lt;/div&gt;
+&lt;p class=&quot;body-sm t-secondary mt-lg&quot;&gt;These choices change only this preview. No learner's settings change.&lt;/p&gt;
+&lt;div class=&quot;actions&quot;&gt;&lt;button class=&quot;btn primary&quot; type=&quot;button&quot;&gt;Done&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;"></iframe></figure>
+</div></div><script>/* board only: fit each frame to its content */ const fit = (f) => { const d = f.contentDocument; if (d && d.body && d.body.childElementCount) f.style.height = Math.ceil(d.body.getBoundingClientRect().height) + 'px'; }; for (const f of document.querySelectorAll('iframe.frame')) { f.addEventListener('load', () => fit(f)); fit(f); }</script>
+</body>
+</html>
