@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { LANDING_WIDTHS } from './landing-targets';
 
 /**
  * Landing layout in a real browser, over the static export (apps/web/out).
@@ -10,8 +11,6 @@ import { expect, test, type Page } from '@playwright/test';
  * illustrations capped when the layout stacks.
  */
 const HEIGHT = 800;
-/** The three phone / small-tablet widths the owner named. */
-const WIDTHS = [320, 375, 768] as const;
 /**
  * Pages whose footer or body once pushed the document wider than the screen: the English site, `src/app/(en)/`
  * (F-I18N-001 PR 11b). `/es` and `/ko` render the same bodies and are not exported until they ship.
@@ -86,7 +85,7 @@ async function box(page: Page, selector: string): Promise<Box> {
   }, selector);
 }
 
-for (const width of WIDTHS) {
+for (const width of LANDING_WIDTHS) {
   test.describe(`${width}px wide`, () => {
     test.use({ viewport: { width, height: HEIGHT } });
 
@@ -119,7 +118,7 @@ for (const width of WIDTHS) {
 }
 
 test.describe('keyboard focus follows the visual order (WCAG 2.4.3 / 1.3.2)', () => {
-  for (const width of [...WIDTHS, 1280]) {
+  for (const width of [...LANDING_WIDTHS, 1280]) {
     test(`${width}px: Tab goes brand row first ("Play now"), then the section links, left to right`, async ({
       page,
     }) => {

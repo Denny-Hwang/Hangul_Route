@@ -5,10 +5,13 @@ import type { MyRouteModel } from './types';
 /**
  * The start marker (F-ROUTE-001 R-7a, section 3.6): "You started here".
  *
- * The route is computed with **no completions**, so the start quest is a fixed
- * anchor. It moves only with a better retake (the placed-out set only grows)
- * or a grown-up override (which may move it earlier); it never moves because
- * the learner played.
+ * The route is computed with **no completions**, so the start never moves
+ * because the learner played. It moves with a better retake (the placed-out
+ * set only grows) or a grown-up override (which may move it earlier). It is
+ * also read against today's bundle and tier, the same way `effectiveRoute`
+ * picks where the app starts the learner: a quest that joins the bundle ahead
+ * of the old start, or a stage the learner is newly entitled to, can become
+ * the start, because it was never placed out (section 3.6).
  */
 
 /** `effectiveRoute(placements, catalog, { isEntitled, completedQuestIds: new Set() })`; null without a stored result. */

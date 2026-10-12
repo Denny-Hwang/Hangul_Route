@@ -19,6 +19,13 @@ export interface VocabCatalogOptions {
 export interface VocabCatalog {
   /** Topics the picker may list: everything but `draft` unless `showDrafts`. */
   readonly vocabTopics: readonly VocabTopic[];
+  /**
+   * Items whose primary topic (`topics[0]`) is in `vocabTopics`, in file order.
+   * Every learner pool and distractor universe drawn from the whole catalogue
+   * (F-VOC-004 mixed review, F-VOC-005, F-RVW-001) uses this, never the raw
+   * item list, so unreviewed draft words never reach a learner (V12).
+   */
+  readonly visibleItems: readonly RuntimeVocabItem[];
   /** Any topic by key (draft included; the picker uses `vocabTopics`). */
   vocabTopic(key: string): VocabTopic | undefined;
   /**
@@ -38,9 +45,11 @@ export function createVocabCatalog(
   const visibleTopics = topics.filter((t) => showDrafts || t.status !== 'draft');
   const topicsByKey = new Map(topics.map((t) => [t.key as string, t]));
   const itemsById = new Map(items.map((i) => [i.id, i]));
+  const visibleKeys = new Set<string>(visibleTopics.map((t) => t.key));
 
   return {
     vocabTopics: visibleTopics,
+    visibleItems: items.filter((i) => visibleKeys.has(i.topics[0]!)), // topics has at least one entry (VocabItemSchema)
     vocabTopic: (key) => topicsByKey.get(key),
     topicItems: (key) => {
       const inTopic = items.filter((i) => (i.topics as readonly string[]).includes(key));

@@ -1,8 +1,11 @@
 /**
  * Colour-vision helpers for the `colors.vocab` review (F-VOC-002 §3.4).
- * Test-only utilities: they are not exported from the `./word-art` entry; the
- * shipped result is the constant in `color-confusion.ts`, which the tests
- * recompute with these helpers.
+ * Review utilities: they are not exported from the `./word-art` entry (the app
+ * never loads them); the shipped result is the constant in
+ * `color-confusion.ts`, which the tests recompute with these helpers. The
+ * web contact sheet reads `MACHADO_MATRICES` through the
+ * `./word-art/color-science` subpath for its colour-vision strip, so the
+ * preview simulates exactly what the confusion pairs are computed from.
  *
  * - sRGB -> CIE Lab (D65), distance by CIEDE2000 (Sharma, Wu and Dalal 2005).
  * - Colour-vision simulation by the Machado, Oliveira and Fernandes (2009)
@@ -18,9 +21,10 @@ export const VISIONS: readonly Exclude<Vision, 'normal'>[] = ['protanopia', 'deu
 /** Two colours closer than this (CIEDE2000) under one vision collapse (§3.4). */
 export const CONFUSION_THRESHOLD = 8;
 
-type Matrix = readonly [number, number, number, number, number, number, number, number, number];
+export type VisionMatrix = readonly [number, number, number, number, number, number, number, number, number];
 
-const MACHADO: Readonly<Record<Exclude<Vision, 'normal'>, Matrix>> = {
+/** Row-major 3 x 3 matrices in linear RGB, severity 1.0 (Machado, Oliveira and Fernandes 2009). */
+export const MACHADO_MATRICES: Readonly<Record<Exclude<Vision, 'normal'>, VisionMatrix>> = {
   protanopia: [0.152286, 1.052583, -0.204868, 0.114503, 0.786281, 0.099216, -0.003882, -0.048116, 1.051998],
   deuteranopia: [0.367322, 0.860646, -0.227968, 0.280085, 0.672501, 0.047413, -0.01182, 0.04294, 0.968881],
   tritanopia: [1.255528, -0.076749, -0.178779, -0.078411, 0.930809, 0.147602, 0.004733, 0.691367, 0.3039],
@@ -53,7 +57,7 @@ function toHex(linear: readonly number[]): string {
 function simulateLinear(hex: string, vision: Vision): [number, number, number] {
   const [r, g, b] = linearRgb(hex);
   if (vision === 'normal') return [r, g, b];
-  const m = MACHADO[vision];
+  const m = MACHADO_MATRICES[vision];
   const clamp = (v: number): number => Math.min(1, Math.max(0, v));
   return [clamp(m[0] * r + m[1] * g + m[2] * b), clamp(m[3] * r + m[4] * g + m[5] * b), clamp(m[6] * r + m[7] * g + m[8] * b)];
 }

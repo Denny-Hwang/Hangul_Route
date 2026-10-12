@@ -344,15 +344,35 @@ export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot
  * writes made since. Every collection only grows, so `mergeSnapshots` keeps
  * both sides; only quest `attempts` is a sum, so the attempts `base` already
  * gave `theirs` are taken out of `ours` first and each attempt counts once.
+ * A quest finished during the request keeps its new `completedAt` (the
+ * later one): `mergeQuest` keeps the earliest date between devices, but a
+ * local replay moves it forward (`recordBestQuest`), and Home's "done today"
+ * and the replay window read it.
  */
 export function rebaseSnapshot(base: ProgressSnapshot, ours: ProgressSnapshot, theirs: ProgressSnapshot, opts: MergeOptions): ProgressSnapshot {
   const counted = new Map(base.quests.map((q) => [q.questId, q.attempts]));
+  const sentDone = new Map(base.quests.map((q) => [q.questId, q.completedAt]));
   const held = new Set(theirs.quests.map((q) => q.questId));
   const quests = ours.quests.map((q) => {
     const already = held.has(q.questId) ? (counted.get(q.questId) ?? 0) : 0;
     return already === 0 ? q : { ...q, attempts: Math.max(0, q.attempts - already) };
   });
-  return mergeSnapshots({ ...ours, quests }, theirs, opts);
+  // Quests whose completedAt this device moved forward while the request was in flight.
+  const finished = new Map<string, string>();
+  for (const q of ours.quests) {
+    const before = sentDone.get(q.questId);
+    if (q.completedAt && (!before || compareInstant(q.completedAt, before) > 0)) finished.set(q.questId, q.completedAt);
+  }
+  const merged = mergeSnapshots({ ...ours, quests }, theirs, opts);
+  if (finished.size === 0) return merged;
+  return {
+    ...merged,
+    quests: merged.quests.map((q) => {
+      const mine = finished.get(q.questId);
+      if (!mine || (q.completedAt && compareInstant(q.completedAt, mine) >= 0)) return q;
+      return { ...q, completedAt: mine };
+    }),
+  };
 }
 
 /**

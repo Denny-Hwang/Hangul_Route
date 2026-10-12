@@ -16,7 +16,7 @@ vi.mock('@react-native-async-storage/async-storage', () => ({
 }));
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { listKeys, readJson, removeKey, writeJson } from '../storage';
+import { listKeys, readJson, readJsonStrict, removeKey, writeJson } from '../storage';
 
 describe('platform/storage (AsyncStorage wrapper)', () => {
   beforeEach(() => {
@@ -42,6 +42,16 @@ describe('platform/storage (AsyncStorage wrapper)', () => {
   it('readJson returns null when the underlying store throws', async () => {
     vi.mocked(AsyncStorage.getItem).mockRejectedValueOnce(new Error('disk'));
     expect(await readJson('profiles')).toBeNull();
+  });
+
+  it('readJsonStrict reads like readJson but throws when the underlying store throws', async () => {
+    await writeJson('q', [1, 2]);
+    expect(await readJsonStrict('q')).toEqual([1, 2]);
+    expect(await readJsonStrict('nope')).toBeNull();
+    mem.set('hr:bad', '{not-json');
+    expect(await readJsonStrict('bad')).toBeNull();
+    vi.mocked(AsyncStorage.getItem).mockRejectedValueOnce(new Error('disk'));
+    await expect(readJsonStrict('q')).rejects.toThrow('disk');
   });
 
   it('removeKey deletes only the prefixed key', async () => {

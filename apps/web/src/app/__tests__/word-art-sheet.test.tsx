@@ -28,15 +28,41 @@ describe('/design-preview/word-art', () => {
   });
 
   it('draws each glyph once as a colour and a silhouette symbol, and at 160, four sizes on three backgrounds, silhouette and three simulations', () => {
-    expect(count(html, '<symbol id="wa-')).toBe(keys.length * 2);
+    expect(count(html, '<symbol id="wa_c_')).toBe(keys.length);
+    expect(count(html, '<symbol id="wa_m_')).toBe(keys.length);
     for (const key of keys) {
-      expect(count(html, `href="#wa-${key}"`)).toBe(1 + 12 + 3);
-      expect(count(html, `href="#wa-${key}-mono"`)).toBe(1);
+      expect(count(html, `href="#wa_c_${key}"`)).toBe(1 + 12 + 3);
+      expect(count(html, `href="#wa_m_${key}"`)).toBe(1);
     }
     for (const size of [160, 96, 64, 48, 32]) expect(html).toContain(`width="${size}" height="${size}"`);
     expect(count(html, 'data-bg="paper"')).toBe(keys.length);
     expect(count(html, 'data-bg="sunken"')).toBe(keys.length);
     expect(count(html, 'data-bg="canvas"')).toBe(keys.length);
+  });
+
+  it('lets each background row wrap, so the four sizes fit a 320 px screen', () => {
+    const rows = [...html.matchAll(/<div data-(?:reuse-)?bg="[a-z]+" style="([^"]*)"/g)].map((m) => m[1]!);
+    expect(rows).toHaveLength((keys.length + 13) * 3);
+    for (const style of rows) expect(style).toContain('flex-wrap:wrap');
+  });
+
+  it('shows each card: reuse at 96 and 64 px on the three backgrounds, beside its catalog word (§3.11)', () => {
+    const reuses = [...new Set(VOCAB_CATALOG.filter((e) => e.visual.startsWith('card:')).map((e) => e.visual))];
+    expect(reuses.length).toBe(13);
+    expect(count(html, 'data-testid="card-reuse"')).toBe(reuses.length);
+    for (const cardId of reuses) {
+      const at = html.indexOf(`data-card="${cardId}"`);
+      expect(at).toBeGreaterThan(-1);
+      const cell = html.slice(at, html.indexOf('</article>', at));
+      expect(count(cell, 'viewBox="0 0 200 200"')).toBe(6);
+      expect(count(cell, '<svg width="96" height="96"')).toBe(3);
+      expect(count(cell, '<svg width="64" height="64"')).toBe(3);
+      for (const bg of ['paper', 'sunken', 'canvas']) expect(cell).toContain(`data-reuse-bg="${bg}"`);
+      for (const word of VOCAB_CATALOG.filter((e) => e.visual === cardId)) {
+        expect(cell).toContain(`<span lang="ko">${word.ko}</span>`);
+        expect(cell).toContain(word.en);
+      }
+    }
   });
 
   it('defines the three colour-vision filters once and uses each on every card', () => {

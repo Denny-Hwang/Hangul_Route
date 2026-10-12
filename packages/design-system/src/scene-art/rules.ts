@@ -262,7 +262,7 @@ export function checkScene(art: SceneArtLike, registry: Registry): Finding[] {
   const scene = resolveScene(art, registry);
   const thumb = resolveScene(art, registry, { variant: 'thumb' });
   const def = (ref: string): ItemDef => registry[ref]!;
-  const setting = Object.hasOwn(registry, art.setting) ? registry[art.setting] : undefined;
+  const setting = Object.prototype.hasOwnProperty.call(registry, art.setting) ? registry[art.setting] : undefined;
   const { width: W, height: H } = SCENE_CANVAS;
 
   for (const issue of scene.issues) add('error', 'S-resolve', `${issue.kind}: ${issue.ref}`, issue.layerIndex, issue.ref);

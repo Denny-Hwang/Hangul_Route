@@ -7,8 +7,8 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * corrected row when the bundle and this file drift apart. Bump `CATALOG_VERSION`
  * on every content change that alters what a generated route can contain.
  *
- * Until F-QUEST-002 lands the 15 Stage 1 quests, this file lists the 8 the bundle
- * ships; Q-6a filled `teaches` for letters q1-q3, Q-6b for life q1-q3 (adding life q3),
+ * Until F-QUEST-002 lands the 15 Stage 1 quests, this file lists the 9 the bundle
+ * ships (8, plus life q3 since Q-6b); Q-6a filled `teaches` for letters q1-q3, Q-6b for life q1-q3 (adding life q3),
  * and Q-7b and Q-8 grow it to 15 (the parity test shows the rows to add).
  * Every story is a `draft` until a native reviewer signs it and the bundle holds
  * its `shelf` block; flipping a story to `ready` is that reviewer's change.

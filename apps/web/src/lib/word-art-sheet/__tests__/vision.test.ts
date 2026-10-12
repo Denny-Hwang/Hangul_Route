@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { MACHADO_MATRICES, VISIONS } from '@hangul-route/design-system/word-art/color-science';
 import { VISION_FILTERS, visionFilterId } from '../vision';
 
 describe('colour-vision filters for the preview strip (F-VOC-002 §3.10)', () => {
@@ -20,6 +21,14 @@ describe('colour-vision filters for the preview strip (F-VOC-002 §3.10)', () =>
     for (const v of VISION_FILTERS) {
       const n = v.values.split(' ').map(Number);
       for (const row of [0, 1, 2]) expect(n[row * 5]! + n[row * 5 + 1]! + n[row * 5 + 2]!).toBeCloseTo(1, 2);
+    }
+  });
+
+  it("draws the design system's own matrices, the ones COLOR_CONFUSION_PAIRS is computed from", () => {
+    expect(VISION_FILTERS.map((v) => v.vision)).toEqual([...VISIONS]);
+    for (const v of VISION_FILTERS) {
+      const n = v.values.split(' ').map(Number);
+      expect([0, 1, 2].flatMap((row) => n.slice(row * 5, row * 5 + 3))).toEqual([...MACHADO_MATRICES[v.vision]]);
     }
   });
 

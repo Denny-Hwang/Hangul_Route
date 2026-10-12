@@ -31,4 +31,11 @@ describe('placementRouteCatalog (F-PLC-001 section 3.6)', () => {
     const catalog = placementRouteCatalog(questsAll, episodesAll);
     expect(catalog.quests.map((q) => q.id)).toEqual(appRouteCatalog(questsAll, episodesAll).quests.map((q) => q.id));
   });
+
+  it('gives the shipped life q1-q3 the symbols their Discover steps teach, so a stage1 level can place them out', () => {
+    const teaches = new Map(placementRouteCatalog(questsAll, episodesAll).quests.map((q) => [q.id, q.teaches]));
+    expect(teaches.get('quest:stage1-life-q1')).toEqual(['ㅈ', 'ㅊ']);
+    expect(teaches.get('quest:stage1-life-q2')).toEqual(['ㅂ', 'ㅅ']);
+    expect(teaches.get('quest:stage1-life-q3')).toEqual(['ㅋ', 'ㅌ']);
+  });
 });

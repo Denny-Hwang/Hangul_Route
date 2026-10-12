@@ -171,7 +171,7 @@ export const stage1Quests: Quest[] = [
     blurbEn: 'Two new letters, b and s, and family words to read.',
     estimatedMinutes: 4,
     steps: [
-      { id: 's1', kind: 'intro', titleEn: 'Family!', hoyaLineEn: 'Everyone is at the table. Let us read their names!', durationSeconds: 6 },
+      { id: 's1', kind: 'intro', titleEn: 'Family!', hoyaLineEn: 'Everyone is at the table. Let us read the family words!', durationSeconds: 6 },
       {
         id: 's2',
         kind: 'discover',
@@ -220,7 +220,7 @@ export const stage1Quests: Quest[] = [
         id: 's2',
         kind: 'discover',
         titleEn: 'Two New Letters',
-        hoyaLineEn: 'k is like g with a puff of air, and t is like d with a puff of air.',
+        hoyaLineEn: 'Tap Hear it: k is like g with a puff of air, and t is like d with a puff of air.',
         discover: {
           pages: [
             {
