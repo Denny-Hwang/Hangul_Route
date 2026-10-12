@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS billing_events (
   id            TEXT PRIMARY KEY,   -- bev:xxxx
   subject_kind  TEXT NOT NULL CHECK (subject_kind IN ('account', 'space')),
   subject_id    TEXT NOT NULL,
-  plan_key      TEXT NOT NULL CHECK (plan_key IN ('family_lifetime', 'group_license', 'school_seat')),
+  plan_key      TEXT NOT NULL CHECK (plan_key IN ('family_lifetime', 'group_license', 'school_seat')),  -- family_lifetime = the yearly Family Plan (historical name, BY-D1)
   kind          TEXT NOT NULL CHECK (kind IN ('purchase', 'renewal', 'refund', 'failed')),
   amount_cents  INTEGER NOT NULL CHECK (amount_cents >= 0),
   currency      TEXT NOT NULL,      -- ISO 4217, lower-case as Stripe sends it
