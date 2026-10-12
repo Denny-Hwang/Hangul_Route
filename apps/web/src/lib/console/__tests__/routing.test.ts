@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { SpaceListItem } from '../api';
@@ -136,19 +137,21 @@ describe('page load errors (settings, school admin, F-I18N-001 PR 10c)', () => {
 });
 
 
-describe("one learner's Learning Route page (Learning Route amendment section 6.1, LR-7)", () => {
-  it('sends a family to /parent/space/route and a class, or no kind, to /teach/space/route', () => {
-    expect(ROUTES.learnerRoute('space:f', 'learner:1', 'family')).toBe('/parent/space/route?id=space%3Af&learner=learner%3A1');
+describe("one learner's Learning Route page (Learning Route amendment section 6.1, LR-7, LR-8)", () => {
+  it('lands every kind on /teach/space/route until F-APP-001 A-5b adds the /parent/space/route twin', () => {
+    // Section 2, F-APP-001 row: before A-5b the builder returns /teach/space/route for every kind (it renders a
+    // family too), so no link can open a page that does not exist yet. A-5b's `spacePath` sends a family to
+    // /parent/space/route together with the twin page, which its SPACE_PAGES test enforces.
+    expect(ROUTES.learnerRoute('space:f', 'learner:1', 'family')).toBe('/teach/space/route?id=space%3Af&learner=learner%3A1');
     expect(ROUTES.learnerRoute('space:c', 'learner:1', 'class')).toBe('/teach/space/route?id=space%3Ac&learner=learner%3A1');
-    // Omitted renders every kind (F-APP-001's pre-A-5b rule).
     expect(ROUTES.learnerRoute('space:c', 'learner:1')).toBe('/teach/space/route?id=space%3Ac&learner=learner%3A1');
   });
 
-  it('never yields a /teach path for a family space', () => {
-    for (const [space, learner] of [['space:f', 'l'], ['fam ily', 'a&b=c'], ['', '']] as const) {
-      const path = ROUTES.learnerRoute(space, learner, 'family');
-      expect(path.startsWith('/parent/space/route?')).toBe(true);
-      expect(path).not.toContain('/teach');
+  it('points only at a page this console has', () => {
+    const page = new URL('../../../app/(console)/teach/space/route/page.tsx', import.meta.url);
+    expect(existsSync(page)).toBe(true);
+    for (const kind of ['family', 'class', undefined] as const) {
+      expect(new URL(ROUTES.learnerRoute('s', 'l', kind), 'https://app.example').pathname).toBe('/teach/space/route');
     }
   });
 
