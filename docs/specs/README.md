@@ -89,6 +89,10 @@ F-XXX-<slug>.md
 - `F-ROUTE-001-my-route-overview.md` — My route: the whole journey at a glance (stage trail, pips that only fill, read / listen / write inventory, grown-up and console views) and the weekly plan proposed after the level check (companion `AMENDMENTS-PLC-PLAN-HANDOFF.md`, applied to F-PLC-001 and F-PLAN-002) · **ready**
 - `F-QUEST-002` amended: initial ㅇ is spoken by its name (see F-AUDIO-004)
 
+### UX wave 2026-10-11 (owner request: persona split, reports, feedback, learning route)
+- `F-FEEDBACK-001-adult-feedback-channel.md` — notes from grown-ups: a one-way, child-safe channel from a learner's teacher or family (preset encouragement plus a short text, preset reactions only, family oversight, hide and report, offline, deleted with the learner) · **ready**
+  - wireframes `design/wireframes/home/notes-card.md`, `notes/{list,detail}.md`, `parent/{notes,note-report}.md`, `console/{note-composer,notes-sent,family-notes}.md` (FB-0)
+
 ### Phase 2 / planned
 - `F-PROF-001-device-profiles.md` — multi-learner · **draft** (code shipped PR #13, full spec covers cloud sync)
 - `F-HW-001-homework-page.md` — Homework tab · **draft**

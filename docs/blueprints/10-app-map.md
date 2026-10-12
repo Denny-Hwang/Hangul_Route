@@ -192,6 +192,9 @@ Hangul Route
 | `pwa/system-banners` | (신규, web only) | 오프라인 준비됨 · 업데이트 · 오프라인 상태 | P | roadmap P2 | NEW |
 | `layout/wide` | (모든 화면, `useLayoutClass`) | 넓은 창은 그림·두 화면 동시 보기에 쓰고 타깃은 작게 하지 않음: 클래스 4 · Home 2열 · Journey/Library 두 pane · 폰 가로 안내 · pane 상태 | S | F-LAYOUT-001 §3.1-3.8 | ✓ |
 | `classroom/lecture-presenter` | PresenterApp (`/present`, 별도 root, 웹 전용) | 교사가 TV·프로젝터로 하는 슬라이드 수업 — 점수·순위 없음, 이름은 피커에만 (URL 에 없음), 학습자 진도 기록 없음 | R | F-TCH-004 | ✓ |
+| `home/notes-card` | Main/Home (row 2a, F-ROUTE-001 §6.4) | 새 노트 1장 (보낸 사람 · 격려 문구) → Read — 미션 카드 뒤, 타이머·카운터 없음 | R | F-FEEDBACK-001 §6.5 | ✓ |
+| `notes/list` | Notes | 내 노트: New · Earlier, 최신순 — 삭제 없음 | R | F-FEEDBACK-001 §6.5 | ✓ |
+| `notes/detail` | NoteDetail | 노트 읽기 · 추천 퀘스트 Start · 프리셋 반응 4개 (자유 입력 없음) · Tell a grown-up | R | F-FEEDBACK-001 §6.5-6.7 | ✓ |
 | `classroom/projection-mode` | (연기, 자원봉사 학생용 — 교사 수업은 `classroom/lecture-presenter`) | 학습자 화면을 교실 TV 에 그대로 표시 | D | F-TCH-001 §3.4 | NEW |
 
 ※ `parent/gate` (수학 문제) 는 2026-09-19 에 PIN 으로 통합됨 (§7). 파일은 결정 기록용으로 남긴다.
@@ -207,6 +210,9 @@ Hangul Route
 | `console/plan-builder` | web `/teach/space/:id/plan` (family·class 공용) | 계획 만들기·발행·readout | S | F-PLAN-001 §3.5 | ✓ |
 | `console/account` | web + mobile | 이메일·동의·백업·학습자 삭제 | P | roadmap §5.3 | NEW |
 | `console/billing` | web `/teach/billing` (mobile IAP 는 F-IAP-002) | 현재 플랜 카드 · 역할별 플랜 행 (추천 1개) · Choose → Stripe Checkout · Manage → Portal · 미설정 시 조용한 안내 | S | F-ENT-001 §3.6 | ✓ |
+| `parent/notes` | ParentDashboard 의 섹션 (PIN 뒤) | 학습자별 모든 노트 · 숨기기 · 신고 · 학급 노트 설정 (전체 / 격려만 / 끔) | R | F-FEEDBACK-001 §6.10 | ✓ |
+| `parent/note-report` | sheet (PIN 뒤, `NoteReport`) | 노트 신고 (사유 4개, 자유 입력 없음) → 모든 기기에서 숨김 | R | F-FEEDBACK-001 §6.10 | ✓ |
+| `console/family-notes` | web `/teach/space/notes?id=` (family) | 우리 학습자에게 온 모든 노트 (가정·학급) · 숨기기 · 신고 · 학급 노트 설정 | R | F-FEEDBACK-001 §7.2 | ✓ |
 
 ### 3.3 C. Teacher / School Console (web `/teach`)
 
@@ -220,6 +226,8 @@ Hangul Route
 | `console/school-admin` | web `/teach/space/:id` (kind = school) | 학급 트리 · 교사 초대 · seat 사용량 · 교사 배정 (집계만, 학생 이름 없음) | S | F-SCHOOL-001 §3.3 | ✓ |
 | `console/plan-builder` | (B 와 공용) | S | F-PLAN-001 §3.5 | ✓ |
 | `console/billing` | (B 와 공용, group_license / school) | S | F-ENT-001 §3.6 | ✓ |
+| `console/note-composer` | web `/teach/space/notes?id=` (+ roster 카드 Send a note) | 받는 사람 · 격려 프리셋 (필수) · 짧은 글 120자 · 퀘스트 추천 · 미리보기 → Send | R | F-FEEDBACK-001 §6.1-6.4 | ✓ |
+| `console/notes-sent` | web `/teach/space/notes?id=` | 보낸 노트 최신순 · 상태 Sent / Opened / Not shown · 되돌리기 — 개봉률·순위 없음 | R | F-FEEDBACK-001 §7.2, §9 | ✓ |
 | `console/lecture-setup` | web `/teach/space/lecture?id=` (C10) | 이번 주 계획 · 카탈로그 · 다시 보기로 덱 구성 · 옵션 · 헬퍼 피커 · [[ Open presenter ]] / [ Copy link ] | R | F-TCH-004 §3.11 | ✓ (`classroom/lecture-presenter.md` K) |
 
 ### 3.4 웹 마케팅 (`apps/web`) — 와이어프레임 대상 아님

@@ -106,7 +106,7 @@ Companion stories:
 - **Paid teacher tier / Pro features** (`02-core-feature-spec §6.6`) → F-ENT-001 (roadmap S6, right after this spec — moved up from Phase 3).
 - **Multi-teacher per class** (co-teacher) → Phase 3.
 - **Live "screen control"** of student devices → security review needed, deferred indefinitely.
-- **In-app parent ↔ teacher messaging** → F-NOTIF-001 family.
+- **In-app parent ↔ teacher messaging** → F-NOTIF-001 family. Teacher → learner notes (one-way, preset encouragement plus a short text, preset reactions only) are specified in `F-FEEDBACK-001-adult-feedback-channel.md`.
 
 ## 5. UI sketch
 

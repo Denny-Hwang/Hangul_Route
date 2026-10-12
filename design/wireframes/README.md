@@ -45,6 +45,7 @@
 | `layout/wide.md` | S | F-LAYOUT-001 §3.1-3.8 (PR 0; built in PRs 1-7: classes, Home columns, Journey / Library panes, portrait guard also in `pwa/system-banners.md` panel 4; adoption checklist in `.github/pull_request_template.md`) |
 | `console/class-transfer.md` | D | F-SPACE-002 |
 | `journey/my-route-overview.md` | R | F-ROUTE-001 (screens A to I; J amends `placement/result.md` (was `placement.md` G) for F-PLC-001 AM-1 / AM-14, K is F-PLAN-002's weekly plan proposal, FP-B6) |
+| `home/notes-card.md` · `notes/list.md` · `notes/detail.md` | R | F-FEEDBACK-001 §6.5-6.7 (FB-0; built in FB-8) |
 
 ### B/C. Caregiver · Teacher · School console (web, 일부 mobile) — 어른
 | 파일 | 상태 | 스펙 |
@@ -55,6 +56,8 @@
 | `console/plan-builder.md` | P | roadmap §6 · F-HW-001 §3.4 |
 | `console/school-admin.md` | P | roadmap S7 |
 | `console/account.md` · `console/billing.md` | P | roadmap §5.3 · §7 |
+| `parent/notes.md` · `parent/note-report.md` | R | F-FEEDBACK-001 §6.10 (FB-0; built in FB-9) |
+| `console/note-composer.md` · `console/notes-sent.md` · `console/family-notes.md` | R | F-FEEDBACK-001 §7.2, §9 (FB-0; built in FB-11, FB-12) |
 
 ## 다음 단계
 1. Open questions 의 코드-스펙 불일치를 스펙에 반영 (특히 `parent/gate` ↔ `profiles/pin-entry` 통합, 계획 gating 규칙 F-HW-001 §3.4 vs F-TCH-001 §3.3).
