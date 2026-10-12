@@ -625,7 +625,7 @@ export const landing = {
              * records anything; Stripe Live is off, so no real payment exists before then), `billing_events`
              * (migration 0007: purchase, renewal, refund or a payment that did not go through; amount, currency, date, Stripe ids). F-SITE-002 S-7.
              */
-            p1: `${PAYMENT_CHANNELS} We never see or store full card numbers — Stripe or the store handles payment. For each plan we keep the plan, its status and dates, the Stripe or store reference ids, any promotion code used, and a record of each payment and refund, and of any payment that did not go through (amount, currency and date).`,
+            p1: `${PAYMENT_CHANNELS} We never see or store full card numbers — Stripe or the store handles payment. For each plan we keep the plan, its status and dates, the Stripe, store or contract reference ids, the number of seats on a school contract, any promotion code used, and a record of each payment and refund, and of any payment that did not go through (amount, currency, date and its reference id).`,
           },
         },
         thirdParty: {
@@ -696,6 +696,9 @@ export const landing = {
             channels: PAYMENT_CHANNELS,
             webRenewal:
               'Plans bought on the web (the Family Plan and the Group License) renew every year until cancelled. Cancel any time in Billing, under Manage subscription; the plan stays active until the end of the year already paid.',
+            /** BY-D4: a sponsored Group License (100%-off code, `payment_method_collection=if_required`) has no card and lapses at the end of its year. */
+            sponsored:
+              'A Group License started with a code that makes its first year free needs no card; it ends when that year does unless a card is added under Manage subscription.',
           },
           /** The store terms, kept and marked as applying to in-app purchases (F-ENT-001 §3.5, F-IAP-002). */
           bullets: {

@@ -103,12 +103,15 @@ describe('legal: payment facts (F-SITE-002 S-7, OD-13; English-authoritative, fl
     'On the web, a grown-up pays through Stripe after signing in at app.hangulroute.com. In the iPhone and Android apps, purchases (when offered) go through the App Store or Google Play.';
   const WEB_RENEWAL =
     'Plans bought on the web (the Family Plan and the Group License) renew every year until cancelled. Cancel any time in Billing, under Manage subscription; the plan stays active until the end of the year already paid.';
+  // BY-D4: a sponsored Group License (100%-off code, no card on file) lapses at the end of its year.
+  const SPONSORED =
+    'A Group License started with a code that makes its first year free needs no card; it ends when that year does unless a card is added under Manage subscription.';
   const privacy = l.legal.privacy.sections;
   const billing = l.legal.terms.sections.billing;
 
   it('Privacy Policy: payments name both channels, then the card promise for both', () => {
     expect(privacy.payments.paragraphs.p1).toBe(
-      `${CHANNELS} We never see or store full card numbers — Stripe or the store handles payment. For each plan we keep the plan, its status and dates, the Stripe or store reference ids, any promotion code used, and a record of each payment and refund, and of any payment that did not go through (amount, currency and date).`,
+      `${CHANNELS} We never see or store full card numbers — Stripe or the store handles payment. For each plan we keep the plan, its status and dates, the Stripe, store or contract reference ids, the number of seats on a school contract, any promotion code used, and a record of each payment and refund, and of any payment that did not go through (amount, currency, date and its reference id).`,
     );
     // One source for the channel sentence: the Terms carry the same string.
     expect(privacy.payments.paragraphs.p1.startsWith(billing.paragraphs.channels)).toBe(true);
@@ -124,8 +127,19 @@ describe('legal: payment facts (F-SITE-002 S-7, OD-13; English-authoritative, fl
 
   it('Terms of Service: the channels and the web renewal (BY-D10) lead the billing section', () => {
     expect(billing.heading).toBe('Subscriptions, billing, and cancellation');
-    expect(billing.paragraphs).toEqual({ channels: CHANNELS, webRenewal: WEB_RENEWAL });
-    expect(Object.keys(billing.paragraphs)).toEqual(['channels', 'webRenewal']);
+    expect(billing.paragraphs).toEqual({ channels: CHANNELS, webRenewal: WEB_RENEWAL, sponsored: SPONSORED });
+    expect(Object.keys(billing.paragraphs)).toEqual(['channels', 'webRenewal', 'sponsored']);
+  });
+
+  it('Terms of Service: the web renewal names the console labels the grown-up sees, so a relabel breaks this test', () => {
+    const consoleBilling = getMessages('en').console.billing;
+    expect(consoleBilling.title).toBe('Billing');
+    expect(consoleBilling.manage.cta).toBe('Manage subscription');
+    expect(consoleBilling.planTitle.family_lifetime).toBe('Family Plan');
+    expect(consoleBilling.planTitle.group_license).toBe('Group License');
+    expect(WEB_RENEWAL).toContain(`in ${consoleBilling.title}, under ${consoleBilling.manage.cta};`);
+    expect(WEB_RENEWAL).toContain(`(the ${consoleBilling.planTitle.family_lifetime} and the ${consoleBilling.planTitle.group_license})`);
+    expect(SPONSORED).toContain(`under ${consoleBilling.manage.cta}.`);
   });
 
   it('Terms of Service: the store terms stay, each marked for in-app purchases, in their old order', () => {

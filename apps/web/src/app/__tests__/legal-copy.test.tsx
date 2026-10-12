@@ -205,6 +205,8 @@ describe('payment facts (F-SITE-002 S-7)', () => {
     'On the web, a grown-up pays through Stripe after signing in at app.hangulroute.com. In the iPhone and Android apps, purchases (when offered) go through the App Store or Google Play.';
   const WEB_RENEWAL =
     'Plans bought on the web (the Family Plan and the Group License) renew every year until cancelled. Cancel any time in Billing, under Manage subscription; the plan stays active until the end of the year already paid.';
+  const SPONSORED =
+    'A Group License started with a code that makes its first year free needs no card; it ends when that year does unless a card is added under Manage subscription.';
   const IN_APP = /^In-app purchases: /;
   const STORE = /App Store|Google Play/;
   const STORES_LINE = 'Apple App Store / Google Play — payments and subscription management for in-app purchases.';
@@ -246,7 +248,7 @@ describe('payment facts (F-SITE-002 S-7)', () => {
     it('keeps the card promise for both channels and says what is kept about a plan', () => {
       expect(privacyPayments).toContain('We never see or store full card numbers — Stripe or the store handles payment.');
       expect(privacyPayments).toContain(
-        'For each plan we keep the plan, its status and dates, the Stripe or store reference ids, any promotion code used, and a record of each payment and refund, and of any payment that did not go through (amount, currency and date).',
+        'For each plan we keep the plan, its status and dates, the Stripe, store or contract reference ids, the number of seats on a school contract, any promotion code used, and a record of each payment and refund, and of any payment that did not go through (amount, currency, date and its reference id).',
       );
       expect(privacyPayments).not.toMatch(/the minimum needed to unlock|only what we need/);
     });
@@ -268,6 +270,21 @@ describe('payment facts (F-SITE-002 S-7)', () => {
       expect(channels).toBeGreaterThan(-1);
       expect(renewal).toBeGreaterThan(channels);
       expect(inApp).toBeGreaterThan(renewal);
+    });
+
+    it('says a Group License started with a full-discount code and no card ends after its year (BY-D4), right after the web renewal', () => {
+      const renewal = termsBilling.indexOf(WEB_RENEWAL);
+      const sponsored = termsBilling.indexOf(SPONSORED);
+      expect(sponsored).toBe(renewal + WEB_RENEWAL.length + 1);
+      expect(sponsored).toBeLessThan(termsBilling.indexOf('In-app purchases:'));
+    });
+
+    it('names the console labels the grown-up actually sees (a relabel in the console breaks the Terms test)', () => {
+      const consoleBilling = getMessages('en').console.billing;
+      expect(WEB_RENEWAL).toContain(`Cancel any time in ${consoleBilling.title}, under ${consoleBilling.manage.cta};`);
+      expect(WEB_RENEWAL).toContain(`(the ${consoleBilling.planTitle.family_lifetime} and the ${consoleBilling.planTitle.group_license})`);
+      expect(SPONSORED).toContain(`A ${consoleBilling.planTitle.group_license} started`);
+      expect(SPONSORED).toContain(`under ${consoleBilling.manage.cta}.`);
     });
 
     it('keeps the store subscription, auto-renew, management and refund paragraphs, each marked for in-app purchases', () => {
