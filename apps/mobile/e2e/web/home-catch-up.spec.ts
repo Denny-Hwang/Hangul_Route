@@ -18,14 +18,19 @@ const STAGE1_QUESTS: readonly (readonly [string, string])[] = [
   ['quest:stage1-letters-q3', 'episode:stage1-letters'],
   ['quest:stage1-life-q1', 'episode:stage1-life'],
   ['quest:stage1-life-q2', 'episode:stage1-life'],
+  ['quest:stage1-life-q3', 'episode:stage1-life'],
   ['quest:stage1-rites-q1', 'episode:stage1-rites'],
   ['quest:stage1-nature-q1', 'episode:stage1-nature'],
   ['quest:stage1-crafts-q1', 'episode:stage1-crafts'],
 ];
-const STAGE1_QUEST_CARDS = ['card:book', 'card:hanji', 'card:brush', 'card:kimchi', 'card:family-table', 'card:seollal', 'card:magpie', 'card:yutnori'];
-const LINE = 'Hoya found 22 cards you already earned!';
+const STAGE1_QUEST_CARDS = ['card:book', 'card:hanji', 'card:brush', 'card:kimchi', 'card:family-table', 'card:kimbap', 'card:seollal', 'card:magpie', 'card:yutnori'];
+const LINE = 'Hoya found 21 cards you already earned!';
 
-/** All eight shipped Stage 1 quests at two stars with their quest cards: the reconcile owes 22 more (§3.11 row 1). */
+/**
+ * All nine shipped Stage 1 quests at two stars with their quest cards: the reconcile owes the 21 other
+ * cards (§3.11 row 1). F-QUEST-002 Q-6b added life q3 (quest card kimbap), which moved one card from
+ * "episode" to "quest"; the total stays 30. Mirrors card-award-integrity.test.ts and progress-store.test.ts.
+ */
 const stage1Done = (profileId: string): ProgressSnapshot => ({
   profileId,
   updatedAt: T,
@@ -91,7 +96,7 @@ test('a learner who earned cards before sees one catch-up card under the greetin
   const text = await card.innerText();
   expect(text).not.toMatch(/\d+\s*(\/|of)\s*\d+/);
   expect(text.toLowerCase()).not.toMatch(/\b(left|remaining|missing|missed)\b/);
-  expect((await newCards(page, profileId)).length).toBe(22);
+  expect((await newCards(page, profileId)).length).toBe(21);
   await shot(page, 'home-catch-up');
 
   // See my cards: the Library, the caught-up cards marked seen, and the card goes for good.
@@ -121,7 +126,7 @@ test('closing the app before See my cards: the card does not come back and the c
   await page.goto('/');
   await expect(page.getByText('Today with Hoya')).toBeVisible();
   await expect(catchUp(page)).toHaveCount(0);
-  expect((await newCards(page, profileId)).length).toBe(22);
+  expect((await newCards(page, profileId)).length).toBe(21);
 });
 
 test('a new learner (the welcome card alone) sees no catch-up card', async ({ page }) => {
