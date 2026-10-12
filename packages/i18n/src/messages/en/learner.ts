@@ -1285,6 +1285,8 @@ export const learner = {
       reactions: { heading: 'Answer with one tap' },
       putAway: { cta: 'Put this note away' },
       putAwayDone: 'Put away. A grown-up can still see it.',
+      /** The same line on a self-managed profile, which may have no family (section 6.3 rule 4). */
+      putAwayDoneSelf: 'Put away. It is hidden on this device.',
       tellGrownUp: { cta: 'Tell a grown-up' },
       reportSelf: { cta: 'Report this note' },
       /** A stale route, or a note taken away by an inbox while its page is open. */

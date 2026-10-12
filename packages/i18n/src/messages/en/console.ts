@@ -1391,6 +1391,8 @@ export const consoleMsgs = {
         tone: (word: string) => `Please choose a kinder word than "${word}".`,
         invalid: 'Some characters cannot be sent in a note. Please type the words again.',
       },
+      /** The picked list cannot be sent as it is (more than the 300 a send takes, or an id the form cannot send). */
+      recipientsProblem: 'Choose up to 300 learners.',
       quest: {
         title: 'Suggest a quest (optional)',
         needed: 'Needed for this encouragement',
@@ -1440,6 +1442,10 @@ export const consoleMsgs = {
         badPreset: 'Pick a quest for this encouragement.',
         badSuggest: 'That quest cannot be suggested. Pick another one.',
         tooMany: 'You have sent many notes today. You can send more tomorrow.',
+        /** A short limiter `429` (several sends in a minute), never the daily limit. */
+        wait: 'Please wait a minute and try again.',
+        /** `not_in_space`: a picked learner left the space between loading and Send (section 6.1 item 2). */
+        notInSpace: 'Someone on this list is no longer in this space. Refresh and try again.',
         paused: 'Sending notes is paused for this account. Write to hello@hangulroute.com.',
         notAllowed: 'The family owner can let you send notes.',
         notAllowedClass: 'Only the teachers of this class can send notes.',
@@ -1457,7 +1463,7 @@ export const consoleMsgs = {
       learner: 'Learner',
       tabs: { label: 'Notes for this learner', received: 'Received', sent: 'Sent' },
       from: {
-        class: (className: string) => `From class ${className} (teacher)`,
+        class: (className: string) => `From ${className} (teacher)`,
         home: 'From home',
         signed: (label: string) => `signed ${label}`,
       },
@@ -1523,6 +1529,8 @@ export const consoleMsgs = {
       error: 'Notes could not load. Try again.',
       retry: { cta: 'Try again' },
       saveFailed: 'That did not save. Try again.',
+      /** A short limiter `429` on hide, stop, allow again or a setting; `report.tooMany` is the daily report limit. */
+      wait: 'Please wait a minute and try again.',
       older: { cta: 'Show older' },
       /** Panel D on the family settings page: who may send notes (OD-17). */
       senders: {

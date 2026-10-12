@@ -245,6 +245,9 @@ describe('learner.notes lines (section 6.5, 6.6, 6.10)', () => {
     expect(en.learner.notes.detail.reactions.heading).toBe('Answer with one tap');
     expect(en.learner.notes.detail.putAway.cta).toBe('Put this note away');
     expect(en.learner.notes.detail.putAwayDone).toBe('Put away. A grown-up can still see it.');
+    // A self-managed profile may have no family: its line never names a grown-up (section 6.3 rule 4).
+    expect(en.learner.notes.detail.putAwayDoneSelf).toBe('Put away. It is hidden on this device.');
+    expect(/grown[- ]?up|adult|parent|family/i.test(en.learner.notes.detail.putAwayDoneSelf)).toBe(false);
     expect(en.learner.notes.detail.gone).toBe('This note was put away.');
   });
 
@@ -294,7 +297,7 @@ describe('grown-up notes strings (section 6.10, 6.13, 7.7, 8.2, 9)', () => {
   });
 
   it('names a class note by its class, never by the teacher account (section 8.2-a)', () => {
-    expect(en.console.notes.family.from.class('Sunday Class A')).toBe('From class Sunday Class A (teacher)');
+    expect(en.console.notes.family.from.class('Sunday Class A')).toBe('From Sunday Class A (teacher)');
     expect(en.console.notes.family.from.class.length).toBe(1);
   });
 
@@ -306,6 +309,10 @@ describe('grown-up notes strings (section 6.10, 6.13, 7.7, 8.2, 9)', () => {
     expect(en.console.notes.composer.errors.sendingOff).toBe('Sending notes is not open yet.');
     expect(en.console.notes.composer.errors.paused).toBe('Sending notes is paused for this account. Write to hello@hangulroute.com.');
     expect(en.console.notes.composer.errors.notAllowed).toBe('The family owner can let you send notes.');
+    expect(en.console.notes.composer.errors.wait).toBe('Please wait a minute and try again.');
+    expect(en.console.notes.composer.errors.notInSpace).toBe('Someone on this list is no longer in this space. Refresh and try again.');
+    expect(en.console.notes.composer.recipientsProblem).toBe('Choose up to 300 learners.');
+    expect(en.console.notes.family.wait).toBe('Please wait a minute and try again.');
     expect(en.console.notes.composer.closedMark).toBe('Some learners can open this lesson only with the full route.');
   });
 });
