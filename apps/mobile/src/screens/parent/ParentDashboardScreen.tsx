@@ -29,6 +29,7 @@ import { LearningRouteRow } from './LearningRouteRow';
 import type { RootStackParamList } from '../../navigation/types';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { syncApi } from '../../store/sync-store';
 
 /** Learner's cub beside the name (F-LEARN-001 §3.6). */
 const AVATAR_SIZE = 40;
@@ -151,7 +152,8 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
         <Heading level="prompt">{m.privacy.title}</Heading>
         <Spacer size="xs" />
         <Body size="sm" tone="secondary">
-          {m.privacy.body}
+          {/* The backup sentence only on a build that backs up; a build with cloud saving off says so. */}
+          {syncApi() !== null ? m.privacy.body : m.privacy.bodyDeviceOnly}
         </Body>
       </Card>
       <Spacer size="xl" />
