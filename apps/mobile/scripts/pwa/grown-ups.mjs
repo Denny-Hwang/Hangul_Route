@@ -20,7 +20,7 @@ export const CONSOLE_ASSET_DIR = '_next';
  * A prefix is written into the generated sw.js as RegExp source, so it must be one
  * plain lower-case segment (`/teach`): nothing that could change the pattern.
  */
-const PREFIX_SHAPE = /^\/[a-z][a-z0-9-]*$/;
+export const PREFIX_SHAPE = /^\/[a-z][a-z0-9-]*$/;
 
 /** R-1: a prefix matches when followed by end of path, `/`, `?` or `.` (`/teach.html` yes, `/teacher` no). */
 const BOUNDARY = '(?:$|[/?.])';

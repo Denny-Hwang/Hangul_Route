@@ -5,9 +5,11 @@ import { dbFor, type Db } from '../db';
 import { fail, ok } from '../envelope';
 import { accountActor, requireAccount, spaceContext } from '../lib/access';
 import { can } from '../lib/can';
+import { isDuplicateCompletion, recordBillingHistory, stripeModeOf, type StripeWebhookEvent } from '../lib/billing-events';
 import { accountBrowseScope, isEntitlementActive } from '../lib/entitlement';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
-import { checkoutForm, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, freshStripeEvent, lookupPromotionCode, mergeForStripeEvent, priceIdFor, verifyStripeSignature, type StripeEnv, type StripeEventLike } from '../lib/stripe';
+import { recordServerEvent } from '../lib/server-events';
+import { checkoutForm, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, freshStripeEvent, lookupPromotionCode, mergeForStripeEvent, priceIdFor, verifyStripeSignature, type StripeEnv } from '../lib/stripe';
 
 /** Promo lookups are guessable strings: 20 per minute per client (F-ENT-002 §3.2). */
 export const PROMO_LIMIT = 20;
@@ -156,17 +158,41 @@ entitlementRoutes.post('/stripe/webhook', async (c) => {
   if (!(await verifyStripeSignature(c.req.header('stripe-signature'), raw, env.STRIPE_WEBHOOK_SECRET))) {
     return fail(c, 'bad_signature', 'Signature check failed', 400);
   }
-  let event: StripeEventLike;
+  let event: StripeWebhookEvent;
   try {
-    event = JSON.parse(raw) as StripeEventLike;
+    event = JSON.parse(raw) as StripeWebhookEvent;
   } catch {
     return fail(c, 'bad_request', 'Body is not JSON', 400);
   }
-  if (!event || typeof event.type !== 'string' || !event.data || typeof event.data.object !== 'object') return fail(c, 'bad_request', 'Not a Stripe event', 400);
-  const current = await freshStripeEvent(env, event, stripeFetch ?? globalThis.fetch);
-  const apply = entitlementFromStripeEvent(current);
-  if (!apply) return ok(c, { received: true, applied: false });
+  if (!event || typeof event.type !== 'string' || !event.data || typeof event.data.object !== 'object' || event.data.object === null) return fail(c, 'bad_request', 'Not a Stripe event', 400);
+  const fetchImpl = stripeFetch ?? globalThis.fetch;
   const db = dbFor(c);
-  const entitlement = await db.applyEntitlement(apply, new Date(), mergeForStripeEvent(current));
-  return ok(c, { received: true, applied: true, entitlement: await withSpaceName(db, entitlement) });
+  const now = new Date();
+  const mode = stripeModeOf(event);
+  const current = await freshStripeEvent(env, event, fetchImpl);
+  const apply = entitlementFromStripeEvent(current);
+  let entitlement: Entitlement | null = null;
+  let duplicate = false;
+  if (apply) {
+    // Checked before the completion lands: two checkouts paid in two tabs (F-BILL-002 §4.4).
+    duplicate = event.type === 'checkout.session.completed' && (await isDuplicateCompletion(db, apply, now));
+    entitlement = await db.applyEntitlement(apply, now, mergeForStripeEvent(current));
+  }
+  // Payment history (F-BILL-002 §5.4): recorded only; it never changes an entitlement (BY-D8).
+  const history = await recordBillingHistory(db, env, event, fetchImpl, now);
+  // A refund that cannot be matched yet: Stripe delivers it again rather than it being lost.
+  if (history.outcome === 'retry') {
+    return history.reason === 'lookup'
+      ? fail(c, 'stripe_unavailable', 'Stripe could not be reached to match this refund; retry', 503)
+      : fail(c, 'payment_not_recorded', 'The payment this refund belongs to is not recorded yet; retry', 503);
+  }
+  // Telemetry last, once everything above has succeeded, so a request that fails and is retried sends it once.
+  if (apply && event.type === 'checkout.session.completed') recordServerEvent('billing.checkout_completed', { planKey: apply.planKey, mode, duplicate });
+  if (history.outcome === 'recorded' && history.fresh) {
+    if (history.event.kind === 'failed') recordServerEvent('billing.payment_failed', { planKey: history.event.planKey, mode });
+    if (history.event.kind === 'refund') recordServerEvent('billing.refund_recorded', { planKey: history.event.planKey, full: history.full, mode });
+  }
+  const recorded = history.outcome === 'recorded' ? { recorded: true } : {};
+  if (!entitlement) return ok(c, { received: true, applied: history.outcome === 'recorded', ...recorded });
+  return ok(c, { received: true, applied: true, ...recorded, entitlement: await withSpaceName(db, entitlement) });
 });

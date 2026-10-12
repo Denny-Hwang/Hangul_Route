@@ -22,6 +22,13 @@ import { plural } from '../../plural';
  * Every string here is caregiver surface (no "behind", "lazy" or a learner-banned word),
  * checked per locale by console-messages.test.ts.
  */
+/** F-BILL-002 B-6: "St. Mary's license", not "St. Mary's's license", for a school name that already ends in a possessive. */
+const licenseOf = (school: string): string => (/['’]s$/i.test(school) ? `${school} license` : `${school}'s license`);
+/** F-BILL-002 B-6: a usage count, "{n} of {cap} <nouns>" or "{n} <nouns>" when there is no cap (null). */
+const usageCount =
+  (one: string, other: string) =>
+  (n: number, cap: number | null): string =>
+    cap === null ? plural('en', n, { one: `${n} ${one}`, other: `${n} ${other}` }) : plural('en', cap, { one: `${n} of ${cap} ${one}`, other: `${n} of ${cap} ${other}` });
 /** "1 item" / "4 items": `planCounts.items`, also the plan item count inside `plan.summary.*`. */
 const planItems = (items: number): string => plural('en', items, { one: `${items} item`, other: `${items} items` });
 /** "1 learner" / "3 students": `planCounts.targets`, also the target count inside `plan.summary.some.*`. */
@@ -274,8 +281,9 @@ export const consoleMsgs = {
     trialEnds: (date: string) => `trial · ends ${date}`,
     active: 'active',
     activeRenews: (date: string) => `active · renews ${date}`,
-    pastDueKept: 'payment needs attention · premium kept for a week',
-    pastDuePaused: 'payment needs attention · premium paused',
+    /** F-BILL-002 B-6: "full route", never "premium" (§6.1). */
+    pastDueKept: 'payment needs attention · full route kept for a week',
+    pastDuePaused: 'payment needs attention · full route paused',
     cancelled: 'cancelled',
     cancelledEnds: (date: string) => `cancelled · ends ${date}`,
     ended: 'ended',
@@ -420,10 +428,138 @@ export const consoleMsgs = {
       change: { cta: 'Change code' },
       /** `name` is the promotion's own name, when it has one. */
       applied: (code: string, name: string | null) => `${code} applied${name ? ` · ${name}` : ''}.`,
+      /** F-BILL-002 B-6: the collapsed promo box under the price line it rewrites. */
+      disclosure: 'Have a code?',
     },
     choose: { cta: 'Choose' },
-    contact: { cta: 'Contact us' },
+    contact: {
+      cta: 'Contact us',
+      /** F-BILL-002 B-6: the subject of the school contract mail link (no space name or id in it). */
+      mailSubject: 'Hangul Route school contract',
+    },
     isCurrent: { pill: 'current' },
+
+    /*
+     * F-BILL-002 B-6 (§6.1): the billing home on app.hangulroute.com (`APP_ROUTES.billing`), its
+     * checkout return, receipts page and step-up dialog (wireframes billing/*). Names, dates and
+     * amounts arrive as arguments (`formatDate`, `formatUsd`); limits arrive as numbers from
+     * content-schema. The Family Plan renews yearly (AMENDMENTS-BILLING-FAMILY-YEARLY BY-D9).
+     */
+    testMode: 'Test mode: no real card is charged.',
+    notConfigured: "Payments aren't set up yet. Nothing was charged.",
+    liveOff: 'Payments are not open yet. Nothing was charged.',
+    offline: "You're offline. Plans and receipts need a connection.",
+    retry: { cta: 'Try again' },
+    sections: { yours: 'Your plans', add: 'Add a plan', help: 'Help' },
+    /** The kind half of a card heading ("Family · <space name>"). */
+    kind: { family: 'Family', class: 'Class', school: 'School' },
+    archived: '(archived)',
+    /** The plan line of a card. */
+    coverage: {
+      free: 'Free plan',
+      family: 'Family Plan',
+      license: 'Group License',
+      contract: 'School Contract',
+      school: (school: string) => `Covered by ${licenseOf(school)}`,
+      schoolUntil: (school: string, date: string) => `Covered by ${licenseOf(school)} until ${date}`,
+    },
+    /** The status line of a renewing plan; the date arrives formatted. */
+    status: {
+      renewsOn: (date: string) => `Renews on ${date}`,
+      endsOn: (date: string) => `Ends on ${date}`,
+    },
+    /** What a viewer (not the payer) reads instead of actions. */
+    readOnly: {
+      family: 'The person who set up this family manages this plan.',
+      class: 'The class owner manages this plan.',
+      school: 'Your school manages this plan.',
+    },
+    /** The usage line; a null cap means no cap (`Usage.learnerCap` / `teacherCap`). */
+    usage: {
+      learners: usageCount('learner', 'learners'),
+      students: usageCount('student', 'students'),
+      teachers: usageCount('teacher', 'teachers'),
+    },
+    /** A family whose plan is active and that has no learner yet. */
+    connectLearner: { line: 'Next: connect a learner to this family.', cta: 'Connect a learner' },
+    /** A buy row: the plan title (`planTitle`) and the space name arrive as arguments. */
+    buy: {
+      forSpace: (plan: string, space: string) => `${plan} for ${space}`,
+      family_lifetime: { cta: 'Get Family Plan' },
+      group_license: { cta: 'Get Group License' },
+    },
+    /**
+     * What a plan includes. The feature lines (`browse`, `reports`, `notes`) render only while the
+     * feature is live (`SITE_CLAIMS`, F-SITE-002); limits arrive from content-schema.
+     */
+    includesLines: {
+      family: {
+        everyLesson: 'Every lesson of every Stage, new ones included',
+        learners: (n: number) => plural('en', n, { one: `Up to ${n} learner in one family`, other: `Up to ${n} learners in one family` }),
+        cloudSave: 'Cloud save on every device',
+        browse: 'Browse every lesson as your learner sees it',
+        reports: 'Reports on what went well and what to practice next',
+        notes: 'Send notes to your learners',
+      },
+      license: {
+        everyStudent: 'Every lesson for every student while they are enrolled',
+        noCap: (cap: number) => `No ${cap}-student cap`,
+        school: (teachers: number, students: number) =>
+          `A school holds up to ${plural('en', teachers, { one: `${teachers} teacher`, other: `${teachers} teachers` })} and ${plural('en', students, { one: `${students} student`, other: `${students} students` })}`,
+        browse: 'Browse every lesson as your students see it',
+        reports: 'Student and class reports',
+        notes: 'Send notes to your students',
+      },
+    },
+    /** A grown-up with no space yet. */
+    noSpaces: {
+      title: 'Plans belong to a family or a class.',
+      family: { cta: 'Set up for me or my family' },
+      class: { cta: 'Set up a class' },
+    },
+    /** Checkout answered 409 `already_active`. */
+    alreadyActive: 'This plan is already active. Nothing was charged.',
+    /** The checkout return (wireframe billing/checkout-return). */
+    checking: 'Almost there: checking your plan.',
+    done: 'Thank you. The plan is active. Learners get it the next time they open Hangul Route.',
+    stillProcessing: 'Your payment went through. The plan shows here in a minute.',
+    checkAgain: { cta: 'Check again' },
+    /** Receipts inline on a payer card and on the receipts page (wireframe billing/receipts). */
+    receipts: {
+      title: 'Receipts',
+      all: { cta: 'All receipts' },
+      empty: 'No receipts yet.',
+      older: 'Older payments are in the receipt email from Stripe.',
+      beyondLimit: "Older receipts: see Stripe's emails or write to us.",
+      kind: { purchase: 'Payment', renewal: 'Renewal', refund: 'Refund', failed: "Payment didn't go through" },
+      /** The column headers of the wide receipts table (the date column is the row header, §8). */
+      column: { date: 'Date', what: 'What', plan: 'Plan', amount: 'Amount' },
+      test: { pill: 'test' },
+      view: { cta: 'View receipt' },
+      viewA11y: (date: string) => `View receipt from ${date} (opens Stripe in a new tab)`,
+      linkFailed: "Can't open this receipt right now.",
+      pageTitle: (space: string) => `${space} · receipts`,
+      notYours: 'This page is for the person who pays for this space.',
+      cantLoad: "Can't load receipts right now.",
+      back: { cta: 'Back to Billing' },
+    },
+    /** Confirm the grown-up before a payment, a plan change or a receipt (wireframe billing/step-up). */
+    stepUp: {
+      title: "Confirm it's you",
+      body: 'Before a payment, a plan change or a receipt, sign in again.',
+      reason: 'This keeps payments safe on a shared device.',
+      cta: 'Continue',
+      cancel: { cta: 'Not now' },
+      cancelled: 'Nothing was changed.',
+      unavailable: "Can't confirm right now. Try again in a moment.",
+    },
+    help: {
+      refund: (email: string) => `Questions or a refund? Write to ${email}.`,
+      learners: 'Learners never see prices or receipts.',
+      sharedDevice: 'On a shared device? Sign out when you are done.',
+    },
+    /** One neutral note above the cards while a payer card is past due (never the danger colour). */
+    pastDue: "A payment didn't go through. Update your card in Manage subscription; learners keep the full route for a week.",
   },
 
   /**

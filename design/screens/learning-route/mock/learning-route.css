@@ -1,0 +1,307 @@
+/*
+ * LR-D: static design mock of the Learning Route (not shipped code). Spec:
+ * docs/specs/AMENDMENTS-ROUTE-LEARNING-ROUTE.md (sections 4.3, 5, 6, 10). Every value below is a token of
+ * packages/design-system/src/tokens.ts, copied once as a custom property named after it (generated from the
+ * tokens module on 2026-10-12): --spacing-xl is spacing.xl, --colors-brand-primary is colors.brand.primary.
+ * Text sizes are in rem (token / 16), so a browser text size of 200 % enlarges every line. Breakpoints are in
+ * px (layout.breakpoint 600 / 900 and PIP_ROW_MIN_WIDTH 360), because the app's window classes follow the
+ * window width in dp, not the text size; they are written mobile first (min-width only). Pips, badges and glyphs keep their dp size
+ * (design/components/PipRow/spec.md: they follow the layout class, not the font scale). The few numbers
+ * that are not tokens are listed in ../README.md, "Constants", each with what it derives from.
+ */
+:root {
+  --colors-brand-primary: #B24915;
+  --colors-brand-primaryDark: #8D3A11;
+  --colors-brand-primaryLight: #FAD9C6;
+  --colors-brand-secondary: #2672A6;
+  --colors-brand-secondaryDark: #1D5881;
+  --colors-brand-secondaryLight: #CDE5F4;
+  --colors-surface-canvas: #FCF8F1;
+  --colors-surface-paper: #FFFFFF;
+  --colors-surface-sunken: #F2EBDE;
+  --colors-surface-overlay: rgba(20, 14, 8, 0.40);
+  --colors-surface-inkScrim: rgba(20, 14, 8, 0.06);
+  --colors-text-primary: #2A1F14;
+  --colors-text-secondary: #5C4A36;
+  --colors-text-muted: #6F614D;
+  --colors-text-inverse: #FFFFFF;
+  --colors-text-onPrimary: #FFFFFF;
+  --colors-text-onSecondary: #FFFFFF;
+  --colors-feedback-success: #397952;
+  --colors-feedback-successDark: #2C5E3F;
+  --colors-feedback-successLight: #D6EFDF;
+  --colors-feedback-nudge: #F2B33D;
+  --colors-feedback-nudgeLight: #FCEED1;
+  --colors-feedback-info: #5B8DEF;
+  --colors-feedback-infoLight: #D9E5FB;
+  --colors-feedback-danger: #C84B3D;
+  --colors-feedback-dangerLight: #F8DBD8;
+  --colors-stage-stage1: #E8743B;
+  --colors-stage-stage2: #D89B2B;
+  --colors-stage-stage3: #7BB552;
+  --colors-stage-stage4: #4A9DD6;
+  --colors-stage-stage5: #8265C2;
+  --colors-stage-stage6: #C84B7D;
+  --colors-stage-stage7: #3D9B8C;
+  --colors-border-subtle: #E8DFCD;
+  --colors-border-strong: #C5B8A1;
+  --colors-border-focus: #3A7FB5;
+  --colors-border-shape: #857360;
+  --colors-hoya-fur: #F2B33D;
+  --colors-hoya-furDark: #B5862A;
+  --colors-hoya-stripes: #2A1F14;
+  --colors-hoya-belly: #FCF8F1;
+  --colors-hoya-nose: #2A1F14;
+  --colors-hoya-cheek: #F8B4B4;
+  --colors-hoya-furBlue: #4891CB;
+  --colors-hoya-furBlueDark: #2E6A9E;
+  --colors-hoya-furGreen: #5E9E3E;
+  --colors-hoya-furGreenDark: #437A2A;
+  --colors-hoya-furPurple: #7C57C0;
+  --colors-hoya-furPurpleDark: #5B3F9A;
+  --colors-hoya-furPink: #D0527F;
+  --colors-hoya-furPinkDark: #A33A62;
+  --spacing-none: 0px;
+  --spacing-xxs: 2px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-xxl: 32px;
+  --spacing-xxxl: 48px;
+  --spacing-jumbo: 64px;
+  --radii-none: 0px;
+  --radii-xs: 4px;
+  --radii-sm: 8px;
+  --radii-md: 12px;
+  --radii-lg: 16px;
+  --radii-xl: 24px;
+  --radii-xxl: 32px;
+  --radii-pill: 999px;
+  --radii-circle: 9999px;
+  --size-caption: 0.875rem; /* 14 */
+  --size-bodySm: 1rem; /* 16 */
+  --size-body: 1.125rem; /* 18 */
+  --size-bodyLg: 1.25rem; /* 20 */
+  --size-prompt: 1.375rem; /* 22 */
+  --size-title: 1.75rem; /* 28 */
+  --size-display: 2.25rem; /* 36 */
+  --size-hero: 3rem; /* 48 */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --leading-tight: 1.15;
+  --leading-normal: 1.35;
+  --leading-relaxed: 1.55;
+  --family-mono: Menlo, Courier, monospace;
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 20;
+  --z-drawer: 30;
+  --z-modal: 40;
+  --z-toast: 50;
+  --z-hoyaBubble: 60;
+  --touch-min: 64px;
+  --touch-child: 80px;
+  --touch-hero: 96px;
+  --border-width-thin: 1px;
+  --border-width-base: 2px;
+  --border-width-thick: 3px;
+  --max-width-reading: 720px;
+  --max-width-full: 1120px;
+  --gutter-compact: 16px;
+  --gutter-regular: 24px;
+  --gutter-wide: 32px;
+  --shadow-card: 0 2px 8px rgba(42, 31, 20, 0.06); /* shadows.card (shadowColor text.primary) */
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* Constants: values that are not tokens, each named once. ../README.md "Constants" gives what  */
+/* each one derives from; LR-4, LR-5a and LR-8 write them as named constants, never as literals. */
+/* ------------------------------------------------------------------------------------------ */
+:root {
+  --badge-size: 40px;           /* BADGE_SIZE, screens/my-route/StageBadge.tsx (unchanged) */
+  --badge-known-disc: 20px;     /* BADGE_SIZE / 2: the known badge's inner disc */
+  --in-plan-ring: 16px;         /* placeholder: F-ENT-003 E3-D owns the "In your plan" ring */
+  --tab-label-cap: 18.2px;      /* 1.3 x typography.size.caption: LR-4's maxFontSizeMultiplier 1.3 on the tab label */
+  --pip-row-min-width: 360px;   /* PIP_ROW_MIN_WIDTH, logic/my-route/view.ts (written out in the media queries below) */
+  --board-column-min: 22rem;    /* design board only, not UI: one card per row at 375, two side by side at 1280 */
+  --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; /* typography.family.sans ('System') as the app's web build renders it */
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* Base                                                                                         */
+/* ------------------------------------------------------------------------------------------ */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: var(--spacing-none);
+  background: var(--colors-surface-canvas);
+  color: var(--colors-text-primary);
+  font-family: var(--font-stack);
+  font-size: var(--size-body);
+  line-height: var(--leading-normal);
+}
+p, h1, h2, h3, ol, ul, dl, dd { margin: var(--spacing-none); }
+ol, ul { padding: var(--spacing-none); list-style: none; }
+.icon, .hoya { display: block; flex: none; }
+.visually-hidden { position: absolute; width: var(--border-width-thin); height: var(--border-width-thin); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Learner app (react-native screens, drawn as HTML)                                           */
+/* ------------------------------------------------------------------------------------------ */
+.app { min-height: 100vh; display: flex; flex-direction: column; }
+.screen { flex: 1; width: 100%; max-width: var(--max-width-reading); margin: 0 auto; padding: var(--spacing-lg) var(--gutter-compact) var(--spacing-xxl); display: flex; flex-direction: column; gap: var(--spacing-lg); }
+@media (min-width: 600px) { .screen { padding-left: var(--gutter-regular); padding-right: var(--gutter-regular); } }
+@media (min-width: 900px) { .screen { padding-left: var(--gutter-wide); padding-right: var(--gutter-wide); } }
+.screen-head { display: flex; flex-direction: column; gap: var(--spacing-xxs); }
+.screen-title { font-size: var(--size-title); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.screen-purpose { color: var(--colors-text-secondary); }
+.back-row { display: flex; align-items: center; gap: var(--spacing-sm); min-height: var(--touch-min); }
+.icon-button { width: var(--touch-min); height: var(--touch-min); border-radius: var(--radii-circle); display: inline-flex; align-items: center; justify-content: center; background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); }
+
+.card { background: var(--colors-surface-paper); border-radius: var(--radii-lg); padding: var(--spacing-lg); box-shadow: var(--shadow-card); }
+.route-card { display: flex; flex-direction: column; gap: var(--spacing-md); }
+.route-card-top { display: flex; gap: var(--spacing-md); align-items: flex-start; }
+.route-card-top > .stack { flex: 1; min-width: 0; }
+.hoya-line { font-size: var(--size-prompt); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.stack { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.where { display: grid; grid-template-columns: auto 1fr; column-gap: var(--spacing-sm); row-gap: var(--spacing-xs); align-items: start; }
+/* The Goal pair sits apart from the Now pair, so each label reads with its own line. */
+.where dd + dt { margin-top: var(--spacing-xs); }
+.where-label { grid-column: 1 / -1; font-size: var(--size-caption); font-weight: var(--weight-semibold); color: var(--colors-text-muted); }
+.where-line { grid-column: 1 / -1; display: flex; gap: var(--spacing-xs); align-items: flex-start; font-weight: var(--weight-bold); font-size: var(--size-bodyLg); line-height: var(--leading-tight); }
+.where-line .glyphs { display: flex; gap: var(--spacing-xxs); padding-top: var(--spacing-xxs); }
+.where-line.goal-collapsed { font-size: var(--size-prompt); }
+.source-line { color: var(--colors-text-secondary); font-size: var(--size-bodySm); }
+.can-do { display: flex; flex-direction: column; gap: var(--spacing-xxs); }
+.can-do-lead { font-size: var(--size-caption); font-weight: var(--weight-semibold); color: var(--colors-text-muted); }
+.next-line { font-weight: var(--weight-bold); }
+.plan-ends { color: var(--colors-text-secondary); font-size: var(--size-bodySm); }
+
+.button { display: flex; width: 100%; min-height: var(--touch-child); align-items: center; justify-content: center; padding: var(--spacing-sm) var(--spacing-xl); border-radius: var(--radii-pill); border: none; background: var(--colors-brand-primary); color: var(--colors-text-onPrimary); font: inherit; font-size: var(--size-bodyLg); font-weight: var(--weight-bold); text-align: center; }
+.button-ghost { display: inline-flex; min-height: var(--touch-min); align-items: center; padding: var(--spacing-xs) var(--spacing-lg); border-radius: var(--radii-pill); background: var(--colors-brand-primaryLight); color: var(--colors-brand-primaryDark); font-size: var(--size-bodySm); font-weight: var(--weight-bold); }
+.plan-line { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--spacing-sm); color: var(--colors-text-secondary); }
+
+.pip-row { display: inline-flex; flex-wrap: wrap; align-items: flex-end; row-gap: var(--spacing-xs); line-height: 0; }
+.pip-group { display: inline-flex; flex-wrap: wrap; gap: var(--spacing-xs); margin-right: var(--spacing-md); }
+.pip-group:last-child { margin-right: var(--spacing-none); }
+
+/* Trail (F-ROUTE-001 rows, unchanged except the goal tag) */
+.trail { display: flex; flex-direction: column; }
+.trail-row { position: relative; display: flex; gap: var(--spacing-md); padding-bottom: var(--spacing-lg); }
+.trail-row .connector { position: absolute; left: calc(var(--badge-size) / 2 - var(--spacing-xs) / 2); top: var(--badge-size); bottom: 0; width: var(--spacing-xs); border-radius: var(--radii-pill); }
+/* TrailConnector: round dots spacing.xs across, one every spacing.sm, in border.shape. */
+.trail-row .connector.dotted { background-image: radial-gradient(circle closest-side, var(--colors-border-shape) 85%, transparent); background-size: var(--spacing-xs) var(--spacing-sm); background-repeat: repeat-y; }
+.trail-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--spacing-xs); padding-top: var(--spacing-xxs); }
+.trail-title { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--spacing-sm); row-gap: var(--spacing-xxs); }
+.trail-title b { font-size: var(--size-bodyLg); }
+.trail-caption { color: var(--colors-text-secondary); }
+.badge { position: relative; z-index: var(--z-raised); width: var(--badge-size); height: var(--badge-size); flex: none; border-radius: var(--radii-circle); display: inline-flex; align-items: center; justify-content: center; font-weight: var(--weight-bold); }
+.badge-open { background: var(--colors-surface-paper); border: var(--border-width-thick) solid; }
+.badge-known { background: var(--colors-surface-paper); border: var(--border-width-thick) solid var(--colors-border-shape); }
+.badge-dot { width: var(--badge-known-disc); height: var(--badge-known-disc); border-radius: var(--radii-circle); background: var(--colors-border-shape); }
+.badge-complete { border: var(--border-width-base) solid var(--colors-border-shape); }
+.badge-later { background: var(--colors-surface-sunken); color: var(--colors-text-muted); }
+.badge-later svg { position: absolute; inset: 0; }
+.pill { display: inline-flex; align-items: center; padding: var(--spacing-xxs) var(--spacing-sm); border-radius: var(--radii-pill); font-size: var(--size-caption); font-weight: var(--weight-semibold); }
+.pill-primary { background: var(--colors-brand-primaryLight); color: var(--colors-brand-primaryDark); }
+.pill-secondary { background: var(--colors-brand-secondaryLight); color: var(--colors-brand-secondaryDark); }
+.pill-neutral { background: var(--colors-surface-sunken); color: var(--colors-text-secondary); }
+.pill-success { background: var(--colors-feedback-successLight); color: var(--colors-feedback-successDark); }
+.tags { display: flex; flex-wrap: wrap; gap: var(--spacing-xs); }
+.tag { display: inline-flex; align-items: center; gap: var(--spacing-xxs); padding: var(--spacing-xxs) var(--spacing-sm); border-radius: var(--radii-pill); font-size: var(--size-caption); font-weight: var(--weight-semibold); background: var(--colors-brand-primaryLight); }
+.tag.glyph { background: var(--colors-surface-sunken); }
+.cell-rows { display: flex; flex-direction: column; gap: var(--spacing-xs); margin-top: var(--spacing-xs); }
+.cell-row { display: flex; flex-direction: column; gap: var(--spacing-xxs); padding: var(--spacing-sm) var(--spacing-md); min-height: var(--touch-min); border-radius: var(--radii-md); background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); }
+.cell-row .cell-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-sm); color: var(--colors-text-secondary); font-size: var(--size-bodySm); }
+.cell-theme { font-size: var(--size-caption); color: var(--colors-text-muted); font-weight: var(--weight-semibold); }
+.in-plan { display: inline-flex; align-items: center; gap: var(--spacing-xxs); font-size: var(--size-caption); font-weight: var(--weight-semibold); color: var(--colors-text-primary); }
+.in-plan .ring { width: var(--in-plan-ring); height: var(--in-plan-ring); border-radius: var(--radii-circle); border: var(--border-width-base) solid var(--colors-border-shape); }
+.legend { display: flex; flex-direction: column; gap: var(--spacing-xs); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-md); background: var(--colors-surface-sunken); }
+.legend-row { display: flex; align-items: center; gap: var(--spacing-sm); font-size: var(--size-bodySm); }
+.gains { display: flex; gap: var(--spacing-lg); align-items: center; color: var(--colors-text-secondary); }
+.gains span { display: inline-flex; gap: var(--spacing-xs); align-items: center; font-weight: var(--weight-bold); color: var(--colors-text-primary); }
+.section-title { font-size: var(--size-bodyLg); font-weight: var(--weight-bold); }
+
+/* Tab bar (navigation/tabs.tsx: paper, a thin top rule, items of touchTarget.min, caption labels) */
+.tab-bar { position: sticky; bottom: 0; z-index: var(--z-sticky); background: var(--colors-surface-paper); border-top: var(--border-width-thin) solid var(--colors-border-subtle); padding: var(--spacing-xs) 0 var(--spacing-sm); }
+.tab-bar-inner { display: flex; max-width: var(--max-width-full); margin: 0 auto; }
+.tab { flex: 1 1 0; min-width: 0; min-height: var(--touch-min); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--spacing-xxs); font-size: var(--size-caption); font-weight: var(--weight-semibold); color: var(--colors-text-muted); text-align: center; }
+.tab[aria-selected="true"] { color: var(--colors-brand-primary); }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Adult shell (apps/web console pages, drawn as HTML)                                          */
+/* ------------------------------------------------------------------------------------------ */
+.adult { min-height: 100vh; }
+.shell-header { max-width: var(--max-width-full); margin: 0 auto; padding: var(--spacing-md) var(--gutter-compact); }
+.shell-placeholder { min-height: var(--touch-min); display: flex; align-items: center; padding: 0 var(--spacing-md); border: var(--border-width-thin) dashed var(--colors-border-strong); border-radius: var(--radii-md); color: var(--colors-text-muted); font-size: var(--size-caption); }
+.reading { max-width: var(--max-width-reading); margin: 0 auto; padding: var(--spacing-lg) var(--gutter-compact) var(--spacing-jumbo); display: flex; flex-direction: column; gap: var(--spacing-lg); }
+@media (min-width: 600px) { .reading, .shell-header { padding-left: var(--gutter-regular); padding-right: var(--gutter-regular); } }
+.back-link { display: inline-flex; align-items: center; gap: var(--spacing-xs); min-height: var(--touch-min); align-self: flex-start; padding-right: var(--spacing-md); color: var(--colors-brand-secondaryDark); font-weight: var(--weight-semibold); text-decoration: underline; }
+.page-head { display: flex; flex-direction: column; gap: var(--spacing-xxs); }
+.page-head h1 { font-size: var(--size-title); line-height: var(--leading-tight); }
+.muted { color: var(--colors-text-muted); font-size: var(--size-bodySm); }
+.panel { background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); padding: var(--spacing-lg); }
+.grown-card { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.grown-line { display: flex; gap: var(--spacing-sm); align-items: flex-start; }
+.grown-line .icon { margin-top: var(--spacing-xxs); }
+.grown-line strong { font-size: var(--size-bodyLg); line-height: var(--leading-tight); }
+.secondary-line { padding-top: var(--spacing-sm); border-top: var(--border-width-thin) solid var(--colors-border-subtle); color: var(--colors-text-secondary); }
+.stages-title { font-size: var(--size-bodyLg); font-weight: var(--weight-bold); }
+.stage-list { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.stage-item { display: flex; gap: var(--spacing-md); padding: var(--spacing-md); background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-md); }
+.stage-item.quiet { background: transparent; border-style: dashed; }
+.stage-item .shape { padding-top: var(--spacing-xxs); }
+.stage-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.stage-name { font-weight: var(--weight-bold); }
+.stage-name .state { font-weight: var(--weight-regular); color: var(--colors-text-secondary); }
+.stage-cando { color: var(--colors-text-primary); }
+.stage-count { color: var(--colors-text-secondary); font-size: var(--size-bodySm); }
+/* The reserved F-BROWSE-001 slot: drawn only to show where it goes; it renders nothing until BR-11. */
+.slot { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--spacing-sm); min-height: var(--touch-min); padding: var(--spacing-xs) var(--spacing-md); border: var(--border-width-thin) dashed var(--colors-border-strong); border-radius: var(--radii-pill); color: var(--colors-text-muted); font-size: var(--size-caption); align-self: flex-start; }
+.slot-note { font-family: var(--family-mono); overflow-wrap: anywhere; min-width: 0; }
+.link-button { display: inline-flex; align-items: center; min-height: var(--touch-min); padding: var(--spacing-sm) var(--spacing-lg); border-radius: var(--radii-pill); border: var(--border-width-thin) solid var(--colors-border-strong); background: var(--colors-surface-paper); color: var(--colors-text-primary); font-weight: var(--weight-bold); font-size: var(--size-bodySm); align-self: flex-start; text-decoration: none; }
+.glance { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.glance h1 { font-size: var(--size-title); line-height: var(--leading-tight); margin-bottom: var(--spacing-xs); }
+.goal-line { display: flex; gap: var(--spacing-xs); align-items: flex-start; font-weight: var(--weight-semibold); }
+.goal-line .icon { margin-top: var(--spacing-xxs); }
+.skeleton { height: var(--spacing-xxxl); border-radius: var(--radii-md); background: var(--colors-surface-sunken); }
+.notice { padding: var(--spacing-lg); border-radius: var(--radii-lg); background: var(--colors-feedback-infoLight); }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Design board (annotations, not UI)                                                           */
+/* ------------------------------------------------------------------------------------------ */
+.board { padding: var(--spacing-lg) var(--gutter-compact) var(--spacing-jumbo); display: flex; flex-direction: column; gap: var(--spacing-xl); max-width: var(--max-width-full); margin: 0 auto; }
+.board-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--board-column-min)), 1fr)); gap: var(--spacing-xl); align-items: start; }
+.board-item { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.board-label { font-family: var(--family-mono); font-size: var(--size-caption); color: var(--colors-text-muted); padding-left: var(--spacing-sm); border-left: var(--border-width-thick) solid var(--colors-border-strong); }
+.board-title { font-size: var(--size-bodyLg); font-weight: var(--weight-bold); }
+.frame { border: var(--border-width-thin) solid var(--colors-border-strong); border-radius: var(--radii-md); overflow: hidden; background: var(--colors-surface-canvas); }
+.frame-pad { padding: var(--spacing-lg); }
+/* A tab bar sample spans the viewport on phones, as the real bar does, so its four items are the real width. */
+.frame-bleed { margin-left: calc(-1 * var(--gutter-compact)); margin-right: calc(-1 * var(--gutter-compact)); border-radius: var(--radii-none); border-left: none; border-right: none; }
+@media (min-width: 600px) { .frame-bleed { margin-left: var(--spacing-none); margin-right: var(--spacing-none); border-radius: var(--radii-md); border-left: var(--border-width-thin) solid var(--colors-border-strong); border-right: var(--border-width-thin) solid var(--colors-border-strong); } }
+.hoya-next { display: flex; align-items: center; gap: var(--spacing-md); }
+.hoya-next .next-line { flex: 1; min-width: 0; }
+/*
+ * Below 360 (PIP_ROW_MIN_WIDTH) the card pads with spacing.md, so the 11 Stage 1 pips sit on one line, and a
+ * trail row shows R-3's plain fill bar instead of its pips (stageRowLook), so the card's goal pips are the only
+ * pips on the first screens. Mobile first: the narrow rule is the default and a min-width query overrides it,
+ * so no fractional width falls between two queries. The width is in px, like the app's window classes.
+ */
+.route-card { padding: var(--spacing-md); }
+.trail-row.bar-when-narrow .pip-row { display: none; }
+.fill-bar { display: block; height: var(--spacing-sm); border-radius: var(--radii-pill); background: var(--colors-surface-sunken); overflow: hidden; }
+.fill-bar-value { display: block; height: 100%; background: var(--colors-brand-primary); }
+@media (min-width: 360px) {
+  .route-card { padding: var(--spacing-lg); }
+  .trail-row.bar-when-narrow .pip-row { display: inline-flex; }
+  .fill-bar { display: none; }
+}
+.board-title, .board-label { overflow-wrap: anywhere; }
+/* Four-tab bar only (flag on): labels grow with the text size up to 1.3 x caption (LR-4: maxFontSizeMultiplier 1.3 on the native label), so four labels fit 80 dp at 320; the icon and the accessibility label carry the rest. Today's three-tab bar keeps its uncapped labels. */
+.tab-bar-four .tab span { font-size: min(var(--size-caption), var(--tab-label-cap)); }
+.reading.flush { width: 100%; margin: 0; padding: 0; }
