@@ -21,6 +21,8 @@ export const caregiver = {
     'unknown-quest': (_learnerName: string) => 'That quest is not available yet.',
     'episode-not-shipped': (_learnerName: string) => 'That episode is still being built.',
     'stage-locked': (learnerName: string) => `${learnerName} hasn't reached this quest yet.`,
+    /** A closed lesson (F-ENT-003 section 3.6): the products that open it, never a price. */
+    'quest-closed': (learnerName: string) => `${learnerName} can play this lesson with the Family Plan or a Group License.`,
   },
   /** `audienceCopy(audience, m.caregiver.audience)` picks `shared` plus one variant. */
   audience: {
