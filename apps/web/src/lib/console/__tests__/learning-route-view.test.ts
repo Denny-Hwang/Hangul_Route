@@ -58,11 +58,19 @@ const stageRow = (rows: LearningRouteRow[], stage: StageKey): LearningRouteStage
 };
 const tagsOf = (view: LearningRouteReady, stage: StageKey): string[] => stageRow(view.stages, stage).tags.map((t) => t.text);
 
-/** Every sentence a view carries, for the copy rules. */
+/** Keys that hold ids, enum values or links, never a sentence. */
+const NOT_TEXT = new Set(['href', 'stage', 'kind', 'state', 'availability', 'status']);
+/**
+ * Every sentence a view carries, for the copy rules: the card and every stage row (line, can-do, state word, tags).
+ * Only a merged later row's `stages` (stage keys) is skipped, never the view's own `stages` list of rows.
+ */
 const textsOf = (value: unknown): string[] => {
   if (typeof value === 'string') return [value];
   if (Array.isArray(value)) return value.flatMap(textsOf);
-  if (value !== null && typeof value === 'object') return Object.entries(value).flatMap(([key, v]) => (key === 'href' || key === 'stage' || key === 'stages' || key === 'kind' || key === 'state' || key === 'availability' || key === 'status' ? [] : textsOf(v)));
+  if (value !== null && typeof value === 'object') {
+    const later = (value as { kind?: unknown }).kind === 'later';
+    return Object.entries(value).flatMap(([key, v]) => (NOT_TEXT.has(key) || (later && key === 'stages') ? [] : textsOf(v)));
+  }
   return [];
 };
 
@@ -217,6 +225,8 @@ describe('learningRouteView: the stage list (section 6.1 "The stage list page")'
     expect(stageRow(view.stages, 'stage1').line).toBe('8 known from the level check');
     expect(stageRow(view.stages, 'stage2').line).toBeNull();
     expect(stageRow(view.stages, 'stage4').line).toBe('3 quests done');
+    // The copy rules read the stage rows too, not only the card.
+    expect(textsOf(view)).toEqual(expect.arrayContaining(['8 known from the level check', '3 quests done', 'Sam is here', canDo[4]]));
     for (const text of textsOf(view)) {
       expect(text).not.toMatch(/(^|\D)0 /);
       expect(text).not.toMatch(/\d+ ?\/ ?\d+|%/);
@@ -509,6 +519,13 @@ describe('case 2: this space has a live curriculum plan for the learner', () => 
     expect(view.card.goal).toMatchObject({ case: 3, stage: 'stage1' });
     expect(JSON.stringify(view)).not.toContain('Dec 20');
     expect(textsOf(view).filter((t) => /['’]s goal\b|\bgoal:/i.test(t))).toEqual([]);
+    // Not even read: a summary whose routeGoal or selfRoute throws on access draws the same class view.
+    const guarded = summary({});
+    for (const key of ['routeGoal', 'selfRoute']) {
+      Object.defineProperty(guarded, key, { enumerable: true, get: () => { throw new Error(`a class read summary.${key}`); } });
+    }
+    const guardedView = ready({ space: { id: 'space:c', kind: 'class' }, learners: [learner({ summary: guarded })] });
+    expect(guardedView.card.goal).toMatchObject({ case: 3, stage: 'stage1' });
   });
 
   it("words a family viewer's own plan the same way when the device has not sent its goal (an older build)", () => {

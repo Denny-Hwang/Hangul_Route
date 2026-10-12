@@ -330,8 +330,9 @@ function buildCard(
   // - a goal from "your family's weekly plan" while this family has no live plan for the learner, or one that
   //   reaches another stage: the device synced before this family's plans changed (or the plan is another family
   //   space's, which "your family" would misname). This family's own live plan then speaks (case 2), or the road (case 3).
+  // A class never reads `routeGoal` or `selfRoute` (section 6.1), even when they arrive.
   const device = kind === 'family' ? deviceGoalOf(summary) : null;
-  const ownEnd = summary.selfRoute?.endsOn;
+  const ownEnd = device !== null ? summary.selfRoute?.endsOn : undefined;
   const ownEnded = typeof ownEnd === 'string' && isDateKey(ownEnd) && ownEnd < today;
   const deviceStale = device !== null && ((device.from === 'self' && ownEnded) || (device.from === 'family' && (spacePlan === null || spacePlan.stage !== device.stage)));
   if (device !== null && !deviceStale) {
