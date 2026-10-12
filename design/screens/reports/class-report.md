@@ -27,7 +27,7 @@ Practice together                  (h2)                                       |
   Letters to revisit together      (h3)  (ㅊ (ch): 4) ...  max 5              |
   ( Plan a lesson )                      lecture mode only                   /
 This period                        (h2)                                      layer 2
-  Days practiced (h3): Not yet: 4 / 1 to 2 days: 3 / 3 to 4 days: 3 / 5 to 7 days: 2
+  Days practiced (h3): Not yet: 3 / 1 to 2 days: 3 / 3 to 4 days: 3 / 5 to 7 days: 2   (11 with activity)
   Time (h3): Total time: 212 minutes  More than last week / Typical time for those who practiced: 24 minutes
 [ More detail  v ]                                                           layer 3
   Level check (learners who took one) (h3): per strand (h4) four count rows
@@ -45,8 +45,8 @@ From 60em: layer 1 left, layer 2 right, More detail across. The class-level line
 | New quests / New cards | `report.class.questsNew`, `cardsNew` as body lines; the up-only line after New quests when it grew |
 | Milestones | `report.class.milestones(when)` as `h3`, then `report.class.milestone(n, stage, count)` per stage finished in the window. Events only, never a standing count per stage (OD-4). Hidden when none |
 | Plan a lesson | ghost pill as the learner report's actions, at the end of Practice together, only when `lectureModeEnabled()` |
-| Bands | `report.class.section.daysPracticed` as `h3`, then one text row per band (`report.class.count(band label, n)`), separated by `border.subtle` rules, no bar and no highlight on any row. Week: `band.none`, `range(1, 2)`, `range(3, 4)`, `range(5, 7)`; month: `none`, `range(1, 4)`, `range(5, 9)`, `atLeast(10)`; day: `band.practiced`, `band.none`; all: no bands |
-| Time | `report.class.section.time` as `h3`; `minutesTotal` (with the up-only line when it grew) and `medianMinutes`, the median hidden under 3 learners who practiced |
+| Bands | `report.class.section.daysPracticed` as `h3`, then one text row per band. The bands count learners with `activity` only (`withActivity`), so they add up to 11 in the mock, where 1 of the 12 members has an older app: a learner without day-by-day data is never counted in "Not yet". The same holds for every day-by-day block (the median, new quests and cards, new letters); the headline's total is `learners` (members), as behaviour 5 says (`report.class.count(band label, n)`), separated by `border.subtle` rules, no bar and no highlight on any row. Week: `band.none`, `range(1, 2)`, `range(3, 4)`, `range(5, 7)`; month: `none`, `range(1, 4)`, `range(5, 9)`, `atLeast(10)`; day: `band.practiced`, `band.none`; all: no bands |
+| Time | `report.class.section.time` as `h3`; `minutesTotal` (with the up-only line when it grew) and `medianMinutes` over the learners who practiced, hidden when fewer than 3 practiced, on every period including Today (section 3.7) |
 | Level check | `report.class.section.levelCheck` as `h3`, then a grid of strands (one per row on phones): `h4` strand name (`caregiver.placementReport.strand`) and four rows `report.class.count(report.strand.status.*, n)`. Counts only (OD-5); no names, no levels, no percentages |
 | Homework | `report.class.section.homework` as `h3`; up to three plans, newest first: the title as a `brand.secondaryDark` bold link to the plan builder, then `report.class.planRow(assigned, started, finished)` |
 
@@ -60,7 +60,7 @@ From 60em: layer 1 left, layer 2 right, More detail across. The class-level line
 | empty (no learners) | `report.class.empty` in a neutral block; the back link goes to the roster, where the join code is. No Print |
 | every learner on an older app | the class lines explain (`olderApp`); This period shows `report.class.afterUpdate`; revisit letters (and level-check counts in More detail) still render |
 | no practice in the window | headline "0 of 12 learners practiced this week."; What went well hidden; Practice together renders; This period says `report.headline.noneYet(when)` |
-| Today | `headline` with `when.day`; bands Practiced / Not yet; time total only |
+| Today | `headline` with `when.day`; bands Practiced / Not yet; total time, and the typical time when at least 3 practiced (3 in the example) |
 | All time | `headline` with `when.all`; no bands; milestones to date as events with `when.all`; no stepper |
 | month, under 3 practiced | the median line is not drawn; the total stays (behaviour 5) |
 | unavailable | a family or a school space, or not allowed: `report.state.unavailable` and the back link. No Print |

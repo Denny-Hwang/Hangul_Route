@@ -13,7 +13,7 @@ A learner-app stack screen drawn as HTML with LR-D's app rules: one centred colu
 ( < )                                   back to the dashboard (icon button, touchTarget.min)
 Sam: report                             h1; "Your report" on a self-only device
 Now on Stage 1: Hangul
-( Open Learning Route )                 opens the local read-only page L1 (LR-D), when it exists
+( Open Learning Route )                 opens L1 for this report's profile, read-only (see below)
 Last practice: Oct 12
 ( Today ) ([This week]) ( This month )  SectionTabs: pills, wrap to two rows at 375
 ( All time )
@@ -29,14 +29,18 @@ This period: figures, calendar
 | | Console | In-app |
 |---|---|---|
 | Header | back link, Send a note, Print | the stack's back button only (no Print, OD-7; no Send a note) |
-| Glance | LR-D region with the goal line | "Now on" and **Open Learning Route** (to L1, which shows the device's own goal with its source); no goal line |
+| Glance | LR-D region with the goal line | "Now on" and **Open Learning Route** (`console.learningRoute.open`, in the region labelled `console.learningRoute.section`) to L1, which shows the device's own goal with its source; no goal line |
 | Tabs | segmented row | `SectionTabs` (`design/components/SectionTabs/spec.md`): pills, selected `brand.primary` fill, wrap |
 | Insight actions | Add to a plan, Open the plan | none |
-| Letters | links (Browse after RP-13) | plain text in sentences; letter tiles are buttons that expand in place to the content romanization and gloss (`content/episodes/stage-1/jamo.json`) |
-| Calendar | may show dashed "not saved yet" cells | never: every day up to today is on the device |
+| Letters | links (Browse after RP-13) | plain text in sentences ("ㅂ (b)" already carries the romanization; no inline control); the More detail letter tiles are the chips that expand: disclosure buttons (`aria-expanded`, `aria-controls` the expansion, `touchTarget.min`, named by their visible letter and romanization) that open, under the tile row, the content romanization and gloss (`content/episodes/stage-1/jamo.json`) |
+| Calendar | may show dashed "not saved yet" cells | no dashed cells: the device's own practice is complete up to today. A profile that also practices on another device shows those days once this device has pulled them; until then they draw as empty outlines. This is an accepted v1 limit, recorded in the spec's review log for RP-9 (the sentence under the calendar lists practiced days only and never says a day was missed) |
 | Plan rows | family or class rows | `report.detail.planRow.device` (every plan on the device and the own route) |
 | Skills | not shown (OD-8) | the skills rows in More detail (below) |
 | Words | hidden until F-VOC-005 P-4 | hidden too |
+
+## Open Learning Route
+
+The link navigates on the root stack to `MyRoute { source: 'parent', profileId: <this report's profileId>, viewer: 'grownup' }`, the read-only grown-up view (L1), never the active profile's route and never the learner-facing page with play buttons. Back returns to `LearnerReport`. RP-9's test asserts both `profileId` and `viewer`. The link renders only when L1 exists on the build (spec section 3.6).
 
 ## Skills rows (device only, OD-8)
 
@@ -58,7 +62,7 @@ On a self-only device (`gateOpensDirectly`), every sentence that names the learn
 | empty | `report.state.empty(name)` and the app's next line; the self-only text `report.you.state.empty` is drawn under it as a labelled alternative |
 | no practice in the window | `headline.noneYet`, no What went well, `insight.rhythm` first |
 | All time | the growth block with its table open (as `learner-report.md`) |
-| a letter tapped | the tile or chip expands in place: the letter large (`size.display`) beside its content romanization (bold) and gloss (`text.muted`) on `surface.sunken` |
+| a letter tile tapped | the tile's `aria-expanded` turns true and the expansion opens under the tile row: the letter large (`size.display`) beside its content romanization (bold) and gloss (`text.muted`) on `surface.sunken`. Tapping again closes it |
 | error | `report.state.error` and `common.buttons.tryAgain` (a primary `Button`); never a crash screen |
 | loading | a brief skeleton while the local summary is computed (as the console's skeleton blocks; not drawn again) |
 | offline | identical to success: local data only |
@@ -69,5 +73,6 @@ On a self-only device (`gateOpensDirectly`), every sentence that names the learn
 ## Accessibility
 
 - The stack's back button is labelled `common.buttons.back`. Tabs are `SectionTabs` with the row named `a11y.report.periods` and `a11y.report.periodChanged` announced on change.
-- Calendar and growth line carry the same text alternatives as the console; letter tiles announce the letter and its romanization.
+- Calendar and growth line carry the same text alternatives as the console; letter tiles announce the letter (`lang="ko"`) and its romanization from their visible content, plus their expanded state.
+- Tabs: each `SectionTabs` tab has `aria-controls` the report panel, and the report below the tabs is the `tabpanel` labelled by the selected tab (as the console, `learner-report.md`).
 - Read-only: nothing on this screen writes progress or changes the active profile; `report.viewed` goes without `profileId` (spec section 3.13).

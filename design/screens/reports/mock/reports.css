@@ -17,7 +17,7 @@
 :root {
   --avatar-chip: 28px;          /* AVATAR_CHIP_SIZE (AvatarChip.tsx), as the app-shell mock draws learner chips */
   --period-tab-min: 4.5rem;     /* four period tabs in one row at 375 and 390; fewer per row at 320 or with large text */
-  --figure-min: 7rem;           /* figure tile minimum: three across at 375, five across in the 1280 right column */
+  --figure-min: 7rem;           /* figure tile minimum: two across at 375, three across in the 1280 right column */
   --print-hint-min: 8rem;       /* the hint stays beside the button down to 375; with large text it moves under it */
   --print-hint-max: 14rem;      /* the print hint wraps beside the button instead of running across the header */
   --detail-column-min: 22rem;   /* More detail blocks: one column on phones, two or three on wide screens */
@@ -26,7 +26,7 @@
 }
 
 /* ------------------------------------------------------------------------------------------ */
-/* Adult frame placeholder: the real frame is F-APP-001 A-5a (design/screens/app-shell/).      */
+/* Adult frame placeholder: the real frame is F-APP-001 A-5a (section 3.8; design pending #420). */
 /* Drawn at its phone height (one header row + the tab row) so the first-screen budget is true. */
 /* ------------------------------------------------------------------------------------------ */
 .frame-band { background: var(--colors-surface-paper); border-bottom: var(--border-width-thin) solid var(--colors-border-subtle); }
@@ -60,6 +60,8 @@
 
 /* Period tabs: one segmented row (role tablist). The selected tab is paper, bold and outlined, never colour alone. */
 .report-controls { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+/* The report body is the tab panel (role="tabpanel", labelled by the selected tab): it keeps its parent's spacing. */
+.tabpanel { display: flex; flex-direction: column; gap: inherit; }
 .period-tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--period-tab-min)), 1fr)); gap: var(--spacing-xs); padding: var(--spacing-xs); border-radius: var(--radii-lg); background: var(--colors-surface-sunken); max-width: var(--max-width-reading); }
 .period-tab { min-height: var(--touch-min); padding: var(--spacing-xs) var(--spacing-sm); border-radius: var(--radii-md); border: var(--border-width-base) solid transparent; background: transparent; color: var(--colors-text-secondary); font: inherit; font-size: var(--size-bodySm); font-weight: var(--weight-semibold); line-height: var(--leading-tight); text-align: center; }
 .period-tab[aria-selected="true"] { background: var(--colors-surface-paper); border-color: var(--colors-brand-primary); color: var(--colors-text-primary); font-weight: var(--weight-bold); }
