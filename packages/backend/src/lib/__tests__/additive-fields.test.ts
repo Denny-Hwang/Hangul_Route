@@ -313,6 +313,9 @@ describe('preserveAdditiveFields (quest latch entry, F-REPORT-001 section 3.3.1,
     const merge = field?.merge;
     expect(merge?.({ q: '2026-10-11T08:00:00+09:00' }, { q: '2026-10-11T00:00:00Z' })).toEqual({ q: '2026-10-11T08:00:00+09:00' });
     expect(merge?.({ q: 'soon' }, { q: '2026-10-11T00:00:00.000Z' })).toEqual({ q: '2026-10-11T00:00:00.000Z' });
+    // two unparseable values fall back to the string order, whichever side holds the smaller one
+    expect(merge?.({ q: 'a' }, { q: 'b' })).toEqual({ q: 'a' });
+    expect(merge?.({ q: 'b' }, { q: 'a' })).toEqual({ q: 'a' });
     expect(merge?.({ q: 7, r: '2026-10-12T00:00:00.000Z' }, ['x'])).toEqual({ r: '2026-10-12T00:00:00.000Z' });
     expect(merge?.({ b: '2026-10-12T00:00:00.000Z', a: '2026-10-11T00:00:00.000Z' }, {})).toEqual({ a: '2026-10-11T00:00:00.000Z', b: '2026-10-12T00:00:00.000Z' });
     expect(Object.keys(merge?.({ b: '2026-10-12T00:00:00.000Z', a: '2026-10-11T00:00:00.000Z' }, {}) as object)).toEqual(['a', 'b']);
