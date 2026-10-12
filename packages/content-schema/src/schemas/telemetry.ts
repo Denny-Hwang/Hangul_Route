@@ -129,6 +129,8 @@ export const TELEMETRY_EVENT_NAMES = [
   'access.free_end_reached',
   'route.next_started',
   'route.offplan_finished',
+  // F-REPORT-001 §3.13 (payload { scope, space, period }: codes only, never a profileId, space id, learner id or name)
+  'report.viewed',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);

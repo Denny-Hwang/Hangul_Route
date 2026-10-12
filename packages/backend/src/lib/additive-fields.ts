@@ -9,8 +9,8 @@
  * never describes data the payload no longer holds.
  *
  * One list serves every additive field (F-PLC-001 `placements`, F-VOC-005
- * `vocab`, F-PLAN-002 `selfRoute`): a later spec appends an entry, nothing else
- * changes. Deploy the Worker before any app build that can send the field.
+ * `vocab`, F-PLAN-002 `selfRoute`, F-REPORT-001 `questDoneAt`): a later spec
+ * appends an entry, nothing else changes. Deploy the Worker before any app build that can send the field.
  */
 export interface AdditiveField {
   /** Key on the stored snapshot payload. */
@@ -58,6 +58,24 @@ export function earlierLatchTime(a: string, b: string): string {
 }
 
 /**
+ * Unions two latch records (key -> ISO time): every key of either side, the
+ * earlier time where both have one (`earlierLatchTime`), keys sorted. A side
+ * that is not a record, and a value that is not a string, contribute nothing.
+ */
+function unionLatch(incoming: unknown, stored: unknown): Record<string, string> {
+  const out = new Map<string, string>();
+  for (const side of [stored, incoming]) {
+    if (!isPlain(side)) continue;
+    for (const [key, at] of Object.entries(side)) {
+      if (typeof at !== 'string') continue;
+      const prev = out.get(key);
+      out.set(key, prev === undefined ? at : earlierLatchTime(prev, at));
+    }
+  }
+  return Object.fromEntries([...out.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
+}
+
+/**
  * `stageDoneAt` (F-ROUTE-001 section 3.15) is the stage latch: a record that
  * only ever gains keys. A missing key or an empty record next to a stored
  * non-empty one can only come from a client that predates it, so the stored
@@ -69,18 +87,7 @@ export function earlierLatchTime(a: string, b: string): string {
 const STAGE_DONE_AT: AdditiveField = {
   payloadKey: 'stageDoneAt',
   isUnset: (value) => value === undefined || (isPlain(value) && Object.keys(value).length === 0),
-  merge: (incoming, stored) => {
-    const out = new Map<string, string>();
-    for (const side of [stored, incoming]) {
-      if (!isPlain(side)) continue;
-      for (const [stage, at] of Object.entries(side)) {
-        if (typeof at !== 'string') continue;
-        const prev = out.get(stage);
-        out.set(stage, prev === undefined ? at : earlierLatchTime(prev, at));
-      }
-    }
-    return Object.fromEntries([...out.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
-  },
+  merge: unionLatch,
 };
 
 /**
@@ -108,7 +115,28 @@ const VOCAB: AdditiveField = {
   isUnset: (value) => value === undefined,
 };
 
-export const ADDITIVE_FIELDS: readonly AdditiveField[] = [PLACEMENTS, STAGE_DONE_AT, SELF_ROUTE, VOCAB];
+/**
+ * `questDoneAt` (F-REPORT-001 section 3.3.1) is the quest latch, the twin of
+ * `stageDoneAt`: quest id -> the time the quest was first finished. Builds from
+ * RP-3a on always send the key, an empty record included, so only an **absent**
+ * key means "an old build sent this" (the VOCAB rule): an old build that
+ * re-uploads keeps the stored latch and `summary.activity`, also for a learner
+ * with sessions but no finished quest (stored `{}` is a value). A sent record is
+ * unioned with the stored one, earliest time wins (the stage-latch merge), so a
+ * device that upgraded after another device synced never erases that device's
+ * first-finish days; a build that sends the latch sends its own
+ * `summary.activity`, which is kept as sent. After a profile reset the union can
+ * bring old entries back: the device counts an entry only while its quest is
+ * completed (section 3.3.4 step 2), so the report still starts fresh.
+ */
+const QUEST_DONE_AT: AdditiveField = {
+  payloadKey: 'questDoneAt',
+  summaryKey: 'activity',
+  isUnset: (value) => value === undefined,
+  merge: unionLatch,
+};
+
+export const ADDITIVE_FIELDS: readonly AdditiveField[] = [PLACEMENTS, STAGE_DONE_AT, SELF_ROUTE, VOCAB, QUEST_DONE_AT];
 
 export interface SnapshotParts<P, S> {
   payload: P;
