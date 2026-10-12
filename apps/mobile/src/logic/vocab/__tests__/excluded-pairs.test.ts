@@ -3,7 +3,7 @@ import { VOCAB_ITEMS } from '../../../content/__generated__/vocab';
 import { VOCAB_EXCLUDED_PAIRS, excludedPair } from '../excluded-pairs';
 
 describe('VOCAB_EXCLUDED_PAIRS (F-VOC-004 §3.3 rule 1, overlapping words)', () => {
-  it('lists the ball against each ball sport, and fire against light', () => {
+  it('lists the ball against each ball sport, fire against light, and the overlapping pictures of the art batches', () => {
     expect(VOCAB_EXCLUDED_PAIRS.map((pair) => [...pair])).toEqual([
       ['vocab:gureum', 'vocab:bi-rain'],
       ['vocab:gureum', 'vocab:haneul'],
