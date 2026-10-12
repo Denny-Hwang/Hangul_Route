@@ -275,21 +275,30 @@ describe('GET /api/billing/summary: one card per persona (section 4.2)', () => {
   });
 
   it('orders payer cards first, then family, class, school, newest first', async () => {
-    const sch = await createSpace('principal', 'school', 'Maple School');
-    await addAdult(sch, 'kim', 'teacher');
-    const famOld = await createSpace('kim', 'family', 'Old family');
-    const clsA = await createSpace('kim', 'class', 'A');
-    const famNew = await createSpace('kim', 'family', 'New family');
-    const clsB = await createSpace('kim', 'class', 'B');
-    const other = await createSpace('mom', 'family', 'Kim family');
-    await addAdult(other, 'kim', 'caregiver');
-    // Distinct creation times, oldest first, as the spaces were made.
-    for (const [i, id] of [sch, famOld, clsA, famNew, clsB, other].entries()) {
-      const space = await db.getSpace(id);
-      if (space) await db.putSpace({ ...space, createdAt: new Date(Date.UTC(2026, 0, 1 + i)).toISOString() });
+    // Distinct creation times, oldest first, one day apart. The clock moves
+    // instead of rewriting createdAt: the D1 upsert keeps created_at.
+    let day = 0;
+    const made = async (user: string, kind: string, name: string): Promise<string> => {
+      vi.setSystemTime(new Date(Date.UTC(2026, 0, 1 + day++)));
+      return createSpace(user, kind, name);
+    };
+    vi.useFakeTimers({ toFake: ['Date'] });
+    let expected: string[];
+    try {
+      const sch = await made('principal', 'school', 'Maple School');
+      await addAdult(sch, 'kim', 'teacher');
+      const famOld = await made('kim', 'family', 'Old family');
+      const clsA = await made('kim', 'class', 'A');
+      const famNew = await made('kim', 'family', 'New family');
+      const clsB = await made('kim', 'class', 'B');
+      const other = await made('mom', 'family', 'Kim family');
+      await addAdult(other, 'kim', 'caregiver');
+      expected = [famNew, famOld, clsB, clsA, other, sch];
+    } finally {
+      vi.useRealTimers();
     }
     const ids = (await summaryOf('kim')).cards.map((c) => c.spaceId);
-    expect(ids).toEqual([famNew, famOld, clsB, clsA, other, sch]);
+    expect(ids).toEqual(expected);
   });
 
   it('an account-subject row (legacy): one extra card for the viewer only', async () => {
