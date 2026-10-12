@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored } from './helpers';
 import { shot } from './shots';
 import { back, fullyVisible, next, nextPage, position, primaryButtons } from './story-reader-helpers';
 
@@ -30,8 +30,32 @@ type E2eWindow = Window & {
   __hrStoryE2E?: {
     openReader(p: { storyId: string; level: string; sceneIndex?: number }): void;
     openQuest(p: { questId: string; episodeId: string }): void;
+    events(): Array<{ name: string; payload?: Record<string, unknown> }>;
   };
 };
+
+const NOTE = 'cn-hangul-day';
+const T = '2026-10-10T09:00:00.000Z';
+
+/** The fixture story's quest finished once (a synced or earlier finish), so its culture note is found. */
+async function seedStoryFinished(page: Page): Promise<void> {
+  const profiles = await readStored<Array<{ id: string }>>(page, 'profiles');
+  const profileId = profiles?.[0]?.id;
+  if (!profileId) throw new Error('no profile stored');
+  await seedStored(page, `progress:${profileId}`, {
+    profileId,
+    updatedAt: T,
+    episodes: [],
+    quests: [{ questId: QUEST, episodeId: EPISODE, startedAt: T, completedAt: T, stars: 2, attempts: 1, accuracy: 1 }],
+    cards: [],
+    sessions: [],
+    homework: [],
+    reviews: [],
+    streakDays: 0,
+  });
+  await expect(page.getByText('Hi, Dami!')).toBeVisible();
+  await page.waitForFunction(() => Boolean((window as E2eWindow).__hrStoryE2E), undefined, { timeout: 10_000 });
+}
 
 async function onboard(page: Page): Promise<void> {
   await page.goto('/');
@@ -155,8 +179,9 @@ test.describe('story reader extras (fixture bundle)', () => {
     // Card art for card:hanji, hidden from screen readers (the title and term say what it shows).
     await expect(page.getByTestId('story-reader-note-art')).toBeVisible();
     await expect(page.getByTestId('story-reader-note-art')).toHaveAttribute('aria-hidden', 'true');
-    // "More in Culture notes" (F-STORY-004 PR 4.7): a ghost button beside Close.
-    await expect(page.getByTestId('story-reader-note-more')).toHaveText('More in Culture notes');
+    // Not found yet (the story is not finished): the Culture notes screen would not list it, so no
+    // "More in Culture notes" (F-STORY-004 PR 4.7).
+    await expect(page.getByTestId('story-reader-note-more')).toHaveCount(0);
     // The note card adds no primary button.
     expect(await primaryButtons(page)).toEqual(['story-reader-next']);
     expect(await page.locator('body').innerText()).not.toMatch(EMOJI);
@@ -164,11 +189,58 @@ test.describe('story reader extras (fixture bundle)', () => {
     await page.getByTestId('story-reader-note-close').click();
     await expect(note(page)).toHaveCount(0);
     await expect(chip(page)).toHaveAttribute('aria-expanded', 'false');
+  });
 
-    // More in Culture notes opens the Culture notes screen (`CultureNotes { noteId }`).
+  test('once the story is finished, More in Culture notes opens the note: in view, outlined, sources open, viewed once', async ({ page }) => {
+    await onboard(page);
+    await seedStoryFinished(page);
+    await openReplay(page);
+    await chip(page).click();
+    const more = page.getByTestId('story-reader-note-more');
+    await expect(more).toHaveText('More in Culture notes');
+    expect(await primaryButtons(page)).toEqual(['story-reader-next']);
+    await more.click();
+
+    await expect(page.getByTestId('culture-notes')).toBeVisible();
+    const target = page.getByTestId(`culture-note-${NOTE}`);
+    await expect(target).toBeInViewport();
+    // The target note has the thicker focus outline (borderWidth.thick).
+    expect(await target.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe('3px');
+    await expect(page.getByTestId(`culture-note-source-list-${NOTE}`)).toBeVisible();
+    // The replay reader is not a quest run: the note links to its story.
+    await expect(page.getByTestId(`culture-note-story-${NOTE}`)).toBeVisible();
+    const viewed = async (): Promise<unknown[]> =>
+      (await page.evaluate(() => (window as E2eWindow).__hrStoryE2E?.events() ?? []))
+        .filter((e) => e.name === 'culture.note.viewed')
+        .map((e) => e.payload);
+    await expect.poll(viewed).toEqual([{ noteId: NOTE, storyId: STORY }]);
+
+    // Back is the reader, on the scene it was on.
+    await page.getByTestId('culture-notes-back').click();
+    await expect(next(page)).toBeVisible();
+    await expect(position(page)).toHaveText('1 / 5');
+    expect(await viewed()).toHaveLength(1);
+  });
+
+  test('quest mode: no More on a first read; once found, the notes screen over the quest offers Back only', async ({ page }) => {
+    await onboard(page);
+    await openQuestReader(page);
+    await chip(page).click();
+    await expect(note(page)).toBeVisible();
+    await expect(page.getByTestId('story-reader-note-more')).toHaveCount(0);
+
+    await seedStoryFinished(page);
+    await openQuestReader(page);
     await chip(page).click();
     await page.getByTestId('story-reader-note-more').click();
-    await expect(page.getByTestId('culture-notes')).toBeVisible();
+    await expect(page.getByTestId(`culture-note-${NOTE}`)).toBeInViewport();
+    // Nothing on the screen can unwind the running quest: no story link, no Story Time button.
+    await expect(page.getByTestId(`culture-note-story-${NOTE}`)).toHaveCount(0);
+    await expect(page.getByTestId('culture-notes-to-story-time')).toHaveCount(0);
+    await page.getByTestId('culture-notes-back').click();
+    // Back in the same quest run, on the reader.
+    await expect(next(page)).toBeVisible();
+    await expect(position(page)).toHaveText('1 / 5');
   });
 
   test('the note card closes on a second tap, Escape, a term chip and a page turn; scenes without a note have no chip', async ({ page }) => {
