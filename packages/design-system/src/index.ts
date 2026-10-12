@@ -27,6 +27,7 @@ export * from './components/SparkMeter';
 export * from './components/WordArt';
 export { WORD_ART_KEYS } from './word-art/registry';
 export * from './components/PipRow';
+export * from './components/RouteMarkers';
 // Pure scene-art API (no React): the path Metro can resolve; the web app uses the ./scene-art subpaths.
 export * from './scene-art';
 export { KOREAN_LANGUAGE, KOREAN_TEXT_SIZES, koreanTextLabel, koreanTextView } from './korean-text';
