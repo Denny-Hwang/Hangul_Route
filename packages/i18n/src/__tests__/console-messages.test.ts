@@ -16,11 +16,9 @@ const c = getMessages('en').console;
 describe('console: the former COPY, keys and wording unchanged', () => {
   it('keeps the function message and the array', () => {
     expect(c.capWarning(16, 20)).toBe('Free plan: 16 / 20 students');
-    expect(c.whySignIn).toEqual(['Keep progress safe across devices', 'Bring cards back after a reinstall', 'Manage plans and billing']);
   });
 
   it('keeps every flat COPY key with its English text', () => {
-    expect(c.kidsNoAccount).toBe("Kids don't need an account — they join with a code.");
     expect(c.tryAgain).toBe('Try again');
     expect(c.writeOnBoard).toBe('Write it on the board. Students join from Profile → Classes & family → Join a class.');
     expect(c.notSyncedYet).toBe('not synced yet');
@@ -35,12 +33,12 @@ describe('console: the former COPY, keys and wording unchanged', () => {
 
   // PR 10a added one group per console page and retired four fragments (practicedThisWeek, anchor,
   // revisitTogether, notSyncedWeek) for whole-sentence messages under `space.week`; PR 10b added `plan` and `billing`;
-  // F-TCH-004 PR 10 added `lecture`; F-I18N-001 PR 10c added `settings`, `school` and `parent`; F-PLC-001 P-9 added `placement`; F-ROUTE-001 R-9a added `journey`; F-APP-001 A-2 added `offline`; F-APP-001 A-4a added `lock`; F-ENT-003 E3-9 added `access`; Learning Route LR-7 added `learningRoute`; F-FEEDBACK-001 FB-5 added `notes`.
-  it('has exactly the 54 remaining COPY keys plus the formatter and page groups', () => {
+  // F-TCH-004 PR 10 added `lecture`; F-I18N-001 PR 10c added `settings`, `school` and `parent`; F-PLC-001 P-9 added `placement`; F-ROUTE-001 R-9a added `journey`; F-APP-001 A-2 added `offline`; F-APP-001 A-4a added `lock`; F-ENT-003 E3-9 added `access`; Learning Route LR-7 added `learningRoute`; F-FEEDBACK-001 FB-5 added `notes`; F-APP-001 A-4b removed `whySignIn`, `kidsNoAccount` and `clerkIntro` (design pass D14).
+  it('has exactly the 51 remaining COPY keys plus the formatter and page groups', () => {
     const groups = ['language', 'codeExpiry', 'spaceCounts', 'planCounts', 'planStatus', 'entitlementStatus', 'price', 'promoPrice'];
     const pages = ['shell', 'kind', 'joinCode', 'signIn', 'start', 'home', 'space', 'relink', 'plan', 'billing', 'curriculum', 'lecture', 'settings', 'school', 'parent', 'placement', 'journey', 'offline', 'lock', 'access', 'learningRoute', 'notes'];
     const copyKeys = Object.keys(en.console).filter((k) => !groups.includes(k) && !pages.includes(k));
-    expect(copyKeys).toHaveLength(54);
+    expect(copyKeys).toHaveLength(51);
     for (const g of pages) expect(Object.keys(en.console)).toContain(g);
     for (const g of groups) expect(Object.keys(en.console)).toContain(g);
   });

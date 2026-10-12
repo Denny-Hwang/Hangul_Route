@@ -245,4 +245,8 @@ export const a11y = {
     reactionPicked: (label: string) => `You picked: ${label}`,
     questCard: (title: string) => `Try this quest: ${title}`,
   },
+  /** The grown-up shell (F-APP-001 section 3.16): router pages announce this in a polite live region. */
+  shell: {
+    redirecting: 'Taking you to your home…',
+  },
 } as const;

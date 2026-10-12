@@ -42,7 +42,7 @@ describe('the guard is a thin re-export of @hangul-route/i18n (F-I18N-001 §3.1,
 
 describe('the console namespace of the dictionary', () => {
   it('keeps the former COPY keys; the English-only COPY alias is gone now every page reads useMessages() (F-I18N-001 PR 10c)', () => {
-    expect(en.console.kidsNoAccount).toBe("Kids don't need an account — they join with a code.");
+    expect(en.console.tryAgain).toBe('Try again');
     expect(Object.keys(copyModule)).not.toContain('COPY');
   });
 
