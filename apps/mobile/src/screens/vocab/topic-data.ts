@@ -1,5 +1,6 @@
 import type { RuntimeVocabItem, VocabTopic } from '@hangul-route/content-schema';
 import { flags } from '../../config/flags';
+import { storyFixtureIds } from '../../content/stories';
 import { visibleItems, vocabTopics } from '../../content/vocab';
 import { resolvePicture } from '../../logic/picture-ref';
 import { createIntroMemory, wordsOfTopic } from '../../logic/vocab/topic-view';
@@ -56,9 +57,17 @@ export function pickerTopic(topicKey: string): VocabTopic | undefined {
   return pickerTopics().find((t) => t.key === topicKey);
 }
 
-/** Words is on: its flag, and at least one topic to show (T1's `isAvailable`). */
+/**
+ * The e2e fixture bundle: only it holds story fixture ids (the switch of
+ * `navigation/story-e2e.tsx`), never a release build. It offers Words with
+ * the flag off, so CI runs the Library Words tab end to end before C-7 without
+ * an env-keyed build (the Metro cache must never carry a flag into `dist/`).
+ */
+const FIXTURE_BUNDLE = storyFixtureIds.length > 0;
+
+/** Words is on: its flag (or the e2e fixture bundle), and at least one topic to show (T1's `isAvailable`). */
 export function wordsOffered(): boolean {
-  return flags.vocabTopicsEnabled && pickerTopics().length > 0;
+  return (flags.vocabTopicsEnabled || FIXTURE_BUNDLE) && pickerTopics().length > 0;
 }
 
 /** Hoya's topic line once per topic per learner per app session (keyed by profile). */
