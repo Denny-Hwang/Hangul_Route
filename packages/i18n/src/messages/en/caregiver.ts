@@ -34,7 +34,7 @@ export const caregiver = {
       restoreCardsBack: 'Your cards come back with your rescue code.',
       spacesNoClass: 'Not in a class yet. Got a code from a teacher or your family?',
       /** A learner already in three classes tries to join another. */
-      joinCodeFull: "You're already in three classes. Leave one in Settings first.",
+      joinCodeFull: "You're already in three classes. Leave one under Classes & family in your Profile first.",
       /** A code that is not a class code was entered. */
       joinCodeNotForLearners: "That code isn't for joining as a learner. Ask for a class code.",
       promoHint: 'Have a promo or referral code? Enter it on the web console.',

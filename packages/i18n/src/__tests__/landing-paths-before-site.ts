@@ -2,6 +2,10 @@
  * Every leaf path of `landing` (en) on main before F-SITE-002 PR S-3, frozen. Until S-6 removes the old landing,
  * site-layered-messages.test.ts checks that each one still resolves, so no page of the live site loses a string.
  * S-6 deletes this file with the keys it removes.
+ *
+ * Generated from `leafPaths(getMessages('en').landing)` on main at 463600fd (2026-10-11): 226 leaves, the last added
+ * being `legal.privacy.sections.collect.bullets.progressWho` (F-REPORT-001 RP-0b). A landing key added on main
+ * after that commit belongs to its own spec and is not listed here.
  */
 export const LANDING_PATHS_BEFORE_SITE: readonly string[] = [
   'meta.title',
@@ -160,6 +164,7 @@ export const LANDING_PATHS_BEFORE_SITE: readonly string[] = [
   'legal.privacy.sections.collect.heading',
   'legal.privacy.sections.collect.bullets.profile',
   'legal.privacy.sections.collect.bullets.progress',
+  'legal.privacy.sections.collect.bullets.progressWho',
   'legal.privacy.sections.collect.bullets.contact',
   'legal.privacy.sections.collect.bullets.device',
   'legal.privacy.sections.never.heading',

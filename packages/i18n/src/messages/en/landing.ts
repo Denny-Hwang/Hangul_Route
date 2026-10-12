@@ -72,9 +72,9 @@ export const landing = {
     mark: 'HR',
   },
   /**
-   * The site header (F-SITE-002 §3.2). `learners`, `parents`, `teachers`, `signIn`, `start`, `skip` and `current`
-   * are the new header's; `playNow`, `cards`, `games` and `dashboard` are the old landing header's until S-6.
-   * `current` is the visually hidden suffix of the current page's link.
+   * The site header (F-SITE-002 §3.2). `learners`, `parents`, `teachers`, `signIn`, `start` and `skip` are the new
+   * header's; `playNow`, `cards`, `games` and `dashboard` are the old landing header's until S-6. The current page's
+   * link carries `aria-current="page"` alone (no hidden suffix: screen readers announce it).
    */
   nav: {
     label: 'Main',
@@ -88,11 +88,11 @@ export const landing = {
     signIn: 'Sign in',
     start: 'Start learning',
     skip: 'Skip to content',
-    current: '(current page)',
   },
   /**
    * The layered home `/` (F-SITE-002 §3.3, appendix B.1). `hero.title` is the tagline; the taught letter in Hoya's
-   * bubble is passed in. `how.routeBody` replaces step 3's line only while the `learningRoute` claim is on.
+   * bubble is passed in with its romanization (CLAUDE.md §1; the page passes the letter's teaching sound value, e.g.
+   * `g/k` for the first letter). `how.routeBody` replaces step 3's line only while the `learningRoute` claim is on.
    * The promises are titles only; their explanations live on the persona pages.
    */
   home: {
@@ -103,7 +103,7 @@ export const landing = {
       grownUps: 'Parent or teacher? Find your page',
       /** Hedged like `persona.learners.faq.offline`: offline opening on iOS 14 is a known open issue (OD-15). */
       facts: 'Runs in your browser · Nothing to install · The app works offline on most devices after your first visit',
-      bubble: (letter: string) => `Annyeong! Let's meet ${letter}.`,
+      bubble: (letter: string, romanization: string) => `Annyeong! Let's meet ${letter} (${romanization}).`,
     },
     who: {
       title: 'Who is it for?',
@@ -145,8 +145,10 @@ export const landing = {
     },
   },
   /**
-   * The only cost words on the site (F-SITE-002 §3.9, OD-7): never a price, never a term. The cost line is the free
-   * line, then the `paid` line the `paidPlans` claim picks. The free plan is all of Stage 1 (F-ENT-003 OD-1), so
+   * The only cost words on the site (F-SITE-002 §3.9, OD-7): never a price, never a term. The home's cost line is the
+   * free line, then the `paid` line the `paidPlans` claim picks. A persona page's Plans block is the free line, the
+   * `paid.coming` line only while plans are coming, then `managedInApp`, so the host is named once (§3.5). The free
+   * plan is all of Stage 1 (F-ENT-003 OD-1), so
    * `free.stage1` is the same in every state and says nothing about paid plans. Plans bought on the web renew
    * yearly (BY-1): the signed-in billing page states the term (the Terms will too, S-7), and no site line names a
    * term or calls a plan one-time.
@@ -178,7 +180,11 @@ export const landing = {
         bullets: { read: 'Read letters and syllables', listen: 'Listen and match sounds', write: 'Write letters by tracing them' },
       },
       quest: {
-        title: 'How a quest works',
+        /**
+         * "Most": `quest:stage1-nature-q1` and `quest:stage1-crafts-q1` have no Discover and Check steps until
+         * F-QUEST-002 Q-8 adds them; Q-8 may then drop the word.
+         */
+        title: 'How most quests work',
         bullets: {
           discover: 'Discover: see and hear a new letter.',
           play: 'Play: short mini-games that use it.',
@@ -229,12 +235,15 @@ export const landing = {
         bullets: {
           ads: 'No ads, and no data sold.',
           /**
-           * Content and safety review in S-3: "Most" matches the Privacy Policy (usage events such as a finished quest
-           * are sent without sign-in); a grown-up's sign-in syncs progress so it can be restored (Privacy Policy,
-           * security); a class or family join shares only a summary (F-SPACE-001 §3.5).
+           * Content and safety review in S-3 (review 3), against the code: every learner profile (nickname, level,
+           * avatar) and its progress snapshot syncs to the API on start and after each write, with no sign-in
+           * (F-SYNC-002, `sync-store.ts`), and a Rescue Code is minted after the first cloud save (F-RESTORE-001). A
+           * join shows the space the name the learner joins with (`caregiver.join.confirm.seeYouAs`) and their
+           * progress; family caregivers can also recover the full snapshot (`can.ts` `snapshot.read`, the Privacy
+           * Policy's `progressWho`).
            */
-          localFirst:
-            'Most learning data stays on the device. When a grown-up signs in, progress is saved to our servers so it can be restored. When a learner joins a class or family with a code, only a short progress summary is shared with that space.',
+          backup:
+            "Each learner's nickname and progress are kept on the device and backed up to our servers, so they can be restored with a Rescue Code. When a learner joins a class or family with a code, that space sees the name they join with and their progress. A family's grown-ups can also restore their progress.",
           gate: 'A grown-up gate guards anything that costs money or deletes data.',
           siblings: 'Siblings can share a device. Each learner keeps their own stars and cards.',
         },
@@ -249,11 +258,15 @@ export const landing = {
         /** Names the product as the app's billing page does (`console.billing.planTitle.family_lifetime`). */
         browse: 'With the Family Plan, browse every lesson exactly as your learner sees it.',
       },
-      /** "What can I see?" is answered by `follow.body`, plus `follow.reports` while its claim is on. */
+      /** "What can I see?" answers with `whatSee.a`, or `whatSee.reports` while the `parentReports` claim is on. */
       faq: {
         account: { q: 'Does my learner need an account?', a: 'No. Learners never need an email or a password.' },
         learnAlong: { q: 'Can I learn alongside them?', a: 'Yes. Learning Korean yourself? Play the same quests.' },
-        whatSee: { q: 'What can I see?' },
+        whatSee: {
+          q: 'What can I see?',
+          a: "Each learner's week, in your family space after you sign in. Learners join it with your family code.",
+          reports: "Each learner's week and reports, in your family space after you sign in. Learners join it with your family code.",
+        },
       },
     },
     teachers: {

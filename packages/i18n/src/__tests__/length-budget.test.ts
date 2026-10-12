@@ -233,6 +233,9 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
         24,
         ['landing.nav.start', 'landing.home.hero.start', 'landing.persona.parents.signIn', 'landing.persona.teachers.signIn', 'landing.persona.teachers.tryIt'],
       ],
+      // Text links that are not `cta` leaves, so the general CTA budget skips them (S-3 review 3).
+      ['text link', 36, ['landing.home.hero.grownUps', 'landing.persona.parents.learn.link']],
+      ['skip link and 404 action', 24, ['landing.nav.skip', 'landing.notFound.home', 'landing.notFound.start']],
     ];
     for (const locale of LOCALES) {
       for (const [label, max, paths] of SITE_BUDGETS) {

@@ -36,10 +36,14 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
     expect(l.nav.signIn).toBe('Sign in');
     expect(l.nav.start).toBe('Start learning');
     expect(l.nav.skip).toBe('Skip to content');
-    expect(l.nav.current).toBe('(current page)');
   });
 
-  it('hero: the taught letter is passed in', () => {
+  it('no visually hidden "(current page)" suffix: aria-current="page" alone names the current link (S-3 review 3)', () => {
+    // Every major screen reader announces aria-current, so a hidden suffix would be read twice.
+    expect(lookup(l, 'nav.current')).toBeUndefined();
+  });
+
+  it('hero: the taught letter and its romanization are passed in', () => {
     expect(l.home.hero.title).toBe('Learn Hangul from zero, at any age.');
     expect(l.home.hero.lead).toBe(
       'Short, playful quests teach you to read, hear and write the Korean alphabet, with Hoya the tiger as your guide.',
@@ -47,7 +51,13 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
     expect(l.home.hero.start).toBe('Start learning');
     expect(l.home.hero.grownUps).toBe('Parent or teacher? Find your page');
     expect(l.home.hero.facts).toBe('Runs in your browser · Nothing to install · The app works offline on most devices after your first visit');
-    expect(l.home.hero.bubble('x')).toBe("Annyeong! Let's meet x.");
+    expect(l.home.hero.bubble('x', 'g/k')).toBe("Annyeong! Let's meet x (g/k).");
+  });
+
+  it("the taught letter in Hoya's bubble keeps its romanization in the sentence (CLAUDE.md §1, F-SITE-002 §6)", () => {
+    expect(l.home.hero.bubble.length).toBe(2);
+    const sentence = l.home.hero.bubble('LETTER', 'ROMANIZATION');
+    expect(sentence).toContain('LETTER (ROMANIZATION)');
   });
 
   it('the hero title is the tagline (F-SITE-002 §5), so the footer and the hero cannot drift', () => {
@@ -121,6 +131,34 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
     expect(l.plans.paid.inApp).not.toMatch(/coming/);
   });
 
+  /**
+   * How the pages compose the cost words (F-SITE-002 §3.3 block 5, §3.5 and §3.6 Plans). Home: one paragraph, the
+   * free line then the paid line. Persona pages: the free line, the paid line only while plans are coming (once they
+   * are on sale, `managedInApp` already says where), then `managedInApp`. S-4b and S-5 pin the rendered output.
+   */
+  const homeCost = (paidPlans: 'coming' | 'inApp'): string => `${l.plans.free.stage1} ${l.plans.paid[paidPlans]}`;
+  const personaPlans = (paidPlans: 'coming' | 'inApp'): string[] => [
+    paidPlans === 'coming' ? `${l.plans.free.stage1} ${l.plans.paid.coming}` : l.plans.free.stage1,
+    l.plans.managedInApp,
+  ];
+
+  it('the cost line on the home, in both paidPlans states', () => {
+    expect(homeCost('coming')).toBe('Stage 1 is free. More stages are coming, with plans for families and classes.');
+    expect(homeCost('inApp')).toBe('Stage 1 is free. Plans for families and classes are at app.hangulroute.com.');
+  });
+
+  it('the Plans block of a persona page, in both paidPlans states, names the app host once (rule 3: no repeats)', () => {
+    expect(personaPlans('coming')).toEqual([
+      'Stage 1 is free. More stages are coming, with plans for families and classes.',
+      'Plans and billing are managed at app.hangulroute.com after you sign in.',
+    ]);
+    expect(personaPlans('inApp')).toEqual(['Stage 1 is free.', 'Plans and billing are managed at app.hangulroute.com after you sign in.']);
+    for (const state of ['coming', 'inApp'] as const) {
+      expect(personaPlans(state).join(' ').match(/app\.hangulroute\.com/g), state).toHaveLength(1);
+      expect(homeCost(state).match(/app\.hangulroute\.com/g)?.length ?? 0, state).toBeLessThanOrEqual(1);
+    }
+  });
+
   it('launch news: the form itself keeps landing.waitlist', () => {
     expect(l.home.news).toEqual({ title: 'Get the launch news', body: "Leave your email and we'll send you the launch news. Nothing else." });
   });
@@ -141,7 +179,7 @@ describe('B.2 learners', () => {
 
   it('how a quest works, with the Hoya line and the mini-games fold', () => {
     expect(p().quest).toEqual({
-      title: 'How a quest works',
+      title: 'How most quests work',
       bullets: {
         discover: 'Discover: see and hear a new letter.',
         play: 'Play: short mini-games that use it.',
@@ -150,6 +188,11 @@ describe('B.2 learners', () => {
       hoya: 'Hoya the tiger guides every quest and never says “wrong.”',
       gamesFold: 'See the mini-games',
     });
+  });
+
+  it('the quest heading says "most": two Stage 1 quests have no Discover and Check steps until F-QUEST-002 Q-8', () => {
+    // quest:stage1-nature-q1 and quest:stage1-crafts-q1 still run intro, present, practice, apply, reward.
+    expect(p().quest.title).toMatch(/\bmost quests\b/);
   });
 
   it('collect Korean culture: the fold counts the cards with plural forms', () => {
@@ -195,6 +238,15 @@ describe('B.2 learners', () => {
     }
     expect(app.console.writeOnBoard).not.toMatch(/Settings/);
   });
+
+  it('the learner app names the same place when a learner already has three classes (no "Settings" on that path)', () => {
+    const app = getMessages('en');
+    const full = app.caregiver.audience.shared.joinCodeFull;
+    expect(full).toBe("You're already in three classes. Leave one under Classes & family in your Profile first.");
+    expect(full).toContain(app.caregiver.spaces.title);
+    expect(full).toContain(app.learner.home.profileLabel);
+    expect(full).not.toMatch(/Settings/);
+  });
 });
 
 describe('B.3 parents', () => {
@@ -216,35 +268,44 @@ describe('B.3 parents', () => {
 
   it('safe by design: four bullets in order', () => {
     expect(p().safe.title).toBe('Safe by design');
-    expect(Object.keys(p().safe.bullets)).toEqual(['ads', 'localFirst', 'gate', 'siblings']);
+    expect(Object.keys(p().safe.bullets)).toEqual(['ads', 'backup', 'gate', 'siblings']);
     expect(p().safe.bullets.ads).toBe('No ads, and no data sold.');
     expect(p().safe.bullets.gate).toBe('A grown-up gate guards anything that costs money or deletes data.');
     expect(p().safe.bullets.siblings).toBe('Siblings can share a device. Each learner keeps their own stars and cards.');
   });
 
-  it('pins the local-first sentence that stays true for usage events, sign-in sync and class and family joins', () => {
-    const sentence = p().safe.bullets.localFirst;
-    expect(sentence).toBe(
-      'Most learning data stays on the device. When a grown-up signs in, progress is saved to our servers so it can be restored. When a learner joins a class or family with a code, only a short progress summary is shared with that space.',
+  it('pins the backup sentence: what leaves the device, where it goes and who sees it (S-3 review 3)', () => {
+    expect(p().safe.bullets.backup).toBe(
+      "Each learner's nickname and progress are kept on the device and backed up to our servers, so they can be restored with a Rescue Code. When a learner joins a class or family with a code, that space sees the name they join with and their progress. A family's grown-ups can also restore their progress.",
     );
-    // Today's "until you sign in" is not true for a learner who joins a class with a code (F-SPACE-001 §3.5).
-    expect(sentence).not.toMatch(/until you sign in/i);
-    expect(sentence).toMatch(/joins a class or family with a code/);
-    expect(sentence).toMatch(/only a short progress summary/);
   });
 
-  it('the local-first sentence says what the Privacy Policy says, so the two cannot drift', () => {
-    const sentence = p().safe.bullets.localFirst;
-    const policy = l.legal.privacy.sections;
-    const policyText = JSON.stringify(policy);
-    // Usage events (a finished quest, an unlocked card) are sent before any sign-in, so never "all" and never
-    // "stays until": the policy's own hedge is "Most learning data stays on the device".
-    expect(sentence.startsWith('Most learning data stays on the device.')).toBe(true);
-    expect(policyText).toContain('Most learning data stays on the device');
-    expect(sentence).not.toMatch(/\ball learning data\b|stays on the device until/i);
-    // A grown-up's sign-in syncs progress so it can be restored; the policy says the same.
-    expect(sentence).toMatch(/signs in, progress is saved to our servers so it can be restored/);
-    expect(policyText).toMatch(/progress syncs to our servers \(Cloudflare\) so it can be restored/);
+  it('the backup sentence says what the app does: every learner syncs, no sign-in needed (F-SYNC-002, F-RESTORE-001)', () => {
+    const sentence = p().safe.bullets.backup;
+    // The app backs up every learner profile (nickname, level, avatar, progress) on start and after each write,
+    // and mints a Rescue Code after the first cloud save; nothing waits for a grown-up to sign in.
+    expect(sentence).toMatch(/nickname and progress are kept on the device and backed up to our servers/);
+    expect(sentence.toLowerCase()).toContain(getMessages('en').caregiver.backup.save.detail.toLowerCase());
+    // The wordings this sentence replaced: each said data stays local until a sign-in, which the app does not do.
+    expect(sentence).not.toMatch(/until you sign in|signs? in|stays on the device|\ball learning data\b|\bmost learning data\b/i);
+  });
+
+  it('the backup sentence agrees with the Privacy Policy on who sees progress (legal.privacy...progressWho)', () => {
+    const sentence = p().safe.bullets.backup;
+    const who = l.legal.privacy.sections.collect.bullets.progressWho;
+    // A family's caregivers can recover the full saved progress; a class sees progress, never "only a summary".
+    expect(who).toMatch(/family caregivers, who can also recover the full saved progress/);
+    expect(sentence).toMatch(/A family's grown-ups can also restore their progress\./);
+    expect(who).toMatch(/the teacher of a class the learner joined/);
+    expect(sentence).toMatch(/joins a class or family with a code, that space sees the name they join with and their progress/);
+    expect(sentence).not.toMatch(/only a (short )?(progress )?summary/i);
+  });
+
+  it('the name a space sees is the one the join screen shows (caregiver.join.confirm.seeYouAs)', () => {
+    const seeYouAs = getMessages('en').caregiver.join.confirm.seeYouAs;
+    expect(seeYouAs.teacher).toMatch(/will see you as/);
+    expect(seeYouAs.family).toMatch(/will see you as/);
+    expect(p().safe.bullets.backup).toMatch(/the name they join with/);
   });
 
   it('follow along: the base line and one line per claim', () => {
@@ -264,11 +325,25 @@ describe('B.3 parents', () => {
     expect(p().follow.browse).toContain(`the ${app.console.billing.planTitle.family_lifetime}`);
   });
 
-  it('three folded questions; "What can I see?" is answered by the follow-along lines', () => {
+  it('three folded questions; "What can I see?" has its own answer and a report variant', () => {
     expect(Object.keys(p().faq)).toEqual(['account', 'learnAlong', 'whatSee']);
     expect(p().faq.account).toEqual({ q: 'Does my learner need an account?', a: 'No. Learners never need an email or a password.' });
     expect(p().faq.learnAlong).toEqual({ q: 'Can I learn alongside them?', a: 'Yes. Learning Korean yourself? Play the same quests.' });
-    expect(p().faq.whatSee).toEqual({ q: 'What can I see?' });
+    expect(p().faq.whatSee).toEqual({
+      q: 'What can I see?',
+      a: "Each learner's week, in your family space after you sign in. Learners join it with your family code.",
+      reports: "Each learner's week and reports, in your family space after you sign in. Learners join it with your family code.",
+    });
+  });
+
+  it('"What can I see?" never repeats a line the page already shows (§3.1 rule 3)', () => {
+    const { whatSee } = p().faq;
+    for (const line of [p().follow.body, p().follow.reports]) {
+      expect(whatSee.a).not.toContain(line);
+      expect(whatSee.reports).not.toContain(line);
+    }
+    // The report variant says "reports" and nothing else changes, so it shows only while parentReports is on.
+    expect(whatSee.reports.replace(' and reports', '')).toBe(whatSee.a);
   });
 
   it('keeps the pinned sentence that moves to /parents', () => {
@@ -482,8 +557,10 @@ describe('Learning Route spelling in every landing value', () => {
 });
 
 describe('no key of the current landing is removed before S-6', () => {
-  it('the frozen list holds every leaf of the landing tree as it was before S-3', () => {
-    expect(LANDING_PATHS_BEFORE_SITE.length).toBe(225);
+  it('the frozen list holds every leaf of the landing tree as it was before S-3, once each', () => {
+    expect(LANDING_PATHS_BEFORE_SITE.length).toBe(226);
+    expect(new Set(LANDING_PATHS_BEFORE_SITE).size).toBe(LANDING_PATHS_BEFORE_SITE.length);
+    expect(LANDING_PATHS_BEFORE_SITE).toContain('legal.privacy.sections.collect.bullets.progressWho');
   });
 
   it.each(LANDING_PATHS_BEFORE_SITE)('landing.%s is still there', (path) => {
