@@ -121,7 +121,7 @@ export const TRAVEL_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
   ],
 
   // blue booklet with a globe emblem (a meridian and the equator), no letters:
-  // no ring over a bar, which would read as the syllable 으 (C10)
+  // no ring over a bar, which would read as the syllable eu (a circle over a bar, C10)
   'travel-passport': [
     groundShadow(52, 87, 26),
     rect(31, 17, 44, 68, 5, { f: 'surface.paper', ...INK }),
