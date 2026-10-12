@@ -6,6 +6,19 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { mockFamily } from '@/data/mock-family';
 import { siteLocaleParams } from '@/lib/site-locales';
+// The pages are imported here, once, not inside each test: a page load pulls in the whole landing graph (i18n
+// dictionaries, content schema, design-system art), and inside a test body it counted against the 5 s test
+// timeout, which a busy CI runner came close to. Imported at the top, they load while the file is collected.
+import * as childPage from '../(console)/parent/[childId]/page';
+import * as parentPage from '../(console)/parent/page';
+import * as enAboutPage from '../(en)/about/page';
+import * as enLandingPage from '../(en)/page';
+import * as enPrivacyPage from '../(en)/privacy/page';
+import * as enTermsPage from '../(en)/terms/page';
+import * as locAboutPage from '../(loc)/[locale]/about/page';
+import * as locLandingPage from '../(loc)/[locale]/page';
+import * as locPrivacyPage from '../(loc)/[locale]/privacy/page';
+import * as locTermsPage from '../(loc)/[locale]/terms/page';
 
 /**
  * What a visitor reads about where learning data lives, on the pages that are live today: the site
@@ -41,38 +54,41 @@ function blocksOf(html: string): string {
     .join('\n');
 }
 
-type Params = Readonly<Record<string, string>>;
+/** A page module, typed by the params its route gives it. */
+type PageModule<P> = { default: (props: { params: P }) => JSX.Element };
 
-const SITE_PAGES: ReadonlyArray<readonly [string, string, Params?]> = [
-  ['/', '../(en)/page'],
-  ['/about', '../(en)/about/page'],
-  ['/privacy', '../(en)/privacy/page'],
-  ['/terms', '../(en)/terms/page'],
-  ...siteLocaleParams().flatMap(({ locale }) =>
-    (
-      [
-        ['', '../(loc)/[locale]/page'],
-        ['/about', '../(loc)/[locale]/about/page'],
-        ['/privacy', '../(loc)/[locale]/privacy/page'],
-        ['/terms', '../(loc)/[locale]/terms/page'],
-      ] as const
-    ).map(([suffix, path]) => [`/${locale}${suffix}`, path, { locale }] as const),
-  ),
-];
-
-const PARENT_PAGES: ReadonlyArray<readonly [string, string, Params?]> = [
-  ['/parent', '../(console)/parent/page'],
-  ...mockFamily().profiles.map((p) => [`/parent/${p.slug}`, '../(console)/parent/[childId]/page', { childId: p.slug }] as const),
-];
-
-async function html(path: string, params: Params = {}): Promise<string> {
-  const mod = (await import(path)) as { default: (props: { params: Params }) => JSX.Element };
-  const Page = mod.default;
+function html<P>(page: PageModule<P>, params: P): string {
+  const Page = page.default;
   return renderToStaticMarkup(<Page params={params} />);
 }
 
-async function render(path: string, params: Params = {}): Promise<string> {
-  return textOf(await html(path, params));
+/** A page bound to its params, so a list can hold pages whose params differ and the type checker still pairs them. */
+const at =
+  <P,>(page: PageModule<P>, params: P) =>
+  (): string =>
+    html(page, params);
+
+const SITE_PAGES: ReadonlyArray<readonly [string, () => string]> = [
+  ['/', at(enLandingPage, {})],
+  ['/about', at(enAboutPage, {})],
+  ['/privacy', at(enPrivacyPage, {})],
+  ['/terms', at(enTermsPage, {})],
+  ...siteLocaleParams().flatMap(({ locale }) => [
+    [`/${locale}`, at(locLandingPage, { locale })] as const,
+    [`/${locale}/about`, at(locAboutPage, { locale })] as const,
+    [`/${locale}/privacy`, at(locPrivacyPage, { locale })] as const,
+    [`/${locale}/terms`, at(locTermsPage, { locale })] as const,
+  ]),
+];
+
+const PARENT_PAGES: ReadonlyArray<readonly [string, () => string]> = [
+  ['/parent', at(parentPage, {})],
+  ...mockFamily().profiles.map((p) => [`/parent/${p.slug}`, at(childPage, { childId: p.slug })] as const),
+];
+
+/** The text of a page that takes no params. */
+function render(page: PageModule<Record<string, never>>): string {
+  return textOf(html(page, {}));
 }
 
 const BACKUP = getMessages('en').landing.persona.parents.safe.bullets.backup;
@@ -84,9 +100,9 @@ describe('no live page promises that data stays on the device until someone sign
     expect(PARENT_PAGES.length).toBeGreaterThan(1);
   });
 
-  for (const [name, path, params] of [...SITE_PAGES, ...PARENT_PAGES]) {
-    it(name, async () => {
-      expect(retiredDataPromises(blocksOf(await html(path, params)))).toEqual([]);
+  for (const [name, markup] of [...SITE_PAGES, ...PARENT_PAGES]) {
+    it(name, () => {
+      expect(retiredDataPromises(blocksOf(markup()))).toEqual([]);
     });
   }
 
@@ -104,16 +120,16 @@ describe('the pages say what the app does, in the backup sentence', () => {
     );
   });
 
-  it('About: the promise is the backup', async () => {
-    expect(await render('../(en)/about/page')).toContain(BACKUP_FIRST);
+  it('About: the promise is the backup', () => {
+    expect(render(enAboutPage)).toContain(BACKUP_FIRST);
   });
 
-  it('home: says progress is backed up', async () => {
-    expect(await render('../(en)/page')).toMatch(/backed up/);
+  it('home: says progress is backed up', () => {
+    expect(render(enLandingPage)).toMatch(/backed up/);
   });
 
-  it('Privacy Policy: the short version and "Where your data lives" say every learner is backed up with no sign-in', async () => {
-    const privacy = await render('../(en)/privacy/page');
+  it('Privacy Policy: the short version and "Where your data lives" say every learner is backed up with no sign-in', () => {
+    const privacy = render(enPrivacyPage);
     const short = /The short version(.*?)Who creates the account/.exec(privacy)?.[1] ?? '';
     expect(short).toContain(BACKUP_FIRST);
     const where = /Where your data lives(.*?)Payments and subscriptions/.exec(privacy)?.[1] ?? '';
@@ -127,18 +143,18 @@ describe('the pages say what the app does, in the backup sentence', () => {
     expect(where).toContain('Data in transit is encrypted (HTTPS), and at rest it is access-controlled.');
   });
 
-  it('Privacy Policy: stays a draft for counsel, with the new effective date', async () => {
-    const privacy = await render('../(en)/privacy/page');
+  it('Privacy Policy: stays a draft for counsel, with the new effective date', () => {
+    const privacy = render(enPrivacyPage);
     expect(privacy).toContain('pending review by qualified legal counsel');
     expect(privacy).toContain('Effective October 12, 2026');
   });
 
-  it('/parent demo: the privacy list leads with the backup sentence', async () => {
-    expect(await render('../(console)/parent/page')).toContain(BACKUP);
+  it('/parent demo: the privacy list leads with the backup sentence', () => {
+    expect(render(parentPage)).toContain(BACKUP);
   });
 
-  it('old home: the trust strip says "Child safety first" (OD-4) and makes no claim about which personal data we hold', async () => {
-    const home = await render('../(en)/page');
+  it('old home: the trust strip says "Child safety first" (OD-4) and makes no claim about which personal data we hold', () => {
+    const home = render(enLandingPage);
     expect(home).toContain('Child safety first');
     expect(home).not.toMatch(/COPPA-compliant|only PII/);
   });
