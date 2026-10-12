@@ -203,6 +203,71 @@ function contract(name: string, make: () => Db): void {
       expect(cleared.seats).toBeNull();
     });
 
+    it('entitlementByProviderRef finds the row a Stripe subscription id points at (F-BILL-002 §5.5)', async () => {
+      const now = new Date(T);
+      expect(await db.entitlementByProviderRef('stripe', 'sub_1')).toBeNull();
+      const lic = await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:c', planKey: 'group_license', status: 'active', provider: 'stripe', providerRef: 'sub_1', customerRef: 'cus_1' }, now);
+      await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:s', planKey: 'school_seat', status: 'active', provider: 'manual', providerRef: 'sub_1' }, now);
+      expect(await db.entitlementByProviderRef('stripe', 'sub_1')).toEqual(lic);
+      expect((await db.entitlementByProviderRef('manual', 'sub_1'))?.subjectId).toBe('space:s');
+      expect(await db.entitlementByProviderRef('stripe', 'sub_2')).toBeNull();
+      // Two rows on one subscription (a re-subscribe): the most recently updated wins.
+      const later = await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:c2', planKey: 'group_license', status: 'active', provider: 'stripe', providerRef: 'sub_1' }, new Date('2026-10-08T00:00:00.000Z'));
+      expect(await db.entitlementByProviderRef('stripe', 'sub_1')).toEqual(later);
+    });
+
+    it('billing events: insert or keep per (provider, ref, kind), fill a missing paymentRef, read newest first (F-BILL-002 §5.5)', async () => {
+      const now = new Date(T);
+      const base = { subjectKind: 'space' as const, subjectId: 'space:c', planKey: 'group_license' as const, amountCents: 15300, currency: 'usd', provider: 'stripe' as const, livemode: false };
+      const first = await db.recordBillingEvent({ ...base, kind: 'purchase', providerRef: 'in_1', paymentRef: null, occurredAt: '2026-10-01T00:00:00.000Z' }, now);
+      expect(first).toEqual({ ...base, id: first.id, kind: 'purchase', providerRef: 'in_1', paymentRef: null, occurredAt: '2026-10-01T00:00:00.000Z', createdAt: T });
+      expect(first.id).toMatch(/^bev:[a-z0-9-]+$/);
+
+      // A webhook retry keeps the stored row (same id, same amount) and only fills the missing paymentRef.
+      const retry = await db.recordBillingEvent({ ...base, kind: 'purchase', providerRef: 'in_1', paymentRef: 'pi_1', amountCents: 1, occurredAt: '2026-10-02T00:00:00.000Z' }, new Date('2026-10-12T00:00:00.000Z'));
+      expect(retry).toEqual({ ...first, paymentRef: 'pi_1' });
+      // ... and never overwrites one that is already there.
+      const again = await db.recordBillingEvent({ ...base, kind: 'purchase', providerRef: 'in_1', paymentRef: 'pi_other', occurredAt: '2026-10-01T00:00:00.000Z' }, now);
+      expect(again).toEqual({ ...first, paymentRef: 'pi_1' });
+      expect(await db.recordBillingEvent({ ...base, kind: 'purchase', providerRef: 'in_1', paymentRef: null, occurredAt: '2026-10-01T00:00:00.000Z' }, now)).toEqual({ ...first, paymentRef: 'pi_1' });
+
+      // The same invoice can hold another kind (a failed attempt before the payment).
+      const failed = await db.recordBillingEvent({ ...base, kind: 'failed', providerRef: 'in_1', paymentRef: null, occurredAt: '2026-09-30T00:00:00.000Z' }, now);
+      expect(failed.id).not.toBe(first.id);
+      const renewal = await db.recordBillingEvent({ ...base, kind: 'renewal', providerRef: 'in_2', paymentRef: 'pi_2', livemode: true, occurredAt: '2027-10-01T00:00:00.000Z' }, now);
+      expect(renewal.livemode).toBe(true);
+      const refund = await db.recordBillingEvent({ ...base, kind: 'refund', providerRef: 'ch_2:refund:500', paymentRef: null, amountCents: 500, occurredAt: '2027-10-02T00:00:00.000Z' }, now);
+      await db.recordBillingEvent({ ...base, subjectId: 'space:other', kind: 'purchase', providerRef: 'in_9', paymentRef: null, occurredAt: '2026-10-05T00:00:00.000Z' }, now);
+      await db.recordBillingEvent({ ...base, subjectKind: 'account', kind: 'purchase', providerRef: 'in_8', paymentRef: null, occurredAt: '2026-10-05T00:00:00.000Z' }, now);
+
+      expect((await db.billingEventsFor('space', 'space:c', 50)).map((e) => e.id)).toEqual([refund.id, renewal.id, first.id, failed.id]);
+      expect((await db.billingEventsFor('space', 'space:c', 2)).map((e) => e.id)).toEqual([refund.id, renewal.id]);
+      expect((await db.billingEventsFor('account', 'space:c', 50)).map((e) => e.providerRef)).toEqual(['in_8']);
+      expect(await db.billingEventsFor('space', 'space:none', 50)).toEqual([]);
+
+      expect(await db.billingEventById(renewal.id)).toEqual(renewal);
+      expect(await db.billingEventById('bev:missing')).toBeNull();
+
+      expect(await db.billingEventByRef('stripe', 'in_1', 'failed')).toEqual(failed);
+      expect(await db.billingEventByRef('stripe', 'in_1', 'purchase')).toEqual({ ...first, paymentRef: 'pi_1' });
+      // Without a kind: the newest row on that ref.
+      expect((await db.billingEventByRef('stripe', 'in_1'))?.id).toBe(first.id);
+      expect(await db.billingEventByRef('stripe', 'in_1', 'refund')).toBeNull();
+      expect(await db.billingEventByRef('manual', 'in_1')).toBeNull();
+
+      expect(await db.billingEventByPaymentRef('pi_2')).toEqual(renewal);
+      expect((await db.billingEventByPaymentRef('pi_1'))?.id).toBe(first.id);
+      expect(await db.billingEventByPaymentRef('pi_none')).toBeNull();
+
+      // Reads are copies.
+      const read = await db.billingEventById(first.id);
+      if (read) read.amountCents = 0;
+      expect((await db.billingEventById(first.id))?.amountCents).toBe(15300);
+
+      await db.reset();
+      expect(await db.billingEventsFor('space', 'space:c', 50)).toEqual([]);
+    });
+
     it('waitlist: addWaitlist is idempotent per address, keeps the first row and an unsubscribe, and reset wipes it', async () => {
       expect(await db.waitlistEntries()).toEqual([]);
       await db.addWaitlist({ email: 'a@example.com', createdAt: T, source: 'landing', locale: 'en', consentTextVersion: 'v1' });

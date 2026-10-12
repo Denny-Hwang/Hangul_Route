@@ -1,8 +1,9 @@
-import { TRANSFER_COOLING_OFF_MS, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type Space, type TransferBlockReason, type TransferEndReason, type TransferSlot } from '@hangul-route/content-schema';
+import { TRANSFER_COOLING_OFF_MS, type BillingEvent, type BillingEventKind, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type Space, type TransferBlockReason, type TransferEndReason, type TransferSlot } from '@hangul-route/content-schema';
 import { id, type Account, type Learner, type LearnerDevice, type SnapshotRecord } from '../store';
 import {
   learnerRateKeys,
   mergeEntitlement,
+  type BillingEventInput,
   type EntitlementMerge,
   type ConsentResetReason,
   type Db,
@@ -121,6 +122,22 @@ const toEntitlement = (r: Row): Entitlement => ({
 });
 
 const bool = (v: unknown): boolean => v === 1 || v === true || v === '1';
+/** A `billing_events` row (migration 0007). */
+const toBillingEvent = (r: Row): BillingEvent => ({
+  id: str(r.id),
+  subjectKind: str(r.subject_kind) as BillingEvent['subjectKind'],
+  subjectId: str(r.subject_id),
+  planKey: str(r.plan_key) as BillingEvent['planKey'],
+  kind: str(r.kind) as BillingEvent['kind'],
+  amountCents: num(r.amount_cents),
+  currency: str(r.currency),
+  provider: str(r.provider) as BillingEvent['provider'],
+  providerRef: str(r.provider_ref),
+  paymentRef: nstr(r.payment_ref),
+  livemode: bool(r.livemode),
+  occurredAt: str(r.occurred_at),
+  createdAt: str(r.created_at),
+});
 const toTransfer = (r: Row): StoredTransfer => ({
   id: str(r.id),
   learnerId: str(r.learner_id),
@@ -234,6 +251,7 @@ const IN_CHUNK = 90;
 const TRANSFER_TABLES = ['transfer_events', 'transfer_requests', 'learner_transfer_prefs', 'rate_hits'] as const;
 const RESET_TABLES = [
   ...TRANSFER_TABLES,
+  'billing_events',
   'waitlist',
   'entitlements',
   'relink_requests',
@@ -448,6 +466,41 @@ export class D1Db implements Db {
     }
     // Stripe retries a failed delivery, and the retry merges onto whatever is stored then.
     throw new Error('entitlement_write_conflict');
+  }
+
+  // ---- billing history (F-BILL-002 section 5.5, migration 0007) ----
+
+  async recordBillingEvent(input: BillingEventInput, now: Date): Promise<BillingEvent> {
+    const key = [input.provider, input.providerRef, input.kind];
+    // One transaction: insert-or-keep on the unique key, then fill a missing payment_ref (never overwrite one).
+    await this.d1.batch([
+      this.d1
+        .prepare(
+          'INSERT INTO billing_events (id, subject_kind, subject_id, plan_key, kind, amount_cents, currency, provider, provider_ref, payment_ref, livemode, occurred_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(provider, provider_ref, kind) DO NOTHING',
+        )
+        .bind(id('bev'), input.subjectKind, input.subjectId, input.planKey, input.kind, input.amountCents, input.currency, input.provider, input.providerRef, input.paymentRef, input.livemode ? 1 : 0, input.occurredAt, now.toISOString()),
+      this.d1.prepare('UPDATE billing_events SET payment_ref = ? WHERE provider = ? AND provider_ref = ? AND kind = ? AND payment_ref IS NULL AND ? IS NOT NULL').bind(input.paymentRef, ...key, input.paymentRef),
+    ]);
+    const stored = await this.one('SELECT * FROM billing_events WHERE provider = ? AND provider_ref = ? AND kind = ?', key, toBillingEvent);
+    if (!stored) throw new Error('billing_events: row missing after insert');
+    return stored;
+  }
+  billingEventsFor(subjectKind: BillingEvent['subjectKind'], subjectId: string, limit: number): Promise<BillingEvent[]> {
+    return this.many('SELECT * FROM billing_events WHERE subject_kind = ? AND subject_id = ? ORDER BY occurred_at DESC, id DESC LIMIT ?', [subjectKind, subjectId, limit], toBillingEvent);
+  }
+  billingEventById(eventId: string): Promise<BillingEvent | null> {
+    return this.one('SELECT * FROM billing_events WHERE id = ?', [eventId], toBillingEvent);
+  }
+  billingEventByRef(provider: BillingEvent['provider'], providerRef: string, kind?: BillingEventKind): Promise<BillingEvent | null> {
+    return kind === undefined
+      ? this.one('SELECT * FROM billing_events WHERE provider = ? AND provider_ref = ? ORDER BY occurred_at DESC, id DESC LIMIT 1', [provider, providerRef], toBillingEvent)
+      : this.one('SELECT * FROM billing_events WHERE provider = ? AND provider_ref = ? AND kind = ?', [provider, providerRef, kind], toBillingEvent);
+  }
+  billingEventByPaymentRef(paymentRef: string): Promise<BillingEvent | null> {
+    return this.one('SELECT * FROM billing_events WHERE payment_ref = ? ORDER BY occurred_at DESC, id DESC LIMIT 1', [paymentRef], toBillingEvent);
+  }
+  entitlementByProviderRef(provider: Entitlement['provider'], providerRef: string): Promise<Entitlement | null> {
+    return this.one('SELECT * FROM entitlements WHERE provider = ? AND provider_ref = ? ORDER BY updated_at DESC, id DESC LIMIT 1', [provider, providerRef], toEntitlement);
   }
 
   addWaitlist(e: Omit<WaitlistEntry, 'unsubscribedAt'>): Promise<void> {
