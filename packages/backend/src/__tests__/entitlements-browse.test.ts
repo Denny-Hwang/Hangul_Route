@@ -1,5 +1,6 @@
 import { BrowseScopeResponseSchema, type EntitlementApply, type Membership, type Space } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { setFallbackDb, type Db } from '../db';
 import app from '../index';
 import { accountBrowseScope, adultCoveredAny } from '../lib/entitlement';
 import { testDb as db } from './helpers/db';
@@ -19,6 +20,64 @@ async function browse(headers: Record<string, string>) {
   const res = await app.request('/api/entitlements/browse', { method: 'GET', headers });
   return { status: res.status, body: (await res.json()) as Envelope };
 }
+
+/**
+ * `target` seen through a proxy that records each `Db` method the caller
+ * invokes, by name. Calls a method makes on its own helpers are not seen, so
+ * the list is exactly the route's (or helper's) use of the `Db` interface.
+ */
+function watching(target: Db): { db: Db; calls: string[] } {
+  const calls: string[] = [];
+  const proxy = new Proxy<Db>(target, {
+    get(t, prop) {
+      const value: unknown = Reflect.get(t, prop, t);
+      if (typeof value !== 'function') return value;
+      return (...args: unknown[]): unknown => {
+        calls.push(String(prop));
+        return (value as (...a: unknown[]) => unknown).apply(t, args);
+      };
+    },
+  });
+  return { db: proxy, calls };
+}
+
+/** Every `Db` method that only reads; anything else the route calls is a write (or a new method to classify here). */
+const DB_READERS: ReadonlySet<string> = new Set([
+  'getAccount',
+  'getLearner',
+  'learnerByRecoveryHash',
+  'getDevice',
+  'deviceExists',
+  'getSnapshot',
+  'getSpace',
+  'spaceByCode',
+  'childSpaces',
+  'spacesOwnedBy',
+  'membership',
+  'membershipsOf',
+  'membersOf',
+  'getPlan',
+  'plansOf',
+  'getRelink',
+  'relinksOf',
+  'entitlementsFor',
+  'waitlistEntries',
+  'getTransfer',
+  'transfersOfSpace',
+  'openTransfersOfSpaces',
+  'transfersOfLearner',
+  'openTransferOf',
+  'lastLearnerRefusal',
+  'lastCooldownDecline',
+  'countTransfersCreatedBy',
+  'countTransfersCreatedForLearner',
+  'countOpenTransfersTo',
+  'transferEvents',
+  'getLearners',
+  'getSpaces',
+  'countRateHits',
+  'getTransferPrefs',
+]);
 
 const DAY = 24 * 60 * 60 * 1000;
 const iso = (ms: number): string => new Date(ms).toISOString();
@@ -204,8 +263,22 @@ describe('accountBrowseScope / adultCoveredAny (F-BROWSE-001 §4.2)', () => {
     const now = new Date('2026-10-11T00:00:00.000Z');
     await space('space:f', 'family', 'mom');
     await grant({ subjectKind: 'space', subjectId: 'space:f', planKey: 'family_lifetime', status: 'active' }, now);
-    vi.spyOn(db, 'getSpace').mockResolvedValue(null);
+    vi.spyOn(db, 'getSpaces').mockResolvedValue([]);
     expect(await accountBrowseScope(db, 'mom', now)).toBe('sampler');
+  });
+
+  it('reads the spaces in one call and each space and school once, however many classes (D1 query budget)', async () => {
+    const now = new Date('2026-10-11T00:00:00.000Z');
+    await space('space:big', 'school', 'principal');
+    for (let n = 0; n < 30; n += 1) await space(`space:c${n}`, 'class', 'busy-teacher', { parent: 'space:big' });
+    const watched = watching(db);
+    expect(await adultCoveredAny(watched.db, 'busy-teacher', now)).toBe(false);
+    const count = (name: string): number => watched.calls.filter((c) => c === name).length;
+    expect(count('getSpace')).toBe(0);
+    expect(count('getSpaces')).toBeLessThanOrEqual(2);
+    // the account row, each class once and the school once: 32, never one school read per class
+    expect(count('entitlementsFor')).toBe(32);
+    expect(watched.calls.length).toBeLessThan(40);
   });
 });
 
@@ -231,28 +304,26 @@ describe('GET /api/entitlements/browse (F-BROWSE-001 §5.2)', () => {
     expect(await db.getAccount('first-visit')).not.toBeNull(); // requireAccount's first sign-in upsert, the only write
   });
 
-  it('writes nothing for a seeded existing account', async () => {
+  it('writes nothing for a seeded existing account: every Db call is a reader', async () => {
     const nowMs = Date.now();
     await seedWorld(nowMs);
-    const writers = [
-      'putAccount',
-      'putLearner',
-      'putDevice',
-      'putSnapshot',
-      'putSpace',
-      'addMembership',
-      'removeMembership',
-      'putPlan',
-      'putRelink',
-      'applyEntitlement',
-      'addWaitlist',
-      'recordRateHit',
-    ] as const;
-    const spies = writers.map((name) => vi.spyOn(db, name));
-    for (const accountId of ['fam-owner', 'sch-teacher', 'arch-cls-owner', 'nobody']) {
-      expect((await browse(bearer(accountId))).status).toBe(200);
+    const watched = watching(db);
+    setFallbackDb(watched.db);
+    try {
+      for (const accountId of ['fam-owner', 'sch-teacher', 'arch-cls-owner', 'nobody']) {
+        expect((await browse(bearer(accountId))).status).toBe(200);
+      }
+    } finally {
+      setFallbackDb(db);
     }
-    for (const spy of spies) expect(spy).not.toHaveBeenCalled();
+    expect(watched.calls).toContain('membershipsOf'); // the proxy saw the route
+    expect(watched.calls.filter((name) => !DB_READERS.has(name))).toEqual([]);
+  });
+
+  it('the watcher catches a write', async () => {
+    const watched = watching(db);
+    await watched.db.putAccount({ id: 'w', email: null, displayName: null, consent: null, createdAt: '2026-01-01T00:00:00.000Z' });
+    expect(watched.calls.filter((name) => !DB_READERS.has(name))).toEqual(['putAccount']);
   });
 
   it('parity: for every coverage fixture the route says full exactly when adultCoveredAny does', async () => {

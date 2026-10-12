@@ -5,9 +5,8 @@ import { dbFor, type Db } from '../db';
 import { fail, ok } from '../envelope';
 import { accountActor, requireAccount, spaceContext } from '../lib/access';
 import { can } from '../lib/can';
-import { accountBrowseScope } from '../lib/entitlement';
+import { accountBrowseScope, isEntitlementActive } from '../lib/entitlement';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
-import { isEntitlementActive } from '../lib/entitlement';
 import { checkoutForm, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, freshStripeEvent, lookupPromotionCode, mergeForStripeEvent, priceIdFor, verifyStripeSignature, type StripeEnv, type StripeEventLike } from '../lib/stripe';
 
 /** Promo lookups are guessable strings: 20 per minute per client (F-ENT-002 §3.2). */
