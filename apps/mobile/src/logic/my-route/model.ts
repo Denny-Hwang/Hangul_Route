@@ -63,14 +63,14 @@ export function buildMyRoute(input: MyRouteInput): MyRouteModel {
   });
   const cursorEntry = order.find((e) => e.questId === cursorQuest?.id);
   const cursor = cursorEntry ? { questId: cursorEntry.questId, episodeId: cursorEntry.episodeId, stage: cursorEntry.stage } : null;
-  const startQuest = route?.startQuestId ? input.catalog.quests.find((q) => q.id === route.startQuestId) : undefined;
   const start = startMarkerOf(route, order);
 
   const stages = buildStageRows(input, {
     gridEpisodes,
     pips: { order, done, placedOut, latched, isEntitled: input.isEntitled, cursorId: cursor?.questId ?? null, startId: start?.questId ?? null },
     cursorStage: cursor?.stage ?? null,
-    startStage: startQuest?.stage ?? null,
+    // One start marker feeds both `here` (with nothing done) and the tag, so they never disagree.
+    startStage: start?.stage ?? null,
     startTagStage: start?.stage ?? null,
   });
 

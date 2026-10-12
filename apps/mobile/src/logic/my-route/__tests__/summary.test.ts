@@ -86,7 +86,7 @@ describe('journeySummaryOf: the sync-store input (F-ROUTE-001 R-8)', () => {
   it('equals summarizeJourney(buildMyRoute(...)) with no route when no level check is stored', () => {
     const snapshot = snapshotWith(['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3', 'quest:stage1-life-q1']);
     const summary = journeySummaryOf(snapshot, content(), now);
-    expect(summary).toEqual(summarizeJourney(buildMyRoute({ snapshot, ...content(), route: null, now })));
+    expect(summary).toEqual({ ...summarizeJourney(buildMyRoute({ snapshot, ...content(), route: null, now })), seeded: true });
     expect(summary?.stages[0]).toEqual({ stage: 'stage1', state: 'open', done: 4, known: 0, total: 8 });
   });
 
@@ -95,6 +95,11 @@ describe('journeySummaryOf: the sync-store input (F-ROUTE-001 R-8)', () => {
     expect(summary?.here).toBe('stage1');
     expect(summary?.stages).toHaveLength(7);
     expect(summary?.stages.every((s) => s.done === 0 && s.known === 0)).toBe(true);
+  });
+
+  it('marks every journey it builds as seeded from the placement route, so the console can tell it from an older build', () => {
+    expect(journeySummaryOf(snapshotWith([]), content(), now)?.seeded).toBe(true);
+    expect(summarizeJourney(buildMyRoute({ snapshot: snapshotWith([]), ...content(), route: null, now }))).not.toHaveProperty('seeded');
   });
 
   it('never throws: a snapshot it cannot read gives no journey, so the upload goes on without it', () => {
