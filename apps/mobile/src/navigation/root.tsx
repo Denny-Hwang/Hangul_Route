@@ -27,6 +27,8 @@ import { StoryReaderScreen } from '../screens/story/StoryReaderScreen';
 import { StorySourcesScreen } from '../screens/story/StorySourcesScreen';
 import { CultureNotesScreen } from '../screens/story/CultureNotesScreen';
 import { PlacementScreen } from '../screens/placement/PlacementScreen';
+import { VocabTopicScreen } from '../screens/vocab/VocabTopicScreen';
+import { VocabTopicsScreen } from '../screens/vocab/VocabTopicsScreen';
 import { STORY_FIXTURES_BUILD, StoryE2eHook } from './story-e2e';
 import { PlacementE2eHook } from './placement-e2e';
 import { VocabE2eHook, VocabQuestionE2eScreen } from './vocab-question-e2e';
@@ -83,6 +85,9 @@ export function RootNavigator(): React.ReactElement {
         <Stack.Screen name="CultureNotes" component={CultureNotesScreen} />
         <Stack.Screen name="Placement" component={PlacementScreen} options={{ gestureEnabled: false }} />
         <Stack.Screen name="PlacementReport" component={PlacementReportScreen} />
+        {/* Words (F-VOC-003): reachable only from the Library Words section, which needs flags.vocabTopicsEnabled. */}
+        <Stack.Screen name="VocabTopics" component={VocabTopicsScreen} />
+        <Stack.Screen name="VocabTopic" component={VocabTopicScreen} />
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="VocabQuestionE2e" component={VocabQuestionE2eScreen} /> : null}
       </Stack.Navigator>
     </>

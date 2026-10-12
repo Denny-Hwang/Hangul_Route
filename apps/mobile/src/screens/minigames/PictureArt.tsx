@@ -12,7 +12,16 @@ import {
 import React from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
-import { pictureName, pictureTile, resolvePictureArt, swatchColors, type PictureContext, type PictureTileMetrics } from '../../logic/picture-ref';
+import {
+  pictureName,
+  pictureTile,
+  resolvePicture,
+  resolvePictureArt,
+  silhouetteOf,
+  swatchColors,
+  type PictureContext,
+  type PictureTileMetrics,
+} from '../../logic/picture-ref';
 
 /**
  * PictureArt — the one place that turns a `PictureRef` into art for every game
@@ -28,6 +37,11 @@ import { pictureName, pictureTile, resolvePictureArt, swatchColors, type Picture
  * requested side the tile grows outward (`pictureTile`).
  * `decorative` hides the picture from assistive technology when the same card
  * already names it in a KoreanText line (F-VOC-002 §3.7).
+ * `mono` draws a word not collected yet (the Words word wall, F-VOC-003
+ * §3.4): a WordArt picture in silhouette on the sunken tile, anything else a
+ * plain sunken tile (card art has no silhouette; a swatch or a text tile would
+ * give the word away). It is always hidden from assistive technology: the
+ * wall tile carries the name ("Not collected yet").
  * All art is SVG from the design system (D7); this adds none.
  * Design: design/wireframes/quest/discover.md (S5 picture options, S6 Pic-Word Match),
  * design/components/WordArt/spec.md (the caller's tile).
@@ -52,6 +66,8 @@ export interface PictureArtProps {
   size: number;
   /** Hidden from assistive technology: the same card already names the word in a KoreanText line. */
   decorative?: boolean;
+  /** A word not collected yet: the silhouette (or a plain tile), hidden from assistive technology. */
+  mono?: boolean;
   testID?: string;
 }
 
@@ -64,9 +80,23 @@ function hiddenProps(decorative: boolean): {
   return decorative ? { 'aria-hidden': true, accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants' } : {};
 }
 
-function ArtTile({ size, decorative, children }: { size: number; decorative: boolean; children: React.ReactNode }): React.ReactElement {
+function ArtTile({
+  size,
+  decorative,
+  sunken = false,
+  testID,
+  children,
+}: {
+  size: number;
+  decorative: boolean;
+  /** The silhouette's tile (`mono`). */
+  sunken?: boolean;
+  testID?: string;
+  children?: React.ReactNode;
+}): React.ReactElement {
   return (
     <View
+      testID={testID}
       {...hiddenProps(decorative)}
       style={{
         width: size,
@@ -77,7 +107,7 @@ function ArtTile({ size, decorative, children }: { size: number; decorative: boo
         borderRadius: radii.lg,
         borderWidth: borderWidth.thin,
         borderColor: colors.border.subtle,
-        backgroundColor: colors.surface.paper,
+        backgroundColor: sunken ? colors.surface.sunken : colors.surface.paper,
       }}
     >
       {children}
@@ -85,11 +115,21 @@ function ArtTile({ size, decorative, children }: { size: number; decorative: boo
   );
 }
 
-export function PictureArt({ pictureRef, gloss, size, decorative = false, testID }: PictureArtProps): React.ReactElement {
+export function PictureArt({ pictureRef, gloss, size, decorative = false, mono = false, testID }: PictureArtProps): React.ReactElement {
   const m = useMessages();
   const picture = resolvePictureArt(pictureRef, gloss, PICTURE_CONTEXT);
   const name = pictureName(gloss, m.a11y.minigame.picture);
   const tile = pictureTile(size, TILE);
+
+  if (mono) {
+    // Resolved without the gloss: a silhouette never shows or needs the word's meaning.
+    const silhouette = silhouetteOf(resolvePicture(pictureRef, PICTURE_CONTEXT));
+    return (
+      <ArtTile size={tile.tile} decorative sunken testID={testID}>
+        {silhouette.kind === 'word' ? <WordArt artKey={silhouette.key} size={tile.art} mono decorative /> : null}
+      </ArtTile>
+    );
+  }
 
   if (picture.kind === 'card') {
     return (

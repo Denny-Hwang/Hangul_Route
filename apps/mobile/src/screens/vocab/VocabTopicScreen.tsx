@@ -1,0 +1,203 @@
+import { levelOrder, type VocabTopic } from '@hangul-route/content-schema';
+import {
+  Body,
+  Button,
+  Heading,
+  HoyaBubble,
+  KoreanText,
+  Progress,
+  Screen,
+  Spacer,
+  spacing,
+  useLayoutClass,
+} from '@hangul-route/design-system';
+import { romanizationShown } from '@hangul-route/i18n';
+import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View } from 'react-native';
+import { topicItems } from '../../content/vocab';
+import { useLocale, useMessages } from '../../i18n/use-messages';
+import { useRomanizationMode } from '../../i18n/use-romanization-mode';
+import { contentWidth } from '../../logic/layout/pane-sizes';
+import { VOCAB_SCREENS, capabilities } from '../../logic/vocab/caps';
+import { vocabCopyOf } from '../../logic/vocab/copy';
+import { emptyVocab, vocabOf } from '../../logic/vocab/progress';
+import { suggestActivity, type VocabActivity } from '../../logic/vocab/suggest';
+import {
+  cardsTarget,
+  localizedTopic,
+  meterVariant,
+  optionCountFor,
+  topicActivities,
+  wallTileViews,
+} from '../../logic/vocab/topic-view';
+import { topicState } from '../../logic/vocab/topics';
+import type { RootStackParamList } from '../../navigation/types';
+import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
+import { useProgressStore } from '../../store/progress-store';
+import { BackButton } from './BackButton';
+import { pickerTopic, topicIntroMemory, topicWallWords } from './topic-data';
+import { WordWall } from './WordWall';
+
+type Props = NativeStackScreenProps<RootStackParamList, 'VocabTopic'>;
+type Navigation = NativeStackNavigationProp<RootStackParamList, 'VocabTopic'>;
+
+/** The dots of the meter (the `Progress` default) and the gap `Progress` draws between them. */
+const METER_DOT = 12;
+/** Hides a view and everything in it from assistive technology on the web, iOS and Android. */
+const HIDDEN = { 'aria-hidden': true, accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants' } as const;
+
+/**
+ * A Words topic page (F-VOC-003 §3.4, wireframe vocab/topic-detail C): the
+ * title and Korean title, the collection meter and count, Hoya's line once per
+ * topic per session, the activities (each drawn only when its screen is in the
+ * build, `VOCAB_SCREENS`) and the word wall. A key the picker does not show is
+ * "Topic not found" with a way back (T8). Writes nothing.
+ * Design: design/screens/vocab/topic.md.
+ */
+export function VocabTopicScreen({ route, navigation }: Props): React.ReactElement {
+  const topic = pickerTopic(route.params.topicKey);
+  const back = (): void => {
+    if (navigation.canGoBack()) navigation.goBack();
+    else navigation.navigate('Main', { screen: 'Library' });
+  };
+  return topic ? <TopicPage source={topic} navigation={navigation} onBack={back} /> : <TopicNotFound onBack={back} />;
+}
+
+function TopicNotFound({ onBack }: { onBack: () => void }): React.ReactElement {
+  const copy = vocabCopyOf(useMessages());
+  return (
+    <Screen tone="canvas" testID="vocab-topic-not-found">
+      <BackButton onPress={onBack} />
+      <Spacer size="md" />
+      <Body>{copy.topic.notFound}</Body>
+      <Spacer size="lg" />
+      <Button label={copy.topic.back} tone="secondary" size="md" onPress={onBack} />
+    </Screen>
+  );
+}
+
+function TopicPage({ source, navigation, onBack }: { source: VocabTopic; navigation: Navigation; onBack: () => void }): React.ReactElement {
+  const messages = useMessages();
+  const copy = vocabCopyOf(messages);
+  const locale = useLocale();
+  const topic = useMemo(() => localizedTopic(source, locale), [source, locale]);
+  const profile = useProfileStore(activeProfileSelector);
+  const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
+  // Not hydrated or unreadable: the page as for nothing collected (§3.4); this page writes nothing.
+  const progress = useMemo(() => (snap ? vocabOf(snap) : emptyVocab()), [snap]);
+  const romanizationMode = useRomanizationMode();
+  const [revealed, setRevealed] = useState(false);
+  const titleShown = romanizationShown(romanizationMode, revealed);
+
+  // The flashcards' order (level, then file) for the chunks; the wall's file order for the tiles.
+  const items = useMemo(() => topicItems(topic.key), [topic.key]);
+  const wallWords = useMemo(() => topicWallWords(topic.key), [topic.key]);
+  const counts = useMemo(() => topicState(topic.key, items.map((item) => item.id), progress), [topic.key, items, progress]);
+  const level = profile ? levelOrder(profile.ageGroup) : null;
+  const optionCount = optionCountFor(level);
+  const activities = useMemo(
+    () =>
+      topicActivities({
+        collected: counts.collected,
+        suggestion: suggestActivity(topic.key, progress, new Date(), { wordIds: items.map((item) => item.id), optionCount }),
+        optionCount,
+        picWordMatch: capabilities.picWordMatch,
+        screens: VOCAB_SCREENS,
+        copy,
+      }),
+    [counts.collected, topic.key, progress, items, optionCount, copy],
+  );
+  const tiles = useMemo(
+    () => wallTileViews(wallWords, progress, { locale, romanizationMode, copy, koreanItem: messages.a11y.koreanItem }),
+    [wallWords, progress, locale, romanizationMode, copy, messages.a11y.koreanItem],
+  );
+
+  // Hoya's line once per topic per app session: decided when the page opens, remembered once shown.
+  const [intro] = useState(() => topicIntroMemory.due(topic.key));
+  useEffect(() => {
+    topicIntroMemory.mark(topic.key);
+  }, [topic.key]);
+
+  const lc = useLayoutClass();
+  const meter = meterVariant(counts.total, contentWidth(lc.windowWidth, lc.gutter, lc.maxWidth.reading), METER_DOT, spacing.sm);
+
+  const open = (activity: VocabActivity): void => {
+    const topicKey = topic.key;
+    if (activity === 'learn') navigation.navigate('VocabCards', { topicKey });
+    else if (activity === 'speed') navigation.navigate('VocabSpeedRound', { topicKey });
+    else navigation.navigate('VocabMatch', { topicKey });
+  };
+  const openWord = (id: string): void => {
+    const target = cardsTarget(topic, items, level, id);
+    if (target) navigation.navigate('VocabCards', target);
+  };
+
+  return (
+    <Screen tone="canvas" scrollable testID="vocab-topic">
+      <BackButton onPress={onBack} />
+      <Spacer size="sm" />
+      <Heading level="display" testID="vocab-topic-title">
+        {topic.titleEn}
+      </Heading>
+      <Spacer size="xs" />
+      <View style={{ alignSelf: 'flex-start', maxWidth: '100%' }}>
+        <KoreanText
+          ko={topic.titleKo.ko}
+          romanization={topic.titleKo.romanization}
+          romanizationShown={titleShown}
+          size="sm"
+          accessibilityLabel={messages.a11y.koreanItem({ ko: topic.titleKo.ko, romanization: topic.titleKo.romanization, gloss: topic.titleEn })}
+          testID="vocab-topic-ko"
+        />
+      </View>
+      {titleShown ? null : (
+        <View style={{ alignSelf: 'flex-start' }}>
+          <Spacer size="xs" />
+          <Button label={copy.cards.showSound} tone="ghost" size="md" onPress={() => setRevealed(true)} testID="vocab-topic-reveal" />
+        </View>
+      )}
+
+      <Spacer size="md" />
+      <View {...HIDDEN}>
+        <Progress variant={meter} value={counts.collected} max={Math.max(counts.total, 1)} height={meter === 'dots' ? METER_DOT : spacing.sm} />
+      </View>
+      <Spacer size="xs" />
+      <Body weight="semibold" testID="vocab-topic-count">
+        {copy.topic.collected(counts.collected)}
+      </Body>
+
+      {intro && topic.hoyaIntroEn.trim() !== '' ? (
+        <>
+          <Spacer size="lg" />
+          <HoyaBubble tone="idle" message={topic.hoyaIntroEn} testID="vocab-topic-hoya" />
+        </>
+      ) : null}
+
+      {activities.length > 0 ? (
+        <View style={{ gap: spacing.md }} testID="vocab-topic-activities">
+          <Spacer size="xs" />
+          {activities.map((a) => (
+            <View key={a.kind} style={{ gap: spacing.xs }}>
+              <Button
+                label={a.label}
+                tone={a.primary ? 'primary' : 'secondary'}
+                size="lg"
+                fullWidth
+                onPress={() => open(a.opens)}
+                testID={`vocab-activity-${a.kind}`}
+              />
+              <Body size="sm" tone="secondary">
+                {a.line}
+              </Body>
+            </View>
+          ))}
+        </View>
+      ) : null}
+
+      <Spacer size="lg" />
+      <WordWall tiles={tiles} onOpen={VOCAB_SCREENS.learn ? openWord : undefined} />
+      <Spacer size="xl" />
+    </Screen>
+  );
+}
