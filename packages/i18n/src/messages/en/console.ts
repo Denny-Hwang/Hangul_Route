@@ -1014,4 +1014,17 @@ export const consoleMsgs = {
       later: 'Coming later',
     },
   },
+  /**
+   * The offline page of grown-up paths on the app host (F-APP-001 sections 3.4 and 3.12, A-2;
+   * wireframe `design/wireframes/shell/offline.md`). Not drawn by the console: the learner app's
+   * `scripts/pwa-postbuild.mjs` reads it at build time into `dist/grown-ups-offline.html`, which
+   * the service worker serves when a grown-up page is opened without a network. A learner may
+   * follow a grown-up link and see it, so the copy is neutral (no age wording).
+   */
+  offline: {
+    title: "You're offline",
+    line: 'Grown-up pages need the internet. Learning still works offline.',
+    back: 'Back to learning',
+    retry: 'Try again',
+  },
 } as const;

@@ -5,22 +5,50 @@
 // Letter clips are precached; vocabulary / story / card / dialogue clips are
 // runtime-cached instead (F-AUDIO-004 AD10), and the build fails if a clip
 // that should be precached is missing from the manifest (§3.10).
+// Grown-up paths (F-APP-001 §3.4, A-2): app.hangulroute.com also serves the grown-up
+// console under GROWN_UP_PREFIXES (from A-3), so the worker never answers a grown-up
+// navigation with the learner shell (denylist), sends it to the network only (with
+// the precached grown-ups-offline.html when offline), and the build fails if a
+// console file reaches the learner precache, by path (consoleLeaks) or by content
+// (consolePages: an HTML page that loads /_next/ code, such as a Next 404.html).
 // app.json (adaptive icon) and public/manifest.webmanifest keep a copy of brand.primary: keep them equal to the token.
 import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
+import * as nodeModule from 'node:module';
 import { join, dirname, relative } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { generateSW, getManifest } from 'workbox-build';
 import { AUDIO_PRECACHE_IGNORES, audioRuntimeCaching, precacheGaps, precacheLeaks } from './audio/lib.mjs';
+import {
+  GROWN_UPS_OFFLINE_FILE,
+  assertLearnerPrecache,
+  grownUpDenylist,
+  grownUpGlobIgnores,
+  grownUpNavigationRule,
+  renderGrownUpsOffline,
+} from './pwa/grown-ups.mjs';
 
 const dist = process.argv[2] ?? 'dist';
 
-// Shell colors come from the design tokens (packages/design-system), read at
-// build time so the HTML shell never carries its own palette.
+// The workspace's TypeScript sources are read at build time through
+// scripts/ts-loader.mjs (precedent: scripts/i18n-status.mjs): the design tokens
+// (packages/design-system) so the HTML shell and the offline page never carry their
+// own palette, the grown-up prefixes and R-1 predicate (packages/content-schema) so
+// the list exists once, and the offline page strings (packages/i18n, console.offline).
 const here = dirname(fileURLToPath(import.meta.url));
-const tokensSrc = readFileSync(join(here, '../../../packages/design-system/src/tokens.ts'), 'utf8');
-const token = (name, fallback) => tokensSrc.match(new RegExp(`\\b${name}:\\s*'(#[0-9A-Fa-f]{6})'`))?.[1] ?? fallback;
-const canvas = token('canvas', '#FCF8F1');
-const brand = token('primary', '#B24915');
+const repo = join(here, '..', '..', '..');
+if (typeof nodeModule.register !== 'function') {
+  throw new Error(`pwa-postbuild needs Node 20.6+ (module.register); this is ${process.version}`);
+}
+nodeModule.register(pathToFileURL(join(repo, 'scripts', 'ts-loader.mjs')));
+const importSource = (path) => import(pathToFileURL(join(repo, path)).href);
+const [tokens, appShell, i18n] = await Promise.all([
+  importSource('packages/design-system/src/tokens.ts'),
+  importSource('packages/content-schema/src/schemas/app-shell.ts'),
+  importSource('packages/i18n/src/index.ts'),
+]);
+const { GROWN_UP_PREFIXES, isGrownUpPath } = appShell;
+const canvas = tokens.colors.surface.canvas;
+const brand = tokens.colors.brand.primary;
 const indexPath = join(dist, 'index.html');
 if (!existsSync(indexPath)) {
   throw new Error(`${indexPath} not found — run \`expo export --platform web\` first`);
@@ -90,11 +118,20 @@ html = html.replace(/<meta name="viewport"[^>]*>/, '<meta name="viewport" conten
 html = html.replace('</head>', `${head}\n${sw}\n</head>`);
 writeFileSync(indexPath, html);
 
+// The offline page of grown-up paths (wireframe shell/offline): every shipped UI
+// locale's console.offline strings, the default locale first; written before the
+// glob below so it is precached.
+const offlineLocales = [i18n.DEFAULT_LOCALE, ...i18n.availableLocales(false).filter((l) => l !== i18n.DEFAULT_LOCALE)].map(
+  (locale) => ({ locale, lang: i18n.LOCALE_META[locale].htmlLang, strings: i18n.getMessages(locale).console.offline }),
+);
+writeFileSync(join(dist, GROWN_UPS_OFFLINE_FILE), renderGrownUpsOffline({ locales: offlineLocales, tokens }));
+
 const precache = {
   globDirectory: dist,
   globPatterns: ['**/*.{js,html,ico,png,json,webmanifest,svg,mp3,woff2}'],
-  // Workbox's default ignore, plus the clip groups served by the runtime rule below.
-  globIgnores: ['**/node_modules/**/*', ...AUDIO_PRECACHE_IGNORES],
+  // Workbox's default ignore, the clip groups served by the runtime rule below, and
+  // every console file (grown-up paths and _next/): never in the learner's offline bundle.
+  globIgnores: ['**/node_modules/**/*', ...AUDIO_PRECACHE_IGNORES, ...grownUpGlobIgnores(GROWN_UP_PREFIXES)],
   maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
 };
 
@@ -102,10 +139,12 @@ const { count, size, warnings } = await generateSW({
   ...precache,
   swDest: join(dist, 'sw.js'),
   navigateFallback: '/index.html',
+  // A grown-up navigation never receives the learner shell; /present and /browse keep it.
+  navigateFallbackDenylist: grownUpDenylist(GROWN_UP_PREFIXES),
   clientsClaim: true,
   skipWaiting: false, // the app decides when to apply an update (never mid-quest)
   cleanupOutdatedCaches: true,
-  runtimeCaching: [audioRuntimeCaching()],
+  runtimeCaching: [audioRuntimeCaching(), grownUpNavigationRule(GROWN_UP_PREFIXES)],
 });
 for (const w of warnings) process.stdout.write(`workbox: ${w}\n`);
 
@@ -130,5 +169,7 @@ const gaps = precacheGaps(clips, manifestUrls);
 const leaks = precacheLeaks(manifestUrls);
 if (gaps.length > 0) throw new Error(`pwa-postbuild: clips missing from the precache: ${gaps.join(', ')}`);
 if (leaks.length > 0) throw new Error(`pwa-postbuild: runtime-cached clips found in the precache: ${leaks.join(', ')}`);
+// No console file by path or by content (a Next 404.html), and the offline page present.
+assertLearnerPrecache(manifestUrls, isGrownUpPath, (url) => readFileSync(join(dist, url), 'utf8'));
 
 process.stdout.write(`pwa-postbuild: precached ${count} files (${(size / 1024 / 1024).toFixed(2)} MB), ${clips.length} audio clips built\n`);
