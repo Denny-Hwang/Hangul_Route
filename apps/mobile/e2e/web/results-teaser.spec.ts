@@ -89,16 +89,13 @@ async function home(page: Page): Promise<void> {
 /**
  * A quest whose games can all be skipped: the Stage 2 taste quest Lunch Box Words. Since
  * F-QUEST-002 Q-8 every Stage 1 quest ends on a Check, which has no Skip. The soft-prerequisite
- * sheet may ask once; either answer starts the quest.
+ * sheet is Stage 1 only (`previousStage1Quest`), so it never opens here and Start goes straight in.
  */
 async function startSkippableQuest(page: Page): Promise<void> {
   await home(page);
   await page.getByText('Journey', { exact: true }).last().click();
   await page.getByRole('button', { name: 'Food & Daily Life episode for stage2' }).click();
   await page.getByRole('button', { name: 'Start', exact: true }).first().click();
-  const anyway = page.getByRole('button', { name: 'Play anyway' });
-  await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
-  if (await anyway.isVisible()) await anyway.click();
   await page.getByRole('button', { name: 'Continue' }).click();
 }
 

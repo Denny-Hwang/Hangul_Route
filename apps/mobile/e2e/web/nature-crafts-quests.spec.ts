@@ -40,12 +40,14 @@ const nextPage = (page: Page) => page.getByRole('button', { name: 'Continue' }).
 
 /** A Discover word item and its card picture (an svg, never the text fallback). */
 async function expectPicturedWord(page: Page, ko: string): Promise<void> {
-  await expect(page.getByTestId(`discover-item-word:${ko}`).locator('svg').first()).toBeVisible();
+  // The card holds two svgs: its picture and the Hear it button's speaker icon (the text fallback draws none).
+  await expect(page.getByTestId(`discover-item-word:${ko}`).locator('svg')).toHaveCount(2);
 }
 
-/** A word item that has no picture: the Korean shows, and no art is drawn for it. */
+/** A word item that has no picture: the Korean shows, and no art is drawn for it (only the speaker icon). */
 async function expectPlainWord(page: Page, ko: string): Promise<void> {
   await expect(page.getByTestId(`discover-item-word:${ko}`)).toContainText(ko);
+  await expect(page.getByTestId(`discover-item-word:${ko}`).locator('svg')).toHaveCount(1);
 }
 
 /** Every Build a Letter block in round order: the initial and vowel tiles, then the final as its batchim tile. */
@@ -165,7 +167,7 @@ test('quest 12: Moon, Stars and Night reads the night sky and traces a final bef
   // The trace step draws one of the finals m, p, l and ng; it is skipped here.
   await page.getByRole('button', { name: 'Skip for now' }).click();
   await page.getByRole('button', { name: 'Play minigame' }).click();
-  await expect(page.getByRole('heading', { name: /^Trace the letter (m|p|l|ng)$/ }).first()).toBeVisible();
+  await expect(page.getByRole('heading', { name: /^Trace the final (m|p|l|ng)$/ }).first()).toBeVisible();
   await page.screenshot({ path: test.info().outputPath('nature-q3-trace-final.png'), fullPage: true });
   await page.getByRole('button', { name: 'Skip', exact: true }).click();
 
@@ -197,7 +199,7 @@ test('quest 13: Yut, Kite, Top reads game words, builds six closed blocks, then 
     ['줄', [letter('ㅈ'), letter('ㅜ'), 'final l']],
     ['놀', [letter('ㄴ'), letter('ㅗ'), 'final l']],
     ['북', [letter('ㅂ'), letter('ㅜ'), 'final k']],
-    ['밥', [letter('ㅂ'), letter('ㅏ'), 'final p']],
+    ['집', [letter('ㅈ'), letter('ㅣ'), 'final p']],
   ]);
 
   // The folk-game board is skipped; the Check hears 연 (kite card), then reads 놀이.
