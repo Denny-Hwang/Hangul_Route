@@ -143,7 +143,7 @@ function wordsOf(quest: Quest, bundle: BrowseBundle, locale: UiLocale): { words:
     for (const s of localScope.syllables ?? []) syllables.push({ ko: s.ko, romanization: s.romanization });
   }
   const uniqueWords = uniqueByKo(words);
-  // A syllable that is also a word ("가", "the sound ga") is listed once, as the word.
+  // A syllable that is also a word (ga, "the sound ga") is listed once, as the word.
   const wordKo = new Set(uniqueWords.map((w) => w.ko));
   return { words: uniqueWords, syllables: uniqueByKo(syllables).filter((s) => !wordKo.has(s.ko)) };
 }
