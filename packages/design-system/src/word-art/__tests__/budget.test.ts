@@ -6,7 +6,8 @@ import { measureWordArtSource, overBudget, wordArtSourceFiles, type WordArtSourc
 
 /**
  * F-VOC-002 W7 / §3.8 and behaviour 7: all WordArt source (`src/word-art/**`,
- * tests excluded) stays within 120 KB raw and 30 KB gzipped. The limits and
+ * tests excluded) stays within the W7 budget: 160 KB raw and 48 KB gzipped
+ * since W-5 (120 / 30 KB before; the §8.1 (b) decision). The limits and
  * the walk live in `src/word-art-budget.ts`, shared with the web contact
  * sheet. The measured numbers go in each PR description.
  */
@@ -30,7 +31,7 @@ describe('WordArt budget (W7)', () => {
     expect(rel.some((f) => f.includes('__tests__'))).toBe(false);
   });
 
-  it('is within 120 KB raw and 30 KB gzip', () => {
+  it('is within the W7 budget, 160 KB raw and 48 KB gzip', () => {
     expect(overBudget(measureWordArtSource(WORD_ART_DIR, NODE_FS))).toBeNull();
   });
 });

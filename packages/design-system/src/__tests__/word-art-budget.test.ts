@@ -32,9 +32,9 @@ const TREE = reader({
 });
 
 describe('the WordArt budget module (W7)', () => {
-  it('is 120 KB raw and 30 KB gzip', () => {
-    expect(BUDGET_RAW).toBe(120 * 1024);
-    expect(BUDGET_GZIP).toBe(30 * 1024);
+  it('is 160 KB raw and 48 KB gzip (raised at W-5 under the §8.1 (b) decision)', () => {
+    expect(BUDGET_RAW).toBe(160 * 1024);
+    expect(BUDGET_GZIP).toBe(48 * 1024);
   });
 
   it('is a package entry, outside src/word-art so it does not count against itself', () => {
@@ -57,8 +57,8 @@ describe('the WordArt budget module (W7)', () => {
   });
 
   it('reports the measured sizes when over (behaviour 7)', () => {
-    expect(overBudget({ raw: BUDGET_RAW + 1, gzip: 10 })).toBe(`WordArt source is ${BUDGET_RAW + 1} B raw / 10 B gzip; the budget is 122880 / 30720`);
-    expect(overBudget({ raw: 10, gzip: BUDGET_GZIP + 1 })).toMatch(/30721 B gzip/);
+    expect(overBudget({ raw: BUDGET_RAW + 1, gzip: 10 })).toBe(`WordArt source is ${BUDGET_RAW + 1} B raw / 10 B gzip; the budget is 163840 / 49152`);
+    expect(overBudget({ raw: 10, gzip: BUDGET_GZIP + 1 })).toMatch(/49153 B gzip/);
     expect(overBudget({ raw: BUDGET_RAW, gzip: BUDGET_GZIP })).toBeNull();
   });
 });

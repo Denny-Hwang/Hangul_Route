@@ -1,14 +1,16 @@
 /**
  * The WordArt source budget (F-VOC-002 W7, §3.8): all WordArt source
- * (`src/word-art/**`, tests excluded) stays within 120 KB raw and 30 KB
- * gzipped. One definition, read by `word-art/__tests__/budget.test.ts` and by
+ * (`src/word-art/**`, tests excluded) stays within 160 KB raw and 48 KB
+ * gzipped (raised at W-5 from 120 / 30 KB, the §8.1 (b) decision: the
+ * measured projection for all 99 hand glyphs plus room for the card-art
+ * exits). One definition, read by `word-art/__tests__/budget.test.ts` and by
  * the web contact sheet's totals line, so raising the budget (§8.1 (b)) moves
  * both. It sits outside `src/word-art/` so it does not count against itself,
  * and is pure: the caller passes the file reads and the gzip.
  */
 
-export const BUDGET_RAW = 120 * 1024;
-export const BUDGET_GZIP = 30 * 1024;
+export const BUDGET_RAW = 160 * 1024;
+export const BUDGET_GZIP = 48 * 1024;
 
 export interface WordArtSize {
   raw: number;
