@@ -169,11 +169,12 @@ describe('the frozen learners (section 3.15)', () => {
     ]);
   });
 
-  it('Sora, saved 4 days ago: the stage line first; no rhythm line on a partial window (behaviour 13)', () => {
+  it('Sora, saved 4 days ago: the headline names the stage, so the lines start below it; no rhythm line on a partial window (behaviour 13)', () => {
+    expect(ctxOf({ summary: STALE4 }).report.headline?.code).toBe('stage_done');
     expect(well({ summary: STALE4 })).toEqual([
-      { code: 'stage_done', params: { stage: { stage: 'stage1', n: 1 } } },
       { code: 'letters_new', params: { letters: ['ㄷ', 'ㄹ'] } },
       { code: 'practice_days', params: { days: 3 } },
+      { code: 'quests_new', params: { count: 7 } },
     ]);
     expect(next({ summary: STALE4 })).toEqual([]);
   });
@@ -230,13 +231,32 @@ describe('states', () => {
 });
 
 describe('went well, rule by rule', () => {
-  it('W1 stage_done: a milestone in the window (the newest when there are two); none outside it', () => {
+  it('W1 stage_done: a milestone in the window (the newest when there are two), read under a headline that does not name it', () => {
     const s = learner({ '2026-10-14': {}, '2026-10-15': {} }, {}, { milestones: [{ stage: 'stage1', on: '2026-10-14' }, { stage: 'stage2', on: '2026-10-15' }] });
-    expect(well(at({ summary: s }))[0]).toEqual({ code: 'stage_done', params: { stage: { stage: 'stage2', n: 2 } } });
+    const ctx = ctxOf(at({ summary: s }));
+    const headline = ctx.report.headline;
+    expect(headline?.code).toBe('stage_done');
+    // A context whose headline does not name the stage (the rule reads the context it is given): W1 is the first line.
+    const plain = { ...ctx, report: { ...ctx.report, headline: headline ? { ...headline, code: 'practiced' as const, stage: null } : null } };
+    expect(wentWell(plain)[0]).toEqual({ code: 'stage_done', params: { stage: { stage: 'stage2', n: 2 } } });
+    // No milestone in the window: no stage line under any headline.
     const old = learner({ '2026-10-01': {}, '2026-10-15': {} }, {}, { milestones: [{ stage: 'stage1', on: '2026-10-01' }] });
+    expect(ctxOf(at({ summary: old })).report.headline?.code).toBe('practiced');
     expect(codes(well(at({ summary: old })))).not.toContain('stage_done');
-    // `all` reads every milestone.
-    expect(codes(well(at({ summary: old, period: 'all' })))[0]).toBe('stage_done');
+  });
+
+  it('W1 never repeats a `stage_done` headline (RP-2b2): the next rule moves up, as W3 does under `practiced`', () => {
+    const s = learner({ '2026-10-14': {}, '2026-10-15': {} }, {}, { milestones: [{ stage: 'stage1', on: '2026-10-14' }, { stage: 'stage2', on: '2026-10-15' }] });
+    const old = learner({ '2026-10-01': {}, '2026-10-15': {} }, {}, { milestones: [{ stage: 'stage1', on: '2026-10-01' }] });
+    for (const [summary, period] of [[s, 'day'], [s, 'week'], [s, 'month'], [s, 'all'], [old, 'all']] as const) {
+      const ctx = ctxOf(at({ summary, period }));
+      expect(ctx.report.headline?.code, period).toBe('stage_done');
+      expect(codes(wentWell(ctx)), period).not.toContain('stage_done');
+    }
+    // W3 names the practice days under a `stage_done` headline; W0 stays the last resort when nothing else fires.
+    expect(well(at({ summary: s }))).toEqual([{ code: 'practice_days', params: { days: 2 } }]);
+    expect(well(at({ summary: s, period: 'month' }))).toEqual([{ code: 'showed_up', params: { days: 2, period: 'month' } }]);
+    expect(codes(well(at({ summary: learner({ '2026-10-15': { q: 1 } }, {}, { milestones: [{ stage: 'stage1', on: '2026-10-15' }] }), period: 'day' })))).toEqual(['practice_days', 'quests_new']);
   });
 
   it('W2 letters_new: at least one letter, up to 5 in the order learned', () => {
@@ -260,7 +280,6 @@ describe('went well, rule by rule', () => {
     const all = (total: number): string[] => codes(well(at({ summary: learner({ '2026-10-15': {} }, {}, { ...stage, total: { since: '2026-01-01', min: 0, q: 0, c: 0, w: 0, days: total } }), period: 'all' })));
     expect([all(4).includes('practice_days'), all(5).includes('practice_days')]).toEqual([false, true]);
     expect(well(at({ summary: learner({ '2026-10-15': {} }, {}, { ...stage, total: { since: '2026-01-01', min: 0, q: 0, c: 0, w: 0, days: 5 } }), period: 'all' }))).toEqual([
-      { code: 'stage_done', params: { stage: { stage: 'stage1', n: 1 } } },
       { code: 'practice_days', params: { days: 5 } },
     ]);
   });
@@ -436,7 +455,8 @@ describe('went well, rule by rule', () => {
       { placement: check(['vocabulary']) },
       { milestones: [{ stage: 'stage1', on: '2026-10-14' }] },
     );
-    expect(codes(well(at({ summary: s })))).toEqual(['stage_done', 'letters_new', 'practice_days']);
+    // The headline names the stage, so W1 is skipped and W5 moves up into the third place.
+    expect(codes(well(at({ summary: s })))).toEqual(['letters_new', 'practice_days', 'quests_new']);
   });
 });
 
