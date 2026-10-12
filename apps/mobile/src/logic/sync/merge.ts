@@ -13,6 +13,7 @@ import {
   type VocabProgress,
   type VocabTopicProgress,
 } from '@hangul-route/content-schema';
+import { streakSessionDates } from '../sessions/session-log';
 import { computeStreak } from '../streak';
 import { codePoint, validVocab } from '../vocab/progress';
 
@@ -344,10 +345,8 @@ export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot
     sessions,
     homework: unionBy(local.homework, server.homework, (h) => h.id, mergeHomework),
     reviews: unionBy(local.reviews, server.reviews, (r) => r.id, mergeReview),
-    streakDays: computeStreak(
-      sessions.map((s) => s.startedAt),
-      opts.now,
-    ),
+    // Story, game and level-check time never moves the streak (F-REPORT-001 OD-19).
+    streakDays: computeStreak(streakSessionDates(sessions), opts.now),
     ...(stageDoneAt ? { stageDoneAt } : {}),
     // A snapshot that predates the key keeps its shape when neither side has one.
     ...(local.placements !== undefined || server.placements !== undefined

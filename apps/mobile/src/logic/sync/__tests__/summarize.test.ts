@@ -55,6 +55,11 @@ describe('summarize (F-SYNC-001 §3.4)', () => {
     expect(summary.streakDays).toBe(2);
     expect(summary.planProgress).toEqual({});
   });
+  it('counts a session at most 60 minutes, so an hours-long session from an older build never inflates the minutes (F-REPORT-001 section 3.3.2)', () => {
+    const long = { id: 's-long', profileId: 'profile:a', startedAt: '2026-09-21T08:00:00Z', durationSeconds: 3 * 60 * 60, episodesTouched: [] };
+    const capped = summarize({ snapshot: { ...snap, sessions: [long] }, now: NOW, stage1QuestIds: [], questJamo: {} });
+    expect(capped.minutesLast7d).toBe(60);
+  });
   it('empty snapshot → null anchor accuracy and zeros', () => {
     const empty = summarize({ snapshot: { ...snap, quests: [], sessions: [], cards: [] }, now: NOW, stage1QuestIds: ['q1'], questJamo: {} });
     expect(empty.stage1.anchorAccuracy).toBeNull();

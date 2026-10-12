@@ -24,6 +24,7 @@ import { flags } from '../../config/flags';
 import { localizeStage } from '../../logic/content-locale';
 import { bandLabel } from '../../logic/placement/copy';
 import { startingSpotRow } from '../../logic/placement/report-page';
+import { practiceTotals } from '../../logic/sessions/session-log';
 import { LinkButton } from '../placement/parts';
 import { LearningRouteRow } from './LearningRouteRow';
 import type { RootStackParamList } from '../../navigation/types';
@@ -74,10 +75,9 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
           const level = levelLabel(p.ageGroup);
           const completed = snap?.quests.filter((q) => q.completedAt).length ?? 0;
           const cards = snap?.cards.length ?? 0;
-          const sessions = snap?.sessions.length ?? 0;
-          const sessionMinutes = Math.round(
-            ((snap?.sessions ?? []).reduce((sum, s) => sum + (s.durationSeconds ?? 0), 0)) / 60,
-          );
+          // Quest sessions only, and capped minutes (F-REPORT-001 section 3.3.2): a story, game or
+          // level-check visit adds minutes, never a session.
+          const { sessions, minutes: sessionMinutes } = practiceTotals(snap?.sessions ?? []);
           return (
             <Card key={p.id} padding="md" style={{ marginBottom: spacing.md }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>

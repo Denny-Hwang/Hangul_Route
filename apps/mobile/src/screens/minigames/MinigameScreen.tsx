@@ -11,6 +11,7 @@ import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
 import { useQuestRunStore } from '../../store/quest-run-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
+import { usePracticeSession } from '../use-practice-session';
 import { BuildLetterGame } from './BuildLetterGame';
 import { CardMatchGame } from './CardMatchGame';
 import { CultureQuizGame } from './CultureQuizGame';
@@ -54,6 +55,9 @@ export function MinigameScreen({ route, navigation, onOpenCultureNote, ...exitPr
     return source && ref ? localizeScope(source, ref, locale) : source;
   }, [ref, locale]);
   const activeProfileId = useProfileStore((s) => activeProfileSelector(s)?.id);
+  // Practice time on the learner stack only (F-REPORT-001 section 3.3.2); inside a quest it joins the
+  // quest's session. Another host (All lessons) passes no navigation and records nothing.
+  usePracticeSession(activeProfileId, navigation ? `minigame:${questId}:${stepIndex}` : null);
   const copy = useMessages().learner.minigame;
   // Learner default: back to the quest player. A game has no home or link exit of its own.
   const learnerBack = (): void => navigation?.goBack();
