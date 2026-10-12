@@ -5,6 +5,8 @@
  * rules with token imports in apps/web (inline styles plus the breakpoint classes in globals.css).
  * Text sizes are written in rem (token / 16) and breakpoints in em (px / 16), so a browser text-size setting of
  * 200 % enlarges every line and moves the layout switches with it (spec 3.11, assumption b).
+ * Mobile first: every narrow rule is the default and a min-width query overrides it. No max-width query, so no
+ * fractional viewport width (browser zoom, display scaling) can fall between two queries (S-D review).
  */
 :root {
   --colors-brand-primary: #B24915;
@@ -93,7 +95,13 @@
   --hoya-share: 62%;            /* Hoya inside the art square, leaving room for the bubble */
   --lead-measure: 34em;         /* reading measure, about 60 characters */
   --footer-col-min: 8rem;       /* 2 x spacing.jumbo at default text size */
-  --field-basis: 12rem;         /* 3 x spacing.jumbo at default text size */
+  --tile-min: 5.5rem;           /* card tile: three across at 320 px, fewer as text grows (README, "Constants") */
+
+  /* The existing WaitlistForm's own values (apps/web/src/components/landing/WaitlistForm.tsx), drawn as it renders
+     today. The component is not changed by this design; these are its numbers, not new ones. */
+  --wl-max: 480px;              /* the form's maxWidth */
+  --wl-control: 48px;           /* field and button minHeight */
+  --wl-field-basis: 240px;      /* the field's flex basis */
 }
 
 /* ---------- base ---------- */
@@ -146,7 +154,7 @@ a { color: inherit; text-decoration: none; }
 }
 .brand { gap: var(--spacing-sm); justify-content: flex-start; padding-right: var(--spacing-sm); }
 .brand-mark {
-  display: flex; align-items: center; justify-content: center;
+  display: none; align-items: center; justify-content: center;
   width: var(--spacing-xxxl); height: var(--spacing-xxxl); border-radius: var(--radii-circle);
   background: var(--colors-brand-primary); color: var(--colors-text-inverse);
   font-weight: var(--weight-bold); font-size: var(--size-bodyLg);
@@ -157,7 +165,7 @@ a { color: inherit; text-decoration: none; }
   background: var(--colors-brand-primary); color: var(--colors-text-onPrimary);
   font-weight: var(--weight-bold); white-space: nowrap;
 }
-.site-nav { display: flex; align-items: center; column-gap: var(--spacing-xxs); }
+.site-nav { align-items: center; column-gap: var(--spacing-xxs); }
 .nav-link, .signin {
   padding: 0 var(--spacing-md); color: var(--colors-text-secondary);
   font-weight: var(--weight-semibold); white-space: nowrap;
@@ -174,12 +182,17 @@ a { color: inherit; text-decoration: none; }
 }
 .signin:hover { border-color: var(--colors-text-secondary); }
 /* Phones: brand and Sign in only. display:none also takes the items out of the Tab order. */
-@media (max-width: 44.99em) {
-  .header-start, .site-nav { display: none; }
+.header-start, .site-nav { display: none; }
+@media (min-width: 45em) {
+  .header-start { display: inline-flex; }
+  .site-nav { display: flex; }
 }
 /* 720 to 959: every item fits one row once the name steps down to the mark (the name stays the link's name). */
-@media (min-width: 45em) and (max-width: 59.99em) {
+@media (min-width: 45em) {
   .brand-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+@media (min-width: 60em) {
+  .brand-name { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
 }
 /* Phones: Sign in sits at the far right. Wide: Start stays next to the brand (wireframe default), the persona
    links and Sign in sit at the right. Auto margins only; nothing uses `order`. */
@@ -188,9 +201,9 @@ a { color: inherit; text-decoration: none; }
   .site-nav { margin-left: auto; }
   .signin { margin-left: var(--spacing-xs); }
 }
-/* 320 px phones: the name keeps the row; the mark steps out (existing rule hr-landing-logo-mark). */
-@media (max-width: 22.49em) {
-  .brand-mark { display: none; }
+/* 320 px phones: the name keeps the row; the mark steps out below 360 px (existing rule hr-landing-logo-mark). */
+@media (min-width: 22.5em) {
+  .brand-mark { display: flex; }
 }
 
 /* ---------- buttons ---------- */
@@ -209,14 +222,15 @@ a { color: inherit; text-decoration: none; }
 /* brand.primary on brand.primaryLight is below AA for normal text (contrast.test.ts): the label darkens on hover. */
 .btn-secondary:hover { background: var(--colors-brand-primaryLight); color: var(--colors-brand-primaryDark); }
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-md); margin-top: var(--spacing-xl); }
-@media (max-width: 44.99em) { .actions .btn { width: 100%; } }
+.actions .btn { width: 100%; }
+@media (min-width: 45em) { .actions .btn { width: auto; } }
 .text-link {
   color: var(--colors-brand-primaryDark); font-weight: var(--weight-semibold);
   text-decoration: underline; text-decoration-thickness: var(--border-width-thin); text-underline-offset: var(--spacing-xs);
 }
 
 /* ---------- hero (home L0) ---------- */
-.hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--spacing-xl); padding: var(--spacing-xl) 0 var(--spacing-xxl); }
+.hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--spacing-xl); padding: var(--spacing-xl) 0; }
 .hero h1 { font-size: var(--size-display); line-height: var(--leading-tight); margin: 0; }
 .lead { margin: var(--spacing-md) 0 0; font-size: var(--size-body); line-height: var(--leading-relaxed); color: var(--colors-text-secondary); max-width: var(--lead-measure); }
 .hero .grown-ups { margin-top: var(--spacing-xs); }
@@ -242,7 +256,8 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ---------- sections ---------- */
-.section { padding: var(--spacing-xl) 0; border-top: var(--border-width-thin) solid var(--colors-border-subtle); }
+/* Phones: spacing.lg above and below each section (the launch-news band's real form needs the room, README "Measured"). */
+.section { padding: var(--spacing-lg) 0; border-top: var(--border-width-thin) solid var(--colors-border-subtle); }
 .section h2 { font-size: var(--size-prompt); line-height: var(--leading-tight); margin: 0 0 var(--spacing-md); }
 .section p { margin: 0; line-height: var(--leading-relaxed); }
 @media (min-width: 45em) {
@@ -307,14 +322,53 @@ a { color: inherit; text-decoration: none; }
   .steps-wide { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
-/* ---------- launch news (existing WaitlistForm, drawn as it renders today) ---------- */
-.news-form { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); margin-top: var(--spacing-lg); }
-.news-form .field {
-  flex: 1 1 var(--field-basis); min-width: 0; min-height: var(--touch-min); padding: 0 var(--spacing-lg);
-  border: var(--border-width-base) solid var(--colors-border-strong); border-radius: var(--radii-md);
-  background: var(--colors-surface-paper); color: var(--colors-text-muted); display: flex; align-items: center;
+/* ---------- launch news: the existing WaitlistForm, unchanged, on today's brand band (#get) ----------
+   The form's consent and success lines are text.onPrimary, so the block keeps the band. Only the band is new. It
+   follows the cost section directly (no top margin): that section's bottom padding already separates them. */
+.news-band {
+  margin: 0 0 var(--spacing-xl); padding: var(--spacing-lg);
+  background: var(--colors-brand-primary); color: var(--colors-text-onPrimary);
+  border-radius: var(--radii-xxl); text-align: center;
 }
-.consent { margin-top: var(--spacing-sm) !important; font-size: var(--size-caption); color: var(--colors-text-muted); }
+.news-band h2 { font-size: var(--size-prompt); line-height: var(--leading-tight); margin: 0 0 var(--spacing-sm); color: var(--colors-text-onPrimary); }
+.news-band > p { margin: 0 auto var(--spacing-lg); max-width: var(--lead-measure); line-height: var(--leading-relaxed); }
+/* border.focus is under 3:1 on brand.primary: on the band the focus ring is text.onPrimary (a band rule, not a form change). */
+.news-band :focus-visible { outline-color: var(--colors-text-onPrimary); }
+@media (min-width: 45em) {
+  .news-band { margin: 0 0 var(--spacing-xxxl); padding: var(--spacing-xxl); }
+  .news-band h2 { font-size: var(--size-title); }
+}
+/* WaitlistForm as it renders today. */
+.wl { max-width: var(--wl-max); margin: 0 auto; }
+.wl-form { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--spacing-sm); }
+.wl-input {
+  flex: 1 1 var(--wl-field-basis); min-width: 0; min-height: var(--wl-control);
+  padding: var(--spacing-sm) var(--spacing-lg); border: none; border-radius: var(--radii-pill);
+  background: var(--colors-surface-paper); color: var(--colors-text-primary); font: inherit; font-size: var(--size-body);
+}
+.wl-button {
+  min-height: var(--wl-control); padding: var(--spacing-sm) var(--spacing-xl); border: none; border-radius: var(--radii-pill);
+  background: var(--colors-text-primary); color: var(--colors-text-inverse);
+  font: inherit; font-weight: var(--weight-bold); font-size: var(--size-body); cursor: pointer;
+}
+.wl-consent { margin: var(--spacing-md) 0 0; font-size: var(--size-bodySm); line-height: var(--leading-relaxed); color: var(--colors-text-onPrimary); }
+.wl-consent a { color: inherit; text-decoration: underline; }
+
+/* ---------- /learners: the Hoya line, card tiles ---------- */
+.hoya-line { display: grid; grid-template-columns: var(--spacing-xxxl) minmax(0, 1fr); column-gap: var(--spacing-md); align-items: center; margin: var(--spacing-lg) 0; }
+.hoya-line .hoya-small { width: var(--spacing-xxxl); height: var(--spacing-xxxl); display: flex; }
+.hoya-line p { margin: 0; line-height: var(--leading-normal); }
+.tiles { list-style: none; margin: var(--spacing-md) 0; padding: 0; display: grid; gap: var(--spacing-sm); grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--tile-min)), 1fr)); }
+.tile {
+  display: grid; justify-items: center; align-content: start; row-gap: var(--spacing-xxs); text-align: center;
+  padding: var(--spacing-sm); background: var(--colors-surface-paper);
+  border: var(--border-width-base) solid var(--colors-border-subtle); border-radius: var(--radii-lg); box-shadow: var(--shadow-card);
+}
+.tile .ko { font-size: var(--size-prompt); font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: normal; word-break: keep-all; }
+.tile .rr { font-size: var(--size-caption); color: var(--colors-text-muted); }
+.tile .en { font-size: var(--size-bodySm); font-weight: var(--weight-semibold); line-height: var(--leading-tight); }
+@media (min-width: 45em) { .tiles { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--spacing-md); } .tile { padding: var(--spacing-md); } }
+.fold-note { color: var(--colors-text-muted); font-size: var(--size-caption); }
 
 /* ---------- folds (native details) ---------- */
 .folds { display: grid; gap: var(--spacing-sm); }
@@ -322,23 +376,25 @@ details {
   background: var(--colors-surface-paper); border: var(--border-width-base) solid var(--colors-border-subtle);
   border-radius: var(--radii-md);
 }
-summary {
+/* The summary stays a block: older WebKit (iOS 14 / 15 Safari) does not reliably lay out a summary that is itself a
+   grid or flex container, so the question and the chevron sit in an inner span that does the layout (S-D review). */
+summary { display: block; font-weight: var(--weight-semibold); cursor: pointer; list-style: none; }
+summary::-webkit-details-marker { display: none; }
+summary .q {
   display: grid; grid-template-columns: minmax(0, 1fr) var(--spacing-xl); align-items: center; column-gap: var(--spacing-md);
   min-height: var(--touch-min); padding: var(--spacing-sm) var(--spacing-lg);
-  font-weight: var(--weight-semibold); cursor: pointer; list-style: none;
 }
-summary::-webkit-details-marker { display: none; }
-summary::after {
+summary .q::after {
   content: ""; width: var(--spacing-sm); height: var(--spacing-sm); justify-self: center;
   border-right: var(--border-width-base) solid var(--colors-brand-primaryDark);
   border-bottom: var(--border-width-base) solid var(--colors-brand-primaryDark);
   transform: rotate(45deg); margin-top: calc(-1 * var(--spacing-xs));
 }
-details[open] summary::after { transform: rotate(225deg); margin-top: var(--spacing-xs); }
+details[open] summary .q::after { transform: rotate(225deg); margin-top: var(--spacing-xs); }
 details .answer { padding: 0 var(--spacing-lg) var(--spacing-lg); color: var(--colors-text-secondary); line-height: var(--leading-relaxed); }
 
 /* ---------- page head (persona pages) and closing block ---------- */
-.page-head { padding: var(--spacing-xl) 0 var(--spacing-xxl); }
+.page-head { padding: var(--spacing-xl) 0; }
 .page-head h1 { font-size: var(--size-display); line-height: var(--leading-tight); margin: 0; }
 @media (min-width: 45em) {
   .page-head { padding: var(--spacing-xxxl) 0; }
@@ -350,7 +406,8 @@ details .answer { padding: 0 var(--spacing-lg) var(--spacing-lg); color: var(--c
   display: grid; gap: var(--spacing-lg); justify-items: start;
 }
 .closing p { margin: 0; font-size: var(--size-prompt); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
-@media (max-width: 44.99em) { .closing .btn { width: 100%; } }
+.closing .btn { width: 100%; }
+@media (min-width: 45em) { .closing .btn { width: auto; } }
 @media (min-width: 45em) {
   .closing { grid-template-columns: minmax(0, 1fr) auto; align-items: center; padding: var(--spacing-xxl); margin: var(--spacing-xxxl) 0; }
 }
