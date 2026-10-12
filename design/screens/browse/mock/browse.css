@@ -420,3 +420,4 @@ a.cell, a.trail-row, a.slot, a.lib-tile, a.topic-row, a.award { text-decoration:
 .switch { border: 0; padding: 0; }
 .word-main .ko, .slot .ko { align-self: flex-start; }
 .ko { flex-wrap: wrap; } .ko b, .ko i { white-space: nowrap; }
+.thumb-row a, a .face { text-decoration: none; }

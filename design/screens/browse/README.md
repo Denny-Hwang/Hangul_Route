@@ -28,7 +28,7 @@ Built by:
 
 **The mock is a design reference, not shipped code.**
 
-- **Content is real.** Every lesson, letter, word, gloss, minute count, step, skill, card and "Where it sits" line is the shipped bundle read through BR-4's own functions (`defaultBrowseBundle`, `browseRouteTrail`, `browseJourneyRows`, `browseLibrary`, `episodeOutline`, `itemFacts`) on `origin/main` at `34aae58a`. The sampler grid of `home-states.html` is `browseJourneyRows` with a sampler pass and the switch on.
+- **Content is real.** Every lesson, letter, word, gloss, minute count, step, skill, card and "Where it sits" line is the shipped bundle read through BR-4's own functions (`defaultBrowseBundle`, `browseRouteTrail`, `browseJourneyRows`, `browseLibrary`, `episodeOutline`, `itemFacts`) on `origin/main` at `6610ae87` (after #410, which completed Stage 1 Nature and Crafts). The sampler grid of `home-states.html` is `browseJourneyRows` with a sampler pass and the switch on.
 - **Tokens.** Every value in `mock/browse.css` is a token of `packages/design-system/src/tokens.ts`, copied once into a custom property named after it, generated from the tokens module: `--spacing-xl` is `spacing.xl`, `--colors-border-shape` is `colors.border.shape`. The few derived values are under "Constants".
 - **Drawn parts are the shipped geometry.**
   - Card faces are `HeritageCardArt` rendered to SVG, or CardArt's Korean-word face on the theme tint where the design system draws no picture (`design/components/CardArt/spec.md`).
@@ -56,9 +56,9 @@ Open any file in a browser (`design/screens/browse/mock/home-route.html`). Links
 | `lesson-display-375.png`, `-1280.png` | page | the sheet over home (a bottom sheet on phones, a centred dialog from the regular class) |
 | `lesson-display-states-375.png`, `-1280.png` | board | today (no Language row) and with Korean and Spanish shipped |
 | `episode-375.png`, `-1280.png` | page | Meet the Letters: three lessons with their letters, skills and minutes, the five cards |
-| `episode-states-375.png`, `-1280.png` | board | closed rows (Lunch Box Words, sampler with the switch on), a taste (Tiger, Magpie, Moon), coming later (Word Builder), a story episode |
+| `episode-states-375.png`, `-1280.png` | board | closed rows (Lunch Box Words, sampler with the switch on), Tigers, Mountains, Moon (two lessons that introduce no letter show their first three words), coming later (Word Builder), a story episode |
 | `item-375.png`, `-375-first.png`, `-1280.png`, `-320-text200.png` | page | Meet a, eo, g, n opened from a report letter ㄴ: focus line, the marked chip, What this teaches, Where it sits, the card, Preview this lesson |
-| `item-states-375.png`, `-1280.png` | board | closed with Open billing (account pass), closed without it (gate or kept pass), a taste lesson, a story |
+| `item-states-375.png`, `-1280.png` | board | closed with Open billing (account pass), closed without it (gate or kept pass), a lesson that introduces no letter (Mountain, River, Sea), a story |
 | `preview-player-375.png`, `-375-first.png`, `-1280.png`, `-320.png`, `-320-text200.png` | page | the strip above the learner quest player (Discover, page 2 of 2: ㄱ and ㄴ) |
 | `preview-states-375.png`, `-1280.png` | board | the leave confirm, the story reader, a game step, the error screen |
 | `preview-end-375.png`, `-1280.png` | page | That is the whole lesson: the card Book, Next lesson, Preview again, Back to the lesson page |
@@ -121,7 +121,7 @@ All of them pass the caregiver banned list (`behind`, `lazy`) and the spec's lis
 8. **Lesson rows put skills and Open on one line.** Title, minutes, the letters (or a taste lesson's first three words), then the skills chips with [ Open ] at the right of the same line. A closed row adds the grown-up caption above that line. [ Open ] is a ghost button: the outline has no primary action (wireframe, "home is a map").
 9. **The item page's primary is pinned on phones.** With five fact rows the button would sit below the fold at 375. It is pinned to the bottom edge on the compact class, with a `border.subtle` top rule on canvas, and is inline from the regular class up. This keeps the wireframe's order (facts first) and makes the action one tap away.
 10. **Focus marking.** The focus line "Taught here: ㄴ n" sits on `surface.sunken` above the title. The focused chip in the Letters row gets a `borderWidth.thick` `text.primary` outline (shape) and the label "…, taught here" (words), never colour alone.
-11. **Syllables get their own row.** `itemFacts` returns syllables apart from words, because a syllable has no gloss. The wireframe has no row for them, so "Syllables" is drawn after Words. An empty row is hidden: no Skills row for a lesson whose `questSkills` is empty, no Letters row for a taste lesson.
+11. **Syllables get their own row.** `itemFacts` returns syllables apart from words, because a syllable has no gloss. The wireframe has no row for them, so "Syllables" is drawn after Words. An empty row is hidden: no Skills row for a lesson whose `questSkills` is empty, no Letters row for a lesson that introduces no letter.
 12. **Steps are the player's own names, in order.** "Hello · Look and learn · Practice · Try it · Quick check · Finish" (`questStepLabel`), not the wireframe's sample ("Meet the letters · Practice · Check · Card").
 13. **"Where it sits" uses the Journey column label.** "Stage 1 · Letters · lesson 1 of 3" uses `themeColumnLabel` (the first word of the theme title), the same word as the Journey's columns. A shelf story's quest reads "Stage n · Theme", with no position.
 14. **The closed box replaces the primary, in place.** On `surface.sunken`: the grown-up line in Body semibold, then [ Open billing ] as a ghost button for an account pass (not kept, not a fallback). It has no glyph, no price, and no learner word. The facts above it are the same as on the open page.
