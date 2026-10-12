@@ -39,9 +39,13 @@ export function canKeep(pass: BrowsePass): boolean {
   return pass.source === 'account' && pass.fallback !== true;
 }
 
-/** What the keep switch writes to `browse:pass`, or `null` when this pass may not be kept. */
+/**
+ * What the keep switch writes to `browse:pass`, or `null` when this pass may
+ * not be kept: a gate or fallback pass, or one that is no longer active (a tab
+ * left open past its 12 hours cannot turn the switch on into 7 new days).
+ */
 export function keptPassFor(pass: BrowsePass, now: number): BrowseKeptPass | null {
-  return canKeep(pass) ? { v: 1, scope: pass.scope, keptAt: now } : null;
+  return canKeep(pass) && passActive(pass, now) ? { v: 1, scope: pass.scope, keptAt: now } : null;
 }
 
 export function keptPassActive(kept: BrowseKeptPass, now: number): boolean {

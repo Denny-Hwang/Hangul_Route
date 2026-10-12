@@ -66,6 +66,15 @@ describe('keep on this device (OD-4)', () => {
     expect(keptPassFor(account({ scope: 'sampler', fallback: true }), T0)).toBeNull();
   });
 
+  it('only a pass that is still active may be kept: the switch never turns an expired pass into 7 new days', () => {
+    // a tab left open past the account pass's 12 hours, then the switch turned on without a navigation
+    expect(keptPassFor(account(), T0 + BROWSE_ACCOUNT_MAX_MS - 1)).toEqual({ v: 1, scope: 'full', keptAt: T0 + BROWSE_ACCOUNT_MAX_MS - 1 });
+    expect(keptPassFor(account(), T0 + BROWSE_ACCOUNT_MAX_MS)).toBeNull();
+    expect(keptPassFor(account({ scope: 'sampler' }), T0 + 13 * 60 * MIN)).toBeNull();
+    // a pass issued too far ahead of this clock is no pass, so it cannot be kept either
+    expect(keptPassFor(account({ issuedAt: T0 + 2 * MIN, seen: T0 + 2 * MIN }), T0)).toBeNull();
+  });
+
   it('a kept pass lives 7 days and never from the future', () => {
     expect(keptPassActive(kept(), T0 + BROWSE_KEEP_MS - 1)).toBe(true);
     expect(keptPassActive(kept(), T0 + BROWSE_KEEP_MS)).toBe(false);
