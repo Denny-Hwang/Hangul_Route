@@ -172,3 +172,13 @@ Three names in the new `access.` namespace and two in F-PLAN-002's `route.` name
 | 3 | `access.free_end_reached` | F-ENT-003 §3.12 | `{ freeDays: number, placedOut: boolean }` (first time on this device for this profile) | E3-1b | E3-7 |
 | 4 | `route.next_started` | F-ENT-003 §3.12 | `{ source: 'class' \| 'school' \| 'family' \| 'self' \| 'cursor', surface: 'home' \| 'results' \| 'journey' \| 'episode' \| 'route' \| 'placement' }` (the `routeNext` quest is started) | E3-1b | E3-4, E3-6 |
 | 5 | `route.offplan_finished` | F-ENT-003 §3.12 | `{ source: 'class' \| 'school' \| 'family' \| 'self', stage: StageKey }` (a quest outside the plan is completed while a leading source exists) | E3-1b | E3-4 |
+
+## O. Persona app shell names (F-APP-001; added by its A-0 docs PR)
+
+Three names in the new `shell.` namespace (the learner app's entries into the grown-up area on app.hangulroute.com). None collides with sections A to N or with `TELEMETRY_EVENT_NAMES` on `main` at `ba78478c` (no existing name starts with `shell.`). Worker first: A-1 adds all three to `TELEMETRY_EVENT_NAMES` and its exact-list test, and the API Worker deploys on merge before any app build that sends them (A-6, A-7). Sent by the learner app only (the console has no telemetry client, F-APP-001 OD-9). **No `profileId`** on any of them: codes only, never a name, an email, a path with ids or a space id. `paywall.console_opened` keeps firing where F-BILL-002 keeps it (flag off).
+
+| # | Name | Owning spec | Payload | Added to the list by | Emitted by |
+|---|---|---|---|---|---|
+| 1 | `shell.persona_chosen` | F-APP-001 §3.18 | `{ persona: 'learner' \| 'parent' \| 'teacher', from: 'welcome' \| 'welcome-continue' }` (a Welcome persona button, Continue as, or Let's start) | A-1 | A-7 |
+| 2 | `shell.grown_up_handoff` | F-APP-001 §3.18 | `{ via: 'profile' \| 'dashboard' \| 'plan' \| 'lock', target: 'router' \| 'billing' \| 'next' }` (the learner app hands the tab to the grown-up area after the gate) | A-1 | A-6 (lock), A-7 (profile, dashboard, plan) |
+| 3 | `shell.path_bounced` | F-APP-001 §3.18 | `{ prefix: 'signin' \| 'start' \| 'teach' \| 'parent' \| 'account' }` (the learner bundle booted on a grown-up path with no file and sent the tab to the persona entry) | A-1 | A-6 |

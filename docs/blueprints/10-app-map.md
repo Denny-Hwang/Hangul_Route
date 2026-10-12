@@ -201,15 +201,27 @@ Hangul Route
 
 ### 3.2 B. Caregiver Console (mobile `parent/*` + web `/parent`)
 
+> **F-APP-001 (2026-10-11, 결정 #33)**: 어른 페이지 전부가 **`app.hangulroute.com`** 으로 옮겨 간다 (학습자 Worker `hangul-route-app` 이 콘솔 정적 내보내기를 예약 경로 `/signin` · `/start` · `/teach` · `/parent` · `/account` 아래에 함께 서빙, F-APP-001 §3.1 B2). hangulroute.com 은 소개·가이드 전용 (F-SITE-002 S-10 부터 옛 어른 주소를 앱 호스트로 리다이렉트). 경로 표의 원본은 F-APP-001 §3.2 와 코드의 `APP_ROUTES` / `GROWN_UP_PREFIXES` (`packages/content-schema/src/schemas/app-shell.ts`). 아래 "web" 표기는 M3 이후 app 호스트를 뜻한다.
+
 | ID | 위치 | 목표 | 상태 | 스펙 | WF |
 |---|---|---|---|---|---|
-| `parent/dashboard` | ParentDashboard · web `/parent` | 학습자별 주간 카드 | S | F-PAR-001 | ✓ |
-| `parent/learner-detail` | web `/parent/[childId]` | 한 아이 깊이 보기 | S-thin | F-PAR-001 §5 | ✓ |
+| `shell/signin` | app `/signin` (`?persona=` · `?as=` · `?next=` · `?mode=create` · `?lang=`) | 어른 로그인 + 페르소나 홈으로 라우팅 · 계정 만들기는 어른 확인 단계 뒤 · 기기에 학습자 프로필이 있으면 OAuth 만으로는 열리지 않음 (재인증) | R | F-APP-001 §3.7 | ✓ |
+| `shell/adult-frame` | app 의 모든 어른 페이지 | 페르소나 전환 (Family · Teacher) · 메뉴 · Back to learning · 사이트 링크 (푸터) | R | F-APP-001 §3.8 | ✓ |
+| `shell/parent-home` | app `/parent` | 가족 홈: 학습자 카드 (고정 순서, 최근 7일 분) · 카드 액션 · 빈 상태 (이 기기에서 앱 열기 + join 코드) · 가족 없음 상태 · 교사로 교차 링크 | R | F-APP-001 §3.8 | ✓ |
+| `shell/teacher-home` | app `/teach/home` (필터됨) | 교사 홈: 학급·학교만 · 학급 행 entries · 학급 없음 상태 · 가족으로 교차 링크 | R | F-APP-001 §3.8 | ✓ |
+| `shell/grown-up-lock` | app 어른 페이지 위 (학습자 프로필이 있는 기기) | Grown-ups only: 기기 PIN (서명으로 확인된 epoch 일 때) 또는 다시 로그인 · Back to learning · 잠긴 동안 데이터·API 호출 없음 | R | F-APP-001 §3.9 | ✓ |
+| `shell/offline` | 프리캐시 `/grown-ups-offline.html` | 오프라인에서 어른 경로로 갈 때: "You're offline" · Back to learning · Try again | R | F-APP-001 §3.12 | ✓ |
+
+| ID | 위치 | 목표 | 상태 | 스펙 | WF |
+|---|---|---|---|---|---|
+| `parent/dashboard` | ParentDashboard · web `/parent` (F-APP-001 A-5b 부터 app `/parent` = `shell/parent-home`) | 학습자별 주간 카드 | S | F-PAR-001 | ✓ |
+| `parent/grown-up-home-card` | Profile 어른 영역 첫 행 + ParentDashboard 상단 카드 (웹, `flags.grownUpHomeEnabled`) | "Grown-up home" → 신선한 PIN → app 어른 영역 (`openGrownUpArea`) · 오프라인이면 비활성 | R | F-APP-001 §3.6, §3.9 | ✓ |
+| `parent/learner-detail` | web `/parent/[childId]` (데모; F-APP-001 A-5b 에서 제거, 옛 주소는 `/parent` 로) | 한 아이 깊이 보기 | S-thin | F-PAR-001 §5 | ✓ |
 | `parent/voice-recorder` | (신규) | 10초 음성 메시지 | R | F-PAR-001 N5 | ✓ |
-| `console/sign-in` | web `/teach` (+ mobile 나중, F-AUTH-004) | 어른 로그인 — **Clerk 위젯** (publishable key 가 빌드에 있을 때, hash routing) · dev 폼은 키 없는 빌드에서만 | S | F-CONSOLE-001 §3.2 · F-AUTH-001/002 | ✓ |
+| `console/sign-in` | web `/teach` (+ mobile 나중, F-AUTH-004) · F-APP-001 부터 app `/signin` (`shell/signin`), `/teach` 는 라우터 | 어른 로그인 — **Clerk 위젯** (publishable key 가 빌드에 있을 때, hash routing) · dev 폼은 키 없는 빌드에서만 | S | F-CONSOLE-001 §3.2 · F-AUTH-001/002 | ✓ |
 | `console/plan-builder` | web `/teach/space/:id/plan` (family·class 공용) | 계획 만들기·발행·readout | S | F-PLAN-001 §3.5 | ✓ |
 | `console/account` | web + mobile | 이메일·동의·백업·학습자 삭제 | P | roadmap §5.3 | NEW |
-| `console/billing` | web `/teach/billing` (mobile IAP 는 F-IAP-002) | 현재 플랜 카드 · 역할별 플랜 행 (추천 1개) · Choose → Stripe Checkout · Manage → Portal · 미설정 시 조용한 안내 | S | F-ENT-001 §3.6 | ✓ |
+| `console/billing` | web `/teach/billing` (mobile IAP 는 F-IAP-002) · F-APP-001 부터 app `/account/billing` (모든 어른, 내용은 F-BILL-002), `/teach/billing` 은 리다이렉트 페이지 | 현재 플랜 카드 · 역할별 플랜 행 (추천 1개) · Choose → Stripe Checkout · Manage → Portal · 미설정 시 조용한 안내 | S | F-ENT-001 §3.6 | ✓ |
 | `parent/notes` | ParentDashboard 의 학습자별 행 → NotesGrownUp (PIN 뒤) | 학습자별 모든 노트 · 숨기기 · 신고 · 학급 노트 설정 (전체 / 격려만 / 끔) · 교사가 보는 것 안내 · 웹: Send a note → app 의 `/parent/notes` | R | F-FEEDBACK-001 §6.10 | ✓ |
 | `parent/note-report` | sheet (PIN 뒤, `NoteReport`) | 노트 신고 (사유 4개, 자유 입력 없음) → 모든 기기에서 숨김 · Just hide it (신고 없이 숨김) | R | F-FEEDBACK-001 §6.10 | ✓ |
 | `console/family-notes` | app `/parent/space/notes?id=` (Received · Sent 탭) | 학습자 한 명씩: 받은 모든 노트 (가정·학급, 되돌린 노트 포함, 가정 노트는 보낸 계정 표시) · 숨기기 · 신고 · 보낸 사람 막기 · 학급 노트 설정 · 가족 설정의 Can send notes | R | F-FEEDBACK-001 §6.13, §7.2, §8.2-8.5 | ✓ |
@@ -217,9 +229,11 @@ Hangul Route
 
 ### 3.3 C. Teacher / School Console (web `/teach`)
 
+> **F-APP-001 (2026-10-11)**: 모든 경로가 `app.hangulroute.com` 에서 서빙된다 (결정 #33). `/teach/start` → **`/start`** (role cards, `?persona=` 로 카드 미리 선택; app 호스트의 `/teach/start` 는 쿼리를 유지하는 리다이렉트 페이지). `/teach` 는 라우터, `/teach/home` 은 학급·학교만 보이는 교사 홈 (`shell/teacher-home`; 가족 그룹은 `/parent` 로). 모든 `/teach/space/**` 페이지에 `/parent/space/**` 쌍둥이가 생긴다 (`SPACE_PAGES`, A-5b).
+
 | ID | 목표 | 상태 | 스펙 | WF |
 |---|---|---|---|---|
-| `console/onboarding-role` | web `/teach/start` | 부모/교사/관리자 선택 → 첫 space 생성 → (교사) 코드 | S | F-CONSOLE-001 §3.3 | ✓ |
+| `console/onboarding-role` | web `/teach/start` (F-APP-001 부터 app `/start`) | 부모/교사/관리자 선택 → 첫 space 생성 → (교사) 코드 | S | F-CONSOLE-001 §3.3 | ✓ |
 | `console/home` | web `/teach/home` | 내 space 들 (가정·학급·학교) 전환 허브 — 모든 행이 `/teach/space/:id` 로 (§7 #23) | S | F-CONSOLE-001 §3.4 | ✓ |
 | `console/roster` | web `/teach/space/:id` | join code (복사·재발급) · 이번 주 롤업 · 학생 summary 카드 (계획·재연결·설정 버튼은 비활성) | S-thin | F-CONSOLE-001 §3.5 · F-TCH-001 §3.2 | ✓ |
 | `console/space-settings` | web `/teach/space/:id/settings` | 코드 재발급 · 동의 모드 · 익명 roster · 멤버/학습자 제거 · 보관/해제 · 학습자 데이터 삭제 (이름 입력 확인) | S | F-TCH-001 §10.3 | ✓ |
@@ -297,6 +311,24 @@ journey/grid-with-stories ─┬─ (lesson 셀) ─▶ episode/detail ─▶ ep
 ```
 
 ### 4.3 Caregiver / Teacher Console (web)
+
+F-APP-001 이후 (app.hangulroute.com, M3 부터 학습자 진입점 켜짐):
+
+```
+학습자 앱 Welcome (프로필 없음) ─ [Parent or caregiver | Teacher] ─▶ shell/signin (?persona=)
+학습자 앱 Profile 어른 영역 · ParentDashboard 카드 · Plan 화면 Open billing ─▶ (신선한 PIN) ─▶ shell/signin 또는 /account/billing
+hangulroute.com 의 Sign in 링크 ─▶ shell/signin (?persona=, ?lang=)
+
+shell/signin ─┬─ (space 없음) ─▶ console/onboarding-role (/start) ─▶ space 생성 ─▶ 페르소나 홈
+              └─ (space 있음) ─▶ 페르소나 홈 (homeFor: hint → last → 하나뿐인 페르소나 → Family)
+shell/grown-up-lock ─ 학습자 프로필이 있는 기기에서 모든 어른 페이지 앞 (PIN 또는 다시 로그인)
+shell/adult-frame ─┬─ [Family]  ─▶ shell/parent-home (/parent) ─▶ /parent/space/** (roster · plan · settings …)
+                   ├─ [Teacher] ─▶ shell/teacher-home (/teach/home) ─▶ /teach/space/** (roster · plan · lecture …)
+                   ├─▶ console/billing (/account/billing)
+                   └─▶ Back to learning (/) — unlock 과 콘솔 세션을 지움
+```
+
+출시 전 (현재 hangulroute.com, F-SITE-002 S-10 전까지 그대로):
 
 ```
 / (landing) ─▶ console/sign-in ─▶ (space 없음) console/onboarding-role ─▶ space 생성 ─▶ console/home
@@ -382,6 +414,7 @@ console/home ─┬─ [family] ─▶ parent/dashboard ─▶ parent/learner-de
 | 32 | 인메모리 store → D1 전환 방식 | **`Db` 인터페이스 + 구현 2개** (`D1Db` / `MemoryDb`, 읽기는 복사본·쓰기는 `put`). 라우트 응답 불변. 테스트는 계약 스위트(두 백엔드) + 전체 스위트를 메모리·SQLite(`node:sqlite` 셔임 위에 실제 마이그레이션) 로 두 번 실행. v1 표는 메모리 유지 (클라이언트 미사용) | F-INFRA-003 |
 | 31 | 프로모션·레퍼럴 코드의 저장 위치 (자체 테이블 + 관리 화면 vs Stripe) | **Stripe Promotion Code 가 유일한 원본** (오너 요청 2026-10-06: 코드·할인율을 나중에 직접 관리). 생성·수정·만료·사용 횟수 제한은 Stripe 대시보드, API 는 조회·적용·귀속만. 자동 리워드(추천인 보상) 는 첫 코드 운영 후 별도 스펙 | F-ENT-002 |
 | 29 | 랜딩·콘솔 (`apps/web`) 호스팅 — Vercel vs Cloudflare(OpenNext) | **Cloudflare 통일, 단 어댑터 없이 Next `output: 'export'` 정적 내보내기 → assets-only Worker `hangul-route-web`** (학습자 앱과 같은 모양). 최신 OpenNext 어댑터는 Next ≥ 15.5 를 요구해 Next 14 콘솔과 맞지 않고, Vercel 무료 플랜은 상업 이용 불가. 결과로 space 주소가 `/teach/space/:id` → `/teach/space?id=` 로 바뀜 (오너 결정 2026-10-06) | F-CONSOLE-001 §3.7 · `apps/web/wrangler.toml` |
+| 33 | 어른 페이지 (콘솔) 의 호스트 — hangulroute.com 유지 vs app.hangulroute.com | **app 호스트가 콘솔을 서빙 (B2)**: Next 콘솔을 "console" 역할로 빌드해 학습자 Worker `hangul-route-app` 의 `dist` 에 예약 경로 (`/signin` · `/start` · `/teach` · `/parent` · `/account`) 로 복사. Worker 코드·대시보드 라우트 없음, 같은 origin 이라 PIN 핸드오프 (`sessionStorage`) 와 발표자 핸드오프가 그대로 동작. 서비스 워커는 어른 경로를 프리캐시·폴백에서 제외하고 오프라인 페이지를 보여 준다. hangulroute.com 은 소개·가이드 전용 (F-SITE-002 S-10 이 옛 주소를 리다이렉트), 결제도 app 호스트 `/account/billing` 에서만 (오너 요청 2026-10-11) | F-APP-001 §3.1–3.4 · F-CONSOLE-001 §3.7 · `docs/launch/owner-runbook.md` §E |
 | 25 | 재연결 시 새 기기의 임시 프로필 | 새 기기에서 만든 임시 프로필은 **그대로 두고** 복원된 프로필을 활성으로 전환 (자동 삭제는 아동 데이터 손실 위험) | F-TCH-001 §10.1 · 코드 `JoinSpaceScreen` |
 
 코드 ↔ 스펙 불일치 (shipped 화면) 는 같은 날 코드로 수정했다 — 각 와이어프레임의 Open questions 와 PR 본문 참조.
