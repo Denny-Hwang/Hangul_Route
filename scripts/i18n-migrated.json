@@ -66,6 +66,7 @@
     "apps/mobile/src/screens/library/StoryTile.tsx",
     "apps/mobile/src/screens/library/StoryShelf.tsx",
     "apps/mobile/src/screens/profile/EditProfileScreen.tsx",
+    "apps/web/src/components/console/JourneyParts.tsx",
     "apps/mobile/src/screens/parent/PlacementReportScreen.tsx",
     "apps/mobile/src/screens/results/**"
   ],
