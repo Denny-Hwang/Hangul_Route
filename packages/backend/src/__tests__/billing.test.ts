@@ -183,7 +183,8 @@ describe('GET /api/billing/summary: one card per persona (section 4.2)', () => {
     await history(fam);
     const c = cardOf(await summaryOf('dad'), fam);
     expect(c).toMatchObject({ role: 'caregiver', payer: false, readOnlyReason: 'family', actions: { buy: null, manage: false, contact: false }, receipts: [], hasReceipts: false, legacyNoHistory: false });
-    expect(c.usage).toEqual({ learners: 3, learnerCap: FAMILY_LIFETIME_LEARNERS, teachers: null, teacherCap: null });
+    // Viewers get the learner count only, never the plan's limit (section 5.3).
+    expect(c.usage).toEqual({ learners: 3, learnerCap: null, teachers: null, teacherCap: null });
     expect(JSON.stringify(c)).not.toMatch(/amountCents|1530/);
   });
 
@@ -202,6 +203,13 @@ describe('GET /api/billing/summary: one card per persona (section 4.2)', () => {
     expect(cardOf(await summaryOf('co'), cls)).toMatchObject({ role: 'teacher', payer: false, readOnlyReason: 'class', usage: { learners: 23, learnerCap: null }, actions: { buy: null, manage: false, contact: false }, receipts: [] });
   });
 
+  it('co-teacher of a free class: the student count, not the free cap', async () => {
+    const cls = await createSpace('teacher', 'class', 'Room 4');
+    await addAdult(cls, 'co', 'teacher');
+    await addLearners(cls, 14);
+    expect(cardOf(await summaryOf('co'), cls).usage).toEqual({ learners: 14, learnerCap: null, teachers: null, teacherCap: null });
+  });
+
   it('class inside a school: covered by the school, "Your school manages this plan", nothing to buy', async () => {
     const sch = await createSpace('principal', 'school', 'Maple School');
     // A teacher invited into the school creates their own class there; the school pays.
@@ -209,15 +217,36 @@ describe('GET /api/billing/summary: one card per persona (section 4.2)', () => {
     const own = await createSpace('kim', 'class', 'Room 5', sch);
     await addLearners(own, 31);
     const lic = await entitle(sch, { planKey: 'group_license' });
+    await history(sch, { planKey: 'group_license' });
     const c = cardOf(await summaryOf('kim'), own);
-    expect(c).toMatchObject({ payer: true, readOnlyReason: 'school', coverage: { state: 'school', schoolName: 'Maple School', planKey: 'group_license', expiresAt: lic.expiresAt }, usage: { learners: 31, learnerCap: null }, actions: { buy: null, manage: false, contact: false } });
+    // The class owner is a viewer here: the school pays (section 4.2), so no receipts and no payer ordering.
+    expect(c).toMatchObject({ payer: false, readOnlyReason: 'school', coverage: { state: 'school', schoolName: 'Maple School', planKey: 'group_license', expiresAt: lic.expiresAt }, usage: { learners: 31, learnerCap: null }, actions: { buy: null, manage: false, contact: false }, receipts: [], hasReceipts: false });
+  });
+
+  it('class inside a school under a seat contract: covered by the contract; an archived school covers nothing', async () => {
+    const sch = await createSpace('principal', 'school', 'Maple School');
+    await addAdult(sch, 'kim', 'teacher');
+    const own = await createSpace('kim', 'class', 'Room 5', sch);
+    await entitle(sch, { planKey: 'school_seat', provider: 'manual', providerRef: null, customerRef: null, seats: 400 });
+    expect(cardOf(await summaryOf('kim'), own).coverage).toMatchObject({ state: 'school', planKey: 'school_seat' });
+    expect(cardOf(await summaryOf('kim'), sch).coverage).toMatchObject({ state: 'school', schoolName: 'Maple School', planKey: 'school_seat' });
+    expect((await call('POST', `/api/spaces/${sch}/archive`, bearer('principal'))).status).toBe(200);
+    expect(cardOf(await summaryOf('kim'), own)).toMatchObject({ coverage: { state: 'free' }, readOnlyReason: 'school', actions: { buy: null } });
+  });
+
+  it('a class moved into a school that still holds its own license: its owner stays the payer and can manage it', async () => {
+    const sch = await createSpace('principal', 'school', 'Maple School');
+    await addAdult(sch, 'kim', 'teacher');
+    const own = await createSpace('kim', 'class', 'Room 5', sch);
+    await entitle(own, { planKey: 'group_license' });
+    expect(cardOf(await summaryOf('kim'), own)).toMatchObject({ payer: true, readOnlyReason: null, coverage: { state: 'own', planKey: 'group_license' }, actions: { buy: null, manage: true } });
   });
 
   it('class inside a school without a school plan: free, still the school manages it, no buy', async () => {
     const sch = await createSpace('principal', 'school', 'Maple School');
     await addAdult(sch, 'kim', 'teacher');
     const own = await createSpace('kim', 'class', 'Room 5', sch);
-    expect(cardOf(await summaryOf('kim'), own)).toMatchObject({ readOnlyReason: 'school', coverage: { state: 'free' }, usage: { learnerCap: FREE_CLASS_STUDENT_CAP }, actions: { buy: null } });
+    expect(cardOf(await summaryOf('kim'), own)).toMatchObject({ payer: false, readOnlyReason: 'school', coverage: { state: 'free' }, usage: { learnerCap: null }, actions: { buy: null } });
   });
 
   it('school teacher member: covered by the school, no seat counts', async () => {
@@ -225,6 +254,9 @@ describe('GET /api/billing/summary: one card per persona (section 4.2)', () => {
     await addAdult(sch, 'kim', 'teacher');
     await entitle(sch, { planKey: 'group_license', expiresAt: null });
     expect(cardOf(await summaryOf('kim'), sch)).toMatchObject({ role: 'teacher', payer: false, readOnlyReason: 'school', coverage: { state: 'school', schoolName: 'Maple School', planKey: 'group_license', expiresAt: null }, usage: null, receipts: [] });
+    // A license past due beyond the grace week no longer covers the member.
+    await entitle(sch, { planKey: 'group_license', status: 'past_due' }, new Date(Date.now() - 30 * DAY));
+    expect(cardOf(await summaryOf('kim'), sch)).toMatchObject({ coverage: { state: 'free' }, usage: null });
     // Without a plan the member just sees the free plan, still no seat counts.
     await entitle(sch, { planKey: 'group_license', status: 'expired' });
     expect(cardOf(await summaryOf('kim'), sch)).toMatchObject({ coverage: { state: 'free' }, usage: null, actions: { buy: null } });
@@ -274,6 +306,17 @@ describe('GET /api/billing/summary: one card per persona (section 4.2)', () => {
     expect((await summaryOf('co')).cards).toEqual([]);
   });
 
+  it('archived: a legacy one-time Family Plan never renews, so its card goes; a past-due subscription Stripe still retries keeps it', async () => {
+    const legacy = await createSpace('mom', 'family', 'Old family');
+    await entitle(legacy, { providerRef: 'pi_legacy', expiresAt: null });
+    const lapsing = await createSpace('mom', 'family', 'Kim family');
+    await entitle(lapsing, { status: 'past_due' }, new Date(Date.now() - 30 * DAY));
+    for (const id of [legacy, lapsing]) expect((await call('POST', `/api/spaces/${id}/archive`, bearer('mom'))).status).toBe(200);
+    const s = await summaryOf('mom');
+    expect(s.cards.map((c) => c.spaceId)).toEqual([lapsing]);
+    expect(cardOf(s, lapsing)).toMatchObject({ archived: true, coverage: { state: 'own', status: 'past_due' }, actions: { buy: null, manage: true } });
+  });
+
   it('orders payer cards first, then family, class, school, newest first', async () => {
     // Distinct creation times, oldest first, one day apart. The clock moves
     // instead of rewriting createdAt: the D1 upsert keeps created_at.
@@ -312,6 +355,21 @@ describe('GET /api/billing/summary: one card per persona (section 4.2)', () => {
     expect((await summaryOf('solo')).account).toEqual([]);
   });
 
+  it('account cards: each plan with its own receipts; past due is a card; no history on an active Stripe row is legacyNoHistory', async () => {
+    const acct = (planKey: 'group_license' | 'family_lifetime', status: 'active' | 'past_due') =>
+      db.applyEntitlement({ subjectKind: 'account', subjectId: 'solo', planKey, status, provider: 'stripe', providerRef: `sub_${planKey}`, customerRef: 'cus_acct', expiresAt: future() }, new Date());
+    await acct('group_license', 'past_due');
+    await acct('family_lifetime', 'active');
+    await db.recordBillingEvent({ subjectKind: 'account', subjectId: 'solo', planKey: 'group_license', kind: 'failed', amountCents: 15300, currency: 'usd', provider: 'stripe', providerRef: 'in_lic', paymentRef: null, livemode: false, occurredAt: '2026-01-01T00:00:00.000Z' }, new Date());
+    const cards = (await summaryOf('solo')).account;
+    expect(cards).toHaveLength(2);
+    const lic = cards.find((c) => c.coverage.state === 'own' && c.coverage.planKey === 'group_license');
+    const fam = cards.find((c) => c.coverage.state === 'own' && c.coverage.planKey === 'family_lifetime');
+    expect(lic).toMatchObject({ coverage: { status: 'past_due' }, legacyNoHistory: false });
+    expect(lic?.receipts.map((r) => r.planKey)).toEqual(['group_license']);
+    expect(fam).toMatchObject({ receipts: [], legacyNoHistory: true });
+  });
+
   it('sends billing.summary_viewed with counts and the mode, but not for a poll', async () => {
     const fam = await createSpace('mom', 'family', 'Kim family');
     const other = await createSpace('dad', 'family', 'Lee family');
@@ -324,6 +382,54 @@ describe('GET /api/billing/summary: one card per persona (section 4.2)', () => {
     expect(billingEvents()).toEqual([]);
   });
 
+  it('keeps the D1 statement count flat however many spaces and classes the account holds (Workers Free: 50 per invocation)', async () => {
+    const put = async (id: string, kind: 'family' | 'class' | 'school', owner: string, parent: string | null = null) => {
+      await db.putAccount({ id: owner, email: null, displayName: null, consent: null, createdAt: new Date().toISOString() });
+      await db.putSpace({ id, kind, name: id, parentSpaceId: parent, ownerAccountId: owner, joinCode: null, joinCodeExpiresAt: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt: null, createdAt: new Date().toISOString() });
+      await db.addMembership({ spaceId: id, memberKind: 'account', memberId: owner, role: 'owner', joinedAt: new Date().toISOString() });
+    };
+    /** A school with `classes` classes, each with its own teacher and two learners, plus a teacher who owns `classes` classes of their own. */
+    const world = async (tag: string, classes: number) => {
+      const sch = `space:sch-${tag}`;
+      await put(sch, 'school', `principal-${tag}`);
+      await entitle(sch, { planKey: 'group_license' });
+      await history(sch, { planKey: 'group_license' });
+      for (let i = 0; i < classes; i += 1) {
+        await put(`space:${tag}-c${i}`, 'class', `t-${tag}-${i}`, sch);
+        await addLearners(`space:${tag}-c${i}`, 2);
+        await put(`space:${tag}-own${i}`, 'class', `solo-${tag}`);
+        await entitle(`space:${tag}-own${i}`, { planKey: 'group_license' });
+        await history(`space:${tag}-own${i}`, { planKey: 'group_license' });
+      }
+    };
+    await world('small', 1);
+    await world('large', 45);
+    const { setFallbackDb, fallbackDb } = await import('../db');
+    const original = fallbackDb();
+    const count = async (user: string) => {
+      await summaryOf(user); // the first-sign-in upsert is not part of the budget
+      const watched = watching(original);
+      setFallbackDb(watched.db);
+      try {
+        return { summary: await summaryOf(user), calls: watched.calls.length };
+      } finally {
+        setFallbackDb(original);
+      }
+    };
+    const small = await count('principal-small');
+    const large = await count('principal-large');
+    expect(cardOf(large.summary, 'space:sch-large').usage).toEqual({ learners: 90, learnerCap: SCHOOL_LICENSE_STUDENTS, teachers: 45, teacherCap: SCHOOL_LICENSE_TEACHERS });
+    expect(cardOf(large.summary, 'space:sch-large').receipts).toHaveLength(1);
+    expect(large.calls).toBe(small.calls);
+    expect(large.calls).toBeLessThanOrEqual(10);
+    const soloSmall = await count('solo-small');
+    const soloLarge = await count('solo-large');
+    expect(soloLarge.summary.cards).toHaveLength(45);
+    expect(soloLarge.summary.cards.every((c) => c.payer && c.receipts.length === 1 && c.coverage.state === 'own')).toBe(true);
+    expect(soloLarge.calls).toBe(soloSmall.calls);
+    expect(soloLarge.calls).toBeLessThanOrEqual(10);
+  });
+
   it('reads only (no Db write besides the first-sign-in upsert) and makes no outbound call', async () => {
     const fam = await createSpace('mom', 'family', 'Kim family');
     await entitle(fam);
@@ -332,9 +438,13 @@ describe('GET /api/billing/summary: one card per persona (section 4.2)', () => {
     const { setFallbackDb, fallbackDb } = await import('../db');
     const original = fallbackDb();
     setFallbackDb(watched.db);
+    const outbound = vi.spyOn(globalThis, 'fetch');
     try {
       await summaryOf('mom');
+      expect((await call('GET', `/api/billing/receipts?id=${encodeURIComponent(fam)}`, bearer('mom'))).status).toBe(200);
+      expect(outbound).not.toHaveBeenCalled();
     } finally {
+      outbound.mockRestore();
       setFallbackDb(original);
     }
     expect(watched.calls).toContain('membershipsOf'); // the proxy saw the route
@@ -388,6 +498,19 @@ describe('GET /api/billing/receipts (payers only, OD-8)', () => {
     await history(fam, { provider: 'manual', providerRef: 'in_manual' });
     const rows = ((await call('GET', `/api/billing/receipts?id=${encodeURIComponent(fam)}`, bearer('mom'))).body.data as { receipts: Array<{ hasReceipt: boolean; amountCents: number }> }).receipts;
     expect(rows.map((r) => r.hasReceipt)).toEqual([false, false, false, true, true, true]);
+  });
+
+  it('a row of the other Stripe mode has no View receipt: test rows under a live key, live rows under a test key, none without a key', async () => {
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    await history(fam, { providerRef: 'in_live', livemode: true });
+    await history(fam, { providerRef: 'in_test', livemode: false });
+    const flags = async (env: Record<string, string>) =>
+      ((await call('GET', `/api/billing/receipts?id=${encodeURIComponent(fam)}`, bearer('mom'), undefined, env)).body.data as { receipts: Array<{ hasReceipt: boolean; livemode: boolean }> }).receipts.map((r) => [r.livemode, r.hasReceipt]);
+    expect(await flags(TEST_ENV)).toEqual([[false, true], [true, false]]);
+    expect(await flags({ STRIPE_SECRET_KEY: 'sk_live_x', BILLING_LIVE_ALLOWED: 'true' })).toEqual([[false, false], [true, true]]);
+    expect(await flags({})).toEqual([[false, false], [true, false]]);
+    // The summary's inline rows say the same.
+    expect(cardOf(await summaryOf('mom'), fam).receipts.map((r) => [r.livemode, r.hasReceipt])).toEqual([[false, true], [true, false]]);
   });
 });
 
@@ -475,8 +598,20 @@ describe('POST /api/billing/receipt-link (fresh from Stripe, never stored)', () 
     const none = await call('POST', '/api/billing/receipt-link', bearer('mom'), { id: invoice.id }, {});
     expect([none.status, none.body.error?.code]).toEqual([503, 'not_configured']);
     expect(stripe).not.toHaveBeenCalled();
+    const liveRow = await history(fam, { providerRef: 'in_live', livemode: true });
     setReceiptFetchForTests(stripeAnswers({ hosted_invoice_url: 'https://invoice.stripe.com/i/live' }));
-    expect((await call('POST', '/api/billing/receipt-link', bearer('mom'), { id: invoice.id }, { STRIPE_SECRET_KEY: 'sk_live_x', BILLING_LIVE_ALLOWED: 'true' })).status).toBe(200);
+    expect((await call('POST', '/api/billing/receipt-link', bearer('mom'), { id: liveRow.id }, { STRIPE_SECRET_KEY: 'sk_live_x', BILLING_LIVE_ALLOWED: 'true' })).status).toBe(200);
+  });
+
+  it('answers 404 other_mode, without asking Stripe, for a row of the other mode', async () => {
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    const sandbox = await history(fam, { providerRef: 'in_test', livemode: false });
+    const live = await history(fam, { providerRef: 'in_live', livemode: true });
+    const underLive = await call('POST', '/api/billing/receipt-link', bearer('mom'), { id: sandbox.id }, { STRIPE_SECRET_KEY: 'sk_live_x', BILLING_LIVE_ALLOWED: 'true' });
+    expect([underLive.status, underLive.body.error?.code]).toEqual([404, 'other_mode']);
+    const underTest = await call('POST', '/api/billing/receipt-link', bearer('mom'), { id: live.id });
+    expect([underTest.status, underTest.body.error?.code]).toEqual([404, 'other_mode']);
+    expect(stripe).not.toHaveBeenCalled();
   });
 
   describe('step-up (section 4.4) with real Clerk session tokens', () => {
@@ -506,7 +641,13 @@ describe('POST /api/billing/receipt-link (fresh from Stripe, never stored)', () 
 
     it('the summary and the receipts list need no step-up (dates and amounts only)', async () => {
       const headers = await signedIn('user_mom', { fva: [500, -1] });
+      const r = await call('POST', '/api/spaces', headers, { kind: 'family', name: 'Kim family' }, env());
+      const fam = (r.body.data as { space: { id: string } }).space.id;
+      await history(fam);
       expect((await call('GET', '/api/billing/summary', headers, undefined, env())).status).toBe(200);
+      const list = await call('GET', `/api/billing/receipts?id=${encodeURIComponent(fam)}`, headers, undefined, env());
+      expect(list.status).toBe(200);
+      expect((list.body.data as { receipts: unknown[] }).receipts).toHaveLength(1);
     });
   });
 });

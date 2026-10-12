@@ -3,7 +3,7 @@ import { Hono } from 'hono';
 import { dbFor } from '../db';
 import { fail, ok } from '../envelope';
 import { accountActor, requireAccount, spaceContext } from '../lib/access';
-import { billingSummaryFor, hasStripeReceipt, receiptUrl, receiptView } from '../lib/billing-summary';
+import { billingSummaryFor, hasStripeReceipt, receiptUrl, receiptView, rowInMode } from '../lib/billing-summary';
 import { can } from '../lib/can';
 import { recordServerEvent } from '../lib/server-events';
 import { requireStepUp } from '../lib/step-up';
@@ -64,7 +64,8 @@ billingRoutes.get('/receipts', async (c) => {
   const db = dbFor(c);
   const space = await paidSpace(db, account, spaceId);
   if (typeof space === 'string') return refusal(c, space);
-  const receipts = (await db.billingEventsFor('space', space.id, RECEIPTS_PAGE_LIMIT)).map(receiptView);
+  const mode = stripeMode(c.env ?? {});
+  const receipts = (await db.billingEventsFor('space', space.id, RECEIPTS_PAGE_LIMIT)).map((row) => receiptView(row, mode));
   recordServerEvent('billing.receipts_viewed', { rows: receipts.length });
   return ok(c, { spaceName: space.name, receipts });
 });
@@ -91,6 +92,8 @@ billingRoutes.post('/receipt-link', async (c) => {
   if (mode === 'none') return fail(c, 'not_configured', 'Payments are not set up on this deployment', 503);
   if (mode === 'live' && !billingLiveAllowed(env)) return fail(c, 'live_not_enabled', 'Live payments are not open on this deployment', 503);
   if (!hasStripeReceipt(row)) return fail(c, 'no_receipt', 'Stripe has no receipt for this row', 404);
+  // A test key cannot open a live row, nor a live key a test row: say so before asking Stripe.
+  if (!rowInMode(row, mode)) return fail(c, 'other_mode', 'This receipt belongs to the other Stripe mode', 404);
   const url = await receiptUrl(env, row, receiptFetch ?? globalThis.fetch);
   if (!url) return fail(c, 'receipt_unavailable', "Can't open this receipt right now", 502);
   return ok(c, { url });

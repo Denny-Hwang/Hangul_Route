@@ -62,7 +62,12 @@ export interface SchoolLimits {
 
 /** What a school's licence allows — F-SCHOOL-001 §3.1. */
 export async function schoolLimits(db: Db, school: Space, now: Date): Promise<SchoolLimits> {
-  const active = (await db.entitlementsFor('space', school.id)).filter((e) => isEntitlementActive(e, now));
+  return schoolLimitsFrom(await db.entitlementsFor('space', school.id), now);
+}
+
+/** `schoolLimits` from rows already read (the school's own entitlement rows). */
+export function schoolLimitsFrom(rows: readonly Entitlement[], now: Date): SchoolLimits {
+  const active = rows.filter((e) => isEntitlementActive(e, now));
   const license = active.find((e) => e.planKey === 'group_license') ?? null;
   if (license) return { licensed: true, students: SCHOOL_LICENSE_STUDENTS, teachers: SCHOOL_LICENSE_TEACHERS, license };
   const seats = active.find((e) => e.planKey === 'school_seat') ?? null;
@@ -78,12 +83,20 @@ export interface SchoolUsage {
 /** Distinct learners and teaching accounts across a school's live classes. */
 export async function schoolUsage(db: Db, school: Space): Promise<SchoolUsage> {
   const classes = (await db.childSpaces(school.id)).filter((s) => s.kind === 'class' && !s.archivedAt);
+  const members = new Map<string, Membership[]>([[school.id, await db.membersOf(school.id)]]);
+  for (const cls of classes) members.set(cls.id, await db.membersOf(cls.id));
+  return schoolUsageFrom(school, classes, (spaceId) => members.get(spaceId) ?? []);
+}
+
+/** `schoolUsage` from reads already made: the school's child spaces and each space's memberships. */
+export function schoolUsageFrom(school: Space, children: readonly Space[], membersOf: (spaceId: string) => readonly Membership[]): SchoolUsage {
   const learners = new Set<string>();
   const teachers = new Set<string>();
-  for (const m of await db.membersOf(school.id)) if (m.memberKind === 'account' && m.role === 'teacher') teachers.add(m.memberId);
-  for (const cls of classes) {
+  for (const m of membersOf(school.id)) if (m.memberKind === 'account' && m.role === 'teacher') teachers.add(m.memberId);
+  for (const cls of children) {
+    if (cls.kind !== 'class' || cls.archivedAt || cls.parentSpaceId !== school.id) continue;
     if (cls.ownerAccountId !== school.ownerAccountId) teachers.add(cls.ownerAccountId);
-    for (const m of await db.membersOf(cls.id)) {
+    for (const m of membersOf(cls.id)) {
       if (m.memberKind === 'learner') learners.add(m.memberId);
       else if (m.role === 'teacher' && m.memberId !== school.ownerAccountId) teachers.add(m.memberId);
     }
