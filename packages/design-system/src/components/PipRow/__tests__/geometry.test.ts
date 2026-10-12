@@ -4,6 +4,7 @@ import pipRowSource from '../PipRow.tsx?raw';
 import geometrySource from '../geometry.ts?raw';
 import typesSource from '../types.ts?raw';
 import indexSource from '../index.ts?raw';
+import segmentsSource from '../StageSegments.tsx?raw';
 import { WCAG_AA_LARGE, contrastRatio } from '../../../contrast';
 import { colors } from '../../../tokens';
 import {
@@ -17,6 +18,8 @@ import {
   pipRowBands,
   pipRowCells,
   pipStrokeWidth,
+  STAGE_SEGMENT_STATES,
+  stageSegmentParts,
   startBand,
   startMarkerParts,
   type PipPart,
@@ -316,6 +319,30 @@ describe('pipRowBands: marker room is reserved only when a marker is drawn', () 
   });
 });
 
+describe('stageSegmentParts: the seven-segment overview (section 3.x coming-later rows; the Home strip and the console strip)', () => {
+  const signature = (parts: PipPart[]): string =>
+    parts.map((p) => (p.kind === 'circle' ? `c:${p.fill}:${p.stroke ?? ''}:${p.dash ? 'dash' : ''}` : `p:${p.fill}:${p.stroke ?? ''}`)).join('|');
+
+  it('maps complete, known, open and later to the pip shapes of the same meaning', () => {
+    expect(stageSegmentParts('complete', 20)).toEqual(pipParts('done', 20));
+    expect(stageSegmentParts('known', 20)).toEqual(pipParts('known', 20));
+    expect(stageSegmentParts('open', 20)).toEqual(pipParts('open', 20));
+    expect(stageSegmentParts('later', 20)).toEqual(pipParts('later', 20));
+  });
+
+  it('draws explored as the check of a done pip without its disc, so it never reads as complete', () => {
+    const explored = stageSegmentParts('explored', 20);
+    expect(explored).toEqual(pipParts('done', 20).filter((p) => p.kind === 'path'));
+    expect(explored.some((p) => p.kind === 'circle' && p.fill === 'accent')).toBe(false);
+  });
+
+  it('gives every state its own geometry (meaning in the shape, not the colour)', () => {
+    const signatures = STAGE_SEGMENT_STATES.map((state) => signature(stageSegmentParts(state, 20)));
+    expect(new Set(signatures).size).toBe(STAGE_SEGMENT_STATES.length);
+    expect([...STAGE_SEGMENT_STATES]).toEqual(['complete', 'known', 'explored', 'open', 'later']);
+  });
+});
+
 describe('drawn, never typed (section 3.4)', () => {
   const sources: Record<string, string> = {
     'Pip.tsx': pipSource,
@@ -323,6 +350,7 @@ describe('drawn, never typed (section 3.4)', () => {
     'geometry.ts': geometrySource,
     'types.ts': typesSource,
     'index.ts': indexSource,
+    'StageSegments.tsx': segmentsSource,
   };
 
   it.each(Object.keys(sources))('%s has no arrow, shape, dingbat or emoji-capable character', (name) => {
@@ -334,14 +362,14 @@ describe('drawn, never typed (section 3.4)', () => {
   });
 
   it('the components draw with svg only and never render text', () => {
-    for (const source of [pipSource, pipRowSource]) {
+    for (const source of [pipSource, pipRowSource, segmentsSource]) {
       expect(source).not.toMatch(/\bText\b/);
       expect(source).toMatch(/from 'react-native-svg'/);
     }
   });
 
   it('the row and the single pip hide their shapes from screen readers on native and web (the stage row label carries the facts)', () => {
-    for (const source of [pipRowSource, pipSource]) {
+    for (const source of [pipRowSource, pipSource, segmentsSource]) {
       expect(source).toMatch(/importantForAccessibility="no-hide-descendants"/);
       expect(source).toMatch(/accessibilityElementsHidden/);
       // react-native-web maps only aria-hidden to the DOM, not the two native props.
@@ -350,7 +378,7 @@ describe('drawn, never typed (section 3.4)', () => {
   });
 
   it('uses tokens only: no colour literal in the components', () => {
-    for (const source of [pipSource, pipRowSource, geometrySource]) {
+    for (const source of [pipSource, pipRowSource, geometrySource, segmentsSource]) {
       expect(source).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
       expect(source).not.toMatch(/rgba?\(/);
     }

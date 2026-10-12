@@ -1122,6 +1122,19 @@ export const learner = {
     /** Gains (section 3.8): absolute numbers, shown only when greater than zero. */
     gains: { stars: 'Stars', cards: 'Cards', stories: 'Stories read' },
     storiesNote: 'Heritage stories are open any time.',
+    /**
+     * The Home route strip (R-4b, section 3.1 entry 2; amendment LR-A6): the page's name, the goal
+     * line from the goal source and the weekly plan week. No count of what is left, no date.
+     */
+    home: {
+      strip: {
+        title: 'Learning Route',
+        goal: (n: number, title: string) => `Goal: Stage ${n} · ${title}`,
+        week: (n: number) => `Week ${n} of your weekly plan`,
+        /** Beside the seven drawn segments, so they read as the whole route, not as more quests. */
+        stages: 'Seven stages',
+      },
+    },
   },
 
   /**
