@@ -1338,4 +1338,16 @@ export const learner = {
       family: 'Your family will see your answer.',
     },
   },
+  /**
+   * The one "next" and the learner's plan (F-ENT-003 section 3.11, Appendix A; PR E3-4). "Plan" is
+   * the learner's curriculum, never an access word; nothing is ever late or skipped. Home card (2)
+   * reads `home.subtitle` when the next quest comes from a plan; the Results teaser reads
+   * `results.caption`, or `results.backToPlan` after a quest outside the plan. The tags are the
+   * Journey and episode page words (E3-5, E3-6).
+   */
+  routeNext: {
+    tag: { next: 'Next', inPlan: 'In your plan' },
+    home: { subtitle: 'Next in your plan' },
+    results: { caption: 'Next in your plan', backToPlan: 'Back to your plan' },
+  },
 } as const;

@@ -56,6 +56,7 @@ import { placementEntriesOn, questsDoneOf } from '../../logic/placement/entry';
 import { skippedEvent } from '../../logic/placement/events';
 import { homeQuietCard, levelCheckCard } from '../../logic/placement/home-card';
 import { DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
+import { nextStartedEvent, qualifiesForNext, routeNext, routeNextInputOf } from '../../logic/route-next';
 import { streakSessionDates } from '../../logic/sessions/session-log';
 import { computeStreak } from '../../logic/streak';
 import { emptyBookmarks } from '../../logic/story/bookmarks';
@@ -67,6 +68,7 @@ import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
 import { usePlacementRunStore } from '../../store/placement-run-store';
+import { usePlanStore } from '../../store/plan-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
@@ -207,6 +209,8 @@ export function HomeScreen(): React.ReactElement {
   const tier = useAccessTier(profile?.id ?? '');
   // May the active learner start a quest (F-ENT-003 section 3.6): every card is chosen among open quests.
   const questOpen = useQuestAccess();
+  // The learner's cached inbox plans: card (2) follows the one next (F-ENT-003 section 3.5).
+  const plans = usePlanStore((s) => (profile ? s.byLearner[profile.id] : undefined));
   const bookmarks = useStoryStore((s) => (profile ? s.byProfile[profile.id] : undefined)) ?? NO_BOOKMARKS;
   // Reviewed stories only (D14): empty in production while every bundled story is still a draft.
   const storyIndex = defaultStoryIndex();
@@ -232,9 +236,28 @@ export function HomeScreen(): React.ReactElement {
   // Today's mission — the plan is pinned for the day so finishing one card
   // never reshuffles the other two under the learner (F-HW-001 §3.2).
   const pinnedPlan = useRef<MissionPlan | null>(null);
+  // The one next (F-ENT-003 section 3.5): due today, then the leading plan source, then the default route.
+  const routeInput = useMemo(
+    () =>
+      profile && snap
+        ? routeNextInputOf({
+            snapshot: snap,
+            profileId: profile.id,
+            today: dayKey(new Date().toISOString()),
+            plans,
+            quests: questsAll,
+            episodes: episodesAll,
+            tier,
+            gatingActive: gatingActive(flags, bundleOs()),
+            isQuestOpen: questOpen,
+          })
+        : null,
+    [profile, snap, plans, tier, questOpen],
+  );
+  const next = useMemo(() => (routeInput ? routeNext(routeInput) : null), [routeInput]);
   const mission = useMemo(() => {
-    if (!profile || !snap) return null;
-    const today = dayKey(new Date().toISOString());
+    if (!profile || !snap || !routeInput) return null;
+    const today = routeInput.today;
     const built = buildTodaysMission({
       profileId: profile.id,
       snapshot: snap,
@@ -250,6 +273,8 @@ export function HomeScreen(): React.ReactElement {
         episodes: episodesAll,
         isQuestOpen: questOpen,
       }),
+      // Card (2) is the one next; "Next in your plan" when it comes from a plan.
+      route: routeInput,
       // The story card (F-STORY-004 §3.7): never a locked story; nothing is locked while gating is off.
       stories: {
         entries: storyIndex,
@@ -271,11 +296,13 @@ export function HomeScreen(): React.ReactElement {
       today,
       enabled: true,
       titleOf: (questId) => questsAll.find((q) => q.id === questId)?.titleEn,
+      // Only an assignment `routeNext` step 1 would pick takes the card: known, playable, open, not done (section 3.5).
+      isQuestOpen: qualifiesForNext(routeInput),
     }).plan;
     pinnedPlan.current = merged;
     return merged;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, snap, tier, questOpen, bookmarks, storyIndex]);
+  }, [profile, snap, tier, questOpen, routeInput, bookmarks, storyIndex]);
 
   // The route strip (F-ROUTE-001 R-4b, OD-3): built from `routeModelInput`, the same input as the
   // Learning Route page, so the strip and the page always name the same stage and pips.
@@ -324,6 +351,10 @@ export function HomeScreen(): React.ReactElement {
 
   const openCard = (card: MissionCard): void => {
     if (card.kind === 'story' && openStory(card)) return;
+    // Card (2) naming the one next starts it from Home (F-ENT-003 section 3.12); a day-pinned older pick does not.
+    if (profile && card.slot === 2 && next?.kind === 'quest' && card.questId === next.questId) {
+      void track(nextStartedEvent(profile.id, next.source, 'home'));
+    }
     if (card.questId && card.episodeId) {
       navigation.navigate('QuestPlayer', { questId: card.questId, episodeId: card.episodeId });
     } else if (card.episodeId) {

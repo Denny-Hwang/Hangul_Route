@@ -20,6 +20,13 @@ export interface MergeInput {
   enabled: boolean;
   /** Resolves a quest id to its learner-facing title. */
   titleOf: (questId: string) => string | undefined;
+  /**
+   * May the learner start this quest now (F-ENT-003 section 3.5)? Home
+   * passes `qualifiesForNext` (known, playable, open, not done); an assignment
+   * that fails is skipped like an unknown one, so card (2) names the same
+   * quest as `routeNext` step 1. Omitted means every quest qualifies.
+   */
+  isQuestOpen?: (questId: string) => boolean;
 }
 
 export interface MergeResult {
@@ -29,7 +36,7 @@ export interface MergeResult {
 }
 
 /** Section 3.10 of F-PLAN-002: class (teacher) first, then family (parent), then the learner's own plan (system). */
-const SOURCE_RANK: Record<HomeworkAssignment['assignedBy'], number> = { teacher: 0, parent: 1, system: 2 };
+export const SOURCE_RANK: Record<HomeworkAssignment['assignedBy'], number> = { teacher: 0, parent: 1, system: 2 };
 
 /** The precedence order of outstanding assignments: source rank, then the earlier `targetDate`, then the earlier `assignedAt`. */
 export function compareAssignments(a: HomeworkAssignment, b: HomeworkAssignment): number {
@@ -61,6 +68,7 @@ export function mergeAssignments({
   today,
   enabled,
   titleOf,
+  isQuestOpen,
 }: MergeInput): MergeResult {
   if (!enabled) {
     return { plan, deferred: [] };
@@ -75,7 +83,7 @@ export function mergeAssignments({
   // queued, and the next known one takes the card, so a carried-over unknown
   // item never holds card ② for good.
   const pick = queue
-    .map((assignment) => ({ assignment, title: titleOf(assignment.questId) }))
+    .map((assignment) => ({ assignment, title: !isQuestOpen || isQuestOpen(assignment.questId) ? titleOf(assignment.questId) : undefined }))
     .find((x): x is { assignment: HomeworkAssignment; title: string } => x.title !== undefined);
   if (pick === undefined) {
     return { plan, deferred: [...queue] };

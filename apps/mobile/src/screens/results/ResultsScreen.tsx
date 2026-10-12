@@ -42,10 +42,14 @@ import { cursorContext } from '../../logic/cursor-context';
 import {
   resultsActions,
   resultsTeaser,
+  teaserCaption,
   teaserCtaLabel,
+  teaserNextStartedEvent,
   teaserTappedEvent,
   type ResultsTeaser,
 } from '../../logic/quest-flow/results-teaser';
+import { dayKey } from '../../logic/homework/mission-builder';
+import { offplanFinishedEvent, planBeforeOf, routeNextInputOf, type PlanBefore } from '../../logic/route-next';
 import { episodeReturn } from '../../logic/layout/quest-return';
 import { applyQuestResult, type QuestResultOutcome } from '../../logic/results-award';
 import { resultsCheerMessage, resultsHeadline } from '../../logic/results-copy';
@@ -58,6 +62,7 @@ import { nextStoryAfter, storyLockFor } from '../../logic/story/story-pick';
 import { useReducedMotion } from '../../platform/motion';
 import { track } from '../../platform/telemetry';
 import type { RootStackParamList } from '../../navigation/types';
+import { usePlanStore } from '../../store/plan-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
@@ -91,6 +96,8 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   const tier = useAccessTier(profile?.id ?? '');
   // May the active learner start a quest (F-ENT-003 sections 3.5 and 3.6): "Next up" and "Next story" offer open quests only.
   const questOpen = useQuestAccess();
+  // The learner's cached inbox plans: the teaser names the one next (F-ENT-003 section 3.8).
+  const plans = usePlanStore((s) => (profile ? s.byLearner[profile.id] : undefined));
   const bookmarks = useStoryStore((s) => (profile ? s.byProfile[profile.id] : undefined)) ?? NO_BOOKMARKS;
   const reducedMotion = useReducedMotion();
   const { panes } = useLayoutClass();
@@ -166,11 +173,31 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
     AccessibilityInfo.announceForAccessibility(announcement);
   }, [announcement]);
 
-  // "Next up" (F-QUEST-002 §3.5): the Journey cursor with this quest counted as
-  // done, told the same stages and placed-out quests as Home and My route
-  // (`cursorContext`, F-ROUTE-001 R-4a), so the three never disagree. Deciding
-  // it from route params (not from the snapshot the effect above is still
-  // writing) keeps it stable across the write.
+  // The one next (F-ENT-003 sections 3.5 and 3.8): due today, then the leading plan source, then the
+  // default route, with this quest counted as done (`resultsTeaser` passes it as `justCompleted`), so Home,
+  // Results and the Learning Route never disagree.
+  const routeInput = useMemo(
+    () =>
+      profile && snapshot
+        ? routeNextInputOf({
+            snapshot,
+            profileId: profile.id,
+            today: dayKey(new Date().toISOString()),
+            plans,
+            quests: questsAll,
+            episodes: episodesAll,
+            tier,
+            gatingActive: gatingActive(flags, bundleOs()),
+            isQuestOpen: questOpen,
+          })
+        : undefined,
+    [profile, snapshot, plans, tier, questOpen],
+  );
+  // The plan, the one next and the pending items as they were before this quest's score is written (the
+  // first render, before the effect above): an off-plan quest, while a plan leads, reads "Back to your
+  // plan" (section 3.8); the quest the app named, or any pending plan or assigned item, never does.
+  const planBefore = useRef<PlanBefore | null>(null);
+  if (planBefore.current === null && routeInput) planBefore.current = planBeforeOf(routeInput);
   const teaser = useMemo(
     () =>
       resultsTeaser({
@@ -181,9 +208,20 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
         total,
         locale,
         ...cursorContext({ tier, placements: snapshot?.placements, quests: questsAll, episodes: episodesAll, isQuestOpen: questOpen }),
+        ...(routeInput ? { route: routeInput } : {}),
+        ...(planBefore.current ? { planBefore: planBefore.current } : {}),
       }),
-    [snapshot, questId, total, tier, questOpen, locale],
+    [snapshot, questId, total, tier, questOpen, locale, routeInput],
   );
+
+  // `route.offplan_finished` once per results visit, for a first completion of an off-plan quest (section 3.12).
+  const offplanSent = useRef(false);
+  useEffect(() => {
+    if (offplanSent.current || !profile || total === 0 || planBefore.current === null) return;
+    offplanSent.current = true;
+    const event = offplanFinishedEvent(profile.id, planBefore.current, questId, episodesAll);
+    if (event) void track(event);
+  }, [profile, total, questId, routeInput]);
   const actions = resultsActions(teaser);
 
   // The story variant (F-STORY-003 §3.7): a story quest whose story is bundled gets the story card and
@@ -341,7 +379,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
           {teaser ? (
             <>
               <Spacer size="lg" />
-              <NextUpCard teaser={teaser} m={m} />
+              <NextUpCard teaser={teaser} m={m} caption={teaserCaption(teaser, messages.learner)} />
             </>
           ) : null}
 
@@ -354,7 +392,11 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
                 size="hero"
                 fullWidth
                 onPress={() => {
-                  if (profile) void track(teaserTappedEvent(profile.id, questId, teaser));
+                  if (profile) {
+                    void track(teaserTappedEvent(profile.id, questId, teaser));
+                    const started = teaserNextStartedEvent(profile.id, teaser);
+                    if (started) void track(started);
+                  }
                   navigation.navigate('QuestPlayer', { questId: teaser.questId, episodeId: teaser.episodeId });
                 }}
               />
@@ -387,14 +429,16 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
 
 /**
  * F-QUEST-002 §3.5 — the "Next up" card (wireframe results/next-quest-teaser).
+ * Its caption is "Next up", "Next in your plan" or "Back to your plan" (F-ENT-003 section 3.8,
+ * wireframe results/back-to-plan-and-free-end).
  * The quest title and one line; letters in the line are taught content, so
  * they go through `KoreanText` with their romanization, never a plain string.
  */
-function NextUpCard({ teaser, m }: { teaser: ResultsTeaser; m: ResultsMessages }): React.ReactElement {
+function NextUpCard({ teaser, m, caption }: { teaser: ResultsTeaser; m: ResultsMessages; caption: string }): React.ReactElement {
   const { line } = teaser;
   return (
     <Card padding="md" tone="paper" testID="next-up-card">
-      <Caption tone="muted">{m.nextUp.title}</Caption>
+      <Caption tone="muted">{caption}</Caption>
       <Spacer size="xs" />
       <Heading level="prompt">{teaser.titleEn}</Heading>
       {line?.kind === 'text' ? (

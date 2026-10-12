@@ -58,7 +58,7 @@ export interface DeriveSource {
 }
 
 /** Rule 4: class -> teacher, family -> parent, self -> system; a school space keeps `parent`. */
-const ASSIGNED_BY: Record<SourceKind, HomeworkAssignment['assignedBy']> = {
+export const ASSIGNED_BY: Record<SourceKind, HomeworkAssignment['assignedBy']> = {
   class: 'teacher',
   family: 'parent',
   school: 'parent',

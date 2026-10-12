@@ -4,6 +4,7 @@ import { findJamo } from '../../content/jamo';
 import type { TelemetryEvent } from '../../platform/telemetry';
 import { localizeQuest } from '../content-locale';
 import { nextQuestAfter } from '../next-quest';
+import { isOffPlan, nextStartedEvent, routeNext, type NextSource, type PlanBefore, type RouteNextInput } from '../route-next';
 import { questTeaches } from '../stage1/curriculum';
 
 /**
@@ -25,6 +26,13 @@ export type TeaserLine =
   | { kind: 'text'; text: string }
   | { kind: 'letters'; letters: TeaserLetter[] };
 
+/**
+ * The words above the title (F-ENT-003 section 3.8): today's "Next up" for
+ * the default route, "Next in your plan" for a plan's quest, and "Back to
+ * your plan" after a quest outside the plan.
+ */
+export type TeaserCaption = 'nextUp' | 'nextInPlan' | 'backToPlan';
+
 export interface ResultsTeaser {
   questId: string;
   episodeId: string;
@@ -32,6 +40,9 @@ export interface ResultsTeaser {
   line?: TeaserLine;
   /** `true` when every game was skipped and the same quest is offered again. */
   again: boolean;
+  caption: TeaserCaption;
+  /** Where `routeNext` found the quest; absent without `route` and on "Try this one again". */
+  source?: NextSource;
 }
 
 export interface ResultsTeaserInput {
@@ -52,6 +63,19 @@ export interface ResultsTeaserInput {
   skipQuestIds?: ReadonlySet<string>;
   /** May the learner start this quest: from `cursorContext`, as on Home (F-ENT-003 section 3.5). Omitted means every quest is open. */
   isQuestOpen?: (questId: string) => boolean;
+  /**
+   * The one next (F-ENT-003 section 3.8, `routeNextInputOf`): the teaser
+   * target becomes `routeNext` with the quest just played as `justCompleted`;
+   * `free-end` and `rest` give no teaser card. The cursor fields above are
+   * then unused. Omitted means the bare cursor, as before E3-4.
+   */
+  route?: RouteNextInput;
+  /**
+   * `planBeforeOf` taken before the quest was completed: an off-plan quest
+   * (`isOffPlan`: a leading source exists and the quest was not in the plan,
+   * not the one next and not a pending item) makes the caption "Back to your plan".
+   */
+  planBefore?: PlanBefore;
 }
 
 /** The one line under the title: `teaserEn`, else the new letters from Discover, else `blurbEn`. */
@@ -81,6 +105,15 @@ function episodeIdOf(questId: string, episodes: readonly Episode[]): string | un
 export function resultsTeaser(input: ResultsTeaserInput): ResultsTeaser | undefined {
   const { quests, episodes, questId, total } = input;
   const again = total === 0;
+  if (input.route && !again) {
+    const next = routeNext({ ...input.route, justCompleted: questId });
+    if (next.kind !== 'quest') return undefined;
+    const quest = quests.find((q) => q.id === next.questId);
+    if (!quest) return undefined;
+    const caption: TeaserCaption =
+      next.source === 'cursor' ? 'nextUp' : input.planBefore && isOffPlan(input.planBefore, questId) ? 'backToPlan' : 'nextInPlan';
+    return teaserOf(quest, next.episodeId, input, { again, caption, source: next.source });
+  }
   const cursor = {
     snapshot: input.snapshot ?? EMPTY_SNAPSHOT,
     quests,
@@ -97,14 +130,40 @@ export function resultsTeaser(input: ResultsTeaserInput): ResultsTeaser | undefi
   if (!target) return undefined;
   const episodeId = episodeIdOf(target.id, episodes);
   if (!episodeId) return undefined;
+  return teaserOf(target, episodeId, input, { again, caption: 'nextUp' });
+}
+
+function teaserOf(
+  target: Quest,
+  episodeId: string,
+  input: ResultsTeaserInput,
+  how: { again: boolean; caption: TeaserCaption; source?: NextSource },
+): ResultsTeaser {
   const local = localizeQuest(target, input.locale ?? 'en', input.overlays);
   return {
     questId: target.id,
     episodeId,
     titleEn: local.titleEn,
     line: teaserLine(local),
-    again,
+    again: how.again,
+    caption: how.caption,
+    ...(how.source === undefined ? {} : { source: how.source }),
   };
+}
+
+/** The caption's words: `learner.results.nextUp.title`, or `learner.routeNext.results.*` for a plan. */
+export function teaserCaption(
+  teaser: Pick<ResultsTeaser, 'caption'>,
+  m: { results: Pick<Messages['learner']['results'], 'nextUp'>; routeNext: Pick<Messages['learner']['routeNext'], 'results'> },
+): string {
+  if (teaser.caption === 'nextInPlan') return m.routeNext.results.caption;
+  if (teaser.caption === 'backToPlan') return m.routeNext.results.backToPlan;
+  return m.results.nextUp.title;
+}
+
+/** `route.next_started { source, surface: 'results' }` when the teaser is the one next; null for "Try this one again". */
+export function teaserNextStartedEvent(profileId: string, teaser: Pick<ResultsTeaser, 'source'>): TelemetryEvent | null {
+  return teaser.source === undefined ? null : nextStartedEvent(profileId, teaser.source, 'results');
 }
 
 /** The teaser button's words: "Try this one again" when every game was skipped, else "Play next quest". */

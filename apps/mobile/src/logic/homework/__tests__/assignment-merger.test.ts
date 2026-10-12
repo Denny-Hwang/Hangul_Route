@@ -136,6 +136,22 @@ describe('mergeAssignments', () => {
     expect(result.deferred.map((a) => a.id)).toEqual(['hw:unknown']);
   });
 
+  it('skips an assignment whose quest is closed, like routeNext step 1 (F-ENT-003 section 3.5); the next open one takes the card', () => {
+    const closedZ = (questId: string): boolean => questId !== 'quest:z';
+    const out = mergeAssignments({
+      plan,
+      assignments: [assignment({ id: 'hw:z' }), assignment({ id: 'hw:y', questId: 'quest:y', assignedAt: `${TODAY}T09:00:00.000Z` })],
+      today: TODAY,
+      enabled: true,
+      titleOf,
+      isQuestOpen: closedZ,
+    });
+    expect(out.plan.cards[1]).toMatchObject({ questId: 'quest:y', subtitle: 'assigned' });
+    expect(out.deferred.map((a) => a.id)).toEqual(['hw:z']);
+    const none = mergeAssignments({ plan, assignments: [assignment({ id: 'hw:z' })], today: TODAY, enabled: true, titleOf, isQuestOpen: closedZ });
+    expect(none.plan).toBe(plan);
+  });
+
   it('takes an item left from yesterday on the next day, without any late wording', () => {
     const result = merge([assignment({ targetDate: YESTERDAY })]);
     expect(result.plan.cards[1]).toMatchObject({ questId: 'quest:z', subtitle: 'assigned' });

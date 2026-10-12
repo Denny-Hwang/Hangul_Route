@@ -1,6 +1,7 @@
 import type { Episode, ProgressSnapshot, Quest } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import { nextQuestAfter, offerableQuests, playableEpisodes } from '../next-quest';
+import { inAPlan, routeNext, type RouteNextInput } from '../route-next';
 import type { BookmarkFile } from '../story/bookmarks';
 import { entryForQuest, type StoryIndexEntry } from '../story/story-index';
 import { planOpenStory, type OpenStoryMode, type OpenStoryPlan } from '../story/open-story';
@@ -12,7 +13,8 @@ import { storyStatus, type StoryStatus } from '../story/story-status';
  *
  * Exactly three cards, in fixed slot order, each the first card its chain finds:
  *   ① continue story → best replay → next story → again story → explore
- *   ② New — the next Quest on the Journey cursor (grid episodes only)
+ *   ② New — the one next quest (`routeNext`, F-ENT-003 section 3.5) when the
+ *     caller gives `route`, else the Journey cursor (grid episodes only)
  *   ③ Daily test (F-RVW-001) when available, else
  *      next story → best remaining replay → again story → explore
  *
@@ -40,10 +42,12 @@ export type MissionCardKind = 'replay' | 'new' | 'daily-test' | 'story' | 'explo
 
 /**
  * Keys of `learner.home.mission.subtitle`, plus `explore`, whose words are
- * `learner.storyShelf.home.explore`. A `story` card with a `storyReason` reads
- * `learner.storyShelf.home.subtitle[storyReason]` (`missionCardText`).
+ * `learner.storyShelf.home.explore`, and `nextInPlan`, whose words are
+ * `learner.routeNext.home.subtitle` (F-ENT-003 section 3.7). A `story` card
+ * with a `storyReason` reads `learner.storyShelf.home.subtitle[storyReason]`
+ * (`missionCardText`).
  */
-export type MissionSubtitle = 'replay' | 'story' | 'new' | 'assigned' | 'dailyTest' | 'explore';
+export type MissionSubtitle = 'replay' | 'story' | 'new' | 'assigned' | 'dailyTest' | 'explore' | 'nextInPlan';
 
 export interface MissionCard {
   slot: 1 | 2 | 3;
@@ -110,6 +114,14 @@ export interface BuildMissionInput {
    */
   isQuestOpen?: (questId: string) => boolean;
   /**
+   * The one next (F-ENT-003 section 3.5, `routeNextInputOf` on the same
+   * snapshot, profile and day): card (2) is its quest, "Next in your plan"
+   * when it comes from a plan and "New" from the default route; at `rest`
+   * (and at `free-end` until E3-7 draws the free-end card) today's replay
+   * fallback stays. Omitted means the bare cursor, as before E3-4.
+   */
+  route?: RouteNextInput;
+  /**
    * The story card's world (F-STORY-004 §3.7): the story index, the profile's
    * bookmarks, the lock (`storyLockFor`, with `isQuestOpen` for book stories) and the fit (`storyFitsFor`,
    * F-STORY-005 §3.4: fitting stories come first among `next`; it only
@@ -170,15 +182,22 @@ function replayCandidates(snapshot: ProgressSnapshot, episodes: readonly Episode
  * offerable quest is done Home keeps offering the last one, as it always has,
  * rather than an empty "New" slot.
  */
-function nextQuest(input: BuildMissionInput): Quest | undefined {
+function nextQuest(input: BuildMissionInput): { quest: Quest; subtitle: 'new' | 'nextInPlan' } | undefined {
   const { snapshot, quests, episodes, skipQuestIds, isEntitled, isQuestOpen } = input;
   const offerable = offerableQuests(quests, episodes, isEntitled, isQuestOpen);
+  if (input.route) {
+    const next = routeNext(input.route);
+    const quest = next.kind === 'quest' ? quests.find((q) => q.id === next.questId) : undefined;
+    if (next.kind === 'quest' && quest) return { quest, subtitle: next.source === 'cursor' ? 'new' : 'nextInPlan' };
+    const last = offerable[offerable.length - 1];
+    return last ? { quest: last, subtitle: 'new' } : undefined;
+  }
   // A placed-out quest never played comes before a replay of the last quest.
-  return (
+  const quest =
     nextQuestAfter({ snapshot, quests, episodes, isEntitled, isQuestOpen, skipQuestIds }) ??
     (skipQuestIds === undefined ? undefined : nextQuestAfter({ snapshot, quests, episodes, isEntitled, isQuestOpen })) ??
-    offerable[offerable.length - 1]
-  );
+    offerable[offerable.length - 1];
+  return quest ? { quest, subtitle: 'new' } : undefined;
 }
 
 /** `input.isQuestOpen`, or every quest open when the caller gave none. */
@@ -285,12 +304,12 @@ function firstOf(chain: readonly Link[], slot: 1 | 3, input: BuildMissionInput, 
   return null;
 }
 
-function newCard(quest: Quest, episodes: readonly Episode[]): MissionCard {
+function newCard(quest: Quest, episodes: readonly Episode[], subtitle: 'new' | 'nextInPlan' = 'new'): MissionCard {
   return {
     slot: 2,
     kind: 'new',
     titleEn: quest.titleEn,
-    subtitle: 'new',
+    subtitle,
     questId: quest.id,
     episodeId: episodeOfQuest(episodes, quest.id)?.id,
     collected: false,
@@ -310,15 +329,15 @@ function repinPlacedOut(cards: readonly MissionCard[], input: BuildMissionInput)
   const skip = input.skipQuestIds;
   // Only the system "New" card re-pins; a caregiver or teacher assignment
   // (`subtitle: 'assigned'`, `mergeAssignments`) keeps its slot.
-  const pinnedNew = cards.find((card) => card.slot === 2 && card.kind === 'new' && card.subtitle === 'new');
+  const pinnedNew = cards.find((card) => card.slot === 2 && card.kind === 'new' && (card.subtitle === 'new' || card.subtitle === 'nextInPlan'));
   if (!pinnedNew?.questId) return cards;
   const placedOut = skip?.has(pinnedNew.questId) ?? false;
   if (!placedOut && isOpen(input, pinnedNew.questId)) return cards;
   if (completedToday(input.snapshot, pinnedNew.questId, input.today)) return cards;
   const upcoming = nextQuest(input);
   // `nextQuest` offers open quests only, so the new card is open too.
-  if (!upcoming || skip?.has(upcoming.id) || cards.some((card) => card.questId === upcoming.id)) return cards;
-  return cards.map((card) => (card === pinnedNew ? newCard(upcoming, input.episodes) : card));
+  if (!upcoming || skip?.has(upcoming.quest.id) || cards.some((card) => card.questId === upcoming.quest.id)) return cards;
+  return cards.map((card) => (card === pinnedNew ? newCard(upcoming.quest, input.episodes, upcoming.subtitle) : card));
 }
 
 /** Records a card on the plan; a replay of a book story quest also takes its story. */
@@ -361,6 +380,8 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
       cards: repinPlacedOut(input.pinned.cards, input).map((card) => {
         const refreshed: MissionCard = { ...card, collected: isCollected(card, snapshot, today, card.collected) };
         if (card.kind === 'story') refreshed.storyReason = refreshedReason(card, input);
+        // A plan removed after the pin (unpublished, or the own plan archived): the quest stays, "Next in your plan" goes.
+        if (card.subtitle === 'nextInPlan' && card.questId && input.route && !inAPlan(input.route, card.questId)) refreshed.subtitle = 'new';
         return refreshed;
       }),
     };
@@ -371,7 +392,7 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
 
   // ② New — the Journey cursor. Chosen first so slot ①'s story never repeats its quest.
   const upcoming = nextQuest(input);
-  const second: MissionCard | null = upcoming ? newCard(upcoming, episodes) : null;
+  const second: MissionCard | null = upcoming ? newCard(upcoming.quest, episodes, upcoming.subtitle) : null;
   // It takes its quest and, for a book story quest, its story, so no other card offers that story. Not its
   // episode: the explore card may still name the learner's current episode, so the row keeps three cards.
   if (second) use(used, { ...second, episodeId: undefined }, input);
@@ -406,10 +427,11 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
   };
 }
 
-/** The two dictionary subtrees a card reads: `learner.home.mission` and `learner.storyShelf.home`. */
+/** The dictionary subtrees a card reads: `learner.home.mission`, `learner.storyShelf.home` and `learner.routeNext.home`. */
 type MissionMessages = {
   home: Pick<Messages['learner']['home'], 'mission'>;
   storyShelf: Pick<Messages['learner']['storyShelf'], 'home'>;
+  routeNext: Pick<Messages['learner']['routeNext'], 'home'>;
 };
 
 /** A card's title and subtitle in the UI language (`m` is `messages.learner`). */
@@ -418,6 +440,7 @@ export function missionCardText(card: MissionCard, m: MissionMessages): { title:
   const storyHome = m.storyShelf.home;
   const title = card.titleEn ?? mission.dailyTest.title;
   if (card.subtitle === 'explore') return { title, subtitle: storyHome.explore };
+  if (card.subtitle === 'nextInPlan') return { title, subtitle: m.routeNext.home.subtitle };
   if (card.subtitle === 'story' && card.storyReason) return { title, subtitle: storyHome.subtitle[card.storyReason] };
   return { title, subtitle: mission.subtitle[card.subtitle] };
 }
