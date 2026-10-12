@@ -67,7 +67,7 @@ Inline variant on `billing/billing-home` (inside a payer card, `> Receipts` open
 
 ## Interaction points
 
-- `[ View receipt ]` → opens a blank tab at once (not blocked as a pop-up) → `POST /api/billing/receipt-link { id }` → `billing/step-up` if the sign-in is older than 10 minutes → the tab goes to Stripe's hosted invoice (license) or charge receipt (lifetime, refund), with the opener cleared; on failure the blank tab closes and the row shows "Can't open this receipt right now."
+- `[ View receipt ]` → opens a blank tab at once (not blocked as a pop-up) → `POST /api/billing/receipt-link { id }` → `billing/step-up` if the sign-in is older than 10 minutes → the tab goes to Stripe's hosted invoice (Family Plan or Group License: every payment and renewal of a subscription) or charge receipt (refund, or a legacy one-time sandbox payment) per F-BILL-002 §4.10, with the opener cleared; on failure the blank tab closes and the row shows "Can't open this receipt right now."
 - `[< Back to Billing]` → `billing/billing-home`
 
 ## Navigation graph
