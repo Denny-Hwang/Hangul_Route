@@ -1,14 +1,16 @@
-# Browse/Show-as — how lessons are shown during preview (wireframe v1, bottom sheet)
+# Browse/Show-as — Lesson display: how lessons are shown during preview (wireframe v2, bottom sheet)
 
 Spec: `docs/specs/F-BROWSE-001-adult-content-browser.md` §4.9
-Audience: **parent or teacher** in Browse.
-Code (planned): `apps/mobile/src/screens/browse/ShowAsSheet.tsx`, `BrowseSettingsProvider` + `useRomanizationMode()` (BR-5)
+Audience: **parent or teacher** in All lessons.
+
+v2 (review of 2026-10-11): the sheet and its header button are named **Lesson display** ("Show as" did not say what it changes); the file keeps its name so links stay stable; romanization covers every learner call site; the language choice stays in memory.
+Code (planned): `apps/mobile/src/screens/browse/LessonDisplaySheet.tsx`, `BrowseSettingsProvider` + `useRomanizationMode()` (BR-5c), `locale-store.setSessionLocale` (memory only)
 Notation: as `browse/home.md`.
 
 ## Scenario (Given-When-Then)
 
 Given: a grown-up wants to see a lesson the way a learner with a different setting sees it (romanization hidden for reading practice), or in another UI language
-When: they open Show as from the Browse header
+When: they open Lesson display from the header
 Then: they change it in one tap and every lesson they open next follows it
 
 ## Screen goal
@@ -20,7 +22,7 @@ Then: they change it in one tap and every lesson they open next follows it
 ```
 ┌──────────────────────────────────┐
 │ ──                               │   sheet handle; Escape / swipe down closes
-│ Show lessons as                  │
+│ Lesson display                   │
 │                                  │
 │ Romanization                     │
 │  (o) Always shown                │
@@ -39,9 +41,9 @@ Then: they change it in one tap and every lesson they open next follows it
 
 ## Interaction points
 
-- Romanization radio -> applies at once to open and later lessons (Discover, Listen & Pick, Pic-Word, story reader)
+- Romanization radio -> applies at once to open and later lessons (every learner call site: Discover, the games, story checks and ordering, the story reader, checkpoints and word recaps)
 - Language chip -> re-renders Browse and lessons in that UI locale (glosses through overlays; taught Korean unchanged)
-- [[ Done ]] / Escape / swipe -> closes; focus returns to [Show as]
+- [[ Done ]] / Escape / swipe -> closes; focus returns to [Lesson display]
 
 ## Navigation graph
 

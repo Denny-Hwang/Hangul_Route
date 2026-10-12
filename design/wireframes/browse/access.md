@@ -1,79 +1,88 @@
-# Browse/Access — no pass yet, expired, or waiting for one (wireframe v1)
+# Browse/Access — no pass, or the pass ended (wireframe v2)
 
-Spec: `docs/specs/F-BROWSE-001-adult-content-browser.md` §4.2, §4.3 (Access screen), §8
-Audience: whoever reached `app.hangulroute.com/browse` without a valid pass: a grown-up who opened a plain link, a grown-up whose gate session ended, or a learner on a shared device. It must show **no lesson, title or card**.
+Spec: `docs/specs/F-BROWSE-001-adult-content-browser.md` §4.3 (Access screen), §8
+Audience: whoever reached `app.hangulroute.com/browse` without an active pass: a grown-up whose tab or time ended, a family that uses only the learner app, or a learner on a shared device. It must show **no lesson, title or card**.
 Code (planned): `apps/mobile/src/screens/browse/BrowseAccessScreen.tsx`
 Notation: as `browse/home.md`.
 
+v2 (review of 2026-10-11): the primary action follows how the visitor arrived (grown-up area, account, or unknown); no "waiting" state (the pass is read at once from the tab); every account link goes to a grown-up page that sits behind sign-in and the grown-up lock.
+
 ## Scenario (Given-When-Then)
 
-Given: Browse opened without a pass from the console, a kept pass or a gate hand-off (or the pass expired)
-When: the 3-second wait for a pass ends
-Then: the visitor learns that Browse is for grown-up accounts and how to open it, and sees nothing else
+Given: All lessons opened without an active pass (none in this tab, none kept, or the gate pass idled out)
+When: the root resolves the pass
+Then: the visitor learns that the page is for parents and teachers and gets the one action that brings them back, and sees nothing else
 
 ## Screen goal
 
-"Open Browse the right way." (one action: sign in)
+"Get back in the right way." (one primary action, chosen by source)
 
 ## Box diagram
 
-### A. No pass (reason `none`)
+### A. Gate source (the grown-up area pass ended)
 
 ```
 ┌──────────────────────────────────┐
-│ [< Back to the app]              │   -> learner app root (/)
-│                                  │
 │            (Hoya waving)         │
 │                                  │
-│  Browse lessons is for grown-up  │
-│  accounts.                       │
+│  This page is for parents and    │
+│  teachers.                       │
+│  Your time in the grown-up area  │
+│  ended.                          │
 │                                  │
-│  [[        Sign in         ]]    │   -> adult sign-in (persona shell; until then console /teach)
-│                                  │
-│  On a family tablet, open it     │   plain text, no link (the grown-up area needs the PIN)
-│  from the grown-up area of the   │
-│  app.                            │
+│ [[ Back to the grown-up area ]]  │   -> /?gate=browse : PIN, then a fresh gate pass
+│ [ Back to the app ]              │   -> / (learner app)
 └──────────────────────────────────┘
 ```
 
-### B. Expired (reason `expired`)
+### B. Account source (expired account pass, or this browser remembers a parent / teacher persona)
 
 ```
-│  Your preview time ended.        │
-│  Open Browse again from your     │
-│  account or the grown-up area.   │
-│  [[        Sign in         ]]    │
+│  This page is for parents and    │
+│  teachers.                       │
+│  Open lessons again from your    │
+│  account.                        │
+│ [[ Open lessons from my account ]]│  -> /parent or /teach/home (by the remembered persona)
+│ [ Sign in ]                      │   -> /signin (grown-up sign-in, F-APP-001)
 ```
 
-### C. Waiting (reason `waiting`, between 1 s and 3 s)
+### C. Unknown source (a typed URL, a new tab)
 
 ```
-│  Getting your lessons ready…     │   no spinner loop longer than 3 s; then A
+│  This page is for parents and    │
+│  teachers.                       │
+│  On a family device, open them   │
+│  from the grown-up area. Parents │
+│  and teachers can also open them │
+│  from their account.             │
+│ [[ Back to the grown-up area ]]  │   -> /?gate=browse
+│ [ Sign in ]                      │   -> /signin
 ```
 
 ## Interaction points
 
-- [[ Sign in ]] -> adult sign-in URL (new tab when opened from a script, same tab otherwise)
-- [< Back to the app] -> `/` (the learner app; no PIN bypass, it simply reloads the learner root)
-- A pass arriving while this screen shows -> replaces it with `browse/home` (or the resolved deep-link target)
+- [[ Back to the grown-up area ]] -> learner app boot intent `gate=browse`: PIN entry over the start screen; correct PIN -> a fresh gate pass -> `browse/home`; cancel -> learner home, nothing written. Until BR-12b ships: [[ Back to the app ]] with "Then open the grown-up area again."
+- [[ Open lessons from my account ]] -> the persona home; Clerk sign-in and F-APP-001's grown-up lock (PIN or fresh sign-in on a device with learner profiles) apply there, so a child cannot reach billing or account pages through this screen
+- [ Sign in ] -> `/signin`; a signed-in visitor is routed to their persona home, which carries **Lessons**
+- [ Back to the app ] -> `/`
 
 ## Navigation graph
 
-Enter from: browse root boot with no pass · a gate pass that expired · any navigation after expiry
-Exit to: `browse/home` (pass arrives) · adult sign-in · learner app
+Enter from: browse root boot with no active pass · any navigation after a gate pass idles out
+Exit to: learner app (PIN, then `browse/home`) · persona home · grown-up sign-in · learner app root
 
 ## States
 
-- **none / expired / waiting**: A / B / C.
-- **offline with no kept pass**: A, plus one line "Connect to the internet to sign in."
+- **gate / account / unknown**: A / B / C.
+- **offline**: the same panels; account actions add "Grown-up pages need the internet." (the PIN path works offline up to the PIN).
 - **error**: none possible beyond the learner `OopsScreen`; the screen has no data.
 
 ## Data needs
 
-- reads: the pass state only
-- writes: none (an expired `browse:pass` is removed by the pass logic before this screen renders)
+- reads: the pass state (an expired pass's source) and `shell:lastPersona` (a persona code, never a name)
+- writes: none (an expired or corrupt pass is removed by the pass logic before this screen renders)
 - telemetry: `browse.opened { scope: 'none', passFrom: 'none' }` (sent by the root, not this screen)
 
 ## Open questions
 
-- None. OD-3 records the alternative (a sampler for signed-out visitors); the default shows nothing.
+- None. OD-3 records the alternative (a sampler for visitors without a pass); the default shows nothing.

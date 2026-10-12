@@ -55,7 +55,7 @@
 | `console/plan-builder.md` | P | roadmap §6 · F-HW-001 §3.4 |
 | `console/school-admin.md` | P | roadmap S7 |
 | `console/account.md` · `console/billing.md` | P | roadmap §5.3 · §7 |
-| `browse/home.md` · `browse/episode.md` · `browse/item.md` · `browse/preview-player.md` · `browse/preview-end.md` · `browse/show-as.md` · `browse/access.md` · `browse/entry-points.md` | R | F-BROWSE-001 (Browse lessons: grown-ups preview every lesson as a learner sees it, at `app.hangulroute.com/browse`; BR-0) |
+| `browse/home.md` · `browse/episode.md` · `browse/item.md` · `browse/preview-player.md` · `browse/preview-end.md` · `browse/show-as.md` · `browse/access.md` · `browse/entry-points.md` | R | F-BROWSE-001 (All lessons: paying parents and teachers preview every lesson as a learner sees it, at `app.hangulroute.com/browse`, same-tab entry from the adult navigation and the grown-up area; BR-0) |
 
 ## 다음 단계
 1. Open questions 의 코드-스펙 불일치를 스펙에 반영 (특히 `parent/gate` ↔ `profiles/pin-entry` 통합, 계획 gating 규칙 F-HW-001 §3.4 vs F-TCH-001 §3.3).

@@ -1,8 +1,10 @@
-# Browse/Preview-player — the learner's lesson inside a preview frame (wireframe v1)
+# Browse/Preview-player — the learner's lesson inside a preview frame (wireframe v2)
 
 Spec: `docs/specs/F-BROWSE-001-adult-content-browser.md` §4.7, §4.10, BD2, BD3
 Audience: **parent or teacher** previewing; the lesson itself is the learner's screen, unchanged (anyone, any age).
-Code (planned): `apps/mobile/src/screens/browse/PreviewFrame.tsx`, `screens/browse/PreviewQuestScreen.tsx` (renders `screens/quest/QuestPlayerView.tsx` with preview ports), the learner `screens/minigames/MinigameScreen.tsx`, `screens/story/StoryReaderScreen.tsx` (replay), F-VOC-003 flashcards (mode `'preview'`)
+
+v2 (review of 2026-10-11): the strip lives only here and on the preview end screen; games run in the learner's own host modes; story sources are copy-only; the gate pass idles out after 15 minutes.
+Code (planned): `apps/mobile/src/screens/browse/PreviewFrame.tsx`, `screens/browse/PreviewQuestScreen.tsx` (renders `screens/quest/QuestPlayerView.tsx` with preview ports), the learner `screens/minigames/MinigameScreen.tsx` and `screens/story/StoryReaderScreen.tsx` (replay) through the navigation adapter (BR-5c), F-VOC-003 flashcards (mode `'preview'`, the only use of that mode)
 Notation: as `browse/home.md`. The lesson area is drawn only as a box: it is exactly the learner wireframes `quest/player.md`, `minigame/shell.md`, `story/reader.md`, `vocab/flashcards.md`.
 
 ## Scenario (Given-When-Then)
@@ -61,7 +63,7 @@ Then: every step, game, sound and Hoya line is what a learner gets, a thin strip
 
 ## Interaction points
 
-- Everything inside the lesson -> the learner behaviour (answers counted in memory only, for the lesson's own flow)
+- Everything inside the lesson -> the learner behaviour (answers counted in memory only, for the lesson's own flow; games keep host modes `'quest'` / `'check'`, so the header and the "Quick check" dots are the learner's)
 - [ Leave preview ] -> C -> `browse/item` (no end screen)
 - The lesson's own close [x] -> its own confirm (learner copy) -> `browse/item`
 - Last step done -> `browse/preview-end` (replaces the learner Results screen)
@@ -77,13 +79,13 @@ Exit to: `browse/preview-end` · `browse/item`
 - **success**: A / B.
 - **no Korean voice on the device**: the learner's text fallback (F-AUDIO-004 §3.8), unchanged.
 - **offline**: works (bundled content); nothing to sync because nothing is written.
-- **pass expired mid-lesson** (gate pass, 15 minutes): the lesson continues to its end; the next navigation shows `browse/access`.
+- **pass idled out mid-lesson** (gate pass, 15 idle minutes, 60 minutes at most): the lesson continues to its end; the next navigation shows `browse/access` with [[ Back to the grown-up area ]].
 - **error** (a step fails to render): learner `OopsScreen` with [ Back to the lesson page ].
 
 ## Data needs
 
-- reads: bundle only; `quest-run-store` (memory only, this tab, reset on leave and finish); `audio-store`; the Show as setting (romanization, language) through `useRomanizationMode()` and the browse locale
-- writes: none (storage fence: only `browse:*`, `device:audio` if the grown-up mutes, `telemetry:queue`)
+- reads: bundle only; `quest-run-store` (memory only, this tab, reset on leave and finish); `audio-store`; the Lesson display setting (romanization, language) through `useRomanizationMode()` and the in-memory browse locale
+- writes: none (storage fence: only `browse:pass` / `browse:prefs` when kept, `device:audio` if the grown-up mutes, `browse:telemetry-queue`; the learner `telemetry:queue` is never read or rewritten)
 - telemetry: `browse.preview_started` (on entry), `browse.preview_ended { reachedEnd: false }` on leave; learner events from the reused screens are dropped by the telemetry fence
 
 ## Open questions

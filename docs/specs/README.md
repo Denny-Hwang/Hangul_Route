@@ -88,6 +88,8 @@ F-XXX-<slug>.md
 - `F-SPACE-002-class-transfer.md` — move a learner between classes with learner-side, releasing and receiving consent (flag-locked) · **ready**
 - `F-ROUTE-001-my-route-overview.md` — My route: the whole journey at a glance (stage trail, pips that only fill, read / listen / write inventory, grown-up and console views) and the weekly plan proposed after the level check (companion `AMENDMENTS-PLC-PLAN-HANDOFF.md`, applied to F-PLC-001 and F-PLAN-002) · **ready**
 - `F-QUEST-002` amended: initial ㅇ is spoken by its name (see F-AUDIO-004)
+- `F-BROWSE-001-adult-content-browser.md` — All lessons: paying parents and teachers preview every lesson exactly as a learner sees it (a third root of the learner web build at `/browse`, same-tab pass from the adult navigation or the grown-up area, free adults see exactly what a free learner can open, nothing is ever saved) · **ready**
+  - wireframes `design/wireframes/browse/{home,episode,item,preview-player,preview-end,show-as,access,entry-points}.md` (BR-0)
 
 ### Phase 2 / planned
 - `F-PROF-001-device-profiles.md` — multi-learner · **draft** (code shipped PR #13, full spec covers cloud sync)

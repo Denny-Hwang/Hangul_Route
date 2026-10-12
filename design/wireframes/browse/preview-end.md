@@ -1,7 +1,9 @@
-# Browse/Preview-end — the end of a lesson preview (wireframe v1)
+# Browse/Preview-end — the end of a lesson preview (wireframe v2)
 
 Spec: `docs/specs/F-BROWSE-001-adult-content-browser.md` §4.8, BD9
-Audience: **parent or teacher** in Browse.
+Audience: **parent or teacher** in All lessons.
+
+v2 (review of 2026-10-11): [[ Next lesson ]] on a closed next lesson (sampler, content switch on) opens its page in closed form; the strip stays on this screen.
 Code (planned): `apps/mobile/src/screens/browse/PreviewEndScreen.tsx`
 Notation: as `browse/home.md`.
 
@@ -41,7 +43,7 @@ Story variant: "That is the whole story. A learner can read it again any time." 
 
 ## Interaction points
 
-- [[ Next lesson ]] -> `browse/item` of the next quest (sampler: an outline item opens its page in outline form; never auto-plays)
+- [[ Next lesson ]] -> `browse/item` of the next quest, catalogue order (closed next lesson: its page in closed form; never auto-plays)
 - [ Preview again ] -> `browse/preview-player` (fresh run)
 - [ Back to the lesson page ] -> `browse/item`
 
