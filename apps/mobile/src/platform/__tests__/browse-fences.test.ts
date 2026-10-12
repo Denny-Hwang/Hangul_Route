@@ -1,3 +1,5 @@
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { join, relative, sep } from 'node:path';
 import { BROWSE_EVENT_NAMES, TELEMETRY_EVENT_NAMES } from '@hangul-route/content-schema';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -66,5 +68,63 @@ describe('browse fences', () => {
     await track({ name: 'browse.opened', payload: { source: 'gate' } }, { endpoint: 'https://api.example.com', fetchImpl: offline });
     expect(mem.has('telemetry:queue')).toBe(false);
     expect((mem.get('browse:telemetry-queue') as { name: string }[]).map((e) => e.name)).toEqual(['browse.opened']);
+  });
+});
+
+/**
+ * The fences drop writes silently, so a fence set in the learner app would
+ * lose progress with no error. Only browse code (the `/browse` root) may set
+ * one: no other module of the app imports `browse-fences` or calls a fence or
+ * queue setter. The definers themselves are the exception.
+ */
+const APP_ROOT = join(__dirname, '..', '..', '..');
+const FENCE_CALL = /\b(setWriteFence|setTelemetryFence|configureTelemetryQueue|applyBrowseFences)\s*\(|['"][^'"]*\/browse-fences['"]/;
+
+function appSources(dir: string): string[] {
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir).flatMap((name) => {
+    const path = join(dir, name);
+    if (statSync(path).isDirectory()) return name === '__tests__' || name === 'node_modules' ? [] : appSources(path);
+    return /\.tsx?$/.test(name) ? [path] : [];
+  });
+}
+
+/** Browse code (F-BROWSE-001 section 4.10) and the modules that define the fences. */
+function mayFence(file: string): boolean {
+  const rel = relative(APP_ROOT, file).split(sep).join('/');
+  return (
+    /^src\/(screens|logic)\/browse\//.test(rel) ||
+    /^(src\/)?BrowseApp\.tsx$/.test(rel) ||
+    rel === 'src/navigation/browse.tsx' ||
+    /^src\/platform\/browse[^/]*\.tsx?$/.test(rel) ||
+    /^src\/platform\/(storage-fence|storage|storage\.web|telemetry)\.ts$/.test(rel)
+  );
+}
+
+export function fenceCallers(files: readonly string[]): string[] {
+  return files.filter((file) => !mayFence(file) && FENCE_CALL.test(readFileSync(file, 'utf8'))).map((file) => relative(APP_ROOT, file));
+}
+
+describe('the learner app never sets a fence', () => {
+  it('no module outside browse code imports browse-fences or calls a fence or queue setter', () => {
+    const files = [join(APP_ROOT, 'App.tsx'), join(APP_ROOT, 'index.ts'), ...appSources(join(APP_ROOT, 'src'))].filter((f) => existsSync(f));
+    expect(files.some((f) => f.endsWith(join('src', 'store', 'progress-store.ts')))).toBe(true);
+    const callers = fenceCallers(files);
+    expect(callers, callers.join('\n')).toEqual([]);
+  });
+
+  it('flags a learner module that would set one, and allows browse code', () => {
+    const dir = join(APP_ROOT, 'src', 'platform', '__tests__');
+    expect(mayFence(join(APP_ROOT, 'src', 'screens', 'browse', 'BrowseHome.tsx'))).toBe(true);
+    expect(mayFence(join(APP_ROOT, 'src', 'platform', 'browse-fences.ts'))).toBe(true);
+    expect(mayFence(join(APP_ROOT, 'BrowseApp.tsx'))).toBe(true);
+    expect(mayFence(join(APP_ROOT, 'App.tsx'))).toBe(false);
+    expect(mayFence(join(APP_ROOT, 'src', 'store', 'bootstrap.ts'))).toBe(false);
+    expect(mayFence(join(APP_ROOT, 'src', 'screens', 'home', 'HomeScreen.tsx'))).toBe(false);
+    for (const line of ["import { applyBrowseFences } from '../platform/browse-fences';", 'setWriteFence(() => true);', "configureTelemetryQueue('x');", 'setTelemetryFence (null);']) {
+      expect(FENCE_CALL.test(line), line).toBe(true);
+    }
+    expect(FENCE_CALL.test('const fenced = writePasses(key);')).toBe(false);
+    expect(fenceCallers([join(dir, 'browse-fences.test.ts')])).toEqual([relative(APP_ROOT, join(dir, 'browse-fences.test.ts'))]);
   });
 });
