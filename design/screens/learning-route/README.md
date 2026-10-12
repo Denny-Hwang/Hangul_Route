@@ -43,7 +43,7 @@ Open any file in a browser (`design/screens/learning-route/mock/route-tab.html`)
 
 ## Constants
 
-Values that are not tokens. Each one derives from code or a token, and LR-4, LR-5a and LR-8 write them as named constants, never as bare literals (CLAUDE.md section 4).
+Values that are not tokens. Each one derives from code or a token. LR-4, LR-5a and LR-8 write the UI ones as named constants, never as bare literals (CLAUDE.md section 4); the font stack and the board column say why they need no constant.
 
 | Where | Value | Derived from |
 |---|---|---|
@@ -55,7 +55,7 @@ Values that are not tokens. Each one derives from code or a token, and LR-4, LR-
 | "In your plan" ring | 16 px, `borderWidth.base` | placeholder for F-ENT-003 E3-D, which owns the ring at pip and cell size |
 | Card shadow | `0 2 8` at 0.06 | `shadows.card` (shadowColor `text.primary`) |
 | App breakpoints | 600 px, 900 px | `layout.breakpoint` (window classes, F-LAYOUT-001); written in px because the app's classes follow the window in dp, not the text size |
-| Font stack | the system stack (`-apple-system`, `Segoe UI`, `Roboto`, ...) | `typography.family.sans` is `'System'`, which the app's web build renders as this stack |
+| Font stack | the system stack (`-apple-system`, `Segoe UI`, `Roboto`, ...) | `typography.family.sans` is `'System'`, which the app's web build resolves to this stack by itself; no constant needed |
 | Board column | 22rem | design board only, not UI: one card per row at 375, two side by side at 1280 |
 
 The board labels use `typography.family.mono`, and the badge and the sticky tab bar use `z.raised` and `z.sticky`, all as tokens.

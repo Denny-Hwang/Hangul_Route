@@ -320,7 +320,7 @@ There are two read-only modes. Both use `viewer: 'grownup'` copy: third person, 
 ### 6.2 Local read-only page (R-3, extended by LR-5a)
 
 The route card in the third person, from the device's own `pickGoal`, so it **is** the learner's goal and may say so:
-- "Now: {name} is on Stage {n}: {title}." (or the collapsed line "Stage {n} · {title}: {name} is in the goal stage");
+- "Now: {name} is on Stage {n}: {title}." (or the collapsed line "Stage {n} · {title}: {name} is in the goal stage", or for a taste goal "Explore Stage {n} · {title}: {name} is in the goal stage");
 - "Goal: Stage {n} · {title}" with the source line "From the class's weekly plan" / "From the school's weekly plan" / "From the family's weekly plan" / "From {name}'s own weekly plan" / "Hoya's suggestion";
 - "Plan ends {date}" (grown-up only);
 - the goal pips; "Next: {title}" as text.
@@ -499,7 +499,7 @@ Counts are asserted on the frozen fixtures of F-ROUTE-001 section 5: `catalog-20
 | `apps/web/src/lib/console/__tests__/learning-route-view.test.ts` | unit, 100 % | rows from `summary.journey` (unknown stages and states ignored, `later` runs merged, zero parts omitted); goal cases 1 to 3 per viewer; a draft or archived plan never sets a goal; a plan targeted at another learner is ignored; newest `publishedAt` wins; a class viewer never reads `routeGoal` or `selfRoute`; secondary family-plan line only when the family plan does not lead; start stage via `placementStageNumber`; not-synced state; nothing exported that averages, sorts or compares |
 | `apps/web/src/lib/console/__tests__/class-goal-line.test.ts` | unit | whole-class plans only; newest `publishedAt`; targeted-only plans give no line; drafts give no line |
 | `apps/web/src/lib/console/__tests__/routing.test.ts` (extend) | unit | `learnerRoute(spaceId, learnerId, kind?)` encodes ids; `kind: 'family'` never yields `/teach`; omitted kind yields `/teach/space/route`; no name parameter exists |
-| `apps/mobile/e2e/web/my-route.spec.ts` (extend R-10's) | e2e | Route tab at 320 x 568, 375 x 667, 844 x 390, 1180 x 820: four tabs, no horizontal scroll, route card text, goal tag, three tags on one row take at most two rows at the default text size and one row each at 200 % text, nothing cut off (assumption f); a plan fixture shows "From your class's weekly plan" and Continue opens the same quest as Home card (2) |
+| `apps/mobile/e2e/web/my-route.spec.ts` (extend R-10's) | e2e | Route tab at 320 x 568, 375 x 667, 844 x 390, 1180 x 820: four tabs, no horizontal scroll, route card text, goal tag; at 320 x 568, three tags on one row take at most two rows at the default text size and one row each at 200 % text, nothing cut off (assumption f); a plan fixture shows "From your class's weekly plan" and Continue opens the same quest as Home card (2) |
 | `apps/web/e2e/learning-route.spec.ts` | e2e | the stage list page under `/parent/space/route` and `/teach/space/route` on a mocked roster at 320 and 1280: `<ol>` of stages, can-do lines, no `/ \d+` ratio, no "0 quests", no "behind", no billing link, not-found state, back link; the report's At a glance card and its link (once RP-7a is in) |
 
 Coverage: `packages/content-schema` 100 %; `apps/mobile/src/logic/my-route/` 100 %; `apps/web` console logic 90 % or more (`learning-route-view.ts` 100 %).

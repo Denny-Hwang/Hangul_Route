@@ -65,7 +65,7 @@ The shots `route-card-three-tags-320.png` and `-320-text200.png` show one stage 
 - **Motion.** The first-reached `cheering` pose is static when motion is reduced.
 - **Sizes.** Body text keeps the 18 floor. The button is `touchTarget.child`.
 
-## Strings the mocks need beyond section 11.1
+## Strings the mocks needed, and the PR that ships each key
 
 | Key | Draft | Why |
 |---|---|---|
