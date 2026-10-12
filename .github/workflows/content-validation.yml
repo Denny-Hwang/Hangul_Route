@@ -38,6 +38,9 @@ on:
       - "apps/web/src/data/lecture-catalogue.generated.ts"
       # F-STORY-001 PR 1.5: story version rules
       - "scripts/check-story-versions.mjs"
+      # F-TCH-004 PR 3: presenter font glyph list (re-derived from the content above)
+      - "scripts/build-presenter-font.mjs"
+      - "apps/mobile/public/fonts/**"
 
 # F-I18N-001 §3.10: overlay locales whose missing translations are errors (comma list, e.g. "es").
 # Add a locale here in the PR that flips its LOCALE_STATUS to 'shipped'; scripts/i18n-status.mjs
@@ -106,6 +109,12 @@ jobs:
 
       - name: Lecture catalogue is up to date (F-TCH-004)
         run: node scripts/build-lecture-catalogue.mjs --check
+
+      - name: Presenter font glyph list is up to date (F-TCH-004 §3.6)
+        run: node scripts/build-presenter-font.mjs --check
+
+      - name: Presenter font budget (F-TCH-004 §3.6)
+        run: node scripts/build-presenter-font.mjs --report
 
       - name: Story versions are raised (F-STORY-001 §3.7)
         # Plain Node, no install needed: report even when an earlier step failed.
