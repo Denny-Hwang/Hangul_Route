@@ -108,7 +108,7 @@ describe('legal: payment facts (F-SITE-002 S-7, OD-13; English-authoritative, fl
 
   it('Privacy Policy: payments name both channels, then the card promise for both', () => {
     expect(privacy.payments.paragraphs.p1).toBe(
-      `${CHANNELS} We never see or store full card numbers — Stripe or the store handles payment. We keep only what we need to run the plan: the plan, its status and dates, the Stripe or store reference ids, any promotion code used, and a record of each payment and refund, and of any payment that did not go through (amount, currency and date).`,
+      `${CHANNELS} We never see or store full card numbers — Stripe or the store handles payment. For each plan we keep the plan, its status and dates, the Stripe or store reference ids, any promotion code used, and a record of each payment and refund, and of any payment that did not go through (amount, currency and date).`,
     );
     // One source for the channel sentence: the Terms carry the same string.
     expect(privacy.payments.paragraphs.p1.startsWith(billing.paragraphs.channels)).toBe(true);
@@ -116,7 +116,7 @@ describe('legal: payment facts (F-SITE-002 S-7, OD-13; English-authoritative, fl
 
   it('Privacy Policy: third-party services list Stripe for the web, then the stores for in-app purchases', () => {
     expect(privacy.thirdParty.bullets.stripe).toBe(
-      'Stripe — payments and subscription management for plans bought on the web. We give Stripe the email address the grown-up signed in with, for receipts.',
+      'Stripe — payments and subscription management for plans bought on the web. We give Stripe the email address the grown-up signed in with, for receipts, and our own reference ids for the plan, so each payment is matched to it.',
     );
     expect(privacy.thirdParty.bullets.stores).toBe('Apple App Store / Google Play — payments and subscription management for in-app purchases.');
     expect(Object.keys(privacy.thirdParty.bullets)).toEqual(['stripe', 'stores', 'cloudflare', 'noTracking']);

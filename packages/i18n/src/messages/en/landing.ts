@@ -621,10 +621,11 @@ export const landing = {
           paragraphs: {
             /**
              * The payment channels, then what the server keeps about a plan, never card data: `entitlements` (plan key,
-             * status, dates, `provider_ref` / `customer_ref`, `promo_code`) and, from F-BILL-002 B-3, `billing_events`
+             * status, dates, `provider_ref` / `customer_ref`, `promo_code`) and, from F-BILL-002 B-3 (notice before it
+             * records anything; Stripe Live is off, so no real payment exists before then), `billing_events`
              * (migration 0007: purchase, renewal, refund or a payment that did not go through; amount, currency, date, Stripe ids). F-SITE-002 S-7.
              */
-            p1: `${PAYMENT_CHANNELS} We never see or store full card numbers — Stripe or the store handles payment. We keep only what we need to run the plan: the plan, its status and dates, the Stripe or store reference ids, any promotion code used, and a record of each payment and refund, and of any payment that did not go through (amount, currency and date).`,
+            p1: `${PAYMENT_CHANNELS} We never see or store full card numbers — Stripe or the store handles payment. For each plan we keep the plan, its status and dates, the Stripe or store reference ids, any promotion code used, and a record of each payment and refund, and of any payment that did not go through (amount, currency and date).`,
           },
         },
         thirdParty: {
@@ -632,9 +633,10 @@ export const landing = {
           bullets: {
             /**
              * F-SITE-002 S-7: the web's payment processor, listed before the stores as in the payment sentence. Checkout
-             * is opened with the signed-in account's email (`customer_email`, packages/backend lib/stripe.ts).
+             * is opened with the signed-in account's email (`customer_email`) and the plan's subject kind and id, plan key
+             * and any promotion code as metadata (`checkoutForm`, packages/backend lib/stripe.ts).
              */
-            stripe: 'Stripe — payments and subscription management for plans bought on the web. We give Stripe the email address the grown-up signed in with, for receipts.',
+            stripe: 'Stripe — payments and subscription management for plans bought on the web. We give Stripe the email address the grown-up signed in with, for receipts, and our own reference ids for the plan, so each payment is matched to it.',
             stores: 'Apple App Store / Google Play — payments and subscription management for in-app purchases.',
             cloudflare: 'Cloudflare — hosting, storage, and content delivery.',
             noTracking: 'We do not use third-party advertising or social-media tracking SDKs.',
