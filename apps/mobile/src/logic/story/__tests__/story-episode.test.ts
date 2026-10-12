@@ -7,6 +7,7 @@ import { shelfCopy } from '../shelf-copy';
 import {
   STORY_EPISODE_AUDIO_SOURCE,
   episodeRewardCards,
+  episodeTitleKorean,
   episodeWordChip,
   episodeWordSpeech,
   storyEpisodeEntries,
@@ -286,6 +287,32 @@ describe('episodeWordChip / episodeWordSpeech', () => {
       source: STORY_EPISODE_AUDIO_SOURCE,
       audioRef: 'audio/words/sejong.mp3',
     });
+  });
+});
+
+describe('episodeTitleKorean', () => {
+  it('always mode shows the romanization and adds no tap (the reviewed look)', () => {
+    const t = episodeTitleKorean('sun-and-moon', '해와 달', { romanizationMode: 'always', revealed: new Set() });
+    expect(t).toEqual({
+      key: 'title:sun-and-moon',
+      romanizationShown: true,
+      tappable: false,
+      speech: { text: '해와 달', language: 'ko-KR', kind: 'sentence', source: STORY_EPISODE_AUDIO_SOURCE },
+    });
+  });
+
+  it('hide-until-tap (D2): hidden until tapped, and the tap stays so the title can be heard again', () => {
+    const hidden = episodeTitleKorean('sun-and-moon', '해와 달', { romanizationMode: 'tap', revealed: new Set() });
+    expect(hidden.romanizationShown).toBe(false);
+    expect(hidden.tappable).toBe(true);
+    const shown = episodeTitleKorean('sun-and-moon', '해와 달', { romanizationMode: 'tap', revealed: new Set([hidden.key]) });
+    expect(shown.romanizationShown).toBe(true);
+    expect(shown.tappable).toBe(true);
+  });
+
+  it('a title key never collides with a word id in the shared revealed set', () => {
+    const t = episodeTitleKorean('sun', '해', { romanizationMode: 'tap', revealed: new Set(['sun']) });
+    expect(t.romanizationShown).toBe(false);
   });
 });
 

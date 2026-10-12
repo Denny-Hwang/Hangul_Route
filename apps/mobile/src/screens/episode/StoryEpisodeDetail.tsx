@@ -26,6 +26,7 @@ import { usePromptSlot } from '../../components/use-prompt-slot';
 import { cardById, stageByKey, themeByKey } from '../../content';
 import { storiesAll } from '../../content/stories';
 import { useLocale, useMessages } from '../../i18n/use-messages';
+import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { localizeCard, localizeStage, localizeStory, localizeTheme } from '../../logic/content-locale';
 import { emptyBookmarks } from '../../logic/story/bookmarks';
 import { foundNotes } from '../../logic/story/culture-notes';
@@ -34,10 +35,12 @@ import { shelfCopy } from '../../logic/story/shelf-copy';
 import {
   STORY_EPISODE_AUDIO_SOURCE,
   episodeRewardCards,
+  episodeTitleKorean,
   episodeWordChip,
   episodeWordSpeech,
   storyEpisodeView,
   type EpisodeRewardCard,
+  type EpisodeTitleKorean,
   type TaleRowAction,
   type TaleRowView,
 } from '../../logic/story/story-episode';
@@ -45,7 +48,6 @@ import { defaultStoryIndex, type StoryIndexEntry } from '../../logic/story/story
 import { storyCoverVariant } from '../../logic/story/story-tile';
 import { playPrompt, stop } from '../../platform/audio';
 import { track } from '../../platform/telemetry';
-import { useLocaleStore } from '../../store/locale-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
@@ -95,7 +97,7 @@ export function StoryEpisodeDetail({ episode, entries: sourceEntries, onOpenStor
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
   const bookmarks = useStoryStore((s) => (profile ? s.byProfile[profile.id] : undefined)) ?? NO_BOOKMARKS;
-  const romanizationMode = useLocaleStore((s) => (profile ? (s.byProfile[profile.id]?.romanizationMode ?? 'always') : 'always'));
+  const romanizationMode = useRomanizationMode();
   const thumb = useMediaSize(THUMB_BASE);
 
   // Story text in the UI language (F-CNT-002 overlay); taught Korean never changes.
@@ -138,6 +140,13 @@ export function StoryEpisodeDetail({ episode, entries: sourceEntries, onOpenStor
     },
     [view.words, slot],
   );
+  // D2: a Korean title hidden until tapped plays the title and shows how to say it, like a word chip.
+  const titleKorean = (storyId: string, ko: string): EpisodeTitleKorean => episodeTitleKorean(storyId, ko, { romanizationMode, revealed });
+  const hearTitle = (title: EpisodeTitleKorean): void => {
+    void slot.play(() => playPrompt(title.speech));
+    setRevealed((r) => (r.has(title.key) ? r : new Set([...r, title.key])));
+  };
+  const pageTitle = view.storyId && view.title.ko ? titleKorean(view.storyId, view.title.ko) : null;
 
   const runAction = (row: TaleRowView, action: TaleRowAction): void => {
     const plan = planOpenStory({ entry: row.entry, status: row.status, source: 'episode', mode: action.mode });
@@ -176,15 +185,18 @@ export function StoryEpisodeDetail({ episode, entries: sourceEntries, onOpenStor
         <Heading level="display" testID="story-episode-title">
           {view.title.en}
         </Heading>
-        {view.title.ko ? (
+        {view.title.ko && pageTitle ? (
           <>
             <Spacer size="xs" />
             <View style={{ alignSelf: 'flex-start', maxWidth: '100%' }}>
               <KoreanText
                 ko={view.title.ko}
                 romanization={view.title.romanization ?? ''}
-                romanizationShown={romanizationMode === 'always'}
+                romanizationShown={pageTitle.romanizationShown}
                 size="sm"
+                onPress={pageTitle.tappable ? () => hearTitle(pageTitle) : undefined}
+                accessibilityLabel={messages.a11y.koreanItem({ ko: view.title.ko, romanization: view.title.romanization ?? '', gloss: view.title.en })}
+                testID="story-episode-title-ko"
               />
             </View>
           </>
@@ -200,7 +212,8 @@ export function StoryEpisodeDetail({ episode, entries: sourceEntries, onOpenStor
               key={row.entry.questId}
               row={row}
               thumb={thumb}
-              romanizationShown={romanizationMode === 'always'}
+              titleKo={titleKorean(row.entry.storyId, row.ko)}
+              onHearTitle={hearTitle}
               onAction={(action) => runAction(row, action)}
             />
           ))}
@@ -320,14 +333,17 @@ export function StoryEpisodeDetail({ episode, entries: sourceEntries, onOpenStor
 function TaleRow({
   row,
   thumb,
-  romanizationShown,
+  titleKo,
+  onHearTitle,
   onAction,
 }: {
   row: TaleRowView;
   thumb: number;
-  romanizationShown: boolean;
+  titleKo: EpisodeTitleKorean;
+  onHearTitle: (title: EpisodeTitleKorean) => void;
   onAction: (action: TaleRowAction) => void;
 }): React.ReactElement {
+  const messages = useMessages();
   const id = row.entry.storyId;
   return (
     <View role="listitem" testID={`story-episode-row-${id}`}>
@@ -344,13 +360,21 @@ function TaleRow({
           <View style={{ flex: 1, gap: spacing.xs }}>
             <Body weight="semibold">{row.titleEn}</Body>
             <View style={{ alignSelf: 'flex-start', maxWidth: '100%' }}>
-              <KoreanText ko={row.ko} romanization={row.romanization} romanizationShown={romanizationShown} size="sm" />
+              <KoreanText
+                ko={row.ko}
+                romanization={row.romanization}
+                romanizationShown={titleKo.romanizationShown}
+                size="sm"
+                onPress={titleKo.tappable ? () => onHearTitle(titleKo) : undefined}
+                accessibilityLabel={messages.a11y.koreanItem({ ko: row.ko, romanization: row.romanization, gloss: row.titleEn })}
+                testID={`story-episode-row-ko-${id}`}
+              />
             </View>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm }}>
               <Body size="sm" weight="semibold" tone="secondary" testID={`story-episode-state-${id}`}>
                 {row.stateLine}
               </Body>
-              {row.stars > 0 ? <StarRow stars={row.stars} size={spacing.lg} /> : null}
+              {row.stars > 0 ? <StarRow stars={row.stars} size={spacing.lg} accessibilityLabel={messages.a11y.stars(row.stars)} /> : null}
             </View>
           </View>
         </View>

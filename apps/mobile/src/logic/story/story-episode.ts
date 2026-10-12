@@ -205,6 +205,35 @@ export function episodeWordSpeech(word: RecapWord): PlaySpec {
   return spec;
 }
 
+export interface EpisodeTitleKorean {
+  /** Its entry in the page's `revealed` set (shared with the word chips; prefixed so no word id collides). */
+  key: string;
+  romanizationShown: boolean;
+  /**
+   * Hide-until-tap only (D2): the Korean title is a button that plays the
+   * title and reveals its romanization, as the word chips do. Always mode
+   * keeps the plain title.
+   */
+  tappable: boolean;
+  /** Korean speech of the title (a story title has no clip). */
+  speech: PlaySpec;
+}
+
+/** A Korean story title on the page (the page title or a tale row) under the profile's romanization mode. */
+export function episodeTitleKorean(
+  storyId: string,
+  ko: string,
+  ctx: { romanizationMode: RomanizationMode; revealed: ReadonlySet<string> },
+): EpisodeTitleKorean {
+  const key = `title:${storyId}`;
+  return {
+    key,
+    romanizationShown: romanizationShown(ctx.romanizationMode, ctx.revealed.has(key)),
+    tappable: ctx.romanizationMode === 'tap',
+    speech: { text: ko, language: 'ko-KR', kind: 'sentence', source: STORY_EPISODE_AUDIO_SOURCE },
+  };
+}
+
 export type EpisodeRewardCard =
   | { cardId: string; earned: true; card: HeritageCard }
   | { cardId: string; earned: false; rarity: HeritageCard['rarity'] };
