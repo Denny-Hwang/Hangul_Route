@@ -36,3 +36,14 @@ describe('D1Db.reset and the class-transfer tables', () => {
     d1.close();
   });
 });
+
+describe('D1Db.reset and the notes tables (F-FEEDBACK-001 FB-2)', () => {
+  it('works on a database without migration 0008', async () => {
+    const d1 = openSqliteD1();
+    for (const table of ['feedback_reports', 'feedback_notes', 'learner_note_prefs', 'feedback_sender_blocks', 'feedback_send_grants', 'feedback_sender_holds']) await d1.prepare(`DROP TABLE ${table}`).run();
+    await insertAccount(d1, 'acct-a').run();
+    await new D1Db(d1).reset();
+    expect(await count(d1, 'accounts')).toBe(0);
+    d1.close();
+  });
+});
