@@ -12,8 +12,9 @@ import { fullyVisible, nextPage } from './story-reader-helpers';
  *
  * `quest:story-hangul-day-listen` is intro, read, check, sequence, reward. The
  * suite skips the read step, so a run scores 3 check rounds + 4 sequence slots.
- * The fixture bundle holds one shelf story, so `nextStoryAfter` has nothing to
- * offer and the primary is Back home; the Next story choice is covered by the
+ * The fixture bundle holds one Story Time shelf story (its other shelf story is a
+ * Culture one, F-STORY-005 PR 5.5b), so `nextStoryAfter` has nothing to offer and
+ * the primary is Back home; the Next story choice is covered by the
  * unit tests of `nextStoryAfter` and `storyResultsExtras`.
  */
 
