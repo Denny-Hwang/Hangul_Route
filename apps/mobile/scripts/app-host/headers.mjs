@@ -122,17 +122,31 @@ const MISSING_CONSOLE_FILES = [
 /** A Cache-Control value that lets a browser keep the answer: `immutable`, or a positive `max-age` / `s-maxage`. */
 const KEEPS = (value) => /\bimmutable\b/i.test(value) || /\b(?:max-age|s-maxage)\s*=\s*"?0*[1-9]/i.test(value);
 
+/** Whether a header lets a browser keep the answer: such a Cache-Control, or any `Expires`. */
+const keepsAnswer = ([name, value]) => {
+  if (value === null) return false;
+  const key = name.toLowerCase();
+  return (key === 'cache-control' && KEEPS(value)) || key === 'expires';
+};
+
+/** The path part of a pattern: Workers also accept absolute URLs (`https://app.hangulroute.com/_next/*`). */
+const pathOf = (pattern) => (/^https?:\/\//i.test(pattern) ? pattern.replace(/^https?:\/\/[^/]*/i, '') || '/' : pattern);
+
 /**
  * Patterns that would let a browser keep a missing `/_next/` file. On this Worker the single-page fallback
  * answers such a miss with `index.html` (200, `text/html`), so a long rule there would let a browser keep
- * that page under the chunk URL (section 3.3, 2026-10-12 amendment). A rule counts when its pattern is under
- * `/_next/` or matches a missing console file, and its Cache-Control keeps the answer.
+ * that page under the chunk URL (section 3.3, 2026-10-12 amendment). A rule counts when its pattern (by its
+ * path, for an absolute URL) is under `/_next/` or matches a missing console file, and it sets `Expires` or a
+ * Cache-Control that keeps the answer.
  * @param {ReturnType<typeof parseHeaders>} rules
  * @returns {string[]}
  */
 export function longCacheConsoleRules(rules) {
   return rules
-    .filter((rule) => rule.pattern.startsWith('/_next/') || MISSING_CONSOLE_FILES.some((path) => patternMatches(rule.pattern, path)))
-    .filter((rule) => rule.headers.some(([name, value]) => name.toLowerCase() === 'cache-control' && value !== null && KEEPS(value)))
+    .filter((rule) => {
+      const path = pathOf(rule.pattern);
+      return path.startsWith('/_next/') || MISSING_CONSOLE_FILES.some((file) => patternMatches(path, file));
+    })
+    .filter((rule) => rule.headers.some(keepsAnswer))
     .map((rule) => rule.pattern);
 }

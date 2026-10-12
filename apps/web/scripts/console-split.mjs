@@ -13,7 +13,7 @@
 // scripts/ts-loader.mjs (precedent: scripts/check-i18n.mjs, apps/mobile/scripts/pwa-postbuild.mjs).
 //
 //   node scripts/console-split.mjs [out] [dest]     (dest defaults to `<out>-console`)
-import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, realpathSync, rmSync, statSync } from 'node:fs';
 import * as nodeModule from 'node:module';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -22,9 +22,10 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 export const CONSOLE_ASSET_DIR = '_next';
 
 /**
- * First names (before the first `/` or `.`) the console role never copies, whatever the prefix list says
- * (section 3.3): the landing, Next's 404 page, legal, persona, locale and preview pages. A second guard
- * after the R-1 selection, so a mistaken prefix can never publish a site page on the app host.
+ * Starts of first names (before the first `/` or `.`) the console role never copies, whatever the prefix
+ * list says (section 3.3: `index.html`, `404.html`, `about*`, `privacy*`, ...): the landing, Next's 404 page,
+ * legal, persona, locale and preview pages. A second guard after the R-1 selection, so a mistaken prefix
+ * can never publish a site page on the app host.
  */
 export const NEVER_COPIED = ['index', '404', 'about', 'privacy', 'terms', 'learners', 'parents', 'teachers', 'es', 'ko', 'design-preview'];
 
@@ -48,7 +49,10 @@ export function isConsoleFile(rel, isGrownUpPath) {
  */
 export function consoleFiles(relPaths, isGrownUpPath) {
   const selected = relPaths.map(toPosix).filter((rel) => isConsoleFile(rel, isGrownUpPath));
-  const site = selected.filter((rel) => NEVER_COPIED.includes(rel.split(/[/.]/)[0]));
+  const site = selected.filter((rel) => {
+    const first = rel.split(/[/.]/)[0];
+    return NEVER_COPIED.some((name) => first.startsWith(name));
+  });
   if (site.length > 0) throw new Error(`the console role never copies site pages, but selected ${site.join(', ')}`);
   return selected.sort();
 }
@@ -95,7 +99,11 @@ export function splitConsole(outDir, destDir, isGrownUpPath) {
   return files;
 }
 
-if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Real paths on both sides: Node resolves symlinks in import.meta.url but not in argv[1], and a CLI that
+// compared them as they are would skip itself without a word in a symlinked checkout.
+const isMain = Boolean(process.argv[1]) && existsSync(process.argv[1]) && realpathSync(fileURLToPath(import.meta.url)) === realpathSync(process.argv[1]);
+
+if (isMain) {
   try {
     if (typeof nodeModule.register !== 'function') {
       throw new Error(`needs Node 20.6+ (module.register); this is ${process.version}`);

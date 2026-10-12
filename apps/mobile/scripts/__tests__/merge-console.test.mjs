@@ -5,7 +5,7 @@
 // grown-up `_headers` block. Checked here on stand-in exports; the real merged build is
 // e2e/web/app-host.spec.ts.
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -180,6 +180,12 @@ describe('parseHeaders, patternMatches and headersFor (the Workers assets _heade
     }
     expect(longCacheConsoleRules(parseHeaders('/_next/*\n  Cache-Control: public, max-age=86400\n'))).toEqual(['/_next/*']);
     expect(longCacheConsoleRules(parseHeaders('/_next/*\n  Cache-Control: s-maxage=600\n'))).toEqual(['/_next/*']);
+    expect(longCacheConsoleRules(parseHeaders('/_next/*\n  Expires: Thu, 01 Dec 2099 16:00:00 GMT\n'))).toEqual(['/_next/*']);
+    // host-qualified patterns (Workers accept absolute URLs) are read by their path
+    for (const pattern of ['https://app.hangulroute.com/_next/static/*', 'https://:sub.hangulroute.com/*']) {
+      expect(longCacheConsoleRules(parseHeaders(`${pattern}\n  Cache-Control: public, max-age=31536000, immutable\n`)), pattern).toEqual([pattern]);
+    }
+    expect(longCacheConsoleRules(parseHeaders('https://app.hangulroute.com/assets/*\n  Cache-Control: immutable\n'))).toEqual([]);
     // revalidating rules, and long rules elsewhere, are fine
     expect(
       longCacheConsoleRules(parseHeaders('/_next/*\n  Cache-Control: no-cache\n/_next/static/*\n  Cache-Control: public, max-age=0, must-revalidate\n/assets/*\n  Cache-Control: immutable\n/sw.js\n  Cache-Control: max-age=600\n')),
@@ -401,6 +407,19 @@ describe('merge-console.mjs (the CLI)', () => {
     expect(run.status, run.stderr).toBe(0);
     expect(run.stdout).toMatch(/SKIP_CONSOLE=1/);
     expect(snapshot(dist)).toEqual(before);
+  });
+
+  it('runs when reached through a symlink (a symlinked checkout or temp folder), never skips itself silently', () => {
+    const link = join(root, 'merge-console-link.mjs');
+    symlinkSync(MERGE, link);
+    const skip = spawnSync(process.execPath, [link, dist], { encoding: 'utf8', env: { ...process.env, SKIP_CONSOLE: '1' } });
+    expect(skip.status, skip.stderr).toBe(0);
+    expect(skip.stdout).toMatch(/SKIP_CONSOLE=1/);
+    const empty = join(root, 'empty-for-link');
+    mkdirSync(empty);
+    const run = spawnSync(process.execPath, [link, empty], { encoding: 'utf8', env: { ...process.env, SKIP_CONSOLE: '' } });
+    expect(run.status).toBe(1);
+    expect(run.stderr).toMatch(/^merge-console: no learner export/);
   });
 
   it('fails fast, before building anything, without a learner export', () => {

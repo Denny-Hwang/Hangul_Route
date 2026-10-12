@@ -18,7 +18,7 @@
 //
 //   node scripts/app-host/merge-console.mjs [dist]
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 import * as nodeModule from 'node:module';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -179,7 +179,11 @@ export function runMerge({ dist, env, consoleOut, build, isGrownUpPath, prefixes
   return mergeConsole({ dist, consoleOut, isGrownUpPath, prefixes });
 }
 
-if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Real paths on both sides: Node resolves symlinks in import.meta.url but not in argv[1], and a build step
+// that compared them as they are would skip itself without a word in a symlinked checkout.
+const isMain = Boolean(process.argv[1]) && existsSync(process.argv[1]) && realpathSync(fileURLToPath(import.meta.url)) === realpathSync(process.argv[1]);
+
+if (isMain) {
   const log = (line) => process.stdout.write(`merge-console: ${line}\n`);
   try {
     if (skipConsole(process.env)) {

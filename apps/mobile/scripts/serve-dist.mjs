@@ -27,7 +27,16 @@ const types = {
   '.woff2': 'font/woff2',
 };
 const headersFile = join(root, '_headers');
-const rules = existsSync(headersFile) ? parseHeaders(readFileSync(headersFile, 'utf8')) : [];
+let headersCache = { mtimeMs: -1, rules: [] };
+
+/** The rules of dist/_headers, read again when the file changes (a rebuild under a server left running). */
+function currentRules() {
+  const mtimeMs = existsSync(headersFile) ? statSync(headersFile).mtimeMs : 0;
+  if (mtimeMs !== headersCache.mtimeMs) {
+    headersCache = { mtimeMs, rules: mtimeMs === 0 ? [] : parseHeaders(readFileSync(headersFile, 'utf8')) };
+  }
+  return headersCache.rules;
+}
 
 const isFile = (path) => path.startsWith(root + sep) && existsSync(path) && statSync(path).isFile();
 
@@ -48,6 +57,6 @@ createServer((req, res) => {
   const file = resolveFile(url.pathname) ?? join(root, 'index.html'); // SPA fallback
   res.setHeader('Content-Type', types[extname(file)] ?? 'application/octet-stream');
   res.setHeader('Cache-Control', 'no-cache');
-  for (const [name, value] of Object.entries(headersFor(rules, url.pathname))) res.setHeader(name, value);
+  for (const [name, value] of Object.entries(headersFor(currentRules(), url.pathname))) res.setHeader(name, value);
   createReadStream(file).pipe(res);
 }).listen(port, () => process.stdout.write(`serving ${root} on http://localhost:${port}\n`));

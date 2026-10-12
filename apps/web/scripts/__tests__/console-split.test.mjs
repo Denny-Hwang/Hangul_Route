@@ -4,7 +4,7 @@
 // and the whole `_next/` folder, which `apps/mobile/scripts/app-host/merge-console.mjs`
 // then copies into the learner Worker's dist. The site role (`out/`) is not touched.
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -150,6 +150,10 @@ describe('consoleFiles', () => {
     for (const rel of ['index.html', '404.html', 'about.html', 'privacy.txt', 'terms.html', 'learners.html', 'parents.html', 'teachers.txt', 'es.html', 'es/about.html', 'ko/privacy.html', 'design-preview.html', 'design-preview/scenes/library.html']) {
       expect(() => consoleFiles([rel], yesToAll), rel).toThrow(/never copies/);
     }
+    // section 3.3 names them as prefixes (`about*`, `privacy*`, ...): a longer first name is refused too
+    for (const rel of ['about-us.html', 'privacy-center/data.html', 'terms-of-sale.txt', 'learners-guide.html', 'design-previews/x.html', 'es-mx.html', 'ko-kr/index.html']) {
+      expect(() => consoleFiles([rel], yesToAll), rel).toThrow(/never copies/);
+    }
   });
 
   it('names every never-copied page of section 3.3', () => {
@@ -233,13 +237,21 @@ describe('console-split.mjs (the CLI, prefixes read from packages/content-schema
     expect(run.status).toBe(1);
     expect(run.stderr).toMatch(/^console-split: no export folder/);
   });
+
+  it('runs when reached through a symlink (a symlinked checkout or temp folder), never skips itself silently', () => {
+    const link = join(root, 'console-split-link.mjs');
+    symlinkSync(SCRIPT, link);
+    const run = spawnSync(process.execPath, [link, join(root, 'nope')], { encoding: 'utf8' });
+    expect(run.status).toBe(1);
+    expect(run.stderr).toMatch(/^console-split: no export folder/);
+  });
 });
 
 describe('package.json', () => {
   const scripts = JSON.parse(readFileSync(join(WEB, 'package.json'), 'utf8')).scripts;
 
-  it('builds the console role from the same export (section 3.3)', () => {
-    expect(scripts['build:console']).toBe('next build && node scripts/console-split.mjs out');
+  it('builds the console role from the same export (section 3.3), then leaves out/ pruned as the site role does', () => {
+    expect(scripts['build:console']).toBe('next build && node scripts/console-split.mjs out && node scripts/prune-hidden-locales.mjs out');
   });
 
   it('keeps the site role unchanged', () => {
