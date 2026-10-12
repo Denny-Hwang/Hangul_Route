@@ -108,12 +108,16 @@ describe('legal: payment facts (F-SITE-002 S-7, OD-13; English-authoritative, fl
 
   it('Privacy Policy: payments name both channels, then the card promise for both', () => {
     expect(privacy.payments.paragraphs.p1).toBe(
-      `${CHANNELS} We never see or store full card numbers — Stripe or the store handles payment, and we keep only the minimum needed to unlock the subscription on the account.`,
+      `${CHANNELS} We never see or store full card numbers — Stripe or the store handles payment. We keep only what we need to run the plan: the plan, its status and dates, the Stripe or store reference ids, any promotion code used, and a record of each payment and refund, and of any payment that did not go through (amount, currency and date).`,
     );
+    // One source for the channel sentence: the Terms carry the same string.
+    expect(privacy.payments.paragraphs.p1.startsWith(billing.paragraphs.channels)).toBe(true);
   });
 
   it('Privacy Policy: third-party services list Stripe for the web, then the stores for in-app purchases', () => {
-    expect(privacy.thirdParty.bullets.stripe).toBe('Stripe — payments and subscription management for plans bought on the web.');
+    expect(privacy.thirdParty.bullets.stripe).toBe(
+      'Stripe — payments and subscription management for plans bought on the web. We give Stripe the email address the grown-up signed in with, for receipts.',
+    );
     expect(privacy.thirdParty.bullets.stores).toBe('Apple App Store / Google Play — payments and subscription management for in-app purchases.');
     expect(Object.keys(privacy.thirdParty.bullets)).toEqual(['stripe', 'stores', 'cloudflare', 'noTracking']);
   });
@@ -126,7 +130,7 @@ describe('legal: payment facts (F-SITE-002 S-7, OD-13; English-authoritative, fl
 
   it('Terms of Service: the store terms stay, each marked for in-app purchases, in their old order', () => {
     expect(billing.bullets).toEqual({
-      premium: 'In-app purchases: premium content is offered as an auto-renewing subscription billed through the Apple App Store or Google Play.',
+      premium: 'In-app purchases: when offered, premium content is an auto-renewing subscription billed through the Apple App Store or Google Play.',
       renews: 'In-app purchases: your subscription renews automatically unless you cancel at least 24 hours before the end of the current period.',
       manage: 'In-app purchases: manage or cancel anytime in your App Store or Google Play account settings.',
       refunds:

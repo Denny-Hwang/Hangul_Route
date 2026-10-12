@@ -34,6 +34,15 @@ const FAQ_KOREAN = {
   a: 'No — starting from zero is what we built it for. Instructions are in plain, simple English. Korean only appears as the thing being learned.',
 } as const;
 
+/**
+ * Both payment channels (F-SITE-002 §3.7, S-7, OD-13), word for word as the spec gives them: Stripe Checkout on
+ * app.hangulroute.com after sign-in (F-BILL-002), the stores in the native apps when they offer purchases
+ * (F-ENT-001 §3.5, F-IAP-002). The Privacy Policy and the Terms both open their payment text with it, so the
+ * copies cannot drift. English-authoritative (L10); no price (OD-7).
+ */
+const PAYMENT_CHANNELS =
+  'On the web, a grown-up pays through Stripe after signing in at app.hangulroute.com. In the iPhone and Android apps, purchases (when offered) go through the App Store or Google Play.';
+
 /** Values the legal pages pass to the few sentences that name the contact address or the level labels. */
 export interface LegalValues {
   email: string;
@@ -611,18 +620,21 @@ export const landing = {
           heading: 'Payments and subscriptions',
           paragraphs: {
             /**
-             * Both payment channels (F-SITE-002 §3.7, S-7, OD-13): Stripe Checkout on app.hangulroute.com after sign-in
-             * (F-BILL-002), the stores in the native apps when they offer purchases (F-ENT-001 §3.5, F-IAP-002). The server
-             * keeps the plan, its status and the Stripe or store ids, never card data (`entitlements`). No price here (OD-7).
+             * The payment channels, then what the server keeps about a plan, never card data: `entitlements` (plan key,
+             * status, dates, `provider_ref` / `customer_ref`, `promo_code`) and, from F-BILL-002 B-3, `billing_events`
+             * (migration 0007: purchase, renewal, refund or a payment that did not go through; amount, currency, date, Stripe ids). F-SITE-002 S-7.
              */
-            p1: 'On the web, a grown-up pays through Stripe after signing in at app.hangulroute.com. In the iPhone and Android apps, purchases (when offered) go through the App Store or Google Play. We never see or store full card numbers — Stripe or the store handles payment, and we keep only the minimum needed to unlock the subscription on the account.',
+            p1: `${PAYMENT_CHANNELS} We never see or store full card numbers — Stripe or the store handles payment. We keep only what we need to run the plan: the plan, its status and dates, the Stripe or store reference ids, any promotion code used, and a record of each payment and refund, and of any payment that did not go through (amount, currency and date).`,
           },
         },
         thirdParty: {
           heading: 'Third-party services',
           bullets: {
-            /** F-SITE-002 S-7: the web's payment processor, listed before the stores as in the payment sentence. */
-            stripe: 'Stripe — payments and subscription management for plans bought on the web.',
+            /**
+             * F-SITE-002 S-7: the web's payment processor, listed before the stores as in the payment sentence. Checkout
+             * is opened with the signed-in account's email (`customer_email`, packages/backend lib/stripe.ts).
+             */
+            stripe: 'Stripe — payments and subscription management for plans bought on the web. We give Stripe the email address the grown-up signed in with, for receipts.',
             stores: 'Apple App Store / Google Play — payments and subscription management for in-app purchases.',
             cloudflare: 'Cloudflare — hosting, storage, and content delivery.',
             noTracking: 'We do not use third-party advertising or social-media tracking SDKs.',
@@ -674,19 +686,18 @@ export const landing = {
         billing: {
           heading: 'Subscriptions, billing, and cancellation',
           /**
-           * F-SITE-002 §3.7 (S-7, OD-13): both payment channels, then the yearly renewal of web plans
+           * F-SITE-002 §3.7 (S-7, OD-13): both payment channels (PAYMENT_CHANNELS), then the yearly renewal of web plans
            * (AMENDMENTS-BILLING-FAMILY-YEARLY BY-D10 [BY]; "Billing" and "Manage subscription" are the console's own labels).
            * The page renders these before the bullets. No price here (OD-7).
            */
           paragraphs: {
-            channels:
-              'On the web, a grown-up pays through Stripe after signing in at app.hangulroute.com. In the iPhone and Android apps, purchases (when offered) go through the App Store or Google Play.',
+            channels: PAYMENT_CHANNELS,
             webRenewal:
               'Plans bought on the web (the Family Plan and the Group License) renew every year until cancelled. Cancel any time in Billing, under Manage subscription; the plan stays active until the end of the year already paid.',
           },
           /** The store terms, kept and marked as applying to in-app purchases (F-ENT-001 §3.5, F-IAP-002). */
           bullets: {
-            premium: 'In-app purchases: premium content is offered as an auto-renewing subscription billed through the Apple App Store or Google Play.',
+            premium: 'In-app purchases: when offered, premium content is an auto-renewing subscription billed through the Apple App Store or Google Play.',
             renews: 'In-app purchases: your subscription renews automatically unless you cancel at least 24 hours before the end of the current period.',
             manage: 'In-app purchases: manage or cancel anytime in your App Store or Google Play account settings.',
             refunds: 'In-app purchases: refunds are handled by the store under its policy. A free trial, if offered, converts to a paid subscription unless cancelled before it ends.',

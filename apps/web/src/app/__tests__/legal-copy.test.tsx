@@ -34,6 +34,14 @@ function blocksOf(html: string): string[] {
   return [...html.matchAll(/<(p|li)\b[^>]*>(.*?)<\/\1>/g)].map((m) => textOf(m[2] ?? '').trim());
 }
 
+/** A block split into sentences (a period followed by a space ends one; "app.hangulroute.com" does not). */
+function sentencesOf(block: string): string[] {
+  return block
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
 /** The text between two section headings of a rendered document. */
 function between(text: string, from: string, to: string): string {
   const start = text.indexOf(from);
@@ -210,14 +218,18 @@ describe('payment facts (F-SITE-002 S-7)', () => {
       expect(privacy).not.toContain('the store handles payment and gives us');
     });
 
-    it('keeps the card promise for both channels', () => {
+    it('keeps the card promise for both channels and says what is kept about a plan', () => {
+      expect(privacyPayments).toContain('We never see or store full card numbers — Stripe or the store handles payment.');
       expect(privacyPayments).toContain(
-        'We never see or store full card numbers — Stripe or the store handles payment, and we keep only the minimum needed to unlock the subscription on the account.',
+        'We keep only what we need to run the plan: the plan, its status and dates, the Stripe or store reference ids, any promotion code used, and a record of each payment and refund, and of any payment that did not go through (amount, currency and date).',
       );
+      expect(privacyPayments).not.toContain('the minimum needed to unlock');
     });
 
     it('lists Stripe for the web and keeps the stores, marked for in-app purchases, among the third-party services', () => {
-      expect(privacyThirdParty).toContain('Stripe — payments and subscription management for plans bought on the web.');
+      expect(privacyThirdParty).toContain(
+        'Stripe — payments and subscription management for plans bought on the web. We give Stripe the email address the grown-up signed in with, for receipts.',
+      );
       expect(privacyThirdParty).toContain('Apple App Store / Google Play — payments and subscription management for in-app purchases.');
       expect(privacyThirdParty.indexOf('Stripe —')).toBeLessThan(privacyThirdParty.indexOf('Apple App Store /'));
     });
@@ -235,7 +247,7 @@ describe('payment facts (F-SITE-002 S-7)', () => {
 
     it('keeps the store subscription, auto-renew, management and refund paragraphs, each marked for in-app purchases', () => {
       expect(termsBilling).toContain(
-        'In-app purchases: premium content is offered as an auto-renewing subscription billed through the Apple App Store or Google Play.',
+        'In-app purchases: when offered, premium content is an auto-renewing subscription billed through the Apple App Store or Google Play.',
       );
       expect(termsBilling).toContain(
         'In-app purchases: your subscription renews automatically unless you cancel at least 24 hours before the end of the current period.',
@@ -262,13 +274,27 @@ describe('payment facts (F-SITE-002 S-7)', () => {
       ['terms', termsHtml],
     ] as const;
 
-    it.each(documents)('%s: every paragraph about the stores or renewal says which purchases it applies to', (_, html) => {
-      const blocks = blocksOf(html).filter((block) => STORE.test(block) || /\brenew/i.test(block));
-      expect(blocks.length).toBeGreaterThan(0);
-      for (const block of blocks) {
-        const scoped = block === CHANNELS || block.includes(CHANNELS) || block === WEB_RENEWAL || IN_APP.test(block) || /for in-app purchases\.$/.test(block);
-        expect(scoped, block).toBe(true);
-      }
+    it.each(documents)('%s: every sentence about the stores or renewal says which purchases it applies to', (_, html) => {
+      // A block marked "In-app purchases:" scopes all of its sentences; elsewhere each sentence must be one of the
+      // channel or web-renewal sentences, or a third-party line that ends "for in-app purchases.".
+      const allowed = new Set(sentencesOf(`${CHANNELS} ${WEB_RENEWAL}`));
+      const unscoped = blocksOf(html)
+        .filter((block) => !IN_APP.test(block))
+        .flatMap(sentencesOf)
+        .filter((sentence) => STORE.test(sentence) || /\brenew/i.test(sentence))
+        .filter((sentence) => !allowed.has(sentence) && !/for in-app purchases\.$/.test(sentence));
+      expect(unscoped).toEqual([]);
+      expect(blocksOf(html).some((block) => STORE.test(block))).toBe(true);
+    });
+
+    it('the scope check reads each sentence: an unmarked store sentence next to the channel sentence is caught', () => {
+      const html = `<p>${CHANNELS} Subscriptions renew automatically through Google Play.</p><li>In-app purchases: renews in the store.</li>`;
+      const unscoped = blocksOf(html)
+        .filter((block) => !IN_APP.test(block))
+        .flatMap(sentencesOf)
+        .filter((sentence) => STORE.test(sentence) || /\brenew/i.test(sentence))
+        .filter((sentence) => !new Set(sentencesOf(`${CHANNELS} ${WEB_RENEWAL}`)).has(sentence));
+      expect(unscoped).toEqual(['Subscriptions renew automatically through Google Play.']);
     });
 
     it.each(documents)('%s: names no price and no one-time or lifetime purchase', (_, html) => {
