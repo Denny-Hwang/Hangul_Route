@@ -1,7 +1,6 @@
-import type { Episode, Quest } from '@hangul-route/content-schema';
+import type { Episode } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { isContentLocked } from '../../content-access';
-import { isStagePlayable } from '../../entitlement';
+import { browseQuestOpen, isContentLocked, questAccess } from '../../content-access';
 import { entryForQuest } from '../../story/story-index';
 import { itemAccess, type AccessItemKind } from '../access';
 import { defaultBrowseBundle, episodeOfQuest, isOpenableEpisode, vocabTopicKey, type BrowseBundle } from '../bundle';
@@ -60,13 +59,17 @@ describe('itemAccess (F-BROWSE-001 §4.2)', () => {
   it('switch on: sampler equals what a new free learner can open, item by item', () => {
     // A new free learner's story rule, with the free set of this bundle (its sampler stories).
     const storyOpen = (storyId: string): boolean => !isContentLocked({ kind: 'story', id: storyId, tier: 'free', gatingEnabled: true, registry: bundle.freeRegistry });
+    let closedLessons = 0;
     for (const quest of openableQuests) {
-      const episode = episodeOfQuest(bundle, quest.id) as Episode;
       const story = entryForQuest(bundle.storyIndex, quest.id);
-      // A story quest follows its story; a lesson follows today's learner rule until F-ENT-003 E3-2 (isStagePlayable).
-      const open = story ? storyOpen(story.storyId) : isStagePlayable(episode.stage);
+      // A story quest follows its story; a lesson follows F-ENT-003's rule for a free learner with nothing finished.
+      const lessonOpen = questAccess({ questId: quest.id, tier: 'free', gatingEnabled: true, completedQuestIds: new Set() }) !== 'closed';
+      expect(browseQuestOpen('sampler', true)(quest.id), quest.id).toBe(lessonOpen);
+      if (!story && !lessonOpen) closedLessons += 1;
+      const open = story ? storyOpen(story.storyId) : lessonOpen;
       expect(itemAccess({ kind: 'quest', id: quest.id }, 'sampler', true, ctx), quest.id).toBe(open ? 'open' : 'closed');
     }
+    expect(closedLessons).toBeGreaterThan(0); // the free lessons (all of Stage 1) are a real subset
     for (const entry of bundle.storyIndex) {
       expect(itemAccess({ kind: 'story', id: entry.storyId }, 'sampler', true, ctx), entry.storyId).toBe(storyOpen(entry.storyId) ? 'open' : 'closed');
     }
@@ -116,6 +119,11 @@ describe('itemAccess (F-BROWSE-001 §4.2)', () => {
     for (const episode of production.episodes.filter(isOpenableEpisode)) {
       expect(itemAccess({ kind: 'episode', id: episode.id }, 'sampler', false), episode.id).toBe('open');
     }
+    // switch on: all of Stage 1 opens (the free lessons), a Stage 2 lesson does not
+    expect(itemAccess({ kind: 'episode', id: 'episode:stage1-letters' }, 'sampler', true)).toBe('open');
+    expect(itemAccess({ kind: 'quest', id: 'quest:stage1-life-q1' }, 'sampler', true)).toBe('open');
+    expect(itemAccess({ kind: 'quest', id: 'quest:stage2-life-q1' }, 'sampler', true)).toBe('closed');
+    expect(itemAccess({ kind: 'quest', id: 'quest:stage2-life-q1' }, 'full', true)).toBe('open');
     for (const topic of production.vocabTopics) {
       expect(itemAccess({ kind: 'vocab-topic', id: topic.id }, 'sampler', false), topic.id).toBe('open');
       const locked = isContentLocked({ kind: 'vocab-topic', id: vocabTopicKey(topic.id), tier: 'free', gatingEnabled: true });
@@ -149,7 +157,7 @@ describe('itemAccess (F-BROWSE-001 §4.2)', () => {
   it('a closed quest closes its row, and an episode closes only when none of its quests is open', () => {
     const letters = bundle.episodes.find((e) => e.id === 'episode:stage1-letters') as Episode;
     const [first, second] = letters.questIds as [string, string];
-    const onlyFirst = (quest: Pick<Quest, 'id'>): boolean => quest.id === first;
+    const onlyFirst = (questId: string): boolean => questId === first;
     expect(itemAccess({ kind: 'quest', id: first }, 'sampler', true, { bundle, freeQuestOpen: onlyFirst })).toBe('open');
     expect(itemAccess({ kind: 'quest', id: second }, 'sampler', true, { bundle, freeQuestOpen: onlyFirst })).toBe('closed');
     expect(itemAccess({ kind: 'episode', id: letters.id }, 'sampler', true, { bundle, freeQuestOpen: onlyFirst })).toBe('open');

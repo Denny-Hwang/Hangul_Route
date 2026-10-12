@@ -1,4 +1,3 @@
-import type { Quest } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { flags } from '../../../config/flags';
@@ -54,7 +53,8 @@ describe('browseJourneyRows', () => {
   });
 
   it('a closed episode is drawn closed only for a sampler pass with the switch on', () => {
-    const lettersOnly = (_quest: Pick<Quest, 'id'>, episode: { id: string }): boolean => episode.id !== 'episode:stage1-life';
+    const life = bundle.episodes.find((e) => e.id === 'episode:stage1-life')?.questIds ?? [];
+    const lettersOnly = (questId: string): boolean => !life.includes(questId);
     const cellOf = (r: ReturnType<typeof browseJourneyRows>, key: string) => r.flatMap((x) => x.cells).find((c) => c.key === key);
     const sampler = browseJourneyRows({ bundle, scope: 'sampler', gatingEnabled: true, freeQuestOpen: lettersOnly });
     expect(cellOf(sampler, 'stage1-life')?.state).toBe('closed');
@@ -62,6 +62,10 @@ describe('browseJourneyRows', () => {
     expect(cellOf(sampler, 'stage3-life')?.state).toBe('later');
     expect(cellOf(browseJourneyRows({ bundle, scope: 'full', gatingEnabled: true, freeQuestOpen: lettersOnly }), 'stage1-life')?.state).toBe('open');
     expect(cellOf(browseJourneyRows({ bundle, scope: 'sampler', gatingEnabled: false, freeQuestOpen: lettersOnly }), 'stage1-life')?.state).toBe('open');
+    // the learner rule by default: a free learner's lessons are all of Stage 1
+    const learner = browseJourneyRows({ bundle, scope: 'sampler', gatingEnabled: true });
+    expect(cellOf(learner, 'stage1-life')?.state).toBe('open');
+    expect(cellOf(learner, 'stage2-life')?.state).toBe('closed');
   });
 
   it('two panes: a selected cell and selectable later cells, as the learner Journey does', () => {

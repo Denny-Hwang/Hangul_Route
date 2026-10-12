@@ -1,6 +1,5 @@
 import type { BrowseScope, Episode, Quest } from '@hangul-route/content-schema';
-import { isContentLocked } from '../content-access';
-import { isStagePlayable } from '../entitlement';
+import { browseQuestOpen, isContentLocked } from '../content-access';
 import { entryForQuest } from '../story/story-index';
 import { defaultBrowseBundle, episodeOfQuest, isOpenableEpisode, vocabTopicKey, type BrowseBundle } from './bundle';
 
@@ -19,16 +18,13 @@ export type AccessItemKind = 'episode' | 'quest' | 'story' | 'vocab-topic' | 'ca
 /** `later`: a preview or unshipped item ("Coming later"); `access`: no active pass. */
 export type ItemAccess = 'open' | 'closed' | 'later' | 'access';
 
-/** Whether a new free learner (no completions) may start this quest while the switch is on. */
-export type FreeQuestOpen = (quest: Pick<Quest, 'id'>, episode: Pick<Episode, 'id' | 'stage'>) => boolean;
-
 /**
- * Today's learner rule for a lesson: every quest of a playable stage
- * (`isStagePlayable`). F-ENT-003 E3-2 replaces it with `isQuestOpen({ questId,
- * tier: 'free', gatingEnabled, completedQuestIds: none })`, with the same
- * effective switch; the table does not change.
+ * Whether a new free learner (no finished quest) may start this lesson. The
+ * default is F-ENT-003's own adapter, `browseQuestOpen('sampler',
+ * gatingEnabled)` (section 3.3), so the sampler never drifts from the learner
+ * rule; tests pass their own.
  */
-export const learnerFreeQuestOpen: FreeQuestOpen = (_quest, episode) => isStagePlayable(episode.stage);
+export type FreeQuestOpen = (questId: string) => boolean;
 
 export interface AccessContext {
   bundle: BrowseBundle;
@@ -63,20 +59,20 @@ function storyOpen(storyId: string, bundle: BrowseBundle): boolean {
 }
 
 /** A quest under the sampler: a story quest opens with its story (F-ENT-003 leaves stories to `isContentLocked`), a lesson by the lesson rule. */
-function questOpen(questId: string, episode: Episode, ctx: AccessContext): boolean {
+function questOpen(questId: string, ctx: AccessContext): boolean {
   const story = entryForQuest(ctx.bundle.storyIndex, questId);
-  return story ? storyOpen(story.storyId, ctx.bundle) : ctx.freeQuestOpen({ id: questId }, episode);
+  return story ? storyOpen(story.storyId, ctx.bundle) : ctx.freeQuestOpen(questId);
 }
 
 /** A shipped item under a sampler pass with the switch on. */
 function samplerOpen(item: { kind: AccessItemKind; id: string }, ctx: AccessContext): boolean {
   switch (item.kind) {
     case 'quest':
-      return questOpen(item.id, episodeOfQuest(ctx.bundle, item.id) as Episode, ctx);
+      return questOpen(item.id, ctx);
     case 'episode': {
       // Open when any of its quests opens: a shelf episode with its story, a grid episode with any lesson.
       const episode = ctx.bundle.episodes.find((e) => e.id === item.id) as Episode;
-      return questsOf(ctx.bundle, episode).some((q) => questOpen(q.id, episode, ctx));
+      return questsOf(ctx.bundle, episode).some((q) => questOpen(q.id, ctx));
     }
     case 'story':
       return storyOpen(item.id, ctx.bundle);
@@ -94,7 +90,10 @@ export function itemAccess(
   context: Partial<AccessContext> = {},
 ): ItemAccess {
   if (scope === 'none') return 'access';
-  const ctx: AccessContext = { bundle: context.bundle ?? defaultBrowseBundle(), freeQuestOpen: context.freeQuestOpen ?? learnerFreeQuestOpen };
+  const ctx: AccessContext = {
+    bundle: context.bundle ?? defaultBrowseBundle(),
+    freeQuestOpen: context.freeQuestOpen ?? browseQuestOpen('sampler', gatingEnabled),
+  };
   if (shippedState(item, ctx.bundle) === 'later') return 'later';
   if (scope === 'full' || !gatingEnabled) return 'open';
   return samplerOpen(item, ctx) ? 'open' : 'closed';

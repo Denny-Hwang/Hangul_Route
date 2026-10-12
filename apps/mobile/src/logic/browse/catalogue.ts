@@ -40,7 +40,7 @@ export interface BrowseJourneyInput {
   bundle: BrowseBundle;
   scope: 'full' | 'sampler';
   gatingEnabled: boolean;
-  /** Test seam for the sampler quest rule (default: the learner's, `access.ts`). */
+  /** Test seam for the sampler lesson rule (default: F-ENT-003's `browseQuestOpen`, `access.ts`). */
   freeQuestOpen?: FreeQuestOpen;
   /** Two panes (F-LAYOUT-001 section 3.7), as the learner Journey. */
   paneMode?: boolean;
