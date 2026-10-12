@@ -18,7 +18,8 @@ export type GrownUpDestination =
   | 'Paywall'
   | 'ExternalLink'
   | 'PlacementFinish'
-  | 'EditProfile';
+  | 'EditProfile'
+  | 'PlacementReport';
 
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
@@ -51,7 +52,7 @@ export type RootStackParamList = {
     url?: string;
     /** `next: 'Paywall'`: the surface that opened it, passed on to the paywall (default `'journey'`). */
     from?: 'journey' | 'library';
-    /** `next: 'EditProfile'`: the profile to edit (F-LEARN-001 §3.11). */
+    /** `next: 'EditProfile'`: the profile to edit (F-LEARN-001 §3.11); `next: 'PlacementReport'`: whose report opens (F-PLC-001 section 3.9). */
     profileId?: string;
   };
   /** Forgot PIN: Rescue Code or a 24-hour wait, then a new PIN (F-LEARN-001 §3.5). `next` is kept for the PIN screen. */
@@ -90,6 +91,8 @@ export type RootStackParamList = {
    * options with that length and the guide hidden.
    */
   Placement: { source: PlacementSource; retakeMode?: 'standard' | 'deep' };
+  /** parent/placement-report — the grown-up report of the level check, behind the PIN gate (F-PLC-001 section 3.9). */
+  PlacementReport: { profileId: string };
 };
 
 /** The level check's screens (F-PLC-001 section 3.1); the flow state machine decides which one shows. */

@@ -192,6 +192,9 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.library.earnHint.stage': [[1]],
   'learner.library.earnHint.set': [['Seasons and Tales']],
   'caregiver.placementReport.count': [[0, 3], [1, 1]],
+  'caregiver.placementReport.takenOn': [['Oct 9', 'English']],
+  'caregiver.placementReport.needsStage': [['Sam', 2]],
+  'caregiver.placementReport.noStart': [['Sam']],
   'learner.storyShelf.minutes.pill': [[2], [10]],
   'learner.storyShelf.tileLabel': [
     ['The Sun and the Moon', 'New', 1],
