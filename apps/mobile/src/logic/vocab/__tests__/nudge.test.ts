@@ -78,7 +78,7 @@ describe('vocabNudge (F-VOC-005 section 3.7)', () => {
       st('vocab:bap-rice'),
     ]);
     expect(vocabNudge(v, topicOf, TODAY)).toEqual({ topicKey: 'food', due: 5 });
-    const reversed = { ...TOPICS, food: { key: 'food', order: 9 } };
+    const reversed: Record<string, NudgeTopicRef> = { ...TOPICS, food: { key: 'food', order: 9 } };
     expect(vocabNudge(v, (id) => (WORD_TOPIC[id] ? reversed[WORD_TOPIC[id]!] : undefined), TODAY)).toEqual({
       topicKey: 'animals',
       due: 5,
