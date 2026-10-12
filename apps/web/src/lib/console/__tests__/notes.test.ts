@@ -3,6 +3,7 @@ import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it, vi } from 'vitest';
 import {
   NOTE_PAIR_DAILY_LIMIT,
+  closedQuestIds,
   composerCheck,
   counterAnnouncement,
   createNotesApi,
@@ -10,6 +11,7 @@ import {
   groupByDay,
   notePreview,
   presetGroups,
+  questClosedLine,
   receivedRowView,
   recipientRows,
   sendProblem,
@@ -466,5 +468,43 @@ describe('groupByDay (section 9: send time only)', () => {
 
   it('an unreadable date keeps its row in its own group', () => {
     expect(groupByDay([{ createdAt: 'x', id: 9 }], now, 'en')).toEqual([{ day: '', rows: [{ createdAt: 'x', id: 9 }] }]);
+  });
+});
+
+/**
+ * The quest picker's closed-quest mark (section 6.2, F-ENT-003 E3-1a `freeRouteQuestIds` and E3-9
+ * `contentGatingEnabled()`): only with the free-plan switch on and a space this viewer knows no
+ * plan covers. The learner's own device stays the authority on what opens.
+ */
+describe('quest picker marks', () => {
+  const freeLesson = CATALOG.quests.find((q) => q.kind === 'lesson' && q.stage === 'stage1')!;
+  const laterLesson = CATALOG.quests.find((q) => q.kind === 'lesson' && q.stage !== 'stage1')!;
+  const story = CATALOG.quests.find((q) => q.kind === 'story')!;
+
+  it('marks the lessons past the free route, for an uncovered space with the switch on', () => {
+    const closed = closedQuestIds({ gating: true, coverage: 'uncovered' });
+    expect(closed.has(laterLesson.id)).toBe(true);
+    expect(closed.has(freeLesson.id)).toBe(false);
+    expect(questClosedLine(laterLesson.id, { gating: true, coverage: 'uncovered' }, 'en')).toBe(
+      'Some learners can open this lesson only with the full route.',
+    );
+    expect(questClosedLine(freeLesson.id, { gating: true, coverage: 'uncovered' }, 'en')).toBeNull();
+  });
+
+  it('marks nothing with the switch off, for a covered space, or when the viewer cannot tell', () => {
+    for (const opts of [
+      { gating: false, coverage: 'uncovered' as const },
+      { gating: true, coverage: 'covered' as const },
+      { gating: true, coverage: 'unknown' as const },
+    ]) {
+      expect(closedQuestIds(opts).size, JSON.stringify(opts)).toBe(0);
+      expect(questClosedLine(laterLesson.id, opts, 'en')).toBeNull();
+    }
+  });
+
+  it('never marks a story or a quest this catalogue does not hold', () => {
+    const closed = closedQuestIds({ gating: true, coverage: 'uncovered' });
+    expect(closed.has(story.id)).toBe(false);
+    expect(questClosedLine('quest:nowhere', { gating: true, coverage: 'uncovered' }, 'en')).toBeNull();
   });
 });

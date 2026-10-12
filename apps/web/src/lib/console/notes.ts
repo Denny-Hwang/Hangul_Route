@@ -5,6 +5,8 @@ import {
   NOTE_PRESETS_NEED_SUGGEST,
   NOTE_REACTION_IDS,
   NoteSendSchema,
+  freeRouteQuestIds,
+  gridLessonIds,
   type Catalog,
   type FamilyLabelId,
   type NoteAccountReport,
@@ -18,6 +20,7 @@ import {
 import { DEFAULT_LOCALE, formatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { NOTE_TEXT_MAX, checkNoteText, normalizeNoteText, type NoteTextProblem, type NoteTextResult } from '@hangul-route/i18n/note-text';
 import type { ConsoleApiOptions } from './api';
+import type { SpaceCoverage } from './curriculum';
 
 /**
  * Notes from grown-ups in the console (F-FEEDBACK-001 FB-10, sections 6.13, 7.2, 8.2 and 9;
@@ -25,7 +28,6 @@ import type { ConsoleApiOptions } from './api';
  * client of the account routes, and the pure view models the notes pages (FB-11a, FB-12) render.
  * Every word comes from `console.notes` / `common.notes` in the console locale. Nothing here sorts
  * or filters by status, opens or answers (section 9), and a class sender never reads "Opened".
- * The closed-quest mark of the quest picker (F-ENT-003) is not here yet: it waits for E3-9.
  */
 
 // ---------------------------------------------------------------------------------------------
@@ -307,6 +309,24 @@ const ANNOUNCE_AT: readonly number[] = [100, NOTE_TEXT_MAX];
 /** The polite announcement when the count reaches 100 or the limit (section 6.12); null otherwise. */
 export function counterAnnouncement(previous: number, count: number, locale: UiLocale = DEFAULT_LOCALE): string | null {
   return ANNOUNCE_AT.some((at) => previous < at && count >= at) ? getMessages(locale).console.notes.composer.text.counterA11y(count, NOTE_TEXT_MAX) : null;
+}
+
+/**
+ * The quest picker's closed-quest marks (section 6.2, wireframe console/note-composer.md step 4):
+ * the grid lessons past the free route (F-ENT-003 E3-1a `freeRouteQuestIds`), only while the
+ * console's free-plan switch is on (E3-9 `contentGatingEnabled()`) and this viewer knows no plan
+ * covers the space (`spaceCoverage` is "uncovered"; "unknown" never claims a limit). Stories are
+ * never marked: their access is not the route's. The learner's device stays the authority.
+ */
+export function closedQuestIds(opts: { gating: boolean; coverage: SpaceCoverage }, catalog: Catalog = CATALOG): ReadonlySet<string> {
+  if (!opts.gating || opts.coverage !== 'uncovered') return new Set();
+  const free = freeRouteQuestIds(catalog);
+  return new Set([...gridLessonIds(catalog)].filter((id) => !free.has(id)));
+}
+
+/** The line under a picked quest: "Some learners can open this lesson only with the full route." or null. Never a price or a link. */
+export function questClosedLine(questId: string, opts: { gating: boolean; coverage: SpaceCoverage }, locale: UiLocale = DEFAULT_LOCALE, catalog: Catalog = CATALOG): string | null {
+  return closedQuestIds(opts, catalog).has(questId) ? getMessages(locale).console.notes.composer.closedMark : null;
 }
 
 export interface RecipientRow {
