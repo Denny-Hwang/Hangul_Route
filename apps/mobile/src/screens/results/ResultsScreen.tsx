@@ -142,10 +142,10 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
 
   // Android/web read the live region below (a second announcement would double-read);
   // iOS VoiceOver ignores live regions, so it gets one explicit announcement for both banners.
-  const announcement = [
-    newCard ? m.newCard.announce(newCard.titleEn) : null,
-    extras ? extraCardsAnnouncement(m.extraCards, extras.cards.map((c) => c.titleEn), extras.episodeTitle) : null,
-  ]
+  const extrasAnnouncement = extras
+    ? extraCardsAnnouncement(m.extraCards, extras.cards.map((c) => c.titleEn), extras.episodeTitle)
+    : null;
+  const announcement = [newCard ? m.newCard.announce(newCard.titleEn) : null, extrasAnnouncement]
     .filter((line): line is string => line !== null)
     .join(' ');
   useEffect(() => {
@@ -237,6 +237,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
               more={extras.more}
               total={extras.cards.length}
               episodeTitle={extras.episodeTitle}
+              announcement={extrasAnnouncement ?? ''}
               reducedMotion={reducedMotion}
               onOpenCard={(cardId) => navigation.navigate('CardDetail', { cardId })}
             />
