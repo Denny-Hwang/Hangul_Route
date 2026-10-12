@@ -137,13 +137,22 @@ function glossed(ko: string, romanization: string | undefined, gloss: string): W
 /** Jamo ids are `jamo:<name>` (`JamoSchema`). */
 const isLetterId = (id: string): boolean => id.startsWith('jamo:');
 
+/** `lp.syl` with no meaning gives its prompt this English line (`scope-builders.ts`); with one, the meaning. */
+const isBareSyllable = (round: ListenPickRound): boolean => round.prompt.en === `the syllable ${round.prompt.romanization}`;
+
 /**
- * What a Listen & Pick round practises (F-QUEST-002 section 3.10): a sound ->
- * symbol round a letter (the letters row lists it), a syllable round (every
- * option one block, one final apart from the prompt) a syllable, a word or
- * picture round its word. Only the answer is taught; the other options are not.
+ * What a Listen & Pick round practises (F-QUEST-002 section 3.10), read from
+ * the English source round. The builder's id says it first: `lp.sym` a letter
+ * (the letters row lists it), `lp.syl` a syllable, or the word it means when
+ * it was built with a meaning, `lp.word` and `lp.pic` a word, whatever their
+ * options look like. A hand-written round is read by its shape: a picture
+ * answer or options that are not all one final apart make it a word. Only the
+ * answer is taught; the other options are not.
  */
 function listenPickTarget(round: ListenPickRound): 'letter' | 'syllable' | 'word' {
+  if (round.id.startsWith('lp:sym:')) return 'letter';
+  if (round.id.startsWith('lp:syl:')) return isBareSyllable(round) ? 'syllable' : 'word';
+  if (round.id.startsWith('lp:word:') || round.id.startsWith('lp:pic:')) return 'word';
   const answer = round.options.find((o) => o.id === round.answerId);
   if (answer?.pictureRef) return 'word';
   if (isLetterId(round.answerId)) return 'letter';
@@ -156,21 +165,23 @@ function listenPickTarget(round: ListenPickRound): 'letter' | 'syllable' | 'word
 }
 
 /**
- * The Korean one game scope practises, already in the UI language: card pairs,
- * Build a Letter syllables, every Pic-Word board word, the answer of each
- * Listen & Pick round, each dialogue line with its right reply, and the Korean
- * labels of Story Order steps.
+ * The Korean one game scope practises, in the UI language (`scope` is the
+ * localized scope, `source` its English source, which classifies Listen &
+ * Pick rounds; localizing keeps every list in order): card pairs, Build a
+ * Letter syllables, every Pic-Word board word, the answer of each Listen &
+ * Pick round, each dialogue line with its right reply, and the Korean labels
+ * of Story Order steps.
  */
-function scopeWords(scope: MinigameScope): { words: WordFact[]; syllables: SyllableFact[] } {
+function scopeWords(scope: MinigameScope, source: MinigameScope): { words: WordFact[]; syllables: SyllableFact[] } {
   const words: WordFact[] = [];
   const syllables: SyllableFact[] = [];
   for (const pair of scope.cardPairs ?? []) words.push(...glossed(pair.ko, pair.romanization, pair.en));
   for (const s of scope.syllables ?? []) syllables.push({ ko: s.ko, romanization: s.romanization });
   for (const board of scope.picWord?.boards ?? []) words.push(...board.pairs.map((pair) => wordOf(pair.word)));
-  for (const round of scope.listenPick?.rounds ?? []) {
-    const target = listenPickTarget(round);
-    if (target === 'word') words.push(wordOf(round.prompt));
-    if (target === 'syllable') syllables.push({ ko: round.prompt.ko, romanization: round.prompt.romanization });
+  const targets = (source.listenPick?.rounds ?? []).map(listenPickTarget);
+  for (const [i, round] of (scope.listenPick?.rounds ?? []).entries()) {
+    if (targets[i] === 'word') words.push(wordOf(round.prompt));
+    if (targets[i] === 'syllable') syllables.push({ ko: round.prompt.ko, romanization: round.prompt.romanization });
   }
   for (const turn of scope.dialogue ?? []) {
     words.push(...glossed(turn.npcKo, turn.npcRomanization, turn.npcEn));
@@ -212,7 +223,7 @@ function wordsOf(quest: Quest, bundle: BrowseBundle, locale: UiLocale): { words:
     }
     const scope = bundle.scopeFor(ref);
     if (!scope) continue;
-    const found = scopeWords(localizeScope(scope, ref, locale));
+    const found = scopeWords(localizeScope(scope, ref, locale), scope);
     words.push(...found.words);
     syllables.push(...found.syllables);
   }

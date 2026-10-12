@@ -111,6 +111,37 @@ describe('itemFacts: quest', () => {
     expect(facts.syllables).toEqual([{ ko: '단', romanization: 'dan' }]);
   });
 
+  it('Listen & Pick reads the round builder first: a word round stays a word whatever its options; a syllable round with a meaning teaches that word', () => {
+    const bam = { ko: '밤', romanization: 'bam', en: 'night' };
+    const bare = (ko: string, romanization: string) => ({ ko, romanization, en: `the syllable ${romanization}` });
+    const facts = withScope({
+      kind: 'listen-pick',
+      listenPick: {
+        rounds: [
+          // a one-syllable word whose options happen to be one final apart is still a word, with its gloss
+          lp.word(bam, [
+            { ko: '반', romanization: 'ban', en: 'half' },
+            { ko: '발', romanization: 'bal', en: 'foot' },
+          ]),
+          // a syllable round built with a meaning teaches the word
+          lp.syl('물', ['무', '문'], 'water'),
+          // a syllable round with no meaning teaches the syllable
+          lp.syl('단', ['다', '달']),
+          // a hand-written round (no builder id) is read by its shape
+          { id: 'hand', prompt: bare('산', 'san'), options: [{ id: '산', text: bare('산', 'san') }, { id: '사', text: bare('사', 'sa') }], answerId: '산' },
+        ],
+      },
+    });
+    expect(facts.words).toEqual([
+      { ko: '밤', romanization: 'bam', gloss: 'night' },
+      { ko: '물', romanization: 'mul', gloss: 'water' },
+    ]);
+    expect(facts.syllables).toEqual([
+      { ko: '단', romanization: 'dan' },
+      { ko: '산', romanization: 'san' },
+    ]);
+  });
+
   it('a dialogue adds each line and its right reply, the same Korean once; the wrong replies are not taught', () => {
     const greet = questFacts('quest:stage4-rites-q1');
     expect(greet.words).toEqual(
@@ -170,7 +201,7 @@ describe('itemFacts: quest', () => {
     expect(questFacts('quest:stage4-rites-q1', 'es').words).toContainEqual({ ko: turn?.npcKo, romanization: turn?.npcRomanization, gloss: turn?.npcEn });
   });
 
-  it('every bundled lesson lists every word its boards, word rounds, dialogues and story steps practise', () => {
+  it('every bundled lesson lists every word its boards, word rounds, syllable rounds with a meaning, dialogues and story steps practise', () => {
     for (const q of bundle.quests) {
       const facts = itemFacts({ kind: 'quest', id: q.id }, bundle) as QuestFacts | null;
       if (!facts) continue;
@@ -180,7 +211,9 @@ describe('itemFacts: quest', () => {
         if (!scope) continue;
         const expected = [
           ...(scope.picWord?.boards ?? []).flatMap((b) => b.pairs.map((p) => p.word.ko)),
-          ...(scope.listenPick?.rounds ?? []).filter((r) => /^lp:(word|pic):/.test(r.id)).map((r) => r.prompt.ko),
+          ...(scope.listenPick?.rounds ?? [])
+            .filter((r) => /^lp:(word|pic):/.test(r.id) || (/^lp:syl:/.test(r.id) && r.prompt.en !== `the syllable ${r.prompt.romanization}`))
+            .map((r) => r.prompt.ko),
           ...(scope.dialogue ?? []).flatMap((t) => [t.npcKo, ...t.options.filter((o) => o.isCorrect).map((o) => o.ko)]),
           ...(scope.storySteps ?? []).flatMap((s) => (s.labelKo ? [s.labelKo] : [])),
         ];
