@@ -11,7 +11,9 @@ import {
   MATRIX_VIEWPORTS,
   messagesFor,
   nameIn,
+  nameInAny,
   prefixIn,
+  smallControlKeys,
   toleratedKeys,
   type MatrixAllowlist,
 } from '../../../e2e/web/locale-matrix';
@@ -32,7 +34,7 @@ const allowlist = JSON.parse(
 const matrixList = JSON.parse(
   readFileSync(join(ROOT, 'e2e', 'web', 'fixtures', 'locale-matrix-allowlist.json'), 'utf8'),
 ) as MatrixAllowlist;
-const keys = toleratedKeys(allowlist, matrixList);
+const keys = toleratedKeys(allowlist, matrixList, { width: 375, height: 667 });
 
 describe('matrix shape (§3.11)', () => {
   it('runs the three widths of the landing layout spec on the six named screens', () => {
@@ -127,6 +129,13 @@ describe('allowedSmall', () => {
     }
   });
 
+  it("a numbered line (`... #2`) is tolerated as that occurrence only, in the locale's words", () => {
+    expect(allowedSmall('Profile', 'en-XA', ['Profile | button | Go back #2'])).toEqual(
+      new Set(['button | Go back #2', `button | ${pseudoText('Go back')} #2`]),
+    );
+    expect(allowedSmall('PinEntry', 'en', keys).has('button | Close #2')).toBe(false);
+  });
+
   it('a label under several keys is tolerated in each of its translations', () => {
     expect(allowedSmall('Home', 'en', ['Home | button | Close', 'Home | link | Close'])).toEqual(new Set(['button | Close', 'link | Close']));
     expect(allowedSmall('Home', 'en', ['broken line'])).toEqual(new Set());
@@ -134,13 +143,60 @@ describe('allowedSmall', () => {
 });
 
 describe('toleratedKeys', () => {
-  it('joins the ratchet list (every window) and the matrix list, once each', () => {
-    const ratchet: TouchTargetAllowlist = { note: '', offenders: { '1x1': ['Home | button | A'], '2x2': ['Home | button | A', 'Profile | button | B'] } };
-    expect(toleratedKeys(ratchet, { note: '', offenders: ['PinEntry | button | C', 'Home | button | A'] })).toEqual([
-      'Home | button | A',
-      'Profile | button | B',
-      'PinEntry | button | C',
-    ]);
+  const ratchet: TouchTargetAllowlist = {
+    note: '',
+    offenders: {
+      '1180x820': ['Library | button | Wide'],
+      '375x667': ['Home | button | A', 'Profile | button | B'],
+      '768x1024': ['Home | button | A'],
+    },
+  };
+  const matrix: MatrixAllowlist = { note: '', offenders: ['PinEntry | button | C', 'Home | button | A'] };
+
+  it('joins the ratchet list of the same window and the matrix list, once each', () => {
+    expect(toleratedKeys(ratchet, matrix, { width: 375, height: 667 })).toEqual(['Home | button | A', 'Profile | button | B', 'PinEntry | button | C']);
+  });
+
+  it("never borrows another window's lines: 768 does not get what only 375 or 1180 lists", () => {
+    expect(toleratedKeys(ratchet, matrix, { width: 768, height: 1024 })).toEqual(['Home | button | A', 'PinEntry | button | C']);
+  });
+
+  it('a window narrower than any the ratchet measures takes its narrowest wider window (320 -> 375)', () => {
+    expect(toleratedKeys(ratchet, matrix, { width: 320, height: 568 })).toEqual(['Home | button | A', 'Profile | button | B', 'PinEntry | button | C']);
+  });
+
+  it('a window wider than every ratchet window takes the matrix list only', () => {
+    expect(toleratedKeys(ratchet, matrix, { width: 1400, height: 900 })).toEqual(['PinEntry | button | C', 'Home | button | A']);
+  });
+
+  it('the matrix widths each find a ratchet window in the real list', () => {
+    for (const vp of MATRIX_VIEWPORTS) expect(toleratedKeys(allowlist, matrixList, vp)).toContain('Profile | button | Go back');
+  });
+});
+
+describe('smallControlKeys', () => {
+  const box = (name: string, width: number, height: number) => ({ role: 'button' as const, name, width, height });
+
+  it('keeps the controls under the floor as role | name with their size', () => {
+    expect(smallControlKeys([box('Close', 28, 30), box('Unlock', 300, 64)])).toEqual([{ key: 'button | Close', size: '28x30' }]);
+  });
+
+  it('numbers repeats in document order, so a second small control never hides behind a listed one', () => {
+    const small = smallControlKeys([box('Close', 28, 30), box('Close', 40, 40)]);
+    expect(small.map((t) => t.key)).toEqual(['button | Close', 'button | Close #2']);
+    const allowed = allowedSmall('PinEntry', 'en', keys);
+    expect(small.filter((t) => !allowed.has(t.key)).map((t) => t.key)).toEqual(['button | Close #2']);
+  });
+});
+
+describe('nameInAny', () => {
+  it('matches the whole message in any locale the matrix runs, so one handler serves every walk', () => {
+    const notNow = nameInAny((m) => m.caregiver.install.notNow.cta);
+    expect(notNow.test(getMessages('en').caregiver.install.notNow.cta)).toBe(true);
+    expect(notNow.test(getMessages('ko').caregiver.install.notNow.cta)).toBe(true);
+    expect(notNow.test(getMessages('es').caregiver.install.notNow.cta)).toBe(true);
+    expect(notNow.test(pseudoText(getMessages('en').caregiver.install.notNow.cta))).toBe(true);
+    expect(notNow.test(`${getMessages('en').caregiver.install.notNow.cta} please`)).toBe(false);
   });
 });
 
@@ -154,6 +210,12 @@ describe('fixedButListed', () => {
 
   it('names a listed control that is no longer small, so its line is removed', () => {
     expect(fixedButListed('PinEntry', 'en', list, [])).toEqual(['PinEntry | button | Close']);
+  });
+
+  it('a numbered line is still listed while that occurrence is small, and fixed once it is not', () => {
+    const numbered: MatrixAllowlist = { note: '', offenders: ['PinEntry | button | Close #2'] };
+    expect(fixedButListed('PinEntry', 'en', numbered, ['button | Close', 'button | Close #2'])).toEqual([]);
+    expect(fixedButListed('PinEntry', 'en', numbered, ['button | Close'])).toEqual(['PinEntry | button | Close #2']);
   });
 
   it('ignores lines for other screens', () => {

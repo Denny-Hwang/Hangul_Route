@@ -39,6 +39,6 @@ export function resolveColor(token: ColorToken): string {
 /** Stroke width in canvas units; absent means `base`. */
 export function resolveStroke(token: StrokeToken | undefined): number {
   if (token === undefined) return borderWidth.base;
-  if (!Object.hasOwn(borderWidth, token)) throw new RangeError(`Unknown stroke token: ${String(token)}`);
+  if (!Object.prototype.hasOwnProperty.call(borderWidth, token)) throw new RangeError(`Unknown stroke token: ${String(token)}`);
   return borderWidth[token];
 }

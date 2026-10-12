@@ -101,7 +101,7 @@ function announce(line: string, queue: boolean): void {
  * `logic/story/check-player.ts` and `logic/story/check-game.ts`; this file
  * paints them and runs their effects. After the last item, Next opens the
  * word recap (`StoryWordRecap`, §3.6, PR 3.4b) when the story has words to
- * recap; its Done ends the step. Without words, Next ends the step at once.
+ * recap; its Done (or Close) ends the step. Without words, Next ends the step at once.
  */
 export function StoryCheckGame({ scope, onFinish, onBack }: Props): React.ReactElement {
   const locale = useLocale();
@@ -196,9 +196,13 @@ export function StoryCheckGame({ scope, onFinish, onBack }: Props): React.ReactE
       if (out.state.index !== previous.index) {
         resetForScene();
         setRevealed(false);
+      } else if (out.state.phase === 'recap' && previous.phase !== 'recap') {
+        // The recap keeps the index: cut the last item's voice (explanation, a speaker play) so it does
+        // not run under the recap heading. The prompt slot stays, so its "Say it yourself" state does too.
+        stopAudio();
       }
     },
-    [playerView, answerRound, copy, profileId, finish, resetForScene],
+    [playerView, answerRound, copy, profileId, finish, resetForScene, stopAudio],
   );
 
   // Focus follows the resolved item to Next (web: the DOM focus; native: the screen reader's focus),
@@ -271,9 +275,10 @@ export function StoryCheckGame({ scope, onFinish, onBack }: Props): React.ReactE
   return (
     <Screen tone="canvas" scrollable>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: touchTarget.min }}>
-        {/* Close (wireframe check.md A): back to the quest step; scored answers stay scored. */}
+        {/* Close (wireframe check.md A): back to the quest step; scored answers stay scored. On the recap every
+            item is answered and nothing is scored, so Close ends the step like Done (no replay of the items). */}
         <Pressable
-          onPress={onBack}
+          onPress={inRecap ? () => dispatch({ type: 'finishRecap' }) : onBack}
           accessibilityRole="button"
           accessibilityLabel={m.learner.story.reader.close}
           testID="story-check-close"

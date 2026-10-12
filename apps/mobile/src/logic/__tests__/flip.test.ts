@@ -126,8 +126,9 @@ describe('CardDetailView uses FlipCard (behaviour unchanged)', () => {
 
   it('a card that cannot flip says it is locked on either face, shows no flip hint and returns to the front', () => {
     expect(view).toContain('disabled={!canFlip}');
-    expect(view).toContain('accessibilityLabelFront={canFlip ? messages.a11y.flipToBack : messages.a11y.lockedCard}');
-    expect(view).toContain('accessibilityLabelBack={canFlip ? messages.a11y.flipToFront : messages.a11y.lockedCard}');
+    // F-STORY-006 PR 6.5b: the locked label carries the earn hint ("Locked card. Finish the episode: ...").
+    expect(view).toContain('accessibilityLabelFront={canFlip ? messages.a11y.flipToBack : lockedLabel}');
+    expect(view).toContain('accessibilityLabelBack={canFlip ? messages.a11y.flipToFront : lockedLabel}');
     expect(view).toContain('flipHint={canFlip ? m.flip.back : null}');
     expect(view).toMatch(/if \(!canFlip\) setFace\('front'\)/);
   });

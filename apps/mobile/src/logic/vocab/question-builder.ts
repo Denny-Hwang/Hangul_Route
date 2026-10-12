@@ -2,6 +2,7 @@ import { decomposeSyllable, type RuntimeVocabItem } from '@hangul-route/content-
 import { shuffle } from '../shuffle';
 import { sameSense } from './catalog';
 import { COLOR_CONFUSION_PAIRS } from './color-confusion';
+import { excludedPair } from './excluded-pairs';
 import { VOCAB_FORMATS, formatFor, formatsForLevel, repeatFormat, type VocabFormat, type VocabLevelOrder } from './format-for';
 
 /**
@@ -112,6 +113,11 @@ function colourConfused(a: RuntimeVocabItem, b: RuntimeVocabItem): boolean {
   return CONFUSED.has(pairKey(a.id, b.id));
 }
 
+/** Rule 1: one sense (`sameSense`), or a pair whose pictures or meanings overlap (`VOCAB_EXCLUDED_PAIRS`). */
+function overlaps(a: RuntimeVocabItem, b: RuntimeVocabItem): boolean {
+  return sameSense(a, b) || excludedPair(a.id, b.id);
+}
+
 /** Same first syllable, or same initial consonant of the first syllable (rule 6). */
 function confusable(a: RuntimeVocabItem, b: RuntimeVocabItem): boolean {
   // `ko` is never empty (VocabItemSchema), so both are syllable blocks.
@@ -136,12 +142,12 @@ function countAllowed(answer: number, candidate: number | null, levelOrder: Voca
 }
 
 /**
- * The distractors for `answer` in `format` (§3.3 rules 1-8). Rules 1 (sense)
- * and 2 (picture) never relax; rule 3 (colours) and rule 4 (counts) relax, in
+ * The distractors for `answer` in `format` (§3.3 rules 1-8). Rules 1 (sense,
+ * and the overlapping pairs of `VOCAB_EXCLUDED_PAIRS`) and 2 (picture) never relax; rule 3 (colours) and rule 4 (counts) relax, in
  * reverse order, when they would leave fewer than `optionCount - 1`; rules 5
  * (picture family), 6 (confusables, level 2) and 7 (same topic) rank the rest.
- * Options never share a sense or (picture formats) a picture with each other
- * either. Returns fewer than `optionCount - 1` only when the universe cannot
+ * Options never share a sense, an overlapping pair or (picture formats) a
+ * picture with each other either. Returns fewer than `optionCount - 1` only when the universe cannot
  * supply them.
  */
 export function distractorsFor(answer: RuntimeVocabItem, format: VocabFormat, input: BuildInput): RuntimeVocabItem[] {
@@ -151,7 +157,7 @@ export function distractorsFor(answer: RuntimeVocabItem, format: VocabFormat, in
   const base = uniqueById(i.universe).filter(
     (c) =>
       c.id !== answer.id &&
-      !sameSense(c, answer) &&
+      !overlaps(c, answer) &&
       c.visual !== answer.visual &&
       (!pictures || i.canRender(c.visual)),
   );
@@ -193,7 +199,7 @@ function pick(
   const ranked = shuffle(candidates, i.seed).sort((a, b) => score(b) - score(a));
   const clashes = (c: RuntimeVocabItem, chosen: readonly RuntimeVocabItem[]): boolean =>
     chosen.some(
-      (p) => sameSense(p, c) || (rules.pictures && p.visual === c.visual) || (rules.colours && colourConfused(p, c)),
+      (p) => overlaps(p, c) || (rules.pictures && p.visual === c.visual) || (rules.colours && colourConfused(p, c)),
     );
 
   const chosen: RuntimeVocabItem[] = [];

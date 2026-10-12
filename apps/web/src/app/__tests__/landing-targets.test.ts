@@ -24,14 +24,25 @@ import {
  * the page's words or locale prefix, so `/es` and `/ko` are held to the English
  * page's list. These tests pin the keys and the comparison without a browser.
  */
-const allowlist = JSON.parse(
-  readFileSync(join(__dirname, '..', '..', '..', 'e2e', 'fixtures', 'landing-touch-allowlist.json'), 'utf8'),
-) as LandingTouchAllowlist;
+const WEB = join(__dirname, '..', '..', '..');
+const allowlist = JSON.parse(readFileSync(join(WEB, 'e2e', 'fixtures', 'landing-touch-allowlist.json'), 'utf8')) as LandingTouchAllowlist;
 
 describe('matrix shape', () => {
   it('the floor is touchTarget.min and the widths are the landing layout spec ones', () => {
     expect(TARGET_MIN).toBe(touchTarget.min);
     expect([...LANDING_WIDTHS]).toEqual([320, 375, 768]);
+  });
+
+  it('LANDING_WIDTHS is the one list of widths: the layout and locale specs import it instead of declaring their own', () => {
+    for (const spec of ['landing-layout.spec.ts', 'landing-locales.spec.ts']) {
+      const source = readFileSync(join(WEB, 'e2e', spec), 'utf8');
+      expect(source).toMatch(/import \{[^}]*\bLANDING_WIDTHS\b[^}]*\} from '\.\/landing-targets'/);
+      expect(source).not.toMatch(/\b(?:const|let)\s+WIDTHS\b/);
+    }
+  });
+
+  it('every landing spec runs as an en-US browser, so a QA export never shows the LocaleBanner on a machine that prefers es or ko', () => {
+    expect(readFileSync(join(WEB, 'playwright.config.ts'), 'utf8')).toMatch(/\buse:\s*\{[^]*?\blocale:\s*'en-US'[^]*?\bwebServer:/);
   });
 });
 
@@ -61,6 +72,17 @@ describe('controlKey', () => {
     expect(controlKey({ tag: 'button', href: null, hreflang: null, type: 'submit' })).toBe('button submit');
     expect(controlKey({ tag: 'input', href: null, hreflang: null, type: 'email' })).toBe('input email');
     expect(controlKey({ tag: 'summary', href: null, hreflang: null, type: null })).toBe('summary');
+  });
+
+  it("keys a link to the learner app by the token <app>, whatever origin the export was built with (NEXT_PUBLIC_APP_URL)", () => {
+    const link = (href: string) => ({ tag: 'a', href, hreflang: null, type: null });
+    expect(controlKey(link('https://app.hangulroute.com'), 'https://app.hangulroute.com')).toBe('a <app>');
+    expect(controlKey(link('https://app.hangulroute.com?lang=ko'), 'https://app.hangulroute.com')).toBe('a <app>');
+    expect(controlKey(link('https://staging.example.dev/play?lang=es&x=1'), 'https://staging.example.dev')).toBe('a <app>/play?x=1');
+    // Only the same origin is the app: a look-alike host keeps its own key.
+    expect(controlKey(link('https://app.hangulroute.com.evil/'), 'https://app.hangulroute.com')).toBe('a https://app.hangulroute.com.evil/');
+    // Without an app origin the key is the plain href, as before.
+    expect(controlKey(link('https://app.hangulroute.com'))).toBe('a https://app.hangulroute.com');
   });
 });
 
@@ -113,6 +135,10 @@ describe('e2e/fixtures/landing-touch-allowlist.json', () => {
       expect(keys).toEqual([...new Set(keys)].sort());
     }
     expect(allowlist.note).toMatch(/only shrinks/);
+  });
+
+  it('no line names an absolute origin: app links are keyed <app>, so a staging export keeps the same list', () => {
+    for (const key of [...Object.values(allowlist.pages), ...Object.values(allowlist.shownLocales)].flat()) expect(key).not.toMatch(/:\/\//);
   });
 
   it('its switcher lines are the locale links', () => {

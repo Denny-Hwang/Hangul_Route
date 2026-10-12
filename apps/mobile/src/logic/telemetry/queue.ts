@@ -8,6 +8,12 @@ export interface QueuedEvent {
   payload?: Record<string, unknown>;
   /** ISO timestamp of the original call, sent as `at` when flushed. */
   at: string;
+  /**
+   * Local id, unique across tabs, so a flush can tell which stored events
+   * arrived while it was sending (`arrivedSince`). Never sent to the API.
+   * Events queued by builds before it have none.
+   */
+  id?: string;
 }
 
 export const TELEMETRY_QUEUE_CAP = 200;
@@ -30,4 +36,16 @@ export function takeBatch(
 /** Put a failed batch back in front so order is preserved. */
 export function requeue(failed: readonly QueuedEvent[], rest: readonly QueuedEvent[]): QueuedEvent[] {
   return [...failed, ...rest];
+}
+
+/**
+ * The stored events that arrived after a flush read `seen`: those with an id
+ * `seen` does not hold, in stored order. Works across tabs that share one
+ * stored queue, where counting this tab's own appends misses another tab's.
+ * An event without an id predates ids, so it was already stored when the
+ * flush began.
+ */
+export function arrivedSince(stored: readonly QueuedEvent[], seen: readonly QueuedEvent[]): QueuedEvent[] {
+  const seenIds = new Set(seen.map((e) => e.id));
+  return stored.filter((e) => e.id !== undefined && !seenIds.has(e.id));
 }

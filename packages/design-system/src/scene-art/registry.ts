@@ -305,5 +305,5 @@ export const SCENE_ART_REGISTRY: Registry = Object.freeze({
 
 /** Whether a `setting` or layer `ref` names a registered item. */
 export function hasItem(ref: string): boolean {
-  return Object.hasOwn(SCENE_ART_REGISTRY, ref);
+  return Object.prototype.hasOwnProperty.call(SCENE_ART_REGISTRY, ref);
 }

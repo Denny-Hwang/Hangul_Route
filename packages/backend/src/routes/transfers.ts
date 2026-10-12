@@ -16,6 +16,7 @@ import {
   isTransferConsentLocale,
   transferConsentLineIds,
   type Space,
+  type TransferConsent,
   type TransferCreateBody,
   type TransferEndReason,
   type TransferInitiator,
@@ -29,13 +30,15 @@ import { fail, ok } from '../envelope';
 import { requireAccount, spaceContext } from '../lib/access';
 import { can, type AccountActor } from '../lib/can';
 import { isJoinCodeLive } from '../lib/join-code';
-import { clientKey, createRateLimiter } from '../lib/rate-limit';
+import { createRateLimiter } from '../lib/rate-limit';
 import { classSeatCheck } from '../lib/seats';
 import {
   classTransferEnabled,
+  consentTermsDigest,
   consentTermsFor,
   familyGuardianRole,
   guardianOf,
+  guardianOfLearner,
   learnerSideCooldown,
   newRequest,
   newTransferId,
@@ -55,6 +58,7 @@ import {
   viewLookups,
   type TransferDestinationView,
   type TransferLearnerSideView,
+  type LearnerSideContext,
   type TransferSourceView,
   type ViewLookups,
 } from '../lib/transfer-views';
@@ -82,13 +86,17 @@ const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
 /** Ended and executed requests stay on a class or family page this long (wireframe: "Terminal cards stay 30 days"). */
 const HISTORY_MS = 30 * DAY_MS;
-/** Rows read per role before filtering; open requests are at most 14 days old and history 30, so this covers a page of 50. */
+/** History rows (ended or executed) read per role before filtering; open rows are read apart, with no window. */
 const LIST_FETCH = 200;
 /** Bounded purge on create (section 4.1). */
 const PURGE_TRANSFERS_LIMIT = 50;
 const PURGE_RATE_HITS_LIMIT = 200;
 
-/** Per-client limiter on preview + create, in memory per isolate (copied from the lookup limiter, section 4.2 guard 4). */
+/**
+ * Per-account limiter on preview + create, in memory per isolate (section 4.2 guard 4). Keyed by the
+ * signed-in account, not the client address: a school behind one NAT address would otherwise share 20
+ * an hour across every teacher and guardian. The durable per-account and per-learner limits back it.
+ */
 export const TRANSFER_CLIENT_LIMIT = 20;
 export const transferClientLimiter = createRateLimiter(TRANSFER_CLIENT_LIMIT, HOUR_MS);
 
@@ -118,12 +126,14 @@ const PLACEHOLDER_CODE = 'AAAAAA';
  * Parses a preview / create body. A malformed code alone is not a bad body
  * but a failed code attempt (`invalid_code`, counted after the caller is
  * authorized, guard 4); any other problem, unknown keys included, is null.
+ * Only a code that was typed counts: a missing or non-string `code` is a bad
+ * body, so a buggy client cannot brake an account without trying a code.
  */
 async function readCodeBody<T>(c: Ctx, schema: ParsedSchema<T>): Promise<{ data: T; codeInvalid: boolean } | null> {
   const raw: unknown = await c.req.json().catch(() => null);
   const first = schema.safeParse(raw);
   if (first.success) return { data: first.data, codeInvalid: false };
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw) || !first.error.issues.every((issue) => issue.path[0] === 'code')) return null;
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw) || typeof (raw as { code?: unknown }).code !== 'string' || !first.error.issues.every((issue) => issue.path[0] === 'code')) return null;
   const second = schema.safeParse({ ...(raw as Record<string, unknown>), code: PLACEHOLDER_CODE });
   return second.success ? { data: second.data, codeInvalid: true } : null;
 }
@@ -136,8 +146,8 @@ async function readBody<T>(c: Ctx, schema: ParsedSchema<T>): Promise<T | null> {
 // ---------------------------------------------------------------------------
 // Preview and create (sections 4.2, 4.4, 4.9)
 
-/** Who is starting the move, after guard 2 (entitled to the learner and the source). */
-type StartingSide = { kind: 'class'; source: Space; via: TransferVia } | { kind: 'family'; family: Space; source: Space; role: TransferGuardianRole };
+/** Who is starting the move, after guard 2 (entitled to the learner and the source). `consent` is null on a preview. */
+type StartingSide = { kind: 'class'; source: Space; via: TransferVia } | { kind: 'family'; family: Space; source: Space; role: TransferGuardianRole; consent: TransferConsent | null };
 
 /** Seconds until the failed-code brake opens, or null while it is open (D1-backed, whatever the isolate). */
 async function codeBrake(db: Db, key: string, now: Date): Promise<number | null> {
@@ -152,6 +162,18 @@ async function familyViewContext(db: Db, family: Space, learnerId: string, env: 
   return { family, selfManaged: prefs.selfManaged, caregiverRoute: true, deviceConsent: transferDeviceConsentEnabled(env), now };
 }
 
+/**
+ * What the learner side is shown and agrees to, computed once so the terms and the flags agree
+ * (`premiumChange` is computed a single time): the preview's sheet, the create's record and the digest
+ * that ties the two together (section 4.11).
+ */
+async function consentSheet(db: Db, learnerId: string, source: Space, dest: Space, now: Date) {
+  const sheet = await learnerSideTerms(db, learnerId, source, dest, now);
+  const flags = { premiumChange: sheet.premiumChange, destinationConsentMode: sheet.destinationConsentMode, relinkAffected: sheet.relinkAffected, sourcePlansAffected: sheet.sourcePlansAffected };
+  const terms = await consentTermsFor(db, learnerId, source, dest, now, sheet.premiumChange);
+  return { sheet, flags, terms, digest: await consentTermsDigest(terms, flags) };
+}
+
 async function startedView(db: Db, side: StartingSide, row: StoredTransfer, env: TransferEnv | undefined, now: Date): Promise<TransferSourceView | TransferLearnerSideView> {
   const look = await viewLookups(db, [row]);
   return side.kind === 'class' ? sourceView(row, look) : learnerSideView(db, row, look, await familyViewContext(db, side.family, row.learnerId, env, now));
@@ -161,20 +183,21 @@ type MoveBody = (TransferPreviewBody & { destinationSpaceId?: undefined; introdu
 
 /**
  * Preview and create share one sequence of guards (section 4.2), in this order:
- * lock; per-client limiter; account; the acting space and the caller's right
+ * lock; account; per-account limiter; the acting space and the caller's right
  * to the learner and the source (404 otherwise, guard 2); body shape per
  * route; learner-level rules that say nothing about any destination; the
  * failed-code brake and the code (guard 3 and 4); the destination; guard 9
- * for a guardian; an open request (idempotent for the same caller on create);
- * already a member; the 7-day cooldown; advisory capacity; a busy
- * destination; then, on create only, the daily create limits.
+ * for a guardian; an open request, settled first (idempotent for the same
+ * caller on create); already a member; the 7-day cooldown; advisory capacity;
+ * a busy destination; then, on create only, the terms the guardian was shown
+ * and the daily create limits.
  */
 async function startMove(c: Ctx, mode: 'preview' | 'create'): Promise<Response> {
   if (!classTransferEnabled(c.env)) return locked(c);
-  const limit = transferClientLimiter.check(clientKey((n) => c.req.header(n)));
-  if (!limit.allowed) return tooMany(c, 'too_many_attempts', limit.retryAfterSeconds);
   const account = await requireAccount(c);
   if (!('id' in account)) return account;
+  const limit = transferClientLimiter.check(`acct:${account.id}`);
+  if (!limit.allowed) return tooMany(c, 'too_many_attempts', limit.retryAfterSeconds);
   const parsed = await readCodeBody<MoveBody>(c, mode === 'preview' ? TransferPreviewBodySchema : TransferCreateBodySchema);
   if (!parsed) return badRequest(c);
   const body = parsed.data;
@@ -196,11 +219,12 @@ async function startMove(c: Ctx, mode: 'preview' | 'create'): Promise<Response> 
   } else if (acting.kind === 'family') {
     const role = await familyGuardianRole(db, account.id, body.learnerId, acting.id);
     if (!role) return notFound(c);
-    if (body.fromSpaceId === undefined || (mode === 'create' && body.consent === undefined)) return badRequest(c);
+    const consent = body.consent ?? null;
+    if (body.fromSpaceId === undefined || (mode === 'create' && consent === null)) return badRequest(c);
     const source = await db.getSpace(body.fromSpaceId);
     if (!source || !(await db.membership(source.id, 'learner', body.learnerId))) return notFound(c);
     if (source.kind !== 'class' || source.archivedAt) return fail(c, 'not_transferable', 'Only a live class can be moved from', 422);
-    side = { kind: 'family', family: acting, source, role };
+    side = { kind: 'family', family: acting, source, role, consent };
   } else {
     return notFound(c);
   }
@@ -236,7 +260,6 @@ async function startMove(c: Ctx, mode: 'preview' | 'create'): Promise<Response> 
   if (dest.id === source.id) return fail(c, 'same_space', 'That is the class the learner is in', 409);
 
   // Guard 9 (b, c) for a guardian, now that both classes are known.
-  let guardianRole: TransferGuardianRole | null = null;
   if (side.kind === 'family') {
     const guardian = await guardianOf(db, account.id, learnerId, { sourceSpaceId: source.id, destSpaceId: dest.id, initiator: 'learner_side', initiatorAccountId: account.id }, now, { familyId: side.family.id });
     if (!guardian.ok) {
@@ -244,12 +267,15 @@ async function startMove(c: Ctx, mode: 'preview' | 'create'): Promise<Response> 
       if (guardian.error === 'conflicted_guardian') return fail(c, 'conflicted_guardian', 'A teacher of either class cannot answer for the family', 409);
       return notFound(c);
     }
-    guardianRole = guardian.role;
   }
 
   // One open request per learner; the same caller's own request comes back on a repeated create (section 4.9).
+  // The open row is settled first (there is no scheduler): one past its expiry, or whose learner left its
+  // source, is not open any more and must neither block this request nor come back as a live one.
   const initiator: TransferInitiator = side.kind === 'class' ? 'source' : 'learner_side';
-  const open = await db.openTransferOf(learnerId);
+  const openRaw = await db.openTransferOf(learnerId);
+  const settledOpen = openRaw ? (await settle(db, openRaw, now, env)).request : null;
+  const open = settledOpen && isOpenTransfer(settledOpen) ? settledOpen : null;
   const isOwn = (t: StoredTransfer): boolean => t.sourceSpaceId === source.id && t.destSpaceId === dest.id && t.initiator === initiator && t.initiatorAccountId === account.id;
   const alreadyOpen = (t: StoredTransfer): Response =>
     side.kind === 'family'
@@ -265,31 +291,25 @@ async function startMove(c: Ctx, mode: 'preview' | 'create'): Promise<Response> 
   }
   const seat = await classSeatCheck(db, dest, learnerId, now, { excludeSpaceId: source.id });
   if (seat) return fail(c, seat, 'That class has no room right now', 409);
-  if ((await db.countOpenTransfersTo(dest.id)) >= TRANSFER_MAX_OPEN_PER_DESTINATION) return fail(c, 'destination_busy', 'That class has too many moves waiting', 409);
+  // Only requests still inside their 14 days count: an expired row nobody has listed yet is not waiting.
+  if ((await db.countOpenTransfersTo(dest.id, now)) >= TRANSFER_MAX_OPEN_PER_DESTINATION) return fail(c, 'destination_busy', 'That class has too many moves waiting', 409);
 
   if (mode === 'preview') {
     if (side.kind === 'class') return ok(c, { destination: { id: dest.id, kind: dest.kind, name: dest.name } });
-    const [facts, terms] = await Promise.all([destinationFacts(db, dest, now), learnerSideTerms(db, learnerId, source, dest, now)]);
-    return ok(c, { destination: { id: dest.id, kind: dest.kind, name: dest.name, ...facts }, ...terms });
+    const [facts, shown] = await Promise.all([destinationFacts(db, dest, now), consentSheet(db, learnerId, source, dest, now)]);
+    return ok(c, { destination: { id: dest.id, kind: dest.kind, name: dest.name, ...facts }, ...shown.sheet, termsDigest: shown.digest });
   }
 
-  // Create only: the daily limits, the bounded purge, then the insert.
-  const dayAgo = new Date(now.getTime() - DAY_MS);
-  if ((await db.countTransfersCreatedBy(account.id, dayAgo)) >= TRANSFER_MAX_CREATED_PER_ACCOUNT_PER_DAY) return tooMany(c, 'too_many_requests', DAY_MS / 1000, 'Too many requests today — try again tomorrow');
-  if ((await db.countTransfersCreatedForLearner(learnerId, dayAgo)) >= TRANSFER_MAX_CREATED_PER_LEARNER_PER_DAY) return tooMany(c, 'too_many_requests', DAY_MS / 1000, 'Too many requests today — try again tomorrow');
-  const purgeBefore = new Date(now.getTime() - TRANSFER_PURGE_AFTER_MS);
-  await db.purgeTransfers(purgeBefore, purgeBefore, PURGE_TRANSFERS_LIMIT);
-  await db.purgeRateHits(dayAgo, PURGE_RATE_HITS_LIMIT);
-
+  // Create only: the row. For a guardian, what they were shown must still be what they agree to (section 4.11).
   const common = { id: newTransferId(), learnerId, sourceSpaceId: source.id, destSpaceId: dest.id, introduce: body.introduce ?? false, now };
   let row: StoredTransfer;
   if (side.kind === 'class') {
     row = newRequest({ ...common, initiator: 'source', initiatorAccountId: account.id, via: side.via });
   } else {
-    const consent = body.consent;
-    if (!consent || guardianRole === null) return badRequest(c);
-    const [terms, sheet] = await Promise.all([consentTermsFor(db, learnerId, source, dest, now), learnerSideTerms(db, learnerId, source, dest, now)]);
-    const flags = { premiumChange: sheet.premiumChange, destinationConsentMode: sheet.destinationConsentMode, relinkAffected: sheet.relinkAffected, sourcePlansAffected: sheet.sourcePlansAffected };
+    const shown = await consentSheet(db, learnerId, source, dest, now);
+    // Checked with the body shape above: the family route's create always carries a consent.
+    const consent = side.consent as TransferConsent;
+    if (consent.termsDigest !== undefined && consent.termsDigest !== shown.digest) return fail(c, 'terms_changed', 'Something about this move has changed. Please look at it again.', 409);
     row = newRequest({
       ...common,
       initiator: 'learner_side',
@@ -298,14 +318,24 @@ async function startMove(c: Ctx, mode: 'preview' | 'create'): Promise<Response> 
         basis: 'caregiver',
         attest: null,
         evidence: account.id,
-        role: guardianRole,
+        // Guard 9 was checked through this same family, whose one membership of the account gives the role.
+        role: side.role,
         textVersion: consent.textVersion,
         locale: consent.locale,
-        shown: { lineIds: transferConsentLineIds({ initiator: 'learner_side', ...flags }), flags },
-        terms,
+        shown: { lineIds: transferConsentLineIds({ initiator: 'learner_side', ...shown.flags }), flags: shown.flags },
+        terms: shown.terms,
       },
     });
   }
+
+  // Then the daily limits, the bounded purge, and the insert.
+  const dayAgo = new Date(now.getTime() - DAY_MS);
+  if ((await db.countTransfersCreatedBy(account.id, dayAgo)) >= TRANSFER_MAX_CREATED_PER_ACCOUNT_PER_DAY) return tooMany(c, 'too_many_requests', DAY_MS / 1000, 'Too many requests today — try again tomorrow');
+  if ((await db.countTransfersCreatedForLearner(learnerId, dayAgo)) >= TRANSFER_MAX_CREATED_PER_LEARNER_PER_DAY) return tooMany(c, 'too_many_requests', DAY_MS / 1000, 'Too many requests today — try again tomorrow');
+  const purgeBefore = new Date(now.getTime() - TRANSFER_PURGE_AFTER_MS);
+  await db.purgeTransfers(purgeBefore, purgeBefore, PURGE_TRANSFERS_LIMIT);
+  await db.purgeRateHits(dayAgo, PURGE_RATE_HITS_LIMIT);
+
   const detail: Record<string, string> = side.kind === 'class' ? { initiator, via: side.via } : { initiator, basis: 'caregiver' };
   const created = await db.createTransfer(row, { at: now.toISOString(), actorKind: 'account', actorRef: account.id, event: 'created', slot: side.kind === 'class' ? 'source' : 'learner', detail });
   if (created === 'already_open') {
@@ -322,7 +352,8 @@ transferSpaceRoutes.post('/:id/transfer-requests/preview', (c) => startMove(c, '
 transferSpaceRoutes.post('/:id/transfer-requests', (c) => startMove(c, 'create'));
 
 // ---------------------------------------------------------------------------
-// List (section 4.4): settles each open row first, then builds views set-based
+// List (section 4.4): settles each open row first, then builds views set-based.
+// Open rows are read apart from the history window, so newer ended rows can never hide one.
 
 /** Brings open rows up to date (expiry, archived destination, learner left). There is no scheduler; reads do it. */
 async function settleAll(db: Db, rows: readonly StoredTransfer[], now: Date, env: TransferEnv | undefined): Promise<StoredTransfer[]> {
@@ -336,6 +367,12 @@ async function settleAll(db: Db, rows: readonly StoredTransfer[], now: Date, env
     if (settled) out.push(settled);
   }
   return out;
+}
+
+/** The settled open rows, then the history rows not already among them (an open row settled into history keeps its new state). */
+function withHistory(settled: readonly StoredTransfer[], history: readonly StoredTransfer[]): StoredTransfer[] {
+  const seen = new Set(settled.map((t) => t.id));
+  return [...settled, ...history.filter((t) => !isOpenTransfer(t) && !seen.has(t.id))];
 }
 
 const recent = (t: StoredTransfer, now: Date): boolean => {
@@ -366,9 +403,14 @@ transferSpaceRoutes.get('/:id/transfer-requests', async (c) => {
 
   if (space.kind === 'class') {
     if (!teacherVia(actor, ctx)) return notFound(c);
-    const [asSource, asDest] = await Promise.all([db.transfersOfSpace(space.id, 'source', LIST_FETCH), db.transfersOfSpace(space.id, 'destination', LIST_FETCH)]);
-    const src = (await settleAll(db, asSource, now, c.env)).filter((t) => recent(t, now));
-    const dst = (await settleAll(db, asDest, now, c.env)).filter((t) => recent(t, now) && destinationSees(t));
+    const [openSource, openDest, pastSource, pastDest] = await Promise.all([
+      db.openTransfersOfSpaces([space.id], 'source'),
+      db.openTransfersOfSpaces([space.id], 'destination'),
+      db.transfersOfSpace(space.id, 'source', LIST_FETCH),
+      db.transfersOfSpace(space.id, 'destination', LIST_FETCH),
+    ]);
+    const src = withHistory(await settleAll(db, openSource, now, c.env), pastSource).filter((t) => recent(t, now));
+    const dst = withHistory(await settleAll(db, openDest, now, c.env), pastDest).filter((t) => recent(t, now) && destinationSees(t));
     const rows = [...src, ...dst].sort(listOrder).slice(0, TRANSFER_LIST_MAX);
     const look = await viewLookups(db, rows);
     const requests: Array<TransferSourceView | TransferDestinationView> = rows.map((t) => (t.sourceSpaceId === space.id ? sourceView(t, look) : destinationView(t, look)));
@@ -378,57 +420,62 @@ transferSpaceRoutes.get('/:id/transfer-requests', async (c) => {
   if (space.kind === 'family') {
     if (space.archivedAt || !can(actor, 'snapshot.read', { kind: 'space', ctx })) return notFound(c);
     const learnerIds = (await db.membersOf(space.id)).filter((m) => m.memberKind === 'learner').map((m) => m.memberId);
-    const all: StoredTransfer[] = [];
-    for (const learnerId of learnerIds) all.push(...(await db.transfersOfLearner(learnerId)));
-    const rows = (await settleAll(db, all, now, c.env)).filter((t) => recent(t, now)).sort(listOrder).slice(0, TRANSFER_LIST_MAX);
-    const look = await viewLookups(db, rows);
-    const learners = new Map((await db.getLearners(learnerIds)).map((l) => [l.id, l]));
-    const contexts = new Map<string, Awaited<ReturnType<typeof familyViewContext>>>();
-    const options = [];
-    for (const learnerId of learnerIds) {
-      const learner = learners.get(learnerId);
-      if (!learner) continue;
-      const prefs = await db.getTransferPrefs(learnerId);
-      contexts.set(learnerId, { family: space, selfManaged: prefs.selfManaged, caregiverRoute: true, deviceConsent: transferDeviceConsentEnabled(c.env), now });
-      const classes: Array<{ spaceId: string; name: string }> = [];
-      for (const m of await db.membershipsOf('learner', learnerId)) {
-        const s = await db.getSpace(m.spaceId);
-        if (s && s.kind === 'class' && !s.archivedAt) classes.push({ spaceId: s.id, name: s.name });
-      }
-      options.push({ learnerId, name: rosterName(space, learner.displayName), classes, selfManaged: prefs.selfManaged, blockTeacherRequests: prefs.blockTeacherRequests });
-    }
+    const perLearner = await Promise.all(
+      learnerIds.map(async (learnerId) => {
+        const [rows, prefs, memberships] = await Promise.all([db.transfersOfLearner(learnerId), db.getTransferPrefs(learnerId), db.membershipsOf('learner', learnerId)]);
+        return { learnerId, rows, prefs, spaceIds: memberships.map((m) => m.spaceId) };
+      }),
+    );
+    const rows = (await settleAll(db, perLearner.flatMap((p) => p.rows), now, c.env)).filter((t) => recent(t, now)).sort(listOrder).slice(0, TRANSFER_LIST_MAX);
+    const [look, learnerList, memberSpaces] = await Promise.all([viewLookups(db, rows), db.getLearners(learnerIds), db.getSpaces(perLearner.flatMap((p) => p.spaceIds))]);
+    const learners = new Map(learnerList.map((l) => [l.id, l]));
+    const liveClasses = new Map(memberSpaces.filter((s) => s.kind === 'class' && !s.archivedAt).map((s) => [s.id, s]));
+    const deviceConsent = transferDeviceConsentEnabled(c.env);
+    // Every row belongs to one of these learners, so each has its context.
+    const contexts = new Map(perLearner.map((p) => [p.learnerId, { family: space, selfManaged: p.prefs.selfManaged, caregiverRoute: true, deviceConsent, now }]));
+    const options = perLearner.flatMap((p) => {
+      const learner = learners.get(p.learnerId);
+      if (!learner) return [];
+      const classes = p.spaceIds.flatMap((id) => {
+        const s = liveClasses.get(id);
+        return s ? [{ spaceId: s.id, name: s.name }] : [];
+      });
+      return [{ learnerId: p.learnerId, name: rosterName(space, learner.displayName), classes, selfManaged: p.prefs.selfManaged, blockTeacherRequests: p.prefs.blockTeacherRequests }];
+    });
     const requests: TransferLearnerSideView[] = [];
-    for (const t of rows) requests.push(await learnerSideView(db, t, look, contexts.get(t.learnerId) ?? (await familyViewContext(db, space, t.learnerId, c.env, now))));
+    for (const t of rows) requests.push(await learnerSideView(db, t, look, contexts.get(t.learnerId) as LearnerSideContext));
     return ok(c, { requests, options });
   }
 
-  // A school sees how many moves wait per child class, nothing else (TransferSchoolCountView).
+  // A school sees how many moves wait per child class, nothing else (TransferSchoolCountView). The counts
+  // are read set-based and settle nothing (a school may have many busy classes; settling every row could pass
+  // the per-request query limit): a row past its expiry is left out, and the class pages settle the rest.
   if (space.archivedAt || !can(actor, 'roster.manage', { kind: 'space', ctx })) return notFound(c);
-  const counts = [];
-  for (const cls of await db.childSpaces(space.id)) {
-    if (cls.kind !== 'class' || cls.archivedAt) continue;
-    const [asSource, asDest] = await Promise.all([db.transfersOfSpace(cls.id, 'source', LIST_FETCH), db.transfersOfSpace(cls.id, 'destination', LIST_FETCH)]);
-    const src = (await settleAll(db, asSource.filter(isOpenTransfer), now, c.env)).filter(isOpenTransfer);
-    const dst = (await settleAll(db, asDest.filter(isOpenTransfer), now, c.env)).filter((t) => isOpenTransfer(t) && destinationSees(t));
-    counts.push({ spaceId: cls.id, waiting: src.length + dst.length });
-  }
+  const classes = (await db.childSpaces(space.id)).filter((cls) => cls.kind === 'class' && !cls.archivedAt);
+  const ids = classes.map((cls) => cls.id);
+  const [asSource, asDest] = await Promise.all([db.openTransfersOfSpaces(ids, 'source'), db.openTransfersOfSpaces(ids, 'destination')]);
+  const at = now.toISOString();
+  const liveSource = asSource.filter((t) => t.expiresAt > at);
+  const liveDest = asDest.filter((t) => t.expiresAt > at && destinationSees(t));
+  const counts = ids.map((id) => ({ spaceId: id, waiting: liveSource.filter((t) => t.sourceSpaceId === id).length + liveDest.filter((t) => t.destSpaceId === id).length }));
   return ok(c, { requests: [], counts });
 });
 
 // ---------------------------------------------------------------------------
 // Decline and cancel (sections 4.2, 4.4)
 
-/** The acting party on a `:tid` route, after the ownership rules of section 4.4. */
-type Party = { kind: 'source' | 'destination'; space: Space } | { kind: 'family'; family: Space };
+/** The acting party on a `:tid` route, after the ownership rules of section 4.4; a class party carries how its account holds the class (A12). */
+type Party = { kind: 'source' | 'destination'; space: Space; via: TransferVia } | { kind: 'family'; family: Space };
 
 /** A class party: `:id` is this request's source or destination, live, and the caller holds `learner.transfer` there. */
 async function classParty(db: Db, actor: AccountActor, space: Space, row: StoredTransfer, slot: 'source' | 'destination'): Promise<Party | null> {
   if (space.kind !== 'class' || space.archivedAt) return null;
   if (space.id !== (slot === 'source' ? row.sourceSpaceId : row.destSpaceId)) return null;
-  if (!teacherVia(actor, await spaceContext(db, space))) return null;
+  const via = teacherVia(actor, await spaceContext(db, space));
+  if (!via) return null;
   // The destination cannot see a request before the learner side said yes (T8).
   if (slot === 'destination' && row.learner.state !== 'consented') return null;
-  return { kind: slot, space };
+  return { kind: slot, space, via };
 }
 
 /** A guardian party: `:id` is a live family holding the learner and the caller is its owner or caregiver (guard 9a; the safe direction needs no more). */
@@ -449,6 +496,9 @@ async function openRow(c: Ctx, db: Db, row: StoredTransfer, now: Date): Promise<
   if (!settled) return notFound(c);
   return isOpenTransfer(settled) ? settled : closed(c, settled);
 }
+
+/** The audit detail of a deciding party (codes only): a class party's `via`, plus the destination's reason. */
+const decidedBy = (party: Party, reason?: string): Record<string, string> | null => (party.kind === 'family' ? null : { ...(reason ? { reason } : {}), via: party.via });
 
 const END_BY_SLOT: Record<TransferSlot, { reason: TransferEndReason; actor: TransferEndActor }> = {
   learner: { reason: 'declined_learner', actor: 'family' },
@@ -472,11 +522,12 @@ transferSpaceRoutes.post('/:id/transfer-requests/:tid/decline', async (c) => {
   const row = await openRow(c, db, loaded, now);
   if (row instanceof Response) return row;
   const end = END_BY_SLOT[body.slot];
-  const changed = await db.declineSlot(row.id, body.slot, end.reason, end.actor, now);
+  // The row keeps only the end actor's kind; who decided, and how and why, is in this event, written with the CAS.
+  const event = { at: now.toISOString(), actorKind: 'account' as const, actorRef: account.id, event: 'declined' as const, slot: body.slot, detail: decidedBy(party, body.reason) };
+  const changed = await db.declineSlot(row.id, body.slot, end.reason, end.actor, now, event);
   const after = await db.getTransfer(row.id);
   if (!after) return notFound(c);
   if (changed === 0) return closed(c, after);
-  await db.addTransferEvent({ transferId: row.id, at: now.toISOString(), actorKind: 'account', actorRef: account.id, event: 'declined', slot: body.slot, detail: body.reason ? { reason: body.reason } : null });
   return ok(c, { request: await partyView(db, party, after, c.env, now) });
 });
 
@@ -496,16 +547,18 @@ transferSpaceRoutes.post('/:id/transfer-requests/:tid/cancel', async (c) => {
   const row = await openRow(c, db, loaded, now);
   if (row instanceof Response) return row;
   const byFamily = party.kind === 'family';
-  const changed = await db.cancelTransfer(row.id, byFamily ? 'withdrawn_learner' : 'cancelled_initiator', byFamily ? 'family' : 'source', now);
+  const event = { at: now.toISOString(), actorKind: 'account' as const, actorRef: account.id, event: 'cancelled' as const, slot: byFamily ? ('learner' as const) : ('source' as const), detail: decidedBy(party) };
+  const changed = await db.cancelTransfer(row.id, byFamily ? 'withdrawn_learner' : 'cancelled_initiator', byFamily ? 'family' : 'source', now, event);
   const after = await db.getTransfer(row.id);
   if (!after) return notFound(c);
   if (changed === 0) return closed(c, after);
-  await db.addTransferEvent({ transferId: row.id, at: now.toISOString(), actorKind: 'account', actorRef: account.id, event: 'cancelled', slot: byFamily ? 'learner' : 'source', detail: null });
   return ok(c, { request: await partyView(db, party, after, c.env, now) });
 });
 
 // ---------------------------------------------------------------------------
-// The guardian's switch (section 4.2 guard 13): only `blockTeacherRequests`; `selfManaged` belongs to the learner's device (T-5c)
+// The guardian's switch (section 4.2 guard 13): only `blockTeacherRequests`; `selfManaged` belongs to the learner's device (T-5c).
+// Switching teacher requests off is the safe direction (guard 9a, like a veto); switching them back on lets
+// teacher requests in again, so it needs the whole of guard 9 with the learner's classes as the other parties.
 
 transferSpaceRoutes.put('/:id/learners/:learnerId/transfer-prefs', async (c) => {
   if (!classTransferEnabled(c.env)) return locked(c);
@@ -514,10 +567,16 @@ transferSpaceRoutes.put('/:id/learners/:learnerId/transfer-prefs', async (c) => 
   const body = await readBody(c, TransferFamilyPrefsBodySchema);
   if (!body) return badRequest(c);
   const db = dbFor(c);
+  const now = new Date();
   const space = await db.getSpace(c.req.param('id'));
   const learnerId = c.req.param('learnerId');
   if (!space || space.kind !== 'family' || space.archivedAt || !(await familyGuardianRole(db, account.id, learnerId, space.id))) return notFound(c);
-  await db.setTransferPref(learnerId, 'blockTeacherRequests', body.blockTeacherRequests, new Date());
+  if (!body.blockTeacherRequests) {
+    const guardian = await guardianOfLearner(db, account.id, learnerId, now, { familyId: space.id });
+    if (!guardian.ok && guardian.error === 'family_too_new') return fail(c, 'family_too_new', 'This can be changed one day after joining the family', 422);
+    if (!guardian.ok) return fail(c, 'conflicted_guardian', 'A teacher of the learner cannot change this for the family', 409);
+  }
+  await db.setTransferPref(learnerId, 'blockTeacherRequests', body.blockTeacherRequests, now);
   const prefs = await db.getTransferPrefs(learnerId);
   return ok(c, { prefs: { blockTeacherRequests: prefs.blockTeacherRequests, selfManaged: prefs.selfManaged } });
 });

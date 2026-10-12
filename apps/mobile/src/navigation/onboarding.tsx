@@ -2,6 +2,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import { CreateProfileScreen } from '../screens/onboarding/CreateProfileScreen';
 import { FirstQuestPreviewScreen } from '../screens/onboarding/FirstQuestPreviewScreen';
+import { PlacementInviteScreen } from '../screens/onboarding/PlacementInviteScreen';
 import { WelcomeScreen } from '../screens/onboarding/WelcomeScreen';
 import type { OnboardingStackParamList } from './types';
 
@@ -13,6 +14,7 @@ export function OnboardingStack(): React.ReactElement {
       <Stack.Screen name="Welcome" component={WelcomeScreen} />
       <Stack.Screen name="CreateProfile" component={CreateProfileScreen} initialParams={{ firstRun: true }} />
       <Stack.Screen name="FirstQuestPreview" component={FirstQuestPreviewScreen} />
+      <Stack.Screen name="PlacementInvite" component={PlacementInviteScreen} />
     </Stack.Navigator>
   );
 }

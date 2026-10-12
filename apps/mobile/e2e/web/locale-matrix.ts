@@ -10,7 +10,7 @@
  * pseudo-locale shows up, and the walk must still reach the next screen.
  */
 import { getMessages, pseudoLocalize, pseudoText, type Messages } from '@hangul-route/i18n';
-import type { TouchTargetAllowlist } from './target-audit';
+import { isOffender, occurrenceKeys, viewportKey, type MeasuredTarget, type TouchTargetAllowlist } from './target-audit';
 
 export type MatrixLocale = 'en' | 'es' | 'ko' | 'en-XA';
 
@@ -60,6 +60,12 @@ export function nameIn(locale: MatrixLocale, pick: (m: Messages) => string): Reg
   return new RegExp(`^(?:${alternatives([pick(getMessages('en')), pick(messagesFor(locale))])})$`);
 }
 
+/** A whole accessible name or text in any locale the matrix runs (an overlay that can show up mid-walk in any of them). */
+export function nameInAny(pick: (m: Messages) => string): RegExp {
+  const locales: readonly MatrixLocale[] = ['en', 'es', 'ko', 'en-XA'];
+  return new RegExp(`^(?:${alternatives(locales.map((locale) => pick(messagesFor(locale))))})$`);
+}
+
 /**
  * The start of a function message, whatever its argument (an answer card's "Right answer: <label>"). The
  * message is called with a marker and cut there, so a pseudo-localised message keeps its opening bracket.
@@ -91,29 +97,59 @@ function translations(english: string, locale: MatrixLocale): string[] {
  * Controls on the matrix screens that are under `touchTarget.min` today and that the touch-target ratchet
  * does not walk (`fixtures/locale-matrix-allowlist.json`): `Screen | role | English name`, at every width.
  * Like the ratchet's list it only shrinks: a listed control that is no longer small fails the matrix.
+ * A repeat of the same control is numbered (`... #2`, `occurrenceKeys`), so it needs its own line.
  */
 export interface MatrixAllowlist {
   note: string;
   offenders: string[];
 }
 
-/** Every `Screen | role | English name` the matrix tolerates: the ratchet's list at any window, then its own. */
-export function toleratedKeys(ratchet: TouchTargetAllowlist, matrix: MatrixAllowlist): string[] {
-  return [...new Set([...Object.values(ratchet.offenders).flat(), ...matrix.offenders])];
+/**
+ * The ratchet lines a matrix window is held to: those of the same window; for a phone narrower than every
+ * window the ratchet measures (320), those of its narrowest one (375), since a narrower screen keeps the same
+ * small controls; otherwise none. Another window's lines never leak in.
+ */
+function ratchetLines(ratchet: TouchTargetAllowlist, vp: { width: number; height: number }): string[] {
+  const exact = ratchet.offenders[viewportKey(vp)];
+  if (exact) return exact;
+  const windows = Object.keys(ratchet.offenders)
+    .map((key) => ({ key, width: Number(key.split('x')[0]) }))
+    .sort((a, b) => a.width - b.width);
+  const narrowest = windows[0];
+  return narrowest && narrowest.width > vp.width ? (ratchet.offenders[narrowest.key] ?? []) : [];
 }
 
-/** `role | name` forms of one `Screen | role | English name` key on `screen`, in English and in the locale's words. */
-function localizedForms(key: string, screen: MatrixScreen, locale: MatrixLocale): string[] {
-  const [where, role, name] = key.split(' | ');
-  if (where !== screen || role === undefined || name === undefined) return [];
-  const names = new Set([name, ...(locale === 'en-XA' ? [pseudoText(name)] : []), ...translations(name, locale)]);
-  return [...names].map((form) => `${role} | ${form}`);
+/** Every `Screen | role | English name` the matrix tolerates at `vp`: the ratchet's list for that window, then its own. */
+export function toleratedKeys(ratchet: TouchTargetAllowlist, matrix: MatrixAllowlist, vp: { width: number; height: number }): string[] {
+  return [...new Set([...ratchetLines(ratchet, vp), ...matrix.offenders])];
 }
 
 /**
- * The small controls (`role | name`) the matrix tolerates on `screen`: the listed ones (`toleratedKeys`),
- * in English and in the locale's words. Every other control on a matrix screen must be at least
- * `touchTarget.min` in every locale.
+ * The controls under `touchTarget.min` on one read of a screen, as `role | name` keys with their size, in
+ * document order; a repeat of a key is numbered (`... #2`), so it never hides behind the first one's line.
+ */
+export function smallControlKeys(measured: readonly MeasuredTarget[]): Array<{ key: string; size: string }> {
+  const small = measured.filter((t) => isOffender(t));
+  const keys = occurrenceKeys(small.map((t) => `${t.role} | ${t.name}`));
+  return small.map((t, i) => ({ key: keys[i] ?? '', size: `${Math.round(t.width)}x${Math.round(t.height)}` }));
+}
+
+const OCCURRENCE = / #\d+$/;
+
+/** `role | name` forms of one `Screen | role | English name[ #n]` key on `screen`, in English and in the locale's words. */
+function localizedForms(key: string, screen: MatrixScreen, locale: MatrixLocale): string[] {
+  const [where, role, numbered] = key.split(' | ');
+  if (where !== screen || role === undefined || numbered === undefined) return [];
+  const suffix = OCCURRENCE.exec(numbered)?.[0] ?? '';
+  const name = numbered.slice(0, numbered.length - suffix.length);
+  const names = new Set([name, ...(locale === 'en-XA' ? [pseudoText(name)] : []), ...translations(name, locale)]);
+  return [...names].map((form) => `${role} | ${form}${suffix}`);
+}
+
+/**
+ * The small controls (`role | name`, repeats numbered) the matrix tolerates on `screen`: the listed ones
+ * (`toleratedKeys`), in English and in the locale's words. Every other control on a matrix screen must be at
+ * least `touchTarget.min` in every locale.
  */
 export function allowedSmall(screen: MatrixScreen, locale: MatrixLocale, keys: readonly string[]): Set<string> {
   return new Set(keys.flatMap((key) => localizedForms(key, screen, locale)));

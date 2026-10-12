@@ -141,6 +141,8 @@ describe('beyondContent and needsStage', () => {
     expect(startPips(m)).toEqual([]);
     expect(m.cursor).toBeNull();
     expect(m.hero).toBe('beyond');
+    // `here` follows the one start marker, never back to Stage 1 (section 3.3).
+    expect(m.stages.filter((s) => s.here).map((s) => s.stage)).toEqual(['stage4']);
   });
 
   it('placed at a stage the tier lacks: rest wording, never beyond; the tag stays on the known stage', () => {
@@ -149,11 +151,38 @@ describe('beyondContent and needsStage', () => {
     expect(m.cursor).toBeNull();
     expect(m.hero).toBe('rest');
     expect(m.start).toEqual({ stage: 'stage1', questId: null });
+    expect(m.stages.filter((s) => s.here).map((s) => s.stage)).toEqual(['stage1']);
+  });
+
+  it('here sits on the start tag when the start quest is held by a stage above Stage 1 and nothing is done', () => {
+    const placements = [result({ level: { stage: 'stage4', band: 0 }, beyondContent: true, placedOutQuestIds: ALL_GRID })];
+    const m = build([], placements);
+    const tagged = m.stages.filter((s) => s.isStart).map((s) => s.stage);
+    expect(m.stages.filter((s) => s.here).map((s) => s.stage)).toEqual(tagged);
   });
 
   it('keeps the start where it was while the learner finishes the placed-out quests', () => {
     const placements = [result({ level: { stage: 'stage4', band: 0 }, beyondContent: true, placedOutQuestIds: ALL_GRID })];
     expect(build(ALL_GRID, placements).start).toEqual({ stage: 'stage4', questId: null });
+  });
+});
+
+describe('the start follows today\'s bundle and tier (section 3.6)', () => {
+  it('a quest that joins the bundle before the old start becomes the start (it was never placed out)', () => {
+    // Placed out as of the 8-quest bundle: letters 1-3 and life 1-2; the start was rites q1.
+    const placements = [result({ placedOutQuestIds: [...LETTERS, 'quest:stage1-life-q1', 'quest:stage1-life-q2'] })];
+    expect(build([], placements, BUNDLE_8).start).toEqual({ stage: 'stage1', questId: 'quest:stage1-rites-q1' });
+    // The 15-quest bundle adds life q3 ahead of rites q1 in route order.
+    expect(build([], placements, BUNDLE_15).start).toEqual({ stage: 'stage1', questId: 'quest:stage1-life-q3' });
+  });
+
+  it('a wider tier moves the start from the stage-only tag to the first quest the learner may now play', () => {
+    const placements = [result({ level: { stage: 'stage4', band: 0 }, placedOutQuestIds: STAGE1_8 })];
+    const stage1Only = (stage: StageKey): boolean => stage === 'stage1';
+    expect(build([], placements, BUNDLE_8, { isEntitled: stage1Only }).start).toEqual({ stage: 'stage1', questId: null });
+    const wider = build([], placements, BUNDLE_8);
+    expect(wider.start?.questId).not.toBeNull();
+    expect(wider.start?.stage).not.toBe('stage1');
   });
 });
 
@@ -198,5 +227,21 @@ describe('summary.journey carries known from the level check (R-7a)', () => {
     }, new Date('2026-10-11T00:00:00.000Z'));
     expect(summary?.stages[0]).toEqual({ stage: 'stage1', state: 'known', done: 1, known: 7, total: 8 });
     expect(summary?.here).toBe('stage2');
+  });
+
+  it('a learner placed past every quest uploads here on the start stage, not Stage 1', () => {
+    const bundle = BUNDLE_8;
+    const placements = [result({ level: { stage: 'stage4', band: 0 }, beyondContent: true, placedOutQuestIds: bundle.quests.map((q) => q.id) })];
+    const summary = journeySummaryOf(snapshotWith([], { placements }), {
+      catalog: catalogOf(bundle),
+      episodes: bundle.episodes,
+      quests: bundle.quests,
+      cards: [],
+      stages: STAGE_DEFS,
+      themes: THEME_DEFS,
+      isEntitled: everyone,
+    }, new Date('2026-10-11T00:00:00.000Z'));
+    expect(summary?.here).toBe('stage4');
+    expect(summary?.seeded).toBe(true);
   });
 });

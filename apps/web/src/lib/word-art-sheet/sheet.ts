@@ -42,6 +42,25 @@ export interface WordArtSheet {
   totals: { glyphs: number; byStatus: Record<WordArtStatus, number> };
 }
 
+/** A heritage card picture that vocabulary items reuse as their `visual` (§3.11). */
+export interface CardArtReuse {
+  /** `card:<id>`, the HeritageCardArt id. */
+  cardId: string;
+  words: SheetWord[];
+}
+
+/** Each `card:` visual of the catalog once, in catalog order, with the words that use it: the reuses §3.11 has reviewed at 96 and 64 px. */
+export function cardArtReuses(catalog: readonly VocabCatalogEntry[]): CardArtReuse[] {
+  const byCard = new Map<string, SheetWord[]>();
+  for (const item of catalog) {
+    if (!item.visual.startsWith('card:')) continue;
+    const list = byCard.get(item.visual) ?? [];
+    list.push({ id: item.id, ko: item.ko, romanization: item.romanization, en: item.en, topic: item.topic });
+    byCard.set(item.visual, list);
+  }
+  return [...byCard].map(([cardId, words]) => ({ cardId, words }));
+}
+
 export function glyphBytes(glyph: WordArtGlyph): number {
   return JSON.stringify(glyph).length;
 }
@@ -81,7 +100,11 @@ export function svgBody(svg: string): string {
   return body;
 }
 
-/** The sprite id of a key's colour or silhouette (`mono`) drawing. */
+/**
+ * The sprite id of a key's colour (`wa_c_`) or silhouette (`wa_m_`) drawing.
+ * The mode is a prefix with an underscore, which the key pattern cannot
+ * contain, so no key's colour id can equal another key's silhouette id.
+ */
 export function symbolId(key: string, mono: boolean): string {
-  return mono ? `wa-${key}-mono` : `wa-${key}`;
+  return `${mono ? 'wa_m_' : 'wa_c_'}${key}`;
 }

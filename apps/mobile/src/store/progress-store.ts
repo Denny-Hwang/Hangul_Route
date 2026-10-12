@@ -10,6 +10,7 @@ import type { DerivedAward } from '../logic/awards/types';
 import { recordBestQuest } from '../logic/quest-progress';
 import { mergePlacements, mergeSnapshots, withSnapshotDefaults } from '../logic/sync/merge';
 import { notifyProgressPersisted } from '../logic/sync/persist-hook';
+import { applyVocabEvents, emptyVocab, vocabOf, type VocabEvent } from '../logic/vocab/progress';
 import { readJson, writeJson } from '../platform/storage';
 import { track } from '../platform/telemetry';
 import { onProfileRemoved } from './profile-removal';
@@ -67,6 +68,21 @@ interface State {
    * the catch-up card's number is the cards found, never what is left (D3).
    */
   catchUpFound: Record<string, string[]>;
+  /**
+   * Word progress events recorded before the profile's saved snapshot was read
+   * (F-VOC-005 section 3.2), in order, each batch with its clock. `hydrate`
+   * replays them onto the saved slice: merging a slice built on a blank one
+   * would let a fresh `introduced` stamp win over a saved schedule.
+   * Memory only; cleared by `hydrate` and by any wholesale replacement.
+   */
+  pendingVocabEvents: Record<string, PendingVocab[]>;
+}
+
+/** One `recordVocab` call waiting for the saved snapshot. */
+export interface PendingVocab {
+  events: readonly VocabEvent[];
+  /** The clock of the call, ISO. */
+  at: string;
 }
 
 type CatchUpState = Pick<State, 'catchUp' | 'catchUpFound'>;
@@ -145,12 +161,28 @@ interface Actions {
    */
   recordPlacement: (profileId: string, result: PlacementResult) => boolean;
   /**
+   * A grown-up's "Choose a different start" on the report (F-PLC-001 section
+   * 3.9): sets `override` on that stored result (a later one replaces it) and
+   * nothing else. `effectiveRoute` then skips every grid quest before the
+   * chosen one and puts it and everything after it back. Returns whether a
+   * result was changed.
+   */
+  applyPlacementOverride: (profileId: string, resultId: string, startQuestId: string) => boolean;
+  /**
    * Sync / restore hand back a merged snapshot. It is latched and reconciled
    * first and saved with one write; that write does not notify sync unless the
    * stage latch added a key or the reconcile added cards, which sync must then
    * upload (the next pass adds nothing, so it converges).
    */
   replaceSnapshot: (profileId: string, snapshot: ProgressSnapshot) => void;
+  /**
+   * Fold word progress events into the profile's `vocab` slice (F-VOC-005
+   * section 3.2) and save it; writes nothing when every event is ignored.
+   * Before the saved snapshot is read the events are also queued, and
+   * `hydrate` replays them onto the saved slice. No screen calls it until the
+   * Worker that keeps the slice is deployed (section 3.3).
+   */
+  recordVocab: (profileId: string, events: readonly VocabEvent[], now?: Date) => void;
 }
 
 function blankSnapshot(profileId: string): ProgressSnapshot {
@@ -198,6 +230,29 @@ function completeAssignments(homework: ProgressSnapshot['homework'], questId: st
 function replayUnsaved(merged: ProgressSnapshot, unsaved: ProgressSnapshot): ProgressSnapshot {
   const homework = unsaved.quests.reduce((hw, q) => (q.completedAt ? completeAssignments(hw, q.questId, q.completedAt) : hw), merged.homework);
   return { ...merged, homework };
+}
+
+/**
+ * The merged snapshot with the queued word events replayed onto its slice.
+ * The pending write's own slice was left out of the merge (it was built on a
+ * blank one), so each event lands on the saved state exactly once.
+ */
+function replayVocab(merged: ProgressSnapshot, queued: readonly PendingVocab[]): ProgressSnapshot {
+  const start = vocabOf(merged);
+  const vocab = queued.reduce((v, batch) => applyVocabEvents(v, batch.events, new Date(batch.at)), start);
+  return vocab === start && merged.vocab === undefined ? merged : { ...merged, vocab };
+}
+
+/** `snap` without its `vocab` key. */
+function withoutVocab(snap: ProgressSnapshot): ProgressSnapshot {
+  const { vocab: _dropped, ...rest } = snap;
+  return rest;
+}
+
+function withoutKey<T>(record: Record<string, T>, id: string): Record<string, T> {
+  if (!(id in record)) return record;
+  const { [id]: _dropped, ...others } = record;
+  return others;
 }
 
 /** One storage read per profile at a time: callers that overlap share it. */
@@ -261,12 +316,6 @@ function announceCatchUp(profileId: string, added: readonly DerivedAward[]): voi
   if (payload) void track({ name: 'card.catchup_granted', profileId, payload });
 }
 
-function withoutKey(record: Record<string, string[]>, profileId: string): Record<string, string[]> {
-  if (!(profileId in record)) return record;
-  const { [profileId]: _dropped, ...others } = record;
-  return others;
-}
-
 /** The profile's catch-up list and its found list go together. */
 function withoutCatchUp(s: CatchUpState, profileId: string): CatchUpState {
   return { catchUp: withoutKey(s.catchUp, profileId), catchUpFound: withoutKey(s.catchUpFound, profileId) };
@@ -283,6 +332,7 @@ function settle(profileId: string, snapshot: ProgressSnapshot): void {
     byProfile: { ...s.byProfile, [profileId]: snapshot },
     hydratedFor: new Set([...s.hydratedFor, profileId]),
     pendingFor: without(s.pendingFor, profileId),
+    pendingVocabEvents: withoutKey(s.pendingVocabEvents, profileId),
   }));
 }
 
@@ -292,6 +342,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
   pendingFor: new Set(),
   catchUp: {},
   catchUpFound: {},
+  pendingVocabEvents: {},
 
   hydrate: (profileId) => {
     if (get().hydratedFor.has(profileId)) return Promise.resolve();
@@ -301,11 +352,14 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
       const loaded = await readJson<ProgressSnapshot>(key(profileId));
       // A restore or a reset landed first; this read is stale.
       if (get().hydratedFor.has(profileId)) return;
-      const { byProfile, pendingFor } = get();
+      const { byProfile, pendingFor, pendingVocabEvents } = get();
       const unsaved = pendingFor.has(profileId) ? byProfile[profileId] : undefined;
+      const queued = pendingVocabEvents[profileId];
       const found =
         unsaved && loaded
-          ? replayUnsaved(mergeSnapshots(unsaved, loaded, { now: new Date() }), unsaved)
+          ? queued
+            ? replayVocab(replayUnsaved(mergeSnapshots(withoutVocab(unsaved), loaded, { now: new Date() }), unsaved), queued)
+            : replayUnsaved(mergeSnapshots(unsaved, loaded, { now: new Date() }), unsaved)
           : (unsaved ?? loaded ?? byProfile[profileId]);
       const latched = found ? withLatches(found, new Date()) : found;
       // Reconcile after the merge with the saved copy, never before (F-STORY-006 §3.5).
@@ -314,6 +368,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
         byProfile: snap ? { ...s.byProfile, [profileId]: snap } : s.byProfile,
         hydratedFor: new Set([...s.hydratedFor, profileId]),
         pendingFor: without(s.pendingFor, profileId),
+        pendingVocabEvents: withoutKey(s.pendingVocabEvents, profileId),
         ...catchUpAfter(s, profileId, added),
       }));
       announceCatchUp(profileId, added);
@@ -492,8 +547,27 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     return true;
   },
 
+  applyPlacementOverride: (profileId, resultId, startQuestId) => {
+    const snap = get().byProfile[profileId];
+    const placements = snap?.placements ?? [];
+    if (snap === undefined || startQuestId === '' || !placements.some((r) => r.id === resultId)) return false;
+    const at = new Date().toISOString();
+    const updated: ProgressSnapshot = {
+      ...snap,
+      placements: placements.map((r) => (r.id === resultId ? { ...r, override: { by: 'parent', at, startQuestId } } : r)),
+      updatedAt: at,
+    };
+    set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
+    persist(profileId, updated);
+    return true;
+  },
+
   reset: (profileId) => {
-    const fresh = blankSnapshot(profileId);
+    // A profile that ever held word progress gets the empty slice, not an
+    // absent key: the Worker keeps a stored slice when the key is absent
+    // (F-VOC-005 section 3.10), which would bring the old words back.
+    const heldVocab = get().byProfile[profileId]?.vocab !== undefined || profileId in get().pendingVocabEvents;
+    const fresh = heldVocab ? { ...blankSnapshot(profileId), vocab: emptyVocab() } : blankSnapshot(profileId);
     settle(profileId, fresh);
     set((s) => withoutCatchUp(s, profileId));
     save(profileId, fresh);
@@ -511,6 +585,23 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     announceCatchUp(profileId, added);
     void writeJson(key(profileId), snap);
     if (snap !== snapshot) notifyProgressPersisted(profileId);
+  },
+
+  recordVocab: (profileId, events, now = new Date()) => {
+    const clock = Number.isFinite(now.getTime()) ? now : new Date();
+    const snap = get().byProfile[profileId] ?? blankSnapshot(profileId);
+    const current = vocabOf(snap);
+    const vocab = applyVocabEvents(current, events, clock);
+    if (vocab === current) return;
+    const updated: ProgressSnapshot = { ...snap, vocab, updatedAt: clock.toISOString() };
+    const hydrated = get().hydratedFor.has(profileId);
+    set((s) => ({
+      byProfile: { ...s.byProfile, [profileId]: updated },
+      pendingVocabEvents: hydrated
+        ? s.pendingVocabEvents
+        : { ...s.pendingVocabEvents, [profileId]: [...(s.pendingVocabEvents[profileId] ?? []), { events, at: clock.toISOString() }] },
+    }));
+    persist(profileId, updated);
   },
 }));
 

@@ -29,6 +29,8 @@ F-SYNC-001 shipped the server object and the pure merge/summary/engine. This spe
 - Only when `flags.syncEnabled` and an API base URL is configured (the placeholder endpoint sends nothing — same rule as telemetry).
 - Triggers: app start (after hydration), every progress write (debounced **30 s** per learner), back-online.
 - The engine's result is applied: a merged snapshot replaces the local one (never a subset of it), and the stored `rev` advances. `retry-later` and errors leave local data untouched and try again on the next trigger.
+- A progress write that lands while a sync request is in flight is kept: the server answer is rebased onto the current snapshot (`rebaseSnapshot`, F-SYNC-001 §3.3: each quest attempt counted once, a quest finished during the request keeps its new `completedAt`), reconciled with the cached plans (F-PLAN-002 §3.6), and another sync is requested. If the learner was removed during the request, the answer is dropped.
+- One sync per learner at a time: a run started while one is in flight joins it, and one more run follows when it settles; `syncAll` waits for a learner the pending-write flush already started instead of syncing it twice. A restore (`adoptServerLearner`) waits for a running sync of that learner before it reads local progress.
 - Sync never blocks a quest, never shows a spinner on a child surface, and never throws.
 
 ### 3.3 Settings: "Progress backup" card (`profile/settings`)

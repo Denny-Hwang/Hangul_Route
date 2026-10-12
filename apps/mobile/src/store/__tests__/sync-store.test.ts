@@ -198,6 +198,123 @@ describe('sync-store (F-SYNC-002)', () => {
     });
   });
 
+  describe('one sync at a time per learner', () => {
+    beforeEach(() => {
+      mem.set('sync:profile:a', { secret: 'sec', rev: 3, lastSyncedAt: null });
+    });
+
+    it('a syncNow made while one is in flight joins it, and one more run follows when it settles', async () => {
+      let release: () => void = () => undefined;
+      const gate = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      const putSnapshot = vi.fn()
+        .mockImplementationOnce(async () => {
+          await gate;
+          return { status: 'ok', rev: 4 };
+        })
+        .mockResolvedValue({ status: 'ok', rev: 5 });
+      setSyncApiForTests(fakeApi({ putSnapshot }) as never);
+      const first = useSyncStore.getState().syncNow('profile:a');
+      await vi.waitFor(() => expect(putSnapshot).toHaveBeenCalledTimes(1));
+      const second = useSyncStore.getState().syncNow('profile:a');
+      const third = useSyncStore.getState().syncNow('profile:a');
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      const callsWhileInFlight = putSnapshot.mock.calls.length;
+      release();
+      expect(callsWhileInFlight).toBe(1);
+      const [a, b, c] = await Promise.all([first, second, third]);
+      expect(b).toBe(a);
+      expect(c).toBe(a);
+      expect(a).toMatchObject({ status: 'synced', rev: 4 });
+      // The two joined calls ask for one more run, not two; it goes up at the new rev.
+      await vi.waitFor(() => expect(useSyncStore.getState().byLearner['profile:a']?.rev).toBe(5));
+      expect(putSnapshot).toHaveBeenCalledTimes(2);
+      expect(putSnapshot.mock.calls[1]?.[1]).toMatchObject({ baseRev: 4 });
+    });
+
+    it('syncAll does not start a second sync for a learner the pending-write flush just started, so attempts are not doubled', async () => {
+      let server: { rev: number; snapshot: ProgressSnapshot } = { rev: 3, snapshot: snap(['q1']) };
+      const putSnapshot = vi.fn(async (_id: string, body: { baseRev: number; snapshot: ProgressSnapshot }) => {
+        await Promise.resolve();
+        if (body.baseRev !== server.rev) return { status: 'conflict', rev: server.rev, snapshot: server.snapshot };
+        server = { rev: server.rev + 1, snapshot: body.snapshot };
+        return { status: 'ok', rev: server.rev };
+      });
+      setSyncApiForTests(fakeApi({ putSnapshot }) as never);
+      useSyncStore.getState().requestSync('profile:a');
+      await useSyncStore.getState().syncAll();
+      expect(putSnapshot).toHaveBeenCalledTimes(1);
+      expect(server.snapshot.quests.find((q) => q.questId === 'q1')?.attempts).toBe(1);
+      expect(useProgressStore.getState().byProfile['profile:a']?.quests.find((q) => q.questId === 'q1')?.attempts).toBe(1);
+    });
+
+    it('a restore for a learner with a sync in flight waits for it, so the fold never reads the restore as a local write', async () => {
+      let release: () => void = () => undefined;
+      const gate = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      const putSnapshot = vi.fn().mockImplementationOnce(async () => {
+        await gate;
+        return { status: 'ok', rev: 4 };
+      });
+      setSyncApiForTests(fakeApi({ putSnapshot }) as never);
+      const requestSync = vi.spyOn(useSyncStore.getState(), 'requestSync').mockImplementation(() => undefined);
+      try {
+        const sync = useSyncStore.getState().syncNow('profile:a');
+        await vi.waitFor(() => expect(putSnapshot).toHaveBeenCalledTimes(1));
+        let restored = false;
+        const restore = useSyncStore
+          .getState()
+          .adoptServerLearner({ learner: { id: 'profile:a', displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange' }, secret: 'sec', snapshot: { rev: 9, snapshot: snap(['q2']) } })
+          .then(() => {
+            restored = true;
+          });
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        expect(restored).toBe(false);
+        release();
+        await Promise.all([sync, restore]);
+        expect(useSyncStore.getState().byLearner['profile:a']?.rev).toBe(9);
+        expect(useProgressStore.getState().byProfile['profile:a']?.quests.map((q) => q.questId)).toEqual(['q1', 'q2']);
+      } finally {
+        // Never leave a request hanging: a stuck run would make every later test join it.
+        release();
+        requestSync.mockRestore();
+      }
+    });
+  });
+
+  describe('a learner removed while the request is in flight', () => {
+    beforeEach(() => {
+      mem.set('sync:profile:a', { secret: 'sec', rev: 3, lastSyncedAt: null });
+    });
+
+    it('the server answer is dropped: the removed learner\'s progress is not written back', async () => {
+      const putSnapshot = vi.fn()
+        .mockImplementationOnce(async () => {
+          useProfileStore.setState({ profiles: [], activeId: null });
+          return { status: 'conflict', rev: 7, snapshot: snap(['q2']) };
+        })
+        .mockResolvedValueOnce({ status: 'ok', rev: 8 });
+      setSyncApiForTests(fakeApi({ putSnapshot }) as never);
+      await useSyncStore.getState().syncNow('profile:a');
+      expect(useProgressStore.getState().byProfile['profile:a']?.quests.map((q) => q.questId)).toEqual(['q1']);
+      expect(mem.has('progress:profile:a')).toBe(false);
+    });
+
+    it('a snapshot gone from memory while the profile still exists takes the server answer', async () => {
+      const putSnapshot = vi.fn()
+        .mockImplementationOnce(async () => {
+          useProgressStore.setState({ byProfile: {} });
+          return { status: 'conflict', rev: 7, snapshot: snap(['q2']) };
+        })
+        .mockResolvedValueOnce({ status: 'ok', rev: 8 });
+      setSyncApiForTests(fakeApi({ putSnapshot }) as never);
+      await useSyncStore.getState().syncNow('profile:a');
+      expect(useProgressStore.getState().byProfile['profile:a']?.quests.map((q) => q.questId)).toEqual(['q1', 'q2']);
+    });
+  });
+
   it('drops a pending plan item the cached plans no longer hold when a conflict merge brings it back (F-PLAN-002 section 3.6)', async () => {
     mem.set('sync:profile:a', { secret: 'sec', rev: 3, lastSyncedAt: null });
     usePlanStore.setState({ byLearner: { 'profile:a': [] }, notReady: {} });
