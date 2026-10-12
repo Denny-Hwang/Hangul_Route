@@ -1,4 +1,5 @@
 import type { HeritageCard, Rarity, StageKey, ThemeKey } from '@hangul-route/content-schema';
+import { storyCards } from './story-cards';
 
 const make = (
   id: string,
@@ -89,7 +90,8 @@ export const stage4Cards: HeritageCard[] = [
   make('insa', 'Greeting', '인사', 'insa', 'A bow or a hello — a greeting.', 'A small bow is a polite Korean greeting.', 'rites', 'stage4', 'rare', 'episode:stage4-rites'),
 ];
 
-export const heritageCardsAll: HeritageCard[] = [...stage1Cards, ...stage2Cards, ...stage4Cards];
+/** The hand-written cards, then the heritage story cards and their collection cards (F-STORY-006 §3.8). */
+export const heritageCardsAll: HeritageCard[] = [...stage1Cards, ...stage2Cards, ...stage4Cards, ...storyCards];
 
 export function cardById(id: string): HeritageCard | undefined {
   return heritageCardsAll.find((c) => c.id === id);

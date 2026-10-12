@@ -2,17 +2,18 @@ import type { AwardWorld } from '../logic/awards/types';
 import { episodesAll } from './episodes';
 import { heritageCardsAll } from './heritage-cards';
 import { questsAll } from './quests';
+import { storySets } from './story-cards';
 
 /**
  * The shipped bundle as the award engine reads it (F-STORY-006 §3.2): every
- * card, every grid and shelf episode, every quest. Card sets join with the
- * story cards (PR 6.7, `content/story-sets.ts`); until then there are none.
+ * card, every grid and shelf episode, every quest, and the collections of
+ * story cards whose member stories are all bundled (`content/story-cards.ts`).
  */
 export const awardWorld: AwardWorld = {
   cards: heritageCardsAll,
   episodes: episodesAll,
   quests: questsAll,
-  sets: [],
+  sets: storySets,
 };
 
 /**
