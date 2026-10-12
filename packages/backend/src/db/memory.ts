@@ -215,23 +215,30 @@ export class MemoryDb implements Db {
     return 'created';
   }
 
-  async consentSlot(transferId: string, consent: TransferSlotConsent, now: Date): Promise<number> {
+  async consentSlot(transferId: string, consent: TransferSlotConsent, now: Date, events: ReadonlyArray<Omit<NewTransferEvent, 'transferId'>> = []): Promise<number> {
     const at = now.toISOString();
+    // The events are checked first (the CHECK of migration 0005), so a bad one changes nothing; they are
+    // written only by the call whose CAS changed the row (one transaction on D1).
+    for (const e of events) assertTransferEventChecks(e);
+    let changed: number;
     if (consent.kind === 'learner') {
       const executeAfter = new Date(now.getTime() + TRANSFER_COOLING_OFF_MS).toISOString();
-      return this.casTransfer(
+      changed = this.casTransfer(
         transferId,
         (t) => isOpenTransfer(t) && t.learner.state === 'pending',
         (t) => ({ ...t, learner: consentedLearnerSlot(consent.record, at), introduce: consent.introduce ?? t.introduce, executeAfter, updatedAt: at }),
       );
+    } else {
+      const slots = teacherSlotsOf(consent);
+      const filled = { state: 'consented' as const, at, accountId: consent.accountId, via: consent.via };
+      changed = this.casTransfer(
+        transferId,
+        (t) => isOpenTransfer(t) && (!slots.source || t.source.state === 'pending') && (!slots.destination || (t.destination.state === 'pending' && t.learner.state === 'consented')),
+        (t) => ({ ...t, source: slots.source ? { ...filled } : t.source, destination: slots.destination ? { ...filled } : t.destination, updatedAt: at }),
+      );
     }
-    const slots = teacherSlotsOf(consent);
-    const filled = { state: 'consented' as const, at, accountId: consent.accountId, via: consent.via };
-    return this.casTransfer(
-      transferId,
-      (t) => isOpenTransfer(t) && (!slots.source || t.source.state === 'pending') && (!slots.destination || (t.destination.state === 'pending' && t.learner.state === 'consented')),
-      (t) => ({ ...t, source: slots.source ? { ...filled } : t.source, destination: slots.destination ? { ...filled } : t.destination, updatedAt: at }),
-    );
+    if (changed === 1) for (const e of events) this.pushTransferEvent({ ...e, transferId });
+    return changed;
   }
 
   async declineSlot(transferId: string, slot: TransferSlot, endReason: TransferEndReason, endActor: TransferEndActor, now: Date, event?: Omit<NewTransferEvent, 'transferId'>): Promise<number> {

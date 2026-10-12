@@ -105,8 +105,12 @@ export interface Db {
    * its own request before treating the answer as a conflict.
    */
   createTransfer(row: StoredTransfer, event: Omit<NewTransferEvent, 'transferId'>): Promise<'created' | 'already_open'>;
-  /** Fill pending slot(s) of an open request. The destination slot needs the learner slot consented; a learner consent sets `executeAfter` = now + 48 h. */
-  consentSlot(id: string, consent: TransferSlotConsent, now: Date): Promise<number>;
+  /**
+   * Fill pending slot(s) of an open request. The destination slot needs the learner slot consented; a learner consent sets `executeAfter` = now + 48 h.
+   * With `events` (the consenting account and its `via` / basis, one per slot), the audit rows are written in the same transaction, only by the call
+   * whose CAS filled the slot(s): a lost race writes no event, and an event that cannot be written undoes the consent.
+   */
+  consentSlot(id: string, consent: TransferSlotConsent, now: Date, events?: ReadonlyArray<Omit<NewTransferEvent, 'transferId'>>): Promise<number>;
   /**
    * End an open request as `declined` by one slot. With `event` (the deciding account and its `via` / reason,
    * which the row does not store), the audit row is written in the same transaction, only by the call whose

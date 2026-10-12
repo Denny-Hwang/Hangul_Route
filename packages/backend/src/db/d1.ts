@@ -465,31 +465,52 @@ export class D1Db implements Db {
     return inserted === 1 ? 'created' : 'already_open';
   }
 
-  async consentSlot(transferId: string, consent: TransferSlotConsent, now: Date): Promise<number> {
+  async consentSlot(transferId: string, consent: TransferSlotConsent, now: Date, events: ReadonlyArray<Omit<NewTransferEvent, 'transferId'>> = []): Promise<number> {
     const at = now.toISOString();
-    if (consent.kind === 'learner') {
-      const record = consentedLearnerSlot(consent.record, at);
-      const introduce = consent.introduce === undefined ? null : consent.introduce ? 1 : 0;
-      return this.changes(
-        `UPDATE transfer_requests SET l_state = 'consented', ${LEARNER_RECORD_COLUMNS.map((c) => `${c} = ?`).join(', ')}, introduce = COALESCE(?, introduce), execute_after = ?, updated_at = ?, rev = rev + 1 WHERE id = ? AND ${OPEN} AND l_state = 'pending'`,
-        [...learnerRecordValues(record), introduce, new Date(now.getTime() + TRANSFER_COOLING_OFF_MS).toISOString(), at, transferId],
-      );
-    }
-    const slots = teacherSlotsOf(consent);
     const sets: string[] = [];
     const params: unknown[] = [];
     const where: string[] = [];
-    if (slots.source) {
-      sets.push("s_state = 'consented', s_at = ?, s_account_id = ?, s_via = ?");
-      params.push(at, consent.accountId, consent.via);
-      where.push("s_state = 'pending'");
+    if (consent.kind === 'learner') {
+      const record = consentedLearnerSlot(consent.record, at);
+      sets.push(`l_state = 'consented', ${LEARNER_RECORD_COLUMNS.map((c) => `${c} = ?`).join(', ')}, introduce = COALESCE(?, introduce), execute_after = ?`);
+      params.push(...learnerRecordValues(record), consent.introduce === undefined ? null : consent.introduce ? 1 : 0, new Date(now.getTime() + TRANSFER_COOLING_OFF_MS).toISOString());
+      where.push("l_state = 'pending'");
+    } else {
+      const slots = teacherSlotsOf(consent);
+      if (slots.source) {
+        sets.push("s_state = 'consented', s_at = ?, s_account_id = ?, s_via = ?");
+        params.push(at, consent.accountId, consent.via);
+        where.push("s_state = 'pending'");
+      }
+      if (slots.destination) {
+        sets.push("d_state = 'consented', d_at = ?, d_account_id = ?, d_via = ?");
+        params.push(at, consent.accountId, consent.via);
+        where.push("d_state = 'pending'", "l_state = 'consented'");
+      }
     }
-    if (slots.destination) {
-      sets.push("d_state = 'consented', d_at = ?, d_account_id = ?, d_via = ?");
-      params.push(at, consent.accountId, consent.via);
-      where.push("d_state = 'pending'", "l_state = 'consented'");
+    const update = (extraSet: string, extraParams: unknown[]): [string, unknown[]] => [
+      `UPDATE transfer_requests SET ${sets.join(', ')}${extraSet}, updated_at = ?, rev = rev + 1 WHERE id = ? AND ${OPEN} AND ${where.join(' AND ')}`,
+      [...params, ...extraParams, at, transferId],
+    ];
+    if (events.length === 0) {
+      const [sql, values] = update('', []);
+      return this.changes(sql, values);
     }
-    return this.changes(`UPDATE transfer_requests SET ${sets.join(', ')}, updated_at = ?, rev = rev + 1 WHERE id = ? AND ${OPEN} AND ${where.join(' AND ')}`, [...params, at, transferId]);
+    // The consent and its audit rows in one transaction, written only by the call whose CAS changed the row:
+    // the UPDATE marks it with a one-off token in `block_reason`, each event is guarded by the token, and the
+    // last statement clears it (the pattern of resetLearnerConsent). A slot can be filled only while the
+    // request is `requested` (an `approved` row has every slot in), and a `requested` row never carries a
+    // block reason (`blockTransfer` needs `approved`, a reset clears it), so the token overwrites nothing.
+    const token = `consenting:${crypto.randomUUID()}`;
+    const [changed] = await this.batchChanges([
+      update(', block_reason = ?', [token]),
+      ...events.map((e): [string, unknown[]] => [
+        'INSERT INTO transfer_events (transfer_id, at, actor_kind, actor_ref, event, slot, detail_json) SELECT ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM transfer_requests WHERE id = ? AND block_reason = ?)',
+        [transferId, e.at, e.actorKind, e.actorRef, e.event, e.slot, e.detail === null ? null : JSON.stringify(e.detail), transferId, token],
+      ]),
+      ['UPDATE transfer_requests SET block_reason = NULL WHERE id = ? AND block_reason = ?', [transferId, token]],
+    ]);
+    return changed ?? 0;
   }
 
   async declineSlot(transferId: string, slot: TransferSlot, endReason: TransferEndReason, endActor: TransferEndActor, now: Date, event?: Omit<NewTransferEvent, 'transferId'>): Promise<number> {
