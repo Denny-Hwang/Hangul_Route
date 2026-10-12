@@ -58,7 +58,7 @@ D1 `hangul-route` 는 2026-10-07 에 대시보드에서 만들었고 (Database I
 **확인**: `https://hangul-route-web.<계정>.workers.dev` 에서 랜딩이 뜨고, `/teach` 에서 dev 로그인 화면이 뜬다.
 
 ### Step 5. 앱과 API 연결 (10분)
-`hangul-route-app` → Settings → Build → Variables and Secrets → `EXPO_PUBLIC_API_BASE_URL` = Step 3 의 API 주소 → **Retry deployment**. (선택) `EXPO_PUBLIC_CONSOLE_URL` = 콘솔 주소 — 기본값은 hangulroute.com 이라 도메인 연결 전에는 workers.dev 주소를 넣으면 페이월 버튼이 바로 열린다.
+`hangul-route-app` → Settings → Build → Variables and Secrets → `EXPO_PUBLIC_API_BASE_URL` = Step 3 의 API 주소 → **Retry deployment**. (선택) `EXPO_PUBLIC_CONSOLE_URL` = 콘솔 주소 — 기본값은 hangulroute.com 이라 도메인 연결 전에는 workers.dev 주소를 넣으면 페이월 버튼이 바로 열린다. 이 값은 반드시 `https://` 주소여야 한다: F-BILL-002 B-9 이후 Plan 화면의 Open billing 은 https 만 연다 (`http://localhost:3000` 같은 주소는 열지 않고 "브라우저에서 여세요" 줄에 주소만 보여 준다).
 **확인 1**: 앱에서 프로필 생성 → 설정 → Backup 카드 → Save my progress 에 Rescue Code (단어 4개 + 숫자 6자리, 예: `TIGER-MOON-RIVER-APPLE-482139`) 가 생긴다.
 **확인 2**: 콘솔 `/teach` → 교사로 로그인 → 학급 생성 → 6자리 코드 → 앱 설정 *Classes & family* 에 입력 → 콘솔 roster 에 학생이 보인다.
 - 참고 (audit SEC-2, 2026-10-09): 배포된 API 는 fail closed 라서, `CLERK_SECRET_KEY` 가 등록되기 전(Step 7)에는 콘솔 dev 로그인 뒤의 API 호출이 503 `auth_not_configured` 로 막힌다. 새로 배포하는 경우 확인 2 는 Step 7 뒤에 한다 (확인 1 의 학습자 기기 경로는 D1 만 있으면 된다).
