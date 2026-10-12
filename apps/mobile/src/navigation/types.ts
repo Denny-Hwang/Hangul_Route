@@ -109,6 +109,8 @@ export type OnboardingStackParamList = {
   Welcome: undefined;
   CreateProfile: { firstRun: boolean };
   FirstQuestPreview: { profileId: string };
+  /** The level check's fork (F-PLC-001 section 3.1 step 1), between CreateProfile and FirstQuestPreview. */
+  PlacementInvite: { profileId: string };
 };
 
 export type MainTabParamList = {

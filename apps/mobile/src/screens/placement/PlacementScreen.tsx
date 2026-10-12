@@ -75,7 +75,8 @@ import {
  * starts and saves the run (`placement-run-store`), records the finished
  * result (`recordPlacement`, never a completion) and sends the telemetry; the
  * screens render what it gives them. Back is the exit sheet while a run is
- * open. Entry points arrive with P-7; `flags.placementEnabled` hides them.
+ * open. Entry points (P-7): the onboarding fork (`PlacementInvite`), the Home
+ * card and the Profile row; `flags.placementEnabled` hides them.
  */
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Placement'>;
