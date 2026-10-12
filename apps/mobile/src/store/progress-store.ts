@@ -7,7 +7,7 @@ import { applyAwards } from '../logic/awards/apply';
 import { catchUpGrantedPayload } from '../logic/awards/catch-up';
 import { missingAwards } from '../logic/awards/derive';
 import type { DerivedAward } from '../logic/awards/types';
-import { recordBestQuest } from '../logic/quest-progress';
+import { latchQuests, recordBestQuest } from '../logic/quest-progress';
 import { mergePlacements, mergeSnapshots, withSnapshotDefaults } from '../logic/sync/merge';
 import { notifyProgressPersisted } from '../logic/sync/persist-hook';
 import { applyVocabEvents, emptyVocab, vocabOf, type VocabEvent } from '../logic/vocab/progress';
@@ -196,6 +196,8 @@ function blankSnapshot(profileId: string): ProgressSnapshot {
     homework: [],
     reviews: [],
     streakDays: 0,
+    // The quest latch key is always written (F-REPORT-001 section 3.3.1), a reset included.
+    questDoneAt: {},
   };
 }
 
@@ -205,15 +207,17 @@ function save(profileId: string, snap: ProgressSnapshot): void {
 }
 
 /**
- * The stage latch writer (F-ROUTE-001 R-1b): adds `stageDoneAt` keys for
- * stages that are complete now, on the hydrated snapshot only, never on a
- * blank one. Runs after each quest result, on hydrate (app start) and when
- * sync or restore hands back a snapshot, with `flags.myRouteEnabled` off too,
+ * The latch writers, on the hydrated snapshot only, never on a blank one. They
+ * run after each quest result, on hydrate (app start) and when sync or restore
+ * hands back a snapshot. The stage latch (F-ROUTE-001 R-1b) adds `stageDoneAt`
+ * keys for stages that are complete now, with `flags.myRouteEnabled` off too,
  * so a learner who finishes Stage 1 is latched before any build adds Stage 1
- * quests. Best effort: it never throws (`latchSnapshot`).
+ * quests. The quest latch (F-REPORT-001 section 3.3.1) dates each quest's
+ * first finish in `questDoneAt`; on hydrate it is the one-time backfill from
+ * `completedAt`. Best effort: neither throws (`latchSnapshot`, `latchQuests`).
  */
 function withLatches(snap: ProgressSnapshot, now: Date): ProgressSnapshot {
-  return latchSnapshot(snap, episodesAll, now);
+  return latchSnapshot(latchQuests(snap), episodesAll, now);
 }
 
 /** Any open assignment for the quest is done (F-HW-001 §3.4, F-PLAN-001 §3.3). */
@@ -403,7 +407,13 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
   },
 
   recordQuestComplete: (profileId, input) => {
-    const snap = get().byProfile[profileId] ?? blankSnapshot(profileId);
+    const hydrated = get().hydratedFor.has(profileId);
+    const held = get().byProfile[profileId] ?? blankSnapshot(profileId);
+    // A finish held without a latch is dated before this run moves its
+    // completedAt (F-REPORT-001 section 3.3.1): a replay never moves the first
+    // finish. Before the saved copy loads, `hydrate` latches the merged copy,
+    // whose completedAt is the saved (earliest) finish.
+    const snap = hydrated ? latchQuests(held) : held;
     const now = new Date().toISOString();
     const updatedQuest = recordBestQuest(
       snap.quests.find((q) => q.questId === input.questId),
@@ -414,7 +424,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     const homework = completeAssignments(snap.homework, input.questId, now);
     const result: ProgressSnapshot = { ...snap, quests, homework, updatedAt: now };
     // Before the saved copy loads, `hydrate` latches the merged snapshot instead.
-    const updated = get().hydratedFor.has(profileId) ? withLatches(result, new Date(now)) : result;
+    const updated = hydrated ? withLatches(result, new Date(now)) : result;
     set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
     persist(profileId, updated);
   },

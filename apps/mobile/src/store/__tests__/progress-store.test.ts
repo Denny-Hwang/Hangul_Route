@@ -1,4 +1,4 @@
-import { VocabProgressSchema, type ProgressSnapshot, type VocabItemState } from '@hangul-route/content-schema';
+import { ProgressSnapshotSchema, VocabProgressSchema, type ProgressSnapshot, type VocabItemState } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mem = vi.hoisted(() => new Map<string, unknown>());
@@ -156,7 +156,7 @@ describe('quest completion marks assignments (F-HW-001 §3.4, F-PLAN-001 §3.3)'
   });
 });
 
-/** What a learner earned in an earlier visit, as it sits in storage. */
+/** What a learner earned in an earlier visit, as it sits in storage (written by a build with the quest latch). */
 const savedSnapshot = (profileId = 'p1'): ProgressSnapshot => ({
   profileId,
   updatedAt: '2026-10-01T09:05:00.000Z',
@@ -167,7 +167,14 @@ const savedSnapshot = (profileId = 'p1'): ProgressSnapshot => ({
   homework: [],
   reviews: [],
   streakDays: 1,
+  questDoneAt: { 'quest:a': '2026-10-01T09:05:00.000Z' },
 });
+
+/** The same visit saved by a build from before the quest latch (F-REPORT-001 RP-3a): no `questDoneAt` key. */
+const savedBeforeLatch = (profileId = 'p1'): ProgressSnapshot => {
+  const { questDoneAt: _latch, ...rest } = savedSnapshot(profileId);
+  return rest;
+};
 
 const stored = (profileId = 'p1'): ProgressSnapshot | undefined => mem.get(`progress:${profileId}`) as ProgressSnapshot | undefined;
 
@@ -639,6 +646,8 @@ describe('stage latch writer (F-ROUTE-001 R-1b, runs with flags.myRouteEnabled o
   const savedWith = (done: { questId: string; episodeId: string }[], extra: Partial<ProgressSnapshot> = {}): ProgressSnapshot => ({
     ...savedSnapshot(),
     quests: done.map((q) => ({ ...q, startedAt: '2026-10-01T09:00:00.000Z', completedAt: '2026-10-01T09:05:00.000Z', stars: 1 as const, attempts: 1, accuracy: 1 })),
+    // Saved by a build with the quest latch (F-REPORT-001 RP-3a), so only the stage latch is under test here.
+    questDoneAt: Object.fromEntries(done.map((q) => [q.questId, '2026-10-01T09:05:00.000Z'])),
     ...extra,
   });
 
@@ -727,6 +736,149 @@ describe('stage latch writer (F-ROUTE-001 R-1b, runs with flags.myRouteEnabled o
     await useProgressStore.getState().hydrate('p1');
     finish('p1', taste[0] as (typeof taste)[number]);
     expect(stored()).not.toHaveProperty('stageDoneAt');
+  });
+});
+
+describe('quest latch writer (F-REPORT-001 section 3.3.1, RP-3a, M5)', () => {
+  const notified: string[] = [];
+  const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+  const SAVED_DONE = '2026-10-01T09:05:00.000Z';
+  const finish = (profileId: string, questId: string, stars: 0 | 1 | 2 | 3 = 2) =>
+    useProgressStore.getState().recordQuestComplete(profileId, { questId, episodeId: 'episode:e', stars, accuracy: 0.8, attempts: 1 });
+  /** A new app start: memory is empty, storage is kept. */
+  const restart = () => useProgressStore.setState({ byProfile: {}, hydratedFor: new Set(), pendingFor: new Set(), pendingVocabEvents: {} });
+
+  beforeEach(() => {
+    resetStore();
+    notified.length = 0;
+    setProgressPersistListener((id) => notified.push(id));
+  });
+
+  afterEach(() => {
+    setProgressPersistListener(null);
+  });
+
+  it('writes the first finish in the same save as the quest result', async () => {
+    mem.set('progress:p1', savedSnapshot());
+    await useProgressStore.getState().hydrate('p1');
+    vi.mocked(writeJson).mockClear();
+    finish('p1', 'quest:b');
+    expect(writeJson).toHaveBeenCalledTimes(1);
+    const completedAt = stored()?.quests.find((q) => q.questId === 'quest:b')?.completedAt;
+    expect(completedAt).toMatch(ISO);
+    expect(stored()?.questDoneAt).toEqual({ 'quest:a': SAVED_DONE, 'quest:b': completedAt });
+    expect(useProgressStore.getState().byProfile['p1']).toEqual(stored());
+  });
+
+  it('a replay never moves the first finish (behaviour 3)', async () => {
+    mem.set('progress:p1', savedSnapshot());
+    await useProgressStore.getState().hydrate('p1');
+    finish('p1', 'quest:a', 3);
+    expect(stored()?.quests[0]?.completedAt).not.toBe(SAVED_DONE);
+    expect(stored()?.questDoneAt).toEqual({ 'quest:a': SAVED_DONE });
+  });
+
+  it('backfills once on hydrate from completedAt, saves and tells sync, and leaves updatedAt alone', async () => {
+    mem.set('progress:p1', savedBeforeLatch());
+    await useProgressStore.getState().hydrate('p1');
+    expect(stored()?.questDoneAt).toEqual({ 'quest:a': SAVED_DONE });
+    expect(stored()?.updatedAt).toBe(savedSnapshot().updatedAt);
+    expect(stored()?.cards.map((c) => c.cardId)).toEqual(['card:book']);
+    expect(notified).toEqual(['p1']);
+    // The next app start finds the latch and writes nothing.
+    restart();
+    vi.mocked(writeJson).mockClear();
+    notified.length = 0;
+    await useProgressStore.getState().hydrate('p1');
+    expect(writeJson).not.toHaveBeenCalled();
+    expect(notified).toEqual([]);
+  });
+
+  it('a quest finished before RP-3a and replayed later keeps its backfilled day', async () => {
+    mem.set('progress:p1', savedBeforeLatch());
+    await useProgressStore.getState().hydrate('p1');
+    finish('p1', 'quest:a', 3);
+    expect(stored()?.questDoneAt).toEqual({ 'quest:a': SAVED_DONE });
+  });
+
+  it('a record held in memory without the latch is backfilled before a replay moves completedAt', () => {
+    useProgressStore.setState({ byProfile: { p1: savedBeforeLatch() }, hydratedFor: new Set(['p1']) });
+    finish('p1', 'quest:a', 3);
+    expect(stored()?.questDoneAt).toEqual({ 'quest:a': SAVED_DONE });
+  });
+
+  it('a replay finished before the saved copy loads keeps the saved first finish, not the replay time', async () => {
+    mem.set('progress:p1', savedBeforeLatch());
+    finish('p1', 'quest:a', 3);
+    finish('p1', 'quest:new');
+    await settle();
+    const fresh = stored()?.quests.find((q) => q.questId === 'quest:new')?.completedAt;
+    expect(fresh).toMatch(ISO);
+    expect(stored()?.questDoneAt).toEqual({ 'quest:a': SAVED_DONE, 'quest:new': fresh });
+    expect(notified).toEqual(['p1']);
+  });
+
+  it('every snapshot the build writes carries the key: a new profile, a card-only write, a reset', async () => {
+    useProgressStore.getState().unlockCard('p-new', 'card:book');
+    await settle();
+    expect(stored('p-new')?.questDoneAt).toEqual({});
+    expect(useProgressStore.getState().ensure('p-other').questDoneAt).toEqual({});
+    mem.set('progress:p1', savedSnapshot());
+    await useProgressStore.getState().hydrate('p1');
+    useProgressStore.getState().reset('p1');
+    expect(stored()?.questDoneAt).toEqual({});
+    expect(stored()?.quests).toEqual([]);
+  });
+
+  it('latches a completed quest that arrives by sync or restore (replaceSnapshot) and announces it so it uploads', () => {
+    useProgressStore.getState().replaceSnapshot('p1', savedBeforeLatch());
+    expect(stored()?.questDoneAt).toEqual({ 'quest:a': SAVED_DONE });
+    expect(useProgressStore.getState().byProfile['p1']?.questDoneAt).toEqual({ 'quest:a': SAVED_DONE });
+    expect(notified).toEqual(['p1']);
+  });
+
+  it('a sync that brings an earlier finish of a backfilled quest pulls the entry back and announces it', async () => {
+    // This device replayed quest:a on an older build, so the backfill dates it by the replay.
+    const replayed = '2026-10-09T08:00:00.000Z';
+    mem.set('progress:p1', { ...savedBeforeLatch(), quests: [{ ...savedSnapshot().quests[0]!, completedAt: replayed }] });
+    await useProgressStore.getState().hydrate('p1');
+    expect(stored()?.questDoneAt).toEqual({ 'quest:a': replayed });
+    notified.length = 0;
+    // The merge with the server copy keeps another device's earlier finish as completedAt.
+    const merged = { ...(useProgressStore.getState().byProfile['p1'] as ProgressSnapshot), quests: savedSnapshot().quests };
+    useProgressStore.getState().replaceSnapshot('p1', merged);
+    expect(stored()?.questDoneAt).toEqual({ 'quest:a': SAVED_DONE });
+    expect(notified).toEqual(['p1']);
+  });
+
+  it('replaceSnapshot keeps an incoming latch and does not announce when nothing is added', () => {
+    const latch = { 'quest:a': '2026-09-30T08:00:00.000Z', 'quest:elsewhere': '2026-09-29T08:00:00.000Z' };
+    useProgressStore.getState().replaceSnapshot('p1', { ...savedBeforeLatch(), questDoneAt: latch });
+    expect(stored()?.questDoneAt).toEqual(latch);
+    expect(notified).toEqual([]);
+  });
+
+  it('after a reset, entries the server unions back are kept and a quest finished again keeps its old entry (known approximation, M5)', () => {
+    useProgressStore.getState().reset('p1');
+    const old = { 'quest:a': SAVED_DONE };
+    useProgressStore.getState().replaceSnapshot('p1', { ...(useProgressStore.getState().byProfile['p1'] as ProgressSnapshot), questDoneAt: old });
+    expect(stored()?.quests).toEqual([]);
+    expect(stored()?.questDoneAt).toEqual(old);
+    finish('p1', 'quest:a');
+    expect(stored()?.questDoneAt).toEqual(old);
+  });
+
+  it('a malformed saved snapshot (no quests) still hydrates and writes nothing', async () => {
+    mem.set('progress:p1', { ...savedSnapshot(), quests: undefined });
+    await expect(useProgressStore.getState().hydrate('p1')).resolves.toBeUndefined();
+    expect(writeJson).not.toHaveBeenCalled();
+  });
+
+  it('every written snapshot passes the Worker schema', async () => {
+    mem.set('progress:p1', savedBeforeLatch());
+    await useProgressStore.getState().hydrate('p1');
+    finish('p1', 'quest:b');
+    expect(ProgressSnapshotSchema.safeParse(stored()).success).toBe(true);
   });
 });
 
@@ -1027,11 +1179,12 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
       expect(vi.mocked(track).mock.calls.filter(([e]) => e.name === 'card.catchup_granted')).toEqual([]);
     });
 
-    it('an old saved snapshot keeps its shape: no new key is added', async () => {
+    it('an old saved snapshot keeps its shape: no new key is added but the quest latch (F-REPORT-001 RP-3a backfill)', async () => {
       const legacy = ritesDone(1);
+      expect(legacy).not.toHaveProperty('questDoneAt');
       mem.set('progress:profile:a', legacy);
       await useProgressStore.getState().hydrate('profile:a');
-      expect(Object.keys(storedA() ?? {}).sort()).toEqual(Object.keys(legacy).sort());
+      expect(Object.keys(storedA() ?? {}).sort()).toEqual([...Object.keys(legacy), 'questDoneAt'].sort());
     });
   });
 
