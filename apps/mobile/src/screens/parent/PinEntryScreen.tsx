@@ -163,7 +163,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       // passed the gate, so it stays read-only even for the active profile (amendment section 5.1).
       const { profileId } = route.params;
       if (profileId === undefined) navigation.goBack();
-      else navigation.replace('MyRoute', { source: 'parent', profileId, viewer: 'grownup' });
+      else navigation.replace('MyRoute', { profileId, viewer: 'grownup' });
     } else if (route.params.next === 'PlacementReport') {
       const { profileId } = route.params;
       if (profileId === undefined) navigation.replace('ParentDashboard');

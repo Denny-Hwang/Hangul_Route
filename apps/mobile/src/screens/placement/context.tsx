@@ -25,7 +25,7 @@ export interface FinishedCheck {
   startQuest: { questId: string; episodeId: string } | null;
 }
 
-export type ResultAction = 'start' | 'seeMap' | 'openStories' | 'forGrownUps' | 'tryStandard' | 'retryHidden';
+export type ResultAction = 'start' | 'seeMap' | 'seeMyRoute' | 'openStories' | 'forGrownUps' | 'tryStandard' | 'retryHidden';
 
 export interface PlacementContextValue {
   profileId: string;

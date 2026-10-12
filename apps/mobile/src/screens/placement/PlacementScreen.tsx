@@ -14,6 +14,7 @@ import { CommonActions } from '@react-navigation/native';
 import { createNativeStackNavigator, type NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState } from 'react-native';
+import { flags } from '../../config/flags';
 import { episodesAll, questsAll } from '../../content';
 import { PLACEMENT_BANK, PLACEMENT_WARMUP } from '../../content/placement.generated';
 import { useLocale } from '../../i18n/use-messages';
@@ -328,9 +329,10 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
         catalog,
         completedQuestIds: completed,
         profileType: effectiveLearnerType(profile),
-        // The weekly-plan strip and My route arrive with F-PLAN-002 / F-ROUTE-001 (P-7b).
+        // The weekly-plan strip arrives with F-PLAN-002 (P-7b). "See Learning Route" opens the Route tab, which
+        // exists only while `flags.myRouteEnabled` is on (AMENDMENTS-ROUTE-LEARNING-ROUTE section 5.2, LR-4).
         routeEnabled: false,
-        myRouteEnabled: false,
+        myRouteEnabled: flags.myRouteEnabled,
         proposalAvailable: false,
         planPromptDismissed: false,
         hasActivePlan: false,
@@ -447,6 +449,9 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
           return;
         case 'seeMap':
           resetTo([{ name: 'Main', params: { screen: 'Journey' } }]);
+          return;
+        case 'seeMyRoute':
+          resetTo([{ name: 'Main', params: { screen: 'Route' } }]);
           return;
         case 'openStories':
           resetTo([{ name: 'Main', params: { screen: 'Library' } }]);

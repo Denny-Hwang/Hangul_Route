@@ -1,6 +1,5 @@
 import type { PlacementSource, StoryLevel } from '@hangul-route/content-schema';
 import type { NavigatorScreenParams } from '@react-navigation/native';
-import type { MyRouteSource } from '../logic/my-route/telemetry';
 import type { PinResetMethod } from '../logic/profiles/pin-flow';
 import type { GrownUpVia } from '../logic/shell/handoff-rules';
 import type { LibrarySectionId } from '../logic/story/library-sections';
@@ -35,12 +34,12 @@ export type RootStackParamList = {
   Main: NavigatorScreenParams<MainTabParamList>;
   EpisodeDetail: { episodeId: string };
   /**
-   * My route (F-ROUTE-001 section 3.1): the whole journey at a glance. `profileId` absent = the
-   * active profile. Another profile opens read-only only while the grown-up gate is open; otherwise
-   * the screen replaces itself with `PinEntry`. `source` is the entry, for `route_map.viewed`.
+   * The Learning Route of one learner, for a grown-up (AMENDMENTS-ROUTE-LEARNING-ROUTE section 5.1, LR-4):
+   * the parent dashboard row (R-9b) and the PIN screen it passes through. Both params are required. Always
+   * read-only, also for the active profile, and only while the grown-up gate is open; otherwise the screen
+   * replaces itself with `PinEntry`. A learner's own page is the Route tab (`MainTabParamList.Route`).
    */
-  /** `viewer: 'grownup'`: opened by a grown-up (the parent dashboard row, R-9b), always read-only, also for the active profile (amendment section 5.1). */
-  MyRoute: { source: MyRouteSource; profileId?: string; viewer?: 'grownup' };
+  MyRoute: { profileId: string; viewer: 'grownup' };
   /**
    * `resume`: open a story quest on its `story-read` step when the learner has a
    * bookmark for it at the quest's level (F-STORY-004 §3.8); otherwise step 0.
@@ -160,6 +159,11 @@ export type OnboardingStackParamList = {
 
 export type MainTabParamList = {
   Home: undefined;
+  /**
+   * The learner's Learning Route (AMENDMENTS-ROUTE-LEARNING-ROUTE section 5.1, LR-4): the active profile's
+   * page, second in the bar. Mounted only while `flags.myRouteEnabled` is on (`mainTabs`).
+   */
+  Route: undefined;
   /**
    * `episodeId`: select this episode in the two-pane Journey (back from a quest or from Results,
    * F-LAYOUT-001 §3.7). Read once, then cleared; on one pane it only seeds the remembered selection

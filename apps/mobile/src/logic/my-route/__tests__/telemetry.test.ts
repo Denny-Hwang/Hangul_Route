@@ -26,6 +26,11 @@ describe('route_map.* events (F-ROUTE-001 section 3.16: stage keys, booleans and
     expect(isTelemetryEventName(e?.name)).toBe(true);
   });
 
+  it('viewed from the Route tab (LR-4): source tab, the only entry that sends it', () => {
+    const e = viewedEvent({ profileId: 'p1', model: model([]), source: 'tab', hasPlan: false, readOnly: false });
+    expect(e).toEqual({ name: 'route_map.viewed', profileId: 'p1', payload: { source: 'tab', stage: 'stage1', hasStart: false, hasPlan: false } });
+  });
+
   it('stage_opened and continue_tapped', () => {
     expect(stageOpenedEvent({ profileId: 'p1', stage: 'stage3', readOnly: false })).toEqual({ name: 'route_map.stage_opened', profileId: 'p1', payload: { stage: 'stage3' } });
     expect(continueTappedEvent({ profileId: 'p1', model: model([]), readOnly: false })).toEqual({

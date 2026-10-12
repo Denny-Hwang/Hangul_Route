@@ -1,16 +1,19 @@
 import { Body, Button, Card, Heading, Icon, Screen, Spacer, colors, spacing, useLayoutClass } from '@hangul-route/design-system';
 import type { ThemeKey } from '@hangul-route/content-schema';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
+import { flags } from '../../config/flags';
 import { questsAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
-import { myRouteAccess } from '../../logic/my-route/access';
+import { myRouteAccess, myRouteEntryOf, selfEntryTab } from '../../logic/my-route/access';
+import { focusEffects } from '../../logic/my-route/focus';
 import { buildMyRoute } from '../../logic/my-route/model';
 import { localizedRouteContent, routeModelInput } from '../../logic/my-route/route-input';
 import { readSeen, seenFrom, writeSeen } from '../../logic/my-route/seen';
-import { continueTappedEvent, stageOpenedEvent, viewedEvent, type MyRouteSource } from '../../logic/my-route/telemetry';
+import { continueTappedEvent, stageOpenedEvent, viewedEvent } from '../../logic/my-route/telemetry';
 import type { MyRouteModel, SeenRecord } from '../../logic/my-route/types';
 import { emptySnapshot, myRouteView, stageRowLook } from '../../logic/my-route/view';
 import { isParentSessionValid } from '../../logic/profiles/session';
@@ -38,53 +41,73 @@ import { LaterRowItem, StageRowItem } from './TrailRow';
  * `design/wireframes/journey/my-route-overview.md` (A to G, L); the drawn pips:
  * `design/components/PipRow/spec.md`. Everything is derived from the local
  * snapshot and the bundle, so it works offline.
+ *
+ * Two variants (AMENDMENTS-ROUTE-LEARNING-ROUTE section 5.1, LR-4; wireframe
+ * `design/wireframes/journey/learning-route.md` A and G, mock
+ * `design/screens/learning-route/mock/route-tab.html`):
+ * - `tab`: the learner's Route tab (`MyRouteTabScreen`), the active profile's
+ *   own page. No back button; the title "Learning Route" over the purpose line.
+ *   `route_map.viewed` with `source: 'tab'` once per focus.
+ * - `stack`: the root-stack `MyRoute` screen (`MyRouteScreen`), grown-up only
+ *   and always read-only, behind the gate. It sends nothing.
  */
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MyRoute'>;
+type Navigation = NativeStackNavigationProp<RootStackParamList>;
+type Variant = 'tab' | 'stack';
 
 const STORAGE = { readJson, writeJson };
 
+/** The root-stack screen: one learner's page for a grown-up, read-only (section 5.1). */
 export function MyRouteScreen({ route, navigation }: Props): React.ReactElement {
   const profiles = useProfileStore((s) => s.profiles);
   const activeId = useProfileStore((s) => s.activeId);
   const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
   const { opensDirectly } = useAudience();
   const sessionOpen = isParentSessionValid(parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' }, Date.now());
+  // The params are typed as required; an old call without them reads as the tab entry (`myRouteEntryOf`).
+  const params: Partial<RootStackParamList['MyRoute']> | undefined = route.params;
   const access = myRouteAccess({
-    requestedId: route.params?.profileId,
+    entry: myRouteEntryOf(route.params),
+    requestedId: params?.profileId,
     activeId,
     profiles,
     gateOpen: opensDirectly(sessionOpen),
-    grownup: route.params?.viewer === 'grownup',
   });
   const gateFor = access.kind === 'gate' ? access.profileId : null;
 
   useEffect(() => {
-    // Another profile with the gate closed: the PIN screen replaces this one (section 3.1).
+    // The gate is closed: the PIN screen replaces this one (section 3.1).
     if (gateFor !== null) navigation.replace('PinEntry', { next: 'MyRoute', profileId: gateFor });
+    // A learner's own page is the Route tab: an old call moves there, so there is never a second copy (section 5.1).
+    // `navigate`, not the section's literal `replace`: `Main` is always below this screen, and navigate returns to
+    // that same route (popping this one), where replace would stack a second `Main` with its own tab bar.
+    else if (access.kind === 'self') navigation.navigate('Main', { screen: selfEntryTab(flags.myRouteEnabled) });
     else if (access.kind === 'none' && navigation.canGoBack()) navigation.goBack();
   }, [gateFor, access.kind, navigation]);
 
-  if (access.kind === 'gate' || access.kind === 'none') return <Screen tone="canvas">{null}</Screen>;
-  return (
-    <MyRouteBody
-      key={access.profileId}
-      profileId={access.profileId}
-      readOnly={access.kind === 'readOnly'}
-      source={route.params?.source ?? 'journey'}
-      navigation={navigation}
-    />
-  );
+  if (access.kind !== 'readOnly') return <Screen tone="canvas">{null}</Screen>;
+  return <MyRouteBody key={access.profileId} profileId={access.profileId} readOnly variant="stack" navigation={navigation} />;
+}
+
+/** The Route tab (LR-4): the active profile's own page. Mounted only while `flags.myRouteEnabled` is on (`mainTabs`). */
+export function MyRouteTabScreen(): React.ReactElement {
+  const navigation = useNavigation<Navigation>();
+  const profiles = useProfileStore((s) => s.profiles);
+  const activeId = useProfileStore((s) => s.activeId);
+  const access = myRouteAccess({ entry: 'tab', requestedId: undefined, activeId, profiles, gateOpen: false });
+  if (access.kind !== 'self') return <Screen tone="canvas">{null}</Screen>;
+  return <MyRouteBody key={access.profileId} profileId={access.profileId} readOnly={false} variant="tab" navigation={navigation} />;
 }
 
 interface BodyProps {
   profileId: string;
   readOnly: boolean;
-  source: MyRouteSource;
-  navigation: Props['navigation'];
+  variant: Variant;
+  navigation: Navigation;
 }
 
-function MyRouteBody({ profileId, readOnly, source, navigation }: BodyProps): React.ReactElement {
+function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): React.ReactElement {
   const messages = useMessages();
   const m = messages.learner.myRoute;
   const locale = useLocale();
@@ -95,21 +118,31 @@ function MyRouteBody({ profileId, readOnly, source, navigation }: BodyProps): Re
   const { windowWidth } = useLayoutClass();
   const reducedMotion = useReducedMotion();
 
-  // The record this open starts from (section 3.10); read for the active learner only.
+  // Each focus is one open (the tab stays mounted between visits): counted from 1, 0 before the first focus.
+  const [focusKey, setFocusKey] = useState(0);
+  useFocusEffect(
+    useCallback(() => {
+      setFocusKey((k) => k + 1);
+    }, []),
+  );
+
+  // The record this open starts from (section 3.10), read again on every focus; for the active learner only.
+  // The read waits for the previous focus's write, so a quick tab switch never reads the record from before it.
   const [seen, setSeen] = useState<SeenRecord | undefined>(undefined);
-  const [seenLoaded, setSeenLoaded] = useState(readOnly);
+  const [seenFor, setSeenFor] = useState(0);
+  const pendingWrite = useRef<Promise<unknown>>(Promise.resolve());
   useEffect(() => {
-    if (readOnly) return;
+    if (readOnly || focusKey === 0) return;
     let live = true;
-    void readSeen(STORAGE, profileId).then((record) => {
+    void pendingWrite.current.then(() => readSeen(STORAGE, profileId)).then((record) => {
       if (!live) return;
       setSeen(record);
-      setSeenLoaded(true);
+      setSeenFor(focusKey);
     });
     return () => {
       live = false;
     };
-  }, [profileId, readOnly]);
+  }, [profileId, readOnly, focusKey]);
 
   const [attempt, setAttempt] = useState(0);
   const localized = useMemo(() => localizedRouteContent(locale), [locale]);
@@ -142,21 +175,23 @@ function MyRouteBody({ profileId, readOnly, source, navigation }: BodyProps): Re
     });
   }, [model, messages, readOnly, profile?.displayName, localized, locale, seen]);
 
-  // Once per open: route_map.viewed, then remember what this open saw (active learner only, never read-only).
-  const viewedSent = useRef(false);
-  const seenWritten = useRef(false);
+  // Once per focus: route_map.viewed from the tab, then remember what this open saw (active learner only, never
+  // read-only: the grown-up screen sends and writes nothing, section 8).
+  const viewedFor = useRef(0);
+  const seenWrittenFor = useRef(0);
   useEffect(() => {
     if (model === null) return;
-    if (!viewedSent.current) {
-      viewedSent.current = true;
-      const event = viewedEvent({ profileId, model, source, hasPlan: false, readOnly });
+    const fx = focusEffects({ focusKey, viewedFor: viewedFor.current, seenFor, seenWrittenFor: seenWrittenFor.current, readOnly, modelReady: true });
+    if (fx.sendViewed) {
+      viewedFor.current = focusKey;
+      const event = viewedEvent({ profileId, model, source: 'tab', hasPlan: false, readOnly });
       if (event) void track(event);
     }
-    if (seenLoaded && !seenWritten.current && !readOnly) {
-      seenWritten.current = true;
-      void writeSeen(STORAGE, profileId, seenFrom(model, new Date()), { readOnly });
+    if (fx.writeSeen) {
+      seenWrittenFor.current = focusKey;
+      pendingWrite.current = writeSeen(STORAGE, profileId, seenFrom(model, new Date()), { readOnly });
     }
-  }, [model, seenLoaded, profileId, source, readOnly]);
+  }, [model, focusKey, seenFor, profileId, readOnly]);
 
   // One row open at a time; the `here` stage is open on first view.
   const [openKey, setOpenKey] = useState<string | null | undefined>(undefined);
@@ -174,13 +209,25 @@ function MyRouteBody({ profileId, readOnly, source, navigation }: BodyProps): Re
       <Icon name="arrow-left" size={28} />
     </Pressable>
   );
+  // The tab is a root: no back button, and the purpose line under the title (LR-OD-3). The grown-up screen keeps Back.
+  const header = (
+    <>
+      {variant === 'stack' ? back : null}
+      {variant === 'stack' ? <Spacer size="sm" /> : null}
+      <Heading level="title">{m.title}</Heading>
+      {variant === 'tab' ? (
+        <>
+          <Spacer size="xs" />
+          <Body tone="secondary">{m.purpose}</Body>
+        </>
+      ) : null}
+    </>
+  );
 
   if (model === null || view === null) {
     return (
       <Screen tone="canvas">
-        {back}
-        <Spacer size="sm" />
-        <Heading level="title">{m.title}</Heading>
+        {header}
         <Spacer size="lg" />
         <Card padding="lg">
           <Body>{messages.common.errors.generic}</Body>
@@ -214,9 +261,7 @@ function MyRouteBody({ profileId, readOnly, source, navigation }: BodyProps): Re
 
   return (
     <Screen tone="canvas" testID="my-route-screen">
-      {back}
-      <Spacer size="sm" />
-      <Heading level="title">{m.title}</Heading>
+      {header}
       {view.viewing !== null ? (
         <>
           <Spacer size="xs" />

@@ -159,7 +159,7 @@ export function LearningRouteRow({
   }, [stored, profileId, name, showStarted, tier, locale, localized, messages]);
 
   if (!hydrated) return null;
-  const onOpen = (): void => navigation.navigate('MyRoute', { source: 'parent', profileId, viewer: 'grownup' });
+  const onOpen = (): void => navigation.navigate('MyRoute', { profileId, viewer: 'grownup' });
   const words = messages.caregiver.journey.row;
   return view === null ? (
     <LearningRouteRowFallback title={words.title} cta={words.cta} onOpen={onOpen} testID={testID} />
