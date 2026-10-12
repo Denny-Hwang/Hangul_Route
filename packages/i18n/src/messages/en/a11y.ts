@@ -155,4 +155,18 @@ export const a11y = {
         .join(' '),
     homeStripGoal: (n: number, title: string) => `Goal: Stage ${n}, ${title}`,
   },
+  /**
+   * The vocabulary question view (F-VOC-004 §3.8, S-4b): the speaker, the outcome said in words after a
+   * tap (`gloss` is the answer's meaning in the UI language, content), and the homonym topic chip.
+   */
+  vocab: {
+    question: {
+      speaker: 'Play the word again',
+      right: (gloss: string) => `Right. ${gloss}.`,
+      reveal: (gloss: string) => `Not this one. The answer is ${gloss}.`,
+      /** The quick check after a miss: the learner taps again. */
+      tryAnother: 'Not this one. Try another.',
+      topic: (title: string) => `Topic: ${title}`,
+    },
+  },
 } as const;
