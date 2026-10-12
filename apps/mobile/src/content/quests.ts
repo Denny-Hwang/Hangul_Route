@@ -379,7 +379,7 @@ export const stage1Quests: Quest[] = [
   {
     id: 'quest:stage1-nature-q1',
     titleEn: 'Tiger, Magpie, Moon',
-    blurbEn: 'The last two final letters, m and p, and words you can now read.',
+    blurbEn: 'Two more final letters, m and p, and words you can now read.',
     estimatedMinutes: 4,
     steps: [
       { id: 's1', kind: 'intro', titleEn: 'Tiger and Magpie', hoyaLineEn: 'Old Korean paintings often show a tiger with a magpie. Two new final letters today!', durationSeconds: 8 },
@@ -428,11 +428,11 @@ export const stage1Quests: Quest[] = [
     blurbEn: 'Read nature words: mountain, river, sea and sky.',
     estimatedMinutes: 4,
     steps: [
-      { id: 's1', kind: 'intro', titleEn: 'Into the Hills', hoyaLineEn: 'Korea has many mountains, and the sea is on three sides. Let us read nature words!', durationSeconds: 8 },
+      { id: 's1', kind: 'intro', titleEn: 'Into the Hills', hoyaLineEn: 'Korea has many mountains, and the sea is on three sides. Let\'s read nature words!', durationSeconds: 8 },
       {
         id: 's2',
         kind: 'discover',
-        titleEn: 'Words You Can Read',
+        titleEn: 'Nature Words',
         hoyaLineEn: 'Tap Hear it, then read each word yourself.',
         discover: {
           pages: [
@@ -470,7 +470,7 @@ export const stage1Quests: Quest[] = [
       {
         id: 's2',
         kind: 'discover',
-        titleEn: 'Words You Can Read',
+        titleEn: 'Night Sky Words',
         hoyaLineEn: 'Tap Hear it, then read each word yourself.',
         discover: {
           pages: [
@@ -502,14 +502,14 @@ export const stage1Quests: Quest[] = [
   {
     id: 'quest:stage1-crafts-q1',
     titleEn: 'Yut, Kite, Top',
-    blurbEn: 'Read game words: kite, ball, rope and play.',
+    blurbEn: 'Read game words: kite, ball, rope and more.',
     estimatedMinutes: 4,
     steps: [
-      { id: 's1', kind: 'intro', titleEn: 'Game Time!', hoyaLineEn: 'On New Year, families play yut and fly kites. Let us read game words!', durationSeconds: 8 },
+      { id: 's1', kind: 'intro', titleEn: 'Game Time!', hoyaLineEn: 'On Seollal, Korean New Year, families play yut and fly kites. Let\'s read game words!', durationSeconds: 8 },
       {
         id: 's2',
         kind: 'discover',
-        titleEn: 'Words You Can Read',
+        titleEn: 'Game Words',
         hoyaLineEn: 'Tap Hear it, then read each word yourself.',
         discover: {
           pages: [
@@ -524,8 +524,8 @@ export const stage1Quests: Quest[] = [
                 { type: 'word', word: { ko: '줄', romanization: 'jul', en: 'rope' } },
                 {
                   type: 'word',
-                  word: { ko: '놀이', romanization: 'nori', en: 'play, game', syllables: ['no', 'ri'] },
-                  noteEn: 'Say it smoothly: nol + i sounds like nori.',
+                  word: { ko: '놀이', romanization: 'nori', en: 'game, play', syllables: ['no', 'ri'] },
+                  noteEn: 'Read it smoothly: nol + i sounds like nori.',
                 },
               ],
             },
@@ -547,11 +547,11 @@ export const stage1Quests: Quest[] = [
     blurbEn: 'Read craft words: Korean paper and celadon pottery.',
     estimatedMinutes: 4,
     steps: [
-      { id: 's1', kind: 'intro', titleEn: 'Craft Time!', hoyaLineEn: 'Korean hands make strong paper and jade-green pottery. Let us read craft words!', durationSeconds: 8 },
+      { id: 's1', kind: 'intro', titleEn: 'Craft Time!', hoyaLineEn: 'Korean hands make strong paper and jade-green pottery. Let\'s read craft words!', durationSeconds: 8 },
       {
         id: 's2',
         kind: 'discover',
-        titleEn: 'Words You Can Read',
+        titleEn: 'Craft Words',
         hoyaLineEn: 'Tap Hear it, then read each word yourself.',
         discover: {
           pages: [
@@ -589,14 +589,14 @@ export const stage1Quests: Quest[] = [
       {
         id: 's2',
         kind: 'discover',
-        titleEn: 'Words You Can Read',
+        titleEn: 'Hangul Words',
         hoyaLineEn: 'Tap Hear it, then read each word yourself.',
         discover: {
           pages: [
             {
               items: [
                 { type: 'word', word: { ko: '한글', romanization: 'hangeul', en: 'the Korean alphabet', syllables: ['han', 'geul'] }, picture: 'card:hangul-day' },
-                { type: 'word', word: { ko: '호야', romanization: 'hoya', en: 'Hoya, the tiger', syllables: ['ho', 'ya'] }, picture: 'card:tiger' },
+                { type: 'word', word: { ko: '호야', romanization: 'hoya', en: 'Hoya the tiger', syllables: ['ho', 'ya'] }, picture: 'card:tiger' },
               ],
             },
             {

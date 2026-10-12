@@ -186,7 +186,7 @@ test('quest 13: Yut, Kite, Top reads game words, builds six closed blocks, then 
   await expectPlainWord(page, '공');
   await nextPage(page);
   await expectPlainWord(page, '줄');
-  await expect(page.getByTestId('discover-item-word:놀이')).toContainText('Say it smoothly: nol + i sounds like nori.');
+  await expect(page.getByTestId('discover-item-word:놀이')).toContainText('Read it smoothly: nol + i sounds like nori.');
   await page.screenshot({ path: test.info().outputPath('crafts-q1-discover-nori.png'), fullPage: true });
   await nextPage(page);
 
