@@ -19,7 +19,7 @@
   --period-tab-min: 4.5rem;     /* four period tabs in one row at 375 and 390; fewer per row at 320 or with large text */
   --figure-min: 7rem;           /* figure tile minimum: two across at 375, three across in the 1280 right column */
   --print-hint-min: 8rem;       /* the hint stays beside the button down to 375; with large text it moves under it */
-  --print-hint-max: 14rem;      /* the print hint wraps beside the button instead of running across the header */
+  --print-hint-max: 14rem;      /* from 45em the print hint wraps beside the button instead of running across the header */
   --detail-column-min: 22rem;   /* More detail blocks: one column on phones, two or three on wide screens */
   --insight-text-min: 14rem;    /* an insight sentence keeps this width before its action wraps under it */
   --strand-min: 12rem;          /* class level check: one strand per row on phones, up to five across on wide screens */
@@ -43,20 +43,30 @@
 @media (min-width: 45em) { .report { padding-left: var(--gutter-regular); padding-right: var(--gutter-regular); } }
 @media (min-width: 70em) { .report { padding-left: var(--gutter-wide); padding-right: var(--gutter-wide); } }
 
-/* Header row: back link, then Send a note and Print with its hint. Wraps on phones: back + note, then print. */
-.report-top { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--spacing-sm); row-gap: var(--spacing-xs); }
-.report-top .back-link { margin-right: auto; }
+/* Header. Phones: the back link has the first row to itself (a long space name wraps inside it); Send a note and Print */
+/* share the second row whatever the back link says, and the print hint sits beside Print when it fits, else under */
+/* the two buttons. From 45em: one row, the back link left and the actions right. */
+.report-top { display: flex; flex-direction: column; align-items: flex-start; gap: var(--spacing-xs); }
+.report-actions { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--spacing-xs); row-gap: var(--spacing-xxs); }
+.report-actions .print-group { display: contents; }
+@media (min-width: 45em) {
+  .report-top { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; column-gap: var(--spacing-sm); }
+  .report-actions { justify-content: flex-end; column-gap: var(--spacing-sm); }
+  .print-hint { max-width: var(--print-hint-max); }
+}
 .action-note { gap: var(--spacing-xs); text-decoration: none; }
 .print-group { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-xs) var(--spacing-sm); }
 .print-button { font: inherit; font-size: var(--size-bodySm); font-weight: var(--weight-bold); cursor: pointer; }
 .print-button:disabled { background: var(--colors-surface-sunken); color: var(--colors-text-muted); }
-.print-hint { flex: 1 1 var(--print-hint-min); max-width: var(--print-hint-max); font-size: var(--size-caption); color: var(--colors-text-muted); line-height: var(--leading-tight); }
+.print-hint { flex: 1 1 var(--print-hint-min); font-size: var(--size-caption); color: var(--colors-text-muted); line-height: var(--leading-tight); }
 
 /* Title and at a glance: LR-D's `.glance` block; the title row adds the learner's avatar chip. */
 .report-glance { display: flex; flex-direction: column; gap: var(--spacing-xs); }
 .report-title { display: flex; align-items: center; gap: var(--spacing-sm); }
 .avatar-chip { flex: none; width: var(--avatar-chip); height: var(--avatar-chip); border-radius: var(--radii-circle); background: var(--colors-hoya-furDark); border: var(--border-width-base) solid var(--colors-surface-paper); box-shadow: 0 0 0 var(--border-width-thin) var(--colors-border-strong); }
 .state-line { display: flex; flex-direction: column; gap: var(--spacing-xxs); padding: var(--spacing-md); border-radius: var(--radii-md); background: var(--colors-surface-sunken); color: var(--colors-text-primary); }
+/* A state page without a learner's name (unavailable, flag off, failed first load): the state sentence is the h1. */
+.state-title { font-size: var(--size-bodyLg); line-height: var(--leading-tight); }
 
 /* Period tabs: one segmented row (role tablist). The selected tab is paper, bold and outlined, never colour alone. */
 .report-controls { display: flex; flex-direction: column; gap: var(--spacing-xs); }
@@ -97,7 +107,13 @@
 .went-well .insight-text > p:first-child::before { background: var(--colors-brand-primary); }
 .insight-tip { font-size: var(--size-bodySm); color: var(--colors-text-secondary); }
 .insight-tip a, .insight-text a:not(.letter-link) { color: var(--colors-brand-secondaryDark); }
+/* The strand tip is a link of its own (not inside a sentence), so it gets the full target height. */
+.tip-link { display: inline-flex; align-items: center; min-height: var(--touch-min); }
 .action { text-decoration: none; }
+/* A line with two actions (P1: Add to a plan, then Preview behind browseEnabled()): beside the sentence on wide screens, */
+/* under it on phones, side by side inside the group. */
+.actions { display: flex; flex-wrap: wrap; gap: var(--spacing-xs); }
+.actions .link-button { align-self: auto; }
 .report-section > .action { align-self: flex-start; }
 .letter-link, .letter-plain { white-space: nowrap; }
 .letter-link { color: var(--colors-brand-secondaryDark); text-decoration: underline; text-decoration-thickness: var(--border-width-thin); text-underline-offset: var(--spacing-xxs); }
@@ -149,6 +165,8 @@
 .detail-panel { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--detail-column-min)), 1fr)); gap: var(--spacing-lg) var(--spacing-xl); align-items: start; }
 .detail-panel[hidden] { display: none; }
 .detail-block { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+/* "Since the start" totals lead the panel across its columns, under the More detail heading, with no h3 of their own. */
+.detail-lead { grid-column: 1 / -1; }
 .detail-block h3 { font-size: var(--size-body); }
 .detail-block h4 { margin: var(--spacing-none); font-size: var(--size-bodySm); }
 .detail-lines { display: flex; flex-direction: column; gap: var(--spacing-xxs); }
@@ -164,8 +182,11 @@
 .band-rows li { padding: var(--spacing-xs) 0; border-bottom: var(--border-width-thin) solid var(--colors-border-subtle); }
 .strand-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--strand-min)), 1fr)); gap: var(--spacing-md); }
 .strand { display: flex; flex-direction: column; gap: var(--spacing-xxs); }
-.plan-rows { display: flex; flex-direction: column; gap: var(--spacing-sm); }
-.plan-title { color: var(--colors-brand-secondaryDark); font-weight: var(--weight-bold); }
+.plan-rows { display: flex; flex-direction: column; gap: var(--spacing-xs); max-width: var(--max-width-reading); }
+/* One homework plan = one link block (title and counts), at least touchTarget.min tall; it opens the plan builder. */
+.plan-row { display: flex; flex-direction: column; justify-content: center; gap: var(--spacing-xxs); min-height: var(--touch-min); padding: var(--spacing-xs) var(--spacing-md); border-radius: var(--radii-md); background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); color: var(--colors-text-primary); text-decoration: none; }
+.plan-title { color: var(--colors-brand-secondaryDark); font-weight: var(--weight-bold); text-decoration: underline; text-decoration-thickness: var(--border-width-thin); text-underline-offset: var(--spacing-xxs); }
+.plan-counts { font-size: var(--size-bodySm); }
 
 /* Choosers (no learner / no class id). */
 .chooser-title { font-size: var(--size-title); line-height: var(--leading-tight); }
@@ -196,6 +217,7 @@ a.button { text-decoration: none; }
 .skill-note { font-size: var(--size-caption); color: var(--colors-text-muted); }
 .letter-expanded { display: flex; gap: var(--spacing-md); align-items: center; padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-md); background: var(--colors-surface-sunken); }
 .letter-expanded > [lang="ko"] { font-size: var(--size-display); line-height: var(--leading-tight); }
+.letter-expanded[hidden] { display: none; }
 .app-frame .screen { min-height: 0; }
 .entry-card { display: flex; flex-direction: column; gap: var(--spacing-sm); }
 
@@ -207,7 +229,7 @@ a.button { text-decoration: none; }
 @media print {
   body { background: var(--colors-surface-paper); color: var(--colors-text-primary); }
   /* Nothing to press on paper: the frame, the actions, the stepper buttons, the disclosure button, the toggles. */
-  .frame-band, .report-top, .step-button, .disclosure-heading, .action, .table-toggle, .growth-chart, .growth-axis, .growth-legend, .calendar, .period-tab:not([aria-selected="true"]) { display: none !important; }
+  .frame-band, .report-top, .step-button, .disclosure-heading, .action, .actions, .table-toggle, .growth-chart, .growth-axis, .growth-legend, .calendar, .period-tab:not([aria-selected="true"]) { display: none !important; }
   /* The page padding sits inside the body, so @page margin 0 leaves no room for the browser's URL and title lines. */
   /* clone: every printed page gets the top padding and the bottom padding, so the fixed footer never covers a block. */
   .report { max-width: none; padding: var(--spacing-xxl) var(--spacing-xxl) var(--spacing-jumbo); gap: var(--spacing-sm); box-decoration-break: clone; -webkit-box-decoration-break: clone; }
@@ -223,6 +245,8 @@ a.button { text-decoration: none; }
   .report-section, .figure, .detail-block, .headline-group, .layer-1 > *, .calendar-block, .growth, .strand { break-inside: avoid; }
   .figure { border-color: var(--colors-border-strong); }
   a, .letter-link, .plan-title, .insight-tip a, .insight-text a:not(.letter-link) { color: inherit; text-decoration: none; }
+  .tip-link { display: inline; min-height: 0; }
+  .plan-row { min-height: 0; padding: 0; border: none; }
   .letter-tile { border-color: var(--colors-border-strong); }
   .print-footer { display: block; position: fixed; left: 0; right: 0; bottom: 0; padding: var(--spacing-md) var(--spacing-xxl); font-size: var(--size-caption); color: var(--colors-text-secondary); border-top: var(--border-width-thin) solid var(--colors-border-strong); background: var(--colors-surface-paper); }
 }
