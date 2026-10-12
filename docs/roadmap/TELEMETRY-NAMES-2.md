@@ -135,3 +135,15 @@ Five names in the `route.` namespace (F-PLAN-002's dated weekly plan; F-ROUTE-00
 | 3 | `route.proposed` | F-PLAN-002 §3.11 (FP-B7) | `{ source, kind: 'new' \| 'update', defaultWeeks: 4 \| 12 \| 26, pace: 'gentle' \| 'steady' \| 'brisk' }` (the proposal is shown) | P2-4 | P2-7a |
 | 4 | `route.proposal_skipped` | F-PLAN-002 §3.11 (FP-B7) | `{ source }` (Just start / Not now) | P2-4 | P2-7a |
 | 5 | `route.updated` | F-PLAN-002 §3.11 (FP-B7) | `{ source: 'retake' \| 'override', itemsRemoved, itemsAdded }` (a retake or an override reseeds the route) | P2-4 | P2-7a |
+
+## L. Free plan and plan-next names (F-ENT-003; added by its E3-0 docs PR)
+
+Three names in the new `access.` namespace and two in F-PLAN-002's `route.` namespace. None collides with sections A to K or with the names in `TELEMETRY_EVENT_NAMES` on `main` at `ea9049e4` (no existing name starts with `access.`; `route.next_started` and `route.offplan_finished` are new). Worker first: E3-1b adds all five to `TELEMETRY_EVENT_NAMES` and its exact-list tests, and the Worker deploys on merge before any app build that sends them (E3-4, E3-6, E3-7). Active profile only; codes, stage keys and counts only; no title, name, price or tier word. If another docs PR claims letter L first, this section takes the next free letter when it merges. Changed payload of an existing name (section D style): `paywall.viewed.from` gains `episode`, `home`, `results`.
+
+| # | Name | Owning spec | Payload | Added to the list by | Emitted by |
+|---|---|---|---|---|---|
+| 1 | `access.preview_opened` | F-ENT-003 §3.12 | `{ stage: StageKey, day: number, from: 'journey' \| 'home' \| 'route' \| 'results' }` (a lesson page opens in preview) | E3-1b | E3-6 |
+| 2 | `access.grownup_asked` | F-ENT-003 §3.12 | `{ from: 'episode' \| 'home' \| 'results' \| 'library' }` (Ask a grown-up, before the gate) | E3-1b | E3-6, E3-7 |
+| 3 | `access.free_end_reached` | F-ENT-003 §3.12 | `{ freeDays: number }` (first time on this device for this profile) | E3-1b | E3-7 |
+| 4 | `route.next_started` | F-ENT-003 §3.12 | `{ source: 'class' \| 'family' \| 'self' \| 'route', surface: 'home' \| 'results' \| 'journey' \| 'episode' \| 'route' }` (the routeNext quest is started) | E3-1b | E3-4, E3-6 |
+| 5 | `route.offplan_finished` | F-ENT-003 §3.12 | `{ source: 'class' \| 'family' \| 'self', stage: StageKey }` (a quest outside the active plan is completed while a plan exists) | E3-1b | E3-4 |

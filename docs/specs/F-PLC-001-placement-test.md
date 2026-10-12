@@ -99,6 +99,7 @@ Screen ids: `placement/invite`, `placement/language`, `placement/options`, `plac
 
    The backstop clock stops while the pause sheet, the exit sheet or the rest card is open (**Keep going** moves the deadline by the time spent paused).
 7. **Result (`placement/result`).** Hoya cheering; "Hoya found your starting spot!"; a mini grid (7 x 5) with a pin on the start cell and a light outline on placed-out cells; three route cards **Start here** (start quest title), **Next** (the next one or two quests on the route), **Later** (the next stage title).
+   > **Amended by F-ENT-003 (2026-10-11).** When the start quest is closed for a free learner (switch on, past Day 2), the primary action starts `routeNext` (always open) and the pin still marks the start cell (F-ENT-003 §3.6, PR E3-3).
 
    **Weekly plan strip.** Shown when `flags.routeEnabled`, `proposeRoute` (F-PLAN-002 section 3.1a) returns a proposal, the plan prompt is not dismissed (AM-6, section 3.10), and the profile is a **self** profile (`effectiveLearnerType(profile) === 'self'`, `apps/mobile/src/logic/profiles/learner-type.ts:20`). Visibility does **not** use `gateRequired`, which is device-level (`learner-type.ts:52-57`: true with a PIN or any child on the device); `gateRequired` only decides whether a grown-up destination needs the PIN.
 

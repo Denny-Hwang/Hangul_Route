@@ -198,6 +198,8 @@ Changes in `logic/homework/mission-builder.ts` (pure) and `HomeScreen.tsx`.
 
 ### 3.9 Content access (D5)
 
+> **Amended by F-ENT-003 (2026-10-11).** The registry gains a `quest` kind (`freeQuests` = the first two route days, `freeRouteQuestIds`) and `questAccess` / `isQuestOpen`; `contentGatingEnabled` becomes the one switch for every free-tier limit (grid quests past Day 2, stories, word topics), still off by default; the locked tile word becomes "Opens with the full route" (F-ENT-003 §3.3, §3.4, §3.7). `isStageEntitled` and `isContentLocked` keep their results.
+
 New `apps/mobile/src/logic/content-access.ts`; if a F-VOC PR already added it, reuse and extend that file.
 
 ```ts

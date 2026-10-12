@@ -201,6 +201,8 @@ Below 360 dp of available width, a stage row shows its count caption and the `Pr
 
 ### 3.5 The cursor and the hero
 
+> **Amended by F-ENT-003 (2026-10-11).** `NextQuestInput` and `CursorContext` gain an optional `isQuestOpen`; `routeNext` (`logic/route-next.ts`) wraps the one cursor and puts the learner's active plan first (class, family, own), so Home card (2), the Results teaser, the Journey Next marker and this page's hero show the same next quest. The hero gains `free-end` (free learner, switch on, every open quest done: "You finished your first two days!" and Ask a grown-up behind the gate); PR E3-10 after R-3.
+
 **One cursor.** `nextQuestAfter` (`logic/next-quest.ts:44-48`) is the only cursor. R-4a extends `NextQuestInput` with `skipQuestIds?: ReadonlySet<string>` (placed-out quests) and makes Home and Results pass the **same** `isEntitled` and `skipQuestIds`. `logic/my-route/cursor.ts` is a thin wrapper that calls it; it returns `undefined` at rest. Home keeps its replay fallback **inside** `mission-builder.ts` (`:120-121`), wrapping the shared cursor, so Home's card (2) does not disappear at rest. Landed in R-4a: `logic/cursor-context.ts` `cursorContext({ tier, placements, quests, episodes })` returns the `{ isEntitled, skipQuestIds }` pair that Home, Results and My route (R-3) all spread into the cursor; `CURSOR_STAGE_RULE` holds OD-4 (`'shipped'` = the default, every shipped stage playable; `'tier'` = the alternative), so switching OD-4 is one constant (Home and Results both re-render on a tier change; Home's day pin keeps card (2) until the next day, so a switch to `'tier'` should also re-pin it on a tier change).
 
 Two surface-specific fallbacks sit **around** the one cursor and are accepted (R-4a review):

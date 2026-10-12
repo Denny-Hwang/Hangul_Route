@@ -45,6 +45,8 @@ Companion stories:
 
 ### 3.1 Inputs, defaults and presets
 
+> **Amended by F-ENT-003 (2026-10-11).** `CurriculumParams` gains `openQuestIds?: string[]` (max 400; absent = the stage rule). A ready cell quest outside it goes to `locked[]` and raises `premium-needed`. It is omitted from `StoredCurriculumParamsSchema` (like `completedQuestIds`) and passed again to `regenerateFrom`; goldens A and B are unchanged (F-ENT-003 §3.9, PR E3-9).
+
 `packages/content-schema/src/curriculum/params.ts` (zod, exported from `src/index.ts`):
 
 ```ts

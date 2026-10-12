@@ -51,6 +51,8 @@ Legacy `/api/subscriptions/*` (v1 family subscription) was removed on 2026-10-09
 
 ### 3.5 Paywall (PR 2) — `paywall/upgrade`, PIN-gated
 
+> **Amended by F-ENT-003 (2026-10-11).** While `contentGatingEnabled` is on, the free state leads with a "What is free" block (Day 1 and Day 2 of the route, the sampler stories, the free word topics, "Everything your learner finished stays theirs.") instead of "Stage 1 is always free", and the first bullet reads "Every lesson of every Stage, now and later"; `from` gains `episode`, `home`, `results` (F-ENT-003 §3.9, PR E3-8). With the switch off this section is unchanged.
+
 - Entered from a locked Stage 2+ cell on the journey grid and from the settings plan card, through `profiles/pin-entry`.
 - States: **covered** (premium via class/school — no prices, "Back to journey"), **already premium** (family), **free** — "Stage 1 is always free" first, 4 bullets (every Stage, cloud save, dashboard, up to 5 learners), **one Family Lifetime card ($15.30 once, "nothing to cancel")**, one button that opens the web console billing (`EXPO_PUBLIC_CONSOLE_URL`, web) or explains the store purchase arrives with F-IAP-002 (native). Never a teacher/school plan on the native app.
 
