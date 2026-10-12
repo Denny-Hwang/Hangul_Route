@@ -133,6 +133,18 @@ describe('NoteSendSchema (POST /api/spaces/:id/notes)', () => {
     expect(NoteSendSchema.safeParse({ ...minimal, to: { kind: 'class' } }).success).toBe(false);
   });
 
+  it('refuses a repeated learner id, so one send cannot deliver the same note twice to one learner', () => {
+    expect(NoteSendSchema.safeParse({ ...minimal, to: { kind: 'learners', ids: ['profile:a', 'profile:b'] } }).success).toBe(true);
+    expect(NoteSendSchema.safeParse({ ...minimal, to: { kind: 'learners', ids: ['profile:a', 'profile:a'] } }).success).toBe(false);
+    expect(NoteSendSchema.safeParse({ ...minimal, to: { kind: 'learners', ids: Array.from({ length: 300 }, () => 'profile:x') } }).success).toBe(false);
+  });
+
+  it('caps a learner id at 80 characters', () => {
+    const id = (n: number): string => `profile:${'a'.repeat(n - 'profile:'.length)}`;
+    expect(NoteSendSchema.safeParse({ ...minimal, to: { kind: 'learners', ids: [id(80)] } }).success).toBe(true);
+    expect(NoteSendSchema.safeParse({ ...minimal, to: { kind: 'learners', ids: [id(81)] } }).success).toBe(false);
+  });
+
   it('takes a known preset id only', () => {
     expect(NoteSendSchema.safeParse({ ...minimal, presetId: 'effort_great' }).success).toBe(false);
     expect(NoteSendSchema.safeParse({ to: minimal.to }).success).toBe(false);
@@ -209,6 +221,17 @@ describe('note prefs, state, report bodies', () => {
   it('defaults the prefs to all notes, not yet acknowledged', () => {
     expect(NotePrefsSchema.parse({})).toEqual({ classes: 'all', acknowledged: false });
     expect(NotePrefsSchema.parse({ classes: 'presets', acknowledged: true })).toEqual({ classes: 'presets', acknowledged: true });
+  });
+
+  it('reads a mode this app does not know as null (unknown), never as a looser mode, and keeps the acknowledgement', () => {
+    expect(NotePrefsSchema.parse({ classes: 'quiet', acknowledged: true })).toEqual({ classes: null, acknowledged: true });
+    expect(NotePrefsSchema.parse({ classes: 42, acknowledged: false })).toEqual({ classes: null, acknowledged: false });
+    expect(NotePrefsSchema.parse({ classes: null, acknowledged: false })).toEqual({ classes: null, acknowledged: false });
+  });
+
+  it('reads an unreadable acknowledgement as given, so the one-time card never comes back (section 6.10 item 5)', () => {
+    expect(NotePrefsSchema.parse({ classes: 'off', acknowledged: 'yes' })).toEqual({ classes: 'off', acknowledged: true });
+    expect(NotePrefsSchema.parse({ classes: 'all', acknowledged: null })).toEqual({ classes: 'all', acknowledged: true });
   });
 
   it('writes the prefs strictly; acknowledge may only be true', () => {

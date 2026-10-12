@@ -50,7 +50,7 @@ describe('POST /api/telemetry', () => {
     expect(store.events.map((e) => [e.name, e.payload])).toEqual(events);
   });
 
-  it('accepts the seven F-FEEDBACK-001 notes names with their payloads, sent without a profile id (Worker first, FB-1)', async () => {
+  it('accepts the seven F-FEEDBACK-001 notes names with their payloads (Worker first, FB-1)', async () => {
     const events: Array<[string, Record<string, unknown>]> = [
       ['notes.card_shown', { unread: 1 }],
       ['notes.list_viewed', { notes: 3, unread: 1 }],
@@ -64,7 +64,18 @@ describe('POST /api/telemetry', () => {
       expect((await post({ name, payload })).status, name).toBe(201);
     }
     expect(store.events.map((e) => [e.name, e.payload])).toEqual(events);
-    expect(store.events.every((e) => e.profileId === undefined)).toBe(true);
+  });
+
+  it('never stores a profile id on a notes event, even when a client sends one (F-FEEDBACK-001 section 10)', async () => {
+    for (const name of ['notes.card_shown', 'notes.note_opened', 'notes.report_sent']) {
+      expect((await post({ name, profileId: 'profile:a', payload: { unread: 1 } })).status, name).toBe(201);
+    }
+    expect(store.events).toHaveLength(3);
+    expect(store.events.map((e) => e.profileId)).toEqual([undefined, undefined, undefined]);
+    expect(store.events.map((e) => e.payload)).toEqual([{ unread: 1 }, { unread: 1 }, { unread: 1 }]);
+    // An ordinary event still keeps the profile id it was sent with.
+    await post({ name: 'session.start', profileId: 'profile:a' });
+    expect(store.events.at(-1)?.profileId).toBe('profile:a');
   });
 
   it('rejects unknown or missing event names with 422', async () => {

@@ -88,6 +88,11 @@ describe('keptEventFields (the codes-only filter shared with POST /api/telemetry
     expect(keptEventFields('report.viewed', { scope: 'learner', other: 'x' }, 'profile:a')).toEqual({ profileId: undefined, payload: { scope: 'learner' } });
     expect(keptEventFields('shell.unlisted' as TelemetryEventName, { prefix: 'teach' }, 'profile:a')).toEqual({ profileId: undefined, payload: undefined });
   });
+
+  it('never keeps a profile id on a notes event, and keeps its payload as given (F-FEEDBACK-001 section 10)', () => {
+    expect(keptEventFields('notes.note_opened', { unread: 1 }, 'profile:a')).toEqual({ profileId: undefined, payload: { unread: 1 } });
+    expect(keptEventFields('notes.report_sent', undefined, 'profile:a')).toEqual({ profileId: undefined, payload: undefined });
+  });
 });
 
 describe('appendEvent', () => {

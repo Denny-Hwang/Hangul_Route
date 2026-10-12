@@ -132,10 +132,22 @@ function browsePayload(name: string, payload: Record<string, unknown> | undefine
 }
 
 /**
+ * Notes events (F-FEEDBACK-001 section 10) are never stored with a profile id,
+ * whatever a client sends, so the server holds no per-learner log of which
+ * notes were opened. Their payload (ids, codes and counts) is kept as sent.
+ */
+const NO_PROFILE_PREFIXES: readonly string[] = ['notes.'];
+
+function keepsProfileId(name: string): boolean {
+  return !NO_PROFILE_PREFIXES.some((prefix) => name.startsWith(prefix));
+}
+
+/**
  * The profile id and payload stored for an event: an ordinary event keeps a
  * string profile id and its payload as given; a codes-only event keeps only its
  * codes and never a profile id; a `browse.*` event keeps only its documented
- * fields (F-BROWSE-001 section 9) and never a profile id.
+ * fields (F-BROWSE-001 section 9) and never a profile id; a `notes.*` event
+ * keeps its payload as given and never a profile id (F-FEEDBACK-001 section 10).
  */
 export function keptEventFields(
   name: TelemetryEventName,
@@ -145,7 +157,7 @@ export function keptEventFields(
   if (name.startsWith(BROWSE_EVENT_PREFIX)) return { profileId: undefined, payload: browsePayload(name, payload) };
   const codesOnly = codesOnlyValues(name);
   if (codesOnly) return { profileId: undefined, payload: codesOnlyPayload(payload, codesOnly) };
-  return { profileId: typeof profileId === 'string' ? profileId : undefined, payload };
+  return { profileId: keepsProfileId(name) && typeof profileId === 'string' ? profileId : undefined, payload };
 }
 
 /** Appends an event to the log and trims the oldest ones past `MAX_EVENTS`. */

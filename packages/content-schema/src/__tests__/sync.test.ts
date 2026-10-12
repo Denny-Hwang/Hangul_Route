@@ -384,10 +384,18 @@ describe('SyncInboxSchema notes additions (F-FEEDBACK-001 section 7.1)', () => {
     expect(SyncInboxSchema.parse({ ...oldWorker, notes: null }).notes).toEqual([]);
   });
 
-  it('a malformed notePrefs never costs the inbox; it reads as the defaults', () => {
-    const inbox = SyncInboxSchema.parse({ ...oldWorker, notes: [note], notePrefs: { classes: 'quiet' } });
-    expect(inbox.notePrefs).toEqual({ classes: 'all', acknowledged: false });
+  it('a notePrefs with an unknown mode never costs the inbox or the acknowledgement; the mode reads as unknown', () => {
+    const inbox = SyncInboxSchema.parse({ ...oldWorker, notes: [note], notePrefs: { classes: 'quiet', acknowledged: true } });
+    expect(inbox.notePrefs).toEqual({ classes: null, acknowledged: true });
     expect(inbox.notes).toEqual([note]);
     expect(inbox.plans).toHaveLength(1);
+  });
+
+  it('a notePrefs that is not an object reads as unknown and acknowledged, never as the loosest mode', () => {
+    for (const notePrefs of ['all', 42, [], null]) {
+      const inbox = SyncInboxSchema.parse({ ...oldWorker, notes: [note], notePrefs });
+      expect(inbox.notePrefs, JSON.stringify(notePrefs)).toEqual({ classes: null, acknowledged: true });
+      expect(inbox.notes).toEqual([note]);
+    }
   });
 });

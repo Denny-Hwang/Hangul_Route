@@ -76,6 +76,9 @@ export type NotesMode = (typeof NOTES_MODES)[number];
 /** Learners in one send (section 7.3); the statement count of a send does not grow with it. */
 export const NOTE_SEND_MAX_LEARNERS = 300;
 
+/** The longest learner id a send may name; real ids are far shorter. */
+export const NOTE_LEARNER_ID_MAX = 80;
+
 export const NoteIdSchema = z.string().regex(/^note:[a-z0-9-]{8,64}$/);
 
 export const NoteSuggestSchema = z.object({ kind: z.literal('quest'), id: z.string().min(1).max(64) }).strict();
@@ -94,10 +97,13 @@ export const NoteSendSchema = z
       z
         .object({
           kind: z.literal('learners'),
+          // Distinct ids: one send never delivers the same note twice to one learner,
+          // and the per-learner daily limit counts each learner once.
           ids: z
-            .array(z.string().regex(/^profile:[a-z0-9-]+$/))
+            .array(z.string().max(NOTE_LEARNER_ID_MAX).regex(/^profile:[a-z0-9-]+$/))
             .min(1)
-            .max(NOTE_SEND_MAX_LEARNERS),
+            .max(NOTE_SEND_MAX_LEARNERS)
+            .refine((ids) => new Set(ids).size === ids.length, { message: 'duplicate learner id' }),
         })
         .strict(),
       z.object({ kind: z.literal('everyone') }).strict(),
@@ -144,13 +150,24 @@ export const InboxNoteSchema = z.object({
 });
 export type InboxNote = z.infer<typeof InboxNoteSchema>;
 
-/** The learner's class-notes setting, as the inbox carries it (section 6.10). */
+/**
+ * The learner's class-notes setting, as the inbox carries it (section 6.10).
+ * Each field falls back on its own, and never towards a looser setting: a mode
+ * this app does not know (a newer Worker) reads as `null`, meaning unknown, and
+ * the grown-up zone then leaves the setting row out and sends nothing; an
+ * unreadable acknowledgement reads as given, so the one-time card never comes back.
+ */
 export const NotePrefsSchema = z.object({
-  classes: z.enum(NOTES_MODES).default('all'),
+  classes: z.enum(NOTES_MODES).nullable().default('all').catch(null),
   /** Read-only on the wire: the family has answered the one-time class-notes card. */
-  acknowledged: z.boolean().default(false),
+  acknowledged: z.boolean().default(false).catch(true),
 });
 export type NotePrefs = z.infer<typeof NotePrefsSchema>;
+
+/** The inbox's `notePrefs` when the Worker sends none (an older Worker): the server defaults. */
+export const NOTE_PREFS_DEFAULT: Readonly<NotePrefs> = { classes: 'all', acknowledged: false };
+/** The inbox's `notePrefs` when the value is not an object at all: unknown and acknowledged. */
+export const NOTE_PREFS_UNREADABLE: Readonly<NotePrefs> = { classes: null, acknowledged: true };
 
 /** PUT note-prefs body (device and family routes). */
 export const NotePrefsPutSchema = z.object({ classes: z.enum(NOTES_MODES), acknowledge: z.literal(true).optional() }).strict();

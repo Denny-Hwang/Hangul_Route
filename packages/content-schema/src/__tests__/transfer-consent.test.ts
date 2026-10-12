@@ -337,4 +337,8 @@ describe('what a class sender sees of a note (F-FEEDBACK-001 section 7.7, OD-8)'
     // the combined text keeps the RP-W2 sentence and adds note_replies
     expect(TRANSFER_CONSENT_TEXT.en.items.activity).toBe('When {learner} practiced, minutes each day and days in a row');
   });
+
+  it('keeps every pinned version accepted, so the accepted list only grows when a later PR bumps the text', () => {
+    for (const version of Object.keys(PINNED_HASHES)) expect(ACCEPTED_CONSENT_TEXT_VERSIONS, version).toContain(version);
+  });
 });
