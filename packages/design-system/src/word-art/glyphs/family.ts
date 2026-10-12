@@ -43,10 +43,10 @@ function pointingFigure(clothes: WordArtTone): WordArtGlyph {
 }
 
 export const FAMILY_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
-  // adult figure, long hair
-  'family-mom': adult({ hair: 'long', clothes: 'vocab.pink' }),
+  // adult figure, long hair (clothes tones are not gendered, C12: hair alone carries the brief)
+  'family-mom': adult({ hair: 'long', clothes: 'feedback.success' }),
   // adult figure, short hair
-  'family-dad': adult({ hair: 'short', clothes: 'vocab.blue' }),
+  'family-dad': adult({ hair: 'short', clothes: 'brand.primary' }),
   // adult figure, hair bun in gray
   'family-grandma': adult({ hair: 'bun', hairTone: 'vocab.gray', clothes: 'vocab.purple', height: 66 }),
   // adult figure, gray short hair, cane
@@ -70,8 +70,8 @@ export const FAMILY_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
   // four figures in a row (ink hair, so four people stay within four fill tones)
   'family-family': [
     groundShadow(50, 85, 38),
-    ...figure({ height: 58, hair: 'short', hairTone: 'text.primary', clothes: 'vocab.blue', x: 27, ground: 85, compact: true }),
-    ...figure({ height: 54, hair: 'long', hairTone: 'text.primary', clothes: 'vocab.pink', x: 43, ground: 85, compact: true }),
+    ...figure({ height: 58, hair: 'short', hairTone: 'text.primary', clothes: 'brand.primary', x: 27, ground: 85, compact: true }),
+    ...figure({ height: 54, hair: 'long', hairTone: 'text.primary', clothes: 'feedback.success', x: 43, ground: 85, compact: true }),
     ...figure({ height: 40, hair: 'short', hairTone: 'text.primary', clothes: 'hoya.fur', x: 60, ground: 85, compact: true }),
     ...figure({ height: 34, hair: 'long', hairTone: 'text.primary', clothes: 'vocab.blue', x: 74, ground: 85, compact: true }),
   ],
