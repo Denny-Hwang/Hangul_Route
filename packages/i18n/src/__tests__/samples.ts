@@ -206,6 +206,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.storyShelf.episode.minutes.pill': [[2], [10]],
   'learner.storyShelf.episode.hearWord': [['hae']],
   'learner.storyShelf.episode.cultureNotes': [[1], [3]],
+  'learner.storyShelf.episode.rowLabel': [['Start', 'The Sun and the Moon'], ['Read it again', 'Hangul Day']],
   'learner.storyShelf.cultureNotes.found.pill': [[1], [24]],
   'learner.storyShelf.cultureNotes.fromStory': [['The Sun and the Moon']],
   'learner.storyShelf.cultureNotes.source': [['Hangul Day', 'National Institute of Korean Language']],

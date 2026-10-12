@@ -1009,6 +1009,10 @@ export const learner = {
       wordsTitle: 'Words in this story',
       hearWord: (romanization: string) => `Hear ${romanization}`,
       cultureNotes: (found: number) => `Culture notes: ${found} found`,
+      /** The grown-up row at the end of the page: opens Sources (`StorySources { from: 'episode' }`). */
+      sources: { cta: 'Sources' },
+      /** A tale row's button read out with its story: `cta` is the button label, `title` the story's title (content). */
+      rowLabel: (cta: string, title: string) => `${cta}: ${title}`,
     },
     cultureNotes: {
       title: 'Culture notes',
