@@ -95,6 +95,11 @@ describe('telemetry event names (one list for the client type and the API whitel
         'vocab.round.start',
         'vocab.round.complete',
         'vocab.challenge_toggled',
+        'browse.opened',
+        'browse.item_viewed',
+        'browse.preview_started',
+        'browse.preview_ended',
+        'browse.plans_tapped',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);
@@ -150,6 +155,14 @@ describe('telemetry event names (one list for the client type and the API whitel
     }
     expect(isTelemetryEventName('vocab.round.finished')).toBe(false);
     expect(isTelemetryEventName('vocab.challenge_toggle')).toBe(false);
+  });
+
+  it('lists the five browse names of F-BROWSE-001 section 9 (Worker first, BR-1)', () => {
+    for (const name of ['browse.opened', 'browse.item_viewed', 'browse.preview_started', 'browse.preview_ended', 'browse.plans_tapped']) {
+      expect(TELEMETRY_EVENT_NAMES.filter((n) => n === name)).toHaveLength(1);
+      expect(isTelemetryEventName(name)).toBe(true);
+    }
+    expect(isTelemetryEventName('browse.started')).toBe(false);
   });
 
   it('narrows unknown input with isTelemetryEventName', () => {

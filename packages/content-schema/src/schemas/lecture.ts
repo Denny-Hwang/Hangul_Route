@@ -1,5 +1,8 @@
 import { z } from 'zod';
 import { RomanizationModeSchema, UiLocaleSchema } from './locale';
+import { EPISODE_ID_RE } from './episode';
+import { CARD_ID_RE } from './heritage-card';
+import { QUEST_ID_RE } from './quest';
 import { JOIN_CODE_RE } from './space';
 import { StoryLevelSchema } from './story';
 import { VocabIdSchema } from './vocab';
@@ -58,8 +61,8 @@ export const LECTURE_REVISIT_CHAR_RE = /^[\u3131-\u3163]$/;
 export const LECTURE_CREATED_AT_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,9})?)?(Z|[+-]\d{2}:\d{2})$/;
 
 export const LectureBlockSchema = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('episode'), id: z.string().regex(/^episode:[a-z0-9-]+$/) }).strict(),
-  z.object({ kind: z.literal('quest'), id: z.string().regex(/^quest:[a-z0-9-]+$/) }).strict(),
+  z.object({ kind: z.literal('episode'), id: z.string().regex(EPISODE_ID_RE) }).strict(),
+  z.object({ kind: z.literal('quest'), id: z.string().regex(QUEST_ID_RE) }).strict(),
   z
     .object({ kind: z.literal('jamo-set'), jamoIds: z.array(z.string().regex(LECTURE_JAMO_ID_RE)).min(1).max(12) })
     .strict(),
@@ -80,7 +83,7 @@ export const LectureBlockSchema = z.discriminatedUnion('kind', [
       checks: z.boolean().default(true),
     })
     .strict(),
-  z.object({ kind: z.literal('cards'), cardIds: z.array(z.string().regex(/^card:[a-z0-9-]+$/)).min(1).max(12) }).strict(),
+  z.object({ kind: z.literal('cards'), cardIds: z.array(z.string().regex(CARD_ID_RE)).min(1).max(12) }).strict(),
   z.object({ kind: z.literal('quiz'), from: z.enum(['previous', 'all']), rounds: z.number().int().min(1).max(10) }).strict(),
   z
     .object({ kind: z.literal('activity'), preset: z.enum(ACTIVITY_PRESETS), minutes: z.number().int().min(1).max(15) })

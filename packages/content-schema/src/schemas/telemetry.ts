@@ -113,6 +113,12 @@ export const TELEMETRY_EVENT_NAMES = [
   'vocab.round.start',
   'vocab.round.complete',
   'vocab.challenge_toggled',
+  // F-BROWSE-001 §9 (sent without profileId; content ids and codes only, never a person id)
+  'browse.opened',
+  'browse.item_viewed',
+  'browse.preview_started',
+  'browse.preview_ended',
+  'browse.plans_tapped',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);

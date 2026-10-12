@@ -33,13 +33,16 @@ export const CardCitationSchema = z.object({
 });
 export type CardCitation = z.infer<typeof CardCitationSchema>;
 
+/** The heritage card id grammar, `card:<slug>` (exported for F-BROWSE-001 §4.4 and the lecture blocks). */
+export const CARD_ID_RE = /^card:[a-z0-9-]+$/;
+
 /**
  * Heritage Card — a collectible piece of Korean culture earned by completing
  * an episode or milestone. The primary reward of Hangul Route.
  */
 export const HeritageCardSchema = z
   .object({
-    id: z.string().regex(/^card:[a-z0-9-]+$/),
+    id: z.string().regex(CARD_ID_RE),
     titleEn: z.string(),
     subtitleKo: z.string().optional(),
     romanization: z.string().optional(),
