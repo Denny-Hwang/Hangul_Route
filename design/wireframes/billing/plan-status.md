@@ -1,14 +1,14 @@
-# Billing/Plan status — the learner's plan, status only (wireframe v1)
+# Billing/Plan status — the learner's plan, status only (wireframe v2)
 
-Spec: `docs/specs/F-BILL-002-billing-in-app-all-personas.md` §4.7, §4.8 · supersedes the body of `paywall/upgrade.md` (F-ENT-001 §3.5) · gate: `profiles/pin-entry`
+Spec: `docs/specs/F-BILL-002-billing-in-app-all-personas.md` §4.7, §4.8, §4.12 · supersedes the body of `paywall/upgrade.md` (F-ENT-001 §3.5) · free slot content: `paywall/free-plan-days.md` (F-ENT-003 E3-8) · gate for Open billing: `profiles/pin-entry` · hand-off: F-APP-001 `openGrownUpArea`
 Screen ID: `billing/plan-status` · Navigation route key stays `Paywall` (title "Plan")
-Audience: **learner's grown-up** on a family device (after the PIN gate); **the learner themself** on a self-only device (the gate opens directly when no PIN is set). Same screen for every age; no age wording.
+Audience: **any learner** (status, no PIN), **their grown-up** for Open billing (after the PIN gate) on a family device, and **the learner themself** on a self-only device (the gate opens directly when no PIN is set). Same screen for every age; no age wording.
 
 ## Scenario (Given-When-Then)
 
-Given: a learner profile on the free plan, on a family plan, or covered by a class or school
-When: a grown-up (or a self-learner) opens Plan details from Profile, or a locked-content tap that the free-plan spec routes here
-Then: they see which plan this learner is on and where it comes from; on the web a grown-up can open Billing; there is never a price, and native builds show no link or mention of buying elsewhere
+Given: a learner profile on the free plan, on the full route from a family plan, or covered by a class or school
+When: the learner opens Plan details from Profile, or a grown-up arrives through a locked-lesson "Ask a grown-up" (F-ENT-003)
+Then: they see which plan this learner is on and where it comes from; on the web a grown-up can open Billing in the same tab after the gate; there is never a price, and native builds show no link or mention of buying elsewhere
 
 ## Screen goal
 
@@ -16,78 +16,103 @@ Then: they see which plan this learner is on and where it comes from; on the web
 
 ## Box diagram
 
-Web, free plan (family audience):
+Web, free plan, family audience, F-ENT-003 switch off:
 
 ```
-+--------------------------------------------+
-| [< back]            Plan                   |
-|                                            |
-|            [ Hoya, idle pose ]             |
-|                                            |
-|   <Name> is on the free plan.              |  <- summary heading (first accessible element)
-|   Stage 1 is open to everyone.             |  <- line owned by the free-plan spec
-|                                            |
-|   Plans and receipts are on the billing    |  <- web only
-|   page for grown-ups.                      |
-|   [ Open billing ]   (opens the browser)   |  <- web only, secondary, new tab
-|                                            |
-|   [[ BACK TO JOURNEY ]]                    |
-+--------------------------------------------+
++-----------------------------------+
+| [< back]          Plan            |
+|                                   |
+|         [ Hoya, idle pose ]       |
+|                                   |
+|  <Name> is on the free plan.      |  <- summary heading (first accessible element)
+|  Stage 1 is always free.          |  <- free slot (F-ENT-003 owns; this line until E3-8 / switch off)
+|                                   |
+|  Plans and receipts are on the    |  <- web only (self: "Your plan and receipts are
+|  billing page for grown-ups.      |     on the billing page.")
+|  [ Open billing ]                 |  <- web only, secondary; PIN gate first, then same tab
+|                                   |
+|  [[ BACK TO JOURNEY ]]            |
++-----------------------------------+
+```
+
+Web, free plan, F-ENT-003 switch on (the slot holds the What is free block; no offer, no price, no button inside it):
+
+```
+|  <Name> is on the free plan.      |
+|  What is free                     |  <- F-ENT-003 E3-8 block, counts from data
+|   - Day 1 and Day 2 of the route: |
+|     {6} quests, {18} letters      |
+|   - {4} word topics               |
+|   - Everything your learner       |
+|     finished stays theirs.        |
+|  Plans and receipts are on the    |
+|  billing page for grown-ups.      |
+|  [ Open billing ]                 |
 ```
 
 Native (iOS / Android), free plan:
 
 ```
-+--------------------------------------------+
-| [< back]            Plan                   |
-|            [ Hoya, idle pose ]             |
-|   <Name> is on the free plan.              |
-|   Stage 1 is open to everyone.             |
-|                                            |
-|   [[ BACK TO JOURNEY ]]                    |  <- no link, no price, no "web" wording
-+--------------------------------------------+
++-----------------------------------+
+| [< back]          Plan            |
+|         [ Hoya, idle pose ]       |
+|  <Name> is on the free plan.      |
+|  Stage 1 is always free.          |
+|                                   |
+|  [[ BACK TO JOURNEY ]]            |  <- no link, no price, no "web" wording
++-----------------------------------+
 ```
 
 Other states (web and native identical except the web-only block):
 
 ```
-premium (family)   | [ Hoya, cheering ] | <Name> has the full journey.  | From your family's Family Lifetime plan. | (web: Open billing) | [[ BACK TO JOURNEY ]]
-covered (class)    | [ Hoya, cheering ] | <Name> is covered by <space>. | Everything is open while they are in it. |                     | [[ BACK TO JOURNEY ]]
-self audience      | "You're on the free plan." instead of "<Name> is on the free plan."
+full route, family source | [ Hoya, cheering ] | <Name> has the full route.    | From your family's Family Lifetime plan. | (web: caption + Open billing) | [[ BACK TO JOURNEY ]]
+full route, no source     | [ Hoya, cheering ] | <Name> has the full route.    | Everything is open.                      | (web: caption + Open billing) | [[ BACK TO JOURNEY ]]
+covered (class / school)  | [ Hoya, cheering ] | <Name> is covered by <space>. | Everything is open while they are in it. |                               | [[ BACK TO JOURNEY ]]
+self audience             | "You're on the free plan." · "You have the full route." · "From your Family Lifetime plan." · "You're covered by <space>." · "Everything is open while you are in it."
 ```
 
-Profile card entry (unchanged pill, new button label):
+Profile card entry (every tier; no PIN for Plan details):
 
 ```
-| Plan                        [ Free ] |
-| Stage 1 is free. More stages are on the way.  |
-| [ Plan details ]  (PIN required)     |  <- was "Unlock the journey"
+| Plan                      [ Free ]  |      | Plan                    [ Active ] |
+| Free plan                           |      | Full route                         |
+| Stage 1 is free. More stages are on |      | Everything is open, from <space>.  |
+| the way.                            |      |                                    |
+| [ Plan details ]                    |      | [ Plan details ]                   |
 ```
 
 ## Interaction points
 
-- `[ Open billing ]` (web only) → `billingUrl()` in a new browser tab (`billing/billing-home`); failure → one line with the address to type
+- `[ Plan details ]` (Profile, every tier) → this screen, no PIN
+- `[ Open billing ]` (web only) → `profiles/pin-entry` with destination `Billing` (opens directly while a grown-up session is open, or on a self-only device without a PIN) → with F-APP-001's flag on: `openGrownUpArea({ via: 'paywall', target: APP_ROUTES.billing })`, the **same tab**, no "Grown-ups only" lock → `billing/billing-home`; flag off (before F-APP-001 A-6): today's console billing URL in the browser. Failure → one line with the address to type.
 - `[[ BACK TO JOURNEY ]]` → `journey/grid`
-- `[< back]` → where the learner came from (`profile/settings` or the locked tile)
+- `[< back]` → where the learner came from (`profile/settings`, or the lesson page through the gate)
 
 ## Navigation graph
 
-Enter from: `profile/settings` plan card (Plan details, through `profiles/pin-entry`) · locked-content taps routed here by the free-plan spec (through the gate)
-Exit to: `journey/grid` · `profile/settings` · `billing/billing-home` (web only, external tab)
+Enter from: `profile/settings` plan card (Plan details) · F-ENT-003 locked-lesson "Ask a grown-up" (through `profiles/pin-entry`)
+Exit to: `journey/grid` · `profile/settings` · `profiles/pin-entry` → `billing/billing-home` (web only, same tab)
 
 ## States
 
-- **free**, **premium**, **covered**: as drawn.
-- **offline / no cached tier**: the free state with the same words (the tier store falls back to free); nothing claims a purchase failed.
+- **free** (switch off / on), **full route**, **covered**: as drawn.
+- **offline / no cached tier**: the state the tier store gives (7-day grace; free when nothing is cached); nothing claims a purchase failed. Open billing then leads to F-APP-001's grown-up offline page.
 - **empty** (no active profile): "Your learner" stands in for the name.
-- **error** (the browser could not be opened, web): "Open <address> in a browser."
+- **error** (billing could not be opened, web): "Open <address> in a browser."
+
+## Accessibility
+
+- The summary line is the first accessible element (`a11y.planStatus`: "<Name>: <state>.").
+- Open billing is a button with the hint "Opens the billing page".
+- No meaning by colour: the pill has text; Hoya's pose is decoration.
 
 ## Data needs
 
-- reads: `tier-store` `effectiveTier(learnerId)` and its `source` (inbox tier with the 7-day grace, F-ENT-001 §3.4); audience (`store/audience.ts`); the active profile's name
+- reads: `tier-store` `effectiveTier(learnerId)` and its `source` (inbox tier with the 7-day grace, F-ENT-001 §3.4); audience (`store/audience.ts`); the active profile's name; F-ENT-003's switch and counts (inside its slot)
 - writes: none
-- telemetry: `paywall.viewed { from, state }`; `paywall.console_opened` (web only, when Open billing is pressed)
+- telemetry: `paywall.viewed { from, state }`; `paywall.console_opened` (web only, when billing actually opens after the gate)
 
 ## Open questions
 
-- Should a covered learner also see the cover's end date? Default: no; the date is a grown-up detail and lives on Billing for the payer and staff.
+- Should a covered learner also see the cover's end date? Default: no; the date is a grown-up detail and lives on Billing for payers and staff.

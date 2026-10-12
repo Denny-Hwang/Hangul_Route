@@ -55,7 +55,7 @@
 | `console/plan-builder.md` | P | roadmap §6 · F-HW-001 §3.4 |
 | `console/school-admin.md` | P | roadmap S7 |
 | `console/account.md` · `console/billing.md` | P | roadmap §5.3 · §7 |
-| `billing/billing-home.md` · `checkout-return.md` · `receipts.md` · `step-up.md` · `plan-status.md` · `moved-notice.md` | R | F-BILL-002 (supersedes `console/billing.md`; `plan-status` supersedes the body of `paywall/upgrade.md`) |
+| `billing/billing-home.md` · `checkout-return.md` · `receipts.md` · `step-up.md` · `plan-status.md` | R | F-BILL-002 (supersedes `console/billing.md`; `plan-status` supersedes the body of `paywall/upgrade.md`; page at `/account/billing` inside F-APP-001's frame) |
 
 ## 다음 단계
 1. Open questions 의 코드-스펙 불일치를 스펙에 반영 (특히 `parent/gate` ↔ `profiles/pin-entry` 통합, 계획 gating 규칙 F-HW-001 §3.4 vs F-TCH-001 §3.3).
