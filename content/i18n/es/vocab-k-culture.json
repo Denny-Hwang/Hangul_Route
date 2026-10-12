@@ -1,0 +1,54 @@
+{
+  "locale": "es",
+  "domain": "vocab-k-culture",
+  "entries": {
+    "vocab-topic:k-culture": {
+      "title": "Cultura coreana",
+      "blurb": "Ropa, comida, fiestas, juegos y música de Corea.",
+      "hoyaIntro": "Ven a descubrir la ropa, la comida, las fiestas y la música de Corea."
+    },
+    "vocab:hanbok": {
+      "gloss": "hanbok (ropa tradicional)",
+      "senseNote": "Se suele llevar en fiestas como Seollal y Chuseok."
+    },
+    "vocab:hangeul": {
+      "gloss": "hangul (el alfabeto coreano)",
+      "senseNote": "El alfabeto que estás aprendiendo aquí."
+    },
+    "vocab:hanok": {
+      "gloss": "hanok (casa tradicional)"
+    },
+    "vocab:bibimbap": {
+      "gloss": "bibimbap (tazón de arroz mixto)",
+      "senseNote": "Arroz con verduras encima, que se mezcla antes de comer."
+    },
+    "vocab:tteokbokki": {
+      "gloss": "tteokbokki (pasteles de arroz picantes)"
+    },
+    "vocab:seollal": {
+      "gloss": "Año Nuevo lunar",
+      "senseNote": "La gente lleva hanbok y hace una reverencia a los mayores."
+    },
+    "vocab:chuseok": {
+      "gloss": "Chuseok (fiesta de la cosecha)",
+      "senseNote": "Las familias se reúnen y comparten songpyeon, pasteles de arroz en forma de media luna."
+    },
+    "vocab:yunnori": {
+      "gloss": "juego de yut (tablero y palitos)",
+      "senseNote": "Se lanzan cuatro palitos de madera, sobre todo en el Año Nuevo lunar."
+    },
+    "vocab:gayageum": {
+      "gloss": "gayageum (cítara coreana)",
+      "senseNote": "Un instrumento largo de cuerdas que se toca con los dedos."
+    },
+    "vocab:norae": {
+      "gloss": "canción"
+    },
+    "vocab:chum": {
+      "gloss": "baile"
+    },
+    "vocab:deurama": {
+      "gloss": "serie de televisión"
+    }
+  }
+}
