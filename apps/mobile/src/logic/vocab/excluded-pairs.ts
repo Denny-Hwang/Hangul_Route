@@ -9,6 +9,10 @@
  *   other picture is a right answer too.
  * - gong "ball" against each ball sport: the sport glyphs of F-VOC-002 §3.11
  *   are drawn as their ball, so two pictures would read as "ball".
+ * - The batch D pictures of F-VOC-002 W-6 that hold another word's subject:
+ *   the taxi is a car, the subway a train seen from the front, the airport
+ *   has a plane, the shadow a ball and the sun, space has stars, the rainbow
+ *   stands on clouds, and tteokbokki is tteok in sauce.
  * - bul "fire" against bit "light": bul also means a light that is on (its
  *   note says so), so the bulb picture of bit is a right answer for bul.
  * - ip "mouth" against i-tooth "tooth" (F-VOC-002 W-4): the mouth glyph is an
@@ -26,6 +30,14 @@ export const VOCAB_EXCLUDED_PAIRS: readonly (readonly [string, string])[] = Obje
   ['vocab:gong-ball', 'vocab:yagu'],
   ['vocab:gong-ball', 'vocab:nonggu'],
   ['vocab:gong-ball', 'vocab:baegu'],
+  ['vocab:jadongcha', 'vocab:taeksi'],
+  ['vocab:gicha', 'vocab:jihacheol'],
+  ['vocab:bihaenggi', 'vocab:gonghang'],
+  ['vocab:geurimja', 'vocab:gong-ball'],
+  ['vocab:geurimja', 'vocab:hae-sun'],
+  ['vocab:byeol', 'vocab:uju'],
+  ['vocab:gureum', 'vocab:mujigae'],
+  ['vocab:tteok', 'vocab:tteokbokki'],
   ['vocab:bul', 'vocab:bit'],
   ['vocab:ip', 'vocab:i-tooth'],
   ['vocab:son', 'vocab:pal-arm'],

@@ -97,6 +97,9 @@ const META: WordArtMetaOverrides = {
   ...Object.fromEntries([...['puppy', 'rabbit', 'bird', 'fish', 'duck', 'fox', 'monkey', 'butterfly'].map((a) => `animal-${a}`), ...BODY_PARTS.map((p) => `body-${p}`)].map((k) => [k, { status: 'approved' }])),
   // batch W-5: family, school and nature, approved by the batch review that stands in for the owner's (2026-10-11)
   ...Object.fromEntries([...['mom', 'dad', 'grandma', 'grandpa', 'eonni', 'nuna', 'oppa', 'hyeong', 'dongsaeng', 'baby', 'family', 'me'].map((k) => `family-${k}`), ...['school', 'teacher', 'friend', 'pencil', 'bag', 'notebook', 'eraser', 'desk', 'scissors', 'board'].map((k) => `school-${k}`), ...['sky', 'sun', 'star', 'tree', 'rain', 'snow', 'river'].map((k) => `nature-${k}`)].map((k) => [k, { status: 'approved' }])),
+  // batch W-6: travel, sport, K-Culture and science, approved by the batch review that stands in for the owner's (2026-10-11)
+  ...Object.fromEntries([...['airplane', 'train', 'taxi', 'subway', 'car', 'boat', 'map', 'passport', 'ticket', 'airport', 'hotel'].map((k) => `travel-${k}`), ...['baseball', 'basketball', 'volleyball', 'tabletennis', 'swimming', 'taekwondo', 'running', 'jumprope', 'bicycle', 'skiing', 'ball'].map((k) => `sport-${k}`), ...['hangul', 'hanok', 'bibimbap', 'tteokbokki', 'song', 'dance', 'drama'].map((k) => `culture-${k}`), ...['fire', 'ice', 'stone', 'magnet', 'earth', 'space', 'robot', 'seed', 'shadow', 'wind', 'light'].map((k) => `science-${k}`)].map((k) => [k, { status: 'approved' }])),
+  'science-rainbow': { status: 'approved', maxTones: 7, reason: 'A rainbow needs its six arc colours, and the two clouds at its feet are a seventh, white (§3.12 brief: six arcs, two clouds).' },
 };
 
 /** One glyph file: the family it holds, and its glyphs by key. */
