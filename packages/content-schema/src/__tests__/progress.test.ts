@@ -95,7 +95,7 @@ describe('ProgressSnapshotSchema.questDoneAt (F-REPORT-001 section 3.3.1, additi
   });
 
   it('rejects a malformed value', () => {
-    for (const bad of [null, [], 'letters-q1', { 'letters-q1': 1 }, { 'letters-q1': null }]) {
+    for (const bad of [null, [], 'letters-q1', { 'letters-q1': 1 }, { 'letters-q1': null }, { '': 'x' }, { ['q'.repeat(65)]: 'x' }, { 'letters-q1': '' }, { 'letters-q1': 'x'.repeat(41) }]) {
       expect(ProgressSnapshotSchema.safeParse({ ...legacy, questDoneAt: bad }).success).toBe(false);
     }
   });

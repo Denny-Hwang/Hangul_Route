@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { ZodArray, ZodCatch, ZodDefault, ZodEffects, ZodNullable, ZodObject, ZodOptional, ZodUnion, type ZodTypeAny } from 'zod';
 import {
   ActivityDaySchema,
   ActivityMonthSchema,
@@ -13,7 +14,9 @@ import {
   REPORT_MILESTONES_MAX,
   REPORT_MONTHS_MAX,
   REPORT_PERIODS,
+  ReportLetterSchema,
   ReportPeriodSchema,
+  ReportStageKeySchema,
   ReportSummarySchema,
   TEACHER_VISIBLE_SUMMARY_KEYS,
   reportPeriodOf,
@@ -33,7 +36,9 @@ const activity: ActivitySummary = {
   next: { q: 'letters-q3', plan: false },
   revisit: 'letters-q2',
 };
-const dayKeys = (n: number) => Array.from({ length: n }, (_, i) => ({ ...day, d: `2026-09-${String(i + 1).padStart(2, '0')}` }));
+/** n distinct ascending days ending at 2026-10-11 (`activity.asOf`). */
+const dayKeys = (n: number) =>
+  Array.from({ length: n }, (_, i) => ({ ...day, d: new Date(Date.UTC(2026, 9, 11 - (n - 1) + i)).toISOString().slice(0, 10) }));
 const monthKeys = (n: number) => Array.from({ length: n }, (_, i) => ({ ...month, m: `${2024 + Math.floor(i / 12)}-${String((i % 12) + 1).padStart(2, '0')}` }));
 
 const summary = {
@@ -63,8 +68,8 @@ describe('ActivitySummarySchema (F-REPORT-001 section 3.3.3)', () => {
 
   it('holds the bounds: 35 days, 24 months, 16 milestones, 12 letters a day', () => {
     expect([REPORT_DAYS_MAX, REPORT_MONTHS_MAX, REPORT_MILESTONES_MAX, REPORT_DAY_LETTERS_MAX]).toEqual([35, 24, 16, 12]);
-    expect(ActivitySummarySchema.safeParse({ ...activity, days: dayKeys(30) }).success).toBe(true);
-    expect(ActivitySummarySchema.safeParse({ ...activity, days: [...dayKeys(30), ...dayKeys(6)] }).success).toBe(false);
+    expect(ActivitySummarySchema.safeParse({ ...activity, days: dayKeys(35) }).success).toBe(true);
+    expect(ActivitySummarySchema.safeParse({ ...activity, days: dayKeys(36) }).success).toBe(false);
     expect(ActivitySummarySchema.safeParse({ ...activity, months: monthKeys(24) }).success).toBe(true);
     expect(ActivitySummarySchema.safeParse({ ...activity, months: monthKeys(25) }).success).toBe(false);
     const milestones = (n: number) => Array.from({ length: n }, () => activity.milestones[0]);
@@ -74,6 +79,7 @@ describe('ActivitySummarySchema (F-REPORT-001 section 3.3.3)', () => {
     expect(ActivityDaySchema.safeParse({ ...day, j: letters(12) }).success).toBe(true);
     expect(ActivityDaySchema.safeParse({ ...day, j: letters(13) }).success).toBe(false);
     expect(ActivityDaySchema.safeParse({ ...day, j: ['x'.repeat(17)] }).success).toBe(false);
+    expect(ActivityDaySchema.safeParse({ ...day, j: ['ㄱ'.repeat(3)] }).success).toBe(false);
     expect(ActivityMonthSchema.safeParse({ ...month, days: 32 }).success).toBe(false);
   });
 
@@ -88,6 +94,35 @@ describe('ActivitySummarySchema (F-REPORT-001 section 3.3.3)', () => {
     for (const m of ['2026-1', '2026-10-01', '202610']) expect(ActivityMonthSchema.safeParse({ ...month, m }).success).toBe(false);
     expect(ActivitySummarySchema.safeParse({ ...activity, asOf: '2026-10' }).success).toBe(false);
     expect(ActivitySummarySchema.safeParse({ ...activity, milestones: [{ stage: 'stage1', on: 'yesterday' }] }).success).toBe(false);
+  });
+
+  it('rejects a day key that is not a real calendar day, and a month outside 01-12', () => {
+    for (const d of ['2026-19-45', '2026-02-30', '2026-00-10', '2026-04-31', '0000-01-01']) expect(ActivityDaySchema.safeParse({ ...day, d }).success).toBe(false);
+    expect(ActivityDaySchema.safeParse({ ...day, d: '2028-02-29' }).success).toBe(true);
+    for (const m of ['2026-00', '2026-13']) expect(ActivityMonthSchema.safeParse({ ...month, m }).success).toBe(false);
+    expect(ActivitySummarySchema.safeParse({ ...activity, total: { ...activity.total, since: '2026-02-30' } }).success).toBe(false);
+  });
+
+  it('letters are jamo and stages are stage keys: no free text (section 3.10)', () => {
+    for (const ok of ['ㄱ', 'ㅏ', 'ㄲ', 'ㅘ', 'ㆎ', 'ㄱㅏ']) expect(ReportLetterSchema.safeParse(ok).success).toBe(true);
+    for (const bad of ['', 'a', '가', 'hi', 'ㄱㄴㄷ', ' ㄱ', 'ㄱ ']) expect(ReportLetterSchema.safeParse(bad).success).toBe(false);
+    expect(ActivityDaySchema.safeParse({ ...day, j: ['call me'] }).success).toBe(false);
+    for (const ok of ['stage1', 'stage-7']) expect(ReportStageKeySchema.safeParse(ok).success).toBe(true);
+    for (const bad of ['', 'Stage 1', 'x'.repeat(33), 'stage1!']) expect(ReportStageKeySchema.safeParse(bad).success).toBe(false);
+    expect(ActivitySummarySchema.safeParse({ ...activity, milestones: [{ stage: 'hello world', on: '2026-10-09' }] }).success).toBe(false);
+  });
+
+  it('days and months are ascending with no repeats, and none after asOf', () => {
+    const [a, b] = dayKeys(2) as [typeof day, typeof day];
+    expect(ActivitySummarySchema.safeParse({ ...activity, days: [a, b] }).success).toBe(true);
+    expect(ActivitySummarySchema.safeParse({ ...activity, days: [b, a] }).success).toBe(false);
+    expect(ActivitySummarySchema.safeParse({ ...activity, days: [a, a] }).success).toBe(false);
+    expect(ActivitySummarySchema.safeParse({ ...activity, days: [{ ...day, d: '2026-10-12' }] }).success).toBe(false);
+    const sep = { ...month, m: '2026-09' };
+    expect(ActivitySummarySchema.safeParse({ ...activity, months: [sep, month] }).success).toBe(true);
+    expect(ActivitySummarySchema.safeParse({ ...activity, months: [month, sep] }).success).toBe(false);
+    expect(ActivitySummarySchema.safeParse({ ...activity, months: [month, month] }).success).toBe(false);
+    expect(ActivitySummarySchema.safeParse({ ...activity, months: [{ ...month, m: '2026-11' }] }).success).toBe(false);
   });
 
   it('bounds the offset to -840..840 minutes and v to 1', () => {
@@ -113,7 +148,7 @@ describe('ProgressSummary.activity is tolerant (assumption a)', () => {
   });
 
   it('a malformed or oversized activity is dropped, never a failure', () => {
-    for (const bad of [{ ...activity, days: [...dayKeys(30), ...dayKeys(6)] }, { ...activity, next: { end: false } }, 42]) {
+    for (const bad of [{ ...activity, days: dayKeys(36) }, { ...activity, next: { end: false } }, { ...activity, days: [day, day] }, { ...activity, days: [{ ...day, j: ['free text'] }] }, 42]) {
       const parsed = ProgressSummarySchema.safeParse({ ...summary, activity: bad });
       expect(parsed.success).toBe(true);
       if (parsed.success) expect(parsed.data.activity).toBeUndefined();
@@ -251,6 +286,21 @@ function deepKeys(value: unknown, out: string[] = []): string[] {
   return out;
 }
 
+/** Every key a schema declares, through wrappers, arrays, unions and refinements. */
+function schemaKeys(schema: ZodTypeAny, out: string[] = []): string[] {
+  if (schema instanceof ZodObject) {
+    for (const [k, v] of Object.entries(schema.shape as Record<string, ZodTypeAny>)) {
+      out.push(k);
+      schemaKeys(v, out);
+    }
+  } else if (schema instanceof ZodOptional || schema instanceof ZodNullable) schemaKeys(schema.unwrap() as ZodTypeAny, out);
+  else if (schema instanceof ZodArray) schemaKeys(schema.element as ZodTypeAny, out);
+  else if (schema instanceof ZodEffects) schemaKeys(schema.innerType() as ZodTypeAny, out);
+  else if (schema instanceof ZodDefault || schema instanceof ZodCatch) schemaKeys(schema._def.innerType as ZodTypeAny, out);
+  else if (schema instanceof ZodUnion) for (const option of schema.options as ZodTypeAny[]) schemaKeys(option, out);
+  return out;
+}
+
 describe('ClassReportSchema and ClassReportResponseSchema (sections 3.7, 3.8)', () => {
   it('parses a class report and its response body', () => {
     expect(ClassReportSchema.parse(classReport)).toEqual(classReport);
@@ -258,14 +308,36 @@ describe('ClassReportSchema and ClassReportResponseSchema (sections 3.7, 3.8)', 
     expect(ClassReportResponseSchema.parse(body)).toEqual(body);
   });
 
+  const bands = (names: string[]) => names.map((band) => ({ band, learners: 1 }));
+  const withBands = (period: string, names: string[] | undefined) =>
+    ClassReportSchema.safeParse({ ...classReport, period, practice: names === undefined ? {} : { dayBands: bands(names) } }).success;
+
   it('accepts the bands of each period, and none for all', () => {
-    const bands = (names: string[]) => names.map((band) => ({ band, learners: 1 }));
-    for (const names of [['0', '1-4', '5-9', '10+'], ['practiced', 'not_yet']]) {
-      expect(ClassReportSchema.safeParse({ ...classReport, practice: { ...classReport.practice, dayBands: bands(names) } }).success).toBe(true);
-    }
+    expect(withBands('week', ['0', '1-2', '3-4', '5-7'])).toBe(true);
+    expect(withBands('month', ['0', '1-4', '5-9', '10+'])).toBe(true);
+    expect(withBands('day', ['practiced', 'not_yet'])).toBe(true);
     const all = ClassReportSchema.parse({ ...classReport, period: 'all', practice: {} });
     expect(all.practice).not.toHaveProperty('dayBands');
-    expect(ClassReportSchema.safeParse({ ...classReport, practice: { ...classReport.practice, dayBands: bands(['top']) } }).success).toBe(false);
+    expect(withBands('week', ['top'])).toBe(false);
+  });
+
+  it('rejects a band from another period, and any band on all', () => {
+    expect(withBands('week', ['0', '10+'])).toBe(false);
+    expect(withBands('week', ['practiced'])).toBe(false);
+    expect(withBands('month', ['1-2'])).toBe(false);
+    expect(withBands('month', ['not_yet'])).toBe(false);
+    expect(withBands('day', ['0'])).toBe(false);
+    expect(withBands('day', ['5-7'])).toBe(false);
+    expect(withBands('all', ['0'])).toBe(false);
+    expect(withBands('all', [])).toBe(false);
+  });
+
+  it('takes a plan id with the plan grammar and no tighter bound, and letters only as jamo', () => {
+    const long = `plan:${'a'.repeat(70)}`;
+    expect(ClassReportSchema.safeParse({ ...classReport, plans: [{ ...classReport.plans[0], planId: long }] }).success).toBe(true);
+    expect(ClassReportSchema.safeParse({ ...classReport, plans: [{ ...classReport.plans[0], planId: 'Week 3' }] }).success).toBe(false);
+    expect(ClassReportSchema.safeParse({ ...classReport, revisit: [{ letter: 'hello', learners: 1 }] }).success).toBe(false);
+    expect(ClassReportSchema.safeParse({ ...classReport, wentWell: { ...classReport.wentWell, milestones: [{ stage: 'Stage One', count: 1 }] } }).success).toBe(false);
   });
 
   it('carries a median only as a count or null, and up only as true', () => {
@@ -296,7 +368,9 @@ describe('ClassReportSchema and ClassReportResponseSchema (sections 3.7, 3.8)', 
   });
 
   it('declares no learner identifier and no ranking field anywhere in its shape', () => {
-    const keys = deepKeys(ClassReportSchema.parse(classReport));
+    const keys = schemaKeys(ClassReportSchema);
+    // The walker reaches every block, optional and nested ones included.
+    for (const declared of ['headline', 'notSaved7d', 'lettersNew', 'letter', 'dayBands', 'band', 'minutesMedian', 'notTested', 'planId', 'itemsDone']) expect(keys).toContain(declared);
     for (const banned of ['id', 'learnerId', 'displayName', 'avatar', 'name', 'top', 'most', 'least', 'best', 'lowest']) expect(keys).not.toContain(banned);
   });
 });
