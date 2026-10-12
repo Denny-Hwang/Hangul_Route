@@ -22,7 +22,7 @@ export interface RouteDay {
 }
 
 /** The stages the free plan opens: all of Stage 1 (owner decision OD-1, 2026-10-11). */
-export const FREE_ROUTE_STAGES: readonly StageKey[] = ['stage1'];
+export const FREE_ROUTE_STAGES: readonly StageKey[] = Object.freeze<StageKey[]>(['stage1']);
 
 export interface FreeLessonsFacts {
   lessons: number;
@@ -39,8 +39,20 @@ export interface FreeLessonsFacts {
 const stageRank = (stage: StageKey): number => StageKeySchema.options.indexOf(stage);
 const themeRank = (theme: ThemeKey): number => ThemeKeySchema.options.indexOf(theme);
 
+/** The catalogue is immutable bundled data, so its route is built once per catalogue object. */
+const routeCache = new WeakMap<Catalog, readonly RouteDay[]>();
+
 /** Every route day of the catalogue: one per ready cell that holds at least one lesson quest. */
 export function routeDaysOf(catalog: Catalog): RouteDay[] {
+  let days = routeCache.get(catalog);
+  if (days === undefined) {
+    days = buildRouteDays(catalog);
+    routeCache.set(catalog, days);
+  }
+  return [...days];
+}
+
+function buildRouteDays(catalog: Catalog): readonly RouteDay[] {
   const lessons = new Map(
     catalog.quests.filter((quest) => quest.kind === 'lesson').map((quest) => [quest.id, quest.minutes]),
   );
@@ -54,16 +66,18 @@ export function routeDaysOf(catalog: Catalog): RouteDay[] {
       return minutes === undefined ? [] : [{ id, minutes }];
     });
     if (quests.length === 0) continue;
-    days.push({
-      day: days.length + 1,
-      stage: cell.stage,
-      theme: cell.theme,
-      episodeId: cell.episodeId,
-      questIds: quests.map((quest) => quest.id),
-      minutes: quests.reduce((sum, quest) => sum + quest.minutes, 0),
-    });
+    days.push(
+      Object.freeze({
+        day: days.length + 1,
+        stage: cell.stage,
+        theme: cell.theme,
+        episodeId: cell.episodeId,
+        questIds: Object.freeze(quests.map((quest) => quest.id)),
+        minutes: quests.reduce((sum, quest) => sum + quest.minutes, 0),
+      }),
+    );
   }
-  return days;
+  return Object.freeze(days);
 }
 
 /** The route days of the given stages (default: the free plan, `FREE_ROUTE_STAGES`). */

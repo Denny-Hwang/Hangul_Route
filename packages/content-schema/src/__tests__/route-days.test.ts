@@ -15,6 +15,7 @@ import {
   type CatalogCell,
   type CatalogQuest,
   type CurriculumParamsInput,
+  type FreeLessonsFacts,
   type StageKey,
 } from '..';
 import { CATALOG_2026_10 } from './fixtures/catalog-2026-10';
@@ -34,6 +35,40 @@ const TODAY_FREE = [
   'stage1-life-q1', 'stage1-life-q2', 'stage1-life-q3',
   'stage1-rites-q1', 'stage1-nature-q1', 'stage1-crafts-q1',
 ].map(q);
+
+/**
+ * The live catalogue's figures, one entry per CATALOG_VERSION. Whoever bumps the
+ * catalogue adds the new version's figures here (a missing entry fails, it never skips),
+ * because grown-up copy shows these numbers.
+ */
+const LIVE_ROUTE_DAYS: Partial<Record<number, readonly (readonly [string, number])[]>> = {
+  3: [
+    ['episode:stage1-letters', 15],
+    ['episode:stage1-life', 12],
+    ['episode:stage1-rites', 5],
+    ['episode:stage1-nature', 5],
+    ['episode:stage1-crafts', 5],
+    ['episode:stage2-life', 5],
+    ['episode:stage2-nature', 5],
+    ['episode:stage4-rites', 4],
+  ],
+};
+const LIVE_FREE_FACTS: Partial<Record<number, FreeLessonsFacts>> = {
+  3: {
+    lessons: 9,
+    letters: 18,
+    minutes: 40,
+    days: 5,
+    episodeIds: [
+      'episode:stage1-letters',
+      'episode:stage1-life',
+      'episode:stage1-rites',
+      'episode:stage1-nature',
+      'episode:stage1-crafts',
+    ],
+  },
+};
+const MISSING = `${CHANGED}; add the live figures for CATALOG_VERSION ${CATALOG_VERSION}`;
 
 /** A small catalogue built from the frozen one: same 35 cells, with the given changes. */
 const withChanges = (
@@ -80,6 +115,12 @@ describe('routeDaysOf', () => {
     expect(days.map((d) => d.day)).toEqual(days.map((_, i) => i + 1));
   });
 
+  it('on the live catalogue, pins every day and its minutes for this CATALOG_VERSION', () => {
+    const expected = LIVE_ROUTE_DAYS[CATALOG_VERSION];
+    expect(expected, MISSING).toBeDefined();
+    expect(routeDaysOf(CATALOG).map((d) => [d.episodeId, d.minutes]), CHANGED).toEqual(expected);
+  });
+
   it('sums the quests\' catalogue minutes, not the cell minutes', () => {
     const rites = routeDaysOf(CATALOG_2026_10).find((d) => d.episodeId === 'episode:stage1-rites');
     expect(rites?.minutes).toBe(4 + 5 + 5);
@@ -110,6 +151,16 @@ describe('routeDaysOf', () => {
     expect(days.map((d) => d.day)).toEqual([1, 2, 3, 4, 5, 6, 7]);
   });
 
+  it('computes once per catalogue: a caller changing its copy never changes the next answer', () => {
+    const catalog: Catalog = { ...CATALOG_2026_10 };
+    const first = routeDaysOf(catalog);
+    first.pop();
+    expect(routeDaysOf(catalog)).toHaveLength(8);
+    expect(routeDaysOf(catalog)).not.toBe(routeDaysOf(catalog));
+    expect(Object.isFrozen(routeDaysOf(catalog)[0])).toBe(true);
+    expect(Object.isFrozen(routeDaysOf(catalog)[0]?.questIds)).toBe(true);
+  });
+
   it('keeps a draft cell out (only shipped and ready cells are playable)', () => {
     const catalog = withChanges((cell) => (cell.episodeId === 'episode:stage4-rites' ? { ...cell, status: 'draft' } : cell));
     expect(routeDaysOf(catalog).map((d) => d.episodeId)).not.toContain('episode:stage4-rites');
@@ -117,6 +168,10 @@ describe('routeDaysOf', () => {
 });
 
 describe('the free route days (FREE_ROUTE_STAGES)', () => {
+  it('cannot be changed at run time', () => {
+    expect(Object.isFrozen(FREE_ROUTE_STAGES)).toBe(true);
+  });
+
   it('is all of Stage 1 (owner decision OD-1)', () => {
     expect(FREE_ROUTE_STAGES).toEqual(['stage1']);
   });
@@ -187,20 +242,10 @@ describe('freeLessonsFacts', () => {
     });
   });
 
-  it.runIf(CATALOG_VERSION === 3)('live catalogue (CATALOG_VERSION 3): 9 lessons, 18 letters, about 40 minutes, 5 days', () => {
-    expect(freeLessonsFacts(CATALOG), CHANGED).toEqual({
-      lessons: 9,
-      letters: 18,
-      minutes: 40,
-      days: 5,
-      episodeIds: [
-        'episode:stage1-letters',
-        'episode:stage1-life',
-        'episode:stage1-rites',
-        'episode:stage1-nature',
-        'episode:stage1-crafts',
-      ],
-    });
+  it('live catalogue: the free figures are pinned for this CATALOG_VERSION (9 lessons, 18 letters, about 40 minutes, 5 days at version 3)', () => {
+    const expected = LIVE_FREE_FACTS[CATALOG_VERSION];
+    expect(expected, MISSING).toBeDefined();
+    expect(freeLessonsFacts(CATALOG), CHANGED).toEqual(expected);
   });
 
   it('counts a final form as its letter', () => {
