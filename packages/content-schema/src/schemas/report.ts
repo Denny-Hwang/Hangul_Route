@@ -17,8 +17,11 @@ export const REPORT_DAYS_MAX = 35;
 export const REPORT_MONTHS_MAX = 24;
 export const REPORT_MILESTONES_MAX = 16;
 export const REPORT_DAY_LETTERS_MAX = 12;
-/** A tampered client cannot grow every roster that copies the summary. */
-const COUNT_MAX = 100_000;
+/** A tampered client cannot grow every roster that copies the summary. The device clamps to it (RP-4). */
+export const REPORT_COUNT_MAX = 100_000;
+const COUNT_MAX = REPORT_COUNT_MAX;
+/** The longest quest id `next.q` and `revisit` carry. */
+export const REPORT_QUEST_ID_MAX = 64;
 /** `YYYY-MM-DD` that names a real calendar day (no 2026-19-45). */
 const isRealDay = (key: string): boolean => {
   const [y, m, d] = key.split('-').map(Number) as [number, number, number];
@@ -27,7 +30,7 @@ const isRealDay = (key: string): boolean => {
 };
 const DayKeySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(isRealDay);
 const MonthKeySchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
-const QuestIdSchema = z.string().min(1).max(64);
+const QuestIdSchema = z.string().min(1).max(REPORT_QUEST_ID_MAX);
 /**
  * A letter is a Hangul compatibility jamo (one or two, U+3131-U+318E), never
  * free text: what the device reads from the jamo catalogue (`questJamo`).

@@ -1,0 +1,13 @@
+{
+  "id": "story:beta",
+  "state": "draft",
+  "facts": [
+    {
+      "id": "f1",
+      "sources": [
+        { "title": "C", "publisher": "P", "url": "https://moved.example/old", "accessed": "2026-10-09", "quoteOrLocator": "q" },
+        { "title": "D", "publisher": "P", "url": "https://good.example/page", "accessed": "2026-10-09", "quoteOrLocator": "q" }
+      ]
+    }
+  ]
+}

@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { flags } from '../config/flags';
 import { journeyContent, questJamo, stage1QuestIds } from '../content/sync-context';
 import { journeySummaryOf, routeGoalSummaryOf } from '../logic/my-route/summary';
+import { buildActivity, deviceLocalDay } from '../logic/reports/activity';
 import { syncLearner } from '../logic/sync/engine';
 import { mergeSnapshots, rebaseSnapshot } from '../logic/sync/merge';
 import { planRestore, type RestorePlan } from '../logic/sync/restore';
@@ -14,6 +15,7 @@ import { apiBaseUrl, createSyncApi, type SyncApiClient } from '../platform/sync-
 import { usePlanStore } from './plan-store';
 import { useProfileStore } from './profile-store';
 import { useProgressStore } from './progress-store';
+import { questOpenFor } from './tier-store';
 
 /**
  * Background progress sync — F-SYNC-002 §3.1–3.2. One record per learner:
@@ -106,6 +108,9 @@ const summarizeFor = (snapshot: ProgressSnapshot) => {
     // The goal the Learning Route shows, for the family space only (Learning Route LR-6, LR-OD-12). Left out while
     // this device does not know the learner's plans (no inbox yet, or not loaded): a plan may lead, so no goal is guessed.
     routeGoal: inbox === undefined ? undefined : routeGoalSummaryOf({ snapshot, plans: inbox, journey, content: journeyContent, now }),
+    // Day-by-day report activity on this device's calendar (F-REPORT-001 RP-4, OD-12). `next` waits for F-ENT-003
+    // E3-4's `routeNext`; `revisit` reads the same quest access the learner's screens do.
+    activity: buildActivity({ snapshot, now, questJamo, localDay: deviceLocalDay, isQuestOpen: questOpenFor(snapshot.profileId, now, snapshot) }),
   });
 };
 

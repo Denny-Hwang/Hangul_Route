@@ -66,7 +66,7 @@ The full process is `docs/workflows/story-content-qa.md` (F-STORY-005 §3.9 and 
 - `fact.rev` (integer, starts at 1): bump it when that fact's `claimEn`, `claimKo` or any of its `sources` changes.
 - Versions never go down. A fact is never deleted without an erratum of `kind: "removal"` naming it. A new story file starts at `contentVer: 1`.
 
-`scripts/check-story-versions.mjs` (F-STORY-001 PR 1.5) will enforce these rules in CI against `origin/main`. Until that check is in the tree, the PR author and the reviewer apply them by hand.
+`scripts/check-story-versions.mjs` enforces these rules in CI (`content-validation.yml`) against `origin/main`, and keeps errata append-only. A hold (`ready` to `draft`, nothing else) needs no bump; when the held story turns `ready` again it is compared with its last `ready` version, so edits made while it was held still need their bumps and errata. A `ready` story file is never deleted or renamed (the check reports `story-removed`): hold it instead. Run it before you push: `git fetch origin && node scripts/check-story-versions.mjs`.
 
 The Sources screen shows "Story version N" and the date the facts were last checked, so every version is visible to a grown-up.
 
@@ -110,7 +110,7 @@ When a fact in a shipped story turns out to be wrong, fix it in the open: a date
 
 ## Source links
 
-Source pages move. A scheduled link check (`scripts/check-source-links.mjs`, F-STORY-001 PR 1.5) will open an issue listing broken links; it never fails a PR, because several authoritative hosts block automated requests. A dead link does not make a fact wrong: re-verify, replace the source (bump the fact's `rev`), or leave it. Until the scheduled check exists, re-open a story's sources whenever you touch its facts.
+Source pages move. A monthly link check (`.github/workflows/source-links.yml` running `scripts/check-source-links.mjs`, also started by hand from the Actions tab) opens an issue labelled `source-links` listing broken links (a later run updates that issue while it is open); it never fails a PR, because several authoritative hosts block automated requests (those hosts are listed, with a reason, in `scripts/source-link-ignore.json`). A dead link does not make a fact wrong: re-verify, replace the source (bump the fact's `rev`), or leave it. Re-open a story's sources whenever you touch its facts.
 
 ## Checks to run before a PR
 

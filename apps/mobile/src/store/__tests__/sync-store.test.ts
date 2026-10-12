@@ -1,4 +1,4 @@
-import { JourneySummarySchema, ProgressSummarySchema, type CurriculumMeta, type ProgressSnapshot, type ProgressSummary } from '@hangul-route/content-schema';
+import { ActivitySummarySchema, JourneySummarySchema, ProgressSummarySchema, type CurriculumMeta, type ProgressSnapshot, type ProgressSummary } from '@hangul-route/content-schema';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mem = vi.hoisted(() => new Map<string, unknown>());
@@ -21,6 +21,7 @@ vi.mock('../../config/flags', () => ({
 }));
 
 import { apiBaseUrl } from '../../platform/sync-api';
+import { deviceLocalDay } from '../../logic/reports/activity';
 import { result } from '../../logic/my-route/__tests__/fixtures/route';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
@@ -83,6 +84,34 @@ describe('sync-store (F-SYNC-002)', () => {
     expect(journey?.stages.map((s) => s.stage)).toEqual(['stage1', 'stage2', 'stage3', 'stage4', 'stage5', 'stage6', 'stage7']);
     expect(journey?.stages[0]?.done).toBe(1);
     expect(journey?.stages.every((s) => s.known === 0)).toBe(true);
+  });
+
+  it('uploads summary.activity built from the snapshot on the device calendar (F-REPORT-001 RP-4)', async () => {
+    const startedAt = new Date(Date.now() - 60_000).toISOString();
+    const quest = { ...snap(['quest:stage1-letters-q1']).quests[0], episodeId: 'episode:stage1-letters', accuracy: 0.4 } as ProgressSnapshot['quests'][number];
+    useProgressStore.setState({
+      byProfile: {
+        'profile:a': {
+          ...snap([]),
+          quests: [quest],
+          questDoneAt: { 'quest:stage1-letters-q1': startedAt },
+          sessions: [{ id: `session:${startedAt}`, profileId: 'profile:a', startedAt, endedAt: startedAt, durationSeconds: 120, episodesTouched: [] }],
+        },
+      },
+    });
+    const putSnapshot = vi.fn(async (_id: string, _body: { summary: ProgressSummary }) => ({ status: 'ok', rev: 1 }));
+    setSyncApiForTests(fakeApi({ putSnapshot }) as never);
+    await useSyncStore.getState().syncNow('profile:a');
+    const activity = putSnapshot.mock.calls[0]?.[1].summary.activity;
+    expect(activity).toBeDefined();
+    expect(ActivitySummarySchema.parse(activity)).toEqual(activity);
+    const today = deviceLocalDay(startedAt);
+    expect(activity?.days).toEqual([{ d: today, min: 2, q: 1, c: 0, w: 0, j: [] }]);
+    expect(activity?.total).toMatchObject({ since: today, q: 1, days: 1 });
+    // The quest it finished weakly is the first open quest that teaches its first letter to practice.
+    expect(activity?.revisit).toBe('quest:stage1-letters-q1');
+    // Before F-ENT-003 E3-4 (routeNext) is on main, the report has no next.
+    expect(activity).not.toHaveProperty('next');
   });
 
   it('summary.journey counts the quests a stored level check placed out as known (F-ROUTE-001 R-7a)', async () => {

@@ -1,0 +1,67 @@
+{
+  "v": 1,
+  "id": "story:fixture-rain-gauge",
+  "state": "ready",
+  "contentVer": 2,
+  "title": { "ko": "측우기", "romanization": "Cheugugi", "en": "The Rain Gauge" },
+  "summaryEn": "A short story about measuring rain.",
+  "theme": "nature",
+  "kind": "science",
+  "minutes": 4,
+  "keywords": [{ "id": "rain", "ko": "비", "romanization": "bi", "en": "rain" }],
+  "tiers": {
+    "standard": {
+      "scenes": [
+        { "id": "s1", "narrationEn": "Long ago, people wanted to know how much {kw:rain} fell.", "factIds": ["f1"] },
+        { "id": "s2", "narrationEn": "They made a metal cup to catch it.", "factIds": ["f2"] }
+      ]
+    }
+  },
+  "facts": [
+    {
+      "id": "f1",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Farmers needed to know how much rain fell.",
+      "claimKo": "농사에는 강우량을 아는 것이 중요했다.",
+      "sources": [
+        {
+          "title": "Fixture source one",
+          "publisher": "Fixture publisher",
+          "url": "https://example.org/one",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "section 1"
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "rev": 2,
+      "scope": "documented",
+      "claimEn": "The gauge was a metal cylinder.",
+      "claimKo": "측우기는 쇠로 만든 원통이다.",
+      "sources": [
+        {
+          "title": "Fixture source two",
+          "publisher": "Fixture publisher",
+          "url": "https://example.org/two",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "section 2"
+        }
+      ]
+    }
+  ],
+  "review": { "language": "draft", "culture": "draft", "advisory": [] },
+  "verification": { "passes": 3, "checkedAt": "2026-10-10", "scope": "cluster", "notes": "Fixture verification note." },
+  "errata": [
+    {
+      "id": "e1",
+      "date": "2026-10-11",
+      "kind": "clarification",
+      "factIds": ["f2"],
+      "summaryEn": "We made the shape of the gauge clearer.",
+      "fixedInVer": 2,
+      "show": false
+    }
+  ]
+}
