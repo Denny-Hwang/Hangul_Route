@@ -24,6 +24,38 @@ import { devFallbacksAllowed, environmentName, notConfigured, type RuntimeEnv } 
  * browser) follows Clerk's default and is checked for signature and expiry only.
  */
 export async function getAuthUserId(c: Context): Promise<string | null> {
+  return (await getAuthClaims(c))?.sub ?? null;
+}
+
+/** Factor verification age in minutes, `[firstFactor, secondFactor]` (Clerk session token v2; -1 = never). */
+export type FactorVerificationAge = readonly [number, number];
+
+/**
+ * The verified claims of the request's bearer (F-BILL-002 B-5): `sub` as
+ * `getAuthUserId` returns it, and `fva` for step-up on money routes
+ * (`lib/step-up`); `fva` is null when the token carries none or a malformed
+ * one. `verified` is false on the dev fallback, where the bearer string is the
+ * user id and there is no token to read. Null when no bearer verifies. The
+ * same request is verified once, however many times this is called.
+ */
+export interface AuthClaims {
+  sub: string;
+  fva: FactorVerificationAge | null;
+  verified: boolean;
+}
+
+const claimsByRequest = new WeakMap<object, Promise<AuthClaims | null>>();
+
+export function getAuthClaims(c: Context): Promise<AuthClaims | null> {
+  const key: object = c.req;
+  const known = claimsByRequest.get(key);
+  if (known) return known;
+  const pending = readAuthClaims(c);
+  claimsByRequest.set(key, pending);
+  return pending;
+}
+
+async function readAuthClaims(c: Context): Promise<AuthClaims | null> {
   const env = (c.env ?? {}) as RuntimeEnv;
   const keyBound = Boolean(env.CLERK_SECRET_KEY || env.CLERK_JWT_KEY);
   if (!keyBound && !devFallbacksAllowed(env)) {
@@ -35,7 +67,7 @@ export async function getAuthUserId(c: Context): Promise<string | null> {
   const token = header.slice('Bearer '.length).trim();
   if (token.length === 0) return null;
 
-  if (!keyBound) return token; // DEV FALLBACK — opted in explicitly, never in production.
+  if (!keyBound) return { sub: token, fva: null, verified: false }; // DEV FALLBACK — opted in explicitly, never in production.
 
   // Production: the allow-list alone, never widened by what the token claims.
   const previewParty = environmentName(env) === 'production' ? undefined : claimedParty(token);
@@ -45,10 +77,17 @@ export async function getAuthUserId(c: Context): Promise<string | null> {
       jwtKey: env.CLERK_JWT_KEY,
       authorizedParties: authorizedPartiesFor(env.ALLOWED_ORIGINS, previewParty),
     });
-    return typeof payload.sub === 'string' ? payload.sub : null;
+    return typeof payload.sub === 'string' ? { sub: payload.sub, fva: factorAges((payload as { fva?: unknown }).fva), verified: true } : null;
   } catch {
     return null;
   }
+}
+
+/** `fva` as two finite numbers, or null for anything else. */
+function factorAges(value: unknown): FactorVerificationAge | null {
+  if (!Array.isArray(value) || value.length !== 2) return null;
+  const [first, second] = value as unknown[];
+  return typeof first === 'number' && Number.isFinite(first) && typeof second === 'number' && Number.isFinite(second) ? [first, second] : null;
 }
 
 /**
