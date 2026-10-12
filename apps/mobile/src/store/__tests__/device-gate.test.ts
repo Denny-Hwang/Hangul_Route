@@ -208,6 +208,38 @@ describe('device gate marker writer', () => {
       expect(markerWrites()).toEqual([{ v: 1, gate: 'none' }]);
     });
 
+    it('a self-only device without a PIN: the stored self profile agrees, none is written', async () => {
+      const self = profile('me', 'self');
+      vi.mocked(readJsonStrict).mockImplementation(async (key: string) => (key === 'profiles' ? [self] : null));
+      useProfileStore.setState({ profiles: [self], hydrated: true });
+      useAccountStore.setState({ pinHashSeen: NO_PIN_SEEN, hydrated: true });
+      unbind = bindDeviceGateMarker();
+      await flush();
+      expect(markerWrites()).toEqual([{ v: 1, gate: 'none' }]);
+    });
+
+    it('a refused none is not read again on every store change, only after the marker changed', async () => {
+      vi.mocked(readJsonStrict).mockImplementation(async (key: string) => (key === 'profiles' ? [profile('a')] : null));
+      useProfileStore.setState({ profiles: [], hydrated: true });
+      useAccountStore.setState({ pinHashSeen: NO_PIN_SEEN, hydrated: true });
+      unbind = bindDeviceGateMarker();
+      await flush();
+      useAccountStore.setState({ parentEmail: 'x@example.com' });
+      useProfileStore.setState({ activeId: null });
+      await flush();
+      expect(readJsonStrict).toHaveBeenCalledTimes(1);
+      expect(markerWrites()).toEqual([]);
+
+      // The device says something else (a child, no PIN), then none again: checked again, and now it agrees.
+      useProfileStore.setState({ profiles: [profile('b')] });
+      await flush();
+      vi.mocked(readJsonStrict).mockImplementation(async () => []);
+      useProfileStore.setState({ profiles: [] });
+      await flush();
+      expect(readJsonStrict).toHaveBeenCalledTimes(2);
+      expect(markerWrites()).toEqual([{ v: 1, gate: 'nopin' }, { v: 1, gate: 'none' }]);
+    });
+
     it('pin and nopin never wait for the stored list (they only make the lock stricter)', async () => {
       vi.mocked(readJsonStrict).mockImplementation(async () => {
         throw new Error('UnknownError');

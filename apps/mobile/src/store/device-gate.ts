@@ -1,5 +1,5 @@
 import { DEVICE_GATE_KEY, type DeviceGateMarker } from '@hangul-route/content-schema';
-import { deviceGateMarker, sameMarker, storedListHasLearner } from '../logic/shell/device-gate';
+import { deviceGateMarker, sameMarker, storedMarkerProfiles } from '../logic/shell/device-gate';
 import { readJsonStrict, writeJson } from '../platform/storage';
 import { useAccountStore } from './account-store';
 import { PROFILES_KEY, useProfileStore } from './profile-store';
@@ -14,9 +14,11 @@ import { PROFILES_KEY, useProfileStore } from './profile-store';
  *   would say `none`);
  * - on the first evaluation the account reconciles the PIN epoch (a PIN an older bundle changed
  *   moves it to now), before the first marker is written;
- * - a `none` marker is written only when the stored profile list, read again strictly, agrees
- *   that there is no learner: a profile read that failed at boot (the store then looks empty)
- *   writes nothing, and the console keeps the previous marker or its own fallback;
+ * - a `none` marker is written only when the stored profile list, read again strictly, gives
+ *   `none` too (no learner, or self learners only without a PIN): a profile read that failed at
+ *   boot (the store then looks empty) writes nothing, and the console keeps the previous marker
+ *   or its own fallback. A `none` the stored list refuses is not checked again until the marker
+ *   changes;
  * - writes run one at a time, each for the newest marker, and a marker equal to the last one
  *   written is not written again.
  *
@@ -26,6 +28,8 @@ import { PROFILES_KEY, useProfileStore } from './profile-store';
 
 let current: DeviceGateMarker | null = null;
 let written: DeviceGateMarker | null = null;
+/** A `none` the stored list did not confirm; not read again until the marker changes. */
+let refused: DeviceGateMarker | null = null;
 let generation = 0;
 let reconciled = false;
 let scheduled = false;
@@ -35,21 +39,36 @@ export function currentDeviceGateMarker(): DeviceGateMarker | null {
   return current;
 }
 
-async function noLearnerStored(): Promise<boolean> {
-  return !storedListHasLearner(await readJsonStrict<unknown>(PROFILES_KEY));
+/** Whether the stored profile list, read strictly, gives the same marker; a failed read throws. */
+async function storageAgrees(marker: DeviceGateMarker): Promise<boolean> {
+  const profiles = storedMarkerProfiles(await readJsonStrict<unknown>(PROFILES_KEY));
+  const { parentPinHash, pinSetAt } = useAccountStore.getState();
+  return sameMarker(deviceGateMarker({ profiles, parentPinHash, pinSetAt }), marker);
 }
 
 async function flush(gen: number): Promise<void> {
   const marker = current;
-  if (gen !== generation || marker === null || sameMarker(written, marker)) return;
+  if (gen !== generation || marker === null || sameMarker(written, marker) || sameMarker(refused, marker)) return;
+  if (marker.gate === 'none') {
+    let agrees: boolean;
+    try {
+      agrees = await storageAgrees(marker);
+    } catch {
+      // A failed strict read refuses `none` like a list that disagrees.
+      agrees = false;
+    }
+    if (!agrees) {
+      if (gen === generation) refused = marker;
+      return;
+    }
+  }
+  // A newer marker arrived meanwhile: its own flush, queued behind this one, writes it.
+  if (gen !== generation || current !== marker) return;
   try {
-    if (marker.gate === 'none' && !(await noLearnerStored())) return;
-    // A newer marker arrived meanwhile: its own flush, queued behind this one, writes it.
-    if (gen !== generation || current !== marker) return;
     await writeJson(DEVICE_GATE_KEY, marker);
     if (gen === generation) written = marker;
   } catch {
-    // Best effort: a failed read or write leaves the stored marker; the next change tries again.
+    // Best effort: the stored marker stays as it was, and the next change tries again.
   }
 }
 
@@ -78,6 +97,8 @@ function evaluate(gen: number): void {
   }
   const { parentPinHash, pinSetAt } = useAccountStore.getState();
   current = deviceGateMarker({ profiles, parentPinHash, pinSetAt });
+  // A refused `none` is checked again once the device said something else in between.
+  if (refused !== null && !sameMarker(refused, current)) refused = null;
   schedule(gen);
 }
 
@@ -87,6 +108,7 @@ export function bindDeviceGateMarker(): () => void {
   const gen = generation;
   current = null;
   written = null;
+  refused = null;
   reconciled = false;
   scheduled = false;
   const offProfiles = useProfileStore.subscribe(() => evaluate(gen));
@@ -99,6 +121,7 @@ export function bindDeviceGateMarker(): () => void {
       generation += 1;
       current = null;
       written = null;
+      refused = null;
       reconciled = false;
       scheduled = false;
     }

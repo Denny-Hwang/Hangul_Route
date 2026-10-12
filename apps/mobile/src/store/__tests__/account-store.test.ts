@@ -2,13 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../platform/storage', () => ({
   readJson: vi.fn(async () => null),
+  readJsonStrict: vi.fn(async () => null),
   writeJson: vi.fn(),
 }));
 
 import type { SubscriptionState } from '../../logic/entitlement';
 import { INITIAL_ATTEMPT_STATE } from '../../logic/profiles/pin-hash';
-import { NO_PIN_SEEN, pinHashFingerprint } from '../../logic/shell/device-gate';
-import { readJson, writeJson } from '../../platform/storage';
+import { NO_PIN_SEEN, PIN_HASH_UNREAD, pinHashFingerprint } from '../../logic/shell/device-gate';
+import { readJson, readJsonStrict, writeJson } from '../../platform/storage';
 import { useAccountStore } from '../account-store';
 
 describe('account-store', () => {
@@ -287,25 +288,41 @@ describe('account-store', () => {
       await useAccountStore.getState().hydrate();
       expect(useAccountStore.getState().pinSetAt).toBeNull();
       expect(useAccountStore.getState().pinHashSeen).toBeNull();
-      vi.mocked(readJson).mockImplementation(async (key: string) => {
-        if (key === 'account:pinSetAt') return 1_760_000_000_000;
-        if (key === 'account:pinHashSeen') return '0123456789abcdef';
-        return null;
-      });
+      vi.mocked(readJson).mockImplementation(async (key: string) => (key === 'account:pinSetAt' ? 1_760_000_000_000 : null));
+      vi.mocked(readJsonStrict).mockImplementation(async (key: string) => (key === 'account:pinHashSeen' ? '0123456789abcdef' : null));
       await useAccountStore.getState().hydrate();
       expect(useAccountStore.getState().pinSetAt).toBe(1_760_000_000_000);
       expect(useAccountStore.getState().pinHashSeen).toBe('0123456789abcdef');
+      vi.mocked(readJson).mockImplementation(async () => null);
+      vi.mocked(readJsonStrict).mockImplementation(async () => null);
+    });
+
+    it('a fingerprint read that fails is not "nothing seen yet": the next reconcile moves the epoch', async () => {
+      vi.mocked(readJson).mockImplementation(async (key: string) => {
+        if (key === 'account:parentPinHash') return 'new:hash';
+        if (key === 'account:pinSetAt') return 5;
+        return null;
+      });
+      vi.mocked(readJsonStrict).mockImplementation(async () => {
+        throw new Error('UnknownError');
+      });
+      await useAccountStore.getState().hydrate();
+      expect(useAccountStore.getState().pinHashSeen).toBe(PIN_HASH_UNREAD);
+      useAccountStore.getState().reconcilePinEpoch(9_000);
+      expect(useAccountStore.getState().pinSetAt).toBe(9_000);
+      expect(writeJson).toHaveBeenCalledWith('account:pinSetAt', 9_000);
+      vi.mocked(readJson).mockImplementation(async () => null);
+      vi.mocked(readJsonStrict).mockImplementation(async () => null);
     });
 
     it('hydrate reads a corrupt epoch or fingerprint as absent', async () => {
-      vi.mocked(readJson).mockImplementation(async (key: string) => {
-        if (key === 'account:pinSetAt') return 'yesterday';
-        if (key === 'account:pinHashSeen') return 42;
-        return null;
-      });
+      vi.mocked(readJson).mockImplementation(async (key: string) => (key === 'account:pinSetAt' ? 'yesterday' : null));
+      vi.mocked(readJsonStrict).mockImplementation(async (key: string) => (key === 'account:pinHashSeen' ? 42 : null));
       await useAccountStore.getState().hydrate();
       expect(useAccountStore.getState().pinSetAt).toBeNull();
       expect(useAccountStore.getState().pinHashSeen).toBeNull();
+      vi.mocked(readJson).mockImplementation(async () => null);
+      vi.mocked(readJsonStrict).mockImplementation(async () => null);
     });
 
     it('reconcilePinEpoch: a hash an older bundle changed moves the epoch to now and stores both keys', () => {

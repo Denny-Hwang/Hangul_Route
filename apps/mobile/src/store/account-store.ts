@@ -3,8 +3,14 @@ import { create } from 'zustand';
 import type { SubscriptionState } from '../logic/entitlement';
 import { INITIAL_ATTEMPT_STATE, type AttemptState } from '../logic/profiles/pin-hash';
 import { startResetWait } from '../logic/profiles/pin-reset';
-import { PIN_HASH_SEEN_KEY, pinHashFingerprint, reconcilePinEpoch as nextPinEpoch } from '../logic/shell/device-gate';
-import { readJson, writeJson } from '../platform/storage';
+import {
+  PIN_HASH_SEEN_KEY,
+  PIN_HASH_UNREAD,
+  pinHashFingerprint,
+  pinSetAtOf,
+  reconcilePinEpoch as nextPinEpoch,
+} from '../logic/shell/device-gate';
+import { readJson, readJsonStrict, writeJson } from '../platform/storage';
 
 /**
  * Family-level account settings, persisted across sessions.
@@ -30,8 +36,17 @@ const PIN_ATTEMPTS_KEY = 'account:pinAttempts';
 // set (`account:pinSetAt`, epoch ms), and the fingerprint of the hash this app last saw
 // (`account:pinHashSeen`), so a PIN changed by an older bundle still moves the epoch.
 
-function finiteTime(value: unknown): number | null {
-  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
+/**
+ * The fingerprint is read strictly: a read that fails is not "nothing seen yet" (which keeps the
+ * epoch) but `PIN_HASH_UNREAD`, which moves it, so a lost read can never hide a PIN change.
+ */
+async function readPinHashSeen(): Promise<string | null> {
+  try {
+    const value = await readJsonStrict<unknown>(PIN_HASH_SEEN_KEY);
+    return typeof value === 'string' ? value : null;
+  } catch {
+    return PIN_HASH_UNREAD;
+  }
 }
 
 interface State {
@@ -47,7 +62,7 @@ interface State {
   parentPinHash: string | null;
   /** Epoch ms the current PIN was set; null for a PIN set before F-APP-001 A-6 (read as epoch 0) or no PIN yet. */
   pinSetAt: number | null;
-  /** Fingerprint of the stored PIN hash last seen (`NO_PIN_SEEN` without a PIN); null before the first look. */
+  /** Fingerprint of the stored PIN hash last seen (`NO_PIN_SEEN` without a PIN); null before the first look, `PIN_HASH_UNREAD` when the read failed. */
   pinHashSeen: string | null;
   pinAttempts: AttemptState;
   hydrated: boolean;
@@ -95,7 +110,7 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     const parentPinHash = await readJson<string | null>(PIN_HASH_KEY);
     const pinAttempts = await readJson<AttemptState | null>(PIN_ATTEMPTS_KEY);
     const pinSetAt = await readJson<unknown>(PIN_SET_AT_KEY);
-    const pinHashSeen = await readJson<unknown>(PIN_HASH_SEEN_KEY);
+    const pinHashSeen = await readPinHashSeen();
     set({
       parentEmail: parentEmail ?? null,
       consentAcceptedAt: consentAcceptedAt ?? null,
@@ -111,8 +126,8 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
       pinResetRequestedAt: pinResetRequestedAt ?? null,
       subscription: subscription ?? null,
       parentPinHash: parentPinHash ?? null,
-      pinSetAt: finiteTime(pinSetAt),
-      pinHashSeen: typeof pinHashSeen === 'string' ? pinHashSeen : null,
+      pinSetAt: pinSetAtOf(pinSetAt),
+      pinHashSeen,
       pinAttempts: pinAttempts ?? INITIAL_ATTEMPT_STATE,
       hydrated: true,
     });

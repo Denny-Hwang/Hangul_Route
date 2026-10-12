@@ -2,13 +2,15 @@ import { DeviceGateMarkerSchema, type ProfileRole } from '@hangul-route/content-
 import { describe, expect, it } from 'vitest';
 import {
   NO_PIN_SEEN,
+  PIN_HASH_UNREAD,
   deviceGateMarker,
   isLearnerEntry,
   pinEpochOf,
   pinHashFingerprint,
+  pinSetAtOf,
   reconcilePinEpoch,
   sameMarker,
-  storedListHasLearner,
+  storedMarkerProfiles,
 } from '../device-gate';
 
 /**
@@ -143,6 +145,15 @@ describe('reconcilePinEpoch (any PIN change moves the epoch, whichever bundle ma
     });
   });
 
+  it('a fingerprint that could not be read counts as a changed PIN: the epoch becomes now (fail closed)', () => {
+    expect(reconcilePinEpoch({ parentPinHash: HASH, pinSetAt: 5, pinHashSeen: PIN_HASH_UNREAD }, NOW)).toEqual({
+      pinSetAt: NOW,
+      pinHashSeen: pinHashFingerprint(HASH),
+    });
+    expect(PIN_HASH_UNREAD).not.toMatch(/^[0-9a-f]{16}$/);
+    expect(PIN_HASH_UNREAD).not.toBe(NO_PIN_SEEN);
+  });
+
   it('a PIN removed keeps the epoch (no pin marker carries it) and records no PIN', () => {
     expect(reconcilePinEpoch({ parentPinHash: null, pinSetAt: 5, pinHashSeen: pinHashFingerprint(HASH) }, NOW)).toEqual({
       pinSetAt: 5,
@@ -162,10 +173,11 @@ describe('sameMarker', () => {
   });
 });
 
-describe('isLearnerEntry and storedListHasLearner (the raw hr:profiles list)', () => {
-  it('a learner, or an entry without a role, is a learner; the other roles are not', () => {
+describe('isLearnerEntry and storedMarkerProfiles (the raw hr:profiles list, the strict way)', () => {
+  it('anything but a grown-up role is a learner: learner, no role, an unknown role', () => {
     expect(isLearnerEntry({ role: 'learner' })).toBe(true);
     expect(isLearnerEntry({ displayName: 'x' })).toBe(true);
+    expect(isLearnerEntry({ role: 'pupil' })).toBe(true);
     for (const role of ['parent', 'teacher', 'admin']) expect(isLearnerEntry({ role }), role).toBe(false);
   });
 
@@ -173,10 +185,44 @@ describe('isLearnerEntry and storedListHasLearner (the raw hr:profiles list)', (
     for (const entry of [null, 'x', 7, true]) expect(isLearnerEntry(entry), String(entry)).toBe(true);
   });
 
-  it('only a list with a learner holds one', () => {
-    expect(storedListHasLearner([{ role: 'parent' }, { role: 'learner' }])).toBe(true);
-    expect(storedListHasLearner([{ role: 'parent' }])).toBe(false);
-    expect(storedListHasLearner([])).toBe(false);
-    for (const raw of [null, undefined, '[]', {}, 3]) expect(storedListHasLearner(raw), String(raw)).toBe(false);
+  it('keeps only the role and a self learner type; a learner type that is not self reads as a child', () => {
+    expect(
+      storedMarkerProfiles([
+        { role: 'learner', learnerType: 'self', displayName: 'A' },
+        { role: 'learner', learnerType: 'child' },
+        { learnerType: 'self' },
+        { role: 'learner', learnerType: 'SELF' },
+        { role: 'parent', learnerType: 'self' },
+        'junk',
+      ]),
+    ).toEqual([
+      { role: 'learner', learnerType: 'self' },
+      { role: 'learner' },
+      { role: 'learner', learnerType: 'self' },
+      { role: 'learner' },
+      { role: 'parent' },
+      { role: 'learner' },
+    ]);
+  });
+
+  it('anything but a list is no profile', () => {
+    for (const raw of [null, undefined, '[]', {}, 3]) expect(storedMarkerProfiles(raw), String(raw)).toEqual([]);
+  });
+
+  it('gives the marker the app computes: self-only without a PIN is none, a child is nopin', () => {
+    const marker = (raw: unknown, hash: string | null = null) => deviceGateMarker({ profiles: storedMarkerProfiles(raw), parentPinHash: hash, pinSetAt: 4 });
+    expect(marker([{ role: 'learner', learnerType: 'self' }])).toEqual({ v: 1, gate: 'none' });
+    expect(marker([{ role: 'learner', learnerType: 'self' }], HASH)).toEqual({ v: 1, gate: 'pin', pinEpoch: 4 });
+    expect(marker([{ role: 'learner' }])).toEqual({ v: 1, gate: 'nopin' });
+    expect(marker([{ role: 'parent' }])).toEqual({ v: 1, gate: 'none' });
+    expect(marker(null)).toEqual({ v: 1, gate: 'none' });
+  });
+});
+
+describe('pinSetAtOf', () => {
+  it('a finite, non-negative number, else none', () => {
+    expect(pinSetAtOf(5)).toBe(5);
+    expect(pinSetAtOf(0)).toBe(0);
+    for (const raw of [null, undefined, -1, Number.NaN, Number.POSITIVE_INFINITY, '5']) expect(pinSetAtOf(raw), String(raw)).toBeNull();
   });
 });

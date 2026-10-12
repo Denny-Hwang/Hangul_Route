@@ -21,6 +21,11 @@ import { gateRequired } from '../profiles/learner-type';
 export const PIN_HASH_SEEN_KEY = 'account:pinHashSeen';
 /** The fingerprint recorded while no PIN is stored. */
 export const NO_PIN_SEEN = 'none';
+/**
+ * Held in memory when `account:pinHashSeen` could not be read: it matches no fingerprint, so
+ * `reconcilePinEpoch` treats the stored PIN as a changed one (fail closed). Never stored.
+ */
+export const PIN_HASH_UNREAD = 'unread';
 
 interface ProfileLike {
   /** Absent on a profile saved before roles existed: read as `learner`, like `ProfileRoleSchema`'s default. */
@@ -28,24 +33,39 @@ interface ProfileLike {
   learnerType?: LearnerType;
 }
 
+const NON_LEARNER_ROLES: ReadonlySet<unknown> = new Set<ProfileRole>(['parent', 'teacher', 'admin']);
+
 /**
- * Whether a profile entry is a learner. An entry without a role is one (the schema default); an
- * entry that is not an object at all counts as one too, so an unreadable entry can only make the
- * marker stricter, never `none`.
+ * Whether a profile entry is a learner: anything but a grown-up role is one. An entry without a
+ * role is one (the schema default), and so is an entry that is not an object at all, so an
+ * unreadable entry can only make the marker stricter, never `none`.
  */
 export function isLearnerEntry(entry: unknown): boolean {
   if (typeof entry !== 'object' || entry === null) return true;
-  const role = (entry as { role?: unknown }).role;
-  return role === undefined || role === 'learner';
+  return !NON_LEARNER_ROLES.has((entry as { role?: unknown }).role);
 }
 
-/** Whether a stored profile list (`hr:profiles`, read raw) holds a learner; anything but a list holds none. */
-export function storedListHasLearner(raw: unknown): boolean {
-  return Array.isArray(raw) && raw.some(isLearnerEntry);
+/**
+ * The profiles a stored list (`hr:profiles`, read raw) stands for, reduced to what the marker
+ * reads, the strict way: a learner unless the role is a grown-up one, and a self learner only
+ * when it says so (absent reads as a child, F-LEARN-001). Anything but a list is no profile.
+ */
+export function storedMarkerProfiles(raw: unknown): ProfileLike[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((entry): ProfileLike => {
+    if (!isLearnerEntry(entry)) return { role: (entry as { role: ProfileRole }).role };
+    const self = typeof entry === 'object' && entry !== null && (entry as { learnerType?: unknown }).learnerType === 'self';
+    return self ? { role: 'learner', learnerType: 'self' } : { role: 'learner' };
+  });
+}
+
+/** `account:pinSetAt` as stored: a finite, non-negative time, else none. */
+export function pinSetAtOf(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
 }
 
 export function pinEpochOf(pinSetAt: unknown): number {
-  return typeof pinSetAt === 'number' && Number.isFinite(pinSetAt) && pinSetAt >= 0 ? pinSetAt : 0;
+  return pinSetAtOf(pinSetAt) ?? 0;
 }
 
 export function deviceGateMarker(input: {
@@ -54,8 +74,8 @@ export function deviceGateMarker(input: {
   pinSetAt: number | null;
 }): DeviceGateMarker {
   const { parentPinHash } = input;
-  const profiles = input.profiles.map((p) => ({ ...p, role: p.role ?? 'learner' }));
-  if (!profiles.some(isLearnerEntry) || !gateRequired({ profiles, parentPinHash })) return { v: 1, gate: 'none' };
+  const profiles = input.profiles.map((p) => ({ ...p, role: isLearnerEntry(p) ? ('learner' as const) : (p.role as ProfileRole) }));
+  if (!profiles.some((p) => p.role === 'learner') || !gateRequired({ profiles, parentPinHash })) return { v: 1, gate: 'none' };
   if (parentPinHash === null) return { v: 1, gate: 'nopin' };
   return { v: 1, gate: 'pin', pinEpoch: pinEpochOf(input.pinSetAt) };
 }
@@ -104,6 +124,8 @@ export interface PinEpochState {
  *   set before A-6 stays epoch `0` until it is set again;
  * - a different PIN: the epoch becomes `now`, so a grown-up must sign in once before the PIN
  *   opens the grown-up area again;
+ * - a fingerprint that could not be read (`PIN_HASH_UNREAD`): the same, since the PIN may have
+ *   changed;
  * - the PIN removed: record that, keep the epoch (no `pin` marker carries it).
  */
 export function reconcilePinEpoch(state: PinEpochState, now: number): Pick<PinEpochState, 'pinSetAt' | 'pinHashSeen'> | null {
