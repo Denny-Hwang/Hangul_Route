@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { checkoutForm, checkoutMode, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, lookupPromotionCode, mapStripeStatus, parseStripeSignature, priceIdFor, promoFromStripe, signStripePayload, verifyStripeSignature } from '../stripe';
+import { checkoutForm, checkoutMode, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, fetchSubscription, freshStripeEvent, lookupPromotionCode, mergeForStripeEvent, mapStripeStatus, parseStripeSignature, priceIdFor, promoFromStripe, signStripePayload, verifyStripeSignature } from '../stripe';
 
 const secret = 'whsec_test';
 const body = '{"id":"evt_1","type":"customer.subscription.updated"}';
@@ -77,6 +77,46 @@ describe('stripe helpers (F-ENT-001 §3.3)', () => {
     expect(sub({ status: 'active', items: null })).toMatchObject({ expiresAt: null });
   });
 
+  it('a subscription completion merges as a checkout; everything else sets (BY-D5)', () => {
+    const meta = { subjectKind: 'space', subjectId: 'space:fam', planKey: 'family_lifetime' };
+    expect(mergeForStripeEvent({ type: 'checkout.session.completed', data: { object: { id: 'cs_1', mode: 'subscription', subscription: 'sub_1', metadata: meta } } })).toBe('checkout');
+    expect(mergeForStripeEvent({ type: 'checkout.session.completed', data: { object: { id: 'cs_1', subscription: 'sub_1', metadata: meta } } })).toBe('checkout');
+    expect(mergeForStripeEvent({ type: 'checkout.session.completed', data: { object: { id: 'cs_2', mode: 'payment', payment_intent: 'pi_1', metadata: meta } } })).toBe('set'); // legacy one-time
+    expect(mergeForStripeEvent({ type: 'customer.subscription.updated', data: { object: { id: 'sub_1', status: 'active', metadata: meta } } })).toBe('set');
+  });
+
+  it('reads a subscription again for created and updated events, falling back to the event on any failure (BY-D5)', async () => {
+    const env = { STRIPE_SECRET_KEY: 'sk_test' };
+    const meta = { subjectKind: 'space', subjectId: 'space:fam', planKey: 'family_lifetime' };
+    const stale = { type: 'customer.subscription.updated', data: { object: { id: 'sub_1', status: 'active', cancel_at_period_end: true, metadata: meta } } };
+    const freshSub = { id: 'sub_1', object: 'subscription', status: 'active', cancel_at_period_end: false, metadata: meta };
+    const ok = vi.fn<typeof fetch>().mockImplementation(async () => new Response(JSON.stringify(freshSub), { status: 200 }));
+    expect(await freshStripeEvent(env, stale, ok)).toEqual({ ...stale, data: { object: freshSub } });
+    const [url, init] = ok.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('https://api.stripe.com/v1/subscriptions/sub_1');
+    expect(init.method).toBe('GET');
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer sk_test');
+    expect(await freshStripeEvent(env, { ...stale, type: 'customer.subscription.created' }, ok)).toMatchObject({ data: { object: freshSub } });
+
+    // Failures and odd answers keep the event's own copy.
+    for (const answer of [new Response('{}', { status: 404 }), new Response('not json', { status: 200 }), new Response(JSON.stringify({ ...freshSub, id: 'sub_other' }), { status: 200 }), new Response('[]', { status: 200 })]) {
+      expect(await freshStripeEvent(env, stale, vi.fn<typeof fetch>().mockResolvedValue(answer))).toBe(stale);
+    }
+    expect(await freshStripeEvent(env, stale, vi.fn<typeof fetch>().mockRejectedValue(new Error('offline')))).toBe(stale);
+    expect(await freshStripeEvent(env, stale, vi.fn<typeof fetch>().mockResolvedValue(undefined as unknown as Response))).toBe(stale);
+    // No read without a key, for deleted (final), for completions, or without a subscription id.
+    const never = vi.fn<typeof fetch>();
+    expect(await freshStripeEvent({}, stale, never)).toBe(stale);
+    const deleted = { ...stale, type: 'customer.subscription.deleted' };
+    expect(await freshStripeEvent(env, deleted, never)).toBe(deleted);
+    const completed = { type: 'checkout.session.completed', data: { object: { id: 'cs_1', subscription: 'sub_1', metadata: meta } } };
+    expect(await freshStripeEvent(env, completed, never)).toBe(completed);
+    const noId = { type: 'customer.subscription.updated', data: { object: { id: 'pi_1', metadata: meta } } };
+    expect(await freshStripeEvent(env, noId, never)).toBe(noId);
+    expect(never).not.toHaveBeenCalled();
+    expect(await fetchSubscription(env, 'sub_1', ok)).toEqual(freshSub);
+  });
+
   it('builds checkout forms, resolves price ids, and posts sessions', async () => {
     const env = { STRIPE_SECRET_KEY: 'sk_test', STRIPE_PRICE_GROUP_LICENSE_YEARLY: 'price_gl_y' };
     expect(priceIdFor(env, 'group_license')).toBe('price_gl_y');
@@ -100,11 +140,17 @@ describe('stripe helpers (F-ENT-001 §3.3)', () => {
       'subscription_data[metadata][subjectKind]': 'space',
       'subscription_data[metadata][subjectId]': 'space:fam',
       'subscription_data[metadata][planKey]': 'family_lifetime',
-      payment_method_collection: 'if_required',
+      // A family always saves a card, so a free first year still renews and "renews {date}" stays true (BY-D4).
+      payment_method_collection: 'always',
     });
     expect(family).not.toHaveProperty('customer_creation'); // Stripe refuses it in subscription mode
     expect(family).not.toHaveProperty('customer_email');
     expect(family.allow_promotion_codes).toBe('true'); // no code → Stripe's own box
+    // A subject that already has a Stripe customer buys on it again, so one portal shows every invoice (BY-D4).
+    const again = checkoutForm({ priceId: 'price_fy', subjectKind: 'space', subjectId: 'space:fam', planKey: 'family_lifetime', successUrl: 's', cancelUrl: 'c', customerEmail: 'kim@example.com', customer: 'cus_old' });
+    expect(again.customer).toBe('cus_old');
+    expect(again).not.toHaveProperty('customer_email'); // Stripe refuses both together
+    expect(checkoutForm({ priceId: 'p', subjectKind: 'space', subjectId: 's', planKey: 'group_license', successUrl: 's', cancelUrl: 'c', customerEmail: 'kim@example.com', customer: null })).toMatchObject({ customer_email: 'kim@example.com' });
     const promo = { id: 'promo_1', code: 'HOYA20', name: 'Launch', percentOff: 20, amountOffCents: null, duration: 'once' as const };
     const withPromo = checkoutForm({ priceId: 'p', subjectKind: 'space', subjectId: 's', planKey: 'family_lifetime', successUrl: 's', cancelUrl: 'c', promo });
     expect(withPromo).toMatchObject({ 'discounts[0][promotion_code]': 'promo_1', 'metadata[promoCode]': 'HOYA20' });

@@ -6,7 +6,8 @@ import { fail, ok } from '../envelope';
 import { accountActor, requireAccount, spaceContext } from '../lib/access';
 import { can } from '../lib/can';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
-import { checkoutForm, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, lookupPromotionCode, priceIdFor, verifyStripeSignature, type StripeEnv, type StripeEventLike } from '../lib/stripe';
+import { isEntitlementActive } from '../lib/entitlement';
+import { checkoutForm, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, freshStripeEvent, lookupPromotionCode, mergeForStripeEvent, priceIdFor, verifyStripeSignature, type StripeEnv, type StripeEventLike } from '../lib/stripe';
 
 /** Promo lookups are guessable strings: 20 per minute per client (F-ENT-002 §3.2). */
 export const PROMO_LIMIT = 20;
@@ -71,6 +72,10 @@ entitlementRoutes.post('/stripe/checkout', async (c) => {
   if (planKey === 'group_license' && space.kind === 'class' && space.parentSpaceId) {
     return fail(c, 'bad_request', 'A class inside a school is covered by the school licence', 422);
   }
+  // A covering subscription of this plan already renews yearly: a second one would too (BY-D4).
+  // A legacy one-time sandbox row or a contract row does not block moving to the yearly plan.
+  const subscriptions = (await db.entitlementsFor('space', subjectId)).filter((e) => e.planKey === planKey && e.provider === 'stripe' && isStripeSubscriptionRef(e.providerRef));
+  if (subscriptions.some((e) => isEntitlementActive(e, new Date()))) return fail(c, 'already_active', 'This plan is already active', 409);
 
   const env = c.env ?? {};
   const priceId = priceIdFor(env, planKey);
@@ -82,7 +87,7 @@ entitlementRoutes.post('/stripe/checkout', async (c) => {
   const base = (env.CONSOLE_URL ?? 'https://hangulroute.com').replace(/\/$/, '');
   const session = await createCheckoutSession(
     env,
-    checkoutForm({ priceId, subjectKind, subjectId, planKey, successUrl: `${base}/teach/billing?checkout=success`, cancelUrl: `${base}/teach/billing?checkout=cancel`, customerEmail: account.email, promo }),
+    checkoutForm({ priceId, subjectKind, subjectId, planKey, successUrl: `${base}/teach/billing?checkout=success`, cancelUrl: `${base}/teach/billing?checkout=cancel`, customerEmail: account.email, customer: subscriptions.find((e) => e.customerRef)?.customerRef ?? null, promo }),
     fetchImpl,
   );
   if (!session.ok || !session.url) return fail(c, 'stripe_error', 'Stripe did not return a checkout link', 500, { status: session.status });
@@ -146,9 +151,10 @@ entitlementRoutes.post('/stripe/webhook', async (c) => {
     return fail(c, 'bad_request', 'Body is not JSON', 400);
   }
   if (!event || typeof event.type !== 'string' || !event.data || typeof event.data.object !== 'object') return fail(c, 'bad_request', 'Not a Stripe event', 400);
-  const apply = entitlementFromStripeEvent(event);
+  const current = await freshStripeEvent(env, event, stripeFetch ?? globalThis.fetch);
+  const apply = entitlementFromStripeEvent(current);
   if (!apply) return ok(c, { received: true, applied: false });
   const db = dbFor(c);
-  const entitlement = await db.applyEntitlement(apply, new Date());
+  const entitlement = await db.applyEntitlement(apply, new Date(), mergeForStripeEvent(current));
   return ok(c, { received: true, applied: true, entitlement: await withSpaceName(db, entitlement) });
 });
