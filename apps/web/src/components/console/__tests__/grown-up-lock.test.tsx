@@ -480,7 +480,7 @@ describe('browserLockEnvironment: the default wiring', () => {
     const env = browserLockEnvironment();
     expect(env.window).toBeNull();
     expect(env.document).toBeNull();
-    expect(await env.readDevice()).toEqual({ readable: false });
+    expect(await env.readDevice()).toEqual({ readable: false, reason: 'unavailable' });
     expect(await env.readTrustedEpoch()).toBeNull();
     expect(env.readUnlock()).toBeNull();
     expect(env.origin()).toBe('');

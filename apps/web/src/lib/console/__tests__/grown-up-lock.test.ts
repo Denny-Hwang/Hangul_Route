@@ -8,6 +8,7 @@ import {
   trustableEpoch,
   type DeviceGateRead,
   type LockDecision,
+  type LockLine,
 } from '../grown-up-lock';
 
 /**
@@ -19,14 +20,17 @@ const NOW = 1_800_000_000_000;
 const EPOCH = 1_790_000_000_000;
 
 const OPEN: LockDecision = { state: 'open' };
-const locked = (pinPath: boolean, line: 'default' | 'pinChanged' | 'firstSignIn' | 'noPin'): LockDecision => ({ state: 'locked', pinPath, line });
+const locked = (pinPath: boolean, line: LockLine): LockDecision => ({ state: 'locked', pinPath, line });
 
 const pin = (pinEpoch = EPOCH): DeviceGateMarker => ({ v: 1, gate: 'pin', pinEpoch });
 const nopin: DeviceGateMarker = { v: 1, gate: 'nopin' };
 const none: DeviceGateMarker = { v: 1, gate: 'none' };
 
 const device = (marker: DeviceGateMarker | null, hasProfiles = false): DeviceGateRead => ({ readable: true, marker, hasProfiles });
-const unreadable: DeviceGateRead = { readable: false };
+/** No IndexedDB API at all: such a browser cannot keep learner profiles either. */
+const unavailable: DeviceGateRead = { readable: false, reason: 'unavailable' };
+/** The API exists but the read failed (connection lost, backing store error) or timed out. */
+const failed: DeviceGateRead = { readable: false, reason: 'failed' };
 
 const signinUnlock = (seenAgo = 0): GrownUpUnlock => ({ v: 1, at: NOW - seenAgo - 1000, seen: NOW - seenAgo, src: 'signin' });
 const pinUnlock = (pinEpoch = EPOCH, seenAgo = 0): GrownUpUnlock => ({ v: 1, at: NOW - seenAgo - 1000, seen: NOW - seenAgo, src: 'pin', pinEpoch });
@@ -38,7 +42,7 @@ function decide(d: DeviceGateRead, unlock: GrownUpUnlock | null, trustedEpoch: n
 
 describe('decideGrownUpLock: exempt and open rows', () => {
   it('any marker on /signin is open (exempt)', () => {
-    for (const d of [device(pin()), device(nopin), device(null, true), unreadable]) expect(decide(d, null, null, true)).toEqual(OPEN);
+    for (const d of [device(pin()), device(nopin), device(null, true), unavailable, failed]) expect(decide(d, null, null, true)).toEqual(OPEN);
   });
 
   it('absent marker and no hr:profiles list is open (a teacher laptop)', () => {
@@ -50,8 +54,23 @@ describe('decideGrownUpLock: exempt and open rows', () => {
     expect(decide(device(none, true), signinUnlock(expired), EPOCH)).toEqual(OPEN);
   });
 
-  it('storage unreadable is open: a browser without IndexedDB cannot keep learner profiles either', () => {
-    expect(decide(unreadable, null, null)).toEqual(OPEN);
+  it('no IndexedDB API is open: a browser without IndexedDB cannot keep learner profiles either', () => {
+    expect(decide(unavailable, null, null)).toEqual(OPEN);
+  });
+});
+
+describe('decideGrownUpLock: a device read that failed (A-4a review, 2026-10-12)', () => {
+  // The API exists, so this browser may hold learner profiles: a lost connection or a backing
+  // store error must not open the page. It locks like a learner app older than A-6.
+  it('opens only with an active sign-in unlock', () => {
+    expect(decide(failed, signinUnlock(), null)).toEqual(OPEN);
+  });
+
+  it('is sign-in only with the plain sign-in line otherwise, a PIN unlock included (no epoch to check)', () => {
+    expect(decide(failed, null, null)).toEqual(locked(false, 'signInOnly'));
+    expect(decide(failed, null, EPOCH)).toEqual(locked(false, 'signInOnly'));
+    expect(decide(failed, pinUnlock(), EPOCH)).toEqual(locked(false, 'signInOnly'));
+    expect(decide(failed, signinUnlock(expired), EPOCH)).toEqual(locked(false, 'signInOnly'));
   });
 });
 
@@ -60,10 +79,11 @@ describe('decideGrownUpLock: absent marker with learner profiles (a learner app 
     expect(decide(device(null, true), signinUnlock(), null)).toEqual(OPEN);
   });
 
-  it('is locked to sign-in only otherwise, a PIN unlock included (no epoch to check)', () => {
-    expect(decide(device(null, true), null, null)).toEqual(locked(false, 'firstSignIn'));
-    expect(decide(device(null, true), signinUnlock(expired), null)).toEqual(locked(false, 'firstSignIn'));
-    expect(decide(device(null, true), pinUnlock(), EPOCH)).toEqual(locked(false, 'firstSignIn'));
+  it('is locked to sign-in only otherwise, a PIN unlock included (no epoch to check), with the plain sign-in line', () => {
+    // A sign-in cannot turn a PIN path on here (only A-6 writes a pin marker), so the line promises none.
+    expect(decide(device(null, true), null, null)).toEqual(locked(false, 'signInOnly'));
+    expect(decide(device(null, true), signinUnlock(expired), null)).toEqual(locked(false, 'signInOnly'));
+    expect(decide(device(null, true), pinUnlock(), EPOCH)).toEqual(locked(false, 'signInOnly'));
   });
 });
 
@@ -77,13 +97,16 @@ describe('decideGrownUpLock: marker pin', () => {
     expect(decide(device(pin()), pinUnlock(), EPOCH)).toEqual(OPEN);
   });
 
-  it('a PIN unlock whose epoch differs, or with no trusted epoch, is sign-in only with the PIN-changed line', () => {
+  it('a PIN unlock whose epoch differs is sign-in only with the PIN-changed line', () => {
     // a child reset the PIN after the grown-up signed in: the marker moved on
     expect(decide(device(pin(EPOCH + 5)), pinUnlock(EPOCH + 5), EPOCH)).toEqual(locked(false, 'pinChanged'));
     // the unlock carries an older epoch than the marker
     expect(decide(device(pin()), pinUnlock(EPOCH - 5), EPOCH)).toEqual(locked(false, 'pinChanged'));
-    // no grown-up sign-in on this device yet
-    expect(decide(device(pin()), pinUnlock(), null)).toEqual(locked(false, 'pinChanged'));
+  });
+
+  it('a PIN unlock with no trusted epoch is sign-in only with the "sign in once" line: nothing changed, nobody signed in here yet', () => {
+    // a parent already signed in to Clerk (carried over from the site) enters the PIN first
+    expect(decide(device(pin()), pinUnlock(), null)).toEqual(locked(false, 'firstSignIn'));
   });
 
   it('no unlock with a trusted epoch: the PIN path and sign-in, with the default line', () => {
@@ -110,10 +133,15 @@ describe('decideGrownUpLock: marker pin', () => {
     expect(decide(device(pin(EPOCH + 1)), null, EPOCH)).toEqual(locked(false, 'pinChanged'));
   });
 
-  it('marker epoch 0 (a PIN set before A-6) is never trusted, even if a 0 was somehow stored', () => {
-    expect(decide(device(pin(0)), null, 0)).toEqual(locked(false, 'firstSignIn'));
-    expect(decide(device(pin(0)), pinUnlock(0), 0)).toEqual(locked(false, 'pinChanged'));
-    expect(decide(device(pin(0)), null, null)).toEqual(locked(false, 'firstSignIn'));
+  it('marker epoch 0 (a PIN set before A-6) is never trusted, even if a 0 was somehow stored; the line says to set the PIN again', () => {
+    // A sign-in never stores epoch 0, so "sign in once" would promise a PIN path that cannot come.
+    expect(decide(device(pin(0)), null, 0)).toEqual(locked(false, 'pinRenew'));
+    expect(decide(device(pin(0)), pinUnlock(0), 0)).toEqual(locked(false, 'pinRenew'));
+    expect(decide(device(pin(0)), null, null)).toEqual(locked(false, 'pinRenew'));
+    expect(decide(device(pin(0)), null, EPOCH)).toEqual(locked(false, 'pinRenew'));
+    expect(decide(device(pin(0)), pinUnlock(EPOCH), EPOCH)).toEqual(locked(false, 'pinRenew'));
+    // a sign-in still opens it
+    expect(decide(device(pin(0)), signinUnlock(), null)).toEqual(OPEN);
   });
 
   it('a trusted epoch that is not a finite positive number counts as none', () => {
@@ -170,9 +198,16 @@ describe('lock screen targets', () => {
     expect(signInAgainUrl('/account/billing?checkout=success#top')).toBe('/signin?next=%2Faccount%2Fbilling%3Fcheckout%3Dsuccess');
   });
 
-  it('learnerHome is / on the app host and the app host elsewhere (console still on hangulroute.com)', () => {
-    expect(learnerHome('https://app.hangulroute.com')).toBe('/');
+  it('learnerHome is the app host only while the console is still served on the site (hangulroute.com, www)', () => {
     expect(learnerHome('https://hangulroute.com')).toBe('https://app.hangulroute.com/');
     expect(learnerHome('https://www.hangulroute.com')).toBe('https://app.hangulroute.com/');
+  });
+
+  it('learnerHome is / on the app host and on every other origin, so previews and local builds never leave for production', () => {
+    expect(learnerHome('https://app.hangulroute.com')).toBe('/');
+    expect(learnerHome('https://hangul-route-app-preview.example.workers.dev')).toBe('/');
+    expect(learnerHome('http://localhost:4173')).toBe('/');
+    expect(learnerHome('http://127.0.0.1:3000')).toBe('/');
+    expect(learnerHome('')).toBe('/');
   });
 });

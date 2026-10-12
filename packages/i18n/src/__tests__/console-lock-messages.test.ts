@@ -25,9 +25,17 @@ describe('console.lock (F-APP-001 section 3.9 lock screen)', () => {
     expect(lock.noPin).toBe('Set a grown-up PIN in the app, or sign in again.');
   });
 
+  // A-4a review (2026-10-12): each line promises only what a sign-in can do on that device.
+  // A PIN set before A-6 (epoch 0) is never trusted, so a sign-in alone never turns the PIN
+  // path on; a learner app older than A-6 (or a device read that failed) has no PIN path at all.
+  it('has the PIN-renew line (epoch 0) and the plain sign-in line (no PIN path possible)', () => {
+    expect(lock.pinRenew).toBe('To use the grown-up PIN here, set it again in the app, then sign in once.');
+    expect(lock.signInOnly).toBe('Sign in again to open grown-up pages on this device.');
+  });
+
   it('holds exactly these keys', () => {
     expect(leafPaths(lock).sort()).toEqual(
-      ['title', 'line', 'usePin.cta', 'signInAgain.cta', 'backToLearning.cta', 'pinChanged', 'firstSignIn', 'noPin'].sort(),
+      ['title', 'line', 'usePin.cta', 'signInAgain.cta', 'backToLearning.cta', 'pinChanged', 'firstSignIn', 'noPin', 'pinRenew', 'signInOnly'].sort(),
     );
   });
 

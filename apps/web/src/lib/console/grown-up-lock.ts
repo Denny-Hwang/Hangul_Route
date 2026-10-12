@@ -1,4 +1,4 @@
-import { APP_ORIGIN, APP_ROUTES, safeNextPath, unlockActive, type DeviceGateMarker, type GrownUpUnlock } from '@hangul-route/content-schema';
+import { APP_ORIGIN, APP_ROUTES, SITE_ORIGIN, safeNextPath, unlockActive, type DeviceGateMarker, type GrownUpUnlock } from '@hangul-route/content-schema';
 
 /**
  * The grown-up lock decision (F-APP-001 section 3.9, OD-3; wireframe shell/grown-up-lock.md).
@@ -8,9 +8,13 @@ import { APP_ORIGIN, APP_ROUTES, safeNextPath, unlockActive, type DeviceGateMark
  * (`components/console/GrownUpLock.tsx`) reads the stored records and asks this module.
  */
 
-/** What the console could read of the learner app's device state (IndexedDB, `lib/console/device-marker.ts`). */
+/**
+ * What the console could read of the learner app's device state (IndexedDB, `lib/console/device-marker.ts`).
+ * `unavailable`: the browser has no IndexedDB API, so it cannot keep learner profiles either.
+ * `failed`: the API exists but the read failed or timed out; this browser may hold profiles.
+ */
 export type DeviceGateRead =
-  | { readable: false }
+  | { readable: false; reason: 'unavailable' | 'failed' }
   | {
       readable: true;
       /** `hr:device:gate`; null when absent or invalid. */
@@ -19,8 +23,14 @@ export type DeviceGateRead =
       hasProfiles: boolean;
     };
 
-/** `default` goes with the PIN button; the other three are the sign-in-only cases. */
-export type LockLine = 'default' | 'pinChanged' | 'firstSignIn' | 'noPin';
+/**
+ * `default` goes with the PIN button; the others are the sign-in-only cases, each chosen by its
+ * cause so it promises only what a sign-in can do: `firstSignIn` (no grown-up signed in here yet;
+ * a sign-in turns the PIN path on), `pinChanged` (the epoch moved since), `pinRenew` (a PIN set
+ * before A-6, epoch 0, which a sign-in never trusts), `signInOnly` (no PIN path at all: a learner
+ * app older than A-6, or a failed read) and `noPin` (a family device without a PIN).
+ */
+export type LockLine = 'default' | 'pinChanged' | 'firstSignIn' | 'pinRenew' | 'signInOnly' | 'noPin';
 
 export type LockDecision = { state: 'open' } | { state: 'locked'; pinPath: boolean; line: LockLine };
 
@@ -51,29 +61,34 @@ export function trustableEpoch(marker: DeviceGateMarker | null): number | null {
   return marker?.gate === 'pin' && isRealEpoch(marker.pinEpoch) ? marker.pinEpoch : null;
 }
 
-/** The decision table of section 3.9, row by row. */
+/** Why the PIN cannot open a `pin` device whose epoch is not the trusted one. */
+function untrustedLine(markerEpoch: number, trusted: number | null): LockLine {
+  if (!isRealEpoch(markerEpoch)) return 'pinRenew';
+  return trusted === null ? 'firstSignIn' : 'pinChanged';
+}
+
+/** The decision table of section 3.9, row by row (lines by cause, A-4a review 2026-10-12). */
 export function decideGrownUpLock(input: LockInput): LockDecision {
   const { device, unlock, now } = input;
   if (input.exempt) return OPEN;
-  if (!device.readable) return OPEN;
-  const { marker } = device;
-  if (marker === null && !device.hasProfiles) return OPEN;
+  if (!device.readable && device.reason === 'unavailable') return OPEN;
+  // A failed read counts as an absent marker on a device with profiles: it may hold them.
+  const marker = device.readable ? device.marker : null;
+  if (device.readable && marker === null && !device.hasProfiles) return OPEN;
   if (marker?.gate === 'none') return OPEN;
 
   const active = unlockActive(unlock, now) ? unlock : null;
   // A sign-in unlock opens every locked row.
   if (active?.src === 'signin') return OPEN;
 
-  if (marker === null) return signInOnly('firstSignIn');
+  if (marker === null) return signInOnly('signInOnly');
   if (marker.gate === 'nopin') return signInOnly('noPin');
 
   const trusted = isRealEpoch(input.trustedEpoch) ? input.trustedEpoch : null;
-  const markerTrusted = trusted !== null && marker.pinEpoch === trusted;
-  if (active?.src === 'pin') {
-    return markerTrusted && active.pinEpoch === marker.pinEpoch ? OPEN : signInOnly('pinChanged');
-  }
-  if (markerTrusted) return { state: 'locked', pinPath: true, line: 'default' };
-  return signInOnly(trusted === null ? 'firstSignIn' : 'pinChanged');
+  if (trusted === null || marker.pinEpoch !== trusted) return signInOnly(untrustedLine(marker.pinEpoch, trusted));
+  if (active === null) return { state: 'locked', pinPath: true, line: 'default' };
+  // A PIN unlock made with another epoch: the PIN changed since it was entered.
+  return active.src === 'pin' && active.pinEpoch === marker.pinEpoch ? OPEN : signInOnly('pinChanged');
 }
 
 /**
@@ -91,7 +106,14 @@ export function signInAgainUrl(path: string): string {
   return next ? `${APP_ROUTES.signIn}?next=${encodeURIComponent(next)}` : APP_ROUTES.signIn;
 }
 
-/** The learner app: `/` on the app host, the app host itself while the console is still served on hangulroute.com. */
+/** The site origins that still serve the console until F-SITE-002 S-10 (hangulroute.com and www). */
+const SITE_ORIGINS: ReadonlySet<string> = new Set([SITE_ORIGIN, SITE_ORIGIN.replace('://', '://www.')]);
+
+/**
+ * The learner app: the app host itself while the console is still served on the site, `/`
+ * everywhere else (the app host, a merged-build preview, a local build), so a preview or a test
+ * never leaves for production (A-4a review 2026-10-12, refines section 3.8).
+ */
 export function learnerHome(origin: string): string {
-  return origin === APP_ORIGIN ? APP_ROUTES.learn : `${APP_ORIGIN}${APP_ROUTES.learn}`;
+  return SITE_ORIGINS.has(origin) ? `${APP_ORIGIN}${APP_ROUTES.learn}` : APP_ROUTES.learn;
 }
