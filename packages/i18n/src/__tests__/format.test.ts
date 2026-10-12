@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { describeRelativeDay, formatDate, formatNumber, formatUsd } from '../format';
+import { describeRelativeDay, formatDate, formatMinorAmount, formatNumber, formatUsd } from '../format';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -162,6 +162,32 @@ describe('formatUsd', () => {
     }
     vi.stubGlobal('Intl', { NumberFormat: Boom });
     expect(formatUsd('en', 15.3)).toBe('$15.30');
+  });
+});
+
+describe('formatMinorAmount (F-BILL-002 receipts: Stripe minor units)', () => {
+  it('uses the currency own fraction digits, never a fixed / 100', () => {
+    expect(formatMinorAmount('en', 1530, 'usd')).toBe('$15.30');
+    expect(formatMinorAmount('en', 15300, 'USD')).toBe('$153.00');
+    expect(formatMinorAmount('en', 0, 'usd')).toBe('$0.00');
+    expect(formatMinorAmount('en', 20000, 'krw')).toBe('₩20,000');
+    expect(formatMinorAmount('en', 1500, 'jpy')).toBe('¥1,500');
+    expect(formatMinorAmount('en', 1250, 'eur')).toBe('€12.50');
+  });
+
+  it('is localised for es and ko and always mentions the amount', () => {
+    expect(formatMinorAmount('es', 1530, 'usd')).toMatch(/15[.,]30/);
+    expect(formatMinorAmount('ko', 20000, 'krw')).toContain('20,000');
+  });
+
+  it('falls back to the number and the code when Intl is missing, or rejects the code', () => {
+    expect(formatMinorAmount('en', 1234, 'u$d')).toBe('12.34 U$D');
+    vi.stubGlobal('Intl', undefined);
+    expect(formatMinorAmount('en', 1530, 'usd')).toBe('$15.30');
+    expect(formatMinorAmount('en', 123456, 'eur')).toBe('1,234.56 EUR');
+    expect(formatMinorAmount('es', 20000, 'krw')).toBe('20,000 KRW');
+    expect(formatMinorAmount('en', -500, 'usd')).toBe('-$5.00');
+    expect(formatMinorAmount('en', -500, 'gbp')).toBe('-5.00 GBP');
   });
 });
 

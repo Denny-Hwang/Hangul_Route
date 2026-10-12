@@ -111,6 +111,35 @@ export function formatUsd(locale: UiLocale, amount: number, options: FormatUsdOp
   }
 }
 
+/**
+ * Stripe's zero-decimal currencies: their minor unit is the whole unit
+ * (https://docs.stripe.com/currencies#zero-decimal). Only the fallback reads
+ * this; `Intl` knows each currency's own fraction digits.
+ */
+const ZERO_DECIMAL_CURRENCIES: ReadonlySet<string> = new Set(['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF']);
+
+/**
+ * An amount in a currency's minor unit, as Stripe stores it (F-BILL-002 section
+ * 4.10): cents for `usd` (1530 → "$15.30"), whole units for zero-decimal
+ * currencies (`krw` 20000 → "₩20,000"). The fraction digits come from the
+ * currency itself, never a fixed `/ 100`. `currency` is an ISO 4217 code in
+ * any case. Without `Intl`, or for a code it rejects: "15.30 EUR" ("$15.30"
+ * for US dollars).
+ */
+export function formatMinorAmount(locale: UiLocale, amountMinor: number, currency: string): string {
+  const code = currency.toUpperCase();
+  try {
+    const format = new Intl.NumberFormat(LOCALE_META[locale].speechLang, { style: 'currency', currency: code });
+    // Every currency style resolves its fraction digits; 2 only satisfies the type.
+    return format.format(amountMinor / 10 ** (format.resolvedOptions().maximumFractionDigits ?? 2));
+  } catch {
+    const digits = ZERO_DECIMAL_CURRENCIES.has(code) ? 0 : 2;
+    const text = groupDigits(Math.abs(amountMinor / 10 ** digits).toFixed(digits));
+    const sign = amountMinor < 0 ? '-' : '';
+    return code === 'USD' ? `${sign}$${text}` : `${sign}${text} ${code}`;
+  }
+}
+
 export interface RelativeDayWords {
   today: string;
   yesterday: string;
