@@ -255,4 +255,14 @@ export const a11y = {
   shell: {
     redirecting: 'Taking you to your home…',
   },
+  /**
+   * The route marks read as words (F-ENT-003 section 3.7, 3.14, Appendix A; PR E3-5): a Journey cell label
+   * appends them after its own words in the order Next, In your plan, not open yet. `notOpen` is the only key
+   * for a closed cell's words; `title` is the cell's episode title in the UI locale.
+   */
+  access: {
+    next: 'Next',
+    inPlan: 'In your plan',
+    notOpen: (title: string) => `${title}: not open yet. Opens the lesson page.`,
+  },
 } as const;
