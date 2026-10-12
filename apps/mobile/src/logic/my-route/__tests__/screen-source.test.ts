@@ -64,3 +64,36 @@ describe('screens/my-route sources', () => {
     expect(src).toContain("navigation.replace('MyRoute', { source: 'parent', profileId })");
   });
 });
+
+describe('the Home route strip (F-ROUTE-001 R-4b)', () => {
+  const home = read(join(SRC, 'screens', 'home', 'HomeScreen.tsx'));
+  const strip = read(join(SRC, 'screens', 'home', 'RouteStrip.tsx'));
+
+  it('RouteStrip.tsx: tokens only, drawn shapes only, names its design reference', () => {
+    expect(strip).not.toMatch(SYMBOL);
+    expect(strip).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/);
+    expect(strip).not.toMatch(/['"`][^'"`]*\d+\s*\/\s*\d+[^'"`]*['"`]/);
+    expect(strip).toMatch(/design\/(wireframes|components)\//);
+    expect(strip).toContain('<PipRow');
+    expect(strip).toContain('accessibilityLabel={view.a11yLabel}');
+  });
+
+  it('Home builds the strip from the shared model and opens the page from Home', () => {
+    expect(home).toContain('homeStripView(');
+    expect(home).toContain('buildMyRoute(');
+    expect(home).toContain('cursorContext(');
+    expect(home).toContain("navigation.navigate('MyRoute', { source: 'home' })");
+  });
+
+  it('the strip replaces the "Stage 1 progress" bar only behind flags.myRouteEnabled', () => {
+    const strip = home.indexOf('<RouteStrip');
+    const bar = home.indexOf('m.learner.home.progress.heading');
+    expect(strip).toBeGreaterThan(0);
+    expect(bar).toBeGreaterThan(0);
+    const branch = home.lastIndexOf('flags.myRouteEnabled', strip);
+    expect(branch).toBeGreaterThan(0);
+    // One ternary: the strip when the flag is on, the old bar otherwise (never both).
+    expect(bar).toBeGreaterThan(strip);
+    expect(home.slice(strip, bar)).toMatch(/\)\s*:\s*\(/);
+  });
+});

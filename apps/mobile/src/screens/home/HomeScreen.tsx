@@ -29,11 +29,12 @@ import { ProfileAvatar } from '../../components/ProfileAvatar';
 import type { SceneArt } from '@hangul-route/content-schema';
 import { welcomeCardIds } from '../../content/award-world';
 import { flags } from '../../config/flags';
-import { episodesAll, questsAll } from '../../content';
+import { episodesAll, heritageCardsAll, questsAll, stages, themes } from '../../content';
+import { journeyContent } from '../../content/sync-context';
 import { PLACEMENT_BANK } from '../../content/placement.generated';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { catchUpCard, takeCatchUpAnnouncement } from '../../logic/awards/catch-up';
-import { localizeMissionCard } from '../../logic/content-locale';
+import { localizeMissionCard, localizeStage } from '../../logic/content-locale';
 import { cursorContext } from '../../logic/cursor-context';
 import {
   buildTodaysMission,
@@ -48,6 +49,10 @@ import { dueTodayCount, showsTodayCount } from '../../logic/homework/assignment-
 import { mergeAssignments } from '../../logic/homework/assignment-merger';
 import { gridQuestProgress } from '../../logic/journey';
 import { homeColumns } from '../../logic/layout/home-columns';
+import { homeStripView, type HomeStripView } from '../../logic/my-route/home-strip';
+import { buildMyRoute } from '../../logic/my-route/model';
+import { startRouteOf } from '../../logic/my-route/start-marker';
+import { emptySnapshot } from '../../logic/my-route/view';
 import { placementEntriesOn, questsDoneOf } from '../../logic/placement/entry';
 import { skippedEvent } from '../../logic/placement/events';
 import { homeQuietCard, levelCheckCard } from '../../logic/placement/home-card';
@@ -67,6 +72,7 @@ import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
 import { effectiveTier, useTierStore } from '../../store/tier-store';
 import { LinkButton } from '../placement/parts';
+import { RouteStrip } from './RouteStrip';
 
 /** Avatar circle in the Profile entry; with its label the button clears the 64pt floor. */
 const AVATAR_SIZE = 52;
@@ -183,6 +189,7 @@ function CatchUpCard({
 
 export function HomeScreen(): React.ReactElement {
   const m = useMessages();
+  const locale = useLocale();
   const { copy } = useAudience();
   const profile = useProfileStore(activeProfileSelector);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -267,6 +274,35 @@ export function HomeScreen(): React.ReactElement {
     // `cachedTier` re-renders this screen when the inbox changes the tier.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, snap, tier, cachedTier, bookmarks, storyIndex]);
+
+  // The route strip (F-ROUTE-001 R-4b, OD-3): the same model, cursor and start route as the
+  // Learning Route page, so the strip and the page always name the same stage and pips.
+  const routeStrip = useMemo((): HomeStripView | null => {
+    if (!flags.myRouteEnabled || !profile) return null;
+    try {
+      const snapshot = snap ?? emptySnapshot(profile.id);
+      const cursor = cursorContext({ tier, placements: snapshot.placements, quests: questsAll, episodes: episodesAll });
+      const model = buildMyRoute({
+        snapshot,
+        catalog: journeyContent.catalog,
+        episodes: episodesAll,
+        quests: questsAll,
+        cards: heritageCardsAll,
+        stages: stages.map((s) => localizeStage(s, locale)),
+        themes,
+        isEntitled: cursor.isEntitled,
+        skipQuestIds: cursor.skipQuestIds,
+        route: startRouteOf(snapshot.placements, journeyContent.catalog, cursor.isEntitled),
+        now: new Date(),
+      });
+      return homeStripView({ model, messages: m });
+    } catch {
+      // Content that cannot be read leaves the slot empty; the page itself shows the retry.
+      return null;
+    }
+    // `cachedTier` re-renders this screen when the inbox changes the tier.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile, snap, tier, cachedTier, locale, m]);
 
   // Native screen readers hear the catch-up line once (F-STORY-006 §3.10): the card is usually on
   // the first render, where a live region says nothing, and iOS has no live regions. The web reads
@@ -408,13 +444,26 @@ export function HomeScreen(): React.ReactElement {
   // The gap under the card only when mission cards follow it; the side block brings its own.
   const catchUpGap = catchUp && missions ? <Spacer size="lg" /> : null;
 
-  const side = (
+  // Block 5 of the Home stack (F-ROUTE-001 section 6.4): the route strip replaces the
+  // "Stage 1 progress" bar when the flag is on (OD-3); with the flag off Home is unchanged.
+  const progressBlock = flags.myRouteEnabled ? (
+    routeStrip ? <RouteStrip view={routeStrip} onPress={() => navigation.navigate('MyRoute', { source: 'home' })} /> : null
+  ) : (
     <>
       <Heading level="prompt">{m.learner.home.progress.heading}</Heading>
       <Spacer size="sm" />
       <Progress value={completed} max={totalStage1Quests} tone="primary" label={m.learner.home.progress.label(completed, totalStage1Quests)} />
+    </>
+  );
 
-      <Spacer size="xl" />
+  const side = (
+    <>
+      {progressBlock ? (
+        <>
+          {progressBlock}
+          <Spacer size="xl" />
+        </>
+      ) : null}
       <Pressable
         onPress={() => navigation.navigate('Homework')}
         accessibilityRole="button"
