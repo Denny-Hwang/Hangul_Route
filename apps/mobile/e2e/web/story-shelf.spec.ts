@@ -8,8 +8,11 @@ import { nextPage, position } from './story-reader-helpers';
  * entry points (no `openQuest` hook): the Home story card, continue where you
  * left off, Results, the Library sections (Story Time, Culture and their
  * tiles), the story variant of the episode page and Culture notes. Needs the
- * fixture bundle, whose one reviewed shelf story is `story:hangul-day`
- * (Story Time, order 1, the sampler; one culture note):
+ * fixture bundle, whose main reviewed shelf story is `story:hangul-day`
+ * (Story Time, order 1, the sampler; one culture note). Its second one,
+ * `story:cell-stories-fixture` ("The Hangul Book", Culture, home cell Stage 2
+ * Letters), is there for journey-stories.spec.ts (F-STORY-005 PR 5.5b); here it
+ * is only the Home plan's second story and the Culture section's one tile:
  *
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
  *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile test:e2e:web story-shelf
@@ -186,8 +189,9 @@ test.describe('story shelf (fixture bundle)', () => {
     await expect(missionCards(page).first()).toHaveAccessibleName('Hangul Day. A short story.');
     // Slot 2 is the Journey cursor, which comes from the grid alone: never the shelf quest (§3.14 rows 1, 9).
     await expect(missionCards(page).nth(1)).toHaveAccessibleName('Meet a, eo, g, n. Something new today.');
-    await expect(missionCards(page).nth(2)).toHaveAccessibleName('Meet the Letters. Take a look.');
-    await expect(page.getByTestId('home-missions').locator('[data-testid^="home-mission-cover-"]')).toHaveCount(1);
+    // Slot 3 is a second story when the shelf has one (§3.14 row 1): the bundle's Culture fixture.
+    await expect(missionCards(page).nth(2)).toHaveAccessibleName('The Hangul Book. A short story.');
+    await expect(page.getByTestId('home-missions').locator('[data-testid^="home-mission-cover-"]')).toHaveCount(2);
     await expect(page.getByTestId('home-missions')).not.toContainText('Story time');
 
     // Start from Home: the quest opens on its intro.
@@ -339,12 +343,15 @@ test.describe('story shelf (fixture bundle)', () => {
     expect(tileBox?.height ?? 0).toBeGreaterThanOrEqual(64);
     await expect.poll(() => events(page, 'story.shelf.viewed')).toEqual([{ section: 'story-time', stories: 1, started: 0, finished: 0 }]);
 
-    // Culture before any story is finished: the notes card says how notes are found; no story tile.
+    // Culture before any story is finished: the notes card says how notes are found; the one tile is
+    // the bundle's Culture fixture (F-STORY-005 PR 5.5b), never Story Time's story.
     await openSection(page, 'Culture');
     await expect(shown(page, 'library-culture-notes')).toHaveAccessibleName(
       'Culture notes. Finish a story to find your first culture note.',
     );
-    await expect(shown(page, 'library-shelf-culture-grid').getByRole('button')).toHaveCount(0);
+    await expect(shown(page, 'library-shelf-culture-grid').getByRole('button')).toHaveCount(1);
+    await expect(shown(page, 'story-tile-story:cell-stories-fixture')).toBeVisible();
+    await expect(shown(page, 'library-shelf-culture-grid').getByTestId(`story-tile-${STORY}`)).toHaveCount(0);
     await expect.poll(async () => (await events(page, 'story.shelf.viewed')).map((p) => p?.section)).toEqual(['story-time', 'culture']);
     // Culture notes with nothing found: no placeholders, one way to Story Time.
     await shown(page, 'library-culture-notes').click();
