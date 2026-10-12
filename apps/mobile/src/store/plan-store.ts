@@ -51,6 +51,11 @@ export function unlockedStagesFor(now: Date, learnerId: string): string[] {
 
 function deriveFor(learnerId: string, plans: readonly InboxPlan[], snapshot: ProgressSnapshot, now: Date): DeriveResult {
   const profile = useProfileStore.getState().profiles.find((p) => p.id === learnerId);
+  // The same access tier as the stages below, plus the switch and the kept quests (F-ENT-003 section 3.6).
+  // A quest this snapshot finished is kept (open) even when the store does not hold it yet: a sync merge
+  // reconciled here may bring one from another device (section 3.2).
+  const open = questOpenFor(learnerId, now);
+  const kept = new Set(snapshot.quests.filter((q) => q.completedAt).map((q) => q.questId));
   // The learner's own weekly plan rides along as a source of kind `self` (F-PLAN-002 section 3.6).
   return deriveAssignments({
     sources: sourcesOf(plans, snapshot.selfRoute),
@@ -61,8 +66,7 @@ function deriveFor(learnerId: string, plans: readonly InboxPlan[], snapshot: Pro
     unlockedStages: unlockedStagesFor(now, learnerId),
     today: dayKey(now.toISOString()),
     learnerName: profile?.displayName ?? 'Your learner',
-    // The same access tier as the stages above, plus the switch and the kept quests (F-ENT-003 section 3.6).
-    isQuestOpen: questOpenFor(learnerId, now),
+    isQuestOpen: (questId) => kept.has(questId) || open(questId),
   });
 }
 

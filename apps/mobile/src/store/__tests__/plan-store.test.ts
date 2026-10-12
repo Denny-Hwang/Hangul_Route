@@ -218,6 +218,29 @@ describe('plan-store and quest access (F-ENT-003 section 3.6)', () => {
     expect(reconciled.homework.map((h) => h.questId)).toEqual(['quest:stage1-letters-q1']);
   });
 
+  it('reconcile counts a quest the merged snapshot finished as kept, before the store holds it (section 3.2)', async () => {
+    vi.mocked(questOpenFor).mockImplementation(closing('quest:stage1-letters-q2'));
+    await usePlanStore.getState().applyPlans('profile:a', [twoStage1]);
+    const local = useProgressStore.getState().byProfile['profile:a']!;
+    expect(local.homework.map((h) => h.questId)).toEqual(['quest:stage1-letters-q1']);
+    // Finished on another device: the union of the sync merge brings it in.
+    const finishedElsewhere = {
+      questId: 'quest:stage1-letters-q2',
+      episodeId: 'episode:stage1-letters',
+      startedAt: '2026-09-29T08:00:00.000Z',
+      completedAt: '2026-09-29T08:05:00.000Z',
+      stars: 3 as const,
+      attempts: 1,
+      accuracy: 1,
+    };
+    const merged = { ...local, quests: [...local.quests, finishedElsewhere] };
+    const reconciled = usePlanStore.getState().reconcile('profile:a', merged);
+    expect(reconciled.homework.find((h) => h.questId === 'quest:stage1-letters-q2')).toMatchObject({
+      id: 'plan:w3#quest:stage1-letters-q2',
+      completedAt: '2026-09-29T08:05:00.000Z',
+    });
+  });
+
   describe('with the real predicate and the switch on (web)', () => {
     const savedOs = process.env.EXPO_OS;
     beforeEach(() => {
