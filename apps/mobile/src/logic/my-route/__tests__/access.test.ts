@@ -29,4 +29,28 @@ describe('myRouteAccess (F-ROUTE-001 section 3.1: the gate check)', () => {
     expect(myRouteAccess({ requestedId: 'p-alex', activeId: null, profiles, gateOpen: false })).toEqual({ kind: 'gate', profileId: 'p-alex' });
     expect(myRouteAccess({ requestedId: 'p-alex', activeId: null, profiles, gateOpen: true })).toEqual({ kind: 'readOnly', profileId: 'p-alex' });
   });
+
+  describe('the grown-up entry from the parent dashboard (amendment section 5.1, R-9b)', () => {
+    it('the active profile opens read-only while the gate is open, never as the learner', () => {
+      expect(myRouteAccess({ requestedId: 'p-sam', activeId: 'p-sam', profiles, gateOpen: true, grownup: true })).toEqual({ kind: 'readOnly', profileId: 'p-sam' });
+    });
+
+    it('the active profile with the gate closed: the PIN screen', () => {
+      expect(myRouteAccess({ requestedId: 'p-sam', activeId: 'p-sam', profiles, gateOpen: false, grownup: true })).toEqual({ kind: 'gate', profileId: 'p-sam' });
+    });
+
+    it('another profile: read-only with the gate open, the PIN screen without it', () => {
+      expect(myRouteAccess({ requestedId: 'p-alex', activeId: 'p-sam', profiles, gateOpen: true, grownup: true })).toEqual({ kind: 'readOnly', profileId: 'p-alex' });
+      expect(myRouteAccess({ requestedId: 'p-alex', activeId: 'p-sam', profiles, gateOpen: false, grownup: true })).toEqual({ kind: 'gate', profileId: 'p-alex' });
+    });
+
+    it('a profile this device does not hold, or none named: nothing, never the active learner', () => {
+      expect(myRouteAccess({ requestedId: 'p-gone', activeId: 'p-sam', profiles, gateOpen: true, grownup: true })).toEqual({ kind: 'none' });
+      expect(myRouteAccess({ requestedId: undefined, activeId: 'p-sam', profiles, gateOpen: true, grownup: true })).toEqual({ kind: 'none' });
+    });
+
+    it('grownup false keeps the learner entries unchanged', () => {
+      expect(myRouteAccess({ requestedId: 'p-sam', activeId: 'p-sam', profiles, gateOpen: true, grownup: false })).toEqual({ kind: 'self', profileId: 'p-sam' });
+    });
+  });
 });
