@@ -88,10 +88,12 @@ describe('applyInbox', () => {
     expect(out.notes[0]?.text).toBeNull();
   });
 
-  it('mirrors the class-notes acknowledgement and never forgets a local answer', () => {
+  it('mirrors the class-notes acknowledgement of the server: a local mark lasts until the next inbox', () => {
     expect(applyInbox(emptyNotes(), { notes: [], notePrefs: { classes: 'all', acknowledged: true } }).data.classNotesCardSeen).toBe(true);
     expect(applyInbox(emptyNotes(), { notes: [], notePrefs: { classes: 'all', acknowledged: false } }).data.classNotesCardSeen).toBe(false);
-    expect(applyInbox(data({ classNotesCardSeen: true }), { notes: [], notePrefs: { classes: 'all', acknowledged: false } }).data.classNotesCardSeen).toBe(true);
+    // The acknowledgement is recorded on the server (section 6.10 item 5): a local mark whose PUT never landed lets the card come back.
+    expect(applyInbox(data({ classNotesCardSeen: true }), { notes: [], notePrefs: { classes: 'all', acknowledged: false } }).data.classNotesCardSeen).toBe(false);
+    expect(applyInbox(data({ classNotesCardSeen: true }), { notes: [], notePrefs: { classes: 'all', acknowledged: true } }).data.classNotesCardSeen).toBe(true);
   });
 
   it('stores its own copy of the prefs, never a shared fallback object', () => {

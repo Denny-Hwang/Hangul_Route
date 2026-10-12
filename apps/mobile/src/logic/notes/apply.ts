@@ -9,6 +9,8 @@ import type { NotesData, PendingState } from './types';
  * - Read state and reactions are server state, except local writes the server has not acknowledged
  *   yet (a pending state write in the queue), which stay until they are flushed. `readAt` is set
  *   once: the earliest known time wins.
+ * - `classNotesCardSeen` takes the server's `notePrefs.acknowledged`: the acknowledgement is
+ *   recorded on the server, and a local mark only bridges the time until the next inbox.
  * - Put-away ids that are no longer listed are dropped; pending state writes of gone notes are
  *   dropped too (the Worker would answer 404). A pending report stays: the next flush sends it.
  */
@@ -45,7 +47,8 @@ export function applyInbox(local: NotesData, inbox: { notes: readonly InboxNote[
       notes,
       prefs: { classes: inbox.notePrefs.classes, acknowledged: inbox.notePrefs.acknowledged },
       putAway: local.putAway.filter((id) => seen.has(id)),
-      classNotesCardSeen: local.classNotesCardSeen || inbox.notePrefs.acknowledged,
+      // A true mirror of the server: a local mark whose PUT never landed lets the card come back (section 6.10 item 5).
+      classNotesCardSeen: inbox.notePrefs.acknowledged,
       queue: local.queue.filter((write) => write.kind === 'report' || seen.has(write.noteId)),
     },
     added: [...seen].filter((id) => !cached.has(id)),

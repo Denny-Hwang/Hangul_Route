@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { notesKey, readStoredNotes } from '../stored';
+import { mergeUnloaded, notesKey, readStoredNotes } from '../stored';
 import { emptyNotes } from '../types';
-import { note } from './fixtures';
+import { data, note } from './fixtures';
 
 /** F-FEEDBACK-001 section 6.9: the per-profile record read back from storage, leniently. */
 describe('readStoredNotes', () => {
@@ -57,5 +57,41 @@ describe('readStoredNotes', () => {
   it('reads stored prefs through the inbox rules (an unknown mode is null, never a looser one)', () => {
     expect(readStoredNotes({ prefs: { classes: 'friends', acknowledged: false } }).prefs).toEqual({ classes: null, acknowledged: false });
     expect(readStoredNotes({ prefs: null }).prefs).toBeNull();
+  });
+});
+
+describe('mergeUnloaded (a read that failed, then one that worked)', () => {
+  const prefs = { classes: 'all' as const, acknowledged: false };
+  const report = { kind: 'report' as const, noteId: 'note:aaaaaaaa', reason: 'unsafe' as const, at: 't0' };
+
+  it('keeps the stored notes and queue when memory applied no inbox, and folds the memory writes in', () => {
+    const stored = data({ notes: [note('aaaaaaaa')], prefs, putAway: ['note:aaaaaaaa'], queue: [report, { kind: 'state', noteId: 'note:aaaaaaaa', read: true, at: 't1' }] });
+    const memory = data({
+      notes: [note('bbbbbbbb', { createdAt: '2026-10-11T09:00:00.000Z' })],
+      putAway: ['note:bbbbbbbb', 'note:gone'],
+      classNotesCardSeen: true,
+      queue: [{ kind: 'state', noteId: 'note:aaaaaaaa', reaction: 'thanks', at: 't2' }, { kind: 'report', noteId: 'note:bbbbbbbb', reason: 'other', at: 't3' }],
+    });
+    const out = mergeUnloaded(stored, memory);
+    expect(out.notes.map((n) => n.id)).toEqual(['note:bbbbbbbb', 'note:aaaaaaaa']);
+    expect(out.prefs).toEqual(prefs);
+    expect(out.putAway).toEqual(['note:aaaaaaaa', 'note:bbbbbbbb']);
+    expect(out.classNotesCardSeen).toBe(true);
+    expect(out.queue).toEqual([
+      report,
+      { kind: 'state', noteId: 'note:aaaaaaaa', read: true, reaction: 'thanks', at: 't2' },
+      { kind: 'report', noteId: 'note:bbbbbbbb', reason: 'other', at: 't3' },
+    ]);
+  });
+
+  it('takes the notes of an inbox applied in memory, and never loses a stored report', () => {
+    const stored = data({ notes: [note('aaaaaaaa'), note('cccccccc')], prefs, putAway: ['note:cccccccc'], classNotesCardSeen: true, queue: [report, { kind: 'state', noteId: 'note:cccccccc', read: true, at: 't1' }] });
+    const memory = data({ notes: [note('aaaaaaaa')], prefs: { classes: 'off', acknowledged: false }, classNotesCardSeen: false, queue: [] });
+    const out = mergeUnloaded(stored, memory);
+    expect(out.notes.map((n) => n.id)).toEqual(['note:aaaaaaaa']);
+    expect(out.prefs).toEqual({ classes: 'off', acknowledged: false });
+    expect(out.putAway).toEqual([]);
+    expect(out.classNotesCardSeen).toBe(false);
+    expect(out.queue).toEqual([report]);
   });
 });

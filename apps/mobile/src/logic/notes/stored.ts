@@ -8,6 +8,8 @@ import {
   type NoteReactionId,
   type NoteReportReason,
 } from '@hangul-route/content-schema';
+import { newestFirst } from './apply';
+import { enqueueReport, enqueueState } from './queue';
 import { emptyNotes, type NoteAttest, type NotesData, type PendingWrite } from './types';
 
 /**
@@ -62,6 +64,36 @@ export function readStoredNotes(raw: unknown): NotesData {
     prefs,
     putAway: (Array.isArray(raw.putAway) ? raw.putAway : []).filter((id): id is string => typeof id === 'string'),
     classNotesCardSeen: raw.classNotesCardSeen === true,
+    queue,
+  };
+}
+
+/**
+ * The stored record with the changes made in memory before it could be read (a read that failed,
+ * then one that worked). Memory that applied an inbox (`prefs` set) is authoritative for which
+ * notes exist; otherwise the stored notes stay, with any note held in memory on top. No report and
+ * no put-away id is lost, and a state write made in memory is merged into the stored one for its
+ * note (the newer pick wins). Pure.
+ */
+export function mergeUnloaded(stored: NotesData, memory: NotesData): NotesData {
+  const fresh = memory.prefs !== null;
+  const byId = new Map<string, InboxNote>(fresh ? [] : stored.notes.map((n) => [n.id, n]));
+  for (const n of memory.notes) byId.set(n.id, n);
+  const notes = [...byId.values()].sort(newestFirst);
+  const ids = new Set(byId.keys());
+  let queue: PendingWrite[] = [...stored.queue];
+  for (const w of memory.queue) {
+    queue =
+      w.kind === 'report'
+        ? enqueueReport(queue, w.noteId, w.reason, w.attest, w.at)
+        : enqueueState(queue, w.noteId, { ...(w.read ? { read: true as const } : {}), ...(w.reaction ? { reaction: w.reaction } : {}) }, w.at);
+  }
+  if (fresh) queue = queue.filter((w) => w.kind === 'report' || ids.has(w.noteId));
+  return {
+    notes,
+    prefs: memory.prefs ?? stored.prefs,
+    putAway: [...new Set([...stored.putAway, ...memory.putAway])].filter((id) => ids.has(id)),
+    classNotesCardSeen: fresh ? memory.classNotesCardSeen : stored.classNotesCardSeen || memory.classNotesCardSeen,
     queue,
   };
 }

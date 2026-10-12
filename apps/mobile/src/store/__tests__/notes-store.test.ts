@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mem = vi.hoisted(() => new Map<string, unknown>());
 vi.mock('../../platform/storage', () => ({
-  readJson: vi.fn(async (k: string) => (mem.has(k) ? JSON.parse(JSON.stringify(mem.get(k))) : null)),
+  readJsonStrict: vi.fn(async (k: string) => (mem.has(k) ? JSON.parse(JSON.stringify(mem.get(k))) : null)),
   writeJson: vi.fn(async (k: string, v: unknown) => {
     mem.set(k, JSON.parse(JSON.stringify(v)));
   }),
@@ -12,7 +12,7 @@ vi.mock('../../platform/storage', () => ({
   }),
 }));
 
-import { readJson, removeKey } from '../../platform/storage';
+import { readJsonStrict, removeKey } from '../../platform/storage';
 import { useNotesStore, type NotesClient } from '../notes-store';
 import { useProfileStore } from '../profile-store';
 
@@ -49,7 +49,7 @@ const restart = (): void => useNotesStore.setState({ byProfile: {} });
 beforeEach(() => {
   mem.clear();
   restart();
-  vi.mocked(readJson).mockClear();
+  vi.mocked(readJsonStrict).mockClear();
 });
 
 describe('notes-store (F-FEEDBACK-001 section 6.9)', () => {
@@ -59,14 +59,14 @@ describe('notes-store (F-FEEDBACK-001 section 6.9)', () => {
     restart();
     const data = await useNotesStore.getState().hydrate('profile:a');
     expect(data.notes.map((n) => n.id)).toEqual(['note:aaaaaaaa']);
-    expect(readJson).toHaveBeenCalledWith('notes:profile:a');
+    expect(readJsonStrict).toHaveBeenCalledWith('notes:profile:a');
   });
 
   it('hydrates once per profile, also when asked twice at the same time', async () => {
     mem.set('notes:profile:a', { notes: [note('aaaaaaaa')] });
     const [a, b] = await Promise.all([useNotesStore.getState().hydrate('profile:a'), useNotesStore.getState().hydrate('profile:a')]);
     expect(a).toBe(b);
-    expect(readJson).toHaveBeenCalledTimes(1);
+    expect(readJsonStrict).toHaveBeenCalledTimes(1);
     expect(await useNotesStore.getState().hydrate('profile:a')).toBe(a);
   });
 
@@ -225,6 +225,96 @@ describe('notes-store (F-FEEDBACK-001 section 6.9)', () => {
     expect(mem.has('notes:profile:b')).toBe(true);
     expect(useNotesStore.getState().byProfile['profile:a']).toBeUndefined();
     expect(useNotesStore.getState().byProfile['profile:b']).toBeDefined();
+  });
+
+  it('a report that was sent stays put away until an inbox drops the note', async () => {
+    await useNotesStore.getState().applyInbox('profile:a', { notes: [note('aaaaaaaa')], notePrefs: prefs });
+    await useNotesStore.getState().queueReport('profile:a', 'note:aaaaaaaa', 'unkind');
+    await useNotesStore.getState().flush('profile:a', client(), creds);
+    expect(useNotesStore.getState().byProfile['profile:a']).toMatchObject({ queue: [], putAway: ['note:aaaaaaaa'] });
+    // The Worker dropped it: the put-away id clears itself.
+    await useNotesStore.getState().applyInbox('profile:a', { notes: [], notePrefs: prefs });
+    expect(useNotesStore.getState().byProfile['profile:a']).toMatchObject({ notes: [], putAway: [] });
+  });
+
+  it('stops the flush at a 5xx or a 401, so a degraded Worker does not hold up the inbox', async () => {
+    await useNotesStore.getState().applyInbox('profile:a', { notes: [note('aaaaaaaa'), note('bbbbbbbb')], notePrefs: prefs });
+    await useNotesStore.getState().markRead('profile:a', 'note:aaaaaaaa');
+    await useNotesStore.getState().markRead('profile:a', 'note:bbbbbbbb');
+    for (const http of [503, 401]) {
+      const api = client({ putNoteState: vi.fn<NotesClient['putNoteState']>(async () => ({ status: 'error', http, code: `http_${http}` })) });
+      await useNotesStore.getState().flush('profile:a', api, creds);
+      expect(api.putNoteState, String(http)).toHaveBeenCalledTimes(1);
+      expect(useNotesStore.getState().byProfile['profile:a']?.queue).toHaveLength(2);
+    }
+  });
+
+  it('a storage read that fails never overwrites the stored record, and the next good read keeps both', async () => {
+    const stored = {
+      notes: [note('aaaaaaaa')],
+      prefs,
+      putAway: [],
+      classNotesCardSeen: false,
+      queue: [{ kind: 'report', noteId: 'note:aaaaaaaa', reason: 'unsafe', at: 't0' }],
+    };
+    mem.set('notes:profile:a', stored);
+    vi.mocked(readJsonStrict).mockRejectedValueOnce(new Error('storage busy'));
+    const { writeJson } = await import('../../platform/storage');
+    vi.mocked(writeJson).mockClear();
+    await useNotesStore.getState().putAway('profile:a', 'note:zzzzzzzz'); // read fails: nothing is written
+    await useNotesStore.getState().markClassNotesCardSeen('profile:a'); // read works now: memory folded in
+    expect(mem.get('notes:profile:a')).toMatchObject({
+      notes: [{ id: 'note:aaaaaaaa' }],
+      queue: [{ kind: 'report', noteId: 'note:aaaaaaaa', reason: 'unsafe' }],
+      classNotesCardSeen: true,
+    });
+    expect(vi.mocked(writeJson).mock.calls.every(([, v]) => (v as { queue: unknown[] }).queue.length === 1)).toBe(true);
+  });
+
+  it('keeps changes in memory while storage cannot be read, and writes them once it can', async () => {
+    vi.mocked(readJsonStrict).mockRejectedValueOnce(new Error('storage busy'));
+    await useNotesStore.getState().applyInbox('profile:a', { notes: [note('aaaaaaaa')], notePrefs: prefs });
+    expect(useNotesStore.getState().byProfile['profile:a']?.notes).toHaveLength(1);
+    expect(mem.has('notes:profile:a')).toBe(false);
+    await useNotesStore.getState().markRead('profile:a', 'note:aaaaaaaa');
+    expect(mem.get('notes:profile:a')).toMatchObject({ notes: [{ id: 'note:aaaaaaaa' }], queue: [{ kind: 'state', noteId: 'note:aaaaaaaa', read: true }] });
+  });
+
+  it('a profile removed while a flush is in flight leaves no notes key behind', async () => {
+    await useNotesStore.getState().applyInbox('profile:a', { notes: [note('aaaaaaaa'), note('bbbbbbbb')], notePrefs: prefs });
+    await useNotesStore.getState().queueReport('profile:a', 'note:aaaaaaaa', 'unkind');
+    await useNotesStore.getState().markRead('profile:a', 'note:bbbbbbbb');
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const api = client({
+      reportNote: vi.fn<NotesClient['reportNote']>(async () => {
+        await gate;
+        return { status: 'error', http: 429, code: 'too_many' };
+      }),
+    });
+    const running = useNotesStore.getState().flush('profile:a', api, creds);
+    await Promise.resolve();
+    useNotesStore.getState().forgetProfile('profile:a');
+    release();
+    await running;
+    await Promise.resolve();
+    expect(mem.has('notes:profile:a')).toBe(false);
+    expect(useNotesStore.getState().byProfile['profile:a']).toBeUndefined();
+    expect(api.putNoteState).not.toHaveBeenCalled();
+  });
+
+  it('a profile removed while its stored record or an inbox is being applied keeps nothing', async () => {
+    mem.set('notes:profile:a', { notes: [note('aaaaaaaa')], prefs, putAway: [], classNotesCardSeen: false, queue: [] });
+    const applying = useNotesStore.getState().applyInbox('profile:a', { notes: [note('aaaaaaaa', { text: 'Loved it' })], notePrefs: prefs });
+    useNotesStore.getState().forgetProfile('profile:a');
+    await applying;
+    await Promise.resolve();
+    expect(mem.has('notes:profile:a')).toBe(false);
+    expect(useNotesStore.getState().byProfile['profile:a']).toBeUndefined();
+    // A later profile with the same id starts empty.
+    expect(await useNotesStore.getState().hydrate('profile:a')).toEqual({ notes: [], prefs: null, putAway: [], classNotesCardSeen: false, queue: [] });
   });
 
   it('a stored write that fails never breaks the app', async () => {

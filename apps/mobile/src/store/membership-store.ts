@@ -94,7 +94,8 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       const creds = await credentialsFor(learnerId, false);
       if (!creds) return offline();
       // Queued note reads, reactions and reports go first, so this inbox already reflects them (F-FEEDBACK-001 section 6.9).
-      if (flags.notesEnabled) await useNotesStore.getState().flush(learnerId, client, creds);
+      // A notes problem never holds up the inbox: tier, memberships and plans still apply.
+      if (flags.notesEnabled) await useNotesStore.getState().flush(learnerId, client, creds).catch(() => undefined);
       const result = await client.getInbox(learnerId, creds);
       if (result.status !== 'ok') return offline();
       const rows = put(learnerId, result.inbox.memberships);

@@ -60,18 +60,34 @@ describe('seenByText and reportLinkText', () => {
 });
 
 describe('noteDateText', () => {
-  const now = new Date('2026-10-12T15:00:00.000Z');
+  // Built from local components, so the days hold in every time zone the suite runs in.
+  const at = (day: number, hour: number): string => new Date(2026, 9, day, hour).toISOString();
+  const now = new Date(2026, 9, 12, 15);
 
   it('"Today", "Yesterday", otherwise a short date in the UI locale', () => {
-    expect(noteDateText(m, 'en', '2026-10-12T01:00:00.000Z', now)).toBe('Today');
-    expect(noteDateText(m, 'en', '2026-10-11T23:00:00.000Z', now)).toBe('Yesterday');
-    expect(noteDateText(m, 'en', '2026-10-03T10:00:00.000Z', now)).toBe('Oct 3');
-    expect(noteDateText(m, 'es', '2026-10-03T10:00:00.000Z', now)).not.toBe('Oct 3');
+    expect(noteDateText(m, 'en', at(12, 1), now)).toBe('Today');
+    expect(noteDateText(m, 'en', at(11, 23), now)).toBe('Yesterday');
+    expect(noteDateText(m, 'en', at(3, 10), now)).toBe('Oct 3');
+    expect(noteDateText(m, 'es', at(3, 10), now)).not.toBe('Oct 3');
   });
 
   it('a date from a clock ahead of the device reads "Today"; an unreadable date reads as nothing', () => {
-    expect(noteDateText(m, 'en', '2026-10-13T10:00:00.000Z', now)).toBe('Today');
+    expect(noteDateText(m, 'en', at(13, 10), now)).toBe('Today');
     expect(noteDateText(m, 'en', 'not a date', now)).toBe('');
+  });
+
+  it("reads the day in the device's time zone, not in UTC", () => {
+    const tz = process.env.TZ;
+    try {
+      // 01:00 UTC on Oct 12 is the evening of Oct 11 in Los Angeles and the morning of Oct 12 in Seoul.
+      const later = new Date('2026-10-12T12:00:00.000Z');
+      process.env.TZ = 'America/Los_Angeles';
+      expect(noteDateText(m, 'en', '2026-10-12T01:00:00.000Z', later)).toBe('Yesterday');
+      process.env.TZ = 'Asia/Seoul';
+      expect(noteDateText(m, 'en', '2026-10-12T01:00:00.000Z', later)).toBe('Today');
+    } finally {
+      process.env.TZ = tz;
+    }
   });
 });
 

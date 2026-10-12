@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { enqueueReport, enqueueState, flushOrder, outcomeOf, pendingReportIds, settleWrite } from '../queue';
+import { enqueueReport, enqueueState, flushOrder, outcomeOf, pendingReportIds, settleWrite, staysQueued } from '../queue';
 import type { PendingWrite } from '../types';
 import { data, note } from './fixtures';
 
@@ -113,5 +113,30 @@ describe('settleWrite', () => {
   it('a rate-limited state write waits for the next sync', () => {
     const d = data({ queue: [state] });
     expect(settleWrite(d, state, 'limited')).toBe(d);
+  });
+
+  it('a report that was sent or refused keeps its note put away, so it never shows again before an inbox drops it', () => {
+    for (const outcome of ['done', 'drop', 'limited'] as const) {
+      const d = data({ notes: [note('aaaaaaaa')], queue: [report] });
+      const out = settleWrite(d, report, outcome);
+      expect(out.queue, outcome).toEqual([]);
+      expect(out.putAway, outcome).toEqual(['note:aaaaaaaa']);
+      expect(pendingReportIds(out.queue).size).toBe(0);
+    }
+    // A report the Worker refuses (409 or 422 from a stricter schema) is a drop, and the note stays away.
+    expect(settleWrite(data({ notes: [note('aaaaaaaa')], queue: [report] }), report, outcomeOf(409)).putAway).toEqual(['note:aaaaaaaa']);
+    expect(settleWrite(data({ notes: [note('aaaaaaaa')], queue: [report] }), report, outcomeOf(422)).putAway).toEqual(['note:aaaaaaaa']);
+    // A state write never puts a note away.
+    expect(settleWrite(data({ queue: [state] }), state, 'done').putAway).toEqual([]);
+    expect(settleWrite(data({ queue: [state] }), state, 'drop').putAway).toEqual([]);
+  });
+
+  it('says which answers keep the write queued (the flush stops there)', () => {
+    expect(staysQueued(state, 'retry')).toBe(true);
+    expect(staysQueued(state, 'limited')).toBe(true);
+    expect(staysQueued(report, 'retry')).toBe(true);
+    expect(staysQueued(report, 'limited')).toBe(false);
+    expect(staysQueued(state, 'done')).toBe(false);
+    expect(staysQueued(report, 'drop')).toBe(false);
   });
 });

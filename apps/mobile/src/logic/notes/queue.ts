@@ -50,15 +50,22 @@ export function outcomeOf(httpStatus: number): FlushOutcome {
 
 const sameWrite = (a: PendingWrite, b: PendingWrite): boolean => a.kind === b.kind && a.noteId === b.noteId && a.at === b.at;
 
+/** Whether the write stays in the queue for a later flush (the flush stops there). */
+export function staysQueued(write: PendingWrite, outcome: FlushOutcome): boolean {
+  return outcome === 'retry' || (outcome === 'limited' && write.kind === 'state');
+}
+
 /**
  * The notes after one write was answered. Only the write that was sent leaves the queue: a newer
- * pick made while it was in flight stays for the next flush. A report the Worker refused for
- * today's limit leaves the queue, and the note stays hidden on this device (put away).
+ * pick made while it was in flight stays for the next flush. A report that leaves the queue for
+ * any answer (sent, refused, or today's limit) keeps its note hidden on this device (put away), so
+ * a reported note never shows again before an inbox drops it; the next inbox clears the put-away
+ * id once the note is no longer listed (section 6.9).
  */
 export function settleWrite(data: NotesData, write: PendingWrite, outcome: FlushOutcome): NotesData {
-  if (outcome === 'retry' || (outcome === 'limited' && write.kind === 'state')) return data;
+  if (staysQueued(write, outcome)) return data;
   const queue = data.queue.filter((w) => !sameWrite(w, write));
-  if (outcome === 'limited' && !data.putAway.includes(write.noteId)) {
+  if (write.kind === 'report' && !data.putAway.includes(write.noteId)) {
     return { ...data, queue, putAway: [...data.putAway, write.noteId] };
   }
   return { ...data, queue };

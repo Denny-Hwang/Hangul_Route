@@ -36,7 +36,11 @@ export interface NotesData {
   prefs: NotePrefs | null;
   /** Notes the learner put away on this device (never sent anywhere). */
   putAway: string[];
-  /** The one-time class-notes card was answered (a mirror of `notePrefs.acknowledged`, kept until the next inbox). */
+  /**
+   * The one-time class-notes card was answered: a mirror of `notePrefs.acknowledged`. A local mark
+   * (FB-9 sets it with the online `PUT note-prefs { acknowledge: true }`) lasts until the next inbox,
+   * which replaces it with the server's value.
+   */
   classNotesCardSeen: boolean;
   queue: PendingWrite[];
 }

@@ -1,10 +1,10 @@
 import type { InboxNote, NotePrefs, NoteReactionId, NoteReportReason } from '@hangul-route/content-schema';
 import { create } from 'zustand';
 import { applyInbox } from '../logic/notes/apply';
-import { enqueueReport, enqueueState, flushOrder, outcomeOf, settleWrite } from '../logic/notes/queue';
-import { notesKey, readStoredNotes } from '../logic/notes/stored';
+import { enqueueReport, enqueueState, flushOrder, outcomeOf, settleWrite, staysQueued } from '../logic/notes/queue';
+import { mergeUnloaded, notesKey, readStoredNotes } from '../logic/notes/stored';
 import { emptyNotes, type NoteAttest, type NotesData, type PendingWrite } from '../logic/notes/types';
-import { readJson, removeKey, writeJson } from '../platform/storage';
+import { readJsonStrict, removeKey, writeJson } from '../platform/storage';
 import type { DeviceCredentials, SyncApiClient } from '../platform/sync-api';
 import { onProfileRemoved } from './profile-removal';
 
@@ -14,6 +14,12 @@ import { onProfileRemoved } from './profile-removal';
  * reactions are written here first and queued; the membership store flushes the queue before each
  * inbox read and applies the inbox's notes after it (`flags.notesEnabled`). Siblings on one device
  * each have their own record. Put away is device state: it is never sent.
+ *
+ * - The stored record is read strictly: while storage cannot be read, changes stay in memory and
+ *   nothing is written, so a record this device could not see (its queue of reports) is never
+ *   overwritten; the next good read folds the memory changes into it.
+ * - A removed profile bumps its generation: work that started before the removal (a refresh, a
+ *   flush, a read) changes nothing in memory or storage when it ends.
  */
 interface State {
   byProfile: Record<string, NotesData>;
@@ -36,7 +42,7 @@ interface Actions {
   queueReport: (profileId: string, noteId: string, reason: NoteReportReason, attest?: NoteAttest, now?: Date) => Promise<void>;
   /** The grown-up answered the one-time class-notes card on this device. */
   markClassNotesCardSeen: (profileId: string) => Promise<void>;
-  /** Send the queued writes, reports first; stops at the first network failure. */
+  /** Send the queued writes, reports first; stops at the first write that has to wait (offline, 5xx, 401, a limited state write). */
   flush: (profileId: string, client: NotesClient, creds: DeviceCredentials) => Promise<void>;
   /** Drop a removed profile's notes from memory and storage. */
   forgetProfile: (profileId: string) => void;
@@ -49,31 +55,51 @@ const persist = (profileId: string, data: NotesData): void => {
 export const useNotesStore = create<State & Actions>((set, get) => {
   const loading = new Map<string, Promise<NotesData>>();
   const flushing = new Map<string, Promise<void>>();
+  /** Profiles whose stored record was read (or found missing): only these are written back. */
+  const loaded = new Set<string>();
+  /** Bumped when a profile is removed, so work that started before the removal changes nothing. */
+  const generation = new Map<string, number>();
+  const genOf = (profileId: string): number => generation.get(profileId) ?? 0;
 
   /** Change one profile's record in memory and storage; `undefined` from `change` leaves it as it is. */
-  const update = (profileId: string, change: (current: NotesData) => NotesData | undefined): void => {
+  const update = (profileId: string, gen: number, change: (current: NotesData) => NotesData | undefined): void => {
+    if (genOf(profileId) !== gen) return; // the profile was removed meanwhile
     const current = get().byProfile[profileId] ?? emptyNotes();
     const next = change(current);
     if (next === undefined || next === current) return;
     set((s) => ({ byProfile: { ...s.byProfile, [profileId]: next } }));
-    persist(profileId, next);
+    if (loaded.has(profileId)) persist(profileId, next);
   };
 
   const hydrate = (profileId: string): Promise<NotesData> => {
     const existing = get().byProfile[profileId];
-    if (existing) return Promise.resolve(existing);
+    if (existing && loaded.has(profileId)) return Promise.resolve(existing);
     const pending = loading.get(profileId);
     if (pending) return pending;
-    const load = readJson<unknown>(notesKey(profileId))
-      .then((raw) => {
-        // A write that landed while the read was pending is newer than the stored copy.
-        const arrived = get().byProfile[profileId];
-        if (arrived) return arrived;
-        const data = readStoredNotes(raw);
-        set((s) => ({ byProfile: { ...s.byProfile, [profileId]: data } }));
-        return data;
-      })
-      .finally(() => loading.delete(profileId));
+    const gen = genOf(profileId);
+    const load: Promise<NotesData> = readJsonStrict<unknown>(notesKey(profileId))
+      .then(
+        (raw) => {
+          if (genOf(profileId) !== gen) return emptyNotes();
+          const stored = readStoredNotes(raw);
+          // Changes made in memory before this read (one that failed, or a state set directly) are folded in.
+          const inMemory = get().byProfile[profileId];
+          const data = inMemory ? mergeUnloaded(stored, inMemory) : stored;
+          loaded.add(profileId);
+          set((s) => ({ byProfile: { ...s.byProfile, [profileId]: data } }));
+          if (inMemory) persist(profileId, data);
+          return data;
+        },
+        // Storage could not be read: work in memory, write nothing, and read again next time.
+        () => {
+          if (genOf(profileId) !== gen) return emptyNotes();
+          loaded.delete(profileId);
+          return get().byProfile[profileId] ?? emptyNotes();
+        },
+      )
+      .finally(() => {
+        if (loading.get(profileId) === load) loading.delete(profileId);
+      });
     loading.set(profileId, load);
     return load;
   };
@@ -92,9 +118,10 @@ export const useNotesStore = create<State & Actions>((set, get) => {
     hydrate,
 
     applyInbox: async (profileId, inbox) => {
+      const gen = genOf(profileId);
       await hydrate(profileId);
       let outcome = { added: [] as string[], removed: [] as string[] };
-      update(profileId, (current) => {
+      update(profileId, gen, (current) => {
         const result = applyInbox(current, inbox);
         outcome = { added: result.added, removed: result.removed };
         return result.data;
@@ -103,8 +130,9 @@ export const useNotesStore = create<State & Actions>((set, get) => {
     },
 
     markRead: async (profileId, noteId, now = new Date()) => {
+      const gen = genOf(profileId);
       await hydrate(profileId);
-      update(profileId, (current) => {
+      update(profileId, gen, (current) => {
         const note = current.notes.find((n) => n.id === noteId);
         if (!note || note.readAt !== null) return undefined;
         const at = now.toISOString();
@@ -117,8 +145,9 @@ export const useNotesStore = create<State & Actions>((set, get) => {
     },
 
     pickReaction: async (profileId, noteId, reaction, now = new Date()) => {
+      const gen = genOf(profileId);
       await hydrate(profileId);
-      update(profileId, (current) => {
+      update(profileId, gen, (current) => {
         const note = current.notes.find((n) => n.id === noteId);
         if (!note || note.reaction === reaction) return undefined;
         return {
@@ -130,33 +159,39 @@ export const useNotesStore = create<State & Actions>((set, get) => {
     },
 
     putAway: async (profileId, noteId) => {
+      const gen = genOf(profileId);
       await hydrate(profileId);
-      update(profileId, (current) =>
+      update(profileId, gen, (current) =>
         current.putAway.includes(noteId) || !current.notes.some((n) => n.id === noteId) ? undefined : { ...current, putAway: [...current.putAway, noteId] },
       );
     },
 
     queueReport: async (profileId, noteId, reason, attest, now = new Date()) => {
+      const gen = genOf(profileId);
       await hydrate(profileId);
-      update(profileId, (current) =>
+      update(profileId, gen, (current) =>
         current.notes.some((n) => n.id === noteId) ? { ...current, queue: enqueueReport(current.queue, noteId, reason, attest, now.toISOString()) } : undefined,
       );
     },
 
     markClassNotesCardSeen: async (profileId) => {
+      const gen = genOf(profileId);
       await hydrate(profileId);
-      update(profileId, (current) => (current.classNotesCardSeen ? undefined : { ...current, classNotesCardSeen: true }));
+      update(profileId, gen, (current) => (current.classNotesCardSeen ? undefined : { ...current, classNotesCardSeen: true }));
     },
 
     flush: (profileId, client, creds) => {
       const running = flushing.get(profileId);
       if (running) return running;
+      const gen = genOf(profileId);
       const run = (async () => {
         const data = await hydrate(profileId);
         for (const write of flushOrder(data.queue)) {
-          const http = await send(profileId, write, client, creds);
-          update(profileId, (current) => settleWrite(current, write, outcomeOf(http)));
-          if (http === -1) break; // offline: the rest waits for the next sync
+          if (genOf(profileId) !== gen) break; // the profile was removed
+          const outcome = outcomeOf(await send(profileId, write, client, creds));
+          update(profileId, gen, (current) => settleWrite(current, write, outcome));
+          // Offline, a server problem or stale credentials: the rest waits for the next sync, so the inbox is not held up.
+          if (staysQueued(write, outcome)) break;
         }
       })().finally(() => flushing.delete(profileId));
       flushing.set(profileId, run);
@@ -164,6 +199,9 @@ export const useNotesStore = create<State & Actions>((set, get) => {
     },
 
     forgetProfile: (profileId) => {
+      generation.set(profileId, genOf(profileId) + 1);
+      loaded.delete(profileId);
+      loading.delete(profileId);
       set((s) => {
         const rest = { ...s.byProfile };
         delete rest[profileId];

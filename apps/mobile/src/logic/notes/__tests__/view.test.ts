@@ -4,7 +4,9 @@ import { homeNotesCard, noteDetail, notesList, reactionSeenBy, showMyNotesRow, v
 import { classRow, data, familyNote, familyRow, note } from './fixtures';
 
 const m = getMessages('en');
-const now = new Date('2026-10-12T15:00:00.000Z');
+// Built from local components, so "Today" and "Yesterday" hold in every time zone the suite runs in.
+const at = (day: number, hour: number): string => new Date(2026, 9, day, hour).toISOString();
+const now = new Date(2026, 9, 12, 15);
 const ctx = (over: Partial<NotesViewContext> = {}): NotesViewContext => ({
   m,
   locale: 'en',
@@ -15,9 +17,9 @@ const ctx = (over: Partial<NotesViewContext> = {}): NotesViewContext => ({
   ...over,
 });
 
-const unreadTeacher = note('aaaaaaaa', { createdAt: '2026-10-12T09:00:00.000Z', text: 'Loved your work today' });
-const unreadFamily = familyNote('bbbbbbbb', { createdAt: '2026-10-11T09:00:00.000Z', presetId: 'warm_thinking_of_you' });
-const readOld = note('cccccccc', { createdAt: '2026-10-03T09:00:00.000Z', readAt: '2026-10-03T10:00:00.000Z', reaction: 'thanks', presetId: 'progress_reading' });
+const unreadTeacher = note('aaaaaaaa', { createdAt: at(12, 9), text: 'Loved your work today' });
+const unreadFamily = familyNote('bbbbbbbb', { createdAt: at(11, 9), presetId: 'warm_thinking_of_you' });
+const readOld = note('cccccccc', { createdAt: at(3, 9), readAt: at(3, 10), reaction: 'thanks', presetId: 'progress_reading' });
 
 describe('visibleNotes', () => {
   it('leaves out notes put away on this device and notes with a pending report', () => {

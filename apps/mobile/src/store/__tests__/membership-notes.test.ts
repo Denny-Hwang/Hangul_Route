@@ -5,6 +5,7 @@ const mem = vi.hoisted(() => new Map<string, unknown>());
 const flagState = vi.hoisted(() => ({ notesEnabled: true }));
 vi.mock('../../platform/storage', () => ({
   readJson: vi.fn(async (k: string) => mem.get(k) ?? null),
+  readJsonStrict: vi.fn(async (k: string) => mem.get(k) ?? null),
   writeJson: vi.fn(async (k: string, v: unknown) => {
     mem.set(k, v);
   }),
@@ -28,6 +29,7 @@ vi.mock('../../config/flags', async (importOriginal) => ({
   },
 }));
 
+import { visibleNotes } from '../../logic/notes/view';
 import { useMembershipStore } from '../membership-store';
 import { useNotesStore } from '../notes-store';
 import { usePlanStore } from '../plan-store';
@@ -126,6 +128,42 @@ describe('membership-store refresh with notes', () => {
     expect(calls).toEqual(['inbox']);
     expect(useNotesStore.getState().byProfile['profile:a']?.notes).toEqual([]);
     expect(mem.has('notes:profile:a')).toBe(false);
+  });
+
+  it('a report sent just before an inbox that fails keeps its note out of sight (section 6.9)', async () => {
+    const calls: string[] = [];
+    const api = { ...fakeApi(calls), getInbox: vi.fn(async () => ({ status: 'error', code: 'http_503' })) };
+    setSyncApiForTests(api as never);
+    useSyncStore.getState().adoptCredentials('profile:a', 'sec', 1);
+    useNotesStore.setState({
+      byProfile: { 'profile:a': { notes: [delivered], prefs: null, putAway: [], classNotesCardSeen: false, queue: [{ kind: 'report', noteId: 'note:aaaaaaaa', reason: 'unkind', at: 't2' }] } },
+    });
+    await useMembershipStore.getState().refresh('profile:a');
+    expect(calls).toEqual(['report']);
+    const notes = useNotesStore.getState().byProfile['profile:a'];
+    expect(notes?.queue).toEqual([]);
+    expect(notes && visibleNotes(notes).map((n) => n.id)).toEqual([]);
+  });
+
+  it('a notes flush that throws never holds up the inbox: tier, memberships and notes still apply', async () => {
+    const calls: string[] = [];
+    const api = {
+      ...fakeApi(calls),
+      reportNote: vi.fn(async () => {
+        throw new Error('boom');
+      }),
+    };
+    setSyncApiForTests(api as never);
+    useSyncStore.getState().adoptCredentials('profile:a', 'sec', 1);
+    useNotesStore.setState({
+      byProfile: { 'profile:a': { notes: [], prefs: null, putAway: [], classNotesCardSeen: false, queue: [{ kind: 'report', noteId: 'note:aaaaaaaa', reason: 'unkind', at: 't2' }] } },
+    });
+    const rows = await useMembershipStore.getState().refresh('profile:a');
+    expect(api.getInbox).toHaveBeenCalledTimes(1);
+    expect(rows).toEqual([classRow]);
+    expect(useNotesStore.getState().byProfile['profile:a']?.notes.map((n) => n.id)).toEqual(['note:aaaaaaaa']);
+    // The report that could not be sent stays queued, so its note stays out of sight.
+    expect(visibleNotes(useNotesStore.getState().byProfile['profile:a']!)).toEqual([]);
   });
 
   it('an inbox that could not be read leaves the cached notes as they are', async () => {
