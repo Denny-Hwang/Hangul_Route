@@ -51,6 +51,7 @@ describe('step-up before money moves (F-BILL-002 B-5, section 4.4, OD-7)', () =>
       ...reverificationError({ level: 'first_factor', afterMinutes: STEP_UP_MAX_AGE_MIN }),
       ok: false,
       error: { code: 'reverify_required', message: 'Confirm it is you to continue' },
+      meta: { serverTime: expect.any(String), version: expect.any(String) },
     });
     expect(body.clerk_error).toEqual({ type: 'forbidden', reason: 'reverification-error', metadata: { reverification: { level: 'first_factor', afterMinutes: 10 } } });
   });
@@ -77,7 +78,7 @@ describe('step-up before money moves (F-BILL-002 B-5, section 4.4, OD-7)', () =>
       }
     });
 
-    it('lets the dev fallback through and leaves an unverifiable bearer to the caller (401 elsewhere)', async () => {
+    it('lets the dev fallback through; an unverifiable bearer gets the 403 hint here (requireAccount has already answered 401 in the real routes)', async () => {
       expect(await requireStepUp(ctx('Bearer user_dev', { ENVIRONMENT: 'test' }))).toBeNull();
       const res = await requireStepUp(ctx('Bearer not-a-token', { CLERK_JWT_KEY: keys.jwtKey }));
       expect(res?.status).toBe(403);

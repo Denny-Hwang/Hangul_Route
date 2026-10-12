@@ -17,7 +17,7 @@ export interface StripeEnv {
   /** Group License: recurring yearly price ($153 / year). */
   STRIPE_PRICE_GROUP_LICENSE_YEARLY?: string;
   /**
-   * Exactly "true" lets a live key create checkout, portal, promo and receipt-link calls
+   * Exactly "true" lets a live key create checkout, portal, promo (and, from B-4, receipt-link) calls
    * (F-BILL-002 section 4.9). Unset until the owner opens payments (OD-12).
    */
   BILLING_LIVE_ALLOWED?: string;
