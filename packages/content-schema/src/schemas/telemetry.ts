@@ -78,6 +78,8 @@ export const TELEMETRY_EVENT_NAMES = [
   'route_map.viewed',
   'route_map.stage_opened',
   'route_map.continue_tapped',
+  // Learning Route section 8 (payload { stage, goalFrom }: a stage key and a source code only; LR-W1, Worker first)
+  'route_map.goal_reached',
   // F-LAYOUT-001 §3.13 (classes only: no sizes in px, no profile data)
   'layout.observed',
   'layout.guard_shown',
