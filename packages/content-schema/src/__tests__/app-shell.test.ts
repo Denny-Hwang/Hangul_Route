@@ -30,6 +30,9 @@ import {
   personaHint,
   personasFor,
   safeNextPath,
+  SHELL_TELEMETRY_PAYLOADS,
+  SHELL_TELEMETRY_PREFIX,
+  TELEMETRY_EVENT_NAMES,
   unlockActive,
   type AdultPersona,
   type GrownUpUnlock,
@@ -197,6 +200,23 @@ describe('safeNextPath (closes open redirects through next)', () => {
     expect(safeNextPath(ok + 'a')).toBeNull();
   });
 
+  it('takes the URLSearchParams.get value as is (no second decode), so escapes in a deep link survive', () => {
+    for (const target of ['/teach/space?id=space%3Aabc', '/teach/space?id=a%26b', '/teach/space?q=100%25', '/teach/space?id=a%23b']) {
+      const next = new URLSearchParams(`next=${encodeURIComponent(target)}`).get('next');
+      expect(next).toBe(target);
+      expect(safeNextPath(next)).toBe(target);
+    }
+  });
+
+  it('still refuses a percent-encoded parent segment in an as-is value', () => {
+    const next = new URLSearchParams(`next=${encodeURIComponent('/teach/%2E%2e/present')}`).get('next');
+    expect(safeNextPath(next)).toBeNull();
+  });
+
+  it('refuses a very long raw value before decoding it', () => {
+    expect(safeNextPath('%2F' + 'teach%2F'.repeat(400))).toBeNull();
+  });
+
   it('allows dots that are not a parent segment', () => {
     expect(safeNextPath('/teach.html')).toBe('/teach.html');
     expect(safeNextPath('/teach/space?id=a..b')).toBe('/teach/space?id=a..b');
@@ -256,6 +276,11 @@ describe('personasFor (personas come from memberships)', () => {
       });
     }
   }
+
+  it('ignores a membership of an unknown kind instead of throwing', () => {
+    const unknownKind = [{ kind: 'org', role: 'owner' }, { kind: 'family', role: 'owner' }] as unknown as { kind: SpaceKind; role: SpaceRole }[];
+    expect(personasFor(unknownKind)).toEqual(['parent']);
+  });
 
   it('returns nothing for no memberships', () => {
     expect(personasFor([])).toEqual([]);
@@ -426,5 +451,17 @@ describe('storage names', () => {
   it('keeps the shell store out of the learner hr: namespace', () => {
     expect(SHELL_DB.startsWith('hr:')).toBe(false);
     for (const key of Object.values(SHELL_KEYS)) expect(key.startsWith('hr:')).toBe(false);
+  });
+});
+
+describe('shell.* telemetry codes (section 3.18)', () => {
+  it('lists exactly the documented keys and values, and every shell name uses the prefix', () => {
+    expect(SHELL_TELEMETRY_PREFIX).toBe('shell.');
+    expect(SHELL_TELEMETRY_PAYLOADS).toEqual({
+      'shell.persona_chosen': { persona: ['learner', 'parent', 'teacher'], from: ['welcome', 'welcome-continue'] },
+      'shell.grown_up_handoff': { via: ['profile', 'dashboard', 'plan', 'lock'], target: ['router', 'billing', 'next'] },
+      'shell.path_bounced': { prefix: ['signin', 'start', 'teach', 'parent', 'account'] },
+    });
+    expect(TELEMETRY_EVENT_NAMES.filter((name) => name.startsWith(SHELL_TELEMETRY_PREFIX))).toEqual(Object.keys(SHELL_TELEMETRY_PAYLOADS));
   });
 });

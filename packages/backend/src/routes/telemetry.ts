@@ -1,4 +1,11 @@
-import { LearnerBasisSchema, TransferInitiatorSchema, TransferSlotSchema, isTelemetryEventName } from '@hangul-route/content-schema';
+import {
+  LearnerBasisSchema,
+  SHELL_TELEMETRY_PAYLOADS,
+  SHELL_TELEMETRY_PREFIX,
+  TransferInitiatorSchema,
+  TransferSlotSchema,
+  isTelemetryEventName,
+} from '@hangul-route/content-schema';
 import { Hono } from 'hono';
 import { fail, ok } from '../envelope';
 import { id, store, type TelemetryEvent } from '../store';
@@ -41,16 +48,40 @@ function clientTimestamp(raw: unknown, nowMs: number): string | null {
  * so no class or learner identifier can ride along. Telemetry is never
  * evidence of consent; the D1 audit (`transfer_events`) is.
  */
+type PayloadValues = Readonly<Record<string, ReadonlySet<string>>>;
+
 const TRANSFER_EVENT_PREFIX = 'space.transfer.';
-const TRANSFER_PAYLOAD_VALUES: Readonly<Record<string, ReadonlySet<string>>> = {
+const TRANSFER_PAYLOAD_VALUES: PayloadValues = {
   initiator: new Set(TransferInitiatorSchema.options),
   slot: new Set(TransferSlotSchema.options),
   basis: new Set(LearnerBasisSchema.options),
 };
 
-function transferPayload(payload: Record<string, unknown> | undefined): Record<string, unknown> | undefined {
+/**
+ * App-shell events (F-APP-001 section 3.18) carry codes only too: per event,
+ * the keys and values in `SHELL_TELEMETRY_PAYLOADS`, and no profile id. A
+ * `shell.*` name without an entry keeps no payload at all.
+ */
+const SHELL_PAYLOAD_VALUES: Readonly<Record<string, PayloadValues>> = Object.fromEntries(
+  Object.entries(SHELL_TELEMETRY_PAYLOADS).map(([name, codes]) => [
+    name,
+    Object.fromEntries(Object.entries(codes).map(([key, values]) => [key, new Set(values)])),
+  ]),
+);
+
+/** The only payload keys and values kept for a codes-only event, or `null` for an ordinary event. */
+function codesOnlyValues(name: string): PayloadValues | null {
+  if (name.startsWith(TRANSFER_EVENT_PREFIX)) return TRANSFER_PAYLOAD_VALUES;
+  if (name.startsWith(SHELL_TELEMETRY_PREFIX)) return SHELL_PAYLOAD_VALUES[name] ?? {};
+  return null;
+}
+
+function codesOnlyPayload(
+  payload: Record<string, unknown> | undefined,
+  values: PayloadValues,
+): Record<string, unknown> | undefined {
   const kept: Record<string, unknown> = {};
-  for (const [key, allowed] of Object.entries(TRANSFER_PAYLOAD_VALUES)) {
+  for (const [key, allowed] of Object.entries(values)) {
     const value = payload?.[key];
     if (typeof value === 'string' && allowed.has(value)) kept[key] = value;
   }
@@ -67,12 +98,12 @@ telemetryRoutes.post('/', async (c) => {
   const receivedAt = now.toISOString();
   const rawPayload = body?.payload;
   const payload = rawPayload && typeof rawPayload === 'object' && !Array.isArray(rawPayload) ? (rawPayload as Record<string, unknown>) : undefined;
-  const transfer = name.startsWith(TRANSFER_EVENT_PREFIX);
+  const codesOnly = codesOnlyValues(name);
   const event: TelemetryEvent = {
     id: id('event'),
     name,
-    profileId: !transfer && typeof body?.profileId === 'string' ? body.profileId : undefined,
-    payload: transfer ? transferPayload(payload) : payload,
+    profileId: !codesOnly && typeof body?.profileId === 'string' ? body.profileId : undefined,
+    payload: codesOnly ? codesOnlyPayload(payload, codesOnly) : payload,
     at: clientTimestamp(body?.at, now.getTime()) ?? receivedAt,
     receivedAt,
   };

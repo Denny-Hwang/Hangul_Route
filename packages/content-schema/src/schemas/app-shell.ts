@@ -67,19 +67,25 @@ const CONTROL_CHARS = /[\u0000-\u001f\u007f]/;
 const DOT_DOT_SEGMENTS: ReadonlySet<string> = new Set(['..', '.%2e', '%2e.', '%2e%2e']);
 
 /**
- * `?next=` guard (section 3.11). Decodes once and accepts only a relative
+ * `?next=` guard (section 3.11). Expects the value read with
+ * `URLSearchParams.get('next')`, which is already decoded: a value that
+ * starts with `/` is taken as is, so escapes such as `%3A`, `%26` or `%25`
+ * inside a deep link's query survive. Any other value is percent-decoded
+ * once (a caller that passed the raw query value). Accepts only a relative
  * grown-up path: starts with a single `/`, no backslash, no control
- * character, no `..` segment (plain or percent-encoded), at most 512
- * characters. Returns path and query without the fragment; anything else is
- * `null` (the caller then uses the persona home).
+ * character, no `..` segment (plain or percent-encoded, any case), at most
+ * 512 characters. Returns path and query without the fragment; anything
+ * else is `null` (the caller then uses the persona home).
  */
 export function safeNextPath(raw: string | null | undefined): string | null {
-  if (typeof raw !== 'string' || raw === '') return null;
-  let decoded: string;
-  try {
-    decoded = decodeURIComponent(raw);
-  } catch {
-    return null;
+  if (typeof raw !== 'string' || raw === '' || raw.length > NEXT_PATH_MAX * 3) return null;
+  let decoded = raw;
+  if (!raw.startsWith('/')) {
+    try {
+      decoded = decodeURIComponent(raw);
+    } catch {
+      return null;
+    }
   }
   if (decoded.length > NEXT_PATH_MAX) return null;
   if (!decoded.startsWith('/') || decoded.startsWith('//')) return null;
@@ -120,15 +126,15 @@ const TEACHER_ROLES: Readonly<Record<'class' | 'school', ReadonlySet<SpaceRole>>
 
 /**
  * Adult personas from memberships (section 3.5), never from a self-declared
- * flag. Archived spaces count; `student` never maps to a persona. Order:
- * `parent`, then `teacher`.
+ * flag. Archived spaces count; `student` never maps to a persona; a kind
+ * this bundle does not know is ignored. Order: `parent`, then `teacher`.
  */
 export function personasFor(memberships: readonly { kind: SpaceKind; role: SpaceRole }[]): AdultPersona[] {
   let parent = false;
   let teacher = false;
   for (const { kind, role } of memberships) {
     if (kind === 'family') parent = parent || PARENT_ROLES.has(role);
-    else teacher = teacher || TEACHER_ROLES[kind].has(role);
+    else if (kind === 'class' || kind === 'school') teacher = teacher || TEACHER_ROLES[kind].has(role);
   }
   const out: AdultPersona[] = [];
   if (parent) out.push('parent');
@@ -206,6 +212,18 @@ export function unlockActive(record: GrownUpUnlock | null | undefined, now: numb
   const idle = now - record.seen;
   return idle >= 0 && idle < GROWN_UP_IDLE_MS;
 }
+
+/**
+ * Payload codes of the `shell.*` telemetry events (section 3.18), per event:
+ * the only keys and values each one carries, and never a profile id. The
+ * Worker keeps nothing else.
+ */
+export const SHELL_TELEMETRY_PREFIX = 'shell.';
+export const SHELL_TELEMETRY_PAYLOADS: Readonly<Record<string, Readonly<Record<string, readonly string[]>>>> = {
+  'shell.persona_chosen': { persona: PersonaSchema.options, from: ['welcome', 'welcome-continue'] },
+  'shell.grown_up_handoff': { via: ['profile', 'dashboard', 'plan', 'lock'], target: ['router', 'billing', 'next'] },
+  'shell.path_bounced': { prefix: GROWN_UP_PREFIXES.map((prefix) => prefix.slice(1)) },
+};
 
 /** Learner storage key, stored as `hr:device:gate` by `platform/storage`. */
 export const DEVICE_GATE_KEY = 'device:gate';
