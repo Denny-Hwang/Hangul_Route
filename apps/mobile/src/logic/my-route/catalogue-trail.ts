@@ -66,7 +66,8 @@ function catalogueStageRows(i: CatalogueTrailInput): StageRow[] {
 
 function stageRowView(row: StageRow, ctx: CopyContext, i: CatalogueTrailInput, themeTitles: ReadonlyMap<ThemeKey, string>): StageRowView {
   const m = i.messages;
-  const isLater = row.state === 'later';
+  const oneLiner = i.stages.find((s) => s.key === row.stage)?.oneLinerEn;
+  // With every stage open to look at, a stage row is never `later` (coming-later stages are later rows).
   return {
     kind: 'stage',
     key: row.stage,
@@ -74,9 +75,9 @@ function stageRowView(row: StageRow, ctx: CopyContext, i: CatalogueTrailInput, t
     order: row.order,
     title: row.title,
     stateWord: stageStateWord(row, ctx),
-    tone: isLater ? 'neutral' : row.availability === 'taste' ? 'secondary' : 'primary',
-    badge: isLater ? 'later' : 'number',
-    captions: [i.stages.find((s) => s.key === row.stage)?.oneLinerEn ?? ''].filter((line) => line.length > 0),
+    tone: row.availability === 'taste' ? 'secondary' : 'primary',
+    badge: 'number',
+    captions: oneLiner ? [oneLiner] : [],
     tags: [],
     a11yLabel: stageA11yLabel(row, ctx),
     groups: [],

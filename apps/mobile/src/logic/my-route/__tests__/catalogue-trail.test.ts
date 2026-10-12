@@ -79,6 +79,13 @@ describe('catalogueTrail', () => {
     expect(rows[rows.length - 1]?.connector).toBeNull();
   });
 
+  it('a stage without a one-liner draws no empty caption; a theme without a title reads its key', () => {
+    const rows = stageRows(trail({ stages: STAGE_DEFS, themes: THEME_DEFS.filter((t) => t.key !== 'crafts') }));
+    for (const row of rows) expect(row.captions).toEqual([]);
+    const crafts = rows[0]?.cells.find((c) => c.key.endsWith('-crafts'));
+    expect(crafts?.themeLabel).toBe('crafts');
+  });
+
   it('reads the UI locale through the messages it is given', () => {
     const ko = getMessages('ko');
     const rows = trail({ messages: ko });
