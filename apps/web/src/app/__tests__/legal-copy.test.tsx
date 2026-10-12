@@ -102,6 +102,34 @@ describe('privacy policy', () => {
     expect(privacy).toMatch(/A parent can review, export, correct, or delete/);
   });
 
+  describe('progress reports (F-REPORT-001 section 3.10, notice before collection)', () => {
+    it('says which day-by-day progress details are kept, and their limits', () => {
+      expect(privacy).toContain('practice days and minutes per day for the last 35 days');
+      expect(privacy).toContain('monthly totals for up to 24 months');
+      expect(privacy).toContain('the letters that became strong each day');
+      expect(privacy).toContain('the next lesson');
+    });
+
+    it('says who can see progress and reports, and that a class sees history only from the day the learner joined', () => {
+      expect(privacy).toContain("the learner's family caregivers");
+      expect(privacy).toContain('the teacher and school admin of a class the learner joined');
+      expect(privacy).toContain('only from the day the learner joined');
+    });
+
+    it('puts both lines in "What we collect", progress first', () => {
+      const section = /What we collect(.*?)What we never collect/.exec(privacy)?.[1] ?? '';
+      const kept = section.indexOf('for the last 35 days');
+      const who = section.indexOf("the learner's family caregivers");
+      expect(kept).toBeGreaterThan(-1);
+      expect(who).toBeGreaterThan(kept);
+    });
+
+    it('names no speaking data, recordings or per-question history among the report details', () => {
+      const section = /What we collect(.*?)What we never collect/.exec(privacy)?.[1] ?? '';
+      expect(section).not.toMatch(/speak|pronunciation|recording|response time/i);
+    });
+  });
+
   it('is still marked as a draft pending legal review', () => {
     expect(privacy).toContain('pending review by qualified legal counsel');
   });
