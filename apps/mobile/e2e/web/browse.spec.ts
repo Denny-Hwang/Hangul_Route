@@ -130,17 +130,19 @@ test('a gate pass opens All lessons: the fragment leaves the address, the title 
   await expect(page).toHaveTitle('Hangul Route lessons');
   await shot(page, 'br6-browse-home-pixel5');
 
-  // Let the boot finish its reads, its event and its flush, then compare the whole store.
+  // A check that nothing was written needs a settle window: let the boot finish its reads, its event and its
+  // flush, then compare the whole store.
   await page.waitForTimeout(1500);
   const after = await readAllStored(page);
   const changed = [...new Set([...Object.keys(before), ...Object.keys(after)])].filter((k) => before[k] !== after[k]);
   expect(changed.filter((k) => !k.startsWith('hr:browse:')), changed.join(', ')).toEqual([]);
   expect(after[LEARNER_QUEUE]).toBe(SEEDED_QUEUE);
+  // This build has no API address, so `track` neither posts nor queues: `browse.opened` itself (its payload,
+  // no profileId, the flush) is pinned by platform/__tests__/browse-opened.test.ts. Here: whatever the browse
+  // queue holds is a browse event that names no one, and no telemetry key other than the two queues exists.
   const browseQueue = JSON.parse(after[BROWSE_QUEUE] ?? '[]') as Array<{ name: string; profileId?: string }>;
-  for (const event of browseQueue) {
-    expect(event.name.startsWith('browse.'), event.name).toBe(true);
-    expect(event.profileId).toBeUndefined();
-  }
+  expect(browseQueue.filter((event) => !event.name.startsWith('browse.') || event.profileId !== undefined)).toEqual([]);
+  expect(Object.keys(after).filter((k) => k.includes('telemetry') && k !== LEARNER_QUEUE && k !== BROWSE_QUEUE)).toEqual([]);
   // All lessons never clears the grown-up unlock of its tab (F-BROWSE-001 BD1).
   expect(await page.evaluate((k) => sessionStorage.getItem(k), UNLOCK_KEY)).not.toBeNull();
 
@@ -231,6 +233,60 @@ test('Close goes back to the page the tab came from, else to the learner app for
   await expect(home(page)).toBeVisible();
   await page.getByRole('button', { name: 'Close' }).click();
   await expect(page).toHaveURL(/\/$/);
+});
+
+test('Close after a later link skips its history entry and goes back to the page the tab came from', async ({ page }) => {
+  await page.goto('/?from=e2e');
+  await writeGatePass(page);
+  await page.evaluate(() => window.location.assign('/browse#s=gate'));
+  await expect(home(page)).toBeVisible();
+  await page.evaluate(() => {
+    window.location.hash = '#t=jamo:nieun&s=report';
+  });
+  await expect(page).toHaveURL(/\/browse$/);
+  await expect(home(page)).toBeVisible();
+  await page.getByRole('button', { name: 'Close' }).click();
+  await expect(page).toHaveURL(/\/\?from=e2e$/);
+});
+
+test('Close in a new tab opened from an app page (a referrer, nothing to go back to) leaves by address', async ({ page, context }) => {
+  await page.goto('/?from=e2e');
+  await writeGatePass(page);
+  // `window.open` copies the tab's sessionStorage (the pass) and sets a same-origin referrer; the new tab's history has one entry.
+  const [tab] = await Promise.all([context.waitForEvent('page'), page.evaluate(() => void window.open('/browse', '_blank'))]);
+  await expect(home(tab)).toBeVisible();
+  expect(await tab.evaluate(() => [document.referrer !== '', history.length])).toEqual([true, 1]);
+  await tab.getByRole('button', { name: 'Close' }).click();
+  await expect(tab).toHaveURL(/\/$/);
+});
+
+test('Close shows the border.focus ring on keyboard focus', async ({ page }) => {
+  await page.goto('/');
+  await writeGatePass(page);
+  await page.goto('/browse');
+  await expect(home(page)).toBeVisible();
+  const close = page.getByTestId('browse-close');
+  const ring = () => close.evaluate((el) => getComputedStyle(el).borderTopColor);
+  const atRest = await ring();
+  await close.focus();
+  await expect.poll(ring).not.toBe(atRest);
+});
+
+test('a tab shown again after 15 idle minutes shows the Access screen without a tap', async ({ page }) => {
+  await page.clock.install({ time: new Date('2026-10-12T09:00:00.000Z') });
+  await page.goto('/');
+  await writeGatePass(page);
+  await page.goto('/browse');
+  await expect(home(page)).toBeVisible();
+
+  await page.clock.fastForward('14:00');
+  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange', { bubbles: true })));
+  await expect(home(page)).toBeVisible();
+
+  await page.clock.fastForward('01:00');
+  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange', { bubbles: true })));
+  await expect(accessTitle(page)).toBeVisible();
+  await expect(home(page)).toHaveCount(0);
 });
 
 test('at 320 wide the Access screen keeps 64 targets and nothing runs off the page', async ({ page }) => {
