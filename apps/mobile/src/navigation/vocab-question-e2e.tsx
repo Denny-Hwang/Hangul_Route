@@ -9,6 +9,7 @@ import type { VocabFormat } from '../logic/vocab/format-for';
 import { nudgeFor } from '../logic/vocab/nudges';
 import { buildQuestions } from '../logic/vocab/question-builder';
 import type { QuestionFlowMode } from '../logic/vocab/question-flow';
+import { addTelemetryListener, type TelemetryEvent } from '../platform/telemetry';
 import type { MinigameHost } from '../screens/minigames/host';
 import { PICTURE_CONTEXT } from '../screens/minigames/PictureArt';
 import { VocabQuestionView, type VocabQuestionHoya } from '../screens/vocab/VocabQuestionView';
@@ -38,8 +39,13 @@ export interface VocabQuestionE2eParams {
 
 export interface VocabE2eHandle {
   openQuestion(params: VocabQuestionE2eParams): void;
-  /** Every `host.answer` call since the screen opened, and how many reveal beats ended. */
-  log(): { answers: Array<{ key: string; correct: boolean; itemId?: string }>; firstTaps: string[]; advances: number; answerId: string | null };
+  /**
+   * Every `host.answer` call since the screen opened, how many reveal beats ended, and how long each beat
+   * lasted (ms from the last accepted tap to `onAdvance`).
+   */
+  log(): Log;
+  /** `audio.*` telemetry events `track()` accepted since the hook mounted (the e2e build sends none). */
+  events(): TelemetryEvent[];
 }
 
 interface Log {
@@ -47,9 +53,11 @@ interface Log {
   firstTaps: string[];
   advances: number;
   answerId: string | null;
+  beats: number[];
 }
 
-const log: Log = { answers: [], firstTaps: [], advances: 0, answerId: null };
+const log: Log = { answers: [], firstTaps: [], advances: 0, answerId: null, beats: [] };
+let lastAnswerAt = 0;
 
 /** The box that makes the builder choose each format (F-VOC-004 §3.2: 0-1 word, 2 sound, 3+ picture to word). */
 const BOX_FOR: Record<VocabFormat, number> = { 'word-to-image': 0, 'audio-to-image': 2, 'image-to-word': 3 };
@@ -61,11 +69,23 @@ export function VocabE2eHook(): null {
   const navigation = useNavigation();
   useEffect(() => {
     const g = globalThis as { __hrVocabE2E?: VocabE2eHandle };
+    const events: TelemetryEvent[] = [];
+    const stopListening = addTelemetryListener((e) => {
+      if (e.name.startsWith('audio.')) events.push(e);
+    });
     g.__hrVocabE2E = {
       openQuestion: (params) => navigation.dispatch(StackActions.push('VocabQuestionE2e', params)),
-      log: () => ({ answers: log.answers.map((a) => ({ ...a })), firstTaps: [...log.firstTaps], advances: log.advances, answerId: log.answerId }),
+      log: () => ({
+        answers: log.answers.map((a) => ({ ...a })),
+        firstTaps: [...log.firstTaps],
+        advances: log.advances,
+        answerId: log.answerId,
+        beats: [...log.beats],
+      }),
+      events: () => events.map((e) => ({ ...e })),
     };
     return () => {
+      stopListening();
       delete g.__hrVocabE2E;
     };
   }, [navigation]);
@@ -106,11 +126,13 @@ export function VocabQuestionE2eScreen({ route }: Props): React.ReactElement {
     log.answers = [];
     log.firstTaps = [];
     log.advances = 0;
+    log.beats = [];
   }, [route.params]);
 
   const host: MinigameHost = {
     mode: 'vocab',
     answer: (key, correct, meta) => {
+      lastAnswerAt = Date.now();
       log.answers.push({ key: String(key), correct, ...(meta?.itemId === undefined ? {} : { itemId: meta.itemId }) });
       if (!question || mode !== 'speed') return;
       const item = vocabItem(question.itemId);
@@ -136,6 +158,7 @@ export function VocabQuestionE2eScreen({ route }: Props): React.ReactElement {
           onAnswer={(optionId) => log.firstTaps.push(optionId)}
           onAdvance={() => {
             log.advances += 1;
+            log.beats.push(Date.now() - lastAnswerAt);
             setHoya(null);
             setIndex((i) => i + 1);
           }}
