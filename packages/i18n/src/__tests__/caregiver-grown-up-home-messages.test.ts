@@ -8,7 +8,7 @@ import { leafPaths, lookup } from '../tree';
 // Panel D: the PIN screen opened for the grown-up area on a device with no PIN stored. It
 // never offers to create a PIN (a child could then open grown-up pages); it sends the grown-up
 // to sign in instead. The button carries `cta` so the 28-character budget covers it. A-7 adds
-// the row and card strings (`title`, `line`, `cta`) to the same object.
+// the dashboard card strings (`title`, `line`, `cta`) to the same object.
 const grownUpHome = getMessages('en').caregiver.grownUpHome;
 
 describe('caregiver.grownUpHome (F-APP-001 section 3.9, PIN screen without a PIN)', () => {
@@ -18,7 +18,7 @@ describe('caregiver.grownUpHome (F-APP-001 section 3.9, PIN screen without a PIN
   });
 
   it('holds exactly these keys', () => {
-    expect(leafPaths(grownUpHome).sort()).toEqual(['continue.cta', 'noPin']);
+    expect(leafPaths(grownUpHome).sort()).toEqual(['continue.cta', 'cta', 'line', 'noPin', 'title']);
   });
 
   it('passes the caregiver ban list, names no age, no price and no way to make a PIN here', () => {

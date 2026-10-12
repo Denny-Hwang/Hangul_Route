@@ -81,7 +81,14 @@ describe('Plan screen (screens/paywall/PaywallScreen.tsx)', () => {
     const back = plan.indexOf('accessibilityLabel={messages.a11y.goBack}');
     expect(summary).toBeGreaterThan(-1);
     expect(back).toBeGreaterThan(summary);
-    expect(plan).toContain('accessibilityHint={view.billing.hint}');
+    expect(plan).toMatch(/accessibilityHint=\{offline \? needsInternet : view\.billing\.hint\}/);
+  });
+
+  it('F-APP-001 A-7: offline with the entries on, Open billing is disabled with "Needs the internet" (sections 3.6, 3.12)', () => {
+    expect(plan).toMatch(/planOpenBlocked\(grownUpEntriesOn\(flags\.grownUpHomeEnabled, bundleOs\(\)\), online\)/);
+    expect(plan).toContain('disabled={offline}');
+    expect(plan).toContain('messages.learner.welcome.grownUps.needsInternet');
+    expect(plan).toMatch(/if \(offline\) return;/);
   });
 });
 

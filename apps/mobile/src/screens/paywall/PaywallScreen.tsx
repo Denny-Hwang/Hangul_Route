@@ -3,8 +3,11 @@ import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
+import { useOnline } from '../../components/use-online';
+import { bundleOs, flags } from '../../config/flags';
 import { useMessages } from '../../i18n/use-messages';
 import { billingNote, billingOpenedEvent, billingPressStep, pendingBillingStep, planView } from '../../logic/paywall';
+import { grownUpEntriesOn, planOpenBlocked } from '../../logic/shell/entry-points';
 import type { RootStackParamList } from '../../navigation/types';
 import { openBilling } from '../../platform/billing-handoff';
 import { HAND_OFF_NEEDS_TAP } from '../../platform/external-link';
@@ -25,6 +28,9 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Paywall'>;
  * grown-up can open Billing: the press goes through the gate (destination `Billing`) unless it
  * opens directly. A correct PIN returns here, and the web asks for one more tap of Open billing
  * (a browser may block a tab opened outside a tap); the session is open then, so that tap opens it.
+ * F-APP-001 A-7 (sections 3.6, 3.12, 3.19; mock app-shell/learner-entry.md): with the grown-up home
+ * flag on (web) and the browser offline, Open billing is disabled with "Needs the internet" under it
+ * as its description, and re-enables on `online`. The same-tab hand-off is F-BILL-002 B-9b.
  */
 export function PaywallScreen({ navigation, route }: Props): React.ReactElement {
   const { audience } = useAudience();
@@ -41,6 +47,9 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
   const [note, setNote] = useState<string | null>(null);
   const from = route.params?.from ?? 'settings';
   const profileId = profile?.id;
+  const online = useOnline();
+  const offline = planOpenBlocked(grownUpEntriesOn(flags.grownUpHomeEnabled, bundleOs()), online);
+  const needsInternet = messages.learner.welcome.grownUps.needsInternet;
 
   useEffect(() => {
     void track({ name: 'paywall.viewed', profileId, payload: { state, from } });
@@ -72,6 +81,7 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
   );
 
   const onOpenBilling = (): void => {
+    if (offline) return;
     setNote(null);
     if (billingPressStep(gateOpensDirectlyNow()) === 'open') {
       // Called straight from the press so the web hand-off keeps the tap (pop-up rules).
@@ -142,10 +152,20 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
             tone="secondary"
             size="lg"
             fullWidth
-            accessibilityHint={view.billing.hint}
+            accessibilityHint={offline ? needsInternet : view.billing.hint}
+            disabled={offline}
             onPress={onOpenBilling}
             pressableRef={openRef}
+            testID="plan-open-billing"
           />
+          {offline ? (
+            <>
+              <Spacer size="xs" />
+              <Body size="sm" tone="secondary" align="center" testID="plan-open-billing-offline">
+                {needsInternet}
+              </Body>
+            </>
+          ) : null}
           {/* The prompt after the PIN and any failure line are read out as they appear. */}
           <View accessibilityLiveRegion="polite">
             {note ? (

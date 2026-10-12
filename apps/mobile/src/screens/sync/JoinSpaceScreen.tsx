@@ -6,6 +6,7 @@ import { useMessages } from '../../i18n/use-messages';
 import { cleanJoinCode, isCodeError, isCompleteJoinCode, joinErrorMessage } from '../../logic/spaces/join-code';
 import { relinkNotice } from '../../logic/sync/restore';
 import type { RootStackParamList } from '../../navigation/types';
+import { takeJoinHandoff } from '../../platform/join-handoff';
 import { apiBaseUrl } from '../../platform/sync-api';
 import { useMembershipStore, type LookupOutcome } from '../../store/membership-store';
 import type { RosterName } from '../../platform/sync-api';
@@ -21,6 +22,10 @@ export const RELINK_POLL_MS = 4000;
  * sync/join-space — F-SPACE-001 §3.5. Code → confirm the roster name →
  * done. Not PIN-gated: the teacher is in the room; nothing about progress
  * moves or resets.
+ *
+ * Join prefill (F-APP-001 A-7, sections 3.6 and 3.8, web): a family join code the family home's
+ * "Open the app on this device" left in this tab fills the field the next time this screen is
+ * shown within 30 minutes (read once); every step after it is unchanged.
  */
 export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
   const messages = useMessages();
@@ -41,6 +46,11 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{ name: string; alreadyMember: boolean; notice?: string } | null>(null);
   const cloudAvailable = !!apiBaseUrl();
+
+  useEffect(() => {
+    const handed = takeJoinHandoff();
+    if (handed !== null) setCode(handed);
+  }, []);
 
   const find = async (): Promise<void> => {
     setMessage(null);
