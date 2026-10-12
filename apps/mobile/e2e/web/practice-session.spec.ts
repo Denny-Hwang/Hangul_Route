@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, readStored } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, readStored, waitForSaved } from './helpers';
 import { next } from './story-reader-helpers';
 
 /**
@@ -8,7 +8,10 @@ import { next } from './story-reader-helpers';
  * only. Its session id is time-only (`session:time:`), it ends with its
  * elapsed time when the reader closes, a hidden page ends it and a visible
  * page begins a new one, and the learner's streak never moves (OD-19). Runs
- * on the fixture bundle, like the other reader suites:
+ * on the fixture bundle, like the other reader suites. The level check's
+ * session runs only while the check is in front: the grown-up report pushed
+ * over it ends it (RP-3b review).
+ *
  *
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
  *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile test:e2e:web practice-session
@@ -19,6 +22,7 @@ const STORY = 'story:hangul-day';
 
 type E2eWindow = Window & {
   __hrStoryE2E?: { openReader(p: { storyId: string; level: string }): void };
+  __hrPlacementE2E?: { open(source: string): void };
 };
 
 interface Saved {
@@ -76,5 +80,44 @@ test.describe('practice sessions (F-REPORT-001 section 3.3.2)', () => {
     const after = await saved();
     expect(timeOnly(after).every((s) => (s.durationSeconds ?? -1) >= 0 && (s.durationSeconds ?? 0) <= 3600)).toBe(true);
     expect(after?.streakDays).toBe(streakBefore);
+  });
+
+  test('the level check records a time-only session that ends while the grown-up report is in front', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: "Let's start" }).click();
+    await page.getByRole('radio', { name: /^Me\./ }).click();
+    await page.getByPlaceholder('Type a name').fill('Sam');
+    await page.getByRole('radio', { name: /^Some reading/ }).click();
+    await page.getByRole('checkbox').click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Start my journey' }).click();
+    await waitForSaved(page, ['profiles']);
+    await page.goto('/');
+    await expect(page.getByText('Hi, Sam!')).toBeVisible();
+    const profileId = (await readStored<Array<{ id: string }>>(page, 'profiles'))?.[0]?.id ?? '';
+    const saved = (): Promise<Saved | null> => readStored<Saved>(page, `progress:${profileId}`);
+    const streakBefore = (await saved())?.streakDays ?? 0;
+
+    await page.waitForFunction(() => Boolean((window as E2eWindow).__hrPlacementE2E), undefined, { timeout: 10_000 });
+    await page.evaluate(() => (window as E2eWindow).__hrPlacementE2E?.open('home'));
+    await expect(page.getByTestId('placement-options')).toBeVisible();
+    await expect.poll(async () => timeOnly(await saved()).length).toBe(1);
+    expect(timeOnly(await saved())[0]?.endedAt).toBeUndefined();
+
+    await page.getByTestId('placement-guide-tap').click();
+    await page.getByTestId('placement-next').click();
+    await page.getByTestId('placement-warmup-speaker').click();
+    await expect(page.getByTestId('placement-no-sound-note')).toBeVisible();
+    await page.getByTestId('placement-warmup-option-rice').click();
+    await page.locator('[data-testid^="placement-option-"]').first().click();
+    await page.getByTestId('placement-exit').click();
+    await page.getByTestId('placement-enough').click();
+    await expect(page.getByTestId('placement-result')).toBeVisible();
+
+    await page.getByTestId('placement-link-forGrownUps').click();
+    await expect(page.getByTestId('placement-report')).toBeVisible();
+    await expect.poll(async () => timeOnly(await saved()).every((s) => s.endedAt !== undefined)).toBe(true);
+    expect(timeOnly(await saved())).toHaveLength(1);
+    expect((await saved())?.streakDays).toBe(streakBefore);
   });
 });

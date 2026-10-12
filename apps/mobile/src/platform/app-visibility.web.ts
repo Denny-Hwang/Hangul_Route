@@ -25,3 +25,9 @@ export function subscribeAppVisibility(listener: (visible: boolean) => void): ()
     win.removeEventListener('pageshow', onShow);
   };
 }
+
+/** Whether the page is in front now: hidden only when the document says so; no document counts as in front. */
+export function isAppVisible(): boolean {
+  const doc = (globalThis as { document?: Document }).document;
+  return doc?.visibilityState !== 'hidden';
+}

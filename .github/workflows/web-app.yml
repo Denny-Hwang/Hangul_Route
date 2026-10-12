@@ -109,3 +109,5 @@ jobs:
           STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test audio -g "bundled clips"
           # F-VOC-004 S-4b: the shared vocabulary question view, through the __hrVocabE2E hook (no host screen yet).
           STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test vocab-question
+          # F-REPORT-001 RP-3b: time-only practice sessions in the story reader and the level check.
+          STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test practice-session

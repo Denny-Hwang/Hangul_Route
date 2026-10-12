@@ -7,6 +7,7 @@ vi.mock('../../platform/storage', () => ({
 vi.mock('../../platform/telemetry', () => ({ track: vi.fn(async () => true) }));
 const visibility = vi.hoisted(() => ({ listeners: new Set<(visible: boolean) => void>() }));
 vi.mock('../../platform/app-visibility', () => ({
+  isAppVisible: () => true,
   subscribeAppVisibility: (listener: (visible: boolean) => void) => {
     visibility.listeners.add(listener);
     return () => visibility.listeners.delete(listener);

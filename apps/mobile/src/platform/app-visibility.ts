@@ -15,3 +15,8 @@ export function subscribeAppVisibility(listener: (visible: boolean) => void): ()
   });
   return () => subscription.remove();
 }
+
+/** Whether the app is in front now: only `background` is hidden (`inactive` and an unknown state count as in front). */
+export function isAppVisible(): boolean {
+  return AppState.currentState !== 'background';
+}

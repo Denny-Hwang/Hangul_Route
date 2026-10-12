@@ -167,7 +167,8 @@ interface Actions {
    * Begin a session (F-REPORT-001 section 3.3.2): returns its id, or `null`
    * when the open session already belongs to this profile (a story opened
    * inside a quest joins the quest's session; that caller does nothing on
-   * unmount). An open session of another profile is ended first.
+   * unmount). A streak session begun over the profile's time-only session
+   * ends it and takes over. An open session of another profile is ended first.
    * `streak: true` (the quest player) moves `streakDays` and sends
    * `session.start` as before; `streak: false` (story, stand-alone game, level
    * check; OD-19) records time only.
@@ -532,7 +533,9 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
 
   beginSession: (profileId, options) => {
     const open = get().openSession;
-    if (open?.profileId === profileId) return null;
+    // Join the profile's open session, unless a quest (streak) begins over a time-only one: it takes over,
+    // so the streak moves and session.start is sent; the time-only holder's own end is then a no-op.
+    if (open?.profileId === profileId && !(options.streak && !open.streak)) return null;
     if (open) get().endSession(open.profileId, open.sessionId);
     const snap = get().byProfile[profileId] ?? blankSnapshot(profileId);
     const now = new Date().toISOString();

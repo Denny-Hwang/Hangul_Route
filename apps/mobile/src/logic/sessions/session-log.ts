@@ -72,3 +72,14 @@ export function countedSeconds(session: Pick<SessionLog, 'durationSeconds'>): nu
   if (seconds === undefined || !Number.isFinite(seconds)) return 0;
   return Math.min(SESSION_COUNT_CAP_S, Math.max(0, seconds));
 }
+
+/**
+ * The grown-up dashboard's totals (F-REPORT-001 section 3.3.2, RP-3b review):
+ * `sessions` counts the quest sessions only, so a story, game or level-check
+ * visit never adds one; `minutes` sums every session's counted (capped)
+ * seconds, time-only sessions included (OD-19), rounded once.
+ */
+export function practiceTotals(sessions: readonly SessionLog[]): { sessions: number; minutes: number } {
+  const seconds = sessions.reduce((sum, s) => sum + countedSeconds(s), 0);
+  return { sessions: sessions.filter(countsForStreak).length, minutes: Math.round(seconds / 60) };
+}

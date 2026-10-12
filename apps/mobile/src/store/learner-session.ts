@@ -1,5 +1,5 @@
 import { holdSession, type SessionOptions } from '../logic/sessions/hold';
-import { subscribeAppVisibility } from '../platform/app-visibility';
+import { isAppVisible, subscribeAppVisibility } from '../platform/app-visibility';
 import { useProgressStore } from './progress-store';
 
 /**
@@ -13,6 +13,7 @@ export function holdLearnerSession(profileId: string, options: SessionOptions): 
     {
       begin: (id, opts) => useProgressStore.getState().beginSession(id, opts),
       end: (id, sessionId) => useProgressStore.getState().endSession(id, sessionId),
+      visible: isAppVisible,
       subscribe: subscribeAppVisibility,
     },
     profileId,
