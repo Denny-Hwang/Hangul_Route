@@ -47,6 +47,9 @@ export const useTierStore = create<State & Actions>((set, get) => ({
     const existing = get().byLearner[learnerId];
     if (existing) return existing;
     const saved = await readJson<LearnerTier>(key(learnerId));
+    // An inbox that landed while the read was pending is newer than the saved copy.
+    const arrived = get().byLearner[learnerId];
+    if (arrived) return arrived;
     if (saved) set((s) => ({ byLearner: { ...s.byLearner, [learnerId]: saved } }));
     return saved ?? null;
   },
@@ -109,21 +112,29 @@ export function questOpenFor(learnerId: string, now: Date): (questId: string) =>
   });
 }
 
-/** The inputs of the active learner's access; a new predicate is built only when one of them changes. */
-function accessInputs(): readonly unknown[] {
-  const { profiles, activeId } = useProfileStore.getState();
-  const id = activeId ?? '';
-  const tiers = useTierStore.getState();
-  return [profiles, activeId, tiers.byLearner[id], tiers.spaceMembers[id], useProgressStore.getState().byProfile[id], useAccountStore.getState().subscription];
+/**
+ * What decides the active learner's answer, the clock included (a legacy
+ * subscription ends at its `expiresAt`): the learner, the access tier, the
+ * effective switch and the finished quests. A snapshot write that finishes no
+ * quest leaves it unchanged.
+ */
+function activeAccessKey(): { key: string; tier: Tier; gatingEnabled: boolean; kept: string[] } {
+  const id = useProfileStore.getState().activeId ?? '';
+  const tier = accessTier(id, new Date());
+  const gatingEnabled = gatingActive(flags, bundleOs());
+  const quests = useProgressStore.getState().byProfile[id]?.quests ?? [];
+  const kept = [...new Set(quests.filter((q) => q.completedAt).map((q) => q.questId))].sort();
+  return { key: JSON.stringify([id, tier, gatingEnabled, kept]), tier, gatingEnabled, kept };
 }
 
-let activeAccess: { inputs: readonly unknown[]; open: (questId: string) => boolean } | null = null;
+let activeAccess: { key: string; open: (questId: string) => boolean } | null = null;
 
 function activeQuestOpen(): (questId: string) => boolean {
-  const inputs = accessInputs();
-  if (activeAccess && activeAccess.inputs.every((value, i) => value === inputs[i])) return activeAccess.open;
-  const open = questOpenFor(useProfileStore.getState().activeId ?? '', new Date());
-  activeAccess = { inputs, open };
+  const { key: accessKey, tier, gatingEnabled, kept } = activeAccessKey();
+  if (activeAccess?.key === accessKey) return activeAccess.open;
+  // The same predicate `questOpenFor` builds, from the values the key holds.
+  const open = questOpenPredicate({ tier, gatingEnabled, completedQuestIds: new Set(kept) });
+  activeAccess = { key: accessKey, open };
   return open;
 }
 
@@ -135,10 +146,29 @@ function subscribeAccess(onChange: () => void): () => void {
 }
 
 /**
- * `questOpenFor` for the active profile, as a React hook: re-renders when the
+ * `questOpenFor` for the active profile, as a React hook: re-reads when the
  * tier cache, the snapshot, the subscription or the profile list changes, and
- * keeps the same predicate while none of them does.
+ * keeps the same predicate while the answer cannot differ (same learner, access
+ * tier, switch and finished quests).
  */
 export function useQuestAccess(): (questId: string) => boolean {
   return useSyncExternalStore(subscribeAccess, activeQuestOpen, activeQuestOpen);
+}
+
+function subscribeTier(onChange: () => void): () => void {
+  const offs = [useTierStore.subscribe(onChange), useAccountStore.subscribe(onChange)];
+  return () => {
+    for (const off of offs) off();
+  };
+}
+
+/**
+ * `accessTier` for one learner, as a React hook: the tier every learner-facing
+ * access read uses (story locks, the cursor's stages, the level check's start
+ * quest), re-read when the tier cache, the spaces or the subscription change.
+ * Billing surfaces keep `effectiveTier` (F-ENT-003 section 3.4).
+ */
+export function useAccessTier(learnerId: string): Tier {
+  const read = (): Tier => accessTier(learnerId, new Date());
+  return useSyncExternalStore(subscribeTier, read, read);
 }

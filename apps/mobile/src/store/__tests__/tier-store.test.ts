@@ -25,11 +25,12 @@ vi.mock('../../platform/storage', () => ({
 
 import { flags } from '../../config/flags';
 import { questsAll } from '../../content';
+import { readJson } from '../../platform/storage';
 import { useAccountStore } from '../account-store';
 import { unlockedStagesFor } from '../plan-store';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
-import { accessTier, cachedTierIsPremium, effectiveTier, questOpenFor, useQuestAccess, useTierStore } from '../tier-store';
+import { accessTier, cachedTierIsPremium, effectiveTier, questOpenFor, useAccessTier, useQuestAccess, useTierStore, type LearnerTier } from '../tier-store';
 
 const now = new Date('2026-09-21T12:00:00.000Z');
 const source = { kind: 'class' as const, spaceId: 'space:c', name: 'Sunday Class A' };
@@ -64,6 +65,17 @@ describe('tier-store (F-ENT-001 §3.4)', () => {
     expect(await useTierStore.getState().hydrate('profile:a')).toEqual(applied);
     expect(await useTierStore.getState().hydrate('profile:a')).toEqual(applied);
     expect(await useTierStore.getState().hydrate('profile:none')).toBeNull();
+  });
+
+  it('an inbox that lands while the saved copy is still being read wins over the older copy', async () => {
+    const older: LearnerTier = { tier: 'premium', source, validUntil: '2026-09-28T12:00:00.000Z', fetchedAt: 'old' };
+    let release: (value: unknown) => void = () => undefined;
+    vi.mocked(readJson).mockImplementationOnce(() => new Promise((resolve) => (release = resolve)));
+    const pending = useTierStore.getState().hydrate('profile:a');
+    const fresh = useTierStore.getState().applyInbox('profile:a', { tier: 'free', tierSource: null, tierValidUntil: null, serverTime: 'new' });
+    release(older);
+    expect(await pending).toEqual(fresh);
+    expect(useTierStore.getState().byLearner['profile:a']).toEqual(fresh);
   });
 
   it('honours the cache until validUntil for billing, then falls back to the legacy subscription', () => {
@@ -120,6 +132,22 @@ describe('accessTier (F-ENT-003 section 3.4, OD-11)', () => {
     useTierStore.getState().noteSpaces('profile:a', 1);
     useTierStore.getState().noteSpaces('profile:a', 0);
     expect(accessTier('profile:a', now)).toBe('free');
+  });
+
+  it('useAccessTier answers accessTier for a learner and re-renders on the tier store and the subscription', () => {
+    expect(useAccessTier('profile:a')).toBe('free');
+    useTierStore.getState().noteSpaces('profile:a', 1);
+    expect(useAccessTier('profile:a')).toBe('premium');
+    // A stale premium past its validUntil still opens, as accessTier does.
+    useTierStore.getState().applyInbox('profile:b', { tier: 'premium', tierSource: source, tierValidUntil: '2020-01-01T00:00:00.000Z', serverTime: 't' });
+    expect(useAccessTier('profile:b')).toBe('premium');
+    expect(hook.server?.()).toBe('premium');
+    const onChange = vi.fn();
+    const off = hook.subscribe!(onChange);
+    useTierStore.getState().noteSpaces('profile:c', 1);
+    useAccountStore.setState({ subscription: { status: 'active', plan: 'yearly', expiresAt: '2027-01-01T00:00:00.000Z' } });
+    expect(onChange).toHaveBeenCalledTimes(2);
+    off();
   });
 
   it('unlockedStagesFor reads the access tier, so stage and quest access come from the same tier', () => {
@@ -226,6 +254,60 @@ describe('questOpenFor and useQuestAccess (F-ENT-003 section 3.4)', () => {
     off();
     useTierStore.getState().noteSpaces('profile:a', 0);
     expect(onChange).toHaveBeenCalledTimes(4);
+  });
+
+  it('a snapshot write that finishes no quest keeps the same predicate; finishing one builds a new one', () => {
+    switchOn('web');
+    useProfileStore.setState({
+      profiles: [{ id: 'profile:a', displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't' }],
+      activeId: 'profile:a',
+    });
+    const done = { questId: 'quest:stage4-rites-q1', episodeId: 'episode:stage4-rites', startedAt: at, completedAt: at, stars: 3 as const, attempts: 1, accuracy: 1 };
+    useProgressStore.setState({ byProfile: { 'profile:a': snapshotWith('profile:a', [done]) } });
+    const first = useQuestAccess();
+    // A session, a started quest, the same finished quest again: nothing that decides access changed.
+    useProgressStore.setState({
+      byProfile: {
+        'profile:a': {
+          ...snapshotWith('profile:a', [{ questId: 'quest:stage2-life-q1', episodeId: 'episode:stage2-life', startedAt: at, stars: 0, attempts: 1, accuracy: 0 }, done, { ...done }]),
+          sessions: [{ id: 's1', profileId: 'profile:a', startedAt: at, episodesTouched: [] }],
+        },
+      },
+    });
+    expect(useQuestAccess()).toBe(first);
+    useProfileStore.setState({ profiles: [...useProfileStore.getState().profiles] });
+    expect(useQuestAccess()).toBe(first);
+    // Finishing a quest keeps it open: a new predicate.
+    useProgressStore.setState({
+      byProfile: { 'profile:a': snapshotWith('profile:a', [done, { ...done, questId: 'quest:stage2-life-q1', episodeId: 'episode:stage2-life' }]) },
+    });
+    const next = useQuestAccess();
+    expect(next).not.toBe(first);
+    expect(first('quest:stage2-life-q1')).toBe(false);
+    expect(next('quest:stage2-life-q1')).toBe(true);
+  });
+
+  it('the predicate follows the clock: a legacy subscription that ends mid-session closes on the next read', () => {
+    switchOn('web');
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(new Date('2026-12-31T23:59:00.000Z'));
+      useProfileStore.setState({
+        profiles: [{ id: 'profile:a', displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't' }],
+        activeId: 'profile:a',
+      });
+      useAccountStore.setState({ subscription: { status: 'active', plan: 'yearly', expiresAt: '2027-01-01T00:00:00.000Z' } });
+      const before = useQuestAccess();
+      expect(before('quest:stage2-life-q1')).toBe(true);
+      // No store changed; only the time passed the subscription's end.
+      vi.setSystemTime(new Date('2027-01-01T00:01:00.000Z'));
+      const after = useQuestAccess();
+      expect(after).not.toBe(before);
+      expect(after('quest:stage2-life-q1')).toBe(false);
+      expect(after('quest:stage1-letters-q1')).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('with no active profile the hook answers for a learner with nothing kept and no tier', () => {
