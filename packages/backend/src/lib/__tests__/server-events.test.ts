@@ -171,6 +171,22 @@ describe('billing events (F-BILL-002 section 10: recorded by the Worker only, co
   });
 });
 
+describe('checkout and portal billing events (F-BILL-002 B-5, section 10)', () => {
+  it('keeps planKey, mode, the promo flag and the refusal reason, and nothing else', () => {
+    const smuggled = { spaceId: 'space:fam', accountId: 'acct:1', promoCode: 'HOYA20', url: 'https://checkout.stripe.com/c/1', amountCents: 1530 };
+    expect(keptEventFields('billing.checkout_started', { ...smuggled, planKey: 'family_lifetime', mode: 'test', promo: true }, 'profile:a')).toEqual({
+      profileId: undefined,
+      payload: { planKey: 'family_lifetime', mode: 'test', promo: true },
+    });
+    for (const reason of ['reverify_required', 'already_active', 'live_not_enabled', 'not_configured']) {
+      expect(keptEventFields('billing.checkout_refused', { ...smuggled, planKey: 'group_license', reason }, undefined).payload).toEqual({ planKey: 'group_license', reason });
+    }
+    expect(keptEventFields('billing.checkout_refused', { planKey: 'group_license', reason: 'forbidden', mode: 'test' }, undefined).payload).toEqual({ planKey: 'group_license' });
+    expect(keptEventFields('billing.portal_opened', { ...smuggled, planKey: 'group_license', mode: 'live', promo: true }, undefined).payload).toEqual({ planKey: 'group_license', mode: 'live' });
+    expect(keptEventFields('billing.checkout_started', { planKey: 'family_lifetime', mode: 'test', promo: 'HOYA20' }, undefined).payload).toEqual({ planKey: 'family_lifetime', mode: 'test' });
+  });
+});
+
 describe('appendEvent', () => {
   it('pushes and trims from the front once past the cap', () => {
     store.events = Array.from({ length: MAX_EVENTS }, (_, i) => ({ id: `event:${i}`, name: 'session.start', at: NOW.toISOString() }));

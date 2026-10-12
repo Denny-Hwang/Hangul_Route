@@ -1,5 +1,5 @@
 import type { EntitlementMerge } from '../db/types';
-import { PromoSchema, type EntitlementApply, type EntitlementStatus, type Promo, type PurchasablePlanKey } from '@hangul-route/content-schema';
+import { PromoSchema, type EntitlementApply, type EntitlementStatus, type Promo, type PurchasablePlanKey, type StripeMode } from '@hangul-route/content-schema';
 
 /**
  * Stripe without the SDK — F-ENT-001 §3.3. Webhook signatures are HMAC-SHA256
@@ -16,6 +16,39 @@ export interface StripeEnv {
   STRIPE_PRICE_FAMILY_YEARLY?: string;
   /** Group License: recurring yearly price ($153 / year). */
   STRIPE_PRICE_GROUP_LICENSE_YEARLY?: string;
+  /**
+   * Exactly "true" lets a live key create checkout, portal, promo (and, from B-4, receipt-link) calls
+   * (F-BILL-002 section 4.9). Unset until the owner opens payments (OD-12).
+   */
+  BILLING_LIVE_ALLOWED?: string;
+}
+
+const TEST_KEY_PREFIXES = ['sk_test_', 'rk_test_'] as const;
+
+/**
+ * The bound key's mode (F-BILL-002 section 4.9): `sk_test_` / `rk_test_` → test,
+ * no key → none, anything else → live. Stripe issues only `sk_live_` / `rk_live_`
+ * besides the test prefixes; a key with no known prefix also reads as live, so the
+ * live guard refuses it rather than letting an unknown key move money (fail closed).
+ */
+export function stripeMode(env: Pick<StripeEnv, 'STRIPE_SECRET_KEY'> | undefined): StripeMode {
+  const key = env?.STRIPE_SECRET_KEY;
+  if (typeof key !== 'string' || key.length === 0) return 'none';
+  return TEST_KEY_PREFIXES.some((prefix) => key.startsWith(prefix)) ? 'test' : 'live';
+}
+
+/** Has the owner opened live payments? Only the exact string "true" counts. */
+export function billingLiveAllowed(env: Pick<StripeEnv, 'BILLING_LIVE_ALLOWED'> | undefined): boolean {
+  return env?.BILLING_LIVE_ALLOWED === 'true';
+}
+
+/**
+ * The checkout success suffix (F-BILL-002 section 4.4): the plan and the opaque
+ * space id, so the billing page can wait for that card to turn active. No name
+ * ever enters the URL. Cancel stays `?checkout=cancel`.
+ */
+export function checkoutSuccessSuffix(planKey: PurchasablePlanKey, spaceId: string): string {
+  return `?checkout=success&plan=${encodeURIComponent(planKey)}&id=${encodeURIComponent(spaceId)}`;
 }
 
 export const SIGNATURE_TOLERANCE_SEC = 300;

@@ -29,6 +29,7 @@ export function failResponse(code: string, message: string, status: 503): Respon
   });
 }
 
-function meta(): ApiMeta {
+/** The `meta` every envelope carries; exported for bodies built outside `ok` / `fail` (the step-up hint). */
+export function meta(): ApiMeta {
   return { serverTime: new Date().toISOString(), version: VERSION };
 }

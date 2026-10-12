@@ -103,7 +103,7 @@ describe('GET /health reports bindings as booleans', () => {
       status: 'misconfigured',
       environment: 'production',
       devFallbacks: false,
-      bindings: { db: false, clerk: false, stripe: false, stripeWebhook: false, rescuePepper: false },
+      bindings: { db: false, clerk: false, stripe: false, stripeWebhook: false, rescuePepper: false, stripeLive: false, billingLiveAllowed: false },
     });
   });
 
@@ -116,7 +116,7 @@ describe('GET /health reports bindings as booleans', () => {
       status: 'ok',
       environment: 'production',
       devFallbacks: false,
-      bindings: { db: true, clerk: true, stripe: true, stripeWebhook: false, rescuePepper: true },
+      bindings: { db: true, clerk: true, stripe: true, stripeWebhook: false, rescuePepper: true, stripeLive: true, billingLiveAllowed: false },
     });
   });
 });

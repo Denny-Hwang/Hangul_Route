@@ -53,6 +53,15 @@ keep_vars = true
 #                                    the yearly build; until then checkout is stripe_not_configured.
 # STRIPE_PRICE_GROUP_LICENSE_YEARLY  Stripe price id — $153 / year, recurring
 # CONSOLE_URL                        checkout success / cancel return, e.g. https://hangulroute.com
+#                                    (success adds ?checkout=success&plan=<planKey>&id=<spaceId>,
+#                                    F-BILL-002 B-5; the space id is opaque, no name in the URL)
+# BILLING_LIVE_ALLOWED               F-BILL-002 section 4.9, OD-12: leave UNSET. With a live Stripe
+#                                    key (sk_live_ / rk_live_, or any key without a test prefix)
+#                                    checkout, portal, promo (and receipt links, B-4) answer 503
+#                                    live_not_enabled; only the exact text "true" opens them. The
+#                                    webhook keeps working in every mode. GET /health shows
+#                                    bindings.stripeLive and bindings.billingLiveAllowed (booleans).
+#                                    Set it only together with the owner's decision to go live.
 # SCHOOL_CONSENT_MODE                "enabled" only after the legal review (decision #27)
 # ENVIRONMENT                        unset = production (fail closed: no Clerk key or no
 #                                    D1 binding → 503). Only "development" / "test" turn on

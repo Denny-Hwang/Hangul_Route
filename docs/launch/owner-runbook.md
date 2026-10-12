@@ -134,6 +134,11 @@ https://dashboard.stripe.com → **Test mode**
   - `payment_not_recorded`: 그 결제의 `invoice.paid` 가 아직 기록되지 않았다 (Stripe 는 이벤트 순서를 보장하지 않는다). `invoice.paid` 가 들어오면 다음 재전송에서 기록된다. 환불 후 **72시간**이 지나면 더 기다리지 않고 200 (`"applied":false`) 으로 받는다. 그래서 이 엔드포인트가 `invoice.paid` 를 받기 **전에** 결제된 건의 환불은 결제 기록에 남지 않는다 (Stripe 대시보드에는 그대로 있다).
 - 분쟁 (`charge.dispute.*`) 은 기록하지 않는다. Stripe 대시보드에서 처리한다.
 
+**결제 전 본인 확인과 Live 잠금 (F-BILL-002 B-5 배포 후)**:
+- **confirm `fva` in a production token** (한 번만): 결제·구독 관리 (B-4 이후 영수증 링크도) 는 최근 10분 안에 다시 로그인한 경우에만 열린다 (Clerk 세션 토큰의 `fva` 클레임). 토큰에 `fva` 가 없으면 결제가 계속 거절된다 (`reverify_required`). 확인 방법: app.hangulroute.com (또는 hangulroute.com 콘솔) 에 로그인 → 브라우저 개발자 도구 Console 에서 `JSON.parse(atob((await window.Clerk.session.getToken()).split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).fva` 를 실행한다 → `[숫자, 숫자]` 가 나오면 된다 (`undefined` 면 없음). 토큰 문자열을 jwt.io 같은 외부 사이트에 붙여 넣지 않는다. 없으면 Clerk Dashboard 에서 인스턴스의 **session token version** 을 v2 로 올린다 (Dashboard 의 Updates 또는 Sessions 설정 화면에 있다; 코드 변경 없음). 올린 뒤 다시 로그인해서 같은 방법으로 `fva` 를 확인한다.
+- 그 전까지 (그리고 B-8b 의 확인 창이 나오기 전까지) 예전 결제 화면에서 로그인한 지 10분이 지났으면 "Couldn't start checkout" 이 보인다. 로그아웃 후 다시 로그인하면 된다.
+- **`BILLING_LIVE_ALLOWED` 는 넣지 않는다** (OD-12). 이 값 없이 Live 키 (`sk_live_…`) 를 넣으면 결제·구독 관리·코드 확인이 `503 live_not_enabled` 로 막힌다 (웹훅은 계속 받는다). `GET /health` 의 `bindings.stripeLive` / `bindings.billingLiveAllowed` 로 상태를 본다. 테스트 키를 넣었는데 `stripeLive: true` 면 키 문자열이 잘못된 것이다 (`sk_test_` 또는 `rk_test_` 로 시작해야 한다; 알 수 없는 키는 Live 로 보고 막는다). Live 를 열 때만 Type **Text** 로 `BILLING_LIVE_ALLOWED` = `true`.
+
 ### Step 9. 프로모·레퍼럴 코드 (15분, 배포 불필요)
 Stripe → Product catalog → **Coupons** → New: 퍼센트 또는 정액 · Duration (`once` = Family Plan 과 라이선스 모두 **첫 해만**, `forever` = 매년 갱신까지, `repeating` = 지정한 개월 수) · 선택: 총 사용 횟수, 만료 → 그 쿠폰에서 **Add promotion code** → 고객이 입력할 문자열 (런치용 `HOYA20`, 추천 교사별 `MSPARK`) · 코드별 최대 사용 / 만료 / 첫 구매만 / 최소 금액. 끄기 = inactive.
 - **100% 할인 Once 코드**: Family Plan 은 그래도 카드를 받는다 (`payment_method_collection=always`) → 첫 해 무료, 그 다음 해부터 그 카드로 $15.30 갱신 (갱신 사전 고지 메일 후). Group License 는 카드를 받지 않는다 (`if_required`) → 첫 갱신 때 결제가 안 되어 `past_due` 후 재시도가 끝나면 해지된다. 갱신 사전 고지 메일이 Manage subscription 에서 카드를 넣으라고 안내한다; 카드가 없으면 무료 1년 뒤 끝난다. 계속 후원할 학급이면 **Forever** 코드를 쓴다.

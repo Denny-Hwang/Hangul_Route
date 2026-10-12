@@ -208,6 +208,9 @@ Three names in the new `billing.` namespace, recorded from the Stripe webhook. B
 | 1 | `billing.checkout_completed` | F-BILL-002 §10 | `{ planKey, mode, duplicate: boolean }` (the webhook applied a `checkout.session.completed`; `duplicate` is set when another Stripe subscription of the same plan already covered the space, §4.4, best effort) | B-3 | B-3 (Worker, webhook) |
 | 2 | `billing.payment_failed` | F-BILL-002 §10 | `{ planKey, mode }` (the webhook recorded an `invoice.payment_failed` row for the first time) | B-3 | B-3 (Worker, webhook) |
 | 3 | `billing.refund_recorded` | F-BILL-002 §10 | `{ planKey, full: boolean, mode }` (the webhook recorded a `charge.refunded` row for the first time; `full` when the whole charge is refunded) | B-3 | B-3 (Worker, webhook) |
+| 4 | `billing.checkout_started` | F-BILL-002 §10 | `{ planKey, mode, promo: boolean }` (a Stripe Checkout session was created; `promo` when a validated code was applied) | B-5 | B-5 (Worker, `POST /api/entitlements/stripe/checkout`) |
+| 5 | `billing.checkout_refused` | F-BILL-002 §10 | `{ planKey, reason }`, `reason` one of `reverify_required` (403 step-up), `already_active` (the 409 that landed in BY-1, #371), `live_not_enabled` (503 live guard), `not_configured` (no Stripe key or price bound). No event for a caller who may not buy for the space (403 forbidden) | B-5 | B-5 (Worker, checkout) |
+| 6 | `billing.portal_opened` | F-BILL-002 §10 | `{ planKey, mode }` (a Billing Portal session was created; `planKey` of the subscription row it manages) | B-5 | B-5 (Worker, `POST /api/entitlements/stripe/portal`) |
 
 A retried webhook delivery writes no second history row and sends no second `payment_failed` or `refund_recorded`. `checkout_completed` is sent each time a completion is applied. Every event is recorded only after the whole webhook request has succeeded, so a request that fails and is retried sends it once.
 

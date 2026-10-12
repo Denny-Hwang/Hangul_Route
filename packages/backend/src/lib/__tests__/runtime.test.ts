@@ -68,7 +68,7 @@ describe('healthReport (booleans only)', () => {
       status: 'misconfigured',
       environment: 'production',
       devFallbacks: false,
-      bindings: { db: false, clerk: false, stripe: false, stripeWebhook: false, rescuePepper: false },
+      bindings: { db: false, clerk: false, stripe: false, stripeWebhook: false, rescuePepper: false, stripeLive: false, billingLiveAllowed: false },
     });
     expect(healthReport({ DB: {} }).status).toBe('misconfigured');
     expect(healthReport({ CLERK_SECRET_KEY: 'sk_live_secret' }).status).toBe('misconfigured');
@@ -81,7 +81,7 @@ describe('healthReport (booleans only)', () => {
       status: 'ok',
       environment: 'production',
       devFallbacks: false,
-      bindings: { db: true, clerk: true, stripe: true, stripeWebhook: true, rescuePepper: true },
+      bindings: { db: true, clerk: true, stripe: true, stripeWebhook: true, rescuePepper: true, stripeLive: true, billingLiveAllowed: false }, // 'sk_stripe' has no test prefix: read as live (fail closed)
     });
     expect(JSON.stringify(report)).not.toMatch(/sk_live_secret|sk_stripe|whsec_x|pepper_do_not_echo/);
     expect(healthReport({ DB: {}, CLERK_JWT_KEY: '-----BEGIN PUBLIC KEY-----' }).bindings.clerk).toBe(true);
@@ -109,6 +109,19 @@ describe('healthReport (booleans only)', () => {
   it('ignores a DB binding that is not an object', () => {
     setDevFallbacksDefaultForTests(false);
     expect(healthReport({ DB: 'nope', CLERK_SECRET_KEY: 'sk' }).bindings.db).toBe(false);
+  });
+});
+
+describe('healthReport Stripe mode booleans (F-BILL-002 B-5, section 4.9)', () => {
+  it('reports whether the bound key is live and whether live payments are allowed, never the key', () => {
+    const base = { DB: {}, CLERK_SECRET_KEY: 'sk' };
+    expect(healthReport({ ...base, STRIPE_SECRET_KEY: 'sk_test_do_not_echo' }).bindings).toMatchObject({ stripe: true, stripeLive: false, billingLiveAllowed: false });
+    expect(healthReport({ ...base, STRIPE_SECRET_KEY: 'sk_live_do_not_echo' }).bindings).toMatchObject({ stripe: true, stripeLive: true, billingLiveAllowed: false });
+    expect(healthReport({ ...base, STRIPE_SECRET_KEY: 'rk_live_do_not_echo', BILLING_LIVE_ALLOWED: 'true' }).bindings).toMatchObject({ stripeLive: true, billingLiveAllowed: true });
+    expect(healthReport({ ...base, BILLING_LIVE_ALLOWED: 'yes' }).bindings).toMatchObject({ stripe: false, stripeLive: false, billingLiveAllowed: false });
+    const report = healthReport({ ...base, STRIPE_SECRET_KEY: 'sk_live_do_not_echo', BILLING_LIVE_ALLOWED: 'true' });
+    expect(JSON.stringify(report)).not.toContain('do_not_echo');
+    for (const value of Object.values(report.bindings)) expect(typeof value).toBe('boolean');
   });
 });
 
