@@ -364,6 +364,9 @@ export const stage1Quests: Quest[] = [
         durationSeconds: 40,
       },
       { id: 's3', kind: 'practice', titleEn: 'Listen and Pick', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-rites-q3-play', durationSeconds: 90 },
+      // 90 s, above the 60-75 s apply range in F-QUEST-002 §3.6: Story Order (4 cards plus
+      // replay) needs it, and it keeps the spec's 5-minute value for this 2-page quest
+      // (at 75 s the quest rounds to 4). The range/minutes conflict goes to the Q-11 docs pass.
       { id: 's4', kind: 'apply', titleEn: 'New Year Order', minigameKind: 'story-sequence', minigameRef: 'minigame:s1-rites-q3-apply', durationSeconds: 90 },
       { id: 's5', kind: 'check', titleEn: 'Listen and Read', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-rites-q3-check', durationSeconds: 35 },
       { id: 's6', kind: 'reward', titleEn: 'New Year Bow Card!', hoyaLineEn: 'A New Year bow card joins your library!', durationSeconds: 8 },
