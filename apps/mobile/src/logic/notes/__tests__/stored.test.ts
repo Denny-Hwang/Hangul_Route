@@ -41,6 +41,7 @@ describe('readStoredNotes', () => {
         { kind: 'report', noteId: 'note:bbbbbbbb', reason: 'other', attest: 'someone', at: 't3' },
         { kind: 'hide', noteId: 'note:aaaaaaaa', at: 't4' },
         { kind: 'state', noteId: 'note:cccccccc', read: true, at: 't5' },
+        { kind: 'state', noteId: 'note:dddddddd', reaction: 'happy', at: 't6' },
         null,
       ],
     });
@@ -49,6 +50,7 @@ describe('readStoredNotes', () => {
     expect(out.queue).toEqual([
       { kind: 'report', noteId: 'note:bbbbbbbb', reason: 'other', at: 't3' },
       { kind: 'state', noteId: 'note:cccccccc', read: true, at: 't5' },
+      { kind: 'state', noteId: 'note:dddddddd', reaction: 'happy', at: 't6' },
     ]);
   });
 

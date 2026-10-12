@@ -253,8 +253,9 @@ describe('platform/sync-api note routes', () => {
   });
 
   it('putNoteState reads a missing or odd answer body as nulls', async () => {
-    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValueOnce(json(200, { data: { readAt: 5 } }));
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValueOnce(json(200, { data: { readAt: 5 } })).mockResolvedValueOnce(json(200, {}));
     const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
+    expect(await api.putNoteState('profile:a', 'note:aaaaaaaa', { read: true }, creds)).toEqual({ status: 'ok', http: 200, readAt: null, reaction: null });
     expect(await api.putNoteState('profile:a', 'note:aaaaaaaa', { read: true }, creds)).toEqual({ status: 'ok', http: 200, readAt: null, reaction: null });
   });
 
@@ -275,7 +276,8 @@ describe('platform/sync-api note routes', () => {
     const fetchImpl = vi.fn<typeof fetch>()
       .mockResolvedValueOnce(json(200, { data: {} }))
       .mockResolvedValueOnce(json(200, { data: { classes: 'presets', acknowledged: true } }))
-      .mockResolvedValueOnce(json(403, { error: { code: 'scope' } }));
+      .mockResolvedValueOnce(json(403, { error: { code: 'scope' } }))
+      .mockResolvedValueOnce(json(404, {}));
     const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
     expect(await api.hideNote('profile:a', 'note:aaaaaaaa', creds)).toEqual({ status: 'ok', http: 200 });
     const [hideUrl, hideInit] = fetchImpl.mock.calls[0] as [string, RequestInit];
@@ -288,5 +290,6 @@ describe('platform/sync-api note routes', () => {
     expect(prefsInit.method).toBe('PUT');
     expect(JSON.parse(String(prefsInit.body))).toEqual({ classes: 'presets', acknowledge: true, attest: 'self' });
     expect(await api.putNotePrefs('profile:a', { classes: 'off' }, creds)).toEqual({ status: 'error', http: 403, code: 'scope' });
+    expect(await api.hideNote('profile:a', 'note:aaaaaaaa', creds)).toEqual({ status: 'error', http: 404, code: 'http_404' });
   });
 });
