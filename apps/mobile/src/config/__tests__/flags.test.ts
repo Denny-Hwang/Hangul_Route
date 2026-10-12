@@ -102,12 +102,24 @@ describe('flags', () => {
     expect(gatingActive({ contentGatingEnabled: true }, undefined)).toBe(false);
   });
 
+  // Any mention of the flag in code (member access, index access, destructuring); comments do not count.
+  const readsRawFlag = (src: string): boolean =>
+    /\bcontentGatingEnabled\b/.test(src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, ''));
+
+  it('the raw-flag check sees every way of reading the flag, and ignores comments', () => {
+    expect(readsRawFlag('const on = flags.contentGatingEnabled;')).toBe(true);
+    expect(readsRawFlag('const { contentGatingEnabled } = flags;')).toBe(true);
+    expect(readsRawFlag("const on = flags['contentGatingEnabled'];")).toBe(true);
+    expect(readsRawFlag('/**\n * only with `contentGatingEnabled`, D5\n */\nexport const x = 1;')).toBe(false);
+    expect(readsRawFlag('// contentGatingEnabled is read by gatingActive\nexport const x = 1;')).toBe(false);
+  });
+
   it('every access caller reads gatingActive, never the raw flag (F-ENT-003 section 3.4)', () => {
     const root = join(__dirname, '../../..');
     const files = [join(root, 'App.tsx'), ...walk(join(root, 'src'))].filter(
       (f) => /\.tsx?$/.test(f) && !f.includes('__tests__') && !f.endsWith(join('config', 'flags.ts')),
     );
-    const raw = files.filter((f) => readFileSync(f, 'utf8').includes('.contentGatingEnabled'));
+    const raw = files.filter((f) => readsRawFlag(readFileSync(f, 'utf8')));
     expect(raw.map((f) => f.slice(root.length + 1))).toEqual([]);
   });
 
