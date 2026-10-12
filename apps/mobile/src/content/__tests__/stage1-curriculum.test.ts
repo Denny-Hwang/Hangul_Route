@@ -110,22 +110,25 @@ function roundTargets(round: { id: string; answerId: string }): string[] {
   return [];
 }
 
-/** Theme pages (pictured culture words) are exposure: a page of words only, one with a picture. */
+/**
+ * Theme pages (culture words, R3) are exposure: a page of words only under its own caption, such as
+ * "Words of Seollal". A page with no caption is titled "Words you can read now", and a caption that
+ * says "read" makes the same promise, so those pages are reading pages and go through T7 like any other.
+ */
 const isThemePage = (page: DiscoverPage): boolean =>
-  page.items.every((i) => i.type === 'word') && page.items.some((i) => i.picture !== undefined);
+  page.items.every((i) => i.type === 'word') && page.captionEn !== undefined && !/\bread\b/i.test(page.captionEn);
 
 /**
  * The reading words of a quest's Discover step: every example and every word off a theme page.
- * A quest that teaches nothing new (R5, quests 11-15) has no theme page: its pictured words are
- * "Words you can read now", so every one of them is a reading word.
+ * Pictures do not decide it: quest 10's pictured 밥 and 김치 and the R5 words of quests 11-15 sit on
+ * "Words you can read now" pages, so every one of them is a reading word.
  */
 function discoverReading(quest: Quest): KoText[] {
-  const teachesLetters = questTeaches(quest).length > 0;
   return quest.steps.flatMap((s) =>
     (s.discover?.pages ?? []).flatMap((page) =>
       page.items.flatMap((item) => {
         if (item.type === 'jamo') return [item.example];
-        return teachesLetters && isThemePage(page) ? [] : [item.word];
+        return isThemePage(page) ? [] : [item.word];
       }),
     ),
   );
@@ -528,7 +531,7 @@ describe('the Nature and Crafts quests (Q-8)', () => {
       ['줄', 'jul', ['jamo:jieut', 'jamo:u', 'jamo:rieul-batchim']],
       ['놀', 'nol', ['jamo:nieun', 'jamo:o', 'jamo:rieul-batchim']],
       ['북', 'buk', ['jamo:bieup', 'jamo:u', 'jamo:giyeok-batchim']],
-      ['밥', 'bap', ['jamo:bieup', 'jamo:a', 'jamo:bieup-batchim']],
+      ['집', 'jip', ['jamo:jieut', 'jamo:i', 'jamo:bieup-batchim']],
     ]);
     expect(syllables(REBUILT[14]!, 'apply')).toEqual([
       ['한', 'han', ['jamo:hieut', 'jamo:a', 'jamo:nieun-batchim']],
@@ -536,6 +539,17 @@ describe('the Nature and Crafts quests (Q-8)', () => {
       ['호', 'ho', ['jamo:hieut', 'jamo:o']],
       ['야', 'ya', ['jamo:ieung', 'jamo:ya']],
     ]);
+  });
+
+  it('never repeats a glyph inside one Build a Letter block (two identical tiles would be scored by id)', () => {
+    const repeats = Object.entries(minigameScopes).flatMap(([ref, scope]) =>
+      scope.kind !== 'build-letter'
+        ? []
+        : (scope.syllables ?? [])
+            .filter((s) => new Set(s.jamoChars).size !== s.jamoChars.length)
+            .map((s) => `${ref}: ${s.ko}`),
+    );
+    expect(repeats).toEqual([]);
   });
 
   it('traces the finals m, p, l and ng in quest 12', () => {

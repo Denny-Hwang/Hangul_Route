@@ -502,14 +502,15 @@ export const minigameScopes: Record<string, MinigameScope> = {
   // Stage 1 / Crafts / Q13 — nothing new: games to play (quest 13)
   'minigame:s1-crafts-q1-play': {
     kind: 'build-letter',
-    // Six closed blocks: the four of the section 3.6 table and 북, 밥, so every final but m is built (6 rounds, R4).
+    // Six closed blocks: the four of the section 3.6 table and 북, 집, so every final but m is built (6 rounds, R4).
+    // No block repeats a glyph (밥 would show two identical ㅂ tiles, and the game scores slots by id).
     syllables: [
       { ko: '연', romanization: 'yeon', jamoChars: ['ㅇ', 'ㅕ', 'ㄴ'], jamoIds: [J('ieung'), J('yeo'), Jb('nieun')] },
       { ko: '공', romanization: 'gong', jamoChars: ['ㄱ', 'ㅗ', 'ㅇ'], jamoIds: [J('giyeok'), J('o'), Jb('ieung')] },
       { ko: '줄', romanization: 'jul', jamoChars: ['ㅈ', 'ㅜ', 'ㄹ'], jamoIds: [J('jieut'), J('u'), Jb('rieul')] },
       { ko: '놀', romanization: 'nol', jamoChars: ['ㄴ', 'ㅗ', 'ㄹ'], jamoIds: [J('nieun'), J('o'), Jb('rieul')] },
       { ko: '북', romanization: 'buk', jamoChars: ['ㅂ', 'ㅜ', 'ㄱ'], jamoIds: [J('bieup'), J('u'), Jb('giyeok')] },
-      { ko: '밥', romanization: 'bap', jamoChars: ['ㅂ', 'ㅏ', 'ㅂ'], jamoIds: [J('bieup'), J('a'), Jb('bieup')] },
+      { ko: '집', romanization: 'jip', jamoChars: ['ㅈ', 'ㅣ', 'ㅂ'], jamoIds: [J('jieut'), J('i'), Jb('bieup')] },
     ],
   },
   // Folk games on their card pictures.
