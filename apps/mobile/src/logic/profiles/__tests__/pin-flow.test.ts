@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { GROWN_UP_AREA, grownUpAreaNoPin, initialPinMode, pinCreatedWhere, showForgotPin } from '../pin-flow';
+import { GROWN_UP_AREA, forGrownUpArea, grownUpAreaNoPin, initialPinMode, pinCreatedWhere, showForgotPin } from '../pin-flow';
 
 describe('initialPinMode: which step the PIN screen opens on', () => {
   it('verifies when a PIN is stored', () => {
@@ -48,6 +48,9 @@ describe('pinCreatedWhere: the pin.created "where" (F-LEARN-001 §3.8)', () => {
 describe('destination GrownUpArea (F-APP-001 section 3.9)', () => {
   it('is the GrownUpArea destination name', () => {
     expect(GROWN_UP_AREA).toBe('GrownUpArea');
+    expect(forGrownUpArea({ next: GROWN_UP_AREA })).toBe(true);
+    expect(forGrownUpArea({ next: 'ParentDashboard' })).toBe(false);
+    expect(forGrownUpArea({})).toBe(false);
   });
 
   it('always opens in verify, never in a setup step, even with mode "setup" or no PIN stored', () => {

@@ -124,11 +124,11 @@ describe('bootRoot (web): what each root does before it mounts', () => {
     expect(peekBootIntent()).toBeNull();
   });
 
-  it('a gate=grown-up intent keeps both keys, leaves the address, and waits for the navigator', () => {
+  it('a gate=grown-up intent leaves the address and waits for the navigator; the tab is cleared all the same', () => {
     const h = harness('/?gate=grown-up&next=%2Fparent');
     expect(bootRoot(h.env)).toBe('app');
-    expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(true);
-    expect(h.area.data.has(CONSOLE_SESSION_KEY)).toBe(true);
+    // The lock already removed the console session and could not use the unlock; a new one comes after the PIN.
+    expect([...h.area.data.keys()]).toEqual(['hr:browse:pass']);
     expect(h.log).toEqual(['replaceState {"s":1} /']);
     expect(peekBootIntent()).toEqual({ kind: 'grown-up', next: '/parent' });
     expect(peekBootIntent()).toEqual({ kind: 'grown-up', next: '/parent' });
@@ -171,11 +171,26 @@ describe('bootRoot (web): what each root does before it mounts', () => {
     expect(h.log).toEqual([]);
   });
 
-  it('/browse mounts the learner app until F-BROWSE-001 BR-6 wires BrowseApp, so it boots as the app does', () => {
+  it('/browse mounts the learner app until F-BROWSE-001 BR-6 wires BrowseApp, so it clears as the app does', () => {
     const h = harness('/browse');
     expect(bootRoot(h.env)).toBe('browse');
     expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(false);
     expect(h.area.data.has('hr:browse:pass')).toBe(true);
+  });
+
+  it('/browse reads no boot intent: the query stays for the browse root, nothing opens the PIN screen', () => {
+    const h = harness('/browse?gate=grown-up&next=%2Fparent');
+    expect(bootRoot(h.env)).toBe('browse');
+    expect(peekBootIntent()).toBeNull();
+    expect(h.log).toEqual([]);
+    expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(false);
+  });
+
+  it('the bounce carries the query keys its entry reads', async () => {
+    const h = harness('/start?persona=teacher&lang=ko&next=%2Fx');
+    expect(bootRoot(h.env)).toBe('grown-up-bounce');
+    await flush();
+    expect(h.log).toEqual(['track shell.path_bounced', 'replace /signin?persona=teacher&lang=ko']);
   });
 
   it('the grown-up bounce emits shell.path_bounced, then replaces the address with the persona entry; it clears nothing', async () => {
@@ -219,12 +234,12 @@ describe('bootRoot (web): what each root does before it mounts', () => {
     vi.stubGlobal('sessionStorage', area);
     expect(bootRoot()).toBe('app');
     expect(replaceState).toHaveBeenCalledWith(null, '', '/');
-    expect(area.data.size).toBe(2);
+    expect(area.data.size).toBe(0);
     expect(peekBootIntent()).toEqual({ kind: 'grown-up', next: '/parent' });
 
     vi.stubGlobal('location', { pathname: '/', search: '', hash: '', replace });
     expect(bootRoot()).toBe('app');
-    expect(area.data.size).toBe(0);
+    expect(peekBootIntent()).toBeNull();
     expect(replace).not.toHaveBeenCalled();
   });
 
@@ -250,7 +265,8 @@ describe('bootRoot (web): what each root does before it mounts', () => {
     it('so does an app root that booted with a gate intent (the unlock it wrote was for the page it left)', () => {
       const h = withRestore('/?gate=grown-up&next=%2Fparent');
       bootRoot(h.env);
-      expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(true);
+      h.area.data.set(UNLOCK_SESSION_KEY, '{"v":1,"src":"pin"}');
+      h.area.data.set(CONSOLE_SESSION_KEY, '{}');
       h.restore();
       expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(false);
       expect(h.area.data.has(CONSOLE_SESSION_KEY)).toBe(false);

@@ -23,11 +23,20 @@ function indexedDbAvailable(): boolean {
   }
 }
 
-/** `hr-shell` / `kv`, opened once per page; null where the browser has no IndexedDB. */
+/**
+ * `hr-shell` / `kv`, opened once per page and opened again after a failed read (a connection the
+ * browser closed stays failed otherwise); null where the browser has no IndexedDB.
+ */
 function defaultReader(): ShellReader | null {
   if (!indexedDbAvailable()) return null;
   const store = (shellDb ??= createStore(SHELL_DB, SHELL_STORE));
-  return { get: (key) => get(key, store) };
+  return {
+    get: (key) =>
+      get(key, store).catch((error: unknown) => {
+        if (shellDb === store) shellDb = null;
+        throw error;
+      }),
+  };
 }
 
 export async function readLastPersona(open: () => ShellReader | null = defaultReader): Promise<AdultPersona | null> {

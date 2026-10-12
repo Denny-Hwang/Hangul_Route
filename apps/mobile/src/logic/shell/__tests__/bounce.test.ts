@@ -33,6 +33,13 @@ describe('bounceFor', () => {
     }
   });
 
+  it('keeps the query keys an entry reads (persona, as, lang) and drops the rest', () => {
+    expect(bounceFor('/start', '?persona=teacher&lang=ko&next=%2Fx')).toEqual({ prefix: 'start', target: '/signin?persona=teacher&lang=ko' });
+    expect(bounceFor('/teach/zzz', '?as=parent&id=sp_1')).toEqual({ prefix: 'teach', target: '/teach?as=parent' });
+    expect(bounceFor('/parent/space', '?id=sp_1&learner=lr_1')).toEqual({ prefix: 'parent', target: '/parent' });
+    expect(bounceFor('/account/billing', '')).toEqual({ prefix: 'account', target: '/signin' });
+  });
+
   it('every prefix code is one the Worker keeps for shell.path_bounced', () => {
     const allowed = SHELL_TELEMETRY_PAYLOADS['shell.path_bounced']?.prefix ?? [];
     for (const prefix of GROWN_UP_PREFIXES) {

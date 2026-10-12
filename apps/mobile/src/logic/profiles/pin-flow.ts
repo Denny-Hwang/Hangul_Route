@@ -22,7 +22,8 @@ export interface PinRouteParams {
   next?: string;
 }
 
-function forGrownUpArea(params: PinRouteParams): boolean {
+/** Whether the screen was opened for the grown-up area. */
+export function forGrownUpArea(params: PinRouteParams): boolean {
   return params.next === GROWN_UP_AREA;
 }
 

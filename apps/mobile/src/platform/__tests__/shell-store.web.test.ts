@@ -64,6 +64,16 @@ describe('readLastPersona (web)', () => {
     expect(idb.get).toHaveBeenCalledWith(SHELL_KEYS.lastPersona, { db: SHELL_DB, store: SHELL_STORE });
   });
 
+  it('a failed read opens the store again next time, so one closed connection does not hide the persona for the page', async () => {
+    vi.stubGlobal('indexedDB', {});
+    idb.get.mockImplementationOnce(async () => Promise.reject(new Error('closed')));
+    expect(await readLastPersona()).toBeNull();
+    const opened = idb.createStore.mock.calls.length;
+    idb.get.mockImplementation(async () => ({ v: 1, persona: 'teacher' }));
+    expect(await readLastPersona()).toBe('teacher');
+    expect(idb.createStore.mock.calls.length).toBe(opened + 1);
+  });
+
   it('a browser that throws on touching IndexedDB is none', async () => {
     Object.defineProperty(globalThis, 'indexedDB', {
       configurable: true,

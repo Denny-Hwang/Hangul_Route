@@ -1,7 +1,7 @@
 import { isLearnerRoot } from '@hangul-route/content-schema';
 import { parseBootIntent, type BootIntent } from '../logic/shell/boot-intent';
 import { bounceFor } from '../logic/shell/bounce';
-import { clearGrownUpTab, trackThenLeave, type SessionArea } from './grown-up-handoff.web';
+import { clearGrownUpTab, sessionArea, trackThenLeave, type SessionArea } from './grown-up-handoff.web';
 import { track, type TelemetryEvent } from './telemetry';
 
 /**
@@ -11,13 +11,15 @@ import { track, type TelemetryEvent } from './telemetry';
  * adds its branch), `/browse`, the grown-up bounce, else the app.
  *
  * - **app**: reads the boot intent once and takes it out of the address (`history.replaceState`,
- *   keeping every other key, `?lang=` included); then removes the grown-up unlock and the console
- *   session of this tab, except when a `gate=grown-up` intent may write a new unlock after the
- *   PIN. A page restored from the back/forward cache clears them again, so a tab handed back to
- *   a learner is locked again however it came back.
+ *   keeping every other key, `?lang=` included). It removes the grown-up unlock and the console
+ *   session of this tab, with a `gate=grown-up` intent too: the lock that sent the tab here
+ *   already removed the console session, and the unlock it could not use is replaced after the
+ *   PIN, so nothing of value is lost and an intent typed by hand keeps nothing either. A page
+ *   restored from the back/forward cache clears them again, so a tab handed back to a learner is
+ *   locked again however it came back.
  * - **browse**: until F-BROWSE-001 BR-6 wires `BrowseApp`, `/browse` mounts the learner app and
- *   boots as the app does. `BrowseApp` itself never clears the unlock (F-BROWSE-001 BD1 and
- *   section 12), so BR-6 takes `browse` out of `LEARNER_APP_ROOTS`.
+ *   clears as the app does (it reads no boot intent). `BrowseApp` itself never clears the unlock
+ *   (F-BROWSE-001 BD1 and section 12), so BR-6 takes `browse` out of `LEARNER_APP_ROOTS`.
  * - **grown-up-bounce**: the host's single-page fallback answered a grown-up URL that has no
  *   file. Nothing mounts; `shell.path_bounced` names the prefix and the tab moves to the persona
  *   entry (`logic/shell/bounce.ts`). It clears nothing: the tab stays in the grown-up area.
@@ -49,14 +51,6 @@ export interface RootEnv {
 
 let intent: BootIntent | null = null;
 
-function sessionArea(): SessionArea | null {
-  try {
-    return (globalThis as { sessionStorage?: SessionArea }).sessionStorage ?? null;
-  } catch {
-    return null;
-  }
-}
-
 function onPageRestore(handler: () => void): void {
   try {
     const target = globalThis as { addEventListener?: (type: string, listener: (event: { persisted?: boolean }) => void) => void };
@@ -79,18 +73,21 @@ function browserEnv(): RootEnv {
   };
 }
 
-function bootLearnerApp(env: RootEnv, location: NonNullable<RootEnv['location']>): void {
+function readIntent(env: RootEnv, location: NonNullable<RootEnv['location']>): void {
   const parsed = parseBootIntent(location.search);
   intent = parsed.intent;
-  if (parsed.changed) {
-    try {
-      env.history?.replaceState(env.history.state, '', `${location.pathname}${parsed.search}${location.hash}`);
-    } catch {
-      // A history that refuses (a sandboxed frame) must not lose the intent.
-    }
+  if (!parsed.changed) return;
+  try {
+    env.history?.replaceState(env.history.state, '', `${location.pathname}${parsed.search}${location.hash}`);
+  } catch {
+    // A history that refuses (a sandboxed frame) must not lose the intent.
   }
+}
+
+function bootLearnerApp(env: RootEnv, location: NonNullable<RootEnv['location']>, root: AppRoot): void {
+  if (root === 'app') readIntent(env, location);
   const clear = (): void => clearGrownUpTab(env.area());
-  if (intent === null) clear();
+  clear();
   env.onRestore?.(clear);
 }
 
@@ -101,9 +98,9 @@ export function bootRoot(env: RootEnv = browserEnv()): AppRoot {
   if (!location) return 'app';
   const root = pickRoot(location);
   if (LEARNER_APP_ROOTS.has(root)) {
-    bootLearnerApp(env, location);
+    bootLearnerApp(env, location, root);
   } else if (root === 'grown-up-bounce') {
-    const bounce = bounceFor(location.pathname);
+    const bounce = bounceFor(location.pathname, location.search);
     if (bounce) {
       void trackThenLeave({ name: 'shell.path_bounced', payload: { prefix: bounce.prefix } }, () => location.replace(bounce.target), env);
     }

@@ -65,7 +65,8 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function sessionArea(): SessionArea | null {
+/** This tab's `sessionStorage`, or null where it is missing or the browser refuses it. */
+export function sessionArea(): SessionArea | null {
   try {
     return (globalThis as { sessionStorage?: SessionArea }).sessionStorage ?? null;
   } catch {
@@ -95,8 +96,9 @@ function browserEnv(): HandoffEnv {
 
 /**
  * Sends `event`, then calls `leave` once it is sent or after `LEAVE_TELEMETRY_WAIT_MS`, whichever
- * comes first, so a page change does not cut the request short and a slow or failed send never
- * keeps the tab here (a failed send is queued by the telemetry client).
+ * comes first, so a normal send is not cut short by the page change and a slow network never
+ * keeps the tab here. Telemetry is best effort: a send the page change cuts short is lost (an
+ * answered failure is queued by the telemetry client as usual).
  */
 export async function trackThenLeave(
   event: TelemetryEvent,
@@ -145,8 +147,8 @@ export async function openGrownUpArea(request: GrownUpHandoffRequest, env: Hando
 
 /**
  * Removes the grown-up unlock and the console session of this tab (section 3.9): every boot of
- * a learner root, a learner page restored from the back/forward cache, and an abandoned PIN
- * path. Nothing else in `sessionStorage` is touched; blocked or missing storage is a no-op.
+ * a learner root and a learner page restored from the back/forward cache. Nothing else in
+ * `sessionStorage` is touched; blocked or missing storage is a no-op.
  */
 export function clearGrownUpTab(area: SessionArea | null = sessionArea()): void {
   for (const key of [UNLOCK_SESSION_KEY, CONSOLE_SESSION_KEY]) {

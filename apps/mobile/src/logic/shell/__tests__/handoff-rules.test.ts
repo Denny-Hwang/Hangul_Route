@@ -86,7 +86,12 @@ describe('handoffUrl', () => {
 
   it('replaces a lang the target already carries, keeping the rest of its query as written', () => {
     expect(handoffUrl('/parent?lang=ko&x=a%3Ab', 'es')).toBe('/parent?x=a%3Ab&lang=es');
-    expect(handoffUrl('/parent?lang=ko', 'en')).toBe('/parent?lang=ko');
+  });
+
+  it('drops a lang the target carries for the default locale (the learner app speaks English now)', () => {
+    expect(handoffUrl('/parent?lang=ko', 'en')).toBe('/parent');
+    expect(handoffUrl('/teach/space?lang=ko&id=sp_1', 'en')).toBe('/teach/space?id=sp_1');
+    expect(handoffUrl('/teach/space?id=sp_1&', 'en')).toBe('/teach/space?id=sp_1');
   });
 });
 

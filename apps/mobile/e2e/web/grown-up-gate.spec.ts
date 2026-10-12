@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { E2E_PIN, forgetPin, onboardChild, readStored, typeDigits } from './helpers';
+import { E2E_PIN, forgetPin, onboardChild, onboardSelf, readStored, typeDigits } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -38,6 +38,11 @@ test('the device gate marker follows the device: none without a profile, pin wit
   expect(typeof pinSetAt).toBe('number');
   expect(Math.abs((pinSetAt ?? 0) - Date.now())).toBeLessThan(120_000);
   await expect.poll(() => readStored(page, 'device:gate')).toEqual({ v: 1, gate: 'pin', pinEpoch: pinSetAt });
+});
+
+test('a self-only device without a PIN says none, so a grown-up page opens there without a lock', async ({ page }) => {
+  await onboardSelf(page, { name: 'Sam' });
+  await expect.poll(() => readStored(page, 'device:gate')).toEqual({ v: 1, gate: 'none' });
 });
 
 test('a family device whose PIN is gone says nopin', async ({ page }) => {
@@ -104,7 +109,7 @@ test.describe('the lock PIN path', () => {
     expect(await sessionValue(page, UNLOCK)).toBeNull();
   });
 
-  test('Cancel lands on the learner start screen and leaves no unlock in the tab', async ({ page }) => {
+  test('the intent clears the tab like any learner boot; Cancel lands on the learner start screen', async ({ page }) => {
     await onboardChild(page, { name: 'Mina' });
     await page.evaluate((u) => sessionStorage.setItem(u, '{"v":1,"at":1,"seen":1,"src":"signin"}'), UNLOCK);
     await page.goto('/?gate=grown-up&next=%2Fparent');

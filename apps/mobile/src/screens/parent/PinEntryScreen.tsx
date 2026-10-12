@@ -13,14 +13,14 @@ import {
   useLayoutClass,
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PIN_PAD_GAP, PinPad } from '../../components/PinPad';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { pinCreated, pinResetCompleted } from '../../logic/onboarding/onboarding-events';
 import {
-  GROWN_UP_AREA,
+  forGrownUpArea as opensGrownUpArea,
   grownUpAreaNoPin,
   initialPinMode,
   pinCreatedWhere,
@@ -37,7 +37,7 @@ import {
 import { pinKeyMax, pinPadBudget, pinPadFirstWidth, pinPadLayout } from '../../logic/profiles/pin-pad-layout';
 import type { RootStackParamList } from '../../navigation/types';
 import { pinHasher } from '../../platform/crypto';
-import { clearGrownUpTab, continueToGrownUpPage, openGrownUpArea } from '../../platform/grown-up-handoff';
+import { continueToGrownUpPage, openGrownUpArea } from '../../platform/grown-up-handoff';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
 import { useAudience } from '../../store/audience';
@@ -55,7 +55,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
  * `parent/grown-up-home-card.md` Panel D and `shell/grown-up-lock.md`): verify only, no Forgot
  * PIN, never a new PIN. A correct PIN hands off to the grown-up page in this tab
  * (`openGrownUpArea`); with no PIN stored the screen shows one line and Continue to the page
- * without an unlock. Leaving it (Cancel, Close) removes any grown-up unlock from this tab.
+ * without an unlock. Cancel and Close write nothing (the learner boot already cleared the tab).
  */
 
 const DOT_SIZE = 20;
@@ -81,10 +81,8 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const openParentGate = useUiStore((s) => s.openParentGate);
   const markPinVerified = useUiStore((s) => s.markPinVerified);
   const locale = useLocale();
-  const forGrownUpArea = route.params.next === GROWN_UP_AREA;
+  const forGrownUpArea = opensGrownUpArea(route.params);
   const noPin = grownUpAreaNoPin(route.params, storedHash);
-  // Set once the hand-off left for the grown-up page, so closing this screen keeps the new unlock.
-  const handedOff = useRef(false);
 
   const [mode, setMode] = useState<PinMode>(() => initialPinMode(route.params, storedHash));
   const [entry, setEntry] = useState('');
@@ -124,19 +122,13 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     return () => clearInterval(id);
   }, [locked]);
 
-  /** Cancel and Close; for the grown-up area an abandoned PIN path leaves no unlock in this tab. */
-  const leave = (): void => {
-    if (forGrownUpArea && !handedOff.current) clearGrownUpTab();
-    navigation.goBack();
-  };
+  const leave = (): void => navigation.goBack();
 
   const handOff = async (): Promise<void> => {
     const { url, grownUpVia } = route.params;
     const result = await openGrownUpArea({ via: grownUpVia ?? 'lock', ...(url === undefined ? {} : { target: url }) });
-    if (result !== 'opened') return;
-    handedOff.current = true;
     // The tab is leaving; a return through the back/forward cache lands on the start screen.
-    navigation.goBack();
+    if (result === 'opened') navigation.goBack();
   };
 
   const proceed = (): void => {
@@ -271,10 +263,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
           tone="primary"
           size="lg"
           fullWidth
-          onPress={() => {
-            handedOff.current = true;
-            continueToGrownUpPage(route.params.url, locale);
-          }}
+          onPress={() => continueToGrownUpPage(route.params.url, locale)}
         />
         <Spacer size="sm" />
         <Button label={messages.common.buttons.cancel} tone="ghost" size="md" fullWidth onPress={leave} />

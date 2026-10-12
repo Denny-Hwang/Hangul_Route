@@ -64,15 +64,17 @@ const LANG = 'lang';
 /**
  * The address to open: the target (already a safe grown-up path) or the sign-in router, with
  * `?lang=` for a UI locale that is not the default (F-I18N-001 hand-off; the console's locale
- * pick reads it first). Other query pairs keep the exact text they were written with.
+ * pick reads it first). A `lang` the target already carries is replaced, or dropped for the
+ * default locale, so the hand-off always speaks for the learner app's language as it is now.
+ * Other query pairs keep the exact text they were written with.
  */
 export function handoffUrl(target: string | null | undefined, locale: UiLocale): string {
   const base = target || APP_ROUTES.signIn;
-  if (locale === DEFAULT_LOCALE) return base;
   const q = base.indexOf('?');
   const path = q === -1 ? base : base.slice(0, q);
   const pairs = q === -1 ? [] : base.slice(q + 1).split('&').filter((pair) => pair !== '' && pair.split('=')[0] !== LANG);
-  return `${path}?${[...pairs, `${LANG}=${locale}`].join('&')}`;
+  if (locale !== DEFAULT_LOCALE) pairs.push(`${LANG}=${locale}`);
+  return pairs.length === 0 ? path : `${path}?${pairs.join('&')}`;
 }
 
 /** Route params of the PIN screen the hand-off opens when a fresh PIN is needed. */
