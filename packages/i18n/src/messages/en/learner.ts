@@ -1428,14 +1428,25 @@ export const learner = {
   /**
    * Lessons a learner cannot start yet (F-ENT-003 section 3.11, Appendix A). One calm word for the boundary,
    * with the dotted ring; never a lock, a price or a product name. E3-5 draws `notOpen` in the Journey legend
-   * line; the episode page, Home and Library words join this group in E3-6 and E3-7. The Learning Route page
-   * (LR-5b) reads `notOpen`, and `openForYou` with `practiceWords.cta` for its free-end hero.
+   * line; the episode page, Home and Library words join this group in E3-6 and E3-7. Any age reads these, so
+   * they never count and never say "trial" or "day". `ask.*` is the episode page's ask button by device and
+   * learner (`askFor`): `self` never says "grown-up". `freeEnd.title` and `openForYou` are the end of the free
+   * lessons (E3-7 draws them on Home and Results). The Learning Route page (LR-5b) reads `notOpen`, and
+   * `openForYou` with `practiceWords.cta` for its free-end hero.
    */
   access: {
     /** Equal to `myRoute.state.notOpen` and `myRoute.legend.notOpen` (amendment section 7.3). */
     notOpen: 'Not open yet',
+    preview: { line: 'This lesson is not open yet. You can still see what it teaches.' },
+    ask: { family: 'Ask a grown-up', class: 'Ask your teacher or a grown-up', self: 'See how to open it' },
+    back: { cta: 'Back to open lessons' },
+    freeEnd: { title: 'You finished your first lessons!' },
     openForYou: 'You played every quest that is open for you.',
     practiceWords: { cta: 'Practice words' },
+    readStory: { cta: 'Read a story' },
+    replay: { cta: 'Play a favorite again' },
+    home: { cta: 'Back home' },
+    practice: { subtitle: 'Keep practicing' },
   },
   /**
    * The Stage 1 ceremony (F-QUEST-002 §3.8, wireframe results/stage1-complete): Hoya cheering, the
