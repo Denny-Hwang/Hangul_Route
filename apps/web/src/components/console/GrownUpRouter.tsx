@@ -1,6 +1,7 @@
 'use client';
 
-import type { AdultPersona } from '@hangul-route/content-schema';
+import { APP_ROUTES, type AdultPersona } from '@hangul-route/content-schema';
+import { spacing } from '@hangul-route/design-system/tokens';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { DeviceGateRead } from '@/lib/console/grown-up-lock';
 import { learnerHome } from '@/lib/console/grown-up-lock';
@@ -136,18 +137,21 @@ export function GrownUpRouter({ next, hint, reverify, environment }: GrownUpRout
   }
   if (phase.at === 'error') {
     return (
-      <RetryPanel
-        line={m.console.cantReach}
-        retryLabel={m.console.tryAgain}
-        testId="signin-router-error"
-        onRetry={() => {
-          setAttempt((n) => n + 1);
-          setPhase({ at: 'route' });
-        }}
-      />
+      <div style={{ width: '100%', display: 'flex', justifyContent: 'center', paddingBlock: spacing.jumbo }}>
+        <RetryPanel
+          line={m.console.cantReach}
+          retryLabel={m.console.tryAgain}
+          testId="signin-router-error"
+          onRetry={() => {
+            setAttempt((n) => n + 1);
+            setPhase({ at: 'route' });
+          }}
+        />
+      </div>
     );
   }
-  return <RouterPanel line={m.a11y.shell.redirecting} goNowLabel={s.router.goNow} href={phase.at === 'going' ? phase.href : null} />;
+  // Go now: the destination once known; before that the /teach router, which routes the same way (section 3.16: always a visible link).
+  return <RouterPanel line={m.a11y.shell.redirecting} goNowLabel={s.router.goNow} href={phase.at === 'going' ? phase.href : APP_ROUTES.teacherIndex} />;
 }
 
 /** Outside Clerk mode no reverification exists: it ends at once as cancelled, so the lock decides. */

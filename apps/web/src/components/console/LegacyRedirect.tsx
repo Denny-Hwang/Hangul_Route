@@ -25,7 +25,7 @@ export function LegacyRedirect({ to, replace }: { to: string; replace?: (url: st
   }, [to, replace]);
   return (
     <SignInColumn>
-      <RouterPanel line={m.a11y.shell.redirecting} goNowLabel={m.console.signIn.router.goNow} href={href} />
+      <RouterPanel line={m.a11y.shell.redirecting} goNowLabel={m.console.signIn.router.goNow} href={href ?? to} />
     </SignInColumn>
   );
 }
