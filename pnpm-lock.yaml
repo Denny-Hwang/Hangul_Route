@@ -260,6 +260,9 @@ importers:
       '@hangul-route/content-schema':
         specifier: workspace:*
         version: link:../content-schema
+      '@hangul-route/i18n':
+        specifier: workspace:*
+        version: link:../i18n
       '@hangul-route/shared-types':
         specifier: workspace:*
         version: link:../shared-types

@@ -10,6 +10,7 @@ import {
   type NewNote,
   type NoteActVia,
   type NoteDeviceScope,
+  type NoteRecipientRow,
   type RateHitRow,
   type StoredNote,
   type StoredNotePrefs,
@@ -588,6 +589,17 @@ export class MemoryDb implements Db {
   }
   async notePrefsFor(learnerIds: readonly string[]): Promise<StoredNotePrefs[]> {
     return clone([...new Set(learnerIds)].flatMap((learnerId) => this.notePrefs.get(learnerId) ?? []));
+  }
+  async noteRecipients(spaceId: string, senderAccountId: string): Promise<NoteRecipientRow[]> {
+    const rows = [...this.memberships.values()]
+      .filter((m) => m.spaceId === spaceId && m.memberKind === 'learner' && m.role === 'student' && this.learners.has(m.memberId))
+      .sort((a, b) => (a.joinedAt === b.joinedAt ? (a.memberId < b.memberId ? -1 : 1) : a.joinedAt < b.joinedAt ? -1 : 1));
+    return rows.map((m) => ({
+      learnerId: m.memberId,
+      displayName: this.learners.get(m.memberId)?.displayName ?? '',
+      classes: this.notePrefs.get(m.memberId)?.classes ?? 'all',
+      blocked: this.senderBlocks.has(pairKey(m.memberId, senderAccountId)),
+    }));
   }
   async blocksFor(learnerIds: readonly string[], senderAccountId: string): Promise<string[]> {
     return [...new Set(learnerIds)].filter((learnerId) => this.senderBlocks.has(pairKey(learnerId, senderAccountId)));

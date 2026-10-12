@@ -63,6 +63,11 @@ keep_vars = true
 #                                    bindings.stripeLive and bindings.billingLiveAllowed (booleans).
 #                                    Set it only together with the owner's decision to go live.
 # SCHOOL_CONSENT_MODE                "enabled" only after the legal review (decision #27)
+# NOTES_SEND                         F-FEEDBACK-001 section 7.8, OD-19: leave UNSET. Only the exact
+#                                    text "enabled" opens the two note send routes
+#                                    (GET /api/spaces/:id/notes/recipients, POST /api/spaces/:id/notes);
+#                                    otherwise both answer 404 before auth. Set it only after FB-14
+#                                    and the OD-19 go-ahead. GET /health shows features.notesSend.
 # ENVIRONMENT                        unset = production (fail closed: no Clerk key or no
 #                                    D1 binding → 503). Only "development" / "test" turn on
 #                                    the dev fallbacks (bearer = account id, in-memory Db
