@@ -22,6 +22,21 @@ export const learner = {
     cta: "Let's start",
     restore: 'I already have progress',
     trust: 'Start Korean from zero. Built with kids, parents, and grandparents in mind.',
+    /**
+     * The grown-ups' row under the restore link (F-APP-001 A-7, section 3.6; wireframe
+     * onboarding/welcome-personas.md, design/screens/app-shell/learner-entry.md D10). Web only,
+     * behind `flags.grownUpHomeEnabled`. Sign-in only: the buttons open `/signin`. `needsInternet`
+     * is also the offline line of the Profile row and the dashboard card.
+     */
+    grownUps: {
+      lead: 'Here to support a learner?',
+      parent: 'Parent or caregiver',
+      teacher: 'Teacher',
+      continueParent: 'Continue as family',
+      continueTeacher: 'Continue as teacher',
+      someoneElse: 'Someone else',
+      needsInternet: 'Needs the internet',
+    },
   },
 
   /** The language chips (Welcome) and the Language card (Profile) share these. */
@@ -97,6 +112,16 @@ export const learner = {
       hideUntilTap: 'Hide romanization until I tap',
       on: 'On',
       off: 'Off',
+    },
+    /**
+     * The first row of the grown-up zone (F-APP-001 A-7, section 3.6; wireframe
+     * parent/grown-up-home-card.md Panel A, learner-entry.md D9 and D11): opens the grown-up area
+     * on the app host. `selfTitle` on a self-only device, whose zone is "Account & backup".
+     */
+    grownUpHome: {
+      title: 'Grown-up home',
+      line: 'Your family, classes and billing',
+      selfTitle: 'Account home',
     },
   },
 

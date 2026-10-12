@@ -502,11 +502,15 @@ export const caregiver = {
    * The way from the learner app to the grown-up area on the app host (F-APP-001 sections 3.6 and
    * 3.9). A-6: the PIN screen opened for the grown-up area on a device with no PIN stored never
    * offers to make one; it sends the grown-up to sign in instead (wireframe
-   * `parent/grown-up-home-card.md` Panel D). A-7 adds the Profile row and dashboard card strings.
+   * `parent/grown-up-home-card.md` Panel D). A-7 adds the dashboard card strings.
    */
   grownUpHome: {
     noPin: 'This device has no grown-up PIN. Sign in on the grown-up page instead.',
     continue: { cta: 'Continue' },
+    /** A-7: the card at the top of the local dashboard (Panel B), web only, flag on. */
+    title: 'Grown-up home',
+    line: 'Your family, classes and billing.',
+    cta: 'Open',
   },
   /**
    * The free-lessons line on the device's grown-up screens (F-ENT-003 section 3.9.2 and the

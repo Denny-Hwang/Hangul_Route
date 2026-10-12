@@ -15,6 +15,8 @@ describe('learner.welcome (English wording as shipped)', () => {
       cta: "Let's start",
       restore: 'I already have progress',
       trust: 'Start Korean from zero. Built with kids, parents, and grandparents in mind.',
+      // F-APP-001 A-7: the persona row (grown-up-entry-messages.test.ts owns its wording).
+      grownUps: m.learner.welcome.grownUps,
     });
   });
 });
