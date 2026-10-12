@@ -187,6 +187,13 @@ test.describe('app host: the learner app and the grown-up console (F-APP-001 A-3
     }
   });
 
+  test('an unknown grown-up path bounces to its persona entry, a console page (A-6, section 3.4)', async ({ page }) => {
+    await page.goto('/teach/zzz');
+    await expect(page).toHaveURL(/\/teach$/);
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    await expect(page.getByRole('button', { name: "Let's start" })).toHaveCount(0);
+  });
+
   test("visiting the grown-up pages leaves the learner's saved data as it was", async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(String(e)));

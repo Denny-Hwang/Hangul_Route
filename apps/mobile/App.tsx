@@ -16,6 +16,7 @@ import { installGestureUnlock } from './src/platform/audio';
 import { subscribePwa } from './src/platform/pwa';
 import { flushQueue } from './src/platform/telemetry';
 import { bindAudioLevelToProfiles } from './src/store/audio-store';
+import { bindDeviceGateMarker } from './src/store/device-gate';
 import { hydrateLearnerData } from './src/store/bootstrap';
 import { usePwaStore } from './src/store/pwa-store';
 import { rederiveAllLocal, registerInboxRefresh } from './src/store/membership-store';
@@ -46,6 +47,9 @@ export default function App(): React.ReactElement {
     const uninstallUnlock = installGestureUnlock();
     // Speech speed follows the active profile's level; game code never passes one.
     const unbindLevel = bindAudioLevelToProfiles();
+    // The device gate marker the console's grown-up lock reads (F-APP-001 section 3.9): written once
+    // the profiles and the account are in, and again whenever they change; independent of the flag.
+    const unbindGate = bindDeviceGateMarker();
     void countVisit();
     // Offline telemetry (F-PWA-001 §3.2): drain on start and when back online.
     void flushQueue();
@@ -77,6 +81,7 @@ export default function App(): React.ReactElement {
       live = false;
       uninstallUnlock();
       unbindLevel();
+      unbindGate();
       off();
       offInbox();
       foreground.remove();

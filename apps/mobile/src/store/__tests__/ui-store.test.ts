@@ -3,7 +3,7 @@ import { useUiStore } from '../ui-store';
 
 describe('ui-store', () => {
   beforeEach(() => {
-    useUiStore.setState({ hapticsOn: true, parentGateOpenedAt: null, tabBarHeight: 0 });
+    useUiStore.setState({ hapticsOn: true, parentGateOpenedAt: null, lastPinVerifiedAt: null, tabBarHeight: 0 });
   });
 
   it('no longer holds the sound switch: mute lives in audio-store (F-AUDIO-004 AD7)', () => {
@@ -34,5 +34,21 @@ describe('ui-store', () => {
     expect(useUiStore.getState().tabBarHeight).toBe(76);
     useUiStore.getState().setTabBarHeight(0);
     expect(useUiStore.getState().tabBarHeight).toBe(0);
+  });
+
+  /**
+   * F-APP-001 section 3.9 (A-6): the time of the last correct PIN on the PIN screen, in memory
+   * only, for the 2-minute fresh-PIN rule of the grown-up hand-off. A gate the 15-minute
+   * session opens directly never sets it.
+   */
+  it('markPinVerified stamps the time of a correct PIN, in memory only', () => {
+    expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
+    useUiStore.getState().markPinVerified();
+    expect(useUiStore.getState().lastPinVerifiedAt).toBeTypeOf('number');
+  });
+
+  it('opening the gate through the 15-minute session does not count as a PIN entry', () => {
+    useUiStore.getState().openParentGate();
+    expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
   });
 });
