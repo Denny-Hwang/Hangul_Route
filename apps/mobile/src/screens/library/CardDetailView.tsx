@@ -7,15 +7,17 @@ import {
   Heading,
   HoyaBubble,
   Icon,
+  KOREAN_LANGUAGE,
   Pill,
   Screen,
   Spacer,
   colors,
   radii,
   spacing,
+  typography,
 } from '@hangul-route/design-system';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { CardArt } from '../../components/CardArt';
 import { FlipCard } from '../../components/FlipCard';
 import { PromptPanel } from '../../components/PromptPanel';
@@ -25,6 +27,7 @@ import { cardById } from '../../content';
 import { awardWorld } from '../../content/award-world';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { earnHint } from '../../logic/awards/earn-hint';
+import { cardCitationView, type CardCitationView } from '../../logic/library/card-citation';
 import { cardDetailDisplay, type CardDetailState } from '../../logic/library/card-detail-state';
 import { localizeCard, localizeEpisode } from '../../logic/content-locale';
 import { nextFace, type FlipFace } from '../../logic/flip';
@@ -346,7 +349,42 @@ function FrontFaceBody({
   );
 }
 
+// Speech language for a Korean publisher or title; `lang` is forwarded to the DOM on the web.
+const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANGUAGE };
+
+/**
+ * The source of a story card's fact (F-STORY-006 §3.8, wireframe library/card-back-citation G):
+ * "Source: <publisher>, <title>" on at most two lines (the full line is its accessible label),
+ * then "and N more sources". Plain text: no URL and no link on a learner surface.
+ */
+function CitationLines({ view }: { view: CardCitationView }): React.ReactElement {
+  const line = {
+    fontSize: typography.size.caption,
+    lineHeight: typography.size.caption * typography.leading.normal,
+    color: colors.text.muted,
+    textAlign: 'center' as const,
+  };
+  return (
+    <>
+      <Spacer size="xs" />
+      <Text numberOfLines={2} accessibilityLabel={view.line} testID="card-detail-citation" style={line}>
+        {view.runs.map((run, i) => (
+          <Text key={i} {...(run.korean ? koreanSpeech : {})}>
+            {run.text}
+          </Text>
+        ))}
+      </Text>
+      {view.more ? (
+        <Text testID="card-detail-citation-more" style={line}>
+          {view.more}
+        </Text>
+      ) : null}
+    </>
+  );
+}
+
 function BackFaceBody({ card }: { card: HeritageCard }): React.ReactElement {
+  const citation = cardCitationView(card, useMessages().learner.cardDetail.citation);
   return (
     <View style={{ alignItems: 'center', paddingVertical: spacing.lg }}>
       {/* Top 40% — Korean prominent + romanization */}
@@ -394,6 +432,7 @@ function BackFaceBody({ card }: { card: HeritageCard }): React.ReactElement {
                 {card.factEn}
               </Body>
             </View>
+            {citation ? <CitationLines view={citation} /> : null}
           </View>
         </>
       ) : null}
