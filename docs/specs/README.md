@@ -94,13 +94,29 @@ F-XXX-<slug>.md
 - `F-SPACE-002-class-transfer.md` — move a learner between classes with learner-side, releasing and receiving consent (flag-locked) · **ready**
 - `F-ROUTE-001-my-route-overview.md` — My route: the whole journey at a glance (stage trail, pips that only fill, read / listen / write inventory, grown-up and console views) and the weekly plan proposed after the level check (companion `AMENDMENTS-PLC-PLAN-HANDOFF.md`, applied to F-PLC-001 and F-PLAN-002) · **ready**
   - amended 2026-10-11 by `AMENDMENTS-ROUTE-LEARNING-ROUTE.md` (applied): named **Learning Route**, a Route tab for learners, a route card with Now / Goal / goal-stage pips / Next (goal from the class, school, family or own weekly plan; next from F-ENT-003's `routeNext`), a goal line in the per-learner report (F-REPORT-001) and a read-only stage list with the grown-up route card for parents (`/parent/space/route`) and teachers (`/teach/space/route`) · **ready** · wireframes `design/wireframes/journey/learning-route.md`, `parent/learning-route.md`, `console/learning-route.md`
+- `F-BILL-002-billing-in-app-all-personas.md` — billing at app.hangulroute.com/account/billing for every persona (payer and read-only plan cards, receipts and history, test-mode and live guard, step-up), status-only learner Plan screen for every tier, no billing on hangulroute.com, store rules for native builds · **ready**
+- `F-BROWSE-001-adult-content-browser.md` — All lessons: paying parents and teachers preview every lesson exactly as a learner sees it (a third root of the learner web build at `/browse`, same-tab pass from the adult navigation or the grown-up area, free adults see exactly what a free learner can open, nothing is ever saved) · **ready**
+  - wireframes `design/wireframes/browse/{home,episode,item,preview-player,preview-end,show-as,access,entry-points}.md` (BR-0)
 - `F-QUEST-002` amended: initial ㅇ is spoken by its name (see F-AUDIO-004)
+- `F-ENT-003-free-day2-unlocked-curriculum.md` — free plan to about day 2 (the first lessons open, everything else visible as "Not open yet", kept quests and the Stage 1 promise stay open, one switch off until Stripe Live and web only until F-IAP-002), everything open for subscribers, one "next" and one "In your plan" that follow the learner's plan (owner of `questAccess`, `routeNext` and the access glossary for the 2026-10-11 specs) · **ready**
+  - wireframes `design/wireframes/journey/grid-plan-and-access.md`, `episode/detail-access-preview.md`, `home/next-and-free-end-card.md`, `results/back-to-plan-and-free-end.md`, `library/access-and-plan-tags.md`, `billing/plan-status-free-lessons.md`, `console/curriculum-free-days.md`, `console/free-lessons-line.md`
+
+### Spec wave 2026-10-11 (owner UX request: two hosts, personas)
+- `F-APP-001-persona-app-shell.md` — app.hangulroute.com is the one product app: persona sign-in (learner, family, teacher), a home per persona with the entries to reports, notes, Learning Route and lessons, grown-up lock on shared devices, console served on the app host (B2), the route contract for the sibling specs of the wave · **ready**
+  - wireframes `design/wireframes/shell/{signin,adult-frame,parent-home,teacher-home,grown-up-lock,offline}.md`, `onboarding/welcome-personas.md`, `parent/grown-up-home-card.md`
+- `F-SITE-002-marketing-site-layered.md` — hangulroute.com becomes a short, layered intro site: one-screen hero, persona chooser, `/learners`, `/parents`, `/teachers`, no billing or console links, feature lines tied to a claims table; old grown-up URLs are F-APP-001's · **ready**
+  - wireframes `design/wireframes/site/{home,learners,parents,teachers,header-footer}.md`
+
+- `F-FEEDBACK-001-adult-feedback-channel.md` — notes from grown-ups: a one-way, child-safe channel from a learner's teacher or family (preset encouragement plus a short text, preset reactions only, family oversight incl. taken-back notes, hide, report and stop a sender, owner-granted family senders, Worker switch `NOTES_SEND`, offline, deleted with the learner; console pages on app.hangulroute.com) · **ready**
+  - wireframes `design/wireframes/home/notes-card.md`, `notes/{list,detail}.md`, `parent/{notes,note-report}.md`, `console/{note-composer,notes-sent,family-notes,notes-hub}.md` (FB-0)
 
 ### Phase 2 / planned
 - `F-PROF-001-device-profiles.md` — multi-learner · **draft** (code shipped PR #13, full spec covers cloud sync)
 - `F-HW-001-homework-page.md` — Homework tab · **draft**
 - `F-RVW-001-review-tests.md` — Reviews · **draft**
 - `F-PAR-001-parent-dashboard.md` — Parent dashboard · **draft**
+- `F-REPORT-001-progress-reports.md` — progress reports for parents and teachers on app.hangulroute.com: a per-learner dashboard with day / week / month / all-time reports in three layers (headline, what went well, what to practice next first), class statistics without ranking, the in-app report behind the grown-up gate, print; supersedes F-PAR-001 sections 3.2 and 3.3 · **ready**
+  - wireframes `design/wireframes/reports/{learner-report,class-report,in-app-report,print}.md` (RP-0)
 - `F-TCH-001-teacher-classroom.md` — Teacher classroom · **draft** (Phase 2 stub)
 
 ### Deferred (spec exists, ship-when triggers defined)
