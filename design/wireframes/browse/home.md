@@ -29,8 +29,8 @@ Then: in one glance they know what the page is for, see the whole course in the 
 │ Tap a lesson to see what it      │   one how-to line (layer 1: what this page is)
 │ teaches, then play it. Nothing   │
 │ is saved.                        │
-│ To see how your learner is       │   pointer line, account pass only -> persona home
-│ doing, open your home page. >    │   (no learner id in the link)
+│ To see how your learner is       │   pointer line: account pass, not kept, online only
+│ doing, open your home page. >    │   -> persona home (no learner id); never gate/kept
 │ ( *Route* )( Journey )( Library )│   ONE row, learner order; never wraps at 320
 │                                  │
 │ (1)── Hangul                     │   learner Learning Route trail (TrailRow), browse

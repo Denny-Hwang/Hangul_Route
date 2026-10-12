@@ -354,7 +354,7 @@ svg { display: block; flex: none; }
 
 /* Preview strip (PreviewFrame): above the lesson's own layout, never over it; not dismissable. */
 .strip { position: sticky; top: 0; z-index: var(--z-sticky); display: flex; align-items: center; gap: var(--spacing-md); padding: var(--spacing-xs) var(--gutter-compact); background: var(--colors-surface-sunken); border-bottom: var(--border-width-thin) solid var(--colors-border-strong); }
-/* The text never goes under its longest word and the button label wraps before the two can meet; both cap at 1.3 x body. */
+/* The text takes the space the button leaves and wraps between words, never inside one; the button keeps its label on one line while it fits; the two never meet; both cap at 1.3 x body. */
 .strip p { flex: 1 1 0; font-size: min(var(--size-body), var(--seg-label-cap)); font-weight: var(--weight-semibold); overflow-wrap: break-word; }
 .strip .btn { flex: 0 1 auto; font-size: min(var(--size-body), var(--seg-label-cap)); }
 .strip.text-only { min-height: var(--touch-min); }

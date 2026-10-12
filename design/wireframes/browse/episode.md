@@ -87,4 +87,4 @@ Exit to: `browse/item` · `library/card-detail` · `browse/home`
 
 ## Open questions
 
-- None blocking. Stage 2 and 4 taste quests show their first three words (romanization and gloss) in place of the empty letters row (spec §4.6).
+- None blocking. Every lesson that introduces no letter (the Stage 2 and 4 taste quests, and some later Stage 1 lessons such as Mountain, River, Sea) shows its first three words (romanization and gloss) in place of the empty letters row (spec §4.6).

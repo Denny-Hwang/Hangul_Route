@@ -16,13 +16,13 @@ Shown only on lesson screens (the quest player, its games, the story reader, fla
 | Part | Look |
 |---|---|
 | Bar | full window width, above the lesson's own layout and safe area (it pushes the lesson down; it never overlays it). `surface.sunken`, `borderWidth.thin` `border.strong` rule below. Padding `spacing.xs` vertical and the layout gutter (16, 24, 32 by class) horizontal. Pinned while the lesson scrolls |
-| Text | "Preview. Nothing is saved." Body (18) semibold `text.primary`, growing with the text size up to 1.3 x (23.4; `maxFontSizeMultiplier` 1.3). It takes the free width and wraps beside the button (two lines at 320). It never shrinks below its longest word |
-| Button | inside a lesson only: [ Leave preview ], `Button` ghost, compact padding (`spacing.xs` x `spacing.lg`), at least 64 tall, label capped at 1.3 x. When the row runs out of space its label wraps to two lines ("Leave / preview") before the text could reach it, so the two never meet. It opens the leave confirm (`preview-player.md`) |
+| Text | "Preview. Nothing is saved." Body (18) semibold `text.primary`, growing with the text size up to 1.3 x (23.4; `maxFontSizeMultiplier` 1.3). It takes the width the button leaves and wraps beside it between words, never inside one (two lines at 320; one word per line at 320 with 200 % text) |
+| Button | inside a lesson only: [ Leave preview ], `Button` ghost, compact padding (`spacing.xs` x `spacing.lg`), at least 64 tall, label capped at 1.3 x. It keeps its label on one line while it fits (it does at 320 with 200 % text, `shots/preview-player-320-text200.png`); a longer label in another language may wrap inside the button. The two never meet. It opens the leave confirm (`preview-player.md`) |
 | End screen | text only; the bar keeps `touchTarget.min` (64) as its height |
 
 Heights measured on the mock: 73 at 375 and 1280, 82 at 320, 135 at 320 with 200 % text (the ceiling BR-6 names `PREVIEW_STRIP_MAX_HEIGHT`; README, Constants). On every render the text stays inside its box and never intersects the button. The learner close control starts below the bar at every size.
 
-In React Native: the row is `flexDirection: 'row'`; the text is `flex: 1` with `maxFontSizeMultiplier` 1.3; the button has `flexShrink: 1` and its label `maxFontSizeMultiplier` 1.3 with no `numberOfLines`. `browse.spec.ts` checks at 320 with 200 % text that the two boxes do not intersect and that the strip stays at or under the ceiling.
+In React Native: the row is `flexDirection: 'row'`; the text is `flex: 1` with `maxFontSizeMultiplier` 1.3; the button has `flexShrink: 1` and its label `maxFontSizeMultiplier` 1.3 with no `numberOfLines`. Which of the two wraps first is left to layout and is not asserted. `browse.spec.ts` checks at 320 with 200 % text that the two boxes do not intersect, that no text overflows its box, and that the strip stays at or under the ceiling.
 
 ## Rules
 
