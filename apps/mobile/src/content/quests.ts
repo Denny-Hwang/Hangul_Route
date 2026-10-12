@@ -3,8 +3,8 @@ import { storyQuests } from './stories';
 
 /**
  * Stage 1 quests are being rebuilt to the six-step pattern of F-QUEST-002 §3.6:
- * intro → discover → practice → apply → check → reward (letters q1-q3 so far,
- * Q-6a; the others follow in Q-6b, Q-7b and Q-8). The quests not yet rebuilt,
+ * intro → discover → practice → apply → check → reward (letters q1-q3 in Q-6a,
+ * life q1-q3 in Q-6b; the others follow in Q-7b and Q-8). The quests not yet rebuilt,
  * and the Stage 2 / Stage 4 taste quests, keep the five-step pattern
  * intro → present → practice → apply → reward.
  * Each Stage 1 episode owns 1–3 quests.
@@ -126,34 +126,125 @@ export const stage1Quests: Quest[] = [
     rewardCardId: 'card:brush',
   },
 
-  // Food & Life — Q1
+  // Food & Life — Q4: ㅈ ㅊ (F-QUEST-002 §3.6, quest 4)
   {
     id: 'quest:stage1-life-q1',
     titleEn: 'Hello Kimchi & Rice',
-    blurbEn: 'Tap the Korean words for your favorite foods.',
-    estimatedMinutes: 5,
+    blurbEn: 'Two new letters, j and ch, and food words from the table.',
+    estimatedMinutes: 4,
     steps: [
-      { id: 's1', kind: 'intro', titleEn: 'Lunchtime!', hoyaLineEn: 'What\'s for lunch today?', durationSeconds: 6 },
-      { id: 's2', kind: 'present', titleEn: 'Foods on the Table', minigameKind: 'card-match', minigameRef: 'minigame:s1-life-card-1', durationSeconds: 60 },
-      { id: 's3', kind: 'practice', titleEn: 'Match the Food', minigameKind: 'card-match', minigameRef: 'minigame:s1-life-card-1', durationSeconds: 90 },
-      { id: 's4', kind: 'apply', titleEn: 'Sound Match', minigameKind: 'match-sound', minigameRef: 'minigame:s1-life-match-1', durationSeconds: 60 },
-      { id: 's5', kind: 'reward', titleEn: 'Yum!', hoyaLineEn: 'Two food cards added!', durationSeconds: 8 },
+      { id: 's1', kind: 'intro', titleEn: 'Lunchtime!', hoyaLineEn: 'Lunchtime! Two new letters are on the table today.', durationSeconds: 8 },
+      {
+        id: 's2',
+        kind: 'discover',
+        titleEn: 'Two New Letters',
+        hoyaLineEn: 'Tap Hear it to listen to each one.',
+        discover: {
+          pages: [
+            {
+              items: [
+                { type: 'jamo', jamoId: 'jamo:jieut', example: { ko: '자두', romanization: 'jadu', en: 'plum', syllables: ['ja', 'du'] } },
+                { type: 'jamo', jamoId: 'jamo:chieut', example: { ko: '치즈', romanization: 'chijeu', en: 'cheese', syllables: ['chi', 'jeu'] } },
+              ],
+            },
+            {
+              items: [
+                { type: 'word', word: { ko: '고추', romanization: 'gochu', en: 'chili pepper', syllables: ['go', 'chu'] } },
+                { type: 'word', word: { ko: '차', romanization: 'cha', en: 'tea' } },
+              ],
+            },
+          ],
+        },
+        durationSeconds: 40,
+      },
+      { id: 's3', kind: 'practice', titleEn: 'Match the Sound', minigameKind: 'match-sound', minigameRef: 'minigame:s1-life-q1-play', durationSeconds: 75 },
+      { id: 's4', kind: 'apply', titleEn: 'Picture and Word', minigameKind: 'pic-word-match', minigameRef: 'minigame:s1-life-q1-apply', durationSeconds: 60 },
+      { id: 's5', kind: 'check', titleEn: 'Listen and Read', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-life-q1-check', durationSeconds: 35 },
+      { id: 's6', kind: 'reward', titleEn: 'Kimchi Card!', hoyaLineEn: 'A kimchi card joins your library!', durationSeconds: 8 },
     ],
     rewardCardId: 'card:kimchi',
   },
+  // Food & Life — Q5: ㅂ ㅅ (quest 5)
   {
     id: 'quest:stage1-life-q2',
     titleEn: 'Family at the Table',
-    blurbEn: 'Mom, dad, family — say it in Korean.',
-    estimatedMinutes: 5,
+    blurbEn: 'Two new letters, b and s, and family words to read.',
+    estimatedMinutes: 4,
     steps: [
-      { id: 's1', kind: 'intro', titleEn: 'Family!', hoyaLineEn: 'I love my family.', durationSeconds: 6 },
-      { id: 's2', kind: 'present', titleEn: 'Family Words', minigameKind: 'card-match', minigameRef: 'minigame:s1-life-card-2', durationSeconds: 60 },
-      { id: 's3', kind: 'practice', titleEn: 'Story Order', minigameKind: 'story-sequence', minigameRef: 'minigame:s1-life-story-1', durationSeconds: 75 },
-      { id: 's4', kind: 'apply', titleEn: 'Match Family Words', minigameKind: 'card-match', minigameRef: 'minigame:s1-life-card-2', durationSeconds: 75 },
-      { id: 's5', kind: 'reward', titleEn: 'Family Card!', hoyaLineEn: 'Family added.', durationSeconds: 8 },
+      { id: 's1', kind: 'intro', titleEn: 'Family!', hoyaLineEn: 'Everyone is at the table. Let us read their names!', durationSeconds: 6 },
+      {
+        id: 's2',
+        kind: 'discover',
+        titleEn: 'Two New Letters',
+        hoyaLineEn: 'Tap Hear it to listen to each one.',
+        discover: {
+          pages: [
+            {
+              items: [
+                { type: 'jamo', jamoId: 'jamo:bieup', example: { ko: '바나나', romanization: 'banana', en: 'banana', syllables: ['ba', 'na', 'na'] } },
+                { type: 'jamo', jamoId: 'jamo:siot', example: { ko: '사자', romanization: 'saja', en: 'lion', syllables: ['sa', 'ja'] } },
+              ],
+            },
+            {
+              items: [
+                { type: 'word', word: { ko: '아버지', romanization: 'abeoji', en: 'father', syllables: ['a', 'beo', 'ji'] } },
+                { type: 'word', word: { ko: '아기', romanization: 'agi', en: 'baby', syllables: ['a', 'gi'] } },
+              ],
+            },
+            {
+              items: [
+                { type: 'word', word: { ko: '엄마', romanization: 'eomma', en: 'mom', syllables: ['eom', 'ma'] } },
+                { type: 'word', word: { ko: '가족', romanization: 'gajok', en: 'family', syllables: ['ga', 'jok'] }, picture: 'card:family-table' },
+              ],
+            },
+          ],
+        },
+        durationSeconds: 60,
+      },
+      { id: 's3', kind: 'practice', titleEn: 'Match the Sound', minigameKind: 'match-sound', minigameRef: 'minigame:s1-life-q2-play', durationSeconds: 75 },
+      { id: 's4', kind: 'apply', titleEn: 'Build a Letter', minigameKind: 'build-letter', minigameRef: 'minigame:s1-life-q2-apply', durationSeconds: 60 },
+      { id: 's5', kind: 'check', titleEn: 'Listen and Read', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-life-q2-check', durationSeconds: 35 },
+      { id: 's6', kind: 'reward', titleEn: 'Family Card!', hoyaLineEn: 'The family table joins your library!', durationSeconds: 8 },
     ],
     rewardCardId: 'card:family-table',
+  },
+  // Food & Life — Q6: ㅋ ㅌ (quest 6)
+  {
+    id: 'quest:stage1-life-q3',
+    titleEn: 'Picnic Snacks',
+    blurbEn: 'Two puff-of-air letters, k and t, and picnic snacks to read.',
+    estimatedMinutes: 4,
+    steps: [
+      { id: 's1', kind: 'intro', titleEn: 'Picnic Time!', hoyaLineEn: 'Picnic time! What snacks did we pack?', durationSeconds: 6 },
+      {
+        id: 's2',
+        kind: 'discover',
+        titleEn: 'Two New Letters',
+        hoyaLineEn: 'k is like g with a puff of air, and t is like d with a puff of air.',
+        discover: {
+          pages: [
+            {
+              items: [
+                { type: 'jamo', jamoId: 'jamo:kieuk', example: { ko: '쿠키', romanization: 'kuki', en: 'cookie', syllables: ['ku', 'ki'] } },
+                { type: 'jamo', jamoId: 'jamo:tieut', example: { ko: '토마토', romanization: 'tomato', en: 'tomato', syllables: ['to', 'ma', 'to'] } },
+              ],
+            },
+            {
+              items: [
+                { type: 'word', word: { ko: '코코아', romanization: 'kokoa', en: 'cocoa', syllables: ['ko', 'ko', 'a'] } },
+                { type: 'word', word: { ko: '토스트', romanization: 'toseuteu', en: 'toast', syllables: ['to', 'seu', 'teu'] } },
+              ],
+            },
+          ],
+        },
+        durationSeconds: 40,
+      },
+      { id: 's3', kind: 'practice', titleEn: 'Match the Sound', minigameKind: 'match-sound', minigameRef: 'minigame:s1-life-q3-play', durationSeconds: 75 },
+      { id: 's4', kind: 'apply', titleEn: 'What Does It Mean?', minigameKind: 'culture-quiz', minigameRef: 'minigame:s1-life-q3-apply', durationSeconds: 60 },
+      { id: 's5', kind: 'check', titleEn: 'Listen and Read', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-life-q3-check', durationSeconds: 35 },
+      { id: 's6', kind: 'reward', titleEn: 'Kimbap Card!', hoyaLineEn: 'Kimbap, the picnic favorite, joins your library!', durationSeconds: 8 },
+    ],
+    rewardCardId: 'card:kimbap',
   },
 
   // Holidays — Q1
