@@ -40,9 +40,9 @@ Web, free plan, F-ENT-003 switch on (the slot holds F-ENT-003's free-plan lines;
 ```
 |  <Name> is on the free plan.      |
 |  [ F-ENT-003 free-lessons line:   |  <- counts from data, never typed
-|    the first lessons, letters,    |
-|    minutes; everything finished   |
-|    stays ]                        |
+|    all of Stage 1: lessons,       |
+|    letters, minutes; everything   |
+|    finished stays ]               |
 |  [ optional: stories, word topics]|
 |  [ optional: one situation line ] |
 |  Plans and receipts are on the    |

@@ -503,7 +503,7 @@ export const landing = {
     draft: 'Draft for review. This document is a working draft pending review by qualified legal counsel before public launch.',
     privacy: {
       title: 'Privacy Policy',
-      effective: 'Effective October 10, 2026',
+      effective: 'Effective October 11, 2026',
       /** Footer link to the other document. */
       otherDocument: 'Terms of Service',
       sections: {
@@ -525,7 +525,10 @@ export const landing = {
             profile: ({ levels }: LegalValues) =>
               `Learner profile: a display nickname and a starting level the learner picks (${levels}). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. A real name is optional and only stored if a parent enters it.`,
             progress:
-              'Learning progress: quests completed, stars earned, cards unlocked, streaks, and which jamo a learner recognizes — so the journey can resume and a parent can see progress.',
+              "Learning progress: quests completed, stars earned, cards unlocked, streaks, and which jamo a learner recognizes — so the journey can resume and a parent can see progress. For progress reports we also keep: for the last 35 days, which days were practiced, with minutes, quests, cards and words for each day; monthly totals for up to 24 months; all-time totals since the first practice day; the day each stage was finished; the letters that became strong each day; the next lesson and one lesson to revisit; and the device's time zone, so days are counted in the learner's local time.",
+            /** F-REPORT-001 section 3.10: who can see the progress above and the reports built from it. */
+            progressWho:
+              "Who can see progress and reports: the learner's family caregivers, who can also recover the full saved progress; the teacher of a class the learner joined; and the owner and admins of that class's school. A class sees day-by-day history only from the day the learner joined, and all-time totals without the first practice day.",
             contact: 'Account contact: a parent email, used for sign-in, receipts, and account recovery.',
             device: 'Basic device and diagnostic data: app version, device type, and crash logs, to keep the app stable.',
           },

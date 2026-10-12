@@ -45,7 +45,7 @@ Companion stories:
 
 ### 3.1 Inputs, defaults and presets
 
-> **Amended by F-ENT-003 (2026-10-11).** `CurriculumParams` gains `openQuestIds?: string[]` (max 400; absent = the stage rule). A ready cell quest outside it goes to `locked[]` and raises `premium-needed`. It is omitted from `StoredCurriculumParamsSchema` (like `completedQuestIds`) and passed again to `regenerateFrom`; goldens A and B are unchanged. The wizard warning names the product by space kind and the week range of the free lessons, and a plan that runs longer than its lessons offers a shorter length (F-ENT-003 §3.9.3, PR E3-9).
+> **Amended by F-ENT-003 (2026-10-11; revised by its OD-1 decision the same day).** The free plan is all of Stage 1, which is exactly what `unlockedStages: ['stage1']` already schedules for an unlicensed space, so the generator gains nothing: the `openQuestIds` input of F-ENT-003 revision 2 is withdrawn, and goldens A and B, the stored params and `regenerateFrom` are unchanged. The wizard warning names the product by space kind and the week range of the free lessons, and a plan that runs longer than its lessons offers a shorter length (F-ENT-003 §3.9.3, PR E3-9).
 
 `packages/content-schema/src/curriculum/params.ts` (zod, exported from `src/index.ts`):
 

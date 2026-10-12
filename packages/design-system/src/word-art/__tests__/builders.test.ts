@@ -12,6 +12,7 @@ import {
   line,
   path,
   poly,
+  pts,
   r1,
   rect,
   star,
@@ -45,6 +46,29 @@ describe('r1', () => {
     expect(r1(1.26)).toBe(1.3);
     expect(r1(1.24)).toBe(1.2);
     expect(Object.is(r1(-0.01), 0)).toBe(true);
+  });
+});
+
+describe('pts (W-3: dense point lists, F-VOC-002 §8.1 (a))', () => {
+  it('pairs a flat list of numbers into points, in order', () => {
+    expect(pts(10, 20, 30.5, 40)).toEqual([
+      [10, 20],
+      [30.5, 40],
+    ]);
+    expect(pts()).toEqual([]);
+  });
+
+  it('feeds the point builders the same points as the nested form', () => {
+    const nested: [number, number][] = [
+      [20, 30],
+      [80, 30],
+      [50, 80],
+    ];
+    expect(blob(pts(20, 30, 80, 30, 50, 80), INK)).toEqual(blob(nested, INK));
+  });
+
+  it('refuses an odd count: a point without its y', () => {
+    expect(() => pts(10, 20, 30)).toThrow(/even/);
   });
 });
 

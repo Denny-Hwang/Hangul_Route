@@ -189,10 +189,8 @@ describe('colour swatches (§3.6.1)', () => {
       expect(glyphViolations(swatch(tone, glyph), { ...GENERATED, bboxWaived: true, maxTones: 5 }, isWordArtTone), key).toEqual([]);
       expect(fillTones(swatch(tone, glyph)).length, key).toBeLessThanOrEqual(5);
     }
-    // the objects W-3 draws (§3.12); this list shrinks as they land, and the loop above can never check nothing
-    const W3_OBJECTS = ['food-banana', 'food-water', 'animal-bear', 'animal-elephant', 'food-milk', 'nature-flower'];
-    expect(waiting.every((key) => W3_OBJECTS.includes(key)), waiting.join(', ')).toBe(true);
-    expect(Object.keys(COLOR_SWATCHES).length - waiting.length).toBeGreaterThanOrEqual(6);
+    // batch W-3 drew every object (§3.12), so all twelve swatches are checked
+    expect(waiting, waiting.join(', ')).toEqual([]);
   });
 
   it('the swatch square is the reason for the C2 waiver: 88 of 100 units', () => {

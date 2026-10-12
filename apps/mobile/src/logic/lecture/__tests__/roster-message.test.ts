@@ -92,6 +92,14 @@ describe('acceptRoster (F-TCH-004 §3.2 step 4)', () => {
     ).toEqual({ mode: 'initials', labels: ['M. K.', 'J.'] });
   });
 
+  it('accepts a roster from the console on the app host, the same origin as the presenter (F-APP-001 A-1)', () => {
+    expect(acceptRoster({ origin: 'https://app.hangulroute.com', source: opener, data: roster() }, ctx())).toEqual({
+      mode: 'names',
+      labels: ['Mina', '하늘'],
+    });
+    expect(acceptRoster({ origin: 'https://app.hangulroute.com', source: stranger, data: roster() }, ctx())).toBeNull();
+  });
+
   it('trims labels the schema accepts', () => {
     expect(acceptRoster({ origin: CONSOLE, source: opener, data: roster({ labels: [' Mina ', 'Léa'] }) }, ctx())?.labels).toEqual([
       'Mina',
@@ -104,7 +112,6 @@ describe('acceptRoster (F-TCH-004 §3.2 step 4)', () => {
     ['no opener at all (a copied link)', { origin: CONSOLE, source: opener, data: roster() }, ctx({ opener: null })],
     ['a null source', { origin: CONSOLE, source: null, data: roster() }, ctx()],
     ['another origin', { origin: 'https://evil.example', source: opener, data: roster() }, ctx()],
-    ['the app origin itself', { origin: 'https://app.hangulroute.com', source: opener, data: roster() }, ctx()],
     ['a different deck', { origin: CONSOLE, source: opener, data: roster({ deckId: 'lecture:zzz999' }) }, ctx()],
     ['a different mode', { origin: CONSOLE, source: opener, data: roster({ mode: 'initials' }) }, ctx()],
     ['a different count', { origin: CONSOLE, source: opener, data: roster({ labels: ['Mina'] }) }, ctx()],

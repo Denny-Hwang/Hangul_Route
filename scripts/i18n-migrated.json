@@ -8,6 +8,7 @@
     "apps/mobile/src/components/LanguageChips.tsx",
     "apps/mobile/src/screens/home/HomeScreen.tsx",
     "apps/mobile/src/screens/journey/JourneyScreen.tsx",
+    "apps/mobile/src/components/JourneyGrid.tsx",
     "apps/mobile/src/screens/library/LibraryScreen.tsx",
     "apps/mobile/src/screens/library/CardDetailScreen.tsx",
     "apps/mobile/src/screens/episode/EpisodeDetailScreen.tsx",
@@ -69,7 +70,8 @@
     "apps/mobile/src/screens/my-route/**",
     "apps/web/src/components/console/JourneyParts.tsx",
     "apps/mobile/src/screens/parent/PlacementReportScreen.tsx",
-    "apps/mobile/src/screens/results/**"
+    "apps/mobile/src/screens/results/**",
+    "apps/mobile/src/screens/quest/QuestPlayerView.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1

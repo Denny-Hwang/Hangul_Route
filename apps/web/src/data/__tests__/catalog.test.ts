@@ -8,7 +8,7 @@ describe('console catalogue adapter over the shared catalogue', () => {
   it('labels quests by title and episodes with their quest count', () => {
     expect(catalogLabel('quest', 'quest:stage1-letters-q1')).toBe('Meet a, eo, g, n');
     expect(catalogLabel('episode', 'episode:stage1-letters')).toBe('Meet the Letters (3 quests)');
-    expect(catalogLabel('episode', 'episode:stage1-rites')).toBe('New Year & Festivals (1 quest)');
+    expect(catalogLabel('episode', 'episode:stage1-rites')).toBe('New Year & Festivals (3 quests)');
   });
 
   it('labels an episode that is not released yet as coming soon, never as "0 quests"', () => {

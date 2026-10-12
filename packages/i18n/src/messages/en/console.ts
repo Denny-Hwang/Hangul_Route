@@ -73,7 +73,7 @@ export const consoleMsgs = {
   billingCancelled: 'Nothing was charged.',
   billingSuccess: 'Thank you — the plan is active. Learners see it on their next sync.',
   billingPastDue: "A payment didn't go through. Update your card in Manage subscription; learners keep premium for a week.",
-  lifetimeLine: 'One payment. No renewal, no subscription to cancel.',
+  familyLine: 'Renews yearly. Cancel from Manage subscription any time.',
   groupLine: 'Renews yearly. Cancel from Manage subscription any time.',
   contactLine: 'More than 300 students or 10 teachers? Write to us for a contract.',
   promoLabel: 'Promo or referral code',
@@ -273,7 +273,6 @@ export const consoleMsgs = {
     trial: 'trial',
     trialEnds: (date: string) => `trial · ends ${date}`,
     active: 'active',
-    activeForGood: 'active · yours for good',
     activeRenews: (date: string) => `active · renews ${date}`,
     pastDueKept: 'payment needs attention · premium kept for a week',
     pastDuePaused: 'payment needs attention · premium paused',
@@ -402,11 +401,11 @@ export const consoleMsgs = {
       `via ${{ stripe: 'web (Stripe)', apple: 'App Store', google: 'Google Play', manual: 'contract' }[provider]}${code ? ` · code ${code}` : ''}`,
     seats: (seats: number) => plural('en', seats, { one: `${seats} seat`, other: `${seats} seats` }),
     manage: { cta: 'Manage subscription' },
-    planTitle: { free: 'Free', family_lifetime: 'Family Lifetime', group_license: 'Group License', school_seat: 'School Contract' },
+    planTitle: { free: 'Free', family_lifetime: 'Family Plan', group_license: 'Group License', school_seat: 'School Contract' },
     includes: {
       /** `cap` / `freeCap` are content-schema `FREE_CLASS_STUDENT_CAP`. */
       free: (cap: number) => `Stage 1, local progress, Rescue Code, file backup; classes up to ${cap} students`,
-      family_lifetime: (learners: number) => `Every Stage, now and later, for one family: up to ${learners} learners, cloud sync, grown-up dashboard and plans`,
+      family_lifetime: (learners: number) => `Every Stage, new ones included, for one family: up to ${learners} learners, cloud sync, grown-up dashboard and plans`,
       group_license: (teachers: number, students: number, freeCap: number) =>
         `A class or school: every student premium while enrolled, no ${freeCap}-student cap; a school holds up to ${teachers} teachers / ${students} students`,
       school_seat: (students: number, teachers: number) => `Beyond ${students} students or ${teachers} teachers — seats by contract`,

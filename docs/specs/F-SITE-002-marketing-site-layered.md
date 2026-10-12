@@ -23,7 +23,7 @@ Status: ready
 **Rollout**: every PR changes only the pages of the site route groups. Grown-up links go to `/signin?persona=…` on the same origin until the owner sets `CONSOLE_ORIGIN=https://app.hangulroute.com` on the site build (F-APP-001 M3, owner step S-3); from then the same build variable sends the site's links **and** F-APP-001's stubs to the app host together. S-10 makes that origin the code default in the same release as F-APP-001 A-10. Rollback of any PR is one revert.
 **Wireframes** (drafted with this spec, revised after review): `design/wireframes/site/home.md` · `design/wireframes/site/learners.md` · `design/wireframes/site/parents.md` · `design/wireframes/site/teachers.md` · `design/wireframes/site/header-footer.md`
 
-Parent / siblings: CLAUDE.md §1 (any age; child safety; anti-shame; UI languages) · F-I18N-001 §3.3 (`?lang=` hand-off), §3.4 (site routes, string rules, PR 11b route groups, prune of hidden locales), L10 (legal English-authoritative) · F-CONSOLE-001 §3.6 (landing nav, **amended** here), §3.7 (static export) · F-ENT-001 §3.5, §3.6 (billing behind sign-in; native in-app purchase plan) · F-SPACE-001 §3.5 (a learner joins a class or family with a code) · `docs/launch/waitlist.md` (launch-news form) · companion specs of the 2026-10-11 request: **F-APP-001** persona app shell (`docs/persona-app-shell`) · **F-BILL-002** billing for every persona (`docs/billing-in-app-all-personas`) · **F-REPORT-001** progress reports (`docs/progress-reports`) · **F-FEEDBACK-001** notes from grown-ups (`docs/adult-feedback-channel`) · **F-ENT-003** free plan to Day 2 (`docs/free-day2-unlocked-curriculum`) · **AMENDMENTS-ROUTE-LEARNING-ROUTE** to F-ROUTE-001 (`docs/learning-route`) · **F-BROWSE-001** lesson browser for grown-ups (`docs/adult-content-browser`)
+Parent / siblings: CLAUDE.md §1 (any age; child safety; anti-shame; UI languages) · F-I18N-001 §3.3 (`?lang=` hand-off), §3.4 (site routes, string rules, PR 11b route groups, prune of hidden locales), L10 (legal English-authoritative) · F-CONSOLE-001 §3.6 (landing nav, **amended** here), §3.7 (static export) · F-ENT-001 §3.5, §3.6 (billing behind sign-in; native in-app purchase plan) · F-SPACE-001 §3.5 (a learner joins a class or family with a code) · `docs/launch/waitlist.md` (launch-news form) · companion specs of the 2026-10-11 request: **F-APP-001** persona app shell (`docs/persona-app-shell`) · **F-BILL-002** billing for every persona (`docs/billing-in-app-all-personas`) · **F-REPORT-001** progress reports (`docs/progress-reports`) · **F-FEEDBACK-001** notes from grown-ups (`docs/adult-feedback-channel`) · **F-ENT-003** free plan, all of Stage 1 (`docs/free-day2-unlocked-curriculum`) · **AMENDMENTS-ROUTE-LEARNING-ROUTE** to F-ROUTE-001 (`docs/learning-route`) · **F-BROWSE-001** lesson browser for grown-ups (`docs/adult-content-browser`)
 
 ---
 
@@ -45,7 +45,7 @@ Facts on `origin/main` `ea9049e4` and on the live site (2026-10-11):
 - **G3 — Layered, not short of answers.** Four levels (section 3.1): L0 hero, L1 persona chooser and three short blocks, L2 one short page per persona, L3 details behind native disclosure or on a linked page. Hard budgets, enforced by tests (section 3.11): `/` at most 2,900 px tall at 375 x 812 (about 3.5 screens, against 16.5 today) and at most 280 visible words; each persona page at most 4,060 px (5 screens) and at most 550 visible words.
 - **G4 — A page per persona.** `/learners`, `/parents`, `/teachers` (and `/es/...`, `/ko/...` when those locales ship), each with one primary action that fits that persona.
 - **G5 — Every account action on the app host.** Every "Start learning" and "Sign in" link on the site comes from one module, `lib/site-links.ts` (section 3.8), which takes its paths from F-APP-001's `APP_ROUTES` and its origin from F-APP-001's site build variable `CONSOLE_ORIGIN`. The site never links to billing (F-BILL-002 §4.1).
-- **G6 — Promise only what is live.** Feature lines on the site are tied to a typed claims table (`data/site-claims.ts`, section 3.9). A line about reports, notes, the Learning Route, browsing lessons as a learner, or the Day 2 free plan appears only when the companion spec that builds it flips its claim in the same PR that turns the feature on in production. A line about a paid feature also needs paid plans to be on sale (Stripe Live).
+- **G6 — Promise only what is live.** Feature lines on the site are tied to a typed claims table (`data/site-claims.ts`, section 3.9). A line about reports, notes, the Learning Route, or browsing lessons as a learner appears only when the companion spec that builds it flips its claim in the same PR that turns the feature on in production. The free-plan line "Stage 1 is free." is true before and after F-ENT-003 turns its free boundary on (F-ENT-003 OD-1: the free plan is all of Stage 1), so it never flips. A line about a paid feature also needs paid plans to be on sale (Stripe Live).
 - **G7 — Keep what works.** Legal pages, About, the launch-news form, the i18n route groups and hidden-locale pruning from F-I18N-001 PR 11b, `?lang=` hand-off, the locale banner, the "no prices on the site" rule, and every child-safety promise stay.
 - **G8 — Learn whether it works, without tracking anyone.** Page counts come from Cloudflare's own request analytics for the hangulroute.com zone, read by the owner in the Cloudflare dashboard (Analytics, HTTP traffic, by path). The site adds no client script, no cookie, no identifier and no telemetry event (OD-5, assumption c).
 
@@ -184,7 +184,7 @@ export function signIn(persona?: GrownUpPersona): string;                   // `
 
 ```ts
 export interface SiteClaims {
-  freePlan: 'stage1' | 'firstDays';       // which free-plan line the site shows
+  freePlan: 'stage1';                     // the free-plan line: all of Stage 1 is free (F-ENT-003 OD-1, 2026-10-11)
   paidPlans: 'coming' | 'inApp';          // "coming" until the owner turns on Stripe Live, then "managed in the app"
   learningRoute: boolean;                 // Learning Route on for every learner and the grown-up read-only view live
   parentReports: boolean;                 // F-REPORT-001 reports live for parents
@@ -212,14 +212,13 @@ export function showsClaim(claims: SiteClaims, key: BooleanClaimKey): boolean;
 | `parentReports`, `teacherReports` | F-REPORT-001 RP-11 | both report flags on in production |
 | `feedbackNotes` | F-FEEDBACK-001 FB-14 | both notes flags on in production |
 | `browseAsLearner` | F-BROWSE-001 BR-10 (the console entry) | the entry live; shown only with `paidPlans: 'inApp'` (`CLAIM_REQUIRES_PAID`) |
-| `freePlan: 'firstDays'` | the F-ENT-003 E3-11 release that sets `contentGatingEnabled` on in production | needs Stripe Live too (F-ENT-003 OD-2); never at merge time of the code |
 | `lectureMode` | F-TCH-004 R-flip | presenter on in production |
 | `paidPlans: 'inApp'` | the owner's Stripe Live switch | standing rule; sandbox checkout does not count |
 
 - Page components take `claims` as a prop defaulting to `SITE_CLAIMS`, so unit tests render every state, including `browseAsLearner: true` with `paidPlans: 'coming'` (line absent) and with `'inApp'` (line present).
 - With every claim at its default the pages are complete: no empty section, no "coming soon" teaser for an unbuilt feature (only the existing "more stages and classroom plans are coming" cost line).
 - **Other readers.** F-BILL-002 B-7 reads the boolean claims for the "what the plan includes" lines of the signed-in billing page (F-BILL-002 §4.3). `CLAIM_REQUIRES_PAID` applies only to the public site; the billing page is where a plan is bought, so it reads the booleans directly. F-BILL-002 B-7 therefore waits for S-2, and S-2 waits for F-APP-001 A-1.
-- The `firstDays` wording follows F-ENT-003 OD-8: grown-up surfaces say "Day 1 and Day 2 of the route", never "your first two days", which reads as a two-day calendar trial (appendix B.1, OD-6).
+- **`freePlan` has one value.** The owner decided F-ENT-003 OD-1 on 2026-10-11: the free plan keeps all of Stage 1 open and paid plans open Stage 2 onward. So "Stage 1 is free." (`landing.plans.free.stage1`) stays true before and after F-ENT-003's switch is turned on, and no release flips this claim. The `'firstDays'` value and its string of revision 2 are dropped. The key stays so a later change to the free plan is one constant and one string.
 
 ### 3.10 Old grown-up URLs, robots and sitemap
 
@@ -243,7 +242,7 @@ export function showsClaim(claims: SiteClaims, key: BooleanClaimKey): boolean;
 
 - **Header height**: at 320 x 568 and at 375 x 812 the header is one row, at most 96 px tall (64 px targets plus padding); at 320 px with `font-size: 200%` on `html` it is at most two rows and never scrolls sideways. Measured on every site page.
 - Heights are measured on the real export, so with the claims as they are in `SITE_CLAIMS`. To leave room for claim lines that switch on later, the export must also stay under a **headroom budget** while claims are off: `/` at most 2,750 px and each persona page at most 3,700 px at 375 x 812. Each claim-flip PR (section 3.9) runs this spec with its claim on, so the full budget is checked again at that moment.
-- Words are also checked without a browser: `app/__tests__/site-word-budget.test.tsx` renders each page with `ALL_CLAIMS_ON` (a test fixture with every boolean on, `freePlan: 'firstDays'` and `paidPlans: 'inApp'`, never imported by a page) through `renderToStaticMarkup`, strips folded `<details>` bodies and display-none phone-only duplicates, and asserts the word budgets above. No build variable switches claims, so a production build can never show an unlaunched claim.
+- Words are also checked without a browser: `app/__tests__/site-word-budget.test.tsx` renders each page with `ALL_CLAIMS_ON` (a test fixture with every boolean on, `freePlan: 'stage1'` and `paidPlans: 'inApp'`, never imported by a page) through `renderToStaticMarkup`, strips folded `<details>` bodies and display-none phone-only duplicates, and asserts the word budgets above. No build variable switches claims, so a production build can never show an unlaunched claim.
 - `landing-layout.spec.ts` keeps its checks (no sideways scroll at 320 / 375 / 768, Tab order = visual order) and its `PAGES` list gains the three persona pages; its "Play now visible" check becomes "the page's primary action visible on the first screen".
 
 ### 3.12 Copy truth pass
@@ -274,7 +273,7 @@ New and changed keys (S-3 adds; old keys are removed only in S-6, after no page 
 | `landing.home.how.{title, steps.{start,quests,collect}.{title, body}, routeBody}` | strings | `routeBody` only with `learningRoute` |
 | `landing.home.promises.{label, items.{ads,safety,noRed}}` | strings | titles only |
 | `landing.home.news.{title, body}` | strings | the form keeps `landing.waitlist` |
-| `landing.plans.{title, free.{stage1, firstDays}, paid.{coming, inApp}, managedInApp}` | strings | the only cost words on the site |
+| `landing.plans.{title, free.stage1, paid.{coming, inApp}, managedInApp}` | strings | the only cost words on the site |
 | `landing.persona.learners.*`, `landing.persona.parents.*`, `landing.persona.teachers.*` | strings + count functions | appendix B.2 to B.4; `cards.seeAll(n)` uses `plural`; learner `faq.adult` / `faq.korean` reuse today's `landing.faq.items.adult` / `.korean` text |
 | `landing.persona.closing.{learners, parents, teachers}` | strings | closing block lines |
 | `landing.persona.{plansTitle, faqTitle}` | strings | the persona pages' "Plans" h2 and visually hidden "Questions" h2 |
@@ -386,7 +385,7 @@ Coverage: `apps/web` new `lib/` and `data/` modules at 100 % lines (pure); page 
 - **F-APP-001** (persona app shell): A-1 (`APP_ROUTES`, `APP_ORIGIN`, `isGrownUpPath`) gates S-2 and S-9; A-4 (`/signin` with `?persona=` intros) gates S-4a, S-4b and S-5; A-8 (stubs) and M3 (owner sets `CONSOLE_ORIGIN`) move the site's links to the app host; A-10 ships with S-10. F-APP-001 §6.4 lists this spec's links (`/`, `/signin?persona=parent`, `/signin?persona=teacher`); before M3 the site uses the same paths on its own origin (section 3.8).
 - **F-BILL-002** (billing): the site has no billing link and no price (F-BILL-002 §4.1; its B-10 guard test and this spec's `site-links` test both pin it); the `/teach/billing` forwarder and the billing path (`/billing` or `/account/billing`, settled between F-APP-001 and F-BILL-002) are not this spec's.
 - **Requests from F-BILL-002 §13.2, answered:** S1 (a `/teach/billing*` rule in `site-routes.json`) is superseded. This spec has no `site-routes.json` and no redirect table. F-APP-001's `legacyConsoleTarget` already maps `/teach/billing` to `/account/billing` in one hop on hangulroute.com, and the site renders no billing link. S2 is accepted: F-BILL-002 B-10's `site-no-billing.test.ts` keeps its link-and-amount scan and allows the S-7 legal prose. This spec's `site-links` and page tests pin the same rule from the site's side. B-10's allowance for "`site-routes.json`" is no longer needed.
-- **Claim hand-offs:** F-ROUTE-001 R-10 with AMENDMENTS-ROUTE-LEARNING-ROUTE LR-8 (`learningRoute`) · F-REPORT-001 RP-11 (`parentReports`, `teacherReports`) · F-FEEDBACK-001 FB-14 (`feedbackNotes`) · F-BROWSE-001 BR-10 (`browseAsLearner`, paid line) · F-ENT-003 E3-11 release (`freePlan: 'firstDays'`) · F-TCH-004 R-flip (`lectureMode`) · owner Stripe Live (`paidPlans: 'inApp'`).
+- **Claim hand-offs:** F-ROUTE-001 R-10 with AMENDMENTS-ROUTE-LEARNING-ROUTE LR-8 (`learningRoute`) · F-REPORT-001 RP-11 (`parentReports`, `teacherReports`) · F-FEEDBACK-001 FB-14 (`feedbackNotes`) · F-BROWSE-001 BR-10 (`browseAsLearner`, paid line) · F-TCH-004 R-flip (`lectureMode`) · owner Stripe Live (`paidPlans: 'inApp'`).
 - **External:** owner answers (section 11; defaults apply); Cloudflare zone analytics (assumption c).
 
 ## 11. Owner decisions (each has a default; each gates only the PRs named)
@@ -398,7 +397,7 @@ Coverage: `apps/web` new `lib/` and `data/` modules at 100 % lines (pure); page 
 | OD-3 | *closed in review: the redirect status is F-APP-001's (stub pages, no HTTP redirect)* | — | — | — |
 | OD-4 | "COPPA-compliant" on the public site while the legal documents are drafts | replace with "Child safety first"; restore a compliance claim only after counsel signs off | S-3, S-5 | yes |
 | OD-5 | Site measurement | no client telemetry, no script, no cookie; page counts from Cloudflare's zone analytics in the dashboard | — | yes (a later spec may add an owner-only sink) |
-| OD-6 | Free-plan wording once the Day 2 boundary is enforced | "Start free with Day 1 and Day 2 of the route and a few word topics. Lessons you finish stay open." (`landing.plans.free.firstDays`, F-ENT-003 OD-8 wording), shown from the E3-11 release with Stripe Live; until then "Stage 1 is free. More stages and classroom plans are coming." | the F-ENT-003 claim flip | yes |
+| OD-6 | Free-plan wording once F-ENT-003's free boundary is enforced | **Closed by F-ENT-003 OD-1 (owner, 2026-10-11)**: the free plan is all of Stage 1, so the site keeps "Stage 1 is free." (`landing.plans.free.stage1`) before and after the boundary is enforced; no `firstDays` line, no claim flip | — | — |
 | OD-7 | Prices on hangulroute.com | never: the site names plans without amounts and says they are managed at app.hangulroute.com | — (rule) | yes |
 | OD-8 | Launch-news form after launch | keep a short "Get the launch news" block on `/` only, same API and consent line | S-5 | yes |
 | OD-9 | Stage 1 card blurbs that say "kids" / "children" | reword the five blurbs as in section 3.12 (accuracy kept, content-skill review) | S-6 | yes |
@@ -454,7 +453,6 @@ Console, sign-in and billing on app.hangulroute.com; forwarding of old grown-up 
 - promises.label "Our promises" · items: ads "No ads, ever" · safety "Child safety first" · noRed "No red marks"
 - plans.title "What does it cost?"
 - plans.free.stage1 "Stage 1 is free. More stages and classroom plans are coming."
-- plans.free.firstDays "Start free with Day 1 and Day 2 of the route and a few word topics. Lessons you finish stay open."
 - plans.paid.coming "Plans for families and classes are coming."
 - plans.paid.inApp "Plans for families and classes are at app.hangulroute.com."
 - plans.managedInApp "Plans and billing are managed at app.hangulroute.com after you sign in."
@@ -536,3 +534,4 @@ Console, sign-in and billing on app.hangulroute.com; forwarding of old grown-up 
   - Rejected or adjusted:
     - "The app host serves `/privacy` and `/terms` redirects": not chosen. The `privacyUrl()` contract keeps Privacy on hangulroute.com without a second copy.
     - "Analytics Engine or D1 sink": not chosen for this spec (OD-5).
+- 2026-10-11, F-ENT-003 OD-1 (owner decision, applied in F-ENT-003 E3-0b): the free plan keeps all of Stage 1 open; paid plans open Stage 2 onward. `freePlan` keeps the single value `'stage1'`; the `'firstDays'` value, its string, its hand-off row and the E3-11 flip are dropped; OD-6 is closed. The "Free-plan wording" item of review 1 above is superseded.

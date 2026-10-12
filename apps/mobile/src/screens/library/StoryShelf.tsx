@@ -18,6 +18,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { View, type LayoutChangeEvent } from 'react-native';
 import { flags } from '../../config/flags';
 import { useLocale, useMessages } from '../../i18n/use-messages';
+import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { isContentLocked } from '../../logic/content-access';
 import { localizeStory } from '../../logic/content-locale';
 import { contentWidth, gridCellWidth, gridRows } from '../../logic/layout/pane-sizes';
@@ -25,6 +26,7 @@ import { emptyBookmarks } from '../../logic/story/bookmarks';
 import { planOpenStory } from '../../logic/story/open-story';
 import { shelfCopy } from '../../logic/story/shelf-copy';
 import { shelfEntries, type ShelfCategory, type StoryIndexEntry } from '../../logic/story/story-index';
+import { storyFitsForSnapshot } from '../../logic/story/story-fit';
 import { pickedForYou } from '../../logic/story/story-pick';
 import { storyStatus, type StoryStatus } from '../../logic/story/story-status';
 import {
@@ -39,7 +41,6 @@ import type { MainTabParamList, RootStackParamList } from '../../navigation/type
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
 import { useAudience } from '../../store/audience';
-import { useLocaleStore } from '../../store/locale-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
@@ -83,9 +84,7 @@ export function StoryShelf({ category, index }: { category: ShelfCategory; index
   void subscription;
   const tier = effectiveTier(profile?.id ?? '', new Date()).tier;
   // D2: hide-until-tap profiles see no romanization on the shelf (one button per tile, no reveal); the reader reveals it.
-  const romanizationShown = useLocaleStore((s) =>
-    profile ? (s.byProfile[profile.id]?.romanizationMode ?? 'always') === 'always' : true,
-  );
+  const romanizationShown = useRomanizationMode() === 'always';
 
   // Nothing is locked while gating is off (D5): `isContentLocked` is false for every story then.
   const isLocked = useCallback(
@@ -106,7 +105,9 @@ export function StoryShelf({ category, index }: { category: ShelfCategory; index
   );
 
   const hero = useMemo(() => {
-    const pick = pickedForYou({ entries: items.map((i) => i.entry), snapshot: snap, bookmarks, isLocked, category });
+    // F-STORY-005 §3.4: stories near the learner's stage come first; it only orders, never hides.
+    const fits = storyFitsForSnapshot(snap);
+    const pick = pickedForYou({ entries: items.map((i) => i.entry), snapshot: snap, bookmarks, isLocked, category, fits });
     return pick ? items.find((i) => i.entry.questId === pick.entry.questId) ?? null : null;
   }, [items, snap, bookmarks, isLocked, category]);
 

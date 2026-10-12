@@ -28,6 +28,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Text, View, type LayoutChangeEvent } from 'react-native';
 import { storyById } from '../../content/stories';
 import { useLocale, useMessages } from '../../i18n/use-messages';
+import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { localizeStory } from '../../logic/content-locale';
 import type { MinigameScope } from '../../logic/minigame-config';
 import {
@@ -67,7 +68,6 @@ import { playPrompt, stop } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
 import { useReducedMotion } from '../../platform/motion';
 import { track } from '../../platform/telemetry';
-import { useLocaleStore } from '../../store/locale-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useQuestRunStore } from '../../store/quest-run-store';
 
@@ -125,9 +125,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
   const answerRound = useQuestRunStore((s) => s.answerRound);
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
   const activeProfileId = useProfileStore((s) => activeProfileSelector(s)?.id);
-  const romanizationMode = useLocaleStore((s) =>
-    s.byProfile[activeProfileId ?? '']?.romanizationMode ?? 'always',
-  );
+  const romanizationMode = useRomanizationMode();
   const reducedMotion = useReducedMotion();
   // F-LAYOUT-001 §3.12: the window from the layout class (3-4 card columns at tablet width, F-STORY-003 §3.5).
   const lc = useLayoutClass();

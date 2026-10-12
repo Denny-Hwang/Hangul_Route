@@ -50,6 +50,22 @@ The render list is memoised per glyph and mode in `word-art/model.ts`, and the c
 
 ## Checklist for this PR (W-1c)
 
-Nothing is learner-visible: no screen renders `WordArt` until F-VOC-003 flips `flags.vocabTopicsEnabled` and W-7 binds `PictureArt`. The registry holds the six W-1b samples and the four props (`status: 'review'`); the generated families (colours, counts, body) are registered by batches W-3 and W-4.
+At W-1c nothing was learner-visible: the registry held the six W-1b samples and the four props (`status: 'review'`). Since then W-7 has bound `PictureArt`, so a `word:` ref with a registered glyph draws it in every picture game; the vocabulary topic screens still wait for F-VOC-003's `flags.vocabTopicsEnabled`. The colours and counts are registered by W-3 (below) and the body family by W-4.
 
 Review sheet (rendered from the data with `glyphToSvgString`, checked by eye at 96 and 48 px and in silhouette): `w1c-review.png` in this folder. It shows the four props, the swatches whose objects are drawn so far, every count, every body part, and figure and sibling compositions.
+
+## Checklist for batch A (W-3)
+
+Registered, all `status: 'review'`: the eight other food glyphs, the three colour-swatch objects of later families (`animal-bear`, `animal-elephant`, `nature-flower`; `nature-cloud` is from W-1b), the twelve colour swatches (from `colorGlyphs`, each with the C2 size waiver and its reason; no swatch needs a fifth fill tone, so none has `maxTones`) and the twelve counts (from the ten-frame generator).
+
+Review sheet: `w3-review.png` in this folder, rendered from the data with `glyphToSvgString` at 96 and 48 px and in silhouette. It shows the nine food glyphs, the four swatch objects, the twelve swatches and the twelve counts. Result against the §3.12 review checklist:
+
+- Recognisable at 48 px and in silhouette (hand glyphs). A swatch is a square and a ten-frame a bar in silhouette by design; the object sticker and the dot count carry them.
+- Faces smile (bear, elephant). Tokens only, at most 4 fill tones on every glyph, no text, digits or emoji.
+- Standing objects sit on a ground shadow. One fix made during review: the banana floated above its shadow (shadow moved from y 82 to 78).
+- Swatch stickers read on their swatch thanks to the paper halo (the crow on black, the milk on white).
+
+Open for the owner's review:
+
+- Counts at the 48 dp minimum: the ten-frame is 70 by 28 units, so at 48 dp the frame is about 13 px tall and a dot has a radius of about 2.2 px; 7 against 8 and 9 against 10 are hard to tell apart. Picture games draw at hero size today. If a count is ever drawn below about 64 dp, either raise the minimum size for the count family in `PictureArt` or scale the frame up to the 88-unit width as the swatches do (with a C2 waiver), and add a 48 dp check of `count-7` against `count-8` to the sheet.
+- Colour words and their sticker objects (red and the apple, brown and the bear, and so on) are look-alike pictures. Before a question builder runs over a cross-topic universe, those pairs must be excluded as distractors of each other (derived from `COLOR_SWATCHES[*].object`).

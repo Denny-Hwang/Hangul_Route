@@ -55,6 +55,13 @@ const SAMPLES: Record<string, unknown[][]> = {
   'a11y.myRoute.cell': [['Letters and Books', 'Meet the Letters', 'Complete']],
   'a11y.myRoute.skill': [['Read', 'In 4 quests you finished']],
   'a11y.myRoute.gain': [['Stars', 9]],
+  'learner.myRoute.home.strip.goal': TITLES,
+  'learner.myRoute.home.strip.week': [[1], [3], [12]],
+  'a11y.myRoute.homeStrip': [
+    ['Learning Route', 'You are on Stage 1: Hangul.', [], null, null],
+    ['Learning Route', 'You are on Stage 1: Hangul.', ['4 quests played', 'New quests joined'], 'Goal: Stage 2, Words', 'Week 3 of your weekly plan'],
+  ],
+  'a11y.myRoute.homeStripGoal': TITLES,
 };
 
 type Rendered = { path: string; text: string; surface: Surface; args: unknown[] };

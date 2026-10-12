@@ -5,7 +5,6 @@ import {
   Caption,
   Card,
   Heading,
-  HeritageCardArt,
   HoyaBubble,
   Icon,
   Pill,
@@ -14,10 +13,10 @@ import {
   colors,
   radii,
   spacing,
-  supportedCardIds,
 } from '@hangul-route/design-system';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { CardArt } from '../../components/CardArt';
 import { FlipCard } from '../../components/FlipCard';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
@@ -26,6 +25,7 @@ import { cardById } from '../../content';
 import { awardWorld } from '../../content/award-world';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { earnHint } from '../../logic/awards/earn-hint';
+import { cardDetailDisplay, type CardDetailState } from '../../logic/library/card-detail-state';
 import { localizeCard, localizeEpisode } from '../../logic/content-locale';
 import { nextFace, type FlipFace } from '../../logic/flip';
 import { playPrompt, stop } from '../../platform/audio';
@@ -33,23 +33,32 @@ import { isShareAvailable, shareSnapshot } from '../../platform/sharing';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 
+/** Side of the card face on the front of the card page. */
+const CARD_FACE = 200;
+
 export interface CardDetailViewProps {
   cardId: string;
   /** Renders the close button when given (the modal screen passes it; a split pane does not). */
   onClose?: () => void;
   /** A locked card says how it is earned (F-LAYOUT-001 §3.6, F-STORY-006 §3.7): the Library pane and the stack screen pass it. */
   showHowToEarn?: boolean;
+  /**
+   * `learner` (default): today's card for the active profile. `preview` (All lessons, F-BROWSE-001 §4.7):
+   * front and back as an earned card looks, no earn hint, no share action, no progress-store read.
+   */
+  state?: CardDetailState;
 }
 
-export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardDetailViewProps): React.ReactElement {
+export function CardDetailView({ cardId, onClose, showHowToEarn = false, state = 'learner' }: CardDetailViewProps): React.ReactElement {
   const messages = useMessages();
   const m = messages.learner.cardDetail;
   const locale = useLocale();
   const source = cardById(cardId);
   const card = source && localizeCard(source, locale);
   const profile = useProfileStore(activeProfileSelector);
-  const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
-  const unlocked = snap?.cards.some((c) => c.cardId === cardId) ?? false;
+  // A preview reads no learner's cards: it shows every card as an earned one.
+  const snap = useProgressStore((s) => (state === 'preview' || !profile ? undefined : s.byProfile[profile.id]));
+  const earned = snap?.cards.some((c) => c.cardId === cardId) ?? false;
   // How a locked card is earned, from its award rule, with the episode title in the UI language (F-STORY-006 §3.7).
   const hint = useMemo(() => {
     if (!source) return null;
@@ -59,6 +68,8 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardD
   const lockedLabel = hint ? messages.a11y.lockedCardHint(hint) : messages.a11y.lockedCard;
   const [face, setFace] = useState<FlipFace>('front');
   const [shareAvailable, setShareAvailable] = useState(false);
+  const display = cardDetailDisplay({ state, earned, showHowToEarn, shareAvailable });
+  const unlocked = display.faceUp;
   const [shareError, setShareError] = useState<string | null>(null);
   const captureRef = useRef<View>(null);
   // The Korean name is printed on the card; the panel only says why it is silent (F-AUDIO-004 A-5b).
@@ -137,7 +148,7 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardD
         />
       </View>
 
-      {showHowToEarn && !unlocked ? <HowToEarn hint={hint} /> : null}
+      {display.howToEarn ? <HowToEarn hint={hint} /> : null}
 
       {/* The blurb + fact card is shown only on the front face (the back face
           already contains this content). Keeps the back face from duplicating. */}
@@ -183,8 +194,8 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardD
       ) : null}
 
       {/* F-CARD-003 — Share button. Shown only when card is unlocked AND
-          OS sharing is available. */}
-      {unlocked && shareAvailable ? (
+          OS sharing is available; never in a preview. */}
+      {display.share ? (
         <>
           <Spacer size="sm" />
           <Button
@@ -297,34 +308,23 @@ function FrontFaceBody({
   const a11y = useMessages().a11y;
   return (
     <View style={{ alignItems: 'center' }}>
-      <View
-        style={{
-          width: 200,
-          height: 200,
-          borderRadius: radii.xxl,
-          backgroundColor: unlocked
-            ? supportedCardIds.includes(card.id)
-              ? colors.surface.paper
-              : colors.theme[card.theme]
-            : colors.surface.sunken,
-          alignItems: 'center',
-          justifyContent: 'center',
-          opacity: unlocked ? (supportedCardIds.includes(card.id) ? 1 : 0.85) : 0.4,
-          overflow: 'hidden',
-        }}
-      >
-        {unlocked ? (
-          supportedCardIds.includes(card.id) ? (
-            <HeritageCardArt cardId={card.id} size={200} accessibilityLabel={a11y.cardArt(card.titleEn)} />
-          ) : (
-            <Text style={{ fontSize: 80, fontWeight: '800', color: colors.text.primary }}>
-              {card.subtitleKo ?? card.titleEn.charAt(0)}
-            </Text>
-          )
-        ) : (
+      {unlocked ? (
+        <CardArt card={card} size={CARD_FACE} accessibilityLabel={a11y.cardArt(card.titleEn)} style={{ borderRadius: radii.xxl }} />
+      ) : (
+        <View
+          style={{
+            width: CARD_FACE,
+            height: CARD_FACE,
+            borderRadius: radii.xxl,
+            backgroundColor: colors.surface.sunken,
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: 0.4,
+          }}
+        >
           <Icon name="lock" size={80} color={colors.text.muted} />
-        )}
-      </View>
+        </View>
+      )}
       <Spacer size="lg" />
       <Heading level="display" align="center">
         {card.titleEn}

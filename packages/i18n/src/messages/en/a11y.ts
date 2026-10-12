@@ -118,7 +118,7 @@ export const a11y = {
   joinName: 'Name your teacher will see',
   leaveSpace: (name: string) => `Leave ${name}`,
   /** The paywall offer card: its name, then the already-formatted price. */
-  lifetimeOffer: (name: string, price: string) => `${name}, ${price}`,
+  familyOffer: (name: string, price: string) => `${name}, ${price}`,
 
   /** My route (F-ROUTE-001 section 3.14): each row label reads the row; the pips are hidden. */
   myRoute: {
@@ -148,5 +148,11 @@ export const a11y = {
     cell: (theme: string, title: string, word: string) => `${theme}: ${title}. ${word}.`,
     skill: (label: string, detail: string) => `${label}. ${detail}.`,
     gain: (word: string, n: number) => `${word}: ${n}`,
+    /** The Home route strip read as one button (R-4b): no middle dot, each line a sentence; `progress` is the here stage's caption. */
+    homeStrip: (title: string, here: string, progress: readonly string[], goal: string | null, week: string | null) =>
+      [`${title}.`, here, ...progress.map((line) => `${line}.`), goal === null ? '' : `${goal}.`, week === null ? '' : `${week}.`]
+        .filter((part) => part !== '')
+        .join(' '),
+    homeStripGoal: (n: number, title: string) => `Goal: Stage ${n}, ${title}`,
   },
 } as const;

@@ -42,14 +42,19 @@ describe('screens/my-route sources', () => {
     expect(src).toContain('myRouteAccess(');
     expect(src).toContain("navigation.replace('PinEntry', { next: 'MyRoute'");
     expect(src).toMatch(/viewedEvent\(|stageOpenedEvent\(|continueTappedEvent\(/);
-    expect(src).toContain('cursorContext(');
+    // The cursor comes from `cursorContext` inside the shared `routeModelInput` (R-4b).
+    expect(src).toContain('routeModelInput(');
+    expect(read(join(SRC, 'logic', 'my-route', 'route-input.ts'))).toContain('cursorContext(');
     expect(src).not.toMatch(/AsyncStorage|localStorage/);
   });
 
   it('the screen feeds the R-7a start route, so the start tag and known pips show', () => {
     const src = read(join(SCREEN_DIR, 'MyRouteScreen.tsx'));
-    expect(src).toContain('route: startRouteOf(snapshot.placements, journeyContent.catalog, cursor.isEntitled)');
+    const input = read(join(SRC, 'logic', 'my-route', 'route-input.ts'));
+    expect(src).toContain('buildMyRoute(routeModelInput(');
+    expect(input).toContain('route: startRouteOf(i.snapshot.placements, journeyContent.catalog, cursor.isEntitled)');
     expect(src).not.toMatch(/route:\s*null/);
+    expect(input).not.toMatch(/route:\s*null/);
   });
 
   it('the Journey header button exists only behind flags.myRouteEnabled', () => {
@@ -62,5 +67,48 @@ describe('screens/my-route sources', () => {
   it('PinEntry continues to the read-only page once the gate is open', () => {
     const src = read(join(SRC, 'screens', 'parent', 'PinEntryScreen.tsx'));
     expect(src).toContain("navigation.replace('MyRoute', { source: 'parent', profileId })");
+  });
+});
+
+describe('the Home route strip (F-ROUTE-001 R-4b)', () => {
+  it('the page and the strip build the model from one input helper', () => {
+    const page = read(join(SRC, 'screens', 'my-route', 'MyRouteScreen.tsx'));
+    expect(page).toContain('buildMyRoute(');
+    expect(page).toContain('routeModelInput(');
+    expect(page).toContain('localizedRouteContent(locale)');
+  });
+
+  const home = read(join(SRC, 'screens', 'home', 'HomeScreen.tsx'));
+  const strip = read(join(SRC, 'screens', 'home', 'RouteStrip.tsx'));
+
+  it('RouteStrip.tsx: tokens only, drawn shapes only, names its design reference', () => {
+    expect(strip).not.toMatch(SYMBOL);
+    expect(strip).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/);
+    expect(strip).not.toMatch(/['"`][^'"`]*\d+\s*\/\s*\d+[^'"`]*['"`]/);
+    expect(strip).toMatch(/design\/(wireframes|components)\//);
+    expect(strip).toContain('<PipRow');
+    expect(strip).toContain('<StageSegments');
+    expect(strip).toContain('accessibilityLabel={view.a11yLabel}');
+    // No header role inside the button (it would hide from heading navigation).
+    expect(strip).not.toContain('<Heading');
+  });
+
+  it('Home builds the strip from the shared model and opens the page from Home', () => {
+    expect(home).toContain('homeStripView(');
+    expect(home).toContain('buildMyRoute(routeModelInput(');
+    expect(home).toContain('localizedRouteContent(locale)');
+    expect(home).toContain("navigation.navigate('MyRoute', { source: 'home' })");
+  });
+
+  it('the strip replaces the "Stage 1 progress" bar only behind flags.myRouteEnabled', () => {
+    const strip = home.indexOf('<RouteStrip');
+    const bar = home.indexOf('m.learner.home.progress.heading');
+    expect(strip).toBeGreaterThan(0);
+    expect(bar).toBeGreaterThan(0);
+    const branch = home.lastIndexOf('flags.myRouteEnabled', strip);
+    expect(branch).toBeGreaterThan(0);
+    // One ternary: the strip when the flag is on, the old bar otherwise (never both).
+    expect(bar).toBeGreaterThan(strip);
+    expect(home.slice(strip, bar)).toMatch(/\)\s*:\s*\(/);
   });
 });

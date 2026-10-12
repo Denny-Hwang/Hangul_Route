@@ -20,10 +20,10 @@ Then: a learner who has done everything open sees one calm line saying so and na
 +--------------------------------------------------+
 | [avatar] Mina                         [ Open ]   |
 | Last active: today · 25 minutes this week        |  <- existing figures (unchanged)
-| Plan: 6 done                                     |  <- existing plan row (notReady never "locked")
+| Plan: 9 done                                     |  <- existing plan row (notReady never "locked")
 |                                                  |
 | Mina finished everything open in this plan.      |  <- plan-waiting line (one line, body text)
-| 4 more lessons open with a Group License.        |
+| 3 more lessons open with a Group License.        |
 | Open billing                                     |  <- link, space owner only
 +--------------------------------------------------+
 ```
@@ -34,7 +34,7 @@ Then: a learner who has done everything open sees one calm line saying so and na
 +--------------------------------------------------+
 | Mina                                              |
 | ...existing rows...                               |
-| Mina finished the free lessons. More lessons      |  <- free-end line (exact: from the snapshot)
+| Mina finished the free lessons. Stage 2 and later |  <- free-end line (exact: from the snapshot)
 | open with Family Lifetime.                        |
 | Open billing  (web build only)                    |
 +--------------------------------------------------+
@@ -45,8 +45,9 @@ Then: a learner who has done everything open sees one calm line saying so and na
 ```
 Practice next
  - Revisit these letters: [ko] [ko]               <- existing rows
- - On the free plan, the first 6 lessons are open.  <- free-plan line (neutral), or plan-waiting
-   More lessons open with Family Lifetime.
+ - On the free plan, all of Stage 1 is open        <- free-plan line (neutral), or plan-waiting;
+   (11 lessons). Stage 2 and later open with          the count is freeLessonsFacts().lessons
+   Family Lifetime.                                   (all of Stage 1, F-ENT-003 OD-1)
    Open billing
 ```
 

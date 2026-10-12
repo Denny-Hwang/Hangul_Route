@@ -26,7 +26,8 @@ import { BADGE_SIZE, StageBadge } from './StageBadge';
 
 /**
  * One trail row of My route (F-ROUTE-001 sections 3.4, 3.11, 3.14; wireframe
- * `design/wireframes/journey/my-route-overview.md` A, B, C; PipRow spec
+ * `design/wireframes/journey/my-route-overview.md` A, B, C, and All lessons
+ * `design/wireframes/browse/home.md` A, where the rows come from `catalogueTrail`; PipRow spec
  * `design/components/PipRow/spec.md` for the trail connector). The row header
  * is one button of at least `touchTarget.min` that opens the stage in place;
  * its label reads the row, and the drawn pips are hidden from screen readers.
@@ -145,9 +146,15 @@ export interface StageRowItemProps {
   reducedMotion: boolean;
   onToggle: () => void;
   onOpenEpisode: (episodeId: string) => void;
+  /**
+   * Default true: the header opens the stage in place (My route). False: the header is a plain
+   * button that goes somewhere else (All lessons, F-BROWSE-001 §4.5: a stage row opens the Journey
+   * at that stage), so it carries no expanded state and the stage never opens in place.
+   */
+  expandable?: boolean;
 }
 
-export function StageRowItem({ row, open, look, reducedMotion, onToggle, onOpenEpisode }: StageRowItemProps): React.ReactElement {
+export function StageRowItem({ row, open, look, reducedMotion, onToggle, onOpenEpisode, expandable = true }: StageRowItemProps): React.ReactElement {
   const badge = useMediaSize(BADGE_SIZE);
   const accent = colors.stage[row.stage];
   return (
@@ -157,8 +164,8 @@ export function StageRowItem({ row, open, look, reducedMotion, onToggle, onOpenE
         onPress={onToggle}
         accessibilityRole="button"
         accessibilityLabel={row.a11yLabel}
-        accessibilityState={{ expanded: open }}
-        aria-expanded={open}
+        accessibilityState={expandable ? { expanded: open } : undefined}
+        aria-expanded={expandable ? open : undefined}
         style={({ pressed }) => ({
           flexDirection: 'row',
           gap: spacing.md,
@@ -202,7 +209,7 @@ export function StageRowItem({ row, open, look, reducedMotion, onToggle, onOpenE
         </View>
       </Pressable>
 
-      {open ? (
+      {expandable && open ? (
         <View style={{ marginLeft: badge + spacing.md, marginTop: spacing.sm }}>
           <View
             style={{
