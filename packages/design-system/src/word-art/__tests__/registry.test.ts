@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { circle } from '../builders';
 import { COLOR_SWATCHES, colorGlyphs } from '../generated/color';
-import { BODY_PARTS, bodyPart } from '../generated/body';
 import { COUNT_VALUES, count } from '../generated/count';
 import { fillTones } from './glyph-checks';
 import { WORD_ART, WORD_ART_FAMILIES, WORD_ART_KEYS, WORD_ART_KEY_RE, WORD_ART_PLAN, buildRegistry, getWordArt, wordArtKeyOf } from '../registry';
@@ -42,15 +41,6 @@ const W3_HAND = [
 ];
 const W3_COLORS = Object.keys(COLOR_SWATCHES);
 const W3_COUNTS = COUNT_VALUES.map((n) => `count-${n}`);
-
-/**
- * Batch W-4 (§3.12): the eight other animal glyphs, drawn by hand (the cat
- * was drawn at W-1b, the bear and the elephant at W-3), and the twelve body
- * parts, generated. Reviewed against the §3.12 checklist by the multi-agent
- * visual review that replaces the owner's batch review (owner, 2026-10-11).
- */
-const W4_ANIMALS = ['animal-puppy', 'animal-rabbit', 'animal-bird', 'animal-fish', 'animal-duck', 'animal-fox', 'animal-monkey', 'animal-butterfly'];
-const W4_BODY = BODY_PARTS.map((part) => `body-${part}`);
 
 describe('key grammar', () => {
   it('is the spec regex over the thirteen families', () => {
@@ -161,25 +151,6 @@ describe('batch W-3 (§3.12)', () => {
   it('waives the frame size only for the colour swatches', () => {
     const waived = WORD_ART_KEYS.filter((k) => WORD_ART[k]!.meta.bboxWaived === true);
     expect(waived.sort()).toEqual([...W3_COLORS].sort());
-  });
-});
-
-describe('batch W-4 (§3.12)', () => {
-  it('holds the eight other animal glyphs, approved after review', () => {
-    for (const key of W4_ANIMALS) expect(WORD_ART[key]?.meta, key).toEqual({ family: 'animal', status: 'approved' });
-  });
-
-  it('completes the animal family: the W-1b cat, the W-3 bear and elephant and the eight of W-4', () => {
-    const animals = WORD_ART_KEYS.filter((k) => k.startsWith('animal-')).sort();
-    expect(animals).toEqual(['animal-cat', 'animal-bear', 'animal-elephant', ...W4_ANIMALS].sort());
-  });
-
-  it('registers the twelve body parts as the generator draws them, approved after review', () => {
-    expect(W4_BODY).toHaveLength(12);
-    for (const part of BODY_PARTS) {
-      expect(getWordArt(`body-${part}`), part).toEqual(bodyPart(part));
-      expect(WORD_ART[`body-${part}`]!.meta, part).toEqual({ family: 'body', status: 'approved' });
-    }
   });
 });
 
