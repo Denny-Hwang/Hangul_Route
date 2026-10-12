@@ -16,8 +16,8 @@ const SCRIPT = resolve(
   "coverage-gate.mjs"
 );
 
-function run(rootDir) {
-  return spawnSync("node", [SCRIPT], {
+function run(rootDir, args = []) {
+  return spawnSync("node", [SCRIPT, ...args], {
     env: { ...process.env, HANGUL_ROUTE_ROOT: rootDir },
     encoding: "utf8",
   });
@@ -63,6 +63,34 @@ describe("coverage-gate.mjs", () => {
       assert.equal(r.status, 0);
       assert.match(r.stdout, /0 pass · 2 skip · 0 fail/);
       assert.match(r.stdout, /no coverage\/coverage-summary\.json/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("--fail-on-skip: a target with no summary fails the gate", () => {
+    const root = makeRoot();
+    try {
+      writeTargets(root, { "packages/foo": 80, "packages/bar": 90 });
+      writeCoverage(root, "packages/foo", 95);
+      const r = run(root, ["--fail-on-skip"]);
+      assert.equal(r.status, 1);
+      assert.match(r.stdout, /1 pass · 1 skip · 0 fail/);
+      assert.match(r.stdout, /::error::packages\/bar — skipped/);
+      assert.match(r.stdout, /could not be measured/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("--fail-on-skip: every target measured and above threshold, exit 0", () => {
+    const root = makeRoot();
+    try {
+      writeTargets(root, { "packages/foo": 80 });
+      writeCoverage(root, "packages/foo", 95);
+      const r = run(root, ["--fail-on-skip"]);
+      assert.equal(r.status, 0);
+      assert.match(r.stdout, /1 pass · 0 skip · 0 fail/);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

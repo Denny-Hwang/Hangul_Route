@@ -6,7 +6,7 @@
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
     "@hangul-route/web#build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "typecheck"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/content/stories/**"],
       "env": ["CONSOLE_ORIGIN"],
       "outputs": [".next/**", "!.next/cache/**", "out/**"]
@@ -23,6 +23,11 @@
     },
     "test:coverage": {
       "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
+    },
+    "@hangul-route/web#test:coverage": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/content/stories/**"],
       "outputs": ["coverage/**"]
     },
     "typecheck": {

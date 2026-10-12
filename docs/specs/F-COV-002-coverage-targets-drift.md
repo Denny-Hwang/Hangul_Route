@@ -1,7 +1,7 @@
 # F-COV-002 — Coverage Targets Drift Detector
 
 **Status**: `shipped` (implemented in the same PR as this spec — T-021)
-**Scope**: `scripts/` · `docs/tests/` · `.github/workflows/coverage-gate.yml`
+**Scope**: `scripts/` · `docs/tests/` · `.github/workflows/ci.yml` (job 'Measure coverage vs rolling targets'; `coverage-gate.yml` until the 2026-10-12 CI speed-up)
 **Owner**: solo dev
 
 Parent docs: `docs/tests/coverage-targets.md` (human source of truth),
@@ -19,7 +19,7 @@ value) would silently stay stale — or vice versa.
 
 F-COV-002 closes that gap: the markdown gains a machine-checked
 **"Enforced W4 gate"** table that exactly mirrors the JSON, and a CI script
-fails the Coverage Gate workflow whenever the two disagree.
+fails the coverage check ('Measure coverage vs rolling targets') whenever the two disagree.
 
 ## 2. Contract
 
@@ -63,9 +63,10 @@ mirror.
 
 ## 4. CI wiring
 
-`.github/workflows/coverage-gate.yml` runs the script immediately after
-checkout (built-ins only — no `pnpm install` needed), so drift fails fast
-before the expensive coverage run.
+The job 'Measure coverage vs rolling targets' in `.github/workflows/ci.yml`
+(until the 2026-10-12 CI speed-up: `coverage-gate.yml`) runs the script right
+after checkout (built-ins only — no `pnpm install` needed), before it reads the
+coverage reports of the unit test jobs.
 
 ## 5. Out of scope
 

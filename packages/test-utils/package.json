@@ -11,6 +11,7 @@
   "scripts": {
     "lint": "echo '(no lint yet — @hangul-route/test-utils)'",
     "test": "echo '(no tests yet — @hangul-route/test-utils)'",
+    "test:coverage": "echo '(no tests yet — @hangul-route/test-utils)'",
     "typecheck": "echo '(no typecheck yet — @hangul-route/test-utils)'",
     "build": "echo '(no build output yet — @hangul-route/test-utils)'"
   }

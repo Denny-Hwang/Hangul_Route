@@ -4,37 +4,58 @@ name: Web App (PWA)
 # worker and run the offline Playwright e2e. Deployment itself is done by
 # Cloudflare Workers Builds (Connect GitHub) on every push to main — see
 # docs/launch/web-app-launch.md §2 — so this workflow never uploads.
+#
+# Layout (CI speed-up, 2026-10-12): one `build` job writes both bundles (the
+# release build dist/ and the fixture build dist-e2e/, back to back so the
+# second reuses the warm Metro cache) and hands them to 4 parallel e2e
+# shards; each runs its share of the release-build suite and of the
+# fixture-bundle specs (dealt round-robin by test, scripts/e2e-shard-list.mjs,
+# so the shards come out even). The required check
+# 'Build PWA · offline e2e' is the last job: it always runs and passes only
+# when every job above passed (or when nothing the PWA depends on changed, and
+# the build job skipped its steps on purpose).
+# A failed shard can be re-run alone; it downloads the same bundles.
+# scripts/__tests__/ci-workflows.test.mjs keeps this layout honest.
 
 on:
   # No path filter: this job is a required check on main, and a required
-  # check that never runs blocks docs-only or console-only PRs. The job runs
-  # on every PR and skips the build + e2e when nothing it covers changed.
+  # check that never runs blocks docs-only PRs. The jobs run
+  # on every PR and skip the build + e2e when nothing they cover changed.
   pull_request:
     branches: [main]
   push:
     branches: [main]
     paths:
       - "apps/mobile/**"
+      - "apps/web/**"
       - "packages/**"
+      - "content/**"
+      - "scripts/build-stories.mjs"
 
 concurrency:
   group: web-app-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
-  build-and-e2e:
-    name: Build PWA · offline e2e
+  build:
+    name: PWA · build (release + fixture bundles)
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    permissions:
-      contents: read
     env:
       WRANGLER_SEND_METRICS: "false"
+    outputs:
+      run: ${{ steps.changes.outputs.run }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Inputs of both bundles: the app and its packages; apps/web (the console
+      # that merge-console.mjs builds into dist/); content/ (vocab clips map,
+      # stories); scripts/build-stories.mjs (the fixture build); and CI itself.
       - name: Did anything the PWA depends on change?
         id: changes
         shell: bash
@@ -45,27 +66,41 @@ jobs:
           git fetch --no-tags --depth=1 origin "${{ github.event.pull_request.base.sha }}"
           changed=$(git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}")
           echo "$changed"
-          if echo "$changed" | grep -qE '^(apps/mobile/|packages/|\.github/workflows/web-app\.yml|package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|turbo\.json|\.nvmrc)'; then
+          if echo "$changed" | grep -qE '^(apps/mobile/|apps/web/|packages/|content/|scripts/build-stories\.mjs|\.github/workflows/web-app\.yml|\.github/actions/|scripts/e2e-shard-list\.mjs|package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|turbo\.json|\.nvmrc)'; then
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
             echo "run=false" >> "$GITHUB_OUTPUT"
             echo "::notice::No PWA-relevant files changed — build and offline e2e skipped, check reports success."
           fi
 
-      - name: Setup pnpm
+      - name: Setup pnpm, Node and dependencies
         if: steps.changes.outputs.run == 'true'
-        uses: pnpm/action-setup@v4
+        uses: ./.github/actions/setup-workspace
 
-      - name: Setup Node
-        if: steps.changes.outputs.run == 'true'
-        uses: actions/setup-node@v4
+      # Metro's transform cache is content-addressed (file contents + transform
+      # options), so a restored entry is only used for an identical module.
+      # Pull requests restore main's cache; main builds cold and saves a fresh
+      # one, so the cache never grows run over run.
+      - name: Restore the Metro cache (pull requests)
+        if: steps.changes.outputs.run == 'true' && github.event_name == 'pull_request'
+        uses: actions/cache/restore@v4
         with:
-          node-version-file: .nvmrc
-          cache: pnpm
+          path: /tmp/metro-cache
+          key: metro-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            metro-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
 
-      - name: Install dependencies
-        if: steps.changes.outputs.run == 'true'
-        run: pnpm install --frozen-lockfile
+      # Next's own incremental build cache for the console role that
+      # merge-console.mjs builds (Next validates every entry itself). Like
+      # Metro: pull requests restore main's cache, main builds cold.
+      - name: Restore the Next.js build cache (apps/web, console role; pull requests)
+        if: steps.changes.outputs.run == 'true' && github.event_name == 'pull_request'
+        uses: actions/cache/restore@v4
+        with:
+          path: apps/web/.next/cache
+          key: next-console-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            next-console-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
 
       - name: Build PWA (expo export + service worker)
         if: steps.changes.outputs.run == 'true'
@@ -75,41 +110,205 @@ jobs:
         if: steps.changes.outputs.run == 'true'
         run: pnpm --filter @hangul-route/mobile exec wrangler deploy --dry-run
 
-      - name: Install Playwright Chromium
+      # F-STORY-002 PR 2.6a: a second build that holds the test fixtures and the
+      # e2e hooks (__hrStoryE2E, __hrPlacementE2E, __hrVocabE2E), written to
+      # dist-e2e/ (never dist/, never deployed; the script restores the real
+      # story bundle and clip map).
+      - name: Build the fixture bundle (dist-e2e, e2e only)
         if: steps.changes.outputs.run == 'true'
+        run: pnpm --filter @hangul-route/mobile build:web:fixtures
+
+      # dist/ holds dot folders (audio clips), so hidden files are included.
+      - name: Upload the release build
+        if: steps.changes.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pwa-dist
+          path: apps/mobile/dist
+          include-hidden-files: true
+          overwrite: true
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Upload the fixture build
+        if: steps.changes.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pwa-dist-e2e
+          path: apps/mobile/dist-e2e
+          include-hidden-files: true
+          overwrite: true
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Save the Metro cache (main only)
+        if: steps.changes.outputs.run == 'true' && github.event_name == 'push' && success()
+        uses: actions/cache/save@v4
+        with:
+          path: /tmp/metro-cache
+          key: metro-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+
+      - name: Save the Next.js build cache (main only)
+        if: steps.changes.outputs.run == 'true' && github.event_name == 'push' && success()
+        uses: actions/cache/save@v4
+        with:
+          path: apps/web/.next/cache
+          key: next-console-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+
+  e2e:
+    name: PWA · offline e2e · shard ${{ matrix.shard }}/4
+    needs: [build]
+    if: needs.build.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm, Node and dependencies
+        uses: ./.github/actions/setup-workspace
+
+      - name: Playwright version
+        id: pw
+        run: echo "version=$(node -p "require('./apps/mobile/node_modules/@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the Playwright browsers
+        id: pw-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.pw.outputs.version }}
+
+      - name: Install Playwright Chromium (system deps; the browser only on a cache miss)
         run: pnpm --filter @hangul-route/mobile exec playwright install --with-deps chromium
 
-      - name: Offline e2e
-        if: steps.changes.outputs.run == 'true'
-        run: pnpm --filter @hangul-route/mobile test:e2e:web
+      - name: Download the release build
+        uses: actions/download-artifact@v4
+        with:
+          name: pwa-dist
+          path: apps/mobile/dist
 
-      # F-STORY-002 PR 2.6a: the reader has no learner entry point until
-      # F-STORY-004's shelf, so its e2e opens it through the __hrStoryE2E hook
-      # and reads fixture-specific content. Both exist only in a second build
-      # that holds the test fixtures, written to dist-e2e/ (never dist/, never
-      # deployed; the script restores the real story bundle).
-      # F-PLC-001 P-6: the level check has no entry point until P-7 either; its
-      # screen e2e opens it through the __hrPlacementE2E hook of the same bundle.
-      - name: Story reader e2e (fixture bundle)
-        if: steps.changes.outputs.run == 'true'
+      - name: Download the fixture build
+        uses: actions/download-artifact@v4
+        with:
+          name: pwa-dist-e2e
+          path: apps/mobile/dist-e2e
+
+      # Each shard runs its share of the release-build suite, then its share of
+      # the fixture-bundle specs. The shares come from scripts/e2e-shard-list.mjs,
+      # which deals the listed tests round-robin (Playwright's own --shard cuts
+      # the list into contiguous runs, and this suite's long and skipped specs
+      # cluster, so its shards came out 4:2:1). --fully-parallel then spreads a
+      # share over the workers by test; every test has its own browser context.
+      - name: Offline e2e (release build, shard ${{ matrix.shard }} of 4)
+        working-directory: apps/mobile
+        env:
+          SHARD: ${{ matrix.shard }}/4
+        shell: bash
         run: |
-          pnpm --filter @hangul-route/mobile build:web:fixtures
-          STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test story-reader placement-screens
-          # F-STORY-003 PR 3.5b: Story Order scene art plays the fixture story's shelf quest.
-          STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test story-order -g "scene art"
-          # F-PLC-001 P-8: the placement report and Choose a different start.
-          STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test placement-report
-          # F-STORY-003 PR 3.4a: the story check step inside the fixture story's quest.
-          STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test story-checks
-          # F-STORY-004 PR 4.6 / 4.7: Results' Episode page opens the story variant of the episode page,
-          # and its Culture notes line opens that story's notes.
-          STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test story-results -g "Episode page"
-          # F-AUDIO-004 A-6: the clip path (precache, runtime cache, offline clip, clip > voice) on
-          # the fixture tones; only that group, since the voice tests expect the regular build.
-          STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test audio -g "bundled clips"
-          # F-VOC-004 S-4b: the shared vocabulary question view, through the __hrVocabE2E hook (no host screen yet).
-          STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test vocab-question
-          # F-REPORT-001 RP-3b: time-only practice sessions in the story reader and the level check.
-          STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test practice-session
-          # F-VOC-003 C-4: the Words picker and topic page, through the same hook (Words stays behind its flag until C-7).
-          STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test vocab-topics
+          pnpm exec playwright test --list > "$RUNNER_TEMP/all-tests.txt"
+          node ../../scripts/e2e-shard-list.mjs --shard "$SHARD" < "$RUNNER_TEMP/all-tests.txt" > "$RUNNER_TEMP/shard-tests.txt"
+          # The list must select exactly one test per line (none lost, none doubled).
+          lines=$(grep -c . "$RUNNER_TEMP/shard-tests.txt")
+          selected=$(pnpm exec playwright test --list --test-list "$RUNNER_TEMP/shard-tests.txt" | sed -n 's/^Total: \([0-9]*\) tests\{0,1\} in .*/\1/p')
+          if [ "$selected" != "$lines" ]; then
+            echo "::error::the shard list has $lines tests but selects ${selected:-none}"
+            exit 1
+          fi
+          pnpm exec playwright test --fully-parallel --test-list "$RUNNER_TEMP/shard-tests.txt"
+
+      # Specs that open screens with no learner entry point yet, through the
+      # e2e hooks of the fixture bundle, and read fixture-specific content.
+      # With STORY_FIXTURES=1 the Playwright web server serves dist-e2e/.
+      # Every listing below goes into one list, dealt round-robin over the
+      # shards like the release-build list above.
+      - name: Offline e2e (fixture bundle, shard ${{ matrix.shard }} of 4)
+        if: ${{ !cancelled() }}
+        working-directory: apps/mobile
+        env:
+          STORY_FIXTURES: "1"
+          SHARD: ${{ matrix.shard }}/4
+        shell: bash
+        run: |
+          # Whole spec files. A file filter matches by name: story-reader covers
+          # every story-reader-*.spec.ts.
+          files=(
+            # F-STORY-002 PR 2.6a: the reader, through the __hrStoryE2E hook.
+            story-reader
+            # F-PLC-001 P-6: the level check screens, through the __hrPlacementE2E hook.
+            placement-screens
+            # F-PLC-001 P-8: the placement report and Choose a different start.
+            placement-report
+            # F-STORY-003 PR 3.4a: the story check step inside the fixture story's quest.
+            story-checks
+            # F-VOC-004 S-4b: the shared vocabulary question view, through the __hrVocabE2E hook.
+            vocab-question
+            # F-REPORT-001 RP-3b: time-only practice sessions in the story reader and the level check.
+            practice-session
+            # F-VOC-003 C-4: the Words picker and topic page (Words stays behind its flag until C-7).
+            vocab-topics
+            # F-STORY-003 PR 3.7 / F-STORY-004 PR 4.6, 4.7: story Results after the fixture story's
+            # quest, its Episode page and Culture notes line. The whole file needs the fixture bundle
+            # (it used to run only its "Episode page" group, so 5 of its 7 tests ran nowhere).
+            story-results
+          )
+          list() { pnpm exec playwright test --list "$@"; }
+          {
+            list "${files[@]}"
+            # One group of a spec file whose other tests expect the release build.
+            # F-STORY-003 PR 3.5b: Story Order scene art plays the fixture story's shelf quest.
+            list story-order -g "scene art"
+            # F-AUDIO-004 A-6: the clip path (precache, runtime cache, offline clip, clip > voice) on
+            # the fixture tones; only that group, since the voice tests expect the release build.
+            list audio -g "bundled clips"
+          } > "$RUNNER_TEMP/all-tests.txt"
+          node ../../scripts/e2e-shard-list.mjs --shard "$SHARD" < "$RUNNER_TEMP/all-tests.txt" > "$RUNNER_TEMP/shard-tests.txt"
+          # The list must select exactly one test per line (none lost, none doubled).
+          lines=$(grep -c . "$RUNNER_TEMP/shard-tests.txt")
+          selected=$(pnpm exec playwright test --list --test-list "$RUNNER_TEMP/shard-tests.txt" | sed -n 's/^Total: \([0-9]*\) tests\{0,1\} in .*/\1/p')
+          if [ "$selected" != "$lines" ]; then
+            echo "::error::the shard list has $lines tests but selects ${selected:-none}"
+            exit 1
+          fi
+          pnpm exec playwright test --fully-parallel --test-list "$RUNNER_TEMP/shard-tests.txt"
+
+      - name: Save the Playwright browsers (main only)
+        if: github.event_name == 'push' && steps.pw-cache.outputs.cache-hit != 'true' && success()
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.pw.outputs.version }}
+
+  pwa:
+    name: Build PWA · offline e2e
+    needs: [build, e2e]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Every PWA job passed (or nothing the PWA depends on changed)
+        env:
+          BUILD: ${{ needs.build.result }}
+          RUN: ${{ needs.build.outputs.run }}
+          E2E: ${{ needs.e2e.result }}
+        run: |
+          echo "build: $BUILD (PWA-relevant change: $RUN)"
+          echo "e2e shards (release build + fixture bundle): $E2E"
+          if [ "$BUILD" != success ]; then
+            echo "::error::The PWA build job did not pass."
+            exit 1
+          fi
+          if [ "$RUN" != true ]; then
+            echo "Nothing the PWA depends on changed: build and e2e skipped on purpose."
+            exit 0
+          fi
+          if [ "$E2E" != success ]; then
+            echo "::error::An e2e job did not pass."
+            exit 1
+          fi

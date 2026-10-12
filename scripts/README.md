@@ -8,11 +8,12 @@
 
 | Script | F-XXX | Workflow | Source of truth |
 |---|---|---|---|
-| `coverage-gate.mjs` | F-COV-001 | `.github/workflows/coverage-gate.yml` | `docs/tests/coverage-targets.json` (mirrors `docs/tests/coverage-targets.md`) |
+| `coverage-gate.mjs` | F-COV-001 | `.github/workflows/ci.yml` (job `Measure coverage vs rolling targets`, on the coverage of the `Unit tests` jobs) | `docs/tests/coverage-targets.json` (mirrors `docs/tests/coverage-targets.md`) |
 | `validate-content.mjs` | F-CNT-001, F-I18N-001 §3.7 | `.github/workflows/content-validation.yml` | `.claude/skills/content-skill/SKILL.md` §3.3; `content/i18n/<locale>/*.json` go through the overlay rules of `overlay-rules.mjs` (allow-list in `overlay-fields.mjs`, banned words from `packages/i18n/src/banned-words.json`); `HANGUL_ROUTE_STRICT_LOCALES` makes missing translations errors |
 | `check-token-drift.mjs` | F-DES-001 | `.github/workflows/design-token-sync.yml` | `design/tokens/*.v*.md` ↔ `packages/design-system/src/tokens.ts` |
 | `check-i18n.mjs` | F-I18N-001 | `.github/workflows/ci.yml` | `docs/specs/F-I18N-001-ui-locales.md` §3.11; ratchet lists in `scripts/i18n-migrated.json` (`globs`: migrated surfaces; `pluralTernaryBaseline`: legacy plural ternaries per file, only ever lowered) |
-| `check-coverage-targets-drift.mjs` | F-COV-002 | `.github/workflows/coverage-gate.yml` | `docs/tests/coverage-targets.md` "Enforced W4 gate" 표 ↔ `docs/tests/coverage-targets.json` |
+| `check-coverage-targets-drift.mjs` | F-COV-002 | `.github/workflows/ci.yml` (job `Measure coverage vs rolling targets`) | `docs/tests/coverage-targets.md` "Enforced W4 gate" 표 ↔ `docs/tests/coverage-targets.json` |
+| `e2e-shard-list.mjs` | CI speed-up (2026-10-12) | `.github/workflows/web-app.yml` (the release-build shards and the fixture-bundle parts) | `playwright test --list` output: deals the listed tests round-robin into `--test-list` files, so the shards come out even |
 | `build-vocab.mjs` | F-VOC-001 | `.github/workflows/content-validation.yml` | `content/vocab/<topic>.json` + `content/i18n/{es,ko}/vocab-*.json` glosses → `apps/mobile/src/content/__generated__/vocab.ts` and `apps/web/src/data/vocab-catalog.ts`; `--check` fails on drift (`pnpm run vocab:check`) |
 | `build-stories.mjs` | F-STORY-001 | `.github/workflows/content-validation.yml` | `content/stories/*.json` (ready stories) → `apps/mobile/src/content/stories.generated.ts`; `--check` fails on drift, `--report` fails over the bundle budget |
 | `check-migrations.mjs` | F-ROUTE-001 R-0 (E-1) | `.github/workflows/ci.yml` (through `pnpm run test:scripts`, whose self-test runs it on the repository) | `apps/api/migrations/*.sql`: every file is `NNNN_snake_case.sql` and no two share a prefix (wrangler and the SQLite shim apply them in sorted order) |

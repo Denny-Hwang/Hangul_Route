@@ -27,4 +27,4 @@
 ## Failure modes
 - 테스트 실패 → R4 스킵, 테스트 복구 이슈 우선.
 - 커버리지 측정 실패 (도구 에러) → blocked 이슈 생성.
-- rolling target 미달 → 경고, push 자체는 차단하지 않음 (차단은 coverage-gate.yml 담당).
+- rolling target 미달 → 경고, push 자체는 차단하지 않음 (차단은 ci.yml 의 'Measure coverage vs rolling targets' job 담당).
