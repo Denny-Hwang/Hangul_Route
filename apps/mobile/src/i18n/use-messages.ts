@@ -1,4 +1,4 @@
-import { getMessages, LOCALE_META, type Messages, type UiLocale } from '@hangul-route/i18n';
+import { dictionaryLocale, getMessages, LOCALE_META, type Messages, type UiLocale } from '@hangul-route/i18n';
 import { useEffect, useMemo } from 'react';
 import { setDocumentLang } from '../platform/locale';
 import { activeLocale, useLocaleStore } from '../store/locale-store';
@@ -17,10 +17,13 @@ export function useLocale(): UiLocale {
   return useLocaleStore((s) => activeLocale(s, activeId));
 }
 
-/** The dictionary for the UI locale; re-renders when the locale changes. */
+/**
+ * The dictionary for the UI locale; re-renders when the locale changes. A pseudo build
+ * (`EXPO_PUBLIC_PSEUDO_LOCALE=1`, QA only) draws English as `en-XA` (`dictionaryLocale`).
+ */
 export function useMessages(): Messages {
   const locale = useLocale();
-  return useMemo(() => getMessages(locale), [locale]);
+  return useMemo(() => getMessages(dictionaryLocale(locale)), [locale]);
 }
 
 /** Keeps `<html lang>` in step with the UI locale (a no-op on native). */
