@@ -7,6 +7,7 @@ import Link from 'next/link';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { Button, Notice } from '@/components/console/ui';
 import { dateRangeText, dayText, extraText, warningText, weekLabel, type FreePlanWording, type WeekItem, type WeekRow } from '@/lib/console/curriculum';
+import { ROUTES } from '@/lib/console/routing';
 import { useMessages } from '@/lib/i18n/locale-context';
 
 /**
@@ -237,7 +238,7 @@ export function WarningList({
             {warning.code === 'premium-needed' && link ? (
               <>
                 {' '}
-                <Link href="/teach/billing">{link}</Link>
+                <Link href={ROUTES.billing}>{link}</Link>
               </>
             ) : null}
           </li>

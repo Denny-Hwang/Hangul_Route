@@ -16,6 +16,8 @@ export const ROUTES = {
   /** Lecture setup (F-TCH-004 §3.11); `from` preselects the deck source, `plan` names the plan on screen (an id). Never a name in the URL. */
   spaceLecture: (id: string, from?: 'plan' | 'revisit', planId?: string) =>
     `/teach/space/lecture?id=${encodeURIComponent(id)}${from ? `&from=${from}` : ''}${planId ? `&plan=${encodeURIComponent(planId)}` : ''}`,
+  /** The console's Billing page (F-ENT-001 §3.6; F-BILL-002 owns it): **Open billing** on the free-lessons line (F-ENT-003 §3.9.2). */
+  billing: '/teach/billing',
 } as const;
 
 /**
