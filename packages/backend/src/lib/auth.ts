@@ -2,9 +2,7 @@ import { verifyToken } from '@clerk/backend';
 import { decodeJwt } from '@clerk/backend/jwt';
 import type { Context } from 'hono';
 import { authorizedPartiesFor } from './cors';
-import { devFallbacksAllowed, notConfigured, type RuntimeEnv } from './runtime';
-
-type AuthEnv = RuntimeEnv & { ALLOWED_ORIGINS?: string };
+import { devFallbacksAllowed, environmentName, notConfigured, type RuntimeEnv } from './runtime';
 
 /**
  * Resolve the authenticated adult (Clerk user id) from the request bearer.
@@ -19,9 +17,14 @@ type AuthEnv = RuntimeEnv & { ALLOWED_ORIGINS?: string };
  * The token must also come from an allowed site (F-APP-001 A-9): its `azp`
  * claim is checked against the CORS allow-list (`authorizedPartiesFor`), so a
  * token minted on another subdomain of the same Clerk instance is refused.
+ * Production (ENVIRONMENT unset or "production") uses the list alone: the
+ * local dev server and workers.dev leniency that CORS keeps without an
+ * explicit list never applies to tokens there, since a Clerk Production
+ * instance serves only its own domain. A token with no `azp` (not minted by a
+ * browser) follows Clerk's default and is checked for signature and expiry only.
  */
 export async function getAuthUserId(c: Context): Promise<string | null> {
-  const env = (c.env ?? {}) as AuthEnv;
+  const env = (c.env ?? {}) as RuntimeEnv;
   const keyBound = Boolean(env.CLERK_SECRET_KEY || env.CLERK_JWT_KEY);
   if (!keyBound && !devFallbacksAllowed(env)) {
     throw notConfigured('auth_not_configured', 'Sign-in is not configured on this deployment');
@@ -34,11 +37,13 @@ export async function getAuthUserId(c: Context): Promise<string | null> {
 
   if (!keyBound) return token; // DEV FALLBACK — opted in explicitly, never in production.
 
+  // Production: the allow-list alone, never widened by what the token claims.
+  const previewParty = environmentName(env) === 'production' ? undefined : claimedParty(token);
   try {
     const payload = await verifyToken(token, {
       secretKey: env.CLERK_SECRET_KEY,
       jwtKey: env.CLERK_JWT_KEY,
-      authorizedParties: authorizedPartiesFor(env.ALLOWED_ORIGINS, claimedParty(token)),
+      authorizedParties: authorizedPartiesFor(env.ALLOWED_ORIGINS, previewParty),
     });
     return typeof payload.sub === 'string' ? payload.sub : null;
   } catch {

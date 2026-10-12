@@ -64,50 +64,59 @@ describe('getAuthUserId fails closed (SEC-2)', () => {
  * F-APP-001 A-9: a Clerk session token names the site that minted it in its
  * `azp` claim. The API accepts it only when that site is on the CORS
  * allow-list (`ALLOWED_ORIGINS` when set, else the defaults), so a token
- * minted on another subdomain of the same Clerk instance is refused.
- * Real RS256 tokens, verified offline against CLERK_JWT_KEY.
+ * minted on another subdomain of the same Clerk instance is refused. The
+ * local dev server and workers.dev leniency of the defaults applies to tokens
+ * only on a named non-production deployment. Real RS256 tokens, verified
+ * offline against CLERK_JWT_KEY.
  */
 describe('getAuthUserId accepts a Clerk token only from an allowed site (F-APP-001 A-9)', () => {
   const KID = 'ins_a9_test_key';
   let jwtKey = '';
   let privateJwk: JsonWebKey = { kty: 'RSA' };
+  /** A second, unrelated key pair: its tokens are well formed but not signed by CLERK_JWT_KEY. */
+  let otherPrivateJwk: JsonWebKey = { kty: 'RSA' };
 
-  beforeAll(async () => {
-    const pair = (await crypto.subtle.generateKey(
+  async function rsaPair(): Promise<CryptoKeyPair> {
+    return (await crypto.subtle.generateKey(
       { name: 'RSASSA-PKCS1-v1_5', modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' },
       true,
       ['sign', 'verify'],
     )) as CryptoKeyPair;
+  }
+
+  beforeAll(async () => {
+    const pair = await rsaPair();
     const spki = Buffer.from((await crypto.subtle.exportKey('spki', pair.publicKey)) as ArrayBuffer).toString('base64');
     jwtKey = `-----BEGIN PUBLIC KEY-----\n${(spki.match(/.{1,64}/g) ?? []).join('\n')}\n-----END PUBLIC KEY-----`;
     privateJwk = (await crypto.subtle.exportKey('jwk', pair.privateKey)) as JsonWebKey;
+    otherPrivateJwk = (await crypto.subtle.exportKey('jwk', (await rsaPair()).privateKey)) as JsonWebKey;
   });
 
   /** A session token for user_a9, valid for ten minutes; `azp` only when given. */
-  async function sessionToken(azp?: string, claims: Record<string, unknown> = {}): Promise<string> {
+  async function sessionToken(azp?: string, claims: Record<string, unknown> = {}, key: JsonWebKey = privateJwk): Promise<string> {
     const now = Math.floor(Date.now() / 1000);
     const payload: Record<string, unknown> = { sub: 'user_a9', sid: 'sess_a9', nbf: now - 5, exp: now + 600, ...claims };
     if (azp !== undefined) payload.azp = azp;
-    return signJwt(payload, privateJwk, { algorithm: 'RS256', header: { typ: 'JWT', kid: KID } });
+    return signJwt(payload, key, { algorithm: 'RS256', header: { typ: 'JWT', kid: KID } });
   }
 
-  async function userFor(azp: string | undefined, allowedOrigins?: string): Promise<string | null> {
-    const env: Record<string, unknown> = { CLERK_JWT_KEY: jwtKey };
-    if (allowedOrigins !== undefined) env.ALLOWED_ORIGINS = allowedOrigins;
-    return getAuthUserId(ctx(`Bearer ${await sessionToken(azp)}`, env));
+  /** The Worker's env: ALLOWED_ORIGINS and ENVIRONMENT only when given (unset ENVIRONMENT = production). */
+  async function userFor(azp: string | undefined, vars: { ALLOWED_ORIGINS?: string; ENVIRONMENT?: string } = {}): Promise<string | null> {
+    return getAuthUserId(ctx(`Bearer ${await sessionToken(azp)}`, { CLERK_JWT_KEY: jwtKey, ...vars }));
   }
 
-  describe('ALLOWED_ORIGINS unset: the CORS defaults', () => {
+  const PREVIEWS = ['http://localhost:3000', 'http://127.0.0.1:4173', 'https://pr-12.hangul-route-web.denny.workers.dev'];
+
+  describe('ALLOWED_ORIGINS unset, production (ENVIRONMENT unset or "production"): exactly the CORS defaults', () => {
     it.each(['https://app.hangulroute.com', 'https://hangulroute.com', 'https://www.hangulroute.com'])('accepts a token minted on %s', async (azp) => {
       expect(await userFor(azp)).toBe('user_a9');
+      expect(await userFor(azp, { ENVIRONMENT: 'production' })).toBe('user_a9');
     });
 
-    it.each(['http://localhost:3000', 'http://127.0.0.1:4173', 'https://pr-12.hangul-route-web.denny.workers.dev'])(
-      'keeps working where CORS lets a preview call: %s',
-      async (azp) => {
-        expect(await userFor(azp)).toBe('user_a9');
-      },
-    );
+    it.each(PREVIEWS)('refuses a local dev server or workers.dev preview, which a Clerk Production instance never serves: %s', async (azp) => {
+      expect(await userFor(azp)).toBeNull();
+      expect(await userFor(azp, { ENVIRONMENT: 'production' })).toBeNull();
+    });
 
     it.each(['https://staging.hangulroute.com', 'https://evil.example', 'https://app.hangulroute.com.evil.example', 'http://app.hangulroute.com'])(
       'refuses a token minted on an unlisted site: %s',
@@ -117,24 +126,47 @@ describe('getAuthUserId accepts a Clerk token only from an allowed site (F-APP-0
     );
   });
 
+  describe('ALLOWED_ORIGINS unset, a named non-production deployment: the defaults plus the previews CORS lets in', () => {
+    it.each(['development', 'test', 'staging'])('keeps previews working where CORS lets them call (ENVIRONMENT=%s)', async (environment) => {
+      for (const azp of PREVIEWS) expect(await userFor(azp, { ENVIRONMENT: environment })).toBe('user_a9');
+      expect(await userFor('https://app.hangulroute.com', { ENVIRONMENT: environment })).toBe('user_a9');
+    });
+
+    it.each(['https://staging.hangulroute.com', 'https://evil.example', 'http://app.hangulroute.com'])(
+      'still refuses a site CORS refuses: %s',
+      async (azp) => {
+        expect(await userFor(azp, { ENVIRONMENT: 'development' })).toBeNull();
+      },
+    );
+  });
+
   describe('ALLOWED_ORIGINS set: exactly that list', () => {
     const list = 'https://hangulroute.com, https://app.hangulroute.com/';
 
     it.each(['https://hangulroute.com', 'https://app.hangulroute.com'])('accepts a token minted on %s', async (azp) => {
-      expect(await userFor(azp, list)).toBe('user_a9');
+      expect(await userFor(azp, { ALLOWED_ORIGINS: list })).toBe('user_a9');
     });
 
     it.each(['https://www.hangulroute.com', 'http://localhost:3000', 'https://x.workers.dev', 'https://evil.example'])(
       'refuses a token minted on a site the list leaves out: %s',
       async (azp) => {
-        expect(await userFor(azp, list)).toBeNull();
+        expect(await userFor(azp, { ALLOWED_ORIGINS: list })).toBeNull();
+        expect(await userFor(azp, { ALLOWED_ORIGINS: list, ENVIRONMENT: 'development' })).toBeNull();
       },
     );
   });
 
   it('accepts a token that names no site, as Clerk does (a token from no browser has no azp)', async () => {
     expect(await userFor(undefined)).toBe('user_a9');
-    expect(await userFor(undefined, 'https://app.hangulroute.com')).toBe('user_a9');
+    expect(await userFor(undefined, { ALLOWED_ORIGINS: 'https://app.hangulroute.com' })).toBe('user_a9');
+  });
+
+  it('refuses a token whose azp is not a string, even when it wraps an allowed site', async () => {
+    for (const azp of [['https://hangulroute.com'], 42, { origin: 'https://app.hangulroute.com' }]) {
+      const token = await sessionToken(undefined, { azp });
+      expect(await getAuthUserId(ctx(`Bearer ${token}`, { CLERK_JWT_KEY: jwtKey }))).toBeNull();
+      expect(await getAuthUserId(ctx(`Bearer ${token}`, { CLERK_JWT_KEY: jwtKey, ENVIRONMENT: 'development' }))).toBeNull();
+    }
   });
 
   it('an allowed site does not excuse a bad token: expired, or signed with another key', async () => {
@@ -142,10 +174,15 @@ describe('getAuthUserId accepts a Clerk token only from an allowed site (F-APP-0
     const expired = await sessionToken('https://app.hangulroute.com', { nbf: now - 3600, exp: now - 600 });
     expect(await getAuthUserId(ctx(`Bearer ${expired}`, { CLERK_JWT_KEY: jwtKey }))).toBeNull();
 
+    const otherKey = await sessionToken('https://app.hangulroute.com', {}, otherPrivateJwk);
+    expect(await getAuthUserId(ctx(`Bearer ${otherKey}`, { CLERK_JWT_KEY: jwtKey }))).toBeNull();
+  });
+
+  it('an allowed site does not excuse a tampered signature', async () => {
     const good = await sessionToken('https://app.hangulroute.com');
     const [head, body] = good.split('.');
-    const forged = `${head}.${body}.${Buffer.from('not-the-signature').toString('base64url')}`;
-    expect(await getAuthUserId(ctx(`Bearer ${forged}`, { CLERK_JWT_KEY: jwtKey }))).toBeNull();
+    const tampered = `${head}.${body}.${Buffer.from('not-the-signature').toString('base64url')}`;
+    expect(await getAuthUserId(ctx(`Bearer ${tampered}`, { CLERK_JWT_KEY: jwtKey }))).toBeNull();
   });
 
   it('a bearer that is not a JWT is refused, not thrown', async () => {

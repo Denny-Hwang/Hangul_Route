@@ -33,7 +33,8 @@ export function allowedOrigin(origin: string | undefined, raw: string | undefine
  * from a site the browser may call it from. With an explicit list that list
  * is final; without one, a local dev server or workers.dev preview that
  * `allowedOrigin` lets in is added, so previews keep working exactly where
- * CORS already lets them call. Always a fresh array.
+ * CORS already lets them call. Production passes no `azp` (lib/auth), so it
+ * gets the list alone. Always a fresh array.
  */
 export function authorizedPartiesFor(raw: string | undefined, azp: string | undefined): string[] {
   const parties = parseAllowedOrigins(raw);
