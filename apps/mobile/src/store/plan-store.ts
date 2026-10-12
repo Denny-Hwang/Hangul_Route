@@ -5,7 +5,7 @@ import { isStageEntitled } from '../logic/entitlement';
 import { dayKey } from '../logic/homework/mission-builder';
 import { deriveAssignments, planIdOf, sourcesOf, type DeriveResult } from '../logic/homework/plan-derivation';
 import { readJson, writeJson } from '../platform/storage';
-import { effectiveTier } from './tier-store';
+import { accessTier } from './tier-store';
 import { useProfileStore } from './profile-store';
 import { useProgressStore } from './progress-store';
 
@@ -43,8 +43,9 @@ interface Actions {
 
 const key = (learnerId: string): string => `plans:${learnerId}`;
 
+/** The stages a plan may derive from, by the access tier, so stage and quest access agree (F-ENT-003 section 3.4). */
 export function unlockedStagesFor(now: Date, learnerId: string): string[] {
-  const { tier } = effectiveTier(learnerId, now);
+  const tier = accessTier(learnerId, now);
   return stages.filter((s) => isStageEntitled(s.key, tier)).map((s) => s.key);
 }
 

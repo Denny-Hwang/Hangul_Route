@@ -60,6 +60,8 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
     const sorted = [...rows].sort((a, b) => a.name.localeCompare(b.name));
     set((s) => ({ byLearner: { ...s.byLearner, [learnerId]: sorted } }));
     void writeJson(key(learnerId), sorted);
+    // Access fails open for a member the server has not answered for yet (F-ENT-003 section 3.4 rule 3).
+    useTierStore.getState().noteSpaces(learnerId, sorted.length);
     return sorted;
   };
 
@@ -71,6 +73,7 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       if (existing) return existing;
       const saved = (await readJson<LearnerMembership[]>(key(learnerId))) ?? [];
       set((s) => ({ byLearner: { ...s.byLearner, [learnerId]: saved } }));
+      useTierStore.getState().noteSpaces(learnerId, saved.length);
       return saved;
     },
 

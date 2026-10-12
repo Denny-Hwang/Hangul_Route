@@ -14,6 +14,7 @@ import { useAccountStore } from '../account-store';
 import { usePlanStore, unlockedStagesFor } from '../plan-store';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
+import { useTierStore } from '../tier-store';
 
 const plan: InboxPlan = {
   id: 'plan:w3',
@@ -32,6 +33,7 @@ beforeEach(() => {
   useProfileStore.setState({ profiles: [{ id: 'profile:a', displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't' }], activeId: 'profile:a', hydrated: true });
   useProgressStore.setState({ byProfile: {}, hydratedFor: new Set() });
   useAccountStore.setState({ subscription: null });
+  useTierStore.setState({ byLearner: {}, spaceMembers: {} });
 });
 
 describe('plan-store (F-PLAN-001 §3.3)', () => {
@@ -76,6 +78,21 @@ describe('plan-store (F-PLAN-001 §3.3)', () => {
       ['route:mine#quest:stage1-letters-q2', 'system'],
     ]);
     expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute).toEqual(route);
+  });
+
+  it('derives a Stage 2 item by the access tier: stale premium and a membership with no cache keep it (F-ENT-003 section 3.4)', async () => {
+    const stage2: InboxPlan = { ...plan, items: [{ kind: 'quest', id: 'quest:stage2-life-q1', targetDate: '2026-09-28' }] };
+    // Free: the Stage 2 item waits.
+    expect((await usePlanStore.getState().applyPlans('profile:a', [stage2])).notReady).toEqual({ 'plan:w3': 1 });
+    // The last word from the server was premium, long past its grace window: access keeps it.
+    useTierStore.setState({ byLearner: { 'profile:a': { tier: 'premium', source: null, validUntil: '2026-01-01T00:00:00.000Z', fetchedAt: 't' } } });
+    expect(await usePlanStore.getState().applyPlans('profile:a', [stage2])).toMatchObject({ added: 1, notReady: {} });
+    // A free inbox closes it again.
+    useTierStore.setState({ byLearner: { 'profile:a': { tier: 'free', source: null, validUntil: null, fetchedAt: 't2' } } });
+    expect(await usePlanStore.getState().applyPlans('profile:a', [stage2])).toMatchObject({ removed: 1, notReady: { 'plan:w3': 1 } });
+    // No cache yet, and the device holds a space for the learner: fail open.
+    useTierStore.setState({ byLearner: {}, spaceMembers: { 'profile:a': true } });
+    expect(await usePlanStore.getState().applyPlans('profile:a', [stage2])).toMatchObject({ added: 1, notReady: {} });
   });
 
   it('persists a redate-only change and reports it (F-PLAN-002 section 3.6 rule 2)', async () => {

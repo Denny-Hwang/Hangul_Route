@@ -48,7 +48,7 @@ beforeEach(() => {
   vi.mocked(track).mockClear();
   useMembershipStore.setState({ byLearner: {} });
   usePlanStore.setState({ byLearner: {}, notReady: {} });
-  useTierStore.setState({ byLearner: {} });
+  useTierStore.setState({ byLearner: {}, spaceMembers: {} });
   useSyncStore.setState({ byLearner: {} });
   useProfileStore.setState({ profiles: [{ id: 'profile:a', displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't' }], activeId: 'profile:a', hydrated: true });
   useProgressStore.setState({ byProfile: { 'profile:a': snap }, hydratedFor: new Set(['profile:a']) });
@@ -73,6 +73,22 @@ describe('membership-store (F-SPACE-001 §3.5)', () => {
     setSyncApiForTests(fakeApi({ getInbox: vi.fn(async () => ({ status: 'error', code: 'network' })) }) as never);
     expect(await useMembershipStore.getState().refresh('profile:a')).toBeNull();
     expect(useMembershipStore.getState().byLearner['profile:a']).toEqual(rows); // last known rows stay
+  });
+
+  it('reports whether the device holds a space for the learner to the tier store, on hydrate and on every change (F-ENT-003 section 3.4 rule 3)', async () => {
+    expect(await useMembershipStore.getState().hydrate('profile:a')).toEqual([]);
+    expect(useTierStore.getState().spaceMembers['profile:a']).toBe(false);
+    useMembershipStore.setState({ byLearner: {} });
+    mem.set('memberships:profile:a', [classRow]);
+    await useMembershipStore.getState().hydrate('profile:a');
+    expect(useTierStore.getState().spaceMembers['profile:a']).toBe(true);
+
+    setSyncApiForTests(fakeApi() as never);
+    useSyncStore.getState().adoptCredentials('profile:a', 'sec', 1);
+    expect(await useMembershipStore.getState().leave('profile:a', 'space:cls')).toBe(true);
+    expect(useTierStore.getState().spaceMembers['profile:a']).toBe(false);
+    await useMembershipStore.getState().join('profile:a', 'space:cls', 'K7M2X9');
+    expect(useTierStore.getState().spaceMembers['profile:a']).toBe(true);
   });
 
   it('applies inbox plans on refresh and asks for a sync when homework changed', async () => {
