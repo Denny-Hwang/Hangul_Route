@@ -6,7 +6,7 @@
 import { arc, circle, curve, groundShadow, leaf, line, path, poly, pts, rect } from '../builders';
 import type { Pt } from '../builders';
 import { figure } from '../generated/figure';
-import type { WordArtGlyph } from '../types';
+import type { WordArtGlyph, WordArtPaint, WordArtShape } from '../types';
 
 const INK = { s: 'text.primary', sw: 3 } as const;
 const DETAIL = { s: 'text.primary', sw: 2 } as const;
@@ -33,6 +33,9 @@ const chalkHills = (x: number, y: number, w: number) => poly(pts(x, y, x + w * 0
 
 /** The pencil's axis: `u` along it from the tip (lower left) to the eraser, `v` across it. */
 const pencil = (...uv: number[]): Pt[] => pts(...uv).map(([u, v]) => [20 + (u + v) * Math.SQRT1_2, 80 - (u - v) * Math.SQRT1_2]);
+
+/** A line between two points. */
+const seg = ([x1, y1]: Pt, [x2, y2]: Pt, paint: WordArtPaint): WordArtShape => line(x1, y1, x2, y2, paint);
 
 /** The eraser block in three-quarter view: a point on its long side at `t` (0 front, 1 back) and height `h` (0 bottom, 1 top). */
 const side = (t: number, h: number): Pt => [44 + 36 * t, 74 - 12 * t - 18 * h];
@@ -100,7 +103,7 @@ export const SCHOOL_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
     poly(pencil(0, 0, 18, -8, 18, 8), { f: 'feedback.nudgeLight', ...INK }, 1.5),
     poly(pencil(0, 0, 6, -2.7, 6, 2.7), { f: 'text.primary' }, 1),
     poly(pencil(18, -8, 66, -8, 66, 8, 18, 8), { f: 'vocab.yellow', ...INK }, 1),
-    line(...pencil(18, 0, 66, 0).flat() as [number, number, number, number], DETAIL),
+    seg(...(pencil(18, 0, 66, 0) as [Pt, Pt]), DETAIL),
     poly(pencil(66, -8.5, 75, -8.5, 75, 8.5, 66, 8.5), { f: 'vocab.gray', ...INK }, 1),
     poly(pencil(75, -8, 86, -8, 86, 8, 75, 8), { f: 'vocab.pink', ...INK }, 4),
   ],
@@ -134,7 +137,7 @@ export const SCHOOL_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
     poly([top(0, 0), top(1, 0), top(1, 1), top(0, 1)], { f: 'vocab.pink', ...INK }, 1.5),
     poly([top(0, 0), top(0, 1), [22, 64], side(0, 0)], { f: 'hoya.cheek', ...INK }, 1.5),
     poly([side(0.45, 0), side(0.45, 1), top(0.45, 1), top(0.85, 1), top(0.85, 0), side(0.85, 0)], { f: 'brand.secondary', ...INK }, 1),
-    line(...[...side(0.45, 1), ...side(0.85, 1)] as [number, number, number, number], DETAIL),
+    seg(side(0.45, 1), side(0.85, 1), DETAIL),
   ],
 
   // wooden desk, drawer
