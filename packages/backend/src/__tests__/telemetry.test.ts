@@ -86,6 +86,23 @@ describe('POST /api/telemetry', () => {
     expect((await post({ name: 'session.end', payload: [1, 2] })).body.data?.event.payload).toBeUndefined();
   });
 
+  it('F-SPACE-002 4.12: space.transfer.* keep only initiator, slot and basis with known values, and never a profile id', async () => {
+    const r = await post({
+      name: 'space.transfer.consented',
+      profileId: 'profile:suni',
+      payload: { initiator: 'learner_side', slot: 'learner', basis: 'caregiver', learnerId: 'profile:suni', spaceId: 'space:class-a', name: 'Suni' },
+    });
+    expect(r.status).toBe(201);
+    expect(r.body.data?.event.profileId).toBeUndefined();
+    expect(r.body.data?.event.payload).toEqual({ initiator: 'learner_side', slot: 'learner', basis: 'caregiver' });
+    // an identifier smuggled into an allowed key is dropped too
+    const smuggled = await post({ name: 'space.transfer.requested', payload: { initiator: 'space:class-a', slot: 7 } });
+    expect(smuggled.status).toBe(201);
+    expect(smuggled.body.data?.event.payload).toBeUndefined();
+    // other events are untouched
+    expect((await post({ name: 'space.join.failed', profileId: 'profile:suni', payload: { code: 'x' } })).body.data?.event).toMatchObject({ profileId: 'profile:suni', payload: { code: 'x' } });
+  });
+
   it('caps the in-memory log at 10k events', async () => {
     store.events = Array.from({ length: 10_000 }, (_, i) => ({ id: `event:${i}`, name: 'session.start', at: NOW.toISOString() }));
     await post({ name: 'session.end' });

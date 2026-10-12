@@ -1,0 +1,169 @@
+{
+  "schemaVersion": 1,
+  "topic": {
+    "id": "vocab-topic:science",
+    "key": "science",
+    "order": 12,
+    "titleEn": "Science",
+    "titleKo": {
+      "ko": "과학",
+      "romanization": "gwahak",
+      "en": "science"
+    },
+    "blurbEn": "From fire and ice to the Earth and outer space.",
+    "hoyaIntroEn": "Let's look closely and wonder how the world works.",
+    "tint": "theme.nature",
+    "coverItemId": "vocab:jigu",
+    "status": "draft",
+    "fixedOrder": false
+  },
+  "items": [
+    {
+      "id": "vocab:bul",
+      "ko": "불",
+      "romanization": "bul",
+      "en": "fire",
+      "pos": "noun",
+      "topics": [
+        "science"
+      ],
+      "level": 1,
+      "visual": "word:science-fire",
+      "senseNote": "It also means a light that is on, such as a lamp."
+    },
+    {
+      "id": "vocab:eoreum",
+      "ko": "얼음",
+      "romanization": "eoreum",
+      "en": "ice",
+      "pos": "noun",
+      "topics": [
+        "science"
+      ],
+      "level": 1,
+      "visual": "word:science-ice"
+    },
+    {
+      "id": "vocab:dol",
+      "ko": "돌",
+      "romanization": "dol",
+      "en": "stone",
+      "pos": "noun",
+      "topics": [
+        "science"
+      ],
+      "level": 1,
+      "visual": "word:science-stone"
+    },
+    {
+      "id": "vocab:jaseok",
+      "ko": "자석",
+      "romanization": "jaseok",
+      "en": "magnet",
+      "pos": "noun",
+      "topics": [
+        "science"
+      ],
+      "level": 1,
+      "visual": "word:science-magnet"
+    },
+    {
+      "id": "vocab:jigu",
+      "ko": "지구",
+      "romanization": "jigu",
+      "en": "Earth",
+      "pos": "noun",
+      "topics": [
+        "science"
+      ],
+      "level": 1,
+      "visual": "word:science-earth"
+    },
+    {
+      "id": "vocab:uju",
+      "ko": "우주",
+      "romanization": "uju",
+      "en": "outer space",
+      "pos": "noun",
+      "topics": [
+        "science"
+      ],
+      "level": 1,
+      "visual": "word:science-space",
+      "senseNote": "It also means the whole universe."
+    },
+    {
+      "id": "vocab:robot",
+      "ko": "로봇",
+      "romanization": "robot",
+      "en": "robot",
+      "pos": "noun",
+      "topics": [
+        "science"
+      ],
+      "level": 1,
+      "visual": "word:science-robot"
+    },
+    {
+      "id": "vocab:ssiat",
+      "ko": "씨앗",
+      "romanization": "ssiat",
+      "en": "seed",
+      "pos": "noun",
+      "topics": [
+        "science"
+      ],
+      "level": 1,
+      "visual": "word:science-seed"
+    },
+    {
+      "id": "vocab:mujigae",
+      "ko": "무지개",
+      "romanization": "mujigae",
+      "en": "rainbow",
+      "pos": "noun",
+      "topics": [
+        "science"
+      ],
+      "level": 2,
+      "visual": "word:science-rainbow"
+    },
+    {
+      "id": "vocab:geurimja",
+      "ko": "그림자",
+      "romanization": "geurimja",
+      "en": "shadow",
+      "pos": "noun",
+      "topics": [
+        "science"
+      ],
+      "level": 2,
+      "visual": "word:science-shadow"
+    },
+    {
+      "id": "vocab:baram",
+      "ko": "바람",
+      "romanization": "baram",
+      "en": "wind",
+      "pos": "noun",
+      "topics": [
+        "science"
+      ],
+      "level": 1,
+      "visual": "word:science-wind"
+    },
+    {
+      "id": "vocab:bit",
+      "ko": "빛",
+      "romanization": "bit",
+      "en": "light",
+      "pos": "noun",
+      "topics": [
+        "science"
+      ],
+      "level": 1,
+      "visual": "word:science-light",
+      "senseNote": "Light from the sun or a lamp, not light in weight."
+    }
+  ]
+}

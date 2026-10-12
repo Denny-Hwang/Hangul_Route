@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:gimjang-arirang",
   "state": "ready",
-  "contentVer": 1,
+  "contentVer": 2,
   "title": {
     "ko": "김장하는 날과 아리랑",
     "romanization": "Gimjanghaneun nalgwa Arirang",
@@ -121,8 +121,39 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "A hanok courtyard in late autumn with bare trees, stacks of napa cabbages and big clay jars; Hoya in a warm vest arriving with a basket."
+          "artBrief": "A hanok courtyard in late autumn with bare trees, stacks of napa cabbages and big clay jars; Hoya in a warm vest arriving with a basket.",
+          "art": {
+            "setting": "scene:village-lane",
+            "layers": [
+              {
+                "ref": "prop:persimmon-tree",
+                "x": 54,
+                "y": 250,
+                "s": 1.1,
+                "z": "back",
+                "tint": "feedback.nudge"
+              },
+              {
+                "ref": "prop:kimchi-jars",
+                "x": 206,
+                "y": 262,
+                "s": 1.15
+              },
+              {
+                "ref": "prop:cabbages",
+                "x": 328,
+                "y": 292,
+                "s": 1.3
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 104,
+                "y": 294,
+                "s": 0.72
+              }
+            ],
+            "altEn": "Hoya arrives in a village yard as winter nears, with napa cabbages piled up and big kimchi jars waiting for gimjang."
+          }
         },
         {
           "id": "s2",
@@ -140,8 +171,34 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Three small seasonal panels: spring jars of salted tiny shrimp, summer sacks of white sea salt, late-summer red chili peppers drying on mats in the sun."
+          "artBrief": "Three small seasonal panels: spring jars of salted tiny shrimp, summer sacks of white sea salt, late-summer red chili peppers drying on mats in the sun.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:kimchi-jars",
+                "x": 82,
+                "y": 272,
+                "s": 1.05,
+                "z": "back"
+              },
+              {
+                "ref": "prop:basket",
+                "x": 214,
+                "y": 276,
+                "s": 1.8,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:basket",
+                "x": 334,
+                "y": 276,
+                "s": 1.8,
+                "tint": "brand.primary"
+              }
+            ],
+            "altEn": "Gimjang starts months early: jars for salted shrimp, a basket of sea salt and a basket of dried red chili peppers."
+          }
         },
         {
           "id": "s3",
@@ -159,8 +216,41 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Neighbors in aprons and rubber gloves around big basins, rubbing red seasoning between cabbage leaves; garlic, ginger and green onions nearby; Hoya helping."
+          "artBrief": "Neighbors in aprons and rubber gloves around big basins, rubbing red seasoning between cabbage leaves; garlic, ginger and green onions nearby; Hoya helping.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:fig-woman",
+                "x": 66,
+                "y": 282,
+                "s": 1.0,
+                "tint": "brand.secondaryLight"
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 146,
+                "y": 294,
+                "s": 0.6
+              },
+              {
+                "ref": "prop:cabbages",
+                "x": 240,
+                "y": 292,
+                "s": 2.0,
+                "tint": "brand.primary"
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 344,
+                "y": 282,
+                "s": 1.0,
+                "flip": true,
+                "tint": "surface.paper"
+              }
+            ],
+            "altEn": "Neighbors gather for gimjang and rub red seasoning into salted napa cabbages, and Hoya helps."
+          }
         },
         {
           "id": "s4",
@@ -178,8 +268,33 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "A simple map-shaped table runner (no labels) with bowls of pale and deep-red kimchi placed from top to bottom; Hoya comparing two bowls."
+          "artBrief": "A simple map-shaped table runner (no labels) with bowls of pale and deep-red kimchi placed from top to bottom; Hoya comparing two bowls.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:soban",
+                "x": 86,
+                "y": 292,
+                "s": 1.4,
+                "tint": "feedback.nudgeLight"
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 200,
+                "y": 292,
+                "s": 0.95
+              },
+              {
+                "ref": "prop:soban",
+                "x": 314,
+                "y": 292,
+                "s": 1.4,
+                "tint": "brand.primary"
+              }
+            ],
+            "altEn": "Hoya compares two tables of kimchi: a milder, paler kind from the cold north and a saltier, redder kind from the south."
+          }
         },
         {
           "id": "s5",
@@ -197,8 +312,39 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Helpers seated around a low table with sliced boiled pork and pale yellow cabbage leaves; a child carrying a covered dish of kimchi to the house next door; Hoya waving."
+          "artBrief": "Helpers seated around a low table with sliced boiled pork and pale yellow cabbage leaves; a child carrying a covered dish of kimchi to the house next door; Hoya waving.",
+          "art": {
+            "setting": "scene:village-lane",
+            "layers": [
+              {
+                "ref": "prop:crowd-seated",
+                "x": 160,
+                "y": 262,
+                "s": 1.4,
+                "tint": "brand.secondaryLight"
+              },
+              {
+                "ref": "prop:soban",
+                "x": 160,
+                "y": 296,
+                "s": 1.3,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 262,
+                "y": 296,
+                "s": 0.6
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 336,
+                "y": 286,
+                "s": 1.1
+              }
+            ],
+            "altEn": "Helpers share boiled pork and cabbage leaves after gimjang, a child heads off to give kimchi next door, and Hoya waves."
+          }
         },
         {
           "id": "s6",
@@ -216,8 +362,38 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Rows of filled clay kimchi jars glowing in late-afternoon light, with Hoya proudly holding a heritage card showing cabbage and hands."
+          "artBrief": "Rows of filled clay kimchi jars glowing in late-afternoon light, with Hoya proudly holding a heritage card showing cabbage and hands.",
+          "art": {
+            "setting": "scene:village-lane",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 200,
+                "y": 200,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:kimchi-jars",
+                "x": 160,
+                "y": 268,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:kimchi-jars",
+                "x": 282,
+                "y": 276,
+                "s": 0.9,
+                "flip": true
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 356,
+                "y": 296,
+                "s": 0.68
+              }
+            ],
+            "altEn": "Rows of filled kimchi jars glow in the late-afternoon sun, and Hoya cheers: gimjang is on UNESCO's heritage list."
+          }
         },
         {
           "id": "s7",
@@ -234,8 +410,25 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Grandma resting on the wooden porch at dusk, humming with eyes closed, musical notes drifting toward mountain ridges; Hoya leaning on her shoulder."
+          "artBrief": "Grandma resting on the wooden porch at dusk, humming with eyes closed, musical notes drifting toward mountain ridges; Hoya leaning on her shoulder.",
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "prop:fig-elder-seated",
+                "x": 190,
+                "y": 276,
+                "s": 1.6
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 298,
+                "y": 296,
+                "s": 0.68
+              }
+            ],
+            "altEn": "As the day ends Grandma rests and hums Arirang, a folk song known all over Korea, with Hoya close beside her."
+          }
         },
         {
           "id": "s8",
@@ -255,8 +448,40 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "A winding mountain pass with three small scenes along it (mountain valley, island coast, river town), each with people singing; Hoya walking the path."
+          "artBrief": "A winding mountain pass with three small scenes along it (mountain valley, island coast, river town), each with people singing; Hoya walking the path.",
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "prop:crowd-seated",
+                "x": 90,
+                "y": 234,
+                "s": 0.55,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 262,
+                "y": 232,
+                "s": 0.45,
+                "tint": "brand.secondaryLight"
+              },
+              {
+                "ref": "prop:crowd-seated",
+                "x": 330,
+                "y": 222,
+                "s": 0.5,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 200,
+                "y": 292,
+                "s": 0.9
+              }
+            ],
+            "altEn": "Hoya walks a winding mountain path past little groups of people, each singing their own Arirang."
+          }
         }
       ],
       "checks": [
@@ -405,9 +630,9 @@
     },
     {
       "id": "f2",
-      "rev": 1,
+      "rev": 2,
       "scope": "documented",
-      "claimEn": "Gimjang preparation takes months (more than half a year, per the Encyclopedia of Korean Culture) and follows a yearly cycle: in spring households procure shrimp, anchovy and other seafood for salting, in summer they buy sea salt, and in late summer red chili peppers are dried and ground into powder.",
+      "claimEn": "Gimjang preparation takes months (more than half a year, per the Encyclopedia of Korean Culture) and runs through the year: in spring, families buy shrimp, anchovy and other seafood to salt; in summer, they buy sea salt; and in late summer, they dry red chili peppers and grind them into powder.",
       "claimKo": "김장 준비에는 반년 이상이 걸리며 1년 주기로 이어진다. 봄에는 새우·멸치 등 해산물을 구해 젓갈을 담그고, 여름에는 소금을 사며, 늦여름에는 고추를 말려 가루를 낸다.",
       "sources": [
         {

@@ -232,7 +232,8 @@ describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
       .map((e) => ({ id: e.id, order: e.order, questIds: e.questIds, status: e.status }));
     expect(shipped).toEqual([
       { id: 'episode:stage1-letters', order: 1, questIds: ['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3'], status: 'shipped' },
-      { id: 'episode:stage1-life', order: 2, questIds: ['quest:stage1-life-q1', 'quest:stage1-life-q2'], status: 'shipped' },
+      // F-QUEST-002 Q-6b appends life q3 on purpose (section 3.6 "Re-scope migration": the episode card is the point).
+      { id: 'episode:stage1-life', order: 2, questIds: ['quest:stage1-life-q1', 'quest:stage1-life-q2', 'quest:stage1-life-q3'], status: 'shipped' },
       { id: 'episode:stage1-rites', order: 3, questIds: ['quest:stage1-rites-q1'], status: 'shipped' },
       { id: 'episode:stage1-nature', order: 4, questIds: ['quest:stage1-nature-q1'], status: 'shipped' },
       { id: 'episode:stage1-crafts', order: 5, questIds: ['quest:stage1-crafts-q1'], status: 'shipped' },

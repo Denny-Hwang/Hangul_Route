@@ -1,0 +1,49 @@
+{
+  "locale": "es",
+  "domain": "vocab-travel",
+  "entries": {
+    "vocab-topic:travel": {
+      "title": "Viajes",
+      "blurb": "Formas de moverse y cosas que necesitas para un viaje.",
+      "hoyaIntro": "¿Adónde vamos hoy? Aprendamos las palabras para un viaje."
+    },
+    "vocab:bihaenggi": {
+      "gloss": "avión"
+    },
+    "vocab:gicha": {
+      "gloss": "tren"
+    },
+    "vocab:beoseu": {
+      "gloss": "autobús"
+    },
+    "vocab:taeksi": {
+      "gloss": "taxi"
+    },
+    "vocab:jihacheol": {
+      "gloss": "metro"
+    },
+    "vocab:jadongcha": {
+      "gloss": "automóvil",
+      "senseNote": "En el habla de todos los días, se suele decir solo cha."
+    },
+    "vocab:bae-boat": {
+      "gloss": "barco"
+    },
+    "vocab:jido": {
+      "gloss": "mapa"
+    },
+    "vocab:yeogwon": {
+      "gloss": "pasaporte"
+    },
+    "vocab:pyo-ticket": {
+      "gloss": "boleto",
+      "senseNote": "Un boleto para el autobús, el tren o un espectáculo."
+    },
+    "vocab:gonghang": {
+      "gloss": "aeropuerto"
+    },
+    "vocab:hotel": {
+      "gloss": "hotel"
+    }
+  }
+}
