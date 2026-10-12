@@ -13,7 +13,6 @@ import {
   supportedCardIds,
   touchTarget,
 } from '@hangul-route/design-system';
-import type { RomanizationMode } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, View, type LayoutChangeEvent } from 'react-native';
@@ -22,28 +21,32 @@ import { usePromptSlot } from '../../components/use-prompt-slot';
 import { cardById, themeByKey } from '../../content';
 import { storiesAll } from '../../content/stories';
 import { useLocale, useMessages } from '../../i18n/use-messages';
+import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { localizeCard, localizeStory, localizeTheme } from '../../logic/content-locale';
 import { foundNotes, type FoundNote } from '../../logic/story/culture-notes';
 import {
   CULTURE_NOTES_AUDIO_SOURCE,
+  cultureNotesActions,
   cultureNotesScreenView,
   noteCardArtId,
   noteTermChip,
   noteTermSpeech,
   noteViewedPayload,
+  type CultureNotesFrom,
 } from '../../logic/story/culture-notes-view';
+import { librarySectionTabs } from '../../logic/story/library-sections';
 import { shelfCopy } from '../../logic/story/shelf-copy';
 import { defaultStoryIndex } from '../../logic/story/story-index';
 import type { RootStackParamList } from '../../navigation/types';
 import { playPrompt, stop } from '../../platform/audio';
 import { track } from '../../platform/telemetry';
-import { useLocaleStore } from '../../store/locale-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { SpeakerButton } from './ReaderParts';
 import { Disclosure, SourcesHeading } from './SourcesParts';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CultureNotes'>;
+type Navigation = Props['navigation'];
 
 /** Card art beside a note (the `HeritageCardArt` size of the episode page). */
 const CARD_SIZE = touchTarget.hero;
@@ -60,23 +63,52 @@ const drawable = (cardId: string): boolean => supportedCardIds.includes(cardId) 
  * card, and a collapsed "Where this comes from" with the sources as plain text
  * (no links: the learner surface never leaves the app). `storyId` shows only
  * that story's notes; `noteId` scrolls to that note, opens its sources and
- * sends `culture.note.viewed`, as opening a note's sources does.
+ * sends `culture.note.viewed`, as opening a note's sources does. `from:
+ * 'quest'` (the reader inside a running quest) offers Back only.
  */
 export function CultureNotesScreen({ route, navigation }: Props): React.ReactElement {
   const storyId = route.params?.storyId;
   const noteId = route.params?.noteId;
+  const from = route.params?.from;
+  // Navigating to a CultureNotes already in the stack replaces its params on the same mount: a new
+  // target is a new visit (its sources open, it is scrolled to and reported), so the content is keyed.
+  return (
+    <CultureNotesContent
+      key={`${storyId ?? ''}|${noteId ?? ''}|${from ?? ''}`}
+      storyId={storyId}
+      noteId={noteId}
+      from={from}
+      navigation={navigation}
+    />
+  );
+}
+
+function CultureNotesContent({
+  storyId,
+  noteId,
+  from,
+  navigation,
+}: {
+  storyId: string | undefined;
+  noteId: string | undefined;
+  from: CultureNotesFrom | undefined;
+  navigation: Navigation;
+}): React.ReactElement {
   const messages = useMessages();
   const copy = shelfCopy(messages);
   const c = copy.cultureNotes;
   const locale = useLocale();
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
-  const romanizationMode = useLocaleStore((s) => (profile ? (s.byProfile[profile.id]?.romanizationMode ?? 'always') : 'always'));
 
   // Note text in the UI language (F-CNT-002 overlay); the taught term never changes.
   const stories = useMemo(() => storiesAll.map((s) => localizeStory(s, locale)), [locale]);
   const notes = useMemo(() => foundNotes(defaultStoryIndex(), stories, snap), [stories, snap]);
   const view = useMemo(() => cultureNotesScreenView({ notes, storyId, noteId }), [notes, storyId, noteId]);
+  const actions = useMemo(
+    () => cultureNotesActions({ from, storyTimeOffered: librarySectionTabs({ entries: defaultStoryIndex() }).includes('story-time') }),
+    [from],
+  );
 
   const [open, setOpen] = useState<ReadonlySet<string>>(() => (view.targetNoteId ? new Set([view.targetNoteId]) : new Set()));
   const viewed = useCallback(
@@ -116,21 +148,28 @@ export function CultureNotesScreen({ route, navigation }: Props): React.ReactEle
     setRevealed((r) => (r.has(n.note.id) ? r : new Set([...r, n.note.id])));
   };
 
-  // Scrolling to a deep-linked note: group offsets in the scroll content, note offsets in their group.
+  // Scrolling to a deep-linked note: group offsets in the scroll content, each group's list offset in
+  // its group (under the heading row), note offsets in their list.
   const scrollRef = useRef<ScrollView | null>(null);
   const groupY = useRef<Record<string, number>>({});
+  const listY = useRef<Record<string, number>>({});
   const noteY = useRef<Record<string, { group: string; y: number }>>({});
   const scrolled = useRef(false);
   const tryScroll = (): void => {
     if (scrolled.current || !view.targetNoteId) return;
     const at = noteY.current[view.targetNoteId];
     const top = at === undefined ? undefined : groupY.current[at.group];
-    if (at === undefined || top === undefined) return;
+    const list = at === undefined ? undefined : listY.current[at.group];
+    if (at === undefined || top === undefined || list === undefined) return;
     scrolled.current = true;
-    scrollRef.current?.scrollTo({ y: Math.max(0, top + at.y - spacing.md), animated: false });
+    scrollRef.current?.scrollTo({ y: Math.max(0, top + list + at.y - spacing.md), animated: false });
   };
   const onGroupLayout = (group: string) => (e: LayoutChangeEvent) => {
     groupY.current[group] = e.nativeEvent.layout.y;
+    tryScroll();
+  };
+  const onListLayout = (group: string) => (e: LayoutChangeEvent) => {
+    listY.current[group] = e.nativeEvent.layout.y;
     tryScroll();
   };
   const onNoteLayout = (group: string, id: string) => (e: LayoutChangeEvent) => {
@@ -183,15 +222,19 @@ export function CultureNotesScreen({ route, navigation }: Props): React.ReactEle
         {view.count === 0 ? (
           <Card padding="md" tone="paper" testID="culture-notes-empty">
             <Body>{c.empty.line}</Body>
-            <View style={{ height: spacing.lg }} />
-            <Button
-              label={c.empty.toStoryTime.cta}
-              tone="primary"
-              size="lg"
-              fullWidth
-              onPress={() => navigation.navigate('Main', { screen: 'Library', params: { section: 'story-time' } })}
-              testID="culture-notes-to-story-time"
-            />
+            {actions.toStoryTime ? (
+              <>
+                <View style={{ height: spacing.lg }} />
+                <Button
+                  label={c.empty.toStoryTime.cta}
+                  tone="primary"
+                  size="lg"
+                  fullWidth
+                  onPress={() => navigation.navigate('Main', { screen: 'Library', params: { section: 'story-time' } })}
+                  testID="culture-notes-to-story-time"
+                />
+              </>
+            ) : null}
           </Card>
         ) : (
           view.groups.map((group) => {
@@ -202,20 +245,23 @@ export function CultureNotesScreen({ route, navigation }: Props): React.ReactEle
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
                   {/* The accent only decorates: the heading words are the cue. */}
                   <View style={{ width: spacing.xs, alignSelf: 'stretch', borderRadius: radii.pill, backgroundColor: colors.theme[group.theme] }} />
-                  <SourcesHeading level={2}>{themeTitle}</SourcesHeading>
+                  {/* Shrinks so a long theme name wraps at 320 dp or large text instead of running off. */}
+                  <View style={{ flexShrink: 1 }}>
+                    <SourcesHeading level={2}>{themeTitle}</SourcesHeading>
+                  </View>
                 </View>
-                <View role="list" aria-label={c.listLabel(themeTitle)} style={{ gap: spacing.md }}>
+                <View role="list" aria-label={c.listLabel(themeTitle)} onLayout={onListLayout(group.theme)} style={{ gap: spacing.md }}>
                   {group.notes.map((n) => (
                     <View key={n.note.id} role="listitem" onLayout={onNoteLayout(group.theme, n.note.id)}>
                       <NoteCard
                         note={n}
                         open={open.has(n.note.id)}
                         highlighted={n.note.id === view.targetNoteId}
-                        romanizationMode={romanizationMode}
                         revealed={revealed}
                         onToggle={() => toggle(n)}
                         onHear={() => hear(n)}
-                        onOpenStory={() => navigation.navigate('EpisodeDetail', { episodeId: n.episodeId })}
+                        // Pushed: navigate would pop back to an episode page already in the stack.
+                        onOpenStory={actions.storyLinks ? () => navigation.push('EpisodeDetail', { episodeId: n.episodeId }) : undefined}
                       />
                     </View>
                   ))}
@@ -233,7 +279,6 @@ function NoteCard({
   note: n,
   open,
   highlighted,
-  romanizationMode,
   revealed,
   onToggle,
   onHear,
@@ -242,13 +287,14 @@ function NoteCard({
   note: FoundNote;
   open: boolean;
   highlighted: boolean;
-  romanizationMode: RomanizationMode;
   revealed: ReadonlySet<string>;
   onToggle: () => void;
   onHear: () => void;
-  onOpenStory: () => void;
+  /** "From the story"; not drawn over a running quest. */
+  onOpenStory: (() => void) | undefined;
 }): React.ReactElement {
   const messages = useMessages();
+  const romanizationMode = useRomanizationMode();
   const locale = useLocale();
   const c = shelfCopy(messages).cultureNotes;
   const id = n.note.id;
@@ -284,26 +330,28 @@ function NoteCard({
           </Body>
         </View>
       ) : null}
-      <Pressable
-        onPress={onOpenStory}
-        accessibilityRole="button"
-        testID={`culture-note-story-${id}`}
-        style={({ pressed }) => ({
-          minHeight: touchTarget.min,
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: spacing.md,
-          paddingHorizontal: spacing.md,
-          borderRadius: radii.md,
-          backgroundColor: pressed ? colors.surface.sunken : colors.surface.canvas,
-        })}
-      >
-        <Body weight="semibold" style={{ flexShrink: 1 }}>
-          {c.fromStory(n.storyTitle.en)}
-        </Body>
-        <Icon name="arrow-right" size={spacing.xl} color={colors.text.secondary} />
-      </Pressable>
+      {onOpenStory ? (
+        <Pressable
+          onPress={onOpenStory}
+          accessibilityRole="button"
+          testID={`culture-note-story-${id}`}
+          style={({ pressed }) => ({
+            minHeight: touchTarget.min,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: spacing.md,
+            paddingHorizontal: spacing.md,
+            borderRadius: radii.md,
+            backgroundColor: pressed ? colors.surface.sunken : colors.surface.canvas,
+          })}
+        >
+          <Body weight="semibold" style={{ flexShrink: 1 }}>
+            {c.fromStory(n.storyTitle.en)}
+          </Body>
+          <Icon name="arrow-right" size={spacing.xl} color={colors.text.secondary} />
+        </Pressable>
+      ) : null}
       <Disclosure label={c.whereFrom} open={open} onToggle={onToggle} testID={`culture-note-sources-${id}`}>
         <View
           style={{ gap: spacing.xs, padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surface.sunken }}

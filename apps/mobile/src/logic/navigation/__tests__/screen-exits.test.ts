@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
-import { backOrHome, linkOpenRoute, resolveScreenExits } from '../screen-exits';
+import { backOrHome, linkOpenRoute, resolveOptionalExit, resolveScreenExits } from '../screen-exits';
 
 /**
  * F-BROWSE-001 §4.7 (BR-5c): the navigation adapter. `MinigameScreen`,
@@ -73,6 +73,27 @@ describe('resolveScreenExits', () => {
   });
 });
 
+describe('resolveOptionalExit', () => {
+  it('uses the host function when one is given', () => {
+    const host = vi.fn();
+    const learnerRoute = vi.fn();
+    resolveOptionalExit(host, learnerRoute)?.('cn-a');
+    expect(host).toHaveBeenCalledWith('cn-a');
+    expect(learnerRoute).not.toHaveBeenCalled();
+  });
+
+  it('keeps the learner route when no prop is given, and has none without a learner stack', () => {
+    const learnerRoute = vi.fn();
+    resolveOptionalExit(undefined, learnerRoute)?.('cn-b');
+    expect(learnerRoute).toHaveBeenCalledWith('cn-b');
+    expect(resolveOptionalExit(undefined, undefined)).toBeUndefined();
+  });
+
+  it('null hides the exit even where the learner route exists', () => {
+    expect(resolveOptionalExit(null, vi.fn())).toBeUndefined();
+  });
+});
+
 describe('linkOpenRoute', () => {
   it('has no Open route when links are copy-only, and never reads the gate', () => {
     const gate = vi.fn(() => true);
@@ -110,6 +131,26 @@ describe('screens take their exits through the adapter (BR-5c)', () => {
   it('the reader opens Sources through a prop with the learner route as default', () => {
     const source = read('story/StoryReaderScreen.tsx');
     expect(source).toContain('onOpenSources?:');
+  });
+
+  it.each(['story/StoryReaderScreen.tsx', 'minigames/MinigameScreen.tsx'])(
+    '%s opens Culture notes through a prop, the learner route only as its default (F-STORY-004 PR 4.7)',
+    (file) => {
+      const source = read(file);
+      expect(source).toContain('onOpenCultureNote?: ((noteId: string) => void) | null;');
+      expect(source).toMatch(/resolveOptionalExit\(\s*onOpenCultureNote,/);
+      // Pushed, so a Culture notes screen lower in the stack is never popped back to.
+      expect(source).toContain("navigation.push('CultureNotes',");
+      expect(source).not.toContain("navigate('CultureNotes'");
+    },
+  );
+
+  it('the quest step takes Culture notes from the game shell, never from the learner stack itself', () => {
+    const game = read('minigames/StoryReadGame.tsx');
+    expect(game).not.toContain('useNavigation');
+    expect(game).toContain('onOpenCultureNote');
+    // Over a running quest the screen offers Back only.
+    expect(read('minigames/MinigameScreen.tsx')).toContain("from: 'quest'");
   });
 
   it('Sources offers Copy link only when links are copy-only', () => {

@@ -5,12 +5,14 @@ import { scanLearnerCopy } from '../../homework/banned-text';
 import { foundNotes, type FoundNote } from '../culture-notes';
 import {
   CULTURE_NOTES_AUDIO_SOURCE,
+  cultureNotesActions,
   cultureNotesCard,
   cultureNotesScreenView,
   noteCardArtId,
   noteTermChip,
   noteTermSpeech,
   noteViewedPayload,
+  storyNotesFound,
 } from '../culture-notes-view';
 import { shelfCopy } from '../shelf-copy';
 import { questId, shelfIndex, snapshot, story } from './shelf-fixture';
@@ -117,6 +119,29 @@ describe('cultureNotesScreenView', () => {
 
   it('nothing found: no groups (the empty card shows)', () => {
     expect(cultureNotesScreenView({ notes: [] })).toEqual({ groups: [], count: 0, targetNoteId: null });
+  });
+});
+
+describe('storyNotesFound (the reader draws "More in Culture notes" only then)', () => {
+  it('is true once a quest of the story is finished, so the screen lists the note', () => {
+    expect(storyNotesFound(ALL, 'story:sun')).toBe(true);
+  });
+
+  it('is false on a first read (nothing of that story found yet) and with nothing found at all', () => {
+    const sunOnly = foundNotes(index, STORIES, snapshot([{ questId: questId('sun'), completedAt: at(1) }]));
+    expect(storyNotesFound(sunOnly, 'story:tiger')).toBe(false);
+    expect(storyNotesFound([], 'story:sun')).toBe(false);
+  });
+});
+
+describe('cultureNotesActions (where the screen may send the learner)', () => {
+  it('from the Library, the episode page or the replay reader: story links, and Go to Story Time when that tab is offered', () => {
+    expect(cultureNotesActions({ storyTimeOffered: true })).toEqual({ storyLinks: true, toStoryTime: true });
+    expect(cultureNotesActions({ storyTimeOffered: false })).toEqual({ storyLinks: true, toStoryTime: false });
+  });
+
+  it('over a running quest: Back only, so nothing can unwind the quest run', () => {
+    expect(cultureNotesActions({ from: 'quest', storyTimeOffered: true })).toEqual({ storyLinks: false, toStoryTime: false });
   });
 });
 

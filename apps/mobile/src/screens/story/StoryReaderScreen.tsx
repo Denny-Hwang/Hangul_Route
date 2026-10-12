@@ -1,12 +1,13 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useMemo } from 'react';
 import { storyById } from '../../content/stories';
-import { backOrHome, resolveScreenExits, type ScreenExitProps } from '../../logic/navigation/screen-exits';
+import { backOrHome, resolveOptionalExit, resolveScreenExits, type ScreenExitProps } from '../../logic/navigation/screen-exits';
 import { sourcesRouteParams, type SourcesRouteParams } from '../../logic/story/source-link';
 import { useLocale } from '../../i18n/use-messages';
 import { readerStory } from '../../logic/story/reader-locale';
 import type { RootStackParamList } from '../../navigation/types';
 import { StoryReaderView } from './StoryReaderView';
+import { useStoryNotesFound } from './use-story-notes-found';
 
 /**
  * The learner stack passes `route` and `navigation`; another host (All lessons, F-BROWSE-001 §4.7)
@@ -14,9 +15,14 @@ import { StoryReaderView } from './StoryReaderView';
  */
 type Props = {
   route: { params: RootStackParamList['StoryReader'] };
-  navigation?: Pick<NativeStackScreenProps<RootStackParamList, 'StoryReader'>['navigation'], 'canGoBack' | 'goBack' | 'navigate'>;
+  navigation?: Pick<NativeStackScreenProps<RootStackParamList, 'StoryReader'>['navigation'], 'canGoBack' | 'goBack' | 'navigate' | 'push'>;
   /** Opens Sources over the reader; the learner default is the `StorySources` route. */
   onOpenSources?: (params: SourcesRouteParams) => void;
+  /**
+   * The note card's "More in Culture notes" (F-STORY-004 PR 4.7); the learner default pushes
+   * `CultureNotes { noteId }`. `null`, or no learner stack, draws no button.
+   */
+  onOpenCultureNote?: ((noteId: string) => void) | null;
 } & ScreenExitProps;
 
 const NOTHING = (): void => undefined;
@@ -29,7 +35,7 @@ const NOTHING = (): void => undefined;
  * episode page). Done, Close and the back gesture return to where it came from.
  * Sources (top bar and end page, PR 2.7) opens `StorySources` on top of it.
  */
-export function StoryReaderScreen({ route, navigation, onOpenSources, ...exitProps }: Props): React.ReactElement {
+export function StoryReaderScreen({ route, navigation, onOpenSources, onOpenCultureNote, ...exitProps }: Props): React.ReactElement {
   const { storyId, level, sceneIndex } = route.params;
   const locale = useLocale();
   // The story in the UI language, with the voice of the narration shown in each scene (PR 2.8).
@@ -56,6 +62,16 @@ export function StoryReaderScreen({ route, navigation, onOpenSources, ...exitPro
     [navigation, onOpenSources, storyId],
   );
 
+  // Only once the story's notes are found: the screen lists found notes only.
+  const notesFound = useStoryNotesFound(storyId);
+  const openCultureNote = useMemo(() => {
+    const exit = resolveOptionalExit(
+      onOpenCultureNote,
+      navigation ? (noteId: string): void => navigation.push('CultureNotes', { noteId }) : undefined,
+    );
+    return notesFound ? exit : undefined;
+  }, [navigation, onOpenCultureNote, notesFound]);
+
   return (
     <StoryReaderView
       story={story}
@@ -67,7 +83,7 @@ export function StoryReaderScreen({ route, navigation, onOpenSources, ...exitPro
       onFinish={leave}
       onClose={leave}
       onOpenSources={openSources}
-      onOpenCultureNote={(noteId) => navigation.navigate('CultureNotes', { noteId })}
+      onOpenCultureNote={openCultureNote}
       narrationLangs={narrationLangs}
       sourceStory={source}
     />

@@ -57,3 +57,17 @@ export function linkOpenRoute(onOpenLink: ScreenExitProps['onOpenLink'], gateOpe
   if (onOpenLink !== undefined) return 'host';
   return gateOpensNow() ? 'hand-off' : 'gate';
 }
+
+/**
+ * An exit a screen may not have (the reader's "More in Culture notes",
+ * F-STORY-004 PR 4.7): the host's function, else the learner route when the
+ * learner stack hosts the screen. `null`, or no learner stack, leaves it out,
+ * so its button is not drawn.
+ */
+export function resolveOptionalExit<A extends unknown[]>(
+  prop: ((...args: A) => void) | null | undefined,
+  learner: ((...args: A) => void) | undefined,
+): ((...args: A) => void) | undefined {
+  if (prop === null) return undefined;
+  return prop ?? learner;
+}

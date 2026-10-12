@@ -68,6 +68,36 @@ export function cultureNotesScreenView(input: { notes: readonly FoundNote[]; sto
   return { groups: groupNotesByTheme(shown), count: shown.length, targetNoteId: target };
 }
 
+/**
+ * Whether the reader draws "More in Culture notes" for this story (F-STORY-002
+ * 2.8, F-STORY-004 PR 4.7): only once its notes are found (a quest of the
+ * story finished), so the screen it opens lists the note. On a first read the
+ * button is not drawn: the screen would not show the note yet.
+ */
+export function storyNotesFound(notes: readonly FoundNote[], storyId: string): boolean {
+  return notes.some((n) => n.storyId === storyId);
+}
+
+/** `CultureNotes { from: 'quest' }`: opened by the reader inside a running quest. */
+export type CultureNotesFrom = 'quest';
+
+export interface CultureNotesActions {
+  /** "From the story" on each note (its episode page). */
+  storyLinks: boolean;
+  /** The empty card's Go to Story Time. */
+  toStoryTime: boolean;
+}
+
+/**
+ * Where the screen may send the learner besides Back. Over a running quest it
+ * offers Back only: an episode page or a Library tab would unwind the quest
+ * run without its leave sheet. Go to Story Time only when that tab is offered.
+ */
+export function cultureNotesActions(input: { from?: CultureNotesFrom; storyTimeOffered: boolean }): CultureNotesActions {
+  const overQuest = input.from === 'quest';
+  return { storyLinks: !overQuest, toStoryTime: !overQuest && input.storyTimeOffered };
+}
+
 /** `culture.note.viewed` (§3.11): ids only. */
 export function noteViewedPayload(n: Pick<FoundNote, 'note' | 'storyId'>): { noteId: string; storyId: string } {
   return { noteId: n.note.id, storyId: n.storyId };
