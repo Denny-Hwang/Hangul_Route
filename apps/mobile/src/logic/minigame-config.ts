@@ -116,6 +116,31 @@ const W = {
   hanguk: word('한국', 'hanguk', 'Korea', ['han', 'guk']),
   hyodo: word('효도', 'hyodo', 'respect for parents', ['hyo', 'do']),
   uyu: word('우유', 'uyu', 'milk', ['u', 'yu']),
+  // Nature (quests 10-12)
+  gom: word('곰', 'gom', 'bear'),
+  bom: word('봄', 'bom', 'spring (season)'),
+  bap: word('밥', 'bap', 'rice'),
+  jip: word('집', 'jip', 'house'),
+  san: word('산', 'san', 'mountain'),
+  gang: word('강', 'gang', 'river'),
+  bada: word('바다', 'bada', 'sea', ['ba', 'da']),
+  haneul: word('하늘', 'haneul', 'sky', ['ha', 'neul']),
+  byeol: word('별', 'byeol', 'star'),
+  bam: word('밤', 'bam', 'night'),
+  boreumdal: word('보름달', 'boreumdal', 'full moon', ['bo', 'reum', 'dal']),
+  // Crafts (quests 13-15)
+  yeon: word('연', 'yeon', 'kite'),
+  gong: word('공', 'gong', 'ball'),
+  jul: word('줄', 'jul', 'rope'),
+  nori: word('놀이', 'nori', 'game, play', ['no', 'ri']),
+  hanji: word('한지', 'hanji', 'Korean paper', ['han', 'ji']),
+  jongi: word('종이', 'jongi', 'paper', ['jong', 'i']),
+  cheongja: word('청자', 'cheongja', 'celadon pottery', ['cheong', 'ja']),
+  dojagi: word('도자기', 'dojagi', 'pottery', ['do', 'ja', 'gi']),
+  hangeul: word('한글', 'hangeul', 'the Korean alphabet', ['han', 'geul']),
+  hoya: word('호야', 'hoya', 'Hoya the tiger', ['ho', 'ya']),
+  annyeong: word('안녕', 'annyeong', 'hi, bye (to friends)', ['an', 'nyeong']),
+  sarang: word('사랑', 'sarang', 'love', ['sa', 'rang']),
 } as const;
 
 /** Theme words (pictured culture words, exposure only, R3): they may hold symbols not taught yet. */
@@ -124,6 +149,14 @@ const T = {
   bap: word('밥', 'bap', 'rice'),
   gimbap: word('김밥', 'gimbap', 'kimbap', ['gim', 'bap']),
   jeotgarak: word('젓가락', 'jeotgarak', 'chopsticks', ['jeot', 'ga', 'rak']),
+  // Nature and Crafts Pic-Word boards (quests 10, 13, 14): glosses name what the card picture shows.
+  horangi: word('호랑이', 'horangi', 'tiger', ['ho', 'rang', 'i']),
+  kkachi: word('까치', 'kkachi', 'magpie', ['kka', 'chi']),
+  yut: word('윷', 'yut', 'yut sticks'),
+  paengi: word('팽이', 'paengi', 'spinning top', ['paeng', 'i']),
+  jegi: word('제기', 'jegi', 'foot shuttlecock', ['je', 'gi']),
+  but: word('붓', 'but', 'writing brush'),
+  jongijeopgi: word('종이접기', 'jongijeopgi', 'paper folding', ['jong', 'i', 'jeop', 'gi']),
 } as const;
 
 export const minigameScopes: Record<string, MinigameScope> = {
@@ -367,58 +400,212 @@ export const minigameScopes: Record<string, MinigameScope> = {
     },
   },
 
-  // Stage 1 / Nature
-  'minigame:s1-nature-card-1': {
-    kind: 'card-match',
-    cardPairs: [
-      { ko: '호랑이', en: 'Tiger', romanization: 'horangi' },
-      { ko: '까치', en: 'Magpie', romanization: 'kkachi' },
-      { ko: '달', en: 'Moon', romanization: 'dal' },
-      { ko: '산', en: 'Mountain', romanization: 'san' },
-    ],
+  // Stage 1 / Nature / Q10 — final ㅁ and final ㅂ, reviewing finals ㄴ ㄹ ㅇ ㄱ (quest 10)
+  'minigame:s1-nature-q1-play': {
+    kind: 'listen-pick',
+    listenPick: {
+      // Hear a closed syllable, pick it among four that differ only in the final: m against p, and an earlier final.
+      rounds: [
+        lp.syl('곰', ['곱', '공', '고'], W.gom.en),
+        lp.syl('봄', ['봅', '본', '볼'], W.bom.en),
+        lp.syl('밥', ['밤', '반', '박'], W.bap.en),
+        lp.syl('집', ['짐', '진', '질'], W.jip.en),
+        lp.syl('입', ['임', '인', '일'], 'mouth'),
+        lp.syl('감', ['갑', '간', '각'], 'persimmon (fruit)'),
+      ],
+    },
   },
-  'minigame:s1-nature-match-1': {
-    kind: 'match-sound',
-    jamoIds: [J('hieut'), J('kieuk'), J('mieum'), J('siot')],
-    rounds: 4,
+  // Animals and sky of Korean stories, on their card pictures.
+  'minigame:s1-nature-q1-apply': {
+    kind: 'pic-word-match',
+    picWord: {
+      boards: [
+        pw([
+          { word: T.horangi, picture: 'card:tiger' },
+          { word: T.kkachi, picture: 'card:magpie' },
+          { word: W.dal, picture: 'card:moon' },
+          { word: W.san, picture: 'card:mountain' },
+        ]),
+      ],
+    },
   },
-
-  // Stage 1 / Crafts
-  'minigame:s1-crafts-card-1': {
-    kind: 'card-match',
-    cardPairs: [
-      { ko: '윷', en: 'Yut sticks', romanization: 'yut' },
-      { ko: '연', en: 'Kite', romanization: 'yeon' },
-      { ko: '팽이', en: 'Top', romanization: 'paengi' },
-      { ko: '제기', en: 'Foot shuttlecock', romanization: 'jegi' },
-    ],
-  },
-  'minigame:s1-crafts-match-1': {
-    kind: 'match-sound',
-    jamoIds: [J('ieung'), J('pieup'), J('jieut'), J('kieuk')],
-    rounds: 4,
-  },
-  'minigame:s1-crafts-story-1': {
-    kind: 'story-sequence',
-    storySteps: [
-      { id: 'a', labelEn: 'Pick teams', labelKo: '편 가르기', romanization: 'pyeon gareugi' },
-      { id: 'b', labelEn: 'Throw the yut', labelKo: '윷 던지기', romanization: 'yut deonjigi' },
-      { id: 'c', labelEn: 'Move the piece', labelKo: '말 옮기기', romanization: 'mal omgigi' },
-      { id: 'd', labelEn: 'Win!', labelKo: '승리!', romanization: 'seungni' },
-    ],
+  'minigame:s1-nature-q1-check': {
+    kind: 'listen-pick',
+    listenPick: {
+      rounds: [lp.syl('곰', ['고', '공', '골'], W.gom.en), lp.word(W.jip, [W.bap, W.gom, W.bom])],
+    },
   },
 
-  // Stage 1 / Nature — Culture Quiz (Korean word -> English meaning)
-  'minigame:s1-nature-quiz-1': {
-    kind: 'culture-quiz',
-    cardPairs: [
-      { ko: '호랑이', en: 'Tiger', romanization: 'horangi' },
-      { ko: '까치', en: 'Magpie', romanization: 'kkachi' },
-      { ko: '달', en: 'Moon', romanization: 'dal' },
-      { ko: '산', en: 'Mountain', romanization: 'san' },
-      { ko: '바다', en: 'Sea', romanization: 'bada' },
+  // Stage 1 / Nature / Q11 — nothing new: nature words with every final (quest 11)
+  'minigame:s1-nature-q2-play': {
+    kind: 'listen-pick',
+    listenPick: {
+      rounds: [
+        lp.word(W.san, [W.gang, W.byeol, W.gom]),
+        lp.word(W.gang, [W.san, W.bada, W.haneul]),
+        lp.word(W.bada, [W.haneul, W.san, W.byeol]),
+        lp.word(W.haneul, [W.bada, W.gang, W.gom]),
+        lp.word(W.byeol, [W.gom, W.san, W.gang]),
+        lp.word(W.gom, [W.byeol, W.bada, W.haneul]),
+      ],
+    },
+  },
+  'minigame:s1-nature-q2-apply': {
+    kind: 'build-letter',
+    syllables: [
+      { ko: '산', romanization: 'san', jamoChars: ['ㅅ', 'ㅏ', 'ㄴ'], jamoIds: [J('siot'), J('a'), Jb('nieun')] },
+      { ko: '강', romanization: 'gang', jamoChars: ['ㄱ', 'ㅏ', 'ㅇ'], jamoIds: [J('giyeok'), J('a'), Jb('ieung')] },
+      { ko: '별', romanization: 'byeol', jamoChars: ['ㅂ', 'ㅕ', 'ㄹ'], jamoIds: [J('bieup'), J('yeo'), Jb('rieul')] },
+      { ko: '곰', romanization: 'gom', jamoChars: ['ㄱ', 'ㅗ', 'ㅁ'], jamoIds: [J('giyeok'), J('o'), Jb('mieum')] },
     ],
+  },
+  'minigame:s1-nature-q2-check': {
+    kind: 'listen-pick',
+    listenPick: {
+      rounds: [
+        // Quests that teach nothing new: hear a word, pick its picture (section 3.3).
+        lp.pic(W.san, ['card:mountain', 'card:sea', 'card:moon', 'card:tiger']),
+        lp.word(W.gang, [W.san, W.bada, W.haneul]),
+      ],
+    },
+  },
+
+  // Stage 1 / Nature / Q12 — nothing new: the night sky (quest 12)
+  'minigame:s1-nature-q3-play': {
+    kind: 'listen-pick',
+    listenPick: {
+      rounds: [
+        lp.word(W.dal, [W.byeol, W.bam, W.boreumdal]),
+        lp.word(W.byeol, [W.dal, W.bam, W.san]),
+        lp.word(W.bam, [W.bom, W.dal, W.byeol]),
+        lp.word(W.boreumdal, [W.dal, W.haneul, W.bam]),
+        lp.word(W.haneul, [W.boreumdal, W.byeol, W.san]),
+        lp.word(W.san, [W.bam, W.dal, W.haneul]),
+      ],
+    },
+  },
+  'minigame:s1-nature-q3-apply': {
+    kind: 'trace-stroke',
+    jamoIds: [Jb('mieum'), Jb('bieup'), Jb('rieul'), Jb('ieung')],
     rounds: 4,
+  },
+  'minigame:s1-nature-q3-check': {
+    kind: 'listen-pick',
+    listenPick: {
+      rounds: [
+        lp.pic(W.dal, ['card:moon', 'card:mountain', 'card:sea', 'card:kite']),
+        lp.word(W.boreumdal, [W.dal, W.byeol, W.bam]),
+      ],
+    },
+  },
+
+  // Stage 1 / Crafts / Q13 — nothing new: games to play (quest 13)
+  'minigame:s1-crafts-q1-play': {
+    kind: 'build-letter',
+    // Six closed blocks: the four of the section 3.6 table and 북, 집, so every final but m is built (6 rounds, R4).
+    // No block repeats a glyph (밥 would show two identical ㅂ tiles, and the game scores slots by id).
+    syllables: [
+      { ko: '연', romanization: 'yeon', jamoChars: ['ㅇ', 'ㅕ', 'ㄴ'], jamoIds: [J('ieung'), J('yeo'), Jb('nieun')] },
+      { ko: '공', romanization: 'gong', jamoChars: ['ㄱ', 'ㅗ', 'ㅇ'], jamoIds: [J('giyeok'), J('o'), Jb('ieung')] },
+      { ko: '줄', romanization: 'jul', jamoChars: ['ㅈ', 'ㅜ', 'ㄹ'], jamoIds: [J('jieut'), J('u'), Jb('rieul')] },
+      { ko: '놀', romanization: 'nol', jamoChars: ['ㄴ', 'ㅗ', 'ㄹ'], jamoIds: [J('nieun'), J('o'), Jb('rieul')] },
+      { ko: '북', romanization: 'buk', jamoChars: ['ㅂ', 'ㅜ', 'ㄱ'], jamoIds: [J('bieup'), J('u'), Jb('giyeok')] },
+      { ko: '집', romanization: 'jip', jamoChars: ['ㅈ', 'ㅣ', 'ㅂ'], jamoIds: [J('jieut'), J('i'), Jb('bieup')] },
+    ],
+  },
+  // Folk games on their card pictures.
+  'minigame:s1-crafts-q1-apply': {
+    kind: 'pic-word-match',
+    picWord: {
+      boards: [
+        pw([
+          { word: T.yut, picture: 'card:yutnori' },
+          { word: W.yeon, picture: 'card:kite' },
+          { word: T.paengi, picture: 'card:top' },
+          { word: T.jegi, picture: 'card:jegi' },
+        ]),
+      ],
+    },
+  },
+  'minigame:s1-crafts-q1-check': {
+    kind: 'listen-pick',
+    listenPick: {
+      rounds: [
+        lp.pic(W.yeon, ['card:kite', 'card:top', 'card:jegi', 'card:yutnori']),
+        lp.word(W.nori, [W.gong, W.jul, W.yeon]),
+      ],
+    },
+  },
+
+  // Stage 1 / Crafts / Q14 — nothing new: paper and pottery (quest 14)
+  'minigame:s1-crafts-q2-play': {
+    kind: 'listen-pick',
+    listenPick: {
+      rounds: [
+        lp.word(W.hanji, [W.jongi, W.cheongja, W.yeon]),
+        lp.word(W.jongi, [W.hanji, W.dojagi, W.gong]),
+        lp.word(W.cheongja, [W.dojagi, W.hanji, W.jongi]),
+        lp.word(W.dojagi, [W.cheongja, W.jongi, W.gong]),
+        lp.word(W.yeon, [W.gong, W.hanji, W.cheongja]),
+        lp.word(W.gong, [W.yeon, W.dojagi, W.jongi]),
+      ],
+    },
+  },
+  // Crafts of paper, clay and the brush, on their card pictures.
+  'minigame:s1-crafts-q2-apply': {
+    kind: 'pic-word-match',
+    picWord: {
+      boards: [
+        pw([
+          { word: W.hanji, picture: 'card:hanji' },
+          { word: W.cheongja, picture: 'card:pottery' },
+          { word: T.but, picture: 'card:brush' },
+          { word: T.jongijeopgi, picture: 'card:origami' },
+        ]),
+      ],
+    },
+  },
+  'minigame:s1-crafts-q2-check': {
+    kind: 'listen-pick',
+    listenPick: {
+      rounds: [
+        lp.pic(W.cheongja, ['card:pottery', 'card:hanji', 'card:brush', 'card:origami']),
+        lp.word(W.hanji, [W.jongi, W.cheongja, W.dojagi]),
+      ],
+    },
+  },
+
+  // Stage 1 / Crafts / Q15 — nothing new: read Hangul! (quest 15)
+  'minigame:s1-crafts-q3-play': {
+    kind: 'listen-pick',
+    listenPick: {
+      rounds: [
+        lp.word(W.hangeul, [W.hanguk, W.hanbok, W.hoya]),
+        lp.word(W.hoya, [W.hangeul, W.annyeong, W.sarang]),
+        lp.word(W.annyeong, [W.sarang, W.hoya, W.hanguk]),
+        lp.word(W.sarang, [W.annyeong, W.hangeul, W.hanbok]),
+        lp.word(W.hanguk, [W.hanbok, W.hangeul, W.sarang]),
+        lp.word(W.hanbok, [W.hanguk, W.hoya, W.annyeong]),
+      ],
+    },
+  },
+  'minigame:s1-crafts-q3-apply': {
+    kind: 'build-letter',
+    syllables: [
+      { ko: '한', romanization: 'han', jamoChars: ['ㅎ', 'ㅏ', 'ㄴ'], jamoIds: [J('hieut'), J('a'), Jb('nieun')] },
+      { ko: '글', romanization: 'geul', jamoChars: ['ㄱ', 'ㅡ', 'ㄹ'], jamoIds: [J('giyeok'), J('eu'), Jb('rieul')] },
+      { ko: '호', romanization: 'ho', jamoChars: ['ㅎ', 'ㅗ'], jamoIds: [J('hieut'), J('o')] },
+      { ko: '야', romanization: 'ya', jamoChars: ['ㅇ', 'ㅑ'], jamoIds: [J('ieung'), J('ya')] },
+    ],
+  },
+  'minigame:s1-crafts-q3-check': {
+    kind: 'listen-pick',
+    listenPick: {
+      rounds: [
+        lp.pic(W.hangeul, ['card:hangul-day', 'card:hanbok', 'card:tiger', 'card:book']),
+        lp.word(W.annyeong, [W.sarang, W.hoya, W.hangeul]),
+      ],
+    },
   },
 
   // Stage 2 / Food & Daily Life — Lunch Box Words (taste)

@@ -5,7 +5,9 @@ import {
   narrativeLine,
   replyOptionLabel,
   traceCanvasA11yLabel,
+  traceHeadingText,
   traceLetterA11yText,
+  traceTargetA11yText,
 } from '../korean-labels';
 import type { MinigameScope } from '../minigame-config';
 
@@ -38,6 +40,14 @@ describe('jamo screen-reader labels (F-CNT-002 §3.3: a11yRomanization)', () => 
     const a11y = getMessages('en').a11y.minigame;
     expect(traceLetterA11yText('g/k', a11y.traceLetter)).toBe('Trace the letter g or k');
     expect(traceCanvasA11yLabel('g/k', a11y.traceCanvas)).toBe('Draw the letter g or k with your finger');
+  });
+
+  it('names a final consonant as a final in the trace heading and its screen-reader text (F-QUEST-002 Q-8, quest 12)', () => {
+    const m = getMessages('en');
+    expect(traceHeadingText({ romanization: 'm', kind: 'batchim' }, m.learner.minigame.trace)).toBe('Trace the final m');
+    expect(traceHeadingText({ romanization: 'm', kind: 'consonant' }, m.learner.minigame.trace)).toBe('Trace the letter m');
+    expect(traceTargetA11yText({ romanization: 'p', kind: 'batchim' }, m.a11y.minigame)).toBe('Trace the final p');
+    expect(traceTargetA11yText({ romanization: 'g/k', kind: 'consonant' }, m.a11y.minigame)).toBe('Trace the letter g or k');
   });
 });
 

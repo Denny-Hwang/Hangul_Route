@@ -70,18 +70,29 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
     }
   });
 
-  it('every quest with a Discover step shows a letter slide for each jamo it discovers, before any quiz', () => {
+  it('every quest with a Discover step shows a letter slide for each jamo and a word slide for each word it discovers, before any quiz', () => {
     const discovering = questsAll.filter((q) => q.steps.some((s) => s.kind === 'discover'));
     expect(discovering.length).toBeGreaterThan(0);
     for (const q of discovering) {
-      const jamoIds = q.steps.flatMap((s) => s.discover?.pages.flatMap((p) => p.items.flatMap((it) => (it.type === 'jamo' ? [it.jamoId] : []))) ?? []);
-      expect(jamoIds.length, q.id).toBeGreaterThan(0);
+      const items = q.steps.flatMap((s) => s.discover?.pages.flatMap((p) => p.items) ?? []);
+      const jamoIds = items.flatMap((it) => (it.type === 'jamo' ? [it.jamoId] : []));
+      // The reading quests of F-QUEST-002 rule R5 (Q-8) discover words only.
+      const words = items.flatMap((it) => (it.type === 'word' ? [it.word.ko] : []));
+      expect(jamoIds.length + words.length, q.id).toBeGreaterThan(0);
       const { slides } = expandDeck(deck([{ kind: 'quest', id: q.id }]), lectureBundle('en'), { canPlayKorean: true });
       const letterAt = new Map(slides.flatMap((s, i) => (s.kind === 'letter' ? [[s.jamoId, i] as const] : [])));
+      const wordAt = new Map<string, number>();
+      slides.forEach((s, i) => {
+        if (s.kind === 'vocab' && !wordAt.has(s.word.ko)) wordAt.set(s.word.ko, i);
+      });
       const firstQuiz = slides.findIndex((s) => s.kind === 'quiz');
       for (const id of jamoIds) {
         expect(letterAt.has(id), `${q.id} ${id}`).toBe(true);
         if (firstQuiz >= 0) expect(letterAt.get(id)!, `${q.id} ${id}`).toBeLessThan(firstQuiz);
+      }
+      for (const ko of words) {
+        expect(wordAt.has(ko), `${q.id} ${ko}`).toBe(true);
+        if (firstQuiz >= 0) expect(wordAt.get(ko)!, `${q.id} ${ko}`).toBeLessThan(firstQuiz);
       }
     }
   });

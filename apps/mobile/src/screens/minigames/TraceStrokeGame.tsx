@@ -23,7 +23,7 @@ import type { JamoStrokePoint } from '../../content/jamo-strokes';
 import { strokesForJamo } from '../../content/jamo-strokes';
 import { useMessages } from '../../i18n/use-messages';
 import type { LayoutChangeEvent } from 'react-native';
-import { traceCanvasA11yLabel, traceLetterA11yText } from '../../logic/korean-labels';
+import { traceCanvasA11yLabel, traceHeadingText, traceTargetA11yText } from '../../logic/korean-labels';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { buildTraceStrokeRounds, type TraceStrokeRound } from '../../logic/round-builder';
 import { pointsToPathD } from '../../logic/stroke-diagram';
@@ -278,8 +278,8 @@ export function TraceStrokeGame({
 
   const prompt = (
     <View style={{ gap: spacing.xs }}>
-      <View accessible accessibilityRole="header" accessibilityLabel={traceLetterA11yText(round.jamo.romanization, m.a11y.minigame.traceLetter)}>
-        <Heading level="prompt">{copy.trace.heading(round.jamo.romanization)}</Heading>
+      <View accessible accessibilityRole="header" accessibilityLabel={traceTargetA11yText(round.jamo, m.a11y.minigame)}>
+        <Heading level="prompt">{traceHeadingText(round.jamo, copy.trace)}</Heading>
       </View>
       {stacked ? <Caption tone="muted">{copy.trace.instruction}</Caption> : null}
     </View>

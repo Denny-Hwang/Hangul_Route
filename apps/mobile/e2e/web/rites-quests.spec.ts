@@ -61,8 +61,8 @@ test('quest 7: the Seollal greeting in Korean, finals n and l at the bottom of t
   await page.screenshot({ path: test.info().outputPath('rites-q1-discover-finals.png'), fullPage: true });
   await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByText('Page 2 of 2', { exact: true })).toBeVisible();
-  await expect(page.getByTestId('discover-item-word:설날').locator('svg').first()).toBeVisible();
-  await expect(page.getByTestId('discover-item-word:떡국').locator('svg').first()).toBeVisible();
+  await expect(page.getByTestId('discover-item-word:설날').locator('svg')).toHaveCount(2);
+  await expect(page.getByTestId('discover-item-word:떡국').locator('svg')).toHaveCount(2);
   await page.screenshot({ path: test.info().outputPath('rites-q1-discover-theme.png'), fullPage: true });
   await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByText('Look and learn', { exact: true })).toHaveCount(0);
@@ -103,8 +103,8 @@ test('quest 8: Rice Cakes of Chuseok pages through ya, yeo, p and final ng to th
   await expect(page.getByTestId('discover-item-jamo:ieung-batchim')).toContainText('송편');
   await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByText('Page 3 of 3', { exact: true })).toBeVisible();
-  await expect(page.getByTestId('discover-item-word:추석').locator('svg').first()).toBeVisible();
-  await expect(page.getByTestId('discover-item-word:송편').locator('svg').first()).toBeVisible();
+  await expect(page.getByTestId('discover-item-word:추석').locator('svg')).toHaveCount(2);
+  await expect(page.getByTestId('discover-item-word:송편').locator('svg')).toHaveCount(2);
   await page.screenshot({ path: test.info().outputPath('rites-q2-discover-theme.png'), fullPage: true });
   await page.getByRole('button', { name: 'Continue' }).click();
 
