@@ -497,4 +497,14 @@ export const caregiver = {
   /** One wording everywhere (F-ROUTE-001 section 3.12): the placement report and My route's skills rows. */
   skillsNote:
     'The level check looks at reading and listening. Writing is practiced with tracing games and is not scored. The rows count finished quests that include these games; a game skipped inside a quest still counts.',
+  /**
+   * The way from the learner app to the grown-up area on the app host (F-APP-001 sections 3.6 and
+   * 3.9). A-6: the PIN screen opened for the grown-up area on a device with no PIN stored never
+   * offers to make one; it sends the grown-up to sign in instead (wireframe
+   * `parent/grown-up-home-card.md` Panel D). A-7 adds the Profile row and dashboard card strings.
+   */
+  grownUpHome: {
+    noPin: 'This device has no grown-up PIN. Sign in on the grown-up page instead.',
+    continue: { cta: 'Continue' },
+  },
 } as const;
