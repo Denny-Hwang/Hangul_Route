@@ -240,8 +240,9 @@ export function cellLabel(m: CellModel, stageTitle: string, themeTitle: string):
   - `stories-only`: border `colors.border.subtle`, background `colors.surface.paper`, `Icon name="library"` (replaces the lock) and the count mark; `onPress` → `onOpenStories`. **Not disabled**, never routed through `PinEntry`.
   - `placeholder`: unchanged (lock, disabled).
   - `accessibilityLabel` = `cellLabel(...)` (fixes "`letters episode for stage1`", `:160`: it names the stage title and the state, including "coming soon" and "N stories").
-- Stage header: unchanged. Add one muted caption under a row that has any stories-only cell (next to the existing `taste` caption, `:117-121`): "Heritage stories are open in the cells with books." (final copy in `JOURNEY_COPY`; the `library` glyph is three books, `packages/design-system/src/components/Icon/glyphs.ts:70-74`).
-- Explainer (`:130`): "Each cell is one episode. Cells with books also have heritage stories." (still no fractions).
+- Stage header: unchanged. Add one muted caption under a row that has any stories-only cell (next to the existing `taste` caption, `:117-121`): "Heritage stories are open in the cells with the books icon." (final copy in `learner.journey.storiesNote`, PR 5.5a: "the books icon" so it never reads as a Stage 5 `book` cell; the `library` glyph is three books, `packages/design-system/src/components/Icon/glyphs.ts:70-74`).
+- Explainer (`:130`): "Each cell is one episode." then, once any cell has stories, "A number in a cell's corner says how many heritage stories it has. A cell with the books icon has heritage stories to read." (`learner.journey.how.stories`, PR 5.5a; it names the count mark and the glyph apart; still no fractions).
+- As built (PR 5.5a): `cellModel`/`cellLabel` live in `logic/journey-cells.ts` and `GridCell` in `components/JourneyGrid.tsx` (extracted by BR-5b); `journeyCellState` uses the same playable rule as `cellModel` (shipped or ready), so a draft grid episode is a placeholder; `onOpenStories` is optional (All lessons draws the grid without it, and a stories-only cell is then not a button); when the placed-out check owns the top-right corner the count mark moves to the bottom-right; the mark's number is capped at 100 % font scale (it is decorative, the number is in the label).
 
 ### 3.6 Map surfaces for stories
 

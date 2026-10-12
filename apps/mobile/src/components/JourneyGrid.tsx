@@ -263,7 +263,7 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories }: GridC
             ...(placedOut ? { bottom: spacing.xxs } : { top: spacing.xxs }),
             right: spacing.xxs,
             minWidth: COUNT_MARK,
-            height: COUNT_MARK,
+            minHeight: COUNT_MARK,
             paddingHorizontal: spacing.xxs,
             borderRadius: radii.pill,
             backgroundColor: colors.surface.sunken,
@@ -273,7 +273,8 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories }: GridC
             justifyContent: 'center',
           }}
         >
-          <Text style={{ fontSize: typography.size.caption, fontWeight: '700', color: colors.text.primary }}>
+          {/* Decorative (the number is in the label), so it keeps its size at large text and stays in its circle. */}
+          <Text maxFontSizeMultiplier={1} style={{ fontSize: typography.size.caption, fontWeight: '700', color: colors.text.primary }}>
             {messages.learner.journey.countMark(count.value, count.more)}
           </Text>
         </View>
