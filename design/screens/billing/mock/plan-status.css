@@ -1,0 +1,39 @@
+/*
+ * F-BILL-002 B-9: static design mock of the learner Plan screen and the Profile plan card (not shipped code).
+ * Wireframe: design/wireframes/billing/plan-status.md. Every value is a token of
+ * packages/design-system/src/tokens.ts, read through the custom properties that
+ * ../../learning-route/mock/learning-route.css declares once (--spacing-xl is spacing.xl, and so on).
+ * Text sizes are in rem (token / 16), so a browser text size of 200 % enlarges every line.
+ */
+.board-note { color: var(--colors-text-muted); font-size: var(--size-caption); }
+
+/* The screen: Screen tone="canvas", reading column, everything centred like today's paywall. */
+.plan-screen { background: var(--colors-surface-canvas); display: flex; flex-direction: column; gap: var(--spacing-sm); padding: var(--spacing-lg) var(--gutter-compact) var(--spacing-xl); }
+
+/* Top bar: the "Plan" heading comes first in reading order (its label is a11y.planStatus); the back button sits over its left edge. */
+.plan-top { position: relative; min-height: var(--touch-min); display: flex; align-items: center; justify-content: center; padding: 0 var(--touch-min); }
+.plan-title { font-size: var(--size-prompt); font-weight: var(--weight-bold); line-height: var(--leading-tight); text-align: center; margin: 0; }
+.plan-back { position: absolute; left: 0; top: 0; }
+
+.plan-hoya { display: flex; justify-content: center; margin-top: var(--spacing-sm); }
+.plan-summary { font-size: var(--size-title); font-weight: var(--weight-bold); line-height: var(--leading-tight); text-align: center; margin: var(--spacing-md) 0 0; overflow-wrap: anywhere; }
+.plan-note { color: var(--colors-text-secondary); font-size: var(--size-body); line-height: var(--leading-normal); text-align: center; margin: 0; }
+
+/* Web only: the caption and Open billing (Button tone="secondary" size="lg", full width). */
+.plan-web { display: flex; flex-direction: column; gap: var(--spacing-sm); margin-top: var(--spacing-xl); }
+.plan-caption { color: var(--colors-text-secondary); font-size: var(--size-bodySm); line-height: var(--leading-normal); text-align: center; margin: 0; }
+.plan-failed { color: var(--colors-text-muted); font-size: var(--size-caption); text-align: center; margin: 0; overflow-wrap: anywhere; }
+.button-secondary { background: var(--colors-brand-secondary); color: var(--colors-text-onSecondary); }
+.plan-screen > .button { margin-top: var(--spacing-md); }
+.plan-web + .button { margin-top: var(--spacing-md); }
+.plan-note + .button { margin-top: var(--spacing-xl); }
+
+/* Profile plan card: Card padding="md" (spacing.lg), tone sunken (free) or success (full route); Button size="md". */
+.profile-plan { border-radius: var(--radii-lg); padding: var(--spacing-lg); box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.profile-plan-sunken { background: var(--colors-surface-sunken); }
+.profile-plan-success { background: var(--colors-feedback-successLight); }
+.profile-plan-row { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-md); }
+.profile-plan-row > .stack { flex: 1; min-width: 0; }
+.profile-plan-title { font-weight: var(--weight-semibold); margin: 0; }
+.profile-plan-note { color: var(--colors-text-muted); font-size: var(--size-caption); margin: 0; }
+.button-md { display: inline-flex; align-self: flex-start; min-height: var(--touch-min); align-items: center; padding: var(--spacing-sm) var(--spacing-xl); border-radius: var(--radii-pill); font-size: var(--size-body); font-weight: var(--weight-semibold); }
