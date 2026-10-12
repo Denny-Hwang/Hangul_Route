@@ -166,11 +166,29 @@ interface Facts {
   quests: ReadonlySet<string>;
 }
 
+/**
+ * What the went-well rules read: only a window with practice in it reaches them (section 3.6), so its day-by-day
+ * data are always there.
+ */
+interface WellFacts extends Facts {
+  activity: ActivitySummary;
+  window: NonNullable<LearnerReport['window']>;
+  upTo: string;
+  figures: NonNullable<LearnerReport['figures']>;
+  headline: NonNullable<LearnerReport['headline']>;
+}
+
 interface Plan {
   id: string;
   done: number;
   total: number;
 }
+
+/**
+ * Only a console viewer gets an action link (**Add to a plan**, **Open the plan**; the renderer still checks
+ * `plan.write`): the in-app report is not a plan builder, so a `device` line carries no link (section 3.6).
+ */
+const consoleViewer = (f: Facts): boolean => f.viewer !== 'device';
 
 const kindOf = (viewer: ReportViewer): 'class' | 'family' => (viewer === 'class' ? 'class' : 'family');
 
@@ -191,42 +209,46 @@ function localDayOf(iso: string, tz: number): string | null {
 }
 
 type Rule<C extends InsightCode> = (f: Facts) => LineOf<C> | null;
+type WellRule<C extends WentWellCode> = (f: WellFacts) => LineOf<C> | null;
 
-const W1: Rule<'stage_done'> = (f) => {
+const W1: WellRule<'stage_done'> = (f) => {
   const newest = f.milestones[f.milestones.length - 1];
   return newest ? { code: 'stage_done', params: { stage: { stage: newest.stage, n: newest.n } } } : null;
 };
 
-const W2: Rule<'letters_new'> = (f) => {
-  if (!f.activity || !f.window || f.upTo === null) return null;
+const W2: WellRule<'letters_new'> = (f) => {
+  // `all`: the letters of every day row the summary holds (the last 35 days), up to 5.
   const letters = lettersIn(f.activity.days, f.window.from, f.upTo).slice(0, LETTERS_NEW_MAX);
   return letters.length ? { code: 'letters_new', params: { letters } } : null;
 };
 
-const W3: Rule<'practice_days'> = (f) => {
-  const days = f.figures?.days.count ?? 0;
+const W3: WellRule<'practice_days'> = (f) => {
+  // A `practiced` headline already states the practice days ("Mina practiced on 3 days this week."): the line would
+  // say it again, so the next rule moves up (design pass #429 left this to RP-2b).
+  if (f.headline.code === 'practiced') return null;
+  const days = f.figures.days.count;
   return days >= PRACTICE_DAYS_MIN[f.period] ? { code: 'practice_days', params: { days } } : null;
 };
 
-const W4: Rule<'minutes_up'> = (f) => {
-  const minutes = f.figures?.minutes;
-  if (!minutes?.up || (f.period !== 'week' && f.period !== 'month')) return null;
+const W4: WellRule<'minutes_up'> = (f) => {
+  const minutes = f.figures.minutes;
+  if (!minutes.up || (f.period !== 'week' && f.period !== 'month')) return null;
   return { code: 'minutes_up', params: { minutes: minutes.count, period: f.period } };
 };
 
-const W5: Rule<'quests_new'> = (f) => {
-  const count = f.figures?.quests.count ?? 0;
+const W5: WellRule<'quests_new'> = (f) => {
+  const count = f.figures.quests.count;
   return count >= 1 ? { code: 'quests_new', params: { count } } : null;
 };
 
-const W6: Rule<'cards_new'> = (f) => {
-  const count = f.figures?.cards.count ?? 0;
+const W6: WellRule<'cards_new'> = (f) => {
+  const count = f.figures.cards.count;
   return count >= 1 ? { code: 'cards_new', params: { count } } : null;
 };
 
-const W7: Rule<'level_secure'> = (f) => {
+const W7: WellRule<'level_secure'> = (f) => {
   const placement = f.summary.placement;
-  if (!placement || !f.activity || !f.window || f.upTo === null) return null;
+  if (!placement) return null;
   if (f.period !== 'all') {
     const taken = localDayOf(placement.takenAt, f.activity.tz);
     if (taken === null || taken < f.window.from || taken > f.upTo) return null;
@@ -236,33 +258,30 @@ const W7: Rule<'level_secure'> = (f) => {
   return strands.length ? { code: 'level_secure', params: { strands } } : null;
 };
 
-const W8: Rule<'plan_done'> = (f) => {
-  // `planProgress` is today's snapshot: it speaks only for the current window, and only when the learner practiced in
-  // it (with no practice in the window, "What went well" is hidden, section 3.6). A `legacy` summary has no window.
-  if (!f.window || !f.figures || f.window.at !== null || f.figures.days.count === 0) return null;
+const W8: WellRule<'plan_done'> = (f) => {
+  // `planProgress` is today's snapshot: it speaks only for the current window.
+  if (f.window.at !== null) return null;
   const { plans, self } = plansOf(f);
   const done = [...plans, ...(self ? [self] : [])].find((plan) => plan.total > 0 && plan.done === plan.total);
   return done ? { code: 'plan_done', params: { done: done.done, kind: kindOf(f.viewer) } } : null;
 };
 
-const W9: Rule<'streak'> = (f) => {
+const W9: WellRule<'streak'> = (f) => {
   // The run ends at the last saved day, so it speaks only for a window that holds that day.
-  if (!f.activity || !f.window || f.window.from > f.activity.asOf || f.window.to < f.activity.asOf) return null;
+  if (f.window.from > f.activity.asOf || f.window.to < f.activity.asOf) return null;
   const days = localRunEndingAt(f.activity.days, f.activity.asOf);
   return days >= STREAK_MIN ? { code: 'streak', params: { days } } : null;
 };
 
-const W10: Rule<'words_new'> = (f) => {
-  const count = f.figures?.words?.count ?? 0;
+const W10: WellRule<'words_new'> = (f) => {
+  const count = f.figures.words?.count ?? 0;
   return REPORT_WORDS_VISIBLE && count >= WORDS_NEW_MIN ? { code: 'words_new', params: { count } } : null;
 };
 
-const W0: Rule<'showed_up'> = (f) => {
-  const days = f.figures?.days.count ?? 0;
-  return days >= 1 ? { code: 'showed_up', params: { days, period: f.period } } : null;
-};
+/** Never null: it runs only on a window with practice. */
+const W0 = (f: WellFacts): LineOf<'showed_up'> => ({ code: 'showed_up', params: { days: f.figures.days.count, period: f.period } });
 
-const WENT_WELL_FNS: Readonly<Record<(typeof WENT_WELL_RULES)[number]['id'], (f: Facts) => InsightLine | null>> = { W1, W2, W3, W4, W5, W6, W7, W8, W9, W10, W0 };
+const WENT_WELL_FNS: Readonly<Record<(typeof WENT_WELL_RULES)[number]['id'], (f: WellFacts) => InsightLine | null>> = { W1, W2, W3, W4, W5, W6, W7, W8, W9, W10, W0 };
 
 const P0: Rule<'rhythm'> = (f) => {
   // No practice in the saved part of the window (days after `asOf` count nowhere, section 3.2); never on a window that
@@ -277,7 +296,7 @@ const P1: Rule<'letters_revisit'> = (f) => {
   // The quest the device chose as open for this learner (section 3.3.4 step 9); none on an older build.
   const revisit = f.activity?.revisit;
   const questId = revisit !== undefined && isQuest(f, revisit) ? revisit : null;
-  return questId ? { code: 'letters_revisit', params: { letters, questId }, links: { addToPlan: questId } } : { code: 'letters_revisit', params: { letters, questId } };
+  return questId && consoleViewer(f) ? { code: 'letters_revisit', params: { letters, questId }, links: { addToPlan: questId } } : { code: 'letters_revisit', params: { letters, questId } };
 };
 
 const P2: Rule<'strand_next'> = (f) => {
@@ -299,7 +318,7 @@ const P3: Rule<'plan_open'> = (f) => {
   // (the self-route is not a plan the builder opens).
   const only = holders.length === 1 && holders[0] !== self ? (holders[0] as Plan).id : null;
   const params = { count, kind: kindOf(f.viewer) };
-  return only !== null && PlanId.safeParse(only).success ? { code: 'plan_open', params, links: { openPlan: only } } : { code: 'plan_open', params };
+  return only !== null && PlanId.safeParse(only).success && consoleViewer(f) ? { code: 'plan_open', params, links: { openPlan: only } } : { code: 'plan_open', params };
 };
 
 const P4: Rule<'next_in_plan' | 'next_on_route' | 'free_days_done'> = (f) => {
@@ -364,8 +383,8 @@ const runs = (periods: readonly ReportPeriod[], f: Facts): boolean => periods.in
  * window (the renderer hides an empty section and its heading).
  */
 export function wentWell(ctx: InsightContext): InsightLine[] {
-  const f = factsOf(ctx);
-  if (f === null || ctx.report.state === 'empty') return [];
+  const f = wellFactsOf(ctx);
+  if (f === null) return [];
   const lines: InsightLine[] = [];
   for (const rule of WENT_WELL_RULES) {
     if (rule.id === 'W0' || lines.length === INSIGHT_LINES_MAX) continue;
@@ -373,9 +392,19 @@ export function wentWell(ctx: InsightContext): InsightLine[] {
     const out = WENT_WELL_FNS[rule.id](f);
     if (out) lines.push(out);
   }
-  if (lines.length) return lines;
-  const fallback = W0(f);
-  return fallback ? [fallback] : [];
+  return lines.length ? lines : [W0(f)];
+}
+
+/**
+ * The facts of a window with practice in it, or null: no summary, `empty`, `legacy` (no day-by-day data), or no
+ * practice day in the window. With no practice in the window "What went well" is hidden (section 3.6), whatever else
+ * the window holds (a streak ending the day before, a level check, a milestone merged from another device).
+ */
+function wellFactsOf(ctx: InsightContext): WellFacts | null {
+  const f = factsOf(ctx);
+  const { headline } = ctx.report;
+  if (f === null || !f.activity || !f.window || f.upTo === null || !f.figures || !headline || f.figures.days.count === 0) return null;
+  return { ...f, activity: f.activity, window: f.window, upTo: f.upTo, figures: f.figures, headline };
 }
 
 /**

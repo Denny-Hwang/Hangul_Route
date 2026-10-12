@@ -145,12 +145,14 @@ describe('the code lists and rule tables', () => {
 });
 
 describe('the frozen learners (section 3.15)', () => {
-  it('Mina, a steady week: new letters, practice days and new quests, in table order, capped at 3 (behaviour 1)', () => {
+  it('Mina, a steady week: new letters, new quests and new cards, in table order, capped at 3 (behaviour 1)', () => {
+    // The headline already reads "Mina practiced on 3 days this week.", so W3 does not say it again.
+    expect(ctxOf({ summary: STEADY }).report.headline?.code).toBe('practiced');
     const lines = well({ summary: STEADY });
     expect(lines).toEqual([
       { code: 'letters_new', params: { letters: ['ㄱ', 'ㄴ'] } },
-      { code: 'practice_days', params: { days: 3 } },
       { code: 'quests_new', params: { count: 2 } },
+      { code: 'cards_new', params: { count: 1 } },
     ]);
   });
 
@@ -246,18 +248,32 @@ describe('went well, rule by rule', () => {
     expect(well(at({ summary: older, period: 'all' }))).toContainEqual({ code: 'letters_new', params: { letters: ['ㅏ'] } });
   });
 
-  it('W3 practice_days: >= 1 day, >= 2 week, >= 4 month, >= 5 all', () => {
+  it('W3 practice_days: >= 1 day, >= 2 week, >= 4 month, >= 5 all (under a headline that does not state the days)', () => {
+    // A milestone on the 15th: the headline is `stage_done`, so W3 is the line that names the practice days.
+    const stage = { milestones: [{ stage: 'stage1' as const, on: '2026-10-15' }] };
     const days = (n: number, period: ReportPeriod): boolean => {
       const rows = Object.fromEntries(Array.from({ length: n }, (_, i) => [`2026-10-${String(15 - i).padStart(2, '0')}`, {}]));
-      return codes(well(at({ summary: learner(rows, {}, { total: { since: '2026-01-01', min: 0, q: 0, c: 0, w: 0, days: 50 } }), period }))).includes('practice_days');
+      return codes(well(at({ summary: learner(rows, {}, { ...stage, total: { since: '2026-01-01', min: 0, q: 0, c: 0, w: 0, days: 50 } }), period }))).includes('practice_days');
     };
     expect([days(1, 'day'), days(1, 'week'), days(2, 'week'), days(3, 'month'), days(4, 'month')]).toEqual([true, false, true, false, true]);
     // `all` counts every practice day ever (`total.days`).
-    const all = (total: number): string[] => codes(well(at({ summary: learner({ '2026-10-15': {} }, {}, { total: { since: '2026-01-01', min: 0, q: 0, c: 0, w: 0, days: total } }), period: 'all' })));
+    const all = (total: number): string[] => codes(well(at({ summary: learner({ '2026-10-15': {} }, {}, { ...stage, total: { since: '2026-01-01', min: 0, q: 0, c: 0, w: 0, days: total } }), period: 'all' })));
     expect([all(4).includes('practice_days'), all(5).includes('practice_days')]).toEqual([false, true]);
-    expect(well(at({ summary: learner({ '2026-10-15': {} }, {}, { total: { since: '2026-01-01', min: 0, q: 0, c: 0, w: 0, days: 5 } }), period: 'all' }))).toEqual([
+    expect(well(at({ summary: learner({ '2026-10-15': {} }, {}, { ...stage, total: { since: '2026-01-01', min: 0, q: 0, c: 0, w: 0, days: 5 } }), period: 'all' }))).toEqual([
+      { code: 'stage_done', params: { stage: { stage: 'stage1', n: 1 } } },
       { code: 'practice_days', params: { days: 5 } },
     ]);
+  });
+
+  it('W3 never repeats a `practiced` headline (design pass #429): the next rule moves up, W0 stays the last resort', () => {
+    const rows = { '2026-10-13': {}, '2026-10-14': {}, '2026-10-15': {} };
+    for (const period of ['day', 'week', 'month', 'all'] as const) {
+      const ctx = ctxOf(at({ summary: learner(rows), period }));
+      expect(ctx.report.headline?.code, period).toBe('practiced');
+      expect(codes(wentWell(ctx)), period).not.toContain('practice_days');
+    }
+    expect(well(at({ summary: learner({ '2026-10-12': {}, '2026-10-14': {} }) }))).toEqual([{ code: 'showed_up', params: { days: 2, period: 'week' } }]);
+    expect(codes(well(at({ summary: learner({ '2026-10-12': {}, '2026-10-14': { q: 1 } }) })))).toEqual(['quests_new']);
   });
 
   it('W4 minutes_up: more minutes than the previous window, which had some (week and month), named by period', () => {
@@ -382,6 +398,27 @@ describe('went well, rule by rule', () => {
     }
   });
 
+  it('no went-well line on a day with no practice yet, even after a run of 3 days (the morning check-in, section 3.6)', () => {
+    const s = learner({ '2026-10-12': {}, '2026-10-13': {}, '2026-10-14': {} }, { needsPractice: ['ㅂ'] });
+    const ctx = ctxOf(at({ summary: s, period: 'day' }));
+    expect(ctx.report.headline?.code).toBe('none_yet');
+    expect(wentWell(ctx)).toEqual([]);
+    expect(practiceNext(ctx)).toEqual([{ code: 'letters_revisit', params: { letters: ['ㅂ'], questId: null } }]);
+    // The same run with practice today: 4 days in a row.
+    expect(well(at({ summary: learner({ '2026-10-12': {}, '2026-10-13': {}, '2026-10-14': {}, '2026-10-15': {} }), period: 'day' }))).toContainEqual({ code: 'streak', params: { days: 4 } });
+  });
+
+  it('no went-well line in a week with no practice day, whatever else it holds (a level check, a milestone); P0 still first', () => {
+    // A check taken on the 13th (an older build records no session for it) and a milestone merged in from another
+    // device on the 14th; the last practice days were the 1st and 2nd.
+    const s = learner({ '2026-10-01': {}, '2026-10-02': {} }, { placement: check(['vocabulary']), needsPractice: ['ㅂ'] }, { milestones: [{ stage: 'stage1', on: '2026-10-14' }] });
+    const ctx = ctxOf(at({ summary: s }));
+    expect(ctx.report.figures?.days.count).toBe(0);
+    expect(wentWell(ctx)).toEqual([]);
+    expect(codes(practiceNext(ctx))[0]).toBe('rhythm');
+    expect(wentWell(ctxOf(at({ summary: learner({ '2026-10-01': {} }, { placement: check(['vocabulary']) }) })))).toEqual([]);
+  });
+
   it('W8: today\'s plan counts speak only for the current window, never for a past one', () => {
     const done = { planProgress: { 'plan:a': { done: 4, total: 4, notReady: 0 } } };
     const s = learner({ '2026-10-06': {}, '2026-10-07': {}, '2026-10-15': {} }, done);
@@ -470,6 +507,16 @@ describe('practice next, rule by rule', () => {
     expect(next(at({ summary: finished }))).toEqual([{ code: 'plan_open', params: { count: 2, kind: 'family' }, links: { openPlan: 'plan:a' } }]);
     // A class never reads the self-route: its one plan keeps the link.
     expect(next(at({ summary: s, viewer: 'class' }))).toEqual([{ code: 'plan_open', params: { count: 2, kind: 'class' }, links: { openPlan: 'plan:a' } }]);
+  });
+
+  it('the in-app report (device viewer) carries no action link: Add to a plan and Open the plan are console actions', () => {
+    const s = learner({ '2026-10-15': {} }, { needsPractice: ['ㅂ'], planProgress: { 'plan:a': { done: 1, total: 3, notReady: 0 } } }, { revisit: 'quest:stage1-letters-q2' });
+    expect(next(at({ summary: s, viewer: 'device' }))).toEqual([
+      { code: 'letters_revisit', params: { letters: ['ㅂ'], questId: 'quest:stage1-letters-q2' } },
+      { code: 'plan_open', params: { count: 2, kind: 'family' } },
+    ]);
+    // The same summary read by a family console viewer keeps both links.
+    expect(next(at({ summary: s })).map((line) => ('links' in line ? line.links : undefined))).toEqual([{ addToPlan: 'quest:stage1-letters-q2' }, { openPlan: 'plan:a' }]);
   });
 
   it('P4: the app\'s own next, three codes (section 3.6, behaviour 14)', () => {
