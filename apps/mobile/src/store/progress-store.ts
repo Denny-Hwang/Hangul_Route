@@ -8,6 +8,8 @@ import { catchUpGrantedPayload } from '../logic/awards/catch-up';
 import { missingAwards } from '../logic/awards/derive';
 import type { DerivedAward } from '../logic/awards/types';
 import { latchQuests, recordBestQuest } from '../logic/quest-progress';
+import type { SessionOptions } from '../logic/sessions/hold';
+import { elapsedSeconds, lastStreakDay, newSessionId } from '../logic/sessions/session-log';
 import { mergePlacements, mergeSnapshots, withSnapshotDefaults } from '../logic/sync/merge';
 import { notifyProgressPersisted } from '../logic/sync/persist-hook';
 import { applyVocabEvents, emptyVocab, vocabOf, type VocabEvent } from '../logic/vocab/progress';
@@ -76,6 +78,18 @@ interface State {
    * Memory only; cleared by `hydrate` and by any wholesale replacement.
    */
   pendingVocabEvents: Record<string, PendingVocab[]>;
+  /**
+   * The one session running now (F-REPORT-001 section 3.3.2), in memory only:
+   * never saved, so it is empty after every start and a session left open by
+   * a killed app or a closed tab (an orphan) is never joined.
+   */
+  openSession: OpenSession | null;
+}
+
+/** The session running now and who began it. */
+export interface OpenSession extends SessionOptions {
+  profileId: string;
+  sessionId: string;
 }
 
 /** One `recordVocab` call waiting for the saved snapshot. */
@@ -149,8 +163,22 @@ interface Actions {
    * when no flag changes (a sync merge may already have cleared them).
    */
   markCardsSeen: (profileId: string, cardIds: readonly string[]) => void;
-  beginSession: (profileId: string) => void;
-  endSession: (profileId: string) => void;
+  /**
+   * Begin a session (F-REPORT-001 section 3.3.2): returns its id, or `null`
+   * when the open session already belongs to this profile (a story opened
+   * inside a quest joins the quest's session; that caller does nothing on
+   * unmount). An open session of another profile is ended first.
+   * `streak: true` (the quest player) moves `streakDays` and sends
+   * `session.start` as before; `streak: false` (story, stand-alone game, level
+   * check; OD-19) records time only.
+   */
+  beginSession: (profileId: string, options: SessionOptions) => string | null;
+  /**
+   * End that session, if it is the open one: its elapsed time, capped at 60
+   * minutes, is saved and `openSession` is cleared. Any other id is a no-op,
+   * so the open session keeps running.
+   */
+  endSession: (profileId: string, sessionId: string) => void;
   reset: (profileId: string) => void;
   /**
    * Append a finished level check (F-PLC-001 section 3.8). Writes `placements`
@@ -340,6 +368,15 @@ function settle(profileId: string, snapshot: ProgressSnapshot): void {
   }));
 }
 
+/** `snap` with the session ended now (its elapsed time, capped), or `undefined` when it is not there or already ended. */
+function withSessionEnded(snap: ProgressSnapshot, sessionId: string, now: string): { updated: ProgressSnapshot; durationSeconds: number } | undefined {
+  const session = snap.sessions.find((s) => s.id === sessionId);
+  if (!session || session.endedAt) return undefined;
+  const durationSeconds = elapsedSeconds(session.startedAt, now);
+  const sessions = snap.sessions.map((s) => (s.id === sessionId ? { ...s, endedAt: now, durationSeconds } : s));
+  return { updated: { ...snap, sessions, updatedAt: now }, durationSeconds };
+}
+
 export const useProgressStore = create<State & Actions>((set, get) => ({
   byProfile: {},
   hydratedFor: new Set(),
@@ -347,6 +384,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
   catchUp: {},
   catchUpFound: {},
   pendingVocabEvents: {},
+  openSession: null,
 
   hydrate: (profileId) => {
     if (get().hydratedFor.has(profileId)) return Promise.resolve();
@@ -492,54 +530,56 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     persist(profileId, updated);
   },
 
-  beginSession: (profileId) => {
+  beginSession: (profileId, options) => {
+    const open = get().openSession;
+    if (open?.profileId === profileId) return null;
+    if (open) get().endSession(open.profileId, open.sessionId);
     const snap = get().byProfile[profileId] ?? blankSnapshot(profileId);
     const now = new Date().toISOString();
+    const sessionId = newSessionId(now, options.streak, snap.sessions);
+    const session = { id: sessionId, profileId, startedAt: now, episodesTouched: [] };
     const todayKey = dayKey(now);
-    const lastSession = snap.sessions[snap.sessions.length - 1];
-    const lastDay = lastSession ? dayKey(lastSession.startedAt) : undefined;
-    const streakDays = nextStreak(snap.streakDays, lastDay, todayKey);
-
-    const session = {
-      id: `session:${now}`,
-      profileId,
-      startedAt: now,
-      episodesTouched: [],
-    };
+    const lastDay = lastStreakDay(snap.sessions);
+    // A time-only session (OD-19) leaves the streak exactly as it is.
+    const streakDays = options.streak ? nextStreak(snap.streakDays, lastDay, todayKey) : snap.streakDays;
     const updated: ProgressSnapshot = {
       ...snap,
       sessions: [...snap.sessions, session],
       streakDays,
       updatedAt: now,
     };
-    set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
+    set((s) => ({
+      byProfile: { ...s.byProfile, [profileId]: updated },
+      openSession: { profileId, sessionId, owner: options.owner, streak: options.streak },
+    }));
     persist(profileId, updated);
-    void track({
-      name: 'session.start',
-      profileId,
-      payload: { streakDays, isNewDay: lastDay !== todayKey },
-    });
+    if (options.streak) {
+      void track({
+        name: 'session.start',
+        profileId,
+        payload: { streakDays, isNewDay: lastDay !== todayKey },
+      });
+    }
+    return sessionId;
   },
 
-  endSession: (profileId) => {
+  endSession: (profileId, sessionId) => {
+    const open = get().openSession;
+    if (open?.profileId !== profileId || open.sessionId !== sessionId) return;
+    set({ openSession: null });
     const snap = get().byProfile[profileId];
-    if (!snap || snap.sessions.length === 0) return;
-    const now = new Date().toISOString();
-    const last = snap.sessions[snap.sessions.length - 1];
-    if (!last || last.endedAt) return;
-    const startMs = new Date(last.startedAt).getTime();
-    const endMs = new Date(now).getTime();
-    const durationSeconds = Math.max(0, Math.round((endMs - startMs) / 1000));
-    const updatedSession = { ...last, endedAt: now, durationSeconds };
-    const sessions = [...snap.sessions.slice(0, -1), updatedSession];
-    const updated: ProgressSnapshot = { ...snap, sessions, updatedAt: now };
-    set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
-    persist(profileId, updated);
-    void track({
-      name: 'session.end',
-      profileId,
-      payload: { durationSeconds, streakDays: snap.streakDays },
-    });
+    if (!snap) return;
+    const ended = withSessionEnded(snap, sessionId, new Date().toISOString());
+    if (!ended) return;
+    set((s) => ({ byProfile: { ...s.byProfile, [profileId]: ended.updated } }));
+    persist(profileId, ended.updated);
+    if (open.streak) {
+      void track({
+        name: 'session.end',
+        profileId,
+        payload: { durationSeconds: ended.durationSeconds, streakDays: snap.streakDays },
+      });
+    }
   },
 
   recordPlacement: (profileId, result) => {
@@ -579,7 +619,8 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     const heldVocab = get().byProfile[profileId]?.vocab !== undefined || profileId in get().pendingVocabEvents;
     const fresh = heldVocab ? { ...blankSnapshot(profileId), vocab: emptyVocab() } : blankSnapshot(profileId);
     settle(profileId, fresh);
-    set((s) => withoutCatchUp(s, profileId));
+    // The open session went with the old record: its owner's end is now a no-op.
+    set((s) => ({ ...withoutCatchUp(s, profileId), openSession: s.openSession?.profileId === profileId ? null : s.openSession }));
     save(profileId, fresh);
   },
 

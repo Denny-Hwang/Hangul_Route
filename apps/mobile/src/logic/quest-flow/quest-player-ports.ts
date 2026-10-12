@@ -2,6 +2,7 @@ import type { Quest } from '@hangul-route/content-schema';
 import type { TelemetryEvent } from '../../platform/telemetry';
 import { episodeReturn } from '../layout/quest-return';
 import { questOutcome, type QuestOutcome } from '../quest-outcome';
+import type { SessionOptions } from '../sessions/hold';
 import type { Bookmark } from '../story/bookmarks';
 import { questStartStep } from '../story/resume';
 
@@ -109,28 +110,38 @@ export interface LearnerSessionDeps {
   resume: boolean | undefined;
   questById: (questId: string) => Quest | undefined;
   bookmarkOf: (profileId: string, storyId: string) => Bookmark | undefined;
-  beginSession: (profileId: string) => void;
-  endSession: (profileId: string) => void;
+  /**
+   * Hold a session while the run is open (`store/learner-session`, F-REPORT-001 section 3.3.2):
+   * returns its release. The quest player's session moves the streak (`streak: true`).
+   */
+  holdSession: (profileId: string, options: SessionOptions) => () => void;
 }
 
 /**
  * The learner's `start` / `end`: a resumed story quest opens on its story-read step (F-STORY-004
- * §3.8); without a usable bookmark it starts at step 0. A study session runs for the active profile.
+ * §3.8); without a usable bookmark it starts at step 0. A study session owned by the quest
+ * (`quest:<questId>`) runs for the active profile and moves the streak, as before (F-REPORT-001
+ * section 3.3.2); `end` releases it once.
  */
 export function learnerQuestSession(deps: LearnerSessionDeps): Pick<QuestPlayerPorts, 'start' | 'end'> {
   const { profileId } = deps;
+  let release: (() => void) | null = null;
+  const end = (): void => {
+    const held = release;
+    release = null;
+    held?.();
+  };
   return {
     start: (questId) => {
       if (profileId === null) return null;
       const step = questStartStep(deps.questById(questId), deps.resume, (storyId) =>
         deps.bookmarkOf(profileId, storyId),
       );
-      deps.beginSession(profileId);
+      end();
+      release = deps.holdSession(profileId, { owner: `quest:${questId}`, streak: true });
       return step;
     },
-    end: () => {
-      if (profileId !== null) deps.endSession(profileId);
-    },
+    end,
   };
 }
 

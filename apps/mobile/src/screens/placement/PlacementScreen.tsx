@@ -48,6 +48,7 @@ import { useAccountStore } from '../../store/account-store';
 import { usePlacementRunStore } from '../../store/placement-run-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { usePracticeSession } from '../use-practice-session';
 import { accessTier } from '../../store/tier-store';
 import { useUiStore } from '../../store/ui-store';
 import { HandoffScreen } from './HandoffScreen';
@@ -140,6 +141,8 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
   const resetParentGate = useUiStore((s) => s.resetParentGate);
   const uiLocale = useLocale();
   const profileId = profile?.id ?? null;
+  // The level check records practice time only (F-REPORT-001 section 3.3.2, OD-19): never the streak.
+  usePracticeSession(profileId, 'placement');
   const saved = usePlacementRunStore((s) => (profileId === null ? undefined : s.active[profileId]));
   const run = saved?.run ?? null;
 

@@ -37,23 +37,20 @@ const storyQuest: Quest = {
 const mark = (level: Bookmark['level']): Bookmark => ({ level, sceneIndex: 2, updatedAt: '2026-10-11T09:00:00.000Z' });
 
 function sessionDeps(overrides: Partial<Parameters<typeof learnerQuestSession>[0]> = {}) {
+  const release = vi.fn();
   return {
     profileId: 'p1' as string | null,
     resume: undefined as boolean | undefined,
     questById: vi.fn((_id: string): Quest | undefined => storyQuest),
     bookmarkOf: vi.fn((_profileId: string, _storyId: string): Bookmark | undefined => undefined),
-    release: vi.fn(),
-    holdSession: vi.fn((_profileId: string, _options: { owner: string; streak: boolean }) => (): void => undefined),
+    /** What `holdSession` hands back: the release the player calls on `end`. */
+    release,
+    holdSession: vi.fn((_profileId: string, _options: { owner: string; streak: boolean }) => release),
     ...overrides,
   };
 }
 
-/** Deps whose `holdSession` hands back the shared `release` spy. */
-function heldDeps(overrides: Partial<Parameters<typeof learnerQuestSession>[0]> = {}) {
-  const deps = sessionDeps(overrides);
-  deps.holdSession.mockImplementation(() => deps.release);
-  return deps;
-}
+const heldDeps = sessionDeps;
 
 describe('learnerQuestSession (questStartStep + a held session, F-REPORT-001 RP-3b)', () => {
   it('starts at step 0 and holds a streak session owned by the quest for the active profile', () => {

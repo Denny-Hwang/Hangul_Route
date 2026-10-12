@@ -7,7 +7,7 @@ import { learnerQuestExits, learnerQuestSession, type QuestPlayerPorts } from '.
 import { track } from '../../platform/telemetry';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
-import { useProgressStore } from '../../store/progress-store';
+import { holdLearnerSession } from '../../store/learner-session';
 import { useStoryStore } from '../../store/story-store';
 import { QuestPlayerView } from './QuestPlayerView';
 
@@ -21,8 +21,6 @@ type Props = NativeStackScreenProps<RootStackParamList, 'QuestPlayer'>;
 export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElement {
   const { questId, episodeId, resume } = route.params;
   const profile = useProfileStore(activeProfileSelector);
-  const beginSession = useProgressStore((s) => s.beginSession);
-  const endSession = useProgressStore((s) => s.endSession);
   const { panes } = useLayoutClass();
 
   // Stable while the profile and the resume flag stay the same, so the run is not restarted.
@@ -33,10 +31,9 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
         resume,
         questById,
         bookmarkOf: (profileId, storyId) => useStoryStore.getState().getResumableBookmark(profileId, storyId),
-        beginSession,
-        endSession,
+        holdSession: holdLearnerSession,
       }),
-    [profile, resume, beginSession, endSession],
+    [profile, resume],
   );
 
   const ports: QuestPlayerPorts = {
