@@ -1,3 +1,4 @@
+import type { InboxNote } from './feedback';
 import type { UiLocale } from './locale';
 import type { SpaceSettings } from './space';
 import type { ProgressSummary } from './sync';
@@ -104,6 +105,7 @@ export const TEACHER_VISIBLE_ITEM_IDS = [
   'level_check',
   'plan_progress',
   'sync_time',
+  'note_replies',
 ] as const;
 export type TeacherVisibleItemId = (typeof TEACHER_VISIBLE_ITEM_IDS)[number];
 
@@ -183,6 +185,16 @@ export const TEACHER_VISIBLE_ROSTER_FIELDS: Readonly<Record<string, TeacherVisib
 };
 
 /**
+ * What a class sender receives about a learner from a note (F-FEEDBACK-001
+ * section 7.7): the reaction the learner picks, and only while the learner's
+ * notes mode is `all`. Never `readAt` (OD-8 default: no "Opened" for class
+ * senders); choosing OD-8's alternative adds it here with new disclosure lines.
+ */
+export const TEACHER_VISIBLE_NOTE_FIELDS: Readonly<Partial<Record<keyof InboxNote, TeacherVisibleItemId>>> = {
+  reaction: 'note_replies',
+};
+
+/**
  * Roster fields that address a row and are never shown (T-1a). `id` is the
  * opaque learner id the console needs to key the list, target a plan and
  * issue a Rescue Code; it carries no progress, so it maps to no consent item.
@@ -241,6 +253,7 @@ export const TRANSFER_CONSENT_TEXT: Readonly<Record<TransferConsentLocale, Trans
       level_check: 'Level check results',
       plan_progress: 'Progress on homework from {destination}',
       sync_time: 'When {learner} joined the class and when progress was last saved',
+      note_replies: 'The answer {learner} picks on a note from the teacher',
     },
   },
 };

@@ -37,10 +37,11 @@ export const TRANSFER_LIST_MAX = 50;
 /**
  * Bump when any consent line changes; a test pins a hash of the lines per locale.
  * `transfer-2026-10b`: the `activity` item names day-by-day practice (F-REPORT-001 RP-W2).
+ * `transfer-2026-10c`: adds the `note_replies` item (F-FEEDBACK-001 section 7.7) to the 10b text.
  */
-export const TRANSFER_CONSENT_TEXT_VERSION = 'transfer-2026-10b';
+export const TRANSFER_CONSENT_TEXT_VERSION = 'transfer-2026-10c';
 /** The current version plus any version legal has not retired. */
-export const ACCEPTED_CONSENT_TEXT_VERSIONS: readonly string[] = ['transfer-2026-10b', 'transfer-2026-10'];
+export const ACCEPTED_CONSENT_TEXT_VERSIONS: readonly string[] = ['transfer-2026-10c', 'transfer-2026-10b', 'transfer-2026-10'];
 
 export const TransferStatusSchema = z.enum(['requested', 'approved', 'executed', 'declined', 'expired', 'cancelled']);
 export type TransferStatus = z.infer<typeof TransferStatusSchema>;

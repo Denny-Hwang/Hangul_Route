@@ -7,6 +7,7 @@ import { LearnerMembershipSchema } from './space';
 import { LearnerLevelIdSchema } from './learner-level';
 import { PlacementSummarySchema } from './placement';
 import { InboxTransferSchema, lenientArray } from './transfer';
+import { InboxNoteSchema, NotePrefsSchema } from './feedback';
 import { VocabIdSchema } from './vocab';
 import { VocabProgressSchema } from './vocab-progress';
 import { ActivitySummarySchema } from './report';
@@ -202,6 +203,14 @@ export const SyncInboxSchema = z.object({
   transferDeviceConsent: z.boolean().default(false),
   selfManaged: z.boolean().default(false),
   transfers: lenientArray(InboxTransferSchema).default([]),
+  /*
+   * Notes from grown-ups (F-FEEDBACK-001 section 7.1). Additive and lenient: an
+   * old Worker omits both (defaults: none, all class notes, not acknowledged),
+   * one bad note is dropped, and malformed prefs read as the defaults, so
+   * neither ever costs the plans, memberships or tier.
+   */
+  notes: lenientArray(InboxNoteSchema).default([]),
+  notePrefs: NotePrefsSchema.default({ classes: 'all', acknowledged: false }).catch({ classes: 'all', acknowledged: false }),
 });
 /**
  * Plans are typed as `InboxPlan` (meta optional) so a parsed inbox and the

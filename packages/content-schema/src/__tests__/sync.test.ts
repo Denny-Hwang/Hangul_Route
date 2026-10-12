@@ -332,3 +332,62 @@ describe('summary.activity (F-REPORT-001 section 3.3.3)', () => {
     }
   });
 });
+
+describe('SyncInboxSchema notes additions (F-FEEDBACK-001 section 7.1)', () => {
+  const plan = {
+    id: 'plan:1',
+    spaceId: 'space:a',
+    spaceKind: 'class',
+    spaceName: 'Sunday Class A',
+    title: 'Week 1',
+    items: [{ kind: 'quest', id: 'quest:stage1-letters-q1' }],
+    publishedAt: 't',
+    updatedAt: 't',
+  };
+  const membership = { spaceId: 'space:a', kind: 'class', name: 'Sunday Class A', role: 'student', joinedAt: 't' };
+  const oldWorker = { rev: 4, plans: [plan], memberships: [membership], tier: 'free', serverTime: 't' };
+  const note = {
+    id: 'note:0b7c2f9e-1d2a',
+    spaceId: 'space:a',
+    from: { role: 'teacher', label: null },
+    presetId: 'progress_reading',
+    text: 'Loved your work today',
+    textLocale: 'en',
+    suggest: null,
+    createdAt: '2026-10-11T09:00:00.000Z',
+    readAt: null,
+    reaction: null,
+  };
+
+  it('an inbox from a Worker without notes or notePrefs parses with the defaults', () => {
+    const inbox = SyncInboxSchema.parse(oldWorker);
+    expect(inbox.notes).toEqual([]);
+    expect(inbox.notePrefs).toEqual({ classes: 'all', acknowledged: false });
+    expect(inbox.plans).toHaveLength(1);
+  });
+
+  it('parses delivered notes and the prefs', () => {
+    const inbox = SyncInboxSchema.parse({ ...oldWorker, notes: [note], notePrefs: { classes: 'presets', acknowledged: true } });
+    expect(inbox.notes).toEqual([note]);
+    expect(inbox.notePrefs).toEqual({ classes: 'presets', acknowledged: true });
+  });
+
+  it('one malformed note is dropped; the other notes, the plans and the memberships survive', () => {
+    const inbox = SyncInboxSchema.parse({ ...oldWorker, notes: [{ id: 'note:bad' }, note, 'junk', { ...note, id: 'x' }] });
+    expect(inbox.notes).toEqual([note]);
+    expect(inbox.plans).toHaveLength(1);
+    expect(inbox.memberships).toEqual([membership]);
+    expect(inbox.tier).toBe('free');
+  });
+
+  it('a non-array notes value reads as empty', () => {
+    expect(SyncInboxSchema.parse({ ...oldWorker, notes: null }).notes).toEqual([]);
+  });
+
+  it('a malformed notePrefs never costs the inbox; it reads as the defaults', () => {
+    const inbox = SyncInboxSchema.parse({ ...oldWorker, notes: [note], notePrefs: { classes: 'quiet' } });
+    expect(inbox.notePrefs).toEqual({ classes: 'all', acknowledged: false });
+    expect(inbox.notes).toEqual([note]);
+    expect(inbox.plans).toHaveLength(1);
+  });
+});
