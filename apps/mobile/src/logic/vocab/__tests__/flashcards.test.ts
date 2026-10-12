@@ -237,17 +237,24 @@ describe('quickCheckItems', () => {
 
   it('takes the again words first, in chunk order, padded with the earliest words', () => {
     expect(QUICK_CHECK_SIZE).toBe(2);
-    expect(quickCheckItems(chunk, { 'vocab:d': 'again', 'vocab:b': 'again', 'vocab:c': 'again' }).map((i) => i.id)).toEqual([
+    expect(quickCheckItems(chunk, new Set(['vocab:d', 'vocab:b', 'vocab:c'])).map((i) => i.id)).toEqual([
       'vocab:b',
       'vocab:c',
     ]);
-    expect(quickCheckItems(chunk, { 'vocab:c': 'again', 'vocab:a': 'got-it' }).map((i) => i.id)).toEqual(['vocab:a', 'vocab:c']);
-    expect(quickCheckItems(chunk, {}).map((i) => i.id)).toEqual(['vocab:a', 'vocab:b']);
+    expect(quickCheckItems(chunk, new Set(['vocab:c'])).map((i) => i.id)).toEqual(['vocab:a', 'vocab:c']);
+    expect(quickCheckItems(chunk, new Set()).map((i) => i.id)).toEqual(['vocab:a', 'vocab:b']);
   });
 
   it('never repeats a word and returns what there is for a short chunk', () => {
-    expect(quickCheckItems([word('a')], { 'vocab:a': 'again' }).map((i) => i.id)).toEqual(['vocab:a']);
-    expect(quickCheckItems(chunk, {}, 3).map((i) => i.id)).toEqual(['vocab:a', 'vocab:b', 'vocab:c']);
+    expect(quickCheckItems([word('a')], new Set(['vocab:a'])).map((i) => i.id)).toEqual(['vocab:a']);
+    expect(quickCheckItems(chunk, new Set(), 3).map((i) => i.id)).toEqual(['vocab:a', 'vocab:b', 'vocab:c']);
+  });
+
+  it('keeps a word marked "Show me again" first even after "Got it" on its second showing', () => {
+    const s = run(initFlash(chunk), ['flip', 'got-it', 'flip', 'got-it', 'flip', 'again', 'flip', 'got-it', 'flip', 'got-it']);
+    expect(s.phase).toBe('check');
+    expect(s.outcomes['vocab:c']).toBe('got-it');
+    expect(quickCheckItems(chunk, s.requeued).map((i) => i.id)).toEqual(['vocab:a', 'vocab:c']);
   });
 });
 
@@ -255,7 +262,8 @@ describe('chunkTally (vocab.cards.complete counts)', () => {
   it('counts self marks, speaker taps and the words newly collected in this chunk', () => {
     const chunk = [word('a'), word('b'), word('c')];
     const s = run(initFlash(chunk), ['hear', 'flip', 'again', 'flip', 'got-it', 'flip', 'got-it', 'flip', 'got-it']);
-    expect(chunkTally(s, new Set(['vocab:b']))).toEqual({ words: 3, gotIt: 3, again: 0, heard: 1, newlyCollected: 2 });
+    // "a" was marked again, then "Got it" when it came back: one again tap, three words known in the end.
+    expect(chunkTally(s, new Set(['vocab:b']))).toEqual({ words: 3, gotIt: 3, again: 1, heard: 1, newlyCollected: 2 });
     const t = run(initFlash(chunk), ['flip', 'again', 'flip', 'again']);
     expect(chunkTally(t, new Set())).toEqual({ words: 3, gotIt: 0, again: 2, heard: 0, newlyCollected: 2 });
   });
@@ -271,7 +279,7 @@ describe('summaryPrimary (the chunk summary button)', () => {
   const chunks = chunksFor(words(8), 4, false);
 
   it('offers the next words while a word of the topic is still to meet', () => {
-    expect(summaryPrimary(chunks, 0, new Set(['vocab:w01', 'vocab:w02', 'vocab:w03', 'vocab:w04']))).toEqual({
+    expect(summaryPrimary(chunks, 0, new Set(['vocab:w01', 'vocab:w02', 'vocab:w03', 'vocab:w04']), new Set())).toEqual({
       kind: 'next',
       chunk: 1,
     });
@@ -279,11 +287,22 @@ describe('summaryPrimary (the chunk summary button)', () => {
 
   it('offers a review of the same chunk once every word is collected', () => {
     const all = new Set(words(8).map((w) => w.id));
-    expect(summaryPrimary(chunks, 1, all)).toEqual({ kind: 'review', chunk: 1 });
+    expect(summaryPrimary(chunks, 1, all, new Set())).toEqual({ kind: 'review', chunk: 1 });
   });
 
   it('a chunk index outside the list reviews chunk 0', () => {
     const all = new Set(words(8).map((w) => w.id));
-    expect(summaryPrimary(chunks, 7, all)).toEqual({ kind: 'review', chunk: 0 });
+    expect(summaryPrimary(chunks, 7, all, new Set())).toEqual({ kind: 'review', chunk: 0 });
+  });
+
+  it('a chunk reopened from the wall after all its words were collected offers "Review these" (behaviour 12)', () => {
+    const first = new Set(['vocab:w01', 'vocab:w02', 'vocab:w03', 'vocab:w04']);
+    expect(summaryPrimary(chunks, 0, first, first)).toEqual({ kind: 'review', chunk: 0 });
+  });
+
+  it('a chunk that collected a word in this run still offers the next words', () => {
+    const before = new Set(['vocab:w01', 'vocab:w02', 'vocab:w03']);
+    const after = new Set([...before, 'vocab:w04']);
+    expect(summaryPrimary(chunks, 0, after, before)).toEqual({ kind: 'next', chunk: 1 });
   });
 });

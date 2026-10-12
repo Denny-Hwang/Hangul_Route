@@ -61,7 +61,7 @@ export interface FlashState {
   /** Position in the queue. */
   index: number;
   face: Face;
-  /** Ids already requeued once. */
+  /** Ids already requeued once: every word marked "Show me again" in this run, whatever its last mark. */
   requeued: ReadonlySet<string>;
   /** The last self mark per id in this run. */
   outcomes: Readonly<Record<string, SelfMark>>;
@@ -169,14 +169,16 @@ export const QUICK_CHECK_SIZE = 2;
 /**
  * The words of the quick check: the chunk's "Show me again" words first,
  * padded with the earliest words of the chunk, never twice, in chunk order.
+ * `again` is the run's `requeued` set, so a word keeps its priority even when
+ * the learner tapped "Got it" on its second showing.
  */
 export function quickCheckItems<T extends { id: string }>(
   chunk: readonly T[],
-  outcomes: Readonly<Record<string, SelfMark>>,
+  again: ReadonlySet<string>,
   size: number = QUICK_CHECK_SIZE,
 ): T[] {
-  const again = chunk.filter((w) => outcomes[w.id] === 'again').slice(0, size);
-  const picked = new Set(again.map((w) => w.id));
+  const first = chunk.filter((w) => again.has(w.id)).slice(0, size);
+  const picked = new Set(first.map((w) => w.id));
   for (const w of chunk) {
     if (picked.size >= size) break;
     picked.add(w.id);
@@ -187,7 +189,9 @@ export function quickCheckItems<T extends { id: string }>(
 /** The counts `vocab.cards.complete` carries (section 3.7). */
 export interface ChunkTally {
   words: number;
+  /** Words whose last mark in this run was "Got it". */
   gotIt: number;
+  /** Words marked "Show me again" at least once in this run. */
   again: number;
   heard: number;
   /** Words first collected in this chunk: a count, never a fraction. */
@@ -200,7 +204,7 @@ export function chunkTally(s: FlashState, collectedBefore: ReadonlySet<string>):
   return {
     words: new Set(s.queue).size,
     gotIt: marks.filter((m) => m === 'got-it').length,
-    again: marks.filter((m) => m === 'again').length,
+    again: s.requeued.size,
     heard: s.heard,
     newlyCollected: [...s.flipped].filter((id) => !collectedBefore.has(id)).length,
   };
@@ -209,15 +213,23 @@ export function chunkTally(s: FlashState, collectedBefore: ReadonlySet<string>):
 export type SummaryPrimary = { kind: 'next' | 'review'; chunk: number };
 
 /**
- * The chunk summary's primary button: "Next words" (the first chunk with a word
- * still to meet) while the topic has one, else "Review these" (the same chunk;
- * chunk 0 when `current` is out of range).
+ * The chunk summary's primary button: "Review these" (the same chunk) when the
+ * chunk was a review — every word of it was collected before it opened
+ * (behaviour 12, e.g. reopened from the word wall) — or when the topic has no
+ * word left to meet (chunk 0 when `current` is out of range); otherwise "Next
+ * words", the first chunk with a word still to meet.
+ * `collectedBefore`: the ids collected when the chunk opened.
  */
 export function summaryPrimary(
   chunks: readonly (readonly { id: string }[])[],
   current: number,
   collected: ReadonlySet<string>,
+  collectedBefore: ReadonlySet<string>,
 ): SummaryPrimary {
+  const chunk = chunks[current];
+  if (chunk !== undefined && chunk.length > 0 && chunk.every((w) => collectedBefore.has(w.id))) {
+    return { kind: 'review', chunk: current };
+  }
   const toMeet = chunks.some((c) => c.some((w) => !collected.has(w.id)));
   if (toMeet) return { kind: 'next', chunk: firstChunkToMeet(chunks, collected) };
   return { kind: 'review', chunk: current >= 0 && current < chunks.length ? current : 0 };
