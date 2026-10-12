@@ -123,8 +123,10 @@ describe('Results award through the real progress store', () => {
     }));
     const current = useProgressStore.getState().byProfile['p1'];
     if (!current) throw new Error('ensure made no snapshot');
-    useProgressStore.setState({ byProfile: { p1: { ...current, quests: letters } } });
-    const r = visit('quest:stage1-rites-q1', 'card:seollal', 1, vi.fn(), 'episode:stage1-rites');
+    // Holidays q1-q2 are done too (1 star, no card; F-QUEST-002 Q-7b gave the episode three quests), so q3 finishes it.
+    const ritesDone = ['quest:stage1-rites-q1', 'quest:stage1-rites-q2'].map((questId) => ({ ...letters[0]!, questId, episodeId: 'episode:stage1-rites' }));
+    useProgressStore.setState({ byProfile: { p1: { ...current, quests: [...letters, ...ritesDone] } } });
+    const r = visit('quest:stage1-rites-q3', 'card:sebae', 1, vi.fn(), 'episode:stage1-rites');
     const lettersCards = [...(episodeById(LETTERS)?.rewardCardIds ?? [])].sort();
     const ritesCards = [...(episodeById('episode:stage1-rites')?.rewardCardIds ?? [])].sort();
     expect(r.outcome.extras.map((e) => e.cardId).sort()).toEqual(ritesCards);

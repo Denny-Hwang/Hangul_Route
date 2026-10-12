@@ -7,13 +7,13 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * corrected row when the bundle and this file drift apart. Bump `CATALOG_VERSION`
  * on every content change that alters what a generated route can contain.
  *
- * Until F-QUEST-002 lands the 15 Stage 1 quests, this file lists the 9 the bundle
- * ships (8, plus life q3 since Q-6b); Q-6a filled `teaches` for letters q1-q3, Q-6b for life q1-q3 (adding life q3),
- * and Q-7b and Q-8 grow it to 15 (the parity test shows the rows to add).
+ * Until F-QUEST-002 lands the 15 Stage 1 quests, this file lists the 11 the bundle
+ * ships (8, plus life q3 since Q-6b and rites q2-q3 since Q-7b); Q-6a filled `teaches` for letters q1-q3, Q-6b for life q1-q3 (adding life q3),
+ * Q-7b for rites q1-q3 (adding rites q2-q3), and Q-8 grows it to 15 (the parity test shows the rows to add).
  * Every story is a `draft` until a native reviewer signs it and the bundle holds
  * its `shelf` block; flipping a story to `ready` is that reviewer's change.
  */
-export const CATALOG_VERSION = 3;
+export const CATALOG_VERSION = 4;
 
 const cell = (
   stage: StageKey,
@@ -39,7 +39,7 @@ const soon = (stage: StageKey, theme: ThemeKey, title: string): CatalogCell => c
 const cells: CatalogCell[] = [
   cell('stage1', 'letters', 'Meet the Letters', 'shipped', 15, ['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3']),
   cell('stage1', 'life', 'Around the Korean Table', 'shipped', 12, ['quest:stage1-life-q1', 'quest:stage1-life-q2', 'quest:stage1-life-q3']),
-  cell('stage1', 'rites', 'New Year & Festivals', 'shipped', 8, ['quest:stage1-rites-q1']),
+  cell('stage1', 'rites', 'New Year & Festivals', 'shipped', 14, ['quest:stage1-rites-q1', 'quest:stage1-rites-q2', 'quest:stage1-rites-q3']),
   cell('stage1', 'nature', 'Tigers, Mountains, Moon', 'shipped', 9, ['quest:stage1-nature-q1']),
   cell('stage1', 'crafts', 'Yut, Kites & Paper', 'shipped', 10, ['quest:stage1-crafts-q1']),
   soon('stage2', 'letters', 'Word Builder'),
@@ -76,8 +76,8 @@ const cells: CatalogCell[] = [
 
 /**
  * `teaches` is what the bundle's Discover steps teach (`questTeaches`, the parity
- * test compares): letters q1-q3 since F-QUEST-002 Q-6a, life q1-q3 since Q-6b; the
- * quests not yet rebuilt teach nothing until Q-7b and Q-8 add their Discover steps.
+ * test compares): letters q1-q3 since F-QUEST-002 Q-6a, life q1-q3 since Q-6b, rites
+ * q1-q3 since Q-7b; the quests not yet rebuilt teach nothing until Q-8 adds their Discover steps.
  */
 const lessonQuests: CatalogQuest[] = [
   lesson('stage1-letters-q1', 'stage1', 'letters', 'Meet a, eo, g, n', 5, ['ㅏ', 'ㅓ', 'ㄱ', 'ㄴ']),
@@ -86,7 +86,9 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage1-life-q1', 'stage1', 'life', 'Hello Kimchi & Rice', 4, ['ㅈ', 'ㅊ']),
   lesson('stage1-life-q2', 'stage1', 'life', 'Family at the Table', 4, ['ㅂ', 'ㅅ']),
   lesson('stage1-life-q3', 'stage1', 'life', 'Picnic Snacks', 4, ['ㅋ', 'ㅌ']),
-  lesson('stage1-rites-q1', 'stage1', 'rites', 'Bow & Eat Tteokguk', 5),
+  lesson('stage1-rites-q1', 'stage1', 'rites', 'Bow & Eat Tteokguk', 4, ['ㄴ/final', 'ㄹ/final']),
+  lesson('stage1-rites-q2', 'stage1', 'rites', 'Rice Cakes of Chuseok', 5, ['ㅑ', 'ㅕ', 'ㅍ', 'ㅇ/final']),
+  lesson('stage1-rites-q3', 'stage1', 'rites', 'Hanbok and the Bow', 5, ['ㅛ', 'ㅠ', 'ㅎ', 'ㄱ/final']),
   lesson('stage1-nature-q1', 'stage1', 'nature', 'Tiger, Magpie, Moon', 5),
   lesson('stage1-crafts-q1', 'stage1', 'crafts', 'Yut, Kite, Top', 5),
   lesson('stage2-life-q1', 'stage2', 'life', 'Lunch Box Words', 5),
