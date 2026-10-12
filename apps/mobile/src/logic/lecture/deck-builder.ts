@@ -2,6 +2,7 @@ import {
   parseNarration,
   syllableSplit,
   type CheckKind,
+  type Discover,
   type Episode,
   type HeritageCard,
   type Jamo,
@@ -171,8 +172,14 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
   };
   const seed = (): number => deck.seed + slides.length;
   const teachWord = (word: KoLine): void => {
-    if (taught.some((t) => t.kind === 'word' && t.ko === word.ko)) return;
-    taught.push({ kind: 'word', ...word });
+    const met = taught.find((t): t is Extract<TaughtItem, { kind: 'word' }> => t.kind === 'word' && t.ko === word.ko);
+    if (!met) {
+      taught.push({ kind: 'word', ...word });
+      return;
+    }
+    // A syllable met without a gloss (na) that is later taught as a word ("I, me") gains the gloss,
+    // so it reaches a word-to-gloss quiz and End shows its meaning.
+    if (met.gloss === undefined && word.gloss !== undefined) met.gloss = word.gloss;
   };
 
   // ---- letters and quizzes ----------------------------------------------------
@@ -351,17 +358,15 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
   };
 
   /** A Discover step (F-QUEST-002 §3.1): a letter slide per jamo item, a vocab slide per word item. */
-  const discoverStep = (path: string, discover: Quest['steps'][number]['discover']): void => {
-    for (const page of listOf(discover?.pages)) {
-      for (const item of page.items) {
-        if (item.type === 'jamo') {
-          letterById(path, item.jamoId);
-          continue;
-        }
-        const word = { ko: item.word.ko, romanization: item.word.romanization, gloss: item.word.en };
-        push(`${path}/${word.ko}`, { kind: 'vocab', word });
-        teachWord(word);
+  const discoverStep = (path: string, discover: Discover): void => {
+    for (const item of discover.pages.flatMap((page) => page.items)) {
+      if (item.type === 'jamo') {
+        letterById(path, item.jamoId);
+        continue;
       }
+      const word = { ko: item.word.ko, romanization: item.word.romanization, gloss: item.word.en };
+      push(`${path}/${word.ko}`, { kind: 'vocab', word });
+      teachWord(word);
     }
   };
 
@@ -381,11 +386,15 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         if (quest.rewardCardId !== undefined) card(stepPath, quest.rewardCardId);
         continue;
       }
-      if (step.kind === 'discover') {
+      if (step.kind === 'discover' && step.discover) {
         discoverStep(stepPath, step.discover);
         continue;
       }
-      if (step.minigameRef === undefined) continue;
+      if (step.minigameRef === undefined) {
+        // Intro is the title slide's line; any other step with nothing to show is counted, never dropped silently.
+        if (step.kind !== 'intro') skip(stepPath, 'unsupported-step');
+        continue;
+      }
       const scope = bundle.scopeFor(step.minigameRef);
       if (!scope) {
         skip(step.minigameRef, 'unknown-id');
@@ -428,6 +437,8 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     });
     if (episode.format === 'story' && episode.storyIds && episode.storyIds.length > 0) {
       for (const storyId of episode.storyIds) storyBlock(`${path}/${storyId}`, storyId, undefined, true);
+      // Rule 12: the episode's quests still count their estimated minutes.
+      for (const questId of episode.questIds) minutes += bundle.questById(questId)?.estimatedMinutes ?? 0;
       return;
     }
     for (const questId of episode.questIds) questById(`${path}/`, questId);

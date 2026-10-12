@@ -6,6 +6,7 @@ import { gridEpisodesOf, routeOrder, type RouteEntry } from './order';
 import { skillRows, tilesCount } from './skills';
 import { stagesToLatch } from './latch';
 import { buildStageRows } from './stage-rows';
+import { startMarkerOf } from './start-marker';
 import type { Hero, MyRouteInput, MyRouteModel, StageRow } from './types';
 
 /**
@@ -17,10 +18,10 @@ import type { Hero, MyRouteInput, MyRouteModel, StageRow } from './types';
 
 const isStageKey = (key: string): key is StageKey => StageKeySchema.safeParse(key).success;
 
-/** R-7a adds "or a start marker exists" to the `continue` rule together with `start`. */
-function heroOf(m: { cursor: MyRouteModel['cursor']; anyDone: boolean; route: MyRouteInput['route'] }): Hero {
+/** `start` only for a learner with nothing done and no start marker (section 3.5); a start marker means `continue`. */
+function heroOf(m: { cursor: MyRouteModel['cursor']; anyDone: boolean; hasStart: boolean; route: MyRouteInput['route'] }): Hero {
   if (m.cursor === null) return m.route?.beyondContent === true && m.route.needsStage === null ? 'beyond' : 'rest';
-  return m.anyDone ? 'continue' : 'start';
+  return m.anyDone || m.hasStart ? 'continue' : 'start';
 }
 
 /**
@@ -63,24 +64,26 @@ export function buildMyRoute(input: MyRouteInput): MyRouteModel {
   const cursorEntry = order.find((e) => e.questId === cursorQuest?.id);
   const cursor = cursorEntry ? { questId: cursorEntry.questId, episodeId: cursorEntry.episodeId, stage: cursorEntry.stage } : null;
   const startQuest = route?.startQuestId ? input.catalog.quests.find((q) => q.id === route.startQuestId) : undefined;
+  const start = startMarkerOf(route, order);
 
   const stages = buildStageRows(input, {
     gridEpisodes,
-    pips: { order, done, placedOut, latched, isEntitled: input.isEntitled, cursorId: cursor?.questId ?? null },
+    pips: { order, done, placedOut, latched, isEntitled: input.isEntitled, cursorId: cursor?.questId ?? null, startId: start?.questId ?? null },
     cursorStage: cursor?.stage ?? null,
     startStage: startQuest?.stage ?? null,
+    startTagStage: start?.stage ?? null,
   });
 
   const open = new Set(offerableQuests(input.quests, input.episodes, isEntitled).map((q) => q.id));
   return {
-    hero: heroOf({ cursor, anyDone: stages.some((s) => s.done > 0), route }),
+    hero: heroOf({ cursor, anyDone: stages.some((s) => s.done > 0), hasStart: start !== null, route }),
     cursor,
     stages,
     trailReached: trailReachedOf(stages, input, order),
     skills: skillRows({ finished: done, open, quests: input.quests }),
     tiles: tilesCount(done, input.quests),
     gains: gainsOf({ snapshot, episodes: input.episodes }),
-    start: null,
+    start,
     latchesToWrite: stagesToLatch(snapshot, input.episodes),
   };
 }

@@ -23,7 +23,8 @@ export function StoryReaderScreen({ route, navigation }: Props): React.ReactElem
   const { storyId, level, sceneIndex } = route.params;
   const locale = useLocale();
   // The story in the UI language, with the voice of the narration shown in each scene (PR 2.8).
-  const { story, narrationLangs } = useMemo(() => readerStory(storyById(storyId), level, locale), [storyId, level, locale]);
+  const source = useMemo(() => storyById(storyId), [storyId]);
+  const { story, narrationLangs } = useMemo(() => readerStory(source, level, locale), [source, level, locale]);
 
   const leave = useCallback((): void => {
     if (navigation.canGoBack()) navigation.goBack();
@@ -47,6 +48,7 @@ export function StoryReaderScreen({ route, navigation }: Props): React.ReactElem
       onClose={leave}
       onOpenSources={openSources}
       narrationLangs={narrationLangs}
+      sourceStory={source}
     />
   );
 }

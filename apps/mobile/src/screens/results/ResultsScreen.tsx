@@ -5,7 +5,6 @@ import {
   Caption,
   Card,
   Heading,
-  HeritageCardArt,
   Hoya,
   HoyaBubble,
   KoreanText,
@@ -16,8 +15,6 @@ import {
   colors,
   radii,
   spacing,
-  supportedCardIds,
-  touchTarget,
   useLayoutClass,
 } from '@hangul-route/design-system';
 import type { Messages } from '@hangul-route/i18n';
@@ -40,7 +37,7 @@ import { flags } from '../../config/flags';
 import { cardById, episodeById, episodesAll, questById, questsAll } from '../../content';
 import { storyById } from '../../content/stories';
 import { useLocale, useMessages } from '../../i18n/use-messages';
-import { localizeCard, localizeStory } from '../../logic/content-locale';
+import { localizeCard, localizeEpisode, localizeStory } from '../../logic/content-locale';
 import { cursorContext } from '../../logic/cursor-context';
 import {
   resultsActions,
@@ -52,6 +49,7 @@ import {
 import { episodeReturn } from '../../logic/layout/quest-return';
 import { applyQuestResult, type QuestResultOutcome } from '../../logic/results-award';
 import { resultsCheerMessage, resultsHeadline } from '../../logic/results-copy';
+import { extraCardsAnnouncement, extraCardsView } from '../../logic/results-extra-cards';
 import { emptyBookmarks } from '../../logic/story/bookmarks';
 import { resultsStoryOf, storyResultsActionEvent, storyResultsExtras } from '../../logic/story/results-extras';
 import { bookmarkClearedByResults } from '../../logic/story/resume';
@@ -64,6 +62,8 @@ import { activeProfileSelector, useProfileStore } from '../../store/profile-stor
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
 import { effectiveTier, useTierStore } from '../../store/tier-store';
+import { CardArtThumb } from './CardArtThumb';
+import { ExtraCardsBanner } from './ExtraCardsBanner';
 import { StoryResultsExtras, type StoryResultsChoice } from './StoryResultsExtras';
 
 type ResultsMessages = Messages['learner']['results'];
@@ -92,8 +92,8 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   const reducedMotion = useReducedMotion();
   const { panes } = useLayoutClass();
   // What this run earned (the quest card and the completion awards), decided
-  // once when the score is written (F-STORY-006 §3.3). The extras get their
-  // own banner with PR 6.5a; until then the quest card banner is unchanged.
+  // once when the score is written (F-STORY-006 §3.3): the quest card banner
+  // and, under it, the extra-cards banner (§3.7).
   const [outcome, setOutcome] = useState<QuestResultOutcome | null>(null);
   const award = outcome?.award ?? null;
   const recordedRef = useRef(false);
@@ -133,21 +133,35 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
     if (finishedStory) stories.clearBookmark(profile.id, finishedStory);
   }, [profile, quest, questId, episodeId, stars, correct, total, retries, recordQuestComplete, unlockCards, recordCatchUp]);
 
-  // Android/web read the live region above (a second announcement would double-read);
-  // iOS VoiceOver ignores live regions, so it gets an explicit announcement.
-  const newCardId = award?.isNew ? award.cardId : undefined;
-  useEffect(() => {
-    if (!newCardId || Platform.OS !== 'ios') return;
-    const card = cardById(newCardId);
-    if (!card) return;
-    AccessibilityInfo.announceForAccessibility(m.newCard.announce(localizeCard(card, locale).titleEn));
-  }, [newCardId, m, locale]);
-
   const played = total > 0;
   const cheerMessage = resultsCheerMessage(stars, played, m.cheer);
   const newCardSource = award?.isNew ? cardById(award.cardId) : undefined;
   const newCard = newCardSource && localizeCard(newCardSource, locale);
   const showSparkles = !!newCard && stars >= 3;
+
+  // The cards an episode, stage or set completion brought besides the quest card (F-STORY-006 §3.7).
+  const extras = useMemo(() => {
+    const view = extraCardsView(outcome, (id) => {
+      const card = cardById(id);
+      return card && localizeCard(card, locale);
+    });
+    if (!view) return null;
+    const finished = view.episodeId ? episodeById(view.episodeId) : undefined;
+    return { ...view, episodeTitle: finished && localizeEpisode(finished, locale).titleEn };
+  }, [outcome, locale]);
+
+  // Android/web read the live region below (a second announcement would double-read);
+  // iOS VoiceOver ignores live regions, so it gets one explicit announcement for both banners.
+  const announcement = [
+    newCard ? m.newCard.announce(newCard.titleEn) : null,
+    extras ? extraCardsAnnouncement(m.extraCards, extras.cards.map((c) => c.titleEn), extras.episodeTitle) : null,
+  ]
+    .filter((line): line is string => line !== null)
+    .join(' ');
+  useEffect(() => {
+    if (!announcement || Platform.OS !== 'ios') return;
+    AccessibilityInfo.announceForAccessibility(announcement);
+  }, [announcement]);
 
   // "Next up" (F-QUEST-002 §3.5): the Journey cursor with this quest counted as
   // done, told the same stages and placed-out quests as Home and My route
@@ -299,6 +313,20 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
               showSparkles={showSparkles}
               reducedMotion={reducedMotion}
               onSeeCard={() => navigation.navigate('CardDetail', { cardId: newCard.id })}
+            />
+          </>
+        ) : null}
+        {extras ? (
+          <>
+            <Spacer size="lg" />
+            <ExtraCardsBanner
+              m={m.extraCards}
+              cards={extras.shown}
+              more={extras.more}
+              total={extras.cards.length}
+              episodeTitle={extras.episodeTitle}
+              reducedMotion={reducedMotion}
+              onOpenCard={(cardId) => navigation.navigate('CardDetail', { cardId })}
             />
           </>
         ) : null}
@@ -507,39 +535,6 @@ function CardUnlockBanner({
           <Sparkles />
         </Animated.View>
       ) : null}
-    </View>
-  );
-}
-
-/** The art is decorative (hidden from screen readers), so a target size is just the nearest token. */
-const CARD_THUMB = touchTarget.hero;
-
-/** The card's art, or its Korean word on the theme tint when no art ships yet. */
-function CardArtThumb({ card }: { card: HeritageCard }): React.ReactElement {
-  const hasArt = supportedCardIds.includes(card.id);
-  return (
-    <View
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
-      style={{
-        width: CARD_THUMB,
-        height: CARD_THUMB,
-        borderRadius: radii.lg,
-        borderWidth: borderWidth.thick,
-        borderColor: colors.rarity[card.rarity],
-        backgroundColor: hasArt ? colors.surface.paper : colors.theme[card.theme],
-        alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'hidden',
-      }}
-    >
-      {hasArt ? (
-        <HeritageCardArt cardId={card.id} size={CARD_THUMB} />
-      ) : (
-        <Heading level="title">
-          {card.subtitleKo ?? card.titleEn.charAt(0)}
-        </Heading>
-      )}
     </View>
   );
 }

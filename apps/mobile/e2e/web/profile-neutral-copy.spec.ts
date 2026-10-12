@@ -61,7 +61,7 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
     });
 
-    test('self-only device without a PIN: Add a profile and a locked stage open directly', async ({ page }) => {
+    test('self-only device without a PIN: Add a profile and the unlock page open directly', async ({ page }) => {
       await onboardSelf(page, { name: 'Rio' });
       await openProfile(page, 'Rio');
       const add = page.getByRole('button', { name: 'Add a profile', exact: true });
@@ -70,14 +70,21 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByRole('heading', { name: 'Who is learning?' })).toBeVisible();
       await expect(page.getByText(/Create a (grown-up )?PIN/)).toHaveCount(0);
 
-      // A locked Journey stage goes straight to the unlock page.
+      // The Journey has no lock and no door to the unlock page (F-ROUTE-001 R-J, OD-8).
       await page.goto('/');
       await expect(page.getByText('Hi, Rio!')).toBeVisible();
       const guide = page.getByTestId('install-guide');
       await page.waitForTimeout(800);
       if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
       await page.getByText('Journey', { exact: true }).last().click();
-      await page.getByRole('button', { name: /: locked\. Opens the unlock page\.$/ }).first().click();
+      await expect(page.getByRole('heading', { name: 'Heritage Journey' })).toBeVisible();
+      await expect(page.getByRole('button', { name: /locked|unlock/i })).toHaveCount(0);
+
+      // The unlock page is reached from Profile, straight away on a self-only device.
+      await openProfile(page, 'Rio');
+      const unlock = page.getByRole('button', { name: /^Unlock the journey/ });
+      await unlock.scrollIntoViewIfNeeded();
+      await unlock.click();
       await expect(page.getByRole('button', { name: 'Open the web console' })).toBeVisible();
       await expect(page.getByText(/Create a (grown-up )?PIN/)).toHaveCount(0);
     });

@@ -495,7 +495,7 @@ export const FIG_COMMANDER: ItemDef = {
   alt: 'Joseon military commander in a dark cheollik robe, a red sash belt and a black felt jeollip hat',
   sourceRef: { title: '융복 (戎服)', publisher: PUBLISHER, url: 'https://encykorea.aks.ac.kr/Article/E0042783', accessed: ACCESSED },
   accuracyNote:
-    'Military dress per the entry: a pleated cheollik robe (worn for military duty from the Imjin War on), a red silk belt and a jeollip hat. Rank colours came later, so the robe is a plain dark tone, tintable. No sword or armour; faceless.',
+    'Military dress per the entry: a pleated cheollik robe (worn widely in early Joseon, and by all ranks for military duty from the Imjin War on), a red silk belt and a jeollip hat. Rank colours came later, so the robe is a plain dark tone, tintable. No sword or armour; faceless.',
   nodes: [
     { t: 'rect', x: 36, y: 40, w: 8, h: 10, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
     { t: 'path', d: 'M30 48 L50 48 L58 56 L68 100 L60 104 L57 82 L68 122 L12 122 L23 82 L20 104 L12 100 L22 56 Z', fill: 'text.secondary', stroke: 'text.primary', sw: 'thin' },

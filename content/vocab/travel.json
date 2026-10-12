@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "topic": {
+    "id": "vocab-topic:travel",
+    "key": "travel",
+    "order": 9,
+    "titleEn": "Travel",
+    "titleKo": {
+      "ko": "여행",
+      "romanization": "yeohaeng",
+      "en": "travel"
+    },
+    "blurbEn": "Ways to get around, and things you need for a trip.",
+    "hoyaIntroEn": "Where shall we go today? Let's learn the words for a trip.",
+    "tint": "theme.crafts",
+    "coverItemId": "vocab:bihaenggi",
+    "status": "draft",
+    "fixedOrder": false
+  },
+  "items": [
+    {
+      "id": "vocab:bihaenggi",
+      "ko": "비행기",
+      "romanization": "bihaenggi",
+      "en": "airplane",
+      "pos": "noun",
+      "topics": [
+        "travel"
+      ],
+      "level": 2,
+      "visual": "word:travel-airplane"
+    },
+    {
+      "id": "vocab:gicha",
+      "ko": "기차",
+      "romanization": "gicha",
+      "en": "train",
+      "pos": "noun",
+      "topics": [
+        "travel"
+      ],
+      "level": 1,
+      "visual": "word:travel-train"
+    },
+    {
+      "id": "vocab:beoseu",
+      "ko": "버스",
+      "romanization": "beoseu",
+      "en": "bus",
+      "pos": "noun",
+      "topics": [
+        "travel"
+      ],
+      "level": 1,
+      "visual": "word:travel-bus"
+    },
+    {
+      "id": "vocab:taeksi",
+      "ko": "택시",
+      "romanization": "taeksi",
+      "en": "taxi",
+      "pos": "noun",
+      "topics": [
+        "travel"
+      ],
+      "level": 1,
+      "visual": "word:travel-taxi"
+    },
+    {
+      "id": "vocab:jihacheol",
+      "ko": "지하철",
+      "romanization": "jihacheol",
+      "en": "subway",
+      "pos": "noun",
+      "topics": [
+        "travel"
+      ],
+      "level": 2,
+      "visual": "word:travel-subway"
+    },
+    {
+      "id": "vocab:jadongcha",
+      "ko": "자동차",
+      "romanization": "jadongcha",
+      "en": "car",
+      "pos": "noun",
+      "topics": [
+        "travel"
+      ],
+      "level": 2,
+      "visual": "word:travel-car",
+      "senseNote": "In everyday talk, people often just say cha."
+    },
+    {
+      "id": "vocab:bae-boat",
+      "ko": "배",
+      "romanization": "bae",
+      "en": "boat",
+      "pos": "noun",
+      "topics": [
+        "travel"
+      ],
+      "level": 1,
+      "visual": "word:travel-boat",
+      "senseGroup": "bae"
+    },
+    {
+      "id": "vocab:jido",
+      "ko": "지도",
+      "romanization": "jido",
+      "en": "map",
+      "pos": "noun",
+      "topics": [
+        "travel"
+      ],
+      "level": 1,
+      "visual": "word:travel-map"
+    },
+    {
+      "id": "vocab:yeogwon",
+      "ko": "여권",
+      "romanization": "yeogwon",
+      "en": "passport",
+      "pos": "noun",
+      "topics": [
+        "travel"
+      ],
+      "level": 1,
+      "visual": "word:travel-passport"
+    },
+    {
+      "id": "vocab:pyo-ticket",
+      "ko": "표",
+      "romanization": "pyo",
+      "en": "ticket",
+      "pos": "noun",
+      "topics": [
+        "travel"
+      ],
+      "level": 1,
+      "visual": "word:travel-ticket",
+      "senseNote": "A ticket for a bus, a train or a show.",
+      "senseGroup": "pyo"
+    },
+    {
+      "id": "vocab:gonghang",
+      "ko": "공항",
+      "romanization": "gonghang",
+      "en": "airport",
+      "pos": "noun",
+      "topics": [
+        "travel"
+      ],
+      "level": 1,
+      "visual": "word:travel-airport"
+    },
+    {
+      "id": "vocab:hotel",
+      "ko": "호텔",
+      "romanization": "hotel",
+      "en": "hotel",
+      "pos": "noun",
+      "topics": [
+        "travel"
+      ],
+      "level": 1,
+      "visual": "word:travel-hotel"
+    }
+  ]
+}

@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:donguibogam",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "허준의 동의보감",
     "romanization": "Heojunui Donguibogam",
@@ -226,7 +226,7 @@
                 "flip": true
               }
             ],
-            "altEn": "At night by lamplight Heo Jun sits writing with a brush, surrounded by stacks of old thread-bound books."
+            "altEn": "By lamplight Heo Jun sits writing with a brush, surrounded by stacks of old thread-bound books."
           }
         },
         {
@@ -393,7 +393,7 @@
         },
         {
           "id": "s8",
-          "narrationEn": "Copies from that first printing are now National Treasures of Korea. Hoya hugs a book-shaped pillow and smiles: \"{kw:bobae-gateun-chaek}!\" That means, \"A book like a treasure!\"",
+          "narrationEn": "Copies from that first printing are now National Treasures of Korea. Hoya holds a book close: \"{kw:bobae-gateun-chaek}!\" That means, \"A book like a treasure!\"",
           "captionEn": "First-edition copies are National Treasures",
           "line": {
             "ko": "보배 같은 책",

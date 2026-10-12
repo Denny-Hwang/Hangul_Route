@@ -1213,6 +1213,11 @@ export const OVERLAYS: Overlays = {
       "hoyaIntro": "¿Tienes hambre? Vamos a nombrar cosas ricas juntos.",
       "title": "Comida"
     },
+    "vocab-topic:k-culture": {
+      "blurb": "Ropa, comida, fiestas, juegos y música de Corea.",
+      "hoyaIntro": "Ven a descubrir la ropa, la comida, las fiestas y la música de Corea.",
+      "title": "Cultura coreana"
+    },
     "vocab-topic:nature": {
       "blurb": "Lo que ves al aire libre, del cielo al mar.",
       "hoyaIntro": "Salgamos a mirar el mundo que nos rodea.",
@@ -1227,6 +1232,21 @@ export const OVERLAYS: Overlays = {
       "blurb": "Cosas del salón de clases y de la mochila.",
       "hoyaIntro": "¡Prepara tu mochila! Busquemos las cosas del salón de clases.",
       "title": "Escuela"
+    },
+    "vocab-topic:science": {
+      "blurb": "Del fuego y el hielo a la Tierra y el espacio exterior.",
+      "hoyaIntro": "Miremos de cerca y preguntémonos cómo funciona el mundo.",
+      "title": "Ciencia"
+    },
+    "vocab-topic:sports": {
+      "blurb": "Deportes y juegos para jugar o mirar.",
+      "hoyaIntro": "¡En sus marcas, listos, fuera! Aprendamos las palabras de los deportes.",
+      "title": "Deportes"
+    },
+    "vocab-topic:travel": {
+      "blurb": "Formas de moverse y cosas que necesitas para un viaje.",
+      "hoyaIntro": "¿Adónde vamos hoy? Aprendamos las palabras para un viaje.",
+      "title": "Viajes"
     },
     "vocab:agi": {
       "gloss": "bebé"
@@ -1244,6 +1264,12 @@ export const OVERLAYS: Overlays = {
     "vocab:bae-belly": {
       "gloss": "barriga"
     },
+    "vocab:bae-boat": {
+      "gloss": "barco"
+    },
+    "vocab:baegu": {
+      "gloss": "voleibol"
+    },
     "vocab:bal": {
       "gloss": "pie"
     },
@@ -1254,11 +1280,32 @@ export const OVERLAYS: Overlays = {
       "gloss": "arroz cocido",
       "senseNote": "También significa una comida. El arroz sin cocinar es ssal."
     },
+    "vocab:baram": {
+      "gloss": "viento"
+    },
+    "vocab:beoseu": {
+      "gloss": "autobús"
+    },
     "vocab:bi-rain": {
       "gloss": "lluvia"
     },
+    "vocab:bibimbap": {
+      "gloss": "bibimbap (tazón de arroz mixto)",
+      "senseNote": "Arroz con verduras encima, que se mezcla antes de comer."
+    },
+    "vocab:bihaenggi": {
+      "gloss": "avión"
+    },
+    "vocab:bit": {
+      "gloss": "luz",
+      "senseNote": "La luz del sol o de una lámpara."
+    },
     "vocab:borasaek": {
       "gloss": "morado"
+    },
+    "vocab:bul": {
+      "gloss": "fuego",
+      "senseNote": "También significa una luz encendida, como la de una lámpara."
     },
     "vocab:bunhongsaek": {
       "gloss": "rosa"
@@ -1281,6 +1328,16 @@ export const OVERLAYS: Overlays = {
     "vocab:choroksaek": {
       "gloss": "verde"
     },
+    "vocab:chukgu": {
+      "gloss": "fútbol"
+    },
+    "vocab:chum": {
+      "gloss": "baile"
+    },
+    "vocab:chuseok": {
+      "gloss": "Chuseok (fiesta de la cosecha)",
+      "senseNote": "Las familias se reúnen y comparten songpyeon, pasteles de arroz en forma de media luna."
+    },
     "vocab:dal-moon": {
       "gloss": "luna"
     },
@@ -1288,11 +1345,20 @@ export const OVERLAYS: Overlays = {
       "gloss": "huevo",
       "senseNote": "También se dice gyeran, igual de común."
     },
+    "vocab:dalligi": {
+      "gloss": "correr"
+    },
     "vocab:dari-leg": {
       "gloss": "pierna"
     },
     "vocab:daseot": {
       "gloss": "cinco"
+    },
+    "vocab:deurama": {
+      "gloss": "serie de televisión"
+    },
+    "vocab:dol": {
+      "gloss": "piedra"
     },
     "vocab:dongsaeng": {
       "gloss": "hermano o hermana menor",
@@ -1313,6 +1379,9 @@ export const OVERLAYS: Overlays = {
       "gloss": "hermana mayor (lo dice una mujer o niña)",
       "senseNote": "Así llama una mujer o niña a su hermana mayor. Un hombre o niño dice nuna."
     },
+    "vocab:eoreum": {
+      "gloss": "hielo"
+    },
     "vocab:gabang": {
       "gloss": "bolsa o mochila"
     },
@@ -1332,8 +1401,18 @@ export const OVERLAYS: Overlays = {
     "vocab:gawi": {
       "gloss": "tijeras"
     },
+    "vocab:gayageum": {
+      "gloss": "gayageum (cítara coreana)",
+      "senseNote": "Un instrumento largo de cuerdas que se toca con los dedos."
+    },
     "vocab:geomeunsaek": {
       "gloss": "negro"
+    },
+    "vocab:geurimja": {
+      "gloss": "sombra"
+    },
+    "vocab:gicha": {
+      "gloss": "tren"
     },
     "vocab:gimbap": {
       "gloss": "gimbap (rollo de arroz con alga)"
@@ -1345,8 +1424,14 @@ export const OVERLAYS: Overlays = {
     "vocab:gom": {
       "gloss": "oso"
     },
+    "vocab:gong-ball": {
+      "gloss": "pelota"
+    },
     "vocab:gongchaek": {
       "gloss": "cuaderno"
+    },
+    "vocab:gonghang": {
+      "gloss": "aeropuerto"
     },
     "vocab:goyangi": {
       "gloss": "gato"
@@ -1370,11 +1455,22 @@ export const OVERLAYS: Overlays = {
       "gloss": "uno",
       "senseNote": "Delante de un contador, como en han gae (una cosa), se dice han."
     },
+    "vocab:hanbok": {
+      "gloss": "hanbok (ropa tradicional)",
+      "senseNote": "Se suele llevar en fiestas como Seollal y Chuseok."
+    },
     "vocab:haneul": {
       "gloss": "cielo"
     },
     "vocab:haneulsaek": {
       "gloss": "celeste"
+    },
+    "vocab:hangeul": {
+      "gloss": "hangul (el alfabeto coreano)",
+      "senseNote": "El alfabeto que estás aprendiendo aquí."
+    },
+    "vocab:hanok": {
+      "gloss": "hanok (casa tradicional)"
     },
     "vocab:harabeoji": {
       "gloss": "abuelo"
@@ -1387,6 +1483,9 @@ export const OVERLAYS: Overlays = {
     },
     "vocab:horangi": {
       "gloss": "tigre"
+    },
+    "vocab:hotel": {
+      "gloss": "hotel"
     },
     "vocab:hyeong": {
       "gloss": "hermano mayor (lo dice un hombre o niño)",
@@ -1402,11 +1501,33 @@ export const OVERLAYS: Overlays = {
     "vocab:ip": {
       "gloss": "boca"
     },
+    "vocab:jadongcha": {
+      "gloss": "automóvil",
+      "senseNote": "En el habla de todos los días, se suele decir solo cha."
+    },
+    "vocab:jajeongeo": {
+      "gloss": "bicicleta"
+    },
+    "vocab:jaseok": {
+      "gloss": "imán"
+    },
+    "vocab:jido": {
+      "gloss": "mapa"
+    },
+    "vocab:jigu": {
+      "gloss": "Tierra"
+    },
+    "vocab:jihacheol": {
+      "gloss": "metro"
+    },
     "vocab:jiugae": {
       "gloss": "goma de borrar"
     },
     "vocab:juhwangsaek": {
       "gloss": "naranja"
+    },
+    "vocab:julleomgi": {
+      "gloss": "saltar la cuerda"
     },
     "vocab:kkot": {
       "gloss": "flor"
@@ -1420,6 +1541,9 @@ export const OVERLAYS: Overlays = {
     "vocab:meori": {
       "gloss": "cabeza",
       "senseNote": "También significa cabello."
+    },
+    "vocab:mujigae": {
+      "gloss": "arcoíris"
     },
     "vocab:mul": {
       "gloss": "agua"
@@ -1440,6 +1564,12 @@ export const OVERLAYS: Overlays = {
     "vocab:net": {
       "gloss": "cuatro",
       "senseNote": "Delante de un contador, como en ne gae (cuatro cosas), se dice ne."
+    },
+    "vocab:nonggu": {
+      "gloss": "baloncesto"
+    },
+    "vocab:norae": {
+      "gloss": "canción"
     },
     "vocab:noransaek": {
       "gloss": "amarillo"
@@ -1473,8 +1603,15 @@ export const OVERLAYS: Overlays = {
     "vocab:ppang": {
       "gloss": "pan"
     },
+    "vocab:pyo-ticket": {
+      "gloss": "boleto",
+      "senseNote": "Un boleto para el autobús, el tren o un espectáculo."
+    },
     "vocab:ramyeon": {
       "gloss": "fideos instantáneos"
+    },
+    "vocab:robot": {
+      "gloss": "robot"
     },
     "vocab:sae-bird": {
       "gloss": "pájaro"
@@ -1485,6 +1622,10 @@ export const OVERLAYS: Overlays = {
     "vocab:san": {
       "gloss": "montaña"
     },
+    "vocab:seollal": {
+      "gloss": "Año Nuevo lunar",
+      "senseNote": "La gente lleva hanbok y hace una reverencia a los mayores."
+    },
     "vocab:seonsaengnim": {
       "gloss": "maestro o maestra",
       "senseNote": "También se usa para dirigirse a un maestro o una maestra; el sufijo nim muestra respeto."
@@ -1493,12 +1634,31 @@ export const OVERLAYS: Overlays = {
       "gloss": "tres",
       "senseNote": "Delante de un contador, como en se gae (tres cosas), se dice se."
     },
+    "vocab:seuki": {
+      "gloss": "esquí"
+    },
     "vocab:seumul": {
       "gloss": "veinte",
       "senseNote": "Delante de un contador, como en seumu gae (veinte cosas), se dice seumu."
     },
     "vocab:son": {
       "gloss": "mano"
+    },
+    "vocab:ssiat": {
+      "gloss": "semilla"
+    },
+    "vocab:suyeong": {
+      "gloss": "natación"
+    },
+    "vocab:taegwondo": {
+      "gloss": "taekwondo",
+      "senseNote": "Un arte marcial coreano, conocido por sus patadas altas."
+    },
+    "vocab:taeksi": {
+      "gloss": "taxi"
+    },
+    "vocab:takgu": {
+      "gloss": "tenis de mesa"
     },
     "vocab:tokki": {
       "gloss": "conejo"
@@ -1510,8 +1670,15 @@ export const OVERLAYS: Overlays = {
       "gloss": "pastel de arroz",
       "senseNote": "Comida coreana suave y masticable, hecha de arroz."
     },
+    "vocab:tteokbokki": {
+      "gloss": "tteokbokki (pasteles de arroz picantes)"
+    },
     "vocab:uija": {
       "gloss": "silla"
+    },
+    "vocab:uju": {
+      "gloss": "espacio exterior",
+      "senseNote": "También significa todo el universo."
     },
     "vocab:uyu": {
       "gloss": "leche"
@@ -1519,8 +1686,14 @@ export const OVERLAYS: Overlays = {
     "vocab:wonsungi": {
       "gloss": "mono"
     },
+    "vocab:yagu": {
+      "gloss": "béisbol"
+    },
     "vocab:yeodeol": {
       "gloss": "ocho"
+    },
+    "vocab:yeogwon": {
+      "gloss": "pasaporte"
     },
     "vocab:yeol-ten": {
       "gloss": "diez"
@@ -1537,6 +1710,10 @@ export const OVERLAYS: Overlays = {
     },
     "vocab:yeou": {
       "gloss": "zorro"
+    },
+    "vocab:yunnori": {
+      "gloss": "juego de yut (tablero y palitos)",
+      "senseNote": "Se lanzan cuatro palitos de madera, sobre todo en el Año Nuevo lunar."
     }
   },
   "ko": {}

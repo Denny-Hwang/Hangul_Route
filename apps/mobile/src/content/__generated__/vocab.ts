@@ -137,6 +137,74 @@ export const VOCAB_TOPICS: readonly VocabTopic[] = [
     "coverItemId": "vocab:san",
     "status": "draft",
     "fixedOrder": false
+  },
+  {
+    "id": "vocab-topic:travel",
+    "key": "travel",
+    "order": 9,
+    "titleEn": "Travel",
+    "titleKo": {
+      "ko": "여행",
+      "romanization": "yeohaeng",
+      "en": "travel"
+    },
+    "blurbEn": "Ways to get around, and things you need for a trip.",
+    "hoyaIntroEn": "Where shall we go today? Let's learn the words for a trip.",
+    "tint": "theme.crafts",
+    "coverItemId": "vocab:bihaenggi",
+    "status": "draft",
+    "fixedOrder": false
+  },
+  {
+    "id": "vocab-topic:sports",
+    "key": "sports",
+    "order": 10,
+    "titleEn": "Sports",
+    "titleKo": {
+      "ko": "운동",
+      "romanization": "undong",
+      "en": "sports"
+    },
+    "blurbEn": "Sports and games to play or watch.",
+    "hoyaIntroEn": "Ready, set, go! Let's learn the words for sports.",
+    "tint": "theme.crafts",
+    "coverItemId": "vocab:chukgu",
+    "status": "draft",
+    "fixedOrder": false
+  },
+  {
+    "id": "vocab-topic:k-culture",
+    "key": "k-culture",
+    "order": 11,
+    "titleEn": "K-Culture",
+    "titleKo": {
+      "ko": "한국 문화",
+      "romanization": "hanguk munhwa",
+      "en": "Korean culture"
+    },
+    "blurbEn": "Korean clothes, food, holidays, games and music.",
+    "hoyaIntroEn": "Come and explore the clothes, food, holidays and music of Korea.",
+    "tint": "theme.rites",
+    "coverItemId": "vocab:hanbok",
+    "status": "draft",
+    "fixedOrder": false
+  },
+  {
+    "id": "vocab-topic:science",
+    "key": "science",
+    "order": 12,
+    "titleEn": "Science",
+    "titleKo": {
+      "ko": "과학",
+      "romanization": "gwahak",
+      "en": "science"
+    },
+    "blurbEn": "From fire and ice to the Earth and outer space.",
+    "hoyaIntroEn": "Let's look closely and wonder how the world works.",
+    "tint": "theme.nature",
+    "coverItemId": "vocab:jigu",
+    "status": "draft",
+    "fixedOrder": false
   }
 ];
 
@@ -1714,6 +1782,790 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "glosses": {
       "en": "cloud",
       "es": "nube"
+    }
+  },
+  {
+    "id": "vocab:bihaenggi",
+    "ko": "비행기",
+    "romanization": "bihaenggi",
+    "en": "airplane",
+    "pos": "noun",
+    "topics": [
+      "travel"
+    ],
+    "level": 2,
+    "visual": "word:travel-airplane",
+    "glosses": {
+      "en": "airplane",
+      "es": "avión"
+    }
+  },
+  {
+    "id": "vocab:gicha",
+    "ko": "기차",
+    "romanization": "gicha",
+    "en": "train",
+    "pos": "noun",
+    "topics": [
+      "travel"
+    ],
+    "level": 1,
+    "visual": "word:travel-train",
+    "glosses": {
+      "en": "train",
+      "es": "tren"
+    }
+  },
+  {
+    "id": "vocab:beoseu",
+    "ko": "버스",
+    "romanization": "beoseu",
+    "en": "bus",
+    "pos": "noun",
+    "topics": [
+      "travel"
+    ],
+    "level": 1,
+    "visual": "word:travel-bus",
+    "glosses": {
+      "en": "bus",
+      "es": "autobús"
+    }
+  },
+  {
+    "id": "vocab:taeksi",
+    "ko": "택시",
+    "romanization": "taeksi",
+    "en": "taxi",
+    "pos": "noun",
+    "topics": [
+      "travel"
+    ],
+    "level": 1,
+    "visual": "word:travel-taxi",
+    "glosses": {
+      "en": "taxi",
+      "es": "taxi"
+    }
+  },
+  {
+    "id": "vocab:jihacheol",
+    "ko": "지하철",
+    "romanization": "jihacheol",
+    "en": "subway",
+    "pos": "noun",
+    "topics": [
+      "travel"
+    ],
+    "level": 2,
+    "visual": "word:travel-subway",
+    "glosses": {
+      "en": "subway",
+      "es": "metro"
+    }
+  },
+  {
+    "id": "vocab:jadongcha",
+    "ko": "자동차",
+    "romanization": "jadongcha",
+    "en": "car",
+    "pos": "noun",
+    "topics": [
+      "travel"
+    ],
+    "level": 2,
+    "visual": "word:travel-car",
+    "senseNote": "In everyday talk, people often just say cha.",
+    "glosses": {
+      "en": "car",
+      "es": "automóvil"
+    }
+  },
+  {
+    "id": "vocab:bae-boat",
+    "ko": "배",
+    "romanization": "bae",
+    "en": "boat",
+    "pos": "noun",
+    "topics": [
+      "travel"
+    ],
+    "level": 1,
+    "visual": "word:travel-boat",
+    "senseGroup": "bae",
+    "glosses": {
+      "en": "boat",
+      "es": "barco"
+    }
+  },
+  {
+    "id": "vocab:jido",
+    "ko": "지도",
+    "romanization": "jido",
+    "en": "map",
+    "pos": "noun",
+    "topics": [
+      "travel"
+    ],
+    "level": 1,
+    "visual": "word:travel-map",
+    "glosses": {
+      "en": "map",
+      "es": "mapa"
+    }
+  },
+  {
+    "id": "vocab:yeogwon",
+    "ko": "여권",
+    "romanization": "yeogwon",
+    "en": "passport",
+    "pos": "noun",
+    "topics": [
+      "travel"
+    ],
+    "level": 1,
+    "visual": "word:travel-passport",
+    "glosses": {
+      "en": "passport",
+      "es": "pasaporte"
+    }
+  },
+  {
+    "id": "vocab:pyo-ticket",
+    "ko": "표",
+    "romanization": "pyo",
+    "en": "ticket",
+    "pos": "noun",
+    "topics": [
+      "travel"
+    ],
+    "level": 1,
+    "visual": "word:travel-ticket",
+    "senseNote": "A ticket for a bus, a train or a show.",
+    "senseGroup": "pyo",
+    "glosses": {
+      "en": "ticket",
+      "es": "boleto"
+    }
+  },
+  {
+    "id": "vocab:gonghang",
+    "ko": "공항",
+    "romanization": "gonghang",
+    "en": "airport",
+    "pos": "noun",
+    "topics": [
+      "travel"
+    ],
+    "level": 1,
+    "visual": "word:travel-airport",
+    "glosses": {
+      "en": "airport",
+      "es": "aeropuerto"
+    }
+  },
+  {
+    "id": "vocab:hotel",
+    "ko": "호텔",
+    "romanization": "hotel",
+    "en": "hotel",
+    "pos": "noun",
+    "topics": [
+      "travel"
+    ],
+    "level": 1,
+    "visual": "word:travel-hotel",
+    "glosses": {
+      "en": "hotel",
+      "es": "hotel"
+    }
+  },
+  {
+    "id": "vocab:chukgu",
+    "ko": "축구",
+    "romanization": "chukgu",
+    "en": "soccer (football)",
+    "pos": "noun",
+    "topics": [
+      "sports"
+    ],
+    "level": 1,
+    "visual": "word:sport-soccer",
+    "glosses": {
+      "en": "soccer (football)",
+      "es": "fútbol"
+    }
+  },
+  {
+    "id": "vocab:yagu",
+    "ko": "야구",
+    "romanization": "yagu",
+    "en": "baseball",
+    "pos": "noun",
+    "topics": [
+      "sports"
+    ],
+    "level": 1,
+    "visual": "word:sport-baseball",
+    "glosses": {
+      "en": "baseball",
+      "es": "béisbol"
+    }
+  },
+  {
+    "id": "vocab:nonggu",
+    "ko": "농구",
+    "romanization": "nonggu",
+    "en": "basketball",
+    "pos": "noun",
+    "topics": [
+      "sports"
+    ],
+    "level": 1,
+    "visual": "word:sport-basketball",
+    "glosses": {
+      "en": "basketball",
+      "es": "baloncesto"
+    }
+  },
+  {
+    "id": "vocab:baegu",
+    "ko": "배구",
+    "romanization": "baegu",
+    "en": "volleyball",
+    "pos": "noun",
+    "topics": [
+      "sports"
+    ],
+    "level": 1,
+    "visual": "word:sport-volleyball",
+    "glosses": {
+      "en": "volleyball",
+      "es": "voleibol"
+    }
+  },
+  {
+    "id": "vocab:takgu",
+    "ko": "탁구",
+    "romanization": "takgu",
+    "en": "table tennis",
+    "pos": "noun",
+    "topics": [
+      "sports"
+    ],
+    "level": 1,
+    "visual": "word:sport-tabletennis",
+    "glosses": {
+      "en": "table tennis",
+      "es": "tenis de mesa"
+    }
+  },
+  {
+    "id": "vocab:suyeong",
+    "ko": "수영",
+    "romanization": "suyeong",
+    "en": "swimming",
+    "pos": "noun",
+    "topics": [
+      "sports"
+    ],
+    "level": 1,
+    "visual": "word:sport-swimming",
+    "glosses": {
+      "en": "swimming",
+      "es": "natación"
+    }
+  },
+  {
+    "id": "vocab:taegwondo",
+    "ko": "태권도",
+    "romanization": "taegwondo",
+    "en": "taekwondo",
+    "pos": "noun",
+    "topics": [
+      "sports"
+    ],
+    "level": 2,
+    "visual": "word:sport-taekwondo",
+    "senseNote": "A Korean martial art, known for its high kicks.",
+    "glosses": {
+      "en": "taekwondo",
+      "es": "taekwondo"
+    }
+  },
+  {
+    "id": "vocab:dalligi",
+    "ko": "달리기",
+    "romanization": "dalligi",
+    "en": "running",
+    "pos": "noun",
+    "topics": [
+      "sports"
+    ],
+    "level": 2,
+    "visual": "word:sport-running",
+    "glosses": {
+      "en": "running",
+      "es": "correr"
+    }
+  },
+  {
+    "id": "vocab:julleomgi",
+    "ko": "줄넘기",
+    "romanization": "julleomgi",
+    "en": "jump rope",
+    "pos": "noun",
+    "topics": [
+      "sports"
+    ],
+    "level": 2,
+    "visual": "word:sport-jumprope",
+    "glosses": {
+      "en": "jump rope",
+      "es": "saltar la cuerda"
+    }
+  },
+  {
+    "id": "vocab:jajeongeo",
+    "ko": "자전거",
+    "romanization": "jajeongeo",
+    "en": "bicycle",
+    "pos": "noun",
+    "topics": [
+      "sports"
+    ],
+    "level": 2,
+    "visual": "word:sport-bicycle",
+    "glosses": {
+      "en": "bicycle",
+      "es": "bicicleta"
+    }
+  },
+  {
+    "id": "vocab:seuki",
+    "ko": "스키",
+    "romanization": "seuki",
+    "en": "skiing",
+    "pos": "noun",
+    "topics": [
+      "sports"
+    ],
+    "level": 1,
+    "visual": "word:sport-skiing",
+    "glosses": {
+      "en": "skiing",
+      "es": "esquí"
+    }
+  },
+  {
+    "id": "vocab:gong-ball",
+    "ko": "공",
+    "romanization": "gong",
+    "en": "ball",
+    "pos": "noun",
+    "topics": [
+      "sports"
+    ],
+    "level": 1,
+    "visual": "word:sport-ball",
+    "senseGroup": "gong",
+    "glosses": {
+      "en": "ball",
+      "es": "pelota"
+    }
+  },
+  {
+    "id": "vocab:hanbok",
+    "ko": "한복",
+    "romanization": "hanbok",
+    "en": "hanbok (traditional clothes)",
+    "pos": "noun",
+    "topics": [
+      "k-culture"
+    ],
+    "level": 1,
+    "visual": "card:hanbok",
+    "senseNote": "Often worn on holidays such as Seollal and Chuseok.",
+    "glosses": {
+      "en": "hanbok (traditional clothes)",
+      "es": "hanbok (ropa tradicional)"
+    }
+  },
+  {
+    "id": "vocab:hangeul",
+    "ko": "한글",
+    "romanization": "hangeul",
+    "en": "Hangul (the Korean alphabet)",
+    "pos": "noun",
+    "topics": [
+      "k-culture"
+    ],
+    "level": 1,
+    "visual": "word:culture-hangul",
+    "senseNote": "The alphabet you are learning here.",
+    "glosses": {
+      "en": "Hangul (the Korean alphabet)",
+      "es": "hangul (el alfabeto coreano)"
+    }
+  },
+  {
+    "id": "vocab:hanok",
+    "ko": "한옥",
+    "romanization": "hanok",
+    "en": "hanok (traditional house)",
+    "pos": "noun",
+    "topics": [
+      "k-culture"
+    ],
+    "level": 1,
+    "visual": "word:culture-hanok",
+    "glosses": {
+      "en": "hanok (traditional house)",
+      "es": "hanok (casa tradicional)"
+    }
+  },
+  {
+    "id": "vocab:bibimbap",
+    "ko": "비빔밥",
+    "romanization": "bibimbap",
+    "en": "bibimbap (mixed rice bowl)",
+    "pos": "noun",
+    "topics": [
+      "k-culture"
+    ],
+    "level": 2,
+    "visual": "word:culture-bibimbap",
+    "senseNote": "Rice topped with vegetables, mixed together before you eat.",
+    "glosses": {
+      "en": "bibimbap (mixed rice bowl)",
+      "es": "bibimbap (tazón de arroz mixto)"
+    }
+  },
+  {
+    "id": "vocab:tteokbokki",
+    "ko": "떡볶이",
+    "romanization": "tteokbokki",
+    "en": "tteokbokki (spicy rice cakes)",
+    "pos": "noun",
+    "topics": [
+      "k-culture"
+    ],
+    "level": 2,
+    "visual": "word:culture-tteokbokki",
+    "glosses": {
+      "en": "tteokbokki (spicy rice cakes)",
+      "es": "tteokbokki (pasteles de arroz picantes)"
+    }
+  },
+  {
+    "id": "vocab:seollal",
+    "ko": "설날",
+    "romanization": "seollal",
+    "en": "Lunar New Year",
+    "pos": "noun",
+    "topics": [
+      "k-culture"
+    ],
+    "level": 1,
+    "visual": "card:seollal",
+    "senseNote": "People wear hanbok and bow to their elders.",
+    "glosses": {
+      "en": "Lunar New Year",
+      "es": "Año Nuevo lunar"
+    }
+  },
+  {
+    "id": "vocab:chuseok",
+    "ko": "추석",
+    "romanization": "chuseok",
+    "en": "Chuseok (harvest festival)",
+    "pos": "noun",
+    "topics": [
+      "k-culture"
+    ],
+    "level": 1,
+    "visual": "card:chuseok",
+    "senseNote": "Families gather and share songpyeon, half-moon rice cakes.",
+    "glosses": {
+      "en": "Chuseok (harvest festival)",
+      "es": "Chuseok (fiesta de la cosecha)"
+    }
+  },
+  {
+    "id": "vocab:yunnori",
+    "ko": "윷놀이",
+    "romanization": "yunnori",
+    "en": "yut game (board game with sticks)",
+    "pos": "noun",
+    "topics": [
+      "k-culture"
+    ],
+    "level": 2,
+    "visual": "card:yutnori",
+    "senseNote": "Players throw four wooden sticks, often at Lunar New Year.",
+    "glosses": {
+      "en": "yut game (board game with sticks)",
+      "es": "juego de yut (tablero y palitos)"
+    }
+  },
+  {
+    "id": "vocab:gayageum",
+    "ko": "가야금",
+    "romanization": "gayageum",
+    "en": "gayageum (Korean zither)",
+    "pos": "noun",
+    "topics": [
+      "k-culture"
+    ],
+    "level": 2,
+    "visual": "card:gayageum",
+    "senseNote": "A long string instrument, plucked with the fingers.",
+    "glosses": {
+      "en": "gayageum (Korean zither)",
+      "es": "gayageum (cítara coreana)"
+    }
+  },
+  {
+    "id": "vocab:norae",
+    "ko": "노래",
+    "romanization": "norae",
+    "en": "song",
+    "pos": "noun",
+    "topics": [
+      "k-culture"
+    ],
+    "level": 1,
+    "visual": "word:culture-song",
+    "glosses": {
+      "en": "song",
+      "es": "canción"
+    }
+  },
+  {
+    "id": "vocab:chum",
+    "ko": "춤",
+    "romanization": "chum",
+    "en": "dance",
+    "pos": "noun",
+    "topics": [
+      "k-culture"
+    ],
+    "level": 1,
+    "visual": "word:culture-dance",
+    "glosses": {
+      "en": "dance",
+      "es": "baile"
+    }
+  },
+  {
+    "id": "vocab:deurama",
+    "ko": "드라마",
+    "romanization": "deurama",
+    "en": "TV drama",
+    "pos": "noun",
+    "topics": [
+      "k-culture"
+    ],
+    "level": 2,
+    "visual": "word:culture-drama",
+    "glosses": {
+      "en": "TV drama",
+      "es": "serie de televisión"
+    }
+  },
+  {
+    "id": "vocab:bul",
+    "ko": "불",
+    "romanization": "bul",
+    "en": "fire",
+    "pos": "noun",
+    "topics": [
+      "science"
+    ],
+    "level": 1,
+    "visual": "word:science-fire",
+    "senseNote": "It also means a light that is on, such as a lamp.",
+    "glosses": {
+      "en": "fire",
+      "es": "fuego"
+    }
+  },
+  {
+    "id": "vocab:eoreum",
+    "ko": "얼음",
+    "romanization": "eoreum",
+    "en": "ice",
+    "pos": "noun",
+    "topics": [
+      "science"
+    ],
+    "level": 1,
+    "visual": "word:science-ice",
+    "glosses": {
+      "en": "ice",
+      "es": "hielo"
+    }
+  },
+  {
+    "id": "vocab:dol",
+    "ko": "돌",
+    "romanization": "dol",
+    "en": "stone",
+    "pos": "noun",
+    "topics": [
+      "science"
+    ],
+    "level": 1,
+    "visual": "word:science-stone",
+    "glosses": {
+      "en": "stone",
+      "es": "piedra"
+    }
+  },
+  {
+    "id": "vocab:jaseok",
+    "ko": "자석",
+    "romanization": "jaseok",
+    "en": "magnet",
+    "pos": "noun",
+    "topics": [
+      "science"
+    ],
+    "level": 1,
+    "visual": "word:science-magnet",
+    "glosses": {
+      "en": "magnet",
+      "es": "imán"
+    }
+  },
+  {
+    "id": "vocab:jigu",
+    "ko": "지구",
+    "romanization": "jigu",
+    "en": "Earth",
+    "pos": "noun",
+    "topics": [
+      "science"
+    ],
+    "level": 1,
+    "visual": "word:science-earth",
+    "glosses": {
+      "en": "Earth",
+      "es": "Tierra"
+    }
+  },
+  {
+    "id": "vocab:uju",
+    "ko": "우주",
+    "romanization": "uju",
+    "en": "outer space",
+    "pos": "noun",
+    "topics": [
+      "science"
+    ],
+    "level": 1,
+    "visual": "word:science-space",
+    "senseNote": "It also means the whole universe.",
+    "glosses": {
+      "en": "outer space",
+      "es": "espacio exterior"
+    }
+  },
+  {
+    "id": "vocab:robot",
+    "ko": "로봇",
+    "romanization": "robot",
+    "en": "robot",
+    "pos": "noun",
+    "topics": [
+      "science"
+    ],
+    "level": 1,
+    "visual": "word:science-robot",
+    "glosses": {
+      "en": "robot",
+      "es": "robot"
+    }
+  },
+  {
+    "id": "vocab:ssiat",
+    "ko": "씨앗",
+    "romanization": "ssiat",
+    "en": "seed",
+    "pos": "noun",
+    "topics": [
+      "science"
+    ],
+    "level": 1,
+    "visual": "word:science-seed",
+    "glosses": {
+      "en": "seed",
+      "es": "semilla"
+    }
+  },
+  {
+    "id": "vocab:mujigae",
+    "ko": "무지개",
+    "romanization": "mujigae",
+    "en": "rainbow",
+    "pos": "noun",
+    "topics": [
+      "science"
+    ],
+    "level": 2,
+    "visual": "word:science-rainbow",
+    "glosses": {
+      "en": "rainbow",
+      "es": "arcoíris"
+    }
+  },
+  {
+    "id": "vocab:geurimja",
+    "ko": "그림자",
+    "romanization": "geurimja",
+    "en": "shadow",
+    "pos": "noun",
+    "topics": [
+      "science"
+    ],
+    "level": 2,
+    "visual": "word:science-shadow",
+    "glosses": {
+      "en": "shadow",
+      "es": "sombra"
+    }
+  },
+  {
+    "id": "vocab:baram",
+    "ko": "바람",
+    "romanization": "baram",
+    "en": "wind",
+    "pos": "noun",
+    "topics": [
+      "science"
+    ],
+    "level": 1,
+    "visual": "word:science-wind",
+    "glosses": {
+      "en": "wind",
+      "es": "viento"
+    }
+  },
+  {
+    "id": "vocab:bit",
+    "ko": "빛",
+    "romanization": "bit",
+    "en": "light",
+    "pos": "noun",
+    "topics": [
+      "science"
+    ],
+    "level": 1,
+    "visual": "word:science-light",
+    "senseNote": "Light from the sun or a lamp, not light in weight.",
+    "glosses": {
+      "en": "light",
+      "es": "luz"
     }
   }
 ];

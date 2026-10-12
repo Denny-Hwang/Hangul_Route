@@ -129,8 +129,11 @@ export type TeacherVisibleSummaryKey = Extract<(typeof TEACHER_VISIBLE_SUMMARY_K
 /**
  * Summary keys a teacher never receives. `selfRoute` (F-PLAN-002 section 3.10)
  * is read by the learner's family space only, never by a class or school.
+ * `vocab` (F-VOC-005 section 3.8) stays hidden until the console PR that shows
+ * it (F-VOC-005 P-4) moves it to the allow-list with its consent item, so the
+ * consent text never lags what a teacher receives.
  */
-export const TEACHER_HIDDEN_SUMMARY_KEYS = ['schemaVersion', 'stage1Anchor', 'selfRoute'] as const;
+export const TEACHER_HIDDEN_SUMMARY_KEYS = ['schemaVersion', 'stage1Anchor', 'selfRoute', 'vocab'] as const;
 export type TeacherHiddenSummaryKey = Extract<(typeof TEACHER_HIDDEN_SUMMARY_KEYS)[number], keyof ProgressSummary>;
 
 export const TEACHER_VISIBLE_SUMMARY_ITEMS: Readonly<Record<TeacherVisibleSummaryKey, TeacherVisibleItemId>> = {
@@ -145,9 +148,11 @@ export const TEACHER_VISIBLE_SUMMARY_ITEMS: Readonly<Record<TeacherVisibleSummar
   planProgress: 'plan_progress',
   /**
    * Stage-level quest counts of My route, shown like `stage1` (F-ROUTE-001 OD-11).
-   * Its `known` count and `known` state come from the level check, which is the
-   * `level_check` item; they stay 0 while sync-store passes `route: null`. R-7a,
-   * which turns known pips on, re-checks this mapping or the `quests` wording.
+   * Re-checked in R-7a, which turns known pips on: the mapping stays `quests`.
+   * Its `known` count and `known` state come from the level check, and the
+   * teacher already sees level check results through `placement`, which is on
+   * this same allow-list as the `level_check` item, so the consent text needs
+   * no new line and no version bump (a test pins both items).
    */
   journey: 'quests',
 };

@@ -18,7 +18,8 @@ describe('learner.episode (English wording as shipped)', () => {
     expect(e.comingSoon.note).toBe('Finish Stage 1 to help Hoya unlock this episode.');
     expect(e.quests.heading).toBe('Quests');
     expect(e.cards.heading).toBe('Cards in this episode');
-    expect(e.cards.waiting).toBe('Waiting for you');
+    // F-STORY-006 PR 6.5a: the earn hint replaced "Waiting for you".
+    expect(e.cards.waiting).toBe('Finish every quest to earn it');
   });
 
   it('keeps the quest buttons and the soft-prerequisite lines', () => {
@@ -119,14 +120,15 @@ describe('learner.home.mission and learner.journey.availability (left by PR 6a)'
 
   it('keeps the stage availability pills', () => {
     const a = m.learner.journey.availability;
-    expect([a.open.pill, a.taste.pill, a.soon.pill]).toEqual(['Open', 'Taste', 'Soon']);
+    // F-ROUTE-001 R-J (OD-8): "Soon" reads "Coming later", the My route word.
+    expect([a.open.pill, a.taste.pill, a.soon.pill]).toEqual(['Open', 'A taste', 'Coming later']);
   });
 });
 
 describe('accessibility labels of these screens', () => {
   it('are the English labels as shipped', () => {
     expect(m.a11y.episodeCard('Hanbok')).toBe('Hanbok card');
-    expect(m.a11y.cardWaiting).toBe('A card still waiting to be earned');
+    expect(m.a11y.cardWaiting).toBe('A card you can earn by finishing this episode'); // F-STORY-006 PR 6.5a
     expect(m.a11y.playAgainQuest('Meet Hoya')).toBe('Play again: Meet Hoya');
     expect(m.a11y.homeworkRow('Meet Hoya', 'Today')).toBe('Meet Hoya, Today');
   });

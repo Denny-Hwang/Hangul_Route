@@ -9,8 +9,9 @@ import { describe, expect, it } from 'vitest';
  * story state, names registered items and passes the composition rules
  * (§3.9.5) with no error; ready stories have art or `artPending` on every scene
  * (F-STORY-001 lint `art-missing`). The records-joseon (PR 2.10a),
- * hangul-printing (PR 2.10b) and science-art-life (PR 2.10c) clusters are
- * fully illustrated and passed review with no warnings either.
+ * hangul-printing (PR 2.10b), science-art-life (PR 2.10c) and seasons-tales
+ * (PR 2.10d) clusters are fully illustrated and passed review with no
+ * warnings either, so every launch scene now has art.
  */
 const DIR = join(__dirname, '../../../../../content/stories');
 const stories: Story[] = readdirSync(DIR)
@@ -47,16 +48,26 @@ const SCIENCE_ART_LIFE = [
   'story:kim-hongdo-genre-paintings',
 ];
 
+const SEASONS_TALES = [
+  'story:seollal-new-year',
+  'story:chuseok-ganggangsullae',
+  'story:dano-ssireum',
+  'story:gimjang-arirang',
+  'story:pansori-tales',
+  'story:sun-and-moon',
+];
+
 /** Every illustrated cluster, with its scene count (F-STORY-002 §3.9.8 cadence). */
 const CLUSTERS: ReadonlyArray<{ name: string; ids: readonly string[]; scenes: number }> = [
   { name: 'records-joseon', ids: RECORDS_JOSEON, scenes: 45 },
   { name: 'hangul-printing', ids: HANGUL_PRINTING, scenes: 46 },
   { name: 'science-art-life', ids: SCIENCE_ART_LIFE, scenes: 43 },
+  { name: 'seasons-tales', ids: SEASONS_TALES, scenes: 48 },
 ];
 
 describe('story scene art', () => {
   it('has art to check', () => {
-    expect(withArt.length).toBeGreaterThanOrEqual(134);
+    expect(withArt.length).toBeGreaterThanOrEqual(182);
   });
 
   it('every setting and layer ref is in the registry', () => {
@@ -103,24 +114,90 @@ describe('story scene art', () => {
     for (const story of stories.filter((s) => ids.includes(s.id))) expect(story.contentVer, story.id).toBeGreaterThanOrEqual(2);
   });
 
+  // F-STORY-001 §3.7: the follow-up to PR 2.10c (post-merge review of #265)
+  // reworded alt text and narration on these ready stories, so each moved to 3.
+  const REWORDED_AFTER_ART = [
+    'story:cheugugi-rain-gauge',
+    'story:donguibogam',
+    'story:nanjung-ilgi',
+    'story:kim-hongdo-genre-paintings',
+    'story:shapes-of-hangeul',
+    'story:sillok-royal-historians',
+  ];
+  it('bumped contentVer again on the stories reworded after their art', () => {
+    for (const id of REWORDED_AFTER_ART) {
+      const story = stories.find((s) => s.id === id);
+      expect(story?.state, id).toBe('ready');
+      expect(story?.contentVer, id).toBeGreaterThanOrEqual(3);
+    }
+  });
+
   // §3.9.5 rule 9: the alt states what is drawn. Hoya has five poses
   // (idle, cheering, thinking, reading, waving); none points, grips, kneels,
-  // holds a paw out or stands in a ready stance, so the alt may not say so.
-  it('science-art-life alt text names only gestures Hoya is drawn in', () => {
-    const undrawn = /\bHoya\b[^.;:]*?\b(points?|pointing|holds out|stands? ready|grips?|gripping|kneels?)\b/i;
-    for (const { story, scene } of scenes.filter((s) => SCIENCE_ART_LIFE.includes(s.story.id) && s.scene.art)) {
-      if (!scene.art!.layers.some((l) => l.ref.startsWith('hoya:'))) continue;
-      expect(scene.art!.altEn, `${story.id} ${scene.id}`).not.toMatch(undrawn);
+  // holds a paw out, hugs, rolls up his sleeves or stands in a ready stance.
+  // The narration a learner hears beside the picture may not say so either.
+  // A relative clause ("where a signpost points") is about something else.
+  const UNDRAWN_GESTURE =
+    /\bHoya\b(?:(?!\b(?:where|which|that|while)\b)[^.;:])*?\b(points?|pointing|holds out|stands? ready|grips?|gripping|kneels?|kneeling|hugs?|hugging|rolls? up)\b/i;
+  const illustrated = CLUSTERS.flatMap((c) => c.ids);
+  const hoyaScenes = scenes.filter(
+    (s) => illustrated.includes(s.story.id) && s.scene.art?.layers.some((l) => l.ref.startsWith('hoya:')),
+  );
+
+  it('has illustrated scenes with Hoya to check', () => {
+    expect(hoyaScenes.length).toBeGreaterThan(30);
+  });
+
+  it('alt text of every illustrated cluster names only gestures Hoya is drawn in', () => {
+    for (const { story, scene } of hoyaScenes) expect(scene.art!.altEn, `${story.id} ${scene.id}`).not.toMatch(UNDRAWN_GESTURE);
+  });
+
+  it('narration beside a picture of Hoya names only gestures he is drawn in', () => {
+    for (const { story, scene } of hoyaScenes) expect(scene.narrationEn, `${story.id} ${scene.id}`).not.toMatch(UNDRAWN_GESTURE);
+  });
+
+  it('the gesture guard ignores a relative clause about something else', () => {
+    expect('Hoya stands at a crossroads where a signpost points three ways.').not.toMatch(UNDRAWN_GESTURE);
+    expect('Hoya grins and points at the sky.').toMatch(UNDRAWN_GESTURE);
+  });
+
+  // §3.9.5 rule 9 again: an alt that says night or evening needs a drawn night
+  // cue (a night window, a night sky or the moon); a lamp alone is not one.
+  const NIGHT_WORDS = /\b(night|nightfall|evening|moonlight)\b/i;
+  const NIGHT_CUES = new Set(['prop:night-window', 'prop:night-sky', 'prop:full-moon']);
+  it('an alt that says night or evening draws a night cue', () => {
+    for (const { story, scene } of withArt.filter((s) => NIGHT_WORDS.test(s.scene.art!.altEn))) {
+      expect(scene.art!.layers.some((l) => NIGHT_CUES.has(l.ref)), `${story.id} ${scene.id}`).toBe(true);
     }
   });
 
   // §3.9.10: a detail the sources do not support is left out. The museum's
-  // Seodang shows the teacher in a square indoor cap, never an outdoor gat.
+  // Seodang shows the teacher in a square indoor cap, never an outdoor gat, so
+  // the teacher is the bare-topknot seated writer and no gat-drawing figure is
+  // in the scene (checked by id, not by the words of a registry alt).
+  const GAT_FIGURES = ['prop:fig-scholar', 'prop:crowd-seated'];
   it('draws the Seodang teacher without a gat', () => {
     const seodang = scenes.find((s) => s.story.id === 'story:kim-hongdo-genre-paintings' && s.scene.id === 's6');
-    expect(seodang?.scene.art).toBeDefined();
-    for (const layer of seodang!.scene.art!.layers) {
-      expect(SCENE_ART_REGISTRY[layer.ref]?.alt ?? '', layer.ref).not.toMatch(/\bgat\b/);
+    const refs = seodang?.scene.art?.layers.map((l) => l.ref) ?? [];
+    expect(refs).toContain('prop:fig-writer-seated');
+    for (const id of GAT_FIGURES) {
+      expect(hasItem(id), id).toBe(true);
+      expect(refs, id).not.toContain(id);
+    }
+  });
+
+  // §3.9.5 R-S10 and §3.9.10 (PR 2.10d): the folk tale's peril is shown as
+  // setting and objects. The rotten rope (s6) and the sorghum field (s7) draw
+  // no tiger, so its fall is never pictured; the trickster tiger is never
+  // tinted into Hoya's yellow.
+  it('draws no tiger where the sun-and-moon tale tells of its fall', () => {
+    for (const id of ['s6', 's7']) {
+      const art = scenes.find((s) => s.story.id === 'story:sun-and-moon' && s.scene.id === id)?.scene.art;
+      expect(art, id).toBeDefined();
+      expect(art!.layers.map((l) => l.ref), id).not.toContain('prop:tiger-trickster');
+    }
+    for (const { scene } of withArt) {
+      for (const layer of scene.art!.layers.filter((l) => l.ref === 'prop:tiger-trickster')) expect(layer.tint ?? '').not.toBe('feedback.nudge');
     }
   });
 

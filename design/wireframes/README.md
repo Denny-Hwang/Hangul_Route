@@ -22,7 +22,7 @@
 | `journey/grid.md` · `episode/detail.md` | S | 02 §1 · 04 · 05 |
 | `journey/grid-with-stories.md` · `story/cell-stories.md` · `episode/detail-cell-stories-row.md` | R | F-STORY-005 §3.6 (PR 5.0; brief `screens/27-cell-stories`, story sections in `05-journey-grid` and `06-episode-detail`) |
 | `quest/player.md` · `minigame/shell.md` · `minigame/families.md` | S | content-skill · 06 |
-| `story/reader.md` · `story/term-gloss.md` · `story/sources.md` | S (reader G2 checkpoint: R, PR 2.9) | F-STORY-002 §3.3-3.8 (PR 2.0; briefs `screens/21-story-reader`, `screens/26-story-sources`, `components/story-scene`, `illustrations/scene-art-style`) |
+| `story/reader.md` · `story/term-gloss.md` · `story/sources.md` | S | F-STORY-002 §3.3-3.8 (PR 2.0; briefs `screens/21-story-reader`, `screens/26-story-sources`, `components/story-scene`, `illustrations/scene-art-style`) |
 | `minigame/build-letter.md` | R | F-QUEST-002 §3.7 (Q-7a) |
 | `minigame/listen-pick.md` | R | F-QUEST-002 §3.10 (Q-3b) |
 | `minigame/pic-word-match.md` | R | F-QUEST-002 §3.11 (Q-4) |
@@ -39,12 +39,12 @@
 | `pwa/install-guide.md` · `pwa/system-banners.md` | P | roadmap web-pwa-offline §3 |
 | `classroom/projection-mode.md` | D | F-TCH-001 §3.4 (연기: 자원봉사 학생용 옵션; 교사 수업은 `classroom/lecture-presenter.md`, F-TCH-004) |
 | `vocab/topics.md` · `vocab/flashcards.md` · `vocab/speed-round.md` | D | F-VOC-003 · F-VOC-004 |
-| `placement/placement.md` | D | F-PLC-001 |
+| `placement/placement.md` (flow overview) · `placement/invite.md` · `language.md` · `options.md` · `handoff.md` · `warmup.md` · `item.md` · `item-short.md` · `pause.md` · `sound-needed.md` · `result.md` · `report.md` · `home-entry.md` | R | F-PLC-001 (promoted in P-0) |
 | `console/curriculum-planner.md` | D | F-PLAN-002 |
 | `classroom/lecture-presenter.md` | R | F-TCH-004 |
 | `layout/wide.md` | S | F-LAYOUT-001 §3.1-3.8 (PR 0; built in PRs 1-7: classes, Home columns, Journey / Library panes, portrait guard also in `pwa/system-banners.md` panel 4; adoption checklist in `.github/pull_request_template.md`) |
 | `console/class-transfer.md` | D | F-SPACE-002 |
-| `journey/my-route-overview.md` | R | F-ROUTE-001 (screens A to I; J amends `placement/placement.md` G for F-PLC-001 AM-1 / AM-14, K is F-PLAN-002's weekly plan proposal, FP-B6) |
+| `journey/my-route-overview.md` | R | F-ROUTE-001 (screens A to I; J amends `placement/result.md` (was `placement.md` G) for F-PLC-001 AM-1 / AM-14, K is F-PLAN-002's weekly plan proposal, FP-B6) |
 
 ### B/C. Caregiver · Teacher · School console (web, 일부 mobile) — 어른
 | 파일 | 상태 | 스펙 |

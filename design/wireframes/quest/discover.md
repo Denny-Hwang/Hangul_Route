@@ -269,7 +269,7 @@ Sheet after tapping START on such a quest (once per quest per session):
 | (1) (Hangul)            [Complete]  [ Hangul Check ]
 ```
 
-- Pills of other stages are unchanged (the existing "Premium" pill stays where stage gating already is, D5).
+- Pills of other stages show their availability word (Open / A taste / Coming later). There is no "Premium" pill on a learner screen since F-ROUTE-001 R-J (OD-8).
 
 ## Interaction points
 

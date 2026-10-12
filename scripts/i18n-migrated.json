@@ -54,6 +54,7 @@
     "apps/web/src/components/console/CurriculumParts.tsx",
     "apps/web/src/components/console/RoutePlanParts.tsx",
     "apps/mobile/src/screens/placement/**",
+    "apps/web/src/components/console/PlacementParts.tsx",
     "apps/web/src/app/(console)/teach/space/lecture/page.tsx",
     "apps/web/src/components/console/LectureParts.tsx",
     "apps/web/src/app/(console)/teach/space/settings/page.tsx",
@@ -61,7 +62,10 @@
     "apps/web/src/components/console/SchoolAdmin.tsx",
     "apps/web/src/app/(console)/parent/**",
     "apps/web/src/components/parent/**",
-    "apps/mobile/src/screens/profile/EditProfileScreen.tsx"
+    "apps/mobile/src/screens/library/StoryTile.tsx",
+    "apps/mobile/src/screens/library/StoryShelf.tsx",
+    "apps/mobile/src/screens/profile/EditProfileScreen.tsx",
+    "apps/mobile/src/screens/results/**"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1

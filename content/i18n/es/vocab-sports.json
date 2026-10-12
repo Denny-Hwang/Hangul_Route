@@ -1,0 +1,48 @@
+{
+  "locale": "es",
+  "domain": "vocab-sports",
+  "entries": {
+    "vocab-topic:sports": {
+      "title": "Deportes",
+      "blurb": "Deportes y juegos para jugar o mirar.",
+      "hoyaIntro": "¡En sus marcas, listos, fuera! Aprendamos las palabras de los deportes."
+    },
+    "vocab:chukgu": {
+      "gloss": "fútbol"
+    },
+    "vocab:yagu": {
+      "gloss": "béisbol"
+    },
+    "vocab:nonggu": {
+      "gloss": "baloncesto"
+    },
+    "vocab:baegu": {
+      "gloss": "voleibol"
+    },
+    "vocab:takgu": {
+      "gloss": "tenis de mesa"
+    },
+    "vocab:suyeong": {
+      "gloss": "natación"
+    },
+    "vocab:taegwondo": {
+      "gloss": "taekwondo",
+      "senseNote": "Un arte marcial coreano, conocido por sus patadas altas."
+    },
+    "vocab:dalligi": {
+      "gloss": "correr"
+    },
+    "vocab:julleomgi": {
+      "gloss": "saltar la cuerda"
+    },
+    "vocab:jajeongeo": {
+      "gloss": "bicicleta"
+    },
+    "vocab:seuki": {
+      "gloss": "esquí"
+    },
+    "vocab:gong-ball": {
+      "gloss": "pelota"
+    }
+  }
+}

@@ -18,9 +18,14 @@ export * from './components/KoreanText';
 export * from './components/ChoiceCard';
 export * from './components/SyllableBlock';
 export * from './components/StoryScene';
+export * from './components/SectionTabs';
 export * from './components/SparkMeter';
-// WordArt is not in this barrel: callers import '@hangul-route/design-system/components/WordArt', so an
-// app that never shows a word picture does not load the glyph registry at start (F-VOC-002 §3.7, W7).
+// WordArt and its key list are in this barrel because Metro (Expo SDK 52, no metro.config.js) does not read
+// package `exports`, so the app cannot import '@hangul-route/design-system/components/WordArt' at runtime
+// (apps/mobile metro-subpaths.test.ts). PictureArt (F-VOC-002 W-7) is the app's one caller; the web contact
+// sheet and node tests keep using the pure './word-art' subpath.
+export * from './components/WordArt';
+export { WORD_ART_KEYS } from './word-art/registry';
 export * from './components/PipRow';
 // Pure scene-art API (no React): the path Metro can resolve; the web app uses the ./scene-art subpaths.
 export * from './scene-art';

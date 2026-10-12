@@ -1,11 +1,13 @@
 # F-RVW-001 — Review Tests (Daily / Feedback / Stage)
 
 **Status**: `draft`
-**Scope**: `apps/mobile` · `packages/content-schema` · MVP (Stage 1 range)
+**Scope**: `apps/mobile` · `packages/content-schema` · `packages/content-schema/src/assessment/` (shared question engine, owner F-PLC-001) · MVP (Stage 1 range)
 **Owner**: solo dev
 **Rollout**: MVP — all three review kinds, Stage 1 content only. Stage 2+ extensions are content work, not new spec.
 
 Parent doc: `docs/blueprints/09-homework-review-profiles-addendum.md` §2.
+
+> **Amended 2026-10-11 by F-PLC-001 appendix B (B1 to B9, PR P-0).** The attempt session, selection helpers, seeded RNG and session clock are shared with the placement check and already live in `packages/content-schema/src/assessment/` (F-PLC-001 PR P-1, #161). This spec stays `draft` until its own PR 1; no review code is in the tree, so nothing shipped changes.
 
 ---
 
@@ -53,6 +55,7 @@ Companion stories:
   - Pool A (yesterday): 1–2 items (50 % weight)
   - Pool B (D-2, D-3): 1 item (30 % weight)
   - Pool C (last test's misses): 1 item (forced inclusion)
+    - For the first three Daily Tests after a placement, the `sym:` entries of the newest placement result's `priorityTokens` take the Pool C slot in turn, one per test, each once (Pool C stays one forced item; `skill:` tokens are not items and are ignored here) (F-PLC-001 section 3.7).
   - Pool D (D-7 long-term): 1 item (10 % weight)
 - **Given** a Pool C item is answered correctly on day N,
   **when** the next daily test runs,
@@ -69,7 +72,7 @@ Companion stories:
 - **Given** the learner answers the Feedback Review,
   **when** the answer registers,
   **then** Hoya delivers a recap line (e.g. *"You saw ㅂ four times today!"* — English frame, the jamo is the taught content) regardless of correctness. **No extra stars** — Quest score absorbs the result.
-- Feedback Review must complete in ≤ 45 s wall-clock, including animation. If the learner doesn't answer within 15 s, the system auto-marks `skipped` (not wrong) and proceeds to Hoya recap.
+- Feedback Review must complete in ≤ 45 s wall-clock, including animation. If the learner doesn't answer within 15 s, the system auto-marks `skipped` (not wrong) and proceeds to Hoya recap. The auto-skip is recorded through the shared `session.skip` (F-PLC-001 B9): the shared outcome set is `correct`, `wrong`, `skipped`, and there is no `timeout` outcome.
 
 ### 3.4 Stage Review — anchor audit
 
@@ -90,6 +93,8 @@ Companion stories:
 ### 3.5 Engine separation (testability)
 
 - The review **engine** (selection, scoring, star math) lives in `apps/mobile/src/logic/reviews/` and is fully pure — no React, no platform, no audio.
+- Selection helpers (`selectSpread`, `placeCorrect`), the seeded RNG, the attempt session (`startSession`, `answer`, `skip`, `expire`, `tally`) and the session clock live in `@hangul-route/content-schema` (`src/assessment/`, F-PLC-001 section 3.3). `apps/mobile/src/logic/reviews/` keeps Daily Pool, star math, stage balance and banned text and imports the shared module. Review items are `AssessmentQuestion`s built from jamo / vocab ids, `ReviewAttempt` responses use `AssessmentResponseSchema`, and `ReviewEntrySchema` (`schemas/progress.ts`) is unchanged.
+- The Hangul Check builder (`buildHangulCheck`, F-QUEST-002 section 3.9) is unchanged and may later emit `AssessmentQuestion`s; that is a follow-up, not required here (F-PLC-001 B8).
 - The review **player** (UI shell, animations, Hoya wiring) lives in `apps/mobile/src/screens/reviews/` and consumes the engine.
 - Engine coverage target: 100 % branch.
 
@@ -103,7 +108,7 @@ Companion stories:
 
 Source: `CLAUDE.md` §1 "Feedback & motivation" (owner decision 2026-10-09) and `09-...-addendum.md` §2.2. Positive nudges are allowed; shame is not. These rules bound every learner-facing review surface — they permit the surfaces below, they do not require them.
 
-- **Session clock (allowed)** — a review may show **one** clock for the whole attempt, never one per item. When it runs out the attempt ends: unanswered items are recorded `skipped` (as in §3.3), never `wrong`, and the 1-star floor (§3.1) still holds.
+- **Session clock (allowed)** — a review may show **one** clock for the whole attempt, never one per item. When it runs out the attempt ends: unanswered items are recorded `skipped` (as in §3.3), never `wrong`, and the 1-star floor (§3.1) still holds. This is implemented once by `expire` in the shared session (`packages/content-schema/src/assessment/session.ts`): unanswered -> `skipped`, never `wrong`, the 1-star floor unchanged.
 - **Fill-only meters (allowed)** — item dots, collection counts and progress meters only grow; a miss never empties or shrinks them. A combo counter that resets on a miss is a meter that drops, so it is not allowed.
 - **Encouraging streak messages (allowed)** — e.g. Hoya after a Daily Test: *"3 days in a row!"*. A missed day gets no message about the break and no "streak lost" state.
 - **Challenge mode (allowed, opt-in)** — off by default. When the learner or a caregiver turns it on, a review may show a real countdown timer. With it off, nothing else changes.
@@ -112,7 +117,7 @@ Source: `CLAUDE.md` §1 "Feedback & motivation" (owner decision 2026-10-09) and 
 ## 4. Out of scope
 
 - **Voice / pronunciation review** (speak-the-jamo) → blocked on STT bench (INBOX T-013), tracked separately.
-- **Adaptive difficulty** (raise stakes after a 3-star streak) — out of scope. Encouraging streak *messages* are allowed (§3.7), but raising the stakes on a streak turns encouragement into pressure.
+- **Adaptive difficulty** (raise stakes after a 3-star streak) — out of scope. Encouraging streak *messages* are allowed (§3.7), but raising the stakes on a streak turns encouragement into pressure. The placement check (F-PLC-001) is the one adaptive use: it lives in `src/placement/`, runs once at the learner's request, decides only which rung comes next, and is never a review. The shared session reducer (`assessment/session.ts`) stays non-adaptive and is used by both.
 - **Public ranking of children** (multi-learner leaderboards, class rankings) — explicit no, ever (§3.7).
 - **Stage 2+ Review content** — content work, this spec only covers the engine + Stage 1 question set.
 
@@ -134,7 +139,9 @@ Authored 2026-09-19 (IDs per `docs/blueprints/10-app-map.md` §3.1):
 | `logic/reviews/daily-pool.ts` | §3.2 — Pool A/B/C/D weighting, Pool C forced, anti-staleness |
 | `logic/reviews/stage-balance.ts` | §3.4 — each pillar contributes ≥ 1 |
 | `logic/reviews/banned-text.ts` | §3.1 — no %, no x/y fractions reach learner UI |
-| `logic/reviews/engine.ts` | end-to-end attempt lifecycle (started → item answer × N → completed); §3.7 — if a session clock expires, remaining items become `skipped`, never `wrong`, and earned stars / cards never decrease |
+| `logic/reviews/engine.ts` | end-to-end attempt lifecycle (started → item answer × N → completed), testing the composition with the shared `assessment/session`; §3.7 — if a session clock expires, remaining items become `skipped`, never `wrong`, and earned stars / cards never decrease |
+
+The shared reducer's own tests (`startSession`, `answer`, `skip`, `expire`, `tally`, the clock, selection and RNG) live in `packages/content-schema/src/__tests__/assessment-*.test.ts` (F-PLC-001) and are not repeated here.
 
 ### Integration
 
@@ -161,6 +168,7 @@ Authored 2026-09-19 (IDs per `docs/blueprints/10-app-map.md` §3.1):
 - **F-HW-001** (Homework) — daily test is invoked from home card ③.
 - **F-PROF-001** (profiles) — every attempt is scoped to `currentProfileId`.
 - **packages/content-schema** — needs `ReviewAttempt` / `ReviewItem` types + Stage-1 item pool seed.
+- **F-PLC-001 PR P-1** (shared question engine, `packages/content-schema/src/assessment/`, merged as #161) — the session, clock, selection and RNG this engine imports. `ReviewEntrySchema` (`schemas/progress.ts`) is unchanged.
 
 ### Downstream
 

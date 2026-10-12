@@ -20,6 +20,20 @@ export function latestPublished<T extends PlanLike>(plans: readonly T[]): T | nu
   return plans.filter((p) => p.publishedAt && !p.archivedAt).sort((a, b) => (b.publishedAt as string).localeCompare(a.publishedAt as string))[0] ?? null;
 }
 
+/**
+ * The plan the roster shows (the "Open plan" button and the card lines): the newest published
+ * plan for everyone, so a plan sent to one or a few learners (such as a suggested start) never
+ * buries the class plan; the newest published plan of any kind when there is no plan for everyone.
+ */
+export function rosterPlan<T extends PlanLike & { targetLearnerIds: readonly string[] | null }>(plans: readonly T[]): T | null {
+  return latestPublished(plans.filter((p) => p.targetLearnerIds === null)) ?? latestPublished(plans);
+}
+
+/** Whether a plan reaches this learner: a plan for everyone reaches all, a targeted plan only its learners. */
+export function planReaches(plan: { targetLearnerIds: readonly string[] | null }, learnerId: string): boolean {
+  return plan.targetLearnerIds === null || plan.targetLearnerIds.includes(learnerId);
+}
+
 /** The plan the builder opens with: the newest live plan, drafts included. */
 export function currentPlan<T extends PlanLike>(plans: readonly T[]): T | null {
   return plans.filter((p) => !p.archivedAt).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0] ?? null;

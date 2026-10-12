@@ -202,7 +202,7 @@ describe('consent text per locale', () => {
 describe('what the new teacher sees is generated from data (TEACHER_VISIBLE_SUMMARY_KEYS)', () => {
   const summaryKeys = Object.keys(ProgressSummarySchema.shape).sort();
 
-  it('allow-lists exactly the spec keys and hides schemaVersion, stage1Anchor and selfRoute', () => {
+  it('allow-lists exactly the spec keys and hides schemaVersion, stage1Anchor, selfRoute and vocab', () => {
     expect([...TEACHER_VISIBLE_SUMMARY_KEYS]).toEqual([
       'lastActiveAt',
       'streakDays',
@@ -216,7 +216,8 @@ describe('what the new teacher sees is generated from data (TEACHER_VISIBLE_SUMM
       'journey',
     ]);
     // selfRoute: the family space reads it, a class or school never does (F-PLAN-002 section 3.10).
-    expect([...TEACHER_HIDDEN_SUMMARY_KEYS]).toEqual(['schemaVersion', 'stage1Anchor', 'selfRoute']);
+    // vocab: hidden until F-VOC-005 P-4 adds the console line and its consent item.
+    expect([...TEACHER_HIDDEN_SUMMARY_KEYS]).toEqual(['schemaVersion', 'stage1Anchor', 'selfRoute', 'vocab']);
   });
 
   it('classifies every ProgressSummarySchema key exactly once (a new key fails here until classified)', () => {
@@ -229,6 +230,13 @@ describe('what the new teacher sees is generated from data (TEACHER_VISIBLE_SUMM
   it('maps summary.journey to the quests item, like stage1 (F-ROUTE-001 OD-11)', () => {
     expect(TEACHER_VISIBLE_SUMMARY_ITEMS.journey).toBe('quests');
     expect(TEACHER_VISIBLE_SUMMARY_ITEMS.journey).toBe(TEACHER_VISIBLE_SUMMARY_ITEMS.stage1);
+  });
+
+  it('discloses the level check behind journey known counts through the placement item (F-ROUTE-001 R-7a)', () => {
+    expect(TEACHER_VISIBLE_SUMMARY_KEYS).toContain('placement');
+    expect(TEACHER_VISIBLE_SUMMARY_ITEMS.placement).toBe('level_check');
+    expect(TEACHER_VISIBLE_ITEM_IDS).toContain('level_check');
+    expect(TRANSFER_CONSENT_TEXT.en.items.level_check).toBe('Level check results');
   });
 
   it('gives every allow-listed key a consent item, and nothing else', () => {

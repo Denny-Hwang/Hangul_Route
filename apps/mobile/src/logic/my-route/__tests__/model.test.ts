@@ -102,7 +102,9 @@ describe('buildMyRoute (F-ROUTE-001 section 3.18 behaviours, frozen fixtures)', 
     expect(row(m, 'stage2')?.here).toBe(true);
     expect(m.cursor?.questId).toBe('quest:stage2-life-q1');
     expect(m.trailReached).toBe(0);
-    expect(m.hero).toBe('start');
+    // R-7a: a start marker exists (the seed names no start quest, so the tag sits on the known stage), so the hero is continue.
+    expect(m.start).toEqual({ stage: 'stage1', questId: null });
+    expect(m.hero).toBe('continue');
     expect(m.skills.every((s) => s.quests === 0)).toBe(true);
   });
 

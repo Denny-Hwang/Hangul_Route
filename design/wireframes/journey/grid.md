@@ -74,6 +74,6 @@ Exit to:    `episode/detail` · `paywall/upgrade` (future) · `reviews/stage-rev
 
 ## Open questions
 
-- **Discrepancy**: the row pill shows "Soon" for every stage except 1, yet the Stage 2 (life, nature) and Stage 4 (rites) taste cells are open and tappable. Row status and cell status need one rule (default: pill reflects "any cell open").
+- **Discrepancy** (resolved by F-ROUTE-001 R-J, OD-8: the pill reads Open / A taste / Coming later from `stageAvailability`, and no stage header is a lock or a paywall door): the row pill showed "Soon" for every stage except 1, yet the Stage 2 (life, nature) and Stage 4 (rites) taste cells are open and tappable. Row status and cell status need one rule (default: pill reflects "any cell open").
 - **Discrepancy**: no entitlement check in the shipped grid (F-SUB-001 §4 defers it). When Stage 2 becomes gated, does the *cell* or the *row* carry the lock, and does a locked cell open `paywall/upgrade` directly or show `episode/detail` in preview mode first? Default: cell → paywall, because a child tapping "something locked" should meet the grown-up gate, not a dead page.
 - Completed cell defined as "any quest completed" (code) vs "all quests completed" (episode progress). Pick before the mid-fi pass; it changes how Stage 1 looks at 50 %.

@@ -631,6 +631,118 @@ function lintPillarTags(story: Story, add: Add): void {
   }
 }
 
+// ---- copying, designation numbers, shelf reviewers (F-STORY-005 §3.9) ------------------------------
+
+/** A run of this many consecutive words shared with a source excerpt counts as copied. */
+export const COPIED_RUN_WORDS = 8;
+/**
+ * Names and fixed date forms a writer cannot restate: UNESCO register and
+ * programme names, the country names in them, and lunar dates ("the fifteenth
+ * day of the eighth lunar month"). Matched on the normalized text (lower case,
+ * no apostrophes, single spaces). An exempt phrase is dropped from the word
+ * stream: its words never count toward a run, but the words on either side of
+ * it join up, so a long copy that contains a name still fails.
+ */
+const COPY_EXEMPT =
+  /\b(?:representative list of the intangible cultural heritage of humanity|masterpieces? of the oral and intangible heritage of humanity|(?:the )?government of the republic of korea|democratic peoples republic of korea|republic of korea|memory of the world|lunar new year|(?:the )?[a-z0-9]+ day of the [a-z0-9]+ lunar month)\b/g;
+/**
+ * Word characters after lower-casing: ASCII letters and digits, Latin-1 and
+ * Latin Extended letters, Hangul syllables. Explicit ranges, not `\p{L}`
+ * (F-I18N-001 §3.1 keeps Unicode property escapes out of shared code).
+ */
+const NON_WORD = /[^a-z0-9\u00c0-\u024f\uac00-\ud7a3]+/;
+/**
+ * Designation numbers left official names in 2021: "National Treasure No. 70",
+ * "National Treasure (No. 70)", "National Treasures Nos. 32 and 151",
+ * "National Treasure 70" (any case), and the capitalized designations
+ * "Treasure No. 1", "Historic Site No. 3", "Natural Monument #53" (case-sensitive,
+ * so a folk tale's "treasure number 2" passes).
+ */
+const DESIGNATION_NUMBER: readonly RegExp[] = [
+  /\bnational\s+treasures?(?:\s*[,(]?\s*(?:nos?\.?|numbers?|#)\s*|\s+)\d+/i,
+  /\b(?:Treasures?|Historic\s+Sites?|Scenic\s+Sites?|Natural\s+Monuments?|(?:National\s+)?Intangible\s+Cultural\s+Heritage)\s*[,(]?\s*(?:Nos?\.?|Numbers?|#)\s*\d+/,
+];
+
+/**
+ * Lower-cased word runs of `text`, case- and punctuation-insensitive. A `{kw:}`
+ * token ends a run (the learner hears a Korean word there, not the source's
+ * words); a name or date of `COPY_EXEMPT` is skipped without ending it.
+ */
+function wordRuns(text: string): string[][] {
+  return text.split(TOKEN).map((part) =>
+    part
+      .toLowerCase()
+      .replace(/['\u2019]/g, '')
+      .split(NON_WORD)
+      .filter((w) => w !== '')
+      .join(' ')
+      .replace(COPY_EXEMPT, ' ')
+      .split(' ')
+      .filter((w) => w !== ''),
+  );
+}
+
+function wordWindows(text: string): string[] {
+  return wordRuns(text).flatMap((words) =>
+    words.slice(0, Math.max(0, words.length - COPIED_RUN_WORDS + 1)).map((_, i) =>
+      words.slice(i, i + COPIED_RUN_WORDS).join(' '),
+    ),
+  );
+}
+
+/** The learner-facing English prose checked for copying (every prose field, claims included). */
+function lintCopying(story: Story, add: Add): void {
+  const excerpts = new Map<string, string>();
+  story.facts.forEach((fact, fi) =>
+    fact.sources.forEach((source, si) => {
+      for (const window of wordWindows(source.quoteOrLocator)) {
+        if (!excerpts.has(window)) excerpts.set(window, at('facts', fi, 'sources', si, 'quoteOrLocator'));
+      }
+    }),
+  );
+  if (excerpts.size === 0) return;
+  for (const [path, text] of proseFields(story)) {
+    const copied = text === undefined ? undefined : wordWindows(text).find((window) => excerpts.has(window));
+    if (copied) {
+      add(
+        'narration-copies-source',
+        'error',
+        path,
+        `"${copied}" is copied from ${excerpts.get(copied)}; restate the fact in your own words (${COPIED_RUN_WORDS} or more words in a row match)`,
+      );
+    }
+  }
+}
+
+/** Every prose field except `claimEn`, which may name a designation as its source does. */
+function lintDesignationNumbers(story: Story, add: Add): void {
+  for (const [path, text] of proseFields(story)) {
+    if (text === undefined || /^facts\[\d+\]\.claimEn$/.test(path)) continue;
+    const plain = stripTokens(text);
+    const match = DESIGNATION_NUMBER.map((re) => re.exec(plain)).find((m) => m !== null);
+    if (match) {
+      add(
+        'narration-national-treasure-number',
+        'error',
+        path,
+        `text carries a designation number ("${match[0]}"); write the name without the number, e.g. "National Treasure" (numbers stay in source titles)`,
+      );
+    }
+  }
+}
+
+function lintShelfReviewers(story: Story, add: Add): void {
+  const { review } = story;
+  if (story.shelf && !(review.language === 'native-reviewed' && review.culture === 'culture-reviewed')) {
+    add(
+      'story-shelf-needs-reviewers',
+      'error',
+      'review',
+      `a story with a shelf block needs review.language native-reviewed and review.culture culture-reviewed (has ${review.language} and ${review.culture})`,
+    );
+  }
+}
+
 // ---- entry points -----------------------------------------------------------------------------------------------
 
 function unusedFacts(story: Story, add: Add): void {
@@ -672,5 +784,8 @@ export function lintStory(story: Story, ctx: LintContext = {}): Finding[] {
   lintText(story, add);
   lintGates(story, add);
   lintPillarTags(story, add);
+  lintCopying(story, add);
+  lintDesignationNumbers(story, add);
+  lintShelfReviewers(story, add);
   return findings;
 }

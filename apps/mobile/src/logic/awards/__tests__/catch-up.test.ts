@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { catchUpGrantedPayload } from '../catch-up';
+import { catchUpCard, catchUpGrantedPayload } from '../catch-up';
 import type { AwardSource, DerivedAward } from '../types';
 import { T1 } from './fixtures';
 
@@ -28,5 +28,31 @@ describe('catchUpGrantedPayload (F-STORY-006 §3.5)', () => {
 
   it('is null when the welcome card arrived alone: a new profile is not a catch-up', () => {
     expect(catchUpGrantedPayload([award('card:tiger', 'welcome')])).toBeNull();
+  });
+});
+
+describe('catchUpCard: the Home catch-up card for one session (F-STORY-006 §3.5, PR 6.5c)', () => {
+  const WELCOME = ['card:tiger'];
+
+  it('shows the cards the reconcile listed this session, counted by the list length', () => {
+    const listed = ['card:chuseok', 'card:sebae', 'card:tiger'];
+    expect(catchUpCard(listed, WELCOME)).toEqual({ cardIds: listed, count: 3 });
+  });
+
+  it('is hidden when nothing is listed: no reconcile added cards, or See my cards cleared them', () => {
+    expect(catchUpCard(undefined, WELCOME)).toBeNull();
+    expect(catchUpCard([], WELCOME)).toBeNull();
+  });
+
+  it('is hidden for the welcome card alone: a new profile is not a catch-up', () => {
+    expect(catchUpCard(['card:tiger'], WELCOME)).toBeNull();
+  });
+
+  it('is hidden once only the welcome card is left (the others were opened in the Library)', () => {
+    expect(catchUpCard(['card:tiger'], new Set(WELCOME))).toBeNull();
+  });
+
+  it('counts a card once even if a list repeats it', () => {
+    expect(catchUpCard(['card:sebae', 'card:sebae', 'card:tiger'], WELCOME)).toEqual({ cardIds: ['card:sebae', 'card:tiger'], count: 2 });
   });
 });

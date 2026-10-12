@@ -12,6 +12,7 @@ export { SKILLS, SKILL_OF_KIND, SKILL_THRESHOLDS, TILE_KINDS, marksFor, questSki
 export { gainsOf } from './gains';
 export { journeySummaryOf, summarizeJourney, type JourneyContent, type JourneyStageSummary, type JourneySummary } from './summary';
 export { stagesToLatch, withStageLatches } from './latch';
+export { startMarkerOf, startRouteOf } from './start-marker';
 export { hoyaPoseFor, newQuestsLine, newlyDoneKeys, parseSeen, readSeen, seenFrom, seenKey, writeSeen, type JsonStorage } from './seen';
 export {
   canDoCopy,
