@@ -15,7 +15,8 @@ import { onProfileRemoved } from './profile-removal';
  * UI locale and romanization display setting (F-I18N-001 §3.2). A local-first
  * device preference, never part of the synced `Profile`: it lives under
  * `device:settings` and `settings:${profileId}` and only locale codes reach
- * telemetry. Resolution is profile override > device choice > detection > `en`.
+ * telemetry. Resolution is profile override > device choice > detection > `en`; a
+ * tab-only session override (All lessons, memory only) sits above them all.
  */
 
 const DEVICE_KEY = 'device:settings';
@@ -29,6 +30,11 @@ interface State {
   detected: UiLocale;
   /** The device-level choice; `null` = never chosen. */
   device: UiLocale | null;
+  /**
+   * A tab-only override (F-BROWSE-001 §4.9): All lessons shows its chosen UI language without a
+   * learner profile and without touching the device choice. Never stored; `null` = none.
+   */
+  session: UiLocale | null;
   byProfile: Record<string, ProfileSettings>;
   hydrated: boolean;
 }
@@ -36,6 +42,8 @@ interface State {
 interface Actions {
   hydrate: (profileIds: string[]) => Promise<void>;
   setDeviceLocale: (locale: UiLocale | null, source?: LocaleChangeSource) => void;
+  /** Sets the active UI locale in memory only: no `device:settings` write, no event (F-BROWSE-001 §4.9). */
+  setSessionLocale: (locale: UiLocale | null) => void;
   setProfileLocale: (profileId: string, locale: UiLocale | null, source?: LocaleChangeSource) => void;
   setRomanizationMode: (profileId: string, mode: RomanizationMode) => void;
   /** The story reader's Read to me switch (F-STORY-002 §3.4); no telemetry. */
@@ -59,7 +67,15 @@ function visible(locale: UiLocale | null | undefined): UiLocale | undefined {
 }
 
 /** `resolveLocale` over the levels that are currently visible; a hidden level falls through to the next one. */
-function effectiveLocale(levels: { profile?: UiLocale | null; device?: UiLocale | null; detected?: UiLocale | null }): UiLocale {
+function effectiveLocale(levels: {
+  session?: UiLocale | null;
+  profile?: UiLocale | null;
+  device?: UiLocale | null;
+  detected?: UiLocale | null;
+}): UiLocale {
+  // A visible session override wins over every stored level; it is never persisted.
+  const session = visible(levels.session);
+  if (session !== undefined) return session;
   return resolveLocale({
     profile: visible(levels.profile),
     device: visible(levels.device),
@@ -68,8 +84,12 @@ function effectiveLocale(levels: { profile?: UiLocale | null; device?: UiLocale 
 }
 
 /** The locale the UI renders in for the active profile (`null` = no profile yet). */
-export function activeLocale(state: Pick<State, 'detected' | 'device' | 'byProfile'>, activeProfileId: string | null): UiLocale {
+export function activeLocale(
+  state: Pick<State, 'detected' | 'device' | 'byProfile'> & Partial<Pick<State, 'session'>>,
+  activeProfileId: string | null,
+): UiLocale {
   return effectiveLocale({
+    session: state.session,
     profile: activeProfileId === null ? undefined : state.byProfile[activeProfileId]?.uiLocale,
     device: state.device,
     detected: state.detected,
@@ -106,6 +126,7 @@ function withoutLocale(settings: ProfileSettings | undefined): ProfileSettings {
 export const useLocaleStore = create<State & Actions>((set, get) => ({
   detected: detectInitialLocale(),
   device: null,
+  session: null,
   byProfile: {},
   hydrated: false,
 
@@ -130,6 +151,10 @@ export const useLocaleStore = create<State & Actions>((set, get) => ({
     set({ device: locale });
     persist(locale === null ? removeKey(DEVICE_KEY) : writeJson(DEVICE_KEY, { uiLocale: locale }));
     reportLocaleChange(from, effectiveLocale({ device: locale, detected }), 'device', source);
+  },
+
+  setSessionLocale: (locale) => {
+    set({ session: locale });
   },
 
   setProfileLocale: (profileId, locale, source = 'settings') => {

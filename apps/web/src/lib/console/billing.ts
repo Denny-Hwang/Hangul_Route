@@ -1,8 +1,12 @@
-import { FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, PLAN_PRICING, SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS, discountedUsd, promoLabel, type Entitlement, type PlanKey, type PlanPricing, type Promo, type PurchasablePlanKey } from '@hangul-route/content-schema';
+import { FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, PLAN_PRICING, SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS, discountedUsd, isStripeSubscriptionRef, promoLabel, type Entitlement, type PlanKey, type PlanPricing, type Promo, type PurchasablePlanKey } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, formatDate, formatUsd, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { EntitlementView, SpaceListItem } from './api';
 
-/** Billing view models — F-ENT-001 §3.6 (wireframe console/billing). Two products (decision #30): family once, group yearly, contract beyond the caps. */
+/**
+ * Billing view models — F-ENT-001 §3.6 (wireframe console/billing). Two products (decision #30), both
+ * renewing yearly since 2026-10-11 (AMENDMENTS-BILLING-FAMILY-YEARLY): the Family Plan and the Group License;
+ * a contract beyond the caps.
+ */
 const PAST_DUE_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
 
 export interface PlanRow {
@@ -17,12 +21,12 @@ export interface PlanRow {
   recommended: boolean;
 }
 
-/** A plan's name ("Family Lifetime"), in `locale`. */
+/** A plan's name ("Family Plan"), in `locale`. */
 export function planTitle(planKey: PlanKey | 'free', locale: UiLocale = DEFAULT_LOCALE): string {
   return getMessages(locale).console.billing.planTitle[planKey];
 }
 
-/** "$15.30 once" · "$153 / year" around a formatted amount; `cents` keeps two digits for a computed (discounted) amount. */
+/** "$15.30 / year" · "$153 / year" around a formatted amount; `cents` keeps two digits for a computed (discounted) amount. */
 function priceText(per: PlanPricing['per'], amountUsd: number, locale: UiLocale, cents = false): string {
   const price = getMessages(locale).console.price;
   const amount = formatUsd(locale, amountUsd, { cents });
@@ -77,7 +81,7 @@ export function statusLine(e: Entitlement, now: Date, locale: UiLocale = DEFAULT
     case 'trial':
       return when ? words.trialEnds(when) : words.trial;
     case 'active':
-      if (e.planKey === 'family_lifetime') return words.activeForGood;
+      // A yearly plan says when it renews; a row without a date (a legacy one-time sandbox row) just says active.
       return when ? words.activeRenews(when) : words.active;
     case 'past_due':
       return isActive(e, now) ? words.pastDueKept : words.pastDuePaused;
@@ -110,12 +114,13 @@ export function currentPlanCards(entitlements: readonly EntitlementView[], now: 
     subject: e.subjectKind === 'account' ? getMessages(locale).console.billing.yourAccount : (e.subjectName ?? e.subjectId),
     status: statusLine(e, now, locale),
     active: isActive(e, now),
-    canManage: e.provider === 'stripe' && !!e.customerRef && e.planKey !== 'family_lifetime',
+    // Both plans are Stripe subscriptions the portal can cancel (BY-D6); a legacy one-time row has nothing to manage.
+    canManage: e.provider === 'stripe' && !!e.customerRef && isStripeSubscriptionRef(e.providerRef),
   }));
 }
 
 /**
- * Rows to offer this adult: Family Lifetime per owned family, Group License per owned
+ * Rows to offer this adult: Family Plan per owned family, Group License per owned
  * stand-alone class (a class inside a school is covered by the school) and per owned
  * school, plus the contract row for each school. Worded in `locale`.
  */
@@ -149,8 +154,8 @@ export function planRowsFor(_accountId: string, spaces: readonly SpaceListItem[]
 }
 
 /**
- * Price line once a code is applied — "$12.24 with HOYA20 (20% off), was $15.30" (F-ENT-002 §3.3).
- * A yearly licence on a one-charge coupon says so; null when the plan is not purchasable.
+ * Price line once a code is applied — "$12.24 / year with HOYA20 (20% off, first year), was $15.30 / year" (F-ENT-002 §3.3).
+ * A yearly plan on a one-charge coupon says "first year"; null when the plan is not purchasable.
  */
 export function promoPriceLine(planKey: PlanKey | 'free', promo: Promo | null, locale: UiLocale = DEFAULT_LOCALE): string | null {
   if (!promo || (planKey !== 'family_lifetime' && planKey !== 'group_license')) return null;

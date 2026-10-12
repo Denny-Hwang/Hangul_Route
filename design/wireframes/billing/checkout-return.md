@@ -1,5 +1,7 @@
 # Billing/Checkout return — waiting honestly for the payment to land (wireframe v2)
 
+> **Amended 2026-10-11 [BY]** (`docs/specs/AMENDMENTS-BILLING-FAMILY-YEARLY.md`): the family product is the **Family Plan**, $15.30 / year, renews yearly, cancel any time (was the one-time "Family Lifetime"). Lines below are updated.
+
 Spec: `docs/specs/F-BILL-002-billing-in-app-all-personas.md` §4.5, §4.12
 Screen ID: `billing/checkout-return` (a state of `billing/billing-home`, drawn separately because it has its own flow)
 URL on arrival: `https://app.hangulroute.com/account/billing?checkout=success&plan=<planKey>&id=<spaceId>` or `?checkout=cancel` (the query is removed from the address bar right after it is read; the id is opaque, never a name)
@@ -43,10 +45,10 @@ Then: the page says plainly what it knows (checking, active, still processing, o
 state: done
 | (check glyph) Thank you. The plan is active.                 |
 |   Learners get it the next time they open Hangul Route.      |   focus -> the card heading
-| Family · <space name> | Family Lifetime · yours for good     |
+| Family · <space name> | Family Plan · Renews on <date>       |
 
 state: done, family with no learner yet (next step on the card)
-| Family · <space name> | Family Lifetime · yours for good | 0 of 5 learners |
+| Family · <space name> | Family Plan · Renews on <date> | 0 of 5 learners |
 | Next: connect a learner to this family.                      |
 | [ Connect a learner ]                                         |   -> F-APP-001 family page (join code)
 

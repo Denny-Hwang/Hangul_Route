@@ -8,6 +8,7 @@ import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeStory } from '../../logic/content-locale';
 import { gateOpensDirectly } from '../../logic/profiles/gate-route';
 import { isParentSessionValid } from '../../logic/profiles/session';
+import { backOrHome, linkOpenRoute, resolveScreenExits, type ScreenExitProps } from '../../logic/navigation/screen-exits';
 import {
   findSourceLink,
   linkOpenedPayload,
@@ -28,7 +29,14 @@ import { activeProfileSelector, useProfileStore } from '../../store/profile-stor
 import { useUiStore } from '../../store/ui-store';
 import { CitationText, CorrectionsList, Disclosure, FactCard, SeeFactRow, SourcesHeader, SourcesHeading } from './SourcesParts';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'StorySources'>;
+/**
+ * The learner stack passes `route` and `navigation`; another host (All lessons, F-BROWSE-001 §4.7)
+ * passes `route` and the exits instead, with `onOpenLink: null` for copy-only links (no PIN there).
+ */
+type Props = {
+  route: { params: RootStackParamList['StorySources'] };
+  navigation?: Pick<NativeStackScreenProps<RootStackParamList, 'StorySources'>['navigation'], 'canGoBack' | 'goBack' | 'navigate'>;
+} & ScreenExitProps;
 
 /** Whether a grown-up action skips the PIN screen right now, read fresh from the stores (F-LEARN-001 L7). */
 function gateOpenNow(): boolean {
@@ -49,8 +57,16 @@ function gateOpenNow(): boolean {
  * grown-up action: `PinEntry { next: 'ExternalLink', url }` unless the gate
  * opens directly, and only for an https link the story itself cites.
  */
-export function StorySourcesScreen({ route, navigation }: Props): React.ReactElement {
+export function StorySourcesScreen({ route, navigation, ...exitProps }: Props): React.ReactElement {
   const { storyId, factId, sceneIndex, from } = route.params;
+  // Learner defaults: back where it came from, else Home; a link goes through the grown-up gate.
+  const learnerHome = (): void => navigation?.navigate('Main', { screen: 'Home' });
+  const home = exitProps.onHome ?? learnerHome;
+  const exits = resolveScreenExits(exitProps, {
+    back: () => (navigation ? backOrHome(navigation, home) : home()),
+    home,
+    openLink: (url) => navigation?.navigate('PinEntry', { next: 'ExternalLink', url }),
+  });
   const messages = useMessages();
   const copy = messages.learner.story.sources;
   const locale = useLocale();
@@ -158,30 +174,30 @@ export function StorySourcesScreen({ route, navigation }: Props): React.ReactEle
     }, [handOff, setNote, copy]),
   );
 
-  const onOpen = (source: SourceView, key: string): void => {
+  const onOpen = (source: SourceView, key: string, openLink: (url: string) => void): void => {
     const link = findSourceLink(story, source.url);
     if (!link) {
       setNote(key, copy.openFailed(source.url));
       return;
     }
-    if (openLinkStep(gateOpenNow()) === 'open') {
+    const route = linkOpenRoute(exitProps.onOpenLink, () => openLinkStep(gateOpenNow()) === 'open');
+    if (route === 'hand-off') {
       // Called straight from the press so the web hand-off keeps the tap (pop-up rules).
       void handOff(link, key);
       return;
     }
     setNote(key, null);
-    pending.current = { link, key };
-    navigation.navigate('PinEntry', { next: 'ExternalLink', url: link.url });
+    // Only the learner gate comes back here to finish the hand-off; a host owns its own open.
+    if (route === 'gate') pending.current = { link, key };
+    openLink(link.url);
   };
 
   const onCopy = (source: SourceView, key: string): void => {
     void copyText(source.url).then((ok) => setNote(key, ok ? copy.linkCopied : copy.copyUnavailable));
   };
 
-  const back = (): void => {
-    if (navigation.canGoBack()) navigation.goBack();
-    else navigation.navigate('Main', { screen: 'Home' });
-  };
+  const back = exits.back;
+  const openLink = exits.openLink;
 
   const jumpTo = (id: string): void => {
     setHighlight(id);
@@ -287,7 +303,7 @@ export function StorySourcesScreen({ route, navigation }: Props): React.ReactEle
                   }
                   noteFor={(i) => notes[`${item.fact.id}:${i}`] ?? null}
                   onCopy={(source, i) => onCopy(source, `${item.fact.id}:${i}`)}
-                  onOpen={(source, i) => onOpen(source, `${item.fact.id}:${i}`)}
+                  onOpen={openLink === null ? null : (source, i) => onOpen(source, `${item.fact.id}:${i}`, openLink)}
                   onLayout={onCardLayout(s, item.fact.id)}
                 />
               ),

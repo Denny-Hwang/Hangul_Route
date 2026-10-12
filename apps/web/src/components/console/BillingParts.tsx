@@ -81,7 +81,7 @@ export function PlanRowList({
             <Muted>{row.includes}</Muted>
             <Muted>
               <strong>{promoPriceLine(row.planKey, promo, locale) ?? row.price}</strong>
-              {row.planKey === 'family_lifetime' ? ` · ${c.lifetimeLine}` : row.planKey === 'group_license' ? ` · ${c.groupLine}` : row.planKey === 'school_seat' ? ` · ${c.contactLine}` : ''}
+              {row.planKey === 'family_lifetime' ? ` · ${c.familyLine}` : row.planKey === 'group_license' ? ` · ${c.groupLine}` : row.planKey === 'school_seat' ? ` · ${c.contactLine}` : ''}
             </Muted>
           </div>
           {row.action === 'choose' ? (

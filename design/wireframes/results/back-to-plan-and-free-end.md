@@ -31,7 +31,7 @@ A. next in plan / back to plan     B. end of the free lessons (once)   C. after 
 ```
 
 - A caption: "Next in your plan" (plan source), "Back to your plan" (the quest just played was off-plan while a leading source exists), else today's "Next up".
-- B replaces the teaser card and the button set; the row holds the cards earned in the free lessons (up to six), wraps, or shows the earned-cards count when it does not fit at 320 dp; no row when none was earned. **{ask}** = `askFor` label (spec §3.7).
+- B replaces the teaser card and the button set; the row holds the cards earned in the free lessons (all of Stage 1: up to six tiles), and shows the earned-cards count when more were earned or the row does not fit at 320 dp; no row when none was earned. **{ask}** = `askFor` label (spec §3.7).
 - C is shown at `free-end` once the seen key is set (for example after a replay): one line, Practice words added, **no ask**.
 - Never: "you skipped", "wrong lesson", "not in your plan", "trial", a price, a product name, a countdown, a number of days.
 
@@ -42,7 +42,7 @@ A. next in plan / back to plan     B. end of the free lessons (once)   C. after 
 - B [[ BACK HOME ]] -> Main tabs (Home shows `home/next-and-free-end-card` state C).
 - B / C [ Practice words ] -> topic player (first free topic playable in this build).
 - B {ask} -> `access.help_asked { from: 'results', audience }` -> `PinEntry { next: 'Paywall', from: 'results' }` (self-only device with no PIN: the Plan screen directly).
-- B shown -> sets `free-end-seen:<profileId>` (write in try/catch) and sends `access.free_end_reached { freeDays: 2, placedOut }`.
+- B shown -> sets `free-end-seen:<profileId>` (write in try/catch) and sends `access.free_end_reached { freeDays, placedOut }` (`freeDays` = `freeLessonsFacts().days`: the route days of Stage 1, 5 today; F-ENT-003 OD-1).
 - Completing an off-plan quest with a leading source -> `route.offplan_finished { source, stage }`.
 
 ## Navigation graph
