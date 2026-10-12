@@ -7,7 +7,7 @@ import { storyMinigameRef } from '../../story/story-ref';
 import { localizedGloss } from '../../vocab/catalog';
 import { questTeaches } from '../../stage1/curriculum';
 import { bookEpisode, story, storyQuest } from '../../story/__tests__/shelf-fixture';
-import type { StoryIndexEntry } from '../../story/story-index';
+import { entryForQuest, type StoryIndexEntry } from '../../story/story-index';
 import { buildBrowseBundle, isOpenableEpisode } from '../bundle';
 import { episodeOutline, itemFacts, type QuestFacts, type QuestPlace, type StoryFacts, type TopicFacts } from '../facts';
 import { CULTURE_ID, DRAFT_ID, TALE_ID, fixtureBundle, fixtureInput, fixtureStories } from './browse-fixture';
@@ -22,44 +22,70 @@ const bundle = fixtureBundle();
 const quest = (id: string): Quest => bundle.quests.find((q) => q.id === id) as Quest;
 const questFacts = (id: string, locale: 'en' | 'es' | 'ko' = 'en', focusJamoId?: string): QuestFacts =>
   itemFacts({ kind: 'quest', id, ...(focusJamoId ? { focusJamoId } : {}) }, bundle, locale) as QuestFacts;
+/** The first lesson of the curriculum (F-QUEST-002): its id is the curriculum's anchor; every value below is read from the bundle. */
+const Q1 = 'quest:stage1-letters-q1';
 const LETTERS_1 = ['jamo:eo', 'jamo:a', 'jamo:giyeok', 'jamo:nieun'];
+const asWord = (t: { ko: string; romanization?: string; en: string }) => ({ ko: t.ko, romanization: t.romanization ?? '', gloss: t.en });
+const koKey = (ko: string): string => ko.replace(/[!?.]+$/u, '');
+/** The bundled game scopes a quest plays, with their refs. */
+const scopesOf = (q: Quest): { ref: string; scope: MinigameScope }[] =>
+  q.steps.flatMap((step) => {
+    const scope = step.minigameRef ? bundle.scopeFor(step.minigameRef) : undefined;
+    return scope && step.minigameRef ? [{ ref: step.minigameRef, scope }] : [];
+  });
+/** The first bundled lesson (not a story quest) with a scope like this, and that scope: real content, picked by what it holds, never by name. */
+function lessonWith(has: (scope: MinigameScope) => boolean): { quest: Quest; ref: string; scope: MinigameScope } {
+  for (const q of bundle.quests) {
+    if (entryForQuest(bundle.storyIndex, q.id)) continue;
+    const found = scopesOf(q).find(({ scope }) => has(scope));
+    if (found) return { quest: q, ...found };
+  }
+  throw new Error('the bundle holds no lesson with such a scope');
+}
 /** The facts of a one-step lesson that plays `scope` (a scope the bundled content does not hold). */
 function withScope(scope: MinigameScope): QuestFacts {
   const ref = 'minigame:browse-facts-test';
-  const base = quest('quest:stage2-life-q1');
+  const base = quest(Q1);
   const one: Quest = { ...base, id: 'quest:one-game', steps: [{ id: 's1', kind: 'practice', titleEn: 'Play', minigameKind: scope.kind, minigameRef: ref }] };
   const scopeFor = (r: string): MinigameScope | undefined => (r === ref ? scope : bundle.scopeFor(r));
   return itemFacts({ kind: 'quest', id: one.id }, { ...bundle, quests: [...bundle.quests, one], scopeFor }) as QuestFacts;
 }
 
 describe('itemFacts: quest', () => {
-  const q1 = questFacts('quest:stage1-letters-q1');
+  const q1 = questFacts(Q1);
+  const discoverOf = (q: Quest, locale: 'en' | 'es' = 'en') =>
+    localizeQuest(q, locale)
+      .steps.flatMap((step) => step.discover?.pages ?? [])
+      .flatMap((page) => page.items)
+      .map((item) => (item.type === 'jamo' ? item.example : item.word));
 
   it('title, minutes, the steps in order and the card it awards', () => {
-    expect(q1).toMatchObject({ kind: 'quest', id: 'quest:stage1-letters-q1', title: 'Meet a, eo, g, n', minutes: 5, rewardCardId: 'card:book' });
-    expect(q1.steps).toEqual(['intro', 'discover', 'practice', 'apply', 'check', 'reward']);
+    const q = quest(Q1);
+    expect(q1).toMatchObject({ kind: 'quest', id: Q1, title: q.titleEn, minutes: q.estimatedMinutes, rewardCardId: q.rewardCardId ?? null });
+    expect(q1.steps).toEqual(q.steps.map((step) => step.kind));
+    expect(q1.rewardCardId).not.toBeNull();
   });
 
   it('the letters in Discover order, each with its romanization', () => {
-    expect(q1.letters.map((l) => l.jamoId)).toEqual(questTeaches(quest('quest:stage1-letters-q1')));
-    expect(q1.letters.map((l) => [l.char, l.romanization])).toEqual([
-      ['ㅏ', 'a'],
-      ['ㅓ', 'eo'],
-      ['ㄱ', 'g/k'],
-      ['ㄴ', 'n'],
-    ]);
+    const teaches = questTeaches(quest(Q1));
+    expect(teaches.length).toBeGreaterThan(0);
+    const letterOf = (id: string) => {
+      const jamo = bundle.jamo.find((j) => j.id === id);
+      return { jamoId: id, char: jamo?.char, romanization: jamo?.romanization };
+    };
+    expect(q1.letters).toEqual(teaches.map(letterOf));
     expect(q1.tasteWords).toEqual([]);
     // a letter this bundle does not hold is left out, never shown blank
-    const without = itemFacts({ kind: 'quest', id: 'quest:stage1-letters-q1' }, { ...bundle, jamo: bundle.jamo.filter((j) => j.id !== 'jamo:a') }) as QuestFacts;
-    expect(without.letters.map((l) => l.char)).toEqual(['ㅓ', 'ㄱ', 'ㄴ']);
+    const [dropped, ...rest] = teaches as [string, ...string[]];
+    const without = itemFacts({ kind: 'quest', id: Q1 }, { ...bundle, jamo: bundle.jamo.filter((j) => j.id !== dropped) }) as QuestFacts;
+    expect(without.letters).toEqual(rest.map(letterOf));
   });
 
-  it('words from Discover and the game scopes, once each, with romanization and gloss', () => {
-    expect(q1.words.slice(0, 3)).toEqual([
-      { ko: '나', romanization: 'na', gloss: 'I, me' },
-      { ko: '너', romanization: 'neo', gloss: 'you' },
-      { ko: '가', romanization: 'ga', gloss: 'the sound ga' },
-    ]);
+  it("words from Discover first (each letter's example word and every word item), then the game scopes, once each, with romanization and gloss", () => {
+    const discover = discoverOf(quest(Q1));
+    expect(discover.length).toBeGreaterThan(0);
+    expect(q1.words[0]).toEqual(asWord(discover[0] as (typeof discover)[number]));
+    for (const d of discover) expect(q1.words.some((w) => koKey(w.ko) === koKey(d.ko)), d.ko).toBe(true);
     expect(new Set(q1.words.map((w) => w.ko)).size).toBe(q1.words.length);
     for (const word of q1.words) {
       expect(word.romanization.length, word.ko).toBeGreaterThan(0);
@@ -69,16 +95,10 @@ describe('itemFacts: quest', () => {
     expect(new Set(q1.syllables.map((s) => s.ko)).size).toBe(q1.syllables.length);
   });
 
-  it('a Pic-Word board adds every word on it (quest 4 teaches its food words only there)', () => {
-    const life = questFacts('quest:stage1-life-q1');
-    expect(life.words).toEqual(
-      expect.arrayContaining([
-        { ko: '김치', romanization: 'gimchi', gloss: 'kimchi' },
-        { ko: '밥', romanization: 'bap', gloss: 'rice' },
-        { ko: '김밥', romanization: 'gimbap', gloss: 'kimbap' },
-        { ko: '젓가락', romanization: 'jeotgarak', gloss: 'chopsticks' },
-      ]),
-    );
+  it('a Pic-Word board adds every word on it', () => {
+    const { quest: board, scope } = lessonWith((sc) => (sc.picWord?.boards.length ?? 0) > 0);
+    const words = questFacts(board.id).words;
+    for (const pair of scope.picWord?.boards.flatMap((b) => b.pairs) ?? []) expect(words, pair.word.ko).toContainEqual(asWord(pair.word));
   });
 
   it('Listen & Pick adds what each round asks for: a word or picture round its word, a syllable round its syllable; never a letter round or a wrong option', () => {
@@ -143,32 +163,31 @@ describe('itemFacts: quest', () => {
   });
 
   it('a dialogue adds each line and its right reply, the same Korean once; the wrong replies are not taught', () => {
-    const greet = questFacts('quest:stage4-rites-q1');
-    expect(greet.words).toEqual(
-      expect.arrayContaining([
-        { ko: '이름이 뭐예요?', romanization: 'ireumi mwoyeyo', gloss: "What's your name?" },
-        { ko: '저는 호야예요', romanization: 'jeoneun hoyayeyo', gloss: 'I am Hoya' },
-        { ko: '저도 반가워요', romanization: 'jeodo bangawoyo', gloss: 'Nice to meet you too' },
-      ]),
-    );
-    expect(greet.words.map((w) => w.ko)).not.toContain('잘 가요');
-    // "안녕하세요!" and the reply "안녕하세요" differ only in the mark
-    expect(greet.words.filter((w) => w.ko.startsWith('안녕하세요'))).toEqual([{ ko: '안녕하세요!', romanization: 'annyeonghaseyo', gloss: 'Hello!' }]);
-    // the taste words still come first from the opening card pairs
-    expect(greet.tasteWords.map((w) => w.ko)).toEqual(['안녕', '감사', '친구']);
+    const { scope } = lessonWith((sc) => (sc.dialogue?.length ?? 0) > 0);
+    const facts = withScope(scope);
+    const turns = scope.dialogue ?? [];
+    const taught = turns.flatMap((t) => [{ ko: t.npcKo, romanization: t.npcRomanization, en: t.npcEn }, ...t.options.filter((o) => o.isCorrect)]);
+    const keys = new Set(facts.words.map((w) => koKey(w.ko)));
+    for (const line of taught.filter((t) => t.romanization)) expect(keys.has(koKey(line.ko)), line.ko).toBe(true);
+    const wrongOnly = turns.flatMap((t) => t.options.filter((o) => !o.isCorrect)).filter((o) => !taught.some((t) => koKey(t.ko) === koKey(o.ko)));
+    expect(wrongOnly.length).toBeGreaterThan(0);
+    for (const wrong of wrongOnly) expect(keys.has(koKey(wrong.ko)), wrong.ko).toBe(false);
+    expect(keys.size).toBe(facts.words.length);
+    // a line and a reply that differ only in the closing mark are one entry, the first one met
+    const hello = { ko: '안녕하세요!', romanization: 'annyeonghaseyo', en: 'Hello!' };
+    const echo = withScope({ kind: 'tap-respond', dialogue: [{ npcKo: hello.ko, npcRomanization: hello.romanization, npcEn: hello.en, options: [{ ...hello, ko: '안녕하세요', en: 'Hello', isCorrect: true }] }] });
+    expect(echo.words).toEqual([asWord(hello)]);
     // a line with no romanization is left out, never shown without it
     const bare = withScope({ kind: 'tap-respond', dialogue: [{ npcKo: '네', npcEn: 'Yes', options: [{ ko: '네', en: 'Yes', isCorrect: true }] }] });
     expect(bare.words).toEqual([]);
   });
 
   it('story steps add their Korean labels; a label with no Korean or no romanization adds nothing', () => {
-    const crafts = questFacts('quest:stage1-crafts-q1');
-    expect(crafts.words).toEqual(
-      expect.arrayContaining([
-        { ko: '편 가르기', romanization: 'pyeon gareugi', gloss: 'Pick teams' },
-        { ko: '윷 던지기', romanization: 'yut deonjigi', gloss: 'Throw the yut' },
-      ]),
-    );
+    const { quest: order, scope } = lessonWith((sc) => (sc.storySteps ?? []).some((step) => step.labelKo && step.romanization));
+    const words = questFacts(order.id).words;
+    for (const step of scope.storySteps ?? []) {
+      if (step.labelKo && step.romanization) expect(words, step.labelKo).toContainEqual({ ko: step.labelKo, romanization: step.romanization, gloss: step.labelEn });
+    }
     const bare = withScope({ kind: 'story-sequence', storySteps: [{ id: 'a', labelEn: 'Wake up' }, { id: 'b', labelEn: 'Eat', labelKo: '먹기' }] });
     expect(bare.words).toEqual([]);
   });
@@ -191,14 +210,14 @@ describe('itemFacts: quest', () => {
   });
 
   it('game glosses follow the UI language; the Korean and its romanization never change', () => {
-    for (const id of ['quest:stage1-life-q1', 'quest:stage4-rites-q1', 'quest:stage1-crafts-q1']) {
-      const en = questFacts(id);
-      const es = questFacts(id, 'es');
-      expect(es.words.map((w) => [w.ko, w.romanization]), id).toEqual(en.words.map((w) => [w.ko, w.romanization]));
+    for (const q of bundle.quests) {
+      const en = itemFacts({ kind: 'quest', id: q.id }, bundle, 'en') as QuestFacts | null;
+      const es = itemFacts({ kind: 'quest', id: q.id }, bundle, 'es') as QuestFacts | null;
+      expect(es?.words.map((w) => [w.ko, w.romanization]), q.id).toEqual(en?.words.map((w) => [w.ko, w.romanization]));
     }
-    const ref = 'minigame:s4-rites-respond-1';
-    const turn = localizeScope(bundle.scopeFor(ref) ?? { kind: 'tap-respond' }, ref, 'es').dialogue?.[1];
-    expect(questFacts('quest:stage4-rites-q1', 'es').words).toContainEqual({ ko: turn?.npcKo, romanization: turn?.npcRomanization, gloss: turn?.npcEn });
+    const { quest: talk, ref } = lessonWith((sc) => (sc.dialogue ?? []).some((t) => t.npcRomanization));
+    const turn = localizeScope(bundle.scopeFor(ref) as MinigameScope, ref, 'es').dialogue?.find((t) => t.npcRomanization);
+    expect(questFacts(talk.id, 'es').words.find((w) => koKey(w.ko) === koKey(turn?.npcKo ?? ''))).toEqual({ ko: turn?.npcKo, romanization: turn?.npcRomanization, gloss: turn?.npcEn });
   });
 
   it('every bundled lesson lists every word its boards, word rounds, syllable rounds with a meaning, dialogues and story steps practise', () => {
@@ -223,8 +242,16 @@ describe('itemFacts: quest', () => {
   });
 
   it('a syllable that is also a word is listed once, as the word (never twice under "What this teaches")', () => {
-    expect(q1.words.map((w) => w.ko)).toContain('가');
-    expect(q1.syllables.map((s) => s.ko)).not.toContain('가');
+    const both = withScope({
+      kind: 'syllable-build',
+      cardPairs: [{ ko: '가', romanization: 'ga', en: 'the sound ga' }],
+      syllables: [
+        { ko: '가', romanization: 'ga', jamoChars: ['ㄱ', 'ㅏ'] },
+        { ko: '너', romanization: 'neo', jamoChars: ['ㄴ', 'ㅓ'] },
+      ],
+    });
+    expect(both.words).toEqual([{ ko: '가', romanization: 'ga', gloss: 'the sound ga' }]);
+    expect(both.syllables).toEqual([{ ko: '너', romanization: 'neo' }]);
     for (const q of bundle.quests) {
       const facts = itemFacts({ kind: 'quest', id: q.id }, bundle) as QuestFacts | null;
       if (!facts) continue;
@@ -233,18 +260,14 @@ describe('itemFacts: quest', () => {
     }
   });
 
-  it('glosses follow the UI language; the Korean and its romanization never change', () => {
-    const es = questFacts('quest:stage1-letters-q1', 'es');
-    const localized = localizeQuest(quest('quest:stage1-letters-q1'), 'es');
-    const discover = localized.steps.find((s) => s.kind === 'discover');
-    const first = discover?.discover?.pages[0]?.items[0];
-    expect(first?.type).toBe('jamo');
-    expect(es.words[0]).toEqual({ ko: '나', romanization: 'na', gloss: first?.type === 'jamo' ? first.example.en : '' });
+  it('Discover glosses follow the UI language; the Korean and its romanization never change', () => {
+    const es = questFacts(Q1, 'es');
+    expect(es.words[0]).toEqual(asWord(discoverOf(quest(Q1), 'es')[0] as { ko: string; romanization: string; en: string }));
     expect(es.words.map((w) => [w.ko, w.romanization])).toEqual(q1.words.map((w) => [w.ko, w.romanization]));
   });
 
   it('skills are read, listen and write in that order, never speaking', () => {
-    expect(q1.skills).toEqual(['read', 'listen']);
+    expect(q1.skills.length).toBeGreaterThan(0);
     for (const q of bundle.quests) {
       const facts = itemFacts({ kind: 'quest', id: q.id }, bundle) as QuestFacts | null;
       if (!facts) continue;
@@ -292,21 +315,28 @@ describe('itemFacts: quest', () => {
   });
 
   it('a taste quest that introduces no letter shows its first three words, glossed in the UI language', () => {
-    const taste = questFacts('quest:stage2-life-q1');
-    expect(taste.letters).toEqual([]);
-    expect(taste.tasteWords).toEqual([
-      { ko: '사과', romanization: 'sagwa', gloss: 'Apple' },
-      { ko: '우유', romanization: 'uyu', gloss: 'Milk' },
-      { ko: '빵', romanization: 'ppang', gloss: 'Bread' },
-    ]);
-    const es = questFacts('quest:stage2-life-q1', 'es');
-    const scope = localizeScope(bundle.scopeFor('minigame:s2-life-card-1') ?? { kind: 'card-match' }, 'minigame:s2-life-card-1', 'es');
-    expect(es.tasteWords[0]?.gloss).toBe(scope.cardPairs?.[0]?.en);
+    const tastes = bundle.quests.flatMap((q) => {
+      const facts = entryForQuest(bundle.storyIndex, q.id) ? null : (itemFacts({ kind: 'quest', id: q.id }, bundle) as QuestFacts | null);
+      return facts && facts.letters.length === 0 && facts.words.length >= 3 ? [facts] : [];
+    });
+    expect(tastes.length).toBeGreaterThan(0);
+    for (const taste of tastes) expect(taste.tasteWords, taste.id).toEqual(taste.words.slice(0, 3));
+    // in Spanish, its first word's gloss is the localized one of the scope it comes from
+    const taste = tastes[0] as QuestFacts;
+    const es = questFacts(taste.id, 'es');
+    const first = scopesOf(quest(taste.id))
+      .map(({ ref, scope }) => localizeScope(scope, ref, 'es'))
+      .flatMap((scope) => scope.cardPairs ?? [])
+      .find((pair) => pair.ko === es.tasteWords[0]?.ko);
+    expect(first).toBeDefined();
+    expect(es.tasteWords[0]?.gloss).toBe(first?.en);
   });
 
   it('the focus line: only for a letter this lesson introduces', () => {
-    expect(questFacts('quest:stage1-letters-q1', 'en', 'jamo:nieun').focus).toEqual({ jamoId: 'jamo:nieun', char: 'ㄴ', romanization: 'n' });
-    expect(questFacts('quest:stage1-letters-q1', 'en', 'jamo:mieum').focus).toBeNull();
+    const focus = q1.letters[q1.letters.length - 1] as QuestFacts['letters'][number];
+    expect(questFacts(Q1, 'en', focus.jamoId).focus).toEqual(focus);
+    const other = bundle.jamo.find((j) => !questTeaches(quest(Q1)).includes(j.id));
+    expect(questFacts(Q1, 'en', other?.id).focus).toBeNull();
     expect(q1.focus).toBeNull();
   });
 
@@ -319,8 +349,10 @@ describe('itemFacts: quest', () => {
   });
 
   it('a game step whose scope the bundle lacks adds no words', () => {
-    const base = quest('quest:stage2-life-q1');
-    const unscoped: Quest = { ...base, id: 'quest:unscoped', steps: base.steps.map((s) => (s.minigameRef ? { ...s, minigameRef: 'minigame:not-bundled' } : s)) };
+    const base = quest(Q1);
+    const games = base.steps.filter((s) => s.minigameRef);
+    expect(games.length).toBeGreaterThan(0);
+    const unscoped: Quest = { ...base, id: 'quest:unscoped', steps: games.map((s) => ({ ...s, minigameRef: 'minigame:not-bundled' })) };
     const facts = itemFacts({ kind: 'quest', id: 'quest:unscoped' }, { ...bundle, quests: [...bundle.quests, unscoped] }) as QuestFacts;
     expect(facts.words).toEqual([]);
     expect(facts.syllables).toEqual([]);
@@ -386,14 +418,16 @@ describe('episodeOutline', () => {
     expect(outline?.comingLater).toBe(false);
     expect(outline?.quests.map((q) => q.id)).toEqual(episode?.questIds);
     expect(outline?.minutes).toBe(episode?.questIds.reduce((sum, id) => sum + quest(id).estimatedMinutes, 0));
-    expect(outline?.quests[0]).toMatchObject({ id: 'quest:stage1-letters-q1', title: 'Meet a, eo, g, n', minutes: 5, skills: ['read', 'listen'] });
-    expect(outline?.quests[0]?.letters.map((l) => l.char)).toEqual(['ㅏ', 'ㅓ', 'ㄱ', 'ㄴ']);
+    const first = questFacts(episode?.questIds[0] ?? '');
+    expect(outline?.quests[0]).toEqual({ id: first.id, title: first.title, minutes: first.minutes, letters: first.letters, tasteWords: first.tasteWords, skills: first.skills });
+    expect(outline?.quests[0]?.letters.length).toBeGreaterThan(0);
     expect(outline?.rewardCardIds).toEqual(episode?.rewardCardIds);
     expect(outline?.stories).toEqual([]);
   });
 
   it('a taste episode shows first words, a story episode its stories, a placeholder "Coming later"', () => {
-    expect(episodeOutline('episode:stage2-life', bundle)?.quests[0]?.tasteWords.map((w) => w.ko)).toEqual(['사과', '우유', '빵']);
+    const taste = bundle.episodes.flatMap((e) => (isOpenableEpisode(e) && e.placement !== 'shelf' ? (episodeOutline(e.id, bundle)?.quests ?? []) : [])).find((row) => row.letters.length === 0 && row.tasteWords.length > 0);
+    expect(taste?.tasteWords).toEqual(questFacts(taste?.id ?? '').tasteWords);
     const shelf = bundle.storyIndex.find((e) => e.storyId === TALE_ID);
     expect(episodeOutline(shelf?.episodeId ?? '', bundle)?.stories.map((s) => s.storyId)).toEqual([TALE_ID]);
     const preview = bundle.episodes.find((e) => e.status === 'preview');
@@ -406,6 +440,16 @@ describe('episodeOutline', () => {
 
   it('titles follow the UI language', () => {
     const es = episodeOutline('episode:stage1-letters', bundle, 'es');
-    expect(es?.quests[0]?.title).toBe(localizeQuest(quest('quest:stage1-letters-q1'), 'es').titleEn);
+    expect(es?.quests[0]?.title).toBe(localizeQuest(quest(Q1), 'es').titleEn);
+  });
+});
+
+describe('production content anchors (change these with the content they name)', () => {
+  it('the first lesson introduces a, eo, g and n (F-QUEST-002 section 3.3)', () => {
+    expect(questFacts(Q1).letters.map((l) => l.jamoId)).toEqual(['jamo:a', 'jamo:eo', 'jamo:giyeok', 'jamo:nieun']);
+  });
+
+  it('the first life lesson lists the food words its Pic-Word board teaches (the case the Codex review of #393 found)', () => {
+    expect(questFacts('quest:stage1-life-q1').words.map((w) => w.ko)).toEqual(expect.arrayContaining(['김치', '밥', '김밥', '젓가락']));
   });
 });

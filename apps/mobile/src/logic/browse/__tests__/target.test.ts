@@ -13,6 +13,9 @@ import { TALE_ID, fixtureBundle } from './browse-fixture';
 const bundle = fixtureBundle();
 const stage1 = stage1QuestsFrom(bundle.episodes, bundle.quests);
 const active: ResolvedPass = { status: 'active', scope: 'full', from: 'account', fallback: false, removeSession: false, removeKept: false };
+const CARD = (bundle.cards[0] as (typeof bundle.cards)[number]).id;
+/** A compatibility jamo (U+3131 to U+318E) this bundle holds no letter for: read from the bundle, so new letters never break the case. */
+const ABSENT_CHAR = Array.from({ length: 0x318e - 0x3131 + 1 }, (_, i) => String.fromCharCode(0x3131 + i)).find((c) => !bundle.jamo.some((j) => j.char === c)) as string;
 
 describe('resolveTarget', () => {
   it('no target opens home on its default section', () => {
@@ -36,13 +39,15 @@ describe('resolveTarget', () => {
     expect(resolveTarget({ kind: 'episode', id: 'episode:shelf-hangul-day' }, bundle)).toEqual({ screen: 'episode', episodeId: 'episode:shelf-hangul-day' });
     expect(resolveTarget({ kind: 'story', id: TALE_ID }, bundle)).toEqual({ screen: 'item', kind: 'story', id: TALE_ID });
     expect(resolveTarget({ kind: 'vocab-topic', id: 'vocab-topic:food' }, bundle)).toEqual({ screen: 'item', kind: 'vocab-topic', id: 'vocab-topic:food' });
-    expect(resolveTarget({ kind: 'card', id: 'card:hanji' }, bundle)).toEqual({ screen: 'card', cardId: 'card:hanji' });
+    expect(resolveTarget({ kind: 'card', id: CARD }, bundle)).toEqual({ screen: 'card', cardId: CARD });
   });
 
   it('a letter opens the lesson that teaches it, marked as the focus', () => {
-    const teacher = teachingQuestFor('jamo:nieun', stage1);
-    expect(teacher?.id).toBe('quest:stage1-letters-q1');
-    expect(resolveTarget({ kind: 'jamo', id: 'jamo:nieun' }, bundle)).toEqual({ screen: 'item', kind: 'quest', id: teacher?.id, focusJamoId: 'jamo:nieun' });
+    const taught = bundle.jamo.filter((j) => teachingQuestFor(j.id, stage1));
+    expect(taught.length).toBeGreaterThan(0);
+    for (const jamo of taught) {
+      expect(resolveTarget({ kind: 'jamo', id: jamo.id }, bundle), jamo.id).toEqual({ screen: 'item', kind: 'quest', id: teachingQuestFor(jamo.id, stage1)?.id, focusJamoId: jamo.id });
+    }
   });
 
   it('a letter no lesson teaches lands on the Stage 1 Journey with a note', () => {
@@ -52,12 +57,21 @@ describe('resolveTarget', () => {
   });
 
   it('a character resolves to its letter, never to the final-consonant form', () => {
-    expect(bundle.jamo.filter((j) => j.char === 'ㄴ').map((j) => j.kind).sort()).toEqual(['batchim', 'consonant']);
-    expect(resolveTarget({ kind: 'char', char: 'ㄴ' }, bundle)).toEqual({ screen: 'item', kind: 'quest', id: 'quest:stage1-letters-q1', focusJamoId: 'jamo:nieun' });
-    expect(resolveTarget({ kind: 'char', char: 'ㅏ' }, bundle)).toMatchObject({ screen: 'item', focusJamoId: 'jamo:a' });
+    // every character the bundle holds as a final consonant too
+    const finals = bundle.jamo.filter((j) => j.kind === 'batchim');
+    expect(finals.length).toBeGreaterThan(0);
+    for (const final of finals) {
+      const letter = bundle.jamo.find((j) => j.char === final.char && j.kind !== 'batchim');
+      expect(letter, final.char).toBeDefined();
+      expect(resolveTarget({ kind: 'char', char: final.char }, bundle), final.char).toEqual(resolveTarget({ kind: 'jamo', id: letter?.id ?? '' }, bundle));
+      expect(resolveTarget({ kind: 'char', char: final.char }, bundle)).not.toMatchObject({ focusJamoId: final.id });
+    }
+    const vowel = bundle.jamo.find((j) => j.kind === 'vowel' && teachingQuestFor(j.id, stage1)) as (typeof bundle.jamo)[number];
+    expect(resolveTarget({ kind: 'char', char: vowel.char }, bundle)).toMatchObject({ screen: 'item', focusJamoId: vowel.id });
   });
 
   it('an id the bundle does not know lands on home with the not-in-this-version note', () => {
+    expect(ABSENT_CHAR).toBeDefined();
     const unknown: BrowseTarget[] = [
       { kind: 'episode', id: 'episode:stage9-space' },
       { kind: 'quest', id: 'quest:stage9-space-q1' },
@@ -68,7 +82,7 @@ describe('resolveTarget', () => {
       { kind: 'vocab-topic', id: 'vocab-topic:space' },
       { kind: 'card', id: 'card:not-bundled' },
       { kind: 'jamo', id: 'jamo:not-bundled' },
-      { kind: 'char', char: 'ㄲ' },
+      { kind: 'char', char: ABSENT_CHAR },
     ];
     for (const target of unknown) expect(resolveTarget(target, bundle), JSON.stringify(target)).toEqual({ screen: 'home', section: null, note: 'not-in-version' });
   });
@@ -92,6 +106,6 @@ describe('resolveEntry', () => {
     const expired: ResolvedPass = { status: 'none', reason: 'expired', expiredSource: 'gate', removeSession: false, removeKept: false };
     expect(resolveEntry({ target: { kind: 'quest', id: 'quest:stage1-letters-q1' }, pass: none, lastPersona: null, bundle })).toEqual({ screen: 'access', reason: 'none', source: 'unknown' });
     expect(resolveEntry({ target: null, pass: none, lastPersona: 'teacher', bundle })).toEqual({ screen: 'access', reason: 'none', source: 'account' });
-    expect(resolveEntry({ target: { kind: 'card', id: 'card:hanji' }, pass: expired, lastPersona: 'parent', bundle })).toEqual({ screen: 'access', reason: 'expired', source: 'gate' });
+    expect(resolveEntry({ target: { kind: 'card', id: CARD }, pass: expired, lastPersona: 'parent', bundle })).toEqual({ screen: 'access', reason: 'expired', source: 'gate' });
   });
 });

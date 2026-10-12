@@ -66,10 +66,11 @@ describe('browseJourneyRows', () => {
     expect(cellOf(sampler, placeholder?.key ?? '')?.state).toBe('later');
     expect(cellOf(browseJourneyRows({ bundle, scope: 'full', gatingEnabled: true, freeQuestOpen: lettersOnly }), 'stage1-life')?.state).toBe('open');
     expect(cellOf(browseJourneyRows({ bundle, scope: 'sampler', gatingEnabled: false, freeQuestOpen: lettersOnly }), 'stage1-life')?.state).toBe('open');
-    // the learner rule by default: a free learner's lessons are all of Stage 1
+    // the learner rule by default: a free learner's lessons are all of Stage 1 (F-ENT-003 OD-1)
     const learner = browseJourneyRows({ bundle, scope: 'sampler', gatingEnabled: true });
-    expect(cellOf(learner, 'stage1-life')?.state).toBe('open');
-    expect(cellOf(learner, 'stage2-life')?.state).toBe('closed');
+    const open = rows.flatMap((r) => r.cells).filter((c) => c.state === 'open');
+    expect(open.some((c) => c.stage !== 'stage1')).toBe(true);
+    for (const cell of open) expect(cellOf(learner, cell.key)?.state, cell.key).toBe(cell.stage === 'stage1' ? 'open' : 'closed');
   });
 
   it('an openable episode with no quest left in this bundle is drawn later, as its outline reads "Coming later"', () => {
