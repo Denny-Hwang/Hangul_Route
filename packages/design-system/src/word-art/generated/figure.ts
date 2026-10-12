@@ -65,6 +65,14 @@ const capsuleD = (x: number, y: number, w: number, h: number): string => {
 /** The hair cap: the top of a circle a little larger than the head, with a soft fringe. */
 const CAP = `M -21 -81 A 21 21 0 0 1 21 -81 Q 11 -92 0 -90 Q -11 -92 -21 -81 Z`;
 
+/**
+ * Long hair's front locks: one strand down over each shoulder, drawn over the
+ * shirt and under the head, so long hair reads past the shoulders even on a
+ * small figure at 48 px (W-5 review: the speaker of the sibling words).
+ * Compact figures (three or four in a glyph) leave them out, like the hands.
+ */
+export const LONG_HAIR_LOCKS = 'M -23 -78 V -53 A 4.5 4.5 0 0 0 -14 -53 V -76 Z M 23 -78 V -53 A 4.5 4.5 0 0 1 14 -53 V -76 Z';
+
 function hairBehind(hair: FigureHair, tone: WordArtTone): WordArtShape[] {
   if (hair === 'long') return [path('M -22 -80 A 22 22 0 0 1 22 -80 V -64 A 6 6 0 0 1 16 -58 H -16 A 6 6 0 0 1 -22 -64 Z', { f: tone, ...INK })];
   if (hair === 'bun') return [circle(0, -103, 8, { f: tone, ...INK })];
@@ -105,6 +113,7 @@ function canonical(o: FigureOptions): WordArtShape[] {
     );
     if (o.accessory === 'cane') shapes.push(path('M 27 0 L 27 -40 A 4.5 4.5 0 0 1 36 -40', INK));
     if (!o.compact) shapes.push(path(`${circleD(-FIGURE_HAND.dx, FIGURE_HAND.y, FIGURE_HAND.r)} ${circleD(FIGURE_HAND.dx, FIGURE_HAND.y, FIGURE_HAND.r)}`, PAPER));
+    if (o.hair === 'long' && !o.compact) shapes.push(path(LONG_HAIR_LOCKS, { f: tone, ...INK }));
   }
   shapes.push(circle(HEAD.x, HEAD.y, HEAD.r, PAPER));
   if (o.hair !== 'none') shapes.push(path(CAP, { f: tone, ...INK }));

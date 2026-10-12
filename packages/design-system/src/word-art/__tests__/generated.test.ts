@@ -437,6 +437,25 @@ describe('figure (§3.6.4)', () => {
     expect(four.length).toBeLessThanOrEqual(31);
   });
 
+  it('long hair puts a lock over each shoulder, below the shoulder line, except on a compact figure (W-5 review)', () => {
+    const opts: FigureOptions = { height: 48, hair: 'long', clothes: 'brand.secondary', x: 70, ground: 84 };
+    const glyph = figure(opts);
+    const locks = glyph.filter((s) => s.t === 'path' && s.f === 'text.secondary' && parsePath(s.d)!.filter((c) => c.c === 'M').length === 2);
+    expect(locks).toHaveLength(1);
+    const box = shapeBox(locks[0]!);
+    // the shoulders sit at -59 on the canonical figure; the locks reach past them, on both sides of the head
+    expect(box.maxY).toBeGreaterThan(84 - 0.59 * 48 + 2);
+    expect(box.minX).toBeLessThan(70 - 0.18 * 48);
+    expect(box.maxX).toBeGreaterThan(70 + 0.18 * 48);
+    // drawn over the shirt and under the head
+    const at = glyph.indexOf(locks[0]!);
+    expect(at).toBeGreaterThan(0);
+    expect(glyph.slice(0, at).some((s) => s.f === 'brand.secondary')).toBe(true);
+    expect(glyph.slice(at).some((s) => s.t === 'circle' && s.f === 'surface.paper')).toBe(true);
+    for (const hair of ['short', 'bun', 'grey', 'none'] as const) expect(figure({ ...opts, hair }).length, hair).toBeLessThan(figure(opts).length);
+    expect(figure({ ...opts, compact: true }).some((s) => s.t === 'path' && s.f === 'text.secondary' && parsePath(s.d)!.filter((c) => c.c === 'M').length === 2)).toBe(false);
+  });
+
   it('marker is a small brand.secondary dot', () => {
     expect(marker(50, 10)).toEqual({ t: 'circle', x: 50, y: 10, r: 4, f: 'brand.secondary', s: 'text.primary', sw: 2 });
   });
