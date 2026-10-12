@@ -116,6 +116,15 @@ export interface Flags {
    * of learners.
    */
   vocabShowDrafts: boolean;
+
+  /**
+   * The learner app's entries to the grown-up area on app.hangulroute.com (F-APP-001 section
+   * 3.6): the Welcome persona row, the Profile "Grown-up home" row, the dashboard card and the
+   * Plan screen's same-tab billing hand-off (A-7). OFF until M3 (owner step S-3); web only, and
+   * native builds never show them (OD-6). The device gate marker, the bounce and the lock's PIN
+   * path run with it off.
+   */
+  grownUpHomeEnabled: boolean;
 }
 
 const launchDefaults: Flags = {
@@ -130,6 +139,7 @@ const launchDefaults: Flags = {
   myRouteEnabled: false,
   vocabTopicsEnabled: false,
   vocabShowDrafts: false,
+  grownUpHomeEnabled: false,
 };
 
 export const flags: Flags = {
@@ -151,6 +161,7 @@ export const flags: Flags = {
   vocabTopicsEnabled: parseBool(process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED, launchDefaults.vocabTopicsEnabled),
   vocabShowDrafts:
     isDevBuild() && parseBool(process.env.EXPO_PUBLIC_VOCAB_SHOW_DRAFTS, launchDefaults.vocabShowDrafts),
+  grownUpHomeEnabled: parseBool(process.env.EXPO_PUBLIC_GROWN_UP_HOME, launchDefaults.grownUpHomeEnabled),
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;

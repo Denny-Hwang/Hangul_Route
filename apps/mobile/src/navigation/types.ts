@@ -2,6 +2,7 @@ import type { PlacementSource, StoryLevel } from '@hangul-route/content-schema';
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { MyRouteSource } from '../logic/my-route/telemetry';
 import type { PinResetMethod } from '../logic/profiles/pin-flow';
+import type { GrownUpVia } from '../logic/shell/handoff-rules';
 import type { LibrarySectionId } from '../logic/story/library-sections';
 import type { SourcesRouteParams } from '../logic/story/source-link';
 import type { VocabQuestionE2eParams } from './vocab-question-e2e';
@@ -10,7 +11,8 @@ import type { VocabQuestionE2eParams } from './vocab-question-e2e';
  * Where a grown-up action continues once the gate (or a new PIN) is through. `ExternalLink`
  * (F-STORY-002 §3.1, §3.8): back to Sources, which opens the waiting source link (native) or asks for one more tap (web).
  * `PlacementFinish`: back to the level check, which then ends the run for the grown-up (F-PLC-001
- * section 3.1 step 6, stop reason `grown-up`).
+ * section 3.1 step 6, stop reason `grown-up`). `GrownUpArea` (F-APP-001 section 3.9, web only): the
+ * grown-up pages on the app host; its PIN screen only verifies, never creates or resets a PIN.
  */
 export type GrownUpDestination =
   | 'ParentDashboard'
@@ -22,7 +24,8 @@ export type GrownUpDestination =
   | 'PlacementFinish'
   | 'EditProfile'
   | 'MyRoute'
-  | 'PlacementReport';
+  | 'PlacementReport'
+  | 'GrownUpArea';
 
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
@@ -58,8 +61,13 @@ export type RootStackParamList = {
     mode?: 'setup';
     /** Which Forgot PIN path led here (telemetry only). */
     via?: PinResetMethod;
-    /** `next: 'ExternalLink'`: the source link waiting on the gate (Sources holds it until the return). */
+    /**
+     * `next: 'ExternalLink'`: the source link waiting on the gate (Sources holds it until the return).
+     * `next: 'GrownUpArea'`: the grown-up page to open after the PIN (a path `safeNextPath` accepts); absent opens the sign-in router.
+     */
     url?: string;
+    /** `next: 'GrownUpArea'`: the entry that asked for the PIN (`shell.grown_up_handoff` `via`); the lock's PIN path passes `lock`. */
+    grownUpVia?: GrownUpVia;
     /** `next: 'Paywall'`: the surface that opened it, passed on to the paywall (default `'journey'`). */
     from?: 'journey' | 'library';
     /** `next: 'EditProfile'`: the profile to edit (F-LEARN-001 §3.11); `next: 'MyRoute'`: the profile whose page opens read-only; `next: 'PlacementReport'`: whose report opens (F-PLC-001 section 3.9). */
