@@ -51,6 +51,7 @@ import type { MainTabParamList, RootStackParamList } from '../../navigation/type
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { CardDetailView } from './CardDetailView';
+import { CultureSection } from './CultureSection';
 import { StoryShelf } from './StoryShelf';
 
 /** Card art in a gallery thumb at scale 1 (phones), and the thumb's padding plus its thickest border on both sides. */
@@ -253,7 +254,7 @@ export function LibraryScreen(): React.ReactElement {
   // The card page as the stack screen shows it, without its close button; a locked card also says how it is earned.
   const detail = selectedId ? <CardDetailView key={selectedId} cardId={selectedId} showHowToEarn /> : null;
 
-  if (active === 'story-time') {
+  if (active === 'story-time' || active === 'culture') {
     // Story sections use the full width with no detail pane on every window (F-LAYOUT-001 §3.6).
     return (
       <Screen tone="canvas" edges={TAB_SCREEN_EDGES} width="full" scrollable>
@@ -262,7 +263,7 @@ export function LibraryScreen(): React.ReactElement {
         {panel(
           <>
             <Spacer size="lg" />
-            <StoryShelf category="story-time" index={storyIndex} />
+            {active === 'culture' ? <CultureSection index={storyIndex} /> : <StoryShelf category="story-time" index={storyIndex} />}
             <Spacer size="xl" />
           </>,
         )}

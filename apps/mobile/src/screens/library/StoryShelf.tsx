@@ -63,11 +63,21 @@ interface ShelfItem {
 /**
  * One story section of the Library (F-STORY-004 §3.4): a "Picked for you"
  * hero with its one primary button, then the category's tiles in
- * `shelf.order` (never re-sorted by progress). Story Time uses it today; the
- * Culture section (PR 4.7) puts its notes card above the same shelf.
+ * `shelf.order` (never re-sorted by progress). Story Time uses it with the
+ * hero; the Culture section (PR 4.7) puts its notes card, its one primary
+ * action, above the tiles alone (`hero={false}`, wireframe library/culture C).
  * `story.shelf.viewed` fires once each time the section is shown.
  */
-export function StoryShelf({ category, index }: { category: ShelfCategory; index: readonly StoryIndexEntry[] }): React.ReactElement {
+export function StoryShelf({
+  category,
+  index,
+  hero: withHero = true,
+}: {
+  category: ShelfCategory;
+  index: readonly StoryIndexEntry[];
+  /** The "Picked for you" hero; `false` draws the tiles only. */
+  hero?: boolean;
+}): React.ReactElement {
   const messages = useMessages();
   const copy = shelfCopy(messages);
   const locale = useLocale();
@@ -105,11 +115,12 @@ export function StoryShelf({ category, index }: { category: ShelfCategory; index
   );
 
   const hero = useMemo(() => {
+    if (!withHero) return null;
     // F-STORY-005 §3.4: stories near the learner's stage come first; it only orders, never hides.
     const fits = storyFitsForSnapshot(snap);
     const pick = pickedForYou({ entries: items.map((i) => i.entry), snapshot: snap, bookmarks, isLocked, category, fits });
     return pick ? items.find((i) => i.entry.questId === pick.entry.questId) ?? null : null;
-  }, [items, snap, bookmarks, isLocked, category]);
+  }, [withHero, items, snap, bookmarks, isLocked, category]);
 
   // Once per visit (§3.11): switching to this section, or the Library tab gaining focus with it shown.
   // Coming back from a screen pushed over the tabs (a story, its episode page, the paywall) is the same

@@ -95,6 +95,12 @@ export type RootStackParamList = {
    */
   StorySources: SourcesRouteParams;
   /**
+   * Culture notes (F-STORY-004 §3.5): every note the learner has found, by theme. `storyId` shows
+   * only that story's notes; `noteId` scrolls to that note and opens its sources. `from: 'quest'`:
+   * opened by the reader inside a running quest, so the screen offers Back only.
+   */
+  CultureNotes: { storyId?: string; noteId?: string; from?: 'quest' } | undefined;
+  /**
    * The level check (F-PLC-001 section 3.10): a nested stack of its screens.
    * `retakeMode`: "Try it with the sound guide hidden" on the result opens the
    * options with that length and the guide hidden.

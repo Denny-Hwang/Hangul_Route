@@ -68,8 +68,8 @@ export interface StoryEpisodeNavigation {
   onOpenCard: (cardId: string) => void;
   /** Sources of the page's one story (`StorySources { storyId, from: 'episode' }`). */
   onOpenSources: (storyId: string) => void;
-  /** "Culture notes: N found" opens `CultureNotes { storyId }` when given (the route lands with PR 4.7); otherwise the line is text. */
-  onOpenCultureNotes?: (storyId: string) => void;
+  /** "Culture notes: N found" opens `CultureNotes { storyId }` (§3.6). */
+  onOpenCultureNotes: (storyId: string) => void;
   /** The back arrow, when the host is a stack screen (a split pane has none). */
   onBack?: () => void;
 }
@@ -264,35 +264,29 @@ export function StoryEpisodeDetail({ episode, entries: sourceEntries, onOpenStor
         {view.notesLine && notesStoryId ? (
           <>
             <Spacer size="lg" />
-            {onOpenCultureNotes ? (
-              <Pressable
-                onPress={() => onOpenCultureNotes(notesStoryId)}
-                accessibilityRole="button"
-                accessibilityLabel={view.notesLine}
-                testID="story-episode-notes"
-                style={({ pressed }) => ({
-                  minHeight: touchTarget.min,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: spacing.md,
-                  paddingHorizontal: spacing.lg,
-                  backgroundColor: colors.surface.paper,
-                  borderRadius: radii.lg,
-                  borderWidth: borderWidth.base,
-                  borderColor: pressed ? colors.border.focus : colors.border.subtle,
-                })}
-              >
-                <Body weight="semibold" style={{ flexShrink: 1 }}>
-                  {view.notesLine}
-                </Body>
-                <Icon name="arrow-right" size={spacing.xl} color={colors.text.secondary} />
-              </Pressable>
-            ) : (
-              <Card padding="md" tone="paper" testID="story-episode-notes">
-                <Body weight="semibold">{view.notesLine}</Body>
-              </Card>
-            )}
+            <Pressable
+              onPress={() => onOpenCultureNotes(notesStoryId)}
+              accessibilityRole="button"
+              accessibilityLabel={view.notesLine}
+              testID="story-episode-notes"
+              style={({ pressed }) => ({
+                minHeight: touchTarget.min,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: spacing.md,
+                paddingHorizontal: spacing.lg,
+                backgroundColor: colors.surface.paper,
+                borderRadius: radii.lg,
+                borderWidth: borderWidth.base,
+                borderColor: pressed ? colors.border.focus : colors.border.subtle,
+              })}
+            >
+              <Body weight="semibold" style={{ flexShrink: 1 }}>
+                {view.notesLine}
+              </Body>
+              <Icon name="arrow-right" size={spacing.xl} color={colors.text.secondary} />
+            </Pressable>
           </>
         ) : null}
 

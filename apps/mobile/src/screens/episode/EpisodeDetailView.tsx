@@ -41,8 +41,8 @@ export interface EpisodeDetailViewProps {
   onOpenStory: (target: StoryTarget) => void;
   /** Story episodes: Sources of the page's story (`StorySources { storyId, from: 'episode' }`). */
   onOpenSources: (storyId: string) => void;
-  /** Story episodes: the "Culture notes: N found" line (`CultureNotes { storyId }`); the hosts pass it once the route exists (PR 4.7). */
-  onOpenCultureNotes?: (storyId: string) => void;
+  /** Story episodes: the "Culture notes: N found" line (`CultureNotes { storyId }`, pushed). */
+  onOpenCultureNotes: (storyId: string) => void;
 }
 
 export function EpisodeDetailView({
