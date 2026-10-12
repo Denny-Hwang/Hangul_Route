@@ -58,6 +58,7 @@
 | `console/plan-builder.md` | P | roadmap §6 · F-HW-001 §3.4 |
 | `console/curriculum-free-days.md` · `console/free-lessons-line.md` | R | F-ENT-003 §3.9.2-3.9.3 (E3-0) |
 | `console/school-admin.md` | P | roadmap S7 |
+| `browse/home.md` · `browse/episode.md` · `browse/item.md` · `browse/preview-player.md` · `browse/preview-end.md` · `browse/show-as.md` · `browse/access.md` · `browse/entry-points.md` | R | F-BROWSE-001 (All lessons: paying parents and teachers preview every lesson as a learner sees it, at `app.hangulroute.com/browse`, same-tab entry from the adult navigation and the grown-up area; BR-0) |
 | `console/account.md` · `console/billing.md` | P | roadmap §5.3 · §7 |
 | `parent/notes.md` · `parent/note-report.md` | R | F-FEEDBACK-001 §6.10 (FB-0; built in FB-9) |
 | `console/note-composer.md` · `console/notes-sent.md` · `console/family-notes.md` · `console/notes-hub.md` | R | F-FEEDBACK-001 §6.13, §7.2, §9 (FB-0; built in FB-11a, FB-11b, FB-12; console pages on app.hangulroute.com per F-APP-001) |
