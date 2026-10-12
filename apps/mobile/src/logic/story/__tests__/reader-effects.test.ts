@@ -41,18 +41,17 @@ describe('readerAvailability (§3.3 fallback, §3.11)', () => {
   });
 });
 
-describe('readerCheckpoints (§3.7: inline checkpoints arrive with PR 2.9)', () => {
-  it('without checkpoint support every scene reads straight through', () => {
+describe('readerCheckpoints (§3.7: inline checkpoint cards, PR 2.9)', () => {
+  it('maps each scene to its checkpoint id', () => {
     const tier = tierOf(readyStory(), 'listen');
     expect(tier.scenes[2]!.checkpointId).toBe('cp1');
-    expect(readerCheckpoints(tier, false)).toEqual([null, null, null, null, null]);
+    expect(readerCheckpoints(tier)).toEqual([null, null, 'cp1', null, null]);
   });
 
-  it('with support it maps each scene to its checkpoint id, only when the tier defines it', () => {
+  it('a checkpoint id the tier does not define reads straight through', () => {
     const tier = tierOf(readyStory(), 'listen');
-    expect(readerCheckpoints(tier, true)).toEqual([null, null, 'cp1', null, null]);
     tier.checkpoints = [];
-    expect(readerCheckpoints(tier, true)).toEqual([null, null, null, null, null]);
+    expect(readerCheckpoints(tier)).toEqual([null, null, null, null, null]);
   });
 });
 

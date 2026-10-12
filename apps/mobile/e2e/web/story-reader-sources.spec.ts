@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { nextPage } from './story-reader-helpers';
 import { completeChildForm, completeSelfForm, keepSidewaysIfAsked, seedStored, typeDigits, unlockWithPin } from './helpers';
 
 /**
@@ -206,7 +207,7 @@ test.describe('story Sources (fixture bundle)', () => {
   test('from the end page: opens at the top, from = end', async ({ page }) => {
     await onboard(page);
     await openReader(page, 'read-along');
-    for (let i = 0; i < 4; i += 1) await page.getByTestId('story-reader-next').click();
+    for (let i = 0; i < 4; i += 1) await nextPage(page);
     await expect(page.getByRole('heading', { name: 'The End' })).toBeVisible();
     await page.getByTestId('story-reader-end-sources').click();
     await expect(page.getByTestId('story-sources-title')).toBeVisible();

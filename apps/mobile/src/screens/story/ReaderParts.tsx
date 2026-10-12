@@ -596,6 +596,8 @@ export function ReaderBottomBar({
   isFirst,
   nextLabel,
   nextSize,
+  nextDisabled = false,
+  nextRef,
   onBack,
   onNext,
 }: {
@@ -605,6 +607,10 @@ export function ReaderBottomBar({
   isFirst: boolean;
   nextLabel: string;
   nextSize: 'lg' | 'hero';
+  /** A checkpoint card still waiting for its answer (its Skip is the way on, §3.7). */
+  nextDisabled?: boolean;
+  /** Focus lands here once a checkpoint is answered. */
+  nextRef?: React.Ref<View>;
   onBack: () => void;
   onNext: () => void;
 }): React.ReactElement {
@@ -625,7 +631,16 @@ export function ReaderBottomBar({
           testID="story-reader-back"
         />
         <View style={{ flex: 1 }}>
-          <Button label={nextLabel} tone="primary" size={nextSize} fullWidth onPress={onNext} testID="story-reader-next" />
+          <Button
+            pressableRef={nextRef}
+            label={nextLabel}
+            tone="primary"
+            size={nextSize}
+            fullWidth
+            disabled={nextDisabled}
+            onPress={onNext}
+            testID="story-reader-next"
+          />
         </View>
       </View>
     </View>

@@ -51,6 +51,7 @@ describe('learner.story.reader (English wording as shipped in PR 2.5)', () => {
     expect(r.cultureNote.moreInCultureNotes.cta).toBe('More in Culture notes');
     expect(r.cultureNote.close.cta).toBe('Close');
     expect(r.checkpoint.tryIt).toBe('Try it');
+    expect(r.checkpoint.quickQuestion).toBe('Quick question');
     expect(r.checkpoint.skip.cta).toBe('Skip');
   });
 });
