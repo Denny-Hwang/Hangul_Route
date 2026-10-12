@@ -9,7 +9,11 @@ export interface ScreenExitProps {
   onBack?: () => void;
   /** The home of the stack hosting the screen. */
   onHome?: () => void;
-  /** Open a link a story cites; `null` makes links copy-only (no Open action). */
+  /**
+   * Open a link a story cites; `null` makes links copy-only (no Open action).
+   * A host function receives every Open press: the learner grown-up gate and
+   * its direct hand-off are skipped (see `linkOpenRoute`).
+   */
   onOpenLink?: ((url: string) => void) | null;
 }
 
@@ -38,4 +42,18 @@ export function resolveScreenExits(props: ScreenExitProps, learner: LearnerExits
 export function backOrHome(stack: { canGoBack(): boolean; goBack(): void }, home: () => void): void {
   if (stack.canGoBack()) stack.goBack();
   else home();
+}
+
+/** Where an Open link press goes: nowhere (copy-only), the host, the learner hand-off, or the learner gate. */
+export type LinkOpenRoute = 'none' | 'host' | 'hand-off' | 'gate';
+
+/**
+ * The route of one Open link press. A host's `onOpenLink` takes every press,
+ * so the learner gate (`gateOpensNow`, read only on the learner path) can
+ * never open a link around it; `null` has no Open action at all.
+ */
+export function linkOpenRoute(onOpenLink: ScreenExitProps['onOpenLink'], gateOpensNow: () => boolean): LinkOpenRoute {
+  if (onOpenLink === null) return 'none';
+  if (onOpenLink !== undefined) return 'host';
+  return gateOpensNow() ? 'hand-off' : 'gate';
 }

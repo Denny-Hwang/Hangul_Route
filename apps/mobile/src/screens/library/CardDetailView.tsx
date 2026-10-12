@@ -44,7 +44,7 @@ export interface CardDetailViewProps {
   showHowToEarn?: boolean;
   /**
    * `learner` (default): today's card for the active profile. `preview` (All lessons, F-BROWSE-001 §4.7):
-   * front and back as an earned card looks, no earn hint, no share action, no profile read.
+   * front and back as an earned card looks, no earn hint, no share action, no progress-store read.
    */
   state?: CardDetailState;
 }

@@ -8,7 +8,7 @@ import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeStory } from '../../logic/content-locale';
 import { gateOpensDirectly } from '../../logic/profiles/gate-route';
 import { isParentSessionValid } from '../../logic/profiles/session';
-import { backOrHome, resolveScreenExits, type ScreenExitProps } from '../../logic/navigation/screen-exits';
+import { backOrHome, linkOpenRoute, resolveScreenExits, type ScreenExitProps } from '../../logic/navigation/screen-exits';
 import {
   findSourceLink,
   linkOpenedPayload,
@@ -180,13 +180,15 @@ export function StorySourcesScreen({ route, navigation, ...exitProps }: Props): 
       setNote(key, copy.openFailed(source.url));
       return;
     }
-    if (openLinkStep(gateOpenNow()) === 'open') {
+    const route = linkOpenRoute(exitProps.onOpenLink, () => openLinkStep(gateOpenNow()) === 'open');
+    if (route === 'hand-off') {
       // Called straight from the press so the web hand-off keeps the tap (pop-up rules).
       void handOff(link, key);
       return;
     }
     setNote(key, null);
-    pending.current = { link, key };
+    // Only the learner gate comes back here to finish the hand-off; a host owns its own open.
+    if (route === 'gate') pending.current = { link, key };
     openLink(link.url);
   };
 

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
-import { backOrHome, resolveScreenExits } from '../screen-exits';
+import { backOrHome, linkOpenRoute, resolveScreenExits } from '../screen-exits';
 
 /**
  * F-BROWSE-001 §4.7 (BR-5c): the navigation adapter. `MinigameScreen`,
@@ -73,6 +73,26 @@ describe('resolveScreenExits', () => {
   });
 });
 
+describe('linkOpenRoute', () => {
+  it('has no Open route when links are copy-only, and never reads the gate', () => {
+    const gate = vi.fn(() => true);
+    expect(linkOpenRoute(null, gate)).toBe('none');
+    expect(gate).not.toHaveBeenCalled();
+  });
+
+  it('sends every press to a host function, even while the grown-up gate is open', () => {
+    const gate = vi.fn(() => true);
+    expect(linkOpenRoute(vi.fn(), gate)).toBe('host');
+    expect(linkOpenRoute(vi.fn(), () => false)).toBe('host');
+    expect(gate).not.toHaveBeenCalled();
+  });
+
+  it('keeps the learner path: the direct hand-off while the gate is open, else the gate', () => {
+    expect(linkOpenRoute(undefined, () => true)).toBe('hand-off');
+    expect(linkOpenRoute(undefined, () => false)).toBe('gate');
+  });
+});
+
 describe('screens take their exits through the adapter (BR-5c)', () => {
   const read = (file: string): string => readFileSync(resolve(__dirname, '../../../screens', file), 'utf8');
 
@@ -96,6 +116,8 @@ describe('screens take their exits through the adapter (BR-5c)', () => {
     const screen = read('story/StorySourcesScreen.tsx');
     expect(screen).toContain('const openLink = exits.openLink;');
     expect(screen).toMatch(/onOpen=\{openLink === null \? null : /);
+    // The press is routed by linkOpenRoute, so a host function is never bypassed by the learner gate.
+    expect(screen).toContain('linkOpenRoute(exitProps.onOpenLink,');
     const parts = read('story/SourcesParts.tsx');
     expect(parts).toMatch(/onOpen: \(\(source: SourceView, sourceIndex: number\) => void\) \| null/);
   });

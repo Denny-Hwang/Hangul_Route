@@ -12,7 +12,7 @@ import {
   type ProfileChoice,
 } from '../logic/locale/language-picker';
 import { useMessages } from '../i18n/use-messages';
-import { useRomanizationMode } from '../i18n/use-romanization-mode';
+import { resolveRomanizationMode } from '../logic/locale/romanization-mode';
 import { activeLocale, useLocaleStore } from '../store/locale-store';
 import { LanguageChips } from './LanguageChips';
 import { OptionCard } from './OptionCard';
@@ -56,8 +56,8 @@ export function LanguageCard({ profileId }: LanguageCardProps): React.ReactEleme
 
   const deviceLocale = deviceChoice(device, detected, available);
   const selectedProfile = profileChoice(settings?.uiLocale, available);
-  // This card edits the given profile's own setting (never mounted under an override).
-  const tapMode = useRomanizationMode(profileId) === 'tap';
+  // This card edits the profile's stored setting, so it shows that value and never an All lessons override.
+  const tapMode = resolveRomanizationMode(null, settings) === 'tap';
 
   const apply = (p: Pending): void => {
     if (p.scope === 'profile') setProfileLocale(profileId, p.choice === 'device' ? null : p.choice, 'settings');
