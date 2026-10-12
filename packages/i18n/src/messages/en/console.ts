@@ -1027,4 +1027,25 @@ export const consoleMsgs = {
     back: 'Back to learning',
     retry: 'Try again',
   },
+  /**
+   * The grown-up lock (F-APP-001 section 3.9, wireframe shell/grown-up-lock.md): the screen a
+   * grown-up page shows on a shared device until a fresh PIN or a sign-in opens it. It is the
+   * screen a child would meet, so it names nobody, shows no number and has no countdown.
+   * `line` goes with the PIN button; the other lines are the sign-in-only cases, and each
+   * promises only what a sign-in can do on that device: `pinRenew` for a PIN set before A-6
+   * (never trusted), `signInOnly` where no PIN path exists (a learner app older than A-6, or a
+   * device read that failed).
+   */
+  lock: {
+    title: 'Grown-ups only',
+    line: "Enter this device's grown-up PIN, or sign in again.",
+    usePin: { cta: 'Use the grown-up PIN' },
+    signInAgain: { cta: 'Sign in again' },
+    backToLearning: { cta: 'Back to learning' },
+    pinChanged: 'The grown-up PIN changed on this device. Sign in again to use it.',
+    firstSignIn: 'Sign in once on this device to use the grown-up PIN here.',
+    noPin: 'Set a grown-up PIN in the app, or sign in again.',
+    pinRenew: 'To use the grown-up PIN here, set it again in the app, then sign in once.',
+    signInOnly: 'Sign in again to open grown-up pages on this device.',
+  },
 } as const;

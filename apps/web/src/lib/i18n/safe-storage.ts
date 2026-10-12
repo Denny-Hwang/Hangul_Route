@@ -51,3 +51,15 @@ export function removeItem(storage: KeyValueStorage | null, key: string): void {
     // nothing to remove
   }
 }
+
+/**
+ * Whether the browser offers IndexedDB (F-APP-001: the console reads the learner's device
+ * marker and keeps the shell store there). False under SSR, in node and where touching it throws.
+ */
+export function indexedDbAvailable(): boolean {
+  try {
+    return Boolean((globalThis as { indexedDB?: unknown }).indexedDB);
+  } catch {
+    return false;
+  }
+}

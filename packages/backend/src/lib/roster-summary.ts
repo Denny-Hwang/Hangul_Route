@@ -147,22 +147,26 @@ export function teacherVisibleSummary(summary: unknown, planIds: ReadonlySet<str
 }
 
 const SELF_ROUTE_KEYS = ['done', 'total', 'notReady', 'weeks', 'endsOn'] as const satisfies readonly (keyof NonNullable<ProgressSummary['selfRoute']>)[];
+const ROUTE_GOAL_KEYS = ['stage', 'from'] as const satisfies readonly (keyof NonNullable<ProgressSummary['routeGoal']>)[];
 
 /** What a family space additionally reads of its learner's summary. */
-export type FamilyVisibleSummary = TeacherVisibleSummary & Pick<ProgressSummary, 'selfRoute'>;
+export type FamilyVisibleSummary = TeacherVisibleSummary & Pick<ProgressSummary, 'selfRoute' | 'routeGoal'>;
 
 /**
  * The roster's summary for a space of `kind` (F-PLAN-002 section 3.10): the
- * teacher projection above, plus the self-route counts for a family space
- * only. A class or school never receives `selfRoute`; one summary is shared by
- * every space the learner is in, so the field is removed at read time.
+ * teacher projection above, plus the self-route counts and the Learning Route
+ * goal (Learning Route section 9, LR-W1) for a family space only. A class or
+ * school never receives `selfRoute` or `routeGoal`; one summary is shared by
+ * every space the learner is in, so the fields are removed at read time.
  * `joinedAt` is the learner's membership of the viewing space: a class or
  * school sees no `activity` day from before it (F-REPORT-001 section 3.8), and
  * the roster and the report routes pass it alike.
  */
 export function rosterSummary(summary: unknown, planIds: ReadonlySet<string>, kind: SpaceKind, opts: { joinedAt?: string | null } = {}): FamilyVisibleSummary | null {
-  const out = teacherVisibleSummary(summary, planIds, { kind, joinedAt: opts.joinedAt });
-  if (!out || kind !== 'family' || !isPlain(summary) || !isPlain(summary.selfRoute)) return out;
-  // Projected to the known keys, like every other field here: keys a newer writer left under it never leave.
-  return { ...out, selfRoute: pick(summary.selfRoute, SELF_ROUTE_KEYS) as ProgressSummary['selfRoute'] };
+  const out: FamilyVisibleSummary | null = teacherVisibleSummary(summary, planIds, { kind, joinedAt: opts.joinedAt });
+  if (!out || kind !== 'family' || !isPlain(summary)) return out;
+  // Projected to the known keys, like every other field here: keys a newer writer left under them never leave.
+  if (isPlain(summary.selfRoute)) out.selfRoute = pick(summary.selfRoute, SELF_ROUTE_KEYS) as ProgressSummary['selfRoute'];
+  if (isPlain(summary.routeGoal)) out.routeGoal = pick(summary.routeGoal, ROUTE_GOAL_KEYS) as ProgressSummary['routeGoal'];
+  return out;
 }

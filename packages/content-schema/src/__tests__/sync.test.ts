@@ -6,6 +6,7 @@ import {
   JourneySummarySchema,
   LearnerRegisterSchema,
   ProgressSummarySchema,
+  RouteGoalSummarySchema,
   SnapshotPutSchema,
   SyncInboxSchema,
 } from '../index';
@@ -198,6 +199,65 @@ describe('summary.journey (F-ROUTE-001 section 3.12, R-8)', () => {
     expect(SnapshotPutSchema.parse({ ...body, summary: { ...summary, journey } }).summary.journey).toEqual(journey);
     const dropped = SnapshotPutSchema.safeParse({ ...body, summary: { ...summary, journey: { v: 1 } } });
     expect(dropped.success && dropped.data.summary.journey).toBeUndefined();
+  });
+});
+
+describe('summary.routeGoal (Learning Route section 9, LR-W1)', () => {
+  const routeGoal = { stage: 'stage2', from: 'class' as const };
+
+  it('parses a route goal and keeps it on the summary, schemaVersion staying 1', () => {
+    expect(RouteGoalSummarySchema.parse(routeGoal)).toEqual(routeGoal);
+    expect(ProgressSummarySchema.parse({ ...summary, routeGoal })).toEqual({ ...summary, routeGoal });
+    for (const from of ['class', 'school', 'family', 'self', 'default'] as const) {
+      expect(ProgressSummarySchema.parse({ ...summary, routeGoal: { stage: 'stage1', from } }).routeGoal).toEqual({ stage: 'stage1', from });
+    }
+  });
+
+  it('an old summary without routeGoal still parses, with no routeGoal key', () => {
+    const parsed = ProgressSummarySchema.parse(summary);
+    expect(parsed).toEqual(summary);
+    expect(parsed).not.toHaveProperty('routeGoal');
+  });
+
+  it('the stage is a plain string on the wire (validated as a StageKey by the reader)', () => {
+    expect(RouteGoalSummarySchema.parse({ stage: 'stage9', from: 'self' })).toEqual({ stage: 'stage9', from: 'self' });
+  });
+
+  it('a malformed route goal is dropped, never fatal to the whole summary', () => {
+    const bad = [
+      'stage2',
+      null,
+      42,
+      [],
+      {},
+      { stage: 'stage2' },
+      { from: 'class' },
+      { stage: 'stage2', from: 'teacher' },
+      { stage: 'stage2', from: 'cursor' },
+      { stage: 2, from: 'class' },
+      { stage: 's'.repeat(33), from: 'class' },
+      { stage: 'stage2', from: null },
+    ];
+    for (const value of bad) {
+      expect(RouteGoalSummarySchema.safeParse(value).success).toBe(false);
+      const parsed = ProgressSummarySchema.safeParse({ ...summary, routeGoal: value });
+      expect(parsed.success).toBe(true);
+      expect(parsed.success && parsed.data.routeGoal).toBeUndefined();
+      expect(parsed.success && parsed.data.stage1).toEqual(summary.stage1);
+    }
+  });
+
+  it('strips unknown keys under routeGoal (no plan id, date or name leaves the device through it)', () => {
+    const parsed = ProgressSummarySchema.parse({ ...summary, routeGoal: { ...routeGoal, sourceId: 'plan:secret', endsOn: '2026-12-31', learnerName: 'Suni' } });
+    expect(parsed.routeGoal).toEqual(routeGoal);
+  });
+
+  it('the PUT body keeps a valid route goal and drops a malformed one', () => {
+    const body = { baseRev: 0, snapshot, schemaVer: 1, contentVer: '2026.09' };
+    expect(SnapshotPutSchema.parse({ ...body, summary: { ...summary, routeGoal } }).summary.routeGoal).toEqual(routeGoal);
+    const dropped = SnapshotPutSchema.safeParse({ ...body, summary: { ...summary, routeGoal: { stage: 'stage2', from: 'teacher' } } });
+    expect(dropped.success).toBe(true);
+    expect(dropped.success && dropped.data.summary.routeGoal).toBeUndefined();
   });
 });
 
