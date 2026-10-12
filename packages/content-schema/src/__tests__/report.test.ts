@@ -14,11 +14,14 @@ import {
   REPORT_MILESTONES_MAX,
   REPORT_MONTHS_MAX,
   REPORT_PERIODS,
+  REPORT_TELEMETRY_PAYLOAD,
+  REPORT_TELEMETRY_PREFIX,
   ReportLetterSchema,
   ReportPeriodSchema,
   ReportStageKeySchema,
   ReportSummarySchema,
   TEACHER_VISIBLE_SUMMARY_KEYS,
+  TELEMETRY_EVENT_NAMES,
   reportPeriodOf,
   type ActivitySummary,
 } from '../index';
@@ -372,5 +375,29 @@ describe('ClassReportSchema and ClassReportResponseSchema (sections 3.7, 3.8)', 
     // The walker reaches every block, optional and nested ones included.
     for (const declared of ['headline', 'notSaved7d', 'lettersNew', 'letter', 'dayBands', 'band', 'minutesMedian', 'notTested', 'planId', 'itemsDone']) expect(keys).toContain(declared);
     for (const banned of ['id', 'learnerId', 'displayName', 'avatar', 'name', 'top', 'most', 'least', 'best', 'lowest']) expect(keys).not.toContain(banned);
+  });
+});
+
+describe('report telemetry codes (section 3.13; the Worker filter of section 3.10, RP-W1)', () => {
+  it('names the report. prefix, and every report name on the shared list starts with it', () => {
+    expect(REPORT_TELEMETRY_PREFIX).toBe('report.');
+    expect(TELEMETRY_EVENT_NAMES.filter((name) => name.startsWith(REPORT_TELEMETRY_PREFIX))).toEqual(['report.viewed']);
+  });
+
+  it('allows exactly scope, space and period, with their enum values', () => {
+    expect(REPORT_TELEMETRY_PAYLOAD).toEqual({
+      scope: ['learner', 'class'],
+      space: ['family', 'class', 'device'],
+      period: ['day', 'week', 'month', 'all'],
+    });
+    expect(REPORT_TELEMETRY_PAYLOAD.period).toEqual(REPORT_PERIODS);
+  });
+
+  it('has no key or value that could carry an identifier or a name', () => {
+    const keys = Object.keys(REPORT_TELEMETRY_PAYLOAD);
+    for (const banned of ['profileId', 'spaceId', 'learnerId', 'id', 'name', 'displayName']) expect(keys).not.toContain(banned);
+    for (const values of Object.values(REPORT_TELEMETRY_PAYLOAD)) {
+      for (const value of values) expect(value).toMatch(/^[a-z]+$/);
+    }
   });
 });

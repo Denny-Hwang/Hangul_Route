@@ -1,6 +1,7 @@
 import { BROWSE_EVENT_NAMES } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import app from '../index';
+import { recordServerEvent } from '../lib/server-events';
 import { store } from '../store';
 
 /**
@@ -102,5 +103,14 @@ describe('POST /api/telemetry, browse.* (F-BROWSE-001 §5.2)', () => {
     const transfer = await post({ name: 'space.transfer.consented', profileId: 'profile:a', payload: { initiator: 'learner_side', itemId: 'quest:x' } });
     expect(transfer.event?.profileId).toBeUndefined();
     expect(transfer.event?.payload).toEqual({ initiator: 'learner_side' });
+  });
+});
+
+describe('recordServerEvent, browse.* (the same filter as POST /api/telemetry)', () => {
+  it('keeps only the documented fields of an event the Worker records itself', () => {
+    const event = recordServerEvent('browse.item_viewed', { kind: 'quest', itemId: 'quest:stage1-letters-q1', access: 'open', profileId: 'profile:suni', accountId: 'account:a' });
+    expect(event?.payload).toEqual({ kind: 'quest', itemId: 'quest:stage1-letters-q1', access: 'open' });
+    expect(event?.profileId).toBeUndefined();
+    expect(recordServerEvent('browse.opened', { source: 'email' })?.payload).toBeUndefined();
   });
 });

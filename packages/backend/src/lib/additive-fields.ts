@@ -9,8 +9,8 @@
  * never describes data the payload no longer holds.
  *
  * One list serves every additive field (F-PLC-001 `placements`, F-VOC-005
- * `vocab`, F-PLAN-002 `selfRoute`): a later spec appends an entry, nothing else
- * changes. Deploy the Worker before any app build that can send the field.
+ * `vocab`, F-PLAN-002 `selfRoute`, F-REPORT-001 `questDoneAt`): a later spec
+ * appends an entry, nothing else changes. Deploy the Worker before any app build that can send the field.
  */
 export interface AdditiveField {
   /** Key on the stored snapshot payload. */
@@ -24,6 +24,13 @@ export interface AdditiveField {
    * both are set. Without it the sent value replaces the stored one.
    */
   readonly merge?: (incoming: unknown, stored: unknown) => unknown;
+  /**
+   * When the client sends the field but not its summary counterpart, keep the
+   * stored summary instead of dropping it: for a field that a build can write
+   * before it computes the summary. Without it a sent field travels with
+   * exactly the summary that was sent.
+   */
+  readonly keepStoredSummaryWhenSent?: boolean;
 }
 
 /**
@@ -58,6 +65,24 @@ export function earlierLatchTime(a: string, b: string): string {
 }
 
 /**
+ * Unions two latch records (key -> ISO time): every key of either side, the
+ * earlier time where both have one (`earlierLatchTime`), keys sorted. A side
+ * that is not a record, and a value that is not a string, contribute nothing.
+ */
+function unionLatch(incoming: unknown, stored: unknown): Record<string, string> {
+  const out = new Map<string, string>();
+  for (const side of [stored, incoming]) {
+    if (!isPlain(side)) continue;
+    for (const [key, at] of Object.entries(side)) {
+      if (typeof at !== 'string') continue;
+      const prev = out.get(key);
+      out.set(key, prev === undefined ? at : earlierLatchTime(prev, at));
+    }
+  }
+  return Object.fromEntries([...out.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
+}
+
+/**
  * `stageDoneAt` (F-ROUTE-001 section 3.15) is the stage latch: a record that
  * only ever gains keys. A missing key or an empty record next to a stored
  * non-empty one can only come from a client that predates it, so the stored
@@ -69,18 +94,7 @@ export function earlierLatchTime(a: string, b: string): string {
 const STAGE_DONE_AT: AdditiveField = {
   payloadKey: 'stageDoneAt',
   isUnset: (value) => value === undefined || (isPlain(value) && Object.keys(value).length === 0),
-  merge: (incoming, stored) => {
-    const out = new Map<string, string>();
-    for (const side of [stored, incoming]) {
-      if (!isPlain(side)) continue;
-      for (const [stage, at] of Object.entries(side)) {
-        if (typeof at !== 'string') continue;
-        const prev = out.get(stage);
-        out.set(stage, prev === undefined ? at : earlierLatchTime(prev, at));
-      }
-    }
-    return Object.fromEntries([...out.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
-  },
+  merge: unionLatch,
 };
 
 /**
@@ -108,7 +122,33 @@ const VOCAB: AdditiveField = {
   isUnset: (value) => value === undefined,
 };
 
-export const ADDITIVE_FIELDS: readonly AdditiveField[] = [PLACEMENTS, STAGE_DONE_AT, SELF_ROUTE, VOCAB];
+/**
+ * `questDoneAt` (F-REPORT-001 section 3.3.1) is the quest latch, the twin of
+ * `stageDoneAt`: quest id -> the time the quest was first finished. Builds from
+ * RP-3a on always send the key, an empty record included, so only an **absent**
+ * key means "an old build sent this" (the VOCAB rule): an old build that
+ * re-uploads keeps the stored latch and `summary.activity`, also for a learner
+ * with sessions but no finished quest (stored `{}` is a value). A sent record is
+ * unioned with the stored one, earliest time wins (the stage-latch merge), so a
+ * device that upgraded after another device synced never erases that device's
+ * first-finish days. A sent `summary.activity` is kept as sent; a sent latch
+ * without one (a build with the RP-3a writer but not the RP-4 builder, or an
+ * activity the schema dropped as malformed) keeps the stored activity, which
+ * carries its own `asOf`, so such a device never erases what another device
+ * computed. After a profile reset the union brings old entries back; the device
+ * counts an entry only while its quest is completed (section 3.3.4 step 2), so
+ * the report starts fresh, but a quest finished again keeps its pre-reset first
+ * finish (a known approximation, spec section 8 M5).
+ */
+const QUEST_DONE_AT: AdditiveField = {
+  payloadKey: 'questDoneAt',
+  summaryKey: 'activity',
+  isUnset: (value) => value === undefined,
+  merge: unionLatch,
+  keepStoredSummaryWhenSent: true,
+};
+
+export const ADDITIVE_FIELDS: readonly AdditiveField[] = [PLACEMENTS, STAGE_DONE_AT, SELF_ROUTE, VOCAB, QUEST_DONE_AT];
 
 export interface SnapshotParts<P, S> {
   payload: P;
@@ -134,17 +174,21 @@ export function preserveAdditiveFields<P extends object, S extends object>(
 
   let payload: Plain = inPayload;
   let summary: Plain = inSummary;
+  /** Fills the summary counterpart from `stored` when the client sent none. */
+  const keepStoredSummary = (key: string | undefined): void => {
+    if (key && inSummary[key] === undefined && storedSummary && storedSummary[key] !== undefined) {
+      summary = { ...summary, [key]: storedSummary[key] };
+    }
+  };
   for (const field of fields) {
     if (field.isUnset(storedPayload[field.payloadKey])) continue;
     if (!field.isUnset(inPayload[field.payloadKey])) {
       if (field.merge) payload = { ...payload, [field.payloadKey]: field.merge(inPayload[field.payloadKey], storedPayload[field.payloadKey]) };
+      if (field.keepStoredSummaryWhenSent) keepStoredSummary(field.summaryKey);
       continue;
     }
     payload = { ...payload, [field.payloadKey]: storedPayload[field.payloadKey] };
-    const key = field.summaryKey;
-    if (key && inSummary[key] === undefined && storedSummary && storedSummary[key] !== undefined) {
-      summary = { ...summary, [key]: storedSummary[key] };
-    }
+    keepStoredSummary(field.summaryKey);
   }
   return { payload: payload as P, summary: summary as S };
 }

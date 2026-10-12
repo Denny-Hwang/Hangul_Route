@@ -57,7 +57,7 @@
 ## 4. Exact copy
 
 - Title: **"Heritage Journey"**
-- Sub: **"7 stages × 5 themes. Draw your own route."**
+- Sub: **"Every lesson, by stage and theme."** (superseded by AMENDMENTS-ROUTE-LEARNING-ROUTE §7.2 and LR-OD-3, LR-1: the grid no longer says "route", so Journey and the Route tab never read as synonyms; the original brief said "7 stages × 5 themes. Draw your own route.")
 - Stage labels: Hangul / Words / Sentences / Dialogue / Stories / Real-use / Self-expression
 - One-liners per stage (see `apps/mobile/src/content/stages.ts`)
 - Helper card title: **"How the journey works"**
@@ -74,7 +74,7 @@ Layout (top to bottom, 48px horizontal padding):
 1. 60px status bar
 2. Title "Heritage Journey" — 84sp bold #2A1F14
 3. 12px gap
-4. Subtitle "7 stages × 5 themes. Draw your own route." — 54sp #5C4A36
+4. Subtitle "Every lesson, by stage and theme." — 54sp #5C4A36 (LR-1 copy, see section 4)
 5. 48px gap
 
 6. Theme column header row (sm caption above the first stage row only):

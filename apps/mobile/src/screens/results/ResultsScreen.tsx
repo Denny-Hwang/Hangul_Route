@@ -33,7 +33,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
-import { flags } from '../../config/flags';
+import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { cardById, episodeById, episodesAll, questById, questsAll } from '../../content';
 import { storyById } from '../../content/stories';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -61,7 +61,7 @@ import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
-import { effectiveTier, useTierStore } from '../../store/tier-store';
+import { useAccessTier } from '../../store/tier-store';
 import { CardArtThumb } from './CardArtThumb';
 import { ExtraCardsBanner } from './ExtraCardsBanner';
 import { StoryResultsExtras, type StoryResultsChoice } from './StoryResultsExtras';
@@ -87,7 +87,8 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   const unlockCards = useProgressStore((s) => s.unlockCards);
   const recordCatchUp = useProgressStore((s) => s.recordCatchUp);
   const snapshot = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
-  const cachedTier = useTierStore((s) => (profile ? s.byLearner[profile.id] : undefined));
+  // The access tier (F-ENT-003 section 3.4): re-renders when the inbox, the spaces or the subscription change it.
+  const tier = useAccessTier(profile?.id ?? '');
   const bookmarks = useStoryStore((s) => (profile ? s.byProfile[profile.id] : undefined)) ?? NO_BOOKMARKS;
   const reducedMotion = useReducedMotion();
   const { panes } = useLayoutClass();
@@ -168,7 +169,6 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   // (`cursorContext`, F-ROUTE-001 R-4a), so the three never disagree. Deciding
   // it from route params (not from the snapshot the effect above is still
   // writing) keeps it stable across the write.
-  const tier = effectiveTier(profile?.id ?? '', new Date()).tier;
   const teaser = useMemo(
     () =>
       resultsTeaser({
@@ -180,9 +180,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
         locale,
         ...cursorContext({ tier, placements: snapshot?.placements, quests: questsAll, episodes: episodesAll }),
       }),
-    // `cachedTier` re-renders this screen when the inbox changes the tier.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [snapshot, questId, total, tier, cachedTier, locale],
+    [snapshot, questId, total, tier, locale],
   );
   const actions = resultsActions(teaser);
 
@@ -201,7 +199,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
       entries: defaultStoryIndex(),
       snapshot,
       bookmarks,
-      isLocked: storyLockFor({ tier, gatingEnabled: flags.contentGatingEnabled, episodes: episodesAll }),
+      isLocked: storyLockFor({ tier, gatingEnabled: gatingActive(flags, bundleOs()), episodes: episodesAll }),
     });
     const view = storyResultsExtras(
       {
@@ -217,9 +215,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
       messages.learner.story.results,
     );
     return { story, next, view };
-    // `cachedTier` re-renders this screen when the inbox changes the tier.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quest, questId, locale, snapshot, bookmarks, tier, cachedTier, stars, episode, messages]);
+  }, [quest, questId, locale, snapshot, bookmarks, tier, stars, episode, messages]);
 
   const goHome = (): void => {
     navigation.dispatch(

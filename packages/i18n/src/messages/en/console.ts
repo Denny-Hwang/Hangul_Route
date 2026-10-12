@@ -991,7 +991,8 @@ export const consoleMsgs = {
    * `later`); grown-up copy may name the level check.
    */
   journey: {
-    title: 'Journey',
+    /** The page name (AMENDMENTS-ROUTE-LEARNING-ROUTE section 7.2, LR-1). */
+    title: 'Learning Route',
     onStage: (n: number) => `On Stage ${n}`,
     /** "4 known from the level check, 2 quests done"; the known part is left out when it is 0. */
     stageLine: (known: number, done: number) => {

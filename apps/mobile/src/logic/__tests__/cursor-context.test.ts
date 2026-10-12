@@ -183,7 +183,8 @@ describe('the screens build the cursor from cursorContext (wiring guard)', () =>
     expect(args).toBeDefined();
     expect(args).toMatch(/\btier\b/);
     expect(args).toMatch(/\bplacements\b/);
-    expect(src).toMatch(/useTierStore\(/);
+    // The access tier through its hook, so the screen re-renders when the tier changes (F-ENT-003 section 3.4).
+    expect(src).toMatch(/\buseAccessTier\(/);
     expect(src).not.toMatch(importsEitherOldSource);
   });
 });

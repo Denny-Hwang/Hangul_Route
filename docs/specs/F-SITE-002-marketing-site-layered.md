@@ -211,9 +211,9 @@ export function showsClaim(claims: SiteClaims, key: BooleanClaimKey): boolean;
 | `learningRoute` | F-ROUTE-001 R-10 flag flip (AMENDMENTS-ROUTE-LEARNING-ROUTE LR-10 keeps it there) | `flags.myRouteEnabled` on in production and LR-8's grown-up summary live; a test fails if `learningRoute` is true while `learner.myRoute.title` is not "Learning Route" |
 | `parentReports`, `teacherReports` | F-REPORT-001 RP-11 | both report flags on in production |
 | `feedbackNotes` | F-FEEDBACK-001 FB-14 | both notes flags on in production |
-| `browseAsLearner` | F-BROWSE-001 BR-10 (the console entry) | the entry live; shown only with `paidPlans: 'inApp'` (`CLAIM_REQUIRES_PAID`) |
-| `lectureMode` | F-TCH-004 R-flip | presenter on in production |
-| `paidPlans: 'inApp'` | the owner's Stripe Live switch | standing rule; sandbox checkout does not count |
+| `browseAsLearner` | F-BROWSE-001 BR-14 flag flip (BR-10 only adds the console entry behind `browseEnabled()`, off by default) | the entry on by default in production; shown only with `paidPlans: 'inApp'` (`CLAIM_REQUIRES_PAID`) |
+| `lectureMode` | the PR that follows the owner setting `NEXT_PUBLIC_LECTURE_MODE=enabled` on the production console build (F-TCH-004 names no flip PR yet) | presenter on in production |
+| `paidPlans: 'inApp'` | a PR after the owner turns on Stripe Live (the claim is a code constant, so the switch alone changes nothing) | standing rule; sandbox checkout does not count |
 
 - Page components take `claims` as a prop defaulting to `SITE_CLAIMS`, so unit tests render every state, including `browseAsLearner: true` with `paidPlans: 'coming'` (line absent) and with `'inApp'` (line present).
 - With every claim at its default the pages are complete: no empty section, no "coming soon" teaser for an unbuilt feature (only the paid cost line "More stages are coming, with plans for families and classes." while `paidPlans` is `coming`).
