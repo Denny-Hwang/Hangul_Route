@@ -141,6 +141,11 @@ export const TELEMETRY_EVENT_NAMES = [
   'notes.suggest_started',
   'notes.report_sent',
   'notes.prefs_changed',
+  // F-BILL-002 §10 (recorded by the Worker only, from the Stripe webhook; POST /api/telemetry refuses billing.* with 422;
+  // payload codes only: planKey, mode, duplicate / full; never an account, space or learner id, an amount, a code or a URL)
+  'billing.checkout_completed',
+  'billing.payment_failed',
+  'billing.refund_recorded',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);

@@ -91,6 +91,19 @@ describe("check-i18n: a) plural-suffix ternaries", () => {
     assert.equal(run(root).status, 0);
   });
 
+  test("ignores build outputs, the console role's out-console/ included (F-APP-001 A-3)", () => {
+    const bundled = "export const f = () => new Intl.NumberFormat('en').format(1);\n";
+    const root = makeRoot({
+      "scripts/i18n-migrated.json": MIGRATED(),
+      "apps/mobile/dist/_next/static/chunks/a.js": bundled,
+      "apps/mobile/dist-e2e/b.js": bundled,
+      "apps/web/out/_next/static/chunks/c.js": bundled,
+      "apps/web/out-console/_next/static/chunks/d.js": bundled,
+    });
+    const r = run(root);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+  });
+
   test("a file within its baseline passes (legacy), one over it fails", () => {
     const two =
       "export const a = (n: number) => `d${n === 1 ? '' : 's'}`;\nexport const b = (n: number) => `d${n === 1 ? '' : 's'}`;\n";

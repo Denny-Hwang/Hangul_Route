@@ -26,7 +26,12 @@ export default defineConfig({
   esbuild: { jsx: 'automatic' },
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    include: [
+      'src/**/*.test.ts',
+      'src/**/*.test.tsx',
+      // Build scripts (F-APP-001 A-3: the console role of the static export).
+      'scripts/__tests__/**/*.test.mjs',
+    ],
     passWithNoTests: true,
     coverage: {
       provider: 'v8',

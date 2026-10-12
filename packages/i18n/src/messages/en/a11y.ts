@@ -119,6 +119,8 @@ export const a11y = {
   leaveSpace: (name: string) => `Leave ${name}`,
   /** The paywall offer card: its name, then the already-formatted price. */
   familyOffer: (name: string, price: string) => `${name}, ${price}`,
+  /** The learner Plan screen's summary heading, its first accessible element (F-BILL-002 §8). */
+  planStatus: (name: string, state: string) => `${name}: ${state}.`,
 
   /** Learning Route (F-ROUTE-001 section 3.14): each row label reads the row; the pips are hidden. */
   myRoute: {

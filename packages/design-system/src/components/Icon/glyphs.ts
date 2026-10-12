@@ -129,6 +129,19 @@ export const iconGlyphs: Record<IconName, readonly IconGlyphPart[]> = {
   // F-VOC-004 §3.6, §3.8: the non-colour mark of a locked miss (the Speed Round has no retry, so it
   // is not `replay`). One short level bar, never a cross or an X.
   dash: [stroke('M7 12 H17', 2.6)],
+  // F-FEEDBACK-001 FB-6 (design/components/Icon/spec.md). A note from a grown-up: a sheet with its
+  // top-right corner folded down and two lines of writing. Portrait, so it never reads as `card`.
+  note: [
+    stroke('M5.5 3 L13 3 L18.5 8.5 L18.5 21 L5.5 21 Z', 2.2),
+    stroke('M13 3 L13 8.5 L18.5 8.5'),
+    stroke('M9 13 L15 13'),
+    stroke('M9 17 L13 17'),
+  ],
+  // The Thank you answer to a note: an outlined heart, two round lobes and a tip, never filled
+  // (a solid heart reads as a game "life"; the picked answer shows a check beside its word).
+  heart: [
+    stroke('M12 20.5 C9 17.5 3.5 13.5 3.5 8.75 A4.25 4.25 0 0 1 12 8.75 A4.25 4.25 0 0 1 20.5 8.75 C20.5 13.5 15 17.5 12 20.5 Z', 2.2),
+  ],
 };
 
 export const iconNames = Object.keys(iconGlyphs) as readonly IconName[];

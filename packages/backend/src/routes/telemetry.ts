@@ -1,4 +1,4 @@
-import { isTelemetryEventName } from '@hangul-route/content-schema';
+import { isServerOnlyTelemetryName, isTelemetryEventName } from '@hangul-route/content-schema';
 import { Hono } from 'hono';
 import { fail, ok } from '../envelope';
 import { appendEvent, keptEventFields } from '../lib/server-events';
@@ -13,7 +13,8 @@ import { id, type TelemetryEvent } from '../store';
  * Codes-only events (`space.transfer.*`, `shell.*`, `report.*`) keep only their
  * codes and never a profile id, `browse.*` and `notes.*` events keep only
  * their documented fields and never a profile id (F-BROWSE-001 section 9,
- * F-FEEDBACK-001 section 10), and the log is
+ * F-FEEDBACK-001 section 10), `billing.*` names are refused with 422 because
+ * only the Worker records them (F-BILL-002 section 10), and the log is
  * capped: these rules live in lib/server-events.ts, shared with the events the
  * Worker records itself.
  * There is deliberately no read route (audit SEC-3).
@@ -45,6 +46,10 @@ telemetryRoutes.post('/', async (c) => {
   const name = body?.name;
   if (!isTelemetryEventName(name)) {
     return fail(c, 'bad_request', 'unknown event name', 422);
+  }
+  // `billing.*` is recorded by the Worker itself (F-BILL-002 section 10): a client can never forge one.
+  if (isServerOnlyTelemetryName(name)) {
+    return fail(c, 'bad_request', 'server-only event name', 422);
   }
   const now = new Date();
   const receivedAt = now.toISOString();

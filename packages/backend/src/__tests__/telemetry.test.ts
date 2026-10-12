@@ -1,4 +1,4 @@
-import { TELEMETRY_EVENT_NAMES } from '@hangul-route/content-schema';
+import { TELEMETRY_EVENT_NAMES, isServerOnlyTelemetryName } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import app from '../index';
 import { store } from '../store';
@@ -25,8 +25,20 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 describe('POST /api/telemetry', () => {
-  it.each(TELEMETRY_EVENT_NAMES.map((n) => [n]))('accepts %s', async (name) => {
+  // `billing.*` names are recorded by the Worker only (F-BILL-002 section 10): a client is refused below.
+  it.each(TELEMETRY_EVENT_NAMES.filter((n) => !isServerOnlyTelemetryName(n)).map((n) => [n]))('accepts %s', async (name) => {
     expect((await post({ name })).status).toBe(201);
+  });
+
+  it('refuses every billing.* name from a client with 422, listed or not, and stores nothing (F-BILL-002 B-3)', async () => {
+    const billing = TELEMETRY_EVENT_NAMES.filter((n) => n.startsWith('billing.'));
+    expect(billing).toEqual(['billing.checkout_completed', 'billing.payment_failed', 'billing.refund_recorded']);
+    for (const name of [...billing, 'billing.checkout_started', 'billing.made_up']) {
+      const r = await post({ name, payload: { planKey: 'family_lifetime', mode: 'test', duplicate: false } });
+      expect(r.status, name).toBe(422);
+      expect(r.body.error?.code).toBe('bad_request');
+    }
+    expect(store.events).toHaveLength(0);
   });
 
   it('accepts the nine names that used to 422 (spaces + paywall)', async () => {
