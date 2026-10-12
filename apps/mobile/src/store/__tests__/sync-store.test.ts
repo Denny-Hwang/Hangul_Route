@@ -16,6 +16,7 @@ vi.mock('../../platform/sync-api', () => ({
 vi.mock('../../config/flags', () => ({ flags: { syncEnabled: true, telemetryEnabled: false, telemetryNetwork: false, voiceEchoEnabled: false } }));
 
 import { apiBaseUrl } from '../../platform/sync-api';
+import { result } from '../../logic/my-route/__tests__/fixtures/route';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
 import { usePlanStore } from '../plan-store';
@@ -75,6 +76,18 @@ describe('sync-store (F-SYNC-002)', () => {
     expect(journey?.stages.map((s) => s.stage)).toEqual(['stage1', 'stage2', 'stage3', 'stage4', 'stage5', 'stage6', 'stage7']);
     expect(journey?.stages[0]?.done).toBe(1);
     expect(journey?.stages.every((s) => s.known === 0)).toBe(true);
+  });
+
+  it('summary.journey counts the quests a stored level check placed out as known (F-ROUTE-001 R-7a)', async () => {
+    const placedOut = ['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3'];
+    useProgressStore.setState({ byProfile: { 'profile:a': { ...snap([]), placements: [result({ placedOutQuestIds: placedOut })] } } });
+    const putSnapshot = vi.fn(async (_id: string, _body: { summary: ProgressSummary }) => ({ status: 'ok', rev: 1 }));
+    setSyncApiForTests(fakeApi({ putSnapshot }) as never);
+    await useSyncStore.getState().syncNow('profile:a');
+    const journey = putSnapshot.mock.calls[0]?.[1].summary.journey;
+    expect(JourneySummarySchema.parse(journey)).toEqual(journey);
+    expect(journey?.stages[0]).toMatchObject({ stage: 'stage1', done: 0, known: 3 });
+    expect(journey?.stages.slice(1).every((s) => s.known === 0)).toBe(true);
   });
 
   it('applies a merged snapshot back into progress on conflict', async () => {
