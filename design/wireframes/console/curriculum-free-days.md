@@ -30,7 +30,7 @@ Then: the plan holds only lessons that will open for these learners (the free le
 | | (i) The free plan covers the first 6 lessons     | |  <- warning `premium-needed`,
 | |     (weeks 1 to 3). {n} more lessons open with a | |     product by space kind:
 | |     Group License. They are left out of this     | |     class/school: a Group License
-| |     plan.                     [ Open billing -> ] | |     family: Family Lifetime
+| |     plan.                     [ Open billing -> ] | |     family: the Family Plan [BY]
 | +--------------------------------------------------+ |
 |                                                      |
 | This plan has lessons until week 3. After that it    |  <- short-plan line (only when the

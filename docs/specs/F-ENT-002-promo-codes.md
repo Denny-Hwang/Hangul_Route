@@ -15,14 +15,14 @@ The owner hands out codes — on flyers for a Hangul school, in a creator's post
 
 ## 2. User story
 
-A parent opens Billing, types `HOYA20`, sees "$12.24 once with HOYA20 (20% off), was $15.30 once", presses Choose and pays the discounted amount. The owner later sees `HOYA20` on that entitlement.
+A parent opens Billing, types `HOYA20`, sees "$12.24 / year with HOYA20 (20% off), first year, was $15.30 / year", presses Choose and pays the discounted amount for the first year (the Family Plan renews yearly since 2026-10-11, `AMENDMENTS-BILLING-FAMILY-YEARLY.md` [BY]). The owner later sees `HOYA20` on that entitlement.
 
 ## 3. Acceptance criteria
 
 ### 3.1 Data (`content-schema/entitlement.ts`)
 
 - `PROMO_CODE_RE` `^[A-Z0-9][A-Z0-9_-]{1,31}$`; `normalizePromoCode` trims, upper-cases, strips spaces (Stripe matches case-insensitively). `PromoCodeFieldSchema` applies both.
-- `Promo` = `{ id (promo_…), code, name | null, percentOff | null, amountOffCents | null (USD only), duration: once | forever | repeating }`.
+- `Promo` = `{ id (promo_…), code, name | null, percentOff | null, amountOffCents | null (USD only), duration: once | forever | repeating }` (`once` = the first year of a yearly plan; `forever` = every renewal; `repeating` = a number of months [BY]).
 - `discountedUsd(listUsd, promo)` rounds to cents, never below 0; `promoLabel(promo)` → "20% off" / "$5.00 off".
 - `Entitlement.promoCode: string | null` (default null) for attribution; `EntitlementApply.promoCode?`; `schema-v2.sql` column `promo_code`.
 - `CheckoutCreateSchema.promoCode?` (normalized) · `PromoCheckSchema { code, planKey }`.
@@ -31,12 +31,12 @@ A parent opens Billing, types `HOYA20`, sees "$12.24 once with HOYA20 (20% off),
 
 - `lookupPromotionCode(env, code)` → `GET /v1/promotion_codes?code=&active=true&limit=1`; `promoFromStripe(obj, nowSec)` returns null when inactive, coupon invalid, expired, fully redeemed, or not parseable. Network trouble reads as "no such code".
 - `POST /api/entitlements/stripe/promo { code, planKey }` (account): 422 `promo_invalid` for a malformed code, `stripe_not_configured` without the secret key, 404 `promo_invalid` when Stripe has nothing usable, else `{ promo, price: { planKey, listUsd, discountedUsd } }`. Rate-limited **20 / minute per client** (429 `too_many_attempts`, `Retry-After`).
-- `POST /stripe/checkout` accepts `promoCode`; it is **looked up again** server-side (a stale or made-up code → 422 `promo_invalid`, Stripe is never asked to apply it). A valid one becomes `discounts[0][promotion_code]` plus `metadata[promoCode]` (and `subscription_data[metadata][promoCode]` for the yearly licence). Without a code the session sets `allow_promotion_codes=true`, so Stripe's own box still works.
+- `POST /stripe/checkout` accepts `promoCode`; it is **looked up again** server-side (a stale or made-up code → 422 `promo_invalid`, Stripe is never asked to apply it). A valid one becomes `discounts[0][promotion_code]` plus `metadata[promoCode]` (and `subscription_data[metadata][promoCode]`, which every plan now carries because both are yearly subscriptions [BY]). Without a code the session sets `allow_promotion_codes=true`, so Stripe's own box still works.
 - Webhook: `metadata.promoCode` → `promoCode` on the entitlement (`applyEntitlement` keeps it unless replaced).
 
 ### 3.3 Console (`/teach/billing`)
 
-- A **Promo or referral code** box above the plan rows: Apply → `checkPromo` against the first purchasable row; success replaces the price line on every purchasable row with `promoPriceLine` ("$12.24 once with HOYA20 (20% off), was $15.30 once"; a yearly licence on a one-charge coupon adds ", first year"); failure shows one calm line (invalid / too many tries / not set up). Choose sends the code; a `promo_invalid` at that point clears it and explains.
+- A **Promo or referral code** box above the plan rows: Apply → `checkPromo` against the first purchasable row; success replaces the price line on every purchasable row with `promoPriceLine` ("$12.24 / year with HOYA20 (20% off), first year, was $15.30 / year"; every plan is yearly [BY], so a one-charge coupon always adds ", first year"); failure shows one calm line (invalid / too many tries / not set up). Choose sends the code; a `promo_invalid` at that point clears it and explains.
 - Copy passes the caregiver ban list; no urgency or "limited time" language.
 
 ### 3.4 Child app
@@ -45,7 +45,7 @@ A parent opens Billing, types `HOYA20`, sees "$12.24 once with HOYA20 (20% off),
 
 ### 3.5 Owner operations (no deploy)
 
-Stripe Dashboard → Product catalog → **Coupons** → New: percent or fixed amount, duration (`once` for the lifetime price and the first year of a licence; `forever` for every renewal), optional redemption limit and expiry → **Add promotion code**: the customer-facing string (e.g. `HOYA20`, `MSPARK` for a referring teacher), optional per-code limits (max redemptions, expiry, first-time customers only, minimum amount). Pausing = set the promotion code inactive. Referral attribution = one promotion code per referrer; purchases carry the code on the entitlement (`GET /api/entitlements` and the Stripe payment metadata).
+Stripe Dashboard → Product catalog → **Coupons** → New: percent or fixed amount, duration (`once` for the first year of the Family Plan or a licence; `forever` for every renewal; `repeating` for a number of months [BY]), optional redemption limit and expiry → **Add promotion code**: the customer-facing string (e.g. `HOYA20`, `MSPARK` for a referring teacher), optional per-code limits (max redemptions, expiry, first-time customers only, minimum amount). Pausing = set the promotion code inactive. Referral attribution = one promotion code per referrer; purchases carry the code on the entitlement (`GET /api/entitlements` and the Stripe payment metadata).
 
 ## 4. Out of scope
 

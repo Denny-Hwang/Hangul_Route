@@ -1,5 +1,7 @@
 # Billing/Receipts — every recorded payment of one space (wireframe v2)
 
+> **Amended 2026-10-11 [BY]** (`docs/specs/AMENDMENTS-BILLING-FAMILY-YEARLY.md`): the family product is the **Family Plan**, $15.30 / year, renews yearly, cancel any time (was the one-time "Family Lifetime"). Lines below are updated.
+
 Spec: `docs/specs/F-BILL-002-billing-in-app-all-personas.md` §4.10, §4.12, §5.3 (`GET /api/billing/receipts`, `POST /api/billing/receipt-link`)
 Screen ID: `billing/receipts` · URL: `https://app.hangulroute.com/account/billing/receipts?id=<spaceId>` (`BILLING_RECEIPTS_PATH`; opaque id, never a name in the URL)
 Audience: **payers of the space only** (family owner, class owner, school owner or school admin, adult self-learner who owns their family). Co-parents and teachers never reach it (403 → the not-yours state).
@@ -39,7 +41,7 @@ Phone (list):
 | +-------------------------------+ |
 | +-------------------------------+ |
 | | <date>       Payment  (test)  | |  <- "test" pill when recorded in test mode
-| | Family Lifetime · one payment | |
+| | Family Plan                   | |
 | |                     <amount>  | |
 | | [ View receipt ]              | |
 | |   Can't open this receipt     | |  <- only after a failed lookup, on that row
@@ -58,7 +60,7 @@ Wide (table, same data; caption "Receipts", date is the row header):
 |--------|------------------------------|-----------------|----------|---------------|
 | <date> | Renewal                      | Group License   | <amount> | View receipt  |
 | <date> | Payment didn't go through    | Group License   | <amount> | View receipt  |
-| <date> | Refund                       | Family Lifetime | <amount> | View receipt  |
+| <date> | Refund                       | Family Plan     | <amount> | View receipt  |
 ```
 
 Inline variant on `billing/billing-home` (inside a payer card, `> Receipts` open): the latest 3 rows in the list form **without** View receipt, then `[ All receipts ]`.

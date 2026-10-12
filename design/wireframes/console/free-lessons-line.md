@@ -6,7 +6,7 @@ Code: `packages/content-schema/src/catalog/free-lessons-line.ts` (pure), `apps/w
 
 ## Scenario (Given-When-Then)
 
-Given: the free-plan switch is on, the space is not covered (no Family Lifetime, no Group License), and the viewer owns the space
+Given: the free-plan switch is on, the space is not covered (no Family Plan, no Group License), and the viewer owns the space
 When: the grown-up looks at a learner's card or report
 Then: a learner who has done everything open sees one calm line saying so and naming what opens more, with Open billing; no price, no ranking, no comparison, nothing when the data cannot tell
 
@@ -35,7 +35,7 @@ Then: a learner who has done everything open sees one calm line saying so and na
 | Mina                                              |
 | ...existing rows...                               |
 | Mina finished the free lessons. More lessons      |  <- free-end line (exact: from the snapshot)
-| open with Family Lifetime.                        |
+| open with the Family Plan.                        |
 | Open billing  (web build only)                    |
 +--------------------------------------------------+
 ```
@@ -46,11 +46,11 @@ Then: a learner who has done everything open sees one calm line saying so and na
 Practice next
  - Revisit these letters: [ko] [ko]               <- existing rows
  - On the free plan, the first 6 lessons are open.  <- free-plan line (neutral), or plan-waiting
-   More lessons open with Family Lifetime.
+   More lessons open with the Family Plan.
    Open billing
 ```
 
-- Product name by space kind: family -> "Family Lifetime"; class or school -> "a Group License". No price anywhere.
+- Product name by space kind: family -> "the Family Plan" (renamed from "Family Lifetime" 2026-10-11, `AMENDMENTS-BILLING-FAMILY-YEARLY.md` [BY]); class or school -> "a Group License". No price anywhere.
 - Lines are codes from `freeLessonsLine` turned into strings by the host; no string is built from free text.
 - No "behind", "stuck", "only", "trial", "day", no comparison with another learner, no class figure.
 
