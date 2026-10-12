@@ -7,9 +7,10 @@ import { shot } from './shots';
  * F-APP-001 A-6 (sections 3.4, 3.9, 3.11): the learner side of the grown-up area on the app host.
  * The device gate marker the console's lock reads, the bounce of a grown-up URL the host has no
  * page for, the lock's PIN path (`/?gate=grown-up&next=`) through the PIN screen for `GrownUpArea`,
- * and the unlock and console-session clearing of a learner boot. The learner build has no console
- * pages yet (F-APP-001 A-3), so the grown-up page the PIN path returns to is a stand-in served by
- * the test; the service worker is blocked so that stand-in is what the navigation gets.
+ * and the unlock and console-session clearing of a learner boot. Since A-3 the merged build serves
+ * the console's `/teach` and `/parent` pages; the grown-up page the PIN path returns to is still a
+ * stand-in served by the test, so the hand-off is checked without a Clerk session, and the service
+ * worker is blocked so that stand-in is what the navigation gets.
  */
 test.use({ serviceWorkers: 'block' });
 
@@ -51,11 +52,14 @@ test('a family device whose PIN is gone says nopin', async ({ page }) => {
   await expect.poll(() => readStored(page, 'device:gate')).toEqual({ v: 1, gate: 'nopin' });
 });
 
-test('a grown-up URL the host has no page for bounces to its persona entry, which opens the learner app', async ({ page }) => {
+test('a grown-up URL the host has no page for bounces to its persona entry', async ({ page }) => {
+  // `/teach` is a console page of the merged build (A-3): the bounce lands there, not in the learner app.
   await page.goto('/teach/does-not-exist?id=sp_1');
   await expect(page).toHaveURL(/\/teach$/);
-  await expect(page.getByRole('button', { name: "Let's start" })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await expect(page.getByRole('button', { name: "Let's start" })).toHaveCount(0);
 
+  // TODO(F-APP-001 A-4b): `/signin` becomes a console page; until then the learner app answers it.
   await page.goto('/account/billing?checkout=success');
   await expect(page).toHaveURL(/\/signin$/);
   await expect(page.getByRole('button', { name: "Let's start" })).toBeVisible();
