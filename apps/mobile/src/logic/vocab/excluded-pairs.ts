@@ -3,12 +3,19 @@
  * differ (F-VOC-004 §3.3 rule 1): the builder never shows the two words of a
  * pair in one question, as answer and option or as two options. Never relaxed.
  *
+ * - gureum "cloud" against bi "rain" and haneul "sky", and chilpan "board"
+ *   against seonsaengnim "teacher" (F-VOC-002 W-5): the rain is a cloud with
+ *   drops, the sky draws two clouds, and the teacher stands at a board, so the
+ *   other picture is a right answer too.
  * - gong "ball" against each ball sport: the sport glyphs of F-VOC-002 §3.11
  *   are drawn as their ball, so two pictures would read as "ball".
  * - bul "fire" against bit "light": bul also means a light that is on (its
  *   note says so), so the bulb picture of bit is a right answer for bul.
  */
 export const VOCAB_EXCLUDED_PAIRS: readonly (readonly [string, string])[] = Object.freeze([
+  ['vocab:gureum', 'vocab:bi-rain'],
+  ['vocab:gureum', 'vocab:haneul'],
+  ['vocab:chilpan', 'vocab:seonsaengnim'],
   ['vocab:gong-ball', 'vocab:chukgu'],
   ['vocab:gong-ball', 'vocab:yagu'],
   ['vocab:gong-ball', 'vocab:nonggu'],
