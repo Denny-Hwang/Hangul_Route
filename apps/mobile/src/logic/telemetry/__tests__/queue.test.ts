@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { TELEMETRY_FLUSH_BATCH, TELEMETRY_QUEUE_CAP, enqueue, requeue, takeBatch, type QueuedEvent } from '../queue';
+import { TELEMETRY_FLUSH_BATCH, TELEMETRY_QUEUE_CAP, arrivedSince, enqueue, requeue, takeBatch, type QueuedEvent } from '../queue';
 
 const ev = (n: number): QueuedEvent => ({ name: `e${n}`, at: `2026-09-21T00:00:${String(n).padStart(2, '0')}Z` });
 
@@ -24,5 +24,12 @@ describe('telemetry queue', () => {
   });
   it('respects a custom cap', () => {
     expect(enqueue([ev(0), ev(1)], ev(2), 2).map((e) => e.name)).toEqual(['e1', 'e2']);
+  });
+  it('arrivedSince keeps only the stored events with an id the flush did not see, in stored order', () => {
+    const seen = [{ ...ev(0), id: 'a' }, ev(1), { ...ev(2), id: 'b' }];
+    const stored = [...seen, { ...ev(3), id: 'c' }, ev(4), { ...ev(5), id: 'd' }];
+    expect(arrivedSince(stored, seen).map((e) => e.name)).toEqual(['e3', 'e5']);
+    expect(arrivedSince(seen, seen)).toEqual([]);
+    expect(arrivedSince([{ ...ev(6), id: 'x' }], [])).toHaveLength(1);
   });
 });

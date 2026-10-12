@@ -64,7 +64,7 @@ describe('class views after the move', () => {
     const approved: StoredTransfer = { ...executed(learnerSideRow()), status: 'approved', executedAt: null, executeAfter: iso(2 * DAY), blockReason: 'cap_class' };
     const look = await viewLookups(db, [approved]);
     expect(destinationView(approved, look)).toMatchObject({ status: 'approved', scheduledFor: iso(2 * DAY), blockReason: 'cap_class' });
-    const empty = { learners: new Map(), spaces: new Map() };
+    const empty = { learners: new Map(), spaces: new Map(), facts: new Map() };
     expect(destinationView(approved, empty).learner).toBeNull();
     expect(sourceView(approved, empty)).toMatchObject({ learner: null, destination: null });
   });
@@ -79,7 +79,7 @@ describe('learnerSideView', () => {
     const view = await learnerSideView(db, done, await viewLookups(db, [done]), ctx);
     expect(view).toMatchObject({ status: 'executed', premiumChange: 'none', relinkAffected: false, sourcePlansAffected: false, visibleToday: [], endedFrom: null, executeAfter: done.executeAfter });
     const ended: StoredTransfer = { ...learnerSideRow(), status: 'cancelled', endReason: 'withdrawn_learner', endActor: 'device', endedAt: iso(DAY) };
-    const lonely = await learnerSideView(db, ended, { learners: new Map(), spaces: new Map() }, { ...ctx, family: null });
+    const lonely = await learnerSideView(db, ended, { learners: new Map(), spaces: new Map(), facts: new Map() }, { ...ctx, family: null });
     expect(lonely).toMatchObject({ status: 'ended', endedFrom: 'device', executeAfter: null, learner: { id: LEARNER, name: '?' }, from: { spaceId: SOURCE, name: '?' }, to: { name: '?', ownerName: null, learnerCount: 0 }, destinationConsentMode: 'parent' });
   });
 });

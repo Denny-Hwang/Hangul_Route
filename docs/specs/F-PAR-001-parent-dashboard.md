@@ -87,6 +87,8 @@ Suggestions are produced by a small rules table:
 
 ### 3.4 Parent voice message (N5)
 
+> **Superseded (2026-10-11, F-FEEDBACK-001 OD-12 default):** a grown-up's message to a learner is now the note channel of `F-FEEDBACK-001-adult-feedback-channel.md` (preset encouragement plus a short text, synced, visible to the family, hide and report). The voice message below is not built; the rewrite of this spec drops it unless the owner answers OD-12 otherwise.
+
 - **Given** the parent taps "Record a message for Suni",
   **when** the recorder opens,
   **then** the parent records ≤ 10 s audio. On confirm, the audio is stored locally keyed by the target learner's profile.

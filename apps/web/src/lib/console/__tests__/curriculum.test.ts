@@ -548,6 +548,14 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
     expect(ids('brand-new').slice(0, 3)).toEqual(LETTERS);
     expect(ids('some-letters').filter((id) => LETTERS.includes(id))).toEqual([]);
   });
+
+  it('a new route from "Knows all letters" places life q1-q3 out (they teach ㅈ ㅊ ㅂ ㅅ ㅋ ㅌ) and still schedules rites q1; "Knows some letters" keeps them', () => {
+    const LIFE = ['quest:stage1-life-q1', 'quest:stage1-life-q2', 'quest:stage1-life-q3'];
+    const ids = (start: WizardState['start']): string[] => classPlan({ start, length: '12-week' }).items.map((item) => item.id);
+    expect(ids('all-letters').filter((id) => LIFE.includes(id))).toEqual([]);
+    expect(ids('all-letters')).toContain('quest:stage1-rites-q1');
+    expect(ids('some-letters').filter((id) => LIFE.includes(id))).toEqual(LIFE);
+  });
 });
 
 describe('saving a re-pace (section 3.7): the same plan, still published', () => {

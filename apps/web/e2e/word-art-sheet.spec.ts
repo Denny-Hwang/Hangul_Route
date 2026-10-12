@@ -49,6 +49,25 @@ test('?topic= keeps only that family and marks its filter link', async ({ page }
   expect(errors).toEqual([]);
 });
 
+test('the card-art reuses draw the real heritage card art at 96 and 64 px', async ({ page }) => {
+  const errors = watchErrors(page);
+  await page.goto('/design-preview/word-art');
+  await expect(page.getByRole('heading', { level: 2, name: 'Card-art reuses' })).toBeVisible();
+  const reuse = page.locator('[data-testid="card-reuse"][data-card="card:rice"]');
+  await expect(reuse).toBeVisible();
+  const sizes = await reuse.locator('svg[viewBox="0 0 200 200"]').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().width)));
+  expect(sizes).toEqual([96, 64, 96, 64, 96, 64]);
+  expect(await reuse.locator('path, circle, ellipse').count()).toBeGreaterThan(6);
+  expect(errors).toEqual([]);
+});
+
+test('fits a 320 px screen with no sideways scroll', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await page.goto('/design-preview/word-art');
+  await expect(page.getByTestId('word-art-card').first()).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+});
+
 test('the design preview links the contact sheet', async ({ page }) => {
   await page.goto('/design-preview');
   await page.getByRole('link', { name: '→ Word pictures (contact sheet)' }).click();

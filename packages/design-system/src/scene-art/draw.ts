@@ -68,7 +68,7 @@ function paintOf(shape: LeafShape): DrawPaint | null {
   if (hasFill && !isColorToken(fill)) return null;
   if (stroke !== undefined && !isColorToken(stroke)) return null;
   if (!hasFill && stroke === undefined) return null;
-  if (sw !== undefined && !Object.hasOwn(borderWidth, sw)) return null;
+  if (sw !== undefined && !Object.prototype.hasOwnProperty.call(borderWidth, sw)) return null;
   const paint: DrawPaint = { fill: hasFill ? resolveColor(fill) : 'none' };
   if (stroke !== undefined) {
     paint.stroke = resolveColor(stroke);

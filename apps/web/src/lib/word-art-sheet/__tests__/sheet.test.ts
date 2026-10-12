@@ -2,7 +2,7 @@ import { WORD_ART, WORD_ART_FAMILIES, type WordArtEntry } from '@hangul-route/de
 import { describe, expect, it } from 'vitest';
 import { VOCAB_CATALOG, type VocabCatalogEntry } from '../../../data/vocab-catalog';
 import { glyphToSvgString } from '@hangul-route/design-system/word-art';
-import { STATUS_LABEL, buildWordArtSheet, glyphBytes, svgBody, symbolId } from '../sheet';
+import { STATUS_LABEL, buildWordArtSheet, cardArtReuses, glyphBytes, svgBody, symbolId } from '../sheet';
 import { parseTopic, topicHref } from '../topic';
 
 const apple: WordArtEntry = { glyph: [{ t: 'circle', x: 50, y: 50, r: 30, f: 'vocab.red', s: 'text.primary', sw: 3 }], meta: { family: 'food', status: 'review' } };
@@ -53,6 +53,28 @@ describe('buildWordArtSheet (F-VOC-002 §3.10)', () => {
   });
 });
 
+describe('cardArtReuses: the words that reuse a heritage card picture (F-VOC-002 §3.11)', () => {
+  it('lists each card: visual once, in catalog order, with the words that use it', () => {
+    const list = cardArtReuses([
+      entry({ id: 'vocab:bap', ko: '밥', romanization: 'bap', en: 'cooked rice', topic: 'food', visual: 'card:rice' }),
+      entry({}),
+      entry({ id: 'vocab:dal', ko: '달', romanization: 'dal', en: 'moon', topic: 'nature', visual: 'card:moon' }),
+      entry({ id: 'vocab:ssal', ko: '쌀', romanization: 'ssal', en: 'rice', topic: 'food', visual: 'card:rice' }),
+    ]);
+    expect(list.map((r) => r.cardId)).toEqual(['card:rice', 'card:moon']);
+    expect(list[0]!.words.map((w) => w.id)).toEqual(['vocab:bap', 'vocab:ssal']);
+    expect(list[1]!.words).toEqual([{ id: 'vocab:dal', ko: '달', romanization: 'dal', en: 'moon', topic: 'nature' }]);
+  });
+
+  it('finds the 13 launch reuses in the shipped catalog', () => {
+    const list = cardArtReuses(VOCAB_CATALOG);
+    expect(list.map((r) => r.cardId).sort()).toEqual(
+      ['book', 'chuseok', 'gayageum', 'hanbok', 'kimbap', 'kimchi', 'moon', 'mountain', 'rice', 'sea', 'seollal', 'tiger', 'yutnori'].map((c) => `card:${c}`),
+    );
+    for (const r of list) expect(r.words.length).toBeGreaterThan(0);
+  });
+});
+
 describe('parseTopic and topicHref (?topic=<family>)', () => {
   it('reads a known family from a query string', () => {
     expect(parseTopic('?topic=food', WORD_ART_FAMILIES)).toBe('food');
@@ -87,7 +109,13 @@ describe('svgBody and symbolId: one sprite symbol per glyph and mode', () => {
   });
 
   it('names the colour and silhouette symbols of a key', () => {
-    expect(symbolId('food-apple', false)).toBe('wa-food-apple');
-    expect(symbolId('food-apple', true)).toBe('wa-food-apple-mono');
+    expect(symbolId('food-apple', false)).toBe('wa_c_food-apple');
+    expect(symbolId('food-apple', true)).toBe('wa_m_food-apple');
+  });
+
+  it('never gives two drawings the same id, even for keys ending in -mono (the key pattern has no underscore)', () => {
+    const keys = ['food-x', 'food-x-mono', 'food-x--mono', 'food-mono-x'];
+    const ids = keys.flatMap((k) => [symbolId(k, false), symbolId(k, true)]);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });

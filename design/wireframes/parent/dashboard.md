@@ -3,6 +3,8 @@
 Spec: `docs/specs/F-PAR-001-parent-dashboard.md` §3.1–3.3, §3.6
 Audience: **parent** (only surface where numbers/percentages may appear — never mirrored on learner screens)
 
+> **Superseded on the web (2026-10-11)**: the web `/parent` demo is replaced by F-APP-001's parent home (`shell/parent-home.md`) and F-REPORT-001's learner report (`reports/learner-report.md`). The in-app dashboard described here stays; its weekly digest (F-PAR-001 section 3.2) is superseded by `reports/in-app-report.md`.
+
 ## Scenario (Given-When-Then)
 
 Given: a parent passed the PIN gate on a device with 1+ linked learners

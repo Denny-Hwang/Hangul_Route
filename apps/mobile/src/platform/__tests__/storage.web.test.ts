@@ -13,7 +13,8 @@ vi.mock('idb-keyval', () => ({
   clear: vi.fn(async () => mem.clear()),
 }));
 
-import { listKeys, readJson, removeKey, requestPersistence, writeJson } from '../storage.web';
+import { get } from 'idb-keyval';
+import { listKeys, readJson, readJsonStrict, removeKey, requestPersistence, writeJson } from '../storage.web';
 
 describe('platform/storage.web (IndexedDB via idb-keyval)', () => {
   beforeEach(() => mem.clear());
@@ -28,6 +29,16 @@ describe('platform/storage.web (IndexedDB via idb-keyval)', () => {
     expect(await readJson('nope')).toBeNull();
     mem.set('hr:bad', '{not json');
     expect(await readJson('bad')).toBeNull();
+  });
+
+  it('readJsonStrict reads like readJson but throws when IndexedDB throws', async () => {
+    await writeJson('q', [1, 2]);
+    expect(await readJsonStrict('q')).toEqual([1, 2]);
+    expect(await readJsonStrict('nope')).toBeNull();
+    mem.set('hr:bad', '{not json');
+    expect(await readJsonStrict('bad')).toBeNull();
+    vi.mocked(get).mockRejectedValueOnce(new Error('idb'));
+    await expect(readJsonStrict('q')).rejects.toThrow('idb');
   });
 
   it('listKeys strips the prefix and ignores foreign keys', async () => {

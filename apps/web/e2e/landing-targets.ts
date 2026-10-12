@@ -13,7 +13,7 @@ import { touchTarget } from '@hangul-route/design-system/tokens';
 
 export const TARGET_MIN = touchTarget.min;
 
-/** The three phone / small-tablet widths of `landing-layout.spec.ts` (`WIDTHS`). */
+/** The three phone / small-tablet widths the owner named: the one list `landing-layout.spec.ts` and `landing-locales.spec.ts` use. */
 export const LANDING_WIDTHS = [320, 375, 768] as const;
 
 export interface LandingTouchAllowlist {
@@ -52,9 +52,27 @@ export function normalizeHref(href: string): string {
   return `${bare}${rest ? `?${rest}` : ''}${hash === undefined ? '' : `#${hash}`}`;
 }
 
-/** `tag` plus the locale switcher's language, else where the link goes, else the control's type. */
-export function controlKey(c: ControlFacts): string {
+/** Whether `href` is on `origin` (the same scheme, host and port, not a look-alike host). */
+function onOrigin(href: string, origin: string): boolean {
+  try {
+    return new URL(href).origin === new URL(origin).origin;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * `tag` plus the locale switcher's language, else where the link goes, else the control's type. A link to
+ * the learner app (`appOrigin`, which `NEXT_PUBLIC_APP_URL` sets at build time) is keyed `<app>` plus its
+ * path, so an export built for another app origin keeps the same list.
+ */
+export function controlKey(c: ControlFacts, appOrigin?: string | null): string {
   if (c.hreflang) return `${c.tag} hreflang=${c.hreflang}`;
+  if (c.href !== null && appOrigin && onOrigin(c.href, appOrigin)) {
+    const url = new URL(c.href);
+    const rest = normalizeHref(`${url.pathname === '/' ? '' : url.pathname}${url.search}${url.hash}`);
+    return `${c.tag} <app>${rest}`;
+  }
   if (c.href !== null) return `${c.tag} ${normalizeHref(c.href)}`;
   return c.type ? `${c.tag} ${c.type}` : c.tag;
 }
