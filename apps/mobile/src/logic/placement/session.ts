@@ -9,6 +9,7 @@ import {
   type RouteOptions,
   type RouteSeed,
 } from '@hangul-route/content-schema';
+import type { NextSource, RouteNext } from '../route-next';
 
 /**
  * Small pure helpers for the screen that hosts a run (F-PLC-001 section 3.1
@@ -62,4 +63,35 @@ export function startTarget(seed: RouteSeed): { questId: string; episodeId: stri
  */
 export function completedAtOf(offer: 'live' | 'finish', savedAtMs: number, nowMs: number): string {
   return new Date(offer === 'finish' ? savedAtMs : nowMs).toISOString();
+}
+
+/** What the result screen's primary action opens (F-PLC-001 section 3.1 step 7, amended by F-ENT-003 E3-4). */
+export type PlacementStart =
+  /** `source` is set when the quest is `routeNext` (for `route.next_started`), else null. */
+  | { kind: 'quest'; questId: string; episodeId: string; source: NextSource | null }
+  | { kind: 'topic'; topicKey: string }
+  | { kind: 'journey' };
+
+/**
+ * The start quest while it is open (the pin still marks the start cell);
+ * when it is closed for a free learner (effective switch on), `routeNext`'s
+ * quest, which is always open; at `free-end` with `placedOut`, the first free
+ * word topic; otherwise the Journey, as with no start quest.
+ */
+export function placementStart(i: {
+  start: { questId: string; episodeId: string } | null;
+  isQuestOpen: (questId: string) => boolean;
+  next: RouteNext;
+  /** The first free word topic the picker shows in this build, or null. */
+  freeTopicKey: string | null;
+}): PlacementStart {
+  const { start, next } = i;
+  if (start === null) return { kind: 'journey' };
+  if (i.isQuestOpen(start.questId)) {
+    const source = next.kind === 'quest' && next.questId === start.questId ? next.source : null;
+    return { kind: 'quest', ...start, source };
+  }
+  if (next.kind === 'quest') return { kind: 'quest', questId: next.questId, episodeId: next.episodeId, source: next.source };
+  if (next.kind === 'free-end' && next.placedOut && i.freeTopicKey !== null) return { kind: 'topic', topicKey: i.freeTopicKey };
+  return { kind: 'journey' };
 }

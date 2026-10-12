@@ -37,7 +37,9 @@ import {
 } from '../../logic/placement/flow';
 import { bankHasClips, flowCapability, placementKoreanAudio, speechLangOf } from '../../logic/placement/options-view';
 import { resultView } from '../../logic/placement/result-view';
-import { completedAtOf, newResponse, resultRoutes, rungPosition, startTarget } from '../../logic/placement/session';
+import { completedAtOf, newResponse, placementStart, resultRoutes, rungPosition, startTarget } from '../../logic/placement/session';
+import { isFreeContent } from '../../logic/content-access';
+import { nextStartedEvent, routeNext } from '../../logic/route-next';
 import { resolvePicture } from '../../logic/picture-ref';
 import { effectiveLearnerType, gateRequired } from '../../logic/profiles/learner-type';
 import type { PlacementStackParamList, RootStackParamList } from '../../navigation/types';
@@ -50,7 +52,9 @@ import { usePlacementRunStore } from '../../store/placement-run-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { usePracticeSession } from '../use-practice-session';
+import { routeNextInputFor } from '../../store/route-next-input';
 import { accessTier } from '../../store/tier-store';
+import { pickerTopics, wordsOffered } from '../vocab/topic-data';
 import { useUiStore } from '../../store/ui-store';
 import { HandoffScreen } from './HandoffScreen';
 import { ItemScreen } from './ItemScreen';
@@ -440,13 +444,26 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
     (action: ResultAction): void => {
       const check = finished;
       switch (action) {
-        case 'start':
-          if (check?.startQuest) {
-            resetTo([{ name: 'Main' }, { name: 'QuestPlayer', params: check.startQuest }]);
+        case 'start': {
+          // The start quest while it is open; else the one next, or the first free word topic at the
+          // end of the free lessons (F-PLC-001 section 3.1 step 7, amended by F-ENT-003 E3-4).
+          const startQuest = check?.startQuest ?? null;
+          const input = profileId === null ? null : routeNextInputFor(profileId, new Date());
+          const freeTopicKey = wordsOffered() ? (pickerTopics().find((t) => isFreeContent('vocab-topic', t.key))?.key ?? null) : null;
+          const start =
+            input === null
+              ? placementStart({ start: startQuest, isQuestOpen: () => true, next: { kind: 'rest' }, freeTopicKey })
+              : placementStart({ start: startQuest, isQuestOpen: input.isQuestOpen, next: routeNext(input), freeTopicKey });
+          if (start.kind === 'quest') {
+            if (start.source !== null && profileId !== null) void track(nextStartedEvent(profileId, start.source, 'placement'));
+            resetTo([{ name: 'Main' }, { name: 'QuestPlayer', params: { questId: start.questId, episodeId: start.episodeId } }]);
+          } else if (start.kind === 'topic') {
+            resetTo([{ name: 'Main' }, { name: 'VocabTopic', params: { topicKey: start.topicKey } }]);
           } else {
             resetTo([{ name: 'Main', params: { screen: 'Journey' } }]);
           }
           return;
+        }
         case 'seeMap':
           resetTo([{ name: 'Main', params: { screen: 'Journey' } }]);
           return;

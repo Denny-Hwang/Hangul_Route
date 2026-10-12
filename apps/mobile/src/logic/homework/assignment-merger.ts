@@ -20,6 +20,12 @@ export interface MergeInput {
   enabled: boolean;
   /** Resolves a quest id to its learner-facing title. */
   titleOf: (questId: string) => string | undefined;
+  /**
+   * May the learner start this quest (`useQuestAccess`, F-ENT-003 section 3.5)?
+   * A closed assignment is skipped like an unknown one, so card (2) names the
+   * same quest as `routeNext` step 1. Omitted means every quest is open.
+   */
+  isQuestOpen?: (questId: string) => boolean;
 }
 
 export interface MergeResult {
@@ -61,6 +67,7 @@ export function mergeAssignments({
   today,
   enabled,
   titleOf,
+  isQuestOpen,
 }: MergeInput): MergeResult {
   if (!enabled) {
     return { plan, deferred: [] };
@@ -75,7 +82,7 @@ export function mergeAssignments({
   // queued, and the next known one takes the card, so a carried-over unknown
   // item never holds card ② for good.
   const pick = queue
-    .map((assignment) => ({ assignment, title: titleOf(assignment.questId) }))
+    .map((assignment) => ({ assignment, title: !isQuestOpen || isQuestOpen(assignment.questId) ? titleOf(assignment.questId) : undefined }))
     .find((x): x is { assignment: HomeworkAssignment; title: string } => x.title !== undefined);
   if (pick === undefined) {
     return { plan, deferred: [...queue] };
