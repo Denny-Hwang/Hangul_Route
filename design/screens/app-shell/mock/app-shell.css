@@ -137,8 +137,10 @@ button, select, input { font: inherit; color: inherit; }
 .btn-small { font-size: var(--size-bodySm); padding-left: var(--spacing-lg); padding-right: var(--spacing-lg); }
 .btn-block { width: 100%; }
 .btn-col { width: 100%; max-width: var(--pane-master); }
+/* Add a learner open (a disclosure, aria-expanded="true"): the sunken fill is a second cue beside the panel itself. */
+.btn[aria-expanded="true"] { background: var(--colors-surface-sunken); }
 .btn[disabled], .btn[aria-disabled="true"] { background: var(--colors-surface-sunken); border-color: var(--colors-surface-sunken); color: var(--colors-text-muted); cursor: default; }
-.text-link { display: inline-flex; align-items: center; min-height: var(--touch-min); color: var(--colors-brand-secondaryDark); font-weight: var(--weight-semibold); text-decoration: underline; text-underline-offset: var(--spacing-xs); }
+.text-link { display: inline-flex; align-items: center; justify-content: center; min-height: var(--touch-min); min-width: var(--touch-min); padding-inline: var(--spacing-sm); color: var(--colors-brand-secondaryDark); font-weight: var(--weight-semibold); text-decoration: underline; text-underline-offset: var(--spacing-xs); }
 .select { min-height: var(--touch-min); padding: var(--spacing-sm) var(--spacing-xl) var(--spacing-sm) var(--spacing-lg); border-radius: var(--radii-pill); border: var(--border-width-thin) solid var(--colors-border-strong); background: var(--colors-surface-paper); font-size: var(--size-bodySm); font-weight: var(--weight-bold); }
 .muted { color: var(--colors-text-muted); font-size: var(--size-bodySm); }
 .secondary { color: var(--colors-text-secondary); }
@@ -182,7 +184,6 @@ button, select, input { font: inherit; color: inherit; }
 @media (min-width: 45em) {
   .frame-bar { padding-left: var(--gutter-regular); padding-right: var(--gutter-regular); column-gap: var(--spacing-md); }
   .frame-bar.has-switch .brand { display: inline-flex; }
-  .brand-name { position: static; width: auto; height: auto; overflow: visible; clip-path: none; }
   .wide-only { display: inline-flex; }
   .way-back { margin-left: auto; flex: none; }
   .persona-switch [role="radio"] { padding-left: var(--spacing-md); padding-right: var(--spacing-md); }
@@ -192,8 +193,10 @@ button, select, input { font: inherit; color: inherit; }
   .nav-item { padding: 0 var(--spacing-md); }
   .foot-tools { display: none; }
 }
+/* The brand name joins the mark only from 70em (layout.maxWidth.full), so the wide header stays one row from 45em up (README, D2). */
 @media (min-width: 70em) {
   .frame-bar, .frame-nav, .frame-main, .frame-foot-inner { padding-left: var(--gutter-wide); padding-right: var(--gutter-wide); }
+  .brand-name { position: static; width: auto; height: auto; overflow: visible; clip-path: none; }
 }
 
 /* ------------------------------------------------------------------------------------------ */
@@ -225,8 +228,11 @@ button, select, input { font: inherit; color: inherit; }
 .skeleton-line.short { width: 50%; }
 .skeleton-line.tall { height: var(--touch-min); }
 @media (min-width: 45em) {
-  .home-layout.with-side { display: grid; grid-template-columns: minmax(0, 1fr) var(--pane-master); align-items: start; gap: var(--spacing-xxl); }
   .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* The side column opens only from 70em (layout.maxWidth.full): below that the main column would be narrower than the side one (README, D6). */
+@media (min-width: 70em) {
+  .home-layout.with-side { display: grid; grid-template-columns: minmax(0, 1fr) var(--pane-master); align-items: start; gap: var(--spacing-xxl); }
   .home-layout.with-side .cards { grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr)); }
 }
 
@@ -295,6 +301,7 @@ button, select, input { font: inherit; color: inherit; }
 .rn-hero { width: 100%; min-height: var(--touch-hero); padding: var(--spacing-sm) var(--spacing-xxl); background: var(--colors-brand-primary); color: var(--colors-text-onPrimary); font-size: var(--size-prompt); }
 .rn-primary { background: var(--colors-brand-primary); color: var(--colors-text-onPrimary); }
 .rn-ghost { background: transparent; border-color: var(--colors-brand-primary); color: var(--colors-brand-primary); }
+.rn-secondary { background: var(--colors-brand-secondary); color: var(--colors-text-onSecondary); }
 .rn-btn[disabled] { background: var(--colors-surface-sunken); border-color: transparent; color: var(--colors-text-muted); opacity: var(--disabled-opacity); cursor: default; }
 .rn-link { display: inline-flex; align-items: center; min-height: var(--touch-min); padding: 0 var(--spacing-md); color: var(--colors-brand-primaryDark); font-size: var(--size-body); font-weight: var(--weight-semibold); text-decoration: underline; text-underline-offset: var(--spacing-xs); }
 .grownups { width: 100%; display: flex; flex-direction: column; align-items: center; gap: var(--spacing-sm); margin-top: var(--spacing-xs); padding-top: var(--spacing-md); border-top: var(--border-width-thin) solid var(--colors-border-subtle); }
