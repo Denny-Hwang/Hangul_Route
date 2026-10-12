@@ -20,8 +20,10 @@ import { StoryShelf } from './StoryShelf';
  * design/wireframes/library/culture.md C, brief
  * design/brief/screens/24-culture-notes.md): the Culture notes card on top
  * ("N found" and the two newest titles, or how notes are found; the whole card
- * opens `CultureNotes`), then the `culture` story tiles exactly as Story Time
- * (`StoryShelf`, which also sends `story.shelf.viewed`).
+ * opens `CultureNotes`, the section's one primary action), then the `culture`
+ * story tiles as in Story Time but without its "Picked for you" hero
+ * (`StoryShelf hero={false}`). The shelf is mounted even with no culture tile,
+ * so `story.shelf.viewed { section: 'culture' }` is sent once per visit either way.
  */
 export function CultureSection({ index }: { index: readonly StoryIndexEntry[] }): React.ReactElement {
   const messages = useMessages();
@@ -75,12 +77,8 @@ export function CultureSection({ index }: { index: readonly StoryIndexEntry[] })
         </View>
         <Icon name="arrow-right" size={spacing.xl} color={colors.text.secondary} />
       </Pressable>
-      {hasTiles ? (
-        <>
-          <Spacer size="lg" />
-          <StoryShelf category="culture" index={index} />
-        </>
-      ) : null}
+      {hasTiles ? <Spacer size="lg" /> : null}
+      <StoryShelf category="culture" index={index} hero={false} />
     </View>
   );
 }
