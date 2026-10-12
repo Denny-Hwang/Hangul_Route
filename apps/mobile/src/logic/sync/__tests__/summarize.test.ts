@@ -211,6 +211,19 @@ describe('vocabSummaryOf (F-VOC-005 section 3.8)', () => {
     expect(rate([w('a', { seen: 8, right: 8 })])).toBe(1);
   });
 
+  it('rounds an exact half up, whatever the floating-point division says', () => {
+    const rate = (items: VocabItemState[]) => vocabSummaryOf({ v: 1, items, topics: [] }, TODAY).firstTryRate;
+    // 23 / 40 = 0.575 and 1 / 8 = 0.125: (right / seen) * 100 lands just under the half.
+    expect(rate([w('a', { seen: 40, right: 23 })])).toBe(0.58);
+    expect(rate([w('a', { seen: 8, right: 1 })])).toBe(0.13);
+    for (let seen = 1; seen <= 400; seen++) {
+      for (let right = 0; right <= seen; right++) {
+        const want = Math.floor((right * 200 + seen) / (2 * seen)) / 100;
+        expect(rate([w('a', { seen, right })])).toBe(want);
+      }
+    }
+  });
+
   it('lists up to three words seen twice or more, now in box 1, lowest right/seen first', () => {
     const v: VocabProgress = {
       v: 1,
@@ -302,7 +315,9 @@ describe('summarize with words (F-VOC-005 section 3.8)', () => {
       });
       expect(out.vocab?.topicsPracticed7d).toBe(1);
     } finally {
-      process.env.TZ = tz;
+      // Assigning undefined would store the string "undefined" and leak a bogus zone.
+      if (tz === undefined) delete process.env.TZ;
+      else process.env.TZ = tz;
     }
   });
 });

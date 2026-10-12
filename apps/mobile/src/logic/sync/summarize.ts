@@ -116,7 +116,7 @@ export function vocabSummaryOf(v: VocabProgress, today: string): VocabSummary {
     strong: v.items.filter((s) => s.bestBox >= VOCAB_STRONG_BOX).length,
     topicsStarted: v.topics.length,
     topicsPracticed7d: v.topics.filter((t) => t.last >= weekStart).length,
-    firstTryRate: seen === 0 ? null : Math.round((right / seen) * 100) / 100,
+    firstTryRate: seen === 0 ? null : Math.round((right * 100) / seen) / 100,
     needsPractice,
   };
 }
