@@ -172,11 +172,13 @@ describe('bootRoot (web): what each root does before it mounts', () => {
     expect(h.log).toEqual([]);
   });
 
-  it('/browse mounts the learner app until F-BROWSE-001 BR-6 wires BrowseApp, so it clears as the app does', () => {
+  it('/browse mounts BrowseApp, which clears neither the unlock nor the console session (F-BROWSE-001 BD1, section 4.10)', () => {
     const h = harness('/browse');
     expect(bootRoot(h.env)).toBe('browse');
-    expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(false);
+    expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(true);
+    expect(h.area.data.has(CONSOLE_SESSION_KEY)).toBe(true);
     expect(h.area.data.has('hr:browse:pass')).toBe(true);
+    expect(h.log).toEqual([]);
   });
 
   it('/browse reads no boot intent: the query stays for the browse root, nothing opens the PIN screen', () => {
@@ -184,7 +186,17 @@ describe('bootRoot (web): what each root does before it mounts', () => {
     expect(bootRoot(h.env)).toBe('browse');
     expect(peekBootIntent()).toBeNull();
     expect(h.log).toEqual([]);
-    expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(false);
+    expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(true);
+  });
+
+  it('/browse restored from the back/forward cache clears nothing either: [ Close ] goes back to the console page that needs both', () => {
+    const h = harness('/browse');
+    const handlers: Array<() => void> = [];
+    h.env.onRestore = (handler) => {
+      handlers.push(handler);
+    };
+    bootRoot(h.env);
+    expect(handlers).toHaveLength(0);
   });
 
   it('the bounce carries the query keys its entry reads', async () => {
