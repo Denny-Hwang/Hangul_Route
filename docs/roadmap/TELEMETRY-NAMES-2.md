@@ -136,9 +136,31 @@ Five names in the `route.` namespace (F-PLAN-002's dated weekly plan; F-ROUTE-00
 | 4 | `route.proposal_skipped` | F-PLAN-002 §3.11 (FP-B7) | `{ source }` (Just start / Not now) | P2-4 | P2-7a |
 | 5 | `route.updated` | F-PLAN-002 §3.11 (FP-B7) | `{ source: 'retake' \| 'override', itemsRemoved, itemsAdded }` (a retake or an override reseeds the route) | P2-4 | P2-7a |
 
-## L. Free plan and plan-next names (F-ENT-003; added by its E3-0 docs PR)
+## L. Progress report names (F-REPORT-001; added by its RP-0 docs PR)
 
-Three names in the new `access.` namespace and two in F-PLAN-002's `route.` namespace. None collides with sections A to K or with the names in `TELEMETRY_EVENT_NAMES` on `main` at `ea9049e4` (no existing name starts with `access.`; `route.next_started` and `route.offplan_finished` are new). Worker first: E3-1b adds all five to `TELEMETRY_EVENT_NAMES` and its exact-list tests, and the Worker deploys on merge before any app build that sends them (E3-4, E3-6, E3-7). Active profile only; codes, stage keys and counts only; no title, name, price, product or tier word; F-BROWSE-001 sends none of them. Several docs PRs of the 2026-10-11 wave add a section to this file: whichever merges later takes the next free letter (this section keeps L only if it merges first). Changed payload of an existing name (section D style): `paywall.viewed.from` gains `episode`, `home`, `results` (F-BILL-002 keeps `paywall.viewed` for its Plan screen).
+One name in the new `report.` namespace (grown-up reports of a learner or a class). None collides with sections A to K or with `TELEMETRY_EVENT_NAMES` on `main` at `ea9049e4` (no existing name starts with `report.`; the level check's grown-up report screen sends no event of its own). Worker first: RP-W1 adds the name to `TELEMETRY_EVENT_NAMES`, its exact-list test and a `report.*` payload filter in `routes/telemetry.ts` (keeps only `scope`, `space`, `period` with their enum values; always drops `profileId`), and is deployed before RP-5 records it and before any app build with RP-9 sends it. **Two emitters**: the console has no telemetry client, so the Worker records the event itself inside the two report routes (`packages/backend/src/lib/server-events.ts` appends to the same in-memory store as `POST /api/telemetry`); the learner app sends it through `track()` from the in-app report. Codes only: **no `profileId`, no space id, no learner id, no name**.
+
+| # | Name | Owning spec | Payload | Added to the list by | Emitted by |
+|---|---|---|---|---|---|
+| 1 | `report.viewed` | F-REPORT-001 §3.13 | `{ scope: 'learner' \| 'class', space: 'family' \| 'class' \| 'device', period: 'day' \| 'week' \| 'month' \| 'all' }` (a report opens, its period changes or it steps to a past window) | RP-W1 | RP-5 / RP-5b (Worker, console views), RP-9 (learner app, `space: 'device'`) |
+
+## M. Notes from grown-ups names (F-FEEDBACK-001; added by its FB-0 docs PR)
+
+Seven names in the new `notes.` namespace (the learner side of the adult-to-learner feedback channel). None collides with sections A to L or with `TELEMETRY_EVENT_NAMES` on `main` at `ea9049e4` (no existing name starts with `notes.`). Worker first: FB-1 adds all seven to `TELEMETRY_EVENT_NAMES` and its exact-list test, and the API Worker is deployed with FB-1 before the app builds that send them (FB-8, FB-9). App only (the console has no telemetry client). Payloads never carry note text, a note or batch id, a sender label, a space name or id, an account id or a learner name; **every** `notes.*` event is sent **without `profileId`**, so the server holds no per-learner log of opened notes.
+
+| # | Name | Owning spec | Payload | Added to the list by | Emitted by |
+|---|---|---|---|---|---|
+| 1 | `notes.card_shown` | F-FEEDBACK-001 §10 | `{ unread }` (once per app session, when the Home card first shows) | FB-1 | FB-8 |
+| 2 | `notes.list_viewed` | F-FEEDBACK-001 §10 | `{ notes, unread }` | FB-1 | FB-8 |
+| 3 | `notes.note_opened` | F-FEEDBACK-001 §10 | `{ presetId, fromRole: 'teacher' \| 'family', hasText, hasSuggest, suggestOpen }` | FB-1 | FB-8 |
+| 4 | `notes.reaction_picked` | F-FEEDBACK-001 §10 | `{ reaction: 'thanks' \| 'will_try' \| 'did_it' \| 'happy', fromRole, changed }` | FB-1 | FB-8 |
+| 5 | `notes.suggest_started` | F-FEEDBACK-001 §10 | `{ fromRole }` (Start on a suggested quest) | FB-1 | FB-8 |
+| 6 | `notes.report_sent` | F-FEEDBACK-001 §10 | `{ reason: 'unkind' \| 'unsafe' \| 'not_for_me' \| 'other', via: 'note_page' \| 'grown_up_zone' }` | FB-1 | FB-9 |
+| 7 | `notes.prefs_changed` | F-FEEDBACK-001 §10 | `{ classes: 'all' \| 'presets' \| 'off' }` | FB-1 | FB-9 |
+
+## N. Free plan and plan-next names (F-ENT-003; added by its E3-0 docs PR)
+
+Three names in the new `access.` namespace and two in F-PLAN-002's `route.` namespace. None collides with sections A to M or with the names in `TELEMETRY_EVENT_NAMES` on `main` at `ea9049e4` (no existing name starts with `access.`; `route.next_started` and `route.offplan_finished` are new). Worker first: E3-1b adds all five to `TELEMETRY_EVENT_NAMES` and its exact-list tests, and the Worker deploys on merge before any app build that sends them (E3-4, E3-6, E3-7). Active profile only; codes, stage keys and counts only; no title, name, price, product or tier word; F-BROWSE-001 sends none of them. Changed payload of an existing name (section D style): `paywall.viewed.from` gains `episode`, `home`, `results` (F-BILL-002 keeps `paywall.viewed` for its Plan screen).
 
 | # | Name | Owning spec | Payload | Added to the list by | Emitted by |
 |---|---|---|---|---|---|

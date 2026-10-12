@@ -371,7 +371,7 @@ Item 10's guidance needs a configured plan. Class and family plans can be made t
 - **Banned on grown-up copy of this spec**: the F-PAR-001 §3.6 phrases, "trial", "expires", "limited time", any countdown, any price, any comparison with other learners, "day" / "days" (as words).
 - Each string passes the length budget (`packages/i18n/src/__tests__/length-budget.test.ts`).
 
-### 3.12 Telemetry (Worker first; rows in `docs/roadmap/TELEMETRY-NAMES-2.md`, section L or the next free letter when E3-0 merges)
+### 3.12 Telemetry (Worker first; rows in `docs/roadmap/TELEMETRY-NAMES-2.md` section N)
 
 | Name | Payload | When |
 |---|---|---|
@@ -505,7 +505,7 @@ Coverage: new pure modules (`route-days.ts`, `free-lessons-line.ts`, `route-next
 
 | PR | Content | Size | Needs |
 |---|---|---|---|
-| E3-0 | `docs`: this spec; the nine wireframes; amendment lines in F-ENT-001 §3.5 (the paywall is replaced by F-BILL-002's Plan screen; free-plan lines from this spec), F-STORY-004 §3.9 (one switch, "Not open yet", dotted ring), F-ROUTE-001 §3.5 (`routeNext` and `planView` owned here; LR-3b imports; LR-5 draws `free-end`), F-PLAN-002 §3.1 (`openQuestIds`), F-PLC-001 §3.1 step 7; telemetry rows (section L); `docs/specs/README.md` index line | S | — |
+| E3-0 | `docs`: this spec; the nine wireframes; amendment lines in F-ENT-001 §3.5 (the paywall is replaced by F-BILL-002's Plan screen; free-plan lines from this spec), F-STORY-004 §3.9 (one switch, "Not open yet", dotted ring), F-ROUTE-001 §3.5 (`routeNext` and `planView` owned here; LR-3b imports; LR-5 draws `free-end`), F-PLAN-002 §3.1 (`openQuestIds`), F-PLC-001 §3.1 step 7; telemetry rows (`TELEMETRY-NAMES-2.md` section N); `docs/specs/README.md` index line | S | — |
 | E3-1a | `feat(content-schema)`: `catalog/route-days.ts` (`routeDaysOf`, `FREE_ROUTE_DAYS`, `freeRouteQuestIds`, `gridLessonIds`, `routeDayOfQuest`, `freeLessonsFacts`) + tests + index exports | S | E3-0 |
 | E3-1b | `feat(content-schema,backend)`: five telemetry names + exact-list tests. **The Worker deploys on merge, before any app build that sends them** | S | E3-0 |
 | E3-D | `design`: mock of the In your plan solid ring, the Not open yet dotted ring, the Next pin on a cell, the preview card, the free-end card and the practice card (`design/components/RouteMarkers/spec.md` + preview), greyscale and protanopia check of solid against dotted | S | E3-0 |
@@ -529,7 +529,7 @@ E3-10 (route page hero) is withdrawn: LR-5 draws the route page's `free-end` sta
 - **E3-8 merges after F-BILL-002 B-9** (it adds keys to `caregiver.plan`, which B-6 creates, on the screen B-9 builds).
 - Shared append-only files: `packages/content-schema/src/index.ts`, `schemas/telemetry.ts` and its test. Append, never reorder.
 - The access parts of E3-5 to E3-7 merge while the switch is off; they are inert in production and covered by the e2e build with the switch on.
-- **Docs PRs of the 2026-10-11 wave** (they share `docs/specs/README.md`, `design/wireframes/README.md`, `docs/roadmap/TELEMETRY-NAMES-2.md` and `F-ROUTE-001-my-route-overview.md`). Recommended merge order: F-ENT-003 (owner of the shared predicate, `routeNext` and the glossary) -> LR-0 -> F-BILL-002 B-0 -> F-APP-001 A-0 -> F-BROWSE-001 -> F-REPORT-001 -> F-FEEDBACK-001 -> F-SITE-002. Whichever merges later rebases on the newest `origin/main` and keeps both sides of each index line; a telemetry section takes the next free letter at merge time.
+- **Docs PRs of the 2026-10-11 wave** (they share `docs/specs/README.md`, `design/wireframes/README.md`, `docs/roadmap/TELEMETRY-NAMES-2.md` and `F-ROUTE-001-my-route-overview.md`). Merge order (fixed 2026-10-11): F-APP-001 A-0 (#341) and F-BILL-002 B-0 (#336) are merged; then F-SITE-002 (#335) -> F-REPORT-001 (#337) -> F-FEEDBACK-001 (#338) -> F-ENT-003 E3-0 (#339) -> F-BROWSE-001 (#340) -> LR-0 (#344, after this spec, which owns the shared predicate, `routeNext` and the glossary). Each PR already carries the index lines of the PRs before it exactly as they land on `main`; the telemetry sections are fixed: L F-REPORT-001, M F-FEEDBACK-001, N this spec.
 
 ### 6.3 Ownership
 
