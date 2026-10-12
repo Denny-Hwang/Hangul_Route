@@ -15,7 +15,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import type { QuestStepKind } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { Pressable, View } from 'react-native';
 import { questById } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -28,7 +28,12 @@ import {
   watchCheck,
   type CheckWatch,
 } from '../../logic/quest-flow/check-launcher';
-import { questFinish, type QuestPlayerPorts } from '../../logic/quest-flow/quest-player-ports';
+import {
+  runQuestFinish,
+  runQuestLeave,
+  runQuestStart,
+  type QuestPlayerPorts,
+} from '../../logic/quest-flow/quest-player-ports';
 import { questStepLabel } from '../../logic/quest-steps';
 import { confirm } from '../../platform/dialog';
 import { useQuestRunStore } from '../../store/quest-run-store';
@@ -49,7 +54,9 @@ export interface QuestPlayerViewProps {
 /**
  * The quest player body (F-BROWSE-001 BR-5a): the step header, Discover, the game launcher and the
  * narrative steps, with the run kept in `quest-run-store` (memory only). It reaches no learner store,
- * no navigation stack and no telemetry client of its own: every exit goes through `ports`.
+ * no navigation stack and no telemetry client of its own: every exit goes through `ports`. Its one
+ * navigation coupling is `useFocusEffect` (applying a game's pending advance on re-focus), which the
+ * browse stack's own navigation container also provides.
  */
 export function QuestPlayerView({ questId, episodeId, ports, onOpenGame, onBack }: QuestPlayerViewProps): React.ReactElement {
   const m = useMessages();
@@ -64,20 +71,18 @@ export function QuestPlayerView({ questId, episodeId, ports, onOpenGame, onBack 
   const consumePending = useQuestRunStore((s) => s.consumePendingAdvance);
   const stepIndex = useQuestRunStore((s) => s.stepIndex);
 
-  // Exits and telemetry read the latest ports; only `start` / `end` decide when a run begins again.
+  // Telemetry effects read the latest committed ports (updated after commit, never during render);
+  // only `start` / `end` decide when a run begins again.
   const portsRef = useRef(ports);
-  portsRef.current = ports;
+  useLayoutEffect(() => {
+    portsRef.current = ports;
+  });
   const { start, end } = ports;
 
   // Initialize quest run state once per mount (and when the session changes). The ports pick the
   // first step (a resumed story quest opens on its story-read step, F-STORY-004 §3.8) or say that no
   // run may start.
-  useEffect(() => {
-    const startStep = start(questId, episodeId);
-    if (startStep === null) return;
-    begin(questId, episodeId, startStep);
-    return () => end();
-  }, [questId, episodeId, start, end, begin]);
+  useEffect(() => runQuestStart({ start, end }, begin, questId, episodeId), [questId, episodeId, start, end, begin]);
 
   // When we re-focus (e.g., returning from a minigame), apply pending advance
   useFocusEffect(
@@ -112,14 +117,13 @@ export function QuestPlayerView({ questId, episodeId, ports, onOpenGame, onBack 
   // Honest outcome: a quest with every game skipped is 0 / 0, not 5 / 5.
   // Rounds are scored on the first try; retries ride along for telemetry.
   const finishQuest = (): void => {
-    ports.finish(questFinish(useQuestRunStore.getState()));
+    runQuestFinish(useQuestRunStore.getState(), ports);
   };
 
   // Quit control (wireframe quest/player): one-line confirm, then the run is discarded and the ports
   // take the player back. Progress already saved is untouched.
   const leaveQuest = (): void => {
-    useQuestRunStore.getState().reset();
-    ports.leave();
+    runQuestLeave(useQuestRunStore.getState().reset, ports);
   };
 
   const confirmQuit = (): void => {

@@ -19,7 +19,10 @@ export interface QuestPlayerPorts {
   start(questId: string, episodeId: string): number | null;
   /** The cleanup of `start`. */
   end(): void;
-  /** The last step is done. */
+  /**
+   * The last step is done. The run is still in `quest-run-store` when this is called (the learner's
+   * Results reads it); a port that does not hand the run on (the preview) resets the store itself.
+   */
   finish(result: QuestFinish): void;
   /** The player confirmed Leave; the run has already been discarded. */
   leave(): void;
@@ -44,6 +47,34 @@ export interface QuestRunCounters {
 /** Rounds are scored on the first try; a run with every game skipped is 0 / 0, not 5 / 5. */
 export function questFinish(run: QuestRunCounters): QuestFinish {
   return { ...questOutcome(run.correctCount, run.totalCount), retries: run.retryCount };
+}
+
+/**
+ * The view's start rule (the body of its start effect): the ports pick the first step or say that no
+ * run may start. Returns the effect cleanup (`end`), or `undefined` when no run began, so `end` never
+ * runs for a run that never started.
+ */
+export function runQuestStart(
+  ports: Pick<QuestPlayerPorts, 'start' | 'end'>,
+  begin: (questId: string, episodeId: string, startStep: number) => void,
+  questId: string,
+  episodeId: string,
+): (() => void) | undefined {
+  const startStep = ports.start(questId, episodeId);
+  if (startStep === null) return undefined;
+  begin(questId, episodeId, startStep);
+  return () => ports.end();
+}
+
+/** The view's confirmed Leave: the run is discarded first, then the ports take the player back. */
+export function runQuestLeave(reset: () => void, ports: Pick<QuestPlayerPorts, 'leave'>): void {
+  reset();
+  ports.leave();
+}
+
+/** The view's finish: the honest outcome of the run in the store, handed to the ports. */
+export function runQuestFinish(run: QuestRunCounters, ports: Pick<QuestPlayerPorts, 'finish'>): void {
+  ports.finish(questFinish(run));
 }
 
 export interface ResultsResetState {

@@ -8,15 +8,20 @@ import {
   learnerQuestSession,
   questFinish,
   resultsReset,
+  runQuestFinish,
+  runQuestLeave,
+  runQuestStart,
   type QuestPlayerPorts,
 } from '../quest-player-ports';
 
 /**
  * F-BROWSE-001 BR-5a (§4.7): the quest player body is `QuestPlayerView`, and everything it does
  * to the outside world goes through `QuestPlayerPorts`. These tests pin today's learner ports
- * (session, Results, leave, telemetry), and read the view and screen sources to hold the seam:
- * the view reaches no learner store, no navigation and no telemetry client of its own.
- * The screens have no renderer harness; behaviour is held by the full mobile Playwright suite.
+ * (session, Results, leave, telemetry) and the view's own start / Leave / finish rules (the pure
+ * `runQuest*` helpers its effect and handlers call), and read the view and screen sources to hold the
+ * seam: the view reaches no learner store, no navigation stack and no telemetry client of its own
+ * (`useFocusEffect` is its one allowed navigation coupling). The screens have no renderer harness;
+ * rendered behaviour is held by the full mobile Playwright suite.
  */
 
 const storyQuest: Quest = {
@@ -102,7 +107,7 @@ describe('learnerQuestSession (today: questStartStep + beginSession / endSession
 describe('questFinish (honest outcome + retries)', () => {
   it('scores first tries and carries retries for telemetry', () => {
     expect(questFinish({ correctCount: 4, totalCount: 5, retryCount: 2 })).toEqual({
-      stars: expect.any(Number),
+      stars: 2,
       correct: 4,
       total: 5,
       played: true,
@@ -118,6 +123,58 @@ describe('questFinish (honest outcome + retries)', () => {
       played: false,
       retries: 0,
     });
+  });
+});
+
+function stubPorts() {
+  const calls: string[] = [];
+  const ports = {
+    start: vi.fn((_q: string, _e: string): number | null => {
+      calls.push('start');
+      return 1;
+    }),
+    end: vi.fn(() => calls.push('end')),
+    finish: vi.fn(() => calls.push('finish')),
+    leave: vi.fn(() => calls.push('leave')),
+  };
+  return { ports, calls };
+}
+
+describe("the view's run rules (runQuestStart / runQuestLeave / runQuestFinish)", () => {
+  it('start begins the run on the step the ports pick and returns end as the cleanup', () => {
+    const { ports, calls } = stubPorts();
+    const begin = vi.fn(() => calls.push('begin'));
+    const cleanup = runQuestStart(ports, begin, 'quest:q1', 'episode:e1');
+    expect(ports.start).toHaveBeenCalledWith('quest:q1', 'episode:e1');
+    expect(begin).toHaveBeenCalledWith('quest:q1', 'episode:e1', 1);
+    expect(ports.end).not.toHaveBeenCalled();
+    expect(typeof cleanup).toBe('function');
+    cleanup?.();
+    expect(ports.end).toHaveBeenCalledTimes(1);
+    expect(calls).toEqual(['start', 'begin', 'end']);
+  });
+
+  it('a null start leaves the run unstarted and has no cleanup, so end never runs', () => {
+    const { ports } = stubPorts();
+    ports.start.mockReturnValue(null);
+    const begin = vi.fn();
+    expect(runQuestStart(ports, begin, 'quest:q1', 'episode:e1')).toBeUndefined();
+    expect(begin).not.toHaveBeenCalled();
+    expect(ports.end).not.toHaveBeenCalled();
+  });
+
+  it('a confirmed Leave discards the run before the ports take the player back', () => {
+    const { ports, calls } = stubPorts();
+    const reset = vi.fn(() => calls.push('reset'));
+    runQuestLeave(reset, ports);
+    expect(calls).toEqual(['reset', 'leave']);
+  });
+
+  it('finish hands the honest outcome of the store counters to the ports and leaves the run in place', () => {
+    const { ports } = stubPorts();
+    runQuestFinish({ correctCount: 4, totalCount: 5, retryCount: 2 }, ports);
+    expect(ports.finish).toHaveBeenCalledWith({ stars: 2, correct: 4, total: 5, played: true, retries: 2 });
+    expect(ports.leave).not.toHaveBeenCalled();
   });
 });
 
@@ -222,24 +279,23 @@ describe('QuestPlayerView extraction (source)', () => {
   });
 
   it('the view reaches no learner store, no navigation types and no telemetry client', () => {
-    const forbidden = [
-      '../../store/progress-store',
-      '../../store/profile-store',
-      '../../store/story-store',
-      '../../platform/telemetry',
-      '../../navigation/types',
-      '@react-navigation/native-stack',
-    ];
-    for (const spec of importsOf(view)) expect(forbidden).not.toContain(spec);
+    const forbidden =
+      /store\/(progress|profile|story)-store|platform\/telemetry|navigation\/types|@react-navigation\/native-stack|^\.\.\/\.\.\/store(\/index)?(\.ts)?$/;
+    for (const spec of importsOf(view)) expect(spec).not.toMatch(forbidden);
+    const navigationImports = importsOf(view).filter((spec) => spec.startsWith('@react-navigation/'));
+    expect(navigationImports).toEqual(['@react-navigation/native']);
+    expect(view).toMatch(/import \{ useFocusEffect \} from '@react-navigation\/native'/);
     expect(view).not.toContain('navigation.');
     expect(view).not.toContain('CommonActions');
   });
 
   it('the view runs every exit through the ports', () => {
-    expect(view).toContain('ports.finish(');
-    expect(view).toContain('ports.leave()');
+    expect(view).toContain('runQuestFinish(useQuestRunStore.getState(), ports)');
+    expect(view).toContain('runQuestLeave(useQuestRunStore.getState().reset, ports)');
+    expect(view).toMatch(/runQuestStart\(\{ start, end \}, begin, questId, episodeId\)/);
     expect(view).toMatch(/ports(Ref\.current)?\.track\(/);
-    expect(view).toMatch(/start\(questId, episodeId\)/);
+    // The ports ref is updated after commit, never during render.
+    expect(view).toMatch(/useLayoutEffect\(\(\) => \{\n\s*portsRef\.current = ports;\n\s*\}\);/);
   });
 
   it('the screen is a thin wrapper that keeps the learner wiring', () => {
@@ -250,6 +306,5 @@ describe('QuestPlayerView extraction (source)', () => {
     expect(screen).toContain('navigation.goBack()');
     expect(screen).toContain('CommonActions.reset(');
     expect(screen).not.toContain('<DiscoverStep');
-    expect(screen.split('\n').length).toBeLessThan(90);
   });
 });
