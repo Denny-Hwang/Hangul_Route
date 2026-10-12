@@ -67,7 +67,12 @@ const MINA = {
 };
 
 const words = (needsPractice: string[], collected = 12, strong = 4) => ({ collected, strong, topicsStarted: 2, topicsPracticed7d: 1, firstTryRate: 0.5, needsPractice });
-const learner = (id: string, displayName: string, vocab: ReturnType<typeof words> | undefined) => ({
+/** The slice as P-4b's roster projection will carry it: the first-try rate dropped for every roster viewer. */
+const wordsWithoutRate = (needsPractice: string[]) => {
+  const { firstTryRate: _rate, ...rest } = words(needsPractice);
+  return rest;
+};
+const learner = (id: string, displayName: string, vocab: ReturnType<typeof words> | ReturnType<typeof wordsWithoutRate> | undefined) => ({
   ...MINA,
   id,
   displayName,
@@ -138,6 +143,16 @@ describe('the roster with word counts', () => {
     expect(byTestId(sam, 'student-words')).toHaveLength(0);
     // The first-try rate stays off the roster.
     expect(textOf(mina)).not.toMatch(/%|0\.5/);
+  });
+
+  it('draws the lines and the week from slices without firstTryRate, as P-4b will send them', async () => {
+    learners = [learner('l:1', 'Mina', wordsWithoutRate(['vocab:uyu'])), learner('l:2', 'Sam', wordsWithoutRate(['vocab:uyu', 'vocab:ppang']))];
+    const root = await roster();
+    const [mina] = byTestId(root, 'student-card');
+    if (!mina) throw new Error('cards');
+    expect(byTestId(mina, 'student-words').map(textOf)).toEqual(['Words: 12 collected · 4 strong']);
+    expect(byTestId(mina, 'student-words-revisit').map(textOf)).toEqual(['Words to revisit: 우유 uyu (milk)']);
+    expect(byTestId(root, 'week-words-revisit').map(textOf)).toEqual(['Words to revisit together: 우유 uyu (milk) · 빵 ppang (bread)']);
   });
 
   it('names the class words to revisit together in the week, and keeps the roster order', async () => {

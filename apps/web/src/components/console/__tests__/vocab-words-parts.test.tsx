@@ -55,6 +55,13 @@ describe('StudentWordsLines', () => {
     expect(html.match(/lang="ko"/g)).toHaveLength(1);
   });
 
+  it('draws the lines from a slice without firstTryRate, as the roster will carry it (P-4b)', () => {
+    const { firstTryRate: _rate, ...withoutRate } = VOCAB;
+    const html = renderToStaticMarkup(<StudentWordsLines words={studentWords({ vocab: withoutRate }, 'en')} />);
+    expect(textOf(html)).toContain('Words: 12 collected · 4 strong');
+    expect(textOf(html)).toContain('Words to revisit: 사과 sagwa (apple) · 눈 nun (eye)');
+  });
+
   it('renders nothing without summary.vocab', () => {
     expect(renderToStaticMarkup(<StudentWordsLines words={null} />)).toBe('');
   });
@@ -69,7 +76,10 @@ describe('StudentWordsLines', () => {
     for (const piece of unbreakable) expect(piece.length).toBeLessThan(20);
     // Each line may also break inside a single long word rather than overflow.
     expect(html.match(/<div data-testid="student-words[^"]*" style="overflow-wrap:anywhere">/g)).toHaveLength(2);
-    expect(textOf(html)).toContain('떡볶이 tteokbokki (tteokbokki (pasteles de arroz picantes))');
+    // A gloss that opens with its own romanization is not repeated after it, and brackets never nest.
+    expect(textOf(html)).toContain('떡볶이 tteokbokki (pasteles de arroz picantes)');
+    expect(textOf(html)).toContain('언니 eonni (hermana mayor, lo dice una mujer o niña)');
+    expect(textOf(html)).not.toMatch(/tteokbokki \(tteokbokki|\([^()]*\(/);
   });
 
   it('glosses in the UI language', () => {

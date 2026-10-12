@@ -2,7 +2,7 @@ import type { VocabSummary } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { VOCAB_CATALOG } from '../../../data/vocab-catalog';
 import { parseVocabSummary } from '../vocab-summary';
-import { consoleWord, consoleWords, studentWords } from '../vocab-words';
+import { consoleGloss, consoleWord, consoleWords, studentWords } from '../vocab-words';
 
 /**
  * F-VOC-005 P-4 (section 3.8, behaviour 14): the console reads a student's word counts and up to
@@ -46,6 +46,50 @@ describe('consoleWord', () => {
     expect(consoleWord('odd', 'en')).toEqual({ id: 'odd', ko: null, romanization: 'odd', gloss: null });
   });
 
+  it('never repeats the romanization nor nests parentheses: a gloss that opens with its own romanization keeps only its explanation', () => {
+    expect(consoleWord('vocab:tteokbokki', 'en').gloss).toBe('spicy rice cakes');
+    expect(consoleWord('vocab:tteokbokki', 'es').gloss).toBe('pasteles de arroz picantes');
+    expect(consoleWord('vocab:chuseok', 'en').gloss).toBe('harvest festival');
+    // The catalogue spells the alphabet's name the English way ("Hangul" for hangeul).
+    expect(consoleWord('vocab:hangeul', 'en').gloss).toBe('the Korean alphabet');
+    expect(consoleWord('vocab:hangeul', 'es').gloss).toBe('el alfabeto coreano');
+  });
+
+  it('turns any other parenthetical into a comma, so the line reads one level of brackets', () => {
+    expect(consoleWord('vocab:eonni', 'en').gloss).toBe('older sister, said by a woman or girl');
+    expect(consoleWord('vocab:nuna', 'es').gloss).toBe('hermana mayor, lo dice un hombre o niño');
+    expect(consoleWord('vocab:chukgu', 'en').gloss).toBe('soccer, football');
+    expect(consoleWord('vocab:yunnori', 'en').gloss).toBe('yut game, board game with sticks');
+  });
+
+  it('keeps a plain gloss as it is, a loanword included', () => {
+    expect(consoleGloss('apple', 'sagwa')).toBe('apple');
+    expect(consoleGloss('banana', 'banana')).toBe('banana');
+    expect(consoleGloss('older sister (said by a woman or girl)', 'eonni')).toBe('older sister, said by a woman or girl');
+    expect(consoleGloss('gimbap (seaweed rice roll)', 'gimbap')).toBe('seaweed rice roll');
+    // A short head close to the romanization is not taken for it.
+    expect(consoleGloss('i (tooth)', 'a')).toBe('i, tooth');
+    // One letter added, dropped or changed still names the word; two or more do not.
+    expect(consoleGloss('hangeul (the alphabet)', 'hangul')).toBe('the alphabet');
+    expect(consoleGloss('kimchy (pickled cabbage)', 'kimchi')).toBe('pickled cabbage');
+    expect(consoleGloss('hangul (the alphabet)', 'hangeuls')).toBe('hangul, the alphabet');
+    expect(consoleGloss('kimbop (rice roll)', 'gimbap')).toBe('kimbop, rice roll');
+    expect(consoleGloss('tteok (rice cake)', 'tteokbokki')).toBe('tteok, rice cake');
+  });
+
+  it('across the whole catalogue, in every UI language: no nested parentheses, the romanization never inside the gloss unless the gloss is the word itself', () => {
+    for (const entry of VOCAB_CATALOG) {
+      for (const locale of ['en', 'es', 'ko'] as const) {
+        const word = consoleWord(entry.id, locale);
+        const gloss = word.gloss ?? '';
+        expect(gloss, entry.id).not.toMatch(/[()]/);
+        if (gloss.toLowerCase() !== entry.romanization.toLowerCase()) {
+          expect(gloss.toLowerCase().startsWith(`${entry.romanization.toLowerCase()} `), `${entry.id} ${locale}`).toBe(false);
+        }
+      }
+    }
+  });
+
   it('maps a list in order', () => {
     expect(consoleWords(['vocab:nun-eye', 'vocab:sagwa-apple'], 'en').map((w) => w.romanization)).toEqual(['nun', 'sagwa']);
   });
@@ -74,6 +118,16 @@ describe('studentWords', () => {
         { id: 'vocab:nun-eye', ko: '눈', romanization: 'nun', gloss: 'eye' },
       ],
     });
+  });
+
+  it('reads a roster slice without firstTryRate, as P-4b will send it (the rate stays off the roster)', () => {
+    const { firstTryRate: _rate, ...withoutRate } = vocab({ needsPractice: ['vocab:uyu'] });
+    expect(parseVocabSummary(withoutRate)).toEqual({ collected: 12, strong: 4, topicsStarted: 2, topicsPracticed7d: 1, needsPractice: ['vocab:uyu'] });
+    expect(studentWords({ vocab: withoutRate }, 'en')?.revisit.map((w) => w.id)).toEqual(['vocab:uyu']);
+  });
+
+  it('drops a firstTryRate that still reaches it, so no reading of the roster can show the rate', () => {
+    expect(parseVocabSummary(vocab())).not.toHaveProperty('firstTryRate');
   });
 
   it('carries no rate, percent or day count', () => {

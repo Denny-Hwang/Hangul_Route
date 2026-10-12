@@ -93,6 +93,12 @@ describe('class roll-up (F-CONSOLE-001 §3.5)', () => {
       for (const id of roll.vocabRevisit) expect(id).toMatch(/^vocab:/);
     });
 
+    it('reads slices without firstTryRate, as the roster will carry them once P-4b ships (the rate never reaches the roster)', () => {
+      const noRate = (needsPractice: string[]) => ({ vocab: { collected: 10, strong: 2, topicsStarted: 1, topicsPracticed7d: 1, needsPractice } });
+      const roll = classRollup([learner('a', {}, noRate(['vocab:uyu', 'vocab:banana'])), learner('b', {}, noRate(['vocab:uyu']))], now);
+      expect(roll.vocabRevisit).toEqual(['vocab:uyu', 'vocab:banana']);
+    });
+
     it('is empty while no roster carries summary.vocab (vocab stays on the hidden list)', () => {
       expect(classRollup([learner('a'), learner('b', {}, null), learner('c', {}, { needsPractice: ['ㅂ'] })], now).vocabRevisit).toEqual([]);
     });

@@ -17,8 +17,8 @@ import { aroundSlot } from '@/lib/i18n/slot';
 
 /**
  * The Hangul and its romanization are kept on one line, so the romanization never wraps away from
- * the word it reads. The gloss is not: real glosses run to 40-plus characters ("tteokbokki
- * (pasteles de arroz picantes)"), which kept unbreakable would overflow a 280 px card.
+ * the word it reads. The gloss is not: real glosses run to 40-plus characters ("hermana mayor,
+ * lo dice una mujer o niña"), which kept unbreakable would overflow a 280 px card.
  */
 const KEEP_TOGETHER = { whiteSpace: 'nowrap' } as const;
 /** A line breaks inside one long word rather than overflow its card. */

@@ -17,7 +17,10 @@ export interface ConsoleWord {
   /** The Hangul, drawn with `lang="ko"`; null for an id this build does not know. */
   ko: string | null;
   romanization: string;
-  /** The gloss in the UI language, English when the catalogue has none for it; null for an unknown id. */
+  /**
+   * The gloss in the UI language, English when the catalogue has none for it, shaped by
+   * `consoleGloss` (no second romanization, no nested brackets); null for an unknown id.
+   */
   gloss: string | null;
 }
 
@@ -29,7 +32,64 @@ export function consoleWord(id: string, locale: MessageLocale): ConsoleWord {
   const entry = BY_ID.get(id);
   if (!entry) return { id, ko: null, romanization: id.startsWith(ID_PREFIX) ? id.slice(ID_PREFIX.length) : id, gloss: null };
   const glosses: Readonly<Partial<Record<string, string>>> = entry.glosses;
-  return { id, ko: entry.ko, romanization: entry.romanization, gloss: glosses[locale] ?? entry.en };
+  return { id, ko: entry.ko, romanization: entry.romanization, gloss: consoleGloss(glosses[locale] ?? entry.en, entry.romanization) };
+}
+
+/** "head (inner)": a gloss that carries its own parenthetical. */
+const PARENTHETICAL = /^(.+?)\s*\(([^()]+)\)$/;
+
+/**
+ * A catalogue gloss as the console draws it after "<Hangul> <romanization>", inside the one pair
+ * of brackets of `wordGloss`. Some glosses were written to stand alone, so they open with the word
+ * itself ("tteokbokki (spicy rice cakes)") or carry a note of their own ("older sister (said by a
+ * woman or girl)"). Wrapped as they are, the card would read "tteokbokki (tteokbokki (...))". So a
+ * gloss whose head is the romanization keeps only its explanation, and any other parenthetical
+ * becomes a comma: one level of brackets, the romanization said once.
+ */
+export function consoleGloss(gloss: string, romanization: string): string {
+  const match = PARENTHETICAL.exec(gloss);
+  if (!match) return gloss;
+  const head = match[1] ?? '';
+  const inner = match[2] ?? '';
+  return namesTheWord(head, romanization) ? inner : `${head}, ${inner}`;
+}
+
+/** The romanization shortest at which a one-letter spelling difference still names the same word. */
+const FUZZY_MIN_LENGTH = 5;
+
+/**
+ * True when a gloss head is the romanized word, in any case, or its usual English spelling one
+ * letter away ("Hangul" for hangeul). Short words must match exactly, so "i" never stands for "a".
+ */
+function namesTheWord(head: string, romanization: string): boolean {
+  const a = head.toLowerCase();
+  const b = romanization.toLowerCase();
+  if (a === b) return true;
+  return Math.min(a.length, b.length) >= FUZZY_MIN_LENGTH && withinOneEdit(a, b);
+}
+
+/** Levenshtein distance of at most one. */
+function withinOneEdit(a: string, b: string): boolean {
+  if (Math.abs(a.length - b.length) > 1) return false;
+  let i = 0;
+  let j = 0;
+  let edits = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) {
+      i += 1;
+      j += 1;
+      continue;
+    }
+    edits += 1;
+    if (edits > 1) return false;
+    if (a.length > b.length) i += 1;
+    else if (b.length > a.length) j += 1;
+    else {
+      i += 1;
+      j += 1;
+    }
+  }
+  return edits + (a.length - i) + (b.length - j) <= 1;
 }
 
 export function consoleWords(ids: readonly string[], locale: MessageLocale): ConsoleWord[] {

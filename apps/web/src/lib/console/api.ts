@@ -9,6 +9,7 @@ import type {
   SpaceKind,
   SpaceRole,
   TeacherVisibleSummaryKey,
+  VocabSummary,
 } from '@hangul-route/content-schema';
 
 /**
@@ -45,9 +46,13 @@ export type RosterSummary = Pick<ProgressSummary, TeacherVisibleSummaryKey> &
   Partial<Pick<ProgressSummary, 'selfRoute' | 'routeGoal'>> &
   /**
    * Word counts (F-VOC-005 section 3.8). `vocab` is on `TEACHER_HIDDEN_SUMMARY_KEYS`, so no roster
-   * carries it until a consent item covers it; the console shows its word lines only when it is here.
+   * carries it until a consent item covers it (P-4b); the console shows its word lines only when it
+   * is here. Never the first-try rate: P-4b's projection drops it for every roster viewer.
    */
-  Partial<Pick<ProgressSummary, 'vocab'>>;
+  { vocab?: RosterVocab };
+
+/** A roster's `summary.vocab`: the learner's word counts and words to revisit, without the first-try rate. */
+export type RosterVocab = Omit<VocabSummary, 'firstTryRate'>;
 
 export interface RosterLearner {
   /** Opaque learner id: keys the row, targets plans, issues Rescue Codes. Never shown. */
