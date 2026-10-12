@@ -412,6 +412,23 @@ describe('distractor rules (§3.3)', () => {
     }
   });
 
+  it('rule 1 keeps every pair of VOCAB_EXCLUDED_PAIRS apart both ways, in its topic and in the whole catalogue', () => {
+    for (const [a, b] of VOCAB_EXCLUDED_PAIRS) {
+      for (const [answer, partner] of [[a, b], [b, a]] as const) {
+        const topic = topicOf(byId(answer).topics[0]!);
+        for (let seed = 0; seed < 10; seed++) {
+          for (const format of ['word-to-image', 'image-to-word', 'audio-to-image'] as const) {
+            for (const universe of [topic, VOCAB_ITEMS]) {
+              const picked = distractorsFor(byId(answer), format, input({ pool: topic, universe, seed }));
+              expect(picked).toHaveLength(3);
+              expect(picked.map((p) => p.id), `${answer} ${format} ${seed}`).not.toContain(partner);
+            }
+          }
+        }
+      }
+    }
+  });
+
   it('rule 1 keeps an overlapping pair apart among the options of another answer too', () => {
     const SPORTS = topicOf('sports');
     for (let seed = 0; seed < 300; seed++) {

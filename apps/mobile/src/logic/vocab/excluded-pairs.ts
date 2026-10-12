@@ -7,6 +7,9 @@
  *   are drawn as their ball, so two pictures would read as "ball".
  * - bul "fire" against bit "light": bul also means a light that is on (its
  *   note says so), so the bulb picture of bit is a right answer for bul.
+ * - ip "mouth" against i-tooth "tooth" (F-VOC-002 W-4): both body glyphs are
+ *   the same zoomed head with a ring at the mouth, so either picture is a
+ *   right answer for the other word.
  */
 export const VOCAB_EXCLUDED_PAIRS: readonly (readonly [string, string])[] = Object.freeze([
   ['vocab:gong-ball', 'vocab:chukgu'],
@@ -14,6 +17,7 @@ export const VOCAB_EXCLUDED_PAIRS: readonly (readonly [string, string])[] = Obje
   ['vocab:gong-ball', 'vocab:nonggu'],
   ['vocab:gong-ball', 'vocab:baegu'],
   ['vocab:bul', 'vocab:bit'],
+  ['vocab:ip', 'vocab:i-tooth'],
 ] as const);
 
 const pairKey = (a: string, b: string): string => (a < b ? `${a}|${b}` : `${b}|${a}`);
