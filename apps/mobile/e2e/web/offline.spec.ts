@@ -101,8 +101,8 @@ test('grown-up pages are never cached, show the offline page without a network, 
   expect(sw).toContain('denylist');
   expect(sw).toContain('/grown-ups-offline.html');
 
-  // Online, every grown-up URL goes to the network (until A-3 the host's single-page fallback
-  // answers it), and nothing of it is kept by any cache.
+  // Online, every grown-up URL goes to the network (the console page merged in by A-3, or the host's
+  // single-page fallback for a page that does not exist yet), and nothing of it is kept by any cache.
   for (const url of GROWN_UP_URLS) {
     const res = await page.goto(url);
     expect(res?.ok(), url).toBe(true);
