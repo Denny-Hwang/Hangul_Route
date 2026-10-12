@@ -1,5 +1,14 @@
-import { describe, expect, it } from "vitest";
-import app from "../index";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { describe, expect, it, vi } from "vitest";
+import worker from "../index";
+
+/** The Worker's fetch, called the way the runtime calls it (`app.request` of Hono, on the exported handler). */
+const app = {
+  request: (path: string, init: RequestInit = {}, env?: Record<string, unknown>): Promise<Response> =>
+    Promise.resolve(worker.fetch(new Request(`http://localhost${path}`, init), env)),
+};
 
 describe("apps/api router", () => {
   it("GET / returns the hello-hoya envelope", async () => {
@@ -58,5 +67,22 @@ describe("apps/api router", () => {
       expect(res.status, `${method} ${path}`).toBe(404);
       expect(await res.json()).toMatchObject({ ok: false, error: { code: "not_found" } });
     }
+  });
+
+  it("exports fetch and the scheduled handler of the daily Cron Trigger (F-FEEDBACK-001 FB-3b)", () => {
+    expect(Object.keys(worker).sort()).toEqual(["fetch", "scheduled"]);
+    expect(typeof worker.scheduled).toBe("function");
+  });
+
+  it("wrangler.toml declares one daily cron for the purge, after the D1 binding (F-FEEDBACK-001 section 8.7)", () => {
+    const toml = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../wrangler.toml"), "utf8");
+    expect(toml).toMatch(/^\[triggers\]\ncrons = \["17 11 \* \* \*"\]$/m);
+    expect(toml.indexOf("[triggers]")).toBeGreaterThan(toml.indexOf("[[d1_databases]]"));
+  });
+
+  it("the scheduled handler fails closed without D1 on a production Worker: it purges nothing from memory", async () => {
+    const waitUntil = vi.fn();
+    await expect(worker.scheduled({ scheduledTime: Date.now() }, {}, { waitUntil })).rejects.toMatchObject({ status: 503 });
+    expect(waitUntil).not.toHaveBeenCalled();
   });
 });

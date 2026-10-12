@@ -21,6 +21,7 @@ import type {
   NoteDeviceScope,
   NoteRecipientRow,
   RateHitRow,
+  SpaceNoteListRow,
   StoredNote,
   StoredNotePrefs,
   StoredNoteReport,
@@ -303,6 +304,12 @@ export interface Db {
   notesForLearner(learnerId: string, scope: NoteDeviceScope, now: Date, limit: number): Promise<LearnerNotesInbox>;
   /** Notes sent in a space (optionally to one learner), newest first, older than `before` when given, at most `limit`. */
   notesForSpace(spaceId: string, options: { before: NoteCursor | null; limit: number; now: Date; learnerId?: string }): Promise<StoredNote[]>;
+  /**
+   * A space's sent list without a learner filter (section 7.2, PR FB-3b), in one statement: every note to
+   * chosen learners, and each `everyone` batch as one row (its representative note, its size and live
+   * notes), newest first by the row's note, older than `before` when given, at most `limit` rows.
+   */
+  sentListOfSpace(spaceId: string, options: { before: NoteCursor | null; limit: number; now: Date }): Promise<SpaceNoteListRow[]>;
   /** Every note to a learner from any space, every status, newest first (the family view). */
   notesForOversight(learnerId: string, options: { before: NoteCursor | null; limit: number; now: Date }): Promise<StoredNote[]>;
   /**

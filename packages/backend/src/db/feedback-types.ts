@@ -133,6 +133,17 @@ export interface LearnerNotesInbox {
   prefs: StoredNotePrefs | null;
 }
 
+/**
+ * One row of a space's sent list (GET /api/spaces/:id/notes, section 7.2, PR FB-3b): a note to chosen
+ * learners, or one `everyone` batch collapsed to one of its notes (a live one while any is live, else a
+ * withdrawn one). `batch` carries no count of opens or reactions, only its size and live notes (section 9).
+ */
+export interface SpaceNoteListRow {
+  note: StoredNote;
+  /** For an `everyone` batch: the notes of the batch every list still shows, and how many are live; null otherwise. */
+  batch: { size: number; live: number } | null;
+}
+
 /** Days a live, hidden or withdrawn note is kept and delivered (OD-9). */
 export const NOTE_RETENTION_DAYS = 180;
 /** Days a reported note and its reports are kept after the report. */

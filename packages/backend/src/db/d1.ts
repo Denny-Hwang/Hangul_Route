@@ -34,6 +34,7 @@ import {
   type NoteDeviceScope,
   type NoteRecipientRow,
   type RateHitRow,
+  type SpaceNoteListRow,
   type StoredNote,
   type StoredNotePrefs,
   type StoredNoteReport,
@@ -339,6 +340,21 @@ const NOT_HELD = 'NOT EXISTS (SELECT 1 FROM feedback_sender_holds h WHERE h.acco
  * with a report of the last 90 days. Binds (notesSince, reportsSince).
  */
 const NOTE_VISIBLE = "((n.status <> 'reported' AND n.created_at >= ?) OR (n.status = 'reported' AND EXISTS (SELECT 1 FROM feedback_reports r WHERE r.note_id = n.id AND r.created_at >= ?)))";
+/** NOTE_VISIBLE for another note `b` of the same batch. Binds (notesSince, reportsSince). */
+const BATCH_NOTE_VISIBLE = "((b.status <> 'reported' AND b.created_at >= ?) OR (b.status = 'reported' AND EXISTS (SELECT 1 FROM feedback_reports r WHERE r.note_id = b.id AND r.created_at >= ?)))";
+/**
+ * A space's sent list (section 7.2): each `everyone` batch is one row, its representative note (a live one
+ * while any is live, else a withdrawn one, then the lowest id), with the batch's size and live notes.
+ * Binds (notesSince, reportsSince, notesSince, spaceId, notesSince, reportsSince, notesSince, reportsSince),
+ * then the optional cursor and the limit.
+ */
+const SENT_LIST_SELECT = `SELECT n.*,
+    CASE WHEN n.batch_kind = 'everyone' THEN (SELECT COUNT(*) FROM feedback_notes b WHERE b.batch_id = n.batch_id AND ${BATCH_NOTE_VISIBLE}) END AS batch_size,
+    CASE WHEN n.batch_kind = 'everyone' THEN (SELECT COUNT(*) FROM feedback_notes b WHERE b.batch_id = n.batch_id AND b.status = 'live' AND b.created_at >= ?) END AS batch_live
+  FROM feedback_notes n
+  WHERE n.space_id = ? AND ${NOTE_VISIBLE}
+    AND (n.batch_kind <> 'everyone' OR n.id = (SELECT b.id FROM feedback_notes b WHERE b.batch_id = n.batch_id AND ${BATCH_NOTE_VISIBLE}
+      ORDER BY CASE b.status WHEN 'live' THEN 0 WHEN 'withdrawn' THEN 1 ELSE 2 END, b.id LIMIT 1))`;
 /** Keyset paging, newest first: rows strictly older than the cursor. Binds (createdAt, createdAt, id). */
 const NOTE_BEFORE = '(n.created_at < ? OR (n.created_at = ? AND n.id < ?))';
 /**
@@ -914,6 +930,8 @@ export class D1Db implements Db {
                                  WHERE r.learner_id = ? AND r.status = 'approved' AND r.space_id <> ?)`,
         [learnerId, ...g, source, learnerId, learnerId, source],
       ],
+      // F-FEEDBACK-001 section 7.5: the source membership ends, so its live, hidden and withdrawn notes go (reported ones stay for review)
+      [`DELETE FROM feedback_notes WHERE learner_id = ? AND space_id = ? AND status <> 'reported' AND ${guard}`, [learnerId, source, ...g]],
       [`INSERT INTO transfer_events (transfer_id, at, actor_kind, actor_ref, event, slot, detail_json) SELECT ?, ?, 'system', NULL, 'executed', NULL, NULL WHERE ${guard}`, [transferId, at, ...g]],
       ['UPDATE transfer_requests SET block_reason = NULL WHERE id = ? AND block_reason = ?', g],
     ]);
@@ -1108,6 +1126,19 @@ export class D1Db implements Db {
       params.push(options.before.createdAt, options.before.createdAt, options.before.id);
     }
     return this.many(`SELECT n.* FROM feedback_notes n WHERE ${where.join(' AND ')} ORDER BY n.created_at DESC, n.id DESC LIMIT ?`, [...params, options.limit], toNote);
+  }
+  sentListOfSpace(spaceId: string, options: { before: NoteCursor | null; limit: number; now: Date }): Promise<SpaceNoteListRow[]> {
+    const { notesSince, reportsSince } = noteRetentionCuts(options.now);
+    const params: unknown[] = [notesSince, reportsSince, notesSince, spaceId, notesSince, reportsSince, notesSince, reportsSince];
+    let sql = SENT_LIST_SELECT;
+    if (options.before) {
+      sql += ` AND ${NOTE_BEFORE}`;
+      params.push(options.before.createdAt, options.before.createdAt, options.before.id);
+    }
+    return this.many(`${sql} ORDER BY n.created_at DESC, n.id DESC LIMIT ?`, [...params, options.limit], (r) => ({
+      note: toNote(r),
+      batch: r.batch_size === null || r.batch_size === undefined ? null : { size: Number(r.batch_size), live: Number(r.batch_live ?? 0) },
+    }));
   }
   notesForOversight(learnerId: string, options: { before: NoteCursor | null; limit: number; now: Date }): Promise<StoredNote[]> {
     const cuts = noteRetentionCuts(options.now);

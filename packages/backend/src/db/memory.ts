@@ -12,6 +12,7 @@ import {
   type NoteDeviceScope,
   type NoteRecipientRow,
   type RateHitRow,
+  type SpaceNoteListRow,
   type StoredNote,
   type StoredNotePrefs,
   type StoredNoteReport,
@@ -417,6 +418,8 @@ export class MemoryDb implements Db {
         devicesRevoked += 1;
       }
     }
+    // F-FEEDBACK-001 section 7.5: the source membership ended, so its live, hidden and withdrawn notes go.
+    for (const n of [...this.notes.values()]) if (n.learnerId === learnerId && n.spaceId === source && n.status !== 'reported') this.deleteNoteRow(n.id);
     this.pushTransferEvent({ transferId, at, actorKind: 'system', actorRef: null, event: 'executed', slot: null, detail: null });
     return { executed: true, devicesRevoked, relinksClosed };
   }
@@ -681,6 +684,25 @@ export class MemoryDb implements Db {
       (n) => n.spaceId === spaceId && (options.learnerId === undefined || n.learnerId === options.learnerId) && beforeCursor(n, options.before) && this.isVisible(n, options.now),
     );
     return clone(rows.sort(newestNoteFirst).slice(0, options.limit));
+  }
+  async sentListOfSpace(spaceId: string, options: { before: NoteCursor | null; limit: number; now: Date }): Promise<SpaceNoteListRow[]> {
+    const visible = [...this.notes.values()].filter((n) => n.spaceId === spaceId && this.isVisible(n, options.now));
+    const batches = new Map<string, StoredNote[]>();
+    for (const n of visible) if (n.batchKind === 'everyone') batches.set(n.batchId, [...(batches.get(n.batchId) ?? []), n]);
+    const rank = (n: StoredNote): number => (n.status === 'live' ? 0 : n.status === 'withdrawn' ? 1 : 2);
+    const { notesSince } = noteRetentionCuts(options.now);
+    const rows: SpaceNoteListRow[] = [];
+    for (const n of visible) {
+      if (n.batchKind !== 'everyone') {
+        rows.push({ note: n, batch: null });
+        continue;
+      }
+      const all = batches.get(n.batchId) ?? [];
+      const head = [...all].sort((a, b) => rank(a) - rank(b) || (a.id < b.id ? -1 : 1))[0];
+      if (head?.id === n.id) rows.push({ note: n, batch: { size: all.length, live: all.filter((x) => x.status === 'live' && x.createdAt >= notesSince).length } });
+    }
+    const page = rows.filter((r) => beforeCursor(r.note, options.before)).sort((a, b) => newestNoteFirst(a.note, b.note)).slice(0, options.limit);
+    return clone(page);
   }
   async notesForOversight(learnerId: string, options: { before: NoteCursor | null; limit: number; now: Date }): Promise<StoredNote[]> {
     const rows = [...this.notes.values()].filter((n) => n.learnerId === learnerId && beforeCursor(n, options.before) && this.isVisible(n, options.now));
