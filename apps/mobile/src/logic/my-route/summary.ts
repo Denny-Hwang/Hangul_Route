@@ -1,5 +1,8 @@
-import type { ProgressSnapshot, StageKey } from '@hangul-route/content-schema';
+import { pickGoal, type InboxPlan, type ProgressSnapshot, type ProgressSummary, type StageKey } from '@hangul-route/content-schema';
+import { sourcesOf } from '../homework/plan-derivation';
+import { stageAvailability } from '../journey';
 import { buildMyRoute } from './model';
+import { gridEpisodesOf } from './order';
 import { startRouteOf } from './start-marker';
 import type { MyRouteInput, MyRouteModel, StageState } from './types';
 
@@ -63,6 +66,45 @@ export function journeySummaryOf(snapshot: ProgressSnapshot, content: JourneyCon
   try {
     const route = startRouteOf(snapshot.placements, content.catalog, content.isEntitled);
     return { ...summarizeJourney(buildMyRoute({ snapshot, ...content, route, now })), seeded: true };
+  } catch {
+    return undefined;
+  }
+}
+
+export interface RouteGoalSummaryInput {
+  snapshot: ProgressSnapshot;
+  /** The learner's inbox plans as the plan store holds them (published, unarchived, targeting this learner). */
+  plans: readonly InboxPlan[];
+  /** The stage rows of the same upload (`journeySummaryOf`); without them only a plan goal can be named. */
+  journey: Pick<JourneySummary, 'stages'> | undefined;
+  content: Pick<JourneyContent, 'catalog' | 'episodes'>;
+  now: Date;
+}
+
+/**
+ * `summary.routeGoal` (Learning Route amendment section 9, LR-6; LR-OD-12):
+ * the goal the learner's Learning Route shows, so the family space names the
+ * same goal as the child's tab. It is `pickGoal` over the sources Home and
+ * Homework derive from (`sourcesOf(inboxPlans, snapshot.selfRoute)`), the
+ * journey's stage rows and the bundle's stage availability, on the day the
+ * plan derivation uses. Only the stage and the source code leave the device:
+ * no plan id, no date, no name. Undefined when there is no goal (the end of
+ * the open road), so the key is left out. Best effort, as `journeySummaryOf`:
+ * a stored plan it cannot read gives no goal and the upload goes on without it.
+ */
+export function routeGoalSummaryOf(input: RouteGoalSummaryInput): ProgressSummary['routeGoal'] {
+  try {
+    const { snapshot, plans, journey, content, now } = input;
+    const grid = gridEpisodesOf(content.episodes);
+    const goal = pickGoal({
+      sources: sourcesOf(plans, snapshot.selfRoute).map((source) => ({ ...source, meta: source.meta ?? null })),
+      catalog: content.catalog,
+      stages: journey?.stages ?? [],
+      availability: (stage) => stageAvailability(stage, grid),
+      // The UTC day the plan derivation uses (`dayKey` in plan-store), so a plan sets the goal exactly while it derives homework.
+      today: now.toISOString().slice(0, 10),
+    });
+    return goal === null ? undefined : { stage: goal.stage, from: goal.from };
   } catch {
     return undefined;
   }
