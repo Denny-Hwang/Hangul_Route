@@ -2,7 +2,7 @@
 
 Spec: `docs/specs/F-ENT-003-free-day2-unlocked-curriculum.md` §3.7 (marks, Journey, episode page, Home, Library), §3.8 (Results), §3.11 (glossary), §3.14 (accessibility), PR **E3-D** in §6.1, assumption **b** in §9 · Learning Route: `docs/specs/AMENDMENTS-ROUTE-LEARNING-ROUTE.md` §4.5 (the shared dotted ring, LR-OD-8)
 Wireframes: `design/wireframes/journey/grid-plan-and-access.md`, `episode/detail-access-preview.md`, `home/next-and-free-end-card.md`, `results/back-to-plan-and-free-end.md`, `library/access-and-plan-tags.md`
-Reuses: `design/components/PipRow/spec.md` (`pipParts`, `cursorMarkerParts`, `LATER_DASHES`, `PIP_SIZE`), `design/components/Icon/spec.md` (`pin`, `check-circle`, `card`), `design/components/StoryTile/spec.md`, `Card`, `Button`, `Hoya`
+Reuses: `design/components/PipRow/spec.md` (`pipParts`, `cursorMarkerParts`, `LATER_DASHES`, `PIP_SIZE`), `design/components/Icon/spec.md` (`pin`, `check-circle`), `design/components/StoryTile/spec.md`, `Card`, `Button`, `Hoya`
 Built by: **E3-5** (Journey: Next, the two rings, the legend line, labels), **E3-6** (episode page tags, the closed-row caption, the preview card), **E3-7** (Home free-end and practice cards, the Results end-of-free-lessons card, Library tiles), **LR-5a / LR-5b** (the "In your plan" tag and the not-open pip on the Learning Route)
 Preview: `route-markers-v1.png` (the mark sheet); the mock pages are in `mock/` and the shots in `shots/` (table at the end).
 
@@ -14,16 +14,16 @@ Three learner marks. Each one is **one drawn shape plus its word**, never colour
 |---|---|---|---|
 | **Next** | the one quest `routeNext` returns (F-ENT-003 §3.5) | the **cursor triangle** of the pip row (`cursorMarkerParts`), solid, `text.primary`, pointing down at what it marks | "Next" (`learner.routeNext.tag.next`, `a11y.access.next`) |
 | **In your plan** | a cell, quest or tile in `planView()` (the leading plan source, inside the horizon) | a **solid ring**, `border.shape` | "In your plan" (`learner.routeNext.tag.inPlan`, `a11y.access.inPlan`) |
-| **Not open yet** | a playable lesson a free learner cannot start while the switch is on (`questAccess` is `closed`) | a **dotted ring**: the `later` pip's pattern (8 dashes, each 55 % of the period) | "Not open yet" (`learner.access.notOpen`, `a11y.access.notOpen(title)`) |
+| **Not open yet** | a playable lesson a free learner cannot start while the switch is on (`questAccess` is `closed`) | a **dotted ring**: the `later` pip's pattern (8 dashes, each 55 % of the period) | "Not open yet" (`learner.access.notOpen`; the cell label is `a11y.access.notOpen(title)`, the only key for it, F-ENT-003 rev 3.2) |
 
 Subscribers, anyone while the switch is off, and every native store build see **Next** and **In your plan** only. The dotted ring exists only for a free learner on the web with the effective switch on (`gatingActive`).
 
 ## Decisions of this design pass
 
-These settle what the spec left to the E3-D mock. D1, D4 to D7 and D11 change lines of F-ENT-003. This PR writes them back into §3.7, §3.11 and §3.14 (revision 3.2) and into the two wireframes, so the spec and the mock say the same thing.
+These settle what the spec left to the E3-D mock. D1, D4 to D7 and D11 change lines of F-ENT-003. This PR writes them back into F-ENT-003 revision 3.2 (§3.7, §3.10, §3.11, §3.14, the test plan, the PR rows E3-5 to E3-7, OD-10 and Appendix A) and into the Journey, episode and browse home wireframes, so the spec and the mock say the same thing.
 
 - **D1. Next is the cursor triangle, not the `pin` glyph.**
-  - The spec draft said "Next = the drawn `pin` glyph". On the Journey the `pin` already means **"You started here"**: F-PLC-001 P-7 draws it in the top-left corner of the level check's start cell, and the Journey's own note says "The pin shows where you started." (`learner.journey.how.placement`). The `pin` is also the "You started here" tag of the route page (`design/components/Icon/spec.md`).
+  - The spec draft said "Next = the drawn `pin` glyph". On the Journey the `pin` already means **"You started here"**: F-PLC-001 P-7 draws it in the top-left corner of the level check's start cell, and the Journey's own note says "The pin shows where you started." (`learner.journey.how.placement`). The `pin` also means "You started here" on the route page's stage rows (`design/components/Icon/spec.md`), and the Learning Route amendment draws it for **"Now"**, the current stage (`docs/specs/AMENDMENTS-ROUTE-LEARNING-ROUTE.md` §4.2, `design/wireframes/journey/learning-route.md`). So the `pin` already carries two meanings on learner screens; a third (Next) would make it worse. That second meaning is listed under "Open items for the owner".
   - For a placed learner the start cell and the Next cell differ after the first lesson, so a pin for Next would put two pins with two meanings on one grid. That breaks "one shape each" (§3.7).
   - The pip rows of the route page already mark the next quest with the cursor triangle (`PipRow` spec, "Markers"). Using it on the Journey and on the episode row gives Next one shape everywhere, by the same rule that makes "Not open yet" the `later` pip at cell scale.
 - **D2. The rings follow the layout class; the stroke is `borderWidth.thick`.** 40 dp on a compact cell (the cell initial, `typography.size.title`, plus `spacing.md`), scaled by `useMediaSize` like the pips (48 regular, 56 wide). The dotted ring keeps the `later` pip's pattern exactly. The stroke is `borderWidth.thick` (3, then 4) rather than the pip ratio (size / 10 = 4 on a compact cell), so the ring stays lighter than the 28 dp initial it surrounds: the lesson is the content, the ring is its state (sheet section 1 shows both).
@@ -31,11 +31,12 @@ These settle what the spec left to the E3-D mock. D1, D4 to D7 and D11 change li
 - **D4. A legend line on the Journey.** §3.14 asks for the shapes "plus the words on the page", and the cells are too small for words. One line between the intro and the column labels shows each mark the grid currently draws, with its word: Next, In your plan, Not open yet. It shows nothing when no mark is drawn.
 - **D5. Coming-later cells lose the lock glyph.** OD-6 (resolved with LR-OD-8) puts no lock glyph on any learner screen. Today a coming-later cell draws `lock`, which would sit beside the new dotted cells and read as "more locked". The cell stays `surface.sunken` with its `border.subtle` edge and is **empty**. Its label and the stage pill ("Coming later") carry the words, and the empty cell (no initial) is its shape.
 - **D6. The episode row:** the triangle sits over the row's number disc, the chip "Next" carries the word, the chip "In your plan" carries the ring and the word. A closed row replaces Start with the caption "Not open yet" next to the stage-row `later` pip. The Start buttons keep today's tones (§3.7: open rows are unchanged).
-- **D7. On the episode page the waiting card tile draws `card` instead of `lock`.** It keeps its words ("Finish every quest to earn it"). This avoids a lock under a "Not open yet" caption (OD-6). The Library card gallery keeps F-STORY-006's look (outside this spec; listed under "Open items").
+- **D7. On the episode page the waiting card tile draws no glyph.** Today it draws `lock`, which would sit under a "Not open yet" caption (OD-6). The first pass drew the `card` glyph instead, but `card` is a landscape rectangle with a band near the top, the common payment-card icon; in the preview state it would show four times right above "Ask a grown-up" and could read as "pay to open" at the purchase boundary (§3.7, OD-6). So the tile is its `surface.sunken` box with its words ("Finish every quest to earn it"), which carry the meaning, in every state of the page. The Library card gallery keeps F-STORY-006's look (outside this spec; listed under "Open items").
 - **D8. The free-end cards are paper `Card`s.** They carry a ghost button (the ask), and a ghost label (`brand.primary`) holds 4.5:1 only on canvas, paper and sunken. Those are the ghost pairs `contrast.test.ts` pins. It is 4.48:1 on `feedback.successLight` and 4.10:1 on `brand.primaryLight`. The celebration is carried by Hoya `cheering` and the title.
-- **D9. The Results earned row is one line of 64 dp faces.** As many as fit (at most six: three at 320 dp, four at 375 dp), then `learner.results.extraCards.more(n)` ("and 9 more in your Library"). The row is one image, not buttons, so it uses `touchTarget.min` instead of the 96 dp `CardArtThumb` buttons of the extra-cards banner.
+- **D9. The Results earned row is one line of 64 dp faces.** As many as fit (at most six: three at 320 dp, four at 375 dp), then `learner.results.extraCards.more(n)` ("and 9 more in your Library"). The row is one image, not buttons, so its faces are `spacing.jumbo` (64), not the 96 dp `CardArtThumb` buttons of the extra-cards banner.
 - **D10. The practice card names the topic, not the bare word.** A free word topic card reads "Food words". This needs one key beyond Appendix A: `learner.access.practice.topicTitle(title)` "{title} words" (E3-7). A story keeps its title, a kept replay its quest title.
-- **D11. The taste note gives way on a closed row.** A taste row's note reads "A taste of this stage is open now. More episodes are coming." For a free learner with the switch on, every playable cell of Stage 2 and Stage 4 is closed, so the note would contradict the rings under it. The note shows only when at least one playable cell of the row is open for this learner. The pill keeps "A taste" (§3.7, R-J). No key changes.
+- **D11. The taste note gives way on a closed row.** A taste row's note reads "A taste of this stage is open now. More episodes are coming." For a free learner with the switch on, every playable cell of Stage 2 and Stage 4 is closed, so the note would contradict the rings under it. The note shows only when **at least one playable cell of the row has a quest whose `questAccess` is not `closed`** (open, or kept because it was finished before). Example: state E of `shots/journey-states.png`, a kept Lunch Box Words with the other Stage 2 cells closed, keeps the note on Stage 2 and leaves it out on Stage 4. Subscribers and anyone with the switch off always see it (states A, B, G). The pill keeps "A taste" (§3.7, R-J). No key changes.
+- **D12. In your plan stays a plain solid ring, on purpose.** A reviewer noted that the Learning Route legend calls the plain `open` pip "Ready to play" (`learner.myRoute.legend.open`), so a plain ring has a second meaning on another screen. It stays, because the two never meet: on the Journey and the episode page no pip row is drawn, and on the Learning Route "In your plan" is always the chip with its word, never a bare ring in a pip row (see "Tags, captions and tiles"). A double ring or a notched ring would add a sixth ring shape to learn, would be harder to tell from the dotted ring at 16 dp, and would move LR-D's placeholder (a 16 dp ring, already on its board) away from its final shape. Listed under "Open items for the owner" in case one geometry per meaning across screens is preferred.
 
 ## Geometry
 
@@ -221,7 +222,7 @@ Values that are not tokens, each with what it derives from. E3-5 to E3-7 write t
 | Next triangle | base 32 (19.2 x 9.6 drawn) | `spacing.xxl` through `cursorMarkerParts` |
 | Next tip inset | 4 | `borderWidth.base` + `spacing.xxs` |
 | Sticker edge | 1 dp beyond the glyph's stroke at 16 dp (1.5 units of the 24 grid) | `spacing.xxs` / 2 |
-| Earned face | 64 | `touchTarget.min` |
+| Earned face | 64 | `spacing.jumbo` (an image size; `touchTarget.min` stays for interactive targets) |
 | Quest number disc | 44 | `EpisodeDetailView` today (unchanged) |
 | Measured cell sizes | 54.4, 62.4, 65.4, 107.2, 112, 76.4 | GridCell in the web build at 320, 360, 375, 600, 768 and 1180 / 1280 wide (2026-10-12) |
 | Mock frame | 320 px | the 320 dp width the spec checks |
@@ -237,13 +238,13 @@ The mock is a design reference, not shipped code. Every value in `mock/route-mar
 | `shots/journey-free-320-first.png` | 320 x 568, first screen | a free learner (switch on): legend, Next on the first unfinished Stage 1 cell, dotted rings on Stage 2 |
 | `shots/journey-free-320.png`, `journey-plan-320.png` | 320, full page | the whole Journey for a free learner, and for a subscriber with a family plan (Next and two rings) |
 | `shots/journey-plan-1280.png` | 1280, two panes | the wide grid (ring 56) beside the episode page with its tags; the selected cell keeps its focus edge |
-| `shots/journey-states.png` | board | states A to G of the wireframe: plan, no plan, free new, free-end, kept Stage 2 quest, free and placed into Stage 2, placed with a plan |
-| `shots/episode-plan-320.png` | 320, full page | episode page A: Play again, Next with In your plan, an off-plan row, the waiting tiles with `card` |
+| `shots/journey-states.png` | board | states A to G of the wireframe: plan, no plan, free new, free-end, kept Stage 2 quest, free and placed into Stage 2, placed with a plan; the taste note by D11 (shown in A, B and on Stage 2 of E) |
+| `shots/episode-plan-320.png` | 320, full page | episode page A: Play again, Next with In your plan, an off-plan row, the waiting tiles with their words and no glyph (D7) |
 | `shots/episode-preview-320.png`, `-text200.png` | 320, full page | episode page B: the closed caption, the preview card with the ask and Back to open lessons; the same at 200 % text |
 | `shots/cards-320.png`, `-text200.png` | board of 320 frames | Home card 2 (A, B, C), Home at free-end with its three cards, Results A (both captions), B and C, Library story and topic tiles, the ask by device |
 | `shots/check-320-1x.png`, `-2x.png` | board | assumption b at 1x and 2x: the grid and the probes in normal, greyscale and protanopia, true size and 4x, and the measured table |
 
-Measured on the mock: no page or board scrolls sideways (`scrollWidth` equals the viewport on all 13 shots). The 320 x 568 first screen shows the legend, the Next cell and the first dotted ring.
+Measured on the mock: no page or board scrolls sideways (`scrollWidth` equals the viewport on all 13 shots). The shots are 2x renders in Chromium, recompressed losslessly (zlib level 9, adaptive filtering), which halves their size without changing a pixel. The 320 x 568 first screen shows the legend, the Next cell and the first dotted ring.
 
 ## Notes for later rows
 
@@ -258,4 +259,6 @@ Measured on the mock: no page or board scrolls sideways (`scrollWidth` equals th
 - **LR-5a / LR-5b:** take the shapes above; the LR-D board's placeholders already match them.
 - **Open items for the owner** (outside F-ENT-003):
   - The Library card gallery and the card page still draw `lock` for a card not yet earned (F-STORY-006, "Locked card"). OD-6 covers access, not earning, but the owner may want the `card` glyph there too, for one vocabulary on learner screens.
+  - **The `pin` has two meanings on learner screens** (D1): "You started here" on the Journey and the route page's stage rows, "Now" on the Learning Route route card. Not changed by this pass; to settle with the Learning Route owner.
+  - **The plain ring** means "In your plan" (chip, Journey cell) and, as the `open` pip, "Ready to play" on the Learning Route (D12). Kept on purpose; a double ring is the alternative if one geometry per meaning is wanted.
   - `Pill` tone `success` writes its label in a component constant (`#2F6A47`), not a token. The mock draws it in `feedback.successDark`.

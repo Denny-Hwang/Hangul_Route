@@ -20,6 +20,7 @@ Then: one cell shows where to go next, the cells of the plan's coming items are 
 +--------------------------------------------+
 | Journey (title)                            |
 | short intro line                           |
+|  v Next   (==) In your plan  (: :) Not open yet  <- legend line (D4), aria-hidden
 |                                            |
 |  Letters  Life  Rites  Nature  Crafts      |  <- column labels (unchanged)
 |                                            |
@@ -29,9 +30,10 @@ Then: one cell shows where to go next, the cells of the plan's coming items are 
 |  |  L   | |  L   | |  R   | |  N   | |  C   |  <- cell initial (unchanged)
 |  +------+ +------+ +------+ +------+ +------+
 |   Next    In your   (all of Stage 1 is free:|
-|           plan       never a dotted ring)  |  <- words live in the a11y label;
-|                                            |     on regular / wide windows a
-| (2) Word .......................[ A taste ] |     caption row may show them
+|           plan       never a dotted ring)  |  <- words in the a11y label and in
+|                                            |     the legend line on every class (D4)
+| (2) Word .......................[ A taste ] |  <- taste note left out: every playable
+|                                            |     cell of this row is closed (D11)
 |  +------+ .------. +------+ .------. +------+
 |  | soon | :  L   : | soon | :  N   : | soon |
 |  +------+ '------' +------+ '------' +------+
@@ -68,9 +70,10 @@ Exit to: `episode/detail` (`EpisodeDetail { episodeId }`) · right pane of `jour
 
 - **Subscriber with a plan**: Next on the `routeNext` cell, solid rings on the leading source's cells inside the horizon, no dotted ring.
 - **No plan** (subscriber, or free with the switch off): Next on the default-route cursor cell, no solid ring, no dotted ring.
-- **Free, switch on, any learner**: Next on the `routeNext` cell (Meet the Letters for a new learner); no dotted ring on any Stage 1 cell; dotted rings on Stage 2 life and nature and Stage 4 rites (the playable cells past Stage 1 today).
+- **Free, switch on, any learner**: Next on the `routeNext` cell (Meet the Letters for a new learner); no dotted ring on any Stage 1 cell; dotted rings on Stage 2 life and nature and Stage 4 rites (the playable cells past Stage 1 today); the taste note of Stage 2 and Stage 4 is left out, because no playable cell of those rows is open (E3-D D11: the note shows only when at least one playable cell of the row has a quest whose `questAccess` is not `closed`, that is open or kept).
 - **Free, switch on, free lessons finished** (`free-end`, all of Stage 1 done): no Next; dotted rings on the closed cells; the Stage 1 cells show their completion tint.
-- **Free learner with kept quests past Stage 1** (a taste finished before the switch turned on): no dotted ring on a cell that holds any kept quest.
+- **Free learner with kept quests past Stage 1** (a taste finished before the switch turned on): no dotted ring on a cell that holds any kept quest, and that row keeps its taste note (D11).
+- **Legend line** (E3-D D4, every class): under the intro, above the column labels; it lists only the marks the grid draws now (Next, In your plan, Not open yet), and shows nothing when no mark is drawn. Hidden from screen readers.
 - **Empty** (no playable episode, content failed to load): the existing coming-soon pane; no marks.
 - **Error** (tier cache or snapshot unreadable): fail open — treated as the switch-off state; no dotted ring, Next from the default route.
 
