@@ -98,6 +98,9 @@ test('quest 8: Rice Cakes of Chuseok pages through ya, yeo, p and final ng to th
   await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByText('Page 2 of 3', { exact: true })).toBeVisible();
   await expect(page.getByText('포도').first()).toBeVisible();
+  // Final ㅇ: its block diagram with the final at the bottom, and the example 송편.
+  await expect(page.getByTestId('discover-block-jamo:ieung-batchim')).toBeVisible();
+  await expect(page.getByTestId('discover-item-jamo:ieung-batchim')).toContainText('송편');
   await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByText('Page 3 of 3', { exact: true })).toBeVisible();
   await expect(page.getByTestId('discover-item-word:추석').locator('svg').first()).toBeVisible();
