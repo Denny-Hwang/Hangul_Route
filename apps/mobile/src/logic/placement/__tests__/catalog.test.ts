@@ -38,4 +38,11 @@ describe('placementRouteCatalog (F-PLC-001 section 3.6)', () => {
     expect(teaches.get('quest:stage1-life-q2')).toEqual(['ㅂ', 'ㅅ']);
     expect(teaches.get('quest:stage1-life-q3')).toEqual(['ㅋ', 'ㅌ']);
   });
+
+  it('gives the shipped rites q1-q3 their Discover symbols, finals as `/final` keys (F-QUEST-002 Q-7b)', () => {
+    const teaches = new Map(placementRouteCatalog(questsAll, episodesAll).quests.map((q) => [q.id, q.teaches]));
+    expect(teaches.get('quest:stage1-rites-q1')).toEqual(['ㄴ/final', 'ㄹ/final']);
+    expect(teaches.get('quest:stage1-rites-q2')).toEqual(['ㅑ', 'ㅕ', 'ㅍ', 'ㅇ/final']);
+    expect(teaches.get('quest:stage1-rites-q3')).toEqual(['ㅛ', 'ㅠ', 'ㅎ', 'ㄱ/final']);
+  });
 });

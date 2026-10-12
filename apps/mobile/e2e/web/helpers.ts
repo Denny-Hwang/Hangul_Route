@@ -325,3 +325,27 @@ export async function answerCheckRounds(page: Page): Promise<void> {
     if (round === 1) await waitForNextListenPickRound(page);
   }
 }
+
+/** One Check round answered by option id: `missWith` is tapped first (a first-try miss), then `answer`. */
+export type CheckAnswer = { answer: string; missWith?: string };
+
+/**
+ * Play a quest's two-question Check from its launcher when the spec knows the content:
+ * Go, then each round's option by id (`listen-pick-option-<id>`), so the stars come out
+ * the same on every run. A miss locks only that card (amber nudge); the right one ends the round.
+ */
+export async function playCheckByIds(page: Page, rounds: readonly [CheckAnswer, CheckAnswer]): Promise<void> {
+  await page.getByRole('button', { name: 'Go', exact: true }).click();
+  for (const [i, { answer, missWith }] of rounds.entries()) {
+    for (const [id, verdict] of [...(missWith === undefined ? [] : [[missWith, /^Not this one/] as const]), [answer, /^Right answer/] as const]) {
+      const option = page.getByTestId(`listen-pick-option-${id}`);
+      await expect(option).toBeVisible();
+      // A tap inside the game's double-touch window is dropped: tap again until the card answers.
+      await expect(async () => {
+        await option.click();
+        await expect(option).toHaveAttribute('aria-label', verdict, { timeout: 250 });
+      }).toPass();
+    }
+    if (i === 0) await waitForNextListenPickRound(page);
+  }
+}

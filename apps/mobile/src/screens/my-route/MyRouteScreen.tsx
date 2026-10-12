@@ -3,15 +3,13 @@ import type { ThemeKey } from '@hangul-route/content-schema';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { episodesAll, heritageCardsAll, questsAll, stages, themes } from '../../content';
-import { journeyContent } from '../../content/sync-context';
+import { questsAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
-import { localizeEpisode, localizeQuest, localizeStage, localizeTheme } from '../../logic/content-locale';
-import { cursorContext } from '../../logic/cursor-context';
+import { localizeQuest } from '../../logic/content-locale';
 import { myRouteAccess } from '../../logic/my-route/access';
 import { buildMyRoute } from '../../logic/my-route/model';
+import { localizedRouteContent, routeModelInput } from '../../logic/my-route/route-input';
 import { readSeen, seenFrom, writeSeen } from '../../logic/my-route/seen';
-import { startRouteOf } from '../../logic/my-route/start-marker';
 import { continueTappedEvent, stageOpenedEvent, viewedEvent, type MyRouteSource } from '../../logic/my-route/telemetry';
 import type { MyRouteModel, SeenRecord } from '../../logic/my-route/types';
 import { emptySnapshot, myRouteView, stageRowLook } from '../../logic/my-route/view';
@@ -109,34 +107,12 @@ function MyRouteBody({ profileId, readOnly, source, navigation }: BodyProps): Re
   }, [profileId, readOnly]);
 
   const [attempt, setAttempt] = useState(0);
-  const localized = useMemo(
-    () => ({
-      stages: stages.map((s) => localizeStage(s, locale)),
-      themes: themes.map((t) => localizeTheme(t, locale)),
-      episodes: episodesAll.map((e) => localizeEpisode(e, locale)),
-    }),
-    [locale],
-  );
+  const localized = useMemo(() => localizedRouteContent(locale), [locale]);
 
   const built = useMemo((): { model: MyRouteModel } | { error: true } => {
     try {
       const snapshot = snap ?? emptySnapshot(profileId);
-      const cursor = cursorContext({ tier, placements: snapshot.placements, quests: questsAll, episodes: episodesAll });
-      const model = buildMyRoute({
-        snapshot,
-        catalog: journeyContent.catalog,
-        episodes: localized.episodes,
-        quests: questsAll,
-        cards: heritageCardsAll,
-        stages: localized.stages,
-        themes: localized.themes,
-        isEntitled: cursor.isEntitled,
-        skipQuestIds: cursor.skipQuestIds,
-        // The start marker and known pips (R-7a): the route with no completions.
-        route: startRouteOf(snapshot.placements, journeyContent.catalog, cursor.isEntitled),
-        seen,
-        now: new Date(),
-      });
+      const model = buildMyRoute(routeModelInput({ snapshot, tier, localized, seen, now: new Date() }));
       return { model };
     } catch {
       return { error: true };

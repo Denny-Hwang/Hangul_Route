@@ -54,8 +54,14 @@
 | 10 | 설치 3종 + 오프라인 실기기 완주 | 30분 |
 | 11 | Lighthouse (설치 가능 전부 녹색, Performance ≥ 80) | 15분 |
 | 12 | 자모 MP3 30개 녹음 | 1일 |
+| S-1 | (F-APP-001, A-3 머지 후) `hangul-route-app` 빌드 변수 `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (사이트와 같은 `pk_live_…`) → Retry · `app.hangulroute.com/signin` 에 위젯 | 5분 |
+| S-2 | (F-APP-001 M2) Clerk Production 이 `app.hangulroute.com` 을 받는지 확인 + 브라우저와 설치한 PWA (iOS · Android) 에서 Google · 이메일 코드 로그인 | 30분 |
+| S-0 | (F-APP-001, S-3 직전) 운영 `sw.js` 에 어른 경로 거부 목록이 있고 A-2 가 7일 이상 운영에 있었는지 | 5분 |
+| S-3 | (F-APP-001 M3) `EXPO_PUBLIC_GROWN_UP_HOME=true` · `EXPO_PUBLIC_SITE_URL=https://hangulroute.com` → Retry · 학습자 앱의 어른 진입점이 켜진다 | 5분 |
 
 프로젝트 3개의 Project name / Build / Deploy command / Build variables / 런타임 변수·시크릿 표는 `owner-runbook.md` §0.
+
+> **F-APP-001 (2026-10-11)**: 어른 페이지 (콘솔) 의 운영 주소가 `hangulroute.com/teach` 에서 **`app.hangulroute.com`** (`/signin` · `/start` · `/teach` · `/parent` · `/account/billing`) 으로 옮겨 간다. `hangul-route-app` 이 같은 빌드에서 콘솔을 함께 서빙하고 (빌드 명령 불변), 서비스 워커는 어른 경로를 프리캐시하지 않으며 오프라인이면 `/grown-ups-offline.html` 을 보여 준다 (학습자 오프라인 동작은 그대로). hangulroute.com 은 소개·가이드 전용 (F-SITE-002 S-10 이 옛 주소를 리다이렉트). 순서와 확인 기준은 `owner-runbook.md` §E.
 
 ## 3. 웹에서 다른 점 (사용자 안내용)
 

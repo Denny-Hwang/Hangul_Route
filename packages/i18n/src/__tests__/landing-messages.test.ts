@@ -80,6 +80,24 @@ describe('landing: sentences that take a value render the former text', () => {
   });
 });
 
+describe('privacy: progress report lines (F-REPORT-001 RP-0b)', () => {
+  const bullets = l.legal.privacy.sections.collect.bullets;
+
+  it('extends the progress bullet with the day-by-day details and their limits', () => {
+    expect(bullets.progress).toBe(
+      "Learning progress: quests completed, stars earned, cards unlocked, streaks, and which jamo a learner recognizes — so the journey can resume and a parent can see progress. For progress reports we also keep: for the last 35 days, which days were practiced, with minutes, quests, cards and words for each day; monthly totals for up to 24 months; all-time totals since the first practice day; the day each stage was finished; the letters that became strong each day; the next lesson and one lesson to revisit; and the device's time zone, so days are counted in the learner's local time.",
+    );
+  });
+
+  it('says who can see progress and reports, right after the progress bullet', () => {
+    expect(bullets.progressWho).toBe(
+      "Who can see progress and reports: the learner's family caregivers, who can also recover the full saved progress; the teacher of a class the learner joined; and the owner and admins of that class's school. A class sees day-by-day history only from the day the learner joined, and all-time totals without the first practice day.",
+    );
+    const keys = Object.keys(bullets);
+    expect(keys.indexOf('progressWho')).toBe(keys.indexOf('progress') + 1);
+  });
+});
+
 describe('landing: the lines other PRs rely on stay byte-identical', () => {
   it('keeps the launch-news line of #get and the waitlist copy (#146)', () => {
     expect(l.get.body).toBe(
@@ -98,7 +116,7 @@ describe('landing: the lines other PRs rely on stay byte-identical', () => {
   });
 
   it('keeps the legal effective dates and the draft notice (#149)', () => {
-    expect(l.legal.privacy.effective).toBe('Effective October 10, 2026');
+    expect(l.legal.privacy.effective).toBe('Effective October 11, 2026');
     expect(l.legal.terms.effective).toBe('Effective May 22, 2026');
     expect(l.legal.draft).toBe('Draft for review. This document is a working draft pending review by qualified legal counsel before public launch.');
   });

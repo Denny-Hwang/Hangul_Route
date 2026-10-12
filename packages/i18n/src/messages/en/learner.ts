@@ -1122,6 +1122,19 @@ export const learner = {
     /** Gains (section 3.8): absolute numbers, shown only when greater than zero. */
     gains: { stars: 'Stars', cards: 'Cards', stories: 'Stories read' },
     storiesNote: 'Heritage stories are open any time.',
+    /**
+     * The Home route strip (R-4b, section 3.1 entry 2; amendment LR-A6): the page's name, the goal
+     * line from the goal source and the weekly plan week. No count of what is left, no date.
+     */
+    home: {
+      strip: {
+        title: 'Learning Route',
+        goal: (n: number, title: string) => `Goal: Stage ${n} · ${title}`,
+        week: (n: number) => `Week ${n} of your weekly plan`,
+        /** Beside the seven drawn segments, so they read as the whole route, not as more quests. */
+        stages: 'Seven stages',
+      },
+    },
   },
 
   /**
@@ -1159,6 +1172,63 @@ export const learner = {
           firstStar: 'Good try! You collected a star!',
         },
       },
+    },
+    /**
+     * Words: the Library entry, the topic picker, the topic page and the flashcards (F-VOC-003 §3.1-§3.5).
+     * Counts only, never "n of m" or a percentage (D3); no streak line (T9); nothing tells a learner a card
+     * was wrong (T3). `title` is the topic's English title (content).
+     */
+    library: {
+      title: 'Words',
+      line: 'Pick a topic. Meet a few words at a time.',
+      collected: (n: number) => `${n} collected`,
+      open: 'Open Words',
+      a11y: (n: number) => `Words. ${n} collected. Opens topics.`,
+    },
+    topics: {
+      title: 'Words',
+      line: 'Pick a topic you like.',
+      collected: (n: number) => `${n} collected`,
+      tileA11y: (title: string, n: number) =>
+        `${title}. ${plural('en', n, { one: '1 word collected', other: `${n} words collected` })}.`,
+      empty: 'Words are on their way.',
+      back: 'Back',
+    },
+    topic: {
+      notFound: 'Topic not found',
+      back: 'Back',
+      collected: (n: number) => `${n} collected`,
+      wallNew: 'Not collected yet',
+      learn: { label: 'Learn', line: 'Meet a few words with pictures.' },
+      speed: {
+        label: 'Speed round',
+        line: 'Catch the words you know.',
+        /** `n`: the words still to learn before the Speed round, never the threshold. */
+        needMore: (n: number) => plural('en', n, { one: 'Learn 1 word first', other: `Learn ${n} words first` }),
+      },
+      match: { label: 'Match', line: 'Match each word to its picture.' },
+    },
+    cards: {
+      tapToFlip: 'Tap the card to see what it means',
+      hear: 'Hear the word',
+      showMeaning: 'Show meaning',
+      showWord: 'Show word',
+      again: 'Show me again',
+      gotIt: 'Got it',
+      noSound: 'No sound? You can read it here.',
+      soundOn: 'Turn sound on',
+      readingPractice: 'Reading practice',
+      showSound: 'Show sound',
+      checkTitle: 'Quick check',
+      summary: {
+        newlyCollected: (n: number) =>
+          plural('en', n, { one: '1 new word collected', other: `${n} new words collected` }),
+        next: 'Next words',
+        review: 'Review these',
+        speed: 'Speed round',
+        backToTopic: 'Back to topic',
+      },
+      leave: { title: 'Keep going or stop for now?', keep: 'Keep going', stop: 'Stop' },
     },
   },
 } as const;

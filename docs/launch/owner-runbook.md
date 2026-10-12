@@ -14,10 +14,12 @@ Workers & Pages → **Create** → Workers 탭 → **Import a repository** → `
 | Root directory | `/` | `/` | `/` |
 | Build command | `pnpm install --frozen-lockfile && pnpm --filter @hangul-route/mobile build:web` | `pnpm install --frozen-lockfile` | `pnpm install --frozen-lockfile && pnpm --filter @hangul-route/web build` |
 | Deploy command | `pnpm --filter @hangul-route/mobile exec wrangler deploy` | `pnpm --filter @hangul-route/api exec wrangler d1 migrations apply hangul-route --remote && pnpm --filter @hangul-route/api exec wrangler deploy` | `pnpm --filter @hangul-route/web exec wrangler deploy` |
-| Build variables (빌드 시 코드에 박힘) | `NODE_VERSION` = `22` · `EXPO_PUBLIC_API_BASE_URL` = API 주소 (Step 3 후) · (선택) `EXPO_PUBLIC_CONSOLE_URL` | `NODE_VERSION` = `22` | `NODE_VERSION` = `22` · `NEXT_PUBLIC_API_BASE_URL` = API 주소 · `NEXT_PUBLIC_CONSOLE_DEV_AUTH` = `true` (Step 7 전까지만, 그때 삭제) · `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (Step 7) |
+| Build variables (빌드 시 코드에 박힘) | `NODE_VERSION` = `22` · `EXPO_PUBLIC_API_BASE_URL` = API 주소 (Step 3 후) · (선택) `EXPO_PUBLIC_CONSOLE_URL` (F-BILL-002 가 더 읽지 않으면 삭제, §E S-3) · `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (§E S-1, 앱 호스트의 어른 페이지) · `EXPO_PUBLIC_SITE_URL` · `EXPO_PUBLIC_GROWN_UP_HOME` (§E S-3) | `NODE_VERSION` = `22` | `NODE_VERSION` = `22` · `NEXT_PUBLIC_API_BASE_URL` = API 주소 · `NEXT_PUBLIC_CONSOLE_DEV_AUTH` = `true` (Step 7 전까지만, 그때 삭제) · `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (Step 7) |
 | Runtime: Variables (Type: Text) | 없음 | `ALLOWED_ORIGINS` · `STRIPE_PRICE_FAMILY_LIFETIME` · `STRIPE_PRICE_GROUP_LICENSE_YEARLY` · `CONSOLE_URL` · (법률 검토 후) `SCHOOL_CONSENT_MODE` | 없음 |
 | Runtime: Secrets (Type: Secret) | 없음 | `CLERK_SECRET_KEY` · `STRIPE_SECRET_KEY` · `STRIPE_WEBHOOK_SECRET` · (권장, 한 번만) `RESCUE_PEPPER` | 없음 |
 | Custom domain | `app.hangulroute.com` | (workers.dev 주소 사용) | `hangulroute.com` · `www.hangulroute.com` |
+
+> **F-APP-001 (2026-10-11)**: `hangul-route-app` 이 학습자 앱과 함께 **어른 페이지 (콘솔)** 도 `app.hangulroute.com` 의 `/signin` · `/start` · `/teach` · `/parent` · `/account` 에서 서빙한다 (빌드 명령은 그대로; A-3 부터 같은 빌드가 콘솔도 만든다). hangulroute.com 은 소개·가이드 전용이 되고 (F-SITE-002 S-10), 결제는 앱 호스트 `/account/billing` 에서만 한다 (F-BILL-002 B-10). 오너 작업은 §E 의 S-1 → S-2 → S-0 → S-3 순서.
 
 - **Build variables** 는 프로젝트 → Settings → **Build** → Variables and Secrets. `NEXT_PUBLIC_*` / `EXPO_PUBLIC_*` 는 빌드 때 번들에 박히므로 값을 바꾸면 **Retry deployment** (또는 다음 머지) 로 다시 빌드해야 반영된다.
 - **Runtime Variables / Secrets** 는 프로젝트 → Settings → **Variables and Secrets** (런타임). API Worker 의 `wrangler.toml` 이 `keep_vars = true` 라서 재배포해도 대시보드 변수가 지워지지 않고, Secret 은 원래 지워지지 않는다. 바인딩(D1 등) 만은 toml 이 원본이라 PR 로 바꾼다.
@@ -68,6 +70,7 @@ D1 `hangul-route` 는 2026-10-07 에 대시보드에서 만들었고 (Database I
 3. `hangul-route-api` → Settings → Variables and Secrets → Add → Type **Text** → `ALLOWED_ORIGINS` = `https://hangulroute.com,https://www.hangulroute.com,https://app.hangulroute.com` → Deploy. (비워 두면 같은 기본값 + localhost + `*.workers.dev` 가 허용되므로 도메인 전엔 생략해도 된다.)
 
 **확인**: https://app.hangulroute.com 과 https://hangulroute.com/teach 가 열린다 (DNS 탭에 Worker 가 만든 레코드가 보인다). Step 5 의 `EXPO_PUBLIC_CONSOLE_URL` 은 지워도 된다 (지우면 Retry deployment).
+- F-APP-001 이후 (§E S-1 뒤): 콘솔 주소는 **https://app.hangulroute.com/signin** 이다. 확인은 https://app.hangulroute.com/signin 이 로그인 위젯을 보여 주는지로 한다. hangulroute.com/teach 는 F-SITE-002 S-10 전까지 그대로 열리고, 그 뒤에는 앱 호스트의 같은 경로로 리다이렉트된다. 학습자 앱의 개인정보 링크 등 사이트 주소는 `EXPO_PUBLIC_SITE_URL` (기본 `https://hangulroute.com`) 이 `EXPO_PUBLIC_CONSOLE_URL` 을 대신한다.
 
 ## B. 외부 키 (Step 7–9)
 
@@ -138,6 +141,43 @@ Rescue Code 는 서버에 해시로만 저장된다. 이 키를 넣으면 **새�
 **확인**: 다른 계정 (예: 개인 Gmail) 에서 `hello@hangulroute.com` 으로 메일을 보내면 몇 분 안에 4 의 받은편지함에 도착한다 (스팸함도 확인). Routing 탭에서 `hello@hangulroute.com` 규칙이 Active 로 보인다.
 - 참고: Email Routing 은 받는 것만 전달한다. 답장은 받은편지함 주소에서 나가므로, 발신자를 `hello@hangulroute.com` 으로 보이게 하려면 메일 서비스 쪽 설정 (예: Gmail 의 "다른 주소에서 메일 보내기") 이 따로 필요하다. 선택 사항이고 공개 전 필수는 아니다.
 
+## E. 앱 호스트의 어른 영역 (F-APP-001, S-1 → S-2 → S-0 → S-3)
+
+> 목적: app.hangulroute.com 에서 어른이 페르소나 (Family · Teacher) 로 로그인하고, hangulroute.com 은 소개·가이드만 맡는다. 모든 단계는 대시보드에서만 하고, 각 단계는 되돌릴 수 있다 (F-APP-001 §3.13). **Stripe Live 는 이 절과 무관하며 계속 꺼 둔다.**
+
+### 빌드 변수 표 (`hangul-route-app` → Settings → Build → Variables and Secrets)
+
+| 변수 | 값 | 언제 | 없으면 |
+|---|---|---|---|
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | `hangul-route-web` 과 **같은** `pk_live_…` | S-1 (A-3 머지 후) | 앱 호스트의 어른 페이지가 "sign-in is not set up on this build" 한 줄만 보여 준다 (아무 데서도 링크하지 않으므로 무해) |
+| `NEXT_PUBLIC_LECTURE_MODE` · `NEXT_PUBLIC_SCHOOL_CONSENT_MODE` | (선택) `hangul-route-web` 과 같은 값 | S-1 | 해당 콘솔 기능이 앱 호스트에서 꺼진 채로 |
+| 형제 스펙의 콘솔 플래그 (`NEXT_PUBLIC_REPORTS_ENABLED` · `NEXT_PUBLIC_NOTES_ENABLED` · `NEXT_PUBLIC_BROWSE_ENABLED` · `NEXT_PUBLIC_LEARNING_ROUTE_ENABLED`) | 각 스펙이 켤 때 `true` | 각 형제 스펙의 단계 | 해당 메뉴·카드가 숨겨진다 |
+| `EXPO_PUBLIC_GROWN_UP_HOME` | `true` | S-3 (M3) | 학습자 앱에 어른 진입점 (Welcome 페르소나 행 · Profile "Grown-up home" · 대시보드 카드) 이 보이지 않는다 |
+| `EXPO_PUBLIC_SITE_URL` | `https://hangulroute.com` | S-3 | 기본값도 `https://hangulroute.com` (그다음 `EXPO_PUBLIC_CONSOLE_URL`) |
+| `EXPO_PUBLIC_CONSOLE_URL` | 삭제 | S-3 뒤, F-BILL-002 가 더 읽지 않을 때 | — |
+
+`NEXT_PUBLIC_API_BASE_URL` 은 넣지 않아도 된다: 빌드가 `EXPO_PUBLIC_API_BASE_URL` 을 넘겨 준다 (A-3). 변수를 바꾸면 **Retry deployment**.
+
+### S-1. 앱 호스트 빌드에 Clerk 키 (5분, A-3 머지 후)
+`hangul-route-app` → Settings → Build → Variables → `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` = `hangul-route-web` 의 것과 같은 `pk_live_…` (Secret key 가 아니라 publishable key). 선택: 위 표의 콘솔 플래그를 사이트와 같은 값으로. → **Retry deployment**.
+**확인**: https://app.hangulroute.com/signin 에 Clerk 로그인 위젯이 뜬다. https://app.hangulroute.com 의 학습자 앱은 그대로다 (아직 어디서도 어른 페이지로 링크하지 않는다).
+
+### S-2. Clerk Production 확인 + M2 실기기 로그인 (30분, A-4b 와 A-5c 가 앱 호스트에 배포된 뒤)
+1. Clerk 대시보드 (Production 인스턴스) → `https://app.hangulroute.com/signin` 로그인이 되는지 본다 (루트 도메인의 서브도메인은 같은 인스턴스가 서빙). 허용 redirect origin 목록이 보이면 `https://app.hangulroute.com` 을 추가. "verify email at sign-up" 이 켜져 있는지 확인.
+2. M2: 데스크톱 브라우저에서, 그리고 **설치한 PWA** (iPad 또는 iPhone, Android Chrome) 에서 각각 Google 과 이메일 코드로 로그인 → 학급 하나 열기 → `/parent` → `/account/billing` 열기.
+**확인**: 여섯 조합 (기기 3 × 방식 2) 이 모두 페르소나 홈에 도착하고, 설치한 PWA 창 안에 **Back to learning** 이 보인다. 안 되는 조합은 기기·방식·화면 캡처를 보낸다.
+
+### S-0. 운영 서비스 워커 확인 (5분, S-3 바로 전)
+1. 브라우저에서 `https://app.hangulroute.com/sw.js` 를 열고 `/signin`, `/teach`, `/parent`, `/account` 가 들어 있는 거부 목록 (denylist) 과 `grown-ups-offline.html` 이 보이는지 찾는다 (Ctrl/Cmd+F).
+2. A-2 PR 이 머지된 날짜를 보고 **오늘이 그로부터 7일 이상** 지났는지 확인한다 (설치된 옛 워커가 새 워커로 바뀔 시간).
+**확인**: 두 가지 모두 예. 아니면 S-3 를 미룬다 (F-SITE-002 S-10, F-BILL-002 B-10 도 같은 이유로 S-0 뒤).
+
+### S-3. 학습자 앱의 어른 진입점 켜기 (5분, M3: S-0 과 M2 뒤)
+`hangul-route-app` 빌드 변수 `EXPO_PUBLIC_GROWN_UP_HOME` = `true`, `EXPO_PUBLIC_SITE_URL` = `https://hangulroute.com` → **Retry deployment**. (`EXPO_PUBLIC_CONSOLE_URL` 은 F-BILL-002 가 더 읽지 않게 된 뒤 삭제.) 같은 창에서 F-SITE-002 S-10 (사이트가 `out-site/` 와 리다이렉트를 서빙) 과 F-BILL-002 B-10 (`hangul-route-api` 의 `BILLING_URL=https://app.hangulroute.com/account/billing`) 도 각 스펙 순서대로 한다.
+**확인**: 학습자 프로필이 없는 브라우저의 Welcome 에 "Here to support a learner?" 행이 보이고 **Parent or caregiver** 가 `/signin?persona=parent` 로 간다. 학습자 프로필이 있는 기기에서는 Profile → 어른 영역 → **Grown-up home** → PIN → 어른 영역이 열린다.
+
+**되돌리기**: S-3 는 `EXPO_PUBLIC_GROWN_UP_HOME` 을 `false` 로 (또는 삭제) → Retry deployment. S-10 은 F-SITE-002 쪽 되돌리기, B-10 은 `BILLING_URL` 삭제. 앱 호스트의 어른 페이지는 남아 있어도 무해하고, 데이터는 어느 방향으로도 바뀌지 않는다. 마지막 단계 A-10 (기본값 켜기) 은 M3 후 14일 이상 지나 머지된다.
+
 ## 나중에 (법률 검토 후)
 학교 동의 모드 (c) 를 열 때만: `hangul-route-api` 런타임 변수 `SCHOOL_CONSENT_MODE=enabled` + `hangul-route-web` 빌드 변수 `NEXT_PUBLIC_SCHOOL_CONSENT_MODE=enabled` (Retry deployment). 그 전엔 콘솔에서 선택 불가로 잠겨 있다.
 
@@ -148,6 +188,7 @@ Rescue Code 는 서버에 해시로만 저장된다. 이 키를 넣으면 **새�
 | Step 3 첫 배포 로그 (마이그레이션 ✅ 또는 오류) | 오류면 수정 PR (F-INFRA-003 은 머지됨) |
 | Step 7 확인 결과 (위젯이 뜨고 학급 생성이 되는지) | F-AUTH-005 계정 페이지 (이메일·동의 기록·학습자 데이터 삭제) |
 | Step 11 빨간 항목 캡처 | 성능 수정 |
+| §E S-2 M2 결과 (여섯 조합) · S-0 확인 | F-APP-001 S-3 시점 결정, A-10 (M3 후 14일) |
 | Step 12 녹음 폴더 (`audio-recording-script.md` 의 file id 이름, 저장소 밖 공유) + 동의서는 본인 보관, attribution 표기만 전달 | `content(audio): jamo clips` (F-AUDIO-004 A-9): 처리된 MP3 30개 + `audio:map`, 오프라인 e2e 활성화, 랜딩의 오프라인 발음 문구 복원 |
 
 ## 문제가 생기면
