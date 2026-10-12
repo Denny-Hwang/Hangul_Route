@@ -34,8 +34,10 @@ const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
 const STORY = 'story:hangul-day';
 const QUEST = 'quest:story-hangul-day-listen';
 const NOTE = 'cn-hangul-day';
-/** The listen tier's reward card (`rewardCardIds.listen` of the fixture). */
-const REWARD_CARD = 'card:hanji';
+/** The listen tier's reward card (`rewardCardIds.listen` of the fixture): its own story card (F-STORY-006 6.7). */
+const REWARD_CARD = 'card:story-hangul-day';
+const REWARD_TITLE = 'King Sejong';
+const REWARD_KO = '세종';
 /** The story's Hoya line (`hoyaIntroEn`), shown on its episode page. */
 const HOYA_INTRO = 'Want to hear how the Korean alphabet began?';
 const EMOJI = /\p{Extended_Pictographic}/u;
@@ -465,8 +467,8 @@ test.describe('story shelf (fixture bundle)', () => {
     const earned = shown(page, 'story-episode-cards').getByRole('button');
     await expect(earned).toHaveCount(1);
     await expect(earned).toHaveAttribute('data-testid', `story-episode-card-${REWARD_CARD}`);
-    await expect(earned).toContainText('Hanji Paper');
-    await expect(earned).toContainText('한지');
+    await expect(earned).toContainText(REWARD_TITLE);
+    await expect(earned).toContainText(REWARD_KO);
 
     const line = shown(page, 'story-episode-notes');
     await expect(line).toHaveText('Culture notes: 1 found');
@@ -487,7 +489,7 @@ test.describe('story shelf (fixture bundle)', () => {
     await openSection(page, 'Story Time');
     await tile(page).click();
     await shown(page, `story-episode-card-${REWARD_CARD}`).click();
-    await expect(page.getByRole('heading', { name: 'Hanji Paper', exact: true }).filter({ visible: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: REWARD_TITLE, exact: true }).filter({ visible: true })).toBeVisible();
     await expect(shown(page, 'card-detail-hear')).toBeVisible();
 
     // Play again: the scored quest from its intro (the app loads again, so the event buffer is new).
