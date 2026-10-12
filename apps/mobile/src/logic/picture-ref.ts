@@ -103,3 +103,13 @@ export function pictureTile(size: number, metrics: PictureTileMetrics): { tile: 
   const art = Math.max(size - 2 * metrics.inset, metrics.minArt);
   return { tile: art + 2 * metrics.inset, art };
 }
+
+/**
+ * A word not collected yet on the word wall (F-VOC-002 W8, F-VOC-003 section
+ * 3.4): a WordArt picture drawn in silhouette (`mono`). Card art is JSX and
+ * has no silhouette, and a swatch's colour or a text tile's word would give
+ * the answer away, so those draw a plain tile (F-VOC-003 section 8 item 4).
+ */
+export function silhouetteOf(picture: ResolvedPicture): { kind: 'word'; key: string } | { kind: 'plain' } {
+  return picture.kind === 'word' ? { kind: 'word', key: picture.key } : { kind: 'plain' };
+}

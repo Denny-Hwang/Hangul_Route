@@ -117,6 +117,19 @@ export type RootStackParamList = {
   Placement: { source: PlacementSource; retakeMode?: 'standard' | 'deep' };
   /** parent/placement-report — the grown-up report of the level check, behind the PIN gate (F-PLC-001 section 3.9). */
   PlacementReport: { profileId: string };
+  /** vocab/topics — the Words topic picker (F-VOC-003 section 3.3). */
+  VocabTopics: undefined;
+  /** vocab/topic — a Words topic page (F-VOC-003 section 3.4). A key the picker does not show is "Topic not found". */
+  VocabTopic: { topicKey: string };
+  /**
+   * vocab/cards — flashcards (F-VOC-003 section 3.5; C-5 registers the screen). `chunk` is 0-based, absent = the
+   * suggested chunk; `startId` opens the chunk at that word on its back face (a collected word wall tile).
+   */
+  VocabCards: { topicKey: string; chunk?: number; startId?: string };
+  /** vocab/match — Pic-Word Match on the topic's collected words (F-VOC-003 section 3.9; C-6 registers the screen). */
+  VocabMatch: { topicKey: string };
+  /** vocab/speed-start — the Speed Round (F-VOC-004 section 3.1; S-5 registers the screen). The topic page launches it. */
+  VocabSpeedRound: { topicKey: string; mode?: 'relaxed' | 'challenge' };
   /** Fixture builds only (`navigation/vocab-question-e2e.tsx`): the shared vocabulary question view on catalogue words. */
   VocabQuestionE2e: VocabQuestionE2eParams;
 };

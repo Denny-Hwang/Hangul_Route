@@ -1,6 +1,6 @@
 import { borderWidth, spacing, touchTarget } from '@hangul-route/design-system/tokens';
 import { describe, expect, it } from 'vitest';
-import { hasPicture, pictureName, pictureTile, resolvePicture, resolvePictureArt, swatchColors } from '../picture-ref';
+import { hasPicture, pictureName, pictureTile, resolvePicture, resolvePictureArt, silhouetteOf, swatchColors } from '../picture-ref';
 
 const colors = {
   brand: { primary: '#111111', primaryLight: '#222222' },
@@ -140,5 +140,17 @@ describe('pictureTile: the neutral tile round card art and WordArt (F-VOC-002 §
       expect(tile).toBe(art + 2 * metrics.inset);
       expect(tile).toBeGreaterThanOrEqual(side);
     }
+  });
+});
+
+describe('silhouetteOf: a word not collected yet (F-VOC-002 W8, F-VOC-003 section 3.4)', () => {
+  it('a WordArt picture is drawn in silhouette', () => {
+    expect(silhouetteOf({ kind: 'word', key: 'food-apple' })).toEqual({ kind: 'word', key: 'food-apple' });
+  });
+
+  it('card art, a swatch and a text tile have no silhouette: a plain tile, so no colour or word gives it away', () => {
+    expect(silhouetteOf({ kind: 'card', cardId: 'card:rice' })).toEqual({ kind: 'plain' });
+    expect(silhouetteOf({ kind: 'swatch', token: 'brand-primary', color: 'x' })).toEqual({ kind: 'plain' });
+    expect(silhouetteOf({ kind: 'text' })).toEqual({ kind: 'plain' });
   });
 });

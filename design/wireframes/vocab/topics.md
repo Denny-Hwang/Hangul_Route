@@ -1,16 +1,15 @@
-# Words: Library entry, topic picker, topic page (wireframe v1)
+# Words: Library entry and topic picker (wireframe v1)
 
-Spec: `docs/specs/F-VOC-003-topic-picker-flashcards.md` (§3.1 entry, §3.3 picker, §3.4 topic page); data in F-VOC-001, pictures in F-VOC-002, progress in F-VOC-005
+Spec: `docs/specs/F-VOC-003-topic-picker-flashcards.md` (§3.1 entry, §3.3 picker); data in F-VOC-001, pictures in F-VOC-002, progress in F-VOC-005
 Audience: anyone learning Korean words, any age (CLAUDE.md §1). Nothing tells a learner they are behind; collections only grow.
-Code (planned): `screens/library/LibraryScreen.tsx` (Words card), `screens/vocab/VocabTopicsScreen.tsx`, `TopicTile.tsx`, `VocabTopicScreen.tsx`, `WordWall.tsx`, `logic/vocab/{topics,wall,suggest}.ts`
+Code: `screens/library/LibraryScreen.tsx` (the Words section), `screens/vocab/VocabTopicsScreen.tsx`, `TopicGrid.tsx`, `TopicTile.tsx`, `logic/vocab/{topics,topic-view}.ts`
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary or ghost, `~~ ko ~~` taught Korean drawn with `KoreanText` (Hangul chip, romanization line, gloss), `[pic]` a WordArt / card-art picture, `o o o . .` a fill-only dots meter.
 
-This file holds three screens and their states in one place (house style is one file per screen; split when promoted to `design/wireframes/vocab/topics.md` and `topic-detail.md`):
+This file holds the Library entry and the picker. The topic page (section C) moved to `topic-detail.md` when F-VOC-003 C-4 promoted the wireframes (house style is one file per screen). The design mock is `design/screens/vocab/topics.md`.
 
 - A. Library with the Words entry
 - B. Topic picker (`vocab/topics`)
-- C. Topic page (`vocab/topic`)
-- D. Empty, error and edge states
+- D. Empty and edge states
 
 All copy in boxes is placeholder or an English suggestion; final strings sit in `VOCAB_COPY`.
 
@@ -47,6 +46,20 @@ Then: they see a grid of topics, each showing how many words they have collected
 - With the flag off the screen is exactly today's gallery (no Words card).
 - The whole card is one button (>= 64 tall), label "Words. 24 collected. Opens topics."
 - When F-STORY-004's section tabs exist, this card becomes the `theme-packs` section ("Words") and the same grid renders inline.
+- **Built (C-4):** the section tabs landed first (F-STORY-004 PR 4.x), so the card is not built (spec T1, §8 item 1). The Library offers a **Words** tab when the flag is on and a topic is ready; it holds the line, the plain count and the topic grid of B:
+
+```
+┌──────────────────────────────────┐
+│ "Heritage Library"               │
+│ [Cards] [Story Time] [Culture] [Words] │  <- Words only with the flag on and a ready topic
+│ "Pick a topic. Meet a few words  │
+│  at a time."                     │
+│ 24 collected                     │  <- a plain count
+│ ┌────────────┐ ┌────────────┐    │  <- the picker's grid (B), inline
+│ │ [cover pic]│ │ [cover pic]│    │
+│ │ ...        │ │ ...        │    │
+└──────────────────────────────────┘
+```
 
 ## B. Topic picker (`vocab/topics`)
 
@@ -78,46 +91,21 @@ Then: they see a grid of topics, each showing how many words they have collected
 - No "n of m", no percent in text. The bar (tile) or the dots (topic page header, full width) show how many words are collected and are hidden from screen readers; the text says "N collected".
 - A topic with a missing picture is not listed at all.
 
-## C. Topic page (`vocab/topic`)
+## D. Empty and edge states
 
 ```
-┌──────────────────────────────────┐
-│ [<- back]                        │
-│ Food     ~~ 음식 eumsik ~~       │
-│ o o o o o . . . . . . .  5 collected │  <- fill-only dots (full width fits 12)
-│ (Hoya) "short intro line"        │  <- once per topic per session
-│                                  │
-│ word wall (file order, stable):  │
-│ ┌────┐ ┌────┐ ┌────┐ ┌────┐      │  <- 3 columns at 320 dp, 4 from 360
-│ │[pic]│ │[pic]│ │ ░░ │ │ ░░ │      │     collected = picture + word
-│ │~~ko~~│ │~~ko~~│ │silh.│ │silh.│    │     new = soft silhouette, no word
-│ └────┘ └────┘ └────┘ └────┘      │
-│  ... 12 tiles ...                │
-│                                  │
-│ [[ LEARN ]]                      │  <- the suggested one is primary (changes with progress)
-│ [ SPEED ROUND ]   [ MATCH ]      │  <- Match only when the game exists
-└──────────────────────────────────┘
+No ready topic (dev builds only)
+┌───────────────────────┐
+│ [<- back]             │
+│ "Words are on their   │
+│  way."                │
+└───────────────────────┘
 ```
 
-- A **collected** word tile is tappable: opens that word's flashcard on the back face (`vocab/cards`). A **new** word tile shows a silhouette and the name "Not collected yet"; it is not tappable and shows no Korean (no spoilers).
-- **Learn** -> `vocab/cards`. **Speed round** -> `vocab/speed-start` (needs at least 4 collected words; below that the button says "Learn 4 words first" and goes to Learn). **Match** -> `vocab/match` (only when Pic-Word Match exists; needs 3 collected words).
-- Which button is primary: Learn when fewer than 4 words are collected or a chunk is waiting and nothing was played today; otherwise Speed round. Match is never primary.
-- The wall never shows lock icons, never counts what is left, never re-orders.
-
-## D. Empty, error and edge states
-
-```
-No ready topic (dev builds only)      Topic not found (bad link)         Progress not loaded yet
-┌───────────────────────┐             ┌───────────────────────┐          ┌───────────────────────┐
-│ [<- back]             │             │ [<- back]             │          │ same page, meter shows │
-│ "Words are on their   │             │ "Topic not found"     │          │ no filled dots, Learn  │
-│  way."                │             │ [[ BACK TO WORDS ]]   │          │ works                  │
-└───────────────────────┘             └───────────────────────┘          └───────────────────────┘
-```
-
+- Topic not found and progress not loaded are states of the topic page: `topic-detail.md` D.
 - Offline: everything is bundled; the screens are identical.
-- 200 % text: tiles grow, the grid drops a column, the page scrolls; buttons stay reachable (sticky bottom bar on the topic page).
-- Reduced motion: nothing here animates beyond the existing Hoya pose.
+- 200 % text: tiles grow, the grid drops a column, the page scrolls.
+- Reduced motion: nothing here animates.
 
 ---
 
@@ -125,16 +113,14 @@ No ready topic (dev builds only)      Topic not found (bad link)         Progres
 
 | Where | Action | Result |
 |---|---|---|
-| Library Words card | tap | `vocab/topics` |
-| Picker tile | tap | `vocab/topic { topicKey }`; telemetry `vocab.topic_opened` |
-| Topic page, collected tile | tap | `vocab/cards` at that word, back face |
-| Topic page, Learn / Speed round / Match | tap | `vocab/cards` / `vocab/speed-start` / `vocab/match` |
+| Library Words tab | tap | the Words section (B's grid, inline) |
+| Picker or Words-section tile | tap | `vocab/topic { topicKey }`; telemetry `vocab.topic_opened` (`source: 'library'`) |
 | Back (top-left) | tap | previous screen |
 
 ## Navigation graph
 
-Enter from: `library/gallery` (Words card), `home/vocab-card` (due words, F-VOC-005 §3.7), later a teacher plan item (F-PLAN-002).
-Exit to: `vocab/cards`, `vocab/speed-start`, `vocab/match`, back to `vocab/topics` and `library/gallery`.
+Enter from: `library/gallery` (the Words tab holds the grid itself), `home/vocab-card` (due words, F-VOC-005 §3.7), later a teacher plan item (F-PLAN-002).
+Exit to: `vocab/topic` (`topic-detail.md`), back to `library/gallery`.
 
 ## Data needs
 
@@ -145,6 +131,4 @@ Exit to: `vocab/cards`, `vocab/speed-start`, `vocab/match`, back to `vocab/topic
 
 ## Open questions
 
-1. Whether a collected tile should also show a small "strong" marker for words in a high box (counts only, never a rank): left out of v1 so the wall stays a pure collection.
-2. Whether the Hoya intro line should be shown on every visit or only the first of the day.
-3. The Words card position on Library (above the filter chips vs below the gallery) needs a look at the real screen height on a 320 x 568 phone.
+1. ~~The Words card position on Library~~: resolved by T1, Words is its own Library tab (C-4).
