@@ -214,15 +214,24 @@ export const learner = {
 
   library: {
     title: 'Heritage Library',
+    /** A plain count of the cards held; no total, which would grow with every release (F-STORY-006 §3.7, D3). */
     collected: {
-      line: (collected: number, total: number) => `${collected} of ${total} collected`,
-      pill: (collected: number, total: number) => `${collected}/${total}`,
+      line: (collected: number) => plural('en', collected, { one: '1 card collected', other: `${collected} cards collected` }),
     },
     filterAll: 'All',
-    locked: 'Locked',
+    /** On a card earned since the learner last opened it (`newSinceLastView`). */
+    new: { pill: 'New' },
     /** Keyed by the schema's `Rarity`, so `es` and `ko` can translate each. */
     rarity: { common: 'common', uncommon: 'uncommon', rare: 'rare', legendary: 'legendary' },
-    how: { title: 'How to collect more', body: 'Finish quests to unlock cards.' },
+    /** The explainer, one line per award rule this build can fire (F-STORY-006 §3.7): what to do, never how far along. */
+    how: {
+      title: 'How to collect more',
+      quest: 'Finish a quest to earn its card.',
+      episode: 'Finish every quest in an episode to earn more cards.',
+      stage: (stage: number) => `Finish all of Stage ${stage} for the legendary cards.`,
+      story: 'Finish a story to earn its card.',
+      welcome: "Hoya's tiger card is a welcome gift.",
+    },
     /** Landmark names of the two panes on a wide window (F-LAYOUT-001 §3.13). */
     panes: { master: 'Card gallery', detail: 'Card details' },
     /** How to earn a locked card, one line per award rule (F-STORY-006 §3.7): never how far along. */
