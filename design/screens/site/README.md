@@ -17,7 +17,7 @@ Built by: S-4a (`SiteHeader`, `SiteFooter`, `/learners`), S-4b (`/parents`, `/te
 
 The mock is a design reference, not shipped code. Every value in `mock/site.css` is a token of `packages/design-system/src/tokens.ts`, copied once into a custom property named after it (`--spacing-xl` is `spacing.xl`, `--colors-brand-primary` is `colors.brand.primary`). S-4a / S-5 write the same rules with token imports: inline styles from tokens, and only the properties that change at a breakpoint in `apps/web/src/app/globals.css` (as the landing does today). Text sizes are written in rem (token / 16) and breakpoints in em (px / 16), so a browser text-size setting enlarges every line and moves the layout switches with it. The numbers that are not tokens are listed under "Constants" below, each with the token it derives from; S-4a / S-5 write them as named constants, never as bare literals (CLAUDE.md section 4).
 
-Open the mock with any browser (`design/screens/site/mock/home.html`); links are placeholders. Every drawn string is an S-3 key's English value word for word: appendix B, plus `landing.persona.plansTitle` ("Plans") and `landing.persona.faqTitle` (the visually hidden "Questions"), which the S-3 review added for the persona pages' headings. The closing block is labelled by its own line (`landing.persona.closing.*`), so it needs no extra key.
+Open the mock with any browser (`design/screens/site/mock/home.html`); links are placeholders. Every drawn string is an S-3 key's English value word for word: appendix B, plus `landing.persona.plansTitle` ("Plans") and `landing.persona.faqTitle` (the visually hidden "Questions"), which the S-3 review added for the persona pages' headings. The closing block is labelled by its own line (`landing.persona.closing.*`), so it needs no extra key. The cost line on `/` and under Plans on `/parents` is two keys in one paragraph: `landing.plans.free.stage1` ("Stage 1 is free.") then `landing.plans.paid.coming` ("More stages are coming, with plans for families and classes."), the S-3 strings after F-ENT-003 OD-1 (the free plan is all of Stage 1) and the yearly Family Plan (BY-1).
 
 ## Constants
 
@@ -68,7 +68,7 @@ The 200 % shots use the browser's own text-size setting (Chromium `Page.setFontS
 | Header at 320 and 375 | one row, at most 96 px | one row, 81 px (64 hit area + 2 x `spacing.sm` + `borderWidth.thin`) |
 | Header with 200 % text at 320, 375, 720 and 1280 | at most two rows, no sideways scroll | 320 / 375: two rows (145 px); 720 / 1280: one row (the phone row); never sideways |
 | First screen at 320 x 568 contains header, h1, lead, primary action | | home: primary action ends at 457 px; `/parents`: at 415 px |
-| Visible words, folds closed | home 280, persona page 550 | home 223 (375) / 228 (1280), `/parents` 226 / 231 (chrome included, visually hidden text and the skip link excluded) |
+| Visible words, folds closed | home 280, persona page 550 | home 226 (375) / 231 (1280), `/parents` 229 / 234 (whitespace-separated tokens; chrome included; visually hidden text, the skip link, `aria-hidden` art and closed fold bodies excluded) |
 | Links and buttons under 64 x 64 | none | none |
 
 These are the mock's numbers, not the real export's: S-4a, S-4b and S-5 measure the export in `site-budgets.spec.ts`. The mock confirms spec assumption b (brand and Sign in fit one row at 320 px; the mark steps out below 360 px as today) and gives assumption d room (home at 2,650 px with the 64 px footer links in two columns).

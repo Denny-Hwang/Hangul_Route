@@ -43,12 +43,12 @@ Every block is a `<section>` with an `h2`, separated by a `borderWidth.thin` `bo
 | Who is it for? (`#who`, `tabindex="-1"` so the in-page link moves focus to it) | three persona cards (`persona-card.md`); one column below 720 px, three columns from 720 px, gap `spacing.md` / `spacing.lg` |
 | How it works | ordered list; number in a `spacing.xxl` circle (`brand.primaryLight`, `brand.primaryDark` bold, `aria-hidden`; the list itself numbers for screen readers); title bold, line `text.secondary`; three columns from 720 px |
 | Promises | `h2` visually hidden (`landing.home.promises.label`); three title chips, not links: `surface.paper`, `borderWidth.base` `border.subtle`, `radii.pill`, padding `spacing.sm` x `spacing.lg`, semibold; section padding `spacing.lg` (phone) / `spacing.xl` (wide) |
-| What does it cost? | one line from the claims (`landing.plans.free.*` and, once paid plans are on sale, `landing.plans.paid.inApp`) |
+| What does it cost? | one paragraph: the free line `landing.plans.free.stage1` ("Stage 1 is free.", the same in every state, F-ENT-003 OD-1), then the paid line from the `paidPlans` claim (`landing.plans.paid.coming` today, `landing.plans.paid.inApp` once paid plans are on sale); no price and no plan term |
 | Get the launch news (`#news`) | title, one line, the existing `WaitlistForm` unchanged (field `touchTarget.min` tall, `borderWidth.base` `border.strong`, `radii.md`; Send is a primary button `touchTarget.min` tall) |
 
 No questions block on `/`. The footer follows (`header.md`).
 
 ## States
 
-- Claims on: step 3 reads `landing.home.how.routeBody`; the cost line follows `freePlan` / `paidPlans`. No block grows by more than one line.
+- Claims on: step 3 reads `landing.home.how.routeBody`; the cost line's paid sentence becomes `landing.plans.paid.inApp` ("Plans for families and classes are at app.hangulroute.com.") and the free sentence stays. No block grows by more than one line.
 - Long words (`app.hangulroute.com`, an email) wrap (`overflow-wrap: anywhere` on the page body) so enlarged text never scrolls sideways.
