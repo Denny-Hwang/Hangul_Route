@@ -1255,4 +1255,48 @@ export const learner = {
       leave: { title: 'Keep going or stop for now?', keep: 'Keep going', stop: 'Stop' },
     },
   },
+  /**
+   * Notes from grown-ups on the learner side (F-FEEDBACK-001 FB-5; wireframes home/notes-card.md,
+   * notes/list.md, notes/detail.md). Presets, reactions and sender labels are `common.notes`. Any age
+   * reads these lines, so they are plain, never childish, and never say "report" on a child-managed
+   * profile: `detail.reportSelf` is the self-managed profile's link (section 6.10 item 4). FB-8 renders them.
+   */
+  notes: {
+    /** The Home card (row 2a): one new note, or a count with the newest sender. */
+    home: {
+      title: (sender: string) => `A note from ${sender}`,
+      newCount: (n: number) => count(n, 'new note', 'new notes'),
+      from: (sender: string) => `From ${sender}`,
+      read: { cta: 'Read' },
+    },
+    /** The Profile row, shown only with a membership or a cached note (section 6.5 item 2). */
+    profileRow: { title: 'My notes' },
+    list: {
+      title: 'My notes',
+      groups: { new: 'New', earlier: 'Earlier' },
+      empty: 'No notes yet. Notes from your teacher or family will show here.',
+      error: 'Your notes could not open. Try again later.',
+      retry: { cta: 'Try again' },
+    },
+    detail: {
+      /** Under the grown-up's words, so they are never mistaken for a lesson (section 6.11). */
+      from: (sender: string) => `From ${sender}`,
+      suggest: { title: 'Try this quest', start: { cta: 'Start' } },
+      reactions: { heading: 'Answer with one tap' },
+      putAway: { cta: 'Put this note away' },
+      putAwayDone: 'Put away. A grown-up can still see it.',
+      tellGrownUp: { cta: 'Tell a grown-up' },
+      reportSelf: { cta: 'Report this note' },
+      /** A stale route, or a note taken away by an inbox while its page is open. */
+      gone: 'This note was put away.',
+      seeMyNotes: { cta: 'See my notes' },
+      error: 'This note could not open.',
+      retry: { cta: 'Try again' },
+    },
+    /** Who sees the learner's pick (section 6.6), shown before and after the pick. */
+    reactionSeenBy: {
+      teacher: 'Your teacher will see your answer.',
+      family: 'Your family will see your answer.',
+    },
+  },
 } as const;
