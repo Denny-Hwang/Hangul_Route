@@ -14,6 +14,11 @@
 // (e.g. "apps/mobile/src/logic"). The gate then walks up to the nearest
 // coverage/coverage-summary.json and aggregates line coverage over just the
 // files under that lane path.
+//
+// --fail-on-skip: a target the gate cannot measure (no summary, no files under
+// the lane, no total) fails instead of warning. CI passes it, because the
+// coverage reports reach the gate from other jobs (ci.yml), and a report lost
+// on the way must not leave a target unmeasured while the check stays green.
 
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
@@ -29,6 +34,7 @@ if (!existsSync(CONFIG)) {
   process.exit(1);
 }
 
+const FAIL_ON_SKIP = process.argv.slice(2).includes("--fail-on-skip");
 const cfg = JSON.parse(readFileSync(CONFIG, "utf8"));
 const passes = [];
 const skipped = [];
@@ -101,7 +107,8 @@ for (const p of passes) {
   );
 }
 for (const s of skipped) {
-  console.log(`::warning::${s.pkgPath} — skipped (${s.reason})`);
+  const level = FAIL_ON_SKIP ? "error" : "warning";
+  console.log(`::${level}::${s.pkgPath} — skipped (${s.reason})`);
 }
 for (const f of failures) {
   console.log(
@@ -115,3 +122,7 @@ console.log(
 );
 
 if (failures.length > 0) process.exit(1);
+if (FAIL_ON_SKIP && skipped.length > 0) {
+  console.log(`::error::${skipped.length} coverage target(s) could not be measured (--fail-on-skip)`);
+  process.exit(1);
+}
