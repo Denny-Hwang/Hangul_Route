@@ -177,7 +177,7 @@ describe('composer text (section 6.4, mirrors checkNoteText)', () => {
     expect(textProblem('one\ntwo', 'en')).toMatchObject({ ok: false, problem: 'line_break', message: 'Please keep the note to one line.' });
     expect(textProblem('a'.repeat(121), 'en')).toMatchObject({ ok: false, problem: 'too_long', message: 'Please keep it to 120 characters.' });
     expect(textProblem('   ', 'en')).toMatchObject({ ok: false, problem: 'empty', message: en.composer.problems.empty });
-    expect(textProblem('a‮b', 'en')).toMatchObject({ ok: false, problem: 'invalid', message: en.composer.problems.invalid });
+    expect(textProblem('a\u202Eb', 'en')).toMatchObject({ ok: false, problem: 'invalid', message: en.composer.problems.invalid });
   });
 
   it('a tone or link problem without a token still reads as a sentence', () => {
