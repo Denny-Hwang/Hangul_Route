@@ -55,7 +55,7 @@
 - Title: **"Family Dashboard"** · sub: **"Read-only — settings live on the web."**
 - Per-profile summary: **"{quests} quests · {cards} cards · {streak}d streak"**
 - "Recent" sub-label
-- Privacy title: **"Privacy"** · body: **"Each learner's nickname and progress are kept on the device and backed up to our servers, so they can be restored with a Rescue Code. When a learner joins a class or family with a code, that space sees the name they join with and their progress. A family's grown-ups can also restore their progress. We do not share with third parties."** (`caregiver.dashboard.privacy.body`; until 2026-10-12 it said data stays on the device unless you sign in, which the app never did: it backs up every learner with no sign-in)
+- Privacy title: **"Privacy"** · body: **"Each learner's nickname and progress are kept on the device and backed up to our servers, so they can be restored with a Rescue Code. When a learner joins a class or family with a code, that space sees the name they join with and their progress. A family's grown-ups can also restore their progress. We do not share with third parties."** (`caregiver.dashboard.privacy.body`; until 2026-10-12 it said data stays on the device unless you sign in, which the app never did: it backs up every learner with no sign-in). On a build with cloud saving off (`syncApi()` null) the body is **"Each learner's nickname and progress are kept on this device. Cloud saving is not set up on this build, so use "Back up to a file" to keep a copy. We do not share with third parties."** (`privacy.bodyDeviceOnly`)
 - CTA: **"Open settings"**
 
 ## 5. Claude Design prompt
