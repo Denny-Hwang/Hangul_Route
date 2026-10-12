@@ -9,7 +9,7 @@ import { useConsoleLocale } from '@/lib/i18n/locale-context';
 
 /**
  * The journey strip on a roster card (F-ROUTE-001 section 3.12, R-9a; wireframe
- * `design/wireframes/console/roster.md` "Journey strip"): "Journey", seven drawn segments (one
+ * `design/wireframes/console/roster.md` "Journey strip"): "Learning Route" (LR-1), seven drawn segments (one
  * per stage, the My route shape vocabulary of `design/components/PipRow/spec.md`), "On Stage N",
  * and a `<details>` with one line per stage. The segments are decoration (`aria-hidden`); a
  * visually hidden list carries the same facts as words. Nothing when the summary has no readable

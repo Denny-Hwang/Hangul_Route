@@ -122,6 +122,21 @@ export function reportPeriodOf(raw: unknown): ReportPeriod {
   return parsed.success ? parsed.data : 'week';
 }
 
+/**
+ * Telemetry codes (sections 3.10 and 3.13). `report.viewed` says which report
+ * (`scope`), for which kind of space or the device (`space`) and which period:
+ * never a profile id, a space id, a learner id or a name. The Worker keeps only
+ * these keys with these values for every `report.*` event, the ones the
+ * learner app sends and the ones it records itself, and always drops
+ * `profileId`.
+ */
+export const REPORT_TELEMETRY_PREFIX = 'report.';
+export const REPORT_TELEMETRY_PAYLOAD = {
+  scope: ['learner', 'class'],
+  space: ['family', 'class', 'device'],
+  period: REPORT_PERIODS,
+} as const satisfies Readonly<Record<string, readonly string[]>>;
+
 /*
  * Class statistics (section 3.7): every number is an aggregate. Objects strip
  * unknown keys, so a learner id, a name or a ranking field never survives a

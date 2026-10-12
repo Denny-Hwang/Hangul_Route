@@ -22,7 +22,7 @@ import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
-import { effectiveTier, useTierStore } from '../../store/tier-store';
+import { useAccessTier } from '../../store/tier-store';
 import { useUiStore } from '../../store/ui-store';
 import { GainsCard, StoriesNote } from './GainsCard';
 import { HeroCard } from './HeroCard';
@@ -90,9 +90,8 @@ function MyRouteBody({ profileId, readOnly, source, navigation }: BodyProps): Re
   const locale = useLocale();
   const profile = useProfileStore((s) => s.profiles.find((p) => p.id === profileId));
   const snap = useProgressStore((s) => s.byProfile[profileId]);
-  // Re-renders when the inbox changes the tier, as Home and Results do.
-  const cachedTier = useTierStore((s) => s.byLearner[profileId]);
-  const tier = effectiveTier(profileId, new Date()).tier;
+  // The access tier (F-ENT-003 section 3.4); re-renders when it changes, as Home and Results do.
+  const tier = useAccessTier(profileId);
   const { windowWidth } = useLayoutClass();
   const reducedMotion = useReducedMotion();
 
@@ -123,8 +122,8 @@ function MyRouteBody({ profileId, readOnly, source, navigation }: BodyProps): Re
     } catch {
       return { error: true };
     }
-    // `cachedTier` re-renders this screen when the inbox changes the tier; `attempt` is the retry.
-  }, [snap, profileId, tier, cachedTier, localized, seen, attempt]);
+    // `attempt` is the retry.
+  }, [snap, profileId, tier, localized, seen, attempt]);
   const model = 'model' in built ? built.model : null;
 
   const view = useMemo(() => {

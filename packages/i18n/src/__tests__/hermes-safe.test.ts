@@ -5,6 +5,10 @@ import { describe, expect, it } from 'vitest';
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), '..');
 
+// The note text guard runs only in the Worker and the console (F-FEEDBACK-001 §6.4), never in the
+// mobile bundle, and it guards the call with a runtime check, so NFC composition is allowed there.
+const NORMALIZE_ALLOWED = new Set(['note-text.ts']);
+
 function sourceFiles(dir: string): string[] {
   const out: string[] = [];
   for (const name of readdirSync(dir)) {
@@ -36,7 +40,7 @@ describe('Hermes-safe source (F-I18N-001 §3.1, §10)', () => {
     });
 
     it(`${rel}: no String.prototype.normalize or Intl.PluralRules (unverified on Hermes)`, () => {
-      expect(/\.normalize\(/.test(text)).toBe(false);
+      if (!NORMALIZE_ALLOWED.has(rel)) expect(/\.normalize\(/.test(text)).toBe(false);
       expect(/PluralRules/.test(text)).toBe(false);
     });
   }

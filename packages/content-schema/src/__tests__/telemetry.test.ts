@@ -108,6 +108,7 @@ describe('telemetry event names (one list for the client type and the API whitel
         'access.free_end_reached',
         'route.next_started',
         'route.offplan_finished',
+        'report.viewed',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);
@@ -188,6 +189,13 @@ describe('telemetry event names (one list for the client type and the API whitel
     }
     expect(isTelemetryEventName('access.paywall_shown')).toBe(false);
     expect(isTelemetryEventName('route.next_opened')).toBe(false);
+  });
+
+  it('lists the report name of F-REPORT-001 section 3.13 exactly once (Worker first, RP-W1)', () => {
+    expect(TELEMETRY_EVENT_NAMES.filter((n) => n === 'report.viewed')).toHaveLength(1);
+    expect(isTelemetryEventName('report.viewed')).toBe(true);
+    expect(isTelemetryEventName('report.opened')).toBe(false);
+    expect(TELEMETRY_EVENT_NAMES.filter((n) => n.startsWith('report.'))).toEqual(['report.viewed']);
   });
 
   it('narrows unknown input with isTelemetryEventName', () => {

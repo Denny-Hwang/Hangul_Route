@@ -102,7 +102,7 @@ Split from `design/wireframes/journey/my-route-overview.md` screen I when it was
 │ Starting spot: Stage 2 · Words · Oct 9        (F-PLC-001 P-9, when a level check exists)
 │ Quests 4 / 8 · 3 cards                │   existing
 │ 38 min this week                      │
-│ Journey  (K) ^(O) (L) (C) (L)(L)(L)  On Stage 2   │   seven drawn segments + the stage the learner is on
+│ Learning Route  (K) ^(O) (L) (C) (L)(L)(L)  On Stage 2   │   seven drawn segments + the stage the learner is on (label renamed from "Journey" by AMENDMENTS-ROUTE-LEARNING-ROUTE §7.2, LR-1)
 │ v Stage by stage                      │   <details>, closed by default
 │    Stage 1: 8 known from the level check, 0 quests done
 │    Stage 2: 1 quest done              │   "known" part only when > 0; never "N / total"
