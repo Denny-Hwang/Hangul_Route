@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { testDb as db } from '../../__tests__/helpers/db';
 import {
   INVOICE_PAYMENTS_API_VERSION,
-  REFUND_SCAN_LIMIT,
+  LOOKUP_UNAVAILABLE,
   invoiceForPaymentIntent,
   invoiceSubject,
   isDuplicateCompletion,
@@ -70,7 +70,7 @@ describe('pure helpers', () => {
 });
 
 describe('invoice_payments lookups (pinned API version, injected fetch)', () => {
-  it('reads the payment intent behind an invoice, preferring the paid payment', async () => {
+  it('reads the payment intent behind an invoice from its paid payment', async () => {
     const fetchImpl = answer({
       object: 'list',
       data: [
@@ -83,10 +83,13 @@ describe('invoice_payments lookups (pinned API version, injected fetch)', () => 
     expect(url).toBe('https://api.stripe.com/v1/invoice_payments?invoice=in_1');
     expect(init.method).toBe('GET');
     expect(init.headers).toMatchObject({ Authorization: 'Bearer sk_test_x', 'Stripe-Version': INVOICE_PAYMENTS_API_VERSION });
+    // A hung Stripe never holds the webhook past Stripe's own timeout.
+    expect(init.signal).toBeInstanceOf(AbortSignal);
   });
 
-  it('falls back to the first payment intent when none is marked paid', async () => {
-    expect(await paymentIntentForInvoice(ENV, 'in_1', answer({ data: [{ payment: { type: 'charge', charge: 'ch_1' } }, { payment: { type: 'payment_intent', payment_intent: 'pi_2' } }] }))).toBe('pi_2');
+  it('stores no payment intent rather than a guess when no payment is marked paid', async () => {
+    const unpaid = answer({ data: [{ status: 'canceled', payment: { type: 'payment_intent', payment_intent: 'pi_old' } }, { status: 'open', payment: { type: 'payment_intent', payment_intent: 'pi_2' } }, { status: 'paid', payment: { type: 'charge', charge: 'ch_1' } }] });
+    expect(await paymentIntentForInvoice(ENV, 'in_1', unpaid)).toBeNull();
   });
 
   it('reads the invoice behind a payment intent', async () => {
@@ -97,10 +100,14 @@ describe('invoice_payments lookups (pinned API version, injected fetch)', () => 
     expect(await invoiceForPaymentIntent(ENV, 'pi_9', answer({ data: [{ invoice: 'in_8' }] }))).toBe('in_8');
   });
 
-  it('answers null on any failure: an error status, a thrown fetch, bad JSON, an empty or odd list, or no key', async () => {
+  it('tells "Stripe could not answer now" (worth a retry) from "nothing found"', async () => {
     const throwing = vi.fn<typeof fetch>().mockRejectedValue(new Error('network'));
     const badJson = vi.fn<typeof fetch>().mockResolvedValue(new Response('not json', { status: 200 }));
-    for (const fetchImpl of [stripeDown(), throwing, badJson, answer({ data: [] }), answer({ data: 'x' }), answer([1, 2]), answer({ data: [null, { payment: null }, { invoice: 7 }] })]) {
+    for (const fetchImpl of [stripeDown(), answer({ error: {} }, 429), throwing, badJson]) {
+      expect(await paymentIntentForInvoice(ENV, 'in_1', fetchImpl)).toBeNull();
+      expect(await invoiceForPaymentIntent(ENV, 'pi_1', fetchImpl)).toBe(LOOKUP_UNAVAILABLE);
+    }
+    for (const fetchImpl of [answer({ error: {} }, 404), answer({ data: [] }), answer({ data: 'x' }), answer([1, 2]), answer({ data: [null, { payment: null }, { invoice: 7 }] })]) {
       expect(await paymentIntentForInvoice(ENV, 'in_1', fetchImpl)).toBeNull();
       expect(await invoiceForPaymentIntent(ENV, 'pi_1', fetchImpl)).toBeNull();
     }
@@ -175,9 +182,27 @@ describe('invoice.paid', () => {
 
   it('is idempotent: a retried delivery keeps one row and reports it as not fresh; a later lookup fills a missing payment ref', async () => {
     await recordBillingHistory(db, ENV, evt('invoice.paid', invoice()), stripeDown(), NOW);
-    const again = await recordBillingHistory(db, ENV, evt('invoice.paid', invoice()), answer({ data: [{ payment: { type: 'payment_intent', payment_intent: 'pi_1' } }] }), NOW);
+    const again = await recordBillingHistory(db, ENV, evt('invoice.paid', invoice()), answer({ data: [{ status: 'paid', payment: { type: 'payment_intent', payment_intent: 'pi_1' } }] }), NOW);
     expect(again).toMatchObject({ outcome: 'recorded', fresh: false, event: { providerRef: 'in_1', paymentRef: 'pi_1' } });
     expect(await db.billingEventsFor('space', 'space:fam', 10)).toHaveLength(1);
+    // Once the row has its payment ref, a further retry makes no Stripe call.
+    const never = vi.fn<typeof fetch>();
+    expect(await recordBillingHistory(db, ENV, evt('invoice.paid', invoice()), never, NOW)).toMatchObject({ outcome: 'recorded', fresh: false, event: { paymentRef: 'pi_1' } });
+    expect(never).not.toHaveBeenCalled();
+  });
+
+  it('reports a row another delivery wrote meanwhile as not fresh (two deliveries at once)', async () => {
+    const earlier = new Date(NOW.getTime() - 1000);
+    await recordBillingHistory(db, ENV, evt('invoice.payment_failed', invoice()), stripeDown(), earlier);
+    // This delivery's own read ran before the other one's insert.
+    const racing = new Proxy(db, { get: (target, key) => (key === 'billingEventByRef' ? async () => null : Reflect.get(target, key)) });
+    expect(await recordBillingHistory(racing, ENV, evt('invoice.payment_failed', invoice()), stripeDown(), NOW)).toMatchObject({ outcome: 'recorded', fresh: false });
+  });
+
+  it('looks up no payment for an invoice that cost nothing (a year made free by a code)', async () => {
+    const never = vi.fn<typeof fetch>();
+    expect(await recordBillingHistory(db, ENV, evt('invoice.paid', invoice({ id: 'in_free', amount_paid: 0 })), never, NOW)).toMatchObject({ outcome: 'recorded', event: { amountCents: 0, paymentRef: null } });
+    expect(never).not.toHaveBeenCalled();
   });
 
   it('dates the row by when it was paid, else the event, else now; refuses an unreadable amount or currency', async () => {
@@ -239,7 +264,8 @@ describe('charge.refunded (OD-6 revised, BY-D8: recorded only)', () => {
   });
 
   it('acknowledges a refund it cannot match and records nowhere', async () => {
-    expect(await recordBillingHistory(db, ENV, evt('charge.refunded', charge()), stripeDown(), NOW)).toEqual({ outcome: 'unmatched' });
+    expect(await recordBillingHistory(db, ENV, evt('charge.refunded', charge()), answer({ data: [] }), NOW)).toEqual({ outcome: 'unmatched' });
+    expect(await recordBillingHistory(db, ENV, evt('charge.refunded', charge()), answer({ data: [{ invoice: 'in_not_ours' }] }), NOW)).toEqual({ outcome: 'unmatched' });
     expect(await recordBillingHistory(db, ENV, evt('charge.refunded', charge({ payment_intent: null })), stripeDown(), NOW)).toEqual({ outcome: 'unmatched' });
     expect(await recordBillingHistory(db, ENV, evt('charge.refunded', charge({ id: 7 })), stripeDown(), NOW)).toEqual({ outcome: 'unmatched' });
     await paidInvoice('pi_1');
@@ -247,6 +273,15 @@ describe('charge.refunded (OD-6 revised, BY-D8: recorded only)', () => {
       expect(await recordBillingHistory(db, ENV, evt('charge.refunded', charge(bad)), stripeDown(), NOW), JSON.stringify(bad)).toEqual({ outcome: 'unmatched' });
     }
     expect((await db.billingEventsFor('space', 'space:fam', 10)).filter((e) => e.kind === 'refund')).toEqual([]);
+  });
+
+  it('asks Stripe to retry when the invoice lookup could not be made, instead of dropping the refund', async () => {
+    expect(await recordBillingHistory(db, ENV, evt('charge.refunded', charge()), stripeDown(), NOW)).toEqual({ outcome: 'retry' });
+    // Without a bound key there is nothing to retry with: acknowledged as unmatched.
+    expect(await recordBillingHistory(db, {}, evt('charge.refunded', charge()), stripeDown(), NOW)).toEqual({ outcome: 'unmatched' });
+    // Once the payment is recorded, the retry matches without the lookup.
+    await paidInvoice('pi_1');
+    expect(await recordBillingHistory(db, ENV, evt('charge.refunded', charge()), stripeDown(), NOW)).toMatchObject({ outcome: 'recorded', fresh: true });
   });
 
   it('a retried or older refund event adds nothing: the refund row already covering it is answered, not fresh', async () => {
@@ -280,10 +315,6 @@ describe('charge.refunded (OD-6 revised, BY-D8: recorded only)', () => {
     const refundSec = SEC + 3600;
     await recordBillingHistory(db, ENV, evt('charge.refunded', charge({ refunds: { data: [{ created: SEC + 60 }, { created: refundSec }, { created: 'x' }] } })), stripeDown(), NOW);
     expect(await db.billingEventByRef('stripe', 'ch_1:refund:500', 'refund')).toMatchObject({ occurredAt: new Date(refundSec * 1000).toISOString() });
-  });
-
-  it('looks through at most REFUND_SCAN_LIMIT rows of the subject for earlier refunds', () => {
-    expect(REFUND_SCAN_LIMIT).toBeGreaterThanOrEqual(100);
   });
 
   it('changes no entitlement', async () => {

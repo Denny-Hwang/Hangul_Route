@@ -209,6 +209,6 @@ Three names in the new `billing.` namespace, recorded from the Stripe webhook. B
 | 2 | `billing.payment_failed` | F-BILL-002 §10 | `{ planKey, mode }` (the webhook recorded an `invoice.payment_failed` row for the first time) | B-3 | B-3 (Worker, webhook) |
 | 3 | `billing.refund_recorded` | F-BILL-002 §10 | `{ planKey, full: boolean, mode }` (the webhook recorded a `charge.refunded` row for the first time; `full` when the whole charge is refunded) | B-3 | B-3 (Worker, webhook) |
 
-A retried webhook delivery writes no second history row and sends no second `payment_failed` or `refund_recorded`. `checkout_completed` is sent each time a completion is applied.
+A retried webhook delivery writes no second history row and sends no second `payment_failed` or `refund_recorded`. `checkout_completed` is sent each time a completion is applied. Every event is recorded only after the whole webhook request has succeeded, so a request that fails and is retried sends it once.
 
 Payload note on an existing name (section D style): `paywall.viewed` keeps the payload `{ from, state }`, where `state` is `covered | premium | free`. F-BILL-002 keeps it for the status-only Plan screen (B-9). `paywall.console_opened` is sent on the web only, when Open billing actually opens after the gate. A native build never sends it, because the button does not exist there.

@@ -33,17 +33,26 @@ type Subject = Pick<EntitlementApply, 'subjectKind' | 'subjectId' | 'planKey'>;
 /**
  * What an event did to the history: `ignored` (not a history event, or a subscription checkout,
  * whose first `invoice.paid` is the payment), `unmatched` (a history event with no subject or row to
- * attach to; acknowledged and recorded nowhere), or `recorded` (`fresh` false for a retried delivery,
- * or for a refund an earlier-recorded row already covers). `full` says whether a refund refunded the
- * whole charge; it is false for every other kind.
+ * attach to; acknowledged and recorded nowhere), `retry` (a refund whose invoice lookup Stripe could
+ * not answer just now; the webhook answers 503 so Stripe delivers it again instead of it being lost),
+ * or `recorded` (`fresh` false for a retried delivery, or for a refund an earlier-recorded row
+ * already covers). `full` says whether a refund refunded the whole charge; it is false for every
+ * other kind.
  */
 export type BillingHistoryOutcome =
   | { outcome: 'ignored' }
   | { outcome: 'unmatched' }
+  | { outcome: 'retry' }
   | { outcome: 'recorded'; event: BillingEvent; fresh: boolean; full: boolean };
 
 /** `invoice_payments` exists from 2025-03-31.basil; pinned so the shape does not follow the account's default version. */
 export const INVOICE_PAYMENTS_API_VERSION = '2025-09-30.clover';
+
+/** A lookup gives up after this long, so a hung Stripe never holds the webhook past Stripe's own timeout. */
+export const STRIPE_LOOKUP_TIMEOUT_MS = 5_000;
+
+/** A lookup Stripe could not answer just now (network, timeout, 429, 5xx, a broken body): worth a retry, unlike "nothing found". */
+export const LOOKUP_UNAVAILABLE = 'unavailable';
 
 /** How many of a subject's newest rows a refund looks through for the earlier refunds of its charge (a few rows a year). */
 export const REFUND_SCAN_LIMIT = 500;
@@ -105,36 +114,49 @@ export function invoiceSubject(invoice: Record<string, unknown>): { subject: Sub
   return { subject, subscriptionId };
 }
 
-/** `GET /v1/invoice_payments?…` → the list's rows, or null on any failure (no key, an error status, a thrown fetch, bad JSON). */
-async function invoicePayments(env: StripeEnv, query: Record<string, string>, fetchImpl: typeof fetch): Promise<Record<string, unknown>[] | null> {
-  if (!env.STRIPE_SECRET_KEY) return null;
+/**
+ * `GET /v1/invoice_payments?…` → the list's rows. No bound key, a 4xx or a body with no list read as
+ * "nothing found" (`[]`): asking again would not change the answer. A thrown fetch, a timeout, a 429,
+ * a 5xx or a body that is not JSON read as `LOOKUP_UNAVAILABLE`.
+ */
+async function invoicePayments(env: StripeEnv, query: Record<string, string>, fetchImpl: typeof fetch): Promise<Record<string, unknown>[] | typeof LOOKUP_UNAVAILABLE> {
+  if (!env.STRIPE_SECRET_KEY) return [];
   try {
     const res = await fetchImpl(`https://api.stripe.com/v1/invoice_payments?${new URLSearchParams(query).toString()}`, {
       method: 'GET',
       headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`, 'Stripe-Version': INVOICE_PAYMENTS_API_VERSION },
+      signal: AbortSignal.timeout(STRIPE_LOOKUP_TIMEOUT_MS),
     });
-    if (!res.ok) return null;
-    const body: unknown = await res.json().catch(() => null);
-    return isRecord(body) && Array.isArray(body.data) ? body.data.filter(isRecord) : null;
+    if (res.status === 429 || res.status >= 500) return LOOKUP_UNAVAILABLE;
+    if (!res.ok) return [];
+    const body: unknown = await res.json();
+    return isRecord(body) && Array.isArray(body.data) ? body.data.filter(isRecord) : [];
   } catch {
-    return null;
+    return LOOKUP_UNAVAILABLE;
   }
 }
 
 const paymentIntentOfPayment = (row: Record<string, unknown>): string | null => (isRecord(row.payment) && row.payment.type === 'payment_intent' ? idOf(row.payment.payment_intent) : null);
 
-/** The payment intent behind an invoice (the paid payment first, else the first one), or null. */
+/**
+ * The payment intent of an invoice's paid payment, or null. Never a guess from an open or canceled
+ * attempt: a stored `payment_ref` is never overwritten, so a wrong one would stay.
+ */
 export async function paymentIntentForInvoice(env: StripeEnv, invoiceId: string, fetchImpl: typeof fetch): Promise<string | null> {
   const rows = await invoicePayments(env, { invoice: invoiceId }, fetchImpl);
-  if (!rows) return null;
-  const paid = rows.find((row) => row.status === 'paid' && paymentIntentOfPayment(row) !== null);
-  return paymentIntentOfPayment(paid ?? rows.find((row) => paymentIntentOfPayment(row) !== null) ?? {});
+  if (rows === LOOKUP_UNAVAILABLE) return null;
+  for (const row of rows) {
+    const paymentIntent = row.status === 'paid' ? paymentIntentOfPayment(row) : null;
+    if (paymentIntent) return paymentIntent;
+  }
+  return null;
 }
 
-/** The invoice a payment intent paid, or null. */
-export async function invoiceForPaymentIntent(env: StripeEnv, paymentIntent: string, fetchImpl: typeof fetch): Promise<string | null> {
+/** The invoice a payment intent paid, null when Stripe names none, or `LOOKUP_UNAVAILABLE`. */
+export async function invoiceForPaymentIntent(env: StripeEnv, paymentIntent: string, fetchImpl: typeof fetch): Promise<string | null | typeof LOOKUP_UNAVAILABLE> {
   const rows = await invoicePayments(env, { 'payment[type]': 'payment_intent', 'payment[payment_intent]': paymentIntent }, fetchImpl);
-  for (const row of rows ?? []) {
+  if (rows === LOOKUP_UNAVAILABLE) return rows;
+  for (const row of rows) {
     const invoice = idOf(row.invoice);
     if (invoice) return invoice;
   }
@@ -154,10 +176,15 @@ export async function isDuplicateCompletion(db: Db, completion: EntitlementApply
   );
 }
 
-/** Insert-or-keep, reporting whether this delivery wrote the row. */
-async function record(db: Db, input: BillingEventInput, now: Date, full = false): Promise<BillingHistoryOutcome> {
-  const existed = (await db.billingEventByRef(input.provider, input.providerRef, input.kind)) !== null;
-  return { outcome: 'recorded', event: await db.recordBillingEvent(input, now), fresh: !existed, full };
+/**
+ * Insert-or-keep, reporting whether this delivery wrote the row: nothing was there when it looked,
+ * and the stored row carries this delivery's own creation time (two deliveries at once both look
+ * first; only the one whose insert won wrote the time the row keeps).
+ */
+async function record(db: Db, input: BillingEventInput, now: Date, full = false, existing?: BillingEvent | null): Promise<BillingHistoryOutcome> {
+  const before = existing === undefined ? await db.billingEventByRef(input.provider, input.providerRef, input.kind) : existing;
+  const event = await db.recordBillingEvent(input, now);
+  return { outcome: 'recorded', event, fresh: before === null && event.createdAt === now.toISOString(), full };
 }
 
 function baseRow(subject: Subject, event: StripeWebhookEvent, occurredAt: string): Pick<BillingEventInput, 'subjectKind' | 'subjectId' | 'planKey' | 'provider' | 'livemode' | 'occurredAt'> {
@@ -199,13 +226,20 @@ async function invoiceEvent(db: Db, env: StripeEnv, event: StripeWebhookEvent, f
   const kind: BillingEventKind = failed ? 'failed' : invoice.billing_reason === 'subscription_create' ? 'purchase' : 'renewal';
   const paidAt = !failed && isRecord(invoice.status_transitions) ? unixSeconds(invoice.status_transitions.paid_at) : null;
   const occurredAt = paidAt === null ? eventIso(event, now) : isoFrom(paidAt);
-  // Only a payment has a payment intent to match a refund against; a failed attempt does not need one.
-  const paymentRef = failed ? null : (idOf(invoice.payment_intent) ?? (await paymentIntentForInvoice(env, invoiceId, fetchImpl)));
-  return record(db, { ...baseRow(subject, event, occurredAt), kind, amountCents, currency, providerRef: invoiceId, paymentRef }, now);
+  const existing = await db.billingEventByRef('stripe', invoiceId, kind);
+  // Only a payment has a payment intent to match a refund against: not a failed attempt, not an
+  // invoice that cost nothing, and not a retry whose row already holds it (no Stripe call then).
+  const lookUp = !failed && amountCents > 0 && !existing?.paymentRef;
+  const paymentRef = failed ? null : (idOf(invoice.payment_intent) ?? (lookUp ? await paymentIntentForInvoice(env, invoiceId, fetchImpl) : null));
+  return record(db, { ...baseRow(subject, event, occurredAt), kind, amountCents, currency, providerRef: invoiceId, paymentRef }, now, false, existing);
 }
 
-/** The payment or renewal a refunded charge paid: by payment intent, then by the charge's invoice (older versions), then by `invoice_payments`. */
-async function refundedPayment(db: Db, env: StripeEnv, charge: Record<string, unknown>, paymentIntent: string | null, fetchImpl: typeof fetch): Promise<BillingEvent | null> {
+/**
+ * The payment or renewal a refunded charge paid: by payment intent, then by the charge's invoice
+ * (older versions), then by `invoice_payments`; `LOOKUP_UNAVAILABLE` when only that last call could
+ * have found it and Stripe did not answer.
+ */
+async function refundedPayment(db: Db, env: StripeEnv, charge: Record<string, unknown>, paymentIntent: string | null, fetchImpl: typeof fetch): Promise<BillingEvent | null | typeof LOOKUP_UNAVAILABLE> {
   const byInvoice = async (invoiceId: string | null): Promise<BillingEvent | null> =>
     invoiceId === null ? null : ((await db.billingEventByRef('stripe', invoiceId, 'purchase')) ?? (await db.billingEventByRef('stripe', invoiceId, 'renewal')));
   if (paymentIntent) {
@@ -213,8 +247,9 @@ async function refundedPayment(db: Db, env: StripeEnv, charge: Record<string, un
     if (direct) return direct;
   }
   const own = await byInvoice(idOf(charge.invoice));
-  if (own) return own;
-  return paymentIntent ? byInvoice(await invoiceForPaymentIntent(env, paymentIntent, fetchImpl)) : null;
+  if (own || !paymentIntent) return own;
+  const invoice = await invoiceForPaymentIntent(env, paymentIntent, fetchImpl);
+  return invoice === LOOKUP_UNAVAILABLE ? invoice : byInvoice(invoice);
 }
 
 /** When the newest refund on the charge was made, else when the event was. */
@@ -232,7 +267,9 @@ function refundedAt(charge: Record<string, unknown>, event: StripeWebhookEvent, 
  * `charge.refunded`: a refund row for the part of `amount_refunded` not yet recorded on this
  * charge. Partial refunds each send the cumulative amount, so the new part is the cumulative
  * minus the largest cumulative already recorded; a retried or older event adds nothing and
- * answers the row that already covers it.
+ * answers the row that already covers it. Known limit: two partial refunds of one charge whose
+ * events are handled at the same moment can each count from the same earlier total (history only;
+ * Stripe stays the record of money, and coverage never depends on it).
  */
 async function chargeRefunded(db: Db, env: StripeEnv, event: StripeWebhookEvent, fetchImpl: typeof fetch, now: Date): Promise<BillingHistoryOutcome> {
   const charge = event.data.object;
@@ -242,6 +279,7 @@ async function chargeRefunded(db: Db, env: StripeEnv, event: StripeWebhookEvent,
   if (!chargeId || cumulative === null || !currency) return { outcome: 'unmatched' };
   const paymentIntent = idOf(charge.payment_intent);
   const paid = await refundedPayment(db, env, charge, paymentIntent, fetchImpl);
+  if (paid === LOOKUP_UNAVAILABLE) return { outcome: 'retry' };
   if (!paid) return { outcome: 'unmatched' };
   const full = charge.refunded === true || (amountOf(charge.amount) !== null && cumulative >= (amountOf(charge.amount) ?? 0));
 

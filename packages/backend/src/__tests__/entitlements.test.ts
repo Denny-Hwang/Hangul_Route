@@ -354,10 +354,10 @@ describe('webhook history (F-BILL-002 B-3, section 5.4)', () => {
       String(url).includes('/v1/invoice_payments') ? new Response(JSON.stringify({ data: [{ status: 'paid', payment: { type: 'payment_intent', payment_intent: paymentIntent } }] }), { status: 200 }) : new Response('{}', { status: 503 }),
     );
 
-  async function send(type: string, object: Record<string, unknown>, extra: Record<string, unknown> = {}): Promise<{ status: number; data: Record<string, unknown> }> {
+  async function send(type: string, object: Record<string, unknown>, extra: Record<string, unknown> = {}): Promise<{ status: number; data: Record<string, unknown>; code?: string }> {
     const body = JSON.stringify({ id: `evt_${Math.random()}`, type, created: NOW_SEC, livemode: false, data: { object }, ...extra });
     const r = await call('POST', '/api/entitlements/stripe/webhook', { ...json, 'stripe-signature': await signStripePayload('whsec_test', body, NOW_SEC) }, body, STRIPE_ENV);
-    return { status: r.status, data: r.body.data ?? {} };
+    return { status: r.status, data: r.body.data ?? {}, ...(r.body.error ? { code: r.body.error.code } : {}) };
   }
   const billingEvents = () => store.events.filter((e) => e.name.startsWith('billing.'));
 
@@ -393,7 +393,15 @@ describe('webhook history (F-BILL-002 B-3, section 5.4)', () => {
 
   it('acknowledges an event it cannot attach to a space with applied: false and records nowhere', async () => {
     expect((await send('invoice.paid', { id: 'in_x', amount_paid: 1530, currency: 'usd', subscription: 'sub_unknown' })).data).toEqual({ received: true, applied: false });
+    setStripeFetchForTests(vi.fn<typeof fetch>().mockImplementation(async () => new Response(JSON.stringify({ data: [] }), { status: 200 })));
     expect((await send('charge.refunded', { id: 'ch_x', amount: 1530, amount_refunded: 1530, refunded: true, currency: 'usd', payment_intent: 'pi_unknown' })).data).toEqual({ received: true, applied: false });
+    expect(billingEvents()).toEqual([]);
+  });
+
+  it('answers 503 so Stripe retries a refund whose invoice lookup could not be made', async () => {
+    const r = await send('charge.refunded', { id: 'ch_y', amount: 1530, amount_refunded: 1530, refunded: true, currency: 'usd', payment_intent: 'pi_later' });
+    expect(r.status).toBe(503);
+    expect(r.code).toBe('stripe_unavailable');
     expect(billingEvents()).toEqual([]);
   });
 
@@ -432,6 +440,20 @@ describe('webhook history (F-BILL-002 B-3, section 5.4)', () => {
     await send('charge.refunded', { id: 'ch_fam', amount: 1530, amount_refunded: 1530, refunded: true, currency: 'usd', payment_intent: 'pi_fam' });
     expect((await db.billingEventsFor('space', fam, 10)).filter((e) => e.kind === 'refund')).toHaveLength(1);
     expect(billingEvents()).toHaveLength(1);
+  });
+
+  it('runbook Step 8, duplicate subscriptions: cancelling the one the row carries ends cover, and resending the other one\'s event restores it', async () => {
+    const { fam, tier } = await familyWithLearner('device-dupe0002');
+    const meta = { customer: 'cus_fam', metadata: FAMILY(fam) };
+    const subA = { id: 'sub_a', status: 'active', current_period_end: END, ...meta };
+    await send('customer.subscription.created', subA);
+    await send('customer.subscription.created', { id: 'sub_b', status: 'active', current_period_end: END + 60, ...meta });
+    // The owner refunds and cancels the newer one immediately; the single row carried it.
+    await send('customer.subscription.deleted', { id: 'sub_b', status: 'canceled', current_period_end: END + 60, ...meta });
+    expect(await tier()).toBe('free');
+    // Resend the remaining subscription's latest event from the Stripe dashboard.
+    expect((await send('customer.subscription.created', subA)).data).toMatchObject({ applied: true, entitlement: { providerRef: 'sub_a', status: 'active' } });
+    expect(await tier()).toBe('premium');
   });
 
   it('sends billing.checkout_completed on every applied completion, flagging a second paid subscription as a duplicate', async () => {

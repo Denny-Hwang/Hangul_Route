@@ -172,14 +172,18 @@ entitlementRoutes.post('/stripe/webhook', async (c) => {
   const current = await freshStripeEvent(env, event, fetchImpl);
   const apply = entitlementFromStripeEvent(current);
   let entitlement: Entitlement | null = null;
+  let duplicate = false;
   if (apply) {
     // Checked before the completion lands: two checkouts paid in two tabs (F-BILL-002 §4.4).
-    const duplicate = event.type === 'checkout.session.completed' && (await isDuplicateCompletion(db, apply, now));
+    duplicate = event.type === 'checkout.session.completed' && (await isDuplicateCompletion(db, apply, now));
     entitlement = await db.applyEntitlement(apply, now, mergeForStripeEvent(current));
-    if (event.type === 'checkout.session.completed') recordServerEvent('billing.checkout_completed', { planKey: apply.planKey, mode, duplicate });
   }
   // Payment history (F-BILL-002 §5.4): recorded only; it never changes an entitlement (BY-D8).
   const history = await recordBillingHistory(db, env, event, fetchImpl, now);
+  // A refund whose invoice lookup Stripe could not answer: Stripe delivers it again rather than it being lost.
+  if (history.outcome === 'retry') return fail(c, 'stripe_unavailable', 'Stripe could not be reached to match this refund; retry', 503);
+  // Telemetry last, once everything above has succeeded, so a request that fails and is retried sends it once.
+  if (apply && event.type === 'checkout.session.completed') recordServerEvent('billing.checkout_completed', { planKey: apply.planKey, mode, duplicate });
   if (history.outcome === 'recorded' && history.fresh) {
     if (history.event.kind === 'failed') recordServerEvent('billing.payment_failed', { planKey: history.event.planKey, mode });
     if (history.event.kind === 'refund') recordServerEvent('billing.refund_recorded', { planKey: history.event.planKey, full: history.full, mode });
