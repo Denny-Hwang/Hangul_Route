@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { emptyBookmarks } from '../bookmarks';
 import { nextStoryAfter, pickedForYou, pickStoryForHome, storyLockFor, type StoryPickInput } from '../story-pick';
+import { questOpenPredicate } from '../../content-access';
 import { bookEpisode, bookmarks, questId, shelfIndex, snapshot, story, storyQuest } from './shelf-fixture';
 
 // Story Time: tiger (1), sun (2), fox (3). Culture: seollal (1), chuseok (2).
@@ -317,6 +318,17 @@ describe('storyLockFor (the Home and shelf `isLocked`, F-STORY-004 §3.9)', () =
       const open = storyLockFor({ tier: 'premium', gatingEnabled: true, episodes: [stage5], registry, isQuestOpen: () => true });
       for (const entry of index) expect(open(entry)).toBe(without(entry));
       expect(without(book('tiger'))).toBe(false);
+    });
+
+    it('with the real predicate a story quest is never a closed lesson, so a book stays behind the stage gate alone', () => {
+      // Cells never list story quests, so `questAccess` reads them as `open-not-a-lesson`: today the
+      // rule is a hook for a predicate that can close a book's quest, and the stage gate does the locking.
+      const realFree = questOpenPredicate({ tier: 'free', gatingEnabled: true, completedQuestIds: new Set(), registry });
+      expect(realFree(book('tiger').questId)).toBe(true);
+      const withReal = storyLockFor({ tier: 'free', gatingEnabled: true, episodes: [stage5], registry, isQuestOpen: realFree });
+      const stageOnly = storyLockFor({ tier: 'free', gatingEnabled: true, episodes: [stage5], registry });
+      expect(withReal(book('tiger'))).toBe(true);
+      for (const entry of index) expect(withReal(entry)).toBe(stageOnly(entry));
     });
   });
 });

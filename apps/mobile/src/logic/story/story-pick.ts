@@ -168,8 +168,12 @@ export function nextStoryAfter(questId: string, input: StoryPickInput): StoryInd
  * book (grid) entry also the stage gate Journey applies today, which is not
  * behind the flag: the stage must be entitled for the tier and must not be
  * "soon" (no shipped grid cell yet). A book entry also needs its quest open
- * when `isQuestOpen` is given (F-ENT-003 section 3.6; none is bundled today,
- * the rule is for Stage 5 books); shelf entries keep the story lock alone.
+ * when `isQuestOpen` is given (F-ENT-003 section 3.6). With today's
+ * `questOpenPredicate` this never closes a book: cells never list story
+ * quests, so a story quest reads as `open-not-a-lesson`, and the stage gate
+ * above is what locks a later stage's book. The rule is a hook for a
+ * predicate that can close a book's quest (Stage 5 books); shelf entries keep
+ * the story lock alone.
  */
 export function storyLockFor(ctx: {
   tier: Tier;

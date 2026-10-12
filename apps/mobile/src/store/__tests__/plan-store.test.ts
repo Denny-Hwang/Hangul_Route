@@ -256,8 +256,17 @@ describe('plan-store and quest access (F-ENT-003 section 3.6)', () => {
 
     it('a free learner keeps every Stage 1 item (all of Stage 1 is free, OD-1); a later stage waits', async () => {
       const mixed: InboxPlan = { ...twoStage1, items: [...twoStage1.items, { kind: 'quest', id: 'quest:stage2-life-q1', targetDate: '2026-09-30' }] };
+      vi.mocked(questOpenFor).mockClear();
       const outcome = await usePlanStore.getState().applyPlans('profile:a', [mixed]);
       expect(outcome).toMatchObject({ added: 2, notReady: { 'plan:w3': 1 } });
+      // With today's registry (free = all of Stage 1) the stage lock already holds the Stage 2 item back, so the
+      // outcome alone cannot tell the two rules apart: check the real predicate deriveFor received agrees with it.
+      const received = vi.mocked(questOpenFor).mock.results[0];
+      expect(received?.type).toBe('return');
+      const isOpen = received?.value as (questId: string) => boolean;
+      expect(isOpen('quest:stage1-letters-q1')).toBe(true);
+      expect(isOpen('quest:stage1-letters-q2')).toBe(true);
+      expect(isOpen('quest:stage2-life-q1')).toBe(false);
     });
 
     it('a premium learner derives every item', async () => {

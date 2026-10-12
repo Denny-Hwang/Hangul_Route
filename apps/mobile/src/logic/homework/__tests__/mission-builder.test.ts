@@ -542,6 +542,33 @@ describe('quest access: Home offers open quests only (F-ENT-003 section 3.6)', (
     expect(plan.cards[1]).toMatchObject({ kind: 'new', questId: 'quest:c' });
   });
 
+  it('a pinned "New" card whose quest closed after the pin moves to an open quest (access changed mid-day)', () => {
+    const pinned = build({ isQuestOpen: () => true });
+    expect(pinned.cards[1]?.questId).toBe('quest:a');
+    const plan = build({ pinned, isQuestOpen: closed('quest:a') });
+    expect(plan.cards[1]).toMatchObject({ kind: 'new', subtitle: 'new', questId: 'quest:b' });
+    expect(plan.cards[0]).toEqual(pinned.cards[0]);
+    expect(plan.cards[2]).toEqual(pinned.cards[2]);
+  });
+
+  it('a pinned "New" card stays when its quest is still open, or was finished today', () => {
+    const pinned = build({ isQuestOpen: () => true });
+    expect(build({ pinned, isQuestOpen: closed('quest:b') }).cards[1]?.questId).toBe('quest:a');
+    const doneToday = build({ snapshot: snapshot([done('quest:a', TODAY, 1)]), pinned, isQuestOpen: closed('quest:a') });
+    expect(doneToday.cards[1]).toMatchObject({ questId: 'quest:a', collected: true });
+  });
+
+  it('a pinned assigned card keeps its slot even when its quest closes', () => {
+    const first = build();
+    const assigned: MissionPlan = { ...first, cards: first.cards.map((c) => (c.slot === 2 ? { ...c, subtitle: 'assigned' as const } : c)) };
+    expect(build({ pinned: assigned, isQuestOpen: closed('quest:a') }).cards[1]).toMatchObject({ questId: 'quest:a', subtitle: 'assigned' });
+  });
+
+  it('a pinned "New" card stays when every other quest is closed too', () => {
+    const pinned = build();
+    expect(build({ pinned, isQuestOpen: closed('quest:a', 'quest:b', 'quest:c') }).cards[1]?.questId).toBe('quest:a');
+  });
+
   describe('on the shipped bundle', () => {
     const offerable = offerableQuests(questsAll, episodesAll).map((q) => q.id);
     const stage1 = offerable.filter((id) => episodesAll.some((e) => e.stage === 'stage1' && e.questIds.includes(id)));

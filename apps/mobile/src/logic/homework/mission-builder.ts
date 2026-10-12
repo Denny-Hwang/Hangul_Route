@@ -298,21 +298,26 @@ function newCard(quest: Quest, episodes: readonly Episode[]): MissionCard {
 }
 
 /**
- * The one exception to the day pin (F-ROUTE-001 R-4a, section 3.5): when a
- * level check places out the quest pinned on the "New" card and the learner
- * has not played it today, card (2) moves to the cursor, so Home names the
- * same next quest as Results and My route. Cards (1) and (3) never move, and
- * the pin stays when the cursor has nothing else to offer.
+ * The exceptions to the day pin (F-ROUTE-001 R-4a, section 3.5; F-ENT-003
+ * section 3.6): when a level check places out the quest pinned on the "New"
+ * card, or that quest is no longer open (the access tier changed after the
+ * pin), and the learner has not played it today, card (2) moves to the
+ * cursor, so Home names the same next quest as Results and My route. Cards (1)
+ * and (3) never move, and the pin stays when the cursor has nothing else to
+ * offer.
  */
 function repinPlacedOut(cards: readonly MissionCard[], input: BuildMissionInput): readonly MissionCard[] {
   const skip = input.skipQuestIds;
   // Only the system "New" card re-pins; a caregiver or teacher assignment
   // (`subtitle: 'assigned'`, `mergeAssignments`) keeps its slot.
   const pinnedNew = cards.find((card) => card.slot === 2 && card.kind === 'new' && card.subtitle === 'new');
-  if (!skip || !pinnedNew?.questId || !skip.has(pinnedNew.questId)) return cards;
+  if (!pinnedNew?.questId) return cards;
+  const placedOut = skip?.has(pinnedNew.questId) ?? false;
+  if (!placedOut && isOpen(input, pinnedNew.questId)) return cards;
   if (completedToday(input.snapshot, pinnedNew.questId, input.today)) return cards;
   const upcoming = nextQuest(input);
-  if (!upcoming || skip.has(upcoming.id) || cards.some((card) => card.questId === upcoming.id)) return cards;
+  // `nextQuest` offers open quests only, so the new card is open too.
+  if (!upcoming || skip?.has(upcoming.id) || cards.some((card) => card.questId === upcoming.id)) return cards;
   return cards.map((card) => (card === pinnedNew ? newCard(upcoming, input.episodes) : card));
 }
 
