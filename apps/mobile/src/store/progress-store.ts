@@ -137,6 +137,14 @@ interface Actions {
    */
   recordPlacement: (profileId: string, result: PlacementResult) => boolean;
   /**
+   * A grown-up's "Choose a different start" on the report (F-PLC-001 section
+   * 3.9): sets `override` on that stored result (a later one replaces it) and
+   * nothing else. `effectiveRoute` then skips every grid quest before the
+   * chosen one and puts it and everything after it back. Returns whether a
+   * result was changed.
+   */
+  applyPlacementOverride: (profileId: string, resultId: string, startQuestId: string) => boolean;
+  /**
    * Sync / restore hand back a merged snapshot. It is latched and reconciled
    * first and saved with one write; that write does not notify sync unless the
    * stage latch added a key or the reconcile added cards, which sync must then
@@ -469,6 +477,21 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
       ...snap,
       placements: mergePlacements(snap.placements, [parsed.data]),
       updatedAt: new Date().toISOString(),
+    };
+    set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
+    persist(profileId, updated);
+    return true;
+  },
+
+  applyPlacementOverride: (profileId, resultId, startQuestId) => {
+    const snap = get().byProfile[profileId];
+    const placements = snap?.placements ?? [];
+    if (snap === undefined || startQuestId === '' || !placements.some((r) => r.id === resultId)) return false;
+    const at = new Date().toISOString();
+    const updated: ProgressSnapshot = {
+      ...snap,
+      placements: placements.map((r) => (r.id === resultId ? { ...r, override: { by: 'parent', at, startQuestId } } : r)),
+      updatedAt: at,
     };
     set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
     persist(profileId, updated);
