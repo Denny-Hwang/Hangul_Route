@@ -11,7 +11,12 @@ vi.mock('../../platform/storage', () => ({
 vi.mock('../../platform/device', () => ({ getDeviceId: vi.fn(async () => 'device-test') }));
 vi.mock('../../platform/sync-api', () => ({ apiBaseUrl: vi.fn(() => 'https://api.example.com'), createSyncApi: vi.fn() }));
 vi.mock('../../platform/telemetry', () => ({ track: vi.fn(async () => undefined) }));
-vi.mock('../../config/flags', () => ({ flags: { syncEnabled: true, telemetryEnabled: false, telemetryNetwork: false, voiceEchoEnabled: false } }));
+// The free-tier switch stays off, as in the node lane (plan derivation reads quest access, F-ENT-003 section 3.6).
+vi.mock('../../config/flags', () => ({
+  flags: { syncEnabled: true, telemetryEnabled: false, telemetryNetwork: false, voiceEchoEnabled: false, contentGatingEnabled: false },
+  bundleOs: () => undefined,
+  gatingActive: () => false,
+}));
 
 import { readJson } from '../../platform/storage';
 import { apiBaseUrl } from '../../platform/sync-api';

@@ -212,6 +212,22 @@ describe('questOpenFor and useQuestAccess (F-ENT-003 section 3.4)', () => {
     expect(questOpenFor('profile:b', now)('quest:stage2-life-q1')).toBe(false);
   });
 
+  it('web, switch on: a given snapshot adds its finished quests to the kept ones, so a merged copy keeps a quest finished on another device (F-ENT-003 E3-3)', () => {
+    switchOn('web');
+    const finished = (questId: string, episodeId: string) => ({ questId, episodeId, startedAt: at, completedAt: at, stars: 2 as const, attempts: 1, accuracy: 1 });
+    useProgressStore.setState({ byProfile: { 'profile:a': snapshotWith('profile:a', []) } });
+    expect(questOpenFor('profile:a', now)('quest:stage2-life-q1')).toBe(false);
+    const merged = snapshotWith('profile:a', [finished('quest:stage2-life-q1', 'episode:stage2-life')]);
+    expect(questOpenFor('profile:a', now, merged)('quest:stage2-life-q1')).toBe(true);
+    expect(questOpenFor('profile:a', now, merged)('quest:stage2-nature-q1')).toBe(false);
+    // Kept is for good: a quest the store finished after the copy was taken stays open too.
+    useProgressStore.setState({ byProfile: { 'profile:a': snapshotWith('profile:a', [finished('quest:stage2-nature-q1', 'episode:stage2-nature')]) } });
+    const both = questOpenFor('profile:a', now, merged);
+    expect(both('quest:stage2-life-q1')).toBe(true);
+    expect(both('quest:stage2-nature-q1')).toBe(true);
+    expect(both('quest:stage4-rites-q1')).toBe(false);
+  });
+
   it('web, switch on: the access tier opens everything (stale premium, membership with no cache)', () => {
     switchOn('web');
     useTierStore.getState().applyInbox('profile:a', { tier: 'premium', tierSource: source, tierValidUntil: '2026-09-28T12:00:00.000Z', serverTime: 't' });

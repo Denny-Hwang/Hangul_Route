@@ -44,6 +44,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'caregiver.gating.unknown-quest': [['Suni']],
   'caregiver.gating.episode-not-shipped': [['Suni']],
   'caregiver.gating.stage-locked': [['Suni']],
+  'caregiver.gating.quest-closed': [['Suni']],
   'a11y.hearItLabel': [['Korean letter g']],
   'a11y.hearExample': [['na, na, I']],
   'a11y.discoverLetter': [['g/k'], ['g/k', 'like g in go']],

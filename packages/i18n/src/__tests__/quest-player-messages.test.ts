@@ -79,6 +79,10 @@ describe('caregiver.gating (English wording as shipped)', () => {
     expect(g['episode-not-shipped']('Suni')).toBe('That episode is still being built.');
     expect(g['stage-locked']('Suni')).toBe("Suni hasn't reached this quest yet.");
   });
+
+  it('words a closed lesson with the product names and no price (F-ENT-003 section 3.6)', () => {
+    expect(g['quest-closed']('Suni')).toBe('Suni can play this lesson with the Family Plan or a Group License.');
+  });
 });
 
 describe('accessibility labels of the Quest player', () => {

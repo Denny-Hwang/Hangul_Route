@@ -1,13 +1,14 @@
 import type { Episode } from '@hangul-route/content-schema';
 
 /**
- * Stage gating for caregiver assignments — F-HW-001 §3.4.
+ * Stage gating for caregiver assignments — F-HW-001 §3.4, with quest access
+ * (F-ENT-003 section 3.6).
  *
  * A caregiver must not be able to silently assign a Quest the learner cannot
  * reach yet; the create call fails fast so the caregiver sees why.
  */
 
-export type GateRejection = 'unknown-quest' | 'episode-not-shipped' | 'stage-locked';
+export type GateRejection = 'unknown-quest' | 'episode-not-shipped' | 'stage-locked' | 'quest-closed';
 
 export interface GateResult {
   allowed: boolean;
@@ -27,6 +28,14 @@ export interface GateInput {
   unlockedStages: readonly string[];
   /** Learner's display name, returned with a rejection for the caregiver message. */
   learnerName: string;
+  /**
+   * May the learner start this quest (`questOpenFor`, F-ENT-003 section 3.6)?
+   * Omitted means every quest is open. A closed quest is rejected as
+   * `quest-closed` before the stage check, so with the switch on the caregiver
+   * reads which plan opens it; with the switch off every quest is open and
+   * the stage check answers as before.
+   */
+  isQuestOpen?: (questId: string) => boolean;
 }
 
 export function canAssignQuest({
@@ -34,6 +43,7 @@ export function canAssignQuest({
   episodes,
   unlockedStages,
   learnerName,
+  isQuestOpen,
 }: GateInput): GateResult {
   const episode = episodes.find((e) => e.questIds.includes(questId));
   if (!episode) {
@@ -41,6 +51,9 @@ export function canAssignQuest({
   }
   if (episode.status === 'preview' || episode.status === 'draft') {
     return { allowed: false, reason: 'episode-not-shipped', learnerName };
+  }
+  if (isQuestOpen && !isQuestOpen(questId)) {
+    return { allowed: false, reason: 'quest-closed', learnerName };
   }
   if (!unlockedStages.includes(episode.stage)) {
     return { allowed: false, reason: 'stage-locked', learnerName };

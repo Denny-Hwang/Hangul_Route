@@ -74,7 +74,49 @@ describe('canAssignQuest (F-HW-001 §3.4)', () => {
     expect(getMessages('en').caregiver.gating[result.reason ?? 'unknown-quest']('Jin')).toContain('Jin');
   });
 
-  const REASONS: GateRejection[] = ['unknown-quest', 'episode-not-shipped', 'stage-locked'];
+  describe('quest access (F-ENT-003 section 3.6)', () => {
+    const closedB = (questId: string): boolean => questId !== 'quest:b';
+    const allStages = { ...base, unlockedStages: ['stage1', 'stage2'] };
+
+    it('omitted: every quest is open, as before', () => {
+      expect(canAssignQuest({ ...allStages, questId: 'quest:b' })).toEqual({ allowed: true });
+      expect(canAssignQuest({ ...allStages, questId: 'quest:b', isQuestOpen: undefined })).toEqual({ allowed: true });
+    });
+
+    it('rejects a closed quest with `quest-closed` and the learner name', () => {
+      expect(canAssignQuest({ ...allStages, questId: 'quest:b', isQuestOpen: closedB })).toEqual({
+        allowed: false,
+        reason: 'quest-closed',
+        learnerName: 'Suni',
+      });
+    });
+
+    it('allows an open quest', () => {
+      expect(canAssignQuest({ ...allStages, questId: 'quest:a', isQuestOpen: closedB })).toEqual({ allowed: true });
+    });
+
+    it('names the plan when the learner could reach the stage but the quest is closed (switch on)', () => {
+      expect(canAssignQuest({ ...base, questId: 'quest:b', isQuestOpen: closedB }).reason).toBe('quest-closed');
+    });
+
+    it('an open quest in a stage the learner has not reached stays `stage-locked` (a kept quest, or the switch off)', () => {
+      expect(canAssignQuest({ ...base, questId: 'quest:b', isQuestOpen: () => true }).reason).toBe('stage-locked');
+    });
+
+    it('unknown and unbuilt quests keep their own reasons', () => {
+      const closed = (): boolean => false;
+      expect(canAssignQuest({ ...base, questId: 'quest:nope', isQuestOpen: closed }).reason).toBe('unknown-quest');
+      expect(canAssignQuest({ ...base, questId: 'quest:c', isQuestOpen: closed }).reason).toBe('episode-not-shipped');
+    });
+
+    it('the caregiver line names the products, with no price', () => {
+      const line = getMessages('en').caregiver.gating['quest-closed']('Suni');
+      expect(line).toBe('Suni can play this lesson with the Family Plan or a Group License.');
+      expect(line).not.toMatch(/[$€£]|\d|premium|buy|trial|locked/i);
+    });
+  });
+
+  const REASONS: GateRejection[] = ['unknown-quest', 'episode-not-shipped', 'stage-locked', 'quest-closed'];
 
   for (const locale of LOCALES) {
     it(`${locale}: every rejection message is caregiver-safe and has no Hangul outside ko`, () => {
