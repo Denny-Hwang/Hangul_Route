@@ -30,6 +30,8 @@ After these amendments:
 
 ## 1. Default length and pace (OD-12, OD-13)
 
+**Decided by the owner 2026-10-12:** OD-12 (the length rule with the 4 and 16 week thresholds) and OD-13 (the three pace chips Gentle 2 / Steady 3 / Brisk 4, default Gentle for "Pictures first" and for classes, Steady otherwise, and the Hoya check-in after week 4) are accepted as proposed. This section is the rule; P2-3b, P2-6b and P2-7b no longer wait for an owner answer.
+
 ### 1.1 The rule (constants in `curriculum/presets.ts`, one test each)
 
 ```
@@ -176,7 +178,7 @@ Change P-10's "Needs" to "P-7, P-7b, P-8". P-6 and P-7 do not wait. Add to P-6's
 
 APPEND:
 
-> 15. **Default plan length** — owner decision OD-12 in F-ROUTE-001 section 9.
+> 15. **Default plan length** — owner decision OD-12 in F-ROUTE-001 section 9, decided 2026-10-12 (accepted as proposed); the pace chips follow OD-13, decided the same day.
 > 16. **One-tap plan for a self profile on any device** — OD-14.
 > 17. **The level check and writing** — the report's skills note (AM-5); gap list in `AMENDMENTS-PLC-PLAN-HANDOFF.md` section 4.
 
@@ -285,13 +287,13 @@ APPEND: "`route.proposed` `{ source, kind: 'new' | 'update', defaultWeeks: 4 | 1
 
 ### FP-B11. Section 6 (PR breakdown), lines 358 and 362
 
-- **P2-3 splits:** P2-3a `feat(content-schema)`: generator, presets incl. `PACES`, `toPlanItems`, the existing goldens (L). P2-3b `feat(content-schema)`: `propose.ts`, `regenerateFrom` `reseed`, the 1.2 goldens, the benchmark gate (M; needs P2-3a and OD-12 / OD-13).
+- **P2-3 splits:** P2-3a `feat(content-schema)`: generator, presets incl. `PACES`, `toPlanItems`, the existing goldens (L). P2-3b `feat(content-schema)`: `propose.ts`, `regenerateFrom` `reseed`, the 1.2 goldens, the benchmark gate (M; needs P2-3a; OD-12 / OD-13 decided 2026-10-12).
 - P2-6: append "wizard pre-selects pace and length with a *Suggested* tag; family learner card 'Update the plan'".
 - **P2-7 splits:** P2-7a `feat(mobile)`: `route-store`, `RouteProposalScreen`, Home prompt with eligibility and dismissal, Profile row, flag (M-L; needs P2-5, P2-3b). P2-7b `feat(mobile)`: setup steps, preview, overview, auto re-pace, Hoya check-in (M; needs P2-7a). **P2-7a lands before F-PLC-001 P-7b**, so the one-tap default plan exists for learners without a level check first.
 
 ### FP-B12. Section 9 (Unverified assumptions), APPEND
 
-> 11. **Default length rule and pace chips** — owner decisions OD-12 and OD-13 (F-ROUTE-001 section 9); the 1.2 table is hand-estimated and pinned by the P2-3b goldens.
+> 11. **Default length rule and pace chips** — owner decisions OD-12 and OD-13 (F-ROUTE-001 section 9), decided 2026-10-12 (accepted as proposed); the 1.2 table is hand-estimated and pinned by the P2-3b goldens.
 > 12. **One-tap plan for a self profile on any device** — OD-14.
 
 ### FP-B13. Wireframe `curriculum-planner.md` (promoted to `console/curriculum-wizard.md`, `route/setup.md`)
@@ -300,7 +302,7 @@ Add the pace chips, the *Suggested* tags and the preview line per length. Screen
 
 ### FP-B14. Section 3.7 re-pace, APPEND
 
-> **Hoya check-in** (P2-7b, OD-13): once, at the start of week 5 of an active self plan, a positive card offers a pace change computed from sessions actually finished in weeks 1-4: fewer than half -> "Want a lighter week?" (Gentle); every session -> "Want to go a bit faster?" (one step up). It never names a missed or late session, can be closed with **Not now**, and applies through `regenerateFrom(..., 'shift')` with the new sessions a week.
+> **Hoya check-in** (P2-7b, OD-13, decided 2026-10-12): once, at the start of week 5 of an active self plan, a positive card offers a pace change computed from sessions actually finished in weeks 1-4: fewer than half -> "Want a lighter week?" (Gentle); every session -> "Want to go a bit faster?" (one step up). It never names a missed or late session, can be closed with **Not now**, and applies through `regenerateFrom(..., 'shift')` with the new sessions a week.
 
 ### FP-B15. Learner strings (all sections)
 
@@ -322,7 +324,7 @@ In learner-facing strings of sections 3.9 to 3.12 and the wireframes, "route" be
 
 ## 5. Owner decisions touched by this file (the questions and defaults are in F-ROUTE-001 section 9)
 
-OD-1 (sound guide; gates P-6), OD-4 (free-tier stages), OD-7 (learner naming), OD-9 (defined level), OD-12 (length rule; gates P2-3b), OD-13 (pace chips and check-in; gates P2-3b / P2-7b), OD-14 (one-tap for self profiles on any device; gates P-7b), OD-15 (start day Today), OD-16 (14-day dismissal; gates P2-7a).
+OD-1 (sound guide; gates P-6), OD-4 (free-tier stages), OD-7 (learner naming), OD-9 (defined level), OD-12 (length rule; decided 2026-10-12, accepted as proposed; no longer gates P2-3b), OD-13 (pace chips and check-in; decided 2026-10-12, accepted as proposed; no longer gates P2-3b / P2-7b), OD-14 (one-tap for self profiles on any device; gates P-7b), OD-15 (start day Today), OD-16 (14-day dismissal; gates P2-7a).
 
 ## 6. Errata (apply in the same docs PR)
 

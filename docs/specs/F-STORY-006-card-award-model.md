@@ -366,7 +366,7 @@ The engine can ship before any story exists: it already repairs the 31 unearnabl
 | 6.5c | `feat(mobile)`: Home catch-up card (session-only) | 6.4a, design 6.0 |
 | 6.6 | `feat(mobile)`: `CardArt` wrapper replacing the three `supportedCardIds` checks | 6.5a, 6.5b |
 | 6.7 | `feat(content-schema)` + `feat(mobile)`: the `card` lint rules (the block itself is in F-STORY-001 PR 1.1b), `content/story-cards.ts`, `story-sets.ts`, back-face citation, T-AWARD-6/7 | F-STORY-001 PR 1.1b and 1.4 (bundle), F-STORY-005 5.3, 6.6 |
-| 6.8 | `content(cards)`: `card` blocks and `rewardCardIds.listen` on the first reviewed stories (one PR per cluster); cover crops via `StoryScene` | 6.7, F-STORY-002 PR 2.3a (`StoryScene`), reviewed stories |
+| 6.8 | `content(cards)`: `card` blocks and `rewardCardIds.listen` on the first reviewed stories (one PR per cluster); cover crops via `StoryScene`. The card titles and set names get the same multi-agent language and culture review as their stories (owner decision 2026-10-12) | 6.7, F-STORY-002 PR 2.3a (`StoryScene`), reviewed stories (F-STORY-001 PR 1.9, multi-agent review, owner decision 2026-10-12) |
 | 6.9 | `test(e2e)`: `card-awards.spec.ts` | 6.5a-6.8 |
 
 Old-build window (6.4a): a device still on a build before 6.3 merges cards with "local wins", so on a sync conflict it can PUT `newSinceLastView: true` back over a server `false`, and a "New" pill can come back on another device (cosmetic; impossible before 6.4a because nothing writes `false`). The seen state is guaranteed to stick only once every syncing device runs 6.3 or later, so 6.3 ships at least one release before 6.4a.
@@ -384,7 +384,7 @@ Upstream:
 
 Downstream: F-CARD-S5-001 (book quest cards use this model with `episode:stage5-*`), F-VOC (word-pack cards can use the same grammar), F-PAR-001 (caregiver summary), F-MOTION-003.
 
-Assumptions I could not verify (each with a fallback): the F-STORY-002 `StoryScene` props (read in F-STORY-002 §3.9.9) rendering a cropped cover at card size on a device; that an old Worker keeps accepting the unchanged snapshot (it does: no schema change) and that analytics tolerates the new `source` payload key; that the owner accepts removing the `N/M` pill (§8 decision 3, reversible); the 24 card titles, 4 set names and rarity mapping are editorial proposals; whether the native-review budget covers short English card titles; that `ensure()` is the right place to grant the welcome card (alternative: an explicit call after `createProfile` in `CreateProfileScreen.tsx:73` — same behaviour).
+Assumptions I could not verify (each with a fallback): the F-STORY-002 `StoryScene` props (read in F-STORY-002 §3.9.9) rendering a cropped cover at card size on a device; that an old Worker keeps accepting the unchanged snapshot (it does: no schema change) and that analytics tolerates the new `source` payload key; that the owner accepts removing the `N/M` pill (§8 decision 3, reversible); the 24 card titles, 4 set names and rarity mapping are editorial proposals; whether the native-review budget covers short English card titles (resolved 2026-10-12: the multi-agent review of 6.8 covers them, owner decision); that `ensure()` is the right place to grant the welcome card (alternative: an explicit call after `createProfile` in `CreateProfileScreen.tsx:73` — same behaviour).
 
 ## 8. Decisions
 
