@@ -304,7 +304,7 @@ F-BILL-002 B-9 replaces the price-bearing paywall with a status-only **Plan** sc
 - **How E3-8 reads these lines** (revision 3.4, from the reviews of PR E3-8):
   - The premium no-plan line is plan guidance (item 10), not the free boundary: it shows **whatever the switch**, on native and on the web, as soon as E3-8 merges. "No plan" means no inbox plan and no active self plan (`sourcesOf`); plans or progress not read yet count as a plan, so the line never flashes while they load (`hasPlanNow`). The free slot's lines above stay switch-on only (OD-2, D5).
   - Class only: the learner has at least one space membership and none of them is a family space (`classOnlyMember`).
-  - Until E3-4 lands `routeNext`, the free-end line reads the cursor half of section 3.5 steps 3 and 4 (`freeEndOnCursor`: switch on, free access tier, nothing new left open on the cursor with placed-out quests skipped, and at least one playable grid lesson closed); plan sources are not read yet. E3-4 replaces it with `routeNext(...).kind === 'free-end'`.
+  - The free-end line reads the same `routeNext` as Home (`freeEndNow`: `routeNext(routeNextInputOf(...)).kind === 'free-end'`, with the cached plans, the access tier and `useQuestAccess`), so the two never disagree.
   - F-BILL-002 amendment F4 is closed: the locked story and topic entries (`lockedStoryGate`, `TopicGrid.tsx`, `VocabTopicScreen.tsx`) keep `PinEntry { next: 'Paywall' }` on purpose, like the ask rows of section 3.7: the button asks a grown-up, and the grown-up reads the Plan screen's lines (and, on the web, opens billing). `story-tile.test.ts` pins it.
 - "Every lesson of every Stage, now and later" (the old offer bullet) moves to the billing page on app.hangulroute.com, owned by F-BILL-002 (section 6.4).
 - `Paywall` and `PinEntry` `from` gain `'episode' | 'home' | 'results'`; `paywall.viewed` carries them (changed payload, no new name; F-BILL-002 keeps the event).
@@ -661,7 +661,7 @@ Spec decisions (engineering, reversible):
 | 1, 2 | the premium no-plan line was gated by the web-only switch, so it never showed on native or in production, against section 3.9.4 and the item 10 rollout | applied: the line shows whatever the switch; the screen always reads whether a plan exists (section 3.9.1) |
 | 1, 2 | an unread progress snapshot hid an active self plan, so the no-plan line could flash | applied: `hasPlanNow` counts unread plans or progress as a plan |
 | 1 | F-BILL-002 amendment F4 (locked story and topic entries) was not closed | applied: the PIN gate stays on purpose (section 3.9.1); F4 marked closed in F-BILL-002 |
-| 1 | the free-end rule, the class-only rule and the guidance rule lived only in the PR body; the E3-11 preconditions left out `caregiver.plan.freePlan` | applied: section 3.9.1 and the E3-11 row |
+| 1 | the free-end rule, the class-only rule and the guidance rule lived only in the PR body; the E3-11 preconditions left out `caregiver.plan.freePlan` | applied: section 3.9.1 and the E3-11 row; E3-4 (#451) merged meanwhile, so the interim cursor-only free-end rule is replaced by `routeNext` |
 | 1, 2 | the switch-on e2e typed the word-topic count | applied: the count comes from `FREE_VOCAB_TOPIC_IDS` |
 | 2 | CI never runs the switch-on e2e of the Plan screen lines | deferred to E3-11, which owns the build with the switch on (`free-days.spec.ts`); recorded in the E3-11 row. E3-8 does not edit `.github/workflows` |
 
