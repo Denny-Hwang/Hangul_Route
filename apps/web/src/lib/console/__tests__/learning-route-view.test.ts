@@ -1,4 +1,4 @@
-import { StageKeySchema, type StageKey } from '@hangul-route/content-schema';
+import { StageKeySchema, pickGoal, routeCatalogOf, stageAvailabilityOf, type StageKey } from '@hangul-route/content-schema';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { describe, expect, it, vi } from 'vitest';
 import type { PlanView, RosterLearner } from '../api';
@@ -12,6 +12,13 @@ import { ROUTE_CATALOG, TODAY, journey, journeyRows, learner, meta, placement, p
  * console/learning-route.md T3 and parent/learning-route.md L2). Built from the roster row and
  * the space's own plans only; never a list of learners, never a comparison.
  */
+
+const PSEUDO = 'en-XA' as UiLocale;
+// The formatters take UI locales only: under en-XA the console draws dates in English (as console-placement-parts.test.tsx).
+vi.mock('@hangul-route/i18n', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@hangul-route/i18n')>();
+  return { ...actual, formatDate: (locale: UiLocale, ...rest: Parameters<typeof actual.formatDate> extends [UiLocale, ...infer R] ? R : never) => actual.formatDate(locale === PSEUDO ? 'en' : locale, ...rest) };
+});
 
 const en = getMessages('en');
 const lr = en.console.learningRoute;
@@ -75,7 +82,10 @@ describe('learningRouteView: which space and which learner (section 6.1)', () =>
     expect(view.title).toBe("Sam's Learning Route");
     expect(view.updated).toBe('Updated Oct 11');
     expect(ready({ learners: [learner({ displayName: 'S. K.' })] }).title).toBe("S. K.'s Learning Route");
+    // Half a year or more from today: with the year. Around New Year, a recent sync never gains or loses it.
     expect(ready({ learners: [learner({ lastSyncedAt: '2025-12-30T15:00:00.000Z' })] }).updated).toBe('Updated Dec 30, 2025');
+    expect(ready({ today: '2027-01-01', learners: [learner({ lastSyncedAt: '2026-12-31T20:00:00.000Z' })] }).updated).toBe('Updated Dec 31');
+    expect(ready({ today: '2026-12-31', learners: [learner({ lastSyncedAt: '2027-01-01T01:00:00.000Z' })] }).updated).toBe('Updated Jan 1');
     expect(ready({ learners: [learner({ lastSyncedAt: null })] }).updated).toBeNull();
     expect(ready({ learners: [learner({ lastSyncedAt: 'not a date' })] }).updated).toBeNull();
   });
@@ -217,7 +227,8 @@ describe('learningRouteView: the stage list (section 6.1 "The stage list page")'
   });
 
   it('shows no start tag without a readable level check', () => {
-    for (const p of [undefined, { ...placement(), level: { stage: 'stage5', band: 0 } }, { ...placement(), level: { stage: 'stage1', band: 9 } }, { takenAt: 'x' }]) {
+    // The same rule as the roster card's starting-spot line: a level it can word (Stage 1 to 3) and a readable date.
+    for (const p of [undefined, { ...placement(), level: { stage: 'stage5', band: 0 } }, { ...placement(), level: { stage: 'stage1', band: 9 } }, { takenAt: 'x' }, { ...placement(), takenAt: 'garbage' }]) {
       const view = ready({ learners: withSummary({ placement: p }) });
       expect(view.stages.flatMap((r) => (r.kind === 'stage' ? r.tags.map((t) => t.kind) : []))).not.toContain('start');
     }
@@ -225,12 +236,12 @@ describe('learningRouteView: the stage list (section 6.1 "The stage list page")'
 
   it('reads the can-do lines from the shared dictionary entry in the locale it is given', () => {
     vi.stubEnv('NEXT_PUBLIC_PSEUDO_LOCALE', '1');
-    const pseudo = 'en-XA' as UiLocale;
+    const pseudo = PSEUDO;
     const view = ready({ locale: pseudo });
     expect(stageRow(view.stages, 'stage1').canDo).toBe(getMessages(pseudo).learner.myRoute.stage.canDo[1]);
     expect(stageRow(view.stages, 'stage1').canDo).not.toBe(canDo[1]);
     expect(view.title).toMatch(/^\[.*\]$/);
-    // The pseudo-locale has no date tables: the date is formatted in English, then drawn inside the pseudo words.
+    // The date is drawn inside the pseudo words.
     expect(view.updated).toMatch(/^\[.* 11~*\]$/);
     vi.unstubAllEnvs();
   });
@@ -287,6 +298,26 @@ describe('case 1: a family viewer with summary.routeGoal, the goal the learner d
     expect(at('complete', 'stage1', 'default')).toBe("Sam's goal: Stage 1 · Hangul");
   });
 
+  it('says reached exactly when pickGoal says a plan goal is reached (section 4.1 rule 6), for every state and availability', () => {
+    // stage1 is a full stage in the fixture catalogue, stage2 a taste.
+    const planFor: Record<'stage1' | 'stage2', string> = { stage1: 'quest:stage1-life-q1', stage2: 'quest:stage2-life-q1' };
+    for (const stage of ['stage1', 'stage2'] as const) {
+      for (const state of ['complete', 'known', 'explored', 'open', 'later']) {
+        const rows = journeyRows({ [stage]: { state } } as Parameters<typeof journeyRows>[0]);
+        const expected = pickGoal({
+          sources: [{ id: 'plan:x', kind: 'family', assignedAt: '2026-10-05T09:00:00.000Z', items: [quest(planFor[stage])], meta: meta() }],
+          catalog: routeCatalogOf(ROUTE_CATALOG),
+          stages: rows.map((r) => ({ stage: r.stage as StageKey, state: r.state as 'open' })),
+          availability: (s) => stageAvailabilityOf(ROUTE_CATALOG, s),
+          today: TODAY,
+        });
+        expect(expected?.stage).toBe(stage);
+        const line = view({ stage, from: 'class' }, { journey: journey(rows, 'stage4') }).card.goal?.line;
+        expect(line?.startsWith('Sam reached the goal'), `${stage} ${state}`).toBe(expected?.reached);
+      }
+    }
+  });
+
   it("gives the plan end from this family's leading plan or the learner's own plan, never from a plan it cannot see", () => {
     const familyPlan = plan({ id: 'plan:f', items: [quest('quest:stage2-life-q1')] });
     expect(view({ stage: 'stage2', from: 'family' }, {}, { plans: [familyPlan] }).card.goal?.planEnds).toBe('Plan ends Nov 1');
@@ -309,6 +340,11 @@ describe('case 1: a family viewer with summary.routeGoal, the goal the learner d
     });
     expect(view({ stage: 'stage2', from: 'school' }, {}, { plans: [familyPlan] }).card.goal?.familyPlan?.line).toBe("Your family's weekly plan reaches Stage 1 · Hangul");
     expect(view({ stage: 'stage2', from: 'self' }, {}, { plans: [familyPlan] }).card.goal?.familyPlan?.stage).toBe('stage1');
+    // The device names a family source, but this family's live plan reaches another stage (another family space,
+    // or a plan changed since the device last synced): that plan does not lead, so it gets its own line and no date is guessed.
+    const elsewhere = view({ stage: 'stage2', from: 'family' }, {}, { plans: [familyPlan] }).card.goal;
+    expect(elsewhere?.familyPlan).toEqual({ stage: 'stage1', line: "Your family's weekly plan reaches Stage 1 · Hangul", planEnds: 'Plan ends Nov 1' });
+    expect(elsewhere?.planEnds).toBeNull();
     // Hoya's suggestion on the device while the family plan is live (it has not reached the device yet): the plan line shows.
     expect(view({ stage: 'stage2', from: 'default' }, {}, { plans: [familyPlan] }).card.goal?.familyPlan?.line).toBe("Your family's weekly plan reaches Stage 1 · Hangul");
     expect(view({ stage: 'stage1', from: 'family' }, {}, { plans: [familyPlan] }).card.goal?.familyPlan).toBeNull();

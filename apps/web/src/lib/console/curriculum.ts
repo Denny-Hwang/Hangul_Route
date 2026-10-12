@@ -395,7 +395,8 @@ export function ownRouteLine(kind: string, selfRoute: { done: number; total: num
 
 type SwitchablePlan = PlanLike & { meta?: CurriculumMeta | null };
 
-const isLive = (plan: SwitchablePlan): boolean => plan.publishedAt !== null && plan.archivedAt === null;
+/** A plan that is published and not archived: the console's one live rule (the switcher here, the Learning Route goal sources). */
+export const isLive = (plan: SwitchablePlan): boolean => plan.publishedAt !== null && plan.archivedAt === null;
 const newestPublished = (a: SwitchablePlan, b: SwitchablePlan): number => (b.publishedAt ?? '').localeCompare(a.publishedAt ?? '');
 
 /** The plan switcher (section 3.8 step 5): the active route first, then the other live plans, then drafts; archived plans are left out. */

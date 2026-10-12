@@ -2,7 +2,6 @@ import {
   CATALOG,
   RouteGoalSummarySchema,
   StageKeySchema,
-  UI_LOCALES,
   isDateKey,
   pickGoal,
   placementStageNumber,
@@ -17,8 +16,10 @@ import {
 } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, formatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { PlanView, RosterLearner, RosterSummary } from './api';
+import { isLive } from './curriculum';
 import { readJourney, type JourneyEntry, type JourneyState } from './journey-strip';
 import { placementBandLabel } from './placement';
+import { planReaches } from './plans';
 import { ROUTES } from './routing';
 
 /**
@@ -173,11 +174,8 @@ export type LearningRouteView = LearningRouteReady | LearningRouteNotSynced | Le
 type ViewerKind = 'class' | 'family';
 type Messages = ReturnType<typeof getMessages>;
 
-/**
- * Dates are formatted in a UI locale. The QA pseudo-locale (`en-XA`) has no date tables, so its
- * dates read in English while every word around them comes from its dictionary.
- */
-const dateLocaleOf = (locale: UiLocale): UiLocale => ((UI_LOCALES as readonly string[]).includes(locale) ? locale : DEFAULT_LOCALE);
+/** `isLive` (`curriculum.ts`), the console's one live rule, telling the type that a live plan has its publish time. */
+const isLivePlan = (plan: PlanView): plan is PlanView & { publishedAt: string } => isLive(plan);
 
 /**
  * The console goal sources of section 4.1 ("Who passes which sources"): this space's published,
@@ -188,9 +186,8 @@ const dateLocaleOf = (locale: UiLocale): UiLocale => ((UI_LOCALES as readonly st
  */
 export function goalSourcesOf(plans: readonly PlanView[], kind: GoalSource['kind'], learnerId: string | null): GoalSource[] {
   return plans.flatMap((plan) => {
-    if (plan.publishedAt === null || plan.archivedAt !== null) return [];
-    const targets = plan.targetLearnerIds;
-    if (targets !== null && (learnerId === null || !targets.includes(learnerId))) return [];
+    if (!isLivePlan(plan)) return [];
+    if (learnerId === null ? plan.targetLearnerIds !== null : !planReaches(plan, learnerId)) return [];
     return [{ id: plan.id, kind, assignedAt: plan.publishedAt, items: plan.items, meta: plan.meta ?? null }];
   });
 }
@@ -203,16 +200,23 @@ export function goalSourcesOf(plans: readonly PlanView[], kind: GoalSource['kind
 export function planEndText(endsOn: string | null | undefined, today: DateKey, locale: UiLocale = DEFAULT_LOCALE): string | null {
   if (typeof endsOn !== 'string' || !isDateKey(endsOn)) return null;
   const kind = endsOn.slice(0, 4) === today.slice(0, 4) ? 'monthDay' : 'monthDayYear';
-  return getMessages(locale).console.learningRoute.planEnds(formatDate(dateLocaleOf(locale), endsOn, kind, { utc: true }));
+  return getMessages(locale).console.learningRoute.planEnds(formatDate(locale, endsOn, kind, { utc: true }));
 }
 
-/** "Updated Oct 11" in the viewer's time zone, with the year when it is not this year; null without a readable date. */
+/** Half a year: a sync date closer to today than this reads clearly without its year. */
+const YEAR_SHOWN_AFTER_MS = 183 * 86_400_000;
+
+/**
+ * "Updated Oct 11" in the viewer's time zone; with the year ("Updated Dec 30, 2025") when the
+ * sync is half a year or more from today. The rule compares instants, never a local year with
+ * the UTC `today`, so the year never comes and goes around New Year. Null without a readable date.
+ */
 function updatedText(lastSyncedAt: string | null, today: DateKey, locale: UiLocale, m: Messages): string | null {
   if (lastSyncedAt === null) return null;
   const at = new Date(lastSyncedAt);
   if (Number.isNaN(at.getTime())) return null;
-  const kind = String(at.getFullYear()) === today.slice(0, 4) ? 'monthDay' : 'monthDayYear';
-  return m.console.learningRoute.updated(formatDate(dateLocaleOf(locale), at, kind));
+  const kind = Math.abs(at.getTime() - Date.parse(`${today}T12:00:00.000Z`)) < YEAR_SHOWN_AFTER_MS ? 'monthDay' : 'monthDayYear';
+  return m.console.learningRoute.updated(formatDate(locale, at, kind));
 }
 
 /** The goal the learner's device sent (case 1), when this build can read it. */
@@ -224,13 +228,15 @@ function deviceGoalOf(summary: RosterSummary): { stage: StageKey; from: GoalFrom
 }
 
 /**
- * The stage the level check started the learner at, when the roster row holds a level this build
- * can word (the check measures Stage 1 to Stage 3; the roster is cast, not parsed). The same rule
- * as the starting-spot line on the roster card, so the two never disagree.
+ * The stage the level check started the learner at, when the roster row holds a check the
+ * starting-spot line can show (`startingSpotLine`, `placement.ts`): a level this build can word
+ * (the check measures Stage 1 to Stage 3; the roster is cast, not parsed) and a readable date.
+ * So the tag and the roster card's starting-spot line never disagree.
  */
 function startStageOf(summary: RosterSummary): number | null {
-  const level = summary.placement?.level;
-  return level !== undefined && placementBandLabel(level) !== null ? placementStageNumber(level.stage) : null;
+  const placement = summary.placement;
+  if (!placement || placementBandLabel(placement.level) === null || Number.isNaN(new Date(placement.takenAt).getTime())) return null;
+  return placementStageNumber(placement.level.stage);
 }
 
 const isEmptyLater = (row: LearningRouteStageRow): boolean => row.state === 'later' && row.line === null && row.tags.length === 0;
@@ -308,16 +314,15 @@ function buildCard(
     const title = stageTitle(stage);
     const state = entries.find((e) => e.stage === stage)?.state;
     const reached = from !== 'default' && (state === 'complete' || state === 'known' || (state === 'explored' && availability(stage) === 'taste'));
-    const planEnds =
-      from === 'self'
-        ? ends(summary.selfRoute?.endsOn)
-        : from === 'family' && spacePlan !== null && spacePlan.stage === stage
-          ? ends(spacePlan.endsOn)
-          : null;
+    // This family's plan leads when the device names a family source with the stage that plan reaches. Any other
+    // live plan of this family is not the goal the learner's tab shows, so it gets its own line.
+    const familyLeads = from === 'family' && spacePlan !== null && spacePlan.stage === stage;
     const familyPlan =
-      from !== 'family' && spacePlan !== null
+      spacePlan !== null && !familyLeads
         ? { stage: spacePlan.stage, line: lr.planReaches.family(orderOf(spacePlan.stage), stageTitle(spacePlan.stage)), planEnds: ends(spacePlan.endsOn) }
         : null;
+    // The end of the source that leads, when this page can see it: the learner's own plan, or this family's.
+    const planEnds = from === 'self' ? ends(summary.selfRoute?.endsOn) : familyLeads ? ends(spacePlan.endsOn) : null;
     return {
       card: {
         now,

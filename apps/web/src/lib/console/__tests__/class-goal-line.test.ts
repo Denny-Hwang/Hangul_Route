@@ -10,6 +10,13 @@ import { ROUTE_CATALOG, TODAY, meta, plan, quest, stageTitle } from './fixtures/
  * plan, computed from the plan alone. It says nothing about the learners.
  */
 
+const PSEUDO = 'en-XA' as UiLocale;
+// The formatters take UI locales only: under en-XA the console draws dates in English (as console-placement-parts.test.tsx).
+vi.mock('@hangul-route/i18n', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@hangul-route/i18n')>();
+  return { ...actual, formatDate: (locale: UiLocale, ...rest: Parameters<typeof actual.formatDate> extends [UiLocale, ...infer R] ? R : never) => actual.formatDate(locale === PSEUDO ? 'en' : locale, ...rest) };
+});
+
 const input = (over: Partial<ClassGoalLineInput> = {}): ClassGoalLineInput => ({
   kind: 'class',
   plans: [plan({ id: 'plan:c' })],
@@ -88,9 +95,8 @@ describe('classGoalLine (section 6.3)', () => {
 
   it('reads its words from the locale it is given', () => {
     vi.stubEnv('NEXT_PUBLIC_PSEUDO_LOCALE', '1');
-    const pseudo = 'en-XA' as UiLocale;
-    const line = classGoalLine(input({ locale: pseudo }));
-    expect(line?.line).toBe(getMessages(pseudo).console.learningRoute.planReaches.class(2, 'Words'));
+    const line = classGoalLine(input({ locale: PSEUDO }));
+    expect(line?.line).toBe(getMessages(PSEUDO).console.learningRoute.planReaches.class(2, 'Words'));
     expect(line?.line).toMatch(/^\[.*\]$/);
     vi.unstubAllEnvs();
   });
