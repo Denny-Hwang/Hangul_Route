@@ -24,9 +24,10 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { episodeById, episodeFor, episodesAll, gridEpisodes, stages, themes } from '../../content';
+import { episodeById, episodeFor, episodesAll, gridEpisodes, questsAll, stages, themes } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeStage, localizeTheme } from '../../logic/content-locale';
+import { cursorEntitlement } from '../../logic/cursor-context';
 import {
   isEpisodeComplete,
   stageAvailability,
@@ -36,13 +37,21 @@ import {
 } from '../../logic/journey';
 import { initialEpisode, latchedSelection, reconcileSelection, requestedSelection, type PaneLatch } from '../../logic/layout/pane-selection';
 import { journeyGridMaxWidth } from '../../logic/layout/pane-sizes';
+import { cellLook, journeyMarks, type JourneyMarks } from '../../logic/placement/cell-look';
+import { appRouteCatalog } from '../../logic/placement/route-skip';
 import type { MainTabParamList, RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { effectiveTier, useTierStore } from '../../store/tier-store';
 import { EpisodeDetailView } from '../episode/EpisodeDetailView';
 
 /** The grid's episodes: a shelf episode is never a grid cell or a pane selection (F-STORY-004 §3.10). */
 const GRID_EPISODES = gridEpisodes(episodesAll);
+/** The app's quests in the cursor's order, as the level check's route catalogue (F-PLC-001 section 3.7). */
+const ROUTE_CATALOG = appRouteCatalog(questsAll, episodesAll);
+/** The start pin and the placed-out check sit in the cell's corners. */
+const MARK_SIZE = spacing.lg;
+const NO_IDS: ReadonlySet<string> = new Set();
 
 export function JourneyScreen(): React.ReactElement {
   const m = useMessages().learner.journey;
@@ -81,6 +90,24 @@ export function JourneyScreen(): React.ReactElement {
   useEffect(() => {
     if (paneMode && selected === null && selectedId !== null) setLatch({ ownerId, id: selectedId });
   }, [paneMode, selected, selectedId, ownerId]);
+
+  // The level check's marks (F-PLC-001 section 3.7, consumer 3): placed-out cells and the start pin.
+  // Nothing changes for a learner who never took the check.
+  // The pin follows the cursor's stage rule (OD-4), so it re-renders when the inbox changes the tier.
+  const cachedTier = useTierStore((st) => (profile ? st.byLearner[profile.id] : undefined));
+  const tier = effectiveTier(profile?.id ?? '', new Date()).tier;
+  const placements = snap?.placements;
+  const marks = useMemo(
+    () => journeyMarks(placements, ROUTE_CATALOG, cursorEntitlement(tier)),
+    // `cachedTier` re-renders this screen when the inbox changes the tier.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [placements, tier, cachedTier],
+  );
+  const snapQuests = snap?.quests;
+  const completedIds = useMemo(
+    () => (snapQuests === undefined ? NO_IDS : new Set(snapQuests.filter((q) => q.completedAt).map((q) => q.questId))),
+    [snapQuests],
+  );
 
   const gridMax = journeyGridMaxWidth(spacing.xs, layout.columns.journeyCellMax);
 
@@ -153,6 +180,8 @@ export function JourneyScreen(): React.ReactElement {
                   selectedId={selectedId}
                   onOpen={(episodeId) => (paneMode ? setSelected(episodeId) : navigation.navigate('EpisodeDetail', { episodeId }))}
                   progressSnapshot={snap}
+                  marks={marks}
+                  completedIds={completedIds}
                 />
               ))}
             </View>
@@ -172,6 +201,14 @@ export function JourneyScreen(): React.ReactElement {
         <Body tone="secondary" size="sm">
           {m.how.body}
         </Body>
+        {marks !== null ? (
+          <>
+            <Spacer size="xs" />
+            <Body tone="secondary" size="sm" testID="journey-placement-note">
+              {m.how.placement}
+            </Body>
+          </>
+        ) : null}
       </Card>
       <Spacer size="xl" />
     </>
@@ -226,14 +263,23 @@ interface GridCellProps {
     episodes: Array<{ episodeId: string; completedAt?: string }>;
     quests: Array<{ questId: string; episodeId: string; completedAt?: string }>;
   };
+  /** The level check's marks, or null without a stored result (F-PLC-001 section 3.7). */
+  marks: JourneyMarks | null;
+  completedIds: ReadonlySet<string>;
 }
 
-function GridCell({ stage, theme, paneMode, selectedId, onOpen, progressSnapshot }: GridCellProps): React.ReactElement {
+function GridCell({ stage, theme, paneMode, selectedId, onOpen, progressSnapshot, marks, completedIds }: GridCellProps): React.ReactElement {
   const a11y = useMessages().a11y;
   const episode = episodeFor(stage, theme.key);
   const isPreview = !episode || episode.status === 'preview';
   // Complete only when every quest of the episode is done (wireframe journey/grid).
   const completed = !!episode && isEpisodeComplete(episode, progressSnapshot?.quests ?? []);
+  // Placed out (wireframe placement I): every quest done or placed out, not all done. A dashed light
+  // outline and a small check, never the completed tint; the cell stays tappable and awards as any.
+  const placedOut =
+    !!episode && !isPreview && !completed && marks !== null && cellLook(episode.id, ROUTE_CATALOG, marks.placedOut, completedIds) === 'placed-out';
+  const start = marks === null ? null : marks.start;
+  const isStart = start !== null && start.stage === stage && start.theme === theme.key;
   const tone = colors.stage[stage];
   const isSelected = paneMode && !!episode && episode.id === selectedId;
   // One pane: a preview cell does nothing, as today. Two panes: it is selectable (its page says "coming soon").
@@ -245,12 +291,16 @@ function GridCell({ stage, theme, paneMode, selectedId, onOpen, progressSnapshot
       disabled={disabled}
       accessibilityRole="button"
       aria-selected={paneMode ? isSelected : undefined}
-      accessibilityLabel={a11y.gridCell(theme.titleEn, stage, isPreview)}
+      accessibilityLabel={
+        isStart || placedOut ? a11y.gridCellMarked(theme.titleEn, stage, isStart, placedOut) : a11y.gridCell(theme.titleEn, stage, isPreview)
+      }
+      testID={isStart ? 'journey-cell-start' : placedOut ? 'journey-cell-placed-out' : undefined}
       style={{
         flex: 1,
         aspectRatio: 1,
         borderRadius: radii.md,
         backgroundColor: isPreview ? colors.surface.sunken : completed ? colors.feedback.successLight : colors.surface.paper,
+        borderStyle: placedOut && !isSelected ? 'dashed' : 'solid',
         borderWidth: isSelected ? borderWidth.thick : 2,
         borderColor: isSelected
           ? colors.border.focus
@@ -271,6 +321,16 @@ function GridCell({ stage, theme, paneMode, selectedId, onOpen, progressSnapshot
           {themeCellInitial(theme)}
         </Text>
       )}
+      {isStart ? (
+        <View pointerEvents="none" style={{ position: 'absolute', top: spacing.xxs, left: spacing.xxs }}>
+          <Icon name="pin" size={MARK_SIZE} color={colors.brand.primary} />
+        </View>
+      ) : null}
+      {placedOut ? (
+        <View pointerEvents="none" style={{ position: 'absolute', top: spacing.xxs, right: spacing.xxs }}>
+          <Icon name="check-circle" size={MARK_SIZE} color={tone} />
+        </View>
+      ) : null}
     </Pressable>
   );
 }

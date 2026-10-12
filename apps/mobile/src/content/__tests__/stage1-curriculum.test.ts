@@ -437,3 +437,52 @@ describe('the sound hints (Appendix A)', () => {
     expect(hint('ㅇ', 'batchim')).toContain('ng');
   });
 });
+
+describe('Hoya lines of the rebuilt quests', () => {
+  it('every line opens with a capital letter, and every Discover line asks the learner to tap Hear it', () => {
+    for (const quest of REBUILT) {
+      for (const step of quest.steps) {
+        if (step.hoyaLineEn === undefined) continue;
+        expect(step.hoyaLineEn, `${quest.id} ${step.id}`).toMatch(/^[A-Z]/);
+        if (step.kind === 'discover') expect(step.hoyaLineEn, `${quest.id} ${step.id}`).toContain('Tap Hear it');
+      }
+    }
+  });
+
+  it('the Family at the Table intro promises family words, not names (it teaches 아버지, 아기, 엄마, 가족)', () => {
+    const intro = questsAll.find((q) => q.id === 'quest:stage1-life-q2')!.steps.find((s) => s.kind === 'intro')!;
+    expect(intro.hoyaLineEn).toContain('family words');
+    expect(intro.hoyaLineEn).not.toContain('names');
+  });
+});
+
+describe('a word read in Discover and asked in a Check is the same KoText', () => {
+  it('every Check word that a Discover step also shows has the same romanization, gloss and syllables', () => {
+    const discovered = new Map<string, { quest: string; text: KoText }>();
+    for (const quest of REBUILT) {
+      for (const step of quest.steps) {
+        for (const item of step.discover?.pages.flatMap((p) => p.items) ?? []) {
+          const text = item.type === 'word' ? item.word : item.example;
+          if (text !== undefined && !discovered.has(text.ko)) discovered.set(text.ko, { quest: quest.id, text });
+        }
+      }
+    }
+    let compared = 0;
+    for (const quest of REBUILT) {
+      for (const { ref, scope } of scopesOf(quest)) {
+        for (const round of scope?.listenPick?.rounds ?? []) {
+          if (!round.id.startsWith('lp:word:')) continue;
+          for (const text of [round.prompt, ...round.options.flatMap((o) => (o.text ? [o.text] : []))]) {
+            const seen = discovered.get(text.ko);
+            if (seen === undefined) continue;
+            compared += 1;
+            const pick = (t: KoText) => ({ ko: t.ko, romanization: t.romanization, en: t.en, syllables: t.syllables });
+            expect(pick(text), `${ref} ${text.ko} vs ${seen.quest}`).toEqual(pick(seen.text));
+          }
+        }
+      }
+    }
+    // The Food & Life Checks ask Discover words (치즈, 자두, 고추, 차, 아버지, 아기, 바나나, ...).
+    expect(compared).toBeGreaterThanOrEqual(8);
+  });
+});

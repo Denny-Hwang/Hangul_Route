@@ -43,7 +43,7 @@ One primary action: **Done**.
 └──────────────────────────────────┘
 ```
 
-- 2 columns from 360 wide, 1 column at 320.
+- 2 columns from 360 wide, 1 column at 320. A half-width chip must never break a Korean word across lines, so the recap keeps 1 column when its longest word is over 3 glyphs on a phone (5 from 768 wide), and larger device text counts as a narrower window (width / text scale; `recapColumns`, review follow-up to PR #306).
 - Unscored, never blocks. Romanization follows the reading-practice setting (hidden until tap only when the learner opted in).
 - Duplicates are removed by id; Listen shows the tier's new keywords (at most 4), other levels the keywords used in the tier (at most 8).
 
@@ -53,21 +53,21 @@ One primary action: **Done**.
 
 | Where | Tap / key | Result |
 |---|---|---|
-| Chip speaker (or the chip) | tap | plays the word once per tap (clip first, else device speech) |
-| Show how to say it | tap | reveals that chip's romanization (hide-romanization mode only) |
+| Chip speaker | tap | plays the word once per tap (clip first, else device speech); the speaker is the chip's one play control (the Korean is plain text, one focus stop per word) |
+| Show how to say it | tap | reveals that chip's romanization (hide-romanization mode only); its accessible name adds the chip's Korean ("Show how to say it: 세종") |
 | Done | tap, Enter | completes the step (`markStepComplete`, `onFinish`) |
-| Close / back | tap | the quest's leave sheet (the check answers are already scored) |
+| Close | tap | ends the step like Done (every item is answered and the recap is unscored), so a learner is never sent back to replay the questions |
 
 ## Navigation graph
 
 Enter from: `story/check` (Next after the last item), same screen
-Exit to: `quest/player` next step (`apply`, `story/sequence`) · `quest/player` leave sheet
+Exit to: `quest/player` next step (`apply`, `story/sequence`), by Done or Close
 
 ## States
 
 - **success**: E as drawn.
 - **empty**: no words to recap: the recap is skipped and the step ends after the last question.
-- **error**: a word without a gloss cannot ship (validator); a missing voice shows the text and the "Say it yourself" chip.
+- **error**: a word without a gloss cannot ship (validator); a missing voice shows the text and the "Say it yourself" chip (the speakers stay, F-AUDIO-004 §3.8; a silent tap records no `story.recap.word_played`).
 - **offline**: bundled; no network.
 - **200 % text, 320 wide**: one column, chips grow taller, Done stays reachable by scroll.
 - **reduced motion**: no chip press animation.
@@ -76,7 +76,7 @@ Exit to: `quest/player` next step (`apply`, `story/sequence`) · `quest/player` 
 
 - reads: `recapWords(story, level)` (tier `newKeywordIds` for Listen; tier keywords otherwise), `romanizationMode`
 - writes: nothing scored
-- telemetry: `story.recap.word_played` `{ storyId, wordId }` once per distinct word tapped
+- telemetry: `story.recap.word_played` `{ storyId, wordId }` once per distinct word tapped while a Korean voice can play it
 
 ## Open questions
 

@@ -1,12 +1,24 @@
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import * as designSystemBudget from '@hangul-route/design-system/word-art-budget';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { BUDGET_GZIP, BUDGET_RAW, measureWordArtSource, wordArtDir, wordArtSourceFiles } from '../budget';
 
-function fixture(): string {
+const dirs: string[] = [];
+afterEach(() => {
+  for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true });
+});
+
+function tempDir(): string {
   const dir = mkdtempSync(join(tmpdir(), 'word-art-'));
+  dirs.push(dir);
+  return dir;
+}
+
+function fixture(): string {
+  const dir = tempDir();
   mkdirSync(join(dir, 'glyphs'));
   mkdirSync(join(dir, '__tests__'));
   writeFileSync(join(dir, 'index.ts'), 'export {};\n');
@@ -16,14 +28,36 @@ function fixture(): string {
   return dir;
 }
 
+/** A workspace root (it has pnpm-workspace.yaml) with an apps/web folder. */
+function workspace(): string {
+  const root = tempDir();
+  writeFileSync(join(root, 'pnpm-workspace.yaml'), 'packages: []\n');
+  mkdirSync(join(root, 'apps', 'web', 'src'), { recursive: true });
+  return root;
+}
+
 describe('the WordArt source budget on the contact sheet (F-VOC-002 W7, §3.8)', () => {
-  it('uses the same limits as budget.test.ts: 120 KB raw, 30 KB gzip', () => {
-    expect(BUDGET_RAW).toBe(120 * 1024);
-    expect(BUDGET_GZIP).toBe(30 * 1024);
+  it("uses the design system's limits, the ones budget.test.ts enforces", () => {
+    expect(BUDGET_RAW).toBe(designSystemBudget.BUDGET_RAW);
+    expect(BUDGET_GZIP).toBe(designSystemBudget.BUDGET_GZIP);
   });
 
-  it('finds packages/design-system/src/word-art from apps/web', () => {
-    expect(wordArtDir('/repo/apps/web')).toBe(resolve('/repo/packages/design-system/src/word-art'));
+  it('finds packages/design-system/src/word-art from the workspace root, wherever it runs', () => {
+    const root = workspace();
+    const expected = resolve(root, 'packages/design-system/src/word-art');
+    expect(wordArtDir(join(root, 'apps', 'web'))).toBe(expected);
+    expect(wordArtDir(join(root, 'apps', 'web', 'src'))).toBe(expected);
+    expect(wordArtDir(root)).toBe(expected);
+  });
+
+  it('finds the same folder from apps/web and from the repo root', () => {
+    const fromWeb = wordArtDir();
+    expect(wordArtDir(resolve(fromWeb, '../../../..'))).toBe(fromWeb);
+    expect(wordArtSourceFiles(fromWeb).length).toBeGreaterThan(10);
+  });
+
+  it('falls back to the apps/web relative path when no workspace root is above', () => {
+    expect(wordArtDir('/')).toBe(resolve('/', '../../packages/design-system/src/word-art'));
   });
 
   it('counts source files, sorted, and leaves the tests and non-source files out', () => {

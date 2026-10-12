@@ -147,9 +147,17 @@ export async function premiumChangeFor(db: Db, learnerId: string, fromSpaceId: s
   return today.tier === after.tier ? 'none' : 'may_change';
 }
 
-/** The terms a learner-side consent covers, from live values: ids and hashes only, never a name. */
-export async function consentTermsFor(db: Db, learnerId: string, source: Space, dest: Space, now: Date): Promise<TransferConsentTerms> {
-  const [destNameHash, sourceNameHash, premiumChange] = await Promise.all([nameHash(dest.name), nameHash(source.name), premiumChangeFor(db, learnerId, source.id, dest.id, now)]);
+/**
+ * The terms a learner-side consent covers, from live values: ids and hashes only, never a name. A caller that
+ * has already computed `premiumChange` for the same sheet passes it, so the terms and the shown flags can
+ * never disagree.
+ */
+export async function consentTermsFor(db: Db, learnerId: string, source: Space, dest: Space, now: Date, knownPremiumChange?: TransferPremiumChange): Promise<TransferConsentTerms> {
+  const [destNameHash, sourceNameHash, premiumChange] = await Promise.all([
+    nameHash(dest.name),
+    nameHash(source.name),
+    knownPremiumChange ?? premiumChangeFor(db, learnerId, source.id, dest.id, now),
+  ]);
   return {
     destNameHash,
     destConsentMode: dest.settings.consentMode,
@@ -158,6 +166,38 @@ export async function consentTermsFor(db: Db, learnerId: string, source: Space, 
     sourceNameHash,
     premiumChange,
   };
+}
+
+/** The conditional flags of the consent sheet (which conditional lines it shows). */
+export interface ConsentSheetFlags {
+  premiumChange: TransferPremiumChange;
+  destinationConsentMode: Space['settings']['consentMode'];
+  relinkAffected: boolean;
+  sourcePlansAffected: boolean;
+}
+
+/**
+ * SHA-256 hex over what a guardian is shown and agrees to (§4.11): the
+ * consent-time terms and the sheet's conditional flags. The preview returns
+ * it; a create that carries it is refused (`409 terms_changed`) when the live
+ * value differs, so the record never says the guardian agreed to a sheet they
+ * were not shown (a renamed class, a new consent mode, a new conditional line).
+ */
+export function consentTermsDigest(terms: TransferConsentTerms, flags: ConsentSheetFlags): Promise<string> {
+  return hashSecret(
+    JSON.stringify([
+      terms.destNameHash,
+      terms.destOwnerId,
+      terms.destConsentMode,
+      terms.destAnonymize,
+      terms.sourceNameHash,
+      terms.premiumChange,
+      flags.premiumChange,
+      flags.destinationConsentMode,
+      flags.relinkAffected,
+      flags.sourcePlansAffected,
+    ]),
+  );
 }
 
 /**
@@ -319,17 +359,40 @@ export async function familyGuardianRole(db: Db, accountId: string, learnerId: s
  * the request answers `family_too_new` (behaviour 5).
  */
 export async function guardianOf(db: Db, accountId: string, learnerId: string, parties: GuardianParties, now: Date, opts: { familyId?: string } = {}): Promise<GuardianCheck> {
-  const { actor, links } = await familyLinks(db, accountId, learnerId, opts.familyId);
+  return guardianCheck(db, accountId, learnerId, [parties.sourceSpaceId, parties.destSpaceId], parties, now, opts.familyId);
+}
+
+/**
+ * Guard 9 (a-c) with every class the learner is in as the other parties, for
+ * a guardian act that is not tied to one request: turning `blockTeacherRequests`
+ * off (§4.2 guard 13), which lets teacher requests in again. A learner in no
+ * class needs (a) and (b) only.
+ */
+export async function guardianOfLearner(db: Db, accountId: string, learnerId: string, now: Date, opts: { familyId?: string } = {}): Promise<GuardianCheck> {
+  const spaces = await db.getSpaces((await db.membershipsOf('learner', learnerId)).map((m) => m.spaceId));
+  return guardianCheck(
+    db,
+    accountId,
+    learnerId,
+    spaces.filter((s) => s.kind === 'class').map((s) => s.id),
+    {},
+    now,
+    opts.familyId,
+  );
+}
+
+async function guardianCheck(db: Db, accountId: string, learnerId: string, classIds: readonly string[], parties: Omit<GuardianParties, 'sourceSpaceId' | 'destSpaceId'>, now: Date, familyId: string | undefined): Promise<GuardianCheck> {
+  const { actor, links } = await familyLinks(db, accountId, learnerId, familyId);
   if (links.length === 0) return { ok: false, error: 'not_guardian' };
   const oldEnough = now.getTime() - TRANSFER_GUARDIAN_MIN_AGE_MS;
   const aged = links.find((l) => Date.parse(l.accountJoinedAt) <= oldEnough && Date.parse(l.learnerJoinedAt) <= oldEnough);
   if (!aged) return { ok: false, error: 'family_too_new' };
 
-  const classes = await db.getSpaces([parties.sourceSpaceId, parties.destSpaceId]);
+  const classes = await db.getSpaces(classIds);
   const schoolIds = classes.map((s) => s.parentSpaceId).filter((id): id is string => id !== null);
   const schools = await db.getSpaces(schoolIds);
   const related = [...classes, ...schools];
-  const relatedIds = new Set([parties.sourceSpaceId, parties.destSpaceId, ...schoolIds]);
+  const relatedIds = new Set([...classIds, ...schoolIds]);
   const conflicted =
     actor.memberships.some((m) => m.memberKind === 'account' && m.memberId === accountId && relatedIds.has(m.spaceId)) ||
     related.some((s) => s.ownerAccountId === accountId) ||

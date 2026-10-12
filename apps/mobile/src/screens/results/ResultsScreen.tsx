@@ -33,9 +33,11 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
+import { flags } from '../../config/flags';
 import { cardById, episodeById, episodesAll, questById, questsAll } from '../../content';
+import { storyById } from '../../content/stories';
 import { useLocale, useMessages } from '../../i18n/use-messages';
-import { localizeCard, localizeEpisode } from '../../logic/content-locale';
+import { localizeCard, localizeEpisode, localizeStory } from '../../logic/content-locale';
 import { cursorContext } from '../../logic/cursor-context';
 import {
   resultsActions,
@@ -48,7 +50,11 @@ import { episodeReturn } from '../../logic/layout/quest-return';
 import { applyQuestResult, type QuestResultOutcome } from '../../logic/results-award';
 import { resultsCheerMessage, resultsHeadline } from '../../logic/results-copy';
 import { extraCardsAnnouncement, extraCardsView } from '../../logic/results-extra-cards';
+import { emptyBookmarks } from '../../logic/story/bookmarks';
+import { resultsStoryOf, storyResultsActionEvent, storyResultsExtras } from '../../logic/story/results-extras';
 import { bookmarkClearedByResults } from '../../logic/story/resume';
+import { defaultStoryIndex } from '../../logic/story/story-index';
+import { nextStoryAfter, storyLockFor } from '../../logic/story/story-pick';
 import { useReducedMotion } from '../../platform/motion';
 import { track } from '../../platform/telemetry';
 import type { RootStackParamList } from '../../navigation/types';
@@ -58,11 +64,14 @@ import { useStoryStore } from '../../store/story-store';
 import { effectiveTier, useTierStore } from '../../store/tier-store';
 import { CardArtThumb } from './CardArtThumb';
 import { ExtraCardsBanner } from './ExtraCardsBanner';
+import { StoryResultsExtras, type StoryResultsChoice } from './StoryResultsExtras';
 
 type ResultsMessages = Messages['learner']['results'];
 
 /** Learner's cub in the name chip above the guide Hoya. */
 const AVATAR_SIZE = 40;
+
+const NO_BOOKMARKS = emptyBookmarks();
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Results'>;
 
@@ -79,6 +88,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   const recordCatchUp = useProgressStore((s) => s.recordCatchUp);
   const snapshot = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
   const cachedTier = useTierStore((s) => (profile ? s.byLearner[profile.id] : undefined));
+  const bookmarks = useStoryStore((s) => (profile ? s.byProfile[profile.id] : undefined)) ?? NO_BOOKMARKS;
   const reducedMotion = useReducedMotion();
   const { panes } = useLayoutClass();
   // What this run earned (the quest card and the completion awards), decided
@@ -142,10 +152,10 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
 
   // Android/web read the live region below (a second announcement would double-read);
   // iOS VoiceOver ignores live regions, so it gets one explicit announcement for both banners.
-  const announcement = [
-    newCard ? m.newCard.announce(newCard.titleEn) : null,
-    extras ? extraCardsAnnouncement(m.extraCards, extras.cards.map((c) => c.titleEn), extras.episodeTitle) : null,
-  ]
+  const extrasAnnouncement = extras
+    ? extraCardsAnnouncement(m.extraCards, extras.cards.map((c) => c.titleEn), extras.episodeTitle)
+    : null;
+  const announcement = [newCard ? m.newCard.announce(newCard.titleEn) : null, extrasAnnouncement]
     .filter((line): line is string => line !== null)
     .join(' ');
   useEffect(() => {
@@ -175,6 +185,84 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
     [snapshot, questId, total, tier, cachedTier, locale],
   );
   const actions = resultsActions(teaser);
+
+  // The story variant (F-STORY-003 §3.7): a story quest whose story is bundled gets the story card and
+  // its own actions (one primary: Next story, else Back home), in place of "Next up" and the two
+  // generic buttons. Next story (F-STORY-004 `nextStoryAfter`) walks the same book or shelf category
+  // and never offers a locked story; the culture-note link waits for the Culture notes route
+  // (F-STORY-004 PR 4.7), so none is supplied yet.
+  const storyResults = useMemo(() => {
+    const story = resultsStoryOf(quest, (id) => {
+      const found = storyById(id);
+      return found && localizeStory(found, locale);
+    });
+    if (!story) return null;
+    const next = nextStoryAfter(questId, {
+      entries: defaultStoryIndex(),
+      snapshot,
+      bookmarks,
+      isLocked: storyLockFor({ tier, gatingEnabled: flags.contentGatingEnabled, episodes: episodesAll }),
+    });
+    const view = storyResultsExtras(
+      {
+        stars,
+        storyId: story.storyId,
+        level: story.level,
+        title: story.title,
+        nextQuestId: next?.questId ?? null,
+        hasEpisodePage: episode !== undefined,
+        cultureNote: null,
+        episodeCompleteLine: null,
+      },
+      messages.learner.story.results,
+    );
+    return { story, next, view };
+    // `cachedTier` re-renders this screen when the inbox changes the tier.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quest, questId, locale, snapshot, bookmarks, tier, cachedTier, stars, episode, messages]);
+
+  const goHome = (): void => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'Main' }],
+      }),
+    );
+  };
+
+  const openEpisodePage = (): void => {
+    if (!episode) return;
+    // Two panes: the episode in the Journey's right pane, selected in the grid (F-LAYOUT-001 §3.7).
+    const state = navigation.getState();
+    const page = episodeReturn(panes, episode.id, state.routes[state.index - 1]?.name);
+    if (page.to === 'journeyPane') navigation.navigate('Main', { screen: 'Journey', params: { episodeId: page.episodeId } });
+    else navigation.navigate('EpisodeDetail', { episodeId: page.episodeId });
+  };
+
+  const chooseStoryAction = (choice: StoryResultsChoice): void => {
+    if (!storyResults) return;
+    void track(storyResultsActionEvent(profile?.id, questId, storyResults.story.storyId, choice.action));
+    switch (choice.action) {
+      case 'next-story':
+        if (storyResults.next) {
+          navigation.navigate('QuestPlayer', { questId: storyResults.next.questId, episodeId: storyResults.next.episodeId });
+        }
+        return;
+      case 'read-again':
+        // An unscored replay: the reader writes nothing (F-STORY-002 §3.1).
+        navigation.navigate('StoryReader', choice.target);
+        return;
+      case 'episode':
+        openEpisodePage();
+        return;
+      case 'home':
+        goHome();
+        return;
+      case 'culture-note':
+        // No culture note is supplied until the Culture notes route ships (F-STORY-004 PR 4.7).
+        return;
+    }
+  };
 
   return (
     <Screen tone="canvas" scrollable>
@@ -237,6 +325,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
               more={extras.more}
               total={extras.cards.length}
               episodeTitle={extras.episodeTitle}
+              announcement={extrasAnnouncement ?? ''}
               reducedMotion={reducedMotion}
               onOpenCard={(cardId) => navigation.navigate('CardDetail', { cardId })}
             />
@@ -244,59 +333,55 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
         ) : null}
       </View>
 
-      {teaser ? (
+      {storyResults ? (
         <>
           <Spacer size="lg" />
-          <NextUpCard teaser={teaser} m={m} />
+          <StoryResultsExtras extras={storyResults.view} onChoose={chooseStoryAction} />
         </>
-      ) : null}
-
-      <Spacer size="xl" />
-      {teaser ? (
+      ) : (
         <>
+          {teaser ? (
+            <>
+              <Spacer size="lg" />
+              <NextUpCard teaser={teaser} m={m} />
+            </>
+          ) : null}
+
+          <Spacer size="xl" />
+          {teaser ? (
+            <>
+              <Button
+                label={teaserCtaLabel(teaser, m.nextUp)}
+                tone="primary"
+                size="hero"
+                fullWidth
+                onPress={() => {
+                  if (profile) void track(teaserTappedEvent(profile.id, questId, teaser));
+                  navigation.navigate('QuestPlayer', { questId: teaser.questId, episodeId: teaser.episodeId });
+                }}
+              />
+              <Spacer size="sm" />
+            </>
+          ) : null}
           <Button
-            label={teaserCtaLabel(teaser, m.nextUp)}
-            tone="primary"
-            size="hero"
+            label={m.backHome.cta}
+            tone={actions.backHome.tone}
+            size={actions.backHome.size}
             fullWidth
-            onPress={() => {
-              if (profile) void track(teaserTappedEvent(profile.id, questId, teaser));
-              navigation.navigate('QuestPlayer', { questId: teaser.questId, episodeId: teaser.episodeId });
-            }}
+            onPress={goHome}
           />
           <Spacer size="sm" />
+          {episode ? (
+            <Button
+              label={m.episodePage.cta}
+              tone={actions.episodePage.tone}
+              size={actions.episodePage.size}
+              fullWidth
+              onPress={openEpisodePage}
+            />
+          ) : null}
         </>
-      ) : null}
-      <Button
-        label={m.backHome.cta}
-        tone={actions.backHome.tone}
-        size={actions.backHome.size}
-        fullWidth
-        onPress={() => {
-          navigation.dispatch(
-            CommonActions.reset({
-              index: 0,
-              routes: [{ name: 'Main' }],
-            }),
-          );
-        }}
-      />
-      <Spacer size="sm" />
-      {episode ? (
-        <Button
-          label={m.episodePage.cta}
-          tone={actions.episodePage.tone}
-          size={actions.episodePage.size}
-          fullWidth
-          onPress={() => {
-            // Two panes: the episode in the Journey's right pane, selected in the grid (F-LAYOUT-001 §3.7).
-            const state = navigation.getState();
-            const page = episodeReturn(panes, episode.id, state.routes[state.index - 1]?.name);
-            if (page.to === 'journeyPane') navigation.navigate('Main', { screen: 'Journey', params: { episodeId: page.episodeId } });
-            else navigation.navigate('EpisodeDetail', { episodeId: page.episodeId });
-          }}
-        />
-      ) : null}
+      )}
       <Spacer size="lg" />
     </Screen>
   );

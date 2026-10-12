@@ -178,6 +178,16 @@ describe('summary.journey (F-ROUTE-001 section 3.12, R-8)', () => {
     }
   });
 
+  it('keeps the seeded marker (R-7a follow-up); a bad marker is dropped, never the journey', () => {
+    expect(JourneySummarySchema.parse({ ...journey, seeded: true })).toEqual({ ...journey, seeded: true });
+    expect(JourneySummarySchema.parse(journey)).not.toHaveProperty('seeded');
+    for (const seeded of [false, 'yes', 1, null]) {
+      const parsed = ProgressSummarySchema.parse({ ...summary, journey: { ...journey, seeded } });
+      expect(parsed.journey).toEqual(journey);
+      expect(parsed.journey?.seeded).toBeUndefined();
+    }
+  });
+
   it('strips unknown keys inside the journey and its stages', () => {
     const parsed = JourneySummarySchema.parse({ ...journey, extra: 1, stages: [{ ...journey.stages[0], questIds: ['quest:x'] }] });
     expect(parsed).toEqual({ ...journey, stages: [journey.stages[0]] });

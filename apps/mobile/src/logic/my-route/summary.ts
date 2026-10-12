@@ -25,6 +25,12 @@ export interface JourneySummary {
   v: 1;
   here: StageKey | null;
   stages: JourneyStageSummary[];
+  /**
+   * Set by `journeySummaryOf`: built by a client that reads the stored level
+   * check (R-7a) and derives `here` from the start marker. Absent on older
+   * builds, whose `known` counts are always 0, so the console can tell them apart.
+   */
+  seeded?: true;
 }
 
 export function summarizeJourney(model: MyRouteModel): JourneySummary {
@@ -48,14 +54,15 @@ export type JourneyContent = Pick<MyRouteInput, 'catalog' | 'episodes' | 'quests
  * The sync-store input (F-ROUTE-001 R-8): `summarizeJourney(buildMyRoute(...))`
  * for the snapshot about to upload. The route comes from the stored level-check
  * results with no completions (R-7a `startRouteOf`), so `known` counts the
- * quests the level check placed out and the learner has not done. Best effort:
+ * quests the level check placed out and the learner has not done, and the
+ * journey carries `seeded: true`. Best effort:
  * an error gives no journey and the upload goes on without it, never blocking
  * a sync.
  */
 export function journeySummaryOf(snapshot: ProgressSnapshot, content: JourneyContent, now: Date): JourneySummary | undefined {
   try {
     const route = startRouteOf(snapshot.placements, content.catalog, content.isEntitled);
-    return summarizeJourney(buildMyRoute({ snapshot, ...content, route, now }));
+    return { ...summarizeJourney(buildMyRoute({ snapshot, ...content, route, now })), seeded: true };
   } catch {
     return undefined;
   }

@@ -154,6 +154,15 @@ describe('console request bodies are strict (F-SPACE-002 §4.4)', () => {
     expect(TransferConsentSchema.safeParse({ ...consent, attest: 'self' }).success).toBe(false);
   });
 
+  it('consent may carry the terms digest the preview returned: 64 lowercase hex characters, optional', () => {
+    const digest = 'a1'.repeat(32);
+    expect(TransferConsentSchema.parse({ ...consent, termsDigest: digest })).toEqual({ ...consent, termsDigest: digest });
+    expect(TransferConsentSchema.safeParse({ ...consent, termsDigest: 'A1'.repeat(32) }).success).toBe(false);
+    expect(TransferConsentSchema.safeParse({ ...consent, termsDigest: 'a1'.repeat(31) }).success).toBe(false);
+    expect(TransferConsentSchema.safeParse({ ...consent, termsDigest: '' }).success).toBe(false);
+    expect(TransferConsentSchema.parse(consent)).not.toHaveProperty('termsDigest');
+  });
+
   it('preview: learner and code, optional fromSpaceId; normalizes the code', () => {
     const ok = TransferPreviewBodySchema.parse({ learnerId: 'profile:mina', code: 'abc-def', fromSpaceId: 'space:a' });
     expect(ok).toEqual({ learnerId: 'profile:mina', code: 'ABCDEF', fromSpaceId: 'space:a' });

@@ -209,20 +209,31 @@ export const learner = {
     how: {
       title: 'How the journey works',
       body: 'Each cell is one episode. Finish every quest in a cell to complete it and earn its Heritage cards. More stages open as the journey grows.',
+      /** Shown under `body` once the learner has a level-check result (F-PLC-001 section 3.7, wireframe placement I). */
+      placement: 'The pin shows where you started. A cell with a light outline and a check is one you can skip ahead of. You can still play it any time.',
     },
   },
 
   library: {
     title: 'Heritage Library',
+    /** A plain count of the cards held; no total, which would grow with every release (F-STORY-006 §3.7, D3). */
     collected: {
-      line: (collected: number, total: number) => `${collected} of ${total} collected`,
-      pill: (collected: number, total: number) => `${collected}/${total}`,
+      line: (collected: number) => plural('en', collected, { one: '1 card collected', other: `${collected} cards collected` }),
     },
     filterAll: 'All',
-    locked: 'Locked',
+    /** On a card earned since the learner last opened it (`newSinceLastView`). */
+    new: { pill: 'New' },
     /** Keyed by the schema's `Rarity`, so `es` and `ko` can translate each. */
     rarity: { common: 'common', uncommon: 'uncommon', rare: 'rare', legendary: 'legendary' },
-    how: { title: 'How to collect more', body: 'Finish quests to unlock cards.' },
+    /** The explainer, one line per award rule this build can fire (F-STORY-006 §3.7): what to do, never how far along. */
+    how: {
+      title: 'How to collect more',
+      quest: 'Finish a quest to earn its card.',
+      episode: 'Finish every quest in an episode to earn more cards.',
+      stage: (stage: number) => `Finish all of Stage ${stage} for the legendary cards.`,
+      story: 'Finish a story to earn its card.',
+      welcome: "Hoya's tiger card is a welcome gift.",
+    },
     /** Landmark names of the two panes on a wide window (F-LAYOUT-001 §3.13). */
     panes: { master: 'Card gallery', detail: 'Card details' },
     /** How to earn a locked card, one line per award rule (F-STORY-006 §3.7): never how far along. */
@@ -626,6 +637,8 @@ export const learner = {
       wordsLabel: (count: number) =>
         plural('en', count, { one: '1 word from this story', other: `${count} words from this story` }),
       hearWord: (romanization: string) => `Hear ${romanization}`,
+      /** A recap chip's "Show how to say it" button, named with its word so each one is distinct (WCAG 2.4.6). */
+      revealWord: (ko: string) => `Show how to say it: ${ko}`,
     },
     sequence: {
       title: 'Put the story in order',
@@ -1017,5 +1030,43 @@ export const learner = {
      * `keepReading` / `readAgain` label, `title` the story's title (content).
      */
     heroLabel: (cta: string, title: string) => `${cta}: ${title}`,
+  },
+
+  /**
+   * Vocabulary practice (F-VOC-003 / F-VOC-004). `speed.nudge` holds Hoya's Speed Round lines
+   * (F-VOC-004 §3.7): encouraging only, never a number of misses, a lost spark, a streak, combo or
+   * lives, a percentage, an age or a comparison with anyone (`logic/vocab/nudges.ts` scans them).
+   * `gloss` is the word's meaning in the UI language (content). Each set is rotated so the same line
+   * never plays twice in a row.
+   */
+  vocab: {
+    speed: {
+      nudge: {
+        right: {
+          lines: ['Got it!', 'Nice catch.'],
+          named: (gloss: string) => `Yes, ${gloss}!`,
+        },
+        /** At 3, 5, 8 and 10 sparks, in place of the right-answer line. */
+        milestone: {
+          three: '3 sparks!',
+          five: 'Look at that glow.',
+          eight: 'Your sparks are shining.',
+          ten: 'Full of sparks!',
+        },
+        miss: {
+          first: (gloss: string) => `That one is ${gloss}. Next time!`,
+          second: (gloss: string) => `Good try. Now you know ${gloss}.`,
+        },
+        idle: 'Take your time.',
+        start: 'Ready when you are.',
+        results: {
+          three: 'Wow, a bright round!',
+          two: 'Nice round.',
+          one: 'Good round. Every word helps.',
+          /** One star with no first-try right answer (F-RVW-001 §3.1's line). */
+          firstStar: 'Good try! You collected a star!',
+        },
+      },
+    },
   },
 } as const;

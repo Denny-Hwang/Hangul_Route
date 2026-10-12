@@ -53,6 +53,8 @@ The learner device is unauthenticated (children have no accounts), so the device
 
 Merging is idempotent and commutative on the sets above (`merge(a,b) ≡ merge(b,a)` except `profileId`).
 
+`rebaseSnapshot(base, ours, theirs)` folds a server answer into a copy that changed while the request was in flight (F-SYNC-002 §3.2). `base` went up, `theirs` came back and already holds `base`, `ours` is `base` plus the writes made since. It applies the rules above after one step: for each quest `theirs` holds, the `attempts` that `base` already gave it are subtracted from `ours`, so each attempt counts once. A quest whose `completedAt` in `ours` is later than in `base` (finished during the request) keeps the later date; between devices the earliest-`completedAt` rule above still holds.
+
 ### 3.4 Summary is client-computed (`logic/sync/summarize.ts`)
 
 `ProgressSummary` (content-schema): `lastActiveAt`, `streakDays`, `stage1 { questsDone, questsTotal, anchorAccuracy | null }`, `cardsUnlocked`, `minutesLast7d`, `jamoRecognized[]`, `needsPractice[]` (≤ 3), `planProgress {}`. Teachers will read only this column (roadmap §3.1).
@@ -83,7 +85,7 @@ Merging is idempotent and commutative on the sets above (`merge(a,b) ≡ merge(b
 | `content-schema/__tests__/sync.test.ts` | summary / put body / backup file schemas parse and reject |
 | `backend/__tests__/sync.test.ts` | register, device auth (401/403), put/get, 409 conflict + merged retry, concurrent PUTs on one base rev (one wins), inbox shape |
 | `backend/db/__tests__/db-contract.test.ts` | `putSnapshot(record, baseRev)` compare-and-set on both backends |
-| `mobile/logic/sync/__tests__/merge.test.ts` | every rule in §3.3, commutativity, idempotence |
+| `mobile/logic/sync/__tests__/merge.test.ts` | every rule in §3.3, commutativity, idempotence; `rebaseSnapshot` attempts subtraction and kept `completedAt` |
 | `mobile/logic/sync/__tests__/summarize.test.ts` | §3.4 fields on fixtures |
 | `mobile/logic/sync/__tests__/engine.test.ts` | ok / conflict-then-ok / double conflict / error |
 | `mobile/logic/sync/__tests__/backup.test.ts` | round trip, version and shape rejection |

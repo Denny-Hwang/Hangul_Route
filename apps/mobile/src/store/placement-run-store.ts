@@ -45,6 +45,12 @@ interface Actions {
    * time away (`resumeClocks`).
    */
   resume: (profileId: string, nowMs: number, bankVersion: number) => Promise<ResumeOffer | null>;
+  /**
+   * Read only, for Home's card (F-PLC-001 section 3.10: "Continue the level
+   * check" while a run can be resumed): what `resume` would offer, without
+   * restoring the run to memory or removing a stale one.
+   */
+  peekResumable: (profileId: string, nowMs: number, bankVersion: number) => Promise<ResumeOffer['kind'] | null>;
   /** Start again, or the run finished and its result is recorded. */
   discard: (profileId: string) => void;
   /** Reads `placement-ui:<profileId>`; a mark made in memory before the read finished is kept. */
@@ -118,6 +124,11 @@ export const usePlacementRunStore = create<State & Actions>((set, get) => ({
     const offer = offerFrom(stored);
     if (offer === null) removeKey(runKey(profileId)).catch(() => undefined);
     return offer;
+  },
+
+  peekResumable: async (profileId, nowMs, bankVersion) => {
+    const candidate = get().active[profileId] ?? (await readJson<unknown>(runKey(profileId)));
+    return resumableRun(candidate, nowMs, bankVersion)?.kind ?? null;
   },
 
   discard: (profileId) => {

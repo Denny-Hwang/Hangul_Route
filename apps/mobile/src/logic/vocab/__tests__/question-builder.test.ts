@@ -2,6 +2,7 @@ import { decomposeSyllable, type RuntimeVocabItem } from '@hangul-route/content-
 import { COLOR_CONFUSION_PAIRS } from '@hangul-route/design-system/word-art';
 import { describe, expect, it } from 'vitest';
 import { VOCAB_ITEMS } from '../../../content/__generated__/vocab';
+import { VOCAB_EXCLUDED_PAIRS } from '../excluded-pairs';
 import {
   NotEnoughWords,
   buildQuestions,
@@ -381,6 +382,59 @@ describe('distractor rules (§3.3)', () => {
       const picked = distractorsFor(FAMILY[4]!, 'image-to-word', input({ pool: [FAMILY[4]!], universe, seed }));
       const groups = picked.map((p) => p.senseGroup).filter((g) => g !== undefined);
       expect(new Set(groups).size).toBe(groups.length);
+    }
+  });
+
+  it('rule 1 never puts two overlapping words together (VOCAB_EXCLUDED_PAIRS: 공 and each ball sport, 불 and 빛)', () => {
+    const SPORTS = topicOf('sports');
+    const SCIENCE = topicOf('science');
+    const cases: [string, readonly RuntimeVocabItem[], string[]][] = [
+      ['vocab:gong-ball', SPORTS, ['vocab:chukgu', 'vocab:yagu', 'vocab:nonggu', 'vocab:baegu']],
+      ['vocab:chukgu', SPORTS, ['vocab:gong-ball']],
+      ['vocab:yagu', SPORTS, ['vocab:gong-ball']],
+      ['vocab:nonggu', SPORTS, ['vocab:gong-ball']],
+      ['vocab:baegu', SPORTS, ['vocab:gong-ball']],
+      ['vocab:bul', SCIENCE, ['vocab:bit']],
+      ['vocab:bit', SCIENCE, ['vocab:bul']],
+    ];
+    for (const [id, topic, partners] of cases) {
+      for (const levelOrder of [1, 2] as const) {
+        for (let seed = 0; seed < 15; seed++) {
+          for (const format of ['word-to-image', 'image-to-word', 'audio-to-image'] as const) {
+            for (const universe of [topic, VOCAB_ITEMS]) {
+              const picked = distractorsFor(byId(id), format, input({ pool: topic, universe, levelOrder, seed }));
+              expect(picked).toHaveLength(3);
+              for (const partner of partners) expect(picked.map((p) => p.id)).not.toContain(partner);
+            }
+          }
+        }
+      }
+    }
+  });
+
+  it('rule 1 keeps an overlapping pair apart among the options of another answer too', () => {
+    const SPORTS = topicOf('sports');
+    for (let seed = 0; seed < 300; seed++) {
+      for (const format of ['word-to-image', 'image-to-word'] as const) {
+        const ids = distractorsFor(byId('vocab:suyeong'), format, input({ pool: SPORTS, seed })).map((p) => p.id);
+        expect(ids).toHaveLength(3);
+        for (const [a, b] of VOCAB_EXCLUDED_PAIRS) expect(ids.includes(a) && ids.includes(b), `${seed} ${a} ${b}`).toBe(false);
+      }
+    }
+  });
+
+  it('builds full Sports and Science rounds that never show an overlapping pair', () => {
+    for (const key of ['sports', 'science']) {
+      const pool = topicOf(key);
+      for (let seed = 0; seed < 40; seed++) {
+        const i = input({ pool, seed, count: pool.length, boxOf: (id) => (id.length + seed) % 6 });
+        const questions = buildQuestions(i);
+        assertProperties(questions, i);
+        for (const q of questions) {
+          const ids = q.options.map((o) => o.id);
+          for (const [a, b] of VOCAB_EXCLUDED_PAIRS) expect(ids.includes(a) && ids.includes(b), `${q.key} ${a} ${b}`).toBe(false);
+        }
+      }
     }
   });
 

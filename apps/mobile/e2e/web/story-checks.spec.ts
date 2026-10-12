@@ -385,15 +385,14 @@ test.describe('story check step (fixture bundle)', () => {
     const body = await page.locator('body').innerText();
     expect(body).not.toMatch(EMOJI);
 
-    // Each speaker asks for its word; story.recap.word_played once per word per visit.
+    // One play control per chip: the speaker (the Korean is plain text, not a second button that says nothing of sound).
+    for (const w of RECAP) {
+      await expect(page.getByTestId(`story-recap-word-${w.id}`).getByRole('button')).toHaveCount(1);
+    }
+    // The speakers stay (F-AUDIO-004 §3.8), but with no voice a tap makes no sound: story.recap.word_played records nothing.
     await page.getByTestId('story-recap-hear-sejong').click();
-    await page.getByTestId('story-recap-hear-sejong').click();
-    await page.getByTestId('story-recap-text-hangeul').click();
-    const played = (await storyEvents(page)).filter((e) => e.name === 'story.recap.word_played').map((e) => e.payload);
-    expect(played).toEqual([
-      { storyId: 'story:hangul-day', wordId: 'sejong' },
-      { storyId: 'story:hangul-day', wordId: 'hangeul' },
-    ]);
+    await page.getByTestId('story-recap-hear-hangeul').click();
+    expect((await storyEvents(page)).filter((e) => e.name === 'story.recap.word_played')).toEqual([]);
 
     // Unscored: Done ends the step; the quest moves to the sequence step.
     await page.getByTestId('story-recap-done').click();
@@ -403,11 +402,13 @@ test.describe('story check step (fixture bundle)', () => {
     expect(errors).toEqual([]);
   });
 
-  test('word recap with a Korean voice: a speaker says its word in Korean, and no "Say it yourself" chip', async ({ page }) => {
+  test('word recap with a Korean voice: a speaker says its word in Korean, no "Say it yourself" chip, word_played once per word, and the last item audio is cut', async ({ page }) => {
     // This spec's own engine with one ko-KR voice (it wins over the silent one of fixtures.ts).
     await page.addInitScript(() => {
       const spoken: string[] = [];
-      (window as Window & { __spoken?: string[] }).__spoken = spoken;
+      const w = window as Window & { __spoken?: string[]; __cancels?: number };
+      w.__spoken = spoken;
+      w.__cancels = 0;
       const voice = { name: 'Yuna', lang: 'ko-KR', voiceURI: 'Yuna', localService: true, default: false };
       Object.defineProperty(window, 'speechSynthesis', {
         configurable: true,
@@ -421,7 +422,9 @@ test.describe('story check step (fixture bundle)', () => {
               u.onend?.call(u, new Event('end') as SpeechSynthesisEvent);
             }, 0);
           },
-          cancel: () => undefined,
+          cancel: () => {
+            w.__cancels = (w.__cancels ?? 0) + 1;
+          },
           getVoices: () => [voice],
           addEventListener: () => undefined,
           removeEventListener: () => undefined,
@@ -431,13 +434,42 @@ test.describe('story check step (fixture bundle)', () => {
     await openChecks(page);
     await answer(page, C1);
     await answer(page, C2);
-    await answer(page, C3);
+    await option(page, C3.right).click();
+    await expect(page.getByText(C3.explain)).toBeVisible();
+    // Whatever the last item was saying is cut when the recap opens (no Korean under the recap heading).
+    const cancelsBefore = await page.evaluate(() => (window as Window & { __cancels?: number }).__cancels ?? 0);
+    await nextButton(page).click();
     await expect(page.getByTestId('story-recap-title')).toBeVisible();
+    await expect
+      .poll(() => page.evaluate(() => (window as Window & { __cancels?: number }).__cancels ?? 0))
+      .toBeGreaterThan(cancelsBefore);
     await expect(page.getByTestId('story-recap-say-it')).toHaveCount(0);
     await page.getByTestId('story-recap-hear-hangeullal').click();
     await expect
       .poll(() => page.evaluate(() => (window as Window & { __spoken?: string[] }).__spoken ?? []))
       .toContain('한글날');
+
+    // story.recap.word_played once per word per visit.
+    await page.getByTestId('story-recap-hear-sejong').click();
+    await page.getByTestId('story-recap-hear-sejong').click();
+    const played = (await storyEvents(page)).filter((e) => e.name === 'story.recap.word_played').map((e) => e.payload);
+    expect(played).toEqual([
+      { storyId: 'story:hangul-day', wordId: 'hangeullal' },
+      { storyId: 'story:hangul-day', wordId: 'sejong' },
+    ]);
+  });
+
+  test('Close on the word recap ends the step like Done: every item was answered, and the recap is unscored', async ({ page }) => {
+    await openChecks(page);
+    await answer(page, C1);
+    await answer(page, C2);
+    await answer(page, C3);
+    await expect(page.getByTestId('story-recap-title')).toBeVisible();
+    await page.getByTestId('story-check-close').click();
+    await expect(stepHeading(page, 'Put the story in order')).toBeVisible();
+    const events = await storyEvents(page);
+    expect(events.filter((e) => e.name === 'story.check.finished')).toHaveLength(1);
+    expect(events.filter((e) => e.name === 'story.check.answered')).toHaveLength(3);
   });
 
   test('word recap, hide until tap: each chip reveals its own romanization', async ({ page }) => {
@@ -449,6 +481,9 @@ test.describe('story check step (fixture bundle)', () => {
     const hangeul = page.getByTestId('story-recap-word-hangeul');
     await expect(sejong).toContainText('King Sejong');
     await expect(page.getByTestId('story-recap-text-sejong')).not.toContainText('sejong');
+    // Each reveal button names its word: a screen reader can tell them apart.
+    await expect(page.getByTestId('story-recap-reveal-sejong')).toHaveAccessibleName('Show how to say it: 세종');
+    await expect(page.getByTestId('story-recap-reveal-hangeul')).toHaveAccessibleName('Show how to say it: 한글');
     await page.getByTestId('story-recap-reveal-sejong').click();
     await expect(page.getByTestId('story-recap-text-sejong')).toContainText('sejong');
     await expect(page.getByTestId('story-recap-reveal-sejong')).toHaveCount(0);

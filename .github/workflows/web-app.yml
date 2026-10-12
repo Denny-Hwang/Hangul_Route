@@ -97,6 +97,8 @@ jobs:
           STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test story-reader placement-screens
           # F-STORY-003 PR 3.5b: Story Order scene art plays the fixture story's shelf quest.
           STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test story-order -g "scene art"
+          # F-PLC-001 P-8: the placement report and Choose a different start.
+          STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test placement-report
           # F-STORY-003 PR 3.4a: the story check step inside the fixture story's quest.
           STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test story-checks
           # F-AUDIO-004 A-6: the clip path (precache, runtime cache, offline clip, clip > voice) on

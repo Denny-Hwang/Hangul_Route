@@ -59,6 +59,13 @@ export const JourneySummarySchema = z.object({
       }),
     )
     .max(16),
+  /**
+   * Set by builds that compute the journey from the stored level check
+   * (F-ROUTE-001 R-7a follow-up). Absent on older builds, whose `known` is
+   * always 0 and whose `here` ignores the start marker; the console strip uses
+   * it to spot that skew. A bad value drops only the marker, never the journey.
+   */
+  seeded: z.literal(true).optional().catch(undefined),
 });
 export type JourneySummary = z.infer<typeof JourneySummarySchema>;
 
