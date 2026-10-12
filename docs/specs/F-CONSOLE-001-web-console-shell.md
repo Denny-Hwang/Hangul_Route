@@ -22,7 +22,7 @@ A teacher needs one place to make a class, read the code aloud, and see who prac
 ### 3.1 API reachable from browsers
 
 - The Worker answers CORS for `/api/*`: preflight `OPTIONS` → 204 with `Access-Control-Allow-Origin` echoing an **allowed** origin, `Allow-Headers: Content-Type, Authorization`, methods `GET POST PUT DELETE OPTIONS`, `Max-Age` 1 day. Disallowed origins get no `Allow-Origin` header (the browser blocks).
-- Allowed origins come from the Worker var `ALLOWED_ORIGINS` (comma-separated). Unset → the defaults: `https://hangulroute.com`, `https://www.hangulroute.com`, `https://app.hangulroute.com`, any `https://*.workers.dev`, and `http://localhost:*` / `http://127.0.0.1:*`. Pure `lib/cors.ts`, 100 % tested.
+- Allowed origins come from the Worker var `ALLOWED_ORIGINS` (comma-separated). Unset → the defaults: `https://hangulroute.com`, `https://www.hangulroute.com`, `https://app.hangulroute.com`, any `https://*.workers.dev`, and `http://localhost:*` / `http://127.0.0.1:*`. Pure `lib/cors.ts`, 100 % tested. The same list is also the Clerk `authorizedParties` for sign-in tokens (F-APP-001 A-9): a host left out loses console sign-in on the API (401).
 
 ### 3.2 Sign-in — `/teach` (`console/sign-in`)
 

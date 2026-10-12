@@ -14,7 +14,7 @@ import { bandLabel } from '../../logic/placement/copy';
 import { startingSpotRow } from '../../logic/placement/report-page';
 import type { RootStackParamList } from '../../navigation/types';
 import { useProgressStore } from '../../store/progress-store';
-import { effectiveTier, useTierStore } from '../../store/tier-store';
+import { useAccessTier } from '../../store/tier-store';
 import { SKILL_ACCENT } from '../my-route/SkillsCard';
 
 /**
@@ -142,14 +142,13 @@ export function LearningRouteRow({
   const locale = useLocale();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const hydrated = useProgressStore((s) => s.hydratedFor.has(profileId));
-  // Re-renders when the inbox changes this learner's tier, as the page does.
-  const cachedTier = useTierStore((s) => s.byLearner[profileId]);
+  // The learner's access tier (F-ENT-003 section 3.4); re-renders when it changes, as the page does.
+  const tier = useAccessTier(profileId);
   const localized = useMemo(() => localizedRouteContent(locale), [locale]);
 
   const view = useMemo((): DashboardRowView | null => {
     try {
       const snapshot = stored ?? emptySnapshot(profileId);
-      const tier = effectiveTier(profileId, new Date()).tier;
       const model = buildMyRoute(routeModelInput({ snapshot, tier, localized, now: new Date() }));
       const spot = showStarted ? startingSpotRow(snapshot.placements) : null;
       const started = spot === null ? null : { stage: spot.level.stage, band: bandLabel(messages, spot.level), date: formatDate(locale, spot.takenAt, 'monthDay') };
@@ -157,9 +156,7 @@ export function LearningRouteRow({
     } catch {
       return null;
     }
-    // `cachedTier` re-renders the row when the inbox changes the tier.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stored, profileId, name, showStarted, cachedTier, locale, localized, messages]);
+  }, [stored, profileId, name, showStarted, tier, locale, localized, messages]);
 
   if (!hydrated) return null;
   const onOpen = (): void => navigation.navigate('MyRoute', { source: 'parent', profileId, viewer: 'grownup' });

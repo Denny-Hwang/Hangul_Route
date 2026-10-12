@@ -6,14 +6,16 @@ import type { MyRouteMessages } from '../../copy';
  * R-3 puts the final copy in the dictionary (`learner.myRoute`,
  * `caregiver.journey`, `caregiver.skillsNote`, `a11y.myRoute`); this fixture
  * only drives the selector tests and the copy-rule test of the drafts.
+ * LR-1 (AMENDMENTS-ROUTE-LEARNING-ROUTE section 7.2) renamed the page to
+ * "Learning Route"; the four renamed values below follow it.
  */
 const quests = (n: number): string => plural('en', n, { one: '1 quest', other: `${n} quests` });
 
 export const DRAFT_EN: MyRouteMessages = {
   learner: {
-    title: 'My route',
+    title: 'Learning Route',
     hero: {
-      start: 'Your Hangul route starts here.',
+      start: 'Your Learning Route starts here.',
       goal: 'Your first goal: read every Hangul letter.',
       here: (n, title) => `You are on Stage ${n}: ${title}.`,
       next: (title) => `Next: ${title}`,
@@ -55,9 +57,9 @@ export const DRAFT_EN: MyRouteMessages = {
     started: (name) => `${name} started here.`,
     known: (name) => `${name} already knew this.`,
     quests: (name, n) => `In ${quests(n)} ${name} finished`,
-    viewing: (name) => `Viewing ${name}'s journey`,
+    viewing: (name) => `Viewing ${name}'s Learning Route`,
     tiles: (n) => `Spelling with tiles: ${quests(n)}`,
-    start: (name) => `${name}'s Hangul route starts here.`,
+    start: (name) => `${name}'s Learning Route starts here.`,
     goal: 'First goal: read every Hangul letter.',
     rest: (name) => `${name} did everything that is open right now. More is coming.`,
     beyond: (name) => `${name} knows a lot! More adventures are coming.`,

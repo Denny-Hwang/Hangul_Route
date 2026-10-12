@@ -1,9 +1,12 @@
+import { useAccountStore } from './account-store';
 import { useAudioStore } from './audio-store';
 import { useLayoutStore } from './layout-store';
 import { useLocaleStore } from './locale-store';
+import { useMembershipStore } from './membership-store';
 import { useProfileStore } from './profile-store';
 import { useProgressStore } from './progress-store';
 import { useStoryStore } from './story-store';
+import { useTierStore } from './tier-store';
 
 /**
  * Cold start (audit UX-01 / L16, F-PROF-001 §3.1): read the profile list,
@@ -22,7 +25,12 @@ import { useStoryStore } from './story-store';
  * that failed looks the same, and a blank record would replace real
  * progress. Its welcome card arrives with Home's `ensure` (§3.3), in memory,
  * and is saved by the learner's first real write.
- * App.tsx mounts the navigator and runs the start-up sync
+ * The account (legacy subscription), every profile's cached tier and every
+ * profile's spaces load in the same pass (F-ENT-003 section 3.4), so the first
+ * render and the first plan derivation already read the access tier the server
+ * last gave: a premium learner offline never sees a lesson close or a plan item
+ * go, and a member the server has not answered for yet fails open.
+ * App.tsx mounts the navigator, derives plans and runs the start-up sync
  * (F-SYNC-002 §3.2, "after hydration") only once this resolves.
  */
 export async function hydrateLearnerData(): Promise<void> {
@@ -30,11 +38,20 @@ export async function hydrateLearnerData(): Promise<void> {
   const { profiles } = useProfileStore.getState();
   const progress = useProgressStore.getState();
   const stories = useStoryStore.getState();
-  await Promise.all([
+  const tiers = useTierStore.getState();
+  const memberships = useMembershipStore.getState();
+  // Every hydrate finishes before this settles, even when one fails, so `ready`
+  // never comes while another read (the account's PIN hash) is still pending.
+  const results = await Promise.allSettled([
     useAudioStore.getState().hydrate(),
     useLayoutStore.getState().hydrate(),
     useLocaleStore.getState().hydrate(profiles.map((p) => p.id)),
+    useAccountStore.getState().hydrate(),
     ...profiles.map((p) => progress.hydrate(p.id)),
     ...profiles.map((p) => stories.hydrate(p.id)),
+    ...profiles.map((p) => tiers.hydrate(p.id)),
+    ...profiles.map((p) => memberships.hydrate(p.id)),
   ]);
+  const failed = results.find((r): r is PromiseRejectedResult => r.status === 'rejected');
+  if (failed) throw failed.reason;
 }

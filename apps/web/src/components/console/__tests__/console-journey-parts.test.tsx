@@ -48,7 +48,7 @@ describe('JourneyStrip (console/roster)', () => {
   it('shows the label, seven drawn segments, "On Stage 2" and the stage lines', () => {
     const html = render('class', { journey });
     expect(html).toContain('data-testid="journey-strip"');
-    expect(html).toContain('>Journey<');
+    expect(html).toContain('>Learning Route<');
     expect(html).toContain('>On Stage 2<');
     expect(segmentsOf(html).match(/<svg/g)).toHaveLength(7);
     expect(html).toContain('<details');

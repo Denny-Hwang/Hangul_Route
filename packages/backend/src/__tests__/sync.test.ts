@@ -854,3 +854,202 @@ describe('vocab and summary.vocab (F-VOC-005 section 3.3, server first and the a
     expect(data.summary.vocab).toEqual(counts);
   });
 });
+
+describe('questDoneAt and summary.activity (F-REPORT-001 section 3.3.1, the quest latch and the additive preserve rule, RP-W1)', () => {
+  beforeEach(() => db.reset());
+  const base = { schemaVer: 1, contentVer: '2026.10' };
+  const latch = { 'letters-q1': '2026-10-01T09:00:00.000Z', 'letters-q2': '2026-10-05T10:00:00.000Z' };
+  const activity = {
+    v: 1,
+    tz: 540,
+    asOf: '2026-10-11',
+    days: [
+      { d: '2026-10-05', min: 12, q: 1, c: 1, w: 0, j: ['ㅂ'] },
+      { d: '2026-10-11', min: 9, q: 0, c: 0, w: 0, j: [] },
+    ],
+    months: [{ m: '2026-10', min: 21, q: 1, c: 1, w: 0, days: 2 }],
+    total: { since: '2026-10-01', min: 33, q: 2, c: 1, w: 0, days: 3 },
+    milestones: [{ stage: 'stage1', on: '2026-10-05' }],
+    next: { q: 'letters-q3', plan: false },
+    revisit: 'letters-q2',
+  };
+  const quests = [
+    { questId: 'letters-q1', stars: 3 as const },
+    { questId: 'letters-q2', stars: 2 as const },
+  ];
+  const withLatch = (profileId: string, questDoneAt: unknown) => ({ ...snapshotFor(profileId, quests), questDoneAt });
+  /** The day key `n` days before 2026-10-11 (the fixtures' `asOf`). */
+  const dayKey = (n: number) => new Date(Date.UTC(2026, 9, 11) - n * 86_400_000).toISOString().slice(0, 10);
+
+  type Stored = { data: { rev: number; snapshot: Record<string, unknown>; summary: Record<string, unknown> } };
+  async function getStored(learnerId: string, auth: Record<string, string>) {
+    const res = await app.request(`/api/sync/learners/${learnerId}/snapshot`, { headers: auth });
+    return (await res.json()) as Stored;
+  }
+
+  it('round-trips the latch and the activity summary', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, latch), summary: { ...summary, activity } })).status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot.questDoneAt).toEqual(latch);
+    expect(got.data.summary.activity).toEqual(activity);
+  });
+
+  it('an old client (no latch, no activity) is accepted exactly as today and reads back without either key', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: snapshotFor(r.learnerId), summary })).status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot).not.toHaveProperty('questDoneAt');
+    expect(got.data.summary).not.toHaveProperty('activity');
+  });
+
+  it('behaviour 8: an old build re-uploading after a newer build keeps the stored latch and summary.activity', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, latch), summary: { ...summary, activity } });
+
+    const old = await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: snapshotFor(r.learnerId, quests), summary: { ...summary, streakDays: 4 } });
+    expect(old.status).toBe(200);
+    expect(old.json.data?.rev).toBe(2);
+
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot.questDoneAt).toEqual(latch);
+    expect(got.data.summary.activity).toEqual(activity);
+    // everything the old client did send is taken as sent
+    expect(got.data.summary.streakDays).toBe(4);
+  });
+
+  it('behaviour 8 with a stored empty latch: a learner with sessions but no finished quest keeps the activity too', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    const sessionsOnly = { ...activity, days: [activity.days[1]], months: [{ ...activity.months[0], q: 0, c: 0, days: 1 }], total: { since: '2026-10-11', min: 9, q: 0, c: 0, w: 0, days: 1 }, milestones: [] };
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: { ...snapshotFor(r.learnerId), questDoneAt: {} }, summary: { ...summary, activity: sessionsOnly } });
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: snapshotFor(r.learnerId), summary })).status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot.questDoneAt).toEqual({});
+    expect(got.data.summary.activity).toEqual(sessionsOnly);
+  });
+
+  it('a sent latch is unioned with the stored one (earliest time wins), and the sent activity replaces the stored one', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, latch), summary: { ...summary, activity } });
+    const sent = { 'letters-q1': '2026-10-09T00:00:00.000Z', 'letters-q3': '2026-10-11T08:00:00.000Z' };
+    const fresh = { ...activity, total: { ...activity.total, q: 3 } };
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: withLatch(r.learnerId, sent), summary: { ...summary, activity: fresh } })).status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot.questDoneAt).toEqual({ ...latch, 'letters-q3': sent['letters-q3'] });
+    expect(got.data.summary.activity).toEqual(fresh);
+  });
+
+  it('a build that sends the latch but no summary.activity (the latch writer without the activity builder) keeps the stored activity', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, latch), summary: { ...summary, activity } });
+    const sent = { 'letters-q3': '2026-10-11T08:00:00.000Z' };
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: withLatch(r.learnerId, sent), summary: { ...summary, streakDays: 5 } })).status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot.questDoneAt).toEqual({ ...latch, ...sent });
+    expect(got.data.summary.activity).toEqual(activity);
+    expect(got.data.summary.streakDays).toBe(5);
+  });
+
+  it('a device that upgraded after another device synced never erases that device\'s first-finish days', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    // device A (new build) latches q2: rev 1
+    const a = { 'letters-q2': '2026-10-05T10:00:00.000Z' };
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, a), summary: { ...summary, activity } });
+    // device B (old build) uploads without the field: the preserve rule keeps q2, rev 2
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: snapshotFor(r.learnerId), summary })).status).toBe(200);
+    // device B upgrades, backfills q1 and uploads at its in-sync rev without ever having seen q2
+    const b = { 'letters-q1': '2026-10-12T10:00:00.000Z' };
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 2, snapshot: withLatch(r.learnerId, b), summary })).status).toBe(200);
+    expect((await getStored(r.learnerId, auth)).data.snapshot.questDoneAt).toEqual({ ...a, ...b });
+  });
+
+  it('an explicit empty record is a value: unioned with the stored latch (never a delete), carrying its own summary', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, latch), summary: { ...summary, activity } });
+    const fresh = { v: 1, tz: 540, asOf: '2026-10-11', days: [], months: [], total: { since: null, min: 0, q: 0, c: 0, w: 0, days: 0 }, milestones: [] };
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: { ...snapshotFor(r.learnerId), questDoneAt: {} }, summary: { ...summary, activity: fresh } })).status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot.questDoneAt).toEqual(latch);
+    expect(got.data.summary.activity).toEqual(fresh);
+  });
+
+  it('malformed activity: PUT still 200, activity dropped, the rest of the upload stored', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    const day = activity.days[0];
+    const malformed = [
+      'activity',
+      { ...activity, v: 2 },
+      { ...activity, tz: 900 },
+      { ...activity, days: [activity.days[1], day] },
+      { ...activity, days: [{ ...day, d: '2026-10-12' }] },
+      { ...activity, days: [{ ...day, j: ['abc'] }] },
+      { ...activity, days: [{ ...day, min: -1 }] },
+      { ...activity, next: { q: 'letters-q3', plan: false, name: 'Suni' } },
+      // Oversized: dropped like any malformed activity, so no roster copies it.
+      { ...activity, days: Array.from({ length: 36 }, (_, i) => ({ ...day, d: dayKey(35 - i) })) },
+    ];
+    let rev = 0;
+    for (const bad of malformed) {
+      const res = await put(r.learnerId, auth, { ...base, baseRev: rev, snapshot: withLatch(r.learnerId, latch), summary: { ...summary, streakDays: 3, activity: bad } });
+      expect(res.status, JSON.stringify(bad).slice(0, 80)).toBe(200);
+      rev += 1;
+      const got = await getStored(r.learnerId, auth);
+      expect(got.data.summary).not.toHaveProperty('activity');
+      expect(got.data.summary.streakDays).toBe(3);
+      expect(got.data.snapshot.questDoneAt).toEqual(latch);
+    }
+  });
+
+  it('assumption b: a maximal activity summary (every bound at its limit) round-trips', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    const MAX = 100_000;
+    const letters = Array.from({ length: 12 }, (_, i) => String.fromCodePoint(0x3131 + i) + String.fromCodePoint(0x314f + i));
+    const monthKey = (n: number) => new Date(Date.UTC(2026, 9 - n, 1)).toISOString().slice(0, 7);
+    const maximal = {
+      v: 1,
+      tz: -840,
+      asOf: '2026-10-11',
+      days: Array.from({ length: 35 }, (_, i) => ({ d: dayKey(34 - i), min: MAX, q: MAX, c: MAX, w: MAX, j: letters })),
+      months: Array.from({ length: 24 }, (_, i) => ({ m: monthKey(23 - i), min: MAX, q: MAX, c: MAX, w: MAX, days: 31 })),
+      total: { since: '2024-11-01', min: MAX, q: MAX, c: MAX, w: MAX, days: MAX },
+      milestones: Array.from({ length: 16 }, (_, i) => ({ stage: `stage-${String(i).padStart(26, '0')}`, on: dayKey(16 - i) })),
+      next: { q: 'q'.repeat(64), plan: true },
+      revisit: 'r'.repeat(64),
+    };
+    const bytes = new TextEncoder().encode(JSON.stringify(maximal)).length;
+    // Well inside the Worker body limit (100 MB) and a D1 row (1 MB): a few kilobytes.
+    expect(bytes).toBeLessThan(12 * 1024);
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, latch), summary: { ...summary, activity: maximal } })).status).toBe(200);
+    expect((await getStored(r.learnerId, auth)).data.summary.activity).toEqual(maximal);
+  });
+
+  it('a 409 hands the stored latch and activity back for the client merge', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, latch), summary: { ...summary, activity } });
+    const stale = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: snapshotFor(r.learnerId), summary });
+    expect(stale.status).toBe(409);
+    const data = stale.json.data as { snapshot: { questDoneAt?: unknown }; summary: { activity?: unknown } };
+    expect(data.snapshot.questDoneAt).toEqual(latch);
+    expect(data.summary.activity).toEqual(activity);
+  });
+
+  it('rejects a malformed latch with 422 and stores nothing', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    for (const bad of [null, ['letters-q1'], { 'letters-q1': 1 }, { ['q'.repeat(65)]: '2026-10-01T09:00:00.000Z' }, { 'letters-q1': '' }]) {
+      expect((await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, bad), summary })).status).toBe(422);
+    }
+    expect(await db.getSnapshot(r.learnerId)).toBeNull();
+  });
+});

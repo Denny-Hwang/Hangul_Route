@@ -15,7 +15,7 @@ import { telemetryRoutes } from './routes/telemetry';
 import { transferSpaceRoutes } from './routes/transfers';
 import { waitlistRoutes } from './routes/waitlist';
 
-const app = new Hono<{ Bindings: RuntimeEnv & { ALLOWED_ORIGINS?: string } }>();
+const app = new Hono<{ Bindings: RuntimeEnv }>();
 
 // Browser callers (PWA, console) live on other origins — F-CONSOLE-001 §3.1.
 app.use(
