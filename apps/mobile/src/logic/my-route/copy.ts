@@ -218,7 +218,7 @@ export type TrailEntry =
  * not-open-yet stage (playable content, not entitled) keeps its full row and
  * never merges into a coming-later run.
  */
-export function trailEntries(model: MyRouteModel, ctx: CopyContext): TrailEntry[] {
+export function trailEntries(model: Pick<MyRouteModel, 'stages'>, ctx: CopyContext): TrailEntry[] {
   const out: TrailEntry[] = [];
   let run: StageRow[] = [];
   const flush = (): void => {

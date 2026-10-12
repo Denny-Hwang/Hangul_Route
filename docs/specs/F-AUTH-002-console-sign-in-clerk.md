@@ -45,6 +45,8 @@ A teacher opens `/teach`, signs in with Google or an email code, lands on the ho
 
 ### 3.6 Owner operations
 
+> **Amended by F-APP-001 (2026-10-11).** Grown-up sign-in moves to **`/signin` on `app.hangulroute.com`** (persona intro from `?persona=` or `?as=`, a safe `?next=` checked by `safeNextPath`, `?lang=`), which also routes a signed-in grown-up to the persona home (`/parent` or `/teach/home`, `homeFor`). Account creation (sign-up) is hidden behind the adult step `?mode=create` (an affirmation, then Clerk sign-up with a verified email); the Welcome row and the site links open sign-in only. `useConsole()` sends a signed-out visitor to `/signin?next=<path and query>`. On a device with learner profiles an OAuth one-tap sign-in alone does not unlock the grown-up area: Clerk reverification asks for a secret first (F-APP-001 section 3.9). Owner step: the `hangul-route-app` build gains the same `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` as `hangul-route-web` (runbook S-1), and the Clerk Production instance must accept `https://app.hangulroute.com` (runbook S-2). The Clerk instance, the keys and the Worker verification do not change.
+
 - Keys stay in the dashboard (runbook Step 7). Moving the Clerk instance from Development to **Production** later changes both keys and requires the production domain (`hangulroute.com`) in Clerk; the console code does not change.
 
 ## 4. Out of scope

@@ -449,15 +449,15 @@ Coverage: `apps/mobile/src/logic` >= 90 % with `logic/my-route/` at 100 %; `pack
 | R-2b | `feat(design-system)`: `PipRow` (five drawn shapes, cursor and start markers), border token via `design/tokens/` + `design-token-sync` | M | design mock |
 | R-3 | `feat(mobile)`: `MyRoute` screen (phone / regular / wide single column), navigation + gate check, `learner.myRoute` / `a11y.myRoute` en strings, Journey header button, flag | L | R-1a, R-1b, R-2b, R-W1 deployed, R-4a (so Home and My route share one cursor for a placed-out learner) |
 | R-4a | `feat(mobile)`: `NextQuestInput.skipQuestIds`; Home and Results pass the same `isEntitled` / `skipQuestIds`; Home keeps its replay fallback; the one predicate is `logic/entitlement.ts` `isStagePlayable`, which `content/sync-context.ts` `journeyContent` (`summary.journey`, R-8) already binds | S | OD-4 |
-| R-4b | `feat(mobile)`: Home route strip replaces the bar (`HomeScreen.tsx:199-202`) | M | R-3, OD-3, F-STORY-004 4.4a, F-LAYOUT-001 5c |
+| R-4b | `feat(mobile)`: Home route strip replaces the bar (`HomeScreen.tsx:199-202`): the here stage's pips and the seven-segment overview (`StageSegments` in `packages/design-system`, the PipRow shape vocabulary); `logic/my-route/home-strip.ts` takes optional `goalStage` and `week`, fed by LR-5a and R-7b; the page and the strip share one model input (`logic/my-route/route-input.ts`) | M | R-3, OD-3, F-STORY-004 4.4a, F-LAYOUT-001 5c |
 | R-7a | `feat(mobile)`: start marker and known pips; once `summary.journey` carries a non-zero `known`, re-check its consent item (`transfer-consent.ts` maps `journey` to `quests`, while `known` comes from the level check) | S | F-PLC-001 P-5, F-QUEST-002 Q-6a |
-| R-7b | `feat(mobile)`: weekly plan line | S | F-PLAN-002 P2-7a |
+| R-7b | `feat(mobile)`: weekly plan line, and the same week passed to the Home strip (`homeStripView({ week })`) | S | F-PLAN-002 P2-7a |
 | R-7c | `feat(mobile)`: letter wall + jamo-id adapter | S | Q-6a (partial), Q-8 (complete) |
 | R-8 | `feat(content-schema,mobile)`: `JourneySummarySchema`, sync-store input, backend tests | M | R-1a; deploy in D2 |
 | R-9a | `feat(web)`: `journey-strip.ts`, roster card strip (class and family) | M | R-8 deployed |
 | R-9b | `feat(mobile)`: parent dashboard Journey row, read-only page | M | R-3, PR 8a (#172) |
 | R-J | `feat(mobile)`: Journey pill wording (no "Premium" on a learner screen; "Taste" -> "A taste"; "Soon" -> "Coming later"); the stage header is a plain row, never a lock or a paywall door (review) | S | OD-8 |
-| R-10 | `test(e2e)` + flag flip for beta | S | R-3, R-4b, es / ko review (else `en` only) |
+| R-10 | `test(e2e)` + flag flip for beta; `my-route.spec.ts` runs a flag-on build and covers the Home strip entry too (strip visible, no "Stage 1 progress", its one-button label, no horizontal scroll at 320 and 844x390, tap opens the page with `source: 'home'`); es and ko values for the R-3 and R-4b strings (`learner.myRoute.*`, `a11y.myRoute.*`, including `home.strip.*` and `homeStrip*`) before the flip, else the flip is `en` only | S | R-3, R-4b, es / ko review (else `en` only) |
 
 [LR-A8] The Learning Route PRs (LR-0 to LR-10) are listed in `AMENDMENTS-ROUTE-LEARNING-ROUTE.md` section 13. R-4b, R-9a, R-9b and R-10 above take the new names; R-4b and R-9b also take the goal line; R-9b's button opens `MyRoute { profileId, viewer: 'grownup' }`; R-10 also covers the tab.
 

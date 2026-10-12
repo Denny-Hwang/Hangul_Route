@@ -1,9 +1,10 @@
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { colors, spacing } from '../../../tokens';
-import { cursorMarkerParts, markerBand, pipInk, pipParts, startBand, startMarkerParts, type PipPart } from '../geometry';
+import { cursorMarkerParts, markerBand, pipInk, pipParts, stageSegmentParts, startBand, startMarkerParts, type PipPart } from '../geometry';
 import { Pip, PipParts, PipSvg } from '../Pip';
 import { PipRow, PipRowBody } from '../PipRow';
+import { StageSegments, StageSegmentsBody } from '../StageSegments';
 
 /**
  * The element trees of PipRow and Pip (component-skill section 3.1), built by
@@ -158,5 +159,46 @@ describe('PipRow and Pip: context to size through useMediaSize, and the default 
     }) as El;
     expect(row.props.style).toMatchObject({ columnGap: 6, rowGap: 6 });
     expect(kids(row).map((c) => (c.props.style as { marginRight: number }).marginRight)).toEqual([12, 0]);
+  });
+});
+
+describe('StageSegmentsBody: one drawn segment per stage', () => {
+  const segments = [
+    { key: 'stage1', state: 'complete', here: false, accent: colors.stage.stage1 },
+    { key: 'stage2', state: 'open', here: true, accent: colors.stage.stage2 },
+    { key: 'stage3', state: 'later', here: false, accent: colors.stage.stage3 },
+  ] as const;
+
+  it('is one row hidden from screen readers on native and web, a segment per stage, in order', () => {
+    const row = StageSegmentsBody({ segments, size: 20, gap: spacing.xs, testID: 'segs' }) as El;
+    expect(row.type).toBe('View');
+    expect(row.props).toMatchObject({ testID: 'segs', importantForAccessibility: 'no-hide-descendants', accessibilityElementsHidden: true, 'aria-hidden': true });
+    expect(row.props.style).toMatchObject({ flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing.xs });
+    expect(kids(row).map((k) => k.key)).toEqual(['.$stage1', '.$stage2', '.$stage3']);
+  });
+
+  it('reserves the marker band in every segment and draws the cursor only over the stage the learner is on', () => {
+    const row = StageSegmentsBody({ segments, size: 20, gap: spacing.xs }) as El;
+    const band = markerBand(20);
+    const svgs = kids(row).map((cell) => kids(cell)[0]!);
+    for (const svg of svgs) expect(svg.props).toMatchObject({ width: 20, height: 20 + band });
+    const parts = svgs.map((svg) => kids(svg));
+    expect(parts[0]).toHaveLength(1);
+    expect(parts[1]).toHaveLength(2);
+    expect(parts[1]![0]!.props).toMatchObject({ parts: cursorMarkerParts(20), accent: colors.stage.stage2 });
+    expect(parts[1]![1]!.props).toMatchObject({ parts: stageSegmentParts('open', 20), offsetY: band });
+    expect(parts[0]![0]!.props).toMatchObject({ parts: stageSegmentParts('complete', 20), accent: colors.stage.stage1, offsetY: band });
+  });
+
+  it('rounds the svg height up to whole pixels at a scaled size', () => {
+    const row = StageSegmentsBody({ segments, size: 30, gap: spacing.xs }) as El;
+    const svg = kids(kids(row)[0]!)[0]!;
+    expect(svg.props).toMatchObject({ height: Math.ceil(markerBand(30) + 30), viewBox: `0 0 30 ${Math.ceil(markerBand(30) + 30)}` });
+  });
+
+  it('the hook wrapper passes the scaled 20 dp stage size and the scaled pip gap', () => {
+    const body = StageSegments({ segments }) as El;
+    expect(body.type).toBe(StageSegmentsBody);
+    expect(body.props).toMatchObject({ size: 30, gap: Math.round(spacing.xs * 1.5) });
   });
 });
