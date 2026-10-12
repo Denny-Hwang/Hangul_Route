@@ -26,6 +26,9 @@ interface Saved {
   sessions: Array<{ id: string; endedAt?: string; durationSeconds?: number }>;
 }
 
+/** The time-only sessions saved for the learner (the onboarding quest's own session is left out). */
+const timeOnly = (snap: Saved | null): Saved['sessions'] => (snap?.sessions ?? []).filter((s) => s.id.startsWith('session:time:'));
+
 async function onboard(page: Page): Promise<string> {
   await page.goto('/');
   await keepSidewaysIfAsked(page);
@@ -58,21 +61,20 @@ test.describe('practice sessions (F-REPORT-001 section 3.3.2)', () => {
 
     await page.evaluate((storyId) => (window as E2eWindow).__hrStoryE2E?.openReader({ storyId, level: 'listen' }), STORY);
     await expect(next(page)).toBeVisible();
-    await expect.poll(async () => (await saved())?.sessions.length ?? 0).toBe(1);
-    const [first] = (await saved())?.sessions ?? [];
-    expect(first?.id.startsWith('session:time:')).toBe(true);
-    expect(first?.endedAt).toBeUndefined();
+    await expect.poll(async () => timeOnly(await saved()).length).toBe(1);
+    expect(timeOnly(await saved())[0]?.endedAt).toBeUndefined();
 
     await setVisibility(page, 'hidden');
-    await expect.poll(async () => (await saved())?.sessions[0]?.endedAt).toBeDefined();
+    await expect.poll(async () => timeOnly(await saved())[0]?.endedAt).toBeDefined();
     await setVisibility(page, 'visible');
-    await expect.poll(async () => (await saved())?.sessions.length ?? 0).toBe(2);
+    await expect.poll(async () => timeOnly(await saved()).length).toBe(2);
+    expect(timeOnly(await saved())[1]?.endedAt).toBeUndefined();
 
     await page.getByTestId('story-reader-close').click();
     await expect(page.getByTestId('story-reader')).toHaveCount(0);
-    await expect.poll(async () => (await saved())?.sessions.every((s) => s.endedAt !== undefined)).toBe(true);
+    await expect.poll(async () => timeOnly(await saved()).every((s) => s.endedAt !== undefined)).toBe(true);
     const after = await saved();
-    expect(after?.sessions.every((s) => s.id.startsWith('session:time:') && (s.durationSeconds ?? -1) >= 0)).toBe(true);
+    expect(timeOnly(after).every((s) => (s.durationSeconds ?? -1) >= 0 && (s.durationSeconds ?? 0) <= 3600)).toBe(true);
     expect(after?.streakDays).toBe(streakBefore);
   });
 });
