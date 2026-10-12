@@ -8,8 +8,9 @@
  * object, not the fill, tells red (apple) from brown (bear).
  *
  * The swatch fills the frame (88 of 100 units), so a registered colour glyph
- * carries the C2 waiver; with the object's tones it may need up to 5 fill
- * tones (`maxTones: 5`, §3.3). The batch that registers the colours (W-3)
+ * carries the C2 waiver. The swatch tone plus the object's tones may pass the
+ * 4-tone limit; a key gets `maxTones` (§3.3) only when its glyph really does
+ * (none of the twelve does at W-3). The batch that registers the colours (W-3)
  * builds them with `colorGlyphs(getGlyph)` once every object is drawn.
  */
 import { rect } from '../builders';
