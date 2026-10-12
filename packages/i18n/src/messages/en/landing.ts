@@ -145,18 +145,18 @@ export const landing = {
     },
   },
   /**
-   * The only cost words on the site (F-SITE-002 §3.9, OD-6, OD-7): never a price. The page picks one `free` and one
-   * `paid` line from the `freePlan` and `paidPlans` claims; `firstDays` follows F-ENT-003 OD-8 ("Day 1 and Day 2
-   * of the route", never "your first two days").
+   * The only cost words on the site (F-SITE-002 §3.9, OD-7): never a price, never a term. The cost line is the free
+   * line, then the `paid` line the `paidPlans` claim picks. The free plan is all of Stage 1 (F-ENT-003 OD-1), so
+   * `free.stage1` is the same in every state and says nothing about paid plans. Plans bought on the web renew
+   * yearly (BY-1); the signed-in billing page and the Terms say so, and no site line calls a plan one-time.
    */
   plans: {
     title: 'What does it cost?',
     free: {
-      stage1: 'Stage 1 is free. More stages and classroom plans are coming.',
-      firstDays: 'Start free with Day 1 and Day 2 of the route and a few word topics. Lessons you finish stay open.',
+      stage1: 'Stage 1 is free.',
     },
     paid: {
-      coming: 'Plans for families and classes are coming.',
+      coming: 'More stages are coming, with plans for families and classes.',
       inApp: 'Plans for families and classes are at app.hangulroute.com.',
     },
     managedInApp: 'Plans and billing are managed at app.hangulroute.com after you sign in.',
@@ -245,7 +245,8 @@ export const landing = {
         reports: 'Reports for today, this week, this month and all time show what went well and what to practise next.',
         route: "Open each learner's Learning Route to see where they are and what comes next.",
         notes: 'Send a short note of encouragement that your learner sees in the app.',
-        browse: 'With a family plan, browse every lesson exactly as your learner sees it.',
+        /** Names the product as the app's billing page does (`console.billing.planTitle.family_lifetime`). */
+        browse: 'With the Family Plan, browse every lesson exactly as your learner sees it.',
       },
       /** "What can I see?" is answered by `follow.body`, plus `follow.reports` while its claim is on. */
       faq: {

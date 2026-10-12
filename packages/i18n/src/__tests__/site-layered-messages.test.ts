@@ -98,17 +98,27 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
     expect(JSON.stringify(l.home)).not.toMatch(/COPPA|compliant/i);
   });
 
-  it('plans: the only cost words on the site, never a price (OD-6, OD-7)', () => {
+  it('plans: the only cost words on the site, never a price (OD-7)', () => {
     expect(l.plans.title).toBe('What does it cost?');
-    expect(l.plans.free.stage1).toBe('Stage 1 is free. More stages and classroom plans are coming.');
-    expect(l.plans.free.firstDays).toBe('Start free with Day 1 and Day 2 of the route and a few word topics. Lessons you finish stay open.');
-    expect(l.plans.paid.coming).toBe('Plans for families and classes are coming.');
+    expect(l.plans.free.stage1).toBe('Stage 1 is free.');
+    expect(l.plans.paid.coming).toBe('More stages are coming, with plans for families and classes.');
     expect(l.plans.paid.inApp).toBe('Plans for families and classes are at app.hangulroute.com.');
     expect(l.plans.managedInApp).toBe('Plans and billing are managed at app.hangulroute.com after you sign in.');
+    expect(Object.keys(l.plans)).toEqual(['title', 'free', 'paid', 'managedInApp']);
+    expect(Object.keys(l.plans.paid)).toEqual(['coming', 'inApp']);
   });
 
-  it('the free-plan line never reads as a two-day calendar trial (F-ENT-003 OD-8)', () => {
-    expect(l.plans.free.firstDays).not.toMatch(/first two days|2-day|two-day|trial/i);
+  it('the free plan is all of Stage 1: one free line, no day-count line (F-ENT-003 OD-1)', () => {
+    // The `firstDays` value of revision 2 is dropped with its string; the free line never flips.
+    expect(Object.keys(l.plans.free)).toEqual(['stage1']);
+    expect(lookup(l, 'plans.free.firstDays')).toBeUndefined();
+  });
+
+  it('the free line is true with paid plans coming and on sale, so it says nothing about paid plans (F-ENT-003 OD-1)', () => {
+    expect(l.plans.free.stage1).not.toMatch(/\bplans?\b|coming|app\.hangulroute\.com/i);
+    // What is coming belongs to the paid line, which follows the `paidPlans` claim.
+    expect(l.plans.paid.coming).toMatch(/coming/);
+    expect(l.plans.paid.inApp).not.toMatch(/coming/);
   });
 
   it('launch news: the form itself keeps landing.waitlist', () => {
@@ -244,8 +254,14 @@ describe('B.3 parents', () => {
       reports: 'Reports for today, this week, this month and all time show what went well and what to practise next.',
       route: "Open each learner's Learning Route to see where they are and what comes next.",
       notes: 'Send a short note of encouragement that your learner sees in the app.',
-      browse: 'With a family plan, browse every lesson exactly as your learner sees it.',
+      browse: 'With the Family Plan, browse every lesson exactly as your learner sees it.',
     });
+  });
+
+  it('the browse line names the Family Plan as the app names it (yearly Family Plan, BY-1)', () => {
+    const app = getMessages('en');
+    expect(app.console.billing.planTitle.family_lifetime).toBe('Family Plan');
+    expect(p().follow.browse).toContain(`the ${app.console.billing.planTitle.family_lifetime}`);
   });
 
   it('three folded questions; "What can I see?" is answered by the follow-along lines', () => {
@@ -365,6 +381,17 @@ describe('closing lines, footer groups, the 404 links and per-page metadata', ()
 
 const NEW_SITE_PREFIXES = ['nav', 'home', 'plans', 'persona', 'footer.guide', 'footer.app', 'notFound', 'meta.pages'] as const;
 
+/**
+ * Words the site never uses about a plan. The Family Plan renews yearly (owner decision 2026-10-11, BY-1), so
+ * no one-time or lifetime wording; and the site names no term, which the signed-in billing page and the Terms
+ * state (F-SITE-002 OD-7, S-7).
+ */
+const LIFETIME_OR_TERM_WORDS =
+  /\blifetime\b|\bonce\b|\bone payment\b|\bfor good\b|\bforever\b|\bnothing to cancel\b|\bno renewal\b|\bsubscri|\brenew|\byearly\b|\bper year\b|\ba year\b|\bannual/i;
+
+/** Free-plan copy of revision 2 and its kin: day counts, trials and time limits (F-ENT-003 OD-1, OD-8). */
+const DAY_COUNT_WORDS = /\bday\s+(\d+|one|two|three)\b|\b(\d+|one|two|three|first|few)[\s-]+days?\b|\btrial\b|\bfree for\b/i;
+
 describe('rules for every new site string', () => {
   const entries = NEW_SITE_PREFIXES.flatMap((prefix) => entriesUnder(prefix));
 
@@ -391,6 +418,27 @@ describe('rules for every new site string', () => {
 
   it('links name their purpose: no "learn more", no "click here"', () => {
     for (const [path, out] of entries) expect(out, path).not.toMatch(/learn more|click here/i);
+  });
+
+  it('no plan is a one-time or lifetime purchase: plans bought on the web renew yearly (BY-1)', () => {
+    for (const [path, out] of entries) expect(out, path).not.toMatch(LIFETIME_OR_TERM_WORDS);
+  });
+
+  it('no day-count, trial or time-limited free-plan copy: the free plan is all of Stage 1 (F-ENT-003 OD-1)', () => {
+    for (const [path, out] of entries) expect(out, path).not.toMatch(DAY_COUNT_WORDS);
+  });
+
+  it('the plan-word checks catch what they are for and pass the strings the site keeps (self-check)', () => {
+    for (const bad of ['Family Lifetime', 'Pay once, keep it', 'One payment, no renewal.', 'Yours for good.', 'Free forever', 'Nothing to cancel.', 'A yearly subscription.', 'Renews every year.']) {
+      expect(bad, bad).toMatch(LIFETIME_OR_TERM_WORDS);
+    }
+    for (const bad of ['Start free with Day 1 and Day 2 of the route', 'Your first two days are free.', 'A 7-day free trial', 'Try it free for 14 days', 'A two-day pass']) {
+      expect(bad, bad).toMatch(DAY_COUNT_WORDS);
+    }
+    for (const ok of [l.persona.teachers.class.reports, l.persona.parents.follow.reports, l.persona.teachers.faq.try.a, l.plans.free.stage1]) {
+      expect(ok, ok).not.toMatch(DAY_COUNT_WORDS);
+      expect(ok, ok).not.toMatch(LIFETIME_OR_TERM_WORDS);
+    }
   });
 });
 
