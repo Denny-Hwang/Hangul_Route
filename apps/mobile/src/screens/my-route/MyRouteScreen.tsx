@@ -9,7 +9,7 @@ import { questsAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
 import { myRouteAccess, myRouteEntryOf, selfEntryTab } from '../../logic/my-route/access';
-import { focusEffects } from '../../logic/my-route/focus';
+import { focusEffects, seenForView, seenReadAfter } from '../../logic/my-route/focus';
 import { buildMyRoute } from '../../logic/my-route/model';
 import { localizedRouteContent, routeModelInput } from '../../logic/my-route/route-input';
 import { readSeen, seenFrom, writeSeen } from '../../logic/my-route/seen';
@@ -120,29 +120,37 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
 
   // Each focus is one open (the tab stays mounted between visits): counted from 1, 0 before the first focus.
   const [focusKey, setFocusKey] = useState(0);
+  const [focused, setFocused] = useState(false);
   useFocusEffect(
     useCallback(() => {
       setFocusKey((k) => k + 1);
+      setFocused(true);
+      return () => {
+        setFocused(false);
+      };
     }, []),
   );
 
   // The record this open starts from (section 3.10), read again on every focus; for the active learner only.
-  // The read waits for the previous focus's write, so a quick tab switch never reads the record from before it.
-  const [seen, setSeen] = useState<SeenRecord | undefined>(undefined);
+  // The read waits for the previous focus's write (`seenReadAfter`), so a quick tab switch never reads the record
+  // from before it; a read superseded by a newer focus is dropped.
+  const [seenRead, setSeenRead] = useState<SeenRecord | undefined>(undefined);
   const [seenFor, setSeenFor] = useState(0);
   const pendingWrite = useRef<Promise<unknown>>(Promise.resolve());
   useEffect(() => {
     if (readOnly || focusKey === 0) return;
     let live = true;
-    void pendingWrite.current.then(() => readSeen(STORAGE, profileId)).then((record) => {
-      if (!live) return;
-      setSeen(record);
+    void seenReadAfter(pendingWrite.current, () => readSeen(STORAGE, profileId), () => live).then((result) => {
+      if (result === null) return;
+      setSeenRead(result.record);
       setSeenFor(focusKey);
     });
     return () => {
       live = false;
     };
   }, [profileId, readOnly, focusKey]);
+  // What is new is measured against this open's record only, and only while the page is in front (`seenForView`).
+  const seen = seenForView({ focusKey, seenFor, focused, seen: seenRead });
 
   const [attempt, setAttempt] = useState(0);
   const localized = useMemo(() => localizedRouteContent(locale), [locale]);
@@ -270,7 +278,7 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
       ) : null}
       <Spacer size="md" />
 
-      <HeroCard copy={view.heroCopy} pose={view.pose} onAction={onHero} />
+      <HeroCard copy={view.heroCopy} pose={view.pose} onAction={onHero} focusToken={focusKey} />
 
       {view.newQuests !== null ? (
         <>
