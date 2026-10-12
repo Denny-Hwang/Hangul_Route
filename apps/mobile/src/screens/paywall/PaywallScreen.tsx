@@ -4,11 +4,13 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
-import { billingNote, billingPressStep, pendingBillingStep, planView } from '../../logic/paywall';
+import { billingNote, billingOpenedEvent, billingPressStep, pendingBillingStep, planView } from '../../logic/paywall';
 import { gateOpensDirectly } from '../../logic/profiles/gate-route';
 import { isParentSessionValid } from '../../logic/profiles/session';
 import type { RootStackParamList } from '../../navigation/types';
 import { openBilling } from '../../platform/billing-handoff';
+import { HAND_OFF_NEEDS_TAP } from '../../platform/external-link';
+import { focusForScreenReader } from '../../platform/screen-reader';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
 import { useAudience } from '../../store/audience';
@@ -34,7 +36,8 @@ function gateOpenNow(): boolean {
  * design/screens/billing/plan-status.md). Route key `Paywall`, title "Plan". Status only and not
  * gated: no price, no offer, and on native builds no link and no word about the web. On the web a
  * grown-up can open Billing: the press goes through the gate (destination `Billing`) unless it
- * opens directly, and a correct PIN returns here to finish the hand-off.
+ * opens directly. A correct PIN returns here, and the web asks for one more tap of Open billing
+ * (a browser may block a tab opened outside a tap); the session is open then, so that tap opens it.
  */
 export function PaywallScreen({ navigation, route }: Props): React.ReactElement {
   const { audience } = useAudience();
@@ -59,19 +62,26 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
   const handOff = useCallback(async (): Promise<void> => {
     const { outcome, url } = await openBilling();
     setNote(billingNote(outcome, url, messages));
-    if (outcome === 'opened') {
-      void track({ name: 'paywall.console_opened', profileId, payload: { state } });
-    }
+    const event = billingOpenedEvent(outcome, state);
+    if (event) void track({ ...event, profileId });
   }, [messages, profileId, state]);
 
-  // A press waiting on the gate: opens once the PIN is through, dropped when the gate was cancelled.
+  // A press waiting on the gate, back here: dropped when the gate was cancelled. Once the PIN is
+  // through, native opens billing; the web asks for one more tap (a tab opened outside a tap may be
+  // blocked) and moves focus to Open billing, and with the session open that tap opens it directly.
   const pending = useRef(false);
+  const openRef = useRef<View>(null);
+  const gateDone = view.billing?.gateDone ?? null;
   useFocusEffect(
     useCallback(() => {
-      const step = pendingBillingStep(pending.current, gateOpenNow());
+      const step = pendingBillingStep(pending.current, gateOpenNow(), HAND_OFF_NEEDS_TAP);
       pending.current = false;
       if (step === 'open') void handOff();
-    }, [handOff]),
+      else if (step === 'tap-again' && gateDone !== null) {
+        setNote(gateDone);
+        focusForScreenReader(openRef.current);
+      }
+    }, [handOff, gateDone]),
   );
 
   const onOpenBilling = (): void => {
@@ -147,15 +157,19 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
             fullWidth
             accessibilityHint={view.billing.hint}
             onPress={onOpenBilling}
+            pressableRef={openRef}
           />
-          {note ? (
-            <>
-              <Spacer size="xs" />
-              <Caption tone="muted" align="center">
-                {note}
-              </Caption>
-            </>
-          ) : null}
+          {/* The prompt after the PIN and any failure line are read out as they appear. */}
+          <View accessibilityLiveRegion="polite">
+            {note ? (
+              <>
+                <Spacer size="xs" />
+                <Caption tone="muted" align="center">
+                  {note}
+                </Caption>
+              </>
+            ) : null}
+          </View>
           <Spacer size="md" />
         </>
       ) : (

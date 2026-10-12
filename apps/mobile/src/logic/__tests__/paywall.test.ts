@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import * as paywall from '../paywall';
 import {
   billingNote,
+  billingOpenedEvent,
   billingPressStep,
   consoleBillingUrl,
   pendingBillingStep,
@@ -114,6 +115,7 @@ describe('Open billing is web only (§4.7, §4.8)', () => {
       expect(view.billing, key).not.toBeNull();
       expect(view.billing?.cta, key).toBe('Open billing');
       expect(view.billing?.hint, key).toBe('Opens the billing page');
+      expect(view.billing?.gateDone, key).toBe('PIN accepted. Tap Open billing again.');
     }
     const web = (audience: DeviceAudience): PlanView => planView({ tier: 'free', source: null, audience, name: 'Mina', platform: 'web' }, en);
     expect(web('family').billing?.caption).toBe('Plans and receipts are on the billing page for grown-ups.');
@@ -169,6 +171,7 @@ describe('Open billing is web only (§4.7, §4.8)', () => {
       'Plans and receipts are on the billing page for grown-ups.',
       'Open billing',
       'Opens the billing page',
+      'PIN accepted. Tap Open billing again.',
       'Back to journey',
     ]);
     const native = planView({ tier: 'premium', source: klass, audience: 'self', name: 'Rio', platform: 'android' }, en);
@@ -182,18 +185,43 @@ describe('Open billing through the gate (§4.7: destination Billing)', () => {
     expect(billingPressStep(false)).toBe('gate');
   });
 
-  it('back on the Plan screen: opens once the gate is through, drops a cancelled gate, ignores a plain return', () => {
-    expect(pendingBillingStep(false, true)).toBe('none');
-    expect(pendingBillingStep(false, false)).toBe('none');
-    expect(pendingBillingStep(true, true)).toBe('open');
-    expect(pendingBillingStep(true, false)).toBe('drop');
+  it('back on the Plan screen: a cancelled gate drops the press, a plain return does nothing', () => {
+    for (const needsTap of [true, false]) {
+      expect(pendingBillingStep(false, true, needsTap)).toBe('none');
+      expect(pendingBillingStep(false, false, needsTap)).toBe('none');
+      expect(pendingBillingStep(true, false, needsTap)).toBe('drop');
+    }
   });
 
-  it('a hand-off that did not open shows the address to type; an opened one shows nothing', () => {
+  it('once the gate is through, the web asks for one more tap of Open billing (pop-up rules); native opens it', () => {
+    expect(pendingBillingStep(true, true, true)).toBe('tap-again');
+    expect(pendingBillingStep(true, true, false)).toBe('open');
+  });
+
+  it('the line after the gate asks for one more tap, in every locale', () => {
+    expect(en.caregiver.plan.gateDone).toBe('PIN accepted. Tap Open billing again.');
+    for (const locale of LOCALES) {
+      const m = getMessages(locale).caregiver.plan;
+      expect(m.gateDone, locale).toContain(m.openBilling.cta);
+    }
+  });
+
+  it('a hand-off that did not open shows the address to type; offline says a connection is needed first; an opened one shows nothing', () => {
     const url = 'https://hangulroute.com/teach/billing';
     expect(billingNote('opened', url, en)).toBeNull();
     expect(billingNote('failed', url, en)).toBe('Open https://hangulroute.com/teach/billing in a browser.');
-    expect(billingNote('offline', url, en)).toBe('Open https://hangulroute.com/teach/billing in a browser.');
+    expect(billingNote('offline', url, en)).toBe('Opening billing needs a connection. Open https://hangulroute.com/teach/billing in a browser.');
+    for (const locale of LOCALES) {
+      const m = getMessages(locale);
+      expect(billingNote('offline', url, m), locale).toBe(`${m.caregiver.plan.needsConnection} ${m.caregiver.plan.openFailed(url)}`);
+    }
+  });
+
+  it('paywall.console_opened is sent only for a hand-off that opened, with the state code only', () => {
+    expect(billingOpenedEvent('opened', 'free')).toEqual({ name: 'paywall.console_opened', payload: { state: 'free' } });
+    expect(billingOpenedEvent('opened', 'covered')).toEqual({ name: 'paywall.console_opened', payload: { state: 'covered' } });
+    expect(billingOpenedEvent('failed', 'free')).toBeNull();
+    expect(billingOpenedEvent('offline', 'premium')).toBeNull();
   });
 
   it("keeps today's target: the console billing page (B-9b moves it to the app host)", () => {

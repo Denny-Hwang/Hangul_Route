@@ -139,6 +139,8 @@ const PLAN_SCREEN = [
 
 const PROFILE_ADDED = ['learner.profile.plan.fullRoute', 'learner.profile.plan.open', 'learner.profile.plan.details.cta'];
 const A11Y_ADDED = ['a11y.planStatus'];
+/** Added by B-9's review: the web hand-off lines (one more tap after the PIN; offline needs a connection). */
+const PLAN_SCREEN_B9 = ['caregiver.plan.gateDone', 'caregiver.plan.needsConnection'];
 
 const B6_PATHS = [...BILLING_ADDED, ...STATUS_CHANGED, ...PLAN_SCREEN, ...PROFILE_ADDED, ...A11Y_ADDED];
 
@@ -754,6 +756,7 @@ const LEARNER_FIXTURE: Record<UiLocale, readonly string[]> = {
 /** The learner-reachable new keys: the Plan screen and the Profile card (kept keys too; B-9 deletes premium / unlocked / unlock). */
 const LEARNER_PATHS = [
   ...PLAN_SCREEN,
+  ...PLAN_SCREEN_B9,
   ...PROFILE_ADDED,
   ...A11Y_ADDED,
   'learner.profile.plan.free',
@@ -815,6 +818,24 @@ describe('learner-reachable words (§4.7, §4.8, §6.5)', () => {
           const hit = locale === 'ko' ? lower.includes(word) : new RegExp(`(^|[^a-zà-ɏ])${word.replace(/\./g, '\\.')}([^a-zà-ɏ]|$)`).test(lower);
           expect(hit, `${locale}:${path}: "${word}" in ${out}`).toBe(false);
         }
+      }
+    }
+  });
+});
+
+describe('caregiver.plan hand-off lines (F-BILL-002 B-9, web only)', () => {
+  it('words the line after the PIN and the offline line in English', () => {
+    expect(p.gateDone).toBe('PIN accepted. Tap Open billing again.');
+    expect(p.needsConnection).toBe('Opening billing needs a connection.');
+  });
+
+  it('every locale has both, in its own language, with no price and no grown-up wording', () => {
+    for (const [path, out] of outputs('ko', PLAN_SCREEN_B9)) expect(HANGUL.test(out), `ko:${path}: ${out}`).toBe(true);
+    for (const path of PLAN_SCREEN_B9) expect(renderings('es', path), `es:${path}`).not.toEqual(renderings('en', path));
+    for (const locale of LOCALES) {
+      for (const [path, out] of outputs(locale, PLAN_SCREEN_B9)) {
+        expect(out.trim().length, `${locale}:${path}`).toBeGreaterThan(0);
+        expect(out, `${locale}:${path}`).not.toMatch(/[$€£₩]\s?\d|grown-?up|adult[oa]s?|보호자|어른/i);
       }
     }
   });

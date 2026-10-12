@@ -56,6 +56,13 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
  * PIN, never a new PIN. A correct PIN hands off to the grown-up page in this tab
  * (`openGrownUpArea`); with no PIN stored the screen shows one line and Continue to the page
  * without an unlock. Cancel and Close write nothing (the learner boot already cleared the tab).
+ *
+ * Destination `Billing` (F-BILL-002 B-9, section 4.7, web only): the learner Plan screen's Open
+ * billing. A correct PIN opens the grown-up session and returns to the Plan screen, which asks for
+ * one more tap of Open billing (a tab opened outside a tap may be blocked); Cancel opens nothing.
+ *
+ * Destination `ExternalLink` (F-STORY-002): a source link on Sources; a correct PIN returns there,
+ * which likewise asks for one more tap on the web.
  */
 
 const DOT_SIZE = 20;
@@ -145,7 +152,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     } else if (route.params.next === 'Paywall') {
       navigation.replace('Paywall', { from: route.params.from ?? 'journey' });
     } else if (route.params.next === 'Billing') {
-      // Back to the Plan screen with the gate open: it opens Billing for the press that waited (F-BILL-002 §4.7).
+      // Back to the Plan screen with the gate open: native opens Billing for the press that waited, the web asks for one more tap (F-BILL-002 §4.7).
       navigation.goBack();
     } else if (route.params.next === 'EditProfile') {
       const { profileId } = route.params;

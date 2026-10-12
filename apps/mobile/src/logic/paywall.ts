@@ -34,8 +34,11 @@ export interface PlanView {
   freeSlotLine: string | null;
   /** Whether the guidance slot follows the full-route lines (empty until F-ENT-003 E3-8). */
   guidanceSlot: boolean;
-  /** Web only: the caption, the Open billing button and its hint. Null on native builds (section 4.8). */
-  billing: { caption: string; cta: string; hint: string } | null;
+  /**
+   * Web only: the caption, the Open billing button, its hint and the line shown back from a correct
+   * PIN (one more tap opens billing; see `pendingBillingStep`). Null on native builds (section 4.8).
+   */
+  billing: { caption: string; cta: string; hint: string; gateDone: string } | null;
   back: string;
 }
 
@@ -80,7 +83,12 @@ export function planView(input: PlanViewInput, messages: Pick<Messages, 'caregiv
     guidanceSlot: state === 'premium',
     billing:
       input.platform === 'web'
-        ? { caption: family ? m.openBilling.caption.family : m.openBilling.caption.self, cta: m.openBilling.cta, hint: m.openBilling.a11yHint }
+        ? {
+            caption: family ? m.openBilling.caption.family : m.openBilling.caption.self,
+            cta: m.openBilling.cta,
+            hint: m.openBilling.a11yHint,
+            gateDone: m.gateDone,
+          }
         : null,
     back: m.backToJourney.cta,
   };
@@ -94,7 +102,7 @@ export function planTexts(view: PlanView): string[] {
     view.title,
     ...view.lines,
     ...(view.freeSlotLine === null ? [] : [view.freeSlotLine]),
-    ...(view.billing === null ? [] : [view.billing.caption, view.billing.cta, view.billing.hint]),
+    ...(view.billing === null ? [] : [view.billing.caption, view.billing.cta, view.billing.hint, view.billing.gateDone]),
     view.back,
   ];
 }
@@ -105,17 +113,34 @@ export function billingPressStep(gateOpensDirectly: boolean): 'open' | 'gate' {
 }
 
 /**
- * Back on the Plan screen after the gate: a press waiting on it opens billing once the gate is
- * through and is dropped when the gate was cancelled; a return with nothing waiting does nothing.
+ * Back on the Plan screen after the gate (as Sources' `pendingLinkStep`): a cancelled gate drops the
+ * waiting press, and a return with nothing waiting does nothing. Once the gate is through, billing
+ * opens by itself where the hand-off needs no tap of its own (native), and the screen asks for one
+ * more tap of Open billing where it does (web, `HAND_OFF_NEEDS_TAP`: a browser may block a tab
+ * opened outside a tap; the grown-up session is open now, so that tap opens it directly).
  */
-export function pendingBillingStep(pending: boolean, gateOpensDirectly: boolean): 'none' | 'open' | 'drop' {
+export function pendingBillingStep(pending: boolean, gateOpensDirectly: boolean, handOffNeedsTap: boolean): 'none' | 'open' | 'tap-again' | 'drop' {
   if (!pending) return 'none';
-  return gateOpensDirectly ? 'open' : 'drop';
+  if (!gateOpensDirectly) return 'drop';
+  return handOffNeedsTap ? 'tap-again' : 'open';
 }
 
-/** The line under Open billing: nothing once billing opened, else the address to type (section 4.7). */
+/**
+ * The line under Open billing: nothing once billing opened, else the address to type (section 4.7);
+ * offline, it says a connection is needed first (as Sources' `openLinkNote`).
+ */
 export function billingNote(outcome: OpenLinkOutcome, url: string, messages: Pick<Messages, 'caregiver'>): string | null {
-  return outcome === 'opened' ? null : messages.caregiver.plan.openFailed(url);
+  if (outcome === 'opened') return null;
+  const m = messages.caregiver.plan;
+  return outcome === 'offline' ? `${m.needsConnection} ${m.openFailed(url)}` : m.openFailed(url);
+}
+
+/** `paywall.console_opened` (TELEMETRY-NAMES-2 §D): only for a hand-off that opened, with the state code only. */
+export function billingOpenedEvent(
+  outcome: OpenLinkOutcome,
+  state: PaywallState,
+): { name: 'paywall.console_opened'; payload: { state: PaywallState } } | null {
+  return outcome === 'opened' ? { name: 'paywall.console_opened', payload: { state } } : null;
 }
 
 export interface PlanCardView {

@@ -35,6 +35,8 @@ export const caregiver = {
       a11yHint: 'Abre la página de facturación',
     },
     openFailed: (url: string) => `Abre ${url} en un navegador.`,
+    needsConnection: 'Para abrir la facturación hace falta conexión.',
+    gateDone: 'PIN aceptado. Toca Abrir facturación otra vez.',
     backToJourney: { cta: 'Volver al recorrido' },
   },
 } satisfies DeepPartial<Messages['caregiver']>;

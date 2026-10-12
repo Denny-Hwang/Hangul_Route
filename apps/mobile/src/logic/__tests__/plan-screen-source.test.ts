@@ -42,12 +42,25 @@ describe('Plan screen (screens/paywall/PaywallScreen.tsx)', () => {
   it('Open billing asks the gate with destination Billing unless it opens directly', () => {
     expect(plan).toContain("navigation.navigate('PinEntry', { next: 'Billing' })");
     expect(plan).toMatch(/billingPressStep\(/);
-    expect(plan).toMatch(/pendingBillingStep\(/);
     expect(plan).toContain('useFocusEffect');
   });
 
-  it('sends paywall.console_opened only once billing actually opened, with codes only', () => {
-    expect(plan).toMatch(/outcome === 'opened'[\s\S]{0,200}paywall\.console_opened[\s\S]{0,120}payload: \{ state \}/);
+  it('after the gate the web asks for one more tap (HAND_OFF_NEEDS_TAP), as Sources does: no tab opens outside a tap', () => {
+    expect(plan).toMatch(/import \{ HAND_OFF_NEEDS_TAP \} from '\.\.\/\.\.\/platform\/external-link'/);
+    expect(plan).toMatch(/pendingBillingStep\(pending\.current, gateOpenNow\(\), HAND_OFF_NEEDS_TAP\)/);
+    expect(plan).toContain('const gateDone = view.billing?.gateDone ?? null;');
+    expect(plan).toMatch(/step === 'tap-again'[\s\S]{0,80}setNote\(gateDone\);\s*focusForScreenReader\(openRef\.current\);/);
+    // The prompt moves focus to Open billing, so the next press is one key or tap away.
+    expect(plan).toMatch(/pressableRef=\{openRef\}/);
+  });
+
+  it('sends paywall.console_opened only through billingOpenedEvent (codes only, only when billing opened)', () => {
+    expect(plan).toMatch(/const event = billingOpenedEvent\(outcome, state\);\s*if \(event\) void track\(\{ \.\.\.event, profileId \}\);/);
+    expect(plan).not.toContain("'paywall.console_opened'");
+  });
+
+  it('the hand-off note is a polite live region, so the prompt and any failure line are read out on the web', () => {
+    expect(plan).toMatch(/accessibilityLiveRegion="polite"/);
   });
 
   it('the summary heading comes first and carries a11y.planStatus; the button carries the hint', () => {

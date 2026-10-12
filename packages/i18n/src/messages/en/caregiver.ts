@@ -165,6 +165,10 @@ export const caregiver = {
       a11yHint: 'Opens the billing page',
     },
     openFailed: (url: string) => `Open ${url} in a browser.`,
+    /** Web only: offline, before `openFailed` (as Sources' needsConnection). */
+    needsConnection: 'Opening billing needs a connection.',
+    /** Web only: back from a correct PIN, a browser may block a tab opened outside a tap, so one more tap opens it (as Sources' gateDone). */
+    gateDone: 'PIN accepted. Tap Open billing again.',
     backToJourney: { cta: 'Back to journey' },
   },
 

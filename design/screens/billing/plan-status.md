@@ -29,7 +29,8 @@ Code: `apps/mobile/src/screens/paywall/PaywallScreen.tsx` (route key stays `Payw
 | 3 | web, full route, family source | "Mina has the full route." | "From your family's Family Plan." | caption + Open billing |
 | 4 | web, full route, no source, self | "You have the full route." | "Everything is open." | caption (self) + Open billing |
 | 5 | web, covered | "Mina is covered by Sunday Class A." | "Everything is open while they are in it." | caption + Open billing |
-| 6 | web, hand-off failed | as 1 | as 1 | caption + Open billing + "Open https://hangulroute.com/teach/billing in a browser." |
+| 6 | web, hand-off failed | as 1 | as 1 | caption + Open billing + "Open https://hangulroute.com/teach/billing in a browser." (offline: "Opening billing needs a connection." first) |
+| 6b | web, back from a correct PIN | as 1 | as 1 | caption + Open billing (focused) + "PIN accepted. Tap Open billing again." |
 | 7 to 9 | native (iOS, Android) | as on the web | as on the web | none |
 
 - **Covered on the web** (state 5). The wireframe's "Other states" table leaves the covered row's web cell empty. Sections 4.7 ("Web only: under the state ...") and 11 ("every state on `web` ... web renders one Open billing button") show it on every web state, and the spec decides. A covered learner's grown-up can still read the class or school card on Billing.
@@ -40,9 +41,9 @@ Code: `apps/mobile/src/screens/paywall/PaywallScreen.tsx` (route key stays `Payw
 ## Open billing (web only)
 
 - The press goes through the grown-up gate with destination `Billing`. While a grown-up session is open, or on a self-only device without a PIN, the gate opens directly and the billing page opens inside the same tap.
-- Otherwise the PIN screen comes first. A correct PIN returns to this screen, which then opens the billing page by itself. A cancelled PIN opens nothing.
+- Otherwise the PIN screen comes first. A correct PIN returns to this screen, which shows "PIN accepted. Tap Open billing again." (`caregiver.plan.gateDone`) and moves focus to Open billing. It does not open the tab by itself: a browser may block a tab opened outside a tap (`HAND_OFF_NEEDS_TAP` in `platform/external-link.web.ts`, the rule Sources follows). The grown-up session is open now, so the next press opens the billing page inside that tap. A cancelled PIN opens nothing.
 - B-9 opens today's `consoleBillingUrl()` in a new browser tab, through the same safe hand-off that Sources uses (`openExternalUrl`). That hand-off clears the opener and reports a blocked tab. B-9b changes only the target: with `flags.grownUpHomeEnabled` on, `openGrownUpArea({ via: 'paywall', target: APP_ROUTES.billing })` in the same tab.
-- If the tab could not open (a pop-up blocker, or offline), the line "Open {url} in a browser." shows under the button. Pressing Open billing again opens it directly, because the grown-up session is now open.
+- If the tab could not open (a pop-up blocker), the line "Open {url} in a browser." shows under the button; offline, "Opening billing needs a connection." (`caregiver.plan.needsConnection`) comes first. Pressing Open billing again opens it directly, because the grown-up session is now open. The line sits in a polite live region, so it is read out as it appears.
 - `paywall.console_opened { state }` is sent only when the billing page actually opened.
 
 ## Profile plan card (every tier)

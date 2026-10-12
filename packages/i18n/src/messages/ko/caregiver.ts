@@ -33,6 +33,8 @@ export const caregiver = {
       a11yHint: '결제 페이지를 열어요',
     },
     openFailed: (url: string) => `브라우저에서 이 주소를 열어 주세요: ${url}`,
+    needsConnection: '결제 화면을 열려면 인터넷 연결이 필요해요.',
+    gateDone: 'PIN을 확인했어요. 결제 화면 열기를 한 번 더 눌러 주세요.',
     backToJourney: { cta: '여정으로 돌아가기' },
   },
 } satisfies DeepPartial<Messages['caregiver']>;
