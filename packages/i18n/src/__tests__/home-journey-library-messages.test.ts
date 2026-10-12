@@ -168,7 +168,7 @@ describe('accessibility labels of these screens', () => {
 describe('en-XA covers the new keys', () => {
   const NEW_PREFIXES = ['learner.home', 'learner.journey', 'learner.library', 'learner.cardDetail'];
   const NEW_A11Y = [
-    'a11y.profileEntry', 'a11y.openHomework', 'a11y.missionCard', 'a11y.gridCell', 'a11y.gridCellMarked', 'a11y.lockedCard',
+    'a11y.profileEntry', 'a11y.openHomework', 'a11y.missionCard', 'a11y.journeyCell', 'a11y.lockedCard',
     'a11y.flipToBack', 'a11y.flipToFront', 'a11y.shareCard',
   ];
   const paths = leafPaths(m).filter((p) => NEW_PREFIXES.some((x) => p.startsWith(`${x}.`)) || NEW_A11Y.includes(p));
