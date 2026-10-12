@@ -15,7 +15,7 @@ Until now the API kept everything in process memory: every redeploy — and ever
 
 ## 2. User story
 
-A parent buys Family Lifetime on Sunday; on Monday, after a deploy, the child's device still syncs, the teacher still sees the roster, and the entitlement still unlocks Stage 2.
+A parent buys the Family Plan on Sunday; on Monday, after a deploy, the child's device still syncs, the teacher still sees the roster, and the entitlement still unlocks Stage 2.
 
 ## 3. Acceptance criteria
 

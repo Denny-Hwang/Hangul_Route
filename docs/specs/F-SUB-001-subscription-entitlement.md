@@ -15,6 +15,14 @@ what a child can open. Business model: monthly/yearly subscription with
 **Stage 1 (Hangul) always free** as the taste, and the rest of the journey
 behind premium.
 
+> **Amended 2026-10-11 [BY]** (`AMENDMENTS-BILLING-FAMILY-YEARLY.md`): the family
+> product is the **Family Plan**, a yearly subscription ($15.30 / year, renews
+> yearly, cancel any time), bought on the web through Stripe (F-ENT-001) and later
+> in the stores as an auto-renewable yearly subscription (F-IAP-002). Decision #30
+> had made it a one-time lifetime purchase; that is withdrawn. The tier rule here
+> is unchanged: premium only while the plan is `active` / `trial` and `expiresAt`
+> is in the future.
+
 This spec is the pure entitlement layer: a function that maps a subscription
 to an access tier, and a function that maps a tier + stage to access. UI
 surfaces (Journey lock, paywall) consume it; this PR wires only the

@@ -99,15 +99,24 @@ A. Yes. After your first visit the app works offline. Letter sounds need a Korea
 
 ## Pricing & access
 
+> Updated 2026-10-11 (`docs/specs/AMENDMENTS-BILLING-FAMILY-YEARLY.md`).
+> Until the owner turns on Stripe Live, answer with the first sentence of
+> each answer only ("Stage 1 is free. Plans are coming.") and quote no price.
+
 **Q. How much?**
-A. First 12 cards are free. After that, 12-card packs at $4.99
-in-app. Lifetime full access at $29 (PH launch promo: $19).
+A. Stage 1 (all of Hangul) is free. The Family Plan is $15.30 a year for
+the whole route, renews yearly, and you can cancel any time.
 
 **Q. Family plan?**
-A. Up to 3 child profiles per account, no extra charge.
+A. One Family Plan covers up to 5 learners in one family, on every device.
+
+**Q. What happens if I cancel?**
+A. The plan stays on until the end of the year you paid for. Every card,
+star and finished lesson stays yours after that.
 
 **Q. School / classroom pricing?**
-A. Yes — DM us. We're working with two Korean heritage schools in beta.
+A. Yes. A Group License is $153 a year for a class or a school; bigger
+schools write to hello@hangulroute.com.
 
 ---
 
