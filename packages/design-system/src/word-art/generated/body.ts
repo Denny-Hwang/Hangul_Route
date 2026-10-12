@@ -1,18 +1,23 @@
 /**
  * Body parts (F-VOC-002 §3.6.3): `word:body-*`. A friendly neutral figure (a
  * paper face and limbs, a `hoya.fur` shirt, smiling; not the Hoya component)
- * with a highlight ring on the part. Eye, nose, mouth, ear, tooth and face zoom
- * on the head; head, hand, arm, leg, foot and belly show the whole figure.
+ * with a highlight ring on the part. Eye, nose, mouth, ear and face zoom on
+ * the head; head, hand, arm, leg, foot and belly show the whole figure. The
+ * tooth is drawn on its own, a molar with its two roots (W-4 review: on the
+ * zoomed head a ring tight on the teeth hid the smile and read as a pacifier).
  * The anchors are data (`BODY_ANCHORS`), worked out from the same geometry the
  * figure is drawn from, so a ring always sits on its part.
  */
-import { circle, face, path } from '../builders';
+import { circle, face, groundShadow, path } from '../builders';
 import type { WordArtShape } from '../types';
 import { FIGURE_HAND, figure } from './figure';
 import { HALO_TONE, HALO_WIDTH } from './halo';
 
 export const BODY_PARTS = Object.freeze(['eye', 'nose', 'mouth', 'ear', 'head', 'face', 'hand', 'arm', 'leg', 'foot', 'belly', 'tooth'] as const);
 export type BodyPart = (typeof BODY_PARTS)[number];
+/** The parts shown with a highlight ring: all but the tooth, which is drawn on its own. */
+export type RingedBodyPart = Exclude<BodyPart, 'tooth'>;
+export const RINGED_BODY_PARTS: readonly RingedBodyPart[] = Object.freeze(BODY_PARTS.filter((p): p is RingedBodyPart => p !== 'tooth'));
 
 export interface BodyAnchor {
   /** `head`: the zoomed head; `body`: the whole figure. */
@@ -47,12 +52,11 @@ const EYES = face(HEAD.x, EYE_Y, EYE_SCALE).filter(isEye);
 /** The eye on the viewer's left (the ring sits on it). */
 const LEFT_EYE = EYES.reduce((a, b) => (b.x < a.x ? b : a));
 
-export const BODY_ANCHORS: Readonly<Record<BodyPart, BodyAnchor>> = Object.freeze({
+export const BODY_ANCHORS: Readonly<Record<RingedBodyPart, BodyAnchor>> = Object.freeze({
   eye: { view: 'head', x: LEFT_EYE.x, y: LEFT_EYE.y, r: 8.5 },
   nose: { view: 'head', x: 50, y: 57, r: 6.5 },
   mouth: { view: 'head', x: 50, y: 68.5, r: 12.5 },
   ear: { view: 'head', x: HEAD.x - EAR.dx, y: EAR.y, r: 9 },
-  tooth: { view: 'head', x: 50, y: 67, r: 6.5 },
   face: { view: 'head', x: 50, y: 59, r: 21 },
   head: { view: 'body', ...at(0, -82), r: 15 },
   hand: { view: 'body', ...at(-FIGURE_HAND.dx, FIGURE_HAND.y), r: 7 },
@@ -60,7 +64,7 @@ export const BODY_ANCHORS: Readonly<Record<BodyPart, BodyAnchor>> = Object.freez
   leg: { view: 'body', ...at(8, -18), r: 9 },
   foot: { view: 'body', ...at(9, -3.5), r: 7 },
   belly: { view: 'body', ...at(0, -42), r: 9 },
-} satisfies Record<BodyPart, BodyAnchor>);
+} satisfies Record<RingedBodyPart, BodyAnchor>);
 
 const RING_WIDTH = 3;
 
@@ -94,8 +98,22 @@ function zoomedHead(): WordArtShape[] {
   ];
 }
 
-/** The body-part glyph: the head or the whole figure, then the ring on the part. */
+/**
+ * The tooth on its own: a paper molar (a crown with two roots) with the ink
+ * outline, a shine line on the crown, and a ground shadow. No face, so it
+ * stays a plain object (D1).
+ */
+function tooth(): WordArtShape[] {
+  return [
+    groundShadow(50, 88, 20),
+    path('M 50 24 C 44 18 28 16 24 30 C 21 42 28 50 30 60 C 32 72 34 84 40 84 C 46 84 45 70 50 66 C 55 70 54 84 60 84 C 66 84 68 72 70 60 C 72 50 79 42 76 30 C 72 16 56 18 50 24 Z', PAPER),
+    path('M 33 32 Q 35 26 41 26', DETAIL),
+  ];
+}
+
+/** The body-part glyph: the head or the whole figure, then the ring on the part; the tooth on its own. */
 export function bodyPart(part: BodyPart): WordArtShape[] {
+  if (part === 'tooth') return tooth();
   const anchor = BODY_ANCHORS[part];
   const base = anchor.view === 'head' ? zoomedHead() : figure({ ...FIG, hair: 'short', clothes: 'hoya.fur' });
   return [...base, ...ring(anchor.x, anchor.y, anchor.r)];
