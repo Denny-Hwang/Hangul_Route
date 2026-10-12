@@ -37,10 +37,13 @@ const WORD_ART_FROM_ROOT = 'packages/design-system/src/word-art';
  * back to the path seen from apps/web.
  */
 export function wordArtDir(cwd: string = process.cwd()): string {
-  for (let dir = resolve(cwd); ; dir = dirname(dir)) {
-    if (existsSync(join(dir, 'pnpm-workspace.yaml'))) return resolve(dir, WORD_ART_FROM_ROOT);
-    if (dirname(dir) === dir) return resolve(cwd, '../..', WORD_ART_FROM_ROOT);
+  let dir = resolve(cwd);
+  while (!existsSync(join(dir, 'pnpm-workspace.yaml'))) {
+    const up = dirname(dir);
+    if (up === dir) return resolve(cwd, '../..', WORD_ART_FROM_ROOT);
+    dir = up;
   }
+  return resolve(dir, WORD_ART_FROM_ROOT);
 }
 
 export function wordArtSourceFiles(dir: string = wordArtDir()): string[] {
