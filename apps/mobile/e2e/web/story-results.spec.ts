@@ -151,9 +151,14 @@ test.describe('story Results (fixture bundle)', () => {
 
     // Front: the fact card under the flip card carries the claim and the full source line, where a
     // screen reader reaches it (the flip card is one button).
-    const SOURCE = 'Source: Cultural Heritage Administration, Hangul Day';
+    // The fixture's first source is '문화재청 (Cultural Heritage Administration, heritage.go.kr)':
+    // the web address is dropped, and only the Hangul is marked Korean for a screen reader.
+    const SOURCE = 'Source: 문화재청 (Cultural Heritage Administration), Hangul Day';
     await expect(page.getByText('Hangul Day is celebrated in South Korea on October 9.')).toBeVisible();
     await expect(page.getByTestId('card-detail-citation')).toHaveText(SOURCE);
+    const korean = page.getByTestId('card-detail-citation').locator('[lang="ko"]');
+    await expect(korean).toHaveCount(1);
+    await expect(korean).toHaveText('문화재청');
     await expect(page.getByTestId('card-detail-citation-more')).toHaveText('and 1 more source');
     await expect(page.getByTestId('card-detail-citation')).not.toHaveAttribute('aria-label', /.*/);
 
@@ -164,9 +169,9 @@ test.describe('story Results (fixture bundle)', () => {
     await expect(page.getByTestId('card-detail-citation')).toHaveText(SOURCE);
     await expect(page.getByTestId('card-detail-citation-more')).toHaveText('and 1 more source');
 
-    // Never a URL and never a link on a learner surface.
+    // Never a URL, a web address or a link on a learner surface.
     const body = await page.locator('body').innerText();
-    expect(body).not.toMatch(/https?:\/\/|www\./);
+    expect(body).not.toMatch(/https?:\/\/|www\.|\b[a-z0-9-]+\.(?:go\.kr|kr|org|com|net|int)\b/i);
     expect(body).not.toMatch(EMOJI);
     for (const id of ['card-detail-citation', 'card-detail-citation-more']) {
       await expect(page.getByTestId(id).locator('xpath=ancestor-or-self::a | descendant::a')).toHaveCount(0);
