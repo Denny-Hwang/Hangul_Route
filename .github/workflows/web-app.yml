@@ -7,9 +7,10 @@ name: Web App (PWA)
 #
 # Layout (CI speed-up, 2026-10-12): one `build` job writes both bundles (the
 # release build dist/ and the fixture build dist-e2e/, back to back so the
-# second reuses the warm Metro cache) and hands them to parallel e2e jobs:
-# the main suite in 3 shards, and the fixture-bundle specs in 2 parts (both
-# dealt round-robin by test, scripts/e2e-shard-list.mjs). The required check
+# second reuses the warm Metro cache) and hands them to 4 parallel e2e
+# shards; each runs its share of the release-build suite and of the
+# fixture-bundle specs (dealt round-robin by test, scripts/e2e-shard-list.mjs,
+# so the shards come out even). The required check
 # 'Build PWA · offline e2e' is the last job: it always runs and passes only
 # when every job above passed (or when nothing the PWA depends on changed, and
 # the build job skipped its steps on purpose).
@@ -146,7 +147,7 @@ jobs:
           key: next-console-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
 
   e2e:
-    name: PWA · offline e2e · release build ${{ matrix.shard }}/3
+    name: PWA · offline e2e · shard ${{ matrix.shard }}/4
     needs: [build]
     if: needs.build.outputs.run == 'true'
     runs-on: ubuntu-latest
@@ -154,7 +155,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        shard: [1, 2, 3, 4]
 
     steps:
       - name: Checkout
@@ -183,15 +184,22 @@ jobs:
           name: pwa-dist
           path: apps/mobile/dist
 
-      # The shard's tests come from scripts/e2e-shard-list.mjs, which deals the
-      # listed tests round-robin (Playwright's own --shard cuts the list into
-      # contiguous runs, and this suite's long and skipped specs cluster, so its
-      # shards came out 4:2:1). --fully-parallel then spreads the shard's tests
-      # over the workers by test; every test has its own browser context.
-      - name: Offline e2e (release build, shard ${{ matrix.shard }} of 3)
+      - name: Download the fixture build
+        uses: actions/download-artifact@v4
+        with:
+          name: pwa-dist-e2e
+          path: apps/mobile/dist-e2e
+
+      # Each shard runs its share of the release-build suite, then its share of
+      # the fixture-bundle specs. The shares come from scripts/e2e-shard-list.mjs,
+      # which deals the listed tests round-robin (Playwright's own --shard cuts
+      # the list into contiguous runs, and this suite's long and skipped specs
+      # cluster, so its shards came out 4:2:1). --fully-parallel then spreads a
+      # share over the workers by test; every test has its own browser context.
+      - name: Offline e2e (release build, shard ${{ matrix.shard }} of 4)
         working-directory: apps/mobile
         env:
-          SHARD: ${{ matrix.shard }}/3
+          SHARD: ${{ matrix.shard }}/4
         shell: bash
         run: |
           pnpm exec playwright test --list > "$RUNNER_TEMP/all-tests.txt"
@@ -205,60 +213,17 @@ jobs:
           fi
           pnpm exec playwright test --fully-parallel --test-list "$RUNNER_TEMP/shard-tests.txt"
 
-      - name: Save the Playwright browsers (main only)
-        if: github.event_name == 'push' && steps.pw-cache.outputs.cache-hit != 'true' && success()
-        uses: actions/cache/save@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-chromium-${{ runner.os }}-${{ steps.pw.outputs.version }}
-
-  e2e-fixtures:
-    name: PWA · offline e2e · fixture bundle ${{ matrix.part }}/2
-    needs: [build]
-    if: needs.build.outputs.run == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        part: [1, 2]
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm, Node and dependencies
-        uses: ./.github/actions/setup-workspace
-
-      - name: Playwright version
-        id: pw
-        run: echo "version=$(node -p "require('./apps/mobile/node_modules/@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
-
-      - name: Restore the Playwright browsers
-        uses: actions/cache/restore@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-chromium-${{ runner.os }}-${{ steps.pw.outputs.version }}
-
-      - name: Install Playwright Chromium (system deps; the browser only on a cache miss)
-        run: pnpm --filter @hangul-route/mobile exec playwright install --with-deps chromium
-
-      - name: Download the fixture build
-        uses: actions/download-artifact@v4
-        with:
-          name: pwa-dist-e2e
-          path: apps/mobile/dist-e2e
-
       # Specs that open screens with no learner entry point yet, through the
       # e2e hooks of the fixture bundle, and read fixture-specific content.
       # With STORY_FIXTURES=1 the Playwright web server serves dist-e2e/.
-      # Every listing below goes into one list, dealt round-robin over the parts
-      # (scripts/e2e-shard-list.mjs); --test-list then runs exactly those tests.
-      - name: Fixture e2e (part ${{ matrix.part }} of 2)
+      # Every listing below goes into one list, dealt round-robin over the
+      # shards like the release-build list above.
+      - name: Offline e2e (fixture bundle, shard ${{ matrix.shard }} of 4)
+        if: ${{ !cancelled() }}
         working-directory: apps/mobile
         env:
           STORY_FIXTURES: "1"
-          SHARD: ${{ matrix.part }}/2
+          SHARD: ${{ matrix.shard }}/4
         shell: bash
         run: |
           # Whole spec files. A file filter matches by name: story-reader covers
@@ -302,9 +267,16 @@ jobs:
           fi
           pnpm exec playwright test --fully-parallel --test-list "$RUNNER_TEMP/shard-tests.txt"
 
+      - name: Save the Playwright browsers (main only)
+        if: github.event_name == 'push' && steps.pw-cache.outputs.cache-hit != 'true' && success()
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.pw.outputs.version }}
+
   pwa:
     name: Build PWA · offline e2e
-    needs: [build, e2e, e2e-fixtures]
+    needs: [build, e2e]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -315,11 +287,9 @@ jobs:
           BUILD: ${{ needs.build.result }}
           RUN: ${{ needs.build.outputs.run }}
           E2E: ${{ needs.e2e.result }}
-          FIXTURES: ${{ needs.e2e-fixtures.result }}
         run: |
           echo "build: $BUILD (PWA-relevant change: $RUN)"
-          echo "e2e, release build: $E2E"
-          echo "e2e, fixture bundle: $FIXTURES"
+          echo "e2e shards (release build + fixture bundle): $E2E"
           if [ "$BUILD" != success ]; then
             echo "::error::The PWA build job did not pass."
             exit 1
@@ -328,7 +298,7 @@ jobs:
             echo "Nothing the PWA depends on changed: build and e2e skipped on purpose."
             exit 0
           fi
-          if [ "$E2E" != success ] || [ "$FIXTURES" != success ]; then
+          if [ "$E2E" != success ]; then
             echo "::error::An e2e job did not pass."
             exit 1
           fi

@@ -188,15 +188,20 @@ describe("unit tests run once, with coverage", () => {
 describe("PWA e2e", () => {
   const text = read(".github/workflows/web-app.yml");
 
-  test("the release-build shards and the fixture parts each cover 1..N of their total", () => {
+  test("the release-build share and the fixture share use the same shards, 1..N of N", () => {
     const shards = [...text.matchAll(/SHARD: \$\{\{ matrix\.(\w+) \}\}\/(\d+)/g)].map((m) => ({ key: m[1], total: Number(m[2]) }));
-    assert.deepEqual(shards.map((x) => x.key).sort(), ["part", "shard"]);
-    for (const { key, total } of shards) {
-      assert.ok(total >= 1);
-      const list = text.match(new RegExp(`^\\s+${key}: \\[([^\\]]+)\\]`, "m"))?.[1];
-      assert.ok(list, `matrix.${key} is listed`);
-      assert.deepEqual(list.split(",").map((v) => Number(v.trim())), Array.from({ length: total }, (_, i) => i + 1), key);
-    }
+    assert.equal(shards.length, 2, "one SHARD for the release-build list, one for the fixture list");
+    assert.deepEqual(shards[0], shards[1]);
+    const { key, total } = shards[0];
+    assert.ok(total >= 2);
+    const list = text.match(new RegExp(`^\\s+${key}: \\[([^\\]]+)\\]`, "m"))?.[1];
+    assert.ok(list, `matrix.${key} is listed`);
+    assert.deepEqual(list.split(",").map((v) => Number(v.trim())), Array.from({ length: total }, (_, i) => i + 1));
+  });
+
+  test("the fixture share runs even when the release-build share failed", () => {
+    const step = text.slice(text.indexOf("- name: Offline e2e (fixture bundle"));
+    assert.match(step.split("\n").slice(0, 3).join("\n"), /if: \$\{\{ !cancelled\(\) \}\}/);
   });
 
   test("each e2e job runs its round-robin share of one full listing, checked before it runs", () => {
