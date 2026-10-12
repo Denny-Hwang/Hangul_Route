@@ -1,7 +1,19 @@
 import type { ProgressSnapshot } from '@hangul-route/content-schema';
-import { createElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+// The mobile vitest lane renders no components: the hook's one React call answers with the store snapshot.
+const hook = vi.hoisted(() => ({ subscribe: null as null | ((onChange: () => void) => () => void), server: null as null | (() => unknown) }));
+vi.mock('react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react')>();
+  return {
+    ...actual,
+    useSyncExternalStore: <T,>(subscribe: (onChange: () => void) => () => void, getSnapshot: () => T, getServerSnapshot?: () => T): T => {
+      hook.subscribe = subscribe;
+      hook.server = getServerSnapshot ?? null;
+      return getSnapshot();
+    },
+  };
+});
 
 const mem = vi.hoisted(() => new Map<string, unknown>());
 vi.mock('../../platform/storage', () => ({
@@ -155,7 +167,7 @@ describe('questOpenFor and useQuestAccess (F-ENT-003 section 3.4)', () => {
       byProfile: {
         'profile:a': snapshotWith('profile:a', [
           { questId: 'quest:stage2-life-q1', episodeId: 'episode:stage2-life', startedAt: at, completedAt: at, stars: 2, attempts: 1, accuracy: 1 },
-          { questId: 'quest:stage2-nature-q1', episodeId: 'episode:stage2-nature', startedAt: at, attempts: 1, accuracy: 0 },
+          { questId: 'quest:stage2-nature-q1', episodeId: 'episode:stage2-nature', startedAt: at, stars: 0, attempts: 1, accuracy: 0 },
         ]),
       },
     });
@@ -186,36 +198,40 @@ describe('questOpenFor and useQuestAccess (F-ENT-003 section 3.4)', () => {
     useProgressStore.setState({
       byProfile: { 'profile:a': snapshotWith('profile:a', [{ questId: 'quest:stage4-rites-q1', episodeId: 'episode:stage4-rites', startedAt: at, completedAt: at, stars: 3, attempts: 1, accuracy: 1 }]) },
     });
-    const seen: Array<(questId: string) => boolean> = [];
-    const Probe = (): null => {
-      seen.push(useQuestAccess());
-      return null;
-    };
-    renderToStaticMarkup(createElement(Probe));
-    const fromHook = seen[0]!;
+    const fromHook = useQuestAccess();
     const direct = questOpenFor('profile:a', new Date());
     for (const q of questsAll) expect(fromHook(q.id), q.id).toBe(direct(q.id));
     expect(fromHook('quest:stage4-rites-q1')).toBe(true);
     expect(fromHook('quest:stage2-life-q1')).toBe(false);
+    // Nothing changed: the same predicate comes back, from the server snapshot too.
+    expect(useQuestAccess()).toBe(fromHook);
+    expect(hook.server?.()).toBe(fromHook);
 
     // The predicate follows the stores: a premium inbox opens everything on the next render.
     useTierStore.getState().applyInbox('profile:a', { tier: 'premium', tierSource: source, tierValidUntil: null, serverTime: 't' });
-    renderToStaticMarkup(createElement(Probe));
-    expect(seen[1]!('quest:stage2-life-q1')).toBe(true);
-    // Nothing changed: the same predicate comes back.
-    renderToStaticMarkup(createElement(Probe));
-    expect(seen[2]).toBe(seen[1]);
+    const after = useQuestAccess();
+    expect(after).not.toBe(fromHook);
+    expect(after('quest:stage2-life-q1')).toBe(true);
+  });
+
+  it('the hook re-renders when the tier cache, the snapshot, the subscription or the profile list changes', () => {
+    useQuestAccess();
+    const onChange = vi.fn();
+    const off = hook.subscribe!(onChange);
+    useTierStore.getState().noteSpaces('profile:a', 1);
+    useProgressStore.setState({ byProfile: { 'profile:a': snapshotWith('profile:a', []) } });
+    useAccountStore.setState({ subscription: { status: 'active', plan: 'yearly', expiresAt: '2027-01-01T00:00:00.000Z' } });
+    useProfileStore.setState({ activeId: 'profile:a' });
+    expect(onChange).toHaveBeenCalledTimes(4);
+    off();
+    useTierStore.getState().noteSpaces('profile:a', 0);
+    expect(onChange).toHaveBeenCalledTimes(4);
   });
 
   it('with no active profile the hook answers for a learner with nothing kept and no tier', () => {
     switchOn('web');
-    const seen: Array<(questId: string) => boolean> = [];
-    const Probe = (): null => {
-      seen.push(useQuestAccess());
-      return null;
-    };
-    renderToStaticMarkup(createElement(Probe));
-    expect(seen[0]!('quest:stage1-letters-q1')).toBe(true);
-    expect(seen[0]!('quest:stage2-life-q1')).toBe(false);
+    const open = useQuestAccess();
+    expect(open('quest:stage1-letters-q1')).toBe(true);
+    expect(open('quest:stage2-life-q1')).toBe(false);
   });
 });
