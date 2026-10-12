@@ -61,7 +61,7 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
     });
 
-    test('self-only device without a PIN: Add a profile and the unlock page open directly', async ({ page }) => {
+    test('self-only device without a PIN: Add a profile and the Plan screen open directly', async ({ page }) => {
       await onboardSelf(page, { name: 'Rio' });
       await openProfile(page, 'Rio');
       const add = page.getByRole('button', { name: 'Add a profile', exact: true });
@@ -80,12 +80,12 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByRole('heading', { name: 'Heritage Journey' })).toBeVisible();
       await expect(page.getByRole('button', { name: /locked|unlock/i })).toHaveCount(0);
 
-      // The unlock page is reached from Profile, straight away on a self-only device.
+      // The Plan screen is reached from Profile with no PIN (F-BILL-002 B-9: Plan details on every tier).
       await openProfile(page, 'Rio');
-      const unlock = page.getByRole('button', { name: /^Unlock the journey/ });
-      await unlock.scrollIntoViewIfNeeded();
-      await unlock.click();
-      await expect(page.getByRole('button', { name: 'Open the web console' })).toBeVisible();
+      const details = page.getByRole('button', { name: 'Plan details', exact: true });
+      await details.scrollIntoViewIfNeeded();
+      await details.click();
+      await expect(page.getByRole('button', { name: 'Open billing' })).toBeVisible();
       await expect(page.getByText(/Create a (grown-up )?PIN/)).toHaveCount(0);
     });
 
