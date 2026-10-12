@@ -65,7 +65,8 @@
     "apps/mobile/src/screens/library/StoryTile.tsx",
     "apps/mobile/src/screens/library/StoryShelf.tsx",
     "apps/mobile/src/screens/profile/EditProfileScreen.tsx",
-    "apps/web/src/components/console/JourneyParts.tsx"
+    "apps/web/src/components/console/JourneyParts.tsx",
+    "apps/mobile/src/screens/results/**"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1

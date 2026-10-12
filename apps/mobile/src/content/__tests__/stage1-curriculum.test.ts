@@ -25,7 +25,7 @@ import { questsAll } from '../quests';
 /**
  * The Stage 1 curriculum invariants (F-QUEST-002 section 5, T1-T11): the heart of the
  * spec. They run over the Stage 1 quests already rebuilt with a Discover step (Q-6a:
- * quests 1-3; Q-6b, Q-7b and Q-8 add the rest), which must lead the Stage 1 order so
+ * quests 1-3; Q-6b: quests 4-6; Q-7b and Q-8 add the rest), which must lead the Stage 1 order so
  * "taught by this quest or earlier" means the real teaching order. T1 (all 30 symbols)
  * runs once all 15 quests are rebuilt.
  */
@@ -162,11 +162,14 @@ function englishFieldsOf(quest: Quest): Array<{ where: string; text: string }> {
 const ctx = { exceptions: ROMANIZATION_EXCEPTIONS };
 
 describe('the rebuilt Stage 1 quests', () => {
-  it('starts with letters q1-q3 (Q-6a) and they lead the Stage 1 order', () => {
-    expect(REBUILT.map((q) => q.id).slice(0, 3)).toEqual([
+  it('starts with letters q1-q3 (Q-6a) and life q1-q3 (Q-6b), and they lead the Stage 1 order', () => {
+    expect(REBUILT.map((q) => q.id).slice(0, 6)).toEqual([
       'quest:stage1-letters-q1',
       'quest:stage1-letters-q2',
       'quest:stage1-letters-q3',
+      'quest:stage1-life-q1',
+      'quest:stage1-life-q2',
+      'quest:stage1-life-q3',
     ]);
     expect(STAGE1_QUESTS.slice(0, REBUILT.length)).toEqual(REBUILT);
   });
@@ -176,12 +179,60 @@ describe('the rebuilt Stage 1 quests', () => {
     expect(chars(REBUILT[0]!)).toEqual(['ㅏ', 'ㅓ', 'ㄱ', 'ㄴ']);
     expect(chars(REBUILT[1]!)).toEqual(['ㅗ', 'ㅜ', 'ㅁ', 'ㅇ']);
     expect(chars(REBUILT[2]!)).toEqual(['ㅡ', 'ㅣ', 'ㄷ', 'ㄹ']);
+    expect(chars(REBUILT[3]!)).toEqual(['ㅈ', 'ㅊ']);
+    expect(chars(REBUILT[4]!)).toEqual(['ㅂ', 'ㅅ']);
+    expect(chars(REBUILT[5]!)).toEqual(['ㅋ', 'ㅌ']);
+  });
+
+  it('keeps the life titles and reward cards of section 3.6, 4 minutes each', () => {
+    const life = REBUILT.slice(3, 6);
+    expect(life.map((q) => [q.titleEn, q.estimatedMinutes, q.rewardCardId])).toEqual([
+      ['Hello Kimchi & Rice', 4, 'card:kimchi'],
+      ['Family at the Table', 4, 'card:family-table'],
+      ['Picnic Snacks', 4, 'card:kimbap'],
+    ]);
+  });
+
+  it('plays the section 3.6 Check rounds of quests 4-6: the focus symbol among the table options, then a reading word', () => {
+    const checkOf = (q: Quest) => scopesOf(q).find((s) => s.kind === 'check')!.scope!.listenPick!.rounds;
+    const optionTexts = (round: { options: Array<{ text?: KoText }> }): string[] => round.options.map((o) => o.text?.ko ?? '').sort();
+    const table: Array<[string, string[], string, string[]]> = [
+      ['ㅊ', ['ㅊ', 'ㅈ', 'ㄱ', 'ㄷ'], '치즈', ['치즈', '자두', '고추', '차']],
+      ['ㅅ', ['ㅅ', 'ㅈ', 'ㅂ', 'ㅁ'], '아버지', ['아버지', '아기', '바나나', '두부']],
+      ['ㅋ', ['ㅋ', 'ㄱ', 'ㅌ', 'ㄷ'], '토마토', ['토마토', '코코아', '쿠키', '토스트']],
+    ];
+    REBUILT.slice(3, 6).forEach((quest, i) => {
+      const [symbol, symbolOptions, word, wordOptions] = table[i]!;
+      const [first, second] = checkOf(quest);
+      expect(findJamo(first!.answerId)?.char, quest.id).toBe(symbol);
+      expect(optionTexts(first!), quest.id).toEqual([...symbolOptions].sort());
+      expect(second!.answerId, quest.id).toBe(word);
+      expect(optionTexts(second!), quest.id).toEqual([...wordOptions].sort());
+    });
+  });
+
+  it('gives quest 4 the first Pic-Word board: four food words, each on its drawn card picture', () => {
+    const apply = scopesOf(REBUILT[3]!).find((s) => s.kind === 'apply')!.scope!;
+    expect(apply.kind).toBe('pic-word-match');
+    const pairs = apply.picWord!.boards[0]!.pairs;
+    expect(pairs.map((p) => [p.word.ko, p.word.romanization, p.pictureRef])).toEqual([
+      ['김치', 'gimchi', 'card:kimchi'],
+      ['밥', 'bap', 'card:rice'],
+      ['김밥', 'gimbap', 'card:kimbap'],
+      ['젓가락', 'jeotgarak', 'card:chopsticks'],
+    ]);
+    // Every picture is a Stage 1 card (HeritageCardArt draws all 30), and the gloss is the card's own title,
+    // so the text fallback tile reads the same.
+    for (const pair of pairs) {
+      expect(cardById(pair.pictureRef!)?.stage, pair.pictureRef).toBe('stage1');
+      expect(pair.word.en.toLowerCase(), pair.id).toBe(cardById(pair.pictureRef!)?.titleEn.toLowerCase());
+    }
   });
 
   it('gives an episode whose quests are all rebuilt the sum of their minutes (section 3.6: letters 15)', () => {
     const rebuilt = new Set(REBUILT.map((q) => q.id));
     const done = episodesAll.filter((e) => e.stage === 'stage1' && e.questIds.length > 0 && e.questIds.every((id) => rebuilt.has(id)));
-    expect(done.map((e) => e.id)).toContain('episode:stage1-letters');
+    expect(done.map((e) => e.id)).toEqual(expect.arrayContaining(['episode:stage1-letters', 'episode:stage1-life']));
     for (const episode of done) {
       const sum = episode.questIds.reduce((n, id) => n + (questsAll.find((q) => q.id === id)?.estimatedMinutes ?? 0), 0);
       expect(episode.estimatedMinutes, episode.id).toBe(sum);
@@ -189,6 +240,7 @@ describe('the rebuilt Stage 1 quests', () => {
     const letters = episodesAll.find((e) => e.id === 'episode:stage1-letters');
     expect(letters?.estimatedMinutes).toBe(15);
     expect(letters?.subtitleEn).toBe('Twelve letters, and your first real words.');
+    expect(episodesAll.find((e) => e.id === 'episode:stage1-life')?.estimatedMinutes).toBe(12);
   });
 });
 

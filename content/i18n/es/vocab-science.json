@@ -1,0 +1,50 @@
+{
+  "locale": "es",
+  "domain": "vocab-science",
+  "entries": {
+    "vocab-topic:science": {
+      "title": "Ciencia",
+      "blurb": "Del fuego y el hielo a la Tierra y el espacio exterior.",
+      "hoyaIntro": "Miremos de cerca y preguntémonos cómo funciona el mundo."
+    },
+    "vocab:bul": {
+      "gloss": "fuego",
+      "senseNote": "También significa una luz encendida, como la de una lámpara."
+    },
+    "vocab:eoreum": {
+      "gloss": "hielo"
+    },
+    "vocab:dol": {
+      "gloss": "piedra"
+    },
+    "vocab:jaseok": {
+      "gloss": "imán"
+    },
+    "vocab:jigu": {
+      "gloss": "Tierra"
+    },
+    "vocab:uju": {
+      "gloss": "espacio exterior",
+      "senseNote": "También significa todo el universo."
+    },
+    "vocab:robot": {
+      "gloss": "robot"
+    },
+    "vocab:ssiat": {
+      "gloss": "semilla"
+    },
+    "vocab:mujigae": {
+      "gloss": "arcoíris"
+    },
+    "vocab:geurimja": {
+      "gloss": "sombra"
+    },
+    "vocab:baram": {
+      "gloss": "viento"
+    },
+    "vocab:bit": {
+      "gloss": "luz",
+      "senseNote": "La luz del sol o de una lámpara."
+    }
+  }
+}

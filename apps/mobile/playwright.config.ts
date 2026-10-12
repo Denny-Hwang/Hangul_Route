@@ -5,6 +5,10 @@ import { defineConfig, devices } from '@playwright/test';
  * story fixture build from ./dist-e2e when STORY_FIXTURES=1) by
  * scripts/serve-dist.mjs. The Chromium binary path is overridable because
  * CI images ship their own build (PW_CHROMIUM).
+ *
+ * Every spec runs as an en-US browser (F-I18N-001 §3.11), so the specs' English
+ * `getByText` stays English whatever language the machine prefers; `locale.spec.ts`
+ * covers the other languages with its own `test.use({ locale })`.
  */
 export default defineConfig({
   testDir: './e2e/web',
@@ -14,6 +18,7 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:4173',
     ...devices['Pixel 5'],
+    locale: 'en-US',
     launchOptions: process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {},
   },
   webServer: {

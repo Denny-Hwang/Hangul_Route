@@ -2,7 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked } from './helpers';
 import { shot } from './shots';
-import { back, fullyVisible, next, position, primaryButtons } from './story-reader-helpers';
+import { back, fullyVisible, next, nextPage, position, primaryButtons } from './story-reader-helpers';
 
 /**
  * F-STORY-002 PR 2.8: the reader's culture note chip and card, the grown-up
@@ -114,7 +114,7 @@ test.describe('story reader extras (fixture bundle)', () => {
     await expect(advisory(page)).toBeVisible();
 
     // A page turn takes it away and Back does not bring it back in that visit.
-    await next(page).click();
+    await nextPage(page);
     await expect(advisory(page)).toHaveCount(0);
     await back(page).click();
     await expect(position(page)).toHaveText('1 / 5');
@@ -188,7 +188,7 @@ test.describe('story reader extras (fixture bundle)', () => {
     await expect(note(page)).toBeVisible();
     await expect(page.getByTestId('story-reader-gloss')).toHaveCount(0);
 
-    await next(page).click();
+    await nextPage(page);
     await expect(position(page)).toHaveText('2 / 5');
     await expect(note(page)).toHaveCount(0);
     await expect(chip(page)).toHaveCount(0);
@@ -200,7 +200,7 @@ test.describe('story reader extras (fixture bundle)', () => {
   test('the end page recaps the story with its Story Order pictures, hidden from screen readers', async ({ page }) => {
     await onboard(page);
     await openReplay(page, 'listen', 4);
-    await next(page).click();
+    await nextPage(page);
     await expect(page.getByRole('heading', { name: 'The End' })).toBeVisible();
     const recap = page.getByTestId('story-reader-recap');
     await expect(recap).toBeVisible();
@@ -216,7 +216,7 @@ test.describe('story reader extras (fixture bundle)', () => {
   test('read-along: a Story Order scene whose art is pending is left out of the recap', async ({ page }) => {
     await onboard(page);
     await openReplay(page, 'read-along', 3);
-    await next(page).click();
+    await nextPage(page);
     await expect(page.getByRole('heading', { name: 'The End' })).toBeVisible();
     for (const id of ['s1', 's2', 's4']) await expect(page.getByTestId(`story-reader-recap-${id}`)).toBeVisible();
     await expect(page.getByTestId('story-reader-recap-s3')).toHaveCount(0);
@@ -263,7 +263,7 @@ test.describe('story reader extras (fixture bundle)', () => {
       expect(await noSidewaysScroll(page)).toBe(true);
       await shot(page, `story-extras-note-${vp.width}x${vp.height}`);
 
-      for (let i = 0; i < 5; i += 1) await next(page).click();
+      for (let i = 0; i < 5; i += 1) await nextPage(page);
       const primary = page.getByTestId('story-reader-end-primary');
       await expect(primary).toHaveText('Continue');
       await expect(page.getByTestId('story-reader-recap')).toBeVisible();

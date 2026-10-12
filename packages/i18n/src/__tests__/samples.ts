@@ -23,6 +23,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.home.stars.pill': [[0], [3]],
   'learner.home.progress.label': [[1, 24]],
   'learner.home.homework.due': [[2]],
+  'learner.home.catchUp.line': [[1], [22]],
   'learner.library.collected.line': [[1, 24]],
   'learner.library.collected.pill': [[1, 24]],
   'learner.cardDetail.earn.quest': [['Meet g, n, d, l', 1], ['Meet g, n, d, l', 2]],
@@ -312,4 +313,9 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.journey.stageLine': [[0, 0], [0, 1], [0, 4], [8, 0], [4, 2]],
   'console.journey.stage': [[1, '4 quests done'], [3, 'Coming later']],
   'console.journey.stages': [[5, 7, 'Coming later']],
+  'learner.results.extraCards.title': [[1], [4]],
+  'learner.results.extraCards.episodeDone': [['Meet the Letters']],
+  'learner.results.extraCards.more': [[1], [3]],
+  'learner.results.extraCards.announce': [[1, ['Rice']], [2, ['Rice', 'Chopsticks']]],
+  'learner.results.extraCards.seeA11y': [['Hanbok']],
 };

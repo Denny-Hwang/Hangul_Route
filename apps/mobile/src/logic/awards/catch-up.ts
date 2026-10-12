@@ -14,3 +14,27 @@ export function catchUpGrantedPayload(added: readonly DerivedAward[]): CatchUpGr
   for (const award of added) payload[award.source] += 1;
   return payload;
 }
+
+/** What the Home catch-up card shows (F-STORY-006 §3.5): the cards found this session and how many. */
+export interface CatchUpCard {
+  /** The ids `See my cards` marks seen, each once. */
+  cardIds: readonly string[];
+  /** The number of cards found; never a fraction of the collection (D3). */
+  count: number;
+}
+
+/**
+ * The Home catch-up card for the session-only list a reconcile wrote (`progress-store` `catchUp`).
+ * Null when nothing is listed or only the welcome card is: a new profile is not a catch-up, and
+ * the card stays away once `See my cards` (or the Library) has seen the others.
+ */
+export function catchUpCard(
+  listed: readonly string[] | undefined,
+  welcomeCardIds: ReadonlySet<string> | readonly string[],
+): CatchUpCard | null {
+  if (!listed || listed.length === 0) return null;
+  const welcome = new Set(welcomeCardIds);
+  const cardIds = [...new Set(listed)];
+  if (!cardIds.some((id) => !welcome.has(id))) return null;
+  return { cardIds, count: cardIds.length };
+}
