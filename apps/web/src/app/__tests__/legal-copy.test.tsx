@@ -43,7 +43,7 @@ describe('privacy policy', () => {
   });
 
   it('says the privacy page was last updated 2026-10-10', () => {
-    expect(privacy).toContain('Effective October 10, 2026');
+    expect(privacy).toContain('Effective October 11, 2026');
   });
 
   describe('launch-news email list', () => {
@@ -103,17 +103,22 @@ describe('privacy policy', () => {
   });
 
   describe('progress reports (F-REPORT-001 section 3.10, notice before collection)', () => {
-    it('says which day-by-day progress details are kept, and their limits', () => {
-      expect(privacy).toContain('practice days and minutes per day for the last 35 days');
+    it('names every progress-report detail the app sends, and their limits', () => {
+      expect(privacy).toContain('for the last 35 days, which days were practiced, with minutes, quests, cards and words for each day');
       expect(privacy).toContain('monthly totals for up to 24 months');
+      expect(privacy).toContain('all-time totals since the first practice day');
+      expect(privacy).toContain('the day each stage was finished');
       expect(privacy).toContain('the letters that became strong each day');
-      expect(privacy).toContain('the next lesson');
+      expect(privacy).toContain('the next lesson and one lesson to revisit');
+      expect(privacy).toContain("the device's time zone, so days are counted in the learner's local time");
     });
 
     it('says who can see progress and reports, and that a class sees history only from the day the learner joined', () => {
       expect(privacy).toContain("the learner's family caregivers");
-      expect(privacy).toContain('the teacher and school admin of a class the learner joined');
-      expect(privacy).toContain('only from the day the learner joined');
+      expect(privacy).toContain('who can also recover the full saved progress');
+      expect(privacy).toContain('the teacher of a class the learner joined');
+      expect(privacy).toContain("the owner and admins of that class's school");
+      expect(privacy).toContain('only from the day the learner joined, and all-time totals without the first practice day');
     });
 
     it('puts both lines in "What we collect", progress first', () => {
