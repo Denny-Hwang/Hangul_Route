@@ -1,5 +1,6 @@
 import type { RuntimeVocabItem, VocabItemState, VocabProgress } from '@hangul-route/content-schema';
 import { shuffle } from '../shuffle';
+import { normaliseSeed } from './question-builder';
 import { addDays, isDue } from './srs';
 
 /**
@@ -55,7 +56,10 @@ const asc = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 const lastOf = (e: Entry): string => e.state?.last ?? '';
 
 export function selectSpeedWords(input: SelectSpeedWordsInput): RuntimeVocabItem[] {
-  const { collected, progress, today, count, seed } = input;
+  const { collected, progress, today, count } = input;
+  // The same clean-up buildQuestions applies: a hashed, negative or NaN seed
+  // would otherwise leave holes in the shuffled list.
+  const seed = normaliseSeed(input.seed);
   const states = new Map(progress.items.map((s) => [s.id, s]));
   const unique = new Map<string, Entry>();
   for (const item of collected) {

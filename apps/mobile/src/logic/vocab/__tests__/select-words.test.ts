@@ -215,3 +215,32 @@ describe('selectSpeedWords (F-VOC-005 section 3.5)', () => {
     expect(ids(out).slice(8)).toEqual(['strong2', 'strong1']);
   });
 });
+
+describe('selectSpeedWords seed hygiene (F-VOC-005 section 3.5)', () => {
+  const collected = ['a', 'b', 'c', 'd', 'e', 'f'].map(word);
+  const progress = slice([
+    st('a', { due: '2026-10-19' }),
+    st('b', { due: '2026-10-19' }),
+    st('c', { due: '2026-10-19' }),
+    st('d', { first: '2026-10-18' }),
+    st('e', { first: '2026-10-18' }),
+    st('f', { box: 4, bestBox: 4 }),
+  ]);
+
+  it.each([-123456789, Number.NaN, 1.5, Number.NEGATIVE_INFINITY])(
+    'never returns holes for a seed of %s and replays the same round',
+    (seed) => {
+      const round = selectSpeedWords({ collected, progress, today: TODAY, count: 6, seed });
+      expect(round).toHaveLength(6);
+      expect(round.every((w) => w !== undefined && typeof w.id === 'string')).toBe(true);
+      expect(new Set(round.map((w) => w.id)).size).toBe(6);
+      expect(round).toEqual(selectSpeedWords({ collected, progress, today: TODAY, count: 6, seed }));
+    },
+  );
+
+  it('treats a negative seed like its absolute value', () => {
+    const neg = selectSpeedWords({ collected, progress, today: TODAY, count: 6, seed: -42 });
+    const pos = selectSpeedWords({ collected, progress, today: TODAY, count: 6, seed: 42 });
+    expect(neg).toEqual(pos);
+  });
+});
