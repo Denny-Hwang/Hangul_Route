@@ -182,18 +182,18 @@ describe('the week report of a steady learner (behaviour 1, family viewer)', () 
     expect(detail?.blocks[5]).toEqual({ kind: 'lines', heading: 'Plan', lines: ["This week's plan: 3 done, 2 ready to play", 'Own route: 2 done, 2 ready to play'] });
   });
 
-  it('dates the level check on the learner-local day, with the year when it is not this year', () => {
-    // 05:00 UTC on Oct 11 is 22:00 on Oct 10 in Los Angeles, the learner's zone (OD-12).
+  it('dates the level check and its starting spot on the learner-local day, with the year when it is not this year', () => {
+    // 05:00 UTC on Oct 11 is 22:00 on Oct 10 in Los Angeles, the learner's zone (OD-12); the viewer's zone never moves it.
     const late = view({ ...STEADY, placement: { ...PLACEMENT, takenAt: '2026-10-11T05:00:00.000Z' } });
     const lines = (v2: LearnerReportView): string[] => {
       const block = v2.moreDetail?.blocks.find((b) => 'heading' in b && b.heading === 'Level check');
       return block?.kind === 'lines' ? block.lines : [];
     };
-    expect(lines(late)).toContain('Checked Oct 10');
+    expect(lines(late).slice(0, 2)).toEqual(['Starting spot: Stage 1 · Letters and sounds · Oct 10', 'Checked Oct 10']);
     const lastYear = view({ ...STEADY, placement: { ...PLACEMENT, takenAt: '2025-10-11T05:00:00.000Z' } });
-    expect(lines(lastYear)).toContain('Checked Oct 10, 2025');
+    expect(lines(lastYear).slice(0, 2)).toEqual(['Starting spot: Stage 1 · Letters and sounds · Oct 10, 2025', 'Checked Oct 10, 2025']);
     const unreadable = view({ ...STEADY, placement: { ...PLACEMENT, takenAt: 'not a date' } });
-    expect(lines(unreadable).some((line) => line.startsWith('Checked'))).toBe(false);
+    expect(lines(unreadable).some((line) => line.startsWith('Checked') || line.startsWith('Starting spot'))).toBe(false);
   });
 
   it('never prints a percentage, a speaking word or a comparison with anyone else', () => {

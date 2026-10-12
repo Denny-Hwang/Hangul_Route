@@ -699,7 +699,8 @@ function detailView(report: LearnerReport, summary: ReportSummary, w: ReportWord
     blocks.push({ kind: 'lines', heading: d.milestones, lines: detail.milestones.map((row) => d.milestone(row.n, w.stageTitle(row.stage), dayText(row.on, w))) });
   }
   if (detail.levelCheck !== null) {
-    const spot = startingSpotLine(summary, w.locale);
+    // The starting spot and "Checked" share one learner-local day (OD-12), whatever the viewer's zone.
+    const spot = startingSpotLine(summary, w.locale, (takenAt) => learnerDayOf(takenAt, summary, w) ?? '');
     const statuses = m.report.strand.status;
     blocks.push({
       kind: 'lines',
@@ -725,18 +726,23 @@ function detailView(report: LearnerReport, summary: ReportSummary, w: ReportWord
   return { button: m.report.section.moreDetail, blocks };
 }
 
-/** "Last practice: Oct 12": the learner-local day of `lastActiveAt` (UTC without day-by-day data). */
-/** "Checked Oct 10" on the learner-local day of the check (OD-12), like every other date here; none for an unreadable time. */
-function levelCheckOnOf(takenAt: string, summary: ReportSummary, w: ReportWords): string[] {
-  const ms = Date.parse(takenAt);
-  if (!Number.isFinite(ms)) return [];
-  return [w.m.report.detail.levelCheckOn(dayText(todayFor(new Date(ms), summary.activity?.tz ?? 0), w))];
+/** An instant as its learner-local day in words (OD-12: `activity.tz`, UTC without day-by-day data); null when unreadable. */
+function learnerDayOf(at: string, summary: ReportSummary, w: ReportWords): string | null {
+  const ms = Date.parse(at);
+  if (!Number.isFinite(ms)) return null;
+  return dayText(todayFor(new Date(ms), summary.activity?.tz ?? 0), w);
 }
 
+/** "Checked Oct 10" on the learner-local day of the check (OD-12), like every other date here; none for an unreadable time. */
+function levelCheckOnOf(takenAt: string, summary: ReportSummary, w: ReportWords): string[] {
+  const day = learnerDayOf(takenAt, summary, w);
+  return day === null ? [] : [w.m.report.detail.levelCheckOn(day)];
+}
+
+/** "Last practice: Oct 12": the learner-local day of `lastActiveAt` (UTC without day-by-day data). */
 function lastPracticeOf(summary: ReportSummary, w: ReportWords): string | null {
-  const ms = Date.parse(summary.lastActiveAt ?? '');
-  if (!Number.isFinite(ms)) return null;
-  return w.m.report.glance.lastPractice(dayText(todayFor(new Date(ms), summary.activity?.tz ?? 0), w));
+  const day = learnerDayOf(summary.lastActiveAt ?? '', summary, w);
+  return day === null ? null : w.m.report.glance.lastPractice(day);
 }
 
 function noticesOf(report: LearnerReport, w: ReportWords): string[] {
