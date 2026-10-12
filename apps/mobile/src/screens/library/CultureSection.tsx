@@ -61,8 +61,9 @@ export function CultureSection({ index }: { index: readonly StoryIndexEntry[] })
               {card.foundLine}
             </Body>
           ) : null}
-          {card.newest.map((title) => (
-            <Body key={title} size="sm">
+          {card.newest.map((title, i) => (
+            // Two notes may share a title: the position is the key.
+            <Body key={i} size="sm">
               {title}
             </Body>
           ))}

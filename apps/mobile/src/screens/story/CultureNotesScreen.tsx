@@ -145,7 +145,7 @@ export function CultureNotesScreen({ route, navigation }: Props): React.ReactEle
 
   return (
     <Screen tone="canvas" scrollable={false} testID="culture-notes">
-      <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm, minHeight: touchTarget.min }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: touchTarget.min }}>
         <Pressable
           onPress={back}
           accessibilityRole="button"
@@ -167,8 +167,13 @@ export function CultureNotesScreen({ route, navigation }: Props): React.ReactEle
             {c.title}
           </SourcesHeading>
         </View>
-        {view.count > 0 ? <Pill tone="neutral" size="sm" label={c.found.pill(view.count)} testID="culture-notes-count" /> : null}
       </View>
+      {/* A count of what was found, never a fraction; under the title so a long title never pushes it off. */}
+      {view.count > 0 ? (
+        <View style={{ alignSelf: 'flex-start', marginLeft: touchTarget.min + spacing.sm, marginBottom: spacing.sm }}>
+          <Pill tone="neutral" size="sm" label={c.found.pill(view.count)} testID="culture-notes-count" />
+        </View>
+      ) : null}
       <ScrollView
         ref={scrollRef}
         style={{ flex: 1 }}
