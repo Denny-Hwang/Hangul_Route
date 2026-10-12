@@ -1028,6 +1028,16 @@ export const learner = {
         line: 'Finish a story to find your first culture note.',
         toStoryTime: { cta: 'Go to Story Time' },
       },
+      /**
+       * The Library's Culture notes card read out as one button: the count and the two newest note
+       * titles (content), or, with nothing found yet, how notes are found.
+       */
+      cardLabel: (found: number, newest: readonly string[]) =>
+        found > 0
+          ? `Culture notes. ${found} found.${newest.length > 0 ? ` ${newest.join(', ')}.` : ''}`
+          : 'Culture notes. Finish a story to find your first culture note.',
+      /** The heading of a note's term and the list of found notes, for screen readers. */
+      listLabel: (theme: string) => `Culture notes: ${theme}`,
     },
     /**
      * The "Picked for you" button read out with the story it opens: `cta` is a `start` /
