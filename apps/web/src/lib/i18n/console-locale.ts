@@ -45,12 +45,8 @@ export function browserLanguages(
  * locale, or null when absent or not one.
  */
 export function queryLocale(search: string): UiLocale | null {
-  try {
-    const parsed = UiLocaleSchema.safeParse(new URLSearchParams(search).get('lang'));
-    return parsed.success ? parsed.data : null;
-  } catch {
-    return null;
-  }
+  const parsed = UiLocaleSchema.safeParse(new URLSearchParams(search).get('lang'));
+  return parsed.success ? parsed.data : null;
 }
 
 /**
