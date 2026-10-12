@@ -364,9 +364,11 @@ const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANG
  * flip card repeats it in full, where assistive tech reaches it.
  */
 function CitationLines({ view, face }: { view: CardCitationView; face: 'back' | 'fact-card' }): React.ReactElement {
+  // Caption's style (muted, medium weight); a raw Text so the line can be cut at two lines and its Korean runs nested.
   const line = {
     fontSize: typography.size.caption,
     lineHeight: typography.size.caption * typography.leading.normal,
+    fontWeight: typography.weight.medium,
     color: colors.text.muted,
     textAlign: face === 'back' ? ('center' as const) : ('left' as const),
   };

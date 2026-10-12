@@ -19,9 +19,9 @@ describe('learner.cardDetail.citation (F-STORY-006 §3.8)', () => {
     expect(c.more(3)).toBe('and 3 more sources');
   });
 
-  it('never shows a link, a fraction or a percent', () => {
+  it('never shows a link, a web address, a fraction or a percent', () => {
     for (const line of [c.source('P', 'T'), c.more(1), c.more(2)]) {
-      expect(line).not.toMatch(/https?:|www\.|\d\s*\/\s*\d|%/);
+      expect(line).not.toMatch(/https?:|www\.|\b[a-z0-9-]+\.(?:kr|org|com|net|int)\b|\d\s*\/\s*\d|%/i);
     }
   });
 });

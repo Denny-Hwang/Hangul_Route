@@ -1,5 +1,7 @@
+import { WEB_ADDRESS } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
+import { scanLearnerCopy } from '../../homework/banned-text';
 import { cardCitationView, hangulRuns } from '../card-citation';
 
 /**
@@ -41,6 +43,21 @@ describe('cardCitationView', () => {
     ]);
   });
 
+  it('never prints a web address: a host in the publisher or title is dropped, its names kept (§3.8)', () => {
+    const view = cardCitationView(
+      { citation: { title: '조선왕조실록 (sillok.history.go.kr)', publisher: '국가유산청 (Korea Heritage Service, heritage.go.kr)', more: 0 } },
+      m,
+    );
+    expect(view?.line).toBe('Source: 국가유산청 (Korea Heritage Service), 조선왕조실록');
+    expect(view?.line).not.toMatch(WEB_ADDRESS);
+    expect(view?.runs.map((r) => r.text).join('')).toBe(view?.line);
+  });
+
+  it('every line it prints passes the learner copy scan (no banned word, §3.10)', () => {
+    const lines = [m.source('P', 'T'), m.more(1), m.more(3), cardCitationView({ citation: { title: DAY, publisher: MUSEUM, more: 2 } }, m)?.line ?? ''];
+    expect(scanLearnerCopy(lines)).toEqual([]);
+  });
+
   it('never marks text because it repeats the template ("Source" as a publisher)', () => {
     const view = cardCitationView({ citation: { title: DAY, publisher: 'Source', more: 0 } }, m);
     expect(view?.runs).toEqual([
@@ -67,6 +84,17 @@ describe('hangulRuns', () => {
       { text: '세종', korean: true },
     ]);
     expect(runs.map((r) => r.text).join('')).toBe(text);
+  });
+
+  it('marks Hanja as Korean too (a title given in Hangul and in Hanja)', () => {
+    const text = '조선왕조실록 정족산사고본 (朝鮮王朝實錄 鼎足山史庫本)';
+    expect(hangulRuns(text)).toEqual([
+      { text: '조선왕조실록 정족산사고본', korean: true },
+      { text: ' (', korean: false },
+      { text: '朝鮮王朝實錄 鼎足山史庫本', korean: true },
+      { text: ')', korean: false },
+    ]);
+    expect(hangulRuns('국보 (陜川 海印寺)').filter((r) => r.korean).map((r) => r.text)).toEqual(['국보', '陜川 海印寺']);
   });
 
   it('a translated template in Korean is marked too', () => {

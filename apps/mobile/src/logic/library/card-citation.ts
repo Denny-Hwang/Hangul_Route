@@ -1,4 +1,4 @@
-import type { HeritageCard } from '@hangul-route/content-schema';
+import { withoutWebAddresses, type HeritageCard } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 
 type CitationMessages = Messages['learner']['cardDetail']['citation'];
@@ -18,9 +18,11 @@ export interface CardCitationView {
   more: string | null;
 }
 
-// Hangul syllables, jamo and compatibility jamo (the range of `hasHangul` in story/source-link.ts).
-const HANGUL = '[\\u1100-\\u11ff\\u3130-\\u318f\\uac00-\\ud7a3]';
-// A Korean span: Hangul words with only spaces between them, so a Korean phrase is read as one piece.
+// Hangul syllables, jamo and compatibility jamo (the range of `hasHangul` in story/source-link.ts), and
+// the CJK ideographs with their compatibility forms: a Korean source often gives its title in Hanja too,
+// which a Korean voice reads and an English voice skips or spells out.
+const HANGUL = '[\\u1100-\\u11ff\\u3130-\\u318f\\uac00-\\ud7a3\\u4e00-\\u9fff\\uf900-\\ufaff]';
+// A Korean span: Hangul (or Hanja) words with only spaces between them, so a Korean phrase is read as one piece.
 // The capture group makes `split` keep the spans, at the odd indices.
 const KOREAN_SPAN = new RegExp(`(${HANGUL}+(?:\\s+${HANGUL}+)*)`);
 
@@ -43,13 +45,16 @@ export function hangulRuns(text: string): TextRun[] {
  * The source line under a story card's fact (F-STORY-006 §3.8, wireframe
  * library/card-back-citation G): the fact's first source as printed
  * (publisher and title may be Korean) and how many others it has. Never a
- * URL and never a link: the grown-up Sources screen lists them all. Null for
+ * URL and never a link: a web address in the publisher or title is dropped
+ * (`withoutWebAddresses`), and the grown-up Sources screen lists every source
+ * with its address. Null for
  * a card without a citation, whose back face is unchanged.
  */
 export function cardCitationView(card: Pick<HeritageCard, 'citation'>, m: CitationMessages): CardCitationView | null {
   const { citation } = card;
   if (!citation) return null;
-  const line = m.source(citation.publisher, citation.title);
+  // Never a web address on a learner surface (story lint keeps a name to print).
+  const line = m.source(withoutWebAddresses(citation.publisher), withoutWebAddresses(citation.title));
   return {
     line,
     runs: hangulRuns(line),
