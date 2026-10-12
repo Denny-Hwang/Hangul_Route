@@ -313,7 +313,7 @@ CREATE INDEX IF NOT EXISTS idx_entitlements_provider_ref ON entitlements(provide
 
 - `BILLING_RECEIPTS_PATH` (from `APP_ROUTES.billing`, section 4.1), `STEP_UP_MAX_AGE_MIN = 10`, `RECEIPTS_PAGE_LIMIT = 50`, `RECEIPTS_CARD_LIMIT = 3`, `CHECKOUT_POLL_MS = 2000`, `CHECKOUT_POLL_MAX = 10`.
 - `BillingEventKindSchema = z.enum(['purchase', 'renewal', 'refund', 'failed'])`.
-- `BillingEventSchema`: `{ id: /^bev:[a-z0-9-]+$/, subjectKind, subjectId, planKey, kind, amountCents: int ≥ 0, currency: /^[a-z]{3}$/, provider, providerRef, paymentRef: string | null, livemode: boolean, occurredAt, createdAt }`.
+- `BillingEventSchema`: `{ id: /^bev:[a-z0-9-]+$/, subjectKind, subjectId, planKey, kind, amountCents: int ≥ 0, currency: /^[a-z]{3}$/, provider, providerRef, paymentRef: non-empty string | null, livemode: boolean, occurredAt, createdAt }`. `amountCents` is Stripe's minor unit: cents for `usd`, whole units for zero-decimal currencies (`krw`, `jpy`), so a formatter uses the currency's own fraction digits, never a fixed `/ 100`.
 - `ReceiptViewSchema`: `{ id, kind, planKey, amountCents, currency, livemode, occurredAt, hasReceipt: boolean }` (no Stripe id, no URL; `id` is the opaque `bev:` id used by the receipt-link call).
 - `StripeModeSchema = z.enum(['test', 'live', 'none'])`.
 - `CoverageSchema` (discriminated on `state`):
@@ -322,9 +322,10 @@ CREATE INDEX IF NOT EXISTS idx_entitlements_provider_ref ON entitlements(provide
   - `{ state: 'school', schoolName: string, planKey: 'group_license' | 'school_seat', expiresAt: string | null }` (a class covered by its school, or a school seen by a teacher member)
 - `UsageSchema`: `{ learners: int ≥ 0, learnerCap: int | null, teachers: int | null, teacherCap: int | null }` (`null` cap = unlimited; teachers only for school payers).
 - `ReadOnlyReasonSchema = z.enum(['family', 'class', 'school'])` (which "manages this plan" line a viewer sees).
-- `BillingSpaceCardSchema`: `{ spaceId, kind, name, role, archived: boolean, payer: boolean, readOnlyReason: ReadOnlyReason | null, coverage, usage, actions: { buy: PurchasablePlanKey | null, manage: boolean, contact: boolean }, receipts: ReceiptView[] (payer only, at most 3, `hasReceipt` ignored inline), hasReceipts: boolean, legacyNoHistory: boolean }`.
-- `BillingSummarySchema`: `{ mode: StripeMode, purchasesOpen: boolean, cards: BillingSpaceCard[], account: BillingSpaceCard-like cards for subject `account` (usually empty) }`. There is no "paying grown-up" flag here: F-BROWSE-001 owns that rule (`accountBrowseScope`).
-- Parsing is lenient on the client (`safeParse`, unknown keys stripped), so a newer Worker never breaks an older page.
+- `BillingSpaceCardSchema`: `{ spaceId, kind, name, role (any role but student), archived: boolean, payer: boolean, readOnlyReason: ReadOnlyReason | null, coverage, usage: Usage | null (null = no usage line: a school seen by a teacher member, section 4.2), actions: { buy: PurchasablePlanKey | null, manage: boolean, contact: boolean }, receipts: ReceiptView[] (payer only, at most 3, `hasReceipt` ignored inline), hasReceipts: boolean, legacyNoHistory: boolean }`.
+- `BillingAccountCardSchema` (subject `account`, always the viewer's own): `{ coverage, actions: { manage: boolean }, receipts: ReceiptView[] (at most 3, inline only), legacyNoHistory: boolean }`. No All receipts link, because the receipts page takes a space id.
+- `BillingSummarySchema`: `{ mode: StripeMode, purchasesOpen: boolean, cards: BillingSpaceCard[], account: BillingAccountCard[] (usually empty) }`, the strict contract the Worker answers with. There is no "paying grown-up" flag here: F-BROWSE-001 owns that rule (`accountBrowseScope`).
+- Pages read the response with `parseBillingSummary(raw): BillingSummary | null`, never with the strict schema, so a newer Worker never breaks an older page: unknown keys are stripped; a card or receipt row with a value the page does not know is dropped and its siblings stay; more than 3 inline rows are cut to the newest 3; an unknown `mode` reads as `none` (buttons off). `null` only when the summary itself is unreadable.
 
 ### 5.3 Routes
 
@@ -699,3 +700,13 @@ Assumptions this spec relies on (and what happens if they change):
 | R2 minor: no index on `entitlements.provider_ref`; disputes | Applied (index in 0007; disputes out of scope). |
 
 **2026-10-11, revision 2 (sibling pass)**: re-read the sibling specs as revised in parallel. F-SITE-002 revision 2 dropped its redirect table, so the old site address is F-APP-001 A-8's one-hop stub only (amendment S1 closed; B-10 now depends on F-SITE-002's page PRs and A-8). F-ENT-003 revision 2 moved its lines onto the Plan screen under `caregiver.plan.freePlan`; this spec now uses `caregiver.plan.*` for every Plan screen string, moves `free.bubble` to `caregiver.plan.free.open` with the same words, and adds a guidance slot for F-ENT-003's premium no-plan line (amendments F1 to F3 updated).
+
+**2026-10-11, B-1 review amendments (PR #375)**, after two reviews of B-1. Section 5.2 only; no behaviour elsewhere changes.
+
+| Finding | Resolution |
+|---|---|
+| `usage` could not be omitted, but a school teacher member sees no seat counts (section 4.2, 5.3) | `usage: Usage \| null`; null means no usage line. |
+| "A newer Worker never breaks an older page" held for unknown keys only: a new enum value or a higher inline limit failed the whole summary | `parseBillingSummary` is per-card and per-row tolerant, cuts inline rows to 3 and reads an unknown mode as `none`; `BillingSummarySchema` stays the strict Worker contract. |
+| The account card had no Manage action and a `hasReceipts` with nowhere to point | `BillingAccountCardSchema` named: `actions: { manage }` (the portal accepts subject `account`), no `hasReceipts`. |
+| Zero-decimal currencies | `amountCents` is documented as Stripe's minor unit. |
+| `paymentRef` could be empty; a student could get a card | `paymentRef` non-empty or null; the card role excludes `student`. |
