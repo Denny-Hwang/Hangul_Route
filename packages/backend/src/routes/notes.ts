@@ -272,7 +272,17 @@ notesRoutes.post('/:id/notes/:noteId/withdraw', async (c) => {
   const who = await sender(c, db, c.req.param('id'), { allowArchived: true });
   if (who instanceof Response) return who;
   const { account, space } = who;
-  const body = withdrawBody(await c.req.json().catch(() => ({})));
+  // No body reads as `{}`; a body that is not JSON is refused like any other bad body.
+  const text = await c.req.text().catch(() => '');
+  let raw: unknown = {};
+  if (text.trim() !== '') {
+    try {
+      raw = JSON.parse(text);
+    } catch {
+      raw = null;
+    }
+  }
+  const body = withdrawBody(raw);
   if (!body) return fail(c, 'bad_request', 'Invalid body', 422);
 
   const now = new Date();
