@@ -176,8 +176,10 @@ describe('culture notes copy', () => {
         c.hearTerm('hangeullal'),
         c.empty.line,
         c.empty.toStoryTime.cta,
-        c.cardLabel(3, ['A', 'B']),
-        c.cardLabel(0, []),
+        c.cardLabel(3, 'A', 'B'),
+        c.cardLabel(1, 'A'),
+        c.cardLabel(2),
+        c.cardLabel(0),
       ]),
     ).toEqual([]);
   });

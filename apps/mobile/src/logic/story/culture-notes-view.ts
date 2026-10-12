@@ -50,7 +50,7 @@ export function cultureNotesCard(notes: readonly FoundNote[], copy: StoryShelfCo
     foundLine: count > 0 ? c.found.pill(count) : null,
     newest,
     emptyLine: count > 0 ? null : c.empty.line,
-    accessibilityLabel: c.cardLabel(count, newest),
+    accessibilityLabel: c.cardLabel(count, newest[0], newest[1]),
   };
 }
 

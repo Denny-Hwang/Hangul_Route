@@ -1032,9 +1032,9 @@ export const learner = {
        * The Library's Culture notes card read out as one button: the count and the two newest note
        * titles (content), or, with nothing found yet, how notes are found.
        */
-      cardLabel: (found: number, newest: readonly string[]) =>
+      cardLabel: (found: number, newest = '', second = '') =>
         found > 0
-          ? `Culture notes. ${found} found.${newest.length > 0 ? ` ${newest.join(', ')}.` : ''}`
+          ? `Culture notes. ${found} found.${newest ? ` ${second ? `${newest}, ${second}` : newest}.` : ''}`
           : 'Culture notes. Finish a story to find your first culture note.',
       /** The heading of a note's term and the list of found notes, for screen readers. */
       listLabel: (theme: string) => `Culture notes: ${theme}`,
