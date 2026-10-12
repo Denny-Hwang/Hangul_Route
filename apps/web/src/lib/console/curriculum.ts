@@ -26,6 +26,7 @@ import {
   type LengthPresetId,
   type PlacementLevel,
   type PlanItem,
+  type SpaceRole,
   type StageKey,
   type ThemeKey,
   type WeekExtra,
@@ -225,66 +226,106 @@ export function learnerProblem(state: Pick<WizardState, 'audience' | 'learnerId'
   return state.audience === 'family' && learnerCount > 0 && state.learnerId === null ? 'no-learner' : null;
 }
 
+/** An active entitlement (a Family Plan or a Group License) covers the space or its school. */
+export function spaceCovered(entitlements: readonly Entitlement[], space: { id: string; parentSpaceId: string | null }, now: Date): boolean {
+  const subjects = new Set([space.id, ...(space.parentSpaceId ? [space.parentSpaceId] : [])]);
+  return entitlements.some((e) => e.subjectKind === 'space' && subjects.has(e.subjectId) && isActive(e, now));
+}
+
 /**
  * Stages the generator may schedule for this space (assumption 9a): every stage when an
  * active entitlement covers the space or its school, else Stage 1. Locked lessons are
  * listed by the generator, never scheduled.
  */
 export function unlockedStagesForSpace(entitlements: readonly Entitlement[], space: { id: string; parentSpaceId: string | null }, now: Date): StageKey[] {
-  const subjects = new Set([space.id, ...(space.parentSpaceId ? [space.parentSpaceId] : [])]);
-  const covered = entitlements.some((e) => e.subjectKind === 'space' && subjects.has(e.subjectId) && isActive(e, now));
-  return covered ? [...StageKeySchema.options] : ['stage1'];
+  return spaceCovered(entitlements, space, now) ? [...StageKeySchema.options] : ['stage1'];
+}
+
+export type SpaceCoverage = 'covered' | 'uncovered' | 'unknown';
+
+/**
+ * Whether a Family Plan or a Group License covers the space, as far as this viewer can tell
+ * (F-ENT-003 sections 3.9.2 and 3.9.3). `GET /api/entitlements` lists the account's own rows and
+ * the rows of the spaces it owns, so "uncovered" is only answered for the owner of the space,
+ * and for a class inside a school only when the viewer owns the school too. Anything else (a
+ * co-teacher, a co-caregiver, a class in a school someone else owns, a failed read, a list not
+ * loaded yet) is "unknown": no free-plan words and no billing link, never a claimed limit.
+ */
+export function spaceCoverage(
+  entitlements: readonly Entitlement[] | null,
+  memberships: readonly { space: { id: string }; role: SpaceRole }[] | null,
+  space: { id: string; parentSpaceId: string | null },
+  now: Date,
+): SpaceCoverage {
+  if (entitlements === null) return 'unknown';
+  if (spaceCovered(entitlements, space, now)) return 'covered';
+  const owns = (id: string): boolean => memberships?.some((m) => m.space.id === id && m.role === 'owner') ?? false;
+  return owns(space.id) && (space.parentSpaceId === null || owns(space.parentSpaceId)) ? 'uncovered' : 'unknown';
 }
 
 /**
  * The free-plan view of a wizard preview (F-ENT-003 section 3.9.3; wireframe
- * console/curriculum-free-days): only for a space no plan covers while the console's free-plan
- * switch is on. The generator already plans Stage 1 only for such a space (`unlockedStages`,
- * section 3.1 golden), so nothing here changes its input (OD-1).
+ * console/curriculum-free-days): only for a space this viewer knows no plan covers
+ * (`spaceCoverage` is "uncovered") while the console's free-plan switch is on. The generator
+ * already plans Stage 1 only for such a space (`unlockedStages`, section 3.1 golden), so nothing
+ * here changes its input (OD-1).
  */
 export interface FreeDaysView {
   /** Names the product: a family space -> the Family Plan, a class or school -> a Group License. */
   kind: WizardAudience;
-  /** The last week of the draft that holds a lesson; null when it holds none. */
+  /** The first and the last week of the draft that hold a lesson; null when it holds none. */
+  firstWeek: number | null;
   lastWeek: number | null;
   /** The plan runs on after its last lesson week: the preview says so above **Use this route**. */
   short: boolean;
+  /** Whether the weeks after the last lesson hold stories (else only practice, review or days off). */
+  storiesAfter: boolean;
   /** The shortest length preset, shorter than the plan, that still holds every lesson of it; null when none does. */
   shorter: { length: LengthPresetId; weeks: number } | null;
 }
 
 const isLesson = (item: CurriculumItem, source: Catalog): boolean => item.kind === 'quest' && itemCategory(item.kind, item.id, source) === 'lesson';
 
-/** The last week of a draft that holds a lesson (a lesson quest; stories and coming-soon episodes do not count), or null when it holds none. */
-export function lastLessonWeek(items: readonly CurriculumItem[], source: Catalog = CATALOG): number | null {
+/** The first and the last week of a draft that hold a lesson (a lesson quest; stories and coming-soon episodes do not count), or null when none does. */
+export function lessonWeeks(items: readonly CurriculumItem[], source: Catalog = CATALOG): { first: number; last: number } | null {
   const weeks = items.filter((item) => isLesson(item, source)).map((item) => item.week);
-  return weeks.length > 0 ? Math.max(...weeks) : null;
+  return weeks.length > 0 ? { first: Math.min(...weeks), last: Math.max(...weeks) } : null;
 }
 
-const PRESETS_SHORTEST_FIRST = (Object.keys(LENGTH_PRESETS) as LengthPresetId[]).sort((a, b) => LENGTH_PRESETS[a].weeks - LENGTH_PRESETS[b].weeks);
+/** The length presets shorter than `weeks`, shortest first (the order of the wizard's chips). */
+const shorterPresets = (weeks: number): LengthPresetId[] =>
+  LENGTH_CHOICES.filter((choice): choice is LengthPresetId => choice !== 'custom' && LENGTH_PRESETS[choice].weeks < weeks);
 
-/** The shortest preset, shorter than the draft, whose plan holds every lesson the draft holds (the same params, only the length and its review rhythm change). */
+/**
+ * The shortest preset, shorter than the draft, whose plan holds every lesson the draft holds:
+ * the same params with only the length and its review rhythm changed. The generator lays
+ * lessons in queue order, so the shorter plan holds them all exactly when it schedules as many.
+ */
 function shorterPreset(draft: CurriculumDraft, source: Catalog): FreeDaysView['shorter'] {
-  const lessons = draft.items.filter((item) => isLesson(item, source)).map((item) => item.id);
-  for (const length of PRESETS_SHORTEST_FIRST) {
+  for (const length of shorterPresets(draft.params.weeks)) {
     const { weeks, reviewEvery } = LENGTH_PRESETS[length];
-    if (weeks >= draft.params.weeks) break;
-    const held = new Set(generateCurriculum({ ...draft.params, weeks, reviewEvery }, source).items.filter((item) => isLesson(item, source)).map((item) => item.id));
-    if (lessons.every((id) => held.has(id))) return { length, weeks };
+    if (generateCurriculum({ ...draft.params, weeks, reviewEvery }, source).stats.lessons >= draft.stats.lessons) return { length, weeks };
   }
   return null;
 }
 
 /**
- * The free-plan view of a preview, or null with the switch off (`contentGatingEnabled()`) or for
- * a covered space (`unlocked` holds every stage), where the wizard keeps today's wording. A
- * failed entitlements read leaves the space at Stage 1, so it reads as unlicensed: fail safe.
+ * The free-plan view of a preview, or null with the switch off (`contentGatingEnabled()`) or
+ * unless this viewer knows the space is uncovered (`spaceCoverage`): then the wizard keeps
+ * today's wording.
  */
-export function freeDaysView(draft: CurriculumDraft, unlocked: readonly StageKey[], gating: boolean, source: Catalog = CATALOG): FreeDaysView | null {
-  if (!gating || StageKeySchema.options.every((stage) => unlocked.includes(stage))) return null;
-  const lastWeek = lastLessonWeek(draft.items, source);
-  const short = lastWeek !== null && lastWeek < draft.params.weeks;
-  return { kind: draft.params.audience === 'family' ? 'family' : 'class', lastWeek, short, shorter: short ? shorterPreset(draft, source) : null };
+export function freeDaysView(draft: CurriculumDraft, coverage: SpaceCoverage, gating: boolean, source: Catalog = CATALOG): FreeDaysView | null {
+  if (!gating || coverage !== 'uncovered') return null;
+  const weeks = lessonWeeks(draft.items, source);
+  const short = weeks !== null && weeks.last < draft.params.weeks;
+  return {
+    kind: draft.params.audience === 'family' ? 'family' : 'class',
+    firstWeek: weeks?.first ?? null,
+    lastWeek: weeks?.last ?? null,
+    short,
+    storiesAfter: short && draft.items.some((item) => item.week > (weeks?.last ?? 0) && itemCategory(item.kind, item.id, source) === 'story'),
+    shorter: short ? shorterPreset(draft, source) : null,
+  };
 }
 
 export interface WeekItem {
@@ -400,8 +441,8 @@ export function weekdayLabel(day: Weekday, locale: UiLocale = DEFAULT_LOCALE): s
   return formatDate(locale, addDays('2026-10-11', WEEKDAYS.indexOf(day)), 'weekday', { utc: true });
 }
 
-/** What the free-plan wording of the left-out warning needs (F-ENT-003 section 3.9.3): the space kind and the last week that holds a lesson. */
-export type FreePlanWording = Pick<FreeDaysView, 'kind' | 'lastWeek'>;
+/** What the free-plan wording of the left-out warning needs (F-ENT-003 section 3.9.3): the space kind and the weeks that hold lessons. */
+export type FreePlanWording = Pick<FreeDaysView, 'kind' | 'firstWeek' | 'lastWeek'>;
 
 /**
  * A generator warning in plain, invitational words (section 3.8 step 4). With `free` (an
@@ -415,7 +456,10 @@ export function warningText(warning: CurriculumWarning, locale: UiLocale = DEFAU
   if (warning.code === 'premium-needed' && free) {
     const messages = getMessages(locale).console;
     const product = messages.access.product[free.kind];
-    return free.lastWeek === null ? messages.curriculum.freeDays.warningNoLessons(count, product) : messages.curriculum.freeDays.warning(free.lastWeek, count, product);
+    const { firstWeek, lastWeek } = free;
+    return firstWeek === null || lastWeek === null
+      ? messages.curriculum.freeDays.warningNoLessons(count, product)
+      : messages.curriculum.freeDays.warning(firstWeek, lastWeek, count, product);
   }
   switch (warning.code) {
     case 'content-runs-out':

@@ -246,14 +246,27 @@ export function WarningList({
 
 /**
  * F-ENT-003 section 3.9.3: the plan's lessons end before the plan does (an unlicensed space with
- * the free-plan switch on). Shown above **Use this route**; `shorterWeeks` adds **Use {weeks}
- * weeks**, which re-runs the preview with that length preset. Using the long plan stays allowed.
+ * the free-plan switch on). Shown above **Use this route**; the line says whether stories or only
+ * practice follow; `shorterWeeks` adds **Use {weeks} weeks**, which re-runs the preview with that
+ * length preset. Using the long plan stays allowed.
  */
-export function ShortPlanLine({ lastWeek, shorterWeeks, onUseWeeks }: { lastWeek: number; shorterWeeks: number | null; onUseWeeks: () => void }): JSX.Element {
+export function ShortPlanLine({
+  lastWeek,
+  storiesAfter,
+  shorterWeeks,
+  onUseWeeks,
+}: {
+  lastWeek: number;
+  storiesAfter: boolean;
+  shorterWeeks: number | null;
+  onUseWeeks: () => void;
+}): JSX.Element {
   const words = useMessages().console.curriculum.freeDays;
   return (
     <div data-testid="route-short-plan" style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap', margin: `${spacing.sm}px 0 ${spacing.md}px` }}>
-      <p style={{ margin: 0, color: colors.text.secondary, fontSize: typography.size.bodySm, lineHeight: typography.leading.relaxed }}>{words.shortPlan(lastWeek)}</p>
+      <p style={{ margin: 0, color: colors.text.secondary, fontSize: typography.size.bodySm, lineHeight: typography.leading.relaxed }}>
+        {storiesAfter ? words.shortPlan(lastWeek) : words.shortPlanPractice(lastWeek)}
+      </p>
       {shorterWeeks !== null ? (
         <Button onClick={onUseWeeks} testId="route-use-weeks">
           {words.useWeeks.cta(shorterWeeks)}

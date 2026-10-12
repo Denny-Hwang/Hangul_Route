@@ -788,15 +788,18 @@ export const consoleMsgs = {
     /**
      * The wizard preview of an unlicensed space while the free-plan switch is on (F-ENT-003
      * section 3.9.3, wireframe console/curriculum-free-days; `NEXT_PUBLIC_CONTENT_GATING_ENABLED`).
-     * `warning` replaces `preview.warnings.premium`; `product` is `console.access.product.*`.
+     * `warning` replaces `preview.warnings.premium` with the weeks that hold lessons (`first` is
+     * week 1 unless days off open the plan); `product` is `console.access.product.*`.
      * `warningNoLessons` is the same line when nothing open is scheduled (the wireframe's empty
-     * state). Never "day": the free plan is a set of lessons, not a time.
+     * state). `shortPlan` when stories follow the last lesson week, `shortPlanPractice` when
+     * only practice, review or days off do. Never "day": the free plan is lessons, not time.
      */
     freeDays: {
-      warning: (lastWeek: number, n: number, product: string) =>
-        `The free plan covers Stage 1 (${plural('en', lastWeek, { one: 'lessons in week 1', other: `lessons in weeks 1 to ${lastWeek}` })}). ${leftOut(n, product)}`,
+      warning: (first: number, last: number, n: number, product: string) =>
+        `The free plan covers Stage 1 (${first === last ? `lessons in week ${first}` : `lessons in weeks ${first} to ${last}`}). ${leftOut(n, product)}`,
       warningNoLessons: (n: number, product: string) => `The free plan covers Stage 1. ${leftOut(n, product)}`,
       shortPlan: (lastWeek: number) => `This plan has lessons until week ${lastWeek}. After that it has stories and practice.`,
+      shortPlanPractice: (lastWeek: number) => `This plan has lessons until week ${lastWeek}. After that it has practice.`,
       useWeeks: { cta: (weeks: number) => plural('en', weeks, { one: `Use ${weeks} week`, other: `Use ${weeks} weeks` }) },
     },
   },

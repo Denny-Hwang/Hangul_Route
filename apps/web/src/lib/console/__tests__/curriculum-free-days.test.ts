@@ -1,117 +1,181 @@
-import { CATALOG, LENGTH_PRESETS, StageKeySchema, generateCurriculum, type Catalog, type CurriculumDraft, type CurriculumItem } from '@hangul-route/content-schema';
+import { CATALOG, LENGTH_PRESETS, StageKeySchema, generateCurriculum, type Catalog, type CurriculumDraft, type CurriculumItem, type Entitlement, type LengthPresetId } from '@hangul-route/content-schema';
 import { findBannedWord, getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { itemCategory } from '@/data/catalog';
-import { defaultsFor, freeDaysView, lastLessonWeek, toParams, warningText, type WizardState } from '../curriculum';
+// The frozen October 2026 catalogue (Stage 1 complete, every story ready): pinned figures stay true while the live catalogue grows.
+import { CATALOG_2026_10 } from '../../../../../../packages/content-schema/src/__tests__/fixtures/catalog-2026-10';
+import { defaultsFor, freeDaysView, lessonWeeks, spaceCoverage, toParams, warningText, type WizardState } from '../curriculum';
 
 /**
- * F-ENT-003 section 3.9.3 (E3-9; wireframe console/curriculum-free-days): for an unlicensed
- * space with the console's free-plan switch on, the wizard's left-out warning names the
- * product by space kind and the last week that holds a lesson, and a plan that runs longer
- * than its lessons says so, with a shorter length preset when one holds every lesson. The
- * generator is not touched (OD-1): an unlicensed space already plans Stage 1 only.
+ * F-ENT-003 section 3.9.3 (E3-9; wireframe console/curriculum-free-days): for a space this viewer
+ * knows is uncovered, with the console's free-plan switch on, the wizard's left-out warning names
+ * the product by space kind and the weeks that hold lessons, and a plan that runs longer than its
+ * lessons says so, with a shorter length preset when one holds every lesson. The generator is not
+ * touched (OD-1): an unlicensed space already plans Stage 1 only.
  */
 const TODAY = '2026-10-18'; // a Sunday
 const ALL = [...StageKeySchema.options];
 const FREE = ['stage1'] as const;
+const FROZEN = CATALOG_2026_10;
 const m = getMessages('en').console;
 
 const stateFor = (audience: 'class' | 'family', patch: Partial<WizardState> = {}): WizardState => ({ ...defaultsFor(audience, [], TODAY), ...patch });
 
-function draftOf(state: WizardState, unlocked: readonly (typeof ALL)[number][] = FREE, source: Catalog = CATALOG): CurriculumDraft {
+function draftOf(state: WizardState, source: Catalog = CATALOG, unlocked: readonly (typeof ALL)[number][] = FREE): CurriculumDraft {
   const params = toParams(state, unlocked);
   if (!params) throw new Error('params');
   return generateCurriculum(params, source);
 }
 
-const lessonIds = (items: readonly CurriculumItem[]): string[] => items.filter((i) => i.kind === 'quest' && itemCategory(i.kind, i.id) === 'lesson').map((i) => i.id);
+const lessonIds = (items: readonly CurriculumItem[], source: Catalog): string[] => items.filter((i) => i.kind === 'quest' && itemCategory(i.kind, i.id, source) === 'lesson').map((i) => i.id);
+const view = (draft: CurriculumDraft, source: Catalog = CATALOG) => freeDaysView(draft, 'uncovered', true, source);
 
-describe('lastLessonWeek: the last week of a draft that holds a lesson', () => {
-  it('is the week of the last scheduled lesson quest; stories and coming-soon episodes do not count', () => {
+describe('lessonWeeks: the weeks of a draft that hold a lesson', () => {
+  it('spans the first to the last scheduled lesson quest; stories and coming-soon episodes do not count', () => {
     const draft = draftOf(stateFor('class', { length: '12-week' }));
     const weeks = draft.items.filter((i) => i.kind === 'quest' && itemCategory(i.kind, i.id) === 'lesson').map((i) => i.week);
-    expect(lastLessonWeek(draft.items)).toBe(Math.max(...weeks));
-    // The coming-soon episodes of later stages sit after the last lesson: they never extend it.
-    expect(draft.items.some((i) => i.kind === 'episode' && i.week > Math.max(...weeks))).toBe(true);
+    expect(lessonWeeks(draft.items)).toEqual({ first: Math.min(...weeks), last: Math.max(...weeks) });
   });
 
   it('is null when the draft holds no lesson', () => {
-    expect(lastLessonWeek([])).toBeNull();
+    expect(lessonWeeks([])).toBeNull();
     const story: CurriculumItem = { kind: 'quest', id: CATALOG.quests.find((q) => q.kind === 'story')?.id ?? 'quest:story', week: 3 };
     const comingSoon: CurriculumItem = { kind: 'episode', id: 'episode:stage3-letters', week: 4 };
-    expect(lastLessonWeek([story, comingSoon])).toBeNull();
+    expect(lessonWeeks([story, comingSoon])).toBeNull();
     // An unlicensed space whose starting point is past Stage 1 has nothing open to schedule.
-    expect(lastLessonWeek(draftOf(stateFor('class', { length: '12-week', start: 'first-words' })).items)).toBeNull();
+    expect(lessonWeeks(draftOf(stateFor('class', { length: '12-week', start: 'first-words' })).items)).toBeNull();
   });
 
-  it('reads the catalogue it is given', () => {
-    const noLessons: Catalog = { ...CATALOG, quests: CATALOG.quests.filter((q) => q.kind !== 'lesson') };
-    const items = draftOf(stateFor('class', { length: '4-week' })).items;
-    expect(lastLessonWeek(items)).not.toBeNull();
-    expect(lastLessonWeek(items, noLessons)).toBeNull();
+  it('starts after week 1 when days off open the plan', () => {
+    const draft = draftOf(stateFor('family', { length: '12-week', daysOff: [{ from: '2026-10-18', to: '2026-11-07' }] }), FROZEN);
+    expect(lessonWeeks(draft.items, FROZEN)).toEqual({ first: 4, last: 10 });
   });
 });
 
-describe('freeDaysView: only for an unlicensed space with the switch on', () => {
-  it('is null with the switch off (the wizard keeps its wording) and for a covered space', () => {
-    const state = stateFor('class', { length: '12-week' });
-    expect(freeDaysView(draftOf(state), FREE, false)).toBeNull();
-    expect(freeDaysView(draftOf(state, ALL), ALL, true)).toBeNull();
-    expect(freeDaysView(draftOf(state, ALL), ALL, false)).toBeNull();
+describe('spaceCoverage: only an owner who can see every entitlement that could cover the space hears "uncovered"', () => {
+  const ent = (subjectId: string, patch: Partial<Entitlement> = {}): Entitlement => ({
+    id: 'ent:a',
+    subjectKind: 'space',
+    subjectId,
+    planKey: 'group_license',
+    status: 'active',
+    provider: 'stripe',
+    providerRef: null,
+    customerRef: null,
+    seats: null,
+    expiresAt: '2027-10-01T00:00:00.000Z',
+    promoCode: null,
+    updatedAt: '2026-10-01T00:00:00.000Z',
+    ...patch,
+  });
+  const now = new Date('2026-10-18T12:00:00Z');
+  const member = (id: string, role: 'owner' | 'teacher' | 'caregiver') => ({ space: { id }, role });
+  const own = { id: 'space:c', parentSpaceId: null };
+  const inSchool = { id: 'space:c', parentSpaceId: 'space:school' };
+
+  it('is covered when an active entitlement of the space or its school is visible, whoever looks', () => {
+    expect(spaceCoverage([ent('space:c')], [member('space:c', 'teacher')], own, now)).toBe('covered');
+    expect(spaceCoverage([ent('space:school')], null, inSchool, now)).toBe('covered');
+  });
+
+  it('is uncovered for the owner of a space with no school, or of a class whose school they own too', () => {
+    expect(spaceCoverage([], [member('space:c', 'owner')], own, now)).toBe('uncovered');
+    expect(spaceCoverage([ent('space:c', { status: 'expired' })], [member('space:c', 'owner')], own, now)).toBe('uncovered');
+    expect(spaceCoverage([], [member('space:c', 'owner'), member('space:school', 'owner')], inSchool, now)).toBe('uncovered');
+  });
+
+  it('is unknown for a co-teacher or a co-caregiver, a class in a school someone else owns, or a failed read', () => {
+    expect(spaceCoverage([], [member('space:c', 'teacher')], own, now)).toBe('unknown');
+    expect(spaceCoverage([], [member('space:c', 'caregiver')], own, now)).toBe('unknown');
+    expect(spaceCoverage([], [member('space:c', 'owner')], inSchool, now)).toBe('unknown');
+    expect(spaceCoverage([], [member('space:c', 'owner'), member('space:school', 'teacher')], inSchool, now)).toBe('unknown');
+    expect(spaceCoverage(null, [member('space:c', 'owner')], own, now)).toBe('unknown');
+    expect(spaceCoverage([], null, own, now)).toBe('unknown');
+    expect(spaceCoverage([], [member('space:other', 'owner')], own, now)).toBe('unknown');
+  });
+});
+
+describe('freeDaysView: only with the switch on, for a space the viewer knows is uncovered', () => {
+  it('is null with the switch off and for a covered or unknown space (the wizard keeps its wording)', () => {
+    const draft = draftOf(stateFor('class', { length: '12-week' }));
+    expect(freeDaysView(draft, 'uncovered', false)).toBeNull();
+    expect(freeDaysView(draft, 'covered', true)).toBeNull();
+    expect(freeDaysView(draft, 'unknown', true)).toBeNull();
+    expect(freeDaysView(draft, 'uncovered', true)).not.toBeNull();
   });
 
   it('names the space kind for the product, from the draft', () => {
-    expect(freeDaysView(draftOf(stateFor('class', { length: '12-week' })), FREE, true)?.kind).toBe('class');
-    expect(freeDaysView(draftOf(stateFor('family', { length: '12-week' })), FREE, true)?.kind).toBe('family');
+    expect(view(draftOf(stateFor('class', { length: '12-week' })))?.kind).toBe('class');
+    expect(view(draftOf(stateFor('family', { length: '12-week' })))?.kind).toBe('family');
   });
 
-  it('a free class at 2 sessions a week for 12 weeks: lessons end early and no shorter preset holds them all (section 3.17)', () => {
-    const draft = draftOf(stateFor('class', { length: '12-week' }));
-    const view = freeDaysView(draft, FREE, true);
-    expect(view).toEqual({ kind: 'class', lastWeek: lastLessonWeek(draft.items), short: true, shorter: null });
-    // 4 weeks at 2 sessions hold fewer lessons than the free plan has.
-    const fourWeeks = draftOf(stateFor('class', { length: '4-week' }));
-    expect(lessonIds(fourWeeks.items).length).toBeLessThan(lessonIds(draft.items).length);
+  it('a free class at 2 sessions a week for 12 weeks: lessons end in week 11, stories follow, no shorter preset holds them all', () => {
+    const draft = draftOf(stateFor('class', { length: '12-week' }), FROZEN);
+    expect(view(draft, FROZEN)).toEqual({ kind: 'class', firstWeek: 1, lastWeek: 11, short: true, storiesAfter: true, shorter: null });
+    expect(lessonIds(draftOf(stateFor('class', { length: '4-week' }), FROZEN).items, FROZEN).length).toBeLessThan(lessonIds(draft.items, FROZEN).length);
   });
 
-  it('a free family at 3 sessions a week for 12 weeks: 4 weeks hold every lesson, so it is offered', () => {
-    const state = stateFor('family', { length: '12-week' });
-    const draft = draftOf(state);
-    const view = freeDaysView(draft, FREE, true);
-    expect(view?.short).toBe(true);
-    expect(view?.shorter).toEqual({ length: '4-week', weeks: 4 });
+  it('offers the shortest preset shorter than the plan that holds every lesson', () => {
+    const state = stateFor('class', { length: '6-month' });
+    const draft = draftOf(state, FROZEN);
+    expect(view(draft, FROZEN)?.shorter).toEqual({ length: '12-week', weeks: LENGTH_PRESETS['12-week'].weeks });
     // What the page re-runs with that preset really holds every lesson of the long plan.
-    const rerun = draftOf({ ...state, length: '4-week' });
-    expect(new Set(lessonIds(rerun.items))).toEqual(new Set(lessonIds(draft.items)));
+    expect(new Set(lessonIds(draftOf({ ...state, length: '12-week' }, FROZEN).items, FROZEN))).toEqual(new Set(lessonIds(draft.items, FROZEN)));
+    expect(view(draftOf(stateFor('family', { length: '6-month' }), FROZEN), FROZEN)?.shorter).toEqual({ length: '12-week', weeks: 12 });
+    // 4 weeks at 3 sessions hold fewer than the 15 free lessons, and 12 weeks is not shorter than 10.
+    expect(view(draftOf(stateFor('family', { length: 'custom', customWeeks: 10 }), FROZEN), FROZEN)?.shorter).toBeNull();
   });
 
-  it('offers the shortest preset that holds every lesson, never a longer one or the same length', () => {
-    expect(freeDaysView(draftOf(stateFor('family', { length: '6-month' })), FREE, true)?.shorter).toEqual({ length: '4-week', weeks: 4 });
-    expect(freeDaysView(draftOf(stateFor('family', { length: 'custom', customWeeks: 10 })), FREE, true)?.shorter).toEqual({ length: '4-week', weeks: 4 });
-    // 12 weeks hold the class's lessons when 4 weeks do not.
-    expect(freeDaysView(draftOf(stateFor('class', { length: '6-month' })), FREE, true)?.shorter).toEqual({ length: '12-week', weeks: LENGTH_PRESETS['12-week'].weeks });
+  it('on the live catalogue, a suggested preset always holds every lesson and a missing one never could', () => {
+    for (const audience of ['class', 'family'] as const) {
+      for (const length of ['12-week', '6-month'] as const) {
+        const state = stateFor(audience, { length });
+        const draft = draftOf(state);
+        const result = view(draft);
+        const lessons = new Set(lessonIds(draft.items, CATALOG));
+        const holds = (preset: LengthPresetId): boolean => lessonIds(draftOf({ ...state, length: preset }).items, CATALOG).length >= lessons.size;
+        const shorter = (['4-week', '12-week'] as const).filter((p) => LENGTH_PRESETS[p].weeks < LENGTH_PRESETS[length].weeks);
+        if (result?.shorter) {
+          expect(new Set(lessonIds(draftOf({ ...state, length: result.shorter.length }).items, CATALOG)), `${audience} ${length}`).toEqual(lessons);
+          expect(shorter.find(holds)).toBe(result.shorter.length);
+        } else expect(shorter.some(holds), `${audience} ${length}`).toBe(false);
+      }
+    }
   });
 
   it('has no short-plan line when the lessons reach the last week', () => {
-    const view = freeDaysView(draftOf(stateFor('family', { length: '4-week' })), FREE, true);
-    expect(view).toMatchObject({ kind: 'family', short: false, shorter: null });
-    expect(view?.lastWeek).toBe(4);
-    const tiny = freeDaysView(draftOf(stateFor('family', { length: 'custom', customWeeks: 3 })), FREE, true);
-    expect(tiny).toMatchObject({ lastWeek: 3, short: false, shorter: null });
+    expect(view(draftOf(stateFor('family', { length: '4-week' }), FROZEN), FROZEN)).toMatchObject({ kind: 'family', lastWeek: 4, short: false, storiesAfter: false, shorter: null });
+    expect(view(draftOf(stateFor('family', { length: 'custom', customWeeks: 3 })))).toMatchObject({ lastWeek: 3, short: false, shorter: null });
+  });
+
+  it('tells stories from practice after the last lesson week', () => {
+    for (const source of [CATALOG, FROZEN]) {
+      const draft = draftOf(stateFor('class', { length: '12-week' }), source);
+      const result = view(draft, source);
+      const last = result?.lastWeek ?? 0;
+      expect(result?.storiesAfter).toBe(draft.items.some((i) => i.week > last && itemCategory(i.kind, i.id, source) === 'story'));
+    }
+    const noStories: Catalog = { ...FROZEN, stories: [], quests: FROZEN.quests.filter((q) => q.kind !== 'story') };
+    expect(view(draftOf(stateFor('class', { length: '12-week' }), noStories), noStories)).toMatchObject({ short: true, storiesAfter: false });
   });
 
   it('keeps the warning without a short-plan line when nothing open is scheduled', () => {
-    const view = freeDaysView(draftOf(stateFor('class', { length: '12-week', start: 'first-words' })), FREE, true);
-    expect(view).toEqual({ kind: 'class', lastWeek: null, short: false, shorter: null });
+    expect(view(draftOf(stateFor('class', { length: '12-week', start: 'first-words' })))).toEqual({
+      kind: 'class',
+      firstWeek: null,
+      lastWeek: null,
+      short: false,
+      storiesAfter: false,
+      shorter: null,
+    });
   });
 
   it('never changes the generator input (OD-1: no openQuestIds)', () => {
     const state = stateFor('family', { length: '12-week' });
-    const params = toParams(state, FREE);
-    expect(params).not.toHaveProperty('openQuestIds');
+    expect(toParams(state, FREE)).not.toHaveProperty('openQuestIds');
     const draft = draftOf(state);
     const before = JSON.stringify(draft);
-    freeDaysView(draft, FREE, true);
+    view(draft);
     expect(JSON.stringify(draft)).toBe(before);
   });
 });
@@ -121,51 +185,51 @@ describe('the left-out warning with the switch on (section 3.9.3)', () => {
 
   it('names the product by space kind and the weeks that hold lessons', () => {
     const warning = { code: 'premium-needed', count: 3 } as const;
-    expect(warningText(warning, 'en', { kind: 'class', lastWeek: 7 })).toBe(
+    expect(warningText(warning, 'en', { kind: 'class', firstWeek: 1, lastWeek: 7 })).toBe(
       'The free plan covers Stage 1 (lessons in weeks 1 to 7). 3 more lessons open with a Group License. They are left out of this plan.',
     );
-    expect(warningText(warning, 'en', { kind: 'family', lastWeek: 5 })).toBe(
-      'The free plan covers Stage 1 (lessons in weeks 1 to 5). 3 more lessons open with the Family Plan. They are left out of this plan.',
+    expect(warningText(warning, 'en', { kind: 'family', firstWeek: 4, lastWeek: 10 })).toBe(
+      'The free plan covers Stage 1 (lessons in weeks 4 to 10). 3 more lessons open with the Family Plan. They are left out of this plan.',
     );
-    expect(warningText({ code: 'premium-needed', count: 1 }, 'en', { kind: 'family', lastWeek: 1 })).toBe(
+    expect(warningText({ code: 'premium-needed', count: 1 }, 'en', { kind: 'family', firstWeek: 1, lastWeek: 1 })).toBe(
       'The free plan covers Stage 1 (lessons in week 1). 1 more lesson opens with the Family Plan. It is left out of this plan.',
     );
-    expect(warningText(warning, 'en', { kind: 'class', lastWeek: 7 })).toBe(free.warning(7, 3, m.access.product.class));
+    expect(warningText(warning, 'en', { kind: 'class', firstWeek: 2, lastWeek: 7 })).toBe(free.warning(2, 7, 3, m.access.product.class));
   });
 
   it('still states the left-out count when nothing open is scheduled', () => {
-    expect(warningText({ code: 'premium-needed', count: 14 }, 'en', { kind: 'class', lastWeek: null })).toBe(
+    expect(warningText({ code: 'premium-needed', count: 14 }, 'en', { kind: 'class', firstWeek: null, lastWeek: null })).toBe(
       'The free plan covers Stage 1. 14 more lessons open with a Group License. They are left out of this plan.',
     );
-    expect(warningText({ code: 'premium-needed' }, 'en', { kind: 'family', lastWeek: null })).toBe(free.warningNoLessons(0, m.access.product.family));
+    expect(warningText({ code: 'premium-needed' }, 'en', { kind: 'family', firstWeek: null, lastWeek: null })).toBe(free.warningNoLessons(0, m.access.product.family));
   });
 
   it('keeps the existing wording with the switch off, and leaves every other warning as it was', () => {
     expect(warningText({ code: 'premium-needed', count: 3 }, 'en')).toBe(m.curriculum.preview.warnings.premium(3));
     expect(warningText({ code: 'premium-needed', count: 3 }, 'en', null)).toBe(m.curriculum.preview.warnings.premium(3));
-    const context = { kind: 'class', lastWeek: 7 } as const;
+    const context = { kind: 'class', firstWeek: 1, lastWeek: 7 } as const;
     expect(warningText({ code: 'content-runs-out', week: 11 }, 'en', context)).toBe(m.curriculum.preview.warnings.contentRunsOut(11));
     expect(warningText({ code: 'coming-soon-included', week: 7, count: 5 }, 'en', context)).toBe(m.curriculum.preview.warnings.comingSoon(5));
     expect(warningText({ code: 'fewer-sessions-than-units', count: 3 }, 'en', context)).toBe(m.curriculum.preview.warnings.didNotFit(3));
   });
 
-  it('section 3.17: a free class previews a 12-week plan at 2 sessions a week on today\'s catalogue', () => {
-    const draft = draftOf(stateFor('class', { length: '12-week' }));
-    const view = freeDaysView(draft, FREE, true);
-    if (!view) throw new Error('view');
-    const texts = draft.warnings.filter((w) => w.code === 'premium-needed').map((w) => warningText(w, 'en', view));
-    // Today: 11 Stage 1 lessons end in week 7; stage2-life, stage2-nature and stage4-rites are left out.
-    // When Stage 1 grows (F-QUEST-002 Q-8) these figures move: check F-ENT-003 section 3.17.
-    expect(texts).toEqual(['The free plan covers Stage 1 (lessons in weeks 1 to 7). 3 more lessons open with a Group License. They are left out of this plan.']);
-    expect(free.shortPlan(view.lastWeek ?? 0)).toBe('This plan has lessons until week 7. After that it has stories and practice.');
-    expect(view.shorter).toBeNull();
+  it('section 3.17: a free class previews a 12-week plan at 2 sessions a week (frozen catalogue, Stage 1 complete)', () => {
+    const draft = draftOf(stateFor('class', { length: '12-week' }), FROZEN);
+    const result = view(draft, FROZEN);
+    if (!result) throw new Error('view');
+    expect(draft.warnings.filter((w) => w.code === 'premium-needed').map((w) => warningText(w, 'en', result))).toEqual([
+      'The free plan covers Stage 1 (lessons in weeks 1 to 11). 3 more lessons open with a Group License. They are left out of this plan.',
+    ]);
+    expect(free.shortPlan(result.lastWeek ?? 0)).toBe('This plan has lessons until week 11. After that it has stories and practice.');
+    expect(result.shorter).toBeNull();
   });
 
   it('keeps every free-plan text calm: no banned word, no price, no "day", no Premium', () => {
     const texts = [
-      warningText({ code: 'premium-needed', count: 3 }, 'en', { kind: 'class', lastWeek: 7 }),
-      warningText({ code: 'premium-needed', count: 1 }, 'en', { kind: 'family', lastWeek: null }),
+      warningText({ code: 'premium-needed', count: 3 }, 'en', { kind: 'class', firstWeek: 1, lastWeek: 7 }),
+      warningText({ code: 'premium-needed', count: 1 }, 'en', { kind: 'family', firstWeek: null, lastWeek: null }),
       free.shortPlan(7),
+      free.shortPlanPractice(7),
       free.useWeeks.cta(4),
       m.access.openBilling.cta,
     ];

@@ -22,6 +22,7 @@ import {
   freeDaysView,
   learnerProblem,
   levelHint,
+  spaceCoverage,
   statsText,
   toParams,
   unlockedStagesForSpace,
@@ -29,6 +30,7 @@ import {
   weekdayLabel,
   weeksOf,
   wizardProblem,
+  type SpaceCoverage,
   type WizardProblem,
   type WizardState,
 } from '@/lib/console/curriculum';
@@ -64,6 +66,8 @@ function CurriculumInner(): JSX.Element {
   const [today] = useState(() => dateKey(new Date()));
   const [roster, setRoster] = useState<Roster | null>(null);
   const [unlocked, setUnlocked] = useState<StageKey[]>(['stage1']);
+  // F-ENT-003 section 3.9.3: whether this viewer knows the space is uncovered (read only while the free-plan switch is on).
+  const [coverage, setCoverage] = useState<SpaceCoverage>('unknown');
   const [state, setState] = useState<WizardState>(() => defaultsFor('class', [], today));
   // Once the grown-up changes anything, a late roster no longer resets the form to its defaults.
   const touched = useRef(false);
@@ -85,7 +89,8 @@ function CurriculumInner(): JSX.Element {
   const load = useCallback(async (): Promise<void> => {
     if (!api) return;
     setError(null);
-    const [r, e] = await Promise.all([api.roster(spaceId), api.entitlements()]);
+    const gating = contentGatingEnabled();
+    const [r, e, memberships] = await Promise.all([api.roster(spaceId), api.entitlements(), gating ? api.listSpaces() : null]);
     if (!r.ok) {
       setError('cantReach');
       return;
@@ -96,6 +101,7 @@ function CurriculumInner(): JSX.Element {
     setState((s) => (touched.current ? { ...s, audience: kind, learnerId: kind === 'family' && r.data.learners.some((l) => l.id === s.learnerId) ? s.learnerId : null } : defaultsFor(kind, r.data.learners, today)));
     // Without the entitlement list the route plans Stage 1 only and lists the rest as locked: honest, never more than allowed.
     if (e.ok) setUnlocked(unlockedStagesForSpace(e.data, r.data.space, new Date()));
+    if (gating) setCoverage(spaceCoverage(e.ok ? e.data : null, memberships?.ok ? memberships.data : null, r.data.space, new Date()));
   }, [api, spaceId, today]);
 
   useEffect(() => {
@@ -122,8 +128,8 @@ function CurriculumInner(): JSX.Element {
       return null;
     }
   }, [state, unlocked, problem]);
-  // F-ENT-003 section 3.9.3: an unlicensed space with the free-plan switch on (null otherwise: today's wording).
-  const free = useMemo(() => (draft ? freeDaysView(draft, unlocked, contentGatingEnabled()) : null), [draft, unlocked]);
+  // F-ENT-003 section 3.9.3: an uncovered space with the free-plan switch on (null otherwise: today's wording). Only the preview step shows it.
+  const free = useMemo(() => (step === STEPS && draft ? freeDaysView(draft, coverage, contentGatingEnabled()) : null), [step, draft, coverage]);
 
   if (!ready || !session) return <ConsoleShell>{null}</ConsoleShell>;
 
@@ -183,8 +189,11 @@ function CurriculumInner(): JSX.Element {
   const stats = draft ? statsText(draft.stats, locale) : null;
   const shorter = free?.shorter ?? null;
   // **Use {weeks} weeks** re-runs the preview with that length preset; the long plan stays allowed.
+  // The button unmounts with the short-plan line, so focus moves to the page heading (as Next and Back do).
   const pickShorter = (): void => {
-    if (shorter) update({ length: shorter.length });
+    if (!shorter) return;
+    update({ length: shorter.length });
+    heading.current?.focus();
   };
 
   return (
@@ -404,7 +413,7 @@ function CurriculumInner(): JSX.Element {
             </div>
           ) : null}
           {free?.short && free.lastWeek !== null ? (
-            <ShortPlanLine lastWeek={free.lastWeek} shorterWeeks={shorter?.weeks ?? null} onUseWeeks={pickShorter} />
+            <ShortPlanLine lastWeek={free.lastWeek} storiesAfter={free.storiesAfter} shorterWeeks={shorter?.weeks ?? null} onUseWeeks={pickShorter} />
           ) : null}
           {error === 'saveFailed' ? <Notice tone="nudge">{c.preview.saveFailed}</Notice> : null}
           {stats ? <Muted>{c.preview.draftNote}</Muted> : null}

@@ -39,11 +39,13 @@ describe('console.access and console.curriculum.freeDays (English)', () => {
 
   it('words the wizard warning with the weeks that hold lessons and the left-out count', () => {
     const f = en.curriculum.freeDays;
-    expect(f.warning(7, 3, 'a Group License')).toBe('The free plan covers Stage 1 (lessons in weeks 1 to 7). 3 more lessons open with a Group License. They are left out of this plan.');
-    expect(f.warning(1, 1, 'the Family Plan')).toBe('The free plan covers Stage 1 (lessons in week 1). 1 more lesson opens with the Family Plan. It is left out of this plan.');
+    expect(f.warning(1, 7, 3, 'a Group License')).toBe('The free plan covers Stage 1 (lessons in weeks 1 to 7). 3 more lessons open with a Group License. They are left out of this plan.');
+    expect(f.warning(4, 10, 3, 'the Family Plan')).toBe('The free plan covers Stage 1 (lessons in weeks 4 to 10). 3 more lessons open with the Family Plan. They are left out of this plan.');
+    expect(f.warning(1, 1, 1, 'the Family Plan')).toBe('The free plan covers Stage 1 (lessons in week 1). 1 more lesson opens with the Family Plan. It is left out of this plan.');
     expect(f.warningNoLessons(14, 'a Group License')).toBe('The free plan covers Stage 1. 14 more lessons open with a Group License. They are left out of this plan.');
     expect(f.warningNoLessons(1, 'the Family Plan')).toBe('The free plan covers Stage 1. 1 more lesson opens with the Family Plan. It is left out of this plan.');
     expect(f.shortPlan(7)).toBe('This plan has lessons until week 7. After that it has stories and practice.');
+    expect(f.shortPlanPractice(7)).toBe('This plan has lessons until week 7. After that it has practice.');
     expect(f.useWeeks.cta(4)).toBe('Use 4 weeks');
     expect(f.useWeeks.cta(12)).toBe('Use 12 weeks');
   });

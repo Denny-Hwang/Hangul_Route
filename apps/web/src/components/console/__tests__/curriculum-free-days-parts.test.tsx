@@ -36,8 +36,8 @@ describe('WarningList with the free-plan switch on', () => {
   it('words the left-out line by space kind and links Open billing for a class and a family', () => {
     const pseudo = pseudoWords();
     for (const kind of ['class', 'family'] as const) {
-      const html = renderToStaticMarkup(<WarningList warnings={warnings} locale={PSEUDO} billingLink={kind === 'class'} free={{ kind, lastWeek: 7 }} />);
-      expect(html).toContain(pseudo.curriculum.freeDays.warning(7, 3, pseudo.access.product[kind]).replace(/&/g, '&amp;'));
+      const html = renderToStaticMarkup(<WarningList warnings={warnings} locale={PSEUDO} billingLink={kind === 'class'} free={{ kind, firstWeek: 1, lastWeek: 7 }} />);
+      expect(html).toContain(pseudo.curriculum.freeDays.warning(1, 7, 3, pseudo.access.product[kind]).replace(/&/g, '&amp;'));
       expect(html).toContain('href="/teach/billing"');
       expect(html).toContain(`>${pseudo.access.openBilling.cta}</a>`);
       expect(html).not.toContain(pseudo.curriculum.preview.warnings.seePlans.cta);
@@ -57,28 +57,30 @@ describe('WarningList with the free-plan switch on', () => {
   });
 
   it('renders nothing when there is no warning', () => {
-    expect(renderToStaticMarkup(<WarningList warnings={[]} locale={PSEUDO} billingLink free={{ kind: 'class', lastWeek: 7 }} />)).toBe('');
+    expect(renderToStaticMarkup(<WarningList warnings={[]} locale={PSEUDO} billingLink free={{ kind: 'class', firstWeek: 1, lastWeek: 7 }} />)).toBe('');
   });
 });
 
 describe('ShortPlanLine', () => {
   it('says where the lessons end and offers a shorter preset as a button', () => {
     const pseudo = pseudoWords();
-    const html = renderToStaticMarkup(<ShortPlanLine lastWeek={5} shorterWeeks={4} onUseWeeks={noop} />);
+    const html = renderToStaticMarkup(<ShortPlanLine lastWeek={5} storiesAfter shorterWeeks={4} onUseWeeks={noop} />);
     expect(html).toContain(pseudo.curriculum.freeDays.shortPlan(5));
     expect(html).toMatch(new RegExp(`<button type="button"[^>]*data-testid="route-use-weeks"[^>]*>${escape(pseudo.curriculum.freeDays.useWeeks.cta(4))}</button>`));
     expectAllPseudo(html, [], 2);
   });
 
-  it('has no button when no shorter preset holds every lesson', () => {
+  it('says practice, not stories, when no story follows; no button when no shorter preset holds every lesson', () => {
     const pseudo = pseudoWords();
-    const html = renderToStaticMarkup(<ShortPlanLine lastWeek={7} shorterWeeks={null} onUseWeeks={noop} />);
-    expect(html).toContain(pseudo.curriculum.freeDays.shortPlan(7));
+    const html = renderToStaticMarkup(<ShortPlanLine lastWeek={7} storiesAfter={false} shorterWeeks={null} onUseWeeks={noop} />);
+    expect(html).toContain(pseudo.curriculum.freeDays.shortPlanPractice(7));
+    expect(html).not.toContain(pseudo.curriculum.freeDays.shortPlan(7));
     expect(html).not.toContain('<button');
   });
 
   it('reads in plain English', () => {
     expect(en.curriculum.freeDays.shortPlan(7)).toBe('This plan has lessons until week 7. After that it has stories and practice.');
+    expect(en.curriculum.freeDays.shortPlanPractice(7)).toBe('This plan has lessons until week 7. After that it has practice.');
     expect(en.curriculum.freeDays.useWeeks.cta(4)).toBe('Use 4 weeks');
   });
 });
