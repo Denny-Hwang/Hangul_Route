@@ -516,7 +516,30 @@ export const caregiver = {
     viewing: (name: string) => `Viewing ${name}'s Learning Route`,
     tiles: (n: number) => `Spelling with tiles: ${plural('en', n, { one: '1 quest', other: `${n} quests` })}`,
     start: (name: string) => `${name}'s Learning Route starts here.`,
-    goal: 'First goal: read every Hangul letter.',
+    /**
+     * `first` is the new-learner line (F-ROUTE-001 OD-9). The rest is the grown-up route card
+     * (AMENDMENTS-ROUTE-LEARNING-ROUTE sections 6.2 and 11.1, LR-3b), about the child, from the
+     * device's own goal; the shared parts (`now.label`, `goal.label`, `goal.stage`, `goal.explore`,
+     * `goal.reachedStage`, `goal.tasteLine`) come from `learner.myRoute`.
+     */
+    goal: {
+      first: 'First goal: read every Hangul letter.',
+      inGoal: (name: string, n: number, title: string) => `Stage ${n} · ${title}: ${name} is in the goal stage`,
+      exploreInGoal: (name: string, n: number, title: string) => `Explore Stage ${n} · ${title}: ${name} is in the goal stage`,
+      reached: (name: string, n: number, title: string) => `${name} reached the goal: Stage ${n} · ${title}.`,
+      from: {
+        class: "From the class's weekly plan",
+        school: "From the school's weekly plan",
+        family: "From the family's weekly plan",
+        self: (name: string) => `From ${name}'s own weekly plan`,
+        default: "Hoya's suggestion",
+      },
+    },
+    /** Grown-up views only (LR-OD-7): a date, never "late" or "behind". */
+    planEnds: (date: string) => `Plan ends ${date}`,
+    goalTag: (name: string) => `${name}'s goal`,
+    endOfRoad: (name: string) => `${name} reached the end of the open road. More is coming.`,
+    error: (name: string) => `Hoya could not open ${name}'s Learning Route.`,
     rest: (name: string) => `${name} did everything that is open right now. More is coming.`,
     beyond: (name: string) => `${name} knows a lot! More adventures are coming.`,
     hereTag: (name: string) => `${name} is here`,

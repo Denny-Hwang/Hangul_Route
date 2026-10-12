@@ -22,10 +22,32 @@ export const DRAFT_EN: MyRouteMessages = {
       rest: 'You did everything that is open right now. More is coming.',
       beyond: 'You know a lot! More adventures are coming.',
       cta: { start: 'Start', continue: 'Continue' },
+      error: 'Hoya could not open your Learning Route.',
     },
     cta: { stories: 'Open stories', library: 'Open Library' },
+    // The route card drafts of AMENDMENTS-ROUTE-LEARNING-ROUTE section 11.1 (LR-3b).
+    now: { label: 'Now' },
+    goal: {
+      label: 'Goal',
+      stage: (n, title) => `Stage ${n} · ${title}`,
+      inGoal: (n, title) => `Stage ${n} · ${title}: you are in your goal stage`,
+      explore: (n, title) => `Explore Stage ${n} · ${title}`,
+      exploreInGoal: (n, title) => `Explore Stage ${n} · ${title}: you are in your goal stage`,
+      tasteLine: 'Try the first quests of this stage.',
+      reachedStage: (n, title) => `Stage ${n} · ${title} · reached`,
+      keepGoing: (title) => `Keep going: ${title}`,
+      reachedHoya: 'You reached your goal. Hoya is proud!',
+      endOfRoad: 'You reached the end of the open road. More is coming.',
+      from: {
+        class: "From your class's weekly plan",
+        school: "From your school's weekly plan",
+        family: "From your family's weekly plan",
+        self: 'From your own weekly plan',
+        default: "Hoya's suggestion",
+      },
+    },
     state: { complete: 'Complete', known: 'You knew this', explored: 'Explored', open: 'Open', taste: 'A taste', later: 'Coming later', notOpen: 'Not open yet' },
-    tag: { here: 'You are here', start: 'You started here' },
+    tag: { here: 'You are here', goal: 'Your goal', start: 'You started here' },
     cell: { playing: 'Playing' },
     caption: {
       played: (n) => `${quests(n)} played`,
@@ -60,7 +82,23 @@ export const DRAFT_EN: MyRouteMessages = {
     viewing: (name) => `Viewing ${name}'s Learning Route`,
     tiles: (n) => `Spelling with tiles: ${quests(n)}`,
     start: (name) => `${name}'s Learning Route starts here.`,
-    goal: 'First goal: read every Hangul letter.',
+    goal: {
+      first: 'First goal: read every Hangul letter.',
+      inGoal: (name, n, title) => `Stage ${n} · ${title}: ${name} is in the goal stage`,
+      exploreInGoal: (name, n, title) => `Explore Stage ${n} · ${title}: ${name} is in the goal stage`,
+      reached: (name, n, title) => `${name} reached the goal: Stage ${n} · ${title}.`,
+      from: {
+        class: "From the class's weekly plan",
+        school: "From the school's weekly plan",
+        family: "From the family's weekly plan",
+        self: (name) => `From ${name}'s own weekly plan`,
+        default: "Hoya's suggestion",
+      },
+    },
+    planEnds: (date) => `Plan ends ${date}`,
+    goalTag: (name) => `${name}'s goal`,
+    endOfRoad: (name) => `${name} reached the end of the open road. More is coming.`,
+    error: (name) => `Hoya could not open ${name}'s Learning Route.`,
     rest: (name) => `${name} did everything that is open right now. More is coming.`,
     beyond: (name) => `${name} knows a lot! More adventures are coming.`,
     hereTag: (name) => `${name} is here`,
@@ -71,13 +109,19 @@ export const DRAFT_EN: MyRouteMessages = {
   skillsNote:
     'The level check looks at reading and listening. Writing is practiced with tracing games and is not scored. The rows count finished quests that include these games; a game skipped inside a quest still counts.',
   a11y: {
-    stage: (order, title, stateWord, here, start, played) =>
-      [`Stage ${order}, ${title}.`, `${stateWord}.`, here ? 'You are here.' : '', start ? 'You started here.' : '', played > 0 ? `${quests(played)} played.` : '']
+    stage: (order, title, stateWord, here, start, played, goal = false) =>
+      [`Stage ${order}, ${title}.`, `${stateWord}.`, here ? 'You are here.' : '', goal ? 'Your goal.' : '', start ? 'You started here.' : '', played > 0 ? `${quests(played)} played.` : '']
         .filter((part) => part !== '')
         .join(' '),
-    stageGrownup: (name, order, title, stateWord, here, start, played) =>
-      [`Stage ${order}, ${title}.`, `${stateWord}.`, here ? `${name} is here.` : '', start ? `${name} started here.` : '', played > 0 ? `${quests(played)} played.` : '']
+    stageGrownup: (name, order, title, stateWord, here, start, played, goal = false) =>
+      [`Stage ${order}, ${title}.`, `${stateWord}.`, here ? `${name} is here.` : '', goal ? `${name}'s goal.` : '', start ? `${name} started here.` : '', played > 0 ? `${quests(played)} played.` : '']
         .filter((part) => part !== '')
         .join(' '),
+    routeCard: (nowText, goalText, fromText, pipsText, nextText) =>
+      [nowText, goalText, fromText, pipsText, nextText]
+        .filter((part): part is string => part !== null && part !== '')
+        .map((part) => `${part.replace(/ · /g, ', ').replace(/[.!]$/, '')}.`)
+        .join(' '),
+    goalPips: { none: 'Ready when you are', some: 'Some quests done, more are ready', all: 'Every quest here is done' },
   },
 };

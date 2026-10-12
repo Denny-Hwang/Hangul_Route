@@ -1,6 +1,21 @@
 import { describe, expect, it, vi } from 'vitest';
 import { buildMyRoute } from '../model';
-import { hoyaPoseFor, newQuestsLine, newlyDoneKeys, parseSeen, readSeen, seenFrom, seenKey, writeSeen, type JsonStorage } from '../seen';
+import type { RouteGoal } from '@hangul-route/content-schema';
+import {
+  goalReachedKey,
+  goalsReachedOf,
+  hoyaPoseFor,
+  isFirstGoalReached,
+  newQuestsLine,
+  newlyDoneKeys,
+  parseSeen,
+  readSeen,
+  seenFrom,
+  seenKey,
+  withGoalReached,
+  writeSeen,
+  type JsonStorage,
+} from '../seen';
 import type { SeenRecord } from '../types';
 import { BUNDLE_15, BUNDLE_8, STAGE1_8, STAGE_DEFS, THEME_DEFS, catalogOf, snapshotWith, type Bundle } from './fixtures/bundle-2026-10';
 
@@ -115,5 +130,59 @@ describe('what the seen record drives', () => {
     expect(hoyaPoseFor(model([...letters.slice(0, 2), 'quest:stage1-life-q1']), before)).toBe('idle');
     expect(hoyaPoseFor(model(letters), { ...before, doneKeys: letters })).toBe('idle');
     expect(hoyaPoseFor(model(letters), undefined)).toBe('idle');
+  });
+});
+
+describe('goalsReached (Learning Route amendment section 4.5, LR-3b)', () => {
+  const goal = (o: Partial<RouteGoal> = {}): RouteGoal => ({ stage: 'stage2', from: 'class', sourceId: 'plan:c', endsOn: '2026-11-01', reached: true, taste: true, ...o });
+  const base: SeenRecord = { totals: { stage1: 8 }, doneKeys: ['a'], at: 't' };
+
+  it('keys a goal by its source and stage; a default goal has no source id', () => {
+    expect(goalReachedKey(goal())).toBe('class:plan:c:stage2');
+    expect(goalReachedKey(goal({ from: 'default', sourceId: null, stage: 'stage1' }))).toBe('default:-:stage1');
+  });
+
+  it('reads a missing value as [] and keeps a well-formed one; a malformed one is dropped without the record', () => {
+    expect(goalsReachedOf(undefined)).toEqual([]);
+    expect(goalsReachedOf(base)).toEqual([]);
+    expect(parseSeen({ ...base })).toEqual(base);
+    expect(parseSeen({ ...base, goalsReached: ['class:plan:c:stage2'] })?.goalsReached).toEqual(['class:plan:c:stage2']);
+    expect(parseSeen({ ...base, goalsReached: ['x', 3, null] })?.goalsReached).toEqual(['x']);
+    expect(parseSeen({ ...base, goalsReached: 'x' })).toEqual(base);
+  });
+
+  it('is the first reached moment only for a reached goal not yet recorded', () => {
+    expect(isFirstGoalReached(goal(), undefined)).toBe(true);
+    expect(isFirstGoalReached(goal(), base)).toBe(true);
+    expect(isFirstGoalReached(goal({ reached: false }), base)).toBe(false);
+    expect(isFirstGoalReached(null, base)).toBe(false);
+    expect(isFirstGoalReached(goal(), withGoalReached(base, goal()))).toBe(false);
+    // A new plan with the same stage is a new goal.
+    expect(isFirstGoalReached(goal({ sourceId: 'plan:d' }), withGoalReached(base, goal()))).toBe(true);
+  });
+
+  it('adds a key once', () => {
+    const once = withGoalReached(base, goal());
+    expect(once.goalsReached).toEqual(['class:plan:c:stage2']);
+    expect(withGoalReached(once, goal())).toBe(once);
+    expect(withGoalReached(once, goal({ stage: 'stage4' })).goalsReached).toEqual(['class:plan:c:stage2', 'class:plan:c:stage4']);
+    expect(base.goalsReached).toBeUndefined();
+  });
+
+  it('carries the recorded goals over to the next seen record, and adds nothing without one', () => {
+    const m = model(['quest:stage1-letters-q1']);
+    expect(seenFrom(m, NOW, withGoalReached(base, goal())).goalsReached).toEqual(['class:plan:c:stage2']);
+    expect(seenFrom(m, NOW, base)).not.toHaveProperty('goalsReached');
+  });
+
+  it('is never written from the grown-up entry, and a failed write is swallowed', async () => {
+    const store = memory();
+    const record = withGoalReached(base, goal());
+    expect(await writeSeen(store, 'p1', record, { readOnly: true })).toBe(false);
+    expect(store.data.size).toBe(0);
+    expect(await writeSeen(store, 'p1', record, { readOnly: false })).toBe(true);
+    expect((await readSeen(store, 'p1'))?.goalsReached).toEqual(['class:plan:c:stage2']);
+    const failing: JsonStorage = { readJson: async () => null, writeJson: async () => Promise.reject(new Error('full')) };
+    expect(await writeSeen(failing, 'p1', record, { readOnly: false })).toBe(false);
   });
 });

@@ -70,6 +70,25 @@ const SAMPLES: Record<string, unknown[][]> = {
   'a11y.myRoute.homeStripGoal': TITLES,
   'a11y.myRoute.rowGoal': TITLES,
   'a11y.myRoute.rowStarted': [[1, 'Letters and sounds', 'Oct 9']],
+  // The route card (AMENDMENTS-ROUTE-LEARNING-ROUTE section 11.1, LR-3b).
+  'learner.myRoute.goal.stage': TITLES,
+  'learner.myRoute.goal.inGoal': TITLES,
+  'learner.myRoute.goal.explore': TITLES,
+  'learner.myRoute.goal.exploreInGoal': TITLES,
+  'learner.myRoute.goal.reachedStage': TITLES,
+  'learner.myRoute.goal.keepGoing': QUEST_TITLES.map((t) => [t]),
+  'caregiver.journey.goal.inGoal': NAMES.flatMap((name) => TITLES.map(([n, t]) => [name, n, t])),
+  'caregiver.journey.goal.exploreInGoal': NAMES.flatMap((name) => TITLES.map(([n, t]) => [name, n, t])),
+  'caregiver.journey.goal.reached': NAMES.flatMap((name) => TITLES.map(([n, t]) => [name, n, t])),
+  'caregiver.journey.goal.from.self': NAMES.map((n) => [n]),
+  'caregiver.journey.planEnds': [['Dec 20'], ['Oct 9']],
+  'caregiver.journey.goalTag': NAMES.map((n) => [n]),
+  'caregiver.journey.endOfRoad': NAMES.map((n) => [n]),
+  'caregiver.journey.error': NAMES.map((n) => [n]),
+  'a11y.myRoute.routeCard': [
+    ['Now: Stage 1 · Hangul', 'Goal: Stage 2 · Words', "From your class's weekly plan", 'Some quests done, more are ready', 'Next: Family at the Table'],
+    ['Stage 1 · Hangul: you are in your goal stage', null, "Hoya's suggestion", 'Ready when you are', null],
+  ],
 };
 
 type Rendered = { path: string; text: string; surface: Surface; args: unknown[] };

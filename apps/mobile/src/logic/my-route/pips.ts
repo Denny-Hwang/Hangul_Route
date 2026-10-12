@@ -21,12 +21,22 @@ export interface PipFacts {
   joinedAfterLatch: boolean;
   /** Playable and entitled. */
   offerable: boolean;
+  /**
+   * F-ENT-003's access says the learner cannot start it yet (Learning Route
+   * amendment section 4.5). Absent or false: open.
+   */
+  notOpen?: boolean;
 }
 
-/** Precedence: done > known > new > open > later. */
+/**
+ * Precedence: done > known > not open (later) > new > open > later. A done or
+ * known pip stays filled whatever access says later (fill-only, section 4.5);
+ * a not-open quest is never offered as new or open.
+ */
 export function pipStateOf(facts: PipFacts): PipState {
   if (facts.done) return 'done';
   if (facts.placedOut) return 'known';
+  if (facts.notOpen === true) return 'later';
   if (facts.joinedAfterLatch) return 'new';
   if (facts.offerable) return 'open';
   return 'later';
@@ -41,22 +51,30 @@ export interface PipContext {
   cursorId: string | null;
   /** The start marker's quest (R-7a); absent or null when there is none. */
   startId?: string | null;
+  /** F-ENT-003's quest access (Learning Route amendment section 4.5); absent means every quest is open. */
+  isQuestOpen?: (questId: string) => boolean;
 }
 
-const questPip = (entry: RouteEntry, ctx: PipContext): Pip => ({
-  key: entry.questId,
-  kind: 'quest',
-  questId: entry.questId,
-  episodeId: entry.episodeId,
-  state: pipStateOf({
+function questPip(entry: RouteEntry, ctx: PipContext): Pip {
+  const state = pipStateOf({
     done: ctx.done.has(entry.questId),
     placedOut: ctx.placedOut.has(entry.questId),
     joinedAfterLatch: ctx.latched.has(entry.stage),
     offerable: ctx.isEntitled(entry.stage),
-  }),
-  isCursor: entry.questId === ctx.cursorId,
-  isStart: ctx.startId != null && entry.questId === ctx.startId,
-});
+    notOpen: ctx.isQuestOpen !== undefined && !ctx.isQuestOpen(entry.questId),
+  });
+  return {
+    key: entry.questId,
+    kind: 'quest',
+    questId: entry.questId,
+    episodeId: entry.episodeId,
+    state,
+    isCursor: entry.questId === ctx.cursorId,
+    isStart: ctx.startId != null && entry.questId === ctx.startId,
+    // A playable quest that cannot be played reads "Not open yet", never "Coming later".
+    ...(state === 'later' ? { laterReason: 'notOpen' as const } : {}),
+  };
+}
 
 const cellPip = (key: string, episodeId: string | undefined): Pip => ({
   key,
@@ -65,6 +83,7 @@ const cellPip = (key: string, episodeId: string | undefined): Pip => ({
   state: 'later',
   isCursor: false,
   isStart: false,
+  laterReason: 'soon',
 });
 
 function cellStateOf(pips: readonly Pip[]): CellState {

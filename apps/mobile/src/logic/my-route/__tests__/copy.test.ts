@@ -3,8 +3,10 @@ import type { StageKey } from '@hangul-route/content-schema';
 import {
   canDoCopy,
   cellWord,
+  goalPipsWord,
   heroCopy,
   newQuestsCopy,
+  routeCardCopy,
   skillCopy,
   skillsNoteCopy,
   skillsTitle,
@@ -19,6 +21,8 @@ import {
   type MyRouteMessages,
 } from '../copy';
 import { buildMyRoute } from '../model';
+import type { CurriculumMeta, GoalSource } from '@hangul-route/content-schema';
+import type { RouteNext } from '../../route-next';
 import type { MyRouteInput, MyRouteModel, SeenRecord } from '../types';
 import { copyViolations, type Surface } from './copy-rules';
 import { BUNDLE_15, BUNDLE_8, STAGE1_8, STAGE_DEFS, THEME_DEFS, catalogOf, snapshotWith, type Bundle } from './fixtures/bundle-2026-10';
@@ -265,6 +269,25 @@ const SAMPLES: Record<string, unknown[][]> = {
   'caregiver.journey.skillsTitle': NAMES.map((n) => [n]),
   'a11y.myRoute.stage': TITLES.flatMap(([n, t]) => STATE_WORDS.map((w, i) => [n, t, w, i === 0, i === 1, N[i]])),
   'a11y.myRoute.stageGrownup': TITLES.flatMap(([n, t]) => STATE_WORDS.map((w, i) => ['Sam', n, t, w, i === 0, i === 1, N[i]])),
+  // The route card (AMENDMENTS-ROUTE-LEARNING-ROUTE section 11.1, LR-3b).
+  'learner.myRoute.goal.stage': TITLES,
+  'learner.myRoute.goal.inGoal': TITLES,
+  'learner.myRoute.goal.explore': TITLES,
+  'learner.myRoute.goal.exploreInGoal': TITLES,
+  'learner.myRoute.goal.reachedStage': TITLES,
+  'learner.myRoute.goal.keepGoing': QUEST_TITLES.map((t) => [t]),
+  'caregiver.journey.goal.inGoal': NAMES.flatMap((name) => TITLES.map(([n, t]) => [name, n, t])),
+  'caregiver.journey.goal.exploreInGoal': NAMES.flatMap((name) => TITLES.map(([n, t]) => [name, n, t])),
+  'caregiver.journey.goal.reached': NAMES.flatMap((name) => TITLES.map(([n, t]) => [name, n, t])),
+  'caregiver.journey.goal.from.self': NAMES.map((n) => [n]),
+  'caregiver.journey.planEnds': [['Dec 20'], ['Oct 9']],
+  'caregiver.journey.goalTag': NAMES.map((n) => [n]),
+  'caregiver.journey.endOfRoad': NAMES.map((n) => [n]),
+  'caregiver.journey.error': NAMES.map((n) => [n]),
+  'a11y.myRoute.routeCard': [
+    ['Now: Stage 1 · Hangul', 'Goal: Stage 2 · Words', "From your class's weekly plan", 'Some quests done, more are ready', 'Next: Family at the Table'],
+    ['Stage 1 · Hangul: you are in your goal stage', null, "Hoya's suggestion", 'Ready when you are', null],
+  ],
 };
 
 /** Every string the drafts can render, with the realistic arguments it was called with. */
@@ -399,13 +422,221 @@ describe('viewer grownup: every selector output is third person (section 3.12)',
       out.push(c.label, c.detail);
     }
     out.push(skillsTitle(grownup), skillsNoteCopy(grownup) ?? '', tilesCopy(m, grownup) ?? '', viewingCopy(grownup) ?? '', newQuestsCopy(m, grownup) ?? '');
+    // The route card (LR-3b), with the goal tag on its row.
+    const ctx = { ...grownup, goalStage: m.goal?.stage ?? null };
+    for (const nextTitle of [null, 'Family at the Table']) {
+      const card = routeCardCopy(m, ctx, { nextTitle, firstReached: true, formatDay: () => 'Dec 20' });
+      const where = card.where === null ? [] : card.where.kind === 'collapsed' ? [card.where.line] : [card.where.now?.line ?? '', card.where.goal.line];
+      out.push(card.hoya ?? '', ...where, card.from ?? '', card.planEnds ?? '', card.canDo?.lead ?? '', card.tasteLine ?? '', card.next ?? '', card.a11yLabel);
+    }
+    for (const r of m.stages) out.push(...stageTags(r, ctx), stageA11yLabel(r, ctx));
     return out;
   };
 
-  it('never says "you" in any form, across heroes, states, entitlements and latches', () => {
-    expect(new Set(models.map((m) => m.hero))).toEqual(new Set(['start', 'continue', 'rest', 'beyond']));
+  it('never says "you" in any form, across heroes, states, entitlements, latches and goals', () => {
+    // Plan goals from every source, reached and not, and free-end, on top of the default goals above.
+    for (const kind of ['class', 'school', 'family', 'self'] as const) {
+      models.push(model(APPENDIX_C, { sources: [goalSource(kind)], routeNext: { kind: 'free-end', placedOut: false } }));
+      models.push(model(['quest:stage2-life-q1', 'quest:stage2-nature-q1'], { sources: [goalSource(kind)] }));
+      models.push(model(APPENDIX_C, { sources: [goalSource(kind, ['quest:stage1-life-q2'])] }));
+    }
+    expect(models.some((m) => m.goal?.reached === true) && models.some((m) => m.goal === null) && models.some((m) => m.hero === 'freeEnd')).toBe(true);
+    expect(new Set(models.map((m) => m.hero))).toEqual(new Set(['start', 'continue', 'freeEnd', 'rest', 'beyond']));
     const states = new Set(models.flatMap((m) => m.stages.map((r) => r.state)));
     expect(states).toEqual(new Set(['complete', 'known', 'explored', 'open', 'later']));
     for (const m of models) for (const text of outputs(m)) expect(text, text).not.toMatch(YOU);
+  });
+});
+
+/** A four-week curriculum meta from Oct 5 (live on the fixture's Oct 11). */
+const META: CurriculumMeta = {
+  kind: 'curriculum',
+  generatorVersion: 1,
+  catalogVersion: 4,
+  params: {
+    audience: 'class',
+    level: { stage: 'stage1', band: 0 },
+    startDate: '2026-10-05',
+    weeks: 4,
+    sessionsPerWeek: 2,
+    minutesPerSession: 10,
+    daysOff: [],
+    goals: { focus: 'balanced' },
+    includeComingSoon: true,
+    culturalAnchors: true,
+    unlockedStages: ['stage1'],
+  },
+  weeks: ['2026-10-05', '2026-10-12', '2026-10-19', '2026-10-26'].map((startDate, i) => ({
+    index: i + 1,
+    startDate,
+    kind: 'learn' as const,
+    focus: { episodeId: null, storyIds: [], festival: null },
+    extras: [],
+  })),
+  horizonDays: 7,
+  repacedAt: null,
+};
+function goalSource(kind: GoalSource['kind'], questIds: readonly string[] = ['quest:stage2-life-q1']): GoalSource {
+  return { id: `plan:${kind}`, kind, assignedAt: '2026-10-05T09:00:00.000Z', items: questIds.map((id) => ({ kind: 'quest' as const, id })), meta: META };
+}
+const nextQuest = (questId: string, episodeId: string, stage: 'stage1' | 'stage2'): RouteNext => ({ kind: 'quest', questId, episodeId, stage, source: 'class', sourceId: 'plan:class' });
+const LIFE_Q2 = nextQuest('quest:stage1-life-q2', 'episode:stage1-life', 'stage1');
+const withGoal = (ctx: CopyContext, m: MyRouteModel): CopyContext => ({ ...ctx, goalStage: m.goal?.stage ?? null });
+const formatDay = (day: string): string => (day === '2026-11-01' ? 'Nov 1' : day);
+
+describe('routeCardCopy (Learning Route amendment sections 4.3, 6.2 and 10; LR-3b)', () => {
+  it('goal ahead of now (a class plan reaching Stage 2): Now over Goal, the source, the goal stage can-do or taste line, Next', () => {
+    const m = model(APPENDIX_C, { sources: [goalSource('class')], routeNext: LIFE_Q2 });
+    expect(routeCardCopy(m, withGoal(self, m), { nextTitle: 'Family at the Table' })).toEqual({
+      hoya: null,
+      where: { kind: 'split', now: { label: 'Now', line: 'Stage 1 · Hangul' }, goal: { label: 'Goal', line: 'Explore Stage 2 · Words' } },
+      from: "From your class's weekly plan",
+      planEnds: null,
+      canDo: null,
+      tasteLine: 'Try the first quests of this stage.',
+      next: 'Next: Family at the Table',
+      a11yLabel: "Now: Stage 1, Hangul. Goal: Explore Stage 2, Words. From your class's weekly plan. Ready when you are. Next: Family at the Table.",
+    });
+  });
+
+  it('goal equals now: one collapsed line, the can-do line and the goal pips in words', () => {
+    const m = model(APPENDIX_C, { sources: [goalSource('family', ['quest:stage1-life-q2'])], routeNext: LIFE_Q2 });
+    const card = routeCardCopy(m, withGoal(self, m), { nextTitle: 'Family at the Table' });
+    expect(card.where).toEqual({ kind: 'collapsed', line: 'Stage 1 · Hangul: you are in your goal stage' });
+    expect(card.from).toBe("From your family's weekly plan");
+    expect(card.canDo).toEqual({ lead: 'By the end of this stage you can:', line: 'Read any Hangul letter and syllable and know its sound.' });
+    expect(card.tasteLine).toBeNull();
+    expect(card.a11yLabel).toBe(
+      "Stage 1, Hangul: you are in your goal stage. From your family's weekly plan. Some quests done, more are ready. Next: Family at the Table.",
+    );
+  });
+
+  it("the default goal is Hoya's suggestion; a taste stage it collapses into reads Explore", () => {
+    const m = model(APPENDIX_C);
+    expect(routeCardCopy(m, withGoal(self, m), { nextTitle: 'Family at the Table' }).from).toBe("Hoya's suggestion");
+    const taste = model(STAGE1_8, { routeNext: nextQuest('quest:stage2-life-q1', 'episode:stage2-life', 'stage2') }, BUNDLE_8, { stageDoneAt: { stage1: '2026-10-01T00:00:00.000Z' } });
+    expect(taste.goal).toMatchObject({ stage: 'stage2', taste: true, from: 'default' });
+    const card = routeCardCopy(taste, withGoal(self, taste), { nextTitle: 'Lunch Box Words' });
+    expect(card.where).toEqual({ kind: 'collapsed', line: 'Explore Stage 2 · Words: you are in your goal stage' });
+    expect(card.tasteLine).toBe('Try the first quests of this stage.');
+    expect(card.canDo).toBeNull();
+    expect(routeCardCopy(taste, withGoal(grownup, taste), { nextTitle: 'Lunch Box Words' }).where).toEqual({
+      kind: 'collapsed',
+      line: 'Explore Stage 2 · Words: Sam is in the goal stage',
+    });
+  });
+
+  it('a new learner: the start line instead of a Now line, the goal, the can-do line, Next', () => {
+    const m = model([]);
+    const card = routeCardCopy(m, withGoal(self, m), { nextTitle: 'Meet the First Letters' });
+    expect(card.hoya).toBe('Your Learning Route starts here.');
+    expect(card.where).toEqual({ kind: 'split', now: null, goal: { label: 'Goal', line: 'Stage 1 · Hangul' } });
+    expect(card.canDo?.line).toBe('Read any Hangul letter and syllable and know its sound.');
+    expect(card.next).toBe('Next: Meet the First Letters');
+    expect(card.a11yLabel).toBe("Your Learning Route starts here. Goal: Stage 1, Hangul. Hoya's suggestion. Ready when you are. Next: Meet the First Letters.");
+  });
+
+  it('a reached goal: "· reached", the pips all done, Keep going, and the Hoya line only on the first visit', () => {
+    const m = model(['quest:stage2-life-q1', 'quest:stage2-nature-q1'], { sources: [goalSource('class')], routeNext: nextQuest('quest:stage1-letters-q1', 'episode:stage1-letters', 'stage1') });
+    expect(m.goal?.reached).toBe(true);
+    const later = routeCardCopy(m, withGoal(self, m), { nextTitle: 'Meet the First Letters' });
+    expect(later.hoya).toBeNull();
+    expect(later.where).toEqual({ kind: 'split', now: { label: 'Now', line: 'Stage 1 · Hangul' }, goal: { label: 'Goal', line: 'Stage 2 · Words · reached' } });
+    expect(later.canDo).toBeNull();
+    expect(later.tasteLine).toBeNull();
+    expect(later.next).toBe('Keep going: Meet the First Letters');
+    expect(later.a11yLabel).toContain('Every quest here is done.');
+    expect(routeCardCopy(m, withGoal(self, m), { nextTitle: 'Meet the First Letters', firstReached: true }).hoya).toBe('You reached your goal. Hoya is proud!');
+    // Read-only never celebrates and names the child.
+    const g = routeCardCopy(m, withGoal(grownup, m), { nextTitle: 'Meet the First Letters', firstReached: true });
+    expect(g.hoya).toBeNull();
+    expect(g.where).toEqual({ kind: 'split', now: { label: 'Now', line: 'Sam is on Stage 1: Hangul.' }, goal: { label: null, line: 'Sam reached the goal: Stage 2 · Words.' } });
+    expect(g.next).toBe('Next: Meet the First Letters');
+  });
+
+  it('the end of the open road: one sentence, no goal line, no Next', () => {
+    const m = model(ALL_8);
+    expect(m.goal).toBeNull();
+    expect(routeCardCopy(m, withGoal(self, m), { nextTitle: 'Family at the Table' })).toEqual({
+      hoya: 'You reached the end of the open road. More is coming.',
+      where: null,
+      from: null,
+      planEnds: null,
+      canDo: null,
+      tasteLine: null,
+      next: null,
+      a11yLabel: 'You reached the end of the open road. More is coming.',
+    });
+    expect(routeCardCopy(m, grownup, { nextTitle: null }).hoya).toBe('Sam reached the end of the open road. More is coming.');
+  });
+
+  it('free-end: the goal line only (no Now line, never collapsed), no can-do line and no Next', () => {
+    const m = model(STAGE1_8, { routeNext: { kind: 'free-end', placedOut: false } }, BUNDLE_8, { stageDoneAt: { stage1: '2026-10-01T00:00:00.000Z' } });
+    expect(m.goal?.stage).toBe(m.stages.find((s) => s.here)?.stage);
+    const card = routeCardCopy(m, withGoal(self, m), { nextTitle: 'Lunch Box Words' });
+    expect(card.where).toEqual({ kind: 'split', now: null, goal: { label: 'Goal', line: 'Explore Stage 2 · Words' } });
+    expect(card.canDo).toBeNull();
+    expect(card.tasteLine).toBeNull();
+    expect(card.next).toBeNull();
+  });
+
+  it('rest and beyond keep their sentence above the goal', () => {
+    const rest = model(APPENDIX_C, { routeNext: { kind: 'rest' } });
+    expect(routeCardCopy(rest, self, { nextTitle: null }).hoya).toBe('You did everything that is open right now. More is coming.');
+    const beyond = model(APPENDIX_C, { routeNext: { kind: 'rest' }, route: seed([], { beyondContent: true, needsStage: null }) });
+    expect(routeCardCopy(beyond, grownup, { nextTitle: null }).hoya).toBe('Sam knows a lot! More adventures are coming.');
+  });
+
+  it('the grown-up card: third person, each source, and "Plan ends" only for a grown-up with a plan', () => {
+    const sources = { class: "From the class's weekly plan", school: "From the school's weekly plan", family: "From the family's weekly plan", self: "From Sam's own weekly plan" } as const;
+    for (const kind of ['class', 'school', 'family', 'self'] as const) {
+      const m = model(APPENDIX_C, { sources: [goalSource(kind, ['quest:stage1-life-q2'])], routeNext: LIFE_Q2 });
+      const card = routeCardCopy(m, withGoal(grownup, m), { nextTitle: 'Family at the Table', formatDay });
+      expect(card.from).toBe(sources[kind]);
+      expect(card.planEnds).toBe('Plan ends Nov 1');
+      expect(card.where).toEqual({ kind: 'collapsed', line: 'Stage 1 · Hangul: Sam is in the goal stage' });
+      expect(card.canDo?.lead).toBe('By the end of this stage, Sam can:');
+      expect(card.a11yLabel).toBe(`Stage 1, Hangul: Sam is in the goal stage. ${sources[kind]}. Plan ends Nov 1. Some quests done, more are ready. Next: Family at the Table.`);
+      // Never on a learner screen, and never without a formatter.
+      expect(routeCardCopy(m, withGoal(self, m), { nextTitle: null, formatDay }).planEnds).toBeNull();
+      expect(routeCardCopy(m, withGoal(grownup, m), { nextTitle: null }).planEnds).toBeNull();
+    }
+    const def = model(APPENDIX_C);
+    expect(routeCardCopy(def, withGoal(grownup, def), { nextTitle: null, formatDay }).planEnds).toBeNull();
+    expect(routeCardCopy(def, withGoal(grownup, def), { nextTitle: null, formatDay }).from).toBe("Hoya's suggestion");
+  });
+
+  it('learner goal strings carry no date, no number to the goal and no digits but the stage order', () => {
+    const m = model(APPENDIX_C, { sources: [goalSource('class')], routeNext: LIFE_Q2 });
+    const card = routeCardCopy(m, withGoal(self, m), { nextTitle: 'Family at the Table', formatDay });
+    const texts = [card.hoya, card.from, card.planEnds, card.tasteLine, card.next, card.a11yLabel].filter((t): t is string => t !== null);
+    for (const text of texts) expect(text.replace(/Stage \d/g, '')).not.toMatch(/\d/);
+  });
+});
+
+describe('the goal tag and the goal pips in words (sections 4.3 and 10, LR-3b)', () => {
+  it('tags the goal row after "You are here" and before "You started here", for the learner and about the child', () => {
+    const m = model([]);
+    const r = { ...row(m, 'stage1'), isStart: true };
+    expect(stageTags(r, withGoal(self, m))).toEqual(['You are here', 'Your goal', 'You started here']);
+    expect(stageTags(r, withGoal(grownup, m))).toEqual(['Sam is here', "Sam's goal", 'Sam started here.']);
+    expect(stageTags(row(m, 'stage2'), withGoal(self, m))).toEqual([]);
+    expect(stageTags(r, self)).toEqual(['You are here', 'You started here']);
+  });
+
+  it('reads the goal in the row label between the here and start parts', () => {
+    const m = model([]);
+    const r = { ...row(m, 'stage1'), isStart: true };
+    expect(stageA11yLabel(r, withGoal(self, m))).toBe('Stage 1, Hangul. Open. You are here. Your goal. You started here.');
+    expect(stageA11yLabel(r, withGoal(grownup, m))).toBe("Stage 1, Hangul. Open. Sam is here. Sam's goal. Sam started here.");
+  });
+
+  it('names the goal pips without digits: none, some, every', () => {
+    expect(goalPipsWord(row(model([]), 'stage1').pips, self)).toBe('Ready when you are');
+    expect(goalPipsWord(row(model(APPENDIX_C), 'stage1').pips, self)).toBe('Some quests done, more are ready');
+    expect(goalPipsWord(row(model(STAGE1_8), 'stage1').pips, self)).toBe('Every quest here is done');
+    expect(goalPipsWord(row(model([], { route: seed(STAGE1_8) }), 'stage1').pips, self)).toBe('Every quest here is done');
+    expect(goalPipsWord([], self)).toBe('Ready when you are');
+    expect(goalPipsWord([], grownup)).toBe('Ready when Sam is');
   });
 });

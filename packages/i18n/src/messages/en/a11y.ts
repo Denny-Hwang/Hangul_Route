@@ -159,21 +159,24 @@ export const a11y = {
   myRoute: {
     /** The Route tab's accessibility label: the full page name (LR-OD-1). */
     tab: 'Learning Route',
-    stage: (order: number, title: string, stateWord: string, here: boolean, start: boolean, played: number) =>
+    /** `goal` (LR-3b, trailing and optional so existing callers do not change) is spoken between the here and start parts, the order the tags show. */
+    stage: (order: number, title: string, stateWord: string, here: boolean, start: boolean, played: number, goal = false) =>
       [
         `Stage ${order}, ${title}.`,
         `${stateWord}.`,
         here ? 'You are here.' : '',
+        goal ? 'Your goal.' : '',
         start ? 'You started here.' : '',
         played > 0 ? `${plural('en', played, { one: '1 quest', other: `${played} quests` })} played.` : '',
       ]
         .filter((part) => part !== '')
         .join(' '),
-    stageGrownup: (name: string, order: number, title: string, stateWord: string, here: boolean, start: boolean, played: number) =>
+    stageGrownup: (name: string, order: number, title: string, stateWord: string, here: boolean, start: boolean, played: number, goal = false) =>
       [
         `Stage ${order}, ${title}.`,
         `${stateWord}.`,
         here ? `${name} is here.` : '',
+        goal ? `${name}'s goal.` : '',
         start ? `${name} started here.` : '',
         played > 0 ? `${plural('en', played, { one: '1 quest', other: `${played} quests` })} played.` : '',
       ]
@@ -194,6 +197,18 @@ export const a11y = {
     /** The parent dashboard row (R-9b): its goal and started lines, read without the middle dot. */
     rowGoal: (n: number, title: string) => `Goal: Stage ${n}, ${title}.`,
     rowStarted: (n: number, band: string, date: string) => `Started: Stage ${n}, ${band}, ${date}.`,
+    /**
+     * The route card read as one summary (AMENDMENTS-ROUTE-LEARNING-ROUTE section 10, LR-3b): the
+     * visible parts in order, each one a sentence; a part that is not shown is passed as null. The
+     * middle dot of the visible lines is read as a comma ("Goal: Stage 2, Words").
+     */
+    routeCard: (nowText: string | null, goalText: string | null, fromText: string | null, pipsText: string | null, nextText: string | null) =>
+      [nowText, goalText, fromText, pipsText, nextText]
+        .filter((part): part is string => part !== null && part !== '')
+        .map((part) => `${part.replace(/ · /g, ', ').replace(/[.!]$/, '')}.`)
+        .join(' '),
+    /** The goal stage's pips in one label, without digits. */
+    goalPips: { none: 'Ready when you are', some: 'Some quests done, more are ready', all: 'Every quest here is done' },
   },
   /**
    * The vocabulary question view (F-VOC-004 §3.8, S-4b): the speaker, the outcome said in words after a
