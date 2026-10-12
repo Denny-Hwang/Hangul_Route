@@ -31,7 +31,7 @@ The report line and the stage list card always show the same case. LR-7 computes
 | Case | When | Goal line | Glyph |
 |---|---|---|---|
 | 1 | Family viewer, `summary.routeGoal` present (the goal the learner's device shows) | "Sam's goal: Stage 2 · Words" (`learnerGoal`) | flag |
-| 1, reached | as 1, and the goal stage is complete or known, or explored when its availability is `taste` (section 4.1 rule 6, the device's own rule) | "Sam reached the goal: Stage 1 · Hangul." (`reached`) | flag |
+| 1, reached | as 1, the source is a plan (not `default`), and the goal stage is complete or known, or explored when its availability is `taste` (section 4.1 rule 6, the device's own rule). A default goal ("Hoya's suggestion") is never reached | "Sam reached the goal: Stage 1 · Hangul." (`reached`) | flag |
 | 2 | No `routeGoal`, and this space has a live curriculum plan that targets the learner (the newest `publishedAt` wins) | "Your family's weekly plan reaches Stage 1 · Hangul" or "Your class's weekly plan reaches Stage 1 · Hangul" (`planReaches.*`) | flag |
 | 3 | Neither | "Next open stage: Stage {n} · {title}" (`nextOpen`), also when that stage is the Now stage (below) | none |
 | No goal | `pickGoal` returns null: every stage is complete, known, explored or later | "Sam reached the end of the open road. More is coming." (`endOfRoad`) | none |
@@ -84,7 +84,7 @@ There is one reading column (`layout.maxWidth.reading`, centred). The gutter is 
 2. **Back link**: "Back to the report". Until F-REPORT-001's page exists, it reads "Back to the family" or "Back to the class". It is `touchTarget.min` tall, with an `arrow-left` glyph and underlined `brand.secondaryDark` text.
 3. **Heading**: `h1` "{name}'s Learning Route" at `title` size, then "Updated {date}" (`bodySm`, muted).
 4. **The grown-up route card**: a panel (`surface.paper`, `border.subtle`, `radii.lg`, padding `spacing.lg`).
-5. **"Stages"** (`h2`, `console.learningRoute.stagesTitle`, a key this PR adds to section 11.1 for LR-7), then an `ol`.
+5. **"Stages"** (`h2`, `console.learningRoute.stagesTitle`, a key this PR adds to section 11.1; LR-7 ships it, or LR-8 if LR-7 merged without it), then an `ol`.
 
 ### The grown-up route card
 
@@ -94,11 +94,12 @@ There is one reading column (`layout.maxWidth.reading`, centred). The gutter is 
 | Goal | `[flag]` "Sam's goal: Stage 2 · Words" | `[flag]` "Your class's weekly plan reaches Stage 1 · Hangul" |
 | Source or plan end | "From the class's weekly plan" | "Plan ends Dec 20" |
 | Reached | — | "Mina reached this stage." |
-| Can-do | "By the end of this stage, Sam can:" + the stage 2 line | "By the end of this stage, Mina can:" + the stage 1 line |
+| Can-do (only while the goal is not reached) | "By the end of this stage, Sam can:" + the stage 2 line | — (Mina reached the plan's stage, so the line is hidden) |
 | Secondary (family only, when the family plan does not lead) | "Your family's weekly plan reaches Stage 1 · Hangul. Plan ends Dec 20", above a thin rule | — |
 
 - **Type.** Now and Goal are `bodyLg`, bold, with 20 dp glyphs. The source and plan end lines are `bodySm` in `text.secondary`. The can-do lead is caption, semibold and muted.
 - **Plan end** shows for a family or self source (case 1) and in case 2, never for a class source in case 1 (section 6.1).
+- **Can-do line and a reached goal.** The can-do line shows only while the goal is not reached. Case 1 reached ("{name} reached the goal: ...") and case 2 with "{name} reached this stage." drop it, as the learner card drops it in state C (`route-card.md`): "By the end of this stage" reads wrongly for a stage already reached. Section 6.1 says the same for LR-7.
 - **Case 3**: the Now line, then "Next open stage: Stage {n} · {title}" with no flag, then that stage's can-do line. This is the same when the next open stage is the Now stage.
 - **No goal**: the Now line, then "{name} reached the end of the open road. More is coming."
 
@@ -120,7 +121,7 @@ Each row is an `li`: a paper panel, `radii.md`, `border.subtle`, padding `spacin
 - **Tags** (the same chips and order as the learner page): "{name} is here", then "{name}'s goal" (flag, case 1) or "Plan goal" (flag, case 2), then "{name} started here" (pin).
 - **The reserved slot** "Preview lessons" (dashed, `touchTarget.min`): F-BROWSE-001 renders it. Until then it renders **nothing**. The mock draws it only to show where it goes.
 
-**Later stages.** Their rows are quiet: a dashed border, no fill, only the name and "Coming later". Consecutive later stages merge into one row ("Stages 5 to 7 · Coming later").
+**Later stages.** Their rows are quiet: a dashed border, no fill, only the name and "Coming later". Consecutive later stages merge into one row, "Stages 5 to 7: Coming later": the existing `console.journey.stages(from, to, text)` words, with a colon, unlike a single row's "3. Sentences · Coming later".
 
 **Never on the page:** another learner, an average, a sort, "ahead" or "behind", a percentage, "N / M", a zero count, skills, speaking, a price, a product name, a billing link or a free-lessons line.
 
@@ -132,7 +133,7 @@ Each row is an `li`: a paper panel, `radii.md`, `border.subtle`, padding `spacin
   - The roster strip's own use of `stageLine` is not changed by this page.
 - **A taste.** `console.journey.state` has no word for a taste stage, because the summary states are `complete`, `known`, `explored`, `open` and `later`.
   - The row shows "A taste" when the stage's state is `open` and `stageAvailabilityOf(CATALOG, stage)` is `taste`.
-  - This is the learner page's word (`learner.myRoute.state.taste`). LR-7 adds the console key.
+  - The word is the learner page's `learner.myRoute.state.taste` ("A taste"), read through `getMessages(locale)` as the view already reads `learner.myRoute.stage.canDo`. It has no "you", so no console key is needed.
 
 ### States (board)
 

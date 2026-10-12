@@ -29,7 +29,7 @@ Code (planned): `screens/my-route/RouteCard.tsx` (LR-5a), copy selectors in `log
 | C later visits | — | as C | filled pips, Hoya `idle` + "Keep going" | Continue |
 | E default taste goal | — | collapsed "Explore Stage 2 · Words: you are in your goal stage", "Hoya's suggestion" | "Try the first quests of this stage.", pips | Continue |
 | F end of the open road | "You reached the end of the open road. More is coming." | none (no flag anywhere) | — | Open Library (or Open stories) |
-| D free-end (web, switch on) | "You played every quest that is open for you." | Goal only, "Hoya's suggestion" | — (no ask, no price, no lock) | Practice words (or Open Library) |
+| D free-end (web, switch on) | "You played every quest that is open for you." | Goal only, "Hoya's suggestion". The free-end hero has no Now line, so the goal line never collapses, even when here equals the goal stage (the board's trail puts both tags on Stage 2): the label reads "... Goal: Explore Stage 2, Words. Hoya's suggestion." | — (no ask, no price, no lock) | Practice words (or Open Library) |
 | J content cannot be read | "Hoya could not open your Learning Route." | — | — | Try again |
 | L1 grown-up, local | — | collapsed in the third person, family source, "Plan ends Dec 20" | "By the end of this stage, Sam can:", pips, Hoya + Next as text | none |
 
