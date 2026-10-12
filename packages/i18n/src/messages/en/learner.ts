@@ -1131,6 +1131,8 @@ export const learner = {
         title: 'Learning Route',
         goal: (n: number, title: string) => `Goal: Stage ${n} · ${title}`,
         week: (n: number) => `Week ${n} of your weekly plan`,
+        /** Beside the seven drawn segments, so they read as the whole route, not as more quests. */
+        stages: 'Seven stages',
       },
     },
   },

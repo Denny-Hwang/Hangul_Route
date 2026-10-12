@@ -39,8 +39,11 @@ export function RouteStrip({ view, onPress }: { view: HomeStripView; onPress: ()
           </View>
         </>
       ) : null}
-      <Spacer size="sm" />
-      <StageSegments segments={segments} testID="home-route-strip-segments" />
+      <Spacer size="md" />
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end', columnGap: spacing.sm, rowGap: spacing.xxs }}>
+        <StageSegments segments={segments} testID="home-route-strip-segments" />
+        <Caption tone="muted">{view.segmentsLabel}</Caption>
+      </View>
       {view.week !== null ? (
         <>
           <Spacer size="sm" />

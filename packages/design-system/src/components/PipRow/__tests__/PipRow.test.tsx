@@ -190,6 +190,12 @@ describe('StageSegmentsBody: one drawn segment per stage', () => {
     expect(parts[0]![0]!.props).toMatchObject({ parts: stageSegmentParts('complete', 20), accent: colors.stage.stage1, offsetY: band });
   });
 
+  it('rounds the svg height up to whole pixels at a scaled size', () => {
+    const row = StageSegmentsBody({ segments, size: 30, gap: spacing.xs }) as El;
+    const svg = kids(kids(row)[0]!)[0]!;
+    expect(svg.props).toMatchObject({ height: Math.ceil(markerBand(30) + 30), viewBox: `0 0 30 ${Math.ceil(markerBand(30) + 30)}` });
+  });
+
   it('the hook wrapper passes the scaled 20 dp stage size and the scaled pip gap', () => {
     const body = StageSegments({ segments }) as El;
     expect(body.type).toBe(StageSegmentsBody);

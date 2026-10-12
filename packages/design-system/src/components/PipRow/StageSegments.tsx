@@ -41,7 +41,8 @@ export function StageSegments({ segments, testID }: StageSegmentsProps): React.R
 /** The row for a resolved size, without hooks (tested by calling it). */
 export function StageSegmentsBody({ segments, size, gap, testID }: StageSegmentsProps & { size: number; gap: number }): React.ReactElement {
   const band = markerBand(size);
-  const height = band + size;
+  // Whole pixels, so a scaled band (0.45 x 30 = 13.5) never clips the bottom of the shapes.
+  const height = Math.ceil(band + size);
   return (
     <View
       testID={testID}

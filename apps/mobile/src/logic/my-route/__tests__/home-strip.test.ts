@@ -109,6 +109,7 @@ describe('homeStripView', () => {
       const here = v.segments.filter((s) => s.here);
       expect(here).toHaveLength(1);
       expect(here[0]?.stage).toBe(v.stage);
+      expect(v.segmentsLabel).toBe('Seven stages');
     }
   });
 
@@ -123,7 +124,7 @@ describe('homeStripView', () => {
 
   it('keeps the copy rules: no ratio, no percent, no count of what is left', () => {
     const v = strip(model(STAGE1_8.slice(0, 5)), { goalStage: 'stage2', week: 2 });
-    for (const text of [v.title, v.here, v.goal, v.week, ...v.progress]) expect(copyViolations(text ?? '', 'en', 'learner', [1, 2, 5])).toEqual([]);
+    for (const text of [v.title, v.here, v.goal, v.week, v.segmentsLabel, ...v.progress]) expect(copyViolations(text ?? '', 'en', 'learner', [1, 2, 5])).toEqual([]);
     expect(copyViolations(v.a11yLabel, 'en', 'a11y')).toEqual([]);
     expect(v.title.toLowerCase()).not.toContain('my route');
   });

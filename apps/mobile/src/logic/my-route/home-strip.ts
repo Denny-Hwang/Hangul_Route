@@ -38,6 +38,8 @@ export interface HomeStripView {
    * seven stages in route order with their state, exactly one of them `here`.
    */
   segments: { stage: StageKey; order: number; state: StageState; here: boolean }[];
+  /** The words beside the segments (wireframes H and D: "seven stages"). */
+  segmentsLabel: string;
   /** The here stage's caption on the page ("4 quests played"), in words for screen readers. */
   progress: string[];
   /** The whole strip as one button label; the drawn pips are hidden from screen readers. */
@@ -64,6 +66,7 @@ export function homeStripView(i: HomeStripInput): HomeStripView {
     week,
     groups: stageGroups(here),
     segments: i.model.stages.map((s) => ({ stage: s.stage, order: s.order, state: s.state, here: s.here })),
+    segmentsLabel: strip.stages,
     progress,
     a11yLabel: a11y.homeStrip(strip.title, hereLine, progress, goalRow ? a11y.homeStripGoal(goalRow.order, goalRow.title) : null, week),
   };
