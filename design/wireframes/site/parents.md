@@ -43,7 +43,7 @@ Phone:
 |  + reports: today, week, month, all time   (claim parentReports)
 |  + open each learner's Learning Route      (claim learningRoute)
 |  + encouragement notes                     (claim feedbackNotes)
-|  + with a family plan, browse lessons      (claim browseAsLearner AND paidPlans = inApp)
+|  + with the Family Plan, browse lessons    (claim browseAsLearner AND paidPlans = inApp)
 +--------------------------------------+
 | H2 Plans                             |
 | cost line (no price) · "managed at app.hangulroute.com after you sign in"

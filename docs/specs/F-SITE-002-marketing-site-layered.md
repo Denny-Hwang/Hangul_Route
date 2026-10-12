@@ -107,7 +107,7 @@ Order (each block is one `<section>` with a heading; the hero heading is the pag
 2. **Who is it for? (`#who`, L1).** Three persona cards in a list: Learners, Parents, Teachers. Each card is a single link (whole card clickable) to its L2 page, with a title and one line. Accessible name = title + line. On wide screens three columns; under 720 px one column.
 3. **How it works (L1).** Three numbered steps, one line each: open the app; learn in five-minute quests; collect culture cards and keep going. When the `learningRoute` claim is on, step 3's line becomes the Learning Route variant (appendix B.1).
 4. **Promises (L1).** Three titles, no body: No ads, ever · Child safety first (replaces "COPPA-compliant", OD-4) · No red marks. Heading visually hidden ("Our promises"). The explanations live on `/parents` and `/learners` (rule 3). "Works offline" is not repeated here; the facts line carries it.
-5. **What does it cost? (L1).** One line from the `freePlan` and `paidPlans` claims (section 3.9). Today: "Stage 1 is free. More stages and classroom plans are coming." No price, ever.
+5. **What does it cost? (L1).** One line: the free line ("Stage 1 is free.", the same in every state, F-ENT-003 OD-1), then the paid line the `paidPlans` claim picks (section 3.9). Today: "Stage 1 is free. More stages are coming, with plans for families and classes." No price and no plan term, ever.
 6. **Launch news (`#news`).** Heading, one line, the existing `WaitlistForm` (same API, same `source: 'landing'`, same consent line and `CONSENT_TEXT_VERSION`; `docs/launch/waitlist.md` stays true). The section's old "Play now — free" button and devices line are dropped (the header and hero already carry the action).
 7. Footer.
 
@@ -133,7 +133,7 @@ Wireframe: `design/wireframes/site/parents.md`. Strings: appendix B.3. Caregiver
 1. h1 "For parents and caregivers" + lead (names grandparents and other caregivers) + primary `Sign in as a parent` (`siteLinks.signIn('parent')`) + secondary `Start learning`.
 2. **What they learn.** One line + link "What learners do" to `/learners`.
 3. **Safe by design.** Four bullets: no ads and no data sold; most learning data stays on the device; a grown-up's sign-in saves progress to our servers so it can be restored; a class or family join shares only a short progress summary with that space (true under F-SPACE-001 §3.5 and the Privacy Policy, which also hedges "most" because usage events are sent without sign-in; pinned by a new `landing-claims.test.tsx` sentence, content and safety review in S-3); a grown-up gate guards anything that costs money or deletes data; siblings can share a device and each learner keeps their own stars and cards.
-4. **Follow along.** Base line (true today on the console's family space): "Create a free family space, share its code, and see each learner's week: time practised, quests done and letters to revisit together." Extra lines, each behind its claim (section 3.9): `parentReports` (reports for today, this week, this month and all time, with what went well and what to practise next; F-REPORT-001) · `learningRoute` (open each learner's Learning Route; AMENDMENTS-ROUTE-LEARNING-ROUTE G6) · `feedbackNotes` (send a short note of encouragement; F-FEEDBACK-001) · `browseAsLearner` (with a family plan, browse every lesson exactly as your learner sees it; F-BROWSE-001; paid line, shown only when `paidPlans` is `inApp`).
+4. **Follow along.** Base line (true today on the console's family space): "Create a free family space, share its code, and see each learner's week: time practised, quests done and letters to revisit together." Extra lines, each behind its claim (section 3.9): `parentReports` (reports for today, this week, this month and all time, with what went well and what to practise next; F-REPORT-001) · `learningRoute` (open each learner's Learning Route; AMENDMENTS-ROUTE-LEARNING-ROUTE G6) · `feedbackNotes` (send a short note of encouragement; F-FEEDBACK-001) · `browseAsLearner` (with the Family Plan, browse every lesson exactly as your learner sees it; F-BROWSE-001; the product name the app's billing page uses, BY-1; paid line, shown only when `paidPlans` is `inApp`).
 5. **Plans.** The cost line (section 3.9) + "Plans and billing are managed at app.hangulroute.com after you sign in." No price, no billing link.
 6. Three folded questions: does my learner need an account (no: learners never need an email or password); can I learn alongside them (keeps the pinned sentence "Learning Korean yourself? Play the same quests."); what can I see (the base line, plus the report line when its claim is on).
 7. Closing block with `Sign in as a parent`.
@@ -216,9 +216,9 @@ export function showsClaim(claims: SiteClaims, key: BooleanClaimKey): boolean;
 | `paidPlans: 'inApp'` | the owner's Stripe Live switch | standing rule; sandbox checkout does not count |
 
 - Page components take `claims` as a prop defaulting to `SITE_CLAIMS`, so unit tests render every state, including `browseAsLearner: true` with `paidPlans: 'coming'` (line absent) and with `'inApp'` (line present).
-- With every claim at its default the pages are complete: no empty section, no "coming soon" teaser for an unbuilt feature (only the existing "more stages and classroom plans are coming" cost line).
+- With every claim at its default the pages are complete: no empty section, no "coming soon" teaser for an unbuilt feature (only the paid cost line "More stages are coming, with plans for families and classes." while `paidPlans` is `coming`).
 - **Other readers.** F-BILL-002 B-7 reads the boolean claims for the "what the plan includes" lines of the signed-in billing page (F-BILL-002 §4.3). `CLAIM_REQUIRES_PAID` applies only to the public site; the billing page is where a plan is bought, so it reads the booleans directly. F-BILL-002 B-7 therefore waits for S-2, and S-2 waits for F-APP-001 A-1.
-- **`freePlan` has one value.** The owner decided F-ENT-003 OD-1 on 2026-10-11: the free plan keeps all of Stage 1 open and paid plans open Stage 2 onward. So "Stage 1 is free." (`landing.plans.free.stage1`) stays true before and after F-ENT-003's switch is turned on, and no release flips this claim. The `'firstDays'` value and its string of revision 2 are dropped. The key stays so a later change to the free plan is one constant and one string.
+- **`freePlan` has one value.** The owner decided F-ENT-003 OD-1 on 2026-10-11: the free plan keeps all of Stage 1 open and paid plans open Stage 2 onward. So "Stage 1 is free." (`landing.plans.free.stage1`) stays true before and after F-ENT-003's switch is turned on, and no release flips this claim. The `'firstDays'` value and its string of revision 2 are dropped. The key stays so a later change to the free plan is one constant and one string. Because the free line never flips, it says nothing about paid plans: what is coming is the paid line's (`landing.plans.paid.coming`), which `paidPlans: 'inApp'` replaces (S-3 rework).
 
 ### 3.10 Old grown-up URLs, robots and sitemap
 
@@ -452,8 +452,8 @@ Console, sign-in and billing on app.hangulroute.com; forwarding of old grown-up 
 - how.routeBody "Earn Korean culture cards and see your whole Learning Route: where you are and what comes next."
 - promises.label "Our promises" · items: ads "No ads, ever" · safety "Child safety first" · noRed "No red marks"
 - plans.title "What does it cost?"
-- plans.free.stage1 "Stage 1 is free. More stages and classroom plans are coming."
-- plans.paid.coming "Plans for families and classes are coming."
+- plans.free.stage1 "Stage 1 is free." (every state; F-ENT-003 OD-1)
+- plans.paid.coming "More stages are coming, with plans for families and classes."
 - plans.paid.inApp "Plans for families and classes are at app.hangulroute.com."
 - plans.managedInApp "Plans and billing are managed at app.hangulroute.com after you sign in."
 - news.title "Get the launch news" · news.body "Leave your email and we'll send you the launch news. Nothing else."
@@ -477,7 +477,7 @@ Console, sign-in and billing on app.hangulroute.com; forwarding of old grown-up 
 - follow.reports "Reports for today, this week, this month and all time show what went well and what to practise next."
 - follow.route "Open each learner's Learning Route to see where they are and what comes next."
 - follow.notes "Send a short note of encouragement that your learner sees in the app."
-- follow.browse "With a family plan, browse every lesson exactly as your learner sees it."
+- follow.browse "With the Family Plan, browse every lesson exactly as your learner sees it."
 - faq: account "Does my learner need an account?" / "No. Learners never need an email or a password." · learnAlong "Can I learn alongside them?" / "Yes. Learning Korean yourself? Play the same quests." · whatSee "What can I see?" / follow.body (and follow.reports when its claim is on)
 - closing "See your learner's week in one place."
 
@@ -535,3 +535,4 @@ Console, sign-in and billing on app.hangulroute.com; forwarding of old grown-up 
     - "The app host serves `/privacy` and `/terms` redirects": not chosen. The `privacyUrl()` contract keeps Privacy on hangulroute.com without a second copy.
     - "Analytics Engine or D1 sink": not chosen for this spec (OD-5).
 - 2026-10-11, F-ENT-003 OD-1 (owner decision, applied in F-ENT-003 E3-0b): the free plan keeps all of Stage 1 open; paid plans open Stage 2 onward. `freePlan` keeps the single value `'stage1'`; the `'firstDays'` value, its string, its hand-off row and the E3-11 flip are dropped; OD-6 is closed. The "Free-plan wording" item of review 1 above is superseded.
+- 2026-10-11, S-3 rework after F-ENT-003 OD-1 and the yearly Family Plan (BY-1; `AMENDMENTS-BILLING-FAMILY-YEARLY.md`, BY-0). `landing.plans.free.firstDays` is not added. `plans.free.stage1` is now just "Stage 1 is free.": it never flips, so its old second sentence ("More stages and classroom plans are coming.") would have been false once `paidPlans` is `inApp`. That sentence moves to `plans.paid.coming` ("More stages are coming, with plans for families and classes."), so today's cost line keeps it. `follow.browse` names "the Family Plan", as the app's billing page does. The S-3 tests now fail on any site string with lifetime, one-time or term wording, or a day-count, trial or time-limited free-plan line.
