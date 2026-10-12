@@ -1,5 +1,4 @@
 import type { HeritageCard, SceneArt, ThemeKey } from '@hangul-route/content-schema';
-import { typography } from '@hangul-route/design-system/tokens';
 
 /**
  * What a card's face shows (F-STORY-006 §3.8 Art, D7), decided once for every
@@ -97,10 +96,11 @@ const WORD_WIDTH_SHARE = 0.8;
 
 /**
  * The font size of the fallback word: large on a big card, smaller for a long
- * word so it stays inside the square, never below the caption size.
+ * word so it stays inside the square, never below `minSize` (the caption
+ * size token, passed in so this stays pure logic with no design-system import).
  */
-export function cardWordFontSize(size: number, word: string): number {
+export function cardWordFontSize(size: number, word: string, minSize: number): number {
   const glyphs = Math.max(1, Array.from(word).length);
   const fit = Math.floor(Math.min(size * WORD_HEIGHT_SHARE, (size * WORD_WIDTH_SHARE) / glyphs));
-  return Math.max(typography.size.caption, fit);
+  return Math.max(minSize, fit);
 }

@@ -148,17 +148,17 @@ describe('cardPlateLayout', () => {
 
 describe('cardWordFontSize', () => {
   it('fills a large square with a short word (the old 80 on a 200 card page)', () => {
-    expect(cardWordFontSize(200, '김치')).toBe(80);
+    expect(cardWordFontSize(200, '김치', typography.size.caption)).toBe(80);
   });
 
   it('steps down so a long word stays inside the square', () => {
-    const size = cardWordFontSize(96, '금속활자');
+    const size = cardWordFontSize(96, '금속활자', typography.size.caption);
     expect(size * 4).toBeLessThanOrEqual(96 * 0.8);
-    expect(size).toBeLessThan(cardWordFontSize(96, '김치'));
+    expect(size).toBeLessThan(cardWordFontSize(96, '김치', typography.size.caption));
   });
 
   it('never goes below the caption size, and treats an empty word as one glyph', () => {
-    expect(cardWordFontSize(40, '아주아주아주긴단어')).toBe(typography.size.caption);
-    expect(cardWordFontSize(100, '')).toBe(40);
+    expect(cardWordFontSize(40, '아주아주아주긴단어', typography.size.caption)).toBe(typography.size.caption);
+    expect(cardWordFontSize(100, '', typography.size.caption)).toBe(40);
   });
 });

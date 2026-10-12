@@ -30,7 +30,7 @@ const DEPS: CardArtDeps = {
 const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANGUAGE };
 
 function CardWord({ word, size }: { word: string; size: number }): React.ReactElement {
-  const fontSize = cardWordFontSize(size, word);
+  const fontSize = cardWordFontSize(size, word, typography.size.caption);
   return (
     <Text
       {...koreanSpeech}
