@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { HOYA_POSES } from '../hoya';
 import { LIBRARY, SCENE_ART_REGISTRY, hasItem } from '../registry';
 import { checkItem, checkScene } from '../rules';
+import { COLOR_TOKENS, resolveColor } from '../tokens-map';
+import type { ColorToken, Shape } from '../types';
 
 /** PR 2.3a seeded the Hoya poses; PR 2.3b adds the first library batch; PR 2.10a the records-joseon batch; PR 2.10b the hangul-printing batch; PR 2.10c the science-art-life batch; PR 2.10d the seasons-tales batch. */
 const SETTINGS = [
@@ -365,6 +367,26 @@ describe('SCENE_ART_REGISTRY', () => {
     const json = JSON.stringify(tiger.nodes);
     expect(json).not.toMatch(/hoya\.|feedback\.nudge"/);
     expect(tiger.tintable).toBe('theme.letters');
+  });
+
+  // Post-merge review of #310: compare colours, not token names, since other
+  // tokens (theme.life, feedback.nudge) share the hex of Hoya's gold fur.
+  it("draws the trickster tiger in no colour of Hoya's gold fur", () => {
+    const hoyaHex = new Set((['hoya.fur', 'hoya.furDark'] as const).map(resolveColor));
+    expect(COLOR_TOKENS.filter((t) => hoyaHex.has(resolveColor(t))).length).toBeGreaterThan(2);
+    const tiger = SCENE_ART_REGISTRY['prop:tiger-trickster']!;
+    const paints = new Set<string>();
+    const walk = (shapes: readonly Shape[]): void => {
+      for (const n of shapes) {
+        if ('fill' in n && typeof n.fill === 'string') paints.add(n.fill);
+        if ('stroke' in n && typeof n.stroke === 'string') paints.add(n.stroke);
+        if (n.t === 'group') walk(n.kids);
+      }
+    };
+    walk(tiger.nodes);
+    if (tiger.tintable) paints.add(tiger.tintable);
+    expect(paints.size).toBeGreaterThan(0);
+    for (const token of paints) expect(hoyaHex.has(resolveColor(token as ColorToken)), token).toBe(false);
   });
 
   it('answers hasItem for registered refs only', () => {

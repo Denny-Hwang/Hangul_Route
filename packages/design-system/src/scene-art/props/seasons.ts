@@ -133,7 +133,7 @@ export const FIG_PANSORI: ItemDef = {
   z: 'mid',
   alt: 'Pansori singer in a white hanbok, standing with an open folding fan',
   sourceRef: { title: '판소리 (한국의 인류무형문화유산)', publisher: '국가유산청 국가유산포털 (heritage.go.kr)', url: 'https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FCulHeritage%2FCulHeritage_02.jsp&pageNo=1_3_2_0', accessed: ACCESSED },
-  accuracyNote: 'The heritage page: the singer needs only a fan; the gosu entry: the singer stands, the drummer sits. Costume not described: plain white hanbok. Face blank.',
+  accuracyNote: 'The heritage page: the singer needs only a fan. Costume not described: plain white hanbok. Face blank.',
   nodes: [
     { t: 'circle', cx: 30, cy: 19, r: 5, fill: 'text.primary' },
     { t: 'path', d: 'M15 42L35 42Q44 70 48 120L2 120Q6 70 15 42ZM16 27L34 27L40 33L56 18L62 24L40 46L14 46L9 58L2 56L8 33Z', fill: 'surface.paper', stroke: 'border.strong', sw: 'base' },
@@ -350,7 +350,7 @@ export const CABBAGES: ItemDef = {
   z: 'mid',
   tintable: 'feedback.nudgeLight',
   alt: 'A heap of napa cabbages, some cut to show the inner leaves',
-  accuracyNote: 'Napa cabbage, the main gimjang vegetable (entry). The inner leaves are tintable: pale when salted, red when seasoned.',
+  accuracyNote: 'Napa cabbage, the main gimjang vegetable. The inner leaves are tintable: pale when salted, red when seasoned.',
   nodes: [
     { t: 'path', d: 'M4 46Q2 32 12 28Q24 26 28 36Q30 44 26 46ZM70 46Q68 30 80 26Q92 26 94 36Q94 44 90 46Z', fill: 'theme.nature', stroke: 'text.secondary', sw: 'thin' },
     { t: 'path', d: 'M24 46Q18 14 44 6Q70 2 74 26Q76 40 68 46Z', fill: 'feedback.nudgeLight', stroke: 'text.secondary', sw: 'thin' },
@@ -451,7 +451,7 @@ export const CHANGPO: ItemDef = {
   box: { w: 60, h: 90 },
   z: 'mid',
   alt: 'A clump of tall, sword-shaped sweet flag leaves',
-  accuracyNote: 'Changpo (sweet flag) as the dictionary entry names it: long, narrow, sword-like leaves. No flower spikes.',
+  accuracyNote: 'Changpo (sweet flag): long, narrow, sword-like leaves. No flower spikes.',
   nodes: [
     { t: 'path', d: 'M24 90L14 10L28 88ZM30 90L30 0L36 90ZM34 90L48 8L40 90ZM20 90L2 30L26 90ZM40 90L58 34L44 90Z', fill: 'theme.nature', stroke: 'text.primary', sw: 'thin' },
   ],
@@ -497,7 +497,7 @@ export const GOURDS: ItemDef = {
   box: { w: 130, h: 66 },
   z: 'mid',
   alt: 'Two big round pale gourds and a third split open with rice and gold coins',
-  accuracyNote: 'Bottle gourds for Heungbo-ga: the entry says the gourd is split and money and rice pour out. Treasure is plain coins and rice.',
+  accuracyNote: 'Bottle gourds for Heungbo-ga; money and rice pour from the split one in the tale. Treasure is plain coins and rice.',
   nodes: [
     { t: 'path', d: 'M6 62Q0 30 26 26Q52 30 46 62ZM88 62Q82 34 106 30Q130 34 124 62Z', fill: 'surface.paper', stroke: 'theme.nature', sw: 'base' },
     { t: 'path', d: 'M50 62Q48 44 66 42Q84 44 82 62Z', fill: 'surface.sunken', stroke: 'theme.nature', sw: 'base' },
@@ -564,7 +564,7 @@ export const SKY_ROPE: ItemDef = {
   z: 'mid',
   tags: { sky: true },
   alt: 'A thick golden rope hanging from the sky beside a thin frayed grey rope',
-  accuracyNote: "The tale (entry): a new rope comes down for the siblings; the tiger's rotten one snaps. No fall is shown.",
+  accuracyNote: "The tale: a new rope comes down for the siblings; the tiger's rotten one snaps. No fall is shown.",
   nodes: [
     { t: 'path', d: 'M40 0Q34 130 44 258', stroke: 'feedback.nudge', sw: 'thick' },
     { t: 'path', d: 'M36 0V256H48V0Z', fill: 'feedback.nudge', stroke: 'text.secondary', sw: 'thin' },

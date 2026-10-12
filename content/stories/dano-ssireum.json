@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:dano-ssireum",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "단옷날의 그네, 탈, 씨름",
     "romanization": "Danonnarui geune, tal, ssireum",
@@ -195,7 +195,7 @@
                 "s": 0.6
               }
             ],
-            "altEn": "By a stream a woman stands beside tall sweet flag, the plant once boiled for Dano hair washing, and Hoya sniffs its leaves."
+            "altEn": "By a stream a woman stands beside tall sweet flag, the plant once boiled for Dano hair washing, and Hoya stands nearby."
           }
         },
         {

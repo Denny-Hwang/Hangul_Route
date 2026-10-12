@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:pansori-tales",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "판소리로 듣는 흥부와 놀부, 토끼와 자라",
     "romanization": "Pansoriro deunneun Heungbuwa Nolbu, tokkiwa jara",
@@ -138,12 +138,11 @@
             "setting": "scene:hanji-backdrop",
             "layers": [
               {
-                "ref": "prop:fig-writer-seated",
+                "ref": "prop:fig-elder-seated",
                 "x": 318,
                 "y": 262,
                 "s": 1.0,
-                "z": "back",
-                "tint": "surface.sunken"
+                "z": "back"
               },
               {
                 "ref": "prop:fig-pansori",
@@ -206,12 +205,11 @@
             "setting": "scene:hanji-backdrop",
             "layers": [
               {
-                "ref": "prop:fig-writer-seated",
+                "ref": "prop:fig-elder-seated",
                 "x": 272,
                 "y": 268,
                 "s": 1.25,
-                "z": "back",
-                "tint": "surface.sunken"
+                "z": "back"
               },
               {
                 "ref": "prop:fig-pansori",
@@ -263,7 +261,7 @@
                 "s": 1.1
               }
             ],
-            "altEn": "Kind Heungbu gently binds the broken leg of a baby swallow outside his straw-roofed home."
+            "altEn": "Kind Heungbu stands outside his straw-roofed home as the baby swallow he helped flies beside him."
           }
         },
         {

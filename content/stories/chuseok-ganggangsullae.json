@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:chuseok-ganggangsullae",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "추석 송편과 보름달",
     "romanization": "Chuseok songpyeongwa boreumdal",
@@ -168,7 +168,7 @@
                 "s": 0.95
               }
             ],
-            "altEn": "Golden rice fields and persimmon trees heavy with orange fruit at harvest time, as a farmer works and Hoya stretches up happily."
+            "altEn": "Golden rice fields and persimmon trees heavy with orange fruit at harvest time, as a farmer works and Hoya cheers."
           }
         },
         {
@@ -308,7 +308,7 @@
                 "s": 0.7
               }
             ],
-            "altEn": "Freshly steamed half-moon songpyeon rest on fragrant pine needles, and Hoya leans in to smell them."
+            "altEn": "Freshly steamed half-moon songpyeon rest on fragrant pine needles, and Hoya is ready to taste one."
           }
         },
         {
@@ -464,7 +464,7 @@
                 "s": 0.85
               }
             ],
-            "altEn": "By the sea at night, dancers sit low in a line for the fern-picking game, and Hoya wonders what ganggangsullae means."
+            "altEn": "By the sea at night, dancers crouch low in a line for the fern-picking game, and Hoya wonders what ganggangsullae means."
           }
         },
         {
@@ -494,6 +494,12 @@
                 "s": 1.1
               },
               {
+                "ref": "prop:full-moon",
+                "x": 225,
+                "y": 158,
+                "s": 1.2
+              },
+              {
                 "ref": "prop:fig-elder-seated",
                 "x": 200,
                 "y": 262,
@@ -519,7 +525,7 @@
                 "s": 0.65
               }
             ],
-            "altEn": "With the moon in the window at night, the family shares rice cakes and fruit, and Hoya joins them."
+            "altEn": "With the full moon in the window at night, the family shares rice cakes and fruit, and Hoya joins them."
           }
         }
       ],
