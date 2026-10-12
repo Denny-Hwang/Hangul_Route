@@ -26,3 +26,17 @@ export function allowedOrigin(origin: string | undefined, raw: string | undefine
   if (/^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)*\.workers\.dev$/.test(origin)) return origin;
   return null;
 }
+
+/**
+ * Clerk `authorizedParties` for a session token whose `azp` claim names
+ * `azp` (F-APP-001 A-9): the same allow-list, so the API accepts a token only
+ * from a site the browser may call it from. With an explicit list that list
+ * is final; without one, a local dev server or workers.dev preview that
+ * `allowedOrigin` lets in is added, so previews keep working exactly where
+ * CORS already lets them call. Always a fresh array.
+ */
+export function authorizedPartiesFor(raw: string | undefined, azp: string | undefined): string[] {
+  const parties = parseAllowedOrigins(raw);
+  const preview = allowedOrigin(azp, raw);
+  return preview && !parties.includes(preview) ? [...parties, preview] : parties;
+}

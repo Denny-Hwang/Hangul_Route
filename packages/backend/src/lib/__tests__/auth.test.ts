@@ -1,6 +1,8 @@
+import { signJwt } from '@clerk/backend/jwt';
 import type { Context } from 'hono';
 import { HTTPException } from 'hono/http-exception';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import app from '../../index';
 import { getAuthUserId } from '../auth';
 import { setDevFallbacksDefaultForTests } from '../runtime';
 
@@ -55,5 +57,113 @@ describe('getAuthUserId fails closed (SEC-2)', () => {
 
   it('never trusts the raw bearer once a Clerk key is bound', async () => {
     expect(await getAuthUserId(ctx('Bearer user_abc', { CLERK_JWT_KEY: 'not-a-pem', ENVIRONMENT: 'development' }))).toBeNull();
+  });
+});
+
+/**
+ * F-APP-001 A-9: a Clerk session token names the site that minted it in its
+ * `azp` claim. The API accepts it only when that site is on the CORS
+ * allow-list (`ALLOWED_ORIGINS` when set, else the defaults), so a token
+ * minted on another subdomain of the same Clerk instance is refused.
+ * Real RS256 tokens, verified offline against CLERK_JWT_KEY.
+ */
+describe('getAuthUserId accepts a Clerk token only from an allowed site (F-APP-001 A-9)', () => {
+  const KID = 'ins_a9_test_key';
+  let jwtKey = '';
+  let privateJwk: JsonWebKey = { kty: 'RSA' };
+
+  beforeAll(async () => {
+    const pair = (await crypto.subtle.generateKey(
+      { name: 'RSASSA-PKCS1-v1_5', modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' },
+      true,
+      ['sign', 'verify'],
+    )) as CryptoKeyPair;
+    const spki = Buffer.from((await crypto.subtle.exportKey('spki', pair.publicKey)) as ArrayBuffer).toString('base64');
+    jwtKey = `-----BEGIN PUBLIC KEY-----\n${(spki.match(/.{1,64}/g) ?? []).join('\n')}\n-----END PUBLIC KEY-----`;
+    privateJwk = (await crypto.subtle.exportKey('jwk', pair.privateKey)) as JsonWebKey;
+  });
+
+  /** A session token for user_a9, valid for ten minutes; `azp` only when given. */
+  async function sessionToken(azp?: string, claims: Record<string, unknown> = {}): Promise<string> {
+    const now = Math.floor(Date.now() / 1000);
+    const payload: Record<string, unknown> = { sub: 'user_a9', sid: 'sess_a9', nbf: now - 5, exp: now + 600, ...claims };
+    if (azp !== undefined) payload.azp = azp;
+    return signJwt(payload, privateJwk, { algorithm: 'RS256', header: { typ: 'JWT', kid: KID } });
+  }
+
+  async function userFor(azp: string | undefined, allowedOrigins?: string): Promise<string | null> {
+    const env: Record<string, unknown> = { CLERK_JWT_KEY: jwtKey };
+    if (allowedOrigins !== undefined) env.ALLOWED_ORIGINS = allowedOrigins;
+    return getAuthUserId(ctx(`Bearer ${await sessionToken(azp)}`, env));
+  }
+
+  describe('ALLOWED_ORIGINS unset: the CORS defaults', () => {
+    it.each(['https://app.hangulroute.com', 'https://hangulroute.com', 'https://www.hangulroute.com'])('accepts a token minted on %s', async (azp) => {
+      expect(await userFor(azp)).toBe('user_a9');
+    });
+
+    it.each(['http://localhost:3000', 'http://127.0.0.1:4173', 'https://pr-12.hangul-route-web.denny.workers.dev'])(
+      'keeps working where CORS lets a preview call: %s',
+      async (azp) => {
+        expect(await userFor(azp)).toBe('user_a9');
+      },
+    );
+
+    it.each(['https://staging.hangulroute.com', 'https://evil.example', 'https://app.hangulroute.com.evil.example', 'http://app.hangulroute.com'])(
+      'refuses a token minted on an unlisted site: %s',
+      async (azp) => {
+        expect(await userFor(azp)).toBeNull();
+      },
+    );
+  });
+
+  describe('ALLOWED_ORIGINS set: exactly that list', () => {
+    const list = 'https://hangulroute.com, https://app.hangulroute.com/';
+
+    it.each(['https://hangulroute.com', 'https://app.hangulroute.com'])('accepts a token minted on %s', async (azp) => {
+      expect(await userFor(azp, list)).toBe('user_a9');
+    });
+
+    it.each(['https://www.hangulroute.com', 'http://localhost:3000', 'https://x.workers.dev', 'https://evil.example'])(
+      'refuses a token minted on a site the list leaves out: %s',
+      async (azp) => {
+        expect(await userFor(azp, list)).toBeNull();
+      },
+    );
+  });
+
+  it('accepts a token that names no site, as Clerk does (a token from no browser has no azp)', async () => {
+    expect(await userFor(undefined)).toBe('user_a9');
+    expect(await userFor(undefined, 'https://app.hangulroute.com')).toBe('user_a9');
+  });
+
+  it('an allowed site does not excuse a bad token: expired, or signed with another key', async () => {
+    const now = Math.floor(Date.now() / 1000);
+    const expired = await sessionToken('https://app.hangulroute.com', { nbf: now - 3600, exp: now - 600 });
+    expect(await getAuthUserId(ctx(`Bearer ${expired}`, { CLERK_JWT_KEY: jwtKey }))).toBeNull();
+
+    const good = await sessionToken('https://app.hangulroute.com');
+    const [head, body] = good.split('.');
+    const forged = `${head}.${body}.${Buffer.from('not-the-signature').toString('base64url')}`;
+    expect(await getAuthUserId(ctx(`Bearer ${forged}`, { CLERK_JWT_KEY: jwtKey }))).toBeNull();
+  });
+
+  it('a bearer that is not a JWT is refused, not thrown', async () => {
+    expect(await getAuthUserId(ctx('Bearer not.a-jwt', { CLERK_JWT_KEY: jwtKey }))).toBeNull();
+    expect(await getAuthUserId(ctx('Bearer plain', { CLERK_JWT_KEY: jwtKey }))).toBeNull();
+  });
+
+  it('end to end: the Worker reads ALLOWED_ORIGINS from its env and answers 401 for an unlisted site', async () => {
+    const env = { CLERK_JWT_KEY: jwtKey, ALLOWED_ORIGINS: 'https://app.hangulroute.com' };
+    const call = async (azp: string) =>
+      app.request('/api/entitlements', { headers: { authorization: `Bearer ${await sessionToken(azp)}`, origin: 'https://app.hangulroute.com' } }, env);
+
+    const listed = await call('https://app.hangulroute.com');
+    expect(listed.status).toBe(200);
+    expect(await listed.json()).toMatchObject({ ok: true, data: { entitlements: [] } });
+
+    const unlisted = await call('https://hangulroute.com');
+    expect(unlisted.status).toBe(401);
+    expect(unlisted.headers.get('access-control-allow-origin')).toBe('https://app.hangulroute.com');
   });
 });
