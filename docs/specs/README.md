@@ -102,13 +102,12 @@ F-XXX-<slug>.md
   - wireframes `design/wireframes/journey/grid-plan-and-access.md`, `episode/detail-access-preview.md`, `home/next-and-free-end-card.md`, `results/back-to-plan-and-free-end.md`, `library/access-and-plan-tags.md`, `billing/plan-status-free-lessons.md`, `console/curriculum-free-days.md`, `console/free-lessons-line.md`
 
 ### Spec wave 2026-10-11 (owner UX request: two hosts, personas)
+- `F-FEEDBACK-001-adult-feedback-channel.md` — notes from grown-ups: a one-way, child-safe channel from a learner's teacher or family (preset encouragement plus a short text, preset reactions only, family oversight incl. taken-back notes, hide, report and stop a sender, owner-granted family senders, Worker switch `NOTES_SEND`, offline, deleted with the learner; console pages on app.hangulroute.com) · **ready**
+  - wireframes `design/wireframes/home/notes-card.md`, `notes/{list,detail}.md`, `parent/{notes,note-report}.md`, `console/{note-composer,notes-sent,family-notes,notes-hub}.md` (FB-0)
 - `F-APP-001-persona-app-shell.md` — app.hangulroute.com is the one product app: persona sign-in (learner, family, teacher), a home per persona with the entries to reports, notes, Learning Route and lessons, grown-up lock on shared devices, console served on the app host (B2), the route contract for the sibling specs of the wave · **ready**
   - wireframes `design/wireframes/shell/{signin,adult-frame,parent-home,teacher-home,grown-up-lock,offline}.md`, `onboarding/welcome-personas.md`, `parent/grown-up-home-card.md`
 - `F-SITE-002-marketing-site-layered.md` — hangulroute.com becomes a short, layered intro site: one-screen hero, persona chooser, `/learners`, `/parents`, `/teachers`, no billing or console links, feature lines tied to a claims table; old grown-up URLs are F-APP-001's · **ready**
   - wireframes `design/wireframes/site/{home,learners,parents,teachers,header-footer}.md`
-
-- `F-FEEDBACK-001-adult-feedback-channel.md` — notes from grown-ups: a one-way, child-safe channel from a learner's teacher or family (preset encouragement plus a short text, preset reactions only, family oversight incl. taken-back notes, hide, report and stop a sender, owner-granted family senders, Worker switch `NOTES_SEND`, offline, deleted with the learner; console pages on app.hangulroute.com) · **ready**
-  - wireframes `design/wireframes/home/notes-card.md`, `notes/{list,detail}.md`, `parent/{notes,note-report}.md`, `console/{note-composer,notes-sent,family-notes,notes-hub}.md` (FB-0)
 
 ### Phase 2 / planned
 - `F-PROF-001-device-profiles.md` — multi-learner · **draft** (code shipped PR #13, full spec covers cloud sync)
