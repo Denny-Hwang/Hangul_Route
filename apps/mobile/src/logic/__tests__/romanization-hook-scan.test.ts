@@ -1,0 +1,69 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { join, relative } from 'node:path';
+import { describe, expect, it } from 'vitest';
+
+/**
+ * F-BROWSE-001 §4.9 (BR-5c): every screen reads the romanization mode through
+ * `useRomanizationMode()`, so All lessons can set it for the whole tab without
+ * a learner profile. No file under `screens/` or `components/` reads
+ * `romanizationMode` off the locale store's profile settings directly. Source
+ * scan, because the vitest lanes do not render screens.
+ */
+const SRC = join(__dirname, '..', '..');
+
+function sourceFiles(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    const full = join(dir, e.name);
+    if (e.isDirectory()) return e.name === '__tests__' ? [] : sourceFiles(full);
+    return /\.tsx?$/.test(e.name) ? [full] : [];
+  });
+}
+
+const files = ['screens', 'components'].flatMap((dir) =>
+  sourceFiles(join(SRC, dir)).map((f) => ({ rel: relative(SRC, f).split('\\').join('/'), source: readFileSync(f, 'utf8') })),
+);
+
+/** The ten call sites of F-BROWSE-001 §1. */
+const CALL_SITES = [
+  'screens/quest/DiscoverStep.tsx',
+  'screens/minigames/ListenPickGame.tsx',
+  'screens/minigames/PicWordMatchGame.tsx',
+  'screens/minigames/StoryCheckGame.tsx',
+  'screens/minigames/StorySequenceGame.tsx',
+  'screens/story/StoryReaderView.tsx',
+  'screens/story/CheckpointCard.tsx',
+  'screens/story/StoryWordRecap.tsx',
+  'screens/library/StoryShelf.tsx',
+  'components/LanguageCard.tsx',
+];
+
+describe('romanization mode through one hook (F-BROWSE-001 BR-5c)', () => {
+  it('scans the screens and components', () => {
+    expect(files.length).toBeGreaterThan(50);
+  });
+
+  it('no screen or component reads romanizationMode off a settings object', () => {
+    const offenders = files
+      .filter((f) => /\.\s*romanizationMode\b/.test(f.source) || /\]\??\.romanizationMode/.test(f.source))
+      .map((f) => f.rel);
+    expect(offenders).toEqual([]);
+  });
+
+  it('no screen or component passes the mode down as a prop any more', () => {
+    expect(files.filter((f) => /romanizationMode=\{/.test(f.source)).map((f) => f.rel)).toEqual([]);
+  });
+
+  it.each(CALL_SITES)('%s calls useRomanizationMode', (rel) => {
+    const file = files.find((f) => f.rel === rel);
+    expect(file, rel).toBeDefined();
+    expect(file!.source).toContain('useRomanizationMode(');
+  });
+
+  it('the hook takes the override from a provider and resolves through the one rule', () => {
+    const hook = readFileSync(join(SRC, 'i18n', 'use-romanization-mode.tsx'), 'utf8');
+    expect(hook).toContain('export function useRomanizationMode(');
+    expect(hook).toContain('export function RomanizationModeOverride(');
+    expect(hook).toContain('useContext(');
+    expect(hook).toContain('resolveRomanizationMode(');
+  });
+});
