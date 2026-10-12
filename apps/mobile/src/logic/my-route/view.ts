@@ -299,7 +299,8 @@ export function withConnectors(rows: TrailRowView[], model: Pick<MyRouteModel, '
   });
 }
 
-function skillRowView(row: MyRouteModel['skills'][number], ctx: CopyContext, m: Messages): SkillRowView {
+/** One skill row: the word, an absolute count and its earned marks (also the parent dashboard's mini rows, R-9b). */
+export function skillRowView(row: MyRouteModel['skills'][number], ctx: CopyContext, m: Messages): SkillRowView {
   const { label, detail } = skillCopy(row, ctx);
   const marks: Pip[] = Array.from({ length: row.marks }, (_, k) => ({ key: `${row.skill}-mark-${k}`, kind: 'quest', state: 'done', isCursor: false, isStart: false }));
   if (row.quests > 0 && row.nextReachable) marks.push({ key: `${row.skill}-next`, kind: 'quest', state: 'open', isCursor: false, isStart: false });

@@ -364,6 +364,12 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.myRoute.home.strip.week': [[1], [3]],
   'a11y.myRoute.homeStrip': [['Learning Route', 'You are on Stage 1: Hangul.', [], null, null], ['Learning Route', 'You are on Stage 1: Hangul.', ['4 quests played'], 'Goal: Stage 2, Words', 'Week 3 of your weekly plan']],
   'a11y.myRoute.homeStripGoal': [[2, 'Words']],
+  // F-ROUTE-001 R-9b: the parent dashboard Learning Route row.
+  'caregiver.journey.row.now': [[1, 'Hangul']],
+  'caregiver.journey.row.goal': [[2, 'Words']],
+  'caregiver.journey.row.started': [[1, 'Letters and sounds', 'Oct 9']],
+  'a11y.myRoute.rowGoal': [[2, 'Words']],
+  'a11y.myRoute.rowStarted': [[1, 'Letters and sounds', 'Oct 9']],
   'learner.results.extraCards.title': [[1], [4]],
   'learner.results.extraCards.episodeDone': [['Meet the Letters']],
   'learner.results.extraCards.more': [[1], [3]],
