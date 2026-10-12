@@ -1,0 +1,9 @@
+{
+  "$comment": "Hosts that block automated requests, skipped by scripts/check-source-links.mjs (F-STORY-001 §3.7). A host matches itself and its subdomains. Every entry says why.",
+  "hosts": [
+    {
+      "host": "unesco.org",
+      "reason": "unesco.org, ich.unesco.org, whc.unesco.org and media.unesco.org reset connections from automated clients; the verification passes read them through Wayback copies (content/stories/*.json verification.notes)."
+    }
+  ]
+}

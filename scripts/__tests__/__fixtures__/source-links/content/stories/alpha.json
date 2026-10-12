@@ -1,0 +1,20 @@
+{
+  "id": "story:alpha",
+  "state": "ready",
+  "facts": [
+    {
+      "id": "f1",
+      "sources": [
+        { "title": "A", "publisher": "P", "url": "https://good.example/page", "accessed": "2026-10-09", "quoteOrLocator": "q" },
+        { "title": "B", "publisher": "P", "url": "https://gone.example/missing", "accessed": "2026-10-09", "quoteOrLocator": "q" }
+      ]
+    },
+    {
+      "id": "f2",
+      "sources": [
+        { "title": "A again", "publisher": "P", "url": "https://good.example/page", "accessed": "2026-10-09", "quoteOrLocator": "q" },
+        { "title": "UNESCO", "publisher": "P", "url": "https://ich.unesco.org/en/RL/fixture", "accessed": "2026-10-09", "quoteOrLocator": "q" }
+      ]
+    }
+  ]
+}

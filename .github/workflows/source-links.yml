@@ -1,0 +1,56 @@
+name: Source Links
+
+# F-STORY-001 §3.7 "Link rot": a monthly (and manual) check of every source URL
+# the stories cite. When links are broken it opens one issue labelled
+# source-links, or updates the one that is still open. It never
+# runs on a pull request or a push, so a slow or blocking host can never fail
+# a PR or turn main red, and it is not one of the required checks.
+on:
+  schedule:
+    - cron: "17 3 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: source-links
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Story source links
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Check every cited URL
+        id: links
+        run: node scripts/check-source-links.mjs --out "$RUNNER_TEMP/source-links.md"
+
+      - name: Open or update the source-links issue
+        if: steps.links.outputs.problems != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROBLEMS: ${{ steps.links.outputs.problems }}
+        # A link that stays broken (the owner may choose to leave it) updates the
+        # one open issue labelled source-links instead of opening a new one each month.
+        run: |
+          gh label create source-links --color BFD4F2 --description "Monthly story source link check (F-STORY-001)" --force
+          title="Source link check: $PROBLEMS problem(s), $(date -u +%F)"
+          existing="$(gh issue list --label source-links --state open --json number -q '.[0].number')"
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --title "$title" --body-file "$RUNNER_TEMP/source-links.md"
+            gh issue comment "$existing" --body "Checked again on $(date -u +%F): $PROBLEMS problem(s). The issue body now lists this run."
+          else
+            gh issue create --title "$title" --label source-links --body-file "$RUNNER_TEMP/source-links.md"
+          fi
