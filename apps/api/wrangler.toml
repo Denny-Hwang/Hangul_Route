@@ -57,7 +57,7 @@ keep_vars = true
 #                                    F-BILL-002 B-5; the space id is opaque, no name in the URL)
 # BILLING_LIVE_ALLOWED               F-BILL-002 section 4.9, OD-12: leave UNSET. With a live Stripe
 #                                    key (sk_live_ / rk_live_, or any key without a test prefix)
-#                                    checkout, portal, promo and receipt links answer 503
+#                                    checkout, portal, promo (and receipt links, B-4) answer 503
 #                                    live_not_enabled; only the exact text "true" opens them. The
 #                                    webhook keeps working in every mode. GET /health shows
 #                                    bindings.stripeLive and bindings.billingLiveAllowed (booleans).
