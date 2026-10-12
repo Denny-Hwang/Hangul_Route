@@ -90,3 +90,42 @@ Exit to:    `console/plan-builder` · `console/relink-approval` · `console/spac
 - F-TCH-001 §3.2 shows "class avg time-on-app" in the roll-up; F-PAR-001 §3.2 bans class averages on the *parent* card. Keep the average here (teacher, whole-class) but never pass it into the shared `parent/learner-detail` component — confirm when F-TCH-001 is promoted to `ready`.
 - Should "not synced since" be per card, roll-up only, or both? Default both; measure whether teachers act on it in the pilot.
 - F-TCH-001 §5 names `design/wireframes/teacher/roster.md`; app map v1 moved it to `console/roster` — update the spec's §5 paths when promoting.
+
+## Journey strip (F-ROUTE-001 R-9a)
+
+Split from `design/wireframes/journey/my-route-overview.md` screen I when it was built (spec `docs/specs/F-ROUTE-001-my-route-overview.md` §3.12, PR R-9a). Code: `apps/web/src/lib/console/journey-strip.ts` (pure, tested) and `apps/web/src/components/console/JourneyParts.tsx` (`JourneyStrip`), rendered under the minutes line of each roster card in `app/(console)/teach/space/page.tsx`. Data: the learner's own `summary.journey` (R-8), nothing else. Strings: `console.journey`.
+
+```
+┌──────────────────────────────────────┐
+│ (avatar) Mina          [Some reading] │
+│ Last active today                     │
+│ Starting spot: Stage 2 · Words · Oct 9        (F-PLC-001 P-9, when a level check exists)
+│ Quests 4 / 8 · 3 cards                │   existing
+│ 38 min this week                      │
+│ Journey  (K) ^(O) (L) (C) (L)(L)(L)  On Stage 2   │   seven drawn segments + the stage the learner is on
+│ v Stage by stage                      │   <details>, closed by default
+│    Stage 1: 8 known from the level check, 0 quests done
+│    Stage 2: 1 quest done              │   "known" part only when > 0; never "N / total"
+│    Stage 3: Coming later              │
+│    Stage 4: 1 quest done              │
+│    Stages 5 to 7: Coming later        │   consecutive empty coming-later stages merge
+└──────────────────────────────────────┘
+```
+
+**Segments.** One drawn shape per stage, 20 px, the My route shape vocabulary (`design/components/PipRow/spec.md`, geometry imported from `@hangul-route/design-system/pip-geometry`, so the shapes match the app exactly). Every state differs in geometry, not only in ink:
+
+| Stage state | Segment | Ink |
+|---|---|---|
+| `complete` | filled disc with a check (the done pip) | fill = the stage colour (decoration), edge `border.shape`, check `text.primary` |
+| `known` | ring with an inner disc (the known pip) | `border.shape` |
+| `explored` | the check alone, no ring (never drawn as complete) | `text.primary` |
+| `open` | ring (the open pip) | `border.shape` |
+| `later` | dotted ring, 8 dashes (the later pip) | `border.shape` |
+| `here` | the cursor triangle above the segment | `text.primary` |
+
+- Segments are equal size: `total` sizes nothing visible and is never shown as a goal (no fill share, no ratio).
+- The segments are `aria-hidden`; a visually hidden list reads the same facts as words ("Stage 1: Known from the level check", "Stage 2: Open", ...). "On Stage N" is visible text.
+- Shows on **class and family** roster cards only: not on a `school` space (it renders `SchoolAdmin` before any roster) and not on `teach/home` (counts only, no names).
+- `summary.journey` absent (an old build, or no upload yet) or malformed: no strip at all, never a "no progress" look. An entry with an unknown stage key, an unknown state or unreadable counts (a newer build) is skipped; a `here` that is not a readable stage drops only "On Stage N".
+- Hard rules: cards stay in recent-activity order; no class average, distribution, sort or filter by stage; no "ahead" / "behind"; no "not included" line (the roster has no tier).
+- Fits the 280 px minimum card width: the label, the seven segments and "On Stage N" wrap onto a second line when needed (spec §9 assumption e).

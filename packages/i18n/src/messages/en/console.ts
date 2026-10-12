@@ -983,4 +983,33 @@ export const consoleMsgs = {
       comingSoon: 'Coming soon — for now, Hoya picks the next quest.',
     },
   },
+  /**
+   * The journey strip on a roster card (F-ROUTE-001 section 3.12, R-9a; Appendix B
+   * `console.journey`; wireframe `design/wireframes/console/roster.md` "Journey strip"): seven
+   * drawn segments with a word each, "On Stage N", and one line per stage in a `<details>`.
+   * Counts only: a stage's `total` is never shown, and nothing is averaged, ranked or sorted.
+   * The stage states are the words of `summary.journey` (`complete`, `known`, `explored`, `open`,
+   * `later`); grown-up copy may name the level check.
+   */
+  journey: {
+    title: 'Journey',
+    onStage: (n: number) => `On Stage ${n}`,
+    /** "4 known from the level check, 2 quests done"; the known part is left out when it is 0. */
+    stageLine: (known: number, done: number) => {
+      const quests = plural('en', done, { one: `${done} quest done`, other: `${done} quests done` });
+      return known > 0 ? `${known} known from the level check, ${quests}` : quests;
+    },
+    /** One stage with its line or its state word: "Stage 1: 4 quests done". */
+    stage: (n: number, text: string) => `Stage ${n}: ${text}`,
+    /** A run of stages with nothing in them yet: "Stages 5 to 7: Coming later". */
+    stages: (from: number, to: number, text: string) => `Stages ${from} to ${to}: ${text}`,
+    details: 'Stage by stage',
+    state: {
+      complete: 'Complete',
+      known: 'Known from the level check',
+      explored: 'Explored',
+      open: 'Open',
+      later: 'Coming later',
+    },
+  },
 } as const;

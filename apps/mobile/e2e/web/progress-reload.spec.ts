@@ -160,7 +160,7 @@ test('progress earned before a reload survives it and the next write', async ({ 
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
   await expect(page.getByText(/^2 cards$/)).toBeVisible();
   await page.getByText('Library', { exact: true }).last().click();
-  await expect(page.getByText(/^2 of \d+ collected$/)).toBeVisible();
+  await expect(page.getByText('2 cards collected', { exact: true })).toBeVisible();
 
   expect(errors).toEqual([]);
 });

@@ -29,6 +29,7 @@ import { useMessages } from '../../i18n/use-messages';
 import { OptionCard } from '../../components/OptionCard';
 import { PinSetupField } from '../../components/PinSetupField';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
+import { flags } from '../../config/flags';
 import { isValidEmail } from '../../logic/email';
 import { PRIVACY_FALLBACK_NOTE, privacyUrl } from '../../logic/links';
 import { CREATE_PROFILE_COPY, whoCopy } from '../../logic/onboarding/create-profile-copy';
@@ -42,6 +43,7 @@ import {
 import { levelSelected, whoSelected } from '../../logic/onboarding/onboarding-events';
 import { PIN_SETUP_START, type PinSetupState } from '../../logic/onboarding/pin-setup';
 import { submitProfile } from '../../logic/onboarding/submit-profile';
+import { afterProfileCreated, placementEntriesOn } from '../../logic/placement/entry';
 import { AVATAR_PRESETS, DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
 import { createPinHash } from '../../logic/profiles/pin-hash';
 import { NAME_MAX } from '../../logic/profiles/profile-model';
@@ -73,7 +75,9 @@ const fieldStyle = (borderColor: string) =>
  * preselected answer), then name, reading level and cub; the card at the
  * bottom matches the answer: a grown-up card with the consent, an email and
  * the PIN for a child or student, or a short agreement for a learner who is
- * 13 or older. First-run route params: `{ firstRun }`.
+ * 13 or older. First-run route params: `{ firstRun }`. Next: the level
+ * check's fork (F-PLC-001 P-7) when `flags.placementEnabled` is on, else the
+ * first-quest preview.
  * Design reference: design/wireframes/onboarding/all-ages-onboarding.md, A to E.
  * Rules and copy live in logic/onboarding (tested); this file paints them.
  */
@@ -177,7 +181,8 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
         },
       );
       if (result.ok) {
-        navigation.replace('FirstQuestPreview', { profileId: result.profile.id });
+        // The level check's fork when it is on (F-PLC-001 section 3.1 step 1, first and later profiles alike).
+        navigation.replace(afterProfileCreated(placementEntriesOn(flags.placementEnabled)), { profileId: result.profile.id });
       } else if (result.reason === 'pin-failed') {
         setPinError(COPY.pin.failed);
       }

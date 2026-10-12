@@ -11,6 +11,7 @@ import { withOwnSafeArea } from './with-own-safe-area';
 import { ParentDashboardScreen } from '../screens/parent/ParentDashboardScreen';
 import { PinEntryScreen } from '../screens/parent/PinEntryScreen';
 import { PinResetScreen } from '../screens/parent/PinResetScreen';
+import { PlacementReportScreen } from '../screens/parent/PlacementReportScreen';
 import { RestoreScreen } from '../screens/sync/RestoreScreen';
 import { SaveProgressScreen } from '../screens/sync/SaveProgressScreen';
 import { JoinSpaceScreen } from '../screens/sync/JoinSpaceScreen';
@@ -75,6 +76,7 @@ export function RootNavigator(): React.ReactElement {
         <Stack.Screen name="StoryReader" component={StoryReaderScreen} />
         <Stack.Screen name="StorySources" component={StorySourcesScreen} />
         <Stack.Screen name="Placement" component={PlacementScreen} options={{ gestureEnabled: false }} />
+        <Stack.Screen name="PlacementReport" component={PlacementReportScreen} />
       </Stack.Navigator>
     </>
   );
