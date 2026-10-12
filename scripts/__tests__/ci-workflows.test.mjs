@@ -125,7 +125,13 @@ describe("required checks", () => {
         assert.ok(others.length > 0, `${file}: '${name}' should gate the parallel jobs of its workflow`);
         assert.match(job.if ?? "", /\balways\(\)/, `${file}#${id}: a skipped required check counts as passing, so it must run with if: always()`);
         assert.ok(job.needs.length > 0, `${file}#${id}: needs the jobs it reports for`);
-        assert.match(job.text, /needs\b/, `${file}#${id}: must read the results of its needs`);
+        for (const need of job.needs) {
+          assert.ok(
+            job.text.includes(`needs.${need}.result`),
+            `${file}#${id}: must read needs.${need}.result (the job it stands for)`
+          );
+        }
+        assert.match(job.text, /!= success[\s\S]*?exit 1/, `${file}#${id}: must fail (exit 1) when a job it stands for did not succeed`);
       }
     });
   }
@@ -183,6 +189,40 @@ describe("unit tests run once, with coverage", () => {
     assert.match(cov.text, /check-coverage-targets-drift\.mjs/);
     assert.match(cov.text, /coverage-gate\.mjs/);
   });
+
+  test("a coverage report lost between the jobs fails the check instead of being skipped", () => {
+    const text = read(".github/workflows/ci.yml");
+    const all = jobs(text);
+    const [, cov] = Object.entries(all).find(([, j]) => j.name === REQUIRED[2]);
+    assert.match(cov.text, /node scripts\/coverage-gate\.mjs --fail-on-skip/);
+    // tar writes an archive from an empty list, so the pack step checks the list itself.
+    assert.match(all.unit.text, /if \[ ! -s coverage-files\.txt \]; then[\s\S]*?exit 1/);
+  });
+
+  test("web typecheck runs before the web build (tsc reads .next/types, which next build rewrites)", () => {
+    const turbo = JSON.parse(read("turbo.json"));
+    assert.ok(turbo.tasks["@hangul-route/web#build"].dependsOn.includes("typecheck"));
+  });
+});
+
+describe("workflow hygiene", () => {
+  test("ci.yml and web-app.yml give their token read-only contents access", () => {
+    for (const file of ["ci.yml", "web-app.yml"]) {
+      const perms = topBlock(read(`.github/workflows/${file}`), "permissions").map((l) => l.trim()).filter(Boolean);
+      assert.deepEqual(perms, ["contents: read"], file);
+    }
+  });
+
+  test("every artifact upload in ci.yml and web-app.yml can be re-run (overwrite: true)", () => {
+    for (const file of ["ci.yml", "web-app.yml"]) {
+      const steps = read(`.github/workflows/${file}`).split(/\n(?=\s+- name: )/);
+      const uploads = steps.filter((st) => /uses: actions\/upload-artifact@/.test(st));
+      assert.ok(uploads.length > 0, file);
+      for (const st of uploads) {
+        assert.match(st, /overwrite: true/, `${file}: ${st.trim().split("\n")[0]}`);
+      }
+    }
+  });
 });
 
 describe("PWA e2e", () => {
@@ -210,27 +250,38 @@ describe("PWA e2e", () => {
     assert.equal(text.match(/pnpm exec playwright test --fully-parallel --test-list "\$RUNNER_TEMP\/shard-tests\.txt"/g)?.length, 2);
   });
 
-  test("every spec that needs the fixture bundle runs in a fixture e2e run", () => {
-    // Filters: the entries of the `files=( ... )` list and the file of every
-    // single-group listing (`list <file> -g "..."`).
-    const filters = new Set();
+  test("every test that needs the fixture bundle runs in a fixture e2e run", () => {
+    // Whole files: the entries of the `files=( ... )` list. Single groups:
+    // `list <file> -g "<grep>"`, which covers a file only inside the top-level
+    // describe blocks whose title the grep matches.
+    const wholeFiles = new Set();
     const arr = text.match(/files=\(\n([\s\S]*?)\n\s*\)/);
     if (arr) {
       for (const line of arr[1].split("\n")) {
         const word = line.replace(/#.*/, "").trim();
-        if (word) filters.add(word);
+        if (word) wholeFiles.add(word);
       }
     }
-    for (const m of text.matchAll(/\b([a-z0-9-]+) -g "/g)) filters.add(m[1]);
-    assert.ok(filters.size > 0, "found the fixture runs");
+    const groups = [...text.matchAll(/\blist ([a-z0-9-]+) -g "([^"]+)"/g)].map((m) => ({ file: m[1], grep: new RegExp(m[2]) }));
+    assert.ok(wholeFiles.size > 0 && groups.length > 0, "found the fixture runs");
 
     const dir = join(ROOT, "apps", "mobile", "e2e", "web");
-    const needsFixtures = readdirSync(dir)
-      .filter((f) => f.endsWith(".spec.ts"))
-      .filter((f) => /!\s*FIXTURE_BUILD\b/.test(readFileSync(join(dir, f), "utf8")));
-    assert.ok(needsFixtures.length > 0);
-    const missing = needsFixtures.filter((f) => ![...filters].some((flt) => f.includes(flt)));
-    assert.deepEqual(missing, [], "fixture-only specs that no fixture run picks up");
+    const missing = [];
+    for (const f of readdirSync(dir).filter((n) => n.endsWith(".spec.ts"))) {
+      if ([...wholeFiles].some((flt) => f.includes(flt))) continue;
+      const lines = readFileSync(join(dir, f), "utf8").split("\n");
+      const mine = groups.filter((g) => f.includes(g.file));
+      let describe = null;
+      lines.forEach((line, i) => {
+        const d = line.match(/^test\.describe\((['"`])(.*?)\1/);
+        if (d) describe = d[2];
+        else if (/^\S/.test(line) && !/^\}\)/.test(line)) describe = null;
+        if (!/!\s*FIXTURE_BUILD\b/.test(line)) return;
+        if (describe !== null && mine.some((g) => g.grep.test(describe))) return;
+        missing.push(`${f}:${i + 1} (${describe === null ? "outside a describe" : `in '${describe}'`})`);
+      });
+    }
+    assert.deepEqual(missing, [], "tests that need the fixture bundle but no fixture run selects");
   });
 
   test("the fixture runs use the fixture bundle and the main suite the release build", () => {

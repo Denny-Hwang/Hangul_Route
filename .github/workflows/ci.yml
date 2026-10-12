@@ -22,6 +22,9 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   checks:
     name: Lint · typecheck · build · repo checks
@@ -47,8 +50,10 @@ jobs:
           key: turbo-checks-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ steps.tree.outputs.tree }}
 
       # Next's own incremental build cache (webpack); Next validates every entry itself.
-      # Saved from main only, so pull requests share main's cache and never grow it.
-      - name: Restore the Next.js build cache (apps/web, site role)
+      # Pull requests restore main's cache; main builds cold and saves a fresh one, so the
+      # cache never grows run over run.
+      - name: Restore the Next.js build cache (apps/web, site role; pull requests)
+        if: github.event_name == 'pull_request'
         uses: actions/cache/restore@v4
         with:
           path: apps/web/.next/cache
@@ -148,6 +153,11 @@ jobs:
           find apps packages -path '*/node_modules' -prune -o -type f -path '*/coverage/*' \
             \( -name coverage-summary.json -o -name lcov.info \) -print > coverage-files.txt
           cat coverage-files.txt
+          # tar writes an archive even from an empty list, so an empty list fails here.
+          if [ ! -s coverage-files.txt ]; then
+            echo "::error::No coverage reports found for ${{ matrix.group }}."
+            exit 1
+          fi
           tar -cf "coverage-${{ matrix.group }}.tar" -T coverage-files.txt
 
       - name: Upload the coverage reports
@@ -155,6 +165,7 @@ jobs:
         with:
           name: coverage-${{ matrix.group }}
           path: coverage-${{ matrix.group }}.tar
+          overwrite: true
           if-no-files-found: error
           retention-days: 3
 
@@ -211,8 +222,10 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+      # --fail-on-skip: the reports come from the unit jobs, so a target with no report
+      # means a report was lost on the way, and fails instead of being skipped.
       - name: Enforce rolling targets (F-COV-001)
-        run: node scripts/coverage-gate.mjs
+        run: node scripts/coverage-gate.mjs --fail-on-skip
 
   ci:
     name: lint · typecheck · test · build

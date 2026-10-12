@@ -19,7 +19,7 @@ name: Web App (PWA)
 
 on:
   # No path filter: this job is a required check on main, and a required
-  # check that never runs blocks docs-only or console-only PRs. The jobs run
+  # check that never runs blocks docs-only PRs. The jobs run
   # on every PR and skip the build + e2e when nothing they cover changed.
   pull_request:
     branches: [main]
@@ -27,7 +27,10 @@ on:
     branches: [main]
     paths:
       - "apps/mobile/**"
+      - "apps/web/**"
       - "packages/**"
+      - "content/**"
+      - "scripts/build-stories.mjs"
 
 concurrency:
   group: web-app-${{ github.ref }}
@@ -50,6 +53,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Inputs of both bundles: the app and its packages; apps/web (the console
+      # that merge-console.mjs builds into dist/); content/ (vocab clips map,
+      # stories); scripts/build-stories.mjs (the fixture build); and CI itself.
       - name: Did anything the PWA depends on change?
         id: changes
         shell: bash
@@ -60,7 +66,7 @@ jobs:
           git fetch --no-tags --depth=1 origin "${{ github.event.pull_request.base.sha }}"
           changed=$(git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}")
           echo "$changed"
-          if echo "$changed" | grep -qE '^(apps/mobile/|packages/|\.github/workflows/web-app\.yml|\.github/actions/|scripts/e2e-shard-list\.mjs|package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|turbo\.json|\.nvmrc)'; then
+          if echo "$changed" | grep -qE '^(apps/mobile/|apps/web/|packages/|content/|scripts/build-stories\.mjs|\.github/workflows/web-app\.yml|\.github/actions/|scripts/e2e-shard-list\.mjs|package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|turbo\.json|\.nvmrc)'; then
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
             echo "run=false" >> "$GITHUB_OUTPUT"
@@ -85,9 +91,10 @@ jobs:
             metro-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
 
       # Next's own incremental build cache for the console role that
-      # merge-console.mjs builds (Next validates every entry itself).
-      - name: Restore the Next.js build cache (apps/web, console role)
-        if: steps.changes.outputs.run == 'true'
+      # merge-console.mjs builds (Next validates every entry itself). Like
+      # Metro: pull requests restore main's cache, main builds cold.
+      - name: Restore the Next.js build cache (apps/web, console role; pull requests)
+        if: steps.changes.outputs.run == 'true' && github.event_name == 'pull_request'
         uses: actions/cache/restore@v4
         with:
           path: apps/web/.next/cache
@@ -119,6 +126,7 @@ jobs:
           name: pwa-dist
           path: apps/mobile/dist
           include-hidden-files: true
+          overwrite: true
           if-no-files-found: error
           retention-days: 3
 
@@ -129,6 +137,7 @@ jobs:
           name: pwa-dist-e2e
           path: apps/mobile/dist-e2e
           include-hidden-files: true
+          overwrite: true
           if-no-files-found: error
           retention-days: 3
 
@@ -243,6 +252,10 @@ jobs:
             practice-session
             # F-VOC-003 C-4: the Words picker and topic page (Words stays behind its flag until C-7).
             vocab-topics
+            # F-STORY-003 PR 3.7 / F-STORY-004 PR 4.6, 4.7: story Results after the fixture story's
+            # quest, its Episode page and Culture notes line. The whole file needs the fixture bundle
+            # (it used to run only its "Episode page" group, so 5 of its 7 tests ran nowhere).
+            story-results
           )
           list() { pnpm exec playwright test --list "$@"; }
           {
@@ -250,9 +263,6 @@ jobs:
             # One group of a spec file whose other tests expect the release build.
             # F-STORY-003 PR 3.5b: Story Order scene art plays the fixture story's shelf quest.
             list story-order -g "scene art"
-            # F-STORY-004 PR 4.6 / 4.7: Results' Episode page opens the story variant of the episode
-            # page, and its Culture notes line opens that story's notes.
-            list story-results -g "Episode page"
             # F-AUDIO-004 A-6: the clip path (precache, runtime cache, offline clip, clip > voice) on
             # the fixture tones; only that group, since the voice tests expect the release build.
             list audio -g "bundled clips"
