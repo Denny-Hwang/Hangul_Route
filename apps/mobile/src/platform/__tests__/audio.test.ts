@@ -1,3 +1,4 @@
+import * as contentSchema from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('expo-speech', () => ({
@@ -64,6 +65,18 @@ import * as Speech from 'expo-speech';
 import { useAudioStore } from '../../store/audio-store';
 import type { ClipFailure, ClipPlayer } from '../../logic/audio/controller';
 import { createNativeAudio, type NativeClipSetup, type NativeSpeechApi } from '../audio';
+
+/**
+ * The suites that reset the module registry and import the module again (the default instance is made when the
+ * module loads) re-evaluate its whole import graph in the test body. Most of that graph is
+ * `@hangul-route/content-schema`, loaded from source and stateless, so these suites hand back the copy this file
+ * already loaded: the reset still gives a fresh module, store and clip map, at a fraction of the cost. What is
+ * left is still a cold module load, which a busy CI runner slows, so these suites allow 15 s, not the 5 s default.
+ */
+const RELOAD_SUITE = { timeout: 15_000 } as const;
+function pinContentSchema(): void {
+  vi.doMock('@hangul-route/content-schema', () => contentSchema);
+}
 
 interface NativeVoice {
   identifier: string;
@@ -471,7 +484,10 @@ describe('platform/audio (native): capability, unlock, telemetry', () => {
   });
 });
 
-describe('platform/audio (native): the module-level API', () => {
+describe('platform/audio (native): the module-level API', RELOAD_SUITE, () => {
+  beforeEach(pinContentSchema);
+  afterEach(() => vi.doUnmock('@hangul-route/content-schema'));
+
   it('uses expo-speech on the default instance and plays the jamo sound', async () => {
     vi.resetModules();
     vi.mocked(Speech.getAvailableVoicesAsync).mockResolvedValue([YUNA] as never);
@@ -630,7 +646,10 @@ describe('platform/audio (native): bundled clips (A-7, AD4: clip > voice > text)
   });
 });
 
-describe('platform/audio (native): the module-level clip path', () => {
+describe('platform/audio (native): the module-level clip path', RELOAD_SUITE, () => {
+  beforeEach(pinContentSchema);
+  afterEach(() => vi.doUnmock('@hangul-route/content-schema'));
+
   it('resolves a bundled clip through expo-asset and plays it with expo-av, once the session is set', async () => {
     vi.resetModules();
     av.modes.length = 0;

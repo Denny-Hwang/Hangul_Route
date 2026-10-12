@@ -9,6 +9,12 @@ import { mockFamily } from '@/data/mock-family';
 import { LocaleProvider } from '@/lib/i18n/locale-context';
 import type { EntitlementView, MemberView, Roster, SchoolView } from '@/lib/console/api';
 import { expectAllPseudo, wordsOf } from './pseudo-text';
+// The pages are imported here, once, not inside each test: a page load counted against the 5 s test timeout on a
+// busy CI runner. The mocks above are hoisted above these imports, and the pages read the env flags when they render.
+import * as parentChildPage from '@/app/(console)/parent/[childId]/page';
+import * as parentLayout from '@/app/(console)/parent/layout';
+import * as parentPage from '@/app/(console)/parent/page';
+import * as settingsPage from '@/app/(console)/teach/space/settings/page';
 
 /**
  * F-I18N-001 PR 10c, §3.11: the space settings page, the school admin view and the /parent demo
@@ -113,9 +119,9 @@ describe('space settings render only dictionary text (en-XA)', () => {
     expectAllPseudo(sections({ roster: roster('school', { archivedAt: '2026-10-01T00:00:00.000Z' }), members: [member({})] }), settingsData);
   });
 
-  it('the page, before the roster loads', async () => {
-    const mod = (await import('@/app/(console)/teach/space/settings/page')) as { default: () => JSX.Element };
-    const html = renderToStaticMarkup(<mod.default />);
+  it('the page, before the roster loads', () => {
+    const Page = settingsPage.default;
+    const html = renderToStaticMarkup(<Page />);
     expect(html).toContain('href="/teach/space?id=space%3Ac1"');
     expectAllPseudo(html, [], 3);
   });
@@ -210,26 +216,25 @@ describe('/parent demo renders only dictionary text (en-XA)', () => {
     // Longest first, so a card gloss inside a quest title ("Kite") does not cut the title apart.
     .sort((a, b) => b.length - a.length);
 
-  it('the family dashboard', async () => {
-    const mod = (await import('@/app/(console)/parent/page')) as { default: () => JSX.Element };
-    const html = renderToStaticMarkup(<mod.default />);
+  it('the family dashboard', () => {
+    const Page = parentPage.default;
+    const html = renderToStaticMarkup(<Page />);
     expect(html).toContain(`href="/parent/${family.profiles[0]!.slug}"`);
     expectAllPseudo(html, demoData);
   });
 
-  it('each child page', async () => {
-    const mod = (await import('@/app/(console)/parent/[childId]/page')) as { default: (p: { params: { childId: string } }) => JSX.Element };
+  it('each child page', () => {
+    const Page = parentChildPage.default;
     for (const p of family.profiles) {
       // Day letters are one-letter sample data: drop them from the text nodes before the check.
-      const html = renderToStaticMarkup(<mod.default params={{ childId: p.slug }} />).replace(/>[A-Z]<\/span>/g, '></span>');
+      const html = renderToStaticMarkup(<Page params={{ childId: p.slug }} />).replace(/>[A-Z]<\/span>/g, '></span>');
       expectAllPseudo(html, demoData);
     }
   });
 
-  it('the layout wraps the demo in the console locale provider', async () => {
-    const mod = (await import('@/app/(console)/parent/layout')) as { default: (p: { children: JSX.Element }) => JSX.Element };
+  it('the layout wraps the demo in the console locale provider', () => {
     const child = <p>x</p>;
-    const el = mod.default({ children: child });
+    const el = parentLayout.default({ children: child });
     // The element itself, not its markup: a provider renders nothing of its own, so markup alone would pass without one.
     expect(el.type).toBe(LocaleProvider);
     expect((el.props as { children: unknown }).children).toBe(child);

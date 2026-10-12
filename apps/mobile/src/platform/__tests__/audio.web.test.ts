@@ -1,3 +1,4 @@
+import * as contentSchema from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   FakeAudioContext,
@@ -30,6 +31,18 @@ vi.mock('../telemetry', () => ({
 
 import { useAudioStore } from '../../store/audio-store';
 import { createWebAudio, type WebAudioEnv } from '../audio.web';
+
+/**
+ * The suites that reset the module registry and import the module again (the default instance is made when the
+ * module loads) re-evaluate its whole import graph in the test body. Most of that graph is
+ * `@hangul-route/content-schema`, loaded from source and stateless, so these suites hand back the copy this file
+ * already loaded: the reset still gives a fresh module, store and clip map, at a fraction of the cost. What is
+ * left is still a cold module load, which a busy CI runner slows, so these suites allow 15 s, not the 5 s default.
+ */
+const RELOAD_SUITE = { timeout: 15_000 } as const;
+function pinContentSchema(): void {
+  vi.doMock('@hangul-route/content-schema', () => contentSchema);
+}
 
 const voice = (name: string, lang: string, over: Partial<FakeVoice> = {}): FakeVoice => ({
   name,
@@ -788,9 +801,11 @@ describe('platform/audio.web: the clip context is touched only when clips can pl
   });
 });
 
-describe('platform/audio.web: the module-level API (browser globals)', () => {
+describe('platform/audio.web: the module-level API (browser globals)', RELOAD_SUITE, () => {
+  beforeEach(pinContentSchema);
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.doUnmock('@hangul-route/content-schema');
     vi.resetModules();
   });
 

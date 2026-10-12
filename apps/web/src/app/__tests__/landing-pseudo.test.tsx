@@ -3,6 +3,13 @@ import { describe, expect, it, vi } from 'vitest';
 import { CONTACT_EMAIL } from '../../data/contact';
 import { minigameCatalog } from '../../data/minigame-catalog';
 import { stage1Cards } from '../../data/stage1-cards';
+// The pages are imported here, once, not inside each test: a page load pulls in the whole landing graph, and inside
+// a test body it counted against the 5 s test timeout, which a busy CI runner exceeded. `vi.mock` below is hoisted
+// above these imports, so the pages still load (and render) with the pseudo dictionary.
+import AboutPage from '../(en)/about/page';
+import LandingPage from '../(en)/page';
+import PrivacyPage from '../(en)/privacy/page';
+import TermsPage from '../(en)/terms/page';
 
 /**
  * F-I18N-001 PR 11a, §3.11: the site's pages take every word from `messages/*\/landing.ts`.
@@ -36,21 +43,19 @@ function wordsOf(html: string): string[] {
     .filter((t) => /[A-Za-z]/.test(t));
 }
 
-async function render(path: string): Promise<string> {
-  const mod = (await import(path)) as { default: () => JSX.Element };
-  const Page = mod.default;
+function render(Page: () => JSX.Element): string {
   return renderToStaticMarkup(<Page />);
 }
 
 describe('site pages render only dictionary text (en-XA)', () => {
-  for (const [name, path] of [
-    ['landing', '../(en)/page'],
-    ['about', '../(en)/about/page'],
-    ['privacy', '../(en)/privacy/page'],
-    ['terms', '../(en)/terms/page'],
+  for (const [name, Page] of [
+    ['landing', LandingPage],
+    ['about', AboutPage],
+    ['privacy', PrivacyPage],
+    ['terms', TermsPage],
   ] as const) {
-    it(name, async () => {
-      const words = wordsOf(await render(path));
+    it(name, () => {
+      const words = wordsOf(render(Page));
       expect(words.length).toBeGreaterThan(10);
       for (const w of words) expect(w, `"${w}" is not from the dictionary`).toMatch(/^\[[^\]]*\]$/);
     });
