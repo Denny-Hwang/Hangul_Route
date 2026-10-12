@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { ProgressSnapshot } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -23,8 +25,9 @@ vi.mock('../../platform/storage', () => ({
   }),
 }));
 
-import { flags } from '../../config/flags';
+import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { questsAll } from '../../content';
+import { isContentLocked } from '../../logic/content-access';
 import { readJson } from '../../platform/storage';
 import { useAccountStore } from '../account-store';
 import { unlockedStagesFor } from '../plan-store';
@@ -308,6 +311,27 @@ describe('questOpenFor and useQuestAccess (F-ENT-003 section 3.4)', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('a stale-premium learner gets the same answer for a story and for a grid lesson (OD-11)', () => {
+    switchOn('web');
+    useTierStore.getState().applyInbox('profile:a', { tier: 'premium', tierSource: source, tierValidUntil: '2026-09-28T12:00:00.000Z', serverTime: 't' });
+    const tenDaysLater = new Date('2026-10-08T12:00:00.000Z');
+    const storyLocked = isContentLocked({ kind: 'story', id: 'story:any-shelf-story', tier: accessTier('profile:a', tenDaysLater), gatingEnabled: gatingActive(flags, bundleOs()) });
+    expect(storyLocked).toBe(false);
+    expect(questOpenFor('profile:a', tenDaysLater)('quest:stage4-rites-q1')).toBe(true);
+    // A free learner with the switch on: both close.
+    expect(isContentLocked({ kind: 'story', id: 'story:any-shelf-story', tier: accessTier('profile:b', tenDaysLater), gatingEnabled: gatingActive(flags, bundleOs()) })).toBe(true);
+    expect(questOpenFor('profile:b', tenDaysLater)('quest:stage4-rites-q1')).toBe(false);
+  });
+
+  it('learner-facing screens read the access tier; only billing surfaces read effectiveTier (F-ENT-003 section 3.4)', () => {
+    const root = join(__dirname, '../..');
+    const walk = (dir: string): string[] =>
+      readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(join(dir, e.name)) : [join(dir, e.name)]));
+    const files = [...walk(join(root, 'screens')), ...walk(join(root, 'components'))].filter((f) => /\.tsx?$/.test(f) && !f.includes('__tests__'));
+    const billing = files.filter((f) => /\beffectiveTier\(/.test(readFileSync(f, 'utf8'))).map((f) => f.slice(root.length + 1).split('\\').join('/'));
+    expect(billing.sort()).toEqual(['screens/paywall/PaywallScreen.tsx', 'screens/profile/ProfileScreen.tsx']);
   });
 
   it('with no active profile the hook answers for a learner with nothing kept and no tier', () => {

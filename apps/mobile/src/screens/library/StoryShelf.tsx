@@ -39,12 +39,11 @@ import {
 } from '../../logic/story/story-tile';
 import type { MainTabParamList, RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
-import { useAccountStore } from '../../store/account-store';
 import { useAudience } from '../../store/audience';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
-import { effectiveTier, useTierStore } from '../../store/tier-store';
+import { useAccessTier } from '../../store/tier-store';
 import { CoverFallback, StoryTile } from './StoryTile';
 
 const GRID_GAP = spacing.sm;
@@ -87,12 +86,8 @@ export function StoryShelf({
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
   const bookmarks = useStoryStore((s) => (profile ? s.byProfile[profile.id] : undefined)) ?? NO_BOOKMARKS;
-  // `effectiveTier` reads both stores imperatively: subscribe to each so a change re-runs `isLocked`.
-  const cachedTier = useTierStore((s) => (profile ? s.byLearner[profile.id] : undefined));
-  const subscription = useAccountStore((s) => s.subscription);
-  void cachedTier;
-  void subscription;
-  const tier = effectiveTier(profile?.id ?? '', new Date()).tier;
+  // The access tier (F-ENT-003 section 3.4): a change in the inbox, the spaces or the subscription re-runs `isLocked`.
+  const tier = useAccessTier(profile?.id ?? '');
   // D2: hide-until-tap profiles see no romanization on the shelf (one button per tile, no reveal); the reader reveals it.
   const romanizationShown = useRomanizationMode() === 'always';
 
