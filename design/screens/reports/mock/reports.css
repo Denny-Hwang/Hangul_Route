@@ -1,0 +1,225 @@
+/*
+ * F-REPORT-001 design pass: static design mock of the report pages (not shipped code).
+ * Spec: docs/specs/F-REPORT-001-progress-reports.md (sections 3.5 to 3.7, 3.9, 3.10, 3.12, 3.14).
+ *
+ * This sheet builds on the Learning Route mock's sheet, imported unchanged: it holds the token custom properties
+ * (every value a token of packages/design-system/src/tokens.ts, named after it: --spacing-xl is spacing.xl), the
+ * base rules, the adult page parts and the report's At a glance block that LR-D (#399) drew (`.glance`,
+ * `.goal-line`, `.link-button`). The report pages reuse that block as it is; nothing below redraws it.
+ *
+ * Units: text in rem (token / 16), so the browser text size enlarges every line. Grown-up pages switch layout in em
+ * (45em = the adult frame's phone / wide switch, F-APP-001 section 3.8; 60em = the two-column report body), mobile
+ * first (min-width only). The learner-app screen keeps the app's window classes in px (layout.breakpoint 600 / 900),
+ * as LR-D does. Numbers that are not tokens are named once below and listed in ../README.md, "Constants".
+ */
+@import url("../../learning-route/mock/learning-route.css");
+
+:root {
+  --avatar-chip: 28px;          /* AVATAR_CHIP_SIZE (AvatarChip.tsx), as the app-shell mock draws learner chips */
+  --period-tab-min: 4.5rem;     /* four period tabs in one row at 375 and 390; fewer per row at 320 or with large text */
+  --figure-min: 7rem;           /* figure tile minimum: three across at 375, five across in the 1280 right column */
+  --print-hint-min: 8rem;       /* the hint stays beside the button down to 375; with large text it moves under it */
+  --print-hint-max: 14rem;      /* the print hint wraps beside the button instead of running across the header */
+  --detail-column-min: 22rem;   /* More detail blocks: one column on phones, two or three on wide screens */
+  --insight-text-min: 14rem;    /* an insight sentence keeps this width before its action wraps under it */
+  --strand-min: 12rem;          /* class level check: one strand per row on phones, up to five across on wide screens */
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* Adult frame placeholder: the real frame is F-APP-001 A-5a (design/screens/app-shell/).      */
+/* Drawn at its phone height (one header row + the tab row) so the first-screen budget is true. */
+/* ------------------------------------------------------------------------------------------ */
+.frame-band { background: var(--colors-surface-paper); border-bottom: var(--border-width-thin) solid var(--colors-border-subtle); }
+.frame-row { max-width: var(--max-width-full); margin: 0 auto; padding: var(--spacing-sm) var(--gutter-compact); display: flex; }
+.frame-nav-row { padding-top: var(--spacing-none); padding-bottom: var(--spacing-none); }
+.shell-placeholder.grow { flex: 1; min-width: 0; overflow-wrap: anywhere; font-family: var(--family-mono); }
+@media (min-width: 45em) { .frame-row { padding-left: var(--gutter-regular); padding-right: var(--gutter-regular); } }
+@media (min-width: 70em) { .frame-row { padding-left: var(--gutter-wide); padding-right: var(--gutter-wide); } }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Report page (console, app.hangulroute.com)                                                   */
+/* ------------------------------------------------------------------------------------------ */
+.report { max-width: var(--max-width-full); margin: 0 auto; padding: var(--spacing-md) var(--gutter-compact) var(--spacing-jumbo); display: flex; flex-direction: column; gap: var(--spacing-sm); }
+@media (min-width: 45em) { .report { padding-left: var(--gutter-regular); padding-right: var(--gutter-regular); } }
+@media (min-width: 70em) { .report { padding-left: var(--gutter-wide); padding-right: var(--gutter-wide); } }
+
+/* Header row: back link, then Send a note and Print with its hint. Wraps on phones: back + note, then print. */
+.report-top { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--spacing-sm); row-gap: var(--spacing-xs); }
+.report-top .back-link { margin-right: auto; }
+.action-note { gap: var(--spacing-xs); text-decoration: none; }
+.print-group { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-xs) var(--spacing-sm); }
+.print-button { font: inherit; font-size: var(--size-bodySm); font-weight: var(--weight-bold); cursor: pointer; }
+.print-button:disabled { background: var(--colors-surface-sunken); color: var(--colors-text-muted); }
+.print-hint { flex: 1 1 var(--print-hint-min); max-width: var(--print-hint-max); font-size: var(--size-caption); color: var(--colors-text-muted); line-height: var(--leading-tight); }
+
+/* Title and at a glance: LR-D's `.glance` block; the title row adds the learner's avatar chip. */
+.report-glance { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.report-title { display: flex; align-items: center; gap: var(--spacing-sm); }
+.avatar-chip { flex: none; width: var(--avatar-chip); height: var(--avatar-chip); border-radius: var(--radii-circle); background: var(--colors-hoya-furDark); border: var(--border-width-base) solid var(--colors-surface-paper); box-shadow: 0 0 0 var(--border-width-thin) var(--colors-border-strong); }
+.state-line { display: flex; flex-direction: column; gap: var(--spacing-xxs); padding: var(--spacing-md); border-radius: var(--radii-md); background: var(--colors-surface-sunken); color: var(--colors-text-primary); }
+
+/* Period tabs: one segmented row (role tablist). The selected tab is paper, bold and outlined, never colour alone. */
+.report-controls { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.period-tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--period-tab-min)), 1fr)); gap: var(--spacing-xs); padding: var(--spacing-xs); border-radius: var(--radii-lg); background: var(--colors-surface-sunken); max-width: var(--max-width-reading); }
+.period-tab { min-height: var(--touch-min); padding: var(--spacing-xs) var(--spacing-sm); border-radius: var(--radii-md); border: var(--border-width-base) solid transparent; background: transparent; color: var(--colors-text-secondary); font: inherit; font-size: var(--size-bodySm); font-weight: var(--weight-semibold); line-height: var(--leading-tight); text-align: center; }
+.period-tab[aria-selected="true"] { background: var(--colors-surface-paper); border-color: var(--colors-brand-primary); color: var(--colors-text-primary); font-weight: var(--weight-bold); }
+.period-tab:disabled { color: var(--colors-text-muted); }
+.period-tab:focus-visible, .step-button:focus-visible, .disclosure:focus-visible, .section-tab:focus-visible { outline: var(--border-width-thick) solid var(--colors-border-focus); outline-offset: var(--border-width-base); }
+
+/* Previous / Next stepper (OD-18): the window's dates sit between the two buttons. Next is absent on the current window. */
+.stepper { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--spacing-sm); row-gap: var(--spacing-xxs); }
+.step-button { display: inline-flex; align-items: center; gap: var(--spacing-xs); min-height: var(--touch-min); padding: var(--spacing-xs) var(--spacing-md); border-radius: var(--radii-pill); border: var(--border-width-thin) solid var(--colors-border-strong); background: var(--colors-surface-paper); color: var(--colors-text-primary); font: inherit; font-size: var(--size-bodySm); font-weight: var(--weight-bold); }
+.window-range { color: var(--colors-text-secondary); font-size: var(--size-bodySm); }
+.step-next { margin-left: auto; }
+
+/* Body: layer 1 (headline, went well, practice next), layer 2 (this period), layer 3 (More detail). */
+.report-body { display: flex; flex-direction: column; gap: var(--spacing-xl); }
+.layer-1 { display: flex; flex-direction: column; gap: var(--spacing-lg); }
+@media (min-width: 60em) {
+  .report-body { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); column-gap: var(--spacing-xxl); row-gap: var(--spacing-xl); align-items: start; }
+  .report-body > .layer-3 { grid-column: 1 / -1; }
+}
+.headline { font-size: var(--size-prompt); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.headline-group { display: flex; flex-direction: column; gap: var(--spacing-xxs); }
+.horizon { color: var(--colors-text-secondary); }
+.report-section { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.report-section h2 { font-size: var(--size-bodyLg); line-height: var(--leading-tight); }
+.report-section h3 { font-size: var(--size-body); font-weight: var(--weight-bold); margin-top: var(--spacing-xs); }
+
+/* Insight lines: a small disc, the sentence, an optional action. No icon that grades. */
+.insights { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.insights > li { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--spacing-md); row-gap: var(--spacing-xs); padding-left: var(--spacing-lg); }
+.insight-text { position: relative; flex: 1 1 var(--insight-text-min); min-width: 0; display: flex; flex-direction: column; gap: var(--spacing-xxs); }
+/* The disc sits on the sentence's first line, wherever the action button puts the row's centre. */
+.insight-text > p:first-child::before { content: ""; position: absolute; left: calc(-1 * var(--spacing-lg) + var(--spacing-xxs)); top: calc(var(--size-body) * var(--leading-normal) / 2 - var(--spacing-xs)); width: var(--spacing-sm); height: var(--spacing-sm); border-radius: var(--radii-circle); background: var(--colors-border-shape); }
+.went-well .insight-text > p:first-child::before { background: var(--colors-brand-primary); }
+.insight-tip { font-size: var(--size-bodySm); color: var(--colors-text-secondary); }
+.insight-tip a, .insight-text a:not(.letter-link) { color: var(--colors-brand-secondaryDark); }
+.action { text-decoration: none; }
+.report-section > .action { align-self: flex-start; }
+.letter-link, .letter-plain { white-space: nowrap; }
+.letter-link { color: var(--colors-brand-secondaryDark); text-decoration: underline; text-decoration-thickness: var(--border-width-thin); text-underline-offset: var(--spacing-xxs); }
+[lang="ko"] { font-weight: var(--weight-bold); }
+
+/* Figures (layer 2): a count over its label; "More than ..." only when it grew (OD-11). */
+.figures { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--figure-min)), 1fr)); gap: var(--spacing-sm); }
+.figure { display: flex; flex-direction: column; gap: var(--spacing-xxs); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-md); background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); }
+.figure dt { order: 1; font-size: var(--size-bodySm); color: var(--colors-text-secondary); }
+.figure .figure-value { order: 0; font-size: var(--size-title); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.figure .figure-up { order: 2; }
+.figure-up { font-size: var(--size-caption); font-weight: var(--weight-semibold); color: var(--colors-feedback-successDark); }
+
+/* Calendar: practiced = filled square with the check glyph; none = outline; not saved = dashed outline. */
+.calendar-block { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--spacing-xs); max-width: var(--max-width-reading); }
+.cal-day { display: flex; flex-direction: column; align-items: center; gap: var(--spacing-xxs); min-width: 0; }
+.cal-head { text-align: center; font-size: var(--size-caption); font-weight: var(--weight-semibold); color: var(--colors-text-muted); }
+.cal-label { display: flex; flex-direction: column; align-items: center; font-size: var(--size-caption); line-height: var(--leading-tight); color: var(--colors-text-secondary); }
+.cal-dow { font-weight: var(--weight-semibold); color: var(--colors-text-muted); }
+.cal-mark { width: 100%; max-width: var(--spacing-xxxl); aspect-ratio: 1; border-radius: var(--radii-sm); display: flex; align-items: center; justify-content: center; }
+.cal-mark.practiced { background: var(--colors-brand-secondary); border: var(--border-width-base) solid var(--colors-brand-secondaryDark); }
+.cal-mark.none { background: var(--colors-surface-paper); border: var(--border-width-base) solid var(--colors-border-shape); }
+.cal-mark.not-saved { background: transparent; border: var(--border-width-base) dashed var(--colors-border-shape); }
+.cal-check { width: 60%; height: 60%; }
+.calendar-text { color: var(--colors-text-secondary); font-size: var(--size-bodySm); }
+
+/* All time: the cumulative growth line (only rises), a legend with direct values, the axis and the table. */
+.growth { display: flex; flex-direction: column; gap: var(--spacing-sm); max-width: var(--max-width-reading); }
+.growth-legend { display: flex; flex-wrap: wrap; gap: var(--spacing-lg); font-size: var(--size-bodySm); color: var(--colors-text-secondary); }
+.growth-legend li { display: inline-flex; align-items: center; gap: var(--spacing-xs); }
+.growth-legend b { color: var(--colors-text-primary); }
+.swatch { display: inline-block; width: var(--spacing-xl); height: 0; border-top: var(--border-width-base) solid; }
+.swatch.quests { border-top-color: var(--colors-brand-primary); }
+.swatch.cards { border-top-style: dashed; border-top-color: var(--colors-brand-secondary); }
+.growth-chart { width: 100%; height: auto; display: block; background: var(--colors-surface-paper); border-radius: var(--radii-md); border: var(--border-width-thin) solid var(--colors-border-subtle); }
+.growth-axis { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); text-align: center; font-size: var(--size-caption); color: var(--colors-text-muted); }
+.table-toggle { font: inherit; font-size: var(--size-bodySm); font-weight: var(--weight-bold); }
+.growth-table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: var(--size-bodySm); }
+.growth-table caption { text-align: left; font-weight: var(--weight-bold); padding-bottom: var(--spacing-xs); }
+.growth-table th, .growth-table td { padding: var(--spacing-xs) var(--spacing-sm); overflow-wrap: anywhere; border-bottom: var(--border-width-thin) solid var(--colors-border-subtle); text-align: left; }
+
+/* More detail (layer 3): one disclosure button; its panel holds an h3 per block. */
+.layer-3 { display: flex; flex-direction: column; gap: var(--spacing-md); }
+.disclosure-heading { font-size: var(--size-bodyLg); }
+.disclosure { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: var(--spacing-sm); min-height: var(--touch-min); padding: var(--spacing-sm) var(--spacing-lg); border-radius: var(--radii-md); border: var(--border-width-thin) solid var(--colors-border-strong); background: var(--colors-surface-paper); color: var(--colors-text-primary); font: inherit; font-size: var(--size-bodyLg); font-weight: var(--weight-bold); text-align: left; }
+.disclosure .chevron { transform: rotate(90deg); }
+.disclosure[aria-expanded="true"] .chevron { transform: rotate(-90deg); }
+.detail-panel { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--detail-column-min)), 1fr)); gap: var(--spacing-lg) var(--spacing-xl); align-items: start; }
+.detail-panel[hidden] { display: none; }
+.detail-block { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.detail-block h3 { font-size: var(--size-body); }
+.detail-block h4 { margin: var(--spacing-none); font-size: var(--size-bodySm); }
+.detail-lines { display: flex; flex-direction: column; gap: var(--spacing-xxs); }
+.letter-tiles { display: flex; flex-wrap: wrap; gap: var(--spacing-xs); }
+.letter-tile { min-width: var(--touch-min); min-height: var(--touch-min); padding: var(--spacing-xxs) var(--spacing-sm); display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: var(--radii-md); background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-strong); color: var(--colors-text-primary); font: inherit; text-decoration: none; }
+.letter-tile [lang="ko"] { font-size: var(--size-prompt); line-height: var(--leading-tight); }
+.letter-tile .rom { font-size: var(--size-caption); color: var(--colors-text-secondary); }
+
+/* Class report: counts for the class, never a name or an order of learners. */
+.count-chips { display: flex; flex-wrap: wrap; gap: var(--spacing-xs); }
+.count-chip { padding: var(--spacing-xs) var(--spacing-md); border-radius: var(--radii-pill); background: var(--colors-surface-sunken); font-size: var(--size-bodySm); font-weight: var(--weight-semibold); }
+.band-rows { display: flex; flex-direction: column; max-width: var(--max-width-reading); }
+.band-rows li { padding: var(--spacing-xs) 0; border-bottom: var(--border-width-thin) solid var(--colors-border-subtle); }
+.strand-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--strand-min)), 1fr)); gap: var(--spacing-md); }
+.strand { display: flex; flex-direction: column; gap: var(--spacing-xxs); }
+.plan-rows { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.plan-title { color: var(--colors-brand-secondaryDark); font-weight: var(--weight-bold); }
+
+/* Choosers (no learner / no class id). */
+.chooser-title { font-size: var(--size-title); line-height: var(--leading-tight); }
+.chooser { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.chooser-row { display: flex; align-items: center; gap: var(--spacing-sm); min-height: var(--touch-min); padding: var(--spacing-xs) var(--spacing-md); border-radius: var(--radii-md); background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); color: var(--colors-text-primary); font-weight: var(--weight-bold); text-decoration: none; }
+.chooser-row span:not(.avatar-chip) { flex: 1; }
+.skeleton.tall { height: calc(3 * var(--spacing-xxxl)); }
+.try-again { width: auto; align-self: flex-start; }
+a.button { text-decoration: none; }
+
+/* Board samples (design board only): a report part inside a frame, no page padding. */
+.report.sample { padding: var(--spacing-lg); max-width: none; }
+.entry-sample { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Learner app: LearnerReport behind the grown-up gate (react-native screen drawn as HTML)      */
+/* ------------------------------------------------------------------------------------------ */
+.app-report .headline { font-size: var(--size-prompt); }
+.section-tabs { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); }
+.section-tab { min-height: var(--touch-min); padding: var(--spacing-sm) var(--spacing-xl); border-radius: var(--radii-pill); border: var(--border-width-base) solid var(--colors-border-strong); background: var(--colors-surface-paper); color: var(--colors-text-primary); font: inherit; font-size: var(--size-body); font-weight: var(--weight-semibold); }
+.section-tab[aria-selected="true"] { background: var(--colors-brand-primary); border-color: var(--colors-brand-primary); color: var(--colors-text-onPrimary); font-weight: var(--weight-bold); }
+.skill-rows { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.skill-row { display: flex; align-items: center; gap: var(--spacing-md); min-height: var(--touch-min); padding: 0 var(--spacing-xs); }
+.skill-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--spacing-xxs); }
+.skill-head { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--spacing-sm); row-gap: var(--spacing-xxs); }
+.skill-head .pip-row { gap: var(--spacing-xs); }
+.skill-detail, .skill-tiles { font-size: var(--size-bodySm); color: var(--colors-text-secondary); }
+.skill-note { font-size: var(--size-caption); color: var(--colors-text-muted); }
+.letter-expanded { display: flex; gap: var(--spacing-md); align-items: center; padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-md); background: var(--colors-surface-sunken); }
+.letter-expanded > [lang="ko"] { font-size: var(--size-display); line-height: var(--leading-tight); }
+.app-frame .screen { min-height: 0; }
+.entry-card { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Print or save as PDF (RP-7b; wireframe reports/print.md). Layout only; colours stay tokens. */
+/* ------------------------------------------------------------------------------------------ */
+.print-footer { display: none; }
+@page { margin: 0; }
+@media print {
+  body { background: var(--colors-surface-paper); color: var(--colors-text-primary); }
+  /* Nothing to press on paper: the frame, the actions, the stepper buttons, the disclosure button, the toggles. */
+  .frame-band, .report-top, .step-button, .disclosure-heading, .action, .table-toggle, .growth-chart, .growth-axis, .growth-legend, .calendar, .period-tab:not([aria-selected="true"]) { display: none !important; }
+  /* The page padding sits inside the body, so @page margin 0 leaves no room for the browser's URL and title lines. */
+  .report { max-width: none; padding: var(--spacing-xxl) var(--spacing-xxl) var(--spacing-jumbo); gap: var(--spacing-sm); }
+  /* The selected period prints as plain text next to the window's dates. */
+  .report-controls { flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: var(--spacing-sm); }
+  .period-tabs { display: block; padding: 0; background: none; }
+  .period-tab[aria-selected="true"] { display: inline; min-height: 0; padding: 0; border: none; font-size: var(--size-body); }
+  .stepper { display: inline-flex; }
+  .glance .link-button { display: none; }
+  /* More detail is always expanded on paper; the growth line prints as its table. */
+  .detail-panel[hidden], .growth-table[hidden] { display: grid !important; }
+  .growth-table[hidden] { display: table !important; }
+  .report-section, .figure, .detail-block, .headline-group, .layer-1 > *, .calendar-block, .growth, .strand { break-inside: avoid; }
+  .figure { border-color: var(--colors-border-strong); }
+  a, .letter-link, .plan-title, .insight-tip a, .insight-text a:not(.letter-link) { color: inherit; text-decoration: none; }
+  .letter-tile { border-color: var(--colors-border-strong); }
+  .print-footer { display: block; position: fixed; left: 0; right: 0; bottom: 0; padding: var(--spacing-md) var(--spacing-xxl); font-size: var(--size-caption); color: var(--colors-text-secondary); border-top: var(--border-width-thin) solid var(--colors-border-strong); background: var(--colors-surface-paper); }
+}
