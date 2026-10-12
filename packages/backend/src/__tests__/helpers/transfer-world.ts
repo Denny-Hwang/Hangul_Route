@@ -112,6 +112,8 @@ export const create = (spaceId: string, user: string, body: Record<string, unkno
 export const list = (spaceId: string, user: string) => call('GET', base(spaceId), bearer(user));
 export const decline = (spaceId: string, user: string, tid: string, body: Record<string, unknown>) => call('POST', `${base(spaceId)}/${tid}/decline`, bearer(user), body);
 export const cancel = (spaceId: string, user: string, tid: string, body: Record<string, unknown> = {}) => call('POST', `${base(spaceId)}/${tid}/cancel`, bearer(user), body);
+export const approve = (spaceId: string, user: string, tid: string, body: Record<string, unknown>) => call('POST', `${base(spaceId)}/${tid}/approve`, bearer(user), body);
+export const retry = (spaceId: string, user: string, tid: string, body: Record<string, unknown> = {}) => call('POST', `${base(spaceId)}/${tid}/retry`, bearer(user), body);
 export const prefs = (spaceId: string, learnerId: string, user: string, body: Record<string, unknown>) => call('PUT', `/api/spaces/${spaceId}/learners/${learnerId}/transfer-prefs`, bearer(user), body);
 
 export const consent = { textVersion: TRANSFER_CONSENT_TEXT_VERSION, locale: 'en' };
