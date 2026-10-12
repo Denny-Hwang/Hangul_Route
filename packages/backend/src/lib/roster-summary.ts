@@ -59,9 +59,11 @@ const ACTIVITY_MILESTONE_KEYS = ['stage', 'on'] as const satisfies readonly (key
 const ACTIVITY_NEXT_QUEST_KEYS = ['q', 'plan'] as const;
 
 /**
- * Word counts reach no grown-up while `vocab` is hidden: F-VOC-005 P-4 moves
+ * Word counts reach no grown-up while `vocab` is hidden: F-VOC-005 P-4b moves
  * `vocab` to the allow-list with its own consent item, and from then on `w`
- * travels as sent (a test pins the coupling).
+ * travels as sent (a test pins the coupling). P-4 shipped the console lines
+ * dormant; P-4b's `vocab` branch copies only `VocabSummary`'s known keys and
+ * drops `firstTryRate` for every roster viewer (a student's detail view only).
  */
 const WORDS_HIDDEN = (TEACHER_HIDDEN_SUMMARY_KEYS as readonly string[]).includes('vocab');
 

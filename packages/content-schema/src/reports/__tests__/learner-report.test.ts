@@ -427,7 +427,7 @@ describe('a device clock ahead of the viewer', () => {
   });
 });
 
-describe('words stay hidden until F-VOC-005 P-4 (section 3.10)', () => {
+describe('words stay hidden until F-VOC-005 P-4b (section 3.10)', () => {
   it('never shows a words figure, even when the rows carry words', () => {
     expect(REPORT_WORDS_VISIBLE).toBe(false);
     const words = withActivity(STEADY, { days: STEADY.activity.days.map((row) => ({ ...row, w: 3 })) });

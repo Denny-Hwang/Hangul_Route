@@ -36,7 +36,7 @@ This period: figures, calendar
 | Calendar | may show dashed "not saved yet" cells | no dashed cells: the device's own practice is complete up to today. A profile that also practices on another device shows those days once this device has pulled them; until then they draw as empty outlines. This is an accepted v1 limit, recorded in the spec's review log for RP-9 (the sentence under the calendar lists practiced days only and never says a day was missed) |
 | Plan rows | family or class rows | `report.detail.planRow.device` (every plan on the device and the own route) |
 | Skills | not shown (OD-8) | the skills rows in More detail (below) |
-| Words | hidden until F-VOC-005 P-4 | hidden too |
+| Words | hidden until F-VOC-005 P-4b | hidden too |
 
 ## Open Learning Route
 
