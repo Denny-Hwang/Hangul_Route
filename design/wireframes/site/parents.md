@@ -33,8 +33,9 @@ Phone:
 +--------------------------------------+
 | H2 Safe by design                    |
 |  - no ads, no data sold              |
-|  - data stays on the device until a grown-up signs in or the learner joins
-|    a class or family with a code; then only a short progress summary is shared
+|  - nickname and progress kept on the device and backed up to our servers
+|    (restore with a Rescue Code); a class or family a learner joins with a code
+|    sees the joining name and their progress; family grown-ups can restore it
 |  - grown-up gate for money and deleting
 |  - siblings share a device, each keeps their own stars and cards
 +--------------------------------------+
@@ -46,7 +47,8 @@ Phone:
 |  + with the Family Plan, browse lessons    (claim browseAsLearner AND paidPlans = inApp)
 +--------------------------------------+
 | H2 Plans                             |
-| cost line (no price) · "managed at app.hangulroute.com after you sign in"
+| free line (+ "more stages are coming" while plans are coming)
+| "managed at app.hangulroute.com after you sign in"  (host named once)
 +--------------------------------------+
 |  > Does my learner need an account?  |  <- 3 folded questions
 |  > Can I learn alongside them?       |
@@ -77,7 +79,7 @@ Exit to:    app sign-in (parent) · learner app · `site/learners` · `site/teac
 ## States
 
 - **success** (claims off, today): "Follow along" shows only the base line, which is true today on the console's family space.
-- **claims on**: up to four extra lines under "Follow along"; the browse line needs paid plans on sale too; the "What can I see?" answer adds the reports line; the cost line follows `freePlan` / `paidPlans`.
+- **claims on**: up to four extra lines under "Follow along"; the browse line needs paid plans on sale too; the "What can I see?" answer switches to its reports variant (`faq.whatSee.reports`); the cost line follows `freePlan` / `paidPlans`.
 - **empty**: none — the page has no runtime data.
 - **error**: app sign-in unreachable → the app host's own page (the site shows no error); JavaScript off → everything works; hidden locale → 404 page.
 
