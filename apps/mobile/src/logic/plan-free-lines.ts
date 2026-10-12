@@ -97,7 +97,7 @@ export function readFreeFacts(read: () => FreeLessonsFacts): FreeLessonsFacts | 
 
 /** The learner's only space memberships are classes or schools (no family space, at least one space). */
 export function classOnlyMember(memberships: readonly Pick<LearnerMembership, 'kind'>[] | undefined): boolean {
-  return (memberships?.length ?? 0) > 0 && (memberships ?? []).every((ms) => ms.kind !== 'family');
+  return memberships !== undefined && memberships.length > 0 && memberships.every((ms) => ms.kind !== 'family');
 }
 
 export interface FreeEndInput {

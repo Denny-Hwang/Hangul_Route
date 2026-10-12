@@ -216,6 +216,12 @@ describe('F-ENT-003 E3-8: the free-plan lines in the slots (F-ENT-003 section 3.
     }
   });
 
+  it('a hidden free-plan line (facts unreadable) leaves the list in planTexts and nothing in its place', () => {
+    const v = web('free', null, { ...ON, facts: null });
+    expect(v.freeSlot).toEqual({ line: null, list: ['4 word topics'], extra: null });
+    expect(planTexts(v).slice(2, 4)).toEqual(['Mina is on the free plan.', '4 word topics']);
+  });
+
   it('the class line names the teacher in the family audience and speaks to a self learner', () => {
     expect(web('free', null, { ...ON, classOnly: true }).freeSlot?.extra).toBe("Mina's teacher can open every lesson for the class.");
     expect(web('free', null, { ...ON, classOnly: true }, 'self').freeSlot?.extra).toBe('Your teacher can open every lesson for the class.');
