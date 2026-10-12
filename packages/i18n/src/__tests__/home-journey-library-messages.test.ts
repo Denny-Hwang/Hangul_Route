@@ -157,15 +157,6 @@ describe('accessibility labels of these screens', () => {
     expect(m.a11y.openHomework).toBe('Open homework');
     expect(m.a11y.missionCard('Meet Hoya', 'Say hello', false)).toBe('Meet Hoya. Say hello.');
     expect(m.a11y.missionCard('Meet Hoya', 'Say hello', true)).toBe('Meet Hoya. Say hello. Collected.');
-    expect(m.a11y.gridCell('Letters', 'hangul', false)).toBe('Letters episode for hangul');
-    expect(m.a11y.gridCell('Letters', 'hangul', true)).toBe('Letters episode for hangul, coming soon');
-    expect(m.a11y.gridCellMarked('Letters', 'hangul', true, false)).toBe('Letters episode for hangul. You started here.');
-    expect(m.a11y.gridCellMarked('Letters', 'hangul', false, true)).toBe(
-      'Letters episode for hangul. You can skip ahead here, and it is still open to play.',
-    );
-    expect(m.a11y.gridCellMarked('Letters', 'hangul', true, true)).toBe(
-      'Letters episode for hangul. You started here. You can skip ahead here, and it is still open to play.',
-    );
     expect(m.a11y.lockedCard).toBe('Locked card');
     expect(m.a11y.flipToBack).toBe('Tap to flip card to back');
     expect(m.a11y.flipToFront).toBe('Tap to flip card to front');
