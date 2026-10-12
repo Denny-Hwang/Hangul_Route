@@ -167,7 +167,7 @@ Three names in the new `access.` namespace and two in F-PLAN-002's `route.` name
 
 | # | Name | Owning spec | Payload | Added to the list by | Emitted by |
 |---|---|---|---|---|---|
-| 1 | `access.preview_opened` | F-ENT-003 §3.12 | `{ stage: StageKey, day: number, from: 'journey' \| 'home' \| 'route' \| 'results' \| 'library' \| 'player' }` (a lesson page opens in preview; `day` is the internal route day) | E3-1b | E3-6 |
+| 1 | `access.preview_opened` | F-ENT-003 §3.12 | `{ stage: StageKey, theme: ThemeKey, from: 'journey' \| 'home' \| 'route' \| 'results' \| 'library' \| 'player' }` (a lesson page opens in preview; stable codes only, the internal route day is not sent) | E3-1b | E3-6 |
 | 2 | `access.help_asked` | F-ENT-003 §3.12 | `{ from: 'episode' \| 'home' \| 'results' \| 'library', audience: 'family' \| 'class' \| 'self' }` (the ask button, before the gate) | E3-1b | E3-6, E3-7 |
 | 3 | `access.free_end_reached` | F-ENT-003 §3.12 | `{ freeDays: number, placedOut: boolean }` (first time on this device for this profile) | E3-1b | E3-7 |
 | 4 | `route.next_started` | F-ENT-003 §3.12 | `{ source: 'class' \| 'school' \| 'family' \| 'self' \| 'cursor', surface: 'home' \| 'results' \| 'journey' \| 'episode' \| 'route' \| 'placement' }` (the `routeNext` quest is started) | E3-1b | E3-4, E3-6 |

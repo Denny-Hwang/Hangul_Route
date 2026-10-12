@@ -91,7 +91,7 @@ Then: a subscriber sees which quest is next and which are in their plan, with ev
 - [ {ask} ] -> `access.help_asked { from: 'episode', audience }`, then the route in the table above.
 - Back to open lessons -> `episode/detail` of the `routeNext` episode; at `free-end` -> the first free word topic (or the Library when none is playable).
 - [<- back] -> where the learner came from.
-- Opening state B fires `access.preview_opened { stage, day, from }` once per open (`from: 'player'` when the quest player guard sent the learner here).
+- Opening state B fires `access.preview_opened { stage, theme, from }` once per open (`from: 'player'` when the quest player guard sent the learner here).
 
 ## Navigation graph
 

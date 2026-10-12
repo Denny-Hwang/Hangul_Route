@@ -13,7 +13,7 @@ Sibling specs of the same owner request (wave 2026-10-11), each read for this re
 | Sibling | What this spec takes from it |
 |---|---|
 | **F-APP-001** persona app shell | the console served on `app.hangulroute.com` (B2), so the hand-off is same origin and same tab; `ADULT_NAV` in `lib/console/shell-nav.ts` (the **Lessons** item); `/browse` reserved in `LEARNER_ROOTS`; the root chooser order; `hr:shell:lastPersona`; the grown-up lock and its idle rule; the boot intent module |
-| **F-ENT-003** free plan, all of Stage 1 (OD-1) | `questAccess` / `isQuestOpen` (E3-2) and the one switch `flags.contentGatingEnabled`; the learner words for a closed lesson ("Opens with the full route") and the Journey lock glyph (§3.7) |
+| **F-ENT-003** free plan, all of Stage 1 (OD-1) | `questAccess` / `isQuestOpen` (E3-2) and the one switch `flags.contentGatingEnabled`; the learner word "Not open yet" and the dotted ring, never a lock glyph (F-ENT-003 §3.7, §3.11, OD-6); grown-up text "Opens with Family Lifetime or a Group License" (the older wording in this spec's body is pending F-ENT-003 §6.4 adoption in this spec's own docs PR) |
 | **F-BILL-002** billing for every persona | `adultAccess.coveredAny` (the paying-grown-up predicate) and the billing page path `BILLING_PATH` |
 | **Learning Route** amendment to F-ROUTE-001 (`AMENDMENTS-ROUTE-LEARNING-ROUTE.md`) | the Route tab and the learner tab order (Today · Route · Journey · Library); the adult summary page `/teach/space/route` (LR-7, LR-8); `TrailRow` (R-3) |
 | **F-REPORT-001** progress reports | the insight action slot on the learner report ("Preview" for `questId`, RP-7a) and the letter chips |

@@ -112,7 +112,7 @@ export function freeLessonsFacts(catalog: Catalog, stages?: readonly StageKey[])
 | Learner | Switch off (production default), or any native store build | Switch on (web) |
 |---|---|---|
 | premium (Family Lifetime, licensed class or school, legacy subscription, cached premium, OD-11) | everything open; plan guidance | everything open; plan guidance; **no access mark anywhere** |
-| free (any profile, created before or after the flip) | everything open (today's behaviour); plan guidance | **all of Stage 1** open; Stage 2 onward visible as previews; kept quests open; sampler stories and free word topics open; plan guidance over open quests |
+| free (any profile) | everything open (today's behaviour); plan guidance | **all of Stage 1** open; Stage 2 onward visible as previews; kept quests open; sampler stories and free word topics open; plan guidance over open quests |
 
 - **Free learners in a free class or a family space without a purchase** follow the free rows (OD-5). Their teacher's or parent's items that are closed derive as `notReady` (section 3.6), the console says so before publishing (section 3.9.3), and the grown-up's own screens show one line once the learner has finished what is open (section 3.9.2).
 - **Placed-out quests** (F-PLC-001) are not kept and not opened by the level check: a free learner placed into Stage 2 still has all of Stage 1 open, and Stage 2 stays closed for them. Because a placed-out learner already reads those letters, `routeNext` offers word practice instead of replaying them (section 3.5 step 3).
@@ -374,7 +374,7 @@ Item 10's guidance needs a configured plan. Class and family plans can be made t
 
 | Name | Payload | When |
 |---|---|---|
-| `access.preview_opened` | `{ stage: StageKey, day: number, from: 'journey' \| 'home' \| 'route' \| 'results' \| 'library' \| 'player' }` | a lesson page opens in preview (`day` is the internal route day) |
+| `access.preview_opened` | `{ stage: StageKey, theme: ThemeKey, from: 'journey' \| 'home' \| 'route' \| 'results' \| 'library' \| 'player' }` | a lesson page opens in preview (stable codes only; the internal route day is not sent, because it is renumbered when a later cell becomes ready) |
 | `access.help_asked` | `{ from: 'episode' \| 'home' \| 'results' \| 'library', audience: 'family' \| 'class' \| 'self' }` | the ask button is pressed (before the gate) |
 | `access.free_end_reached` | `{ freeDays: number, placedOut: boolean }` | the first time `free-end` is shown on this device for this profile (`freeDays` = `freeLessonsFacts().days`, 5 today) |
 | `route.next_started` | `{ source: 'class' \| 'school' \| 'family' \| 'self' \| 'cursor', surface: 'home' \| 'results' \| 'journey' \| 'episode' \| 'route' \| 'placement' }` | a quest that was `routeNext` is started from that surface |
@@ -435,8 +435,8 @@ The draft `paywall/free-plan-days.md` of revision 1 is replaced by `billing/plan
 
 ### 3.17 Behaviours (Given / When / Then; counts on today's catalogue)
 
-- **Given** the switch on (web) and a new free learner created after the flip, **when** the Journey opens, **then** `stage1-letters` carries Next, the five Stage 1 cells carry no ring, the three other playable cells (`stage2-life`, `stage2-nature`, `stage4-rites`) carry the dotted ring with the label "not open yet", and no cell is hidden.
-- **Given** the same learner opens "Lunch Box Words", **then** the page lists its quest with title, blurb and the cards to earn, the row shows "Not open yet" instead of Start, one preview card offers "Ask a grown-up" (family device) and "Back to open lessons", and `access.preview_opened { stage: 'stage2', day: 6, from: 'journey' }` is sent.
+- **Given** the switch on (web) and a free learner, **when** the Journey opens, **then** `stage1-letters` carries Next, the five Stage 1 cells carry no ring, the three other playable cells (`stage2-life`, `stage2-nature`, `stage4-rites`) carry the dotted ring with the label "not open yet", and no cell is hidden.
+- **Given** the same learner opens "Lunch Box Words", **then** the page lists its quest with title, blurb and the cards to earn, the row shows "Not open yet" instead of Start, one preview card offers "Ask a grown-up" (family device) and "Back to open lessons", and `access.preview_opened { stage: 'stage2', theme: 'life', from: 'journey' }` is sent.
 - **Given** a self-only device, **then** the same card's button reads "See how to open it" and opens the Plan screen without the PIN when no PIN is set.
 - **Given** the learner finishes the last open Stage 1 lesson (`crafts-q1` today, `crafts-q3` once Stage 1 is complete), **then** Results shows "You finished your first lessons!" with the cards earned in the free lessons, Back home, Practice words and the ask, and `access.free_end_reached { freeDays: 5, placedOut: false }` is sent once; the next Home shows the practice card with no ask.
 - **Given** a free learner who finished `stage2-life-q1` on an older build, **when** the switch turns on, **then** every Stage 1 lesson and `stage2-life-q1` stay playable, `stage2-nature` shows Not open yet, and the card from `stage2-life` stays in the Library.
@@ -595,7 +595,7 @@ Spec decisions (engineering, reversible):
 | OD-6 | Learner word and shape for a closed lesson | **resolved with LR-OD-8**: "Not open yet" with the dotted ring on the Journey, the Library and the Learning Route; no lock glyph on learner screens | the lock glyph everywhere (then LR changes too) | E3-5, E3-6, E3-7 | yes |
 | OD-7 | Where "next" comes from | section 3.5: due today first (Home's card), then the leading plan source, then the default route | the default route always, plans only on Home's dated card (today's behaviour) | E3-4 | yes |
 | OD-8 | "Day" on screens | never: no learner or grown-up string says "day"; the free part is named "the first lessons" | show "Day N" on lesson pages | E3-6, E3-7, E3-8 | yes |
-| OD-9 | Plan screen free-state wording when the switch is on | the line of section 3.9.1 replaces "Stage 1 is open to everyone." | keep the Stage 1 line and add ours under it (would be untrue for new learners) | E3-8 | yes |
+| OD-9 | Plan screen free-state wording when the switch is on | the line of section 3.9.1 replaces "Stage 1 is always free." (`caregiver.plan.free.open`) and adds the figures | keep the Stage 1 line and add ours under it (says the same thing twice) | E3-8 | yes |
 | OD-10 | Plan marks on the Journey | Next pin plus In your plan ring for the leading source's items inside the derivation horizon (7 days) | Next only; or the whole plan | E3-5 | yes |
 | OD-11 | Offline premium for access | the last server word wins for access (stale premium keeps lessons open); a learner with a membership and no cache fails open; billing keeps the 7-day grace | 7-day grace for access too | E3-2 | yes |
 | OD-12 | Do learners who started under "Stage 1 is always free" keep it? | **Withdrawn by OD-1 (2026-10-11)**: all of Stage 1 is free for every learner, so no profile needs a separate promise; `promiseQuests`, `keepsStage1Promise`, `open-promise` and `EXPO_PUBLIC_FREE_PLAN_SINCE` are removed from this spec | — | none | — |
@@ -611,7 +611,7 @@ Spec decisions (engineering, reversible):
 | d | a plan generated with `unlockedStages: ['stage1']` schedules exactly the free lessons, so the wizard needs no new generator input (OD-1) | E3-1a golden test |
 | e | `gateOpensDirectly` already sends a self-only device with no PIN to the `Paywall` route from any `from` | E3-6 e2e |
 | f | with the switch on, `planProgress.notReady` counts the closed items of that plan (stage-locked items are a subset of closed ones), and `total` counts derived items only (`summarize.ts:30-47`) | E3-12 test |
-| g | a restored profile keeps its `createdAt` (profile schema `createdAt`, `schemas/profile.ts:33`) | E3-2 test |
+| g | ~~a restored profile keeps its `createdAt`~~ withdrawn with OD-12 (OD-1, 2026-10-11): access no longer depends on when a profile was created | none |
 
 ## Appendix A — draft English strings (final copy is the dictionary's)
 
