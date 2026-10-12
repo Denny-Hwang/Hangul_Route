@@ -1036,7 +1036,7 @@ export const learner = {
         found > 0
           ? `Culture notes. ${found} found.${newest ? ` ${second ? `${newest}, ${second}` : newest}.` : ''}`
           : 'Culture notes. Finish a story to find your first culture note.',
-      /** The heading of a note's term and the list of found notes, for screen readers. */
+      /** Screen-reader name of a theme's list of found notes (`theme` is the theme heading). */
       listLabel: (theme: string) => `Culture notes: ${theme}`,
     },
     /**
