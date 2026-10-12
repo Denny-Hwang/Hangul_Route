@@ -4,12 +4,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('../../platform/storage', () => ({
   readJson: vi.fn(async () => null),
   readJsonStrict: vi.fn(async () => null),
+  readJsonExact: vi.fn(async () => null),
   writeJson: vi.fn(async () => undefined),
 }));
 
 import { INITIAL_ATTEMPT_STATE } from '../../logic/profiles/pin-hash';
 import { NO_PIN_SEEN, pinHashFingerprint } from '../../logic/shell/device-gate';
-import { readJsonStrict, writeJson } from '../../platform/storage';
+import { readJsonExact, writeJson } from '../../platform/storage';
 import { useAccountStore } from '../account-store';
 import { bindDeviceGateMarker, currentDeviceGateMarker } from '../device-gate';
 import { useProfileStore } from '../profile-store';
@@ -46,6 +47,7 @@ function resetStores(): void {
     parentPinHash: null,
     pinSetAt: null,
     pinHashSeen: null,
+    pinHashReadFailed: false,
     pinAttempts: INITIAL_ATTEMPT_STATE,
     hydrated: false,
   });
@@ -62,8 +64,8 @@ describe('device gate marker writer', () => {
     vi.setSystemTime(T0);
     resetStores();
     vi.mocked(writeJson).mockClear();
-    vi.mocked(readJsonStrict).mockReset();
-    vi.mocked(readJsonStrict).mockImplementation(async () => null);
+    vi.mocked(readJsonExact).mockReset();
+    vi.mocked(readJsonExact).mockImplementation(async () => null);
   });
 
   afterEach(() => {
@@ -177,19 +179,19 @@ describe('device gate marker writer', () => {
 
   describe('a none marker is written only when the stored list agrees (no fail-open on a failed read)', () => {
     it('the store looks empty but the stored list holds a learner (the profile read failed at boot): nothing is written', async () => {
-      vi.mocked(readJsonStrict).mockImplementation(async (key: string) => (key === 'profiles' ? [profile('a')] : null));
+      vi.mocked(readJsonExact).mockImplementation(async (key: string) => (key === 'profiles' ? [profile('a')] : null));
       useProfileStore.setState({ profiles: [], hydrated: true });
       useAccountStore.setState({ pinHashSeen: NO_PIN_SEEN, hydrated: true });
       unbind = bindDeviceGateMarker();
       await flush();
       expect(markerWrites()).toEqual([]);
-      expect(readJsonStrict).toHaveBeenCalledWith('profiles');
+      expect(readJsonExact).toHaveBeenCalledWith('profiles');
       // The device as the app sees it is still reported to the hand-off.
       expect(currentDeviceGateMarker()).toEqual({ v: 1, gate: 'none' });
     });
 
     it('a strict read that fails writes nothing', async () => {
-      vi.mocked(readJsonStrict).mockImplementation(async () => {
+      vi.mocked(readJsonExact).mockImplementation(async () => {
         throw new Error('UnknownError');
       });
       useProfileStore.setState({ profiles: [], hydrated: true });
@@ -200,7 +202,7 @@ describe('device gate marker writer', () => {
     });
 
     it('a stored list of grown-up profiles only, or none at all, agrees: none is written', async () => {
-      vi.mocked(readJsonStrict).mockImplementation(async () => [{ role: 'parent' }]);
+      vi.mocked(readJsonExact).mockImplementation(async (key: string) => (key === 'profiles' ? [{ role: 'parent' }] : null));
       useProfileStore.setState({ profiles: [], hydrated: true });
       useAccountStore.setState({ pinHashSeen: NO_PIN_SEEN, hydrated: true });
       unbind = bindDeviceGateMarker();
@@ -210,7 +212,7 @@ describe('device gate marker writer', () => {
 
     it('a self-only device without a PIN: the stored self profile agrees, none is written', async () => {
       const self = profile('me', 'self');
-      vi.mocked(readJsonStrict).mockImplementation(async (key: string) => (key === 'profiles' ? [self] : null));
+      vi.mocked(readJsonExact).mockImplementation(async (key: string) => (key === 'profiles' ? [self] : null));
       useProfileStore.setState({ profiles: [self], hydrated: true });
       useAccountStore.setState({ pinHashSeen: NO_PIN_SEEN, hydrated: true });
       unbind = bindDeviceGateMarker();
@@ -219,7 +221,7 @@ describe('device gate marker writer', () => {
     });
 
     it('a refused none is not read again on every store change, only after the marker changed', async () => {
-      vi.mocked(readJsonStrict).mockImplementation(async (key: string) => (key === 'profiles' ? [profile('a')] : null));
+      vi.mocked(readJsonExact).mockImplementation(async (key: string) => (key === 'profiles' ? [profile('a')] : null));
       useProfileStore.setState({ profiles: [], hydrated: true });
       useAccountStore.setState({ pinHashSeen: NO_PIN_SEEN, hydrated: true });
       unbind = bindDeviceGateMarker();
@@ -227,21 +229,21 @@ describe('device gate marker writer', () => {
       useAccountStore.setState({ parentEmail: 'x@example.com' });
       useProfileStore.setState({ activeId: null });
       await flush();
-      expect(readJsonStrict).toHaveBeenCalledTimes(1);
+      expect(readJsonExact).toHaveBeenCalledTimes(2);
       expect(markerWrites()).toEqual([]);
 
       // The device says something else (a child, no PIN), then none again: checked again, and now it agrees.
       useProfileStore.setState({ profiles: [profile('b')] });
       await flush();
-      vi.mocked(readJsonStrict).mockImplementation(async () => []);
+      vi.mocked(readJsonExact).mockImplementation(async (key: string) => (key === 'profiles' ? [] : null));
       useProfileStore.setState({ profiles: [] });
       await flush();
-      expect(readJsonStrict).toHaveBeenCalledTimes(2);
+      expect(readJsonExact).toHaveBeenCalledTimes(4);
       expect(markerWrites()).toEqual([{ v: 1, gate: 'nopin' }, { v: 1, gate: 'none' }]);
     });
 
     it('pin and nopin never wait for the stored list (they only make the lock stricter)', async () => {
-      vi.mocked(readJsonStrict).mockImplementation(async () => {
+      vi.mocked(readJsonExact).mockImplementation(async () => {
         throw new Error('UnknownError');
       });
       useProfileStore.setState({ profiles: [profile('a')], hydrated: true });
@@ -249,7 +251,7 @@ describe('device gate marker writer', () => {
       unbind = bindDeviceGateMarker();
       await flush();
       expect(markerWrites()).toEqual([{ v: 1, gate: 'nopin' }]);
-      expect(readJsonStrict).not.toHaveBeenCalled();
+      expect(readJsonExact).not.toHaveBeenCalled();
     });
 
     it('the last learner removed in this session: none once the stored list agrees', async () => {
@@ -264,7 +266,7 @@ describe('device gate marker writer', () => {
 
     it('a newer marker that arrives while none waits for its read wins, and none is never written after it', async () => {
       let release: (value: unknown) => void = () => undefined;
-      vi.mocked(readJsonStrict).mockImplementation(() => new Promise((resolve) => (release = resolve)));
+      vi.mocked(readJsonExact).mockImplementation((key: string) => (key === 'profiles' ? new Promise((resolve) => (release = resolve)) : Promise.resolve(null)));
       useProfileStore.setState({ profiles: [], hydrated: true });
       useAccountStore.setState({ pinHashSeen: NO_PIN_SEEN, hydrated: true });
       unbind = bindDeviceGateMarker();
@@ -275,6 +277,75 @@ describe('device gate marker writer', () => {
       await flush();
       await flush();
       expect(markerWrites()).toEqual([{ v: 1, gate: 'nopin' }]);
+    });
+  });
+
+  describe('a PIN hash that could not be read never says less than the device holds (A-6 review)', () => {
+    it('a self-only device whose stored hash is there while the store lost it: none is not written', async () => {
+      const self = profile('me', 'self');
+      vi.mocked(readJsonExact).mockImplementation(async (key: string) => {
+        if (key === 'profiles') return [self];
+        if (key === 'account:parentPinHash') return HASH;
+        return null;
+      });
+      useProfileStore.setState({ profiles: [self], hydrated: true });
+      useAccountStore.setState({ pinHashSeen: NO_PIN_SEEN, hydrated: true });
+      unbind = bindDeviceGateMarker();
+      await flush();
+      expect(readJsonExact).toHaveBeenCalledWith('account:parentPinHash');
+      expect(markerWrites()).toEqual([]);
+    });
+
+    it('a failed PIN hash read at hydrate: no marker, no reconcile, no pinHashSeen, nothing for the hand-off', async () => {
+      const self = profile('me', 'self');
+      useProfileStore.setState({ profiles: [self], hydrated: true });
+      useAccountStore.setState({ pinSetAt: T0 - 5, pinHashSeen: pinHashFingerprint(HASH), pinHashReadFailed: true, hydrated: true });
+      unbind = bindDeviceGateMarker();
+      await flush();
+      expect(markerWrites()).toEqual([]);
+      expect(writeJson).not.toHaveBeenCalled();
+      expect(currentDeviceGateMarker()).toBeNull();
+      expect(useAccountStore.getState().pinHashSeen).toBe(pinHashFingerprint(HASH));
+    });
+
+    it('a PIN set after the failed read: the writer resumes with the new epoch', async () => {
+      useProfileStore.setState({ profiles: [profile('a')], hydrated: true });
+      useAccountStore.setState({ pinHashSeen: pinHashFingerprint(HASH), pinHashReadFailed: true, hydrated: true });
+      unbind = bindDeviceGateMarker();
+      await flush();
+      useAccountStore.getState().setParentPinHash('ff:ee');
+      await flush();
+      expect(markerWrites()).toEqual([{ v: 1, gate: 'pin', pinEpoch: T0 }]);
+    });
+
+    it('a stored PIN hash that is not a string refuses none', async () => {
+      vi.mocked(readJsonExact).mockImplementation(async (key: string) => (key === 'account:parentPinHash' ? 7 : null));
+      useProfileStore.setState({ profiles: [], hydrated: true });
+      useAccountStore.setState({ pinHashSeen: NO_PIN_SEEN, hydrated: true });
+      unbind = bindDeviceGateMarker();
+      await flush();
+      expect(markerWrites()).toEqual([]);
+    });
+
+    it('a stored profile list that does not parse (the exact read throws) refuses none', async () => {
+      vi.mocked(readJsonExact).mockImplementation(async (key: string) => {
+        if (key === 'profiles') throw new SyntaxError('Unexpected token');
+        return null;
+      });
+      useProfileStore.setState({ profiles: [], hydrated: true });
+      useAccountStore.setState({ pinHashSeen: NO_PIN_SEEN, hydrated: true });
+      unbind = bindDeviceGateMarker();
+      await flush();
+      expect(markerWrites()).toEqual([]);
+    });
+
+    it('a stored profile value that is not a list refuses none', async () => {
+      vi.mocked(readJsonExact).mockImplementation(async (key: string) => (key === 'profiles' ? { a: 1 } : null));
+      useProfileStore.setState({ profiles: [], hydrated: true });
+      useAccountStore.setState({ pinHashSeen: NO_PIN_SEEN, hydrated: true });
+      unbind = bindDeviceGateMarker();
+      await flush();
+      expect(markerWrites()).toEqual([]);
     });
   });
 

@@ -161,6 +161,15 @@ export function clearGrownUpTab(area: SessionArea | null = sessionArea()): void 
 }
 
 /**
+ * Forgets the PIN this tab saw: the fresh-PIN time and the 15-minute parent gate session, both in
+ * memory only. A learner page restored from the back/forward cache calls it (`app-root.web.ts`),
+ * so a device handed back after a grown-up page asks for the PIN again (A-6 review).
+ */
+export function forgetFreshPin(): void {
+  useUiStore.setState({ lastPinVerifiedAt: null, parentGateOpenedAt: null });
+}
+
+/**
  * The PIN screen for `GrownUpArea` on a device with no PIN stored: Continue opens the waiting
  * grown-up page (or the sign-in router) without writing an unlock, so the console asks for a
  * sign-in (section 3.9).

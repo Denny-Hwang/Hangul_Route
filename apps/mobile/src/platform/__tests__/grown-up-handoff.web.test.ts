@@ -15,6 +15,7 @@ import {
   LEAVE_TELEMETRY_WAIT_MS,
   clearGrownUpTab,
   continueToGrownUpPage,
+  forgetFreshPin,
   openGrownUpArea,
   trackThenLeave,
   type HandoffEnv,
@@ -199,6 +200,17 @@ describe('trackThenLeave', () => {
     const leave = vi.fn();
     await trackThenLeave(event, leave, { track: async () => Promise.reject(new Error('boom')), wait: () => new Promise(() => undefined) });
     expect(leave).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('forgetFreshPin', () => {
+  it('resets the fresh-PIN time and the parent gate session, and nothing else', () => {
+    useUiStore.setState({ lastPinVerifiedAt: 5, parentGateOpenedAt: 6, hapticsOn: false });
+    forgetFreshPin();
+    expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
+    expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
+    expect(useUiStore.getState().hapticsOn).toBe(false);
+    useUiStore.setState({ hapticsOn: true });
   });
 });
 

@@ -14,6 +14,7 @@ import * as nativeRoot from '../app-root';
 import { bootRoot, consumeBootIntent, peekBootIntent, pickRoot, type RootEnv } from '../app-root.web';
 import { LEAVE_TELEMETRY_WAIT_MS, type SessionArea } from '../grown-up-handoff.web';
 import type { TelemetryEvent } from '../telemetry';
+import { useUiStore } from '../../store/ui-store';
 
 /**
  * The root chooser of the learner web build (F-APP-001 sections 3.4, 3.9 and 3.11; F-BROWSE-001
@@ -272,6 +273,16 @@ describe('bootRoot (web): what each root does before it mounts', () => {
       expect(h.area.data.has(CONSOLE_SESSION_KEY)).toBe(false);
     });
 
+    it('a restore also forgets the fresh PIN of this tab (A-6 review: Back after a hand-off never skips the PIN)', () => {
+      const h = withRestore('/');
+      const forgetPin = vi.fn();
+      h.env.forgetPin = forgetPin;
+      bootRoot(h.env);
+      expect(forgetPin).not.toHaveBeenCalled();
+      h.restore();
+      expect(forgetPin).toHaveBeenCalledTimes(1);
+    });
+
     it('the bounce registers nothing', () => {
       const h = withRestore('/teach/zzz');
       bootRoot(h.env);
@@ -294,6 +305,21 @@ describe('bootRoot (web): what each root does before it mounts', () => {
       expect(area.data.has(UNLOCK_SESSION_KEY)).toBe(true);
       listeners[0]?.({ persisted: true });
       expect(area.data.has(UNLOCK_SESSION_KEY)).toBe(false);
+    });
+
+    it('by default a restore resets the in-memory fresh PIN and the parent gate session', () => {
+      const listeners: Array<(event: { persisted?: boolean }) => void> = [];
+      vi.stubGlobal('location', { pathname: '/', search: '', hash: '', replace: vi.fn() });
+      vi.stubGlobal('history', { state: null, replaceState: vi.fn() });
+      vi.stubGlobal('sessionStorage', memoryArea({}));
+      vi.stubGlobal('addEventListener', (type: string, listener: (event: { persisted?: boolean }) => void) => {
+        if (type === 'pageshow') listeners.push(listener);
+      });
+      bootRoot();
+      useUiStore.setState({ lastPinVerifiedAt: Date.now(), parentGateOpenedAt: Date.now() });
+      listeners[0]?.({ persisted: true });
+      expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
+      expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
     });
 
     it('a window that throws on addEventListener still boots', () => {

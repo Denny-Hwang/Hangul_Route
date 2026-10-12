@@ -1,4 +1,4 @@
-import { APP_ROUTES, GROWN_UP_PREFIXES, isGrownUpPath, type GrownUpPrefix } from '@hangul-route/content-schema';
+import { APP_ROUTES, GROWN_UP_PREFIXES, isGrownUpPath, legacyAppTarget, type GrownUpPrefix } from '@hangul-route/content-schema';
 
 /**
  * The bounce rule (F-APP-001 section 3.4, A-6). The learner bundle boots on a grown-up path only
@@ -6,7 +6,9 @@ import { APP_ROUTES, GROWN_UP_PREFIXES, isGrownUpPath, type GrownUpPrefix } from
  * console URL): the tab then goes to the persona entry of the prefix, `/parent*` to `/parent`,
  * `/teach*` to `/teach`, anything else to `/signin`, and `shell.path_bounced` names the prefix.
  * The query keys the entries read (`persona`, its alias `as`, and the `lang` hand-off) go along;
- * every other key, and the fragment, stays behind.
+ * every other key, and the fragment, stays behind. The app-host legacy pages (`/teach/billing`,
+ * `/teach/start`, section 3.13) go first to their new page with the whole query, as their redirect
+ * pages would (a Stripe return keeps `checkout=`), on a host that does not serve those pages yet.
  *
  * A path that already is its entry never bounces (it mounts the learner app instead). On a host
  * that serves the entries as console pages (A-3 onwards) the learner bundle never boots there;
@@ -54,6 +56,11 @@ export function bounceFor(pathname: string, search = ''): Bounce | null {
   // one, so the prefix a grown-up path starts with is the one it matched.
   const prefix = GROWN_UP_PREFIXES.find((p) => pathname.startsWith(p));
   if (prefix === undefined || !isGrownUpPath(pathname)) return null;
+  const legacy = legacyAppTarget(pathname);
+  if (legacy !== null) {
+    const query = search === '' || search.startsWith('?') ? search : `?${search}`;
+    return { prefix: prefix.slice(1) as BouncePrefix, target: `${legacy}${query}` };
+  }
   const entry = ENTRY[prefix];
   if (withoutTrailingSlash(pathname) === entry) return null;
   return { prefix: prefix.slice(1) as BouncePrefix, target: `${entry}${keptQuery(search)}` };

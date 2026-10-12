@@ -1,7 +1,7 @@
 import { isLearnerRoot } from '@hangul-route/content-schema';
 import { parseBootIntent, type BootIntent } from '../logic/shell/boot-intent';
 import { bounceFor } from '../logic/shell/bounce';
-import { clearGrownUpTab, sessionArea, trackThenLeave, type SessionArea } from './grown-up-handoff.web';
+import { clearGrownUpTab, forgetFreshPin, sessionArea, trackThenLeave, type SessionArea } from './grown-up-handoff.web';
 import { track, type TelemetryEvent } from './telemetry';
 
 /**
@@ -15,8 +15,9 @@ import { track, type TelemetryEvent } from './telemetry';
  *   session of this tab, with a `gate=grown-up` intent too: the lock that sent the tab here
  *   already removed the console session, and the unlock it could not use is replaced after the
  *   PIN, so nothing of value is lost and an intent typed by hand keeps nothing either. A page
- *   restored from the back/forward cache clears them again, so a tab handed back to a learner is
- *   locked again however it came back.
+ *   restored from the back/forward cache clears them again and forgets the fresh PIN and the
+ *   parent gate session held in memory, so a tab handed back to a learner is locked again however
+ *   it came back.
  * - **browse**: until F-BROWSE-001 BR-6 wires `BrowseApp`, `/browse` mounts the learner app and
  *   clears as the app does (it reads no boot intent). `BrowseApp` itself never clears the unlock
  *   (F-BROWSE-001 BD1 and section 12), so BR-6 takes `browse` out of `LEARNER_APP_ROOTS`.
@@ -47,6 +48,8 @@ export interface RootEnv {
   wait?: (ms: number) => Promise<void>;
   /** Calls `handler` when the page comes back from the back/forward cache. */
   onRestore?: (handler: () => void) => void;
+  /** Forgets this tab's in-memory fresh PIN and parent gate session (on a restore). */
+  forgetPin?: () => void;
 }
 
 let intent: BootIntent | null = null;
@@ -70,6 +73,7 @@ function browserEnv(): RootEnv {
     area: sessionArea,
     track: (event) => track(event),
     onRestore: onPageRestore,
+    forgetPin: forgetFreshPin,
   };
 }
 
@@ -86,9 +90,13 @@ function readIntent(env: RootEnv, location: NonNullable<RootEnv['location']>): v
 
 function bootLearnerApp(env: RootEnv, location: NonNullable<RootEnv['location']>, root: AppRoot): void {
   if (root === 'app') readIntent(env, location);
-  const clear = (): void => clearGrownUpTab(env.area());
-  clear();
-  env.onRestore?.(clear);
+  clearGrownUpTab(env.area());
+  // A restored page also forgets the PIN it saw before it left: Back from a grown-up page within
+  // 2 minutes of a PIN must not let the next tap skip the PIN (A-6 review).
+  env.onRestore?.(() => {
+    clearGrownUpTab(env.area());
+    env.forgetPin?.();
+  });
 }
 
 /** Picks the root and runs its boot step; call once, before anything mounts. */

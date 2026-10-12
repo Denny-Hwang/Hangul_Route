@@ -33,6 +33,17 @@ export async function readJsonStrict<T>(key: string): Promise<T | null> {
   }
 }
 
+/**
+ * Like `readJsonStrict`, but only a missing key is null: a failed read and a stored value that
+ * does not parse both throw. For reads that must not take damaged data for "nothing stored"
+ * (the device gate marker, F-APP-001 section 3.9).
+ */
+export async function readJsonExact<T>(key: string): Promise<T | null> {
+  const raw = await get<string>(KEY_PREFIX + key);
+  if (raw === null || raw === undefined || raw === '') return null;
+  return JSON.parse(raw) as T;
+}
+
 /** Stores `value`; a key the write fence rejects is left untouched (F-BROWSE-001 section 4.10). */
 export async function writeJson<T>(key: string, value: T): Promise<void> {
   if (!writePasses(key, 'write')) return;

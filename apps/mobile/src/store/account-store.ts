@@ -6,11 +6,12 @@ import { startResetWait } from '../logic/profiles/pin-reset';
 import {
   PIN_HASH_SEEN_KEY,
   PIN_HASH_UNREAD,
+  pinHashSeenOf,
   pinHashFingerprint,
   pinSetAtOf,
   reconcilePinEpoch as nextPinEpoch,
 } from '../logic/shell/device-gate';
-import { readJson, readJsonStrict, writeJson } from '../platform/storage';
+import { readJson, readJsonExact, writeJson } from '../platform/storage';
 
 /**
  * Family-level account settings, persisted across sessions.
@@ -30,22 +31,38 @@ const SUBSCRIPTION_KEY = 'account:subscription';
 // Family-level grown-up PIN (F-PROF-001 §10 interim: one PIN per device until
 // parent-first onboarding ships). Attempt state persists so a force-quit
 // cannot clear an active cooldown (§3.1).
-const PIN_HASH_KEY = 'account:parentPinHash';
+export const PIN_HASH_KEY = 'account:parentPinHash';
 const PIN_ATTEMPTS_KEY = 'account:pinAttempts';
 // The PIN epoch behind the device gate marker (F-APP-001 section 3.9): when the current PIN was
 // set (`account:pinSetAt`, epoch ms), and the fingerprint of the hash this app last saw
 // (`account:pinHashSeen`), so a PIN changed by an older bundle still moves the epoch.
 
 /**
- * The fingerprint is read strictly: a read that fails is not "nothing seen yet" (which keeps the
- * epoch) but `PIN_HASH_UNREAD`, which moves it, so a lost read can never hide a PIN change.
+ * The fingerprint is read exactly: a read that fails, a value that does not parse and a value
+ * that is not a fingerprint are not "nothing seen yet" (which keeps the epoch) but
+ * `PIN_HASH_UNREAD`, which moves it, so a lost or damaged read can never hide a PIN change.
  */
 async function readPinHashSeen(): Promise<string | null> {
   try {
-    const value = await readJsonStrict<unknown>(PIN_HASH_SEEN_KEY);
-    return typeof value === 'string' ? value : null;
+    return pinHashSeenOf(await readJsonExact<unknown>(PIN_HASH_SEEN_KEY));
   } catch {
     return PIN_HASH_UNREAD;
+  }
+}
+
+/**
+ * The PIN hash, read exactly (A-6 review): a read that fails or a stored value that is not a hash
+ * is `failed`, so the device gate marker and the epoch never take it for "no PIN". The screens
+ * keep the lenient value, as before: a retry that finds a hash is not a failure.
+ */
+async function readPinHash(): Promise<{ hash: string | null; failed: boolean }> {
+  try {
+    const value = await readJsonExact<unknown>(PIN_HASH_KEY);
+    if (value === null || typeof value === 'string') return { hash: value, failed: false };
+    return { hash: null, failed: true };
+  } catch {
+    const retry = await readJson<unknown>(PIN_HASH_KEY);
+    return typeof retry === 'string' ? { hash: retry, failed: false } : { hash: null, failed: true };
   }
 }
 
@@ -64,6 +81,12 @@ interface State {
   pinSetAt: number | null;
   /** Fingerprint of the stored PIN hash last seen (`NO_PIN_SEEN` without a PIN); null before the first look, `PIN_HASH_UNREAD` when the read failed. */
   pinHashSeen: string | null;
+  /**
+   * The PIN hash could not be read at hydrate (or was damaged): the device gate marker is not
+   * written and the epoch not reconciled until a PIN is set again (F-APP-001 section 3.9, A-6
+   * review). In memory only.
+   */
+  pinHashReadFailed: boolean;
   pinAttempts: AttemptState;
   hydrated: boolean;
 }
@@ -97,6 +120,7 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
   parentPinHash: null,
   pinSetAt: null,
   pinHashSeen: null,
+  pinHashReadFailed: false,
   pinAttempts: INITIAL_ATTEMPT_STATE,
   hydrated: false,
 
@@ -107,7 +131,7 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     const selfConsentAcceptedAt = await readJson<string | null>(SELF_CONSENT_KEY);
     const pinResetRequestedAt = await readJson<string | null>(PIN_RESET_KEY);
     const subscription = await readJson<SubscriptionState | null>(SUBSCRIPTION_KEY);
-    const parentPinHash = await readJson<string | null>(PIN_HASH_KEY);
+    const pinHash = await readPinHash();
     const pinAttempts = await readJson<AttemptState | null>(PIN_ATTEMPTS_KEY);
     const pinSetAt = await readJson<unknown>(PIN_SET_AT_KEY);
     const pinHashSeen = await readPinHashSeen();
@@ -125,7 +149,8 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
       selfConsentAcceptedAt: selfConsentAcceptedAt ?? null,
       pinResetRequestedAt: pinResetRequestedAt ?? null,
       subscription: subscription ?? null,
-      parentPinHash: parentPinHash ?? null,
+      parentPinHash: pinHash.hash,
+      pinHashReadFailed: pinHash.failed,
       pinSetAt: pinSetAtOf(pinSetAt),
       pinHashSeen,
       pinAttempts: pinAttempts ?? INITIAL_ATTEMPT_STATE,
@@ -183,6 +208,7 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
       parentPinHash: hash,
       pinSetAt,
       pinHashSeen,
+      pinHashReadFailed: false,
       pinAttempts: INITIAL_ATTEMPT_STATE,
       ...(hadReset ? { pinResetRequestedAt: null } : {}),
     });
@@ -199,7 +225,9 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
   },
 
   reconcilePinEpoch: (now) => {
-    const { parentPinHash, pinSetAt, pinHashSeen } = get();
+    const { parentPinHash, pinSetAt, pinHashSeen, pinHashReadFailed } = get();
+    // A hash that could not be read is not "no PIN": record nothing until it is known again.
+    if (pinHashReadFailed) return;
     const next = nextPinEpoch({ parentPinHash, pinSetAt, pinHashSeen }, now);
     if (next === null) return;
     set(next);

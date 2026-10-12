@@ -1,7 +1,7 @@
 import { DEVICE_GATE_KEY, type DeviceGateMarker } from '@hangul-route/content-schema';
-import { deviceGateMarker, sameMarker, storedMarkerProfiles } from '../logic/shell/device-gate';
-import { readJsonStrict, writeJson } from '../platform/storage';
-import { useAccountStore } from './account-store';
+import { deviceGateMarker, sameMarker, storedMarkerProfiles, storedProfilesReadable } from '../logic/shell/device-gate';
+import { readJsonExact, writeJson } from '../platform/storage';
+import { PIN_HASH_KEY, useAccountStore } from './account-store';
 import { PROFILES_KEY, useProfileStore } from './profile-store';
 
 /**
@@ -14,11 +14,13 @@ import { PROFILES_KEY, useProfileStore } from './profile-store';
  *   would say `none`);
  * - on the first evaluation the account reconciles the PIN epoch (a PIN an older bundle changed
  *   moves it to now), before the first marker is written;
- * - a `none` marker is written only when the stored profile list, read again strictly, gives
- *   `none` too (no learner, or self learners only without a PIN): a profile read that failed at
- *   boot (the store then looks empty) writes nothing, and the console keeps the previous marker
- *   or its own fallback. A `none` the stored list refuses is not checked again until the marker
- *   changes;
+ * - a `none` marker is written only when the stored profile list and PIN hash, read again
+ *   exactly, give `none` too (no learner, or self learners only without a PIN): a read that
+ *   failed at boot (the store then looks empty) or damaged data writes nothing, and the console
+ *   keeps the previous marker or its own fallback. A `none` the stored device refuses is not
+ *   checked again until the marker changes;
+ * - while the PIN hash could not be read at hydrate (`pinHashReadFailed`) nothing is written and
+ *   the epoch is not reconciled, so a lost read never records "no PIN";
  * - writes run one at a time, each for the newest marker, and a marker equal to the last one
  *   written is not written again.
  *
@@ -39,11 +41,19 @@ export function currentDeviceGateMarker(): DeviceGateMarker | null {
   return current;
 }
 
-/** Whether the stored profile list, read strictly, gives the same marker; a failed read throws. */
+/**
+ * Whether the device as stored gives the same marker: the profile list and the PIN hash are both
+ * read again exactly (A-6 review), so neither a failed read nor damaged data at boot can confirm a
+ * `none` the device does not hold. A failed or unparsable read throws; a value of the wrong shape
+ * disagrees.
+ */
 async function storageAgrees(marker: DeviceGateMarker): Promise<boolean> {
-  const profiles = storedMarkerProfiles(await readJsonStrict<unknown>(PROFILES_KEY));
-  const { parentPinHash, pinSetAt } = useAccountStore.getState();
-  return sameMarker(deviceGateMarker({ profiles, parentPinHash, pinSetAt }), marker);
+  const rawProfiles = await readJsonExact<unknown>(PROFILES_KEY);
+  if (!storedProfilesReadable(rawProfiles)) return false;
+  const rawHash = await readJsonExact<unknown>(PIN_HASH_KEY);
+  if (rawHash !== null && typeof rawHash !== 'string') return false;
+  const { pinSetAt } = useAccountStore.getState();
+  return sameMarker(deviceGateMarker({ profiles: storedMarkerProfiles(rawProfiles), parentPinHash: rawHash, pinSetAt }), marker);
 }
 
 async function flush(gen: number): Promise<void> {
@@ -89,7 +99,14 @@ function schedule(gen: number): void {
 function evaluate(gen: number): void {
   if (gen !== generation) return;
   const { profiles, hydrated: profilesIn } = useProfileStore.getState();
-  if (!profilesIn || !useAccountStore.getState().hydrated) return;
+  const account = useAccountStore.getState();
+  if (!profilesIn || !account.hydrated) return;
+  if (account.pinHashReadFailed) {
+    // The PIN hash could not be read: this device says nothing (the console keeps the stored
+    // marker or its own fallback, and the hand-off writes no unlock) until a PIN is set again.
+    current = null;
+    return;
+  }
   if (!reconciled) {
     reconciled = true;
     // May update the account store, which evaluates again with the moved epoch.

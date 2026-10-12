@@ -7,10 +7,12 @@ import {
   isLearnerEntry,
   pinEpochOf,
   pinHashFingerprint,
+  pinHashSeenOf,
   pinSetAtOf,
   reconcilePinEpoch,
   sameMarker,
   storedMarkerProfiles,
+  storedProfilesReadable,
 } from '../device-gate';
 
 /**
@@ -224,5 +226,34 @@ describe('pinSetAtOf', () => {
     expect(pinSetAtOf(5)).toBe(5);
     expect(pinSetAtOf(0)).toBe(0);
     for (const raw of [null, undefined, -1, Number.NaN, Number.POSITIVE_INFINITY, '5']) expect(pinSetAtOf(raw), String(raw)).toBeNull();
+  });
+});
+
+describe('pinHashSeenOf (a stored account:pinHashSeen, A-6 review)', () => {
+  it('absent is "nothing seen yet"', () => {
+    expect(pinHashSeenOf(null)).toBeNull();
+  });
+
+  it('a fingerprint or the no-PIN value is kept', () => {
+    expect(pinHashSeenOf(pinHashFingerprint('a:1'))).toBe(pinHashFingerprint('a:1'));
+    expect(pinHashSeenOf(NO_PIN_SEEN)).toBe(NO_PIN_SEEN);
+  });
+
+  it('anything else present is damaged and reads as unread, which moves the epoch', () => {
+    for (const raw of [42, true, {}, [], '', 'unread', '0123456789ABCDEF', '0123456789abcde', 'xyz']) {
+      expect(pinHashSeenOf(raw), JSON.stringify(raw)).toBe(PIN_HASH_UNREAD);
+    }
+  });
+});
+
+describe('storedProfilesReadable (a stored hr:profiles that may confirm none)', () => {
+  it('absent or a list is readable', () => {
+    expect(storedProfilesReadable(null)).toBe(true);
+    expect(storedProfilesReadable([])).toBe(true);
+    expect(storedProfilesReadable([{ role: 'parent' }])).toBe(true);
+  });
+
+  it('anything else present is damaged and never confirms none', () => {
+    for (const raw of [{}, 'x', 0, true]) expect(storedProfilesReadable(raw), JSON.stringify(raw)).toBe(false);
   });
 });

@@ -40,6 +40,17 @@ describe('bounceFor', () => {
     expect(bounceFor('/account/billing', '')).toEqual({ prefix: 'account', target: '/signin' });
   });
 
+  it('the app-host legacy pages go to their new page with the whole query (section 3.13: a Stripe return keeps checkout=)', () => {
+    expect(bounceFor('/teach/billing', '?checkout=success')).toEqual({ prefix: 'teach', target: '/account/billing?checkout=success' });
+    expect(bounceFor('/teach/billing/', '?checkout=cancel')).toEqual({ prefix: 'teach', target: '/account/billing?checkout=cancel' });
+    expect(bounceFor('/teach/billing.html')).toEqual({ prefix: 'teach', target: '/account/billing' });
+    expect(bounceFor('/teach/billing', 'checkout=success')).toEqual({ prefix: 'teach', target: '/account/billing?checkout=success' });
+    expect(bounceFor('/teach/start', '?x=1&persona=teacher')).toEqual({ prefix: 'teach', target: '/start?x=1&persona=teacher' });
+    // Neither target is a legacy page, so the next boot bounces at most once more and never loops.
+    expect(bounceFor('/account/billing', '?checkout=success')).toEqual({ prefix: 'account', target: '/signin' });
+    expect(bounceFor('/start', '?x=1')).toEqual({ prefix: 'start', target: '/signin' });
+  });
+
   it('every prefix code is one the Worker keeps for shell.path_bounced', () => {
     const allowed = SHELL_TELEMETRY_PAYLOADS['shell.path_bounced']?.prefix ?? [];
     for (const prefix of GROWN_UP_PREFIXES) {

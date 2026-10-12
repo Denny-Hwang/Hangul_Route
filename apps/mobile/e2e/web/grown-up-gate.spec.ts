@@ -129,6 +129,7 @@ test.describe('the lock PIN path', () => {
 });
 
 for (const vp of [
+  { width: 320, height: 568 },
   { width: 375, height: 667 },
   { width: 1280, height: 800 },
 ] as const) {
@@ -144,6 +145,10 @@ for (const vp of [
       await expect(page.getByRole('button', { name: 'Digit 1', exact: true })).toHaveCount(0);
       await expect(page.getByText('Create a grown-up PIN')).toHaveCount(0);
       await expect(page.getByRole('button', { name: 'Forgot PIN?' })).toHaveCount(0);
+      // The layout bar (A-6 review): no horizontal scroll, and both buttons whole on screen.
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+      await expect(page.getByRole('button', { name: 'Continue' })).toBeInViewport({ ratio: 1 });
+      await expect(page.getByRole('button', { name: 'Cancel' })).toBeInViewport({ ratio: 1 });
       await shot(page, `a6-no-pin-${vp.width}`);
 
       await page.getByRole('button', { name: 'Continue' }).click();

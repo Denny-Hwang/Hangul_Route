@@ -14,7 +14,7 @@ vi.mock('idb-keyval', () => ({
 }));
 
 import { get } from 'idb-keyval';
-import { listKeys, readJson, readJsonStrict, removeKey, requestPersistence, writeJson } from '../storage.web';
+import { listKeys, readJson, readJsonExact, readJsonStrict, removeKey, requestPersistence, writeJson } from '../storage.web';
 
 describe('platform/storage.web (IndexedDB via idb-keyval)', () => {
   beforeEach(() => mem.clear());
@@ -39,6 +39,16 @@ describe('platform/storage.web (IndexedDB via idb-keyval)', () => {
     expect(await readJsonStrict('bad')).toBeNull();
     vi.mocked(get).mockRejectedValueOnce(new Error('idb'));
     await expect(readJsonStrict('q')).rejects.toThrow('idb');
+  });
+
+  it('readJsonExact is null only for a missing key: a failed read or an unparsable value throws (F-APP-001 A-6)', async () => {
+    await writeJson('q', [1, 2]);
+    expect(await readJsonExact('q')).toEqual([1, 2]);
+    expect(await readJsonExact('nope')).toBeNull();
+    mem.set('hr:bad', '{not json');
+    await expect(readJsonExact('bad')).rejects.toThrow();
+    vi.mocked(get).mockRejectedValueOnce(new Error('idb'));
+    await expect(readJsonExact('q')).rejects.toThrow('idb');
   });
 
   it('listKeys strips the prefix and ignores foreign keys', async () => {

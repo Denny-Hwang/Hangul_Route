@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { parseBootIntent } from '../boot-intent';
+import { describe, expect, it, vi } from 'vitest';
+import { openBootIntentWhenReady, parseBootIntent } from '../boot-intent';
 
 /**
  * F-APP-001 section 3.9 (PIN path in the learner app) and section 3.11 (boot intents): the
@@ -65,5 +65,88 @@ describe('parseBootIntent', () => {
 
   it('accepts a search without the leading question mark', () => {
     expect(parseBootIntent('gate=grown-up&next=%2Fsignin').intent).toEqual({ kind: 'grown-up', next: '/signin' });
+  });
+});
+
+/**
+ * A-6 review: the hook behind `navigation/boot-intent.tsx` opens the PIN screen exactly once,
+ * whether the navigator is ready at once or later, and never when the intent is gone.
+ */
+describe('openBootIntentWhenReady', () => {
+  function fakeNavigator(ready: boolean) {
+    const listeners = new Set<() => void>();
+    const nav = {
+      ready,
+      isReady: vi.fn(() => nav.ready),
+      navigate: vi.fn(),
+      addListener: vi.fn((_event: 'state', listener: () => void) => {
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      }),
+      emit: () => [...listeners].forEach((listener) => listener()),
+      listeners,
+    };
+    return nav;
+  }
+
+  function source(next: string | null) {
+    let intent = next === null ? null : { kind: 'grown-up' as const, next };
+    return {
+      peek: vi.fn(() => intent),
+      consume: vi.fn(() => {
+        intent = null;
+      }),
+    };
+  }
+
+  const PIN_PARAMS = { next: 'GrownUpArea', url: '/parent?id=sp_1', grownUpVia: 'lock' };
+
+  it('a ready navigator: opens the PIN screen once, at once, and listens to nothing', () => {
+    const nav = fakeNavigator(true);
+    const src = source('/parent?id=sp_1');
+    const cleanup = openBootIntentWhenReady(nav, src);
+    expect(nav.navigate).toHaveBeenCalledTimes(1);
+    expect(nav.navigate).toHaveBeenCalledWith('PinEntry', PIN_PARAMS);
+    expect(src.consume).toHaveBeenCalledTimes(1);
+    expect(nav.addListener).not.toHaveBeenCalled();
+    cleanup();
+  });
+
+  it('a navigator not ready yet: waits for a state change once ready, opens once, then stops listening', () => {
+    const nav = fakeNavigator(false);
+    const src = source('/parent?id=sp_1');
+    openBootIntentWhenReady(nav, src);
+    expect(nav.navigate).not.toHaveBeenCalled();
+    expect(nav.listeners.size).toBe(1);
+    nav.emit();
+    expect(nav.navigate).not.toHaveBeenCalled();
+    nav.ready = true;
+    nav.emit();
+    nav.emit();
+    expect(nav.navigate).toHaveBeenCalledTimes(1);
+    expect(nav.navigate).toHaveBeenCalledWith('PinEntry', PIN_PARAMS);
+    expect(nav.listeners.size).toBe(0);
+  });
+
+  it('no intent (or one already taken, as on a remount): nothing happens', () => {
+    const nav = fakeNavigator(true);
+    openBootIntentWhenReady(nav, source(null));
+    expect(nav.navigate).not.toHaveBeenCalled();
+    expect(nav.addListener).not.toHaveBeenCalled();
+
+    const src = source('/parent');
+    openBootIntentWhenReady(nav, src);
+    openBootIntentWhenReady(nav, src);
+    expect(nav.navigate).toHaveBeenCalledTimes(1);
+  });
+
+  it('the cleanup of an effect that never opened removes its listener', () => {
+    const nav = fakeNavigator(false);
+    const cleanup = openBootIntentWhenReady(nav, source('/parent'));
+    cleanup();
+    expect(nav.listeners.size).toBe(0);
+    nav.ready = true;
+    nav.emit();
+    expect(nav.navigate).not.toHaveBeenCalled();
   });
 });

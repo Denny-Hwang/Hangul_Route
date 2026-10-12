@@ -59,6 +59,28 @@ export function storedMarkerProfiles(raw: unknown): ProfileLike[] {
   });
 }
 
+/**
+ * Whether a stored `hr:profiles` value (read exactly, `null` when absent) can confirm a `none`
+ * marker: only a missing key or a list can; anything else is damaged data that may hide a learner
+ * (A-6 review), so it never confirms `none`.
+ */
+export function storedProfilesReadable(raw: unknown): boolean {
+  return raw === null || Array.isArray(raw);
+}
+
+const FINGERPRINT = /^[0-9a-f]{16}$/;
+
+/**
+ * A stored `account:pinHashSeen` (read exactly, `null` when absent): absent is "nothing seen yet",
+ * a fingerprint or `NO_PIN_SEEN` is kept, and anything else is damaged and reads as
+ * `PIN_HASH_UNREAD`, so it moves the epoch like a failed read (A-6 review: fail closed).
+ */
+export function pinHashSeenOf(raw: unknown): string | null {
+  if (raw === null) return null;
+  if (raw === NO_PIN_SEEN || (typeof raw === 'string' && FINGERPRINT.test(raw))) return raw;
+  return PIN_HASH_UNREAD;
+}
+
 /** `account:pinSetAt` as stored: a finite, non-negative time, else none. */
 export function pinSetAtOf(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
