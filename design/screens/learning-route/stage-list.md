@@ -33,7 +33,7 @@ The report line and the stage list card always show the same case. LR-7 computes
 | 1 | Family viewer, `summary.routeGoal` present (the goal the learner's device shows) | "Sam's goal: Stage 2 · Words" (`learnerGoal`) | flag |
 | 1, reached | as 1, and the goal stage is complete or known | "Sam reached the goal: Stage 1 · Hangul." (`reached`) | flag |
 | 2 | No `routeGoal`, and this space has a live curriculum plan that targets the learner (the newest `publishedAt` wins) | "Your family's weekly plan reaches Stage 1 · Hangul" or "Your class's weekly plan reaches Stage 1 · Hangul" (`planReaches.*`) | flag |
-| 3 | Neither | "Next open stage: Stage {n} · {title}" (`nextOpen`), **only when that stage is not the Now stage** (decision below) | none |
+| 3 | Neither | "Next open stage: Stage {n} · {title}" (`nextOpen`), also when that stage is the Now stage (below) | none |
 | No goal | `pickGoal` returns null: every stage is complete, known, explored or later | "Sam reached the end of the open road. More is coming." (`endOfRoad`) | none |
 
 - **Flag.** Only lines that name a goal or a plan's destination carry the flag (cases 1 and 2). Case 3 and the end of the road name no goal, so they have no flag.
@@ -41,22 +41,12 @@ The report line and the stage list card always show the same case. LR-7 computes
 - **Teachers** never get case 1, because a class never receives `routeGoal` (section 9).
 - **Older app on a second device.** Its sync removes `routeGoal`, so the view falls to case 2 or 3. There is no error text and no "unknown" (section 9, mixed builds).
 
-### Decision for LR-7: case 3 shows no line when its stage is the Now stage
+### Case 3 when the next open stage is the Now stage
 
-- **The problem.** The two stages come from different rules:
-  - case 3 is `pickGoal` over `summary.journey.stages` with no sources, which gives the first stage whose state is `open`;
-  - the Now stage is `summary.journey.here`, the stage of the catalogue cursor.
-
-  These are almost always the same stage, and a class with no plan for a student gets case 3 every time. A teacher would read "Now on Stage 1: Hangul" and then "Next open stage: Stage 1 · Hangul". The stage is said twice, and "next" suggests a different stage.
-- **The decision.** In case 3, when the next open stage equals `journey.here`, there is no goal line.
-  - The report shows only "Now on Stage {n}: {stage}".
-  - The card shows the Now line and the Now stage's can-do line.
-- **When they differ.** For example, a level check started Mina in Stage 2 while Stage 1 is still open. The line then shows "Next open stage: Stage 1 · Hangul", with no flag. The board draws both forms.
-- **Cost.**
-  - One comparison in `learning-route-view.ts`.
-  - One test row: "case 3 equal to `here` yields no goal line".
-  - No new key and no new data.
-- **Spec.** It keeps the section 6.1 rule that cases 2 and 3 never claim the learner's goal. Section 6.1 does not cover the equal case; LR-7 writes this rule into its tests and into the spec's case 3 text.
+- **Two rules, usually one stage.** Case 3 is `pickGoal` over `summary.journey.stages` with no sources: the first stage whose state is `open`. The Now stage is `summary.journey.here`, the stage of the catalogue cursor. For a learner with no plan these are usually the same stage, so a teacher reads "Now on Stage 1: Hangul" and then "Next open stage: Stage 1 · Hangul".
+- **The line stays.** Section 6.1 asks for it in every case-3 view, and the report needs it to say where the learner is heading. It is true: Stage 1 is still the stage to finish. It names no goal and no person, so it keeps the grown-up honesty rule (section 7.3).
+- **When they differ.** For example, a level check started Mina in Stage 2 while Stage 1 is still open: "Now on Stage 2: Words", then "Next open stage: Stage 1 · Hangul". The board draws both.
+- **Not a design choice.** Hiding the line when it names the Now stage would change section 6.1. If the owner wants that, it is a spec change with its own test in LR-7, not something LR-7 or LR-8 decide alone.
 
 ## The goal line in the per-learner report
 
@@ -108,7 +98,7 @@ There is one reading column (`layout.maxWidth.reading`, centred). The gutter is 
 
 - **Type.** Now and Goal are `bodyLg`, bold, with 20 dp glyphs. The source and plan end lines are `bodySm` in `text.secondary`. The can-do lead is caption, semibold and muted.
 - **Plan end** shows for a family or self source (case 1) and in case 2, never for a class source in case 1 (section 6.1).
-- **Case 3** follows the decision above: either the Now line with the Now stage's can-do line, or "Next open stage: Stage {n} · {title}" with no flag and that stage's can-do line.
+- **Case 3**: the Now line, then "Next open stage: Stage {n} · {title}" with no flag, then that stage's can-do line. This is the same when the next open stage is the Now stage.
 - **No goal**: the Now line, then "{name} reached the end of the open road. More is coming."
 
 The states board draws case 3 (both forms), case 1 with "Hoya's suggestion: the next open stage" as the source, and the end of the road.
@@ -126,7 +116,7 @@ Each row is an `li`: a paper panel, `radii.md`, `border.subtle`, padding `spacin
 - **Name and state word**: "1. Hangul · Open", with the name bold and the word in `text.secondary`. A taste stage reads "A taste"; known reads "Known from the level check".
 - **The can-do line** (`learner.myRoute.stage.canDo.<n>`, read from the dictionary).
 - **The count line**, with every zero part left out: "4 known from the level check, 2 quests done", "8 known from the level check", "1 quest done". There is no line when both are 0, and never "0" or "of N".
-- **Tags** (the same chips as the learner page): "{name} is here", "{name} started here" (pin), and "{name}'s goal" (flag, case 1) or "Plan goal" (flag, case 2).
+- **Tags** (the same chips and order as the learner page): "{name} is here", then "{name}'s goal" (flag, case 1) or "Plan goal" (flag, case 2), then "{name} started here" (pin).
 - **The reserved slot** "Preview lessons" (dashed, `touchTarget.min`): F-BROWSE-001 renders it. Until then it renders **nothing**. The mock draws it only to show where it goes.
 
 **Later stages.** Their rows are quiet: a dashed border, no fill, only the name and "Coming later". Consecutive later stages merge into one row ("Stages 5 to 7 · Coming later").
@@ -146,9 +136,9 @@ Each row is an `li`: a paper panel, `radii.md`, `border.subtle`, padding `spacin
 ### States (board)
 
 - **Loading**: the back link and three `surface.sunken` placeholder rows (`aria-busy`, no text).
-- **Not synced yet** (or an older app): the heading, then the notice "The Learning Route appears after Sam's next sync on the newest app." The stage list is hidden. It is never worded "no progress".
+- **Not synced yet** (or an older app): the back link, the heading, then the notice "The Learning Route appears after Sam's next sync on the newest app." The stage list is hidden. It is never worded "no progress". Every state keeps the back link, so no state is a dead end.
 - **Learner not in this space**: "We could not find this learner in this space." and "Back to the family" (or "Back to the class"). There is no list of other learners.
-- **Cannot reach the server**: the existing console wording, "Can't reach the console right now.", and Try again.
+- **Cannot reach the server**: the back link, then the existing console wording, "Can't reach the console right now.", and Try again.
 
 ## Accessibility
 
