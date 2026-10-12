@@ -147,14 +147,33 @@ describe('itemFacts: quest', () => {
           lp.syl('물', ['무', '문'], 'water'),
           // a syllable round with no meaning teaches the syllable
           lp.syl('단', ['다', '달']),
-          // a hand-written round (no builder id) is read by its shape
+          // hand-written rounds (no builder id) are read by their shape: options one final apart, a picture answer, a letter answer
           { id: 'hand', prompt: bare('산', 'san'), options: [{ id: '산', text: bare('산', 'san') }, { id: '사', text: bare('사', 'sa') }], answerId: '산' },
+          {
+            id: 'hand-pic',
+            prompt: { ko: '빵', romanization: 'ppang', en: 'bread' },
+            options: [
+              { id: 'card:kimchi', pictureRef: 'card:kimchi', labelEn: 'Kimchi' },
+              { id: 'card:rice', pictureRef: 'card:rice', labelEn: 'Rice' },
+            ],
+            answerId: 'card:kimchi',
+          },
+          {
+            id: 'hand-sym',
+            prompt: { ko: '어', romanization: 'eo', en: 'the letter eo' },
+            options: [
+              { id: 'jamo:eo', text: { ko: 'ㅓ', romanization: 'eo', en: 'the letter eo' } },
+              { id: 'jamo:a', text: { ko: 'ㅏ', romanization: 'a', en: 'the letter a' } },
+            ],
+            answerId: 'jamo:eo',
+          },
         ],
       },
     });
     expect(facts.words).toEqual([
       { ko: '밤', romanization: 'bam', gloss: 'night' },
       { ko: '물', romanization: 'mul', gloss: 'water' },
+      { ko: '빵', romanization: 'ppang', gloss: 'bread' },
     ]);
     expect(facts.syllables).toEqual([
       { ko: '단', romanization: 'dan' },
