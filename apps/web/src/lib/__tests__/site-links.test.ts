@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
 import { APP_ORIGIN, APP_ROUTES, personaHint } from '@hangul-route/content-schema';
 import { LOCALES } from '@hangul-route/i18n';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { appUrl } from '../console/config';
 import { SITE_DEFAULT_CONSOLE_ORIGIN, grownUpOrigin, learnerStart, signIn, type GrownUpPersona } from '../site-links';
 import { appEntryUrl } from '../site-path';
@@ -91,6 +91,7 @@ describe('signIn (F-APP-001 §3.7 /signin with ?persona=)', () => {
   });
 
   it('takes only a grown-up persona (by type)', () => {
+    expectTypeOf<GrownUpPersona>().toEqualTypeOf<'parent' | 'teacher'>();
     // @ts-expect-error learners never sign in with an email or password (F-APP-001 OD-2)
     expect(() => signIn('learner')).not.toThrow();
     // @ts-expect-error an unknown persona does not compile
