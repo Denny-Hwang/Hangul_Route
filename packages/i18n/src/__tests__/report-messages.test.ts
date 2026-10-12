@@ -130,7 +130,8 @@ describe('Appendix A drafts (English)', () => {
     expect(r.period).toEqual({ day: 'Today', week: 'This week', month: 'This month', all: 'All time' });
     expect([r.step.prevDay, r.step.prevWeek, r.step.prevMonth, r.step.next]).toEqual(['Yesterday', 'Last week', 'Last month', 'Next']);
     expect(r.glance.nowOn(1, 'Hangul')).toBe('Now on Stage 1: Hangul');
-    expect(r.glance.openRoute).toBe('Open Learning Route');
+    // RP-7a1 (design pass #429): the glance link reads `console.learningRoute.open`, so the report keeps no copy of it.
+    expect(r.glance).not.toHaveProperty('openRoute');
     expect(r.glance.lastPractice('Oct 9')).toBe('Last practice: Oct 9');
     expect(r.horizon('Oct 9')).toBe('Figures up to Oct 9.');
     expect(r.section).toEqual({ wentWell: 'What went well', practiceNext: 'What to practice next', thisPeriod: 'This period', moreDetail: 'More detail' });

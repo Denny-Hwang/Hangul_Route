@@ -64,7 +64,10 @@ export const report = {
     prevWeek: 'Last week',
     prevMonth: 'Last month',
     next: 'Next',
-    /** A week window older than the first step: two formatted dates. */
+    /**
+     * A week window as two formatted dates: the dates in the stepper row for every week window (the current one too),
+     * and the name of a week older than the first step back.
+     */
     range: (from: string, to: string) => `${from} to ${to}`,
   },
   /** The back link (`from`): the parent home, or the space's roster. */
@@ -72,10 +75,13 @@ export const report = {
     home: 'Back to home',
     space: (space: string) => `Back to ${space}`,
   },
-  /** At a glance: two lines that do not depend on the period. `stage` is the stage's title. */
+  /**
+   * At a glance: two lines that do not depend on the period. `stage` is the stage's title. The link under "Now on" and
+   * the region's label are `console.learningRoute.open` / `.section` (LR-7), one copy of each for the report and the
+   * stage list page.
+   */
   glance: {
     nowOn: (n: number, stage: string) => `Now on Stage ${n}: ${stage}`,
-    openRoute: 'Open Learning Route',
     lastPractice: (date: string) => `Last practice: ${date}`,
   },
   /**

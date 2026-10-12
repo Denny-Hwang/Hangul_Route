@@ -34,7 +34,16 @@ describe('formatDate: Intl path', () => {
     expect(formatDate('en', new Date(iso), 'weekday', { utc: true })).toBe('Thu');
   });
 
+  it('monthYear names a whole month (a report window, F-REPORT-001 RP-7a1)', () => {
+    expect(formatDate('en', sep3, 'monthYear')).toBe('September 2026');
+    expect(formatDate('en', '2026-10-01T00:00:00.000Z', 'monthYear', { utc: true })).toBe('October 2026');
+    expect(formatDate('es', sep3, 'monthYear')).toContain('2026');
+    expect(formatDate('ko', sep3, 'monthYear')).toContain('9');
+    expect(formatDate('ko', sep3, 'monthYear')).toContain('2026');
+  });
+
   it('returns an empty string for an invalid date (never throws)', () => {
+    expect(formatDate('en', 'not a date', 'monthYear')).toBe('');
     expect(formatDate('en', 'not a date', 'monthDay')).toBe('');
     expect(formatDate('ko', new Date(NaN), 'weekday')).toBe('');
   });
@@ -62,6 +71,7 @@ describe('formatDate: fallback tables (no Intl, or Intl throws)', () => {
       expect(formatDate('en', sep3, 'monthDay')).toBe('Sep 3');
       expect(formatDate('en', sep3, 'monthDayYear')).toBe('Sep 3, 2026');
       expect(formatDate('en', sep3, 'weekday')).toBe('Thu');
+      expect(formatDate('en', sep3, 'monthYear')).toBe('Sep 2026');
     });
 
     it(`es (${name})`, () => {
@@ -69,6 +79,7 @@ describe('formatDate: fallback tables (no Intl, or Intl throws)', () => {
       expect(formatDate('es', sep3, 'monthDay')).toBe('3 sep');
       expect(formatDate('es', sep3, 'monthDayYear')).toBe('3 sep 2026');
       expect(formatDate('es', sep3, 'weekday')).toBe('jue');
+      expect(formatDate('es', sep3, 'monthYear')).toBe('sep 2026');
     });
 
     it(`ko (${name})`, () => {
@@ -76,6 +87,7 @@ describe('formatDate: fallback tables (no Intl, or Intl throws)', () => {
       expect(formatDate('ko', sep3, 'monthDay')).toBe('9월 3일');
       expect(formatDate('ko', sep3, 'monthDayYear')).toBe('2026년 9월 3일');
       expect(formatDate('ko', sep3, 'weekday')).toBe('목');
+      expect(formatDate('ko', sep3, 'monthYear')).toBe('2026년 9월');
     });
   }
 
@@ -85,6 +97,7 @@ describe('formatDate: fallback tables (no Intl, or Intl throws)', () => {
     expect(formatDate('en', lateUtc, 'monthDay', { utc: true })).toBe('Jan 31');
     expect(formatDate('en', lateUtc, 'weekday', { utc: true })).toBe('Sat');
     expect(formatDate('en', lateUtc, 'monthDayYear', { utc: true })).toBe('Jan 31, 2026');
+    expect(formatDate('en', '2026-12-31T23:59:00.000Z', 'monthYear', { utc: true })).toBe('Dec 2026');
   });
 
   it('the fallback returns an empty string for an invalid date', () => {
