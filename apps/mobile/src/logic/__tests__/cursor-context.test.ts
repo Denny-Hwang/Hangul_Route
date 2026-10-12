@@ -61,6 +61,23 @@ describe('cursorContext', () => {
     expect([...(ctx.skipQuestIds ?? [])].sort()).toEqual(['quest:a', 'quest:b']);
   });
 
+  it('has no quest predicate when the caller gives none: every quest open, as before (F-ENT-003 section 3.5)', () => {
+    const ctx = cursorContext({ tier: 'free', placements: undefined, quests: QUESTS, episodes: EPISODES });
+    expect(ctx.isQuestOpen).toBeUndefined();
+    expect(nextQuestAfter({ snapshot: snapshotWith([]), quests: QUESTS, episodes: EPISODES, ...ctx })?.id).toBe('quest:a');
+  });
+
+  it('carries the quest predicate to the cursor, which skips closed quests (F-ENT-003 section 3.5)', () => {
+    const isQuestOpen = (questId: string): boolean => questId !== 'quest:a';
+    const ctx = cursorContext({ tier: 'free', placements: undefined, quests: QUESTS, episodes: EPISODES, isQuestOpen });
+    expect(ctx.isQuestOpen).toBe(isQuestOpen);
+    expect(nextQuestAfter({ snapshot: snapshotWith([]), quests: QUESTS, episodes: EPISODES, ...ctx })?.id).toBe('quest:b');
+    // Home's "New" card is told the same predicate through the spread.
+    const first = offerableQuests(questsAll, episodesAll)[0]!.id;
+    const live = cursorContext({ tier: 'free', placements: undefined, quests: questsAll, episodes: episodesAll, isQuestOpen: (id) => id !== first });
+    expect(homeNext(snapshotWith([]), live)).toBe(offerableQuests(questsAll, episodesAll)[1]!.id);
+  });
+
   it('passes the rule through (OD-4 alternative)', () => {
     const ctx = cursorContext({ tier: 'free', placements: undefined, quests: QUESTS, episodes: EPISODES, rule: 'tier' });
     expect(ctx.isEntitled('stage2')).toBe(false);
@@ -186,5 +203,12 @@ describe('the screens build the cursor from cursorContext (wiring guard)', () =>
     // The access tier through its hook, so the screen re-renders when the tier changes (F-ENT-003 section 3.4).
     expect(src).toMatch(/\buseAccessTier\(/);
     expect(src).not.toMatch(importsEitherOldSource);
+  });
+
+  it('Home gives the cursor the quest predicate of the active learner (F-ENT-003 section 3.5)', () => {
+    const src = read('home/HomeScreen.tsx');
+    const args = cursorArgsIn(src, 'buildTodaysMission');
+    expect(args).toMatch(/\bisQuestOpen\b/);
+    expect(src).toMatch(/\buseQuestAccess\(\)/);
   });
 });

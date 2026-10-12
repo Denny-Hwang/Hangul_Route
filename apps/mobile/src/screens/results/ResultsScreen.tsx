@@ -61,7 +61,7 @@ import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
-import { useAccessTier } from '../../store/tier-store';
+import { useAccessTier, useQuestAccess } from '../../store/tier-store';
 import { CardArtThumb } from './CardArtThumb';
 import { ExtraCardsBanner } from './ExtraCardsBanner';
 import { StoryResultsExtras, type StoryResultsChoice } from './StoryResultsExtras';
@@ -89,6 +89,8 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   const snapshot = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
   // The access tier (F-ENT-003 section 3.4): re-renders when the inbox, the spaces or the subscription change it.
   const tier = useAccessTier(profile?.id ?? '');
+  // May the active learner start a quest (F-ENT-003 section 3.6): "Next story" never offers a closed book story.
+  const questOpen = useQuestAccess();
   const bookmarks = useStoryStore((s) => (profile ? s.byProfile[profile.id] : undefined)) ?? NO_BOOKMARKS;
   const reducedMotion = useReducedMotion();
   const { panes } = useLayoutClass();
@@ -199,7 +201,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
       entries: defaultStoryIndex(),
       snapshot,
       bookmarks,
-      isLocked: storyLockFor({ tier, gatingEnabled: gatingActive(flags, bundleOs()), episodes: episodesAll }),
+      isLocked: storyLockFor({ tier, gatingEnabled: gatingActive(flags, bundleOs()), episodes: episodesAll, isQuestOpen: questOpen }),
     });
     const view = storyResultsExtras(
       {
@@ -215,7 +217,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
       messages.learner.story.results,
     );
     return { story, next, view };
-  }, [quest, questId, locale, snapshot, bookmarks, tier, stars, episode, messages]);
+  }, [quest, questId, locale, snapshot, bookmarks, tier, questOpen, stars, episode, messages]);
 
   const goHome = (): void => {
     navigation.dispatch(

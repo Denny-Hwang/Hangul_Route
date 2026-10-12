@@ -295,4 +295,40 @@ describe('storyLockFor (the Home and shelf `isLocked`, F-STORY-004 §3.9)', () =
   it('defaults to the bundle registry', () => {
     expect(storyLockFor({ tier: 'free', gatingEnabled: false, episodes: [stage5] })(shelf('sun'))).toBe(false);
   });
+
+  describe('a book (grid) story needs its quest open (F-ENT-003 section 3.6)', () => {
+    const closedTiger = (questId: string): boolean => questId !== book('tiger').questId;
+
+    it('locks a book story whose quest is closed, even in an entitled, available stage', () => {
+      const locked = storyLockFor({ tier: 'premium', gatingEnabled: true, episodes: [stage5], registry, isQuestOpen: closedTiger });
+      expect(locked(book('tiger'))).toBe(true);
+      expect(locked(book('sun'))).toBe(false);
+    });
+
+    it('leaves shelf stories to the story lock (section 3.2)', () => {
+      const closedAll = (): boolean => false;
+      const locked = storyLockFor({ tier: 'free', gatingEnabled: true, episodes: [stage5], registry, isQuestOpen: closedAll });
+      expect(locked(shelf('tiger'))).toBe(false);
+      expect(locked(shelf('sun'))).toBe(true);
+    });
+
+    it('omitted: every book story keeps its stage rule only', () => {
+      const without = storyLockFor({ tier: 'premium', gatingEnabled: true, episodes: [stage5], registry });
+      const open = storyLockFor({ tier: 'premium', gatingEnabled: true, episodes: [stage5], registry, isQuestOpen: () => true });
+      for (const entry of index) expect(open(entry)).toBe(without(entry));
+      expect(without(book('tiger'))).toBe(false);
+    });
+  });
+});
+
+describe('Results builds its story lock with the quest predicate (wiring guard, F-ENT-003 section 3.6)', () => {
+  // A source-level guard: the mobile vitest lane does not render screens.
+  it('passes the active learner\'s isQuestOpen to storyLockFor for "Next story"', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const src = readFileSync(join(__dirname, '../../../screens/results/ResultsScreen.tsx'), 'utf8');
+    const args = /storyLockFor\(\{([\s\S]*?)\}\)/.exec(src)?.[1];
+    expect(args).toMatch(/\bisQuestOpen\b/);
+    expect(src).toMatch(/\buseQuestAccess\(\)/);
+  });
 });

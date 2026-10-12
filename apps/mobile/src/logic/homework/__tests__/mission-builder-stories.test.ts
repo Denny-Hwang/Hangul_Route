@@ -236,6 +236,18 @@ describe('slot ① chain: continue → replay → next → again → explore', (
     expect(plan.cards[0]?.storyId).toBe('story:sun');
     expect(plan.cards[2]?.storyId).toBe('story:seollal');
   });
+
+  it('never picks a story whose quest is closed (F-ENT-003 section 3.6); omitted, nothing changes', () => {
+    const plan = build({ isQuestOpen: (id) => id !== questId('tiger') });
+    expect(plan.cards[0]?.storyId).toBe('story:sun');
+    expect(plan.cards[2]?.storyId).toBe('story:seollal');
+    expect(build({ isQuestOpen: undefined })).toEqual(build());
+  });
+
+  it('a closed story falls back down the chain to the explore card', () => {
+    const plan = build({ isQuestOpen: (id) => !id.startsWith('quest:story-') });
+    expect(plan.cards.map((c) => c.kind)).toEqual(['explore', 'new', 'explore']);
+  });
 });
 
 describe('slot ③ chain: next → replay → again → explore', () => {

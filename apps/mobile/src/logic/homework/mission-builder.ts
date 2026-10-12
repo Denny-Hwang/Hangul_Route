@@ -101,6 +101,14 @@ export interface BuildMissionInput {
    */
   isEntitled?: (stageKey: string) => boolean;
   /**
+   * May the learner start this quest (`cursorContext` from `useQuestAccess`,
+   * F-ENT-003 section 3.6)? Every card is chosen among open quests: the cursor,
+   * replays (a finished quest is kept, so a replay always stays), the explore
+   * episode (one open quest at least) and story cards. Omitted means every
+   * quest is open.
+   */
+  isQuestOpen?: (questId: string) => boolean;
+  /**
    * The story card's world (F-STORY-004 §3.7): the story index, the profile's
    * bookmarks, the lock (`storyLockFor`) and the fit (`storyFitsFor`,
    * F-STORY-005 §3.4: fitting stories come first among `next`; it only
@@ -162,14 +170,19 @@ function replayCandidates(snapshot: ProgressSnapshot, episodes: readonly Episode
  * rather than an empty "New" slot.
  */
 function nextQuest(input: BuildMissionInput): Quest | undefined {
-  const { snapshot, quests, episodes, skipQuestIds, isEntitled } = input;
-  const offerable = offerableQuests(quests, episodes, isEntitled);
+  const { snapshot, quests, episodes, skipQuestIds, isEntitled, isQuestOpen } = input;
+  const offerable = offerableQuests(quests, episodes, isEntitled, isQuestOpen);
   // A placed-out quest never played comes before a replay of the last quest.
   return (
-    nextQuestAfter({ snapshot, quests, episodes, isEntitled, skipQuestIds }) ??
-    (skipQuestIds === undefined ? undefined : nextQuestAfter({ snapshot, quests, episodes, isEntitled })) ??
+    nextQuestAfter({ snapshot, quests, episodes, isEntitled, isQuestOpen, skipQuestIds }) ??
+    (skipQuestIds === undefined ? undefined : nextQuestAfter({ snapshot, quests, episodes, isEntitled, isQuestOpen })) ??
     offerable[offerable.length - 1]
   );
+}
+
+/** `input.isQuestOpen`, or every quest open when the caller gave none. */
+function isOpen(input: BuildMissionInput, questId: string): boolean {
+  return !input.isQuestOpen || input.isQuestOpen(questId);
 }
 
 function completedToday(snapshot: ProgressSnapshot, questId: string, today: string): boolean {
@@ -228,11 +241,12 @@ type Link = (slot: 1 | 3, input: BuildMissionInput, used: Used) => MissionCard |
 function storyLink(...reasons: StoryReason[]): Link {
   return (slot, input, used) => {
     if (!input.stories) return null;
+    const { isLocked } = input.stories;
     const pick = pickStoryForHome({
       entries: input.stories.entries,
       snapshot: input.snapshot,
       bookmarks: input.stories.bookmarks,
-      isLocked: input.stories.isLocked,
+      isLocked: (entry) => isLocked(entry) || !isOpen(input, entry.questId),
       fits: input.stories.fits,
       excludeStoryIds: [...used.stories],
       excludeQuestIds: [...used.quests],
@@ -242,11 +256,11 @@ function storyLink(...reasons: StoryReason[]): Link {
   };
 }
 
-/** The best replay not on the plan yet (grid quests only). */
+/** The best replay not on the plan yet (grid quests only; open ones, and a finished quest is kept, so open). */
 const replayLink: Link = (slot, input, used) => {
   const { snapshot, quests, episodes, today } = input;
   for (const candidate of replayCandidates(snapshot, episodes, today)) {
-    if (used.quests.has(candidate.questId)) continue;
+    if (used.quests.has(candidate.questId) || !isOpen(input, candidate.questId)) continue;
     const quest = quests.find((q) => q.id === candidate.questId);
     if (!quest) continue;
     return replayCard(slot, quest, episodeOfQuest(episodes, quest.id)?.id);
@@ -254,9 +268,10 @@ const replayLink: Link = (slot, input, used) => {
   return null;
 };
 
-/** The first playable grid episode not on the plan yet. */
+/** The first playable grid episode not on the plan yet, with at least one open quest. */
 const exploreLink: Link = (slot, input, used) => {
-  const episode = playableEpisodes(input.episodes).find((e) => !used.episodes.has(e.id));
+  const open = input.isQuestOpen;
+  const episode = playableEpisodes(input.episodes).find((e) => !used.episodes.has(e.id) && (!open || e.questIds.some((id) => open(id))));
   return episode ? exploreCard(slot, episode) : null;
 };
 
