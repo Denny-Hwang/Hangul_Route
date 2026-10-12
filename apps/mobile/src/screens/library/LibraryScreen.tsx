@@ -53,6 +53,8 @@ import { useProgressStore } from '../../store/progress-store';
 import { CardDetailView } from './CardDetailView';
 import { CultureSection } from './CultureSection';
 import { StoryShelf } from './StoryShelf';
+import { wordsOffered } from '../vocab/topic-data';
+import { WordsSection } from '../vocab/WordsSection';
 
 /** Card art in a gallery thumb at scale 1 (phones), and the thumb's padding plus its thickest border on both sides. */
 const THUMB_ART = 96;
@@ -79,8 +81,8 @@ export function LibraryScreen(): React.ReactElement {
   // reviewed story offers Cards alone and the screen is exactly today's gallery, with no tab row.
   const copy = shelfCopy(messages);
   const storyIndex = defaultStoryIndex();
-  // Empty when only Cards is offered: no tab row at all.
-  const sections = useMemo(() => librarySectionTabs({ entries: storyIndex }), [storyIndex]);
+  // Empty when only Cards is offered: no tab row at all. Words (F-VOC-003 T1) joins with its flag and a ready topic.
+  const sections = useMemo(() => librarySectionTabs({ entries: storyIndex, words: wordsOffered() }), [storyIndex]);
   const requested = useRoute<RouteProp<MainTabParamList, 'Library'>>().params?.section;
   const tabNavigation = useNavigation<BottomTabNavigationProp<MainTabParamList, 'Library'>>();
   const [section, setSection] = useState<LibrarySectionId>(() => selectedSection(requested, sections));
@@ -253,6 +255,23 @@ export function LibraryScreen(): React.ReactElement {
 
   // The card page as the stack screen shows it, without its close button; a locked card also says how it is earned.
   const detail = selectedId ? <CardDetailView key={selectedId} cardId={selectedId} showHowToEarn /> : null;
+
+  if (active === 'theme-packs') {
+    // Words (F-VOC-003 T1): the picker's grid inline, full width with no detail pane, like the story sections.
+    return (
+      <Screen tone="canvas" edges={TAB_SCREEN_EDGES} width="full" scrollable>
+        <Heading level="title">{m.title}</Heading>
+        {tabs}
+        {panel(
+          <>
+            <Spacer size="lg" />
+            <WordsSection />
+            <Spacer size="xl" />
+          </>,
+        )}
+      </Screen>
+    );
+  }
 
   if (active === 'story-time' || active === 'culture') {
     // Story sections use the full width with no detail pane on every window (F-LAYOUT-001 §3.6).
