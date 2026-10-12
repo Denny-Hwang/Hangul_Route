@@ -29,7 +29,7 @@ export interface MergeResult {
 }
 
 /** Section 3.10 of F-PLAN-002: class (teacher) first, then family (parent), then the learner's own plan (system). */
-const SOURCE_RANK: Record<HomeworkAssignment['assignedBy'], number> = { teacher: 0, parent: 1, system: 2 };
+export const SOURCE_RANK: Record<HomeworkAssignment['assignedBy'], number> = { teacher: 0, parent: 1, system: 2 };
 
 /** The precedence order of outstanding assignments: source rank, then the earlier `targetDate`, then the earlier `assignedAt`. */
 export function compareAssignments(a: HomeworkAssignment, b: HomeworkAssignment): number {
