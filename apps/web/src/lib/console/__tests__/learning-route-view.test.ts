@@ -283,7 +283,8 @@ describe('case 1: a family viewer with summary.routeGoal, the goal the learner d
 
   it('names every source, in the words of section 6.1', () => {
     expect(view({ stage: 'stage1', from: 'school' }).card.goal?.from).toBe("From the school's weekly plan");
-    expect(view({ stage: 'stage1', from: 'family' }).card.goal?.from).toBe("From your family's weekly plan");
+    const familyPlan = plan({ id: 'plan:f', items: [quest('quest:stage1-life-q1')] });
+    expect(view({ stage: 'stage1', from: 'family' }, {}, { plans: [familyPlan] }).card.goal?.from).toBe("From your family's weekly plan");
     expect(view({ stage: 'stage1', from: 'self' }).card.goal?.from).toBe("From Sam's own weekly plan");
     expect(view({ stage: 'stage1', from: 'default' }).card.goal?.from).toBe("Hoya's suggestion: the next open stage");
   });
@@ -321,14 +322,14 @@ describe('case 1: a family viewer with summary.routeGoal, the goal the learner d
   it("gives the plan end from this family's leading plan or the learner's own plan, never from a plan it cannot see", () => {
     const familyPlan = plan({ id: 'plan:f', items: [quest('quest:stage2-life-q1')] });
     expect(view({ stage: 'stage2', from: 'family' }, {}, { plans: [familyPlan] }).card.goal?.planEnds).toBe('Plan ends Nov 1');
-    // The device leads with a family plan this space does not hold as its leading plan: no date is guessed.
-    expect(view({ stage: 'stage4', from: 'family' }, {}, { plans: [familyPlan] }).card.goal?.planEnds).toBeNull();
-    expect(view({ stage: 'stage2', from: 'family' }).card.goal?.planEnds).toBeNull();
+    // The device names a family plan this family does not hold as its leading plan: case 1 gives way (see below).
+    expect(view({ stage: 'stage4', from: 'family' }, {}, { plans: [familyPlan] }).card.goal).toMatchObject({ case: 2, stage: 'stage2', planEnds: 'Plan ends Nov 1' });
+    expect(view({ stage: 'stage2', from: 'family' }).card.goal).toMatchObject({ case: 3, planEnds: null });
     const selfRoute = { done: 3, total: 9, notReady: 0, weeks: 12, endsOn: '2026-12-20' };
     expect(view({ stage: 'stage1', from: 'self' }, { selfRoute }).card.goal?.planEnds).toBe('Plan ends Dec 20');
     expect(view({ stage: 'stage1', from: 'self' }, { selfRoute: { ...selfRoute, endsOn: '20 Dec' } }).card.goal?.planEnds).toBeNull();
-    // A summary from before the own plan ended: a past end is never shown (it would read as late).
-    expect(view({ stage: 'stage1', from: 'self' }, { selfRoute: { ...selfRoute, endsOn: '2026-10-10' } }).card.goal?.planEnds).toBeNull();
+    // A summary from before the own plan ended: no past end is shown (it would read as late) and the goal gives way.
+    expect(view({ stage: 'stage1', from: 'self' }, { selfRoute: { ...selfRoute, endsOn: '2026-10-10' } }).card.goal).toMatchObject({ case: 3, planEnds: null });
     expect(view({ stage: 'stage1', from: 'self' }, { selfRoute: { ...selfRoute, endsOn: TODAY } }).card.goal?.planEnds).toBe('Plan ends Oct 11');
     expect(view({ stage: 'stage1', from: 'self' }).card.goal?.planEnds).toBeNull();
     for (const from of ['class', 'school', 'default']) expect(view({ stage: 'stage2', from }, { selfRoute }, { plans: [familyPlan] }).card.goal?.planEnds).toBeNull();
@@ -343,11 +344,10 @@ describe('case 1: a family viewer with summary.routeGoal, the goal the learner d
     });
     expect(view({ stage: 'stage2', from: 'school' }, {}, { plans: [familyPlan] }).card.goal?.familyPlan?.line).toBe("Your family's weekly plan reaches Stage 1 · Hangul");
     expect(view({ stage: 'stage2', from: 'self' }, {}, { plans: [familyPlan] }).card.goal?.familyPlan?.stage).toBe('stage1');
-    // The device names a family source, but this family's live plan reaches another stage (another family space,
-    // or a plan changed since the device last synced): that plan does not lead, so it gets its own line and no date is guessed.
+    // The device names a family source, but this family's live plan reaches another stage: never two claims about the
+    // same family plan at once; the family's own plan speaks (case 2).
     const elsewhere = view({ stage: 'stage2', from: 'family' }, {}, { plans: [familyPlan] }).card.goal;
-    expect(elsewhere?.familyPlan).toEqual({ stage: 'stage1', line: "Your family's weekly plan reaches Stage 1 · Hangul", planEnds: 'Plan ends Nov 1' });
-    expect(elsewhere?.planEnds).toBeNull();
+    expect(elsewhere).toMatchObject({ case: 2, stage: 'stage1', line: "Your family's weekly plan reaches Stage 1 · Hangul", planEnds: 'Plan ends Nov 1', familyPlan: null });
     // Hoya's suggestion on the device while the family plan is live (it has not reached the device yet): the plan line shows.
     expect(view({ stage: 'stage2', from: 'default' }, {}, { plans: [familyPlan] }).card.goal?.familyPlan?.line).toBe("Your family's weekly plan reaches Stage 1 · Hangul");
     expect(view({ stage: 'stage1', from: 'family' }, {}, { plans: [familyPlan] }).card.goal?.familyPlan).toBeNull();
@@ -361,6 +361,24 @@ describe('case 1: a family viewer with summary.routeGoal, the goal the learner d
     ]) {
       expect(view({ stage: 'stage2', from: 'class' }, {}, { plans: [p] }).card.goal?.familyPlan, p.id).toBeNull();
     }
+  });
+
+  it('gives way to case 2 or 3 when this page can prove the device goal is older than what it sees', () => {
+    const selfRoute = { done: 3, total: 9, notReady: 0, weeks: 12, endsOn: '2026-10-10' };
+    const familyPlan = plan({ id: 'plan:f', items: [quest('quest:stage1-life-q1')] });
+    // The learner's own plan ended before today: the device now picks another goal.
+    expect(view({ stage: 'stage4', from: 'self' }, { selfRoute }).card.goal).toMatchObject({ case: 3, from: null });
+    expect(view({ stage: 'stage4', from: 'self' }, { selfRoute }, { plans: [familyPlan] }).card.goal).toMatchObject({ case: 2, stage: 'stage1' });
+    expect(tagsOf(view({ stage: 'stage4', from: 'self' }, { selfRoute }), 'stage4')).not.toContain("Sam's goal");
+    // The own plan's last day, or an end this build cannot read, proves nothing: case 1 stays.
+    expect(view({ stage: 'stage4', from: 'self' }, { selfRoute: { ...selfRoute, endsOn: TODAY } }).card.goal?.case).toBe(1);
+    expect(view({ stage: 'stage4', from: 'self' }, { selfRoute: { ...selfRoute, endsOn: '10 Oct' } }).card.goal?.case).toBe(1);
+    // "Your family's weekly plan" while this family has no live plan for the learner (archived, finished, or never).
+    for (const plans of [[], [plan({ id: 'plan:archived', items: [quest('quest:stage1-life-q1')], archivedAt: '2026-10-08T00:00:00.000Z' })], [plan({ id: 'plan:done', items: [quest('quest:stage1-life-q1')], meta: meta('2026-09-01') })]]) {
+      expect(view({ stage: 'stage1', from: 'family' }, {}, { plans }).card.goal?.case).toBe(3);
+    }
+    // Sources this page cannot check keep case 1.
+    for (const from of ['class', 'school', 'default']) expect(view({ stage: 'stage4', from }, { selfRoute }).card.goal?.case).toBe(1);
   });
 
   it('tags the goal stage "{name}\'s goal"', () => {

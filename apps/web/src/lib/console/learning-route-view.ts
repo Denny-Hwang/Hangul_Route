@@ -304,25 +304,34 @@ function buildCard(
   /** This space's own leading live curriculum plan for the learner; null when none is live. */
   const spacePlan: RouteGoal | null = picked !== null && picked.from !== 'default' ? picked : null;
 
-  // Case 1: the family viewer holds the goal the learner's device shows.
+  // Case 1: the family viewer holds the goal the learner's device shows, unless this page can prove that goal is
+  // older than what it sees (the card never claims the learner's own goal unless it has it, section 6.1):
+  // - a goal from the learner's own plan whose end (`selfRoute.endsOn`, synced with it) is before today: that plan
+  //   ended, so the device now picks another goal;
+  // - a goal from "your family's weekly plan" while this family has no live plan for the learner, or one that
+  //   reaches another stage: the device synced before this family's plans changed (or the plan is another family
+  //   space's, which "your family" would misname). This family's own live plan then speaks (case 2), or the road (case 3).
   const device = kind === 'family' ? deviceGoalOf(summary) : null;
-  if (device !== null) {
+  const ownEnd = summary.selfRoute?.endsOn;
+  const ownEnded = typeof ownEnd === 'string' && isDateKey(ownEnd) && ownEnd < today;
+  const deviceStale = device !== null && ((device.from === 'self' && ownEnded) || (device.from === 'family' && (spacePlan === null || spacePlan.stage !== device.stage)));
+  if (device !== null && !deviceStale) {
     const { stage, from } = device;
     const n = orderOf(stage);
     const title = stageTitle(stage);
     const state = entries.find((e) => e.stage === stage)?.state;
     const reached = from !== 'default' && (state === 'complete' || state === 'known' || (state === 'explored' && availability(stage) === 'taste'));
-    // This family's plan leads when the device names a family source with the stage that plan reaches. Any other
-    // live plan of this family is not the goal the learner's tab shows, so it gets its own line.
-    const familyLeads = from === 'family' && spacePlan !== null && spacePlan.stage === stage;
+    // A family source here is this family's leading live plan (the same stage, checked above). Any other source leaves
+    // this family's live plan, when there is one, its own line: it is not the goal the learner's tab shows.
+    const familyLeads = from === 'family';
     const familyPlan =
       spacePlan !== null && !familyLeads
         ? { stage: spacePlan.stage, line: lr.planReaches.family(orderOf(spacePlan.stage), stageTitle(spacePlan.stage)), planEnds: ends(spacePlan.endsOn) }
         : null;
-    // The end of the source that leads, when this page can see it: the learner's own plan (never a past end from a
-    // summary synced before it ended: it would read as late), or this family's live plan.
-    const ownEnd = summary.selfRoute?.endsOn;
-    const planEnds = from === 'self' ? (ownEnd !== undefined && ownEnd >= today ? ends(ownEnd) : null) : familyLeads ? ends(spacePlan.endsOn) : null;
+    // The end of the source that leads, when this page can see it: the learner's own plan (never past, checked above),
+    // or this family's live plan. Known limit: a learner in two family spaces whose other family's plan leads with the
+    // same stage gets this family's end date; the summary carries no source id (section 9), so the page cannot tell.
+    const planEnds = from === 'self' ? ends(ownEnd) : familyLeads && spacePlan !== null ? ends(spacePlan.endsOn) : null;
     return {
       card: {
         now,
@@ -399,6 +408,8 @@ export function learningRouteView(input: LearningRouteInput): LearningRouteView 
   const m = getMessages(locale);
   const lr = m.console.learningRoute;
 
+  // Section 6.1 asks for `ROUTES.space(spaceId, kind)`; `ROUTES.space` takes no kind and no `/parent/space` page exists
+  // before F-APP-001 A-5b, so a family goes to the one space page there is. The page's PR (LR-8) passes the kind once it can.
   const toSpace: LearningRouteLink = { href: ROUTES.space(space.id), text: lr.back[kind] };
   const learner = input.learners.find((row) => row.id === learnerId);
   if (learner === undefined) return { status: 'notFound', message: lr.notFound, back: toSpace };
