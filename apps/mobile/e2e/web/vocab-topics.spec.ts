@@ -14,10 +14,11 @@ import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
  *   and topic pages through `window.__hrVocabE2E.openTopics()` /
  *   `openTopic(key)`, words collected with `collect(ids)`;
  * - a build made with `EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=1` (`E2E_VOCAB_TOPICS=1`):
- *   the Library's Words tab, end to end.
+ *   the Library's Words tab, end to end. CI builds the fixture bundle with the
+ *   flag on, so both groups run there (.github/workflows/web-app.yml).
  *
- *   pnpm --filter @hangul-route/mobile build:web:fixtures
- *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test vocab-topics
+ *   EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=1 pnpm --filter @hangul-route/mobile build:web:fixtures
+ *   STORY_FIXTURES=1 E2E_VOCAB_TOPICS=1 pnpm --filter @hangul-route/mobile exec playwright test vocab-topics
  */
 
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
@@ -157,7 +158,7 @@ test.describe('Words picker and topic page (fixture bundle)', () => {
     await expect(food).toContainText('0 collected');
     await expect(page.getByRole('progressbar')).toHaveCount(0);
     // 2 columns on a 393 dp phone (§3.3).
-    expect(await columns(page, 'vocab-topic-tile-')).toBe(2);
+    await expect.poll(() => columns(page, 'vocab-topic-tile-')).toBe(2);
     for (const box of await tiles.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().height))) {
       expect(box).toBeGreaterThanOrEqual(80);
     }
@@ -204,6 +205,9 @@ test.describe('Words picker and topic page (fixture bundle)', () => {
     await expect(page.getByLabel('Korean: 사과, sagwa, apple')).toBeVisible();
     await expect(page.getByLabel('Korean: 우유, uyu, milk')).toBeVisible();
     await expect(page.getByLabel('Korean: 김치, gimchi, kimchi')).toBeVisible();
+    // A collected word carries its meaning in the UI language under the romanization (D2).
+    await expect(page.getByTestId('vocab-wall-vocab:sagwa-apple')).toContainText('apple');
+    await expect(page.getByTestId('vocab-wall-vocab:uyu')).toContainText('milk');
     await expect(page.getByRole('img', { name: 'Not collected yet' })).toHaveCount(9);
     // A word not collected yet shows no Korean (no spoilers).
     await expect(page.getByTestId('vocab-wall-vocab:banana')).not.toContainText('바나나');
@@ -215,7 +219,7 @@ test.describe('Words picker and topic page (fixture bundle)', () => {
     await expect(page.getByRole('button', { name: /^Korean: / })).toHaveCount(0);
 
     // 2 wall columns on a 393 dp phone: every word and its romanization stay whole.
-    expect(await columns(page, 'vocab-wall-')).toBe(2);
+    await expect.poll(() => columns(page, 'vocab-wall-')).toBe(2);
     await expectNoShame(page);
     await expectFits(page);
     await shot(page, 'vocab-topic-food');
@@ -261,10 +265,13 @@ test.describe('Words picker and topic page (fixture bundle)', () => {
     await expect(page.getByTestId('vocab-topic-ko')).not.toContainText('saek');
     await expect(page.getByTestId('vocab-wall-vocab:ppalgansaek')).toContainText('빨간색');
     await expect(page.getByTestId('vocab-wall-vocab:ppalgansaek')).not.toContainText('ppalgansaek');
+    await expect(page.getByTestId('vocab-wall-vocab:ppalgansaek')).toContainText('red');
     // The meaning is never hidden: the screen reader name still carries the gloss.
     await expect(page.getByLabel('Korean: 빨간색, ppalgansaek, red')).toBeVisible();
     await page.getByRole('button', { name: 'Show sound' }).click();
     await expect(page.getByTestId('vocab-topic-ko')).toContainText('saek');
+    // The same Show sound reveals the wall's romanization: nothing on the page stays hidden for good.
+    await expect(page.getByTestId('vocab-wall-vocab:ppalgansaek')).toContainText('ppalgansaek');
     await expect(page.getByRole('button', { name: 'Show sound' })).toHaveCount(0);
   });
 
@@ -273,13 +280,13 @@ test.describe('Words picker and topic page (fixture bundle)', () => {
     await newLearner(page);
     await collect(page, ['vocab:geomeunsaek', 'vocab:juhwangsaek', 'vocab:haneulsaek']);
     await openTopics(page);
-    expect(await columns(page, 'vocab-topic-tile-')).toBe(1);
+    await expect.poll(() => columns(page, 'vocab-topic-tile-')).toBe(1);
     await expectFits(page);
     await shot(page, 'vocab-topics-320');
 
     await page.getByTestId('vocab-topic-tile-colors').click();
     await expect(page.getByTestId('vocab-topic-count')).toHaveText('3 collected');
-    expect(await columns(page, 'vocab-wall-')).toBe(2);
+    await expect.poll(() => columns(page, 'vocab-wall-')).toBe(2);
     // The widest launch word keeps its romanization on one line inside its tile.
     const tile = page.getByTestId('vocab-wall-vocab:geomeunsaek');
     const roman = tile.getByText('geomeunsaek', { exact: true });
@@ -287,6 +294,16 @@ test.describe('Words picker and topic page (fixture bundle)', () => {
     expect(romanBox!.height).toBeLessThan(30);
     expect(romanBox!.x).toBeGreaterThanOrEqual(tileBox!.x);
     expect(romanBox!.x + romanBox!.width).toBeLessThanOrEqual(tileBox!.x + tileBox!.width);
+    // The longest gloss of the three ("sky blue") stays inside its tile, wrapping if it must.
+    const sky = page.getByTestId('vocab-wall-vocab:haneulsaek');
+    const [skyBox, skyGloss] = await Promise.all([sky.boundingBox(), sky.getByText('sky blue', { exact: true }).boundingBox()]);
+    expect(skyGloss!.x).toBeGreaterThanOrEqual(skyBox!.x);
+    expect(skyGloss!.x + skyGloss!.width).toBeLessThanOrEqual(skyBox!.x + skyBox!.width);
+    expect(skyGloss!.y + skyGloss!.height).toBeLessThanOrEqual(skyBox!.y + skyBox!.height);
+    // Back is a full touch target on the web too (hitSlop does not apply there).
+    const backBox = await page.getByTestId('vocab-topic').getByTestId('vocab-back').boundingBox();
+    expect(backBox!.width).toBeGreaterThanOrEqual(64);
+    expect(backBox!.height).toBeGreaterThanOrEqual(64);
     await expectFits(page);
     await shot(page, 'vocab-topic-colors-320');
     await tile.scrollIntoViewIfNeeded();
@@ -298,10 +315,10 @@ test.describe('Words picker and topic page (fixture bundle)', () => {
     await newLearner(page);
     await collect(page, ['vocab:hana', 'vocab:dul', 'vocab:set', 'vocab:net', 'vocab:daseot']);
     await openTopics(page);
-    expect(await columns(page, 'vocab-topic-tile-')).toBe(3);
+    await expect.poll(() => columns(page, 'vocab-topic-tile-')).toBe(3);
     await shot(page, 'vocab-topics-tablet');
     await page.getByTestId('vocab-topic-tile-numbers').click();
-    expect(await columns(page, 'vocab-wall-')).toBe(4);
+    await expect.poll(() => columns(page, 'vocab-wall-')).toBe(4);
     await expectFits(page);
     await shot(page, 'vocab-topic-numbers-tablet');
   });

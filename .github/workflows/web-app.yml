@@ -93,7 +93,9 @@ jobs:
       - name: Story reader e2e (fixture bundle)
         if: steps.changes.outputs.run == 'true'
         run: |
-          pnpm --filter @hangul-route/mobile build:web:fixtures
+          # F-VOC-003 C-4: the fixture bundle turns Words on (its flag stays off in dist/ and in production until C-7),
+          # so the Library Words tab runs end to end below; no other fixture test opens the Library.
+          EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=1 pnpm --filter @hangul-route/mobile build:web:fixtures
           STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test story-reader placement-screens
           # F-STORY-003 PR 3.5b: Story Order scene art plays the fixture story's shelf quest.
           STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test story-order -g "scene art"
@@ -109,5 +111,6 @@ jobs:
           STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test audio -g "bundled clips"
           # F-VOC-004 S-4b: the shared vocabulary question view, through the __hrVocabE2E hook (no host screen yet).
           STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test vocab-question
-          # F-VOC-003 C-4: the Words picker and topic page, through the same hook (Words stays behind its flag until C-7).
-          STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test vocab-topics
+          # F-VOC-003 C-4: the Words picker and topic page through the same hook, and the Library Words tab
+          # (this bundle has the Words flag on; the flag-off parity test runs in the Offline e2e step on dist/).
+          STORY_FIXTURES=1 E2E_VOCAB_TOPICS=1 pnpm --filter @hangul-route/mobile exec playwright test vocab-topics
