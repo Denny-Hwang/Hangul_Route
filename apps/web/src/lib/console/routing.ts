@@ -16,6 +16,14 @@ export const ROUTES = {
   /** Lecture setup (F-TCH-004 §3.11); `from` preselects the deck source, `plan` names the plan on screen (an id). Never a name in the URL. */
   spaceLecture: (id: string, from?: 'plan' | 'revisit', planId?: string) =>
     `/teach/space/lecture?id=${encodeURIComponent(id)}${from ? `&from=${from}` : ''}${planId ? `&plan=${encodeURIComponent(planId)}` : ''}`,
+  /**
+   * One learner's Learning Route stage list (Learning Route amendment section 6.1, LR-7): a family
+   * under `/parent/space/route`, a class (or `kind` omitted, which renders every kind; F-APP-001
+   * section 3.8) under `/teach/space/route`. Ids only, as query parameters (a static export): a
+   * learner's name never reaches the URL.
+   */
+  learnerRoute: (spaceId: string, learnerId: string, kind?: SpaceKind) =>
+    `/${kind === 'family' ? 'parent' : 'teach'}/space/route?id=${encodeURIComponent(spaceId)}&learner=${encodeURIComponent(learnerId)}`,
 } as const;
 
 /**

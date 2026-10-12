@@ -135,3 +135,41 @@ describe('page load errors (settings, school admin, F-I18N-001 PR 10c)', () => {
   });
 });
 
+
+describe("one learner's Learning Route page (Learning Route amendment section 6.1, LR-7)", () => {
+  it('sends a family to /parent/space/route and a class, or no kind, to /teach/space/route', () => {
+    expect(ROUTES.learnerRoute('space:f', 'learner:1', 'family')).toBe('/parent/space/route?id=space%3Af&learner=learner%3A1');
+    expect(ROUTES.learnerRoute('space:c', 'learner:1', 'class')).toBe('/teach/space/route?id=space%3Ac&learner=learner%3A1');
+    // Omitted renders every kind (F-APP-001's pre-A-5b rule).
+    expect(ROUTES.learnerRoute('space:c', 'learner:1')).toBe('/teach/space/route?id=space%3Ac&learner=learner%3A1');
+  });
+
+  it('never yields a /teach path for a family space', () => {
+    for (const [space, learner] of [['space:f', 'l'], ['fam ily', 'a&b=c'], ['', '']] as const) {
+      const path = ROUTES.learnerRoute(space, learner, 'family');
+      expect(path.startsWith('/parent/space/route?')).toBe(true);
+      expect(path).not.toContain('/teach');
+    }
+  });
+
+  it('encodes both ids, so an id can never add or change a query parameter', () => {
+    const path = ROUTES.learnerRoute('space:a&learner=x', 'learner:1#top?id=y', 'class');
+    const url = new URL(path, 'https://app.example');
+    expect(url.pathname).toBe('/teach/space/route');
+    expect([...url.searchParams.keys()]).toEqual(['id', 'learner']);
+    expect(url.searchParams.get('id')).toBe('space:a&learner=x');
+    expect(url.searchParams.get('learner')).toBe('learner:1#top?id=y');
+    expect(url.hash).toBe('');
+    expect(spaceIdFrom(url.searchParams)).toBe('space:a&learner=x');
+  });
+
+  it('takes ids only: no name parameter exists, so a learner name can never reach the URL', () => {
+    // Three parameters at most (space id, learner id, optional kind), and the kind is a space kind, never free text.
+    expect(ROUTES.learnerRoute.length).toBeLessThanOrEqual(3);
+    for (const kind of ['family', 'class', undefined] as const) {
+      const url = new URL(ROUTES.learnerRoute('space:x', 'learner:y', kind), 'https://app.example');
+      expect([...url.searchParams.keys()]).toEqual(['id', 'learner']);
+      for (const name of ['name', 'displayName', 'learnerName', 'n']) expect(url.searchParams.has(name)).toBe(false);
+    }
+  });
+});
