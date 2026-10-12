@@ -8,6 +8,7 @@
     "apps/mobile/src/components/LanguageChips.tsx",
     "apps/mobile/src/screens/home/HomeScreen.tsx",
     "apps/mobile/src/screens/journey/JourneyScreen.tsx",
+    "apps/mobile/src/components/JourneyGrid.tsx",
     "apps/mobile/src/screens/library/LibraryScreen.tsx",
     "apps/mobile/src/screens/library/CardDetailScreen.tsx",
     "apps/mobile/src/screens/episode/EpisodeDetailScreen.tsx",
