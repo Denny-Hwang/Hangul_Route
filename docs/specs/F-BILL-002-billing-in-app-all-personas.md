@@ -246,7 +246,7 @@ What this means in code (B-9), enforced by tests:
 
 - **Source**: Stripe webhooks recorded in a new table `billing_events` (section 5.1) from the day B-3 deploys and the owner subscribes the new events (runbook Step 8). Earlier sandbox payments have no rows; the receipts page says "Older payments are in the receipt email from Stripe." when the space has an active Stripe plan but no rows.
 - **Who**: payers of the space only (section 4.2). Caregivers and teachers never receive receipt rows.
-- **Row**: date (the event's `occurred_at`, shown as the UTC calendar day like the status line, `billing.ts:72`), kind (Payment, Renewal, Refund, Payment didn't go through), plan name ("Family Plan" or "Group License"; "one payment" only on a legacy one-time sandbox row [BY]), amount (`formatUsd` for `usd`; other currencies through `Intl.NumberFormat` with the stored ISO code), a "test" pill when `livemode` is false.
+- **Row**: date (the event's `occurred_at`, shown as the UTC calendar day like the status line, `billing.ts:72`), kind (Payment, Renewal, Refund, Payment didn't go through), plan name ("Family Plan" or "Group License"; a legacy one-time sandbox row shows the plan name only, with no "one payment" label: `receipts.oneTime` is deleted by BY-D9), amount (`formatUsd` for `usd`; other currencies through `Intl.NumberFormat` with the stored ISO code), a "test" pill when `livemode` is false.
 - **Where links live.** Inline rows on a card (latest 3) carry no link. The receipts page shows **View receipt** on each row that has one (`hasReceipt`).
 - **Opening a receipt** (`POST /api/billing/receipt-link { id }`, `id` = the opaque `bev:` id): payer check, **step-up** (section 4.4: the Stripe page shows the payer's name, email and address, and the billing page shares an origin with the learner app), live guard, then a fresh Stripe lookup: a subscription row (Family Plan or license) → `GET /v1/invoices/<id>` → `hosted_invoice_url`; a legacy one-time payment → `GET /v1/payment_intents/<id>?expand[]=latest_charge` → `latest_charge.receipt_url` [BY]; a refund → `GET /v1/charges/<charge>` → `receipt_url` (Stripe shows the refund on it). The Worker returns `{ url }`; nothing is stored, so a link is never stale and never sits in our database. On a Stripe error: `502 receipt_unavailable` and the row shows "Can't open this receipt right now." The page opens a blank tab synchronously on the click (so it is not blocked as a pop-up), sets `opener = null`, then sets its location to the returned URL; the button's accessible name says it opens Stripe in a new tab.
 - **Count**: the receipts page shows up to `RECEIPTS_PAGE_LIMIT` (50) newest rows. Past 50: "Older receipts: see Stripe's emails or write to us."
@@ -396,7 +396,7 @@ All strings in `packages/i18n` (F-I18N-001). English is written in this spec's P
 | `coverage.free` | Free plan |
 | `coverage.family` | Family Plan ([BY]; was `coverage.lifetime` "Family Lifetime · yours for good") |
 | `coverage.license` | Group License |
-| `coverage.contract` | School contract |
+| `coverage.contract` | School Contract (B-6 review: the same words and casing as `planTitle.school_seat`, tested) |
 | `coverage.school(school)` | Covered by {school}'s license |
 | `coverage.schoolUntil(school, date)` | Covered by {school}'s license until {date} |
 | `status.renewsOn(date)` | Renews on {date} |
@@ -437,7 +437,7 @@ All strings in `packages/i18n` (F-I18N-001). English is written in this spec's P
 | `receipts.older` | Older payments are in the receipt email from Stripe. |
 | `receipts.beyondLimit` | Older receipts: see Stripe's emails or write to us. |
 | `receipts.kind.purchase` / `.renewal` / `.refund` / `.failed` | Payment / Renewal / Refund / Payment didn't go through |
-| `receipts.oneTime` | one payment (legacy one-time sandbox rows only [BY]) |
+| ~~`receipts.oneTime`~~ | **Deleted by BY-D9** (AMENDMENTS-BILLING-FAMILY-YEARLY; not added in B-6, #402): a legacy one-time sandbox row shows the plan name only. Do not add this key back (BY-1's lifetime-wording scan rejects "one payment"). |
 | `receipts.test.pill` | test |
 | `receipts.view.cta` | View receipt |
 | `receipts.viewA11y(date)` | View receipt from {date} (opens Stripe in a new tab) |
@@ -572,7 +572,7 @@ The console has no telemetry client (F-APP-001 OD-9). Billing events are therefo
 | `packages/backend/src/__tests__/telemetry.test.ts` (extended) | `billing.*` names refused from clients with 422; server events recorded with codes-only payloads |
 | `packages/backend` `test:sqlite` | migration applies on top of 0001-0006; unique key and idempotent insert; `idx_entitlements_provider_ref` exists; index used by `billingEventsFor` |
 | `packages/backend/src/__tests__/health.test.ts` (extended) | `stripeLive`, `billingLiveAllowed`, booleans only, no key material |
-| `apps/web/src/lib/console/__tests__/billing-summary.test.ts` | card view models for every persona row of section 4.2 (words via the dictionary), order, read-only lines per reason, one buyable space → offer inside the card and no Add a plan block, two buyable spaces → Add a plan with one primary, includes lines per `SITE_CLAIMS` state (a claim that is off renders no line), connect-a-learner step, receipt rows (kinds, test pill, currency formatting, one-payment label), empty state |
+| `apps/web/src/lib/console/__tests__/billing-summary.test.ts` | card view models for every persona row of section 4.2 (words via the dictionary), order, read-only lines per reason, one buyable space → offer inside the card and no Add a plan block, two buyable spaces → Add a plan with one primary, includes lines per `SITE_CLAIMS` state (a claim that is off renders no line), connect-a-learner step, receipt rows (kinds, test pill, currency formatting, a legacy one-time row showing the plan name only with no "one payment" label, BY-D9), empty state |
 | `apps/web/src/lib/console/__tests__/checkout-return.test.ts` | the return state machine: checking → done, → still processing after 10 polls, check again, offline pauses without using attempts and resumes on online, poll error, cancelled, success without plan / id, done with a 0-learner family shows the next step |
 | `apps/web/src/app/__tests__/billing-page.test.tsx` | renders inside the grown-up layout with `noindex`; test banner, live-off, not configured, offline panel, error panel; step-up dialog flow against the real Clerk hint body (`useReverification` mocked at the fetcher boundary), retry refused twice → unavailable line, cancel → "Nothing was changed."; `already_active` note; no price or receipt on viewer cards |
 | `apps/web/src/app/__tests__/receipts-page.test.tsx` | rows, test pill, View receipt opens a blank tab then sets its location with `opener` cleared, link failure line, not-yours and error states, 320 px list layout |
