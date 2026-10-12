@@ -25,7 +25,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ScrollView, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { useLocale, useMessages } from '../../i18n/use-messages';
-import { resolvePicture } from '../../logic/picture-ref';
+import { hasPicture } from '../../logic/picture-ref';
 import {
   buildDiscover,
   pageRender,
@@ -244,8 +244,11 @@ function DiscoverItemCard({
   a11y: Messages['a11y'];
 }): React.ReactElement {
   const { item } = render;
-  const picture = resolvePicture(item.picture, PICTURE_CONTEXT);
   const example = item.example;
+  // The gloss each picture is given below, so "is there a picture" matches what PictureArt draws.
+  const itemGloss = item.gloss ?? item.glyph;
+  const itemPicture = item.kind === 'word' && hasPicture(item.picture, itemGloss, PICTURE_CONTEXT);
+  const examplePicture = example !== undefined && hasPicture(item.picture, example.gloss, PICTURE_CONTEXT);
 
   return (
     <Card padding="lg" tone="paper" testID={`discover-item-${item.key}`}>
@@ -269,9 +272,8 @@ function DiscoverItemCard({
             {item.note}
           </Body>
         ) : null}
-        {item.kind === 'word' && picture.kind !== 'text' ? (
-          <PictureArt pictureRef={item.picture} gloss={item.gloss ?? item.glyph} size={touchTarget.hero} />
-        ) : null}
+        {/* Decorative: the KoreanText line above already names the word (F-VOC-002 §3.7). */}
+        {itemPicture ? <PictureArt pictureRef={item.picture} gloss={itemGloss} size={touchTarget.hero} decorative /> : null}
 
         <HearButton
           action={item.hear}
@@ -352,8 +354,9 @@ function DiscoverItemCard({
               )}
               testID={`discover-hear-${example.hear.id}`}
             />
-            {picture.kind !== 'text' ? (
-              <PictureArt pictureRef={item.picture} gloss={example.gloss} size={touchTarget.hero} />
+            {/* Decorative: the example's KoreanText line already names it. */}
+            {examplePicture ? (
+              <PictureArt pictureRef={item.picture} gloss={example.gloss} size={touchTarget.hero} decorative />
             ) : null}
             {render.showReveal ? (
               <Button
