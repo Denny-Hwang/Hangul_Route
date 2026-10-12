@@ -66,7 +66,7 @@ describe('the shipped catalogue data', () => {
     for (const cell of previews) expect(cell.questIds).toEqual([]);
   });
 
-  it('lists the 8 Stage 1 quests of the bundle until F-QUEST-002 Q-6b brings the 15', () => {
+  it('lists the 9 Stage 1 quests of the bundle (Q-6b adds life q3) until F-QUEST-002 Q-7b and Q-8 bring the 15', () => {
     const stage1 = CATALOG.quests.filter((q) => q.stage === 'stage1' && q.kind === 'lesson');
     expect(stage1.map((q) => q.id)).toEqual([
       'quest:stage1-letters-q1',
@@ -74,12 +74,13 @@ describe('the shipped catalogue data', () => {
       'quest:stage1-letters-q3',
       'quest:stage1-life-q1',
       'quest:stage1-life-q2',
+      'quest:stage1-life-q3',
       'quest:stage1-rites-q1',
       'quest:stage1-nature-q1',
       'quest:stage1-crafts-q1',
     ]);
     expect(CATALOG.quests.filter((q) => q.kind === 'lesson').map((q) => q.id)).toContain('quest:stage4-rites-q1');
-    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(11);
+    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(12);
   });
 
   it('has 24 stories adding up to 112 minutes, each with a listen quest on its shelf episode', () => {
@@ -250,7 +251,7 @@ describe('CatalogSchema rules', () => {
   it('rejects a lesson quest that no cell lists', () => {
     const catalog = clone();
     cellOf(catalog, 'episode:stage1-life').questIds.pop();
-    expect(issues(catalog)).toContain('Lesson quest quest:stage1-life-q2 is not listed by its cell');
+    expect(issues(catalog)).toContain('Lesson quest quest:stage1-life-q3 is not listed by its cell');
   });
 
   it('rejects a lesson quest whose stage or theme is not its cell', () => {
@@ -383,6 +384,7 @@ describe('routeCatalogOf', () => {
       'quest:stage1-letters-q3',
       'quest:stage1-life-q1',
       'quest:stage1-life-q2',
+      'quest:stage1-life-q3',
       'quest:stage1-rites-q1',
       'quest:stage1-nature-q1',
       'quest:stage1-crafts-q1',
@@ -401,7 +403,8 @@ describe('routeCatalogOf', () => {
     const letters = route.quests.find((q) => q.id === 'quest:stage1-letters-q1');
     expect(letters).toMatchObject({ episodeId: 'episode:stage1-letters', stage: 'stage1', theme: 'letters', playable: true, grid: true });
     expect(letters?.teaches).toEqual(['ㅏ', 'ㅓ', 'ㄱ', 'ㄴ']); // F-QUEST-002 Q-6a
-    expect(route.quests.find((q) => q.id === 'quest:stage1-life-q1')?.teaches).toEqual([]);
+    expect(route.quests.find((q) => q.id === 'quest:stage1-life-q1')?.teaches).toEqual(['ㅈ', 'ㅊ']); // F-QUEST-002 Q-6b
+    expect(route.quests.find((q) => q.id === 'quest:stage1-rites-q1')?.teaches).toEqual([]);
   });
 
   it('is playable when the cell is ready and, for a story, when the story is ready', () => {

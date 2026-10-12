@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { en } from '../messages/en';
-import { fallbackPaths, getMessages, resolveLocale } from '../resolve';
+import { dictionaryLocale, fallbackPaths, getMessages, resolveLocale } from '../resolve';
 import { pseudoText } from '../pseudo';
 
 // A partial Spanish overlay, so the merge and fallback paths run against
@@ -26,6 +26,26 @@ describe('resolveLocale', () => {
     expect(resolveLocale({ profile: null, device: null, detected: 'ko' })).toBe('ko');
     expect(resolveLocale({})).toBe('en');
     expect(resolveLocale({ profile: null, device: undefined, detected: undefined })).toBe('en');
+  });
+});
+
+describe('dictionaryLocale', () => {
+  it('without the pseudo flag every UI locale reads its own dictionary', () => {
+    expect(dictionaryLocale('en', false)).toBe('en');
+    expect(dictionaryLocale('es', false)).toBe('es');
+    expect(dictionaryLocale('ko', false)).toBe('ko');
+  });
+
+  it('a pseudo build (the layout matrix, §3.11) shows English as en-XA and leaves es and ko alone', () => {
+    expect(dictionaryLocale('en', true)).toBe('en-XA');
+    expect(dictionaryLocale('es', true)).toBe('es');
+    expect(dictionaryLocale('ko', true)).toBe('ko');
+  });
+
+  it('reads the build flag by default', () => {
+    expect(dictionaryLocale('en')).toBe('en');
+    vi.stubEnv('EXPO_PUBLIC_PSEUDO_LOCALE', '1');
+    expect(dictionaryLocale('en')).toBe('en-XA');
   });
 });
 

@@ -130,6 +130,20 @@ function Header(): JSX.Element {
         >
           → Story scenes (contact sheet)
         </Link>
+        <Link
+          href="/design-preview/word-art"
+          prefetch={false}
+          style={{
+            padding: `${spacing.sm}px ${spacing.md}px`,
+            backgroundColor: colors.brand.secondary,
+            color: colors.text.inverse,
+            borderRadius: radii.pill,
+            fontWeight: 600,
+            fontSize: typography.size.bodySm,
+          }}
+        >
+          → Word pictures (contact sheet)
+        </Link>
       </nav>
     </header>
   );

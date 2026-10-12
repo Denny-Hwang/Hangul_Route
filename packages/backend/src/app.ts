@@ -12,6 +12,7 @@ import { plansRoutes } from './routes/plans';
 import { spacesRoutes } from './routes/spaces';
 import { syncRoutes } from './routes/sync';
 import { telemetryRoutes } from './routes/telemetry';
+import { transferSpaceRoutes } from './routes/transfers';
 import { waitlistRoutes } from './routes/waitlist';
 
 const app = new Hono<{ Bindings: RuntimeEnv & { ALLOWED_ORIGINS?: string } }>();
@@ -57,6 +58,8 @@ app.route('/api/spaces', spacesRoutes);
 app.route('/api/spaces', plansRoutes);
 // Re-link approval (F-TCH-001 §10.1): a class student's new device, approved by the teacher.
 app.route('/api/spaces', relinkRoutes);
+// Class moves (F-SPACE-002 T-5a): console preview / create / list / decline / cancel / prefs; locked until CLASS_TRANSFER=enabled.
+app.route('/api/spaces', transferSpaceRoutes);
 // Entitlements (F-ENT-001): one table for receipts, Stripe and contracts; learners inherit through memberships.
 app.route('/api/entitlements', entitlementRoutes);
 // School admin (F-SCHOOL-001): class tree, teacher invites, seats — aggregates only.

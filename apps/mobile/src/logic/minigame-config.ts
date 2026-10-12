@@ -5,7 +5,7 @@ import type {
   PicWordRound,
   StoryLevel,
 } from '@hangul-route/content-schema';
-import { lp } from './scope-builders';
+import { lp, pw } from './scope-builders';
 import { storyScopeFor } from './story/story-ref';
 
 /**
@@ -54,6 +54,15 @@ const Jb = (id: string): string => `jamo:${id}-batchim`;
 const L1 = [J('a'), J('eo'), J('giyeok'), J('nieun')];
 const L2 = [J('o'), J('u'), J('mieum'), J('ieung')];
 const L3 = [J('eu'), J('i'), J('digeut'), J('rieul')];
+/** The symbols the Food & Life quests teach: quest 4, 5 and 6. */
+const F1 = [J('jieut'), J('chieut')];
+const F2 = [J('bieup'), J('siot')];
+const F3 = [J('kieuk'), J('tieut')];
+/** Everything taught through quest 3, 4, 5 and 6 (the "taught" list of each Check). */
+const THRU_L3 = [...L1, ...L2, ...L3];
+const THRU_F1 = [...THRU_L3, ...F1];
+const THRU_F2 = [...THRU_F1, ...F2];
+const THRU_F3 = [...THRU_F2, ...F3];
 
 const word = (ko: string, romanization: string, en: string, syllables?: string[]): KoText =>
   syllables ? { ko, romanization, en, syllables } : { ko, romanization, en };
@@ -72,6 +81,27 @@ const W = {
   ai: word('아이', 'ai', 'child', ['a', 'i']),
   eomeoni: word('어머니', 'eomeoni', 'mother', ['eo', 'meo', 'ni']),
   deurama: word('드라마', 'deurama', 'drama', ['deu', 'ra', 'ma']),
+  // Food & Life (quests 4-6)
+  jadu: word('자두', 'jadu', 'plum', ['ja', 'du']),
+  chijeu: word('치즈', 'chijeu', 'cheese', ['chi', 'jeu']),
+  gochu: word('고추', 'gochu', 'chili pepper', ['go', 'chu']),
+  cha: word('차', 'cha', 'tea'),
+  abeoji: word('아버지', 'abeoji', 'father', ['a', 'beo', 'ji']),
+  agi: word('아기', 'agi', 'baby', ['a', 'gi']),
+  banana: word('바나나', 'banana', 'banana', ['ba', 'na', 'na']),
+  dubu: word('두부', 'dubu', 'tofu', ['du', 'bu']),
+  tomato: word('토마토', 'tomato', 'tomato', ['to', 'ma', 'to']),
+  kokoa: word('코코아', 'kokoa', 'cocoa', ['ko', 'ko', 'a']),
+  kuki: word('쿠키', 'kuki', 'cookie', ['ku', 'ki']),
+  toseuteu: word('토스트', 'toseuteu', 'toast', ['to', 'seu', 'teu']),
+} as const;
+
+/** Theme words (pictured culture words, exposure only, R3): they may hold symbols not taught yet. */
+const T = {
+  gimchi: word('김치', 'gimchi', 'kimchi', ['gim', 'chi']),
+  bap: word('밥', 'bap', 'rice'),
+  gimbap: word('김밥', 'gimbap', 'kimbap', ['gim', 'bap']),
+  jeotgarak: word('젓가락', 'jeotgarak', 'chopsticks', ['jeot', 'ga', 'rak']),
 } as const;
 
 export const minigameScopes: Record<string, MinigameScope> = {
@@ -136,42 +166,93 @@ export const minigameScopes: Record<string, MinigameScope> = {
   'minigame:s1-letters-q3-check': {
     kind: 'listen-pick',
     listenPick: {
-      rounds: [lp.sym(J('eu'), [...L1, ...L2, ...L3]), lp.word(W.dari, [W.ai, W.eomeoni, W.deurama])],
+      rounds: [lp.sym(J('eu'), THRU_L3), lp.word(W.dari, [W.ai, W.eomeoni, W.deurama])],
     },
   },
 
-  // Stage 1 / Food & Life
-  'minigame:s1-life-card-1': {
-    kind: 'card-match',
-    cardPairs: [
-      { ko: '김치', en: 'Kimchi', romanization: 'gimchi' },
-      { ko: '밥', en: 'Rice', romanization: 'bap' },
-      { ko: '김밥', en: 'Kimbap', romanization: 'gimbap' },
-      { ko: '젓가락', en: 'Chopsticks', romanization: 'jeotgarak' },
-    ],
-  },
-  'minigame:s1-life-card-2': {
-    kind: 'card-match',
-    cardPairs: [
-      { ko: '엄마', en: 'Mom', romanization: 'eomma' },
-      { ko: '아빠', en: 'Dad', romanization: 'appa' },
-      { ko: '가족', en: 'Family', romanization: 'gajok' },
-      { ko: '집', en: 'Home', romanization: 'jip' },
-    ],
-  },
-  'minigame:s1-life-match-1': {
+  // Stage 1 / Food & Life / Q4 — ㅈ ㅊ, reviewing ㄱ ㄴ ㄷ ㄹ (quest 4)
+  'minigame:s1-life-q1-play': {
     kind: 'match-sound',
-    jamoIds: [J('giyeok'), J('mieum'), J('bieup'), J('jieut')],
+    jamoIds: [...F1, J('giyeok'), J('nieun'), J('digeut'), J('rieul'), J('mieum'), J('ieung')],
+    focusJamoIds: F1,
+    rounds: 6,
+  },
+  // The first Pic-Word board (section 3.11): food theme words on their card pictures.
+  'minigame:s1-life-q1-apply': {
+    kind: 'pic-word-match',
+    picWord: {
+      boards: [
+        pw([
+          { word: T.gimchi, picture: 'card:kimchi' },
+          { word: T.bap, picture: 'card:rice' },
+          { word: T.gimbap, picture: 'card:kimbap' },
+          { word: T.jeotgarak, picture: 'card:chopsticks' },
+        ]),
+      ],
+    },
+  },
+  'minigame:s1-life-q1-check': {
+    kind: 'listen-pick',
+    listenPick: {
+      rounds: [
+        lp.sym(J('chieut'), THRU_F1, { optionIds: [J('chieut'), J('jieut'), J('giyeok'), J('digeut')] }),
+        lp.word(W.chijeu, [W.jadu, W.gochu, W.cha]),
+      ],
+    },
+  },
+
+  // Stage 1 / Food & Life / Q5 — ㅂ ㅅ, reviewing ㅈ ㅊ ㅁ ㅇ (quest 5)
+  'minigame:s1-life-q2-play': {
+    kind: 'match-sound',
+    jamoIds: [...F2, ...F1, J('mieum'), J('ieung'), J('giyeok'), J('digeut')],
+    focusJamoIds: F2,
+    rounds: 6,
+  },
+  'minigame:s1-life-q2-apply': {
+    kind: 'build-letter',
+    syllables: [
+      { ko: '바', romanization: 'ba', jamoChars: ['ㅂ', 'ㅏ'] },
+      { ko: '보', romanization: 'bo', jamoChars: ['ㅂ', 'ㅗ'] },
+      { ko: '사', romanization: 'sa', jamoChars: ['ㅅ', 'ㅏ'] },
+      { ko: '수', romanization: 'su', jamoChars: ['ㅅ', 'ㅜ'] },
+    ],
+  },
+  'minigame:s1-life-q2-check': {
+    kind: 'listen-pick',
+    listenPick: {
+      rounds: [
+        lp.sym(J('siot'), THRU_F2, { optionIds: [J('siot'), J('jieut'), J('bieup'), J('mieum')] }),
+        lp.word(W.abeoji, [W.agi, W.banana, W.dubu]),
+      ],
+    },
+  },
+
+  // Stage 1 / Food & Life / Q6 — ㅋ ㅌ next to their soft twins ㄱ ㄷ, and ㅂ ㅅ ㅈ ㅊ (quest 6)
+  'minigame:s1-life-q3-play': {
+    kind: 'match-sound',
+    jamoIds: [...F3, J('giyeok'), J('digeut'), ...F2, ...F1],
+    focusJamoIds: F3,
+    rounds: 6,
+  },
+  'minigame:s1-life-q3-apply': {
+    kind: 'culture-quiz',
+    cardPairs: [
+      { ko: '토마토', en: 'Tomato', romanization: 'tomato' },
+      { ko: '코코아', en: 'Cocoa', romanization: 'kokoa' },
+      { ko: '쿠키', en: 'Cookie', romanization: 'kuki' },
+      { ko: '토스트', en: 'Toast', romanization: 'toseuteu' },
+      { ko: '김밥', en: 'Kimbap', romanization: 'gimbap' },
+    ],
     rounds: 4,
   },
-  'minigame:s1-life-story-1': {
-    kind: 'story-sequence',
-    storySteps: [
-      { id: 'a', labelEn: 'Wash hands', labelKo: '손 씻기', romanization: 'son ssitgi' },
-      { id: 'b', labelEn: 'Set the table', labelKo: '상 차리기', romanization: 'sang charigi' },
-      { id: 'c', labelEn: 'Eat with family', labelKo: '같이 먹기', romanization: 'gachi meokgi' },
-      { id: 'd', labelEn: 'Say thanks', labelKo: '잘 먹었습니다', romanization: 'jal meogeotseumnida' },
-    ],
+  'minigame:s1-life-q3-check': {
+    kind: 'listen-pick',
+    listenPick: {
+      rounds: [
+        lp.sym(J('kieuk'), THRU_F3, { optionIds: [J('kieuk'), J('giyeok'), J('tieut'), J('digeut')] }),
+        lp.word(W.tomato, [W.kokoa, W.kuki, W.toseuteu]),
+      ],
+    },
   },
 
   // Stage 1 / Rites

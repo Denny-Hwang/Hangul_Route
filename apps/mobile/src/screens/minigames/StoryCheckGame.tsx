@@ -55,6 +55,7 @@ import {
   type CheckPlayerView,
   type CheckState,
 } from '../../logic/story/check-player';
+import { recapWords } from '../../logic/story/recap';
 import { sayItYourselfShown } from '../../logic/story/reader-effects';
 import { effectiveReadToMe } from '../../logic/story/reader-settings';
 import { noteFallbackShown } from '../../platform/audio';
@@ -65,6 +66,7 @@ import { useLocaleStore } from '../../store/locale-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useQuestRunStore } from '../../store/quest-run-store';
 import { SpeakerButton } from '../story/ReaderParts';
+import { StoryWordRecap } from '../story/StoryWordRecap';
 import { useReaderAudio } from '../story/use-reader-audio';
 import { PictureArt } from './PictureArt';
 
@@ -97,8 +99,9 @@ function announce(line: string, queue: boolean): void {
  * and the item resolves only on the right card, with the explanation and a
  * Next button (never an auto-advance). The rules live in
  * `logic/story/check-player.ts` and `logic/story/check-game.ts`; this file
- * paints them and runs their effects. The word recap after the last item
- * arrives with PR 3.4b.
+ * paints them and runs their effects. After the last item, Next opens the
+ * word recap (`StoryWordRecap`, §3.6, PR 3.4b) when the story has words to
+ * recap; its Done ends the step. Without words, Next ends the step at once.
  */
 export function StoryCheckGame({ scope, onFinish, onBack }: Props): React.ReactElement {
   const locale = useLocale();
@@ -107,14 +110,17 @@ export function StoryCheckGame({ scope, onFinish, onBack }: Props): React.ReactE
   const level = scope.story?.level ?? 'listen';
   const checkIds = scope.story?.checkIds;
   // The items as shown (UI-language overlay) and as authored (tells translated text from English for speech).
-  const { items, sourceItems } = useMemo(() => {
+  // The recap words carry the gloss in the UI language (overlay); only the Korean is spoken.
+  const { items, sourceItems, words } = useMemo(() => {
     const story = scope.story ? storyById(scope.story.storyId) : undefined;
+    const shown = story && localizeStory(story, locale);
     return {
-      items: checkGameItems(story && localizeStory(story, locale), level, checkIds),
+      items: checkGameItems(shown, level, checkIds),
       sourceItems: checkGameItems(story, level, checkIds),
+      words: shown ? recapWords(shown, level) : [],
     };
   }, [scope.story, locale, level, checkIds]);
-  const playerView = useMemo<CheckPlayerView>(() => ({ items, hasRecap: false }), [items]);
+  const playerView = useMemo<CheckPlayerView>(() => ({ items, hasRecap: words.length > 0 }), [items, words]);
   const ids: CheckIds = { storyId: scope.story?.storyId ?? null, level: scope.story?.level ?? null };
   const idsRef = useRef(ids);
   idsRef.current = ids;
@@ -228,9 +234,15 @@ export function StoryCheckGame({ scope, onFinish, onBack }: Props): React.ReactE
   useEffect(() => () => stopAudio(), [stopAudio]);
 
   // `audio.fallback_shown` (source 'story-check') only for the fallback drawn here: the chip (spec §3.4).
+  const inRecap = state.phase === 'recap' || state.phase === 'done';
   const sayItNow =
     item !== undefined &&
-    sayItYourselfShown({ canPlayKorean: audio.canPlayKorean, reason: audio.slot.view.reason, hasKorean: checkHasKorean(item) });
+    sayItYourselfShown({
+      canPlayKorean: audio.canPlayKorean,
+      reason: audio.slot.view.reason,
+      // Every recap word is Korean.
+      hasKorean: inRecap ? words.length > 0 : checkHasKorean(item),
+    });
   useEffect(() => {
     const reason = checkFallbackReason(sayItNow);
     if (reason !== null) noteFallbackShown(STORY_CHECK_AUDIO_SOURCE, reason);
@@ -298,128 +310,145 @@ export function StoryCheckGame({ scope, onFinish, onBack }: Props): React.ReactE
         </View>
       </View>
 
-      <Spacer size="lg" />
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm }}>
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Heading level="prompt" testID="story-check-prompt">
-            {item.promptParts.map((part, i) =>
-              'target' in part ? (
-                <Text key={i} {...koreanSpeech} style={{ fontWeight: typography.weight.bold }}>
-                  {part.target.ko}
-                </Text>
-              ) : (
-                part.text
-              ),
-            )}
-          </Heading>
-        </View>
-        <SpeakerButton
-          label={copy.speakerPrompt}
-          onPress={() => playAudio([...speech.question, ...speech.options])}
-          testID="story-check-speaker"
-        />
-      </View>
-
-      {target ? (
+      {inRecap ? (
         <>
-          <Spacer size="md" />
-          <View style={{ alignSelf: 'flex-start' }}>
-            <KoreanText
-              ko={target.ko}
-              romanization={target.romanization}
-              gloss={target.gloss}
-              size="md"
-              // Without a Korean voice the speaker gives way to the "Say it yourself" chip (F-AUDIO-004 §3.8).
-              onPress={!sayIt && speech.target ? () => playAudio(speech.target ? [speech.target] : []) : undefined}
-              // As the speaker it says that a tap plays the word; as plain text, "ko, romanization" (the default).
-              accessibilityLabel={!sayIt && speech.target ? targetAccessibilityLabel(target, copy) : undefined}
-              testID="story-check-target"
+          <Spacer size="lg" />
+          <StoryWordRecap
+            words={words}
+            storyId={scope.story?.storyId ?? ''}
+            profileId={profileId ?? undefined}
+            romanizationMode={romanizationMode}
+            sayIt={sayIt}
+            play={playAudio}
+            onDone={() => dispatch({ type: 'finishRecap' })}
+          />
+        </>
+      ) : (
+        <>
+          <Spacer size="lg" />
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm }}>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Heading level="prompt" testID="story-check-prompt">
+                {item.promptParts.map((part, i) =>
+                  'target' in part ? (
+                    <Text key={i} {...koreanSpeech} style={{ fontWeight: typography.weight.bold }}>
+                      {part.target.ko}
+                    </Text>
+                  ) : (
+                    part.text
+                  ),
+                )}
+              </Heading>
+            </View>
+            <SpeakerButton
+              label={copy.speakerPrompt}
+              onPress={() => playAudio([...speech.question, ...speech.options])}
+              testID="story-check-speaker"
             />
           </View>
-        </>
-      ) : null}
 
-      {sayIt || revealNeeded(item, state, ctx) ? (
-        <>
-          <Spacer size="sm" />
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm }}>
-            {sayIt ? <Pill label={m.learner.story.reader.sayItYourself.pill} tone="info" testID="story-check-say-it" /> : null}
-            {revealNeeded(item, state, ctx) ? (
-              <Button
-                label={copy.showRomanization.cta}
-                tone="ghost"
-                size="md"
-                onPress={() => setRevealed(true)}
-                testID="story-check-reveal"
-              />
+          {target ? (
+            <>
+              <Spacer size="md" />
+              <View style={{ alignSelf: 'flex-start' }}>
+                <KoreanText
+                  ko={target.ko}
+                  romanization={target.romanization}
+                  gloss={target.gloss}
+                  size="md"
+                  // Without a Korean voice the speaker gives way to the "Say it yourself" chip (F-AUDIO-004 §3.8).
+                  onPress={!sayIt && speech.target ? () => playAudio(speech.target ? [speech.target] : []) : undefined}
+                  // As the speaker it says that a tap plays the word; as plain text, "ko, romanization" (the default).
+                  accessibilityLabel={!sayIt && speech.target ? targetAccessibilityLabel(target, copy) : undefined}
+                  testID="story-check-target"
+                />
+              </View>
+            </>
+          ) : null}
+
+          {sayIt || revealNeeded(item, state, ctx) ? (
+            <>
+              <Spacer size="sm" />
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm }}>
+                {sayIt ? <Pill label={m.learner.story.reader.sayItYourself.pill} tone="info" testID="story-check-say-it" /> : null}
+                {revealNeeded(item, state, ctx) ? (
+                  <Button
+                    label={copy.showRomanization.cta}
+                    tone="ghost"
+                    size="md"
+                    onPress={() => setRevealed(true)}
+                    testID="story-check-reveal"
+                  />
+                ) : null}
+              </View>
+            </>
+          ) : null}
+
+          <Spacer size="lg" />
+          <View testID="story-check-options" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
+            {item.options.map((option) => {
+              const card = optionCardView(item, option, state, { ...ctx, copy });
+              const art =
+                card.art !== undefined && supportedCardIds.includes(card.art) ? (
+                  <PictureArt pictureRef={card.art} gloss={card.label ?? ''} size={pictureSize} />
+                ) : undefined;
+              return (
+                <View
+                  key={option.id}
+                  style={{ ...cell, minWidth: touchTarget.hero, gap: spacing.xs }}
+                >
+                  <ChoiceCard
+                    testID={`story-check-option-${option.id}`}
+                    state={card.state}
+                    label={card.label}
+                    ko={card.ko}
+                    romanization={card.romanization}
+                    gloss={card.gloss}
+                    art={art}
+                    accessibilityLabel={card.accessibilityLabel}
+                    onPress={() => dispatch({ type: 'choose', optionId: option.id })}
+                  />
+                  {card.status ? (
+                    // The visible non-colour cue; the card's accessible name already ends with these words.
+                    <View {...a11yHidden}>
+                      <Body size="sm" weight="semibold" testID={`story-check-status-${option.id}`}>
+                        {card.status === 'correct' ? copy.correct : copy.tryAnother}
+                      </Body>
+                    </View>
+                  ) : null}
+                </View>
+              );
+            })}
+          </View>
+
+          {/* A live region on the web only: native announces the outcome line itself (one announcement, no overlap). */}
+          <View accessibilityLiveRegion={Platform.OS === 'web' ? 'polite' : 'none'}>
+            {bubble ? (
+              <>
+                <Spacer size="lg" />
+                <HoyaBubble tone={bubble.tone} message={bubble.message} />
+              </>
             ) : null}
           </View>
+
+          {resolved ? (
+            <>
+              <Spacer size="xl" />
+              <View>
+                <Button
+                  pressableRef={nextRef}
+                  label={copy.next.cta}
+                  tone="primary"
+                  size="hero"
+                  fullWidth
+                  onPress={() => dispatch({ type: 'next' })}
+                  testID="story-check-next"
+                />
+              </View>
+            </>
+          ) : null}
         </>
-      ) : null}
-
-      <Spacer size="lg" />
-      <View testID="story-check-options" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
-        {item.options.map((option) => {
-          const card = optionCardView(item, option, state, { ...ctx, copy });
-          const art =
-            card.art !== undefined && supportedCardIds.includes(card.art) ? (
-              <PictureArt pictureRef={card.art} gloss={card.label ?? ''} size={pictureSize} />
-            ) : undefined;
-          return (
-            <View
-              key={option.id}
-              style={{ ...cell, minWidth: touchTarget.hero, gap: spacing.xs }}
-            >
-              <ChoiceCard
-                testID={`story-check-option-${option.id}`}
-                state={card.state}
-                label={card.label}
-                ko={card.ko}
-                romanization={card.romanization}
-                gloss={card.gloss}
-                art={art}
-                accessibilityLabel={card.accessibilityLabel}
-                onPress={() => dispatch({ type: 'choose', optionId: option.id })}
-              />
-              {card.status ? (
-                // The visible non-colour cue; the card's accessible name already ends with these words.
-                <View {...a11yHidden}>
-                  <Body size="sm" weight="semibold" testID={`story-check-status-${option.id}`}>
-                    {card.status === 'correct' ? copy.correct : copy.tryAnother}
-                  </Body>
-                </View>
-              ) : null}
-            </View>
-          );
-        })}
-      </View>
-
-      {/* A live region on the web only: native announces the outcome line itself (one announcement, no overlap). */}
-      <View accessibilityLiveRegion={Platform.OS === 'web' ? 'polite' : 'none'}>
-        {bubble ? (
-          <>
-            <Spacer size="lg" />
-            <HoyaBubble tone={bubble.tone} message={bubble.message} />
-          </>
-        ) : null}
-      </View>
-
-      {resolved ? (
-        <>
-          <Spacer size="xl" />
-          <View>
-            <Button
-              pressableRef={nextRef}
-              label={copy.next.cta}
-              tone="primary"
-              size="hero"
-              fullWidth
-              onPress={() => dispatch({ type: 'next' })}
-              testID="story-check-next"
-            />
-          </View>
-        </>
-      ) : null}
+      )}
       <Spacer size="xl" />
     </Screen>
   );

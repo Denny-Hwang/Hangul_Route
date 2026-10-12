@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 1,
+  "topic": {
+    "id": "vocab-topic:k-culture",
+    "key": "k-culture",
+    "order": 11,
+    "titleEn": "K-Culture",
+    "titleKo": {
+      "ko": "한국 문화",
+      "romanization": "hanguk munhwa",
+      "en": "Korean culture"
+    },
+    "blurbEn": "Korean clothes, food, holidays, games and music.",
+    "hoyaIntroEn": "Come and explore the clothes, food, holidays and music of Korea.",
+    "tint": "theme.rites",
+    "coverItemId": "vocab:hanbok",
+    "status": "draft",
+    "fixedOrder": false
+  },
+  "items": [
+    {
+      "id": "vocab:hanbok",
+      "ko": "한복",
+      "romanization": "hanbok",
+      "en": "hanbok (traditional clothes)",
+      "pos": "noun",
+      "topics": [
+        "k-culture"
+      ],
+      "level": 1,
+      "visual": "card:hanbok",
+      "senseNote": "Often worn on holidays such as Seollal and Chuseok."
+    },
+    {
+      "id": "vocab:hangeul",
+      "ko": "한글",
+      "romanization": "hangeul",
+      "en": "Hangul (the Korean alphabet)",
+      "pos": "noun",
+      "topics": [
+        "k-culture"
+      ],
+      "level": 1,
+      "visual": "word:culture-hangul",
+      "senseNote": "The alphabet you are learning here."
+    },
+    {
+      "id": "vocab:hanok",
+      "ko": "한옥",
+      "romanization": "hanok",
+      "en": "hanok (traditional house)",
+      "pos": "noun",
+      "topics": [
+        "k-culture"
+      ],
+      "level": 1,
+      "visual": "word:culture-hanok"
+    },
+    {
+      "id": "vocab:bibimbap",
+      "ko": "비빔밥",
+      "romanization": "bibimbap",
+      "en": "bibimbap (mixed rice bowl)",
+      "pos": "noun",
+      "topics": [
+        "k-culture"
+      ],
+      "level": 2,
+      "visual": "word:culture-bibimbap",
+      "senseNote": "Rice topped with vegetables, mixed together before you eat."
+    },
+    {
+      "id": "vocab:tteokbokki",
+      "ko": "떡볶이",
+      "romanization": "tteokbokki",
+      "en": "tteokbokki (spicy rice cakes)",
+      "pos": "noun",
+      "topics": [
+        "k-culture"
+      ],
+      "level": 2,
+      "visual": "word:culture-tteokbokki"
+    },
+    {
+      "id": "vocab:seollal",
+      "ko": "설날",
+      "romanization": "seollal",
+      "en": "Lunar New Year",
+      "pos": "noun",
+      "topics": [
+        "k-culture"
+      ],
+      "level": 1,
+      "visual": "card:seollal",
+      "senseNote": "People wear hanbok and bow to their elders."
+    },
+    {
+      "id": "vocab:chuseok",
+      "ko": "추석",
+      "romanization": "chuseok",
+      "en": "Chuseok (harvest festival)",
+      "pos": "noun",
+      "topics": [
+        "k-culture"
+      ],
+      "level": 1,
+      "visual": "card:chuseok",
+      "senseNote": "Families gather and share songpyeon, half-moon rice cakes."
+    },
+    {
+      "id": "vocab:yunnori",
+      "ko": "윷놀이",
+      "romanization": "yunnori",
+      "en": "yut game (board game with sticks)",
+      "pos": "noun",
+      "topics": [
+        "k-culture"
+      ],
+      "level": 2,
+      "visual": "card:yutnori",
+      "senseNote": "Players throw four wooden sticks, often at Lunar New Year."
+    },
+    {
+      "id": "vocab:gayageum",
+      "ko": "가야금",
+      "romanization": "gayageum",
+      "en": "gayageum (Korean zither)",
+      "pos": "noun",
+      "topics": [
+        "k-culture"
+      ],
+      "level": 2,
+      "visual": "card:gayageum",
+      "senseNote": "A long string instrument, plucked with the fingers."
+    },
+    {
+      "id": "vocab:norae",
+      "ko": "노래",
+      "romanization": "norae",
+      "en": "song",
+      "pos": "noun",
+      "topics": [
+        "k-culture"
+      ],
+      "level": 1,
+      "visual": "word:culture-song"
+    },
+    {
+      "id": "vocab:chum",
+      "ko": "춤",
+      "romanization": "chum",
+      "en": "dance",
+      "pos": "noun",
+      "topics": [
+        "k-culture"
+      ],
+      "level": 1,
+      "visual": "word:culture-dance"
+    },
+    {
+      "id": "vocab:deurama",
+      "ko": "드라마",
+      "romanization": "deurama",
+      "en": "TV drama",
+      "pos": "noun",
+      "topics": [
+        "k-culture"
+      ],
+      "level": 2,
+      "visual": "word:culture-drama"
+    }
+  ]
+}

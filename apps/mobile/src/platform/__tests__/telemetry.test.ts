@@ -13,6 +13,8 @@ vi.mock('../storage', () => ({
 }));
 
 import { flags } from '../../config/flags';
+import { TELEMETRY_QUEUE_CAP } from '../../logic/telemetry/queue';
+import { writeJson } from '../storage';
 import { addTelemetryListener, flushQueue, track } from '../telemetry';
 
 const ORIGINAL_FETCH = globalThis.fetch;
@@ -144,6 +146,76 @@ describe('offline queue (F-PWA-001 §3.2)', () => {
     const mixed = vi.fn<typeof fetch>(async () => new Response(null, { status: (n += 1) === 1 ? 400 : 201 }));
     expect(await flushQueue({ endpoint: 'https://api.example.com', fetchImpl: mixed })).toBe(1);
     expect(mem.get('telemetry:queue')).toEqual([]);
+  });
+
+  describe('concurrent writers never overwrite each other (issue #261)', () => {
+    const endpoint = 'https://api.example.com';
+    const offline = vi.fn<typeof fetch>(async () => {
+      throw new Error('offline');
+    });
+    const names = (): string[] => ((mem.get('telemetry:queue') as Array<{ name: string }> | undefined) ?? []).map((e) => e.name);
+
+    it('stores all N events that fail in the same tick, in call order', async () => {
+      // A Results visit that completes a stage sends this many at once.
+      const batch = ['quest.complete', 'card.unlocked', 'card.unlocked', 'card.unlocked', 'episode.complete', 'stage.complete', 'card_set.complete', 'card.unlocked', 'card.unlocked', 'card.unlocked'] as const;
+      const results = await Promise.all(batch.map((name, i) => track({ name, payload: { i } }, { endpoint, fetchImpl: offline })));
+      expect(results.every((ok) => ok === false)).toBe(true);
+      const queue = mem.get('telemetry:queue') as Array<{ name: string; payload: { i: number } }>;
+      expect(queue).toHaveLength(batch.length);
+      expect(queue.map((e) => e.payload.i)).toEqual(batch.map((_, i) => i));
+    });
+
+    it('keeps an event queued while a flush is sending', async () => {
+      mem.set('telemetry:queue', [
+        { name: 'a', at: '1' },
+        { name: 'b', at: '2' },
+      ]);
+      let late: Promise<boolean> | null = null;
+      const online = vi.fn<typeof fetch>(async () => {
+        late ??= track({ name: 'quest.complete' }, { endpoint, fetchImpl: offline });
+        return new Response(null, { status: 201 });
+      });
+      expect(await flushQueue({ endpoint, fetchImpl: online })).toBe(2);
+      await late;
+      expect(names()).toEqual(['quest.complete']);
+    });
+
+    it('keeps an event queued while a flush fails, after the unsent ones', async () => {
+      mem.set('telemetry:queue', [
+        { name: 'a', at: '1' },
+        { name: 'b', at: '2' },
+      ]);
+      let late: Promise<boolean> | null = null;
+      const down = vi.fn<typeof fetch>(async () => {
+        late ??= track({ name: 'quest.complete' }, { endpoint, fetchImpl: offline });
+        return new Response(null, { status: 503 });
+      });
+      expect(await flushQueue({ endpoint, fetchImpl: down })).toBe(0);
+      await late;
+      expect(names()).toEqual(['a', 'b', 'quest.complete']);
+    });
+
+    it('keeps the newest events within the cap when a failed flush and new events overflow it', async () => {
+      const full = Array.from({ length: TELEMETRY_QUEUE_CAP }, (_, i) => ({ name: `old${i}`, at: String(i) }));
+      mem.set('telemetry:queue', full);
+      let late: Promise<boolean> | null = null;
+      const down = vi.fn<typeof fetch>(async () => {
+        late ??= track({ name: 'quest.complete' }, { endpoint, fetchImpl: offline });
+        return new Response(null, { status: 503 });
+      });
+      await flushQueue({ endpoint, fetchImpl: down });
+      await late;
+      const kept = names();
+      expect(kept).toHaveLength(TELEMETRY_QUEUE_CAP);
+      expect(kept[0]).toBe('old1');
+      expect(kept.at(-1)).toBe('quest.complete');
+    });
+
+    it('a storage failure never blocks the events queued after it', async () => {
+      vi.mocked(writeJson).mockRejectedValueOnce(new Error('quota'));
+      await Promise.all([track({ name: 'quest.complete' }, { endpoint, fetchImpl: offline }), track({ name: 'stage.complete' }, { endpoint, fetchImpl: offline })]);
+      expect(names()).toEqual(['stage.complete']);
+    });
   });
 
   it('never queues for the placeholder endpoint', async () => {
