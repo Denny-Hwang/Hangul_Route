@@ -11,6 +11,7 @@ import {
   type ExecuteTransferResult,
   type NewTransferEvent,
   type StoredRelink,
+  type StoredSummary,
   type StoredTransfer,
   type TransferEndActor,
   type TransferEvent,
@@ -59,6 +60,7 @@ const toAccount = (r: Row): Account => ({ id: str(r.id), email: nstr(r.email), d
 const toLearner = (r: Row): Learner => ({ id: str(r.id), displayName: str(r.display_name), ageGroup: str(r.age_group) as Learner['ageGroup'], avatar: str(r.avatar), recoveryHash: nstr(r.recovery_hash), createdAt: str(r.created_at), lastActiveAt: str(r.last_active_at) });
 const toDevice = (r: Row): LearnerDevice => ({ learnerId: str(r.learner_id), deviceId: str(r.device_id), secretHash: str(r.secret_hash), scope: r.scope === 'class' ? 'class' : 'full', createdAt: str(r.created_at), lastSeenAt: str(r.last_seen_at) });
 const toSnapshot = (r: Row): SnapshotRecord => ({ learnerId: str(r.learner_id), rev: num(r.rev), schemaVer: num(r.schema_ver), contentVer: str(r.content_ver), deviceId: str(r.device_id), summary: json(r.summary_json), payload: json(r.payload_json), updatedAt: str(r.updated_at) });
+const toStoredSummary = (r: Row): StoredSummary => ({ learnerId: str(r.learner_id), summary: json(r.summary_json), updatedAt: str(r.updated_at) });
 const toSpace = (r: Row): Space => ({
   id: str(r.id),
   kind: str(r.kind) as Space['kind'],
@@ -359,6 +361,10 @@ export class D1Db implements Db {
 
   getSnapshot(learnerId: string): Promise<SnapshotRecord | null> {
     return this.one('SELECT * FROM snapshots WHERE learner_id = ?', [learnerId], toSnapshot);
+  }
+  /** Three columns, never `payload_json` (F-REPORT-001 section 3.8): `getSnapshot` is `SELECT *`. */
+  summaryOf(learnerId: string): Promise<StoredSummary | null> {
+    return this.one('SELECT learner_id, summary_json, updated_at FROM snapshots WHERE learner_id = ?', [learnerId], toStoredSummary);
   }
   async putSnapshot(s: SnapshotRecord, baseRev: number): Promise<boolean> {
     // One statement each, so the rev check and the write cannot interleave with another isolate (SYNC-1).

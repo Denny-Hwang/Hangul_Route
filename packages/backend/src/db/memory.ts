@@ -13,6 +13,7 @@ import {
   type ExecuteTransferResult,
   type NewTransferEvent,
   type StoredRelink,
+  type StoredSummary,
   type StoredTransfer,
   type TransferEndActor,
   type TransferEvent,
@@ -115,6 +116,10 @@ export class MemoryDb implements Db {
     if ((this.snapshots.get(record.learnerId)?.rev ?? 0) !== baseRev) return false;
     this.snapshots.set(record.learnerId, clone(record));
     return true;
+  }
+  async summaryOf(learnerId: string): Promise<StoredSummary | null> {
+    const row = this.snapshots.get(learnerId);
+    return row ? clone({ learnerId: row.learnerId, summary: row.summary, updatedAt: row.updatedAt }) : null;
   }
 
   async getSpace(spaceId: string): Promise<Space | null> {

@@ -39,7 +39,7 @@ export const LOOKUP_WINDOW_MS = 60 * 60 * 1000;
 export const lookupLimiter = createRateLimiter(LOOKUP_LIMIT, LOOKUP_WINDOW_MS);
 
 /** What members see about a space — never the code (handed out separately, by role). */
-function publicSpace(space: Space) {
+export function publicSpace(space: Space) {
   return {
     id: space.id,
     kind: space.kind,
@@ -72,7 +72,7 @@ async function issueCode(db: Db, space: Space, now: Date): Promise<void> {
 }
 
 /** Authorize an account for `action` on `space`; returns the account or an error Response. */
-async function requireCan(c: Context, db: Db, space: Space, action: Action): Promise<Response | Account> {
+export async function requireCan(c: Context, db: Db, space: Space, action: Action): Promise<Response | Account> {
   const account = await requireAccount(c);
   if (!('id' in account)) return account;
   if (!can(await accountActor(db, account), action, { kind: 'space', ctx: await spaceContext(db, space) })) {
@@ -81,7 +81,8 @@ async function requireCan(c: Context, db: Db, space: Space, action: Action): Pro
   return account;
 }
 
-async function findSpace(c: Context, db: Db, spaceId: string, allowArchived = false): Promise<Response | Space> {
+/** The space, or a 404 Response; archived spaces only when `allowArchived` (read-only routes). */
+export async function findSpace(c: Context, db: Db, spaceId: string, allowArchived = false): Promise<Response | Space> {
   const space = await db.getSpace(spaceId);
   if (!space || (space.archivedAt && !allowArchived)) return fail(c, 'not_found', 'Space not found', 404);
   return space;

@@ -97,6 +97,20 @@ function contract(name: string, make: () => Db): void {
       expect(await db.getSnapshot('profile:other')).toBeNull();
     });
 
+    it('summaryOf reads the summary and its time, never the payload (F-REPORT-001 section 3.8)', async () => {
+      await db.putLearner({ id: 'profile:suni', displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange', recoveryHash: null, createdAt: T, lastActiveAt: T });
+      expect(await db.summaryOf('profile:suni')).toBeNull();
+      const later = '2026-10-08T09:30:00.000Z';
+      await db.putSnapshot({ learnerId: 'profile:suni', rev: 1, schemaVer: 1, contentVer: '2026.10', deviceId: 'device-a', summary: { cardsUnlocked: 3, needsPractice: ['ㅂ'] }, payload: { profileId: 'profile:suni', cards: ['secret'] }, updatedAt: later }, 0);
+      const read = await db.summaryOf('profile:suni');
+      expect(read).toEqual({ learnerId: 'profile:suni', summary: { cardsUnlocked: 3, needsPractice: ['ㅂ'] }, updatedAt: later });
+      expect(JSON.stringify(read)).not.toContain('secret');
+      // reads are copies: nothing saved without put
+      (read?.summary as { cardsUnlocked: number }).cardsUnlocked = 99;
+      expect((await db.summaryOf('profile:suni'))?.summary).toEqual({ cardsUnlocked: 3, needsPractice: ['ㅂ'] });
+      expect(await db.summaryOf('profile:nobody')).toBeNull();
+    });
+
     it('spaces: upsert, lookup by code, children, owner, archived flag, settings JSON', async () => {
       await db.putAccount({ id: 'principal', email: null, displayName: null, consent: null, createdAt: T });
       await db.putAccount({ id: 'teacher', email: null, displayName: null, consent: null, createdAt: T });
