@@ -29,46 +29,81 @@ export function rowsFromOf(asOf: string): string {
 }
 
 const monthStart = (month: string): string => `${month}-01`;
-const addMonths = (month: string, n: number): string => {
+/** `month` moved by `n` months (`YYYY-MM`). */
+export function addMonths(month: string, n: number): string {
   const [y, m] = month.split('-').map(Number) as [number, number];
   const index = y * 12 + (m - 1) + n;
   const year = Math.floor(index / 12);
   return `${String(year).padStart(4, '0')}-${String(index - year * 12 + 1).padStart(2, '0')}`;
-};
+}
 const monthEnd = (month: string): string => addDays(monthStart(addMonths(month, 1)), -1);
 
 /** A day key the URL may carry: a real calendar day, never after today. */
 const pastOrToday = (at: string | null | undefined, today: string): at is string => typeof at === 'string' && isDateKey(at) && at <= today;
 
+/**
+ * The first day the activity holds anything: `total.since` (the first practice day), else the oldest day row,
+ * month or milestone, else null. A class's copy has no `since` and nothing from before the learner joined (RP-W2
+ * `activityOf`), so there it is a day on or after the join day.
+ */
+export function firstDayOf(activity: ActivitySummary): string | null {
+  const firsts = [activity.days[0]?.d, activity.months[0] ? monthStart(activity.months[0].m) : undefined, ...activity.milestones.map((row) => row.on)];
+  const known = firsts.filter((day): day is string => day !== undefined).sort();
+  return activity.total.since ?? known[0] ?? null;
+}
+
+/**
+ * Where a class's view begins: its copy has no `since` (RP-W2) and no day from before the learner joined, so the
+ * first day it holds anything stands in for the join day (on or after it: never a day the class cannot see); today
+ * when it holds nothing yet. Null for a family or device copy, which sees every day.
+ */
+function floorOf(activity: ActivitySummary, today: string): string | null {
+  return activity.total.since === null ? (firstDayOf(activity) ?? today) : null;
+}
+
+/** The first day of a window that starts on `from` that the viewer sees: `from`, or a class's floor when later. */
+function seenFrom(activity: ActivitySummary, today: string, from: string): string {
+  const floor = floorOf(activity, today);
+  return floor !== null && floor > from ? floor : from;
+}
+
+/**
+ * The first day the report speaks for: the first of the 35 day rows, or a class's floor when later. The up-only
+ * marker never compares with a week that starts before it (a week the class saw only in part).
+ */
+export function shownFromOf(activity: ActivitySummary, today: string): string {
+  return seenFrom(activity, today, rowsFromOf(activity.asOf));
+}
+
+/**
+ * A window can be drawn day by day when every day of it the viewer sees lies within the 35 day rows (so no unknown
+ * day looks empty) and the viewer sees at least one of its days. Unsaved days after `asOf` are fine.
+ */
+function drawable(activity: ActivitySummary, today: string, from: string, to: string): boolean {
+  const seen = seenFrom(activity, today, from);
+  return seen >= rowsFromOf(activity.asOf) && seen <= to;
+}
+
 export interface ReportWindow {
   period: ReportPeriod;
-  /** First day of the window. */
+  /** First day of the window; for `all`, the first day the report holds (`firstDayOf`). */
   from: string;
   /** Last day of the window, included. */
   to: string;
   /** The window the up-only marker compares with (`week`, `month`). */
   prevFrom?: string;
   prevTo?: string;
-  /** A month that starts before the day rows: figures from `activity.months` only, no calendar, no letters. */
+  /** A month the day rows do not draw whole: figures from its month row, no calendar, no letters. */
   totalsOnly: boolean;
-}
-
-export interface WindowOptions {
-  /**
-   * The device's last saved day (`activity.asOf`): the day rows are the 35 days that end there, so a month that
-   * starts before them is totals only. Pass it whenever the window reads an activity; the default (today) is right
-   * only for a device that saved today.
-   */
-  asOf?: string;
-  /** `all`: the first day the report holds (`firstDayOf`); today when there is none. */
-  since?: string | null;
 }
 
 /**
  * The window of `period` that ends at `at` (`day`, `week`) or holds it (`month`); the current window when `at` is
- * absent, malformed or after today. `at` is trusted otherwise: `clampAt` keeps it within the saved rows first.
+ * absent, malformed or after today. `at` is trusted otherwise: `clampAt` keeps it within the stepper's limits first.
+ * `activity` places the day rows (they end at its `asOf`) and the start of `all`; without it, a device that saved
+ * today and holds nothing.
  */
-export function windowOf(period: ReportPeriod, today: string, at?: string | null, opts: WindowOptions = {}): ReportWindow {
+export function windowOf(period: ReportPeriod, today: string, at?: string | null, activity?: ActivitySummary): ReportWindow {
   const target = pastOrToday(at, today) ? at : today;
   if (period === 'day') return { period, from: target, to: target, totalsOnly: false };
   if (period === 'week') {
@@ -79,64 +114,43 @@ export function windowOf(period: ReportPeriod, today: string, at?: string | null
     const month = monthOf(target);
     const from = monthStart(month);
     const prev = addMonths(month, -1);
+    const seen = activity ? seenFrom(activity, today, from) : from;
     return {
       period,
       from,
       to: month === monthOf(today) ? today : monthEnd(month),
       prevFrom: monthStart(prev),
       prevTo: monthEnd(prev),
-      totalsOnly: from < rowsFromOf(opts.asOf ?? today),
+      totalsOnly: seen < rowsFromOf(activity?.asOf ?? today),
     };
   }
-  const since = opts.since ?? today;
+  const since = (activity && firstDayOf(activity)) ?? today;
   return { period, from: since < today ? since : today, to: today, totalsOnly: false };
 }
 
-/** Months before this one that have activity, ascending (`activity.months` is ascending with no repeats). */
-const pastMonths = (activity: ActivitySummary, today: string): string[] => {
+/**
+ * Months before this one the month tab can show, ascending: every month with a month row (`activity.months`, up to
+ * 24), and a month without one that the day rows draw whole (a month with no practice, or the month a class joined
+ * in, whose row the class copy leaves out) while they still do.
+ */
+function pastMonths(activity: ActivitySummary, today: string): string[] {
   const current = monthOf(today);
-  return activity.months.map((row) => row.m).filter((month) => month < current);
-};
-
-/**
- * The first day the activity holds anything: `total.since` (the first practice day), else the oldest day row,
- * month or milestone, else null. A class's copy has no `since` and nothing from before the learner joined (RP-W2
- * `activityOf`), so there it is a day on or after the join day.
- */
-export function firstDayOf(activity: ActivitySummary): string | null {
-  const firsts = [activity.days[0]?.d, activity.months[0] ? `${activity.months[0].m}-01` : undefined, ...activity.milestones.map((row) => row.on)];
-  const known = firsts.filter((day): day is string => day !== undefined).sort();
-  return activity.total.since ?? known[0] ?? null;
+  const months = new Set(activity.months.map((row) => row.m).filter((month) => month < current));
+  for (let month = monthOf(rowsFromOf(activity.asOf)); month < current; month = addMonths(month, 1)) {
+    if (drawable(activity, today, monthStart(month), monthEnd(month))) months.add(month);
+  }
+  return [...months].sort();
 }
-
-/**
- * The first day the report speaks for: the first of the 35 day rows; for a class, whose copy has no history before
- * the learner joined (`total.since` null), the first day it shows anything. The stepper never reaches a window that
- * ends before it, and the up-only marker never compares with a week that starts before it (a clipped week).
- */
-export function shownFromOf(activity: ActivitySummary, today: string): string {
-  const rowsFrom = rowsFromOf(activity.asOf);
-  if (activity.total.since !== null) return rowsFrom;
-  const first = firstDayOf(activity) ?? today;
-  return first > rowsFrom ? first : rowsFrom;
-}
-
-/**
- * A past day or week the stepper may show: all of it within the 35 day rows (so no unknown day looks empty), and
- * ending on or after `shownFromOf` (a class sees at least one day of it). Unsaved days after `asOf` are fine.
- */
-const reachable = (activity: ActivitySummary, today: string, from: string, to: string): boolean =>
-  from >= rowsFromOf(activity.asOf) && to >= shownFromOf(activity, today);
 
 /**
  * `at` as a URL carries it, within the stepper's limits (OD-18), or null for the current window. `day` and `week`:
- * a past window that is `reachable`; `month`: a month in `activity.months` before this one, as its first day; `all`:
- * never. Anything else (malformed, out of the limits, the current window itself) is null.
+ * a past window that is `drawable`; `month`: one of `pastMonths`, as its first day; `all`: never. Anything else
+ * (malformed, out of the limits, the current window itself) is null.
  */
 export function clampAt(period: ReportPeriod, today: string, at: string | null | undefined, activity: ActivitySummary): string | null {
   if (!pastOrToday(at, today) || at === today) return null;
-  if (period === 'day') return reachable(activity, today, at, at) ? at : null;
-  if (period === 'week') return reachable(activity, today, addDays(at, -6), at) ? at : null;
+  if (period === 'day') return drawable(activity, today, at, at) ? at : null;
+  if (period === 'week') return drawable(activity, today, addDays(at, -6), at) ? at : null;
   if (period === 'month') return pastMonths(activity, today).includes(monthOf(at)) ? monthStart(monthOf(at)) : null;
   return null;
 }
@@ -148,7 +162,7 @@ export interface ReportStep {
 
 /**
  * Previous / Next from the window at `at` (null: the current window). Null when there is no step that way, so the
- * button is hidden: Next on the current window, Previous past what is `reachable` or the oldest month with activity.
+ * button is hidden: Next on the current window, Previous past what is `drawable` or the oldest month there is.
  */
 export function stepOf(period: ReportPeriod, today: string, at: string | null, dir: 'prev' | 'next', activity: ActivitySummary): ReportStep | null {
   if (period === 'all' || (dir === 'next' && at === null)) return null;
@@ -170,7 +184,7 @@ export function stepOf(period: ReportPeriod, today: string, at: string | null, d
     return { at: next >= today ? null : next };
   }
   const prev = addDays(end, -size);
-  return reachable(activity, today, addDays(prev, -(size - 1)), prev) ? { at: prev } : null;
+  return drawable(activity, today, addDays(prev, -(size - 1)), prev) ? { at: prev } : null;
 }
 
 export interface ReportHorizon {

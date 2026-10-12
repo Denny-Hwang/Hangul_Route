@@ -6,8 +6,8 @@ import { reportPeriodOf, type ActivityDay, type ActivitySummary, type ReportPeri
 import type { ReportSummary } from '../schemas/report-response';
 import { TEACHER_HIDDEN_SUMMARY_KEYS } from '../schemas/transfer-consent';
 import {
+  addMonths,
   clampAt,
-  firstDayOf,
   horizonOf,
   lettersIn,
   monthOf,
@@ -193,10 +193,15 @@ function staleOf(summary: ReportSummary, lastSyncedAt: string | null, now: Date)
   return { lastSaved: days.sort(byCodeUnit)[0] as string };
 }
 
-/** Each taught symbol's first place in the catalogue (quest order, then each quest's `teaches`). */
+const ORDERS = new WeakMap<Catalog, Map<string, number>>();
+
+/** Each taught symbol's first place in the catalogue (quest order, then each quest's `teaches`), once per catalogue. */
 function teachingOrder(catalog: Catalog): Map<string, number> {
+  const cached = ORDERS.get(catalog);
+  if (cached) return cached;
   const order = new Map<string, number>();
   for (const quest of catalog.quests) for (const symbol of quest.teaches) if (!order.has(symbol)) order.set(symbol, order.size);
+  ORDERS.set(catalog, order);
   return order;
 }
 
@@ -266,19 +271,19 @@ const monthSums = (activity: ActivitySummary, month: string): DaySums | null => 
  * (a class has no row for its join month or before).
  */
 function previousOf(activity: ActivitySummary, window: ReportWindow, today: string): (DaySums & { letters: number | null }) | null {
-  const prevFrom = window.prevFrom as string;
-  const prevTo = window.prevTo as string;
-  if (window.period === 'week' && prevFrom >= shownFromOf(activity, today)) {
+  const { prevFrom, prevTo } = window;
+  if (prevFrom === undefined || prevTo === undefined) return null;
+  if (window.period === 'week') {
+    if (prevFrom < shownFromOf(activity, today)) return null;
     return { ...sumDays(activity.days, prevFrom, prevTo), letters: lettersIn(activity.days, prevFrom, prevTo).length };
   }
-  const row = window.period === 'month' ? monthSums(activity, monthOf(prevFrom)) : null;
+  const row = monthSums(activity, monthOf(prevFrom));
   return row ? { ...row, letters: null } : null;
 }
 
 function stepLabel(period: ReportPeriod, today: string, at: string | null): 'current' | 'previous' | 'earlier' {
   if (at === null) return 'current';
-  const previous =
-    period === 'month' ? monthOf(addDays(`${monthOf(today)}-01`, -1)) === monthOf(at) : addDays(today, period === 'day' ? -1 : -7) === at;
+  const previous = period === 'month' ? addMonths(monthOf(today), -1) === monthOf(at) : addDays(today, period === 'day' ? -1 : -7) === at;
   return previous ? 'previous' : 'earlier';
 }
 
@@ -330,7 +335,10 @@ export function learnerReport(input: LearnerReportInput): LearnerReport {
     detail: null,
   };
   if (summary === null) return base;
-  base.stale = staleOf(summary, lastSyncedAt, now);
+  // An invalid clock (say, a malformed server time) never breaks the page: no stale line, and today is the device's
+  // last saved day.
+  const clock = Number.isNaN(now.getTime()) ? null : now;
+  base.stale = clock ? staleOf(summary, lastSyncedAt, clock) : null;
   if (state === 'empty') return base;
   base.glance = { nowOn: stageOf(summary.journey?.here), lastPractice: summary.lastActiveAt || null };
   const activity = summary.activity;
@@ -339,9 +347,9 @@ export function learnerReport(input: LearnerReportInput): LearnerReport {
     return base;
   }
 
-  const today = todayFor(now, activity.tz);
+  const today = clock ? todayFor(clock, activity.tz) : activity.asOf;
   const at = clampAt(period, today, input.at, activity);
-  const window = windowOf(period, today, at, { asOf: activity.asOf, since: firstDayOf(activity) });
+  const window = windowOf(period, today, at, activity);
   const horizon = horizonOf(window, activity.asOf);
   const all = period === 'all';
   const lettersNew = all || window.totalsOnly ? null : lettersIn(activity.days, window.from, horizon.upTo);

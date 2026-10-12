@@ -534,6 +534,17 @@ describe('More detail (section 3.5 item 10)', () => {
   });
 });
 
+describe('an invalid clock (a malformed server time)', () => {
+  it('never throws: today is the device\'s last saved day and there is no stale line', () => {
+    const r = report({ summary: STALE4, now: new Date(''), lastSyncedAt: '2026-09-01T00:00:00.000Z' });
+    expect(r.state).toBe('ready');
+    expect(r.stale).toBeNull();
+    expect(r.window).toMatchObject({ from: '2026-10-05', to: '2026-10-11' });
+    expect(r.horizon).toEqual({ asOf: '2026-10-11', partial: false });
+    expect(report({ summary: LEGACY, now: new Date('nope'), lastSyncedAt: '2026-09-01T00:00:00.000Z' }).stale).toBeNull();
+  });
+});
+
 describe('voice (OD-17)', () => {
   it('second person only for the device viewer', () => {
     expect(report({ summary: STEADY, viewer: 'device', voice: 'second' }).voice).toBe('second');
