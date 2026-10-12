@@ -28,7 +28,7 @@ import { InstallGuideSheet } from '../../components/InstallGuideSheet';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import type { SceneArt } from '@hangul-route/content-schema';
 import { welcomeCardIds } from '../../content/award-world';
-import { flags } from '../../config/flags';
+import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { episodesAll, questsAll } from '../../content';
 import { PLACEMENT_BANK } from '../../content/placement.generated';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -253,7 +253,7 @@ export function HomeScreen(): React.ReactElement {
         bookmarks,
         isLocked: storyLockFor({
           tier,
-          gatingEnabled: flags.contentGatingEnabled,
+          gatingEnabled: gatingActive(flags, bundleOs()),
           episodes: episodesAll,
         }),
         // F-STORY-005 §3.4: stories near the learner's stage come first; it only orders, never hides.

@@ -1,8 +1,12 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const ORIGINAL_ENV = { ...process.env };
+
+function walk(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(join(dir, e.name)) : [join(dir, e.name)]));
+}
 
 async function reload(): Promise<typeof import('../flags')> {
   vi.resetModules();
@@ -96,6 +100,15 @@ describe('flags', () => {
     expect(gatingActive({ contentGatingEnabled: false }, 'android')).toBe(false);
     // An unknown bundle (tests, scripts) fails open, like the switch off.
     expect(gatingActive({ contentGatingEnabled: true }, undefined)).toBe(false);
+  });
+
+  it('every access caller reads gatingActive, never the raw flag (F-ENT-003 section 3.4)', () => {
+    const root = join(__dirname, '../../..');
+    const files = [join(root, 'App.tsx'), ...walk(join(root, 'src'))].filter(
+      (f) => /\.tsx?$/.test(f) && !f.includes('__tests__') && !f.endsWith(join('config', 'flags.ts')),
+    );
+    const raw = files.filter((f) => readFileSync(f, 'utf8').includes('.contentGatingEnabled'));
+    expect(raw.map((f) => f.slice(root.length + 1))).toEqual([]);
   });
 
   it('bundleOs reads the platform the bundler inlines, by its literal name', async () => {

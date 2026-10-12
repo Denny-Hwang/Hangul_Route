@@ -16,7 +16,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { View, type LayoutChangeEvent } from 'react-native';
-import { flags } from '../../config/flags';
+import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { isContentLocked } from '../../logic/content-access';
@@ -99,7 +99,7 @@ export function StoryShelf({
   // Nothing is locked while gating is off (D5): `isContentLocked` is false for every story then.
   const isLocked = useCallback(
     (entry: StoryIndexEntry): boolean =>
-      isContentLocked({ kind: 'story', id: entry.storyId, tier, gatingEnabled: flags.contentGatingEnabled }),
+      isContentLocked({ kind: 'story', id: entry.storyId, tier, gatingEnabled: gatingActive(flags, bundleOs()) }),
     [tier],
   );
 

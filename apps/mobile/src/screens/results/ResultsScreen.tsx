@@ -33,7 +33,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
-import { flags } from '../../config/flags';
+import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { cardById, episodeById, episodesAll, questById, questsAll } from '../../content';
 import { storyById } from '../../content/stories';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -201,7 +201,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
       entries: defaultStoryIndex(),
       snapshot,
       bookmarks,
-      isLocked: storyLockFor({ tier, gatingEnabled: flags.contentGatingEnabled, episodes: episodesAll }),
+      isLocked: storyLockFor({ tier, gatingEnabled: gatingActive(flags, bundleOs()), episodes: episodesAll }),
     });
     const view = storyResultsExtras(
       {
