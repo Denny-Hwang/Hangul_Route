@@ -26,8 +26,8 @@ const learnerCount = (n: number): string => plural('en', n, { one: `${n} learner
 const list = (items: readonly string[]): string =>
   items.length <= 1 ? (items[0] ?? '') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1] ?? ''}`;
 /** One sentence, two keys: the headline and the W0 line say the same thing (section 3.15 behaviour 11). */
-const practicedOn = (name: string, days: number, when: string): string => `${name} practiced on ${dayCount(days)} ${when}.`;
-const youPracticedOn = (days: number, when: string): string => `You practiced on ${dayCount(days)} ${when}.`;
+const practicedDays = (name: string, days: number, when: string): string => `${name} practiced on ${dayCount(days)} ${when}.`;
+const youPracticedDays = (days: number, when: string): string => `You practiced on ${dayCount(days)} ${when}.`;
 
 export const report = {
   /** `document.title` of every report page: never the learner's name (section 3.10, browser history and print header). */
@@ -79,18 +79,20 @@ export const report = {
     lastPractice: (date: string) => `Last practice: ${date}`,
   },
   /**
-   * One sentence under the tabs (section 3.5 item 5). `when` is a `report.when` value. `practicedOn` is the
-   * `day` period's sentence ("Mina practiced today."); `stageDoneAll` the `all` period's; `noneThen` is
-   * `noneYet` for a window in the past ("No practice last week."); `noneSavedAfter` is `noneSaved` for a window
-   * in the past, with the device's last saved day ("Nothing saved from Mina's device after Oct 1 yet.").
+   * One sentence under the tabs (section 3.5 item 5). `when` is a `report.when` value for a day, a week or a
+   * month (never `when.all`). `practicedOn` is the `day` period's sentence ("Mina practiced today.");
+   * `stageDoneAll` the `all` period's; `noneThen` is `noneYet` for a window in the past ("No practice last week.");
+   * `noneEver` is the `all` period's (the class report's practice block); `noneSavedAfter` is `noneSaved` for a
+   * window in the past, with the device's last saved day ("Nothing saved from Mina's device after Oct 1 yet.").
    */
   headline: {
-    practiced: practicedOn,
+    practiced: practicedDays,
     practicedOn: (name: string, when: string) => `${name} practiced ${when}.`,
     stageDone: (name: string, n: number, stage: string, when: string) => `${name} finished Stage ${n}: ${stage} ${when}!`,
     stageDoneAll: (name: string, n: number, stage: string) => `${name} finished Stage ${n}: ${stage}!`,
     noneYet: (when: string) => `No practice yet ${when}.`,
     noneThen: (when: string) => `No practice ${when}.`,
+    noneEver: 'No practice yet.',
     noneSaved: (name: string, when: string) => `Nothing saved from ${name}'s device ${when} yet.`,
     noneSavedAfter: (name: string, date: string) => `Nothing saved from ${name}'s device after ${date} yet.`,
     gettingStarted: (name: string) => `${name} is just getting started.`,
@@ -158,7 +160,7 @@ export const report = {
    * (the page renders the chips in place). `practice_day` is `practice_days` on the `day` period.
    */
   insight: {
-    showed_up: practicedOn,
+    showed_up: practicedDays,
     stage_done: (name: string, n: number, stage: string) => `${name} finished Stage ${n}: ${stage}.`,
     letters_new: (name: string, letters: string) => `${name} got strong on ${letters}.`,
     practice_days: (name: string, days: number) => `${name} practiced on ${dayCount(days)}.`,
@@ -190,13 +192,14 @@ export const report = {
     words_revisit: (words: string) => `${words}: worth another look together.`,
   },
   /**
-   * Second person (OD-17), for the in-app report on a self-only device: the twin of every message above
-   * that names the learner. Everything else reads the same in both voices.
+   * Second person (OD-17), for the in-app report on a self-only device: the twin of every message above that
+   * names the learner, and of the lines that say "together" (a grown-up and a learner side by side). Everything
+   * else reads the same in both voices.
    */
   you: {
     title: 'Your report',
     headline: {
-      practiced: youPracticedOn,
+      practiced: youPracticedDays,
       practicedOn: (when: string) => `You practiced ${when}.`,
       stageDone: (n: number, stage: string, when: string) => `You finished Stage ${n}: ${stage} ${when}!`,
       stageDoneAll: (n: number, stage: string) => `You finished Stage ${n}: ${stage}!`,
@@ -208,7 +211,7 @@ export const report = {
       lettersStrong: 'Letters you know well',
     },
     insight: {
-      showed_up: youPracticedOn,
+      showed_up: youPracticedDays,
       stage_done: (n: number, stage: string) => `You finished Stage ${n}: ${stage}.`,
       letters_new: (letters: string) => `You got strong on ${letters}.`,
       practice_days: (days: number) => `You practiced on ${dayCount(days)}.`,
@@ -218,6 +221,12 @@ export const report = {
     state: {
       empty: 'You have not started yet. The report fills in after your first practice.',
     },
+    /** The lines that picture a grown-up and a learner side by side, for an adult learning alone. */
+    tip: {
+      'syllable-reading': 'Read short words.',
+      sentences: 'Read a short story.',
+    },
+    words_revisit: (words: string) => `${words}: worth another look.`,
   },
   /**
    * One fixed tip per level-check strand (section 3.11), under `insight.strand_next`. `game` is the game's
@@ -284,8 +293,8 @@ export const report = {
     questsNew: (count: number) => `New quests: ${count}`,
     cardsNew: (count: number) => `New cards: ${count}`,
     milestones: (when: string) => `Stage milestones ${when}`,
-    milestone: (n: number, stage: string, count: number) =>
-      plural('en', count, { one: `Stage ${n}: ${stage}, finished 1 time`, other: `Stage ${n}: ${stage}, finished ${count} times` }),
+    /** `count`: the learners who finished the stage in the window (events, never a standing count, OD-4). */
+    milestone: (n: number, stage: string, count: number) => `Stage ${n}: ${stage}, finished by ${learnerCount(count)}`,
     /** Day bands (section 3.7): `none` is the `0` band, never highlighted; `practiced` is the `day` band. */
     band: {
       none: 'Not yet',

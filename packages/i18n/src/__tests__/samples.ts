@@ -386,12 +386,12 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // F-REPORT-001 RP-6: the report namespace and a11y.report. Names run to the 20-character display name and dates to
   // the longest short form, so the length budgets see the long case; taught letters and words are stand-ins (no Hangul).
   'report.title.learner': [['Mina'], ['Alexandria Kimberley']],
-  'report.title.class': [['Class A'], ['Ms Park, Room 12, Tuesday and Thursday']],
+  'report.title.class': [['Class A'], ['Ms Park, Room 12B, Tuesdays and Thursday']],
   'report.when.onDay': [['Sep 30, 2026']],
   'report.when.weekTo': [['Sep 30, 2026']],
   'report.when.inMonth': [['September 2026']],
   'report.step.range': [['Sep 24', 'Sep 30'], ['Dec 28, 2026', 'Jan 3, 2027']],
-  'report.back.space': [['Kim family'], ['Ms Park, Room 12, Tuesday and Thursday']],
+  'report.back.space': [['Kim family'], ['Ms Park, Room 12B, Tuesdays and Thursday']],
   'report.glance.nowOn': [[1, 'Hangul'], [7, 'Self-expression']],
   'report.glance.lastPractice': [['Sep 30, 2026']],
   'report.headline.practiced': [['Mina', 1, 'this week'], ['Mina', 3, 'this week'], ['Alexandria Kimberley', 12, 'in the week to Sep 30, 2026']],
@@ -458,6 +458,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'report.class.cardsNew': [[1], [2400]],
   'report.class.milestones': [['this week'], ['in the week to Sep 30, 2026']],
   'report.class.milestone': [[1, 'Hangul', 1], [7, 'Self-expression', 120]],
+  'report.you.words_revisit': [['x (bap)'], ['x (bap), x (mul) and x (kimchi)']],
   'report.class.band.range': [[1, 2], [5, 9]],
   'report.class.band.atLeast': [[10]],
   'report.class.count': [['Not yet', 3], ['Not checked yet', 300]],

@@ -307,6 +307,8 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
           'report.you.headline',
           'report.you.insight',
           'report.you.state',
+          'report.you.tip',
+          'report.you.words_revisit',
           'report.state',
           'report.tip',
           'report.detail',

@@ -188,10 +188,8 @@ export const a11y = {
     periods: 'Report period',
     periodChanged: (window: string) => `Showing ${window}`,
     periodChangedAll: 'Showing all time',
-    /** The Previous button. */
+    /** The Previous and Next buttons, each naming the window it opens ("Show last week", "Show this week"). */
     step: (window: string) => `Show ${window}`,
-    /** The Next button. */
-    stepNext: { day: 'Show next day', week: 'Show next week', month: 'Show next month' },
     calendar: (days: string) => `Practiced on ${days}.`,
     calendarNone: 'No practice days in this period.',
     notSaved: (days: string) => `Not saved yet: ${days}.`,

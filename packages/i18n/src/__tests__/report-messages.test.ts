@@ -164,6 +164,7 @@ describe('Appendix A drafts (English)', () => {
     expect(r.headline.noneSavedAfter('Mina', 'Oct 1')).toBe("Nothing saved from Mina's device after Oct 1 yet.");
     expect(r.you.headline.noneSavedAfter('Oct 1')).toBe('Nothing saved on your device after Oct 1 yet.');
     expect(r.headline.noneThen(r.when.prevWeek)).toBe('No practice last week.');
+    expect(r.headline.noneEver).toBe('No practice yet.');
     expect(r.headline.practicedOn('Mina', r.when.day)).toBe('Mina practiced today.');
     expect(r.headline.gettingStarted('Mina')).toBe('Mina is just getting started.');
     expect(r.insight.showed_up('Mina', 1, r.when.week)).toBe('Mina practiced on 1 day this week.');
@@ -228,6 +229,8 @@ describe('Appendix A drafts (English)', () => {
     expect(c.medianMinutes(12)).toBe('Typical time for those who practiced: 12 minutes');
     expect(c.planLesson).toBe('Plan a lesson');
     expect(c.milestones(r.when.week)).toBe('Stage milestones this week');
+    expect(c.milestone(1, 'Hangul', 3)).toBe('Stage 1: Hangul, finished by 3 learners');
+    expect(c.milestone(1, 'Hangul', 1)).toBe('Stage 1: Hangul, finished by 1 learner');
   });
 
   it('pins the screen-reader labels (section 3.12)', () => {
@@ -237,7 +240,8 @@ describe('Appendix A drafts (English)', () => {
     expect(a.periodChanged(r.when.week)).toBe('Showing this week');
     expect(a.step(r.when.prevWeek)).toBe('Show last week');
     expect(a.step(r.step.range('Sep 24', 'Sep 30'))).toBe('Show Sep 24 to Sep 30');
-    expect(a.stepNext).toEqual({ day: 'Show next day', week: 'Show next week', month: 'Show next month' });
+    // Next names the window it opens too, the current one included.
+    expect(a.step(r.when.week)).toBe('Show this week');
     expect(a.periodChanged(r.when.prevMonth)).toBe('Showing last month');
   });
 
@@ -494,9 +498,30 @@ describe('voices (OD-17): third person for grown-ups, second person on a self-on
     ['report.you.state.empty', 'report.state.empty'],
   ];
 
-  it('every report.you leaf has a twin, and the twin takes the name as one more argument', () => {
+  /** The lines that picture a grown-up and a learner side by side ("together"), and their lone-learner twins. */
+  const PAIR_TWINS: readonly [you: string, third: string][] = [
+    ['report.you.tip.syllable-reading', 'report.tip.syllable-reading'],
+    ['report.you.tip.sentences', 'report.tip.sentences'],
+    ['report.you.words_revisit', 'report.insight.words_revisit'],
+  ];
+
+  it('every "together" line a device can show has a lone-learner twin, with the same arguments and no "together"', () => {
+    const together = render(en.report, 'report')
+      .filter(({ path, text }) => !path.startsWith('report.you.') && !path.startsWith('report.class.') && /\btogether\b/i.test(text))
+      .map(({ path }) => path);
+    expect([...new Set(together)].sort()).toEqual(PAIR_TWINS.map(([, third]) => third).sort());
+    for (const [youPath, thirdPath] of PAIR_TWINS) {
+      const you = lookup(en, youPath);
+      const third = lookup(en, thirdPath);
+      expect(typeof you, youPath).toBe(typeof third);
+      if (typeof you === 'function') expect(you.length).toBe((third as (...a: unknown[]) => string).length);
+      for (const { text } of render(you, youPath)) expect(text, youPath).not.toMatch(/\btogether\b/i);
+    }
+  });
+
+  it('every report.you leaf has a twin, and a name twin takes the name as one more argument', () => {
     const youPaths = leafPaths(en.report.you).map((p) => `report.you.${p}`);
-    expect(youPaths.sort()).toEqual(TWINS.map(([you]) => you).sort());
+    expect(youPaths.sort()).toEqual([...TWINS, ...PAIR_TWINS].map(([you]) => you).sort());
     for (const [youPath, thirdPath] of TWINS) {
       const you = lookup(en, youPath);
       const third = lookup(en, thirdPath);
