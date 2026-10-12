@@ -1,4 +1,4 @@
-# Browse/Home — All lessons, the way a learner sees them (wireframe v2)
+# Browse/Home — All lessons, the way a learner sees them (wireframe v3)
 
 Spec: `docs/specs/F-BROWSE-001-adult-content-browser.md` §4.1, §4.2, §4.5, §4.9
 Audience: **parent or teacher** with a pass (grown-up surface inside the learner web build, `app.hangulroute.com/browse`). Copy may address grown-ups directly; no age wording, no "kids".
@@ -6,6 +6,7 @@ Code (planned): `apps/mobile/src/screens/browse/BrowseHomeScreen.tsx`, `componen
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary, `~~ ko ~~` taught Korean through `KoreanText` (romanization beside it), `(o)` / `( )` a radio, `(*X*)` the selected segment. No colours, fonts or pixel sizes. Every sentence is a placeholder; final strings live in `caregiver.browse`.
 
 v2 (review of 2026-10-11): one-row section control in the learner's order (Route · Journey · Library), one how-to line, scope line only when it means something, no preview strip on catalogue screens, closed items drawn the way the learner sees them, [ Close ] instead of "Exit preview", "Lesson display" instead of "Show as".
+v3 (2026-10-12, F-ENT-003 §6.4 adopted): a closed Journey cell carries the learner's dotted ring and "not open yet" label, never a lock glyph (F-ENT-003 OD-6); the Library groups follow the learner registry order (Cards, Story Time, Culture, Words).
 
 ## Scenario (Given-When-Then)
 
@@ -63,24 +64,26 @@ Then: in one glance they know what the page is for, see the whole course in the 
 - A cell -> `browse/episode`. On regular / wide windows the grid and the episode outline share two panes, as the learner Journey does (F-LAYOUT-001 §3.7).
 - There is no primary [[ CTA ]] here: home is a map; the primary action lives on the item page.
 
-### C. Library section (the learner Library's groups, in its order)
+### C. Library section (the learner Library's groups, in its registry order)
 
 ```
 │ ( Route )( Journey )( *Library* )│
-│ Stories                          │
+│ Cards                            │
+│ [card][card][card][card]         │   every card face up: no silhouette, no earn hint
+│ [card][card][card][card]         │   tap -> library/card-detail in preview state (modal)
+│ Story Time                       │
 │ ┌────────┐ ┌────────┐ ┌────────┐ │   learner StoryTile, browse state (no "continue",
-│ │ [cover]│ │ [cover]│ │ [cover]│ │    no bookmark)
+│ │ [cover]│ │ [cover]│ │ [cover]│ │    no bookmark); Culture follows the same way
 │ │ title  │ │ title  │ │ title  │ │
 │ └────────┘ └────────┘ └────────┘ │
-│ Words                            │
+│ Words                            │   the slot F-VOC-003 registers as "Words"
 │ ┌──────────────────────────────┐ │
 │ │ Food · 12 words          [>] │ │   one row per topic -> browse/item (vocab-topic)
 │ │ ~~ 밥 ~~ bap rice · ~~ 물 ~~… │ │   three sample words, romanization + gloss
 │ └──────────────────────────────┘ │
-│ Cards                            │
-│ [card][card][card][card]         │   every card face up: no silhouette, no earn hint
-│ [card][card][card][card]         │   tap -> library/card-detail in preview state (modal)
 ```
+
+- Group order is the learner Library's tab order (`LIBRARY_SECTIONS`): Cards, Story Time, Culture, Words. A group with nothing in this build is left out, as the learner leaves out its tab; Cards always stays. Found culture notes are a learner's state and are not shown.
 
 ### D. Sampler pass with the content switch ON (not possible in production today)
 
@@ -92,8 +95,10 @@ Then: in one glance they know what the page is for, see the whole course in the 
 │ teach.                           │
 │ ( Route )( *Journey* )( Library )│
 │  S1  [o]  [o]  [o*] [o*] [o*]    │   * closed cell drawn exactly as the learner Journey
-│                                  │     draws it (F-ENT-003 lock glyph, label "opens with
-│                                  │     the full route"); it still opens its page
+│                                  │     draws it: the dotted ring, never a lock glyph,
+│                                  │     label "{episode}: not open yet. Opens the lesson
+│                                  │     page." (F-ENT-003 §3.7, journey/grid-plan-and-
+│                                  │     access.md); it still opens its page
 ```
 
 - With the switch **off** (production until Stripe Live), sampler and full look identical: no scope line, no closed cell, no closed tile.
@@ -138,7 +143,7 @@ Exit to: `browse/episode` · `browse/item` · `library/card-detail` (preview) ·
 
 ## Data needs
 
-- reads: the bundled content only (`content/*`, `defaultStoryIndex()`, `vocabTopics`, `heritageCardsAll`), through `logic/browse/catalogue.ts`; the session pass (`hr:browse:pass`) or the kept pass; `browse:prefs` when kept; `shell:lastPersona` (persona code only); `flags.contentGatingEnabled`, `flags.myRouteEnabled`
+- reads: the bundled content only (`content/*`, `defaultStoryIndex()`, `vocabTopics`, `heritageCardsAll`), through `logic/browse/catalogue.ts`; the session pass (`hr:browse:pass`) or the kept pass; `browse:prefs` when kept; `shell:lastPersona` (persona code only); the effective switch `gatingActive(flags, bundleOs())` (never the raw `flags.contentGatingEnabled`), `flags.myRouteEnabled`
 - writes: `browse:pass` and `browse:prefs` only when the keep switch is on (the storage fence allows nothing else besides `device:audio` and the browse telemetry queue)
 - telemetry: `browse.opened` (once per load), `browse.item_viewed` when a card opens
 - no learner data of any kind (no profile, progress, tier, plan)

@@ -1,11 +1,12 @@
-# Browse/Item — what this lesson teaches, and Preview (wireframe v2)
+# Browse/Item — what this lesson teaches, and Preview (wireframe v3)
 
 Spec: `docs/specs/F-BROWSE-001-adult-content-browser.md` §4.6, §4.2, §4.4 (focus line), §4.11 (Present this)
 Audience: **parent or teacher** in All lessons. No age wording, no price, no "Premium".
 Code (planned): `apps/mobile/src/screens/browse/BrowseItemScreen.tsx` (one template for `quest`, `story`, `vocab-topic`), `logic/browse/facts.ts`, `logic/browse/access.ts`
 Notation: as `browse/home.md`.
 
-v2 (review of 2026-10-11): "Where it sits" with [ See on the Journey ] (the Learning Route is its own page); a closed lesson uses the learner's words "Opens with the full route", with [ See plans ] for account passes only; no preview strip on this catalogue page.
+v2 (review of 2026-10-11): "Where it sits" with [ See on the Journey ] (the Learning Route is its own page); no preview strip on this catalogue page.
+v3 (2026-10-12, F-ENT-003 §6.4 adopted): a closed lesson shows the grown-up line "Opens with the Family Plan or a Group License" [BY] with [ Open billing ] for account passes only, and no lock glyph (F-ENT-003 OD-6); a shelf story's own quest sits at its story's home cell, with no lesson position.
 
 ## Scenario (Given-When-Then)
 
@@ -37,8 +38,9 @@ Then: in one screen they read what it teaches (letters, words, skills, minutes, 
 │           Practice · Check · Card│
 │                                  │
 │ Where it sits                    │
-│  Stage 1 · Letters · lesson 2/3  │
-│           [ See on the Journey ] │   -> browse/home, Journey, this cell
+│  Stage 1 · Letters · lesson 2/3  │   a shelf story's quest: its story's home cell,
+│           [ See on the Journey ] │   no lesson position ("Stage 3 · Life");
+│                                  │   -> browse/home, Journey, this cell
 │                                  │
 │ The card it awards               │
 │  [card] Hanji Paper              │   -> library/card-detail (preview)
@@ -54,14 +56,14 @@ Then: in one screen they read what it teaches (letters, words, skills, minutes, 
 │ What this teaches  (as A)        │
 │ ...                              │
 │ ┌──────────────────────────────┐ │
-│ │ [lock] Opens with the full   │ │   the learner's own caption and glyph (F-ENT-003);
-│ │        route                 │ │   replaces the primary button; no price, no countdown
-│ │                [ See plans ] │ │   account pass only (not kept, not fallback)
+│ │ Opens with the Family Plan or│ │   the grown-up line of F-ENT-003 §3.11 [BY]; no
+│ │ a Group License              │ │   glyph; replaces the primary button; no price
+│ │              [ Open billing ]│ │   account pass only (not kept, not fallback)
 │ └──────────────────────────────┘ │   -> billing page on the app host (same tab)
 ```
 
 - With the switch off (production today) this state cannot appear.
-- Gate or kept pass: the caption only, no [ See plans ].
+- Gate or kept pass: the line only, no [ Open billing ].
 
 ### C. Story
 
@@ -92,7 +94,7 @@ Then: in one screen they read what it teaches (letters, words, skills, minutes, 
 ## Interaction points
 
 - [[ Preview this lesson ]] -> `browse/preview-player` (quest, story or flashcards)
-- [ See plans ] (closed, account pass) -> billing page, same tab; `browse.plans_tapped { kind }`
+- [ Open billing ] (closed, account pass) -> billing page (`APP_ROUTES.billing`), same tab; `browse.plans_tapped { kind }`
 - [ See on the Journey ] -> `browse/home` Journey at this cell
 - Card -> `library/card-detail` (preview state)
 - [ See the sources ] -> `story/sources` (Copy link only; no Open, no PIN)
