@@ -178,7 +178,7 @@ Rescue Code 는 서버에 해시로만 저장된다. 이 키를 넣으면 **새�
 
 | 변수 | 값 | 언제 | 없으면 |
 |---|---|---|---|
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | `hangul-route-web` 과 **같은** `pk_live_…` | S-1 (A-3 머지 후) | 앱 호스트의 어른 페이지가 "sign-in is not set up on this build" 한 줄만 보여 준다 (아무 데서도 링크하지 않으므로 무해) |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | `hangul-route-web` 과 **같은** `pk_live_…` | S-1 (A-4b 머지 후) | 앱 호스트의 어른 페이지가 "sign-in is not set up on this build" 한 줄만 보여 준다 (아무 데서도 링크하지 않으므로 무해) |
 | `NEXT_PUBLIC_LECTURE_MODE` · `NEXT_PUBLIC_SCHOOL_CONSENT_MODE` | (선택) `hangul-route-web` 과 같은 값 | S-1 | 해당 콘솔 기능이 앱 호스트에서 꺼진 채로 |
 | 형제 스펙의 콘솔 플래그 (`NEXT_PUBLIC_REPORTS_ENABLED` · `NEXT_PUBLIC_NOTES_ENABLED` · `NEXT_PUBLIC_BROWSE_ENABLED` · `NEXT_PUBLIC_LEARNING_ROUTE_ENABLED`) | 각 스펙이 켤 때 `true` | 각 형제 스펙의 단계 | 해당 메뉴·카드가 숨겨진다 |
 | `EXPO_PUBLIC_GROWN_UP_HOME` | `true` | S-3 (M3) | 학습자 앱에 어른 진입점 (Welcome 페르소나 행 · Profile "Grown-up home" · 대시보드 카드) 이 보이지 않는다 |
@@ -187,8 +187,9 @@ Rescue Code 는 서버에 해시로만 저장된다. 이 키를 넣으면 **새�
 
 `NEXT_PUBLIC_API_BASE_URL` 은 넣지 않아도 된다: 빌드가 `EXPO_PUBLIC_API_BASE_URL` 을 넘겨 준다 (A-3). 변수를 바꾸면 **Retry deployment**.
 
-### S-1. 앱 호스트 빌드에 Clerk 키 (5분, A-3 머지 후)
-`hangul-route-app` → Settings → Build → Variables → `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` = `hangul-route-web` 의 것과 같은 `pk_live_…` (Secret key 가 아니라 publishable key). 선택: 위 표의 콘솔 플래그를 사이트와 같은 값으로. → **Retry deployment**.
+### S-1. 앱 호스트 빌드에 Clerk 키 (5분, A-4b 머지 후)
+A-3 이 아니라 **A-4b 머지 후**에 한다: A-4b 의 공통 어른 레이아웃이 모든 어른 페이지에 잠금 (`GrownUpLock`) 을 씌우고, 아래 확인에 쓰는 `/signin` 도 A-4b 와 함께 생긴다.
+`hangul-route-app` → Settings → Build → Variables → `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` = `hangul-route-web` 의 것과 같은 `pk_live_…` (Secret key 가 아니라 publishable key). 선택: 위 표의 콘솔 플래그를 사이트와 같은 값으로. `NEXT_PUBLIC_CONSOLE_DEV_AUTH` 는 **복사하지 않는다** (앱 호스트 빌드는 이 값을 항상 끈다). → **Retry deployment**.
 **확인**: https://app.hangulroute.com/signin 에 Clerk 로그인 위젯이 뜬다. https://app.hangulroute.com 의 학습자 앱은 그대로다 (아직 어디서도 어른 페이지로 링크하지 않는다).
 
 ### S-2. Clerk Production 확인 + M2 실기기 로그인 (30분, A-4b 와 A-5c 가 앱 호스트에 배포된 뒤)
