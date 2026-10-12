@@ -1,6 +1,7 @@
 import { CATALOG, freeLessonsFacts, freeRouteDays } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import type { Page } from '@playwright/test';
+import { FREE_VOCAB_TOPIC_IDS } from '../../src/logic/content-access';
 import { expect, test } from './fixtures';
 import { onboardChild, onboardSelf } from './helpers';
 
@@ -9,14 +10,15 @@ import { onboardChild, onboardSelf } from './helpers';
  * in F-BILL-002's Plan screen slots. They show only on a web build with the free-plan switch on, so
  * this spec runs only against such a build (E2E_CONTENT_GATING=1 with a dist built with
  * EXPO_PUBLIC_CONTENT_GATING_ENABLED=true); the release build, whose switch is off, keeps
- * "Stage 1 is always free." (plan-screen.spec.ts). Every figure comes from `freeLessonsFacts`.
+ * "Stage 1 is always free." (plan-screen.spec.ts, which also covers the premium no-plan line: it is
+ * plan guidance and shows with the switch off too). Every figure comes from data, never typed.
  */
 test.skip(process.env.E2E_CONTENT_GATING !== '1', 'needs a web build with EXPO_PUBLIC_CONTENT_GATING_ENABLED=true');
 
 const m = getMessages('en').caregiver.plan;
 const facts = freeLessonsFacts(CATALOG);
 const LINE = m.freePlan.line(facts.lessons, facts.letters, facts.minutes);
-const TOPICS = m.freePlan.topics(4);
+const TOPICS = m.freePlan.topics(FREE_VOCAB_TOPIC_IDS.length);
 const SET_PLAN = m.freePlan.setPlan;
 const SET_PLAN_WEB = m.freePlan.setPlanWeb;
 
