@@ -1,4 +1,4 @@
-import { ReportSummarySchema, reportPeriodOf, type LearnerReportResponse, type ReportSummary } from '@hangul-route/content-schema';
+import { ProgressSummarySchema, ReportSummarySchema, reportPeriodOf, type LearnerReportResponse, type ReportSummary } from '@hangul-route/content-schema';
 import { Hono } from 'hono';
 import { dbFor } from '../db';
 import { fail, ok } from '../envelope';
@@ -16,21 +16,35 @@ import { findSpace, publicSpace, requireCan, rosterName } from './spaces';
  */
 export const spaceReportRoutes = new Hono();
 
+const PLAN_ENTRY = ProgressSummarySchema.shape.planProgress.valueSchema;
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
+
 /**
  * The report's summary: the roster projection narrowed to the keys a report
  * reads (`ReportSummarySchema`; anything else the roster carries stays out,
- * data minimisation), each key checked on its own. A stored summary was valid
- * when it was written, but an older build may have written a field the schema
- * has since tightened: that one field is dropped instead of failing the whole
- * report, so the body always parses as `LearnerReportResponseSchema`.
+ * data minimisation), each key checked on its own, and each plan of
+ * `planProgress` on its own. A stored summary was valid when it was written,
+ * but an older build may have written a field the schema has since tightened:
+ * that one field (or plan) is dropped instead of failing the whole report, so
+ * the body always parses as `LearnerReportResponseSchema`.
  */
 function reportSummaryOf(projected: FamilyVisibleSummary | null): ReportSummary | null {
   if (!projected) return null;
   const source = projected as Record<string, unknown>;
   const out: Record<string, unknown> = {};
   for (const [key, field] of Object.entries(ReportSummarySchema.shape)) {
-    if (source[key] === undefined) continue;
-    const checked = field.safeParse(source[key]);
+    const value = source[key];
+    if (value === undefined) continue;
+    if (key === 'planProgress' && isRecord(value)) {
+      out.planProgress = Object.fromEntries(
+        Object.entries(value).flatMap(([planId, row]) => {
+          const checked = PLAN_ENTRY.safeParse(row);
+          return checked.success ? [[planId, checked.data]] : [];
+        }),
+      );
+      continue;
+    }
+    const checked = field.safeParse(value);
     if (checked.success && checked.data !== undefined) out[key] = checked.data;
   }
   return out as ReportSummary;
@@ -55,11 +69,16 @@ spaceReportRoutes.get('/:id/learners/:learnerId/report', async (c) => {
   if (!('id' in account)) return account;
   if (space.kind === 'school') return fail(c, 'wrong_kind', 'A school has no learner report; open the class report', 409);
 
-  const membership = await db.membership(space.id, 'learner', c.req.param('learnerId'));
-  if (!membership) return fail(c, 'not_member', 'This learner is not in this space', 404);
-  // Independent reads, in parallel. planProgress keeps this space's own plans only, archived ones included (F-SPACE-002 T-1a), as on the roster.
-  const [learner, plans, stored] = await Promise.all([db.getLearner(membership.memberId), db.plansOf(space.id), db.summaryOf(membership.memberId)]);
-  if (!learner) return fail(c, 'not_member', 'This learner is not in this space', 404);
+  // Independent reads, in parallel (one round trip); nothing read here is used before the membership check below.
+  // planProgress keeps this space's own plans only, archived ones included (F-SPACE-002 T-1a), as on the roster.
+  const learnerId = c.req.param('learnerId');
+  const [membership, learner, plans, stored] = await Promise.all([
+    db.membership(space.id, 'learner', learnerId),
+    db.getLearner(learnerId),
+    db.plansOf(space.id),
+    db.summaryOf(learnerId),
+  ]);
+  if (!membership || !learner) return fail(c, 'not_member', 'This learner is not in this space', 404);
   const planIds = new Set(plans.map((p) => p.id));
   const body: LearnerReportResponse = {
     space: publicSpace(space),

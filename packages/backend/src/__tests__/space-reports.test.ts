@@ -327,6 +327,23 @@ describe('GET /api/spaces/:id/learners/:learnerId/report (F-REPORT-001 section 3
     expect(summary).toMatchObject({ cardsUnlocked: 3, jamoRecognized: ['ㄱ', 'ㄴ'], planProgress: {}, streakDays: 2 });
   });
 
+  it('drops only the plan entry the schema has since tightened, never the other plans of the space', async () => {
+    const cls = await createSpace('teacher', 'class', 'A');
+    const suni = await registerLearner('device-suni0001', 'Suni');
+    await join(cls.space.id, suni.auth, { code: cls.joinCode, learnerId: suni.learnerId });
+    const stale = { ...baseSummary, planProgress: { 'plan:a': { done: 1, total: 2 }, 'plan:b': { done: -1, total: 3 }, 'plan:c': { done: 2, total: 2, notReady: 1 } } };
+    await db.putSnapshot({ learnerId: suni.learnerId, rev: 1, schemaVer: 1, contentVer: '2026.09', deviceId: 'device-suni0001', summary: stale, payload: snapshotFor(suni.learnerId), updatedAt: '2026-10-01T00:00:00.000Z' }, 0);
+    const plans = (await db.plansOf(cls.space.id)).concat(['plan:a', 'plan:b', 'plan:c'].map((id) => ({ id }) as Awaited<ReturnType<typeof db.plansOf>>[number]));
+    vi.spyOn(db, 'plansOf').mockResolvedValue(plans);
+    const r = await get(reportPath(cls.space.id, suni.learnerId), bearer('teacher'));
+    expect(r.status).toBe(200);
+    expect(LearnerReportResponseSchema.parse(r.body.data)).toEqual(r.body.data);
+    expect((r.body.data as { summary: { planProgress: unknown } }).summary.planProgress).toEqual({
+      'plan:a': { done: 1, total: 2, notReady: 0 },
+      'plan:c': { done: 2, total: 2, notReady: 1 },
+    });
+  });
+
   it('answers a HEAD without recording a view', async () => {
     const cls = await createSpace('teacher', 'class', 'A');
     const suni = await registerLearner('device-suni0001', 'Suni');
