@@ -28,7 +28,7 @@ import { GAP, LEGACY, NOW, STALE4, STEADY } from './fixtures/activity-2026-10';
 type Input = Partial<LearnerReportInput> & Pick<LearnerReportInput, 'summary'>;
 const ctxOf = (input: Input): InsightContext => {
   const full: LearnerReportInput = { viewer: 'family', voice: 'third', period: 'week', now: NOW, catalog: CATALOG_2026_10, lastSyncedAt: null, ...input };
-  return { summary: full.summary, report: learnerReport(full) };
+  return { summary: full.summary, report: learnerReport(full), catalog: full.catalog };
 };
 const codes = (lines: readonly InsightLine[]): string[] => lines.map((line) => line.code);
 const well = (input: Input): InsightLine[] => wentWell(ctxOf(input));
@@ -159,10 +159,11 @@ describe('the frozen learners (section 3.15)', () => {
   });
 
   it('Mina, practice next: the letters with the revisit quest, the strand, then the open plan items (behaviour 4)', () => {
+    // 2 open items in the family plan and 2 in the self-route: no single plan holds all 4, so no plan link.
     expect(next({ summary: STEADY })).toEqual([
       { code: 'letters_revisit', params: { letters: ['ㅂ', 'ㅅ'], questId: 'quest:stage1-life-q2' }, links: { addToPlan: 'quest:stage1-life-q2' } },
       { code: 'strand_next', params: { strand: 'sound-letter' } },
-      { code: 'plan_open', params: { count: 4, kind: 'family' }, links: { openPlan: 'plan:family-week' } },
+      { code: 'plan_open', params: { count: 4, kind: 'family' } },
     ]);
   });
 
@@ -175,9 +176,13 @@ describe('the frozen learners (section 3.15)', () => {
     expect(next({ summary: STALE4 })).toEqual([]);
   });
 
-  it('Jun, a gap: no went-well line and no rhythm line while the window reaches past the data', () => {
+  it('Jun, a gap: no went-well line; the rhythm line reads the saved part of the window (sections 3.2 and 3.11)', () => {
+    // Saved up to the 14th, today the 15th: no practice from the 9th to the 14th, so "No practice yet this week." and P0.
     expect(well({ summary: GAP })).toEqual([]);
-    expect(next({ summary: GAP })).toEqual([{ code: 'letters_revisit', params: { letters: ['ㅂ'], questId: null } }]);
+    expect(next({ summary: GAP })).toEqual([
+      { code: 'rhythm', params: {} },
+      { code: 'letters_revisit', params: { letters: ['ㅂ'], questId: null } },
+    ]);
   });
 
   it('Jun, last week (a whole saved window with no practice): the rhythm line comes first', () => {
@@ -206,17 +211,19 @@ describe('states', () => {
     expect(ctxOf(at({ summary: fresh })).report.state).toBe('empty');
     expect(well(at({ summary: fresh }))).toEqual([]);
     expect(next(at({ summary: fresh }))).toEqual([{ code: 'next_on_route', params: { questId: 'quest:stage1-letters-q1' } }]);
-    // The empty page shows the line whatever the period.
-    expect(codes(next(at({ summary: fresh, period: 'day' })))).toEqual(['next_on_route']);
+    // `day` keeps only P1 (no daily nudging), and the empty page holds only P4: nothing on `day`.
+    expect(next(at({ summary: fresh, period: 'day' }))).toEqual([]);
+    expect(codes(next(at({ summary: fresh, period: 'month' })))).toEqual(['next_on_route']);
+    expect(codes(next(at({ summary: fresh, period: 'all' })))).toEqual(['next_on_route']);
   });
 
   it('empty without activity: nothing', () => {
     expect(next({ summary: {} })).toEqual([]);
   });
 
-  it('legacy: a plan done still goes well; nothing needs the window', () => {
+  it('legacy: no went-well line, not even a finished plan (no window, so no practice in it; layer 3 shows the plan)', () => {
     const done = { ...LEGACY, planProgress: { 'plan:class-week': { done: 4, total: 4, notReady: 0 } } };
-    expect(well({ summary: done, viewer: 'class' })).toEqual([{ code: 'plan_done', params: { done: 4, kind: 'class' } }]);
+    expect(well({ summary: done, viewer: 'class' })).toEqual([]);
   });
 });
 
@@ -368,6 +375,22 @@ describe('went well, rule by rule', () => {
       expect(well(at({ summary: learner({ '2026-10-15': {} }), period })).length, period).toBeGreaterThan(0);
     }
     expect(well(at({ summary: learner({ '2026-09-01': { q: 3 } }) }))).toEqual([]);
+    // Not even a finished plan or self-route: "What went well" is hidden.
+    const done = { planProgress: { 'plan:a': { done: 4, total: 4, notReady: 0 } }, selfRoute: { done: 2, total: 2, notReady: 0, weeks: 1, endsOn: '2026-10-30' } };
+    for (const period of ['day', 'week', 'month'] as const) {
+      expect(well(at({ summary: learner({ '2026-09-20': {} }, done), period })), period).toEqual([]);
+    }
+  });
+
+  it('W8: today\'s plan counts speak only for the current window, never for a past one', () => {
+    const done = { planProgress: { 'plan:a': { done: 4, total: 4, notReady: 0 } } };
+    const s = learner({ '2026-10-06': {}, '2026-10-07': {}, '2026-10-15': {} }, done);
+    expect(codes(well(at({ summary: s })))).toContain('plan_done');
+    expect(codes(well(at({ summary: s, period: 'all' })))).toContain('plan_done');
+    const lastWeek = ctxOf(at({ summary: s, at: '2026-10-08' }));
+    expect(lastWeek.report.figures?.days.count).toBe(2);
+    expect(codes(wentWell(lastWeek))).not.toContain('plan_done');
+    expect(codes(well(at({ summary: s, period: 'day', at: '2026-10-07' })))).not.toContain('plan_done');
   });
 
   it('never more than 3 lines, in table order', () => {
@@ -390,9 +413,12 @@ describe('practice next, rule by rule', () => {
     expect(codes(next(at({ summary: learner({ '2026-10-15': {}, '2026-09-01': {} }) })))).not.toContain('rhythm');
   });
 
-  it('P0: not when the window reaches past the last saved day, nor when it lies wholly after it', () => {
+  it('P0: reads the saved part of a window that reaches past the last saved day; never a window wholly after it', () => {
     const s = learner({ '2026-09-01': {}, '2026-09-02': {} }, {}, { asOf: '2026-10-13' });
-    expect(codes(next(at({ summary: s })))).not.toContain('rhythm');
+    expect(ctxOf(at({ summary: s })).report.horizon?.partial).toBe(true);
+    expect(codes(next(at({ summary: s })))).toEqual(['rhythm']);
+    // Practice in the saved part: no rhythm line (behaviour 13).
+    expect(codes(next(at({ summary: learner({ '2026-10-12': {}, '2026-10-13': {} }, {}, { asOf: '2026-10-13' }) })))).not.toContain('rhythm');
     const after = learner({ '2026-09-01': {}, '2026-09-02': {} }, {}, { asOf: '2026-10-01' });
     expect(ctxOf(at({ summary: after })).report.headline?.code).toBe('none_saved');
     expect(next(at({ summary: after }))).toEqual([]);
@@ -433,10 +459,23 @@ describe('practice next, rule by rule', () => {
     expect(next(at({ summary: learner({ '2026-10-15': {} }, { selfRoute: self }), viewer: 'class' }))).toEqual([]);
   });
 
+  it('P3: one open plan and an open self-route: the count holds both and there is no plan link', () => {
+    const self = { done: 0, total: 5, notReady: 0, weeks: 2, endsOn: '2026-10-30' };
+    const plans = { 'plan:a': { done: 1, total: 3, notReady: 0 } };
+    const s = learner({ '2026-10-15': {} }, { planProgress: plans, selfRoute: self });
+    expect(next(at({ summary: s }))).toEqual([{ code: 'plan_open', params: { count: 7, kind: 'family' } }]);
+    expect(next(at({ summary: s, viewer: 'device' }))).toEqual([{ code: 'plan_open', params: { count: 7, kind: 'family' } }]);
+    // A finished self-route holds nothing open: the one plan holds every item, so the link stays.
+    const finished = learner({ '2026-10-15': {} }, { planProgress: plans, selfRoute: { ...self, done: 5 } });
+    expect(next(at({ summary: finished }))).toEqual([{ code: 'plan_open', params: { count: 2, kind: 'family' }, links: { openPlan: 'plan:a' } }]);
+    // A class never reads the self-route: its one plan keeps the link.
+    expect(next(at({ summary: s, viewer: 'class' }))).toEqual([{ code: 'plan_open', params: { count: 2, kind: 'class' }, links: { openPlan: 'plan:a' } }]);
+  });
+
   it('P4: the app\'s own next, three codes (section 3.6, behaviour 14)', () => {
     const withNext = (n: ActivitySummary['next']): ReportSummary => learner({ '2026-10-14': {}, '2026-10-15': {} }, {}, { next: n });
-    expect(next(at({ summary: withNext({ q: 'quest:a', plan: true }) }))).toEqual([{ code: 'next_in_plan', params: { questId: 'quest:a' } }]);
-    expect(next(at({ summary: withNext({ q: 'quest:a', plan: false }) }))).toEqual([{ code: 'next_on_route', params: { questId: 'quest:a' } }]);
+    expect(next(at({ summary: withNext({ q: 'quest:stage1-letters-q1', plan: true }) }))).toEqual([{ code: 'next_in_plan', params: { questId: 'quest:stage1-letters-q1' } }]);
+    expect(next(at({ summary: withNext({ q: 'quest:stage1-letters-q1', plan: false }) }))).toEqual([{ code: 'next_on_route', params: { questId: 'quest:stage1-letters-q1' } }]);
     expect(next(at({ summary: withNext({ end: true }) }))).toEqual([{ code: 'free_days_done', params: {} }]);
     expect(next(at({ summary: withNext({ end: true }), viewer: 'device' }))).toEqual([{ code: 'free_days_done', params: {} }]);
     expect(next(at({ summary: withNext(undefined) }))).toEqual([]);
@@ -445,6 +484,10 @@ describe('practice next, rule by rule', () => {
   it('P4 and P1: an id that is not a catalogue quest id is never named or linked', () => {
     const odd = learner({ '2026-10-14': {}, '2026-10-15': {} }, { needsPractice: ['ㅂ'] }, { next: { q: 'Mina', plan: false }, revisit: 'Mina' });
     expect(next(at({ summary: odd }))).toEqual([{ code: 'letters_revisit', params: { letters: ['ㅂ'], questId: null } }]);
+    // A well-formed id this build's catalogue does not hold (a retired quest, or one from a newer build): no title to show.
+    const unknown = learner({ '2026-10-14': {}, '2026-10-15': {} }, { needsPractice: ['ㅂ'] }, { next: { q: 'quest:stage1-letters-q99', plan: true }, revisit: 'quest:stage9-new-q1' });
+    expect(next(at({ summary: unknown }))).toEqual([{ code: 'letters_revisit', params: { letters: ['ㅂ'], questId: null } }]);
+    expect(next(at({ summary: unknown, period: 'day' }))).toEqual([{ code: 'letters_revisit', params: { letters: ['ㅂ'], questId: null } }]);
   });
 
   it('a legacy summary without plan counts or a level check: only what it holds', () => {
@@ -454,17 +497,17 @@ describe('practice next, rule by rule', () => {
 
   it('P4: a class always reads the route\'s next and never the free-lessons line', () => {
     const withNext = (n: ActivitySummary['next']): ReportSummary => learner({ '2026-10-14': {}, '2026-10-15': {} }, {}, { next: n });
-    expect(next(at({ summary: withNext({ q: 'quest:a', plan: true }), viewer: 'class' }))).toEqual([{ code: 'next_on_route', params: { questId: 'quest:a' } }]);
+    expect(next(at({ summary: withNext({ q: 'quest:stage1-letters-q1', plan: true }), viewer: 'class' }))).toEqual([{ code: 'next_on_route', params: { questId: 'quest:stage1-letters-q1' } }]);
     expect(next(at({ summary: withNext({ end: true }), viewer: 'class' }))).toEqual([]);
   });
 
   it('P5 words_revisit stays hidden while words are hidden', () => {
     const s = { ...learner({ '2026-10-15': {} }), vocab: { collected: 9, strong: 1, topicsStarted: 1, topicsPracticed7d: 1, firstTryRate: 0.5, needsPractice: ['vocab:bap'] } };
-    expect(practiceNext({ summary: s, report: ctxOf(at({ summary: s })).report })).toEqual([]);
+    expect(practiceNext(ctxOf(at({ summary: s })))).toEqual([]);
   });
 
   it('day keeps only P1 (no daily nudging)', () => {
-    const s = learner({ '2026-10-14': {}, '2026-10-15': {} }, { needsPractice: ['ㅂ'], placement: check([]), planProgress: { 'plan:a': { done: 0, total: 2, notReady: 0 } } }, { next: { q: 'quest:a', plan: false } });
+    const s = learner({ '2026-10-14': {}, '2026-10-15': {} }, { needsPractice: ['ㅂ'], placement: check([]), planProgress: { 'plan:a': { done: 0, total: 2, notReady: 0 } } }, { next: { q: 'quest:stage1-letters-q1', plan: false } });
     expect(codes(next(at({ summary: s, period: 'day' })))).toEqual(['letters_revisit']);
     expect(codes(next(at({ summary: s })))).toEqual(['letters_revisit', 'plan_open', 'next_on_route']);
   });
@@ -473,11 +516,14 @@ describe('practice next, rule by rule', () => {
     const s = learner(
       { '2026-10-15': {} },
       { needsPractice: ['ㅂ'], planProgress: { 'plan:a': { done: 0, total: 2, notReady: 0 } } },
-      { next: { q: 'quest:a', plan: true }, total: { since: '2026-10-15', min: 10, q: 0, c: 0, w: 0, days: 1 } },
+      { next: { q: 'quest:stage1-letters-q1', plan: true }, total: { since: '2026-10-15', min: 10, q: 0, c: 0, w: 0, days: 1 } },
     );
     expect(ctxOf(at({ summary: s })).report.headline?.code).toBe('getting_started');
-    expect(next(at({ summary: s }))).toEqual([{ code: 'next_in_plan', params: { questId: 'quest:a' } }]);
+    expect(next(at({ summary: s }))).toEqual([{ code: 'next_in_plan', params: { questId: 'quest:stage1-letters-q1' } }]);
     expect(next(at({ summary: { ...s, activity: { ...(s.activity as ActivitySummary), next: undefined } } }))).toEqual([]);
+    // `day` keeps only P1 and getting started holds only P4: nothing on `day` (no daily nudging).
+    expect(next(at({ summary: s, period: 'day' }))).toEqual([]);
+    expect(codes(next(at({ summary: s, period: 'month' })))).toEqual(['next_in_plan']);
     // Went well is not affected.
     expect(well(at({ summary: s }))).toEqual([{ code: 'showed_up', params: { days: 1, period: 'week' } }]);
   });
@@ -486,7 +532,7 @@ describe('practice next, rule by rule', () => {
     const s = learner(
       { '2026-09-01': {}, '2026-09-02': {} },
       { needsPractice: ['ㅂ'], placement: check([]), planProgress: { 'plan:a': { done: 0, total: 2, notReady: 0 } } },
-      { next: { q: 'quest:a', plan: false } },
+      { next: { q: 'quest:stage1-letters-q1', plan: false } },
     );
     const strands = { ...(s.placement as NonNullable<ReportSummary['placement']>), strands: { ...(s.placement as NonNullable<ReportSummary['placement']>).strands, vocabulary: 'not-yet' as const } };
     expect(codes(next(at({ summary: { ...s, placement: strands } })))).toEqual(['rhythm', 'letters_revisit', 'strand_next']);
@@ -506,7 +552,7 @@ describe('every line carries codes and numbers only (section 3.6)', () => {
       ...well(at({ summary: learner({ '2026-10-14': {} }, { placement: check(['vocabulary']), planProgress: { 'plan:a': { done: 1, total: 1, notReady: 0 } } }) })),
       ...well(at({ summary: learner({ '2026-10-13': { min: 0 }, '2026-10-14': { min: 0 }, '2026-10-15': { min: 0 } }, {}, { total: { since: null, min: 0, q: 0, c: 0, w: 0, days: 40 } }) })),
       ...next(at({ summary: learner({ '2026-10-14': {}, '2026-10-15': {} }, {}, { next: { end: true } }) })),
-      ...next(at({ summary: learner({ '2026-10-14': {}, '2026-10-15': {} }, {}, { next: { q: 'quest:a', plan: true } }) })),
+      ...next(at({ summary: learner({ '2026-10-14': {}, '2026-10-15': {} }, {}, { next: { q: 'quest:stage1-letters-q1', plan: true } }) })),
     ];
     expect(new Set(lines.map((line) => line.code)).size).toBeGreaterThanOrEqual(15);
     for (const line of lines) expect(InsightLineSchema.parse(line)).toEqual(line);

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { Catalog } from '../catalog/schema';
 import { StageKeySchema } from '../schemas/heritage-card';
 import { PlacementStrandSchema, type PlacementStrand } from '../schemas/placement';
 import { QUEST_ID_RE } from '../schemas/quest';
@@ -121,10 +122,15 @@ type LineOf<C extends InsightCode> = Extract<InsightLine, { code: C }>;
  */
 export type InsightSummary = ReportSummary & { vocab?: VocabSummary };
 
-/** `report` is `learnerReport(...)` of the same `summary`; its viewer, period, window and figures drive the rules. */
+/**
+ * `report` is `learnerReport(...)` of the same `summary` and `catalog`; its viewer, period, window and figures drive the
+ * rules. `catalog` is this build's catalogue: a quest id it does not hold (a retired quest, or one from a newer app
+ * build) is never named or linked, because the renderer would have no title for it.
+ */
 export interface InsightContext {
   summary: InsightSummary | null;
   report: LearnerReport;
+  catalog: Catalog;
 }
 
 // ---------------------------------------------------------------------------
@@ -156,6 +162,8 @@ interface Facts {
   figures: LearnerReport['figures'];
   milestones: readonly (ReportStage & { on: string })[];
   totalsOnly: boolean;
+  /** The catalogue's quest ids. */
+  quests: ReadonlySet<string>;
 }
 
 interface Plan {
@@ -229,6 +237,9 @@ const W7: Rule<'level_secure'> = (f) => {
 };
 
 const W8: Rule<'plan_done'> = (f) => {
+  // `planProgress` is today's snapshot: it speaks only for the current window, and only when the learner practiced in
+  // it (with no practice in the window, "What went well" is hidden, section 3.6). A `legacy` summary has no window.
+  if (!f.window || !f.figures || f.window.at !== null || f.figures.days.count === 0) return null;
   const { plans, self } = plansOf(f);
   const done = [...plans, ...(self ? [self] : [])].find((plan) => plan.total > 0 && plan.done === plan.total);
   return done ? { code: 'plan_done', params: { done: done.done, kind: kindOf(f.viewer) } } : null;
@@ -254,8 +265,9 @@ const W0: Rule<'showed_up'> = (f) => {
 const WENT_WELL_FNS: Readonly<Record<(typeof WENT_WELL_RULES)[number]['id'], (f: Facts) => InsightLine | null>> = { W1, W2, W3, W4, W5, W6, W7, W8, W9, W10, W0 };
 
 const P0: Rule<'rhythm'> = (f) => {
-  // A whole saved window with no practice: never a window that reaches past the device's last saved day.
-  if (!f.activity || !f.window || !f.figures || f.window.to > f.activity.asOf) return null;
+  // No practice in the saved part of the window (days after `asOf` count nowhere, section 3.2); never on a window that
+  // lies wholly after the device's last saved day (`none_saved`: no practice-next line refers to it).
+  if (!f.activity || !f.window || !f.figures || f.window.from > f.activity.asOf) return null;
   return f.figures.days.count === 0 ? { code: 'rhythm', params: {} } : null;
 };
 
@@ -264,7 +276,7 @@ const P1: Rule<'letters_revisit'> = (f) => {
   if (!letters.length) return null;
   // The quest the device chose as open for this learner (section 3.3.4 step 9); none on an older build.
   const revisit = f.activity?.revisit;
-  const questId = revisit !== undefined && QUEST_ID_RE.test(revisit) ? revisit : null;
+  const questId = revisit !== undefined && isQuest(f, revisit) ? revisit : null;
   return questId ? { code: 'letters_revisit', params: { letters, questId }, links: { addToPlan: questId } } : { code: 'letters_revisit', params: { letters, questId } };
 };
 
@@ -280,11 +292,12 @@ const P2: Rule<'strand_next'> = (f) => {
 
 const P3: Rule<'plan_open'> = (f) => {
   const { plans, self } = plansOf(f);
-  const open = plans.filter((plan) => plan.total - plan.done > 0);
-  const count = [...open, ...(self ? [self] : [])].reduce((n, plan) => n + Math.max(0, plan.total - plan.done), 0);
+  const holders = [...plans, ...(self ? [self] : [])].filter((plan) => plan.total - plan.done > 0);
+  const count = holders.reduce((n, plan) => n + (plan.total - plan.done), 0);
   if (count === 0) return null;
-  // "Open the plan" opens one plan: offered only when one plan holds every open item of the viewer's plans.
-  const only = open.length === 1 ? (open[0] as Plan).id : null;
+  // "Open the plan" opens one plan: offered only when one plan holds every open item counted, the self-route included
+  // (the self-route is not a plan the builder opens).
+  const only = holders.length === 1 && holders[0] !== self ? (holders[0] as Plan).id : null;
   const params = { count, kind: kindOf(f.viewer) };
   return only !== null && PlanId.safeParse(only).success ? { code: 'plan_open', params, links: { openPlan: only } } : { code: 'plan_open', params };
 };
@@ -296,7 +309,7 @@ const P4: Rule<'next_in_plan' | 'next_on_route' | 'free_days_done'> = (f) => {
     // A family's plan is not a teacher's business: a class never reads the free-lessons line (section 3.6).
     return f.viewer === 'class' ? null : { code: 'free_days_done', params: {} };
   }
-  if (!QUEST_ID_RE.test(next.q)) return null;
+  if (!isQuest(f, next.q)) return null;
   // A class cannot tell its own plan from a family plan or a self-route: it always reads the route's next.
   return next.plan && f.viewer !== 'class' ? { code: 'next_in_plan', params: { questId: next.q } } : { code: 'next_on_route', params: { questId: next.q } };
 };
@@ -308,6 +321,19 @@ const P5: Rule<'words_revisit'> = (f) => {
 };
 
 const PRACTICE_NEXT_FNS: Readonly<Record<(typeof PRACTICE_NEXT_RULES)[number]['id'], (f: Facts) => InsightLine | null>> = { P0, P1, P2, P3, P4, P5 };
+
+const QUEST_SETS = new WeakMap<Catalog, ReadonlySet<string>>();
+/** The catalogue's quest ids, once per catalogue. */
+function questsOf(catalog: Catalog): ReadonlySet<string> {
+  const cached = QUEST_SETS.get(catalog);
+  if (cached) return cached;
+  const ids = new Set(catalog.quests.map((quest) => quest.id));
+  QUEST_SETS.set(catalog, ids);
+  return ids;
+}
+
+/** A quest id of the catalogue grammar that this build's catalogue holds. */
+const isQuest = (f: Facts, id: string): boolean => QUEST_ID_RE.test(id) && f.quests.has(id);
 
 /** What the rules read, or null when there is no summary (`no_data`). */
 function factsOf(ctx: InsightContext): Facts | null {
@@ -326,6 +352,7 @@ function factsOf(ctx: InsightContext): Facts | null {
     figures: report.figures,
     milestones: report.detail?.milestones ?? [],
     totalsOnly: window?.totalsOnly ?? false,
+    quests: questsOf(ctx.catalog),
   };
 }
 
@@ -334,7 +361,7 @@ const runs = (periods: readonly ReportPeriod[], f: Facts): boolean => periods.in
 /**
  * "What went well" (section 3.6): up to 3 lines in table order; W0 only when no other line fired and the learner
  * practiced in the window, so the section is never empty after practice. No line at all without practice in the
- * window except a finished plan (the renderer hides an empty section and its heading).
+ * window (the renderer hides an empty section and its heading).
  */
 export function wentWell(ctx: InsightContext): InsightLine[] {
   const f = factsOf(ctx);
@@ -353,14 +380,15 @@ export function wentWell(ctx: InsightContext): InsightLine[] {
 
 /**
  * "What to practice next" (section 3.6): an invitation, never a warning. Up to 3 lines in table order, P0 first when
- * it fires. `day` keeps only P1. A learner with fewer than 2 practice days ever, and the `empty` state, hold only the
- * app's next (P4), whatever the period.
+ * it fires. `day` keeps only P1 (no daily nudging). A learner with fewer than 2 practice days ever, and the `empty`
+ * state, hold only the app's next (P4), on the periods P4 runs on: nothing on `day`.
  */
 export function practiceNext(ctx: InsightContext): InsightLine[] {
   const f = factsOf(ctx);
   if (f === null) return [];
   const gettingStarted = ctx.report.state === 'empty' || (f.activity !== undefined && f.activity.total.days < GETTING_STARTED_DAYS);
   if (gettingStarted) {
+    if (!runs(PRACTICE_NEXT_RULES[4].periods, f)) return [];
     const only = P4(f);
     return only ? [only] : [];
   }

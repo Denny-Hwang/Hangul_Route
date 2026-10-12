@@ -38,6 +38,7 @@ function learner(words: number, vocab?: VocabSummary): InsightSummary {
 const ctx = (summary: InsightSummary, period: ReportPeriod = 'week') => ({
   summary,
   report: learnerReport({ summary, viewer: 'family', voice: 'third', period, now: NOW, catalog: CATALOG_2026_10, lastSyncedAt: null }),
+  catalog: CATALOG_2026_10,
 });
 
 describe('words, once vocab leaves the hidden list (F-VOC-005 P-4)', () => {
@@ -48,7 +49,7 @@ describe('words, once vocab leaves the hidden list (F-VOC-005 P-4)', () => {
     expect(wentWell(ctx(learner(5), 'month'))).toEqual([{ code: 'words_new', params: { count: 5 } }]);
     expect(wentWell(ctx(learner(5), 'all'))).toContainEqual({ code: 'words_new', params: { count: 5 } });
     const day = learnerReport({ summary: learner(5), viewer: 'family', voice: 'third', period: 'day', now: new Date('2026-10-14T12:00:00.000Z'), catalog: CATALOG_2026_10, lastSyncedAt: null });
-    expect(wentWell({ summary: learner(5), report: day }).map((line) => line.code)).not.toContain('words_new');
+    expect(wentWell({ summary: learner(5), report: day, catalog: CATALOG_2026_10 }).map((line) => line.code)).not.toContain('words_new');
   });
 
   it('P5 words_revisit: up to 3 words that need practice; nothing when there are none or no slice', () => {
