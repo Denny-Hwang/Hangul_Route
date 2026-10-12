@@ -20,7 +20,7 @@ Subscribers, anyone while the switch is off, and every native store build see **
 
 ## Decisions of this design pass
 
-These settle what the spec left to the E3-D mock. D1, D4, D5 and D6 change lines of F-ENT-003; this PR writes them back into §3.7, §3.11 and §3.14 (revision 3.2) and into the two wireframes, so the spec and the mock say the same thing.
+These settle what the spec left to the E3-D mock. D1, D4 to D7 and D11 change lines of F-ENT-003. This PR writes them back into §3.7, §3.11 and §3.14 (revision 3.2) and into the two wireframes, so the spec and the mock say the same thing.
 
 - **D1. Next is the cursor triangle, not the `pin` glyph.**
   - The spec draft said "Next = the drawn `pin` glyph". On the Journey the `pin` already means **"You started here"**: F-PLC-001 P-7 draws it in the top-left corner of the level check's start cell, and the Journey's own note says "The pin shows where you started." (`learner.journey.how.placement`). The `pin` is also the "You started here" tag of the route page (`design/components/Icon/spec.md`).
@@ -32,9 +32,10 @@ These settle what the spec left to the E3-D mock. D1, D4, D5 and D6 change lines
 - **D5. Coming-later cells lose the lock glyph.** OD-6 (resolved with LR-OD-8) puts no lock glyph on any learner screen. Today a coming-later cell draws `lock`, which would sit beside the new dotted cells and read as "more locked". The cell stays `surface.sunken` with its `border.subtle` edge and is **empty**. Its label and the stage pill ("Coming later") carry the words, and the empty cell (no initial) is its shape.
 - **D6. The episode row:** the triangle sits over the row's number disc, the chip "Next" carries the word, the chip "In your plan" carries the ring and the word. A closed row replaces Start with the caption "Not open yet" next to the stage-row `later` pip. The Start buttons keep today's tones (§3.7: open rows are unchanged).
 - **D7. On the episode page the waiting card tile draws `card` instead of `lock`.** It keeps its words ("Finish every quest to earn it"). This avoids a lock under a "Not open yet" caption (OD-6). The Library card gallery keeps F-STORY-006's look (outside this spec; listed under "Open items").
-- **D8. The free-end cards are paper `Card`s.** They carry a ghost button (the ask), and a ghost label (`brand.primary`) holds 4.5:1 only on canvas, paper and sunken. It is 4.48:1 on `feedback.successLight` and 4.10:1 on `brand.primaryLight` (`contrast.test.ts`). The celebration is carried by Hoya `cheering` and the title.
+- **D8. The free-end cards are paper `Card`s.** They carry a ghost button (the ask), and a ghost label (`brand.primary`) holds 4.5:1 only on canvas, paper and sunken. Those are the ghost pairs `contrast.test.ts` pins. It is 4.48:1 on `feedback.successLight` and 4.10:1 on `brand.primaryLight`. The celebration is carried by Hoya `cheering` and the title.
 - **D9. The Results earned row is one line of 64 dp faces.** As many as fit (at most six: three at 320 dp, four at 375 dp), then `learner.results.extraCards.more(n)` ("and 9 more in your Library"). The row is one image, not buttons, so it uses `touchTarget.min` instead of the 96 dp `CardArtThumb` buttons of the extra-cards banner.
 - **D10. The practice card names the topic, not the bare word.** A free word topic card reads "Food words". This needs one key beyond Appendix A: `learner.access.practice.topicTitle(title)` "{title} words" (E3-7). A story keeps its title, a kept replay its quest title.
+- **D11. The taste note gives way on a closed row.** A taste row's note reads "A taste of this stage is open now. More episodes are coming." For a free learner with the switch on, every playable cell of Stage 2 and Stage 4 is closed, so the note would contradict the rings under it. The note shows only when at least one playable cell of the row is open for this learner. The pill keeps "A taste" (§3.7, R-J). No key changes.
 
 ## Geometry
 
@@ -83,6 +84,7 @@ Every number is a token or derives from one (see "Constants").
   - In two panes the selected cell's `border.focus` edge (3 dp) leaves the tip 1 dp inside.
 - **Free learner, switch on:** the dotted ring sits around the initial. The cell keeps its paper fill, its stage-coloured border and its tap (§3.7). A cell with any kept quest shows no ring.
 - **Coming later:** empty (D5). No mark of this spec is ever drawn on it.
+- **Taste note:** left out on a row whose playable cells are all closed for this learner (D11).
 - **The legend line (D4).**
   - It sits under the intro, above the column labels. Order: Next, In your plan, Not open yet.
   - Each item is the 16 dp tag mark (the Next triangle centred in the same box), `spacing.xs`, then the word in `bodySm` semibold `text.secondary`. Items are `spacing.lg` apart, wrap, and leave `spacing.md` below.
@@ -223,6 +225,7 @@ Values that are not tokens, each with what it derives from. E3-5 to E3-7 write t
 | Quest number disc | 44 | `EpisodeDetailView` today (unchanged) |
 | Measured cell sizes | 54.4, 62.4, 65.4, 107.2, 112, 76.4 | GridCell in the web build at 320, 360, 375, 600, 768 and 1180 / 1280 wide (2026-10-12) |
 | Mock frame | 320 px | the 320 dp width the spec checks |
+| Mock breakpoints | 600 px, 900 px | `layout.breakpoint` (the app's window classes, in px because they follow the window in dp) |
 
 ## Mock and shots
 
@@ -245,7 +248,7 @@ Measured on the mock: no page or board scrolls sideways (`scrollWidth` equals th
 ## Notes for later rows
 
 - **E3-5:**
-  - Journey marks, legend, D5, the cell label order.
+  - Journey marks, legend, D5, D11, the cell label order.
   - Update `logic/journey-grid.ts`'s comment: there is no lock glyph and no "opens with the full route" label for a closed cell.
   - `JourneyCellState` stays `open` / `later`; closed is a mark from `questAccess`, not a new cell state.
 - **E3-6:** D6, D7, the preview card, `askFor`.

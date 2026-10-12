@@ -244,6 +244,7 @@ export function planView(i: RouteNextInput): PlanView;
 - **Next.** The cell that holds `routeNext`'s quest carries the Next triangle over its top edge; its accessibility label appends "Next". One cell at most. Hidden at `rest` and `free-end`.
 - **Legend line** (E3-D D4). Under the intro, one line shows each mark the grid draws with its word (Next, In your plan, Not open yet), so the words are on the page (§3.14); hidden from screen readers, because the cell labels carry them.
 - **Coming-later cells** (no shipped episode) lose today's lock glyph and stay sunken and empty (E3-D D5, OD-6).
+- **Taste note.** A taste row's note ("A taste of this stage is open now. ...") shows only when at least one playable cell of the row is open for this learner (E3-D D11).
 - **In your plan.** Cells in `planView().inPlanEpisodeIds` carry the solid ring and the label suffix "In your plan". Only while a plan exists; no ring for the default route (the route is the whole grid).
 - **Not open yet** (effective switch on, free): the cell keeps its art, colour and tap; the dotted ring sits around the cell art and the label reads "{episode}: not open yet. Opens the lesson page." A cell with any kept quest shows no ring. The stage pill keeps the availability word (R-J); no stage row is ever a lock or a door to a purchase.
 - **Subscribers and the switch-off state show no access mark at all.** Precedence on one cell: Next > In your plan > Not open yet (a closed cell is never Next or In your plan).
@@ -640,7 +641,7 @@ Spec decisions (engineering, reversible):
 
 ## Review log
 
-**Revision 3.2 (2026-10-12), the E3-D design pass** (`design/components/RouteMarkers/spec.md`). Written back: Next is the cursor triangle, not the `pin` (§3.7, §3.11, §3.14; the `pin` means "You started here" on the same grid); the Journey legend line; coming-later cells without the lock glyph; the episode row tags and the waiting card glyph. The other decisions of the pass (ring geometry, corner glyphs over the ring, paper free-end cards, the earned row, `learner.access.practice.topicTitle`) live in the component spec.
+**Revision 3.2 (2026-10-12), the E3-D design pass** (`design/components/RouteMarkers/spec.md`). Written back: Next is the cursor triangle, not the `pin` (§3.7, §3.11, §3.14; the `pin` means "You started here" on the same grid); the Journey legend line; coming-later cells without the lock glyph; the taste note left out on a closed row; the episode row tags and the waiting card glyph. The other decisions of the pass (ring geometry, corner glyphs over the ring, paper free-end cards, the earned row, `learner.access.practice.topicTitle`) live in the component spec.
 
 **Revision 3.1 (2026-10-12), after two reviews of PR E3-2 (#390).** No blocker or major finding; minors applied in the PR unless listed.
 
