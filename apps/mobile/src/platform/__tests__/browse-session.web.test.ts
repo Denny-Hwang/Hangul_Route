@@ -121,7 +121,8 @@ describe('readSessionPass (web)', () => {
   });
 
   it('no sessionStorage at all means no pass', () => {
-    vi.unstubAllGlobals();
+    // Explicitly absent: newer Node versions define Web Storage globals by default.
+    vi.stubGlobal('sessionStorage', undefined);
     expect(readSessionPass()).toBeNull();
     expect(writeSessionPass(pass)).toBe(false);
   });

@@ -37,7 +37,9 @@ export function removeSessionPass(): void {
  * The tab's pass, or `null`. A value that is not a valid `BrowsePass`
  * (corrupt JSON, a wrong shape, an extra field such as an account or
  * learner id) is ignored silently and removed. A valid pass stays for
- * reloads; whether it is still active is `passActive`'s call.
+ * reloads; whether it is still active is `passActive`'s call. Removing an
+ * unparsable value is safe only because the v1 shape is frozen
+ * (`BrowsePassSchema`): a newer writer never changes it.
  */
 export function readSessionPass(): BrowsePass | null {
   let raw: string | null;
