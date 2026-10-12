@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lock states (F-APP-001 mock)</title>
+<link rel="stylesheet" href="app-shell.css">
+</head>
+<body>
+<div class="board"><h1 class="page-title">Grown-up lock: Panel A and every sign-in-only line</h1><p class="annot">Drawn as GrownUpLock.tsx renders it (A-4a, merged). The line names the cause; Sign in again becomes the primary.</p><div class="board-grid"><div class="board-item"><p class="board-label">A · pin, trusted epoch, no active unlock</p><p class="board-title">PIN path and sign-in</p><div class="sample"><div class="solo"><main class="solo-column">
+<a class="btn btn-quiet" href="#" style="align-self: flex-start"><svg class="icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-secondary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg>Back to learning</a>
+<section class="solo-card" role="region" aria-labelledby="lock-title">
+  <svg class="icon" width="48" height="48" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8.5 11 V8 A3.5 3.5 0 0 1 15.5 8 V11" style="fill: none; stroke: var(--colors-text-secondary); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round"/><path d="M7.5 11 H16.5 Q18 11 18 12.5 V18.5 Q18 20 16.5 20 H7.5 Q6 20 6 18.5 V12.5 Q6 11 7.5 11 Z" style="fill: var(--colors-text-secondary)"/></svg>
+  <h1 id="lock-title" tabindex="-1">Grown-ups only</h1>
+  <p class="line">Enter this device's grown-up PIN, or sign in again.</p>
+  <button type="button" class="btn btn-primary btn-col">Use the grown-up PIN</button>
+  <button type="button" class="btn  btn-col">Sign in again</button>
+</section>
+</main></div></div></div>
+<div class="board-item"><p class="board-label">B · pin, trusted epoch differs (PIN changed)</p><p class="board-title">console.lock.pinChanged</p><div class="sample"><div class="solo"><main class="solo-column">
+<a class="btn btn-quiet" href="#" style="align-self: flex-start"><svg class="icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-secondary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg>Back to learning</a>
+<section class="solo-card" role="region" aria-labelledby="lock-title">
+  <svg class="icon" width="48" height="48" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8.5 11 V8 A3.5 3.5 0 0 1 15.5 8 V11" style="fill: none; stroke: var(--colors-text-secondary); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round"/><path d="M7.5 11 H16.5 Q18 11 18 12.5 V18.5 Q18 20 16.5 20 H7.5 Q6 20 6 18.5 V12.5 Q6 11 7.5 11 Z" style="fill: var(--colors-text-secondary)"/></svg>
+  <h1 id="lock-title" tabindex="-1">Grown-ups only</h1>
+  <p class="line">The grown-up PIN changed on this device. Sign in again to use it.</p>
+  
+  <button type="button" class="btn btn-primary btn-col">Sign in again</button>
+</section>
+</main></div></div></div>
+<div class="board-item"><p class="board-label">B · pin, no trusted epoch in this browser</p><p class="board-title">console.lock.firstSignIn</p><div class="sample"><div class="solo"><main class="solo-column">
+<a class="btn btn-quiet" href="#" style="align-self: flex-start"><svg class="icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-secondary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg>Back to learning</a>
+<section class="solo-card" role="region" aria-labelledby="lock-title">
+  <svg class="icon" width="48" height="48" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8.5 11 V8 A3.5 3.5 0 0 1 15.5 8 V11" style="fill: none; stroke: var(--colors-text-secondary); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round"/><path d="M7.5 11 H16.5 Q18 11 18 12.5 V18.5 Q18 20 16.5 20 H7.5 Q6 20 6 18.5 V12.5 Q6 11 7.5 11 Z" style="fill: var(--colors-text-secondary)"/></svg>
+  <h1 id="lock-title" tabindex="-1">Grown-ups only</h1>
+  <p class="line">Sign in once on this device to use the grown-up PIN here.</p>
+  
+  <button type="button" class="btn btn-primary btn-col">Sign in again</button>
+</section>
+</main></div></div></div>
+<div class="board-item"><p class="board-label">B · pin with epoch 0 (set before A-6)</p><p class="board-title">console.lock.pinRenew</p><div class="sample"><div class="solo"><main class="solo-column">
+<a class="btn btn-quiet" href="#" style="align-self: flex-start"><svg class="icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-secondary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg>Back to learning</a>
+<section class="solo-card" role="region" aria-labelledby="lock-title">
+  <svg class="icon" width="48" height="48" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8.5 11 V8 A3.5 3.5 0 0 1 15.5 8 V11" style="fill: none; stroke: var(--colors-text-secondary); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round"/><path d="M7.5 11 H16.5 Q18 11 18 12.5 V18.5 Q18 20 16.5 20 H7.5 Q6 20 6 18.5 V12.5 Q6 11 7.5 11 Z" style="fill: var(--colors-text-secondary)"/></svg>
+  <h1 id="lock-title" tabindex="-1">Grown-ups only</h1>
+  <p class="line">To use the grown-up PIN here, set it again in the app, then sign in once.</p>
+  
+  <button type="button" class="btn btn-primary btn-col">Sign in again</button>
+</section>
+</main></div></div></div>
+<div class="board-item"><p class="board-label">B · nopin</p><p class="board-title">console.lock.noPin</p><div class="sample"><div class="solo"><main class="solo-column">
+<a class="btn btn-quiet" href="#" style="align-self: flex-start"><svg class="icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-secondary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg>Back to learning</a>
+<section class="solo-card" role="region" aria-labelledby="lock-title">
+  <svg class="icon" width="48" height="48" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8.5 11 V8 A3.5 3.5 0 0 1 15.5 8 V11" style="fill: none; stroke: var(--colors-text-secondary); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round"/><path d="M7.5 11 H16.5 Q18 11 18 12.5 V18.5 Q18 20 16.5 20 H7.5 Q6 20 6 18.5 V12.5 Q6 11 7.5 11 Z" style="fill: var(--colors-text-secondary)"/></svg>
+  <h1 id="lock-title" tabindex="-1">Grown-ups only</h1>
+  <p class="line">Set a grown-up PIN in the app, or sign in again.</p>
+  
+  <button type="button" class="btn btn-primary btn-col">Sign in again</button>
+</section>
+</main></div></div></div>
+<div class="board-item"><p class="board-label">B · marker absent with profiles, or a failed / slow read</p><p class="board-title">console.lock.signInOnly</p><div class="sample"><div class="solo"><main class="solo-column">
+<a class="btn btn-quiet" href="#" style="align-self: flex-start"><svg class="icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-secondary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg>Back to learning</a>
+<section class="solo-card" role="region" aria-labelledby="lock-title">
+  <svg class="icon" width="48" height="48" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8.5 11 V8 A3.5 3.5 0 0 1 15.5 8 V11" style="fill: none; stroke: var(--colors-text-secondary); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round"/><path d="M7.5 11 H16.5 Q18 11 18 12.5 V18.5 Q18 20 16.5 20 H7.5 Q6 20 6 18.5 V12.5 Q6 11 7.5 11 Z" style="fill: var(--colors-text-secondary)"/></svg>
+  <h1 id="lock-title" tabindex="-1">Grown-ups only</h1>
+  <p class="line">Sign in again to open grown-up pages on this device.</p>
+  
+  <button type="button" class="btn btn-primary btn-col">Sign in again</button>
+</section>
+</main></div></div></div></div></div>
+</body>
+</html>

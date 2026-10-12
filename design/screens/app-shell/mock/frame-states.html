@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adult frame states (F-APP-001 mock)</title>
+<link rel="stylesheet" href="app-shell.css">
+</head>
+<body>
+<div class="board"><h1 class="page-title">AdultFrame: header, persona, navigation, footer</h1><p class="annot">The same markup at every width: below 45em (720 px) one header row plus the tab row, Language and Sign out in the footer; from 45em the wide header. Shot at 375 and at 1280.</p><div class="board-wide"><div class="board-item"><p class="board-label">Both personas · Family · every sibling flag on</p><div class="sample"><div class="frame">
+<header class="frame-top">
+  <div class="frame-bar has-switch">
+    <a class="brand" href="#"><span class="brand-mark" aria-hidden="true">HR</span><span class="brand-name">Hangul Route</span></a>
+    <div class="persona-switch" role="radiogroup" aria-label="Switch between Family and Teacher"><button type="button" role="radio" aria-checked="true" tabindex="0">Family</button><button type="button" role="radio" aria-checked="false" tabindex="-1">Teacher</button></div>
+    <a class="way-back" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Back to learning</span></a>
+    <select class="select wide-only" aria-label="Language"><option>English</option></select>
+    <button type="button" class="btn btn-quiet btn-small wide-only">Sign out</button>
+  </div>
+  <nav class="frame-nav" aria-label="Family"><ul class="nav-list"><li><a class="nav-item" href="#" aria-current="page">Home</a></li><li><a class="nav-item" href="#">Reports</a></li><li><a class="nav-item" href="#">Notes</a></li><li><button type="button" class="nav-item">Lessons</button></li><li><a class="nav-item" href="#">Billing</a></li></ul></nav>
+</header>
+<main class="frame-main" id="content">
+<p class="annot">[ page content ]</p>
+</main>
+<footer class="frame-foot"><div class="frame-foot-inner">
+  <div class="foot-links"><a href="#">About Hangul Route</a><a href="#">Privacy</a><a href="#">Terms</a></div>
+  <div class="foot-tools"><select class="select" aria-label="Language"><option>English</option></select><button type="button" class="btn btn-small">Sign out</button></div>
+</div></footer>
+</div></div></div>
+<div class="board-item"><p class="board-label">Both personas · Teacher · Lessons on</p><div class="sample"><div class="frame">
+<header class="frame-top">
+  <div class="frame-bar has-switch">
+    <a class="brand" href="#"><span class="brand-mark" aria-hidden="true">HR</span><span class="brand-name">Hangul Route</span></a>
+    <div class="persona-switch" role="radiogroup" aria-label="Switch between Family and Teacher"><button type="button" role="radio" aria-checked="false" tabindex="-1">Family</button><button type="button" role="radio" aria-checked="true" tabindex="0">Teacher</button></div>
+    <a class="way-back" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Back to learning</span></a>
+    <select class="select wide-only" aria-label="Language"><option>English</option></select>
+    <button type="button" class="btn btn-quiet btn-small wide-only">Sign out</button>
+  </div>
+  <nav class="frame-nav" aria-label="Teacher"><ul class="nav-list"><li><a class="nav-item" href="#" aria-current="page">Classes</a></li><li><button type="button" class="nav-item">Lessons</button></li><li><a class="nav-item" href="#">Billing</a></li></ul></nav>
+</header>
+<main class="frame-main" id="content">
+<p class="annot">[ page content ]</p>
+</main>
+<footer class="frame-foot"><div class="frame-foot-inner">
+  <div class="foot-links"><a href="#">About Hangul Route</a><a href="#">Privacy</a><a href="#">Terms</a></div>
+  <div class="foot-tools"><select class="select" aria-label="Language"><option>English</option></select><button type="button" class="btn btn-small">Sign out</button></div>
+</div></footer>
+</div></div></div>
+<div class="board-item"><p class="board-label">Teacher only · sibling flags off</p><div class="sample"><div class="frame">
+<header class="frame-top">
+  <div class="frame-bar">
+    <a class="brand" href="#"><span class="brand-mark" aria-hidden="true">HR</span><span class="brand-name">Hangul Route</span></a>
+    <span class="persona-text">Teacher</span>
+    <a class="way-back" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Back to learning</span></a>
+    <select class="select wide-only" aria-label="Language"><option>English</option></select>
+    <button type="button" class="btn btn-quiet btn-small wide-only">Sign out</button>
+  </div>
+  <nav class="frame-nav" aria-label="Teacher"><ul class="nav-list"><li><a class="nav-item" href="#" aria-current="page">Classes</a></li><li><a class="nav-item" href="#">Billing</a></li></ul></nav>
+</header>
+<main class="frame-main" id="content">
+<p class="annot">[ page content ]</p>
+</main>
+<footer class="frame-foot"><div class="frame-foot-inner">
+  <div class="foot-links"><a href="#">About Hangul Route</a><a href="#">Privacy</a><a href="#">Terms</a></div>
+  <div class="foot-tools"><select class="select" aria-label="Language"><option>English</option></select><button type="button" class="btn btn-small">Sign out</button></div>
+</div></footer>
+</div></div></div>
+<div class="board-item"><p class="board-label">Family only · sibling flags off · /account/billing</p><div class="sample"><div class="frame">
+<header class="frame-top">
+  <div class="frame-bar">
+    <a class="brand" href="#"><span class="brand-mark" aria-hidden="true">HR</span><span class="brand-name">Hangul Route</span></a>
+    <span class="persona-text">Family</span>
+    <a class="way-back" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Back to learning</span></a>
+    <select class="select wide-only" aria-label="Language"><option>English</option></select>
+    <button type="button" class="btn btn-quiet btn-small wide-only">Sign out</button>
+  </div>
+  <nav class="frame-nav" aria-label="Family"><ul class="nav-list"><li><a class="nav-item" href="#">Home</a></li><li><a class="nav-item" href="#" aria-current="page">Billing</a></li></ul></nav>
+</header>
+<main class="frame-main" id="content">
+<p class="annot">[ page content ]</p>
+</main>
+<footer class="frame-foot"><div class="frame-foot-inner">
+  <div class="foot-links"><a href="#">About Hangul Route</a><a href="#">Privacy</a><a href="#">Terms</a></div>
+  <div class="foot-tools"><select class="select" aria-label="Language"><option>English</option></select><button type="button" class="btn btn-small">Sign out</button></div>
+</div></footer>
+</div></div></div>
+<div class="board-item"><p class="board-label">Teacher's laptop · no learner profile on this browser</p><p class="board-title">Open the learner app</p><div class="sample"><div class="frame">
+<header class="frame-top">
+  <div class="frame-bar">
+    <a class="brand" href="#"><span class="brand-mark" aria-hidden="true">HR</span><span class="brand-name">Hangul Route</span></a>
+    <span class="persona-text">Teacher</span>
+    <a class="way-back" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Open the learner app</span></a>
+    <select class="select wide-only" aria-label="Language"><option>English</option></select>
+    <button type="button" class="btn btn-quiet btn-small wide-only">Sign out</button>
+  </div>
+  <nav class="frame-nav" aria-label="Teacher"><ul class="nav-list"><li><a class="nav-item" href="#" aria-current="page">Classes</a></li><li><a class="nav-item" href="#">Billing</a></li></ul></nav>
+</header>
+<main class="frame-main" id="content">
+<p class="annot">[ page content ]</p>
+</main>
+<footer class="frame-foot"><div class="frame-foot-inner">
+  <div class="foot-links"><a href="#">About Hangul Route</a><a href="#">Privacy</a><a href="#">Terms</a></div>
+  <div class="foot-tools"><select class="select" aria-label="Language"><option>English</option></select><button type="button" class="btn btn-small">Sign out</button></div>
+</div></footer>
+</div></div></div>
+<div class="board-item"><p class="board-label">/parent/space?id= · space kind still loading · last persona Family</p><p class="board-title">No option checked; the last persona's items, none highlighted (the row keeps its height and items)</p><div class="sample"><div class="frame">
+<header class="frame-top">
+  <div class="frame-bar has-switch">
+    <a class="brand" href="#"><span class="brand-mark" aria-hidden="true">HR</span><span class="brand-name">Hangul Route</span></a>
+    <div class="persona-switch" role="radiogroup" aria-label="Switch between Family and Teacher"><button type="button" role="radio" aria-checked="false" tabindex="0">Family</button><button type="button" role="radio" aria-checked="false" tabindex="-1">Teacher</button></div>
+    <a class="way-back" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Back to learning</span></a>
+    <select class="select wide-only" aria-label="Language"><option>English</option></select>
+    <button type="button" class="btn btn-quiet btn-small wide-only">Sign out</button>
+  </div>
+  <nav class="frame-nav" aria-label="Family"><ul class="nav-list"><li><a class="nav-item" href="#">Home</a></li><li><a class="nav-item" href="#">Reports</a></li><li><a class="nav-item" href="#">Notes</a></li><li><button type="button" class="nav-item">Lessons</button></li><li><a class="nav-item" href="#">Billing</a></li></ul></nav>
+</header>
+<main class="frame-main" id="content">
+<p class="annot">[ page content ]</p>
+</main>
+<footer class="frame-foot"><div class="frame-foot-inner">
+  <div class="foot-links"><a href="#">About Hangul Route</a><a href="#">Privacy</a><a href="#">Terms</a></div>
+  <div class="foot-tools"><select class="select" aria-label="Language"><option>English</option></select><button type="button" class="btn btn-small">Sign out</button></div>
+</div></footer>
+</div></div></div>
+<div class="board-item"><p class="board-label">Spaces fetch failed</p><p class="board-title">Name, the way back and Sign out only</p><div class="sample"><div class="frame">
+<header class="frame-top">
+  <div class="frame-bar">
+    <a class="brand" href="#"><span class="brand-mark" aria-hidden="true">HR</span><span class="brand-name">Hangul Route</span></a>
+    
+    <a class="way-back" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Back to learning</span></a>
+    <select class="select wide-only" aria-label="Language"><option>English</option></select>
+    <button type="button" class="btn btn-quiet btn-small wide-only">Sign out</button>
+  </div>
+  
+</header>
+<main class="frame-main" id="content">
+<div class="panel stack"><p>Can't reach the console right now.</p><button type="button" class="btn btn-small" style="align-self: flex-start">Try again</button></div>
+</main>
+<footer class="frame-foot"><div class="frame-foot-inner">
+  <div class="foot-links"><a href="#">About Hangul Route</a><a href="#">Privacy</a><a href="#">Terms</a></div>
+  <div class="foot-tools"><select class="select" aria-label="Language"><option>English</option></select><button type="button" class="btn btn-small">Sign out</button></div>
+</div></footer>
+</div></div></div></div></div>
+</body>
+</html>

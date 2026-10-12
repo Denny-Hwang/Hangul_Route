@@ -22,7 +22,7 @@ Panel A — signed out, `?persona=teacher`
 +------------------------------------------+
 | [< Back to learning]                     |  <- top-left, always -> learner app /
 |                                          |
-|  [hoya small]  title (placeholder)       |
+|  [brand mark]  title (placeholder)       |  <- no Hoya on grown-up pages (design pass D1)
 |  1 line: persona intro                   |  <- teacher: "see your classes"; family: "see your family's learning";
 |                                          |     no hint: neutral line
 |  +------------------------------------+  |
