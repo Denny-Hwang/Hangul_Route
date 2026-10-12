@@ -7,6 +7,24 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { siteMetadata } from '../../data/landing-copy';
 import { HIDDEN_LOCALE_ATTR, siteLocaleParams } from '../../lib/site-locales';
+// Every layout and page is imported here, once, and never with a dynamic import inside a test: loading a page
+// pulls in the whole landing graph (i18n dictionaries, content schema, design-system art), and inside a test body
+// that load counted against the 5 s test timeout, which a busy CI runner exceeded. Imported at the top, it runs
+// while the file is collected. The env-dependent checks below still hold: the layouts read the QA flags when
+// they render, not when they load.
+import * as consoleLayout from '../(console)/layout';
+import * as enAboutPage from '../(en)/about/page';
+import * as enLayout from '../(en)/layout';
+import * as enLandingPage from '../(en)/page';
+import * as enPrivacyPage from '../(en)/privacy/page';
+import * as enTermsPage from '../(en)/terms/page';
+import * as locAboutPage from '../(loc)/[locale]/about/page';
+import * as locLayout from '../(loc)/[locale]/layout';
+import * as locLandingPage from '../(loc)/[locale]/page';
+import * as locPrivacyPage from '../(loc)/[locale]/privacy/page';
+import * as locTermsPage from '../(loc)/[locale]/terms/page';
+import * as rootLayout from '../layout';
+import * as notFoundPage from '../not-found';
 
 /**
  * F-I18N-001 PR 11b, §3.4: the static export has no middleware, and the root layout cannot see a
@@ -43,8 +61,8 @@ type PageProps = { params: { locale: string } };
 const SITE_PAGES = ['page.tsx', join('about', 'page.tsx'), join('privacy', 'page.tsx'), join('terms', 'page.tsx')];
 
 describe('three route groups, each with its own document', () => {
-  it('the top layout carries the stylesheet and the site metadata, and renders no <html>', async () => {
-    const mod = (await import('../layout')) as { default: (p: LayoutProps) => unknown; metadata: unknown };
+  it('the top layout carries the stylesheet and the site metadata, and renders no <html>', () => {
+    const mod = rootLayout as { default: (p: LayoutProps) => unknown; metadata: unknown };
     expect(mod.default({ children: 'x' })).toBe('x');
     expect(mod.metadata).toBe(siteMetadata);
     expect(existsSync(join(appDir, 'page.tsx'))).toBe(false);
@@ -75,13 +93,15 @@ describe('three route groups, each with its own document', () => {
 });
 
 describe('<html lang> is right in the static HTML', () => {
-  it.each(['(en)', '(console)'])('%s renders lang="en"', async (group) => {
-    const mod = (await import(`../${group}/layout.tsx`)) as { default: (p: LayoutProps) => JSX.Element };
+  const GROUP_LAYOUTS = { '(en)': enLayout, '(console)': consoleLayout } as const;
+
+  it.each(Object.keys(GROUP_LAYOUTS) as Array<keyof typeof GROUP_LAYOUTS>)('%s renders lang="en"', (group) => {
+    const mod = GROUP_LAYOUTS[group] as { default: (p: LayoutProps) => JSX.Element };
     expect(renderToStaticMarkup(mod.default({ children: 'x' }))).toMatch(/^<html lang="en"><body style="[^"]+">x<\/body><\/html>$/);
   });
 
-  it('the 404 page is Next\'s own body in an English document', async () => {
-    const mod = (await import('../not-found')) as { default: () => JSX.Element };
+  it('the 404 page is Next\'s own body in an English document', () => {
+    const mod = notFoundPage as { default: () => JSX.Element };
     const html = renderToStaticMarkup(mod.default());
     expect(html).toMatch(/^<html lang="en"><body style="[^"]+">/);
     expect(html).toContain('This page could not be found.');
@@ -96,18 +116,18 @@ describe('<html lang> is right in the static HTML', () => {
     expect(readFileSync(join(appDir, 'not-found.tsx'), 'utf8')).toContain("from 'next/dist/client/components/not-found-error'");
   });
 
-  it('every document renders the same body', async () => {
-    const en = (await import('../(en)/layout')) as { default: (p: LayoutProps) => JSX.Element };
-    const loc = (await import('../(loc)/[locale]/layout')) as { default: (p: LayoutProps) => JSX.Element };
-    const con = (await import('../(console)/layout')) as { default: (p: LayoutProps) => JSX.Element };
+  it('every document renders the same body', () => {
+    const en = enLayout as { default: (p: LayoutProps) => JSX.Element };
+    const loc = locLayout as { default: (p: LayoutProps) => JSX.Element };
+    const con = consoleLayout as { default: (p: LayoutProps) => JSX.Element };
     const body = (html: string): string => html.replace(/^<html [^>]*>/, '');
     const enHtml = renderToStaticMarkup(en.default({ children: 'x' }));
     expect(body(renderToStaticMarkup(loc.default({ children: 'x', params: { locale: 'es' } })))).toBe(body(enHtml));
     expect(body(renderToStaticMarkup(con.default({ children: 'x' })))).toBe(body(enHtml));
   });
 
-  it.each(SITE_LOCALES)('(loc)/[locale] renders lang="%s", marked hidden while it has not shipped', async (locale) => {
-    const mod = (await import('../(loc)/[locale]/layout')) as { default: (p: LayoutProps) => JSX.Element };
+  it.each(SITE_LOCALES)('(loc)/[locale] renders lang="%s", marked hidden while it has not shipped', (locale) => {
+    const mod = locLayout as { default: (p: LayoutProps) => JSX.Element };
     expect(renderToStaticMarkup(mod.default({ children: 'x', params: { locale } }))).toMatch(
       new RegExp(`^<html lang="${locale}" ${HIDDEN_LOCALE_ATTR}="${locale}">`),
     );
@@ -121,47 +141,47 @@ describe('/es and /ko are prerendered but hidden until shipped', () => {
     generateMetadata: (p: { params: { locale: string } }) => { robots?: unknown };
   };
 
-  it('renders every site locale and nothing else (Next refuses an empty list under output: export)', async () => {
-    const mod = (await import('../(loc)/[locale]/layout')) as LocaleLayoutModule;
+  it('renders every site locale and nothing else (Next refuses an empty list under output: export)', () => {
+    const mod = locLayout as LocaleLayoutModule;
     expect(mod.dynamicParams).toBe(false);
     expect(mod.generateStaticParams()).toEqual([{ locale: 'es' }, { locale: 'ko' }]);
   });
 
-  it('a hidden locale is noindex, on top of the site metadata', async () => {
-    const mod = (await import('../(loc)/[locale]/layout')) as LocaleLayoutModule;
+  it('a hidden locale is noindex, on top of the site metadata', () => {
+    const mod = locLayout as LocaleLayoutModule;
     expect(mod.generateMetadata({ params: { locale: 'es' } })).toEqual({ robots: { index: false, follow: false } });
   });
 
-  it.each(SITE_LOCALES)('a QA build (NEXT_PUBLIC_SHOW_ALL_LOCALES=1) shows %s: no marker, no noindex', async (locale) => {
+  it.each(SITE_LOCALES)('a QA build (NEXT_PUBLIC_SHOW_ALL_LOCALES=1) shows %s: no marker, no noindex', (locale) => {
     vi.stubEnv('NEXT_PUBLIC_SHOW_ALL_LOCALES', '1');
-    const mod = (await import('../(loc)/[locale]/layout')) as LocaleLayoutModule & { default: (p: LayoutProps) => JSX.Element };
+    const mod = locLayout as LocaleLayoutModule & { default: (p: LayoutProps) => JSX.Element };
     expect(renderToStaticMarkup(mod.default({ children: 'x', params: { locale } }))).toMatch(new RegExp(`^<html lang="${locale}"><body `));
     expect(mod.generateMetadata({ params: { locale } })).toEqual({});
   });
 
-  it.each(SITE_LOCALES)('the learner app flag (EXPO_PUBLIC_SHOW_ALL_LOCALES=1) alone keeps %s hidden', async (locale) => {
+  it.each(SITE_LOCALES)('the learner app flag (EXPO_PUBLIC_SHOW_ALL_LOCALES=1) alone keeps %s hidden', (locale) => {
     vi.stubEnv('EXPO_PUBLIC_SHOW_ALL_LOCALES', '1');
-    const mod = (await import('../(loc)/[locale]/layout')) as LocaleLayoutModule & { default: (p: LayoutProps) => JSX.Element };
+    const mod = locLayout as LocaleLayoutModule & { default: (p: LayoutProps) => JSX.Element };
     expect(renderToStaticMarkup(mod.default({ children: 'x', params: { locale } }))).toContain(`${HIDDEN_LOCALE_ATTR}="${locale}"`);
     expect(mod.generateMetadata({ params: { locale } })).toEqual({ robots: { index: false, follow: false } });
   });
 
-  it('a locale that is not a site locale is a 404 in the layout, never an English copy', async () => {
-    const layout = (await import('../(loc)/[locale]/layout')) as { default: (p: LayoutProps) => JSX.Element };
+  it('a locale that is not a site locale is a 404 in the layout, never an English copy', () => {
+    const layout = locLayout as { default: (p: LayoutProps) => JSX.Element };
     for (const locale of ['en', 'fr']) {
       expect(() => layout.default({ children: 'x', params: { locale } })).toThrow('NEXT_NOT_FOUND');
     }
   });
 
   const LOCALE_PAGES = {
-    page: () => import('../(loc)/[locale]/page'),
-    'about/page': () => import('../(loc)/[locale]/about/page'),
-    'privacy/page': () => import('../(loc)/[locale]/privacy/page'),
-    'terms/page': () => import('../(loc)/[locale]/terms/page'),
+    page: locLandingPage,
+    'about/page': locAboutPage,
+    'privacy/page': locPrivacyPage,
+    'terms/page': locTermsPage,
   } as const;
 
-  it.each(Object.keys(LOCALE_PAGES) as Array<keyof typeof LOCALE_PAGES>)('(loc)/[locale]/%s is a 404 for a locale that is not a site locale', async (page) => {
-    const mod = (await LOCALE_PAGES[page]()) as { default: (p: PageProps) => JSX.Element };
+  it.each(Object.keys(LOCALE_PAGES) as Array<keyof typeof LOCALE_PAGES>)('(loc)/[locale]/%s is a 404 for a locale that is not a site locale', (page) => {
+    const mod = LOCALE_PAGES[page] as { default: (p: PageProps) => JSX.Element };
     for (const locale of ['en', 'fr']) {
       expect(() => mod.default({ params: { locale } })).toThrow('NEXT_NOT_FOUND');
     }
@@ -170,20 +190,20 @@ describe('/es and /ko are prerendered but hidden until shipped', () => {
 
 describe('locale pages are the English pages with locale links', () => {
   const pages = [
-    ['landing', '../(en)/page', '../(loc)/[locale]/page'],
-    ['about', '../(en)/about/page', '../(loc)/[locale]/about/page'],
-    ['privacy', '../(en)/privacy/page', '../(loc)/[locale]/privacy/page'],
-    ['terms', '../(en)/terms/page', '../(loc)/[locale]/terms/page'],
+    ['landing', enLandingPage, locLandingPage],
+    ['about', enAboutPage, locAboutPage],
+    ['privacy', enPrivacyPage, locPrivacyPage],
+    ['terms', enTermsPage, locTermsPage],
   ] as const;
 
   const hrefs = (html: string): string[] => [...html.matchAll(/href="([^"]*)"/g)].map((m) => m[1] ?? '');
 
   // The same-words half is temporary: the es and ko overlays are empty until PRs 15 and 16, so each locale
   // falls back to English. When an overlay gets content, replace it with a check of that locale's words.
-  for (const [name, enPath, locPath] of pages) {
-    it.each(SITE_LOCALES)(`${name}: /%s renders the same words (it falls back to English) with locale links`, async (locale) => {
-      const en = (await import(enPath)) as { default: () => JSX.Element };
-      const loc = (await import(locPath)) as { default: (p: PageProps) => JSX.Element };
+  for (const [name, enPage, locPage] of pages) {
+    it.each(SITE_LOCALES)(`${name}: /%s renders the same words (it falls back to English) with locale links`, (locale) => {
+      const en = enPage as { default: () => JSX.Element };
+      const loc = locPage as { default: (p: PageProps) => JSX.Element };
       const enHtml = renderToStaticMarkup(en.default());
       const locHtml = renderToStaticMarkup(loc.default({ params: { locale } }));
       // "Play now" carries the locale to the learner app (`?lang=`, PR 11c).
