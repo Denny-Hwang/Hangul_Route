@@ -153,7 +153,7 @@ export type WallTileView =
       pictureRef: string;
       /** The meaning in the UI language: the picture's text fallback and part of the name. */
       gloss: string;
-      /** "Korean: 사과, sagwa, apple". */
+      /** "Korean: <word>, <romanization>, <meaning>", e.g. the word for apple, "sagwa", "apple". */
       accessibilityLabel: string;
     }
   | {
