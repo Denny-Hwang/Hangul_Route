@@ -12,6 +12,8 @@
 //   (build:web:fixtures) never runs this step.
 // - The console build gets NEXT_PUBLIC_API_BASE_URL from EXPO_PUBLIC_API_BASE_URL when it has none of its
 //   own; NEXT_PUBLIC_APP_URL keeps the console default (https://app.hangulroute.com, lib/console/config.ts).
+// - The console build always gets NEXT_PUBLIC_CONSOLE_DEV_AUTH=false: the dev sign-in form (bearer = account
+//   id) never ships on the learner origin, even if the variable is copied from hangul-route-web.
 // - Fails the build, before writing anything, if a console file would land on a path that already exists
 //   in dist (collision guard), is neither a grown-up path nor under `_next/`, or is `index.html`.
 // - Appends the grown-up `_headers` block (section 3.17), generated from GROWN_UP_PREFIXES.
@@ -39,11 +41,13 @@ const blank = (value) => value === undefined || value.trim() === '';
 
 /**
  * The environment of the console build: the build's own, plus the learner build's API base when the
- * console has none (section 3.3), so owner step S-1 only adds the Clerk key. Never changes its input.
+ * console has none (section 3.3), so owner step S-1 only adds the Clerk key. The dev sign-in form is
+ * always off (`NEXT_PUBLIC_CONSOLE_DEV_AUTH=false`): the app host shares its origin with the learner
+ * app, so a dev-auth flag copied from hangul-route-web must never reach it. Never changes its input.
  * @param {Record<string, string | undefined>} env
  */
 export function consoleBuildEnv(env) {
-  const out = { ...env };
+  const out = { ...env, NEXT_PUBLIC_CONSOLE_DEV_AUTH: 'false' };
   if (blank(env.NEXT_PUBLIC_API_BASE_URL) && !blank(env.EXPO_PUBLIC_API_BASE_URL)) {
     out.NEXT_PUBLIC_API_BASE_URL = env.EXPO_PUBLIC_API_BASE_URL;
   }

@@ -243,6 +243,14 @@ describe('consoleBuildEnv (API base pass-through, section 3.3)', () => {
     expect(env.NEXT_PUBLIC_LECTURE_MODE).toBe('enabled');
     expect('NEXT_PUBLIC_API_BASE_URL' in input).toBe(false);
   });
+
+  it('always builds the app-host console without the dev sign-in form, whatever the build variables say', () => {
+    for (const value of ['true', 'TRUE', '1', 'false', undefined]) {
+      const input = { NEXT_PUBLIC_CONSOLE_DEV_AUTH: value };
+      expect(consoleBuildEnv(input).NEXT_PUBLIC_CONSOLE_DEV_AUTH).toBe('false');
+      expect(input.NEXT_PUBLIC_CONSOLE_DEV_AUTH).toBe(value);
+    }
+  });
 });
 
 describe('pnpmInvocation', () => {
