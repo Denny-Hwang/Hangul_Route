@@ -37,6 +37,14 @@ Then: one control opens All lessons at that lesson in the same tab, [ Close ] br
 │                           [ Plan ] [Preview] │   action slot: Preview -> item (quest target)
 ```
 
+In-app report (RP-9, behind the PIN, web only): no chip links and no Preview in a line; one row after the Practice next lines (F-REPORT-001 section 3.9, `design/screens/reports/in-app-report.md`):
+
+```
+│ Practice next                                │
+│  ㅂ (b) and ㅅ (s): worth another visit.      │   letters stay plain (tiles expand in More detail)
+│ [ Preview lessons ]                          │   -> gate hand-off, stage of journey.here: /browse#t=stage:stage1&s=gate
+```
+
 ### 3. Learning Route summary page (adult shell, LR-8) and in-app read-only page (R-9b, behind the PIN)
 
 ```
@@ -73,7 +81,7 @@ Then: one control opens All lessons at that lesson in the same tab, [ Close ] br
 - Console entries (1-5) -> `openBrowse(target, source)`: read the account scope (cached), write the tab's pass, `location.assign('/browse#t=…&s=…')` in the same tab
 - Scope check failed -> no navigation; [ Try again ] re-checks; [ Open free lessons ] opens with a 1-hour free-lessons pass
 - Browser storage blocked -> no navigation; one line "Your browser blocked this page's storage, so lessons cannot open here."
-- Gate entry (6) -> writes the gate pass (15 idle minutes) and `location.assign('/browse#s=gate')`
+- Gate entry (6) -> writes the gate pass (15 idle minutes) and `location.assign('/browse#s=gate')`; the in-app [ Preview lessons ] rows (in-app report, R-9b page) write the same gate pass and add their stage target: `/browse#t=stage:<key>&s=gate` (F-BROWSE-001 section 4.3, `openBrowseFromGate(target?)`)
 - No entry shows a price, "Premium" or a lock; a free account sees the same controls
 
 ## Navigation graph
