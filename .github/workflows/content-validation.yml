@@ -36,6 +36,8 @@ on:
       # F-TCH-004 PR 10: lecture catalogue mirror (stories and vocabulary topics for the console)
       - "scripts/build-lecture-catalogue.mjs"
       - "apps/web/src/data/lecture-catalogue.generated.ts"
+      # F-STORY-001 PR 1.5: story version rules
+      - "scripts/check-story-versions.mjs"
 
 # F-I18N-001 §3.10: overlay locales whose missing translations are errors (comma list, e.g. "es").
 # Add a locale here in the PR that flips its LOCALE_STATUS to 'shipped'; scripts/i18n-status.mjs
@@ -56,6 +58,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # F-STORY-001 §3.7: check-story-versions.mjs compares each story with origin/main.
+          fetch-depth: 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -101,3 +106,6 @@ jobs:
 
       - name: Lecture catalogue is up to date (F-TCH-004)
         run: node scripts/build-lecture-catalogue.mjs --check
+
+      - name: Story versions are raised (F-STORY-001 §3.7)
+        run: node scripts/check-story-versions.mjs --base origin/main
