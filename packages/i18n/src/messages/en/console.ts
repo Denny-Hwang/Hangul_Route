@@ -38,6 +38,12 @@ const planTargets = (kind: 'family' | 'class' | 'school', n: number): string =>
     : kind === 'class'
       ? plural('en', n, { one: `${n} student`, other: `${n} students` })
       : plural('en', n, { one: `${n} member`, other: `${n} members` });
+/** "3 more lessons open with a Group License. They are left out of this plan." (F-ENT-003 section 3.9.3). */
+const leftOut = (n: number, product: string): string =>
+  plural('en', n, {
+    one: `${n} more lesson opens with ${product}. It is left out of this plan.`,
+    other: `${n} more lessons open with ${product}. They are left out of this plan.`,
+  });
 
 export const consoleMsgs = {
   whySignIn: ['Keep progress safe across devices', 'Bring cards back after a reinstall', 'Manage plans and billing'],
@@ -779,6 +785,34 @@ export const consoleMsgs = {
     catalog: {
       comingSoon: (title: string) => `${title} (coming soon)`,
     },
+    /**
+     * The wizard preview of an unlicensed space while the free-plan switch is on (F-ENT-003
+     * section 3.9.3, wireframe console/curriculum-free-days; `NEXT_PUBLIC_CONTENT_GATING_ENABLED`).
+     * `warning` replaces `preview.warnings.premium` with the weeks that hold lessons (`first` is
+     * week 1 unless days off open the plan); `product` is `console.access.product.*`.
+     * `warningNoLessons` is the same line when nothing open is scheduled (the wireframe's empty
+     * state). `shortPlan` when stories follow the last lesson week, `shortPlanPractice` when
+     * only practice, review or days off do. Never "day": the free plan is lessons, not time.
+     */
+    freeDays: {
+      warning: (first: number, last: number, n: number, product: string) =>
+        `The free plan covers Stage 1 (${first === last ? `lessons in week ${first}` : `lessons in weeks ${first} to ${last}`}). ${leftOut(n, product)}`,
+      warningNoLessons: (n: number, product: string) => `The free plan covers Stage 1. ${leftOut(n, product)}`,
+      shortPlan: (lastWeek: number) => `This plan has lessons until week ${lastWeek}. After that it has stories and practice.`,
+      shortPlanPractice: (lastWeek: number) => `This plan has lessons until week ${lastWeek}. After that it has practice.`,
+      useWeeks: { cta: (weeks: number) => plural('en', weeks, { one: `Use ${weeks} week`, other: `Use ${weeks} weeks` }) },
+      /** Appended to the short-plan line when coming-soon episodes sit after the last lesson week. */
+      shortPlanSoon: 'Episodes that are not released yet are listed there as well.',
+      /** The left-out line while the switch is on and this viewer cannot tell whether a plan covers the space (section 3.11's neutral product words; no billing link). */
+      warningNeutral: (n: number) => leftOut(n, 'the Family Plan or a Group License'),
+      /** Replaces `preview.warnings.comingSoon` when `closed` of the `n` coming-soon episodes are past Stage 1: those open with `product` once released, not on their dates. */
+      comingSoon: (n: number, closed: number, product: string) =>
+        `${plural('en', n, { one: '1 episode is not released yet.', other: `${n} episodes are not released yet.` })} ${
+          closed >= n
+            ? plural('en', n, { one: `It is past Stage 1 and opens with ${product} once it is released.`, other: `They are past Stage 1 and open with ${product} once they are released.` })
+            : `${plural('en', closed, { one: `1 of them is past Stage 1 and opens with ${product} once released.`, other: `${closed} of them are past Stage 1 and open with ${product} once released.` })} The others start on their dates once they are released.`
+        }`,
+    },
   },
   /**
    * The roster's level-check line and the advisory hand-off (F-PLC-001 section 3.9, wireframe
@@ -1183,5 +1217,19 @@ export const consoleMsgs = {
     noPin: 'Set a grown-up PIN in the app, or sign in again.',
     pinRenew: 'To use the grown-up PIN here, set it again in the app, then sign in once.',
     signInOnly: 'Sign in again to open grown-up pages on this device.',
+  },
+  /**
+   * The free-plan words of grown-up console surfaces (F-ENT-003 section 3.11 glossary): the
+   * product that opens Stage 2 and later, named by space kind (a family space -> the Family Plan,
+   * which renews yearly [BY]; a class or school -> a Group License), and the link to the
+   * console's Billing route. No price, no "Premium"; the link is F-BILL-002's **Open billing**,
+   * never "See plans".
+   */
+  access: {
+    product: {
+      family: 'the Family Plan',
+      class: 'a Group License',
+    },
+    openBilling: { cta: 'Open billing' },
   },
 } as const;

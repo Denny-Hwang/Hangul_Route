@@ -44,6 +44,8 @@ Then: the plan holds only lessons that will open for these learners (all of Stag
 +------------------------------------------------------+
 ```
 
+- The warning names the weeks that hold lessons: "lessons in weeks {first} to {last}" ({first} is week 1 unless days off open the plan; "lessons in week {n}" for one week). **Open billing** follows for a class and a family alike.
+- The short-plan line says "After that it has practice." when no story follows the last lesson week.
 - Drawn: a free class, 12 weeks, 2 sessions a week, today's catalogue (11 Stage 1 lessons; `stage2-life`, `stage2-nature` and `stage4-rites` left out). Numbers come from the draft (the `premium-needed` count, the last week with a lesson); never typed.
 - `( [ Use {weeks} weeks ] )` shows only when a shorter length preset holds every lesson: not for this class today (4 weeks at 2 sessions hold 8 of the 11 lessons); 4 weeks for a family at 3 sessions a week.
 - A licensed space never sees the warning (nothing is left out).
@@ -68,8 +70,10 @@ Exit to: roster page (after publish) · billing · back to the previous wizard s
 - **Unlicensed, switch on, plan fits** (for example 4 weeks): warning only, no short-plan line.
 - **Licensed**: no warning, no short-plan line; all ready lessons scheduled.
 - **Switch off**: today's behaviour.
-- **Empty** (nothing open to schedule): the existing `content-runs-out` / free-practice weeks; the warning still states the left-out count.
-- **Error** (entitlements request fails): today's error state; the wizard treats the space as unlicensed for the preview (fail safe for publishing: nothing scheduled that will not open).
+- **Coverage unknown, switch on** (a co-teacher, a co-caregiver, a class in a school someone else owns): the left-out line in neutral words, "{n} more lessons open with the Family Plan or a Group License. They are left out of this plan.", no link, no short-plan line. Only the owner who can see every entitlement that could cover the space reads the free-plan words (F-ENT-003 section 3.9.3).
+- **Coming-soon placeholders past Stage 1** (switch on, uncovered): the coming-soon line says they open with {product} once released, not on their dates; the short-plan line adds "Episodes that are not released yet are listed there as well." when they sit after the last lesson week (OD-14).
+- **Empty** (nothing open to schedule): the existing `content-runs-out` / free-practice weeks; the warning still states the left-out count ("The free plan covers Stage 1. {n} more lessons open with {product}. ...").
+- **Error** (entitlements or spaces request fails): the generator plans Stage 1 only, as today (fail safe for publishing: nothing scheduled that will not open); the coverage is unknown, so the preview shows the neutral left-out line with no link, never a claimed limit it cannot confirm.
 
 ## Accessibility
 
