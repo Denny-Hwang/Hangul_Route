@@ -143,6 +143,17 @@ describe('formatUsd', () => {
     expect(formatUsd('en', 153)).toBe('$153');
   });
 
+  it("takes the fraction digits from Stripe's minor units, not from Intl's CLDR data", () => {
+    // Intl reports 0 digits for these; Stripe stores them two-decimal.
+    expect(formatMinorAmount('en', 500000, 'huf')).toMatch(/^HUF\s5,000\.00$/);
+    expect(formatMinorAmount('en', 150000, 'isk')).toMatch(/^ISK\s1,500\.00$/);
+    expect(formatMinorAmount('en', 5000000, 'cop')).toMatch(/^COP\s50,000\.00$/);
+    // Stripe's three-decimal currencies.
+    expect(formatMinorAmount('en', 1234, 'kwd')).toMatch(/^KWD\s1\.234$/);
+    // Any other well-formed code Intl accepts is two-decimal.
+    expect(formatMinorAmount('en', 1234, 'xyz')).toContain('12.34');
+  });
+
   it('is localised for es and ko and always mentions the amount', () => {
     expect(formatUsd('es', 15.3)).toContain('15');
     expect(formatUsd('ko', 153)).toContain('153');
@@ -188,6 +199,8 @@ describe('formatMinorAmount (F-BILL-002 receipts: Stripe minor units)', () => {
     expect(formatMinorAmount('es', 20000, 'krw')).toBe('20,000 KRW');
     expect(formatMinorAmount('en', -500, 'usd')).toBe('-$5.00');
     expect(formatMinorAmount('en', -500, 'gbp')).toBe('-5.00 GBP');
+    expect(formatMinorAmount('en', 500000, 'huf')).toBe('5,000.00 HUF');
+    expect(formatMinorAmount('en', 1234, 'kwd')).toBe('1.234 KWD');
   });
 });
 

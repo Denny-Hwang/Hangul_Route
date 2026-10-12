@@ -70,11 +70,17 @@ describe('readCheckoutReturn: the query Stripe sends back', () => {
     expect(readCheckoutReturn('?id=space%3Afam')).toBeNull();
   });
 
-  it('removes checkout, plan and id from the query and keeps everything else (history.replaceState)', () => {
+  it('removes checkout, plan and id from a return query and keeps everything else (history.replaceState)', () => {
     expect(cleanedReturnSearch('?checkout=success&plan=family_lifetime&id=space%3Afam')).toBe('');
     expect(cleanedReturnSearch('?lang=ko&checkout=cancel')).toBe('?lang=ko');
-    expect(cleanedReturnSearch('?a=1&id=space%3Afam&b=2')).toBe('?a=1&b=2');
+    expect(cleanedReturnSearch('?a=1&checkout=success&plan=family_lifetime&id=space%3Afam&b=2')).toBe('?a=1&b=2');
     expect(cleanedReturnSearch('')).toBe('');
+  });
+
+  it('leaves a query that is not a checkout return as it is (a page that uses ?id= keeps it)', () => {
+    expect(cleanedReturnSearch('?id=space%3Afam')).toBe('?id=space%3Afam');
+    expect(cleanedReturnSearch('?a=1&id=space%3Afam&plan=family_lifetime')).toBe('?a=1&id=space%3Afam&plan=family_lifetime');
+    expect(cleanedReturnSearch('?checkout=maybe&id=space%3Afam')).toBe('?checkout=maybe&id=space%3Afam');
   });
 });
 
@@ -132,6 +138,17 @@ describe('returnStep: checking → done / still processing', () => {
     expect(again).toEqual({ phase: 'checking', target: { plan: 'family_lifetime', spaceId: 'space:fam' }, attempts: 0 });
     expect(run(again, Array.from({ length: CHECKOUT_POLL_MAX - 1 }, () => polled([card()]))).phase).toBe('checking');
     expect(run(again, tenNotYet).phase).toBe('stillProcessing');
+  });
+
+  it('a later summary that shows the plan active ends still processing (the page reloads on online or after an action)', () => {
+    const late = run(start, Array.from({ length: CHECKOUT_POLL_MAX }, () => polled([card()])));
+    expect(late.phase).toBe('stillProcessing');
+    const done = returnStep(late, polled([active({ usage: { learners: 0, learnerCap: 5, teachers: null, teacherCap: null } })]), now);
+    expect(done).toEqual({ phase: 'done', target: { plan: 'family_lifetime', spaceId: 'space:fam' }, nextStep: 'connectLearner' });
+    expect(busyCardId(done)).toBeNull();
+    expect(returnNotice(done, 'en')?.text).toBe(b.done);
+    // Not active yet: no change, and no attempt is counted.
+    expect(returnStep(late, polled([card()]), now)).toBe(late);
   });
 
   it('offline pauses without using attempts, and resumes on online', () => {

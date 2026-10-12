@@ -55,10 +55,15 @@ export function readCheckoutReturn(search: string | URLSearchParams): CheckoutRe
   return plan.success && SPACE_ID.test(spaceId) ? { kind: 'success', plan: plan.data, spaceId } : { kind: 'successUnknown' };
 }
 
-/** The query without `checkout`, `plan` and `id`, so a refresh or a copied URL does not repeat the notice. */
+/**
+ * The query without `checkout`, `plan` and `id`, so a refresh or a copied URL does not repeat the
+ * notice. Only a checkout return (`checkout=success` or `checkout=cancel`) is cleaned: any other
+ * query, such as a page's own `?id=`, is kept as it is.
+ */
 export function cleanedReturnSearch(search: string): string {
   const params = new URLSearchParams(search);
-  for (const key of RETURN_KEYS) params.delete(key);
+  const checkout = params.get('checkout');
+  if (checkout === 'success' || checkout === 'cancel') for (const key of RETURN_KEYS) params.delete(key);
   const rest = params.toString();
   return rest ? `?${rest}` : '';
 }
@@ -90,10 +95,10 @@ export function returnStep(state: ReturnState, event: ReturnEvent, now: Date): R
   const attempts = 'attempts' in state ? state.attempts : 0;
   switch (event.type) {
     case 'polled': {
-      if (state.phase === 'stillProcessing') return state;
       // An older return knows nothing to wait for: one successful reload is enough.
       if (!target || boughtPlanActive(event.summary, target, now)) return { phase: 'done', target, nextStep: nextStepFor(event.summary, target) };
-      // A late result while paused shows the plan if it landed, but uses no attempt.
+      // A late result while paused or still processing (the page reloads on `online` and after an
+      // action) shows the plan if it landed, but uses no attempt.
       if (state.phase !== 'checking') return state;
       const used = attempts + 1;
       return used >= CHECKOUT_POLL_MAX ? { phase: 'stillProcessing', target } : { phase: 'checking', target, attempts: used };

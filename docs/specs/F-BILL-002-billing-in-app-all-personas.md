@@ -393,6 +393,7 @@ All strings in `packages/i18n` (F-I18N-001). English is written in this spec's P
 | `sections.yours` / `.add` / `.help` | Your plans / Add a plan / Help |
 | `kind.family` / `.class` / `.school` | Family / Class / School |
 | `archived` | (archived) |
+| `accountCard.title` | Your account (the heading of a legacy account-subject card, section 4.2; added in the B-7 review fix) |
 | `coverage.free` | Free plan |
 | `coverage.family` | Family Plan ([BY]; was `coverage.lifetime` "Family Lifetime · yours for good") |
 | `coverage.license` | Group License |
@@ -727,3 +728,5 @@ Assumptions this spec relies on (and what happens if they change):
 | Locked tiles PIN-gate a status-only screen | Recorded as amendment F4 for F-ENT-003 E3-8; no change in B-9 (§4.7 allows it). |
 | Button hint node used the deprecated `nativeID` on the web | Applied: the web branch passes `id`. |
 | Plan screen e2e ran only at 375 and 320 px | Applied: one 1280 x 800 case (status only, Open billing's accessible description, no sideways scroll). |
+| B-7 review (PR #426): `formatMinorAmount` took fraction digits from Intl's CLDR data, which differs from Stripe's minor unit for HUF, ISK, COP and others | Applied: Stripe's zero-decimal and three-decimal tables decide the digits; usd receipt amounts go through `formatUsd` as section 4.10 says. |
+| B-7 review: past-due note after the grace, test mode with `purchasesOpen: false`, Contact rows by kind, `stillProcessing` ignoring a later summary, `cleanedReturnSearch` stripping a page's own `?id=`, an all-dropped summary showing the empty state, an unchecked receipt link, the lowercase account heading | Applied: the note shows only inside the grace week; buttons follow section 4.3 item 2 (off only for `none` and closed `live`); Contact rows follow `actions.contact`; a later active summary ends `stillProcessing`; only a `checkout=success\|cancel` query is cleaned; a summary whose every row is unreadable is `unreadable_summary`; `receiptLink` accepts only an `https:` URL; `accountCard.title` added. |

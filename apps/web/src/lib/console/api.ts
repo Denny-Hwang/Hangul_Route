@@ -190,6 +190,22 @@ function readableReceipts(rows: readonly unknown[]): ReceiptView[] {
   });
 }
 
+/** How many rows a raw summary sent, before the lenient read dropped any (an array or nothing). */
+function rawRows(raw: unknown, key: 'cards' | 'account'): number {
+  const rows = raw && typeof raw === 'object' ? (raw as Record<string, unknown>)[key] : undefined;
+  return Array.isArray(rows) ? rows.length : 0;
+}
+
+/** Only an https link is ever navigated to: the page opens it in a tab that shares the app origin (section 4.10). */
+function isHttpsUrl(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  try {
+    return new URL(value).protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 function mapError(status: number): ApiError {
   if (status === 401) return 'unauthorized';
   if (status === 403) return 'forbidden';
@@ -271,7 +287,11 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
       call<unknown>(`${billing}/summary${options.poll ? '?poll=1' : ''}`, { method: 'GET' }, [200]).then((r) => {
         if (!r.ok) return r;
         const summary = parseBillingSummary(r.data);
-        return summary ? { ok: true as const, data: summary } : { ok: false as const, error: 'unknown' as const, status: 200, code: 'unreadable_summary' };
+        // Every row dropped (a newer Worker): not the "no spaces yet" empty state, which would
+        // send an owner who already pays to set up a second family or class.
+        const sent = rawRows(r.data, 'cards') + rawRows(r.data, 'account');
+        const allDropped = summary !== null && sent > 0 && summary.cards.length + summary.account.length === 0;
+        return summary && !allDropped ? { ok: true as const, data: summary } : { ok: false as const, error: 'unknown' as const, status: 200, code: 'unreadable_summary' };
       }),
     /** One space's receipts (payers only); a row this build cannot read is dropped, its siblings stay. */
     receipts: (spaceId: string): Promise<ApiResult<ReceiptsView>> =>
@@ -282,7 +302,12 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
         return { ok: true as const, data: { spaceName, receipts: readableReceipts(receipts) } };
       }),
     /** A fresh Stripe receipt or invoice link for one row; step-up and the live guard apply (B-4, B-5). */
-    receiptLink: (id: string) => call<{ url: string }>(`${billing}/receipt-link`, { method: 'POST', body: JSON.stringify({ id }) }, [200]),
+    receiptLink: (id: string): Promise<ApiResult<{ url: string }>> =>
+      call<{ url?: unknown }>(`${billing}/receipt-link`, { method: 'POST', body: JSON.stringify({ id }) }, [200]).then((r) => {
+        if (!r.ok) return r;
+        const { url } = r.data;
+        return isHttpsUrl(url) ? { ok: true as const, data: { url } } : { ok: false as const, error: 'unknown' as const, status: 200, code: 'unreadable_link' };
+      }),
   };
 }
 

@@ -18,7 +18,7 @@ import {
   type SpaceKind,
   type Usage,
 } from '@hangul-route/content-schema';
-import { DEFAULT_LOCALE, formatDate, formatMinorAmount, getMessages, type UiLocale } from '@hangul-route/i18n';
+import { DEFAULT_LOCALE, formatDate, formatMinorAmount, formatUsd, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { CONTACT_EMAIL } from '../../data/contact';
 import { SITE_CLAIMS, type SiteClaims } from '../../data/site-claims';
 import { planPrice, planTitle, promoPriceLine } from './billing';
@@ -121,7 +121,7 @@ export interface BillingHomeView {
   banner: string | null;
   /** Buy and manage buttons work (test mode, or live and opened by the owner). */
   actionsEnabled: boolean;
-  /** One neutral note above the cards while a payer card is past due. */
+  /** One neutral note above the cards while a payer card is past due and still inside its grace week. */
   pastDueNote: string | null;
   cards: BillingCardView[];
   accountCards: BillingAccountCardView[];
@@ -193,8 +193,8 @@ export function receiptRow(r: ReceiptView, locale: UiLocale = DEFAULT_LOCALE): R
     kind: receipts.kind[r.kind],
     // A legacy one-time sandbox row shows the plan name only (BY-D9).
     plan: planTitle(r.planKey, locale),
-    // Stripe's minor unit in the currency's own fraction digits, never a fixed / 100 (section 4.10).
-    amount: formatMinorAmount(locale, r.amountCents, r.currency),
+    // usd like every other price on the page (formatUsd); any other currency in Stripe's own minor unit (section 4.10).
+    amount: r.currency.toLowerCase() === 'usd' ? formatUsd(locale, r.amountCents / 100) : formatMinorAmount(locale, r.amountCents, r.currency),
     testPill: r.livemode ? null : receipts.test.pill,
     hasReceipt: r.hasReceipt,
     viewLabel: receipts.view.cta,
@@ -212,6 +212,11 @@ function ownCovers(c: OwnCoverage, now: Date): boolean {
   if (c.status === 'cancelled') return future === true;
   if (c.status === 'past_due') return Date.parse(c.statusSince) + PAST_DUE_GRACE_MS > t;
   return false;
+}
+
+/** A past-due plan still inside its grace week: the only time the note's "keep the full route for a week" holds (section 4.6). */
+function pastDueInGrace(c: Coverage, now: Date): boolean {
+  return c.state === 'own' && c.status === 'past_due' && ownCovers(c, now);
 }
 
 function ownPlanLine(planKey: PlanKey, locale: UiLocale): string {
@@ -310,7 +315,7 @@ function cardView(card: BillingSpaceCard, offer: BillingOfferView | null, now: D
 function accountCardView(card: BillingAccountCard, now: Date, locale: UiLocale): BillingAccountCardView {
   const lines = coverageLines(card.coverage, now, locale);
   return {
-    heading: getMessages(locale).console.billing.yourAccount,
+    heading: getMessages(locale).console.billing.accountCard.title,
     plan: lines.plan,
     status: lines.status,
     pastDue: lines.pastDue,
@@ -349,12 +354,13 @@ export function billingHomeView(summary: BillingSummary, options: BillingHomeOpt
       ? {
           offers: buyers.map((card, i) => ({ ...offerFor(card, buyable(card) as PurchasablePlanKey, false, locale, claims, promo), primary: i === 0 })),
           contact: buyers
-            .filter((card) => card.kind === 'school')
+            // The server's contact action, the same flag the card's own Contact us button reads.
+            .filter((card) => card.actions.contact)
             .map((card) => ({ spaceId: card.spaceId, title: billing.buy.forSpace(planTitle('school_seat', locale), card.name), cta: billing.contact.cta, href: contactHref(locale) })),
         }
       : null;
 
-  const pastDue = cards.some((c) => c.payer && c.pastDue) || accountCards.some((c) => c.pastDue);
+  const pastDue = summary.cards.some((c) => c.payer && pastDueInGrace(c.coverage, now)) || summary.account.some((c) => pastDueInGrace(c.coverage, now));
   const empty =
     summary.cards.length === 0 && summary.account.length === 0
       ? {
@@ -366,7 +372,8 @@ export function billingHomeView(summary: BillingSummary, options: BillingHomeOpt
 
   return {
     banner: bannerFor(summary, locale),
-    actionsEnabled: summary.mode !== 'none' && summary.purchasesOpen,
+    // Section 4.3 item 2: off with no key, and in live mode until the owner opens purchases; test mode always works.
+    actionsEnabled: summary.mode === 'test' || (summary.mode === 'live' && summary.purchasesOpen),
     pastDueNote: pastDue ? billing.pastDue : null,
     cards,
     accountCards,

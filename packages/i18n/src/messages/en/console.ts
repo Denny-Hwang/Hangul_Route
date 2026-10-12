@@ -470,6 +470,8 @@ export const consoleMsgs = {
     /** The kind half of a card heading ("Family · <space name>"). */
     kind: { family: 'Family', class: 'Class', school: 'School' },
     archived: '(archived)',
+    /** The heading of a legacy account-subject card (section 4.2). */
+    accountCard: { title: 'Your account' },
     /** The plan line of a card. */
     coverage: {
       free: 'Free plan',

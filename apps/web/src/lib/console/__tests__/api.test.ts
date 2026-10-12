@@ -199,6 +199,20 @@ describe('console api — billing (F-BILL-002 B-7)', () => {
     expect((fetchImpl.mock.calls[0]?.[1] as RequestInit).method).toBe('GET');
   });
 
+  it('a summary whose every card and account row this build cannot read is unreadable, never the empty state', async () => {
+    const unknownCard = { ...card, coverage: { state: 'someday' } };
+    const unknownAccount = { coverage: { state: 'someday' }, actions: { manage: true }, receipts: [], legacyNoHistory: false };
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(200, { data: { mode: 'test', purchasesOpen: true, cards: [unknownCard, { ...unknownCard, spaceId: 'space:two' }], account: [] } }))
+      .mockResolvedValueOnce(json(200, { data: { mode: 'test', purchasesOpen: true, cards: [], account: [unknownAccount] } }))
+      .mockResolvedValueOnce(json(200, { data: { mode: 'test', purchasesOpen: true, cards: [], account: [] } }));
+    const api = createConsoleApi({ endpoint: 'https://api.example.com', token: 't', fetchImpl });
+    expect(await api.billingSummary()).toEqual({ ok: false, error: 'unknown', status: 200, code: 'unreadable_summary' });
+    expect(await api.billingSummary()).toEqual({ ok: false, error: 'unknown', status: 200, code: 'unreadable_summary' });
+    // A real answer with no spaces is still the empty state.
+    expect(await api.billingSummary()).toEqual({ ok: true, data: { mode: 'test', purchasesOpen: true, cards: [], account: [] } });
+  });
+
   it('lists one space receipts, dropping rows it cannot read', async () => {
     const fetchImpl = vi.fn<typeof fetch>()
       .mockResolvedValueOnce(json(200, { data: { spaceName: 'Kim family', receipts: [receipt, { ...receipt, id: 'bev:r2', kind: 'chargeback' }, { ...receipt, id: 'bev:r3', url: 'https://pay.stripe.com/x' }] } }))
@@ -228,6 +242,14 @@ describe('console api — billing (F-BILL-002 B-7)', () => {
     const [url, init] = fetchImpl.mock.calls[0] as [string, RequestInit];
     expect(url).toBe('https://api.example.com/api/billing/receipt-link');
     expect(init).toMatchObject({ method: 'POST', body: JSON.stringify({ id: 'bev:r1' }) });
+  });
+
+  it('accepts only an https receipt link: the page navigates a same-origin tab to it', async () => {
+    const bad = [{ url: 'javascript:alert(1)' }, { url: 'http://invoice.stripe.com/i/1' }, { url: 42 }, { url: 'not a url' }, {}];
+    const fetchImpl = vi.fn<typeof fetch>();
+    for (const data of bad) fetchImpl.mockResolvedValueOnce(json(200, { data }));
+    const api = createConsoleApi({ endpoint: 'https://api.example.com', token: 't', fetchImpl });
+    for (let i = 0; i < bad.length; i += 1) expect(await api.receiptLink('bev:r1')).toEqual({ ok: false, error: 'unknown', status: 200, code: 'unreadable_link' });
   });
 
   it('passes the hint through on checkout and portal too, and ignores a clerk_error that is not an object', async () => {

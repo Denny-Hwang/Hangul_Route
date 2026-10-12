@@ -53,7 +53,8 @@ describe('billingHomeView: the mode banner and whether buttons work (section 4.3
   it('live without BILLING_LIVE_ALLOWED: payments not open; live and open: no banner', () => {
     expect(view(summary([card()], { mode: 'live', purchasesOpen: false }))).toMatchObject({ banner: b.liveOff, actionsEnabled: false });
     expect(view(summary([card()], { mode: 'live', purchasesOpen: true }))).toMatchObject({ banner: null, actionsEnabled: true });
-    expect(view(summary([card()], { mode: 'test', purchasesOpen: false }))).toMatchObject({ banner: b.testMode, actionsEnabled: false });
+    // Test mode always works (section 4.3 item 2): only none, and live while closed, turn buttons off.
+    expect(view(summary([card()], { mode: 'test', purchasesOpen: false }))).toMatchObject({ banner: b.testMode, actionsEnabled: true });
   });
 });
 
@@ -164,7 +165,10 @@ describe('billingHomeView: one card per persona row of section 4.2', () => {
     const kept = view(summary([due('2026-10-10T00:00:00.000Z')]));
     expect(kept.cards[0]).toMatchObject({ status: w.entitlementStatus.pastDueKept, pastDue: true });
     expect(kept.pastDueNote).toBe(b.pastDue);
-    expect(view(summary([due('2026-09-01T00:00:00.000Z')])).cards[0]?.status).toBe(w.entitlementStatus.pastDuePaused);
+    const paused = view(summary([due('2026-09-01T00:00:00.000Z')]));
+    expect(paused.cards[0]).toMatchObject({ status: w.entitlementStatus.pastDuePaused, pastDue: true });
+    // The note promises a week of the full route, so it shows only while the grace runs (section 4.6).
+    expect(paused.pastDueNote).toBeNull();
     // A viewer's past-due card raises no note: only the payer can act on it.
     expect(view(summary([card({ payer: false, role: 'caregiver', readOnlyReason: 'family', coverage: own({ status: 'past_due' }), actions: { buy: null, manage: false, contact: false } })])).pastDueNote).toBeNull();
     expect(view(summary([card()])).pastDueNote).toBeNull();
@@ -202,6 +206,13 @@ describe('billingHomeView: order and offers', () => {
     expect(v.addPlan?.offers[1]?.title).toBe(b.buy.forSpace(b.planTitle.group_license, 'Room 4'));
     expect(v.addPlan?.offers[2]?.includes).toContain(b.includesLines.license.school(SCHOOL_LICENSE_TEACHERS, SCHOOL_LICENSE_STUDENTS));
     expect(v.addPlan?.contact).toEqual([{ spaceId: 'space:sch', title: b.buy.forSpace(b.planTitle.school_seat, 'Maple School'), cta: b.contact.cta, href: contactHref() }]);
+  });
+
+  it("the Contact us rows follow the server's contact action, like the card's own button", () => {
+    const noContact = { ...sch, actions: { buy: 'group_license' as const, manage: false, contact: false } };
+    const v = view(summary([noContact, cls, fam]));
+    expect(v.addPlan?.offers).toHaveLength(3);
+    expect(v.addPlan?.contact).toEqual([]);
   });
 
   it('nothing to buy: no offer anywhere', () => {
@@ -263,12 +274,18 @@ describe('receipt rows (section 4.10)', () => {
   });
 
   it('a legacy one-time row shows the plan name only, never a "one payment" label (BY-D9)', () => {
-    const row = receiptRow(receipt({ id: 'bev:legacy' }), 'en');
-    expect(JSON.stringify(row)).not.toMatch(/one payment|once|lifetime/i);
+    // A legacy one-time sandbox Family Plan: the card's row has no date, its receipt is a purchase.
+    const legacy = receipt({ id: 'bev:legacy', kind: 'purchase', planKey: 'family_lifetime', amountCents: 9900, livemode: false });
+    const c = view(summary([card({ coverage: own({ expiresAt: null }), actions: { buy: null, manage: false, contact: false }, receipts: [legacy], hasReceipts: true })])).cards[0];
+    const row = c?.receipts[0];
+    expect(row?.plan).toBe(b.planTitle.family_lifetime);
+    expect(row?.kind).toBe(b.receipts.kind.purchase);
+    for (const value of Object.values(row ?? {})) expect(String(value)).not.toMatch(/one payment|once|lifetime|for good/i);
   });
 
-  it('formats each amount in its currency own minor unit (formatMinorAmount), never a fixed / 100', () => {
-    expect(receiptRow(receipt({ amountCents: 15300 }), 'en').amount).toBe('$153.00');
+  it('usd through formatUsd like the offer price; other currencies in their own minor unit (formatMinorAmount)', () => {
+    expect(receiptRow(receipt({ amountCents: 15300 }), 'en').amount).toBe('$153');
+    expect(receiptRow(receipt({ amountCents: 1530, currency: 'USD' }), 'en').amount).toBe('$15.30');
     expect(receiptRow(receipt({ amountCents: 20000, currency: 'krw' }), 'en').amount).toBe('₩20,000');
     expect(receiptRow(receipt({ amountCents: 1250, currency: 'eur' }), 'es').amount).toBe(formatMinorAmount('es', 1250, 'eur'));
   });
@@ -286,8 +303,15 @@ describe('account cards (legacy subject account rows, section 4.2)', () => {
     const v = view(summary([], { account: [account()] }));
     expect(v.empty).toBeNull();
     expect(v.accountCards).toEqual([
-      { heading: b.yourAccount, plan: b.coverage.license, status: b.status.renewsOn(day(YEAR_ON)), pastDue: false, manage: true, receipts: [receiptRow(receipt(), 'en')], legacyNoHistory: false },
+      { heading: b.accountCard.title, plan: b.coverage.license, status: b.status.renewsOn(day(YEAR_ON)), pastDue: false, manage: true, receipts: [receiptRow(receipt(), 'en')], legacyNoHistory: false },
     ]);
+  });
+
+  it('the account card heading is a sentence-case title in every locale', () => {
+    expect(b.accountCard.title).toBe('Your account');
+    for (const locale of UI_LOCALES) {
+      expect(billingHomeView(summary([], { account: [account()] }), { now, locale }).accountCards[0]?.heading).toBe(getMessages(locale).console.billing.accountCard.title);
+    }
   });
 
   it('a past-due account row raises the note too', () => {
