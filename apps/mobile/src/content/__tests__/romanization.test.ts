@@ -164,7 +164,8 @@ describe('minigame scopes romanization (B1)', () => {
 
   it('every storySteps label has a romanization that passes R1 (a rule, not a table of values)', () => {
     const steps = Object.values(minigameScopes).flatMap((s) => s.storySteps ?? []);
-    expect(steps.length).toBeGreaterThanOrEqual(12);
+    // F-QUEST-002 retires the Stage 1 story-sequence scopes one episode at a time; "New Year Order" (quest 9) keeps its four.
+    expect(steps.length).toBeGreaterThanOrEqual(4);
     for (const p of steps) {
       expect(p.labelKo, p.id).toBeDefined();
       expect(checkRomanization(p.labelKo ?? '', p.romanization ?? '', ctx), p.labelKo).toEqual([]);

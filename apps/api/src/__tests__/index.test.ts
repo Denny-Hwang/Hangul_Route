@@ -31,4 +31,19 @@ describe("apps/api router", () => {
     expect(text).not.toContain("sk_live_secret");
     expect(JSON.parse(text)).toMatchObject({ status: "ok", bindings: { db: true, clerk: true } });
   });
+
+  it("mounts the class-move routes locked: 422 transfers_locked without CLASS_TRANSFER, before any binding is needed (F-SPACE-002 T-5a)", async () => {
+    for (const [method, path] of [
+      ["POST", "/api/spaces/space:a/transfer-requests/preview"],
+      ["POST", "/api/spaces/space:a/transfer-requests"],
+      ["GET", "/api/spaces/space:a/transfer-requests"],
+      ["POST", "/api/spaces/space:a/transfer-requests/transfer:x/decline"],
+      ["POST", "/api/spaces/space:a/transfer-requests/transfer:x/cancel"],
+      ["PUT", "/api/spaces/space:a/learners/profile:x/transfer-prefs"],
+    ]) {
+      const res = await app.request(path, { method });
+      expect(res.status, `${method} ${path}`).toBe(422);
+      expect(await res.json()).toMatchObject({ ok: false, error: { code: "transfers_locked" } });
+    }
+  });
 });

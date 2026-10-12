@@ -18,6 +18,7 @@
 ## Checklist
 - [ ] Spec link present (F-XXX)
 - [ ] Tests added (TDD)
+- [ ] Image rights: SVG drawn in-house, or `credits[]` attached <!-- F-STORY-005 §3.10: no raster, photograph or traced photograph; an external image needs a credits[] entry with KOGL Type 1, public-domain or CC0 proof (docs/workflows/story-content-qa.md) -->
 - [ ] Design tokens only — no hardcoded colors / spacing / typography
 - [ ] Language policy respected — UI strings from the selected locale (en/es/ko); taught Korean shown with romanization + a gloss in the UI language
 - [ ] Romanization + English gloss present for every Korean learning item

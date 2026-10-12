@@ -24,7 +24,7 @@ export const a11y = {
     `${themeTitle} episode for ${stage}${comingSoon ? ', coming soon' : ''}`,
   /** An earned card on the Episode page, and the placeholder for one not yet earned. */
   episodeCard: (title: string) => `${title} card`,
-  cardWaiting: 'A card still waiting to be earned',
+  cardWaiting: 'A card you can earn by finishing this episode',
   /** A finished homework row, and an open one with its due word. */
   playAgainQuest: (title: string) => `Play again: ${title}`,
   homeworkRow: (title: string, due: string) => `${title}, ${due}`,

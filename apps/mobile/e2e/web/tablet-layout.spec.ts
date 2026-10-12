@@ -300,7 +300,8 @@ test.describe('Journey at 1180x820: two panes', () => {
     await detailPane(page).getByRole('button', { name: 'Start', exact: true }).first().click();
     await detailPane(page).getByRole('button', { name: 'Play anyway' }).click();
     await skipToResults(page);
-    await expect(page.getByText('All done!')).toBeVisible();
+    // Food & Life quest 1 ends on its Check since F-QUEST-002 Q-6b, so Results shows stars rather than "All done!".
+    await expect(page.getByText('Next up')).toBeVisible();
 
     await page.getByRole('button', { name: 'Episode page' }).click();
     // Finishing a quest resets the stack under Results, so this selection comes from the quest, not from memory.

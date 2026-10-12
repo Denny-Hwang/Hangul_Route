@@ -83,7 +83,7 @@ Hangul Route
 │   ├─ A14. PWA shell (offline-ready · update banners · offline chip · install guide) [S] roadmap P2 · F-PWA-001
 │   ├─ A15. Lecture presenter (`/present`, 교사·어른이 TV·프로젝터로 하는 수업 · 로그인·프로필 없음 · 진도 기록 없음) [R] F-TCH-004
 │   │    └─ Projection mode (자원봉사 학생이 학습자 화면을 그대로 띄우는 옵션 · 교사 역할 불필요) [D] 연기 F-TCH-001 §3.4
-│   └─ A16. Story reader & Sources (퀘스트의 `story-read` 단계 · "Read it again" replay · 어른용 Sources · SVG 장면 그림) [S] F-STORY-002 (장면 사이 checkpoint 질문만 [R], PR 2.9)
+│   └─ A16. Story reader & Sources (퀘스트의 `story-read` 단계 · "Read it again" replay · 어른용 Sources · SVG 장면 그림) [S] F-STORY-002
 │
 ├─ B. Caregiver Console ─────────────────────────────────────────── 부모
 │   ├─ B1. Parent gate (PIN)                             [S] F-PROF-001

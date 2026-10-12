@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:chuseok-ganggangsullae",
   "state": "ready",
-  "contentVer": 1,
+  "contentVer": 2,
   "title": {
     "ko": "추석 송편과 보름달",
     "romanization": "Chuseok songpyeongwa boreumdal",
@@ -129,8 +129,47 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Golden rice fields under an autumn sky, persimmon trees heavy with orange fruit; Hoya stretching happily at the edge of the field."
+          "artBrief": "Golden rice fields under an autumn sky, persimmon trees heavy with orange fruit; Hoya stretching happily at the edge of the field.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:rice-field",
+                "x": 200,
+                "y": 300,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:persimmon-tree",
+                "x": 70,
+                "y": 256,
+                "s": 1.2,
+                "z": "back"
+              },
+              {
+                "ref": "prop:persimmon-tree",
+                "x": 340,
+                "y": 240,
+                "s": 0.9,
+                "flip": true,
+                "z": "back"
+              },
+              {
+                "ref": "prop:fig-villager",
+                "x": 262,
+                "y": 226,
+                "s": 0.45,
+                "tint": "feedback.nudge"
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 190,
+                "y": 294,
+                "s": 0.95
+              }
+            ],
+            "altEn": "Golden rice fields and persimmon trees heavy with orange fruit at harvest time, as a farmer works and Hoya stretches up happily."
+          }
         },
         {
           "id": "s2",
@@ -148,8 +187,44 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "A family in hanbok standing respectfully before a low table set with fruit and dishes; later a grassy hillside path; Hoya walking quietly with them."
+          "artBrief": "A family in hanbok standing respectfully before a low table set with fruit and dishes; later a grassy hillside path; Hoya walking quietly with them.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:feast-table",
+                "x": 200,
+                "y": 268,
+                "s": 1.45
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 92,
+                "y": 290,
+                "s": 1.0,
+                "tint": "brand.secondaryLight"
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 262,
+                "y": 294,
+                "s": 0.85
+              },
+              {
+                "ref": "prop:fig-villager",
+                "x": 318,
+                "y": 290,
+                "s": 1.05
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 38,
+                "y": 296,
+                "s": 0.55
+              }
+            ],
+            "altEn": "A family in hanbok stands quietly before a table of food set for the ancestors, the Chuseok charye, with Hoya beside them."
+          }
         },
         {
           "id": "s3",
@@ -167,8 +242,38 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Family members around a low table shaping small white, green and pink rice cakes; bowls of sesame, beans and chestnuts; Hoya pinching one closed."
+          "artBrief": "Family members around a low table shaping small white, green and pink rice cakes; bowls of sesame, beans and chestnuts; Hoya pinching one closed.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-elder-seated",
+                "x": 62,
+                "y": 272,
+                "s": 1.15
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 140,
+                "y": 296,
+                "s": 0.58
+              },
+              {
+                "ref": "prop:songpyeon",
+                "x": 244,
+                "y": 296,
+                "s": 1.75
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 368,
+                "y": 286,
+                "s": 0.95,
+                "tint": "surface.sunken"
+              }
+            ],
+            "altEn": "The family shapes songpyeon together, a tray of white, green and yellow rice cakes between them, and Hoya helps."
+          }
         },
         {
           "id": "s4",
@@ -186,8 +291,25 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "A bamboo steamer opened to reveal glossy rice cakes resting on green pine needles, wisps of steam; Hoya sniffing with closed eyes."
+          "artBrief": "A bamboo steamer opened to reveal glossy rice cakes resting on green pine needles, wisps of steam; Hoya sniffing with closed eyes.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:songpyeon",
+                "x": 190,
+                "y": 272,
+                "s": 2.4
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 344,
+                "y": 294,
+                "s": 0.7
+              }
+            ],
+            "altEn": "Freshly steamed half-moon songpyeon rest on fragrant pine needles, and Hoya leans in to smell them."
+          }
         },
         {
           "id": "s5",
@@ -206,8 +328,31 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "A huge glowing full moon rising over a quiet village of thatched and tiled roofs; Hoya sitting on a stone wall gazing up."
+          "artBrief": "A huge glowing full moon rising over a quiet village of thatched and tiled roofs; Hoya sitting on a stone wall gazing up.",
+          "art": {
+            "setting": "scene:village-lane",
+            "layers": [
+              {
+                "ref": "prop:full-moon",
+                "x": 320,
+                "y": 98,
+                "s": 1.8
+              },
+              {
+                "ref": "prop:flat-rock",
+                "x": 150,
+                "y": 292,
+                "s": 1.4
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 220,
+                "y": 292,
+                "s": 1.0
+              }
+            ],
+            "altEn": "A big round full moon rises over the village on Chuseok, and Hoya gazes up at it."
+          }
         },
         {
           "id": "s6",
@@ -225,8 +370,37 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Women in hanbok holding hands in a wide circle on a moonlit field, skirts swirling, one singer at the front; Hoya clapping along outside the circle."
+          "artBrief": "Women in hanbok holding hands in a wide circle on a moonlit field, skirts swirling, one singer at the front; Hoya clapping along outside the circle.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:night-sky",
+                "x": 200,
+                "y": 196,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:full-moon",
+                "x": 320,
+                "y": 96,
+                "s": 1.5
+              },
+              {
+                "ref": "prop:dance-circle",
+                "x": 200,
+                "y": 270,
+                "s": 1.6
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 364,
+                "y": 298,
+                "s": 0.56
+              }
+            ],
+            "altEn": "Under the full moon at night, women hold hands in a wide circle for Ganggangsullae, and Hoya cheers along outside it."
+          }
         },
         {
           "id": "s7",
@@ -246,8 +420,52 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Dancers crouched in a line like ferns while a leader 'picks' them one by one; a coastline with small islands in the moonlight behind; Hoya scratching his head curiously."
+          "artBrief": "Dancers crouched in a line like ferns while a leader 'picks' them one by one; a coastline with small islands in the moonlight behind; Hoya scratching his head curiously.",
+          "art": {
+            "setting": "scene:seashore",
+            "layers": [
+              {
+                "ref": "prop:night-sky",
+                "x": 200,
+                "y": 196,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:full-moon",
+                "x": 80,
+                "y": 96,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:fig-bowing",
+                "x": 46,
+                "y": 262,
+                "s": 1.45,
+                "flip": true
+              },
+              {
+                "ref": "prop:fig-bowing",
+                "x": 114,
+                "y": 270,
+                "s": 1.45,
+                "flip": true
+              },
+              {
+                "ref": "prop:fig-bowing",
+                "x": 182,
+                "y": 278,
+                "s": 1.45,
+                "flip": true
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 240,
+                "y": 294,
+                "s": 0.85
+              }
+            ],
+            "altEn": "By the sea at night, dancers sit low in a line for the fern-picking game, and Hoya wonders what ganggangsullae means."
+          }
         },
         {
           "id": "s8",
@@ -265,8 +483,44 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Hoya and the family sharing songpyeon and fruit on a wooden porch under the full moon, the dance circle glowing in the distance."
+          "artBrief": "Hoya and the family sharing songpyeon and fruit on a wooden porch under the full moon, the dance circle glowing in the distance.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:night-window",
+                "x": 200,
+                "y": 196,
+                "s": 1.1
+              },
+              {
+                "ref": "prop:fig-elder-seated",
+                "x": 200,
+                "y": 262,
+                "s": 1.15
+              },
+              {
+                "ref": "prop:soban",
+                "x": 200,
+                "y": 300,
+                "s": 1.2,
+                "tint": "feedback.nudgeLight"
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 318,
+                "y": 288,
+                "s": 1.1
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 84,
+                "y": 294,
+                "s": 0.65
+              }
+            ],
+            "altEn": "With the moon in the window at night, the family shares rice cakes and fruit, and Hoya joins them."
+          }
         }
       ],
       "checks": [
@@ -385,9 +639,9 @@
   "facts": [
     {
       "id": "f1",
-      "rev": 1,
+      "rev": 2,
       "scope": "documented",
-      "claimEn": "Chuseok falls on the fifteenth day of the eighth lunar month, at the beginning of the harvest season, and is a time to give thanks for the year's crops.",
+      "claimEn": "Chuseok is the fifteenth day of the eighth lunar month. It comes as the harvest begins, and people use it to give thanks for the year's crops.",
       "claimKo": "추석은 음력 8월 15일로 수확기가 시작되는 명절이며, 농사가 잘되게 해준 것에 감사하는 날이다.",
       "sources": [
         {
