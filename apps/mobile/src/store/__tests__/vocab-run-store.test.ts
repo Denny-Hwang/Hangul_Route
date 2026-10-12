@@ -55,10 +55,36 @@ describe('vocab-run-store (F-VOC-003 section 3.2, section 3.9)', () => {
 
   it('the host complete uses the current clock', () => {
     useVocabRunStore.getState().begin('p1', 'food', 'match');
+    vocabHost.answer(0, true, { itemId: 'vocab:a' });
     vocabHost.complete();
     expect(recordVocab).toHaveBeenCalledTimes(1);
-    expect(recordVocab.mock.calls[0]![1]).toEqual([{ type: 'session', topicKey: 'food', kind: 'match' }]);
+    expect(recordVocab.mock.calls[0]![1]).toEqual([
+      { type: 'answer', id: 'vocab:a', correct: true, source: 'match' },
+      { type: 'session', topicKey: 'food', kind: 'match' },
+    ]);
     expect(recordVocab.mock.calls[0]![2]).toBeInstanceOf(Date);
+  });
+
+  it('a match run with no answers (left early) records no session and ends the run', () => {
+    useVocabRunStore.getState().begin('p1', 'food', 'match');
+    useVocabRunStore.getState().complete(NOW);
+    expect(recordVocab).not.toHaveBeenCalled();
+    expect(useVocabRunStore.getState()).toMatchObject({ profileId: null, mode: null, answers: [] });
+  });
+
+  it('writes before it clears, and still ends the run when the write throws', () => {
+    useVocabRunStore.getState().begin('p1', 'food', 'match');
+    vocabHost.answer(0, true, { itemId: 'vocab:a' });
+    let answersDuringWrite: unknown = null;
+    recordVocab.mockImplementationOnce(() => {
+      answersDuringWrite = useVocabRunStore.getState().answers;
+      throw new Error('storage');
+    });
+    expect(() => useVocabRunStore.getState().complete(NOW)).toThrow('storage');
+    expect(answersDuringWrite).toEqual([{ key: '0', id: 'vocab:a', correct: true }]);
+    expect(useVocabRunStore.getState()).toMatchObject({ profileId: null, mode: null, answers: [] });
+    useVocabRunStore.getState().complete(NOW);
+    expect(recordVocab).toHaveBeenCalledTimes(1);
   });
 
   it('ignores an answer without an item id, outside a match run, or after completion', () => {
