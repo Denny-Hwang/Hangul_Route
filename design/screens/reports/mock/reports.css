@@ -207,7 +207,8 @@ a.button { text-decoration: none; }
   /* Nothing to press on paper: the frame, the actions, the stepper buttons, the disclosure button, the toggles. */
   .frame-band, .report-top, .step-button, .disclosure-heading, .action, .table-toggle, .growth-chart, .growth-axis, .growth-legend, .calendar, .period-tab:not([aria-selected="true"]) { display: none !important; }
   /* The page padding sits inside the body, so @page margin 0 leaves no room for the browser's URL and title lines. */
-  .report { max-width: none; padding: var(--spacing-xxl) var(--spacing-xxl) var(--spacing-jumbo); gap: var(--spacing-sm); }
+  /* clone: every printed page gets the top padding and the bottom padding, so the fixed footer never covers a block. */
+  .report { max-width: none; padding: var(--spacing-xxl) var(--spacing-xxl) var(--spacing-jumbo); gap: var(--spacing-sm); box-decoration-break: clone; -webkit-box-decoration-break: clone; }
   /* The selected period prints as plain text next to the window's dates. */
   .report-controls { flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: var(--spacing-sm); }
   .period-tabs { display: block; padding: 0; background: none; }
