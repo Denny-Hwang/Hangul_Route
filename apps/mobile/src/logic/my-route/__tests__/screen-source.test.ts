@@ -72,6 +72,8 @@ describe('screens/my-route sources', () => {
   it('the screen forces read-only for a grown-up entry (amendment section 5.1)', () => {
     const src = read(join(SCREEN_DIR, 'MyRouteScreen.tsx'));
     expect(src).toContain("grownup: route.params?.viewer === 'grownup'");
+    // Read-only builds the grown-up view, which carries no episode, tile or stories link (view.test.ts).
+    expect(src).toContain("viewer: readOnly ? 'grownup' : 'self'");
   });
 });
 
@@ -99,9 +101,10 @@ describe('parent dashboard Learning Route row sources', () => {
     }
   });
 
-  it('the row builds the same model as the page (cursor, start route) and never sends telemetry or writes seen', () => {
-    expect(row).toContain('cursorContext(');
-    expect(row).toContain('route: startRouteOf(snapshot.placements, journeyContent.catalog, cursor.isEntitled)');
+  it('the row builds the same model as the page (the one routeModelInput) and never sends telemetry or writes seen', () => {
+    expect(row).toContain('buildMyRoute(routeModelInput(');
+    expect(row).toContain('localizedRouteContent(locale)');
+    expect(row).not.toContain('startRouteOf(');
     expect(row).toContain('dashboardRowView(');
     expect(row).not.toMatch(/track\(|writeSeen|viewedEvent|AsyncStorage|localStorage/);
   });
@@ -117,9 +120,30 @@ describe('parent dashboard Learning Route row sources', () => {
     expect(row).toMatch(/design\/(wireframes|components)\//);
   });
 
-  it('the drawn segments are hidden from screen readers and a text list reads them', () => {
-    expect(row).toContain('accessibilityElementsHidden');
+  it('draws the segments with the design system StageSegments (hidden from screen readers) and a text list reads them', () => {
+    expect(row).toContain('<StageSegments');
+    expect(row).not.toMatch(/pipParts|cursorMarkerParts|markerBand|<Svg/);
+    expect(row).toContain('role="listitem"');
     expect(row).toContain('segment.a11yLabel');
+  });
+
+  it('waits for the snapshot before drawing a profile, so a child is never shown as a new learner first', () => {
+    expect(row).toContain('hydratedFor.has(profileId)');
+  });
+
+  it('content that cannot be read still leaves the title and See Learning Route, which opens the page and its retry', () => {
+    expect(row).toMatch(/view === null \?/);
+    expect(row).toContain('LearningRouteRowFallback');
+  });
+
+  it('the Started line is left to the Starting spot row when that row shows (one level check per card)', () => {
+    const at = dashboard.indexOf('<LearningRouteRow');
+    expect(dashboard.slice(at, dashboard.indexOf('/>', at))).toContain('showStarted={!flags.placementEnabled}');
+  });
+
+  it('the skill inks come from the page skills card, not a copy', () => {
+    expect(row).toContain("import { SKILL_ACCENT } from '../my-route/SkillsCard'");
+    expect(row).not.toMatch(/const SKILL_ACCENT/);
   });
 });
 

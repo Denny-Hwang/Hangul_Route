@@ -107,7 +107,13 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
                 />
               ) : null}
               {flags.myRouteEnabled ? (
-                <LearningRouteRow profileId={p.id} name={p.displayName} stored={snap} testID={`dashboard-route-${p.id}`} />
+                <LearningRouteRow
+                  profileId={p.id}
+                  name={p.displayName}
+                  stored={snap}
+                  showStarted={!flags.placementEnabled}
+                  testID={`dashboard-route-${p.id}`}
+                />
               ) : null}
               {snap && snap.quests.length > 0 ? (
                 <>

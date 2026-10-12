@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { StageKey } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
-import { SEGMENT_SHAPE, dashboardRowView, type DashboardRowInput } from '../dashboard-row';
+import { dashboardRowView, type DashboardRowInput } from '../dashboard-row';
 import { buildMyRoute } from '../model';
 import type { MyRouteInput, MyRouteModel } from '../types';
 import { BUNDLE_8, STAGE1_8, STAGE_DEFS, THEME_DEFS, catalogOf, snapshotWith } from './fixtures/bundle-2026-10';
@@ -106,21 +106,6 @@ describe('dashboardRowView: the seven segments', () => {
     expect(v.segments[0]?.a11yLabel).toBe('Stage 1, Hangul. Open. Sam is here. 1 quest played.');
     expect(v.segments[2]?.a11yLabel).toBe('Stage 3, Sentences. Coming later.');
     for (const s of v.segments) expect(s.a11yLabel).not.toMatch(/\byou\b/i);
-  });
-});
-
-describe('SEGMENT_SHAPE: one drawn shape per stage state', () => {
-  it('covers the five states, each with its own geometry', () => {
-    expect(Object.keys(SEGMENT_SHAPE).sort()).toEqual(['complete', 'explored', 'known', 'later', 'open']);
-    const shapes = Object.values(SEGMENT_SHAPE).map((s) => `${s.pip}:${s.checkOnly}`);
-    expect(new Set(shapes).size).toBe(5);
-  });
-
-  it('explored is never drawn as complete, and known never as done', () => {
-    expect(SEGMENT_SHAPE.complete).toEqual({ pip: 'done', checkOnly: false });
-    expect(SEGMENT_SHAPE.explored).toEqual({ pip: 'done', checkOnly: true });
-    expect(SEGMENT_SHAPE.known.pip).toBe('known');
-    expect(SEGMENT_SHAPE.later.pip).toBe('later');
   });
 });
 

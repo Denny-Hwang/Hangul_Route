@@ -1,7 +1,7 @@
 import type { StageKey } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import { stageA11yLabel, skillsNoteCopy, tilesCopy, type CopyContext } from './copy';
-import type { MyRouteModel, PipState, StageRow, StageState } from './types';
+import type { MyRouteModel, StageRow, StageState } from './types';
 import { myRouteMessages, skillRowView, type SkillRowView } from './view';
 
 /**
@@ -16,21 +16,6 @@ import { myRouteMessages, skillRowView, type SkillRowView } from './view';
  * and See Learning Route. Pure: the words come from the dictionary, the facts
  * from `buildMyRoute`. No ratio, no comparison between profiles.
  */
-
-/**
- * The drawn shape of each stage state, in the pip vocabulary
- * (`design/components/PipRow/spec.md`, as the console strip draws it): every
- * state differs in geometry, not only in ink (section 3.14). `checkOnly`
- * draws the done pip's check without its disc, so explored is never drawn as
- * complete.
- */
-export const SEGMENT_SHAPE: Readonly<Record<StageState, { pip: PipState; checkOnly: boolean }>> = {
-  complete: { pip: 'done', checkOnly: false },
-  known: { pip: 'known', checkOnly: false },
-  explored: { pip: 'done', checkOnly: true },
-  open: { pip: 'open', checkOnly: false },
-  later: { pip: 'later', checkOnly: false },
-};
 
 export interface DashboardRowInput {
   model: MyRouteModel;
@@ -47,7 +32,7 @@ export interface DashboardSegment {
   stage: StageKey;
   /** 1 to 7. */
   order: number;
-  /** Drawn as its own shape (the PipRow vocabulary); never a count. */
+  /** Drawn as its own shape by the design system `StageSegments` (the PipRow vocabulary); never a count. */
   state: StageState;
   here: boolean;
   /** The segment in words, for the screen-reader list: the stage row's grown-up label. */
