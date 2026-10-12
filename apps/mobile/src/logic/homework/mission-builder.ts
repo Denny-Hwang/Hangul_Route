@@ -102,15 +102,16 @@ export interface BuildMissionInput {
   isEntitled?: (stageKey: string) => boolean;
   /**
    * May the learner start this quest (`cursorContext` from `useQuestAccess`,
-   * F-ENT-003 section 3.6)? Every card is chosen among open quests: the cursor,
-   * replays (a finished quest is kept, so a replay always stays), the explore
-   * episode (one open quest at least) and story cards. Omitted means every
+   * F-ENT-003 section 3.6)? The cursor, replays (a finished quest is kept, so a
+   * replay always stays) and the explore episode (one open quest at least) are
+   * chosen among open quests; story cards follow `stories.isLocked`, which Home
+   * builds with `storyLockFor` and the same predicate. Omitted means every
    * quest is open.
    */
   isQuestOpen?: (questId: string) => boolean;
   /**
    * The story card's world (F-STORY-004 §3.7): the story index, the profile's
-   * bookmarks, the lock (`storyLockFor`) and the fit (`storyFitsFor`,
+   * bookmarks, the lock (`storyLockFor`, with `isQuestOpen` for book stories) and the fit (`storyFitsFor`,
    * F-STORY-005 §3.4: fitting stories come first among `next`; it only
    * orders). Absent → no story cards.
    */
@@ -241,12 +242,11 @@ type Link = (slot: 1 | 3, input: BuildMissionInput, used: Used) => MissionCard |
 function storyLink(...reasons: StoryReason[]): Link {
   return (slot, input, used) => {
     if (!input.stories) return null;
-    const { isLocked } = input.stories;
     const pick = pickStoryForHome({
       entries: input.stories.entries,
       snapshot: input.snapshot,
       bookmarks: input.stories.bookmarks,
-      isLocked: (entry) => isLocked(entry) || !isOpen(input, entry.questId),
+      isLocked: input.stories.isLocked,
       fits: input.stories.fits,
       excludeStoryIds: [...used.stories],
       excludeQuestIds: [...used.quests],

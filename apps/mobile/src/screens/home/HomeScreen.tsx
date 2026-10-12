@@ -257,6 +257,7 @@ export function HomeScreen(): React.ReactElement {
           tier,
           gatingEnabled: gatingActive(flags, bundleOs()),
           episodes: episodesAll,
+          isQuestOpen: questOpen,
         }),
         // F-STORY-005 §3.4: stories near the learner's stage come first; it only orders, never hides.
         fits: storyFitsForSnapshot(snap),

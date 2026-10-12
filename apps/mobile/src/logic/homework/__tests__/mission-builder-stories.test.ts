@@ -7,6 +7,7 @@ import { storiesAll } from '../../../content/stories';
 import { scanLearnerCopy } from '../banned-text';
 import { emptyBookmarks, type BookmarkFile } from '../../story/bookmarks';
 import { defaultStoryIndex, type StoryIndexEntry } from '../../story/story-index';
+import { storyLockFor } from '../../story/story-pick';
 import {
   bookEpisode,
   bookmarks,
@@ -237,16 +238,28 @@ describe('slot ① chain: continue → replay → next → again → explore', (
     expect(plan.cards[2]?.storyId).toBe('story:seollal');
   });
 
-  it('never picks a story whose quest is closed (F-ENT-003 section 3.6); omitted, nothing changes', () => {
-    const plan = build({ isQuestOpen: (id) => id !== questId('tiger') });
-    expect(plan.cards[0]?.storyId).toBe('story:sun');
-    expect(plan.cards[2]?.storyId).toBe('story:seollal');
-    expect(build({ isQuestOpen: undefined })).toEqual(build());
+  it('never picks a book story whose quest is closed: Home builds the lock with storyLockFor and the quest predicate (F-ENT-003 section 3.6)', () => {
+    // Every shelf story finished, so the chain reaches the book (grid) stories of a shipped Stage 5 cell.
+    const book = bookEpisode('episode:stage5-letters', [questId('tiger', 'read-along'), questId('sun', 'read-along')]);
+    const entries = shelfIndex(STORIES, { episodes: [book], quests: [storyQuest('tiger', 'read-along'), storyQuest('sun', 'read-along')] });
+    const isQuestOpen = (id: string): boolean => id !== questId('tiger', 'read-along');
+    const overrides: Partial<BuildMissionInput> = {
+      quests: [...GRID_QUESTS, ...SHELF_QUESTS, fullStoryQuest('tiger', 'read-along'), fullStoryQuest('sun', 'read-along')],
+      episodes: [...GRID_EPISODES, ...SHELF_EPISODES, book],
+      snapshot: snapshot(allShelfFinished()),
+      isQuestOpen,
+    };
+    const lock = (open?: (id: string) => boolean) => storyLockFor({ tier: 'premium', gatingEnabled: true, episodes: overrides.episodes ?? [], isQuestOpen: open });
+    const without = build(overrides, { entries, isLocked: lock() });
+    expect(without.cards[0]).toMatchObject({ kind: 'story', storyReason: 'next', storyId: 'story:tiger', questId: questId('tiger', 'read-along') });
+    const plan = build(overrides, { entries, isLocked: lock(isQuestOpen) });
+    expect(plan.cards[0]).toMatchObject({ kind: 'story', storyReason: 'next', storyId: 'story:sun', questId: questId('sun', 'read-along') });
+    for (const card of plan.cards) expect(card.questId).not.toBe(questId('tiger', 'read-along'));
   });
 
-  it('a closed story falls back down the chain to the explore card', () => {
-    const plan = build({ isQuestOpen: (id) => !id.startsWith('quest:story-') });
-    expect(plan.cards.map((c) => c.kind)).toEqual(['explore', 'new', 'explore']);
+  it('the quest predicate alone leaves story cards to their lock: omitted or given, the same story plan', () => {
+    expect(build({ isQuestOpen: () => true })).toEqual(build());
+    expect(build({ isQuestOpen: undefined })).toEqual(build());
   });
 });
 

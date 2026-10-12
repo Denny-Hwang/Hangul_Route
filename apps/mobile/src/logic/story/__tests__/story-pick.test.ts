@@ -321,12 +321,15 @@ describe('storyLockFor (the Home and shelf `isLocked`, F-STORY-004 §3.9)', () =
   });
 });
 
-describe('Results builds its story lock with the quest predicate (wiring guard, F-ENT-003 section 3.6)', () => {
+describe('Home and Results build their story lock with the quest predicate (wiring guard, F-ENT-003 section 3.6)', () => {
   // A source-level guard: the mobile vitest lane does not render screens.
-  it('passes the active learner\'s isQuestOpen to storyLockFor for "Next story"', async () => {
+  it.each([
+    ['Home', 'home/HomeScreen.tsx'],
+    ['Results', 'results/ResultsScreen.tsx'],
+  ])('%s passes the active learner\'s isQuestOpen to storyLockFor', async (_name, file) => {
     const { readFileSync } = await import('node:fs');
     const { join } = await import('node:path');
-    const src = readFileSync(join(__dirname, '../../../screens/results/ResultsScreen.tsx'), 'utf8');
+    const src = readFileSync(join(__dirname, '../../../screens', file), 'utf8');
     const args = /storyLockFor\(\{([\s\S]*?)\}\)/.exec(src)?.[1];
     expect(args).toMatch(/\bisQuestOpen\b/);
     expect(src).toMatch(/\buseQuestAccess\(\)/);
