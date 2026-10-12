@@ -10,11 +10,11 @@
       "romanization": "hanguk munhwa",
       "en": "Korean culture"
     },
-    "blurbEn": "Korean clothes, food, holidays, games and music.",
+    "blurbEn": "Korean clothes, homes, food, holidays, games, music and more.",
     "hoyaIntroEn": "Come and explore the clothes, food, holidays and music of Korea.",
     "tint": "theme.rites",
     "coverItemId": "vocab:hanbok",
-    "status": "draft",
+    "status": "ready",
     "fixedOrder": false
   },
   "items": [
@@ -92,7 +92,7 @@
       ],
       "level": 1,
       "visual": "card:seollal",
-      "senseNote": "People wear hanbok and bow to their elders."
+      "senseNote": "Many people wear hanbok and bow to their elders."
     },
     {
       "id": "vocab:chuseok",

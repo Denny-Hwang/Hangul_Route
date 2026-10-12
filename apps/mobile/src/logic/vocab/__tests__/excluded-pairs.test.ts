@@ -1,3 +1,4 @@
+import { COLOR_SWATCHES } from '@hangul-route/design-system/word-art';
 import { describe, expect, it } from 'vitest';
 import { VOCAB_ITEMS } from '../../../content/__generated__/vocab';
 import { VOCAB_EXCLUDED_PAIRS, excludedPair } from '../excluded-pairs';
@@ -24,6 +25,15 @@ describe('VOCAB_EXCLUDED_PAIRS (F-VOC-004 §3.3 rule 1, overlapping words)', () 
       ['vocab:ip', 'vocab:i-tooth'],
       ['vocab:son', 'vocab:pal-arm'],
       ['vocab:dari-leg', 'vocab:bal'],
+      ['vocab:ppalgansaek', 'vocab:sagwa-apple'],
+      ['vocab:noransaek', 'vocab:banana'],
+      ['vocab:paransaek', 'vocab:mul'],
+      ['vocab:haneulsaek', 'vocab:gureum'],
+      ['vocab:haneulsaek', 'vocab:haneul'],
+      ['vocab:galsaek', 'vocab:gom'],
+      ['vocab:hoesaek', 'vocab:kokkiri'],
+      ['vocab:hayansaek', 'vocab:uyu'],
+      ['vocab:bunhongsaek', 'vocab:kkot'],
     ]);
   });
 
@@ -54,5 +64,27 @@ describe('VOCAB_EXCLUDED_PAIRS (F-VOC-004 §3.3 rule 1, overlapping words)', () 
     expect(excludedPair('vocab:son', 'vocab:bal')).toBe(false);
     expect(excludedPair('vocab:chukgu', 'vocab:yagu')).toBe(false);
     expect(excludedPair('vocab:gong-ball', 'vocab:gong-ball')).toBe(false);
+  });
+});
+
+describe('VOCAB_EXCLUDED_PAIRS: colour swatch stickers (F-VOC-002 §3.6.1)', () => {
+  it('keeps every colour word apart from each word drawn with its sticker glyph', () => {
+    let checked = 0;
+    for (const [colorKey, { object }] of Object.entries(COLOR_SWATCHES)) {
+      const colour = VOCAB_ITEMS.find((i) => i.visual === `word:${colorKey}`);
+      expect(colour, colorKey).toBeDefined();
+      for (const word of VOCAB_ITEMS.filter((i) => i.visual === `word:${object}`)) {
+        expect(excludedPair(colour?.id as string, word.id), `${colour?.id} / ${word.id}`).toBe(true);
+        checked += 1;
+      }
+    }
+    // apple, banana, water, cloud, bear, elephant, milk, flower; tangerine, leaf, grapes and crow are props, not words
+    expect(checked).toBe(8);
+  });
+
+  it('keeps sky blue apart from the sky, which draws two clouds', () => {
+    expect(excludedPair('vocab:haneul', 'vocab:haneulsaek')).toBe(true);
+    expect(excludedPair('vocab:kkot', 'vocab:bunhongsaek')).toBe(true);
+    expect(excludedPair('vocab:sagwa-apple', 'vocab:juhwangsaek')).toBe(false);
   });
 });

@@ -19,15 +19,29 @@ describe('content/vocab.ts binding', () => {
     }
   });
 
-  it('lists the four reviewed free topics (status ready) in order', () => {
-    expect(vocabTopics.map((t) => t.key)).toEqual(['food', 'animals', 'colors', 'numbers']);
+  it('lists all twelve reviewed topics (status ready, V-7) in topic order', () => {
+    expect(VOCAB_TOPICS.every((t) => t.status === 'ready')).toBe(true);
+    expect(vocabTopics.map((t) => t.key)).toEqual([
+      'food',
+      'animals',
+      'colors',
+      'numbers',
+      'family',
+      'school',
+      'body',
+      'nature',
+      'travel',
+      'sports',
+      'k-culture',
+      'science',
+    ]);
   });
 
-  it('keeps draft words out of visibleItems: only words of the listed topics', () => {
+  it('serves only words of the listed topics through visibleItems, now every launch word', () => {
     const listed = new Set<string>(vocabTopics.map((t) => t.key));
-    expect(visibleItems.length).toBeGreaterThan(0);
     expect(visibleItems.every((i) => listed.has(i.topics[0]!))).toBe(true);
-    expect(visibleItems.map((i) => i.id)).not.toContain('vocab:gong-ball');
+    expect(visibleItems).toHaveLength(VOCAB_ITEMS.length);
+    expect(visibleItems.map((i) => i.id)).toContain('vocab:gong-ball');
   });
 
   it('still looks a topic up by key', () => {

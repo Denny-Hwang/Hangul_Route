@@ -4,7 +4,7 @@
   "entries": {
     "vocab-topic:k-culture": {
       "title": "Cultura coreana",
-      "blurb": "Ropa, comida, fiestas, juegos y música de Corea.",
+      "blurb": "Ropa, casas, comida, fiestas, juegos, música y más de Corea.",
       "hoyaIntro": "Ven a descubrir la ropa, la comida, las fiestas y la música de Corea."
     },
     "vocab:hanbok": {
@@ -19,7 +19,7 @@
       "gloss": "hanok (casa tradicional)"
     },
     "vocab:bibimbap": {
-      "gloss": "bibimbap (tazón de arroz mixto)",
+      "gloss": "bibimbap (tazón de arroz mezclado)",
       "senseNote": "Arroz con verduras encima, que se mezcla antes de comer."
     },
     "vocab:tteokbokki": {
@@ -27,7 +27,7 @@
     },
     "vocab:seollal": {
       "gloss": "Año Nuevo lunar",
-      "senseNote": "La gente lleva hanbok y hace una reverencia a los mayores."
+      "senseNote": "Mucha gente lleva hanbok y hace una reverencia a los mayores."
     },
     "vocab:chuseok": {
       "gloss": "Chuseok (fiesta de la cosecha)",

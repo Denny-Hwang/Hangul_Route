@@ -28,13 +28,14 @@ const WORDS_BUILD = FIXTURE_BUILD || process.env.E2E_VOCAB_TOPICS === '1';
 /** Words and marks a learner never reads here (D3): no fraction, no percent, no "wrong". */
 const SHAME = /\b(wrong|fail\w*|missed|lost|lose|premium|locked)\b|%|\d\s*\/\s*\d|\d+ of \d+/i;
 /**
- * The topics that are `ready` today, in topic order (V12): the other eight stay draft until V-7. A ready
- * topic is listed only once every one of its pictures is drawn (T8): Animals waits for its hand-drawn
- * glyphs (F-VOC-002), so the picker may hold fewer than these, never others and never out of order.
+ * The topics that are `ready`, in topic order (V12): all twelve since F-VOC-001 V-7. A ready topic is
+ * listed only once every one of its pictures is drawn (T8): Travel, Sports, K-Culture and Science wait
+ * for their glyphs (F-VOC-002 W-6), so the picker may hold fewer than these, never others and never out
+ * of order.
  */
-const READY = ['food', 'animals', 'colors', 'numbers'] as const;
-/** Ready topics whose every picture is drawn in this build (Food's glyphs and the generated colour and count families). */
-const DRAWN = ['food', 'colors', 'numbers'] as const;
+const READY = ['food', 'animals', 'colors', 'numbers', 'family', 'school', 'body', 'nature', 'travel', 'sports', 'k-culture', 'science'] as const;
+/** Ready topics whose every picture is drawn in this build (F-VOC-002 W-1 to W-5: the glyphs, the generated colour, count and body families, and card art). */
+const DRAWN = ['food', 'animals', 'colors', 'numbers', 'family', 'school', 'body', 'nature'] as const;
 
 /** The listed topics are ready ones, in topic order, and include every topic known to be fully drawn. */
 function expectReadyTopics(listed: readonly (string | null)[]): void {
@@ -151,8 +152,6 @@ test.describe('Words picker and topic page (fixture bundle)', () => {
     ] as const) {
       await expect(page.getByTestId(`vocab-topic-tile-${key}`)).toHaveAccessibleName(`${title}. 0 words collected.`);
     }
-    // A draft topic never reaches a learner (V12).
-    await expect(page.getByTestId('vocab-topic-tile-body')).toHaveCount(0);
     // Korean title with its romanization; the count in words; the bar is hidden from screen readers.
     const food = page.getByTestId('vocab-topic-tile-food');
     await expect(food).toContainText('음식');
@@ -241,9 +240,9 @@ test.describe('Words picker and topic page (fixture bundle)', () => {
     await expect(page.getByTestId('vocab-topic-hoya')).toBeVisible();
   });
 
-  test('an unknown or draft topic is "Topic not found" with a way back (T8)', async ({ page }) => {
+  test('an unknown topic is "Topic not found" with a way back (T8)', async ({ page }) => {
     await newLearner(page);
-    for (const key of ['nope', 'body']) {
+    for (const key of ['nope']) {
       await openTopic(page, key);
       await expect(page.getByTestId('vocab-topic-not-found')).toBeVisible();
       await expect(page.getByText('Topic not found')).toBeVisible();

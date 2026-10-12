@@ -21,6 +21,12 @@
  *   (F-VOC-002 W-4): the ring sits on the same limb of the same figure, about
  *   10 units apart, so at the 48 px option size the two pictures are too close
  *   to tell apart.
+ * - Each colour word against the word its swatch draws as a sticker
+ *   (F-VOC-002 §3.6.1): the red swatch carries the apple, yellow the banana,
+ *   blue the water, sky blue the cloud, brown the bear, gray the elephant,
+ *   white the milk and pink the flower, so the swatch is a right answer for
+ *   the object word too. Rule 2 compares `visual` keys only and does not see
+ *   a glyph inside a swatch. haneul "sky" (two clouds) joins the sky-blue pair.
  */
 export const VOCAB_EXCLUDED_PAIRS: readonly (readonly [string, string])[] = Object.freeze([
   ['vocab:gureum', 'vocab:bi-rain'],
@@ -42,6 +48,15 @@ export const VOCAB_EXCLUDED_PAIRS: readonly (readonly [string, string])[] = Obje
   ['vocab:ip', 'vocab:i-tooth'],
   ['vocab:son', 'vocab:pal-arm'],
   ['vocab:dari-leg', 'vocab:bal'],
+  ['vocab:ppalgansaek', 'vocab:sagwa-apple'],
+  ['vocab:noransaek', 'vocab:banana'],
+  ['vocab:paransaek', 'vocab:mul'],
+  ['vocab:haneulsaek', 'vocab:gureum'],
+  ['vocab:haneulsaek', 'vocab:haneul'],
+  ['vocab:galsaek', 'vocab:gom'],
+  ['vocab:hoesaek', 'vocab:kokkiri'],
+  ['vocab:hayansaek', 'vocab:uyu'],
+  ['vocab:bunhongsaek', 'vocab:kkot'],
 ] as const);
 
 const pairKey = (a: string, b: string): string => (a < b ? `${a}|${b}` : `${b}|${a}`);

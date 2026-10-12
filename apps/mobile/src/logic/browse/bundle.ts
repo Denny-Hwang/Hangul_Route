@@ -55,10 +55,11 @@ export interface BrowseBundleInput {
   scopeFor: (ref: string) => MinigameScope | undefined;
   /**
    * Whether a word picture can be drawn (F-VOC-003 T8: a topic with one blank
-   * tile is skipped). Default: every picture. The browse root passes the same
-   * check the learner topic picker uses once F-VOC-003's picker ships.
+   * tile is skipped). Required, so the browse root cannot list a topic the
+   * learner picker hides: it passes the picker's own check
+   * (`canRenderPicture` of `screens/vocab/topic-data.ts`).
    */
-  canRender?: (visual: string) => boolean;
+  canRender: (visual: string) => boolean;
 }
 
 const isStoryEpisode = (episode: Pick<Episode, 'format' | 'placement'>): boolean => episode.format === 'story' || episode.placement === 'shelf';
@@ -93,18 +94,25 @@ export function buildBrowseBundle(i: BrowseBundleInput): BrowseBundle {
     jamo: i.jamo,
     cards: i.cards,
     storyIndex,
-    vocabTopics: visibleTopics(vocab.vocabTopics, vocab.topicItems, i.canRender ?? (() => true)),
+    vocabTopics: visibleTopics(vocab.vocabTopics, vocab.topicItems, i.canRender),
     topicItems: vocab.topicItems,
     scopeFor: i.scopeFor,
     freeRegistry: freeContentRegistryFor(i.stories),
   };
 }
 
-let cached: BrowseBundle | undefined;
+const cached = new WeakMap<(visual: string) => boolean, BrowseBundle>();
 
-/** The learner bundle as All lessons sees it, built once. */
-export function defaultBrowseBundle(): BrowseBundle {
-  cached ??= buildBrowseBundle({
+/**
+ * The learner bundle as All lessons sees it, built once per picture check.
+ * `canRender` is the learner picker's check (`canRenderPicture`), so the word
+ * topics listed are exactly the ones a learner sees (T8): a `ready` topic whose
+ * art is not drawn yet stays out of both.
+ */
+export function defaultBrowseBundle(canRender: (visual: string) => boolean): BrowseBundle {
+  const hit = cached.get(canRender);
+  if (hit !== undefined) return hit;
+  const built = buildBrowseBundle({
     stages,
     themes,
     episodes: episodesAll,
@@ -115,8 +123,10 @@ export function defaultBrowseBundle(): BrowseBundle {
     vocabTopics: VOCAB_TOPICS,
     vocabItems: VOCAB_ITEMS,
     scopeFor,
+    canRender,
   });
-  return cached;
+  cached.set(canRender, built);
+  return built;
 }
 
 /** A learner can open an episode that is `shipped` or `ready` (as `playableEpisodes` counts it). */
