@@ -78,12 +78,13 @@ describe('librarySectionTabs (the tab row the Library draws)', () => {
     expect(librarySectionTabs({ entries: shelfIndex([tale('tiger')]) })).toEqual(['cards', 'story-time']);
   });
 
-  it('a culture note alone draws no Culture tab until its section ships (PR 4.7), so no tab row', () => {
-    expect(librarySectionTabs({ entries: shelfIndex([culture('seollal', [note])]) })).toEqual([]);
+  it('a Culture shelf story or a culture note alone draws Cards and Culture', () => {
+    expect(librarySectionTabs({ entries: shelfIndex([culture('seollal', [note])]) })).toEqual(['cards', 'culture']);
+    expect(librarySectionTabs({ entries: shelfIndex([culture('seollal')]) })).toEqual(['cards', 'culture']);
   });
 
-  it('a Story Time story with a culture note still draws Cards and Story Time only', () => {
-    expect(librarySectionTabs({ entries: shelfIndex([tale('tiger', [note])]) })).toEqual(['cards', 'story-time']);
+  it('a Story Time story with a culture note draws Cards, Story Time and Culture', () => {
+    expect(librarySectionTabs({ entries: shelfIndex([tale('tiger', [note])]) })).toEqual(['cards', 'story-time', 'culture']);
   });
 
   it('keeps the registry order whatever the drawn set lists', () => {
@@ -91,7 +92,7 @@ describe('librarySectionTabs (the tab row the Library draws)', () => {
     expect(librarySectionTabs({ entries: shelfIndex([tale('tiger', [note])]) }, all)).toEqual(['cards', 'story-time', 'culture']);
   });
 
-  it('draws Cards and Story Time in this build', () => {
-    expect([...DRAWN_LIBRARY_SECTIONS]).toEqual(['cards', 'story-time']);
+  it('draws Cards, Story Time and Culture in this build (Theme packs is F-VOC-003)', () => {
+    expect([...DRAWN_LIBRARY_SECTIONS]).toEqual(['cards', 'story-time', 'culture']);
   });
 });

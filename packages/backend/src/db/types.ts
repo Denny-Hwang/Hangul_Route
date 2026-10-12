@@ -1,5 +1,6 @@
-import type { Entitlement, EntitlementApply, MemberKind, Membership, Plan, RelinkRequest, Space } from '@hangul-route/content-schema';
+import { isStripeSubscriptionRef, type BillingEvent, type BillingEventKind, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type RelinkRequest, type Space } from '@hangul-route/content-schema';
 import type { TransferBlockReason, TransferEndReason, TransferSlot } from '@hangul-route/content-schema';
+import { isEntitlementActive } from '../lib/entitlement';
 import type { Account, Learner, LearnerDevice, SnapshotRecord } from '../store';
 import type {
   ConsentResetReason,
@@ -26,6 +27,9 @@ export interface WaitlistEntry {
   consentTextVersion: string;
   unsubscribedAt: string | null;
 }
+
+/** `recordBillingEvent` input (F-BILL-002 section 5.5): the row without its generated id and creation time. */
+export type BillingEventInput = Omit<BillingEvent, 'id' | 'createdAt'>;
 
 /** A re-link request as stored: `secret` is held until the device picks it up once. */
 export type StoredRelink = RelinkRequest & { secret: string | null };
@@ -84,8 +88,12 @@ export interface Db {
 
   // entitlements (F-ENT-001)
   entitlementsFor(subjectKind: Entitlement['subjectKind'], subjectId: string): Promise<Entitlement[]>;
-  /** Upsert one row per (subject, plan), keeping refs unless replaced. */
-  applyEntitlement(input: EntitlementApply, now: Date): Promise<Entitlement>;
+  /**
+   * Upsert one row per (subject, plan), keeping refs unless replaced, by the rules of
+   * `mergeEntitlement` (`merge` defaults to 'set'). The write never replaces a row it
+   * did not read: a lost race reads again and merges onto the winner (BY-D5).
+   */
+  applyEntitlement(input: EntitlementApply, now: Date, merge?: EntitlementMerge): Promise<Entitlement>;
 
   // waitlist (launch invites; no email is sent from here)
   /** Insert-if-absent by address: an existing row (and any unsubscribe on it) is left untouched. Says nothing about whether it existed. */
@@ -105,8 +113,12 @@ export interface Db {
    * its own request before treating the answer as a conflict.
    */
   createTransfer(row: StoredTransfer, event: Omit<NewTransferEvent, 'transferId'>): Promise<'created' | 'already_open'>;
-  /** Fill pending slot(s) of an open request. The destination slot needs the learner slot consented; a learner consent sets `executeAfter` = now + 48 h. */
-  consentSlot(id: string, consent: TransferSlotConsent, now: Date): Promise<number>;
+  /**
+   * Fill pending slot(s) of an open request. The destination slot needs the learner slot consented; a learner consent sets `executeAfter` = now + 48 h.
+   * With `events` (the consenting account and its `via` / basis, one per slot), the audit rows are written in the same transaction, only by the call
+   * whose CAS filled the slot(s): a lost race writes no event, and an event that cannot be written undoes the consent.
+   */
+  consentSlot(id: string, consent: TransferSlotConsent, now: Date, events?: ReadonlyArray<Omit<NewTransferEvent, 'transferId'>>): Promise<number>;
   /**
    * End an open request as `declined` by one slot. With `event` (the deciding account and its `via` / reason,
    * which the row does not store), the audit row is written in the same transaction, only by the call whose
@@ -115,8 +127,8 @@ export interface Db {
   declineSlot(id: string, slot: TransferSlot, endReason: TransferEndReason, endActor: TransferEndActor, now: Date, event?: Omit<NewTransferEvent, 'transferId'>): Promise<number>;
   /** End an open request as `cancelled`; `event` as for `declineSlot`. */
   cancelTransfer(id: string, endReason: TransferEndReason, endActor: TransferEndActor, now: Date, event?: Omit<NewTransferEvent, 'transferId'>): Promise<number>;
-  /** `expired` once `expiresAt <= now`. */
-  expireTransfer(id: string, now: Date): Promise<number>;
+  /** `expired` once `expiresAt <= now`; `event` (the system's `expired` row) as for `declineSlot`. */
+  expireTransfer(id: string, now: Date, event?: Omit<NewTransferEvent, 'transferId'>): Promise<number>;
   /** Archived source (section 4.13): a pending source slot becomes `not_required`. */
   markSourceNotRequired(id: string, now: Date): Promise<number>;
   /** `requested` -> `approved` when every slot is in. */
@@ -177,12 +189,74 @@ export interface Db {
   /** Upsert touching only `which`. */
   setTransferPref(learnerId: string, which: TransferPrefKey, value: boolean, now: Date): Promise<void>;
 
+  // billing history (F-BILL-002 section 5.5, migration 0007)
+  /**
+   * Insert-or-keep by (provider, providerRef, kind), so a webhook retry writes nothing new; then fill
+   * `paymentRef` when the stored row has none and `input` carries one. Answers the stored row.
+   * Refuses (throws) what `BillingEventSchema` refuses and an `occurredAt` that is not canonical ISO;
+   * an empty `paymentRef` is stored as null (`billing-rules.ts`).
+   */
+  recordBillingEvent(input: BillingEventInput, now: Date): Promise<BillingEvent>;
+  /** A subject's rows, newest first (`occurredAt`, then `createdAt`, then id), at most `limit` (a non-negative integer). */
+  billingEventsFor(subjectKind: BillingEvent['subjectKind'], subjectId: string, limit: number): Promise<BillingEvent[]>;
+  billingEventById(id: string): Promise<BillingEvent | null>;
+  /** The row on a provider reference; without `kind`, the newest row on it. */
+  billingEventByRef(provider: BillingEvent['provider'], providerRef: string, kind?: BillingEventKind): Promise<BillingEvent | null>;
+  /** The newest `purchase` or `renewal` row whose `paymentRef` is this payment intent: the row a refund belongs to (section 5.4). */
+  billingEventByPaymentRef(paymentRef: string): Promise<BillingEvent | null>;
+  /** The entitlement a provider reference (a Stripe subscription id) points at; the most recently updated when several do. */
+  entitlementByProviderRef(provider: Entitlement['provider'], providerRef: string): Promise<Entitlement | null>;
+
   /** Tests only: wipe everything. */
   reset(): Promise<void>;
 }
 
-/** The upsert rule shared by both backends (F-ENT-001 §3.1). */
-export function mergeEntitlement(existing: Entitlement | null, input: EntitlementApply, now: Date, newId: () => string): Entitlement {
+/**
+ * How an input lands on the stored row (AMENDMENTS-BILLING-FAMILY-YEARLY BY-D5):
+ * - 'set': every provider path and every subscription event. The input's status applies;
+ *   a field it leaves out keeps the stored value.
+ * - 'checkout': a subscription checkout's completion. Its subscription's own events own
+ *   status and end, and Stripe may deliver them first.
+ */
+export type EntitlementMerge = 'set' | 'checkout';
+
+/**
+ * A Stripe subscription event for a different subscription than the one the row carries,
+ * that would take a covering row out of cover (a duplicate's deletion, BY-D5).
+ */
+function isSupersededSubscription(existing: Entitlement, next: Entitlement, now: Date): boolean {
+  return (
+    existing.provider === 'stripe' &&
+    isStripeSubscriptionRef(existing.providerRef) &&
+    isStripeSubscriptionRef(next.providerRef) &&
+    existing.providerRef !== next.providerRef &&
+    isEntitlementActive(existing, now) &&
+    !isEntitlementActive(next, now)
+  );
+}
+
+/**
+ * The upsert rule shared by both backends (F-ENT-001 §3.1, BY-D5). Returns `existing`
+ * itself when the input changes nothing that may change, so callers can skip the write.
+ */
+export function mergeEntitlement(existing: Entitlement | null, input: EntitlementApply, now: Date, newId: () => string, merge: EntitlementMerge = 'set'): Entitlement {
+  if (merge === 'checkout') {
+    if (existing && input.providerRef && existing.providerRef === input.providerRef) {
+      // The subscription's events landed first: only fill what the completion knows.
+      const customerRef = input.customerRef ?? existing.customerRef;
+      const promoCode = input.promoCode ?? existing.promoCode;
+      if (customerRef === existing.customerRef && promoCode === existing.promoCode) return existing;
+      return { ...existing, customerRef, promoCode, updatedAt: now.toISOString() };
+    }
+    // A new row, or a new subscription replacing a lapsed one or a legacy payment: covered
+    // at once with no end until the subscription's own event sets it.
+    return applied(existing, { ...input, expiresAt: null }, now, newId);
+  }
+  const next = applied(existing, input, now, newId);
+  return existing && isSupersededSubscription(existing, next, now) ? existing : next;
+}
+
+function applied(existing: Entitlement | null, input: EntitlementApply, now: Date, newId: () => string): Entitlement {
   return {
     id: existing?.id ?? newId(),
     subjectKind: input.subjectKind,

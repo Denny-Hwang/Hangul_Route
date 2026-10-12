@@ -9,6 +9,15 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {};
 
 const BUDGETS: Readonly<Record<string, number>> = { tab: 12, pill: 24, cta: 28 };
 
+/**
+ * Screen-reader labels whose key name happens to match a budget word: they are read aloud, never
+ * drawn, so no visible budget applies. Each with a reason.
+ */
+const NOT_DRAWN: Readonly<Record<string, string>> = {
+  'a11y.myRoute.tab':
+    'the Route tab read aloud as the full page name "Learning Route" (AMENDMENTS-ROUTE-LEARNING-ROUTE LR-OD-1); the drawn label a11y.tabs.route keeps the tab budget',
+};
+
 type Message = (...args: unknown[]) => string;
 
 /** What a message renders: the string itself, or one output per sample argument list for a function message. */
@@ -28,7 +37,7 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       const value = lookup(messages, path);
       const last = path.split('.').pop() ?? '';
       // Tab labels live under `a11y.tabs.*` (F-I18N-001 §3.4 rule 2) and share the `tab` budget.
-      const budget = BUDGETS[last] ?? (path.startsWith('a11y.tabs.') ? BUDGETS.tab : undefined);
+      const budget = NOT_DRAWN[path] !== undefined ? undefined : (BUDGETS[last] ?? (path.startsWith('a11y.tabs.') ? BUDGETS.tab : undefined));
       if (budget !== undefined) {
         it(`${locale}:${path} fits ${budget} characters`, () => {
           const outputs = renderings(value, path);
@@ -51,7 +60,7 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
 
   it('the allow-list names only real paths and gives a reason', () => {
     const en = getMessages('en');
-    for (const [path, reason] of Object.entries(ES_LENGTH_ALLOW_LIST)) {
+    for (const [path, reason] of Object.entries({ ...ES_LENGTH_ALLOW_LIST, ...NOT_DRAWN })) {
       expect(lookup(en, path)).toBeDefined();
       expect(reason.length).toBeGreaterThan(0);
     }
@@ -217,6 +226,34 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
     const paths = leafPaths(getMessages('en')).filter((p) => BUDGETS[p.split('.').pop() ?? ''] !== undefined);
     for (const expected of ['landing.nav.playNow.cta', 'landing.hero.play.cta', 'landing.hero.seeCards.cta', 'landing.get.play.cta']) {
       expect(paths).toContain(expected);
+    }
+  });
+
+  // F-SITE-002 §5 (PR S-3): the site header's text links, the persona cards and the pill actions. "Start learning"
+  // renders as a pill in the header, so it is budgeted with the pill actions, which leave room for es / ko growth
+  // ("Sign in as a parent" must fit one line at 320 px). Until es / ko have landing overlays these cases check the
+  // English fallback.
+  describe('site budgets (F-SITE-002 S-3)', () => {
+    const SITE_BUDGETS: ReadonlyArray<[label: string, max: number, paths: readonly string[]]> = [
+      ['nav label', 14, ['landing.nav.learners', 'landing.nav.parents', 'landing.nav.teachers', 'landing.nav.signIn']],
+      ['persona card body', 90, ['landing.home.who.items.learners.body', 'landing.home.who.items.parents.body', 'landing.home.who.items.teachers.body']],
+      [
+        'pill action',
+        24,
+        ['landing.nav.start', 'landing.home.hero.start', 'landing.persona.parents.signIn', 'landing.persona.teachers.signIn', 'landing.persona.teachers.tryIt'],
+      ],
+      // Text links that are not `cta` leaves, so the general CTA budget skips them (S-3 review 3).
+      ['text link', 36, ['landing.home.hero.grownUps', 'landing.persona.parents.learn.link']],
+      ['skip link and 404 action', 24, ['landing.nav.skip', 'landing.notFound.home', 'landing.notFound.start']],
+    ];
+    for (const locale of LOCALES) {
+      for (const [label, max, paths] of SITE_BUDGETS) {
+        it.each(paths)(`${locale}: %s fits the ${label} budget (${max})`, (path) => {
+          const value = lookup(getMessages(locale), path);
+          expect(typeof value, path).toBe('string');
+          expect(String(value).length, String(value)).toBeLessThanOrEqual(max);
+        });
+      }
     }
   });
 

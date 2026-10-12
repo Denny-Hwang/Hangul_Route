@@ -182,7 +182,7 @@ describe('myRouteView: wireframe A (Appendix C, today mid-progress)', () => {
 describe('myRouteView: other states', () => {
   it('a new learner: Start with the goal line; skills read "Ready when you are" with no slot', () => {
     const v = view(model([]), { nextTitle: 'Meet the First Letters' });
-    expect(v.heroCopy.lines).toEqual(['Your Hangul route starts here.', 'Your first goal: read every Hangul letter.']);
+    expect(v.heroCopy.lines).toEqual(['Your Learning Route starts here.', 'Your first goal: read every Hangul letter.']);
     expect(v.heroCopy.cta).toEqual({ action: 'quest', label: 'Start' });
     expect(v.skills.map((s) => [s.detail, s.marks.length])).toEqual([
       ['Ready when you are', 0],
@@ -259,7 +259,7 @@ describe('myRouteView: other states', () => {
 
   it('read-only (a grown-up viewing a child): third person, no button, the note, the tiles line, the viewing line', () => {
     const v = view(model(APPENDIX_C), { viewer: 'grownup', name: 'Sam', nextTitle: 'Family at the Table' });
-    expect(v.viewing).toBe("Viewing Sam's journey");
+    expect(v.viewing).toBe("Viewing Sam's Learning Route");
     expect(v.heroCopy).toEqual({ lines: ['Sam is on Stage 1: Hangul.', 'Next: Family at the Table'], cta: null });
     expect(v.skillsTitle).toBe("What Sam's quests practice");
     expect(v.skills[0]?.detail).toBe('In 4 quests Sam finished');
@@ -267,6 +267,25 @@ describe('myRouteView: other states', () => {
     expect(v.tiles).toBe('Spelling with tiles: 2 quests');
     expect(stageRow(v, 'stage1').tags).toEqual([{ label: 'Sam is here', pin: false }]);
     expect(v.newQuests).toBeNull();
+  });
+
+  it('read-only has nothing to tap that plays or opens the Library as the active learner (amendment 5.1, 6.2): no episode cell, no tile link, no stories link', () => {
+    const m = model(APPENDIX_C);
+    const v = view({ ...m, gains: { stars: 3, cards: 2, storiesRead: 1 } }, { viewer: 'grownup', name: 'Sam', hasStories: true });
+    const cells = v.trail.flatMap((row) => (row.kind === 'stage' ? row.cells : []));
+    expect(cells.length).toBeGreaterThan(0);
+    expect(cells.every((c) => c.episodeId === null)).toBe(true);
+    expect(v.gains.map((g) => [g.key, g.opensLibrary])).toEqual([
+      ['stars', false],
+      ['cards', false],
+      ['stories', false],
+    ]);
+    expect(v.storiesNote).toBeNull();
+    // The learner's own page keeps all three.
+    const self = view({ ...m, gains: { stars: 3, cards: 2, storiesRead: 1 } }, { hasStories: true });
+    expect(self.trail.flatMap((row) => (row.kind === 'stage' ? row.cells : [])).some((c) => c.episodeId !== null)).toBe(true);
+    expect(self.gains.filter((g) => g.opensLibrary).map((g) => g.key)).toEqual(['cards', 'stories']);
+    expect(self.storiesNote).not.toBeNull();
   });
 
   it('OD-4 other branch: a not-open-yet stage keeps its own row and reads "Not open yet"; its cells are not buttons', () => {

@@ -15,7 +15,6 @@ import { OopsScreen } from './src/screens/system/OopsScreen';
 import { installGestureUnlock } from './src/platform/audio';
 import { subscribePwa } from './src/platform/pwa';
 import { flushQueue } from './src/platform/telemetry';
-import { useAccountStore } from './src/store/account-store';
 import { bindAudioLevelToProfiles } from './src/store/audio-store';
 import { hydrateLearnerData } from './src/store/bootstrap';
 import { usePwaStore } from './src/store/pwa-store';
@@ -30,14 +29,14 @@ const queryClient = new QueryClient({
 });
 
 export default function App(): React.ReactElement {
-  const hydrateAccount = useAccountStore((s) => s.hydrate);
   // <html lang> follows the UI locale on web (F-I18N-001 §3.4); no-op on native.
   useDocumentLang();
 
   const countVisit = usePwaStore((s) => s.hydrateAndCountVisit);
   // Profiles and every profile's saved progress are in memory before any
   // screen mounts, so nothing shows — or writes over — an empty record
-  // (audit UX-01 / L16).
+  // (audit UX-01 / L16). The account and every cached tier load in the same
+  // pass, before the first derivation (F-ENT-003 section 3.4).
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -47,7 +46,6 @@ export default function App(): React.ReactElement {
     const uninstallUnlock = installGestureUnlock();
     // Speech speed follows the active profile's level; game code never passes one.
     const unbindLevel = bindAudioLevelToProfiles();
-    void hydrateAccount();
     void countVisit();
     // Offline telemetry (F-PWA-001 §3.2): drain on start and when back online.
     void flushQueue();
@@ -84,7 +82,7 @@ export default function App(): React.ReactElement {
       foreground.remove();
       setProgressPersistListener(null);
     };
-  }, [hydrateAccount, countVisit]);
+  }, [countVisit]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

@@ -36,6 +36,20 @@ describe('POST /api/telemetry', () => {
     expect(store.events).toHaveLength(9);
   });
 
+  it('accepts the five F-ENT-003 names with their payloads (Worker first, E3-1b)', async () => {
+    const events: Array<[string, Record<string, unknown>]> = [
+      ['access.preview_opened', { stage: 'stage2', theme: 'life', from: 'journey' }],
+      ['access.help_asked', { from: 'episode', audience: 'family' }],
+      ['access.free_end_reached', { freeDays: 5, placedOut: false }],
+      ['route.next_started', { source: 'class', surface: 'home' }],
+      ['route.offplan_finished', { source: 'self', stage: 'stage1' }],
+    ];
+    for (const [name, payload] of events) {
+      expect((await post({ name, profileId: 'profile:a', payload })).status, name).toBe(201);
+    }
+    expect(store.events.map((e) => [e.name, e.payload])).toEqual(events);
+  });
+
   it('rejects unknown or missing event names with 422', async () => {
     for (const body of [{ name: 'unknown.event' }, { name: 'parent.notify.queued' }, {}, { name: 42 }]) {
       const r = await post(body);
@@ -117,6 +131,36 @@ describe('POST /api/telemetry', () => {
     const smuggled = await post({ name: 'shell.path_bounced', payload: { prefix: '/teach/space?id=space:a', persona: 'parent' } });
     expect(smuggled.status).toBe(201);
     expect(smuggled.body.data?.event.payload).toBeUndefined();
+  });
+
+  it('F-REPORT-001 3.10: report.* keep only scope, space and period with their enum values, and never a profile id (RP-W1)', async () => {
+    const viewed = await post({
+      name: 'report.viewed',
+      profileId: 'profile:suni',
+      payload: { scope: 'learner', space: 'device', period: 'month', learnerId: 'profile:suni', spaceId: 'space:family-a', name: 'Suni', at: '2026-10-05' },
+    });
+    expect(viewed.status).toBe(201);
+    expect(viewed.body.data?.event.profileId).toBeUndefined();
+    expect(viewed.body.data?.event.payload).toEqual({ scope: 'learner', space: 'device', period: 'month' });
+    expect(store.events.at(-1)).toMatchObject({ name: 'report.viewed', payload: { scope: 'learner', space: 'device', period: 'month' } });
+    expect(store.events.at(-1)?.profileId).toBeUndefined();
+    // every documented value passes
+    for (const payload of [
+      { scope: 'class', space: 'class', period: 'day' },
+      { scope: 'learner', space: 'family', period: 'week' },
+      { scope: 'learner', space: 'class', period: 'all' },
+    ]) {
+      expect((await post({ name: 'report.viewed', payload })).body.data?.event.payload).toEqual(payload);
+    }
+    // an identifier smuggled into an allowed key, or a value off the enum, is dropped
+    const smuggled = await post({ name: 'report.viewed', profileId: 'profile:suni', payload: { scope: 'profile:suni', space: 'space:class-a', period: 'year' } });
+    expect(smuggled.status).toBe(201);
+    expect(smuggled.body.data?.event.payload).toBeUndefined();
+    expect(smuggled.body.data?.event.profileId).toBeUndefined();
+    const partial = await post({ name: 'report.viewed', payload: { scope: 'class', space: 7, period: ['week'] } });
+    expect(partial.body.data?.event.payload).toEqual({ scope: 'class' });
+    // other events are untouched
+    expect((await post({ name: 'route_map.viewed', profileId: 'profile:suni', payload: { scope: 'x' } })).body.data?.event).toMatchObject({ profileId: 'profile:suni', payload: { scope: 'x' } });
   });
 
   it('Learning Route section 8: accepts route_map.goal_reached and stores its payload as sent (Worker first, LR-W1)', async () => {

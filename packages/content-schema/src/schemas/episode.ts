@@ -5,6 +5,9 @@ import { StageKeySchema, ThemeKeySchema, type StageKey, type ThemeKey } from './
 /**
  * Episode — one grid cell (Stage × Theme). Contains 1–N Quests.
  */
+/** The episode id grammar, `episode:<slug>` (exported for F-BROWSE-001 §4.4 and the lecture blocks). */
+export const EPISODE_ID_RE = /^episode:[a-z0-9-]+$/;
+
 export const EpisodeStatusSchema = z.enum(['draft', 'ready', 'shipped', 'preview']);
 export type EpisodeStatus = z.infer<typeof EpisodeStatusSchema>;
 
@@ -14,7 +17,7 @@ export type EpisodeStatus = z.infer<typeof EpisodeStatusSchema>;
  * `format` / `placement` / `volume` default, so every existing episode stays valid.
  */
 export const EpisodeObjectSchema = z.object({
-  id: z.string().regex(/^episode:[a-z0-9-]+$/),
+  id: z.string().regex(EPISODE_ID_RE),
   stage: StageKeySchema,
   theme: ThemeKeySchema,
   order: z.number().int().nonnegative(),

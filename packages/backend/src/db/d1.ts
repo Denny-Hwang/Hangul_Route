@@ -1,8 +1,10 @@
-import { TRANSFER_COOLING_OFF_MS, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type Space, type TransferBlockReason, type TransferEndReason, type TransferSlot } from '@hangul-route/content-schema';
+import { TRANSFER_COOLING_OFF_MS, type BillingEvent, type BillingEventKind, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type Space, type TransferBlockReason, type TransferEndReason, type TransferSlot } from '@hangul-route/content-schema';
 import { id, type Account, type Learner, type LearnerDevice, type SnapshotRecord } from '../store';
 import {
   learnerRateKeys,
   mergeEntitlement,
+  type BillingEventInput,
+  type EntitlementMerge,
   type ConsentResetReason,
   type Db,
   type ExecuteTransferInput,
@@ -17,6 +19,7 @@ import {
   type TransferSlotConsent,
   type WaitlistEntry,
 } from './types';
+import { assertBillingLimit, billingEventFields, REFUNDABLE_BILLING_KINDS } from './billing-rules';
 import { assertNewTransfer, assertTransferPrefKey, assertTransferSlot, consentedLearnerSlot, finiteCap, teacherSlotsOf } from './transfer-rules';
 import { ENDED_TRANSFER_STATUSES, OPEN_TRANSFER_STATUSES } from './transfer-types';
 
@@ -120,6 +123,24 @@ const toEntitlement = (r: Row): Entitlement => ({
 });
 
 const bool = (v: unknown): boolean => v === 1 || v === true || v === '1';
+/** Newest first; on an equal Stripe second the later recorded row (`newestBillingEvent` in memory). */
+const NEWEST_BILLING_EVENT = 'occurred_at DESC, created_at DESC, id DESC';
+/** A `billing_events` row (migration 0007). */
+const toBillingEvent = (r: Row): BillingEvent => ({
+  id: str(r.id),
+  subjectKind: str(r.subject_kind) as BillingEvent['subjectKind'],
+  subjectId: str(r.subject_id),
+  planKey: str(r.plan_key) as BillingEvent['planKey'],
+  kind: str(r.kind) as BillingEvent['kind'],
+  amountCents: num(r.amount_cents),
+  currency: str(r.currency),
+  provider: str(r.provider) as BillingEvent['provider'],
+  providerRef: str(r.provider_ref),
+  paymentRef: nstr(r.payment_ref),
+  livemode: bool(r.livemode),
+  occurredAt: str(r.occurred_at),
+  createdAt: str(r.created_at),
+});
 const toTransfer = (r: Row): StoredTransfer => ({
   id: str(r.id),
   learnerId: str(r.learner_id),
@@ -214,6 +235,9 @@ const OPEN = `status IN (${sqlList(OPEN_TRANSFER_STATUSES)})`;
 const ENDED = `status IN (${sqlList(ENDED_TRANSFER_STATUSES)})`;
 const ALL_SLOTS_IN = "l_state = 'consented' AND s_state IN ('consented','not_required') AND d_state = 'consented'";
 /** The row count a write reports; a binding that does not say is an error, never zero. */
+/** Lost races an entitlement write tolerates before it fails (and Stripe retries the delivery). */
+const ENTITLEMENT_WRITE_ATTEMPTS = 5;
+
 const readChanges = (result: D1RunResultLike | undefined): number => {
   const changed = result?.meta?.changes;
   if (typeof changed !== 'number') throw new Error('D1 did not report meta.changes for a compare-and-set write');
@@ -230,6 +254,7 @@ const IN_CHUNK = 90;
 const TRANSFER_TABLES = ['transfer_events', 'transfer_requests', 'learner_transfer_prefs', 'rate_hits'] as const;
 const RESET_TABLES = [
   ...TRANSFER_TABLES,
+  'billing_events',
   'waitlist',
   'entitlements',
   'relink_requests',
@@ -420,14 +445,71 @@ export class D1Db implements Db {
   entitlementsFor(subjectKind: Entitlement['subjectKind'], subjectId: string): Promise<Entitlement[]> {
     return this.many('SELECT * FROM entitlements WHERE subject_kind = ? AND subject_id = ? ORDER BY plan_key', [subjectKind, subjectId], toEntitlement);
   }
-  async applyEntitlement(input: EntitlementApply, now: Date): Promise<Entitlement> {
-    const existing = await this.one('SELECT * FROM entitlements WHERE subject_kind = ? AND subject_id = ? AND plan_key = ?', [input.subjectKind, input.subjectId, input.planKey], toEntitlement);
-    const e = mergeEntitlement(existing, input, now, () => id('ent'));
-    await this.run(
-      'INSERT INTO entitlements (id, subject_kind, subject_id, plan_key, status, provider, provider_ref, customer_ref, seats, expires_at, promo_code, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(subject_kind, subject_id, plan_key) DO UPDATE SET status = excluded.status, provider = excluded.provider, provider_ref = excluded.provider_ref, customer_ref = excluded.customer_ref, seats = excluded.seats, expires_at = excluded.expires_at, promo_code = excluded.promo_code, updated_at = excluded.updated_at',
-      [e.id, e.subjectKind, e.subjectId, e.planKey, e.status, e.provider, e.providerRef, e.customerRef, e.seats, e.expiresAt, e.promoCode, e.updatedAt],
+  /**
+   * A compare-and-set (BY-D5): read, merge in code, then write only if the row is still
+   * what was read (`INSERT … DO NOTHING` for none, `UPDATE … WHERE` every column for one).
+   * Stripe sends a subscription's events and its checkout completion together; a write that
+   * lost the race reads again and merges onto the winner instead of overwriting it.
+   */
+  async applyEntitlement(input: EntitlementApply, now: Date, merge: EntitlementMerge = 'set'): Promise<Entitlement> {
+    for (let attempt = 0; attempt < ENTITLEMENT_WRITE_ATTEMPTS; attempt += 1) {
+      const existing = await this.one('SELECT * FROM entitlements WHERE subject_kind = ? AND subject_id = ? AND plan_key = ?', [input.subjectKind, input.subjectId, input.planKey], toEntitlement);
+      const e = mergeEntitlement(existing, input, now, () => id('ent'), merge);
+      if (existing && e === existing) return e;
+      const won = existing
+        ? await this.changes(
+            'UPDATE entitlements SET status = ?, provider = ?, provider_ref = ?, customer_ref = ?, seats = ?, expires_at = ?, promo_code = ?, updated_at = ? WHERE id = ? AND status = ? AND provider = ? AND provider_ref IS ? AND customer_ref IS ? AND seats IS ? AND expires_at IS ? AND promo_code IS ? AND updated_at = ?',
+            [e.status, e.provider, e.providerRef, e.customerRef, e.seats, e.expiresAt, e.promoCode, e.updatedAt, existing.id, existing.status, existing.provider, existing.providerRef, existing.customerRef, existing.seats, existing.expiresAt, existing.promoCode, existing.updatedAt],
+          )
+        : await this.changes(
+            'INSERT INTO entitlements (id, subject_kind, subject_id, plan_key, status, provider, provider_ref, customer_ref, seats, expires_at, promo_code, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(subject_kind, subject_id, plan_key) DO NOTHING',
+            [e.id, e.subjectKind, e.subjectId, e.planKey, e.status, e.provider, e.providerRef, e.customerRef, e.seats, e.expiresAt, e.promoCode, e.updatedAt],
+          );
+      if (won > 0) return e;
+    }
+    // Stripe retries a failed delivery, and the retry merges onto whatever is stored then.
+    throw new Error('entitlement_write_conflict');
+  }
+
+  // ---- billing history (F-BILL-002 section 5.5, migration 0007) ----
+
+  async recordBillingEvent(input: BillingEventInput, now: Date): Promise<BillingEvent> {
+    const row = billingEventFields(input);
+    const key = [row.provider, row.providerRef, row.kind];
+    // One transaction: insert-or-keep on the unique key, then fill a missing payment_ref (never overwrite one).
+    await this.d1.batch([
+      this.d1
+        .prepare(
+          'INSERT INTO billing_events (id, subject_kind, subject_id, plan_key, kind, amount_cents, currency, provider, provider_ref, payment_ref, livemode, occurred_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(provider, provider_ref, kind) DO NOTHING',
+        )
+        .bind(id('bev'), row.subjectKind, row.subjectId, row.planKey, row.kind, row.amountCents, row.currency, row.provider, row.providerRef, row.paymentRef, row.livemode ? 1 : 0, row.occurredAt, now.toISOString()),
+      this.d1.prepare('UPDATE billing_events SET payment_ref = ? WHERE provider = ? AND provider_ref = ? AND kind = ? AND payment_ref IS NULL AND ? IS NOT NULL').bind(row.paymentRef, ...key, row.paymentRef),
+    ]);
+    const stored = await this.one('SELECT * FROM billing_events WHERE provider = ? AND provider_ref = ? AND kind = ?', key, toBillingEvent);
+    if (!stored) throw new Error('billing_events: row missing after insert');
+    return stored;
+  }
+  async billingEventsFor(subjectKind: BillingEvent['subjectKind'], subjectId: string, limit: number): Promise<BillingEvent[]> {
+    assertBillingLimit(limit);
+    return this.many(`SELECT * FROM billing_events WHERE subject_kind = ? AND subject_id = ? ORDER BY ${NEWEST_BILLING_EVENT} LIMIT ?`, [subjectKind, subjectId, limit], toBillingEvent);
+  }
+  billingEventById(eventId: string): Promise<BillingEvent | null> {
+    return this.one('SELECT * FROM billing_events WHERE id = ?', [eventId], toBillingEvent);
+  }
+  billingEventByRef(provider: BillingEvent['provider'], providerRef: string, kind?: BillingEventKind): Promise<BillingEvent | null> {
+    return kind === undefined
+      ? this.one(`SELECT * FROM billing_events WHERE provider = ? AND provider_ref = ? ORDER BY ${NEWEST_BILLING_EVENT} LIMIT 1`, [provider, providerRef], toBillingEvent)
+      : this.one('SELECT * FROM billing_events WHERE provider = ? AND provider_ref = ? AND kind = ?', [provider, providerRef, kind], toBillingEvent);
+  }
+  billingEventByPaymentRef(paymentRef: string): Promise<BillingEvent | null> {
+    return this.one(
+      `SELECT * FROM billing_events WHERE payment_ref = ? AND kind IN (${REFUNDABLE_BILLING_KINDS.map(() => '?').join(', ')}) ORDER BY ${NEWEST_BILLING_EVENT} LIMIT 1`,
+      [paymentRef, ...REFUNDABLE_BILLING_KINDS],
+      toBillingEvent,
     );
-    return e;
+  }
+  entitlementByProviderRef(provider: Entitlement['provider'], providerRef: string): Promise<Entitlement | null> {
+    return this.one('SELECT * FROM entitlements WHERE provider = ? AND provider_ref = ? ORDER BY updated_at DESC, id DESC LIMIT 1', [provider, providerRef], toEntitlement);
   }
 
   addWaitlist(e: Omit<WaitlistEntry, 'unsubscribedAt'>): Promise<void> {
@@ -465,31 +547,52 @@ export class D1Db implements Db {
     return inserted === 1 ? 'created' : 'already_open';
   }
 
-  async consentSlot(transferId: string, consent: TransferSlotConsent, now: Date): Promise<number> {
+  async consentSlot(transferId: string, consent: TransferSlotConsent, now: Date, events: ReadonlyArray<Omit<NewTransferEvent, 'transferId'>> = []): Promise<number> {
     const at = now.toISOString();
-    if (consent.kind === 'learner') {
-      const record = consentedLearnerSlot(consent.record, at);
-      const introduce = consent.introduce === undefined ? null : consent.introduce ? 1 : 0;
-      return this.changes(
-        `UPDATE transfer_requests SET l_state = 'consented', ${LEARNER_RECORD_COLUMNS.map((c) => `${c} = ?`).join(', ')}, introduce = COALESCE(?, introduce), execute_after = ?, updated_at = ?, rev = rev + 1 WHERE id = ? AND ${OPEN} AND l_state = 'pending'`,
-        [...learnerRecordValues(record), introduce, new Date(now.getTime() + TRANSFER_COOLING_OFF_MS).toISOString(), at, transferId],
-      );
-    }
-    const slots = teacherSlotsOf(consent);
     const sets: string[] = [];
     const params: unknown[] = [];
     const where: string[] = [];
-    if (slots.source) {
-      sets.push("s_state = 'consented', s_at = ?, s_account_id = ?, s_via = ?");
-      params.push(at, consent.accountId, consent.via);
-      where.push("s_state = 'pending'");
+    if (consent.kind === 'learner') {
+      const record = consentedLearnerSlot(consent.record, at);
+      sets.push(`l_state = 'consented', ${LEARNER_RECORD_COLUMNS.map((c) => `${c} = ?`).join(', ')}, introduce = COALESCE(?, introduce), execute_after = ?`);
+      params.push(...learnerRecordValues(record), consent.introduce === undefined ? null : consent.introduce ? 1 : 0, new Date(now.getTime() + TRANSFER_COOLING_OFF_MS).toISOString());
+      where.push("l_state = 'pending'");
+    } else {
+      const slots = teacherSlotsOf(consent);
+      if (slots.source) {
+        sets.push("s_state = 'consented', s_at = ?, s_account_id = ?, s_via = ?");
+        params.push(at, consent.accountId, consent.via);
+        where.push("s_state = 'pending'");
+      }
+      if (slots.destination) {
+        sets.push("d_state = 'consented', d_at = ?, d_account_id = ?, d_via = ?");
+        params.push(at, consent.accountId, consent.via);
+        where.push("d_state = 'pending'", "l_state = 'consented'");
+      }
     }
-    if (slots.destination) {
-      sets.push("d_state = 'consented', d_at = ?, d_account_id = ?, d_via = ?");
-      params.push(at, consent.accountId, consent.via);
-      where.push("d_state = 'pending'", "l_state = 'consented'");
+    const update = (extraSet: string, extraParams: unknown[]): [string, unknown[]] => [
+      `UPDATE transfer_requests SET ${sets.join(', ')}${extraSet}, updated_at = ?, rev = rev + 1 WHERE id = ? AND ${OPEN} AND ${where.join(' AND ')}`,
+      [...params, ...extraParams, at, transferId],
+    ];
+    if (events.length === 0) {
+      const [sql, values] = update('', []);
+      return this.changes(sql, values);
     }
-    return this.changes(`UPDATE transfer_requests SET ${sets.join(', ')}, updated_at = ?, rev = rev + 1 WHERE id = ? AND ${OPEN} AND ${where.join(' AND ')}`, [...params, at, transferId]);
+    // The consent and its audit rows in one transaction, written only by the call whose CAS changed the row:
+    // the UPDATE marks it with a one-off token in `block_reason`, each event is guarded by the token, and the
+    // last statement clears it (the pattern of resetLearnerConsent). A slot can be filled only while the
+    // request is `requested` (an `approved` row has every slot in), and a `requested` row never carries a
+    // block reason (`blockTransfer` needs `approved`, a reset clears it), so the token overwrites nothing.
+    const token = `consenting:${crypto.randomUUID()}`;
+    const [changed] = await this.batchChanges([
+      update(', block_reason = ?', [token]),
+      ...events.map((e): [string, unknown[]] => [
+        'INSERT INTO transfer_events (transfer_id, at, actor_kind, actor_ref, event, slot, detail_json) SELECT ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM transfer_requests WHERE id = ? AND block_reason = ?)',
+        [transferId, e.at, e.actorKind, e.actorRef, e.event, e.slot, e.detail === null ? null : JSON.stringify(e.detail), transferId, token],
+      ]),
+      ['UPDATE transfer_requests SET block_reason = NULL WHERE id = ? AND block_reason = ?', [transferId, token]],
+    ]);
+    return changed ?? 0;
   }
 
   async declineSlot(transferId: string, slot: TransferSlot, endReason: TransferEndReason, endActor: TransferEndActor, now: Date, event?: Omit<NewTransferEvent, 'transferId'>): Promise<number> {
@@ -519,7 +622,7 @@ export class D1Db implements Db {
    * CAS wrote (status, reason and `ended_at` = now) and by the absence of an earlier event of its kind: a
    * request ends once, so a call that lost the race in the same millisecond inserts nothing.
    */
-  private async endTransfer(update: [string, unknown[]], ended: { transferId: string; status: 'declined' | 'cancelled'; endReason: TransferEndReason; at: string }, event: Omit<NewTransferEvent, 'transferId'> | undefined): Promise<number> {
+  private async endTransfer(update: [string, unknown[]], ended: { transferId: string; status: 'declined' | 'cancelled' | 'expired'; endReason: TransferEndReason; at: string }, event: Omit<NewTransferEvent, 'transferId'> | undefined): Promise<number> {
     if (!event) return this.changes(update[0], update[1]);
     const { transferId } = ended;
     const [changed] = await this.batchChanges([
@@ -532,11 +635,15 @@ export class D1Db implements Db {
     return changed ?? 0;
   }
 
-  expireTransfer(transferId: string, now: Date): Promise<number> {
+  expireTransfer(transferId: string, now: Date, event?: Omit<NewTransferEvent, 'transferId'>): Promise<number> {
     const at = now.toISOString();
-    return this.changes(
-      `UPDATE transfer_requests SET status = 'expired', end_reason = 'expired', end_actor = 'system', ended_at = ?, updated_at = ?, rev = rev + 1 WHERE id = ? AND ${OPEN} AND expires_at <= ?`,
-      [at, at, transferId, at],
+    return this.endTransfer(
+      [
+        `UPDATE transfer_requests SET status = 'expired', end_reason = 'expired', end_actor = 'system', ended_at = ?, updated_at = ?, rev = rev + 1 WHERE id = ? AND ${OPEN} AND expires_at <= ?`,
+        [at, at, transferId, at],
+      ],
+      { transferId, status: 'expired', endReason: 'expired', at },
+      event,
     );
   }
 

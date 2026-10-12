@@ -10,8 +10,8 @@ export const a11y = {
   hoya: (pose: string) => `Hoya the tiger, ${pose}`,
   dismissHoya: 'Close Hoya message',
   goBack: 'Go back',
-  /** Bottom tab labels. */
-  tabs: { home: 'Today', journey: 'Journey', library: 'Library' },
+  /** Bottom tab labels. `route` is the Learning Route tab (LR-OD-1: the tab budget is 12; its accessibility label is `myRoute.tab`). */
+  tabs: { home: 'Today', journey: 'Journey', library: 'Library', route: 'Route' },
   cardArt: (title: string) => `Card art for ${title}`,
   /** The cub button on Home: the only way to profiles, backup, classes and the grown-up zone. */
   profileEntry: 'Profile and settings',
@@ -118,10 +118,12 @@ export const a11y = {
   joinName: 'Name your teacher will see',
   leaveSpace: (name: string) => `Leave ${name}`,
   /** The paywall offer card: its name, then the already-formatted price. */
-  lifetimeOffer: (name: string, price: string) => `${name}, ${price}`,
+  familyOffer: (name: string, price: string) => `${name}, ${price}`,
 
-  /** My route (F-ROUTE-001 section 3.14): each row label reads the row; the pips are hidden. */
+  /** Learning Route (F-ROUTE-001 section 3.14): each row label reads the row; the pips are hidden. */
   myRoute: {
+    /** The Route tab's accessibility label: the full page name (LR-OD-1). */
+    tab: 'Learning Route',
     stage: (order: number, title: string, stateWord: string, here: boolean, start: boolean, played: number) =>
       [
         `Stage ${order}, ${title}.`,
@@ -154,5 +156,26 @@ export const a11y = {
         .filter((part) => part !== '')
         .join(' '),
     homeStripGoal: (n: number, title: string) => `Goal: Stage ${n}, ${title}`,
+    /** The parent dashboard row (R-9b): its goal and started lines, read without the middle dot. */
+    rowGoal: (n: number, title: string) => `Goal: Stage ${n}, ${title}.`,
+    rowStarted: (n: number, band: string, date: string) => `Started: Stage ${n}, ${band}, ${date}.`,
+  },
+  /**
+   * The vocabulary question view (F-VOC-004 §3.8, S-4b): the speaker, the outcome said in words after a
+   * tap (`gloss` is the answer's meaning in the UI language, content), and the homonym topic chip.
+   */
+  vocab: {
+    question: {
+      speaker: 'Play the word again',
+      /** The meaning starts the sentence, so its first letter is upper case ("Right. Apple."). */
+      right: (gloss: string) => `Right. ${gloss.charAt(0).toUpperCase()}${gloss.slice(1)}.`,
+      reveal: (gloss: string) => `Not this one. The answer is ${gloss}.`,
+      /** The quick check after a miss: the learner taps again. */
+      tryAnother: 'Not this one. Try another.',
+      topic: (title: string) => `Topic: ${title}`,
+      /** `right` / `reveal` for a question with no word to name (a degenerate question; never an empty name). */
+      rightPlain: 'Right.',
+      revealPlain: 'Not this one.',
+    },
   },
 } as const;

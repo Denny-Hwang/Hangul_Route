@@ -229,6 +229,58 @@ function transferContract(name: string, make: () => Db, dropLearnerRowOnly: Drop
         await expect(db.consentSlot(ID, teacher([]), at(2 * HOUR))).rejects.toThrow(/slot/);
         await expect(db.consentSlot(ID, teacher(['source', 'source']), at(2 * HOUR))).rejects.toThrow(/slot/);
       });
+
+      it('writes the consenting events with the CAS, once; a lost race writes none (T-5b audit)', async () => {
+        await db.createTransfer(learnerSideRow(), created);
+        const source = { at: iso(HOUR), actorKind: 'account' as const, actorRef: 'teacher-a', event: 'consented' as const, slot: 'source' as const, detail: { via: 'owner' } };
+        expect(await db.consentSlot(ID, teacher(['source']), at(HOUR), [source])).toBe(1);
+        // the same answer again in the same millisecond: the CAS loses and no second event appears
+        expect(await db.consentSlot(ID, teacher(['source'], 'school-admin'), at(HOUR), [{ ...source, actorRef: 'school-admin' }])).toBe(0);
+        expect((await db.transferEvents(ID)).map((e) => [e.event, e.actorRef, e.slot, e.detail])).toEqual([
+          ['created', 'mom', null, null],
+          ['consented', 'teacher-a', 'source', { via: 'owner' }],
+        ]);
+        // the token that guards the events never stays on the row
+        expect(await db.getTransfer(ID)).toMatchObject({ blockReason: null, rev: 1 });
+
+        // a two-slot approve (T11) writes one event per slot, in the same transaction
+        await db.cancelTransfer(ID, 'withdrawn_learner', 'family', at(HOUR));
+        await db.createTransfer(learnerSideRow({ id: 'transfer:0002' }), created);
+        const both = [
+          { ...source, at: iso(2 * HOUR) },
+          { ...source, at: iso(2 * HOUR), slot: 'destination' as const },
+        ];
+        expect(await db.consentSlot('transfer:0002', teacher(['source', 'destination']), at(2 * HOUR), both)).toBe(1);
+        expect((await db.transferEvents('transfer:0002')).map((e) => [e.event, e.slot])).toEqual([
+          ['created', null],
+          ['consented', 'source'],
+          ['consented', 'destination'],
+        ]);
+      });
+
+      it('a learner consent writes its event once, again after a reset, never for the guardian who lost the race', async () => {
+        await db.createTransfer(sourceRow(), created);
+        const event = (actorRef: string, ms: number) => ({ at: iso(ms), actorKind: 'account' as const, actorRef, event: 'consented' as const, slot: 'learner' as const, detail: { basis: 'caregiver' } });
+        expect(await db.consentSlot(ID, { kind: 'learner', record: consentRecord() }, at(HOUR), [event('mom', HOUR)])).toBe(1);
+        expect(await db.consentSlot(ID, { kind: 'learner', record: consentRecord({ evidence: 'dad' }) }, at(HOUR), [event('dad', HOUR)])).toBe(0);
+        await db.resetLearnerConsent(ID, 'terms_changed', at(2 * HOUR));
+        expect(await db.consentSlot(ID, { kind: 'learner', record: consentRecord({ evidence: 'dad' }) }, at(3 * HOUR), [event('dad', 3 * HOUR)])).toBe(1);
+        expect((await db.transferEvents(ID)).map((e) => [e.event, e.actorRef])).toEqual([
+          ['created', 'mom'],
+          ['consented', 'mom'],
+          ['consent_reset', null],
+          ['consented', 'dad'],
+        ]);
+        expect(await db.getTransfer(ID)).toMatchObject({ blockReason: null, learner: { state: 'consented', evidence: 'dad' } });
+      });
+
+      it('an event that cannot be written rolls the consent back (one transaction)', async () => {
+        await db.createTransfer(learnerSideRow(), created);
+        const bad = { at: iso(HOUR), actorKind: 'robot' as never, actorRef: 'teacher-a', event: 'consented' as const, slot: 'source' as const, detail: null };
+        await expect(db.consentSlot(ID, teacher(['source']), at(HOUR), [bad])).rejects.toThrow(/CHECK/i);
+        expect(await db.getTransfer(ID)).toMatchObject({ status: 'requested', source: { state: 'pending' }, blockReason: null, rev: 0 });
+        expect((await db.transferEvents(ID)).map((e) => e.event)).toEqual(['created']);
+      });
     });
 
     describe('ending a request', () => {
@@ -303,6 +355,22 @@ function transferContract(name: string, make: () => Db, dropLearnerRowOnly: Drop
         expect(await db.expireTransfer(ID, at(TRANSFER_WINDOW_MS))).toBe(1);
         expect(await db.getTransfer(ID)).toMatchObject({ status: 'expired', endReason: 'expired', endActor: 'system', endedAt: iso(TRANSFER_WINDOW_MS) });
         expect(await db.expireTransfer(ID, at(TRANSFER_WINDOW_MS + DAY))).toBe(0);
+      });
+
+      it('expireTransfer writes the system expired event with the CAS, once; an early or repeated call writes none', async () => {
+        await db.createTransfer(learnerSideRow(), created);
+        const expired = { at: iso(TRANSFER_WINDOW_MS), actorKind: 'system' as const, actorRef: null, event: 'expired' as const, slot: null, detail: null };
+        expect(await db.expireTransfer(ID, at(TRANSFER_WINDOW_MS - 1), { ...expired, at: iso(TRANSFER_WINDOW_MS - 1) })).toBe(0);
+        expect(await db.expireTransfer(ID, at(TRANSFER_WINDOW_MS), expired)).toBe(1);
+        expect(await db.expireTransfer(ID, at(TRANSFER_WINDOW_MS), expired)).toBe(0);
+        expect((await db.transferEvents(ID)).map((e) => [e.event, e.actorKind, e.actorRef, e.slot, e.detail])).toEqual([
+          ['created', 'account', 'mom', null, null],
+          ['expired', 'system', null, null, null],
+        ]);
+        const bad = { ...expired, actorKind: 'robot' as never };
+        expect(await db.createTransfer(sourceRow({ id: 'transfer:0002' }), created)).toBe('created');
+        await expect(db.expireTransfer('transfer:0002', at(TRANSFER_WINDOW_MS), bad)).rejects.toThrow(/CHECK/i);
+        expect(await db.getTransfer('transfer:0002')).toMatchObject({ status: 'requested', rev: 0 });
       });
     });
 

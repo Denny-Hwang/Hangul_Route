@@ -92,7 +92,7 @@ Hangul Route
 │   ├─ B4. Voice message (≤10 s)                         [R] F-PAR-001 N5
 │   ├─ B5. Plan builder (family)  = "Send homework"      [S] F-PLAN-001 §3.5 (`/teach/space/:id/plan`, class 와 공용) (T-P2-01 흡수)
 │   ├─ B6. Account (Clerk sign-in · email · consent · delete learner) [R/P] F-AUTH-001/002
-│   ├─ B7. Billing (family_lifetime $15.30 once)         [S] F-ENT-001 §3.6 (`/teach/billing`, Stripe one-time; 결정 #30) + 프로모·레퍼럴 코드 입력 (F-ENT-002)
+│   ├─ B7. Billing (Family Plan $15.30/년, 매년 갱신)    [S] F-ENT-001 §3.6 (`/teach/billing`, Stripe 연간 구독; 결정 #30 → 2026-10-11 연 단위로 변경, AMENDMENTS-BILLING-FAMILY-YEARLY) + 프로모·레퍼럴 코드 입력 (F-ENT-002)
 │   └─ B8. Backup (rescue code 보기 · 파일 내보내기)      [S] F-SYNC-002 · F-RESTORE-001
 │
 ├─ C. Teacher / School Console (웹 전용) ────────────────────────── 교사·관리자
@@ -125,7 +125,7 @@ Hangul Route
 | 페르소나 (roadmap §1) | A Learner | B Caregiver | C Teacher/School | 결제 |
 |---|---|---|---|---|
 | P-A 개인 학습 (어른 없음) | ✓ 전부 (Stage 1) + Rescue Code | – | – | Free |
-| P-B 가정 | ✓ · Lecture presenter (A15, `/present`, 가족 TV, 프로필 없음) | ✓ 앱+웹 | C10 만 (가족 공간 `caregiver`; `plan.write` 와 같은 조건, F-TCH-004 §3.11) | family_lifetime ($15.30 once) |
+| P-B 가정 | ✓ · Lecture presenter (A15, `/present`, 가족 TV, 프로필 없음) | ✓ 앱+웹 | C10 만 (가족 공간 `caregiver`; `plan.write` 와 같은 조건, F-TCH-004 §3.11) | Family Plan (`family_lifetime`, $15.30/년, 매년 갱신) |
 | P-C 학급 학생 | ✓ + Join code | (부모가 있으면 ✓) | – | 교사가 지불 |
 | P-C 교사 | Lecture presenter 만 (A15, `/present`, 프로필 없음) | – | ✓ C1–C6, C8, C10 | 학생 ≤ 20 무료 → group_license ($153/yr) |
 | P-D 학교 관리자 | – | – | ✓ C7, C8 | group_license ($153/yr) / 상한 초과 seat 계약 |
@@ -410,7 +410,7 @@ console/home ─┬─ [family] ─▶ parent/dashboard ─▶ parent/learner-de
 | 26 | `onboarding/welcome` 의 "Made for kids 5–11" 한 줄 | **"Start Korean from zero."** 로 교체 (오너 결정 2026-10-06). 랜딩 OG/Twitter description 도 동일 | 코드 `WelcomeScreen` · `apps/web layout.tsx` |
 | 27 | 학교 동의 모드 (c) 의 활성 시점 | **법률 검토 전까지 선택 불가** — Worker `SCHOOL_CONSENT_MODE=enabled` + 콘솔 `NEXT_PUBLIC_SCHOOL_CONSENT_MODE=enabled` 가 모두 설정될 때만 school 모드 저장 가능. 그 전에는 API 422 `consent_mode_locked`, 콘솔 라디오 비활성 (오너 결정 2026-10-06) | F-TCH-001 §10.3 · `apps/api/wrangler.toml` |
 | 28 | App Store 트랙 (T-040–T-044) 시점 | **웹앱 안정화 이후** (오너 결정 2026-10-06). 런치 채널은 웹앱 단일 | `docs/tasks/INBOX.md` |
-| 30 | 가격 모델 (3 플랜 × 월/연 placeholder) | **상품 2개 (오너 결정 2026-10-06)**: `family_lifetime` **$15.30 일회** (한 가족 space, 학습자 5명까지, 모든 Stage, 만료 없음) · `group_license` **$153/년** (단독 학급 또는 학교; 학교는 교사 10 / 학생 300 상한) · 상한 초과는 `school_seat` **Contact us** (계약). Teacher Pro · 월 결제 폐지. 가족 space 학습자 cap 5 (`cap_family`) | F-ENT-001 §3.1–3.6 · `PLAN_PRICING` |
+| 30 | 가격 모델 (3 플랜 × 월/연 placeholder) | **상품 2개 (오너 결정 2026-10-06)**: `family_lifetime` = **Family Plan $15.30/년** (2026-10-11 오너 결정으로 일회 평생 → 1년 단위 자동 갱신·언제든 해지, AMENDMENTS-BILLING-FAMILY-YEARLY; 한 가족 space, 학습자 5명까지, 모든 Stage) · `group_license` **$153/년** (단독 학급 또는 학교; 학교는 교사 10 / 학생 300 상한) · 상한 초과는 `school_seat` **Contact us** (계약). Teacher Pro · 월 결제 폐지. 가족 space 학습자 cap 5 (`cap_family`) | F-ENT-001 §3.1–3.6 · `PLAN_PRICING` |
 | 33 | 어른 페이지 (콘솔) 의 호스트 — hangulroute.com 유지 vs app.hangulroute.com | **app 호스트가 콘솔을 서빙 (B2)**: Next 콘솔을 "console" 역할로 빌드해 학습자 Worker `hangul-route-app` 의 `dist` 에 예약 경로 (`/signin` · `/start` · `/teach` · `/parent` · `/account`) 로 복사. Worker 코드·대시보드 라우트 없음, 같은 origin 이라 PIN 핸드오프 (`sessionStorage`) 와 발표자 핸드오프가 그대로 동작. 서비스 워커는 어른 경로를 프리캐시·폴백에서 제외하고 오프라인 페이지를 보여 준다. hangulroute.com 은 소개·가이드 전용 (F-SITE-002 S-10 이 옛 주소를 리다이렉트), 결제도 app 호스트 `/account/billing` 에서만 (오너 요청 2026-10-11) | F-APP-001 §3.1–3.4 · F-CONSOLE-001 §3.7 · `docs/launch/owner-runbook.md` §E |
 | 32 | 인메모리 store → D1 전환 방식 | **`Db` 인터페이스 + 구현 2개** (`D1Db` / `MemoryDb`, 읽기는 복사본·쓰기는 `put`). 라우트 응답 불변. 테스트는 계약 스위트(두 백엔드) + 전체 스위트를 메모리·SQLite(`node:sqlite` 셔임 위에 실제 마이그레이션) 로 두 번 실행. v1 표는 메모리 유지 (클라이언트 미사용) | F-INFRA-003 |
 | 31 | 프로모션·레퍼럴 코드의 저장 위치 (자체 테이블 + 관리 화면 vs Stripe) | **Stripe Promotion Code 가 유일한 원본** (오너 요청 2026-10-06: 코드·할인율을 나중에 직접 관리). 생성·수정·만료·사용 횟수 제한은 Stripe 대시보드, API 는 조회·적용·귀속만. 자동 리워드(추천인 보상) 는 첫 코드 운영 후 별도 스펙 | F-ENT-002 |
@@ -426,7 +426,7 @@ console/home ─┬─ [family] ─▶ parent/dashboard ─▶ parent/learner-de
 | 학교 동의 모드 | 둘 다 지원, space 설정에서 선택 — **school 모드는 법률 검토 전까지 잠금** (결정 #27, 2026-10-06) | roadmap §11, `console/space-settings` 토글 |
 | Rescue Code | 모든 학습자에게 자동 생성, 부모가 끌 수 있음 | roadmap §11, `sync/save-progress` |
 | 교사 Free 캡 | 20명 (베타 후 재검토) | roadmap §7, §11, `console/roster` |
-| Family 가격 | **$15.30 Lifetime** (결정 #30, 2026-10-06) · 그룹 **$153/년** · 상한 초과 Contact us | F-ENT-001 · `console/billing` · `paywall/upgrade` |
+| Family 가격 | **Family Plan $15.30/년, 매년 갱신** (결정 #30, 2026-10-06 → 2026-10-11 연 단위로 변경) · 그룹 **$153/년** · 상한 초과 Contact us | F-ENT-001 · `console/billing` · `paywall/upgrade` |
 | **스토어 카테고리** | **Education (Kids Category 아님)** — 성인 외국인 학습자도 대상이므로 Kids 전용 앱으로 제출하지 않는다. 부모 게이트·무광고·로컬 저장 등 아동 보호 설계는 그대로 유지 | `docs/launch/app-store-submission.md` §5 |
 
 > **대상 사용자 확장 — 반영 완료 (2026-09-20)**: CLAUDE.md §1 이 **kids-first, never kids-only** 로 갱신됨 (P6 성인 초보 = 같은 화면·같은 콘텐츠, 별도 성인 모드 없음). README · `docs/launch/faq.md` · 스토어 카피 동기화. 앱 UI 문구 중 `onboarding/welcome` 의 "Made for kids 5–11" 한 줄은 **"Start Korean from zero."** 로 교체됨 (결정 #26, 2026-10-06). 베타에서 성인 5명 인터뷰로 Hoya 톤 수용도 확인 권장.

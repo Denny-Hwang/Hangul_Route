@@ -6,6 +6,7 @@ Status: ready
 **Scope**: `packages/content-schema` (billing summary, billing event and receipt schemas, telemetry names) · `packages/backend` + `apps/api` (additive D1 table `billing_events` and one index, `GET /api/billing/summary`, `GET /api/billing/receipts`, `POST /api/billing/receipt-link`, webhook history, checkout and portal hardening, live-mode guard, step-up) · `apps/web` (the content of the billing page at `/account/billing` and its receipts page, their view models) · `apps/mobile` (the status-only learner Plan screen replaces the price-bearing paywall; the Profile plan card words) · `packages/i18n` (`console.billing.*` additions, `caregiver.plan.*`, `a11y.planStatus`, learner Profile plan words) · `docs/launch/owner-runbook.md` (Step 8)
 **Owner**: solo dev
 **Rollout**: server first (B-1 to B-5, no visible change), then the learner Plan screen (B-9, ships alone and removes the price and the native link at once), then the billing page content (B-8a to B-8c) once the persona app shell serves `/account/billing` on app.hangulroute.com (F-APP-001 A-5c). Stripe stays in **test mode**: a live key is refused in code until the owner sets `BILLING_LIVE_ALLOWED=true` (section 4.9).
+**Amended 2026-10-11 [BY]** by `AMENDMENTS-BILLING-FAMILY-YEARLY.md`: the family product is the **Family Plan**, $15.30 / year, a Stripe subscription that renews yearly and can be cancelled any time (no longer a one-time lifetime payment). Every [BY] mark below follows from it. The stored key stays `family_lifetime` (BY-D1).
 **Wireframes** (drafted with this spec): `design/wireframes/billing/billing-home.md`, `billing/checkout-return.md`, `billing/receipts.md`, `billing/step-up.md`, `billing/plan-status.md`. They supersede `console/billing.md` and `paywall/upgrade.md` (both get a header note in B-0). The old-address notice is F-APP-001's `shell/moved.md`; this spec draws none.
 
 Basis: `origin/main` `ea9049e4` (2026-10-11). Every `file:line` below is at that commit.
@@ -16,7 +17,7 @@ Owner request (2026-10-11), items covered here: **8** (every persona can see the
 |---|---|---|---|
 | **F-APP-001** | SHELL | the app host serving grown-up pages; `APP_ROUTES.billing = '/account/billing'`; the `/account/billing` route, its layout and the frame's Billing item (A-5c); the legacy `/teach/billing` redirect (A-5c, A-8 `legacyConsoleTarget`); the service-worker denylist and grown-up offline page (A-2); `billingReturnUrl(env, suffix)` (A-9); `openGrownUpArea` and the PIN destination `GrownUpArea` (A-6); `AdultFrame` (A-5a); `/start` (A-4) | `docs/persona-app-shell` |
 | **F-SITE-002** | SITE | hangulroute.com content (no billing link, no price); `SITE_CLAIMS` in `apps/web/src/data/site-claims.ts` (S-2); builds no redirect table (old URLs are F-APP-001's stubs) | `docs/marketing-site-layered` |
-| **F-ENT-003** | FREE | what is free (the first lessons) and the access words; the free-plan lines on the Plan screen (E3-8) and their keys `caregiver.plan.freePlan` | `docs/free-day2-unlocked-curriculum` |
+| **F-ENT-003** | FREE | what is free (all of Stage 1, F-ENT-003 OD-1) and the access words; the free-plan lines on the Plan screen (E3-8) and their keys `caregiver.plan.freePlan` | `docs/free-day2-unlocked-curriculum` |
 | **F-BROWSE-001** | BROWSE | lesson browsing for paying grown-ups; its own access rule `accountBrowseScope`; its [ See plans ] link targets `APP_ROUTES.billing` | `docs/adult-content-browser` |
 | F-REPORT-001, F-FEEDBACK-001 | REPORTS, NOTES | features named in the billing page's "what you get" lines, through `SITE_CLAIMS` | `docs/progress-reports`, `docs/adult-feedback-channel` |
 
@@ -42,8 +43,8 @@ Today every money surface sits on the wrong host or shows the wrong thing to the
 
 1. **Billing lives on the marketing domain.** The only checkout page is `hangulroute.com/teach/billing` (`apps/web/src/app/(console)/teach/billing/page.tsx`). Stripe sends buyers back there (`packages/backend/src/routes/entitlements.ts:82` and `:127`, `CONSOLE_URL ?? 'https://hangulroute.com'`). The learner app's paywall button opens it too (`apps/mobile/src/logic/paywall.ts:51-55`, `DEFAULT_CONSOLE = 'https://hangulroute.com'`). The owner wants hangulroute.com to be an intro and guide site only (item 12).
 2. **A persona who does not own a space sees nothing.** `GET /api/entitlements` (`entitlements.ts:38-46`) lists only the account's own rows and the spaces it **owns**. A teacher whose class sits under someone else's school, a co-parent (caregiver role), or a teacher invited into a school cannot see what covers them or until when. Item 8 asks that every persona can see their own billing information.
-3. **No history.** There is no receipt list and no payment history (F-ENT-001 §4 left "invoices list" out). A parent who paid once has nothing in the product that proves it; a school cannot find last year's invoice.
-4. **The learner side shows a price and a purchase path.** The PIN-gated paywall shows the Family Lifetime price and an "Open the web console" button (`apps/mobile/src/screens/paywall/PaywallScreen.tsx:112-131`). On a native build the same button and the line "you can buy it once on the web console" (`packages/i18n/src/messages/en/caregiver.ts:43-44`) render too. That is a call to action toward a non-store purchase inside a store binary (section 4.8), and it puts a price one gate away from a child.
+3. **No history.** There is no receipt list and no payment history (F-ENT-001 §4 left "invoices list" out). A parent who paid has nothing in the product that proves it; a school cannot find last year's invoice.
+4. **The learner side shows a price and a purchase path.** The PIN-gated paywall shows the family plan's price and an "Open the web console" button (`apps/mobile/src/screens/paywall/PaywallScreen.tsx:112-131`). On a native build the same button and the line "you can buy it once on the web console" (`packages/i18n/src/messages/en/caregiver.ts:43-44`) render too. That is a call to action toward a non-store purchase inside a store binary (section 4.8), and it puts a price one gate away from a child.
 5. **A learner on a paid plan cannot see their plan.** The Profile plan button renders only when `tier !== 'premium'` (`apps/mobile/src/screens/profile/ProfileScreen.tsx:243`), and the card says "Premium" and "The full journey is unlocked" (`packages/i18n/src/messages/en/learner.ts:78-81`), words F-ENT-003 bans on learner surfaces.
 6. **Nothing stops a live key.** The owner rule is "Stripe Live, real prices and commercial claims stay off until the owner says". Today that rests on nobody pasting an `sk_live_` key into the Worker; no code checks it.
 7. **The return from Stripe is optimistic.** `?checkout=success` prints "the plan is active" (`console.ts:74`) before the webhook may have landed. A slow webhook leaves the page saying "Free" under a "Thank you" note.
@@ -51,7 +52,7 @@ Today every money surface sits on the wrong host or shows the wrong thing to the
 
 ## 2. User stories
 
-> **Parent.** As a parent, I open the app, tap Billing in the grown-up area and see my family's plan, how many of my learners it covers, and the receipt for my one payment. On a free family the buy button is right on my family's card. I never visit the marketing site to pay.
+> **Parent.** As a parent, I open the app, tap Billing in the grown-up area and see my family's plan, how many of my learners it covers, and the receipts for each year of the Family Plan, with **Manage subscription** to cancel or change the card. [BY] On a free family the buy button is right on my family's card. I never visit the marketing site to pay.
 
 > **Teacher with a stand-alone class.** As a teacher, I see my class license, when it renews or ends, how many students it holds, and the receipts for each year. Manage subscription takes me to Stripe and back to the same page.
 
@@ -80,7 +81,7 @@ Today every money surface sits on the wrong host or shows the wrong thing to the
 - **G5. Old links keep working** through the sibling redirects (section 4.1), keeping `?checkout=`.
 - **G6. Sandbox stays sandbox.** Test mode is visible on the page. A live key is refused for checkout, portal and promo lookups until the owner opts in.
 - **G7. Honest return from Stripe.** The page waits for the webhook and says so, instead of claiming success early, and pauses while offline.
-- **G8. The lifetime model is explicit.** One payment, no renewal, nothing to cancel, receipt available, refund rule written down.
+- **G8. The yearly Family Plan is explicit [BY].** $15.30 a year, renews until cancelled, cancel any time in one step, access to the end of the paid year, a receipt for every year, refund rule written down.
 - **G9. A purchase always leads somewhere.** When a paid space has no learner yet, the page shows how to connect one.
 
 ### 3.2 Non-goals
@@ -117,7 +118,7 @@ Roles come from `SpaceRoleSchema` (`packages/content-schema/src/schemas/space.ts
 
 | Persona | Where | Sees | Can do |
 |---|---|---|---|
-| Parent (owner of a family space) | Billing | Family card: plan (Free plan or Family Lifetime), status line, learners covered `n of 5` (`FAMILY_LIFETIME_LEARNERS`), latest 3 receipts | Free: **Get Family Lifetime** on the card (section 4.3), promo code. Lifetime: nothing to manage; receipts; refund help line. 0 learners: **Connect a learner**. |
+| Parent (owner of a family space) | Billing | Family card: plan (Free plan or Family Plan), status line, learners covered `n of 5` (`FAMILY_LIFETIME_LEARNERS`), latest 3 receipts | Free: **Get Family Plan** on the card (section 4.3), promo code. Family Plan: **Manage subscription** (portal), receipts, refund help line [BY]. 0 learners: **Connect a learner**. |
 | Co-parent (caregiver in a family) | Billing | Family card read-only: plan and status, learners covered | Nothing; "The person who set up this family manages this plan." |
 | Teacher, stand-alone class (owner) | Billing | Class card: Free plan (`n of 20` students, `FREE_CLASS_STUDENT_CAP`) or Group License (status, renews on / ends on, `n` students, no cap) | Free: **Get Group License**. License: **Manage subscription** (portal), receipts. |
 | Co-teacher (role `teacher` on a class) | Billing | Class card read-only: plan and status, students `n` | Nothing; "The class owner manages this plan." |
@@ -150,7 +151,7 @@ Layered, short, one decision per block (owner item 13). From top to bottom:
 6. **Add a plan**: only when **more than one** payer card can buy. One row per buyable space: plan name and the space it is for, includes lines, price line (`PLAN_PRICING` through `formatUsd`), and a button. Exactly one row carries the primary button (the first recommendation, as `planRowsFor` does today, `billing.ts:139-145`); the rest are secondary. **Have a code?** sits once, under the first row's price line, and rewrites every row's price line (F-ENT-002 §3.3, unchanged behaviour). A school payer also gets the **Contact us** row.
 7. **Help**: "Questions or a refund? Write to hello@hangulroute.com." (the address the site already uses), "Learners never see prices or receipts." and "On a shared device? Sign out when you are done."
 
-**What the plan includes** (the includes lines of a buy row). Base lines always: Family Lifetime: "Every lesson of every Stage, now and later", "Up to {n} learners in one family", "Cloud save on every device". Group License: "Every lesson for every student while they are enrolled", "No {cap}-student cap", and for a school "A school holds up to {teachers} teachers and {students} students". Feature lines appear only when the feature is live, read from F-SITE-002's `SITE_CLAIMS` (`apps/web/src/data/site-claims.ts`, the same flags the site uses): `browseAsLearner` → "Browse every lesson as your learner sees it" (family) / "as your students see it" (license); `parentReports` / `teacherReports` → "Reports on what went well and what to practice next" / "Student and class reports"; `feedbackNotes` → "Send notes to your learners" / "to your students". A line for an unbuilt feature never renders (test, section 11).
+**What the plan includes** (the includes lines of a buy row). Base lines always: Family Plan: "Every lesson of every Stage, new ones included" [BY], "Up to {n} learners in one family", "Cloud save on every device". Group License: "Every lesson for every student while they are enrolled", "No {cap}-student cap", and for a school "A school holds up to {teachers} teachers and {students} students". Feature lines appear only when the feature is live, read from F-SITE-002's `SITE_CLAIMS` (`apps/web/src/data/site-claims.ts`, the same flags the site uses): `browseAsLearner` → "Browse every lesson as your learner sees it" (family) / "as your students see it" (license); `parentReports` / `teacherReports` → "Reports on what went well and what to practice next" / "Student and class reports"; `feedbackNotes` → "Send notes to your learners" / "to your students". A line for an unbuilt feature never renders (test, section 11).
 
 Copy rules for this page: no "best value", "save", "only today", countdowns, strike-through anchor prices other than the promo line F-ENT-002 already defines, no urgency colour, no comparison with other learners or schools. Prices appear only in buy rows and in the payer's receipts. The page never says "Premium"; it names the plan or says "the full route" (F-ENT-003's boundary phrase).
 
@@ -164,11 +165,11 @@ Copy rules for this page: no "best value", "save", "only today", countdowns, str
   - A fresh sign-in in this tab within 10 minutes has `fva[0] ≤ 10`, so it skips step-up (test).
   - Dev fallback (no Clerk key bound, `lib/auth.ts:27`): step-up is skipped, because there is no token to read; it is never active in production (F-AUTH-002).
   - Prerequisite (runbook Step 8, M2 of F-APP-001): the owner confirms once that a production session token carries `fva` (Clerk session token v2). If it does not, money actions stay refused with "Can't confirm right now." and the owner switches the instance's session token version; no code change.
-- **Already active.** When the subject already holds an **active** row of the same plan (`isEntitlementActive`), the Worker answers `409 already_active` and creates no session. The page shows "This plan is already active. Nothing was charged." and reloads the summary. This stops a second purchase **after the first has landed**. Two checkouts opened in two tabs before either is paid can both complete; the webhook then records the second `purchase` normally and sends `billing.checkout_completed { duplicate: true }`, and runbook Step 8 tells the owner to refund the duplicate (both payments show in Receipts).
+- **Already active.** When the subject already holds an **active** row of the same plan (`isEntitlementActive`), the Worker answers `409 already_active` and creates no session. [BY] The server answer landed in BY-1 (#371, AMENDMENTS-BILLING-FAMILY-YEARLY BY-D4), limited to Stripe subscription rows (`sub_…`) so a legacy one-time sandbox row can move to the yearly plan; B-5 adds its telemetry and B-8 the page note. The page shows "This plan is already active. Nothing was charged." and reloads the summary. This stops a second purchase **after the first has landed**. Two checkouts opened in two tabs before either is paid can both complete; the webhook then records the second `purchase` normally and sends `billing.checkout_completed { duplicate: true }`, and runbook Step 8 tells the owner to refund the duplicate (both payments show in Receipts).
 - **Live guard** (section 4.9): `503 live_not_enabled` before any Stripe call.
 - **Return URLs** come from F-APP-001 A-9's `billingReturnUrl(env, suffix)` (base `CONSOLE_URL ?? 'https://app.hangulroute.com'`, path `APP_ROUTES.billing`). This spec changes only the success suffix: `?checkout=success&plan=<planKey>&id=<spaceId>`; cancel stays `?checkout=cancel`. Until A-9 merges, B-5 appends the same suffix to today's builder (`entitlements.ts:82`); whichever of B-5 and A-9 lands second rebases one line. The space id is opaque; no name enters the URL.
-- **Metadata.** Unchanged `metadata[subjectKind|subjectId|planKey]` (and `subscription_data[metadata]` for the license). New for payment mode: `payment_intent_data[metadata][subjectKind|subjectId|planKey]`, so a refund found through the payment intent maps back to the subject without a table lookup (section 5.4 keeps the lookup as the fallback).
-- **The checkout page itself** is Stripe-hosted. A one-time lifetime payment keeps `customer_creation=always` (`stripe.ts:183`). `invoice_creation` stays off (OD-11): the receipt for a lifetime payment is Stripe's charge receipt.
+- **Metadata.** Unchanged `metadata[subjectKind|subjectId|planKey]` and `subscription_data[metadata]`, which both plans now carry because both are subscriptions [BY]. `payment_intent_data[metadata]` is dropped: no payment-mode session is created any more (section 5.4 finds refunds through the invoice).
+- **The checkout page itself** is Stripe-hosted. Both plans are `mode=subscription` [BY]; Stripe creates the customer and an invoice for the first year and every renewal, so every payment has an invoice (OD-11 withdrawn).
 
 ### 4.5 Coming back from Stripe (wireframe `billing/checkout-return`)
 
@@ -186,13 +187,13 @@ The page reads `checkout`, `plan` and `id` once, then removes them with `history
 
 ### 4.6 Managing and ending
 
-- **Group License**: **Manage subscription** opens the Stripe Billing Portal (cancel, change card, invoices there too). Portal `return_url` from `billingReturnUrl(env, '')`. Step-up applies (section 4.4).
-- **Cancel at period end.** B-3 maps a subscription event with `cancel_at_period_end === true`, or a non-null `cancel_at`, to status `cancelled` with `expiresAt` = the period end. Coverage continues while `expiresAt` is in the future (`cancelled` is active until then, F-ENT-001 §3.2); the card says "Ends on *date*" and shows no "renews" line. Reactivating in the portal (flag back to false, status `active`) returns the row to `active` and the card to "Renews on *date*".
-- **Period end location.** The mapper reads `current_period_end` from the subscription's top level (older API versions) or from `items.data[0].current_period_end` (2025-03-31.basil and later); both shapes are tested.
+- **Group License and Family Plan [BY]**: **Manage subscription** opens the Stripe Billing Portal (cancel, change card, invoices there too). Portal `return_url` from `billingReturnUrl(env, '')`. Step-up applies (section 4.4).
+- **Cancel at period end.** BY-1 (moved from B-3 [BY]) maps a subscription event with `cancel_at_period_end === true`, or a non-null `cancel_at`, to status `cancelled` with `expiresAt` = the period end. Coverage continues while `expiresAt` is in the future (`cancelled` is active until then, F-ENT-001 §3.2); the card says "Ends on *date*" and shows no "renews" line. Reactivating in the portal (flag back to false, status `active`) returns the row to `active` and the card to "Renews on *date*".
+- **Period end location.** BY-1's mapper [BY] reads `current_period_end` from the subscription's top level (older API versions) or, when that is absent, the latest `items.data[].current_period_end` (2025-03-31.basil and later); both shapes are tested.
 - **Past due**: the card status reads `console.entitlementStatus.pastDueKept` ("payment needs attention · full route kept for a week") while the 7-day grace runs (`PAST_DUE_GRACE_MS`), and a one-line note above the cards: "A payment didn't go through. Update your card in Manage subscription; learners keep the full route for a week." Neutral tone, not the danger colour.
-- **Family Lifetime**: no Manage button (nothing renews). The card reads "Family Lifetime · yours for good". The help line carries the refund contact.
-- **Refunds** are done by the owner in the Stripe dashboard. The webhook records them (section 5.4). **Rule (OD-6, default)**: a **full** refund of a Family Lifetime payment sets that family's `family_lifetime` row to `expired`; a partial refund changes nothing. Learners keep every star, card and progress item (CLAUDE.md §1: earned items are never taken away); only full-route coverage ends, so lessons past the free set follow F-ENT-003's rules again. A Group License refund changes nothing by itself; Stripe's own subscription events decide its status.
-- **A space archived** with an active plan (`POST /api/spaces/:id/archive`, `spaces.ts:227`; no route deletes a space today): B-12 makes the space settings archive confirm name the plan it affects ("Learners in *space* lose the Family Lifetime plan while it is archived." / "The Group License keeps renewing until you cancel it in Billing."). Unarchiving restores coverage, because `tierFromSpaces` skips archived spaces only while they are archived (`lib/entitlement.ts:97-104`). A lifetime plan belongs to its family space and does not move to another space.
+- **Family Plan [BY]**: renews yearly like the license; the card reads "Renews on *date*" (or "Ends on *date*" after a cancel) and has **Manage subscription**. A legacy one-time sandbox row (`expiresAt` null, BY-D2) reads "Family Plan" with no date and no Manage button. The help line carries the refund contact.
+- **Refunds** are done by the owner in the Stripe dashboard. The webhook records them (section 5.4). **Rule (OD-6, revised [BY-D8])**: a refund never changes coverage by itself, for either plan; Stripe's subscription events decide the status. To end a refunded plan at once, the owner cancels the subscription immediately in the Stripe dashboard (`customer.subscription.deleted` → `expired`). Learners keep every star, card and progress item (CLAUDE.md §1: earned items are never taken away); only full-route coverage ends, so lessons past the free set follow F-ENT-003's rules again.
+- **A space archived** with an active plan (`POST /api/spaces/:id/archive`, `spaces.ts:227`; no route deletes a space today): B-12 makes the space settings archive confirm name the plan it affects ("Learners in *space* lose the Family Plan while it is archived. It keeps renewing until you cancel it in Billing." / "The Group License keeps renewing until you cancel it in Billing.") [BY]. Unarchiving restores coverage, because `tierFromSpaces` skips archived spaces only while they are archived (`lib/entitlement.ts:97-104`). A Family Plan belongs to its family space and does not move to another space. Like a license, a family archived with a live Family Plan still shows to its payers, marked "(archived)", until the plan ends [BY].
 
 ### 4.7 The learner Plan screen (mobile, wireframe `billing/plan-status`)
 
@@ -204,7 +205,7 @@ Replaces the current price-bearing paywall body. The navigation route key stays 
 | State | Family audience | Self audience |
 |---|---|---|
 | **covered** (class or school) | "*Name* is covered by *space*." · "Everything is open while they are in it." | "You're covered by *space*." · "Everything is open while you are in it." |
-| **premium**, source family | "*Name* has the full route." · "From your family's Family Lifetime plan." | "You have the full route." · "From your Family Lifetime plan." |
+| **premium**, source family | "*Name* has the full route." · "From your family's Family Plan." | "You have the full route." · "From your Family Plan." | [BY]
 | **premium**, no source (legacy subscription, F-SUB-001) | "*Name* has the full route." · "Everything is open." | "You have the full route." · "Everything is open." |
 | **free** | "*Name* is on the free plan." | "You're on the free plan." |
 
@@ -214,7 +215,7 @@ Replaces the current price-bearing paywall body. The navigation route key stays 
   - B-9b (F-APP-001 A-6 merged, `flags.grownUpHomeEnabled` on): `openGrownUpArea({ via: 'paywall', target: APP_ROUTES.billing })` in the **same tab**. It writes F-APP-001's per-tab unlock, so the billing page opens without the "Grown-ups only" lock, and the unlock survives the Stripe round trip; **Back to learning** in the frame returns to the app. This replaces the "paywall same-origin billing" item of F-APP-001 A-7 (amendment A2).
   - If opening fails, one line shows the address to type (`caregiver.plan.openFailed`).
 - **Native builds** (`ios`, `android`): no button, no URL, no price, and no sentence that mentions the web, a website or buying elsewhere (section 4.8).
-- **Removed from the learner side**: the Family Lifetime offer card and its price, the bullets list, the promo hint, the "buy it once on the web console" and "buying inside this app arrives with the store update" lines, the terms line. Their dictionary keys are deleted in the same PR (section 6.4). Nothing that F-ENT-003 adds is deleted.
+- **Removed from the learner side**: the Family Plan offer card and its price, the bullets list, the promo hint, the "buy it once on the web console" and "buying inside this app arrives with the store update" lines, the terms line. Their dictionary keys are deleted in the same PR (section 6.4). Nothing that F-ENT-003 adds is deleted.
 - **The Profile plan card**: title "Full route" (was "Premium") or "Free plan"; note "Everything is open." / "Everything is open, from {source}." (was "The full journey is unlocked…") or the free note; pill unchanged ("Active" / "Free"); button **Plan details** for every tier, not gated. No learner string on the card or the screen contains "Premium", "unlock", "buy", "price" or "pay" (test against F-ENT-003's banned fixture).
 
 ### 4.8 Native builds and store rules
@@ -222,7 +223,7 @@ Replaces the current price-bearing paywall body. The navigation route key stays 
 Reading of the store rules this spec designs to (verify against the current text before any store submission; OD-4, OD-5):
 
 - **Apple App Review Guideline 3.1.1**: digital content and features unlocked inside the app use in-app purchase; the app and its metadata must not include buttons, external links or other calls to action that direct customers to purchasing mechanisms other than in-app purchase. Apple changed this for the **United States storefront** in May 2025 (external purchase links and buttons allowed there). This spec does **not** use that exception (OD-4).
-- **Guideline 3.1.3(b) Multiplatform Services**: content bought elsewhere may be unlocked in the app if it is also offered as an in-app purchase. Family Lifetime bought on the web therefore needs an in-app equivalent (F-IAP-002) before a store-distributed build unlocks it (OD-5).
+- **Guideline 3.1.3(b) Multiplatform Services**: content bought elsewhere may be unlocked in the app if it is also offered as an in-app purchase. A Family Plan bought on the web therefore needs an in-app equivalent, an auto-renewable yearly subscription (F-IAP-002, [BY]) before a store-distributed build unlocks it (OD-5).
 - **Guideline 3.1.3(c) Enterprise Services**: an app sold directly to organisations for their students may let those users access what the organisation bought. Group License and school contracts fit here, so class and school coverage stays honoured in native builds.
 - **Google Play Payments policy**: in-app digital purchases use Google Play Billing; linking to another payment method needs an enrolled programme in an eligible region. Not enrolled (OD-4).
 - **Audience**: the app ships in Education, not the Kids Category (CLAUDE.md §1). Any external link inside a grown-up area stays behind the gate regardless.
@@ -245,19 +246,20 @@ What this means in code (B-9), enforced by tests:
 
 - **Source**: Stripe webhooks recorded in a new table `billing_events` (section 5.1) from the day B-3 deploys and the owner subscribes the new events (runbook Step 8). Earlier sandbox payments have no rows; the receipts page says "Older payments are in the receipt email from Stripe." when the space has an active Stripe plan but no rows.
 - **Who**: payers of the space only (section 4.2). Caregivers and teachers never receive receipt rows.
-- **Row**: date (the event's `occurred_at`, shown as the UTC calendar day like the status line, `billing.ts:72`), kind (Payment, Renewal, Refund, Payment didn't go through), plan name ("Family Lifetime · one payment" for a lifetime payment), amount (`formatUsd` for `usd`; other currencies through `Intl.NumberFormat` with the stored ISO code), a "test" pill when `livemode` is false.
+- **Row**: date (the event's `occurred_at`, shown as the UTC calendar day like the status line, `billing.ts:72`), kind (Payment, Renewal, Refund, Payment didn't go through), plan name ("Family Plan" or "Group License"; "one payment" only on a legacy one-time sandbox row [BY]), amount (`formatUsd` for `usd`; other currencies through `Intl.NumberFormat` with the stored ISO code), a "test" pill when `livemode` is false.
 - **Where links live.** Inline rows on a card (latest 3) carry no link. The receipts page shows **View receipt** on each row that has one (`hasReceipt`).
-- **Opening a receipt** (`POST /api/billing/receipt-link { id }`, `id` = the opaque `bev:` id): payer check, **step-up** (section 4.4: the Stripe page shows the payer's name, email and address, and the billing page shares an origin with the learner app), live guard, then a fresh Stripe lookup: a license row → `GET /v1/invoices/<id>` → `hosted_invoice_url`; a lifetime payment → `GET /v1/payment_intents/<id>?expand[]=latest_charge` → `latest_charge.receipt_url`; a refund → `GET /v1/charges/<charge>` → `receipt_url` (Stripe shows the refund on it). The Worker returns `{ url }`; nothing is stored, so a link is never stale and never sits in our database. On a Stripe error: `502 receipt_unavailable` and the row shows "Can't open this receipt right now." The page opens a blank tab synchronously on the click (so it is not blocked as a pop-up), sets `opener = null`, then sets its location to the returned URL; the button's accessible name says it opens Stripe in a new tab.
+- **Opening a receipt** (`POST /api/billing/receipt-link { id }`, `id` = the opaque `bev:` id): payer check, **step-up** (section 4.4: the Stripe page shows the payer's name, email and address, and the billing page shares an origin with the learner app), live guard, then a fresh Stripe lookup: a subscription row (Family Plan or license) → `GET /v1/invoices/<id>` → `hosted_invoice_url`; a legacy one-time payment → `GET /v1/payment_intents/<id>?expand[]=latest_charge` → `latest_charge.receipt_url` [BY]; a refund → `GET /v1/charges/<charge>` → `receipt_url` (Stripe shows the refund on it). The Worker returns `{ url }`; nothing is stored, so a link is never stale and never sits in our database. On a Stripe error: `502 receipt_unavailable` and the row shows "Can't open this receipt right now." The page opens a blank tab synchronously on the click (so it is not blocked as a pop-up), sets `opener = null`, then sets its location to the returned URL; the button's accessible name says it opens Stripe in a new tab.
 - **Count**: the receipts page shows up to `RECEIPTS_PAGE_LIMIT` (50) newest rows. Past 50: "Older receipts: see Stripe's emails or write to us."
 - **A failed payment** row is plain text, never red, with the same note as the past-due card.
 
-### 4.11 Lifetime purchase model (restated, binding)
+### 4.11 Family Plan model (restated, binding) [BY]
 
-- Product `family_lifetime`: one payment (`PLAN_PRICING.family_lifetime`, `per: 'once'`), Stripe Checkout `mode=payment`, `customer_creation=always`, no subscription, no portal.
-- On `checkout.session.completed` the row becomes `active` with `expiresAt: null` and never lapses (F-ENT-001 §3.1).
-- It covers one family space and every learner in it, up to `FAMILY_LIFETIME_LEARNERS` (5), every Stage now and later.
-- It ends only by a full refund (OD-6). Archiving the family space pauses its coverage until it is unarchived (B-12 says so first).
-- Copy never says "subscription", "renews" or "cancel" about it. The page and the receipt both say "one payment".
+- Product `family_lifetime` (the key keeps its historical name, `AMENDMENTS-BILLING-FAMILY-YEARLY.md` BY-D1): the **Family Plan**, `PLAN_PRICING.family_lifetime` = $15.30, `per: 'year'`, Stripe Checkout `mode=subscription` on the recurring yearly price `STRIPE_PRICE_FAMILY_YEARLY`, `subscription_data[metadata]` carrying the subject.
+- `expiresAt` = the subscription's current period end; it moves forward one year at every renewal (`customer.subscription.updated`).
+- It covers one family space and every learner in it, up to `FAMILY_LIFETIME_LEARNERS` (5), every Stage (new ones included) while it is active.
+- Cancel any time in the portal: the row becomes `cancelled` with `expiresAt` = the period end and keeps covering until then; it ends with `customer.subscription.deleted` (`expired`). A failed renewal is `past_due` with the 7-day grace. Archiving the family space pauses its coverage until it is unarchived; the plan keeps renewing until cancelled (B-12 says so first).
+- When it ends, learners keep everything they earned; only lessons past the free set follow F-ENT-003 again.
+- Copy calls it "Family Plan", says "renews yearly" and "cancel any time", and never says "lifetime", "once", "one payment" or "for good" about it. Legacy one-time sandbox rows (BY-D2) stay readable and show no renewal date.
 
 ### 4.12 Offline and errors
 
@@ -283,7 +285,7 @@ CREATE TABLE IF NOT EXISTS billing_events (
   id            TEXT PRIMARY KEY,   -- bev:xxxx
   subject_kind  TEXT NOT NULL CHECK (subject_kind IN ('account', 'space')),
   subject_id    TEXT NOT NULL,
-  plan_key      TEXT NOT NULL CHECK (plan_key IN ('family_lifetime', 'group_license', 'school_seat')),
+  plan_key      TEXT NOT NULL CHECK (plan_key IN ('family_lifetime', 'group_license', 'school_seat')),  -- family_lifetime = the yearly Family Plan (historical name, BY-D1)
   kind          TEXT NOT NULL CHECK (kind IN ('purchase', 'renewal', 'refund', 'failed')),
   amount_cents  INTEGER NOT NULL CHECK (amount_cents >= 0),
   currency      TEXT NOT NULL,      -- ISO 4217, lower-case as Stripe sends it
@@ -311,7 +313,7 @@ CREATE INDEX IF NOT EXISTS idx_entitlements_provider_ref ON entitlements(provide
 
 - `BILLING_RECEIPTS_PATH` (from `APP_ROUTES.billing`, section 4.1), `STEP_UP_MAX_AGE_MIN = 10`, `RECEIPTS_PAGE_LIMIT = 50`, `RECEIPTS_CARD_LIMIT = 3`, `CHECKOUT_POLL_MS = 2000`, `CHECKOUT_POLL_MAX = 10`.
 - `BillingEventKindSchema = z.enum(['purchase', 'renewal', 'refund', 'failed'])`.
-- `BillingEventSchema`: `{ id: /^bev:[a-z0-9-]+$/, subjectKind, subjectId, planKey, kind, amountCents: int ≥ 0, currency: /^[a-z]{3}$/, provider, providerRef, paymentRef: string | null, livemode: boolean, occurredAt, createdAt }`.
+- `BillingEventSchema`: `{ id: /^bev:[a-z0-9-]+$/, subjectKind, subjectId, planKey, kind, amountCents: int ≥ 0, currency: /^[a-z]{3}$/, provider, providerRef, paymentRef: non-empty string | null, livemode: boolean, occurredAt, createdAt }`. `amountCents` is Stripe's minor unit: cents for `usd`, whole units for zero-decimal currencies (`krw`, `jpy`), so a formatter uses the currency's own fraction digits, never a fixed `/ 100`.
 - `ReceiptViewSchema`: `{ id, kind, planKey, amountCents, currency, livemode, occurredAt, hasReceipt: boolean }` (no Stripe id, no URL; `id` is the opaque `bev:` id used by the receipt-link call).
 - `StripeModeSchema = z.enum(['test', 'live', 'none'])`.
 - `CoverageSchema` (discriminated on `state`):
@@ -320,9 +322,10 @@ CREATE INDEX IF NOT EXISTS idx_entitlements_provider_ref ON entitlements(provide
   - `{ state: 'school', schoolName: string, planKey: 'group_license' | 'school_seat', expiresAt: string | null }` (a class covered by its school, or a school seen by a teacher member)
 - `UsageSchema`: `{ learners: int ≥ 0, learnerCap: int | null, teachers: int | null, teacherCap: int | null }` (`null` cap = unlimited; teachers only for school payers).
 - `ReadOnlyReasonSchema = z.enum(['family', 'class', 'school'])` (which "manages this plan" line a viewer sees).
-- `BillingSpaceCardSchema`: `{ spaceId, kind, name, role, archived: boolean, payer: boolean, readOnlyReason: ReadOnlyReason | null, coverage, usage, actions: { buy: PurchasablePlanKey | null, manage: boolean, contact: boolean }, receipts: ReceiptView[] (payer only, at most 3, `hasReceipt` ignored inline), hasReceipts: boolean, legacyNoHistory: boolean }`.
-- `BillingSummarySchema`: `{ mode: StripeMode, purchasesOpen: boolean, cards: BillingSpaceCard[], account: BillingSpaceCard-like cards for subject `account` (usually empty) }`. There is no "paying grown-up" flag here: F-BROWSE-001 owns that rule (`accountBrowseScope`).
-- Parsing is lenient on the client (`safeParse`, unknown keys stripped), so a newer Worker never breaks an older page.
+- `BillingSpaceCardSchema`: `{ spaceId, kind, name, role (any role but student), archived: boolean, payer: boolean, readOnlyReason: ReadOnlyReason | null, coverage, usage: Usage | null (null = no usage line: a school seen by a teacher member, section 4.2), actions: { buy: PurchasablePlanKey | null, manage: boolean, contact: boolean }, receipts: ReceiptView[] (payer only, at most 3, `hasReceipt` ignored inline), hasReceipts: boolean, legacyNoHistory: boolean }`.
+- `BillingAccountCardSchema` (subject `account`, always the viewer's own): `{ coverage, actions: { manage: boolean }, receipts: ReceiptView[] (at most 3, inline only), legacyNoHistory: boolean }`. No All receipts link, because the receipts page takes a space id.
+- `BillingSummarySchema`: `{ mode: StripeMode, purchasesOpen: boolean, cards: BillingSpaceCard[], account: BillingAccountCard[] (usually empty) }`, the strict contract the Worker answers with. There is no "paying grown-up" flag here: F-BROWSE-001 owns that rule (`accountBrowseScope`).
+- Pages read the response with `parseBillingSummary(raw): BillingSummary | null`, never with the strict schema, so a newer Worker never breaks an older page: unknown keys are stripped; a card or receipt row with a value the page does not know is dropped and its siblings stay; more than 3 inline rows are cut to the newest 3; an unknown `mode` reads as `none` (buttons off). `null` only when the summary itself is unreadable.
 
 ### 5.3 Routes
 
@@ -331,14 +334,14 @@ CREATE INDEX IF NOT EXISTS idx_entitlements_provider_ref ON entitlements(provide
 | `GET /api/billing/summary` | signed-in account | `BillingSummary`. One card per non-archived space where the account is `owner`, `caregiver`, `teacher` or `admin` (plus archived spaces the viewer pays for that still hold a live Group License). `payer` = the `space.manage` check of section 4.2. Viewer cards carry `receipts: []`, `hasReceipts: false`, actions all off, and a `readOnlyReason`. `usage` for viewers: learner count only for family and class; a school's seat counts only for payers. Never a learner name, never a promo code, never a price, never `customerRef`, never a join code. `?poll=1` only suppresses the view event. |
 | `GET /api/billing/receipts?id=<spaceId>` | a payer of the space | `{ spaceName, receipts: ReceiptView[] }`, newest first, at most 50. 403 for any other role, 404 for an unknown space. Makes no Stripe call and writes nothing. |
 | `POST /api/billing/receipt-link` `{ id }` | a payer of the row's space | `{ url }` fetched fresh from Stripe (section 4.10). Step-up (`403` hint), live guard (`503`), 403 / 404 as above, `502 receipt_unavailable` on a Stripe error, `503 not_configured` when no key is bound. The URL is never logged and never stored. |
-| `POST /api/entitlements/stripe/checkout` | a payer of the space | as F-ENT-001 §3.3, plus: step-up `403` hint (section 4.4), `409 already_active`, `503 live_not_enabled`, the success suffix with `plan` and `id`, `payment_intent_data[metadata]` in payment mode. |
+| `POST /api/entitlements/stripe/checkout` | a payer of the space | as F-ENT-001 §3.3, plus: step-up `403` hint (section 4.4), `409 already_active` (landed in BY-1, #371 [BY]), `503 live_not_enabled`, the success suffix with `plan` and `id` (both plans are subscriptions, [BY]). |
 | `POST /api/entitlements/stripe/portal` | a payer of the space | as today, plus step-up and the live guard. |
 | `POST /api/entitlements/stripe/promo` | account | as today, plus the live guard. |
 | `POST /api/entitlements/stripe/webhook` | Stripe | as today, plus history recording and the cancel-at-period-end mapping (section 5.4). |
 | `GET /api/entitlements` | account | unchanged (the old page keeps working until B-8a; other console pages keep using it). |
 | `GET /health` | anyone | adds the booleans `bindings.stripeLive`, `bindings.billingLiveAllowed`. |
 
-`/api/billing/*` is a new Hono router mounted in `packages/backend/src/app.ts` next to `/api/entitlements`. CORS already allows `https://app.hangulroute.com` (`packages/backend/src/lib/cors.ts` defaults), and `verifyToken` has no `authorizedParties` (`lib/auth.ts:30-33`), so a Clerk token minted on the app origin is accepted with no change.
+`/api/billing/*` is a new Hono router mounted in `packages/backend/src/app.ts` next to `/api/entitlements`. CORS already allows `https://app.hangulroute.com` (`packages/backend/src/lib/cors.ts` defaults), and `verifyToken` checks `authorizedParties` against the same CORS allow-list (F-APP-001 A-9), which includes `https://app.hangulroute.com`, so a Clerk token minted on the app origin is accepted with no change.
 
 ### 5.4 Webhook history (`lib/billing-events.ts`, pure mapping + Db writes; Stripe lookups through the injected `fetch`)
 
@@ -346,18 +349,18 @@ New events to subscribe in the Stripe dashboard (runbook Step 8, shipped with B-
 
 | Event | Recorded as | Subject from | Amount |
 |---|---|---|---|
-| `checkout.session.completed`, `mode=payment` | `purchase`, `provider_ref` = `payment_intent` (or the session id when a 100%-off code made it free; then no receipt) | session `metadata` (already set) | `amount_total` |
+| `checkout.session.completed`, `mode=payment` (legacy one-time sandbox sessions only; none are created after BY-1) | `purchase`, `provider_ref` = `payment_intent` (or the session id when a 100%-off code made it free; then no receipt) | session `metadata` (already set) | `amount_total` |
 | `checkout.session.completed`, `mode=subscription` | nothing (the first `invoice.paid` records it) | | |
 | `invoice.paid` | `purchase` when `billing_reason === 'subscription_create'`, else `renewal`; `provider_ref` = invoice id; `payment_ref` = see below | `parent.subscription_details.metadata` (2025 versions) or `subscription_details.metadata` (older), else the entitlement whose `providerRef` equals the subscription id (`parent.subscription_details.subscription` or `subscription`) via `entitlementByProviderRef` | `amount_paid` |
 | `invoice.payment_failed` | `failed`; `provider_ref` = invoice id | as above | `amount_due` |
-| `charge.refunded` | `refund`; `provider_ref` = `<charge id>:refund:<amount_refunded>` | the `purchase` / `renewal` row whose `provider_ref` equals the charge's `payment_intent` (lifetime) or whose `payment_ref` equals it (license); fallback below | `amount_refunded` minus the refunds already recorded for that charge |
+| `charge.refunded` | `refund`; `provider_ref` = `<charge id>:refund:<amount_refunded>` | the `purchase` / `renewal` row whose `provider_ref` equals the charge's `payment_intent` (legacy one-time) or whose `payment_ref` equals it (license); fallback below | `amount_refunded` minus the refunds already recorded for that charge |
 
 - **`payment_ref` on current API versions.** `invoice.payment_intent` (older versions) is used when present. On 2025-03-31.basil and later it is gone and `invoice.payments` is not expanded in webhook payloads, so the mapper calls `GET /v1/invoice_payments?invoice=<invoice id>` and stores the first `payment.payment_intent`. If that call fails, the row is stored with `payment_ref` NULL and the event still answers 200.
 - **Refund fallback.** When `charge.refunded` matches no row by `payment_intent`, the mapper calls `GET /v1/invoice_payments?payment[type]=payment_intent&payment[payment_intent]=<pi>`, takes the invoice id and matches the row whose `provider_ref` is that invoice. If nothing matches, the event is acknowledged `200 { applied: false }` and recorded nowhere.
-- **Subscription status** (`entitlementFromStripeEvent`, `stripe.ts:101-131`, changed in B-3): `cancel_at_period_end === true` or a non-null `cancel_at` → `cancelled` with `expiresAt` = period end; period end from the top level or `items.data[0]` (section 4.6).
-- **Duplicate lifetime purchase**: a payment-mode completion for a subject that already holds an active `family_lifetime` row is recorded as a normal `purchase` and sends `billing.checkout_completed { duplicate: true }` (section 4.4).
+- **Subscription status** (`entitlementFromStripeEvent`, `stripe.ts:101-131`, changed in BY-1, moved from B-3 [BY]): `cancel_at_period_end === true` or a non-null `cancel_at` → `cancelled` with `expiresAt` = period end; period end from the top level, else the latest `items.data[].current_period_end` (section 4.6).
+- **Duplicate purchase**: a completion for a subject that already holds an active row of the same plan (two checkouts opened before either was paid) is recorded as a normal `purchase` and sends `billing.checkout_completed { duplicate: true }` (section 4.4).
 - The webhook endpoint's API version is whatever the Stripe dashboard pins; runbook Step 8 records it. The mapper reads both the older and the 2025 shapes, the way `promoFromStripe` already reads two coupon locations (`stripe.ts:224-245`).
-- A full refund (`charge.refunded` with `refunded === true`) of a `family_lifetime` purchase also calls `applyEntitlement({ …, status: 'expired', provider: 'stripe' })` (OD-6).
+- A refund changes no entitlement (OD-6 revised, BY-D8); it is recorded only.
 - `livemode` is copied from the event.
 - Signature checks, tolerance and responses stay exactly as F-ENT-001 §3.3.
 
@@ -391,7 +394,7 @@ All strings in `packages/i18n` (F-I18N-001). English is written in this spec's P
 | `kind.family` / `.class` / `.school` | Family / Class / School |
 | `archived` | (archived) |
 | `coverage.free` | Free plan |
-| `coverage.lifetime` | Family Lifetime · yours for good |
+| `coverage.family` | Family Plan ([BY]; was `coverage.lifetime` "Family Lifetime · yours for good") |
 | `coverage.license` | Group License |
 | `coverage.contract` | School contract |
 | `coverage.school(school)` | Covered by {school}'s license |
@@ -407,8 +410,8 @@ All strings in `packages/i18n` (F-I18N-001). English is written in this spec's P
 | `connectLearner.line` | Next: connect a learner to this family. |
 | `connectLearner.cta` | Connect a learner |
 | `buy.forSpace(plan, space)` | {plan} for {space} |
-| `buy.family_lifetime.cta` / `buy.group_license.cta` | Get Family Lifetime / Get Group License |
-| `includesLines.family.everyLesson` | Every lesson of every Stage, now and later |
+| `buy.family_lifetime.cta` / `buy.group_license.cta` | Get Family Plan / Get Group License [BY] |
+| `includesLines.family.everyLesson` | Every lesson of every Stage, new ones included [BY] |
 | `includesLines.family.learners(n)` | Up to {n} learners in one family |
 | `includesLines.family.cloudSave` | Cloud save on every device |
 | `includesLines.family.browse` | Browse every lesson as your learner sees it |
@@ -434,7 +437,7 @@ All strings in `packages/i18n` (F-I18N-001). English is written in this spec's P
 | `receipts.older` | Older payments are in the receipt email from Stripe. |
 | `receipts.beyondLimit` | Older receipts: see Stripe's emails or write to us. |
 | `receipts.kind.purchase` / `.renewal` / `.refund` / `.failed` | Payment / Renewal / Refund / Payment didn't go through |
-| `receipts.oneTime` | one payment |
+| `receipts.oneTime` | one payment (legacy one-time sandbox rows only [BY]) |
 | `receipts.test.pill` | test |
 | `receipts.view.cta` | View receipt |
 | `receipts.viewA11y(date)` | View receipt from {date} (opens Stripe in a new tab) |
@@ -470,7 +473,7 @@ Deleted in B-8c with their `ko` / `es` entries: `console.billingKidsLine` (repla
 | `covered.note.family` / `.self` | Everything is open while they are in it. / Everything is open while you are in it. |
 | `covered.sourceFallback` | the class |
 | `full.title.family(name)` / `.self` | {name} has the full route. / You have the full route. |
-| `full.fromFamily.family` / `.self` | From your family's Family Lifetime plan. / From your Family Lifetime plan. |
+| `full.fromFamily.family` / `.self` | From your family's Family Plan. / From your Family Plan. [BY] |
 | `full.noSource` | Everything is open. |
 | `free.title.family(name)` / `.self` | {name} is on the free plan. / You're on the free plan. |
 | `free.open` | Stage 1 is always free. (moved from `caregiver.paywall.free.bubble`; F-ENT-003's lines replace it while its switch is on) |
@@ -496,7 +499,7 @@ Kept: `free`, `freeNote`, `pillActive`, `pillFree`. Deleted (B-9): `premium` ("P
 
 - `caregiver.paywall`, the whole object: `learnerFallback` moves to `caregiver.plan.learnerFallback`, `free.bubble` moves to `caregiver.plan.free.open` (same English), and `backToJourney`, `covered`, `premium`, `free.unlocks`, `free.openConsole`, `free.openFailed`, `free.terms`, `bullets`, `offer` are deleted.
 - The namespace for every Plan screen string, F-ENT-003's included, is `caregiver.plan.*`: F-ENT-003 E3-8 adds `caregiver.plan.freePlan` to the object B-6 creates.
-- `caregiver.audience.shared.paywallBuyOnWeb`, `.paywallBuyLater`, `.promoHint`; `a11y.lifetimeOffer`; `learner.profile.plan.premium`, `.unlocked`, `.unlock`.
+- `caregiver.audience.shared.paywallBuyOnWeb`, `.paywallBuyLater`, `.promoHint`; `a11y.familyOffer` (renamed from `a11y.lifetimeOffer` by BY-1); `learner.profile.plan.premium`, `.unlocked`, `.unlock`.
 
 ### 6.5 Copy checks
 
@@ -561,10 +564,10 @@ The console has no telemetry client (F-APP-001 OD-9). Billing events are therefo
 |---|---|
 | `packages/content-schema/src/__tests__/billing.test.ts` | every schema: valid and invalid ids, currency pattern, coverage union (with `endsAtPeriodEnd`), read-only reasons, receipt view has no URL or Stripe id, summary lenient parse (unknown keys stripped), constants, `BILLING_RECEIPTS_PATH` built from `APP_ROUTES.billing` |
 | `packages/content-schema/src/__tests__/telemetry.test.ts` | exact list includes the `billing.*` names, appended in order (B-3, B-4, B-5 each add theirs) |
-| `packages/backend/src/lib/__tests__/billing-events.test.ts` | mapping table of section 5.4: payment-mode session → purchase (with and without payment intent), subscription session → nothing, `invoice.paid` create vs cycle, both metadata locations, `payment_ref` from `invoice.payment_intent` and from the `invoice_payments` lookup (injected fetch: success, failure → NULL), fallback through `entitlementByProviderRef`, `invoice.payment_failed`, `charge.refunded` partial then full (delta amounts) matched through `provider_ref`, `payment_ref` and the `invoice_payments` fallback, unmappable events, `livemode` copy, duplicate lifetime flag |
-| `packages/backend/src/lib/__tests__/stripe.test.ts` (extended) | `stripeMode` for each prefix; `checkoutForm` adds `payment_intent_data[metadata]` in payment mode only; success suffix carries `plan` and `id`; `entitlementFromStripeEvent`: `cancel_at_period_end` → `cancelled` with period end, `cancel_at` set, reactivation → `active`, period end at the top level and in `items.data[0]` |
-| `packages/backend/src/__tests__/billing.test.ts` | `GET /summary` per persona: owner family free / lifetime / lifetime with 0 learners, caregiver read-only (`readOnlyReason: 'family'`, no receipts, no actions, no amounts), owner class free with cap usage, co-teacher (`'class'`), class in school (coverage `school`, `'school'`, no buy), school teacher member (no seat counts), school owner and school admin (both payers: seat counts, actions, receipts), archived class with live license for payers only, no spaces, account-subject legacy row, no join code anywhere; `?poll=1` sends no view event; `GET /receipts` payers only (owner and school admin allowed; 403 caregiver / teacher, 404 unknown), 50-row limit, newest first, no outbound fetch; `POST /receipt-link`: step-up hint when `fva` is old or absent, payer only, each row kind calls the right Stripe path (injected fetch), Stripe error → 502, live guard, no key → 503, the URL is not written to the db |
-| `packages/backend/src/__tests__/entitlements.test.ts` (extended) | checkout `409 already_active`; `503 live_not_enabled` with a live key and without `BILLING_LIVE_ALLOWED`, allowed with it; portal and promo live guard; step-up: `fva[0] > 10` and absent `fva` → 403 with the Clerk hint body and `error.code = 'reverify_required'`, allowed at ≤ 10; webhook records history; full lifetime refund expires the row (learner inbox tier flips to free; progress untouched); idempotent retries (same event twice → one row) |
+| `packages/backend/src/lib/__tests__/billing-events.test.ts` | mapping table of section 5.4: payment-mode session → purchase (with and without payment intent), subscription session → nothing, `invoice.paid` create vs cycle, both metadata locations, `payment_ref` from `invoice.payment_intent` and from the `invoice_payments` lookup (injected fetch: success, failure → NULL), fallback through `entitlementByProviderRef`, `invoice.payment_failed`, `charge.refunded` partial then full (delta amounts) matched through `provider_ref`, `payment_ref` and the `invoice_payments` fallback, unmappable events, `livemode` copy, duplicate purchase flag |
+| `packages/backend/src/lib/__tests__/stripe.test.ts` (extended) | `stripeMode` for each prefix; success suffix carries `plan` and `id` (the `entitlementFromStripeEvent` cancel and period-end cases landed with BY-1, #371 [BY]) |
+| `packages/backend/src/__tests__/billing.test.ts` | `GET /summary` per persona: owner family free / Family Plan / Family Plan with 0 learners, caregiver read-only (`readOnlyReason: 'family'`, no receipts, no actions, no amounts), owner class free with cap usage, co-teacher (`'class'`), class in school (coverage `school`, `'school'`, no buy), school teacher member (no seat counts), school owner and school admin (both payers: seat counts, actions, receipts), archived class with live license for payers only, no spaces, account-subject legacy row, no join code anywhere; `?poll=1` sends no view event; `GET /receipts` payers only (owner and school admin allowed; 403 caregiver / teacher, 404 unknown), 50-row limit, newest first, no outbound fetch; `POST /receipt-link`: step-up hint when `fva` is old or absent, payer only, each row kind calls the right Stripe path (injected fetch), Stripe error → 502, live guard, no key → 503, the URL is not written to the db |
+| `packages/backend/src/__tests__/entitlements.test.ts` (extended) | checkout `409 already_active` (landed in BY-1, #371 [BY]; B-5 adds only the `billing.checkout_refused { reason: 'already_active' }` event on it); `503 live_not_enabled` with a live key and without `BILLING_LIVE_ALLOWED`, allowed with it; portal and promo live guard; step-up: `fva[0] > 10` and absent `fva` → 403 with the Clerk hint body and `error.code = 'reverify_required'`, allowed at ≤ 10; webhook records history; a refund leaves the row unchanged and an immediate cancel expires it (learner inbox tier flips to free; progress untouched) [BY-D8]; idempotent retries (same event twice → one row) |
 | `packages/backend/src/lib/__tests__/auth.test.ts` (extended) | verified claims expose `fva` next to `sub`; existing callers unchanged |
 | `packages/backend/src/__tests__/telemetry.test.ts` (extended) | `billing.*` names refused from clients with 422; server events recorded with codes-only payloads |
 | `packages/backend` `test:sqlite` | migration applies on top of 0001-0006; unique key and idempotent insert; `idx_entitlements_provider_ref` exists; index used by `billingEventsFor` |
@@ -579,7 +582,7 @@ The console has no telemetry client (F-APP-001 OD-9). Billing events are therefo
 | `apps/mobile/src/screens/profile/__tests__/ProfileScreen.test.tsx` (extended) | Plan details shows for free, premium and covered tiers and opens the Plan screen without a PIN; the card says "Full route" and never "Premium" or "unlock" |
 | `apps/mobile/src/platform/__tests__/billing-handoff.test.ts` (B-9b) | with `flags.grownUpHomeEnabled` the `Billing` destination calls `openGrownUpArea({ via: 'paywall', target: APP_ROUTES.billing })`; without it, `Linking.openURL(consoleBillingUrl())` |
 | `packages/i18n/src/__tests__/billing-messages.test.ts` | new keys exist in `en`, typed in `ko` / `es` overlays; removed keys gone; every string a billing wireframe draws has a key (a list kept in the test); no message contains a digit-dollar pattern or a hard-coded limit; banned words (`kids`, age ranges) absent from `console.billing`; learner banned fixture passes for `caregiver.plan` and `learner.profile.plan` |
-| `apps/web/e2e/billing.spec.ts` (B-11) | Playwright on F-APP-001's merged app-host build with a mocked API: parent with one free family → Get Family Lifetime on the card → (mock Stripe URL) → return checking → active → Connect a learner shown; caregiver read-only; receipts page and View receipt with step-up; offline banner; `/teach/billing?checkout=cancel` lands on `/account/billing` with the query; 320 px no sideways scroll; tab order = visual order |
+| `apps/web/e2e/billing.spec.ts` (B-11) | Playwright on F-APP-001's merged app-host build with a mocked API: parent with one free family → Get Family Plan on the card → (mock Stripe URL) → return checking → active → Connect a learner shown; caregiver read-only; receipts page and View receipt with step-up; offline banner; `/teach/billing?checkout=cancel` lands on `/account/billing` with the query; 320 px no sideways scroll; tab order = visual order |
 | `apps/mobile/e2e/plan-status.spec.ts` (B-11) | PWA: Profile → Plan details (no PIN) shows no price; Open billing → PIN → the same tab opens `/account/billing` without the "Grown-ups only" lock (flag on); with the A-2 worker active, a navigation to `/account/billing?checkout=success` serves the billing page, not the learner shell |
 
 Coverage: `packages/content-schema` 100 %, `packages/backend` ≥ 90 %, `apps/web` verification logic (`billing-summary.ts`, `checkout-return.ts`) 100 %, `apps/mobile` `logic/paywall.ts` 100 % (docs/tests/coverage-targets.md).
@@ -591,8 +594,8 @@ Coverage: `packages/content-schema` 100 %, `packages/backend` ≥ 90 %, `apps/we
 | B-0 | `docs`: this spec, five wireframes under `design/wireframes/billing/`, superseded notes on `console/billing.md` and `paywall/upgrade.md`, index rows in `docs/specs/README.md` and `design/wireframes/README.md` | S | — |
 | B-1 | `feat(content-schema)`: `schemas/billing.ts` (constants, event, receipt view, coverage, usage, read-only reason, card, summary, mode) + tests; export appended to `index.ts` | S | B-0, F-APP-001 A-1 (`APP_ROUTES`) |
 | B-2 | `feat(backend,api)`: additive migration `0007_billing_events.sql` (table, two indexes, `idx_entitlements_provider_ref`), Db methods (memory + D1), sqlite tests | S | B-1 |
-| B-3 | `feat(backend,content-schema)` + `docs`: `lib/billing-events.ts` mapping (both API shapes, `invoice_payments` lookups), webhook recording, full-refund rule (OD-6), `cancel_at_period_end` / `cancel_at` and period-end location in `entitlementFromStripeEvent`, `payment_intent_data[metadata]`, `recordServerEvent`, the three webhook telemetry names + exact-list test + client 422 guard, names doc section, runbook Step 8 (subscribe `invoice.paid`, `invoice.payment_failed`, `charge.refunded`; record the pinned webhook API version; duplicate-refund note) | M | B-1, B-2 |
-| B-5 | `feat(backend)`: `stripeMode`, live guard (`BILLING_LIVE_ALLOWED`), `409 already_active`, step-up (`lib/auth.ts` exposes `fva`; Clerk hint body; fail closed) on checkout and portal, success suffix with `plan` and `id`, `/health` booleans, wrangler.toml comments, runbook line "confirm `fva` in a production token", three telemetry names | M | B-1, B-3 |
+| B-3 | `feat(backend,content-schema)` + `docs`: `lib/billing-events.ts` mapping (both API shapes, `invoice_payments` lookups), webhook recording, refund recording (OD-6 revised: no entitlement change, BY-D8), `recordServerEvent`, the three webhook telemetry names + exact-list test + client 422 guard, names doc section, runbook Step 8 (subscribe `invoice.paid`, `invoice.payment_failed`, `charge.refunded`; record the pinned webhook API version; duplicate-refund note) | M | B-1, B-2 |
+| B-5 | `feat(backend)`: `stripeMode`, live guard (`BILLING_LIVE_ALLOWED`), step-up (`lib/auth.ts` exposes `fva`; Clerk hint body; fail closed) on checkout and portal, success suffix with `plan` and `id`, `/health` booleans, wrangler.toml comments, runbook line "confirm `fva` in a production token", three telemetry names (`billing.checkout_refused` also reports the `409 already_active`). [BY] The checkout `409 already_active` itself landed in BY-1 (#371, `AMENDMENTS-BILLING-FAMILY-YEARLY.md` BY-D4) and is not B-5 work | M | B-1, B-3 |
 | B-4 | `feat(backend)`: `/api/billing` router: `GET /summary` (`poll`), `GET /receipts`, `POST /receipt-link` (step-up, live guard, fresh Stripe lookup); two telemetry names | M | B-2, B-3, B-5 |
 | B-6 | `feat(i18n)`: `console.billing.*` additions, the two `entitlementStatus` value changes, `caregiver.plan.*`, `learner.profile.plan` new keys, `a11y.planStatus` (en; ko / es overlay entries for review) + tests | S | B-0 |
 | B-7 | `feat(web)`: pure view models `billing-summary.ts` (reads `SITE_CLAIMS` through a parameter defaulting to it), `checkout-return.ts` + API client `billingSummary()` / `receipts()` / `receiptLink()` + tests | M | B-1, B-6, F-SITE-002 S-2 (`site-claims.ts`) |
@@ -617,13 +620,13 @@ B-1 and B-6 can run in parallel right after B-0 (B-1 also needs F-APP-001 A-1, a
 | OD-2 | Show `PLAN_PRICING` amounts on the signed-in billing page while Stripe is in test mode? | Yes, under the "Test mode: no real card is charged." banner (as `/teach/billing` does today). Never on the learner app or hangulroute.com. | B-8a |
 | OD-3 | Learner Plan screen on the web: offer an **Open billing** button? | Yes, web only, through the gate, same tab (B-9b), no price. Native: none. | B-9 |
 | OD-4 | Use Apple's US-storefront external purchase link exception, or a Google Play alternative billing programme? | No, on every storefront. Native builds carry no external purchase link or mention. | B-9 (copy), store submissions |
-| OD-5 | Native family coverage before F-IAP-002: may a store-distributed build unlock a Family Lifetime bought on the web? | Native builds keep honouring every tier source in code; before the first public store release, F-IAP-002 adds Family Lifetime as an in-app purchase (Guideline 3.1.3(b)). Until then native builds go only to TestFlight / internal testing. Class and school coverage is fine under 3.1.3(c). | release checklist only |
-| OD-6 | What does a refund do? | A full refund of a Family Lifetime payment expires that family's plan; a partial refund changes nothing; Group License status follows Stripe's subscription events. Learners keep everything they earned. | B-3 |
+| OD-5 | Native family coverage before F-IAP-002: may a store-distributed build unlock a Family Plan bought on the web? | Native builds keep honouring every tier source in code; before the first public store release, F-IAP-002 adds the Family Plan as an auto-renewable yearly in-app subscription (Guideline 3.1.3(b), [BY]). Until then native builds go only to TestFlight / internal testing. Class and school coverage is fine under 3.1.3(c). | release checklist only |
+| OD-6 | What does a refund do? | Revised 2026-10-11 [BY-D8]: nothing by itself, for either plan; status follows Stripe's subscription events, and the owner cancels immediately in the dashboard to end a refunded plan at once. Learners keep everything they earned. | B-3 |
 | OD-7 | Require a fresh sign-in before checkout, portal and receipts? | Yes, when the first factor is older than 10 minutes (`STEP_UP_MAX_AGE_MIN`), failing closed when the token has no `fva`. | B-5, B-4, B-8b |
 | OD-8 | Do viewers (co-parents, co-teachers, teachers in a school) see receipts? | No. They see coverage and status only. School admins are payers (they can already buy and manage), so they see receipts. | B-4 |
 | OD-9 | How does an adult learning alone buy? | Through a family space they own, with the empty-state button "Set up for me or my family" and the steps of section 2. No new product. | none (copy only) |
 | OD-10 | (withdrawn) The old-address forwarder. | F-APP-001 and F-SITE-002 own the redirects (section 4.1). | — |
-| OD-11 | Stripe invoices for one-time lifetime payments (`invoice_creation`), for buyers who need a formal invoice? | Off. The Stripe charge receipt is the proof; a buyer who needs an invoice writes to hello@hangulroute.com and the owner issues one from the Stripe dashboard. Licenses already get Stripe invoices. | B-3 |
+| OD-11 | Stripe invoices for one-time lifetime payments (`invoice_creation`)? | Withdrawn 2026-10-11 [BY]: no one-time payment is sold any more; both plans are subscriptions and Stripe issues an invoice for every year. | — |
 | OD-12 | When does Stripe go live? | Not in this spec. `BILLING_LIVE_ALLOWED` stays unset and a live key is refused, until the owner says otherwise. | — |
 
 ### 13.2 Amendments the sibling specs carry (so the five specs agree)
@@ -637,7 +640,7 @@ B-1 and B-6 can run in parallel right after B-0 (B-1 also needs F-APP-001 A-1, a
 | S1 | F-SITE-002 | (answered, superseded) F-SITE-002 revision 2 builds no `_redirects` and no `site-routes.json`; F-APP-001's stubs forward `/teach/billing` in one hop and the site renders no billing link. Remaining edit: F-SITE-002's sentences that mention "F-BILL-002's `/teach/billing` forwarder", `BILLING_URL` and `EXPO_PUBLIC_BILLING_URL` describe revision 1; revision 2 has none of them (the old address on the app host is F-APP-001 A-5c's redirect page; the learner app keeps `consoleBillingUrl()` until B-9b hands off through F-APP-001). |
 | S2 | F-SITE-002 | B-10's guard scans links and amounts only and allows the S-7 legal prose; if F-SITE-002 ships its own equivalent guard, B-10 reuses it. |
 | F1 | F-ENT-003 | (adopted in F-ENT-003 revision 2: §3.9.1, wireframe `billing/plan-status-free-lessons.md`, E3-8 after B-9, keys `caregiver.plan.freePlan`, "Every lesson of every Stage, now and later" moved to the billing page.) Remaining edit: the switch-off line F-ENT-003 quotes is `caregiver.plan.free.open` = "Stage 1 is always free." (today's wording), not "Stage 1 is open to everyone." (revision 1). |
-| F2 | F-ENT-003 | The Profile `learner.profile.plan.freeNote` ("Stage 1 is free. More stages are on the way.") is not true once the switch is on; E3-8 swaps it under the switch. |
+| F2 | F-ENT-003 | Closed by F-ENT-003 OD-1 (2026-10-11): the Profile `learner.profile.plan.freeNote` ("Stage 1 is free. More stages are on the way.") stays true when the switch is on, because all of Stage 1 stays free; no swap. |
 | F3 | F-ENT-003 | §3.9.2's **Open billing** link: there is no `billingUrl()` in F-BILL-002 revision 2. On the console it is `APP_ROUTES.billing`; on the learner device it is the Plan screen's gated **Open billing** (B-9 / B-9b); nothing on native. |
 | B1 | F-BROWSE-001 | [ See plans ] targets `APP_ROUTES.billing` on the app host; F-BILL-002 exposes no "paying grown-up" flag (BROWSE's `accountBrowseScope` is the only rule). |
 
@@ -697,3 +700,13 @@ Assumptions this spec relies on (and what happens if they change):
 | R2 minor: no index on `entitlements.provider_ref`; disputes | Applied (index in 0007; disputes out of scope). |
 
 **2026-10-11, revision 2 (sibling pass)**: re-read the sibling specs as revised in parallel. F-SITE-002 revision 2 dropped its redirect table, so the old site address is F-APP-001 A-8's one-hop stub only (amendment S1 closed; B-10 now depends on F-SITE-002's page PRs and A-8). F-ENT-003 revision 2 moved its lines onto the Plan screen under `caregiver.plan.freePlan`; this spec now uses `caregiver.plan.*` for every Plan screen string, moves `free.bubble` to `caregiver.plan.free.open` with the same words, and adds a guidance slot for F-ENT-003's premium no-plan line (amendments F1 to F3 updated).
+
+**2026-10-11, B-1 review amendments (PR #375)**, after two reviews of B-1. Section 5.2 only; no behaviour elsewhere changes.
+
+| Finding | Resolution |
+|---|---|
+| `usage` could not be omitted, but a school teacher member sees no seat counts (section 4.2, 5.3) | `usage: Usage \| null`; null means no usage line. |
+| "A newer Worker never breaks an older page" held for unknown keys only: a new enum value or a higher inline limit failed the whole summary | `parseBillingSummary` is per-card and per-row tolerant, cuts inline rows to 3 and reads an unknown mode as `none`; `BillingSummarySchema` stays the strict Worker contract. |
+| The account card had no Manage action and a `hasReceipts` with nowhere to point | `BillingAccountCardSchema` named: `actions: { manage }` (the portal accepts subject `account`), no `hasReceipts`. |
+| Zero-decimal currencies | `amountCents` is documented as Stripe's minor unit. |
+| `paymentRef` could be empty; a student could get a card | `paymentRef` non-empty or null; the card role excludes `student`. |

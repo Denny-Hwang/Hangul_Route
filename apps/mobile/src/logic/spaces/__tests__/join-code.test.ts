@@ -27,7 +27,7 @@ describe('join code helpers (F-SPACE-001 §3.5)', () => {
     expect(ALL.map((c) => joinErrorMessage(c, m))).toEqual([
       "That code didn't work. Check it with your teacher.",
       'That code is too old. Ask for a new one.',
-      "You're already in three classes. Leave one in Settings first.",
+      "You're already in three classes. Leave one under Classes & family in your Profile first.",
       'This class is full. Ask your teacher.',
       "That code isn't for joining as a learner. Ask for a class code.",
       'That name is not in this class anymore. Ask your teacher.',

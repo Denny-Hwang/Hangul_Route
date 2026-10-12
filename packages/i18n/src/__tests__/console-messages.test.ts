@@ -21,14 +21,14 @@ describe('console: the former COPY, keys and wording unchanged', () => {
   it('keeps every flat COPY key with its English text', () => {
     expect(c.kidsNoAccount).toBe("Kids don't need an account — they join with a code.");
     expect(c.tryAgain).toBe('Try again');
-    expect(c.writeOnBoard).toBe('Write it on the board. Students join from Settings → Classes & family → Join a class.');
+    expect(c.writeOnBoard).toBe('Write it on the board. Students join from Profile → Classes & family → Join a class.');
     expect(c.notSyncedYet).toBe('not synced yet');
     expect(c.readoutHint).toBe('Most recent activity first — not a ranking. "Not ready yet" means the learner has not unlocked that item.');
     expect(c.relinkCardsComeBack).toBe(
       "Approving brings the learner back into this class. Their cards come back with the rescue code their grown-up keeps in the app (Save my progress) — teachers can't see or reissue it.",
     );
     expect(c.billingSuccess).toBe('Thank you — the plan is active. Learners see it on their next sync.');
-    expect(c.lifetimeLine).toBe('One payment. No renewal, no subscription to cancel.');
+    expect(c.familyLine).toBe('Renews yearly. Cancel from Manage subscription any time.');
     expect(c.schoolLicenceLapsed).toBe('The licence needs attention. Classes stay readable; students keep Stage 1 either way.');
   });
 
@@ -94,7 +94,7 @@ describe('console: formatter words', () => {
     expect(s.trial).toBe('trial');
     expect(s.trialEnds('Oct 21, 2026')).toBe('trial · ends Oct 21, 2026');
     expect(s.active).toBe('active');
-    expect(s.activeForGood).toBe('active · yours for good');
+    expect(s).not.toHaveProperty('activeForGood'); // the Family Plan renews yearly: it says when (BY-D9)
     expect(s.activeRenews('Oct 21, 2026')).toBe('active · renews Oct 21, 2026');
     expect(s.pastDueKept).toBe('payment needs attention · premium kept for a week');
     expect(s.pastDuePaused).toBe('payment needs attention · premium paused');

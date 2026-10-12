@@ -34,14 +34,14 @@ export const caregiver = {
       restoreCardsBack: 'Your cards come back with your rescue code.',
       spacesNoClass: 'Not in a class yet. Got a code from a teacher or your family?',
       /** A learner already in three classes tries to join another. */
-      joinCodeFull: "You're already in three classes. Leave one in Settings first.",
+      joinCodeFull: "You're already in three classes. Leave one under Classes & family in your Profile first.",
       /** A code that is not a class code was entered. */
       joinCodeNotForLearners: "That code isn't for joining as a learner. Ask for a class code.",
       promoHint: 'Have a promo or referral code? Enter it on the web console.',
       paywallBuyOnWeb:
-        'Buy it once on the web console, so no store fees reach your family. Sign in there and come back — this device updates on its next sync.',
+        'Buy it on the web console, so no store fees reach your family. Sign in there and come back — this device updates on its next sync.',
       paywallBuyLater:
-        'Buying inside this app arrives with the store update. Until then, you can buy it once on the web console.',
+        'Buying inside this app arrives with the store update. Until then, you can buy it on the web console.',
       profileSwitchHint: 'Tap a profile to switch.',
     },
     /** "Grown-up zone" stays a family caregiver surface (CLAUDE.md §1). */
@@ -142,14 +142,14 @@ export const caregiver = {
     },
     free: {
       bubble: 'Stage 1 is always free.',
-      unlocks: (offer: string) => `What ${offer} unlocks`,
+      unlocks: (offer: string) => `What the ${offer} unlocks`,
       openConsole: { cta: 'Open the web console' },
       openFailed: (url: string) => `Open ${url} on a computer or phone browser.`,
-      terms: 'One payment, no renewal. Terms and privacy are on the website.',
+      terms: 'Renews yearly until cancelled. Terms and privacy are on the website.',
     },
-    /** What the family plan adds (decision #30: one payment, every Stage, one family). */
+    /** What the Family Plan adds (every Stage, one family; renews yearly since 2026-10-11). */
     bullets: {
-      everyStage: 'Every Stage, now and later',
+      everyStage: 'Every Stage, new ones included',
       cloudSave: 'Cloud save on every device',
       dashboard: 'Grown-up dashboard and plans',
       learners: (n: number) =>
@@ -157,8 +157,8 @@ export const caregiver = {
     },
     /** The single offer; the amount arrives already formatted (`formatUsd`) and is never written here. */
     offer: {
-      name: 'Family Lifetime',
-      line: 'One payment. No subscription, nothing to cancel.',
+      name: 'Family Plan',
+      line: 'Renews every year. Cancel any time.',
       price: { once: (amount: string) => `${amount} once`, year: (amount: string) => `${amount} / year` },
     },
   },
@@ -456,7 +456,7 @@ export const caregiver = {
   },
 
   /**
-   * My route about a child (F-ROUTE-001 sections 3.12, Appendix B): a grown-up viewing another
+   * Learning Route about a child (F-ROUTE-001 sections 3.12, Appendix B; LR-1): a grown-up viewing another
    * profile's page read-only. Every sentence is written about the child, from the profile name.
    */
   journey: {
@@ -466,9 +466,9 @@ export const caregiver = {
     started: (name: string) => `${name} started here.`,
     known: (name: string) => `${name} already knew this.`,
     quests: (name: string, n: number) => `In ${plural('en', n, { one: '1 quest', other: `${n} quests` })} ${name} finished`,
-    viewing: (name: string) => `Viewing ${name}'s journey`,
+    viewing: (name: string) => `Viewing ${name}'s Learning Route`,
     tiles: (n: number) => `Spelling with tiles: ${plural('en', n, { one: '1 quest', other: `${n} quests` })}`,
-    start: (name: string) => `${name}'s Hangul route starts here.`,
+    start: (name: string) => `${name}'s Learning Route starts here.`,
     goal: 'First goal: read every Hangul letter.',
     rest: (name: string) => `${name} did everything that is open right now. More is coming.`,
     beyond: (name: string) => `${name} knows a lot! More adventures are coming.`,
@@ -476,6 +476,15 @@ export const caregiver = {
     ready: (name: string) => `Ready when ${name} is`,
     explored: (name: string) => `${name} explored everything that is open right now`,
     skillsTitle: (name: string) => `What ${name}'s quests practice`,
+    /** The Learning Route row on each profile card of the in-app parent dashboard (R-9b, amendment LR-A6). */
+    row: {
+      title: 'Learning Route',
+      now: (n: number, title: string) => `Now: Stage ${n} · ${title}`,
+      goal: (n: number, title: string) => `Goal: Stage ${n} · ${title}`,
+      /** From the newest level check: its stage, band label and date. */
+      started: (n: number, band: string, date: string) => `Started: Stage ${n} · ${band} · ${date}`,
+      cta: 'See Learning Route',
+    },
   },
   /** One wording everywhere (F-ROUTE-001 section 3.12): the placement report and My route's skills rows. */
   skillsNote:

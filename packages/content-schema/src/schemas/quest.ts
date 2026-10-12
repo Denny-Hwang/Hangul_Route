@@ -72,11 +72,14 @@ export const QuestStepSchema = z.object({
 
 export type QuestStep = z.infer<typeof QuestStepSchema>;
 
+/** The quest id grammar, `quest:<slug>` (exported for F-BROWSE-001 §4.4 and the lecture blocks). */
+export const QUEST_ID_RE = /^quest:[a-z0-9-]+$/;
+
 const SCORED_KINDS: ReadonlySet<QuestStepKind> = new Set(['practice', 'apply', 'check']);
 
 export const QuestSchema = z
   .object({
-    id: z.string().regex(/^quest:[a-z0-9-]+$/),
+    id: z.string().regex(QUEST_ID_RE),
     titleEn: z.string(),
     blurbEn: z.string().optional(),
     /** One plain line for the "Next up" card on Results (F-QUEST-002 §3.5). */

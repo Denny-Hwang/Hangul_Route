@@ -23,6 +23,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Pressable, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { useMessages } from '../../i18n/use-messages';
+import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import {
   headerView,
   optionColumns,
@@ -40,8 +41,6 @@ import type { MinigameScope } from '../../logic/minigame-config';
 import { playPrompt, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useReducedMotion } from '../../platform/motion';
-import { useLocaleStore } from '../../store/locale-store';
-import { useProfileStore } from '../../store/profile-store';
 import { GameColumns } from './GameColumns';
 import type { MinigameHost } from './host';
 import { PictureArt } from './PictureArt';
@@ -79,10 +78,7 @@ export function ListenPickGame({ scope, host, onBack }: Props): React.ReactEleme
 
   const m = useMessages();
   const copy = m.learner.minigame;
-  const activeProfileId = useProfileStore((s) => s.activeId);
-  const romanizationMode = useLocaleStore((s) =>
-    activeProfileId === null ? 'always' : (s.byProfile[activeProfileId]?.romanizationMode ?? 'always'),
-  );
+  const romanizationMode = useRomanizationMode();
   const reducedMotion = useReducedMotion();
   // F-LAYOUT-001 §3.6, §3.12: the sound and the answers side by side on a landscape window; the speaker
   // and the pictures grow with the window.

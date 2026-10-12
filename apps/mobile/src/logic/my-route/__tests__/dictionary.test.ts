@@ -49,6 +49,12 @@ const SAMPLES: Record<string, unknown[][]> = {
   'caregiver.journey.ready': NAMES.map((n) => [n]),
   'caregiver.journey.explored': NAMES.map((n) => [n]),
   'caregiver.journey.skillsTitle': NAMES.map((n) => [n]),
+  'caregiver.journey.row.now': TITLES,
+  'caregiver.journey.row.goal': TITLES,
+  'caregiver.journey.row.started': [
+    [1, 'Letters and sounds', 'Oct 9'],
+    [2, 'Some reading', 'Dec 20'],
+  ],
   'a11y.myRoute.stage': TITLES.flatMap(([n, t]) => WORDS.map((w, i) => [n, t, w, i === 0, i === 1, N[i]])),
   'a11y.myRoute.stageGrownup': TITLES.flatMap(([n, t]) => WORDS.map((w, i) => ['Sam', n, t, w, i === 0, i === 1, N[i]])),
   'a11y.myRoute.later': [['Stages 5 to 7', 'Coming later']],
@@ -62,6 +68,8 @@ const SAMPLES: Record<string, unknown[][]> = {
     ['Learning Route', 'You are on Stage 1: Hangul.', ['4 quests played', 'New quests joined'], 'Goal: Stage 2, Words', 'Week 3 of your weekly plan'],
   ],
   'a11y.myRoute.homeStripGoal': TITLES,
+  'a11y.myRoute.rowGoal': TITLES,
+  'a11y.myRoute.rowStarted': [[1, 'Letters and sounds', 'Oct 9']],
 };
 
 type Rendered = { path: string; text: string; surface: Surface; args: unknown[] };
@@ -114,6 +122,16 @@ describe('the real My route dictionary keeps the copy rules (F-ROUTE-001 section
         expect(r.text, r.path).not.toMatch(/\byou(r|rs|rself|'re|'ve|'ll)?\b/i);
     });
   }
+
+  it('the dashboard row (R-9b) uses the Learning Route names of amendment section 7.2', () => {
+    const row = getMessages('en').caregiver.journey.row;
+    expect(row.title).toBe('Learning Route');
+    expect(row.cta).toBe('See Learning Route');
+    expect(row.now(1, 'Hangul')).toBe('Now: Stage 1 · Hangul');
+    expect(row.goal(2, 'Words')).toBe('Goal: Stage 2 · Words');
+    expect(row.started(1, 'Letters and sounds', 'Oct 9')).toBe('Started: Stage 1 · Letters and sounds · Oct 9');
+    for (const text of [row.title, row.cta]) expect(text).not.toMatch(/my route|journey/i);
+  });
 
   it('the English dictionary is the Appendix B copy the selectors were written against', () => {
     const real = myRouteMessages(getMessages('en'));

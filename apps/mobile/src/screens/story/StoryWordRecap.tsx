@@ -8,10 +8,10 @@ import {
   spacing,
   useLayoutClass,
 } from '@hangul-route/design-system';
-import type { RomanizationMode } from '@hangul-route/i18n';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, View, useWindowDimensions } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
+import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import type { PlaySpec } from '../../logic/audio/controller';
 import type { RecapWord } from '../../logic/story/recap';
 import {
@@ -32,7 +32,6 @@ interface Props {
   words: readonly RecapWord[];
   storyId: string;
   profileId: string | undefined;
-  romanizationMode: RomanizationMode;
   /** No Korean voice on this device: the shared "Say it yourself" chip shows; the text carries every word. */
   sayIt: boolean;
   /** The check step's audio chain (`useReaderAudio`): a newer play cuts the previous one. */
@@ -54,7 +53,8 @@ interface Props {
  * speaker stays (F-AUDIO-004 §3.8) but records nothing. The rules live in
  * `logic/story/recap-view.ts`.
  */
-export function StoryWordRecap({ words, storyId, profileId, romanizationMode, sayIt, play, onDone }: Props): React.ReactElement {
+export function StoryWordRecap({ words, storyId, profileId, sayIt, play, onDone }: Props): React.ReactElement {
+  const romanizationMode = useRomanizationMode();
   const m = useMessages();
   const copy = m.learner.story.recap;
   const width = useLayoutClass().windowWidth;

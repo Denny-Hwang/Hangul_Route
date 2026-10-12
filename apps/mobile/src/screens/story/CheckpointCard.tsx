@@ -15,7 +15,7 @@ import {
   typography,
   useMediaSize,
 } from '@hangul-route/design-system';
-import type { Messages, RomanizationMode } from '@hangul-route/i18n';
+import type { Messages } from '@hangul-route/i18n';
 import React, { useEffect, useRef } from 'react';
 import { Platform, Text, View } from 'react-native';
 import {
@@ -27,6 +27,7 @@ import {
   targetAccessibilityLabel,
   targetView,
 } from '../../logic/story/check-game';
+import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import type { CheckState } from '../../logic/story/check-player';
 import type { CheckView } from '../../logic/story/check-view';
 import { PictureArt } from '../minigames/PictureArt';
@@ -54,7 +55,6 @@ export interface CheckpointCardProps {
   heading: string;
   checkCopy: CheckCopy;
   readerCopy: ReaderCopy;
-  romanizationMode: RomanizationMode;
   /** The learner tapped "Show how to say it" on this card (hide-until-tap, D2). */
   revealed: boolean;
   /** No Korean voice: the "Say it yourself" pill stands in for the Korean speaker (F-AUDIO-004 §3.8). */
@@ -82,7 +82,8 @@ export interface CheckpointCardProps {
  * the story check step (F-STORY-003 §3.4): the prompt with its speaker, the
  * Korean target, `ChoiceCard` options with the written outcome next to a
  * tapped card, Hoya's hint or explanation, and a Skip that is always there.
- * No state and no rules: `StoryReaderView` passes everything in.
+ * No state and no rules: `StoryReaderView` passes everything in except the
+ * romanization mode, which comes from `useRomanizationMode()` (F-BROWSE-001 §4.9).
  */
 export function CheckpointCard({
   item,
@@ -90,7 +91,6 @@ export function CheckpointCard({
   heading,
   checkCopy,
   readerCopy,
-  romanizationMode,
   revealed,
   sayIt,
   onHearQuestion,
@@ -103,6 +103,7 @@ export function CheckpointCard({
   regionRef,
 }: CheckpointCardProps): React.ReactElement {
   const pictureSize = useMediaSize(touchTarget.hero);
+  const romanizationMode = useRomanizationMode();
   const ctx = { romanizationMode, revealed };
   const target = targetView(item, check, ctx);
   const bubble = checkBubble(item, check, checkCopy);

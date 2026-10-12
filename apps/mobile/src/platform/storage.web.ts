@@ -1,4 +1,5 @@
 import { clear, del, get, keys, set } from 'idb-keyval';
+import { writePasses } from './storage-fence';
 
 /**
  * Web variant of the storage wrapper (roadmap web-pwa-offline §2): IndexedDB
@@ -32,13 +33,19 @@ export async function readJsonStrict<T>(key: string): Promise<T | null> {
   }
 }
 
+/** Stores `value`; a key the write fence rejects is left untouched (F-BROWSE-001 section 4.10). */
 export async function writeJson<T>(key: string, value: T): Promise<void> {
+  if (!writePasses(key, 'write')) return;
   await set(KEY_PREFIX + key, JSON.stringify(value));
 }
 
+/** Removes `key`; a key the write fence rejects is left untouched. */
 export async function removeKey(key: string): Promise<void> {
+  if (!writePasses(key, 'remove')) return;
   await del(KEY_PREFIX + key);
 }
+
+export { setWriteFence } from './storage-fence';
 
 export async function listKeys(): Promise<string[]> {
   const all = await keys<string>();

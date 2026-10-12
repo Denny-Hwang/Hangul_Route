@@ -16,8 +16,9 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { View, type LayoutChangeEvent } from 'react-native';
-import { flags } from '../../config/flags';
+import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { useLocale, useMessages } from '../../i18n/use-messages';
+import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { isContentLocked } from '../../logic/content-access';
 import { localizeStory } from '../../logic/content-locale';
 import { contentWidth, gridCellWidth, gridRows } from '../../logic/layout/pane-sizes';
@@ -38,13 +39,11 @@ import {
 } from '../../logic/story/story-tile';
 import type { MainTabParamList, RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
-import { useAccountStore } from '../../store/account-store';
 import { useAudience } from '../../store/audience';
-import { useLocaleStore } from '../../store/locale-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
-import { effectiveTier, useTierStore } from '../../store/tier-store';
+import { useAccessTier } from '../../store/tier-store';
 import { CoverFallback, StoryTile } from './StoryTile';
 
 const GRID_GAP = spacing.sm;
@@ -63,11 +62,21 @@ interface ShelfItem {
 /**
  * One story section of the Library (F-STORY-004 §3.4): a "Picked for you"
  * hero with its one primary button, then the category's tiles in
- * `shelf.order` (never re-sorted by progress). Story Time uses it today; the
- * Culture section (PR 4.7) puts its notes card above the same shelf.
+ * `shelf.order` (never re-sorted by progress). Story Time uses it with the
+ * hero; the Culture section (PR 4.7) puts its notes card, its one primary
+ * action, above the tiles alone (`hero={false}`, wireframe library/culture C).
  * `story.shelf.viewed` fires once each time the section is shown.
  */
-export function StoryShelf({ category, index }: { category: ShelfCategory; index: readonly StoryIndexEntry[] }): React.ReactElement {
+export function StoryShelf({
+  category,
+  index,
+  hero: withHero = true,
+}: {
+  category: ShelfCategory;
+  index: readonly StoryIndexEntry[];
+  /** The "Picked for you" hero; `false` draws the tiles only. */
+  hero?: boolean;
+}): React.ReactElement {
   const messages = useMessages();
   const copy = shelfCopy(messages);
   const locale = useLocale();
@@ -77,21 +86,15 @@ export function StoryShelf({ category, index }: { category: ShelfCategory; index
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
   const bookmarks = useStoryStore((s) => (profile ? s.byProfile[profile.id] : undefined)) ?? NO_BOOKMARKS;
-  // `effectiveTier` reads both stores imperatively: subscribe to each so a change re-runs `isLocked`.
-  const cachedTier = useTierStore((s) => (profile ? s.byLearner[profile.id] : undefined));
-  const subscription = useAccountStore((s) => s.subscription);
-  void cachedTier;
-  void subscription;
-  const tier = effectiveTier(profile?.id ?? '', new Date()).tier;
+  // The access tier (F-ENT-003 section 3.4): a change in the inbox, the spaces or the subscription re-runs `isLocked`.
+  const tier = useAccessTier(profile?.id ?? '');
   // D2: hide-until-tap profiles see no romanization on the shelf (one button per tile, no reveal); the reader reveals it.
-  const romanizationShown = useLocaleStore((s) =>
-    profile ? (s.byProfile[profile.id]?.romanizationMode ?? 'always') === 'always' : true,
-  );
+  const romanizationShown = useRomanizationMode() === 'always';
 
   // Nothing is locked while gating is off (D5): `isContentLocked` is false for every story then.
   const isLocked = useCallback(
     (entry: StoryIndexEntry): boolean =>
-      isContentLocked({ kind: 'story', id: entry.storyId, tier, gatingEnabled: flags.contentGatingEnabled }),
+      isContentLocked({ kind: 'story', id: entry.storyId, tier, gatingEnabled: gatingActive(flags, bundleOs()) }),
     [tier],
   );
 
@@ -107,11 +110,12 @@ export function StoryShelf({ category, index }: { category: ShelfCategory; index
   );
 
   const hero = useMemo(() => {
+    if (!withHero) return null;
     // F-STORY-005 §3.4: stories near the learner's stage come first; it only orders, never hides.
     const fits = storyFitsForSnapshot(snap);
     const pick = pickedForYou({ entries: items.map((i) => i.entry), snapshot: snap, bookmarks, isLocked, category, fits });
     return pick ? items.find((i) => i.entry.questId === pick.entry.questId) ?? null : null;
-  }, [items, snap, bookmarks, isLocked, category]);
+  }, [withHero, items, snap, bookmarks, isLocked, category]);
 
   // Once per visit (§3.11): switching to this section, or the Library tab gaining focus with it shown.
   // Coming back from a screen pushed over the tabs (a story, its episode page, the paywall) is the same

@@ -24,14 +24,14 @@ describe('caregiver.audience (the audience-copy block)', () => {
     expect(s.restoreSignInLabel).toBe('Sign in');
     expect(s.restoreCardsBack).toBe('Your cards come back with your rescue code.');
     expect(s.spacesNoClass).toBe('Not in a class yet. Got a code from a teacher or your family?');
-    expect(s.joinCodeFull).toBe("You're already in three classes. Leave one in Settings first.");
+    expect(s.joinCodeFull).toBe("You're already in three classes. Leave one under Classes & family in your Profile first.");
     expect(s.joinCodeNotForLearners).toBe("That code isn't for joining as a learner. Ask for a class code.");
     expect(s.promoHint).toBe('Have a promo or referral code? Enter it on the web console.');
     expect(s.paywallBuyOnWeb).toBe(
-      'Buy it once on the web console, so no store fees reach your family. Sign in there and come back — this device updates on its next sync.',
+      'Buy it on the web console, so no store fees reach your family. Sign in there and come back — this device updates on its next sync.',
     );
     expect(s.paywallBuyLater).toBe(
-      'Buying inside this app arrives with the store update. Until then, you can buy it once on the web console.',
+      'Buying inside this app arrives with the store update. Until then, you can buy it on the web console.',
     );
     expect(s.profileSwitchHint).toBe('Tap a profile to switch.');
   });
@@ -138,23 +138,24 @@ describe('caregiver dashboard, paywall, spaces and backup', () => {
     expect(w.premium.note('Mina')).toBe('The full journey is open for Mina. Manage your plan on the web console.');
     expect(w.premium.manage.cta).toBe('Manage plan on the web');
     expect(w.free.bubble).toBe('Stage 1 is always free.');
-    expect(w.free.unlocks('Family Lifetime')).toBe('What Family Lifetime unlocks');
+    expect(w.free.unlocks('Family Plan')).toBe('What the Family Plan unlocks');
     expect(w.free.openConsole.cta).toBe('Open the web console');
     expect(w.free.openFailed('https://hangulroute.com/teach/billing')).toBe(
       'Open https://hangulroute.com/teach/billing on a computer or phone browser.',
     );
-    expect(w.free.terms).toBe('One payment, no renewal. Terms and privacy are on the website.');
+    expect(w.free.terms).toBe('Renews yearly until cancelled. Terms and privacy are on the website.');
   });
 
   it('keeps the bullets and builds the offer around an amount it is given (no price lives in a message)', () => {
     const w = c.paywall;
-    expect(w.bullets.everyStage).toBe('Every Stage, now and later');
+    expect(w.bullets.everyStage).toBe('Every Stage, new ones included');
     expect(w.bullets.cloudSave).toBe('Cloud save on every device');
     expect(w.bullets.dashboard).toBe('Grown-up dashboard and plans');
     expect(w.bullets.learners(5)).toBe('Up to 5 learners in your family');
     expect(w.bullets.learners(1)).toBe('Up to 1 learner in your family');
-    expect(w.offer.name).toBe('Family Lifetime');
-    expect(w.offer.line).toBe('One payment. No subscription, nothing to cancel.');
+    // The Family Plan renews yearly (owner decision 2026-10-11, AMENDMENTS-BILLING-FAMILY-YEARLY BY-D9).
+    expect(w.offer.name).toBe('Family Plan');
+    expect(w.offer.line).toBe('Renews every year. Cancel any time.');
     expect(w.offer.price.once('$15.30')).toBe('$15.30 once');
     expect(w.offer.price.year('$153')).toBe('$153 / year');
   });
@@ -192,7 +193,7 @@ describe('accessibility labels of these screens (e2e names are part of the contr
     expect(m.a11y.pinDots(2, 4)).toBe('2 of 4 digits entered');
     expect(m.a11y.rescueCode).toBe('Rescue code');
     expect(m.a11y.leaveSpace('Sunday Class A')).toBe('Leave Sunday Class A');
-    expect(m.a11y.lifetimeOffer('Family Lifetime', '$15.30 once')).toBe('Family Lifetime, $15.30 once');
+    expect(m.a11y.familyOffer('Family Plan', '$15.30 / year')).toBe('Family Plan, $15.30 / year');
   });
 
   it('adds "Continue" to the shared buttons', () => {
@@ -217,7 +218,7 @@ describe('the dictionary is wired', () => {
 
 // en-XA (F-I18N-001 §3.11): every new key, function messages included, survives pseudo-localisation.
 describe('en-XA covers the new keys', () => {
-  const NEW_A11Y = ['a11y.pinDigit', 'a11y.pinDelete', 'a11y.pinDots', 'a11y.rescueCode', 'a11y.leaveSpace', 'a11y.lifetimeOffer'];
+  const NEW_A11Y = ['a11y.pinDigit', 'a11y.pinDelete', 'a11y.pinDots', 'a11y.rescueCode', 'a11y.leaveSpace', 'a11y.familyOffer'];
   const paths = leafPaths(m).filter((p) => p.startsWith('caregiver.') || NEW_A11Y.includes(p));
   const pseudo = pseudoLocalize(m);
 

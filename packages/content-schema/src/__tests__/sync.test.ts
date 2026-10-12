@@ -304,3 +304,31 @@ describe('rescue code (F-RESTORE-001)', () => {
     expect(RescueClaimSchema.parse({ code: 'tiger moon river apple 482139', deviceId: 'device-12345678' }).code).toBe('TIGER-MOON-RIVER-APPLE-482139');
   });
 });
+
+describe('summary.activity (F-REPORT-001 section 3.3.3)', () => {
+  const activity = {
+    v: 1 as const,
+    tz: -420,
+    asOf: '2026-10-11',
+    days: [{ d: '2026-10-11', min: 12, q: 1, c: 0, w: 0, j: ['ㅂ'] }],
+    months: [{ m: '2026-10', min: 12, q: 1, c: 0, w: 0, days: 1 }],
+    total: { since: '2026-10-11', min: 12, q: 1, c: 0, w: 0, days: 1 },
+    milestones: [],
+  };
+
+  it('keeps a valid activity, schemaVersion staying 1', () => {
+    expect(ProgressSummarySchema.parse({ ...summary, activity })).toEqual({ ...summary, activity });
+  });
+
+  it('an old summary without activity parses with no activity key', () => {
+    expect(ProgressSummarySchema.parse(summary)).not.toHaveProperty('activity');
+  });
+
+  it('a malformed activity is dropped, never fatal to the whole summary', () => {
+    for (const bad of ['nope', null, { ...activity, v: 2 }, { ...activity, days: 'x' }]) {
+      const parsed = ProgressSummarySchema.parse({ ...summary, activity: bad });
+      expect(parsed.activity).toBeUndefined();
+      expect(parsed.streakDays).toBe(0);
+    }
+  });
+});

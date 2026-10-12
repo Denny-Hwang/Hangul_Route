@@ -1,5 +1,7 @@
 # Billing/Plan status — the learner's plan, status only (wireframe v2)
 
+> **Amended 2026-10-11 [BY]** (`docs/specs/AMENDMENTS-BILLING-FAMILY-YEARLY.md`): the family product is the **Family Plan**, $15.30 / year, renews yearly, cancel any time (was the one-time "Family Lifetime"). Lines below are updated.
+
 Spec: `docs/specs/F-BILL-002-billing-in-app-all-personas.md` §4.7, §4.8, §4.12 · supersedes the body of `paywall/upgrade.md` (F-ENT-001 §3.5) · free-plan lines: `billing/plan-status-free-lessons.md` (F-ENT-003 §3.9.1, E3-8) · gate for Open billing: `profiles/pin-entry` · hand-off: F-APP-001 `openGrownUpArea`
 Screen ID: `billing/plan-status` · Navigation route key stays `Paywall` (title "Plan")
 Audience: **any learner** (status, no PIN), **their grown-up** for Open billing (after the PIN gate) on a family device, and **the learner themself** on a self-only device (the gate opens directly when no PIN is set). Same screen for every age; no age wording.
@@ -40,9 +42,9 @@ Web, free plan, F-ENT-003 switch on (the slot holds F-ENT-003's free-plan lines;
 ```
 |  <Name> is on the free plan.      |
 |  [ F-ENT-003 free-lessons line:   |  <- counts from data, never typed
-|    the first lessons, letters,    |
-|    minutes; everything finished   |
-|    stays ]                        |
+|    all of Stage 1: lessons,       |
+|    letters, minutes; everything   |
+|    finished stays ]               |
 |  [ optional: stories, word topics]|
 |  [ optional: one situation line ] |
 |  Plans and receipts are on the    |
@@ -66,10 +68,10 @@ Native (iOS / Android), free plan:
 Other states (web and native identical except the web-only block):
 
 ```
-full route, family source | [ Hoya, cheering ] | <Name> has the full route.    | From your family's Family Lifetime plan. | [ guidance slot: F-ENT-003 line, may be empty ] | (web: caption + Open billing) | [[ BACK TO JOURNEY ]]
+full route, family source | [ Hoya, cheering ] | <Name> has the full route.    | From your family's Family Plan.          | [ guidance slot: F-ENT-003 line, may be empty ] | (web: caption + Open billing) | [[ BACK TO JOURNEY ]]
 full route, no source     | [ Hoya, cheering ] | <Name> has the full route.    | Everything is open.                      | (web: caption + Open billing) | [[ BACK TO JOURNEY ]]
 covered (class / school)  | [ Hoya, cheering ] | <Name> is covered by <space>. | Everything is open while they are in it. |                               | [[ BACK TO JOURNEY ]]
-self audience             | "You're on the free plan." · "You have the full route." · "From your Family Lifetime plan." · "You're covered by <space>." · "Everything is open while you are in it."
+self audience             | "You're on the free plan." · "You have the full route." · "From your Family Plan." · "You're covered by <space>." · "Everything is open while you are in it."
 ```
 
 Profile card entry (every tier; no PIN for Plan details):

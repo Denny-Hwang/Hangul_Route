@@ -19,6 +19,8 @@ export interface RuntimeEnv {
   STRIPE_WEBHOOK_SECRET?: string;
   /** Optional Worker secret: keys the stored Rescue Code hash (HMAC) — SEC-5, see lib/rescue-hash. */
   RESCUE_PEPPER?: string;
+  /** Browser origins allowed on /api/* (lib/cors), and the Clerk `authorizedParties` for sign-in tokens (F-APP-001 A-9). */
+  ALLOWED_ORIGINS?: string;
 }
 
 const DEV_ENVIRONMENTS: ReadonlySet<string> = new Set(['development', 'test']);

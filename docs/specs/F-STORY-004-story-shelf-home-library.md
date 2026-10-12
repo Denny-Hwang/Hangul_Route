@@ -146,6 +146,7 @@ Storage key `story:bookmarks:<profileId>` through `platform/storage` `readJson`/
 - **Empty** (no notes found): one card — a short line about finding notes by finishing a story — and a primary button to the Story Time section. **Error** (a note's story or fact does not resolve): that note is skipped; the rest render.
 - The bundled `facts[].sources[]` hold Korean publisher names outside a `ko` field; the extended validator exempts `sources[]` as bibliographic data (F-STORY-001 / F-CNT-002). This screen prints them as given.
 - Heading levels and a list structure make it navigable by screen reader; Korean text nodes carry `lang="ko"` / `accessibilityLanguage="ko-KR"`.
+- *As built (PR 4.7, 2026-10-11):* the reader draws "More in Culture notes" only once the story's notes are found (`storyNotesFound`: a quest of the story finished), so it never opens this screen without its note. Both reader hosts take it as an exit prop (`onOpenCultureNote`, F-BROWSE-001 BR-5c): the learner default **pushes** `CultureNotes { noteId }` from the replay reader and `CultureNotes { noteId, from: 'quest' }` from the quest step; another host gets no button. With `from: 'quest'` the screen offers Back only (no "From the story", no Go to Story Time), so a running quest is never unwound. "From the story" and the episode page's notes line push too; the empty card's Go to Story Time shows only when that tab is offered. The Culture section draws its tiles without the "Picked for you" hero (wireframe `library/culture` C: the notes card is its one primary action) and sends `story.shelf.viewed` once per visit even with no tile.
 
 ### 3.6 Story episode detail — `EpisodeDetailScreen` changes
 
@@ -162,6 +163,7 @@ Storage key `story:bookmarks:<profileId>` through `platform/storage` `readJson`/
 - **Culture notes** line: "N found" → `CultureNotes { storyId }`; shown only when N ≥ 1.
 - **Reward cards.** For each `rewardCardIds`: earned → `HeritageCardArt` (96) with title, Korean and romanization, tap → `CardDetail`; not earned → a silhouette with the rarity border and no title (no spoilers, `design/wireframes/episode/detail.md`).
 - **States**: *error* (episode id unknown) keeps today's "Episode not found." line but adds a Back button; *progress unreadable* renders rows as *new*; *stories missing from the bundle* renders the existing quest list.
+- *As built (PR 4.6, 2026-10-11):* the page reads the romanization mode through `useRomanizationMode()` (F-BROWSE-001 BR-5c). In hide-until-tap (D2) the Korean titles (the page title and each tale row) are buttons that play the title and reveal its romanization, as the word chips do (`episodeTitleKorean`); Always mode is unchanged. Content gating on this page is F-ENT-003 E3-6's (episode page preview state and the `QuestPlayer` guard), not this row's.
 
 ### 3.7 Home "Story time" card
 
@@ -198,7 +200,7 @@ Changes in `logic/homework/mission-builder.ts` (pure) and `HomeScreen.tsx`.
 
 ### 3.9 Content access (D5)
 
-> **Amended by F-ENT-003 (2026-10-11).** The registry gains a `quest` kind (`freeQuests` = the free lessons, `freeRouteQuestIds`; `gridLessons`; `promiseQuests`) and `questAccess` / `isQuestOpen`; `contentGatingEnabled`, read through `gatingActive` (web only until F-IAP-002), becomes the one switch for every free-tier limit (grid lessons, stories, word topics), still off by default; a closed tile reads "Not open yet" with the dotted ring in place of the lock glyph (F-ENT-003 §3.3, §3.4, §3.7, §3.11). `isStageEntitled` and `isContentLocked` keep their results.
+> **Amended by F-ENT-003 (2026-10-11).** The registry gains a `quest` kind (`freeQuests` = the free lessons, all of Stage 1 since F-ENT-003 OD-1, `freeRouteQuestIds`; `gridLessons`) and `questAccess` / `isQuestOpen`; `contentGatingEnabled`, read through `gatingActive` (web only until F-IAP-002), becomes the one switch for every free-tier limit (grid lessons, stories, word topics), still off by default; a closed tile reads "Not open yet" with the dotted ring in place of the lock glyph (F-ENT-003 §3.3, §3.4, §3.7, §3.11). `isStageEntitled` and `isContentLocked` keep their results.
 
 New `apps/mobile/src/logic/content-access.ts`; if a F-VOC PR already added it, reuse and extend that file.
 

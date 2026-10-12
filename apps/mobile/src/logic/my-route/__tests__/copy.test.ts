@@ -49,7 +49,7 @@ const ALL_8 = BUNDLE_8.quests.map((q) => q.id);
 describe('heroCopy (F-ROUTE-001 section 3.5)', () => {
   it('start: the route line, the goal line and Start', () => {
     expect(heroCopy(model([]), self, { nextTitle: 'Meet the First Letters', hasStories: false })).toEqual({
-      lines: ['Your Hangul route starts here.', 'Your first goal: read every Hangul letter.'],
+      lines: ['Your Learning Route starts here.', 'Your first goal: read every Hangul letter.'],
       cta: { action: 'quest', label: 'Start' },
     });
   });
@@ -75,7 +75,7 @@ describe('heroCopy (F-ROUTE-001 section 3.5)', () => {
 
   it('read-only (a grown-up viewing a child): third person and no button', () => {
     expect(heroCopy(model([]), grownup, { nextTitle: null, hasStories: true })).toEqual({
-      lines: ["Sam's Hangul route starts here.", 'First goal: read every Hangul letter.'],
+      lines: ["Sam's Learning Route starts here.", 'First goal: read every Hangul letter.'],
       cta: null,
     });
     expect(heroCopy(model(APPENDIX_C), grownup, { nextTitle: 'Family at the Table', hasStories: true })).toEqual({
@@ -217,7 +217,7 @@ describe('the other lines', () => {
     expect(tilesCopy(m, grownup)).toBe('Spelling with tiles: 2 quests');
     expect(tilesCopy(model([]), grownup)).toBeNull();
     expect(viewingCopy(self)).toBeNull();
-    expect(viewingCopy(grownup)).toBe("Viewing Sam's journey");
+    expect(viewingCopy(grownup)).toBe("Viewing Sam's Learning Route");
   });
 });
 
@@ -329,6 +329,15 @@ describe('copyViolations catches each rule', () => {
       expect(copyViolations(text, 'en', surface, args)).toContain(rule);
     });
 
+  it('a string argument (a band label, a formatted date) clears only its own digits', () => {
+    expect(copyViolations('Started: Stage 1 · Letters · Oct 9', 'en', 'caregiver', [1, 'Letters', 'Oct 9'])).toEqual([]);
+    // A digit the template wrote is still caught next to a string argument.
+    expect(copyViolations('Started: Stage 2 · Oct 9', 'en', 'caregiver', ['Oct 9'])).toContain('digit not from an argument');
+    // A ratio or a percent carried by a string argument is still caught: those rules read the whole text.
+    expect(copyViolations('Started: 3/8', 'en', 'caregiver', ['3/8'])).toContain('ratio');
+    expect(copyViolations('Started: 40%', 'en', 'caregiver', ['40%'])).toContain('percent');
+  });
+
   it('lets a grown-up name the level check, and a11y carry digits', () => {
     expect(copyViolations('The level check looks at reading.', 'en', 'caregiver')).toEqual([]);
     expect(copyViolations('Stage 2, Words.', 'en', 'a11y')).toEqual([]);
@@ -339,6 +348,21 @@ describe('copyViolations catches each rule', () => {
     expect(copyViolations('Tu nivel', 'es', 'caregiver')).toEqual([]);
     expect(copyViolations('남은 퀘스트', 'ko', 'learner')).toContain('banned "남은"');
     expect(copyViolations('발음해 보세요', 'ko', 'learner')).toContain('speaking word "발음"');
+  });
+
+  it('bans a date or a distance to the goal (AMENDMENTS-ROUTE-LEARNING-ROUTE section 7.3, LR-1)', () => {
+    for (const word of ['deadline', 'due', 'overdue', 'days left', 'to go', 'away from']) {
+      expect(copyViolations(`Hoya says ${word} here`, 'en', 'learner'), word).toContain(`banned "${word}"`);
+      expect(copyViolations(`Sam says ${word} here`, 'en', 'caregiver'), word).toContain(`banned "${word}"`);
+    }
+    // Whole words only: "Ready to play" and "duet" stay allowed.
+    expect(copyViolations('Ready to play', 'en', 'learner')).toEqual([]);
+    expect(copyViolations('A duet', 'en', 'learner')).toEqual([]);
+    expect(copyViolations('La fecha límite', 'es', 'learner')).toContain('banned "fecha límite"');
+    expect(copyViolations('마감까지', 'ko', 'learner')).toContain('banned "마감"');
+    expect(copyViolations('기한까지 끝내기', 'ko', 'learner')).toContain('banned "기한까지"');
+    // ko matches substrings: 신기한 ("amazing") holds 기한 and must stay allowed.
+    expect(copyViolations('신기한 이야기', 'ko', 'learner')).toEqual([]);
   });
 });
 

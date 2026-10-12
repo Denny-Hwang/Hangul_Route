@@ -51,13 +51,13 @@ describe('audienceCopy: neutral strings for both audiences (F-LEARN-001 §3.9)',
       });
       it('spaces and join codes', () => {
         expect(c.spacesNoClass).toBe('Not in a class yet. Got a code from a teacher or your family?');
-        expect(c.joinCodeFull).toBe("You're already in three classes. Leave one in Settings first.");
+        expect(c.joinCodeFull).toBe("You're already in three classes. Leave one under Classes & family in your Profile first.");
         expect(c.joinCodeNotForLearners).toBe("That code isn't for joining as a learner. Ask for a class code.");
       });
       it('paywall', () => {
         expect(c.promoHint).toBe('Have a promo or referral code? Enter it on the web console.');
-        expect(c.paywallBuyOnWeb.startsWith('Buy it once on the web console')).toBe(true);
-        expect(c.paywallBuyLater.endsWith('you can buy it once on the web console.')).toBe(true);
+        expect(c.paywallBuyOnWeb.startsWith('Buy it on the web console')).toBe(true);
+        expect(c.paywallBuyLater.endsWith('you can buy it on the web console.')).toBe(true);
       });
       it('profile switcher', () => {
         expect(c.profileSwitchHint).toBe('Tap a profile to switch.');

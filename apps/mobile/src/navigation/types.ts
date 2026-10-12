@@ -4,6 +4,7 @@ import type { MyRouteSource } from '../logic/my-route/telemetry';
 import type { PinResetMethod } from '../logic/profiles/pin-flow';
 import type { LibrarySectionId } from '../logic/story/library-sections';
 import type { SourcesRouteParams } from '../logic/story/source-link';
+import type { VocabQuestionE2eParams } from './vocab-question-e2e';
 
 /**
  * Where a grown-up action continues once the gate (or a new PIN) is through. `ExternalLink`
@@ -32,7 +33,8 @@ export type RootStackParamList = {
    * active profile. Another profile opens read-only only while the grown-up gate is open; otherwise
    * the screen replaces itself with `PinEntry`. `source` is the entry, for `route_map.viewed`.
    */
-  MyRoute: { source: MyRouteSource; profileId?: string };
+  /** `viewer: 'grownup'`: opened by a grown-up (the parent dashboard row, R-9b), always read-only, also for the active profile (amendment section 5.1). */
+  MyRoute: { source: MyRouteSource; profileId?: string; viewer?: 'grownup' };
   /**
    * `resume`: open a story quest on its `story-read` step when the learner has a
    * bookmark for it at the quest's level (F-STORY-004 §3.8); otherwise step 0.
@@ -94,6 +96,12 @@ export type RootStackParamList = {
    */
   StorySources: SourcesRouteParams;
   /**
+   * Culture notes (F-STORY-004 §3.5): every note the learner has found, by theme. `storyId` shows
+   * only that story's notes; `noteId` scrolls to that note and opens its sources. `from: 'quest'`:
+   * opened by the reader inside a running quest, so the screen offers Back only.
+   */
+  CultureNotes: { storyId?: string; noteId?: string; from?: 'quest' } | undefined;
+  /**
    * The level check (F-PLC-001 section 3.10): a nested stack of its screens.
    * `retakeMode`: "Try it with the sound guide hidden" on the result opens the
    * options with that length and the guide hidden.
@@ -101,6 +109,8 @@ export type RootStackParamList = {
   Placement: { source: PlacementSource; retakeMode?: 'standard' | 'deep' };
   /** parent/placement-report — the grown-up report of the level check, behind the PIN gate (F-PLC-001 section 3.9). */
   PlacementReport: { profileId: string };
+  /** Fixture builds only (`navigation/vocab-question-e2e.tsx`): the shared vocabulary question view on catalogue words. */
+  VocabQuestionE2e: VocabQuestionE2eParams;
 };
 
 /** The level check's screens (F-PLC-001 section 3.1); the flow state machine decides which one shows. */

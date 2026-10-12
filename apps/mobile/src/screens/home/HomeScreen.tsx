@@ -28,7 +28,7 @@ import { InstallGuideSheet } from '../../components/InstallGuideSheet';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import type { SceneArt } from '@hangul-route/content-schema';
 import { welcomeCardIds } from '../../content/award-world';
-import { flags } from '../../config/flags';
+import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { episodesAll, questsAll } from '../../content';
 import { PLACEMENT_BANK } from '../../content/placement.generated';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -69,7 +69,7 @@ import { usePlacementRunStore } from '../../store/placement-run-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
-import { effectiveTier, useTierStore } from '../../store/tier-store';
+import { useAccessTier } from '../../store/tier-store';
 import { LinkButton } from '../placement/parts';
 import { RouteStrip } from './RouteStrip';
 
@@ -201,9 +201,9 @@ export function HomeScreen(): React.ReactElement {
   const catchUp = useMemo(() => catchUpCard(catchUpListed, welcomeCardIds, catchUpFound), [catchUpListed, catchUpFound]);
   const catchUpLine = catchUp ? m.learner.home.catchUp.line(catchUp.count) : null;
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
-  // Re-renders Home when the inbox changes the tier, as Results does, so the
-  // cursor follows OD-4 on both (F-ROUTE-001 R-4a).
-  const cachedTier = useTierStore((s) => (profile ? s.byLearner[profile.id] : undefined));
+  // The access tier (F-ENT-003 section 3.4): re-renders Home when the inbox, the spaces or the
+  // subscription change it, as Results does, so the cursor follows OD-4 on both (F-ROUTE-001 R-4a).
+  const tier = useAccessTier(profile?.id ?? '');
   const bookmarks = useStoryStore((s) => (profile ? s.byProfile[profile.id] : undefined)) ?? NO_BOOKMARKS;
   // Reviewed stories only (D14): empty in production while every bundled story is still a draft.
   const storyIndex = defaultStoryIndex();
@@ -229,7 +229,6 @@ export function HomeScreen(): React.ReactElement {
   // Today's mission — the plan is pinned for the day so finishing one card
   // never reshuffles the other two under the learner (F-HW-001 §3.2).
   const pinnedPlan = useRef<MissionPlan | null>(null);
-  const tier = profile ? effectiveTier(profile.id, new Date()).tier : 'free';
   const mission = useMemo(() => {
     if (!profile || !snap) return null;
     const today = dayKey(new Date().toISOString());
@@ -253,7 +252,7 @@ export function HomeScreen(): React.ReactElement {
         bookmarks,
         isLocked: storyLockFor({
           tier,
-          gatingEnabled: flags.contentGatingEnabled,
+          gatingEnabled: gatingActive(flags, bundleOs()),
           episodes: episodesAll,
         }),
         // F-STORY-005 §3.4: stories near the learner's stage come first; it only orders, never hides.
@@ -270,9 +269,8 @@ export function HomeScreen(): React.ReactElement {
     }).plan;
     pinnedPlan.current = merged;
     return merged;
-    // `cachedTier` re-renders this screen when the inbox changes the tier.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, snap, tier, cachedTier, bookmarks, storyIndex]);
+  }, [profile, snap, tier, bookmarks, storyIndex]);
 
   // The route strip (F-ROUTE-001 R-4b, OD-3): built from `routeModelInput`, the same input as the
   // Learning Route page, so the strip and the page always name the same stage and pips.
@@ -288,9 +286,7 @@ export function HomeScreen(): React.ReactElement {
       // Content that cannot be read leaves the slot empty; the page itself shows the retry.
       return null;
     }
-    // `cachedTier` re-renders this screen when the inbox changes the tier.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, snap, tier, cachedTier, routeContent, m]);
+  }, [profile, snap, tier, routeContent, m]);
 
   // Native screen readers hear the catch-up line once (F-STORY-006 §3.10): the card is usually on
   // the first render, where a live region says nothing, and iOS has no live regions. The web reads
