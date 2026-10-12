@@ -73,6 +73,10 @@ describe('learner.journey', () => {
     expect(j.how.body).toBe(
       'Each cell is one episode. Finish every quest in a cell to complete it and earn its Heritage cards. More stages open as the journey grows.',
     );
+    // F-PLC-001 section 3.7: one sentence about the pin and the outline, once a level check is stored.
+    expect(j.how.placement).toBe(
+      'The pin shows where you started. A cell with a light outline and a check is one you can skip ahead of. You can still play it any time.',
+    );
   });
 });
 
@@ -98,12 +102,11 @@ describe('learner.library', () => {
 
   it('keeps the heading, counts, filter, locked and how-to lines', () => {
     expect(l.title).toBe('Heritage Library');
-    expect(l.collected.line(1, 24)).toBe('1 of 24 collected');
-    expect(l.collected.pill(1, 24)).toBe('1/24');
+    // F-STORY-006 PR 6.5b: a plain count (no N/M pill), and the explainer is one line per rule.
+    expect(l.collected.line(1)).toBe('1 card collected');
     expect(l.filterAll).toBe('All');
-    expect(l.locked).toBe('Locked');
     expect(l.how.title).toBe('How to collect more');
-    expect(l.how.body).toBe('Finish quests to unlock cards.');
+    expect(l.how.quest).toBe('Finish a quest to earn its card.');
   });
 
   it('says how to earn a locked card, one sentence per award rule, never how far along (F-STORY-006 §3.7)', () => {
@@ -155,6 +158,13 @@ describe('accessibility labels of these screens', () => {
     expect(m.a11y.missionCard('Meet Hoya', 'Say hello', true)).toBe('Meet Hoya. Say hello. Collected.');
     expect(m.a11y.gridCell('Letters', 'hangul', false)).toBe('Letters episode for hangul');
     expect(m.a11y.gridCell('Letters', 'hangul', true)).toBe('Letters episode for hangul, coming soon');
+    expect(m.a11y.gridCellMarked('Letters', 'hangul', true, false)).toBe('Letters episode for hangul. You started here.');
+    expect(m.a11y.gridCellMarked('Letters', 'hangul', false, true)).toBe(
+      'Letters episode for hangul. You can skip ahead here, and it is still open to play.',
+    );
+    expect(m.a11y.gridCellMarked('Letters', 'hangul', true, true)).toBe(
+      'Letters episode for hangul. You started here. You can skip ahead here, and it is still open to play.',
+    );
     expect(m.a11y.lockedCard).toBe('Locked card');
     expect(m.a11y.flipToBack).toBe('Tap to flip card to back');
     expect(m.a11y.flipToFront).toBe('Tap to flip card to front');
@@ -166,7 +176,7 @@ describe('accessibility labels of these screens', () => {
 describe('en-XA covers the new keys', () => {
   const NEW_PREFIXES = ['learner.home', 'learner.journey', 'learner.library', 'learner.cardDetail'];
   const NEW_A11Y = [
-    'a11y.profileEntry', 'a11y.openHomework', 'a11y.missionCard', 'a11y.gridCell', 'a11y.lockedCard',
+    'a11y.profileEntry', 'a11y.openHomework', 'a11y.missionCard', 'a11y.gridCell', 'a11y.gridCellMarked', 'a11y.lockedCard',
     'a11y.flipToBack', 'a11y.flipToFront', 'a11y.shareCard',
   ];
   const paths = leafPaths(m).filter((p) => NEW_PREFIXES.some((x) => p.startsWith(`${x}.`)) || NEW_A11Y.includes(p));

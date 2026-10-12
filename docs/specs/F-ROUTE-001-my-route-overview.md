@@ -453,7 +453,7 @@ R-3 and R-4b edit `JourneyScreen.tsx`, `HomeScreen.tsx` and `learner.ts`, which 
 | "placed out / known" per quest | `logic/my-route/pips.ts` `pipStateOf` (R-1a) | F-PLC-001 P-7's `logic/placement/cell-look.ts` imports it (thin adapter for `GridCell`), amendment AM-13 |
 | `GridCell` | F-STORY-005 5.5a (`journey-cells.ts`) | then F-PLC-001 P-7, then F-QUEST-002 Q-9; F-ROUTE-001 none |
 | stage completion (`completionState`) | F-QUEST-002 (exists) | latch: this spec (R-W1, R-1b); card award: F-STORY-006 |
-| Home stack order | this spec (6.4) | edits by F-STORY-004 4.4a, F-LAYOUT-001 5c, F-PLC-001 P-7, F-PLAN-002 P2-7a, F-STORY-006 6.5c, R-4b |
+| Home stack order | this spec (6.4) | edits by F-STORY-004 4.4a, F-LAYOUT-001 5c, F-PLC-001 P-7, F-PLAN-002 P2-7a, F-STORY-006 6.5c, R-4b, F-FEEDBACK-001 FB-8 (row 2a) |
 
 ### 6.4 Home stack order (one table, referenced by the other specs)
 
@@ -461,13 +461,14 @@ R-3 and R-4b edit `JourneyScreen.tsx`, `HomeScreen.tsx` and `learner.ts`, which 
 |---|---|---|---|
 | 1 | greeting and streak (existing) | Home | always |
 | 2 | Today mission cards | F-STORY-004 4.4a | always |
+| 2a | notes card (a new note from a teacher or the family) | F-FEEDBACK-001 FB-8 | an unread live note exists for the active profile and `flags.notesEnabled` is on |
 | 3 | story card | F-STORY-004 | a reviewed story exists |
 | 4 | **one** quiet card: the level-check card, else the weekly-plan prompt | F-PLC-001 P-7 / F-PLAN-002 P2-7a | level-check card while eligible; plan prompt per AM-6 |
 | 5 | **My route strip** (with "Week N of your weekly plan" when a plan exists) | R-4b | flag on |
 | 6 | Homework card | Home | as today |
 | 7 | catch-up card | F-STORY-006 6.5c | session-only |
 
-Wide (F-LAYOUT-001 5c): blocks 1-3 in the left column, 4-7 in the right.
+Wide (F-LAYOUT-001 5c): blocks 1-3 in the left column, 2a and 4-7 in the right.
 
 ## 7. Dependencies (status at `27c771c`)
 

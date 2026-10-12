@@ -8,6 +8,7 @@ import { Button, ConsoleShell, Muted, Notice, panelStyle } from '@/components/co
 import { AvatarChip } from '@/components/AvatarChip';
 import { SchoolAdmin } from '@/components/console/SchoolAdmin';
 import { StartingSpot } from '@/components/console/PlacementParts';
+import { JourneyStrip } from '@/components/console/JourneyParts';
 import { useConsole } from '@/components/console/use-console';
 import type { PlanView, Roster, SpaceListItem } from '@/lib/console/api';
 import { lectureModeEnabled } from '@/lib/console/config';
@@ -195,6 +196,7 @@ function SpaceInner(): JSX.Element {
                         <StartingSpot summary={l.summary} spaceId={spaceId} learnerId={l.id} learnerName={l.displayName} />
                         <div>{c.space.learner.questsCards(l.summary.stage1.questsDone, l.summary.stage1.questsTotal, l.summary.cardsUnlocked)}</div>
                         <div>{c.space.learner.minutesThisWeek(l.summary.minutesLast7d)}</div>
+                        <JourneyStrip kind={roster.space.kind} summary={l.summary} />
                         {l.summary.needsPractice.length ? (
                           <div>
                             {learnerRevisit.before}
