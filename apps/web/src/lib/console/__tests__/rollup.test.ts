@@ -102,6 +102,15 @@ describe('class roll-up (F-CONSOLE-001 §3.5)', () => {
       const none = learner('b', {}, { vocab: null } as never);
       expect(classRollup([odd, none, learner('c', {}, words(['vocab:banana']))], now).vocabRevisit).toEqual(['vocab:banana']);
     });
+
+    it('reads a slice exactly as the card does: a slice the schema rejects adds no word, even with a word list', () => {
+      const valid = words(['vocab:banana']);
+      const negative = learner('a', {}, { vocab: { ...valid.vocab, collected: -1, needsPractice: ['vocab:uyu'] } } as never);
+      const four = learner('b', {}, { vocab: { ...valid.vocab, needsPractice: ['vocab:uyu', 'vocab:ppang', 'vocab:nun-eye', 'vocab:sagwa-apple'] } } as never);
+      const notAWord = learner('c', {}, { vocab: { ...valid.vocab, needsPractice: ['uyu'] } } as never);
+      const noCounts = learner('d', {}, { vocab: { needsPractice: ['vocab:uyu'] } } as never);
+      expect(classRollup([negative, four, notAWord, noCounts, learner('e', {}, valid)], now).vocabRevisit).toEqual(['vocab:banana']);
+    });
   });
 
   it('caps only apply to classes and warn from 80 %', () => {

@@ -1,6 +1,7 @@
-import { VocabSummarySchema, type ProgressSummary } from '@hangul-route/content-schema';
+import type { ProgressSummary } from '@hangul-route/content-schema';
 import type { MessageLocale } from '@hangul-route/i18n';
 import { VOCAB_CATALOG, type VocabCatalogEntry } from '../../data/vocab-catalog';
+import { parseVocabSummary } from './vocab-summary';
 
 /**
  * The console's vocabulary words — F-VOC-005 P-4 (section 3.8, behaviour 14).
@@ -38,7 +39,7 @@ export function consoleWords(ids: readonly string[], locale: MessageLocale): Con
 export interface StudentWords {
   collected: number;
   strong: number;
-  /** Up to three words to look at together, in the order the learner's device sent them. */
+  /** Up to three words to look at together, each once, in the order the learner's device sent them. */
   revisit: ConsoleWord[];
 }
 
@@ -51,9 +52,9 @@ export interface StudentWords {
  * (section 3.8).
  */
 export function studentWords(summary: Partial<Pick<ProgressSummary, 'vocab'>> | null | undefined, locale: MessageLocale): StudentWords | null {
-  if (summary?.vocab === undefined) return null;
-  const parsed = VocabSummarySchema.safeParse(summary.vocab);
-  if (!parsed.success) return null;
-  const { collected, strong, needsPractice } = parsed.data;
-  return { collected, strong, revisit: consoleWords(needsPractice, locale) };
+  const vocab = parseVocabSummary(summary?.vocab);
+  if (!vocab) return null;
+  const { collected, strong, needsPractice } = vocab;
+  // A word listed twice is shown once (the roll-up counts it once too), first-seen order kept.
+  return { collected, strong, revisit: consoleWords([...new Set(needsPractice)], locale) };
 }

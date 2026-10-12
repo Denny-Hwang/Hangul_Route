@@ -222,6 +222,8 @@ const SLOTTED: readonly [string, (m: Messages) => (value: string) => string][] =
   ['console.space.learner.revisit', (m) => m.console.space.learner.revisit],
   ['console.space.week.wordsRevisit', (m) => m.console.space.week.wordsRevisit],
   ['console.space.learner.wordsRevisit', (m) => m.console.space.learner.wordsRevisit],
+  // Split around the romanization, so the Hangul and its romanization stay on one line (F-VOC-005 P-4).
+  ['console.space.wordGloss', (m) => (romanization) => m.console.space.wordGloss(romanization, 'gloss')],
   ['console.lecture.source.revisitWith', (m) => m.console.lecture.source.revisitWith],
   ['console.school.footer', (m) => m.console.school.footer],
 ];

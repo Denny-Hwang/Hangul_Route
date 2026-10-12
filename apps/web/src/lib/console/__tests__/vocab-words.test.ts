@@ -1,6 +1,7 @@
 import type { VocabSummary } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { VOCAB_CATALOG } from '../../../data/vocab-catalog';
+import { parseVocabSummary } from '../vocab-summary';
 import { consoleWord, consoleWords, studentWords } from '../vocab-words';
 
 /**
@@ -81,3 +82,18 @@ describe('studentWords', () => {
     expect(Object.keys(out ?? {})).not.toContain('firstTryRate');
   });
 });
+
+describe('studentWords and parseVocabSummary agree on one reading of the slice', () => {
+  it('lists a repeated word once, first-seen order kept', () => {
+    const words = studentWords({ vocab: vocab({ needsPractice: ['vocab:uyu', 'vocab:sagwa-apple', 'vocab:uyu'] }) }, 'en');
+    expect(words?.revisit.map((w) => w.id)).toEqual(['vocab:uyu', 'vocab:sagwa-apple']);
+  });
+
+  it('parses the slice with VocabSummarySchema and returns null for anything it rejects', () => {
+    expect(parseVocabSummary(vocab({ needsPractice: ['vocab:uyu'] }))?.needsPractice).toEqual(['vocab:uyu']);
+    for (const bad of [undefined, null, 'x', { needsPractice: ['vocab:uyu'] }, { ...vocab(), collected: -1 }, { ...vocab(), needsPractice: ['uyu'] }]) {
+      expect(parseVocabSummary(bad)).toBeNull();
+    }
+  });
+});
+

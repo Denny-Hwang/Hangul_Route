@@ -15,15 +15,28 @@ import { aroundSlot } from '@/lib/i18n/slot';
  * the UI language travel with it (CLAUDE.md section 1). Every other word comes from the dictionary.
  */
 
-/** One word kept on one line, so a gloss never wraps away from its Hangul ("nun" on one line, "(eye)" on the next); the list wraps between words. */
-const WORD_STYLE = { whiteSpace: 'nowrap' } as const;
+/**
+ * The Hangul and its romanization are kept on one line, so the romanization never wraps away from
+ * the word it reads. The gloss is not: real glosses run to 40-plus characters ("tteokbokki
+ * (pasteles de arroz picantes)"), which kept unbreakable would overflow a 280 px card.
+ */
+const KEEP_TOGETHER = { whiteSpace: 'nowrap' } as const;
+/** A line breaks inside one long word rather than overflow its card. */
+export const LINE_STYLE = { overflowWrap: 'anywhere' } as const;
 
 function Word({ word }: { word: ConsoleWord }): JSX.Element {
   const { messages: m } = useConsoleLocale();
-  if (word.ko === null || word.gloss === null) return <span style={WORD_STYLE}>{word.romanization}</span>;
+  if (word.ko === null || word.gloss === null) return <span>{word.romanization}</span>;
+  const gloss = word.gloss;
+  // One message ("sagwa (apple)") split around the romanization, so a translation keeps its order.
+  const around = aroundSlot((romanization) => m.console.space.wordGloss(romanization, gloss));
   return (
-    <span style={WORD_STYLE}>
-      <span lang="ko">{word.ko}</span> {m.console.space.wordGloss(word.romanization, word.gloss)}
+    <span>
+      <span style={KEEP_TOGETHER}>
+        <span lang="ko">{word.ko}</span> {around.before}
+        {word.romanization}
+      </span>
+      {around.after}
     </span>
   );
 }
@@ -50,9 +63,11 @@ export function StudentWordsLines({ words }: { words: StudentWords | null }): JS
   const revisit = aroundSlot(s.wordsRevisit);
   return (
     <>
-      <div data-testid="student-words">{s.words(words.collected, words.strong)}</div>
+      <div data-testid="student-words" style={LINE_STYLE}>
+        {s.words(words.collected, words.strong)}
+      </div>
       {words.revisit.length ? (
-        <div data-testid="student-words-revisit">
+        <div data-testid="student-words-revisit" style={LINE_STYLE}>
           {revisit.before}
           <WordList words={words.revisit} />
           {revisit.after}
@@ -68,7 +83,7 @@ export function WeekWordsRevisit({ words }: { words: readonly ConsoleWord[] }): 
   if (!words.length) return null;
   const line = aroundSlot(m.console.space.week.wordsRevisit);
   return (
-    <li data-testid="week-words-revisit">
+    <li data-testid="week-words-revisit" style={LINE_STYLE}>
       {line.before}
       <WordList words={words} />
       {line.after}

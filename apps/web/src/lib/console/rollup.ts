@@ -1,6 +1,7 @@
 import { FREE_CLASS_STUDENT_CAP } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, describeRelativeDay, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { RosterLearner } from './api';
+import { parseVocabSummary } from './vocab-summary';
 
 /**
  * Class roll-up from summaries — F-CONSOLE-001 §3.5 (F-TCH-001 §3.2 rules:
@@ -53,10 +54,9 @@ function topThree(counts: ReadonlyMap<string, number>): string[] {
     .map(([key]) => key);
 }
 
-/** One student's words to revisit, each once; nothing from a malformed slice. */
+/** One student's words to revisit, each once; nothing from a slice the schema rejects (read as the card reads it). */
 function wordsToRevisit(vocab: unknown): Set<string> {
-  const list: unknown = typeof vocab === 'object' && vocab !== null ? (vocab as { needsPractice?: unknown }).needsPractice : undefined;
-  return new Set(Array.isArray(list) ? list.filter((id): id is string => typeof id === 'string') : []);
+  return new Set(parseVocabSummary(vocab)?.needsPractice ?? []);
 }
 
 export interface CapState {

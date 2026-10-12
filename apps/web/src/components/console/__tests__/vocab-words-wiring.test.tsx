@@ -2,6 +2,9 @@ import type { UiLocale } from '@hangul-route/i18n';
 import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+// Imported at module scope (the vi.mock calls below are hoisted above it): a dynamic import inside
+// the first test spent most of the 5 s default timeout under turbo load (as route-groups did, #431).
+import Page from '@/app/(console)/teach/space/page';
 
 /**
  * F-VOC-005 P-4, the roster page's wiring (section 3.8, behaviour 14): a card shows its word lines
@@ -105,7 +108,6 @@ function textOf(node: ReactTestInstance | string): string {
 }
 
 async function roster(): Promise<ReactTestInstance> {
-  const { default: Page } = await import('@/app/(console)/teach/space/page');
   await act(async () => {
     mounted = create(<Page />);
   });

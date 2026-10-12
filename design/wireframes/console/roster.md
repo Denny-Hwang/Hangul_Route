@@ -153,5 +153,6 @@ This week
 
 - Plain text in the card's existing type and colour (`text.secondary`, `bodySm`); no chart, no bar, no colour per word.
 - Each word: Hangul marked `lang="ko"`, then the romanization and the gloss in the UI language ("sagwa (apple)"); the gloss tells the two senses of a homonym apart. An id this build does not know shows its romanized slug alone, with no Hangul.
-- **Shown only when the roster carries `summary.vocab`.** `vocab` stays on `TEACHER_HIDDEN_SUMMARY_KEYS` until a consent item covers it (F-SPACE-002 T-1a), so today no card shows these lines and the week shows no words line.
+- Wrapping: the Hangul and its romanization never break apart; the gloss may wrap after them (real glosses run to 40-plus characters, "tteokbokki (pasteles de arroz picantes)"), and each line may break inside one long word rather than overflow a 280 px card.
+- **Shown only when the roster carries `summary.vocab`.** `vocab` stays on `TEACHER_HIDDEN_SUMMARY_KEYS` until a consent item covers it (F-SPACE-002 T-1a), so today no card shows these lines and the week shows no words line. F-VOC-005 P-4b adds that consent item and the Worker's `vocab` projection (known keys only, no `firstTryRate`); the console needs no further change then.
 - Never shown: the first-try rate (a student's detail view only), a percent, a ranking, a sort by words. Cards keep the roster's order. "Words to revisit", never "weak words", "failed" or "behind".

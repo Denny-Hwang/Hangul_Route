@@ -36,9 +36,9 @@ describe('StudentWordsLines', () => {
     expect(html).toContain('<span lang="ko">사과</span>');
     expect(html).toContain('<span lang="ko">눈</span>');
     expect(html).not.toMatch(/lang="ko">[^<]*[A-Za-z]/);
-    // Each word stays on one line; the list wraps between words.
+    // The Hangul and its romanization stay together on one line; the gloss may wrap after them.
     expect(html.match(/<span style="white-space:nowrap">/g)).toHaveLength(2);
-    expect(html).toContain('<span style="white-space:nowrap"><span lang="ko">사과</span> sagwa (apple)</span>');
+    expect(html).toContain('<span style="white-space:nowrap"><span lang="ko">사과</span> sagwa</span> (apple)');
     // No rate, percent or ranking word reaches the card.
     expect(textOf(html)).not.toMatch(/%|0\.75|rank|weak|fail|behind/i);
   });
@@ -57,6 +57,19 @@ describe('StudentWordsLines', () => {
 
   it('renders nothing without summary.vocab', () => {
     expect(renderToStaticMarkup(<StudentWordsLines words={null} />)).toBe('');
+  });
+
+  it('lets a long gloss wrap inside a narrow card: only the Hangul and its romanization are kept together', () => {
+    // Real catalogue glosses run to 40-plus characters (es "tteokbokki (pasteles de arroz picantes)",
+    // en "older sister (said by a woman or girl)"): kept unbreakable they would overflow a 280 px card.
+    locale = 'es';
+    const html = renderToStaticMarkup(<StudentWordsLines words={studentWords({ vocab: { ...VOCAB, needsPractice: ['vocab:tteokbokki', 'vocab:eonni'] } }, 'es')} />);
+    const unbreakable = [...html.matchAll(/<span style="white-space:nowrap">((?:<span lang="ko">[^<]*<\/span>)?[^<]*)<\/span>/g)].map((m) => textOf(m[1] ?? ''));
+    expect(unbreakable).toEqual(['떡볶이 tteokbokki', '언니 eonni']);
+    for (const piece of unbreakable) expect(piece.length).toBeLessThan(20);
+    // Each line may also break inside a single long word rather than overflow.
+    expect(html.match(/<div data-testid="student-words[^"]*" style="overflow-wrap:anywhere">/g)).toHaveLength(2);
+    expect(textOf(html)).toContain('떡볶이 tteokbokki (tteokbokki (pasteles de arroz picantes))');
   });
 
   it('glosses in the UI language', () => {
@@ -79,7 +92,7 @@ describe('StudentWordsLines', () => {
 describe('WeekWordsRevisit', () => {
   it('reads "Words to revisit together: …" with each word marked', () => {
     const html = renderToStaticMarkup(<WeekWordsRevisit words={consoleWords(['vocab:nun-eye', 'vocab:nun-snow'], 'en')} />);
-    expect(html).toMatch(/^<li data-testid="week-words-revisit"/);
+    expect(html).toMatch(/^<li data-testid="week-words-revisit" style="overflow-wrap:anywhere"/);
     expect(textOf(html)).toBe('Words to revisit together: 눈 nun (eye) · 눈 nun (snow)');
   });
 
