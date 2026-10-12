@@ -29,8 +29,8 @@ import type { WordArtFamily } from '../types';
  * and science (12) and pins their counts. Batch W-3 drew food, color and
  * count (they left the map, so their full check is on) and the colour-swatch
  * objects of later families: `animal-bear` and `animal-elephant` (animal now
- * waits for 8) and `nature-flower` (nature waits for 7). Batch W-5 drew
- * family, school and nature, so they left the map.
+ * waits for 8) and `nature-flower` (nature waits for 7).
+ * Batch W-5 drew family, school and nature, so they left the map.
  */
 interface Awaiting {
   /** The PR that draws the family (F-VOC-002 §6). */
