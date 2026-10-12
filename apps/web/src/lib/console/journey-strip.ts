@@ -40,12 +40,21 @@ export interface JourneyStrip {
   lines: string[];
 }
 
-interface Entry {
+/** One readable `summary.journey` entry; `total` is left behind, so it can never be shown. */
+export interface JourneyEntry {
   stage: StageKey;
+  /** 1 to 7. */
   order: number;
   state: JourneyState;
   done: number;
   known: number;
+}
+
+/** `summary.journey` as this build reads it: the readable entries in stage order, and the `here` entry. */
+export interface ReadJourney {
+  /** The entry `here` names; null when it names no readable stage. */
+  here: JourneyEntry | null;
+  entries: JourneyEntry[];
 }
 
 const isCount = (value: unknown): value is number => typeof value === 'number' && Number.isInteger(value) && value >= 0;
@@ -55,8 +64,8 @@ const stageOf = (value: unknown): StageKey | null => {
   return parsed.success ? parsed.data : null;
 };
 
-function readEntries(stages: readonly unknown[]): Entry[] {
-  const byStage = new Map<StageKey, Entry>();
+function readEntries(stages: readonly unknown[]): JourneyEntry[] {
+  const byStage = new Map<StageKey, JourneyEntry>();
   for (const raw of stages) {
     if (typeof raw !== 'object' || raw === null) continue;
     const { stage: rawStage, state, done, known } = raw as Record<string, unknown>;
@@ -67,29 +76,40 @@ function readEntries(stages: readonly unknown[]): Entry[] {
   return [...byStage.values()].sort((a, b) => a.order - b.order);
 }
 
-const isEmptyLater = (e: Entry): boolean => e.state === 'later' && e.done === 0 && e.known === 0;
-
-export function journeyStrip(kind: string, journey: unknown, locale: UiLocale = DEFAULT_LOCALE): JourneyStrip | null {
-  if (kind !== 'class' && kind !== 'family') return null;
+/**
+ * The tolerant reader of `summary.journey` (section 3.17) that the strip and the Learning Route
+ * stage list (amendment section 6.1, LR-7) share: null for an absent journey, another version, or
+ * one with no readable entry, which a view words as "not synced yet", never as "no progress".
+ */
+export function readJourney(journey: unknown): ReadJourney | null {
   if (typeof journey !== 'object' || journey === null) return null;
   const { v, here: rawHere, stages } = journey as Record<string, unknown>;
   if (v !== 1 || !Array.isArray(stages)) return null;
   const entries = readEntries(stages);
   if (entries.length === 0) return null;
+  return { here: entries.find((e) => e.stage === stageOf(rawHere)) ?? null, entries };
+}
+
+const isEmptyLater = (e: JourneyEntry): boolean => e.state === 'later' && e.done === 0 && e.known === 0;
+
+export function journeyStrip(kind: string, journey: unknown, locale: UiLocale = DEFAULT_LOCALE): JourneyStrip | null {
+  if (kind !== 'class' && kind !== 'family') return null;
+  const read = readJourney(journey);
+  if (read === null) return null;
+  const { entries, here } = read;
 
   const m = getMessages(locale).console.journey;
-  const here = entries.find((e) => e.stage === stageOf(rawHere)) ?? null;
 
   const lines: string[] = [];
   for (let i = 0; i < entries.length; i += 1) {
-    const entry = entries[i] as Entry;
+    const entry = entries[i] as JourneyEntry;
     if (!isEmptyLater(entry)) {
       lines.push(m.stage(entry.order, m.stageLine(entry.known, entry.done)));
       continue;
     }
     let last = entry;
     while (i + 1 < entries.length) {
-      const next = entries[i + 1] as Entry;
+      const next = entries[i + 1] as JourneyEntry;
       if (!isEmptyLater(next) || next.order !== last.order + 1) break;
       last = next;
       i += 1;
