@@ -510,13 +510,13 @@ async function openLibrary(page: Page): Promise<void> {
   await expect(page.getByText('Hi, Dani!')).toBeVisible();
   await page.getByText('Library', { exact: true }).last().click();
   await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeVisible();
-  await expect(page.getByText('4 of 42 collected')).toBeVisible();
+  await expect(page.getByText('4 cards collected', { exact: true })).toBeVisible();
 }
 
 const galleryPane = (page: Page) => page.getByRole('region', { name: 'Card gallery' });
 const cardPane = (page: Page) => page.getByRole('region', { name: 'Card details' });
 /** Gallery thumbs in content order: the first row is Book, then two locked Letters cards. */
-const thumbs = (scope: Page | ReturnType<Page['locator']>) => scope.getByRole('button', { name: /^(Book|Kimchi|Paper Folding|Locked card)$/ });
+const thumbs = (scope: Page | ReturnType<Page['locator']>) => scope.getByRole('button', { name: /^(Book|Kimchi|Paper Folding|Locked card\. .+)$/ });
 
 /** How many thumbs share the first row (same top edge). */
 async function firstRowColumns(scope: Page | ReturnType<Page['locator']>): Promise<number> {
@@ -589,9 +589,9 @@ test.describe('Library at 1180x820: two panes', () => {
     await expect(toFront).toBeVisible();
     await expect(cardPane(page).getByText('tap to flip back')).toBeVisible();
 
-    // A locked card names itself on press and shows no flip hint.
+    // A locked card names itself, with how it is earned, on press and shows no flip hint.
     await thumbs(galleryPane(page)).nth(1).click();
-    const locked = cardPane(page).getByRole('button', { name: 'Locked card' });
+    const locked = cardPane(page).getByRole('button', { name: 'Locked card. Finish the episode: Meet the Letters' });
     await expect(locked).toBeVisible();
     await locked.click({ force: true });
     await page.waitForTimeout(500);
@@ -618,13 +618,14 @@ test.describe('Library at 1180x820: two panes', () => {
     await expect(thumbs(galleryPane(page)).nth(1)).toHaveAttribute('aria-selected', 'true');
     await expect(cardPane(page).getByRole('heading', { name: 'Hanji Paper' })).toBeVisible();
     await expect(cardPane(page).getByText('How to earn it')).toBeVisible();
-    await expect(cardPane(page).getByText('Get 2 or more stars in Meet o, u, m and the circle to earn this card.')).toBeVisible();
+    // Its earn hint (F-STORY-006 §3.7): what to do, never how far along.
+    await expect(cardPane(page).getByText('Finish the episode: Meet the Letters')).toBeVisible();
     await expect(cardPane(page).getByText('Premium')).toHaveCount(0);
     await expect(cardPane(page).getByRole('button', { name: 'Hear it' })).toHaveCount(0);
-    // A card no quest awards yet says so instead of promising one.
+    // A stage card names its stage.
     await thumbs(galleryPane(page)).nth(5).click(); // Hangul Day (stage1-complete)
     await expect(cardPane(page).getByRole('heading', { name: 'Hangul Day' })).toBeVisible();
-    await expect(cardPane(page).getByText('This card comes in a later quest.')).toBeVisible();
+    await expect(cardPane(page).getByText('Finish every quest in Stage 1')).toBeVisible();
   });
 
   test('a filter that hides the selected card shows one it keeps; clearing it brings the selection back', async ({ page }) => {
@@ -655,12 +656,13 @@ test.describe('Library at 768x1024: 3 columns, one pane, a tap navigates', () =>
     await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeHidden();
   });
 
-  test('the card screen of a locked card leaves out "How to earn it" (pane only)', async ({ page }) => {
+  test('the card screen of a locked card says how to earn it too (F-STORY-006 §3.7, wireframe library/earn-hints F2)', async ({ page }) => {
     await openLibrary(page);
     await thumbs(page).nth(1).click(); // Hanji Paper, locked
     await expect(page.getByRole('heading', { name: 'Hanji Paper' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeHidden();
-    await expect(page.getByText('How to earn it')).toHaveCount(0);
+    await expect(page.getByText('How to earn it')).toBeVisible();
+    await expect(page.getByText('Premium')).toHaveCount(0);
   });
 
   test('rotating between 768x1024 and 1024x768 keeps the selected card and never navigates', async ({ page }) => {

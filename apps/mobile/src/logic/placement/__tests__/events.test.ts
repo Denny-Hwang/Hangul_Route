@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { completeEvent, itemAnsweredEvent, skippedEvent, startEvent } from '../events';
+import { completeEvent, itemAnsweredEvent, overrideAppliedEvent, skippedEvent, startEvent } from '../events';
 import { gate, placementResult } from './fixtures';
 
 describe('placement telemetry payloads (F-PLC-001 section 3.13, AM-34)', () => {
@@ -59,5 +59,9 @@ describe('placement telemetry payloads (F-PLC-001 section 3.13, AM-34)', () => {
 
   it('placement.skipped names where it was skipped', () => {
     expect(skippedEvent('p1', 'onboarding')).toEqual({ name: 'placement.skipped', profileId: 'p1', payload: { source: 'onboarding' } });
+  });
+
+  it('placement.override_applied says only who changed the start', () => {
+    expect(overrideAppliedEvent('p1')).toEqual({ name: 'placement.override_applied', profileId: 'p1', payload: { by: 'parent' } });
   });
 });

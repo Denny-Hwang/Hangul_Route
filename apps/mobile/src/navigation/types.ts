@@ -20,7 +20,8 @@ export type GrownUpDestination =
   | 'ExternalLink'
   | 'PlacementFinish'
   | 'EditProfile'
-  | 'MyRoute';
+  | 'MyRoute'
+  | 'PlacementReport';
 
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
@@ -59,7 +60,7 @@ export type RootStackParamList = {
     url?: string;
     /** `next: 'Paywall'`: the surface that opened it, passed on to the paywall (default `'journey'`). */
     from?: 'journey' | 'library';
-    /** `next: 'EditProfile'`: the profile to edit (F-LEARN-001 §3.11). `next: 'MyRoute'`: the profile whose page opens read-only. */
+    /** `next: 'EditProfile'`: the profile to edit (F-LEARN-001 §3.11); `next: 'MyRoute'`: the profile whose page opens read-only; `next: 'PlacementReport'`: whose report opens (F-PLC-001 section 3.9). */
     profileId?: string;
   };
   /** Forgot PIN: Rescue Code or a 24-hour wait, then a new PIN (F-LEARN-001 §3.5). `next` is kept for the PIN screen. */
@@ -98,6 +99,8 @@ export type RootStackParamList = {
    * options with that length and the guide hidden.
    */
   Placement: { source: PlacementSource; retakeMode?: 'standard' | 'deep' };
+  /** parent/placement-report — the grown-up report of the level check, behind the PIN gate (F-PLC-001 section 3.9). */
+  PlacementReport: { profileId: string };
 };
 
 /** The level check's screens (F-PLC-001 section 3.1); the flow state machine decides which one shows. */
@@ -117,6 +120,8 @@ export type OnboardingStackParamList = {
   Welcome: undefined;
   CreateProfile: { firstRun: boolean };
   FirstQuestPreview: { profileId: string };
+  /** The level check's fork (F-PLC-001 section 3.1 step 1), between CreateProfile and FirstQuestPreview. */
+  PlacementInvite: { profileId: string };
 };
 
 export type MainTabParamList = {

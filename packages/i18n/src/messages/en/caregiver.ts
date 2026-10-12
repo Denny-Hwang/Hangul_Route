@@ -428,6 +428,31 @@ export const caregiver = {
     notFinished: 'not finished',
     spellingTiles: 'Spelling with tiles',
     onlyForward: 'A new check can only move the route forward.',
+    /** The date of the newest check and the language it was taken in (`LOCALE_META` endonym). */
+    takenOn: (date: string, language: string) => `Checked ${date}, in ${language}`,
+    whereStarts: 'Where the route starts',
+    changedByGrownUp: 'Changed by a grown-up',
+    takeAgain: 'Take the check again',
+    takeFirst: 'Take the level check',
+    noCheck: 'No check taken yet.',
+    /** On a child profile the one-tap retake with the sound guide hidden lives here, not on the result (AM-23). */
+    retryHidden: 'Try it with the sound guide hidden',
+    /** A stage the account does not include: a plain note, no price, no plan name, no purchase button (assumption 10). */
+    needsStage: (name: string, stage: number) =>
+      `${name} is ready for Stage ${stage}. Stage ${stage} lessons are not included with this account yet.`,
+    noStart: (name: string) => `${name} knows everything that is open right now. More is coming.`,
+    /** Labels before the letters drawn with KoreanText in a strand's example. */
+    examples: { known: 'Knows', fresh: 'New for now' },
+    chooseStart: 'Choose a different start',
+    sheet: {
+      title: 'Choose a different start',
+      help: 'Quests before the one you pick are skipped. It and every quest after it stay on the route.',
+      /** A quest's place on the route in force; a quest still ahead shows no word. */
+      state: { start: 'starts here', done: 'done', placedOut: 'skipped ahead' },
+    },
+    saved: 'The start is changed.',
+    /** The dashboard's row under each profile's stats. */
+    row: { label: 'Starting spot', seeCheck: 'See the check' },
   },
 
   /**
@@ -452,7 +477,7 @@ export const caregiver = {
     explored: (name: string) => `${name} explored everything that is open right now`,
     skillsTitle: (name: string) => `What ${name}'s quests practice`,
   },
-  /** The one wording of this sentence, everywhere it appears (F-ROUTE-001 section 3.12). */
+  /** One wording everywhere (F-ROUTE-001 section 3.12): the placement report and My route's skills rows. */
   skillsNote:
     'The level check looks at reading and listening. Writing is practiced with tracing games and is not scored. The rows count finished quests that include these games; a game skipped inside a quest still counts.',
 } as const;

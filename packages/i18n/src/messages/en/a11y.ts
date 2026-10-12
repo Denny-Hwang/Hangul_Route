@@ -22,6 +22,9 @@ export const a11y = {
   /** A Journey grid cell: the theme's episode for a stage; a preview cell is not open yet. */
   gridCell: (themeTitle: string, stage: string, comingSoon: boolean) =>
     `${themeTitle} episode for ${stage}${comingSoon ? ', coming soon' : ''}`,
+  /** A Journey grid cell with a level-check mark (F-PLC-001 section 3.7): the start pin, the placed-out outline, or both. */
+  gridCellMarked: (themeTitle: string, stage: string, start: boolean, placedOut: boolean) =>
+    `${themeTitle} episode for ${stage}.${start ? ' You started here.' : ''}${placedOut ? ' You can skip ahead here, and it is still open to play.' : ''}`,
   /** An earned card on the Episode page, and the placeholder for one not yet earned. */
   episodeCard: (title: string) => `${title} card`,
   cardWaiting: 'A card you can earn by finishing this episode',
@@ -37,6 +40,10 @@ export const a11y = {
     soundHint === undefined ? `Korean letter ${romanization}` : `Korean letter ${romanization}. ${soundHint}`,
   discoverFinal: (romanization: string) => `Korean final consonant ${romanization}`,
   lockedCard: 'Locked card',
+  /** A locked Library tile or card page, with how it is earned (an earn hint, F-STORY-006 §3.7). */
+  lockedCardHint: (hint: string) => `Locked card. ${hint}`,
+  /** An owned Library tile earned since the learner last opened it (the New pill). */
+  newCard: (title: string) => `${title}. New`,
   flipToBack: 'Tap to flip card to back',
   flipToFront: 'Tap to flip card to front',
   shareCard: 'Share this card',
