@@ -219,6 +219,24 @@ export const learner = {
       /** Shown under `body` once any cell has heritage stories (F-STORY-005 §3.5); still no fractions. */
       stories: "A number in a cell's corner says how many heritage stories it has. A cell with the books icon has heritage stories to read.",
     },
+    /** The cell page and its two doors (F-STORY-005 §3.6; wireframes story/cell-stories, episode/detail-cell-stories-row). */
+    cellStories: {
+      /** The page header: stage and theme titles in the UI locale, on one line. */
+      title: (stageTitle: string, themeTitle: string) => `${stageTitle} · ${themeTitle}`,
+      subtitle: 'Heritage stories for this cell',
+      /** The secondary row to the cell's lesson or book, listed before the stories. */
+      lessonRow: (title: string) => `${title} — the lesson for this cell`,
+      /** Only through a stale link: the map never opens an empty cell. */
+      empty: 'Nothing here yet',
+      /** The lesson page row: a plain count of the cell's stories, never "N of M". */
+      row: 'Heritage stories for this cell',
+      rowLabel: (count: number) =>
+        plural('en', count, { one: 'Heritage stories for this cell, 1 story', other: `Heritage stories for this cell, ${count} stories` }),
+      /** A story page's home cell: a plain pill, never a lock. */
+      homePill: (stage: number, themeTitle: string) => `Stage ${stage} · ${themeTitle}`,
+      homePillLabel: (stage: number, stageTitle: string, themeTitle: string) =>
+        `Heritage stories for Stage ${stage} ${stageTitle}, ${themeTitle}`,
+    },
   },
 
   library: {

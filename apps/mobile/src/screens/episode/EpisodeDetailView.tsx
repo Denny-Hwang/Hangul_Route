@@ -16,6 +16,7 @@ import {
   spacing,
   touchTarget,
 } from '@hangul-route/design-system';
+import type { StageKey, ThemeKey } from '@hangul-route/content-schema';
 import React, { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { PrereqSheet } from '../../components/PrereqSheet';
@@ -28,6 +29,8 @@ import { usePrereqSheetStore } from '../../store/prereq-sheet-store';
 import { useProgressStore } from '../../store/progress-store';
 import { storyEpisodeEntries } from '../../logic/story/story-episode';
 import { defaultStoryIndex } from '../../logic/story/story-index';
+import { lessonRowCount, type CellStoriesSource } from '../../logic/story/cell-stories';
+import { CellLinkRow } from '../story/CellLinkRow';
 import { StoryEpisodeDetail, type StoryTarget } from './StoryEpisodeDetail';
 
 export interface EpisodeDetailViewProps {
@@ -43,6 +46,8 @@ export interface EpisodeDetailViewProps {
   onOpenSources: (storyId: string) => void;
   /** Story episodes: the "Culture notes: N found" line (`CultureNotes { storyId }`, pushed). */
   onOpenCultureNotes: (storyId: string) => void;
+  /** The cell page (F-STORY-005 §3.6): the lesson page's stories row, or a story page's home-cell pill. */
+  onOpenCellStories: (stage: StageKey, theme: ThemeKey, source: Exclude<CellStoriesSource, 'cell'>) => void;
 }
 
 export function EpisodeDetailView({
@@ -53,6 +58,7 @@ export function EpisodeDetailView({
   onOpenStory,
   onOpenSources,
   onOpenCultureNotes,
+  onOpenCellStories,
 }: EpisodeDetailViewProps): React.ReactElement {
   const messages = useMessages();
   const m = messages.learner.episode;
@@ -79,6 +85,8 @@ export function EpisodeDetailView({
 
   // A story episode that is not a preview, with every story in the index, is the story page; else the quest list.
   const storyEntries = useMemo(() => (episode ? storyEpisodeEntries(episode, defaultStoryIndex()) : null), [episode]);
+  // The cell's heritage stories (F-STORY-005 §3.6, wireframe episode/detail-cell-stories-row C): 0 hides the row.
+  const cellStoryCount = useMemo(() => (episode ? lessonRowCount(episode, defaultStoryIndex()) : 0), [episode]);
 
   if (!episode) {
     return (
@@ -105,6 +113,7 @@ export function EpisodeDetailView({
         onOpenCard={onOpenCard}
         onOpenSources={onOpenSources}
         onOpenCultureNotes={onOpenCultureNotes}
+        onOpenCellStories={(stage, theme) => onOpenCellStories(stage, theme, 'story-pill')}
         onBack={onBack}
       />
     );
@@ -236,6 +245,20 @@ export function EpisodeDetailView({
                 </Card>
               );
             })}
+
+            {cellStoryCount > 0 ? (
+              <>
+                <Spacer size="sm" />
+                <CellLinkRow
+                  label={messages.learner.journey.cellStories.row}
+                  accessibilityLabel={messages.learner.journey.cellStories.rowLabel(cellStoryCount)}
+                  count={messages.learner.journey.countMark(cellStoryCount, false)}
+                  icon="library"
+                  onPress={() => onOpenCellStories(episode.stage, episode.theme, 'lesson-row')}
+                  testID="episode-cell-stories-row"
+                />
+              </>
+            ) : null}
 
             <Spacer size="lg" />
             <Heading level="prompt">{m.cards.heading}</Heading>

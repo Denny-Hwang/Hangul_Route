@@ -14,6 +14,7 @@ export function EpisodeDetailScreen({ route, navigation }: Props): React.ReactEl
       onOpenStory={(t) => (t.route === 'StoryReader' ? navigation.navigate('StoryReader', t.params) : navigation.navigate('QuestPlayer', t.params))}
       onOpenSources={(storyId) => navigation.navigate('StorySources', { storyId, from: 'episode' })}
       onOpenCultureNotes={(storyId) => navigation.push('CultureNotes', { storyId })}
+      onOpenCellStories={(stage, theme, source) => navigation.navigate('CellStories', { stage, theme, source })}
       onBack={() => navigation.goBack()}
     />
   );

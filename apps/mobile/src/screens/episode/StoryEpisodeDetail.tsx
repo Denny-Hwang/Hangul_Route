@@ -1,4 +1,4 @@
-import type { Episode } from '@hangul-route/content-schema';
+import type { Episode, StageKey, ThemeKey } from '@hangul-route/content-schema';
 import {
   Body,
   Button,
@@ -29,6 +29,7 @@ import { useLocale, useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { localizeCard, localizeStage, localizeStory, localizeTheme } from '../../logic/content-locale';
 import { emptyBookmarks } from '../../logic/story/bookmarks';
+import { homeCellLink } from '../../logic/story/cell-stories';
 import { foundNotes } from '../../logic/story/culture-notes';
 import { planOpenStory, type OpenStoryPlan } from '../../logic/story/open-story';
 import { shelfCopy } from '../../logic/story/shelf-copy';
@@ -72,6 +73,8 @@ export interface StoryEpisodeNavigation {
   onOpenCultureNotes: (storyId: string) => void;
   /** The back arrow, when the host is a stack screen (a split pane has none). */
   onBack?: () => void;
+  /** A shelf story's home-cell pill opens its cell page (F-STORY-005 §3.6); informational, never a lock. */
+  onOpenCellStories: (stage: StageKey, theme: ThemeKey) => void;
 }
 
 interface Props extends StoryEpisodeNavigation {
@@ -90,7 +93,16 @@ interface Props extends StoryEpisodeNavigation {
  * through `planOpenStory`, so the page reports `story.opened` like every
  * other surface. Start over clears the bookmark first.
  */
-export function StoryEpisodeDetail({ episode, entries: sourceEntries, onOpenStory, onOpenCard, onOpenSources, onOpenCultureNotes, onBack }: Props): React.ReactElement {
+export function StoryEpisodeDetail({
+  episode,
+  entries: sourceEntries,
+  onOpenStory,
+  onOpenCard,
+  onOpenSources,
+  onOpenCultureNotes,
+  onBack,
+  onOpenCellStories,
+}: Props): React.ReactElement {
   const messages = useMessages();
   const copy = shelfCopy(messages);
   const locale = useLocale();
@@ -156,6 +168,10 @@ export function StoryEpisodeDetail({ episode, entries: sourceEntries, onOpenStor
   };
 
   const notesStoryId = view.storyId;
+  // The story's home cell on the map (F-STORY-005 §3.6 "Library link-back"); none on a book page.
+  const home = homeCellLink(sourceEntries);
+  const homeStage = home ? stageByKey(home.stage) : undefined;
+  const homeTheme = home ? themeByKey(home.theme) : undefined;
 
   return (
     <Screen tone="canvas" scrollable>
@@ -180,6 +196,21 @@ export function StoryEpisodeDetail({ episode, entries: sourceEntries, onOpenStor
           <Pill tone="secondary" label={view.pills[1]} size="sm" />
           <Pill tone="neutral" label={view.pills[2]} size="sm" />
         </View>
+        {home && homeStage && homeTheme ? (
+          <Pressable
+            onPress={() => onOpenCellStories(home.stage, home.theme)}
+            accessibilityRole="button"
+            accessibilityLabel={messages.learner.journey.cellStories.homePillLabel(
+              homeStage.order,
+              localizeStage(homeStage, locale).titleEn,
+              localizeTheme(homeTheme, locale).titleEn,
+            )}
+            testID="story-episode-home-cell"
+            style={{ alignSelf: 'flex-start', minHeight: touchTarget.min, justifyContent: 'center' }}
+          >
+            <Pill tone="neutral" label={messages.learner.journey.cellStories.homePill(homeStage.order, localizeTheme(homeTheme, locale).titleEn)} size="sm" />
+          </Pressable>
+        ) : null}
 
         <Spacer size="md" />
         <Heading level="display" testID="story-episode-title">

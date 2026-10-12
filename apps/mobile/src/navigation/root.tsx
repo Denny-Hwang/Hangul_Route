@@ -26,6 +26,7 @@ import { ResultsScreen } from '../screens/results/ResultsScreen';
 import { MinigameScreen } from '../screens/minigames/MinigameScreen';
 import { StoryReaderScreen } from '../screens/story/StoryReaderScreen';
 import { StorySourcesScreen } from '../screens/story/StorySourcesScreen';
+import { CellStoriesScreen } from '../screens/story/CellStoriesScreen';
 import { CultureNotesScreen } from '../screens/story/CultureNotesScreen';
 import { PlacementScreen } from '../screens/placement/PlacementScreen';
 import { VocabTopicScreen } from '../screens/vocab/VocabTopicScreen';
@@ -66,6 +67,7 @@ export function RootNavigator(): React.ReactElement {
         <Stack.Screen name="Onboarding" component={OnboardingStack} />
         <Stack.Screen name="Main" component={MainTabs} />
         <Stack.Screen name="EpisodeDetail" component={EpisodeDetailScreen} />
+        <Stack.Screen name="CellStories" component={CellStoriesScreen} />
         <Stack.Screen name="MyRoute" component={MyRouteScreen} />
         <Stack.Screen name="QuestPlayer" component={QuestPlayerScreen} />
         <Stack.Screen name="Minigame" component={MinigameScreen} />

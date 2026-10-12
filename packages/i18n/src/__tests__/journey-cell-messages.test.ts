@@ -95,3 +95,31 @@ describe('learner.journey story words', () => {
     expect(SAMPLES['a11y.gridCellMarked']).toBeUndefined();
   });
 });
+
+describe('learner.journey.cellStories (F-STORY-005 PR 5.5b)', () => {
+  const c = m.learner.journey.cellStories;
+
+  it('the cell page header, lesson row and stale-link card', () => {
+    expect(c.title('Words', 'Letters & Books')).toBe('Words · Letters & Books');
+    expect(c.subtitle).toBe('Heritage stories for this cell');
+    expect(c.lessonRow('Lunch Box Words')).toBe('Lunch Box Words — the lesson for this cell');
+    expect(c.empty).toBe('Nothing here yet');
+  });
+
+  it('the lesson page row: a plain count with plural(), never "N of M"', () => {
+    expect(c.row).toBe('Heritage stories for this cell');
+    expect(c.rowLabel(1)).toBe('Heritage stories for this cell, 1 story');
+    expect(c.rowLabel(5)).toBe('Heritage stories for this cell, 5 stories');
+  });
+
+  it('the story page home-cell pill and its label', () => {
+    expect(c.homePill(2, 'Letters & Books')).toBe('Stage 2 · Letters & Books');
+    expect(c.homePillLabel(2, 'Words', 'Letters & Books')).toBe('Heritage stories for Stage 2 Words, Letters & Books');
+  });
+
+  it('every function message has sample arguments', () => {
+    for (const key of ['title', 'lessonRow', 'rowLabel', 'homePill', 'homePillLabel']) {
+      expect(SAMPLES[`learner.journey.cellStories.${key}`], key).toBeDefined();
+    }
+  });
+});

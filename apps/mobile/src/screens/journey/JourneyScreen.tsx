@@ -133,6 +133,8 @@ export function JourneyScreen(): React.ReactElement {
         marksOf={marksOf}
         storyEntries={STORY_ENTRIES}
         quests={snapQuests}
+        // A stories-only cell opens its cell page on one pane and on two (F-STORY-005 §3.6).
+        onOpenStories={(stage, theme) => navigation.navigate('CellStories', { stage, theme, source: 'cell' })}
       />
 
       <Card padding="md" tone="sunken">
@@ -173,6 +175,7 @@ export function JourneyScreen(): React.ReactElement {
       onOpenStory={(t) => (t.route === 'StoryReader' ? navigation.navigate('StoryReader', t.params) : navigation.navigate('QuestPlayer', t.params))}
       onOpenSources={(storyId) => navigation.navigate('StorySources', { storyId, from: 'episode' })}
       onOpenCultureNotes={(storyId) => navigation.push('CultureNotes', { storyId })}
+      onOpenCellStories={(stage, theme, source) => navigation.navigate('CellStories', { stage, theme, source })}
     />
   ) : (
     <ComingSoonPane />
