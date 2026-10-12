@@ -267,6 +267,9 @@ async function finishQuestAllRight(page: Page, beforeResults?: () => Promise<voi
     await page.getByTestId(`story-check-option-${id}`).click();
     await page.getByTestId('story-check-next').click();
   }
+  // F-STORY-003 PR 3.4b: the unscored word recap follows the last check; its Done ends the check step.
+  await expect(page.getByTestId('story-recap-title')).toHaveText('Words from this story');
+  await page.getByTestId('story-recap-done').click();
   await expect(page.getByRole('heading', { name: 'Put the story in order' })).toBeVisible();
   await page.getByRole('button', { name: 'Play minigame' }).click();
   for (const caption of ORDER) {
