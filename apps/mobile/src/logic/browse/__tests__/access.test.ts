@@ -7,6 +7,7 @@ import { entryForQuest, type StoryIndexEntry } from '../../story/story-index';
 import { itemAccess, type AccessItemKind, type FreeQuestOpen } from '../access';
 import { buildBrowseBundle, defaultBrowseBundle, episodeOfQuest, isOpenableEpisode, vocabTopicKey, type BrowseBundle } from '../bundle';
 import { CULTURE_ID, TALE_ID, fixtureBundle, fixtureInput, fixtureStories } from './browse-fixture';
+import { canDrawPicture } from '../../__tests__/drawn-pictures';
 
 /**
  * F-BROWSE-001 §4.2 and §4.13 (BR-4): what each scope may open. Sampler is
@@ -142,7 +143,7 @@ describe('itemAccess (F-BROWSE-001 §4.2)', () => {
   });
 
   it('the production bundle: switch off opens everything; switch on follows the learner free set', () => {
-    const production = { bundle: defaultBrowseBundle() };
+    const production = { bundle: defaultBrowseBundle(canDrawPicture) };
     for (const episode of production.bundle.episodes.filter(isOpenableEpisode)) {
       expect(itemAccess({ kind: 'episode', id: episode.id }, 'sampler', false, production), episode.id).toBe('open');
     }

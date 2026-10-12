@@ -41,6 +41,8 @@ export function fixtureInput(stories: Story[] = fixtureStories()): BrowseBundleI
     vocabTopics: VOCAB_TOPICS.map((t) => ({ ...t, status: 'ready' as const })),
     vocabItems: VOCAB_ITEMS,
     scopeFor,
+    // Every picture drawn: the T8 cases pass their own check.
+    canRender: () => true,
   };
 }
 
