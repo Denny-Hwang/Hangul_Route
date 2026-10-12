@@ -118,7 +118,7 @@ export function mergeStageDoneAt(
   s: Readonly<Record<string, string>> | undefined,
 ): Record<string, string> | undefined {
   const out = unionLatch(l, s);
-  return out.size === 0 ? undefined : Object.fromEntries([...out.entries()].sort(([a], [b]) => a.localeCompare(b)));
+  return out.size === 0 ? undefined : Object.fromEntries([...out.entries()].sort(([a], [b]) => codePointCompare(a, b)));
 }
 
 /** The key union of two latches (stage or quest), the earliest time per key (`earlierLatchTime`). */
