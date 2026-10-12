@@ -202,6 +202,12 @@ export const ClassReportSchema = z
     /** Omitted for `all`; the `0` band is "Not yet" and never highlighted. */
     practice: z.object({
       dayBands: z.array(z.object({ band: ClassDayBandSchema, learners: Total })).max(4).optional(),
+      /**
+       * Learners with day-by-day data in no band: nothing of this window is saved in the class (their device has
+       * not saved it yet, they joined after it, or it is older than their saved days). Never "Not yet"; with the bands
+       * it adds up to `class.withActivity`. Omitted with the bands (`all`); optional, so an older payload parses.
+       */
+      notSaved: Total.optional(),
     }),
     /** No mean per learner, no maximum, no minimum; the median is null when fewer than 3 practiced. */
     time: z.object({ minutesTotal: UpCountSchema, minutesMedian: Total.nullable() }),

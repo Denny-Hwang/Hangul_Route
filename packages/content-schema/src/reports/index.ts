@@ -54,3 +54,4 @@ export {
   type InsightSummary,
   type InsightContext,
 } from './insights';
+export { classAtOf, classReport, type ClassReportInput, type ClassReportLearner, type ClassReportPlan } from './class-report';

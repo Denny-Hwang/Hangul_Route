@@ -201,7 +201,7 @@ function staleOf(summary: ReportSummary, lastSyncedAt: string | null, now: Date)
 const ORDERS = new WeakMap<Catalog, Map<string, number>>();
 
 /** Each taught symbol's first place in the catalogue (quest order, then each quest's `teaches`), once per catalogue. */
-function teachingOrder(catalog: Catalog): Map<string, number> {
+export function teachingOrder(catalog: Catalog): ReadonlyMap<string, number> {
   const cached = ORDERS.get(catalog);
   if (cached) return cached;
   const order = new Map<string, number>();

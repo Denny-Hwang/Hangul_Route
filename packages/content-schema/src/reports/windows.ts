@@ -49,7 +49,7 @@ const monthEnd = (month: string): string => addDays(monthStart(addMonths(month, 
 const pastOrToday = (at: string | null | undefined, today: string): at is string => typeof at === 'string' && isDateKey(at) && at <= today;
 
 /** The oldest day row, month or milestone the activity holds, else null. */
-function firstRowDayOf(activity: ActivitySummary): string | null {
+export function firstRowDayOf(activity: ActivitySummary): string | null {
   const firsts = [activity.days[0]?.d, activity.months[0] ? monthStart(activity.months[0].m) : undefined, ...activity.milestones.map((row) => row.on)];
   return firsts.filter((day): day is string => day !== undefined).sort()[0] ?? null;
 }
