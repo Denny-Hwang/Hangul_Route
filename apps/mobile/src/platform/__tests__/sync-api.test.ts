@@ -224,3 +224,69 @@ describe('platform/sync-api — re-link (F-TCH-001 §10.1)', () => {
     expect(fetchImpl.mock.calls[0]?.[0]).toBe('https://api.example.com/api/spaces/space%3Ac/relink-requests/relink%3A1?deviceId=device-x');
   });
 });
+
+/** F-FEEDBACK-001 section 7.6 (FB-7): the device note routes. Typed results with the HTTP status the queue reads. */
+describe('platform/sync-api note routes', () => {
+  const base = 'https://api.example.com/api/sync/learners/profile%3Aa';
+
+  it('putNoteState sends the device header and the body, and answers the stored state', async () => {
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(200, { data: { readAt: '2026-10-12T09:00:00.000Z', reaction: 'thanks' } }))
+      .mockResolvedValueOnce(json(404, { error: { code: 'not_found' } }))
+      .mockResolvedValueOnce(json(503, {}))
+      .mockRejectedValueOnce(new Error('offline'));
+    const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
+    expect(await api.putNoteState('profile:a', 'note:aaaaaaaa', { read: true, reaction: 'thanks' }, creds)).toEqual({
+      status: 'ok',
+      http: 200,
+      readAt: '2026-10-12T09:00:00.000Z',
+      reaction: 'thanks',
+    });
+    const [url, init] = fetchImpl.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(`${base}/notes/note%3Aaaaaaaaa/state`);
+    expect(init.method).toBe('PUT');
+    expect((init.headers as Record<string, string>).Authorization).toBe('Device device-x:s3cret');
+    expect(JSON.parse(String(init.body))).toEqual({ read: true, reaction: 'thanks' });
+    expect(await api.putNoteState('profile:a', 'note:aaaaaaaa', { read: true }, creds)).toEqual({ status: 'error', http: 404, code: 'not_found' });
+    expect(await api.putNoteState('profile:a', 'note:aaaaaaaa', { read: true }, creds)).toEqual({ status: 'error', http: 503, code: 'http_503' });
+    expect(await api.putNoteState('profile:a', 'note:aaaaaaaa', { read: true }, creds)).toEqual({ status: 'error', http: -1, code: 'network' });
+  });
+
+  it('putNoteState reads a missing or odd answer body as nulls', async () => {
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValueOnce(json(200, { data: { readAt: 5 } }));
+    const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
+    expect(await api.putNoteState('profile:a', 'note:aaaaaaaa', { read: true }, creds)).toEqual({ status: 'ok', http: 200, readAt: null, reaction: null });
+  });
+
+  it('reportNote posts the reason and attestation; 201 is ok, 429 carries the code', async () => {
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(201, { data: {} }))
+      .mockResolvedValueOnce(json(429, { error: { code: 'too_many' } }));
+    const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
+    expect(await api.reportNote('profile:a', 'note:aaaaaaaa', { reason: 'unkind', attest: 'grown_up_pin' }, creds)).toEqual({ status: 'ok', http: 201 });
+    const [url, init] = fetchImpl.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(`${base}/notes/note%3Aaaaaaaaa/report`);
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(String(init.body))).toEqual({ reason: 'unkind', attest: 'grown_up_pin' });
+    expect(await api.reportNote('profile:a', 'note:aaaaaaaa', { reason: 'other' }, creds)).toEqual({ status: 'error', http: 429, code: 'too_many' });
+  });
+
+  it('hideNote posts with no body; putNotePrefs sends the mode, the acknowledgement and the attestation', async () => {
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(200, { data: {} }))
+      .mockResolvedValueOnce(json(200, { data: { classes: 'presets', acknowledged: true } }))
+      .mockResolvedValueOnce(json(403, { error: { code: 'scope' } }));
+    const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
+    expect(await api.hideNote('profile:a', 'note:aaaaaaaa', creds)).toEqual({ status: 'ok', http: 200 });
+    const [hideUrl, hideInit] = fetchImpl.mock.calls[0] as [string, RequestInit];
+    expect(hideUrl).toBe(`${base}/notes/note%3Aaaaaaaaa/hide`);
+    expect(hideInit.method).toBe('POST');
+    expect(hideInit.body).toBeUndefined();
+    expect(await api.putNotePrefs('profile:a', { classes: 'presets', acknowledge: true, attest: 'self' }, creds)).toEqual({ status: 'ok', http: 200 });
+    const [prefsUrl, prefsInit] = fetchImpl.mock.calls[1] as [string, RequestInit];
+    expect(prefsUrl).toBe(`${base}/note-prefs`);
+    expect(prefsInit.method).toBe('PUT');
+    expect(JSON.parse(String(prefsInit.body))).toEqual({ classes: 'presets', acknowledge: true, attest: 'self' });
+    expect(await api.putNotePrefs('profile:a', { classes: 'off' }, creds)).toEqual({ status: 'error', http: 403, code: 'scope' });
+  });
+});
