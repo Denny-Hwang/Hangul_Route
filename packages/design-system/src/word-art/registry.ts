@@ -5,7 +5,9 @@
  *
  * The generators (`generated/{color,count,body,figure}.ts`) and the four
  * props land in PR W-1c; the batches register the generated keys (colours
- * and counts in W-3, body in W-4) and fill `glyphs/*.ts` (W-3..W-6).
+ * and counts in W-3, body in W-4) and fill `glyphs/*.ts` (W-3..W-6). The
+ * colour swatches are built from the hand glyphs they draw as stickers, so
+ * the hand sources are merged first.
  */
 import { ANIMAL_GLYPHS } from './glyphs/animal';
 import { CULTURE_GLYPHS } from './glyphs/culture';
@@ -17,6 +19,8 @@ import { SCHOOL_GLYPHS } from './glyphs/school';
 import { SCIENCE_GLYPHS } from './glyphs/science';
 import { SPORT_GLYPHS } from './glyphs/sport';
 import { TRAVEL_GLYPHS } from './glyphs/travel';
+import { COLOR_SWATCHES, colorGlyphs } from './generated/color';
+import { COUNT_VALUES, countGlyphs } from './generated/count';
 import type { WordArtFamily, WordArtGlyph, WordArtMeta } from './types';
 
 export const WORD_ART_FAMILIES: readonly WordArtFamily[] = Object.freeze([
@@ -62,6 +66,9 @@ export interface WordArtEntry {
 /** Per-key meta beyond the family, which the key prefix gives. */
 export type WordArtMetaOverrides = Readonly<Record<string, Partial<Omit<WordArtMeta, 'family'>>>>;
 
+/** Why every colour swatch carries the C2 waiver and a fifth fill tone (§3.6.1, §3.3). */
+const SWATCH_REASON = 'The swatch square fills the frame (88 of 100 units, margin 6) and the object sticker adds its own colours to the swatch colour (§3.6.1).';
+
 /** Review state and waivers. A key not listed is a `draft`. */
 const META: WordArtMetaOverrides = {
   'food-apple': { status: 'review' },
@@ -74,6 +81,12 @@ const META: WordArtMetaOverrides = {
   'prop-leaf': { status: 'review' },
   'prop-grapes': { status: 'review' },
   'prop-crow': { status: 'review' },
+  // batch W-3: food, the colour-swatch objects of later families, colours and counts
+  ...Object.fromEntries(
+    ['food-banana', 'food-milk', 'food-bread', 'food-ramyeon', 'food-water', 'food-egg', 'food-strawberry', 'food-tteok', 'animal-bear', 'animal-elephant', 'nature-flower'].map((k) => [k, { status: 'review' }]),
+  ),
+  ...Object.fromEntries(Object.keys(COLOR_SWATCHES).map((k) => [k, { status: 'review', bboxWaived: true, maxTones: 5, reason: SWATCH_REASON }])),
+  ...Object.fromEntries(COUNT_VALUES.map((n) => [`count-${n}`, { status: 'review' }])),
 };
 
 /** One glyph file: the family it holds, and its glyphs by key. */
@@ -101,19 +114,25 @@ export function buildRegistry(sources: readonly WordArtSource[], meta: WordArtMe
   return Object.freeze(out);
 }
 
+/** The hand-drawn sources, one per family file. */
+const HAND: readonly WordArtSource[] = [
+  ['food', FOOD_GLYPHS],
+  ['animal', ANIMAL_GLYPHS],
+  ['family', FAMILY_GLYPHS],
+  ['school', SCHOOL_GLYPHS],
+  ['nature', NATURE_GLYPHS],
+  ['travel', TRAVEL_GLYPHS],
+  ['sport', SPORT_GLYPHS],
+  ['culture', CULTURE_GLYPHS],
+  ['science', SCIENCE_GLYPHS],
+  ['prop', PROP_GLYPHS],
+];
+
+/** A hand glyph by key, before the registry exists: the colour swatches draw their objects from it. */
+const handGlyph = (key: string): WordArtGlyph | undefined => HAND.find(([, glyphs]) => Object.prototype.hasOwnProperty.call(glyphs, key))?.[1][key];
+
 export const WORD_ART: Readonly<Record<string, WordArtEntry>> = buildRegistry(
-  [
-    ['food', FOOD_GLYPHS],
-    ['animal', ANIMAL_GLYPHS],
-    ['family', FAMILY_GLYPHS],
-    ['school', SCHOOL_GLYPHS],
-    ['nature', NATURE_GLYPHS],
-    ['travel', TRAVEL_GLYPHS],
-    ['sport', SPORT_GLYPHS],
-    ['culture', CULTURE_GLYPHS],
-    ['science', SCIENCE_GLYPHS],
-    ['prop', PROP_GLYPHS],
-  ],
+  [...HAND, ['color', colorGlyphs(handGlyph)], ['count', countGlyphs()]],
   META,
 );
 
