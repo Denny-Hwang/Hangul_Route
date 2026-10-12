@@ -7,10 +7,10 @@ import { appRouteCatalog } from './route-skip';
  * The route catalogue a finished level check is scored against (F-PLC-001
  * section 3.6): the app's quests in cursor order, each with the symbol keys its
  * Discover step teaches (`'ㄱ'`, `'ㄴ/final'`). A quest is placed out by the
- * symbols only when it teaches some: the rebuilt quests (letters q1-q3 since
- * F-QUEST-002 Q-6a, life q1-q3 since Q-6b, rites q1-q3 since Q-7b) are placed out by
- * their symbols from a `stage1` level, while the quests not yet rebuilt teach none
- * until Q-8, so only a `stage2` or higher level places those out (rules 1 and 3), which errs low.
+ * symbols only when it teaches some: quests 1-10 (all 30 symbols, F-QUEST-002 Q-6a
+ * to Q-8) are placed out by their symbols from a `stage1` level, while the five
+ * reading quests (nature q2-q3, crafts q1-q3, rule R5) teach none, so only a `stage2`
+ * or higher level places those out (F-PLC-001 rule 3, consolidation quests).
  */
 
 /** `'ㄱ'` for a consonant or vowel, `'ㄱ/final'` for a final (F-QUEST-002 section 3.7). */

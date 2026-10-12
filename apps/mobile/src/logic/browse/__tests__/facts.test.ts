@@ -340,13 +340,16 @@ describe('itemFacts: quest', () => {
     });
     expect(tastes.length).toBeGreaterThan(0);
     for (const taste of tastes) expect(taste.tasteWords, taste.id).toEqual(taste.words.slice(0, 3));
-    // in Spanish, its first word's gloss is the localized one of the scope it comes from
+    // in Spanish, its first word's gloss is the localized one of the Discover page or the scope it comes from
+    // (since F-QUEST-002 Q-8 the first such lesson is a Stage 1 reading quest, whose words open on its Discover pages)
     const taste = tastes[0] as QuestFacts;
     const es = questFacts(taste.id, 'es');
-    const first = scopesOf(quest(taste.id))
-      .map(({ ref, scope }) => localizeScope(scope, ref, 'es'))
-      .flatMap((scope) => scope.cardPairs ?? [])
-      .find((pair) => pair.ko === es.tasteWords[0]?.ko);
+    const first = [
+      ...discoverOf(quest(taste.id), 'es'),
+      ...scopesOf(quest(taste.id))
+        .map(({ ref, scope }) => localizeScope(scope, ref, 'es'))
+        .flatMap((scope) => scope.cardPairs ?? []),
+    ].find((pair) => pair.ko === es.tasteWords[0]?.ko);
     expect(first).toBeDefined();
     expect(es.tasteWords[0]?.gloss).toBe(first?.en);
   });

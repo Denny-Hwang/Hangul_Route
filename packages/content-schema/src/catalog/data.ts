@@ -7,13 +7,13 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * corrected row when the bundle and this file drift apart. Bump `CATALOG_VERSION`
  * on every content change that alters what a generated route can contain.
  *
- * Until F-QUEST-002 lands the 15 Stage 1 quests, this file lists the 11 the bundle
- * ships (8, plus life q3 since Q-6b and rites q2-q3 since Q-7b); Q-6a filled `teaches` for letters q1-q3, Q-6b for life q1-q3 (adding life q3),
- * Q-7b for rites q1-q3 (adding rites q2-q3), and Q-8 grows it to 15 (the parity test shows the rows to add).
+ * Since F-QUEST-002 Q-8 this file lists the 15 Stage 1 quests the bundle ships: Q-6a
+ * filled `teaches` for letters q1-q3, Q-6b for life q1-q3 (adding life q3), Q-7b for
+ * rites q1-q3 (adding rites q2-q3) and Q-8 for nature q1 (adding nature and crafts q2-q3).
  * Every story is a `draft` until a native reviewer signs it and the bundle holds
  * its `shelf` block; flipping a story to `ready` is that reviewer's change.
  */
-export const CATALOG_VERSION = 4;
+export const CATALOG_VERSION = 5;
 
 const cell = (
   stage: StageKey,
@@ -40,8 +40,8 @@ const cells: CatalogCell[] = [
   cell('stage1', 'letters', 'Meet the Letters', 'shipped', 15, ['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3']),
   cell('stage1', 'life', 'Around the Korean Table', 'shipped', 12, ['quest:stage1-life-q1', 'quest:stage1-life-q2', 'quest:stage1-life-q3']),
   cell('stage1', 'rites', 'New Year & Festivals', 'shipped', 14, ['quest:stage1-rites-q1', 'quest:stage1-rites-q2', 'quest:stage1-rites-q3']),
-  cell('stage1', 'nature', 'Tigers, Mountains, Moon', 'shipped', 9, ['quest:stage1-nature-q1']),
-  cell('stage1', 'crafts', 'Yut, Kites & Paper', 'shipped', 10, ['quest:stage1-crafts-q1']),
+  cell('stage1', 'nature', 'Tigers, Mountains, Moon', 'shipped', 12, ['quest:stage1-nature-q1', 'quest:stage1-nature-q2', 'quest:stage1-nature-q3']),
+  cell('stage1', 'crafts', 'Yut, Kites & Paper', 'shipped', 12, ['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3']),
   soon('stage2', 'letters', 'Word Builder'),
   cell('stage2', 'life', 'Lunch Box Words', 'shipped', 6, ['quest:stage2-life-q1']),
   soon('stage2', 'rites', 'Holiday Words'),
@@ -77,7 +77,8 @@ const cells: CatalogCell[] = [
 /**
  * `teaches` is what the bundle's Discover steps teach (`questTeaches`, the parity
  * test compares): letters q1-q3 since F-QUEST-002 Q-6a, life q1-q3 since Q-6b, rites
- * q1-q3 since Q-7b; the quests not yet rebuilt teach nothing until Q-8 adds their Discover steps.
+ * q1-q3 since Q-7b, nature q1 since Q-8. Nature q2-q3 and crafts q1-q3 teach nothing new:
+ * they read words built from all 30 symbols (F-QUEST-002 rule R5).
  */
 const lessonQuests: CatalogQuest[] = [
   lesson('stage1-letters-q1', 'stage1', 'letters', 'Meet a, eo, g, n', 5, ['ㅏ', 'ㅓ', 'ㄱ', 'ㄴ']),
@@ -89,8 +90,12 @@ const lessonQuests: CatalogQuest[] = [
   lesson('stage1-rites-q1', 'stage1', 'rites', 'Bow & Eat Tteokguk', 4, ['ㄴ/final', 'ㄹ/final']),
   lesson('stage1-rites-q2', 'stage1', 'rites', 'Rice Cakes of Chuseok', 5, ['ㅑ', 'ㅕ', 'ㅍ', 'ㅇ/final']),
   lesson('stage1-rites-q3', 'stage1', 'rites', 'Hanbok and the Bow', 5, ['ㅛ', 'ㅠ', 'ㅎ', 'ㄱ/final']),
-  lesson('stage1-nature-q1', 'stage1', 'nature', 'Tiger, Magpie, Moon', 5),
-  lesson('stage1-crafts-q1', 'stage1', 'crafts', 'Yut, Kite, Top', 5),
+  lesson('stage1-nature-q1', 'stage1', 'nature', 'Tiger, Magpie, Moon', 4, ['ㅁ/final', 'ㅂ/final']),
+  lesson('stage1-nature-q2', 'stage1', 'nature', 'Mountain, River, Sea', 4),
+  lesson('stage1-nature-q3', 'stage1', 'nature', 'Moon, Stars and Night', 4),
+  lesson('stage1-crafts-q1', 'stage1', 'crafts', 'Yut, Kite, Top', 4),
+  lesson('stage1-crafts-q2', 'stage1', 'crafts', 'Paper and Pottery', 4),
+  lesson('stage1-crafts-q3', 'stage1', 'crafts', 'Read Hangul!', 4),
   lesson('stage2-life-q1', 'stage2', 'life', 'Lunch Box Words', 5),
   lesson('stage2-nature-q1', 'stage2', 'nature', 'Outdoor Words', 5),
   lesson('stage4-rites-q1', 'stage4', 'rites', 'Greeting Dialogues', 4),

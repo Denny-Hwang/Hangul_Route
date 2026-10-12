@@ -110,17 +110,18 @@ describe('card award integrity (F-STORY-006 T-AWARD-1..5)', () => {
     }
   });
 
-  it('catch-up (§3.11 row 1): all 11 shipped Stage 1 quests at 2+ stars with their 11 quest cards adds the 19 other cards', () => {
+  it('catch-up (§3.11 row 1): all 15 Stage 1 quests at 2+ stars with their 15 quest cards adds the 15 other cards', () => {
     const stage1 = episodesAll.filter((e) => e.stage === 'stage1' && e.status === 'shipped' && (e.placement ?? 'grid') === 'grid').flatMap((e) => e.questIds);
-    // F-QUEST-002 grows Stage 1 to 15 quests (Q-6b adds life q3, Q-7b rites q2-q3); each new quest card moves one card from "episode" to "quest".
-    expect(stage1).toHaveLength(11);
+    // F-QUEST-002 grows Stage 1 to 15 quests (Q-6b adds life q3, Q-7b rites q2-q3, Q-8 nature and crafts q2-q3); each new quest card moves one card from "episode" to "quest".
+    expect(stage1).toHaveLength(15);
     const base = finished(stage1, 2);
     const questCards = questsAll.filter((q) => stage1.includes(q.id)).map((q) => q.rewardCardId as string);
-    expect(questCards).toHaveLength(11);
+    expect(questCards).toHaveLength(15);
     const snapshot = { ...base, cards: questCards.map((cardId) => ({ cardId, unlockedAt: AT, newSinceLastView: false })) };
     const missing = missingAwards(world, snapshot, PROFILE);
     const bySource = (s: string) => missing.filter((a) => a.source === s).length;
-    expect(missing).toHaveLength(19);
-    expect({ episode: bySource('episode'), stage: bySource('stage'), welcome: bySource('welcome'), quest: bySource('quest') }).toEqual({ episode: 15, stage: 3, welcome: 1, quest: 0 });
+    // F-QUEST-002 section 3.6: 15 quest cards + 11 episode extras + 3 stage1-complete + 1 first-launch = all 30 Stage 1 cards.
+    expect(missing).toHaveLength(15);
+    expect({ episode: bySource('episode'), stage: bySource('stage'), welcome: bySource('welcome'), quest: bySource('quest') }).toEqual({ episode: 11, stage: 3, welcome: 1, quest: 0 });
   });
 });
