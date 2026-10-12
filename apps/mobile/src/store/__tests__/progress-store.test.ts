@@ -22,11 +22,14 @@ import { useProfileStore } from '../profile-store';
 import { notifyProfileRemoved } from '../profile-removal';
 import { nextStreak, useProgressStore } from '../progress-store';
 
+/** The quest player's options (today's behaviour: the streak moves, `session.start` is sent). */
+const QUEST = { owner: 'quest:q1', streak: true } as const;
+
 function resetStore(): void {
   mem.clear();
   vi.mocked(readJson).mockClear();
   vi.mocked(writeJson).mockClear();
-  useProgressStore.setState({ byProfile: {}, hydratedFor: new Set(), pendingFor: new Set(), pendingVocabEvents: {} });
+  useProgressStore.setState({ byProfile: {}, hydratedFor: new Set(), pendingFor: new Set(), pendingVocabEvents: {}, openSession: null });
 }
 
 /** Let fire-and-forget hydrations and storage writes settle. */
@@ -73,8 +76,9 @@ describe('progress-store', () => {
 
   it('beginSession then endSession records a non-negative duration', () => {
     const { beginSession, endSession } = useProgressStore.getState();
-    beginSession('p1');
-    endSession('p1');
+    const id = beginSession('p1', QUEST);
+    expect(id).not.toBeNull();
+    endSession('p1', id as string);
     const snap = useProgressStore.getState().byProfile['p1'];
     expect(snap?.sessions).toHaveLength(1);
     expect(snap?.sessions[0]?.endedAt).toBeTruthy();
@@ -82,7 +86,7 @@ describe('progress-store', () => {
   });
 
   it('endSession with no open session is a no-op', () => {
-    useProgressStore.getState().endSession('p1');
+    useProgressStore.getState().endSession('p1', 'session:none');
     const snap = useProgressStore.getState().byProfile['p1'];
     expect(snap).toBeUndefined();
   });
@@ -98,16 +102,15 @@ describe('progress-store', () => {
   });
 
   it('beginSession starts the streak at 1 on first call', () => {
-    useProgressStore.getState().beginSession('p1');
+    useProgressStore.getState().beginSession('p1', QUEST);
     const snap = useProgressStore.getState().byProfile['p1'];
     expect(snap?.streakDays).toBe(1);
   });
 
   it('beginSession twice in the same day keeps the streak at 1', () => {
     const { beginSession, endSession } = useProgressStore.getState();
-    beginSession('p1');
-    endSession('p1');
-    beginSession('p1');
+    endSession('p1', beginSession('p1', QUEST) as string);
+    beginSession('p1', QUEST);
     const snap = useProgressStore.getState().byProfile['p1'];
     expect(snap?.streakDays).toBe(1);
   });
@@ -263,7 +266,7 @@ describe('loading saved progress (audit UX-01 / L16)', () => {
   it('writes made while a hydrate is in flight are merged, not dropped', async () => {
     mem.set('progress:p1', savedSnapshot());
     const loading = useProgressStore.getState().hydrate('p1');
-    useProgressStore.getState().beginSession('p1');
+    useProgressStore.getState().beginSession('p1', QUEST);
     await loading;
     await settle();
     expect(stored()?.sessions).toHaveLength(2);
@@ -1250,7 +1253,7 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
     it('the first real write saves the welcome card with it', () => {
       useProgressStore.setState({ hydratedFor: new Set(['profile:a']) });
       useProgressStore.getState().ensure('profile:a');
-      useProgressStore.getState().beginSession('profile:a');
+      useProgressStore.getState().beginSession('profile:a', QUEST);
       expect(storedA()?.cards).toEqual([{ cardId: 'card:tiger', unlockedAt: CREATED, newSinceLastView: true }]);
       expect(storedA()?.sessions).toHaveLength(1);
     });
@@ -1351,5 +1354,157 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
       useProgressStore.getState().markCardsSeen('profile:a', [...RITES, 'card:tiger']);
       expect(useProgressStore.getState().catchUp['profile:a']).toBeUndefined();
     });
+  });
+});
+
+describe('session ownership (F-REPORT-001 section 3.3.2, RP-3b)', () => {
+  const STORY = { owner: 'story:story:sun-and-moon', streak: false } as const;
+  const T0 = new Date('2026-10-12T09:00:00.000Z');
+
+  beforeEach(() => {
+    resetStore();
+    vi.mocked(track).mockClear();
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(T0);
+  });
+  afterEach(() => vi.useRealTimers());
+
+  const sessionsOf = (profileId = 'p1'): ProgressSnapshot['sessions'] => useProgressStore.getState().byProfile[profileId]?.sessions ?? [];
+
+  it('beginSession returns a new id and keeps the owner in memory', () => {
+    const id = useProgressStore.getState().beginSession('p1', QUEST);
+    expect(id).toBe('session:2026-10-12T09:00:00.000Z');
+    expect(useProgressStore.getState().openSession).toEqual({ profileId: 'p1', sessionId: id, owner: 'quest:q1', streak: true });
+    expect(sessionsOf().map((s) => s.id)).toEqual([id]);
+  });
+
+  it('beginSession returns null while the open session belongs to the profile (a story inside a quest joins it)', () => {
+    const { beginSession, endSession } = useProgressStore.getState();
+    const quest = beginSession('p1', QUEST) as string;
+    expect(beginSession('p1', STORY)).toBeNull();
+    expect(sessionsOf()).toHaveLength(1);
+    expect(useProgressStore.getState().openSession?.owner).toBe('quest:q1');
+    endSession('p1', quest);
+    expect(useProgressStore.getState().openSession).toBeNull();
+    expect(beginSession('p1', STORY)).toBe('session:time:2026-10-12T09:00:00.000Z');
+  });
+
+  it('endSession with another id leaves the open session running', () => {
+    const { beginSession, endSession } = useProgressStore.getState();
+    const id = beginSession('p1', QUEST) as string;
+    vi.setSystemTime(new Date(T0.getTime() + 60_000));
+    endSession('p1', 'session:someone-else');
+    endSession('p2', id);
+    expect(useProgressStore.getState().openSession?.sessionId).toBe(id);
+    expect(sessionsOf()[0]?.endedAt).toBeUndefined();
+    endSession('p1', id);
+    expect(sessionsOf()[0]).toMatchObject({ endedAt: '2026-10-12T09:01:00.000Z', durationSeconds: 60 });
+  });
+
+  it('ends its own session even when a sync put a later one after it', () => {
+    const { beginSession, endSession, replaceSnapshot } = useProgressStore.getState();
+    const id = beginSession('p1', QUEST) as string;
+    const snap = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    const other = { id: 'session:2026-10-12T09:00:30.000Z', profileId: 'p1', startedAt: '2026-10-12T09:00:30.000Z', episodesTouched: [] };
+    replaceSnapshot('p1', { ...snap, sessions: [...snap.sessions, other] });
+    vi.setSystemTime(new Date(T0.getTime() + 120_000));
+    endSession('p1', id);
+    expect(sessionsOf().find((s) => s.id === id)).toMatchObject({ durationSeconds: 120 });
+    expect(sessionsOf().find((s) => s.id === other.id)?.endedAt).toBeUndefined();
+  });
+
+  it('a persisted open session after hydrate is never joined and keeps no duration', async () => {
+    const orphan = { id: 'session:2026-10-11T20:00:00.000Z', profileId: 'p1', startedAt: '2026-10-11T20:00:00.000Z', episodesTouched: [] };
+    mem.set('progress:p1', {
+      profileId: 'p1',
+      updatedAt: '2026-10-11T20:00:00.000Z',
+      episodes: [],
+      quests: [],
+      cards: [],
+      sessions: [orphan],
+      homework: [],
+      reviews: [],
+      streakDays: 1,
+    } satisfies ProgressSnapshot);
+    await useProgressStore.getState().hydrate('p1');
+    expect(useProgressStore.getState().openSession).toBeNull();
+    const id = useProgressStore.getState().beginSession('p1', QUEST);
+    expect(id).not.toBeNull();
+    vi.setSystemTime(new Date(T0.getTime() + 30_000));
+    useProgressStore.getState().endSession('p1', id as string);
+    const [kept, mine] = sessionsOf();
+    expect(kept).toEqual(orphan);
+    expect(mine).toMatchObject({ id, durationSeconds: 30 });
+  });
+
+  it('counts at most 60 minutes for a session left open', () => {
+    const { beginSession, endSession } = useProgressStore.getState();
+    const id = beginSession('p1', STORY) as string;
+    vi.setSystemTime(new Date(T0.getTime() + 5 * 60 * 60 * 1000));
+    endSession('p1', id);
+    expect(sessionsOf()[0]?.durationSeconds).toBe(3600);
+  });
+
+  it('streak: false records time only: the streak stays and no session event is sent', () => {
+    const { beginSession, endSession } = useProgressStore.getState();
+    const quest = beginSession('p1', QUEST) as string;
+    endSession('p1', quest);
+    expect(useProgressStore.getState().byProfile['p1']?.streakDays).toBe(1);
+    vi.mocked(track).mockClear();
+    // Two days later: a quest would move the streak back to 1 day, a story leaves it alone.
+    vi.setSystemTime(new Date('2026-10-14T09:00:00.000Z'));
+    const story = beginSession('p1', STORY) as string;
+    endSession('p1', story);
+    expect(useProgressStore.getState().byProfile['p1']?.streakDays).toBe(1);
+    expect(sessionsOf()).toHaveLength(2);
+    expect(track).not.toHaveBeenCalled();
+    // The next day's quest counts from the last quest day, not from the story day.
+    vi.setSystemTime(new Date('2026-10-13T09:00:00.000Z'));
+    beginSession('p1', QUEST);
+    expect(useProgressStore.getState().byProfile['p1']?.streakDays).toBe(2);
+  });
+
+  it('streak: true sends session.start and session.end as today', () => {
+    const { beginSession, endSession } = useProgressStore.getState();
+    const id = beginSession('p1', QUEST) as string;
+    endSession('p1', id);
+    expect(vi.mocked(track).mock.calls.map(([e]) => e.name)).toEqual(['session.start', 'session.end']);
+  });
+
+  it('a session for another profile ends the open one first', () => {
+    const { beginSession, endSession } = useProgressStore.getState();
+    const first = beginSession('p1', QUEST) as string;
+    vi.setSystemTime(new Date(T0.getTime() + 10_000));
+    const second = beginSession('p2', STORY);
+    expect(second).not.toBeNull();
+    expect(sessionsOf('p1')[0]).toMatchObject({ id: first, durationSeconds: 10 });
+    expect(useProgressStore.getState().openSession?.profileId).toBe('p2');
+    // the first owner's own end is now a no-op
+    endSession('p1', first);
+    expect(useProgressStore.getState().openSession?.profileId).toBe('p2');
+  });
+
+  it('two sessions begun in the same millisecond get two ids', () => {
+    const { beginSession, endSession } = useProgressStore.getState();
+    endSession('p1', beginSession('p1', QUEST) as string);
+    const again = beginSession('p1', QUEST);
+    expect(again).toBe('session:2026-10-12T09:00:00.000Z:2');
+    expect(sessionsOf()).toHaveLength(2);
+  });
+
+  it('reset forgets the open session of that profile', () => {
+    const { beginSession, endSession, reset } = useProgressStore.getState();
+    const id = beginSession('p1', QUEST) as string;
+    reset('p1');
+    expect(useProgressStore.getState().openSession).toBeNull();
+    endSession('p1', id);
+    expect(sessionsOf()).toEqual([]);
+  });
+
+  it('reset of another profile leaves the open session running', () => {
+    const { beginSession, reset } = useProgressStore.getState();
+    beginSession('p1', QUEST);
+    reset('p2');
+    expect(useProgressStore.getState().openSession?.profileId).toBe('p1');
   });
 });

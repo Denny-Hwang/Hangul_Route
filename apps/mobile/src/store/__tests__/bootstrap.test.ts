@@ -145,7 +145,7 @@ describe('cold start (audit UX-01 / L16)', () => {
     mem.set('progress:profile:a', saved('profile:a', 'card:book'));
 
     await hydrateLearnerData();
-    useProgressStore.getState().beginSession('profile:a');
+    useProgressStore.getState().beginSession('profile:a', { owner: 'quest:quest:a', streak: true });
 
     const stored = mem.get('progress:profile:a') as ProgressSnapshot;
     expect(stored.cards.map((c) => c.cardId)).toEqual(['card:book', 'card:tiger']);
