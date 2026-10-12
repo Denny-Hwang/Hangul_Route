@@ -147,6 +147,19 @@ function feedbackContract(name: string, make: () => Db): void {
         expect(await db.notePrefsFor([])).toEqual([]);
       });
 
+      it('noteRecipients lists the current students with name, mode and whether they stopped this sender', async () => {
+        await db.putNotePrefs({ learnerId: MIN, classes: 'presets', acknowledgedAt: null, updatedAt: iso(0), updatedVia: 'family', updatedByAccount: MOM });
+        await db.putBlock({ learnerId: SUNI, senderAccountId: TEACHER, familySpaceId: FAMILY, createdByAccount: MOM, createdAt: iso(0) });
+        expect(await db.noteRecipients(CLASS, TEACHER)).toEqual([
+          { learnerId: MIN, displayName: MIN, classes: 'presets', blocked: false },
+          { learnerId: SUNI, displayName: SUNI, classes: 'all', blocked: true },
+        ]);
+        expect((await db.noteRecipients(CLASS, COTEACHER)).map((r) => r.blocked)).toEqual([false, false]);
+        await db.removeMembership(CLASS, 'learner', MIN);
+        expect((await db.noteRecipients(CLASS, TEACHER)).map((r) => r.learnerId)).toEqual([SUNI]);
+        expect(await db.noteRecipients('space:nope', TEACHER)).toEqual([]);
+      });
+
       it('blocksFor answers the learners that stopped this sender only', async () => {
         await db.putBlock({ learnerId: SUNI, senderAccountId: TEACHER, familySpaceId: FAMILY, createdByAccount: MOM, createdAt: iso(0) });
         expect(await db.blocksFor([SUNI, MIN], TEACHER)).toEqual([SUNI]);

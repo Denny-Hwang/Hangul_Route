@@ -19,6 +19,7 @@ import type {
   NewNote,
   NoteActVia,
   NoteDeviceScope,
+  NoteRecipientRow,
   RateHitRow,
   StoredNote,
   StoredNotePrefs,
@@ -262,6 +263,11 @@ export interface Db {
   studentsOf(spaceId: string, learnerIds: readonly string[]): Promise<string[]>;
   /** The prefs rows of these learners; a learner without a row is left out (class notes `all`, OD-3). */
   notePrefsFor(learnerIds: readonly string[]): Promise<StoredNotePrefs[]>;
+  /**
+   * The space's current students with their name, class-notes mode and whether their family stopped this
+   * sender, in one statement (GET recipients, section 7.2); oldest membership first.
+   */
+  noteRecipients(spaceId: string, senderAccountId: string): Promise<NoteRecipientRow[]>;
   /** The ids among `learnerIds` whose family stopped this sender (section 8.5). */
   blocksFor(learnerIds: readonly string[], senderAccountId: string): Promise<string[]>;
   /** Hits per key at or after `since`; a key without hits is absent from the map. */

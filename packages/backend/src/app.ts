@@ -7,6 +7,7 @@ import { contentRoutes } from './routes/content';
 import { recoveryRoutes } from './routes/recovery';
 import { billingRoutes } from './routes/billing';
 import { entitlementRoutes } from './routes/entitlements';
+import { notesRoutes } from './routes/notes';
 import { relinkRoutes } from './routes/relink';
 import { schoolRoutes } from './routes/school';
 import { plansRoutes } from './routes/plans';
@@ -70,6 +71,8 @@ app.route('/api/billing', billingRoutes);
 app.route('/api/spaces', schoolRoutes);
 // Progress reports (F-REPORT-001 section 3.8): one learner's report from the roster's projection; read-only, archived spaces included.
 app.route('/api/spaces', spaceReportRoutes);
+// Notes from grown-ups (F-FEEDBACK-001 section 7.2): recipients and send; both 404 until the owner sets NOTES_SEND=enabled.
+app.route('/api/spaces', notesRoutes);
 // Launch-invite waitlist: public, first-party, no auth. POST only (no read route).
 app.route('/api/waitlist', waitlistRoutes);
 

@@ -18,6 +18,7 @@
   "dependencies": {
     "@clerk/backend": "^3.4.12",
     "@hangul-route/content-schema": "workspace:*",
+    "@hangul-route/i18n": "workspace:*",
     "@hangul-route/shared-types": "workspace:*",
     "hono": "^4.6.0"
   },
