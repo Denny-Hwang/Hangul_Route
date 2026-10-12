@@ -143,6 +143,23 @@ describe('createNotesApi (sections 7.2, 7.8)', () => {
     expect(await client.recipients('space:c')).toEqual({ ok: false, failure: { status: 200, code: null, details: null } });
     expect(await client.recipients('space:c')).toEqual({ ok: false, failure: { status: 500, code: null, details: null } });
   });
+
+  it('an action route is done on its success status whatever the body holds, so a done action never reads as failed', async () => {
+    const { client } = api(
+      json(200, {}),
+      new Response(null, { status: 204 }),
+      json(201, { data: null }),
+      new Response('', { status: 201 }),
+      json(200, { data: { ok: true } }),
+      json(409, {}),
+    );
+    expect(await client.hide('space:f', 'profile:a', 'note:aaaaaaaa')).toEqual({ ok: true, data: {} });
+    expect(await client.unblock('space:f', 'profile:a', 'ref:1')).toEqual({ ok: true, data: {} });
+    expect(await client.report('space:f', 'profile:a', 'note:aaaaaaaa', { reason: 'unsafe' })).toEqual({ ok: true, data: {} });
+    expect(await client.block('space:f', 'profile:a', 'note:aaaaaaaa')).toMatchObject({ ok: true });
+    expect(await client.setNoteSender('space:f', 'acct:2', false)).toEqual({ ok: true, data: { ok: true } });
+    expect(await client.hide('space:f', 'profile:a', 'note:aaaaaaaa')).toEqual({ ok: false, failure: { status: 409, code: null, details: null } });
+  });
 });
 
 describe('presetGroups (section 6.3)', () => {
@@ -266,8 +283,10 @@ describe('composerCheck (sections 6.2, 7.1)', () => {
       canSend: false,
       body: null,
       textProblem: null,
-      recipientsProblem: 'Choose up to 300 learners.',
+      recipientsProblem: 'This list cannot be sent as it is. Refresh and try again.',
     });
+    const long = composerCheck(input({ to: { kind: 'learners', ids: ['profile:' + 'a'.repeat(80)] } }), 'en');
+    expect(long.recipientsProblem).toBe(en.composer.recipientsInvalid);
   });
 
   it('sends a learner picked twice once, and says why Send is off for more than 300 learners', () => {
@@ -278,8 +297,11 @@ describe('composerCheck (sections 6.2, 7.1)', () => {
     expect(composerCheck(input({ to: { kind: 'learners', ids: many } }), 'en')).toMatchObject({
       canSend: false,
       body: null,
-      recipientsProblem: en.composer.recipientsProblem,
+      recipientsProblem: 'Choose up to 300 students.',
     });
+    expect(composerCheck(input({ spaceKind: 'family', label: null, presetId: 'effort_proud', to: { kind: 'learners', ids: many } }), 'en').recipientsProblem).toBe(
+      'Choose up to 300 learners.',
+    );
     expect(composerCheck(input({ to: { kind: 'learners', ids: many.slice(0, 300) } }), 'en')).toMatchObject({ canSend: true, recipientsProblem: null });
     // Other problems keep their own line, never the recipients one.
     expect(composerCheck(input({ presetId: null }), 'en').recipientsProblem).toBeNull();
@@ -338,6 +360,8 @@ describe('server problems (section 7.2 errors, wireframe states)', () => {
     expect(sendProblem(f(429, 'too_many', { scope: 'account', retryAfter: 60 }), 'class', 'en')).toBe('You have sent many notes today. You can send more tomorrow.');
     expect(sendProblem(f(429, 'too_many', { scope: 'learner', retryAfter: 3600 }), 'class', 'en')).toBe(en.composer.errors.tooMany);
     expect(sendProblem(f(422, 'not_in_space'), 'class', 'en')).toBe('Someone on this list is no longer in this space. Refresh and try again.');
+    // A learner who left is never worded as the switch being off, whatever status carries the code.
+    expect(sendProblem(f(404, 'not_in_space'), 'family', 'en')).toBe(en.composer.errors.notInSpace);
     expect(sendProblem(f(-1), 'class', 'en')).toBe('Could not send. Check your connection and try again.');
     expect(sendProblem(f(500), 'class', 'en')).toBe('Something went wrong. Please try again.');
   });
@@ -371,6 +395,12 @@ describe('statusText (section 9, OD-8)', () => {
     expect(statusText('opened', 'family', 'en')).toBe('Opened');
     expect(statusText('not_shown', 'class', 'en')).toBe('Not shown');
     expect(statusText('withdrawn', 'family', 'en')).toBe('Taken back');
+  });
+
+  it('reads a status this build does not know as "Not shown", never blank', () => {
+    const newer = 'paused_by_school' as unknown as Parameters<typeof statusText>[0];
+    expect(statusText(newer, 'class', 'en')).toBe('Not shown');
+    expect(statusText(newer, 'family', 'en')).toBe('Not shown');
   });
 });
 
@@ -471,9 +501,11 @@ describe('receivedRowView (wireframe console/family-notes.md A, section 8.2)', (
 
   it('a family note names the signing label and the sending account, or "You sent this"', () => {
     const family = row({ spaceKind: 'family', spaceName: 'Kim family', from: { role: 'family', label: 'grandma' }, senderName: 'Sun Park', status: 'live', reaction: null });
-    expect(receivedRowView(family, 'en')).toMatchObject({ from: 'From home · signed Grandma', sentBy: 'Sent by Sun Park', status: 'Sent' });
+    expect(receivedRowView(family, 'en')).toMatchObject({ from: 'From home, signed Grandma', sentBy: 'Sent by Sun Park', status: 'Sent' });
     expect(receivedRowView({ ...family, mine: true }, 'en')).toMatchObject({ sentBy: 'You sent this', canReport: false, canBlock: false, canHide: true });
-    expect(receivedRowView({ ...family, from: { role: 'family', label: null } }, 'en').from).toBe('From home · signed Your family');
+    // The default sign-off adds nothing to "From home".
+    expect(receivedRowView({ ...family, from: { role: 'family', label: null } }, 'en').from).toBe('From home');
+    expect(receivedRowView({ ...family, from: { role: 'family', label: 'family' } }, 'en').from).toBe('From home');
     expect(receivedRowView({ ...family, senderName: null }, 'en').sentBy).toBeNull();
     expect(receivedRowView({ ...family, suggest: { kind: 'quest', id: QUEST.id } }, 'en').quest).toBe(QUEST.title);
   });
@@ -482,10 +514,13 @@ describe('receivedRowView (wireframe console/family-notes.md A, section 8.2)', (
     const family = row({ spaceKind: 'family', spaceName: 'Kim family', from: { role: 'family', label: 'grandma' }, senderName: 'Sun Park' });
     // An unknown label id signs "Your family".
     const unknown = { ...family, from: { role: 'family', label: 'cousin' } } as unknown as OversightNote;
-    expect(receivedRowView(unknown, 'en').from).toBe('From home · signed Your family');
-    // A missing sender reads as a class note, without the account name.
+    expect(receivedRowView(unknown, 'en').from).toBe('From home');
+    // A missing sender takes its role from the space (D2): a family space reads "From home", never a teacher.
     const noFrom = { ...family, from: undefined } as unknown as OversightNote;
-    expect(receivedRowView(noFrom, 'en')).toMatchObject({ from: 'From Kim family (teacher)', sentBy: null });
+    expect(receivedRowView(noFrom, 'en')).toMatchObject({ from: 'From home', sentBy: 'Sent by Sun Park' });
+    expect(receivedRowView({ ...noFrom, mine: true }, 'en').sentBy).toBe('You sent this');
+    const classNoFrom = { ...row(), from: null } as unknown as OversightNote;
+    expect(receivedRowView(classNoFrom, 'en')).toMatchObject({ from: 'From Sunday Class A (teacher)', sentBy: null });
     expect(JSON.stringify(receivedRowView(unknown, 'en'))).not.toContain('undefined');
   });
 

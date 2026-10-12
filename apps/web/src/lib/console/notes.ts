@@ -1,9 +1,11 @@
 import {
   CATALOG,
+  NOTE_PAIR_DAILY_LIMIT,
   NOTE_PRESET_AUDIENCE,
   NOTE_PRESET_IDS,
   NOTE_PRESETS_NEED_SUGGEST,
   NOTE_REACTION_IDS,
+  NOTE_SEND_MAX_LEARNERS,
   NoteSendSchema,
   freeRouteQuestIds,
   gridLessonIds,
@@ -151,13 +153,19 @@ export function createNotesApi(opts: ConsoleApiOptions) {
   const base = `${opts.endpoint}/api/spaces`;
   const resolveToken = async (): Promise<string | null> => (typeof opts.token === 'string' ? opts.token : opts.token().catch(() => null));
 
-  async function call<T>(url: string, init: RequestInit, okStatus: readonly number[]): Promise<NotesResult<T>> {
+  /**
+   * One route call. `bare` marks a route that only performs an action (hide, report, block, unblock,
+   * a sender switch): any listed success status, or a `204`, is done whatever the body holds, so the
+   * console never says "did not save" after the action happened (section 7.2).
+   */
+  async function call<T>(url: string, init: RequestInit, okStatus: readonly number[], bare = false): Promise<NotesResult<T>> {
     try {
       const token = await resolveToken();
       if (!token) return { ok: false, failure: { status: 401, code: null, details: null } };
       const res = await fetchImpl(url, { ...init, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` } });
       const body: unknown = await res.json().catch(() => ({}));
       const record = isRecord(body) ? body : {};
+      if (bare && (okStatus.includes(res.status) || res.status === 204)) return { ok: true, data: (isRecord(record.data) ? record.data : {}) as T };
       if (okStatus.includes(res.status) && record.data !== undefined) return { ok: true, data: record.data as T };
       const error = isRecord(record.error) ? record.error : {};
       return {
@@ -188,13 +196,13 @@ export function createNotesApi(opts: ConsoleApiOptions) {
     oversight: (familyId: string, learnerId: string, before?: string) =>
       call<{ rows: OversightNote[]; next: string | null }>(`${learner(familyId, learnerId)}/notes${query({ before })}`, { method: 'GET' }, [200]),
     hide: (familyId: string, learnerId: string, noteId: string) =>
-      call<Record<string, unknown>>(`${learner(familyId, learnerId)}/notes/${encodeURIComponent(noteId)}/hide`, { method: 'POST' }, [200]),
+      call<Record<string, unknown>>(`${learner(familyId, learnerId)}/notes/${encodeURIComponent(noteId)}/hide`, { method: 'POST' }, [200], true),
     report: (familyId: string, learnerId: string, noteId: string, body: NoteAccountReport) =>
-      call<Record<string, unknown>>(`${learner(familyId, learnerId)}/notes/${encodeURIComponent(noteId)}/report`, { method: 'POST', body: JSON.stringify(body) }, [201]),
+      call<Record<string, unknown>>(`${learner(familyId, learnerId)}/notes/${encodeURIComponent(noteId)}/report`, { method: 'POST', body: JSON.stringify(body) }, [201], true),
     block: (familyId: string, learnerId: string, noteId: string) =>
-      call<Record<string, unknown>>(`${learner(familyId, learnerId)}/blocks`, { method: 'POST', body: JSON.stringify({ noteId }) }, [201]),
+      call<Record<string, unknown>>(`${learner(familyId, learnerId)}/blocks`, { method: 'POST', body: JSON.stringify({ noteId }) }, [201], true),
     unblock: (familyId: string, learnerId: string, senderRef: string) =>
-      call<Record<string, unknown>>(`${learner(familyId, learnerId)}/blocks/${encodeURIComponent(senderRef)}`, { method: 'DELETE' }, [200]),
+      call<Record<string, unknown>>(`${learner(familyId, learnerId)}/blocks/${encodeURIComponent(senderRef)}`, { method: 'DELETE' }, [200], true),
     blocks: async (familyId: string, learnerId: string) =>
       map(await call<{ blocks: NoteBlock[] }>(`${learner(familyId, learnerId)}/blocks`, { method: 'GET' }, [200]), (d) => d.blocks),
     prefs: (familyId: string, learnerId: string) => call<FamilyNotePrefs>(`${learner(familyId, learnerId)}/note-prefs`, { method: 'GET' }, [200]),
@@ -202,7 +210,7 @@ export function createNotesApi(opts: ConsoleApiOptions) {
       call<FamilyNotePrefs>(`${learner(familyId, learnerId)}/note-prefs`, { method: 'PUT', body: JSON.stringify(body) }, [200]),
     noteSenders: async (familyId: string) => map(await call<{ senders: NoteSender[] }>(`${space(familyId)}/note-senders`, { method: 'GET' }, [200]), (d) => d.senders),
     setNoteSender: (familyId: string, accountId: string, canSend: boolean) =>
-      call<Record<string, unknown>>(`${space(familyId)}/note-senders/${encodeURIComponent(accountId)}`, { method: 'PUT', body: JSON.stringify({ canSend }) }, [200]),
+      call<Record<string, unknown>>(`${space(familyId)}/note-senders/${encodeURIComponent(accountId)}`, { method: 'PUT', body: JSON.stringify({ canSend }) }, [200], true),
   };
 }
 
@@ -214,8 +222,8 @@ export type NotesApi = ReturnType<typeof createNotesApi>;
 const PRESETS: ReadonlySet<string> = new Set(NOTE_PRESET_IDS);
 const REACTIONS: ReadonlySet<string> = new Set(NOTE_REACTION_IDS);
 
-/** Notes this account may send one learner per day (section 7.3, OD-14); the Worker is the authority. */
-export const NOTE_PAIR_DAILY_LIMIT = 3;
+/** Notes this account may send one learner per day (section 7.3, OD-14), shared from content-schema; the Worker is the authority. */
+export { NOTE_PAIR_DAILY_LIMIT };
 
 /** The sender's side of a space: a family signs with a label, any other space as "Your teacher". */
 type Side = 'family' | 'class';
@@ -398,8 +406,10 @@ export function composerCheck(input: ComposerInput, locale: UiLocale = DEFAULT_L
   };
   const parsed = NoteSendSchema.safeParse(body);
   if (parsed.success) return { canSend: true, questNeeded: false, textProblem: null, recipientsProblem: null, body: parsed.data };
-  // Text, preset, quest and label were checked above, so what is left is the learner list.
-  return { canSend: false, questNeeded: false, textProblem: null, recipientsProblem: getMessages(locale).console.notes.composer.recipientsProblem, body: null };
+  // Text, preset, quest and label were checked above, so what is left is the learner list: too long, or an id the form cannot send.
+  const composer = getMessages(locale).console.notes.composer;
+  const recipientsProblem = ids.length > NOTE_SEND_MAX_LEARNERS ? composer.recipientsProblem[side] : composer.recipientsInvalid;
+  return { canSend: false, questNeeded: false, textProblem: null, recipientsProblem, body: null };
 }
 
 export interface NotePreview {
@@ -448,6 +458,8 @@ const TEXT_PROBLEMS: ReadonlySet<string> = new Set<NoteTextProblem>(['empty', 't
 export function sendProblem(failure: NotesFailure, kind: SpaceKind, locale: UiLocale = DEFAULT_LOCALE): string {
   const e = getMessages(locale).console.notes.composer.errors;
   if (failure.status === -1) return e.network;
+  // Before the 404 check: a learner who left is never worded as the switch being off.
+  if (failure.code === 'not_in_space') return e.notInSpace;
   if (failure.status === 404) return e.sendingOff;
   if (failure.code === 'sending_paused') return e.paused;
   if (failure.code === 'not_allowed') return sideOf(kind) === 'family' ? e.notAllowed : e.notAllowedClass;
@@ -461,7 +473,6 @@ export function sendProblem(failure: NotesFailure, kind: SpaceKind, locale: UiLo
   }
   if (failure.code === 'bad_preset') return e.badPreset;
   if (failure.code === 'bad_suggest') return e.badSuggest;
-  if (failure.code === 'not_in_space') return e.notInSpace;
   if (failure.status === 429) return isDailyLimit(failure) ? e.tooMany : e.wait;
   return e.generic;
 }
@@ -498,7 +509,9 @@ export function familyActionProblem(failure: NotesFailure, action: FamilyAction,
 /** A status word for the sending space; a class sender never reads "Opened" (OD-8). */
 export function statusText(status: SentNoteStatus, viewer: Side, locale: UiLocale = DEFAULT_LOCALE): string {
   const words = getMessages(locale).console.notes.status;
-  return status === 'opened' && viewer === 'class' ? words.sent : words[status];
+  if (status === 'opened' && viewer === 'class') return words.sent;
+  // A status this build does not know (a newer Worker) reads as the neutral "Not shown", never blank.
+  return Object.prototype.hasOwnProperty.call(words, status) ? words[status] : words.not_shown;
 }
 
 export interface SentRowView {
@@ -543,7 +556,7 @@ export function sentRowView(row: SentNoteRow, kind: SpaceKind, locale: UiLocale 
 
 export interface ReceivedRowView {
   id: string;
-  /** "From class <name> (teacher)" or "From home · signed <label>": never a teacher's account (section 8.2-a). */
+  /** "From <class> (teacher)", "From home" or "From home, signed <label>": never an account name (section 8.2-a, OD-5). */
   from: string;
   /** The sending account of a family note (adult to adult inside the family), or "You sent this". */
   sentBy: string | null;
@@ -563,9 +576,14 @@ const DEVICE = 'device';
 export function receivedRowView(row: OversightNote, locale: UiLocale = DEFAULT_LOCALE, catalog: Catalog = CATALOG): ReceivedRowView {
   const m = getMessages(locale);
   const f = m.console.notes.family;
-  // A row without a readable sender is read as a class note: it never names an account (section 8.2-a).
-  const fromFamily = isRecord(row.from) && row.from.role === 'family';
-  const from = fromFamily ? `${f.from.home} · ${f.from.signed(labelLine(row.from.label, locale))}` : f.from.class(row.spaceName);
+  // A note belongs to the space it was sent in (D2), so a row without a readable sender takes its role
+  // from the space kind. Neither line ever names an account (section 8.2-a, OD-5).
+  const sender = isRecord(row.from) ? row.from : null;
+  const role = sender?.role === 'family' || sender?.role === 'teacher' ? sender.role : row.spaceKind === 'family' ? 'family' : 'teacher';
+  const fromFamily = role === 'family';
+  const label = sender?.role === 'family' ? sender.label : null;
+  const signed = label !== null && label !== 'family' && Object.prototype.hasOwnProperty.call(m.common.notes.familyLabels, label);
+  const from = !fromFamily ? f.from.class(row.spaceName) : signed ? f.from.homeSigned(labelLine(label, locale)) : f.from.home;
   const sentBy = !fromFamily ? null : row.mine ? f.youSent : row.senderName ? f.sentBy(row.senderName) : null;
   const live = row.status === 'live' || row.status === 'opened';
   return {
