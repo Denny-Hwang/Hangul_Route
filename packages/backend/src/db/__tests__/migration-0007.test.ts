@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { openSqliteD1 } from '../../__tests__/helpers/sqlite';
-import { D1Db } from '../d1';
+import { D1Db, type D1Like, type D1PreparedLike } from '../d1';
 
 /**
  * Migration 0007_billing_events.sql (F-BILL-002 section 5.1). A merge applies it
@@ -33,9 +33,30 @@ async function seedEntitlement(d1: SqliteD1): Promise<void> {
     .run();
 }
 
-async function plan(d1: SqliteD1, query: string, params: unknown[]): Promise<string> {
-  const { results } = await d1.prepare(`EXPLAIN QUERY PLAN ${query}`).bind(...params).all<{ detail: string }>();
-  return results.map((r) => r.detail).join(' | ');
+/**
+ * The query plan of the statement a Db read really prepares: the connection is
+ * wrapped to record the SQL and the bound values of the last read, so a change
+ * to a WHERE or ORDER BY in d1.ts is what this plan sees (not a copy here).
+ */
+async function planOf(d1: SqliteD1, read: (db: D1Db) => Promise<unknown>): Promise<{ sql: string; plan: string }> {
+  let last: { sql: string; params: unknown[] } | null = null;
+  const recording: D1Like = {
+    prepare(sql: string): D1PreparedLike {
+      const stmt = d1.prepare(sql);
+      const bind = stmt.bind.bind(stmt);
+      stmt.bind = (...values: unknown[]) => {
+        last = { sql, params: values };
+        return bind(...values);
+      };
+      return stmt;
+    },
+    batch: (statements) => d1.batch(statements),
+  };
+  await read(new D1Db(recording));
+  const seen = last as { sql: string; params: unknown[] } | null;
+  if (!seen) throw new Error('the read prepared no statement');
+  const { results } = await d1.prepare(`EXPLAIN QUERY PLAN ${seen.sql}`).bind(...seen.params).all<{ detail: string }>();
+  return { sql: seen.sql, plan: results.map((r) => r.detail).join(' | ') };
 }
 
 describe('migration 0007_billing_events.sql · production safety', () => {
@@ -77,9 +98,15 @@ describe('migration 0007_billing_events.sql · production safety', () => {
     const { results } = await d1.prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND name LIKE 'idx_%'").all<{ name: string }>();
     const names = results.map((r) => r.name);
     expect(names).toEqual(expect.arrayContaining(['idx_billing_events_subject', 'idx_billing_events_payment', 'idx_entitlements_provider_ref']));
-    expect(await plan(d1, 'SELECT * FROM billing_events WHERE subject_kind = ? AND subject_id = ? ORDER BY occurred_at DESC, id DESC LIMIT ?', ['space', 'space:c', 3])).toMatch(/idx_billing_events_subject/);
-    expect(await plan(d1, 'SELECT * FROM billing_events WHERE payment_ref = ? ORDER BY occurred_at DESC, id DESC LIMIT 1', ['pi_1'])).toMatch(/idx_billing_events_payment/);
-    expect(await plan(d1, 'SELECT * FROM entitlements WHERE provider = ? AND provider_ref = ? ORDER BY updated_at DESC, id DESC LIMIT 1', ['stripe', 'sub_1'])).toMatch(/idx_entitlements_provider_ref/);
+    const subject = await planOf(d1, (db) => db.billingEventsFor('space', 'space:c', 3));
+    expect(subject.sql).toMatch(/FROM billing_events WHERE subject_kind = \? AND subject_id = \?/);
+    expect(subject.plan).toMatch(/idx_billing_events_subject/);
+    const payment = await planOf(d1, (db) => db.billingEventByPaymentRef('pi_1'));
+    expect(payment.sql).toMatch(/FROM billing_events WHERE payment_ref = \?/);
+    expect(payment.plan).toMatch(/idx_billing_events_payment/);
+    const entitlement = await planOf(d1, (db) => db.entitlementByProviderRef('stripe', 'sub_1'));
+    expect(entitlement.sql).toMatch(/FROM entitlements WHERE provider = \? AND provider_ref = \?/);
+    expect(entitlement.plan).toMatch(/idx_entitlements_provider_ref/);
     d1.close();
   });
 
