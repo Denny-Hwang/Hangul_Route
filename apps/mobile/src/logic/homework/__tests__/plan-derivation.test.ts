@@ -237,3 +237,78 @@ describe('reconcile (F-PLAN-002 section 3.6 rule 2)', () => {
     expect(result).toMatchObject({ redated: 1, completedNow: 1, changed: true });
   });
 });
+
+describe('quest access (F-ENT-003 section 3.6: a closed item is treated like a stage-locked one)', () => {
+  const closed = (...ids: string[]) => {
+    const shut = new Set(ids);
+    return (questId: string): boolean => !shut.has(questId);
+  };
+  const dated = (dates: Record<string, string>): InboxPlan['items'] =>
+    Object.entries(dates).map(([id, targetDate]) => ({ kind: 'quest' as const, id, targetDate }));
+
+  it('omitted: every item derives as before', () => {
+    const p = plan({ items: [{ kind: 'episode', id: 'episode:s1' }, { kind: 'quest', id: 'quest:d' }] });
+    expect(derive([p], snap(), { isQuestOpen: undefined })).toEqual(derive([p], snap()));
+    expect(derive([p], snap(), { isQuestOpen: () => true })).toEqual(derive([p], snap()));
+  });
+
+  it('a closed quest item is not derived and is counted not ready for its source', () => {
+    const p = plan({ items: dated({ 'quest:a': '2026-09-22', 'quest:b': '2026-09-23' }) });
+    const result = derive([p], snap(), { isQuestOpen: closed('quest:b') });
+    expect(result.homework.map((h) => h.id)).toEqual(['plan:w3#quest:a']);
+    expect(result.notReady).toEqual({ 'plan:w3': 1 });
+    expect(result).toMatchObject({ added: 1, changed: true });
+  });
+
+  it('an episode item counts each closed quest once, per source', () => {
+    const route = selfRoute({ items: [{ kind: 'episode', id: 'episode:s3' }] });
+    const result = derive([plan({ items: [{ kind: 'episode', id: 'episode:s3' }] })], snap({ selfRoute: route }), { isQuestOpen: closed('quest:d', 'quest:e') });
+    expect(result.homework).toEqual([]);
+    expect(result.notReady).toEqual({ 'plan:w3': 2, 'route:mine': 2 });
+  });
+
+  it('closed and stage-locked items add up in one count', () => {
+    const p = plan({ items: dated({ 'quest:a': '2026-09-22', 'quest:c': '2026-09-23', 'quest:d': '2026-09-24' }) });
+    const result = derive([p], snap(), { isQuestOpen: closed('quest:d') });
+    expect(result.homework.map((h) => h.id)).toEqual(['plan:w3#quest:a']);
+    expect(result.notReady).toEqual({ 'plan:w3': 2 }); // quest:c stage 2, quest:d closed
+  });
+
+  it('reconcile removes a pending assignment whose quest became closed', () => {
+    const p = plan({ items: dated({ 'quest:a': '2026-09-22', 'quest:d': '2026-09-23' }) });
+    const first = derive([p], snap());
+    expect(first.homework).toHaveLength(2);
+    const result = derive([p], snap({ homework: first.homework }), { isQuestOpen: closed('quest:d') });
+    expect(result.homework.map((h) => h.id)).toEqual(['plan:w3#quest:a']);
+    expect(result).toMatchObject({ removed: 1, added: 0, changed: true, notReady: { 'plan:w3': 1 } });
+  });
+
+  it('never touches a finished assignment, even when its quest reads closed', () => {
+    const p = plan({ items: dated({ 'quest:d': '2026-09-23' }) });
+    const finished = derive([p], snap()).homework.map((h) => ({ ...h, completedAt: '2026-09-23T10:00:00.000Z' }));
+    const result = derive([p], snap({ homework: finished }), { isQuestOpen: closed('quest:d') });
+    expect(result.homework).toEqual(finished);
+    expect(result).toMatchObject({ removed: 0, changed: false });
+  });
+
+  it('caregiver homework is left as it is', () => {
+    const parent: HomeworkAssignment = { id: 'hw:parent-1', profileId: 'profile:a', questId: 'quest:d', episodeId: 'episode:s3', assignedBy: 'parent', assignedAt: 't', targetDate: '2026-09-21' };
+    const result = derive([], snap({ homework: [parent] }), { isQuestOpen: closed('quest:d') });
+    expect(result.homework).toEqual([parent]);
+    expect(result.changed).toBe(false);
+  });
+
+  it('the next derivation after the learner gets a plan adds the item back', () => {
+    const p = plan({ items: dated({ 'quest:a': '2026-09-22', 'quest:d': '2026-09-23' }) });
+    const free = derive([p], snap(), { isQuestOpen: closed('quest:d') });
+    const premium = derive([p], snap({ homework: free.homework }), { isQuestOpen: () => true });
+    expect(premium.homework.map((h) => h.id)).toEqual(['plan:w3#quest:a', 'plan:w3#quest:d']);
+    expect(premium).toMatchObject({ added: 1, removed: 0, notReady: {}, changed: true });
+  });
+
+  it('a closed item beyond a curriculum horizon is not counted yet', () => {
+    const p = plan({ items: dated({ 'quest:a': '2026-09-22', 'quest:d': '2026-12-01' }), meta: curriculumMeta() });
+    const result = derive([p], snap(), { isQuestOpen: closed('quest:d') });
+    expect(result.notReady).toEqual({});
+  });
+});

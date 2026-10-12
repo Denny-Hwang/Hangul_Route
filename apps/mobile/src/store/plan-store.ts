@@ -5,7 +5,7 @@ import { isStageEntitled } from '../logic/entitlement';
 import { dayKey } from '../logic/homework/mission-builder';
 import { deriveAssignments, planIdOf, sourcesOf, type DeriveResult } from '../logic/homework/plan-derivation';
 import { readJson, writeJson } from '../platform/storage';
-import { accessTier } from './tier-store';
+import { accessTier, questOpenFor } from './tier-store';
 import { useProfileStore } from './profile-store';
 import { useProgressStore } from './progress-store';
 
@@ -61,6 +61,8 @@ function deriveFor(learnerId: string, plans: readonly InboxPlan[], snapshot: Pro
     unlockedStages: unlockedStagesFor(now, learnerId),
     today: dayKey(now.toISOString()),
     learnerName: profile?.displayName ?? 'Your learner',
+    // The same access tier as the stages above, plus the switch and the kept quests (F-ENT-003 section 3.6).
+    isQuestOpen: questOpenFor(learnerId, now),
   });
 }
 
