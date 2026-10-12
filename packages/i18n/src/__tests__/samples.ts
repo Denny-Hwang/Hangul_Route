@@ -560,6 +560,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.notes.answer': [['Thank you']],
   'a11y.notes.reactionPicked': [['Thank you']],
   'a11y.notes.questCard': [['Meet g, n, d, l']],
+  'a11y.access.notOpen': [['Lunch Box Words'], ['Around the Korean Table']],
   'caregiver.notes.row.title': [['Mina']],
   'caregiver.notes.title': [['Mina']],
   'caregiver.notes.empty': [['Mina']],
