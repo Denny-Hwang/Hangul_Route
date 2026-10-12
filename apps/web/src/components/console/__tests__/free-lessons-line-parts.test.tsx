@@ -32,7 +32,7 @@ describe('FreeLessonsLine on a roster card', () => {
         role: 'owner',
         coverage: 'uncovered',
         spaceKind: 'class',
-        learner: { id: 'l:1', displayName: 'Mina', summary: { planProgress: { 'plan:1': { done: 1, total: 1, notReady: 3 } } } as never },
+        learner: { id: 'l:1', displayName: 'Mina', summary: { planProgress: { 'plan:1': { done: 1, total: 1, notReady: 3 } } } as never, lastSyncedAt: '2026-10-18T09:00:00.000Z' },
         today: '2026-10-18',
         plans: [
           {
@@ -63,6 +63,10 @@ describe('FreeLessonsLine on a roster card', () => {
     expect(html).toContain(words.planWaiting('Mina', 3, words.product.class).replace(/&/g, '&amp;'));
     expect(html).toMatch(new RegExp(`<a [^>]*href="/teach/billing"[^>]*>${words.openBilling.cta.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}</a>`));
     expectAllPseudo(html, ['Mina'], 2);
+    // The link is described by its own line, so several cards never list identical links without context.
+    const id = /<p id="([^"]+)"/.exec(html)?.[1];
+    expect(id).toBeTruthy();
+    expect(html).toContain(`aria-describedby="${id}"`);
   });
 
   it('renders nothing without a line', () => {

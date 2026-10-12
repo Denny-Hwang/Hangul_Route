@@ -15,7 +15,8 @@ import type { Catalog } from './schema';
  * - `plan-waiting`: the learner did every item of a plan of this space that is open on the free
  *   plan, and the plan holds lessons that open with a paid plan (console: `planProgress[planId]`
  *   has `done === total > 0` and `notReady > 0`, and `planFreeFacts` finds closed lessons in the
- *   plan and no open item still ahead of the derivation horizon). `notReady` alone also counts
+ *   plan, no open item still ahead of the derivation horizon, and no more closed lessons inside
+ *   the horizon than the device skipped: `notReady >= closedInHorizon`). `notReady` alone also counts
  *   items that are not released yet or unknown, and a curriculum derives only up to its horizon,
  *   so the plan's own items decide the count. The console never guesses beyond this.
  * - `free-plan`: the neutral line, only where the host asks for it (the F-REPORT-001 report's
@@ -33,6 +34,13 @@ export type FreeLessonsLine =
 export interface PlanFreeFacts {
   /** The plan's distinct lessons that open with a paid plan: grid lessons past the free stages. A coming-soon or unknown item is not one. */
   closed: number;
+  /**
+   * The closed lessons the device derives: those of items not dated after the horizon. For a
+   * free learner each one bumps `notReady` at least once, so `notReady >= closedInHorizon`; a
+   * learner who has them open (premium through another space, or kept after finishing them)
+   * reports fewer, and the line stays away.
+   */
+  closedInHorizon: number;
   /** An item that is open on the free plan is dated after the derivation horizon: the device has not derived it yet, so the learner has not done everything open. */
   openAhead: boolean;
 }
@@ -65,9 +73,12 @@ export interface FreeLessonsLineInput {
   neutral?: boolean;
 }
 
-/** The learner did every open item of the plan the device derived, nothing open is still ahead, and closed lessons remain. */
+/**
+ * The learner did every open item of the plan the device derived, nothing open is still ahead,
+ * closed lessons remain, and the device really skipped them (`notReady >= closedInHorizon`).
+ */
 const waiting = (plan: FreeLessonsPlanCounts): boolean =>
-  plan.total > 0 && plan.done === plan.total && plan.notReady > 0 && plan.closed > 0 && !plan.openAhead;
+  plan.total > 0 && plan.done === plan.total && plan.notReady > 0 && plan.closed > 0 && !plan.openAhead && plan.notReady >= plan.closedInHorizon;
 
 export function freeLessonsLine(input: FreeLessonsLineInput): FreeLessonsLine {
   if (!input.gating || !input.owner || input.covered !== false) return null;
@@ -92,13 +103,16 @@ export function planFreeFacts(items: readonly PlanItem[], catalog: Catalog, hori
   const stories = new Set(catalog.quests.filter((quest) => quest.kind === 'story').map((quest) => quest.id));
   const questsOf = (item: PlanItem): readonly string[] => (item.kind === 'quest' ? [item.id] : (catalog.cells.find((cell) => cell.episodeId === item.id)?.questIds ?? []));
   const closed = new Set<string>();
+  const closedInHorizon = new Set<string>();
   let openAhead = false;
   for (const item of items) {
     const ahead = horizonEnd !== null && item.targetDate !== undefined && item.targetDate > horizonEnd;
     for (const questId of questsOf(item)) {
-      if (grid.has(questId) && !free.has(questId)) closed.add(questId);
-      else if (ahead && (free.has(questId) || stories.has(questId))) openAhead = true;
+      if (grid.has(questId) && !free.has(questId)) {
+        closed.add(questId);
+        if (!ahead) closedInHorizon.add(questId);
+      } else if (ahead && (free.has(questId) || stories.has(questId))) openAhead = true;
     }
   }
-  return { closed: closed.size, openAhead };
+  return { closed: closed.size, closedInHorizon: closedInHorizon.size, openAhead };
 }

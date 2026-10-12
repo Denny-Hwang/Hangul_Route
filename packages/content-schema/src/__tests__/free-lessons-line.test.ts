@@ -11,7 +11,14 @@ import { CATALOG_2026_10 } from './fixtures/catalog-2026-10';
  * It shows only with the switch on, to the space owner, for a space no plan covers.
  */
 const base: FreeLessonsLineInput = { gating: true, owner: true, covered: false, spaceKind: 'class' };
-const counts = (done: number, total: number, notReady: number, closed = notReady, openAhead = false): FreeLessonsPlanCounts => ({ done, total, notReady, closed, openAhead });
+const counts = (done: number, total: number, notReady: number, closed = notReady, openAhead = false, closedInHorizon = Math.min(closed, notReady)): FreeLessonsPlanCounts => ({
+  done,
+  total,
+  notReady,
+  closed,
+  closedInHorizon,
+  openAhead,
+});
 
 describe('freeLessonsLine: when it shows at all', () => {
   it('is null with the switch off, for a viewer who does not own the space, and for a covered space', () => {
@@ -64,6 +71,17 @@ describe('freeLessonsLine: the codes and their thresholds', () => {
     expect(freeLessonsLine({ ...base, plans: [counts(0, 0, 2)] })).toBeNull();
   });
 
+  it('plan-waiting: never when the device skipped fewer items than the closed lessons it derived (they are open for this learner)', () => {
+    // Premium through another space, or kept after finishing them: the Stage 2 lessons were open and done, one unreleased item was skipped.
+    expect(freeLessonsLine({ ...base, plans: [counts(8, 8, 1, 3, false, 3)] })).toBeNull();
+    expect(freeLessonsLine({ ...base, plans: [counts(8, 8, 2, 3, false, 3)] })).toBeNull();
+    // A free learner: every closed lesson inside the horizon was skipped at least once.
+    expect(freeLessonsLine({ ...base, plans: [counts(8, 8, 3, 3, false, 3)] })).toEqual({ code: 'plan-waiting', product: 'class', closed: 3 });
+    expect(freeLessonsLine({ ...base, plans: [counts(8, 8, 4, 3, false, 3)] })).toEqual({ code: 'plan-waiting', product: 'class', closed: 3 });
+    // Closed lessons dated past the horizon are not derived yet, so they are not expected in notReady.
+    expect(freeLessonsLine({ ...base, plans: [counts(8, 8, 1, 3, false, 1)] })).toEqual({ code: 'plan-waiting', product: 'class', closed: 3 });
+  });
+
   it('plan-waiting: the first plan that qualifies, in the order the host passes them', () => {
     expect(freeLessonsLine({ ...base, plans: [counts(2, 5, 1), counts(3, 3, 4, 4, true), counts(3, 3, 4), counts(6, 6, 2)] })).toEqual({ code: 'plan-waiting', product: 'class', closed: 4 });
   });
@@ -106,29 +124,35 @@ describe('planFreeFacts: what a plan\'s own items say about the free plan', () =
 
   it('counts distinct grid lessons past Stage 1, from quest and episode items', () => {
     const items = [quest('quest:stage1-letters-q1'), quest('quest:stage2-life-q1'), episode('episode:stage2-life'), episode('episode:stage2-nature'), quest('quest:stage4-rites-q1')];
-    expect(planFreeFacts(items, CATALOG, null)).toEqual({ closed: 3, openAhead: false });
+    expect(planFreeFacts(items, CATALOG, null)).toEqual({ closed: 3, closedInHorizon: 3, openAhead: false });
   });
 
   it('never counts a coming-soon episode, a story, an unknown id or a free lesson', () => {
     const items = [episode('episode:stage2-letters'), episode('episode:stage3-life'), episode('episode:nowhere'), quest(story), quest('quest:unknown'), episode('episode:stage1-letters')];
-    expect(planFreeFacts(items, CATALOG, null)).toEqual({ closed: 0, openAhead: false });
+    expect(planFreeFacts(items, CATALOG, null)).toEqual({ closed: 0, closedInHorizon: 0, openAhead: false });
   });
 
   it('finds an open item dated after the horizon of a curriculum; a classic plan has none', () => {
     const later = [quest('quest:stage1-letters-q1', '2026-10-20'), quest('quest:stage1-crafts-q1', '2026-11-30'), quest('quest:stage2-life-q1', '2026-12-30')];
-    expect(planFreeFacts(later, CATALOG, '2026-10-25')).toEqual({ closed: 1, openAhead: true });
-    expect(planFreeFacts(later, CATALOG, null)).toEqual({ closed: 1, openAhead: false });
+    expect(planFreeFacts(later, CATALOG, '2026-10-25')).toEqual({ closed: 1, closedInHorizon: 0, openAhead: true });
+    expect(planFreeFacts(later, CATALOG, null)).toEqual({ closed: 1, closedInHorizon: 1, openAhead: false });
     // A free lesson inside the horizon, a closed lesson or a coming-soon episode after it, or an undated item, is not open ahead.
-    expect(planFreeFacts([quest('quest:stage1-letters-q1', '2026-10-25'), quest('quest:stage2-life-q1', '2026-12-30'), episode('episode:stage3-life', '2026-12-30'), quest('quest:stage1-life-q1')], CATALOG, '2026-10-25')).toEqual({ closed: 1, openAhead: false });
+    expect(planFreeFacts([quest('quest:stage1-letters-q1', '2026-10-25'), quest('quest:stage2-life-q1', '2026-12-30'), episode('episode:stage3-life', '2026-12-30'), quest('quest:stage1-life-q1')], CATALOG, '2026-10-25')).toEqual({ closed: 1, closedInHorizon: 0, openAhead: false });
     expect(planFreeFacts([episode('episode:stage1-life', '2026-11-30')], CATALOG, '2026-10-25').openAhead).toBe(true);
     expect(planFreeFacts([quest(story, '2026-11-30')], CATALOG, '2026-10-25').openAhead).toBe(true);
   });
 
+  it('counts the closed lessons inside the horizon once each, from quest and episode items alike', () => {
+    const items = [quest('quest:stage2-life-q1', '2026-10-20'), episode('episode:stage2-life', '2026-10-21'), quest('quest:stage4-rites-q1'), quest('quest:stage2-nature-q1', '2026-11-30')];
+    const life = CATALOG.cells.find((cell) => cell.episodeId === 'episode:stage2-life')?.questIds.length ?? 0;
+    expect(planFreeFacts(items, CATALOG, '2026-10-25')).toEqual({ closed: life + 2, closedInHorizon: life + 1, openAhead: false });
+  });
+
   it('follows the stages it is given and the catalogue it reads (Stage 1 complete on the frozen October catalogue)', () => {
     const items = [episode('episode:stage1-nature'), episode('episode:stage2-life')];
-    expect(planFreeFacts(items, CATALOG_2026_10, null)).toEqual({ closed: 1, openAhead: false });
-    expect(planFreeFacts(items, CATALOG_2026_10, null, ['stage1', 'stage2'])).toEqual({ closed: 0, openAhead: false });
+    expect(planFreeFacts(items, CATALOG_2026_10, null)).toEqual({ closed: 1, closedInHorizon: 1, openAhead: false });
+    expect(planFreeFacts(items, CATALOG_2026_10, null, ['stage1', 'stage2'])).toEqual({ closed: 0, closedInHorizon: 0, openAhead: false });
     const empty: Catalog = { ...CATALOG, cells: [] };
-    expect(planFreeFacts(items, empty, null)).toEqual({ closed: 0, openAhead: false });
+    expect(planFreeFacts(items, empty, null)).toEqual({ closed: 0, closedInHorizon: 0, openAhead: false });
   });
 });

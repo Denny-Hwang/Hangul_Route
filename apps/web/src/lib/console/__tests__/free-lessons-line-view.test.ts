@@ -2,7 +2,7 @@ import { CATALOG, type CurriculumMeta, type PlanItem } from '@hangul-route/conte
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import type { PlanView, RosterLearner } from '../api';
-import { rosterFreeLessonsLine, type RosterFreeLineInput } from '../free-lessons-line-view';
+import { horizonAnchor, rosterFreeLessonsLine, type RosterFreeLineInput } from '../free-lessons-line-view';
 import { livePublished } from '../plans';
 import { ROUTES } from '../routing';
 
@@ -36,10 +36,12 @@ const plan = (id: string, over: Partial<PlanView> = {}): PlanView => ({
 });
 
 type Progress = Record<string, { done: number; total: number; notReady: number }>;
-const learner = (planProgress: Progress | null): Pick<RosterLearner, 'id' | 'displayName' | 'summary'> => ({
+/** A learner whose device last derived and synced on `day` (the summary's `lastActiveAt` and the row's `lastSyncedAt`). */
+const learner = (planProgress: Progress | null, day: string | null = TODAY, synced: string | null = day): Pick<RosterLearner, 'id' | 'displayName' | 'summary' | 'lastSyncedAt'> => ({
   id: 'l:1',
   displayName: 'Mina',
-  summary: planProgress === null ? null : ({ planProgress } as unknown as RosterLearner['summary']),
+  summary: planProgress === null ? null : ({ planProgress, ...(day ? { lastActiveAt: `${day}T10:00:00.000Z` } : {}) } as unknown as RosterLearner['summary']),
+  lastSyncedAt: synced ? `${synced}T10:05:00.000Z` : null,
 });
 
 const input = (over: Partial<RosterFreeLineInput> = {}): RosterFreeLineInput => ({
@@ -93,8 +95,40 @@ describe('rosterFreeLessonsLine: the plan-waiting line on a roster card', () => 
     const meta = { horizonDays: 7 } as unknown as CurriculumMeta;
     const ahead = plan('plan:1', { meta, items: [quest('quest:stage1-letters-q1', '2026-10-20'), quest('quest:stage2-life-q1', '2026-10-22'), quest('quest:stage1-life-q1', '2026-11-20')] });
     expect(rosterFreeLessonsLine(input({ plans: [ahead], learner: learner({ 'plan:1': { done: 1, total: 1, notReady: 1 } }) }), 'en')).toBeNull();
-    // The same plan once the last open lesson is inside the horizon (today + 7 days).
-    expect(rosterFreeLessonsLine(input({ plans: [ahead], today: '2026-11-14', learner: learner({ 'plan:1': { done: 2, total: 2, notReady: 1 } }) }), 'en')?.text).toBe(words.planWaiting('Mina', 1, words.product.class));
+    // The same plan once the last open lesson is inside the horizon (the device's day - 1 + 7 days).
+    expect(rosterFreeLessonsLine(input({ plans: [ahead], today: '2026-11-14', learner: learner({ 'plan:1': { done: 2, total: 2, notReady: 1 } }, '2026-11-14') }), 'en')?.text).toBe(
+      words.planWaiting('Mina', 1, words.product.class),
+    );
+  });
+
+  it('measures a curriculum\'s horizon from the device\'s last derivation, not the console\'s today (a stale summary never shows the line)', () => {
+    const meta = { horizonDays: 7 } as unknown as CurriculumMeta;
+    // Synced on Oct 10 with everything derived done; an open Stage 1 lesson dated Oct 19 was past that device's horizon.
+    const stale = plan('plan:1', { meta, items: [quest('quest:stage1-letters-q1', '2026-10-08'), quest('quest:stage2-life-q1', '2026-10-09'), quest('quest:stage1-life-q1', '2026-10-19')] });
+    const row = { 'plan:1': { done: 1, total: 1, notReady: 1 } };
+    expect(rosterFreeLessonsLine(input({ plans: [stale], today: '2026-10-15', learner: learner(row, '2026-10-10') }), 'en')).toBeNull();
+    // Three weeks stale, an open lesson dated today + 3: still nothing.
+    expect(rosterFreeLessonsLine(input({ plans: [stale], today: '2026-10-31', learner: learner(row, '2026-10-10') }), 'en')).toBeNull();
+    // A fresh sync on Oct 15 derived through Oct 21 (one day of slack): the Oct 19 lesson was derived, so the counts say it is done.
+    expect(rosterFreeLessonsLine(input({ plans: [stale], today: '2026-10-15', learner: learner({ 'plan:1': { done: 2, total: 2, notReady: 1 } }, '2026-10-15') }), 'en')?.text).toBe(
+      words.planWaiting('Mina', 1, words.product.class),
+    );
+    // A sync later than the last activity: the earlier date wins.
+    expect(rosterFreeLessonsLine(input({ plans: [stale], today: '2026-10-15', learner: learner(row, '2026-10-10', '2026-10-15') }), 'en')).toBeNull();
+  });
+
+  it('shows no curriculum line without a known derivation day; a classic plan needs none', () => {
+    const meta = { horizonDays: 7 } as unknown as CurriculumMeta;
+    const row = { 'plan:1': { done: 2, total: 2, notReady: 3 } };
+    expect(rosterFreeLessonsLine(input({ plans: [plan('plan:1', { meta })], learner: learner(row, null) }), 'en')).toBeNull();
+    expect(rosterFreeLessonsLine(input({ plans: [plan('plan:1')], learner: learner(row, null) }), 'en')).not.toBeNull();
+  });
+
+  it('never shows when the device skipped fewer items than the closed lessons it derived (they were open for this learner)', () => {
+    // Premium through another space: the three closed lessons were open and done; one unreleased episode was skipped.
+    const withSoon = plan('plan:1', { items: [...ITEMS, { kind: 'episode', id: 'episode:stage2-letters' }] });
+    expect(rosterFreeLessonsLine(input({ plans: [withSoon], learner: learner({ 'plan:1': { done: 5, total: 5, notReady: 1 } }) }), 'en')).toBeNull();
+    expect(rosterFreeLessonsLine(input({ plans: [withSoon], learner: learner({ 'plan:1': { done: 2, total: 2, notReady: 4 } }) }), 'en')?.text).toBe(words.planWaiting('Mina', 3, words.product.class));
   });
 
   it('shows nothing for a learner who has not synced, or a plan the device has not reported yet', () => {
@@ -124,6 +158,16 @@ describe('rosterFreeLessonsLine: the plan-waiting line on a roster card', () => 
     ]);
     expect(plans.map((p) => p.id)).toEqual(['plan:open', 'plan:new', 'plan:old']);
     expect(rosterFreeLessonsLine(input({ learner: progress, plans }), 'en')?.text).toBe(words.planWaiting('Mina', 3, words.product.class));
+  });
+
+  it('horizonAnchor: the earliest of today, the last activity and the last sync, one day earlier; null without either date', () => {
+    expect(horizonAnchor({ today: '2026-10-18', learner: learner({}, '2026-10-10', '2026-10-12') })).toBe('2026-10-09');
+    expect(horizonAnchor({ today: '2026-10-18', learner: learner({}, '2026-10-12', '2026-10-10') })).toBe('2026-10-09');
+    expect(horizonAnchor({ today: '2026-10-18', learner: learner({}, null, '2026-10-12') })).toBe('2026-10-11');
+    // A clock ahead on the device never moves the start past the console's today.
+    expect(horizonAnchor({ today: '2026-10-18', learner: learner({}, '2026-10-25') })).toBe('2026-10-17');
+    expect(horizonAnchor({ today: '2026-10-18', learner: learner(null, null) })).toBeNull();
+    expect(horizonAnchor({ today: '2026-10-18', learner: { ...learner({}, null), summary: { lastActiveAt: 'not a date' } as unknown as RosterLearner['summary'] } })).toBeNull();
   });
 
   it('reads the catalogue it is given', () => {
