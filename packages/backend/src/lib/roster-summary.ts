@@ -85,8 +85,12 @@ const withoutWords = (row: Plain): Plain => (WORDS_HIDDEN ? { ...row, w: 0 } : r
  *   `activity.tz`) and months up to and including the join month are dropped;
  *   `total` keeps its lifetime counts (they match the roster) but `since`, the
  *   first practice day, becomes null; `next.end` (the free plan is done) is
- *   dropped, because a family's plan is not a teacher's business. Without a
- *   usable `joinedAt` nothing is provably after joining, so no history is kept.
+ *   dropped, because a family's plan is not a teacher's business, and
+ *   `next.plan` is always false: the flag cannot tell the class's own plan from
+ *   a family plan or the learner's self-route (F-PLAN-002 section 3.10), so a
+ *   teacher reads the app's next quest but never whether a plan chose it.
+ *   Without a usable `joinedAt` nothing is provably after joining, so no
+ *   history is kept.
  */
 export function activityOf(value: Plain, viewer: ActivityViewer): ActivitySummary {
   const out: Plain = pick(value, ACTIVITY_KEYS);
@@ -109,7 +113,8 @@ export function activityOf(value: Plain, viewer: ActivityViewer): ActivitySummar
   out.months = months;
   if (total) out.total = family ? total : { ...total, since: null };
   out.milestones = milestones;
-  if (next && (family || next.end !== true)) out.next = next;
+  if (next && family) out.next = next;
+  else if (next && next.end !== true) out.next = { ...next, plan: false };
   if (value.revisit !== undefined) out.revisit = value.revisit;
   // Stored summaries were validated by ActivitySummarySchema on write (routes/sync.ts); this only removes and narrows.
   return out as ActivitySummary;

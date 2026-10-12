@@ -193,10 +193,11 @@ describe('activityOf and summary.activity on the roster (F-REPORT-001 section 3.
   });
 
   it('zeroes every word count while vocab is on the hidden list (the coupling with F-VOC-005 P-4)', () => {
+    // F-VOC-005 P-4 moves vocab to the visible list: this guard fails first, and P-4 rewrites this test
     expect(wordsHidden).toBe(true);
     for (const kind of ['family', 'class', 'school'] as const) {
       const out = activityOf(activity, { kind, joinedAt });
-      for (const row of [...out.days, ...out.months, out.total]) expect(row.w).toBe(wordsHidden ? 0 : 7);
+      for (const row of [...out.days, ...out.months, out.total]) expect(row.w).toBe(0);
     }
   });
 
@@ -208,7 +209,8 @@ describe('activityOf and summary.activity on the roster (F-REPORT-001 section 3.
       expect(out.months).toEqual([]);
       // lifetime counts stay (they match the roster's totals); the first practice day may be before joining
       expect(out.total).toEqual({ ...zeroW(activity.total), since: null });
-      expect(out.next).toEqual(activity.next);
+      // the app's next quest stays, but never whether a plan chose it (a family plan or a self-route is family-only)
+      expect(out.next).toEqual({ q: 'letters-q3', plan: false });
       expect(out.revisit).toBe('letters-q2');
       expect(out).toMatchObject({ v: 1, tz: 540, asOf: '2026-10-12' });
       expect(ActivitySummarySchema.safeParse(out).success).toBe(true);
@@ -230,6 +232,15 @@ describe('activityOf and summary.activity on the roster (F-REPORT-001 section 3.
     const out = activityOf(activity, { kind: 'class', joinedAt: '2026-09-15T00:00:00.000Z' });
     expect(out.days.map((d) => d.d)).toEqual(['2026-09-20', '2026-10-03', '2026-10-10', '2026-10-12']);
     expect(out.months.map((m) => m.m)).toEqual(['2026-10']);
+  });
+
+  it('never tells a class or a school whether a plan chose the next quest; a family reads the flag as sent', () => {
+    for (const plan of [true, false]) {
+      const withPlan = { ...activity, next: { q: 'letters-q3', plan } };
+      expect(activityOf(withPlan, { kind: 'class', joinedAt }).next).toEqual({ q: 'letters-q3', plan: false });
+      expect(activityOf(withPlan, { kind: 'school', joinedAt }).next).toEqual({ q: 'letters-q3', plan: false });
+      expect(activityOf(withPlan, { kind: 'family', joinedAt }).next).toEqual({ q: 'letters-q3', plan });
+    }
   });
 
   it('drops next.end for a class or a school (a family plan is not a teacher\'s business), keeps it for a family', () => {
