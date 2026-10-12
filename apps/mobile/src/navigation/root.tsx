@@ -2,6 +2,7 @@ import { Screen } from '@hangul-route/design-system';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import { useProfileStore } from '../store/profile-store';
+import { BootIntentHook } from './boot-intent';
 import { MainTabs } from './tabs';
 import type { RootStackParamList } from './types';
 import { CardDetailScreen } from '../screens/library/CardDetailScreen';
@@ -85,6 +86,8 @@ export function RootNavigator(): React.ReactElement {
         <Stack.Screen name="PlacementReport" component={PlacementReportScreen} />
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="VocabQuestionE2e" component={VocabQuestionE2eScreen} /> : null}
       </Stack.Navigator>
+      {/* After the stack, so the navigator is registered when the boot intent opens the PIN screen (F-APP-001 section 3.9). */}
+      <BootIntentHook />
     </>
   );
 }

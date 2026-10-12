@@ -13,13 +13,20 @@ import {
   useLayoutClass,
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PIN_PAD_GAP, PinPad } from '../../components/PinPad';
-import { useMessages } from '../../i18n/use-messages';
+import { useLocale, useMessages } from '../../i18n/use-messages';
 import { pinCreated, pinResetCompleted } from '../../logic/onboarding/onboarding-events';
-import { initialPinMode, pinCreatedWhere, showForgotPin, type PinMode } from '../../logic/profiles/pin-flow';
+import {
+  GROWN_UP_AREA,
+  grownUpAreaNoPin,
+  initialPinMode,
+  pinCreatedWhere,
+  showForgotPin,
+  type PinMode,
+} from '../../logic/profiles/pin-flow';
 import {
   PIN_LENGTH,
   attemptsRemaining,
@@ -30,6 +37,7 @@ import {
 import { pinKeyMax, pinPadBudget, pinPadFirstWidth, pinPadLayout } from '../../logic/profiles/pin-pad-layout';
 import type { RootStackParamList } from '../../navigation/types';
 import { pinHasher } from '../../platform/crypto';
+import { clearGrownUpTab, continueToGrownUpPage, openGrownUpArea } from '../../platform/grown-up-handoff';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
 import { useAudience } from '../../store/audience';
@@ -42,6 +50,12 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
  * and §10 (interim: the first entry creates the family PIN because
  * parent-first onboarding has not shipped yet). Replaces the v1.0 math gate
  * (10-app-map §7 #1). Digits are never echoed as text — dots only (§3.5).
+ *
+ * Destination `GrownUpArea` (F-APP-001 section 3.9, web only; wireframe
+ * `parent/grown-up-home-card.md` Panel D and `shell/grown-up-lock.md`): verify only, no Forgot
+ * PIN, never a new PIN. A correct PIN hands off to the grown-up page in this tab
+ * (`openGrownUpArea`); with no PIN stored the screen shows one line and Continue to the page
+ * without an unlock. Leaving it (Cancel, Close) removes any grown-up unlock from this tab.
  */
 
 const DOT_SIZE = 20;
@@ -65,6 +79,12 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const messages = useMessages();
   const m = messages.caregiver.pin;
   const openParentGate = useUiStore((s) => s.openParentGate);
+  const markPinVerified = useUiStore((s) => s.markPinVerified);
+  const locale = useLocale();
+  const forGrownUpArea = route.params.next === GROWN_UP_AREA;
+  const noPin = grownUpAreaNoPin(route.params, storedHash);
+  // Set once the hand-off left for the grown-up page, so closing this screen keeps the new unlock.
+  const handedOff = useRef(false);
 
   const [mode, setMode] = useState<PinMode>(() => initialPinMode(route.params, storedHash));
   const [entry, setEntry] = useState('');
@@ -103,6 +123,21 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, [locked]);
+
+  /** Cancel and Close; for the grown-up area an abandoned PIN path leaves no unlock in this tab. */
+  const leave = (): void => {
+    if (forGrownUpArea && !handedOff.current) clearGrownUpTab();
+    navigation.goBack();
+  };
+
+  const handOff = async (): Promise<void> => {
+    const { url, grownUpVia } = route.params;
+    const result = await openGrownUpArea({ via: grownUpVia ?? 'lock', ...(url === undefined ? {} : { target: url }) });
+    if (result !== 'opened') return;
+    handedOff.current = true;
+    // The tab is leaving; a return through the back/forward cache lands on the start screen.
+    navigation.goBack();
+  };
 
   const proceed = (): void => {
     openParentGate();
@@ -176,7 +211,10 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       if (result.ok) {
         // Remembering the PIN settles a pending Forgot PIN wait (F-LEARN-001 §3.5).
         if (pinResetRequestedAt !== null) clearPinResetRequest();
-        proceed();
+        // A PIN entered now counts for the grown-up hand-off for 2 minutes (F-APP-001 section 3.9).
+        markPinVerified();
+        if (forGrownUpArea) await handOff();
+        else proceed();
         return;
       }
       setNow(Date.now());
@@ -202,20 +240,54 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
 
   const hintText = locked ? m.cooldown(Math.ceil(cooldownMs / 1000)) : hint;
 
+  const closeButton = (
+    <Pressable
+      onPress={leave}
+      accessibilityRole="button"
+      accessibilityLabel={messages.common.buttons.close}
+      hitSlop={spacing.md}
+      style={{ paddingTop: spacing.xxs }}
+    >
+      <Icon name="close" size={28} />
+    </Pressable>
+  );
+
+  if (noPin) {
+    // F-APP-001 section 3.9: the grown-up area never creates a PIN here; the grown-up signs in instead.
+    const g = messages.caregiver.grownUpHome;
+    return (
+      <Screen tone="canvas">
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md }}>
+          {closeButton}
+          <View style={{ flex: 1 }}>
+            <Heading level="title">{copy.pinVerifyTitle}</Heading>
+          </View>
+        </View>
+        <Spacer size="xs" />
+        <Body tone="secondary">{g.noPin}</Body>
+        <Spacer size="lg" />
+        <Button
+          label={g.continue.cta}
+          tone="primary"
+          size="lg"
+          fullWidth
+          onPress={() => {
+            handedOff.current = true;
+            continueToGrownUpPage(route.params.url, locale);
+          }}
+        />
+        <Spacer size="sm" />
+        <Button label={messages.common.buttons.cancel} tone="ghost" size="md" fullWidth onPress={leave} />
+      </Screen>
+    );
+  }
+
   return (
     <Screen tone="canvas">
       {/* Measured: the keypad gets whatever height this block leaves (p1-L1). */}
       <View onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}>
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md }}>
-          <Pressable
-            onPress={() => navigation.goBack()}
-            accessibilityRole="button"
-            accessibilityLabel={messages.common.buttons.close}
-            hitSlop={spacing.md}
-            style={{ paddingTop: spacing.xxs }}
-          >
-            <Icon name="close" size={28} />
-          </Pressable>
+          {closeButton}
           <View style={{ flex: 1 }}>
             <Heading level="title">{title}</Heading>
           </View>
@@ -288,9 +360,9 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
         onPress={() => void submit()}
       />
       <Spacer size="sm" />
-      <Button label={messages.common.buttons.cancel} tone="ghost" size="md" fullWidth onPress={() => navigation.goBack()} />
+      <Button label={messages.common.buttons.cancel} tone="ghost" size="md" fullWidth onPress={leave} />
       {/* Quiet on purpose: plain text, no icon, nothing for a child to gain from poking it. */}
-      {showForgotPin(mode) ? (
+      {showForgotPin(mode, route.params) ? (
         <Button
           label={m.entry.forgot.cta}
           tone="ghost"
