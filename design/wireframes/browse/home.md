@@ -57,7 +57,7 @@ Then: in one glance they know what the page is for, see the whole course in the 
 │                                  │
 │      Let. Life Rites Nat. Crafts │   the learner Journey grid (JourneyGrid), browse state:
 │  S1  [o]  [o]  [o]  [o]  [o]     │   [o] open cell, nothing done, no stars, no sparkle,
-│  S2  [ ]  [o]  [ ]  [o]  [ ]     │   no Next pin, no "In your plan" ring
+│  S2  [ ]  [o]  [ ]  [o]  [ ]     │   no Next triangle, no "In your plan" ring
 │  S4  [ ]  [ ]  [o]  [ ]  [ ]     │   [ ] later (no shipped episode)
 ```
 
