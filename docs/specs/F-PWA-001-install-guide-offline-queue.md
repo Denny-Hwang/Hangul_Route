@@ -50,11 +50,12 @@ The PWA shell (P2) caches the app after one visit, but two gaps remain:
 - **Given** the browser fires `online`, or the app starts, or a later `track()` succeeds,
   **then** the queue is flushed in order; events that fail again stay queued.
 - The queue never throws into a game and never delays the caller (fire-and-forget preserved).
+- Writes never lose queued events (issue #261, review follow-up to #323): every read-modify-write of `telemetry:queue` runs one at a time in the app, and on the web also under the Web Lock `hr:telemetry:queue` when the browser has Web Locks, because PWA tabs share one IndexedDB queue (without Web Locks, two tabs appending at the same instant can still race). Each queued event carries a local `id` (never sent to the API); a flush keeps every stored event whose id it did not read at the start, whichever tab queued it. A failed storage read is not an empty queue: the write is skipped and the next event or flush retries (a skipped end-of-flush write can resend events, never drop them).
 
 ### 3.3 Decision logic is pure
 
 - `logic/pwa/install-guide.ts`: `installGuideVariant(env)` and `shouldShowInstallGuide(state)` are pure and 100 % unit-tested.
-- `logic/telemetry/queue.ts`: `enqueue` / `takeBatch` / `requeue` are pure over arrays.
+- `logic/telemetry/queue.ts`: `enqueue` / `takeBatch` / `requeue` / `arrivedSince` are pure over arrays.
 
 ## 4. Out of scope
 
@@ -71,8 +72,8 @@ The PWA shell (P2) caches the app after one visit, but two gaps remain:
 | File | Coverage |
 |---|---|
 | `logic/pwa/__tests__/install-guide.test.ts` | variant detection per UA / standalone / prompt; show/snooze/installed rules |
-| `logic/telemetry/__tests__/queue.test.ts` | cap, order, batch take/requeue |
-| `platform/__tests__/telemetry.test.ts` | failure → enqueue, flush order, placeholder endpoint sends nothing |
+| `logic/telemetry/__tests__/queue.test.ts` | cap, order, batch take/requeue, arrivedSince |
+| `platform/__tests__/telemetry.test.ts` | failure → enqueue, flush order, placeholder endpoint sends nothing, same-tick and late events kept, another tab's event kept, id not sent, failed read skips the write, Web Lock taken |
 | `store/__tests__/pwa-store.test.ts` | visits increment, snooze window, installed flag persistence |
 | `e2e/web/install-guide.spec.ts` | third open in a browser tab shows the sheet; dismiss snoozes |
 

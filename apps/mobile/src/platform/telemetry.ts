@@ -17,8 +17,8 @@
 
 import type { TelemetryEventName } from '@hangul-route/content-schema';
 import { flags } from '../config/flags';
-import { enqueue, requeue, takeBatch, type QueuedEvent } from '../logic/telemetry/queue';
-import { readJson, writeJson } from './storage';
+import { arrivedSince, enqueue, requeue, takeBatch, type QueuedEvent } from '../logic/telemetry/queue';
+import { readJsonStrict, writeJson } from './storage';
 
 /** The shared list the API whitelists — an event outside it cannot compile. */
 export type { TelemetryEventName };
@@ -36,6 +36,8 @@ export interface TelemetryClientOptions {
 
 const PLACEHOLDER_ENDPOINT = 'https://api.hangulroute.example';
 const QUEUE_KEY = 'telemetry:queue';
+/** Web Locks name shared by every tab of the PWA (they share one IndexedDB queue). */
+const QUEUE_LOCK = 'hr:telemetry:queue';
 
 async function postEvent(
   endpoint: string,
@@ -57,32 +59,57 @@ async function postEvent(
   }
 }
 
+/**
+ * The stored queue. A failed storage read throws (it is not an empty queue),
+ * so the caller's write is skipped instead of overwriting events it could not
+ * see; the next event or flush tries again. Unparsable data counts as empty.
+ */
 async function readQueue(): Promise<QueuedEvent[]> {
-  return (await readJson<QueuedEvent[]>(QUEUE_KEY)) ?? [];
+  const stored = await readJsonStrict<unknown>(QUEUE_KEY);
+  return Array.isArray(stored) ? (stored as QueuedEvent[]) : [];
+}
+
+/** A local event id that stays unique across tabs and sessions (not a secret). */
+function newEventId(): string {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+interface LockManagerLike {
+  request: <T>(name: string, callback: () => Promise<T>) => Promise<T>;
+}
+
+/**
+ * Run `step` under the cross-tab queue lock when the browser has Web Locks,
+ * so PWA tabs (one shared IndexedDB queue) never interleave a
+ * read-modify-write. Native, and browsers without Web Locks, run it directly:
+ * there two tabs appending at the same instant can still race.
+ */
+function withQueueLock<T>(step: () => Promise<T>): Promise<T> {
+  const locks = (globalThis as { navigator?: { locks?: Partial<LockManagerLike> } }).navigator?.locks;
+  if (typeof locks?.request !== 'function') return step();
+  return (locks as LockManagerLike).request(QUEUE_LOCK, step);
 }
 
 /**
  * Every read-modify-write of the stored queue runs one at a time on this
  * chain (issue #261): a Results visit sends several events in one tick, and
- * unchained writers each read the same queue and overwrite each other. A
- * failed step never breaks the chain for the steps after it.
+ * unchained writers each read the same queue and overwrite each other. The
+ * chain covers this JS context; `withQueueLock` extends it across tabs where
+ * the browser allows. A failed step never breaks the chain for the steps
+ * after it.
  */
 let queueTail: Promise<unknown> = Promise.resolve();
 function serialized<T>(step: () => Promise<T>): Promise<T> {
-  const run = queueTail.then(step);
+  const run = queueTail.then(() => withQueueLock(step));
   queueTail = run.catch(() => undefined);
   return run;
 }
-
-/** Events this session has appended to the stored queue; a flush keeps the ones that arrive while it sends. */
-let appended = 0;
 
 async function queueEvent(event: TelemetryEvent, at: string): Promise<void> {
   try {
     await serialized(async () => {
       const current = await readQueue();
-      await writeJson(QUEUE_KEY, enqueue(current, { name: event.name, profileId: event.profileId, payload: event.payload, at }));
-      appended += 1;
+      await writeJson(QUEUE_KEY, enqueue(current, { name: event.name, profileId: event.profileId, payload: event.payload, at, id: newEventId() }));
     });
   } catch {
     // Queueing is best effort — never surface storage errors into a game.
@@ -104,14 +131,15 @@ export async function flushQueue(options?: TelemetryClientOptions): Promise<numb
   flushing = true;
   let sent = 0;
   try {
-    const { queue: start, mark } = await serialized(async () => ({ queue: await readQueue(), mark: appended }));
+    const start = await serialized(readQueue);
     let queue = start;
     while (queue.length > 0) {
       const { batch, rest } = takeBatch(queue);
       let failedAt = -1;
       for (let i = 0; i < batch.length; i += 1) {
         const ev = batch[i] as QueuedEvent;
-        const result = await postEvent(endpoint, fetchImpl, ev);
+        // The local id stays on the device.
+        const result = await postEvent(endpoint, fetchImpl, { name: ev.name, profileId: ev.profileId, payload: ev.payload, at: ev.at });
         if (result === 'ok') sent += 1;
         else if (result === 'retry') {
           failedAt = i;
@@ -127,9 +155,9 @@ export async function flushQueue(options?: TelemetryClientOptions): Promise<numb
     }
     const unsent = queue;
     await serialized(async () => {
-      // Events queued while the batches were sending sit at the end of the stored queue.
-      const arrived = appended - mark;
-      const late = arrived > 0 ? (await readQueue()).slice(-arrived) : [];
+      // Events queued while the batches were sending, by this tab or another
+      // one, are the stored events this flush did not read at the start.
+      const late = arrivedSince(await readQueue(), start);
       await writeJson(QUEUE_KEY, late.reduce((q, e) => enqueue(q, e), unsent));
     });
   } catch {
