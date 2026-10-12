@@ -16,7 +16,7 @@ Owner request (2026-10-11), items covered here: **8** (every persona can see the
 |---|---|---|---|
 | **F-APP-001** | SHELL | the app host serving grown-up pages; `APP_ROUTES.billing = '/account/billing'`; the `/account/billing` route, its layout and the frame's Billing item (A-5c); the legacy `/teach/billing` redirect (A-5c, A-8 `legacyConsoleTarget`); the service-worker denylist and grown-up offline page (A-2); `billingReturnUrl(env, suffix)` (A-9); `openGrownUpArea` and the PIN destination `GrownUpArea` (A-6); `AdultFrame` (A-5a); `/start` (A-4) | `docs/persona-app-shell` |
 | **F-SITE-002** | SITE | hangulroute.com content (no billing link, no price); `SITE_CLAIMS` in `apps/web/src/data/site-claims.ts` (S-2); builds no redirect table (old URLs are F-APP-001's stubs) | `docs/marketing-site-layered` |
-| **F-ENT-003** | FREE | what is free (the first lessons) and the access words; the free-plan lines on the Plan screen (E3-8) and their keys `caregiver.plan.freePlan` | `docs/free-day2-unlocked-curriculum` |
+| **F-ENT-003** | FREE | what is free (all of Stage 1, F-ENT-003 OD-1) and the access words; the free-plan lines on the Plan screen (E3-8) and their keys `caregiver.plan.freePlan` | `docs/free-day2-unlocked-curriculum` |
 | **F-BROWSE-001** | BROWSE | lesson browsing for paying grown-ups; its own access rule `accountBrowseScope`; its [ See plans ] link targets `APP_ROUTES.billing` | `docs/adult-content-browser` |
 | F-REPORT-001, F-FEEDBACK-001 | REPORTS, NOTES | features named in the billing page's "what you get" lines, through `SITE_CLAIMS` | `docs/progress-reports`, `docs/adult-feedback-channel` |
 

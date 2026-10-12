@@ -10,7 +10,7 @@ Code: the Plan screen of F-BILL-002 B-9 (`apps/mobile/src/screens/paywall/`), `a
 
 Given: a learner pressed the ask button on a lesson that is not open yet, on the one-time free-end card or on a closed Library tile, and an adult passed the gate (switch on, learner free); or an adult opened Plan details from Profile
 When: the Plan screen renders
-Then: the adult reads, in one line built from data, exactly what is free and that everything finished stays; one extra line explains a situation (Stage 1 promise, class learner, free lessons finished); no price, no offer, no purchase wording
+Then: the adult reads, in one line built from data, exactly what is free and that everything finished stays; one extra line explains a situation (class learner, free lessons finished); no price, no offer, no purchase wording
 
 ## Screen goal
 
@@ -23,12 +23,13 @@ Then: the adult reads, in one line built from data, exactly what is free and tha
 | [<- back]          Plan                    |  <- F-BILL-002
 |                                            |
 | [ Mina is on the free plan. ]              |  <- F-BILL-002 title (self: "You're on the free plan.")
-| The first 6 lessons are free: 18 letters,  |  <- freePlan.line (numbers from data)
-| about 25 minutes. Everything finished      |
-| stays.                                     |
+| Stage 1 is free: 9 lessons, 18 letters,    |  <- freePlan.line (numbers from data; all of
+| about 40 minutes. Everything finished      |     Stage 1, F-ENT-003 OD-1; 15 lessons once
+| stays.                                     |     Stage 1 is complete)
 |   - 4 word topics                          |  <- What is free list; 0-count lines hidden
 |                                            |     (no story bundled today: no stories line)
-| All of Stage 1 stays free for Mina.        |  <- at most one extra line (see States)
+| Mina's teacher can open every lesson for   |  <- at most one extra line (see States)
+| the class.                                 |
 |                                            |
 | [ Open billing ]   (web only)              |  <- F-BILL-002 (label, target, caption)
 | [ Plans and receipts are on the billing    |  <- F-BILL-002
@@ -53,10 +54,9 @@ Exit to: the opening surface · the billing page on app.hangulroute.com (web onl
 ## States
 
 - **Free, switch on**: `freePlan.line(lessons, letters, minutes)` (or `lineNoLetters` when the free lessons teach no letter) plus the What is free list. Then at most one extra line, first that applies:
-  1. Stage 1 promise (OD-12): family "All of Stage 1 stays free for {name}." / self "All of Stage 1 stays free for you."
-  2. Learner only in a class or school: family "{name}'s teacher can open every lesson for the class." / self "Your teacher can open every lesson for the class."
-  3. Free lessons finished (`free-end`): family "{name} finished the free lessons." / self "You finished the free lessons."
-- **Free, switch off, or any native build**: F-BILL-002's line "Stage 1 is open to everyone." unchanged; no F-ENT-003 line.
+  1. Learner only in a class or school: family "{name}'s teacher can open every lesson for the class." / self "Your teacher can open every lesson for the class."
+  2. Free lessons finished (`free-end`): family "{name} finished the free lessons." / self "You finished the free lessons."
+- **Free, switch off, or any native build**: F-BILL-002's line "Stage 1 is always free." (`caregiver.plan.free.open`) unchanged; no F-ENT-003 line. It stays true with the switch on (OD-1).
 - **Premium, no plan** (item 10): one line under F-BILL-002's premium lines, "Set a plan to guide what comes next."; on the web also "Plans are made in the grown-up area: Plan the term." (no link).
 - **Premium with a plan, covered**: F-BILL-002's states unchanged; no F-ENT-003 line.
 - **Empty** (catalogue has no free lesson, impossible by test): the line is hidden.
@@ -68,8 +68,8 @@ Exit to: the opening surface · the billing page on app.hangulroute.com (web onl
 
 ## Data needs
 
-- `freeLessonsFacts(CATALOG)`; sampler stories in this build's bundle; free topics playable in this build; `keepsStage1Promise`; the learner's memberships (class-only); `routeNext` (`free-end`); `paywallState(tier, source)` (F-BILL-002); `gatingActive`.
+- `freeLessonsFacts(CATALOG)`; sampler stories in this build's bundle; free topics playable in this build; the learner's memberships (class-only); `routeNext` (`free-end`); `paywallState(tier, source)` (F-BILL-002); `gatingActive`.
 
 ## Open questions
 
-- OD-9 (default: the line replaces "Stage 1 is open to everyone." while the switch is on). OD-12 (promise line).
+- OD-9 (default: the line replaces "Stage 1 is always free." while the switch is on, adding the figures). OD-1 decided 2026-10-11 (all of Stage 1 is free; OD-12 promise line withdrawn).
