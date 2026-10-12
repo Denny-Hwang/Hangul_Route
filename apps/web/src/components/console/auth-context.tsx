@@ -6,6 +6,7 @@ import { sessionFromClerkUser } from '@/lib/console/clerk';
 import { clerkPublishableKey } from '@/lib/console/config';
 import { ROUTES } from '@/lib/console/routing';
 import { readSession, writeSession, type ConsoleSession } from '@/lib/console/session';
+import { clearSignInTab } from '@/lib/console/signin-record';
 import { clearGrownUpTab } from '@/lib/console/unlock';
 
 /**
@@ -29,7 +30,8 @@ export interface ConsoleAuth {
   /** Bearer for the next API call; null when signed out. */
   getToken: () => Promise<string | null>;
   /**
-   * Signs out, removing the grown-up unlock and the console session from this tab first
+   * Signs out, removing the grown-up unlock, the console session, the sign-in record and the
+   * adult-step tick from this tab first
    * (F-APP-001 section 3.9), then goes to `redirectUrl` (`/signin` by default; the lock's Sign in
    * again passes `/signin?next=…`).
    */
@@ -67,6 +69,7 @@ function ClerkBridge({ children }: { children: ReactNode }): JSX.Element {
       getToken: () => getToken().catch(() => null),
       signOut: (redirectUrl = ROUTES.signIn) => {
         clearGrownUpTab();
+        clearSignInTab();
         return clerk.signOut({ redirectUrl });
       },
       devSignIn: () => undefined,
@@ -96,6 +99,7 @@ function DevBridge({ children }: { children: ReactNode }): JSX.Element {
       getToken: async () => session?.token ?? null,
       signOut: async (redirectUrl?: string) => {
         clearGrownUpTab();
+        clearSignInTab();
         setSession(null);
         if (redirectUrl) window.location.assign(redirectUrl);
       },

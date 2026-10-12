@@ -1,6 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import type { KeyValueStorage } from '../../i18n/safe-storage';
-import { SIGNIN_RECORD_KEY, clearSignInRecord, readSignInRecord, writeOAuthStarted, writeSignInProof } from '../signin-record';
+import {
+  AFFIRMATION_KEY,
+  AFFIRMATION_MS,
+  SIGNIN_RECORD_KEY,
+  clearAffirmation,
+  clearSignInRecord,
+  clearSignInTab,
+  readAffirmation,
+  readSignInRecord,
+  writeAffirmation,
+  writeOAuthStarted,
+  writeSecretVerified,
+  writeSignInProof,
+} from '../signin-record';
 
 /**
  * F-APP-001 A-4b, section 3.9: a sign-in completed in this tab, kept in `sessionStorage` across
@@ -89,5 +102,60 @@ describe('the sign-in record (hr:grownup:signin)', () => {
     expect(readSignInRecord()).toBeNull();
     expect(writeOAuthStarted(1)).toBe(false);
     expect(() => clearSignInRecord()).not.toThrow();
+  });
+});
+
+describe('the secret-attempt record: a secret factor verified while still signed out', () => {
+  it('round-trips as kind secret, with no session id', () => {
+    const storage = fakeStorage();
+    expect(writeSecretVerified(7_000, storage)).toBe(true);
+    expect(readSignInRecord(storage)).toEqual({ v: 1, kind: 'secret', at: 7_000 });
+    expect(storage.map.get(SIGNIN_RECORD_KEY)).not.toContain('sessionId');
+  });
+
+  it('a secret record with a bad time reads as absent', () => {
+    expect(readSignInRecord(fakeStorage({ [SIGNIN_RECORD_KEY]: JSON.stringify({ v: 1, kind: 'secret', at: -1 }) }))).toBeNull();
+  });
+});
+
+describe('the adult-step tick (hr:grownup:affirmed)', () => {
+  const at = '2026-10-12T10:00:00.000Z';
+  const t = Date.parse(at);
+
+  it('lives in the grown-up session namespace and holds only the time', () => {
+    expect(AFFIRMATION_KEY).toBe('hr:grownup:affirmed');
+    const storage = fakeStorage();
+    expect(writeAffirmation(at, storage)).toBe(true);
+    expect(JSON.parse(storage.map.get(AFFIRMATION_KEY) ?? '{}')).toEqual({ v: 1, at });
+  });
+
+  it('reads back while fresh; stale, future, corrupt or foreign values read as absent', () => {
+    const storage = fakeStorage();
+    writeAffirmation(at, storage);
+    expect(readAffirmation(t + 1_000, storage)).toBe(at);
+    expect(readAffirmation(t + AFFIRMATION_MS, storage)).toBeNull();
+    expect(readAffirmation(t - 1, storage)).toBeNull();
+    for (const raw of ['{', '[]', 'null', JSON.stringify({ v: 2, at }), JSON.stringify({ v: 1, at: 5 }), JSON.stringify({ v: 1, at: 'not a date' })]) {
+      expect(readAffirmation(t, fakeStorage({ [AFFIRMATION_KEY]: raw }))).toBeNull();
+    }
+    expect(readAffirmation(t, fakeStorage())).toBeNull();
+  });
+
+  it('clears alone, or with the sign-in record on sign-out', () => {
+    const storage = fakeStorage();
+    writeAffirmation(at, storage);
+    clearAffirmation(storage);
+    expect(storage.map.has(AFFIRMATION_KEY)).toBe(false);
+    writeAffirmation(at, storage);
+    writeOAuthStarted(1, storage);
+    clearSignInTab(storage);
+    expect(storage.map.size).toBe(0);
+  });
+
+  it('never throws when storage is blocked or absent', () => {
+    expect(writeAffirmation(at, blocked)).toBe(false);
+    expect(readAffirmation(t, blocked)).toBeNull();
+    expect(() => clearSignInTab(blocked)).not.toThrow();
+    expect(readAffirmation(t, null)).toBeNull();
   });
 });

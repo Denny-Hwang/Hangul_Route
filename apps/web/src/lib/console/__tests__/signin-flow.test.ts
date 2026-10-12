@@ -23,6 +23,7 @@ import {
   resolveDestination,
   reverifyOnce,
   routerDestination,
+  secretVerifiedHere,
   settleSignIn,
   signInReturnUrl,
   signedOutTarget,
@@ -79,12 +80,21 @@ describe('proofFromSignIn: the completed sign-in of this tab', () => {
 
 describe('proofFromSignUp: the account the adult step created', () => {
   it('an email sign-up (verified by a code) proves a secret', () => {
-    expect(proofFromSignUp({ status: 'complete', createdSessionId: 'sess_3', verifications: { externalAccount: { status: 'unverified' } } })).toEqual({ sessionId: 'sess_3', secret: true });
-    expect(proofFromSignUp({ status: 'complete', createdSessionId: 'sess_3', verifications: null })).toEqual({ sessionId: 'sess_3', secret: true });
+    const code = { strategy: 'email_code', status: 'verified' };
+    expect(proofFromSignUp({ status: 'complete', createdSessionId: 'sess_3', verifications: { externalAccount: { status: 'unverified' }, emailAddress: code } })).toEqual({ sessionId: 'sess_3', secret: true });
+    expect(proofFromSignUp({ status: 'complete', createdSessionId: 'sess_3', verifications: { emailAddress: code } })).toEqual({ sessionId: 'sess_3', secret: true });
+    expect(proofFromSignUp({ status: 'complete', createdSessionId: 'sess_3', verifications: { phoneNumber: { strategy: 'phone_code', status: 'verified' } } })).toEqual({ sessionId: 'sess_3', secret: true });
+  });
+
+  it('an email-link sign-up, or one that names no verified code, does not (section 3.9)', () => {
+    expect(proofFromSignUp({ status: 'complete', createdSessionId: 'sess_5', verifications: { emailAddress: { strategy: 'email_link', status: 'verified' } } })).toEqual({ sessionId: 'sess_5', secret: false });
+    expect(proofFromSignUp({ status: 'complete', createdSessionId: 'sess_5', verifications: { emailAddress: { strategy: 'email_code', status: 'unverified' } } })).toEqual({ sessionId: 'sess_5', secret: false });
+    expect(proofFromSignUp({ status: 'complete', createdSessionId: 'sess_5', verifications: null })).toEqual({ sessionId: 'sess_5', secret: false });
   });
 
   it('a Google sign-up does not', () => {
     expect(proofFromSignUp({ status: 'complete', createdSessionId: 'sess_4', verifications: { externalAccount: { status: 'verified' } } })).toEqual({ sessionId: 'sess_4', secret: false });
+    expect(proofFromSignUp({ status: 'complete', createdSessionId: 'sess_4', verifications: { externalAccount: { status: 'verified' }, emailAddress: { strategy: 'email_code', status: 'verified' } } })).toEqual({ sessionId: 'sess_4', secret: false });
   });
 
   it('an unfinished sign-up is no proof', () => {
@@ -156,6 +166,11 @@ describe('planAfterSignIn: what a sign-in completed in this tab earns (section 3
     expect(planAfterSignIn({ record: proof(true, 'sess_1', now + 1), sessionId: 'sess_1', device: PIN, now })).toBe('none');
   });
 
+  it('a secret-attempt record never turned into a proof counts as OAuth (fail closed)', () => {
+    expect(planAfterSignIn({ record: { v: 1, kind: 'secret', at: now - 1 }, sessionId: 'sess_1', device: PIN, now })).toBe('reverify');
+    expect(planAfterSignIn({ record: { v: 1, kind: 'secret', at: now - 1 }, sessionId: 'sess_1', device: NONE, now })).toBe('none');
+  });
+
   it('an OAuth hand-off from this tab with no seen completion counts as OAuth: reverify where the lock can close', () => {
     expect(planAfterSignIn({ record: { v: 1, kind: 'oauth', at: now - 1 }, sessionId: 'sess_1', device: PIN, now })).toBe('reverify');
     expect(planAfterSignIn({ record: { v: 1, kind: 'oauth', at: now - 1 }, sessionId: 'sess_1', device: NONE, now })).toBe('none');
@@ -181,13 +196,44 @@ describe('proofAtSignIn: what the sign-in this page saw complete proved', () => 
     expect(proofAtSignIn({ sessionId: 's1', signIn: { status: 'complete', createdSessionId: 's1', firstFactorVerification: { strategy: 'oauth_google' } }, record: null, now })).toEqual({ sessionId: 's1', secret: false });
     expect(proofAtSignIn({ sessionId: 's1', signIn: { status: 'complete', createdSessionId: 's1', firstFactorVerification: { strategy: 'password' } }, record: { v: 1, kind: 'oauth', at: now }, now })).toEqual({ sessionId: 's1', secret: true });
     expect(proofAtSignIn({ sessionId: 's2', signUp: { status: 'complete', createdSessionId: 's2', verifications: { externalAccount: { status: 'verified' } } }, record: null, now })).toEqual({ sessionId: 's2', secret: false });
+    expect(proofAtSignIn({ sessionId: 's3', signIn: { status: 'complete', createdSessionId: 's3', firstFactorVerification: { strategy: 'email_link' } }, record: { v: 1, kind: 'secret', at: now - 1 }, now })).toEqual({ sessionId: 's3', secret: false });
   });
 
-  it('otherwise an OAuth hand-off from this tab marks it as OAuth, and anything else proved a secret', () => {
+  it('otherwise only a secret factor verified in this tab before the session appeared proves a secret', () => {
+    expect(proofAtSignIn({ sessionId: 's1', signIn: { status: null }, record: { v: 1, kind: 'secret', at: now - 1 }, now })).toEqual({ sessionId: 's1', secret: true });
+    expect(proofAtSignIn({ sessionId: 's1', signIn: { status: 'complete', createdSessionId: 'other', firstFactorVerification: { strategy: 'password' } }, record: { v: 1, kind: 'secret', at: now - 1 }, now })).toEqual({ sessionId: 's1', secret: true });
+  });
+
+  it('no evidence is never secret-proving: unknown errs to OAuth (sections 3.7, 3.17)', () => {
+    // No record and no exact proof: a session from another tab, a missed hand-off record.
+    expect(proofAtSignIn({ sessionId: 's1', record: null, now })).toEqual({ sessionId: 's1', secret: false });
+    expect(proofAtSignIn({ sessionId: 's1', signIn: { status: null }, record: null, now })).toEqual({ sessionId: 's1', secret: false });
     expect(proofAtSignIn({ sessionId: 's1', signIn: { status: null }, record: { v: 1, kind: 'oauth', at: now - 1 }, now })).toEqual({ sessionId: 's1', secret: false });
     expect(proofAtSignIn({ sessionId: 's1', signIn: { status: 'complete', createdSessionId: 'other', firstFactorVerification: { strategy: 'password' } }, record: { v: 1, kind: 'oauth', at: now - 1 }, now })).toEqual({ sessionId: 's1', secret: false });
-    expect(proofAtSignIn({ sessionId: 's1', record: null, now })).toEqual({ sessionId: 's1', secret: true });
-    expect(proofAtSignIn({ sessionId: 's1', record: { v: 1, kind: 'oauth', at: now - SIGNIN_PROOF_MS }, now })).toEqual({ sessionId: 's1', secret: true });
+    expect(proofAtSignIn({ sessionId: 's1', record: { v: 1, kind: 'secret', at: now - SIGNIN_PROOF_MS }, now })).toEqual({ sessionId: 's1', secret: false });
+    expect(proofAtSignIn({ sessionId: 's1', record: { v: 1, kind: 'proof', sessionId: 's0', secret: true, at: now - 1 }, now })).toEqual({ sessionId: 's1', secret: false });
+  });
+});
+
+describe('secretVerifiedHere: positive evidence of a secret factor while still signed out', () => {
+  it('a sign-in first factor verified with a password, a code or a passkey (a second factor may follow)', () => {
+    expect(secretVerifiedHere({ status: 'complete', firstFactorVerification: { strategy: 'password', status: 'verified' } }, null)).toBe(true);
+    expect(secretVerifiedHere({ status: 'needs_second_factor', firstFactorVerification: { strategy: 'email_code', status: 'verified' } }, null)).toBe(true);
+    expect(secretVerifiedHere({ status: 'complete', firstFactorVerification: { strategy: 'passkey', status: 'verified' } }, undefined)).toBe(true);
+  });
+
+  it('a sign-up whose address was verified with a code', () => {
+    expect(secretVerifiedHere(null, { status: 'missing_requirements', verifications: { emailAddress: { strategy: 'email_code', status: 'verified' } } })).toBe(true);
+  });
+
+  it('an attempt not yet verified, OAuth, an email link or nothing does not count', () => {
+    expect(secretVerifiedHere({ status: 'needs_first_factor', firstFactorVerification: { strategy: 'email_code', status: 'unverified' } }, null)).toBe(false);
+    expect(secretVerifiedHere({ status: 'complete', firstFactorVerification: { strategy: 'oauth_google', status: 'verified' } }, null)).toBe(false);
+    expect(secretVerifiedHere({ status: 'complete', firstFactorVerification: { strategy: 'email_link', status: 'verified' } }, null)).toBe(false);
+    expect(secretVerifiedHere(null, { status: 'missing_requirements', verifications: { emailAddress: { strategy: 'email_link', status: 'verified' } } })).toBe(false);
+    expect(secretVerifiedHere(null, { status: 'missing_requirements', verifications: { externalAccount: { status: 'verified' }, emailAddress: { strategy: 'email_code', status: 'verified' } } })).toBe(false);
+    expect(secretVerifiedHere(null, null)).toBe(false);
+    expect(secretVerifiedHere(undefined, undefined)).toBe(false);
   });
 });
 
@@ -290,8 +336,11 @@ describe('routerDestination: one location.replace after sign-in (sections 3.5, 3
     expect(routerDestination({ next: null, personas: ['parent'], last: 'parent', hint: null })).toBe('/teach/home');
   });
 
-  it('keeps an explicit next to a /parent page', () => {
-    expect(routerDestination({ next: '/parent', personas: ['parent'], last: null, hint: null })).toBe('/parent');
+  // A-5b removes this: until then a next into the /parent demo (mock data) never takes a real account there.
+  it('a next into the /parent demo falls back to the home until A-5b', () => {
+    expect(routerDestination({ next: '/parent', personas: ['parent'], last: null, hint: null })).toBe('/teach/home');
+    expect(routerDestination({ next: '/parent/child-1', personas: ['parent'], last: null, hint: null })).toBe('/teach/home');
+    expect(routerDestination({ next: '/parent?tab=week', personas: ['teacher'], last: null, hint: null })).toBe('/teach/home');
   });
 });
 

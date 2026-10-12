@@ -59,7 +59,7 @@ export interface ClerkSignInLike {
 export interface ClerkSignUpLike {
   status?: string | null;
   createdSessionId?: string | null;
-  verifications?: { externalAccount?: VerificationLike | null } | null;
+  verifications?: { externalAccount?: VerificationLike | null; emailAddress?: VerificationLike | null; phoneNumber?: VerificationLike | null } | null;
 }
 
 /** A completed sign-in: the session it created and whether its first factor asked for a secret. */
@@ -68,13 +68,37 @@ export function proofFromSignIn(signIn: ClerkSignInLike | null | undefined): Sig
   return { sessionId: signIn.createdSessionId, secret: isSecretFactor(signIn.firstFactorVerification?.strategy) };
 }
 
+/** Sign-up verifications that ask for a secret: a code sent to the address or the number (never an email link). */
+const SECRET_SIGN_UP_CODES: ReadonlySet<string> = new Set(['email_code', 'phone_code']);
+
+const verifiedWith = (verification: VerificationLike | null | undefined, strategies: ReadonlySet<string>): boolean =>
+  verification?.status === 'verified' && typeof verification.strategy === 'string' && strategies.has(verification.strategy);
+
+/** A sign-up proved a secret: no external account, and its address or number was verified with a code. */
+function signUpProvedSecret(signUp: ClerkSignUpLike): boolean {
+  const verifications = signUp.verifications;
+  if (verifications?.externalAccount?.status === 'verified') return false;
+  return verifiedWith(verifications?.emailAddress, SECRET_SIGN_UP_CODES) || verifiedWith(verifications?.phoneNumber, SECRET_SIGN_UP_CODES);
+}
+
 /**
- * A completed sign-up behind the adult step: an email sign-up proved its address with a code (a
- * secret); a Google sign-up did not.
+ * A completed sign-up behind the adult step: an email sign-up that proved its address with a code
+ * (a secret); a Google sign-up, an email-link one or one that names no code did not.
  */
 export function proofFromSignUp(signUp: ClerkSignUpLike | null | undefined): SignInProof | null {
   if (!signUp || signUp.status !== 'complete' || !signUp.createdSessionId) return null;
-  return { sessionId: signUp.createdSessionId, secret: signUp.verifications?.externalAccount?.status !== 'verified' };
+  return { sessionId: signUp.createdSessionId, secret: signUpProvedSecret(signUp) };
+}
+
+/**
+ * While the tab is still signed out, the widget verified a secret factor: a sign-in whose first
+ * factor is verified with a secret strategy (a password, a code, a passkey; also when a second
+ * factor still follows), or a sign-up whose address was verified with a code. Positive evidence
+ * only: an attempt that has not verified yet does not count.
+ */
+export function secretVerifiedHere(signIn: ClerkSignInLike | null | undefined, signUp: ClerkSignUpLike | null | undefined): boolean {
+  if (verifiedWith(signIn?.firstFactorVerification, SECRET_FIRST_FACTORS)) return true;
+  return !!signUp && signUpProvedSecret(signUp);
 }
 
 /** An OAuth or SSO first factor is waiting for its redirect: the sign-in is leaving this window. */
@@ -93,7 +117,7 @@ export function oauthSignUpStarted(signUp: ClerkSignUpLike | null | undefined): 
 
 const isFresh = (at: number, now: number): boolean => now - at >= 0 && now - at < SIGNIN_PROOF_MS;
 
-const freshOAuth = (record: SignInRecord | null, now: number): boolean => record?.kind === 'oauth' && isFresh(record.at, now);
+const freshSecret = (record: SignInRecord | null, now: number): boolean => record?.kind === 'secret' && isFresh(record.at, now);
 
 /**
  * The page saw this tab go from signed out to signed in: a sign-in (or sign-up) completed here.
@@ -105,15 +129,16 @@ export function signedInHere(previous: string | null | undefined, current: strin
 
 /**
  * The proof of a sign-in this page saw complete for `sessionId`. Clerk's completed sign-in (or
- * sign-up) names its first factor when the client still holds it; otherwise an OAuth hand-off that
- * started in this tab marks it as OAuth, and anything else came through the widget's secret
- * factors (password, email code, passkey). When unsure it errs to OAuth, which only asks for a
- * reverification.
+ * sign-up) names its first factor when the client still holds it; otherwise only a secret factor
+ * the widget verified in this tab before the session appeared (a `secret` record) counts. Anything
+ * else (an OAuth hand-off, a session from another tab, an email link, a ticket, no evidence at
+ * all) is not secret-proving: unknown errs to OAuth, which on a lockable device only asks for a
+ * reverification (sections 3.7 and 3.17).
  */
 export function proofAtSignIn(input: { sessionId: string; signIn?: ClerkSignInLike | null; signUp?: ClerkSignUpLike | null; record: SignInRecord | null; now: number }): SignInProof {
   const exact = [proofFromSignIn(input.signIn), proofFromSignUp(input.signUp)].find((proof) => proof?.sessionId === input.sessionId);
   if (exact) return exact;
-  return { sessionId: input.sessionId, secret: !freshOAuth(input.record, input.now) };
+  return { sessionId: input.sessionId, secret: freshSecret(input.record, input.now) };
 }
 
 /**
@@ -137,7 +162,8 @@ export type AfterSignIn = 'unlock' | 'reverify' | 'none';
  * unlock (and the trusted epoch). An OAuth or SSO sign-in does not count on its own: on a device
  * the lock can close, Clerk reverification runs first; on any other device nothing more is asked.
  * A visitor who arrived already signed in (no record for this session) earns nothing: the lock
- * decides on the page. A fresh OAuth hand-off record with no proof counts as an OAuth sign-in.
+ * decides on the page. A fresh OAuth hand-off record, or a secret-attempt record the page never
+ * turned into a proof for this session, counts as an OAuth sign-in (fail closed).
  */
 export function planAfterSignIn(input: { record: SignInRecord | null; sessionId: string | null; device: DeviceGateRead; now: number }): AfterSignIn {
   const { record, sessionId, device, now } = input;
@@ -191,14 +217,17 @@ function shippedHome(path: string): string {
   return path === APP_ROUTES.parentHome ? ROUTES.home : path;
 }
 
+/** The `/parent` demo pages (mock data) until A-5b: never a `next` for a real account. A-5b removes this. */
+const DEMO_PARENT_PATH = /^\/parent(?:[/?.#]|$)/;
+
 /**
  * Where the router sends a signed-in grown-up (sections 3.5, 3.7): an accepted `next`, else the
  * persona home (`homeFor`: no persona → `/start` with the hint; a hint; the last persona; the only
- * persona; else Family, OD-11).
+ * persona; else Family, OD-11). Until A-5b a `next` into the `/parent` demo falls back to the home.
  */
 export function routerDestination(input: { next: string | null | undefined; personas: readonly AdultPersona[]; last: AdultPersona | null; hint: AdultPersona | null }): string {
   const next = acceptedNext(input.next);
-  if (next) return next;
+  if (next && !DEMO_PARENT_PATH.test(next)) return next;
   return shippedHome(homeFor({ personas: input.personas, last: input.last, hint: input.hint }));
 }
 

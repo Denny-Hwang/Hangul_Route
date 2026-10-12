@@ -10,11 +10,12 @@ import {
   oauthSignUpStarted,
   proofAtSignIn,
   reverifyOnce,
+  secretVerifiedHere,
   signedInHere,
   type ClerkSignInLike,
   type ClerkSignUpLike,
 } from '@/lib/console/signin-flow';
-import { readSignInRecord, writeOAuthStarted, writeSignInProof } from '@/lib/console/signin-record';
+import { clearAffirmation, readSignInRecord, writeOAuthStarted, writeSecretVerified, writeSignInProof } from '@/lib/console/signin-record';
 import { useMessages } from '@/lib/i18n/locale-context';
 import { RetryPanel, WidgetBox } from './SignInParts';
 
@@ -59,8 +60,11 @@ interface ClerkResources {
 /**
  * Keeps, for the router, what a sign-in completed in this tab proved (section 3.9). Enabled only
  * while the page knows the tab is signed out, so the first session it sees is one that signed in
- * here; an OAuth hand-off that leaves the window is noted too (the installed PWA line, and the
- * proof when Clerk finishes the redirect before this page watches).
+ * here. While still signed out it notes positive evidence only: a secret factor the widget
+ * verified (`secret`, which a later session needs when Clerk no longer names its first factor)
+ * or an OAuth hand-off that leaves the window (the installed PWA line). With neither, a session
+ * that appears counts as not secret-proving (fail closed). The adult-step tick is spent once a
+ * session appears.
  */
 function useSignInRecorder(enabled: boolean): void {
   const clerk = useClerk();
@@ -70,9 +74,14 @@ function useSignInRecorder(enabled: boolean): void {
     return clerk.addListener((resources: ClerkResources) => {
       const now = Date.now();
       const current = resources.session?.id ?? null;
+      const signIn = resources.client?.signIn;
+      const signUp = resources.client?.signUp;
       if (signedInHere(previous, current)) {
-        writeSignInProof(proofAtSignIn({ sessionId: current, signIn: resources.client?.signIn, signUp: resources.client?.signUp, record: readSignInRecord(), now }), now);
-      } else if (!current && (oauthRedirectStarted(resources.client?.signIn) || oauthSignUpStarted(resources.client?.signUp))) {
+        writeSignInProof(proofAtSignIn({ sessionId: current, signIn, signUp, record: readSignInRecord(), now }), now);
+        clearAffirmation();
+      } else if (!current && secretVerifiedHere(signIn, signUp)) {
+        writeSecretVerified(now);
+      } else if (!current && (oauthRedirectStarted(signIn) || oauthSignUpStarted(signUp))) {
         writeOAuthStarted(now);
       }
       previous = current;
