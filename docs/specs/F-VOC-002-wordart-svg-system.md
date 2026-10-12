@@ -214,7 +214,7 @@ export interface WordArtProps {
 - **No motion in the art.** There are no animated parts; any pop-in or flip belongs to the caller and respects `useReducedMotion` (`platform/motion.ts:7-25`).
 - **Sizes.** The art is requested at 48 (quiz option in a dense layout, tested minimum), 64, 96 (`touchTarget.hero`, `tokens.ts:198-202`), 160 (flashcard) and larger; it is vector, so no per-size assets.
 
-**Web**: `apps/web/src/app/design-preview/word-art/page.tsx` renders `glyphToSvgString` (server component, no client JS), see §3.10.
+**Web**: `apps/web/src/app/design-preview/word-art/page.tsx` renders `glyphToSvgString` (server component, no client JS), see §3.10. (Amended at W-2: each glyph's `glyphToSvgString` shapes go once into a sprite `<symbol>` placed at every size with `<use>`, so the page does not grow 17 times with the art; the `?topic=` filter is a small client island that imports WordArt types only, because the static export cannot read the query on the server; the page test lives in `apps/web/src/app/__tests__/word-art-sheet.test.tsx` with the other server-rendered page tests, and `apps/web/e2e/word-art-sheet.spec.ts` is the browser smoke.)
 
 ### 3.8 Budget (W7) and measurement
 
