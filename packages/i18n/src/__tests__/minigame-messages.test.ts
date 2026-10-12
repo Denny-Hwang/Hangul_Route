@@ -262,6 +262,7 @@ describe('learner.story (F-STORY-003, English wording as shipped)', () => {
     expect(st.recap.wordsLabel(1)).toBe('1 word from this story');
     expect(st.recap.wordsLabel(3)).toBe('3 words from this story');
     expect(st.recap.hearWord('seollal')).toBe('Hear seollal');
+    expect(st.recap.revealWord('설날')).toBe('Show how to say it: 설날');
   });
 
   it('never uses red-and-cross wording for a wrong tap (D3)', () => {

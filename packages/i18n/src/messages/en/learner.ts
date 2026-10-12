@@ -637,6 +637,8 @@ export const learner = {
       wordsLabel: (count: number) =>
         plural('en', count, { one: '1 word from this story', other: `${count} words from this story` }),
       hearWord: (romanization: string) => `Hear ${romanization}`,
+      /** A recap chip's "Show how to say it" button, named with its word so each one is distinct (WCAG 2.4.6). */
+      revealWord: (ko: string) => `Show how to say it: ${ko}`,
     },
     sequence: {
       title: 'Put the story in order',
