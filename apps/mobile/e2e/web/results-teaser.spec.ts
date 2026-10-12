@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, jamoOfSpoken, passDiscover, waitForNextListenPickRound } from './helpers';
+import { completeChildForm, jamoOfSpoken, journeyCellName, passDiscover, waitForNextListenPickRound } from './helpers';
 
 /**
  * F-QUEST-002 Q-5b: the Results "Next up" teaser and the soft prerequisite on
@@ -94,7 +94,7 @@ async function home(page: Page): Promise<void> {
 async function startSkippableQuest(page: Page): Promise<void> {
   await home(page);
   await page.getByText('Journey', { exact: true }).last().click();
-  await page.getByRole('button', { name: 'Food & Daily Life episode for stage2' }).click();
+  await page.getByRole('button', { name: journeyCellName(2, 'Food & Daily Life') }).click();
   await page.getByRole('button', { name: 'Start', exact: true }).first().click();
   await page.getByRole('button', { name: 'Continue' }).click();
 }

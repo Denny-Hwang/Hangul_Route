@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, passDiscover, playCheck } from './helpers';
+import { completeChildForm, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheck } from './helpers';
 
 /**
  * F-QUEST-002 Q-6b: the Food & Life quests 4-6 teach before they ask (Discover),
@@ -20,7 +20,7 @@ async function openLifeEpisode(page: Page): Promise<void> {
   await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
   if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
   await page.getByText('Journey', { exact: true }).last().click();
-  await page.getByRole('button', { name: 'Food & Daily Life episode for stage1' }).click();
+  await page.getByRole('button', { name: journeyCellName(1, 'Food & Daily Life') }).click();
 }
 
 /** Start the nth quest of the episode page (the letters quests are not done, so the soft-prerequisite sheet asks). */
