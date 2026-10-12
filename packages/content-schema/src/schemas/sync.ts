@@ -70,6 +70,21 @@ export const JourneySummarySchema = z.object({
 export type JourneySummary = z.infer<typeof JourneySummarySchema>;
 
 /**
+ * The goal the learner's Learning Route shows (Learning Route section 9,
+ * LR-OD-12): a stage and the code of the source that set it, no plan id, no
+ * date and no name. `stage` stays a plain string on the wire (the reader
+ * validates it as a `StageKey`, as `journey.stage`). Read by the family space
+ * only: it is on `TEACHER_HIDDEN_SUMMARY_KEYS`, so a class or school never
+ * receives it.
+ */
+export const ROUTE_GOAL_FROM = ['class', 'school', 'family', 'self', 'default'] as const;
+export const RouteGoalSummarySchema = z.object({
+  stage: z.string().max(32),
+  from: z.enum(ROUTE_GOAL_FROM),
+});
+export type RouteGoalSummary = z.infer<typeof RouteGoalSummarySchema>;
+
+/**
  * Word counts for caregivers and teachers (F-VOC-005 section 3.8): counts, a
  * first-try rate and up to three words to look at together. Never shown to the
  * learner; no response time and no per-question history.
@@ -125,6 +140,8 @@ export const ProgressSummarySchema = z.object({
   selfRoute: SelfRouteSummarySchema.optional().catch(undefined),
   /** My route stage counts (F-ROUTE-001 R-8); class and family rosters read it. Malformed is dropped, never fatal. */
   journey: JourneySummarySchema.optional().catch(undefined),
+  /** Learning Route goal (LR-W1, written by LR-6); removed from every roster but a family's. Malformed is dropped, never a 422. */
+  routeGoal: RouteGoalSummarySchema.optional().catch(undefined),
   /**
    * Word counts (F-VOC-005 section 3.8); omitted when the learner has no
    * collected words. A derived display figure, so malformed counts are dropped,

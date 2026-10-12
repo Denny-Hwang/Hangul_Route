@@ -68,6 +68,7 @@ describe('telemetry event names (one list for the client type and the API whitel
         'route_map.viewed',
         'route_map.stage_opened',
         'route_map.continue_tapped',
+        'route_map.goal_reached',
         'layout.observed',
         'layout.guard_shown',
         'layout.guard_dismissed',
@@ -123,6 +124,13 @@ describe('telemetry event names (one list for the client type and the API whitel
       expect(isTelemetryEventName(name)).toBe(true);
     }
     expect(isTelemetryEventName('route_map.opened')).toBe(false);
+  });
+
+  it('lists route_map.goal_reached once, right after route_map.continue_tapped (Learning Route section 8; Worker first, LR-W1)', () => {
+    expect(TELEMETRY_EVENT_NAMES.filter((n) => n === 'route_map.goal_reached')).toHaveLength(1);
+    expect(isTelemetryEventName('route_map.goal_reached')).toBe(true);
+    expect(TELEMETRY_EVENT_NAMES.indexOf('route_map.goal_reached')).toBe(TELEMETRY_EVENT_NAMES.indexOf('route_map.continue_tapped') + 1);
+    expect(isTelemetryEventName('route_map.goal_set')).toBe(false);
   });
 
   it('lists the five route names of F-PLAN-002 section 3.11 (FP-B7; Worker first, P2-4)', () => {

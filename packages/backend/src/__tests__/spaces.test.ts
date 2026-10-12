@@ -371,6 +371,57 @@ describe('leave, remove, roster (§3.3, §3.4)', () => {
     expect(await summaryOf(cls.space.id, 'principal')).not.toHaveProperty('selfRoute');
   });
 
+  it('returns summary.routeGoal to the family roster only, never to a class or a school admin (Learning Route section 9, LR-W1)', async () => {
+    const sch = await createSpace('principal', 'school', 'School');
+    const schCode = await issueCode('principal', sch.space.id);
+    await joinAs(sch.space.id, bearer('teacher'), { code: schCode });
+    const cls = await createSpace('teacher', 'class', 'A', { parentSpaceId: sch.space.id });
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    const famCode = await issueCode('mom', fam.space.id);
+    const suni = await registerLearner('device-suni0001', 'Suni');
+    expect((await joinAs(cls.space.id, suni.auth, { code: cls.joinCode, learnerId: suni.learnerId })).status).toBe(201);
+    expect((await joinAs(fam.space.id, suni.auth, { code: famCode, learnerId: suni.learnerId })).status).toBe(201);
+    const routeGoal = { stage: 'stage2', from: 'class' };
+    const selfRoute = { done: 7, total: 9, notReady: 0, weeks: 12, endsOn: '2027-01-09' };
+    const upload = await call('PUT', `/api/sync/learners/${suni.learnerId}/snapshot`, suni.auth, {
+      baseRev: 0,
+      snapshot: snapshotFor(suni.learnerId),
+      // Unknown keys under routeGoal are stripped by the schema on write and by the projection on read.
+      summary: { ...summary, selfRoute, routeGoal: { ...routeGoal, sourceId: 'plan:secret-plan' } },
+      schemaVer: 1,
+      contentVer: '2026.10',
+    });
+    expect(upload.status).toBe(200);
+
+    const summaryOf = async (spaceId: string, user: string): Promise<Record<string, unknown>> => {
+      const r = await get(`/api/spaces/${spaceId}/roster`, bearer(user));
+      expect(r.status).toBe(200);
+      return ((r.body.data as { learners: Array<{ summary: Record<string, unknown> }> }).learners[0] as { summary: Record<string, unknown> }).summary;
+    };
+    const famView = await summaryOf(fam.space.id, 'mom');
+    expect(famView.routeGoal).toEqual(routeGoal);
+    expect(JSON.stringify(famView)).not.toContain('secret-plan');
+    for (const [spaceId, user] of [[cls.space.id, 'teacher'], [cls.space.id, 'principal']] as const) {
+      const view = await summaryOf(spaceId, user);
+      expect(view).not.toHaveProperty('routeGoal');
+      expect(view).not.toHaveProperty('selfRoute');
+      expect(view).toMatchObject({ cardsUnlocked: 2 });
+    }
+  });
+
+  it('a malformed summary.routeGoal is dropped on write and the rest of the summary syncs (Learning Route section 9)', async () => {
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    const famCode = await issueCode('mom', fam.space.id);
+    const suni = await registerLearner('device-suni0001', 'Suni');
+    expect((await joinAs(fam.space.id, suni.auth, { code: famCode, learnerId: suni.learnerId })).status).toBe(201);
+    const upload = await call('PUT', `/api/sync/learners/${suni.learnerId}/snapshot`, suni.auth, { baseRev: 0, snapshot: snapshotFor(suni.learnerId), summary: { ...summary, routeGoal: { stage: 'stage2', from: 'teacher' } }, schemaVer: 1, contentVer: '2026.10' });
+    expect(upload.status).toBe(200);
+    const r = await get(`/api/spaces/${fam.space.id}/roster`, bearer('mom'));
+    const row = (r.body.data as { learners: Array<{ summary: Record<string, unknown> }> }).learners[0] as { summary: Record<string, unknown> };
+    expect(row.summary).not.toHaveProperty('routeGoal');
+    expect(row.summary).toMatchObject({ cardsUnlocked: 2 });
+  });
+
   it('returns summary.journey to the class and the family roster alike (F-ROUTE-001 R-8, OD-11)', async () => {
     const cls = await createSpace('teacher', 'class', 'A');
     const fam = await createSpace('mom', 'family', 'Kim family');

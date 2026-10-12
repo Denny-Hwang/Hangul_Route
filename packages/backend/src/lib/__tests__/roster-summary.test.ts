@@ -138,6 +138,52 @@ describe('rosterSummary (F-PLAN-002 section 3.10: the self-route reaches the fam
   });
 });
 
+describe('rosterSummary: summary.routeGoal reaches the family space only (Learning Route section 9, LR-W1)', () => {
+  const routeGoal = { stage: 'stage2', from: 'class' } as const;
+  const withGoal = { ...full, routeGoal };
+
+  it('adds routeGoal to the projection for a family space', () => {
+    expect(rosterSummary(withGoal, own, 'family')).toEqual({ ...teacherVisibleSummary(withGoal, own), routeGoal });
+  });
+
+  it('removes it for a class and a school, which see exactly the teacher projection', () => {
+    for (const kind of ['class', 'school'] as const) {
+      const out = rosterSummary(withGoal, own, kind);
+      expect(out).toEqual(teacherVisibleSummary(full, own));
+      expect(out && 'routeGoal' in out).toBe(false);
+    }
+    expect(TEACHER_VISIBLE_SUMMARY_KEYS).not.toContain('routeGoal');
+  });
+
+  it('a class roster of a learner with both a goal and a self-route receives neither', () => {
+    const both = { ...withGoal, selfRoute: { done: 7, total: 9, notReady: 0, weeks: 12, endsOn: '2027-01-09' } };
+    const out = rosterSummary(both, own, 'class');
+    expect(out && 'routeGoal' in out).toBe(false);
+    expect(out && 'selfRoute' in out).toBe(false);
+    expect(rosterSummary(both, own, 'family')).toMatchObject({ routeGoal, selfRoute: both.selfRoute });
+  });
+
+  it('copies only stage and from, never what a newer writer left under it', () => {
+    const out = rosterSummary({ ...full, routeGoal: { ...routeGoal, sourceId: 'plan:secret', endsOn: '2027-01-09', learnerName: 'secret-name' } }, own, 'family');
+    expect(out?.routeGoal).toEqual(routeGoal);
+    expect(JSON.stringify(out)).not.toContain('secret');
+  });
+
+  it('adds nothing when the goal is missing or not an object', () => {
+    for (const value of [undefined, null, 'stage2', ['stage2'], 7]) {
+      const out = rosterSummary({ ...full, routeGoal: value }, own, 'family');
+      expect(out).toEqual(teacherVisibleSummary(full, own));
+      expect(out && 'routeGoal' in out).toBe(false);
+    }
+  });
+
+  it('keeps the self-route and the goal independent of each other for a family', () => {
+    const selfRoute = { done: 1, total: 2, notReady: 0, weeks: 4, endsOn: '2026-11-07' };
+    expect(rosterSummary({ ...full, selfRoute }, own, 'family')).not.toHaveProperty('routeGoal');
+    expect(rosterSummary(withGoal, own, 'family')).not.toHaveProperty('selfRoute');
+  });
+});
+
 describe('summary.vocab never reaches a roster yet (F-VOC-005 section 3.8; the console line is P-4)', () => {
   const own = new Set(['plan:own-1']);
   const vocab = { collected: 12, strong: 4, topicsStarted: 2, topicsPracticed7d: 1, firstTryRate: 0.75, needsPractice: ['vocab:sagwa-apple'] };

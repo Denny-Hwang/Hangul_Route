@@ -119,6 +119,13 @@ describe('POST /api/telemetry', () => {
     expect(smuggled.body.data?.event.payload).toBeUndefined();
   });
 
+  it('Learning Route section 8: accepts route_map.goal_reached and stores its payload as sent (Worker first, LR-W1)', async () => {
+    const r = await post({ name: 'route_map.goal_reached', profileId: 'profile:suni', payload: { stage: 'stage2', goalFrom: 'class' } });
+    expect(r.status).toBe(201);
+    expect(r.body.data?.event).toMatchObject({ name: 'route_map.goal_reached', profileId: 'profile:suni', payload: { stage: 'stage2', goalFrom: 'class' } });
+    expect(store.events.at(-1)?.name).toBe('route_map.goal_reached');
+  });
+
   it('caps the in-memory log at 10k events', async () => {
     store.events = Array.from({ length: 10_000 }, (_, i) => ({ id: `event:${i}`, name: 'session.start', at: NOW.toISOString() }));
     await post({ name: 'session.end' });
