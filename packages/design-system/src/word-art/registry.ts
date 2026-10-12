@@ -19,6 +19,7 @@ import { SCHOOL_GLYPHS } from './glyphs/school';
 import { SCIENCE_GLYPHS } from './glyphs/science';
 import { SPORT_GLYPHS } from './glyphs/sport';
 import { TRAVEL_GLYPHS } from './glyphs/travel';
+import { BODY_PARTS, bodyGlyphs } from './generated/body';
 import { COLOR_SWATCHES, colorGlyphs } from './generated/color';
 import { COUNT_VALUES, countGlyphs } from './generated/count';
 import type { WordArtFamily, WordArtGlyph, WordArtMeta } from './types';
@@ -87,6 +88,10 @@ const META: WordArtMetaOverrides = {
   ),
   ...Object.fromEntries(Object.keys(COLOR_SWATCHES).map((k) => [k, { status: 'review', bboxWaived: true, reason: SWATCH_REASON }])),
   ...Object.fromEntries(COUNT_VALUES.map((n) => [`count-${n}`, { status: 'review' }])),
+  // batch W-4: the other animals and the body parts, approved by the batch review that stands in for the owner's (2026-10-11)
+  ...Object.fromEntries(
+    [...['puppy', 'rabbit', 'bird', 'fish', 'duck', 'fox', 'monkey', 'butterfly'].map((a) => `animal-${a}`), ...BODY_PARTS.map((p) => `body-${p}`)].map((k) => [k, { status: 'approved' }]),
+  ),
 };
 
 /** One glyph file: the family it holds, and its glyphs by key. */
@@ -132,7 +137,7 @@ const HAND: readonly WordArtSource[] = [
 const handGlyph = (key: string): WordArtGlyph | undefined => HAND.find(([, glyphs]) => Object.prototype.hasOwnProperty.call(glyphs, key))?.[1][key];
 
 export const WORD_ART: Readonly<Record<string, WordArtEntry>> = buildRegistry(
-  [...HAND, ['color', colorGlyphs(handGlyph)], ['count', countGlyphs()]],
+  [...HAND, ['color', colorGlyphs(handGlyph)], ['count', countGlyphs()], ['body', bodyGlyphs()]],
   META,
 );
 

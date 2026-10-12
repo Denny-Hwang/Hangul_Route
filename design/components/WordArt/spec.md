@@ -69,3 +69,17 @@ Open for the owner's review:
 
 - Counts at the 48 dp minimum: the ten-frame is 70 by 28 units, so at 48 dp the frame is about 13 px tall and a dot has a radius of about 2.2 px; 7 against 8 and 9 against 10 are hard to tell apart. Picture games draw at hero size today. If a count is ever drawn below about 64 dp, either raise the minimum size for the count family in `PictureArt` or scale the frame up to the 88-unit width as the swatches do (with a C2 waiver), and add a 48 dp check of `count-7` against `count-8` to the sheet.
 - Colour words and their sticker objects (red and the apple, brown and the bear, and so on) are look-alike pictures. Before a question builder runs over a cross-topic universe, those pairs must be excluded as distractors of each other (derived from `COLOR_SWATCHES[*].object`).
+
+## Checklist for batch B (W-4)
+
+Registered, all `status: 'approved'`: the eight other animal glyphs (`animal-puppy`, `animal-rabbit`, `animal-bird`, `animal-fish`, `animal-duck`, `animal-fox`, `animal-monkey`, `animal-butterfly`; the cat is from W-1b, the bear and the elephant from W-3, so the animal family is complete) and the twelve body parts (from the `bodyPart` generator of W-1c). The owner's per-batch review is replaced by a multi-agent review against the §3.12 checklist (owner decision, 2026-10-11, production level); this section is its record, for the owner to spot-check.
+
+Review sheet: `w4-review.png` in this folder, rendered from the data with `glyphToSvgString` at 96 and 48 px and in silhouette, all eleven animals and all twelve body parts. Result against the checklist:
+
+- Recognisable at 48 px and in silhouette: every animal has its own outline in silhouette (the rabbit's ears, the fox's pointed ears and chin, the monkey's side ears and tuft, the puppy's hanging ears, the bird on its branch, the fish with its tail and bubbles, the duck on its wave, the butterfly's four wings), so no two animals of the topic share a silhouette. The body parts are uniform in silhouette by design (W8); the ring tells them apart in colour.
+- Every face smiles through `face()`; the bird, the fish and the duck are profiles with one eye and the mouth line turned up (C5).
+- Tokens only, at most 4 fill tones (puppy: `stage.stage2`, `vocab.brown`, `feedback.nudgeLight`, `hoya.cheek`; bird: `vocab.blue`, `vocab.skyBlue`, `hoya.fur`, `vocab.brown`), no text, digits or emoji, 8 to 16 shapes per animal.
+- Topic fit: the faces (cat, puppy, rabbit, bear, fox, monkey, elephant) share one head size and the ink outline; the bodies (bird, fish, duck, butterfly) fill the same box, so a four-picture question has no "different" option. The cat and the fox, both orange faces with pointed ears, differ by the whiskers and round head against the fox's white cheeks, dark ear tips and pointed chin, also in silhouette. The bird is round and blue; the crow (a colour-swatch prop) is black with a long tail, and props are never options.
+- Fixes made during review: the monkey's first face patch carried a second, open mouth under the `face()` smile (removed) and was 84 units wide, past C2 (ears and head brought in to 74).
+- `body-mouth` and `body-tooth` side by side at 48 px: the mouth ring circles the whole open smile, the tooth ring sits tight on the two teeth; they differ only by the ring, as §3.6.3 records, so F-VOC-004 never offers the two in one question.
+
