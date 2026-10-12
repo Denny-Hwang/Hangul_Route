@@ -1,10 +1,12 @@
-import type { Episode } from '@hangul-route/content-schema';
+import type { Episode, Quest, Story } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { browseQuestOpen, isContentLocked, questAccess } from '../../content-access';
-import { entryForQuest } from '../../story/story-index';
-import { itemAccess, type AccessItemKind } from '../access';
-import { defaultBrowseBundle, episodeOfQuest, isOpenableEpisode, vocabTopicKey, type BrowseBundle } from '../bundle';
-import { CULTURE_ID, TALE_ID, fixtureBundle } from './browse-fixture';
+import { bookEpisode, storyQuest } from '../../story/__tests__/shelf-fixture';
+import { storyLockFor } from '../../story/story-pick';
+import { entryForQuest, type StoryIndexEntry } from '../../story/story-index';
+import { itemAccess, type AccessItemKind, type FreeQuestOpen } from '../access';
+import { buildBrowseBundle, defaultBrowseBundle, episodeOfQuest, isOpenableEpisode, vocabTopicKey, type BrowseBundle } from '../bundle';
+import { CULTURE_ID, TALE_ID, fixtureBundle, fixtureInput, fixtureStories } from './browse-fixture';
 
 /**
  * F-BROWSE-001 §4.2 and §4.13 (BR-4): what each scope may open. Sampler is
@@ -57,8 +59,8 @@ describe('itemAccess (F-BROWSE-001 §4.2)', () => {
   });
 
   it('switch on: sampler equals what a new free learner can open, item by item', () => {
-    // A new free learner's story rule, with the free set of this bundle (its sampler stories).
-    const storyOpen = (storyId: string): boolean => !isContentLocked({ kind: 'story', id: storyId, tier: 'free', gatingEnabled: true, registry: bundle.freeRegistry });
+    // A new free learner's story rule (the learner's own `storyLockFor`), with the free set of this bundle (its sampler stories).
+    const storyLocked = storyLockFor({ tier: 'free', gatingEnabled: true, episodes: bundle.episodes, registry: bundle.freeRegistry });
     let closedLessons = 0;
     for (const quest of openableQuests) {
       const story = entryForQuest(bundle.storyIndex, quest.id);
@@ -66,12 +68,12 @@ describe('itemAccess (F-BROWSE-001 §4.2)', () => {
       const lessonOpen = questAccess({ questId: quest.id, tier: 'free', gatingEnabled: true, completedQuestIds: new Set() }) !== 'closed';
       expect(browseQuestOpen('sampler', true)(quest.id), quest.id).toBe(lessonOpen);
       if (!story && !lessonOpen) closedLessons += 1;
-      const open = story ? storyOpen(story.storyId) : lessonOpen;
+      const open = story ? !storyLocked(story) : lessonOpen;
       expect(itemAccess({ kind: 'quest', id: quest.id }, 'sampler', true, ctx), quest.id).toBe(open ? 'open' : 'closed');
     }
     expect(closedLessons).toBeGreaterThan(0); // the free lessons (all of Stage 1) are a real subset
     for (const entry of bundle.storyIndex) {
-      expect(itemAccess({ kind: 'story', id: entry.storyId }, 'sampler', true, ctx), entry.storyId).toBe(storyOpen(entry.storyId) ? 'open' : 'closed');
+      expect(itemAccess({ kind: 'story', id: entry.storyId }, 'sampler', true, ctx), entry.storyId).toBe(storyLocked(entry) ? 'closed' : 'open');
     }
     let closedTopics = 0;
     for (const topic of bundle.vocabTopics) {
@@ -103,6 +105,31 @@ describe('itemAccess (F-BROWSE-001 §4.2)', () => {
     }
   });
 
+  it("switch on: a book's story quest and the book follow the learner's book rule, the story's mark and the stage (Stage 5 is not free)", () => {
+    const tale = fixtureStories()[0] as Story; // a sampler story
+    const bookQuest = { ...storyQuest('hangul-day', 'read-along'), titleEn: 'Read along', estimatedMinutes: 5 } as Quest;
+    const book = bookEpisode('episode:stage5-letters', [bookQuest.id]);
+    const input = fixtureInput([tale]);
+    const withBook = buildBrowseBundle({ ...input, episodes: [...input.episodes.filter((e) => e.id !== book.id), book], quests: [...input.quests, bookQuest] });
+    const entry = withBook.storyIndex.find((e) => e.questId === bookQuest.id) as StoryIndexEntry;
+    expect(entry).toMatchObject({ placement: 'grid', stage: 'stage5', storyId: tale.id });
+    // the learner's own rule: Home never offers this book to a free learner
+    expect(storyLockFor({ tier: 'free', gatingEnabled: true, episodes: withBook.episodes, registry: withBook.freeRegistry })(entry)).toBe(true);
+    const at = (item: Item, scope: 'full' | 'sampler', gating: boolean, freeQuestOpen?: FreeQuestOpen) =>
+      itemAccess(item, scope, gating, { bundle: withBook, ...(freeQuestOpen ? { freeQuestOpen } : {}) });
+    expect(at({ kind: 'quest', id: bookQuest.id }, 'sampler', true)).toBe('closed');
+    expect(at({ kind: 'episode', id: book.id }, 'sampler', true)).toBe('closed');
+    // the lesson predicate never opens a book quest (a story quest is not a grid lesson)
+    expect(at({ kind: 'quest', id: bookQuest.id }, 'sampler', true, () => true)).toBe('closed');
+    // the same story's shelf quest and the story page still open with its sampler mark
+    const shelf = withBook.storyIndex.find((e) => e.storyId === tale.id && e.placement === 'shelf') as StoryIndexEntry;
+    expect(at({ kind: 'quest', id: shelf.questId }, 'sampler', true)).toBe('open');
+    expect(at({ kind: 'story', id: tale.id }, 'sampler', true)).toBe('open');
+    // full, and the switch off: open
+    expect(at({ kind: 'quest', id: bookQuest.id }, 'full', true)).toBe('open');
+    expect(at({ kind: 'episode', id: book.id }, 'sampler', false)).toBe('open');
+  });
+
   it("an unreviewed story's quest and shelf episode are not in this bundle: \"Coming later\" for every scope", () => {
     for (const item of [
       { kind: 'quest' as const, id: 'quest:story-draft-tale-listen' },
@@ -115,19 +142,23 @@ describe('itemAccess (F-BROWSE-001 §4.2)', () => {
   });
 
   it('the production bundle: switch off opens everything; switch on follows the learner free set', () => {
-    const production = defaultBrowseBundle();
-    for (const episode of production.episodes.filter(isOpenableEpisode)) {
-      expect(itemAccess({ kind: 'episode', id: episode.id }, 'sampler', false), episode.id).toBe('open');
+    const production = { bundle: defaultBrowseBundle() };
+    for (const episode of production.bundle.episodes.filter(isOpenableEpisode)) {
+      expect(itemAccess({ kind: 'episode', id: episode.id }, 'sampler', false, production), episode.id).toBe('open');
     }
-    // switch on: all of Stage 1 opens (the free lessons), a Stage 2 lesson does not
-    expect(itemAccess({ kind: 'episode', id: 'episode:stage1-letters' }, 'sampler', true)).toBe('open');
-    expect(itemAccess({ kind: 'quest', id: 'quest:stage1-life-q1' }, 'sampler', true)).toBe('open');
-    expect(itemAccess({ kind: 'quest', id: 'quest:stage2-life-q1' }, 'sampler', true)).toBe('closed');
-    expect(itemAccess({ kind: 'quest', id: 'quest:stage2-life-q1' }, 'full', true)).toBe('open');
-    for (const topic of production.vocabTopics) {
-      expect(itemAccess({ kind: 'vocab-topic', id: topic.id }, 'sampler', false), topic.id).toBe('open');
+    // switch on: every grid lesson of Stage 1 opens (the free plan, F-ENT-003 OD-1), no lesson of a later stage does
+    let later = 0;
+    for (const quest of production.bundle.quests.filter((q) => episodeOfQuest(production.bundle, q.id) && !entryForQuest(production.bundle.storyIndex, q.id))) {
+      const stage = episodeOfQuest(production.bundle, quest.id)?.stage;
+      if (stage !== 'stage1') later += 1;
+      expect(itemAccess({ kind: 'quest', id: quest.id }, 'sampler', true, production), quest.id).toBe(stage === 'stage1' ? 'open' : 'closed');
+      expect(itemAccess({ kind: 'quest', id: quest.id }, 'full', true, production), quest.id).toBe('open');
+    }
+    expect(later).toBeGreaterThan(0);
+    for (const topic of production.bundle.vocabTopics) {
+      expect(itemAccess({ kind: 'vocab-topic', id: topic.id }, 'sampler', false, production), topic.id).toBe('open');
       const locked = isContentLocked({ kind: 'vocab-topic', id: vocabTopicKey(topic.id), tier: 'free', gatingEnabled: true });
-      expect(itemAccess({ kind: 'vocab-topic', id: topic.id }, 'sampler', true), topic.id).toBe(locked ? 'closed' : 'open');
+      expect(itemAccess({ kind: 'vocab-topic', id: topic.id }, 'sampler', true, production), topic.id).toBe(locked ? 'closed' : 'open');
     }
   });
 
