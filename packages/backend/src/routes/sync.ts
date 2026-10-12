@@ -139,8 +139,9 @@ syncRoutes.get('/learners/:id/inbox', async (c) => {
 /**
  * The learner's read state and reaction on one note (F-FEEDBACK-001 section 7.6). Any device of the learner,
  * a class-scoped one included, but only for a note this device is delivered (the inbox rules): anything else,
- * hidden, withdrawn, another learner's or a family note on a class device, is 404. Idempotent: `readAt` is set
- * once, the last reaction wins.
+ * hidden, withdrawn, another learner's or a family note on a class device, is 404. "Delivered" includes rule 7:
+ * a note past the 30 newest is 404 too, and the device drops its queued write (section 6.9), as the next inbox
+ * drops the note. Idempotent: `readAt` is set once, the last reaction wins.
  */
 syncRoutes.put('/learners/:id/notes/:noteId/state', async (c) => {
   const learnerId = c.req.param('id');

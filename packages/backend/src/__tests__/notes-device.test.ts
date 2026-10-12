@@ -242,6 +242,16 @@ describe('PUT /api/sync/learners/:id/notes/:noteId/state (section 7.6)', () => {
     expect((await db.getNote(toMin.id))?.readAt).toBeNull();
   });
 
+  it('a note past the 30 newest (rule 7) is not delivered, so its state write answers 404 and changes nothing', async () => {
+    const rows = Array.from({ length: 31 }, (_, i) => note({ createdAt: ago((i + 1) * 60_000) }));
+    await db.insertNotes(rows, []);
+    const oldest = rows[30]!;
+    const res = await putState(oldest.id, { read: true, reaction: 'thanks' });
+    expect(res.status).toBe(404);
+    expect(await db.getNote(oldest.id)).toMatchObject({ readAt: null, reaction: null });
+    expect((await putState(rows[29]!.id, { read: true })).status).toBe(200);
+  });
+
   it('a class-scoped device may write the state of a class note', async () => {
     const c = note();
     await db.insertNotes([c], []);
