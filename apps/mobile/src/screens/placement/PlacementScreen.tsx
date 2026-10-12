@@ -48,7 +48,7 @@ import { useAccountStore } from '../../store/account-store';
 import { usePlacementRunStore } from '../../store/placement-run-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
-import { effectiveTier } from '../../store/tier-store';
+import { accessTier } from '../../store/tier-store';
 import { useUiStore } from '../../store/ui-store';
 import { HandoffScreen } from './HandoffScreen';
 import { ItemScreen } from './ItemScreen';
@@ -297,7 +297,7 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
       }
       const snapshot = useProgressStore.getState().byProfile[profile.id];
       const completed = new Set((snapshot?.quests ?? []).filter((q) => q.completedAt !== undefined).map((q) => q.questId));
-      const tier = effectiveTier(profile.id, new Date()).tier;
+      const tier = accessTier(profile.id, new Date());
       const opts = { isEntitled: (stage: string) => isStageEntitled(stage, tier), completedQuestIds: completed };
       const catalog = placementRouteCatalog(questsAll, episodesAll);
       const result: PlacementResult = finishRun(savedRun.run, {

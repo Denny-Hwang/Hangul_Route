@@ -23,7 +23,8 @@ export type IconName =
   | 'check-circle'
   | 'book'
   | 'ear'
-  | 'pencil';
+  | 'pencil'
+  | 'dash';
 
 export interface IconProps {
   name: IconName;

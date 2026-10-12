@@ -27,6 +27,11 @@ export function entitlementTier(subscription: SubscriptionState | null, now: Dat
   return 'premium';
 }
 
+/**
+ * Coarse: the stage-level answer (placement start, card earn hints, the stages
+ * a plan reads). Whether a quest may start is decided by `isQuestOpen`
+ * (`logic/content-access.ts`, F-ENT-003 section 3.3).
+ */
 export function isStageEntitled(stageKey: string, tier: Tier): boolean {
   return tier === 'premium' || isFreeContent('stage', stageKey);
 }

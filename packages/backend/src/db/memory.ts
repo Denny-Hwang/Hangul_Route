@@ -1,9 +1,11 @@
-import { TRANSFER_COOLING_OFF_MS, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type Space, type TransferBlockReason, type TransferEndReason, type TransferSlot } from '@hangul-route/content-schema';
+import { TRANSFER_COOLING_OFF_MS, type BillingEvent, type BillingEventKind, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type Space, type TransferBlockReason, type TransferEndReason, type TransferSlot } from '@hangul-route/content-schema';
 import { id, type Account, type Learner, type LearnerDevice, type SnapshotRecord } from '../store';
+import { assertBillingLimit, billingEventFields, newestBillingEvent, REFUNDABLE_BILLING_KINDS } from './billing-rules';
 import { allSlotsIn, assertNewTransfer, assertTransferChecks, assertTransferEventChecks, assertTransferPrefKey, assertTransferSlot, consentedLearnerSlot, finiteCap, isEndedTransfer, isOpenTransfer, teacherSlotsOf } from './transfer-rules';
 import {
   learnerRateKeys,
   mergeEntitlement,
+  type BillingEventInput,
   type EntitlementMerge,
   type ConsentResetReason,
   type Db,
@@ -23,6 +25,7 @@ import {
 const deviceKey = (learnerId: string, deviceId: string): string => `${learnerId}|${deviceId}`;
 const membershipKey = (spaceId: string, kind: MemberKind, memberId: string): string => `${spaceId}|${kind}|${memberId}`;
 const entitlementKey = (kind: string, subjectId: string, planKey: string): string => `${kind}|${subjectId}|${planKey}`;
+const billingEventKey = (provider: string, providerRef: string, kind: string): string => `${provider}|${providerRef}|${kind}`;
 
 function clone<T>(value: T): T {
   return structuredClone(value);
@@ -59,6 +62,7 @@ export class MemoryDb implements Db {
   private transferPrefs = new Map<string, TransferPrefs>();
   private rateHits: Array<{ id: number; key: string; at: string }> = [];
   private rateHitSeq = 0;
+  private billingEvents = new Map<string, BillingEvent>();
 
   async getAccount(accountId: string): Promise<Account | null> {
     return clone(this.accounts.get(accountId) ?? null);
@@ -459,8 +463,36 @@ export class MemoryDb implements Db {
     this.transferPrefs.set(learnerId, { ...current, [which]: value, updatedAt: now.toISOString() });
   }
 
+  async recordBillingEvent(input: BillingEventInput, now: Date): Promise<BillingEvent> {
+    const row = billingEventFields(input);
+    const k = billingEventKey(row.provider, row.providerRef, row.kind);
+    const stored = this.billingEvents.get(k) ?? { ...row, id: id('bev'), createdAt: now.toISOString() };
+    const next = stored.paymentRef === null && row.paymentRef !== null ? { ...stored, paymentRef: row.paymentRef } : stored;
+    this.billingEvents.set(k, next);
+    return clone(next);
+  }
+  async billingEventsFor(subjectKind: BillingEvent['subjectKind'], subjectId: string, limit: number): Promise<BillingEvent[]> {
+    assertBillingLimit(limit);
+    return clone([...this.billingEvents.values()].filter((e) => e.subjectKind === subjectKind && e.subjectId === subjectId).sort(newestBillingEvent).slice(0, limit));
+  }
+  async billingEventById(eventId: string): Promise<BillingEvent | null> {
+    return clone([...this.billingEvents.values()].find((e) => e.id === eventId) ?? null);
+  }
+  async billingEventByRef(provider: BillingEvent['provider'], providerRef: string, kind?: BillingEventKind): Promise<BillingEvent | null> {
+    const rows = [...this.billingEvents.values()].filter((e) => e.provider === provider && e.providerRef === providerRef && (kind === undefined || e.kind === kind));
+    return clone(rows.sort(newestBillingEvent)[0] ?? null);
+  }
+  async billingEventByPaymentRef(paymentRef: string): Promise<BillingEvent | null> {
+    return clone([...this.billingEvents.values()].filter((e) => e.paymentRef === paymentRef && REFUNDABLE_BILLING_KINDS.includes(e.kind)).sort(newestBillingEvent)[0] ?? null);
+  }
+  async entitlementByProviderRef(provider: Entitlement['provider'], providerRef: string): Promise<Entitlement | null> {
+    const rows = [...this.entitlements.values()].filter((e) => e.provider === provider && e.providerRef === providerRef);
+    rows.sort((a, b) => (a.updatedAt === b.updatedAt ? (a.id < b.id ? 1 : a.id > b.id ? -1 : 0) : a.updatedAt < b.updatedAt ? 1 : -1));
+    return clone(rows[0] ?? null);
+  }
+
   async reset(): Promise<void> {
-    for (const m of [this.accounts, this.learners, this.devices, this.snapshots, this.spaces, this.memberships, this.plans, this.relinks, this.entitlements, this.waitlist, this.transfers, this.transferPrefs]) m.clear();
+    for (const m of [this.accounts, this.learners, this.devices, this.snapshots, this.spaces, this.memberships, this.plans, this.relinks, this.entitlements, this.waitlist, this.transfers, this.transferPrefs, this.billingEvents]) m.clear();
     this.transferEventRows = [];
     this.rateHits = [];
   }

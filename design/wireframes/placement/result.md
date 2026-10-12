@@ -39,13 +39,13 @@ Then: the learner starts playing there, the route skips what they know without m
 - G2, no quest left for this tier: "You know a lot! More adventures are coming." with `[[ OPEN STORIES ]]` (Library) when a reviewed story exists, else `[[ SEE THE WHOLE MAP ]]`. No purchase button for the learner.
 - G3, retake that does not change the route: "Your route stays right where it is." and the same buttons.
 - A result with parts not tested (no sound, sound guide set to always, ended early) says so in one calm line for grown-ups only (J), never on this screen.
-- **Amended (F-PLC-001 AM-1, AM-2, AM-12, AM-14; F-ROUTE-001 R-0):** the button row above is replaced by `journey/my-route-overview.md` J1 (self profile: weekly plan strip with **Use this plan** as the only primary, **Change**, **Just start**, links **See my route** and **For grown-ups**) and J2 (child profile: **Start**, **See my route**, **For grown-ups: set up a weekly plan**); a not-tested run uses J3's headline. **See the whole map** remains only while `flags.myRouteEnabled` is off. G3's learner line becomes "Your plan stays right where it is." when a plan exists; a retake that raises the start shows K3 there. Promoted here (F-PLC-001 P-0).
+- **Amended (F-PLC-001 AM-1, AM-2, AM-12, AM-14; F-ROUTE-001 R-0):** the button row above is replaced by `journey/my-route-overview.md` J1 (self profile: weekly plan strip with **Use this plan** as the only primary, **Change**, **Just start**, links **See Learning Route** and **For grown-ups**) and J2 (child profile: **Start**, **See Learning Route**, **For grown-ups: set up a weekly plan**); a not-tested run uses J3's headline. **See the whole map** remains only while `flags.myRouteEnabled` is off. G3's learner line becomes "Your plan stays right where it is." when a plan exists; a retake that raises the start shows K3 there. Promoted here (F-PLC-001 P-0).
 - **After a Short run (W-7):** no text to read for a child. "Hoya found your starting spot!", or "Here is a good place to start" when reading was not tested. A self profile also gets the quiet link "Try the standard check" when the Short hint fires. Never "for younger learners".
 
 ## Interaction points
 
 - START (or the J1 / J2 primary when the route flag is on): resets the stack to Main plus the quest player on the start quest.
-- See the whole map: `journey/grid` (only while `flags.myRouteEnabled` is off; otherwise See my route).
+- See the whole map: `journey/grid` (only while `flags.myRouteEnabled` is off; otherwise See Learning Route, renamed by AMENDMENTS-ROUTE-LEARNING-ROUTE §7.2, LR-1).
 - For grown-ups: PIN gate -> `parent/placement-report`.
 - Short with the hint (self profile): the quiet link "Try the standard check".
 

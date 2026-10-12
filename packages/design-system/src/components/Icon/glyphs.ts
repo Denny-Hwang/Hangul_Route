@@ -126,6 +126,9 @@ export const iconGlyphs: Record<IconName, readonly IconGlyphPart[]> = {
     stroke('M5 15 L9 19', 2),
     stroke('M13 7 L17 11', 2),
   ],
+  // F-VOC-004 §3.6, §3.8: the non-colour mark of a locked miss (the Speed Round has no retry, so it
+  // is not `replay`). One short level bar, never a cross or an X.
+  dash: [stroke('M7 12 H17', 2.6)],
 };
 
 export const iconNames = Object.keys(iconGlyphs) as readonly IconName[];

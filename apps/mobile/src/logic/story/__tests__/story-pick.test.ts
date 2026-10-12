@@ -257,7 +257,7 @@ describe('nextStoryAfter', () => {
 });
 
 describe('storyLockFor (the Home and shelf `isLocked`, F-STORY-004 §3.9)', () => {
-  const registry = { stages: new Set(['stage1']), vocabTopics: new Set<string>(), samplerStories: new Set(['story:tiger']) };
+  const registry = { stages: new Set(['stage1']), vocabTopics: new Set<string>(), samplerStories: new Set(['story:tiger']), freeQuests: new Set<string>(), gridLessons: new Set<string>() };
   const shelf = (slug: string) => index.find((e) => e.placement === 'shelf' && e.storyId === `story:${slug}`)!;
   const book = (slug: string) => index.find((e) => e.placement === 'grid' && e.storyId === `story:${slug}`)!;
   const stage5 = bookEpisode('episode:stage5-letters', [], { status: 'shipped' });

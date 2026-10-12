@@ -28,7 +28,7 @@ import { appRouteCatalog } from '../../logic/placement/route-skip';
 import type { MainTabParamList, RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
-import { effectiveTier, useTierStore } from '../../store/tier-store';
+import { useAccessTier } from '../../store/tier-store';
 import { EpisodeDetailView } from '../episode/EpisodeDetailView';
 import { flags } from '../../config/flags';
 
@@ -80,14 +80,11 @@ export function JourneyScreen(): React.ReactElement {
   // The level check's marks (F-PLC-001 section 3.7, consumer 3): placed-out cells and the start pin.
   // Nothing changes for a learner who never took the check.
   // The pin follows the cursor's stage rule (OD-4), so it re-renders when the inbox changes the tier.
-  const cachedTier = useTierStore((st) => (profile ? st.byLearner[profile.id] : undefined));
-  const tier = effectiveTier(profile?.id ?? '', new Date()).tier;
+  const tier = useAccessTier(profile?.id ?? '');
   const placements = snap?.placements;
   const marks = useMemo(
     () => journeyMarks(placements, ROUTE_CATALOG, cursorEntitlement(tier)),
-    // `cachedTier` re-renders this screen when the inbox changes the tier.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [placements, tier, cachedTier],
+    [placements, tier],
   );
   const snapQuests = snap?.quests;
   const completedIds = useMemo(
@@ -160,6 +157,7 @@ export function JourneyScreen(): React.ReactElement {
       onOpenCard={(cardId) => navigation.navigate('CardDetail', { cardId })}
       onOpenStory={(t) => (t.route === 'StoryReader' ? navigation.navigate('StoryReader', t.params) : navigation.navigate('QuestPlayer', t.params))}
       onOpenSources={(storyId) => navigation.navigate('StorySources', { storyId, from: 'episode' })}
+      onOpenCultureNotes={(storyId) => navigation.push('CultureNotes', { storyId })}
     />
   ) : (
     <ComingSoonPane />

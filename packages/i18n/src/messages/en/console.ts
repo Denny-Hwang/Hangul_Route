@@ -42,7 +42,7 @@ export const consoleMsgs = {
   tryAgain: 'Try again',
   noSpaces: "You're not in any space yet.",
   createSpace: 'Create a space',
-  writeOnBoard: 'Write it on the board. Students join from Settings → Classes & family → Join a class.',
+  writeOnBoard: 'Write it on the board. Students join from Profile → Classes & family → Join a class.',
   oldCodeStops: 'The old code stops working the moment a new one is made.',
   notSyncedYet: 'not synced yet',
   comingWithPlans: 'Coming with plans',
@@ -991,7 +991,8 @@ export const consoleMsgs = {
    * `later`); grown-up copy may name the level check.
    */
   journey: {
-    title: 'Journey',
+    /** The page name (AMENDMENTS-ROUTE-LEARNING-ROUTE section 7.2, LR-1). */
+    title: 'Learning Route',
     onStage: (n: number) => `On Stage ${n}`,
     /** "4 known from the level check, 2 quests done"; the known part is left out when it is 0. */
     stageLine: (known: number, done: number) => {

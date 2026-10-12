@@ -44,7 +44,7 @@ import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
-import { effectiveTier } from '../../store/tier-store';
+import { useAccessTier } from '../../store/tier-store';
 import { LinkButton, RadioTile } from '../placement/parts';
 
 /**
@@ -111,6 +111,8 @@ export function PlacementReportScreen({ route, navigation }: Props): React.React
   const locale = useLocale();
   const profile = useProfileStore((s) => s.profiles.find((p) => p.id === profileId) ?? null);
   const snapshot = useProgressStore((s) => s.byProfile[profileId]);
+  // The access tier (F-ENT-003 section 3.4) decides the start quest, as the level check itself does.
+  const tier = useAccessTier(profileId);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -120,7 +122,6 @@ export function PlacementReportScreen({ route, navigation }: Props): React.React
 
   const page = useMemo(() => {
     const completed = new Set((snapshot?.quests ?? []).filter((q) => q.completedAt !== undefined).map((q) => q.questId));
-    const tier = effectiveTier(profileId, new Date()).tier;
     return reportPage({
       placements: snapshot?.placements ?? [],
       catalog: CATALOG,
@@ -129,7 +130,7 @@ export function PlacementReportScreen({ route, navigation }: Props): React.React
       profileType: profile === null ? 'child' : effectiveLearnerType(profile),
       lookup: LOOKUP,
     });
-  }, [snapshot, profile, profileId]);
+  }, [snapshot, profile, tier]);
 
   const questTitle = (id: string): string => {
     const quest = questsAll.find((q) => q.id === id);

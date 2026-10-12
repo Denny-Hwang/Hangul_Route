@@ -1,4 +1,4 @@
-import { isStripeSubscriptionRef, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type RelinkRequest, type Space } from '@hangul-route/content-schema';
+import { isStripeSubscriptionRef, type BillingEvent, type BillingEventKind, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type RelinkRequest, type Space } from '@hangul-route/content-schema';
 import type { TransferBlockReason, TransferEndReason, TransferSlot } from '@hangul-route/content-schema';
 import { isEntitlementActive } from '../lib/entitlement';
 import type { Account, Learner, LearnerDevice, SnapshotRecord } from '../store';
@@ -27,6 +27,9 @@ export interface WaitlistEntry {
   consentTextVersion: string;
   unsubscribedAt: string | null;
 }
+
+/** `recordBillingEvent` input (F-BILL-002 section 5.5): the row without its generated id and creation time. */
+export type BillingEventInput = Omit<BillingEvent, 'id' | 'createdAt'>;
 
 /** A re-link request as stored: `secret` is held until the device picks it up once. */
 export type StoredRelink = RelinkRequest & { secret: string | null };
@@ -185,6 +188,24 @@ export interface Db {
   getTransferPrefs(learnerId: string): Promise<TransferPrefs>;
   /** Upsert touching only `which`. */
   setTransferPref(learnerId: string, which: TransferPrefKey, value: boolean, now: Date): Promise<void>;
+
+  // billing history (F-BILL-002 section 5.5, migration 0007)
+  /**
+   * Insert-or-keep by (provider, providerRef, kind), so a webhook retry writes nothing new; then fill
+   * `paymentRef` when the stored row has none and `input` carries one. Answers the stored row.
+   * Refuses (throws) what `BillingEventSchema` refuses and an `occurredAt` that is not canonical ISO;
+   * an empty `paymentRef` is stored as null (`billing-rules.ts`).
+   */
+  recordBillingEvent(input: BillingEventInput, now: Date): Promise<BillingEvent>;
+  /** A subject's rows, newest first (`occurredAt`, then `createdAt`, then id), at most `limit` (a non-negative integer). */
+  billingEventsFor(subjectKind: BillingEvent['subjectKind'], subjectId: string, limit: number): Promise<BillingEvent[]>;
+  billingEventById(id: string): Promise<BillingEvent | null>;
+  /** The row on a provider reference; without `kind`, the newest row on it. */
+  billingEventByRef(provider: BillingEvent['provider'], providerRef: string, kind?: BillingEventKind): Promise<BillingEvent | null>;
+  /** The newest `purchase` or `renewal` row whose `paymentRef` is this payment intent: the row a refund belongs to (section 5.4). */
+  billingEventByPaymentRef(paymentRef: string): Promise<BillingEvent | null>;
+  /** The entitlement a provider reference (a Stripe subscription id) points at; the most recently updated when several do. */
+  entitlementByProviderRef(provider: Entitlement['provider'], providerRef: string): Promise<Entitlement | null>;
 
   /** Tests only: wipe everything. */
   reset(): Promise<void>;

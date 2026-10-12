@@ -79,8 +79,8 @@ describe('learner.firstQuest', () => {
 });
 
 describe('a11y tab labels', () => {
-  it('are the three tabs as shipped', () => {
-    expect(m.a11y.tabs).toEqual({ home: 'Today', journey: 'Journey', library: 'Library' });
+  it('are the three tabs as shipped, plus the Route tab label (LR-1, LR-OD-1)', () => {
+    expect(m.a11y.tabs).toEqual({ home: 'Today', journey: 'Journey', library: 'Library', route: 'Route' });
     expect(m.a11y.goBack).toBe('Go back');
   });
 });

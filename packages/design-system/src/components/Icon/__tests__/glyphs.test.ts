@@ -28,6 +28,7 @@ const EXPECTED_NAMES: IconName[] = [
   'book',
   'ear',
   'pencil',
+  'dash',
 ];
 
 describe('icon glyphs', () => {
@@ -171,5 +172,28 @@ describe('My route glyphs (F-ROUTE-001 R-2a; design/components/Icon/spec.md)', (
     // the open book has a spine; the pencil a separate tip and ferrule line
     expect(strokes('book')).toHaveLength(2);
     expect(strokes('pencil')).toHaveLength(3);
+  });
+});
+
+describe('the miss dash (F-VOC-004 §3.6, §3.8; design/components/Icon/spec.md)', () => {
+  it('is one short horizontal stroke across the centre, shorter than the plus bar, with no fill', () => {
+    const parts = iconGlyphs.dash;
+    expect(parts).toHaveLength(1);
+    const [bar] = parts;
+    expect(bar?.kind).toBe('stroke');
+    const match = /^M(\S+) (\S+) H(\S+)$/.exec(bar?.d ?? '');
+    expect(match, bar?.d).not.toBeNull();
+    const [x1, y, x2] = (match ?? []).slice(1).map(Number) as [number, number, number];
+    expect(y).toBe(12);
+    expect(x1 + x2).toBe(24);
+    expect(x2 - x1).toBeLessThan(14);
+    expect(x2 - x1).toBeGreaterThanOrEqual(8);
+    expect(bar?.kind === 'stroke' ? bar.width : undefined).toBeGreaterThanOrEqual(2.4);
+  });
+
+  it('never reads as a cross, a close mark or a plus', () => {
+    expect(iconGlyphs.dash).not.toEqual(iconGlyphs.close);
+    expect(iconGlyphs.dash).not.toEqual(iconGlyphs.plus);
+    expect(iconGlyphs.dash.some((part) => /V/.test(part.d))).toBe(false);
   });
 });

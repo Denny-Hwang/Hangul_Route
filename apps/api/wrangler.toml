@@ -42,6 +42,10 @@ keep_vars = true
 # ALLOWED_ORIGINS                    comma-separated browser origins allowed on /api/*
 #                                    (F-CONSOLE-001). Unset = hangulroute.com / www / app
 #                                    + localhost + *.workers.dev previews.
+#                                    Also the Clerk authorizedParties list (F-APP-001 A-9): a
+#                                    sign-in token minted on a site left out here gets 401. In
+#                                    production (ENVIRONMENT unset) tokens get the list alone,
+#                                    never the localhost / *.workers.dev leniency.
 # STRIPE_PRICE_FAMILY_YEARLY         Stripe price id — Family Plan, $15.30 / year, recurring
 #                                    (owner decision 2026-10-11). The old
 #                                    STRIPE_PRICE_FAMILY_LIFETIME (one-off) is not read; delete it.
