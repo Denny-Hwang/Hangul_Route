@@ -36,6 +36,20 @@ describe('POST /api/telemetry', () => {
     expect(store.events).toHaveLength(9);
   });
 
+  it('accepts the five F-ENT-003 names with their payloads (Worker first, E3-1b)', async () => {
+    const events: Array<[string, Record<string, unknown>]> = [
+      ['access.preview_opened', { stage: 'stage2', day: 6, from: 'journey' }],
+      ['access.help_asked', { from: 'episode', audience: 'family' }],
+      ['access.free_end_reached', { freeDays: 5, placedOut: false }],
+      ['route.next_started', { source: 'class', surface: 'home' }],
+      ['route.offplan_finished', { source: 'self', stage: 'stage1' }],
+    ];
+    for (const [name, payload] of events) {
+      expect((await post({ name, profileId: 'profile:a', payload })).status, name).toBe(201);
+    }
+    expect(store.events.map((e) => [e.name, e.payload])).toEqual(events);
+  });
+
   it('rejects unknown or missing event names with 422', async () => {
     for (const body of [{ name: 'unknown.event' }, { name: 'parent.notify.queued' }, {}, { name: 42 }]) {
       const r = await post(body);

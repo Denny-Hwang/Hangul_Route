@@ -113,6 +113,12 @@ export const TELEMETRY_EVENT_NAMES = [
   'vocab.round.start',
   'vocab.round.complete',
   'vocab.challenge_toggled',
+  // F-ENT-003 §3.12 (stage keys, codes and counts only; `day` is the internal route day; never a title, name, price or tier word)
+  'access.preview_opened',
+  'access.help_asked',
+  'access.free_end_reached',
+  'route.next_started',
+  'route.offplan_finished',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);
