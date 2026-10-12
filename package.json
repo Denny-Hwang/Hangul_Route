@@ -16,7 +16,7 @@
     "vocab:check": "node scripts/build-vocab.mjs --check"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=20.6"
   },
   "devDependencies": {
     "turbo": "^2.3.3"

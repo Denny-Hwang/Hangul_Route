@@ -1,6 +1,6 @@
-import { TEACHER_VISIBLE_SUMMARY_KEYS, type ProgressSummary } from '@hangul-route/content-schema';
+import { ActivitySummarySchema, TEACHER_HIDDEN_SUMMARY_KEYS, TEACHER_VISIBLE_SUMMARY_KEYS, type ActivitySummary, type ProgressSummary } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { rosterSummary, teacherVisibleSummary } from '../roster-summary';
+import { activityOf, rosterSummary, teacherVisibleSummary } from '../roster-summary';
 
 const placement = {
   takenAt: '2026-10-10T10:05:00.000Z',
@@ -44,7 +44,8 @@ const own = new Set(['plan:own-1', 'plan:own-2', 'plan:own-unstarted']);
 describe('teacherVisibleSummary (F-SPACE-002 T-1a, section 4.11)', () => {
   it('keeps exactly the allow-listed keys, with their values, and drops stage1Anchor and schemaVersion', () => {
     const out = teacherVisibleSummary(full, own);
-    expect(Object.keys(out ?? {}).sort()).toEqual([...TEACHER_VISIBLE_SUMMARY_KEYS].sort());
+    // `activity` (F-REPORT-001 RP-W2) is allow-listed too; its own projection is tested below.
+    expect(Object.keys(out ?? {}).sort()).toEqual([...TEACHER_VISIBLE_SUMMARY_KEYS].filter((k) => k !== 'activity').sort());
     expect(out).toEqual({
       lastActiveAt: full.lastActiveAt,
       streakDays: 4,
@@ -193,6 +194,176 @@ describe('summary.vocab never reaches a roster yet (F-VOC-005 section 3.8; the c
       const out = rosterSummary({ ...full, vocab }, own, kind);
       expect(out && 'vocab' in out).toBe(false);
       expect(out).toEqual(rosterSummary(full, own, kind));
+    }
+  });
+});
+
+describe('activityOf and summary.activity on the roster (F-REPORT-001 section 3.8, RP-W2)', () => {
+  /** Learner-local days at UTC+9; the learner joined the class on 2026-10-10 local time (01:30Z is 10:30 at +09:00). */
+  const activity: ActivitySummary = {
+    v: 1,
+    tz: 540,
+    asOf: '2026-10-12',
+    days: [
+      { d: '2026-09-20', min: 10, q: 1, c: 0, w: 3, j: ['ㄱ'] },
+      { d: '2026-10-03', min: 15, q: 1, c: 1, w: 2, j: ['ㄴ'] },
+      { d: '2026-10-10', min: 12, q: 0, c: 1, w: 4, j: [] },
+      { d: '2026-10-12', min: 9, q: 1, c: 0, w: 1, j: ['ㅂ'] },
+    ],
+    months: [
+      { m: '2026-08', min: 30, q: 2, c: 1, w: 5, days: 3 },
+      { m: '2026-09', min: 10, q: 1, c: 0, w: 3, days: 1 },
+      { m: '2026-10', min: 36, q: 2, c: 2, w: 7, days: 3 },
+    ],
+    total: { since: '2026-08-02', min: 76, q: 5, c: 3, w: 15, days: 7 },
+    milestones: [
+      { stage: 'stage1', on: '2026-10-03' },
+      { stage: 'stage2', on: '2026-10-10' },
+    ],
+    next: { q: 'letters-q3', plan: true },
+    revisit: 'letters-q2',
+  };
+  const joinedAt = '2026-10-10T01:30:00.000Z';
+  const wordsHidden = (TEACHER_HIDDEN_SUMMARY_KEYS as readonly string[]).includes('vocab');
+  const zeroW = <T extends { w: number }>(row: T): T => ({ ...row, w: wordsHidden ? 0 : row.w });
+
+  it('gives a family the whole activity, every level projected to its known keys', () => {
+    const out = activityOf(activity, { kind: 'family', joinedAt });
+    expect(out).toEqual({
+      ...activity,
+      days: activity.days.map(zeroW),
+      months: activity.months.map(zeroW),
+      total: zeroW(activity.total),
+    });
+    expect(ActivitySummarySchema.safeParse(out).success).toBe(true);
+  });
+
+  it('zeroes every word count while vocab is on the hidden list (the coupling with F-VOC-005 P-4)', () => {
+    // F-VOC-005 P-4 moves vocab to the visible list: this guard fails first, and P-4 rewrites this test
+    expect(wordsHidden).toBe(true);
+    for (const kind of ['family', 'class', 'school'] as const) {
+      const out = activityOf(activity, { kind, joinedAt });
+      for (const row of [...out.days, ...out.months, out.total]) expect(row.w).toBe(0);
+    }
+  });
+
+  it('for a class or a school drops days and milestones before the local join day, and months up to and including the join month', () => {
+    for (const kind of ['class', 'school'] as const) {
+      const out = activityOf(activity, { kind, joinedAt });
+      expect(out.days.map((d) => d.d)).toEqual(['2026-10-10', '2026-10-12']);
+      expect(out.milestones).toEqual([{ stage: 'stage2', on: '2026-10-10' }]);
+      expect(out.months).toEqual([]);
+      // lifetime counts stay (they match the roster's totals); the first practice day may be before joining
+      expect(out.total).toEqual({ ...zeroW(activity.total), since: null });
+      // the app's next quest stays, but never whether a plan chose it (a family plan or a self-route is family-only)
+      expect(out.next).toEqual({ q: 'letters-q3', plan: false });
+      expect(out.revisit).toBe('letters-q2');
+      expect(out).toMatchObject({ v: 1, tz: 540, asOf: '2026-10-12' });
+      expect(ActivitySummarySchema.safeParse(out).success).toBe(true);
+    }
+  });
+
+  it('takes the join day in the learner\'s own time zone (activity.tz), not in UTC', () => {
+    // 2026-10-03T16:00Z is still 2026-10-03 in UTC but already 2026-10-04 at +09:00: the 3rd is before joining
+    const east = activityOf(activity, { kind: 'class', joinedAt: '2026-10-03T16:00:00.000Z' });
+    expect(east.days.map((d) => d.d)).toEqual(['2026-10-10', '2026-10-12']);
+    expect(east.milestones.map((m) => m.on)).toEqual(['2026-10-10']);
+    // 2026-10-04T02:00Z is already 2026-10-04 in UTC but still 2026-10-03 at -05:00: the 3rd is the join day
+    const west = activityOf({ ...activity, tz: -300 }, { kind: 'class', joinedAt: '2026-10-04T02:00:00.000Z' });
+    expect(west.days.map((d) => d.d)).toEqual(['2026-10-03', '2026-10-10', '2026-10-12']);
+    expect(west.milestones.map((m) => m.on)).toEqual(['2026-10-03', '2026-10-10']);
+  });
+
+  it('keeps every day from the join day on and every month after the join month', () => {
+    const out = activityOf(activity, { kind: 'class', joinedAt: '2026-09-15T00:00:00.000Z' });
+    expect(out.days.map((d) => d.d)).toEqual(['2026-09-20', '2026-10-03', '2026-10-10', '2026-10-12']);
+    expect(out.months.map((m) => m.m)).toEqual(['2026-10']);
+  });
+
+  it('never tells a class or a school whether a plan chose the next quest; a family reads the flag as sent', () => {
+    for (const plan of [true, false]) {
+      const withPlan = { ...activity, next: { q: 'letters-q3', plan } };
+      expect(activityOf(withPlan, { kind: 'class', joinedAt }).next).toEqual({ q: 'letters-q3', plan: false });
+      expect(activityOf(withPlan, { kind: 'school', joinedAt }).next).toEqual({ q: 'letters-q3', plan: false });
+      expect(activityOf(withPlan, { kind: 'family', joinedAt }).next).toEqual({ q: 'letters-q3', plan });
+    }
+  });
+
+  it('drops next.end for a class or a school (a family plan is not a teacher\'s business), keeps it for a family', () => {
+    const freeEnd = { ...activity, next: { end: true as const } };
+    expect(activityOf(freeEnd, { kind: 'class', joinedAt })).not.toHaveProperty('next');
+    expect(activityOf(freeEnd, { kind: 'school', joinedAt })).not.toHaveProperty('next');
+    expect(activityOf(freeEnd, { kind: 'family', joinedAt }).next).toEqual({ end: true });
+    const noNext = { ...activity };
+    delete noNext.next;
+    delete noNext.revisit;
+    const out = activityOf(noNext, { kind: 'family', joinedAt });
+    expect(out).not.toHaveProperty('next');
+    expect(out).not.toHaveProperty('revisit');
+  });
+
+  it('a class without a usable join time receives no history at all, only the lifetime counts', () => {
+    for (const bad of [null, undefined, 'soon', '']) {
+      const out = activityOf(activity, { kind: 'class', joinedAt: bad });
+      expect(out.days).toEqual([]);
+      expect(out.months).toEqual([]);
+      expect(out.milestones).toEqual([]);
+      expect(out.total).toEqual({ ...zeroW(activity.total), since: null });
+    }
+    // a family does not depend on the join time
+    expect(activityOf(activity, { kind: 'family', joinedAt: null }).days).toHaveLength(4);
+  });
+
+  it('for a class reads the join day in UTC when a stored value has no usable tz, and drops rows without a day key', () => {
+    const stored = { ...activity, tz: 'east', days: [{ min: 3, q: 0, c: 0, w: 0, j: [] }, ...activity.days], months: [{ min: 1 }, ...activity.months] };
+    const out = activityOf(stored, { kind: 'class', joinedAt: '2026-10-03T16:00:00.000Z' });
+    expect(out.days.map((d) => d.d)).toEqual(['2026-10-03', '2026-10-10', '2026-10-12']);
+    expect(out.months).toEqual([]);
+  });
+
+  it('copies only the known keys at every level, never what a newer writer left under them', () => {
+    const stored = {
+      ...activity,
+      learnerName: 'secret-name',
+      days: [{ ...activity.days[3], questIds: ['secret-quest'] }, 'secret-junk'],
+      months: [{ ...activity.months[2], secret: 1 }],
+      total: { ...activity.total, perQuest: 'secret' },
+      milestones: [{ ...activity.milestones[1], by: 'secret' }, 7],
+      next: { q: 'letters-q3', plan: false, title: 'secret-title' },
+    };
+    const out = activityOf(stored, { kind: 'family', joinedAt });
+    expect(JSON.stringify(out)).not.toContain('secret');
+    expect(out.days).toEqual([zeroW(activity.days[3] as ActivitySummary['days'][number])]);
+    expect(out.next).toEqual({ q: 'letters-q3', plan: false });
+    expect(Object.keys(out).sort()).toEqual(['asOf', 'days', 'milestones', 'months', 'next', 'revisit', 'total', 'tz', 'v']);
+  });
+
+  it('reads malformed arrays as empty and a malformed total or next as absent', () => {
+    const out = activityOf({ ...activity, days: 'oops', months: null, milestones: {}, total: 'oops', next: 'oops' }, { kind: 'family', joinedAt });
+    expect(out.days).toEqual([]);
+    expect(out.months).toEqual([]);
+    expect(out.milestones).toEqual([]);
+    expect(out).not.toHaveProperty('total');
+    expect(out).not.toHaveProperty('next');
+  });
+
+  it('rosterSummary projects activity per viewer: whole for a family, clipped at joinedAt for a class and a school', () => {
+    const withActivity = { ...full, activity };
+    expect(rosterSummary(withActivity, own, 'family', { joinedAt })?.activity).toEqual(activityOf(activity, { kind: 'family', joinedAt }));
+    for (const kind of ['class', 'school'] as const) {
+      expect(rosterSummary(withActivity, own, kind, { joinedAt })?.activity).toEqual(activityOf(activity, { kind, joinedAt }));
+    }
+    // without a join time a class receives no day-by-day history
+    expect(rosterSummary(withActivity, own, 'class')?.activity?.days).toEqual([]);
+    expect(teacherVisibleSummary(withActivity, own)?.activity?.days).toEqual([]);
+    expect(teacherVisibleSummary(withActivity, own, { kind: 'class', joinedAt })?.activity).toEqual(activityOf(activity, { kind: 'class', joinedAt }));
+  });
+
+  it('leaves activity out when the summary has none or a value that is not an object (the legacy state)', () => {
+    for (const value of [undefined, null, 'activity', ['x'], 7]) {
+      const out = rosterSummary({ ...full, activity: value }, own, 'class', { joinedAt });
+      expect(out && 'activity' in out).toBe(false);
+      expect(out).toEqual(teacherVisibleSummary(full, own));
     }
   });
 });

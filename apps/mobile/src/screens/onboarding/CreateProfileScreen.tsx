@@ -32,7 +32,7 @@ import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { flags } from '../../config/flags';
 import { isValidEmail } from '../../logic/email';
 import { PRIVACY_FALLBACK_NOTE, privacyUrl } from '../../logic/links';
-import { CREATE_PROFILE_COPY, whoCopy } from '../../logic/onboarding/create-profile-copy';
+import { CREATE_PROFILE_COPY, readyLine, whoCopy } from '../../logic/onboarding/create-profile-copy';
 import {
   MISSING_STEP_CAPTION,
   formPlan,
@@ -52,6 +52,7 @@ import { pinHasher } from '../../platform/crypto';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
 import { useProfileStore } from '../../store/profile-store';
+import { syncApi } from '../../store/sync-store';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'CreateProfile'>;
 
@@ -442,7 +443,7 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
           <View style={{ flex: 1 }}>
             <Body weight="semibold">{COPY.ready.heading}</Body>
             <Body tone="secondary" size="sm">
-              {COPY.ready.line}
+              {readyLine(syncApi() !== null)}
             </Body>
           </View>
         </View>

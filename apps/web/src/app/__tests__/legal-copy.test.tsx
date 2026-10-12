@@ -42,8 +42,8 @@ describe('privacy policy', () => {
     expect(terms).not.toMatch(/age group/i);
   });
 
-  it('says the privacy page was last updated 2026-10-10', () => {
-    expect(privacy).toContain('Effective October 11, 2026');
+  it('says the privacy page was last updated 2026-10-12 (the backup sentences, privacy-statements.test.tsx)', () => {
+    expect(privacy).toContain('Effective October 12, 2026');
   });
 
   describe('launch-news email list', () => {

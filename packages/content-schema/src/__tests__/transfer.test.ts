@@ -98,8 +98,10 @@ describe('transfer constants (F-SPACE-002 §4.1)', () => {
   });
 
   it('accepts the current consent text version', () => {
-    expect(TRANSFER_CONSENT_TEXT_VERSION).toBe('transfer-2026-10');
+    expect(TRANSFER_CONSENT_TEXT_VERSION).toBe('transfer-2026-10b');
     expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toContain(TRANSFER_CONSENT_TEXT_VERSION);
+    // records signed with the text before F-REPORT-001 RP-W2 stay valid
+    expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toContain('transfer-2026-10');
   });
 });
 

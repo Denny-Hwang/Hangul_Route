@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { en } from '../messages/en';
 import { LOCALES } from '../locales';
+import { KIDS_ONLY_FRAMING } from '../audience';
 import { findBannedWord } from '../banned';
 import { pseudoLocalize, pseudoText } from '../pseudo';
 import { getMessages } from '../resolve';
@@ -34,10 +35,10 @@ describe('console: the former COPY, keys and wording unchanged', () => {
 
   // PR 10a added one group per console page and retired four fragments (practicedThisWeek, anchor,
   // revisitTogether, notSyncedWeek) for whole-sentence messages under `space.week`; PR 10b added `plan` and `billing`;
-  // F-TCH-004 PR 10 added `lecture`; F-I18N-001 PR 10c added `settings`, `school` and `parent`; F-PLC-001 P-9 added `placement`; F-ROUTE-001 R-9a added `journey`.
+  // F-TCH-004 PR 10 added `lecture`; F-I18N-001 PR 10c added `settings`, `school` and `parent`; F-PLC-001 P-9 added `placement`; F-ROUTE-001 R-9a added `journey`; F-APP-001 A-2 added `offline`.
   it('has exactly the 54 remaining COPY keys plus the formatter and page groups', () => {
     const groups = ['language', 'codeExpiry', 'spaceCounts', 'planCounts', 'planStatus', 'entitlementStatus', 'price', 'promoPrice'];
-    const pages = ['shell', 'kind', 'joinCode', 'signIn', 'start', 'home', 'space', 'relink', 'plan', 'billing', 'curriculum', 'lecture', 'settings', 'school', 'parent', 'placement', 'journey'];
+    const pages = ['shell', 'kind', 'joinCode', 'signIn', 'start', 'home', 'space', 'relink', 'plan', 'billing', 'curriculum', 'lecture', 'settings', 'school', 'parent', 'placement', 'journey', 'offline'];
     const copyKeys = Object.keys(en.console).filter((k) => !groups.includes(k) && !pages.includes(k));
     expect(copyKeys).toHaveLength(54);
     for (const g of pages) expect(Object.keys(en.console)).toContain(g);
@@ -164,4 +165,23 @@ describe('en-XA covers the console keys', () => {
       }
     });
   }
+});
+
+describe('console.offline: the grown-up offline page (F-APP-001 A-2)', () => {
+  it('words the page the wireframe draws (shell/offline)', () => {
+    expect(c.offline).toEqual({
+      title: "You're offline",
+      line: 'Grown-up pages need the internet. Learning still works offline.',
+      back: 'Back to learning',
+      retry: 'Try again',
+    });
+  });
+
+  it('is neutral copy a learner may read: no age wording, no banned word', () => {
+    for (const text of Object.values(c.offline)) {
+      expect(KIDS_ONLY_FRAMING.filter(({ re }) => re.test(text)).map(({ name }) => name), text).toEqual([]);
+      expect(findBannedWord(text, 'en', 'learner'), text).toBeNull();
+      expect(findBannedWord(text, 'en', 'caregiver'), text).toBeNull();
+    }
+  });
 });
