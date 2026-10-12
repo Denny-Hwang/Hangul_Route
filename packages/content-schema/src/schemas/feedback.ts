@@ -87,6 +87,9 @@ export const NOTE_SEND_MAX_LEARNERS = 300;
 /** The longest learner id a send may name; real ids are far shorter. */
 export const NOTE_LEARNER_ID_MAX = 80;
 
+/** Notes one account may send one learner in a rolling day (section 7.3, OD-14); the Worker is the authority. */
+export const NOTE_PAIR_DAILY_LIMIT = 3;
+
 export const NoteIdSchema = z.string().regex(/^note:[a-z0-9-]{8,64}$/);
 
 export const NoteSuggestSchema = z.object({ kind: z.literal('quest'), id: z.string().min(1).max(64) }).strict();
@@ -197,7 +200,8 @@ export const NotePrefsPutSchema = z.object({ classes: z.enum(NOTES_MODES), ackno
 export type NotePrefsPut = z.infer<typeof NotePrefsPutSchema>;
 
 /** How a device says a grown-up acted: the grown-up PIN, or a self-managed learner. A client claim, recorded, never trusted. */
-const NoteAttestSchema = z.enum(['grown_up_pin', 'self']);
+export const NoteAttestSchema = z.enum(['grown_up_pin', 'self']);
+export type NoteAttest = z.infer<typeof NoteAttestSchema>;
 
 /** PUT /api/sync/learners/:id/note-prefs body (the device route, section 7.6): the family body plus `attest`. */
 export const NoteDevicePrefsPutSchema = NotePrefsPutSchema.extend({ attest: NoteAttestSchema.optional() }).strict();
