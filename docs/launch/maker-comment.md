@@ -111,4 +111,4 @@ thread alive.
 | "Can I try it on Android?" | "Yes — Expo Go QR + APK are both linked at hangulroute.com/get. Native Play Store build lands D+7." |
 | "What about adults learning Korean?" | "Not yet. The whole design assumes a 5–11 year old. We'll consider an adult mode once Stage 3 (sentences) ships." |
 | "How do you make money?" | "Stage 1 is free. The Family Plan is $15.30 a year for up to 5 learners, cancel any time; classes have a yearly Group License. No ads. No data sold." (Before Stripe Live: "Stage 1 is free. No ads. No data sold. Plans are coming.") |
-| "Is this COPPA compliant?" | "Yes. No third-party ad tracking. Parent email is the only PII we store. Default mode keeps all learning data on-device." |
+| "Is this COPPA compliant?" | "Child safety comes first: no ads, no third-party ad tracking, and our Privacy Policy is with legal counsel for review. Each learner's nickname and progress are backed up to our servers so a Rescue Code can restore them. A class or family a learner joins sees the name they join with and their progress." |

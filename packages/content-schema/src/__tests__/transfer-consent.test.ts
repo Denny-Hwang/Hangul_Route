@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import {
+  ACCEPTED_CONSENT_TEXT_VERSIONS,
   ProgressSummarySchema,
   TEACHER_HIDDEN_SUMMARY_KEYS,
   TEACHER_ROSTER_ADDRESS_FIELDS,
@@ -29,6 +30,10 @@ import {
 const PINNED_HASHES: Record<string, Partial<Record<TransferConsentLocale, string>>> = {
   'transfer-2026-10': {
     en: '3a44196159fde9f7056b2e774b915d2f8be42d626965a05a556300cac031bd3b',
+  },
+  // F-REPORT-001 RP-W2: the `activity` item names day-by-day practice.
+  'transfer-2026-10b': {
+    en: '191a3fcf5bb65dcff7ac96c7df77100374d620e1ff990571613833f06e01d0af',
   },
 };
 
@@ -202,7 +207,7 @@ describe('consent text per locale', () => {
 describe('what the new teacher sees is generated from data (TEACHER_VISIBLE_SUMMARY_KEYS)', () => {
   const summaryKeys = Object.keys(ProgressSummarySchema.shape).sort();
 
-  it('allow-lists exactly the spec keys and hides schemaVersion, stage1Anchor, selfRoute, vocab and activity', () => {
+  it('allow-lists exactly the spec keys and hides schemaVersion, stage1Anchor, selfRoute and vocab', () => {
     expect([...TEACHER_VISIBLE_SUMMARY_KEYS]).toEqual([
       'lastActiveAt',
       'streakDays',
@@ -214,17 +219,30 @@ describe('what the new teacher sees is generated from data (TEACHER_VISIBLE_SUMM
       'placement',
       'planProgress',
       'journey',
+      'activity',
     ]);
     // selfRoute: the family space reads it, a class or school never does (F-PLAN-002 section 3.10).
     // vocab: hidden until F-VOC-005 P-4 adds the console line and its consent item.
-    // activity: hidden until F-REPORT-001 RP-W2 changes the consent item and bumps the text version.
-    expect([...TEACHER_HIDDEN_SUMMARY_KEYS]).toEqual(['schemaVersion', 'stage1Anchor', 'selfRoute', 'vocab', 'activity']);
+    expect([...TEACHER_HIDDEN_SUMMARY_KEYS]).toEqual(['schemaVersion', 'stage1Anchor', 'selfRoute', 'vocab']);
   });
 
-  it('keeps summary.activity off the allow-list until RP-W2 (F-REPORT-001 section 3.8)', () => {
-    const visible: readonly string[] = TEACHER_VISIBLE_SUMMARY_KEYS;
-    expect(visible).not.toContain('activity');
-    expect(Object.keys(TEACHER_VISIBLE_SUMMARY_ITEMS)).not.toContain('activity');
+  it('allow-lists summary.activity under the activity item, whose sentence names day-by-day practice (F-REPORT-001 RP-W2)', () => {
+    const hidden: readonly string[] = TEACHER_HIDDEN_SUMMARY_KEYS;
+    expect(hidden).not.toContain('activity');
+    expect(TEACHER_VISIBLE_SUMMARY_ITEMS.activity).toBe('activity');
+    expect(TEACHER_VISIBLE_SUMMARY_ITEMS.activity).toBe(TEACHER_VISIBLE_SUMMARY_ITEMS.minutesLast7d);
+    expect(TRANSFER_CONSENT_TEXT.en.items.activity).toBe('When {learner} practiced, minutes each day and days in a row');
+    expect(sentenceWordCounts(TRANSFER_CONSENT_TEXT.en.items.activity)).toEqual([11]);
+    // Per-day quests, cards and letters are named by the items the teacher already sees.
+    expect(TRANSFER_CONSENT_TEXT.en.items.quests).toBe('Quests done and how many answers were right');
+    expect(TRANSFER_CONSENT_TEXT.en.items.cards_letters).toBe('Cards earned, letters learned and letters that need practice');
+  });
+
+  it('bumps the text version for the new sentence and keeps the old version accepted (F-REPORT-001 section 3.10)', () => {
+    expect(TRANSFER_CONSENT_TEXT_VERSION).toBe('transfer-2026-10b');
+    expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toContain('transfer-2026-10b');
+    expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toContain('transfer-2026-10');
+    expect(PINNED_HASHES['transfer-2026-10b']?.en).not.toBe(PINNED_HASHES['transfer-2026-10']?.en);
   });
 
   it('classifies every ProgressSummarySchema key exactly once (a new key fails here until classified)', () => {

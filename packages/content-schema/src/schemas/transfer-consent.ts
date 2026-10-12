@@ -123,6 +123,7 @@ export const TEACHER_VISIBLE_SUMMARY_KEYS = [
   'placement',
   'planProgress',
   'journey',
+  'activity',
 ] as const;
 export type TeacherVisibleSummaryKey = Extract<(typeof TEACHER_VISIBLE_SUMMARY_KEYS)[number], keyof ProgressSummary>;
 
@@ -131,11 +132,9 @@ export type TeacherVisibleSummaryKey = Extract<(typeof TEACHER_VISIBLE_SUMMARY_K
  * is read by the learner's family space only, never by a class or school.
  * `vocab` (F-VOC-005 section 3.8) stays hidden until the console PR that shows
  * it (F-VOC-005 P-4) moves it to the allow-list with its consent item, so the
- * consent text never lags what a teacher receives. `activity` (F-REPORT-001
- * section 3.8) stays hidden until RP-W2 moves it to the allow-list with the new
- * consent sentence and a text version bump.
+ * consent text never lags what a teacher receives.
  */
-export const TEACHER_HIDDEN_SUMMARY_KEYS = ['schemaVersion', 'stage1Anchor', 'selfRoute', 'vocab', 'activity'] as const;
+export const TEACHER_HIDDEN_SUMMARY_KEYS = ['schemaVersion', 'stage1Anchor', 'selfRoute', 'vocab'] as const;
 export type TeacherHiddenSummaryKey = Extract<(typeof TEACHER_HIDDEN_SUMMARY_KEYS)[number], keyof ProgressSummary>;
 
 export const TEACHER_VISIBLE_SUMMARY_ITEMS: Readonly<Record<TeacherVisibleSummaryKey, TeacherVisibleItemId>> = {
@@ -157,6 +156,19 @@ export const TEACHER_VISIBLE_SUMMARY_ITEMS: Readonly<Record<TeacherVisibleSummar
    * no new line and no version bump (a test pins both items).
    */
   journey: 'quests',
+  /**
+   * Day-by-day practice for progress reports (F-REPORT-001 section 3.8, RP-W2):
+   * minutes and practice days per day are what the `activity` sentence names
+   * ("When {learner} practiced, minutes each day and days in a row"), and the
+   * time-zone offset only sets which local day a count falls on; per-day
+   * quests, stage finish dates and the next lesson are covered by `quests`,
+   * per-day cards and letters and the lesson to revisit by `cards_letters`
+   * (the mapping goes to counsel at gate G2, F-REPORT-001 review log).
+   * Words stay zeroed for every viewer until F-VOC-005 P-4 adds their own item,
+   * and a class or school sees no day before the learner joined
+   * (`activityOf` in packages/backend/src/lib/roster-summary.ts).
+   */
+  activity: 'activity',
 };
 
 /** Roster fields outside `summary` (display name per the class setting, avatar, level label, dates). */
@@ -222,7 +234,7 @@ export const TRANSFER_CONSENT_TEXT: Readonly<Record<TransferConsentLocale, Trans
     },
     items: {
       name_picture_level: "{learner}'s name, picture and level",
-      activity: 'When {learner} was last active, minutes this week and days in a row',
+      activity: 'When {learner} practiced, minutes each day and days in a row',
       quests: 'Quests done and how many answers were right',
       cards_letters: 'Cards earned, letters learned and letters that need practice',
       level_check: 'Level check results',

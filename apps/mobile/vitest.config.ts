@@ -25,6 +25,8 @@ export default defineConfig({
       'src/content/**/*.test.ts',
       'src/config/**/*.test.ts',
       'src/platform/**/*.test.ts',
+      // Build scripts (F-APP-001 A-2: the service worker's grown-up rules read from the emitted sw.js).
+      'scripts/__tests__/**/*.test.mjs',
     ],
     passWithNoTests: true,
     coverage: {
