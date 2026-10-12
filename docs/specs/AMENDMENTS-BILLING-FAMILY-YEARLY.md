@@ -104,11 +104,13 @@ A refund never changes coverage by itself, for either product. Status follows St
 | console | `lifetimeLine` (deleted) → `familyLine` (new) | One payment. No renewal, no subscription to cancel. | Renews yearly. Cancel from Manage subscription any time. |
 | console | `entitlementStatus.activeForGood` (deleted) | active · yours for good | (a Family Plan uses `activeRenews(date)` "active · renews {date}"; a legacy row without a date uses `active`) |
 | console | `price.once` | {amount} once | kept for type completeness, no plan uses it |
-| console promo line | `promoPrice(…)` | "$12.24 once with HOYA20 (20% off), was $15.30 once" | "$12.24 / year with HOYA20 (20% off), first year, was $15.30 / year" on a once-duration code (same rule as the license) |
+| console promo line | `promoPrice(…)` | "$12.24 once with HOYA20 (20% off), was $15.30 once" | "$12.24 / year with HOYA20 (20% off, first year), was $15.30 / year" on a once-duration code (same rule as the license) |
 | paywall | `caregiver.paywall.offer.name` | Family Lifetime | Family Plan |
 | paywall | `caregiver.paywall.offer.line` | One payment. No subscription, nothing to cancel. | Renews every year. Cancel any time. |
 | paywall | `caregiver.paywall.free.terms` | One payment, no renewal. Terms and privacy are on the website. | Renews yearly until cancelled. Terms and privacy are on the website. |
 | paywall | `caregiver.paywall.bullets.everyStage` | Every Stage, now and later | Every Stage, new ones included |
+| paywall | `caregiver.paywall.free.unlocks(offer)` | What {offer} unlocks | What the {offer} unlocks ("What the Family Plan unlocks") |
+| paywall | `caregiver.audience.shared.paywallBuyOnWeb` / `.paywallBuyLater` | Buy it once on the web console, … / … you can buy it once on the web console. | Buy it on the web console, … / … you can buy it on the web console. |
 | a11y | `lifetimeOffer` (renamed `familyOffer`) | {name}, {price} | {name}, {price} |
 | F-BILL-002 (not yet built) | `coverage.lifetime` → `coverage.family` | Family Lifetime · yours for good | Family Plan |
 | F-BILL-002 | `buy.family_lifetime.cta` | Get Family Lifetime | Get Family Plan |

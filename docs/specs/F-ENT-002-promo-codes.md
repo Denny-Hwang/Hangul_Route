@@ -15,7 +15,7 @@ The owner hands out codes — on flyers for a Hangul school, in a creator's post
 
 ## 2. User story
 
-A parent opens Billing, types `HOYA20`, sees "$12.24 / year with HOYA20 (20% off), first year, was $15.30 / year", presses Choose and pays the discounted amount for the first year (the Family Plan renews yearly since 2026-10-11, `AMENDMENTS-BILLING-FAMILY-YEARLY.md` [BY]). The owner later sees `HOYA20` on that entitlement.
+A parent opens Billing, types `HOYA20`, sees "$12.24 / year with HOYA20 (20% off, first year), was $15.30 / year", presses Choose and pays the discounted amount for the first year (the Family Plan renews yearly since 2026-10-11, `AMENDMENTS-BILLING-FAMILY-YEARLY.md` [BY]). The owner later sees `HOYA20` on that entitlement.
 
 ## 3. Acceptance criteria
 
@@ -36,7 +36,7 @@ A parent opens Billing, types `HOYA20`, sees "$12.24 / year with HOYA20 (20% off
 
 ### 3.3 Console (`/teach/billing`)
 
-- A **Promo or referral code** box above the plan rows: Apply → `checkPromo` against the first purchasable row; success replaces the price line on every purchasable row with `promoPriceLine` ("$12.24 / year with HOYA20 (20% off), first year, was $15.30 / year"; every plan is yearly [BY], so a one-charge coupon always adds ", first year"); failure shows one calm line (invalid / too many tries / not set up). Choose sends the code; a `promo_invalid` at that point clears it and explains.
+- A **Promo or referral code** box above the plan rows: Apply → `checkPromo` against the first purchasable row; success replaces the price line on every purchasable row with `promoPriceLine` ("$12.24 / year with HOYA20 (20% off, first year), was $15.30 / year"; every plan is yearly [BY], so a one-charge coupon always adds ", first year"); failure shows one calm line (invalid / too many tries / not set up). Choose sends the code; a `promo_invalid` at that point clears it and explains.
 - Copy passes the caregiver ban list; no urgency or "limited time" language.
 
 ### 3.4 Child app

@@ -7,7 +7,7 @@ Audience: **parent** (family_lifetime = the Family Plan, $15.30 / year, renews y
 > **Superseded (2026-10-11, F-BILL-002):** the billing page moves to `https://app.hangulroute.com/account/billing` (F-APP-001 `APP_ROUTES.billing`) and serves every persona (payer and read-only cards, receipts, test-mode banner, step-up). The current design is `billing/billing-home.md`, with `billing/checkout-return.md`, `billing/receipts.md` and `billing/step-up.md`; old addresses are redirected by F-APP-001 (`shell/moved.md`). This file stays as the F-ENT-001 §3.6 record.
 
 > Code (2026-10-06, decision #30): two products replace the three-plan / monthly-yearly layout below — rows are Family Plan (yearly since 2026-10-11 [BY]; it was Family Lifetime, once), Group License (yearly, per stand-alone class and per school) and School Contract (Contact us); there is no billing-interval selector, and both yearly plans have Manage subscription. See F-ENT-001 §3.6.
-> Code (2026-10-06, F-ENT-002): a **Promo or referral code** box sits above the plan rows — [ Apply code ] checks it against Stripe and rewrites every purchasable row's price line ("$12.24 / year with HOYA20 (20% off), first year, was $15.30 / year" [BY]); Choose carries the code to checkout. Failure copy is one calm line. Codes are managed in the Stripe dashboard, never here.
+> Code (2026-10-06, F-ENT-002): a **Promo or referral code** box sits above the plan rows — [ Apply code ] checks it against Stripe and rewrites every purchasable row's price line ("$12.24 / year with HOYA20 (20% off, first year), was $15.30 / year" [BY]); Choose carries the code to checkout. Failure copy is one calm line. Codes are managed in the Stripe dashboard, never here.
 
 ## Scenario (Given-When-Then)
 

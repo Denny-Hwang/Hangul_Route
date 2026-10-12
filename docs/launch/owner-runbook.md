@@ -120,7 +120,7 @@ https://dashboard.stripe.com → **Test mode**
 
 ### Step 9. 프로모·레퍼럴 코드 (15분, 배포 불필요)
 Stripe → Product catalog → **Coupons** → New: 퍼센트 또는 정액 · Duration (`once` = Family Plan 과 라이선스 모두 **첫 해만**, `forever` = 매년 갱신까지, `repeating` = 지정한 개월 수) · 선택: 총 사용 횟수, 만료 → 그 쿠폰에서 **Add promotion code** → 고객이 입력할 문자열 (런치용 `HOYA20`, 추천 교사별 `MSPARK`) · 코드별 최대 사용 / 만료 / 첫 구매만 / 최소 금액. 끄기 = inactive.
-**확인**: 콘솔 billing 에 코드 입력 → Apply → 행의 가격이 "$12.24 / year with HOYA20 (20% off), first year, was $15.30 / year" 로 바뀐다.
+**확인**: 콘솔 billing 에 코드 입력 → Apply → 행의 가격이 "$12.24 / year with HOYA20 (20% off, first year), was $15.30 / year" 로 바뀐다.
 
 ### 권장 — Rescue Code 키 `RESCUE_PEPPER` (5분, 한 번만, audit SEC-5)
 Rescue Code 는 서버에 해시로만 저장된다. 이 키를 넣으면 **새로 발급되는** 코드가 `HMAC-SHA-256(키, 코드)` 로 저장되어, DB 사본만 유출돼도 오프라인에서 코드를 추측할 수 없다. 이미 발급된 코드(단어 2개 + 숫자 4자리, 예: `PADDLE-GLACIER-4992`)는 키를 넣기 전·후 모두 그대로 복원된다.
