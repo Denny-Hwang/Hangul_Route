@@ -32,6 +32,7 @@ C  Topic page (5 of the words collected)          D  Not found                  
 │ │  │ 사과 │  │ └────────────┘  │
 │ │  └──────┘  │                 │
 │ │   sagwa    │                 │
+│ │   apple    │                 │  <- the meaning in the UI language (D2)
 │ └────────────┘                 │
 │  ... 12 tiles, 2 a row on a    │
 │  phone, 3-4 where they fit ... │
@@ -40,14 +41,14 @@ C  Topic page (5 of the words collected)          D  Not found                  
 
 ## Layout, top to bottom
 
-1. **Back** top-left (`Icon arrow-left`, "Go back", the same place as every stack screen).
+1. **Back** top-left (`Icon arrow-left`, "Go back", the same place as every stack screen); the button is `touchTarget.min` (64 dp) square on every platform.
 2. **Title**: `Heading level="display"`, the topic title in the UI language (overlay `title`, else `titleEn`).
-3. **Korean title**: `KoreanText` `sm`, no gloss (the title above is the meaning). Romanization per the learner's setting (`romanizationShown(mode, revealed)`); in reading practice (`'tap'`) a ghost button **Show sound** under it reveals the romanization for this visit (`learner.vocab.cards.showSound`, the flashcards' word for the same reveal, F-I18N-001 §3.5.3).
+3. **Korean title**: `KoreanText` `sm`, no gloss (the title above is the meaning). Romanization per the learner's setting (`romanizationShown(mode, revealed)`); in reading practice (`'tap'`) a ghost button **Show sound** under it reveals the romanization of the title **and of the word wall** for this visit (`learner.vocab.cards.showSound`, the flashcards' word for the same reveal, F-I18N-001 §3.5.3).
 4. **Meter**: `Progress variant="dots"` (`max` = the topic's words, `value` = collected) when the row fits the content width (12 x 12 + 11 x `spacing.sm` = 232 dp for 12 words), else `variant="bar"`; either one is hidden from assistive technology. Then the count "5 collected" (`learner.vocab.topic.collected`, `Body weight="semibold"`), a plain count, never "5 of 12", never what is left.
-5. **Hoya**: `HoyaBubble tone="idle"` with the topic's Hoya line in the UI language (overlay `hoyaIntro`, else `hoyaIntroEn`), **once per topic per app session** (a second visit in the same session shows no bubble).
+5. **Hoya**: `HoyaBubble tone="idle"` with the topic's Hoya line in the UI language (overlay `hoyaIntro`, else `hoyaIntroEn`), **once per topic per learner per app session** (a second visit by the same learner in the same session shows no bubble; another profile on a shared device still hears it).
 6. **Activities** (T7), in this order, each a `Button size="lg"` (80 dp, `touchTarget.child`) full width with its one line (`Body tone="secondary"`, 18, the body floor of §3.8) under it:
    - **Learn**: "Meet a few words with pictures." Always available.
-   - **Speed round**: "Catch the words you know." From as many collected words as the level has options (3 for Pictures first, 4 otherwise); below that the button stays and its line says "Learn 3 words first" (the words still to learn, never the threshold) and it opens Learn: never a dead end.
+   - **Speed round**: "Catch the words you know." From as many collected words as the level has options (3 for Pictures first, 4 otherwise); below that the button stays and its line says "Learn 3 words first" (the words still to learn: a positive next step, spec §3.4 as amended in its §9 item 4; the wall itself never counts what is left) and it opens Learn: never a dead end.
    - **Match**: "Match each word to its picture." Only when Pic-Word Match is in the build **and** 3 words are collected; before that it is not drawn (it has no "learn first" line of its own).
    - The suggested one (`suggestActivity`: Learn while words are new and the topic had no session today, or below the option count; otherwise Speed round; never Match) is `tone="primary"`, the others `tone="secondary"`.
 7. **Word wall** (`WordWall`): every word of the topic in file order (`topicWords`: the catalogue's `visibleItems` filed under the topic, so a word whose own topic is still a draft never shows, V12), never re-sorted, never a lock, never a count of what is left.
@@ -56,7 +57,7 @@ C  Topic page (5 of the words collected)          D  Not found                  
 
 | Tile | Look | Screen reader |
 |---|---|---|
-| collected | `PictureArt` (`decorative`) above a `KoreanText` `sm` chip with its romanization (per the setting, no reveal on the wall); no gloss line (the picture carries the meaning, F-I18N-001 §3.5.4; the flashcard shows the gloss) | one element: "Korean: 사과, sagwa, apple" (`a11y.koreanItem`); a button once the flashcards exist |
+| collected | `PictureArt` (`decorative`) above a `KoreanText` `sm` chip with its romanization (per the setting; in reading practice the page's **Show sound** reveals it here too) and its **gloss line** in the UI language (D2, CLAUDE.md §8: taught Korean always comes with romanization and a gloss; the picture is the primary meaning carrier, F-I18N-001 §3.5.4, and the gloss is still printed; it wraps inside the tile, e.g. "sky blue") | one element: "Korean: 사과, sagwa, apple" (`a11y.koreanItem`); a button once the flashcards exist |
 | new | the same picture as a **silhouette**: `PictureArt mono` on `surface.sunken` (WordArt in `border.strong`, F-VOC-002 W8); card art and swatches have no silhouette, so they show the plain sunken tile (§8 item 4) | one element: "Not collected yet"; not a button; no Korean (no spoilers) |
 
 - Picture side: the tile's inner width, at least 64 and at most 96 dp (§3.4: "PictureArt at 64-96").
@@ -91,4 +92,5 @@ The topic page launches three screens that later rows add: the flashcards (C-5),
 - **Activities above the wall.** The wireframe draws them under the wall and asks for a sticky bar at large text. Twelve tiles are three to four rows (about 500 dp on a 320 x 568 phone), so under the wall every activity starts below the fold, and a sticky bar of three 80 dp buttons with their lines would cover half the screen. Above the wall, Learn is on the first screen at every size and the collection follows.
 - **Wall columns from the fit, not from 320 / 360 dp.** Measured in Chromium: the `sm` chip of 검은색 is 109 dp and the romanization "geomeunsaek" is 104 dp at `bodySm` (92 dp even at `caption`). Four tiles at a 360 dp window are 76 dp and three at 320 dp are 90 dp, so the spec's 3 / 4 columns would clip the romanization or break it mid-word (and a smaller `KoreanText` tier would only shrink the chip, not the romanization, unless the romanization dropped below the `bodySm` floor `KoreanText` pins). The wall keeps every word whole instead: columns are as many as fit a 120 dp tile, so phones show 2 and wider windows 3 or 4.
 - **Match hidden until available**: Match has no "learn first" line; drawing it as a dead button would break "never a dead end", and the Speed round's line already tells the learner what to do.
+- **The page checks the lock itself**: `topicPageAccess` (found, locked) runs on every open, so any entry point is held to `isContentLocked`; a locked topic (gating on only) replaces the page with the grown-up gate (`lockedStoryGate`), as the grid's locked tile does.
 - **Not found covers hidden topics**: a key that is not in the picker (a draft topic in a release build, a topic whose pictures do not all resolve) is "Topic not found", so a half-empty topic can never be opened (T8, behaviour 3).

@@ -65,20 +65,21 @@ One button, top to bottom:
 
 ## The picker screen (`VocabTopicsScreen`)
 
-- A stack screen: `Screen scrollable` with all four safe-area edges (not `TAB_SCREEN_EDGES`), the reading width. Back top-left (`Icon arrow-left`, `a11y.goBack`, hit slop `spacing.md`), the title "Words" (`Heading level="title"`), the line "Pick a topic you like.", then the grid.
+- A stack screen: `Screen scrollable` with all four safe-area edges (not `TAB_SCREEN_EDGES`), the reading width. Back top-left (`Icon arrow-left`, `a11y.goBack`; the button itself is `touchTarget.min` square, since `hitSlop` does not grow the target on the web), the title "Words" (`Heading level="title"`), the line "Pick a topic you like.", then the grid.
 - Empty (no topic the picker can show; reachable only in a dev build with the flag on): a `Card` with "Words are on their way." and a secondary **Back** button. Never a blank screen.
 
 ## Locked topics (switch on only; never at launch)
 
 Each tile asks `isContentLocked({ kind: 'vocab-topic', id, tier, gatingEnabled: gatingActive(flags, bundleOs()) })` (F-STORY-004 §3.9). With the switch off (production, D5) it is `false` for every topic. Food, Animals, Colors and Numbers are the free samplers (`FREE_VOCAB_TOPIC_IDS`, F-ENT-003 OD-4).
 
-- Nothing is drawn for a locked topic: no lock glyph (F-ENT-003 OD-6: no lock on learner screens), no "Premium" pill, no price (D5). The closed look ("Not open yet" with the dotted ring) arrives with F-ENT-003's learner rows.
+- A locked tile is drawn **closed**, never as a lock (F-ENT-003 OD-6: no lock glyph on learner screens; no "Premium" pill, no price, D5): the `surface.sunken` fill, a **dotted** border in `border.shape` (the closed ring's shape and colour, so colour is never the only cue), no meter, and the line **"Not open yet"** in place of the count (`learner.vocab.topics.locked`). Its name is "Food. Not open yet." (`learner.vocab.topics.lockedA11y`), so a screen reader hears the difference before the tap. Nothing of this shows at launch.
 - The tap of a locked tile takes the route a locked story tile takes (`lockedStoryGate`: straight on for a learner who may open it, else behind the grown-up PIN) instead of opening the topic.
+- The topic page checks the same lock itself (`topicPageAccess`), so a later entry point (the Home card of F-VOC-005 P-3, Browse BR-9, a plan item) that opens `VocabTopic` directly also goes through the gate: the page is replaced by the Paywall or the PIN.
 
 ## Accessibility
 
 - Every tile is a button >= 80 dp tall with its name and count in words. The meters are hidden from assistive technology; the counts are text.
-- Back is a button named "Go back" in the top-left on both screens.
+- Back is a button named "Go back" in the top-left on both screens, at least 64 dp square (`touchTarget.min`) on every platform.
 - 200 % text: the tiles grow; the grid keeps its columns (the tile has no fixed height), the page scrolls; nothing is clipped.
 - No motion, no sound on these screens.
 
