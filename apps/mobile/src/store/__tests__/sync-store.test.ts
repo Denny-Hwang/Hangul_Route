@@ -13,7 +13,12 @@ vi.mock('../../platform/sync-api', () => ({
   apiBaseUrl: vi.fn(() => 'https://api.example.com'),
   createSyncApi: vi.fn(),
 }));
-vi.mock('../../config/flags', () => ({ flags: { syncEnabled: true, telemetryEnabled: false, telemetryNetwork: false, voiceEchoEnabled: false } }));
+// The free-tier switch stays off, as in the node lane (plan derivation reads quest access, F-ENT-003 section 3.6).
+vi.mock('../../config/flags', () => ({
+  flags: { syncEnabled: true, telemetryEnabled: false, telemetryNetwork: false, voiceEchoEnabled: false, contentGatingEnabled: false },
+  bundleOs: () => undefined,
+  gatingActive: () => false,
+}));
 
 import { apiBaseUrl } from '../../platform/sync-api';
 import { result } from '../../logic/my-route/__tests__/fixtures/route';
