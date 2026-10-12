@@ -3,7 +3,7 @@
 Spec: `docs/specs/F-VOC-003-topic-picker-flashcards.md` T7, T8, §3.4 (topic page), §3.8 (accessibility, layout), §3.10 behaviours 2 and 9.
 Wireframe: `design/wireframes/vocab/topic-detail.md` C (topic page) and D (not found, not hydrated).
 Code: `apps/mobile/src/screens/vocab/{VocabTopicScreen,WordWall}.tsx` (render only); decisions in `apps/mobile/src/logic/vocab/{wall,suggest,topic-view,caps}.ts` (100 % covered).
-Components: `KoreanText` (`sm` header, `xs` wall: the tier this row adds, `design/components/KoreanText/spec.md`), `Progress` (`dots` or `bar`), `HoyaBubble`, `Heading`, `Body`, `Button`, `Icon` (design system), `PictureArt` (app; `mono` for the silhouette, this row).
+Components: `KoreanText` (`sm`, header and wall), `Progress` (`dots` or `bar`), `HoyaBubble`, `Heading`, `Body`, `Button`, `Icon` (design system), `PictureArt` (app; `mono` for the silhouette, this row).
 Screenshots: the fixture bundle (`STORY_FIXTURES=1 HR_SHOTS=1 playwright test vocab-topics`) opens the page through `window.__hrVocabE2E.openTopic(key)` and collects words with `collect(ids)`; PNGs in `apps/mobile/e2e/web/__shots__/vocab-topic-*.png` (git-ignored).
 
 ## Frames
@@ -26,14 +26,15 @@ C  Topic page (5 of the words collected)          D  Not found                  
 │ [ SPEED ROUND ]                │
 │ Learn 3 words first            │  <- below the option count it opens Learn
 │                                │
-│ ┌──────┐ ┌──────┐ ┌──────┐     │  <- the word wall, file order, never re-sorted
-│ │[pic] │ │[pic] │ │ ░░░░ │     │     collected: picture + Korean (xs chip)
-│ │┌───┐ │ │┌───┐ │ │      │     │     new: soft silhouette, no Korean
-│ ││사과│ │ ││우유│ │ └──────┘     │
-│ │└───┘ │ │└───┘ │              │
-│ │sagwa │ │uyu   │              │
-│ └──────┘ └──────┘              │
-│  ... 12 tiles, 3 a row ...     │
+│ ┌────────────┐ ┌────────────┐  │  <- the word wall, file order, never re-sorted
+│ │   [pic]    │ │   ░░░░░    │  │     collected: picture + Korean chip
+│ │  ┌──────┐  │ │  (silh.)   │  │     new: soft silhouette, no Korean
+│ │  │ 사과 │  │ └────────────┘  │
+│ │  └──────┘  │                 │
+│ │   sagwa    │                 │
+│ └────────────┘                 │
+│  ... 12 tiles, 2 a row on a    │
+│  phone, 3-4 where they fit ... │
 └────────────────────────────────┘
 ```
 
@@ -55,16 +56,16 @@ C  Topic page (5 of the words collected)          D  Not found                  
 
 | Tile | Look | Screen reader |
 |---|---|---|
-| collected | `PictureArt` (`decorative`) above a `KoreanText` `xs` chip with its romanization (per the setting, no reveal on the wall); no gloss line (the picture carries the meaning, F-I18N-001 §3.5.4; the flashcard shows the gloss) | one element: "Korean: 사과, sagwa, apple" (`a11y.koreanItem`); a button once the flashcards exist |
+| collected | `PictureArt` (`decorative`) above a `KoreanText` `sm` chip with its romanization (per the setting, no reveal on the wall); no gloss line (the picture carries the meaning, F-I18N-001 §3.5.4; the flashcard shows the gloss) | one element: "Korean: 사과, sagwa, apple" (`a11y.koreanItem`); a button once the flashcards exist |
 | new | the same picture as a **silhouette**: `PictureArt mono` on `surface.sunken` (WordArt in `border.strong`, F-VOC-002 W8); card art and swatches have no silhouette, so they show the plain sunken tile (§8 item 4) | one element: "Not collected yet"; not a button; no Korean (no spoilers) |
 
 - Picture side: the tile's inner width, at least 64 and at most 96 dp (§3.4: "PictureArt at 64-96").
-- **Columns**: as many as fit a tile of 88 dp (the `xs` chip of a three-syllable word, 74 dp, and its romanization at `caption` size, about 77 dp for "geomeunsaek", plus the tile's chrome), at least 1 and at most 4, from the measured grid width; at large text the minimum grows with the font scale (up to 2x), so the grid drops columns instead of clipping. That is **3 on a 320 to 400 dp phone and 4 from a 376 dp grid** (a 408 dp window, tablets). Gap `spacing.sm`; a short last row keeps the tile width.
+- **Columns**: as many as fit a tile of 120 dp, at least 1 and at most 4, from the measured grid width. 120 dp holds the widest launch word whole: the `sm` chip of a three-syllable word (about 109 dp) and its romanization at `bodySm` ("geomeunsaek", about 104 dp), plus the tile's chrome. At large text the minimum grows with the font scale (up to 2x), so the grid drops columns instead of clipping. That is **2 columns on most phones** (a 320 to 407 dp window), **3** from a 376 dp grid (a 408 dp window) and **4** from a 504 dp grid (tablets). Gap `spacing.sm`; a short last row keeps the tile width.
 - A collected tile opens its flashcard on the back face (`VocabCards { topicKey, chunk: <the chunk that holds it>, startId }`), at the learner's chunk size. Tap target: the whole tile (>= 64 dp).
 
 ## Activities and tiles before their screens exist
 
-The topic page launches four screens that later rows add: the flashcards (C-5), the Speed Round (F-VOC-004 S-5), Match (C-6). A button or tile is drawn as a button only when its screen is in the build (`VOCAB_SCREENS` in `logic/vocab/caps.ts`; a test ties each entry to the route registered in `navigation/root.tsx`), so a build never shows a button that goes nowhere. This build (C-4) has none of them yet: the page shows the header, the meter, Hoya and the wall, and the wall's tiles are not buttons. C-5 switches Learn and the tiles on, S-5 the Speed round, C-6 Match; each by registering its route and setting its entry.
+The topic page launches three screens that later rows add: the flashcards (C-5), the Speed Round (F-VOC-004 S-5), Match (C-6). A button or tile is drawn as a button only when its screen is in the build (`VOCAB_SCREENS` in `logic/vocab/caps.ts`; a test ties each entry to the route registered in `navigation/root.tsx`), so a build never shows a button that goes nowhere. This build (C-4) has none of them yet: the page shows the header, the meter, Hoya and the wall, and the wall's tiles are not buttons. C-5 switches Learn and the tiles on, S-5 the Speed round, C-6 Match; each by registering its route and setting its entry.
 
 ## States
 
@@ -88,7 +89,6 @@ The topic page launches four screens that later rows add: the flashcards (C-5), 
 ## Decisions taken while building
 
 - **Activities above the wall.** The wireframe draws them under the wall and asks for a sticky bar at large text. Twelve tiles are three to four rows (about 500 dp on a 320 x 568 phone), so under the wall every activity starts below the fold, and a sticky bar of three 80 dp buttons with their lines would cover half the screen. Above the wall, Learn is on the first screen at every size and the collection follows.
-- **`KoreanText` `xs` for the wall.** The `sm` chip (28 dp Hangul) is about 114 dp wide for a three-syllable word, wider than any wall tile on a phone. `xs` draws 18 dp Hangul (the body floor) on a tighter chip with a 14 dp romanization: about 74 dp for 바나나 or 검은색.
-- **Wall columns from the fit, not from 360 dp.** At a 360 dp window four tiles are 76 dp each, narrower than the `xs` chip and the romanization of words like 검은색 (geomeunsaek), which would be clipped or broken mid-word. The wall therefore has 3 columns on phones and 4 where four tiles fit (grid >= 376 dp), and fewer at large text.
+- **Wall columns from the fit, not from 320 / 360 dp.** Measured in Chromium: the `sm` chip of 검은색 is 109 dp and the romanization "geomeunsaek" is 104 dp at `bodySm` (92 dp even at `caption`). Four tiles at a 360 dp window are 76 dp and three at 320 dp are 90 dp, so the spec's 3 / 4 columns would clip the romanization or break it mid-word (and a smaller `KoreanText` tier would only shrink the chip, not the romanization, unless the romanization dropped below the `bodySm` floor `KoreanText` pins). The wall keeps every word whole instead: columns are as many as fit a 120 dp tile, so phones show 2 and wider windows 3 or 4.
 - **Match hidden until available**: Match has no "learn first" line; drawing it as a dead button would break "never a dead end", and the Speed round's line already tells the learner what to do.
 - **Not found covers hidden topics**: a key that is not in the picker (a draft topic in a release build, a topic whose pictures do not all resolve) is "Topic not found", so a half-empty topic can never be opened (T8, behaviour 3).
