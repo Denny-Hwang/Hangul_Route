@@ -16,15 +16,23 @@ import { findSpace, publicSpace, requireCan, rosterName } from './spaces';
  */
 export const spaceReportRoutes = new Hono();
 
-/** The summary keys a report reads (`ReportSummarySchema`); anything else the roster carries stays out (data minimisation). */
-const REPORT_SUMMARY_KEYS: readonly string[] = Object.keys(ReportSummarySchema.shape);
-
+/**
+ * The report's summary: the roster projection narrowed to the keys a report
+ * reads (`ReportSummarySchema`; anything else the roster carries stays out,
+ * data minimisation), each key checked on its own. A stored summary was valid
+ * when it was written, but an older build may have written a field the schema
+ * has since tightened: that one field is dropped instead of failing the whole
+ * report, so the body always parses as `LearnerReportResponseSchema`.
+ */
 function reportSummaryOf(projected: FamilyVisibleSummary | null): ReportSummary | null {
   if (!projected) return null;
   const source = projected as Record<string, unknown>;
   const out: Record<string, unknown> = {};
-  for (const key of REPORT_SUMMARY_KEYS) if (source[key] !== undefined) out[key] = source[key];
-  // Every value comes from the roster projection, which only removes and narrows validated data.
+  for (const [key, field] of Object.entries(ReportSummarySchema.shape)) {
+    if (source[key] === undefined) continue;
+    const checked = field.safeParse(source[key]);
+    if (checked.success && checked.data !== undefined) out[key] = checked.data;
+  }
   return out as ReportSummary;
 }
 
@@ -48,12 +56,11 @@ spaceReportRoutes.get('/:id/learners/:learnerId/report', async (c) => {
   if (space.kind === 'school') return fail(c, 'wrong_kind', 'A school has no learner report; open the class report', 409);
 
   const membership = await db.membership(space.id, 'learner', c.req.param('learnerId'));
-  const learner = membership ? await db.getLearner(membership.memberId) : null;
-  if (!membership || !learner) return fail(c, 'not_member', 'This learner is not in this space', 404);
-
-  // planProgress keeps this space's own plans only, archived ones included (F-SPACE-002 T-1a), as on the roster.
-  const planIds = new Set((await db.plansOf(space.id)).map((p) => p.id));
-  const stored = await db.summaryOf(learner.id);
+  if (!membership) return fail(c, 'not_member', 'This learner is not in this space', 404);
+  // Independent reads, in parallel. planProgress keeps this space's own plans only, archived ones included (F-SPACE-002 T-1a), as on the roster.
+  const [learner, plans, stored] = await Promise.all([db.getLearner(membership.memberId), db.plansOf(space.id), db.summaryOf(membership.memberId)]);
+  if (!learner) return fail(c, 'not_member', 'This learner is not in this space', 404);
+  const planIds = new Set(plans.map((p) => p.id));
   const body: LearnerReportResponse = {
     space: publicSpace(space),
     // No ageGroup: no report block uses it (section 3.8, data minimisation).
@@ -69,6 +76,9 @@ spaceReportRoutes.get('/:id/learners/:learnerId/report', async (c) => {
     lastSyncedAt: stored?.updatedAt ?? null,
     serverTime: new Date().toISOString(),
   };
-  recordServerEvent('report.viewed', { scope: 'learner', space: space.kind, period: reportPeriodOf(c.req.query('period')) });
+  // One event per report a grown-up actually views: a HEAD (Hono answers it with this GET handler) records nothing.
+  if (c.req.method === 'GET') recordServerEvent('report.viewed', { scope: 'learner', space: space.kind, period: reportPeriodOf(c.req.query('period')) });
+  // A learner's progress never sits in a shared browser's HTTP cache.
+  c.header('Cache-Control', 'no-store');
   return ok(c, body);
 });

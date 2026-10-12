@@ -22,7 +22,7 @@ const deviceAuth = (deviceId: string, secret: string): Record<string, string> =>
 
 async function call(method: string, path: string, headers: Record<string, string>, body?: unknown) {
   const res = await app.request(path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
-  return { status: res.status, body: (await res.json()) as Envelope };
+  return { status: res.status, cacheControl: res.headers.get('cache-control'), body: (await res.json()) as Envelope };
 }
 const post = (path: string, headers: Record<string, string>, body?: unknown) => call('POST', path, headers, body);
 const get = (path: string, headers: Record<string, string>) => call('GET', path, headers);
@@ -96,7 +96,8 @@ describe('GET /api/spaces/:id/learners/:learnerId/report (F-REPORT-001 section 3
     await join(fam.space.id, mina.auth, { code: famCode, learnerId: mina.learnerId });
     const selfRoute = { done: 2, total: 5, notReady: 0, weeks: 6, endsOn: '2026-11-20' };
     const routeGoal = { stage: 'stage2', from: 'family' };
-    await upload(mina, { ...baseSummary, selfRoute, routeGoal });
+    const vocab = { collected: 6, strong: 2, topicsStarted: 1, topicsPracticed7d: 1, firstTryRate: 0.5, needsPractice: ['vocab:apple'] };
+    await upload(mina, { ...baseSummary, selfRoute, routeGoal, vocab });
 
     for (const user of ['mom', 'dad']) {
       const r = await get(reportPath(fam.space.id, mina.learnerId), bearer(user));
@@ -109,6 +110,7 @@ describe('GET /api/spaces/:id/learners/:learnerId/report (F-REPORT-001 section 3
       expect(body.summary).toMatchObject({ cardsUnlocked: 3, needsPractice: ['ㅂ'], selfRoute, stage1: { questsDone: 4 } });
       expect(Date.parse(body.lastSyncedAt ?? '')).not.toBeNaN();
       expect(Date.parse(body.serverTime)).not.toBeNaN();
+      expect(r.cacheControl).toBe('no-store');
 
       // Exactly the schema's shape: what the client parses is what the Worker sends.
       expect(r.body.data).toEqual(body);
@@ -281,18 +283,22 @@ describe('GET /api/spaces/:id/learners/:learnerId/report (F-REPORT-001 section 3
     }
   });
 
-  it('fails closed in production: 503 without a Clerk key, 401 for a forged bearer with one (audit SEC-2)', async () => {
+  it('fails closed in production: 503 without D1, 503 auth_not_configured without a Clerk key, 401 for a forged bearer with one (audit SEC-2)', async () => {
     const path = reportPath('space:fam', 'profile:any');
     setDevFallbacksDefaultForTests(false);
     try {
-      const unconfigured = await app.request(path, { headers: bearer('mom') }, {});
-      expect(unconfigured.status).toBe(503);
+      const noDb = await app.request(path, { headers: bearer('mom') }, {});
+      expect(noDb.status).toBe(503);
+      expect(((await noDb.json()) as Envelope).error?.code).toBe('db_not_configured');
       const d1 = openSqliteD1();
       try {
         const T = '2026-10-01T00:00:00.000Z';
         const bound = new D1Db(d1);
         await bound.putAccount({ id: 'mom', email: null, displayName: null, consent: null, createdAt: T });
         await bound.putSpace({ id: 'space:fam', kind: 'family', name: 'Kim family', parentSpaceId: null, ownerAccountId: 'mom', joinCode: null, joinCodeExpiresAt: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt: null, createdAt: T });
+        const noClerk = await app.request(path, { headers: bearer('mom') }, { DB: d1 });
+        expect(noClerk.status).toBe(503);
+        expect(((await noClerk.json()) as Envelope).error?.code).toBe('auth_not_configured');
         const forged = await app.request(path, { headers: bearer('mom') }, { DB: d1, CLERK_SECRET_KEY: 'sk_test_x' });
         expect(forged.status).toBe(401); // the bearer is not trusted as an account id
       } finally {
@@ -301,6 +307,43 @@ describe('GET /api/spaces/:id/learners/:learnerId/report (F-REPORT-001 section 3
     } finally {
       setDevFallbacksDefaultForTests(true);
     }
+    expect(viewed()).toEqual([]);
+  });
+
+  it('drops only a stored field the schema has since tightened, so the body always parses', async () => {
+    const cls = await createSpace('teacher', 'class', 'A');
+    const suni = await registerLearner('device-suni0001', 'Suni');
+    await join(cls.space.id, suni.auth, { code: cls.joinCode, learnerId: suni.learnerId });
+    // Written straight to storage, as an older build's accepted summary would sit there.
+    const stale = { ...baseSummary, needsPractice: ['ㅂ', 'ㅅ', 'ㅈ', 'ㅊ'], stage1: { questsDone: 'four' }, planProgress: { 'plan:a': { done: 1, total: 2 } } };
+    await db.putSnapshot({ learnerId: suni.learnerId, rev: 1, schemaVer: 1, contentVer: '2026.09', deviceId: 'device-suni0001', summary: stale, payload: snapshotFor(suni.learnerId), updatedAt: '2026-10-01T00:00:00.000Z' }, 0);
+    const r = await get(reportPath(cls.space.id, suni.learnerId), bearer('teacher'));
+    expect(r.status).toBe(200);
+    expect(LearnerReportResponseSchema.parse(r.body.data)).toEqual(r.body.data);
+    const summary = (r.body.data as { summary: Record<string, unknown> }).summary;
+    expect(summary).not.toHaveProperty('needsPractice');
+    expect(summary).not.toHaveProperty('stage1');
+    // planProgress keeps this space's plans only (none here), and the rest arrives as stored
+    expect(summary).toMatchObject({ cardsUnlocked: 3, jamoRecognized: ['ㄱ', 'ㄴ'], planProgress: {}, streakDays: 2 });
+  });
+
+  it('answers a HEAD without recording a view', async () => {
+    const cls = await createSpace('teacher', 'class', 'A');
+    const suni = await registerLearner('device-suni0001', 'Suni');
+    await join(cls.space.id, suni.auth, { code: cls.joinCode, learnerId: suni.learnerId });
+    const res = await app.request(reportPath(cls.space.id, suni.learnerId), { method: 'HEAD', headers: bearer('teacher') });
+    expect(res.status).toBe(200);
+    expect(viewed()).toEqual([]);
+  });
+
+  it('answers not_member for a membership whose learner row is gone', async () => {
+    const cls = await createSpace('teacher', 'class', 'A');
+    const ghost = await registerLearner('device-ghost001', 'Ghost');
+    await join(cls.space.id, ghost.auth, { code: cls.joinCode, learnerId: ghost.learnerId });
+    vi.spyOn(db, 'getLearner').mockResolvedValue(null);
+    const r = await get(reportPath(cls.space.id, ghost.learnerId), bearer('teacher'));
+    expect(r.status).toBe(404);
+    expect(r.body.error?.code).toBe('not_member');
     expect(viewed()).toEqual([]);
   });
 
