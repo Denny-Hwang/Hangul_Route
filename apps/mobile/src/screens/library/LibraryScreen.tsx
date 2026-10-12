@@ -4,7 +4,6 @@ import {
   Caption,
   Card,
   Heading,
-  HeritageCardArt,
   Icon,
   Pill,
   Screen,
@@ -18,7 +17,6 @@ import {
   layout,
   radii,
   spacing,
-  supportedCardIds,
   typography,
   useLayoutClass,
   useMediaSize,
@@ -28,6 +26,7 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
+import { CardArt } from '../../components/CardArt';
 import { themes } from '../../content';
 import { awardWorld } from '../../content/award-world';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -366,11 +365,9 @@ function CardThumb({
             {isNew ? <Pill tone="info" label={m.new.pill} size="sm" /> : null}
           </View>
           <Spacer size="xs" />
-          {supportedCardIds.includes(card.id) ? (
-            <View style={{ alignItems: 'center' }}>
-              <HeritageCardArt cardId={card.id} size={artSize} accessibilityLabel={messages.a11y.cardArt(card.titleEn)} />
-            </View>
-          ) : null}
+          <View style={{ alignItems: 'center' }}>
+            <CardArt card={card} size={artSize} accessibilityLabel={messages.a11y.cardArt(card.titleEn)} style={{ borderRadius: radii.md }} />
+          </View>
           <Spacer size="xs" />
           <Text style={{ fontSize: narrow ? typography.size.prompt : typography.size.title, fontWeight: '700', color: colors.text.primary }}>
             {card.subtitleKo ?? card.titleEn}
