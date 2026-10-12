@@ -40,8 +40,68 @@ describe('class roll-up (F-CONSOLE-001 §3.5)', () => {
       ],
       now,
     );
-    expect(roll).toEqual({ students: 4, practicedThisWeek: 2, anchorAccuracy: 0.7, revisit: ['ㅂ', 'ㅅ', 'ㅈ'], notSynced: 2 });
-    expect(classRollup([], now)).toEqual({ students: 0, practicedThisWeek: 0, anchorAccuracy: null, revisit: [], notSynced: 0 });
+    expect(roll).toEqual({ students: 4, practicedThisWeek: 2, anchorAccuracy: 0.7, revisit: ['ㅂ', 'ㅅ', 'ㅈ'], vocabRevisit: [], notSynced: 2 });
+    expect(classRollup([], now)).toEqual({ students: 0, practicedThisWeek: 0, anchorAccuracy: null, revisit: [], vocabRevisit: [], notSynced: 0 });
+  });
+
+  // F-VOC-005 P-4 (section 3.8, P9): the class signal is the words, never an order of students.
+  describe('vocabRevisit', () => {
+    const words = (needsPractice: string[]) => ({
+      vocab: { collected: 10, strong: 2, topicsStarted: 1, topicsPracticed7d: 1, firstTryRate: 0.5, needsPractice },
+    });
+
+    it('names the up-to-three words most often on the students\' lists', () => {
+      const roll = classRollup(
+        [
+          learner('a', {}, words(['vocab:sagwa-apple', 'vocab:nun-eye', 'vocab:uyu'])),
+          learner('b', {}, words(['vocab:nun-eye', 'vocab:ppang'])),
+          learner('c', {}, words(['vocab:nun-eye', 'vocab:sagwa-apple'])),
+          learner('d', {}, words(['vocab:banana'])),
+        ],
+        now,
+      );
+      expect(roll.vocabRevisit).toEqual(['vocab:nun-eye', 'vocab:sagwa-apple', 'vocab:banana']);
+    });
+
+    it('breaks ties by id, so the list never depends on who is listed first', () => {
+      const a = learner('a', {}, words(['vocab:uyu', 'vocab:banana']));
+      const b = learner('b', {}, words(['vocab:ppang', 'vocab:sagwa-apple']));
+      expect(classRollup([a, b], now).vocabRevisit).toEqual(['vocab:banana', 'vocab:ppang', 'vocab:sagwa-apple']);
+      expect(classRollup([b, a], now).vocabRevisit).toEqual(['vocab:banana', 'vocab:ppang', 'vocab:sagwa-apple']);
+    });
+
+    it('is the same for any order of the roster (no ordering of students)', () => {
+      const roster = [
+        learner('a', {}, words(['vocab:sagwa-apple', 'vocab:nun-eye'])),
+        learner('b', {}, words(['vocab:nun-eye'])),
+        learner('c', {}, words(['vocab:uyu', 'vocab:sagwa-apple', 'vocab:nun-eye'])),
+        learner('d', {}, words([])),
+      ];
+      const expected = classRollup(roster, now).vocabRevisit;
+      expect(expected).toEqual(['vocab:nun-eye', 'vocab:sagwa-apple', 'vocab:uyu']);
+      for (const order of [[3, 2, 1, 0], [1, 3, 0, 2], [2, 0, 3, 1]]) {
+        expect(classRollup(order.map((i) => roster[i] as RosterLearner), now).vocabRevisit).toEqual(expected);
+      }
+    });
+
+    it('counts a word once per student and carries only word ids', () => {
+      const roll = classRollup(
+        [learner('a', {}, words(['vocab:uyu', 'vocab:uyu'])), learner('b', {}, words(['vocab:banana'])), learner('c', {}, words(['vocab:banana']))],
+        now,
+      );
+      expect(roll.vocabRevisit).toEqual(['vocab:banana', 'vocab:uyu']);
+      for (const id of roll.vocabRevisit) expect(id).toMatch(/^vocab:/);
+    });
+
+    it('is empty while no roster carries summary.vocab (vocab stays on the hidden list)', () => {
+      expect(classRollup([learner('a'), learner('b', {}, null), learner('c', {}, { needsPractice: ['ㅂ'] })], now).vocabRevisit).toEqual([]);
+    });
+
+    it('ignores a malformed slice instead of failing the roll-up', () => {
+      const odd = learner('a', {}, { vocab: { needsPractice: 'vocab:uyu' } } as never);
+      const none = learner('b', {}, { vocab: null } as never);
+      expect(classRollup([odd, none, learner('c', {}, words(['vocab:banana']))], now).vocabRevisit).toEqual(['vocab:banana']);
+    });
   });
 
   it('caps only apply to classes and warn from 80 %', () => {

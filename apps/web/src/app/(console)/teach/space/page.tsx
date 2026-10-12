@@ -10,6 +10,7 @@ import { SchoolAdmin } from '@/components/console/SchoolAdmin';
 import { StartingSpot } from '@/components/console/PlacementParts';
 import { JourneyStrip } from '@/components/console/JourneyParts';
 import { FreeLessonsLine } from '@/components/console/FreeLessonsParts';
+import { StudentWordsLines, WeekWordsRevisit } from '@/components/console/VocabWordsParts';
 import { useConsole } from '@/components/console/use-console';
 import type { PlanView, Roster, SpaceListItem } from '@/lib/console/api';
 import { contentGatingEnabled, lectureModeEnabled } from '@/lib/console/config';
@@ -20,6 +21,7 @@ import { ownRouteLine, readoutLine as routeReadoutLine, spaceCoverage, type Spac
 import { rosterFreeLessonsLine } from '@/lib/console/free-lessons-line-view';
 import { dateKey, livePublished, planReaches, planReadout, readoutLine, rosterPlan } from '@/lib/console/plans';
 import { ROUTES, type SpaceError, spaceErrorText, spaceIdFrom } from '@/lib/console/routing';
+import { consoleWords, studentWords } from '@/lib/console/vocab-words';
 import { aroundSlot } from '@/lib/i18n/slot';
 
 /** console/roster — F-CONSOLE-001 §3.5. Summaries only; the API never sends payloads here. */
@@ -161,6 +163,7 @@ function SpaceInner(): JSX.Element {
                     ) : null}
                   </li>
                 ) : null}
+                <WeekWordsRevisit words={consoleWords(rollup.vocabRevisit, locale)} />
                 {rollup.notSynced ? <li>{c.space.week.notSynced(rollup.notSynced)}</li> : null}
               </ul>
             </section>
@@ -217,6 +220,7 @@ function SpaceInner(): JSX.Element {
                             {learnerRevisit.after}
                           </div>
                         ) : null}
+                        <StudentWordsLines words={studentWords(l.summary, locale)} />
                         {latestPlan && readout && planReaches(latestPlan, l.id) ? (
                           <div>
                             {c.space.learner.planReadout(

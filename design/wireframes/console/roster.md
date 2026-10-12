@@ -129,3 +129,29 @@ Split from `design/wireframes/journey/my-route-overview.md` screen I when it was
 - `summary.journey` absent (an old build, or no upload yet) or malformed: no strip at all, never a "no progress" look. An entry with an unknown stage key, an unknown state or unreadable counts (a newer build) is skipped; a `here` that is not a readable stage drops only "On Stage N".
 - Hard rules: cards stay in recent-activity order; no class average, distribution, sort or filter by stage; no "ahead" / "behind"; no "not included" line (the roster has no tier).
 - Fits the 280 px minimum card width: the label, the seven segments and "On Stage N" wrap onto a second line when needed (spec §9 assumption e).
+
+## Words lines (F-VOC-005 P-4)
+
+A copy change on the existing card and week panel (spec `docs/specs/F-VOC-005-word-progress-srs-sync.md` §3.8, behaviour 14; no new screen). Code: `apps/web/src/lib/console/vocab-words.ts` and `rollup.ts` (`vocabRevisit`, pure, tested) and `apps/web/src/components/console/VocabWordsParts.tsx`. Data: the learner's own `summary.vocab`, words from the generated `apps/web/src/data/vocab-catalog.ts`. Strings: `console.space.learner.words`, `.wordsRevisit`, `console.space.week.wordsRevisit`, `console.space.wordGloss`.
+
+```
+This week
+ o 9 of 12 practiced this week
+ o Jamo to revisit together: ㅂ · ㅅ
+ o Words to revisit together: 눈 nun (eye) · 사과 sagwa (apple) · 우유 uyu (milk)   <- the three words most often on the lists, ties by id
+
+┌──────────────────────────────────────┐
+│ (avatar) Mina          [Some reading] │
+│ Last active today                     │
+│ Quests 4 / 8 · 3 cards                │
+│ 38 min this week                      │
+│ Revisit: ㅂ                           │   existing jamo line
+│ Words: 12 collected · 4 strong        │   counts only, no rate
+│ Words to revisit: 사과 sagwa (apple) · 눈 nun (eye)   │   up to three, in the order the device sent them
+└──────────────────────────────────────┘
+```
+
+- Plain text in the card's existing type and colour (`text.secondary`, `bodySm`); no chart, no bar, no colour per word.
+- Each word: Hangul marked `lang="ko"`, then the romanization and the gloss in the UI language ("sagwa (apple)"); the gloss tells the two senses of a homonym apart. An id this build does not know shows its romanized slug alone, with no Hangul.
+- **Shown only when the roster carries `summary.vocab`.** `vocab` stays on `TEACHER_HIDDEN_SUMMARY_KEYS` until a consent item covers it (F-SPACE-002 T-1a), so today no card shows these lines and the week shows no words line.
+- Never shown: the first-try rate (a student's detail view only), a percent, a ranking, a sort by words. Cards keep the roster's order. "Words to revisit", never "weak words", "failed" or "behind".

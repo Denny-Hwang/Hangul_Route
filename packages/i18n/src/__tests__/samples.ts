@@ -177,6 +177,11 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.space.learner.revisit': [['a · b']],
   'console.space.learner.planReadout': [['Week 1', '1 / 3']],
   'console.space.learner.joined': [['today']],
+  // F-VOC-005 P-4: the vocabulary lines of the roster.
+  'console.space.learner.words': [[12, 4], [1, 0]],
+  'console.space.learner.wordsRevisit': [['a · b']],
+  'console.space.week.wordsRevisit': [['a · b']],
+  'console.space.wordGloss': [['sagwa', 'apple']],
   'console.relink.titleFor': [['Kim family']],
   'console.relink.back': [['Kim family'], [null]],
   'console.relink.approved': [['Mina']],
