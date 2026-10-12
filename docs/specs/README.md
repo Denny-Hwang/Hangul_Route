@@ -25,6 +25,12 @@ F-XXX-<slug>.md
 - `in-progress` — 어느 PR 에서 작업 중
 - `shipped` — main 반영됨
 
+## Glossary (product terms shared by every spec; UI copy uses these words)
+- **Learning Route** — the learner's whole-road page (F-ROUTE-001, amended by `AMENDMENTS-ROUTE-LEARNING-ROUTE.md`). Always title case in UI strings, the marketing site included; the tab label is **Route**. Code names stay `my-route` / `myRoute`.
+- **Weekly plan** — any dated curriculum plan: a class's, a school's, a family's or the learner's own (F-PLAN-002 OD-7). UI copy says "your class's weekly plan", "your family's weekly plan", "your own weekly plan"; never "family plan" or "class plan" for a curriculum.
+- **Family plan** — the paid family product (F-ENT-001, F-BILL-002). Grown-up surfaces only.
+- **Not open yet** — a lesson a free learner cannot start yet, drawn as a dotted ring; F-ENT-003 section 3.11 owns this and every other access word (learner screens never name a product).
+
 ## 인덱스 (2026-05-21)
 
 ### 기능 (MVP)
@@ -87,6 +93,7 @@ F-XXX-<slug>.md
 - `F-LAYOUT-001-responsive-tablet-landscape.md` — tablet, landscape and split-pane layout · **ready**
 - `F-SPACE-002-class-transfer.md` — move a learner between classes with learner-side, releasing and receiving consent (flag-locked) · **ready**
 - `F-ROUTE-001-my-route-overview.md` — My route: the whole journey at a glance (stage trail, pips that only fill, read / listen / write inventory, grown-up and console views) and the weekly plan proposed after the level check (companion `AMENDMENTS-PLC-PLAN-HANDOFF.md`, applied to F-PLC-001 and F-PLAN-002) · **ready**
+  - amended 2026-10-11 by `AMENDMENTS-ROUTE-LEARNING-ROUTE.md` (applied): named **Learning Route**, a Route tab for learners, a route card with Now / Goal / goal-stage pips / Next (goal from the class, school, family or own weekly plan; next from F-ENT-003's `routeNext`), a goal line in the per-learner report (F-REPORT-001) and a read-only stage list with the grown-up route card for parents (`/parent/space/route`) and teachers (`/teach/space/route`) · **ready** · wireframes `design/wireframes/journey/learning-route.md`, `parent/learning-route.md`, `console/learning-route.md`
 - `F-BILL-002-billing-in-app-all-personas.md` — billing at app.hangulroute.com/account/billing for every persona (payer and read-only plan cards, receipts and history, test-mode and live guard, step-up), status-only learner Plan screen for every tier, no billing on hangulroute.com, store rules for native builds · **ready**
 - `F-BROWSE-001-adult-content-browser.md` — All lessons: paying parents and teachers preview every lesson exactly as a learner sees it (a third root of the learner web build at `/browse`, same-tab pass from the adult navigation or the grown-up area, free adults see exactly what a free learner can open, nothing is ever saved) · **ready**
   - wireframes `design/wireframes/browse/{home,episode,item,preview-player,preview-end,show-as,access,entry-points}.md` (BR-0)

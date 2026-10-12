@@ -93,7 +93,7 @@ Seven names, none colliding with sections A-C (script over all three lists), all
 
 **Total after every spec above lands: 38 on `main` (section A had 32 before #103) + 21 (C) + 7 (G) = 66 names** (section B's six are already on `main` since #103).
 
-## H. My route names (F-ROUTE-001; added by its R-0 docs PR)
+## H. My route / Learning Route names (F-ROUTE-001; added by its R-0 docs PR, row 4 by LR-0)
 
 Three names in the new `route_map.` namespace (the map of progress; F-PLAN-002's dated weekly plan keeps `route.`). None collides with sections A to G, with the 55 names on `main` at `abda11d`, or with F-PLAN-002's `route.*` names (`route.created`, `route.repaced`, and `route.proposed`, `route.proposal_skipped`, `route.updated` from amendment FP-B7, whose rows that spec's P2-4 adds). Worker first: R-W1 adds them to `TELEMETRY_EVENT_NAMES` and its exact-list test and is deployed before the app build that sends them (R-3). Sent for the active profile only, never in read-only (grown-up) mode; stage keys, booleans and codes only.
 
@@ -102,6 +102,9 @@ Three names in the new `route_map.` namespace (the map of progress; F-PLAN-002's
 | 1 | `route_map.viewed` | F-ROUTE-001 §3.16 | `{ source: 'home' \| 'journey' \| 'result' \| 'parent', stage: StageKey, hasStart: boolean, hasPlan: boolean }` (the page opens) | R-W1 | R-3 (sources `home` R-4b, `result` F-PLC-001 P-7b) |
 | 2 | `route_map.stage_opened` | F-ROUTE-001 §3.16 | `{ stage: StageKey }` (a stage row is expanded) | R-W1 | R-3 |
 | 3 | `route_map.continue_tapped` | F-ROUTE-001 §3.16 | `{ stage: StageKey, hero: 'start' \| 'continue' }` (the hero button is pressed) | R-W1 | R-3 |
+| 4 | `route_map.goal_reached` | F-ROUTE-001 §3.16 [LR-A7], `AMENDMENTS-ROUTE-LEARNING-ROUTE.md` §8 | `{ stage: StageKey, goalFrom: 'class' \| 'school' \| 'family' \| 'self' }` (the first time the Route tab shows a reached plan goal on this device) | LR-W1 | LR-5c |
+
+**Learning Route amendment (2026-10-11).** Row 4 is new; Worker first: LR-W1 appends it after `route_map.continue_tapped` in `TELEMETRY_EVENT_NAMES` and its exact-list tests and is deployed before the app build that sends it (LR-5c). Rows 1 and 3 widen their payloads without a Worker change (the Worker checks names only and stores the payload as sent, `packages/backend/src/routes/telemetry.ts:68-75`): row 1 `source` gains `'tab'` (LR-4) and the payload gains `goalFrom: 'class' | 'school' | 'family' | 'self' | 'default' | 'none'` (LR-5a); row 3 gains `from: 'class' | 'school' | 'family' | 'self' | 'cursor'` (F-ENT-003's `NextSource`, LR-5a). Only the learner's Route tab sends these; the grown-up root-stack screen and the console send nothing. Continue also sends F-ENT-003's `route.next_started { surface: 'route' }` (section N). The route page has no ask button, so it never sends `access.help_asked`.
 
 ## I. Layout names (F-LAYOUT-001; added by its PR 3)
 
