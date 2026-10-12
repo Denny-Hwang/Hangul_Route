@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { writePasses } from './storage-fence';
 
 /**
  * AsyncStorage wrapper — CLAUDE.md §8 forbids direct AsyncStorage use.
@@ -31,13 +32,19 @@ export async function readJsonStrict<T>(key: string): Promise<T | null> {
   }
 }
 
+/** Stores `value`; a key the write fence rejects is left untouched (F-BROWSE-001 section 4.10). */
 export async function writeJson<T>(key: string, value: T): Promise<void> {
+  if (!writePasses(key, 'write')) return;
   await AsyncStorage.setItem(KEY_PREFIX + key, JSON.stringify(value));
 }
 
+/** Removes `key`; a key the write fence rejects is left untouched. */
 export async function removeKey(key: string): Promise<void> {
+  if (!writePasses(key, 'remove')) return;
   await AsyncStorage.removeItem(KEY_PREFIX + key);
 }
+
+export { setWriteFence } from './storage-fence';
 
 export async function listKeys(): Promise<string[]> {
   const all = await AsyncStorage.getAllKeys();
