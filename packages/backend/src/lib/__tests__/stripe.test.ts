@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { checkoutForm, checkoutMode, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, fetchSubscription, freshStripeEvent, lookupPromotionCode, mergeForStripeEvent, mapStripeStatus, parseStripeSignature, priceIdFor, promoFromStripe, signStripePayload, verifyStripeSignature } from '../stripe';
+import { billingLiveAllowed, checkoutForm, checkoutMode, checkoutSuccessSuffix, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, fetchSubscription, freshStripeEvent, lookupPromotionCode, mergeForStripeEvent, mapStripeStatus, parseStripeSignature, priceIdFor, promoFromStripe, signStripePayload, stripeMode, verifyStripeSignature } from '../stripe';
 
 const secret = 'whsec_test';
 const body = '{"id":"evt_1","type":"customer.subscription.updated"}';
@@ -212,5 +212,34 @@ describe('stripe helpers (F-ENT-001 §3.3)', () => {
     expect(await lookupPromotionCode(env, 'HOYA20', fetchImpl, now)).toBeNull();
     expect(await lookupPromotionCode(env, 'HOYA20', fetchImpl, now)).toBeNull();
     expect(typeof (await lookupPromotionCode(env, 'HOYA20', vi.fn<typeof fetch>().mockResolvedValueOnce(new Response(JSON.stringify({ data: [live] }), { status: 200 }))))).toBe('object');
+  });
+});
+
+describe('test mode, live mode and the return suffix (F-BILL-002 B-5, sections 4.4 and 4.9)', () => {
+  it('reads the Stripe mode from the secret key prefix', () => {
+    expect(stripeMode({ STRIPE_SECRET_KEY: 'sk_test_abc' })).toBe('test');
+    expect(stripeMode({ STRIPE_SECRET_KEY: 'rk_test_abc' })).toBe('test');
+    expect(stripeMode({ STRIPE_SECRET_KEY: 'sk_live_abc' })).toBe('live');
+    expect(stripeMode({ STRIPE_SECRET_KEY: 'rk_live_abc' })).toBe('live');
+    expect(stripeMode({})).toBe('none');
+    expect(stripeMode({ STRIPE_SECRET_KEY: '' })).toBe('none');
+    expect(stripeMode(undefined)).toBe('none');
+  });
+
+  it('reads a key with no known prefix as live, so the guard refuses it (fail closed)', () => {
+    expect(stripeMode({ STRIPE_SECRET_KEY: 'sk_test' })).toBe('live');
+    expect(stripeMode({ STRIPE_SECRET_KEY: 'pk_test_abc' })).toBe('live');
+    expect(stripeMode({ STRIPE_SECRET_KEY: 'whatever' })).toBe('live');
+  });
+
+  it('allows live money calls only when BILLING_LIVE_ALLOWED is exactly "true"', () => {
+    expect(billingLiveAllowed({ BILLING_LIVE_ALLOWED: 'true' })).toBe(true);
+    for (const value of [undefined, '', 'TRUE', 'True', '1', 'yes', ' true']) expect(billingLiveAllowed({ BILLING_LIVE_ALLOWED: value })).toBe(false);
+    expect(billingLiveAllowed(undefined)).toBe(false);
+  });
+
+  it('builds the success suffix with the plan and the opaque space id, encoded', () => {
+    expect(checkoutSuccessSuffix('family_lifetime', 'space:fam-1')).toBe('?checkout=success&plan=family_lifetime&id=space%3Afam-1');
+    expect(checkoutSuccessSuffix('group_license', 'space:a&b=c')).toBe('?checkout=success&plan=group_license&id=space%3Aa%26b%3Dc');
   });
 });

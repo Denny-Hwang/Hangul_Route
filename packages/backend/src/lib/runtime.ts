@@ -1,5 +1,6 @@
 import { HTTPException } from 'hono/http-exception';
 import { failResponse } from '../envelope';
+import { billingLiveAllowed, stripeMode } from './stripe';
 
 /**
  * Deployment posture (audit SEC-2). The Worker fails closed: the dev
@@ -17,6 +18,8 @@ export interface RuntimeEnv {
   DB?: unknown;
   STRIPE_SECRET_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;
+  /** "true" opens live payments (F-BILL-002 section 4.9); unset = a live key is refused. */
+  BILLING_LIVE_ALLOWED?: string;
   /** Optional Worker secret: keys the stored Rescue Code hash (HMAC) — SEC-5, see lib/rescue-hash. */
   RESCUE_PEPPER?: string;
   /** Browser origins allowed on /api/* (lib/cors), and the Clerk `authorizedParties` for sign-in tokens (F-APP-001 A-9). */
@@ -71,7 +74,7 @@ export interface HealthReport {
   status: 'ok' | 'misconfigured';
   environment: string;
   devFallbacks: boolean;
-  bindings: { db: boolean; clerk: boolean; stripe: boolean; stripeWebhook: boolean; rescuePepper: boolean };
+  bindings: { db: boolean; clerk: boolean; stripe: boolean; stripeWebhook: boolean; rescuePepper: boolean; stripeLive: boolean; billingLiveAllowed: boolean };
 }
 
 /**
@@ -89,6 +92,9 @@ export function healthReport(env: RuntimeEnv | undefined): HealthReport {
     stripeWebhook: Boolean(env?.STRIPE_WEBHOOK_SECRET),
     // Optional, so it never makes a deployment misconfigured — but a monitor can see it vanish.
     rescuePepper: rescuePepper(env) !== undefined,
+    // F-BILL-002 section 4.9: is the bound Stripe key live, and has the owner opened live payments?
+    stripeLive: stripeMode(env) === 'live',
+    billingLiveAllowed: billingLiveAllowed(env),
   };
   const devFallbacks = devFallbacksAllowed(env);
   const environment = environmentName(env);
