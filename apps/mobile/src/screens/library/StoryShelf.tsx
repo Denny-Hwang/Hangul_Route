@@ -18,6 +18,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { View, type LayoutChangeEvent } from 'react-native';
 import { flags } from '../../config/flags';
 import { useLocale, useMessages } from '../../i18n/use-messages';
+import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { isContentLocked } from '../../logic/content-access';
 import { localizeStory } from '../../logic/content-locale';
 import { contentWidth, gridCellWidth, gridRows } from '../../logic/layout/pane-sizes';
@@ -40,7 +41,6 @@ import type { MainTabParamList, RootStackParamList } from '../../navigation/type
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
 import { useAudience } from '../../store/audience';
-import { useLocaleStore } from '../../store/locale-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
@@ -84,9 +84,7 @@ export function StoryShelf({ category, index }: { category: ShelfCategory; index
   void subscription;
   const tier = effectiveTier(profile?.id ?? '', new Date()).tier;
   // D2: hide-until-tap profiles see no romanization on the shelf (one button per tile, no reveal); the reader reveals it.
-  const romanizationShown = useLocaleStore((s) =>
-    profile ? (s.byProfile[profile.id]?.romanizationMode ?? 'always') === 'always' : true,
-  );
+  const romanizationShown = useRomanizationMode() === 'always';
 
   // Nothing is locked while gating is off (D5): `isContentLocked` is false for every story then.
   const isLocked = useCallback(

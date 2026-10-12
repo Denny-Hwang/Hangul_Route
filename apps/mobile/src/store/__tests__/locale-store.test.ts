@@ -40,7 +40,7 @@ const reset = (): void => {
   platform.handoff = null;
   showAll(true);
   track.mockClear();
-  useLocaleStore.setState({ detected: 'en', device: null, byProfile: {}, hydrated: false });
+  useLocaleStore.setState({ detected: 'en', device: null, session: null, byProfile: {}, hydrated: false });
 };
 
 afterAll(() => showAll(false));
@@ -371,5 +371,52 @@ describe('locale-store: a stored locale that is currently hidden is ignored', ()
     useLocaleStore.setState({ detected: 'en', device: null, byProfile: { 'profile:a': { uiLocale: 'es', romanizationMode: 'always' } } });
     useLocaleStore.getState().setProfileLocale('profile:a', null);
     expect(track).not.toHaveBeenCalled();
+  });
+});
+
+describe('locale-store: setSessionLocale (F-BROWSE-001 §4.9, BR-5c)', () => {
+  beforeEach(reset);
+
+  it('sets the active UI locale in memory only: no storage write and no event', async () => {
+    useLocaleStore.setState({ detected: 'en', device: 'ko' });
+    useLocaleStore.getState().setSessionLocale('es');
+    await Promise.resolve();
+    expect(useLocaleStore.getState().session).toBe('es');
+    expect(activeLocale(useLocaleStore.getState(), null)).toBe('es');
+    expect(useLocaleStore.getState().device).toBe('ko');
+    expect(mem.size).toBe(0);
+    expect(track).not.toHaveBeenCalled();
+  });
+
+  it('wins over a profile override and the device choice while set, and clears back to them', () => {
+    useLocaleStore.setState({
+      detected: 'en',
+      device: 'ko',
+      byProfile: { 'profile:a': { uiLocale: 'es', romanizationMode: 'always' } },
+    });
+    useLocaleStore.getState().setSessionLocale('en');
+    expect(activeLocale(useLocaleStore.getState(), 'profile:a')).toBe('en');
+    expect(activeLocale(useLocaleStore.getState(), null)).toBe('en');
+    useLocaleStore.getState().setSessionLocale(null);
+    expect(activeLocale(useLocaleStore.getState(), 'profile:a')).toBe('es');
+    expect(activeLocale(useLocaleStore.getState(), null)).toBe('ko');
+    expect(mem.size).toBe(0);
+    expect(track).not.toHaveBeenCalled();
+  });
+
+  it('a hidden session locale falls through to the next visible level', () => {
+    showAll(false);
+    useLocaleStore.setState({ detected: 'en', device: null });
+    useLocaleStore.getState().setSessionLocale('ko');
+    expect(activeLocale(useLocaleStore.getState(), null)).toBe('en');
+  });
+
+  it('survives hydrate, which never touches it', async () => {
+    mem.set('device:settings', { uiLocale: 'ko' });
+    useLocaleStore.getState().setSessionLocale('es');
+    await useLocaleStore.getState().hydrate([]);
+    expect(useLocaleStore.getState().session).toBe('es');
+    expect(activeLocale(useLocaleStore.getState(), null)).toBe('es');
+    expect(mem.get('device:settings')).toEqual({ uiLocale: 'ko' });
   });
 });

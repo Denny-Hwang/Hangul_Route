@@ -183,13 +183,15 @@ Once a quest is done, the collapsed line of A appears.
 │ ┌──────────────────────────────┐ │
 │ │ (Hoya) You played every quest│ │   F-ENT-003 learner.access.openForYou
 │ │ that is open for you.        │ │
-│ │ Goal  [flag] Stage 1 · Hangul│ │   the goal stays visible
+│ │ Goal  [flag] Stage 2 · Words │ │   the goal stays visible
 │ │       Hoya's suggestion      │ │
 │ │ [[     Practice words     ]] │ │   first free word topic in this build; else Open Library
 │ └──────────────────────────────┘ │
 │  (1)━━ Hangul             [Open] │
-│   ┃   6 quests played            │
-│   ┃   (D)(D)(D)(D)(D)(D)(L)(L)(L)│   dotted ring = "Not open yet" for these quests
+│   ┃   9 quests played            │   all of Stage 1 is free (F-ENT-003 OD-1): every pip filled
+│   ┃   (D)(D)(D)(D)(D)(D)(D)(D)(D)│
+│  (2)━━ Words           [A taste] │
+│   ┃   (L)(L)                     │   dotted ring = "Not open yet" for these quests
 │   ┃   [You are here] [flag Your goal]
 ```
 

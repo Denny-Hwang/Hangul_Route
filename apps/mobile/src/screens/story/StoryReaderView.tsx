@@ -17,6 +17,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AccessibilityInfo, Animated, Platform, ScrollView, View, type LayoutChangeEvent } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { useLocale, useMessages } from '../../i18n/use-messages';
+import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { checkHasKorean, checkOutcomeLine, uiSpeechLang } from '../../logic/story/check-game';
 import { romanizationShown } from '../../logic/story/romanization';
 import {
@@ -175,7 +176,7 @@ function ReaderBody({
   const profileId = profile?.id ?? null;
   const settings = useLocaleStore((s) => (profileId === null ? undefined : s.byProfile[profileId]));
   const setReadToMe = useLocaleStore((s) => s.setReadToMe);
-  const romanizationMode = settings?.romanizationMode ?? 'always';
+  const romanizationMode = useRomanizationMode();
   const readToMe = effectiveReadToMe(settings?.readToMe, profile?.ageGroup ?? '');
   const [sessionReadToMe, setSessionReadToMe] = useState<boolean | null>(null);
   const readToMeOn = sessionReadToMe ?? readToMe;
@@ -715,7 +716,6 @@ function ReaderBody({
           heading={cpHeading}
           checkCopy={checkCopy}
           readerCopy={copy}
-          romanizationMode={romanizationMode}
           revealed={state.revealed.includes(checkpointRevealId(cpItem.checkId))}
           sayIt={sayItYourselfShown({ canPlayKorean: audio.canPlayKorean, reason, hasKorean: checkHasKorean(cpItem) })}
           onHearQuestion={hearQuestion}

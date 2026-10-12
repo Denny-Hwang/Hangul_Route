@@ -25,6 +25,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ScrollView, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { useLocale, useMessages } from '../../i18n/use-messages';
+import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { hasPicture } from '../../logic/picture-ref';
 import {
   buildDiscover,
@@ -40,8 +41,6 @@ import {
 import { clipRefsOf } from '../../logic/audio/clip-refs';
 import { playPrompt, warmClips } from '../../platform/audio';
 import { useReducedMotion } from '../../platform/motion';
-import { useLocaleStore } from '../../store/locale-store';
-import { useProfileStore } from '../../store/profile-store';
 import { PICTURE_CONTEXT, PictureArt } from '../minigames/PictureArt';
 
 /**
@@ -85,10 +84,7 @@ export function DiscoverStep({ pages, hoyaLine, onDone }: Props): React.ReactEle
     void warmClips(clipRefsOf([...actions.values()].map((a) => a.spec)));
   }, [actions]);
 
-  const activeProfileId = useProfileStore((s) => s.activeId);
-  const romanizationMode = useLocaleStore((s) =>
-    activeProfileId === null ? 'always' : (s.byProfile[activeProfileId]?.romanizationMode ?? 'always'),
-  );
+  const romanizationMode = useRomanizationMode();
 
   const [state, setState] = useState<DiscoverState>(() => startDiscover(model));
   const stateRef = useRef(state);
