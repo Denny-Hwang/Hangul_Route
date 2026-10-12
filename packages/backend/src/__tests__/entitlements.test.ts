@@ -4,6 +4,7 @@ import { entitlementFromStripeEvent, mergeForStripeEvent, signStripePayload, typ
 import { setStripeFetchForTests } from '../routes/entitlements';
 import { testDb as db } from './helpers/db';
 import { PROMO_LIMIT, promoLimiter } from '../routes/entitlements';
+import { store } from '../store';
 
 type Envelope = { ok: boolean; data?: Record<string, unknown>; error?: { code: string } };
 const json = { 'content-type': 'application/json' };
@@ -341,5 +342,129 @@ describe('entitlements (F-ENT-001 §3.3)', () => {
       expect(await send(staleCancel)).toMatchObject({ status: 'cancelled', expiresAt: iso(END) });
       expect(await tier()).toBe('premium');
     });
+  });
+});
+
+describe('webhook history (F-BILL-002 B-3, section 5.4)', () => {
+  const NOW_SEC = Math.floor(Date.now() / 1000);
+  const END = NOW_SEC + 365 * 86_400;
+  const FAMILY = (fam: string) => ({ subjectKind: 'space', subjectId: fam, planKey: 'family_lifetime' });
+  const invoiceStripe = (paymentIntent: string): typeof fetch =>
+    vi.fn<typeof fetch>().mockImplementation(async (url) =>
+      String(url).includes('/v1/invoice_payments') ? new Response(JSON.stringify({ data: [{ status: 'paid', payment: { type: 'payment_intent', payment_intent: paymentIntent } }] }), { status: 200 }) : new Response('{}', { status: 503 }),
+    );
+
+  async function send(type: string, object: Record<string, unknown>, extra: Record<string, unknown> = {}): Promise<{ status: number; data: Record<string, unknown> }> {
+    const body = JSON.stringify({ id: `evt_${Math.random()}`, type, created: NOW_SEC, livemode: false, data: { object }, ...extra });
+    const r = await call('POST', '/api/entitlements/stripe/webhook', { ...json, 'stripe-signature': await signStripePayload('whsec_test', body, NOW_SEC) }, body, STRIPE_ENV);
+    return { status: r.status, data: r.body.data ?? {} };
+  }
+  const billingEvents = () => store.events.filter((e) => e.name.startsWith('billing.'));
+
+  async function familyWithLearner(device: string): Promise<{ fam: string; learnerId: string; tier: () => Promise<string> }> {
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    const reg = (await call('POST', '/api/sync/learners', json, { deviceId: device, learner: { displayName: 'Mina', ageGroup: '5-7', avatar: 'hoya-orange' } })).body.data as { learner: { id: string }; device: { secret: string } };
+    const auth = { ...json, authorization: `Device ${device}:${reg.device.secret}` };
+    await db.addMembership({ spaceId: fam, memberKind: 'learner', memberId: reg.learner.id, role: 'student', joinedAt: new Date().toISOString() });
+    return { fam, learnerId: reg.learner.id, tier: async () => ((await call('GET', `/api/sync/learners/${reg.learner.id}/inbox`, auth)).body.data as { tier: string }).tier };
+  }
+
+  beforeEach(() => {
+    store.reset();
+  });
+
+  it('records invoice.paid as the payment, then a renewal; a retried delivery keeps one row', async () => {
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    setStripeFetchForTests(invoiceStripe('pi_first'));
+    const first = { id: 'in_first', billing_reason: 'subscription_create', amount_paid: 1530, currency: 'usd', status_transitions: { paid_at: NOW_SEC }, parent: { subscription_details: { subscription: 'sub_fam', metadata: FAMILY(fam) } } };
+    const paid = await send('invoice.paid', first);
+    expect(paid).toEqual({ status: 200, data: { received: true, applied: true, recorded: true } });
+    expect(await send('invoice.paid', first)).toEqual({ status: 200, data: { received: true, applied: true, recorded: true } });
+    await send('invoice.paid', { ...first, id: 'in_second', billing_reason: 'subscription_cycle' });
+    const rows = await db.billingEventsFor('space', fam, 10);
+    expect(rows.map((e) => [e.kind, e.providerRef, e.paymentRef, e.amountCents, e.livemode]).sort()).toEqual([
+      ['purchase', 'in_first', 'pi_first', 1530, false],
+      ['renewal', 'in_second', 'pi_first', 1530, false],
+    ]);
+    // Nothing a payment records reaches the entitlement table.
+    expect(await db.entitlementsFor('space', fam)).toEqual([]);
+    expect(billingEvents()).toEqual([]);
+  });
+
+  it('acknowledges an event it cannot attach to a space with applied: false and records nowhere', async () => {
+    expect((await send('invoice.paid', { id: 'in_x', amount_paid: 1530, currency: 'usd', subscription: 'sub_unknown' })).data).toEqual({ received: true, applied: false });
+    expect((await send('charge.refunded', { id: 'ch_x', amount: 1530, amount_refunded: 1530, refunded: true, currency: 'usd', payment_intent: 'pi_unknown' })).data).toEqual({ received: true, applied: false });
+    expect(billingEvents()).toEqual([]);
+  });
+
+  it('records a failed payment and sends billing.payment_failed once, with codes only', async () => {
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    const failed = { id: 'in_f', billing_reason: 'subscription_cycle', amount_due: 1530, amount_paid: 0, currency: 'usd', subscription: 'sub_fam', subscription_details: { metadata: FAMILY(fam) } };
+    expect((await send('invoice.payment_failed', failed)).data).toEqual({ received: true, applied: true, recorded: true });
+    await send('invoice.payment_failed', failed);
+    expect(await db.billingEventByRef('stripe', 'in_f', 'failed')).toMatchObject({ amountCents: 1530, kind: 'failed' });
+    expect(billingEvents().map((e) => [e.name, e.payload, e.profileId])).toEqual([['billing.payment_failed', { planKey: 'family_lifetime', mode: 'test' }, undefined]]);
+  });
+
+  it('a refund is recorded and changes nothing; an immediate cancel then ends the plan and keeps progress (OD-6 revised, BY-D8)', async () => {
+    const { fam, learnerId, tier } = await familyWithLearner('device-refund01');
+    const progress = { learnerId, rev: 1, schemaVer: 1, contentVer: '2026.10', deviceId: 'device-refund01', summary: { streakDays: 3 }, payload: { quests: [{ questId: 'quest:a', stars: 3 }], cards: ['card:hanbok'] }, updatedAt: new Date().toISOString() };
+    expect(await db.putSnapshot(progress, 0)).toBe(true);
+    const meta = { customer: 'cus_fam', metadata: FAMILY(fam) };
+    await send('customer.subscription.created', { id: 'sub_fam', status: 'active', current_period_end: END, ...meta });
+    setStripeFetchForTests(invoiceStripe('pi_fam'));
+    await send('invoice.paid', { id: 'in_fam', billing_reason: 'subscription_create', amount_paid: 1530, currency: 'usd', status_transitions: { paid_at: NOW_SEC }, parent: { subscription_details: { subscription: 'sub_fam', metadata: FAMILY(fam) } } });
+    const before = await db.entitlementsFor('space', fam);
+    expect(await tier()).toBe('premium');
+
+    const refund = await send('charge.refunded', { id: 'ch_fam', amount: 1530, amount_refunded: 1530, refunded: true, currency: 'usd', payment_intent: 'pi_fam' });
+    expect(refund.data).toEqual({ received: true, applied: true, recorded: true });
+    expect(await db.billingEventByRef('stripe', 'ch_fam:refund:1530', 'refund')).toMatchObject({ amountCents: 1530, subjectId: fam, planKey: 'family_lifetime' });
+    expect(await db.entitlementsFor('space', fam)).toEqual(before);
+    expect(await tier()).toBe('premium');
+    expect(billingEvents().map((e) => [e.name, e.payload])).toEqual([['billing.refund_recorded', { planKey: 'family_lifetime', full: true, mode: 'test' }]]);
+
+    // The owner cancels the refunded subscription immediately in the Stripe dashboard.
+    expect((await send('customer.subscription.deleted', { id: 'sub_fam', status: 'canceled', current_period_end: END, ...meta })).data).toMatchObject({ applied: true, entitlement: { status: 'expired' } });
+    expect(await tier()).toBe('free');
+    expect(await db.getSnapshot(learnerId)).toEqual(progress);
+    // A retried refund delivery records nothing new and sends nothing again.
+    await send('charge.refunded', { id: 'ch_fam', amount: 1530, amount_refunded: 1530, refunded: true, currency: 'usd', payment_intent: 'pi_fam' });
+    expect((await db.billingEventsFor('space', fam, 10)).filter((e) => e.kind === 'refund')).toHaveLength(1);
+    expect(billingEvents()).toHaveLength(1);
+  });
+
+  it('sends billing.checkout_completed on every applied completion, flagging a second paid subscription as a duplicate', async () => {
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    const completion = (sub: string) => ({ id: `cs_${sub}`, mode: 'subscription', subscription: sub, customer: 'cus_fam', amount_total: 1530, currency: 'usd', metadata: FAMILY(fam) });
+    expect((await send('checkout.session.completed', completion('sub_a'))).data).toMatchObject({ received: true, applied: true, entitlement: { providerRef: 'sub_a' } });
+    // The subscription checkout's payment is its first invoice.paid, not the completion.
+    expect(await db.billingEventsFor('space', fam, 10)).toEqual([]);
+    await send('customer.subscription.created', { id: 'sub_a', status: 'active', current_period_end: END, customer: 'cus_fam', metadata: FAMILY(fam) });
+    await send('checkout.session.completed', completion('sub_b'), { livemode: true });
+    expect(billingEvents().map((e) => [e.name, e.payload, e.profileId])).toEqual([
+      ['billing.checkout_completed', { planKey: 'family_lifetime', mode: 'test', duplicate: false }, undefined],
+      ['billing.checkout_completed', { planKey: 'family_lifetime', mode: 'live', duplicate: true }, undefined],
+    ]);
+  });
+
+  it('records a legacy one-time completion as a purchase next to the entitlement it applies', async () => {
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    const r = await send('checkout.session.completed', { id: 'cs_old', mode: 'payment', payment_intent: 'pi_old', customer: 'cus_fam', amount_total: 1530, currency: 'usd', metadata: FAMILY(fam) });
+    expect(r.data).toMatchObject({ received: true, applied: true, recorded: true, entitlement: { providerRef: 'pi_old', expiresAt: null } });
+    expect(await db.billingEventByRef('stripe', 'pi_old', 'purchase')).toMatchObject({ subjectId: fam, amountCents: 1530 });
+  });
+
+  it('refuses an event whose object is null as not a Stripe event', async () => {
+    const body = JSON.stringify({ id: 'evt_null', type: 'invoice.paid', data: { object: null } });
+    expect((await call('POST', '/api/entitlements/stripe/webhook', { ...json, 'stripe-signature': await signStripePayload('whsec_test', body, NOW_SEC) }, body, STRIPE_ENV)).status).toBe(400);
+  });
+
+  it('keeps answering a subscription event as before: no history, no billing telemetry', async () => {
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    const r = await send('customer.subscription.updated', { id: 'sub_fam', status: 'active', current_period_end: END, customer: 'cus_fam', metadata: FAMILY(fam) });
+    expect(Object.keys(r.data).sort()).toEqual(['applied', 'entitlement', 'received']);
+    expect(await db.billingEventsFor('space', fam, 10)).toEqual([]);
+    expect(billingEvents()).toEqual([]);
   });
 });
