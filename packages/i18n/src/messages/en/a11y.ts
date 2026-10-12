@@ -158,4 +158,22 @@ export const a11y = {
     rowGoal: (n: number, title: string) => `Goal: Stage ${n}, ${title}.`,
     rowStarted: (n: number, band: string, date: string) => `Started: Stage ${n}, ${band}, ${date}.`,
   },
+  /**
+   * The vocabulary question view (F-VOC-004 §3.8, S-4b): the speaker, the outcome said in words after a
+   * tap (`gloss` is the answer's meaning in the UI language, content), and the homonym topic chip.
+   */
+  vocab: {
+    question: {
+      speaker: 'Play the word again',
+      /** The meaning starts the sentence, so its first letter is upper case ("Right. Apple."). */
+      right: (gloss: string) => `Right. ${gloss.charAt(0).toUpperCase()}${gloss.slice(1)}.`,
+      reveal: (gloss: string) => `Not this one. The answer is ${gloss}.`,
+      /** The quick check after a miss: the learner taps again. */
+      tryAnother: 'Not this one. Try another.',
+      topic: (title: string) => `Topic: ${title}`,
+      /** `right` / `reveal` for a question with no word to name (a degenerate question; never an empty name). */
+      rightPlain: 'Right.',
+      revealPlain: 'Not this one.',
+    },
+  },
 } as const;

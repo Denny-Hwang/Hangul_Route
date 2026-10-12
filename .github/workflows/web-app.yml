@@ -107,3 +107,5 @@ jobs:
           # F-AUDIO-004 A-6: the clip path (precache, runtime cache, offline clip, clip > voice) on
           # the fixture tones; only that group, since the voice tests expect the regular build.
           STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test audio -g "bundled clips"
+          # F-VOC-004 S-4b: the shared vocabulary question view, through the __hrVocabE2E hook (no host screen yet).
+          STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test vocab-question

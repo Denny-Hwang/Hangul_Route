@@ -19,6 +19,8 @@ The design system has no copy and no i18n dependency. The caller passes already-
 | `gloss` | `string?` | Passed to `KoreanText` |
 | `art` | `ReactNode?` | Picture slot above the texts (SVG from F-STORY-002). Absent or `null`: the texts alone, never a broken image |
 | `state` | `'idle' \| 'correct' \| 'wrong' \| 'hint' \| 'disabled'` | See States |
+| `wrongMark` | `'replay' \| 'dash'`, default `replay` | The mark of `wrong`. `replay` ("try another") when a retry follows; `dash` for a locked miss that moves on (the F-VOC-004 Speed Round, which has no retry). Added in F-VOC-004 S-4b |
+| `layout` | `'row' \| 'tile'`, default `row` | `tile`: a picture option in a grid. The content is centred and uses the whole width; the status mark sits on the top corner (see Anatomy). Added in F-VOC-004 S-4b |
 | `onPress` | `() => void?` | Fires only in `idle` and `hint` |
 | `accessibilityLabel` | `string` | Required. The accessible name (for a picture option, the text label) |
 | `testID` | `string?` | |
@@ -35,6 +37,19 @@ The design system has no copy and no i18n dependency. The caller passes already-
 ```
 
 Order inside the card: art, then the Korean block (`ko` + romanization + gloss), then `label`. Any of them may be missing. The status mark sits at the end of the row and is decorative (the state is in the accessible name and `accessibilityState`).
+
+**Tile layout** (`layout="tile"`, F-VOC-004 S-4b, wireframe `design/wireframes/vocab/speed-round.md` B, D, E, F):
+
+```
+ +----------------(v)+     <- the status mark on the top corner: spacing.xs from the edges, on a round
+ |                   |        disc (radii.pill, padding spacing.xxs) of the state's own fill, so it reads
+ |     (picture)     |        over the art with the same contrast pairs as the row mark
+ |                   |
+ +-------------------+
+   art centred, Korean block (if any) centred under it
+```
+
+The row keeps no width for the mark, so the narrowest tile is the art plus the horizontal padding and the thickest border: `choiceCardTileWidth(art) = art + 2 x spacing.lg + 2 x borderWidth.thick` (134 dp for a 96 dp picture). Two tiles and an 8 dp gap fit the 288 dp column of a 320 wide phone. The mark shows only once a card is answered, so it never covers the picture while the learner is choosing.
 
 ## Tokens (no literals)
 
@@ -54,7 +69,7 @@ State styles (the pure `choiceCardStyle(state)`):
 |---|---|---|---|---|---|---|---|
 | `idle` | `surface.paper` | `border.subtle` | `text.primary` | none | yes | no | no |
 | `correct` | `feedback.successLight` | `feedback.success` | `text.primary` | `check` in `feedback.success` | no | yes | no |
-| `wrong` | `feedback.nudgeLight` | `feedback.nudge` | `text.primary` | `replay` ("try another") in `text.primary` | no (locked) | yes | no |
+| `wrong` | `feedback.nudgeLight` | `feedback.nudge` | `text.primary` | `replay` ("try another") in `text.primary`; `dash` with `wrongMark="dash"` | no (locked) | yes | no |
 | `hint` | `surface.paper` | `border.focus`, thick | `text.primary` | none | yes | no | no |
 | `disabled` | `surface.sunken` | `border.subtle` | `text.primary` | none | no | no | yes |
 
@@ -65,7 +80,7 @@ No new token. `disabled` uses `surface.sunken` (the existing Tile convention) so
 ### Deviation notes (against the F-STORY-003 paragraph)
 
 - The spec lists `colors.hoya.furDark` as the replacement for the Tile literal `#B5862A`. `furDark` on `feedback.nudgeLight` is 2.85:1, under both the 4.5 text bar and the 3 non-text bar, so it is **not** used for text or the mark there. The wrong-state label stays `text.primary` (14:1) and the mark is `text.primary`. `furDark` is 3.28:1 on `surface.paper` and remains the documented accent for any other surface.
-- `feedback.nudge` on `surface.paper` is 1.86:1, so the amber border alone cannot signal the state (WCAG 1.4.1 / 1.4.11). The `replay` mark and the caller's accessible name carry it; `correct` has the `check` mark; `hint` has the thick `border.focus` ring (4.30:1 on paper).
+- `feedback.nudge` on `surface.paper` is 1.86:1, so the amber border alone cannot signal the state (WCAG 1.4.1 / 1.4.11). The `replay` (or `dash`) mark and the caller's accessible name carry it; `correct` has the `check` mark; `hint` has the thick `border.focus` ring (4.30:1 on paper).
 
 ## Contrast (enforced in `packages/design-system/src/__tests__/contrast.test.ts`)
 
@@ -83,7 +98,8 @@ No new token. `disabled` uses `surface.sunken` (the existing Tile convention) so
 - Touch target: whole card >= `touchTarget.child` (80), full row width is tappable; `hitSlop` `spacing.sm`.
 - Text wraps, never truncates; the card grows with the learner's text size. No emoji, no raster, no fixed height.
 - Reduced motion: no motion at all in the component.
+- Tests: `src/__tests__/choice-card.test.ts` (the pure styles, `wrongMark`, `choiceCardTileWidth`) and `src/components/ChoiceCard/__tests__/ChoiceCard.test.tsx` (where the mark sits in each layout).
 
 ## Where it appears
 
-F-STORY-003 (`StoryCheckGame`: text, Korean and picture options), F-QUEST-002 (Listen & Pick, Pic-Word Match, Hangul Check), F-VOC. Visual regression: all five states are shown in `/design-preview/components` (F-VR-001).
+F-STORY-003 (`StoryCheckGame`: text, Korean and picture options), F-QUEST-002 (Listen & Pick, Pic-Word Match, Hangul Check), F-VOC (`VocabQuestionView`: `layout="tile"` for picture options, `wrongMark="dash"` in the Speed Round, `replay` in the quick check, where a retry follows). Visual regression: all five states are shown in `/design-preview/components` (F-VR-001).

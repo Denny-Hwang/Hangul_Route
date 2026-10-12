@@ -24,6 +24,8 @@ const SLOT_SCREENS = [
   'minigames/VoiceEchoGame.tsx',
   'minigames/CultureQuizGame.tsx',
   'library/CardDetailView.tsx',
+  // F-VOC-004 S-4b: the vocabulary question's prompt word (source vocab-speed / vocab-card).
+  'vocab/VocabQuestionView.tsx',
 ];
 
 function sourceFiles(dir: string): string[] {
@@ -74,7 +76,7 @@ describe('no direct speak from screens', () => {
    * unmount, as Listen & Pick and Story Order do, so Korean never keeps
    * playing over the next screen.
    */
-  it.each(['minigames/TapRespondGame.tsx', 'library/CardDetailView.tsx', 'minigames/ListenPickGame.tsx'])(
+  it.each(['minigames/TapRespondGame.tsx', 'library/CardDetailView.tsx', 'minigames/ListenPickGame.tsx', 'vocab/VocabQuestionView.tsx'])(
     '%s stops its speech on unmount',
     (rel) => {
       const file = files.find((f) => f.rel === rel);
@@ -98,6 +100,12 @@ describe('no direct speak from screens', () => {
       expect(file!.source).toMatch(/warmClips\(clipRefsOf\(/);
     },
   );
+
+  it('the vocabulary question view passes hasClip and its per-mode source to its prompt slot', () => {
+    const file = files.find((f) => f.rel === 'vocab/VocabQuestionView.tsx');
+    expect(audioImports(file!.source)).toContain('hasClip');
+    expect(file!.source).toMatch(/usePromptSlot\(\{\s*source: QUESTION_AUDIO_SOURCE\[mode\],\s*hasClip: hasClip\(/);
+  });
 
   it('Match Sound passes hasClip to its prompt slot', () => {
     const file = files.find((f) => f.rel === 'minigames/MatchSoundGame.tsx');

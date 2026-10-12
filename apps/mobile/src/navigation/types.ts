@@ -4,6 +4,7 @@ import type { MyRouteSource } from '../logic/my-route/telemetry';
 import type { PinResetMethod } from '../logic/profiles/pin-flow';
 import type { LibrarySectionId } from '../logic/story/library-sections';
 import type { SourcesRouteParams } from '../logic/story/source-link';
+import type { VocabQuestionE2eParams } from './vocab-question-e2e';
 
 /**
  * Where a grown-up action continues once the gate (or a new PIN) is through. `ExternalLink`
@@ -108,6 +109,8 @@ export type RootStackParamList = {
   Placement: { source: PlacementSource; retakeMode?: 'standard' | 'deep' };
   /** parent/placement-report — the grown-up report of the level check, behind the PIN gate (F-PLC-001 section 3.9). */
   PlacementReport: { profileId: string };
+  /** Fixture builds only (`navigation/vocab-question-e2e.tsx`): the shared vocabulary question view on catalogue words. */
+  VocabQuestionE2e: VocabQuestionE2eParams;
 };
 
 /** The level check's screens (F-PLC-001 section 3.1); the flow state machine decides which one shows. */

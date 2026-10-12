@@ -380,4 +380,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.results.extraCards.more': [[1], [3]],
   'learner.results.extraCards.announce': [[1, ['Rice']], [2, ['Rice', 'Chopsticks']]],
   'learner.results.extraCards.seeA11y': [['Hanbok']],
+  'a11y.vocab.question.right': [['apple']],
+  'a11y.vocab.question.reveal': [['apple']],
+  'a11y.vocab.question.topic': [['Food']],
 };
