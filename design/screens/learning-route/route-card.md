@@ -1,7 +1,7 @@
 # Route card: where you are and where you are going (screen spec v1)
 
 Spec: `docs/specs/AMENDMENTS-ROUTE-LEARNING-ROUTE.md` sections 4.3, 4.4, 4.5, 6.2, 10 · wireframe `design/wireframes/journey/learning-route.md` A to J, `parent/learning-route.md` L1
-Mock: `mock/route-card.html` (board of states), `mock/route-tab.html` (the card on the Route tab) · shots `shots/route-card-states-375.png`, `-1280.png`, `shots/route-tab-320-first.png`
+Mock: `mock/route-card.html` (board of states), `mock/route-tab.html` (the card on the Route tab) · shots `shots/route-card-states-375.png`, `-1280.png`, `shots/route-tab-320-first.png`, `shots/route-card-three-tags-320.png`, `-320-text200.png`
 Code (planned): `screens/my-route/RouteCard.tsx` (LR-5a), copy selectors in `logic/my-route/copy.ts` (LR-3b)
 
 ## Anatomy
@@ -35,23 +35,27 @@ Code (planned): `screens/my-route/RouteCard.tsx` (LR-5a), copy selectors in `log
 
 ## The trail under the card
 
-- **Goal tag.** The goal stage's row gets the chip `[flag] Your goal` (`surface.sunken`, like the `[pin] You started here` chip). It comes after "You are here" and "You started here". On grown-up pages it reads "{name}'s goal".
+- **Goal tag.** The goal stage's row gets the chip `[flag] Your goal` (`surface.sunken`, like the `[pin] You started here` chip). On grown-up pages it reads "{name}'s goal" (or "Plan goal", case 2 of `stage-list.md`).
+- **Tag order.** "You are here", then "Your goal", then "You started here": where you are, where you are going, where you began. The same order on grown-up rows. This order is what keeps three tags in two rows at 320 (next section).
 - **Not open yet (D).** A not-open quest is the dotted `later` pip. The stage caption reads "Not open yet" when every playable quest of the stage is not open. The legend has two rows with the same dotted ring, "Not open yet" and "Coming later": the word, not the shape, tells them apart (section 4.5).
 - **In your plan.** A cell row of an episode in `inPlanEpisodeIds` carries a ring plus the words "In your plan". The ring's final geometry comes from F-ENT-003 E3-D.
 
-## Assumption f (three tags at 320): measured, and an option
+## Three tags at 320 (assumption f)
 
-- **Measured.** On the mock at 320 the tag row is 236 px wide. The three chips "You are here", "You started here" and "Your goal" do not fit in two rows:
-  - At 100 % text they take **three rows**: the first two chips already need 248 px together.
-  - At 200 % text they also take three rows, and four text lines, because "You started here" wraps inside its chip.
-  - So assumption f does not hold on the mock at either size.
-- **Option** (drawn on the board, before the expanded stage): when "You are here" and "Your goal" fall on the same stage, they become one chip, `[flag] You are here · Your goal`.
-  - At 100 % the row then takes **two rows**, which meets the assumption.
-  - At 200 % it is still two rows, but each chip wraps, so four text lines: no better than three chips.
-- **Decision.** This stays an option for LR-5a and LR-10 to decide on the real screen, where the trail row may be wider than the mock's.
-  - Until then, LR-5a builds the spec's default (three chips).
-  - If LR-10's check confirms the measurement, the chip is adopted for 100 % text, and LR-3b adds one key for it.
-  - At 200 % neither form meets "two lines". That needs the owner's call (keep the assumption at 100 % only, or drop it), not a third tag design.
+The shots `route-card-three-tags-320.png` and `-320-text200.png` show one stage with all three tags. The tag row is 236 px wide at 320 (the trail body beside the 40 px badge).
+
+| Text size | Chip widths (px) | Rows | Text lines |
+|---|---|---|---|
+| 100 % | here 100, goal 97, start 145 | 2: "You are here" and "Your goal" (201 with the gap), then "You started here" | 2 |
+| 100 %, Verdana (a wide fallback font) | here 117, goal 109, start 165 | 2 (first row 230) | 2 |
+| 120 % | here 113, goal 107, start 163 | 2 (first row 224) | 2 |
+| 200 % | here 173, goal 152, start 236 | 3, one tag each | 4: "You started here" wraps inside its chip |
+
+- **Settled for LR-5a.** The order is here, goal, start. Tags wrap to the next row, never scroll, and a long tag may wrap inside its chip. Nothing is cut off. A chip keeps its `radii.pill` and its glyph stays centred when its text takes two lines.
+- **Why not "two lines at 200 %".** At 200 %, "You are here" and "Your goal" are already wider together (329 px) than the 236 px row. So no order and no chip design fits three tags in two lines at 200 %. One merged chip ("You are here · Your goal") was tried: it is no shorter, and it needs a new key. The spec's assumption f is revised in this PR to "two rows at the default text size, one row each at 200 %" (section 14 and its review log).
+- **The old order** (here, start, goal) took three rows even at 100 %: "You are here" and "You started here" need 249 px together.
+- **For LR-5a (code).** Today `stageRowView` marks the pin by position: `pin: row.isStart && index === tags.length - 1` (`logic/my-route/view.ts`). With the goal tag in the middle, LR-5a gives `TagView` a glyph per tag (`'pin' | 'flag' | null`) instead of the position rule. `TagChip` draws `Icon` `flag` (LR-2) at 16 dp, the same size as the pin.
+- **The row label** follows the same order: "... You are here. Your goal. You started here. ..." (section 10, as revised).
 
 ## Accessibility
 
@@ -63,9 +67,17 @@ Code (planned): `screens/my-route/RouteCard.tsx` (LR-5a), copy selectors in `log
 
 ## Strings the mocks need beyond section 11.1
 
-| Key (LR-3b) | Draft | Why |
+| Key | Draft | Why |
 |---|---|---|
-| `learner.myRoute.goal.exploreInGoal(n, title)` | "Explore Stage {n} · {title}: you are in your goal stage" | the collapsed taste line of E (section 4.3 says "or collapsed" for a default taste goal but names no key) |
-| `caregiver.journey.goal.from.family` | "From the family's weekly plan" | already in 11.1; listed because L1 uses it |
+| `learner.myRoute.goal.exploreInGoal(n, title)` (LR-3b) | "Explore Stage {n} · {title}: you are in your goal stage" | the collapsed taste line of E. Section 4.3 says "or collapsed" for a default taste goal but names no key |
+| `learner.myRoute.hero.error` (LR-3b) | "Hoya could not open your Learning Route." | the J state. F-ROUTE-001 section 3.17 asks for "hero and an inline retry" but names no words; this is the wireframe's J line. The button reuses `common.buttons.tryAgain` |
+| `caregiver.journey.goal.from.family` (LR-3b) | "From the family's weekly plan" | already in 11.1; listed because L1 uses it |
+
+**F-ENT-003's words, not yet on main.** These are drawn from F-ENT-003's drafts (its section 3.11 and Appendix A). They arrive with F-ENT-003's string PRs (`learner.routeNext` in E3-4, `learner.access` in E3-6), and LR-5a and LR-5b use them through their keys, never as copies:
+- `learner.access.openForYou`: "You played every quest that is open for you.";
+- `learner.access.practiceWords.cta`: "Practice words";
+- `learner.routeNext.tag.inPlan`: "In your plan".
+
+`learner.myRoute.state.notOpen` ("Not open yet") is already on main, and the legend row "Not open yet" is the new `legend.notOpen`, which carries the same value (section 7.3).
 
 Everything else on the board is a section 11.1 draft or an existing dictionary value.

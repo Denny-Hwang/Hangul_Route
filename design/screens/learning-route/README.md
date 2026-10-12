@@ -30,7 +30,13 @@ Built by:
   - a static port of `Hoya.tsx` (poses `idle` and `cheering`).
   So the shapes in the shots are the shapes the app draws.
 - **Units.** Text sizes are in rem, so the 200 % shots enlarge every line. Pips, badges and glyphs keep their dp size, as `design/components/PipRow/spec.md` decides: they follow the layout class, not the font scale.
-- **Words.** Every drawn string is either a dictionary value or a draft of the amendment, word for word. The sources are section 11.1, `learner.myRoute`, `caregiver.journey`, `console.journey`, and F-REPORT-001's `report.glance.*`.
+- **Words.** Every drawn string comes word for word from one of these sources:
+  - a dictionary value (`learner.myRoute`, `caregiver.journey`, `console.journey`, `common`);
+  - a draft of the amendment (section 11.1);
+  - F-REPORT-001's `report.*` drafts;
+  - F-ENT-003's `learner.access` and `learner.routeNext` drafts.
+
+  Two exceptions need new keys: the collapsed taste line of E and the J error line. `route-card.md` ("Strings the mocks need beyond section 11.1") lists them with the PR that adds each.
 - **Annotations.** Grey dashed boxes and monospace labels are design-board notes, not UI. They mark the adult shell header, the F-BROWSE-001 slot and the unchanged skills card.
 
 Open any file in a browser (`design/screens/learning-route/mock/route-tab.html`). Links are placeholders.
@@ -58,22 +64,23 @@ Values that are not tokens. Each one derives from code or a token, and LR-4, LR-
 | `shots/route-tab-320.png` | 320, full page | the Route tab, state A: card, weekly plan line, trail with "You are here" and "Your goal"; the tab bar is drawn after the page (it is sticky on a real screen) |
 | `shots/route-tab-320-text200.png` | 320, text 200 % | the same, every line enlarged; no sideways scroll; tab labels at the cap |
 | `shots/route-tab-1280.png` | 1280, full page | one centred reading column (`layout.maxWidth.reading`); the bar centred in `layout.maxWidth.full`, drawn after the page as at 320 |
-| `shots/route-card-states-375.png`, `-1280.png` | board | A, A2, B, C (first time and later visits), E, F, D with its trail and legend, L1, J, the expanded stage with three tags and "In your plan", and the assumption f option |
-| `shots/report-goal-line-375.png`, `-1280.png` | board | the report's At a glance block in cases 1, 1 reached, 2, class 2, end of road, the older-device case, and case 3 in both forms (equal to Now: no line; different: "Next open stage") |
+| `shots/route-card-states-375.png`, `-1280.png` | board | A, A2, B, C (first time and later visits), E, F, D with its trail and legend, L1, J, the three tags on one stage, and the expanded stage with "In your plan" |
+| `shots/route-card-three-tags-320.png`, `-320-text200.png` | one board item at 320 | the three tags in their order (here, goal, start): two rows at the default text size, one row each at 200 % (assumption f) |
+| `shots/report-goal-line-375.png`, `-1280.png` | board | the report's At a glance block in cases 1, 1 reached, 2, class 2, end of road, the older-device case, and case 3 ("Next open stage") when that stage is the Now stage and when it is not |
 | `shots/stage-list-family-320.png`, `-1280.png`, `-320-text200.png` | page | `/parent/space/route`: Sam, case 1 with the secondary family-plan line; the 200 % text shot shows the reflow |
 | `shots/stage-list-class-320.png`, `-1280.png` | page | `/teach/space/route`: Mina, case 2 reached, Plan goal tag, start tag |
-| `shots/stage-list-states-375.png` | board | loading, not synced, not found, end of road, case 3 in both forms, Hoya's suggestion source, cannot reach |
+| `shots/stage-list-states-375.png` | board | loading, not synced, not found, end of road, case 3 (Now stage and another stage), Hoya's suggestion source, cannot reach |
 | `shots/tab-bar-320.png`, `-375.png`, `-1280.png`, `-320-text200.png` | board | three tabs (flag off), four tabs with Route or Journey selected, the two headers |
 
 ## Measured on the mock (Chromium)
 
 | Check | Target (spec) | Mock |
 |---|---|---|
-| Sideways scroll | none at 320, 375 and 1280, and at 320 with 200 % text (section 10) | none on any page (`scrollWidth` equals the viewport on all 18 page and board shots) |
+| Sideways scroll | none at 320, 375 and 1280, and at 320 with 200 % text (section 10) | none on any page (`scrollWidth` equals the viewport on all 20 page and board shots) |
 | Primary action on the first screen at 320 x 568 | one tap away (G2) | Continue ends at 478 px. The tab bar starts at 491 px. With a native 20 pt status bar, the button's top 73 of its 80 px are still on the first screen |
 | Tab items at 320 | at least `touchTarget.min` (section 5.1) | four items of 80 x 64 |
 | Tab labels at 320 with 200 % text | "Route" on one line (assumption a) | every label on one line at the cap (Today 51, Route 50, Journey 69, Library 60 px of 80); **without a cap, "Journey" and "Library" overflow their 80 px items**, see `tab-bar.md` |
-| Three tags on one stage row at 320 (assumption f, verified in LR-10) | at most two lines with 200 % text | **Not met.** At 100 % the three chips take three rows: "You are here" plus "You started here" (with its pin) already need 248 px of the 236 px row. At 200 % they take three rows and four text lines, because "You started here" wraps inside its chip. The option on the card board (one chip "You are here · Your goal" when both apply) takes two rows at 100 %. At 200 % it also takes two rows, but each chip wraps, so four text lines. See `route-card.md` |
+| Three tags on one stage row at 320 (assumption f, as revised by this PR) | at most two rows at the default text size; one row each at 200 %, nothing cut off | **Met** in the order here, goal, start. The tag row is 236 px. At 100 %, "You are here" (100) and "Your goal" (97) share the first row (201 px with the gap), and "You started here" (145) takes the second. With Verdana as a wide fallback font the first row is 230 px; it stays two rows up to 120 % text. At 200 % each tag takes its own row and "You started here" wraps inside its chip. The old order (here, start, goal) took three rows even at 100 %. See `route-card.md` |
 | Adult page targets | at least 44 px (section 10) | back link, Open Learning Route, Try again and the reserved slot are 64 px tall (`touchTarget.min`) |
 | Adult page at 320 and 1280 | one reading column, reflows at 200 % (section 10) | one column at both sizes; no sideways scroll at 320 with 200 % text |
 
@@ -91,6 +98,7 @@ These are the mock's numbers. LR-4 and LR-10 measure the real screens (`apps/mob
 - **D follows the owner decision of 2026-10-11.** The free plan is all of Stage 1. So the free-end example shows Stage 1 Complete and Stage 2's two shipped quests as "Not open yet", not a part-played Stage 1 as the wireframe drew before that decision.
 - **The adult pages have no billing link.** The adult shell header (F-APP-001) is drawn as a placeholder. This amendment adds nothing to it, so there is no billing, plan or price link (LR-OD-8).
 - **The stage list rows** use the seven-segment shapes of the R-9a strip at 24 dp (complete, known, explored, open, later), the state word, the can-do line and the count line with zero parts left out. A taste stage's word is "A taste", the learner page's word; LR-7 adds the console key for it. `console.journey.stageLine` still prints "0 quests done" when only the known part is non-zero, so LR-7 drops that part (`stage-list.md`, "Notes for LR-7").
-- **Case 3 shows no goal line when its stage is the Now stage** (report and stage list card). Case 3 is "the first open stage". The Now stage is `journey.here`. The two are almost always the same, so the line would repeat Now with the word "next". It shows only when the two differ. LR-7 adds the comparison and its test, and writes the rule into the spec's case 3 text (`stage-list.md`, "Decision for LR-7").
+- **Case 3 always shows its line**, as section 6.1 says: "Next open stage: Stage {n} · {title}", with no flag. For a learner with no plan this is usually the Now stage, so the line names the same stage as "Now on". That is still true and useful: it says this stage is the one to finish, and it never claims a goal. Hiding it in that case would change section 6.1, so the board draws it (`stage-list.md`).
+- **Tag order: You are here, Your goal, You started here** (where you are, where you are going, where you began). This order fits three tags in two rows at 320, and the old order did not. The spec's assumption f, section 4.3 and the section 10 label order are revised to match in this PR (`route-card.md`).
 - **The report's route lines form one region.** "Now on", the goal line and **Open Learning Route** sit in one `section` labelled "Learning Route" under the report's `h1` (section 10). The link moves from the end of the "Now on" line (F-REPORT-001's wireframe) to under the goal line. "Last practice" stays outside the region.
 - **Pip-size marks come from F-ENT-003 E3-D.** The "Not open yet" dotted ring and the "In your plan" solid ring at pip and cell size are E3-D's (`design/components/RouteMarkers/`). This board draws placeholders only: today's `later` pip, and a 16 px ring in `border.shape`. LR-5a and LR-5b take the final shapes from E3-D. The amendment fixes only the shared dotted ring with its two words (section 4.5), and this board respects that.
