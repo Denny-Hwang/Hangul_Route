@@ -532,6 +532,28 @@ export class MemoryDb implements Db {
     rows.sort((a, b) => (a.updatedAt === b.updatedAt ? (a.id < b.id ? 1 : a.id > b.id ? -1 : 0) : a.updatedAt < b.updatedAt ? 1 : -1));
     return clone(rows[0] ?? null);
   }
+  async entitlementsForSpaces(spaceIds: readonly string[]): Promise<Entitlement[]> {
+    const ids = new Set(spaceIds);
+    return clone([...this.entitlements.values()].filter((e) => e.subjectKind === 'space' && ids.has(e.subjectId)));
+  }
+  async membersOfSpaces(spaceIds: readonly string[]): Promise<Membership[]> {
+    const ids = new Set(spaceIds);
+    return clone([...this.memberships.values()].filter((m) => ids.has(m.spaceId)));
+  }
+  async childSpacesOfSpaces(parentSpaceIds: readonly string[]): Promise<Space[]> {
+    const ids = new Set(parentSpaceIds);
+    return clone([...this.spaces.values()].filter((s) => s.parentSpaceId !== null && ids.has(s.parentSpaceId)));
+  }
+  async billingEventsForSpaces(spaceIds: readonly string[], limitPerSpace: number): Promise<BillingEvent[]> {
+    assertBillingLimit(limitPerSpace);
+    const ids = new Set(spaceIds);
+    const bySpace = new Map<string, BillingEvent[]>();
+    for (const e of this.billingEvents.values()) {
+      if (e.subjectKind !== 'space' || !ids.has(e.subjectId)) continue;
+      bySpace.set(e.subjectId, [...(bySpace.get(e.subjectId) ?? []), e]);
+    }
+    return clone([...bySpace.values()].flatMap((rows) => rows.sort(newestBillingEvent).slice(0, limitPerSpace)));
+  }
 
   // ---- notes from grown-ups (F-FEEDBACK-001 section 7.4) ----
   // Mirrors the SQL of D1Db: each method checks and writes with no await in between.

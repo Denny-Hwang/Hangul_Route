@@ -242,6 +242,16 @@ export interface Db {
   billingEventByPaymentRef(paymentRef: string): Promise<BillingEvent | null>;
   /** The entitlement a provider reference (a Stripe subscription id) points at; the most recently updated when several do. */
   entitlementByProviderRef(provider: Entitlement['provider'], providerRef: string): Promise<Entitlement | null>;
+  // set-based reads for the billing summary (F-BILL-002 B-4): each list is bound as one JSON array and read
+  // with `json_each`, so one statement answers any number of spaces (D1 caps statements per invocation).
+  /** Every space-subject entitlement row of these spaces; order not guaranteed. */
+  entitlementsForSpaces(spaceIds: readonly string[]): Promise<Entitlement[]>;
+  /** Every membership of these spaces; order not guaranteed. */
+  membersOfSpaces(spaceIds: readonly string[]): Promise<Membership[]>;
+  /** Every space whose parent is one of these; order not guaranteed. */
+  childSpacesOfSpaces(parentSpaceIds: readonly string[]): Promise<Space[]>;
+  /** Each space's newest `limitPerSpace` rows (the order of `billingEventsFor`), grouped by space in no set order. */
+  billingEventsForSpaces(spaceIds: readonly string[], limitPerSpace: number): Promise<BillingEvent[]>;
 
   // notes from grown-ups (F-FEEDBACK-001 section 7.4, migration 0008). Every method that takes a list is
   // set-based: the list is bound as one JSON array and read with `json_each`, so the statement count does

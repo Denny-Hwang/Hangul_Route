@@ -656,6 +656,28 @@ export class D1Db implements Db {
   entitlementByProviderRef(provider: Entitlement['provider'], providerRef: string): Promise<Entitlement | null> {
     return this.one('SELECT * FROM entitlements WHERE provider = ? AND provider_ref = ? ORDER BY updated_at DESC, id DESC LIMIT 1', [provider, providerRef], toEntitlement);
   }
+  // Set-based reads for the billing summary: one statement per list, whatever its length (json_each).
+  entitlementsForSpaces(spaceIds: readonly string[]): Promise<Entitlement[]> {
+    if (spaceIds.length === 0) return Promise.resolve([]);
+    return this.many("SELECT * FROM entitlements WHERE subject_kind = 'space' AND subject_id IN (SELECT value FROM json_each(?))", [JSON.stringify(spaceIds)], toEntitlement);
+  }
+  membersOfSpaces(spaceIds: readonly string[]): Promise<Membership[]> {
+    if (spaceIds.length === 0) return Promise.resolve([]);
+    return this.many('SELECT * FROM memberships WHERE space_id IN (SELECT value FROM json_each(?)) ORDER BY joined_at', [JSON.stringify(spaceIds)], toMembership);
+  }
+  childSpacesOfSpaces(parentSpaceIds: readonly string[]): Promise<Space[]> {
+    if (parentSpaceIds.length === 0) return Promise.resolve([]);
+    return this.many('SELECT * FROM spaces WHERE parent_space_id IN (SELECT value FROM json_each(?)) ORDER BY created_at', [JSON.stringify(parentSpaceIds)], toSpace);
+  }
+  async billingEventsForSpaces(spaceIds: readonly string[], limitPerSpace: number): Promise<BillingEvent[]> {
+    assertBillingLimit(limitPerSpace);
+    if (spaceIds.length === 0 || limitPerSpace === 0) return [];
+    return this.many(
+      `SELECT * FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY subject_id ORDER BY ${NEWEST_BILLING_EVENT}) AS rn FROM billing_events WHERE subject_kind = 'space' AND subject_id IN (SELECT value FROM json_each(?))) WHERE rn <= ? ORDER BY subject_id, ${NEWEST_BILLING_EVENT}`,
+      [JSON.stringify(spaceIds), limitPerSpace],
+      toBillingEvent,
+    );
+  }
 
   addWaitlist(e: Omit<WaitlistEntry, 'unsubscribedAt'>): Promise<void> {
     return this.run('INSERT INTO waitlist (email, created_at, source, locale, consent_text_version) VALUES (?, ?, ?, ?, ?) ON CONFLICT(email) DO NOTHING', [e.email, e.createdAt, e.source, e.locale, e.consentTextVersion]);
