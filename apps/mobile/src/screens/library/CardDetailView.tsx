@@ -108,6 +108,8 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false, state =
   }
 
   const flip = (): void => setFace((current) => nextFace(current));
+  // A story card's fact always comes with its source, on either face (F-STORY-006 §3.8).
+  const citation = cardCitationView(card, m.citation);
 
   // `audioRef` joins the card schema with F-CNT-002 / F-VOC (spec §3.9); until then the device voice says the name.
   const hear = (): void => {
@@ -169,6 +171,7 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false, state =
                     {card.factEn}
                   </Body>
                 </View>
+                {citation ? <CitationLines view={citation} face="fact-card" /> : null}
               </>
             ) : null}
           </Card>
@@ -354,20 +357,23 @@ const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANG
 
 /**
  * The source of a story card's fact (F-STORY-006 §3.8, wireframe library/card-back-citation G):
- * "Source: <publisher>, <title>" on at most two lines (the full line is its accessible label),
- * then "and N more sources". Plain text: no URL and no link on a learner surface.
+ * "Source: <publisher>, <title>", then "and N more sources". Plain text: no URL and no link on a
+ * learner surface. The runs are the accessible text (no label over them), so a screen reader reads
+ * each Korean span in Korean. On the back face the line sits under the fact inside the flip button,
+ * which a screen reader reads as one control, and is cut at two lines; the fact card under the
+ * flip card repeats it in full, where assistive tech reaches it.
  */
-function CitationLines({ view }: { view: CardCitationView }): React.ReactElement {
+function CitationLines({ view, face }: { view: CardCitationView; face: 'back' | 'fact-card' }): React.ReactElement {
   const line = {
     fontSize: typography.size.caption,
     lineHeight: typography.size.caption * typography.leading.normal,
     color: colors.text.muted,
-    textAlign: 'center' as const,
+    textAlign: face === 'back' ? ('center' as const) : ('left' as const),
   };
   return (
     <>
       <Spacer size="xs" />
-      <Text numberOfLines={2} accessibilityLabel={view.line} testID="card-detail-citation" style={line}>
+      <Text numberOfLines={face === 'back' ? 2 : undefined} testID="card-detail-citation" style={line}>
         {view.runs.map((run, i) => (
           <Text key={i} {...(run.korean ? koreanSpeech : {})}>
             {run.text}
@@ -432,7 +438,7 @@ function BackFaceBody({ card }: { card: HeritageCard }): React.ReactElement {
                 {card.factEn}
               </Body>
             </View>
-            {citation ? <CitationLines view={citation} /> : null}
+            {citation ? <CitationLines view={citation} face="back" /> : null}
           </View>
         </>
       ) : null}

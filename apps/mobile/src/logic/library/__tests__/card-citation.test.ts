@@ -1,6 +1,6 @@
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
-import { cardCitationView, citationRuns } from '../card-citation';
+import { cardCitationView, hangulRuns } from '../card-citation';
 
 /**
  * F-STORY-006 §3.8 back face, wireframe library/card-back-citation G: under a
@@ -20,12 +20,7 @@ describe('cardCitationView', () => {
     const view = cardCitationView({ citation: { title: 'Hangul Day', publisher: 'Cultural Heritage Administration', more: 0 } }, m);
     expect(view).toEqual({
       line: 'Source: Cultural Heritage Administration, Hangul Day',
-      runs: [
-        { text: 'Source: ', korean: false },
-        { text: 'Cultural Heritage Administration', korean: false },
-        { text: ', ', korean: false },
-        { text: 'Hangul Day', korean: false },
-      ],
+      runs: [{ text: 'Source: Cultural Heritage Administration, Hangul Day', korean: false }],
       more: null,
     });
   });
@@ -35,47 +30,50 @@ describe('cardCitationView', () => {
     expect(cardCitationView({ citation: { title: 'T', publisher: 'P', more: 3 } }, m)?.more).toBe('and 3 more sources');
   });
 
-  it('marks a publisher or title in Korean so it is read in Korean (lang="ko"), and nothing else', () => {
+  it('marks only the Korean of a publisher or title (lang="ko"), never its English gloss or the template', () => {
     const view = cardCitationView({ citation: { title: DAY, publisher: MUSEUM, more: 1 } }, m);
     expect(view?.line).toBe(`Source: ${MUSEUM}, ${DAY}`);
     expect(view?.runs).toEqual([
       { text: 'Source: ', korean: false },
-      { text: MUSEUM, korean: true },
-      { text: ', ', korean: false },
+      { text: '국립한글박물관', korean: true },
+      { text: ' (National Hangeul Museum), ', korean: false },
+      { text: DAY, korean: true },
+    ]);
+  });
+
+  it('never marks text because it repeats the template ("Source" as a publisher)', () => {
+    const view = cardCitationView({ citation: { title: DAY, publisher: 'Source', more: 0 } }, m);
+    expect(view?.runs).toEqual([
+      { text: 'Source: Source, ', korean: false },
       { text: DAY, korean: true },
     ]);
   });
 });
 
-describe('citationRuns', () => {
-  const isKo = (s: string): boolean => s.startsWith('K');
+describe('hangulRuns', () => {
+  it('returns one plain run for text with no Hangul, and none for an empty string', () => {
+    expect(hangulRuns('only text')).toEqual([{ text: 'only text', korean: false }]);
+    expect(hangulRuns('')).toEqual([]);
+  });
 
-  it('splits a line around its parts, in order, keeping every character', () => {
-    const runs = citationRuns('A Kx b Ky c', ['Kx', 'Ky'], isKo);
+  it('keeps a Korean phrase with spaces as one run, and splits at every edge, keeping every character', () => {
+    const text = '훈민정음 해례본 (The Proper Sounds), 한글날 and 세종';
+    const runs = hangulRuns(text);
     expect(runs).toEqual([
-      { text: 'A ', korean: false },
-      { text: 'Kx', korean: true },
-      { text: ' b ', korean: false },
-      { text: 'Ky', korean: true },
-      { text: ' c', korean: false },
+      { text: '훈민정음 해례본', korean: true },
+      { text: ' (The Proper Sounds), ', korean: false },
+      { text: '한글날', korean: true },
+      { text: ' and ', korean: false },
+      { text: '세종', korean: true },
     ]);
-    expect(runs.map((r) => r.text).join('')).toBe('A Kx b Ky c');
+    expect(runs.map((r) => r.text).join('')).toBe(text);
   });
 
-  it('skips a part it cannot find or an empty part, and finds a part a translation moved first', () => {
-    expect(citationRuns('only text', ['Kq', ''], isKo)).toEqual([{ text: 'only text', korean: false }]);
-    expect(citationRuns('Ky then Kx', ['Kx', 'Ky'], isKo)).toEqual([
-      { text: 'Ky', korean: true },
-      { text: ' then ', korean: false },
-      { text: 'Kx', korean: true },
-    ]);
-  });
-
-  it('never marks the same characters twice when two parts are equal', () => {
-    expect(citationRuns('Kx, Kx', ['Kx', 'Kx'], isKo)).toEqual([
-      { text: 'Kx', korean: true },
-      { text: ', ', korean: false },
-      { text: 'Kx', korean: true },
+  it('a translated template in Korean is marked too', () => {
+    expect(hangulRuns('출처: UNESCO, 한글날')).toEqual([
+      { text: '출처', korean: true },
+      { text: ': UNESCO, ', korean: false },
+      { text: '한글날', korean: true },
     ]);
   });
 });

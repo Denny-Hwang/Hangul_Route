@@ -67,7 +67,8 @@ Exit to: back (the caller) · nothing new
 - **success**: G as drawn.
 - **empty**: a card without a citation: today's back face.
 - **error**: a `factId` that no longer resolves (content update) drops the citation band and keeps the summary; never an error box.
-- **long text / 200 % text**: the claim wraps (it is capped at 180 characters by lint); the source line wraps to two lines then truncates, with the full line in the accessible label.
+- **long text / 200 % text**: the claim wraps (it is capped at 180 characters by lint); the source line wraps to two lines then truncates on the back face. The full line is in the blurb and fact card under the flip card (front face), untruncated.
+- **screen reader**: the flip card is one button (its label is the flip action), so nothing on a face inside it is read. The blurb and fact card under it carries the claim and the full source line as plain text; Korean spans of the publisher and title are marked `lang="ko"` (only the Hangul, not an English gloss), so they are read in Korean. No accessible label replaces the text.
 - **offline**: bundled content.
 - **reduced motion**: no flip animation.
 
