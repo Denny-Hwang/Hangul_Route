@@ -33,7 +33,9 @@ const sorted = (ids: Iterable<string>): string[] => [...ids].sort();
 const TODAY_FREE = [
   'stage1-letters-q1', 'stage1-letters-q2', 'stage1-letters-q3',
   'stage1-life-q1', 'stage1-life-q2', 'stage1-life-q3',
-  'stage1-rites-q1', 'stage1-nature-q1', 'stage1-crafts-q1',
+  'stage1-rites-q1', 'stage1-rites-q2', 'stage1-rites-q3',
+  'stage1-nature-q1', 'stage1-nature-q2', 'stage1-nature-q3',
+  'stage1-crafts-q1', 'stage1-crafts-q2', 'stage1-crafts-q3',
 ].map(q);
 
 /**
@@ -63,6 +65,17 @@ const LIVE_ROUTE_DAYS: Partial<Record<number, readonly (readonly [string, number
     ['episode:stage2-nature', 5],
     ['episode:stage4-rites', 4],
   ],
+  // F-QUEST-002 Q-8: nature and crafts grow to three quests each (12 minutes); Stage 1 is complete.
+  5: [
+    ['episode:stage1-letters', 15],
+    ['episode:stage1-life', 12],
+    ['episode:stage1-rites', 14],
+    ['episode:stage1-nature', 12],
+    ['episode:stage1-crafts', 12],
+    ['episode:stage2-life', 5],
+    ['episode:stage2-nature', 5],
+    ['episode:stage4-rites', 4],
+  ],
 };
 const LIVE_FREE_FACTS: Partial<Record<number, FreeLessonsFacts>> = {
   3: {
@@ -82,6 +95,20 @@ const LIVE_FREE_FACTS: Partial<Record<number, FreeLessonsFacts>> = {
     lessons: 11,
     letters: 24,
     minutes: 50,
+    days: 5,
+    episodeIds: [
+      'episode:stage1-letters',
+      'episode:stage1-life',
+      'episode:stage1-rites',
+      'episode:stage1-nature',
+      'episode:stage1-crafts',
+    ],
+  },
+  // F-QUEST-002 Q-8: all 15 Stage 1 lessons are free (OD-1); the letters stay 24 (the finals count as their letters).
+  5: {
+    lessons: 15,
+    letters: 24,
+    minutes: 65,
     days: 5,
     episodeIds: [
       'episode:stage1-letters',
@@ -207,7 +234,7 @@ describe('the free route days (FREE_ROUTE_STAGES)', () => {
     expect([...free].every((id) => id.startsWith('quest:stage1-'))).toBe(true);
   });
 
-  it('live catalogue: the free quests are exactly the lesson quests of the Stage 1 cells and include today\'s nine', () => {
+  it('live catalogue: the free quests are exactly the lesson quests of the Stage 1 cells and include all fifteen', () => {
     const stage1Lessons = new Set(
       CATALOG.cells
         .filter((cell) => cell.stage === 'stage1')
@@ -266,7 +293,7 @@ describe('freeLessonsFacts', () => {
     });
   });
 
-  it('live catalogue: the free figures are pinned for this CATALOG_VERSION (11 lessons, 24 letters, about 50 minutes, 5 days at version 4)', () => {
+  it('live catalogue: the free figures are pinned for this CATALOG_VERSION (15 lessons, 24 letters, about 65 minutes, 5 days at version 5)', () => {
     const expected = LIVE_FREE_FACTS[CATALOG_VERSION];
     expect(expected, MISSING).toBeDefined();
     expect(freeLessonsFacts(CATALOG), CHANGED).toEqual(expected);

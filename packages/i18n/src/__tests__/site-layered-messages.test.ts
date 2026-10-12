@@ -191,8 +191,8 @@ describe('B.2 learners', () => {
     });
   });
 
-  it('the quest heading says "most": two Stage 1 quests have no Discover and Check steps until F-QUEST-002 Q-8', () => {
-    // quest:stage1-nature-q1 and quest:stage1-crafts-q1 still run intro, present, practice, apply, reward.
+  it('the quest heading says "most": not every quest discovers a new letter', () => {
+    // Since F-QUEST-002 Q-8 the five Stage 1 reading quests discover words, and the Stage 2 and 4 taste quests run intro, present, practice, apply, reward.
     expect(p().quest.title).toMatch(/\bmost quests\b/);
   });
 

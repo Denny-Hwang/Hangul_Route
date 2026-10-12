@@ -45,4 +45,10 @@ describe('placementRouteCatalog (F-PLC-001 section 3.6)', () => {
     expect(teaches.get('quest:stage1-rites-q2')).toEqual(['ㅑ', 'ㅕ', 'ㅍ', 'ㅇ/final']);
     expect(teaches.get('quest:stage1-rites-q3')).toEqual(['ㅛ', 'ㅠ', 'ㅎ', 'ㄱ/final']);
   });
+
+  it('gives nature q1 its two finals and the five reading quests no symbols, so only a stage2 level places those out (F-QUEST-002 Q-8, F-PLC-001 rule 3)', () => {
+    const teaches = new Map(placementRouteCatalog(questsAll, episodesAll).quests.map((q) => [q.id, q.teaches]));
+    expect(teaches.get('quest:stage1-nature-q1')).toEqual(['ㅁ/final', 'ㅂ/final']);
+    for (const id of ['nature-q2', 'nature-q3', 'crafts-q1', 'crafts-q2', 'crafts-q3']) expect(teaches.get(`quest:stage1-${id}`), id).toEqual([]);
+  });
 });

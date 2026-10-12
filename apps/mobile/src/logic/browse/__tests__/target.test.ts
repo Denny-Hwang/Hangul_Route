@@ -51,9 +51,13 @@ describe('resolveTarget', () => {
   });
 
   it('a letter no lesson teaches lands on the Stage 1 Journey with a note', () => {
-    const untaught = bundle.jamo.find((j) => !teachingQuestFor(j.id, stage1));
-    expect(untaught).toBeDefined();
-    expect(resolveTarget({ kind: 'jamo', id: untaught?.id ?? '' }, bundle)).toEqual({ screen: 'home', section: 'journey', stage: 'stage1', note: 'letter-across-stage1' });
+    // Since F-QUEST-002 Q-8 the bundle teaches every letter; without the lesson that teaches one, that letter is untaught.
+    expect(bundle.jamo.every((j) => teachingQuestFor(j.id, stage1))).toBe(true);
+    const letter = bundle.jamo[bundle.jamo.length - 1] as (typeof bundle.jamo)[number];
+    const teacher = teachingQuestFor(letter.id, stage1);
+    const without = { ...bundle, quests: bundle.quests.filter((q) => q.id !== teacher?.id) };
+    expect(teachingQuestFor(letter.id, stage1QuestsFrom(without.episodes, without.quests))).toBeUndefined();
+    expect(resolveTarget({ kind: 'jamo', id: letter.id }, without)).toEqual({ screen: 'home', section: 'journey', stage: 'stage1', note: 'letter-across-stage1' });
   });
 
   it('a character resolves to its letter, never to the final-consonant form', () => {

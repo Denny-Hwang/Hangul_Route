@@ -66,7 +66,7 @@ describe('the shipped catalogue data', () => {
     for (const cell of previews) expect(cell.questIds).toEqual([]);
   });
 
-  it('lists the 11 Stage 1 quests of the bundle (Q-6b adds life q3, Q-7b rites q2-q3) until F-QUEST-002 Q-8 brings the 15', () => {
+  it('lists the 15 Stage 1 quests of the bundle (F-QUEST-002: Q-6b adds life q3, Q-7b rites q2-q3, Q-8 nature and crafts q2-q3)', () => {
     const stage1 = CATALOG.quests.filter((q) => q.stage === 'stage1' && q.kind === 'lesson');
     expect(stage1.map((q) => q.id)).toEqual([
       'quest:stage1-letters-q1',
@@ -79,10 +79,14 @@ describe('the shipped catalogue data', () => {
       'quest:stage1-rites-q2',
       'quest:stage1-rites-q3',
       'quest:stage1-nature-q1',
+      'quest:stage1-nature-q2',
+      'quest:stage1-nature-q3',
       'quest:stage1-crafts-q1',
+      'quest:stage1-crafts-q2',
+      'quest:stage1-crafts-q3',
     ]);
     expect(CATALOG.quests.filter((q) => q.kind === 'lesson').map((q) => q.id)).toContain('quest:stage4-rites-q1');
-    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(14);
+    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(18);
   });
 
   it('has 24 stories adding up to 112 minutes, each with a listen quest on its shelf episode', () => {
@@ -391,7 +395,11 @@ describe('routeCatalogOf', () => {
       'quest:stage1-rites-q2',
       'quest:stage1-rites-q3',
       'quest:stage1-nature-q1',
+      'quest:stage1-nature-q2',
+      'quest:stage1-nature-q3',
       'quest:stage1-crafts-q1',
+      'quest:stage1-crafts-q2',
+      'quest:stage1-crafts-q3',
       'quest:stage2-life-q1',
       'quest:stage2-nature-q1',
       'quest:stage4-rites-q1',
@@ -409,7 +417,8 @@ describe('routeCatalogOf', () => {
     expect(letters?.teaches).toEqual(['ㅏ', 'ㅓ', 'ㄱ', 'ㄴ']); // F-QUEST-002 Q-6a
     expect(route.quests.find((q) => q.id === 'quest:stage1-life-q1')?.teaches).toEqual(['ㅈ', 'ㅊ']); // F-QUEST-002 Q-6b
     expect(route.quests.find((q) => q.id === 'quest:stage1-rites-q1')?.teaches).toEqual(['ㄴ/final', 'ㄹ/final']); // F-QUEST-002 Q-7b
-    expect(route.quests.find((q) => q.id === 'quest:stage1-nature-q1')?.teaches).toEqual([]);
+    expect(route.quests.find((q) => q.id === 'quest:stage1-nature-q1')?.teaches).toEqual(['ㅁ/final', 'ㅂ/final']); // F-QUEST-002 Q-8
+    expect(route.quests.find((q) => q.id === 'quest:stage1-nature-q2')?.teaches).toEqual([]); // a reading quest (R5)
   });
 
   it('is playable when the cell is ready and, for a story, when the story is ready', () => {
@@ -481,6 +490,8 @@ describe('the frozen fixture catalog-2026-10', () => {
 
   it('is independent of the shipped data (it stays frozen while content grows)', () => {
     expect(CATALOG_2026_10).not.toBe(CATALOG);
-    expect(CATALOG_2026_10.quests.length).not.toBe(CATALOG.quests.length);
+    expect(CATALOG_2026_10.quests).not.toBe(CATALOG.quests);
+    // Since F-QUEST-002 Q-8 the shipped catalogue has the fixture's 15 Stage 1 lessons too; the fixture keeps its own version.
+    expect(CATALOG_2026_10.version).not.toBe(CATALOG.version);
   });
 });

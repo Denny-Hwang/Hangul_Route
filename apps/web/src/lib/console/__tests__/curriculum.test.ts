@@ -513,8 +513,8 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
     return { id: 'plan:route', meta: toMeta(draft), items: toPlanItems(draft) };
   }
 
-  it('offers Refresh route on every route saved from catalogue version 1, 2 or 3 (F-QUEST-002 Q-6a bumps it to 2, Q-6b to 3, Q-7b to 4)', () => {
-    expect(CATALOG.version).toBe(4);
+  it('offers Refresh route on every route saved from catalogue version 1 to 4 (F-QUEST-002 Q-6a bumps it to 2, Q-6b to 3, Q-7b to 4, Q-8 to 5)', () => {
+    expect(CATALOG.version).toBe(5);
     expect(v1Plan('brand-new').meta.catalogVersion).toBe(1);
     expect(isStaleCatalog(v1Plan('brand-new').meta)).toBe(true);
     expect(isStaleCatalog(v1Plan('some-letters').meta)).toBe(true);
@@ -522,6 +522,14 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
     expect(isStaleCatalog({ ...v1Plan('brand-new').meta, catalogVersion: 2 })).toBe(true);
     // A route saved between Q-6b and Q-7b (version 3, before rites q2-q3 joined) asks once too.
     expect(isStaleCatalog({ ...v1Plan('brand-new').meta, catalogVersion: 3 })).toBe(true);
+    // A route saved between Q-7b and Q-8 (version 4, before nature and crafts q2-q3 joined) asks once too.
+    expect(isStaleCatalog({ ...v1Plan('brand-new').meta, catalogVersion: 4 })).toBe(true);
+  });
+
+  it('a new route on the shipped catalogue can schedule the new nature and crafts quests after their q1 (F-QUEST-002 Q-8)', () => {
+    const ids = classPlan({ start: 'brand-new', length: '6-month' }).items.map((item) => item.id);
+    expect(ids.filter((id) => id.startsWith('quest:stage1-nature-'))).toEqual(['quest:stage1-nature-q1', 'quest:stage1-nature-q2', 'quest:stage1-nature-q3']);
+    expect(ids.filter((id) => id.startsWith('quest:stage1-crafts-'))).toEqual(['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3']);
   });
 
   it('a new route on the shipped catalogue can schedule the new Chuseok and Hanbok quests after rites q1', () => {

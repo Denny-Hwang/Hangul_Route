@@ -57,6 +57,8 @@ export const a11y = {
     /** The block-shape hint picture; `hint` is one of `learner.minigame.buildLetter.shape`. */
     blockShape: (hint: string) => `Block shape. ${hint}`,
     traceLetter: (romanization: string) => `Trace the letter ${romanization}`,
+    /** The trace heading over a final consonant (a `*-batchim` jamo). */
+    traceFinal: (romanization: string) => `Trace the final ${romanization}`,
     traceCanvas: (romanization: string) => `Draw the letter ${romanization} with your finger`,
     /** The still stroke-order diagram read aloud: "Stroke order. 1: right, then down. 2: a loop." */
     strokeOrder: {

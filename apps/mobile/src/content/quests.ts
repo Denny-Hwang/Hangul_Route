@@ -2,12 +2,13 @@ import type { Quest } from '@hangul-route/content-schema';
 import { storyQuests } from './stories';
 
 /**
- * Stage 1 quests are being rebuilt to the six-step pattern of F-QUEST-002 §3.6:
+ * The 15 Stage 1 quests follow the six-step pattern of F-QUEST-002 §3.6:
  * intro → discover → practice → apply → check → reward (letters q1-q3 in Q-6a,
- * life q1-q3 in Q-6b, rites q1-q3 in Q-7b; the others follow in Q-8). The quests not yet rebuilt,
- * and the Stage 2 / Stage 4 taste quests, keep the five-step pattern
- * intro → present → practice → apply → reward.
- * Each Stage 1 episode owns 1–3 quests.
+ * life q1-q3 in Q-6b, rites q1-q3 in Q-7b, nature and crafts q1-q3 in Q-8).
+ * Quests 1-10 teach the 30 symbols; quests 11-15 teach nothing new and read
+ * words built from them (R5). The Stage 2 / Stage 4 taste quests keep the
+ * five-step pattern intro → present → practice → apply → reward.
+ * Each Stage 1 episode owns 3 quests.
  */
 
 export const stage1Quests: Quest[] = [
@@ -192,6 +193,8 @@ export const stage1Quests: Quest[] = [
               ],
             },
             {
+              // Theme words are for looking (R3): 엄마 and 가족 hold finals taught in quest 10, so not "Words you can read now".
+              captionEn: 'Family words',
               items: [
                 { type: 'word', word: { ko: '엄마', romanization: 'eomma', en: 'mom', syllables: ['eom', 'ma'] } },
                 { type: 'word', word: { ko: '가족', romanization: 'gajok', en: 'family', syllables: ['ga', 'jok'] }, picture: 'card:family-table' },
@@ -374,36 +377,246 @@ export const stage1Quests: Quest[] = [
     rewardCardId: 'card:sebae',
   },
 
-  // Nature — Q1
+  // Nature & Animals — Q10: final ㅁ and final ㅂ (F-QUEST-002 §3.6, quest 10)
   {
     id: 'quest:stage1-nature-q1',
     titleEn: 'Tiger, Magpie, Moon',
-    blurbEn: 'Three friends from Korean stories.',
-    estimatedMinutes: 5,
+    blurbEn: 'Two more final letters, m and p, and words you can now read.',
+    estimatedMinutes: 4,
     steps: [
-      { id: 's1', kind: 'intro', titleEn: 'I am a tiger!', hoyaLineEn: 'Hoya means tiger.', durationSeconds: 6 },
-      { id: 's2', kind: 'present', titleEn: 'Animal Words', minigameKind: 'card-match', minigameRef: 'minigame:s1-nature-card-1', durationSeconds: 60 },
-      { id: 's3', kind: 'practice', titleEn: 'Match Animal Sounds', minigameKind: 'match-sound', minigameRef: 'minigame:s1-nature-match-1', durationSeconds: 75 },
-      { id: 's4', kind: 'apply', titleEn: 'What Does It Mean?', minigameKind: 'culture-quiz', minigameRef: 'minigame:s1-nature-quiz-1', durationSeconds: 75 },
-      { id: 's5', kind: 'reward', titleEn: 'Magpie Card!', hoyaLineEn: 'A magpie joins your collection.', durationSeconds: 8 },
+      { id: 's1', kind: 'intro', titleEn: 'Tiger and Magpie', hoyaLineEn: 'Old Korean paintings often show a tiger with a magpie. Two new final letters today!', durationSeconds: 8 },
+      {
+        id: 's2',
+        kind: 'discover',
+        titleEn: 'Two More Finals',
+        hoyaLineEn: 'Tap Hear it to listen. The letters m and p can sit at the bottom of a block too.',
+        discover: {
+          pages: [
+            {
+              items: [
+                { type: 'jamo', jamoId: 'jamo:mieum-batchim', example: { ko: '곰', romanization: 'gom', en: 'bear' } },
+                { type: 'jamo', jamoId: 'jamo:bieup-batchim', example: { ko: '집', romanization: 'jip', en: 'house' } },
+              ],
+            },
+            {
+              items: [
+                { type: 'word', word: { ko: '봄', romanization: 'bom', en: 'spring (season)' } },
+                { type: 'word', word: { ko: '밥', romanization: 'bap', en: 'rice' }, picture: 'card:rice' },
+              ],
+            },
+            {
+              // The payoff (section 3.6): with these two finals, words met earlier now read.
+              captionEn: 'You can read these now!',
+              items: [
+                { type: 'word', word: { ko: '김치', romanization: 'gimchi', en: 'kimchi', syllables: ['gim', 'chi'] }, picture: 'card:kimchi' },
+                { type: 'word', word: { ko: '엄마', romanization: 'eomma', en: 'mom', syllables: ['eom', 'ma'] } },
+              ],
+            },
+          ],
+        },
+        durationSeconds: 60,
+      },
+      { id: 's3', kind: 'practice', titleEn: 'Hear the Final', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-nature-q1-play', durationSeconds: 75 },
+      { id: 's4', kind: 'apply', titleEn: 'Picture and Word', minigameKind: 'pic-word-match', minigameRef: 'minigame:s1-nature-q1-apply', durationSeconds: 60 },
+      { id: 's5', kind: 'check', titleEn: 'Listen and Read', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-nature-q1-check', durationSeconds: 35 },
+      { id: 's6', kind: 'reward', titleEn: 'Magpie Card!', hoyaLineEn: 'A magpie card joins your library!', durationSeconds: 8 },
     ],
     rewardCardId: 'card:magpie',
   },
+  // Nature & Animals — Q11: nothing new, nature words (quest 11)
+  {
+    id: 'quest:stage1-nature-q2',
+    titleEn: 'Mountain, River, Sea',
+    blurbEn: 'Read nature words: mountain, river, sea and sky.',
+    estimatedMinutes: 4,
+    steps: [
+      { id: 's1', kind: 'intro', titleEn: 'Into the Hills', hoyaLineEn: 'Korea has many mountains, and the sea is on three sides. Let\'s read nature words!', durationSeconds: 8 },
+      {
+        id: 's2',
+        kind: 'discover',
+        titleEn: 'Nature Words',
+        hoyaLineEn: 'Tap Hear it, then read each word yourself.',
+        discover: {
+          pages: [
+            {
+              items: [
+                { type: 'word', word: { ko: '산', romanization: 'san', en: 'mountain' }, picture: 'card:mountain' },
+                { type: 'word', word: { ko: '강', romanization: 'gang', en: 'river' } },
+              ],
+            },
+            {
+              items: [
+                { type: 'word', word: { ko: '바다', romanization: 'bada', en: 'sea', syllables: ['ba', 'da'] }, picture: 'card:sea' },
+                { type: 'word', word: { ko: '하늘', romanization: 'haneul', en: 'sky', syllables: ['ha', 'neul'] } },
+              ],
+            },
+          ],
+        },
+        durationSeconds: 40,
+      },
+      { id: 's3', kind: 'practice', titleEn: 'Find the Word', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-nature-q2-play', durationSeconds: 75 },
+      { id: 's4', kind: 'apply', titleEn: 'Build a Block', minigameKind: 'build-letter', minigameRef: 'minigame:s1-nature-q2-apply', durationSeconds: 60 },
+      { id: 's5', kind: 'check', titleEn: 'Listen and Read', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-nature-q2-check', durationSeconds: 35 },
+      { id: 's6', kind: 'reward', titleEn: 'Mountain Card!', hoyaLineEn: 'A mountain card joins your library!', durationSeconds: 8 },
+    ],
+    rewardCardId: 'card:mountain',
+  },
+  // Nature & Animals — Q12: nothing new, the night sky (quest 12)
+  {
+    id: 'quest:stage1-nature-q3',
+    titleEn: 'Moon, Stars and Night',
+    blurbEn: 'Read the night sky: moon, stars and the full moon.',
+    estimatedMinutes: 4,
+    steps: [
+      { id: 's1', kind: 'intro', titleEn: 'Night Sky', hoyaLineEn: 'On Chuseok night, families look at the full moon and make a wish.', durationSeconds: 8 },
+      {
+        id: 's2',
+        kind: 'discover',
+        titleEn: 'Night Sky Words',
+        hoyaLineEn: 'Tap Hear it, then read each word yourself.',
+        discover: {
+          pages: [
+            {
+              items: [
+                { type: 'word', word: { ko: '달', romanization: 'dal', en: 'moon' }, picture: 'card:moon' },
+                { type: 'word', word: { ko: '별', romanization: 'byeol', en: 'star' } },
+              ],
+            },
+            {
+              items: [
+                { type: 'word', word: { ko: '밤', romanization: 'bam', en: 'night' } },
+                { type: 'word', word: { ko: '보름달', romanization: 'boreumdal', en: 'full moon', syllables: ['bo', 'reum', 'dal'] } },
+              ],
+            },
+          ],
+        },
+        durationSeconds: 40,
+      },
+      { id: 's3', kind: 'practice', titleEn: 'Find the Word', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-nature-q3-play', durationSeconds: 75 },
+      { id: 's4', kind: 'apply', titleEn: 'Trace the Finals', minigameKind: 'trace-stroke', minigameRef: 'minigame:s1-nature-q3-apply', durationSeconds: 60 },
+      { id: 's5', kind: 'check', titleEn: 'Listen and Read', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-nature-q3-check', durationSeconds: 35 },
+      { id: 's6', kind: 'reward', titleEn: 'Moon Card!', hoyaLineEn: 'A moon card joins your library!', durationSeconds: 8 },
+    ],
+    rewardCardId: 'card:moon',
+  },
 
-  // Crafts — Q1
+  // Play & Crafts — Q13: nothing new, games to play (quest 13)
   {
     id: 'quest:stage1-crafts-q1',
     titleEn: 'Yut, Kite, Top',
-    blurbEn: 'Korean games to play together.',
-    estimatedMinutes: 5,
+    blurbEn: 'Read game words: kite, ball, rope and more.',
+    estimatedMinutes: 4,
     steps: [
-      { id: 's1', kind: 'intro', titleEn: 'Game time!', hoyaLineEn: 'Pick a game with me.', durationSeconds: 6 },
-      { id: 's2', kind: 'present', titleEn: 'Three Games', minigameKind: 'card-match', minigameRef: 'minigame:s1-crafts-card-1', durationSeconds: 60 },
-      { id: 's3', kind: 'practice', titleEn: 'Yut Words', minigameKind: 'match-sound', minigameRef: 'minigame:s1-crafts-match-1', durationSeconds: 75 },
-      { id: 's4', kind: 'apply', titleEn: 'Game Story', minigameKind: 'story-sequence', minigameRef: 'minigame:s1-crafts-story-1', durationSeconds: 75 },
-      { id: 's5', kind: 'reward', titleEn: 'Yutnori Card!', hoyaLineEn: 'A game card joins your library.', durationSeconds: 8 },
+      { id: 's1', kind: 'intro', titleEn: 'Game Time!', hoyaLineEn: 'On Seollal, Korean New Year, families play yut and fly kites. Let\'s read game words!', durationSeconds: 8 },
+      {
+        id: 's2',
+        kind: 'discover',
+        titleEn: 'Game Words',
+        hoyaLineEn: 'Tap Hear it, then read each word yourself.',
+        discover: {
+          pages: [
+            {
+              items: [
+                { type: 'word', word: { ko: '연', romanization: 'yeon', en: 'kite' }, picture: 'card:kite' },
+                { type: 'word', word: { ko: '공', romanization: 'gong', en: 'ball' } },
+              ],
+            },
+            {
+              items: [
+                { type: 'word', word: { ko: '줄', romanization: 'jul', en: 'rope' } },
+                {
+                  type: 'word',
+                  word: { ko: '놀이', romanization: 'nori', en: 'game, play', syllables: ['no', 'ri'] },
+                  noteEn: 'Read it smoothly: nol + i sounds like nori.',
+                },
+              ],
+            },
+          ],
+        },
+        durationSeconds: 40,
+      },
+      { id: 's3', kind: 'practice', titleEn: 'Build a Block', minigameKind: 'build-letter', minigameRef: 'minigame:s1-crafts-q1-play', durationSeconds: 75 },
+      { id: 's4', kind: 'apply', titleEn: 'Picture and Word', minigameKind: 'pic-word-match', minigameRef: 'minigame:s1-crafts-q1-apply', durationSeconds: 60 },
+      { id: 's5', kind: 'check', titleEn: 'Listen and Read', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-crafts-q1-check', durationSeconds: 35 },
+      { id: 's6', kind: 'reward', titleEn: 'Yut Game Card!', hoyaLineEn: 'A yut game card joins your library!', durationSeconds: 8 },
     ],
     rewardCardId: 'card:yutnori',
+  },
+  // Play & Crafts — Q14: nothing new, paper and pottery (quest 14)
+  {
+    id: 'quest:stage1-crafts-q2',
+    titleEn: 'Paper and Pottery',
+    blurbEn: 'Read craft words: Korean paper and celadon pottery.',
+    estimatedMinutes: 4,
+    steps: [
+      { id: 's1', kind: 'intro', titleEn: 'Craft Time!', hoyaLineEn: 'Korean hands make strong paper and jade-green pottery. Let\'s read craft words!', durationSeconds: 8 },
+      {
+        id: 's2',
+        kind: 'discover',
+        titleEn: 'Craft Words',
+        hoyaLineEn: 'Tap Hear it, then read each word yourself.',
+        discover: {
+          pages: [
+            {
+              items: [
+                { type: 'word', word: { ko: '한지', romanization: 'hanji', en: 'Korean paper', syllables: ['han', 'ji'] }, picture: 'card:hanji' },
+                { type: 'word', word: { ko: '종이', romanization: 'jongi', en: 'paper', syllables: ['jong', 'i'] } },
+              ],
+            },
+            {
+              items: [
+                { type: 'word', word: { ko: '청자', romanization: 'cheongja', en: 'celadon pottery', syllables: ['cheong', 'ja'] }, picture: 'card:pottery' },
+                { type: 'word', word: { ko: '도자기', romanization: 'dojagi', en: 'pottery', syllables: ['do', 'ja', 'gi'] } },
+              ],
+            },
+          ],
+        },
+        durationSeconds: 40,
+      },
+      { id: 's3', kind: 'practice', titleEn: 'Find the Word', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-crafts-q2-play', durationSeconds: 75 },
+      { id: 's4', kind: 'apply', titleEn: 'Picture and Word', minigameKind: 'pic-word-match', minigameRef: 'minigame:s1-crafts-q2-apply', durationSeconds: 60 },
+      { id: 's5', kind: 'check', titleEn: 'Listen and Read', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-crafts-q2-check', durationSeconds: 35 },
+      { id: 's6', kind: 'reward', titleEn: 'Celadon Card!', hoyaLineEn: 'A celadon pottery card joins your library!', durationSeconds: 8 },
+    ],
+    rewardCardId: 'card:pottery',
+  },
+  // Play & Crafts — Q15: nothing new, read Hangul! (quest 15)
+  {
+    id: 'quest:stage1-crafts-q3',
+    titleEn: 'Read Hangul!',
+    blurbEn: 'Put it all together and read Hangul words on your own.',
+    estimatedMinutes: 4,
+    steps: [
+      { id: 's1', kind: 'intro', titleEn: 'You Can Read!', hoyaLineEn: 'King Sejong made Hangul so everyone could read. Now you can read it too!', durationSeconds: 8 },
+      {
+        id: 's2',
+        kind: 'discover',
+        titleEn: 'Hangul Words',
+        hoyaLineEn: 'Tap Hear it, then read each word yourself.',
+        discover: {
+          pages: [
+            {
+              items: [
+                { type: 'word', word: { ko: '한글', romanization: 'hangeul', en: 'the Korean alphabet', syllables: ['han', 'geul'] }, picture: 'card:hangul-day' },
+                { type: 'word', word: { ko: '호야', romanization: 'hoya', en: 'Hoya the tiger', syllables: ['ho', 'ya'] }, picture: 'card:tiger' },
+              ],
+            },
+            {
+              items: [
+                { type: 'word', word: { ko: '안녕', romanization: 'annyeong', en: 'hi, bye (to friends)', syllables: ['an', 'nyeong'] } },
+                { type: 'word', word: { ko: '사랑', romanization: 'sarang', en: 'love', syllables: ['sa', 'rang'] } },
+              ],
+            },
+          ],
+        },
+        durationSeconds: 40,
+      },
+      { id: 's3', kind: 'practice', titleEn: 'Find the Word', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-crafts-q3-play', durationSeconds: 75 },
+      { id: 's4', kind: 'apply', titleEn: 'Build a Block', minigameKind: 'build-letter', minigameRef: 'minigame:s1-crafts-q3-apply', durationSeconds: 60 },
+      { id: 's5', kind: 'check', titleEn: 'Listen and Read', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-crafts-q3-check', durationSeconds: 35 },
+      { id: 's6', kind: 'reward', titleEn: 'Kite Card!', hoyaLineEn: 'A kite card joins your library!', durationSeconds: 8 },
+    ],
+    rewardCardId: 'card:kite',
   },
 ];
 

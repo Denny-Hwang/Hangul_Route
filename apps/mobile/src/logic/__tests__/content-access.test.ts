@@ -34,7 +34,7 @@ const lessonsOfReadyCells = (stage?: string): string[] =>
 const STAGE1_LESSONS = lessonsOfReadyCells('stage1');
 const GRID_LESSONS = lessonsOfReadyCells();
 const LATER_LESSONS = GRID_LESSONS.filter((id) => !STAGE1_LESSONS.includes(id));
-/** Today's free lessons (`CATALOG_VERSION` 4): the free set always includes them. */
+/** Today's free lessons (`CATALOG_VERSION` 5, all 15 of Stage 1): the free set always includes them. */
 const TODAY_STAGE1_LESSONS = [
   'quest:stage1-letters-q1',
   'quest:stage1-letters-q2',
@@ -46,7 +46,11 @@ const TODAY_STAGE1_LESSONS = [
   'quest:stage1-rites-q2',
   'quest:stage1-rites-q3',
   'quest:stage1-nature-q1',
+  'quest:stage1-nature-q2',
+  'quest:stage1-nature-q3',
   'quest:stage1-crafts-q1',
+  'quest:stage1-crafts-q2',
+  'quest:stage1-crafts-q3',
 ];
 const CHANGED = 'The free lessons changed: check F-ENT-003 section 3.1 (all of Stage 1 is free, OD-1)';
 
@@ -118,9 +122,10 @@ describe('isFreeContent (default registry)', () => {
     expect([...gridLessonIds(CATALOG)].sort()).toEqual([...GRID_LESSONS].sort());
   });
 
-  it("the free lessons are exactly Stage 1's lesson quests and include today's eleven (OD-1)", () => {
+  it("the free lessons are exactly Stage 1's lesson quests, all fifteen (OD-1)", () => {
     const free = freeRouteQuestIds(CATALOG);
     for (const id of TODAY_STAGE1_LESSONS) expect(free.has(id), `${CHANGED}: ${id}`).toBe(true);
+    expect(free.size, CHANGED).toBe(15);
     for (const id of free) expect(id.startsWith('quest:stage1-'), `${CHANGED}: ${id}`).toBe(true);
     // A later stage always has lessons to close, or the switch would have nothing to do.
     expect(LATER_LESSONS.length).toBeGreaterThan(0);
