@@ -1,6 +1,6 @@
 # Item page: a lesson or a story (BR-7)
 
-Wireframe: `design/wireframes/browse/item.md` A to C · Spec: F-BROWSE-001 §4.2, §4.4 (focus), §4.6 · Mock: `mock/item.html`, `mock/item-states.html` · Shots: `shots/item-375.png`, `-375-first.png`, `-1280.png`, `-320-text200.png`, `shots/item-states-375.png`, `-1280.png`
+Wireframe: `design/wireframes/browse/item.md` A to C · Spec: F-BROWSE-001 §4.2, §4.4 (focus), §4.6 · Mock: `mock/item.html`, `mock/item-states.html` · Shots: `shots/item-375.png`, `-375-first.png`, `-1280.png`, `-320-text200.png`, `shots/item-states-375.png`
 
 Data: `itemFacts(item, bundle, locale)`, `itemAccess(...)`. The word topic is `topic.md` (BR-9).
 
@@ -22,9 +22,9 @@ Data: `itemFacts(item, bundle, locale)`, `itemAccess(...)`. The word topic is `t
 
 | Row | Value | Hidden when |
 |---|---|---|
-| Letters | `KoreanText` chips (letter + romanization) in Discover order. The focus letter has a `borderWidth.thick` `text.primary` outline and its label ends ", taught here" | a taste lesson |
+| Letters | `KoreanText` chips (letter + romanization) in Discover order. The focus letter has a `borderWidth.thick` `text.primary` outline and its label ends ", taught here" | a lesson that introduces no letter (taste lessons and some later Stage 1 lessons, such as Mountain, River, Sea; README, Deviations) |
 | Words | chip + gloss in the UI language, each word once | none |
-| Syllables | chips (no gloss) | none |
+| Syllables | chips (no gloss). A syllable that is a bundle word with a gloss moves to Words (README, Notes for BR-7) | none |
 | Skills | the skills chips | `questSkills` is empty |
 | Steps | the player's step names, in order, joined by `·` (`questStepLabel`) | never |
 

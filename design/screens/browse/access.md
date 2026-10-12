@@ -1,6 +1,6 @@
 # Access screen (BR-6)
 
-Wireframe: `design/wireframes/browse/access.md` · Spec: F-BROWSE-001 §4.3 (Access screen), §8 · Mock: `mock/access.html`, `mock/access-states.html` · Shots: `shots/access-375.png`, `-1280.png`, `-320-text200.png`, `shots/access-states-375.png`, `-1280.png`
+Wireframe: `design/wireframes/browse/access.md` · Spec: F-BROWSE-001 §4.3 (Access screen), §8 · Mock: `mock/access.html`, `mock/access-states.html` · Shots: `shots/access-375.png`, `-1280.png`, `-320-text200.png`, `shots/access-states-375.png`
 
 It shows **no lesson, title or card**. It is the root's only screen when no pass is active, so it has no Close and no back.
 
@@ -13,7 +13,7 @@ It shows **no lesson, title or card**. It is the root's only screen when no pass
 | Line | by source (below), Body (18) `text.secondary`, centred, `spacing.md` above |
 | Primary | `Button` primary `lg` (80 tall), full width (capped at 26rem from the regular class), `spacing.xl` above |
 | Secondary | `Button` ghost (64), `spacing.sm` above |
-| Offline line | account and unknown sources only: "Grown-up pages need the internet." Body small `text.secondary`, `spacing.md` above, after the buttons |
+| Offline line | account and unknown sources only: "Grown-up pages need the internet." Body (18) `text.secondary`, `spacing.md` above, after the buttons |
 
 ## By source
 
@@ -25,9 +25,9 @@ It shows **no lesson, title or card**. It is the root's only screen when no pass
 
 **Until BR-12b ships** (no `gate=browse` boot intent):
 - **gate**: the line gains "Then open the grown-up area again." and the only button is [[ Back to the app ]].
-- **unknown**: the same applies, and Sign in stays as the secondary.
+- **unknown**: the primary becomes [[ Back to the app ]] and Sign in stays as the secondary. The line is the spec's line unchanged: it already says to open lessons from the grown-up area, and "again" would be wrong for a visitor who was never there.
 
-The spec names this form for the gate source only. The unknown source uses the same `/?gate=browse` target, so it follows the same rule (README decision 4).
+The spec names this form for the gate source only. The unknown source uses the same `/?gate=browse` target, so it takes the same primary (README decision 4).
 
 ## Accessibility
 

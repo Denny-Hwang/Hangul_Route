@@ -9,12 +9,12 @@ Wireframe: `design/wireframes/browse/home.md` A to E and States · Spec: F-BROWS
 | 1 | Header row | [ < Close ] (`arrow-left` 24 + "Close", Body semibold, 64 tall, the one fixed top-left position) and [ Lesson display ] (`settings` 20 + label; a pill chip on `surface.paper`, `borderWidth.base` `border.strong`, 64 tall) at the right | always |
 | 2 | Title | "All lessons", Heading `title`, the screen's one header; the **Offline** chip beside it (`surface.sunken` pill, Caption semibold `text.secondary`) | chip when offline |
 | 3 | How-to | "Tap a lesson to see what it teaches, then play it. Nothing is saved." Body `text.secondary`, `spacing.sm` above | always |
-| 4 | Scope line | a `surface.sunken` box, `radii.md`, `spacing.md` x `spacing.lg` padding. Sampler with the switch on: "Your learner's free lessons are open. The others show what they teach." Fallback: "Showing free lessons. We could not check your plan." | sampler + switch on; fallback |
+| 4 | Scope line | a `surface.sunken` box, `radii.md`, `spacing.md` x `spacing.lg` padding. Sampler with the switch on: "Your learner's free lessons are open. The others show what they teach." Fallback with the switch on: "Showing free lessons. We could not check your plan." | the content switch on only: a sampler pass (the sampler line) or a fallback pass (the fallback line). With the switch off no scope line ever shows, a fallback included (§4.3 step 3, README decision 22) |
 | 4b | Note line | a deep link's note ("This letter is practiced across Stage 1.", "This lesson is not in this version of the app yet.") on `feedback.infoLight` with a 64 dismiss button (`close` glyph, "Dismiss") | after such a link |
-| 5 | Pointer line | "To see how your learner is doing, open your home page." + `arrow-right`, `brand.primary` semibold, underlined, 64 tall; goes to `/parent` or `/teach/home` (no learner id) | account passes (fallback included); never gate or kept |
+| 5 | Pointer line | "To see how your learner is doing, open your home page." + `arrow-right`, `brand.primary` semibold, underlined, 64 tall; goes to `/parent` or `/teach/home` (no learner id) | account passes that are not kept (fallback included); never gate or kept (README decision 3) |
 | 6 | Section control | one row: Route · Journey · Library (README decision 2) | always |
 | 7 | Section | below, `spacing.xl` above | |
-| 8 | Keep switch | `border.subtle` rule, `spacing.xxl` above; "Keep lessons on this device for 7 days, also offline" with a `role="switch"` (48 x 24 track: `border.strong` off, `brand.secondary` on; 16 `surface.paper` thumb) | account passes that are not a fallback |
+| 8 | Keep switch | `border.subtle` rule, `spacing.xxl` above. **The whole row is the control** (README decision 21): one `role="switch"` button, full width and at least 64 tall, holding the label "Keep lessons on this device for 7 days, also offline" (Body) and the 48 x 24 track as drawing only (`border.strong` off, `brand.secondary` on; 16 `surface.paper` thumb). Tap anywhere on the row toggles it; Space and Enter toggle it on keyboard focus | account passes that are not a fallback |
 
 ## Section control
 
@@ -49,7 +49,7 @@ The learner Journey grid (`JourneyGrid` via `browseJourneyRows`), with no learne
 
 Groups in the learner Library's order (`browseLibrary`): Cards, Story Time, Culture, Words. A group with nothing in this build is left out, and Cards always stays.
 
-- **Cards**: the heading, the theme filter chips (the learner's: All, Letters, Food, Holidays, Nature, Play), then the learner gallery grid (2 columns on compact, 3 from regular). Each slot shows the rarity pill, the CardArt face, the Korean with romanization, and the English title. Every card is face up, with no earn hint and no "New" pill. Content order is theme, then rarity. A slot opens the card page in its preview state.
+- **Cards**: the heading, the theme filter chips (the learner's: All, Letters, Food, Holidays, Nature, Play; buttons with `aria-pressed`, at least 64 tall and 64 wide here, where the learner chip is about 40), then the learner gallery grid (2 columns on compact, 3 from regular). Each slot shows the rarity pill, the CardArt face, the Korean with romanization, and the English title. Every card is face up, with no earn hint and no "New" pill. Content order is theme, then rarity. A slot opens the card page in its preview state.
 - **Story Time / Culture**: the learner `StoryTile` (cover, title, the learner's subtitle; no "continue", no bookmark). A closed tile (sampler, switch on) keeps `surface.sunken` and shows the 16 dotted ring with "Not open yet" (E3-D). Today no story is reviewed, so neither group appears (`home-library.html` notes it; `home-states.html` draws it).
 - **Words**: one card row per topic: title, "· 12 words", the first three words (Korean with romanization, gloss), and a chevron. The row is one button to the topic page (`topic.md`).
 
@@ -59,9 +59,11 @@ Groups in the learner Library's order (`browseLibrary`): Cards, Story Time, Cult
 |---|---|
 | full, or sampler with the switch off (production) | A to C exactly; no scope line, ring, closed tile or billing anywhere |
 | sampler, switch on | the scope line; rings on closed cells; closed tiles; the legend |
-| fallback | the fallback line; no keep switch |
+| fallback, switch on | the fallback line; the pointer line; no keep switch |
+| fallback, switch off (production) | no scope line; the pointer line; no keep switch |
 | gate pass | no pointer line, no keep switch |
 | kept pass | no pointer line; the switch shows on |
 | offline | the Offline chip; everything else works |
 | deep-link note | the note line, dismissible |
+| keyboard focus | the `border.focus` ring on the focused target (README decision 20) |
 | no pass | never renders: Access |
