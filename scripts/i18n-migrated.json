@@ -67,6 +67,7 @@
     "apps/web/src/components/parent/**",
     "apps/mobile/src/screens/library/StoryTile.tsx",
     "apps/mobile/src/screens/library/StoryShelf.tsx",
+    "apps/mobile/src/screens/library/StoryTileGrid.tsx",
     "apps/mobile/src/screens/profile/EditProfileScreen.tsx",
     "apps/mobile/src/screens/my-route/**",
     "apps/web/src/components/console/JourneyParts.tsx",
@@ -78,7 +79,8 @@
     "apps/mobile/src/screens/episode/EpisodeDetailView.tsx",
     "apps/mobile/src/screens/library/CultureSection.tsx",
     "apps/web/src/components/console/GrownUpLock.tsx",
-    "apps/web/src/components/console/FreeLessonsParts.tsx"
+    "apps/web/src/components/console/FreeLessonsParts.tsx",
+    "apps/web/src/components/console/VocabWordsParts.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1

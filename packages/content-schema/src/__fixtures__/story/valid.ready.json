@@ -22,7 +22,7 @@
   "origin": {
     "type": "documented",
     "noteEn": "Follows the Cultural Heritage Administration pages cited in the facts.",
-    "retellingNoteEn": "Shortened for young readers; dates are rounded in the narration."
+    "retellingNoteEn": "Shortened for new readers; dates are rounded in the narration."
   },
   "review": {
     "language": "native-reviewed",
@@ -574,7 +574,7 @@
   ],
   "coverSceneId": "s1",
   "rewardCardIds": {
-    "listen": "card:hanji",
+    "listen": "card:story-hangul-day",
     "read": "card:book"
   },
   "shelf": {
@@ -588,8 +588,8 @@
   ],
   "companionId": "hoya",
   "card": {
-    "titleEn": "Hangul Day",
-    "keywordId": "hangeullal",
+    "titleEn": "King Sejong",
+    "keywordId": "sejong",
     "factId": "f3"
   },
   "facts": [
@@ -641,7 +641,7 @@
       "sources": [
         {
           "title": "Hangul Day",
-          "publisher": "Cultural Heritage Administration",
+          "publisher": "문화재청 (Cultural Heritage Administration, heritage.go.kr)",
           "url": "https://www.heritage.go.kr/fixture/hangul-day",
           "accessed": "2026-10-09",
           "quoteOrLocator": "Overview"

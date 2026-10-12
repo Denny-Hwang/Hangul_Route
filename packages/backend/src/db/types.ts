@@ -14,8 +14,28 @@ import type {
   TransferPrefs,
   TransferSlotConsent,
 } from './transfer-types';
+import type {
+  LearnerNotesInbox,
+  NewNote,
+  NoteActVia,
+  NoteDeviceScope,
+  RateHitRow,
+  StoredNote,
+  StoredNotePrefs,
+  StoredNoteReport,
+  StoredSendGrant,
+  StoredSenderBlock,
+  StoredSenderHold,
+} from './feedback-types';
 
 export * from './transfer-types';
+export * from './feedback-types';
+
+/** A keyset position in a newest-first note list: rows strictly older than this (`createdAt`, then `id`). */
+export interface NoteCursor {
+  createdAt: string;
+  id: string;
+}
 
 /** One launch-invite signup (docs/launch/waitlist.md). `email` is stored trimmed and lower-case. */
 export interface WaitlistEntry {
@@ -58,7 +78,7 @@ export interface Db {
   getLearner(id: string): Promise<Learner | null>;
   putLearner(learner: Learner): Promise<void>;
   learnerByRecoveryHash(hash: string): Promise<Learner | null>;
-  /** Erase a learner everywhere (devices, snapshot, memberships, relink requests, transfer requests + events, transfer prefs, learner rate counters). */
+  /** Erase a learner everywhere (devices, snapshot, memberships, relink requests, transfer requests + events, transfer prefs, notes, note reports, note prefs, sender blocks, learner rate counters). */
   deleteLearner(id: string): Promise<boolean>;
   getDevice(learnerId: string, deviceId: string): Promise<LearnerDevice | null>;
   putDevice(device: LearnerDevice): Promise<void>;
@@ -222,6 +242,95 @@ export interface Db {
   billingEventByPaymentRef(paymentRef: string): Promise<BillingEvent | null>;
   /** The entitlement a provider reference (a Stripe subscription id) points at; the most recently updated when several do. */
   entitlementByProviderRef(provider: Entitlement['provider'], providerRef: string): Promise<Entitlement | null>;
+  // set-based reads for the billing summary (F-BILL-002 B-4): each list is bound as one JSON array and read
+  // with `json_each`, so one statement answers any number of spaces (D1 caps statements per invocation).
+  /** Every space-subject entitlement row of these spaces; order not guaranteed. */
+  entitlementsForSpaces(spaceIds: readonly string[]): Promise<Entitlement[]>;
+  /** Every membership of these spaces; order not guaranteed. */
+  membersOfSpaces(spaceIds: readonly string[]): Promise<Membership[]>;
+  /** Every space whose parent is one of these; order not guaranteed. */
+  childSpacesOfSpaces(parentSpaceIds: readonly string[]): Promise<Space[]>;
+  /** Each space's newest `limitPerSpace` rows (the order of `billingEventsFor`), grouped by space in no set order. */
+  billingEventsForSpaces(spaceIds: readonly string[], limitPerSpace: number): Promise<BillingEvent[]>;
+
+  // notes from grown-ups (F-FEEDBACK-001 section 7.4, migration 0008). Every method that takes a list is
+  // set-based: the list is bound as one JSON array and read with `json_each`, so the statement count does
+  // not grow with it and the 100-parameter cap never applies. Every list and the inbox apply the retention
+  // cut-offs of section 8.7 (`now`), and a report never revives a row past them, so a row past them is never
+  // seen before the purge removes it (`getNote` alone reads the stored row, for the routes' checks).
+  /** The ids among `learnerIds` that are current `student` members of the space; order not guaranteed. */
+  studentsOf(spaceId: string, learnerIds: readonly string[]): Promise<string[]>;
+  /** The prefs rows of these learners; a learner without a row is left out (class notes `all`, OD-3). */
+  notePrefsFor(learnerIds: readonly string[]): Promise<StoredNotePrefs[]>;
+  /** The ids among `learnerIds` whose family stopped this sender (section 8.5). */
+  blocksFor(learnerIds: readonly string[], senderAccountId: string): Promise<string[]>;
+  /** Hits per key at or after `since`; a key without hits is absent from the map. */
+  countRateHitsByKeys(keys: readonly string[], since: Date): Promise<Map<string, number>>;
+  addRateHits(rows: readonly RateHitRow[]): Promise<void>;
+  /**
+   * One send (section 7.4): the notes and their counter hits in one transaction, written only while the
+   * sender (every row's `senderAccountId`, which must be one account) has no active hold. Answers the
+   * number of notes written: 0 for a non-empty send means a hold landed in the meantime and nothing was written.
+   */
+  insertNotes(rows: readonly NewNote[], rateHits: readonly RateHitRow[]): Promise<number>;
+  /**
+   * The inbox query (section 6.8, rules 1-7) and the learner's prefs row, in one statement: live notes of the
+   * last 180 days, of spaces the learner is still a student of and that are not archived, class spaces only on
+   * a class-scoped device, class notes only while the mode is not `off` (text null in `presets`), no block of
+   * the sender, and only while the sender still holds `feedback.send` in the space; newest first, at most `limit`.
+   */
+  notesForLearner(learnerId: string, scope: NoteDeviceScope, now: Date, limit: number): Promise<LearnerNotesInbox>;
+  /** Notes sent in a space (optionally to one learner), newest first, older than `before` when given, at most `limit`. */
+  notesForSpace(spaceId: string, options: { before: NoteCursor | null; limit: number; now: Date; learnerId?: string }): Promise<StoredNote[]>;
+  /** Every note to a learner from any space, every status, newest first (the family view). */
+  notesForOversight(learnerId: string, options: { before: NoteCursor | null; limit: number; now: Date }): Promise<StoredNote[]>;
+  /**
+   * The stored row whatever its age (the routes' ownership and status checks). A row past the cut-offs of
+   * section 8.7 is never listed, and `insertNoteReport` refuses it, so acting on it changes nothing visible.
+   */
+  getNote(id: string): Promise<StoredNote | null>;
+  /** Sets `readAt` once, on a live note; answers rows changed (0 when already read or not live). */
+  setNoteRead(id: string, at: Date): Promise<number>;
+  /** The learner's pick on a live note; the last one wins. Answers rows changed. */
+  setNoteReaction(id: string, reaction: string, at: Date): Promise<number>;
+  /** Live -> `hidden`; `actedBy` is the caregiver for `family`, never set for `device`. Answers rows changed. */
+  hideNote(id: string, via: NoteActVia, at: Date, actedBy?: string): Promise<number>;
+  /** Live -> `withdrawn` (soft, OD-18: the row stays for the family). Answers rows changed. */
+  withdrawNote(id: string, at: Date): Promise<number>;
+  /** Every live note of a batch sent by this account -> `withdrawn`. Answers rows changed. */
+  withdrawBatch(batchId: string, senderAccountId: string, at: Date): Promise<number>;
+  /**
+   * The report row and the note's status `reported`, together in one transaction, only while the note is
+   * within the retention of section 8.7 at `row.createdAt` (any status otherwise). Answers whether it recorded:
+   * false for a missing note or one every list already hides, which a report never brings back.
+   */
+  insertNoteReport(row: StoredNoteReport): Promise<boolean>;
+  /** Distinct reporting families (`reporter_key`) with a report against this sender at or after `since` (section 8.4). */
+  countReportersAgainst(accountId: string, since: Date): Promise<number>;
+  getSenderHold(accountId: string): Promise<StoredSenderHold | null>;
+  /** Places a hold; an active hold is never rewritten, a lifted one is replaced. Answers whether it wrote. */
+  putSenderHold(row: StoredSenderHold): Promise<boolean>;
+  getNotePrefs(learnerId: string): Promise<StoredNotePrefs | null>;
+  /** Upsert. An acknowledgement once given is kept when `acknowledgedAt` is null (the card never returns). */
+  putNotePrefs(row: StoredNotePrefs): Promise<void>;
+  /** Insert-if-absent: an existing block keeps its first author and time. */
+  putBlock(row: StoredSenderBlock): Promise<void>;
+  deleteBlock(learnerId: string, senderAccountId: string): Promise<boolean>;
+  /** Newest first. */
+  listBlocks(learnerId: string): Promise<StoredSenderBlock[]>;
+  getSendGrant(spaceId: string, accountId: string): Promise<StoredSendGrant | null>;
+  putSendGrant(row: StoredSendGrant): Promise<void>;
+  deleteSendGrant(spaceId: string, accountId: string): Promise<boolean>;
+  /** A student membership ended (section 7.5): its live, hidden and withdrawn notes go; reported ones stay for review. */
+  deleteNotesForMembership(learnerId: string, spaceId: string): Promise<number>;
+  /**
+   * Bounded retention purge (section 8.7), at most `limit` rows per step: live, hidden and withdrawn notes
+   * created before `before` (and their reports); reported notes with no report at or after `reportedBefore`
+   * (and their reports); report rows before `reportedBefore` of a note no longer reported (a note under review
+   * keeps every report); holds lifted before `liftedBefore`. Each step reads an index (migration 0008).
+   * Answers the rows removed.
+   */
+  purgeNotes(before: Date, reportedBefore: Date, liftedBefore: Date, limit: number): Promise<number>;
 
   /** Tests only: wipe everything. */
   reset(): Promise<void>;

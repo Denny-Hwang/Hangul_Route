@@ -33,6 +33,7 @@ export { plural, type PluralForms } from './plural';
 export {
   describeRelativeDay,
   formatDate,
+  formatMinorAmount,
   formatNumber,
   formatUsd,
   type DateInput,

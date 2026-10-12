@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, jamoOfSpoken, passDiscover, waitForNextListenPickRound } from './helpers';
+import { completeChildForm, jamoOfSpoken, journeyCellName, passDiscover, waitForNextListenPickRound } from './helpers';
 
 /**
  * Audit UX-01 / L16 (roadmap PR-01): progress earned in one visit is still
@@ -149,7 +149,7 @@ test('progress earned before a reload survives it and the next write', async ({ 
 
   // First write of the new visit: replaying the quest starts a session.
   await page.getByText('Journey', { exact: true }).last().click();
-  await page.getByRole('button', { name: /^Letters.* episode for stage1$/ }).click();
+  await page.getByRole('button', { name: journeyCellName(1, 'Letters') }).click();
   await page.getByRole('button', { name: 'Play again' }).click();
   await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
   await expect.poll(async () => (await savedProgress(page))?.sessions ?? 0).toBeGreaterThan(earned?.sessions ?? 0);

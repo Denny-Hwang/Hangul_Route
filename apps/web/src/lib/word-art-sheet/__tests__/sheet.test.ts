@@ -9,7 +9,7 @@ const apple: WordArtEntry = { glyph: [{ t: 'circle', x: 50, y: 50, r: 30, f: 'vo
 const cat: WordArtEntry = { glyph: [{ t: 'circle', x: 50, y: 50, r: 30 }, { t: 'rect', x: 10, y: 10, w: 20, h: 20 }], meta: { family: 'animal', status: 'draft' } };
 const leaf: WordArtEntry = { glyph: [{ t: 'path', d: 'M 10 10 L 20 20' }], meta: { family: 'prop', status: 'approved' } };
 const registry = { 'food-apple': apple, 'animal-cat': cat, 'prop-leaf': leaf };
-const entry = (over: Partial<VocabCatalogEntry>): VocabCatalogEntry => ({ id: 'vocab:x', ko: '사과', romanization: 'sagwa', en: 'apple', topic: 'food', visual: 'word:food-apple', ...over });
+const entry = (over: Partial<VocabCatalogEntry>): VocabCatalogEntry => ({ id: 'vocab:x', ko: '사과', romanization: 'sagwa', en: 'apple', topic: 'food', visual: 'word:food-apple', glosses: { en: over.en ?? 'apple' }, ...over });
 const catalog = [entry({}), entry({ id: 'vocab:bap', ko: '밥', romanization: 'bap', en: 'cooked rice', visual: 'card:rice' })];
 
 describe('buildWordArtSheet (F-VOC-002 §3.10)', () => {

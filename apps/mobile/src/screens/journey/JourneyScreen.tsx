@@ -25,6 +25,7 @@ import { learnerCellMarks } from '../../logic/journey-grid';
 import { initialEpisode, latchedSelection, reconcileSelection, requestedSelection, type PaneLatch } from '../../logic/layout/pane-selection';
 import { journeyMarks } from '../../logic/placement/cell-look';
 import { appRouteCatalog } from '../../logic/placement/route-skip';
+import { defaultStoryIndex } from '../../logic/story/story-index';
 import type { MainTabParamList, RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
@@ -37,6 +38,10 @@ const GRID_EPISODES = gridEpisodes(episodesAll);
 /** The app's quests in the cursor's order, as the level check's route catalogue (F-PLC-001 section 3.7). */
 const ROUTE_CATALOG = appRouteCatalog(questsAll, episodesAll);
 const NO_IDS: ReadonlySet<string> = new Set();
+/** The bundle's story index (F-STORY-005 §3.6): the map's count marks and stories-only cells. Empty while no story is reviewed. */
+const STORY_ENTRIES = defaultStoryIndex();
+/** Any heritage story on the map: the explainer then says what the marks mean. */
+const MAP_HAS_STORIES = STORY_ENTRIES.some((e) => e.placement === 'shelf');
 
 export function JourneyScreen(): React.ReactElement {
   const messages = useMessages();
@@ -126,6 +131,10 @@ export function JourneyScreen(): React.ReactElement {
         selectedId={selectedId}
         onOpen={(episodeId) => (paneMode ? setSelected(episodeId) : navigation.navigate('EpisodeDetail', { episodeId }))}
         marksOf={marksOf}
+        storyEntries={STORY_ENTRIES}
+        quests={snapQuests}
+        // A stories-only cell opens its cell page on one pane and on two (F-STORY-005 §3.6).
+        onOpenStories={(stage, theme) => navigation.navigate('CellStories', { stage, theme, source: 'cell' })}
       />
 
       <Card padding="md" tone="sunken">
@@ -134,6 +143,14 @@ export function JourneyScreen(): React.ReactElement {
         <Body tone="secondary" size="sm">
           {m.how.body}
         </Body>
+        {MAP_HAS_STORIES ? (
+          <>
+            <Spacer size="xs" />
+            <Body tone="secondary" size="sm" testID="journey-stories-how">
+              {m.how.stories}
+            </Body>
+          </>
+        ) : null}
         {marks !== null ? (
           <>
             <Spacer size="xs" />
@@ -158,6 +175,7 @@ export function JourneyScreen(): React.ReactElement {
       onOpenStory={(t) => (t.route === 'StoryReader' ? navigation.navigate('StoryReader', t.params) : navigation.navigate('QuestPlayer', t.params))}
       onOpenSources={(storyId) => navigation.navigate('StorySources', { storyId, from: 'episode' })}
       onOpenCultureNotes={(storyId) => navigation.push('CultureNotes', { storyId })}
+      onOpenCellStories={(stage, theme, source) => navigation.navigate('CellStories', { stage, theme, source })}
     />
   ) : (
     <ComingSoonPane />

@@ -3,7 +3,8 @@ import type { Context } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import app from '../../index';
-import { getAuthUserId } from '../auth';
+import { getAuthClaims, getAuthUserId } from '../auth';
+import { clerkTestKeys, type ClerkTestKeys } from '../../__tests__/helpers/clerk-token';
 import { setDevFallbacksDefaultForTests } from '../runtime';
 
 function ctx(authHeader?: string, env: Record<string, unknown> = {}): Context {
@@ -202,5 +203,54 @@ describe('getAuthUserId accepts a Clerk token only from an allowed site (F-APP-0
     const unlisted = await call('https://hangulroute.com');
     expect(unlisted.status).toBe(401);
     expect(unlisted.headers.get('access-control-allow-origin')).toBe('https://app.hangulroute.com');
+  });
+});
+
+/**
+ * F-BILL-002 B-5: the verified claims carry `fva` (factor verification age in
+ * minutes, `[firstFactor, secondFactor]`) next to `sub`, so money routes can
+ * ask for a fresh sign-in. `getAuthUserId` stays exactly as before.
+ */
+describe('getAuthClaims exposes fva next to sub (F-BILL-002 B-5)', () => {
+  let keys: ClerkTestKeys;
+  beforeAll(async () => {
+    keys = await clerkTestKeys();
+  });
+  const claimsFor = async (claims: Record<string, unknown>) => getAuthClaims(ctx(`Bearer ${await keys.token('user_fva', claims)}`, { CLERK_JWT_KEY: keys.jwtKey }));
+
+  it('returns the verified sub and fva', async () => {
+    expect(await claimsFor({ fva: [3, -1] })).toEqual({ sub: 'user_fva', fva: [3, -1], verified: true });
+    expect(await claimsFor({ fva: [0, 0] })).toEqual({ sub: 'user_fva', fva: [0, 0], verified: true });
+  });
+
+  it('reads fva as null when the token has none or it is malformed', async () => {
+    expect(await claimsFor({})).toEqual({ sub: 'user_fva', fva: null, verified: true });
+    for (const fva of ['3,-1', [3], [3, -1, 2], ['3', '-1'], [Number.NaN, 0], null, { 0: 3, 1: -1 }]) {
+      expect((await claimsFor({ fva }))?.fva).toBeNull();
+    }
+  });
+
+  it('keeps getAuthUserId unchanged for every existing caller', async () => {
+    const token = await keys.token('user_fva', { fva: [1, -1] });
+    expect(await getAuthUserId(ctx(`Bearer ${token}`, { CLERK_JWT_KEY: keys.jwtKey }))).toBe('user_fva');
+    expect(await getAuthUserId(ctx('Bearer user_abc', { ENVIRONMENT: 'development' }))).toBe('user_abc');
+  });
+
+  it('marks the dev fallback as unverified, with no fva (no token to read)', async () => {
+    expect(await getAuthClaims(ctx('Bearer user_abc', { ENVIRONMENT: 'development' }))).toEqual({ sub: 'user_abc', fva: null, verified: false });
+  });
+
+  it('returns null for no bearer or a token that does not verify', async () => {
+    expect(await getAuthClaims(ctx(undefined, { CLERK_JWT_KEY: keys.jwtKey }))).toBeNull();
+    expect(await getAuthClaims(ctx('Bearer plain', { CLERK_JWT_KEY: keys.jwtKey }))).toBeNull();
+    const otherKeys = await clerkTestKeys();
+    expect(await getAuthClaims(ctx(`Bearer ${await otherKeys.token('user_fva', { fva: [1, -1] })}`, { CLERK_JWT_KEY: keys.jwtKey }))).toBeNull();
+  });
+
+  it('verifies a request once, however many times its claims are read', async () => {
+    const c = ctx(`Bearer ${await keys.token('user_fva', { fva: [2, -1] })}`, { CLERK_JWT_KEY: keys.jwtKey });
+    const first = getAuthClaims(c);
+    expect(getAuthClaims(c)).toBe(first);
+    expect(await getAuthUserId(c)).toBe('user_fva');
   });
 });

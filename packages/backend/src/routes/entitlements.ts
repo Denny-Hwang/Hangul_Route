@@ -1,4 +1,4 @@
-import { CheckoutCreateSchema, PLAN_PRICING, PromoCheckSchema, discountedUsd, isStripeSubscriptionRef, type Entitlement, type Space } from '@hangul-route/content-schema';
+import { CheckoutCreateSchema, PLAN_PRICING, PromoCheckSchema, discountedUsd, isStripeSubscriptionRef, type Entitlement, type PurchasablePlanKey, type Space } from '@hangul-route/content-schema';
 import type { Account } from '../store';
 import { Hono, type Context } from 'hono';
 import { dbFor, type Db } from '../db';
@@ -9,7 +9,9 @@ import { isDuplicateCompletion, recordBillingHistory, stripeModeOf, type StripeW
 import { accountBrowseScope, isEntitlementActive } from '../lib/entitlement';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
 import { recordServerEvent } from '../lib/server-events';
-import { checkoutForm, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, freshStripeEvent, lookupPromotionCode, mergeForStripeEvent, priceIdFor, verifyStripeSignature, type StripeEnv } from '../lib/stripe';
+import { liveRefusal } from '../lib/live-guard';
+import { requireStepUp } from '../lib/step-up';
+import { checkoutForm, checkoutSuccessSuffix, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, freshStripeEvent, lookupPromotionCode, mergeForStripeEvent, priceIdFor, stripeMode, verifyStripeSignature, type StripeEnv } from '../lib/stripe';
 
 /** Promo lookups are guessable strings: 20 per minute per client (F-ENT-002 §3.2). */
 export const PROMO_LIMIT = 20;
@@ -67,6 +69,14 @@ async function ownedSpace(c: Context, db: Db, account: Account, spaceId: string,
   return space;
 }
 
+type CheckoutRefusal = 'reverify_required' | 'already_active' | 'live_not_enabled' | 'not_configured';
+
+/** `billing.checkout_refused` (F-BILL-002 section 10): codes only; the response goes out unchanged. */
+function refusedCheckout(planKey: PurchasablePlanKey, reason: CheckoutRefusal, res: Response): Response {
+  recordServerEvent('billing.checkout_refused', { planKey, reason });
+  return res;
+}
+
 /**
  * App Store / Play receipts (F-IAP-001/002). Nothing verifies them yet, so this
  * grants nothing: 501 until real store-server verification is wired (audit
@@ -86,14 +96,19 @@ entitlementRoutes.post('/stripe/checkout', async (c) => {
   if (planKey === 'group_license' && space.kind === 'class' && space.parentSpaceId) {
     return fail(c, 'bad_request', 'A class inside a school is covered by the school licence', 422);
   }
+  // Step-up before money moves (F-BILL-002 section 4.4): a fresh first factor, after the payer check.
+  const stepUp = await requireStepUp(c);
+  if (stepUp) return refusedCheckout(planKey, 'reverify_required', stepUp);
   // A covering subscription of this plan already renews yearly: a second one would too (BY-D4).
   // A legacy one-time sandbox row or a contract row does not block moving to the yearly plan.
   const subscriptions = (await db.entitlementsFor('space', subjectId)).filter((e) => e.planKey === planKey && e.provider === 'stripe' && isStripeSubscriptionRef(e.providerRef));
-  if (subscriptions.some((e) => isEntitlementActive(e, new Date()))) return fail(c, 'already_active', 'This plan is already active', 409);
+  if (subscriptions.some((e) => isEntitlementActive(e, new Date()))) return refusedCheckout(planKey, 'already_active', fail(c, 'already_active', 'This plan is already active', 409));
 
   const env = c.env ?? {};
   const priceId = priceIdFor(env, planKey);
-  if (!env.STRIPE_SECRET_KEY || !priceId) return fail(c, 'stripe_not_configured', 'Checkout is not set up on this deployment yet', 500);
+  if (!env.STRIPE_SECRET_KEY || !priceId) return refusedCheckout(planKey, 'not_configured', fail(c, 'stripe_not_configured', 'Checkout is not set up on this deployment yet', 500));
+  const live = liveRefusal(c, env);
+  if (live) return refusedCheckout(planKey, 'live_not_enabled', live);
   const fetchImpl = stripeFetch ?? globalThis.fetch;
   // A code typed in the console is checked again here so a stale or made-up one never reaches Stripe.
   const promo = promoCode ? await lookupPromotionCode(env, promoCode, fetchImpl) : null;
@@ -101,10 +116,11 @@ entitlementRoutes.post('/stripe/checkout', async (c) => {
   const base = (env.CONSOLE_URL ?? 'https://hangulroute.com').replace(/\/$/, '');
   const session = await createCheckoutSession(
     env,
-    checkoutForm({ priceId, subjectKind, subjectId, planKey, successUrl: `${base}/teach/billing?checkout=success`, cancelUrl: `${base}/teach/billing?checkout=cancel`, customerEmail: account.email, customer: subscriptions.find((e) => e.customerRef)?.customerRef ?? null, promo }),
+    checkoutForm({ priceId, subjectKind, subjectId, planKey, successUrl: `${base}/teach/billing${checkoutSuccessSuffix(planKey, subjectId)}`, cancelUrl: `${base}/teach/billing?checkout=cancel`, customerEmail: account.email, customer: subscriptions.find((e) => e.customerRef)?.customerRef ?? null, promo }),
     fetchImpl,
   );
   if (!session.ok || !session.url) return fail(c, 'stripe_error', 'Stripe did not return a checkout link', 500, { status: session.status });
+  recordServerEvent('billing.checkout_started', { planKey, mode: stripeMode(env), promo: promo !== null });
   return ok(c, { url: session.url });
 });
 
@@ -121,6 +137,8 @@ entitlementRoutes.post('/stripe/promo', async (c) => {
   if (!parsed.success) return fail(c, 'promo_invalid', 'That does not look like a code', 422);
   const env = c.env ?? {};
   if (!env.STRIPE_SECRET_KEY) return fail(c, 'stripe_not_configured', 'Codes are not set up on this deployment yet', 500);
+  const live = liveRefusal(c, env);
+  if (live) return live;
   const promo = await lookupPromotionCode(env, parsed.data.code, stripeFetch ?? globalThis.fetch);
   if (!promo) return fail(c, 'promo_invalid', 'That code cannot be used right now', 404);
   const listUsd = PLAN_PRICING[parsed.data.planKey].amountUsd;
@@ -139,15 +157,22 @@ entitlementRoutes.post('/stripe/portal', async (c) => {
     const space = await ownedSpace(c, db, account, subjectId, ['family', 'school', 'class']);
     if (!('id' in space)) return space;
   }
+  // Step-up (F-BILL-002 section 4.4): the portal changes the card and cancels plans.
+  const stepUp = await requireStepUp(c);
+  if (stepUp) return stepUp;
   // Any Stripe subscription can be managed: the Family Plan and the Group License both renew
   // yearly (BY-D6). A legacy one-time sandbox row (payment intent or session ref) has nothing to manage.
-  const customer = (await db.entitlementsFor(subjectKind, subjectId)).find((e) => e.provider === 'stripe' && e.customerRef && isStripeSubscriptionRef(e.providerRef))?.customerRef;
-  if (!customer) return fail(c, 'not_found', 'No Stripe subscription for this subject', 404);
+  const row = (await db.entitlementsFor(subjectKind, subjectId)).find((e) => e.provider === 'stripe' && e.customerRef && isStripeSubscriptionRef(e.providerRef));
+  const customer = row?.customerRef;
+  if (!row || !customer) return fail(c, 'not_found', 'No Stripe subscription for this subject', 404);
   const env = c.env ?? {};
   if (!env.STRIPE_SECRET_KEY) return fail(c, 'stripe_not_configured', 'Billing portal is not set up on this deployment yet', 500);
+  const live = liveRefusal(c, env);
+  if (live) return live;
   const base = (env.CONSOLE_URL ?? 'https://hangulroute.com').replace(/\/$/, '');
   const session = await createPortalSession(env, customer, `${base}/teach/billing`, stripeFetch ?? globalThis.fetch);
   if (!session.ok || !session.url) return fail(c, 'stripe_error', 'Stripe did not return a portal link', 500, { status: session.status });
+  recordServerEvent('billing.portal_opened', { planKey: row.planKey, mode: stripeMode(env) });
   return ok(c, { url: session.url });
 });
 

@@ -360,6 +360,44 @@ function contract(name: string, make: () => Db): void {
       expect(await db.billingEventByPaymentRef('pi_3')).toEqual(purchase);
     });
 
+    it('set-based reads for the billing summary: many spaces in one call, the same answer as the per-space reads (F-BILL-002 B-4)', async () => {
+      const now = new Date(T);
+      await db.putAccount({ id: 't', email: null, displayName: null, consent: null, createdAt: T });
+      await db.putSpace(space('space:s', 'school', 't'));
+      await db.putSpace(space('space:c1', 'class', 't', 'space:s'));
+      await db.putSpace(space('space:c2', 'class', 't', 'space:s'));
+      await db.putSpace(space('space:f', 'family', 't'));
+      await db.addMembership({ spaceId: 'space:c1', memberKind: 'learner', memberId: 'profile:a', role: 'student', joinedAt: T });
+      await db.addMembership({ spaceId: 'space:c2', memberKind: 'learner', memberId: 'profile:b', role: 'student', joinedAt: T });
+      await db.addMembership({ spaceId: 'space:f', memberKind: 'account', memberId: 't', role: 'owner', joinedAt: T });
+      await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:s', planKey: 'group_license', status: 'active', provider: 'stripe', providerRef: 'sub_s' }, now);
+      await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:f', planKey: 'family_lifetime', status: 'active', provider: 'stripe', providerRef: 'sub_f' }, now);
+      await db.applyEntitlement({ subjectKind: 'account', subjectId: 'space:f', planKey: 'group_license', status: 'active', provider: 'stripe', providerRef: 'sub_acct' }, now);
+      const base = { subjectKind: 'space' as const, planKey: 'group_license' as const, kind: 'renewal' as const, amountCents: 100, currency: 'usd', provider: 'stripe' as const, paymentRef: null, livemode: false };
+      for (const n of [1, 2, 3, 4]) await db.recordBillingEvent({ ...base, subjectId: 'space:s', providerRef: `in_s${n}`, occurredAt: `2026-10-0${n}T00:00:00.000Z` }, now);
+      await db.recordBillingEvent({ ...base, subjectId: 'space:f', providerRef: 'in_f1', occurredAt: '2026-10-01T00:00:00.000Z' }, now);
+      await db.recordBillingEvent({ ...base, subjectKind: 'account', subjectId: 'space:f', providerRef: 'in_acct', occurredAt: '2026-10-09T00:00:00.000Z' }, now);
+
+      const ids = ['space:s', 'space:f', 'space:none'];
+      const byId = <T extends { id: string }>(rows: T[]) => [...rows].sort((x, y) => x.id.localeCompare(y.id));
+      expect(byId(await db.entitlementsForSpaces(ids))).toEqual(byId([...(await db.entitlementsFor('space', 'space:s')), ...(await db.entitlementsFor('space', 'space:f'))]));
+      expect(await db.entitlementsForSpaces([])).toEqual([]);
+      const members = await db.membersOfSpaces(['space:c1', 'space:c2', 'space:f']);
+      expect(members.map((m) => `${m.spaceId}/${m.memberId}`).sort()).toEqual(['space:c1/profile:a', 'space:c2/profile:b', 'space:f/t']);
+      expect(await db.membersOfSpaces([])).toEqual([]);
+      expect((await db.childSpacesOfSpaces(['space:s', 'space:f'])).map((s) => s.id).sort()).toEqual(['space:c1', 'space:c2']);
+      expect(await db.childSpacesOfSpaces([])).toEqual([]);
+
+      const events = await db.billingEventsForSpaces(ids, 3);
+      const of = (id: string) => events.filter((e) => e.subjectId === id);
+      expect(of('space:s')).toEqual(await db.billingEventsFor('space', 'space:s', 3));
+      expect(of('space:f').map((e) => e.providerRef)).toEqual(['in_f1']); // never the account row of the same id
+      expect(events).toHaveLength(4);
+      expect(await db.billingEventsForSpaces(ids, 0)).toEqual([]);
+      expect(await db.billingEventsForSpaces([], 3)).toEqual([]);
+      await expect(db.billingEventsForSpaces(ids, -1)).rejects.toThrow(/billingEventsFor: limit/);
+    });
+
     it('waitlist: addWaitlist is idempotent per address, keeps the first row and an unsubscribe, and reset wipes it', async () => {
       expect(await db.waitlistEntries()).toEqual([]);
       await db.addWaitlist({ email: 'a@example.com', createdAt: T, source: 'landing', locale: 'en', consentTextVersion: 'v1' });

@@ -29,12 +29,35 @@ export const a11y = {
   /** One of Today's mission cards; a collected card keeps its slot and says so. */
   missionCard: (title: string, subtitle: string, collected: boolean) =>
     `${title}. ${subtitle}.${collected ? ' Collected.' : ''}`,
-  /** A Journey grid cell: the theme's episode for a stage; a preview cell is not open yet. */
-  gridCell: (themeTitle: string, stage: string, comingSoon: boolean) =>
-    `${themeTitle} episode for ${stage}${comingSoon ? ', coming soon' : ''}`,
-  /** A Journey grid cell with a level-check mark (F-PLC-001 section 3.7): the start pin, the placed-out outline, or both. */
-  gridCellMarked: (themeTitle: string, stage: string, start: boolean, placedOut: boolean) =>
-    `${themeTitle} episode for ${stage}.${start ? ' You started here.' : ''}${placedOut ? ' You can skip ahead here, and it is still open to play.' : ''}`,
+  /**
+   * A Journey grid cell (F-STORY-005 §3.5, §3.12): the stage by its number and title, the theme, what the
+   * cell holds (`kind` is the cell's `CellKind`) and how many heritage stories call it home; then the
+   * level-check marks as their own sentences (F-PLC-001 section 3.7). `finished` is said only when > 0.
+   */
+  journeyCell: (c: {
+    stage: number;
+    stageTitle: string;
+    themeTitle: string;
+    kind: 'lesson' | 'book' | 'stories-only' | 'placeholder';
+    complete: boolean;
+    stories: number;
+    finished: number;
+    start: boolean;
+    placedOut: boolean;
+  }) => {
+    const where = `Stage ${c.stage} ${c.stageTitle}, ${c.themeTitle}`;
+    const count = plural('en', c.stories, { one: '1 heritage story', other: `${c.stories} heritage stories` });
+    const stories = c.stories === 0 ? '' : c.finished > 0 ? `${count}, ${c.finished} finished` : count;
+    const holds = c.kind === 'book' ? 'story book' : 'lesson';
+    const head =
+      c.kind === 'placeholder'
+        ? `${where}, coming soon`
+        : c.kind === 'stories-only'
+          ? `${where}: ${stories}`
+          : `${where}: ${holds}${c.complete ? ', complete' : ''}${stories === '' ? '' : `, ${stories}`}`;
+    const marks = `${c.start ? ' You started here.' : ''}${c.placedOut ? ' You can skip ahead here, and it is still open to play.' : ''}`;
+    return marks === '' ? head : `${head}.${marks}`;
+  },
   /** An earned card on the Episode page, and the placeholder for one not yet earned. */
   episodeCard: (title: string) => `${title} card`,
   cardWaiting: 'A card you can earn by finishing this episode',
@@ -207,5 +230,19 @@ export const a11y = {
     notSaved: (days: string) => `Not saved yet: ${days}.`,
     growthTable: 'Quests and cards by month',
     loading: 'Loading the report',
+  },
+  /**
+   * Notes from grown-ups (F-FEEDBACK-001 FB-5, section 6.12): the Home card read as one group, a list
+   * row, the learner's own answer and the announced pick. `preset` and `label` are already-rendered
+   * `common.notes` lines; `date` is the note date as drawn.
+   */
+  notes: {
+    card: (sender: string, preset: string) => `New note from ${sender}: ${preset} Read.`,
+    cardMany: (n: number, sender: string) => `${plural('en', n, { one: '1 new note', other: `${n} new notes` })}. Newest from ${sender}. Read.`,
+    row: (sender: string, preset: string, date: string, isNew: boolean) =>
+      `${isNew ? 'New. ' : ''}From ${sender}, ${date}. ${preset}`,
+    answer: (label: string) => `Your answer: ${label}`,
+    reactionPicked: (label: string) => `You picked: ${label}`,
+    questCard: (title: string) => `Try this quest: ${title}`,
   },
 } as const;

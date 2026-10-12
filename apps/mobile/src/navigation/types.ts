@@ -1,7 +1,8 @@
-import type { PlacementSource, StoryLevel } from '@hangul-route/content-schema';
+import type { PlacementSource, StageKey, StoryLevel, ThemeKey } from '@hangul-route/content-schema';
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { PinResetMethod } from '../logic/profiles/pin-flow';
 import type { GrownUpVia } from '../logic/shell/handoff-rules';
+import type { CellStoriesSource } from '../logic/story/cell-stories';
 import type { LibrarySectionId } from '../logic/story/library-sections';
 import type { SourcesRouteParams } from '../logic/story/source-link';
 import type { VocabQuestionE2eParams } from './vocab-question-e2e';
@@ -27,12 +28,20 @@ export type GrownUpDestination =
   | 'MyRoute'
   | 'PlacementReport'
   | 'GrownUpArea'
-  | 'Billing';
+  | 'Billing'
+  /** F-FEEDBACK-001 section 6.10 (types from FB-7; the screens arrive with FB-9): a learner's notes in the grown-up zone, and the report sheet for one note (`PinEntry.noteId`). */
+  | 'NotesGrownUp'
+  | 'NoteReport';
 
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
   Main: NavigatorScreenParams<MainTabParamList>;
   EpisodeDetail: { episodeId: string };
+  /**
+   * The heritage stories of one grid cell (F-STORY-005 §3.6): its lesson first, then its stories.
+   * `source` is the door that opened it, for `journey.cell_stories_opened`.
+   */
+  CellStories: { stage: StageKey; theme: ThemeKey; source: CellStoriesSource };
   /**
    * The Learning Route of one learner, for a grown-up (AMENDMENTS-ROUTE-LEARNING-ROUTE section 5.1, LR-4):
    * the parent dashboard row (R-9b) and the PIN screen it passes through. Both params are required. Always
@@ -74,6 +83,8 @@ export type RootStackParamList = {
     from?: 'journey' | 'library';
     /** `next: 'EditProfile'`: the profile to edit (F-LEARN-001 §3.11); `next: 'MyRoute'`: the profile whose page opens read-only; `next: 'PlacementReport'`: whose report opens (F-PLC-001 section 3.9). */
     profileId?: string;
+    /** `next: 'NoteReport'`: the note the report sheet opens for ("Tell a grown-up", F-FEEDBACK-001 section 6.10 item 4). */
+    noteId?: string;
   };
   /** Forgot PIN: Rescue Code or a 24-hour wait, then a new PIN (F-LEARN-001 §3.5). `next` is kept for the PIN screen. */
   PinReset: { next: GrownUpDestination; profileId?: string };

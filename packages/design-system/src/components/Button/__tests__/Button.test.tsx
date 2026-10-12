@@ -7,7 +7,8 @@ import type { ButtonProps } from '../types';
  * Button's `accessibilityHint` (F-BILL-002 B-9), checked on the element tree built by calling the
  * component directly with react-native's hosts replaced by plain tags (as ChoiceCard.test.tsx does).
  * Native reads the prop as the hint; react-native-web drops it, so on the web the button is
- * described (`aria-describedby`) by a hidden copy whose `nativeID` is that id. A button without a
+ * described (`aria-describedby`) by a hidden copy whose `id` is that id (`id`, not the `nativeID`
+ * react-native-web 0.19 warns is deprecated). A button without a
  * hint, or on native, renders no extra node and no `aria-describedby`.
  */
 const platform = vi.hoisted(() => ({ OS: 'web' }));
@@ -43,10 +44,11 @@ describe('Button accessibilityHint', () => {
     expect(el.props['aria-describedby']).toBe(':hint:');
     expect(el.props.accessibilityLabel).toBe('Open billing');
     expect(el.props.accessibilityHint).toBe(HINT);
-    const hidden = body(el).filter((c) => c.props.nativeID !== undefined);
+    const hidden = body(el).filter((c) => c.props.id !== undefined);
     expect(hidden).toHaveLength(1);
     expect(hidden[0]?.type).toBe('Text');
-    expect(hidden[0]?.props.nativeID).toBe(el.props['aria-describedby']);
+    expect(hidden[0]?.props.id).toBe(el.props['aria-describedby']);
+    expect('nativeID' in (hidden[0]?.props ?? {})).toBe(false);
     expect(hidden[0]?.props.style).toEqual({ display: 'none' });
     expect(textOf(hidden[0] as El)).toBe(HINT);
     // The visible label is the only other text: the hint does not join the accessible name.

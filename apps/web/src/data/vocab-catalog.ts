@@ -6,6 +6,8 @@ export interface VocabCatalogEntry {
   en: string;
   topic: string;
   visual: string;
+  /** The gloss in each UI language that has one; `en` always. */
+  glosses: { en: string; es?: string; ko?: string };
 }
 
 export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
@@ -15,7 +17,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "sagwa",
     "en": "apple",
     "topic": "food",
-    "visual": "word:food-apple"
+    "visual": "word:food-apple",
+    "glosses": {
+      "en": "apple",
+      "es": "manzana"
+    }
   },
   {
     "id": "vocab:banana",
@@ -23,7 +29,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "banana",
     "en": "banana",
     "topic": "food",
-    "visual": "word:food-banana"
+    "visual": "word:food-banana",
+    "glosses": {
+      "en": "banana",
+      "es": "banana"
+    }
   },
   {
     "id": "vocab:uyu",
@@ -31,7 +41,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "uyu",
     "en": "milk",
     "topic": "food",
-    "visual": "word:food-milk"
+    "visual": "word:food-milk",
+    "glosses": {
+      "en": "milk",
+      "es": "leche"
+    }
   },
   {
     "id": "vocab:ppang",
@@ -39,7 +53,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "ppang",
     "en": "bread",
     "topic": "food",
-    "visual": "word:food-bread"
+    "visual": "word:food-bread",
+    "glosses": {
+      "en": "bread",
+      "es": "pan"
+    }
   },
   {
     "id": "vocab:bap",
@@ -47,7 +65,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "bap",
     "en": "cooked rice",
     "topic": "food",
-    "visual": "card:rice"
+    "visual": "card:rice",
+    "glosses": {
+      "en": "cooked rice",
+      "es": "arroz cocido"
+    }
   },
   {
     "id": "vocab:gimchi",
@@ -55,7 +77,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "gimchi",
     "en": "kimchi",
     "topic": "food",
-    "visual": "card:kimchi"
+    "visual": "card:kimchi",
+    "glosses": {
+      "en": "kimchi",
+      "es": "kimchi"
+    }
   },
   {
     "id": "vocab:gimbap",
@@ -63,7 +89,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "gimbap",
     "en": "gimbap (seaweed rice roll)",
     "topic": "food",
-    "visual": "card:kimbap"
+    "visual": "card:kimbap",
+    "glosses": {
+      "en": "gimbap (seaweed rice roll)",
+      "es": "gimbap (rollo de arroz con alga)"
+    }
   },
   {
     "id": "vocab:ramyeon",
@@ -71,7 +101,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "ramyeon",
     "en": "instant noodles",
     "topic": "food",
-    "visual": "word:food-ramyeon"
+    "visual": "word:food-ramyeon",
+    "glosses": {
+      "en": "instant noodles",
+      "es": "fideos instantáneos"
+    }
   },
   {
     "id": "vocab:mul",
@@ -79,7 +113,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "mul",
     "en": "water",
     "topic": "food",
-    "visual": "word:food-water"
+    "visual": "word:food-water",
+    "glosses": {
+      "en": "water",
+      "es": "agua"
+    }
   },
   {
     "id": "vocab:dalgyal",
@@ -87,7 +125,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "dalgyal",
     "en": "egg",
     "topic": "food",
-    "visual": "word:food-egg"
+    "visual": "word:food-egg",
+    "glosses": {
+      "en": "egg",
+      "es": "huevo"
+    }
   },
   {
     "id": "vocab:ttalgi",
@@ -95,7 +137,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "ttalgi",
     "en": "strawberry",
     "topic": "food",
-    "visual": "word:food-strawberry"
+    "visual": "word:food-strawberry",
+    "glosses": {
+      "en": "strawberry",
+      "es": "fresa"
+    }
   },
   {
     "id": "vocab:tteok",
@@ -103,7 +149,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "tteok",
     "en": "rice cake",
     "topic": "food",
-    "visual": "word:food-tteok"
+    "visual": "word:food-tteok",
+    "glosses": {
+      "en": "rice cake",
+      "es": "pastel de arroz"
+    }
   },
   {
     "id": "vocab:horangi",
@@ -111,7 +161,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "horangi",
     "en": "tiger",
     "topic": "animals",
-    "visual": "card:tiger"
+    "visual": "card:tiger",
+    "glosses": {
+      "en": "tiger",
+      "es": "tigre"
+    }
   },
   {
     "id": "vocab:goyangi",
@@ -119,7 +173,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "goyangi",
     "en": "cat",
     "topic": "animals",
-    "visual": "word:animal-cat"
+    "visual": "word:animal-cat",
+    "glosses": {
+      "en": "cat",
+      "es": "gato"
+    }
   },
   {
     "id": "vocab:gangaji",
@@ -127,7 +185,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "gangaji",
     "en": "puppy",
     "topic": "animals",
-    "visual": "word:animal-puppy"
+    "visual": "word:animal-puppy",
+    "glosses": {
+      "en": "puppy",
+      "es": "perrito"
+    }
   },
   {
     "id": "vocab:tokki",
@@ -135,7 +197,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "tokki",
     "en": "rabbit",
     "topic": "animals",
-    "visual": "word:animal-rabbit"
+    "visual": "word:animal-rabbit",
+    "glosses": {
+      "en": "rabbit",
+      "es": "conejo"
+    }
   },
   {
     "id": "vocab:gom",
@@ -143,7 +209,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "gom",
     "en": "bear",
     "topic": "animals",
-    "visual": "word:animal-bear"
+    "visual": "word:animal-bear",
+    "glosses": {
+      "en": "bear",
+      "es": "oso"
+    }
   },
   {
     "id": "vocab:sae-bird",
@@ -151,7 +221,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "sae",
     "en": "bird",
     "topic": "animals",
-    "visual": "word:animal-bird"
+    "visual": "word:animal-bird",
+    "glosses": {
+      "en": "bird",
+      "es": "pájaro"
+    }
   },
   {
     "id": "vocab:mulgogi",
@@ -159,7 +233,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "mulgogi",
     "en": "fish",
     "topic": "animals",
-    "visual": "word:animal-fish"
+    "visual": "word:animal-fish",
+    "glosses": {
+      "en": "fish",
+      "es": "pez"
+    }
   },
   {
     "id": "vocab:ori",
@@ -167,7 +245,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "ori",
     "en": "duck",
     "topic": "animals",
-    "visual": "word:animal-duck"
+    "visual": "word:animal-duck",
+    "glosses": {
+      "en": "duck",
+      "es": "pato"
+    }
   },
   {
     "id": "vocab:yeou",
@@ -175,7 +257,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "yeou",
     "en": "fox",
     "topic": "animals",
-    "visual": "word:animal-fox"
+    "visual": "word:animal-fox",
+    "glosses": {
+      "en": "fox",
+      "es": "zorro"
+    }
   },
   {
     "id": "vocab:wonsungi",
@@ -183,7 +269,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "wonsungi",
     "en": "monkey",
     "topic": "animals",
-    "visual": "word:animal-monkey"
+    "visual": "word:animal-monkey",
+    "glosses": {
+      "en": "monkey",
+      "es": "mono"
+    }
   },
   {
     "id": "vocab:kokkiri",
@@ -191,7 +281,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "kokkiri",
     "en": "elephant",
     "topic": "animals",
-    "visual": "word:animal-elephant"
+    "visual": "word:animal-elephant",
+    "glosses": {
+      "en": "elephant",
+      "es": "elefante"
+    }
   },
   {
     "id": "vocab:nabi",
@@ -199,7 +293,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "nabi",
     "en": "butterfly",
     "topic": "animals",
-    "visual": "word:animal-butterfly"
+    "visual": "word:animal-butterfly",
+    "glosses": {
+      "en": "butterfly",
+      "es": "mariposa"
+    }
   },
   {
     "id": "vocab:ppalgansaek",
@@ -207,7 +305,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "ppalgansaek",
     "en": "red",
     "topic": "colors",
-    "visual": "word:color-red"
+    "visual": "word:color-red",
+    "glosses": {
+      "en": "red",
+      "es": "rojo"
+    }
   },
   {
     "id": "vocab:juhwangsaek",
@@ -215,7 +317,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "juhwangsaek",
     "en": "orange",
     "topic": "colors",
-    "visual": "word:color-orange"
+    "visual": "word:color-orange",
+    "glosses": {
+      "en": "orange",
+      "es": "naranja"
+    }
   },
   {
     "id": "vocab:noransaek",
@@ -223,7 +329,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "noransaek",
     "en": "yellow",
     "topic": "colors",
-    "visual": "word:color-yellow"
+    "visual": "word:color-yellow",
+    "glosses": {
+      "en": "yellow",
+      "es": "amarillo"
+    }
   },
   {
     "id": "vocab:choroksaek",
@@ -231,7 +341,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "choroksaek",
     "en": "green",
     "topic": "colors",
-    "visual": "word:color-green"
+    "visual": "word:color-green",
+    "glosses": {
+      "en": "green",
+      "es": "verde"
+    }
   },
   {
     "id": "vocab:paransaek",
@@ -239,7 +353,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "paransaek",
     "en": "blue",
     "topic": "colors",
-    "visual": "word:color-blue"
+    "visual": "word:color-blue",
+    "glosses": {
+      "en": "blue",
+      "es": "azul"
+    }
   },
   {
     "id": "vocab:borasaek",
@@ -247,7 +365,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "borasaek",
     "en": "purple",
     "topic": "colors",
-    "visual": "word:color-purple"
+    "visual": "word:color-purple",
+    "glosses": {
+      "en": "purple",
+      "es": "morado"
+    }
   },
   {
     "id": "vocab:bunhongsaek",
@@ -255,7 +377,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "bunhongsaek",
     "en": "pink",
     "topic": "colors",
-    "visual": "word:color-pink"
+    "visual": "word:color-pink",
+    "glosses": {
+      "en": "pink",
+      "es": "rosa"
+    }
   },
   {
     "id": "vocab:haneulsaek",
@@ -263,7 +389,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "haneulsaek",
     "en": "sky blue",
     "topic": "colors",
-    "visual": "word:color-skyblue"
+    "visual": "word:color-skyblue",
+    "glosses": {
+      "en": "sky blue",
+      "es": "celeste"
+    }
   },
   {
     "id": "vocab:galsaek",
@@ -271,7 +401,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "galsaek",
     "en": "brown",
     "topic": "colors",
-    "visual": "word:color-brown"
+    "visual": "word:color-brown",
+    "glosses": {
+      "en": "brown",
+      "es": "marrón"
+    }
   },
   {
     "id": "vocab:hoesaek",
@@ -279,7 +413,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "hoesaek",
     "en": "gray",
     "topic": "colors",
-    "visual": "word:color-gray"
+    "visual": "word:color-gray",
+    "glosses": {
+      "en": "gray",
+      "es": "gris"
+    }
   },
   {
     "id": "vocab:hayansaek",
@@ -287,7 +425,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "hayansaek",
     "en": "white",
     "topic": "colors",
-    "visual": "word:color-white"
+    "visual": "word:color-white",
+    "glosses": {
+      "en": "white",
+      "es": "blanco"
+    }
   },
   {
     "id": "vocab:geomeunsaek",
@@ -295,7 +437,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "geomeunsaek",
     "en": "black",
     "topic": "colors",
-    "visual": "word:color-black"
+    "visual": "word:color-black",
+    "glosses": {
+      "en": "black",
+      "es": "negro"
+    }
   },
   {
     "id": "vocab:hana",
@@ -303,7 +449,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "hana",
     "en": "one",
     "topic": "numbers",
-    "visual": "word:count-1"
+    "visual": "word:count-1",
+    "glosses": {
+      "en": "one",
+      "es": "uno"
+    }
   },
   {
     "id": "vocab:dul",
@@ -311,7 +461,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "dul",
     "en": "two",
     "topic": "numbers",
-    "visual": "word:count-2"
+    "visual": "word:count-2",
+    "glosses": {
+      "en": "two",
+      "es": "dos"
+    }
   },
   {
     "id": "vocab:set",
@@ -319,7 +473,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "set",
     "en": "three",
     "topic": "numbers",
-    "visual": "word:count-3"
+    "visual": "word:count-3",
+    "glosses": {
+      "en": "three",
+      "es": "tres"
+    }
   },
   {
     "id": "vocab:net",
@@ -327,7 +485,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "net",
     "en": "four",
     "topic": "numbers",
-    "visual": "word:count-4"
+    "visual": "word:count-4",
+    "glosses": {
+      "en": "four",
+      "es": "cuatro"
+    }
   },
   {
     "id": "vocab:daseot",
@@ -335,7 +497,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "daseot",
     "en": "five",
     "topic": "numbers",
-    "visual": "word:count-5"
+    "visual": "word:count-5",
+    "glosses": {
+      "en": "five",
+      "es": "cinco"
+    }
   },
   {
     "id": "vocab:yeoseot",
@@ -343,7 +509,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "yeoseot",
     "en": "six",
     "topic": "numbers",
-    "visual": "word:count-6"
+    "visual": "word:count-6",
+    "glosses": {
+      "en": "six",
+      "es": "seis"
+    }
   },
   {
     "id": "vocab:ilgop",
@@ -351,7 +521,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "ilgop",
     "en": "seven",
     "topic": "numbers",
-    "visual": "word:count-7"
+    "visual": "word:count-7",
+    "glosses": {
+      "en": "seven",
+      "es": "siete"
+    }
   },
   {
     "id": "vocab:yeodeol",
@@ -359,7 +533,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "yeodeol",
     "en": "eight",
     "topic": "numbers",
-    "visual": "word:count-8"
+    "visual": "word:count-8",
+    "glosses": {
+      "en": "eight",
+      "es": "ocho"
+    }
   },
   {
     "id": "vocab:ahop",
@@ -367,7 +545,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "ahop",
     "en": "nine",
     "topic": "numbers",
-    "visual": "word:count-9"
+    "visual": "word:count-9",
+    "glosses": {
+      "en": "nine",
+      "es": "nueve"
+    }
   },
   {
     "id": "vocab:yeol-ten",
@@ -375,7 +557,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "yeol",
     "en": "ten",
     "topic": "numbers",
-    "visual": "word:count-10"
+    "visual": "word:count-10",
+    "glosses": {
+      "en": "ten",
+      "es": "diez"
+    }
   },
   {
     "id": "vocab:seumul",
@@ -383,7 +569,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "seumul",
     "en": "twenty",
     "topic": "numbers",
-    "visual": "word:count-20"
+    "visual": "word:count-20",
+    "glosses": {
+      "en": "twenty",
+      "es": "veinte"
+    }
   },
   {
     "id": "vocab:yeong-zero",
@@ -391,7 +581,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "yeong",
     "en": "zero",
     "topic": "numbers",
-    "visual": "word:count-0"
+    "visual": "word:count-0",
+    "glosses": {
+      "en": "zero",
+      "es": "cero"
+    }
   },
   {
     "id": "vocab:eomma",
@@ -399,7 +593,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "eomma",
     "en": "mom",
     "topic": "family",
-    "visual": "word:family-mom"
+    "visual": "word:family-mom",
+    "glosses": {
+      "en": "mom",
+      "es": "mamá"
+    }
   },
   {
     "id": "vocab:appa",
@@ -407,7 +605,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "appa",
     "en": "dad",
     "topic": "family",
-    "visual": "word:family-dad"
+    "visual": "word:family-dad",
+    "glosses": {
+      "en": "dad",
+      "es": "papá"
+    }
   },
   {
     "id": "vocab:halmeoni",
@@ -415,7 +617,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "halmeoni",
     "en": "grandmother",
     "topic": "family",
-    "visual": "word:family-grandma"
+    "visual": "word:family-grandma",
+    "glosses": {
+      "en": "grandmother",
+      "es": "abuela"
+    }
   },
   {
     "id": "vocab:harabeoji",
@@ -423,7 +629,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "harabeoji",
     "en": "grandfather",
     "topic": "family",
-    "visual": "word:family-grandpa"
+    "visual": "word:family-grandpa",
+    "glosses": {
+      "en": "grandfather",
+      "es": "abuelo"
+    }
   },
   {
     "id": "vocab:eonni",
@@ -431,7 +641,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "eonni",
     "en": "older sister (said by a woman or girl)",
     "topic": "family",
-    "visual": "word:family-eonni"
+    "visual": "word:family-eonni",
+    "glosses": {
+      "en": "older sister (said by a woman or girl)",
+      "es": "hermana mayor (lo dice una mujer o niña)"
+    }
   },
   {
     "id": "vocab:nuna",
@@ -439,7 +653,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "nuna",
     "en": "older sister (said by a man or boy)",
     "topic": "family",
-    "visual": "word:family-nuna"
+    "visual": "word:family-nuna",
+    "glosses": {
+      "en": "older sister (said by a man or boy)",
+      "es": "hermana mayor (lo dice un hombre o niño)"
+    }
   },
   {
     "id": "vocab:oppa",
@@ -447,7 +665,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "oppa",
     "en": "older brother (said by a woman or girl)",
     "topic": "family",
-    "visual": "word:family-oppa"
+    "visual": "word:family-oppa",
+    "glosses": {
+      "en": "older brother (said by a woman or girl)",
+      "es": "hermano mayor (lo dice una mujer o niña)"
+    }
   },
   {
     "id": "vocab:hyeong",
@@ -455,7 +677,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "hyeong",
     "en": "older brother (said by a man or boy)",
     "topic": "family",
-    "visual": "word:family-hyeong"
+    "visual": "word:family-hyeong",
+    "glosses": {
+      "en": "older brother (said by a man or boy)",
+      "es": "hermano mayor (lo dice un hombre o niño)"
+    }
   },
   {
     "id": "vocab:dongsaeng",
@@ -463,7 +689,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "dongsaeng",
     "en": "younger brother or sister",
     "topic": "family",
-    "visual": "word:family-dongsaeng"
+    "visual": "word:family-dongsaeng",
+    "glosses": {
+      "en": "younger brother or sister",
+      "es": "hermano o hermana menor"
+    }
   },
   {
     "id": "vocab:agi",
@@ -471,7 +701,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "agi",
     "en": "baby",
     "topic": "family",
-    "visual": "word:family-baby"
+    "visual": "word:family-baby",
+    "glosses": {
+      "en": "baby",
+      "es": "bebé"
+    }
   },
   {
     "id": "vocab:gajok",
@@ -479,7 +713,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "gajok",
     "en": "family",
     "topic": "family",
-    "visual": "word:family-family"
+    "visual": "word:family-family",
+    "glosses": {
+      "en": "family",
+      "es": "familia"
+    }
   },
   {
     "id": "vocab:na",
@@ -487,7 +725,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "na",
     "en": "I, me",
     "topic": "family",
-    "visual": "word:family-me"
+    "visual": "word:family-me",
+    "glosses": {
+      "en": "I, me",
+      "es": "yo, mí"
+    }
   },
   {
     "id": "vocab:hakgyo",
@@ -495,7 +737,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "hakgyo",
     "en": "school",
     "topic": "school",
-    "visual": "word:school-school"
+    "visual": "word:school-school",
+    "glosses": {
+      "en": "school",
+      "es": "escuela"
+    }
   },
   {
     "id": "vocab:seonsaengnim",
@@ -503,7 +749,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "seonsaengnim",
     "en": "teacher",
     "topic": "school",
-    "visual": "word:school-teacher"
+    "visual": "word:school-teacher",
+    "glosses": {
+      "en": "teacher",
+      "es": "maestro o maestra"
+    }
   },
   {
     "id": "vocab:chingu",
@@ -511,7 +761,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "chingu",
     "en": "friend",
     "topic": "school",
-    "visual": "word:school-friend"
+    "visual": "word:school-friend",
+    "glosses": {
+      "en": "friend",
+      "es": "amigo o amiga"
+    }
   },
   {
     "id": "vocab:chaek",
@@ -519,7 +773,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "chaek",
     "en": "book",
     "topic": "school",
-    "visual": "card:book"
+    "visual": "card:book",
+    "glosses": {
+      "en": "book",
+      "es": "libro"
+    }
   },
   {
     "id": "vocab:yeonpil",
@@ -527,7 +785,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "yeonpil",
     "en": "pencil",
     "topic": "school",
-    "visual": "word:school-pencil"
+    "visual": "word:school-pencil",
+    "glosses": {
+      "en": "pencil",
+      "es": "lápiz"
+    }
   },
   {
     "id": "vocab:gabang",
@@ -535,7 +797,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "gabang",
     "en": "bag",
     "topic": "school",
-    "visual": "word:school-bag"
+    "visual": "word:school-bag",
+    "glosses": {
+      "en": "bag",
+      "es": "bolsa o mochila"
+    }
   },
   {
     "id": "vocab:gongchaek",
@@ -543,7 +809,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "gongchaek",
     "en": "notebook",
     "topic": "school",
-    "visual": "word:school-notebook"
+    "visual": "word:school-notebook",
+    "glosses": {
+      "en": "notebook",
+      "es": "cuaderno"
+    }
   },
   {
     "id": "vocab:jiugae",
@@ -551,7 +821,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "jiugae",
     "en": "eraser",
     "topic": "school",
-    "visual": "word:school-eraser"
+    "visual": "word:school-eraser",
+    "glosses": {
+      "en": "eraser",
+      "es": "goma de borrar"
+    }
   },
   {
     "id": "vocab:chaeksang",
@@ -559,7 +833,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "chaeksang",
     "en": "desk",
     "topic": "school",
-    "visual": "word:school-desk"
+    "visual": "word:school-desk",
+    "glosses": {
+      "en": "desk",
+      "es": "escritorio"
+    }
   },
   {
     "id": "vocab:uija",
@@ -567,7 +845,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "uija",
     "en": "chair",
     "topic": "school",
-    "visual": "word:school-chair"
+    "visual": "word:school-chair",
+    "glosses": {
+      "en": "chair",
+      "es": "silla"
+    }
   },
   {
     "id": "vocab:gawi",
@@ -575,7 +857,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "gawi",
     "en": "scissors",
     "topic": "school",
-    "visual": "word:school-scissors"
+    "visual": "word:school-scissors",
+    "glosses": {
+      "en": "scissors",
+      "es": "tijeras"
+    }
   },
   {
     "id": "vocab:chilpan",
@@ -583,7 +869,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "chilpan",
     "en": "blackboard",
     "topic": "school",
-    "visual": "word:school-board"
+    "visual": "word:school-board",
+    "glosses": {
+      "en": "blackboard",
+      "es": "pizarrón"
+    }
   },
   {
     "id": "vocab:nun-eye",
@@ -591,7 +881,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "nun",
     "en": "eye",
     "topic": "body",
-    "visual": "word:body-eye"
+    "visual": "word:body-eye",
+    "glosses": {
+      "en": "eye",
+      "es": "ojo"
+    }
   },
   {
     "id": "vocab:ko",
@@ -599,7 +893,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "ko",
     "en": "nose",
     "topic": "body",
-    "visual": "word:body-nose"
+    "visual": "word:body-nose",
+    "glosses": {
+      "en": "nose",
+      "es": "nariz"
+    }
   },
   {
     "id": "vocab:ip",
@@ -607,7 +905,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "ip",
     "en": "mouth",
     "topic": "body",
-    "visual": "word:body-mouth"
+    "visual": "word:body-mouth",
+    "glosses": {
+      "en": "mouth",
+      "es": "boca"
+    }
   },
   {
     "id": "vocab:gwi",
@@ -615,7 +917,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "gwi",
     "en": "ear",
     "topic": "body",
-    "visual": "word:body-ear"
+    "visual": "word:body-ear",
+    "glosses": {
+      "en": "ear",
+      "es": "oreja"
+    }
   },
   {
     "id": "vocab:meori",
@@ -623,7 +929,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "meori",
     "en": "head",
     "topic": "body",
-    "visual": "word:body-head"
+    "visual": "word:body-head",
+    "glosses": {
+      "en": "head",
+      "es": "cabeza"
+    }
   },
   {
     "id": "vocab:eolgul",
@@ -631,7 +941,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "eolgul",
     "en": "face",
     "topic": "body",
-    "visual": "word:body-face"
+    "visual": "word:body-face",
+    "glosses": {
+      "en": "face",
+      "es": "cara"
+    }
   },
   {
     "id": "vocab:son",
@@ -639,7 +953,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "son",
     "en": "hand",
     "topic": "body",
-    "visual": "word:body-hand"
+    "visual": "word:body-hand",
+    "glosses": {
+      "en": "hand",
+      "es": "mano"
+    }
   },
   {
     "id": "vocab:pal-arm",
@@ -647,7 +965,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "pal",
     "en": "arm",
     "topic": "body",
-    "visual": "word:body-arm"
+    "visual": "word:body-arm",
+    "glosses": {
+      "en": "arm",
+      "es": "brazo"
+    }
   },
   {
     "id": "vocab:dari-leg",
@@ -655,7 +977,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "dari",
     "en": "leg",
     "topic": "body",
-    "visual": "word:body-leg"
+    "visual": "word:body-leg",
+    "glosses": {
+      "en": "leg",
+      "es": "pierna"
+    }
   },
   {
     "id": "vocab:bal",
@@ -663,7 +989,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "bal",
     "en": "foot",
     "topic": "body",
-    "visual": "word:body-foot"
+    "visual": "word:body-foot",
+    "glosses": {
+      "en": "foot",
+      "es": "pie"
+    }
   },
   {
     "id": "vocab:bae-belly",
@@ -671,7 +1001,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "bae",
     "en": "belly",
     "topic": "body",
-    "visual": "word:body-belly"
+    "visual": "word:body-belly",
+    "glosses": {
+      "en": "belly",
+      "es": "barriga"
+    }
   },
   {
     "id": "vocab:i-tooth",
@@ -679,7 +1013,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "i",
     "en": "tooth",
     "topic": "body",
-    "visual": "word:body-tooth"
+    "visual": "word:body-tooth",
+    "glosses": {
+      "en": "tooth",
+      "es": "diente"
+    }
   },
   {
     "id": "vocab:san",
@@ -687,7 +1025,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "san",
     "en": "mountain",
     "topic": "nature",
-    "visual": "card:mountain"
+    "visual": "card:mountain",
+    "glosses": {
+      "en": "mountain",
+      "es": "montaña"
+    }
   },
   {
     "id": "vocab:bada",
@@ -695,7 +1037,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "bada",
     "en": "sea",
     "topic": "nature",
-    "visual": "card:sea"
+    "visual": "card:sea",
+    "glosses": {
+      "en": "sea",
+      "es": "mar"
+    }
   },
   {
     "id": "vocab:haneul",
@@ -703,7 +1049,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "haneul",
     "en": "sky",
     "topic": "nature",
-    "visual": "word:nature-sky"
+    "visual": "word:nature-sky",
+    "glosses": {
+      "en": "sky",
+      "es": "cielo"
+    }
   },
   {
     "id": "vocab:hae-sun",
@@ -711,7 +1061,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "hae",
     "en": "sun",
     "topic": "nature",
-    "visual": "word:nature-sun"
+    "visual": "word:nature-sun",
+    "glosses": {
+      "en": "sun",
+      "es": "sol"
+    }
   },
   {
     "id": "vocab:dal-moon",
@@ -719,7 +1073,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "dal",
     "en": "moon",
     "topic": "nature",
-    "visual": "card:moon"
+    "visual": "card:moon",
+    "glosses": {
+      "en": "moon",
+      "es": "luna"
+    }
   },
   {
     "id": "vocab:byeol",
@@ -727,7 +1085,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "byeol",
     "en": "star",
     "topic": "nature",
-    "visual": "word:nature-star"
+    "visual": "word:nature-star",
+    "glosses": {
+      "en": "star",
+      "es": "estrella"
+    }
   },
   {
     "id": "vocab:namu",
@@ -735,7 +1097,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "namu",
     "en": "tree",
     "topic": "nature",
-    "visual": "word:nature-tree"
+    "visual": "word:nature-tree",
+    "glosses": {
+      "en": "tree",
+      "es": "árbol"
+    }
   },
   {
     "id": "vocab:kkot",
@@ -743,7 +1109,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "kkot",
     "en": "flower",
     "topic": "nature",
-    "visual": "word:nature-flower"
+    "visual": "word:nature-flower",
+    "glosses": {
+      "en": "flower",
+      "es": "flor"
+    }
   },
   {
     "id": "vocab:bi-rain",
@@ -751,7 +1121,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "bi",
     "en": "rain",
     "topic": "nature",
-    "visual": "word:nature-rain"
+    "visual": "word:nature-rain",
+    "glosses": {
+      "en": "rain",
+      "es": "lluvia"
+    }
   },
   {
     "id": "vocab:nun-snow",
@@ -759,7 +1133,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "nun",
     "en": "snow",
     "topic": "nature",
-    "visual": "word:nature-snow"
+    "visual": "word:nature-snow",
+    "glosses": {
+      "en": "snow",
+      "es": "nieve"
+    }
   },
   {
     "id": "vocab:gang",
@@ -767,7 +1145,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "gang",
     "en": "river",
     "topic": "nature",
-    "visual": "word:nature-river"
+    "visual": "word:nature-river",
+    "glosses": {
+      "en": "river",
+      "es": "río"
+    }
   },
   {
     "id": "vocab:gureum",
@@ -775,7 +1157,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "gureum",
     "en": "cloud",
     "topic": "nature",
-    "visual": "word:nature-cloud"
+    "visual": "word:nature-cloud",
+    "glosses": {
+      "en": "cloud",
+      "es": "nube"
+    }
   },
   {
     "id": "vocab:bihaenggi",
@@ -783,7 +1169,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "bihaenggi",
     "en": "airplane",
     "topic": "travel",
-    "visual": "word:travel-airplane"
+    "visual": "word:travel-airplane",
+    "glosses": {
+      "en": "airplane",
+      "es": "avión"
+    }
   },
   {
     "id": "vocab:gicha",
@@ -791,7 +1181,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "gicha",
     "en": "train",
     "topic": "travel",
-    "visual": "word:travel-train"
+    "visual": "word:travel-train",
+    "glosses": {
+      "en": "train",
+      "es": "tren"
+    }
   },
   {
     "id": "vocab:beoseu",
@@ -799,7 +1193,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "beoseu",
     "en": "bus",
     "topic": "travel",
-    "visual": "word:travel-bus"
+    "visual": "word:travel-bus",
+    "glosses": {
+      "en": "bus",
+      "es": "autobús"
+    }
   },
   {
     "id": "vocab:taeksi",
@@ -807,7 +1205,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "taeksi",
     "en": "taxi",
     "topic": "travel",
-    "visual": "word:travel-taxi"
+    "visual": "word:travel-taxi",
+    "glosses": {
+      "en": "taxi",
+      "es": "taxi"
+    }
   },
   {
     "id": "vocab:jihacheol",
@@ -815,7 +1217,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "jihacheol",
     "en": "subway",
     "topic": "travel",
-    "visual": "word:travel-subway"
+    "visual": "word:travel-subway",
+    "glosses": {
+      "en": "subway",
+      "es": "metro"
+    }
   },
   {
     "id": "vocab:jadongcha",
@@ -823,7 +1229,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "jadongcha",
     "en": "car",
     "topic": "travel",
-    "visual": "word:travel-car"
+    "visual": "word:travel-car",
+    "glosses": {
+      "en": "car",
+      "es": "automóvil"
+    }
   },
   {
     "id": "vocab:bae-boat",
@@ -831,7 +1241,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "bae",
     "en": "boat",
     "topic": "travel",
-    "visual": "word:travel-boat"
+    "visual": "word:travel-boat",
+    "glosses": {
+      "en": "boat",
+      "es": "barco"
+    }
   },
   {
     "id": "vocab:jido",
@@ -839,7 +1253,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "jido",
     "en": "map",
     "topic": "travel",
-    "visual": "word:travel-map"
+    "visual": "word:travel-map",
+    "glosses": {
+      "en": "map",
+      "es": "mapa"
+    }
   },
   {
     "id": "vocab:yeogwon",
@@ -847,7 +1265,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "yeogwon",
     "en": "passport",
     "topic": "travel",
-    "visual": "word:travel-passport"
+    "visual": "word:travel-passport",
+    "glosses": {
+      "en": "passport",
+      "es": "pasaporte"
+    }
   },
   {
     "id": "vocab:pyo-ticket",
@@ -855,7 +1277,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "pyo",
     "en": "ticket",
     "topic": "travel",
-    "visual": "word:travel-ticket"
+    "visual": "word:travel-ticket",
+    "glosses": {
+      "en": "ticket",
+      "es": "boleto"
+    }
   },
   {
     "id": "vocab:gonghang",
@@ -863,7 +1289,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "gonghang",
     "en": "airport",
     "topic": "travel",
-    "visual": "word:travel-airport"
+    "visual": "word:travel-airport",
+    "glosses": {
+      "en": "airport",
+      "es": "aeropuerto"
+    }
   },
   {
     "id": "vocab:hotel",
@@ -871,7 +1301,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "hotel",
     "en": "hotel",
     "topic": "travel",
-    "visual": "word:travel-hotel"
+    "visual": "word:travel-hotel",
+    "glosses": {
+      "en": "hotel",
+      "es": "hotel"
+    }
   },
   {
     "id": "vocab:chukgu",
@@ -879,7 +1313,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "chukgu",
     "en": "soccer (football)",
     "topic": "sports",
-    "visual": "word:sport-soccer"
+    "visual": "word:sport-soccer",
+    "glosses": {
+      "en": "soccer (football)",
+      "es": "fútbol"
+    }
   },
   {
     "id": "vocab:yagu",
@@ -887,7 +1325,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "yagu",
     "en": "baseball",
     "topic": "sports",
-    "visual": "word:sport-baseball"
+    "visual": "word:sport-baseball",
+    "glosses": {
+      "en": "baseball",
+      "es": "béisbol"
+    }
   },
   {
     "id": "vocab:nonggu",
@@ -895,7 +1337,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "nonggu",
     "en": "basketball",
     "topic": "sports",
-    "visual": "word:sport-basketball"
+    "visual": "word:sport-basketball",
+    "glosses": {
+      "en": "basketball",
+      "es": "baloncesto"
+    }
   },
   {
     "id": "vocab:baegu",
@@ -903,7 +1349,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "baegu",
     "en": "volleyball",
     "topic": "sports",
-    "visual": "word:sport-volleyball"
+    "visual": "word:sport-volleyball",
+    "glosses": {
+      "en": "volleyball",
+      "es": "voleibol"
+    }
   },
   {
     "id": "vocab:takgu",
@@ -911,7 +1361,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "takgu",
     "en": "table tennis",
     "topic": "sports",
-    "visual": "word:sport-tabletennis"
+    "visual": "word:sport-tabletennis",
+    "glosses": {
+      "en": "table tennis",
+      "es": "tenis de mesa"
+    }
   },
   {
     "id": "vocab:suyeong",
@@ -919,7 +1373,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "suyeong",
     "en": "swimming",
     "topic": "sports",
-    "visual": "word:sport-swimming"
+    "visual": "word:sport-swimming",
+    "glosses": {
+      "en": "swimming",
+      "es": "natación"
+    }
   },
   {
     "id": "vocab:taegwondo",
@@ -927,7 +1385,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "taegwondo",
     "en": "taekwondo",
     "topic": "sports",
-    "visual": "word:sport-taekwondo"
+    "visual": "word:sport-taekwondo",
+    "glosses": {
+      "en": "taekwondo",
+      "es": "taekwondo"
+    }
   },
   {
     "id": "vocab:dalligi",
@@ -935,7 +1397,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "dalligi",
     "en": "running",
     "topic": "sports",
-    "visual": "word:sport-running"
+    "visual": "word:sport-running",
+    "glosses": {
+      "en": "running",
+      "es": "correr"
+    }
   },
   {
     "id": "vocab:julleomgi",
@@ -943,7 +1409,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "julleomgi",
     "en": "jump rope",
     "topic": "sports",
-    "visual": "word:sport-jumprope"
+    "visual": "word:sport-jumprope",
+    "glosses": {
+      "en": "jump rope",
+      "es": "saltar la cuerda"
+    }
   },
   {
     "id": "vocab:jajeongeo",
@@ -951,7 +1421,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "jajeongeo",
     "en": "bicycle",
     "topic": "sports",
-    "visual": "word:sport-bicycle"
+    "visual": "word:sport-bicycle",
+    "glosses": {
+      "en": "bicycle",
+      "es": "bicicleta"
+    }
   },
   {
     "id": "vocab:seuki",
@@ -959,7 +1433,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "seuki",
     "en": "skiing",
     "topic": "sports",
-    "visual": "word:sport-skiing"
+    "visual": "word:sport-skiing",
+    "glosses": {
+      "en": "skiing",
+      "es": "esquí"
+    }
   },
   {
     "id": "vocab:gong-ball",
@@ -967,7 +1445,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "gong",
     "en": "ball",
     "topic": "sports",
-    "visual": "word:sport-ball"
+    "visual": "word:sport-ball",
+    "glosses": {
+      "en": "ball",
+      "es": "pelota"
+    }
   },
   {
     "id": "vocab:hanbok",
@@ -975,7 +1457,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "hanbok",
     "en": "hanbok (traditional clothes)",
     "topic": "k-culture",
-    "visual": "card:hanbok"
+    "visual": "card:hanbok",
+    "glosses": {
+      "en": "hanbok (traditional clothes)",
+      "es": "hanbok (ropa tradicional)"
+    }
   },
   {
     "id": "vocab:hangeul",
@@ -983,7 +1469,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "hangeul",
     "en": "Hangul (the Korean alphabet)",
     "topic": "k-culture",
-    "visual": "word:culture-hangul"
+    "visual": "word:culture-hangul",
+    "glosses": {
+      "en": "Hangul (the Korean alphabet)",
+      "es": "hangul (el alfabeto coreano)"
+    }
   },
   {
     "id": "vocab:hanok",
@@ -991,7 +1481,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "hanok",
     "en": "hanok (traditional house)",
     "topic": "k-culture",
-    "visual": "word:culture-hanok"
+    "visual": "word:culture-hanok",
+    "glosses": {
+      "en": "hanok (traditional house)",
+      "es": "hanok (casa tradicional)"
+    }
   },
   {
     "id": "vocab:bibimbap",
@@ -999,7 +1493,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "bibimbap",
     "en": "bibimbap (mixed rice bowl)",
     "topic": "k-culture",
-    "visual": "word:culture-bibimbap"
+    "visual": "word:culture-bibimbap",
+    "glosses": {
+      "en": "bibimbap (mixed rice bowl)",
+      "es": "bibimbap (tazón de arroz mixto)"
+    }
   },
   {
     "id": "vocab:tteokbokki",
@@ -1007,7 +1505,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "tteokbokki",
     "en": "tteokbokki (spicy rice cakes)",
     "topic": "k-culture",
-    "visual": "word:culture-tteokbokki"
+    "visual": "word:culture-tteokbokki",
+    "glosses": {
+      "en": "tteokbokki (spicy rice cakes)",
+      "es": "tteokbokki (pasteles de arroz picantes)"
+    }
   },
   {
     "id": "vocab:seollal",
@@ -1015,7 +1517,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "seollal",
     "en": "Lunar New Year",
     "topic": "k-culture",
-    "visual": "card:seollal"
+    "visual": "card:seollal",
+    "glosses": {
+      "en": "Lunar New Year",
+      "es": "Año Nuevo lunar"
+    }
   },
   {
     "id": "vocab:chuseok",
@@ -1023,7 +1529,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "chuseok",
     "en": "Chuseok (harvest festival)",
     "topic": "k-culture",
-    "visual": "card:chuseok"
+    "visual": "card:chuseok",
+    "glosses": {
+      "en": "Chuseok (harvest festival)",
+      "es": "Chuseok (fiesta de la cosecha)"
+    }
   },
   {
     "id": "vocab:yunnori",
@@ -1031,7 +1541,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "yunnori",
     "en": "yut game (board game with sticks)",
     "topic": "k-culture",
-    "visual": "card:yutnori"
+    "visual": "card:yutnori",
+    "glosses": {
+      "en": "yut game (board game with sticks)",
+      "es": "juego de yut (tablero y palitos)"
+    }
   },
   {
     "id": "vocab:gayageum",
@@ -1039,7 +1553,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "gayageum",
     "en": "gayageum (Korean zither)",
     "topic": "k-culture",
-    "visual": "card:gayageum"
+    "visual": "card:gayageum",
+    "glosses": {
+      "en": "gayageum (Korean zither)",
+      "es": "gayageum (cítara coreana)"
+    }
   },
   {
     "id": "vocab:norae",
@@ -1047,7 +1565,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "norae",
     "en": "song",
     "topic": "k-culture",
-    "visual": "word:culture-song"
+    "visual": "word:culture-song",
+    "glosses": {
+      "en": "song",
+      "es": "canción"
+    }
   },
   {
     "id": "vocab:chum",
@@ -1055,7 +1577,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "chum",
     "en": "dance",
     "topic": "k-culture",
-    "visual": "word:culture-dance"
+    "visual": "word:culture-dance",
+    "glosses": {
+      "en": "dance",
+      "es": "baile"
+    }
   },
   {
     "id": "vocab:deurama",
@@ -1063,7 +1589,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "deurama",
     "en": "TV drama",
     "topic": "k-culture",
-    "visual": "word:culture-drama"
+    "visual": "word:culture-drama",
+    "glosses": {
+      "en": "TV drama",
+      "es": "serie de televisión"
+    }
   },
   {
     "id": "vocab:bul",
@@ -1071,7 +1601,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "bul",
     "en": "fire",
     "topic": "science",
-    "visual": "word:science-fire"
+    "visual": "word:science-fire",
+    "glosses": {
+      "en": "fire",
+      "es": "fuego"
+    }
   },
   {
     "id": "vocab:eoreum",
@@ -1079,7 +1613,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "eoreum",
     "en": "ice",
     "topic": "science",
-    "visual": "word:science-ice"
+    "visual": "word:science-ice",
+    "glosses": {
+      "en": "ice",
+      "es": "hielo"
+    }
   },
   {
     "id": "vocab:dol",
@@ -1087,7 +1625,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "dol",
     "en": "stone",
     "topic": "science",
-    "visual": "word:science-stone"
+    "visual": "word:science-stone",
+    "glosses": {
+      "en": "stone",
+      "es": "piedra"
+    }
   },
   {
     "id": "vocab:jaseok",
@@ -1095,7 +1637,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "jaseok",
     "en": "magnet",
     "topic": "science",
-    "visual": "word:science-magnet"
+    "visual": "word:science-magnet",
+    "glosses": {
+      "en": "magnet",
+      "es": "imán"
+    }
   },
   {
     "id": "vocab:jigu",
@@ -1103,7 +1649,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "jigu",
     "en": "Earth",
     "topic": "science",
-    "visual": "word:science-earth"
+    "visual": "word:science-earth",
+    "glosses": {
+      "en": "Earth",
+      "es": "Tierra"
+    }
   },
   {
     "id": "vocab:uju",
@@ -1111,7 +1661,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "uju",
     "en": "outer space",
     "topic": "science",
-    "visual": "word:science-space"
+    "visual": "word:science-space",
+    "glosses": {
+      "en": "outer space",
+      "es": "espacio exterior"
+    }
   },
   {
     "id": "vocab:robot",
@@ -1119,7 +1673,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "robot",
     "en": "robot",
     "topic": "science",
-    "visual": "word:science-robot"
+    "visual": "word:science-robot",
+    "glosses": {
+      "en": "robot",
+      "es": "robot"
+    }
   },
   {
     "id": "vocab:ssiat",
@@ -1127,7 +1685,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "ssiat",
     "en": "seed",
     "topic": "science",
-    "visual": "word:science-seed"
+    "visual": "word:science-seed",
+    "glosses": {
+      "en": "seed",
+      "es": "semilla"
+    }
   },
   {
     "id": "vocab:mujigae",
@@ -1135,7 +1697,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "mujigae",
     "en": "rainbow",
     "topic": "science",
-    "visual": "word:science-rainbow"
+    "visual": "word:science-rainbow",
+    "glosses": {
+      "en": "rainbow",
+      "es": "arcoíris"
+    }
   },
   {
     "id": "vocab:geurimja",
@@ -1143,7 +1709,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "geurimja",
     "en": "shadow",
     "topic": "science",
-    "visual": "word:science-shadow"
+    "visual": "word:science-shadow",
+    "glosses": {
+      "en": "shadow",
+      "es": "sombra"
+    }
   },
   {
     "id": "vocab:baram",
@@ -1151,7 +1721,11 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "baram",
     "en": "wind",
     "topic": "science",
-    "visual": "word:science-wind"
+    "visual": "word:science-wind",
+    "glosses": {
+      "en": "wind",
+      "es": "viento"
+    }
   },
   {
     "id": "vocab:bit",
@@ -1159,6 +1733,10 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "romanization": "bit",
     "en": "light",
     "topic": "science",
-    "visual": "word:science-light"
+    "visual": "word:science-light",
+    "glosses": {
+      "en": "light",
+      "es": "luz"
+    }
   }
 ];

@@ -1,4 +1,4 @@
-import type { TeacherVisibleSummaryKey } from '@hangul-route/content-schema';
+import type { TeacherVisibleSummaryKey, VocabSummary } from '@hangul-route/content-schema';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { createConsoleApi, type RosterLearner } from '../api';
 
@@ -6,8 +6,11 @@ const json = (status: number, body: unknown) => new Response(JSON.stringify(body
 const space = { id: 'space:c', kind: 'class', name: 'A', parentSpaceId: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt: null, createdAt: 't' };
 
 describe('console api (F-CONSOLE-001)', () => {
-  it('types roster summaries as the teacher allow-list plus a family\'s own-route counts and Learning Route goal: no stage1Anchor, no schemaVersion (F-SPACE-002 T-1a, F-PLAN-002 section 3.10, Learning Route LR-W1)', () => {
-    expectTypeOf<keyof NonNullable<RosterLearner['summary']>>().toEqualTypeOf<TeacherVisibleSummaryKey | 'selfRoute' | 'routeGoal'>();
+  it('types roster summaries as the teacher allow-list plus a family\'s own-route counts, Learning Route goal and an optional vocab: no stage1Anchor, no schemaVersion (F-SPACE-002 T-1a, F-PLAN-002 section 3.10, Learning Route LR-W1, F-VOC-005 P-4)', () => {
+    expectTypeOf<keyof NonNullable<RosterLearner['summary']>>().toEqualTypeOf<TeacherVisibleSummaryKey | 'selfRoute' | 'routeGoal' | 'vocab'>();
+    // Optional: the console shows word lines only when a roster carries it (vocab stays on the hidden list).
+    // Without firstTryRate: the rate is a student's detail view only, never a roster's (section 3.8, P-4b).
+    expectTypeOf<NonNullable<RosterLearner['summary']>['vocab']>().toEqualTypeOf<Omit<VocabSummary, 'firstTryRate'> | undefined>();
     expectTypeOf<NonNullable<RosterLearner['summary']>['selfRoute']>().toEqualTypeOf<{ done: number; total: number; notReady: number; weeks: number; endsOn: string } | undefined>();
     // Optional: only a family roster carries it, and only from a device on a build that writes it (LR-6).
     expectTypeOf<NonNullable<RosterLearner['summary']>['routeGoal']>().toEqualTypeOf<{ stage: string; from: 'class' | 'school' | 'family' | 'self' | 'default' } | undefined>();
@@ -166,5 +169,97 @@ describe('console api — token provider (F-AUTH-002)', () => {
     expect(await api.listSpaces()).toEqual({ ok: false, error: 'unauthorized', status: 401 });
     expect(await api.listSpaces()).toEqual({ ok: false, error: 'unauthorized', status: 401 });
     expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('console api — billing (F-BILL-002 B-7)', () => {
+  const card = { spaceId: 'space:fam', kind: 'family', name: 'Kim family', role: 'owner', archived: false, payer: true, readOnlyReason: null, coverage: { state: 'free' }, usage: { learners: 1, learnerCap: 5, teachers: null, teacherCap: null }, actions: { buy: 'family_lifetime', manage: false, contact: false }, receipts: [], hasReceipts: false, legacyNoHistory: false };
+  const receipt = { id: 'bev:r1', kind: 'purchase', planKey: 'family_lifetime', amountCents: 1530, currency: 'usd', livemode: false, occurredAt: '2026-10-01T00:00:00.000Z', hasReceipt: true };
+  /** Clerk's reverification hint plus our code, as the Worker answers a stale sign-in (B-5). */
+  const hint = { clerk_error: { type: 'forbidden', reason: 'reverification-error', metadata: { reverification: { level: 'first_factor', afterMinutes: 10 } } }, ok: false, error: { code: 'reverify_required', message: 'Confirm it is you to continue' } };
+
+  it('reads the summary leniently, and polls with ?poll=1', async () => {
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(200, { data: { mode: 'test', purchasesOpen: true, cards: [card, { ...card, spaceId: 'space:new', coverage: { state: 'someday' } }], account: [], extra: 1 } }))
+      .mockResolvedValueOnce(json(200, { data: { mode: 'quantum', purchasesOpen: true, cards: [], account: [] } }))
+      .mockResolvedValueOnce(json(200, { data: { cards: 'nope' } }))
+      .mockResolvedValueOnce(json(401, {}));
+    const api = createConsoleApi({ endpoint: 'https://api.example.com', token: 't', fetchImpl });
+    // A card this build cannot read is dropped and its siblings stay (parseBillingSummary).
+    expect(await api.billingSummary()).toEqual({ ok: true, data: { mode: 'test', purchasesOpen: true, cards: [card], account: [] } });
+    expect(await api.billingSummary({ poll: true })).toEqual({ ok: true, data: { mode: 'none', purchasesOpen: true, cards: [], account: [] } });
+    expect(await api.billingSummary()).toEqual({ ok: false, error: 'unknown', status: 200, code: 'unreadable_summary' });
+    expect(await api.billingSummary()).toEqual({ ok: false, error: 'unauthorized', status: 401 });
+    expect(fetchImpl.mock.calls.map((c) => c[0])).toEqual([
+      'https://api.example.com/api/billing/summary',
+      'https://api.example.com/api/billing/summary?poll=1',
+      'https://api.example.com/api/billing/summary',
+      'https://api.example.com/api/billing/summary',
+    ]);
+    expect((fetchImpl.mock.calls[0]?.[1] as RequestInit).method).toBe('GET');
+  });
+
+  it('a summary whose every card and account row this build cannot read is unreadable, never the empty state', async () => {
+    const unknownCard = { ...card, coverage: { state: 'someday' } };
+    const unknownAccount = { coverage: { state: 'someday' }, actions: { manage: true }, receipts: [], legacyNoHistory: false };
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(200, { data: { mode: 'test', purchasesOpen: true, cards: [unknownCard, { ...unknownCard, spaceId: 'space:two' }], account: [] } }))
+      .mockResolvedValueOnce(json(200, { data: { mode: 'test', purchasesOpen: true, cards: [], account: [unknownAccount] } }))
+      .mockResolvedValueOnce(json(200, { data: { mode: 'test', purchasesOpen: true, cards: [], account: [] } }));
+    const api = createConsoleApi({ endpoint: 'https://api.example.com', token: 't', fetchImpl });
+    expect(await api.billingSummary()).toEqual({ ok: false, error: 'unknown', status: 200, code: 'unreadable_summary' });
+    expect(await api.billingSummary()).toEqual({ ok: false, error: 'unknown', status: 200, code: 'unreadable_summary' });
+    // A real answer with no spaces is still the empty state.
+    expect(await api.billingSummary()).toEqual({ ok: true, data: { mode: 'test', purchasesOpen: true, cards: [], account: [] } });
+  });
+
+  it('lists one space receipts, dropping rows it cannot read', async () => {
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(200, { data: { spaceName: 'Kim family', receipts: [receipt, { ...receipt, id: 'bev:r2', kind: 'chargeback' }, { ...receipt, id: 'bev:r3', url: 'https://pay.stripe.com/x' }] } }))
+      .mockResolvedValueOnce(json(200, { data: { receipts: [] } }))
+      .mockResolvedValueOnce(json(403, { ok: false, error: { code: 'forbidden' } }))
+      .mockResolvedValueOnce(json(404, { ok: false, error: { code: 'not_found' } }));
+    const api = createConsoleApi({ endpoint: 'https://api.example.com', token: 't', fetchImpl });
+    expect(await api.receipts('space:fam')).toEqual({ ok: true, data: { spaceName: 'Kim family', receipts: [receipt, { ...receipt, id: 'bev:r3' }] } });
+    expect(await api.receipts('space:fam')).toEqual({ ok: false, error: 'unknown', status: 200, code: 'unreadable_receipts' });
+    expect(await api.receipts('space:cls')).toEqual({ ok: false, error: 'forbidden', status: 403, code: 'forbidden' });
+    expect(await api.receipts('space:nope')).toEqual({ ok: false, error: 'not_found', status: 404, code: 'not_found' });
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe('https://api.example.com/api/billing/receipts?id=space%3Afam');
+  });
+
+  it('asks for a fresh receipt link, and hands back the step-up hint so useReverification can act on it', async () => {
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(200, { data: { url: 'https://invoice.stripe.com/i/1' } }))
+      .mockResolvedValueOnce(json(403, hint))
+      .mockResolvedValueOnce(json(502, { ok: false, error: { code: 'receipt_unavailable' } }))
+      .mockResolvedValueOnce(json(503, { ok: false, error: { code: 'live_not_enabled' } }));
+    const api = createConsoleApi({ endpoint: 'https://api.example.com', token: 't', fetchImpl });
+    expect(await api.receiptLink('bev:r1')).toEqual({ ok: true, data: { url: 'https://invoice.stripe.com/i/1' } });
+    const refused = await api.receiptLink('bev:r1');
+    expect(refused).toEqual({ ok: false, error: 'forbidden', status: 403, code: 'reverify_required', clerk_error: hint.clerk_error });
+    expect(await api.receiptLink('bev:r1')).toEqual({ ok: false, error: 'unknown', status: 502, code: 'receipt_unavailable' });
+    expect(await api.receiptLink('bev:r1')).toEqual({ ok: false, error: 'unknown', status: 503, code: 'live_not_enabled' });
+    const [url, init] = fetchImpl.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('https://api.example.com/api/billing/receipt-link');
+    expect(init).toMatchObject({ method: 'POST', body: JSON.stringify({ id: 'bev:r1' }) });
+  });
+
+  it('accepts only an https receipt link: the page navigates a same-origin tab to it', async () => {
+    const bad = [{ url: 'javascript:alert(1)' }, { url: 'http://invoice.stripe.com/i/1' }, { url: 42 }, { url: 'not a url' }, {}];
+    const fetchImpl = vi.fn<typeof fetch>();
+    for (const data of bad) fetchImpl.mockResolvedValueOnce(json(200, { data }));
+    const api = createConsoleApi({ endpoint: 'https://api.example.com', token: 't', fetchImpl });
+    for (let i = 0; i < bad.length; i += 1) expect(await api.receiptLink('bev:r1')).toEqual({ ok: false, error: 'unknown', status: 200, code: 'unreadable_link' });
+  });
+
+  it('passes the hint through on checkout and portal too, and ignores a clerk_error that is not an object', async () => {
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(403, hint))
+      .mockResolvedValueOnce(json(403, hint))
+      .mockResolvedValueOnce(json(403, { clerk_error: 'x', error: { code: 'forbidden' } }));
+    const api = createConsoleApi({ endpoint: 'https://api.example.com', token: 't', fetchImpl });
+    expect(await api.checkout({ planKey: 'family_lifetime', subjectKind: 'space', subjectId: 'space:fam' })).toMatchObject({ ok: false, code: 'reverify_required', clerk_error: { reason: 'reverification-error' } });
+    expect(await api.portal({ subjectKind: 'space', subjectId: 'space:fam' })).toMatchObject({ ok: false, code: 'reverify_required', clerk_error: { type: 'forbidden' } });
+    expect(await api.portal({ subjectKind: 'space', subjectId: 'space:fam' })).toEqual({ ok: false, error: 'forbidden', status: 403, code: 'forbidden' });
   });
 });

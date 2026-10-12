@@ -30,6 +30,9 @@ import type { WordArtFamily } from '../types';
  * count (they left the map, so their full check is on) and the colour-swatch
  * objects of later families: `animal-bear` and `animal-elephant` (animal now
  * waits for 8) and `nature-flower` (nature waits for 7).
+ * Batch W-4 drew the other eight animals and registered the twelve body
+ * parts, so animal and body left the map.
+ * Batch W-5 drew family, school and nature, so they left the map.
  * Batch W-6 drew travel, sport, culture and science, so they left the map.
  */
 interface Awaiting {
@@ -39,13 +42,7 @@ interface Awaiting {
   missing?: number;
 }
 
-const AWAITING_ART: Readonly<Partial<Record<WordArtFamily, Awaiting>>> = {
-  animal: { batch: 'W-4', missing: 8 },
-  body: { batch: 'W-4', missing: 12 },
-  family: { batch: 'W-5', missing: 12 },
-  school: { batch: 'W-5', missing: 10 },
-  nature: { batch: 'W-5', missing: 7 },
-};
+const AWAITING_ART: Readonly<Partial<Record<WordArtFamily, Awaiting>>> = {};
 
 const VOCAB_DIR = join(__dirname, '..', '..', '..', '..', '..', 'content', 'vocab');
 

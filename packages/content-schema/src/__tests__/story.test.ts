@@ -100,8 +100,8 @@ describe('parseStory: valid fixtures', () => {
     const story = parseStory(readyJson);
     expect(story.shelf).toEqual({ category: 'story-time', order: 1, sampler: true, minutes: 4 });
     expect(story.pillarTags).toEqual(['A1']);
-    expect(story.card).toEqual({ titleEn: 'Hangul Day', keywordId: 'hangeullal', factId: 'f3' });
-    expect(story.rewardCardIds).toEqual({ listen: 'card:hanji', read: 'card:book' });
+    expect(story.card).toEqual({ titleEn: 'King Sejong', keywordId: 'sejong', factId: 'f3' });
+    expect(story.rewardCardIds).toEqual({ listen: 'card:story-hangul-day', read: 'card:book' });
     expect(story.errata[0]?.show).toBe(false);
   });
 

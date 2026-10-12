@@ -12,8 +12,9 @@ import { fullyVisible, nextPage } from './story-reader-helpers';
  *
  * `quest:story-hangul-day-listen` is intro, read, check, sequence, reward. The
  * suite skips the read step, so a run scores 3 check rounds + 4 sequence slots.
- * The fixture bundle holds one shelf story, so `nextStoryAfter` has nothing to
- * offer and the primary is Back home; the Next story choice is covered by the
+ * The fixture bundle holds one Story Time shelf story (its other shelf story is a
+ * Culture one, F-STORY-005 PR 5.5b), so `nextStoryAfter` has nothing to offer and
+ * the primary is Back home; the Next story choice is covered by the
  * unit tests of `nextStoryAfter` and `storyResultsExtras`.
  */
 
@@ -137,6 +138,46 @@ test.describe('story Results (fixture bundle)', () => {
     const body = await page.locator('body').innerText();
     expect(body).not.toMatch(/\d+\s*(%|\/\s*\d)/);
     expect(body).not.toMatch(EMOJI);
+    expect(errors).toEqual([]);
+  });
+
+  test('the story card names its source under its fact, on both faces, with no link (F-STORY-006 6.7)', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await onboard(page);
+    await playQuest(page);
+    await page.getByRole('button', { name: /^See my card/ }).click();
+    const flip = page.getByRole('button', { name: 'Tap to flip card to back' });
+    await expect(flip).toBeVisible();
+
+    // Front: the fact card under the flip card carries the claim and the full source line, where a
+    // screen reader reaches it (the flip card is one button).
+    // The fixture's first source is '문화재청 (Cultural Heritage Administration, heritage.go.kr)':
+    // the web address is dropped, and only the Hangul is marked Korean for a screen reader.
+    const SOURCE = 'Source: 문화재청 (Cultural Heritage Administration), Hangul Day';
+    await expect(page.getByText('Hangul Day is celebrated in South Korea on October 9.')).toBeVisible();
+    await expect(page.getByTestId('card-detail-citation')).toHaveText(SOURCE);
+    const korean = page.getByTestId('card-detail-citation').locator('[lang="ko"]');
+    await expect(korean).toHaveCount(1);
+    await expect(korean).toHaveText('문화재청');
+    await expect(page.getByTestId('card-detail-citation-more')).toHaveText('and 1 more source');
+    await expect(page.getByTestId('card-detail-citation')).not.toHaveAttribute('aria-label', /.*/);
+
+    // Back: the same line under the fact, cut at two lines, then the count.
+    await flip.click();
+    await expect(page.getByRole('button', { name: 'Tap to flip card to front' })).toBeVisible();
+    await expect(page.getByTestId('card-detail-citation')).toHaveCount(1);
+    await expect(page.getByTestId('card-detail-citation')).toHaveText(SOURCE);
+    await expect(page.getByTestId('card-detail-citation-more')).toHaveText('and 1 more source');
+
+    // Never a URL, a web address or a link on a learner surface.
+    const body = await page.locator('body').innerText();
+    expect(body).not.toMatch(/https?:\/\/|www\.|\b[a-z0-9-]+\.(?:go\.kr|kr|org|com|net|int)\b/i);
+    expect(body).not.toMatch(EMOJI);
+    for (const id of ['card-detail-citation', 'card-detail-citation-more']) {
+      await expect(page.getByTestId(id).locator('xpath=ancestor-or-self::a | descendant::a')).toHaveCount(0);
+      await expect(page.getByTestId(id).getByRole('link')).toHaveCount(0);
+    }
     expect(errors).toEqual([]);
   });
 

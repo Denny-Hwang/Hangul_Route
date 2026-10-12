@@ -34,8 +34,8 @@ Then: in one screen they read what it teaches (letters, words, skills, minutes, 
 │  Letters  ~~ ㄷ ~~ d  ~~ ㄴ ~~ n*│   * the focus letter marked (shape + label, not colour only)
 │  Words    ~~ 나 ~~ na  me        │   romanization + gloss in the UI language
 │  Skills   (Read) (Listen) (Write)│   never speaking
-│  Steps    Meet the letters ·     │   the player's own step names, in order
-│           Practice · Check · Card│
+│  Steps    Hello · Look and learn │   the player's own step names (questStepLabel), in order
+│           · Practice · Try it ...│
 │                                  │
 │ Where it sits                    │
 │  Stage 1 · Letters · lesson 2/3  │   a shelf story's quest: its story's home cell,
@@ -113,7 +113,7 @@ Exit to: `browse/preview-player` · `library/card-detail` · `story/sources` · 
 - **success, closed**: B; the facts are identical, only the action differs.
 - **focus letter not in this lesson** (resolver bug): the focus line is omitted, the page still renders.
 - **no card**: the card block is hidden.
-- **no words / no letters** (a story or a taste quest): the empty row is hidden, never "0 letters"; a taste quest shows its first three words.
+- **no words / no letters / no skills** (a story, a taste quest, any lesson that introduces no letter, or a Stage 2 lesson whose games map to no skill): the empty row is hidden, never "0 letters" or an empty "Skills"; on the outline a lesson with no letter shows its first three words (spec §4.6). A Build a Letter syllable that is a bundle word is listed under Words with its gloss; other blocks sit in a separate Syllables row (design `screens/browse/README.md`, decision 11).
 - **unknown id**: never renders; resolution sends the grown-up to `browse/home` with the "not in this version" line.
 - **error**: `OopsScreen` with [ Back ].
 

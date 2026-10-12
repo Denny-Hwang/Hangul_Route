@@ -146,6 +146,15 @@ export const TELEMETRY_EVENT_NAMES = [
   'billing.checkout_completed',
   'billing.payment_failed',
   'billing.refund_recorded',
+  // F-BILL-002 §10, B-5 (recorded by the Worker on checkout and portal; codes only: planKey, mode, promo flag, refusal reason)
+  'billing.checkout_started',
+  'billing.checkout_refused',
+  'billing.portal_opened',
+  // F-STORY-005 §3.11 (payload { stageKey, themeKey, stories, source }: keys, a count and a code only)
+  'journey.cell_stories_opened',
+  // F-BILL-002 §10, B-4 (recorded by the Worker on GET /api/billing/summary without poll=1 and GET /receipts; counts and the mode only)
+  'billing.summary_viewed',
+  'billing.receipts_viewed',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);

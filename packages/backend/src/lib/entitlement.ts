@@ -62,7 +62,12 @@ export interface SchoolLimits {
 
 /** What a school's licence allows — F-SCHOOL-001 §3.1. */
 export async function schoolLimits(db: Db, school: Space, now: Date): Promise<SchoolLimits> {
-  const active = (await db.entitlementsFor('space', school.id)).filter((e) => isEntitlementActive(e, now));
+  return schoolLimitsFrom(await db.entitlementsFor('space', school.id), now);
+}
+
+/** `schoolLimits` from rows already read (the school's own entitlement rows). */
+export function schoolLimitsFrom(rows: readonly Entitlement[], now: Date): SchoolLimits {
+  const active = rows.filter((e) => isEntitlementActive(e, now));
   const license = active.find((e) => e.planKey === 'group_license') ?? null;
   if (license) return { licensed: true, students: SCHOOL_LICENSE_STUDENTS, teachers: SCHOOL_LICENSE_TEACHERS, license };
   const seats = active.find((e) => e.planKey === 'school_seat') ?? null;
@@ -78,12 +83,20 @@ export interface SchoolUsage {
 /** Distinct learners and teaching accounts across a school's live classes. */
 export async function schoolUsage(db: Db, school: Space): Promise<SchoolUsage> {
   const classes = (await db.childSpaces(school.id)).filter((s) => s.kind === 'class' && !s.archivedAt);
+  const members = new Map<string, Membership[]>([[school.id, await db.membersOf(school.id)]]);
+  for (const cls of classes) members.set(cls.id, await db.membersOf(cls.id));
+  return schoolUsageFrom(school, classes, (spaceId) => members.get(spaceId) ?? []);
+}
+
+/** `schoolUsage` from reads already made: the school's child spaces and each space's memberships. */
+export function schoolUsageFrom(school: Space, children: readonly Space[], membersOf: (spaceId: string) => readonly Membership[]): SchoolUsage {
   const learners = new Set<string>();
   const teachers = new Set<string>();
-  for (const m of await db.membersOf(school.id)) if (m.memberKind === 'account' && m.role === 'teacher') teachers.add(m.memberId);
-  for (const cls of classes) {
+  for (const m of membersOf(school.id)) if (m.memberKind === 'account' && m.role === 'teacher') teachers.add(m.memberId);
+  for (const cls of children) {
+    if (cls.kind !== 'class' || cls.archivedAt || cls.parentSpaceId !== school.id) continue;
     if (cls.ownerAccountId !== school.ownerAccountId) teachers.add(cls.ownerAccountId);
-    for (const m of await db.membersOf(cls.id)) {
+    for (const m of membersOf(cls.id)) {
       if (m.memberKind === 'learner') learners.add(m.memberId);
       else if (m.role === 'teacher' && m.memberId !== school.ownerAccountId) teachers.add(m.memberId);
     }
@@ -153,8 +166,10 @@ export async function tierAfterMove(db: Db, learnerId: string, fromSpaceId: stri
   return tierFromSpaces(db, spaces, now);
 }
 
-/** Membership roles that make an account a grown-up of a space; `student` never counts. */
-const ADULT_ROLES: ReadonlySet<SpaceRole> = new Set(['owner', 'caregiver', 'teacher', 'admin']);
+/** A membership role that makes an account a grown-up of a space; `student` never counts. */
+export type AdultRole = Exclude<SpaceRole, 'student'>;
+const ADULT_ROLES: ReadonlySet<SpaceRole> = new Set<AdultRole>(['owner', 'caregiver', 'teacher', 'admin']);
+const isAdultRole = (role: SpaceRole): role is AdultRole => ADULT_ROLES.has(role);
 
 /**
  * One call's reads (D1 counts queries per invocation): the spaces are loaded
@@ -163,22 +178,72 @@ const ADULT_ROLES: ReadonlySet<SpaceRole> = new Set(['owner', 'caregiver', 'teac
  */
 interface CoverageReads {
   spaces: Map<string, Space>;
+  rowsFor: (spaceId: string) => Promise<Entitlement[]>;
   activeFor: (spaceId: string, planKeys: readonly Entitlement['planKey'][]) => Promise<boolean>;
 }
 
 function coverageReads(db: Db, spaces: readonly Space[], now: Date): CoverageReads {
   const rows = new Map<string, Promise<Entitlement[]>>();
+  const rowsFor = (spaceId: string): Promise<Entitlement[]> => {
+    let pending = rows.get(spaceId);
+    if (!pending) {
+      pending = db.entitlementsFor('space', spaceId);
+      rows.set(spaceId, pending);
+    }
+    return pending;
+  };
   return {
     spaces: new Map(spaces.map((s) => [s.id, s])),
-    activeFor: async (spaceId, planKeys) => {
-      let pending = rows.get(spaceId);
-      if (!pending) {
-        pending = db.entitlementsFor('space', spaceId);
-        rows.set(spaceId, pending);
-      }
-      return (await pending).some((e) => planKeys.includes(e.planKey) && isEntitlementActive(e, now));
-    },
+    rowsFor,
+    activeFor: async (spaceId, planKeys) => (await rowsFor(spaceId)).some((e) => planKeys.includes(e.planKey) && isEntitlementActive(e, now)),
   };
+}
+
+/** One space an account holds a grown-up membership in, with its parent school and whether the account pays for it. */
+export interface AdultSpace {
+  membership: Membership;
+  role: AdultRole;
+  space: Space;
+  parent: Space | null;
+  /** `space.manage`: the space's owner, and on a school also an admin (F-BILL-002 section 4.2). */
+  payer: boolean;
+}
+
+/** The spaces of `adultSpacesOf`, with the reads they were loaded through (rows cached per space). */
+export interface AdultSpaces extends Omit<CoverageReads, 'spaces'> {
+  memberships: Membership[];
+  entries: AdultSpace[];
+}
+
+/**
+ * Every space in which the account holds an `owner`, `caregiver`, `teacher` or
+ * `admin` membership (F-BILL-002 section 5.3's card set; learner memberships
+ * never count), archived ones included, in membership order. One
+ * `membershipsOf`, one `getSpaces` for the spaces and one for their parent
+ * schools; entitlement rows are read lazily, once per space. Shared by the
+ * browse rule (`adultCoveredAny`) and the billing summary.
+ */
+export async function adultSpacesOf(db: Db, accountId: string, now: Date): Promise<AdultSpaces> {
+  const memberships = await db.membershipsOf('account', accountId);
+  const adult = memberships.filter((m) => m.memberKind === 'account' && m.memberId === accountId && isAdultRole(m.role));
+  if (adult.length === 0) {
+    const reads = coverageReads(db, [], now);
+    return { memberships, entries: [], rowsFor: reads.rowsFor, activeFor: reads.activeFor };
+  }
+  const spaces = await db.getSpaces(adult.map((m) => m.spaceId));
+  const known = new Set(spaces.map((s) => s.id));
+  const parentIds = [...new Set(spaces.flatMap((s) => (s.parentSpaceId && !known.has(s.parentSpaceId) ? [s.parentSpaceId] : [])))];
+  const parents = parentIds.length > 0 ? await db.getSpaces(parentIds) : [];
+  const reads = coverageReads(db, [...spaces, ...parents], now);
+  const actor = { kind: 'account' as const, accountId, memberships };
+  const entries: AdultSpace[] = [];
+  for (const membership of adult) {
+    const space = reads.spaces.get(membership.spaceId);
+    if (!space || !isAdultRole(membership.role)) continue;
+    const parent = space.parentSpaceId ? (reads.spaces.get(space.parentSpaceId) ?? null) : null;
+    entries.push({ membership, role: membership.role, space, parent, payer: can(actor, 'space.manage', { kind: 'space', ctx: { space, parent } }) });
+  }
+  return { memberships, entries, rowsFor: reads.rowsFor, activeFor: reads.activeFor };
 }
 
 /**
@@ -190,12 +255,8 @@ function coverageReads(db: Db, spaces: readonly Space[], now: Date): CoverageRea
  * section 4.2) while it still holds an active group licence, as the billing
  * home keeps showing it to them.
  */
-async function adultSpaceCovered(reads: CoverageReads, accountId: string, memberships: Membership[], space: Space): Promise<boolean> {
-  const parent = space.parentSpaceId ? (reads.spaces.get(space.parentSpaceId) ?? null) : null;
-  if (space.archivedAt) {
-    const payer = can({ kind: 'account', accountId, memberships }, 'space.manage', { kind: 'space', ctx: { space, parent } });
-    return payer && (await reads.activeFor(space.id, ['group_license']));
-  }
+async function adultSpaceCovered(reads: Pick<AdultSpaces, 'activeFor'>, { space, parent, payer }: AdultSpace): Promise<boolean> {
+  if (space.archivedAt) return payer && (await reads.activeFor(space.id, ['group_license']));
   switch (space.kind) {
     case 'family':
       return reads.activeFor(space.id, ['family_lifetime']);
@@ -220,17 +281,9 @@ async function adultSpaceCovered(reads: CoverageReads, accountId: string, member
  */
 export async function adultCoveredAny(db: Db, accountId: string, now: Date): Promise<boolean> {
   if ((await db.entitlementsFor('account', accountId)).some((e) => isEntitlementActive(e, now))) return true;
-  const memberships = await db.membershipsOf('account', accountId);
-  const adult = memberships.filter((m) => m.memberKind === 'account' && m.memberId === accountId && ADULT_ROLES.has(m.role));
-  if (adult.length === 0) return false;
-  const spaces = await db.getSpaces(adult.map((m) => m.spaceId));
-  const known = new Set(spaces.map((s) => s.id));
-  const parentIds = [...new Set(spaces.flatMap((s) => (s.parentSpaceId && !known.has(s.parentSpaceId) ? [s.parentSpaceId] : [])))];
-  const parents = parentIds.length > 0 ? await db.getSpaces(parentIds) : [];
-  const reads = coverageReads(db, [...spaces, ...parents], now);
-  for (const m of adult) {
-    const space = reads.spaces.get(m.spaceId);
-    if (space && (await adultSpaceCovered(reads, accountId, memberships, space))) return true;
+  const adult = await adultSpacesOf(db, accountId, now);
+  for (const entry of adult.entries) {
+    if (await adultSpaceCovered(adult, entry)) return true;
   }
   return false;
 }

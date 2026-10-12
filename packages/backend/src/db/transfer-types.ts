@@ -12,6 +12,7 @@ import type {
   TransferSlot,
   TransferStatus,
 } from '@hangul-route/content-schema';
+import { noteRateKey } from './feedback-types';
 
 /*
  * Class transfer rows as the Worker sees them — F-SPACE-002 section 4.1 / 4.7
@@ -198,9 +199,12 @@ export const transferRateKey = {
   createLearner: (learnerId: string): string => `tcreate:learner:${learnerId}`,
 };
 
-/** Every counter key that names a learner: erased with the learner. */
+/**
+ * Every counter key that names a learner: erased with the learner. The `note:pair:<learnerId>:*` keys
+ * (one per sender) are erased by their prefix, `notePairPrefix` (F-FEEDBACK-001 section 7.3).
+ */
 export function learnerRateKeys(learnerId: string): string[] {
-  return [transferRateKey.codeLearner(learnerId), transferRateKey.createLearner(learnerId)];
+  return [transferRateKey.codeLearner(learnerId), transferRateKey.createLearner(learnerId), noteRateKey.learner(learnerId), noteRateKey.reportLearner(learnerId)];
 }
 
 /** Why a learner consent is reset (`consent_reset` event detail). Re-exported for the Db signature. */

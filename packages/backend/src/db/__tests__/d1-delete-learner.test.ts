@@ -55,3 +55,44 @@ describe('D1Db.deleteLearner and the class-transfer tables', () => {
     d1.close();
   });
 });
+
+const FEEDBACK_TABLES = ['feedback_reports', 'feedback_notes', 'learner_note_prefs', 'feedback_sender_blocks', 'feedback_send_grants', 'feedback_sender_holds'];
+
+/**
+ * D1Db.deleteLearner and migration 0008 (F-FEEDBACK-001 FB-2, section 7.4): the
+ * notes tables are named only once the migration has created them, so an erase
+ * never fails on a database the migration has not reached.
+ */
+describe('D1Db.deleteLearner and the notes tables', () => {
+  it('erases the learner on a database without migration 0008', async () => {
+    const d1 = openSqliteD1();
+    for (const table of FEEDBACK_TABLES) await d1.prepare(`DROP TABLE ${table}`).run();
+    await seedLearner(d1);
+    await d1.prepare("INSERT INTO rate_hits (key, at) VALUES ('note:pair:profile:suni:teacher', ?)").bind(T).run();
+    expect(await new D1Db(d1).deleteLearner('profile:suni')).toBe(true);
+    expect(await count(d1, 'learners', "WHERE id = 'profile:suni'")).toBe(0);
+    expect(await count(d1, 'rate_hits')).toBe(0);
+    d1.close();
+  });
+
+  it('erases the notes rows children first, in the one transaction', async () => {
+    const d1 = openSqliteD1();
+    await seedLearner(d1);
+    await d1
+      .prepare("INSERT INTO feedback_notes (id, learner_id, space_id, sender_account_id, sender_role, batch_id, batch_kind, preset_id, status, created_at) VALUES ('note:aaaaaaaa', 'profile:suni', 'space:a', 'teacher', 'teacher', 'b', 'learners', 'p', 'reported', ?)")
+      .bind(T)
+      .run();
+    await d1
+      .prepare("INSERT INTO feedback_reports (id, note_id, learner_id, sender_account_id, reason, via, evidence, reporter_key, created_at) VALUES ('notereport:a', 'note:aaaaaaaa', 'profile:suni', 'teacher', 'unkind', 'device', 'd', 'device:d', ?)")
+      .bind(T)
+      .run();
+    await d1.prepare("INSERT INTO learner_note_prefs (learner_id, classes, updated_at, updated_via) VALUES ('profile:suni', 'off', ?, 'device')").bind(T).run();
+    await d1.prepare("INSERT INTO feedback_sender_blocks (learner_id, sender_account_id, family_space_id, created_by_account, created_at) VALUES ('profile:suni', 'teacher', 'space:b', 'mom', ?)").bind(T).run();
+    // with foreign keys off, only the explicit deletes can remove the rows: none may be left behind
+    await d1.prepare('PRAGMA foreign_keys = OFF').run();
+    expect(await new D1Db(d1).deleteLearner('profile:suni')).toBe(true);
+    await d1.prepare('PRAGMA foreign_keys = ON').run();
+    for (const table of ['feedback_reports', 'feedback_notes', 'learner_note_prefs', 'feedback_sender_blocks']) expect(await count(d1, table), table).toBe(0);
+    d1.close();
+  });
+});

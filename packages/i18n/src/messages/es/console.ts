@@ -44,6 +44,7 @@ export const consoleMsgs = {
     sections: { yours: 'Tus planes', add: 'Añadir un plan', help: 'Ayuda' },
     kind: { family: 'Familia', class: 'Clase', school: 'Escuela' },
     archived: '(en archivo)',
+    accountCard: { title: 'Tu cuenta' },
     coverage: {
       free: 'Plan gratuito',
       family: 'Plan Familiar',

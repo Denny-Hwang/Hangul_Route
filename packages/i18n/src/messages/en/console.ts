@@ -108,6 +108,8 @@ export const consoleMsgs = {
     account: { cta: 'Account' },
     billing: { cta: 'Billing' },
     signOut: { cta: 'Sign out' },
+    /** Adult nav labels (F-APP-001 `ADULT_NAV`); `notes` is F-FEEDBACK-001's item, shown only with the notes flag. */
+    nav: { notes: 'Notes' },
     noApi: 'The console needs an API address (NEXT_PUBLIC_API_BASE_URL) on this build.',
   },
   /** Space kinds: a label ("Class code") and the home-page group heading. */
@@ -198,6 +200,8 @@ export const consoleMsgs = {
       anchor: (accuracy: string) => `Stage 1 anchor: ${accuracy}`,
       revisit: (jamo: string) => `Jamo to revisit together: ${jamo}`,
       notSynced: (count: number) => plural('en', count, { one: `${count} hasn't synced in a week`, other: `${count} haven't synced in a week` }),
+      /** F-VOC-005 P-4: up to three words most often on the students' lists, never a ranking of students. The page fills the words. */
+      wordsRevisit: (words: string) => `Words to revisit together: ${words}`,
     },
     /** The latest plan's button. Holds a user-entered plan title, so it is not a budgeted `cta`; its fixed words are budgeted in length-budget.test.ts and the button wraps. */
     openPlan: { label: (plan: string) => `Plan: ${plan}` },
@@ -221,7 +225,13 @@ export const consoleMsgs = {
       revisit: (jamo: string) => `Revisit: ${jamo}`,
       planReadout: (plan: string, readout: string) => `${plan}: ${readout}`,
       joined: (when: string) => `joined ${when}`,
+      /** F-VOC-005 P-4 (section 3.8): counts only; the first-try rate stays off the roster. */
+      words: (collected: number, strong: number) => `Words: ${collected} collected · ${strong} strong`,
+      /** Up to three words to look at together. The page fills the words (Korean marked lang="ko", romanization and gloss). */
+      wordsRevisit: (words: string) => `Words to revisit: ${words}`,
     },
+    /** One taught word after its Hangul: the romanization and the gloss in the UI language (CLAUDE.md section 1). */
+    wordGloss: (romanization: string, gloss: string) => `${romanization} (${gloss})`,
   },
   /** Re-link approval (`/teach/space/relink`, `relink.ts`): identity and timing only, no progress numbers. */
   relink: {
@@ -460,6 +470,8 @@ export const consoleMsgs = {
     /** The kind half of a card heading ("Family · <space name>"). */
     kind: { family: 'Family', class: 'Class', school: 'School' },
     archived: '(archived)',
+    /** The heading of a legacy account-subject card (section 4.2). */
+    accountCard: { title: 'Your account' },
     /** The plan line of a card. */
     coverage: {
       free: 'Free plan',
@@ -1296,5 +1308,252 @@ export const consoleMsgs = {
     notFound: 'We could not find this learner in this space.',
     /** A stage line with nothing done: the known part of `journey.stageLine` alone, so a row never reads "0 quests done". */
     knownLine: (known: number) => `${known} known from the level check`,
+  },
+  /**
+   * Notes from grown-ups on app.hangulroute.com (F-FEEDBACK-001 FB-5; wireframes console/note-composer.md,
+   * console/notes-sent.md, console/family-notes.md, console/notes-hub.md). FB-10 builds the view models,
+   * FB-11a, FB-11b and FB-12 render them. Where the space kind changes the word, a `class` / `family`
+   * pair says "students" or "learners". Status words stay neutral (section 9): never "unread" or "no
+   * reply", and a class sender never sees "Opened" (OD-8). A teacher is named by the class, never by the
+   * account (section 8.2-a). Nothing here mentions a price or a plan (OD-7).
+   */
+  notes: {
+    sendNote: { cta: 'Send a note' },
+    newNote: { cta: 'New note' },
+    /** The roster header action of a class or family page (FB-11a). */
+    roster: { notes: { cta: 'Notes' } },
+    hub: {
+      title: 'Notes',
+      open: { cta: 'Notes' },
+      none: { parent: 'Create your family space to send notes.', teacher: 'Create a class to send notes.' },
+      start: { cta: 'Start' },
+      error: 'Could not load your spaces. Try again.',
+      retry: { cta: 'Try again' },
+    },
+    /** Status words of a sent note; keys are the API statuses. `opened` is shown in a family space only. */
+    status: { sent: 'Sent', opened: 'Opened', not_shown: 'Not shown', withdrawn: 'Taken back' },
+    sent: {
+      title: (space: string) => `Notes · ${space}`,
+      back: { class: 'Back to class', family: 'Back to family' },
+      disclosure: 'Teachers see the answer a student picks. They do not see when a note was read.',
+      filter: { label: 'Show', everyone: 'Everyone' },
+      to: {
+        everyone: {
+          class: (n: number) => `To everyone (${n} ${plural('en', n, { one: 'student', other: 'students' })})`,
+          family: (n: number) => `To everyone (${n} ${plural('en', n, { one: 'learner', other: 'learners' })})`,
+        },
+        learner: (name: string) => `To ${name}`,
+      },
+      signed: (label: string) => `Signed ${label}`,
+      sentBy: (account: string) => `Sent by ${account}`,
+      otherAdult: 'Sent by another grown-up of this space',
+      takeBack: {
+        cta: 'Take back',
+        title: 'Take back this note?',
+        body: (name: string) => `It goes away from ${name}'s app at the next sync. The family can still see that it was sent.`,
+        bodyEveryone: "It goes away from everyone's app at the next sync. The family can still see that it was sent.",
+        confirm: { cta: 'Take back' },
+        cancel: { cta: 'Cancel' },
+        /** `409 note_reported`: the row reads "Not shown". */
+        locked: 'This note can no longer be changed.',
+        failed: 'That did not save. Try again.',
+      },
+      empty: 'No notes sent yet.',
+      error: 'Notes could not load. Try again.',
+      retry: { cta: 'Try again' },
+      older: { cta: 'Show older' },
+    },
+    composer: {
+      title: 'Send a note',
+      close: 'Close',
+      to: {
+        title: 'To',
+        everyone: {
+          class: (space: string, n: number) => `Everyone in ${space} (${n} ${plural('en', n, { one: 'student', other: 'students' })})`,
+          family: (space: string, n: number) => `Everyone in ${space} (${n} ${plural('en', n, { one: 'learner', other: 'learners' })})`,
+        },
+        choose: 'Choose',
+        picker: { class: 'Students', family: 'Learners' },
+      },
+      /** A learner the send would skip: notes mode off or a family block, in the same words (section 6.1 item 4). */
+      notesOff: { class: 'Notes are off for this student', family: 'Notes are off for this learner' },
+      presetsOnly: 'Encouragement only for this student',
+      presetsOnlyShort: 'Encouragement only',
+      /** Notes this account sent that learner in the last 24 hours, at the per-learner limit. */
+      limit: (n: number) => `${n} ${plural('en', n, { one: 'note', other: 'notes' })} today. You can send more tomorrow.`,
+      preset: { title: 'Pick an encouragement', required: 'Required' },
+      /** The four preset groups, keyed by the id prefix (`effort_`, `progress_`, `next_`, `warm_`). */
+      groups: { effort: 'Effort', progress: 'Progress', next: 'Next step', warm: 'Warm' },
+      text: {
+        label: 'Add a few words (optional)',
+        counter: (n: number, max: number) => `${n} of ${max}`,
+        /** Announced politely at 100 and at the limit (section 6.12). */
+        counterA11y: (n: number, max: number) => `${n} of ${max} characters used`,
+      },
+      /** One line per `checkNoteText` problem (`@hangul-route/i18n/note-text`); `word` is the token as typed. */
+      problems: {
+        empty: 'Please add a few words, or leave the box empty.',
+        too_long: (max: number) => `Please keep it to ${max} characters.`,
+        line_break: 'Please keep the note to one line.',
+        link: (word: string) => `Links can't be sent in a note ("${word}").`,
+        contact: "Email addresses, handles and phone numbers can't be sent in a note.",
+        emoji: 'Please use words instead of emoji.',
+        tone: (word: string) => `Please choose a kinder word than "${word}".`,
+        invalid: 'Some characters cannot be sent in a note. Please type the words again.',
+      },
+      /** The picked list is longer than the 300 learners one send takes (`NOTE_SEND_MAX_LEARNERS`). */
+      recipientsProblem: { class: 'Choose up to 300 students.', family: 'Choose up to 300 learners.' },
+      /** The picked list holds an id the form cannot send (a stale or damaged roster row). */
+      recipientsInvalid: 'This list cannot be sent as it is. Refresh and try again.',
+      quest: {
+        title: 'Suggest a quest (optional)',
+        needed: 'Needed for this encouragement',
+        choose: { cta: 'Choose a quest' },
+        remove: { cta: 'Remove' },
+        pickerTitle: 'Pick a quest',
+      },
+      /** Under a picked quest, only with content gating on and an unlicensed space (F-ENT-003). Never a price or a link. */
+      closedMark: 'Some learners can open this lesson only with the full route.',
+      signAs: 'Sign as',
+      preview: {
+        title: 'Preview',
+        from: (sender: string) => `From ${sender}`,
+        quest: (title: string) => `Try this quest: ${title}`,
+        language: 'The learner reads the encouragement in their own app language. Your words show as you typed them.',
+        /** Class spaces only (section 7.7). */
+        disclosure: 'Teachers see the answer a student picks. They do not see when a note was read.',
+      },
+      send: { cta: 'Send' },
+      sending: 'Sending…',
+      cancel: { cta: 'Cancel' },
+      /** After Send: counts only, never names (wireframe B). */
+      result: {
+        sent: {
+          class: (n: number) => `Sent to ${n} ${plural('en', n, { one: 'student', other: 'students' })}.`,
+          family: (n: number) => `Sent to ${n} ${plural('en', n, { one: 'learner', other: 'learners' })}.`,
+        },
+        notesOff: {
+          class: (n: number) => plural('en', n, { one: '1 student has notes off.', other: `${n} students have notes off.` }),
+          family: (n: number) => plural('en', n, { one: '1 learner has notes off.', other: `${n} learners have notes off.` }),
+        },
+        presetsOnly: (n: number) =>
+          plural('en', n, { one: '1 student gets the encouragement only.', other: `${n} students get the encouragement only.` }),
+        limit: {
+          class: (n: number) => plural('en', n, { one: "1 student is at today's limit.", other: `${n} students are at today's limit.` }),
+          family: (n: number) => plural('en', n, { one: "1 learner is at today's limit.", other: `${n} learners are at today's limit.` }),
+        },
+        nothing: {
+          class: "Nothing was sent. Notes are off or today's limit is reached for these students.",
+          family: "Nothing was sent. Notes are off or today's limit is reached for these learners.",
+        },
+        another: { cta: 'Send another' },
+        done: { cta: 'Done' },
+      },
+      /** Server answers (section 7.2); the form keeps its content. */
+      errors: {
+        badPreset: 'Pick a quest for this encouragement.',
+        badSuggest: 'That quest cannot be suggested. Pick another one.',
+        tooMany: 'You have sent many notes today. You can send more tomorrow.',
+        /** A short limiter `429` (several sends in a minute), never the daily limit. */
+        wait: 'Please wait a minute and try again.',
+        /** `not_in_space`: a picked learner left the space between loading and Send (section 6.1 item 2). */
+        notInSpace: 'Someone on this list is no longer in this space. Refresh and try again.',
+        paused: 'Sending notes is paused for this account. Write to hello@hangulroute.com.',
+        notAllowed: 'The family owner can let you send notes.',
+        notAllowedClass: 'Only the teachers of this class can send notes.',
+        sendingOff: 'Sending notes is not open yet.',
+        network: 'Could not send. Check your connection and try again.',
+        archived: { class: 'This class is archived.', family: 'This family space is archived.' },
+        generic: 'Something went wrong. Please try again.',
+      },
+      empty: { class: 'No students yet. Share the join code first.', family: 'Add a learner to your family first.' },
+      backToRoster: { cta: 'Back to the roster' },
+    },
+    /** The family page, Received tab and settings (FB-12), and the family settings panel "Can send notes". */
+    family: {
+      title: 'Notes',
+      learner: 'Learner',
+      tabs: { label: 'Notes for this learner', received: 'Received', sent: 'Sent' },
+      from: {
+        class: (className: string) => `From ${className} (teacher)`,
+        /** A family note with no readable sign-off; the sender is never named here (OD-5). */
+        home: 'From home',
+        /** A family note with its sign-off, one whole line so a translation can reorder it. */
+        homeSigned: (label: string) => `From home, signed ${label}`,
+      },
+      sentBy: (account: string) => `Sent by ${account}`,
+      youSent: 'You sent this',
+      withdrawn: 'Taken back by the sender',
+      hiddenBy: (account: string) => `Hidden by ${account}`,
+      hiddenOnDevice: 'Hidden on a device',
+      reportedBy: (account: string) => `Reported by ${account} · Our team is looking at it`,
+      reportedOnDevice: 'Reported on a device',
+      actions: {
+        hide: { cta: 'Hide' },
+        report: { cta: 'Report' },
+        block: { cta: 'Stop notes from this sender' },
+      },
+      hideConfirm: {
+        title: (learner: string) => `Hide this note from ${learner}?`,
+        body: (learner: string) => `It goes away from ${learner}'s app at the next sync. The sender sees 'Not shown'.`,
+        cta: 'Hide',
+        cancel: { cta: 'Cancel' },
+      },
+      blockConfirm: {
+        title: 'Stop notes from this sender?',
+        body: (learner: string) => `${learner} will not get notes from this sender. The sender is not told.`,
+        cta: 'Stop notes',
+        cancel: { cta: 'Cancel' },
+      },
+      report: {
+        title: 'Report this note',
+        why: 'Why?',
+        reasons: {
+          unkind: 'Unkind',
+          unsafe: 'Unsafe',
+          not_for_me: (learner: string) => `Not meant for ${learner}`,
+          other: 'Something else',
+        },
+        submit: { cta: 'Report and hide' },
+        cancel: { cta: 'Cancel' },
+        line: 'Our team looks at every report.',
+        tooMany: 'Too many reports today. Write to hello@hangulroute.com if you need help now.',
+        /** `422 own_note`: the reporter sent this note. */
+        ownNote: 'This is your own note. You can take it back instead.',
+      },
+      settings: {
+        title: (learner: string) => `Settings for ${learner}`,
+        classes: 'Notes from classes',
+        options: { all: 'All notes', presets: 'Encouragements only', off: 'Off' },
+        familyAlways: 'Notes from your family always arrive.',
+        lastChangedBy: (account: string) => `Last changed by ${account}`,
+        lastChangedOnDevice: 'Last changed on a device',
+        saved: 'Saved',
+        stopped: { title: 'Stopped senders', allowAgain: { cta: 'Allow again' } },
+      },
+      disclosure: (learner: string) => `Teachers see the answer ${learner} picks on their notes. They do not see when a note was read.`,
+      /** The one-time class-notes card; `mode` is a `settings.options` value. */
+      oneTimeCard: {
+        line: (mode: string) => `Notes from classes: ${mode}.`,
+        keep: { cta: 'Keep' },
+        change: { cta: 'Change' },
+      },
+      empty: (learner: string) => `No notes for ${learner} yet.`,
+      noLearners: 'Add a learner to your family first.',
+      error: 'Notes could not load. Try again.',
+      retry: { cta: 'Try again' },
+      saveFailed: 'That did not save. Try again.',
+      /** A short limiter `429` on hide, stop, allow again or a setting; `report.tooMany` is the daily report limit. */
+      wait: 'Please wait a minute and try again.',
+      older: { cta: 'Show older' },
+      /** Panel D on the family settings page: who may send notes (OD-17). */
+      senders: {
+        title: 'Grown-ups in this family',
+        you: (name: string) => `${name} (you)`,
+        canSend: 'Can send notes',
+        always: 'Can send notes: always',
+        line: 'Anyone with the family code can join. Only grown-ups you turn on here can send notes.',
+      },
+    },
   },
 } as const;

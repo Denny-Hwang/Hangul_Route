@@ -205,6 +205,10 @@ export const learner = {
      */
     availability: { open: { pill: 'Open' }, taste: { pill: 'A taste' }, soon: { pill: 'Coming later' } },
     tasteNote: 'A taste of this stage is open now. More episodes are coming.',
+    /** Under a stage row with a stories-only cell (F-STORY-005 §3.5); the books are the `library` glyph. */
+    storiesNote: 'Heritage stories are open in the cells with the books icon.',
+    /** The count mark in a cell's corner: how many heritage stories call the cell home, "5+" from 6 (F-STORY-005 §3.6). */
+    countMark: (value: number, more: boolean) => (more ? `${value}+` : `${value}`),
     /** Landmark names of the two panes on a wide window (F-LAYOUT-001 §3.13). */
     panes: { master: 'Journey map', detail: 'Episode details' },
     how: {
@@ -212,6 +216,30 @@ export const learner = {
       body: 'Each cell is one episode. Finish every quest in a cell to complete it and earn its Heritage cards. More stages open as the journey grows.',
       /** Shown under `body` once the learner has a level-check result (F-PLC-001 section 3.7, wireframe placement I). */
       placement: 'The pin shows where you started. A cell with a light outline and a check is one you can skip ahead of. You can still play it any time.',
+      /** Shown under `body` once any cell has heritage stories (F-STORY-005 §3.5); still no fractions. */
+      stories: "A number in a cell's corner says how many heritage stories it has. A cell with the books icon has heritage stories to read.",
+    },
+    /** The cell page and its two doors (F-STORY-005 §3.6; wireframes story/cell-stories, episode/detail-cell-stories-row). */
+    cellStories: {
+      /** The page header: stage and theme titles in the UI locale, on one line. */
+      title: (stageTitle: string, themeTitle: string) => `${stageTitle} · ${themeTitle}`,
+      subtitle: 'Heritage stories for this cell',
+      /** The secondary row to the cell's lesson or book, listed before the stories. */
+      lessonRow: (title: string) => `${title} — the lesson for this cell`,
+      /** Only through a stale link: the map never opens an empty cell. */
+      empty: 'Nothing here yet',
+      /** The lesson page row: a plain count of the cell's stories, never "N of M". */
+      row: 'Heritage stories for this cell',
+      rowLabel: (count: number) =>
+        plural('en', count, {
+          one: 'Heritage stories for this cell, 1 heritage story',
+          other: `Heritage stories for this cell, ${count} heritage stories`,
+        }),
+      /** A story page's home cell: a plain pill, never a lock. */
+      homePill: (stage: number, themeTitle: string) => `Stage ${stage} · ${themeTitle}`,
+      /** Starts with the pill's visible words (WCAG 2.5.3 label in name), then says where it goes. */
+      homePillLabel: (stage: number, stageTitle: string, themeTitle: string) =>
+        `Stage ${stage} · ${themeTitle}. Heritage stories for this cell in Stage ${stage} ${stageTitle}`,
     },
   },
 
@@ -268,6 +296,14 @@ export const learner = {
           other: `Get ${minStars} or more stars in ${questTitle} to earn this card.`,
         }),
       later: 'This card comes in a later quest.',
+    },
+    /**
+     * The source line under a story card's fact on its back face (F-STORY-006 §3.8): the fact's first
+     * source, then how many others it has. `publisher` and `title` are content, printed as given; no link.
+     */
+    citation: {
+      source: (publisher: string, title: string) => `Source: ${publisher}, ${title}`,
+      more: (n: number) => plural('en', n, { one: 'and 1 more source', other: `and ${n} more sources` }),
     },
   },
 
@@ -1253,6 +1289,53 @@ export const learner = {
         backToTopic: 'Back to topic',
       },
       leave: { title: 'Keep going or stop for now?', keep: 'Keep going', stop: 'Stop' },
+    },
+  },
+  /**
+   * Notes from grown-ups on the learner side (F-FEEDBACK-001 FB-5; wireframes home/notes-card.md,
+   * notes/list.md, notes/detail.md). Presets, reactions and sender labels are `common.notes`. Any age
+   * reads these lines, so they are plain, never childish, and never say "report" on a child-managed
+   * profile: `detail.reportSelf` is the self-managed profile's link (section 6.10 item 4). FB-8 renders them.
+   */
+  notes: {
+    /** The Home card (row 2a): one new note, or a count with the newest sender. */
+    home: {
+      title: (sender: string) => `A note from ${sender}`,
+      newCount: (n: number) => count(n, 'new note', 'new notes'),
+      from: (sender: string) => `From ${sender}`,
+      read: { cta: 'Read' },
+    },
+    /** The Profile row, shown only with a membership or a cached note (section 6.5 item 2). */
+    profileRow: { title: 'My notes' },
+    list: {
+      title: 'My notes',
+      groups: { new: 'New', earlier: 'Earlier' },
+      empty: 'No notes yet. Notes from your teacher or family will show here.',
+      error: 'Your notes could not open. Try again later.',
+      retry: { cta: 'Try again' },
+    },
+    detail: {
+      /** Under the grown-up's words, so they are never mistaken for a lesson (section 6.11). */
+      from: (sender: string) => `From ${sender}`,
+      /** `closed`: the suggested quest is not open on this profile (F-ENT-003): no Start, no price, no link. */
+      suggest: { title: 'Try this quest', start: { cta: 'Start' }, closed: 'Opens with the full route' },
+      reactions: { heading: 'Answer with one tap' },
+      putAway: { cta: 'Put this note away' },
+      putAwayDone: 'Put away. A grown-up can still see it.',
+      /** The same line on a self-managed profile, which may have no family (section 6.3 rule 4). */
+      putAwayDoneSelf: 'Put away. It is hidden on this device.',
+      tellGrownUp: { cta: 'Tell a grown-up' },
+      reportSelf: { cta: 'Report this note' },
+      /** A stale route, or a note taken away by an inbox while its page is open. */
+      gone: 'This note was put away.',
+      seeMyNotes: { cta: 'See my notes' },
+      error: 'This note could not open.',
+      retry: { cta: 'Try again' },
+    },
+    /** Who sees the learner's pick (section 6.6), shown before and after the pick. */
+    reactionSeenBy: {
+      teacher: 'Your teacher will see your answer.',
+      family: 'Your family will see your answer.',
     },
   },
 } as const;

@@ -7,15 +7,17 @@ import {
   Heading,
   HoyaBubble,
   Icon,
+  KOREAN_LANGUAGE,
   Pill,
   Screen,
   Spacer,
   colors,
   radii,
   spacing,
+  typography,
 } from '@hangul-route/design-system';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { CardArt } from '../../components/CardArt';
 import { FlipCard } from '../../components/FlipCard';
 import { PromptPanel } from '../../components/PromptPanel';
@@ -25,6 +27,7 @@ import { cardById } from '../../content';
 import { awardWorld } from '../../content/award-world';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { earnHint } from '../../logic/awards/earn-hint';
+import { cardCitationView, type CardCitationView } from '../../logic/library/card-citation';
 import { cardDetailDisplay, type CardDetailState } from '../../logic/library/card-detail-state';
 import { localizeCard, localizeEpisode } from '../../logic/content-locale';
 import { nextFace, type FlipFace } from '../../logic/flip';
@@ -105,6 +108,8 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false, state =
   }
 
   const flip = (): void => setFace((current) => nextFace(current));
+  // A story card's fact always comes with its source, on either face (F-STORY-006 §3.8).
+  const citation = cardCitationView(card, m.citation);
 
   // `audioRef` joins the card schema with F-CNT-002 / F-VOC (spec §3.9); until then the device voice says the name.
   const hear = (): void => {
@@ -166,6 +171,7 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false, state =
                     {card.factEn}
                   </Body>
                 </View>
+                {citation ? <CitationLines view={citation} face="fact-card" /> : null}
               </>
             ) : null}
           </Card>
@@ -346,7 +352,47 @@ function FrontFaceBody({
   );
 }
 
+// Speech language for a Korean publisher or title; `lang` is forwarded to the DOM on the web.
+const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANGUAGE };
+
+/**
+ * The source of a story card's fact (F-STORY-006 §3.8, wireframe library/card-back-citation G):
+ * "Source: <publisher>, <title>", then "and N more sources". Plain text: no URL and no link on a
+ * learner surface. The runs are the accessible text (no label over them), so a screen reader reads
+ * each Korean span in Korean. On the back face the line sits under the fact inside the flip button,
+ * which a screen reader reads as one control, and is cut at two lines; the fact card under the
+ * flip card repeats it in full, where assistive tech reaches it.
+ */
+function CitationLines({ view, face }: { view: CardCitationView; face: 'back' | 'fact-card' }): React.ReactElement {
+  // Caption's style (muted, medium weight); a raw Text so the line can be cut at two lines and its Korean runs nested.
+  const line = {
+    fontSize: typography.size.caption,
+    lineHeight: typography.size.caption * typography.leading.normal,
+    fontWeight: typography.weight.medium,
+    color: colors.text.muted,
+    textAlign: face === 'back' ? ('center' as const) : ('left' as const),
+  };
+  return (
+    <>
+      <Spacer size="xs" />
+      <Text numberOfLines={face === 'back' ? 2 : undefined} testID="card-detail-citation" style={line}>
+        {view.runs.map((run, i) => (
+          <Text key={i} {...(run.korean ? koreanSpeech : {})}>
+            {run.text}
+          </Text>
+        ))}
+      </Text>
+      {view.more ? (
+        <Text testID="card-detail-citation-more" style={line}>
+          {view.more}
+        </Text>
+      ) : null}
+    </>
+  );
+}
+
 function BackFaceBody({ card }: { card: HeritageCard }): React.ReactElement {
+  const citation = cardCitationView(card, useMessages().learner.cardDetail.citation);
   return (
     <View style={{ alignItems: 'center', paddingVertical: spacing.lg }}>
       {/* Top 40% — Korean prominent + romanization */}
@@ -394,6 +440,7 @@ function BackFaceBody({ card }: { card: HeritageCard }): React.ReactElement {
                 {card.factEn}
               </Body>
             </View>
+            {citation ? <CitationLines view={citation} face="back" /> : null}
           </View>
         </>
       ) : null}

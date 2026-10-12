@@ -1,6 +1,23 @@
 import { TRANSFER_COOLING_OFF_MS, type BillingEvent, type BillingEventKind, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type Space, type TransferBlockReason, type TransferEndReason, type TransferSlot } from '@hangul-route/content-schema';
 import { id, type Account, type Learner, type LearnerDevice, type SnapshotRecord } from '../store';
 import { assertBillingLimit, billingEventFields, newestBillingEvent, REFUNDABLE_BILLING_KINDS } from './billing-rules';
+import { assertNoteChecks, assertOneSender } from './feedback-rules';
+import {
+  noteRetentionCuts,
+  notePairPrefix,
+  type DeliveredNote,
+  type LearnerNotesInbox,
+  type NewNote,
+  type NoteActVia,
+  type NoteDeviceScope,
+  type RateHitRow,
+  type StoredNote,
+  type StoredNotePrefs,
+  type StoredNoteReport,
+  type StoredSendGrant,
+  type StoredSenderBlock,
+  type StoredSenderHold,
+} from './feedback-types';
 import { allSlotsIn, assertNewTransfer, assertTransferChecks, assertTransferEventChecks, assertTransferPrefKey, assertTransferSlot, consentedLearnerSlot, finiteCap, isEndedTransfer, isOpenTransfer, teacherSlotsOf } from './transfer-rules';
 import {
   learnerRateKeys,
@@ -20,6 +37,7 @@ import {
   type TransferPrefKey,
   type TransferPrefs,
   type TransferSlotConsent,
+  type NoteCursor,
   type WaitlistEntry,
 } from './types';
 
@@ -40,6 +58,12 @@ const latestEnded = (a: StoredTransfer, b: StoredTransfer): number => {
   const y = b.endedAt ?? '';
   return x === y ? (a.id < b.id ? 1 : a.id > b.id ? -1 : 0) : x < y ? 1 : -1;
 };
+/** Newest first, ties by id descending (`ORDER BY created_at DESC, id DESC`). */
+const newestNoteFirst = (a: StoredNote, b: StoredNote): number => (a.createdAt === b.createdAt ? (a.id < b.id ? 1 : a.id > b.id ? -1 : 0) : a.createdAt < b.createdAt ? 1 : -1);
+/** Oldest first, ties by id ascending (the purge order). */
+const oldestNoteFirst = (a: StoredNote, b: StoredNote): number => -newestNoteFirst(a, b);
+const beforeCursor = (n: StoredNote, c: NoteCursor | null): boolean => c === null || n.createdAt < c.createdAt || (n.createdAt === c.createdAt && n.id < c.id);
+const pairKey = (a: string, b: string): string => `${a}|${b}`;
 const EMPTY_LEARNER_SLOT: StoredTransfer['learner'] = { state: 'pending', at: null, basis: null, attest: null, evidence: null, role: null, textVersion: null, locale: null, shown: null, terms: null };
 
 /**
@@ -64,6 +88,14 @@ export class MemoryDb implements Db {
   private rateHits: Array<{ id: number; key: string; at: string }> = [];
   private rateHitSeq = 0;
   private billingEvents = new Map<string, BillingEvent>();
+  private notes = new Map<string, StoredNote>();
+  private noteReports = new Map<string, StoredNoteReport>();
+  private senderHolds = new Map<string, StoredSenderHold>();
+  private notePrefs = new Map<string, StoredNotePrefs>();
+  /** Keyed `learnerId|senderAccountId`. */
+  private senderBlocks = new Map<string, StoredSenderBlock>();
+  /** Keyed `spaceId|accountId`. */
+  private sendGrants = new Map<string, StoredSendGrant>();
 
   async getAccount(accountId: string): Promise<Account | null> {
     return clone(this.accounts.get(accountId) ?? null);
@@ -90,8 +122,13 @@ export class MemoryDb implements Db {
     this.transferEventRows = this.transferEventRows.filter((e) => !transferIds.has(e.transferId));
     for (const transferId of transferIds) this.transfers.delete(transferId);
     this.transferPrefs.delete(learnerId);
+    for (const [k, r] of this.noteReports) if (r.learnerId === learnerId) this.noteReports.delete(k);
+    for (const [k, n] of this.notes) if (n.learnerId === learnerId) this.deleteNoteRow(k);
+    this.notePrefs.delete(learnerId);
+    for (const [k, b] of this.senderBlocks) if (b.learnerId === learnerId) this.senderBlocks.delete(k);
     const rateKeys = new Set(learnerRateKeys(learnerId));
-    this.rateHits = this.rateHits.filter((h) => !rateKeys.has(h.key));
+    const pairPrefix = notePairPrefix(learnerId);
+    this.rateHits = this.rateHits.filter((h) => !rateKeys.has(h.key) && !h.key.startsWith(pairPrefix));
     for (const [k, d] of this.devices) if (d.learnerId === learnerId) this.devices.delete(k);
     this.snapshots.delete(learnerId);
     for (const [k, m] of this.memberships) if (m.memberKind === 'learner' && m.memberId === learnerId) this.memberships.delete(k);
@@ -495,9 +532,257 @@ export class MemoryDb implements Db {
     rows.sort((a, b) => (a.updatedAt === b.updatedAt ? (a.id < b.id ? 1 : a.id > b.id ? -1 : 0) : a.updatedAt < b.updatedAt ? 1 : -1));
     return clone(rows[0] ?? null);
   }
+  async entitlementsForSpaces(spaceIds: readonly string[]): Promise<Entitlement[]> {
+    const ids = new Set(spaceIds);
+    return clone([...this.entitlements.values()].filter((e) => e.subjectKind === 'space' && ids.has(e.subjectId)));
+  }
+  async membersOfSpaces(spaceIds: readonly string[]): Promise<Membership[]> {
+    const ids = new Set(spaceIds);
+    return clone([...this.memberships.values()].filter((m) => ids.has(m.spaceId)));
+  }
+  async childSpacesOfSpaces(parentSpaceIds: readonly string[]): Promise<Space[]> {
+    const ids = new Set(parentSpaceIds);
+    return clone([...this.spaces.values()].filter((s) => s.parentSpaceId !== null && ids.has(s.parentSpaceId)));
+  }
+  async billingEventsForSpaces(spaceIds: readonly string[], limitPerSpace: number): Promise<BillingEvent[]> {
+    assertBillingLimit(limitPerSpace);
+    const ids = new Set(spaceIds);
+    const bySpace = new Map<string, BillingEvent[]>();
+    for (const e of this.billingEvents.values()) {
+      if (e.subjectKind !== 'space' || !ids.has(e.subjectId)) continue;
+      bySpace.set(e.subjectId, [...(bySpace.get(e.subjectId) ?? []), e]);
+    }
+    return clone([...bySpace.values()].flatMap((rows) => rows.sort(newestBillingEvent).slice(0, limitPerSpace)));
+  }
+
+  // ---- notes from grown-ups (F-FEEDBACK-001 section 7.4) ----
+  // Mirrors the SQL of D1Db: each method checks and writes with no await in between.
+
+  /** Deletes a note and its reports (ON DELETE CASCADE). */
+  private deleteNoteRow(noteId: string): void {
+    this.notes.delete(noteId);
+    for (const [k, r] of this.noteReports) if (r.noteId === noteId) this.noteReports.delete(k);
+  }
+  private activeHold(accountId: string): boolean {
+    const hold = this.senderHolds.get(accountId);
+    return !!hold && hold.liftedAt === null;
+  }
+  private isVisible(n: StoredNote, now: Date): boolean {
+    const cuts = noteRetentionCuts(now);
+    if (n.status !== 'reported') return n.createdAt >= cuts.notesSince;
+    return [...this.noteReports.values()].some((r) => r.noteId === n.id && r.createdAt >= cuts.reportsSince);
+  }
+  private roleOf(spaceId: string, accountId: string): Membership['role'] | null {
+    return this.memberships.get(membershipKey(spaceId, 'account', accountId))?.role ?? null;
+  }
+  /** Rule 6 of section 6.8: the sender still holds `feedback.send` in the note's space. */
+  private senderMaySend(n: StoredNote, space: Space): boolean {
+    const role = this.roleOf(n.spaceId, n.senderAccountId);
+    if (space.kind === 'class') return n.senderRole === 'teacher' && (role === 'teacher' || role === 'owner');
+    if (space.kind === 'family') return n.senderRole === 'family' && (role === 'owner' || (role === 'caregiver' && this.sendGrants.has(pairKey(n.spaceId, n.senderAccountId))));
+    return false;
+  }
+
+  async studentsOf(spaceId: string, learnerIds: readonly string[]): Promise<string[]> {
+    return [...new Set(learnerIds)].filter((learnerId) => this.memberships.get(membershipKey(spaceId, 'learner', learnerId))?.role === 'student');
+  }
+  async notePrefsFor(learnerIds: readonly string[]): Promise<StoredNotePrefs[]> {
+    return clone([...new Set(learnerIds)].flatMap((learnerId) => this.notePrefs.get(learnerId) ?? []));
+  }
+  async blocksFor(learnerIds: readonly string[], senderAccountId: string): Promise<string[]> {
+    return [...new Set(learnerIds)].filter((learnerId) => this.senderBlocks.has(pairKey(learnerId, senderAccountId)));
+  }
+  async countRateHitsByKeys(keys: readonly string[], since: Date): Promise<Map<string, number>> {
+    const wanted = new Set(keys);
+    const from = since.toISOString();
+    const out = new Map<string, number>();
+    for (const h of this.rateHits) if (wanted.has(h.key) && h.at >= from) out.set(h.key, (out.get(h.key) ?? 0) + 1);
+    return out;
+  }
+  async addRateHits(rows: readonly RateHitRow[]): Promise<void> {
+    for (const r of rows) {
+      this.rateHitSeq += 1;
+      this.rateHits.push({ id: this.rateHitSeq, key: r.key, at: r.at });
+    }
+  }
+  async insertNotes(rows: readonly NewNote[], rateHits: readonly RateHitRow[]): Promise<number> {
+    const sender = assertOneSender(rows);
+    if (sender === null || this.activeHold(sender)) return 0;
+    // Every row is checked before any is written: one transaction on D1.
+    const next = rows.map((n): StoredNote => ({ ...clone(n), status: 'live', hiddenVia: null, actedByAccountId: null, readAt: null, reaction: null, reactionAt: null, hiddenAt: null, withdrawnAt: null }));
+    const seen = new Set<string>();
+    for (const n of next) {
+      if (this.notes.has(n.id) || seen.has(n.id)) throw new Error('UNIQUE constraint failed: feedback_notes.id');
+      seen.add(n.id);
+      if (!this.learners.has(n.learnerId) || !this.spaces.has(n.spaceId)) throw new Error('FOREIGN KEY constraint failed: feedback_notes');
+      assertNoteChecks(n);
+    }
+    for (const n of next) this.notes.set(n.id, n);
+    await this.addRateHits(rateHits);
+    return next.length;
+  }
+  async notesForLearner(learnerId: string, scope: NoteDeviceScope, now: Date, limit: number): Promise<LearnerNotesInbox> {
+    const { notesSince } = noteRetentionCuts(now);
+    const prefs = this.notePrefs.get(learnerId) ?? null;
+    const mode = prefs?.classes ?? 'all';
+    const delivered = [...this.notes.values()].filter((n) => {
+      const space = this.spaces.get(n.spaceId);
+      if (n.learnerId !== learnerId || n.status !== 'live' || n.createdAt < notesSince || !space) return false;
+      if (this.memberships.get(membershipKey(n.spaceId, 'learner', learnerId))?.role !== 'student' || space.archivedAt !== null) return false;
+      if (scope !== 'full' && space.kind !== 'class') return false;
+      if (n.senderRole !== 'family' && mode === 'off') return false;
+      if (this.senderBlocks.has(pairKey(learnerId, n.senderAccountId))) return false;
+      return this.senderMaySend(n, space);
+    });
+    const notes = delivered
+      .sort(newestNoteFirst)
+      .slice(0, limit)
+      .map(
+        (n): DeliveredNote => ({
+          id: n.id,
+          spaceId: n.spaceId,
+          senderRole: n.senderRole,
+          senderLabel: n.senderLabel,
+          presetId: n.presetId,
+          body: n.senderRole === 'teacher' && mode === 'presets' ? null : n.body,
+          bodyLocale: n.bodyLocale,
+          suggest: n.suggest,
+          createdAt: n.createdAt,
+          readAt: n.readAt,
+          reaction: n.reaction,
+        }),
+      );
+    return { notes: clone(notes), prefs: clone(prefs) };
+  }
+  async notesForSpace(spaceId: string, options: { before: NoteCursor | null; limit: number; now: Date; learnerId?: string }): Promise<StoredNote[]> {
+    const rows = [...this.notes.values()].filter(
+      (n) => n.spaceId === spaceId && (options.learnerId === undefined || n.learnerId === options.learnerId) && beforeCursor(n, options.before) && this.isVisible(n, options.now),
+    );
+    return clone(rows.sort(newestNoteFirst).slice(0, options.limit));
+  }
+  async notesForOversight(learnerId: string, options: { before: NoteCursor | null; limit: number; now: Date }): Promise<StoredNote[]> {
+    const rows = [...this.notes.values()].filter((n) => n.learnerId === learnerId && beforeCursor(n, options.before) && this.isVisible(n, options.now));
+    return clone(rows.sort(newestNoteFirst).slice(0, options.limit));
+  }
+  async getNote(noteId: string): Promise<StoredNote | null> {
+    return clone(this.notes.get(noteId) ?? null);
+  }
+  /** One-row compare-and-set: `guard` must hold; answers rows changed. */
+  private casNote(noteId: string, guard: (n: StoredNote) => boolean, change: (n: StoredNote) => StoredNote): number {
+    const row = this.notes.get(noteId);
+    if (!row || !guard(row)) return 0;
+    const next = change(clone(row));
+    assertNoteChecks(next);
+    this.notes.set(noteId, next);
+    return 1;
+  }
+  async setNoteRead(noteId: string, at: Date): Promise<number> {
+    return this.casNote(noteId, (n) => n.status === 'live' && n.readAt === null, (n) => ({ ...n, readAt: at.toISOString() }));
+  }
+  async setNoteReaction(noteId: string, reaction: string, at: Date): Promise<number> {
+    return this.casNote(noteId, (n) => n.status === 'live', (n) => ({ ...n, reaction, reactionAt: at.toISOString() }));
+  }
+  async hideNote(noteId: string, via: NoteActVia, at: Date, actedBy?: string): Promise<number> {
+    return this.casNote(
+      noteId,
+      (n) => n.status === 'live',
+      (n) => ({ ...n, status: 'hidden', hiddenVia: via, hiddenAt: at.toISOString(), actedByAccountId: via === 'family' ? (actedBy ?? null) : null }),
+    );
+  }
+  async withdrawNote(noteId: string, at: Date): Promise<number> {
+    return this.casNote(noteId, (n) => n.status === 'live', (n) => ({ ...n, status: 'withdrawn', withdrawnAt: at.toISOString() }));
+  }
+  async withdrawBatch(batchId: string, senderAccountId: string, at: Date): Promise<number> {
+    let changed = 0;
+    for (const n of [...this.notes.values()]) {
+      if (n.batchId === batchId && n.senderAccountId === senderAccountId) changed += this.casNote(n.id, (x) => x.status === 'live', (x) => ({ ...x, status: 'withdrawn', withdrawnAt: at.toISOString() }));
+    }
+    return changed;
+  }
+  async insertNoteReport(r: StoredNoteReport): Promise<boolean> {
+    const note = this.notes.get(r.noteId);
+    // within retention at the report time (section 8.7), or nothing is written
+    if (!note || !this.isVisible(note, new Date(r.createdAt))) return false;
+    if (this.noteReports.has(r.id)) throw new Error('UNIQUE constraint failed: feedback_reports.id');
+    if (!this.learners.has(r.learnerId)) throw new Error('FOREIGN KEY constraint failed: feedback_reports');
+    this.noteReports.set(r.id, clone(r));
+    this.casNote(r.noteId, () => true, (n) => ({ ...n, status: 'reported' }));
+    return true;
+  }
+  async countReportersAgainst(accountId: string, since: Date): Promise<number> {
+    const from = since.toISOString();
+    return new Set([...this.noteReports.values()].filter((r) => r.senderAccountId === accountId && r.createdAt >= from).map((r) => r.reporterKey)).size;
+  }
+  async getSenderHold(accountId: string): Promise<StoredSenderHold | null> {
+    return clone(this.senderHolds.get(accountId) ?? null);
+  }
+  async putSenderHold(h: StoredSenderHold): Promise<boolean> {
+    if (this.activeHold(h.accountId)) return false;
+    this.senderHolds.set(h.accountId, clone(h));
+    return true;
+  }
+  async getNotePrefs(learnerId: string): Promise<StoredNotePrefs | null> {
+    return clone(this.notePrefs.get(learnerId) ?? null);
+  }
+  async putNotePrefs(p: StoredNotePrefs): Promise<void> {
+    if (!this.learners.has(p.learnerId)) throw new Error('FOREIGN KEY constraint failed: learner_note_prefs.learner_id');
+    const acknowledgedAt = p.acknowledgedAt ?? this.notePrefs.get(p.learnerId)?.acknowledgedAt ?? null;
+    this.notePrefs.set(p.learnerId, clone({ ...p, acknowledgedAt }));
+  }
+  async putBlock(b: StoredSenderBlock): Promise<void> {
+    if (!this.learners.has(b.learnerId) || !this.spaces.has(b.familySpaceId)) throw new Error('FOREIGN KEY constraint failed: feedback_sender_blocks');
+    const k = pairKey(b.learnerId, b.senderAccountId);
+    if (!this.senderBlocks.has(k)) this.senderBlocks.set(k, clone(b));
+  }
+  async deleteBlock(learnerId: string, senderAccountId: string): Promise<boolean> {
+    return this.senderBlocks.delete(pairKey(learnerId, senderAccountId));
+  }
+  async listBlocks(learnerId: string): Promise<StoredSenderBlock[]> {
+    const rows = [...this.senderBlocks.values()].filter((b) => b.learnerId === learnerId);
+    rows.sort((a, b) => (a.createdAt === b.createdAt ? (a.senderAccountId < b.senderAccountId ? 1 : -1) : a.createdAt < b.createdAt ? 1 : -1));
+    return clone(rows);
+  }
+  async getSendGrant(spaceId: string, accountId: string): Promise<StoredSendGrant | null> {
+    return clone(this.sendGrants.get(pairKey(spaceId, accountId)) ?? null);
+  }
+  async putSendGrant(g: StoredSendGrant): Promise<void> {
+    if (!this.spaces.has(g.spaceId)) throw new Error('FOREIGN KEY constraint failed: feedback_send_grants.space_id');
+    this.sendGrants.set(pairKey(g.spaceId, g.accountId), clone(g));
+  }
+  async deleteSendGrant(spaceId: string, accountId: string): Promise<boolean> {
+    return this.sendGrants.delete(pairKey(spaceId, accountId));
+  }
+  async deleteNotesForMembership(learnerId: string, spaceId: string): Promise<number> {
+    const doomed = [...this.notes.values()].filter((n) => n.learnerId === learnerId && n.spaceId === spaceId && n.status !== 'reported');
+    for (const n of doomed) this.deleteNoteRow(n.id);
+    return doomed.length;
+  }
+  async purgeNotes(before: Date, reportedBefore: Date, liftedBefore: Date, limit: number): Promise<number> {
+    const cut = before.toISOString();
+    const reportCut = reportedBefore.toISOString();
+    const liftCut = liftedBefore.toISOString();
+    const old = [...this.notes.values()].filter((n) => n.status !== 'reported' && n.createdAt < cut).sort(oldestNoteFirst).slice(0, limit);
+    for (const n of old) this.deleteNoteRow(n.id);
+    const stale = [...this.notes.values()]
+      .filter((n) => n.status === 'reported' && ![...this.noteReports.values()].some((r) => r.noteId === n.id && r.createdAt >= reportCut))
+      .sort(oldestNoteFirst)
+      .slice(0, limit);
+    for (const n of stale) this.deleteNoteRow(n.id);
+    const reports = [...this.noteReports.values()]
+      .filter((r) => r.createdAt < reportCut && this.notes.get(r.noteId)?.status !== 'reported')
+      .sort((a, b) => (a.createdAt === b.createdAt ? (a.id < b.id ? -1 : 1) : a.createdAt < b.createdAt ? -1 : 1))
+      .slice(0, limit);
+    for (const r of reports) this.noteReports.delete(r.id);
+    const holds = [...this.senderHolds.values()]
+      .filter((h) => h.liftedAt !== null && h.liftedAt < liftCut)
+      .sort((a, b) => ((a.liftedAt ?? '') === (b.liftedAt ?? '') ? (a.accountId < b.accountId ? -1 : 1) : (a.liftedAt ?? '') < (b.liftedAt ?? '') ? -1 : 1))
+      .slice(0, limit);
+    for (const h of holds) this.senderHolds.delete(h.accountId);
+    return old.length + stale.length + reports.length + holds.length;
+  }
 
   async reset(): Promise<void> {
-    for (const m of [this.accounts, this.learners, this.devices, this.snapshots, this.spaces, this.memberships, this.plans, this.relinks, this.entitlements, this.waitlist, this.transfers, this.transferPrefs, this.billingEvents]) m.clear();
+    for (const m of [this.accounts, this.learners, this.devices, this.snapshots, this.spaces, this.memberships, this.plans, this.relinks, this.entitlements, this.waitlist, this.transfers, this.transferPrefs, this.billingEvents, this.notes, this.noteReports, this.senderHolds, this.notePrefs, this.senderBlocks, this.sendGrants]) m.clear();
     this.transferEventRows = [];
     this.rateHits = [];
   }

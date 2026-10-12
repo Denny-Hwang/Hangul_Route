@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import app from '../index';
 import { entitlementFromStripeEvent, mergeForStripeEvent, signStripePayload, type StripeEventLike } from '../lib/stripe';
 import { setStripeFetchForTests } from '../routes/entitlements';
+import { clerkTestKeys, type ClerkTestKeys } from './helpers/clerk-token';
 import { testDb as db } from './helpers/db';
 import { PROMO_LIMIT, promoLimiter } from '../routes/entitlements';
 import { store } from '../store';
@@ -17,7 +18,7 @@ async function createSpace(user: string, kind: string, name: string) {
   const r = await call('POST', '/api/spaces', bearer(user), { kind, name });
   return (r.body.data as { space: { id: string }; joinCode: string | null }).space.id;
 }
-const STRIPE_ENV = { STRIPE_SECRET_KEY: 'sk_test', STRIPE_WEBHOOK_SECRET: 'whsec_test', STRIPE_PRICE_GROUP_LICENSE_YEARLY: 'price_gl', CONSOLE_URL: 'https://hangulroute.com/' };
+const STRIPE_ENV = { STRIPE_SECRET_KEY: 'sk_test_x', STRIPE_WEBHOOK_SECRET: 'whsec_test', STRIPE_PRICE_GROUP_LICENSE_YEARLY: 'price_gl', CONSOLE_URL: 'https://hangulroute.com/' };
 
 /** Stripe answers nothing by default: subscription re-reads fall back to the event (BY-D5), and no test reaches the network. */
 const stripeDown = (): typeof fetch => vi.fn<typeof fetch>().mockImplementation(async () => new Response('{}', { status: 503 }));
@@ -504,5 +505,180 @@ describe('webhook history (F-BILL-002 B-3, section 5.4)', () => {
     expect(Object.keys(r.data).sort()).toEqual(['applied', 'entitlement', 'received']);
     expect(await db.billingEventsFor('space', fam, 10)).toEqual([]);
     expect(billingEvents()).toEqual([]);
+  });
+});
+
+describe('checkout and portal hardening (F-BILL-002 B-5)', () => {
+  const FAMILY_ENV = { ...STRIPE_ENV, STRIPE_PRICE_FAMILY_YEARLY: 'price_fy' };
+  const LIVE_ENV = { ...FAMILY_ENV, STRIPE_SECRET_KEY: 'sk_live_x' };
+  const stripeUrl = (url: string) => vi.fn<typeof fetch>().mockImplementation(async () => new Response(JSON.stringify({ url }), { status: 200 }));
+  const billingEvents = () => store.events.filter((e) => e.name.startsWith('billing.')).map((e) => ({ name: e.name, payload: e.payload }));
+  const checkoutBody = (fam: string, extra: Record<string, unknown> = {}) => ({ planKey: 'family_lifetime', subjectKind: 'space', subjectId: fam, ...extra });
+  async function subscribedFamily(owner = 'mom'): Promise<string> {
+    const fam = await createSpace(owner, 'family', 'Kim family');
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: fam, planKey: 'family_lifetime', status: 'active', provider: 'stripe', customerRef: 'cus_fam', providerRef: 'sub_fam', expiresAt: new Date(Date.now() + 86_400_000).toISOString() }, new Date());
+    return fam;
+  }
+
+  beforeEach(() => {
+    store.reset();
+  });
+
+  it('returns to the billing page with the plan and the opaque space id, and sends billing.checkout_started', async () => {
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    const fetchImpl = stripeUrl('https://checkout.stripe.com/c/1');
+    setStripeFetchForTests(fetchImpl);
+    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('mom'), checkoutBody(fam), FAMILY_ENV)).status).toBe(200);
+    const form = new URLSearchParams(String((fetchImpl.mock.calls[0]?.[1] as RequestInit).body));
+    expect(form.get('success_url')).toBe(`https://hangulroute.com/teach/billing?checkout=success&plan=family_lifetime&id=${encodeURIComponent(fam)}`);
+    expect(form.get('cancel_url')).toBe('https://hangulroute.com/teach/billing?checkout=cancel');
+    expect(billingEvents()).toEqual([{ name: 'billing.checkout_started', payload: { planKey: 'family_lifetime', mode: 'test', promo: false } }]);
+
+    store.reset();
+    setStripeFetchForTests(vi.fn<typeof fetch>().mockResolvedValueOnce(promoResponse([PROMO])).mockResolvedValueOnce(new Response(JSON.stringify({ url: 'https://checkout.stripe.com/c/2' }), { status: 200 })));
+    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('mom'), checkoutBody(fam, { promoCode: 'HOYA20' }), FAMILY_ENV)).status).toBe(200);
+    expect(billingEvents()).toEqual([{ name: 'billing.checkout_started', payload: { planKey: 'family_lifetime', mode: 'test', promo: true } }]);
+  });
+
+  it('a failed Stripe call sends no started event', async () => {
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    setStripeFetchForTests(vi.fn<typeof fetch>().mockResolvedValueOnce(new Response('{}', { status: 500 })));
+    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('mom'), checkoutBody(fam), FAMILY_ENV)).body.error?.code).toBe('stripe_error');
+    expect(billingEvents()).toEqual([]);
+  });
+
+  it('reports a refused checkout: already active (the BY-1 409) and not configured', async () => {
+    const fam = await subscribedFamily();
+    setStripeFetchForTests(stripeUrl('https://checkout.stripe.com/never'));
+    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('mom'), checkoutBody(fam), FAMILY_ENV)).status).toBe(409);
+    const other = await createSpace('dad', 'family', 'Lee family');
+    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('dad'), checkoutBody(other))).body.error?.code).toBe('stripe_not_configured');
+    expect(billingEvents()).toEqual([
+      { name: 'billing.checkout_refused', payload: { planKey: 'family_lifetime', reason: 'already_active' } },
+      { name: 'billing.checkout_refused', payload: { planKey: 'family_lifetime', reason: 'not_configured' } },
+    ]);
+  });
+
+  it('sends no refused event for a caller who may not buy for the space', async () => {
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('stranger'), checkoutBody(fam), FAMILY_ENV)).status).toBe(403);
+    expect(billingEvents()).toEqual([]);
+  });
+
+  describe('live guard (section 4.9): a live key is refused until BILLING_LIVE_ALLOWED is "true"', () => {
+    it('refuses checkout with 503 live_not_enabled before any Stripe call, then allows it', async () => {
+      const fam = await createSpace('mom', 'family', 'Kim family');
+      const fetchImpl = stripeUrl('https://checkout.stripe.com/c/live');
+      setStripeFetchForTests(fetchImpl);
+      for (const env of [LIVE_ENV, { ...LIVE_ENV, BILLING_LIVE_ALLOWED: 'TRUE' }, { ...LIVE_ENV, STRIPE_SECRET_KEY: 'rk_live_x' }, { ...LIVE_ENV, STRIPE_SECRET_KEY: 'sk_unknown' }]) {
+        const refused = await call('POST', '/api/entitlements/stripe/checkout', bearer('mom'), checkoutBody(fam, { promoCode: 'HOYA20' }), env);
+        expect(refused.status).toBe(503);
+        expect(refused.body.error?.code).toBe('live_not_enabled');
+      }
+      expect(fetchImpl).not.toHaveBeenCalled();
+      expect(billingEvents()).toEqual(Array.from({ length: 4 }, () => ({ name: 'billing.checkout_refused', payload: { planKey: 'family_lifetime', reason: 'live_not_enabled' } })));
+
+      store.reset();
+      const allowed = await call('POST', '/api/entitlements/stripe/checkout', bearer('mom'), checkoutBody(fam), { ...LIVE_ENV, BILLING_LIVE_ALLOWED: 'true' });
+      expect(allowed.body.data).toEqual({ url: 'https://checkout.stripe.com/c/live' });
+      expect(billingEvents()).toEqual([{ name: 'billing.checkout_started', payload: { planKey: 'family_lifetime', mode: 'live', promo: false } }]);
+    });
+
+    it('refuses the portal and promo lookups the same way', async () => {
+      const fam = await subscribedFamily();
+      const fetchImpl = stripeUrl('https://billing.stripe.com/p/live');
+      setStripeFetchForTests(fetchImpl);
+      const portal = await call('POST', '/api/entitlements/stripe/portal', bearer('mom'), { subjectKind: 'space', subjectId: fam }, LIVE_ENV);
+      expect([portal.status, portal.body.error?.code]).toEqual([503, 'live_not_enabled']);
+      const promo = await call('POST', '/api/entitlements/stripe/promo', bearer('mom'), { code: 'HOYA20', planKey: 'family_lifetime' }, LIVE_ENV);
+      expect([promo.status, promo.body.error?.code]).toEqual([503, 'live_not_enabled']);
+      expect(fetchImpl).not.toHaveBeenCalled();
+
+      expect((await call('POST', '/api/entitlements/stripe/portal', bearer('mom'), { subjectKind: 'space', subjectId: fam }, { ...LIVE_ENV, BILLING_LIVE_ALLOWED: 'true' })).body.data).toEqual({ url: 'https://billing.stripe.com/p/live' });
+      setStripeFetchForTests(vi.fn<typeof fetch>().mockResolvedValueOnce(promoResponse([PROMO])));
+      expect((await call('POST', '/api/entitlements/stripe/promo', bearer('mom'), { code: 'HOYA20', planKey: 'family_lifetime' }, { ...LIVE_ENV, BILLING_LIVE_ALLOWED: 'true' })).status).toBe(200);
+    });
+
+    it('never stops the webhook, so nothing paid is lost', async () => {
+      const fam = await createSpace('mom', 'family', 'Kim family');
+      const ts = Math.floor(Date.now() / 1000);
+      const event = JSON.stringify({ id: 'evt_live', type: 'checkout.session.completed', livemode: true, data: { object: { id: 'cs_live', mode: 'subscription', subscription: 'sub_live', customer: 'cus_live', metadata: { subjectKind: 'space', subjectId: fam, planKey: 'family_lifetime' } } } });
+      const r = await call('POST', '/api/entitlements/stripe/webhook', { ...json, 'stripe-signature': await signStripePayload('whsec_test', event, ts) }, event, LIVE_ENV);
+      expect(r.status).toBe(200);
+      expect(r.body.data).toMatchObject({ applied: true, entitlement: { providerRef: 'sub_live' } });
+    });
+  });
+
+  it('sends billing.portal_opened with the plan and mode', async () => {
+    const fam = await subscribedFamily();
+    setStripeFetchForTests(stripeUrl('https://billing.stripe.com/p/1'));
+    expect((await call('POST', '/api/entitlements/stripe/portal', bearer('mom'), { subjectKind: 'space', subjectId: fam }, STRIPE_ENV)).status).toBe(200);
+    expect(billingEvents()).toEqual([{ name: 'billing.portal_opened', payload: { planKey: 'family_lifetime', mode: 'test' } }]);
+  });
+
+  describe('step-up (section 4.4, OD-7) with real Clerk session tokens', () => {
+    let keys: ClerkTestKeys;
+    beforeAll(async () => {
+      keys = await clerkTestKeys();
+    });
+    /** A deployment with a Clerk key bound (tokens verified) and the in-memory Db of the test environment. */
+    const clerkEnv = (extra: Record<string, string> = {}) => ({ ...FAMILY_ENV, ENVIRONMENT: 'test', CLERK_JWT_KEY: keys.jwtKey, ...extra });
+    const signedIn = async (sub: string, claims: Record<string, unknown>) => ({ ...json, authorization: `Bearer ${await keys.token(sub, claims)}` });
+    async function ownedFamily(sub: string): Promise<string> {
+      const r = await call('POST', '/api/spaces', await signedIn(sub, { fva: [0, -1] }), { kind: 'family', name: 'Kim family' }, clerkEnv());
+      return (r.body.data as { space: { id: string } }).space.id;
+    }
+
+    it('answers checkout with the Clerk hint body when the first factor is older than 10 minutes or fva is absent', async () => {
+      const fam = await ownedFamily('user_mom');
+      const fetchImpl = stripeUrl('https://checkout.stripe.com/c/s');
+      setStripeFetchForTests(fetchImpl);
+      for (const claims of [{ fva: [11, -1] }, { fva: [600, 0] }, {}, { fva: 'old' }]) {
+        const res = await app.request('/api/entitlements/stripe/checkout', { method: 'POST', headers: await signedIn('user_mom', claims), body: JSON.stringify(checkoutBody(fam)) }, clerkEnv());
+        expect(res.status).toBe(403);
+        expect(await res.json()).toEqual({
+          clerk_error: { type: 'forbidden', reason: 'reverification-error', metadata: { reverification: { level: 'first_factor', afterMinutes: 10 } } },
+          ok: false,
+          error: { code: 'reverify_required', message: 'Confirm it is you to continue' },
+          meta: { serverTime: expect.any(String), version: expect.any(String) },
+        });
+      }
+      expect(fetchImpl).not.toHaveBeenCalled();
+      expect(billingEvents()).toEqual(Array.from({ length: 4 }, () => ({ name: 'billing.checkout_refused', payload: { planKey: 'family_lifetime', reason: 'reverify_required' } })));
+    });
+
+    it('lets a sign-in at most 10 minutes old through to Stripe', async () => {
+      const fam = await ownedFamily('user_mom');
+      setStripeFetchForTests(stripeUrl('https://checkout.stripe.com/c/fresh'));
+      for (const age of [0, 10]) {
+        const r = await call('POST', '/api/entitlements/stripe/checkout', await signedIn('user_mom', { fva: [age, -1] }), checkoutBody(fam), clerkEnv());
+        expect(r.body.data).toEqual({ url: 'https://checkout.stripe.com/c/fresh' });
+      }
+    });
+
+    it('checks who may buy before asking for a fresh sign-in, so a stranger gets 403 forbidden, not the hint', async () => {
+      const fam = await ownedFamily('user_mom');
+      const r = await call('POST', '/api/entitlements/stripe/checkout', await signedIn('user_stranger', { fva: [30, -1] }), checkoutBody(fam), clerkEnv());
+      expect([r.status, r.body.error?.code]).toEqual([403, 'forbidden']);
+      expect(billingEvents()).toEqual([]);
+    });
+
+    it('asks for a fresh sign-in before the portal too', async () => {
+      const fam = await ownedFamily('user_mom');
+      await db.applyEntitlement({ subjectKind: 'space', subjectId: fam, planKey: 'family_lifetime', status: 'active', provider: 'stripe', customerRef: 'cus_fam', providerRef: 'sub_fam', expiresAt: new Date(Date.now() + 86_400_000).toISOString() }, new Date());
+      const fetchImpl = stripeUrl('https://billing.stripe.com/p/s');
+      setStripeFetchForTests(fetchImpl);
+      const stale = await call('POST', '/api/entitlements/stripe/portal', await signedIn('user_mom', { fva: [45, -1] }), { subjectKind: 'space', subjectId: fam }, clerkEnv());
+      expect([stale.status, stale.body.error?.code]).toEqual([403, 'reverify_required']);
+      expect((await call('POST', '/api/entitlements/stripe/portal', await signedIn('user_mom', {}), { subjectKind: 'space', subjectId: fam }, clerkEnv())).status).toBe(403);
+      expect(fetchImpl).not.toHaveBeenCalled();
+      expect((await call('POST', '/api/entitlements/stripe/portal', await signedIn('user_mom', { fva: [3, -1] }), { subjectKind: 'space', subjectId: fam }, clerkEnv())).body.data).toEqual({ url: 'https://billing.stripe.com/p/s' });
+    });
+
+    it('does not ask before a promo lookup (no money moves there)', async () => {
+      setStripeFetchForTests(vi.fn<typeof fetch>().mockResolvedValueOnce(promoResponse([PROMO])));
+      const r = await call('POST', '/api/entitlements/stripe/promo', await signedIn('user_mom', { fva: [90, -1] }), { code: 'HOYA20', planKey: 'family_lifetime' }, clerkEnv());
+      expect(r.status).toBe(200);
+    });
   });
 });

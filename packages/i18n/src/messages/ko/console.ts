@@ -37,6 +37,7 @@ export const consoleMsgs = {
     sections: { yours: '내 플랜', add: '플랜 추가', help: '도움말' },
     kind: { family: '가족', class: '반', school: '학교' },
     archived: '(보관됨)',
+    accountCard: { title: '내 계정' },
     coverage: {
       free: '무료 플랜',
       family: '가족 플랜',

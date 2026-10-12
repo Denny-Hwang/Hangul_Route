@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, passDiscover, playCheckByIds, type CheckAnswer } from './helpers';
+import { completeChildForm, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheckByIds, type CheckAnswer } from './helpers';
 
 /**
  * F-STORY-003 PR 3.5a: Story Order v2 on the shipped Stage 1 sequences.
@@ -37,7 +37,7 @@ async function openNewYearOrder(page: Page): Promise<void> {
   await page.waitForTimeout(800);
   if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
   await page.getByText('Journey', { exact: true }).last().click();
-  await page.getByRole('button', { name: 'Holidays & Traditions episode for stage1' }).click();
+  await page.getByRole('button', { name: journeyCellName(1, 'Holidays & Traditions') }).click();
   await page.getByRole('button', { name: 'Start', exact: true }).nth(2).click();
   await page.getByRole('button', { name: 'Play anyway' }).click(); // soft prerequisite sheet
   await page.getByRole('button', { name: 'Continue' }).click();

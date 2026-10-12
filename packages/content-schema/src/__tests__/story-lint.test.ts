@@ -1284,3 +1284,149 @@ describe('F-STORY-005 §3.9: copying, designation numbers, shelf reviewers', () 
     expect(hits(lint(draft()), 'story-shelf-needs-reviewers')).toEqual([]);
   });
 });
+
+describe('card rules (F-STORY-006 §3.8)', () => {
+  const CARD_RULES = [
+    'card-keyword-unknown',
+    'card-fact-unknown',
+    'card-fact-too-long',
+    'card-fact-single-source',
+    'card-reward-mismatch',
+    'card-source-address-only',
+  ];
+  const cardFindings = (story: Story): Finding[] => lint(story).filter((f) => CARD_RULES.includes(f.rule));
+
+  it('passes the ready fixture, whose card resolves and whose listen reward is its own card', () => {
+    expect(ready().card).toBeDefined();
+    expect(ready().rewardCardIds?.listen).toBe('card:story-hangul-day');
+    expect(cardFindings(ready())).toEqual([]);
+  });
+
+  it('says nothing about a story without a card block', () => {
+    const story = withStory((s) => {
+      delete s.card;
+      s.rewardCardIds = { listen: 'card:hanji' };
+    });
+    expect(cardFindings(story)).toEqual([]);
+  });
+
+  it('card-keyword-unknown: the headword must be a keywords[] entry, in a draft too', () => {
+    const story = withStory((s) => (s.card!.keywordId = 'nope'));
+    expect(hits(lint(story), 'card-keyword-unknown')).toEqual([
+      { rule: 'card-keyword-unknown', level: 'error', path: 'card.keywordId', message: expect.stringContaining('nope') },
+    ]);
+    const inDraft = withStory((s) => {
+      s.card = { titleEn: 'Card', keywordId: 'missing', factId: 'f1' };
+      s.rewardCardIds = { listen: 'card:story-hangul-day-draft' };
+    }, draft);
+    expect(hits(lint(inDraft), 'card-keyword-unknown')).toHaveLength(1);
+  });
+
+  it('card-fact-unknown: the fact must be in facts[]; the length and source rules then stay quiet', () => {
+    const story = withStory((s) => (s.card!.factId = 'f9'));
+    expect(hits(lint(story), 'card-fact-unknown')).toEqual([
+      { rule: 'card-fact-unknown', level: 'error', path: 'card.factId', message: expect.stringContaining('f9') },
+    ]);
+    expect(hits(lint(story), 'card-fact-too-long')).toEqual([]);
+    expect(hits(lint(story), 'card-fact-single-source')).toEqual([]);
+  });
+
+  it('card-fact-too-long: the verbatim claim fits the back face (180 characters)', () => {
+    const at180 = withStory((s) => (s.facts[2]!.claimEn = `${'a'.repeat(179)}.`));
+    expect(hits(lint(at180), 'card-fact-too-long')).toEqual([]);
+    const at181 = withStory((s) => (s.facts[2]!.claimEn = `${'a'.repeat(180)}.`));
+    expect(hits(lint(at181), 'card-fact-too-long')).toEqual([
+      { rule: 'card-fact-too-long', level: 'error', path: 'facts[2].claimEn', message: expect.stringContaining('181') },
+    ]);
+  });
+
+  it('card-fact-single-source: the card fact needs two sources or more', () => {
+    const story = withStory((s) => s.facts[2]!.sources.splice(1));
+    expect(hits(lint(story), 'card-fact-single-source')).toEqual([
+      { rule: 'card-fact-single-source', level: 'error', path: 'facts[2].sources', message: expect.stringContaining('f3') },
+    ]);
+  });
+
+  it('card-source-address-only: the printed source keeps a name once its web address is dropped', () => {
+    const glossed = withStory((s) => (s.facts[2]!.sources[0]!.publisher = '국가유산청 (Korea Heritage Service, heritage.go.kr)'));
+    expect(hits(lint(glossed), 'card-source-address-only')).toEqual([]);
+    const bare = withStory((s) => (s.facts[2]!.sources[0]!.publisher = 'www.heritage.go.kr'));
+    expect(hits(lint(bare), 'card-source-address-only')).toEqual([
+      { rule: 'card-source-address-only', level: 'error', path: 'facts[2].sources[0].publisher', message: expect.stringContaining('f3') },
+    ]);
+    const title = withStory((s) => (s.facts[2]!.sources[0]!.title = 'heritage.go.kr/hangul'));
+    expect(hits(lint(title), 'card-source-address-only').map((f) => f.path)).toEqual(['facts[2].sources[0].title']);
+    // Only the first source is printed on the card; the others are only counted.
+    const second = withStory((s) => (s.facts[2]!.sources[1]!.publisher = 'heritage.go.kr'));
+    expect(hits(lint(second), 'card-source-address-only')).toEqual([]);
+  });
+
+  it('card-reward-mismatch: rewardCardIds.listen is card:story-<slug>, never another card or missing', () => {
+    const other = withStory((s) => (s.rewardCardIds = { listen: 'card:hanji', read: 'card:book' }));
+    expect(hits(lint(other), 'card-reward-mismatch')).toEqual([
+      {
+        rule: 'card-reward-mismatch',
+        level: 'error',
+        path: 'rewardCardIds.listen',
+        message: expect.stringContaining('card:story-hangul-day'),
+      },
+    ]);
+    const noListen = withStory((s) => (s.rewardCardIds = { read: 'card:book' }));
+    expect(hits(lint(noListen), 'card-reward-mismatch')).toHaveLength(1);
+    const noRewards = withStory((s) => delete s.rewardCardIds);
+    expect(hits(lint(noRewards), 'card-reward-mismatch')).toHaveLength(1);
+  });
+});
+
+describe('card-korean-duplicate (F-STORY-006 §3.8, across the bundle)', () => {
+  const withCard = (id: string, keywordId: string, make: () => Story = ready): Story =>
+    withStory((s) => {
+      s.id = id;
+      s.card = { titleEn: 'Card', keywordId, factId: 'f3' };
+      s.rewardCardIds = { listen: `card:story-${id.replace(/^story:/, '')}` };
+    }, make);
+  const dupes = (found: Finding[]): Finding[] => hits(found, 'card-korean-duplicate');
+
+  it('does not count the same story twice as two cards (story-id-duplicate reports that)', () => {
+    expect(dupes(lintStoryCorpus([ready(), ready()]))).toEqual([]);
+  });
+
+  it('passes distinct headwords and a corpus with no other cards', () => {
+    expect(dupes(lintStoryCorpus([withCard('story:a', 'sejong'), withCard('story:b', 'hangeul')]))).toEqual([]);
+    expect(dupes(lintStoryCorpus([ready()], { cards: [] }))).toEqual([]);
+  });
+
+  it('flags two story cards with the same Korean word', () => {
+    const found = dupes(lintStoryCorpus([withCard('story:a', 'sejong'), withCard('story:b', 'sejong')]));
+    expect(found).toEqual([
+      {
+        rule: 'card-korean-duplicate',
+        level: 'error',
+        path: '',
+        message: expect.stringMatching(/card:story-b.*세종.*card:story-a/),
+      },
+    ]);
+  });
+
+  it('flags a story card that repeats an existing card, and ignores cards with no Korean word', () => {
+    const cards = [
+      { id: 'card:hangul-day', subtitleKo: '한글날' },
+      { id: 'card:plain' },
+    ];
+    const found = dupes(lintStoryCorpus([withCard('story:hangul-day', 'hangeullal')], { cards }));
+    expect(found).toHaveLength(1);
+    expect(found[0]!.message).toMatch(/card:story-hangul-day.*한글날.*card:hangul-day/);
+  });
+
+  it('the ready fixture card does not repeat the Korean word of card:hangul-day (the e2e bundle holds both)', () => {
+    expect(dupes(lintStoryCorpus([ready()], { cards: [{ id: 'card:hangul-day', subtitleKo: '한글날' }] }))).toEqual([]);
+  });
+
+  it('counts ready stories only, and skips a card whose headword does not resolve', () => {
+    const cards = [{ id: 'card:sejong', subtitleKo: '세종' }];
+    const asDraft = withStory((s) => (s.state = 'draft'), () => withCard('story:a', 'sejong'));
+    expect(dupes(lintStoryCorpus([asDraft], { cards }))).toEqual([]);
+    expect(dupes(lintStoryCorpus([withCard('story:a', 'nope')], { cards }))).toEqual([]);
+    expect(dupes(lintStoryCorpus([withCard('story:a', 'sejong')], { cards }))).toHaveLength(1);
+  });
+});

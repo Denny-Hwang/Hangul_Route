@@ -13,7 +13,7 @@ import type { WordArtFamily } from '../types';
  * (W-3..W-6, or W-1c for the generated families and props) adds its families
  * here; until then a family may only grow towards its plan.
  */
-const COMPLETE_FAMILIES: readonly WordArtFamily[] = ['prop', 'food', 'color', 'count', 'travel', 'sport', 'culture', 'science'];
+const COMPLETE_FAMILIES: readonly WordArtFamily[] = ['prop', 'food', 'color', 'count', 'animal', 'body', 'family', 'school', 'nature', 'travel', 'sport', 'culture', 'science'];
 
 /** The six sample glyphs of PR W-1b, one per family that has a hand-drawn sample. */
 const W1B_SAMPLES = ['food-apple', 'animal-cat', 'nature-cloud', 'school-chair', 'travel-bus', 'sport-soccer'];

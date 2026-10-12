@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../content/stories', () => ({
+  // The heritage story cards (content/story-cards.ts) are built from the bundle when the cards load.
+  storiesAll: [],
+  heldStoryCards: [],
   storyById: (id: string) =>
     id === 'story:seollal-new-year' ? { tiers: [{ level: 'listen' }] } : undefined,
 }));
