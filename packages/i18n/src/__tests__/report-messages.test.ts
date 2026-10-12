@@ -1,6 +1,6 @@
 import { PlacementStrandSchema, REPORT_PERIODS, StrandStatusSchema } from '@hangul-route/content-schema';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { findBannedWord } from '../banned';
+import { findBannedWord, findWord } from '../banned';
 import { LOCALES, type UiLocale } from '../locales';
 import { en } from '../messages/en';
 import { es } from '../messages/es';
@@ -62,42 +62,45 @@ const REPORT_ONLY: Readonly<Record<UiLocale, readonly string[]>> = {
   ko: [],
 };
 
-/** Nothing in a report shows, counts or mentions speaking (owner decision 2026-10-10). */
-const SPEAKING: readonly string[] = [
-  'speak',
-  'speaks',
-  'speaking',
-  'spoke',
-  'spoken',
-  'speech',
-  'say',
-  'says',
-  'saying',
-  'said',
-  'talk',
-  'talks',
-  'talking',
-  'pronounce',
-  'pronounced',
-  'pronouncing',
-  'pronunciation',
-  'voice',
-  'voices',
-  'oral',
-  'aloud',
-  'repeat after',
-];
+/**
+ * Nothing in a report shows, counts or mentions speaking (owner decision 2026-10-10), in any locale. The es and ko
+ * rows guard the overlays to come (whole words for es, substrings for ko, as `findWord` matches them).
+ */
+const SPEAKING: Readonly<Record<UiLocale, readonly string[]>> = {
+  en: [
+    'speak',
+    'speaks',
+    'speaking',
+    'spoke',
+    'spoken',
+    'speech',
+    'say',
+    'says',
+    'saying',
+    'said',
+    'talk',
+    'talks',
+    'talking',
+    'pronounce',
+    'pronounced',
+    'pronouncing',
+    'pronunciation',
+    'voice',
+    'voices',
+    'oral',
+    'aloud',
+    'repeat after',
+  ],
+  es: ['hablar', 'habla', 'hablas', 'hablando', 'decir', 'pronunciar', 'pronuncia', 'pronunciación', 'voz', 'voces', 'oral', 'en voz alta'],
+  ko: ['말하기', '말해', '말하', '발음', '목소리', '소리 내어'],
+};
 
-const escapeRegExp = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-/** `word` (or a phrase, any whitespace between its words) as a whole word: no letter or digit on either side. */
-function hasWholeWord(text: string, word: string): boolean {
-  const body = word.split(/\s+/).map(escapeRegExp).join('\\s+');
-  return new RegExp(`(?<![\\p{L}\\p{N}])${body}(?![\\p{L}\\p{N}])`, 'iu').test(text);
-}
-
-/** The first word of `list` found in `text` as a whole word, or null. */
-const wholeWordHit = (text: string, list: readonly string[]): string | null => list.find((word) => hasWholeWord(text, word)) ?? null;
+/** No percentage (OD-6), in words either. */
+const PERCENT: Readonly<Record<UiLocale, readonly string[]>> = {
+  en: ['percent', 'per cent', 'percentage'],
+  es: ['por ciento', 'porcentaje'],
+  ko: ['퍼센트', '백분율'],
+};
 
 describe('report namespace registration', () => {
   it('registers report in the English dictionary and a11y.report under a11y', () => {
@@ -158,6 +161,10 @@ describe('Appendix A drafts (English)', () => {
     expect(r.headline.stageDone('Mina', 1, 'Hangul', r.when.week)).toBe('Mina finished Stage 1: Hangul this week!');
     expect(r.headline.noneYet(r.when.week)).toBe('No practice yet this week.');
     expect(r.headline.noneSaved('Mina', r.when.week)).toBe("Nothing saved from Mina's device this week yet.");
+    expect(r.headline.noneSavedAfter('Mina', 'Oct 1')).toBe("Nothing saved from Mina's device after Oct 1 yet.");
+    expect(r.you.headline.noneSavedAfter('Oct 1')).toBe('Nothing saved on your device after Oct 1 yet.');
+    expect(r.headline.noneThen(r.when.prevWeek)).toBe('No practice last week.');
+    expect(r.headline.practicedOn('Mina', r.when.day)).toBe('Mina practiced today.');
     expect(r.headline.gettingStarted('Mina')).toBe('Mina is just getting started.');
     expect(r.insight.showed_up('Mina', 1, r.when.week)).toBe('Mina practiced on 1 day this week.');
   });
@@ -171,7 +178,7 @@ describe('Appendix A drafts (English)', () => {
     expect(i.minutes_up(r.previous.month, 90)).toBe('More practice time than all of last month: 90 minutes.');
     expect(i.quests_new(2)).toBe('2 new quests finished.');
     expect(i.cards_new(3)).toBe('3 new heritage cards collected.');
-    expect(i.level_secure('Words', 1)).toBe('Level check: Words looks secure.');
+    expect(i.level_secure(['Words'])).toBe('Level check: Words looks secure.');
     expect(i.plan_done).toEqual({ class: 'Every homework item in this plan is done.', family: "Everything in this week's plan is done." });
     expect(i.streak(3)).toBe('3 days in a row. Hoya is proud!');
     expect(i.words_new(5)).toBe('5 new words met.');
@@ -229,7 +236,9 @@ describe('Appendix A drafts (English)', () => {
     expect(a.notSaved(r.list(['Saturday', 'Sunday']))).toBe('Not saved yet: Saturday and Sunday.');
     expect(a.periodChanged(r.when.week)).toBe('Showing this week');
     expect(a.step(r.when.prevWeek)).toBe('Show last week');
-    expect(a.step(r.when.nextWeek)).toBe('Show the next week');
+    expect(a.step(r.step.range('Sep 24', 'Sep 30'))).toBe('Show Sep 24 to Sep 30');
+    expect(a.stepNext).toEqual({ day: 'Show next day', week: 'Show next week', month: 'Show next month' });
+    expect(a.periodChanged(r.when.prevMonth)).toBe('Showing last month');
   });
 
   it('has a sentence word for every period tab and a step name for every stepper', () => {
@@ -246,6 +255,22 @@ describe('report.list and report.letter', () => {
     expect(en.report.list(['a'])).toBe('a');
     expect(en.report.list(['a', 'b'])).toBe('a and b');
     expect(en.report.list(['a', 'b', 'c'])).toBe('a, b and c');
+  });
+
+  it('keeps each item once and in order in every locale, so a page can render a chip per letter between the separators', () => {
+    vi.stubEnv('NEXT_PUBLIC_PSEUDO_LOCALE', '1');
+    try {
+      for (const locale of [...LOCALES, PSEUDO_LOCALE] as const) {
+        for (const items of [['\u0001'], ['\u0001', '\u0002'], ['\u0001', '\u0002', '\u0003', '\u0004']]) {
+          const out = getMessages(locale).report.list(items);
+          const at = items.map((item) => out.indexOf(item));
+          expect(items.every((item) => out.split(item).length === 2), `${locale}: ${out}`).toBe(true);
+          expect([...at].sort((x, y) => x - y)).toEqual(at);
+        }
+      }
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 
   it('puts the romanization after a taught letter', () => {
@@ -269,13 +294,19 @@ describe('copy rules for report and a11y.report, in every locale', () => {
       for (const { path, text } of outputs()) expect(findBannedWord(text, locale, 'caregiver'), `${path}: ${text}`).toBeNull();
     });
 
-    it(`${locale}: no report-only word (whole words: ranking, comparison, deficit words)`, () => {
-      const list = [...REPORT_ONLY.en, ...REPORT_ONLY[locale]];
-      for (const { path, text } of outputs()) expect(wholeWordHit(text, list), `${path}: ${text}`).toBeNull();
+    // English words apply to every locale too, so an English fallback is checked wherever it shows.
+    it(`${locale}: no report-only word (ranking, comparison, deficit words; whole words, ko substrings)`, () => {
+      for (const { path, text } of outputs()) {
+        expect(findWord(text, REPORT_ONLY.en, 'en'), `${path}: ${text}`).toBeNull();
+        expect(findWord(text, REPORT_ONLY[locale], locale), `${path}: ${text}`).toBeNull();
+      }
     });
 
     it(`${locale}: no word about speaking, pronunciation or voice`, () => {
-      for (const { path, text } of outputs()) expect(wholeWordHit(text, SPEAKING), `${path}: ${text}`).toBeNull();
+      for (const { path, text } of outputs()) {
+        expect(findWord(text, SPEAKING.en, 'en'), `${path}: ${text}`).toBeNull();
+        expect(findWord(text, SPEAKING[locale], locale), `${path}: ${text}`).toBeNull();
+      }
     });
 
     it(`${locale}: no emoji and no emoji-capable symbol`, () => {
@@ -284,24 +315,31 @@ describe('copy rules for report and a11y.report, in every locale', () => {
 
     it(`${locale}: no percentage (OD-6) and no "locked" (items not ready are left out, section 3.5)`, () => {
       for (const { path, text } of outputs()) {
-        expect(text, path).not.toMatch(/%|percent/i);
-        expect(wholeWordHit(text, ['lock', 'locked']), `${path}: ${text}`).toBeNull();
+        expect(text, path).not.toContain('%');
+        expect(findWord(text, PERCENT.en, 'en'), `${path}: ${text}`).toBeNull();
+        expect(findWord(text, PERCENT[locale], locale), `${path}: ${text}`).toBeNull();
+        expect(findWord(text, ['lock', 'locked'], 'en'), `${path}: ${text}`).toBeNull();
       }
     });
   }
 
-  it('the whole-word matcher is Unicode-aware and never matches inside a word (self-check)', () => {
-    expect(hasWholeWord('Stop', 'top')).toBe(false);
-    expect(hasWholeWord('desktop', 'top')).toBe(false);
-    expect(hasWholeWord('Frank', 'rank')).toBe(false);
-    expect(hasWholeWord('Top letters', 'top')).toBe(true);
-    expect(hasWholeWord('below.', 'below')).toBe(true);
-    expect(hasWholeWord('He should  have', 'should have')).toBe(true);
-    expect(hasWholeWord('último lugar', 'lugar')).toBe(true);
-    expect(hasWholeWord('lugares', 'lugar')).toBe(false);
-    expect(hasWholeWord('ápoor', 'poor')).toBe(false);
-    expect(wholeWordHit('Mina is the top reader.', REPORT_ONLY.en)).toBe('top');
-    expect(wholeWordHit('Say it with Hoya.', SPEAKING)).toBe('say');
+  it('the matcher takes whole words in en and es and never matches inside a word; ko matches with particles (self-check)', () => {
+    expect(findWord('Stop', ['top'], 'en')).toBeNull();
+    expect(findWord('desktop', ['top'], 'en')).toBeNull();
+    expect(findWord('Frank', ['rank'], 'en')).toBeNull();
+    expect(findWord('Top letters', ['top'], 'en')).toBe('top');
+    expect(findWord('below.', ['below'], 'en')).toBe('below');
+    expect(findWord('He should  have', ['should have'], 'en')).toBe('should have');
+    expect(findWord('último lugar', ['lugar'], 'es')).toBe('lugar');
+    expect(findWord('lugares', ['lugar'], 'es')).toBeNull();
+    expect(findWord('ápoor', ['poor'], 'en')).toBeNull();
+    expect(findWord('순위가 올랐어요', ['순위'], 'ko')).toBe('순위');
+    expect(findWord('Mina is the top reader.', REPORT_ONLY.en, 'en')).toBe('top');
+    expect(findWord('Say it with Hoya.', SPEAKING.en, 'en')).toBe('say');
+    expect(findWord('Lee en voz alta.', SPEAKING.es, 'es')).not.toBeNull();
+    expect(findWord('Lee en voz alta.', ['en voz alta'], 'es')).toBe('en voz alta');
+    expect(findWord('발음을 들어요', SPEAKING.ko, 'ko')).toBe('발음');
+    expect(findWord('80 percent right', PERCENT.en, 'en')).toBe('percent');
   });
 });
 
@@ -335,7 +373,43 @@ const COUNTED: readonly [string, (m: Messages, n: number) => string][] = [
   ['report.class.medianMinutes', (m, n) => m.report.class.medianMinutes(n)],
 ];
 
+/** Messages with a number that is not a noun count (no plural to choose), each with the reason. */
+const NUMBER_NOT_COUNTED: Readonly<Record<string, string>> = {
+  'report.glance.nowOn': 'a stage number',
+  'report.headline.stageDone': 'a stage number',
+  'report.headline.stageDoneAll': 'a stage number',
+  'report.you.headline.stageDone': 'a stage number',
+  'report.you.headline.stageDoneAll': 'a stage number',
+  'report.insight.stage_done': 'a stage number',
+  'report.you.insight.stage_done': 'a stage number',
+  'report.detail.milestone': 'a stage number',
+  'report.detail.planRow.class': 'numbers beside "done" and "ready to play", no noun',
+  'report.detail.planRow.family': 'numbers beside "done" and "ready to play", no noun',
+  'report.detail.planRow.self': 'numbers beside "done" and "ready to play", no noun',
+  'report.detail.planRow.device': 'numbers beside "done" and "ready to play", no noun',
+  'report.class.questsNew': 'a label and its number',
+  'report.class.cardsNew': 'a label and its number',
+  'report.class.count': 'a label and its number',
+  'report.class.band.range': 'a range of 2 or more days, always plural',
+  'report.class.band.atLeast': 'the 10+ band, always plural',
+  'report.class.planRow': 'numbers after "assigned to", "started by" and "finished by", no noun',
+};
+
 describe('report counts use plural() in every locale (en, es, ko, en-XA)', () => {
+  it('every message with a number is in the plural rows below or says why it has no plural', () => {
+    const counted = new Set(COUNTED.map(([path]) => path.split(' ')[0]));
+    const numeric = [...leafPaths(en.report).map((path) => `report.${path}`), ...leafPaths(en.a11y.report).map((path) => `a11y.report.${path}`)].filter(
+      (path) => (SAMPLES[path] ?? []).some((args) => args.some((arg) => typeof arg === 'number')),
+    );
+    expect(numeric.filter((path) => !counted.has(path) && NUMBER_NOT_COUNTED[path] === undefined)).toEqual([]);
+    for (const path of [...counted, ...Object.keys(NUMBER_NOT_COUNTED)]) expect(numeric, path).toContain(path);
+  });
+
+  it('level_secure agrees with the number of strands it names', () => {
+    expect(en.report.insight.level_secure(['Words'])).toMatch(/ looks /);
+    expect(en.report.insight.level_secure(['Words', 'Sentences'])).toMatch(/ look /);
+  });
+
   afterEach(() => {
     vi.unstubAllEnvs();
   });
@@ -349,7 +423,7 @@ describe('report counts use plural() in every locale (en, es, ko, en-XA)', () =>
     expect(r.detail.totals(1, 1)).toBe('Since the start: 1 quest, 1 card');
     expect(r.class.headline(1, 1, 'today')).toBe('1 of 1 learner practiced today.');
     expect(r.class.olderApp(1)).toBe('1 learner has an older app: their day-by-day figures appear after an update.');
-    expect(r.insight.level_secure('Words and Sentences', 2)).toBe('Level check: Words and Sentences look secure.');
+    expect(r.insight.level_secure(['Words', 'Sentences'])).toBe('Level check: Words and Sentences look secure.');
   });
 
   it('n = 1 and n = 2 rows', () => {
@@ -408,6 +482,7 @@ describe('voices (OD-17): third person for grown-ups, second person on a self-on
     ['report.you.headline.stageDone', 'report.headline.stageDone'],
     ['report.you.headline.stageDoneAll', 'report.headline.stageDoneAll'],
     ['report.you.headline.noneSaved', 'report.headline.noneSaved'],
+    ['report.you.headline.noneSavedAfter', 'report.headline.noneSavedAfter'],
     ['report.you.headline.gettingStarted', 'report.headline.gettingStarted'],
     ['report.you.detail.lettersStrong', 'report.detail.lettersStrong'],
     ['report.you.insight.showed_up', 'report.insight.showed_up'],
@@ -429,6 +504,21 @@ describe('voices (OD-17): third person for grown-ups, second person on a self-on
       const youArity = typeof you === 'function' ? you.length : 0;
       expect(youArity + 1, `${youPath} vs ${thirdPath}`).toBe((third as (...a: unknown[]) => string).length);
     }
+  });
+
+  /** Third-person messages that never show on a self-only device: the console's states for a device elsewhere. */
+  const CONSOLE_ONLY: Readonly<Record<string, string>> = {
+    'report.state.noData': 'the in-app report always reads its own device, which holds a summary',
+    'report.state.updateAction': 'it asks a grown-up to open the app on another device',
+  };
+
+  it('every message that names the learner has a second-person twin, or never shows on a device', () => {
+    const twinned = new Set(TWINS.map(([, third]) => third));
+    const naming = render(en.report, 'report')
+      .filter(({ path, text }) => !path.startsWith('report.you.') && /Mina|Alexandria Kimberley/.test(text))
+      .map(({ path }) => path);
+    expect([...new Set(naming)].filter((path) => !twinned.has(path) && CONSOLE_ONLY[path] === undefined)).toEqual([]);
+    for (const path of Object.keys(CONSOLE_ONLY)) expect(naming).toContain(path);
   });
 
   it('third person names the learner; second person never does and speaks to "you"', () => {

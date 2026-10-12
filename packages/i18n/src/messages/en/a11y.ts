@@ -180,14 +180,18 @@ export const a11y = {
   },
   /**
    * Progress reports (F-REPORT-001 section 3.12, RP-6): the period tabs and stepper, the live region, and the
-   * text alternatives of the calendar and the growth line. `days` is a list of formatted days
-   * (`report.list`); `window` is a `report.when` value ("last week", "the next week").
+   * text alternatives of the calendar and the growth line. `days` is a list of formatted days (`report.list`).
+   * `window` names a window: `report.when.day` / `week` / `month` ("this week"), `prevDay` / `prevWeek` /
+   * `prevMonth` ("last week"), or for an older window its formatted date or dates (`report.step.range`).
    */
   report: {
     periods: 'Report period',
     periodChanged: (window: string) => `Showing ${window}`,
     periodChangedAll: 'Showing all time',
+    /** The Previous button. */
     step: (window: string) => `Show ${window}`,
+    /** The Next button. */
+    stepNext: { day: 'Show next day', week: 'Show next week', month: 'Show next month' },
     calendar: (days: string) => `Practiced on ${days}.`,
     calendarNone: 'No practice days in this period.',
     notSaved: (days: string) => `Not saved yet: ${days}.`,

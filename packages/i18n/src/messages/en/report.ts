@@ -22,6 +22,12 @@ const minuteCount = (n: number): string => plural('en', n, { one: `${n} minute`,
 const questCount = (n: number): string => plural('en', n, { one: `${n} quest`, other: `${n} quests` });
 const cardCount = (n: number): string => plural('en', n, { one: `${n} card`, other: `${n} cards` });
 const learnerCount = (n: number): string => plural('en', n, { one: `${n} learner`, other: `${n} learners` });
+/** "a", "a and b", "a, b and c". */
+const list = (items: readonly string[]): string =>
+  items.length <= 1 ? (items[0] ?? '') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1] ?? ''}`;
+/** One sentence, two keys: the headline and the W0 line say the same thing (section 3.15 behaviour 11). */
+const practicedOn = (name: string, days: number, when: string): string => `${name} practiced on ${dayCount(days)} ${when}.`;
+const youPracticedOn = (days: number, when: string): string => `You practiced on ${dayCount(days)} ${when}.`;
 
 export const report = {
   /** `document.title` of every report page: never the learner's name (section 3.10, browser history and print header). */
@@ -36,8 +42,9 @@ export const report = {
   /** The four period tabs. */
   period: { day: 'Today', week: 'This week', month: 'This month', all: 'All time' },
   /**
-   * A window inside a sentence ("{name} practiced on 3 days {when}."): the current window, the first step
-   * back, an older window (with a formatted date or month), and the step forward for `a11y.report.step`.
+   * A window inside a sentence, after a verb ("{name} practiced on 3 days {when}."): the current window, the first
+   * step back, an older window (with a formatted date or month). The current and first-step words are also the
+   * window's name in `a11y.report.periodChanged` and `a11y.report.step`; an older window is named by its dates there.
    */
   when: {
     day: 'today',
@@ -50,9 +57,6 @@ export const report = {
     onDay: (date: string) => `on ${date}`,
     weekTo: (date: string) => `in the week to ${date}`,
     inMonth: (month: string) => `in ${month}`,
-    nextDay: 'the next day',
-    nextWeek: 'the next week',
-    nextMonth: 'the next month',
   },
   /** The Previous / Next stepper (OD-18). The first step back is named; further steps show the dates. */
   step: {
@@ -77,16 +81,18 @@ export const report = {
   /**
    * One sentence under the tabs (section 3.5 item 5). `when` is a `report.when` value. `practicedOn` is the
    * `day` period's sentence ("Mina practiced today."); `stageDoneAll` the `all` period's; `noneThen` is
-   * `noneYet` for a window in the past ("No practice last week.").
+   * `noneYet` for a window in the past ("No practice last week."); `noneSavedAfter` is `noneSaved` for a window
+   * in the past, with the device's last saved day ("Nothing saved from Mina's device after Oct 1 yet.").
    */
   headline: {
-    practiced: (name: string, days: number, when: string) => `${name} practiced on ${dayCount(days)} ${when}.`,
+    practiced: practicedOn,
     practicedOn: (name: string, when: string) => `${name} practiced ${when}.`,
     stageDone: (name: string, n: number, stage: string, when: string) => `${name} finished Stage ${n}: ${stage} ${when}!`,
     stageDoneAll: (name: string, n: number, stage: string) => `${name} finished Stage ${n}: ${stage}!`,
     noneYet: (when: string) => `No practice yet ${when}.`,
     noneThen: (when: string) => `No practice ${when}.`,
     noneSaved: (name: string, when: string) => `Nothing saved from ${name}'s device ${when} yet.`,
+    noneSavedAfter: (name: string, date: string) => `Nothing saved from ${name}'s device after ${date} yet.`,
     gettingStarted: (name: string) => `${name} is just getting started.`,
   },
   /** Under the headline when the window reaches past the last day the device saved (section 3.2). */
@@ -152,7 +158,7 @@ export const report = {
    * (the page renders the chips in place). `practice_day` is `practice_days` on the `day` period.
    */
   insight: {
-    showed_up: (name: string, days: number, when: string) => `${name} practiced on ${dayCount(days)} ${when}.`,
+    showed_up: practicedOn,
     stage_done: (name: string, n: number, stage: string) => `${name} finished Stage ${n}: ${stage}.`,
     letters_new: (name: string, letters: string) => `${name} got strong on ${letters}.`,
     practice_days: (name: string, days: number) => `${name} practiced on ${dayCount(days)}.`,
@@ -161,9 +167,9 @@ export const report = {
     quests_new: (count: number) => plural('en', count, { one: '1 new quest finished.', other: `${count} new quests finished.` }),
     cards_new: (count: number) =>
       plural('en', count, { one: '1 new heritage card collected.', other: `${count} new heritage cards collected.` }),
-    /** `strands` is a list of strand names (`report.list`); `count` how many it holds. */
-    level_secure: (strands: string, count: number) =>
-      plural('en', count, { one: `Level check: ${strands} looks secure.`, other: `Level check: ${strands} look secure.` }),
+    /** `strands`: the names of the secure strands (`caregiver.placementReport.strand`), one or two. */
+    level_secure: (strands: readonly string[]) =>
+      plural('en', strands.length, { one: `Level check: ${list(strands)} looks secure.`, other: `Level check: ${list(strands)} look secure.` }),
     plan_done: {
       class: 'Every homework item in this plan is done.',
       family: "Everything in this week's plan is done.",
@@ -190,18 +196,19 @@ export const report = {
   you: {
     title: 'Your report',
     headline: {
-      practiced: (days: number, when: string) => `You practiced on ${dayCount(days)} ${when}.`,
+      practiced: youPracticedOn,
       practicedOn: (when: string) => `You practiced ${when}.`,
       stageDone: (n: number, stage: string, when: string) => `You finished Stage ${n}: ${stage} ${when}!`,
       stageDoneAll: (n: number, stage: string) => `You finished Stage ${n}: ${stage}!`,
       noneSaved: (when: string) => `Nothing saved on your device ${when} yet.`,
+      noneSavedAfter: (date: string) => `Nothing saved on your device after ${date} yet.`,
       gettingStarted: 'You are just getting started.',
     },
     detail: {
       lettersStrong: 'Letters you know well',
     },
     insight: {
-      showed_up: (days: number, when: string) => `You practiced on ${dayCount(days)} ${when}.`,
+      showed_up: youPracticedOn,
       stage_done: (n: number, stage: string) => `You finished Stage ${n}: ${stage}.`,
       letters_new: (letters: string) => `You got strong on ${letters}.`,
       practice_days: (days: number) => `You practiced on ${dayCount(days)}.`,
@@ -264,8 +271,8 @@ export const report = {
         one: '1 learner last saved more than 7 days ago.',
         other: `${count} learners last saved more than 7 days ago.`,
       }),
+    /** The class page's own headings; "What went well" is `report.section.wentWell`. */
     section: {
-      wentWell: 'What went well',
       practiceTogether: 'Practice together',
       daysPracticed: 'Days practiced',
       time: 'Time',
@@ -305,7 +312,9 @@ export const report = {
   nav: { reports: 'Reports', classReports: 'Class reports' },
   /** A taught letter inside a sentence, with its romanization ("ㅂ (b)"); `letter` is taught Korean. */
   letter: (letter: string, romanization: string) => `${letter} (${romanization})`,
-  /** A list inside a sentence: "a", "a and b", "a, b and c". */
-  list: (items: readonly string[]) =>
-    items.length <= 1 ? (items[0] ?? '') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1] ?? ''}`,
+  /**
+   * A list inside a sentence: "a", "a and b", "a, b and c". Each item appears once, in order, so a page can pass
+   * placeholders and render each taught letter as its own chip (`KoreanText`, a Browse link) between the separators.
+   */
+  list,
 } as const;
