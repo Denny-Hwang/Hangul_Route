@@ -1,6 +1,6 @@
-import type { ProgressSummary } from '@hangul-route/content-schema';
 import type { MessageLocale } from '@hangul-route/i18n';
 import { VOCAB_CATALOG, type VocabCatalogEntry } from '../../data/vocab-catalog';
+import type { RosterVocab } from './api';
 import { parseVocabSummary } from './vocab-summary';
 
 /**
@@ -111,7 +111,7 @@ export interface StudentWords {
  * the card shows no word line. The first-try rate is never read here: it stays off the roster
  * (section 3.8).
  */
-export function studentWords(summary: Partial<Pick<ProgressSummary, 'vocab'>> | null | undefined, locale: MessageLocale): StudentWords | null {
+export function studentWords(summary: { vocab?: RosterVocab } | null | undefined, locale: MessageLocale): StudentWords | null {
   const vocab = parseVocabSummary(summary?.vocab);
   if (!vocab) return null;
   const { collected, strong, needsPractice } = vocab;

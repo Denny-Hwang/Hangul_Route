@@ -1,6 +1,6 @@
 import { checkRomanization } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { consoleWord } from '../../lib/console/vocab-words';
+import { consoleGloss, consoleWord } from '../../lib/console/vocab-words';
 import { VOCAB_CATALOG } from '../vocab-catalog';
 
 /** F-VOC-001 §3.7: the generated roster mirror for the console and the WordArt sheet. */
@@ -38,7 +38,10 @@ describe('VOCAB_CATALOG lookup for the console', () => {
 
   it('finds a known id with its Hangul, romanization and gloss', () => {
     expect(consoleWord('vocab:sagwa-apple', 'en')).toEqual({ id: 'vocab:sagwa-apple', ko: '사과', romanization: 'sagwa', gloss: 'apple' });
-    for (const entry of VOCAB_CATALOG) expect(consoleWord(entry.id, 'en'), entry.id).toEqual({ id: entry.id, ko: entry.ko, romanization: entry.romanization, gloss: entry.en });
+    // The gloss is the catalogue's English one, shaped for the line after the romanization (consoleGloss).
+    for (const entry of VOCAB_CATALOG) {
+      expect(consoleWord(entry.id, 'en'), entry.id).toEqual({ id: entry.id, ko: entry.ko, romanization: entry.romanization, gloss: consoleGloss(entry.en, entry.romanization) });
+    }
   });
 
   it('shows an unknown id by its romanized slug, with no Hangul', () => {
