@@ -159,8 +159,11 @@ export const TEACHER_VISIBLE_SUMMARY_ITEMS: Readonly<Record<TeacherVisibleSummar
   /**
    * Day-by-day practice for progress reports (F-REPORT-001 section 3.8, RP-W2):
    * minutes and practice days per day are what the `activity` sentence names
-   * ("When {learner} practiced, minutes each day and days in a row"); per-day
-   * quests, cards and letters are covered by `quests` and `cards_letters`.
+   * ("When {learner} practiced, minutes each day and days in a row"), and the
+   * time-zone offset only sets which local day a count falls on; per-day
+   * quests, stage finish dates and the next lesson are covered by `quests`,
+   * per-day cards and letters and the lesson to revisit by `cards_letters`
+   * (the mapping goes to counsel at gate G2, F-REPORT-001 review log).
    * Words stay zeroed for every viewer until F-VOC-005 P-4 adds their own item,
    * and a class or school sees no day before the learner joined
    * (`activityOf` in packages/backend/src/lib/roster-summary.ts).
