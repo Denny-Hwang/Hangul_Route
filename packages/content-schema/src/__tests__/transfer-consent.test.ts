@@ -19,6 +19,7 @@ import {
   UI_LOCALES,
   isTransferConsentLocale,
   transferConsentLineIds,
+  type TeacherVisibleItemId,
   type TransferConsentContext,
   type TransferConsentLocale,
 } from '../index';
@@ -43,13 +44,25 @@ const PINNED_HASHES: Record<string, Partial<Record<TransferConsentLocale, string
   },
 };
 
-function canonical(locale: TransferConsentLocale): string {
+/**
+ * The canonical text the hash is taken over. `earlier` rebuilds an earlier
+ * version from the current text: items it drops and item wordings it restores,
+ * so a test can prove what a bump changed and nothing else.
+ */
+function canonical(
+  locale: TransferConsentLocale,
+  earlier: { drop?: readonly TeacherVisibleItemId[]; items?: Partial<Record<TeacherVisibleItemId, string>> } = {},
+): string {
   const text = TRANSFER_CONSENT_TEXT[locale];
+  const dropped = new Set(earlier.drop ?? []);
   return JSON.stringify({
     lines: TRANSFER_CONSENT_LINES.map((line) => [line.id, line.when, line.kind, text.lines[line.id]]),
-    items: TEACHER_VISIBLE_ITEM_IDS.map((id) => [id, text.items[id]]),
+    items: TEACHER_VISIBLE_ITEM_IDS.filter((id) => !dropped.has(id)).map((id) => [id, earlier.items?.[id] ?? text.items[id]]),
   });
 }
+
+/** The `activity` item before F-REPORT-001 RP-W2 (`transfer-2026-10`). */
+const ACTIVITY_BEFORE_RP_W2 = 'When {learner} was last active, minutes this week and days in a row';
 
 function sha256(value: string): string {
   return createHash('sha256').update(value).digest('hex');
@@ -249,7 +262,8 @@ describe('what the new teacher sees is generated from data (TEACHER_VISIBLE_SUMM
     // transfer-2026-10b carried the new sentence; F-FEEDBACK-001 FB-1 then moved the current version on to transfer-2026-10c.
     expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toContain('transfer-2026-10b');
     expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toContain('transfer-2026-10');
-    expect(PINNED_HASHES['transfer-2026-10b']?.en).not.toBe(PINNED_HASHES['transfer-2026-10']?.en);
+    // transfer-2026-10 is transfer-2026-10b with the earlier activity sentence and without note_replies, and nothing else.
+    expect(sha256(canonical('en', { drop: ['note_replies'], items: { activity: ACTIVITY_BEFORE_RP_W2 } }))).toBe(PINNED_HASHES['transfer-2026-10']?.en);
   });
 
   it('classifies every ProgressSummarySchema key exactly once (a new key fails here until classified)', () => {
@@ -333,9 +347,16 @@ describe('what a class sender sees of a note (F-FEEDBACK-001 section 7.7, OD-8)'
     expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toContain(TRANSFER_CONSENT_TEXT_VERSION);
     expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toContain('transfer-2026-10b');
     expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toContain('transfer-2026-10');
-    expect(PINNED_HASHES['transfer-2026-10c']?.en).not.toBe(PINNED_HASHES['transfer-2026-10b']?.en);
-    // the combined text keeps the RP-W2 sentence and adds note_replies
-    expect(TRANSFER_CONSENT_TEXT.en.items.activity).toBe('When {learner} practiced, minutes each day and days in a row');
+    // transfer-2026-10c is exactly transfer-2026-10b plus the note_replies item: the RP-W2 sentence is kept.
+    expect(sha256(canonical('en', { drop: ['note_replies'] }))).toBe(PINNED_HASHES['transfer-2026-10b']?.en);
+    expect(sha256(canonical('en'))).toBe(PINNED_HASHES['transfer-2026-10c']?.en);
+  });
+
+  it('pins a hash for the current text that no earlier version shares', () => {
+    const current = sha256(canonical('en'));
+    for (const [version, hashes] of Object.entries(PINNED_HASHES)) {
+      if (version !== TRANSFER_CONSENT_TEXT_VERSION) expect(hashes.en, version).not.toBe(current);
+    }
   });
 
   it('keeps every pinned version accepted, so the accepted list only grows when a later PR bumps the text', () => {

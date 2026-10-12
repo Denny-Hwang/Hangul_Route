@@ -89,9 +89,53 @@ describe('keptEventFields (the codes-only filter shared with POST /api/telemetry
     expect(keptEventFields('shell.unlisted' as TelemetryEventName, { prefix: 'teach' }, 'profile:a')).toEqual({ profileId: undefined, payload: undefined });
   });
 
-  it('never keeps a profile id on a notes event, and keeps its payload as given (F-FEEDBACK-001 section 10)', () => {
-    expect(keptEventFields('notes.note_opened', { unread: 1 }, 'profile:a')).toEqual({ profileId: undefined, payload: { unread: 1 } });
+  it('never keeps a profile id on a notes event, and keeps only its documented fields (F-FEEDBACK-001 section 10)', () => {
+    const opened = { presetId: 'next_try_this', fromRole: 'teacher', hasText: true, hasSuggest: true, suggestOpen: false };
+    expect(keptEventFields('notes.note_opened', opened, 'profile:a')).toEqual({ profileId: undefined, payload: opened });
+    expect(keptEventFields('notes.note_opened', { unread: 1 }, 'profile:a')).toEqual({ profileId: undefined, payload: undefined });
     expect(keptEventFields('notes.report_sent', undefined, 'profile:a')).toEqual({ profileId: undefined, payload: undefined });
+  });
+
+  it('drops note text, ids, labels and a profile id placed inside a notes payload', () => {
+    const smuggled = {
+      profileId: 'profile:a',
+      noteId: 'note:0b7c2f9e-1d2a',
+      batchId: 'batch:1',
+      spaceId: 'space:class-a',
+      accountId: 'acct:1',
+      label: 'mom',
+      text: 'See you at 3 at the park',
+      name: 'Suni',
+    };
+    expect(keptEventFields('notes.note_opened', { ...smuggled, presetId: 'effort_proud', fromRole: 'family' }, 'profile:a')).toEqual({
+      profileId: undefined,
+      payload: { presetId: 'effort_proud', fromRole: 'family' },
+    });
+    expect(keptEventFields('notes.card_shown', { ...smuggled, unread: 2 }, undefined)).toEqual({ profileId: undefined, payload: { unread: 2 } });
+    expect(keptEventFields('notes.prefs_changed', smuggled, undefined)).toEqual({ profileId: undefined, payload: undefined });
+  });
+
+  it('keeps each notes field only in its documented shape', () => {
+    // codes from the shared lists only
+    expect(keptEventFields('notes.note_opened', { presetId: 'effort_brand_new', fromRole: 'school' }, undefined).payload).toBeUndefined();
+    expect(keptEventFields('notes.reaction_picked', { reaction: 'wow', fromRole: 'family', changed: 'yes' }, undefined).payload).toEqual({ fromRole: 'family' });
+    expect(keptEventFields('notes.reaction_picked', { reaction: 'did_it', fromRole: 'teacher', changed: true }, undefined).payload).toEqual({
+      reaction: 'did_it',
+      fromRole: 'teacher',
+      changed: true,
+    });
+    expect(keptEventFields('notes.suggest_started', { fromRole: 'teacher', questId: 'quest:x' }, undefined).payload).toEqual({ fromRole: 'teacher' });
+    expect(keptEventFields('notes.report_sent', { reason: 'unsafe', via: 'grown_up_zone' }, undefined).payload).toEqual({ reason: 'unsafe', via: 'grown_up_zone' });
+    expect(keptEventFields('notes.report_sent', { reason: 'mean', via: 'console' }, undefined).payload).toBeUndefined();
+    expect(keptEventFields('notes.prefs_changed', { classes: 'presets' }, undefined).payload).toEqual({ classes: 'presets' });
+    expect(keptEventFields('notes.prefs_changed', { classes: 'quiet' }, undefined).payload).toBeUndefined();
+    // counts are whole numbers 0-30 (the inbox holds at most 30 notes, section 6.8 rule 7)
+    expect(keptEventFields('notes.list_viewed', { notes: 30, unread: 0 }, undefined).payload).toEqual({ notes: 30, unread: 0 });
+    expect(keptEventFields('notes.list_viewed', { notes: 31, unread: -1 }, undefined).payload).toBeUndefined();
+    expect(keptEventFields('notes.card_shown', { unread: 1.5 }, undefined).payload).toBeUndefined();
+    expect(keptEventFields('notes.card_shown', { unread: '2' }, undefined).payload).toBeUndefined();
+    // a notes name without rules keeps nothing
+    expect(keptEventFields('notes.unlisted' as TelemetryEventName, { unread: 1 }, 'profile:a')).toEqual({ profileId: undefined, payload: undefined });
   });
 });
 

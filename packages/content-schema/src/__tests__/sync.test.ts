@@ -5,6 +5,8 @@ import {
   BackupFileSchema,
   JourneySummarySchema,
   LearnerRegisterSchema,
+  NOTE_PREFS_DEFAULT,
+  NOTE_PREFS_UNREADABLE,
   ProgressSummarySchema,
   RouteGoalSummarySchema,
   SnapshotPutSchema,
@@ -362,7 +364,8 @@ describe('SyncInboxSchema notes additions (F-FEEDBACK-001 section 7.1)', () => {
   it('an inbox from a Worker without notes or notePrefs parses with the defaults', () => {
     const inbox = SyncInboxSchema.parse(oldWorker);
     expect(inbox.notes).toEqual([]);
-    expect(inbox.notePrefs).toEqual({ classes: 'all', acknowledged: false });
+    expect(inbox.notePrefs).toEqual(NOTE_PREFS_DEFAULT);
+    expect(inbox.notePrefs).not.toBe(NOTE_PREFS_DEFAULT);
     expect(inbox.plans).toHaveLength(1);
   });
 
@@ -394,8 +397,25 @@ describe('SyncInboxSchema notes additions (F-FEEDBACK-001 section 7.1)', () => {
   it('a notePrefs that is not an object reads as unknown and acknowledged, never as the loosest mode', () => {
     for (const notePrefs of ['all', 42, [], null]) {
       const inbox = SyncInboxSchema.parse({ ...oldWorker, notes: [note], notePrefs });
-      expect(inbox.notePrefs, JSON.stringify(notePrefs)).toEqual({ classes: null, acknowledged: true });
+      expect(inbox.notePrefs, JSON.stringify(notePrefs)).toEqual(NOTE_PREFS_UNREADABLE);
       expect(inbox.notes).toEqual([note]);
     }
+  });
+
+  it('a partial notePrefs object never reads as the loosest mode', () => {
+    expect(SyncInboxSchema.parse({ ...oldWorker, notePrefs: { acknowledged: false } }).notePrefs).toEqual({ classes: null, acknowledged: false });
+    expect(SyncInboxSchema.parse({ ...oldWorker, notePrefs: {} }).notePrefs).toEqual(NOTE_PREFS_UNREADABLE);
+  });
+
+  it('every unreadable notePrefs is a fresh object, so changing one parsed inbox never loosens the next fallback', () => {
+    const first = SyncInboxSchema.parse({ ...oldWorker, notePrefs: 'x' }).notePrefs;
+    const second = SyncInboxSchema.parse({ ...oldWorker, notePrefs: 'x' }).notePrefs;
+    expect(first).not.toBe(NOTE_PREFS_UNREADABLE);
+    expect(first).not.toBe(second);
+    first.classes = 'all';
+    first.acknowledged = false;
+    expect(NOTE_PREFS_UNREADABLE).toEqual({ classes: null, acknowledged: true });
+    expect(SyncInboxSchema.parse({ ...oldWorker, notePrefs: 'x' }).notePrefs).toEqual({ classes: null, acknowledged: true });
+    expect(second).toEqual(NOTE_PREFS_UNREADABLE);
   });
 });

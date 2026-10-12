@@ -1,14 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import {
+  FAMILY_LABELS_SELF_LEARNER_ONLY,
   FAMILY_LABEL_IDS,
   InboxNoteSchema,
   NOTES_MODES,
+  NOTE_LEARNER_ID_MAX,
+  NOTE_PREFS_DEFAULT,
+  NOTE_PREFS_UNREADABLE,
   NOTE_PRESETS_NEED_SUGGEST,
   NOTE_PRESET_AUDIENCE,
   NOTE_PRESET_IDS,
   NOTE_REACTION_IDS,
   NOTE_REPORT_REASONS,
   NOTE_SEND_MAX_LEARNERS,
+  NoteAccountReportSchema,
+  NoteDevicePrefsPutSchema,
   NoteIdSchema,
   NotePrefsPutSchema,
   NotePrefsSchema,
@@ -67,8 +73,22 @@ describe('note catalogues (section 6.3, 6.6, 6.11)', () => {
     expect((FAMILY_LABEL_IDS as readonly string[]).includes('friend')).toBe(false);
   });
 
-  it('caps one send at 300 learners', () => {
+  it('marks partner as a label shown to a self learner only (section 6.11)', () => {
+    expect([...FAMILY_LABELS_SELF_LEARNER_ONLY]).toEqual(['partner']);
+    for (const label of FAMILY_LABELS_SELF_LEARNER_ONLY) expect(FAMILY_LABEL_IDS).toContain(label);
+    expect(FAMILY_LABELS_SELF_LEARNER_ONLY.has('family')).toBe(false);
+  });
+
+  it('caps one send at 300 learners and a learner id at 80 characters', () => {
     expect(NOTE_SEND_MAX_LEARNERS).toBe(300);
+    expect(NOTE_LEARNER_ID_MAX).toBe(80);
+  });
+
+  it('pins the two inbox fallbacks for notePrefs and freezes them, so no consumer can loosen them', () => {
+    expect(NOTE_PREFS_DEFAULT).toEqual({ classes: 'all', acknowledged: false });
+    expect(NOTE_PREFS_UNREADABLE).toEqual({ classes: null, acknowledged: true });
+    expect(Object.isFrozen(NOTE_PREFS_DEFAULT)).toBe(true);
+    expect(Object.isFrozen(NOTE_PREFS_UNREADABLE)).toBe(true);
   });
 });
 
@@ -139,10 +159,10 @@ describe('NoteSendSchema (POST /api/spaces/:id/notes)', () => {
     expect(NoteSendSchema.safeParse({ ...minimal, to: { kind: 'learners', ids: Array.from({ length: 300 }, () => 'profile:x') } }).success).toBe(false);
   });
 
-  it('caps a learner id at 80 characters', () => {
+  it('caps a learner id at NOTE_LEARNER_ID_MAX characters', () => {
     const id = (n: number): string => `profile:${'a'.repeat(n - 'profile:'.length)}`;
-    expect(NoteSendSchema.safeParse({ ...minimal, to: { kind: 'learners', ids: [id(80)] } }).success).toBe(true);
-    expect(NoteSendSchema.safeParse({ ...minimal, to: { kind: 'learners', ids: [id(81)] } }).success).toBe(false);
+    expect(NoteSendSchema.safeParse({ ...minimal, to: { kind: 'learners', ids: [id(NOTE_LEARNER_ID_MAX)] } }).success).toBe(true);
+    expect(NoteSendSchema.safeParse({ ...minimal, to: { kind: 'learners', ids: [id(NOTE_LEARNER_ID_MAX + 1)] } }).success).toBe(false);
   });
 
   it('takes a known preset id only', () => {
@@ -208,6 +228,25 @@ describe('InboxNoteSchema (one delivered note, lenient on the device)', () => {
     expect(parsed.text).toBe(row.text);
   });
 
+  it('keeps a quest suggestion that carries a field this app does not know (read leniently; the send body stays strict)', () => {
+    const parsed = InboxNoteSchema.parse({ ...row, suggest: { kind: 'quest', id: 'quest:stage1-letters-q1', title: 'Letters', open: true } });
+    expect(parsed.suggest).toEqual({ kind: 'quest', id: 'quest:stage1-letters-q1' });
+    expect(InboxNoteSchema.parse({ ...row, suggest: { kind: 'quest', id: '' } }).suggest).toBeNull();
+  });
+
+  it('keeps a next_try_this note whose suggestion this app cannot read, with suggest null (the app shows the fallback line, section 7.1)', () => {
+    const parsed = InboxNoteSchema.parse({ ...row, presetId: 'next_try_this', suggest: { kind: 'story', id: 'story:x' } });
+    expect(parsed.presetId).toBe('next_try_this');
+    expect(parsed.suggest).toBeNull();
+    expect(NOTE_PRESETS_NEED_SUGGEST.has('next_try_this')).toBe(true);
+  });
+
+  it('never shows a family label on a class note, whatever the Worker sends', () => {
+    expect(InboxNoteSchema.parse({ ...row, from: { role: 'teacher', label: 'mom' } }).from).toEqual({ role: 'teacher', label: null });
+    expect(InboxNoteSchema.parse({ ...row, from: { role: 'teacher' } }).from).toEqual({ role: 'teacher', label: null });
+    expect(InboxNoteSchema.parse({ ...row, from: { role: 'family', label: 'mom' } }).from).toEqual({ role: 'family', label: 'mom' });
+  });
+
   it('refuses a row without a valid id, an unknown sender role or an oversized text', () => {
     expect(InboxNoteSchema.safeParse({ ...row, id: 'x' }).success).toBe(false);
     expect(InboxNoteSchema.safeParse({ ...row, from: { role: 'school', label: null } }).success).toBe(false);
@@ -218,9 +257,17 @@ describe('InboxNoteSchema (one delivered note, lenient on the device)', () => {
 });
 
 describe('note prefs, state, report bodies', () => {
-  it('defaults the prefs to all notes, not yet acknowledged', () => {
-    expect(NotePrefsSchema.parse({})).toEqual({ classes: 'all', acknowledged: false });
+  it('reads the prefs as sent, and the server default NOTE_PREFS_DEFAULT as itself', () => {
     expect(NotePrefsSchema.parse({ classes: 'presets', acknowledged: true })).toEqual({ classes: 'presets', acknowledged: true });
+    expect(NotePrefsSchema.parse(NOTE_PREFS_DEFAULT)).toEqual(NOTE_PREFS_DEFAULT);
+    expect(NotePrefsSchema.parse(NOTE_PREFS_UNREADABLE)).toEqual(NOTE_PREFS_UNREADABLE);
+  });
+
+  it('reads a missing field as unknown, never as the loosest mode or as not acknowledged', () => {
+    expect(NotePrefsSchema.parse({})).toEqual(NOTE_PREFS_UNREADABLE);
+    // A partial object must not turn into `all`: Keep on the one-time card would then overwrite the real value.
+    expect(NotePrefsSchema.parse({ acknowledged: false })).toEqual({ classes: null, acknowledged: false });
+    expect(NotePrefsSchema.parse({ classes: 'off' })).toEqual({ classes: 'off', acknowledged: true });
   });
 
   it('reads a mode this app does not know as null (unknown), never as a looser mode, and keeps the acknowledgement', () => {
@@ -251,6 +298,21 @@ describe('note prefs, state, report bodies', () => {
     expect(NoteStatePutSchema.safeParse({ read: false }).success).toBe(false);
     expect(NoteStatePutSchema.safeParse({ reaction: 'wow' }).success).toBe(false);
     expect(NoteStatePutSchema.safeParse({ read: true, text: 'thanks!' }).success).toBe(false);
+  });
+
+  it('takes an attestation on the device prefs body only, strictly (section 7.6)', () => {
+    expect(NoteDevicePrefsPutSchema.parse({ classes: 'presets', attest: 'grown_up_pin' })).toEqual({ classes: 'presets', attest: 'grown_up_pin' });
+    expect(NoteDevicePrefsPutSchema.parse({ classes: 'all', acknowledge: true, attest: 'self' })).toEqual({ classes: 'all', acknowledge: true, attest: 'self' });
+    expect(NoteDevicePrefsPutSchema.parse({ classes: 'off' })).toEqual({ classes: 'off' });
+    expect(NoteDevicePrefsPutSchema.safeParse({ classes: 'off', attest: 'teacher' }).success).toBe(false);
+    expect(NoteDevicePrefsPutSchema.safeParse({ classes: 'off', device: 'x' }).success).toBe(false);
+    expect(NotePrefsPutSchema.safeParse({ classes: 'off', attest: 'self' }).success).toBe(false);
+  });
+
+  it('refuses an attestation on the account report body (section 7.2)', () => {
+    for (const reason of NOTE_REPORT_REASONS) expect(NoteAccountReportSchema.parse({ reason }), reason).toEqual({ reason });
+    expect(NoteAccountReportSchema.safeParse({ reason: 'unsafe', attest: 'grown_up_pin' }).success).toBe(false);
+    expect(NoteAccountReportSchema.safeParse({ reason: 'rude' }).success).toBe(false);
   });
 
   it('takes a report reason and, from a device, an attestation', () => {
