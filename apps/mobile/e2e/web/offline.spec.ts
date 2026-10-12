@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { GROWN_UP_PREFIXES, isGrownUpPath } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
 import { completeChildForm } from './helpers';
 
@@ -63,7 +64,9 @@ test('onboards, enters the first quest, and keeps working offline', async ({ pag
  * misses (/present, /browse, /teacher) keep the learner shell.
  */
 const GROWN_UP_URLS = ['/parent', '/teach/home', '/teach', '/signin?persona=teacher', '/start', '/account/billing', '/teach.html'];
-const GROWN_UP_PATH = /^\/(?:signin|start|teach|parent|account)(?:$|[/?.])/;
+
+/** A path the learner worker must never keep: a grown-up path (R-1, the one implementation) or a console chunk. */
+const isConsolePath = (p: string): boolean => isGrownUpPath(p) || p.startsWith('/_next/');
 
 /** Every URL the worker keeps (precache and runtime caches), as paths. */
 async function cachedPaths(page: Page): Promise<string[]> {
@@ -77,6 +80,13 @@ async function cachedPaths(page: Page): Promise<string[]> {
 }
 
 test('grown-up pages are never cached, show the offline page without a network, and learning still plays', async ({ page, context }) => {
+  // The probe list keeps up with the prefix list it tests: every URL is grown-up, every prefix is probed.
+  const probed = GROWN_UP_URLS.map((url) => new URL(url, 'http://x').pathname);
+  for (const path of probed) expect(isGrownUpPath(path), path).toBe(true);
+  for (const prefix of GROWN_UP_PREFIXES) {
+    expect(probed.some((path) => isGrownUpPath(path) && path.startsWith(prefix)), prefix).toBe(true);
+  }
+
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e)));
 
@@ -103,7 +113,7 @@ test('grown-up pages are never cached, show the offline page without a network, 
   const cached = await cachedPaths(page);
   expect(cached).toContain('/grown-ups-offline.html');
   expect(cached).toContain('/index.html');
-  expect(cached.filter((p) => GROWN_UP_PATH.test(p) || p.startsWith('/_next/'))).toEqual([]);
+  expect(cached.filter(isConsolePath)).toEqual([]);
 
   // Offline, a grown-up navigation gets the offline page, never the learner shell and never what
   // the same URL showed online.
@@ -130,11 +140,17 @@ test('grown-up pages are never cached, show the offline page without a network, 
   }
   await page.setViewportSize({ width: 393, height: 851 });
 
-  // The learner roots and a near miss keep the learner shell offline (never denied).
+  // The learner roots and a near miss are never denied: offline they get the learner shell (the
+  // index.html pwa-postbuild wrote), whichever root then mounts there (F-TCH-004, F-BROWSE-001).
   for (const url of ['/present', '/browse', '/teacher']) {
     await page.goto(url);
-    await expect(page.getByText('Hi, Suni!'), url).toBeVisible();
+    await expect(page.locator('#root'), url).toBeAttached();
+    await expect(page.locator('link[rel="manifest"]'), url).toBeAttached();
+    expect(await page.evaluate(() => typeof (window as Window & { __hrApplyUpdate?: unknown }).__hrApplyUpdate), url).toBe('function');
+    await expect(page.getByRole('heading', { name: "You're offline" }), url).toHaveCount(0);
   }
+  // /teacher is a plain learner path: the learner home itself.
+  await expect(page.getByText('Hi, Suni!')).toBeVisible();
 
   // Back to learning: the learner app opens and plays offline.
   await page.goto('/parent');
@@ -145,6 +161,6 @@ test('grown-up pages are never cached, show the offline page without a network, 
   await expect(page.getByText(/collected/)).toBeVisible();
 
   // Still nothing grown-up in any cache after the offline visits.
-  expect((await cachedPaths(page)).filter((p) => GROWN_UP_PATH.test(p) || p.startsWith('/_next/'))).toEqual([]);
+  expect((await cachedPaths(page)).filter(isConsolePath)).toEqual([]);
   expect(errors).toEqual([]);
 });
