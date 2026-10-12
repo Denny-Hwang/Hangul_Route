@@ -257,6 +257,13 @@ describe('activityOf and summary.activity on the roster (F-REPORT-001 section 3.
     expect(activityOf(activity, { kind: 'family', joinedAt: null }).days).toHaveLength(4);
   });
 
+  it('for a class reads the join day in UTC when a stored value has no usable tz, and drops rows without a day key', () => {
+    const stored = { ...activity, tz: 'east', days: [{ min: 3, q: 0, c: 0, w: 0, j: [] }, ...activity.days], months: [{ min: 1 }, ...activity.months] };
+    const out = activityOf(stored, { kind: 'class', joinedAt: '2026-10-03T16:00:00.000Z' });
+    expect(out.days.map((d) => d.d)).toEqual(['2026-10-03', '2026-10-10', '2026-10-12']);
+    expect(out.months).toEqual([]);
+  });
+
   it('copies only the known keys at every level, never what a newer writer left under them', () => {
     const stored = {
       ...activity,

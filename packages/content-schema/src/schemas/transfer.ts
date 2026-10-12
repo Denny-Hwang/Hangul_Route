@@ -34,10 +34,13 @@ export const TRANSFER_CODE_FAILS_PER_DAY = 30;
 /** Declined / cancelled / expired rows only; executed rows are consent evidence (§4.1 retention). */
 export const TRANSFER_PURGE_AFTER_MS = 90 * DAY_MS;
 export const TRANSFER_LIST_MAX = 50;
-/** Bump when any consent line changes; a test pins a hash of the lines per locale. */
-export const TRANSFER_CONSENT_TEXT_VERSION = 'transfer-2026-10';
+/**
+ * Bump when any consent line changes; a test pins a hash of the lines per locale.
+ * `transfer-2026-10b`: the `activity` item names day-by-day practice (F-REPORT-001 RP-W2).
+ */
+export const TRANSFER_CONSENT_TEXT_VERSION = 'transfer-2026-10b';
 /** The current version plus any version legal has not retired. */
-export const ACCEPTED_CONSENT_TEXT_VERSIONS: readonly string[] = ['transfer-2026-10'];
+export const ACCEPTED_CONSENT_TEXT_VERSIONS: readonly string[] = ['transfer-2026-10b', 'transfer-2026-10'];
 
 export const TransferStatusSchema = z.enum(['requested', 'approved', 'executed', 'declined', 'expired', 'cancelled']);
 export type TransferStatus = z.infer<typeof TransferStatusSchema>;

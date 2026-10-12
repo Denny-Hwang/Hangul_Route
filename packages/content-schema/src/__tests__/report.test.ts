@@ -226,8 +226,9 @@ describe('LearnerReportResponseSchema (section 3.8)', () => {
     expect(parsed.summary).not.toHaveProperty('vocab');
   });
 
-  it('reads exactly the roster allow-list plus the family self-route and the activity', () => {
-    expect(Object.keys(ReportSummarySchema.shape).sort()).toEqual([...TEACHER_VISIBLE_SUMMARY_KEYS, 'selfRoute', 'activity'].sort());
+  it('reads exactly the roster allow-list (activity on it since RP-W2) plus the family self-route', () => {
+    expect(TEACHER_VISIBLE_SUMMARY_KEYS).toContain('activity');
+    expect(Object.keys(ReportSummarySchema.shape).sort()).toEqual([...TEACHER_VISIBLE_SUMMARY_KEYS, 'selfRoute'].sort());
   });
 
   it('reads a legacy projection with missing keys, and the family and activity fields when present', () => {
