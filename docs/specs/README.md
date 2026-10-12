@@ -93,6 +93,8 @@ F-XXX-<slug>.md
 ### Spec wave 2026-10-11 (owner UX request: two hosts, personas)
 - `F-APP-001-persona-app-shell.md` — app.hangulroute.com is the one product app: persona sign-in (learner, family, teacher), a home per persona with the entries to reports, notes, Learning Route and lessons, grown-up lock on shared devices, console served on the app host (B2), the route contract for the sibling specs of the wave · **ready**
   - wireframes `design/wireframes/shell/{signin,adult-frame,parent-home,teacher-home,grown-up-lock,offline}.md`, `onboarding/welcome-personas.md`, `parent/grown-up-home-card.md`
+- `F-SITE-002-marketing-site-layered.md` — hangulroute.com becomes a short, layered intro site: one-screen hero, persona chooser, `/learners`, `/parents`, `/teachers`, no billing or console links, feature lines tied to a claims table; old grown-up URLs are F-APP-001's · **ready**
+  - wireframes `design/wireframes/site/{home,learners,parents,teachers,header-footer}.md`
 
 ### Phase 2 / planned
 - `F-PROF-001-device-profiles.md` — multi-learner · **draft** (code shipped PR #13, full spec covers cloud sync)
