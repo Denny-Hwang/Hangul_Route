@@ -18,6 +18,7 @@ import { PortraitGuard } from './src/components/PortraitGuard';
 import { OopsScreen } from './src/screens/system/OopsScreen';
 import { BrowseSessionProvider, type BrowseSession } from './src/screens/browse/browse-session';
 import { BrowseSettingsProvider } from './src/screens/browse/BrowseSettings';
+import { canRenderPicture } from './src/screens/vocab/topic-data';
 import { installGestureUnlock } from './src/platform/audio';
 import { writeSessionPass } from './src/platform/browse';
 import { readLastPersonaInTime, resolveBrowseBoot, resolveSessionNow, type BrowseBoot } from './src/platform/browse-boot';
@@ -86,7 +87,7 @@ export default function BrowseApp(): React.ReactElement {
   const start = useMemo(startBrowse, []);
   useDocumentLang();
   const messages = useMessages();
-  const bundle = useMemo(() => defaultBrowseBundle(), []);
+  const bundle = useMemo(() => defaultBrowseBundle(canRenderPicture), []);
   // The effective switch, read once (BD6): never the raw flag.
   const gatingEnabled = useMemo(() => gatingActive(flags, bundleOs()), []);
   const [online, setOnline] = useState(isOnline);
