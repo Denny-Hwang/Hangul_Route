@@ -3,14 +3,15 @@ import { Hono } from 'hono';
 import { dbFor } from '../db';
 import { fail, ok } from '../envelope';
 import { accountActor, requireAccount, spaceContext } from '../lib/access';
-import { billingSummaryFor, receiptUrl, receiptView, hasStripeReceipt } from '../lib/billing-summary';
+import { billingSummaryFor, hasStripeReceipt, receiptUrl, receiptView } from '../lib/billing-summary';
 import { can } from '../lib/can';
 import { recordServerEvent } from '../lib/server-events';
 import { requireStepUp } from '../lib/step-up';
 import { billingLiveAllowed, stripeMode, type StripeEnv } from '../lib/stripe';
-import type { Account } from '../store';
 import type { Context } from 'hono';
 import type { Db } from '../db';
+import type { Space } from '@hangul-route/content-schema';
+import type { Account } from '../store';
 
 /**
  * /api/billing — F-BILL-002 B-4 (section 5.3). The billing home's summary for
@@ -34,11 +35,11 @@ function receiptIdOf(body: unknown): string | null {
   return typeof id === 'string' && /^bev:[a-z0-9-]+$/.test(id) ? id : null;
 }
 
-/** Is the account a payer (`space.manage`) of the space? The caller has checked the space exists. */
-async function paysFor(db: Db, account: Account, spaceId: string): Promise<'payer' | 'forbidden' | 'not_found'> {
+/** The space when the account pays for it (`space.manage`: its owner, or a school admin), else why not. */
+async function paidSpace(db: Db, account: Account, spaceId: string): Promise<Space | 'forbidden' | 'not_found'> {
   const space = await db.getSpace(spaceId);
   if (!space) return 'not_found';
-  return can(await accountActor(db, account), 'space.manage', { kind: 'space', ctx: await spaceContext(db, space) }) ? 'payer' : 'forbidden';
+  return can(await accountActor(db, account), 'space.manage', { kind: 'space', ctx: await spaceContext(db, space) }) ? space : 'forbidden';
 }
 
 function refusal(c: Context, verdict: 'forbidden' | 'not_found'): Response {
@@ -61,12 +62,11 @@ billingRoutes.get('/receipts', async (c) => {
   const spaceId = c.req.query('id');
   if (!spaceId) return fail(c, 'bad_request', 'Which space? Pass ?id=', 422);
   const db = dbFor(c);
-  const verdict = await paysFor(db, account, spaceId);
-  if (verdict !== 'payer') return refusal(c, verdict);
-  const space = await db.getSpace(spaceId);
-  const receipts = (await db.billingEventsFor('space', spaceId, RECEIPTS_PAGE_LIMIT)).map(receiptView);
+  const space = await paidSpace(db, account, spaceId);
+  if (typeof space === 'string') return refusal(c, space);
+  const receipts = (await db.billingEventsFor('space', space.id, RECEIPTS_PAGE_LIMIT)).map(receiptView);
   recordServerEvent('billing.receipts_viewed', { rows: receipts.length });
-  return ok(c, { spaceName: space?.name ?? '', receipts });
+  return ok(c, { spaceName: space.name, receipts });
 });
 
 billingRoutes.post('/receipt-link', async (c) => {
@@ -80,8 +80,8 @@ billingRoutes.post('/receipt-link', async (c) => {
   if (row.subjectKind === 'account') {
     if (row.subjectId !== account.id) return fail(c, 'forbidden', 'Not your receipt', 403);
   } else {
-    const verdict = await paysFor(db, account, row.subjectId);
-    if (verdict !== 'payer') return refusal(c, verdict);
+    const space = await paidSpace(db, account, row.subjectId);
+    if (typeof space === 'string') return refusal(c, space);
   }
   // The Stripe page shows the payer's name, email and address (section 4.10): a fresh sign-in first.
   const stepUp = await requireStepUp(c);
