@@ -29,12 +29,11 @@ import { ProfileAvatar } from '../../components/ProfileAvatar';
 import type { SceneArt } from '@hangul-route/content-schema';
 import { welcomeCardIds } from '../../content/award-world';
 import { flags } from '../../config/flags';
-import { episodesAll, heritageCardsAll, questsAll, stages, themes } from '../../content';
-import { journeyContent } from '../../content/sync-context';
+import { episodesAll, questsAll } from '../../content';
 import { PLACEMENT_BANK } from '../../content/placement.generated';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { catchUpCard, takeCatchUpAnnouncement } from '../../logic/awards/catch-up';
-import { localizeMissionCard, localizeStage } from '../../logic/content-locale';
+import { localizeMissionCard } from '../../logic/content-locale';
 import { cursorContext } from '../../logic/cursor-context';
 import {
   buildTodaysMission,
@@ -51,7 +50,7 @@ import { gridQuestProgress } from '../../logic/journey';
 import { homeColumns } from '../../logic/layout/home-columns';
 import { homeStripView, type HomeStripView } from '../../logic/my-route/home-strip';
 import { buildMyRoute } from '../../logic/my-route/model';
-import { startRouteOf } from '../../logic/my-route/start-marker';
+import { localizedRouteContent, routeModelInput } from '../../logic/my-route/route-input';
 import { emptySnapshot } from '../../logic/my-route/view';
 import { placementEntriesOn, questsDoneOf } from '../../logic/placement/entry';
 import { skippedEvent } from '../../logic/placement/events';
@@ -275,26 +274,15 @@ export function HomeScreen(): React.ReactElement {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, snap, tier, cachedTier, bookmarks, storyIndex]);
 
-  // The route strip (F-ROUTE-001 R-4b, OD-3): the same model, cursor and start route as the
+  // The route strip (F-ROUTE-001 R-4b, OD-3): built from `routeModelInput`, the same input as the
   // Learning Route page, so the strip and the page always name the same stage and pips.
+  // Localized only when the flag is on, so Home does no extra work with the flag off.
+  const routeContent = useMemo(() => (flags.myRouteEnabled ? localizedRouteContent(locale) : null), [locale]);
   const routeStrip = useMemo((): HomeStripView | null => {
-    if (!flags.myRouteEnabled || !profile) return null;
+    if (!routeContent || !profile) return null;
     try {
       const snapshot = snap ?? emptySnapshot(profile.id);
-      const cursor = cursorContext({ tier, placements: snapshot.placements, quests: questsAll, episodes: episodesAll });
-      const model = buildMyRoute({
-        snapshot,
-        catalog: journeyContent.catalog,
-        episodes: episodesAll,
-        quests: questsAll,
-        cards: heritageCardsAll,
-        stages: stages.map((s) => localizeStage(s, locale)),
-        themes,
-        isEntitled: cursor.isEntitled,
-        skipQuestIds: cursor.skipQuestIds,
-        route: startRouteOf(snapshot.placements, journeyContent.catalog, cursor.isEntitled),
-        now: new Date(),
-      });
+      const model = buildMyRoute(routeModelInput({ snapshot, tier, localized: routeContent, now: new Date() }));
       return homeStripView({ model, messages: m });
     } catch {
       // Content that cannot be read leaves the slot empty; the page itself shows the retry.
@@ -302,7 +290,7 @@ export function HomeScreen(): React.ReactElement {
     }
     // `cachedTier` re-renders this screen when the inbox changes the tier.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, snap, tier, cachedTier, locale, m]);
+  }, [profile, snap, tier, cachedTier, routeContent, m]);
 
   // Native screen readers hear the catch-up line once (F-STORY-006 §3.10): the card is usually on
   // the first render, where a live region says nothing, and iOS has no live regions. The web reads

@@ -148,9 +148,11 @@ export const a11y = {
     cell: (theme: string, title: string, word: string) => `${theme}: ${title}. ${word}.`,
     skill: (label: string, detail: string) => `${label}. ${detail}.`,
     gain: (word: string, n: number) => `${word}: ${n}`,
-    /** The Home route strip read as one button (R-4b): no middle dot, each line a sentence. */
-    homeStrip: (title: string, here: string, goal: string | null, week: string | null) =>
-      [`${title}.`, here, goal === null ? '' : `${goal}.`, week === null ? '' : `${week}.`].filter((part) => part !== '').join(' '),
+    /** The Home route strip read as one button (R-4b): no middle dot, each line a sentence; `progress` is the here stage's caption. */
+    homeStrip: (title: string, here: string, progress: readonly string[], goal: string | null, week: string | null) =>
+      [`${title}.`, here, ...progress.map((line) => `${line}.`), goal === null ? '' : `${goal}.`, week === null ? '' : `${week}.`]
+        .filter((part) => part !== '')
+        .join(' '),
     homeStripGoal: (n: number, title: string) => `Goal: Stage ${n}, ${title}`,
   },
 } as const;

@@ -3,7 +3,8 @@ import { getMessages } from '@hangul-route/i18n';
 import { homeStripView, type HomeStripInput } from '../home-strip';
 import { buildMyRoute } from '../model';
 import type { MyRouteModel } from '../types';
-import { stageGroups } from '../view';
+import { stageCaptions } from '../copy';
+import { myRouteMessages, stageGroups } from '../view';
 import { copyViolations } from './copy-rules';
 import { BUNDLE_8, STAGE1_8, STAGE_DEFS, THEME_DEFS, catalogOf, snapshotWith } from './fixtures/bundle-2026-10';
 
@@ -82,16 +83,47 @@ describe('homeStripView', () => {
     for (const bad of [0, -1, 2.5, Number.NaN, Number.POSITIVE_INFINITY]) expect(strip(model([]), { week: bad }).week).toBeNull();
   });
 
-  it('reads as one button label: title, where, goal and week, without the middle dot', () => {
-    expect(strip(model([])).a11yLabel).toBe('Learning Route. You are on Stage 1: Hangul.');
-    const full = strip(model([]), { goalStage: 'stage2', week: 3 }).a11yLabel;
-    expect(full).toBe('Learning Route. You are on Stage 1: Hangul. Goal: Stage 2, Words. Week 3 of your weekly plan.');
+  it('reads as one button label: title, where, how far in words, goal and week, without the middle dot', () => {
+    expect(strip(model([])).a11yLabel).toBe('Learning Route. You are on Stage 1: Hangul. Ready when you are.');
+    const full = strip(model(STAGE1_8.slice(0, 4)), { goalStage: 'stage2', week: 3 }).a11yLabel;
+    expect(full).toBe('Learning Route. You are on Stage 1: Hangul. 4 quests played. Goal: Stage 2, Words. Week 3 of your weekly plan.');
     expect(full).not.toContain('·');
+  });
+
+  it('says the here stage progress with the same caption as its row on the page', () => {
+    const m = model(STAGE1_8.slice(0, 4));
+    const here = m.stages.find((s) => s.here) as NonNullable<(typeof m.stages)[number]>;
+    const captions = stageCaptions(here, { viewer: 'self', name: '', m: myRouteMessages(EN) });
+    expect(strip(m).progress).toEqual(captions);
+    expect(strip(m).progress).toEqual(['4 quests played']);
+  });
+
+  it('draws the whole journey as seven segments in route order, the here stage marked once', () => {
+    for (const done of [[], STAGE1_8.slice(0, 3), STAGE1_8]) {
+      const m = model(done);
+      const v = strip(m);
+      expect(v.segments).toHaveLength(7);
+      expect(v.segments.map((s) => s.stage)).toEqual(m.stages.map((s) => s.stage));
+      expect(v.segments.map((s) => s.order)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+      expect(v.segments.map((s) => s.state)).toEqual(m.stages.map((s) => s.state));
+      const here = v.segments.filter((s) => s.here);
+      expect(here).toHaveLength(1);
+      expect(here[0]?.stage).toBe(v.stage);
+    }
+  });
+
+  it('speaks the goal with the same parts as the visible goal line, in every locale', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const msgs = getMessages(locale);
+      for (const [n, t] of [[1, 'Hangul'], [2, 'Words']] as const) {
+        expect(msgs.a11y.myRoute.homeStripGoal(n, t)).toBe(msgs.learner.myRoute.home.strip.goal(n, t).replace(' · ', ', '));
+      }
+    }
   });
 
   it('keeps the copy rules: no ratio, no percent, no count of what is left', () => {
     const v = strip(model(STAGE1_8.slice(0, 5)), { goalStage: 'stage2', week: 2 });
-    for (const text of [v.title, v.here, v.goal, v.week]) expect(copyViolations(text ?? '', 'en', 'learner', [1, 2, 5])).toEqual([]);
+    for (const text of [v.title, v.here, v.goal, v.week, ...v.progress]) expect(copyViolations(text ?? '', 'en', 'learner', [1, 2, 5])).toEqual([]);
     expect(copyViolations(v.a11yLabel, 'en', 'a11y')).toEqual([]);
     expect(v.title.toLowerCase()).not.toContain('my route');
   });
