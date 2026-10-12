@@ -944,6 +944,18 @@ describe('questDoneAt and summary.activity (F-REPORT-001 section 3.3.1, the ques
     expect(got.data.summary.activity).toEqual(fresh);
   });
 
+  it('a build that sends the latch but no summary.activity (the latch writer without the activity builder) keeps the stored activity', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, latch), summary: { ...summary, activity } });
+    const sent = { 'letters-q3': '2026-10-11T08:00:00.000Z' };
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: withLatch(r.learnerId, sent), summary: { ...summary, streakDays: 5 } })).status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot.questDoneAt).toEqual({ ...latch, ...sent });
+    expect(got.data.summary.activity).toEqual(activity);
+    expect(got.data.summary.streakDays).toBe(5);
+  });
+
   it('a device that upgraded after another device synced never erases that device\'s first-finish days', async () => {
     const r = await register(DEVICE_A);
     const auth = deviceAuth(DEVICE_A, r.secret);

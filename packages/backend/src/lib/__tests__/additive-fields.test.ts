@@ -297,9 +297,26 @@ describe('preserveAdditiveFields (quest latch entry, F-REPORT-001 section 3.3.1,
     expect(out.summary).toEqual({ activity: reset });
   });
 
-  it('a sent record without a summary.activity does not borrow the stored one (the summary describes what was sent)', () => {
-    const out = preserveAdditiveFields(incoming({ questDoneAt: latch }, { streakDays: 2 }), stored({ questDoneAt: latch }, { activity }));
-    expect(out.summary).toEqual({ streakDays: 2 });
+  it('a sent record without a summary.activity keeps the stored one (a build with the latch writer but not the activity builder)', () => {
+    const sent = { 'letters-q3': '2026-10-10T08:00:00.000Z' };
+    const out = preserveAdditiveFields(incoming({ questDoneAt: sent }, { streakDays: 2 }), stored({ questDoneAt: latch }, { activity }));
+    // the latch is still unioned, and the stored activity (dated by its own asOf) is never erased
+    expect(out.payload).toEqual({ questDoneAt: { ...latch, ...sent } });
+    expect(out.summary).toEqual({ streakDays: 2, activity });
+  });
+
+  it('a sent record keeps the stored summary.activity for an explicit empty record too, and invents none when none is stored', () => {
+    const kept = preserveAdditiveFields(incoming({ questDoneAt: {} }, {}), stored({ questDoneAt: latch }, { activity }));
+    expect(kept.summary).toEqual({ activity });
+    for (const prior of [stored({ questDoneAt: latch }, {}), stored({ questDoneAt: latch }, null), stored({ questDoneAt: latch }, { activity: undefined })]) {
+      expect(preserveAdditiveFields(incoming({ questDoneAt: latch }, { streakDays: 2 }), prior).summary).toEqual({ streakDays: 2 });
+    }
+  });
+
+  it('only the quest latch keeps a stored summary when the field itself is sent: a sent placement list travels with exactly the summary sent', () => {
+    expect(ADDITIVE_FIELDS.filter((f) => f.keepStoredSummaryWhenSent).map((f) => f.payloadKey)).toEqual(['questDoneAt']);
+    const out = preserveAdditiveFields(incoming({ placements: [{ id: 'placement:b' }] }, {}), stored({ placements: [result] }, { placement }));
+    expect(out.summary).toEqual({});
   });
 
   it('invents nothing when no latch is stored, even when the stored summary has an activity', () => {

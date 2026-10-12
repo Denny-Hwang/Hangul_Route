@@ -24,6 +24,13 @@ export interface AdditiveField {
    * both are set. Without it the sent value replaces the stored one.
    */
   readonly merge?: (incoming: unknown, stored: unknown) => unknown;
+  /**
+   * When the client sends the field but not its summary counterpart, keep the
+   * stored summary instead of dropping it: for a field that a build can write
+   * before it computes the summary. Without it a sent field travels with
+   * exactly the summary that was sent.
+   */
+  readonly keepStoredSummaryWhenSent?: boolean;
 }
 
 /**
@@ -124,16 +131,21 @@ const VOCAB: AdditiveField = {
  * with sessions but no finished quest (stored `{}` is a value). A sent record is
  * unioned with the stored one, earliest time wins (the stage-latch merge), so a
  * device that upgraded after another device synced never erases that device's
- * first-finish days; a build that sends the latch sends its own
- * `summary.activity`, which is kept as sent. After a profile reset the union can
- * bring old entries back: the device counts an entry only while its quest is
- * completed (section 3.3.4 step 2), so the report still starts fresh.
+ * first-finish days. A sent `summary.activity` is kept as sent; a sent latch
+ * without one (a build with the RP-3a writer but not the RP-4 builder, or an
+ * activity the schema dropped as malformed) keeps the stored activity, which
+ * carries its own `asOf`, so such a device never erases what another device
+ * computed. After a profile reset the union brings old entries back; the device
+ * counts an entry only while its quest is completed (section 3.3.4 step 2), so
+ * the report starts fresh, but a quest finished again keeps its pre-reset first
+ * finish (a known approximation, spec section 8 M5).
  */
 const QUEST_DONE_AT: AdditiveField = {
   payloadKey: 'questDoneAt',
   summaryKey: 'activity',
   isUnset: (value) => value === undefined,
   merge: unionLatch,
+  keepStoredSummaryWhenSent: true,
 };
 
 export const ADDITIVE_FIELDS: readonly AdditiveField[] = [PLACEMENTS, STAGE_DONE_AT, SELF_ROUTE, VOCAB, QUEST_DONE_AT];
@@ -162,17 +174,21 @@ export function preserveAdditiveFields<P extends object, S extends object>(
 
   let payload: Plain = inPayload;
   let summary: Plain = inSummary;
+  /** Fills the summary counterpart from `stored` when the client sent none. */
+  const keepStoredSummary = (key: string | undefined): void => {
+    if (key && inSummary[key] === undefined && storedSummary && storedSummary[key] !== undefined) {
+      summary = { ...summary, [key]: storedSummary[key] };
+    }
+  };
   for (const field of fields) {
     if (field.isUnset(storedPayload[field.payloadKey])) continue;
     if (!field.isUnset(inPayload[field.payloadKey])) {
       if (field.merge) payload = { ...payload, [field.payloadKey]: field.merge(inPayload[field.payloadKey], storedPayload[field.payloadKey]) };
+      if (field.keepStoredSummaryWhenSent) keepStoredSummary(field.summaryKey);
       continue;
     }
     payload = { ...payload, [field.payloadKey]: storedPayload[field.payloadKey] };
-    const key = field.summaryKey;
-    if (key && inSummary[key] === undefined && storedSummary && storedSummary[key] !== undefined) {
-      summary = { ...summary, [key]: storedSummary[key] };
-    }
+    keepStoredSummary(field.summaryKey);
   }
   return { payload: payload as P, summary: summary as S };
 }
