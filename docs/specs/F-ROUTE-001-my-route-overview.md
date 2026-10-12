@@ -226,7 +226,7 @@ Hero (one sentence, one button; the single primary action of the page):
 
 | `hero` | When | Sentence (draft) | Button |
 |---|---|---|---|
-| `start` | nothing done, no start marker | "Your Hangul route starts here." + goal line "Your first goal: read every Hangul letter." | **Start** -> the cursor quest |
+| `start` | nothing done, no start marker | "Your Learning Route starts here." (was "Your Hangul route starts here."; AMENDMENTS-ROUTE-LEARNING-ROUTE §7.2, LR-1) + goal line "Your first goal: read every Hangul letter." | **Start** -> the cursor quest |
 | `continue` | a cursor exists | "You are on Stage N: Title." + "Next: quest title" | **Continue** -> `QuestPlayer` for the cursor |
 | `rest` | no cursor, at least one quest done, `route?.beyondContent` not true | "You did everything that is open right now. More is coming." | **Open stories** when a reviewed shelf story exists, else **Open Library** |
 | `beyond` | no cursor and `route.beyondContent` is true | "You know a lot! More adventures are coming." (F-PLC-001 section 3.1 step 7 wording) | same as `rest` |

@@ -197,7 +197,8 @@ export const learner = {
 
   journey: {
     title: 'Heritage Journey',
-    intro: '7 stages × 5 themes. Draw your own route.',
+    /** The Journey tab's purpose line (AMENDMENTS-ROUTE-LEARNING-ROUTE LR-OD-3): no "route", so it never reads as the Route tab. */
+    intro: 'Every lesson, by stage and theme.',
     /**
      * Keyed by `StageAvailability`. Every stage row shows its availability word,
      * never a commerce word; "A taste" and "Coming later" are the My route words (F-ROUTE-001 R-J, OD-8).
@@ -940,7 +941,7 @@ export const learner = {
       next: 'Next',
       later: 'Later',
       start: { cta: 'Start' },
-      seeMyRoute: 'See my route',
+      seeMyRoute: 'See Learning Route',
       seeMap: 'See the whole map',
       forGrownUps: 'For grown-ups',
       forGrownUpsPlan: 'For grown-ups: set up a weekly plan',
@@ -1047,17 +1048,21 @@ export const learner = {
   },
 
   /**
-   * My route (F-ROUTE-001 R-3, Appendix B): the whole journey at a glance, one stage row each.
+   * Learning Route (F-ROUTE-001 R-3, Appendix B; the page name of AMENDMENTS-ROUTE-LEARNING-ROUTE
+   * section 7, LR-1, written in title case; the key path keeps its code name `myRoute`): the whole
+   * journey at a glance, one stage row each.
    * Absolute, positive words only: never a ratio, a percent, "left" or a level, no commerce word
    * and no speaking word (owner decision 2026-10-10). Digits come only from arguments (Stage {n},
    * counts). The can-do lines and the state words never say "you", so the grown-up view uses them too.
    */
   myRoute: {
-    title: 'My route',
+    title: 'Learning Route',
+    /** The one line under the title in the Route tab's header (LR-OD-3); the Journey tab has `journey.intro`. */
+    purpose: 'Where you are and where you are going.',
     /** The Journey header entry (section 3.1, entry 1). */
-    open: { cta: 'See my route' },
+    open: { cta: 'See Learning Route' },
     hero: {
-      start: 'Your Hangul route starts here.',
+      start: 'Your Learning Route starts here.',
       goal: 'Your first goal: read every Hangul letter.',
       here: (n: number, title: string) => `You are on Stage ${n}: ${title}.`,
       next: (title: string) => `Next: ${title}`,

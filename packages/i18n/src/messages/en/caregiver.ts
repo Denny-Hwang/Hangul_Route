@@ -456,7 +456,7 @@ export const caregiver = {
   },
 
   /**
-   * My route about a child (F-ROUTE-001 sections 3.12, Appendix B): a grown-up viewing another
+   * Learning Route about a child (F-ROUTE-001 sections 3.12, Appendix B; LR-1): a grown-up viewing another
    * profile's page read-only. Every sentence is written about the child, from the profile name.
    */
   journey: {
@@ -466,9 +466,9 @@ export const caregiver = {
     started: (name: string) => `${name} started here.`,
     known: (name: string) => `${name} already knew this.`,
     quests: (name: string, n: number) => `In ${plural('en', n, { one: '1 quest', other: `${n} quests` })} ${name} finished`,
-    viewing: (name: string) => `Viewing ${name}'s journey`,
+    viewing: (name: string) => `Viewing ${name}'s Learning Route`,
     tiles: (n: number) => `Spelling with tiles: ${plural('en', n, { one: '1 quest', other: `${n} quests` })}`,
-    start: (name: string) => `${name}'s Hangul route starts here.`,
+    start: (name: string) => `${name}'s Learning Route starts here.`,
     goal: 'First goal: read every Hangul letter.',
     rest: (name: string) => `${name} did everything that is open right now. More is coming.`,
     beyond: (name: string) => `${name} knows a lot! More adventures are coming.`,

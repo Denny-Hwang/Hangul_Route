@@ -141,7 +141,7 @@ export interface MyRouteView {
   hero: Hero;
   heroCopy: HeroCopy;
   pose: 'idle' | 'cheering';
-  /** Read-only only: "Viewing Sam's journey". */
+  /** Read-only only: "Viewing Sam's Learning Route". */
   viewing: string | null;
   newQuests: string | null;
   trail: TrailRowView[];

@@ -182,7 +182,7 @@ describe('myRouteView: wireframe A (Appendix C, today mid-progress)', () => {
 describe('myRouteView: other states', () => {
   it('a new learner: Start with the goal line; skills read "Ready when you are" with no slot', () => {
     const v = view(model([]), { nextTitle: 'Meet the First Letters' });
-    expect(v.heroCopy.lines).toEqual(['Your Hangul route starts here.', 'Your first goal: read every Hangul letter.']);
+    expect(v.heroCopy.lines).toEqual(['Your Learning Route starts here.', 'Your first goal: read every Hangul letter.']);
     expect(v.heroCopy.cta).toEqual({ action: 'quest', label: 'Start' });
     expect(v.skills.map((s) => [s.detail, s.marks.length])).toEqual([
       ['Ready when you are', 0],
@@ -259,7 +259,7 @@ describe('myRouteView: other states', () => {
 
   it('read-only (a grown-up viewing a child): third person, no button, the note, the tiles line, the viewing line', () => {
     const v = view(model(APPENDIX_C), { viewer: 'grownup', name: 'Sam', nextTitle: 'Family at the Table' });
-    expect(v.viewing).toBe("Viewing Sam's journey");
+    expect(v.viewing).toBe("Viewing Sam's Learning Route");
     expect(v.heroCopy).toEqual({ lines: ['Sam is on Stage 1: Hangul.', 'Next: Family at the Table'], cta: null });
     expect(v.skillsTitle).toBe("What Sam's quests practice");
     expect(v.skills[0]?.detail).toBe('In 4 quests Sam finished');

@@ -10,8 +10,8 @@ export const a11y = {
   hoya: (pose: string) => `Hoya the tiger, ${pose}`,
   dismissHoya: 'Close Hoya message',
   goBack: 'Go back',
-  /** Bottom tab labels. */
-  tabs: { home: 'Today', journey: 'Journey', library: 'Library' },
+  /** Bottom tab labels. `route` is the Learning Route tab (LR-OD-1: the tab budget is 12; its accessibility label is `myRoute.tab`). */
+  tabs: { home: 'Today', journey: 'Journey', library: 'Library', route: 'Route' },
   cardArt: (title: string) => `Card art for ${title}`,
   /** The cub button on Home: the only way to profiles, backup, classes and the grown-up zone. */
   profileEntry: 'Profile and settings',
@@ -120,8 +120,10 @@ export const a11y = {
   /** The paywall offer card: its name, then the already-formatted price. */
   familyOffer: (name: string, price: string) => `${name}, ${price}`,
 
-  /** My route (F-ROUTE-001 section 3.14): each row label reads the row; the pips are hidden. */
+  /** Learning Route (F-ROUTE-001 section 3.14): each row label reads the row; the pips are hidden. */
   myRoute: {
+    /** The Route tab's accessibility label: the full page name (LR-OD-1). */
+    tab: 'Learning Route',
     stage: (order: number, title: string, stateWord: string, here: boolean, start: boolean, played: number) =>
       [
         `Stage ${order}, ${title}.`,

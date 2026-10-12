@@ -27,7 +27,8 @@ function outputsOf(tree: unknown, prefix: string): string[] {
 
 describe('console.journey (English)', () => {
   it('words "On Stage N" and the stage line as in Appendix B, the known part only when greater than zero', () => {
-    expect(j.title).toBe('Journey');
+    // AMENDMENTS-ROUTE-LEARNING-ROUTE section 7.2 (LR-1): the strip title names the page.
+    expect(j.title).toBe('Learning Route');
     expect(j.onStage(2)).toBe('On Stage 2');
     expect(j.stageLine(4, 2)).toBe('4 known from the level check, 2 quests done');
     expect(j.stageLine(8, 0)).toBe('8 known from the level check, 0 quests done');
