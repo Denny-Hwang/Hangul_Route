@@ -85,7 +85,9 @@ test.describe('Library with no reviewed story (regular build)', () => {
   test('Home has no story card: the explore card stands in, and no lesson is labelled "Story time"', async ({ page }) => {
     await onboard(page);
     const missions = page.getByTestId('home-missions');
-    await expect(missions.getByRole('button').first()).toBeVisible();
+    // The settled day-one plan (three cards) before the one-shot label read below, so a card that
+    // renders a tick later cannot slip past the tripwire.
+    await expect(missions.getByRole('button')).toHaveCount(3);
     const labels = await missions.getByRole('button').evaluateAll((els) => els.map((el) => el.getAttribute('aria-label') ?? ''));
 
     // Day one: the first Journey quest and the current episode to look at; never a story.
