@@ -1,4 +1,4 @@
-import { CATALOG, NOTE_PRESET_AUDIENCE, NOTE_PRESETS_NEED_SUGGEST, NoteSendSchema, type NotesMode, type Space } from '@hangul-route/content-schema';
+import { CATALOG, NOTE_PRESET_AUDIENCE, NOTE_PRESETS_NEED_SUGGEST, NOTE_SEND_MAX_LEARNERS, NoteSendSchema, type NotesMode, type Space } from '@hangul-route/content-schema';
 import { checkNoteText } from '@hangul-route/i18n/note-text';
 import { Hono, type Context } from 'hono';
 import { dbFor, noteRateKey, type Db, type NewNote } from '../db';
@@ -118,6 +118,8 @@ notesRoutes.post('/:id/notes', async (c) => {
   let learnerIds: string[];
   if (body.to.kind === 'everyone') {
     learnerIds = (await db.membersOf(space.id)).filter((m) => m.memberKind === 'learner' && m.role === 'student').map((m) => m.memberId);
+    // The 300-learner cap of one send (section 7.3) holds for `everyone` too, answered like the schema's own cap on `ids`.
+    if (learnerIds.length > NOTE_SEND_MAX_LEARNERS) return fail(c, 'bad_request', 'Invalid note', 422, { issues: [{ path: ['to'], code: 'too_big' }] });
   } else {
     const students = new Set(await db.studentsOf(space.id, body.to.ids));
     if (body.to.ids.some((learnerId) => !students.has(learnerId))) return fail(c, 'not_in_space', 'A learner is not a student here', 422);

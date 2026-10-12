@@ -1,5 +1,5 @@
 import type { Space } from '@hangul-route/content-schema';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { D1Db, noteRateKey, type Db, type StoredNote } from '../db';
 import type { D1Like, D1PreparedLike } from '../db/d1';
 import app from '../index';
@@ -214,12 +214,15 @@ describe('POST /api/spaces/:id/notes', () => {
       ['line one\nline two', { problem: 'line_break' }],
       ['   ', { problem: 'empty' }],
       ['x'.repeat(121), { problem: 'too_long' }],
+      ['Do not be lazy', { problem: 'tone', word: 'lazy' }],
+      ['ab\u202Ecd', { problem: 'invalid' }],
     ];
     for (const [text, details] of cases) {
       const res = await send(CLASS, 'teacher', basic({ text, textLocale: 'en' }));
       expect(res.status, text).toBe(422);
       expect(res.body.error).toMatchObject({ code: 'note_text', details });
-      expect(JSON.stringify(res.body)).not.toContain(text.trim() || 'never');
+      // Only the quoted token may come back (a link, a tone word), never the sentence itself.
+      expect(JSON.stringify(res.body)).not.toContain(JSON.stringify(text.trim() || 'never').slice(1, -1));
     }
     expect((await send(CLASS, 'teacher', basic({ text: 'Good job.See you, Mr.Kim', textLocale: 'en' }))).status).toBe(201);
     expect((await send(CLASS, 'teacher', basic({ text: 'no locale' }))).status).toBe(422);
@@ -287,6 +290,26 @@ describe('POST /api/spaces/:id/notes', () => {
     await db.putSenderHold({ accountId: 'teacher', reason: 'reports', createdAt: T, liftedAt: T });
     expect((await send(CLASS, 'teacher', basic())).status).toBe(201);
   });
+
+  it('a hold placed after the route checked it writes nothing: 403 sending_paused, no note and no counter (section 8.4)', async () => {
+    const realHold = db.getSenderHold.bind(db);
+    const spy = vi.spyOn(db, 'getSenderHold').mockImplementationOnce(async (accountId: string) => {
+      const before = await realHold(accountId);
+      await db.putSenderHold({ accountId, reason: 'reports', createdAt: T, liftedAt: null });
+      return before;
+    });
+    try {
+      const res = await send(CLASS, 'teacher', basic({ to: toLearners(SUNI, MIN) }));
+      expect(res.status).toBe(403);
+      expect(res.body.error?.code).toBe('sending_paused');
+    } finally {
+      spy.mockRestore();
+    }
+    expect(await notesOf(SUNI)).toEqual([]);
+    expect(await notesOf(MIN)).toEqual([]);
+    const counts = await db.countRateHitsByKeys([noteRateKey.account('teacher'), noteRateKey.pair(SUNI, 'teacher'), noteRateKey.learner(SUNI), noteRateKey.learner(MIN)], new Date(Date.now() - 60_000));
+    expect(counts.size).toBe(0);
+  });
 });
 
 describe('GET /api/spaces/:id/notes/recipients', () => {
@@ -348,15 +371,17 @@ function counting(d1: D1Like): { binding: D1Like; prepared: () => number; reset:
 }
 
 describe('statement budget (section 7.4, D11)', () => {
-  it('a send to 1 learner and to 300 prepares the same number of statements, at most 16; recipients at most 6', async () => {
+  it('a send to 1 learner and to 300 prepares the same number of statements, at most 16; recipients at most 6; everyone past 300 is refused', async () => {
     const raw = openSqliteD1();
     const own = new D1Db(raw);
     await seed(own);
-    const many = Array.from({ length: 300 }, (_, i) => `profile:l${i}`);
-    for (const learnerId of many) {
+    const addStudent = async (learnerId: string): Promise<void> => {
       await own.putLearner({ id: learnerId, displayName: learnerId, ageGroup: '5-7', avatar: 'x', recoveryHash: null, createdAt: T, lastActiveAt: T });
       await own.addMembership({ spaceId: CLASS, memberKind: 'learner', memberId: learnerId, role: 'student', joinedAt: T });
-    }
+    };
+    // With Suni and Min, the class holds exactly 300 students.
+    const many = Array.from({ length: 298 }, (_, i) => `profile:l${i}`);
+    for (const learnerId of many) await addStudent(learnerId);
     const counter = counting(raw);
     const env = { ...ON, DB: counter.binding };
     const measure = async (body: unknown, user = 'teacher'): Promise<number> => {
@@ -366,18 +391,25 @@ describe('statement budget (section 7.4, D11)', () => {
       return counter.prepared();
     };
     const one = await measure(basic({ to: toLearners(many[0]!), text: 'Well done', textLocale: 'en' }));
-    const all = await measure(basic({ to: toLearners(...many), text: 'Well done', textLocale: 'en' }));
+    const all = await measure(basic({ to: toLearners(SUNI, MIN, ...many), text: 'Well done', textLocale: 'en' }));
     expect(all).toBe(one);
     expect(one).toBeLessThanOrEqual(16);
     // another account: the teacher has 301 of today's 400 already
     const everyone = await measure({ to: { kind: 'everyone' }, presetId: 'effort_proud' }, 'coteacher');
     expect(everyone).toBeLessThanOrEqual(16);
-    expect((await own.notesForOversight(many[299]!, { before: null, limit: 10, now: new Date() })).length).toBe(2);
+    expect((await own.notesForOversight(many[297]!, { before: null, limit: 10, now: new Date() })).length).toBe(2);
+
+    // The 300-learner cap of one send holds for `everyone` too (section 7.3): 422 like the schema's cap, nothing sent.
+    await addStudent('profile:extra');
+    const over = await send(CLASS, 'teacher', { to: { kind: 'everyone' }, presetId: 'effort_proud' }, env);
+    expect(over.status).toBe(422);
+    expect(over.body.error).toMatchObject({ code: 'bad_request', details: { issues: [{ path: ['to'], code: 'too_big' }] } });
+    expect(await own.notesForOversight('profile:extra', { before: null, limit: 10, now: new Date() })).toEqual([]);
 
     counter.reset();
     const list = await recipients(CLASS, 'teacher', env);
     expect(list.status).toBe(200);
-    expect((list.body.data as { learners: unknown[] }).learners).toHaveLength(302);
+    expect((list.body.data as { learners: unknown[] }).learners).toHaveLength(301);
     expect(counter.prepared()).toBeLessThanOrEqual(6);
     raw.close();
   });
