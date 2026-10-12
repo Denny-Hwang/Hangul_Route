@@ -50,6 +50,23 @@ describe('POST /api/telemetry', () => {
     expect(store.events.map((e) => [e.name, e.payload])).toEqual(events);
   });
 
+  it('accepts the seven F-FEEDBACK-001 notes names with their payloads, sent without a profile id (Worker first, FB-1)', async () => {
+    const events: Array<[string, Record<string, unknown>]> = [
+      ['notes.card_shown', { unread: 1 }],
+      ['notes.list_viewed', { notes: 3, unread: 1 }],
+      ['notes.note_opened', { presetId: 'progress_reading', fromRole: 'teacher', hasText: true, hasSuggest: true, suggestOpen: false }],
+      ['notes.reaction_picked', { reaction: 'thanks', fromRole: 'family', changed: false }],
+      ['notes.suggest_started', { fromRole: 'teacher' }],
+      ['notes.report_sent', { reason: 'unkind', via: 'note_page' }],
+      ['notes.prefs_changed', { classes: 'presets' }],
+    ];
+    for (const [name, payload] of events) {
+      expect((await post({ name, payload })).status, name).toBe(201);
+    }
+    expect(store.events.map((e) => [e.name, e.payload])).toEqual(events);
+    expect(store.events.every((e) => e.profileId === undefined)).toBe(true);
+  });
+
   it('rejects unknown or missing event names with 422', async () => {
     for (const body of [{ name: 'unknown.event' }, { name: 'parent.notify.queued' }, {}, { name: 42 }]) {
       const r = await post(body);
