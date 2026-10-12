@@ -33,3 +33,15 @@ pencil:        stroke M4 20 L5 15 L15 5 L19 9 L9 19 Z (2.2) + stroke M5 15 L9 19
 - **Sizes.** Minimum 20 dp (stage-row tag and skill rows); 24 dp in the stage badge. Checked at 20 and 24 dp in the preview: each glyph stays distinct from `check`, `journey` and `card` and from each other.
 - **Accessibility.** Glyphs are decorative inside a labelled row; the row label carries the words. `Icon` has no accessibility props of its own, so the call site hides it: either the Icon sits inside the row's single accessible element (`accessible` with an `accessibilityLabel`, which groups its children), or it is wrapped in a `View` with `importantForAccessibility="no-hide-descendants"` and `accessibilityElementsHidden`. A hide-by-default prop on `Icon` would be a separate design-system change, not R-2a.
 - **Tests.** The existing glyph tests (every name drawn, valid paths, all glyphs distinct, inside the 24 x 24 box, stroke band 1.5 to 3) cover them; R-2a adds a block that pins the outline style (stroke 2 to 2.6), the closed pin drop with its dot inside it, the check mark inside the ring with a visible gap (0.5 at 20 dp), and the ear's inner curl closing on itself (no question-mark tail).
+
+## `dash`: the miss mark of a locked answer (F-VOC-004 S-4b)
+
+Spec: `docs/specs/F-VOC-004-speed-round.md` §3.6 ("a non-colour mark (a short horizontal dash)"), §3.8 ("miss = amber + a dash"), §3.11 behaviour 4 · wireframe: `design/wireframes/vocab/speed-round.md` frame F (`[pic]  -`).
+
+| Glyph | Meaning | Where | Geometry |
+|---|---|---|---|
+| `dash` | "Not this one" on an answer that is locked and moves on (no retry, so it is not `replay`) | `ChoiceCard` `wrong` state with `wrongMark="dash"` (`VocabQuestionView` in the Speed Round) | one level bar across the centre, stroke 2.6: `M7 12 H17` |
+
+- Never a cross or an X: a short bar, drawn in `text.primary` on `feedback.nudgeLight` (14:1), always next to the amber tone and the words "Not this one" in the card's name. Never `feedback.danger`.
+- 10 dp long on the 24 grid (shorter than the `plus` bar, 14), so at 24 dp it reads as a dash, not a divider. Stroke 2.6 like `check` and `close`, the other status marks.
+- Tests: the glyph block in `Icon/__tests__/glyphs.test.ts` pins one horizontal stroke centred on y 12, 8 to 13 long, at least 2.4 wide, with no vertical part.
