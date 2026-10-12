@@ -4,8 +4,12 @@ import {
   type PlacementSummary,
   type ProgressSnapshot,
   type ProgressSummary,
+  type VocabProgress,
+  type VocabSummary,
 } from '@hangul-route/content-schema';
 import { planIdOf } from '../homework/plan-derivation';
+import { codePoint, localDay, vocabOf } from '../vocab/progress';
+import { addDays } from '../vocab/srs';
 import { compareInstant } from './merge';
 
 /**
@@ -79,6 +83,44 @@ function prioritySymbols(placements: readonly PlacementResult[] | undefined): st
   return [...new Set(symbols)].slice(0, 3);
 }
 
+/** A word is strong from this best box (F-VOC-005 section 3.4); shown to caregivers only. */
+export const VOCAB_STRONG_BOX = 3;
+/** At most this many words to look at together. */
+const VOCAB_NEEDS_PRACTICE_MAX = 3;
+
+/**
+ * The caregiver and teacher view of the word slice (F-VOC-005 section 3.8):
+ * counts, a first-try rate and up to three words to look at together. No
+ * per-answer history and no response time. `today` is the device's local day.
+ *
+ * `needsPractice`: words answered at least twice that are in box 1 now, the
+ * lowest share of right answers first, ties by the most recent practice day,
+ * then id. A learner who never missed gets an empty list.
+ */
+export function vocabSummaryOf(v: VocabProgress, today: string): VocabSummary {
+  let seen = 0;
+  let right = 0;
+  for (const s of v.items) {
+    seen += s.seen;
+    right += s.right;
+  }
+  const weekStart = addDays(today, -6);
+  const needsPractice = v.items
+    .filter((s) => s.seen >= 2 && s.box === 1)
+    // a.right / a.seen < b.right / b.seen, compared without division.
+    .sort((a, b) => a.right * b.seen - b.right * a.seen || codePoint(b.last, a.last) || codePoint(a.id, b.id))
+    .slice(0, VOCAB_NEEDS_PRACTICE_MAX)
+    .map((s) => s.id);
+  return {
+    collected: v.items.length,
+    strong: v.items.filter((s) => s.bestBox >= VOCAB_STRONG_BOX).length,
+    topicsStarted: v.topics.length,
+    topicsPracticed7d: v.topics.filter((t) => t.last >= weekStart).length,
+    firstTryRate: seen === 0 ? null : Math.round((right / seen) * 100) / 100,
+    needsPractice,
+  };
+}
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const RECOGNIZED_ACCURACY = 0.8;
 export const PRACTICE_ACCURACY = 0.6;
@@ -110,6 +152,7 @@ export function summarize({ snapshot, now, stage1QuestIds, questJamo, planNotRea
   const needsPractice = [...new Set([...practiced, ...seeded])].slice(0, 3);
 
   const placement = placementSummaryOf(snapshot.placements);
+  const words = vocabOf(snapshot);
 
   const lastSession = snapshot.sessions[snapshot.sessions.length - 1];
   const lastActiveAt =
@@ -131,5 +174,7 @@ export function summarize({ snapshot, now, stage1QuestIds, questJamo, planNotRea
     planProgress: planProgressOf(snapshot, planNotReady),
     ...(placement ? { placement } : {}),
     ...(journey ? { journey } : {}),
+    // Omitted for a learner with no words, so their summary stays byte-identical (F-VOC-005 section 3.8).
+    ...(words.items.length > 0 ? { vocab: vocabSummaryOf(words, localDay(now)) } : {}),
   };
 }
