@@ -1,5 +1,17 @@
 name: CI
 
+# Required checks (ruleset main-protection) live here as two small jobs:
+#   'lint · typecheck · test · build'      passes only when `checks` and both `unit` jobs pass;
+#   'Measure coverage vs rolling targets'  reads the coverage the `unit` jobs wrote.
+# The tests run ONCE, with coverage (`test:coverage`, the same vitest suites as `test`), split
+# over two parallel jobs; the coverage check reuses their reports instead of running the suites
+# again. Both required jobs use if: always(), because a skipped required check counts as passed.
+# scripts/__tests__/ci-workflows.test.mjs keeps this layout honest.
+#
+# Turbo cache: restored and saved under the exact git tree (lockfile included), so it only
+# replays tasks of an identical tree, i.e. a re-run of a failed job skips the tasks that
+# already passed on that same tree. A new commit never reuses an earlier result.
+
 on:
   pull_request:
     branches: [main]
@@ -11,8 +23,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint-typecheck-test-build:
-    name: lint · typecheck · test · build
+  checks:
+    name: Lint · typecheck · build · repo checks
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -20,32 +32,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - name: Setup pnpm, Node and dependencies
+        uses: ./.github/actions/setup-workspace
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Git tree of this run (turbo cache key)
+        id: tree
+        run: echo "tree=$(git rev-parse 'HEAD^{tree}')" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the turbo cache of this exact tree
+        id: turbo-cache
+        uses: actions/cache/restore@v4
         with:
-          node-version-file: .nvmrc
-          cache: pnpm
+          path: .turbo/cache
+          key: turbo-checks-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ steps.tree.outputs.tree }}
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      # Next's own incremental build cache (webpack); Next validates every entry itself.
+      # Saved from main only, so pull requests share main's cache and never grow it.
+      - name: Restore the Next.js build cache (apps/web, site role)
+        uses: actions/cache/restore@v4
+        with:
+          path: apps/web/.next/cache
+          key: next-site-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            next-site-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
 
-      - name: Lint
-        run: pnpm run lint
-
-      - name: Typecheck
-        run: pnpm run typecheck
-
-      - name: Test
-        run: pnpm run test
-
-      - name: Test the API against SQLite (real D1 migrations, F-INFRA-003)
-        run: pnpm --filter @hangul-route/backend test:sqlite
-
-      - name: Test enforcement scripts (T-019)
-        run: pnpm run test:scripts
+      - name: Lint, typecheck and build (one turbo run, tasks in parallel)
+        run: pnpm exec turbo run lint typecheck build
 
       - name: Check i18n rules (F-I18N-001)
         run: node scripts/check-i18n.mjs
@@ -63,9 +75,6 @@ jobs:
             node scripts/i18n-status.mjs
           fi
 
-      - name: Build
-        run: pnpm run build
-
       - name: Validate API wrangler config (dry run, no upload)
         run: pnpm --filter @hangul-route/api exec wrangler deploy --dry-run
         env:
@@ -75,3 +84,152 @@ jobs:
         run: pnpm --filter @hangul-route/api exec wrangler d1 migrations apply hangul-route --local
         env:
           WRANGLER_SEND_METRICS: "false"
+
+      - name: Save the turbo cache of this tree (also after a failure, for a re-run)
+        if: always() && steps.turbo-cache.outputs.cache-hit != 'true' && steps.tree.outputs.tree != ''
+        uses: actions/cache/save@v4
+        with:
+          path: .turbo/cache
+          key: turbo-checks-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ steps.tree.outputs.tree }}
+
+      - name: Save the Next.js build cache (main only)
+        if: github.event_name == 'push' && success()
+        uses: actions/cache/save@v4
+        with:
+          path: apps/web/.next/cache
+          key: next-site-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+
+  unit:
+    name: Unit tests · ${{ matrix.group }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [mobile, packages]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm, Node and dependencies
+        uses: ./.github/actions/setup-workspace
+
+      - name: Git tree of this run (turbo cache key)
+        id: tree
+        run: echo "tree=$(git rev-parse 'HEAD^{tree}')" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the turbo cache of this exact tree
+        id: turbo-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .turbo/cache
+          key: turbo-unit-${{ matrix.group }}-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ steps.tree.outputs.tree }}
+
+      # apps/mobile alone is about half of all the vitest work, so it gets its own job.
+      - name: Unit tests with coverage (apps/mobile)
+        if: matrix.group == 'mobile'
+        run: pnpm exec turbo run test:coverage --filter=@hangul-route/mobile
+
+      - name: Test enforcement scripts (T-019)
+        if: matrix.group == 'mobile'
+        run: pnpm run test:scripts
+
+      - name: Unit tests with coverage (every other workspace)
+        if: matrix.group == 'packages'
+        run: pnpm exec turbo run test:coverage --filter='!@hangul-route/mobile'
+
+      - name: Test the API against SQLite (real D1 migrations, F-INFRA-003)
+        if: matrix.group == 'packages'
+        run: pnpm --filter @hangul-route/backend test:sqlite
+
+      - name: Pack the coverage reports
+        run: |
+          find apps packages -path '*/node_modules' -prune -o -type f -path '*/coverage/*' \
+            \( -name coverage-summary.json -o -name lcov.info \) -print > coverage-files.txt
+          cat coverage-files.txt
+          tar -cf "coverage-${{ matrix.group }}.tar" -T coverage-files.txt
+
+      - name: Upload the coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.group }}
+          path: coverage-${{ matrix.group }}.tar
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Save the turbo cache of this tree (also after a failure, for a re-run)
+        if: always() && steps.turbo-cache.outputs.cache-hit != 'true' && steps.tree.outputs.tree != ''
+        uses: actions/cache/save@v4
+        with:
+          path: .turbo/cache
+          key: turbo-unit-${{ matrix.group }}-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ steps.tree.outputs.tree }}
+
+  coverage:
+    name: Measure coverage vs rolling targets
+    needs: [unit]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Both unit test jobs passed
+        env:
+          UNIT: ${{ needs.unit.result }}
+        run: |
+          echo "unit tests: $UNIT"
+          if [ "$UNIT" != success ]; then
+            echo "::error::The unit test jobs did not pass ($UNIT), so there is no coverage to measure."
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check coverage-targets md ↔ json drift (F-COV-002)
+        run: node scripts/check-coverage-targets-drift.mjs
+
+      - name: Download the coverage reports of the unit test jobs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+          path: coverage-parts
+          merge-multiple: true
+
+      - name: Unpack the coverage reports into their workspaces
+        run: |
+          for t in coverage-parts/*.tar; do tar -xvf "$t"; done
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          overwrite: true
+          path: |
+            **/coverage/coverage-summary.json
+            **/coverage/lcov.info
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Enforce rolling targets (F-COV-001)
+        run: node scripts/coverage-gate.mjs
+
+  ci:
+    name: lint · typecheck · test · build
+    needs: [checks, unit]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Every CI job passed
+        env:
+          CHECKS: ${{ needs.checks.result }}
+          UNIT: ${{ needs.unit.result }}
+        run: |
+          echo "lint · typecheck · build · repo checks: $CHECKS"
+          echo "unit tests (mobile, packages): $UNIT"
+          if [ "$CHECKS" != success ] || [ "$UNIT" != success ]; then
+            echo "::error::A CI job did not pass."
+            exit 1
+          fi

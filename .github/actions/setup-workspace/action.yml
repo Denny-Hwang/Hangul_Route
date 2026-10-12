@@ -1,0 +1,21 @@
+name: Set up the workspace
+description: >
+  pnpm (version from package.json packageManager), Node from .nvmrc with the
+  pnpm store cache (actions/setup-node, keyed on pnpm-lock.yaml), and a
+  frozen-lockfile install. Shared by the jobs of ci.yml and web-app.yml.
+
+runs:
+  using: composite
+  steps:
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version-file: .nvmrc
+        cache: pnpm
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile
