@@ -10,6 +10,7 @@ import {
   type FestivalAnchor,
 } from '../catalog/schema';
 import { placementStageNumber, questsPlacedOutAtLevel } from '../placement/level-map';
+import type { PlacementLevel } from '../schemas/placement';
 import { themeOrderFor } from '../placement/route-seed';
 import { StageKeySchema, ThemeKeySchema, type StageKey, type ThemeKey } from '../schemas/heritage-card';
 import type { PlanItem } from '../schemas/plan-item';
@@ -583,7 +584,19 @@ export function toMeta(draft: CurriculumDraft): CurriculumMeta {
   };
 }
 
-export type RegenerateMode = 'shift' | 'requeue';
+export type RegenerateMode = 'shift' | 'requeue' | 'reseed';
+
+/** What a `reseed` may replace (FP-B4): the start (level and placed-out set) and the goals. */
+export type ReseedPatch = Partial<Pick<CurriculumParams, 'level' | 'placedOutQuestIds' | 'goals'>>;
+
+export interface RegenerateOptions {
+  mode: RegenerateMode;
+  completedQuestIds?: string[];
+  /** `reseed` only; ignored by the other modes. */
+  paramsPatch?: ReseedPatch;
+}
+
+const levelRank = (level: PlacementLevel): number => placementStageNumber(level.stage) * 10 + level.band;
 
 /**
  * Re-pacing (section 3.7) from `today`: sessions before today keep their items,
@@ -592,7 +605,16 @@ export type RegenerateMode = 'shift' | 'requeue';
  * sessions in their order (the console's mode: it cannot know completion).
  * `requeue` rebuilds the queue from the catalogue minus the done set, so an
  * unfinished past item leaves its old date and returns to the front (the
- * device's mode). `reseed` arrives with `proposeRoute` (PR P2-3b).
+ * device's mode).
+ *
+ * `reseed` (after a retake or a grown-up override, FP-B4) replaces the stored
+ * `level` (never lower: a lower level keeps the stored one) and, when the patch
+ * carries them, `placedOutQuestIds` and `goals`; every item dated before today
+ * stays where it is, done or not, and the future queue is rebuilt from the
+ * catalogue minus the done set, the patched placed-out set and those past items.
+ * The caller keeps the placed-out set a superset of the stored one except after
+ * an override (`effectiveRoute` does), so put-back quests return to the queue.
+ * A `reseed` with an empty patch is a `shift`.
  *
  * In `requeue`, past coming-soon placeholders stay on their dates (nothing can
  * complete them, so moving them would never settle), and when no session is
@@ -603,7 +625,7 @@ export function regenerateFrom(
   plan: { meta: CurriculumMeta; items: PlanItem[] },
   today: DateKey,
   catalog: Catalog,
-  opts: { mode: RegenerateMode; completedQuestIds?: string[] },
+  opts: RegenerateOptions,
 ): CurriculumDraft {
   RealDateKeySchema.parse(today);
   const completed = opts.completedQuestIds ?? [];
@@ -611,6 +633,20 @@ export function regenerateFrom(
   const isPast = (item: PlanItem): boolean => item.targetDate !== undefined && item.targetDate < today;
   const past = plan.items.filter(isPast);
   const base = { freezeBefore: today, historyWeeks: plan.meta.weeks };
+  if (opts.mode === 'reseed') {
+    const { level, placedOutQuestIds, goals } = opts.paramsPatch ?? {};
+    if (level === undefined && placedOutQuestIds === undefined && goals === undefined) {
+      return regenerateFrom(plan, today, catalog, { mode: 'shift', completedQuestIds: completed });
+    }
+    const stored = plan.meta.params.level;
+    const reseeded: CurriculumParamsInput = {
+      ...params,
+      level: level !== undefined && levelRank(level) > levelRank(stored) ? level : stored,
+      ...(placedOutQuestIds === undefined ? {} : { placedOutQuestIds: [...placedOutQuestIds] }),
+      ...(goals === undefined ? {} : { goals }),
+    };
+    return build(reseeded, catalog, { ...base, history: past });
+  }
   if (opts.mode === 'requeue') {
     const lookup = new Lookup(catalog);
     const done = new Set(completed);
