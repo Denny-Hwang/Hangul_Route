@@ -546,4 +546,19 @@ export const caregiver = {
     noPin: 'This device has no grown-up PIN. Sign in on the grown-up page instead.',
     continue: { cta: 'Continue' },
   },
+  /**
+   * The free-lessons line on the device's grown-up screens (F-ENT-003 section 3.9.2 and the
+   * section 3.11 glossary; wireframe console/free-lessons-line B): the parent dashboard child
+   * row and the in-app report, behind the grown-up gate, for the space owner only. The product
+   * is named by context ([BY]: the Family Plan renews yearly): a family, a class or school, or
+   * `either` when the context is unknown. No price, no "Premium".
+   */
+  access: {
+    freeEnd: (name: string, product: string) => `${name} finished the free lessons. Stage 2 and later open with ${product}.`,
+    product: {
+      family: 'the Family Plan',
+      class: 'a Group License',
+      either: 'the Family Plan or a Group License',
+    },
+  },
 } as const;

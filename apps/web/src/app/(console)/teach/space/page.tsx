@@ -9,14 +9,16 @@ import { AvatarChip } from '@/components/AvatarChip';
 import { SchoolAdmin } from '@/components/console/SchoolAdmin';
 import { StartingSpot } from '@/components/console/PlacementParts';
 import { JourneyStrip } from '@/components/console/JourneyParts';
+import { FreeLessonsLine } from '@/components/console/FreeLessonsParts';
 import { useConsole } from '@/components/console/use-console';
 import type { PlanView, Roster, SpaceListItem } from '@/lib/console/api';
-import { lectureModeEnabled } from '@/lib/console/config';
+import { contentGatingEnabled, lectureModeEnabled } from '@/lib/console/config';
 import { canComposeIn } from '@/lib/console/lecture';
 import { levelPillLabel } from '@/lib/console/level-label';
 import { capState, classRollup, codeExpiry, percent, relativeDay } from '@/lib/console/rollup';
-import { ownRouteLine, readoutLine as routeReadoutLine } from '@/lib/console/curriculum';
-import { planReaches, planReadout, readoutLine, rosterPlan } from '@/lib/console/plans';
+import { ownRouteLine, readoutLine as routeReadoutLine, spaceCoverage, type SpaceCoverage } from '@/lib/console/curriculum';
+import { rosterFreeLessonsLine } from '@/lib/console/free-lessons-line-view';
+import { dateKey, livePublished, planReaches, planReadout, readoutLine, rosterPlan } from '@/lib/console/plans';
 import { ROUTES, type SpaceError, spaceErrorText, spaceIdFrom } from '@/lib/console/routing';
 import { aroundSlot } from '@/lib/i18n/slot';
 
@@ -28,8 +30,10 @@ function SpaceInner(): JSX.Element {
   const [roster, setRoster] = useState<Roster | null>(null);
   const [plans, setPlans] = useState<PlanView[]>([]);
   const [pendingRelinks, setPendingRelinks] = useState(0);
-  // Lecture mode's entry points show for the roles that compose plans (F-TCH-004 §3.11).
+  // Lecture mode's entry points show for the roles that compose plans (F-TCH-004 §3.11); the free-lessons line for the owner (F-ENT-003 §3.9.2).
   const [spaces, setSpaces] = useState<SpaceListItem[] | null>(null);
+  // Whether a Family Plan or Group License covers this space, as far as this viewer can tell (the free-lessons line never guesses).
+  const [coverage, setCoverage] = useState<SpaceCoverage>('unknown');
   // A key, not text: the message is looked up at render time, so it follows the header language select.
   const [error, setError] = useState<SpaceError | null>(null);
   const [busy, setBusy] = useState(false);
@@ -39,13 +43,18 @@ function SpaceInner(): JSX.Element {
   const load = useCallback(async (): Promise<void> => {
     if (!api) return;
     setError(null);
-    const [result, planList, relinks, spaceList] = await Promise.all([
+    setCoverage('unknown');
+    // The free-plan switch (F-ENT-003 §3.4): only with it on does the roster read the role and the entitlements for the free-lessons line.
+    const gating = contentGatingEnabled();
+    const [result, planList, relinks, spaceList, entitlements] = await Promise.all([
       api.roster(spaceId),
       api.listPlans(spaceId),
       api.relinkRequests(spaceId),
-      lectureModeEnabled() ? api.listSpaces() : null,
+      lectureModeEnabled() || gating ? api.listSpaces() : null,
+      gating ? api.entitlements() : null,
     ]);
     if (spaceList?.ok) setSpaces(spaceList.data);
+    if (gating && result.ok) setCoverage(spaceCoverage(entitlements?.ok ? entitlements.data : null, spaceList?.ok ? spaceList.data : null, result.data.space, new Date()));
     if (planList.ok) setPlans(planList.data);
     if (relinks.ok) setPendingRelinks(relinks.data.length);
     if (result.ok) setRoster(result.data);
@@ -91,6 +100,10 @@ function SpaceInner(): JSX.Element {
   const weekRevisit = aroundSlot(c.space.week.revisit);
   const learnerRevisit = aroundSlot(c.space.learner.revisit);
   const jamo = (items: readonly string[]): JSX.Element => <span lang="ko">{items.join(' · ')}</span>;
+  const gating = contentGatingEnabled();
+  const role = spaces?.find((item) => item.space.id === spaceId)?.role ?? null;
+  const livePlans = gating ? livePublished(plans) : [];
+  const today = dateKey(now);
 
   return (
     <ConsoleShell onSignOut={signOut} title={roster ? c.space.title[roster.space.kind](roster.space.name, roster.learners.length) : c.space.loading}>
@@ -215,6 +228,7 @@ function SpaceInner(): JSX.Element {
                           </div>
                         ) : null}
                         {ownRouteLine(roster.space.kind, l.summary.selfRoute, locale) ? <div data-testid="own-route">{ownRouteLine(roster.space.kind, l.summary.selfRoute, locale)}</div> : null}
+                        <FreeLessonsLine line={rosterFreeLessonsLine({ gating, role, coverage, spaceKind: roster.space.kind, learner: l, plans: livePlans, today }, locale)} />
                       </div>
                     ) : (
                       <Muted>
