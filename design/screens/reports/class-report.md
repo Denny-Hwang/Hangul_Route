@@ -57,7 +57,7 @@ From 60em: layer 1 left, layer 2 right, More detail across. The class-level line
 
 | State | Drawn |
 |---|---|
-| loading (first load) | header with Print disabled, `h1`, the tab row disabled, a visually hidden `role="status"` line `a11y.report.loading`, the panel `aria-busy="true"` with skeletons; later period changes keep the tabs enabled (as the learner report) |
+| loading (first load) | header with Print disabled, `h1`, the tab row disabled, a visually hidden `role="status"` line `a11y.report.loading` right before the panel (its sibling, outside the busy panel), the panel `aria-busy="true"` with skeletons; later period changes keep the tabs enabled (as the learner report) |
 | empty (no learners) | `report.class.empty` in a neutral block; the back link goes to the roster, where the join code is. No Print |
 | every learner on an older app | the class lines explain (`olderApp`); This period shows `report.class.afterUpdate`; revisit letters (and level-check counts in More detail) still render |
 | no practice in the window | headline "0 of 12 learners practiced this week."; What went well hidden; Practice together renders; This period says `report.headline.noneYet(when)` |

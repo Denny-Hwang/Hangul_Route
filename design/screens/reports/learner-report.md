@@ -97,7 +97,7 @@ Both variants show the same layers; nothing else differs. Neither shows a class 
 
 | State | Drawn |
 |---|---|
-| loading (first load) | the header (Print disabled), the `h1`, the tab row disabled, a visually hidden `role="status"` line `a11y.report.loading`, and the panel with `aria-busy="true"` holding three skeleton blocks. A later period or step change keeps the tabs and step buttons enabled and only marks the panel busy |
+| loading (first load) | the header (Print disabled), the `h1`, the tab row disabled, a visually hidden `role="status"` line `a11y.report.loading` as the panel's sibling right before it (never inside the busy panel), and the panel with `aria-busy="true"` holding three skeleton blocks. A later period or step change keeps the tabs and step buttons enabled and only marks the panel busy |
 | no_data | the `h1`, then one neutral block: `report.state.noData(name)` and `report.state.noDataAction`. No glance, no tabs, never "has not practiced" (behaviour 12) |
 | empty | the glance without "Last practice", `report.state.empty(name)`, then the P4 line when the app has one (`next_on_route`) under its `h2` What to practice next (a section with a line always has its heading). No tabs |
 | legacy | the glance, `report.state.legacy` and `report.state.updateAction(name)`, then More detail (open on the board) from today's summary fields: letters, totals, starting spot, level check, plan. No **New letters this period** (it needs `activity`). No tabs |
