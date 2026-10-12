@@ -1,6 +1,8 @@
-import type { StageKey, ThemeKey } from '@hangul-route/content-schema';
+import type { Quest, StageKey, ThemeKey } from '@hangul-route/content-schema';
+import { findJamo } from '../content/jamo';
 import type { TelemetryEvent } from '../platform/telemetry';
 import { nextStartedEvent, type PlanView, type RouteNext } from './route-next';
+import { questTeaches } from './stage1/curriculum';
 
 /**
  * The episode page's plan tags and preview state (F-ENT-003 section 3.7, PR E3-6; wireframe
@@ -106,4 +108,21 @@ export function playerGuard(
   episodeId: string,
 ): { episodeId: string; from: 'player' } | null {
   return isQuestOpen(questId) ? null : { episodeId, from: 'player' };
+}
+
+/**
+ * The letters a quest introduces, as taught Korean with its romanization (drawn with `KoreanText`).
+ * The preview lists them under a closed quest (section 3.7); no closed quest teaches letters today,
+ * because all of Stage 1 is free (OD-1), so the row shows them only once a later stage does.
+ */
+export function taughtLetters(quest: Quest): { ko: string; romanization: string }[] {
+  const seen = new Set<string>();
+  const letters: { ko: string; romanization: string }[] = [];
+  for (const id of questTeaches(quest)) {
+    const jamo = findJamo(id);
+    if (!jamo || seen.has(jamo.char)) continue;
+    seen.add(jamo.char);
+    letters.push({ ko: jamo.char, romanization: jamo.romanization });
+  }
+  return letters;
 }

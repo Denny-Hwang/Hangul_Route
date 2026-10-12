@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { questsAll } from '../../content';
 import {
   backToOpenLessons,
   episodeAccessView,
@@ -7,6 +8,7 @@ import {
   previewFromOf,
   previewOpenedEvent,
   startedFromEpisode,
+  taughtLetters,
 } from '../episode-access';
 import type { PlanView, RouteNext } from '../route-next';
 
@@ -146,5 +148,22 @@ describe('playerGuard (section 3.6, guard at the point of play)', () => {
 
   it('lets an open quest play', () => {
     expect(playerGuard(() => true, 'quest:stage1-letters-q1', 'episode:stage1-letters')).toBeNull();
+  });
+});
+
+describe('taughtLetters (the preview shows what a closed quest teaches)', () => {
+  it('lists the letters a quest introduces, each with its romanization, once', () => {
+    const quest = questsAll.find((q) => q.id === 'quest:stage1-letters-q1');
+    expect(quest).toBeDefined();
+    const letters = taughtLetters(quest!);
+    expect(letters.length).toBeGreaterThan(0);
+    for (const l of letters) expect(l.romanization.length).toBeGreaterThan(0);
+    expect(new Set(letters.map((l) => l.ko)).size).toBe(letters.length);
+  });
+
+  it('is empty for a quest that teaches no letter (a Stage 2 taste)', () => {
+    const quest = questsAll.find((q) => q.id === 'quest:stage2-life-q1');
+    expect(quest).toBeDefined();
+    expect(taughtLetters(quest!)).toEqual([]);
   });
 });
