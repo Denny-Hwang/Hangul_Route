@@ -48,7 +48,8 @@ const outputsOf = (locale: UiLocale, ns: string): Rendered[] => {
 /** The learner-facing namespaces (section 6.3: "every learner-facing string of this spec"). */
 const LEARNER_NS = ['common.notes', 'learner.notes', 'a11y.notes'] as const;
 /** The grown-up namespaces: caregiver list, third person, no age framing. */
-const ADULT_NS = ['caregiver.notes', 'console.notes', 'console.shell.nav'] as const;
+/** `console.shell.nav.notes` only: the other nav labels belong to F-APP-001 and follow its own review. */
+const ADULT_NS = ['caregiver.notes', 'console.notes', 'console.shell.nav.notes'] as const;
 
 const sentences = (text: string): string[] =>
   text
@@ -301,6 +302,22 @@ describe('grown-up notes strings (section 6.10, 6.13, 7.7, 8.2, 9)', () => {
     expect(en.console.notes.family.from.class.length).toBe(1);
   });
 
+  it('words a family note as one whole line, never with the account name (OD-5)', () => {
+    expect(en.console.notes.family.from.home).toBe('From home');
+    expect(en.console.notes.family.from.homeSigned('Grandma')).toBe('From home, signed Grandma');
+    expect(en.console.notes.family.from.homeSigned.length).toBe(1);
+  });
+
+  it('pairs the class and family words of the sent list and the recipient lines', () => {
+    expect(en.console.notes.sent.back).toEqual({ class: 'Back to class', family: 'Back to family' });
+    expect(en.console.notes.composer.recipientsProblem).toEqual({ class: 'Choose up to 300 students.', family: 'Choose up to 300 learners.' });
+    expect(en.console.notes.composer.recipientsInvalid).toBe('This list cannot be sent as it is. Refresh and try again.');
+  });
+
+  it('gives the closed suggestion its caption, with no price, plan or link (section 6.5, F-ENT-003)', () => {
+    expect(en.learner.notes.detail.suggest.closed).toBe('Opens with the full route');
+  });
+
   it('labels the adult nav item "Notes" (console.shell.nav.notes)', () => {
     expect(en.console.shell.nav.notes).toBe('Notes');
   });
@@ -311,7 +328,6 @@ describe('grown-up notes strings (section 6.10, 6.13, 7.7, 8.2, 9)', () => {
     expect(en.console.notes.composer.errors.notAllowed).toBe('The family owner can let you send notes.');
     expect(en.console.notes.composer.errors.wait).toBe('Please wait a minute and try again.');
     expect(en.console.notes.composer.errors.notInSpace).toBe('Someone on this list is no longer in this space. Refresh and try again.');
-    expect(en.console.notes.composer.recipientsProblem).toBe('Choose up to 300 learners.');
     expect(en.console.notes.family.wait).toBe('Please wait a minute and try again.');
     expect(en.console.notes.composer.closedMark).toBe('Some learners can open this lesson only with the full route.');
   });
@@ -319,9 +335,11 @@ describe('grown-up notes strings (section 6.10, 6.13, 7.7, 8.2, 9)', () => {
 
 describe('ko / es follow the F-I18N-001 review process (OD-15)', () => {
   it('adds no ko / es notes entries yet, so every notes string falls back to English', () => {
-    const ns = ['common.notes', 'learner.notes', 'caregiver.notes', 'console.notes', 'a11y.notes', 'console.shell.nav'];
+    const ns = ['common.notes', 'learner.notes', 'caregiver.notes', 'console.notes', 'a11y.notes'];
     for (const overlay of [es, ko]) {
-      for (const path of leafPaths(overlay)) expect(ns.some((n) => path.startsWith(`${n}.`)), path).toBe(false);
+      for (const path of leafPaths(overlay)) {
+        expect(ns.some((n) => path.startsWith(`${n}.`)) || path === 'console.shell.nav.notes', path).toBe(false);
+      }
     }
     for (const locale of ['es', 'ko'] as const) {
       expect(getMessages(locale).common.notes.presets.effort_proud).toBe(en.common.notes.presets.effort_proud);

@@ -1324,7 +1324,7 @@ export const consoleMsgs = {
     status: { sent: 'Sent', opened: 'Opened', not_shown: 'Not shown', withdrawn: 'Taken back' },
     sent: {
       title: (space: string) => `Notes · ${space}`,
-      back: 'Back to class',
+      back: { class: 'Back to class', family: 'Back to family' },
       disclosure: 'Teachers see the answer a student picks. They do not see when a note was read.',
       filter: { label: 'Show', everyone: 'Everyone' },
       to: {
@@ -1391,8 +1391,10 @@ export const consoleMsgs = {
         tone: (word: string) => `Please choose a kinder word than "${word}".`,
         invalid: 'Some characters cannot be sent in a note. Please type the words again.',
       },
-      /** The picked list cannot be sent as it is (more than the 300 a send takes, or an id the form cannot send). */
-      recipientsProblem: 'Choose up to 300 learners.',
+      /** The picked list is longer than the 300 learners one send takes (`NOTE_SEND_MAX_LEARNERS`). */
+      recipientsProblem: { class: 'Choose up to 300 students.', family: 'Choose up to 300 learners.' },
+      /** The picked list holds an id the form cannot send (a stale or damaged roster row). */
+      recipientsInvalid: 'This list cannot be sent as it is. Refresh and try again.',
       quest: {
         title: 'Suggest a quest (optional)',
         needed: 'Needed for this encouragement',
@@ -1464,8 +1466,10 @@ export const consoleMsgs = {
       tabs: { label: 'Notes for this learner', received: 'Received', sent: 'Sent' },
       from: {
         class: (className: string) => `From ${className} (teacher)`,
+        /** A family note with no readable sign-off; the sender is never named here (OD-5). */
         home: 'From home',
-        signed: (label: string) => `signed ${label}`,
+        /** A family note with its sign-off, one whole line so a translation can reorder it. */
+        homeSigned: (label: string) => `From home, signed ${label}`,
       },
       sentBy: (account: string) => `Sent by ${account}`,
       youSent: 'You sent this',

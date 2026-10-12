@@ -1281,7 +1281,8 @@ export const learner = {
     detail: {
       /** Under the grown-up's words, so they are never mistaken for a lesson (section 6.11). */
       from: (sender: string) => `From ${sender}`,
-      suggest: { title: 'Try this quest', start: { cta: 'Start' } },
+      /** `closed`: the suggested quest is not open on this profile (F-ENT-003): no Start, no price, no link. */
+      suggest: { title: 'Try this quest', start: { cta: 'Start' }, closed: 'Opens with the full route' },
       reactions: { heading: 'Answer with one tap' },
       putAway: { cta: 'Put this note away' },
       putAwayDone: 'Put away. A grown-up can still see it.',

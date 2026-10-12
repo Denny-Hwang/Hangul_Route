@@ -567,7 +567,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.notes.composer.result.limit.class': [[1], [2]],
   'console.notes.composer.result.limit.family': [[1], [2]],
   'console.notes.family.from.class': [['Sunday Class A']],
-  'console.notes.family.from.signed': [['Grandma']],
+  'console.notes.family.from.homeSigned': [['Grandma'], ['Your family']],
   'console.notes.family.sentBy': [['Mina Park']],
   'console.notes.family.hiddenBy': [['Mina Park']],
   'console.notes.family.reportedBy': [['Mina Park']],
