@@ -116,7 +116,11 @@ describe('learner.journey.cellStories (F-STORY-005 PR 5.5b)', () => {
 
   it('the story page home-cell pill and its label', () => {
     expect(c.homePill(2, 'Letters & Books')).toBe('Stage 2 · Letters & Books');
-    expect(c.homePillLabel(2, 'Words', 'Letters & Books')).toBe('Heritage stories for Stage 2 Words, Letters & Books');
+    expect(c.homePillLabel(2, 'Words', 'Letters & Books')).toBe(
+      'Stage 2 · Letters & Books. Heritage stories for this cell in Stage 2 Words',
+    );
+    // Label in name (WCAG 2.5.3): the spoken name starts with the words the pill shows.
+    expect(c.homePillLabel(2, 'Words', 'Letters & Books').startsWith(c.homePill(2, 'Letters & Books'))).toBe(true);
   });
 
   it('every function message has sample arguments', () => {

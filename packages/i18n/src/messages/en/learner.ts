@@ -237,8 +237,9 @@ export const learner = {
         }),
       /** A story page's home cell: a plain pill, never a lock. */
       homePill: (stage: number, themeTitle: string) => `Stage ${stage} · ${themeTitle}`,
+      /** Starts with the pill's visible words (WCAG 2.5.3 label in name), then says where it goes. */
       homePillLabel: (stage: number, stageTitle: string, themeTitle: string) =>
-        `Heritage stories for Stage ${stage} ${stageTitle}, ${themeTitle}`,
+        `Stage ${stage} · ${themeTitle}. Heritage stories for this cell in Stage ${stage} ${stageTitle}`,
     },
   },
 
