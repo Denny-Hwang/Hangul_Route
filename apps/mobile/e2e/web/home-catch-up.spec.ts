@@ -20,16 +20,19 @@ const STAGE1_QUESTS: readonly (readonly [string, string])[] = [
   ['quest:stage1-life-q2', 'episode:stage1-life'],
   ['quest:stage1-life-q3', 'episode:stage1-life'],
   ['quest:stage1-rites-q1', 'episode:stage1-rites'],
+  ['quest:stage1-rites-q2', 'episode:stage1-rites'],
+  ['quest:stage1-rites-q3', 'episode:stage1-rites'],
   ['quest:stage1-nature-q1', 'episode:stage1-nature'],
   ['quest:stage1-crafts-q1', 'episode:stage1-crafts'],
 ];
-const STAGE1_QUEST_CARDS = ['card:book', 'card:hanji', 'card:brush', 'card:kimchi', 'card:family-table', 'card:kimbap', 'card:seollal', 'card:magpie', 'card:yutnori'];
-/** The line; the number is whatever the shipped Stage 1 content owes (21 with the nine quests below; 22 when §3.11 row 1 was written). */
+const STAGE1_QUEST_CARDS = ['card:book', 'card:hanji', 'card:brush', 'card:kimchi', 'card:family-table', 'card:kimbap', 'card:seollal', 'card:chuseok', 'card:sebae', 'card:magpie', 'card:yutnori'];
+/** The line; the number is whatever the shipped Stage 1 content owes (19 with the eleven quests below; 22 when §3.11 row 1 was written). */
 const LINE = /Hoya found (\d+) cards you already earned!/;
 
 /**
- * All nine shipped Stage 1 quests at two stars with their quest cards: the reconcile owes the other
- * cards (§3.11 row 1). F-QUEST-002 Q-6b added life q3 (quest card kimbap); the number is read off the
+ * All eleven shipped Stage 1 quests at two stars with their quest cards: the reconcile owes the other
+ * cards (§3.11 row 1). F-QUEST-002 Q-6b added life q3 (quest card kimbap), Q-7b rites q2-q3 (chuseok,
+ * sebae); the number is read off the
  * screen, so later content changes move it without breaking this spec.
  */
 const stage1Done = (profileId: string): ProgressSnapshot => ({

@@ -113,6 +113,10 @@ export const TELEMETRY_EVENT_NAMES = [
   'vocab.round.start',
   'vocab.round.complete',
   'vocab.challenge_toggled',
+  // F-APP-001 §3.18 (learner app only; codes only, never a profileId)
+  'shell.persona_chosen',
+  'shell.grown_up_handoff',
+  'shell.path_bounced',
   // F-ENT-003 §3.12 (stage keys, codes and counts only; `day` is the internal route day; never a title, name, price or tier word)
   'access.preview_opened',
   'access.help_asked',

@@ -1,13 +1,16 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, jamoOfSpoken } from './helpers';
+import type { ProgressSnapshot } from '@hangul-route/content-schema';
+import { completeChildForm, passDiscover, playCheckByIds, readStored, seedStored } from './helpers';
 import { shot } from './shots';
 
 /**
  * F-STORY-006 PR 6.5a: the Results "more cards joined your Library" banner
- * (wireframe results/extra-cards). Finishing the one quest of New Year &
+ * (wireframe results/extra-cards). Finishing the last quest of New Year &
  * Festivals completes the episode, so its other four cards arrive beside the
- * quest card; a replay brings nothing new.
+ * quest card; a replay brings nothing new. The episode has three quests since
+ * F-QUEST-002 Q-7b: the first two are saved as done at one star (no card), and
+ * the spec plays the third, Hanbok and the Bow.
  */
 
 type SpeechWindow = Window & { __spoken?: string[] };
@@ -38,57 +41,65 @@ async function captureSpeech(page: Page): Promise<void> {
   });
 }
 
-const spokenCount = (page: Page): Promise<number> => page.evaluate(() => (window as SpeechWindow).__spoken?.length ?? 0);
+const AT = '2026-10-01T09:05:00.000Z';
 
-/**
- * Tap the tile for the letter whose sound the app just said. Rounds listed in
- * `missFirst` take a wrong tile first, so they count as missed (a 1-star run).
- */
-async function playMatchSound(page: Page, rounds: number, missFirst: readonly number[] = []): Promise<void> {
-  let heard = await spokenCount(page);
-  await page.getByRole('button', { name: 'Play minigame' }).click();
-  for (let round = 1; round <= rounds; round += 1) {
-    await expect(page.getByText(`${round} / ${rounds}`, { exact: true }).filter({ visible: true })).toBeVisible();
-    await page.waitForFunction((n) => ((window as SpeechWindow).__spoken?.length ?? 0) > n, heard);
-    const prompt = jamoOfSpoken(await page.evaluate(() => (window as SpeechWindow).__spoken?.at(-1) ?? ''));
-    heard = await spokenCount(page);
-    const tiles = page.getByRole('button', { name: /^Korean letter / });
-    if (missFirst.includes(round)) {
-      await tiles.filter({ hasNotText: prompt }).first().click();
-      // A miss replays the prompt after a beat; let it finish so the next round reads its own prompt.
-      await page.waitForFunction((n) => ((window as SpeechWindow).__spoken?.length ?? 0) > n, heard);
-    }
-    await tiles.filter({ hasText: prompt }).click();
-    heard = await spokenCount(page);
-  }
-}
+/** Holidays quests 1 and 2 finished at one star: complete, but no quest card earned. */
+const ritesStarted = (profileId: string): ProgressSnapshot => ({
+  profileId,
+  updatedAt: AT,
+  episodes: [],
+  quests: ['quest:stage1-rites-q1', 'quest:stage1-rites-q2'].map((questId) => ({
+    questId,
+    episodeId: 'episode:stage1-rites',
+    startedAt: AT,
+    completedAt: AT,
+    stars: 1,
+    attempts: 1,
+    accuracy: 0.5,
+  })),
+  cards: [],
+  sessions: [],
+  homework: [],
+  reviews: [],
+  streakDays: 0,
+});
 
-/** A new learner, then Home with the install guide out of the way. */
+/** A new learner with Holidays quests 1-2 saved as done, then Home with the install guide out of the way. */
 async function newLearnerAtHome(page: Page): Promise<void> {
   await page.goto('/');
   await page.getByRole('button', { name: "Let's start" }).click();
   await completeChildForm(page, { name: 'Dami' });
   await page.goto('/');
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
+  const profileId = (await readStored<string>(page, 'profiles:active')) as string;
+  expect(profileId).toBeTruthy();
+  await seedStored(page, `progress:${profileId}`, ritesStarted(profileId));
+  await expect(page.getByText('Hi, Dami!')).toBeVisible();
   const guide = page.getByTestId('install-guide');
   await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
   if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
 }
 
-/** The one quest of New Year & Festivals: the card match and the story order skipped, the sound match played. */
-async function playRitesQuest(page: Page, firstTime: boolean, missFirst: readonly number[] = []): Promise<void> {
+/**
+ * The last quest of New Year & Festivals (Hanbok and the Bow): Discover read, the practice
+ * and the story order skipped, the Check played (the vowel yo, then the word 한복). `miss`
+ * takes a wrong card first in round 2, so one of two counts: a 1-star run.
+ */
+async function playRitesQuest(page: Page, firstTime: boolean, miss = false): Promise<void> {
   await page.getByText('Journey', { exact: true }).last().click();
   await page.getByRole('button', { name: /^Holidays.* episode for stage1$/ }).click();
-  await page.getByRole('button', { name: firstTime ? 'Start' : 'Play again', exact: true }).first().click();
-  if (firstTime) await page.getByRole('button', { name: 'Play anyway' }).click();
+  // Quests 1-2 are done (Play again); the third is Start the first time and Play again after.
+  await page.getByRole('button', { name: firstTime ? 'Start' : 'Play again', exact: true }).nth(firstTime ? 0 : 2).click();
   await page.getByRole('button', { name: 'Continue' }).click();
+  await passDiscover(page);
   await page.getByRole('button', { name: 'Skip for now' }).click();
-  await playMatchSound(page, 4, missFirst);
   await page.getByRole('button', { name: 'Skip for now' }).click();
+  await playCheckByIds(page, [{ answer: 'jamo:yo' }, miss ? { answer: '한복', missWith: '한국' } : { answer: '한복' }]);
   await page.getByRole('button', { name: 'See results' }).click();
 }
 
-const EXTRA_TITLES = ['Harvest Festival', 'Rice Cake Soup', 'Songpyeon', 'New Year Bow'];
+/** The episode's cards other than the quest card (New Year Bow): quests 1-2 earned none at one star. */
+const EXTRA_TITLES = ['Lunar New Year', 'Harvest Festival', 'Rice Cake Soup', 'Songpyeon'];
 
 test('finishing an episode shows its extra cards once, each opening its card', async ({ page }) => {
   const errors: string[] = [];
@@ -106,7 +117,7 @@ test('finishing an episode shows its extra cards once, each opening its card', a
     await expect(banner.getByRole('button', { name: `Open card: ${title}` })).toBeVisible();
   }
   // The quest card is never repeated as an extra, and nothing counts what is left.
-  await expect(banner.getByRole('button', { name: 'Open card: Lunar New Year' })).toHaveCount(0);
+  await expect(banner.getByRole('button', { name: 'Open card: New Year Bow' })).toHaveCount(0);
   await expect(banner).not.toContainText(/\d+\s*\/\s*\d+|%/);
   // Every thumbnail is a comfortable target (touchTarget.min = 64).
   for (const box of await Promise.all((await banner.getByRole('button').all()).map((b) => b.boundingBox()))) {
@@ -207,14 +218,14 @@ test.describe('with reduced motion', () => {
 test('a 1-star finish brings no quest card banner, and the episode cards still join', async ({ page }) => {
   await captureSpeech(page);
   await newLearnerAtHome(page);
-  // One round of four right: 25 % accuracy, 1 star (no card from the quest itself).
-  await playRitesQuest(page, true, [2, 3, 4]);
+  // One Check round of two right first time: 50 % accuracy, 1 star (no card from the quest itself).
+  await playRitesQuest(page, true, true);
   await expect(page.getByText('You tried!').or(page.getByText('Good try!')).first()).toBeVisible();
   await expect(page.getByText('New card for your library!')).toHaveCount(0);
   const banner = page.getByTestId('extra-cards-banner');
   await expect(banner.getByText('You finished New Year & Festivals!', { exact: true })).toBeVisible();
   await expect(banner.getByText('5 more cards joined your Library!')).toBeVisible();
-  for (const title of ['Lunar New Year', ...EXTRA_TITLES]) {
+  for (const title of ['New Year Bow', ...EXTRA_TITLES]) {
     await expect(banner.getByRole('button', { name: `Open card: ${title}` })).toBeVisible();
   }
 });

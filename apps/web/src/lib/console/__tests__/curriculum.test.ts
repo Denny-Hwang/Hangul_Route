@@ -513,13 +513,21 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
     return { id: 'plan:route', meta: toMeta(draft), items: toPlanItems(draft) };
   }
 
-  it('offers Refresh route on every route saved from catalogue version 1 or 2 (F-QUEST-002 Q-6a bumps it to 2, Q-6b to 3)', () => {
-    expect(CATALOG.version).toBe(3);
+  it('offers Refresh route on every route saved from catalogue version 1, 2 or 3 (F-QUEST-002 Q-6a bumps it to 2, Q-6b to 3, Q-7b to 4)', () => {
+    expect(CATALOG.version).toBe(4);
     expect(v1Plan('brand-new').meta.catalogVersion).toBe(1);
     expect(isStaleCatalog(v1Plan('brand-new').meta)).toBe(true);
     expect(isStaleCatalog(v1Plan('some-letters').meta)).toBe(true);
     // A route saved between Q-6a and Q-6b (version 2, before life q3 joined) asks once too.
     expect(isStaleCatalog({ ...v1Plan('brand-new').meta, catalogVersion: 2 })).toBe(true);
+    // A route saved between Q-6b and Q-7b (version 3, before rites q2-q3 joined) asks once too.
+    expect(isStaleCatalog({ ...v1Plan('brand-new').meta, catalogVersion: 3 })).toBe(true);
+  });
+
+  it('a new route on the shipped catalogue can schedule the new Chuseok and Hanbok quests after rites q1', () => {
+    const ids = classPlan({ start: 'brand-new', length: '12-week' }).items.map((item) => item.id);
+    const rites = ids.filter((id) => id.startsWith('quest:stage1-rites-'));
+    expect(rites).toEqual(['quest:stage1-rites-q1', 'quest:stage1-rites-q2', 'quest:stage1-rites-q3']);
   });
 
   it('a new route on the shipped catalogue can schedule the new Picnic Snacks quest after life q1-q2', () => {

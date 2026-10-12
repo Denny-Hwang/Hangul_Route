@@ -95,6 +95,9 @@ describe('telemetry event names (one list for the client type and the API whitel
         'vocab.round.start',
         'vocab.round.complete',
         'vocab.challenge_toggled',
+        'shell.persona_chosen',
+        'shell.grown_up_handoff',
+        'shell.path_bounced',
         'access.preview_opened',
         'access.help_asked',
         'access.free_end_reached',
@@ -155,6 +158,14 @@ describe('telemetry event names (one list for the client type and the API whitel
     }
     expect(isTelemetryEventName('vocab.round.finished')).toBe(false);
     expect(isTelemetryEventName('vocab.challenge_toggle')).toBe(false);
+  });
+
+  it('lists the three shell names of F-APP-001 section 3.18 (Worker first, A-1)', () => {
+    for (const name of ['shell.persona_chosen', 'shell.grown_up_handoff', 'shell.path_bounced']) {
+      expect(TELEMETRY_EVENT_NAMES.filter((n) => n === name)).toHaveLength(1);
+      expect(isTelemetryEventName(name)).toBe(true);
+    }
+    expect(isTelemetryEventName('shell.persona_selected')).toBe(false);
   });
 
   it('lists the five free-plan and next names of F-ENT-003 section 3.12 (Worker first, E3-1b)', () => {
