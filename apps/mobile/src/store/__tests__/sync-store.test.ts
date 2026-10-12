@@ -51,6 +51,8 @@ describe('sync-store (F-SYNC-002)', () => {
     useSyncStore.setState({ byLearner: {} });
     useProfileStore.setState({ profiles: [{ id: 'profile:a', displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't' }], activeId: 'profile:a', hydrated: true });
     useProgressStore.setState({ byProfile: { 'profile:a': snap(['q1']) }, hydratedFor: new Set(['profile:a']) });
+    // No inbox plans loaded unless a test sets them, so a failed test never leaks plans into the next one.
+    usePlanStore.setState({ byLearner: {}, notReady: {} });
     vi.mocked(apiBaseUrl).mockReturnValue('https://api.example.com');
   });
 
@@ -90,12 +92,23 @@ describe('sync-store (F-SYNC-002)', () => {
     expect(journey?.stages.slice(1).every((s) => s.known === 0)).toBe(true);
   });
 
-  it("uploads summary.routeGoal from the inbox plans and the bundle, Hoya's default without a plan (Learning Route LR-6)", async () => {
-    usePlanStore.setState({ byLearner: {}, notReady: {} });
+  it("uploads summary.routeGoal from the inbox plans and the bundle, Hoya's default with an empty inbox (Learning Route LR-6)", async () => {
+    usePlanStore.setState({ byLearner: { 'profile:a': [] }, notReady: {} });
     const putSnapshot = vi.fn(async (_id: string, _body: { summary: ProgressSummary }) => ({ status: 'ok', rev: 1 }));
     setSyncApiForTests(fakeApi({ putSnapshot }) as never);
     await useSyncStore.getState().syncNow('profile:a');
     expect(putSnapshot.mock.calls[0]?.[1].summary.routeGoal).toEqual({ stage: 'stage1', from: 'default' });
+  });
+
+  it('leaves summary.routeGoal out while this device does not know the learner\'s plans yet, never a guessed default (Learning Route LR-6)', async () => {
+    // No inbox has reached this device (or its plans are not loaded): a class plan may still lead, so no goal is claimed.
+    const putSnapshot = vi.fn(async (_id: string, _body: { summary: ProgressSummary }) => ({ status: 'ok', rev: 1 }));
+    setSyncApiForTests(fakeApi({ putSnapshot }) as never);
+    await useSyncStore.getState().syncNow('profile:a');
+    const summary = putSnapshot.mock.calls[0]?.[1].summary;
+    expect(summary).not.toHaveProperty('routeGoal');
+    // Everything else still goes up.
+    expect(summary?.journey?.v).toBe(1);
   });
 
   it('summary.routeGoal follows a live class curriculum plan in the inbox to the stage it reaches (Learning Route LR-6)', async () => {
@@ -152,7 +165,6 @@ describe('sync-store (F-SYNC-002)', () => {
     const summary = putSnapshot.mock.calls[0]?.[1].summary;
     expect(summary?.routeGoal).toEqual({ stage: 'stage2', from: 'class' });
     expect(ProgressSummarySchema.parse(summary).routeGoal).toEqual({ stage: 'stage2', from: 'class' });
-    usePlanStore.setState({ byLearner: {}, notReady: {} });
   });
 
   it('applies a merged snapshot back into progress on conflict', async () => {
@@ -471,6 +483,8 @@ describe('rescue code lifecycle (F-RESTORE-001)', () => {
     useSyncStore.setState({ byLearner: {} });
     useProfileStore.setState({ profiles: [{ id: 'profile:a', displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't' }], activeId: 'profile:a', hydrated: true });
     useProgressStore.setState({ byProfile: { 'profile:a': snap(['q1']) }, hydratedFor: new Set(['profile:a']) });
+    // No inbox plans loaded unless a test sets them, so a failed test never leaks plans into the next one.
+    usePlanStore.setState({ byLearner: {}, notReady: {} });
     vi.mocked(apiBaseUrl).mockReturnValue('https://api.example.com');
   });
 

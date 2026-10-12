@@ -93,6 +93,7 @@ export function setSyncApiForTests(client: SyncApiClient | null): void {
 const summarizeFor = (snapshot: ProgressSnapshot) => {
   const now = new Date();
   const plans = usePlanStore.getState();
+  const inbox = plans.byLearner[snapshot.profileId];
   // Stage-level My route counts for the console strip (F-ROUTE-001 R-8); summarize stays pure.
   const journey = journeySummaryOf(snapshot, journeyContent, now);
   return summarize({
@@ -102,8 +103,9 @@ const summarizeFor = (snapshot: ProgressSnapshot) => {
     questJamo,
     planNotReady: plans.notReady[snapshot.profileId] ?? {},
     journey,
-    // The goal the Learning Route shows, for the family space only (Learning Route LR-6, LR-OD-12).
-    routeGoal: routeGoalSummaryOf({ snapshot, plans: plans.byLearner[snapshot.profileId] ?? [], journey, content: journeyContent, now }),
+    // The goal the Learning Route shows, for the family space only (Learning Route LR-6, LR-OD-12). Left out while
+    // this device does not know the learner's plans (no inbox yet, or not loaded): a plan may lead, so no goal is guessed.
+    routeGoal: inbox === undefined ? undefined : routeGoalSummaryOf({ snapshot, plans: inbox, journey, content: journeyContent, now }),
   });
 };
 

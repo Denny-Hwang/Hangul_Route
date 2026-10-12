@@ -1,4 +1,5 @@
 import { pickGoal, type InboxPlan, type ProgressSnapshot, type ProgressSummary, type StageKey } from '@hangul-route/content-schema';
+import { dayKey } from '../homework/mission-builder';
 import { sourcesOf } from '../homework/plan-derivation';
 import { stageAvailability } from '../journey';
 import { buildMyRoute } from './model';
@@ -101,8 +102,8 @@ export function routeGoalSummaryOf(input: RouteGoalSummaryInput): ProgressSummar
       catalog: content.catalog,
       stages: journey?.stages ?? [],
       availability: (stage) => stageAvailability(stage, grid),
-      // The UTC day the plan derivation uses (`dayKey` in plan-store), so a plan sets the goal exactly while it derives homework.
-      today: now.toISOString().slice(0, 10),
+      // The day the plan derivation uses (plan-store), so a plan sets the goal exactly while it derives homework.
+      today: dayKey(now.toISOString()),
     });
     return goal === null ? undefined : { stage: goal.stage, from: goal.from };
   } catch {
