@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, playCheckByIds } from './helpers';
+import { completeChildForm, journeyCellName, keepSidewaysIfAsked, playCheckByIds } from './helpers';
 
 /**
  * F-QUEST-002 Q-8: the Nature and Crafts quests 10-15 on the web PWA. Quest 10 brings
@@ -23,7 +23,7 @@ async function openEpisode(page: Page, episode: Episode): Promise<void> {
   await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
   if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
   await page.getByText('Journey', { exact: true }).last().click();
-  await page.getByRole('button', { name: `${episode} episode for stage1` }).click();
+  await page.getByRole('button', { name: journeyCellName(1, episode) }).click();
 }
 
 /** Start the nth quest of the episode page (the quests before it are not done, so the soft-prerequisite sheet asks), past its intro. */

@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, playCheckByIds } from './helpers';
+import { completeChildForm, journeyCellName, keepSidewaysIfAsked, playCheckByIds } from './helpers';
 
 /**
  * F-QUEST-002 Q-7b: the Holidays quests 7-9 bring the first final letters. Quest 7
@@ -22,7 +22,7 @@ async function openRitesEpisode(page: Page): Promise<void> {
   await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
   if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
   await page.getByText('Journey', { exact: true }).last().click();
-  await page.getByRole('button', { name: 'Holidays & Traditions episode for stage1' }).click();
+  await page.getByRole('button', { name: journeyCellName(1, 'Holidays & Traditions') }).click();
 }
 
 /** Start the nth quest of the episode page (the earlier quests are not done, so the soft-prerequisite sheet asks). */
