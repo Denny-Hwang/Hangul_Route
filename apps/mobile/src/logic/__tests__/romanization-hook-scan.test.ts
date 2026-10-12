@@ -48,6 +48,7 @@ const CALL_SITES = [
   'screens/story/CheckpointCard.tsx',
   'screens/story/StoryWordRecap.tsx',
   'screens/library/StoryShelf.tsx',
+  'screens/episode/StoryEpisodeDetail.tsx',
 ];
 
 describe('romanization mode through one hook (F-BROWSE-001 BR-5c)', () => {
