@@ -583,8 +583,8 @@
   ],
   "companionId": "hoya",
   "card": {
-    "titleEn": "Hangul Day",
-    "keywordId": "hangeullal",
+    "titleEn": "Hangul",
+    "keywordId": "hangeul",
     "factId": "f3"
   },
   "facts": [

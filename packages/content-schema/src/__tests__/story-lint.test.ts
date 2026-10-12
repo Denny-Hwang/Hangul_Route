@@ -1398,9 +1398,13 @@ describe('card-korean-duplicate (F-STORY-006 §3.8, across the bundle)', () => {
       { id: 'card:hangul-day', subtitleKo: '한글날' },
       { id: 'card:plain' },
     ];
-    const found = dupes(lintStoryCorpus([ready()], { cards }));
+    const found = dupes(lintStoryCorpus([withCard('story:hangul-day', 'hangeullal')], { cards }));
     expect(found).toHaveLength(1);
     expect(found[0]!.message).toMatch(/card:story-hangul-day.*한글날.*card:hangul-day/);
+  });
+
+  it('the ready fixture card does not repeat the Korean word of card:hangul-day (the e2e bundle holds both)', () => {
+    expect(dupes(lintStoryCorpus([ready()], { cards: [{ id: 'card:hangul-day', subtitleKo: '한글날' }] }))).toEqual([]);
   });
 
   it('counts ready stories only, and skips a card whose headword does not resolve', () => {
