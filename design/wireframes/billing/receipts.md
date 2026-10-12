@@ -67,7 +67,7 @@ Inline variant on `billing/billing-home` (inside a payer card, `> Receipts` open
 
 ## Interaction points
 
-- `[ View receipt ]` → opens a blank tab at once (not blocked as a pop-up) → `POST /api/billing/receipt-link { id }` → `billing/step-up` if the sign-in is older than 10 minutes → the tab goes to Stripe's hosted invoice (Family Plan or Group License: every payment and renewal of a subscription) or charge receipt (refund, or a legacy one-time sandbox payment) per F-BILL-002 §4.10, with the opener cleared; on failure the blank tab closes and the row shows "Can't open this receipt right now."
+- `[ View receipt ]` → opens a blank tab at once (not blocked as a pop-up) → `POST /api/billing/receipt-link { id }` → `billing/step-up` if the sign-in is older than 10 minutes → the tab goes to Stripe's hosted invoice (Family Plan or Group License: every invoice of a subscription, whether a payment, a renewal or one that didn't go through) or charge receipt (refund, or a legacy one-time sandbox payment) per F-BILL-002 §4.10, with the opener cleared; on failure the blank tab closes and the row shows "Can't open this receipt right now."
 - `[< Back to Billing]` → `billing/billing-home`
 
 ## Navigation graph
@@ -81,7 +81,7 @@ Exit to: Stripe receipt or invoice page (external, new tab) · `billing/step-up`
 - **success**: as drawn, newest first, at most 50 rows.
 - **empty, no plan ever bought**: "No receipts yet."
 - **empty, active Stripe plan bought before history began**: "Older payments are in the receipt email from Stripe."
-- **row without a receipt** (a 100%-off code made the payment free): the row shows no button; the rest of the row stays.
+- **row without a receipt** (a legacy one-time sandbox payment made free by a 100%-off code; a Family Plan year made free by a code still has its hosted invoice, so it keeps View receipt): the row shows no button; the rest of the row stays.
 - **link failed** (Stripe did not answer): "Can't open this receipt right now." on that row only.
 - **not yours** (403) or **unknown space** (404): "This page is for the person who pays for this space." + `[ Back to Billing ]`.
 - **offline**: "You're offline. Plans and receipts need a connection." + `[ Try again ]`.
