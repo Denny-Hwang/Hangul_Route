@@ -9,22 +9,42 @@
  */
 interface BrowserLike {
   location?: { hash?: string; origin?: string; assign?: (url: string) => void };
-  history?: { replaceState?: (state: unknown, unused: string, url: string) => void; back?: () => void };
-  document?: { referrer?: string };
+  history?: { replaceState?: (state: unknown, unused: string, url: string) => void; go?: (delta: number) => void; length?: number; state?: unknown };
+  document?: { referrer?: string; visibilityState?: string };
   navigator?: { onLine?: boolean };
   addEventListener?: (type: string, listener: () => void) => void;
   removeEventListener?: (type: string, listener: () => void) => void;
+  setTimeout?: (fn: () => void, ms: number) => unknown;
 }
 
 const BROWSE_PATH = '/browse';
+/**
+ * How long [ Close ] waits, after going back, for the page to start leaving
+ * (`beforeunload` fires when a traversal to another document starts, before its
+ * network fetch; `pagehide` when it unloads) before it leaves by address instead.
+ */
+const BACK_FALLBACK_MS = 1000;
 
 function browser(): BrowserLike {
   return globalThis as BrowserLike;
 }
 
+/**
+ * The history entries this page added after the one it opened on: each later
+ * link (`hashchange`) pushes one. Kept on the entry's own state
+ * (`{ hrBrowseDepth }`), so a reload and a back or forward inside the page read
+ * it again; [ Close ] goes back past all of them.
+ */
+let depth = 0;
+
+function depthOf(state: unknown): number {
+  const value = (state as { hrBrowseDepth?: unknown } | null | undefined)?.hrBrowseDepth;
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0 ? value : 0;
+}
+
 function stripAddress(): void {
   try {
-    browser().history?.replaceState?.(null, '', BROWSE_PATH);
+    browser().history?.replaceState?.({ hrBrowseDepth: depth }, '', BROWSE_PATH);
   } catch {
     // A sandboxed frame may refuse; the fragment is still read once.
   }
@@ -41,6 +61,11 @@ function currentHash(): string {
 /** The fragment the page was opened with (`''` when none); the address becomes `/browse`. */
 export function takeFragment(): string {
   const raw = currentHash();
+  try {
+    depth = depthOf(browser().history?.state);
+  } catch {
+    depth = 0;
+  }
   stripAddress();
   return raw;
 }
@@ -53,14 +78,26 @@ export function onFragmentChange(handler: (raw: string) => void): () => void {
     const raw = currentHash();
     // Taking the fragment out of the address is not a new link.
     if (raw === '' || raw === '#') return;
+    depth += 1;
     stripAddress();
     handler(raw);
   };
+  const onPop = (): void => {
+    try {
+      depth = depthOf(w.history?.state);
+    } catch {
+      depth = 0;
+    }
+  };
   w.addEventListener('hashchange', listener);
-  return () => w.removeEventListener?.('hashchange', listener);
+  w.addEventListener('popstate', onPop);
+  return () => {
+    w.removeEventListener?.('hashchange', listener);
+    w.removeEventListener?.('popstate', onPop);
+  };
 }
 
-/** Whether the tab came to `/browse` from a page of this origin (then Close goes back to it). */
+/** Whether the tab came to `/browse` from a page of this origin. */
 export function cameFromSameOrigin(): boolean {
   try {
     const w = browser();
@@ -68,6 +105,20 @@ export function cameFromSameOrigin(): boolean {
     const origin = w.location?.origin ?? '';
     if (referrer === '' || origin === '') return false;
     return new URL(referrer).origin === origin;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Whether [ Close ] can go back to the page the tab came from: a referrer on
+ * this origin and an entry before this page in the tab's history. A new tab
+ * opened from a console page has the referrer but nothing to go back to.
+ */
+export function canGoBack(): boolean {
+  try {
+    const length = browser().history?.length;
+    return cameFromSameOrigin() && typeof length === 'number' && length > 1 + depth;
   } catch {
     return false;
   }
@@ -82,13 +133,44 @@ export function leaveTo(url: string): void {
   }
 }
 
-/** Back to the page the tab came from. */
-export function goBack(): void {
+/**
+ * Back to the page the tab came from, past the entries later links added. When
+ * the page has not started to leave shortly after (a history that goes
+ * nowhere), it leaves for `fallbackUrl` instead, so Close is never a dead button.
+ */
+export function goBack(fallbackUrl: string): void {
+  const w = browser();
+  let left = false;
+  const onHide = (): void => {
+    left = true;
+  };
   try {
-    browser().history?.back?.();
+    w.addEventListener?.('beforeunload', onHide);
+    w.addEventListener?.('pagehide', onHide);
+    w.setTimeout?.(() => {
+      w.removeEventListener?.('beforeunload', onHide);
+      w.removeEventListener?.('pagehide', onHide);
+      if (!left) leaveTo(fallbackUrl);
+    }, BACK_FALLBACK_MS);
+    w.history?.go?.(-(1 + depth));
   } catch {
-    // Nothing more to do: the page stays.
+    // The timer, when it was set, still leaves by address.
   }
+}
+
+/** Calls `handler` when the tab is shown again or the window gains focus; returns the unsubscribe. */
+export function onPageVisible(handler: () => void): () => void {
+  const w = browser();
+  if (typeof w.addEventListener !== 'function') return () => undefined;
+  const onVisibility = (): void => {
+    if (w.document?.visibilityState === 'visible') handler();
+  };
+  w.addEventListener('visibilitychange', onVisibility);
+  w.addEventListener('focus', handler);
+  return () => {
+    w.removeEventListener?.('visibilitychange', onVisibility);
+    w.removeEventListener?.('focus', handler);
+  };
 }
 
 /** `navigator.onLine`; a browser that does not say counts as online. */

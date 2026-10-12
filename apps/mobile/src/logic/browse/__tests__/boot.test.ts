@@ -141,20 +141,21 @@ describe('navigationCheck', () => {
 });
 
 describe('closeAction', () => {
-  it('goes back when the tab came from a page of this origin', () => {
-    for (const from of ['account', 'gate', 'kept'] as const) {
-      expect(closeAction({ sameOriginReferrer: true, from, lastPersona: null })).toEqual({ kind: 'back' });
-    }
+  it('goes back when the tab has an earlier page of this origin to go back to, with the fallback ready', () => {
+    expect(closeAction({ canGoBack: true, from: 'account', lastPersona: 'parent' })).toEqual({ kind: 'back', fallbackUrl: APP_ROUTES.parentHome });
+    expect(closeAction({ canGoBack: true, from: 'account', lastPersona: null })).toEqual({ kind: 'back', fallbackUrl: APP_ROUTES.signIn });
+    expect(closeAction({ canGoBack: true, from: 'gate', lastPersona: 'teacher' })).toEqual({ kind: 'back', fallbackUrl: '/' });
+    expect(closeAction({ canGoBack: true, from: 'kept', lastPersona: null })).toEqual({ kind: 'back', fallbackUrl: '/' });
   });
 
-  it('an account pass with no referrer goes to the persona home, else to sign-in', () => {
-    expect(closeAction({ sameOriginReferrer: false, from: 'account', lastPersona: 'parent' })).toEqual({ kind: 'assign', url: APP_ROUTES.parentHome });
-    expect(closeAction({ sameOriginReferrer: false, from: 'account', lastPersona: 'teacher' })).toEqual({ kind: 'assign', url: APP_ROUTES.teacherHome });
-    expect(closeAction({ sameOriginReferrer: false, from: 'account', lastPersona: null })).toEqual({ kind: 'assign', url: APP_ROUTES.signIn });
+  it('an account pass with nothing to go back to goes to the persona home, else to sign-in', () => {
+    expect(closeAction({ canGoBack: false, from: 'account', lastPersona: 'parent' })).toEqual({ kind: 'assign', url: APP_ROUTES.parentHome });
+    expect(closeAction({ canGoBack: false, from: 'account', lastPersona: 'teacher' })).toEqual({ kind: 'assign', url: APP_ROUTES.teacherHome });
+    expect(closeAction({ canGoBack: false, from: 'account', lastPersona: null })).toEqual({ kind: 'assign', url: APP_ROUTES.signIn });
   });
 
-  it('a gate or kept pass with no referrer goes to the learner app, never to an account page', () => {
-    expect(closeAction({ sameOriginReferrer: false, from: 'gate', lastPersona: 'parent' })).toEqual({ kind: 'assign', url: '/' });
-    expect(closeAction({ sameOriginReferrer: false, from: 'kept', lastPersona: 'teacher' })).toEqual({ kind: 'assign', url: '/' });
+  it('a gate or kept pass with nothing to go back to goes to the learner app, never to an account page', () => {
+    expect(closeAction({ canGoBack: false, from: 'gate', lastPersona: 'parent' })).toEqual({ kind: 'assign', url: '/' });
+    expect(closeAction({ canGoBack: false, from: 'kept', lastPersona: 'teacher' })).toEqual({ kind: 'assign', url: '/' });
   });
 });

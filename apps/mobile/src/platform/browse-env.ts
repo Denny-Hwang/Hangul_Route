@@ -16,11 +16,19 @@ export function cameFromSameOrigin(): boolean {
   return false;
 }
 
+export function canGoBack(): boolean {
+  return false;
+}
+
+export function onPageVisible(_handler: () => void): () => void {
+  return () => undefined;
+}
+
 export function leaveTo(_url: string): void {
   // Nowhere to go on native.
 }
 
-export function goBack(): void {
+export function goBack(_fallbackUrl: string): void {
   // No browser history on native.
 }
 

@@ -1,7 +1,7 @@
 import { borderWidth, colors, radii, spacing, touchTarget, typography, useLayoutClass } from '@hangul-route/design-system';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
-import { AccessibilityInfo, Platform, Pressable, Text, View } from 'react-native';
+import { AccessibilityInfo, Platform, Pressable, Text, View, type PressableStateCallbackType } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMessages } from '../../i18n/use-messages';
 import { BROWSE_TEXT_SCALE_CAP } from '../../logic/browse/layout';
@@ -15,10 +15,18 @@ import { BROWSE_TEXT_SCALE_CAP } from '../../logic/browse/layout';
  * dismissed. Shown only on lesson screens and the preview end screen (BR-8
  * wraps them); never on home, the outline, the item page or Access.
  *
- * The strip is a status region announced once when its screen gains focus,
- * not on every render: its text joins the region on focus (iOS, which reads
- * no live region, gets one announcement instead). It adds no animation.
+ * The strip's text is always drawn, so the strip keeps one height from the
+ * first frame and never goes blank under a modal. It is announced once when
+ * its screen gains focus, not on every render: a visually hidden status region
+ * receives the same text on focus (iOS, which reads no live region, gets one
+ * announcement instead). It adds no animation.
  */
+/** Visually hidden, still read: the one-time announcement's status region. */
+const srOnly = { position: 'absolute', width: 1, height: 1, margin: -1, overflow: 'hidden' } as const;
+
+/** react-native-web adds `focused` (keyboard focus) to the pressable's state. */
+type FocusState = PressableStateCallbackType & { focused?: boolean };
+
 export interface PreviewFrameProps {
   children: React.ReactNode;
   /** Inside a lesson: [ Leave preview ] (BR-8 opens the leave confirm). Absent on the end screen. */
@@ -57,37 +65,39 @@ export function PreviewFrame({ children, onLeave }: PreviewFrameProps): React.Re
           borderBottomColor: colors.border.strong,
         }}
       >
-        <View role="status" aria-live="polite" accessibilityLiveRegion="polite" style={{ flex: 1 }}>
-          {/* Joins the live region when the screen gains focus, so it is announced once, then stays. */}
-          {focused ? (
-            <Text
-              testID="preview-strip-text"
-              maxFontSizeMultiplier={BROWSE_TEXT_SCALE_CAP}
-              style={{
-                color: colors.text.primary,
-                fontSize: typography.size.body,
-                fontWeight: typography.weight.semibold,
-                lineHeight: typography.size.body * typography.leading.normal,
-              }}
-            >
-              {m.strip}
-            </Text>
-          ) : null}
+        <View style={{ flex: 1 }}>
+          <Text
+            testID="preview-strip-text"
+            maxFontSizeMultiplier={BROWSE_TEXT_SCALE_CAP}
+            style={{
+              color: colors.text.primary,
+              fontSize: typography.size.body,
+              fontWeight: typography.weight.semibold,
+              lineHeight: typography.size.body * typography.leading.normal,
+            }}
+          >
+            {m.strip}
+          </Text>
+          {/* The status region: the text joins it when the screen gains focus, so it is announced once. */}
+          <View role="status" aria-live="polite" accessibilityLiveRegion="polite" style={srOnly}>
+            {focused ? <Text testID="preview-strip-status">{m.strip}</Text> : null}
+          </View>
         </View>
         {onLeave ? (
           <Pressable
             testID="preview-leave"
             onPress={onLeave}
             accessibilityRole="button"
-            style={({ pressed }) => ({
+            // A keyboard focus shows the `border.focus` ring at the thick width (design README decision 20).
+            style={({ pressed, focused }: FocusState) => ({
               flexShrink: 1,
               minHeight: touchTarget.min,
               justifyContent: 'center',
               paddingVertical: spacing.xs,
               paddingHorizontal: spacing.lg,
               borderRadius: radii.pill,
-              borderWidth: borderWidth.base,
-              borderColor: colors.brand.primary,
+              borderWidth: focused ? borderWidth.thick : borderWidth.base,
+              borderColor: focused ? colors.border.focus : colors.brand.primary,
               backgroundColor: pressed ? colors.brand.primaryLight : 'transparent',
             })}
           >

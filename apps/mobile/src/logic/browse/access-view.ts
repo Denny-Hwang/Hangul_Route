@@ -40,8 +40,7 @@ export interface AccessView {
   offlineLine: boolean;
 }
 
-const personaHome = (persona: AdultPersona | null): string =>
-  persona === 'teacher' ? APP_ROUTES.teacherHome : persona === 'parent' ? APP_ROUTES.parentHome : APP_ROUTES.signIn;
+const personaHome = (persona: AdultPersona): string => (persona === 'teacher' ? APP_ROUTES.teacherHome : APP_ROUTES.parentHome);
 
 export function accessView(i: { source: AccessSource; lastPersona: AdultPersona | null; online: boolean; gateIntent?: boolean }): AccessView {
   const gateIntent = i.gateIntent ?? GATE_BROWSE_INTENT_SHIPPED;
@@ -55,7 +54,10 @@ export function accessView(i: { source: AccessSource; lastPersona: AdultPersona 
         ? { line: 'gate', primary: backToGrownUp, secondary: backToApp, offlineLine }
         : { line: 'gateUntilIntent', primary: backToApp, secondary: null, offlineLine };
     case 'account':
-      return { line: 'account', primary: { label: 'openFromAccount', href: personaHome(i.lastPersona) }, secondary: signIn, offlineLine };
+      // No remembered persona: the account's way back is sign-in itself, one button (never two to one page).
+      return i.lastPersona === null
+        ? { line: 'account', primary: signIn, secondary: null, offlineLine }
+        : { line: 'account', primary: { label: 'openFromAccount', href: personaHome(i.lastPersona) }, secondary: signIn, offlineLine };
     case 'unknown':
       return { line: 'unknown', primary: gateIntent ? backToGrownUp : backToApp, secondary: signIn, offlineLine };
   }

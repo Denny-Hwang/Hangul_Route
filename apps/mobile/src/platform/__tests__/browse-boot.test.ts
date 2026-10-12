@@ -14,6 +14,7 @@ let session: BrowsePass | null = null;
 let sessionRemoved = 0;
 let persona: 'parent' | 'teacher' | null = null;
 let personaReads = 0;
+let hangPersona = false;
 
 vi.mock('../storage', () => ({
   readJson: vi.fn(async (key: string) => (store.has(key) ? store.get(key) : null)),
@@ -34,13 +35,13 @@ vi.mock('../browse', () => ({
   },
 }));
 vi.mock('../shell-store', () => ({
-  readLastPersona: async () => {
+  readLastPersona: () => {
     personaReads += 1;
-    return persona;
+    return hangPersona ? new Promise<never>(() => undefined) : Promise.resolve(persona);
   },
 }));
 
-const { BROWSE_KEPT_PASS_KEY, BROWSE_PREFS_KEY, readKeptPass, removeKeptPass, resolveBrowseBoot, resolveSessionNow } = await import('../browse-boot');
+const { BOOT_READ_TIMEOUT_MS, BROWSE_KEPT_PASS_KEY, BROWSE_PREFS_KEY, readKeptPass, removeKeptPass, resolveBrowseBoot, resolveSessionNow } = await import('../browse-boot');
 
 const T0 = Date.parse('2026-10-12T09:00:00.000Z');
 const MIN = 60_000;
@@ -55,6 +56,8 @@ beforeEach(() => {
   sessionRemoved = 0;
   persona = null;
   personaReads = 0;
+  hangPersona = false;
+  vi.useRealTimers();
 });
 
 describe('keys', () => {
@@ -177,5 +180,30 @@ describe('resolveBrowseBoot', () => {
     vi.mocked(storage.readJson).mockRejectedValueOnce(new Error('closed'));
     const boot = await resolveBrowseBoot(T0);
     expect(boot.resolved.status).toBe('none');
+  });
+
+  it('a store that never answers (a blocked IndexedDB open) reads as nothing kept and no persona, so Access shows instead of a blank page', async () => {
+    vi.useFakeTimers();
+    const storage = await import('../storage');
+    vi.mocked(storage.readJson).mockImplementationOnce(() => new Promise<never>(() => undefined));
+    hangPersona = true;
+    persona = 'teacher';
+    let done: Awaited<ReturnType<typeof resolveBrowseBoot>> | null = null;
+    void resolveBrowseBoot(T0).then((boot) => {
+      done = boot;
+    });
+    await vi.advanceTimersByTimeAsync(BOOT_READ_TIMEOUT_MS - 1);
+    expect(done).toBeNull();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(done).toEqual({ session: null, resolved: { status: 'none', reason: 'none', expiredSource: null, removeSession: false, removeKept: false }, lastPersona: null });
+  });
+
+  it('an active session pass never waits on a persona read that hangs', async () => {
+    vi.useFakeTimers();
+    session = gate();
+    hangPersona = true;
+    const pending = resolveBrowseBoot(T0);
+    await vi.advanceTimersByTimeAsync(BOOT_READ_TIMEOUT_MS);
+    expect((await pending).lastPersona).toBeNull();
   });
 });

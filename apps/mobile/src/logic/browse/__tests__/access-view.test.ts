@@ -33,8 +33,24 @@ describe('accessView before BR-12b (no gate=browse boot intent yet)', () => {
       offlineLine: false,
     });
     expect(accessView({ source: 'account', lastPersona: 'teacher', online: true }).primary).toEqual({ label: 'openFromAccount', href: APP_ROUTES.teacherHome });
-    // An expired account pass in a browser that remembers no persona: sign-in routes to the right home.
-    expect(accessView({ source: 'account', lastPersona: null, online: true }).primary).toEqual({ label: 'openFromAccount', href: APP_ROUTES.signIn });
+    // An expired account pass in a browser that remembers no persona: one Sign in button (sign-in routes to the right home), never two buttons to one page.
+    expect(accessView({ source: 'account', lastPersona: null, online: true })).toEqual({
+      line: 'account',
+      primary: { label: 'signIn', href: APP_ROUTES.signIn },
+      secondary: null,
+      offlineLine: false,
+    });
+  });
+
+  it('no view shows two buttons that lead to one page', () => {
+    for (const source of ['gate', 'account', 'unknown'] as const) {
+      for (const lastPersona of ['parent', 'teacher', null] as const) {
+        for (const gateIntent of [false, true]) {
+          const view = accessView({ source, lastPersona, online: true, gateIntent });
+          expect(view.secondary?.href, `${source} ${lastPersona} ${gateIntent}`).not.toBe(view.primary.href);
+        }
+      }
+    }
   });
 
   it('unknown: the spec line unchanged, back to the app leads, sign in stays', () => {

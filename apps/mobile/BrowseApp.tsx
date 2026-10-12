@@ -6,9 +6,10 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import type { AdultPersona, BrowsePass } from '@hangul-route/content-schema';
+import type { UiLocale } from '@hangul-route/i18n';
 import { flags, bundleOs, gatingActive } from './src/config/flags';
 import { useDocumentLang, useMessages } from './src/i18n/use-messages';
-import { entryStack, navigationCheck, openedEvent, readBootFragment, type BootFragment, type BrowseEntryRoute, type BrowseRouteName } from './src/logic/browse/boot';
+import { entryStack, navigationCheck, readBootFragment, type BootFragment, type BrowseEntryRoute, type BrowseRouteName } from './src/logic/browse/boot';
 import { defaultBrowseBundle } from './src/logic/browse/bundle';
 import type { ResolvedPass } from './src/logic/browse/pass';
 import { resolveEntry } from './src/logic/browse/target';
@@ -19,12 +20,12 @@ import { BrowseSessionProvider, type BrowseSession } from './src/screens/browse/
 import { BrowseSettingsProvider } from './src/screens/browse/BrowseSettings';
 import { installGestureUnlock } from './src/platform/audio';
 import { writeSessionPass } from './src/platform/browse';
-import { resolveBrowseBoot, resolveSessionNow, type BrowseBoot } from './src/platform/browse-boot';
-import { isOnline, onFragmentChange, takeFragment } from './src/platform/browse-env';
+import { readLastPersonaInTime, resolveBrowseBoot, resolveSessionNow, type BrowseBoot } from './src/platform/browse-boot';
+import { isOnline, onFragmentChange, onPageVisible, takeFragment } from './src/platform/browse-env';
+import { announceBrowseOpened } from './src/platform/browse-opened';
 import { applyBrowseFences } from './src/platform/browse-fences';
 import { isOfflineReady, subscribePwa } from './src/platform/pwa';
-import { readLastPersona } from './src/platform/shell-store';
-import { flushQueue, track } from './src/platform/telemetry';
+import { flushQueue } from './src/platform/telemetry';
 import { useAudioStore } from './src/store/audio-store';
 import { useLocaleStore } from './src/store/locale-store';
 
@@ -54,6 +55,9 @@ interface BrowseStart {
 }
 
 let started: BrowseStart | null = null;
+
+/** The pass's UI language for this tab only (memory, never stored; F-BROWSE-001 section 4.9). */
+const applyLocale = (locale: UiLocale): void => useLocaleStore.getState().setSessionLocale(locale);
 
 /** Runs once per page, during the first render: fences first, then the address and the session pass. */
 function startBrowse(): BrowseStart {
@@ -101,28 +105,30 @@ export default function BrowseApp(): React.ReactElement {
   // The pass as the navigation listeners must read it, without waiting for a render.
   const passRef = useRef<{ session: BrowsePass | null; resolved: ResolvedPass } | null>(start.fast);
   const previousRoute = useRef<BrowseRouteName | null>(null);
+  // The latest link: a `hashchange` while the boot still reads the kept pass replaces the first fragment.
+  const fragmentRef = useRef<BootFragment>(start.fragment);
+  // The device locale read, which the pass's session language waits for.
+  const localeReady = useRef<Promise<unknown>>(Promise.resolve());
+  const expiring = useRef(false);
 
   // Boot: audio, the device locale (no profile), the pass, then `browse.opened` from the browse queue.
   useEffect(() => {
     let live = true;
     const uninstallUnlock = installGestureUnlock();
     void useAudioStore.getState().hydrate().catch(() => undefined);
-    const locale = useLocaleStore.getState().hydrate([]).catch(() => undefined);
-    const opened = (resolved: ResolvedPass): void => {
-      const uiLocale = resolved.status === 'active' ? resolved.uiLocale : undefined;
-      if (uiLocale) void locale.then(() => useLocaleStore.getState().setSessionLocale(uiLocale));
-      void track(openedEvent({ source: start.fragment.source, pass: resolved, offlineReady: isOfflineReady() })).then(() => flushQueue());
-    };
+    localeReady.current = useLocaleStore.getState().hydrate([]).catch(() => undefined);
+    const opened = (resolved: ResolvedPass): void =>
+      void announceBrowseOpened({ source: fragmentRef.current.source, resolved, offlineReady: isOfflineReady(), localeReady: localeReady.current, applyLocale });
     if (start.fast) {
       opened(start.fast.resolved);
-      void readLastPersona().then((lastPersona) => {
+      void readLastPersonaInTime().then((lastPersona) => {
         if (live) setVisit((v) => (v.status === 'ready' ? { ...v, lastPersona } : v));
       });
     } else {
       void resolveBrowseBoot(Date.now()).then((boot) => {
         if (!live) return;
         passRef.current = { session: boot.session, resolved: boot.resolved };
-        setVisit({ status: 'ready', ...boot, initial: stackFor(start.fragment, boot) });
+        setVisit({ status: 'ready', ...boot, initial: stackFor(fragmentRef.current, boot) });
         opened(boot.resolved);
       });
     }
@@ -140,19 +146,35 @@ export default function BrowseApp(): React.ReactElement {
     };
   }, [start, stackFor]);
 
-  /** Resolves the pass again (a new link, or a pass that ran out) and shows where it lands. */
+  /**
+   * Resolves the pass again and shows where it lands: a new link (`link`, which
+   * also applies its pass's language and sends `browse.opened` for its source,
+   * as the first boot does) or a pass that ran out (silent: not a link).
+   */
   const reenter = useCallback(
-    async (fragment: BootFragment): Promise<void> => {
+    async (fragment: BootFragment, why: 'link' | 'expired'): Promise<void> => {
       const boot = await resolveBrowseBoot(Date.now());
       passRef.current = { session: boot.session, resolved: boot.resolved };
       setVisit((v) => (v.status === 'ready' ? { ...v, session: boot.session, resolved: boot.resolved, lastPersona: boot.lastPersona } : v));
       if (navigation.isReady()) navigation.reset(routesOf(stackFor(fragment, boot)));
+      if (why === 'link') {
+        void announceBrowseOpened({ source: fragment.source, resolved: boot.resolved, offlineReady: isOfflineReady(), localeReady: localeReady.current, applyLocale });
+      }
     },
     [stackFor],
   );
 
-  // A later link while the tab is open (`hashchange`) is read the same way as the first.
-  useEffect(() => onFragmentChange((raw) => void reenter(readBootFragment(raw))), [reenter]);
+  // A later link while the tab is open (`hashchange`) is read the same way as the first. While the boot is still
+  // resolving, the boot takes the latest link instead (nothing is mounted to reset yet).
+  useEffect(
+    () =>
+      onFragmentChange((raw) => {
+        const fragment = readBootFragment(raw);
+        fragmentRef.current = fragment;
+        if (passRef.current !== null) void reenter(fragment, 'link');
+      }),
+    [reenter],
+  );
 
   // Every browse navigation refreshes a session pass's `seen`, or ends the visit when it ran out (section 4.3).
   const onNavigate = useCallback(() => {
@@ -162,8 +184,29 @@ export default function BrowseApp(): React.ReactElement {
     const check = navigationCheck({ resolved: pass.resolved, session: pass.session, now: Date.now(), from: previousRoute.current, to });
     previousRoute.current = to;
     if (check.write && writeSessionPass(check.write)) passRef.current = { ...pass, session: check.write };
-    if (check.expired) void reenter({ target: null, source: 'direct' });
+    if (check.expired) void reenter({ target: null, source: 'direct' }, 'expired');
   }, [reenter]);
+
+  // A tab shown again after its pass ran out shows the Access screen without waiting for a tap, so a device
+  // picked up later shows no catalogue (section 4.3). Being shown is not activity: `seen` is not refreshed, and
+  // a lesson that already started still runs to its end screen.
+  useEffect(
+    () =>
+      onPageVisible(() => {
+        const at = currentRoute();
+        const pass = passRef.current;
+        if (at === null || pass === null) return;
+        if (expiring.current) return;
+        if (navigationCheck({ resolved: pass.resolved, session: pass.session, now: Date.now(), from: at, to: at }).expired) {
+          // Showing a tab fires both `visibilitychange` and `focus`: resolve once.
+          expiring.current = true;
+          void reenter({ target: null, source: 'direct' }, 'expired').finally(() => {
+            expiring.current = false;
+          });
+        }
+      }),
+    [reenter],
+  );
 
   const session: BrowseSession | null = useMemo(
     () =>

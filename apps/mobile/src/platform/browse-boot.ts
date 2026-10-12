@@ -16,6 +16,35 @@ import { readJson, removeKey } from './storage';
 export const BROWSE_KEPT_PASS_KEY = 'browse:pass';
 export const BROWSE_PREFS_KEY = 'browse:prefs';
 
+/**
+ * How long the boot waits for an IndexedDB read (the kept pass, the last
+ * persona). A blocked or hung open (an upgrade in another tab, some private
+ * modes) then reads as nothing kept and no persona, so the Access screen shows
+ * instead of a blank page.
+ */
+export const BOOT_READ_TIMEOUT_MS = 2500;
+
+function within<T>(read: Promise<T>, fallback: T): Promise<T> {
+  return new Promise<T>((resolve) => {
+    const timer = setTimeout(() => resolve(fallback), BOOT_READ_TIMEOUT_MS);
+    read.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      () => {
+        clearTimeout(timer);
+        resolve(fallback);
+      },
+    );
+  });
+}
+
+/** The last grown-up persona (read only), or `null` when the shell store does not answer in time. */
+export function readLastPersonaInTime(): Promise<AdultPersona | null> {
+  return within(readLastPersona(), null);
+}
+
 export interface BrowseBoot {
   /** The tab's session pass as read (an expired one stays for the Access screen's source); `null` when none or removed. */
   session: BrowsePass | null;
@@ -53,9 +82,9 @@ export async function readKeptPass(): Promise<BrowseKeptPass | null> {
 /** The full boot resolution: session pass, kept pass, persona, and the removals `resolvePass` names. */
 export async function resolveBrowseBoot(now: number): Promise<BrowseBoot> {
   const fast = resolveSessionNow(now);
-  if (fast) return { ...fast, lastPersona: await readLastPersona() };
+  if (fast) return { ...fast, lastPersona: await readLastPersonaInTime() };
   const session = readSessionPass();
-  const [kept, lastPersona] = await Promise.all([readKeptPass(), readLastPersona()]);
+  const [kept, lastPersona] = await Promise.all([within(readKeptPass(), null), readLastPersonaInTime()]);
   const resolved = resolvePass({ session, kept, now });
   if (resolved.removeSession) removeSessionPass();
   if (resolved.removeKept) await removeKeptPass();

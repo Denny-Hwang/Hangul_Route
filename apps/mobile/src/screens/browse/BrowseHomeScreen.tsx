@@ -1,11 +1,11 @@
-import { Body, Heading, Icon, Screen, Spacer, colors, spacing, touchTarget, typography } from '@hangul-route/design-system';
+import { Body, Heading, Icon, Screen, Spacer, borderWidth, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View, type PressableStateCallbackType } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { closeAction } from '../../logic/browse/boot';
 import type { BrowseStackParamList } from '../../navigation/browse';
-import { cameFromSameOrigin, goBack, leaveTo } from '../../platform/browse-env';
+import { canGoBack, goBack, leaveTo } from '../../platform/browse-env';
 import { useBrowseSession } from './browse-session';
 
 /**
@@ -18,14 +18,16 @@ import { useBrowseSession } from './browse-session';
  * takes (`section`, `stage`, `note`).
  */
 type Props = NativeStackScreenProps<BrowseStackParamList, 'BrowseHome'>;
+/** react-native-web adds `focused` (keyboard focus) to the pressable's state. */
+type FocusState = PressableStateCallbackType & { focused?: boolean };
 
 export function BrowseHomeScreen(_props: Props): React.ReactElement {
   const m = useMessages().caregiver.browse.home;
   const { pass, lastPersona } = useBrowseSession();
 
   const onClose = (): void => {
-    const action = closeAction({ sameOriginReferrer: cameFromSameOrigin(), from: pass?.from ?? 'gate', lastPersona });
-    if (action.kind === 'back') goBack();
+    const action = closeAction({ canGoBack: canGoBack(), from: pass?.from ?? 'gate', lastPersona });
+    if (action.kind === 'back') goBack(action.fallbackUrl);
     else leaveTo(action.url);
   };
 
@@ -36,7 +38,18 @@ export function BrowseHomeScreen(_props: Props): React.ReactElement {
           testID="browse-close"
           onPress={onClose}
           accessibilityRole="button"
-          style={{ minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingRight: spacing.sm }}
+          // The `border.focus` ring shows keyboard focus (design README decision 20); at rest the same width is clear, so nothing moves.
+          style={({ focused }: FocusState) => ({
+            minHeight: touchTarget.min,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.xs,
+            paddingLeft: spacing.xs,
+            paddingRight: spacing.sm,
+            borderRadius: radii.md,
+            borderWidth: borderWidth.thick,
+            borderColor: focused ? colors.border.focus : 'transparent',
+          })}
         >
           <Icon name="arrow-left" size={spacing.xl} color={colors.text.primary} />
           <Text style={{ color: colors.text.primary, fontSize: typography.size.body, fontWeight: typography.weight.semibold }}>{m.close.cta}</Text>

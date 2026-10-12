@@ -154,7 +154,7 @@ export function navigationCheck(i: {
   return { write: null, expired: !continuesLesson(i.from, i.to) };
 }
 
-export type CloseAction = { kind: 'back' } | { kind: 'assign'; url: string };
+export type CloseAction = { kind: 'back'; fallbackUrl: string } | { kind: 'assign'; url: string };
 
 const PERSONA_HOME: Readonly<Record<AdultPersona, string>> = {
   parent: APP_ROUTES.parentHome,
@@ -163,12 +163,13 @@ const PERSONA_HOME: Readonly<Record<AdultPersona, string>> = {
 
 /**
  * [ Close ] on the catalogue (section 4.1): back to the page the tab came from
- * when it is on this origin; else the persona home for an account pass (sign-in
+ * when it is on this origin and the tab's history has it (`canGoBack`, from
+ * `platform/browse-env`); else the persona home for an account pass (sign-in
  * when the persona is not known), and the learner app for a gate or kept pass,
- * which reach no account page (section 8).
+ * which reach no account page (section 8). A back that goes nowhere falls back
+ * to the same address (`fallbackUrl`).
  */
-export function closeAction(i: { sameOriginReferrer: boolean; from: PassFrom; lastPersona: AdultPersona | null }): CloseAction {
-  if (i.sameOriginReferrer) return { kind: 'back' };
-  if (i.from === 'account') return { kind: 'assign', url: i.lastPersona ? PERSONA_HOME[i.lastPersona] : APP_ROUTES.signIn };
-  return { kind: 'assign', url: APP_ROUTES.learn };
+export function closeAction(i: { canGoBack: boolean; from: PassFrom; lastPersona: AdultPersona | null }): CloseAction {
+  const url = i.from === 'account' ? (i.lastPersona ? PERSONA_HOME[i.lastPersona] : APP_ROUTES.signIn) : APP_ROUTES.learn;
+  return i.canGoBack ? { kind: 'back', fallbackUrl: url } : { kind: 'assign', url };
 }

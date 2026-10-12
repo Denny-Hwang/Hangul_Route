@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as nativeEnv from '../browse-env';
-import { cameFromSameOrigin, goBack, isOnline, leaveTo, onFragmentChange, takeFragment } from '../browse-env.web';
+import { cameFromSameOrigin, canGoBack, goBack, isOnline, leaveTo, onFragmentChange, onPageVisible, takeFragment } from '../browse-env.web';
 
 /**
  * F-BROWSE-001 sections 4.1 and 4.4 (BR-6): the browse root reads the link's
@@ -10,19 +10,27 @@ import { cameFromSameOrigin, goBack, isOnline, leaveTo, onFragmentChange, takeFr
  */
 interface FakeWindow {
   location: { hash: string; origin: string; assign: ReturnType<typeof vi.fn> };
-  history: { replaceState: ReturnType<typeof vi.fn>; back: ReturnType<typeof vi.fn> };
-  document: { referrer: string };
+  history: { replaceState: ReturnType<typeof vi.fn>; go: ReturnType<typeof vi.fn>; length: number; state: unknown };
+  document: { referrer: string; visibilityState?: string };
   navigator: { onLine?: boolean };
   listeners: Map<string, () => void>;
   addEventListener: (type: string, fn: () => void) => void;
   removeEventListener: (type: string, fn: () => void) => void;
 }
 
-function stubWindow(over: { hash?: string; referrer?: string; onLine?: boolean } = {}): FakeWindow {
+function stubWindow(over: { hash?: string; referrer?: string; onLine?: boolean; length?: number; state?: unknown } = {}): FakeWindow {
   const listeners = new Map<string, () => void>();
+  const history: FakeWindow['history'] = {
+    replaceState: vi.fn((state: unknown) => {
+      history.state = state;
+    }),
+    go: vi.fn(),
+    length: over.length ?? 1,
+    state: over.state ?? null,
+  };
   const w: FakeWindow = {
     location: { hash: over.hash ?? '', origin: 'https://app.hangulroute.com', assign: vi.fn() },
-    history: { replaceState: vi.fn(), back: vi.fn() },
+    history,
     document: { referrer: over.referrer ?? '' },
     navigator: over.onLine === undefined ? {} : { onLine: over.onLine },
     listeners,
@@ -46,13 +54,13 @@ describe('takeFragment', () => {
   it('returns the fragment and leaves /browse in the address, before anything paints', () => {
     const w = stubWindow({ hash: '#t=quest:stage1-letters-q1&s=report' });
     expect(takeFragment()).toBe('#t=quest:stage1-letters-q1&s=report');
-    expect(w.history.replaceState).toHaveBeenCalledWith(null, '', '/browse');
+    expect(w.history.replaceState).toHaveBeenCalledWith({ hrBrowseDepth: 0 }, '', '/browse');
   });
 
   it('with no fragment the address is still /browse (an unknown path under it shows home)', () => {
     const w = stubWindow();
     expect(takeFragment()).toBe('');
-    expect(w.history.replaceState).toHaveBeenCalledWith(null, '', '/browse');
+    expect(w.history.replaceState).toHaveBeenCalledWith({ hrBrowseDepth: 0 }, '', '/browse');
   });
 
   it('a history that refuses keeps the fragment readable and never throws', () => {
@@ -78,7 +86,7 @@ describe('onFragmentChange', () => {
     w.location.hash = '#t=jamo:nieun&s=report';
     w.listeners.get('hashchange')?.();
     expect(seen).toEqual(['#t=jamo:nieun&s=report']);
-    expect(w.history.replaceState).toHaveBeenLastCalledWith(null, '', '/browse');
+    expect(w.history.replaceState).toHaveBeenLastCalledWith({ hrBrowseDepth: 1 }, '', '/browse');
     off();
     expect(w.listeners.has('hashchange')).toBe(false);
   });
@@ -120,24 +128,129 @@ describe('cameFromSameOrigin', () => {
 });
 
 describe('leaving', () => {
-  it('leaveTo assigns the address in this tab; goBack goes back one page', () => {
+  afterEach(() => vi.useRealTimers());
+
+  it('leaveTo assigns the address in this tab', () => {
     const w = stubWindow();
     leaveTo('/parent');
     expect(w.location.assign).toHaveBeenCalledWith('/parent');
-    goBack();
-    expect(w.history.back).toHaveBeenCalledTimes(1);
+  });
+
+  it('goBack goes back past the page, and leaves for the fallback when nothing unloads', () => {
+    vi.useFakeTimers();
+    const w = stubWindow({ length: 3 });
+    takeFragment();
+    goBack('/parent');
+    expect(w.history.go).toHaveBeenCalledWith(-1);
+    vi.advanceTimersByTime(999);
+    expect(w.location.assign).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(w.location.assign).toHaveBeenCalledWith('/parent');
+  });
+
+  it('goBack does not use the fallback once the page starts to leave or unloads', () => {
+    vi.useFakeTimers();
+    for (const event of ['beforeunload', 'pagehide']) {
+      const w = stubWindow({ length: 3 });
+      takeFragment();
+      goBack('/');
+      w.listeners.get(event)?.();
+      vi.advanceTimersByTime(2000);
+      expect(w.location.assign, event).not.toHaveBeenCalled();
+      expect(w.listeners.has('pagehide')).toBe(false);
+    }
+  });
+
+  it('a later link adds a history entry: goBack skips it too, and canGoBack counts it', () => {
+    vi.useFakeTimers();
+    const w = stubWindow({ referrer: 'https://app.hangulroute.com/teach/home', length: 2 });
+    takeFragment();
+    const off = onFragmentChange(() => undefined);
+    // The hash a second link sets pushes one entry.
+    w.history.length = 3;
+    w.location.hash = '#t=jamo:nieun&s=report';
+    w.listeners.get('hashchange')?.();
+    expect(canGoBack()).toBe(true);
+    goBack('/teach/home');
+    expect(w.history.go).toHaveBeenCalledWith(-2);
+    off();
+  });
+
+  it('a reload keeps the count from the entry, and a back or forward inside the page reads it again', () => {
+    const w = stubWindow({ referrer: 'https://app.hangulroute.com/parent', length: 3, state: { hrBrowseDepth: 1 } });
+    takeFragment();
+    expect(w.history.replaceState).toHaveBeenCalledWith({ hrBrowseDepth: 1 }, '', '/browse');
+    const off = onFragmentChange(() => undefined);
+    goBack('/parent');
+    expect(w.history.go).toHaveBeenLastCalledWith(-2);
+    w.history.state = { hrBrowseDepth: 0 };
+    w.listeners.get('popstate')?.();
+    goBack('/parent');
+    expect(w.history.go).toHaveBeenLastCalledWith(-1);
+    w.history.state = 'not ours';
+    w.listeners.get('popstate')?.();
+    goBack('/parent');
+    expect(w.history.go).toHaveBeenLastCalledWith(-1);
+    off();
+    expect(w.listeners.has('popstate')).toBe(false);
   });
 
   it('a browser that refuses never throws', () => {
+    vi.useFakeTimers();
     const w = stubWindow();
     w.location.assign.mockImplementation(() => {
       throw new Error('blocked');
     });
-    w.history.back.mockImplementation(() => {
+    w.history.go.mockImplementation(() => {
       throw new Error('blocked');
     });
     expect(() => leaveTo('/')).not.toThrow();
-    expect(() => goBack()).not.toThrow();
+    expect(() => goBack('/')).not.toThrow();
+    expect(() => vi.advanceTimersByTime(1500)).not.toThrow();
+  });
+});
+
+describe('canGoBack', () => {
+  it('needs a same-origin referrer and an earlier entry in this tab', () => {
+    stubWindow({ referrer: 'https://app.hangulroute.com/parent', length: 2 });
+    takeFragment();
+    expect(canGoBack()).toBe(true);
+    // A new tab (or a middle-click) from a console page: a referrer, but nothing to go back to.
+    stubWindow({ referrer: 'https://app.hangulroute.com/parent', length: 1 });
+    takeFragment();
+    expect(canGoBack()).toBe(false);
+    stubWindow({ referrer: '', length: 4 });
+    takeFragment();
+    expect(canGoBack()).toBe(false);
+  });
+
+  it('no history: false', () => {
+    stubWindow({ referrer: 'https://app.hangulroute.com/parent', length: 2 });
+    vi.stubGlobal('history', undefined);
+    expect(canGoBack()).toBe(false);
+  });
+});
+
+describe('onPageVisible', () => {
+  it('calls back when the tab is shown again or gains focus, and stops on unsubscribe', () => {
+    const w = stubWindow();
+    const seen = vi.fn();
+    const off = onPageVisible(seen);
+    w.document.visibilityState = 'hidden';
+    w.listeners.get('visibilitychange')?.();
+    expect(seen).not.toHaveBeenCalled();
+    w.document.visibilityState = 'visible';
+    w.listeners.get('visibilitychange')?.();
+    w.listeners.get('focus')?.();
+    expect(seen).toHaveBeenCalledTimes(2);
+    off();
+    expect(w.listeners.has('visibilitychange')).toBe(false);
+    expect(w.listeners.has('focus')).toBe(false);
+  });
+
+  it('without window events it returns a no-op', () => {
+    vi.stubGlobal('addEventListener', undefined);
+    expect(() => onPageVisible(() => undefined)()).not.toThrow();
   });
 });
 
@@ -156,9 +269,11 @@ describe('native stub (All lessons is web only, OD-10)', () => {
   it('has no fragment, no referrer and nowhere to go', () => {
     expect(nativeEnv.takeFragment()).toBe('');
     expect(nativeEnv.cameFromSameOrigin()).toBe(false);
+    expect(nativeEnv.canGoBack()).toBe(false);
+    expect(() => nativeEnv.onPageVisible(() => undefined)()).not.toThrow();
     expect(nativeEnv.isOnline()).toBe(true);
     expect(() => nativeEnv.onFragmentChange(() => undefined)()).not.toThrow();
     expect(() => nativeEnv.leaveTo('/')).not.toThrow();
-    expect(() => nativeEnv.goBack()).not.toThrow();
+    expect(() => nativeEnv.goBack('/')).not.toThrow();
   });
 });
