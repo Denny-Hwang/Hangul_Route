@@ -91,6 +91,100 @@ describe('sync-store (F-SYNC-002)', () => {
     expect(api.register).not.toHaveBeenCalled();
   });
 
+  describe('a progress write that lands while the request is in flight (issue #262)', () => {
+    const resultDuringRequest = (rev: number) => async () => {
+      useProgressStore.getState().recordQuestComplete('profile:a', { questId: 'q3', episodeId: 'e', stars: 3, accuracy: 1, attempts: 1 });
+      useProgressStore.getState().markCardsSeen('profile:a', ['card:a']);
+      return { status: 'ok', rev };
+    };
+    const withCard = (s: ProgressSnapshot): ProgressSnapshot => ({ ...s, cards: [{ cardId: 'card:a', unlockedAt: 't', newSinceLastView: true }] });
+
+    beforeEach(() => {
+      mem.set('sync:profile:a', { secret: 'sec', rev: 3, lastSyncedAt: null });
+      useProgressStore.setState({ byProfile: { 'profile:a': withCard(snap(['q1'])) } });
+    });
+
+    it('is kept, in memory and in storage, when a merged snapshot comes back; attempts count once; another sync is requested', async () => {
+      const putSnapshot = vi.fn()
+        .mockResolvedValueOnce({ status: 'conflict', rev: 7, snapshot: withCard(snap(['q2'])) })
+        .mockImplementationOnce(resultDuringRequest(8));
+      setSyncApiForTests(fakeApi({ putSnapshot }) as never);
+      const requestSync = vi.spyOn(useSyncStore.getState(), 'requestSync').mockImplementation(() => undefined);
+      try {
+        const state = await useSyncStore.getState().syncNow('profile:a');
+        expect(state).toMatchObject({ status: 'synced', rev: 8 });
+        const held = useProgressStore.getState().byProfile['profile:a'];
+        expect(held?.quests.map((q) => q.questId)).toEqual(['q1', 'q2', 'q3']);
+        expect(held?.quests.find((q) => q.questId === 'q1')?.attempts).toBe(1);
+        expect(held?.cards.find((c) => c.cardId === 'card:a')?.newSinceLastView).toBe(false);
+        const saved = mem.get('progress:profile:a') as ProgressSnapshot;
+        expect(saved.quests.map((q) => q.questId)).toEqual(['q1', 'q2', 'q3']);
+        // The server does not hold the new result yet.
+        expect(requestSync).toHaveBeenCalledWith('profile:a');
+      } finally {
+        requestSync.mockRestore();
+      }
+    });
+
+    it('the fold is reconciled with the cached plans, so a dropped plan item does not come back (F-PLAN-002 section 3.6)', async () => {
+      usePlanStore.setState({ byLearner: { 'profile:a': [] }, notReady: {} });
+      const stale = { id: 'plan:gone#quest:stage1-letters-q1', profileId: 'profile:a', questId: 'quest:stage1-letters-q1', episodeId: 'episode:stage1-letters', assignedBy: 'teacher' as const, assignedAt: 't', targetDate: '2026-09-20' };
+      useProgressStore.setState({ byProfile: { 'profile:a': { ...withCard(snap(['q1'])), homework: [stale] } } });
+      const putSnapshot = vi.fn()
+        .mockResolvedValueOnce({ status: 'conflict', rev: 7, snapshot: snap(['q2']) })
+        .mockImplementationOnce(resultDuringRequest(8));
+      setSyncApiForTests(fakeApi({ putSnapshot }) as never);
+      const requestSync = vi.spyOn(useSyncStore.getState(), 'requestSync').mockImplementation(() => undefined);
+      try {
+        await useSyncStore.getState().syncNow('profile:a');
+        const held = useProgressStore.getState().byProfile['profile:a'];
+        expect(held?.homework).toEqual([]);
+        expect(held?.quests.map((q) => q.questId)).toEqual(['q1', 'q2', 'q3']);
+      } finally {
+        requestSync.mockRestore();
+      }
+    });
+
+    it('is kept when the sync gives up after a second conflict (retry-later)', async () => {
+      const putSnapshot = vi.fn()
+        .mockResolvedValueOnce({ status: 'conflict', rev: 7, snapshot: withCard(snap(['q2'])) })
+        .mockImplementationOnce(async () => {
+          await resultDuringRequest(0)();
+          return { status: 'conflict', rev: 9, snapshot: null };
+        });
+      setSyncApiForTests(fakeApi({ putSnapshot }) as never);
+      const requestSync = vi.spyOn(useSyncStore.getState(), 'requestSync').mockImplementation(() => undefined);
+      try {
+        const state = await useSyncStore.getState().syncNow('profile:a');
+        expect(state).toMatchObject({ status: 'idle', rev: 9, lastError: 'conflict' });
+        expect(useProgressStore.getState().byProfile['profile:a']?.quests.map((q) => q.questId)).toEqual(['q1', 'q2', 'q3']);
+        expect((mem.get('progress:profile:a') as ProgressSnapshot).quests.map((q) => q.questId)).toEqual(['q1', 'q2', 'q3']);
+        expect(requestSync).toHaveBeenCalledWith('profile:a');
+      } finally {
+        requestSync.mockRestore();
+      }
+    });
+
+    it('is kept when nothing was merged, and no extra sync is requested when nothing landed', async () => {
+      setSyncApiForTests(fakeApi({ putSnapshot: vi.fn().mockImplementationOnce(resultDuringRequest(4)) }) as never);
+      await useSyncStore.getState().syncNow('profile:a');
+      expect(useProgressStore.getState().byProfile['profile:a']?.quests.map((q) => q.questId)).toEqual(['q1', 'q3']);
+
+      const putSnapshot = vi.fn()
+        .mockResolvedValueOnce({ status: 'conflict', rev: 7, snapshot: snap(['q2']) })
+        .mockResolvedValueOnce({ status: 'ok', rev: 8 });
+      setSyncApiForTests(fakeApi({ putSnapshot }) as never);
+      const requestSync = vi.spyOn(useSyncStore.getState(), 'requestSync').mockImplementation(() => undefined);
+      try {
+        await useSyncStore.getState().syncNow('profile:a');
+        expect(useProgressStore.getState().byProfile['profile:a']?.quests.map((q) => q.questId)).toEqual(['q1', 'q2', 'q3']);
+        expect(requestSync).not.toHaveBeenCalled();
+      } finally {
+        requestSync.mockRestore();
+      }
+    });
+  });
+
   it('drops a pending plan item the cached plans no longer hold when a conflict merge brings it back (F-PLAN-002 section 3.6)', async () => {
     mem.set('sync:profile:a', { secret: 'sec', rev: 3, lastSyncedAt: null });
     usePlanStore.setState({ byLearner: { 'profile:a': [] }, notReady: {} });
