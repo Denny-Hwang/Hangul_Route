@@ -1,12 +1,14 @@
-import { ReceiptViewSchema, parseBillingSummary, type BillingSummary, type ReceiptView } from '@hangul-route/content-schema';
+import { LearnerReportResponseSchema, ReceiptViewSchema, parseBillingSummary, type BillingSummary, type ReceiptView } from '@hangul-route/content-schema';
 import type {
   CurriculumMeta,
   Entitlement,
   LearnerLevelId,
+  LearnerReportResponse,
   PlanItem,
   ProgressSummary,
   Promo,
   PurchasablePlanKey,
+  ReportPeriod,
   SpaceKind,
   SpaceRole,
   TeacherVisibleSummaryKey,
@@ -308,6 +310,20 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
         const { url } = r.data;
         return isHttpsUrl(url) ? { ok: true as const, data: { url } } : { ok: false as const, error: 'unknown' as const, status: 200, code: 'unreadable_link' };
       }),
+    /**
+     * One learner's report (F-REPORT-001 section 3.8): the roster's projection of that learner only, never another
+     * learner or a class figure. `period` only labels the Worker's `report.viewed` event. The body is parsed, so the
+     * report module reads a known shape: keys it does not read are stripped, a malformed `activity` reads as absent
+     * (the legacy state), and a body it cannot read at all (a space kind this bundle does not know) is a failed load.
+     */
+    getLearnerReport: (spaceId: string, learnerId: string, period: ReportPeriod): Promise<ApiResult<LearnerReportResponse>> =>
+      call<unknown>(`${base}/${encodeURIComponent(spaceId)}/learners/${encodeURIComponent(learnerId)}/report?period=${period}`, { method: 'GET' }, [200]).then(
+        (r): ApiResult<LearnerReportResponse> => {
+          if (!r.ok) return r;
+          const parsed = LearnerReportResponseSchema.safeParse(r.data);
+          return parsed.success ? { ok: true, data: parsed.data } : { ok: false, error: 'unknown', status: 200, code: 'bad_response' };
+        },
+      ),
   };
 }
 
