@@ -111,6 +111,28 @@ function contract(name: string, make: () => Db): void {
       expect(await db.summaryOf('profile:nobody')).toBeNull();
     });
 
+    it('summariesOf and learnersOf read many learners at once: duplicates once, unknown ids skipped, across chunks of 100 (F-REPORT-001 section 3.8, RP-5b)', async () => {
+      expect(await db.summariesOf([])).toEqual([]);
+      expect(await db.learnersOf([])).toEqual([]);
+      // 250 learners: 3 chunks of up to 100 ids; every 5th has no saved summary.
+      const ids = Array.from({ length: 250 }, (_, i) => `profile:l${String(i).padStart(3, '0')}`);
+      for (const [i, id] of ids.entries()) {
+        await db.putLearner({ id, displayName: `L${i}`, ageGroup: '5-7', avatar: 'hoya-orange', recoveryHash: null, createdAt: T, lastActiveAt: T });
+        if (i % 5 !== 0) await db.putSnapshot({ learnerId: id, rev: 1, schemaVer: 1, contentVer: '2026.10', deviceId: `device-${i}`, summary: { cardsUnlocked: i }, payload: { profileId: id, cards: ['secret'] }, updatedAt: T }, 0);
+      }
+      const asked = [...ids, ids[1] as string, 'profile:nobody', ids[2] as string];
+      const summaries = await db.summariesOf(asked);
+      expect(summaries).toHaveLength(200);
+      expect([...summaries].sort((a, b) => a.learnerId.localeCompare(b.learnerId))[0]).toEqual({ learnerId: 'profile:l001', summary: { cardsUnlocked: 1 }, updatedAt: T });
+      expect(new Set(summaries.map((row) => row.learnerId))).toEqual(new Set(ids.filter((_, i) => i % 5 !== 0)));
+      expect(JSON.stringify(summaries)).not.toContain('secret');
+      // reads are copies
+      (summaries[0]?.summary as { cardsUnlocked: number }).cardsUnlocked = -1;
+      expect((await db.summariesOf([summaries[0]?.learnerId as string]))[0]?.summary).not.toEqual({ cardsUnlocked: -1 });
+      expect([...(await db.learnersOf(asked))].sort()).toEqual(ids);
+      expect(await db.learnersOf(['profile:nobody'])).toEqual([]);
+    });
+
     it('spaces: upsert, lookup by code, children, owner, archived flag, settings JSON', async () => {
       await db.putAccount({ id: 'principal', email: null, displayName: null, consent: null, createdAt: T });
       await db.putAccount({ id: 'teacher', email: null, displayName: null, consent: null, createdAt: T });

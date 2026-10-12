@@ -1,6 +1,7 @@
-import { LearnerReportResponseSchema, ReportSummarySchema } from '@hangul-route/content-schema';
+import { CATALOG, ClassReportResponseSchema, LearnerReportResponseSchema, ReportSummarySchema, classReport, type ReportSummary } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { D1Db } from '../db';
+import type { D1Like, D1PreparedLike } from '../db/d1';
 import app from '../index';
 import { setDevFallbacksDefaultForTests } from '../lib/runtime';
 import { lookupLimiter } from '../routes/spaces';
@@ -375,5 +376,288 @@ describe('GET /api/spaces/:id/learners/:learnerId/report (F-REPORT-001 section 3
     expect(getSnapshot).not.toHaveBeenCalled();
     expect(summaryOf).toHaveBeenCalledTimes(1);
     expect(summaryOf).toHaveBeenCalledWith(suni.learnerId);
+  });
+});
+
+/**
+ * GET /api/spaces/:id/class-report — F-REPORT-001 sections 3.7 and 3.8
+ * (RP-5b). Aggregates only, computed on the Worker from each member's roster
+ * projection, read with batched, chunked narrow reads (`learnersOf`,
+ * `summariesOf`), for exactly who can open the class roster.
+ */
+const classReportPath = (spaceId: string, query = '') => `/api/spaces/${spaceId}/class-report${query}`;
+type RosterRow = { id: string; displayName: string; joinedAt: string; summary: ReportSummary | null; lastSyncedAt: string | null };
+
+/** Today's activity for a learner who joined today: one practice day, one quest, one new letter. */
+const todayActivity = (letter: string) => {
+  const today = new Date().toISOString().slice(0, 10);
+  return { v: 1, tz: 0, asOf: today, days: [{ d: today, min: 12, q: 1, c: 1, w: 0, j: [letter] }], months: [], total: { since: today, min: 12, q: 1, c: 1, w: 0, days: 1 }, milestones: [] };
+};
+
+describe('GET /api/spaces/:id/class-report (F-REPORT-001 sections 3.7 and 3.8, RP-5b)', () => {
+  it('serves the class teacher and a school admin over the class the aggregates of every learner member: no id, no name, no payload', async () => {
+    const sch = await createSpace('principal', 'school', 'School');
+    await join(sch.space.id, bearer('teacher'), { code: await issueCode('principal', sch.space.id) });
+    const cls = await createSpace('teacher', 'class', 'Sunday Class A', { parentSpaceId: sch.space.id });
+    const other = await createSpace('teacher2', 'class', 'B');
+    const suni = await registerLearner('device-suni0001', 'Suni Park');
+    const minho = await registerLearner('device-minho001', 'Minho Lee');
+    const jiwoo = await registerLearner('device-jiwoo001', 'Jiwoo Han');
+    const outsider = await registerLearner('device-outs0001', 'Outsider');
+    for (const l of [suni, minho, jiwoo]) await join(cls.space.id, l.auth, { code: cls.joinCode, learnerId: l.learnerId });
+    await join(other.space.id, outsider.auth, { code: other.joinCode, learnerId: outsider.learnerId });
+    // Suni: day-by-day data; Minho: an older app (no activity); Jiwoo: never saved; the outsider practiced elsewhere.
+    await upload(suni, { ...baseSummary, activity: todayActivity('ㄱ') });
+    await upload(minho, { ...baseSummary, needsPractice: ['ㅂ', 'ㅅ'] });
+    await upload(outsider, { ...baseSummary, activity: todayActivity('ㄴ') });
+
+    for (const user of ['teacher', 'principal']) {
+      const r = await get(classReportPath(cls.space.id), bearer(user));
+      expect(r.status, user).toBe(200);
+      const body = ClassReportResponseSchema.parse(r.body.data);
+      // Exactly the schema's shape: what the client parses is what the Worker sends.
+      expect(r.body.data).toEqual(body);
+      expect(body.space).toMatchObject({ id: cls.space.id, kind: 'class', name: 'Sunday Class A', archivedAt: null });
+      expect(body.period).toBe('week');
+      expect(Date.parse(body.serverTime)).not.toBeNaN();
+      expect(body.report.class).toEqual({ learners: 3, withActivity: 1, olderApp: 1, notSaved7d: 0 });
+      expect(body.report.headline).toMatchObject({ code: 'class_practiced', practiced: 1, learners: 3 });
+      expect(body.report.wentWell.lettersNew).toEqual([{ letter: 'ㄱ', learners: 1 }]);
+      expect(body.report.revisit).toEqual([
+        { letter: 'ㅂ', learners: 2 },
+        { letter: 'ㅅ', learners: 1 },
+      ]);
+      expect(r.cacheControl).toBe('no-store');
+
+      // The report is the class aggregate of the roster's own projection: never more than the roster's consent allows.
+      const roster = (await get(`/api/spaces/${cls.space.id}/roster`, bearer(user))).body.data as { learners: RosterRow[] };
+      const expected = classReport({
+        learners: roster.learners.map((row) => ({ summary: row.summary, lastSyncedAt: row.lastSyncedAt, joinedAt: row.joinedAt })),
+        plans: await db.plansOf(cls.space.id),
+        period: 'week',
+        now: new Date(body.serverTime),
+        catalog: CATALOG,
+      });
+      expect(body.report).toEqual(expected);
+
+      const raw = JSON.stringify(r.body);
+      for (const hidden of [suni.learnerId, minho.learnerId, jiwoo.learnerId, outsider.learnerId, 'Suni', 'Minho', 'Jiwoo', 'Outsider', 'payload-only-1', 'joinCode', 'ownerAccountId', 'ageGroup', 'avatar', 'hoya-orange'])
+        expect(raw, hidden).not.toContain(hidden);
+    }
+  });
+
+  it('counts the class plans as homework rows, never a plan of another space', async () => {
+    const cls = await createSpace('teacher', 'class', 'A');
+    const suni = await registerLearner('device-suni0001', 'Suni');
+    await join(cls.space.id, suni.auth, { code: cls.joinCode, learnerId: suni.learnerId });
+    const T = '2026-10-01T00:00:00.000Z';
+    await db.putPlan({ id: 'plan:week-one', spaceId: cls.space.id, authorAccountId: 'teacher', title: 'Week one', items: [{ kind: 'quest', id: 'quest:stage1-letters-q1' }], targetLearnerIds: null, publishedAt: T, archivedAt: null, createdAt: T, updatedAt: T, meta: null });
+    const progress = { 'plan:week-one': { done: 1, total: 1, notReady: 0 }, 'plan:elsewhere': { done: 2, total: 2, notReady: 0 } };
+    await upload(suni, { ...baseSummary, planProgress: progress, activity: todayActivity('ㄱ') });
+    const body = ClassReportResponseSchema.parse((await get(classReportPath(cls.space.id), bearer('teacher'))).body.data);
+    const expected = classReport({
+      learners: [{ summary: ((await get(`/api/spaces/${cls.space.id}/roster`, bearer('teacher'))).body.data as { learners: RosterRow[] }).learners[0]?.summary ?? null, lastSyncedAt: null, joinedAt: null }],
+      plans: await db.plansOf(cls.space.id),
+      period: 'week',
+      now: new Date(body.serverTime),
+      catalog: CATALOG,
+    });
+    expect(body.report.plans).toEqual(expected.plans);
+    expect(body.report.plans).toMatchObject([{ planId: 'plan:week-one', title: 'Week one', assigned: 1, finished: 1 }]);
+    expect(JSON.stringify(body)).not.toContain('plan:elsewhere');
+  });
+
+  it('reads the period and the day it steps back to, with an unknown period read as week', async () => {
+    const cls = await createSpace('teacher', 'class', 'A');
+    const suni = await registerLearner('device-suni0001', 'Suni');
+    await join(cls.space.id, suni.auth, { code: cls.joinCode, learnerId: suni.learnerId });
+    await upload(suni, { ...baseSummary, activity: todayActivity('ㄱ') });
+    for (const [query, period] of [['?period=month', 'month'], ['?period=day', 'day'], ['?period=all', 'all'], ['?period=year', 'week'], ['', 'week']] as const) {
+      const body = ClassReportResponseSchema.parse((await get(classReportPath(cls.space.id, query), bearer('teacher'))).body.data);
+      expect(body.period, query).toBe(period);
+      expect(body.report.period, query).toBe(period);
+    }
+    // Last week: today's practice is not in it; a malformed day reads as the current window.
+    const lastWeek = new Date(Date.now() - 7 * 86_400_000).toISOString().slice(0, 10);
+    const past = ClassReportResponseSchema.parse((await get(classReportPath(cls.space.id, `?period=week&at=${lastWeek}`), bearer('teacher'))).body.data);
+    expect(past.report.headline.practiced).toBe(0);
+    const malformed = ClassReportResponseSchema.parse((await get(classReportPath(cls.space.id, '?period=week&at=not-a-day'), bearer('teacher'))).body.data);
+    expect(malformed.report.headline.practiced).toBe(1);
+  });
+
+  it('answers 409 wrong_kind for a family space (siblings are never compared) and for a school space', async () => {
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    const mina = await registerLearner('device-mina0001', 'Mina');
+    await join(fam.space.id, mina.auth, { code: await issueCode('mom', fam.space.id), learnerId: mina.learnerId });
+    const sch = await createSpace('principal', 'school', 'School');
+    for (const [spaceId, user] of [[fam.space.id, 'mom'], [sch.space.id, 'principal']] as const) {
+      const r = await get(classReportPath(spaceId), bearer(user));
+      expect(r.status, user).toBe(409);
+      expect(r.body.error?.code).toBe('wrong_kind');
+      expect(JSON.stringify(r.body)).not.toContain('Mina');
+      // an outsider learns nothing about the kind
+      expect((await get(classReportPath(spaceId), bearer('stranger'))).status).toBe(403);
+    }
+    expect(viewed()).toEqual([]);
+  });
+
+  it('answers 401 without a session or with a learner device, 403 to an outsider and 404 for an unknown space', async () => {
+    const cls = await createSpace('teacher', 'class', 'A');
+    const suni = await registerLearner('device-suni0001', 'Suni');
+    await join(cls.space.id, suni.auth, { code: cls.joinCode, learnerId: suni.learnerId });
+    expect((await get(classReportPath(cls.space.id), json)).status).toBe(401);
+    expect((await get(classReportPath(cls.space.id), suni.auth)).status).toBe(401);
+    expect((await get(classReportPath(cls.space.id), bearer('stranger'))).status).toBe(403);
+    const missing = await get(classReportPath('space:nope'), bearer('teacher'));
+    expect(missing.status).toBe(404);
+    expect(missing.body.error?.code).toBe('not_found');
+    expect(viewed()).toEqual([]);
+  });
+
+  it('serves an archived class read-only, like the roster', async () => {
+    const cls = await createSpace('teacher', 'class', 'A');
+    const suni = await registerLearner('device-suni0001', 'Suni');
+    await join(cls.space.id, suni.auth, { code: cls.joinCode, learnerId: suni.learnerId });
+    await upload(suni, { ...baseSummary, activity: todayActivity('ㄱ') });
+    expect((await post(`/api/spaces/${cls.space.id}/archive`, bearer('teacher'))).status).toBe(200);
+    const r = await get(classReportPath(cls.space.id), bearer('teacher'));
+    expect(r.status).toBe(200);
+    const body = ClassReportResponseSchema.parse(r.body.data);
+    expect(body.space.archivedAt).not.toBeNull();
+    expect(body.report.class.learners).toBe(1);
+  });
+
+  it('serves an empty class: every figure 0, nothing to hide', async () => {
+    const cls = await createSpace('teacher', 'class', 'A');
+    const body = ClassReportResponseSchema.parse((await get(classReportPath(cls.space.id), bearer('teacher'))).body.data);
+    expect(body.report.class).toEqual({ learners: 0, withActivity: 0, olderApp: 0, notSaved7d: 0 });
+    expect(body.report.headline).toMatchObject({ practiced: 0, learners: 0 });
+  });
+
+  it('records one report.viewed server event per served class report, codes only; a HEAD records nothing', async () => {
+    const cls = await createSpace('teacher', 'class', 'A');
+    const suni = await registerLearner('device-suni0001', 'Suni');
+    await join(cls.space.id, suni.auth, { code: cls.joinCode, learnerId: suni.learnerId });
+    expect((await get(classReportPath(cls.space.id, '?period=month'), bearer('teacher'))).status).toBe(200);
+    expect((await get(classReportPath(cls.space.id, '?period=year'), bearer('teacher'))).status).toBe(200);
+    expect((await app.request(classReportPath(cls.space.id), { method: 'HEAD', headers: bearer('teacher') })).status).toBe(200);
+    expect(viewed().map((e) => e.payload)).toEqual([
+      { scope: 'class', space: 'class', period: 'month' },
+      { scope: 'class', space: 'class', period: 'week' },
+    ]);
+    for (const event of viewed()) {
+      expect(event.profileId).toBeUndefined();
+      const raw = JSON.stringify(event);
+      for (const id of [suni.learnerId, cls.space.id, 'Suni', 'teacher']) expect(raw).not.toContain(id);
+    }
+  });
+
+  it('counts only members whose learner row exists, as the roster does', async () => {
+    const cls = await createSpace('teacher', 'class', 'A');
+    const suni = await registerLearner('device-suni0001', 'Suni');
+    const ghost = await registerLearner('device-ghost001', 'Ghost');
+    for (const l of [suni, ghost]) await join(cls.space.id, l.auth, { code: cls.joinCode, learnerId: l.learnerId });
+    await upload(ghost, { ...baseSummary, activity: todayActivity('ㄱ') });
+    const learnersOf = db.learnersOf.bind(db);
+    vi.spyOn(db, 'learnersOf').mockImplementation(async (ids) => (await learnersOf(ids)).filter((id) => id !== ghost.learnerId));
+    const body = ClassReportResponseSchema.parse((await get(classReportPath(cls.space.id), bearer('teacher'))).body.data);
+    expect(body.report.class).toMatchObject({ learners: 1, withActivity: 0 });
+  });
+
+  it('never loads a full snapshot or a learner row: one batched learnersOf and one batched summariesOf', async () => {
+    const cls = await createSpace('teacher', 'class', 'A');
+    const learners = [];
+    for (const n of [1, 2, 3]) learners.push(await registerLearner(`device-lrn0000${n}`, `Learner ${n}`));
+    for (const l of learners) await join(cls.space.id, l.auth, { code: cls.joinCode, learnerId: l.learnerId });
+    for (const l of learners) await upload(l, baseSummary);
+    const spies = { getSnapshot: vi.spyOn(db, 'getSnapshot'), summaryOf: vi.spyOn(db, 'summaryOf'), getLearner: vi.spyOn(db, 'getLearner'), getLearners: vi.spyOn(db, 'getLearners'), summariesOf: vi.spyOn(db, 'summariesOf'), learnersOf: vi.spyOn(db, 'learnersOf') };
+    expect((await get(classReportPath(cls.space.id), bearer('teacher'))).status).toBe(200);
+    for (const name of ['getSnapshot', 'summaryOf', 'getLearner', 'getLearners'] as const) expect(spies[name], name).not.toHaveBeenCalled();
+    const ids = learners.map((l) => l.learnerId).sort();
+    expect(spies.learnersOf).toHaveBeenCalledTimes(1);
+    expect([...(spies.learnersOf.mock.calls[0]?.[0] ?? [])].sort()).toEqual(ids);
+    expect(spies.summariesOf).toHaveBeenCalledTimes(1);
+    expect([...(spies.summariesOf.mock.calls[0]?.[0] ?? [])].sort()).toEqual(ids);
+  });
+
+  it('300 members on the real migrations: a constant number of statements, at most 100 ids each, never payload_json', async () => {
+    const d1 = openSqliteD1();
+    const statements: Array<{ sql: string; params: number }> = [];
+    let counting = false;
+    const counted: D1Like = {
+      prepare(sql: string): D1PreparedLike {
+        const inner = d1.prepare(sql);
+        const entry = { sql, params: 0 };
+        if (counting) statements.push(entry);
+        const stmt: D1PreparedLike = {
+          bind(...values: unknown[]) {
+            entry.params = values.length;
+            inner.bind(...values);
+            return stmt;
+          },
+          first: <T>() => inner.first<T>(),
+          all: <T>() => inner.all<T>(),
+          run: () => inner.run(),
+        };
+        return stmt;
+      },
+      batch: (batch) => d1.batch(batch),
+    };
+    const T = '2026-10-01T00:00:00.000Z';
+    const seed = new D1Db(d1);
+    const classOf = async (spaceId: string, members: number): Promise<void> => {
+      await seed.putSpace({ id: spaceId, kind: 'class', name: spaceId, parentSpaceId: null, ownerAccountId: 'teacher', joinCode: null, joinCodeExpiresAt: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt: null, createdAt: T });
+      await seed.addMembership({ spaceId, memberKind: 'account', memberId: 'teacher', role: 'owner', joinedAt: T });
+      for (let i = 0; i < members; i += 1) {
+        const id = `profile:${spaceId.slice(6)}-${String(i).padStart(3, '0')}`;
+        await seed.putLearner({ id, displayName: `Learner ${i}`, ageGroup: '5-7', avatar: 'hoya-orange', recoveryHash: null, createdAt: T, lastActiveAt: T });
+        await seed.addMembership({ spaceId, memberKind: 'learner', memberId: id, role: 'student', joinedAt: T });
+        await seed.putSnapshot({ learnerId: id, rev: 1, schemaVer: 1, contentVer: '2026.10', deviceId: `device-${i}`, summary: { ...baseSummary, activity: todayActivity('ㄱ') }, payload: snapshotFor(id), updatedAt: T }, 0);
+      }
+    };
+    const { setFallbackDb, fallbackDb } = await import('../db');
+    const before = fallbackDb();
+    try {
+      await seed.putAccount({ id: 'teacher', email: null, displayName: null, consent: null, createdAt: T });
+      await classOf('space:one', 1);
+      await classOf('space:big', 300);
+      setFallbackDb(new D1Db(counted));
+      const run = async (spaceId: string) => {
+        statements.length = 0;
+        counting = true;
+        const started = Date.now();
+        const r = await get(classReportPath(spaceId), bearer('teacher'));
+        const ms = Date.now() - started;
+        counting = false;
+        expect(r.status).toBe(200);
+        return { body: ClassReportResponseSchema.parse(r.body.data), sql: statements.map((s) => ({ ...s })), ms };
+      };
+      const one = await run('space:one');
+      const big = await run('space:big');
+      expect(one.body.report.class.learners).toBe(1);
+      expect(big.body.report.class).toMatchObject({ learners: 300, withActivity: 300 });
+      expect(big.body.report.headline).toMatchObject({ practiced: 300, learners: 300 });
+
+      const on = (table: string, sql: Array<{ sql: string }>) => sql.filter((s) => new RegExp(`\\bFROM ${table}\\b`).test(s.sql));
+      // 300 members: 3 learner chunks and 3 summary chunks; everything else is the same as for 1 member.
+      expect(on('learners', big.sql)).toHaveLength(3);
+      expect(on('snapshots', big.sql)).toHaveLength(3);
+      expect(on('learners', one.sql)).toHaveLength(1);
+      expect(on('snapshots', one.sql)).toHaveLength(1);
+      expect(big.sql.length - one.sql.length).toBe(4);
+      expect(big.sql.length).toBeLessThanOrEqual(16);
+      for (const s of big.sql) {
+        expect(s.params, s.sql).toBeLessThanOrEqual(100);
+        expect(s.sql).not.toContain('payload_json');
+        expect(s.sql).not.toMatch(/SELECT \* FROM (snapshots|learners)\b/);
+      }
+      expect(on('snapshots', big.sql).every((s) => s.sql.startsWith('SELECT learner_id, summary_json, updated_at FROM snapshots WHERE learner_id IN ('))).toBe(true);
+      expect(on('learners', big.sql).every((s) => s.sql.startsWith('SELECT id FROM learners WHERE id IN ('))).toBe(true);
+      // Timing note (section 6 item f): the whole 300-member call stays far inside the roster's latency budget on the shim.
+      expect(big.ms).toBeLessThan(5_000);
+    } finally {
+      setFallbackDb(before);
+      d1.close();
+    }
   });
 });

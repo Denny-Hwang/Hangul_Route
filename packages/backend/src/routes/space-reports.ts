@@ -1,4 +1,13 @@
-import { ProgressSummarySchema, ReportSummarySchema, reportPeriodOf, type LearnerReportResponse, type ReportSummary } from '@hangul-route/content-schema';
+import {
+  CATALOG,
+  ProgressSummarySchema,
+  ReportSummarySchema,
+  classReport,
+  reportPeriodOf,
+  type ClassReportResponse,
+  type LearnerReportResponse,
+  type ReportSummary,
+} from '@hangul-route/content-schema';
 import { Hono } from 'hono';
 import { dbFor } from '../db';
 import { fail, ok } from '../envelope';
@@ -98,6 +107,59 @@ spaceReportRoutes.get('/:id/learners/:learnerId/report', async (c) => {
   // One event per report a grown-up actually views: a HEAD (Hono answers it with this GET handler) records nothing.
   if (c.req.method === 'GET') recordServerEvent('report.viewed', { scope: 'learner', space: space.kind, period: reportPeriodOf(c.req.query('period')) });
   // A learner's progress never sits in a shared browser's HTTP cache.
+  c.header('Cache-Control', 'no-store');
+  return ok(c, body);
+});
+
+/**
+ * GET /api/spaces/:id/class-report?period=<day|week|month|all>&at=<day>
+ *
+ * Class statistics (F-REPORT-001 sections 3.7 and 3.8, RP-5b): aggregates
+ * only, computed here so the class page never receives a per-learner row.
+ * Who: whoever may read the class roster (class teacher or owner, a school
+ * admin over the class); archived classes are served read-only. A family
+ * space has no class report (siblings are never compared) and a school has
+ * none either: both answer 409 `wrong_kind`.
+ *
+ * Reads: the memberships and the plans, then the learner members that still
+ * have a learner row (`learnersOf`, ids only) and their stored summaries
+ * (`summariesOf`, never `payload_json`), each batched as `IN (...)` chunks of
+ * 100 ids, so the statement count grows by 2 per 100 members and nothing
+ * else. Each summary is the roster's own projection for its membership
+ * (`rosterSummary` with `joinedAt`), so the report can never count more than
+ * the roster's consent allows; no id or name is carried into `classReport`.
+ */
+spaceReportRoutes.get('/:id/class-report', async (c) => {
+  const db = dbFor(c);
+  const space = await findSpace(c, db, c.req.param('id'), true);
+  if (!('id' in space)) return space;
+  const account = await requireCan(c, db, space, 'summary.read');
+  if (!('id' in account)) return account;
+  if (space.kind !== 'class') return fail(c, 'wrong_kind', 'Only a class has a class report', 409);
+
+  const [members, plans] = await Promise.all([db.membersOf(space.id), db.plansOf(space.id)]);
+  const joinedAt = new Map(members.filter((m) => m.memberKind === 'learner').map((m) => [m.memberId, m.joinedAt]));
+  const memberIds = [...joinedAt.keys()];
+  const [learnerIds, stored] = await Promise.all([db.learnersOf(memberIds), db.summariesOf(memberIds)]);
+  const summaries = new Map(stored.map((row) => [row.learnerId, row]));
+  // planProgress keeps this class's own plans only (archived ones included), as on the roster.
+  const planIds = new Set(plans.map((p) => p.id));
+  const learners = learnerIds.map((learnerId) => {
+    const row = summaries.get(learnerId);
+    const joined = joinedAt.get(learnerId) ?? null;
+    return { summary: reportSummaryOf(rosterSummary(row?.summary, planIds, space.kind, { joinedAt: joined })), lastSyncedAt: row?.updatedAt ?? null, joinedAt: joined };
+  });
+
+  const period = reportPeriodOf(c.req.query('period'));
+  const now = new Date();
+  const body: ClassReportResponse = {
+    space: publicSpace(space),
+    period,
+    serverTime: now.toISOString(),
+    report: classReport({ learners, plans, period, at: c.req.query('at') ?? null, now, catalog: CATALOG }),
+  };
+  if (c.req.method === 'GET') recordServerEvent('report.viewed', { scope: 'class', space: space.kind, period });
+  // A class's progress never sits in a shared browser's HTTP cache.
   c.header('Cache-Control', 'no-store');
   return ok(c, body);
 });
