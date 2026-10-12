@@ -3,9 +3,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const rn = vi.hoisted(() => ({
   listeners: [] as Array<(state: string) => void>,
   removed: 0,
+  currentState: 'active' as string | null,
 }));
 vi.mock('react-native', () => ({
   AppState: {
+    get currentState() {
+      return rn.currentState;
+    },
     addEventListener: (_type: string, fn: (state: string) => void) => {
       rn.listeners.push(fn);
       return {
@@ -17,11 +21,12 @@ vi.mock('react-native', () => ({
   },
 }));
 
-import { subscribeAppVisibility } from '../app-visibility';
+import { isAppVisible, subscribeAppVisibility } from '../app-visibility';
 
 beforeEach(() => {
   rn.listeners.length = 0;
   rn.removed = 0;
+  rn.currentState = 'active';
 });
 
 /**
@@ -41,5 +46,14 @@ describe('platform/app-visibility (native)', () => {
     expect(seen).toEqual([false, true]);
     off();
     expect(rn.removed).toBe(1);
+  });
+
+  it('reads the current state: only background is hidden', () => {
+    rn.currentState = 'background';
+    expect(isAppVisible()).toBe(false);
+    for (const state of ['active', 'inactive', 'unknown', null]) {
+      rn.currentState = state;
+      expect(isAppVisible()).toBe(true);
+    }
   });
 });

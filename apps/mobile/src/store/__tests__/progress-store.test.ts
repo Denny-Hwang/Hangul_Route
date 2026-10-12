@@ -1389,6 +1389,29 @@ describe('session ownership (F-REPORT-001 section 3.3.2, RP-3b)', () => {
     expect(beginSession('p1', STORY)).toBe('session:time:2026-10-12T09:00:00.000Z');
   });
 
+  it('a quest begun over a time-only session takes over: a new streak session, the streak moves and session.start is sent', () => {
+    const { beginSession, endSession } = useProgressStore.getState();
+    const story = beginSession('p1', STORY) as string;
+    vi.mocked(track).mockClear();
+    vi.setSystemTime(new Date(T0.getTime() + 20_000));
+    const quest = beginSession('p1', QUEST);
+    expect(quest).toBe('session:2026-10-12T09:00:20.000Z');
+    expect(sessionsOf().find((s) => s.id === story)).toMatchObject({ durationSeconds: 20 });
+    expect(useProgressStore.getState().openSession).toMatchObject({ sessionId: quest, owner: 'quest:q1', streak: true });
+    expect(useProgressStore.getState().byProfile['p1']?.streakDays).toBe(1);
+    expect(vi.mocked(track).mock.calls.map(([e]) => e.name)).toEqual(['session.start']);
+    // the story's own end is now a no-op; the quest keeps running
+    endSession('p1', story);
+    expect(useProgressStore.getState().openSession?.sessionId).toBe(quest);
+  });
+
+  it('a time-only session begun over another time-only session joins it', () => {
+    const { beginSession } = useProgressStore.getState();
+    beginSession('p1', STORY);
+    expect(beginSession('p1', { owner: 'minigame:q1:0', streak: false })).toBeNull();
+    expect(sessionsOf()).toHaveLength(1);
+  });
+
   it('endSession with another id leaves the open session running', () => {
     const { beginSession, endSession } = useProgressStore.getState();
     const id = beginSession('p1', QUEST) as string;

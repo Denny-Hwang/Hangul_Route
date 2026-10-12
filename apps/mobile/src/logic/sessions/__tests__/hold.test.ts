@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { holdSession, type SessionHoldPorts } from '../hold';
+import { holdSession, holdWhileFocused, type FocusPorts, type SessionHoldPorts } from '../hold';
 
 /**
  * F-REPORT-001 section 3.3.2 (RP-3b): a screen holds a session while it is
@@ -8,7 +8,7 @@ import { holdSession, type SessionHoldPorts } from '../hold';
  * is hidden and begins a new one when it is visible again while still held.
  */
 
-function harness(answers: Array<string | null>): {
+function harness(answers: Array<string | null>, visibleAtStart = true): {
   ports: SessionHoldPorts;
   begin: ReturnType<typeof vi.fn>;
   end: ReturnType<typeof vi.fn>;
@@ -23,6 +23,7 @@ function harness(answers: Array<string | null>): {
   const ports: SessionHoldPorts = {
     begin,
     end,
+    visible: () => visibleAtStart,
     subscribe: (listener) => {
       listeners.add(listener);
       return () => {
@@ -103,5 +104,96 @@ describe('logic/sessions/hold (F-REPORT-001 section 3.3.2)', () => {
     release();
     expect(h.end).toHaveBeenCalledTimes(1);
     expect(h.end).toHaveBeenCalledWith('p1', 's1');
+  });
+
+  it('held while the app is already hidden begins nothing until it is visible (a tab opened in the background)', () => {
+    const h = harness(['s1'], false);
+    const release = holdSession(h.ports, 'p1', STORY);
+    expect(h.begin).not.toHaveBeenCalled();
+    expect(h.listeners()).toBe(1);
+    h.emit(true);
+    expect(h.begin).toHaveBeenCalledWith('p1', STORY);
+    release();
+    expect(h.end).toHaveBeenCalledWith('p1', 's1');
+  });
+
+  it('held while hidden and released before it is visible ends nothing', () => {
+    const h = harness(['s1'], false);
+    const release = holdSession(h.ports, 'p1', STORY);
+    release();
+    h.emit(true);
+    expect(h.begin).not.toHaveBeenCalled();
+    expect(h.end).not.toHaveBeenCalled();
+    expect(h.unsubscribed()).toBe(1);
+  });
+});
+
+/**
+ * F-REPORT-001 section 3.3.2 (RP-3b review): a time-only session runs while
+ * its screen is in front. A grown-up screen pushed over the level check (the
+ * PIN, the placement report) ends it, and coming back begins a new one.
+ */
+function focusHarness(focusedAtStart: boolean): {
+  focus: FocusPorts;
+  emit: (event: 'focus' | 'blur') => void;
+  listeners: () => number;
+} {
+  const listeners = { focus: new Set<() => void>(), blur: new Set<() => void>() };
+  return {
+    focus: {
+      isFocused: () => focusedAtStart,
+      addListener: (event, listener) => {
+        listeners[event].add(listener);
+        return () => listeners[event].delete(listener);
+      },
+    },
+    emit: (event) => [...listeners[event]].forEach((l) => l()),
+    listeners: () => listeners.focus.size + listeners.blur.size,
+  };
+}
+
+describe('logic/sessions/hold holdWhileFocused (F-REPORT-001 section 3.3.2)', () => {
+  it('holds while focused, releases on blur, holds again on focus, and releases on unmount', () => {
+    const f = focusHarness(true);
+    const releases: Array<ReturnType<typeof vi.fn>> = [];
+    const hold = vi.fn(() => {
+      const release = vi.fn();
+      releases.push(release);
+      return release;
+    });
+    const off = holdWhileFocused(f.focus, hold);
+    expect(hold).toHaveBeenCalledTimes(1);
+    f.emit('blur');
+    expect(releases[0]).toHaveBeenCalledTimes(1);
+    f.emit('blur');
+    expect(releases[0]).toHaveBeenCalledTimes(1);
+    f.emit('focus');
+    expect(hold).toHaveBeenCalledTimes(2);
+    f.emit('focus');
+    expect(hold).toHaveBeenCalledTimes(2);
+    off();
+    expect(releases[1]).toHaveBeenCalledTimes(1);
+    expect(f.listeners()).toBe(0);
+    f.emit('focus');
+    expect(hold).toHaveBeenCalledTimes(2);
+  });
+
+  it('mounted out of focus holds nothing until it is focused', () => {
+    const f = focusHarness(false);
+    const hold = vi.fn(() => vi.fn());
+    const off = holdWhileFocused(f.focus, hold);
+    expect(hold).not.toHaveBeenCalled();
+    f.emit('focus');
+    expect(hold).toHaveBeenCalledTimes(1);
+    off();
+  });
+
+  it('without a navigator (no focus ports) holds for the whole mount', () => {
+    const release = vi.fn();
+    const hold = vi.fn(() => release);
+    const off = holdWhileFocused(null, hold);
+    expect(hold).toHaveBeenCalledTimes(1);
+    off();
+    expect(release).toHaveBeenCalledTimes(1);
   });
 });

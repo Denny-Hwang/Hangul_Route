@@ -60,6 +60,15 @@ describe('platform/app-visibility.web', () => {
     expect(listener).not.toHaveBeenCalled();
   });
 
+  it('reads the current page: hidden only when the document says so, visible where there is no document', () => {
+    vi.stubGlobal('document', { visibilityState: 'hidden' });
+    expect(web.isAppVisible()).toBe(false);
+    vi.stubGlobal('document', { visibilityState: 'visible' });
+    expect(web.isAppVisible()).toBe(true);
+    vi.stubGlobal('document', undefined);
+    expect(web.isAppVisible()).toBe(true);
+  });
+
   it('has the same surface as the native file', () => {
     expect(Object.keys(web).sort()).toEqual(Object.keys(native).sort());
   });

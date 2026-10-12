@@ -8,6 +8,7 @@ import {
   elapsedSeconds,
   lastStreakDay,
   newSessionId,
+  practiceTotals,
   streakSessionDates,
 } from '../session-log';
 
@@ -78,5 +79,16 @@ describe('logic/sessions/session-log (F-REPORT-001 section 3.3.2)', () => {
     expect(countedSeconds(session('a', '2026-10-12T09:00:00.000Z'))).toBe(0);
     expect(countedSeconds(session('a', '2026-10-12T09:00:00.000Z', { durationSeconds: -5 }))).toBe(0);
     expect(countedSeconds(session('a', '2026-10-12T09:00:00.000Z', { durationSeconds: Number.NaN }))).toBe(0);
+  });
+
+  it('practiceTotals: the grown-up stats count quest sessions only and capped minutes for all sessions', () => {
+    const totals = practiceTotals([
+      session('session:2026-10-12T09:00:00.000Z', '2026-10-12T09:00:00.000Z', { durationSeconds: 600 }),
+      session('session:2026-10-12T10:00:00.000Z', '2026-10-12T10:00:00.000Z', { durationSeconds: 3 * 3600 }),
+      session(`${TIME_ONLY_SESSION_PREFIX}2026-10-12T11:00:00.000Z`, '2026-10-12T11:00:00.000Z', { durationSeconds: 300 }),
+      session(`${TIME_ONLY_SESSION_PREFIX}2026-10-12T12:00:00.000Z`, '2026-10-12T12:00:00.000Z'),
+    ]);
+    expect(totals).toEqual({ sessions: 2, minutes: 75 });
+    expect(practiceTotals([])).toEqual({ sessions: 0, minutes: 0 });
   });
 });
