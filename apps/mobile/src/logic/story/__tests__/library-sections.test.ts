@@ -43,6 +43,17 @@ describe('visibleSections', () => {
     expect(visibleSections({ entries: shelfIndex([tale('tiger'), culture('seollal')]) })).toEqual(['cards', 'story-time', 'culture']);
   });
 
+  it('Words (the theme-packs slot) is offered only when the caller says Words is on (F-VOC-003 T1)', () => {
+    expect(visibleSections({ entries: [], words: true })).toEqual(['cards', 'theme-packs']);
+    expect(visibleSections({ entries: [], words: false })).toEqual(['cards']);
+    expect(visibleSections({ entries: shelfIndex([tale('tiger', [note])]), words: true })).toEqual([
+      'cards',
+      'story-time',
+      'culture',
+      'theme-packs',
+    ]);
+  });
+
   it('a book (grid) entry alone opens no shelf section, but its notes open Culture', () => {
     const grid = shelfIndex([tale('tiger')]).map((e) => ({ ...e, placement: 'grid' as const, category: null }));
     expect(visibleSections({ entries: grid })).toEqual(['cards']);
@@ -63,9 +74,13 @@ describe('selectedSection (§3.3: route.params.section ?? cards)', () => {
     expect(selectedSection('culture', all)).toBe('culture');
   });
 
-  it('a requested section that is not offered falls back to Cards (no reviewed story, theme packs reserved)', () => {
+  it('a requested section that is not offered falls back to Cards (no reviewed story, Words off)', () => {
     expect(selectedSection('story-time', ['cards'])).toBe('cards');
     expect(selectedSection('theme-packs', all)).toBe('cards');
+  });
+
+  it('a deep link opens Words when it is offered', () => {
+    expect(selectedSection('theme-packs', ['cards', 'theme-packs'])).toBe('theme-packs');
   });
 });
 
@@ -92,7 +107,17 @@ describe('librarySectionTabs (the tab row the Library draws)', () => {
     expect(librarySectionTabs({ entries: shelfIndex([tale('tiger', [note])]) }, all)).toEqual(['cards', 'story-time', 'culture']);
   });
 
-  it('draws Cards, Story Time and Culture in this build (Theme packs is F-VOC-003)', () => {
-    expect([...DRAWN_LIBRARY_SECTIONS]).toEqual(['cards', 'story-time', 'culture']);
+  it('draws every registered section in this build (Words joined with F-VOC-003 C-4)', () => {
+    expect([...DRAWN_LIBRARY_SECTIONS]).toEqual(['cards', 'story-time', 'culture', 'theme-packs']);
+  });
+
+  it('Words alone with Cards draws the tab row (two sections), and keeps the registry order', () => {
+    expect(librarySectionTabs({ entries: [], words: true })).toEqual(['cards', 'theme-packs']);
+    expect(librarySectionTabs({ entries: shelfIndex([tale('tiger')]), words: true })).toEqual(['cards', 'story-time', 'theme-packs']);
+  });
+
+  it('with Words off the tab row is what it was (behaviour 1: the Library renders exactly as before)', () => {
+    expect(librarySectionTabs({ entries: [], words: false })).toEqual([]);
+    expect(librarySectionTabs({ entries: shelfIndex([tale('tiger')]) })).toEqual(['cards', 'story-time']);
   });
 });
