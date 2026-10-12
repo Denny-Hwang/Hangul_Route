@@ -32,7 +32,7 @@ Panel A — device with a PIN whose epoch a grown-up confirmed by signing in
 +-----------------------------------+
 ```
 
-Panel B — sign-in only: the PIN changed since the last grown-up sign-in, no grown-up has signed in on this device yet, or the device has no PIN (`nopin`)
+Panel B — sign-in only: the PIN changed since the last grown-up sign-in, no grown-up has signed in on this device yet, the PIN was set before the PIN epoch existed, no PIN path is possible on this device, or the device has no PIN (`nopin`). The line names the cause and promises only what a sign-in can do (2026-10-12, A-4a review).
 
 ```
 |        [lock outline]             |
@@ -40,6 +40,8 @@ Panel B — sign-in only: the PIN changed since the last grown-up sign-in, no gr
 |   1 line, one of:                 |
 |   - "The grown-up PIN changed on this device. Sign in again to use it."
 |   - "Sign in once on this device to use the grown-up PIN here." (no grown-up sign-in yet)
+|   - "To use the grown-up PIN here, set it again in the app, then sign in once." (PIN set before the epoch, epoch 0)
+|   - "Sign in again to open grown-up pages on this device." (learner app older than A-6, or the device read failed)
 |   - "Set a grown-up PIN in the app, or sign in again." (nopin)
 |   [[ SIGN IN AGAIN ]]             |  <- becomes the primary
 ```
@@ -64,8 +66,8 @@ Exit to:    `profiles/pin-entry` (learner app) · `shell/signin` · learner app 
 
 - **success**: Panel A or B; after unlock the requested page renders.
 - **empty**: not applicable (the lock has no data).
-- **error**: offline → the PIN path still reaches the PIN screen; the return lands on `shell/offline`. Storage unreadable → the lock does not apply (§3.9: such a browser cannot hold learner profiles).
-- **before the decision**: frame without content (a few milliseconds of IndexedDB read), never page content. On a back/forward-cache restore or a return to a hidden tab, content is hidden first and the decision runs again.
+- **error**: offline → the PIN path still reaches the PIN screen; the return lands on `shell/offline`. No IndexedDB API → the lock does not apply (§3.9: such a browser cannot hold learner profiles). A read that fails twice or takes longer than 3 s → Panel B with the plain sign-in line (the browser may hold profiles).
+- **before the decision**: frame without content (a few milliseconds of IndexedDB read), never page content. On a back/forward-cache restore or a return to a hidden tab, content is covered first (an opaque full-screen cover in the canvas colour; the page underneath keeps its layout, scroll and focus) and the decision runs again. A device that cannot lock is never covered on a tab switch. After 15 idle minutes the next tap or key is stopped and the lock shows.
 
 ## Data needs
 
