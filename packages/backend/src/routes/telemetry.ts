@@ -11,9 +11,9 @@ import { id, type TelemetryEvent } from '../store';
  * timestamp (offline-queued events arrive late) when it is plausible, else
  * ours; `receivedAt` is always ours.
  * Codes-only events (`space.transfer.*`, `shell.*`, `report.*`) keep only their
- * codes and never a profile id, `browse.*` events keep only their documented
- * fields and never a profile id (F-BROWSE-001 section 9), `notes.*` events
- * never keep a profile id (F-FEEDBACK-001 section 10), and the log is
+ * codes and never a profile id, `browse.*` and `notes.*` events keep only
+ * their documented fields and never a profile id (F-BROWSE-001 section 9,
+ * F-FEEDBACK-001 section 10), and the log is
  * capped: these rules live in lib/server-events.ts, shared with the events the
  * Worker records itself.
  * There is deliberately no read route (audit SEC-3).

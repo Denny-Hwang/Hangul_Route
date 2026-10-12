@@ -208,9 +208,10 @@ export const SyncInboxSchema = z.object({
    * old Worker omits both (defaults: none, all class notes, not acknowledged),
    * one bad note is dropped, and unreadable prefs fall back field by field
    * (`NotePrefsSchema`), so neither ever costs the plans, memberships or tier.
+   * Each parse returns its own prefs object, never the shared constant.
    */
   notes: lenientArray(InboxNoteSchema).default([]),
-  notePrefs: NotePrefsSchema.default(NOTE_PREFS_DEFAULT).catch(NOTE_PREFS_UNREADABLE),
+  notePrefs: NotePrefsSchema.default(NOTE_PREFS_DEFAULT).catch(() => ({ ...NOTE_PREFS_UNREADABLE })),
 });
 /**
  * Plans are typed as `InboxPlan` (meta optional) so a parsed inbox and the

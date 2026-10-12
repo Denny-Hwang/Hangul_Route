@@ -66,6 +66,14 @@ export type NoteReactionId = (typeof NOTE_REACTION_IDS)[number];
 export const FAMILY_LABEL_IDS = ['family', 'mom', 'dad', 'grandma', 'grandpa', 'aunt', 'uncle', 'guardian', 'partner'] as const;
 export type FamilyLabelId = (typeof FAMILY_LABEL_IDS)[number];
 
+/**
+ * Labels the learner app shows only on a profile whose learner type is `self`
+ * (section 6.11): "Your partner" is for an adult learner's partner (P6). On any
+ * other profile, for example a child who got the note through a send to
+ * everyone, it reads as "Your family".
+ */
+export const FAMILY_LABELS_SELF_LEARNER_ONLY: ReadonlySet<FamilyLabelId> = new Set<FamilyLabelId>(['partner']);
+
 export const NOTE_REPORT_REASONS = ['unkind', 'unsafe', 'not_for_me', 'other'] as const;
 export type NoteReportReason = (typeof NOTE_REPORT_REASONS)[number];
 
@@ -131,19 +139,25 @@ export type NoteSend = z.infer<typeof NoteSendSchema>;
  * plain string (the app renders the fallback line or ignores it), and an
  * unknown family label, text locale or suggestion reads as null (the app shows
  * "Your family", picks `lang` from the text, or leaves the quest out) instead
- * of costing the note.
+ * of costing the note. A suggestion is read without `.strict()`, so a field a
+ * newer Worker adds to it never costs the quest. A preset in
+ * NOTE_PRESETS_NEED_SUGGEST whose suggestion reads as null renders the fallback
+ * line (section 7.1), so the note never points at a quest it does not carry.
+ * A class note never carries a family label: one sent anyway reads as null.
  */
 export const InboxNoteSchema = z.object({
   id: NoteIdSchema,
   spaceId: z.string(),
-  from: z.object({
-    role: z.enum(['teacher', 'family']),
-    label: z.enum(FAMILY_LABEL_IDS).nullable().catch(null),
-  }),
+  from: z
+    .object({
+      role: z.enum(['teacher', 'family']),
+      label: z.enum(FAMILY_LABEL_IDS).nullable().catch(null),
+    })
+    .transform((from) => (from.role === 'family' ? from : { role: from.role, label: null })),
   presetId: z.string().max(64),
   text: z.string().max(400).nullable(),
   textLocale: UiLocaleSchema.nullable().catch(null),
-  suggest: NoteSuggestSchema.nullable().catch(null),
+  suggest: NoteSuggestSchema.strip().nullable().catch(null),
   createdAt: z.string(),
   readAt: z.string().nullable(),
   reaction: z.string().max(32).nullable(),
@@ -153,25 +167,41 @@ export type InboxNote = z.infer<typeof InboxNoteSchema>;
 /**
  * The learner's class-notes setting, as the inbox carries it (section 6.10).
  * Each field falls back on its own, and never towards a looser setting: a mode
- * this app does not know (a newer Worker) reads as `null`, meaning unknown, and
- * the grown-up zone then leaves the setting row out and sends nothing; an
- * unreadable acknowledgement reads as given, so the one-time card never comes back.
+ * this app does not know (a newer Worker) or a missing one reads as `null`,
+ * meaning unknown, and the grown-up zone then leaves the setting row out and
+ * sends nothing; an unreadable or missing acknowledgement reads as given, so
+ * the one-time card never comes back. No field has a default of its own: only
+ * an absent `notePrefs` (an older Worker) reads as the server defaults,
+ * `NOTE_PREFS_DEFAULT`, through `SyncInboxSchema`.
  */
 export const NotePrefsSchema = z.object({
-  classes: z.enum(NOTES_MODES).nullable().default('all').catch(null),
+  classes: z.enum(NOTES_MODES).nullable().catch(null),
   /** Read-only on the wire: the family has answered the one-time class-notes card. */
-  acknowledged: z.boolean().default(false).catch(true),
+  acknowledged: z.boolean().catch(true),
 });
 export type NotePrefs = z.infer<typeof NotePrefsSchema>;
 
-/** The inbox's `notePrefs` when the Worker sends none (an older Worker): the server defaults. */
-export const NOTE_PREFS_DEFAULT: Readonly<NotePrefs> = { classes: 'all', acknowledged: false };
-/** The inbox's `notePrefs` when the value is not an object at all: unknown and acknowledged. */
-export const NOTE_PREFS_UNREADABLE: Readonly<NotePrefs> = { classes: null, acknowledged: true };
+/**
+ * The inbox's `notePrefs` when the Worker sends none (an older Worker): the
+ * server defaults. Frozen; a parsed inbox always holds its own copy.
+ */
+export const NOTE_PREFS_DEFAULT: Readonly<NotePrefs> = Object.freeze({ classes: 'all', acknowledged: false });
+/**
+ * The inbox's `notePrefs` when the value is not an object at all: unknown and
+ * acknowledged. Frozen; a parsed inbox always holds its own copy.
+ */
+export const NOTE_PREFS_UNREADABLE: Readonly<NotePrefs> = Object.freeze({ classes: null, acknowledged: true });
 
-/** PUT note-prefs body (device and family routes). */
+/** PUT /api/spaces/:familyId/learners/:learnerId/note-prefs body (the family route, section 7.2). */
 export const NotePrefsPutSchema = z.object({ classes: z.enum(NOTES_MODES), acknowledge: z.literal(true).optional() }).strict();
 export type NotePrefsPut = z.infer<typeof NotePrefsPutSchema>;
+
+/** How a device says a grown-up acted: the grown-up PIN, or a self-managed learner. A client claim, recorded, never trusted. */
+const NoteAttestSchema = z.enum(['grown_up_pin', 'self']);
+
+/** PUT /api/sync/learners/:id/note-prefs body (the device route, section 7.6): the family body plus `attest`. */
+export const NoteDevicePrefsPutSchema = NotePrefsPutSchema.extend({ attest: NoteAttestSchema.optional() }).strict();
+export type NoteDevicePrefsPut = z.infer<typeof NoteDevicePrefsPutSchema>;
 
 /** PUT /api/sync/learners/:id/notes/:noteId/state body: read once, last reaction wins. */
 export const NoteStatePutSchema = z
@@ -180,6 +210,10 @@ export const NoteStatePutSchema = z
   .refine((v) => v.read !== undefined || v.reaction !== undefined);
 export type NoteStatePut = z.infer<typeof NoteStatePutSchema>;
 
-/** Report body; `attest` comes from a device only (a client claim, recorded, never trusted). */
-export const NoteReportSchema = z.object({ reason: z.enum(NOTE_REPORT_REASONS), attest: z.enum(['grown_up_pin', 'self']).optional() }).strict();
+/** Device report body (section 7.6); `attest` is a client claim, recorded, never trusted. */
+export const NoteReportSchema = z.object({ reason: z.enum(NOTE_REPORT_REASONS), attest: NoteAttestSchema.optional() }).strict();
 export type NoteReport = z.infer<typeof NoteReportSchema>;
+
+/** Account report body (the family route, section 7.2): a reason only, never `attest`. */
+export const NoteAccountReportSchema = NoteReportSchema.omit({ attest: true }).strict();
+export type NoteAccountReport = z.infer<typeof NoteAccountReportSchema>;

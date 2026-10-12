@@ -3,6 +3,10 @@ import {
   BrowseSourceSchema,
   BrowseTargetSchema,
   LearnerBasisSchema,
+  NOTES_MODES,
+  NOTE_PRESET_IDS,
+  NOTE_REACTION_IDS,
+  NOTE_REPORT_REASONS,
   REPORT_TELEMETRY_PAYLOAD,
   REPORT_TELEMETRY_PREFIX,
   SHELL_TELEMETRY_PAYLOADS,
@@ -121,43 +125,60 @@ const BROWSE_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, Fiel
   'browse.plans_tapped': { kind: oneOf(PREVIEW_KINDS) },
 };
 
-function browsePayload(name: string, payload: Record<string, unknown> | undefined): Record<string, unknown> | undefined {
-  const rules = BROWSE_PAYLOAD_RULES[name] ?? {};
+/**
+ * Notes events (F-FEEDBACK-001 section 10) carry no profile id, so the server
+ * holds no per-learner log of which notes were opened, and, per name, only the
+ * documented keys: codes from the shared notes lists, booleans, and counts that
+ * are whole numbers 0-30 (the inbox delivers at most 30 notes, section 6.8
+ * rule 7). Note text, a note, batch, space or account id, a sender label, a
+ * learner name and a profile id are never stored, whatever a client sends.
+ */
+const NOTES_EVENT_PREFIX = 'notes.';
+
+const NOTE_COUNT_MAX = 30;
+const isNoteCount: FieldRule = (value) => typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= NOTE_COUNT_MAX;
+const fromRole = oneOf(['teacher', 'family']);
+
+const NOTES_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, FieldRule>>>> = {
+  'notes.card_shown': { unread: isNoteCount },
+  'notes.list_viewed': { notes: isNoteCount, unread: isNoteCount },
+  'notes.note_opened': { presetId: oneOf(NOTE_PRESET_IDS), fromRole, hasText: isBoolean, hasSuggest: isBoolean, suggestOpen: isBoolean },
+  'notes.reaction_picked': { reaction: oneOf(NOTE_REACTION_IDS), fromRole, changed: isBoolean },
+  'notes.suggest_started': { fromRole },
+  'notes.report_sent': { reason: oneOf(NOTE_REPORT_REASONS), via: oneOf(['note_page', 'grown_up_zone']) },
+  'notes.prefs_changed': { classes: oneOf(NOTES_MODES) },
+};
+
+/** Only the payload fields that fit their rule; a name without rules keeps none. */
+function ruledPayload(
+  rules: Readonly<Record<string, FieldRule>> | undefined,
+  payload: Record<string, unknown> | undefined,
+): Record<string, unknown> | undefined {
   if (!payload) return undefined;
   const kept: Record<string, unknown> = {};
-  for (const [key, fits] of Object.entries(rules)) {
+  for (const [key, fits] of Object.entries(rules ?? {})) {
     if (fits(payload[key], payload)) kept[key] = payload[key];
   }
   return Object.keys(kept).length > 0 ? kept : undefined;
 }
 
 /**
- * Notes events (F-FEEDBACK-001 section 10) are never stored with a profile id,
- * whatever a client sends, so the server holds no per-learner log of which
- * notes were opened. Their payload (ids, codes and counts) is kept as sent.
- */
-const NO_PROFILE_PREFIXES: readonly string[] = ['notes.'];
-
-function keepsProfileId(name: string): boolean {
-  return !NO_PROFILE_PREFIXES.some((prefix) => name.startsWith(prefix));
-}
-
-/**
  * The profile id and payload stored for an event: an ordinary event keeps a
  * string profile id and its payload as given; a codes-only event keeps only its
  * codes and never a profile id; a `browse.*` event keeps only its documented
- * fields (F-BROWSE-001 section 9) and never a profile id; a `notes.*` event
- * keeps its payload as given and never a profile id (F-FEEDBACK-001 section 10).
+ * fields (F-BROWSE-001 section 9) and never a profile id; so does a `notes.*`
+ * event (F-FEEDBACK-001 section 10).
  */
 export function keptEventFields(
   name: TelemetryEventName,
   payload: Record<string, unknown> | undefined,
   profileId: unknown,
 ): Pick<TelemetryEvent, 'profileId' | 'payload'> {
-  if (name.startsWith(BROWSE_EVENT_PREFIX)) return { profileId: undefined, payload: browsePayload(name, payload) };
+  if (name.startsWith(BROWSE_EVENT_PREFIX)) return { profileId: undefined, payload: ruledPayload(BROWSE_PAYLOAD_RULES[name], payload) };
+  if (name.startsWith(NOTES_EVENT_PREFIX)) return { profileId: undefined, payload: ruledPayload(NOTES_PAYLOAD_RULES[name], payload) };
   const codesOnly = codesOnlyValues(name);
   if (codesOnly) return { profileId: undefined, payload: codesOnlyPayload(payload, codesOnly) };
-  return { profileId: keepsProfileId(name) && typeof profileId === 'string' ? profileId : undefined, payload };
+  return { profileId: typeof profileId === 'string' ? profileId : undefined, payload };
 }
 
 /** Appends an event to the log and trims the oldest ones past `MAX_EVENTS`. */
