@@ -11,6 +11,7 @@ import {
   learnerCellMarks,
   type JourneyMarksOf,
 } from '../journey-grid';
+import { shelfIndex, story } from '../story/__tests__/shelf-fixture';
 
 /**
  * F-BROWSE-001 BR-5b: the Journey grid out of `JourneyScreen`, so All lessons can draw the learner's
@@ -66,6 +67,7 @@ describe('journeyCell', () => {
       selected: false,
       disabled: false,
       marks: NO_CELL_MARKS,
+      model: { stage: 'stage1', theme: 'letters', kind: 'lesson', episodeId: 'episode:s1-letters', completed: false, storyCount: 0, storiesFinished: 0 },
     });
   });
 
@@ -99,6 +101,52 @@ describe('journeyCell', () => {
   });
 });
 
+describe('journeyCell with heritage stories (F-STORY-005 PR 5.5a)', () => {
+  const base = { gridEpisodes: GRID, paneMode: false, selectedId: null };
+  const jikji = story('jikji-metal-type', { recommendedStage: 2, theme: 'letters' });
+  const sejong = story('sejong-new-letters', { recommendedStage: 1, theme: 'letters' });
+  const storyEntries = shelfIndex([jikji, sejong]);
+
+  it('a preview cell with a story is a stories-only button, on one pane and on two, and never selected', () => {
+    for (const paneMode of [false, true]) {
+      const cell = journeyCell({ ...base, paneMode, selectedId: 'episode:s2-letters', storyEntries, stage: 'stage2', theme: 'letters' });
+      expect(cell).toMatchObject({ state: 'later', disabled: false, selected: false });
+      expect(cell.model).toMatchObject({ kind: 'stories-only', storyCount: 1 });
+    }
+  });
+
+  it('an empty cell with a story is a stories-only button too', () => {
+    const empty = journeyCell({ ...base, storyEntries: shelfIndex([story('x', { recommendedStage: 3, theme: 'crafts' })]), stage: 'stage3', theme: 'crafts' });
+    expect(empty).toMatchObject({ episodeId: null, disabled: false });
+    expect(empty.model.kind).toBe('stories-only');
+  });
+
+  it('a lesson cell counts its stories and opens as before', () => {
+    const cell = journeyCell({ ...base, storyEntries, stage: 'stage1', theme: 'letters' });
+    expect(cell).toMatchObject({ episodeId: 'episode:s1-letters', state: 'open', disabled: false });
+    expect(cell.model).toMatchObject({ kind: 'lesson', storyCount: 1 });
+  });
+
+  it('the model reads the learner quests: complete cells and finished stories', () => {
+    const quests = [
+      { questId: 'quest:a', episodeId: 'episode:s1-letters', completedAt: '2026-10-01T00:00:00.000Z' },
+      { questId: 'quest:b', episodeId: 'episode:s1-letters', completedAt: '2026-10-01T00:00:00.000Z' },
+      { questId: 'quest:story-sejong-new-letters-listen', episodeId: 'episode:shelf-sejong-new-letters', completedAt: '2026-10-01T00:00:00.000Z' },
+    ];
+    expect(journeyCell({ ...base, storyEntries, quests, stage: 'stage1', theme: 'letters' }).model).toMatchObject({
+      completed: true,
+      storiesFinished: 1,
+    });
+  });
+
+  it('rows pass the stories to every cell; the stage pill still counts lesson cells only', () => {
+    const rows = journeyGridRows({ stages, themes, ...base, storyEntries });
+    expect(rows[1]?.availability).toBe('soon');
+    expect(rows[1]?.cells[0]?.model.kind).toBe('stories-only');
+    expect(rows.flatMap((r) => r.cells).filter((c) => c.model.storyCount > 0)).toHaveLength(2);
+  });
+});
+
 describe('journeyGridRows', () => {
   it('one row per stage in order, five cells per row in theme order, with the stage availability', () => {
     const rows = journeyGridRows({ stages, themes, gridEpisodes: GRID, paneMode: false, selectedId: null });
@@ -115,6 +163,8 @@ describe('journeyGridRows', () => {
     const rows = journeyGridRows({ stages, themes, gridEpisodes: grid, paneMode: false, selectedId: null });
     const cells = rows.flatMap((r) => r.cells);
     expect(cells.every((c) => c.marks === NO_CELL_MARKS)).toBe(true);
+    // Ships dark (F-STORY-005 §6): without story entries no cell is stories-only and none has a count.
+    expect(cells.every((c) => c.model.storyCount === 0 && c.model.kind !== 'stories-only')).toBe(true);
     const openIds = new Set(cells.filter((c) => c.state === 'open').map((c) => c.episodeId));
     const firstShipped = grid.filter((e) => e.status === 'shipped' && cells.some((c) => c.episodeId === e.id));
     expect(firstShipped.length).toBeGreaterThan(0);
@@ -172,6 +222,13 @@ describe('JourneyGrid sources', () => {
     expect(grid).toMatch(/design\/wireframes\/journey\/grid\.md/);
     expect(grid).toMatch(/design\/wireframes\/browse\/home\.md/);
     expect(grid).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/);
+  });
+
+  it('labels every cell with cellLabel and keeps the count mark out of the screen reader (F-STORY-005 PR 5.5a)', () => {
+    expect(grid).toMatch(/design\/wireframes\/journey\/grid-with-stories\.md/);
+    expect(grid).toContain('accessibilityLabel={cellLabel(model, stage, theme, messages.a11y.journeyCell, cell.marks)}');
+    expect(grid).not.toMatch(/a11y\.gridCell/);
+    expect(grid).toMatch(/aria-hidden\s+importantForAccessibility="no-hide-descendants"\s+accessibilityElementsHidden/);
   });
 
   it('each stage row is an anchor for scrolling to a stage, measured only when asked', () => {
