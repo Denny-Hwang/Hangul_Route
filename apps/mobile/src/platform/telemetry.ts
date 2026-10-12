@@ -7,6 +7,8 @@
  *   background.
  * - Honors `flags.telemetryEnabled` (no-op if false).
  * - Honors `flags.telemetryNetwork` (runs validation but skips fetch).
+ * - Honors the telemetry fence (`setTelemetryFence`, F-BROWSE-001): a name it
+ *   rejects is a no-op that returns false.
  * - Skips the network entirely while `EXPO_PUBLIC_API_BASE_URL` is unset —
  *   the placeholder default must never receive traffic.
  *
@@ -35,9 +37,46 @@ export interface TelemetryClientOptions {
 }
 
 const PLACEHOLDER_ENDPOINT = 'https://api.hangulroute.example';
-const QUEUE_KEY = 'telemetry:queue';
-/** Web Locks name shared by every tab of the PWA (they share one IndexedDB queue). */
-const QUEUE_LOCK = 'hr:telemetry:queue';
+/** The learner app's offline queue, the default. */
+export const LEARNER_TELEMETRY_QUEUE_KEY = 'telemetry:queue';
+let queueKey = LEARNER_TELEMETRY_QUEUE_KEY;
+
+/**
+ * Store the offline queue under `key` from now on (F-BROWSE-001 section
+ * 4.10). The All lessons root sets `browse:telemetry-queue` before its first
+ * event, so it never reads, rewrites or sends the learner queue, and a learner
+ * tab and a browse tab never overwrite each other's queue.
+ */
+export function configureTelemetryQueue(key: string): void {
+  queueKey = key;
+}
+
+/** Web Locks name shared by every tab of the PWA that uses the same IndexedDB queue. */
+function queueLock(): string {
+  return `hr:${queueKey}`;
+}
+
+type TelemetryFence = (name: string) => boolean;
+let telemetryFence: TelemetryFence | null = null;
+
+/**
+ * Accept only the names `allow` accepts; `null` lifts the fence
+ * (F-BROWSE-001 section 4.10). A rejected name makes `track()` return false
+ * before validation, listeners, the network or the queue. A fence that
+ * throws rejects (fail closed).
+ */
+export function setTelemetryFence(allow: TelemetryFence | null): void {
+  telemetryFence = allow;
+}
+
+function fenceAllows(name: string): boolean {
+  if (!telemetryFence) return true;
+  try {
+    return telemetryFence(name) === true;
+  } catch {
+    return false;
+  }
+}
 
 async function postEvent(
   endpoint: string,
@@ -65,7 +104,7 @@ async function postEvent(
  * see; the next event or flush tries again. Unparsable data counts as empty.
  */
 async function readQueue(): Promise<QueuedEvent[]> {
-  const stored = await readJsonStrict<unknown>(QUEUE_KEY);
+  const stored = await readJsonStrict<unknown>(queueKey);
   return Array.isArray(stored) ? (stored as QueuedEvent[]) : [];
 }
 
@@ -87,7 +126,7 @@ interface LockManagerLike {
 function withQueueLock<T>(step: () => Promise<T>): Promise<T> {
   const locks = (globalThis as { navigator?: { locks?: Partial<LockManagerLike> } }).navigator?.locks;
   if (typeof locks?.request !== 'function') return step();
-  return (locks as LockManagerLike).request(QUEUE_LOCK, step);
+  return (locks as LockManagerLike).request(queueLock(), step);
 }
 
 /**
@@ -109,7 +148,7 @@ async function queueEvent(event: TelemetryEvent, at: string): Promise<void> {
   try {
     await serialized(async () => {
       const current = await readQueue();
-      await writeJson(QUEUE_KEY, enqueue(current, { name: event.name, profileId: event.profileId, payload: event.payload, at, id: newEventId() }));
+      await writeJson(queueKey, enqueue(current, { name: event.name, profileId: event.profileId, payload: event.payload, at, id: newEventId() }));
     });
   } catch {
     // Queueing is best effort — never surface storage errors into a game.
@@ -158,7 +197,7 @@ export async function flushQueue(options?: TelemetryClientOptions): Promise<numb
       // Events queued while the batches were sending, by this tab or another
       // one, are the stored events this flush did not read at the start.
       const late = arrivedSince(await readQueue(), start);
-      await writeJson(QUEUE_KEY, late.reduce((q, e) => enqueue(q, e), unsent));
+      await writeJson(queueKey, late.reduce((q, e) => enqueue(q, e), unsent));
     });
   } catch {
     // leave whatever we have; next flush retries
@@ -210,6 +249,7 @@ export async function track(
   options?: TelemetryClientOptions,
 ): Promise<boolean> {
   if (!flags.telemetryEnabled) return false;
+  if (!fenceAllows(event.name)) return false;
 
   // Run validation even when network is off, so dev mode catches typos.
   if (!event.name || typeof event.name !== 'string') return false;
