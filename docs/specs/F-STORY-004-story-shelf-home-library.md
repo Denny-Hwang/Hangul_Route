@@ -162,6 +162,7 @@ Storage key `story:bookmarks:<profileId>` through `platform/storage` `readJson`/
 - **Culture notes** line: "N found" → `CultureNotes { storyId }`; shown only when N ≥ 1.
 - **Reward cards.** For each `rewardCardIds`: earned → `HeritageCardArt` (96) with title, Korean and romanization, tap → `CardDetail`; not earned → a silhouette with the rarity border and no title (no spoilers, `design/wireframes/episode/detail.md`).
 - **States**: *error* (episode id unknown) keeps today's "Episode not found." line but adds a Back button; *progress unreadable* renders rows as *new*; *stories missing from the bundle* renders the existing quest list.
+- *As built (PR 4.6, 2026-10-11):* the page reads the romanization mode through `useRomanizationMode()` (F-BROWSE-001 BR-5c). In hide-until-tap (D2) the Korean titles (the page title and each tale row) are buttons that play the title and reveal its romanization, as the word chips do (`episodeTitleKorean`); Always mode is unchanged. Content gating on this page is F-ENT-003 E3-6's (episode page preview state and the `QuestPlayer` guard), not this row's.
 
 ### 3.7 Home "Story time" card
 

@@ -110,8 +110,12 @@ export interface Db {
    * its own request before treating the answer as a conflict.
    */
   createTransfer(row: StoredTransfer, event: Omit<NewTransferEvent, 'transferId'>): Promise<'created' | 'already_open'>;
-  /** Fill pending slot(s) of an open request. The destination slot needs the learner slot consented; a learner consent sets `executeAfter` = now + 48 h. */
-  consentSlot(id: string, consent: TransferSlotConsent, now: Date): Promise<number>;
+  /**
+   * Fill pending slot(s) of an open request. The destination slot needs the learner slot consented; a learner consent sets `executeAfter` = now + 48 h.
+   * With `events` (the consenting account and its `via` / basis, one per slot), the audit rows are written in the same transaction, only by the call
+   * whose CAS filled the slot(s): a lost race writes no event, and an event that cannot be written undoes the consent.
+   */
+  consentSlot(id: string, consent: TransferSlotConsent, now: Date, events?: ReadonlyArray<Omit<NewTransferEvent, 'transferId'>>): Promise<number>;
   /**
    * End an open request as `declined` by one slot. With `event` (the deciding account and its `via` / reason,
    * which the row does not store), the audit row is written in the same transaction, only by the call whose
@@ -120,8 +124,8 @@ export interface Db {
   declineSlot(id: string, slot: TransferSlot, endReason: TransferEndReason, endActor: TransferEndActor, now: Date, event?: Omit<NewTransferEvent, 'transferId'>): Promise<number>;
   /** End an open request as `cancelled`; `event` as for `declineSlot`. */
   cancelTransfer(id: string, endReason: TransferEndReason, endActor: TransferEndActor, now: Date, event?: Omit<NewTransferEvent, 'transferId'>): Promise<number>;
-  /** `expired` once `expiresAt <= now`. */
-  expireTransfer(id: string, now: Date): Promise<number>;
+  /** `expired` once `expiresAt <= now`; `event` (the system's `expired` row) as for `declineSlot`. */
+  expireTransfer(id: string, now: Date, event?: Omit<NewTransferEvent, 'transferId'>): Promise<number>;
   /** Archived source (section 4.13): a pending source slot becomes `not_required`. */
   markSourceNotRequired(id: string, now: Date): Promise<number>;
   /** `requested` -> `approved` when every slot is in. */

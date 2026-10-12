@@ -154,6 +154,9 @@ export const a11y = {
         .filter((part) => part !== '')
         .join(' '),
     homeStripGoal: (n: number, title: string) => `Goal: Stage ${n}, ${title}`,
+    /** The parent dashboard row (R-9b): its goal and started lines, read without the middle dot. */
+    rowGoal: (n: number, title: string) => `Goal: Stage ${n}, ${title}.`,
+    rowStarted: (n: number, band: string, date: string) => `Started: Stage ${n}, ${band}, ${date}.`,
   },
   /**
    * The vocabulary question view (F-VOC-004 §3.8, S-4b): the speaker, the outcome said in words after a

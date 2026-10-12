@@ -455,7 +455,7 @@ Coverage: `apps/mobile/src/logic` >= 90 % with `logic/my-route/` at 100 %; `pack
 | R-7c | `feat(mobile)`: letter wall + jamo-id adapter | S | Q-6a (partial), Q-8 (complete) |
 | R-8 | `feat(content-schema,mobile)`: `JourneySummarySchema`, sync-store input, backend tests | M | R-1a; deploy in D2 |
 | R-9a | `feat(web)`: `journey-strip.ts`, roster card strip (class and family) | M | R-8 deployed |
-| R-9b | `feat(mobile)`: parent dashboard Journey row, read-only page | M | R-3, PR 8a (#172) |
+| R-9b | `feat(mobile)`: parent dashboard Learning Route row (`logic/my-route/dashboard-row.ts`, `screens/parent/LearningRouteRow.tsx`), read-only page through `MyRoute { profileId, viewer: 'grownup' }` (optional `viewer` until LR-4 makes it required); `dashboardRowView` takes an optional `goalStage`, fed by LR-5a; the Started line is left to the Starting spot row while `flags.placementEnabled` shows it (one level check per card); the read-only page has no episode, tile or stories link | M | R-3, PR 8a (#172) |
 | R-J | `feat(mobile)`: Journey pill wording (no "Premium" on a learner screen; "Taste" -> "A taste"; "Soon" -> "Coming later"); the stage header is a plain row, never a lock or a paywall door (review) | S | OD-8 |
 | R-10 | `test(e2e)` + flag flip for beta; `my-route.spec.ts` runs a flag-on build and covers the Home strip entry too (strip visible, no "Stage 1 progress", its one-button label, no horizontal scroll at 320 and 844x390, tap opens the page with `source: 'home'`); es and ko values for the R-3 and R-4b strings (`learner.myRoute.*`, `a11y.myRoute.*`, including `home.strip.*` and `homeStrip*`) before the flip, else the flip is `en` only | S | R-3, R-4b, es / ko review (else `en` only) |
 

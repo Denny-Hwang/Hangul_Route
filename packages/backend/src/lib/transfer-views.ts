@@ -16,7 +16,7 @@ import type { Db, StoredTransfer, TransferEndActor } from '../db';
 import { isEndedTransfer, isOpenTransfer } from '../db/transfer-rules';
 import type { Learner } from '../store';
 import { learnerContexts } from './access';
-import { premiumChangeFor } from './transfer';
+import { consentTermsDigest, consentTermsFor, premiumChangeFor } from './transfer';
 
 /*
  * Class-transfer views — F-SPACE-002 section 4.2 "Views". Each party gets its
@@ -127,6 +127,12 @@ export interface TransferLearnerSideView extends LearnerSideTerms {
   learnerRoute: TransferLearnerRoute;
   /** Set only when this side (a guardian or the learner's device) ended it. */
   endedFrom: TransferEndedFrom | null;
+  /**
+   * The digest of the sheet this view shows (section 4.11), while the learner slot is still to be filled on an
+   * open request; an approve of the learner slot sends it back and is refused (`409 terms_changed`) when the
+   * live terms moved on. Null once there is nothing left to agree to.
+   */
+  termsDigest: string | null;
 }
 
 /**
@@ -339,7 +345,9 @@ export async function learnerSideView(db: Db, t: StoredTransfer, look: ViewLooku
   const source = look.spaces.get(t.sourceSpaceId);
   const dest = look.spaces.get(t.destSpaceId);
   const ended = isEndedTransfer(t);
-  const terms = isOpenTransfer(t) && source && dest ? await learnerSideTerms(db, t.learnerId, source, dest, ctx.now) : NEUTRAL_TERMS(dest);
+  const live = isOpenTransfer(t) && source && dest ? { source, dest } : null;
+  const terms = live ? await learnerSideTerms(db, t.learnerId, live.source, live.dest, ctx.now) : NEUTRAL_TERMS(dest);
+  const termsDigest = live && t.learner.state === 'pending' ? await learnerSheetDigest(db, t.learnerId, live.source, live.dest, terms, ctx.now) : null;
   const facts: DestinationFacts = dest ? await factsOnce(db, dest, look, ctx.now) : { ownerName: null, schoolName: null, ageBucket: null, learnerCount: 0 };
   return {
     id: t.id,
@@ -362,5 +370,12 @@ export async function learnerSideView(db: Db, t: StoredTransfer, look: ViewLooku
     endedAt: t.endedAt,
     learnerRoute: learnerRouteFor({ initiator: t.initiator, selfManaged: ctx.selfManaged, caregiverRoute: ctx.caregiverRoute, deviceConsent: ctx.deviceConsent }),
     endedFrom: ended ? endedFromOf(t.endActor) : null,
+    termsDigest,
   };
+}
+
+/** The digest of a learner-side sheet, from the same terms the sheet shows (`premiumChange` computed once). */
+export async function learnerSheetDigest(db: Db, learnerId: string, source: Space, dest: Space, sheet: LearnerSideTerms, now: Date): Promise<string> {
+  const terms = await consentTermsFor(db, learnerId, source, dest, now, sheet.premiumChange);
+  return consentTermsDigest(terms, { premiumChange: sheet.premiumChange, destinationConsentMode: sheet.destinationConsentMode, relinkAffected: sheet.relinkAffected, sourcePlansAffected: sheet.sourcePlansAffected });
 }

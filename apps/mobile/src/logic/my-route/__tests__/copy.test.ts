@@ -329,6 +329,15 @@ describe('copyViolations catches each rule', () => {
       expect(copyViolations(text, 'en', surface, args)).toContain(rule);
     });
 
+  it('a string argument (a band label, a formatted date) clears only its own digits', () => {
+    expect(copyViolations('Started: Stage 1 · Letters · Oct 9', 'en', 'caregiver', [1, 'Letters', 'Oct 9'])).toEqual([]);
+    // A digit the template wrote is still caught next to a string argument.
+    expect(copyViolations('Started: Stage 2 · Oct 9', 'en', 'caregiver', ['Oct 9'])).toContain('digit not from an argument');
+    // A ratio or a percent carried by a string argument is still caught: those rules read the whole text.
+    expect(copyViolations('Started: 3/8', 'en', 'caregiver', ['3/8'])).toContain('ratio');
+    expect(copyViolations('Started: 40%', 'en', 'caregiver', ['40%'])).toContain('percent');
+  });
+
   it('lets a grown-up name the level check, and a11y carry digits', () => {
     expect(copyViolations('The level check looks at reading.', 'en', 'caregiver')).toEqual([]);
     expect(copyViolations('Stage 2, Words.', 'en', 'a11y')).toEqual([]);
