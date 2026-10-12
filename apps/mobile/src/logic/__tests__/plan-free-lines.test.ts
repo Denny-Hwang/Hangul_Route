@@ -5,9 +5,8 @@ import { LOCALES, getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { episodesAll, questsAll } from '../../content';
 import { FREE_VOCAB_TOPIC_IDS, freeExtrasCount, questOpenPredicate } from '../content-access';
-import { cursorContext } from '../cursor-context';
 import { emptySnapshot } from '../my-route/view';
-import { classOnlyMember, freeEndOnCursor, hasPlanNow, planFreeLines, readFreeFacts, type FreePlanContext, type PlanFreeLinesInput } from '../plan-free-lines';
+import { classOnlyMember, freeEndNow, hasPlanNow, planFreeLines, readFreeFacts, type FreePlanContext, type PlanFreeLinesInput } from '../plan-free-lines';
 import { placementResult } from '../placement/__tests__/fixtures';
 
 /**
@@ -178,7 +177,7 @@ describe('hasPlanNow: the no-plan line never shows before the plans and the prog
   });
 });
 
-describe('freeEndOnCursor: the learner finished everything open (routeNext steps 3 and 4, cursor half)', () => {
+describe('freeEndNow: the learner reached free-end (routeNext, section 3.5 steps 3 and 4)', () => {
   const FREE = [...freeRouteQuestIds(CATALOG)];
   const done = (ids: readonly string[]): ProgressSnapshot => ({
     ...emptySnapshot('p1'),
@@ -188,14 +187,18 @@ describe('freeEndOnCursor: the learner finished everything open (routeNext steps
     const gating = over.gatingActive ?? true;
     const tier = over.tier ?? 'free';
     const completed = new Set(snapshot.quests.filter((q) => q.completedAt).map((q) => q.questId));
-    const cursor = cursorContext({
-      tier,
-      placements: over.placedOut ? [placementResult({ placedOutQuestIds: [...over.placedOut] })] : undefined,
+    const snap = over.placedOut ? { ...snapshot, placements: [placementResult({ placedOutQuestIds: [...over.placedOut] })] } : snapshot;
+    return freeEndNow({
+      snapshot: snap,
+      profileId: 'p1',
+      today: '2026-10-12',
+      plans: [],
       quests: questsAll,
       episodes: episodesAll,
+      tier,
+      gatingActive: gating,
       isQuestOpen: questOpenPredicate({ tier, gatingEnabled: gating, completedQuestIds: completed }),
     });
-    return freeEndOnCursor({ gatingActive: gating, tier, snapshot, quests: questsAll, episodes: episodesAll, cursor });
   };
 
   it('false for a new learner, and while one free lesson is left', () => {
@@ -218,12 +221,8 @@ describe('freeEndOnCursor: the learner finished everything open (routeNext steps
     // Every quest kept: nothing new is open and nothing is closed, so it is rest, not free-end.
     expect(run(done(everything))).toBe(false);
   });
-
-  it('false when the caller gave no access predicate (every quest open)', () => {
-    const cursor = cursorContext({ tier: 'free', placements: undefined, quests: questsAll, episodes: episodesAll });
-    expect(freeEndOnCursor({ gatingActive: true, tier: 'free', snapshot: done(FREE), quests: questsAll, episodes: episodesAll, cursor })).toBe(false);
-  });
 });
+
 
 describe('no figure is typed (section 3.9.1: "never typed")', () => {
   it('the module reads every number from its input', () => {

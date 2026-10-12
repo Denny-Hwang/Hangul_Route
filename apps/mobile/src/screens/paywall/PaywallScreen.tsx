@@ -10,9 +10,9 @@ import { episodesAll, questsAll } from '../../content';
 import { vocabTopics } from '../../content/vocab';
 import { useMessages } from '../../i18n/use-messages';
 import { freeExtrasCount } from '../../logic/content-access';
-import { cursorContext } from '../../logic/cursor-context';
+import { dayKey } from '../../logic/homework/mission-builder';
 import { billingNote, billingOpenedEvent, billingPressStep, pendingBillingStep, planView } from '../../logic/paywall';
-import { classOnlyMember, freeEndOnCursor, hasPlanNow, readFreeFacts, type FreePlanContext } from '../../logic/plan-free-lines';
+import { classOnlyMember, freeEndNow, hasPlanNow, readFreeFacts, type FreePlanContext } from '../../logic/plan-free-lines';
 import { grownUpEntriesOn, planOpenBlocked } from '../../logic/shell/entry-points';
 import type { RootStackParamList } from '../../navigation/types';
 import { openBilling } from '../../platform/billing-handoff';
@@ -73,16 +73,19 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
     if (!gating) return { gatingActive: false, facts: null, stories: 0, topics: 0, classOnly: false, freeEnd: false, hasPlan };
     const freeEnd =
       snap !== undefined &&
-      freeEndOnCursor({
-        gatingActive: gating,
-        tier: accessTier,
+      freeEndNow({
         snapshot: snap,
+        profileId: learnerId,
+        today: dayKey(new Date().toISOString()),
+        plans,
         quests: questsAll,
         episodes: episodesAll,
-        cursor: cursorContext({ tier: accessTier, placements: snap.placements, quests: questsAll, episodes: episodesAll, isQuestOpen: questOpen }),
+        tier: accessTier,
+        gatingActive: gating,
+        isQuestOpen: questOpen,
       });
     return { gatingActive: gating, ...freeBundleFacts(), classOnly: classOnlyMember(memberships), freeEnd, hasPlan };
-  }, [gating, accessTier, questOpen, snap, memberships, plans]);
+  }, [gating, learnerId, accessTier, questOpen, snap, memberships, plans]);
 
   const view = planView(
     { tier: entitled.tier, source: entitled.source, audience, name: profile?.displayName ?? null, platform: Platform.OS, freePlan },

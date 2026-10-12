@@ -1,11 +1,9 @@
-import type { Episode, FreeLessonsFacts, InboxPlan, LearnerMembership, ProgressSnapshot, Quest } from '@hangul-route/content-schema';
+import type { FreeLessonsFacts, InboxPlan, LearnerMembership, ProgressSnapshot } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
-import type { CursorContext } from './cursor-context';
-import type { Tier } from './entitlement';
 import { sourcesOf } from './homework/plan-derivation';
-import { nextQuestAfter, offerableQuests } from './next-quest';
 import type { PaywallState } from './paywall';
 import type { DeviceAudience } from './profiles/learner-type';
+import { routeNext, routeNextInputOf, type RouteNextContext } from './route-next';
 
 /**
  * The lines F-ENT-003 adds to F-BILL-002's learner Plan screen (F-ENT-003 section 3.9.1, row E3-8;
@@ -32,7 +30,7 @@ export interface FreePlanContext {
   topics: number;
   /** The learner's only space memberships are classes or schools (`classOnlyMember`). */
   classOnly: boolean;
-  /** The learner finished everything open on the free plan (`freeEndOnCursor`). */
+  /** The learner finished everything open on the free plan (`freeEndNow`). */
   freeEnd: boolean;
   /** The learner has a plan to follow: an inbox plan or an active self plan (`hasPlanNow`). */
   hasPlan: boolean;
@@ -114,29 +112,10 @@ export function classOnlyMember(memberships: readonly Pick<LearnerMembership, 'k
   return memberships !== undefined && memberships.length > 0 && memberships.every((ms) => ms.kind !== 'family');
 }
 
-export interface FreeEndInput {
-  gatingActive: boolean;
-  /** The access tier (`accessTier`), never a billing tier. */
-  tier: Tier;
-  snapshot: ProgressSnapshot;
-  quests: readonly Quest[];
-  episodes: readonly Episode[];
-  /** `cursorContext(...)` with the learner's `isQuestOpen`. */
-  cursor: CursorContext;
-}
-
 /**
- * F-ENT-003 section 3.5 steps 3 and 4, on the one cursor: with the switch on and a free access
- * tier, the cursor has nothing new left that is open (placed-out quests skipped, as step 3 sends a
- * placed-out free learner to free-end) and some playable grid lesson is closed. `routeNext` (row
- * E3-4, not on main yet) owns the full rule with plan sources; once it lands the screen reads
- * `routeNext(...).kind === 'free-end'` instead and this helper goes.
+ * The learner reached `free-end` (F-ENT-003 section 3.5 steps 3 and 4): the one `routeNext`, with
+ * the plan sources, the cursor and the access predicate, so the Plan screen and Home never disagree.
  */
-export function freeEndOnCursor(input: FreeEndInput): boolean {
-  if (!input.gatingActive || input.tier !== 'free') return false;
-  const open = input.cursor.isQuestOpen;
-  if (!open) return false;
-  const next = nextQuestAfter({ snapshot: input.snapshot, quests: input.quests, episodes: input.episodes, ...input.cursor });
-  if (next) return false;
-  return offerableQuests(input.quests, input.episodes, input.cursor.isEntitled).some((q) => !open(q.id));
+export function freeEndNow(c: RouteNextContext): boolean {
+  return routeNext(routeNextInputOf(c)).kind === 'free-end';
 }

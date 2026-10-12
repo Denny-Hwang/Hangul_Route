@@ -51,7 +51,7 @@ describe('Plan screen (screens/paywall/PaywallScreen.tsx)', () => {
     expect(plan).toMatch(/if \(!gating\) return \{ gatingActive: false, facts: null, stories: 0, topics: 0, classOnly: false, freeEnd: false, hasPlan \};/);
     expect(plan).toContain('hasPlanNow(plans, snap)');
     expect(plan).toContain('freeLessonsFacts(CATALOG)');
-    expect(plan).toContain('freeEndOnCursor(');
+    expect(plan).toContain('freeEndNow(');
     expect(plan).toContain('classOnlyMember(');
     // Figures come from data: no count is typed on the screen.
     expect(plan).not.toMatch(/\b(11|15|24|50|65) (lessons|letters|minutes)\b/);
