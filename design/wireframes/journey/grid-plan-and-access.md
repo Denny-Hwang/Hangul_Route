@@ -25,7 +25,7 @@ Then: one cell shows where to go next, the cells of the plan's coming items are 
 |                                            |
 | (1) Hangul ......................[ Open ]  |  <- stage row: plain, never a button
 |  +------+ +------+ +------+ +------+ +------+
-|  | [pin]| |(====)| |      | |      | |      |
+|  |  v   | |(====)| |      | |      | |      |
 |  |  L   | |  L   | |  R   | |  N   | |  C   |  <- cell initial (unchanged)
 |  +------+ +------+ +------+ +------+ +------+
 |   Next    In your   (all of Stage 1 is free:|
@@ -39,7 +39,8 @@ Then: one cell shows where to go next, the cells of the plan's coming items are 
 |  ...                                       |
 +--------------------------------------------+
 
-[pin]  = drawn pin glyph (R-2a), top-left of the cell: the routeNext cell, at most one
+  v    = the Next triangle (the pip rows' cursor marker), centred over the top edge of the routeNext cell, at most one
+         (E3-D D1: not the `pin`, which marks the level check's start cell on the same grid)
 (====) = solid ring (border.shape): a cell holding an In your plan item (leading source, inside the horizon)
 :....: = dotted ring around the cell art (the Learning Route "later" pip shape at cell scale):
          free learner, switch on, a cell of Stage 2 onward with no kept quest (F-ENT-003 OD-1: all of
@@ -48,7 +49,7 @@ Then: one cell shows where to go next, the cells of the plan's coming items are 
 
 - Precedence on one cell: Next > In your plan > Not open yet. A closed cell is never Next and never In your plan.
 - A subscriber, anyone while the switch is off, and every native store build see **no** dotted ring anywhere.
-- No solid ring for the default route (no plan): the whole grid is the route; only [pin] shows.
+- No solid ring for the default route (no plan): the whole grid is the route; only the Next triangle shows.
 - Stage rows keep the availability word (Open / A taste / Coming later); a stage is never a lock or a door to a purchase.
 - Never on this screen: a lock glyph, "Ask a grown-up", a price, a product name, "Premium", a count of free lessons.
 
@@ -56,7 +57,7 @@ Then: one cell shows where to go next, the cells of the plan's coming items are 
 
 - Tap any cell (including a dotted cell) -> `episode/detail` (one pane) or select it in the right pane (two panes, F-LAYOUT-001 §3.7). A dotted cell opens the preview state of `episode/detail-access-preview`.
 - No long-press, no tooltip, no purchase entry on this screen.
-- `route.next_started { surface: 'journey' }` fires only when a quest is started from the episode page reached through the [pin] cell (sent by the episode page).
+- `route.next_started { surface: 'journey' }` fires only when a quest is started from the episode page reached through the Next cell (sent by the episode page).
 
 ## Navigation graph
 
@@ -65,13 +66,13 @@ Exit to: `episode/detail` (`EpisodeDetail { episodeId }`) · right pane of `jour
 
 ## States
 
-- **Subscriber with a plan**: [pin] on the `routeNext` cell, solid rings on the leading source's cells inside the horizon, no dotted ring.
-- **No plan** (subscriber, or free with the switch off): [pin] on the default-route cursor cell, no solid ring, no dotted ring.
-- **Free, switch on, any learner**: [pin] on the `routeNext` cell (Meet the Letters for a new learner); no dotted ring on any Stage 1 cell; dotted rings on Stage 2 life and nature and Stage 4 rites (the playable cells past Stage 1 today).
-- **Free, switch on, free lessons finished** (`free-end`, all of Stage 1 done): no [pin]; dotted rings on the closed cells; the Stage 1 cells show their completion tint.
+- **Subscriber with a plan**: Next on the `routeNext` cell, solid rings on the leading source's cells inside the horizon, no dotted ring.
+- **No plan** (subscriber, or free with the switch off): Next on the default-route cursor cell, no solid ring, no dotted ring.
+- **Free, switch on, any learner**: Next on the `routeNext` cell (Meet the Letters for a new learner); no dotted ring on any Stage 1 cell; dotted rings on Stage 2 life and nature and Stage 4 rites (the playable cells past Stage 1 today).
+- **Free, switch on, free lessons finished** (`free-end`, all of Stage 1 done): no Next; dotted rings on the closed cells; the Stage 1 cells show their completion tint.
 - **Free learner with kept quests past Stage 1** (a taste finished before the switch turned on): no dotted ring on a cell that holds any kept quest.
 - **Empty** (no playable episode, content failed to load): the existing coming-soon pane; no marks.
-- **Error** (tier cache or snapshot unreadable): fail open — treated as the switch-off state; no dotted ring, [pin] from the default route.
+- **Error** (tier cache or snapshot unreadable): fail open — treated as the switch-off state; no dotted ring, Next from the default route.
 
 ## Accessibility
 
@@ -87,4 +88,4 @@ Exit to: `episode/detail` (`EpisodeDetail { episodeId }`) · right pane of `jour
 ## Open questions
 
 - OD-10 (default: Next plus the leading source's cells inside the horizon). OD-6 resolved with LR-OD-8 (dotted ring plus "Not open yet").
-- Beta check: do learners with a plan follow [pin] more often than the default cursor (`route.next_started` by surface)?
+- Beta check: do learners with a plan follow Next more often than the default cursor (`route.next_started` by surface)?

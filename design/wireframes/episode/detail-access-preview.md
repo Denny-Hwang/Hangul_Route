@@ -31,7 +31,7 @@ Then: a subscriber sees which quest is next and which are in their plan, with ev
 | |     blurb                              | |
 | |     [ Play again ]                     | |
 | +----------------------------------------+ |
-| | (2) Family at the Table  [pin] Next    | |  <- tag: drawn pin + word
+| | (2) Family at the Table  [Next]        | |  <- Next triangle over (2) + the word (E3-D D6)
 | |     blurb            (====) In your plan| |  <- tag: solid ring + word
 | |     [[ START ]]                        | |  <- the primary of the page
 | +----------------------------------------+ |

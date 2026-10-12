@@ -2,7 +2,7 @@ Status: ready
 
 # F-ENT-003 — Free plan: all of Stage 1, everything open for subscribers, and one "next" that follows the learner's own plan
 
-> **Status note.** `ready` (revision 3.1, 2026-10-12: section 3.4 written back from the reviews of PR E3-2; revision 3: the owner's decision on OD-1 applied on 2026-10-11, PR E3-0b; revision 2 came after two reviews on 2026-10-11; the review log is at the end). `ready` means: every behaviour below is decided, each owner question in section 9 has a default that applies until the owner answers, and no answer blocks a PR outside the rows it names. Basis: `origin/main` `ea9049e4` (2026-10-11). Every `file:line` below is at that commit.
+> **Status note.** `ready` (revision 3.2, 2026-10-12: sections 3.7, 3.11 and 3.14 written back from the E3-D design pass, `design/components/RouteMarkers/spec.md`; revision 3.1, 2026-10-12: section 3.4 written back from the reviews of PR E3-2; revision 3: the owner's decision on OD-1 applied on 2026-10-11, PR E3-0b; revision 2 came after two reviews on 2026-10-11; the review log is at the end). `ready` means: every behaviour below is decided, each owner question in section 9 has a default that applies until the owner answers, and no answer blocks a PR outside the rows it names. Basis: `origin/main` `ea9049e4` (2026-10-11). Every `file:line` below is at that commit.
 >
 > **Owner request 2026-10-11 (binding), items 9 and 10.** Item 9: "Free plan: show a bit more — learnable up to about day 2." **Owner decision on OD-1 (2026-10-11): the free plan keeps all of Stage 1 open (11 lessons now, 15 when Stage 1 is complete); the "first 6 lessons" default of revision 2 is rejected; paid plans open Stage 2 onward; enforcement stays off until Stripe Live.** Item 10: "Subscribers: do not lock the content; show the whole content, but make it intuitive to learn along their own configured curriculum." This spec turns both into rules. Its siblings from the same request are F-SITE-002 (item 2, the intro site), F-APP-001 (items 3 to 6, persona homes), F-REPORT-001 (items 4 and 6, reports), F-FEEDBACK-001 (item 7), F-BILL-002 (items 8 and 12, billing), the LEARNING ROUTE amendment to F-ROUTE-001 (item 11, `AMENDMENTS-ROUTE-LEARNING-ROUTE.md`, "LR" below) and F-BROWSE-001 (item 14). **This spec owns three shared things the siblings use:** the access predicate (`questAccess`), the one "next" function (`routeNext` with its "In your plan" set), and the glossary of access words (section 3.11). Section 6.4 lists the exact lines each sibling adopts.
 >
@@ -237,18 +237,20 @@ export function planView(i: RouteNextInput): PlanView;
 
 ### 3.7 Learner screens: Journey, episode page, Home, Library (any age)
 
-**Marks (one shape each, E3-D mock; never colour alone).** **Next** = the drawn `pin` glyph. **In your plan** = a solid ring (`border.shape`). **Not open yet** = a dotted ring, the same shape as the `later` pip of the Learning Route (LR §4.5) at cell scale. No lock glyph on any learner screen (OD-6).
+**Marks (one shape each, E3-D mock `design/components/RouteMarkers/spec.md`; never colour alone).** **Next** = the cursor triangle of the pip rows (`cursorMarkerParts`), not the `pin`, which already means "You started here" on the Journey (E3-D D1). **In your plan** = a solid ring (`border.shape`). **Not open yet** = a dotted ring, the same shape as the `later` pip of the Learning Route (LR §4.5) at cell scale. No lock glyph on any learner screen (OD-6).
 
 **Journey** (`screens/journey/JourneyScreen.tsx`, wireframe `journey/grid-plan-and-access.md`)
 
-- **Next.** The cell that holds `routeNext`'s quest carries the `pin`; its accessibility label appends "Next". One cell at most. Hidden at `rest` and `free-end`.
+- **Next.** The cell that holds `routeNext`'s quest carries the Next triangle over its top edge; its accessibility label appends "Next". One cell at most. Hidden at `rest` and `free-end`.
+- **Legend line** (E3-D D4). Under the intro, one line shows each mark the grid draws with its word (Next, In your plan, Not open yet), so the words are on the page (§3.14); hidden from screen readers, because the cell labels carry them.
+- **Coming-later cells** (no shipped episode) lose today's lock glyph and stay sunken and empty (E3-D D5, OD-6).
 - **In your plan.** Cells in `planView().inPlanEpisodeIds` carry the solid ring and the label suffix "In your plan". Only while a plan exists; no ring for the default route (the route is the whole grid).
 - **Not open yet** (effective switch on, free): the cell keeps its art, colour and tap; the dotted ring sits around the cell art and the label reads "{episode}: not open yet. Opens the lesson page." A cell with any kept quest shows no ring. The stage pill keeps the availability word (R-J); no stage row is ever a lock or a door to a purchase.
 - **Subscribers and the switch-off state show no access mark at all.** Precedence on one cell: Next > In your plan > Not open yet (a closed cell is never Next or In your plan).
 
 **Episode page** (`screens/episode/EpisodeDetailView.tsx`, wireframe `episode/detail-access-preview.md`)
 
-- **Open quest rows** are unchanged. A row whose quest is `routeNext` carries the tag **Next**; a row in `planView().inPlanQuestIds` carries **In your plan** (drawn shape plus word).
+- **Open quest rows** are unchanged. A row whose quest is `routeNext` carries the tag **Next** (the Next triangle over the row's number, the word in a chip); a row in `planView().inPlanQuestIds` carries **In your plan** (the solid ring and the word in a chip). On the episode page the waiting card tile draws the `card` glyph instead of `lock` (E3-D D6, D7).
 - **Preview** (effective switch on, free, at least one closed quest in the episode): the page shows everything it shows today (pills, title, Hoya intro, the quest list with titles and blurbs, the letters each quest teaches as `KoreanText` chips, the cards to earn). Each closed row replaces its Start button with the caption **Not open yet**; kept rows keep **Play again**. Under the list, one card: Hoya `reading`, the line **This lesson is not open yet. You can still see what it teaches.**, the secondary button **{ask}** (below), and the ghost link **Back to open lessons** -> the `routeNext` episode (or the first free word topic at `free-end`). The page has no primary button in preview.
 - **The ask button** (`askFor(audience, classOnly)` in `logic/access-copy.ts`, unit tested):
 
@@ -361,7 +363,7 @@ Item 10's guidance needs a configured plan. Class and family plans can be made t
 | the free part | never counted on learner screens; the free-end title says "your first lessons" | **"Stage 1 is free: {lessons} lessons, {letters} letters, about {minutes} minutes. Everything finished stays."** (numbers from `freeLessonsFacts`); the static site, which cannot read data, keeps "Stage 1 is free." (F-SITE-002 `landing.plans.free.stage1`), which stays true before and after the flip (OD-1) | — |
 | all open quests done | **You finished your first lessons!** (once), then **You played every quest that is open for you.** (`learner.access.openForYou`; LR's `hero.openForYou` uses this key) | "{name} finished the free lessons." | — |
 | the learner's curriculum | **In your plan**, **Next in your plan**, **Back to your plan** | "plan" (console wizard, reports) | solid ring |
-| the one next quest | **Next** | — | `pin` |
+| the one next quest | **Next** | — | cursor triangle (E3-D) |
 | the way to the grown-up | **Ask a grown-up** / **Ask your teacher or a grown-up** / **See how to open it** (section 3.7 table) | **Open billing** (F-BILL-002's label; never "See plans") | — |
 | replay | **Play a favorite again** (`learner.access.replay.cta`, US spelling, shared with LR) | — | — |
 
@@ -401,7 +403,7 @@ The draft `paywall/free-plan-days.md` of revision 1 is replaced by `billing/plan
 
 ### 3.14 Accessibility
 
-- **No colour-only meaning.** Next = drawn `pin` plus the word in the label; In your plan = solid ring plus the word; Not open yet = dotted ring plus the words on the page and in the cell label. Shapes use `border.shape` (4.55:1 on paper, F-ROUTE-001 R-2b); the E3-D mock checks solid against dotted in greyscale and protanopia at the Journey cell size.
+- **No colour-only meaning.** Next = the drawn cursor triangle plus the word (legend line, episode chip, label); In your plan = solid ring plus the word; Not open yet = dotted ring plus the words on the page and in the cell label. Shapes use `border.shape` (4.55:1 on paper, F-ROUTE-001 R-2b); the E3-D mock checked solid against dotted in greyscale and protanopia at the Journey cell size (assumption b holds: one unbroken run against 8 dashes, at least 4.54:1, at 1x to 3x).
 - **Labels equal what is shown.** A cell label reads title, then state words in the order Next, In your plan, not open yet. The preview card is a group whose label reads the line; the buttons are buttons with their text as label.
 - **Targets.** Cells keep their size; the ask button, **Back to open lessons**, **Practice words** and **Play a favorite again** use `Button` (`touchTarget.min` or larger). Body text 18 or larger; reflow at 320 x 568, landscape and 200 % text.
 - **Focus.** On the preview page focus lands on the title, then the quest list, then the preview card. On the free-end card focus lands on the title.
@@ -607,7 +609,7 @@ Spec decisions (engineering, reversible):
 | # | Assumption | Verified in |
 |---|---|---|
 | a | every quest F-QUEST-002 Q-7b (merged, #365) and Q-8 add to Stage 1 is a lesson of a Stage 1 cell, so it is free without a code change | E3-1a live-catalogue test |
-| b | a solid ring and a dotted ring are told apart at Journey cell size at 320 dp, in greyscale | E3-D mock |
+| b | a solid ring and a dotted ring are told apart at Journey cell size at 320 dp, in greyscale | E3-D mock: holds, also in protanopia (`design/components/RouteMarkers/spec.md`) |
 | c | every class, family and self plan item reaches the device as a pending `snapshot.homework` entry `<sourceId>#<questId>` inside the horizon (P2-5) | E3-4 tests on derived fixtures |
 | d | a plan generated with `unlockedStages: ['stage1']` schedules exactly the free lessons, so the wizard needs no new generator input (OD-1) | E3-1a golden test |
 | e | `gateOpensDirectly` already sends a self-only device with no PIN to the `Paywall` route from any `from` | E3-6 e2e |
@@ -637,6 +639,8 @@ Spec decisions (engineering, reversible):
 | becomes premium | no rings; Next on Lunch Box Words | New: `stage2-life-q1` | — |
 
 ## Review log
+
+**Revision 3.2 (2026-10-12), the E3-D design pass** (`design/components/RouteMarkers/spec.md`). Written back: Next is the cursor triangle, not the `pin` (§3.7, §3.11, §3.14; the `pin` means "You started here" on the same grid); the Journey legend line; coming-later cells without the lock glyph; the episode row tags and the waiting card glyph. The other decisions of the pass (ring geometry, corner glyphs over the ring, paper free-end cards, the earned row, `learner.access.practice.topicTitle`) live in the component spec.
 
 **Revision 3.1 (2026-10-12), after two reviews of PR E3-2 (#390).** No blocker or major finding; minors applied in the PR unless listed.
 
