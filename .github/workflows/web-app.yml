@@ -256,6 +256,10 @@ jobs:
             # quest, its Episode page and Culture notes line. The whole file needs the fixture bundle
             # (it used to run only its "Episode page" group, so 5 of its 7 tests ran nowhere).
             story-results
+            # F-STORY-004 PR 4.8: the shelf end to end from the learner's entry points (Home story
+            # card, resume, Library Story Time and Culture, the story episode page, Culture notes).
+            # Anchored on ".spec" so a later story-shelf-*.spec.ts (row 4.8b) is not pulled in here.
+            story-shelf.spec
           )
           list() { pnpm exec playwright test --list "$@"; }
           {
