@@ -23,7 +23,7 @@ const SCREENS: Readonly<Record<MainTabName, React.ComponentType>> = {
   Library: LibraryScreen,
 };
 
-const LABEL_STYLE: TextStyle = { fontSize: typography.size.caption, fontWeight: '600' };
+const LABEL_STYLE: TextStyle = { fontSize: typography.size.caption, fontWeight: typography.weight.semibold };
 /** The navigator's own label offset beside the icon (wide windows), on the spacing scale. */
 const LABEL_BESIDE: TextStyle = { marginLeft: spacing.lg + spacing.xs, marginTop: spacing.xxs };
 

@@ -128,12 +128,18 @@ function PipLegend({ accent }: { accent: string }): React.ReactElement {
   );
 }
 
-/** Fades a row's pips in once when a quest was finished since the last open; never when motion is reduced. */
+const FRESH_FROM = 0.3;
+
+/**
+ * Fades a row's pips in once when a quest was finished since the last open; never when motion is reduced.
+ * It restarts from faded each time `fresh` turns on, so it also plays on a later open of a mounted Route tab.
+ */
 function FreshFill({ fresh, reducedMotion, children }: { fresh: boolean; reducedMotion: boolean; children: React.ReactNode }): React.ReactElement {
   const animate = fresh && !reducedMotion;
-  const opacity = useRef(new Animated.Value(animate ? 0.3 : 1)).current;
+  const opacity = useRef(new Animated.Value(animate ? FRESH_FROM : 1)).current;
   useEffect(() => {
     if (!animate) return;
+    opacity.setValue(FRESH_FROM);
     Animated.timing(opacity, { toValue: 1, duration: motion.duration.celebration, useNativeDriver: false }).start();
   }, [animate, opacity]);
   return <Animated.View style={{ opacity }}>{children}</Animated.View>;
