@@ -138,7 +138,7 @@ describe('caregiver dashboard, paywall, spaces and backup', () => {
     expect(w.premium.note('Mina')).toBe('The full journey is open for Mina. Manage your plan on the web console.');
     expect(w.premium.manage.cta).toBe('Manage plan on the web');
     expect(w.free.bubble).toBe('Stage 1 is always free.');
-    expect(w.free.unlocks('Family Plan')).toBe('What Family Plan unlocks');
+    expect(w.free.unlocks('Family Plan')).toBe('What the Family Plan unlocks');
     expect(w.free.openConsole.cta).toBe('Open the web console');
     expect(w.free.openFailed('https://hangulroute.com/teach/billing')).toBe(
       'Open https://hangulroute.com/teach/billing on a computer or phone browser.',

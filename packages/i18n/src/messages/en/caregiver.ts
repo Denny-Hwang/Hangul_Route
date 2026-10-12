@@ -142,7 +142,7 @@ export const caregiver = {
     },
     free: {
       bubble: 'Stage 1 is always free.',
-      unlocks: (offer: string) => `What ${offer} unlocks`,
+      unlocks: (offer: string) => `What the ${offer} unlocks`,
       openConsole: { cta: 'Open the web console' },
       openFailed: (url: string) => `Open ${url} on a computer or phone browser.`,
       terms: 'Renews yearly until cancelled. Terms and privacy are on the website.',

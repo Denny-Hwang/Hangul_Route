@@ -60,6 +60,7 @@ describe('stripe helpers (F-ENT-001 §3.3)', () => {
     expect(sub({ status: 'trialing', current_period_end: end, cancel_at: end })).toMatchObject({ status: 'cancelled', expiresAt: iso(end) });
     // A cancel date before the period end wins.
     expect(sub({ status: 'active', current_period_end: end, cancel_at: end - 86_400 })).toMatchObject({ status: 'cancelled', expiresAt: iso(end - 86_400) });
+    expect(sub({ status: 'active', cancel_at: end })).toMatchObject({ status: 'cancelled', expiresAt: iso(end) }); // no period end in the payload
     // Undoing the cancel returns the row to active.
     expect(sub({ status: 'active', current_period_end: end, cancel_at_period_end: false })).toMatchObject({ status: 'active' });
     // Other statuses are not rewritten by the cancel flag.
