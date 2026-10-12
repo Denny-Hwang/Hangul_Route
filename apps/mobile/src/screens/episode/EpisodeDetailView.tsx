@@ -230,7 +230,10 @@ export function EpisodeDetailView({ episodeId, onStartQuest, onOpenCard, onBack 
                     ) : (
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
                         <Icon name="lock" size={20} color={colors.text.muted} />
-                        <Caption tone="muted">{m.cards.waiting}</Caption>
+                        {/* Shrinks so the line wraps inside the tile (native text in a row does not by default). */}
+                        <Caption tone="muted" style={{ flexShrink: 1 }}>
+                          {m.cards.waiting}
+                        </Caption>
                       </View>
                     )}
                   </Pressable>

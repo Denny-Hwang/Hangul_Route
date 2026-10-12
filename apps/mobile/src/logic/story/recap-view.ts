@@ -27,6 +27,8 @@ export interface RecapChipView {
   gloss: string;
   /** "Show how to say it" is offered on this chip. */
   revealNeeded: boolean;
+  /** The reveal button's name: its visible words plus the chip's Korean, so each one says which word it shows. */
+  revealLabel: string;
   /** The speaker's name. */
   hearLabel: string;
   /** The chip's name. Like the reader's gloss card, it always says the romanization: a screen reader cannot "peek". */
@@ -46,6 +48,7 @@ export function recapChipView(
     romanization: shown ? word.romanization : '',
     gloss: word.en,
     revealNeeded: !shown,
+    revealLabel: copy.revealWord(word.ko),
     hearLabel: copy.hearWord(word.romanization),
     accessibilityLabel: koreanItem({ ko: word.ko, romanization: word.romanization, gloss: word.en }),
   };
@@ -66,16 +69,23 @@ const FITS_TABLET = 5;
  * Chip columns by window width: one at 320 dp, two from 360 dp (the reading
  * column keeps it at two). `longestKorean` (`longestRecapGlyphs`) keeps one
  * column when a half-width chip would break a Korean word across lines (the
- * same measure as Story Order's cards).
+ * same measure as Story Order's cards). `fontScale` is the device text size
+ * (`useWindowDimensions().fontScale`): larger text counts as a narrower window,
+ * so a word that fits at 100 % does not break at 130 % or 200 % (wireframe
+ * word-recap: "200 % text, 320 wide: one column"); smaller text never widens it.
  */
-export function recapColumns(width: number, longestKorean = 0): 1 | 2 {
-  if (width < 360) return 1;
-  return longestKorean > (width >= 768 ? FITS_TABLET : FITS_PHONE) ? 1 : 2;
+export function recapColumns(width: number, longestKorean = 0, fontScale = 1): 1 | 2 {
+  const room = width / Math.max(1, fontScale);
+  if (room < 360) return 1;
+  return longestKorean > (room >= 768 ? FITS_TABLET : FITS_PHONE) ? 1 : 2;
 }
 
-/** Glyphs of the longest Korean word of the recap (spaces do not count). */
+/**
+ * Glyphs of the longest Korean word of the recap: a phrase counts its longest
+ * space-separated word, since it may wrap at a space but never inside a word.
+ */
 export function longestRecapGlyphs(words: readonly RecapWord[]): number {
-  return Math.max(0, ...words.map((w) => [...w.ko].filter((g) => g.trim() !== '').length));
+  return Math.max(0, ...words.flatMap((w) => w.ko.split(/\s+/).map((part) => [...part].length)));
 }
 
 /** The flex cell of one chip: a full row, or a half row that never stretches (an odd last chip keeps its width). */
@@ -86,10 +96,17 @@ export const RECAP_WORD_CELL = {
 
 /**
  * `story.recap.word_played` fires once per distinct word per visit: the first
- * tap on a word tracks, later taps on it only play. Never mutates `played`.
+ * tap on a word tracks, later taps on it only play. `audible` is false while
+ * the "Say it yourself" chip shows (no Korean voice): that tap makes no sound,
+ * so it records nothing and the word can still track once a voice plays it.
+ * Never mutates `played`.
  */
-export function notePlayed(played: ReadonlySet<string>, wordId: string): { played: ReadonlySet<string>; track: boolean } {
-  if (played.has(wordId)) return { played, track: false };
+export function notePlayed(
+  played: ReadonlySet<string>,
+  wordId: string,
+  audible = true,
+): { played: ReadonlySet<string>; track: boolean } {
+  if (!audible || played.has(wordId)) return { played, track: false };
   return { played: new Set([...played, wordId]), track: true };
 }
 

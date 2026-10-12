@@ -10,7 +10,7 @@ import {
 } from '@hangul-route/design-system';
 import type { RomanizationMode } from '@hangul-route/i18n';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Platform, View } from 'react-native';
+import { Platform, View, useWindowDimensions } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import type { PlaySpec } from '../../logic/audio/controller';
 import type { RecapWord } from '../../logic/story/recap';
@@ -47,15 +47,20 @@ interface Props {
  * design/brief/screens/22-story-check.md frame 5). The new words of the story
  * once more: a chip per word (Korean at title size, romanization subject to
  * the D2 setting, the gloss, a 64 dp speaker), two columns from 360 dp, and
- * Done. Unscored and never blocking. A speaker tap plays the word (its clip,
- * else Korean speech) and, the first time per word in this visit, records
- * `story.recap.word_played`. The rules live in `logic/story/recap-view.ts`.
+ * Done. Unscored and never blocking. The speaker is the chip's one play
+ * control (the Korean is plain text): a tap plays the word (its clip, else
+ * Korean speech) and, the first time per word in this visit, records
+ * `story.recap.word_played`; with no Korean voice ("Say it yourself") the
+ * speaker stays (F-AUDIO-004 §3.8) but records nothing. The rules live in
+ * `logic/story/recap-view.ts`.
  */
 export function StoryWordRecap({ words, storyId, profileId, romanizationMode, sayIt, play, onDone }: Props): React.ReactElement {
   const m = useMessages();
   const copy = m.learner.story.recap;
   const width = useLayoutClass().windowWidth;
-  const columns = recapColumns(width, longestRecapGlyphs(words));
+  // Larger device text needs more room per chip (web reports 1).
+  const { fontScale } = useWindowDimensions();
+  const columns = recapColumns(width, longestRecapGlyphs(words), fontScale);
   const [revealed, setRevealed] = useState<ReadonlySet<string>>(() => new Set());
   const played = useRef<ReadonlySet<string>>(new Set());
   const headingRef = useRef<View | null>(null);
@@ -70,13 +75,13 @@ export function StoryWordRecap({ words, storyId, profileId, romanizationMode, sa
       play([recapSpeech(word)]);
       // Hearing a word shows how to say it (hide-until-tap mode), as in the reader.
       setRevealed((r) => (r.has(word.id) ? r : new Set([...r, word.id])));
-      const out = notePlayed(played.current, word.id);
+      const out = notePlayed(played.current, word.id, !sayIt);
       played.current = out.played;
       if (out.track) {
         void track({ name: 'story.recap.word_played', profileId, payload: recapPlayedPayload(storyId, word.id) });
       }
     },
-    [play, profileId, storyId],
+    [play, profileId, storyId, sayIt],
   );
 
   return (
@@ -120,13 +125,13 @@ export function StoryWordRecap({ words, storyId, profileId, romanizationMode, sa
                     romanization={chip.romanization}
                     gloss={chip.gloss}
                     size="sm"
-                    onPress={() => hear(word)}
                     accessibilityLabel={chip.accessibilityLabel}
                     testID={`story-recap-text-${chip.id}`}
                   />
                   {chip.revealNeeded ? (
                     <Button
                       label={m.learner.story.check.showRomanization.cta}
+                      accessibilityLabel={chip.revealLabel}
                       tone="ghost"
                       size="md"
                       onPress={() => setRevealed((r) => new Set([...r, chip.id]))}
