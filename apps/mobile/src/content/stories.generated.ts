@@ -1854,9 +1854,9 @@ export const storiesAll: Story[] = [
                 },
                 {
                   "ref": "prop:full-moon",
-                  "x": 228,
-                  "y": 150,
-                  "s": 1
+                  "x": 225,
+                  "y": 158,
+                  "s": 1.2
                 },
                 {
                   "ref": "prop:fig-elder-seated",

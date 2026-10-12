@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseStory, type Story } from '@hangul-route/content-schema';
-import { SCENE_ART_REGISTRY, checkScene, hasItem } from '@hangul-route/design-system/scene-art';
+import { SCENE_ART_REGISTRY, checkScene, hasItem, parsePath, resolveScene } from '@hangul-route/design-system/scene-art';
 import { describe, expect, it } from 'vitest';
 
 /**
@@ -267,6 +267,50 @@ describe('story scene art', () => {
     const nights = chuseok.filter((s) => s.scene.art!.layers.some((l) => NIGHT_CUES.has(l.ref)));
     expect(nights.length).toBeGreaterThanOrEqual(4);
     for (const { scene } of nights) expect(scene.art!.layers.map((l) => l.ref), scene.id).toContain('prop:full-moon');
+  });
+
+  // Post-merge verification of the #310 follow-up: `prop:night-window` paints
+  // its own crescent, so a full moon laid over it must hide the crescent
+  // completely. The moon's opaque disk, drawn after the window, has to contain
+  // the circle the crescent's outer arc belongs to (the crescent lies inside
+  // that circle), measured on the canvas after both placements.
+  it('a full moon over a night window hides the window crescent', () => {
+    const both = withArt.filter(({ scene }) => {
+      const refs = scene.art!.layers.map((l) => l.ref);
+      return refs.includes('prop:night-window') && refs.includes('prop:full-moon');
+    });
+    expect(both.length).toBeGreaterThanOrEqual(1);
+    for (const { story, scene } of both) {
+      const where = `${story.id} ${scene.id}`;
+      const { nodes } = resolveScene(scene.art!, SCENE_ART_REGISTRY);
+      const crescents = nodes.filter((n) => n.ref === 'prop:night-window' && n.shape.t === 'path' && n.shape.fill === 'feedback.nudgeLight');
+      const disks = nodes.filter((n) => n.ref === 'prop:full-moon' && n.shape.t === 'circle' && n.shape.o === undefined);
+      expect(crescents.length, where).toBeGreaterThanOrEqual(1);
+      expect(disks.length, where).toBeGreaterThanOrEqual(1);
+      for (const crescent of crescents) {
+        const shape = crescent.shape as { d: string };
+        const segs = parsePath(shape.d)!;
+        const start = segs.find((s) => s.cmd === 'M')!.args;
+        const arc = segs.find((s) => s.cmd === 'A')!.args;
+        // SVG endpoint-to-centre conversion for a circular arc (rx = ry, no rotation).
+        const [r, , , large, sweep, x2, y2] = arc as [number, number, number, number, number, number, number];
+        const [x1, y1] = start as [number, number];
+        const hx = (x1 - x2) / 2;
+        const hy = (y1 - y2) / 2;
+        const k = (large === sweep ? -1 : 1) * Math.sqrt(Math.max(0, (r * r - hx * hx - hy * hy) / (hx * hx + hy * hy)));
+        const lcx = k * hy + (x1 + x2) / 2;
+        const lcy = -k * hx + (y1 + y2) / 2;
+        const [a, , , d, e, f] = crescent.matrix;
+        const cc = { x: a * lcx + e, y: d * lcy + f, r: Math.abs(a) * r };
+        const covered = disks.some((disk) => {
+          const c = disk.shape as { cx: number; cy: number; r: number };
+          const [da, , , dd, de, df] = disk.matrix;
+          const dc = { x: da * c.cx + de, y: dd * c.cy + df, r: Math.abs(da) * c.r };
+          return disk.rank > crescent.rank && Math.hypot(dc.x - cc.x, dc.y - cc.y) + cc.r <= dc.r;
+        });
+        expect(covered, where).toBe(true);
+      }
+    }
   });
 
   // §3.9.5 rule 9, post-merge review of #310: these alts named an action or an
