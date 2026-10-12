@@ -90,8 +90,8 @@ F-XXX-<slug>.md
 - `F-QUEST-002` amended: initial ㅇ is spoken by its name (see F-AUDIO-004)
 
 ### Spec wave 2026-10-11 (owner UX request: two hosts, personas)
-- `F-APP-001-persona-app-shell.md` — app.hangulroute.com is the one product app: persona sign-in (learner, parent or caregiver, teacher), a home per persona, grown-up lock on shared devices, console served on the app host (B2), migration of hangulroute.com grown-up URLs · **ready**
-  - wireframes `design/wireframes/shell/{signin,adult-frame,parent-home,teacher-home,grown-up-lock,offline,moved}.md`, `onboarding/welcome-personas.md`, `parent/grown-up-home-card.md`
+- `F-APP-001-persona-app-shell.md` — app.hangulroute.com is the one product app: persona sign-in (learner, family, teacher), a home per persona with the entries to reports, notes, Learning Route and lessons, grown-up lock on shared devices, console served on the app host (B2), the route contract for the sibling specs of the wave · **ready**
+  - wireframes `design/wireframes/shell/{signin,adult-frame,parent-home,teacher-home,grown-up-lock,offline}.md`, `onboarding/welcome-personas.md`, `parent/grown-up-home-card.md`
 
 ### Phase 2 / planned
 - `F-PROF-001-device-profiles.md` — multi-learner · **draft** (code shipped PR #13, full spec covers cloud sync)
