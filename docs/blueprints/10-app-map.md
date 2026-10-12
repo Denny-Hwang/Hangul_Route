@@ -209,7 +209,7 @@ Hangul Route
 | ID | 코드 라우트 (`BrowseStackParamList`) | 목표 (한 줄) | 상태 | 스펙 | WF |
 |---|---|---|---|---|---|
 | `browse/access` | BrowseAccess `{ reason: 'none' \| 'expired', source: 'account' \| 'gate' \| 'unknown' }` | 활성 pass 가 없을 때 유일한 화면: "This page is for parents and teachers." — 레슨·제목·카드 없음, 들어온 길에 맞는 행동 (gate → 어른 영역, account → 내 계정, unknown → 어른 영역 + Sign in) | R | F-BROWSE-001 §4.3 | ✓ |
-| `browse/home` | BrowseHome `{ section?: 'route' \| 'journey' \| 'library' }` | 헤더 [ Close ] · **All lessons** · [ Lesson display ] · how-to 한 줄 · Route · Journey · Library (학습자 순서, 진도 없는 상태) | R | F-BROWSE-001 §4.5 | ✓ |
+| `browse/home` | BrowseHome `{ section?: 'route' \| 'journey' \| 'library'; stage?; note? }` (`stage`, `note`: §4.4 link targets, BR-6 `entryStack`) | 헤더 [ Close ] · **All lessons** · [ Lesson display ] · how-to 한 줄 · Route · Journey · Library (학습자 순서, 진도 없는 상태) | R | F-BROWSE-001 §4.5 | ✓ |
 | `browse/show-as` | (home 헤더의 bottom sheet, **Lesson display**) | 로마자 항상 / 탭하면 · UI 언어 (메모리만, 기기 로케일 안 씀) | R | F-BROWSE-001 §4.9 | ✓ |
 | `browse/episode` | BrowseEpisode `{ episodeId }` | 한 셀의 레슨들: 글자 · 낱말 · 기술 칩 (speaking 없음) · 분 · 보상 카드 | R | F-BROWSE-001 §4.6 | ✓ |
 | `browse/item` | BrowseItem `{ kind: 'quest' \| 'story' \| 'vocab-topic', id, focusJamoId? }` | What this teaches · Where it sits ([ See on the Journey ]) · 보상 카드 · [[ Preview this lesson ]] (닫힌 항목은 grown-up 한 줄) | R | F-BROWSE-001 §4.6 | ✓ |
