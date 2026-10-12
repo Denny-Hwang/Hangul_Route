@@ -1,5 +1,6 @@
 import { TRANSFER_COOLING_OFF_MS, type BillingEvent, type BillingEventKind, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type Space, type TransferBlockReason, type TransferEndReason, type TransferSlot } from '@hangul-route/content-schema';
 import { id, type Account, type Learner, type LearnerDevice, type SnapshotRecord } from '../store';
+import { assertBillingLimit, billingEventFields, newestBillingEvent, REFUNDABLE_BILLING_KINDS } from './billing-rules';
 import { allSlotsIn, assertNewTransfer, assertTransferChecks, assertTransferEventChecks, assertTransferPrefKey, assertTransferSlot, consentedLearnerSlot, finiteCap, isEndedTransfer, isOpenTransfer, teacherSlotsOf } from './transfer-rules';
 import {
   learnerRateKeys,
@@ -25,8 +26,6 @@ const deviceKey = (learnerId: string, deviceId: string): string => `${learnerId}
 const membershipKey = (spaceId: string, kind: MemberKind, memberId: string): string => `${spaceId}|${kind}|${memberId}`;
 const entitlementKey = (kind: string, subjectId: string, planKey: string): string => `${kind}|${subjectId}|${planKey}`;
 const billingEventKey = (provider: string, providerRef: string, kind: string): string => `${provider}|${providerRef}|${kind}`;
-/** `ORDER BY occurred_at DESC, id DESC`. */
-const newestEvent = (a: BillingEvent, b: BillingEvent): number => (a.occurredAt === b.occurredAt ? (a.id < b.id ? 1 : a.id > b.id ? -1 : 0) : a.occurredAt < b.occurredAt ? 1 : -1);
 
 function clone<T>(value: T): T {
   return structuredClone(value);
@@ -465,24 +464,26 @@ export class MemoryDb implements Db {
   }
 
   async recordBillingEvent(input: BillingEventInput, now: Date): Promise<BillingEvent> {
-    const k = billingEventKey(input.provider, input.providerRef, input.kind);
-    const stored = this.billingEvents.get(k) ?? { ...input, id: id('bev'), createdAt: now.toISOString() };
-    const next = stored.paymentRef === null && input.paymentRef !== null ? { ...stored, paymentRef: input.paymentRef } : stored;
+    const row = billingEventFields(input);
+    const k = billingEventKey(row.provider, row.providerRef, row.kind);
+    const stored = this.billingEvents.get(k) ?? { ...row, id: id('bev'), createdAt: now.toISOString() };
+    const next = stored.paymentRef === null && row.paymentRef !== null ? { ...stored, paymentRef: row.paymentRef } : stored;
     this.billingEvents.set(k, next);
     return clone(next);
   }
   async billingEventsFor(subjectKind: BillingEvent['subjectKind'], subjectId: string, limit: number): Promise<BillingEvent[]> {
-    return clone([...this.billingEvents.values()].filter((e) => e.subjectKind === subjectKind && e.subjectId === subjectId).sort(newestEvent).slice(0, limit));
+    assertBillingLimit(limit);
+    return clone([...this.billingEvents.values()].filter((e) => e.subjectKind === subjectKind && e.subjectId === subjectId).sort(newestBillingEvent).slice(0, limit));
   }
   async billingEventById(eventId: string): Promise<BillingEvent | null> {
     return clone([...this.billingEvents.values()].find((e) => e.id === eventId) ?? null);
   }
   async billingEventByRef(provider: BillingEvent['provider'], providerRef: string, kind?: BillingEventKind): Promise<BillingEvent | null> {
     const rows = [...this.billingEvents.values()].filter((e) => e.provider === provider && e.providerRef === providerRef && (kind === undefined || e.kind === kind));
-    return clone(rows.sort(newestEvent)[0] ?? null);
+    return clone(rows.sort(newestBillingEvent)[0] ?? null);
   }
   async billingEventByPaymentRef(paymentRef: string): Promise<BillingEvent | null> {
-    return clone([...this.billingEvents.values()].filter((e) => e.paymentRef === paymentRef).sort(newestEvent)[0] ?? null);
+    return clone([...this.billingEvents.values()].filter((e) => e.paymentRef === paymentRef && REFUNDABLE_BILLING_KINDS.includes(e.kind)).sort(newestBillingEvent)[0] ?? null);
   }
   async entitlementByProviderRef(provider: Entitlement['provider'], providerRef: string): Promise<Entitlement | null> {
     const rows = [...this.entitlements.values()].filter((e) => e.provider === provider && e.providerRef === providerRef);

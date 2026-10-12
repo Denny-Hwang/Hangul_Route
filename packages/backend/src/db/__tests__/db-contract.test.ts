@@ -268,6 +268,84 @@ function contract(name: string, make: () => Db): void {
       expect(await db.billingEventsFor('space', 'space:c', 50)).toEqual([]);
     });
 
+    it('billing events: both backends refuse a row the BillingEvent schema refuses, store an empty paymentRef as null, and keep only known fields', async () => {
+      const now = new Date(T);
+      const ok = { subjectKind: 'space' as const, subjectId: 'space:c', planKey: 'group_license' as const, kind: 'purchase' as const, amountCents: 15300, currency: 'usd', provider: 'stripe' as const, providerRef: 'in_1', paymentRef: null, livemode: false, occurredAt: '2026-10-01T00:00:00.000Z' };
+      // An empty paymentRef means "unknown": stored as NULL, so a later event can still fill it, and '' never matches a lookup.
+      expect((await db.recordBillingEvent({ ...ok, paymentRef: '' }, now)).paymentRef).toBeNull();
+      expect((await db.recordBillingEvent({ ...ok, paymentRef: 'pi_1' }, now)).paymentRef).toBe('pi_1');
+      expect(await db.recordBillingEvent({ ...ok, providerRef: 'in_2', paymentRef: '' }, now)).toMatchObject({ providerRef: 'in_2', paymentRef: null });
+      expect((await db.recordBillingEvent({ ...ok, providerRef: 'in_2', paymentRef: '' }, now)).paymentRef).toBeNull(); // '' never fills either
+      expect(await db.billingEventByPaymentRef('')).toBeNull();
+
+      const refused = [
+        { ...ok, providerRef: 'r1', amountCents: -1 }, // a negative refund delta (B-3) is a bug, never a row
+        { ...ok, providerRef: 'r2', amountCents: 1.5 },
+        { ...ok, providerRef: 'r3', kind: 'chargeback' },
+        { ...ok, providerRef: 'r4', planKey: 'teacher_pro' },
+        { ...ok, providerRef: 'r5', provider: 'paypal' },
+        { ...ok, providerRef: 'r6', subjectKind: 'learner' },
+        { ...ok, providerRef: 'r7', currency: 'USD' },
+        { ...ok, providerRef: '' },
+        { ...ok, providerRef: 'r9', subjectId: '' },
+        { ...ok, providerRef: 'r10', occurredAt: '2026-10-01' }, // rows sort by occurred_at as text: canonical ISO only
+        { ...ok, providerRef: 'r11', occurredAt: '2026-10-01T00:00:00Z' },
+        { ...ok, providerRef: 'r12', occurredAt: 'yesterday' },
+      ] as unknown as Parameters<Db['recordBillingEvent']>[0][];
+      for (const input of refused) await expect(db.recordBillingEvent(input, now), JSON.stringify(input)).rejects.toThrow(/recordBillingEvent/);
+      expect((await db.billingEventsFor('space', 'space:c', 50)).map((e) => e.providerRef).sort()).toEqual(['in_1', 'in_2']);
+
+      // A wider runtime object carries no extra key into either backend.
+      const wide = { ...ok, providerRef: 'in_3', receiptUrl: 'https://pay.stripe.com/receipts/x' } as Parameters<Db['recordBillingEvent']>[0];
+      const stored = await db.recordBillingEvent(wide, now);
+      expect(Object.keys(stored).sort()).toEqual(['amountCents', 'createdAt', 'currency', 'id', 'kind', 'livemode', 'occurredAt', 'paymentRef', 'planKey', 'provider', 'providerRef', 'subjectId', 'subjectKind']);
+      expect(Object.keys((await db.billingEventById(stored.id)) ?? {})).not.toContain('receiptUrl');
+    });
+
+    it('billing events: the read limit is a non-negative integer on both backends', async () => {
+      const now = new Date(T);
+      const base = { subjectKind: 'space' as const, subjectId: 'space:c', planKey: 'group_license' as const, kind: 'purchase' as const, amountCents: 100, currency: 'usd', provider: 'stripe' as const, paymentRef: null, livemode: false };
+      for (const n of [1, 2, 3]) await db.recordBillingEvent({ ...base, providerRef: `in_${n}`, occurredAt: `2026-10-0${n}T00:00:00.000Z` }, now);
+      expect(await db.billingEventsFor('space', 'space:c', 0)).toEqual([]);
+      expect((await db.billingEventsFor('space', 'space:c', 3)).map((e) => e.providerRef)).toEqual(['in_3', 'in_2', 'in_1']);
+      for (const bad of [-1, 1.5, Number.NaN, Number.POSITIVE_INFINITY]) await expect(db.billingEventsFor('space', 'space:c', bad), String(bad)).rejects.toThrow(/billingEventsFor: limit/);
+    });
+
+    it('billing events and entitlements: ties break the same way on both backends (occurredAt, then createdAt, then id)', async () => {
+      const base = { subjectKind: 'space' as const, subjectId: 'space:c', planKey: 'group_license' as const, amountCents: 15300, currency: 'usd', provider: 'stripe' as const, livemode: false };
+      const second = '2026-10-01T00:00:00.000Z'; // Stripe stamps whole seconds: a failed attempt and the paid invoice can share one
+      const failed = await db.recordBillingEvent({ ...base, kind: 'failed', providerRef: 'in_1', paymentRef: 'pi_1', occurredAt: second }, new Date('2026-10-01T00:00:01.000Z'));
+      const paid = await db.recordBillingEvent({ ...base, kind: 'purchase', providerRef: 'in_1', paymentRef: 'pi_1', occurredAt: second }, new Date('2026-10-01T00:00:02.000Z'));
+      // Same occurredAt: the later recorded row is newer, whatever the random ids.
+      expect((await db.billingEventsFor('space', 'space:c', 50)).map((e) => e.id)).toEqual([paid.id, failed.id]);
+      expect((await db.billingEventByRef('stripe', 'in_1'))?.id).toBe(paid.id);
+      // Same occurredAt and createdAt: the greater id first, identically on both backends.
+      const sameNow = new Date('2026-10-01T00:00:03.000Z');
+      const a = await db.recordBillingEvent({ ...base, kind: 'renewal', providerRef: 'in_2', paymentRef: null, occurredAt: '2026-10-02T00:00:00.000Z' }, sameNow);
+      const b = await db.recordBillingEvent({ ...base, kind: 'renewal', providerRef: 'in_3', paymentRef: null, occurredAt: '2026-10-02T00:00:00.000Z' }, sameNow);
+      const byIdDesc = [a.id, b.id].sort().reverse();
+      expect((await db.billingEventsFor('space', 'space:c', 2)).map((e) => e.id)).toEqual(byIdDesc);
+
+      const now = new Date(T);
+      const e1 = await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:x', planKey: 'group_license', status: 'active', provider: 'stripe', providerRef: 'sub_tie' }, now);
+      const e2 = await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:y', planKey: 'group_license', status: 'active', provider: 'stripe', providerRef: 'sub_tie' }, now);
+      expect((await db.entitlementByProviderRef('stripe', 'sub_tie'))?.id).toBe([e1.id, e2.id].sort().reverse()[0]);
+    });
+
+    it('billingEventByPaymentRef answers the purchase or renewal row a refund belongs to, never a failed or refund row (§5.4)', async () => {
+      const now = new Date(T);
+      const base = { subjectKind: 'space' as const, subjectId: 'space:c', planKey: 'group_license' as const, amountCents: 15300, currency: 'usd', provider: 'stripe' as const, livemode: false };
+      // Stripe reuses an invoice's payment intent across attempts: a newer failed row on the same intent is skipped.
+      const paid = await db.recordBillingEvent({ ...base, kind: 'renewal', providerRef: 'in_1', paymentRef: 'pi_1', occurredAt: '2026-10-01T00:00:00.000Z' }, now);
+      await db.recordBillingEvent({ ...base, kind: 'failed', providerRef: 'in_1', paymentRef: 'pi_1', occurredAt: '2026-10-05T00:00:00.000Z' }, now);
+      await db.recordBillingEvent({ ...base, kind: 'refund', providerRef: 'ch_1:refund:500', paymentRef: 'pi_1', amountCents: 500, occurredAt: '2026-10-06T00:00:00.000Z' }, now);
+      expect(await db.billingEventByPaymentRef('pi_1')).toEqual(paid);
+      await db.recordBillingEvent({ ...base, kind: 'failed', providerRef: 'in_2', paymentRef: 'pi_2', occurredAt: '2026-10-05T00:00:00.000Z' }, now);
+      expect(await db.billingEventByPaymentRef('pi_2')).toBeNull();
+      const purchase = await db.recordBillingEvent({ ...base, kind: 'purchase', providerRef: 'in_3', paymentRef: 'pi_3', occurredAt: '2026-10-07T00:00:00.000Z' }, now);
+      expect(await db.billingEventByPaymentRef('pi_3')).toEqual(purchase);
+    });
+
     it('waitlist: addWaitlist is idempotent per address, keeps the first row and an unsubscribe, and reset wipes it', async () => {
       expect(await db.waitlistEntries()).toEqual([]);
       await db.addWaitlist({ email: 'a@example.com', createdAt: T, source: 'landing', locale: 'en', consentTextVersion: 'v1' });
