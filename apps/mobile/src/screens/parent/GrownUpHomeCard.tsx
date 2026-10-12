@@ -31,15 +31,18 @@ export function GrownUpHomeCard({ onOpen }: { onOpen: () => void }): React.React
             {needsInternet}
           </Body>
         )}
-        <Button
-          label={m.cta}
-          tone="primary"
-          size="md"
-          disabled={!online}
-          accessibilityHint={online ? undefined : needsInternet}
-          onPress={onOpen}
-          testID="dashboard-grown-up-home-open"
-        />
+        {/* Right-aligned (learner-entry.md); `Button` itself aligns to the start of its box. */}
+        <View>
+          <Button
+            label={m.cta}
+            tone="primary"
+            size="md"
+            disabled={!online}
+            accessibilityHint={online ? undefined : needsInternet}
+            onPress={onOpen}
+            testID="dashboard-grown-up-home-open"
+          />
+        </View>
       </View>
     </Card>
   );

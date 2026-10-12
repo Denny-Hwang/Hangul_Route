@@ -95,15 +95,18 @@ export function WelcomeGrownUps(): React.ReactElement {
         </>
       ) : (
         <>
-          <Button
-            label={row.persona === 'parent' ? m.continueParent : m.continueTeacher}
-            tone="ghost"
-            size="md"
-            disabled={disabled}
-            accessibilityHint={hint}
-            onPress={() => choose({ persona: row.persona, from: 'welcome-continue' })}
-            testID="welcome-grown-ups-continue"
-          />
+          {/* Centred under the divider (mock welcome.html Panel B); `Button` itself aligns to the start. */}
+          <View style={{ alignItems: 'center' }}>
+            <Button
+              label={row.persona === 'parent' ? m.continueParent : m.continueTeacher}
+              tone="ghost"
+              size="md"
+              disabled={disabled}
+              accessibilityHint={hint}
+              onPress={() => choose({ persona: row.persona, from: 'welcome-continue' })}
+              testID="welcome-grown-ups-continue"
+            />
+          </View>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={m.someoneElse}
