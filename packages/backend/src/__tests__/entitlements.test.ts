@@ -349,10 +349,15 @@ describe('webhook history (F-BILL-002 B-3, section 5.4)', () => {
   const NOW_SEC = Math.floor(Date.now() / 1000);
   const END = NOW_SEC + 365 * 86_400;
   const FAMILY = (fam: string) => ({ subjectKind: 'space', subjectId: fam, planKey: 'family_lifetime' });
-  const invoiceStripe = (paymentIntent: string): typeof fetch =>
-    vi.fn<typeof fetch>().mockImplementation(async (url) =>
-      String(url).includes('/v1/invoice_payments') ? new Response(JSON.stringify({ data: [{ status: 'paid', payment: { type: 'payment_intent', payment_intent: paymentIntent } }] }), { status: 200 }) : new Response('{}', { status: 503 }),
-    );
+  /** Stripe's invoice_payments answers each invoice with its own payment intent, `pi_<invoice id>`. */
+  const invoiceStripe = (): typeof fetch =>
+    vi.fn<typeof fetch>().mockImplementation(async (url) => {
+      const u = new URL(String(url));
+      const invoice = u.searchParams.get('invoice');
+      return u.pathname === '/v1/invoice_payments' && invoice
+        ? new Response(JSON.stringify({ data: [{ status: 'paid', invoice, payment: { type: 'payment_intent', payment_intent: `pi_${invoice}` } }] }), { status: 200 })
+        : new Response('{}', { status: 503 });
+    });
 
   async function send(type: string, object: Record<string, unknown>, extra: Record<string, unknown> = {}): Promise<{ status: number; data: Record<string, unknown>; code?: string }> {
     const body = JSON.stringify({ id: `evt_${Math.random()}`, type, created: NOW_SEC, livemode: false, data: { object }, ...extra });
@@ -375,7 +380,7 @@ describe('webhook history (F-BILL-002 B-3, section 5.4)', () => {
 
   it('records invoice.paid as the payment, then a renewal; a retried delivery keeps one row', async () => {
     const fam = await createSpace('mom', 'family', 'Kim family');
-    setStripeFetchForTests(invoiceStripe('pi_first'));
+    setStripeFetchForTests(invoiceStripe());
     const first = { id: 'in_first', billing_reason: 'subscription_create', amount_paid: 1530, currency: 'usd', status_transitions: { paid_at: NOW_SEC }, parent: { subscription_details: { subscription: 'sub_fam', metadata: FAMILY(fam) } } };
     const paid = await send('invoice.paid', first);
     expect(paid).toEqual({ status: 200, data: { received: true, applied: true, recorded: true } });
@@ -383,8 +388,8 @@ describe('webhook history (F-BILL-002 B-3, section 5.4)', () => {
     await send('invoice.paid', { ...first, id: 'in_second', billing_reason: 'subscription_cycle' });
     const rows = await db.billingEventsFor('space', fam, 10);
     expect(rows.map((e) => [e.kind, e.providerRef, e.paymentRef, e.amountCents, e.livemode]).sort()).toEqual([
-      ['purchase', 'in_first', 'pi_first', 1530, false],
-      ['renewal', 'in_second', 'pi_first', 1530, false],
+      ['purchase', 'in_first', 'pi_in_first', 1530, false],
+      ['renewal', 'in_second', 'pi_in_second', 1530, false],
     ]);
     // Nothing a payment records reaches the entitlement table.
     expect(await db.entitlementsFor('space', fam)).toEqual([]);
@@ -405,6 +410,17 @@ describe('webhook history (F-BILL-002 B-3, section 5.4)', () => {
     expect(billingEvents()).toEqual([]);
   });
 
+  it('answers 503 so Stripe retries a refund delivered before the invoice.paid it refunds, then records it', async () => {
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    setStripeFetchForTests(invoiceStripe());
+    const refund = { id: 'ch_z', amount: 1530, amount_refunded: 1530, refunded: true, currency: 'usd', payment_intent: null, invoice: 'in_z' };
+    const early = await send('charge.refunded', refund);
+    expect([early.status, early.code]).toEqual([503, 'payment_not_recorded']);
+    await send('invoice.paid', { id: 'in_z', billing_reason: 'subscription_create', amount_paid: 1530, currency: 'usd', parent: { subscription_details: { subscription: 'sub_z', metadata: FAMILY(fam) } } });
+    expect((await send('charge.refunded', refund)).data).toEqual({ received: true, applied: true, recorded: true });
+    expect(await db.billingEventByRef('stripe', 'ch_z:refund:1530', 'refund')).toMatchObject({ subjectId: fam, amountCents: 1530, paymentRef: 'pi_in_z' });
+  });
+
   it('records a failed payment and sends billing.payment_failed once, with codes only', async () => {
     const fam = await createSpace('mom', 'family', 'Kim family');
     const failed = { id: 'in_f', billing_reason: 'subscription_cycle', amount_due: 1530, amount_paid: 0, currency: 'usd', subscription: 'sub_fam', subscription_details: { metadata: FAMILY(fam) } };
@@ -420,12 +436,12 @@ describe('webhook history (F-BILL-002 B-3, section 5.4)', () => {
     expect(await db.putSnapshot(progress, 0)).toBe(true);
     const meta = { customer: 'cus_fam', metadata: FAMILY(fam) };
     await send('customer.subscription.created', { id: 'sub_fam', status: 'active', current_period_end: END, ...meta });
-    setStripeFetchForTests(invoiceStripe('pi_fam'));
+    setStripeFetchForTests(invoiceStripe());
     await send('invoice.paid', { id: 'in_fam', billing_reason: 'subscription_create', amount_paid: 1530, currency: 'usd', status_transitions: { paid_at: NOW_SEC }, parent: { subscription_details: { subscription: 'sub_fam', metadata: FAMILY(fam) } } });
     const before = await db.entitlementsFor('space', fam);
     expect(await tier()).toBe('premium');
 
-    const refund = await send('charge.refunded', { id: 'ch_fam', amount: 1530, amount_refunded: 1530, refunded: true, currency: 'usd', payment_intent: 'pi_fam' });
+    const refund = await send('charge.refunded', { id: 'ch_fam', amount: 1530, amount_refunded: 1530, refunded: true, currency: 'usd', payment_intent: 'pi_in_fam' });
     expect(refund.data).toEqual({ received: true, applied: true, recorded: true });
     expect(await db.billingEventByRef('stripe', 'ch_fam:refund:1530', 'refund')).toMatchObject({ amountCents: 1530, subjectId: fam, planKey: 'family_lifetime' });
     expect(await db.entitlementsFor('space', fam)).toEqual(before);
@@ -437,7 +453,7 @@ describe('webhook history (F-BILL-002 B-3, section 5.4)', () => {
     expect(await tier()).toBe('free');
     expect(await db.getSnapshot(learnerId)).toEqual(progress);
     // A retried refund delivery records nothing new and sends nothing again.
-    await send('charge.refunded', { id: 'ch_fam', amount: 1530, amount_refunded: 1530, refunded: true, currency: 'usd', payment_intent: 'pi_fam' });
+    await send('charge.refunded', { id: 'ch_fam', amount: 1530, amount_refunded: 1530, refunded: true, currency: 'usd', payment_intent: 'pi_in_fam' });
     expect((await db.billingEventsFor('space', fam, 10)).filter((e) => e.kind === 'refund')).toHaveLength(1);
     expect(billingEvents()).toHaveLength(1);
   });

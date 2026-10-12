@@ -34,16 +34,23 @@ type Subject = Pick<EntitlementApply, 'subjectKind' | 'subjectId' | 'planKey'>;
  * What an event did to the history: `ignored` (not a history event, or a subscription checkout,
  * whose first `invoice.paid` is the payment), `unmatched` (a history event with no subject or row to
  * attach to; acknowledged and recorded nowhere), `retry` (a refund whose invoice lookup Stripe could
- * not answer just now; the webhook answers 503 so Stripe delivers it again instead of it being lost),
- * or `recorded` (`fresh` false for a retried delivery, or for a refund an earlier-recorded row
+ * not answer just now, or whose payment Stripe names but this history has not recorded yet; the
+ * webhook answers 503 so Stripe delivers it again instead of it being lost), or `recorded` (`fresh` false for a retried delivery, or for a refund an earlier-recorded row
  * already covers). `full` says whether a refund refunded the whole charge; it is false for every
  * other kind.
  */
 export type BillingHistoryOutcome =
   | { outcome: 'ignored' }
   | { outcome: 'unmatched' }
-  | { outcome: 'retry' }
+  | { outcome: 'retry'; reason: RetryReason }
   | { outcome: 'recorded'; event: BillingEvent; fresh: boolean; full: boolean };
+
+/**
+ * Why a refund is worth a retry: `lookup` (Stripe could not answer the invoice lookup) or
+ * `payment_not_recorded` (the refund came before the `invoice.paid` of the payment it refunds;
+ * Stripe does not keep delivery order, so that `invoice.paid` can still be in its own retries).
+ */
+export type RetryReason = 'lookup' | 'payment_not_recorded';
 
 /** `invoice_payments` exists from 2025-03-31.basil; pinned so the shape does not follow the account's default version. */
 export const INVOICE_PAYMENTS_API_VERSION = '2025-09-30.clover';
@@ -51,8 +58,22 @@ export const INVOICE_PAYMENTS_API_VERSION = '2025-09-30.clover';
 /** A lookup gives up after this long, so a hung Stripe never holds the webhook past Stripe's own timeout. */
 export const STRIPE_LOOKUP_TIMEOUT_MS = 5_000;
 
-/** A lookup Stripe could not answer just now (network, timeout, 429, 5xx, a broken body): worth a retry, unlike "nothing found". */
+/**
+ * A lookup Stripe could not answer just now (network, timeout, 401 or 403 from a rotated, revoked or
+ * restricted key, 429, 5xx, a broken body): worth a retry once the cause is fixed, unlike "nothing found".
+ */
 export const LOOKUP_UNAVAILABLE = 'unavailable';
+
+/**
+ * How long after a refund was made the webhook keeps asking Stripe to deliver it again while the
+ * payment it refunds is not recorded yet: Stripe's own retry window (about three days). Past it, the
+ * refund is acknowledged unmatched (a payment made before the endpoint received `invoice.paid`, or
+ * one this app never sold).
+ */
+export const REFUND_WAIT_MS = 72 * 60 * 60 * 1000;
+
+/** The payment a refund names (by its invoice) is not in the history yet. */
+const PAYMENT_NOT_RECORDED = 'payment_not_recorded';
 
 /** How many of a subject's newest rows a refund looks through for the earlier refunds of its charge (a few rows a year). */
 export const REFUND_SCAN_LIMIT = 500;
@@ -115,9 +136,10 @@ export function invoiceSubject(invoice: Record<string, unknown>): { subject: Sub
 }
 
 /**
- * `GET /v1/invoice_payments?…` → the list's rows. No bound key, a 4xx or a body with no list read as
- * "nothing found" (`[]`): asking again would not change the answer. A thrown fetch, a timeout, a 429,
- * a 5xx or a body that is not JSON read as `LOOKUP_UNAVAILABLE`.
+ * `GET /v1/invoice_payments?…` → the list's rows. No bound key, a 400, a 404 or a body with no list
+ * read as "nothing found" (`[]`): asking again would not change the answer. A thrown fetch, a
+ * timeout, a 401 or 403 (a key that was rotated, revoked or lacks invoice read: fixed by the owner,
+ * after which a retry succeeds), a 429, a 5xx or a body that is not JSON read as `LOOKUP_UNAVAILABLE`.
  */
 async function invoicePayments(env: StripeEnv, query: Record<string, string>, fetchImpl: typeof fetch): Promise<Record<string, unknown>[] | typeof LOOKUP_UNAVAILABLE> {
   if (!env.STRIPE_SECRET_KEY) return [];
@@ -127,7 +149,7 @@ async function invoicePayments(env: StripeEnv, query: Record<string, string>, fe
       headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`, 'Stripe-Version': INVOICE_PAYMENTS_API_VERSION },
       signal: AbortSignal.timeout(STRIPE_LOOKUP_TIMEOUT_MS),
     });
-    if (res.status === 429 || res.status >= 500) return LOOKUP_UNAVAILABLE;
+    if (res.status === 401 || res.status === 403 || res.status === 429 || res.status >= 500) return LOOKUP_UNAVAILABLE;
     if (!res.ok) return [];
     const body: unknown = await res.json();
     return isRecord(body) && Array.isArray(body.data) ? body.data.filter(isRecord) : [];
@@ -236,20 +258,37 @@ async function invoiceEvent(db: Db, env: StripeEnv, event: StripeWebhookEvent, f
 
 /**
  * The payment or renewal a refunded charge paid: by payment intent, then by the charge's invoice
- * (older versions), then by `invoice_payments`; `LOOKUP_UNAVAILABLE` when only that last call could
- * have found it and Stripe did not answer.
+ * (older versions), then by `invoice_payments`. `LOOKUP_UNAVAILABLE` when only that last call could
+ * have found it and Stripe did not answer; `PAYMENT_NOT_RECORDED` when Stripe names the invoice but
+ * no payment or renewal row for it exists yet; null when nothing names a payment at all.
  */
-async function refundedPayment(db: Db, env: StripeEnv, charge: Record<string, unknown>, paymentIntent: string | null, fetchImpl: typeof fetch): Promise<BillingEvent | null | typeof LOOKUP_UNAVAILABLE> {
+async function refundedPayment(
+  db: Db,
+  env: StripeEnv,
+  charge: Record<string, unknown>,
+  paymentIntent: string | null,
+  fetchImpl: typeof fetch,
+): Promise<BillingEvent | null | typeof LOOKUP_UNAVAILABLE | typeof PAYMENT_NOT_RECORDED> {
   const byInvoice = async (invoiceId: string | null): Promise<BillingEvent | null> =>
     invoiceId === null ? null : ((await db.billingEventByRef('stripe', invoiceId, 'purchase')) ?? (await db.billingEventByRef('stripe', invoiceId, 'renewal')));
   if (paymentIntent) {
     const direct = (await db.billingEventByRef('stripe', paymentIntent, 'purchase')) ?? (await db.billingEventByPaymentRef(paymentIntent));
     if (direct) return direct;
   }
-  const own = await byInvoice(idOf(charge.invoice));
-  if (own || !paymentIntent) return own;
-  const invoice = await invoiceForPaymentIntent(env, paymentIntent, fetchImpl);
-  return invoice === LOOKUP_UNAVAILABLE ? invoice : byInvoice(invoice);
+  const chargeInvoice = idOf(charge.invoice);
+  const own = await byInvoice(chargeInvoice);
+  if (own) return own;
+  const invoice = paymentIntent ? await invoiceForPaymentIntent(env, paymentIntent, fetchImpl) : null;
+  if (invoice === LOOKUP_UNAVAILABLE) return invoice;
+  const found = invoice !== null && invoice !== chargeInvoice ? await byInvoice(invoice) : null;
+  if (found) return found;
+  return chargeInvoice !== null || invoice !== null ? PAYMENT_NOT_RECORDED : null;
+}
+
+/** Whether a refund is still inside the window in which its payment's `invoice.paid` can land (`REFUND_WAIT_MS`). */
+function withinRefundWait(event: StripeWebhookEvent, now: Date): boolean {
+  const sec = unixSeconds(event.created);
+  return sec !== null && now.getTime() - sec * 1000 <= REFUND_WAIT_MS;
 }
 
 /** When the newest refund on the charge was made, else when the event was. */
@@ -279,7 +318,9 @@ async function chargeRefunded(db: Db, env: StripeEnv, event: StripeWebhookEvent,
   if (!chargeId || cumulative === null || !currency) return { outcome: 'unmatched' };
   const paymentIntent = idOf(charge.payment_intent);
   const paid = await refundedPayment(db, env, charge, paymentIntent, fetchImpl);
-  if (paid === LOOKUP_UNAVAILABLE) return { outcome: 'retry' };
+  if (paid === LOOKUP_UNAVAILABLE) return { outcome: 'retry', reason: 'lookup' };
+  // Delivered before the invoice.paid it refunds: wait for that payment while Stripe still retries.
+  if (paid === PAYMENT_NOT_RECORDED) return withinRefundWait(event, now) ? { outcome: 'retry', reason: 'payment_not_recorded' } : { outcome: 'unmatched' };
   if (!paid) return { outcome: 'unmatched' };
   const full = charge.refunded === true || (amountOf(charge.amount) !== null && cumulative >= (amountOf(charge.amount) ?? 0));
 

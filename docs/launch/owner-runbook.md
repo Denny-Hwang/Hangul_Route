@@ -129,7 +129,9 @@ https://dashboard.stripe.com → **Test mode**
 - **확인**: 위의 테스트 결제 뒤 Developers → Webhooks → 엔드포인트 → *Event deliveries* 에서 `invoice.paid` 가 **200** 이고 응답에 `"recorded":true` 가 있으면 된다. `"applied":false` 이면 그 인보이스가 어느 space 의 것인지 찾지 못한 것이다 (대시보드에서 직접 만든 구독처럼 우리 결제 화면을 거치지 않은 결제). 기록되지 않을 뿐, 이용 기간에는 영향이 없다.
 - **환불은 기록만 한다** (OD-6, BY-D8): 환불해도 Family Plan / Group License 의 이용 기간은 바뀌지 않는다. 기간은 Stripe 의 구독 이벤트만 정한다. 환불한 플랜을 **바로** 끝내려면 Customers → 해당 고객 → Subscriptions → **Cancel subscription → Immediately** (기간 끝이 아니라 즉시). `customer.subscription.deleted` 가 오면 학습자는 무료 범위로 돌아가고, 이미 얻은 별·카드·진도는 그대로 남는다.
 - 같은 결제를 여러 번 나눠 부분 환불하면, 환불할 때마다 **새로 환불된 금액만** 한 행씩 기록된다. 같은 웹훅이 다시 와도 행이 늘지 않는다.
-- `charge.refunded` 가 *Event deliveries* 에 **503** 으로 보이면, 환불을 결제에 맞추려고 Stripe 를 조회하다 잠시 실패한 것이다. Stripe 가 알아서 다시 보내고, 성공하면 200 이 된다. 할 일은 없다.
+- `charge.refunded` 가 *Event deliveries* 에 **503** 으로 보이면, Stripe 가 알아서 다시 보내고 성공하면 200 이 된다. 응답의 `code` 로 이유를 본다:
+  - `stripe_unavailable`: 환불을 결제에 맞추려고 Stripe 를 조회하다 실패했다. 보통은 잠시 후 저절로 풀린다. **한 시간 넘게** 계속되면 Worker 의 `STRIPE_SECRET_KEY` 를 확인한다 (키를 바꿨거나 폐기했거나, 인보이스 읽기 권한이 없는 제한 키). 키를 고치면 다음 재전송에서 기록된다.
+  - `payment_not_recorded`: 그 결제의 `invoice.paid` 가 아직 기록되지 않았다 (Stripe 는 이벤트 순서를 보장하지 않는다). `invoice.paid` 가 들어오면 다음 재전송에서 기록된다. 환불 후 **72시간**이 지나면 더 기다리지 않고 200 (`"applied":false`) 으로 받는다. 그래서 이 엔드포인트가 `invoice.paid` 를 받기 **전에** 결제된 건의 환불은 결제 기록에 남지 않는다 (Stripe 대시보드에는 그대로 있다).
 - 분쟁 (`charge.dispute.*`) 은 기록하지 않는다. Stripe 대시보드에서 처리한다.
 
 ### Step 9. 프로모·레퍼럴 코드 (15분, 배포 불필요)

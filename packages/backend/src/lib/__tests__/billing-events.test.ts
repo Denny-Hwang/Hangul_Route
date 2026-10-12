@@ -24,6 +24,8 @@ const ENV = { STRIPE_SECRET_KEY: 'sk_test_x' };
 const NOW = new Date('2026-10-12T09:00:00.000Z');
 const SEC = Math.floor(Date.parse('2026-10-11T08:00:00.000Z') / 1000);
 const AT = new Date(SEC * 1000).toISOString();
+/** An event made four days before NOW: past Stripe's retry window (REFUND_WAIT_MS). */
+const OLD_SEC = Math.floor(NOW.getTime() / 1000) - 4 * 86_400;
 const FAM = { subjectKind: 'space', subjectId: 'space:fam', planKey: 'family_lifetime' } as const;
 const CLS = { subjectKind: 'space', subjectId: 'space:cls', planKey: 'group_license' } as const;
 
@@ -103,11 +105,12 @@ describe('invoice_payments lookups (pinned API version, injected fetch)', () => 
   it('tells "Stripe could not answer now" (worth a retry) from "nothing found"', async () => {
     const throwing = vi.fn<typeof fetch>().mockRejectedValue(new Error('network'));
     const badJson = vi.fn<typeof fetch>().mockResolvedValue(new Response('not json', { status: 200 }));
-    for (const fetchImpl of [stripeDown(), answer({ error: {} }, 429), throwing, badJson]) {
+    // A 401 or 403 is a key the owner must fix (rotated, revoked, or restricted without invoice read): a retry then succeeds.
+    for (const fetchImpl of [stripeDown(), answer({ error: {} }, 401), answer({ error: {} }, 403), answer({ error: {} }, 429), throwing, badJson]) {
       expect(await paymentIntentForInvoice(ENV, 'in_1', fetchImpl)).toBeNull();
       expect(await invoiceForPaymentIntent(ENV, 'pi_1', fetchImpl)).toBe(LOOKUP_UNAVAILABLE);
     }
-    for (const fetchImpl of [answer({ error: {} }, 404), answer({ data: [] }), answer({ data: 'x' }), answer([1, 2]), answer({ data: [null, { payment: null }, { invoice: 7 }] })]) {
+    for (const fetchImpl of [answer({ error: {} }, 400), answer({ error: {} }, 404), answer({ data: [] }), answer({ data: 'x' }), answer([1, 2]), answer({ data: [null, { payment: null }, { invoice: 7 }] })]) {
       expect(await paymentIntentForInvoice(ENV, 'in_1', fetchImpl)).toBeNull();
       expect(await invoiceForPaymentIntent(ENV, 'pi_1', fetchImpl)).toBeNull();
     }
@@ -265,7 +268,12 @@ describe('charge.refunded (OD-6 revised, BY-D8: recorded only)', () => {
 
   it('acknowledges a refund it cannot match and records nowhere', async () => {
     expect(await recordBillingHistory(db, ENV, evt('charge.refunded', charge()), answer({ data: [] }), NOW)).toEqual({ outcome: 'unmatched' });
-    expect(await recordBillingHistory(db, ENV, evt('charge.refunded', charge()), answer({ data: [{ invoice: 'in_not_ours' }] }), NOW)).toEqual({ outcome: 'unmatched' });
+    expect(await recordBillingHistory(db, ENV, evt('charge.refunded', charge()), answer({ error: {} }, 404), NOW)).toEqual({ outcome: 'unmatched' });
+    // An invoice this history never records (a payment from before the endpoint received invoice.paid,
+    // or one this app never sold): acknowledged once Stripe's retry window has passed.
+    expect(await recordBillingHistory(db, ENV, evt('charge.refunded', charge(), { created: OLD_SEC }), answer({ data: [{ invoice: 'in_not_ours' }] }), NOW)).toEqual({ outcome: 'unmatched' });
+    expect(await recordBillingHistory(db, ENV, evt('charge.refunded', charge({ payment_intent: null, invoice: 'in_not_ours' }), { created: OLD_SEC }), stripeDown(), NOW)).toEqual({ outcome: 'unmatched' });
+    expect(await recordBillingHistory(db, ENV, evt('charge.refunded', charge(), { created: undefined }), answer({ data: [{ invoice: 'in_not_ours' }] }), NOW)).toEqual({ outcome: 'unmatched' });
     expect(await recordBillingHistory(db, ENV, evt('charge.refunded', charge({ payment_intent: null })), stripeDown(), NOW)).toEqual({ outcome: 'unmatched' });
     expect(await recordBillingHistory(db, ENV, evt('charge.refunded', charge({ id: 7 })), stripeDown(), NOW)).toEqual({ outcome: 'unmatched' });
     await paidInvoice('pi_1');
@@ -276,12 +284,30 @@ describe('charge.refunded (OD-6 revised, BY-D8: recorded only)', () => {
   });
 
   it('asks Stripe to retry when the invoice lookup could not be made, instead of dropping the refund', async () => {
-    expect(await recordBillingHistory(db, ENV, evt('charge.refunded', charge()), stripeDown(), NOW)).toEqual({ outcome: 'retry' });
+    expect(await recordBillingHistory(db, ENV, evt('charge.refunded', charge()), stripeDown(), NOW)).toEqual({ outcome: 'retry', reason: 'lookup' });
+    // A rotated, revoked or restricted key is retried too: the refund lands once the owner fixes the key.
+    expect(await recordBillingHistory(db, ENV, evt('charge.refunded', charge()), answer({ error: {} }, 401), NOW)).toEqual({ outcome: 'retry', reason: 'lookup' });
+    expect(await recordBillingHistory(db, ENV, evt('charge.refunded', charge()), answer({ error: {} }, 403), NOW)).toEqual({ outcome: 'retry', reason: 'lookup' });
     // Without a bound key there is nothing to retry with: acknowledged as unmatched.
     expect(await recordBillingHistory(db, {}, evt('charge.refunded', charge()), stripeDown(), NOW)).toEqual({ outcome: 'unmatched' });
     // Once the payment is recorded, the retry matches without the lookup.
     await paidInvoice('pi_1');
     expect(await recordBillingHistory(db, ENV, evt('charge.refunded', charge()), stripeDown(), NOW)).toMatchObject({ outcome: 'recorded', fresh: true });
+  });
+
+  it('asks Stripe to retry a refund delivered before the invoice.paid it refunds, then records it once that payment lands', async () => {
+    const lookup = answer({ data: [{ invoice: 'in_late', payment: { type: 'payment_intent', payment_intent: 'pi_1' } }] });
+    const early = await recordBillingHistory(db, ENV, evt('charge.refunded', charge()), lookup, NOW);
+    expect(early).toEqual({ outcome: 'retry', reason: 'payment_not_recorded' });
+    // The older shape names the invoice on the charge itself, with no payment intent to look up.
+    expect(await recordBillingHistory(db, ENV, evt('charge.refunded', charge({ payment_intent: null, invoice: 'in_late' })), stripeDown(), NOW)).toEqual({ outcome: 'retry', reason: 'payment_not_recorded' });
+    expect(await db.billingEventsFor('space', 'space:fam', 10)).toEqual([]);
+
+    // Stripe's retry of the invoice.paid lands, then the refund is delivered again.
+    const paidLookup = answer({ data: [{ status: 'paid', invoice: 'in_late', payment: { type: 'payment_intent', payment_intent: 'pi_1' } }] });
+    expect(await recordBillingHistory(db, ENV, evt('invoice.paid', invoice({ id: 'in_late' })), paidLookup, NOW)).toMatchObject({ outcome: 'recorded', event: { kind: 'purchase', paymentRef: 'pi_1' } });
+    expect(await recordBillingHistory(db, ENV, evt('charge.refunded', charge()), lookup, NOW)).toMatchObject({ outcome: 'recorded', fresh: true, event: { ...FAM, kind: 'refund', amountCents: 500, paymentRef: 'pi_1' } });
+    expect((await db.billingEventsFor('space', 'space:fam', 10)).filter((e) => e.kind === 'refund')).toHaveLength(1);
   });
 
   it('a retried or older refund event adds nothing: the refund row already covering it is answered, not fresh', async () => {

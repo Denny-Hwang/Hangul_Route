@@ -180,8 +180,12 @@ entitlementRoutes.post('/stripe/webhook', async (c) => {
   }
   // Payment history (F-BILL-002 §5.4): recorded only; it never changes an entitlement (BY-D8).
   const history = await recordBillingHistory(db, env, event, fetchImpl, now);
-  // A refund whose invoice lookup Stripe could not answer: Stripe delivers it again rather than it being lost.
-  if (history.outcome === 'retry') return fail(c, 'stripe_unavailable', 'Stripe could not be reached to match this refund; retry', 503);
+  // A refund that cannot be matched yet: Stripe delivers it again rather than it being lost.
+  if (history.outcome === 'retry') {
+    return history.reason === 'lookup'
+      ? fail(c, 'stripe_unavailable', 'Stripe could not be reached to match this refund; retry', 503)
+      : fail(c, 'payment_not_recorded', 'The payment this refund belongs to is not recorded yet; retry', 503);
+  }
   // Telemetry last, once everything above has succeeded, so a request that fails and is retried sends it once.
   if (apply && event.type === 'checkout.session.completed') recordServerEvent('billing.checkout_completed', { planKey: apply.planKey, mode, duplicate });
   if (history.outcome === 'recorded' && history.fresh) {
