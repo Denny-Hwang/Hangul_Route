@@ -135,9 +135,12 @@ export const ProgressSnapshotSchema = z.object({
    * first completed. Only ever gains keys; the earliest instant wins on merge.
    * Absent in snapshots written before it; readers treat a missing value as {}.
    * Builds from RP-3a on always write the key (an empty record when nothing is
-   * latched), so "key absent" means "an older build".
+   * latched), so "key absent" means "an older build". Keys are quest ids (at
+   * most 64 characters) and values ISO instants (at most 40): bounded, and
+   * strict rather than caught, since "absent" carries meaning for the
+   * Worker's preserve rule.
    */
-  questDoneAt: z.record(z.string(), z.string()).optional(),
+  questDoneAt: z.record(z.string().min(1).max(64), z.string().min(1).max(40)).optional(),
 });
 /**
  * `placements` is optional in the *type* although the schema defaults it to
