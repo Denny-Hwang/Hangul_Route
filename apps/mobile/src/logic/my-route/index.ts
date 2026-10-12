@@ -10,7 +10,15 @@ export { routeCursor, type CursorInput } from './cursor';
 export { STAGE_BUILDS, hereStageOf, isDerivedComplete, stageStateOf, type StageFacts } from './stage-rows';
 export { SKILLS, SKILL_OF_KIND, SKILL_THRESHOLDS, TILE_KINDS, marksFor, questSkills, skillRows, tilesCount } from './skills';
 export { gainsOf } from './gains';
-export { journeySummaryOf, summarizeJourney, type JourneyContent, type JourneyStageSummary, type JourneySummary } from './summary';
+export {
+  journeySummaryOf,
+  routeGoalSummaryOf,
+  summarizeJourney,
+  type JourneyContent,
+  type JourneyStageSummary,
+  type JourneySummary,
+  type RouteGoalSummaryInput,
+} from './summary';
 export { stagesToLatch, withStageLatches } from './latch';
 export { startMarkerOf, startRouteOf } from './start-marker';
 export { hoyaPoseFor, newQuestsLine, newlyDoneKeys, parseSeen, readSeen, seenFrom, seenKey, writeSeen, type JsonStorage } from './seen';

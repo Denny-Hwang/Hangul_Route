@@ -28,6 +28,8 @@ export interface SummarizeInput {
   planNotReady?: Readonly<Record<string, number>>;
   /** My route stage counts, computed by sync-store (F-ROUTE-001 R-8); left out when absent. */
   journey?: ProgressSummary['journey'];
+  /** The Learning Route goal, computed by sync-store (Learning Route LR-6); left out when absent. */
+  routeGoal?: ProgressSummary['routeGoal'];
 }
 
 /** done / total per plan from the plan-derived assignments, plus what was skipped. */
@@ -125,7 +127,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export const RECOGNIZED_ACCURACY = 0.8;
 export const PRACTICE_ACCURACY = 0.6;
 
-export function summarize({ snapshot, now, stage1QuestIds, questJamo, planNotReady, journey }: SummarizeInput): ProgressSummary {
+export function summarize({ snapshot, now, stage1QuestIds, questJamo, planNotReady, journey, routeGoal }: SummarizeInput): ProgressSummary {
   const completed = snapshot.quests.filter((q) => q.completedAt);
   const stage1Set = new Set(stage1QuestIds);
   const stage1Done = completed.filter((q) => stage1Set.has(q.questId));
@@ -174,6 +176,7 @@ export function summarize({ snapshot, now, stage1QuestIds, questJamo, planNotRea
     planProgress: planProgressOf(snapshot, planNotReady),
     ...(placement ? { placement } : {}),
     ...(journey ? { journey } : {}),
+    ...(routeGoal ? { routeGoal } : {}),
     // Omitted for a learner with no words, so their summary stays byte-identical (F-VOC-005 section 3.8).
     ...(words.items.length > 0 ? { vocab: vocabSummaryOf(words, localDay(now)) } : {}),
   };
