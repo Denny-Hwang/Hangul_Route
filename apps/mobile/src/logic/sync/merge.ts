@@ -128,6 +128,29 @@ export function mergeStageDoneAt(
 }
 
 /**
+ * Quest latch (F-REPORT-001 section 3.3.1, M5): quest id -> first finish. Key
+ * union, earliest instant wins (`earlierLatchTime`, as `mergeStageDoneAt`), so
+ * a first finish recorded on any device is never lost or moved later. Builds
+ * from RP-3a on always write the key, so an empty record is a value and is
+ * kept; `undefined` only when neither side has the key (two older copies keep
+ * their shape). Keys sorted, so merge order never changes the result.
+ */
+export function mergeQuestDoneAt(
+  l: Readonly<Record<string, string>> | undefined,
+  s: Readonly<Record<string, string>> | undefined,
+): Record<string, string> | undefined {
+  if (l === undefined && s === undefined) return undefined;
+  const out = new Map<string, string>();
+  for (const side of [l ?? {}, s ?? {}]) {
+    for (const [questId, at] of Object.entries(side)) {
+      const prev = out.get(questId);
+      out.set(questId, prev === undefined ? at : earlierLatchTime(prev, at));
+    }
+  }
+  return Object.fromEntries([...out.entries()].sort(([a], [b]) => codePointCompare(a, b)));
+}
+
+/**
  * Orders two ISO timestamps as instants (an offset and `Z`, with or without
  * milliseconds, compare by the moment they name), like `earlierLatchTime`.
  * An unparsable side sorts first; equal instants and unparsable pairs fall
@@ -307,6 +330,7 @@ export interface MergeOptions {
 
 export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot, opts: MergeOptions): ProgressSnapshot {
   const stageDoneAt = mergeStageDoneAt(local.stageDoneAt, server.stageDoneAt);
+  const questDoneAt = mergeQuestDoneAt(local.questDoneAt, server.questDoneAt);
   const vocab = mergeVocab(local.vocab, server.vocab);
   const sessions = unionBy<SessionLog>(local.sessions, server.sessions, (x) => x.id, (l) => l).sort(
     (a, b) => a.startedAt.localeCompare(b.startedAt) || a.id.localeCompare(b.id),
@@ -334,6 +358,8 @@ export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot
       : {}),
     // Word progress (F-VOC-005): omitted when neither side has a slice.
     ...(vocab !== undefined ? { vocab } : {}),
+    // Quest latch (F-REPORT-001): omitted only when neither side has the key.
+    ...(questDoneAt !== undefined ? { questDoneAt } : {}),
   };
 }
 
@@ -402,6 +428,12 @@ export function isSubsetOf(local: ProgressSnapshot, server: ProgressSnapshot): b
     const theirs = latched.get(stage);
     return theirs !== undefined && earlierLatchTime(theirs, at) === theirs;
   };
+  // A first finish is held when the server has the quest at the same or an earlier time.
+  const firstDone = new Map(Object.entries(server.questDoneAt ?? {}));
+  const holdsFirst = (questId: string, at: string): boolean => {
+    const theirs = firstDone.get(questId);
+    return theirs !== undefined && earlierLatchTime(theirs, at) === theirs;
+  };
   // The weekly plan is held when the server has the same route at the same or a newer edit.
   const route = local.selfRoute ?? null;
   const theirRoute = server.selfRoute ?? null;
@@ -413,6 +445,7 @@ export function isSubsetOf(local: ProgressSnapshot, server: ProgressSnapshot): b
     local.cards.every(cardHeld) &&
     local.sessions.every((x) => s.has(x.id)) &&
     (local.placements ?? []).every(holdsPlacement) &&
-    Object.entries(local.stageDoneAt ?? {}).every(([stage, at]) => holds(stage, at))
+    Object.entries(local.stageDoneAt ?? {}).every(([stage, at]) => holds(stage, at)) &&
+    Object.entries(local.questDoneAt ?? {}).every(([questId, at]) => holdsFirst(questId, at))
   );
 }

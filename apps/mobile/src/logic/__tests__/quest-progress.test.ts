@@ -1,6 +1,6 @@
-import type { QuestProgress } from '@hangul-route/content-schema';
+import { ProgressSnapshotSchema, type ProgressSnapshot, type QuestProgress } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { recordBestQuest } from '../quest-progress';
+import { latchQuests, recordBestQuest } from '../quest-progress';
 
 const NOW = '2026-10-10T12:00:00.000Z';
 
@@ -100,5 +100,93 @@ describe('recordBestQuest', () => {
     expect(next.startedAt).toBe('2026-09-01T09:00:00.000Z');
     expect(next.completedAt).toBe(NOW);
     expect(next.attempts).toBe(1);
+  });
+});
+
+describe('latchQuests, the quest latch writer (F-REPORT-001 section 3.3.1, M5)', () => {
+  const snapshot = (over: Partial<ProgressSnapshot> = {}): ProgressSnapshot => ({
+    profileId: 'p1',
+    updatedAt: '2026-10-01T09:05:00.000Z',
+    episodes: [],
+    quests: [],
+    cards: [],
+    sessions: [],
+    homework: [],
+    reviews: [],
+    streakDays: 0,
+    ...over,
+  });
+  const done = (questId: string, completedAt: string | undefined): QuestProgress => saved({ questId, completedAt });
+
+  it('backfills every completed quest without an entry from its completedAt, once', () => {
+    const before = snapshot({ quests: [done('quest:a', '2026-10-01T09:05:00.000Z'), done('quest:b', '2026-10-03T10:00:00.000Z')] });
+    const after = latchQuests(before);
+    expect(after.questDoneAt).toEqual({ 'quest:a': '2026-10-01T09:05:00.000Z', 'quest:b': '2026-10-03T10:00:00.000Z' });
+    // a second pass adds nothing and returns the same snapshot
+    expect(latchQuests(after)).toBe(after);
+  });
+
+  it('never moves an entry: a replay that moved completedAt keeps the first finish', () => {
+    const before = snapshot({ quests: [done('quest:a', '2026-10-09T08:00:00.000Z')], questDoneAt: { 'quest:a': '2026-10-01T09:05:00.000Z' } });
+    expect(latchQuests(before)).toBe(before);
+  });
+
+  it('keeps entries for quests it does not hold (another device or before a reset)', () => {
+    const before = snapshot({ quests: [done('quest:b', '2026-10-03T10:00:00.000Z')], questDoneAt: { 'quest:a': '2026-10-01T09:05:00.000Z' } });
+    expect(latchQuests(before).questDoneAt).toEqual({ 'quest:a': '2026-10-01T09:05:00.000Z', 'quest:b': '2026-10-03T10:00:00.000Z' });
+  });
+
+  it('always writes the key: an empty record when nothing is finished', () => {
+    const before = snapshot({ quests: [done('quest:a', undefined)] });
+    expect(latchQuests(before).questDoneAt).toEqual({});
+    const held = snapshot({ questDoneAt: {} });
+    expect(latchQuests(held)).toBe(held);
+  });
+
+  it('leaves updatedAt alone, so the backfill never reads as practice today (lastActiveAt)', () => {
+    const before = snapshot({ quests: [done('quest:a', '2026-10-01T09:05:00.000Z')] });
+    expect(latchQuests(before).updatedAt).toBe(before.updatedAt);
+  });
+
+  it('writes only what the Worker accepts: ids of 1-64 characters, times of 1-40 characters that parse', () => {
+    const long = `quest:${'x'.repeat(59)}`;
+    expect(long).toHaveLength(65);
+    const before = snapshot({
+      quests: [
+        done(long, '2026-10-01T09:05:00.000Z'),
+        done('', '2026-10-01T09:05:00.000Z'),
+        done('quest:junk', 'soon'),
+        done('quest:empty', ''),
+        done('quest:offset', '2026-10-01T18:05:00.000+09:00'),
+        done('quest:too-long', `2026-10-01T09:05:00.000Z${' '.repeat(17)}`),
+      ],
+    });
+    const after = latchQuests(before);
+    expect(after.questDoneAt).toEqual({ 'quest:offset': '2026-10-01T18:05:00.000+09:00' });
+    expect(ProgressSnapshotSchema.safeParse(after).success).toBe(true);
+  });
+
+  it('keeps the first record of a quest listed twice', () => {
+    const before = snapshot({ quests: [done('quest:a', '2026-10-01T09:05:00.000Z'), done('quest:a', '2026-10-05T09:05:00.000Z')] });
+    expect(latchQuests(before).questDoneAt).toEqual({ 'quest:a': '2026-10-01T09:05:00.000Z' });
+  });
+
+  it('a key that names an Object.prototype member is still a quest to latch', () => {
+    const before = snapshot({ quests: [done('constructor', '2026-10-01T09:05:00.000Z')] });
+    expect(latchQuests(before).questDoneAt).toEqual({ constructor: '2026-10-01T09:05:00.000Z' });
+  });
+
+  it('never throws on a malformed saved record: it is returned unchanged', () => {
+    const noQuests = { ...snapshot(), quests: undefined } as unknown as ProgressSnapshot;
+    expect(latchQuests(noQuests)).toBe(noQuests);
+    const badQuest = { ...snapshot(), quests: [null] } as unknown as ProgressSnapshot;
+    expect(latchQuests(badQuest)).toBe(badQuest);
+  });
+
+  it('a latch that is not a record is rebuilt from the quests', () => {
+    for (const junk of [null, [], 'x', 3]) {
+      const before = { ...snapshot({ quests: [done('quest:a', '2026-10-01T09:05:00.000Z')] }), questDoneAt: junk } as unknown as ProgressSnapshot;
+      expect(latchQuests(before).questDoneAt).toEqual({ 'quest:a': '2026-10-01T09:05:00.000Z' });
+    }
   });
 });
