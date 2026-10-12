@@ -75,7 +75,8 @@ import {
  * starts and saves the run (`placement-run-store`), records the finished
  * result (`recordPlacement`, never a completion) and sends the telemetry; the
  * screens render what it gives them. Back is the exit sheet while a run is
- * open. Entry points arrive with P-7; `flags.placementEnabled` hides them.
+ * open. Entry points (P-7): the onboarding fork (`PlacementInvite`), the Home
+ * card and the Profile row; `flags.placementEnabled` hides them.
  */
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Placement'>;
@@ -448,9 +449,10 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
           resetTo([{ name: 'Main', params: { screen: 'Library' } }]);
           return;
         case 'forGrownUps':
-          // The placement report arrives with P-8; until then the grown-up zone.
-          if (gateRequired({ profiles, parentPinHash })) navigation.navigate('PinEntry', { next: 'ParentDashboard' });
-          else navigation.navigate('ParentDashboard');
+          // The grown-up report of this learner (F-PLC-001 section 3.9), behind the PIN when the gate is required.
+          if (profileId === null) return;
+          if (gateRequired({ profiles, parentPinHash })) navigation.navigate('PinEntry', { next: 'PlacementReport', profileId });
+          else navigation.navigate('PlacementReport', { profileId });
           return;
         case 'tryStandard':
           allowLeave.current = true;
@@ -464,7 +466,7 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
         }
       }
     },
-    [finished, resetTo, navigation, profiles, parentPinHash, source],
+    [finished, resetTo, navigation, profiles, parentPinHash, source, profileId],
   );
 
   const continueRun = useCallback((): void => {

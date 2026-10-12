@@ -15,6 +15,7 @@
     "./choice-card-style": "./src/components/ChoiceCard/style.ts",
     "./icon-glyphs": "./src/components/Icon/glyphs.ts",
     "./icon-glyphs/dom": "./src/components/Icon/dom.tsx",
+    "./pip-geometry": "./src/components/PipRow/geometry.ts",
     "./components/*": "./src/components/*/index.ts"
   },
   "scripts": {

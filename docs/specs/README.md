@@ -87,9 +87,12 @@ F-XXX-<slug>.md
 - `F-LAYOUT-001-responsive-tablet-landscape.md` — tablet, landscape and split-pane layout · **ready**
 - `F-SPACE-002-class-transfer.md` — move a learner between classes with learner-side, releasing and receiving consent (flag-locked) · **ready**
 - `F-ROUTE-001-my-route-overview.md` — My route: the whole journey at a glance (stage trail, pips that only fill, read / listen / write inventory, grown-up and console views) and the weekly plan proposed after the level check (companion `AMENDMENTS-PLC-PLAN-HANDOFF.md`, applied to F-PLC-001 and F-PLAN-002) · **ready**
+- `F-BILL-002-billing-in-app-all-personas.md` — billing at app.hangulroute.com/account/billing for every persona (payer and read-only plan cards, receipts and history, test-mode and live guard, step-up), status-only learner Plan screen for every tier, no billing on hangulroute.com, store rules for native builds · **ready**
 - `F-QUEST-002` amended: initial ㅇ is spoken by its name (see F-AUDIO-004)
 
 ### Spec wave 2026-10-11 (owner UX request: two hosts, personas)
+- `F-APP-001-persona-app-shell.md` — app.hangulroute.com is the one product app: persona sign-in (learner, family, teacher), a home per persona with the entries to reports, notes, Learning Route and lessons, grown-up lock on shared devices, console served on the app host (B2), the route contract for the sibling specs of the wave · **ready**
+  - wireframes `design/wireframes/shell/{signin,adult-frame,parent-home,teacher-home,grown-up-lock,offline}.md`, `onboarding/welcome-personas.md`, `parent/grown-up-home-card.md`
 - `F-SITE-002-marketing-site-layered.md` — hangulroute.com becomes a short, layered intro site: one-screen hero, persona chooser, `/learners`, `/parents`, `/teachers`, no billing or console links, feature lines tied to a claims table; old grown-up URLs are F-APP-001's · **ready**
   - wireframes `design/wireframes/site/{home,learners,parents,teachers,header-footer}.md`
 

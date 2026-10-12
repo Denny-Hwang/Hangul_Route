@@ -34,10 +34,10 @@ describe('console: the former COPY, keys and wording unchanged', () => {
 
   // PR 10a added one group per console page and retired four fragments (practicedThisWeek, anchor,
   // revisitTogether, notSyncedWeek) for whole-sentence messages under `space.week`; PR 10b added `plan` and `billing`;
-  // F-TCH-004 PR 10 added `lecture`; F-I18N-001 PR 10c added `settings`, `school` and `parent`; F-PLC-001 P-9 added `placement`.
+  // F-TCH-004 PR 10 added `lecture`; F-I18N-001 PR 10c added `settings`, `school` and `parent`; F-PLC-001 P-9 added `placement`; F-ROUTE-001 R-9a added `journey`.
   it('has exactly the 54 remaining COPY keys plus the formatter and page groups', () => {
     const groups = ['language', 'codeExpiry', 'spaceCounts', 'planCounts', 'planStatus', 'entitlementStatus', 'price', 'promoPrice'];
-    const pages = ['shell', 'kind', 'joinCode', 'signIn', 'start', 'home', 'space', 'relink', 'plan', 'billing', 'curriculum', 'lecture', 'settings', 'school', 'parent', 'placement'];
+    const pages = ['shell', 'kind', 'joinCode', 'signIn', 'start', 'home', 'space', 'relink', 'plan', 'billing', 'curriculum', 'lecture', 'settings', 'school', 'parent', 'placement', 'journey'];
     const copyKeys = Object.keys(en.console).filter((k) => !groups.includes(k) && !pages.includes(k));
     expect(copyKeys).toHaveLength(54);
     for (const g of pages) expect(Object.keys(en.console)).toContain(g);
