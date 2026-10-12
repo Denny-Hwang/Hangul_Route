@@ -360,6 +360,9 @@ describe('copyViolations catches each rule', () => {
     expect(copyViolations('A duet', 'en', 'learner')).toEqual([]);
     expect(copyViolations('La fecha límite', 'es', 'learner')).toContain('banned "fecha límite"');
     expect(copyViolations('마감까지', 'ko', 'learner')).toContain('banned "마감"');
+    expect(copyViolations('기한까지 끝내기', 'ko', 'learner')).toContain('banned "기한까지"');
+    // ko matches substrings: 신기한 ("amazing") holds 기한 and must stay allowed.
+    expect(copyViolations('신기한 이야기', 'ko', 'learner')).toEqual([]);
   });
 });
 

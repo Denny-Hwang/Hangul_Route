@@ -37,8 +37,9 @@ export const MY_ROUTE_BANNED: Readonly<Record<UiLocale, BannedFixture>> = {
   ko: {
     learner: [
       '뒤처', '늦었', '늦은', '따라잡', '남은', '남았', '아직 남', '밖에', '앞서', '비교', '순위', '점수', '프리미엄', '가격', '잠금 해제',
-      // LR-1 equivalents ("days left" and "to go" are covered by 남은 / 남았 above).
-      '마감', '기한', '연체', '밀린', '멀었',
+      // LR-1 equivalents ("days left" and "to go" are covered by 남은 / 남았 above). "Deadline" is
+      // 마감 plus 기한 with a particle only: bare 기한 sits inside 신기한 ("amazing"), which is fine copy.
+      '마감', '기한까지', '기한이', '기한을', '연체', '밀린', '멀었',
     ],
     learnerOnly: ['레벨', '등급'],
     speaking: ['말하기', '말해', '말해 보', '발음', '마이크'],
