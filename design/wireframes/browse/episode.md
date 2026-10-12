@@ -1,9 +1,10 @@
-# Browse/Episode — one grid cell, its lessons and what each teaches (wireframe v2)
+# Browse/Episode — one grid cell, its lessons and what each teaches (wireframe v3)
 
 Spec: `docs/specs/F-BROWSE-001-adult-content-browser.md` §4.6, §4.2
 Audience: **parent or teacher** in All lessons (grown-up surface). No age wording.
 
-v2 (review of 2026-10-11): no preview strip on this catalogue page; a closed lesson row uses the learner's caption "Opens with the full route" (only possible with the content switch on); back can lead to the Route section.
+v2 (review of 2026-10-11): no preview strip on this catalogue page; back can lead to the Route section.
+v3 (2026-10-12, F-ENT-003 §6.4 adopted): a closed lesson row (only possible with the content switch on) carries the grown-up caption "Opens with the Family Plan or a Group License" [BY], with no lock glyph (F-ENT-003 OD-6).
 Code (planned): `apps/mobile/src/screens/browse/BrowseEpisodeScreen.tsx`, `logic/browse/facts.ts` (`itemFacts`), `logic/my-route/skills.ts` (`questSkills`, read only), `logic/stage1/curriculum.ts` (`questTeaches`, read only)
 Notation: as `browse/home.md`.
 
@@ -36,8 +37,8 @@ Then: they see the episode as its learner page introduces it, and for each lesso
 │ ┌──────────────────────────────┐ │
 │ │ 2  More letters  ~5 min      │ │
 │ │    ~~ ㄷ ~~ d …              │ │
-│ │    [lock] Opens with the full│ │   closed (sampler + switch on only): the learner's
-│ │    route                     │ │   caption and glyph; [ Open ] still opens the page
+│ │    Opens with the Family Plan│ │   closed (sampler + switch on only): the grown-up
+│ │    or a Group License        │ │   caption, no glyph; [ Open ] still opens the page
 │ │                     [ Open ] │ │
 │ └──────────────────────────────┘ │
 │                                  │
