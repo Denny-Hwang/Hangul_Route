@@ -44,9 +44,24 @@ Drawn in a `size x size` box. `size` is 20 dp in a stage row and 24 dp in a cell
 - **No ratio, no score.** The row never carries a count, a percentage or an `x / y`. Below 360 dp of width, R-3 shows the stage caption and a plain `Progress` bar instead of the row (§3.4).
 - **No motion in v1.** The one-time fill of a newly done pip (§3.14) belongs to R-3, and only when motion is not reduced.
 
+## Stage segments (R-4b)
+
+`StageSegments` draws the whole journey in one look: one segment per stage, in route order, at the stage pip size (20 dp, scaled by `useMediaSize`), `spacing.xs` apart (scaled), wrapping like a pip row. It is the seven-segment overview the spec keeps on the Home strip (section 3.x, coming-later rows; wireframes `journey/learning-route.md` H and `journey/my-route-overview.md` D). Code: `StageSegments.tsx`, `stageSegmentParts` in `geometry.ts`; tests in both `__tests__` files.
+
+| Stage state | Segment | Ink |
+|---|---|---|
+| `complete` | the `done` pip (disc with a check) | fill = the stage colour token (decoration); edge `border.shape`; check `text.primary` |
+| `known` | the `known` pip (ring plus inner disc) | `border.shape` |
+| `explored` | the check of a done pip without its disc, so it never reads as complete | `text.primary` |
+| `open` | the `open` pip (ring) | `border.shape` |
+| `later` | the `later` pip (dotted ring) | `border.shape` |
+
+The cursor marker sits over the stage the learner is on (exactly one). Every segment reserves the marker band, so the seven sit on one line. The console roster strip (R-9a, `apps/web/src/components/console/JourneyParts.tsx`) uses the same mapping. Decorative, like the row: hidden from screen readers on native and web, and the caller's label carries the facts.
+
 ## Props
 
 ```ts
 <PipRow groups={[[{ key, state, isCursor?, isStart? }, ...], ...]} context="stage" | "cell" accent={colors.stage[stage]} />
 <Pip state="known" context="stage" />
+<StageSegments segments={[{ key: 'stage1', state: 'complete', here: false, accent: colors.stage.stage1 }, ...]} />
 ```

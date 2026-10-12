@@ -5,7 +5,6 @@ import {
   Caption,
   Card,
   Heading,
-  HeritageCardArt,
   HoyaBubble,
   Icon,
   Pill,
@@ -14,10 +13,10 @@ import {
   colors,
   radii,
   spacing,
-  supportedCardIds,
 } from '@hangul-route/design-system';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { CardArt } from '../../components/CardArt';
 import { FlipCard } from '../../components/FlipCard';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
@@ -32,6 +31,9 @@ import { playPrompt, stop } from '../../platform/audio';
 import { isShareAvailable, shareSnapshot } from '../../platform/sharing';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+
+/** Side of the card face on the front of the card page. */
+const CARD_FACE = 200;
 
 export interface CardDetailViewProps {
   cardId: string;
@@ -297,34 +299,23 @@ function FrontFaceBody({
   const a11y = useMessages().a11y;
   return (
     <View style={{ alignItems: 'center' }}>
-      <View
-        style={{
-          width: 200,
-          height: 200,
-          borderRadius: radii.xxl,
-          backgroundColor: unlocked
-            ? supportedCardIds.includes(card.id)
-              ? colors.surface.paper
-              : colors.theme[card.theme]
-            : colors.surface.sunken,
-          alignItems: 'center',
-          justifyContent: 'center',
-          opacity: unlocked ? (supportedCardIds.includes(card.id) ? 1 : 0.85) : 0.4,
-          overflow: 'hidden',
-        }}
-      >
-        {unlocked ? (
-          supportedCardIds.includes(card.id) ? (
-            <HeritageCardArt cardId={card.id} size={200} accessibilityLabel={a11y.cardArt(card.titleEn)} />
-          ) : (
-            <Text style={{ fontSize: 80, fontWeight: '800', color: colors.text.primary }}>
-              {card.subtitleKo ?? card.titleEn.charAt(0)}
-            </Text>
-          )
-        ) : (
+      {unlocked ? (
+        <CardArt card={card} size={CARD_FACE} accessibilityLabel={a11y.cardArt(card.titleEn)} style={{ borderRadius: radii.xxl }} />
+      ) : (
+        <View
+          style={{
+            width: CARD_FACE,
+            height: CARD_FACE,
+            borderRadius: radii.xxl,
+            backgroundColor: colors.surface.sunken,
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: 0.4,
+          }}
+        >
           <Icon name="lock" size={80} color={colors.text.muted} />
-        )}
-      </View>
+        </View>
+      )}
       <Spacer size="lg" />
       <Heading level="display" align="center">
         {card.titleEn}

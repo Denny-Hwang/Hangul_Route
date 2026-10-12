@@ -25,6 +25,7 @@ import { emptyBookmarks } from '../../logic/story/bookmarks';
 import { planOpenStory } from '../../logic/story/open-story';
 import { shelfCopy } from '../../logic/story/shelf-copy';
 import { shelfEntries, type ShelfCategory, type StoryIndexEntry } from '../../logic/story/story-index';
+import { storyFitsForSnapshot } from '../../logic/story/story-fit';
 import { pickedForYou } from '../../logic/story/story-pick';
 import { storyStatus, type StoryStatus } from '../../logic/story/story-status';
 import {
@@ -106,7 +107,9 @@ export function StoryShelf({ category, index }: { category: ShelfCategory; index
   );
 
   const hero = useMemo(() => {
-    const pick = pickedForYou({ entries: items.map((i) => i.entry), snapshot: snap, bookmarks, isLocked, category });
+    // F-STORY-005 §3.4: stories near the learner's stage come first; it only orders, never hides.
+    const fits = storyFitsForSnapshot(snap);
+    const pick = pickedForYou({ entries: items.map((i) => i.entry), snapshot: snap, bookmarks, isLocked, category, fits });
     return pick ? items.find((i) => i.entry.questId === pick.entry.questId) ?? null : null;
   }, [items, snap, bookmarks, isLocked, category]);
 

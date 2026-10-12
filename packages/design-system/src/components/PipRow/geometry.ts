@@ -116,6 +116,37 @@ export function pipParts(state: PipState, size: number): PipPart[] {
   }
 }
 
+/**
+ * A stage's state on the seven-segment overview of the whole journey
+ * (F-ROUTE-001 section 3.3 and the coming-later rows paragraph: the Home strip
+ * and the parent dashboard keep seven segments). The same union as `StageState`
+ * in `apps/mobile/src/logic/my-route/`, restated because the design system does
+ * not import the app.
+ */
+export type StageSegmentState = 'complete' | 'known' | 'explored' | 'open' | 'later';
+
+/** In the order of the spec's stage state table. */
+export const STAGE_SEGMENT_STATES: readonly StageSegmentState[] = ['complete', 'known', 'explored', 'open', 'later'];
+
+/**
+ * The parts of one stage segment, in the pip vocabulary: complete is a done
+ * pip, known, open and later the pips of the same name, and explored the check
+ * of a done pip without its disc, so it is never drawn as complete. Every
+ * state differs in geometry (section 3.14), as on the console journey strip.
+ */
+export function stageSegmentParts(state: StageSegmentState, size: number): PipPart[] {
+  switch (state) {
+    case 'complete':
+      return pipParts('done', size);
+    case 'explored':
+      return pipParts('done', size).filter((part) => part.kind === 'path');
+    case 'known':
+    case 'open':
+    case 'later':
+      return pipParts(state, size);
+  }
+}
+
 /** Height of the band the cursor marker sits in, above the pip. */
 export function markerBand(size: number): number {
   return size * 0.45;

@@ -48,6 +48,10 @@ import { dueTodayCount, showsTodayCount } from '../../logic/homework/assignment-
 import { mergeAssignments } from '../../logic/homework/assignment-merger';
 import { gridQuestProgress } from '../../logic/journey';
 import { homeColumns } from '../../logic/layout/home-columns';
+import { homeStripView, type HomeStripView } from '../../logic/my-route/home-strip';
+import { buildMyRoute } from '../../logic/my-route/model';
+import { localizedRouteContent, routeModelInput } from '../../logic/my-route/route-input';
+import { emptySnapshot } from '../../logic/my-route/view';
 import { placementEntriesOn, questsDoneOf } from '../../logic/placement/entry';
 import { skippedEvent } from '../../logic/placement/events';
 import { homeQuietCard, levelCheckCard } from '../../logic/placement/home-card';
@@ -56,6 +60,7 @@ import { computeStreak } from '../../logic/streak';
 import { emptyBookmarks } from '../../logic/story/bookmarks';
 import { storyCoverArt } from '../../logic/story/scene-view';
 import { defaultStoryIndex, entryForQuest } from '../../logic/story/story-index';
+import { storyFitsForSnapshot } from '../../logic/story/story-fit';
 import { storyLockFor } from '../../logic/story/story-pick';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
@@ -66,6 +71,7 @@ import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
 import { effectiveTier, useTierStore } from '../../store/tier-store';
 import { LinkButton } from '../placement/parts';
+import { RouteStrip } from './RouteStrip';
 
 /** Avatar circle in the Profile entry; with its label the button clears the 64pt floor. */
 const AVATAR_SIZE = 52;
@@ -182,6 +188,7 @@ function CatchUpCard({
 
 export function HomeScreen(): React.ReactElement {
   const m = useMessages();
+  const locale = useLocale();
   const { copy } = useAudience();
   const profile = useProfileStore(activeProfileSelector);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -249,6 +256,8 @@ export function HomeScreen(): React.ReactElement {
           gatingEnabled: flags.contentGatingEnabled,
           episodes: episodesAll,
         }),
+        // F-STORY-005 §3.4: stories near the learner's stage come first; it only orders, never hides.
+        fits: storyFitsForSnapshot(snap),
       },
     });
     // A caregiver or class assignment for today takes card ② (F-HW-001 §3.4, F-PLAN-001 §3.4).
@@ -264,6 +273,24 @@ export function HomeScreen(): React.ReactElement {
     // `cachedTier` re-renders this screen when the inbox changes the tier.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, snap, tier, cachedTier, bookmarks, storyIndex]);
+
+  // The route strip (F-ROUTE-001 R-4b, OD-3): built from `routeModelInput`, the same input as the
+  // Learning Route page, so the strip and the page always name the same stage and pips.
+  // Localized only when the flag is on, so Home does no extra work with the flag off.
+  const routeContent = useMemo(() => (flags.myRouteEnabled ? localizedRouteContent(locale) : null), [locale]);
+  const routeStrip = useMemo((): HomeStripView | null => {
+    if (!routeContent || !profile) return null;
+    try {
+      const snapshot = snap ?? emptySnapshot(profile.id);
+      const model = buildMyRoute(routeModelInput({ snapshot, tier, localized: routeContent, now: new Date() }));
+      return homeStripView({ model, messages: m });
+    } catch {
+      // Content that cannot be read leaves the slot empty; the page itself shows the retry.
+      return null;
+    }
+    // `cachedTier` re-renders this screen when the inbox changes the tier.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile, snap, tier, cachedTier, routeContent, m]);
 
   // Native screen readers hear the catch-up line once (F-STORY-006 §3.10): the card is usually on
   // the first render, where a live region says nothing, and iOS has no live regions. The web reads
@@ -405,13 +432,26 @@ export function HomeScreen(): React.ReactElement {
   // The gap under the card only when mission cards follow it; the side block brings its own.
   const catchUpGap = catchUp && missions ? <Spacer size="lg" /> : null;
 
-  const side = (
+  // Block 5 of the Home stack (F-ROUTE-001 section 6.4): the route strip replaces the
+  // "Stage 1 progress" bar when the flag is on (OD-3); with the flag off Home is unchanged.
+  const progressBlock = flags.myRouteEnabled ? (
+    routeStrip ? <RouteStrip view={routeStrip} onPress={() => navigation.navigate('MyRoute', { source: 'home' })} /> : null
+  ) : (
     <>
       <Heading level="prompt">{m.learner.home.progress.heading}</Heading>
       <Spacer size="sm" />
       <Progress value={completed} max={totalStage1Quests} tone="primary" label={m.learner.home.progress.label(completed, totalStage1Quests)} />
+    </>
+  );
 
-      <Spacer size="xl" />
+  const side = (
+    <>
+      {progressBlock ? (
+        <>
+          {progressBlock}
+          <Spacer size="xl" />
+        </>
+      ) : null}
       <Pressable
         onPress={() => navigation.navigate('Homework')}
         accessibilityRole="button"

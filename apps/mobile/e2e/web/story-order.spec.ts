@@ -1,14 +1,14 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, passDiscover, playCheckByIds, type CheckAnswer } from './helpers';
 
 /**
  * F-STORY-003 PR 3.5a: Story Order v2 on the shipped Stage 1 sequences.
- * "New Year Order" is the apply step of the Seollal quest ("Bow & Eat
- * Tteokguk"); its four steps carry Korean and romanization (F-CNT-002).
+ * "New Year Order" is the apply step of Holidays quest 3 ("Hanbok and the
+ * Bow", F-QUEST-002 Q-7b); its four steps carry Korean and romanization (F-CNT-002).
  * Cards start in a derangement of the correct order, a wrong tap is an amber
  * nudge that moves nothing, the finished order replays, and the quest still
- * completes. Nothing here needs a Korean voice or a network.
+ * completes through its Check. Nothing here needs a Korean voice or a network.
  */
 
 /** Correct order of the Seollal steps: English caption, Korean, romanization. */
@@ -22,8 +22,11 @@ const STEPS = [
 const AMBER = 'rgb(242, 179, 61)'; // colors.feedback.nudge
 const RED = 'rgb(200, 75, 61)'; // colors.feedback.danger: never on a learner's miss
 
-/** Onboard, open the Seollal quest and play up to its Story Order step (the other games are skipped). */
-async function openSeollalOrder(page: Page): Promise<void> {
+/** The quest's Check (F-QUEST-002 section 3.6, quest 9): the vowel yo among yo o yu yeo, then the word 한복. */
+const CHECK_RIGHT: readonly [CheckAnswer, CheckAnswer] = [{ answer: 'jamo:yo' }, { answer: '한복' }];
+
+/** Onboard, open Hanbok and the Bow and play up to its Story Order step (Discover read, practice skipped). */
+async function openNewYearOrder(page: Page): Promise<void> {
   await page.goto('/');
   await keepSidewaysIfAsked(page);
   await page.getByRole('button', { name: "Let's start" }).click();
@@ -35,10 +38,10 @@ async function openSeollalOrder(page: Page): Promise<void> {
   if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
   await page.getByText('Journey', { exact: true }).last().click();
   await page.getByRole('button', { name: 'Holidays & Traditions episode for stage1' }).click();
-  await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+  await page.getByRole('button', { name: 'Start', exact: true }).nth(2).click();
   await page.getByRole('button', { name: 'Play anyway' }).click(); // soft prerequisite sheet
   await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByRole('button', { name: 'Skip for now' }).click();
+  await passDiscover(page);
   await page.getByRole('button', { name: 'Skip for now' }).click();
   await page.getByRole('button', { name: 'Play minigame' }).click();
   await expect(page.getByRole('heading', { name: 'Put the story in order' })).toBeVisible();
@@ -99,7 +102,7 @@ async function placeAll(page: Page): Promise<void> {
 test('the cards never start in the right order, and every one carries its Korean and romanization', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e)));
-  await openSeollalOrder(page);
+  await openNewYearOrder(page);
 
   const order = await shownOrder(page);
   expect(order).toHaveLength(4);
@@ -119,7 +122,7 @@ test('the cards never start in the right order, and every one carries its Korean
 });
 
 test('the shipped steps have no art yet: no picture on a card, and the replay card keeps the paper surface', async ({ page }) => {
-  await openSeollalOrder(page);
+  await openNewYearOrder(page);
   await expect(page.locator('[data-testid^="story-sequence-card-art-"]')).toHaveCount(0);
   await placeAll(page);
   await expect(page.getByTestId('story-sequence-replay-art')).toHaveCount(0);
@@ -128,7 +131,7 @@ test('the shipped steps have no art yet: no picture on a card, and the replay ca
 });
 
 test('a wrong card is an amber nudge that moves nothing; two misses ring the right card', async ({ page }) => {
-  await openSeollalOrder(page);
+  await openNewYearOrder(page);
   const wrong = card(page, 'Eat tteokguk');
 
   await wrong.click();
@@ -153,7 +156,7 @@ test('a wrong card is an amber nudge that moves nothing; two misses ring the rig
 test('every slot placed: the story replays in order, pauses, steps, and Done finishes the quest with its card', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e)));
-  await openSeollalOrder(page);
+  await openNewYearOrder(page);
   await placeAll(page);
 
   // Replay: first card in full, with its Korean and caption.
@@ -176,29 +179,33 @@ test('every slot placed: the story replays in order, pauses, steps, and Done fin
   await page.getByRole('button', { name: 'Play', exact: true }).click();
   await expect(caption).toHaveText('Bow to elders', { timeout: 4500 });
 
-  // Done ends the step (a button, not a timer); the Seollal quest is still completable.
+  // Done ends the step (a button, not a timer); the quest is still completable through its Check.
   await page.getByRole('button', { name: 'Done', exact: true }).click();
+  await playCheckByIds(page, CHECK_RIGHT);
   await page.getByRole('button', { name: 'See results' }).click();
-  await expect(page.getByText('Wonderful!')).toBeVisible(); // four first-try slots
+  await expect(page.getByText('Wonderful!')).toBeVisible(); // four first-try slots and two first-try Check answers
   await expect(page.getByRole('button', { name: /^See my card/ })).toBeVisible();
   expect(errors).toEqual([]);
 });
 
 test('Skip replay ends the step at once; one first-try miss still keeps the card', async ({ page }) => {
-  await openSeollalOrder(page);
+  await openNewYearOrder(page);
   await card(page, 'Bow to elders').click(); // one miss on slot 1
   await placeAll(page);
   await page.getByRole('button', { name: 'Skip replay' }).click();
+  await playCheckByIds(page, CHECK_RIGHT);
   await page.getByRole('button', { name: 'See results' }).click();
-  await expect(page.getByText('Great!')).toBeVisible(); // 3 of 4 first try: two stars
+  await expect(page.getByText('Great!')).toBeVisible(); // 5 of 6 first try (3 of 4 slots, 2 of 2 Check): two stars
   await expect(page.getByRole('button', { name: /^See my card/ })).toBeVisible();
 });
 
-test('Skip this one records nothing: the quest still finishes and no star is given', async ({ page }) => {
-  await openSeollalOrder(page);
+test('Skip this one records nothing: the quest goes on to its Check, which alone sets the stars', async ({ page }) => {
+  await openNewYearOrder(page);
   await page.getByRole('button', { name: 'Skip this one' }).click();
+  // One Check answer right first time of two: 1 star. Had the skipped order counted as four misses, it would be none.
+  await playCheckByIds(page, [{ answer: 'jamo:yo' }, { answer: '한복', missWith: '한국' }]);
   await page.getByRole('button', { name: 'See results' }).click();
-  await expect(page.getByText('All done!')).toBeVisible();
+  await expect(page.getByText('You tried!').or(page.getByText('Good try!')).first()).toBeVisible();
   await expect(page.getByRole('button', { name: /^See my card/ })).toHaveCount(0);
 });
 
@@ -206,7 +213,7 @@ test.describe('reduced motion', () => {
   test.use({ reducedMotion: 'reduce' });
 
   test('the replay does not advance by itself and has no pause control', async ({ page }) => {
-    await openSeollalOrder(page);
+    await openNewYearOrder(page);
     await placeAll(page);
     const caption = page.getByTestId('story-sequence-replay-caption');
     await expect(caption).toHaveText('Wear hanbok');
@@ -226,7 +233,7 @@ for (const vp of [
     test.use({ viewport: { width: vp.width, height: vp.height } });
 
     test('cards stay in one column of whole words, Skip and Done are reachable by scrolling', async ({ page }) => {
-      await openSeollalOrder(page);
+      await openNewYearOrder(page);
       const noSideScroll = (): Promise<boolean> =>
         page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth);
       expect(await noSideScroll()).toBe(true);

@@ -4,7 +4,7 @@
  * draws `nature-flower` and W-5 the rest. Keys are written without the
  * `word:` prefix.
  */
-import { circle, curve, rect } from '../builders';
+import { circle, curve, groundShadow, leaf, rect } from '../builders';
 import type { WordArtGlyph, WordArtPaint, WordArtShape } from '../types';
 
 const INK = { s: 'text.primary', sw: 3 } as const;
@@ -40,5 +40,14 @@ export const NATURE_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
       ],
       { s: 'brand.secondaryLight', sw: 3 },
     ),
+  ],
+  // pink flower on a stem (the pink swatch's object, §3.6.1): five petals round a yellow centre, two leaves
+  'nature-flower': [
+    groundShadow(50, 86, 16),
+    rect(47.5, 44, 5, 42, 2.5, { f: 'vocab.green', ...INK }),
+    leaf(50, 76, 30, 62, 6, { f: 'vocab.green', ...INK }),
+    leaf(50, 70, 70, 56, 6, { f: 'vocab.green', ...INK }),
+    ...[0, 72, 144, 216, 288].map((a) => circle(50 + 13 * Math.sin((a * Math.PI) / 180), 35 - 13 * Math.cos((a * Math.PI) / 180), 10, { f: 'vocab.pink', ...INK })),
+    circle(50, 35, 8, { f: 'hoya.fur', ...INK }),
   ],
 };

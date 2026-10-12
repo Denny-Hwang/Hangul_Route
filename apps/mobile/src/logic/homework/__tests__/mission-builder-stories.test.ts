@@ -115,6 +115,7 @@ interface StoryWorld {
   entries?: readonly StoryIndexEntry[];
   bookmarks?: BookmarkFile;
   isLocked?: (entry: StoryIndexEntry) => boolean;
+  fits?: (entry: StoryIndexEntry) => boolean;
 }
 
 function build(overrides: Partial<BuildMissionInput> = {}, world: StoryWorld = {}): MissionPlan {
@@ -128,6 +129,7 @@ function build(overrides: Partial<BuildMissionInput> = {}, world: StoryWorld = {
       entries: world.entries ?? INDEX,
       bookmarks: world.bookmarks ?? emptyBookmarks(),
       isLocked: world.isLocked ?? (() => false),
+      fits: world.fits,
     },
     ...overrides,
   });
@@ -169,6 +171,19 @@ describe('day one with stories (F-STORY-004 §3.14 #1)', () => {
       snapshot: snapshot([done(questId('tiger'), LONG_AGO, 1, 'episode:shelf-tiger'), done(questId('sun'), LONG_AGO, 1, 'episode:shelf-sun')]),
     });
     expect(plan.cards[0]).toMatchObject({ storyId: 'story:seollal', storyReason: 'next' });
+  });
+});
+
+describe('story fit orders the `next` story cards (F-STORY-005 §3.4 rule 2)', () => {
+  it('fitting stories come first; the rest keep their shelf order and none is dropped', () => {
+    // Only Sun fits: it moves ahead of Tiger in slot 1, and Tiger still takes slot 3.
+    const plan = build({}, { fits: (e) => e.storyId === 'story:sun' });
+    expect(plan.cards[0]).toMatchObject({ storyId: 'story:sun', storyReason: 'next' });
+    expect(plan.cards[2]).toMatchObject({ storyId: 'story:tiger', storyReason: 'next' });
+  });
+
+  it('without `fits` the shelf order is unchanged', () => {
+    expect(build({}, { fits: undefined }).cards[0]).toMatchObject({ storyId: 'story:tiger' });
   });
 });
 

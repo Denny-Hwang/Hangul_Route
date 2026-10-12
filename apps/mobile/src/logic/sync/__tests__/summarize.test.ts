@@ -1,7 +1,13 @@
-import { ProgressSummarySchema, type ProgressSnapshot } from '@hangul-route/content-schema';
+import {
+  ProgressSummarySchema,
+  VocabSummarySchema,
+  type ProgressSnapshot,
+  type VocabItemState,
+  type VocabProgress,
+} from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { placementResult } from '../../placement/__tests__/fixtures';
-import { placementSummaryOf, planProgressOf, summarize } from '../summarize';
+import { placementSummaryOf, planProgressOf, summarize, vocabSummaryOf } from '../summarize';
 
 const NOW = new Date('2026-09-21T12:00:00.000Z');
 const snap: ProgressSnapshot = {
@@ -158,5 +164,160 @@ describe('summarize: summary.journey (F-ROUTE-001 section 3.12, R-8)', () => {
 
   it('leaves the key out when no journey is given (summarize stays pure)', () => {
     expect(summarize({ snapshot: snap, now: NOW, stage1QuestIds: ['q1'], questJamo: {} })).not.toHaveProperty('journey');
+  });
+});
+
+describe('vocabSummaryOf (F-VOC-005 section 3.8)', () => {
+  const TODAY = '2026-10-20';
+  const w = (slug: string, over: Partial<VocabItemState> = {}): VocabItemState => ({
+    id: `vocab:${slug}`,
+    first: '2026-09-01',
+    seen: 4,
+    right: 4,
+    bestBox: 2,
+    last: '2026-10-01',
+    box: 2,
+    due: '2026-10-25',
+    at: '2026-10-01T10:00:00.000Z',
+    ...over,
+  });
+  const topic = (key: string, last: string) => ({ topic: key, bestStars: 1, sessions: 2, last, bestCaught: 0 });
+
+  it('counts collected and strong words (bestBox 3 and up) and the topics started', () => {
+    const v: VocabProgress = {
+      v: 1,
+      items: [w('a', { bestBox: 3, box: 1 }), w('b', { bestBox: 5, box: 5 }), w('c'), w('d', { bestBox: 1, box: 1 })],
+      topics: [topic('food', '2026-10-01'), topic('animals', '2026-10-19')],
+    };
+    const out = vocabSummaryOf(v, TODAY);
+    expect(out).toMatchObject({ collected: 4, strong: 2, topicsStarted: 2 });
+    expect(VocabSummarySchema.safeParse(out).success).toBe(true);
+  });
+
+  it('counts topics practised in the last 7 days, today included (today minus 6 is in, minus 7 is out)', () => {
+    const v: VocabProgress = {
+      v: 1,
+      items: [w('a')],
+      topics: [topic('food', '2026-10-14'), topic('animals', '2026-10-13'), topic('colors', TODAY)],
+    };
+    expect(vocabSummaryOf(v, TODAY).topicsPracticed7d).toBe(2);
+  });
+
+  it('rounds the first-try rate to 2 decimals and is null when nothing was answered', () => {
+    const rate = (items: VocabItemState[]) => vocabSummaryOf({ v: 1, items, topics: [] }, TODAY).firstTryRate;
+    expect(rate([w('a', { seen: 3, right: 2 })])).toBe(0.67);
+    expect(rate([w('a', { seen: 3, right: 1 }), w('b', { seen: 3, right: 3 })])).toBe(0.67);
+    expect(rate([w('a', { seen: 0, right: 0 }), w('b', { seen: 0, right: 0 })])).toBeNull();
+    expect(rate([w('a', { seen: 8, right: 8 })])).toBe(1);
+  });
+
+  it('rounds an exact half up, whatever the floating-point division says', () => {
+    const rate = (items: VocabItemState[]) => vocabSummaryOf({ v: 1, items, topics: [] }, TODAY).firstTryRate;
+    // 23 / 40 = 0.575 and 1 / 8 = 0.125: (right / seen) * 100 lands just under the half.
+    expect(rate([w('a', { seen: 40, right: 23 })])).toBe(0.58);
+    expect(rate([w('a', { seen: 8, right: 1 })])).toBe(0.13);
+    for (let seen = 1; seen <= 400; seen++) {
+      for (let right = 0; right <= seen; right++) {
+        const want = Math.floor((right * 200 + seen) / (2 * seen)) / 100;
+        expect(rate([w('a', { seen, right })])).toBe(want);
+      }
+    }
+  });
+
+  it('lists up to three words seen twice or more, now in box 1, lowest right/seen first', () => {
+    const v: VocabProgress = {
+      v: 1,
+      items: [
+        w('half', { seen: 4, right: 2, box: 1 }),
+        w('none', { seen: 2, right: 0, box: 1 }),
+        w('third', { seen: 3, right: 1, box: 1 }),
+        w('mostly', { seen: 5, right: 4, box: 1 }),
+        w('once', { seen: 1, right: 0, box: 1 }),
+        w('higher', { seen: 4, right: 0, box: 2 }),
+      ],
+      topics: [],
+    };
+    expect(vocabSummaryOf(v, TODAY).needsPractice).toEqual(['vocab:none', 'vocab:third', 'vocab:half']);
+  });
+
+  it('breaks needsPractice ties by the most recent last, then id', () => {
+    const v: VocabProgress = {
+      v: 1,
+      items: [
+        w('b-old', { seen: 2, right: 1, box: 1, last: '2026-10-01' }),
+        w('z-new', { seen: 4, right: 2, box: 1, last: '2026-10-18' }),
+        w('a-new', { seen: 2, right: 1, box: 1, last: '2026-10-18' }),
+        w('c-mid', { seen: 2, right: 1, box: 1, last: '2026-10-10' }),
+      ],
+      topics: [],
+    };
+    expect(vocabSummaryOf(v, TODAY).needsPractice).toEqual(['vocab:a-new', 'vocab:z-new', 'vocab:c-mid']);
+  });
+
+  it('gives a learner who never missed an empty list', () => {
+    const v: VocabProgress = { v: 1, items: [w('a'), w('b', { box: 1, bestBox: 1, seen: 0, right: 0 })], topics: [] };
+    expect(vocabSummaryOf(v, TODAY).needsPractice).toEqual([]);
+  });
+});
+
+describe('summarize with words (F-VOC-005 section 3.8)', () => {
+  const NOON = new Date(2026, 9, 20, 12);
+  const item: VocabItemState = {
+    id: 'vocab:sagwa-apple',
+    first: '2026-10-10',
+    seen: 3,
+    right: 1,
+    bestBox: 2,
+    last: '2026-10-19',
+    box: 1,
+    due: '2026-10-20',
+    at: '2026-10-19T10:00:00.000Z',
+  };
+
+  it('adds summary.vocab when the learner has collected words, and it parses', () => {
+    const out = summarize({
+      snapshot: { ...snap, vocab: { v: 1, items: [item], topics: [] } },
+      now: NOON,
+      stage1QuestIds: ['q1'],
+      questJamo: {},
+    });
+    expect(out.vocab).toEqual({
+      collected: 1,
+      strong: 0,
+      topicsStarted: 0,
+      topicsPracticed7d: 0,
+      firstTryRate: 0.33,
+      needsPractice: ['vocab:sagwa-apple'],
+    });
+    expect(ProgressSummarySchema.parse(out).vocab).toEqual(out.vocab);
+  });
+
+  it('has no vocab key when nothing is collected: absent, empty or unreadable slice (behaviour 13)', () => {
+    const run = (s: ProgressSnapshot) => summarize({ snapshot: s, now: NOON, stage1QuestIds: ['q1'], questJamo: {} });
+    const base = run(snap);
+    expect(base).not.toHaveProperty('vocab');
+    expect(run({ ...snap, vocab: { v: 1, items: [], topics: [] } })).toEqual(base);
+    const broken = { ...snap, vocab: { v: 2, items: 'nope' } } as unknown as ProgressSnapshot;
+    expect(run(broken)).toEqual(base);
+  });
+
+  it('reads the day in the device time zone', () => {
+    const tz = process.env.TZ;
+    try {
+      process.env.TZ = 'America/Los_Angeles';
+      // 2026-10-21 03:00 UTC is still 2026-10-20 in Los Angeles: a topic last practised 2026-10-14 is within 7 days.
+      const late = new Date('2026-10-21T03:00:00.000Z');
+      const out = summarize({
+        snapshot: { ...snap, vocab: { v: 1, items: [item], topics: [{ topic: 'food', bestStars: 0, sessions: 1, last: '2026-10-14', bestCaught: 0 }] } },
+        now: late,
+        stage1QuestIds: ['q1'],
+        questJamo: {},
+      });
+      expect(out.vocab?.topicsPracticed7d).toBe(1);
+    } finally {
+      // Assigning undefined would store the string "undefined" and leak a bogus zone.
+      if (tz === undefined) delete process.env.TZ;
+      else process.env.TZ = tz;
+    }
   });
 });
