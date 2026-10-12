@@ -27,7 +27,10 @@ export type GrownUpDestination =
   | 'MyRoute'
   | 'PlacementReport'
   | 'GrownUpArea'
-  | 'Billing';
+  | 'Billing'
+  /** F-FEEDBACK-001 section 6.10 (types from FB-7; the screens arrive with FB-9): a learner's notes in the grown-up zone, and the report sheet for one note (`PinEntry.noteId`). */
+  | 'NotesGrownUp'
+  | 'NoteReport';
 
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
@@ -74,6 +77,8 @@ export type RootStackParamList = {
     from?: 'journey' | 'library';
     /** `next: 'EditProfile'`: the profile to edit (F-LEARN-001 §3.11); `next: 'MyRoute'`: the profile whose page opens read-only; `next: 'PlacementReport'`: whose report opens (F-PLC-001 section 3.9). */
     profileId?: string;
+    /** `next: 'NoteReport'`: the note the report sheet opens for ("Tell a grown-up", F-FEEDBACK-001 section 6.10 item 4). */
+    noteId?: string;
   };
   /** Forgot PIN: Rescue Code or a 24-hour wait, then a new PIN (F-LEARN-001 §3.5). `next` is kept for the PIN screen. */
   PinReset: { next: GrownUpDestination; profileId?: string };

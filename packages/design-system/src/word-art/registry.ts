@@ -19,6 +19,7 @@ import { SCHOOL_GLYPHS } from './glyphs/school';
 import { SCIENCE_GLYPHS } from './glyphs/science';
 import { SPORT_GLYPHS } from './glyphs/sport';
 import { TRAVEL_GLYPHS } from './glyphs/travel';
+import { BODY_PARTS, bodyGlyphs } from './generated/body';
 import { COLOR_SWATCHES, colorGlyphs } from './generated/color';
 import { COUNT_VALUES, countGlyphs } from './generated/count';
 import type { WordArtFamily, WordArtGlyph, WordArtMeta } from './types';
@@ -69,7 +70,12 @@ export type WordArtMetaOverrides = Readonly<Record<string, Partial<Omit<WordArtM
 /** Why every colour swatch carries the C2 waiver (§3.6.1). No swatch needs a fifth fill tone (§3.3): each stays at 4 or fewer. */
 const SWATCH_REASON = 'The swatch square fills the frame (88 of 100 units, margin 6), so its subject box is past the 60-70 % rule by design (§3.6.1).';
 
-/** Review state and waivers. A key not listed is a `draft`. */
+/**
+ * Review state and waivers. A key not listed is a `draft`. The W-1b samples,
+ * the props and the W-3 keys stay `review` until the follow-up review pass;
+ * F-VOC-003 C-7 waits for every non-prop key of a shown topic to be `approved`
+ * (§6).
+ */
 const META: WordArtMetaOverrides = {
   'food-apple': { status: 'review' },
   'animal-cat': { status: 'review' },
@@ -87,6 +93,8 @@ const META: WordArtMetaOverrides = {
   ),
   ...Object.fromEntries(Object.keys(COLOR_SWATCHES).map((k) => [k, { status: 'review', bboxWaived: true, reason: SWATCH_REASON }])),
   ...Object.fromEntries(COUNT_VALUES.map((n) => [`count-${n}`, { status: 'review' }])),
+  // batch W-4: the other animals and the body parts, approved by the batch review that stands in for the owner's (2026-10-11)
+  ...Object.fromEntries([...['puppy', 'rabbit', 'bird', 'fish', 'duck', 'fox', 'monkey', 'butterfly'].map((a) => `animal-${a}`), ...BODY_PARTS.map((p) => `body-${p}`)].map((k) => [k, { status: 'approved' }])),
   // batch W-5: family, school and nature, approved by the batch review that stands in for the owner's (2026-10-11)
   ...Object.fromEntries([...['mom', 'dad', 'grandma', 'grandpa', 'eonni', 'nuna', 'oppa', 'hyeong', 'dongsaeng', 'baby', 'family', 'me'].map((k) => `family-${k}`), ...['school', 'teacher', 'friend', 'pencil', 'bag', 'notebook', 'eraser', 'desk', 'scissors', 'board'].map((k) => `school-${k}`), ...['sky', 'sun', 'star', 'tree', 'rain', 'snow', 'river'].map((k) => `nature-${k}`)].map((k) => [k, { status: 'approved' }])),
 };
@@ -134,7 +142,7 @@ const HAND: readonly WordArtSource[] = [
 const handGlyph = (key: string): WordArtGlyph | undefined => HAND.find(([, glyphs]) => Object.prototype.hasOwnProperty.call(glyphs, key))?.[1][key];
 
 export const WORD_ART: Readonly<Record<string, WordArtEntry>> = buildRegistry(
-  [...HAND, ['color', colorGlyphs(handGlyph)], ['count', countGlyphs()]],
+  [...HAND, ['color', colorGlyphs(handGlyph)], ['count', countGlyphs()], ['body', bodyGlyphs()]],
   META,
 );
 

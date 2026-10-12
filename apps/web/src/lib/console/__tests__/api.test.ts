@@ -1,4 +1,4 @@
-import type { TeacherVisibleSummaryKey } from '@hangul-route/content-schema';
+import type { TeacherVisibleSummaryKey, VocabSummary } from '@hangul-route/content-schema';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { createConsoleApi, type RosterLearner } from '../api';
 
@@ -6,8 +6,11 @@ const json = (status: number, body: unknown) => new Response(JSON.stringify(body
 const space = { id: 'space:c', kind: 'class', name: 'A', parentSpaceId: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt: null, createdAt: 't' };
 
 describe('console api (F-CONSOLE-001)', () => {
-  it('types roster summaries as the teacher allow-list plus a family\'s own-route counts and Learning Route goal: no stage1Anchor, no schemaVersion (F-SPACE-002 T-1a, F-PLAN-002 section 3.10, Learning Route LR-W1)', () => {
-    expectTypeOf<keyof NonNullable<RosterLearner['summary']>>().toEqualTypeOf<TeacherVisibleSummaryKey | 'selfRoute' | 'routeGoal'>();
+  it('types roster summaries as the teacher allow-list plus a family\'s own-route counts, Learning Route goal and an optional vocab: no stage1Anchor, no schemaVersion (F-SPACE-002 T-1a, F-PLAN-002 section 3.10, Learning Route LR-W1, F-VOC-005 P-4)', () => {
+    expectTypeOf<keyof NonNullable<RosterLearner['summary']>>().toEqualTypeOf<TeacherVisibleSummaryKey | 'selfRoute' | 'routeGoal' | 'vocab'>();
+    // Optional: the console shows word lines only when a roster carries it (vocab stays on the hidden list).
+    // Without firstTryRate: the rate is a student's detail view only, never a roster's (section 3.8, P-4b).
+    expectTypeOf<NonNullable<RosterLearner['summary']>['vocab']>().toEqualTypeOf<Omit<VocabSummary, 'firstTryRate'> | undefined>();
     expectTypeOf<NonNullable<RosterLearner['summary']>['selfRoute']>().toEqualTypeOf<{ done: number; total: number; notReady: number; weeks: number; endsOn: string } | undefined>();
     // Optional: only a family roster carries it, and only from a device on a build that writes it (LR-6).
     expectTypeOf<NonNullable<RosterLearner['summary']>['routeGoal']>().toEqualTypeOf<{ stage: string; from: 'class' | 'school' | 'family' | 'self' | 'default' } | undefined>();

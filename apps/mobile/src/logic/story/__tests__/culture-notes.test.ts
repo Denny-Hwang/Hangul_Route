@@ -4,6 +4,9 @@ import { foundNotes, groupNotesByTheme, notesForStory } from '../culture-notes';
 import { buildStoryIndex } from '../story-index';
 import { bookEpisode, questId, shelfEpisode, shelfIndex, snapshot, story, storyQuest, unreviewed } from './shelf-fixture';
 
+/** The ready fixture's first source of f3, stored with its web address (the card prints it without, F-STORY-006 §3.8). */
+const HANGUL_DAY_PUBLISHER = '문화재청 (Cultural Heritage Administration, heritage.go.kr)';
+
 function note(id: string, factIds: string[] = ['f3'], patch: Partial<CultureNote> = {}): CultureNote {
   return {
     id,
@@ -45,7 +48,7 @@ describe('foundNotes', () => {
       theme: 'letters',
       foundAt: at(2),
       sources: [
-        { title: 'Hangul Day', publisher: 'Cultural Heritage Administration' },
+        { title: 'Hangul Day', publisher: HANGUL_DAY_PUBLISHER },
         { title: 'Hangul Day', publisher: 'National Institute of Korean Language' },
       ],
     });
@@ -65,7 +68,7 @@ describe('foundNotes', () => {
       { title: 'Hangul, the Korean alphabet', publisher: 'Cultural Heritage Administration' },
       { title: 'Hunminjeongeum Manuscript', publisher: 'Cultural Heritage Administration' },
       { title: 'Hunminjeongeum Manuscript', publisher: 'UNESCO' },
-      { title: 'Hangul Day', publisher: 'Cultural Heritage Administration' },
+      { title: 'Hangul Day', publisher: HANGUL_DAY_PUBLISHER },
       { title: 'Hangul Day', publisher: 'National Institute of Korean Language' },
     ]);
   });

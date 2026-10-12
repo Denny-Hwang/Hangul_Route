@@ -202,7 +202,7 @@ describe("build-vocab.mjs: shaping", () => {
     ]);
   });
 
-  test("web catalog holds id, ko, romanization, en, primary topic and visual only", () => {
+  test("web catalog holds id, ko, romanization, en, primary topic, visual and the glosses only", () => {
     const root = makeRoot();
     seed(root);
     assert.equal(run(root).status, 0);
@@ -214,6 +214,7 @@ describe("build-vocab.mjs: shaping", () => {
       en: "apple",
       topic: "food",
       visual: "card:sagwa",
+      glosses: { en: "apple" },
     });
     assert.equal(catalog.length, 4);
     assert.ok(webOf(root).startsWith(GENERATED_HEADER));
@@ -271,6 +272,18 @@ describe("build-vocab.mjs: glosses from overlays", () => {
     put(root, "content/i18n/es/vocab-food.json", overlay("es", "food", { "vocab:sagwa": { gloss: "manzana" } }));
     assert.equal(run(root).status, 0);
     assert.equal(grab(mobileOf(root), "VOCAB_ITEMS")[0].glosses.es, "manzana");
+  });
+
+  test("the web catalog carries the overlay glosses too (F-VOC-005 P-4: the console glosses in its UI language)", () => {
+    const root = makeRoot();
+    seed(root);
+    put(root, "content/i18n/es/vocab-food.json", overlay("es", "food", { "vocab:sagwa": { gloss: "manzana" } }));
+    put(root, "content/i18n/ko/vocab-animals.json", overlay("ko", "animals", { "vocab:horangi": { gloss: "호랑이" } }));
+    assert.equal(run(root).status, 0);
+    const catalog = grab(webOf(root), "VOCAB_CATALOG");
+    assert.deepEqual(catalog[0].glosses, { en: "apple", es: "manzana" });
+    assert.deepEqual(catalog[1].glosses, { en: "pear" });
+    assert.deepEqual(catalog[2].glosses, { en: "tiger", ko: "호랑이" });
   });
 
   test("the overlay of one topic does not leak into another", () => {
@@ -456,7 +469,7 @@ describe("build-vocab.mjs: --check", () => {
     assert.match(r.stdout, /::error file=apps\/web\/src\/data\/vocab-catalog\.ts::.*out of date/);
   });
 
-  test("an overlay change drifts only the mobile module", () => {
+  test("an overlay change drifts both modules (each carries the glosses)", () => {
     const root = makeRoot();
     seed(root);
     run(root);
@@ -464,7 +477,7 @@ describe("build-vocab.mjs: --check", () => {
     const r = run(root, ["--check"]);
     assert.equal(r.status, 1);
     assert.match(r.stdout, /__generated__\/vocab\.ts::.*out of date/);
-    assert.equal(r.stdout.includes("vocab-catalog.ts::"), false);
+    assert.match(r.stdout, /vocab-catalog\.ts::.*out of date/);
   });
 
   test("hand-editing a generated file is caught", () => {

@@ -272,4 +272,25 @@ describe('flags', () => {
     const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
     expect(src).toContain('process.env.EXPO_PUBLIC_GROWN_UP_HOME');
   });
+
+  it('notesEnabled (F-FEEDBACK-001 section 6.5) is OFF by default and flips on with "true" or "1"', async () => {
+    delete process.env.EXPO_PUBLIC_NOTES_ENABLED;
+    let mod = await reload();
+    expect(mod.flags.notesEnabled).toBe(false);
+    expect(mod.launchDefaultFlags.notesEnabled).toBe(false);
+    process.env.EXPO_PUBLIC_NOTES_ENABLED = 'true';
+    mod = await reload();
+    expect(mod.flags.notesEnabled).toBe(true);
+    process.env.EXPO_PUBLIC_NOTES_ENABLED = '1';
+    mod = await reload();
+    expect(mod.flags.notesEnabled).toBe(true);
+    process.env.EXPO_PUBLIC_NOTES_ENABLED = 'false';
+    mod = await reload();
+    expect(mod.flags.notesEnabled).toBe(false);
+  });
+
+  it('notesEnabled is read by its literal name, so a web build can carry the override', () => {
+    const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
+    expect(src).toContain('process.env.EXPO_PUBLIC_NOTES_ENABLED');
+  });
 });

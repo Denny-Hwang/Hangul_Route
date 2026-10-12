@@ -31,6 +31,8 @@ export const CONTENT_SUITE = 'packages/content-schema/src/__tests__/romanization
 export const REGISTERED_SOURCES: readonly RegisteredSource[] = [
   // B1. TS data, mobile
   { path: 'apps/mobile/src/content/heritage-cards.ts', cls: 'B1', suite: MOBILE_SUITE, needle: '../heritage-cards' },
+  // F-STORY-006 §3.8: the collection cards' Korean words (checked with checkRomanization there).
+  { path: 'apps/mobile/src/content/story-sets.ts', cls: 'B1', suite: 'apps/mobile/src/content/__tests__/card-award-integrity.test.ts', needle: '../story-sets' },
   { path: 'apps/mobile/src/content/jamo.ts', cls: 'B1', suite: MOBILE_SUITE, needle: '../jamo' },
   { path: 'apps/mobile/src/content/quests.ts', cls: 'B1', suite: MOBILE_SUITE, needle: '../quests' },
   { path: 'apps/mobile/src/logic/minigame-config.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'logic/minigame-config' },

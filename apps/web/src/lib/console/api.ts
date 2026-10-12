@@ -9,6 +9,7 @@ import type {
   SpaceKind,
   SpaceRole,
   TeacherVisibleSummaryKey,
+  VocabSummary,
 } from '@hangul-route/content-schema';
 
 /**
@@ -42,7 +43,16 @@ export type RosterSummary = Pick<ProgressSummary, TeacherVisibleSummaryKey> &
    * A family space also reads the learner's own-route counts (F-PLAN-002 section 3.10) and the goal the
    * learner's Learning Route shows (Learning Route LR-W1, LR-OD-12); a class never receives them.
    */
-  Partial<Pick<ProgressSummary, 'selfRoute' | 'routeGoal'>>;
+  Partial<Pick<ProgressSummary, 'selfRoute' | 'routeGoal'>> &
+  /**
+   * Word counts (F-VOC-005 section 3.8). `vocab` is on `TEACHER_HIDDEN_SUMMARY_KEYS`, so no roster
+   * carries it until a consent item covers it (P-4b); the console shows its word lines only when it
+   * is here. Never the first-try rate: P-4b's projection drops it for every roster viewer.
+   */
+  { vocab?: RosterVocab };
+
+/** A roster's `summary.vocab`: the learner's word counts and words to revisit, without the first-try rate. */
+export type RosterVocab = Omit<VocabSummary, 'firstTryRate'>;
 
 export interface RosterLearner {
   /** Opaque learner id: keys the row, targets plans, issues Rescue Codes. Never shown. */

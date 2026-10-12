@@ -238,8 +238,8 @@ describe('activityOf and summary.activity on the roster (F-REPORT-001 section 3.
     expect(ActivitySummarySchema.safeParse(out).success).toBe(true);
   });
 
-  it('zeroes every word count while vocab is on the hidden list (the coupling with F-VOC-005 P-4)', () => {
-    // F-VOC-005 P-4 moves vocab to the visible list: this guard fails first, and P-4 rewrites this test
+  it('zeroes every word count while vocab is on the hidden list (the coupling with F-VOC-005 P-4b)', () => {
+    // F-VOC-005 P-4b moves vocab to the visible list: this guard fails first, and P-4b rewrites this test
     expect(wordsHidden).toBe(true);
     for (const kind of ['family', 'class', 'school'] as const) {
       const out = activityOf(activity, { kind, joinedAt });

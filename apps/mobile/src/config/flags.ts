@@ -125,6 +125,13 @@ export interface Flags {
    * path run with it off.
    */
   grownUpHomeEnabled: boolean;
+
+  /**
+   * Notes from grown-ups (F-FEEDBACK-001): the Home card, My notes, the note page and the
+   * grown-up zone rows; with it off the inbox's notes are neither flushed nor applied. OFF until
+   * FB-14 flips it, after the Worker's note routes are deployed.
+   */
+  notesEnabled: boolean;
 }
 
 const launchDefaults: Flags = {
@@ -140,6 +147,7 @@ const launchDefaults: Flags = {
   vocabTopicsEnabled: false,
   vocabShowDrafts: false,
   grownUpHomeEnabled: false,
+  notesEnabled: false,
 };
 
 export const flags: Flags = {
@@ -162,6 +170,7 @@ export const flags: Flags = {
   vocabShowDrafts:
     isDevBuild() && parseBool(process.env.EXPO_PUBLIC_VOCAB_SHOW_DRAFTS, launchDefaults.vocabShowDrafts),
   grownUpHomeEnabled: parseBool(process.env.EXPO_PUBLIC_GROWN_UP_HOME, launchDefaults.grownUpHomeEnabled),
+  notesEnabled: parseBool(process.env.EXPO_PUBLIC_NOTES_ENABLED, launchDefaults.notesEnabled),
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;

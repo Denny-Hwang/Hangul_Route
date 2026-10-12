@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BODY_ANCHORS, BODY_PARTS, bodyGlyphs, bodyPart, ring } from '../generated/body';
+import { BODY_ANCHORS, BODY_PARTS, RINGED_BODY_PARTS, bodyGlyphs, bodyPart, ring } from '../generated/body';
 import { COLOR_SWATCHES, STICKER_SCALE, SWATCH_RECT, colorGlyphs, swatch } from '../generated/color';
 import { COUNT_VALUES, count, countGlyphs } from '../generated/count';
 import { FIGURE_HAND, figure, figureTop, marker, siblings } from '../generated/figure';
@@ -266,12 +266,34 @@ describe('body parts (§3.6.3)', () => {
     expect(BODY_PARTS).toEqual(['eye', 'nose', 'mouth', 'ear', 'head', 'face', 'hand', 'arm', 'leg', 'foot', 'belly', 'tooth']);
   });
 
-  it('zooms on the head for eye, nose, mouth, ear, tooth and face, and shows the whole figure otherwise', () => {
-    const head = BODY_PARTS.filter((p) => BODY_ANCHORS[p].view === 'head');
-    expect(head.sort()).toEqual(['ear', 'eye', 'face', 'mouth', 'nose', 'tooth']);
+  it('zooms on the head for eye, nose, mouth, ear and face, and shows the whole figure otherwise', () => {
+    const head = RINGED_BODY_PARTS.filter((p) => BODY_ANCHORS[p].view === 'head');
+    expect(head.sort()).toEqual(['ear', 'eye', 'face', 'mouth', 'nose']);
   });
 
-  it.each(BODY_PARTS)('the %s anchor, its ring and its halo sit inside the viewBox', (part) => {
+  it('rings every part but the tooth, which is drawn on its own (W-4 review)', () => {
+    expect(RINGED_BODY_PARTS).toEqual(BODY_PARTS.filter((p) => p !== 'tooth'));
+    expect(Object.keys(BODY_ANCHORS).sort()).toEqual([...RINGED_BODY_PARTS].sort());
+  });
+
+  it('draws the tooth as a paper molar with two roots: no ring, no face, a ground shadow', () => {
+    const glyph = bodyPart('tooth');
+    expect(glyph.some((s) => s.s === 'brand.secondary' || s.s === HALO_TONE)).toBe(false);
+    expect(glyph.some((s) => s.t === 'circle' && s.f === 'text.primary')).toBe(false);
+    const outline = glyph.filter((s) => s.t === 'path' && s.f === 'surface.paper');
+    expect(outline).toHaveLength(1);
+    const box = shapeBox(outline[0]!);
+    // taller than wide, and two roots: a root tip on each side, and the outline back up between them
+    expect(box.maxY - box.minY).toBeGreaterThan(box.maxX - box.minX);
+    const points = pathPoints((outline[0] as Extract<WordArtShape, { t: 'path' }>).d);
+    const tips = points.filter(([, y]) => y >= box.maxY - 1).map(([x]) => x);
+    expect(Math.min(...tips)).toBeLessThan(45);
+    expect(Math.max(...tips)).toBeGreaterThan(55);
+    expect(points.some(([x, y]) => Math.abs(x - 50) < 1 && y < box.maxY - 12 && y > box.minY + 30)).toBe(true);
+    expect(glyph[0]).toMatchObject({ t: 'ellipse', f: 'hoya.furDark' });
+  });
+
+  it.each(RINGED_BODY_PARTS)('the %s anchor, its ring and its halo sit inside the viewBox', (part) => {
     const { x, y } = BODY_ANCHORS[part];
     const outer = (ring(x, y, BODY_ANCHORS[part].r)[0] as Extract<WordArtShape, { t: 'circle' }>).r + HALO_WIDTH / 2;
     expect(x - outer).toBeGreaterThanOrEqual(0);
@@ -310,11 +332,23 @@ describe('body parts (§3.6.3)', () => {
     expect(halo!.r - HALO_WIDTH / 2).toBeCloseTo(blue!.r - 1.5, 5);
   });
 
-  it.each(BODY_PARTS)('%s ends with its ring at its anchor, and the figure smiles', (part) => {
+  it.each(RINGED_BODY_PARTS)('%s ends with its ring at its anchor, and the figure smiles', (part) => {
     const glyph = bodyPart(part);
     const { x, y, r } = BODY_ANCHORS[part];
     expect(glyph.slice(-2)).toEqual(ring(x, y, r));
     expect(glyph.some(isSmile)).toBe(true);
+  });
+
+  it.each(RINGED_BODY_PARTS)('%s keeps the bottom of the smile clear of its ring and the ring halo (C5)', (part) => {
+    const glyph = bodyPart(part);
+    const { x, y, r } = BODY_ANCHORS[part];
+    const smile = glyph.find(isSmile) as Extract<WordArtShape, { t: 'path' }>;
+    const bottom = pathPoints(smile.d).reduce((a, b) => (b[1] > a[1] ? b : a));
+    const d = Math.hypot(bottom[0] - x, bottom[1] - y);
+    // inside the ring's inner edge (the ring frames the smile) or past the halo's outer edge
+    const inner = r - 1.5 - 1;
+    const outer = r + 1.5 + (HALO_WIDTH - 3) + 1;
+    expect(d < inner || d > outer, `${part}: smile bottom at ${d.toFixed(1)} from the ring (clear below ${inner} or above ${outer})`).toBe(true);
   });
 
   it('draws a neutral figure: paper face and limbs, hoya.fur clothes, no skin-tone fill', () => {

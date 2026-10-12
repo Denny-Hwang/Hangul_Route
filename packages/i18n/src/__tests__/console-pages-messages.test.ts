@@ -152,6 +152,17 @@ describe('space page (teach/space/page.tsx)', () => {
     expect(s.learner.planReadout('Week 1', '1 / 3')).toBe('Week 1: 1 / 3');
     expect(s.learner.joined('today')).toBe('joined today');
   });
+
+  // F-VOC-005 P-4 (section 3.8): counts and up to three words to look at together; the taught
+  // Korean stays outside the message (the page marks it lang="ko"), the romanization and gloss
+  // travel with it. "Words to revisit", never "weak words", "failed" or "behind".
+  it('words the vocabulary lines of a student card and of the week', () => {
+    expect(s.learner.words(12, 4)).toBe('Words: 12 collected · 4 strong');
+    expect(s.learner.words(1, 0)).toBe('Words: 1 collected · 0 strong');
+    expect(s.learner.wordsRevisit('a · b')).toBe('Words to revisit: a · b');
+    expect(s.week.wordsRevisit('a · b')).toBe('Words to revisit together: a · b');
+    expect(s.wordGloss('sagwa', 'apple')).toBe('sagwa (apple)');
+  });
 });
 
 describe('relink page (teach/space/relink/page.tsx, relink.ts)', () => {
@@ -209,6 +220,10 @@ const SLOTTED: readonly [string, (m: Messages) => (value: string) => string][] =
   ['console.relink.askingToBe', (m) => m.console.relink.askingToBe],
   ['console.space.week.revisit', (m) => m.console.space.week.revisit],
   ['console.space.learner.revisit', (m) => m.console.space.learner.revisit],
+  ['console.space.week.wordsRevisit', (m) => m.console.space.week.wordsRevisit],
+  ['console.space.learner.wordsRevisit', (m) => m.console.space.learner.wordsRevisit],
+  // Split around the romanization, so the Hangul and its romanization stay on one line (F-VOC-005 P-4).
+  ['console.space.wordGloss', (m) => (romanization) => m.console.space.wordGloss(romanization, 'gloss')],
   ['console.lecture.source.revisitWith', (m) => m.console.lecture.source.revisitWith],
   ['console.school.footer', (m) => m.console.school.footer],
 ];

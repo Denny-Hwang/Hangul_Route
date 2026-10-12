@@ -34,6 +34,7 @@ const {
   artBytes,
   buildBundle,
   checkBudget,
+  heldStoryCards,
   levelCode,
   renderBundle,
   slugOf,
@@ -70,7 +71,7 @@ function generatedOf(root) {
   return readFileSync(join(root, GENERATED_REL), "utf8");
 }
 
-/** Evaluate the generated file's three literals (they are plain JSON). */
+/** Evaluate the generated file's four literals (they are plain JSON). */
 function evaluate(source) {
   const grab = (name) => {
     const m = source.match(new RegExp(`export const ${name}: \\w+\\[\\] = ([\\s\\S]*?);\\n(?:\\nexport|$)`));
@@ -81,6 +82,7 @@ function evaluate(source) {
     storiesAll: grab("storiesAll"),
     storyEpisodes: grab("storyEpisodes"),
     storyQuests: grab("storyQuests"),
+    heldStoryCards: grab("heldStoryCards"),
   };
 }
 
@@ -89,16 +91,17 @@ function ready(overrides = {}) {
 }
 
 describe("build-stories.mjs: empty and fixture trees", () => {
-  test("no content/stories directory at all: writes three empty arrays", () => {
+  test("no content/stories directory at all: writes four empty arrays", () => {
     const root = makeRoot();
     const r = run(root);
     assert.equal(r.status, 0, r.stderr + r.stdout);
     const src = generatedOf(root);
     assert.ok(src.startsWith(GENERATED_HEADER));
-    assert.match(src, /import type \{ Episode, Quest, Story \} from '@hangul-route\/content-schema';/);
+    assert.match(src, /import type \{ Episode, HeldStoryCard, Quest, Story \} from '@hangul-route\/content-schema';/);
     assert.match(src, /export const storiesAll: Story\[\] = \[\];/);
     assert.match(src, /export const storyEpisodes: Episode\[\] = \[\];/);
     assert.match(src, /export const storyQuests: Quest\[\] = \[\];/);
+    assert.match(src, /export const heldStoryCards: HeldStoryCard\[\] = \[\];\n$/);
   });
 
   test("an empty content/stories directory behaves the same", () => {
@@ -133,6 +136,48 @@ describe("build-stories.mjs: empty and fixture trees", () => {
     assert.deepEqual(out.storiesAll[0], readFixture("valid.ready.json"));
     assert.equal(out.storyEpisodes.length, 1);
     assert.equal(out.storyQuests.length, 1);
+    // Neither draft fixture has a card block, so no card is held.
+    assert.deepEqual(out.heldStoryCards, []);
+  });
+
+  test("a held story (draft with a card and a shelf block) leaves the bundle but keeps its card (F-STORY-006 3.8)", () => {
+    const root = makeRoot();
+    putStory(root, ready());
+    const held = ready({ id: "story:held-one", state: "draft" });
+    putStory(root, held);
+    const r = run(root);
+    assert.equal(r.status, 0, r.stderr + r.stdout);
+    const out = evaluate(generatedOf(root));
+    assert.deepEqual(out.storiesAll.map((s) => s.id), ["story:hangul-day"]);
+    assert.deepEqual(out.storyEpisodes.map((e) => e.id), ["episode:shelf-hangul-day"]);
+    const keyword = held.keywords.find((k) => k.id === held.card.keywordId);
+    assert.deepEqual(out.heldStoryCards, [
+      {
+        storyId: "story:held-one",
+        titleEn: held.card.titleEn,
+        keyword: { ko: keyword.ko, romanization: keyword.romanization },
+        summaryEn: held.summaryEn,
+        theme: held.theme,
+        recommendedStage: held.recommendedStage,
+      },
+    ]);
+    // No fact and no citation: the claims of a held story are under correction.
+    assert.equal(JSON.stringify(out.heldStoryCards).includes("claimEn"), false);
+  });
+
+  test("heldStoryCards: only drafts with a card and a shelf block whose keyword resolves, sorted by id", () => {
+    const draft = (id, edit = {}) => ({ ...ready({ id, state: "draft" }), ...edit });
+    const card = ready().card;
+    const got = heldStoryCards([
+      ready({ id: "story:ready-one" }),
+      draft("story:zz-held"),
+      draft("story:aa-held"),
+      draft("story:no-card", { card: undefined }),
+      draft("story:no-shelf", { shelf: undefined }),
+      draft("story:bad-keyword", { card: { ...card, keywordId: "nope" } }),
+    ]);
+    assert.deepEqual(got.map((h) => h.storyId), ["story:aa-held", "story:zz-held"]);
+    assert.deepEqual(heldStoryCards([]), []);
   });
 
   test("stories are sorted by id, not by file name ('-' sorts before '.')", () => {
@@ -175,7 +220,7 @@ describe("build-stories.mjs: shelf episodes and quests", () => {
       titleEn: story.title.en,
       hoyaIntroEn: story.hoyaIntroEn,
       questIds: ["quest:story-hangul-day-listen"],
-      rewardCardIds: ["card:hanji"],
+      rewardCardIds: ["card:story-hangul-day"],
       estimatedMinutes: Math.max(3, story.minutes),
       status: "ready",
       format: "story",
@@ -189,7 +234,7 @@ describe("build-stories.mjs: shelf episodes and quests", () => {
     assert.equal(q.id, "quest:story-hangul-day-listen");
     assert.equal(q.titleEn, story.title.en);
     assert.equal(q.estimatedMinutes, Math.max(3, story.minutes));
-    assert.equal(q.rewardCardId, "card:hanji");
+    assert.equal(q.rewardCardId, "card:story-hangul-day");
     assert.deepEqual(
       q.steps.map((s) => [s.id, s.kind]),
       [
@@ -452,7 +497,8 @@ describe("build-stories.mjs: --include-fixtures (F-STORY-002 PR 2.6a, e2e builds
     assert.deepEqual(contentIds.map((s) => s.id), ["story:zz-content"]);
     const fixtures = JSON.parse(src.match(/const fixtureStories: Story\[\] = \(([\s\S]*?) as unknown\[\]\)\.map\(\(raw\) => parseStory\(raw\)\);/)[1]);
     assert.deepEqual(fixtures.map((s) => s.id), ["story:hangul-day"]);
-    assert.match(src, /import \{ parseStory, type Episode, type Quest, type Story \} from '@hangul-route\/content-schema';/);
+    assert.match(src, /import \{ parseStory, type Episode, type HeldStoryCard, type Quest, type Story \} from '@hangul-route\/content-schema';/);
+    assert.match(src, /export const heldStoryCards: HeldStoryCard\[\] = \[\];/);
     assert.match(src, /export const storiesAll: Story\[\] = \[\.\.\.contentStories, \.\.\.fixtureStories\]\.sort/);
     const episodes = JSON.parse(src.match(/export const storyEpisodes: Episode\[\] = ([\s\S]*?);\n\nexport/)[1]);
     assert.deepEqual(episodes.map((e) => e.id), ["episode:shelf-hangul-day"]);
