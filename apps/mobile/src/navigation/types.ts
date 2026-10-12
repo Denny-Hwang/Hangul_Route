@@ -13,6 +13,8 @@ import type { VocabQuestionE2eParams } from './vocab-question-e2e';
  * `PlacementFinish`: back to the level check, which then ends the run for the grown-up (F-PLC-001
  * section 3.1 step 6, stop reason `grown-up`). `GrownUpArea` (F-APP-001 section 3.9, web only): the
  * grown-up pages on the app host; its PIN screen only verifies, never creates or resets a PIN.
+ * `Billing` (F-BILL-002 §4.7, web only): back to the Plan screen, which opens the billing page for
+ * the press that waited on the gate.
  */
 export type GrownUpDestination =
   | 'ParentDashboard'
@@ -25,7 +27,8 @@ export type GrownUpDestination =
   | 'EditProfile'
   | 'MyRoute'
   | 'PlacementReport'
-  | 'GrownUpArea';
+  | 'GrownUpArea'
+  | 'Billing';
 
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
@@ -81,7 +84,7 @@ export type RootStackParamList = {
   SaveProgress: undefined;
   /** sync/join-space — enter a class or family code (F-SPACE-001 §3.5). Not PIN-gated. */
   JoinSpace: undefined;
-  /** paywall/upgrade — PIN-gated premium explainer (F-ENT-001 §3.5). */
+  /** billing/plan-status — the learner Plan screen: status only, no PIN (F-BILL-002 §4.7; F-ENT-003's "Ask a grown-up" still arrives through the gate). */
   Paywall: { from: 'journey' | 'settings' | 'library' } | undefined;
   ParentDashboard: undefined;
   Profile: undefined;

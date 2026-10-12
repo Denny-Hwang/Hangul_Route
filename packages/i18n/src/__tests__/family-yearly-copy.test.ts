@@ -9,7 +9,7 @@ import { en } from '../messages/en';
 const LIFETIME_WORDS = /\blifetime\b|\bonce\b|\bone payment\b|\bpay once\b|\bfor good\b|\bforever\b|\bnothing to cancel\b|\bno renewal\b/i;
 
 /** Formatters for `PlanPricing.per === 'once'`, a value no plan uses since 2026-10-11 (kept for type completeness). */
-const UNUSED_ONCE_FORMATTERS = new Set(['console.price.once', 'caregiver.paywall.offer.price.once']);
+const UNUSED_ONCE_FORMATTERS = new Set(['console.price.once']);
 
 type Tree = { readonly [key: string]: unknown };
 
@@ -23,10 +23,8 @@ function strings(node: unknown, path: string, out: Array<[string, string]>): voi
 function billingStrings(): Array<[string, string]> {
   const out: Array<[string, string]> = [];
   const c = en.console as Tree;
-  strings(en.caregiver.paywall, 'caregiver.paywall', out);
-  strings(en.caregiver.audience.shared.paywallBuyOnWeb, 'caregiver.audience.shared.paywallBuyOnWeb', out);
-  strings(en.caregiver.audience.shared.paywallBuyLater, 'caregiver.audience.shared.paywallBuyLater', out);
-  strings(en.a11y.familyOffer, 'a11y.familyOffer', out);
+  // The learner Plan screen (F-BILL-002 B-9 removed the price-bearing paywall and its keys).
+  strings(en.caregiver.plan, 'caregiver.plan', out);
   for (const key of ['billing', 'entitlementStatus', 'price', 'promoPrice', 'familyLine', 'groupLine', 'contactLine', 'billingSuccess', 'billingCancelled']) strings(c[key], `console.${key}`, out);
   return out.filter(([path]) => !UNUSED_ONCE_FORMATTERS.has(path));
 }
@@ -42,8 +40,7 @@ describe('Family Plan copy says it renews yearly (BY-D9)', () => {
 
   it('names the plan and how it renews', () => {
     expect(en.console.billing.planTitle.family_lifetime).toBe('Family Plan');
-    expect(en.caregiver.paywall.offer.name).toBe('Family Plan');
+    expect(en.caregiver.plan.full.fromFamily.self).toBe('From your Family Plan.');
     expect(en.console.familyLine).toMatch(/renews yearly/i);
-    expect(en.caregiver.paywall.offer.line).toMatch(/renews every year/i);
   });
 });

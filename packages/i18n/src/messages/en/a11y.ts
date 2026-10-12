@@ -119,8 +119,6 @@ export const a11y = {
   classCode: 'Class code',
   joinName: 'Name your teacher will see',
   leaveSpace: (name: string) => `Leave ${name}`,
-  /** The paywall offer card: its name, then the already-formatted price. */
-  familyOffer: (name: string, price: string) => `${name}, ${price}`,
   /** The learner Plan screen's summary heading, its first accessible element (F-BILL-002 §8). */
   planStatus: (name: string, state: string) => `${name}: ${state}.`,
 

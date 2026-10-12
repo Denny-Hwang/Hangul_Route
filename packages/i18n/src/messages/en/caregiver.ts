@@ -1,14 +1,14 @@
 import { plural } from '../../plural';
 
 /**
- * Grown-up surfaces (F-I18N-001 §3.4 rule 2): the PIN screens, the Family Dashboard, the paywall,
+ * Grown-up surfaces (F-I18N-001 §3.4 rule 2): the PIN screens, the Family Dashboard, the Plan screen,
  * the Classes & family and Progress backup cards, and the audience copy that used to live in
- * `logic/audience-copy.ts` (family and self-only variants, PIN titles, paywall and restore lines).
+ * `logic/audience-copy.ts` (family and self-only variants, PIN titles and restore lines).
  * PR 8a moved them in with the wording unchanged; PR 8b adds Restore, Save my progress, Join a
  * class, the cloud status line and the install sheet. PR 7a added the Quest-assignment gating reasons.
  *
- * No price is written here: the paywall builds its amount from `PLAN_PRICING` and `formatUsd`
- * and passes it in. Buttons and pills are keyed `cta` / `pill` so the length budgets (§3.11)
+ * No price is written here, and the learner Plan screen shows none (F-BILL-002 B-9 removed the
+ * price-bearing paywall and its keys, section 6.4). Buttons and pills are keyed `cta` / `pill` so the length budgets (§3.11)
  * cover them. A message never embeds taught Korean (rule 5).
  */
 export const caregiver = {
@@ -39,11 +39,6 @@ export const caregiver = {
       joinCodeFull: "You're already in three classes. Leave one under Classes & family in your Profile first.",
       /** A code that is not a class code was entered. */
       joinCodeNotForLearners: "That code isn't for joining as a learner. Ask for a class code.",
-      promoHint: 'Have a promo or referral code? Enter it on the web console.',
-      paywallBuyOnWeb:
-        'Buy it on the web console, so no store fees reach your family. Sign in there and come back — this device updates on its next sync.',
-      paywallBuyLater:
-        'Buying inside this app arrives with the store update. Until then, you can buy it on the web console.',
       profileSwitchHint: 'Tap a profile to switch.',
     },
     /** "Grown-up zone" stays a family caregiver surface (CLAUDE.md §1). */
@@ -136,43 +131,6 @@ export const caregiver = {
     },
   },
 
-  paywall: {
-    /** The learner's name when there is no active profile. */
-    learnerFallback: 'Your learner',
-    backToJourney: { cta: 'Back to journey' },
-    covered: {
-      title: (name: string, source: string) => `${name} is covered by ${source}.`,
-      sourceFallback: 'the class',
-      note: 'Everything is unlocked while they are in it.',
-    },
-    premium: {
-      title: "You're on Premium.",
-      note: (name: string) => `The full journey is open for ${name}. Manage your plan on the web console.`,
-      manage: { cta: 'Manage plan on the web' },
-    },
-    free: {
-      bubble: 'Stage 1 is always free.',
-      unlocks: (offer: string) => `What the ${offer} unlocks`,
-      openConsole: { cta: 'Open the web console' },
-      openFailed: (url: string) => `Open ${url} on a computer or phone browser.`,
-      terms: 'Renews yearly until cancelled. Terms and privacy are on the website.',
-    },
-    /** What the Family Plan adds (every Stage, one family; renews yearly since 2026-10-11). */
-    bullets: {
-      everyStage: 'Every Stage, new ones included',
-      cloudSave: 'Cloud save on every device',
-      dashboard: 'Grown-up dashboard and plans',
-      learners: (n: number) =>
-        plural('en', n, { one: `Up to ${n} learner in your family`, other: `Up to ${n} learners in your family` }),
-    },
-    /** The single offer; the amount arrives already formatted (`formatUsd`) and is never written here. */
-    offer: {
-      name: 'Family Plan',
-      line: 'Renews every year. Cancel any time.',
-      price: { once: (amount: string) => `${amount} once`, year: (amount: string) => `${amount} / year` },
-    },
-  },
-
   /**
    * The learner Plan screen (F-BILL-002 §4.7, §6.2, wireframe billing/plan-status): status only, no
    * PIN, never a price, an offer or a purchase word. One variant per audience (`family` names the
@@ -198,7 +156,7 @@ export const caregiver = {
     },
     free: {
       title: { family: (name: string) => `${name} is on the free plan.`, self: "You're on the free plan." },
-      /** The free slot while F-ENT-003's switch is off (moved from `paywall.free.bubble`, same words). */
+      /** The free slot while F-ENT-003's switch is off (moved from the removed `paywall.free.bubble`, same words). */
       open: 'Stage 1 is always free.',
     },
     openBilling: {
@@ -207,6 +165,10 @@ export const caregiver = {
       a11yHint: 'Opens the billing page',
     },
     openFailed: (url: string) => `Open ${url} in a browser.`,
+    /** Web only: offline, before `openFailed` (as Sources' needsConnection). */
+    needsConnection: 'Opening billing needs a connection.',
+    /** Web only: back from a correct PIN, a browser may block a tab opened outside a tap, so one more tap opens it (as Sources' gateDone). */
+    gateDone: 'PIN accepted. Tap Open billing again.',
     backToJourney: { cta: 'Back to journey' },
   },
 

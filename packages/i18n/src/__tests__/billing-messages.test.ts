@@ -139,6 +139,8 @@ const PLAN_SCREEN = [
 
 const PROFILE_ADDED = ['learner.profile.plan.fullRoute', 'learner.profile.plan.open', 'learner.profile.plan.details.cta'];
 const A11Y_ADDED = ['a11y.planStatus'];
+/** Added by B-9's review: the web hand-off lines (one more tap after the PIN; offline needs a connection). */
+const PLAN_SCREEN_B9 = ['caregiver.plan.gateDone', 'caregiver.plan.needsConnection'];
 
 const B6_PATHS = [...BILLING_ADDED, ...STATUS_CHANGED, ...PLAN_SCREEN, ...PROFILE_ADDED, ...A11Y_ADDED];
 
@@ -754,6 +756,7 @@ const LEARNER_FIXTURE: Record<UiLocale, readonly string[]> = {
 /** The learner-reachable new keys: the Plan screen and the Profile card (kept keys too; B-9 deletes premium / unlocked / unlock). */
 const LEARNER_PATHS = [
   ...PLAN_SCREEN,
+  ...PLAN_SCREEN_B9,
   ...PROFILE_ADDED,
   ...A11Y_ADDED,
   'learner.profile.plan.free',
@@ -816,6 +819,58 @@ describe('learner-reachable words (§4.7, §4.8, §6.5)', () => {
           expect(hit, `${locale}:${path}: "${word}" in ${out}`).toBe(false);
         }
       }
+    }
+  });
+});
+
+describe('caregiver.plan hand-off lines (F-BILL-002 B-9, web only)', () => {
+  it('words the line after the PIN and the offline line in English', () => {
+    expect(p.gateDone).toBe('PIN accepted. Tap Open billing again.');
+    expect(p.needsConnection).toBe('Opening billing needs a connection.');
+  });
+
+  it('every locale has both, in its own language, with no price and no grown-up wording', () => {
+    for (const [path, out] of outputs('ko', PLAN_SCREEN_B9)) expect(HANGUL.test(out), `ko:${path}: ${out}`).toBe(true);
+    for (const path of PLAN_SCREEN_B9) expect(renderings('es', path), `es:${path}`).not.toEqual(renderings('en', path));
+    for (const locale of LOCALES) {
+      for (const [path, out] of outputs(locale, PLAN_SCREEN_B9)) {
+        expect(out.trim().length, `${locale}:${path}`).toBeGreaterThan(0);
+        expect(out, `${locale}:${path}`).not.toMatch(/[$€£₩]\s?\d|grown-?up|adult[oa]s?|보호자|어른/i);
+      }
+    }
+  });
+});
+
+/** F-BILL-002 B-9 (§6.4): the price-bearing paywall's keys are deleted with their es / ko entries; two move to `caregiver.plan`. */
+const REMOVED_IN_B9 = [
+  'caregiver.paywall',
+  'caregiver.audience.shared.paywallBuyOnWeb',
+  'caregiver.audience.shared.paywallBuyLater',
+  'caregiver.audience.shared.promoHint',
+  'a11y.familyOffer',
+  'learner.profile.plan.premium',
+  'learner.profile.plan.unlocked',
+  'learner.profile.plan.unlock',
+];
+
+describe('keys removed in B-9 (§6.4)', () => {
+  it('are gone from every locale', () => {
+    for (const locale of LOCALES) {
+      for (const path of REMOVED_IN_B9) expect(lookup(getMessages(locale), path), `${locale}:${path}`).toBeUndefined();
+    }
+    for (const [name, overlay] of Object.entries({ es, ko })) {
+      for (const path of REMOVED_IN_B9) expect(lookup(overlay, path), `${name}:${path}`).toBeUndefined();
+    }
+  });
+
+  it('the two kept lines live on under caregiver.plan with the same English', () => {
+    expect(en.caregiver.plan.learnerFallback).toBe('Your learner');
+    expect(en.caregiver.plan.free.open).toBe('Stage 1 is always free.');
+  });
+
+  it('nothing in the samples table still names a removed key', () => {
+    for (const path of Object.keys(SAMPLES)) {
+      for (const gone of REMOVED_IN_B9) expect(path === gone || path.startsWith(`${gone}.`), path).toBe(false);
     }
   });
 });

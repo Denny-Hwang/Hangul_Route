@@ -1,5 +1,5 @@
-import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import React, { useId } from 'react';
+import { Platform, Pressable, Text, View } from 'react-native';
 import { colors, radii, spacing, touchTarget, typography } from '../../tokens';
 import type { ButtonProps, ButtonSize, ButtonTone } from './types';
 
@@ -65,17 +65,24 @@ export function Button({
   leading,
   trailing,
   accessibilityLabel,
+  accessibilityHint,
   expanded,
   testID,
   pressableRef,
 }: ButtonProps): React.ReactElement {
+  const hintId = useId();
+  // react-native-web drops accessibilityHint: describe the button by a hidden copy of the hint instead.
+  const webHint = accessibilityHint !== undefined && Platform.OS === 'web';
+  const describedBy: Record<string, string> = webHint ? { 'aria-describedby': hintId } : {};
   return (
     <Pressable
+      {...describedBy}
       ref={pressableRef}
       onPress={disabled ? undefined : onPress}
       disabled={disabled}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityHint={accessibilityHint}
       accessibilityState={expanded === undefined ? { disabled } : { disabled, expanded }}
       aria-expanded={expanded}
       testID={testID}
@@ -113,6 +120,11 @@ export function Button({
             {label}
           </Text>
           {trailing ? <View style={{ marginLeft: spacing.sm }}>{trailing}</View> : null}
+          {webHint ? (
+            <Text nativeID={hintId} style={{ display: 'none' }}>
+              {accessibilityHint}
+            </Text>
+          ) : null}
         </>
       )}
     </Pressable>
