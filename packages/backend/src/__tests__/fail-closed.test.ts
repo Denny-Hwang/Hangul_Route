@@ -104,6 +104,7 @@ describe('GET /health reports bindings as booleans', () => {
       environment: 'production',
       devFallbacks: false,
       bindings: { db: false, clerk: false, stripe: false, stripeWebhook: false, rescuePepper: false, stripeLive: false, billingLiveAllowed: false },
+      features: { notesSend: false },
     });
   });
 
@@ -117,6 +118,14 @@ describe('GET /health reports bindings as booleans', () => {
       environment: 'production',
       devFallbacks: false,
       bindings: { db: true, clerk: true, stripe: true, stripeWebhook: false, rescuePepper: true, stripeLive: true, billingLiveAllowed: false },
+      features: { notesSend: false },
     });
+  });
+
+  it('reports the NOTES_SEND switch as a boolean (F-FEEDBACK-001 section 7.8)', async () => {
+    const on = await app.request('/health', {}, { DB: {}, CLERK_SECRET_KEY: 'sk', NOTES_SEND: 'enabled' });
+    expect(((await on.json()) as { features: unknown }).features).toEqual({ notesSend: true });
+    const odd = await app.request('/health', {}, { DB: {}, CLERK_SECRET_KEY: 'sk', NOTES_SEND: 'yes' });
+    expect(((await odd.json()) as { features: unknown }).features).toEqual({ notesSend: false });
   });
 });

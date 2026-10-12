@@ -1,5 +1,6 @@
 import { HTTPException } from 'hono/http-exception';
 import { failResponse } from '../envelope';
+import { notesSendEnabled } from './notes-switch';
 import { billingLiveAllowed, stripeMode } from './stripe';
 
 /**
@@ -24,6 +25,8 @@ export interface RuntimeEnv {
   RESCUE_PEPPER?: string;
   /** Browser origins allowed on /api/* (lib/cors), and the Clerk `authorizedParties` for sign-in tokens (F-APP-001 A-9). */
   ALLOWED_ORIGINS?: string;
+  /** Dashboard text variable: `enabled` lets adults send notes (F-FEEDBACK-001 section 7.8); unset = off. */
+  NOTES_SEND?: string;
 }
 
 const DEV_ENVIRONMENTS: ReadonlySet<string> = new Set(['development', 'test']);
@@ -75,6 +78,8 @@ export interface HealthReport {
   environment: string;
   devFallbacks: boolean;
   bindings: { db: boolean; clerk: boolean; stripe: boolean; stripeWebhook: boolean; rescuePepper: boolean; stripeLive: boolean; billingLiveAllowed: boolean };
+  /** Switches the owner sets in the dashboard, so a monitor can see they took effect (F-FEEDBACK-001 section 7.8). */
+  features: { notesSend: boolean };
 }
 
 /**
@@ -99,5 +104,5 @@ export function healthReport(env: RuntimeEnv | undefined): HealthReport {
   const devFallbacks = devFallbacksAllowed(env);
   const environment = environmentName(env);
   const ready = (bindings.db && bindings.clerk) || (devFallbacks && environment !== 'production');
-  return { status: ready ? 'ok' : 'misconfigured', environment, devFallbacks, bindings };
+  return { status: ready ? 'ok' : 'misconfigured', environment, devFallbacks, bindings, features: { notesSend: notesSendEnabled(env) } };
 }

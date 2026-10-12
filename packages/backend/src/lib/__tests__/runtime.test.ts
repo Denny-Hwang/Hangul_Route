@@ -69,6 +69,7 @@ describe('healthReport (booleans only)', () => {
       environment: 'production',
       devFallbacks: false,
       bindings: { db: false, clerk: false, stripe: false, stripeWebhook: false, rescuePepper: false, stripeLive: false, billingLiveAllowed: false },
+      features: { notesSend: false },
     });
     expect(healthReport({ DB: {} }).status).toBe('misconfigured');
     expect(healthReport({ CLERK_SECRET_KEY: 'sk_live_secret' }).status).toBe('misconfigured');
@@ -82,7 +83,10 @@ describe('healthReport (booleans only)', () => {
       environment: 'production',
       devFallbacks: false,
       bindings: { db: true, clerk: true, stripe: true, stripeWebhook: true, rescuePepper: true, stripeLive: true, billingLiveAllowed: false }, // 'sk_stripe' has no test prefix: read as live (fail closed)
+      features: { notesSend: false },
     });
+    // the owner's NOTES_SEND switch (F-FEEDBACK-001 section 7.8), as a boolean only
+    expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', NOTES_SEND: 'enabled' }).features).toEqual({ notesSend: true });
     expect(JSON.stringify(report)).not.toMatch(/sk_live_secret|sk_stripe|whsec_x|pepper_do_not_echo/);
     expect(healthReport({ DB: {}, CLERK_JWT_KEY: '-----BEGIN PUBLIC KEY-----' }).bindings.clerk).toBe(true);
   });
