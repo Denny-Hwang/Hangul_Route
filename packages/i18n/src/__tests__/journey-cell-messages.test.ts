@@ -83,8 +83,9 @@ describe('learner.journey story words', () => {
   });
 
   it('the stories caption and the explainer line', () => {
-    expect(j.storiesNote).toBe('Heritage stories are open in the cells with books.');
-    expect(j.how.stories).toBe('Cells with books also have heritage stories. The number in a corner says how many.');
+    // Names the glyph and the number apart, so "books" never reads as a Stage 5 story book cell.
+    expect(j.storiesNote).toBe('Heritage stories are open in the cells with the books icon.');
+    expect(j.how.stories).toBe("A number in a cell's corner says how many heritage stories it has. A cell with the books icon has heritage stories to read.");
   });
 
   it('every new function message has sample arguments', () => {

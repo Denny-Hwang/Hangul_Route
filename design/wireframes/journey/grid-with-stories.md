@@ -2,7 +2,7 @@
 
 Specs: `docs/specs/F-STORY-005-episode-catalogue-grid.md` (§3.1 model, §3.4 when a story is offered, §3.5 grid capacity, §3.6 map surfaces, §3.12 accessibility) · the card surfaces D-G belong to `docs/specs/F-STORY-006-card-award-model.md` §3.5, §3.7, §3.8 (their screen files are listed below)
 Audience: anyone learning Hangul, any age (CLAUDE.md §1). Nothing says a learner is behind; every locked thing says how to open it; a story cell is never routed through the grown-up PIN.
-Code: built so far (PRs 5.1-5.2): `apps/mobile/src/content/episodes.ts` (`episodesFor`, `MAX_EPISODES_PER_CELL`, `cellsOverCapacity`), `apps/mobile/src/logic/journey.ts` (cell-based `stageAvailability`, `isCellComplete`), the pillar registry; planned: `apps/mobile/src/logic/journey-cells.ts` (`cellModel`, `cellLabel`) and the `GridCell` looks in `screens/journey/JourneyScreen.tsx` (PR 5.5a), `logic/story/home-cell.ts` (PR 5.3). Base screen: `journey/grid.md`; two panes on wide windows: `layout/wide.md` C. Brief: `design/brief/screens/05-journey-grid.md` (story cells section) and `27-cell-stories.md`.
+Code: built (PRs 5.1-5.3, 5.5a): `apps/mobile/src/content/episodes.ts` (`episodesFor`, `MAX_EPISODES_PER_CELL`, `cellsOverCapacity`), `apps/mobile/src/logic/journey.ts` (cell-based `stageAvailability`, `isCellComplete`), the pillar registry, `logic/story/home-cell.ts` (PR 5.3), `apps/mobile/src/logic/journey-cells.ts` (`cellModel`, `countMarkOf`, `cellLabel`), `logic/journey-grid.ts` (`journeyCell` carries the model) and the `GridCell` looks in `components/JourneyGrid.tsx` (extracted from `JourneyScreen` by BR-5b), with the stage caption and explainer line in `screens/journey/JourneyScreen.tsx` (PR 5.5a). Deviations: the count mark moves to the bottom-right when the placed-out check is drawn; `onOpenStories` is optional (All lessons). Base screen: `journey/grid.md`; two panes on wide windows: `layout/wide.md` C. Brief: `design/brief/screens/05-journey-grid.md` (story cells section) and `27-cell-stories.md`.
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary or ghost, `(tab)` a section tab, `~~ ko ~~` taught Korean drawn with `KoreanText` (Korean + romanization + gloss), `#n` a small count mark.
 
 Promoted by F-STORY-005 PR 5.0 from the one-file draft (this file, v1). The panel letters are kept so references still resolve:
@@ -45,8 +45,8 @@ The map keeps its single job (pick a cell); a cell with stories adds a count mar
 │ (2) Words             [A taste]  │
 │     [lib #2] [F #1] [lib #1] [N #1] [lib #3]
 │                                  │      lib = stories-only cell (library icon, no lesson there)
-│     "Heritage stories are open   │
-│      in the cells with books."   │   <- one muted caption, shown when the row has a stories-only cell
+│     "Heritage stories are open in│
+│  the cells with the books icon." │   <- one muted caption, shown when the row has a stories-only cell
 │ (3) Sentences    [Coming later]  │
 │     [lib #2] [lib #1] [lock] [lock] [lock]
 │ (4) Dialogue          [A taste]  │
@@ -60,7 +60,8 @@ The map keeps its single job (pick a cell); a cell with stories adds a count mar
 │                                  │
 │ ┌──────────────────────────────┐ │
 │ │ How the journey works        │ │   <- explainer: "Each cell is one episode.
-│ │ (2 lines, no fractions)      │ │      Cells with books also have heritage stories."
+│ │ (2 lines, no fractions)      │ │      A number in a cell's corner says how many heritage stories
+│ │                              │ │      it has. A cell with the books icon has heritage stories to read."
 │ └──────────────────────────────┘ │
 └──────────────────────────────────┘
 ```

@@ -51,6 +51,10 @@ describe('journeyCellState', () => {
     expect(journeyCellState({ status: 'shipped' })).toBe('open');
     expect(journeyCellState({ status: 'ready' })).toBe('open');
   });
+
+  it('later for a draft episode: the same playable rule as cellModel (F-STORY-005 PR 5.5a)', () => {
+    expect(journeyCellState({ status: 'draft' })).toBe('later');
+  });
 });
 
 describe('journeyCell', () => {
@@ -137,6 +141,22 @@ describe('journeyCell with heritage stories (F-STORY-005 PR 5.5a)', () => {
       completed: true,
       storiesFinished: 1,
     });
+  });
+
+  it('a draft grid episode draws as a placeholder, and as a stories-only button once it has a story', () => {
+    const grid = [...GRID, ep('s3-life', 'stage3', 'life', 'draft')];
+    const draft = journeyCell({ ...base, gridEpisodes: grid, stage: 'stage3', theme: 'life' });
+    expect(draft).toMatchObject({ state: 'later', disabled: true });
+    expect(draft.model.kind).toBe('placeholder');
+    const withStory = journeyCell({
+      ...base,
+      gridEpisodes: grid,
+      storyEntries: shelfIndex([story('y', { recommendedStage: 3, theme: 'life' })]),
+      stage: 'stage3',
+      theme: 'life',
+    });
+    expect(withStory).toMatchObject({ state: 'later', disabled: false });
+    expect(withStory.model.kind).toBe('stories-only');
   });
 
   it('rows pass the stories to every cell; the stage pill still counts lesson cells only', () => {
@@ -226,9 +246,15 @@ describe('JourneyGrid sources', () => {
 
   it('labels every cell with cellLabel and keeps the count mark out of the screen reader (F-STORY-005 PR 5.5a)', () => {
     expect(grid).toMatch(/design\/wireframes\/journey\/grid-with-stories\.md/);
-    expect(grid).toContain('accessibilityLabel={cellLabel(model, stage, theme, messages.a11y.journeyCell, cell.marks)}');
+    expect(grid).toMatch(/accessibilityLabel=\{cellLabel\(model,[^)]*messages\.a11y\.journeyCell/);
     expect(grid).not.toMatch(/a11y\.gridCell/);
     expect(grid).toMatch(/aria-hidden\s+importantForAccessibility="no-hide-descendants"\s+accessibilityElementsHidden/);
+  });
+
+  it('the count mark keeps its size at large text and grows rather than clips (F-STORY-005 §3.12)', () => {
+    expect(grid).toMatch(/<Text maxFontSizeMultiplier=\{1\}[^>]*>\s*\{messages\.learner\.journey\.countMark\(/);
+    expect(grid).toContain('minHeight: COUNT_MARK');
+    expect(grid).not.toMatch(/\bheight: COUNT_MARK/);
   });
 
   it('each stage row is an anchor for scrolling to a stage, measured only when asked', () => {

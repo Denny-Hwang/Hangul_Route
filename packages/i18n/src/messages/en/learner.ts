@@ -206,7 +206,7 @@ export const learner = {
     availability: { open: { pill: 'Open' }, taste: { pill: 'A taste' }, soon: { pill: 'Coming later' } },
     tasteNote: 'A taste of this stage is open now. More episodes are coming.',
     /** Under a stage row with a stories-only cell (F-STORY-005 §3.5); the books are the `library` glyph. */
-    storiesNote: 'Heritage stories are open in the cells with books.',
+    storiesNote: 'Heritage stories are open in the cells with the books icon.',
     /** The count mark in a cell's corner: how many heritage stories call the cell home, "5+" from 6 (F-STORY-005 §3.6). */
     countMark: (value: number, more: boolean) => (more ? `${value}+` : `${value}`),
     /** Landmark names of the two panes on a wide window (F-LAYOUT-001 §3.13). */
@@ -217,7 +217,7 @@ export const learner = {
       /** Shown under `body` once the learner has a level-check result (F-PLC-001 section 3.7, wireframe placement I). */
       placement: 'The pin shows where you started. A cell with a light outline and a check is one you can skip ahead of. You can still play it any time.',
       /** Shown under `body` once any cell has heritage stories (F-STORY-005 §3.5); still no fractions. */
-      stories: 'Cells with books also have heritage stories. The number in a corner says how many.',
+      stories: "A number in a cell's corner says how many heritage stories it has. A cell with the books icon has heritage stories to read.",
     },
   },
 

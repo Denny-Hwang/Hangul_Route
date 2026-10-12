@@ -41,7 +41,8 @@ export interface CellModelInput {
   quests: readonly Pick<QuestProgress, 'questId' | 'episodeId' | 'completedAt'>[];
 }
 
-function isPlayable(episode: Pick<Episode, 'status'>): boolean {
+/** A grid episode a learner can play: shipped or ready (a draft or preview episode is drawn as "coming soon"). */
+export function isPlayable(episode: Pick<Episode, 'status'>): boolean {
   return episode.status === 'shipped' || episode.status === 'ready';
 }
 

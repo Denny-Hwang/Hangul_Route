@@ -1,7 +1,7 @@
 import type { Episode, QuestProgress, RouteCatalog, StageDef, StageKey, ThemeDef, ThemeKey } from '@hangul-route/content-schema';
 import { episodeFor } from '../content/episodes';
 import { isEpisodeComplete, stageAvailability, type StageAvailability } from './journey';
-import { cellModel, type CellModel } from './journey-cells';
+import { cellModel, isPlayable, type CellModel } from './journey-cells';
 import { cellLook, type JourneyMarks } from './placement/cell-look';
 import type { StoryIndexEntry } from './story/story-index';
 
@@ -14,7 +14,7 @@ import type { StoryIndexEntry } from './story/story-index';
  * `JourneyCellState` when that glyph ships; until then no closed cell can exist.
  */
 
-/** `open`: a playable episode. `later`: no episode, or a preview one ("coming soon"). */
+/** `open`: a playable (shipped or ready) episode. `later`: no episode, or a draft or preview one ("coming soon"). */
 export type JourneyCellState = 'open' | 'later';
 
 /** One learner's look of a cell: the completed tint, the placed-out outline, the start pin. */
@@ -52,7 +52,7 @@ export interface JourneyStageView {
 }
 
 export function journeyCellState(episode: Pick<Episode, 'status'> | undefined): JourneyCellState {
-  return !episode || episode.status === 'preview' ? 'later' : 'open';
+  return episode && isPlayable(episode) ? 'open' : 'later';
 }
 
 export interface JourneyCellInput {
