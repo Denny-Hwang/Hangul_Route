@@ -11,6 +11,7 @@ import { cursorContext } from '../../logic/cursor-context';
 import { myRouteAccess } from '../../logic/my-route/access';
 import { buildMyRoute } from '../../logic/my-route/model';
 import { readSeen, seenFrom, writeSeen } from '../../logic/my-route/seen';
+import { startRouteOf } from '../../logic/my-route/start-marker';
 import { continueTappedEvent, stageOpenedEvent, viewedEvent, type MyRouteSource } from '../../logic/my-route/telemetry';
 import type { MyRouteModel, SeenRecord } from '../../logic/my-route/types';
 import { emptySnapshot, myRouteView, stageRowLook } from '../../logic/my-route/view';
@@ -131,8 +132,8 @@ function MyRouteBody({ profileId, readOnly, source, navigation }: BodyProps): Re
         themes: localized.themes,
         isEntitled: cursor.isEntitled,
         skipQuestIds: cursor.skipQuestIds,
-        // The start marker and known pips arrive with R-7a.
-        route: null,
+        // The start marker and known pips (R-7a): the route with no completions.
+        route: startRouteOf(snapshot.placements, journeyContent.catalog, cursor.isEntitled),
         seen,
         now: new Date(),
       });

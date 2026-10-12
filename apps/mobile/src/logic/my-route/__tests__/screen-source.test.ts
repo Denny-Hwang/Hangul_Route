@@ -46,6 +46,12 @@ describe('screens/my-route sources', () => {
     expect(src).not.toMatch(/AsyncStorage|localStorage/);
   });
 
+  it('the screen feeds the R-7a start route, so the start tag and known pips show', () => {
+    const src = read(join(SCREEN_DIR, 'MyRouteScreen.tsx'));
+    expect(src).toContain('route: startRouteOf(snapshot.placements, journeyContent.catalog, cursor.isEntitled)');
+    expect(src).not.toMatch(/route:\s*null/);
+  });
+
   it('the Journey header button exists only behind flags.myRouteEnabled', () => {
     const src = read(join(SRC, 'screens', 'journey', 'JourneyScreen.tsx'));
     const at = src.indexOf("navigate('MyRoute'");
