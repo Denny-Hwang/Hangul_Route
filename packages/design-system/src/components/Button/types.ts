@@ -14,6 +14,12 @@ export interface ButtonProps {
   leading?: ReactNode;
   trailing?: ReactNode;
   accessibilityLabel?: string;
+  /**
+   * What pressing does, when the label alone does not say it (e.g. "Opens the billing page"). Native
+   * reads it as the accessibility hint; react-native-web drops `accessibilityHint`, so on the web the
+   * button is described by a hidden copy of the text (`aria-describedby`).
+   */
+  accessibilityHint?: string;
   /** A disclosure button (it opens and closes something inline): announced as expanded or collapsed. */
   expanded?: boolean;
   testID?: string;
