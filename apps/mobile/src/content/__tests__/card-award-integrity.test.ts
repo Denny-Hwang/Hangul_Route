@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   HeritageCardListSchema,
   ROMANIZATION_EXCEPTIONS,
@@ -6,7 +8,9 @@ import {
   checkRomanization,
   lintStory,
   lintStoryCorpus,
+  parseStory,
   storyCardId,
+  type HeldStoryCard,
   type HeritageCard,
   type ProgressSnapshot,
   type StageKey,
@@ -23,8 +27,8 @@ import { awardWorld } from '../award-world';
 import { episodesAll } from '../episodes';
 import { heritageCardsAll, stage1Cards, stage2Cards, stage4Cards } from '../heritage-cards';
 import { questsAll } from '../quests';
-import { storiesAll } from '../stories';
-import { storyCards, storySets } from '../story-cards';
+import { heldStoryCards, storiesAll } from '../stories';
+import { heldStoryCardIds, storyCards, storySets } from '../story-cards';
 import { storySetDefs } from '../story-sets';
 
 /**
@@ -35,6 +39,13 @@ import { storySetDefs } from '../story-sets';
 const world: AwardWorld = awardWorld;
 const PROFILE = { createdAt: '2026-09-01T00:00:00.000Z' };
 const AT = '2026-09-10T00:00:00.000Z';
+
+/**
+ * The cards T-AWARD-1..3 hold to "can still fire": all of them except the
+ * cards of held stories, which by design can no longer be earned and stay
+ * only for the learners who own them (rule 1, §3.8 "Reviewed only").
+ */
+const earnable: readonly HeritageCard[] = heritageCardsAll.filter((c) => !heldStoryCardIds.includes(c.id));
 
 const episodeById = new Map(episodesAll.map((e) => [e.id, e]));
 const questIds = new Set(questsAll.map((q) => q.id));
@@ -60,14 +71,14 @@ describe('card award integrity (F-STORY-006 T-AWARD-1..5)', () => {
   });
 
   it('T-AWARD-1: every card in heritageCardsAll has a rule that can still fire', () => {
-    const hidden = heritageCardsAll.map((c) => c.id).filter((id) => !obtainableCards(world, new Set()).some((c) => c.id === id));
+    const hidden = earnable.map((c) => c.id).filter((id) => !obtainableCards(world, new Set()).some((c) => c.id === id));
     expect(hidden).toEqual([]);
   });
 
   it('T-AWARD-1: finishing every playable quest, even at 1 star, earns every card', () => {
     const all = playableEpisodes(episodesAll).flatMap((e) => e.questIds);
     const earned = new Set(derivedAwards(world, finished(all, 1), PROFILE).map((a) => a.cardId));
-    expect(heritageCardsAll.map((c) => c.id).filter((id) => !earned.has(id))).toEqual([]);
+    expect(earnable.map((c) => c.id).filter((id) => !earned.has(id))).toEqual([]);
   });
 
   it('T-AWARD-2: every episode reward exists and names that episode as its rule', () => {
@@ -81,7 +92,7 @@ describe('card award integrity (F-STORY-006 T-AWARD-1..5)', () => {
   });
 
   it('T-AWARD-2: every episode card is in its episode reward list', () => {
-    for (const card of heritageCardsAll) {
+    for (const card of earnable) {
       const rule = parseUnlockedBy(card.unlockedBy);
       if (rule.kind !== 'episode') continue;
       expect(episodeById.get(rule.episodeId)?.rewardCardIds ?? [], `${card.id} -> ${rule.episodeId}`).toContain(card.id);
@@ -98,7 +109,7 @@ describe('card award integrity (F-STORY-006 T-AWARD-1..5)', () => {
   });
 
   it('T-AWARD-3: no card is unlocked by an episode that cannot complete', () => {
-    for (const card of heritageCardsAll) {
+    for (const card of earnable) {
       const rule = parseUnlockedBy(card.unlockedBy);
       if (rule.kind !== 'episode') continue;
       const e = episodeById.get(rule.episodeId);
@@ -228,10 +239,30 @@ function withProposedCards(): Story[] {
 
 const CARD_RULE = /^card-/;
 
+/** The set cards' Korean words: a story card must not take one, even before its set is complete. */
+const setHeadwords = storySetDefs.map((d) => ({ id: d.cardId, subtitleKo: d.headword.ko }));
+
+/** What the bundle keeps of `story` once it is held (`build-stories.mjs` heldStoryCards). */
+function heldOf(story: Story): HeldStoryCard {
+  const keyword = story.keywords.find((k) => k.id === story.card?.keywordId);
+  if (!story.card || !keyword) throw new Error(`${story.id} has no card headword`);
+  return {
+    storyId: story.id,
+    titleEn: story.card.titleEn,
+    keyword: { ko: keyword.ko, romanization: keyword.romanization },
+    summaryEn: story.summaryEn,
+    theme: story.theme,
+    recommendedStage: story.recommendedStage,
+  };
+}
+
+const REPO = join(__dirname, '../../../../..');
+const FIXTURE_DIR = join(REPO, 'packages/content-schema/src/__fixtures__/story');
+
 describe('heritage story cards (F-STORY-006 T-AWARD-6, T-AWARD-7)', () => {
   it('the bundle holds one card per reviewed shelf story with a card block (none until 6.8), and every set is complete', () => {
     const carded = storiesAll.filter((s) => s.state === 'ready' && s.shelf !== undefined && s.card !== undefined);
-    const built = storyCards.filter((c) => c.storyId !== undefined);
+    const built = storyCards.filter((c) => c.storyId !== undefined && !heldStoryCardIds.includes(c.id));
     expect(built.map((c) => c.storyId)).toEqual(carded.map((s) => s.id));
     for (const set of storySets) {
       const def = storySetDefs.find((d) => d.id === set.id);
@@ -244,16 +275,44 @@ describe('heritage story cards (F-STORY-006 T-AWARD-6, T-AWARD-7)', () => {
 
   it('T-AWARD-6: every bundled story card carries its story fact verbatim, the first source and a story keyword', () => {
     expectSourcedStoryCards(
-      heritageCardsAll.filter((c) => c.storyId !== undefined),
+      heritageCardsAll.filter((c) => c.storyId !== undefined && !heldStoryCardIds.includes(c.id)),
       storiesAll,
     );
+  });
+
+  it('a held story keeps its card with no fact and no citation, and the card can no longer be earned (rule 1, Behaviour #10)', () => {
+    expect(heldStoryCardIds).toEqual(heldStoryCards.map((h) => storyCardId(h.storyId)));
+    for (const id of heldStoryCardIds) {
+      const card = heritageCardsAll.find((c) => c.id === id);
+      expect(card, id).toBeDefined();
+      expect([card?.factEn, card?.factId, card?.citation], id).toEqual([undefined, undefined, undefined]);
+      expect(storiesAll.some((s) => s.id === card?.storyId), id).toBe(false);
+      expect(obtainableCards(world, new Set()).some((c) => c.id === id), id).toBe(false);
+      expect(obtainableCards(world, new Set([id])).some((c) => c.id === id), id).toBe(true);
+    }
   });
 
   it('every bundled story with a card block passes the card lint rules, and no card repeats a Korean word', () => {
     for (const story of storiesAll) {
       expect(lintStory(story).filter((f) => CARD_RULE.test(f.rule) && f.level === 'error'), story.id).toEqual([]);
     }
-    expect(lintStoryCorpus(storiesAll, { cards: handWritten }).filter((f) => CARD_RULE.test(f.rule))).toEqual([]);
+    const others = [...handWritten, ...setHeadwords, ...heritageCardsAll.filter((c) => heldStoryCardIds.includes(c.id))];
+    expect(lintStoryCorpus(storiesAll, { cards: others }).filter((f) => CARD_RULE.test(f.rule))).toEqual([]);
+  });
+
+  it('a story card that takes a set card word fails the corpus lint before its set is complete', () => {
+    const [gimjang] = withProposedCards().filter((s) => s.id === 'story:gimjang-arirang');
+    if (!gimjang?.card) throw new Error('story:gimjang-arirang is not bundled');
+    gimjang.card = { ...gimjang.card, keywordId: 'arirang' };
+    const found = lintStoryCorpus([gimjang], { cards: [...handWritten, ...setHeadwords] }).filter((f) => f.rule === 'card-korean-duplicate');
+    expect(found.map((f) => f.message)).toEqual([expect.stringMatching(/card:story-gimjang-arirang.*아리랑.*card:set-seasons-tales/)]);
+  });
+
+  it('the e2e fixture bundle (build:web:fixtures) passes the card lint: its story cards repeat no Korean word', () => {
+    const fixtures = ['valid.ready.json', 'valid.revised.json'].map((f) => parseStory(JSON.parse(readFileSync(join(FIXTURE_DIR, f), 'utf8')) as unknown));
+    expect(fixtures.every((s) => s.state === 'ready' && s.card !== undefined)).toBe(true);
+    const found = lintStoryCorpus([...storiesAll, ...fixtures], { cards: [...handWritten, ...setHeadwords] }).filter((f) => CARD_RULE.test(f.rule));
+    expect(found).toEqual([]);
   });
 
   describe('with the 24 proposed card blocks applied to the bundled stories', () => {
@@ -290,7 +349,47 @@ describe('heritage story cards (F-STORY-006 T-AWARD-6, T-AWARD-7)', () => {
     it('T-AWARD-5: no two of the 70 cards share a Korean word, and the corpus lint agrees', () => {
       const words = all.flatMap((c) => (c.subtitleKo === undefined ? [] : [c.subtitleKo]));
       expect(new Set(words).size).toBe(words.length);
-      expect(lintStoryCorpus(stories, { cards: handWritten }).filter((f) => f.rule === 'card-korean-duplicate')).toEqual([]);
+      expect(lintStoryCorpus(stories, { cards: [...handWritten, ...setHeadwords] }).filter((f) => f.rule === 'card-korean-duplicate')).toEqual([]);
+    });
+
+    it('holding one story keeps its card, its set and the counts, and the Library shows it only to its owners (Behaviour #10)', () => {
+      const heldId = 'story:sun-and-moon';
+      const heldStory = stories.find((s) => s.id === heldId);
+      if (!heldStory) throw new Error(`${heldId} is not bundled`);
+      const kept = buildStoryCards(
+        stories.filter((s) => s.id !== heldId),
+        storySetDefs,
+        [heldOf(heldStory)],
+      );
+      expect(kept.heldCardIds).toEqual(['card:story-sun-and-moon']);
+      expect(kept.sets).toEqual(sets);
+      const keptAll = [...handWritten, ...kept.cards];
+      expect(keptAll.map((c) => c.id).sort()).toEqual(all.map((c) => c.id).sort());
+      const words = keptAll.flatMap((c) => (c.subtitleKo === undefined ? [] : [c.subtitleKo]));
+      expect(new Set(words).size).toBe(words.length);
+      expect(() => HeritageCardListSchema.parse(keptAll)).not.toThrow();
+
+      // The held story is a draft now: its shelf episode is gone with it.
+      const episodes = [
+        ...episodesAll,
+        ...stories
+          .filter((s) => s.id !== heldId)
+          .map((s) => ({
+            ...episodesAll[0]!,
+            id: `episode:shelf-${slugOf(s.id)}`,
+            status: 'shipped' as const,
+            questIds: [`quest:story-${slugOf(s.id)}-listen`],
+            rewardCardIds: [storyCardId(s.id)],
+          })),
+      ];
+      const heldWorld: AwardWorld = { cards: keptAll, episodes, quests: questsAll, sets: kept.sets };
+      const listed = (owned: readonly string[]): string[] => obtainableCards(heldWorld, new Set(owned)).map((c) => c.id);
+      expect(listed([])).not.toContain('card:story-sun-and-moon');
+      expect(listed([])).not.toContain('card:set-seasons-tales');
+      expect(listed([])).toContain('card:set-records-joseon');
+      expect(listed(['card:story-sun-and-moon'])).toContain('card:story-sun-and-moon');
+      expect(listed(['card:story-sun-and-moon'])).toContain('card:set-seasons-tales');
+      expect(listed(['card:set-seasons-tales'])).toContain('card:set-seasons-tales');
     });
 
     it('a set card arrives once its six member cards are owned, from the members alone', () => {
@@ -318,7 +417,8 @@ describe('heritage story cards (F-STORY-006 T-AWARD-6, T-AWARD-7)', () => {
       expect(def.cardId).toBe(`card:set-${def.id.slice('set:'.length)}`);
       expect(def.rarity).toBe('legendary');
       expect(checkRomanization(def.headword.ko, def.headword.romanization, { exceptions: ROMANIZATION_EXCEPTIONS }), def.id).toEqual([]);
-      for (const id of def.memberStoryIds) expect(storiesAll.some((s) => s.id === id), id).toBe(true);
+      // A member is a story file (bundled, or held as a draft: its set stays defined).
+      for (const id of def.memberStoryIds) expect(existsSync(join(REPO, 'content/stories', `${slugOf(id)}.json`)), id).toBe(true);
     }
   });
 });

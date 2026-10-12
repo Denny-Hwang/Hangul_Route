@@ -1,4 +1,4 @@
-import type { Rarity } from './schemas/heritage-card';
+import type { Rarity, ThemeKey } from './schemas/heritage-card';
 
 /**
  * The heritage story cards (F-STORY-006 §3.8): one card per shelf story,
@@ -26,4 +26,22 @@ export function storyCardRarity(recommendedStage: number): Rarity {
   if (recommendedStage <= 1) return 'common';
   if (recommendedStage === 2) return 'uncommon';
   return 'rare';
+}
+
+/**
+ * What the bundle keeps of a held story's card (F-STORY-006 §3.8 "Reviewed
+ * only", rule 1, D3). A hold sets the story back to `draft`, so the story
+ * leaves the bundle, but a learner who owns its card keeps it and still sees
+ * it. `scripts/build-stories.mjs` writes one per draft story that has a
+ * `card` and a `shelf` block: the card's title, its Korean word and the
+ * story's summary, theme and stage. No fact and no citation, because the
+ * story's claims are under correction.
+ */
+export interface HeldStoryCard {
+  storyId: string;
+  titleEn: string;
+  keyword: { ko: string; romanization: string };
+  summaryEn: string;
+  theme: ThemeKey;
+  recommendedStage: number;
 }

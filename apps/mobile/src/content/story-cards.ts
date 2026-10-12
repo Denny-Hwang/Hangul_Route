@@ -1,7 +1,7 @@
 import type { HeritageCard } from '@hangul-route/content-schema';
 import { buildStoryCards } from '../logic/awards/story-cards';
 import type { CardSet } from '../logic/awards/types';
-import { storiesAll } from './stories';
+import { heldStoryCards, storiesAll } from './stories';
 import { storySetDefs } from './story-sets';
 
 /**
@@ -9,8 +9,11 @@ import { storySetDefs } from './story-sets';
  * shelf story with a `card` block, then the legendary card of each complete
  * collection. `heritageCardsAll` appends them; the award engine reads the
  * sets. Zero today: the `card` blocks arrive with the reviewed stories (6.8).
+ * A held story keeps its card (no fact, no citation) so a learner who owns it
+ * still sees it (rule 1); `heldStoryCardIds` lists those cards.
  */
-const built = buildStoryCards(storiesAll, storySetDefs);
+const built = buildStoryCards(storiesAll, storySetDefs, heldStoryCards);
 
 export const storyCards: readonly HeritageCard[] = built.cards;
 export const storySets: readonly CardSet[] = built.sets;
+export const heldStoryCardIds: readonly string[] = built.heldCardIds;

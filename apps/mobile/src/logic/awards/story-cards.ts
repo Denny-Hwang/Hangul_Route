@@ -2,6 +2,7 @@ import {
   StageKeySchema,
   storyCardId,
   storyCardRarity,
+  type HeldStoryCard,
   type HeritageCard,
   type KoText,
   type StageKey,
@@ -66,27 +67,64 @@ export function storyCardFor(story: Story): HeritageCard | null {
     theme: story.theme,
     stage: stageKey(story.recommendedStage),
     rarity: storyCardRarity(story.recommendedStage),
-    unlockedBy: `episode:shelf-${story.id.replace(/^story:/, '')}`,
+    unlockedBy: shelfEpisodeOf(story.id),
     storyId: story.id,
     factId: fact.id,
     citation: { title: source.title, publisher: source.publisher, more: others.length },
   };
 }
 
+const shelfEpisodeOf = (storyId: string): string => `episode:shelf-${storyId.replace(/^story:/, '')}`;
+
 /**
- * Every story card of the bundle, then the card of each registered set, and
- * the sets the award engine reads. A set is registered only when every one of
- * its member stories builds a card (F-STORY-006 §3.2); until then neither the
- * set nor its card exists, so its card is neither listed nor awardable.
+ * The card a held story keeps (F-STORY-006 §3.8 "Reviewed only", rule 1, D3):
+ * the same id, title, Korean word, blurb, stage and rule as when it shipped,
+ * with no fact and no citation while its claims are under correction (the back
+ * face drops the citation band and keeps the summary). Its shelf episode is no
+ * longer in the bundle, so the card is neither listed nor awardable unless the
+ * learner already owns it (`obtainableCards`).
+ */
+export function heldStoryCardFor(held: HeldStoryCard): HeritageCard {
+  return {
+    id: storyCardId(held.storyId),
+    titleEn: held.titleEn,
+    subtitleKo: held.keyword.ko,
+    romanization: held.keyword.romanization,
+    blurbEn: held.summaryEn,
+    theme: held.theme,
+    stage: stageKey(held.recommendedStage),
+    rarity: storyCardRarity(held.recommendedStage),
+    unlockedBy: shelfEpisodeOf(held.storyId),
+    storyId: held.storyId,
+  };
+}
+
+/**
+ * Every story card of the bundle (reviewed stories first, then held ones),
+ * then the card of each registered set, and the sets the award engine reads.
+ * A set is registered only when every one of its member stories has a card
+ * (F-STORY-006 §3.2), reviewed or held; until then neither the set nor its
+ * card exists. A held member hides the set card from a learner who does not
+ * own that member (`obtainableCards`), and keeps an owned set card visible.
+ * `heldCardIds` are the cards that come from held stories: they can never
+ * fire, so the integrity test leaves them out of T-AWARD-1..3.
  */
 export function buildStoryCards(
   stories: readonly Story[],
   defs: readonly StorySetDef[],
-): { cards: HeritageCard[]; sets: CardSet[] } {
+  held: readonly HeldStoryCard[] = [],
+): { cards: HeritageCard[]; sets: CardSet[]; heldCardIds: string[] } {
   const byStory = new Map<string, HeritageCard>();
   for (const story of stories) {
     const card = storyCardFor(story);
     if (card) byStory.set(story.id, card);
+  }
+  const heldCardIds: string[] = [];
+  for (const h of held) {
+    if (byStory.has(h.storyId)) continue; // a reviewed copy of the story wins
+    const card = heldStoryCardFor(h);
+    byStory.set(h.storyId, card);
+    heldCardIds.push(card.id);
   }
   const sets: CardSet[] = [];
   const setCards: HeritageCard[] = [];
@@ -114,5 +152,5 @@ export function buildStoryCards(
     const setId = setOf.get(c.id);
     return setId === undefined ? c : { ...c, setId };
   });
-  return { cards: [...cards, ...setCards], sets };
+  return { cards: [...cards, ...setCards], sets, heldCardIds };
 }
