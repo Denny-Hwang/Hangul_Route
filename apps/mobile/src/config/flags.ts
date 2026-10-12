@@ -132,6 +132,13 @@ export interface Flags {
    * FB-14 flips it, after the Worker's note routes are deployed.
    */
   notesEnabled: boolean;
+
+  /**
+   * Progress reports in the learner app (F-REPORT-001 section 3.1, RP-9): the **See report** button on each
+   * grown-up dashboard card and the `LearnerReport` screen behind the gate. With it off the button is not
+   * drawn and the screen is not registered. OFF until RP-11 flips it.
+   */
+  reportsEnabled: boolean;
 }
 
 const launchDefaults: Flags = {
@@ -148,6 +155,7 @@ const launchDefaults: Flags = {
   vocabShowDrafts: false,
   grownUpHomeEnabled: false,
   notesEnabled: false,
+  reportsEnabled: false,
 };
 
 export const flags: Flags = {
@@ -171,6 +179,7 @@ export const flags: Flags = {
     isDevBuild() && parseBool(process.env.EXPO_PUBLIC_VOCAB_SHOW_DRAFTS, launchDefaults.vocabShowDrafts),
   grownUpHomeEnabled: parseBool(process.env.EXPO_PUBLIC_GROWN_UP_HOME, launchDefaults.grownUpHomeEnabled),
   notesEnabled: parseBool(process.env.EXPO_PUBLIC_NOTES_ENABLED, launchDefaults.notesEnabled),
+  reportsEnabled: parseBool(process.env.EXPO_PUBLIC_REPORTS_ENABLED, launchDefaults.reportsEnabled),
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;
