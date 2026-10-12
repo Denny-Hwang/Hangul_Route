@@ -406,7 +406,8 @@ export function rebaseSnapshot(base: ProgressSnapshot, ours: ProgressSnapshot, t
  * A card this device has seen counts as held only when the server copy is
  * seen too (F-STORY-006 section 3.6 M3), so a cleared "New" flag still uploads.
  * Word progress counts as held when the server would gain nothing by merging
- * it (F-VOC-005 section 3.3, `vocabCovered`).
+ * it (F-VOC-005 section 3.3, `vocabCovered`). A stage or quest latch entry is
+ * held when the server has it at the same or an earlier time.
  */
 export function isSubsetOf(local: ProgressSnapshot, server: ProgressSnapshot): boolean {
   const has = <T>(arr: readonly T[], key: (t: T) => string) => new Set(arr.map(key));
