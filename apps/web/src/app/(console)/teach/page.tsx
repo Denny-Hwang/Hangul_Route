@@ -3,6 +3,7 @@
 import { personaHint } from '@hangul-route/content-schema';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
+import { ClerkReverify } from '@/components/console/ClerkSignIn';
 import { GrownUpRouter } from '@/components/console/GrownUpRouter';
 import { SignInColumn } from '@/components/console/SignInParts';
 import { useConsoleAuth } from '@/components/console/auth-context';
@@ -12,12 +13,14 @@ import { useConsoleAuth } from '@/components/console/auth-context';
  * beyond "Taking you to …" and a Go now link. It reads a hint from `?persona=` or `?as=` when
  * present, otherwise none (old `/teach` bookmarks were the sign-in of every grown-up, families
  * included). Signed out, the shared layout sends it to `/signin` with that hint (and `next` when
- * the URL has a query); signed in, it goes to the persona home with that hint.
+ * the URL has a query); signed in, it goes to the persona home with that hint. A sign-in record
+ * that reaches it (the router's Go now, or Clerk following a return URL here) gets the same
+ * reverification as on `/signin`.
  */
 function TeachRouter(): JSX.Element {
   const params = useSearchParams() ?? new URLSearchParams();
   const auth = useConsoleAuth();
-  return <SignInColumn>{auth.ready && auth.session ? <GrownUpRouter next={null} hint={personaHint(params)} /> : null}</SignInColumn>;
+  return <SignInColumn>{auth.ready && auth.session ? <GrownUpRouter next={null} hint={personaHint(params)} reverify={auth.mode === 'clerk' ? (props) => <ClerkReverify {...props} /> : undefined} /> : null}</SignInColumn>;
 }
 
 export default function TeachRouterPage(): JSX.Element {

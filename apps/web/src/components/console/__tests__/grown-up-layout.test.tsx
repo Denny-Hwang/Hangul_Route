@@ -93,6 +93,39 @@ describe('the shared grown-up layout (F-APP-001 A-4b)', () => {
     expect(r.root.findAll((n) => n.props['data-testid'] === 'grown-up-lock-pending' && n.type === 'div')).toHaveLength(1);
   });
 
+  it('a session still unknown after the Clerk wait goes to /signin (the unreachable line lives there), never a blank page', () => {
+    vi.useFakeTimers();
+    try {
+      auth.ready = false;
+      render();
+      act(() => {
+        vi.advanceTimersByTime(14_999);
+      });
+      expect(nav.replaced).toEqual([]);
+      act(() => {
+        vi.advanceTimersByTime(1);
+      });
+      expect(nav.replaced).toEqual([`/signin?next=${encodeURIComponent('/teach/space?id=sp_1')}`]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('/signin itself never forwards while Clerk loads (it shows its own unreachable line)', () => {
+    vi.useFakeTimers();
+    try {
+      auth.ready = false;
+      nav.pathname = '/signin';
+      render();
+      act(() => {
+        vi.advanceTimersByTime(60_000);
+      });
+      expect(nav.replaced).toEqual([]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('wraps a signed-in page in the lock, keyed on the pathname, with the query for its return targets', () => {
     auth.session = { accountId: 'user_1' };
     const r = render();

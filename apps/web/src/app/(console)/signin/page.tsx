@@ -12,7 +12,7 @@ import { createConsoleApi } from '@/lib/console/api';
 import { apiBaseUrl, devAuthEnabled } from '@/lib/console/config';
 import { learnerHome } from '@/lib/console/grown-up-lock';
 import { createModeUrl, isStandaloneDisplay, showStandaloneFinish, signInReturnUrl } from '@/lib/console/signin-flow';
-import { readSignInRecord, writeSignInProof } from '@/lib/console/signin-record';
+import { readAffirmation, readSignInRecord, writeAffirmation, writeSignInProof } from '@/lib/console/signin-record';
 import { clearGrownUpTab } from '@/lib/console/unlock';
 import { useMessages } from '@/lib/i18n/locale-context';
 
@@ -151,21 +151,36 @@ function SignInView({ params, hint }: { params: URLSearchParams; hint: AdultPers
   );
 }
 
-/** `?mode=create`: the adult step, then Clerk's sign-up (behaviour 27: never before the tick). */
+/**
+ * `?mode=create`: the adult step, then Clerk's sign-up (behaviour 27: never before the tick). The
+ * tick is kept for this tab (`hr:grownup:affirmed`), so a Google sign-up returning to
+ * `#/sso-callback`, or a reload during the email code, comes back to `<SignUp>` and not to the
+ * checkbox. Until the tab has been read, the widget's place stays empty.
+ */
 function CreateView({ params, hint }: { params: URLSearchParams; hint: AdultPersona | null }): JSX.Element {
   const router = useRouter();
   const m = useMessages();
   const s = m.console.signIn;
   const [ticked, setTicked] = useState(false);
   const [affirmedAt, setAffirmedAt] = useState<string | null>(null);
+  const [read, setRead] = useState(false);
+  useEffect(() => {
+    setAffirmedAt(readAffirmation(Date.now()));
+    setRead(true);
+  }, []);
+  const affirm = (): void => {
+    const at = new Date().toISOString();
+    writeAffirmation(at);
+    setAffirmedAt(at);
+  };
   return (
     <SignInColumn>
       <QuietBack label={s.create.back.cta} onClick={() => router.replace(createModeUrl(params, false))} testId="signin-create-back" />
       <SignInHead mark={m.landing.brand.mark} title={s.title} />
-      {affirmedAt ? (
+      {!read ? null : affirmedAt ? (
         <SignInWidget kind="signUp" params={params} hint={hint} affirmedAt={affirmedAt} />
       ) : (
-        <AdultStep lead={s.create.lead} affirm={s.create.affirm} continueLabel={s.create.continue.cta} ticked={ticked} onTick={setTicked} onContinue={() => setAffirmedAt(new Date().toISOString())} />
+        <AdultStep lead={s.create.lead} affirm={s.create.affirm} continueLabel={s.create.continue.cta} ticked={ticked} onTick={setTicked} onContinue={affirm} />
       )}
     </SignInColumn>
   );

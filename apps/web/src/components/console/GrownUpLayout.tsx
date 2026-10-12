@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, type ReactNode } from 'react';
-import { signedOutTarget } from '@/lib/console/signin-flow';
+import { CLERK_LOAD_TIMEOUT_MS, signedOutTarget } from '@/lib/console/signin-flow';
 import { LocaleProvider } from '@/lib/i18n/locale-context';
 import { ConsoleAuthProvider, useConsoleAuth } from './auth-context';
 import { GrownUpLock } from './GrownUpLock';
@@ -12,7 +12,9 @@ import { GrownUpLock } from './GrownUpLock';
  * `ConsoleAuthProvider` and `GrownUpLock`. Order of checks on load (section 3.11): signed in?
  * (else `/signin?next=<path and query>`) → the lock decision → the page. `/signin` itself is
  * exempt from both. Until a decision exists the page renders nothing (no frame, no API call):
- * every page that calls the API sits inside the lock, as `GrownUpLock` requires.
+ * every page that calls the API sits inside the lock, as `GrownUpLock` requires. When the session
+ * stays unknown for `CLERK_LOAD_TIMEOUT_MS` (Clerk cannot load), the page goes to `/signin` the
+ * same way, where the unreachable line and Try again live (section 3.19): never a blank page.
  */
 const SIGN_IN_PAGE = /^\/signin(?:\/|\.html)?$/;
 
@@ -36,6 +38,13 @@ export function GrownUpGate({ children }: { children: ReactNode }): JSX.Element 
   useEffect(() => {
     if (signedOut) router.replace(signedOutTarget(pathname, search));
   }, [signedOut, router, pathname, search]);
+
+  const waiting = !exempt && !auth.ready;
+  useEffect(() => {
+    if (!waiting) return undefined;
+    const timer = setTimeout(() => router.replace(signedOutTarget(pathname, search)), CLERK_LOAD_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [waiting, router, pathname, search]);
 
   if (exempt) return <>{children}</>;
   if (!auth.ready || !auth.session) return <Pending />;

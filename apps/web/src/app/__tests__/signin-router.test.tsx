@@ -109,7 +109,7 @@ import TeachStartRedirect from '@/app/(console)/teach/start/page';
 import TeachRouterPage from '@/app/(console)/teach/page';
 import { GrownUpRouter, type RouterEnvironment } from '@/components/console/GrownUpRouter';
 import { ClerkReverify } from '@/components/console/ClerkSignIn';
-import { SIGNIN_RECORD_KEY, readSignInRecord } from '@/lib/console/signin-record';
+import { AFFIRMATION_KEY, SIGNIN_RECORD_KEY, readSignInRecord } from '@/lib/console/signin-record';
 
 const ORIGIN = 'https://app.hangulroute.com';
 const NOW = 1_800_000_000_000;
@@ -208,7 +208,7 @@ async function render(element: ReactElement): Promise<ReactTestRenderer> {
 
 const text = (root: ReactTestInstance): string =>
   root
-    .findAll((node) => typeof node.type === 'string')
+    .findAll((node) => typeof node.type === 'string' && node.type !== 'style')
     .flatMap((node) => node.children.filter((child): child is string => typeof child === 'string'))
     .join(' | ');
 const byTestId = (root: ReactTestInstance, id: string): ReactTestInstance[] => root.findAll((node) => node.props['data-testid'] === id && typeof node.type === 'string');
@@ -325,6 +325,33 @@ describe('/signin?mode=create: the adult step (OD-13, behaviour 27)', () => {
     expect((signUp.appearance as { elements: { footerAction: unknown } }).elements.footerAction).toEqual({ display: 'none' });
   });
 
+  it('keeps the tick for this tab: a Google sign-up back at #/sso-callback (or a reload) renders <SignUp>, not the checkbox', async () => {
+    nav.params = new URLSearchParams('mode=create&persona=parent');
+    const first = (await render(<SignInPage />)).root;
+    await act(async () => byTestId(first, 'signin-affirm')[0]?.props.onChange({ target: { checked: true } }));
+    await act(async () => first.findByType('form').props.onSubmit({ preventDefault: () => undefined }));
+    await settle();
+    const stored = JSON.parse(browser.session.getItem(AFFIRMATION_KEY) ?? 'null') as { v: number; at: string };
+    expect(stored.v).toBe(1);
+    expect(Object.keys(stored).sort()).toEqual(['at', 'v']);
+    act(() => mounted?.unmount());
+    clerk.signUp = [];
+
+    // The new page load after Clerk's redirect: the stored tick mounts <SignUp> at once with the same time.
+    const again = (await render(<SignInPage />)).root;
+    expect(byTestId(again, 'signin-affirm')).toHaveLength(0);
+    const signUp = clerk.signUp[clerk.signUp.length - 1] ?? {};
+    expect((signUp.unsafeMetadata as { adultAffirmedAt: string }).adultAffirmedAt).toBe(stored.at);
+  });
+
+  it('with no stored tick (or a stale one) the checkbox still comes first', async () => {
+    nav.params = new URLSearchParams('mode=create');
+    browser.session.setItem(AFFIRMATION_KEY, JSON.stringify({ v: 1, at: new Date(Date.now() - 31 * 60_000).toISOString() }));
+    const page = (await render(<SignInPage />)).root;
+    expect(byTestId(page, 'signin-affirm')).toHaveLength(1);
+    expect(clerk.signUp).toHaveLength(0);
+  });
+
   it('Back to sign in leaves mode=create with the hint kept', async () => {
     nav.params = new URLSearchParams('mode=create&as=parent');
     const page = (await render(<SignInPage />)).root;
@@ -347,6 +374,40 @@ describe('the recorder: what a sign-in completed in this tab proved (section 3.9
     expect(readSignInRecord()).toBeNull();
     emit({ session: { id: 'sess_1' }, client: { signIn: { status: 'complete', createdSessionId: 'sess_1', firstFactorVerification: { strategy: 'password' } } } });
     expect(readSignInRecord()).toMatchObject({ kind: 'proof', sessionId: 'sess_1', secret: true });
+  });
+
+  it('a secret factor verified before the session appears proves a secret even when Clerk no longer names the sign-in', async () => {
+    await render(<SignInPage />);
+    emit({ session: null, client: { signIn: { status: 'needs_first_factor', firstFactorVerification: { strategy: 'email_code', status: 'unverified' } } } });
+    expect(readSignInRecord()).toBeNull();
+    emit({ session: null, client: { signIn: { status: 'complete', firstFactorVerification: { strategy: 'email_code', status: 'verified' } } } });
+    expect(readSignInRecord()).toMatchObject({ kind: 'secret' });
+    emit({ session: { id: 'sess_3' }, client: { signIn: { status: null } } });
+    expect(readSignInRecord()).toMatchObject({ kind: 'proof', sessionId: 'sess_3', secret: true });
+  });
+
+  it('a session that appears with no evidence (no hand-off record, no named sign-in) is not secret-proving', async () => {
+    await render(<SignInPage />);
+    emit({ session: null, client: { signIn: { status: null } } });
+    emit({ session: { id: 'sess_4' }, client: { signIn: { status: null } } });
+    expect(readSignInRecord()).toMatchObject({ kind: 'proof', sessionId: 'sess_4', secret: false });
+  });
+
+  it('an email-link sign-in is not secret-proving', async () => {
+    await render(<SignInPage />);
+    emit({ session: null, client: { signIn: { status: 'needs_first_factor', firstFactorVerification: { strategy: 'email_link', status: 'unverified' } } } });
+    emit({ session: { id: 'sess_5' }, client: { signIn: { status: 'complete', createdSessionId: 'sess_5', firstFactorVerification: { strategy: 'email_link', status: 'verified' } } } });
+    expect(readSignInRecord()).toMatchObject({ kind: 'proof', sessionId: 'sess_5', secret: false });
+  });
+
+  it('the adult-step tick is spent once the sign-up signs in', async () => {
+    browser.session.setItem(AFFIRMATION_KEY, JSON.stringify({ v: 1, at: new Date().toISOString() }));
+    nav.params = new URLSearchParams('mode=create');
+    await render(<SignInPage />);
+    emit({ session: null, client: { signUp: { status: 'missing_requirements' } } });
+    emit({ session: { id: 'sess_6' }, client: { signUp: { status: 'complete', createdSessionId: 'sess_6', verifications: { emailAddress: { strategy: 'email_code', status: 'verified' } } } } });
+    expect(readSignInRecord()).toMatchObject({ kind: 'proof', sessionId: 'sess_6', secret: true });
+    expect(browser.session.getItem(AFFIRMATION_KEY)).toBeNull();
   });
 
   it('a Google hand-off is noted, and the sign-in it completes is OAuth even when Clerk no longer names it', async () => {
@@ -574,6 +635,16 @@ describe('/teach: a router page with the hint of persona or as, none otherwise (
     nav.params = new URLSearchParams('persona=parent');
     api.spaces = { ok: true, data: [CLASS] };
     await render(<TeachRouterPage />);
+    expect(browser.replaced).toEqual(['/teach/home']);
+  });
+
+  it('an OAuth sign-in record that reaches /teach on a locked device runs the same reverification (behaviour 21)', async () => {
+    browser.session.setItem(SIGNIN_RECORD_KEY, proofNow(false));
+    stores.device = PIN_DEVICE;
+    api.spaces = { ok: true, data: [CLASS] };
+    await render(<TeachRouterPage />);
+    expect(clerk.reverifyAsked).toBe(1);
+    expect(JSON.parse(browser.session.getItem('hr:grownup:unlock') ?? 'null')).toMatchObject({ src: 'signin' });
     expect(browser.replaced).toEqual(['/teach/home']);
   });
 

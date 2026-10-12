@@ -12,6 +12,8 @@ const decode = (s: string): string =>
 export function wordsOf(html: string, data: readonly string[]): string[] {
   const texts = html
     .replace(/<!-- -->/g, '')
+    // A <style> block is CSS, never shown text.
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/g, '')
     .split(/<[^>]+>/)
     .map(decode);
   const attrs = [...html.matchAll(/ (?:aria-label|placeholder|title|alt)="([^"]*)"/g)].map((match) => decode(match[1] ?? ''));

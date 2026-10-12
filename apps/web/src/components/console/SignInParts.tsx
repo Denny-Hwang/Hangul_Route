@@ -2,7 +2,7 @@
 
 import { IconSvg } from '@hangul-route/design-system/icon-glyphs/dom';
 import { borderWidth, colors, layout, radii, shadows, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
-import { useId, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useId, useState, type CSSProperties, type ReactNode } from 'react';
 
 /**
  * The parts of `/signin` and the grown-up routers (F-APP-001 A-4b; design mock
@@ -20,10 +20,14 @@ const cardShadow = `0 ${shadows.card.shadowOffset.height}px ${shadows.card.shado
 const pageStyle: CSSProperties = {
   minHeight: '100vh',
   boxSizing: 'border-box',
-  padding: `${spacing.lg}px ${layout.gutter.compact}px ${spacing.xxxl}px`,
+  paddingTop: spacing.lg,
+  paddingBottom: spacing.xxxl,
   backgroundColor: colors.surface.canvas,
   color: colors.text.primary,
 };
+
+/** The page gutter: `layout.gutter.compact`, `.regular` from 45em (mock token table). */
+const GUTTER_CSS = `.hr-signin-page{padding-inline:${layout.gutter.compact}px}@media (min-width:45em){.hr-signin-page{padding-inline:${layout.gutter.regular}px}}`;
 
 const columnStyle: CSSProperties = {
   display: 'flex',
@@ -38,7 +42,8 @@ const columnStyle: CSSProperties = {
 /** The single centred column of `/signin` and the router pages. */
 export function SignInColumn({ children }: { children: ReactNode }): JSX.Element {
   return (
-    <main style={pageStyle}>
+    <main className="hr-signin-page" style={pageStyle}>
+      <style>{GUTTER_CSS}</style>
       <div style={columnStyle}>{children}</div>
     </main>
   );
@@ -230,12 +235,18 @@ export function AdultStep(props: { lead: string; affirm: string; continueLabel: 
   );
 }
 
-/** Router (Panel B): one polite line and a visible link, `spacing.jumbo` above and below. */
+/**
+ * Router (Panel B): one polite line and a visible link, `spacing.jumbo` above and below. The live
+ * region mounts empty and receives its line after mount, so screen readers announce it (text
+ * already inside a region when it is inserted is often not read).
+ */
 export function RouterPanel({ line, goNowLabel, href }: { line: string; goNowLabel: string; href: string | null }): JSX.Element {
+  const [announced, setAnnounced] = useState('');
+  useEffect(() => setAnnounced(line), [line]);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: spacing.sm, paddingBlock: spacing.jumbo }} data-testid="signin-router">
       <p role="status" aria-live="polite" style={{ margin: 0, color: colors.text.secondary }}>
-        {line}
+        {announced}
       </p>
       {href ? (
         <TextLink href={href} testId="signin-go-now">
