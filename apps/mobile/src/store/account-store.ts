@@ -1,7 +1,9 @@
+import { PIN_SET_AT_KEY } from '@hangul-route/content-schema';
 import { create } from 'zustand';
 import type { SubscriptionState } from '../logic/entitlement';
 import { INITIAL_ATTEMPT_STATE, type AttemptState } from '../logic/profiles/pin-hash';
 import { startResetWait } from '../logic/profiles/pin-reset';
+import { PIN_HASH_SEEN_KEY, pinHashFingerprint, reconcilePinEpoch as nextPinEpoch } from '../logic/shell/device-gate';
 import { readJson, writeJson } from '../platform/storage';
 
 /**
@@ -24,6 +26,13 @@ const SUBSCRIPTION_KEY = 'account:subscription';
 // cannot clear an active cooldown (§3.1).
 const PIN_HASH_KEY = 'account:parentPinHash';
 const PIN_ATTEMPTS_KEY = 'account:pinAttempts';
+// The PIN epoch behind the device gate marker (F-APP-001 section 3.9): when the current PIN was
+// set (`account:pinSetAt`, epoch ms), and the fingerprint of the hash this app last saw
+// (`account:pinHashSeen`), so a PIN changed by an older bundle still moves the epoch.
+
+function finiteTime(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
+}
 
 interface State {
   parentEmail: string | null;
@@ -36,6 +45,10 @@ interface State {
   pinResetRequestedAt: string | null;
   subscription: SubscriptionState | null;
   parentPinHash: string | null;
+  /** Epoch ms the current PIN was set; null for a PIN set before F-APP-001 A-6 (read as epoch 0) or no PIN yet. */
+  pinSetAt: number | null;
+  /** Fingerprint of the stored PIN hash last seen (`NO_PIN_SEEN` without a PIN); null before the first look. */
+  pinHashSeen: string | null;
   pinAttempts: AttemptState;
   hydrated: boolean;
 }
@@ -49,8 +62,14 @@ interface Actions {
   requestPinReset: () => void;
   clearPinResetRequest: () => void;
   setSubscription: (subscription: SubscriptionState | null) => void;
+  /** Stores the PIN hash; every new PIN (first set, change, Forgot PIN reset) moves the epoch to now. */
   setParentPinHash: (hash: string | null) => void;
   setPinAttempts: (state: AttemptState) => void;
+  /**
+   * Boot step of the device gate marker writer: a hash that differs from the one last seen was
+   * changed by an older bundle, so the epoch moves to `now` before the marker is written.
+   */
+  reconcilePinEpoch: (now: number) => void;
 }
 
 export const useAccountStore = create<State & Actions>((set, get) => ({
@@ -61,6 +80,8 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
   pinResetRequestedAt: null,
   subscription: null,
   parentPinHash: null,
+  pinSetAt: null,
+  pinHashSeen: null,
   pinAttempts: INITIAL_ATTEMPT_STATE,
   hydrated: false,
 
@@ -73,6 +94,8 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     const subscription = await readJson<SubscriptionState | null>(SUBSCRIPTION_KEY);
     const parentPinHash = await readJson<string | null>(PIN_HASH_KEY);
     const pinAttempts = await readJson<AttemptState | null>(PIN_ATTEMPTS_KEY);
+    const pinSetAt = await readJson<unknown>(PIN_SET_AT_KEY);
+    const pinHashSeen = await readJson<unknown>(PIN_HASH_SEEN_KEY);
     set({
       parentEmail: parentEmail ?? null,
       consentAcceptedAt: consentAcceptedAt ?? null,
@@ -88,6 +111,8 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
       pinResetRequestedAt: pinResetRequestedAt ?? null,
       subscription: subscription ?? null,
       parentPinHash: parentPinHash ?? null,
+      pinSetAt: finiteTime(pinSetAt),
+      pinHashSeen: typeof pinHashSeen === 'string' ? pinHashSeen : null,
       pinAttempts: pinAttempts ?? INITIAL_ATTEMPT_STATE,
       hydrated: true,
     });
@@ -135,8 +160,20 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     // A stored PIN settles any pending Forgot PIN wait: the request is cleared
     // only after the new PIN is stored (F-LEARN-001 §3.5).
     const hadReset = get().pinResetRequestedAt !== null;
-    set({ parentPinHash: hash, pinAttempts: INITIAL_ATTEMPT_STATE, ...(hadReset ? { pinResetRequestedAt: null } : {}) });
+    // A new PIN gets a new epoch (F-APP-001 section 3.9), so a PIN a child set or reset never
+    // opens the grown-up area until a grown-up signs in again; removing the PIN keeps the epoch.
+    const pinSetAt = hash === null ? get().pinSetAt : Date.now();
+    const pinHashSeen = pinHashFingerprint(hash);
+    set({
+      parentPinHash: hash,
+      pinSetAt,
+      pinHashSeen,
+      pinAttempts: INITIAL_ATTEMPT_STATE,
+      ...(hadReset ? { pinResetRequestedAt: null } : {}),
+    });
     void writeJson(PIN_HASH_KEY, hash);
+    if (hash !== null) void writeJson(PIN_SET_AT_KEY, pinSetAt);
+    void writeJson(PIN_HASH_SEEN_KEY, pinHashSeen);
     void writeJson(PIN_ATTEMPTS_KEY, INITIAL_ATTEMPT_STATE);
     if (hadReset) void writeJson(PIN_RESET_KEY, null);
   },
@@ -144,5 +181,14 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
   setPinAttempts: (state) => {
     set({ pinAttempts: state });
     void writeJson(PIN_ATTEMPTS_KEY, state);
+  },
+
+  reconcilePinEpoch: (now) => {
+    const { parentPinHash, pinSetAt, pinHashSeen } = get();
+    const next = nextPinEpoch({ parentPinHash, pinSetAt, pinHashSeen }, now);
+    if (next === null) return;
+    set(next);
+    if (next.pinSetAt !== pinSetAt && next.pinSetAt !== null) void writeJson(PIN_SET_AT_KEY, next.pinSetAt);
+    void writeJson(PIN_HASH_SEEN_KEY, next.pinHashSeen);
   },
 }));

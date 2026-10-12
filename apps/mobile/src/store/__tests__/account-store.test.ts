@@ -7,6 +7,7 @@ vi.mock('../../platform/storage', () => ({
 
 import type { SubscriptionState } from '../../logic/entitlement';
 import { INITIAL_ATTEMPT_STATE } from '../../logic/profiles/pin-hash';
+import { NO_PIN_SEEN, pinHashFingerprint } from '../../logic/shell/device-gate';
 import { readJson, writeJson } from '../../platform/storage';
 import { useAccountStore } from '../account-store';
 
@@ -20,6 +21,8 @@ describe('account-store', () => {
       pinResetRequestedAt: null,
       subscription: null,
       parentPinHash: null,
+      pinSetAt: null,
+      pinHashSeen: null,
       pinAttempts: INITIAL_ATTEMPT_STATE,
       hydrated: false,
     });
@@ -233,5 +236,101 @@ describe('account-store', () => {
     expect(useAccountStore.getState().pinAttempts.lockedUntil).toBe(5000);
     expect(useAccountStore.getState().hydrated).toBe(true);
     vi.mocked(readJson).mockImplementation(async () => null);
+  });
+
+  /**
+   * F-APP-001 section 3.9 (A-6): every new PIN (first set, change, Forgot PIN reset) writes
+   * `account:pinSetAt`, the epoch the device gate marker carries, and the fingerprint of the
+   * hash it stored (`account:pinHashSeen`), so a later boot can tell a PIN changed elsewhere.
+   */
+  describe('PIN epoch (F-APP-001 section 3.9)', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('a first PIN writes account:pinSetAt (epoch ms) and the fingerprint of its hash', () => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(1_760_000_000_000);
+      useAccountStore.getState().setParentPinHash('salt:digest');
+      const s = useAccountStore.getState();
+      expect(s.pinSetAt).toBe(1_760_000_000_000);
+      expect(s.pinHashSeen).toBe(pinHashFingerprint('salt:digest'));
+      expect(writeJson).toHaveBeenCalledWith('account:pinSetAt', 1_760_000_000_000);
+      expect(writeJson).toHaveBeenCalledWith('account:pinHashSeen', pinHashFingerprint('salt:digest'));
+    });
+
+    it('a changed PIN and a PIN set after Forgot PIN each move the epoch', () => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(1_000);
+      useAccountStore.getState().setParentPinHash('a:1');
+      vi.setSystemTime(2_000);
+      useAccountStore.getState().setParentPinHash('b:2');
+      expect(useAccountStore.getState().pinSetAt).toBe(2_000);
+      useAccountStore.getState().requestPinReset();
+      vi.setSystemTime(3_000);
+      useAccountStore.getState().setParentPinHash('c:3');
+      expect(useAccountStore.getState().pinSetAt).toBe(3_000);
+      expect(useAccountStore.getState().pinHashSeen).toBe(pinHashFingerprint('c:3'));
+      expect(vi.mocked(writeJson).mock.calls.filter(([key]) => key === 'account:pinSetAt').map(([, v]) => v)).toEqual([1_000, 2_000, 3_000]);
+    });
+
+    it('removing the PIN keeps the epoch and records that no PIN is stored', () => {
+      useAccountStore.setState({ parentPinHash: 'a:1', pinSetAt: 5, pinHashSeen: pinHashFingerprint('a:1') });
+      useAccountStore.getState().setParentPinHash(null);
+      expect(useAccountStore.getState().pinSetAt).toBe(5);
+      expect(useAccountStore.getState().pinHashSeen).toBe(NO_PIN_SEEN);
+      expect(writeJson).not.toHaveBeenCalledWith('account:pinSetAt', expect.anything());
+      expect(writeJson).toHaveBeenCalledWith('account:pinHashSeen', NO_PIN_SEEN);
+    });
+
+    it('hydrate restores both keys; a fresh install or a PIN set before A-6 has neither', async () => {
+      await useAccountStore.getState().hydrate();
+      expect(useAccountStore.getState().pinSetAt).toBeNull();
+      expect(useAccountStore.getState().pinHashSeen).toBeNull();
+      vi.mocked(readJson).mockImplementation(async (key: string) => {
+        if (key === 'account:pinSetAt') return 1_760_000_000_000;
+        if (key === 'account:pinHashSeen') return '0123456789abcdef';
+        return null;
+      });
+      await useAccountStore.getState().hydrate();
+      expect(useAccountStore.getState().pinSetAt).toBe(1_760_000_000_000);
+      expect(useAccountStore.getState().pinHashSeen).toBe('0123456789abcdef');
+    });
+
+    it('hydrate reads a corrupt epoch or fingerprint as absent', async () => {
+      vi.mocked(readJson).mockImplementation(async (key: string) => {
+        if (key === 'account:pinSetAt') return 'yesterday';
+        if (key === 'account:pinHashSeen') return 42;
+        return null;
+      });
+      await useAccountStore.getState().hydrate();
+      expect(useAccountStore.getState().pinSetAt).toBeNull();
+      expect(useAccountStore.getState().pinHashSeen).toBeNull();
+    });
+
+    it('reconcilePinEpoch: a hash an older bundle changed moves the epoch to now and stores both keys', () => {
+      useAccountStore.setState({ parentPinHash: 'new:hash', pinSetAt: 5, pinHashSeen: pinHashFingerprint('old:hash') });
+      useAccountStore.getState().reconcilePinEpoch(9_000);
+      const s = useAccountStore.getState();
+      expect(s.pinSetAt).toBe(9_000);
+      expect(s.pinHashSeen).toBe(pinHashFingerprint('new:hash'));
+      expect(writeJson).toHaveBeenCalledWith('account:pinSetAt', 9_000);
+      expect(writeJson).toHaveBeenCalledWith('account:pinHashSeen', pinHashFingerprint('new:hash'));
+    });
+
+    it('reconcilePinEpoch: the first look at a PIN set before A-6 stores only the fingerprint', () => {
+      useAccountStore.setState({ parentPinHash: 'old:hash', pinSetAt: null, pinHashSeen: null });
+      useAccountStore.getState().reconcilePinEpoch(9_000);
+      expect(useAccountStore.getState().pinSetAt).toBeNull();
+      expect(writeJson).toHaveBeenCalledWith('account:pinHashSeen', pinHashFingerprint('old:hash'));
+      expect(writeJson).not.toHaveBeenCalledWith('account:pinSetAt', expect.anything());
+    });
+
+    it('reconcilePinEpoch: nothing written when the hash is the one last seen', () => {
+      useAccountStore.setState({ parentPinHash: 'a:1', pinSetAt: 5, pinHashSeen: pinHashFingerprint('a:1') });
+      useAccountStore.getState().reconcilePinEpoch(9_000);
+      expect(writeJson).not.toHaveBeenCalled();
+      expect(useAccountStore.getState().pinSetAt).toBe(5);
+    });
   });
 });
