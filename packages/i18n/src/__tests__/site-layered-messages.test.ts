@@ -51,13 +51,14 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
     expect(l.home.hero.start).toBe('Start learning');
     expect(l.home.hero.grownUps).toBe('Parent or teacher? Find your page');
     expect(l.home.hero.facts).toBe('Runs in your browser · Nothing to install · The app works offline on most devices after your first visit');
-    expect(l.home.hero.bubble('x', 'g/k')).toBe("Annyeong! Let's meet x (g/k).");
+    expect(l.home.hero.bubble('x', 'g/k')).toBe("Annyeong! Let's meet x\u00a0(g/k).");
   });
 
   it("the taught letter in Hoya's bubble keeps its romanization in the sentence (CLAUDE.md §1, F-SITE-002 §6)", () => {
     expect(l.home.hero.bubble.length).toBe(2);
     const sentence = l.home.hero.bubble('LETTER', 'ROMANIZATION');
-    expect(sentence).toContain('LETTER (ROMANIZATION)');
+    // A no-break space keeps the letter and its romanization on one line when the bubble wraps.
+    expect(sentence).toContain('LETTER\u00a0(ROMANIZATION)');
   });
 
   it('the hero title is the tagline (F-SITE-002 §5), so the footer and the hero cannot drift', () => {

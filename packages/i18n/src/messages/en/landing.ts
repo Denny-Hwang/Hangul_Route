@@ -103,7 +103,8 @@ export const landing = {
       grownUps: 'Parent or teacher? Find your page',
       /** Hedged like `persona.learners.faq.offline`: offline opening on iOS 14 is a known open issue (OD-15). */
       facts: 'Runs in your browser · Nothing to install · The app works offline on most devices after your first visit',
-      bubble: (letter: string, romanization: string) => `Annyeong! Let's meet ${letter} (${romanization}).`,
+      /** A no-break space keeps the letter and its romanization on one line when the bubble wraps. */
+      bubble: (letter: string, romanization: string) => `Annyeong! Let's meet ${letter}\u00a0(${romanization}).`,
     },
     who: {
       title: 'Who is it for?',

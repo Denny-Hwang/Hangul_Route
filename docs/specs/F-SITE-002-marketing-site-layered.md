@@ -441,7 +441,7 @@ Console, sign-in and billing on app.hangulroute.com; forwarding of old grown-up 
 - hero.lead "Short, playful quests teach you to read, hear and write the Korean alphabet, with Hoya the tiger as your guide."
 - hero.start "Start learning" · hero.grownUps "Parent or teacher? Find your page"
 - hero.facts "Runs in your browser · Nothing to install · The app works offline on most devices after your first visit"
-- hero.bubble(letter, romanization) "Annyeong! Let's meet {letter} ({romanization})."
+- hero.bubble(letter, romanization) "Annyeong! Let's meet {letter} ({romanization})." (a no-break space between the letter and its romanization keeps them on one line)
 - who.title "Who is it for?"
 - who.learners: title "Learners" · body "Five-minute quests, a guide who never scolds, and Korean culture cards to collect." · linkLabel "For learners"
 - who.parents: title "Parents and caregivers" · body "See what your learner practises, with a grown-up gate and no ads." · linkLabel "For parents"
