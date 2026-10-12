@@ -1,8 +1,10 @@
 import {
+  REPORT_COUNT_MAX,
   REPORT_DAYS_MAX,
   REPORT_DAY_LETTERS_MAX,
   REPORT_MILESTONES_MAX,
   REPORT_MONTHS_MAX,
+  REPORT_QUEST_ID_MAX,
   ReportLetterSchema,
   ReportStageKeySchema,
   addDays,
@@ -51,13 +53,10 @@ export interface BuildActivityInput {
   isQuestOpen?: (questId: string) => boolean;
 }
 
-/** The schema's bound on every count: a long-lived learner never makes the summary unparseable. */
-const COUNT_MAX = 100_000;
-/** The schema's bound on a quest id (`next.q`, `revisit`). */
-const QUEST_ID_MAX = 64;
-
-const count = (n: number): number => Math.min(COUNT_MAX, n);
-const isQuestId = (id: string): boolean => id.length >= 1 && id.length <= QUEST_ID_MAX;
+/** Clamped to the schema's bound on every count: a long-lived learner never makes the summary unparseable. */
+const count = (n: number): number => Math.min(REPORT_COUNT_MAX, n);
+/** Within the schema's bound on a quest id (`next.q`, `revisit`). */
+const isQuestId = (id: string): boolean => id.length >= 1 && id.length <= REPORT_QUEST_ID_MAX;
 
 /** The device's calendar day of an ISO instant, from the `Date` getters (OD-12). Not a day key when unreadable. */
 export function deviceLocalDay(iso: string): string {
@@ -110,9 +109,13 @@ export function buildActivity(input: BuildActivityInput): ActivitySummary | unde
   };
 
   // 1. Minutes and practice days: a session makes a practice day even with 0 counted seconds.
+  let totalSeconds = 0;
   for (const s of snapshot.sessions) {
     const tally = tallyOn(localDay(s.startedAt));
-    if (tally) tally.seconds += countedSeconds(s);
+    if (!tally) continue;
+    const seconds = countedSeconds(s);
+    tally.seconds += seconds;
+    totalSeconds += seconds;
   }
 
   // 2. First finishes: a latch entry counts only while its quest is completed (a reset learner starts fresh).
@@ -186,8 +189,18 @@ export function buildActivity(input: BuildActivityInput): ActivitySummary | unde
   }
   const months = [...byMonth.values()].slice(-REPORT_MONTHS_MAX);
 
-  const sum = (key: 'min' | 'q' | 'c' | 'w'): number => count(all.reduce((n, day) => n + day[key], 0));
-  const total = { since: all[0]?.d ?? null, min: sum('min'), q: sum('q'), c: sum('c'), w: sum('w'), days: count(all.length) };
+  const sum = (key: 'q' | 'c' | 'w'): number => count(all.reduce((n, day) => n + day[key], 0));
+  // `min` rounds once over every counted second, not per day, so regrouping the same sessions into other local days
+  // (a second device in another zone, travel) never lowers it. `since` is the first day on or before asOf: a report
+  // never reads "since" a day after its own today. `days` counts local days, so it follows the device's zone (OD-12).
+  const total = {
+    since: saved[0]?.d ?? null,
+    min: count(Math.round(totalSeconds / 60)),
+    q: sum('q'),
+    c: sum('c'),
+    w: sum('w'),
+    days: count(all.length),
+  };
 
   // 8 and 9. The app's own next and the quest the "letters to revisit" line offers.
   const next = nextOf(input.routeNext);

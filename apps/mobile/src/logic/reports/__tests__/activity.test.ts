@@ -1,6 +1,7 @@
 import {
   ActivitySummarySchema,
   ProgressSummarySchema,
+  REPORT_COUNT_MAX,
   REPORT_DAYS_MAX,
   REPORT_DAY_LETTERS_MAX,
   REPORT_MILESTONES_MAX,
@@ -14,6 +15,7 @@ import {
   type VocabItemState,
 } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
+import { placementResult } from '../../placement/__tests__/fixtures';
 import { localDay } from '../../vocab/progress';
 import { buildActivity, deviceLocalDay, type ActivityRouteNext, type BuildActivityInput } from '../activity';
 
@@ -264,6 +266,13 @@ describe('buildActivity (F-REPORT-001 section 3.3.4, RP-4)', () => {
       expect(ActivitySummarySchema.safeParse(a).success).toBe(true);
     });
 
+    it('since is the first active day on or before asOf, null when every active day lies after it', () => {
+      expect(build(blank({ sessions: [session('2026-11-02T01:00:00.000Z', 60), session('2026-10-14T01:00:00.000Z', 60)] })).total.since).toBe('2026-10-14');
+      const ahead = build(blank({ sessions: [session('2026-11-02T01:00:00.000Z', 60)] }));
+      expect(ahead.total).toMatchObject({ since: null, days: 1, min: 1 });
+      expect(ActivitySummarySchema.safeParse(ahead).success).toBe(true);
+    });
+
     it('months keep the newest 24 with activity, ascending, with their practice days', () => {
       const sessions: SessionLog[] = [];
       for (let i = 0; i < 26; i += 1) {
@@ -289,6 +298,32 @@ describe('buildActivity (F-REPORT-001 section 3.3.4, RP-4)', () => {
       }),
     );
     expect(a.total).toEqual({ since: '2025-01-01', min: 15, q: 2, c: 1, w: 1, days: 2 });
+  });
+
+  it('total.min rounds once over every counted second, so regrouping the same sessions into other local days never lowers it', () => {
+    // 20 seconds each side of midnight UTC: two days of 0 minutes in UTC, one day of 1 minute an hour east.
+    const snapshot = blank({ sessions: [session('2026-10-13T23:59:00.000Z', 20), session('2026-10-14T00:01:00.000Z', 20)] });
+    const utc = build(snapshot, { localDay: (iso) => iso.slice(0, 10) });
+    const east = build(snapshot, { localDay: (iso) => new Date(Date.parse(iso) + HOUR_MS).toISOString().slice(0, 10) });
+    expect(utc.days.map((d) => d.min)).toEqual([0, 0]);
+    expect(east.days.map((d) => d.min)).toEqual([1]);
+    expect(utc.total.min).toBe(1);
+    expect(east.total.min).toBe(1);
+  });
+
+  it('clamps every count to the schema bound, so a long-lived learner still parses', () => {
+    const many = REPORT_COUNT_MAX + 1;
+    const cards = Array.from({ length: many }, (_, i) => card(`c${i}`, '2026-10-14T01:00:00.000Z'));
+    const a = build(blank({ cards }));
+    expect(a.days).toEqual([{ d: '2026-10-14', min: 0, q: 0, c: REPORT_COUNT_MAX, w: 0, j: [] }]);
+    expect(a.months[0]?.c).toBe(REPORT_COUNT_MAX);
+    expect(a.total.c).toBe(REPORT_COUNT_MAX);
+    // 1,700 one-hour sessions on one day: 102,000 minutes.
+    const sessions = Array.from({ length: 1_700 }, (_, i) => session('2026-10-14T01:00:00.000Z', 3600, `s${i}`));
+    const b = build(blank({ sessions }));
+    expect([b.days[0]?.min, b.months[0]?.min, b.total.min]).toEqual([REPORT_COUNT_MAX, REPORT_COUNT_MAX, REPORT_COUNT_MAX]);
+    expect(ActivitySummarySchema.safeParse(a).success).toBe(true);
+    expect(ActivitySummarySchema.safeParse(b).success).toBe(true);
   });
 
   describe('step 8: next from routeNext', () => {
@@ -325,6 +360,13 @@ describe('buildActivity (F-REPORT-001 section 3.3.4, RP-4)', () => {
     it('is absent when no open quest teaches it, or when nothing needs practice', () => {
       expect(build(snapshot, { questJamo, isQuestOpen: () => false })).not.toHaveProperty('revisit');
       expect(build(blank({ quests: [quest('quest:2', 0.9)] }), { questJamo })).not.toHaveProperty('revisit');
+    });
+
+    it('is absent when no quest teaches the first letter to practice (a level-check symbol outside every teaches list)', () => {
+      // The level check seeds ㅃ, which no quest in questJamo teaches: no quest that teaches another letter is borrowed.
+      const seeded = blank({ placements: [placementResult({ id: 'placement:p', completedAt: '2026-10-01T00:00:00Z', priorityTokens: ['sym:ㅃ', 'sym:ㄷ'] })] });
+      expect(build(seeded, { questJamo })).not.toHaveProperty('revisit');
+      expect(build(seeded, { questJamo: { ...questJamo, 'quest:5': ['ㅃ'] } }).revisit).toBe('quest:5');
     });
 
     it('never offers an id the report would refuse', () => {
