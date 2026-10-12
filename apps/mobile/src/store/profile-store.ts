@@ -20,7 +20,8 @@ import { notifyProfileRemoved } from './profile-removal';
  * live in the logic layer; this module only holds and persists the result.
  */
 
-const KEY = 'profiles';
+/** The profile list (`hr:profiles`); the device gate marker writer reads it raw to confirm a `none` marker. */
+export const PROFILES_KEY = 'profiles';
 const ACTIVE_KEY = 'profiles:active';
 
 interface State extends ProfileSet {
@@ -46,7 +47,7 @@ interface Actions {
 }
 
 function persist(set: ProfileSet): void {
-  void writeJson(KEY, set.profiles);
+  void writeJson(PROFILES_KEY, set.profiles);
   void writeJson(ACTIVE_KEY, set.activeId);
 }
 
@@ -61,7 +62,7 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
   hydrated: false,
 
   hydrate: async () => {
-    const profiles = (await readJson<Profile[]>(KEY)) ?? [];
+    const profiles = (await readJson<Profile[]>(PROFILES_KEY)) ?? [];
     const activeId = await readJson<string | null>(ACTIVE_KEY);
     set({ profiles, activeId: activeId ?? null, hydrated: true });
   },
