@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   APP_ROUTES,
   BILLING_RECEIPTS_PATH,
+  BILLING_TELEMETRY_PREFIX,
+  TELEMETRY_EVENT_NAMES,
+  isServerOnlyTelemetryName,
   BillingAccountCardSchema,
   BillingEventKindSchema,
   BillingEventSchema,
@@ -74,6 +77,22 @@ describe('billing constants (F-BILL-002 §5.2)', () => {
     expect(RECEIPTS_CARD_LIMIT).toBe(3);
     expect(CHECKOUT_POLL_MS).toBe(2000);
     expect(CHECKOUT_POLL_MAX).toBe(10);
+  });
+});
+
+describe('billing telemetry is server-only (F-BILL-002 §10, B-3)', () => {
+  it('names the prefix the Worker refuses from clients', () => {
+    expect(BILLING_TELEMETRY_PREFIX).toBe('billing.');
+  });
+
+  it('marks every billing.* name, and nothing else, as recorded by the Worker only', () => {
+    const billing = TELEMETRY_EVENT_NAMES.filter((name) => name.startsWith(BILLING_TELEMETRY_PREFIX));
+    expect(billing.length).toBeGreaterThanOrEqual(3);
+    for (const name of TELEMETRY_EVENT_NAMES) expect(isServerOnlyTelemetryName(name), name).toBe(billing.includes(name));
+    expect(isServerOnlyTelemetryName('billing.made_up')).toBe(true);
+    expect(isServerOnlyTelemetryName('paywall.viewed')).toBe(false);
+    expect(isServerOnlyTelemetryName(undefined)).toBe(false);
+    expect(isServerOnlyTelemetryName(42)).toBe(false);
   });
 });
 

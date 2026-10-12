@@ -117,6 +117,9 @@ describe('telemetry event names (one list for the client type and the API whitel
         'notes.suggest_started',
         'notes.report_sent',
         'notes.prefs_changed',
+        'billing.checkout_completed',
+        'billing.payment_failed',
+        'billing.refund_recorded',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);
@@ -229,6 +232,19 @@ describe('telemetry event names (one list for the client type and the API whitel
     }
     expect(TELEMETRY_EVENT_NAMES.filter((n) => n.startsWith('notes.'))).toEqual(notes);
     expect(isTelemetryEventName('notes.note_read')).toBe(false);
+  });
+
+  it('lists the three webhook billing names of F-BILL-002 section 10, appended in order (B-3; B-4 and B-5 append theirs)', () => {
+    const webhook = ['billing.checkout_completed', 'billing.payment_failed', 'billing.refund_recorded'];
+    for (const name of webhook) {
+      expect(TELEMETRY_EVENT_NAMES.filter((n) => n === name)).toHaveLength(1);
+      expect(isTelemetryEventName(name)).toBe(true);
+    }
+    expect(TELEMETRY_EVENT_NAMES.filter((n) => n.startsWith('billing.'))).toEqual(webhook);
+    // Not yet: B-5 and B-4 add these with the code that sends them.
+    for (const later of ['billing.checkout_started', 'billing.checkout_refused', 'billing.portal_opened', 'billing.summary_viewed', 'billing.receipts_viewed']) {
+      expect(isTelemetryEventName(later)).toBe(false);
+    }
   });
 
   it('narrows unknown input with isTelemetryEventName', () => {
