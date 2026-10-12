@@ -5,7 +5,7 @@ export const learner = {
   profile: {
     plan: {
       fullRoute: '전체 루트',
-      open: (source: string | null) => (source === null ? '모두 열려 있어요.' : `모두 열려 있어요. 제공: ${source}`),
+      open: (source: string | null) => (source === null || source.trim() === '' ? '모두 열려 있어요.' : `모두 열려 있어요. 제공: ${source}`),
       details: { cta: '플랜 자세히 보기' },
     },
   },

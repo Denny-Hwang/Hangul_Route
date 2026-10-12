@@ -22,6 +22,13 @@ import { plural } from '../../plural';
  * Every string here is caregiver surface (no "behind", "lazy" or a learner-banned word),
  * checked per locale by console-messages.test.ts.
  */
+/** F-BILL-002 B-6: "St. Mary's license", not "St. Mary's's license", for a school name that already ends in a possessive. */
+const licenseOf = (school: string): string => (/['’]s$/i.test(school) ? `${school} license` : `${school}'s license`);
+/** F-BILL-002 B-6: a usage count, "{n} of {cap} <nouns>" or "{n} <nouns>" when there is no cap (null). */
+const usageCount =
+  (one: string, other: string) =>
+  (n: number, cap: number | null): string =>
+    cap === null ? plural('en', n, { one: `${n} ${one}`, other: `${n} ${other}` }) : plural('en', cap, { one: `${n} of ${cap} ${one}`, other: `${n} of ${cap} ${other}` });
 /** "1 item" / "4 items": `planCounts.items`, also the plan item count inside `plan.summary.*`. */
 const planItems = (items: number): string => plural('en', items, { one: `${items} item`, other: `${items} items` });
 /** "1 learner" / "3 students": `planCounts.targets`, also the target count inside `plan.summary.some.*`. */
@@ -453,8 +460,8 @@ export const consoleMsgs = {
       family: 'Family Plan',
       license: 'Group License',
       contract: 'School contract',
-      school: (school: string) => `Covered by ${school}'s license`,
-      schoolUntil: (school: string, date: string) => `Covered by ${school}'s license until ${date}`,
+      school: (school: string) => `Covered by ${licenseOf(school)}`,
+      schoolUntil: (school: string, date: string) => `Covered by ${licenseOf(school)} until ${date}`,
     },
     /** The status line of a renewing plan; the date arrives formatted. */
     status: {
@@ -469,18 +476,9 @@ export const consoleMsgs = {
     },
     /** The usage line; a null cap means no cap (`Usage.learnerCap` / `teacherCap`). */
     usage: {
-      learners: (n: number, cap: number | null) =>
-        cap === null
-          ? plural('en', n, { one: `${n} learner`, other: `${n} learners` })
-          : plural('en', cap, { one: `${n} of ${cap} learner`, other: `${n} of ${cap} learners` }),
-      students: (n: number, cap: number | null) =>
-        cap === null
-          ? plural('en', n, { one: `${n} student`, other: `${n} students` })
-          : plural('en', cap, { one: `${n} of ${cap} student`, other: `${n} of ${cap} students` }),
-      teachers: (n: number, cap: number | null) =>
-        cap === null
-          ? plural('en', n, { one: `${n} teacher`, other: `${n} teachers` })
-          : plural('en', cap, { one: `${n} of ${cap} teacher`, other: `${n} of ${cap} teachers` }),
+      learners: usageCount('learner', 'learners'),
+      students: usageCount('student', 'students'),
+      teachers: usageCount('teacher', 'teachers'),
     },
     /** A family whose plan is active and that has no learner yet. */
     connectLearner: { line: 'Next: connect a learner to this family.', cta: 'Connect a learner' },
@@ -534,6 +532,8 @@ export const consoleMsgs = {
       older: 'Older payments are in the receipt email from Stripe.',
       beyondLimit: "Older receipts: see Stripe's emails or write to us.",
       kind: { purchase: 'Payment', renewal: 'Renewal', refund: 'Refund', failed: "Payment didn't go through" },
+      /** The column headers of the wide receipts table (the date column is the row header, §8). */
+      column: { date: 'Date', what: 'What', plan: 'Plan', amount: 'Amount' },
       test: { pill: 'test' },
       view: { cta: 'View receipt' },
       viewA11y: (date: string) => `View receipt from ${date} (opens Stripe in a new tab)`,

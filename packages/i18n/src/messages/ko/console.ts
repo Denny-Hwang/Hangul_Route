@@ -5,7 +5,9 @@ import type { DeepPartial, Messages } from '../../types';
  * review (F-I18N-001 §3.10): there is no review-ledger entry yet, so `i18n-status` reports the
  * namespace "not reviewed", and `ko` stays hidden (`LOCALE_STATUS`). Every other console key falls
  * back to English until the translation PR. 해요체; no particle that changes with a final consonant
- * is attached to an argument (names, dates and amounts arrive as arguments).
+ * is attached to an argument (names, dates and amounts arrive as arguments). Four existing keys the
+ * new lines name (`title`, `manage.cta`, `planTitle`) are drafted too, so one page never names a
+ * plan, the page or a button two ways.
  */
 export const consoleMsgs = {
   entitlementStatus: {
@@ -13,6 +15,9 @@ export const consoleMsgs = {
     pastDuePaused: '결제 확인 필요 · 전체 루트 일시 중지',
   },
   billing: {
+    title: '결제',
+    manage: { cta: '구독 관리' },
+    planTitle: { free: '무료', family_lifetime: '가족 플랜', group_license: '그룹 라이선스', school_seat: '학교 계약' },
     promo: { disclosure: '코드가 있나요?' },
     contact: { mailSubject: 'Hangul Route 학교 계약 문의' },
     testMode: '테스트 모드: 실제 카드로 결제되지 않아요.',
@@ -76,7 +81,7 @@ export const consoleMsgs = {
     },
     alreadyActive: '이 플랜은 이미 이용 중이에요. 청구된 금액은 없어요.',
     checking: '거의 다 됐어요. 플랜을 확인하고 있어요.',
-    done: '감사합니다. 플랜이 시작됐어요. 학습자가 다음에 Hangul Route를 열면 적용돼요.',
+    done: '감사해요. 플랜이 시작됐어요. 학습자가 다음에 Hangul Route를 열면 적용돼요.',
     stillProcessing: '결제가 완료됐어요. 곧 여기에 플랜이 표시돼요.',
     checkAgain: { cta: '다시 확인' },
     receipts: {
@@ -86,6 +91,7 @@ export const consoleMsgs = {
       older: '이전 결제 내역은 Stripe가 보낸 영수증 이메일에 있어요.',
       beyondLimit: '더 오래된 영수증은 Stripe 이메일에서 확인하거나 저희에게 문의해 주세요.',
       kind: { purchase: '결제', renewal: '갱신', refund: '환불', failed: '결제가 처리되지 않음' },
+      column: { date: '날짜', what: '내용', plan: '플랜', amount: '금액' },
       test: { pill: '테스트' },
       view: { cta: '영수증 보기' },
       viewA11y: (date: string) => `영수증 보기, ${date} (새 탭에서 Stripe가 열려요)`,

@@ -85,7 +85,7 @@ export const learner = {
       unlock: 'Unlock the journey',
       /** F-BILL-002 B-6 (§6.3): the card's words for every tier; B-9 drops premium / unlocked / unlock. */
       fullRoute: 'Full route',
-      open: (source: string | null) => (source === null ? 'Everything is open.' : `Everything is open, from ${source}.`),
+      open: (source: string | null) => (source === null || source.trim() === '' ? 'Everything is open.' : `Everything is open, from ${source}.`),
       details: { cta: 'Plan details' },
     },
     install: { label: 'Install on this device', a11yLabel: 'Install Hangul Route on this device' },

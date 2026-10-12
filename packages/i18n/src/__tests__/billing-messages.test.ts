@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { KIDS_ONLY_FRAMING } from '../audience';
 import { findBannedWord } from '../banned';
@@ -84,6 +85,10 @@ const BILLING_ADDED = [
   'receipts.kind.renewal',
   'receipts.kind.refund',
   'receipts.kind.failed',
+  'receipts.column.date',
+  'receipts.column.what',
+  'receipts.column.plan',
+  'receipts.column.amount',
   'receipts.test.pill',
   'receipts.view.cta',
   'receipts.viewA11y',
@@ -137,6 +142,9 @@ const A11Y_ADDED = ['a11y.planStatus'];
 
 const B6_PATHS = [...BILLING_ADDED, ...STATUS_CHANGED, ...PLAN_SCREEN, ...PROFILE_ADDED, ...A11Y_ADDED];
 
+/** Existing keys the new lines name (the page, its manage button, the plan titles): drafted with them so a page never names one thing two ways. */
+const NAMED_BY_NEW_LINES = ['console.billing.title', 'console.billing.manage.cta', 'console.billing.planTitle.free', 'console.billing.planTitle.family_lifetime', 'console.billing.planTitle.group_license', 'console.billing.planTitle.school_seat'];
+
 type Message = (...args: unknown[]) => string;
 
 /** What a message renders in `locale`: the string, or one output per SAMPLES row (with the row's arguments). */
@@ -178,6 +186,10 @@ describe('console.billing additions (F-BILL-002 §6.1, BY-D9 values)', () => {
     expect(b.coverage.contract).toBe('School contract');
     expect(b.coverage.school('Maple School')).toBe("Covered by Maple School's license");
     expect(b.coverage.schoolUntil('Maple School', 'Jun 30, 2027')).toBe("Covered by Maple School's license until Jun 30, 2027");
+    // A name that already ends in a possessive takes no second one; any other name does.
+    expect(b.coverage.school("St. Mary's")).toBe("Covered by St. Mary's license");
+    expect(b.coverage.schoolUntil('St. Mary\u2019s', 'Jun 30, 2027')).toBe('Covered by St. Mary\u2019s license until Jun 30, 2027');
+    expect(b.coverage.school('St. James')).toBe("Covered by St. James's license");
     expect(b.status.renewsOn('Oct 21, 2027')).toBe('Renews on Oct 21, 2027');
     expect(b.status.endsOn('Oct 21, 2027')).toBe('Ends on Oct 21, 2027');
   });
@@ -254,6 +266,8 @@ describe('console.billing additions (F-BILL-002 §6.1, BY-D9 values)', () => {
     expect(r.older).toBe('Older payments are in the receipt email from Stripe.');
     expect(r.beyondLimit).toBe("Older receipts: see Stripe's emails or write to us.");
     expect(r.kind).toEqual({ purchase: 'Payment', renewal: 'Renewal', refund: 'Refund', failed: "Payment didn't go through" });
+    // The wide table's column headers (wireframe billing/receipts, §8); `title` is its caption.
+    expect(r.column).toEqual({ date: 'Date', what: 'What', plan: 'Plan', amount: 'Amount' });
     expect(r.test.pill).toBe('test');
     expect(r.view.cta).toBe('View receipt');
     expect(r.viewA11y('Oct 21, 2026')).toBe('View receipt from Oct 21, 2026 (opens Stripe in a new tab)');
@@ -307,9 +321,32 @@ describe('the yearly Family Plan words (AMENDMENTS-BILLING-FAMILY-YEARLY BY-D9, 
   });
 
   it('no new string calls a plan lifetime or one-time, in any locale', () => {
-    const LIFETIME = /\blifetime\b|\bonce\b|\bone payment\b|\bpay once\b|\bfor good\b|\bforever\b|\bnothing to cancel\b|\bno renewal\b/i;
-    for (const locale of LOCALES) for (const [path, out] of outputs(locale, B6_PATHS)) expect(out, `${locale}:${path}`).not.toMatch(LIFETIME);
-    expect('Family Lifetime · yours for good').toMatch(LIFETIME); // self-check
+    const LIFETIME: Record<UiLocale, RegExp> = {
+      en: /\blifetime\b|\bonce\b|\bone payment\b|\bpay once\b|\bfor good\b|\bforever\b|\bnothing to cancel\b|\bno renewal\b/i,
+      es: /de por vida|vitalicio|vitalicia|pago único|una sola vez|para siempre|sin renovación|nada que cancelar/i,
+      ko: /평생|영구|한 번 결제|일회|갱신 없|해지할 것이 없/,
+    };
+    for (const locale of LOCALES) for (const [path, out] of outputs(locale, [...B6_PATHS, ...NAMED_BY_NEW_LINES])) expect(out, `${locale}:${path}`).not.toMatch(LIFETIME[locale]);
+    expect('Family Lifetime · yours for good').toMatch(LIFETIME.en); // self-checks
+    expect('Plan Familiar de por vida · pago único').toMatch(LIFETIME.es);
+    expect('평생 이용 · 한 번 결제').toMatch(LIFETIME.ko);
+  });
+
+  it('every locale names the plan, the page and the manage button one way (es / ko drafts too)', () => {
+    for (const locale of LOCALES) {
+      const m = getMessages(locale).console;
+      const bill = m.billing;
+      const title = bill.planTitle;
+      expect(bill.coverage.family, locale).toBe(title.family_lifetime);
+      expect(bill.coverage.license, locale).toBe(title.group_license);
+      expect(bill.buy.family_lifetime.cta, locale).toContain(title.family_lifetime);
+      expect(bill.buy.group_license.cta, locale).toContain(title.group_license);
+      const plan = getMessages(locale).caregiver.plan;
+      expect(plan.full.fromFamily.family, locale).toContain(title.family_lifetime);
+      expect(plan.full.fromFamily.self, locale).toContain(title.family_lifetime);
+      expect(bill.pastDue, locale).toContain(bill.manage.cta);
+      expect(bill.receipts.back.cta, locale).toContain(bill.title);
+    }
   });
 });
 
@@ -362,6 +399,9 @@ describe('learner.profile.plan: the Profile plan card (F-BILL-002 §6.3)', () =>
     expect(card.fullRoute).toBe('Full route');
     expect(card.open(null)).toBe('Everything is open.');
     expect(card.open('Sunday Class A')).toBe('Everything is open, from Sunday Class A.');
+    // A source with no name reads as no source, never "from ."
+    expect(card.open('')).toBe('Everything is open.');
+    expect(card.open('  ')).toBe('Everything is open.');
     expect(card.details.cta).toBe('Plan details');
   });
 
@@ -375,9 +415,14 @@ describe('learner.profile.plan: the Profile plan card (F-BILL-002 §6.3)', () =>
 
 /**
  * Every string the billing wireframes draw (design/wireframes/billing/*.md), with the key that holds
- * it. Rendered with the arguments the wireframe shows, so a key cannot drift from the drawing.
+ * it, rendered with sample arguments. `drawn` is how the wireframe file itself writes it when that
+ * differs: a placeholder (`<date>`), an upper-case primary button, the first line of a wrapped box
+ * line, or the drawing's short form of a line (the renew line); the test finds it in the file, so a
+ * row cannot point at a string the wireframes do not draw.
  */
-const WIREFRAME_STRINGS: ReadonlyArray<{ wireframe: string; text: string; path: string; args?: readonly unknown[] }> = [
+const WIREFRAMES = new URL('../../../../design/wireframes/billing/', import.meta.url);
+const wireframeText = (name: string): string => readFileSync(new URL(`${name}.md`, WIREFRAMES), 'utf8');
+const WIREFRAME_STRINGS: ReadonlyArray<{ wireframe: string; text: string; drawn?: string; path: string; args?: readonly unknown[] }> = [
   { wireframe: 'billing-home', text: 'Billing', path: 'console.billing.title' },
   { wireframe: 'billing-home', text: 'Test mode: no real card is charged.', path: 'console.billing.testMode' },
   { wireframe: 'billing-home', text: 'Your plans', path: 'console.billing.sections.yours' },
@@ -387,38 +432,38 @@ const WIREFRAME_STRINGS: ReadonlyArray<{ wireframe: string; text: string; path: 
   { wireframe: 'billing-home', text: 'Free plan', path: 'console.billing.coverage.free' },
   { wireframe: 'billing-home', text: '2 of 5 learners', path: 'console.billing.usage.learners', args: [2, 5] },
   { wireframe: 'billing-home', text: 'Family Plan', path: 'console.billing.coverage.family' },
-  { wireframe: 'billing-home', text: 'Every lesson of every Stage, new ones included', path: 'console.billing.includesLines.family.everyLesson' },
-  { wireframe: 'billing-home', text: 'Up to 5 learners in one family', path: 'console.billing.includesLines.family.learners', args: [5] },
+  { wireframe: 'billing-home', text: 'Every lesson of every Stage, new ones included', drawn: 'Every lesson of every', path: 'console.billing.includesLines.family.everyLesson' },
+  { wireframe: 'billing-home', text: 'Up to 5 learners in one family', drawn: 'Up to 5 learners in one', path: 'console.billing.includesLines.family.learners', args: [5] },
   { wireframe: 'billing-home', text: 'Cloud save on every device', path: 'console.billing.includesLines.family.cloudSave' },
-  { wireframe: 'billing-home', text: 'Browse every lesson as your learner sees it', path: 'console.billing.includesLines.family.browse' },
+  { wireframe: 'billing-home', text: 'Browse every lesson as your learner sees it', drawn: 'Browse every lesson as', path: 'console.billing.includesLines.family.browse' },
   { wireframe: 'billing-home', text: '$15.30 / year', path: 'console.price.year', args: ['$15.30'] },
-  { wireframe: 'billing-home', text: 'Renews yearly. Cancel from Manage subscription any time.', path: 'console.familyLine' },
+  { wireframe: 'billing-home', text: 'Renews yearly. Cancel from Manage subscription any time.', drawn: 'Renews yearly. Cancel', path: 'console.familyLine' },
   { wireframe: 'billing-home', text: 'Have a code?', path: 'console.billing.promo.disclosure' },
   { wireframe: 'billing-home', text: 'Apply code', path: 'console.billing.promo.apply.cta' },
-  { wireframe: 'billing-home', text: 'Get Family Plan', path: 'console.billing.buy.family_lifetime.cta' },
+  { wireframe: 'billing-home', text: 'Get Family Plan', drawn: 'GET FAMILY PLAN', path: 'console.billing.buy.family_lifetime.cta' },
   { wireframe: 'billing-home', text: 'Receipts', path: 'console.billing.receipts.title' },
   { wireframe: 'billing-home', text: 'Help', path: 'console.billing.sections.help' },
-  { wireframe: 'billing-home', text: 'Questions or a refund? Write to hello@hangulroute.com.', path: 'console.billing.help.refund', args: ['hello@hangulroute.com'] },
-  { wireframe: 'billing-home', text: 'Learners never see prices or receipts.', path: 'console.billing.help.learners' },
-  { wireframe: 'billing-home', text: 'On a shared device? Sign out when you are done.', path: 'console.billing.help.sharedDevice' },
+  { wireframe: 'billing-home', text: 'Questions or a refund? Write to hello@hangulroute.com.', drawn: 'Questions or a refund? Write to', path: 'console.billing.help.refund', args: ['hello@hangulroute.com'] },
+  { wireframe: 'billing-home', text: 'Learners never see prices or receipts.', drawn: 'Learners never see prices or', path: 'console.billing.help.learners' },
+  { wireframe: 'billing-home', text: 'On a shared device? Sign out when you are done.', drawn: 'On a shared device? Sign out when', path: 'console.billing.help.sharedDevice' },
   { wireframe: 'billing-home', text: 'Group License', path: 'console.billing.coverage.license' },
-  { wireframe: 'billing-home', text: 'Renews on Oct 21, 2027', path: 'console.billing.status.renewsOn', args: ['Oct 21, 2027'] },
-  { wireframe: 'billing-home', text: 'Ends on Oct 21, 2027', path: 'console.billing.status.endsOn', args: ['Oct 21, 2027'] },
+  { wireframe: 'billing-home', text: 'Renews on Oct 21, 2027', drawn: 'Renews on <date>', path: 'console.billing.status.renewsOn', args: ['Oct 21, 2027'] },
+  { wireframe: 'billing-home', text: 'Ends on Oct 21, 2027', drawn: 'Ends on <date>', path: 'console.billing.status.endsOn', args: ['Oct 21, 2027'] },
   { wireframe: 'billing-home', text: '23 students', path: 'console.billing.usage.students', args: [23, null] },
   { wireframe: 'billing-home', text: '14 of 20 students', path: 'console.billing.usage.students', args: [14, 20] },
   { wireframe: 'billing-home', text: '212 of 300 students', path: 'console.billing.usage.students', args: [212, 300] },
   { wireframe: 'billing-home', text: '7 of 10 teachers', path: 'console.billing.usage.teachers', args: [7, 10] },
   { wireframe: 'billing-home', text: '4 of 5 learners', path: 'console.billing.usage.learners', args: [4, 5] },
   { wireframe: 'billing-home', text: 'Manage subscription', path: 'console.billing.manage.cta' },
-  { wireframe: 'billing-home', text: "Covered by Maple School's license until Jun 30, 2027", path: 'console.billing.coverage.schoolUntil', args: ['Maple School', 'Jun 30, 2027'] },
+  { wireframe: 'billing-home', text: "Covered by Maple School's license until Jun 30, 2027", drawn: "Covered by <school>'s license until <date>", path: 'console.billing.coverage.schoolUntil', args: ['Maple School', 'Jun 30, 2027'] },
   { wireframe: 'billing-home', text: 'Your school manages this plan.', path: 'console.billing.readOnly.school' },
   { wireframe: 'billing-home', text: 'The person who set up this family manages this plan.', path: 'console.billing.readOnly.family' },
   { wireframe: 'billing-home', text: 'The class owner manages this plan.', path: 'console.billing.readOnly.class' },
   { wireframe: 'billing-home', text: 'Add a plan', path: 'console.billing.sections.add' },
-  { wireframe: 'billing-home', text: 'Group License for Maple Class', path: 'console.billing.buy.forSpace', args: ['Group License', 'Maple Class'] },
+  { wireframe: 'billing-home', text: 'Group License for Maple Class', drawn: 'Group License for <class name>', path: 'console.billing.buy.forSpace', args: ['Group License', 'Maple Class'] },
   { wireframe: 'billing-home', text: 'Every lesson for every student while they are enrolled', path: 'console.billing.includesLines.license.everyStudent' },
   { wireframe: 'billing-home', text: 'No 20-student cap', path: 'console.billing.includesLines.license.noCap', args: [20] },
-  { wireframe: 'billing-home', text: 'Get Group License', path: 'console.billing.buy.group_license.cta' },
+  { wireframe: 'billing-home', text: 'Get Group License', drawn: 'GET GROUP LICENSE', path: 'console.billing.buy.group_license.cta' },
   { wireframe: 'billing-home', text: 'Next: connect a learner to this family.', path: 'console.billing.connectLearner.line' },
   { wireframe: 'billing-home', text: 'Connect a learner', path: 'console.billing.connectLearner.cta' },
   { wireframe: 'billing-home', text: 'Contact us', path: 'console.billing.contact.cta' },
@@ -427,12 +472,12 @@ const WIREFRAME_STRINGS: ReadonlyArray<{ wireframe: string; text: string; path: 
   { wireframe: 'billing-home', text: '(archived)', path: 'console.billing.archived' },
   {
     wireframe: 'billing-home',
-    text: "A payment didn't go through. Update your card in Manage subscription; learners keep the full route for a week.",
+    text: "A payment didn't go through. Update your card in Manage subscription; learners keep the full route for a week.", drawn: "A payment didn't go through. Update your card in Manage subscription;",
     path: 'console.billing.pastDue',
   },
   { wireframe: 'billing-home', text: 'All receipts', path: 'console.billing.receipts.all.cta' },
   { wireframe: 'billing-home', text: 'Plans belong to a family or a class.', path: 'console.billing.noSpaces.title' },
-  { wireframe: 'billing-home', text: 'Set up for me or my family', path: 'console.billing.noSpaces.family.cta' },
+  { wireframe: 'billing-home', text: 'Set up for me or my family', drawn: 'SET UP FOR ME OR MY FAMILY', path: 'console.billing.noSpaces.family.cta' },
   { wireframe: 'billing-home', text: 'Set up a class', path: 'console.billing.noSpaces.class.cta' },
   { wireframe: 'billing-home', text: "Payments aren't set up yet. Nothing was charged.", path: 'console.billing.notConfigured' },
   { wireframe: 'billing-home', text: 'Payments are not open yet. Nothing was charged.', path: 'console.billing.liveOff' },
@@ -440,17 +485,21 @@ const WIREFRAME_STRINGS: ReadonlyArray<{ wireframe: string; text: string; path: 
   { wireframe: 'billing-home', text: "You're offline. Plans and receipts need a connection.", path: 'console.billing.offline' },
   { wireframe: 'billing-home', text: 'Try again', path: 'console.billing.retry.cta' },
   { wireframe: 'billing-home', text: "Can't check your plan right now.", path: 'console.billing.cantCheck' },
-  { wireframe: 'checkout-return', text: 'Almost there: checking your plan.', path: 'console.billing.checking' },
+  { wireframe: 'checkout-return', text: 'Almost there: checking your plan.', drawn: 'Almost there:', path: 'console.billing.checking' },
   {
     wireframe: 'checkout-return',
-    text: 'Thank you. The plan is active. Learners get it the next time they open Hangul Route.',
+    text: 'Thank you. The plan is active. Learners get it the next time they open Hangul Route.', drawn: 'Thank you. The plan is active.',
     path: 'console.billing.done',
   },
   { wireframe: 'checkout-return', text: 'Your payment went through. The plan shows here in a minute.', path: 'console.billing.stillProcessing' },
   { wireframe: 'checkout-return', text: 'Check again', path: 'console.billing.checkAgain.cta' },
   { wireframe: 'checkout-return', text: 'Nothing was charged.', path: 'console.billingCancelled' },
   { wireframe: 'receipts', text: 'Back to Billing', path: 'console.billing.receipts.back.cta' },
-  { wireframe: 'receipts', text: 'Maple Class · receipts', path: 'console.billing.receipts.pageTitle', args: ['Maple Class'] },
+  { wireframe: 'receipts', text: 'Date', drawn: '| Date ', path: 'console.billing.receipts.column.date' },
+  { wireframe: 'receipts', text: 'What', drawn: '| What ', path: 'console.billing.receipts.column.what' },
+  { wireframe: 'receipts', text: 'Plan', drawn: '| Plan ', path: 'console.billing.receipts.column.plan' },
+  { wireframe: 'receipts', text: 'Amount', drawn: '| Amount ', path: 'console.billing.receipts.column.amount' },
+  { wireframe: 'receipts', text: 'Maple Class · receipts', drawn: '<space name> · receipts', path: 'console.billing.receipts.pageTitle', args: ['Maple Class'] },
   { wireframe: 'receipts', text: 'Renewal', path: 'console.billing.receipts.kind.renewal' },
   { wireframe: 'receipts', text: "Payment didn't go through", path: 'console.billing.receipts.kind.failed' },
   { wireframe: 'receipts', text: 'Payment', path: 'console.billing.receipts.kind.purchase' },
@@ -459,48 +508,48 @@ const WIREFRAME_STRINGS: ReadonlyArray<{ wireframe: string; text: string; path: 
   { wireframe: 'receipts', text: 'View receipt', path: 'console.billing.receipts.view.cta' },
   {
     wireframe: 'receipts',
-    text: 'View receipt from Oct 21, 2026 (opens Stripe in a new tab)',
+    text: 'View receipt from Oct 21, 2026 (opens Stripe in a new tab)', drawn: 'View receipt from <date> (opens Stripe in a new tab)',
     path: 'console.billing.receipts.viewA11y',
     args: ['Oct 21, 2026'],
   },
   { wireframe: 'receipts', text: "Can't open this receipt right now.", path: 'console.billing.receipts.linkFailed' },
-  { wireframe: 'receipts', text: "Older receipts: see Stripe's emails or write to us.", path: 'console.billing.receipts.beyondLimit' },
+  { wireframe: 'receipts', text: "Older receipts: see Stripe's emails or write to us.", drawn: "Older receipts: see Stripe's", path: 'console.billing.receipts.beyondLimit' },
   { wireframe: 'receipts', text: 'No receipts yet.', path: 'console.billing.receipts.empty' },
   { wireframe: 'receipts', text: 'Older payments are in the receipt email from Stripe.', path: 'console.billing.receipts.older' },
   { wireframe: 'receipts', text: 'This page is for the person who pays for this space.', path: 'console.billing.receipts.notYours' },
   { wireframe: 'receipts', text: "Can't load receipts right now.", path: 'console.billing.receipts.cantLoad' },
   { wireframe: 'step-up', text: "Confirm it's you", path: 'console.billing.stepUp.title' },
-  { wireframe: 'step-up', text: 'Before a payment, a plan change or a receipt, sign in again.', path: 'console.billing.stepUp.body' },
-  { wireframe: 'step-up', text: 'This keeps payments safe on a shared device.', path: 'console.billing.stepUp.reason' },
-  { wireframe: 'step-up', text: 'Continue', path: 'console.billing.stepUp.cta' },
+  { wireframe: 'step-up', text: 'Before a payment, a plan change or a receipt, sign in again.', drawn: 'Before a payment, a plan', path: 'console.billing.stepUp.body' },
+  { wireframe: 'step-up', text: 'This keeps payments safe on a shared device.', drawn: 'This keeps payments safe on', path: 'console.billing.stepUp.reason' },
+  { wireframe: 'step-up', text: 'Continue', drawn: 'CONTINUE', path: 'console.billing.stepUp.cta' },
   { wireframe: 'step-up', text: 'Not now', path: 'console.billing.stepUp.cancel.cta' },
   { wireframe: 'step-up', text: 'Nothing was changed.', path: 'console.billing.stepUp.cancelled' },
   { wireframe: 'step-up', text: "Can't confirm right now. Try again in a moment.", path: 'console.billing.stepUp.unavailable' },
   { wireframe: 'plan-status', text: 'Plan', path: 'caregiver.plan.title' },
-  { wireframe: 'plan-status', text: 'Mina is on the free plan.', path: 'caregiver.plan.free.title.family', args: ['Mina'] },
+  { wireframe: 'plan-status', text: 'Mina is on the free plan.', drawn: '<Name> is on the free plan.', path: 'caregiver.plan.free.title.family', args: ['Mina'] },
   { wireframe: 'plan-status', text: 'Stage 1 is always free.', path: 'caregiver.plan.free.open' },
-  { wireframe: 'plan-status', text: 'Plans and receipts are on the billing page for grown-ups.', path: 'caregiver.plan.openBilling.caption.family' },
-  { wireframe: 'plan-status', text: 'Your plan and receipts are on the billing page.', path: 'caregiver.plan.openBilling.caption.self' },
+  { wireframe: 'plan-status', text: 'Plans and receipts are on the billing page for grown-ups.', drawn: 'Plans and receipts are on the', path: 'caregiver.plan.openBilling.caption.family' },
+  { wireframe: 'plan-status', text: 'Your plan and receipts are on the billing page.', drawn: 'Your plan and receipts are', path: 'caregiver.plan.openBilling.caption.self' },
   { wireframe: 'plan-status', text: 'Open billing', path: 'caregiver.plan.openBilling.cta' },
-  { wireframe: 'plan-status', text: 'Back to journey', path: 'caregiver.plan.backToJourney.cta' },
-  { wireframe: 'plan-status', text: 'Mina has the full route.', path: 'caregiver.plan.full.title.family', args: ['Mina'] },
+  { wireframe: 'plan-status', text: 'Back to journey', drawn: 'BACK TO JOURNEY', path: 'caregiver.plan.backToJourney.cta' },
+  { wireframe: 'plan-status', text: 'Mina has the full route.', drawn: '<Name> has the full route.', path: 'caregiver.plan.full.title.family', args: ['Mina'] },
   { wireframe: 'plan-status', text: "From your family's Family Plan.", path: 'caregiver.plan.full.fromFamily.family' },
   { wireframe: 'plan-status', text: 'Everything is open.', path: 'caregiver.plan.full.noSource' },
-  { wireframe: 'plan-status', text: 'Mina is covered by Maple Class.', path: 'caregiver.plan.covered.title.family', args: ['Mina', 'Maple Class'] },
+  { wireframe: 'plan-status', text: 'Mina is covered by Maple Class.', drawn: '<Name> is covered by <space>.', path: 'caregiver.plan.covered.title.family', args: ['Mina', 'Maple Class'] },
   { wireframe: 'plan-status', text: 'Everything is open while they are in it.', path: 'caregiver.plan.covered.note.family' },
   { wireframe: 'plan-status', text: "You're on the free plan.", path: 'caregiver.plan.free.title.self' },
   { wireframe: 'plan-status', text: 'You have the full route.', path: 'caregiver.plan.full.title.self' },
   { wireframe: 'plan-status', text: 'From your Family Plan.', path: 'caregiver.plan.full.fromFamily.self' },
-  { wireframe: 'plan-status', text: "You're covered by Maple Class.", path: 'caregiver.plan.covered.title.self', args: ['Maple Class'] },
+  { wireframe: 'plan-status', text: "You're covered by Maple Class.", drawn: "You're covered by <space>.", path: 'caregiver.plan.covered.title.self', args: ['Maple Class'] },
   { wireframe: 'plan-status', text: 'Everything is open while you are in it.', path: 'caregiver.plan.covered.note.self' },
   { wireframe: 'plan-status', text: 'Your learner', path: 'caregiver.plan.learnerFallback' },
-  { wireframe: 'plan-status', text: 'Open app.hangulroute.com in a browser.', path: 'caregiver.plan.openFailed', args: ['app.hangulroute.com'] },
+  { wireframe: 'plan-status', text: 'Open app.hangulroute.com in a browser.', drawn: 'Open <address> in a browser.', path: 'caregiver.plan.openFailed', args: ['app.hangulroute.com'] },
   { wireframe: 'plan-status', text: 'Opens the billing page', path: 'caregiver.plan.openBilling.a11yHint' },
-  { wireframe: 'plan-status', text: 'Mina: Free plan.', path: 'a11y.planStatus', args: ['Mina', 'Free plan'] },
+  { wireframe: 'plan-status', text: 'Mina: Free plan.', drawn: '<Name>: <state>.', path: 'a11y.planStatus', args: ['Mina', 'Free plan'] },
   { wireframe: 'plan-status', text: 'Free plan', path: 'learner.profile.plan.free' },
-  { wireframe: 'plan-status', text: 'Stage 1 is free. More stages are on the way.', path: 'learner.profile.plan.freeNote' },
+  { wireframe: 'plan-status', text: 'Stage 1 is free. More stages are on the way.', drawn: 'Stage 1 is free. More stages are on', path: 'learner.profile.plan.freeNote' },
   { wireframe: 'plan-status', text: 'Full route', path: 'learner.profile.plan.fullRoute' },
-  { wireframe: 'plan-status', text: 'Everything is open, from Maple Class.', path: 'learner.profile.plan.open', args: ['Maple Class'] },
+  { wireframe: 'plan-status', text: 'Everything is open, from Maple Class.', drawn: 'Everything is open, from <space>.', path: 'learner.profile.plan.open', args: ['Maple Class'] },
   { wireframe: 'plan-status', text: 'Plan details', path: 'learner.profile.plan.details.cta' },
   { wireframe: 'plan-status', text: 'Active', path: 'learner.profile.plan.pillActive' },
   { wireframe: 'plan-status', text: 'Free', path: 'learner.profile.plan.pillFree' },
@@ -510,6 +559,15 @@ describe('every string a billing wireframe draws has a key (§11)', () => {
   it('covers each wireframe', () => {
     const drawn = new Set(WIREFRAME_STRINGS.map((row) => row.wireframe));
     expect([...drawn].sort()).toEqual(['billing-home', 'checkout-return', 'plan-status', 'receipts', 'step-up']);
+  });
+
+  it('each row is drawn by its wireframe file', () => {
+    const files = new Map<string, string>();
+    for (const row of WIREFRAME_STRINGS) {
+      const text = files.get(row.wireframe) ?? wireframeText(row.wireframe);
+      files.set(row.wireframe, text);
+      expect(text, `${row.wireframe}.md draws "${row.drawn ?? row.text}"`).toContain(row.drawn ?? row.text);
+    }
   });
 
   for (const row of WIREFRAME_STRINGS) {
@@ -547,8 +605,8 @@ describe('es / ko overlay entries for native review (§6, F-I18N-001 §3.10)', (
   const overlays = { es, ko } as const;
 
   for (const [locale, overlay] of Object.entries(overlays)) {
-    it(`${locale}: has every key B-6 adds or changes, with the English kind and arity`, () => {
-      for (const path of B6_PATHS) {
+    it(`${locale}: has every key B-6 adds or changes, and the existing names they use, with the English kind and arity`, () => {
+      for (const path of [...B6_PATHS, ...NAMED_BY_NEW_LINES]) {
         const own = lookup(overlay, path);
         const source = lookup(en, path);
         expect(own, `${locale}:${path}`).toBeDefined();
@@ -567,7 +625,7 @@ describe('es / ko overlay entries for native review (§6, F-I18N-001 §3.10)', (
 
   it('es: no new value is left in English (a draft says something, not the source again)', () => {
     // Words that are the same in both languages are fine on their own ("Plan").
-    const SAME_IN_BOTH = new Set(['caregiver.plan.title', ...ALL_ARGUMENTS]);
+    const SAME_IN_BOTH = new Set(['caregiver.plan.title', 'console.billing.receipts.column.plan', ...ALL_ARGUMENTS]);
     for (const path of B6_PATHS.filter((x) => !SAME_IN_BOTH.has(x))) {
       const enOut = renderings('en', path).map((r) => r.out);
       const esOut = renderings('es', path).map((r) => r.out);
@@ -638,9 +696,15 @@ describe('copy checks (§6.5)', () => {
     }
   });
 
-  it('the billing page never says Premium and never pushes (§4.3 copy rules)', () => {
-    const PUSH = /\bpremium\b|\bbest value\b|\bsave \d|\bsave up to\b|\bonly today\b|\blimited time\b|\bhurry\b|\bdon't miss\b|\byou will lose\b/i;
-    for (const [path, out] of outputs('en', [...BILLING_ADDED, ...STATUS_CHANGED])) expect(out, path).not.toMatch(PUSH);
+  it('the billing page never says Premium and never pushes, in any locale (§4.3 copy rules)', () => {
+    const PUSH: Record<UiLocale, RegExp> = {
+      en: /\bpremium\b|\bbest value\b|\bsave \d|\bsave up to\b|\bonly today\b|\blimited time\b|\bhurry\b|\bdon't miss\b|\byou will lose\b/i,
+      es: /premium|mejor precio|ahorra|solo hoy|tiempo limitado|date prisa|no te lo pierdas|perderás/i,
+      ko: /프리미엄|최저가|절약|오늘만|기간 한정|서두르|놓치지|잃게/,
+    };
+    for (const locale of LOCALES) for (const [path, out] of outputs(locale, [...BILLING_ADDED, ...STATUS_CHANGED, ...NAMED_BY_NEW_LINES])) expect(out, `${locale}:${path}`).not.toMatch(PUSH[locale]);
+    expect('Premium · solo hoy').toMatch(PUSH.es); // self-checks
+    expect('프리미엄 오늘만').toMatch(PUSH.ko);
   });
 });
 

@@ -1,19 +1,30 @@
 import { plural } from '../../plural';
 import type { DeepPartial, Messages } from '../../types';
 
+/** A usage count, "{n} de {cap} <sustantivos>" or "{n} <sustantivos>" when there is no cap (null). */
+const usageCount =
+  (one: string, other: string) =>
+  (n: number, cap: number | null): string =>
+    cap === null ? plural('es', n, { one: `${n} ${one}`, other: `${n} ${other}` }) : plural('es', cap, { one: `${n} de ${cap} ${one}`, other: `${n} de ${cap} ${other}` });
+
 /**
  * Spanish draft of the console keys F-BILL-002 B-6 adds or changes (§6.1), for native review
  * (F-I18N-001 §3.10): there is no review-ledger entry yet, so `i18n-status` reports the namespace
  * "not reviewed", and `es` stays hidden (`LOCALE_STATUS`). Every other console key falls back to
  * English until the translation PR. Neutral international Spanish, "tú", no gendered adjective
- * about a person; names, dates and amounts arrive as arguments.
+ * about a person; names, dates and amounts arrive as arguments. Four existing keys the new lines
+ * name (`title`, `manage.cta`, `planTitle`) are drafted too, so one page never names a plan, the
+ * page or a button two ways.
  */
 export const consoleMsgs = {
   entitlementStatus: {
-    pastDueKept: 'el pago necesita atención · ruta completa por una semana',
+    pastDueKept: 'el pago necesita atención · la ruta completa sigue una semana',
     pastDuePaused: 'el pago necesita atención · ruta completa en pausa',
   },
   billing: {
+    title: 'Facturación',
+    manage: { cta: 'Gestionar suscripción' },
+    planTitle: { free: 'Gratis', family_lifetime: 'Plan Familiar', group_license: 'Licencia de Grupo', school_seat: 'Contrato Escolar' },
     promo: { disclosure: '¿Tienes un código?' },
     contact: { mailSubject: 'Contrato escolar de Hangul Route' },
     testMode: 'Modo de prueba: no se cobra ninguna tarjeta real.',
@@ -42,18 +53,9 @@ export const consoleMsgs = {
       school: 'Tu escuela gestiona este plan.',
     },
     usage: {
-      learners: (n: number, cap: number | null) =>
-        cap === null
-          ? plural('es', n, { one: `${n} estudiante`, other: `${n} estudiantes` })
-          : plural('es', cap, { one: `${n} de ${cap} estudiante`, other: `${n} de ${cap} estudiantes` }),
-      students: (n: number, cap: number | null) =>
-        cap === null
-          ? plural('es', n, { one: `${n} estudiante`, other: `${n} estudiantes` })
-          : plural('es', cap, { one: `${n} de ${cap} estudiante`, other: `${n} de ${cap} estudiantes` }),
-      teachers: (n: number, cap: number | null) =>
-        cap === null
-          ? plural('es', n, { one: `${n} docente`, other: `${n} docentes` })
-          : plural('es', cap, { one: `${n} de ${cap} docente`, other: `${n} de ${cap} docentes` }),
+      learners: usageCount('estudiante', 'estudiantes'),
+      students: usageCount('estudiante', 'estudiantes'),
+      teachers: usageCount('docente', 'docentes'),
     },
     connectLearner: { line: 'Siguiente: conecta a un estudiante con esta familia.', cta: 'Conectar un estudiante' },
     buy: {
@@ -72,7 +74,7 @@ export const consoleMsgs = {
       },
       license: {
         everyStudent: 'Cada lección para cada estudiante mientras siga en la clase',
-        noCap: (cap: number) => `Más de ${cap} estudiantes`,
+        noCap: (cap: number) => `Sin tope de ${cap} estudiantes`,
         school: (teachers: number, students: number) =>
           `Una escuela admite hasta ${plural('es', teachers, { one: `${teachers} docente`, other: `${teachers} docentes` })} y ${plural('es', students, { one: `${students} estudiante`, other: `${students} estudiantes` })}`,
         browse: 'Explora cada lección como la ven tus estudiantes',
@@ -82,7 +84,7 @@ export const consoleMsgs = {
     },
     noSpaces: {
       title: 'Los planes son de una familia o de una clase.',
-      family: { cta: 'Para mí o mi familia' },
+      family: { cta: 'Crear para mí o mi familia' },
       class: { cta: 'Crear una clase' },
     },
     alreadyActive: 'Este plan ya está activo. No se cobró nada.',
@@ -97,6 +99,7 @@ export const consoleMsgs = {
       older: 'Los pagos anteriores están en el correo de recibo de Stripe.',
       beyondLimit: 'Recibos más antiguos: mira los correos de Stripe o escríbenos.',
       kind: { purchase: 'Pago', renewal: 'Renovación', refund: 'Reembolso', failed: 'El pago no se realizó' },
+      column: { date: 'Fecha', what: 'Qué', plan: 'Plan', amount: 'Importe' },
       test: { pill: 'prueba' },
       view: { cta: 'Ver recibo' },
       viewA11y: (date: string) => `Ver el recibo del ${date} (abre Stripe en una pestaña nueva)`,

@@ -5,7 +5,7 @@ export const learner = {
   profile: {
     plan: {
       fullRoute: 'Ruta completa',
-      open: (source: string | null) => (source === null ? 'Todo está abierto.' : `Todo está abierto, gracias a ${source}.`),
+      open: (source: string | null) => (source === null || source.trim() === '' ? 'Todo está abierto.' : `Todo está abierto, gracias a ${source}.`),
       details: { cta: 'Detalles del plan' },
     },
   },
