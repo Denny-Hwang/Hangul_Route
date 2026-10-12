@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked, readStored } from './helpers';
-import { fullyVisible } from './story-reader-helpers';
+import { fullyVisible, nextPage } from './story-reader-helpers';
 
 /**
  * F-STORY-003 PR 3.7: the story variant of Results (`StoryResultsExtras`),
@@ -151,8 +151,8 @@ test.describe('story Results (fixture bundle)', () => {
     expect(events.filter((e) => e.name === 'story.results.action').map((e) => e.payload)).toEqual([
       { questId: QUEST, storyId: STORY, action: 'read-again' },
     ]);
-    // Read every scene of the replay to its end page: nothing is written.
-    while (await page.getByTestId('story-reader-next').isVisible()) await page.getByTestId('story-reader-next').click();
+    // Read every scene of the replay to its end page (Skip at the inline checkpoint, PR 2.9): nothing is written.
+    while (await page.getByTestId('story-reader-next').isVisible()) await nextPage(page);
     await expect.poll(() => storedStars(page)).toBe(3);
   });
 
