@@ -1,6 +1,7 @@
 import { APP_ROUTES, type AdultPersona, type Persona, type TelemetryEventName } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import type { DeviceAudience } from '../profiles/learner-type';
+import type { GrownUpHandoffRequest } from './handoff-rules';
 
 /**
  * The learner app's entries to the grown-up area (F-APP-001 A-7, sections 3.6, 3.12 and 3.18;
@@ -69,4 +70,49 @@ export function grownUpRowLabel(title: string, line: string): string {
 /** The line under an entry: its own line online, "Needs the internet" offline (section 3.12). */
 export function entryLine(online: boolean, line: string, needsInternet: string): string {
   return online ? line : needsInternet;
+}
+
+/** "Let's start": `shell.persona_chosen { persona: 'learner', from: 'welcome' }` only when the grown-ups' row shows. */
+export function startEvent(grownUps: boolean): PersonaChosenEvent | null {
+  return grownUps ? personaChosen('learner', 'welcome') : null;
+}
+
+/** The entries that hand off from inside the learner app: the Profile row and the dashboard Open. */
+export type GrownUpEntryVia = Extract<GrownUpHandoffRequest['via'], 'profile' | 'dashboard'>;
+
+/**
+ * One tap of Grown-up home (Profile) or Open (dashboard), section 3.6 and behaviour 22: the hand-off
+ * goes on when the PIN is fresh (or the device has none) and otherwise asks for the grown-up area's
+ * PIN with the same `via`. `busy` is a ref, checked and set before the first await, so two taps in one
+ * render run it once. A hand-off that throws settles quietly and frees the entry for another tap.
+ */
+export async function runGrownUpHandoff(
+  via: GrownUpEntryVia,
+  busy: { current: boolean },
+  open: (request: { via: GrownUpEntryVia }) => Promise<'opened' | 'pin'>,
+  askPin: (via: GrownUpEntryVia) => void,
+): Promise<void> {
+  if (busy.current) return;
+  busy.current = true;
+  try {
+    if ((await open({ via })) === 'pin') askPin(via);
+  } catch {
+    // Nothing opened; the entry stays usable.
+  } finally {
+    busy.current = false;
+  }
+}
+
+/**
+ * The Plan screen's Open billing (sections 3.6, 3.12 and the 3.19 learner entry buttons row): with
+ * the entries on (web, flag on) and the browser offline it is disabled with "Needs the internet" as
+ * its description; it re-enables on `online`. The hand-off itself is F-BILL-002 B-9b.
+ */
+export function planOpenBlocked(entriesOn: boolean, online: boolean): boolean {
+  return entriesOn && !online;
+}
+
+/** The dashboard card's title: "Account home" on a self-only device, as the Profile row says (D9). */
+export function dashboardCardTitle(audience: DeviceAudience, m: Messages): string {
+  return audience === 'self' ? m.learner.profile.grownUpHome.selfTitle : m.caregiver.grownUpHome.title;
 }

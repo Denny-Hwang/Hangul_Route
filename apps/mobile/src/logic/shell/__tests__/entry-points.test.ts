@@ -1,13 +1,17 @@
 import { SHELL_TELEMETRY_PAYLOADS, TELEMETRY_EVENT_NAMES } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
+  dashboardCardTitle,
   entryLine,
   grownUpEntriesOn,
   grownUpRowLabel,
   grownUpRowTitle,
   personaChosen,
   personaSignInPath,
+  planOpenBlocked,
+  runGrownUpHandoff,
+  startEvent,
   welcomeRow,
 } from '../entry-points';
 
@@ -91,5 +95,71 @@ describe('entryLine (offline, section 3.12)', () => {
   it('keeps the line online and says "Needs the internet" offline', () => {
     expect(entryLine(true, 'Your family, classes and billing', 'Needs the internet')).toBe('Your family, classes and billing');
     expect(entryLine(false, 'Your family, classes and billing', 'Needs the internet')).toBe('Needs the internet');
+  });
+});
+
+describe("startEvent (Let's start, section 3.18)", () => {
+  it("sends shell.persona_chosen { persona: 'learner', from: 'welcome' } when the grown-ups' row shows", () => {
+    expect(startEvent(true)).toEqual({ name: 'shell.persona_chosen', payload: { persona: 'learner', from: 'welcome' } });
+  });
+
+  it('sends nothing with the entries off (flag off or a native build)', () => {
+    expect(startEvent(false)).toBeNull();
+  });
+});
+
+describe('runGrownUpHandoff (Profile row and dashboard Open, section 3.6, behaviour 22)', () => {
+  it('asks for the PIN with the same via when the hand-off needs a fresh one', async () => {
+    const open = vi.fn().mockResolvedValue('pin');
+    const askPin = vi.fn();
+    await runGrownUpHandoff('dashboard', { current: false }, open, askPin);
+    expect(open).toHaveBeenCalledWith({ via: 'dashboard' });
+    expect(askPin).toHaveBeenCalledWith('dashboard');
+  });
+
+  it('does not ask for the PIN when the area opened', async () => {
+    const askPin = vi.fn();
+    await runGrownUpHandoff('profile', { current: false }, vi.fn().mockResolvedValue('opened'), askPin);
+    expect(askPin).not.toHaveBeenCalled();
+  });
+
+  it('runs once for two taps in the same render, then frees the entry again', async () => {
+    let finish: (v: 'opened') => void = () => undefined;
+    const open = vi.fn(() => new Promise<'opened'>((resolve) => (finish = resolve)));
+    const busy = { current: false };
+    const first = runGrownUpHandoff('profile', busy, open, vi.fn());
+    const second = runGrownUpHandoff('profile', busy, open, vi.fn());
+    await second;
+    expect(open).toHaveBeenCalledTimes(1);
+    finish('opened');
+    await first;
+    expect(busy.current).toBe(false);
+    const third = runGrownUpHandoff('profile', busy, open, vi.fn());
+    expect(open).toHaveBeenCalledTimes(2);
+    finish('opened');
+    await third;
+  });
+
+  it('settles quietly and frees the entry when the hand-off throws', async () => {
+    const busy = { current: false };
+    const askPin = vi.fn();
+    await expect(runGrownUpHandoff('profile', busy, vi.fn().mockRejectedValue(new Error('x')), askPin)).resolves.toBeUndefined();
+    expect(askPin).not.toHaveBeenCalled();
+    expect(busy.current).toBe(false);
+  });
+});
+
+describe('planOpenBlocked (Plan screen Open billing offline, sections 3.6, 3.12, 3.19)', () => {
+  it('blocks Open billing only with the entries on and the browser offline', () => {
+    expect(planOpenBlocked(true, false)).toBe(true);
+    expect(planOpenBlocked(true, true)).toBe(false);
+    expect(planOpenBlocked(false, false)).toBe(false);
+  });
+});
+
+describe('dashboardCardTitle (D9 on the dashboard card)', () => {
+  it('says "Account home" on a self-only device and "Grown-up home" otherwise', () => {
+    expect(dashboardCardTitle('self', en)).toBe(en.learner.profile.grownUpHome.selfTitle);
+    expect(dashboardCardTitle('family', en)).toBe(en.caregiver.grownUpHome.title);
   });
 });

@@ -14,14 +14,14 @@ import {
 import { levelLabel, type StageKey } from '@hangul-route/content-schema';
 import { formatDate, type Messages } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Pressable, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
 import { questsAll, stages } from '../../content';
 import { bundleOs, flags } from '../../config/flags';
-import { grownUpEntriesOn } from '../../logic/shell/entry-points';
+import { grownUpEntriesOn, runGrownUpHandoff } from '../../logic/shell/entry-points';
 import { grownUpPinParams } from '../../logic/shell/handoff-rules';
 import { openGrownUpArea } from '../../platform/grown-up-handoff';
 import { GrownUpHomeCard } from './GrownUpHomeCard';
@@ -57,15 +57,9 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
   // the last 2 minutes to reach this dashboard counts; a gate the 15-minute session opened does not,
   // so the PIN screen asks first (`openGrownUpArea`).
   const grownUpHome = grownUpEntriesOn(flags.grownUpHomeEnabled, bundleOs());
-  const [leaving, setLeaving] = useState(false);
+  const leaving = useRef(false);
   const openGrownUpHome = (): void => {
-    if (leaving) return;
-    setLeaving(true);
-    void openGrownUpArea({ via: 'dashboard' })
-      .then((result) => {
-        if (result === 'pin') navigation.navigate('PinEntry', grownUpPinParams({ via: 'dashboard' }));
-      })
-      .finally(() => setLeaving(false));
+    void runGrownUpHandoff('dashboard', leaving, openGrownUpArea, (v) => navigation.navigate('PinEntry', grownUpPinParams({ via: v })));
   };
 
   const stageTitle = (key: StageKey): string => {

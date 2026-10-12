@@ -16,7 +16,7 @@ import {
 import { levelLabel } from '@hangul-route/content-schema';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { bundleOs, flags } from '../../config/flags';
@@ -40,7 +40,7 @@ import { LanguageCard } from '../../components/LanguageCard';
 import { useMessages } from '../../i18n/use-messages';
 import { BackupCard } from '../../components/BackupCard';
 import { SpacesCard } from '../../components/SpacesCard';
-import { grownUpEntriesOn } from '../../logic/shell/entry-points';
+import { grownUpEntriesOn, runGrownUpHandoff } from '../../logic/shell/entry-points';
 import { grownUpPinParams } from '../../logic/shell/handoff-rules';
 import { openGrownUpArea } from '../../platform/grown-up-handoff';
 import { GrownUpHomeRow } from './GrownUpHomeRow';
@@ -101,15 +101,9 @@ export function ProfileScreen(): React.ReactElement {
   // F-APP-001 A-7 (section 3.6, web, flag on): the grown-up area on the app host, after a fresh PIN
   // where the device has one (`openGrownUpArea`), with no stop at the local dashboard.
   const grownUpHome = grownUpEntriesOn(flags.grownUpHomeEnabled, bundleOs());
-  const [leaving, setLeaving] = useState(false);
+  const leaving = useRef(false);
   const openGrownUpHome = (): void => {
-    if (leaving) return;
-    setLeaving(true);
-    void openGrownUpArea({ via: 'profile' })
-      .then((result) => {
-        if (result === 'pin') navigation.navigate('PinEntry', grownUpPinParams({ via: 'profile' }));
-      })
-      .finally(() => setLeaving(false));
+    void runGrownUpHandoff('profile', leaving, openGrownUpArea, (v) => navigation.navigate('PinEntry', grownUpPinParams({ via: v })));
   };
 
   return (

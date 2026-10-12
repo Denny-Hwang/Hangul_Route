@@ -7,7 +7,7 @@ import { LanguageChips } from '../../components/LanguageChips';
 import { bundleOs, flags } from '../../config/flags';
 import { useMessages } from '../../i18n/use-messages';
 import { deviceChoice, languageOptions, showLanguagePickers } from '../../logic/locale/language-picker';
-import { grownUpEntriesOn, personaChosen } from '../../logic/shell/entry-points';
+import { grownUpEntriesOn, startEvent } from '../../logic/shell/entry-points';
 import type { OnboardingStackParamList, RootStackParamList } from '../../navigation/types';
 import type { NavigationProp } from '@react-navigation/native';
 import { track } from '../../platform/telemetry';
@@ -56,7 +56,8 @@ export function WelcomeScreen({ navigation }: Props): React.ReactElement {
           size="hero"
           fullWidth
           onPress={() => {
-            if (grownUps) void track(personaChosen('learner', 'welcome'));
+            const event = startEvent(grownUps);
+            if (event) void track(event);
             navigation.navigate('CreateProfile', { firstRun: true });
           }}
         />

@@ -3,12 +3,15 @@ import React from 'react';
 import { View } from 'react-native';
 import { useOnline } from '../../components/use-online';
 import { useMessages } from '../../i18n/use-messages';
+import { dashboardCardTitle } from '../../logic/shell/entry-points';
+import { useAudience } from '../../store/audience';
 
 /**
  * The card at the top of the local dashboard (F-APP-001 A-7, section 3.6; wireframe
  * `design/wireframes/parent/grown-up-home-card.md` Panel B, mock
  * `design/screens/app-shell/learner-entry.md`). Web only, behind `flags.grownUpHomeEnabled`; the
- * dashboard is behind the gate already. "Grown-up home", the line, and Open (primary,
+ * dashboard is behind the gate already. "Grown-up home" ("Account home" on a self-only device,
+ * as the Profile row says, D9), the line, and Open (primary,
  * right-aligned), which calls `openGrownUpArea({ via: 'dashboard' })` through `onOpen`. Offline
  * (Panel C): Open disabled with "Needs the internet" above it as its description. The local
  * dashboard below is unchanged and still works offline.
@@ -18,10 +21,11 @@ export function GrownUpHomeCard({ onOpen }: { onOpen: () => void }): React.React
   const m = messages.caregiver.grownUpHome;
   const needsInternet = messages.learner.welcome.grownUps.needsInternet;
   const online = useOnline();
+  const { audience } = useAudience();
 
   return (
     <Card padding="md" testID="dashboard-grown-up-home">
-      <Heading level="prompt">{m.title}</Heading>
+      <Heading level="prompt">{dashboardCardTitle(audience, messages)}</Heading>
       <Spacer size="xs" />
       <Body tone="secondary">{m.line}</Body>
       <Spacer size="sm" />
