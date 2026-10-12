@@ -57,6 +57,18 @@ describe('D1Db transfer writes read meta.changes', () => {
     await expect(silent.purgeTransfers(at(0), at(0), 50)).rejects.toThrow(/meta\.changes/);
   });
 
+  it('declineSlot and cancelTransfer with an event run the CAS and the event as one batch; without one, a single statement', async () => {
+    const counted = d1Answering(() => ({ meta: { changes: 1 } }));
+    const db = new D1Db(counted.d1);
+    const event = { at: T0, actorKind: 'account' as const, actorRef: 'teacher-b', event: 'declined' as const, slot: 'destination' as const, detail: { reason: 'no_room' } };
+    expect(await db.declineSlot('transfer:1', 'destination', 'declined_destination', 'destination', at(0), event)).toBe(1);
+    expect(await db.cancelTransfer('transfer:1', 'withdrawn_learner', 'family', at(0), { ...event, event: 'cancelled', slot: 'learner', detail: null })).toBe(1);
+    expect(await db.declineSlot('transfer:1', 'source', 'declined_source', 'source', at(0))).toBe(1);
+    expect(counted.batches).toEqual([2, 2]);
+    const silent = new D1Db(d1Answering(() => ({ meta: {} })).d1);
+    await expect(silent.declineSlot('transfer:1', 'destination', 'declined_destination', 'destination', at(0), event)).rejects.toThrow(/meta\.changes/);
+  });
+
   it('a row whose consent-time terms are incomplete reads with terms null, never empty strings', async () => {
     const d1 = openSqliteD1();
     await d1.prepare("INSERT INTO accounts (id, created_at) VALUES ('t', ?)").bind(T0).run();
