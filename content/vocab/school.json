@@ -10,11 +10,11 @@
       "romanization": "hakgyo",
       "en": "school"
     },
-    "blurbEn": "Things in a classroom and in a school bag.",
+    "blurbEn": "Words for school: the people, the classroom and your bag.",
     "hoyaIntroEn": "Pack your bag! Let's find the things in a classroom.",
     "tint": "theme.letters",
     "coverItemId": "vocab:yeonpil",
-    "status": "draft",
+    "status": "ready",
     "fixedOrder": false
   },
   "items": [

@@ -9,7 +9,8 @@ import { VocabTopicFileSchema, romanizeWord } from '../index';
  * section 3.4 seed lists, with the family policy of section 3.6 and the sense
  * registry of section 3.2. The expected rows below are written out independently of
  * `content/vocab/*.json`, so a drifted word, gloss, level, picture or note fails here.
- * The four topics ship as `status: 'draft'` (the picker hides them, V12).
+ * The four topics shipped as `status: 'draft'`; V-7 applied the production review
+ * (V12, owner decision 2026-10-11) and flipped them to `ready`.
  */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -55,7 +56,7 @@ const FAMILY: Row[] = [
   { id: 'vocab:dongsaeng', ko: '동생', romanization: 'dongsaeng', en: 'younger brother or sister', es: 'hermano o hermana menor', visual: 'word:family-dongsaeng', level: 1, note: { en: 'Anyone can say it, for a younger brother or a younger sister.', es: 'Lo dice cualquiera, para un hermano menor o una hermana menor.' } },
   { id: 'vocab:agi', ko: '아기', romanization: 'agi', en: 'baby', es: 'bebé', visual: 'word:family-baby', level: 1 },
   { id: 'vocab:gajok', ko: '가족', romanization: 'gajok', en: 'family', es: 'familia', visual: 'word:family-family', level: 1 },
-  { id: 'vocab:na', ko: '나', romanization: 'na', en: 'I, me', es: 'yo, mí', visual: 'word:family-me', level: 1, pos: 'pronoun', note: { en: 'The casual word. To be polite, say jeo.', es: 'La palabra informal. Para hablar con cortesía, se dice jeo.' } },
+  { id: 'vocab:na', ko: '나', romanization: 'na', en: 'I, me', es: 'yo', visual: 'word:family-me', level: 1, pos: 'pronoun', note: { en: 'The casual word. To be polite, say jeo.', es: 'La palabra informal. Para hablar con cortesía, se dice jeo.' } },
 ];
 
 const SCHOOL: Row[] = [
@@ -102,6 +103,14 @@ const NATURE: Row[] = [
   { id: 'vocab:gang', ko: '강', romanization: 'gang', en: 'river', es: 'río', visual: 'word:nature-river', level: 1 },
   { id: 'vocab:gureum', ko: '구름', romanization: 'gureum', en: 'cloud', es: 'nube', visual: 'word:nature-cloud', level: 1 },
 ];
+
+/** Topic blurbs after the V-7 review (School now names its people too, not only things). */
+const REVIEWED_BLURBS: Record<TopicSpec['key'], { en: string; es: string }> = {
+  family: { en: 'Words for the people in a family.', es: 'Palabras para las personas de una familia.' },
+  school: { en: 'Words for school: the people, the classroom and your bag.', es: 'Palabras de la escuela: las personas, el salón de clases y la mochila.' },
+  body: { en: 'Parts of the body you can point to.', es: 'Partes del cuerpo que puedes señalar.' },
+  nature: { en: 'Things you see outdoors, from the sky to the sea.', es: 'Lo que ves al aire libre, del cielo al mar.' },
+};
 
 const TOPICS: TopicSpec[] = [
   { key: 'family', order: 5, titleEn: 'Family', titleEs: 'Familia', titleKo: { ko: '가족', romanization: 'gajok', en: 'family' }, tint: 'theme.rites', coverItemId: 'vocab:gajok', rows: FAMILY },
@@ -153,7 +162,7 @@ describe.each(TOPICS)('content/vocab/$key.json (F-VOC-001 V-6a)', (spec) => {
     expect(row.level).toBe(levelByRule(row.ko));
   });
 
-  it('declares the topic as a draft (native review is a later step, V12)', () => {
+  it('declares the topic as ready (the V-7 production review is applied, V12)', () => {
     expect(file.topic).toMatchObject({
       id: `vocab-topic:${spec.key}`,
       key: spec.key,
@@ -161,7 +170,7 @@ describe.each(TOPICS)('content/vocab/$key.json (F-VOC-001 V-6a)', (spec) => {
       titleEn: spec.titleEn,
       tint: spec.tint,
       coverItemId: spec.coverItemId,
-      status: 'draft',
+      status: 'ready',
       fixedOrder: false,
     });
     expect(file.topic.titleKo).toMatchObject(spec.titleKo);
@@ -196,6 +205,11 @@ describe.each(TOPICS)('content/vocab/$key.json (F-VOC-001 V-6a)', (spec) => {
     const topic = es.entries[`vocab-topic:${spec.key}`]!;
     expect(Object.keys(topic).sort()).toEqual(['blurb', 'hoyaIntro', 'title']);
     expect(topic.title).toBe(spec.titleEs);
+  });
+
+  it('carries the reviewed topic blurb in English and Spanish (V-7)', () => {
+    expect(file.topic.blurbEn).toBe(REVIEWED_BLURBS[spec.key].en);
+    expect(es.entries[`vocab-topic:${spec.key}`]!.blurb).toBe(REVIEWED_BLURBS[spec.key].es);
   });
 
   it('has no Korean overlay, like the merged topics', () => {

@@ -9,8 +9,9 @@ import { VOCAB_TOPIC_KEYS, VocabTopicFileSchema, romanizeWord } from '../index';
  * spec's section 3.4 seed lists, with the sense registry of section 3.2 and the
  * no-real-people rule of V11. The expected rows below are written out
  * independently of `content/vocab/*.json`, so a drifted word, gloss, level,
- * picture or note fails here. The four topics ship as `status: 'draft'` (the
- * picker hides them, V12). With them, all twelve launch topics exist.
+ * picture or note fails here. The four topics shipped as `status: 'draft'`; V-7
+ * applied the production review (V12, owner decision 2026-10-11) and flipped
+ * them to `ready`. With them, all twelve launch topics exist.
  */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -65,8 +66,8 @@ const SPORTS: Row[] = [
   { id: 'vocab:takgu', ko: '탁구', romanization: 'takgu', en: 'table tennis', es: 'tenis de mesa', visual: 'word:sport-tabletennis', level: 1 },
   { id: 'vocab:suyeong', ko: '수영', romanization: 'suyeong', en: 'swimming', es: 'natación', visual: 'word:sport-swimming', level: 1 },
   { id: 'vocab:taegwondo', ko: '태권도', romanization: 'taegwondo', en: 'taekwondo', es: 'taekwondo', visual: 'word:sport-taekwondo', level: 2, note: { en: 'A Korean martial art, known for its high kicks.', es: 'Un arte marcial coreano, conocido por sus patadas altas.' } },
-  { id: 'vocab:dalligi', ko: '달리기', romanization: 'dalligi', en: 'running', es: 'correr', visual: 'word:sport-running', level: 2 },
-  { id: 'vocab:julleomgi', ko: '줄넘기', romanization: 'julleomgi', en: 'jump rope', es: 'saltar la cuerda', visual: 'word:sport-jumprope', level: 2 },
+  { id: 'vocab:dalligi', ko: '달리기', romanization: 'dalligi', en: 'running', es: 'carrera', visual: 'word:sport-running', level: 2 },
+  { id: 'vocab:julleomgi', ko: '줄넘기', romanization: 'julleomgi', en: 'jump rope', es: 'salto de cuerda', visual: 'word:sport-jumprope', level: 2 },
   { id: 'vocab:jajeongeo', ko: '자전거', romanization: 'jajeongeo', en: 'bicycle', es: 'bicicleta', visual: 'word:sport-bicycle', level: 2 },
   { id: 'vocab:seuki', ko: '스키', romanization: 'seuki', en: 'skiing', es: 'esquí', visual: 'word:sport-skiing', level: 1 },
   { id: 'vocab:gong-ball', ko: '공', romanization: 'gong', en: 'ball', es: 'pelota', visual: 'word:sport-ball', level: 1, senseGroup: 'gong' },
@@ -76,9 +77,9 @@ const K_CULTURE: Row[] = [
   { id: 'vocab:hanbok', ko: '한복', romanization: 'hanbok', en: 'hanbok (traditional clothes)', es: 'hanbok (ropa tradicional)', visual: 'card:hanbok', level: 1, note: { en: 'Often worn on holidays such as Seollal and Chuseok.', es: 'Se suele llevar en fiestas como Seollal y Chuseok.' } },
   { id: 'vocab:hangeul', ko: '한글', romanization: 'hangeul', en: 'Hangul (the Korean alphabet)', es: 'hangul (el alfabeto coreano)', visual: 'word:culture-hangul', level: 1, note: { en: 'The alphabet you are learning here.', es: 'El alfabeto que estás aprendiendo aquí.' } },
   { id: 'vocab:hanok', ko: '한옥', romanization: 'hanok', en: 'hanok (traditional house)', es: 'hanok (casa tradicional)', visual: 'word:culture-hanok', level: 1 },
-  { id: 'vocab:bibimbap', ko: '비빔밥', romanization: 'bibimbap', en: 'bibimbap (mixed rice bowl)', es: 'bibimbap (tazón de arroz mixto)', visual: 'word:culture-bibimbap', level: 2, note: { en: 'Rice topped with vegetables, mixed together before you eat.', es: 'Arroz con verduras encima, que se mezcla antes de comer.' } },
+  { id: 'vocab:bibimbap', ko: '비빔밥', romanization: 'bibimbap', en: 'bibimbap (mixed rice bowl)', es: 'bibimbap (tazón de arroz mezclado)', visual: 'word:culture-bibimbap', level: 2, note: { en: 'Rice topped with vegetables, mixed together before you eat.', es: 'Arroz con verduras encima, que se mezcla antes de comer.' } },
   { id: 'vocab:tteokbokki', ko: '떡볶이', romanization: 'tteokbokki', en: 'tteokbokki (spicy rice cakes)', es: 'tteokbokki (pasteles de arroz picantes)', visual: 'word:culture-tteokbokki', level: 2 },
-  { id: 'vocab:seollal', ko: '설날', romanization: 'seollal', en: 'Lunar New Year', es: 'Año Nuevo lunar', visual: 'card:seollal', level: 1, note: { en: 'People wear hanbok and bow to their elders.', es: 'La gente lleva hanbok y hace una reverencia a los mayores.' } },
+  { id: 'vocab:seollal', ko: '설날', romanization: 'seollal', en: 'Lunar New Year', es: 'Año Nuevo lunar', visual: 'card:seollal', level: 1, note: { en: 'Many people wear hanbok and bow to their elders.', es: 'Mucha gente lleva hanbok y hace una reverencia a los mayores.' } },
   { id: 'vocab:chuseok', ko: '추석', romanization: 'chuseok', en: 'Chuseok (harvest festival)', es: 'Chuseok (fiesta de la cosecha)', visual: 'card:chuseok', level: 1, note: { en: 'Families gather and share songpyeon, half-moon rice cakes.', es: 'Las familias se reúnen y comparten songpyeon, pasteles de arroz en forma de media luna.' } },
   { id: 'vocab:yunnori', ko: '윷놀이', romanization: 'yunnori', en: 'yut game (board game with sticks)', es: 'juego de yut (tablero y palitos)', visual: 'card:yutnori', level: 2, note: { en: 'Players throw four wooden sticks, often at Lunar New Year.', es: 'Se lanzan cuatro palitos de madera, sobre todo en el Año Nuevo lunar.' } },
   { id: 'vocab:gayageum', ko: '가야금', romanization: 'gayageum', en: 'gayageum (Korean zither)', es: 'gayageum (cítara coreana)', visual: 'card:gayageum', level: 2, note: { en: 'A long string instrument, plucked with the fingers.', es: 'Un instrumento largo de cuerdas que se toca con los dedos.' } },
@@ -90,7 +91,7 @@ const K_CULTURE: Row[] = [
 const SCIENCE: Row[] = [
   { id: 'vocab:bul', ko: '불', romanization: 'bul', en: 'fire', es: 'fuego', visual: 'word:science-fire', level: 1, note: { en: 'It also means a light that is on, such as a lamp.', es: 'También significa una luz encendida, como la de una lámpara.' } },
   { id: 'vocab:eoreum', ko: '얼음', romanization: 'eoreum', en: 'ice', es: 'hielo', visual: 'word:science-ice', level: 1 },
-  { id: 'vocab:dol', ko: '돌', romanization: 'dol', en: 'stone', es: 'piedra', visual: 'word:science-stone', level: 1 },
+  { id: 'vocab:dol-stone', ko: '돌', romanization: 'dol', en: 'stone', es: 'piedra', visual: 'word:science-stone', level: 1, senseGroup: 'dol' },
   { id: 'vocab:jaseok', ko: '자석', romanization: 'jaseok', en: 'magnet', es: 'imán', visual: 'word:science-magnet', level: 1 },
   { id: 'vocab:jigu', ko: '지구', romanization: 'jigu', en: 'Earth', es: 'Tierra', visual: 'word:science-earth', level: 1 },
   { id: 'vocab:uju', ko: '우주', romanization: 'uju', en: 'outer space', es: 'espacio exterior', visual: 'word:science-space', level: 1, note: { en: 'It also means the whole universe.', es: 'También significa todo el universo.' } },
@@ -101,6 +102,14 @@ const SCIENCE: Row[] = [
   { id: 'vocab:baram', ko: '바람', romanization: 'baram', en: 'wind', es: 'viento', visual: 'word:science-wind', level: 1 },
   { id: 'vocab:bit', ko: '빛', romanization: 'bit', en: 'light', es: 'luz', visual: 'word:science-light', level: 1, note: { en: 'Light from the sun or a lamp, not light in weight.', es: 'La luz del sol o de una lámpara.' } },
 ];
+
+/** Topic blurbs after the V-7 review (K-Culture now also names homes, and "and more" covers Hangul and drama). */
+const REVIEWED_BLURBS: Record<TopicSpec['key'], { en: string; es: string }> = {
+  travel: { en: 'Ways to get around, and things you need for a trip.', es: 'Formas de moverse y cosas que necesitas para un viaje.' },
+  sports: { en: 'Sports and games to play or watch.', es: 'Deportes y juegos para jugar o mirar.' },
+  'k-culture': { en: 'Korean clothes, homes, food, holidays, games, music and more.', es: 'Ropa, casas, comida, fiestas, juegos, música y más de Corea.' },
+  science: { en: 'From fire and ice to the Earth and outer space.', es: 'Del fuego y el hielo a la Tierra y el espacio exterior.' },
+};
 
 const TOPICS: TopicSpec[] = [
   { key: 'travel', order: 9, titleEn: 'Travel', titleEs: 'Viajes', titleKo: { ko: '여행', romanization: 'yeohaeng', en: 'travel' }, tint: 'theme.crafts', coverItemId: 'vocab:bihaenggi', rows: TRAVEL },
@@ -152,7 +161,7 @@ describe.each(TOPICS)('content/vocab/$key.json (F-VOC-001 V-6b)', (spec) => {
     expect(row.level).toBe(levelByRule(row.ko));
   });
 
-  it('declares the topic as a draft (native review is a later step, V12)', () => {
+  it('declares the topic as ready (the V-7 production review is applied, V12)', () => {
     expect(file.topic).toMatchObject({
       id: `vocab-topic:${spec.key}`,
       key: spec.key,
@@ -160,7 +169,7 @@ describe.each(TOPICS)('content/vocab/$key.json (F-VOC-001 V-6b)', (spec) => {
       titleEn: spec.titleEn,
       tint: spec.tint,
       coverItemId: spec.coverItemId,
-      status: 'draft',
+      status: 'ready',
       fixedOrder: false,
     });
     expect(file.topic.titleKo).toMatchObject(spec.titleKo);
@@ -196,6 +205,11 @@ describe.each(TOPICS)('content/vocab/$key.json (F-VOC-001 V-6b)', (spec) => {
     expect(Object.keys(topic).sort()).toEqual(['blurb', 'hoyaIntro', 'title']);
     expect(topic.title).toBe(spec.titleEs);
     for (const text of Object.values(topic)) expect(text).not.toMatch(/[가-힣]/);
+  });
+
+  it('carries the reviewed topic blurb in English and Spanish (V-7)', () => {
+    expect(file.topic.blurbEn).toBe(REVIEWED_BLURBS[spec.key].en);
+    expect(es.entries[`vocab-topic:${spec.key}`]!.blurb).toBe(REVIEWED_BLURBS[spec.key].es);
   });
 
   it('has no Korean overlay, like the merged topics', () => {
@@ -271,7 +285,16 @@ describe('topic-specific rules', () => {
     const file = parse('science');
     expect(file.items.every((i) => i.visual.startsWith('word:science-'))).toBe(true);
     expect(file.items.map((i) => i.ko)).not.toContain('물');
-    expect(file.items.every((i) => i.senseGroup === undefined)).toBe(true);
+  });
+
+  it('Science: the stone is the dol homonym, its first-birthday sense reserved (V-7 review)', () => {
+    const file = parse('science');
+    expect(file.items.filter((i) => i.senseGroup !== undefined).map((i) => [i.id, i.senseGroup])).toEqual([['vocab:dol-stone', 'dol']]);
+    expect(membersOf('dol')).toEqual([
+      expect.objectContaining({ id: 'vocab:dol-stone', state: 'launch' }),
+      expect.objectContaining({ id: 'vocab:dol-birthday', state: 'reserved' }),
+    ]);
+    expect(catalogItems.map((i) => i.id)).not.toContain('vocab:dol');
   });
 
   it('boat (Travel) and belly (Body) are the two launch senses of one homonym, both shipped now', () => {

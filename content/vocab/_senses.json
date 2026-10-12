@@ -95,6 +95,13 @@
       ]
     },
     {
+      "group": "dol",
+      "members": [
+        { "id": "vocab:dol-stone", "en": "stone", "state": "launch" },
+        { "id": "vocab:dol-birthday", "en": "first birthday", "state": "reserved" }
+      ]
+    },
+    {
       "group": "older-sister",
       "members": [
         { "id": "vocab:eonni", "en": "older sister (said by a woman or girl)", "state": "launch" },

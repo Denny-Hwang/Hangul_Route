@@ -1214,7 +1214,7 @@ export const OVERLAYS: Overlays = {
       "title": "Comida"
     },
     "vocab-topic:k-culture": {
-      "blurb": "Ropa, comida, fiestas, juegos y música de Corea.",
+      "blurb": "Ropa, casas, comida, fiestas, juegos, música y más de Corea.",
       "hoyaIntro": "Ven a descubrir la ropa, la comida, las fiestas y la música de Corea.",
       "title": "Cultura coreana"
     },
@@ -1229,7 +1229,7 @@ export const OVERLAYS: Overlays = {
       "title": "Números"
     },
     "vocab-topic:school": {
-      "blurb": "Cosas del salón de clases y de la mochila.",
+      "blurb": "Palabras de la escuela: las personas, el salón de clases y la mochila.",
       "hoyaIntro": "¡Prepara tu mochila! Busquemos las cosas del salón de clases.",
       "title": "Escuela"
     },
@@ -1290,7 +1290,7 @@ export const OVERLAYS: Overlays = {
       "gloss": "lluvia"
     },
     "vocab:bibimbap": {
-      "gloss": "bibimbap (tazón de arroz mixto)",
+      "gloss": "bibimbap (tazón de arroz mezclado)",
       "senseNote": "Arroz con verduras encima, que se mezcla antes de comer."
     },
     "vocab:bihaenggi": {
@@ -1346,7 +1346,7 @@ export const OVERLAYS: Overlays = {
       "senseNote": "También se dice gyeran, igual de común."
     },
     "vocab:dalligi": {
-      "gloss": "correr"
+      "gloss": "carrera"
     },
     "vocab:dari-leg": {
       "gloss": "pierna"
@@ -1357,7 +1357,7 @@ export const OVERLAYS: Overlays = {
     "vocab:deurama": {
       "gloss": "serie de televisión"
     },
-    "vocab:dol": {
+    "vocab:dol-stone": {
       "gloss": "piedra"
     },
     "vocab:dongsaeng": {
@@ -1527,7 +1527,7 @@ export const OVERLAYS: Overlays = {
       "gloss": "naranja"
     },
     "vocab:julleomgi": {
-      "gloss": "saltar la cuerda"
+      "gloss": "salto de cuerda"
     },
     "vocab:kkot": {
       "gloss": "flor"
@@ -1552,7 +1552,7 @@ export const OVERLAYS: Overlays = {
       "gloss": "pez"
     },
     "vocab:na": {
-      "gloss": "yo, mí",
+      "gloss": "yo",
       "senseNote": "La palabra informal. Para hablar con cortesía, se dice jeo."
     },
     "vocab:nabi": {
@@ -1624,7 +1624,7 @@ export const OVERLAYS: Overlays = {
     },
     "vocab:seollal": {
       "gloss": "Año Nuevo lunar",
-      "senseNote": "La gente lleva hanbok y hace una reverencia a los mayores."
+      "senseNote": "Mucha gente lleva hanbok y hace una reverencia a los mayores."
     },
     "vocab:seonsaengnim": {
       "gloss": "maestro o maestra",
