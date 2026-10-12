@@ -10,10 +10,13 @@ import { storySetDefs } from './story-sets';
  * collection. `heritageCardsAll` appends them; the award engine reads the
  * sets. Zero today: the `card` blocks arrive with the reviewed stories (6.8).
  * A held story keeps its card (no fact, no citation) so a learner who owns it
- * still sees it (rule 1); `heldStoryCardIds` lists those cards.
+ * still sees it (rule 1); `heldStoryCardIds` lists those cards, and
+ * `heldSetCardIds` the set cards with a held member (neither can be earned
+ * until the hold is lifted).
  */
 const built = buildStoryCards(storiesAll, storySetDefs, heldStoryCards);
 
 export const storyCards: readonly HeritageCard[] = built.cards;
 export const storySets: readonly CardSet[] = built.sets;
 export const heldStoryCardIds: readonly string[] = built.heldCardIds;
+export const heldSetCardIds: readonly string[] = built.heldSetCardIds;

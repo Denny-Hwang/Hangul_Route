@@ -5,22 +5,28 @@ import {
   ROMANIZATION_EXCEPTIONS,
   STORY_CARD_FACT_MAX_CHARS,
   STORY_CARD_MIN_SOURCES,
+  WEB_ADDRESS,
   checkRomanization,
   lintStory,
   lintStoryCorpus,
   parseStory,
   storyCardId,
+  type Episode,
   type HeldStoryCard,
   type HeritageCard,
   type ProgressSnapshot,
   type StageKey,
   type Story,
+  type ThemeKey,
 } from '@hangul-route/content-schema';
+import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
+import { heldStoryCards as heldStoryCardsOf } from '../../../../../scripts/build-stories.mjs';
 import { derivedAwards, missingAwards, stageCanComplete } from '../../logic/awards/derive';
 import { obtainableCards } from '../../logic/awards/obtainable';
 import { parseUnlockedBy } from '../../logic/awards/rules';
 import { buildStoryCards } from '../../logic/awards/story-cards';
+import { cardCitationView } from '../../logic/library/card-citation';
 import type { AwardWorld } from '../../logic/awards/types';
 import { playableEpisodes } from '../../logic/next-quest';
 import { awardWorld } from '../award-world';
@@ -28,7 +34,7 @@ import { episodesAll } from '../episodes';
 import { heritageCardsAll, stage1Cards, stage2Cards, stage4Cards } from '../heritage-cards';
 import { questsAll } from '../quests';
 import { heldStoryCards, storiesAll } from '../stories';
-import { heldStoryCardIds, storyCards, storySets } from '../story-cards';
+import { heldSetCardIds, heldStoryCardIds, storyCards, storySets } from '../story-cards';
 import { storySetDefs } from '../story-sets';
 
 /**
@@ -42,27 +48,39 @@ const AT = '2026-09-10T00:00:00.000Z';
 
 /**
  * The cards T-AWARD-1..3 hold to "can still fire": all of them except the
- * cards of held stories, which by design can no longer be earned and stay
- * only for the learners who own them (rule 1, §3.8 "Reviewed only").
+ * cards of held stories and the set cards with a held member, which by
+ * design can no longer be earned and stay only for the learners who own them
+ * (rule 1, §3.8 "Reviewed only").
  */
-const earnable: readonly HeritageCard[] = heritageCardsAll.filter((c) => !heldStoryCardIds.includes(c.id));
+const notHeld = (held: readonly string[]) => (c: HeritageCard): boolean => !held.includes(c.id);
+const earnable: readonly HeritageCard[] = heritageCardsAll.filter(notHeld([...heldStoryCardIds, ...heldSetCardIds]));
 
 const episodeById = new Map(episodesAll.map((e) => [e.id, e]));
 const questIds = new Set(questsAll.map((q) => q.id));
 const episodeOfQuest = new Map(episodesAll.flatMap((e) => e.questIds.map((q) => [q, e] as const)));
 
-function finished(ids: readonly string[], stars: 1 | 2 | 3): ProgressSnapshot {
+function finished(ids: readonly string[], stars: 1 | 2 | 3, episodes: readonly Episode[] = episodesAll): ProgressSnapshot {
+  const episodeOf = episodes === episodesAll ? episodeOfQuest : new Map(episodes.flatMap((e) => e.questIds.map((q) => [q, e] as const)));
   return {
     profileId: 'profile:a',
     updatedAt: AT,
     episodes: [],
-    quests: ids.map((questId) => ({ questId, episodeId: episodeOfQuest.get(questId)?.id ?? '', startedAt: AT, completedAt: AT, stars, attempts: 1, accuracy: 1 })),
+    quests: ids.map((questId) => ({ questId, episodeId: episodeOf.get(questId)?.id ?? '', startedAt: AT, completedAt: AT, stars, attempts: 1, accuracy: 1 })),
     cards: [],
     sessions: [],
     homework: [],
     reviews: [],
     streakDays: 0,
   };
+}
+
+/** T-AWARD-1 over a world: each card in `cards` is listed to a learner who owns nothing, and finishing every playable quest at 1 star earns it. */
+function expectEarnable(w: AwardWorld, cards: readonly HeritageCard[]): void {
+  const listed = new Set(obtainableCards(w, new Set()).map((c) => c.id));
+  expect(cards.map((c) => c.id).filter((id) => !listed.has(id))).toEqual([]);
+  const all = playableEpisodes([...w.episodes]).flatMap((e) => e.questIds);
+  const earned = new Set(derivedAwards(w, finished(all, 1, w.episodes), PROFILE).map((a) => a.cardId));
+  expect(cards.map((c) => c.id).filter((id) => !earned.has(id))).toEqual([]);
 }
 
 describe('card award integrity (F-STORY-006 T-AWARD-1..5)', () => {
@@ -188,8 +206,14 @@ function expectSourcedStoryCards(cards: readonly HeritageCard[], stories: readon
     expect(fact.sources.length, card.id).toBeGreaterThanOrEqual(STORY_CARD_MIN_SOURCES);
     const [first] = fact.sources;
     expect(card.citation, card.id).toEqual({ title: first?.title, publisher: first?.publisher, more: fact.sources.length - 1 });
+    // The printed source line never shows a web address, and keeps a name (§3.8, card-source-address-only).
+    const line = cardCitationView(card, citationMessages)?.line ?? '';
+    expect(line, card.id).not.toMatch(WEB_ADDRESS);
+    expect(line, card.id).not.toMatch(/Source: ,|, $/);
   }
 }
+
+const citationMessages = getMessages('en').learner.cardDetail.citation;
 
 /**
  * The 24 card blocks the spec proposes (F-STORY-006 §3.8 table), applied to
@@ -242,18 +266,11 @@ const CARD_RULE = /^card-/;
 /** The set cards' Korean words: a story card must not take one, even before its set is complete. */
 const setHeadwords = storySetDefs.map((d) => ({ id: d.cardId, subtitleKo: d.headword.ko }));
 
-/** What the bundle keeps of `story` once it is held (`build-stories.mjs` heldStoryCards). */
+/** What the bundle keeps of `story` once it is held: the generator's own entry (`build-stories.mjs` heldStoryCards). */
 function heldOf(story: Story): HeldStoryCard {
-  const keyword = story.keywords.find((k) => k.id === story.card?.keywordId);
-  if (!story.card || !keyword) throw new Error(`${story.id} has no card headword`);
-  return {
-    storyId: story.id,
-    titleEn: story.card.titleEn,
-    keyword: { ko: keyword.ko, romanization: keyword.romanization },
-    summaryEn: story.summaryEn,
-    theme: story.theme,
-    recommendedStage: story.recommendedStage,
-  };
+  const [held] = heldStoryCardsOf([{ ...structuredClone(story), state: 'draft' }]);
+  if (!held) throw new Error(`${story.id} keeps no held card`);
+  return held;
 }
 
 const REPO = join(__dirname, '../../../../..');
@@ -322,6 +339,8 @@ describe('heritage story cards (F-STORY-006 T-AWARD-6, T-AWARD-7)', () => {
 
     it('T-AWARD-6: each of the 24 cards is sourced, verbatim and short enough', () => {
       expect(cards.filter((c) => c.storyId !== undefined)).toHaveLength(24);
+      // Some first sources name their web address (heritage.go.kr, unesco.org): the card line drops it.
+      expect(cards.filter((c) => c.citation !== undefined && WEB_ADDRESS.test(`${c.citation.publisher} ${c.citation.title}`)).length).toBeGreaterThan(0);
       expectSourcedStoryCards(
         cards.filter((c) => c.storyId !== undefined),
         stories,
@@ -352,6 +371,28 @@ describe('heritage story cards (F-STORY-006 T-AWARD-6, T-AWARD-7)', () => {
       expect(lintStoryCorpus(stories, { cards: [...handWritten, ...setHeadwords] }).filter((f) => f.rule === 'card-korean-duplicate')).toEqual([]);
     });
 
+    /** The award world once these stories are on the shelf: one shipped shelf episode each, as the bundle builds them. */
+    const shelfWorld = (shelved: readonly Story[], cardsOf: { cards: HeritageCard[]; sets: AwardWorld['sets'] }): AwardWorld => ({
+      cards: [...handWritten, ...cardsOf.cards],
+      episodes: [
+        ...episodesAll,
+        ...shelved.map((s) => ({
+          ...episodesAll[0]!,
+          id: `episode:shelf-${slugOf(s.id)}`,
+          status: 'shipped' as const,
+          questIds: [`quest:story-${slugOf(s.id)}-listen`],
+          rewardCardIds: [storyCardId(s.id)],
+        })),
+      ],
+      quests: questsAll,
+      sets: cardsOf.sets,
+    });
+
+    it('T-AWARD-1 with the 70 cards: every one, set cards included, is listed and earned by finishing every quest', () => {
+      const w = shelfWorld(stories, { cards, sets });
+      expectEarnable(w, w.cards);
+    });
+
     it('holding one story keeps its card, its set and the counts, and the Library shows it only to its owners (Behaviour #10)', () => {
       const heldId = 'story:sun-and-moon';
       const heldStory = stories.find((s) => s.id === heldId);
@@ -370,19 +411,10 @@ describe('heritage story cards (F-STORY-006 T-AWARD-6, T-AWARD-7)', () => {
       expect(() => HeritageCardListSchema.parse(keptAll)).not.toThrow();
 
       // The held story is a draft now: its shelf episode is gone with it.
-      const episodes = [
-        ...episodesAll,
-        ...stories
-          .filter((s) => s.id !== heldId)
-          .map((s) => ({
-            ...episodesAll[0]!,
-            id: `episode:shelf-${slugOf(s.id)}`,
-            status: 'shipped' as const,
-            questIds: [`quest:story-${slugOf(s.id)}-listen`],
-            rewardCardIds: [storyCardId(s.id)],
-          })),
-      ];
-      const heldWorld: AwardWorld = { cards: keptAll, episodes, quests: questsAll, sets: kept.sets };
+      const heldWorld = shelfWorld(
+        stories.filter((s) => s.id !== heldId),
+        kept,
+      );
       const listed = (owned: readonly string[]): string[] => obtainableCards(heldWorld, new Set(owned)).map((c) => c.id);
       expect(listed([])).not.toContain('card:story-sun-and-moon');
       expect(listed([])).not.toContain('card:set-seasons-tales');
@@ -390,6 +422,11 @@ describe('heritage story cards (F-STORY-006 T-AWARD-6, T-AWARD-7)', () => {
       expect(listed(['card:story-sun-and-moon'])).toContain('card:story-sun-and-moon');
       expect(listed(['card:story-sun-and-moon'])).toContain('card:set-seasons-tales');
       expect(listed(['card:set-seasons-tales'])).toContain('card:set-seasons-tales');
+
+      // T-AWARD-1 still holds during the hold: the held card and its set card are the only ones that cannot fire.
+      expect(kept.heldSetCardIds).toEqual(['card:set-seasons-tales']);
+      expectEarnable(heldWorld, keptAll.filter(notHeld([...kept.heldCardIds, ...kept.heldSetCardIds])));
+      expect(() => expectEarnable(heldWorld, keptAll.filter(notHeld(kept.heldCardIds)))).toThrow(/card:set-seasons-tales/);
     });
 
     it('a set card arrives once its six member cards are owned, from the members alone', () => {
@@ -419,6 +456,15 @@ describe('heritage story cards (F-STORY-006 T-AWARD-6, T-AWARD-7)', () => {
       expect(checkRomanization(def.headword.ko, def.headword.romanization, { exceptions: ROMANIZATION_EXCEPTIONS }), def.id).toEqual([]);
       // A member is a story file (bundled, or held as a draft: its set stays defined).
       for (const id of def.memberStoryIds) expect(existsSync(join(REPO, 'content/stories', `${slugOf(id)}.json`)), id).toBe(true);
+    }
+  });
+
+  it("story-sets: each set's theme is its members' most common theme, a tie going to the first tied member in shelf order", () => {
+    for (const def of storySetDefs) {
+      const themes = def.memberStoryIds.map((id) => (JSON.parse(readFileSync(join(REPO, 'content/stories', `${slugOf(id)}.json`), 'utf8')) as { theme: ThemeKey }).theme);
+      const count = (t: ThemeKey): number => themes.filter((x) => x === t).length;
+      const top = Math.max(...themes.map(count));
+      expect(def.theme, def.id).toBe(themes.find((t) => count(t) === top));
     }
   });
 });

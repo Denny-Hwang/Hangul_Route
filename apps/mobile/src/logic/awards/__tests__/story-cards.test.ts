@@ -1,5 +1,6 @@
 import { HeritageCardSchema, type HeldStoryCard, type ProgressSnapshot, type Story } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
+import { heldStoryCards } from '../../../../../../scripts/build-stories.mjs';
 import { readyStory } from '../../story/__tests__/story-fixture';
 import { derivedAwards } from '../derive';
 import { obtainableCards } from '../obtainable';
@@ -16,18 +17,11 @@ function story(slug: string, recommendedStage = 1, edit: (s: Story) => void = ()
   return s;
 }
 
-/** What the bundle keeps of a held story (`build-stories.mjs` heldStoryCards). */
+/** What the bundle keeps of a held story: the generator's own entry for it (`build-stories.mjs` heldStoryCards). */
 function heldOf(slug: string, recommendedStage = 1): HeldStoryCard {
-  const s = story(slug, recommendedStage);
-  const keyword = s.keywords.find((k) => k.id === s.card!.keywordId)!;
-  return {
-    storyId: s.id,
-    titleEn: s.card!.titleEn,
-    keyword: { ko: keyword.ko, romanization: keyword.romanization },
-    summaryEn: s.summaryEn,
-    theme: s.theme,
-    recommendedStage,
-  };
+  const [held] = heldStoryCards([story(slug, recommendedStage, (s) => (s.state = 'draft'))]);
+  if (!held) throw new Error(`story:${slug} keeps no held card`);
+  return held;
 }
 
 const SET: StorySetDef = {
@@ -85,15 +79,21 @@ describe('storyCardFor (F-STORY-006 §3.8)', () => {
     expect(storyCardFor(story('a', 1, (s) => delete s.card))).toBeNull();
   });
 
-  it('builds no card when the headword or the fact does not resolve (the lint fails such a story)', () => {
+  it('builds no card when the headword does not resolve (the lint fails such a story)', () => {
     expect(storyCardFor(story('a', 1, (s) => (s.card!.keywordId = 'nope')))).toBeNull();
-    expect(storyCardFor(story('a', 1, (s) => (s.card!.factId = 'f9')))).toBeNull();
+  });
+
+  it('keeps the card, without its fact and citation, when only the fact does not resolve (wireframe error state, rule 1)', () => {
+    const { factEn: _fact, factId: _factId, citation: _citation, ...whole } = storyCardFor(story('a'))!;
+    expect(storyCardFor(story('a', 1, (s) => (s.card!.factId = 'f9')))).toEqual(whole);
+    const unsourced = story('a', 1, (s) => (s.facts.find((f) => f.id === 'f3')!.sources = []));
+    expect(storyCardFor(unsourced)).toEqual(whole);
   });
 });
 
 describe('buildStoryCards (F-STORY-006 §3.2, §3.8)', () => {
   it('returns nothing for no stories, and no set while a member has no card', () => {
-    expect(buildStoryCards([], [SET])).toEqual({ cards: [], sets: [], heldCardIds: [] });
+    expect(buildStoryCards([], [SET])).toEqual({ cards: [], sets: [], heldCardIds: [], heldSetCardIds: [] });
     const { cards, sets } = buildStoryCards([story('one')], [SET]);
     expect(cards.map((c) => c.id)).toEqual(['card:story-one']);
     expect(cards[0]!.setId).toBeUndefined();
@@ -136,8 +136,10 @@ describe('buildStoryCards (F-STORY-006 §3.2, §3.8)', () => {
   });
 
   it('keeps the card of a held story, with no fact and no citation, and keeps its set registered', () => {
-    const { cards, sets, heldCardIds } = buildStoryCards([story('one')], [SET], [heldOf('two', 2)]);
+    const { cards, sets, heldCardIds, heldSetCardIds } = buildStoryCards([story('one')], [SET], [heldOf('two', 2)]);
     expect(heldCardIds).toEqual(['card:story-two']);
+    // Its set card can no longer be earned either (a member never fires), so it is held with it.
+    expect(heldSetCardIds).toEqual(['card:set-test-pair']);
     expect(sets.map((x) => x.memberCardIds)).toEqual([['card:story-one', 'card:story-two']]);
     const held = cards.find((c) => c.id === 'card:story-two')!;
     const s = story('two', 2);
@@ -162,6 +164,10 @@ describe('buildStoryCards (F-STORY-006 §3.2, §3.8)', () => {
   it('the same card for a held story as when it shipped, except the fact and the citation', () => {
     const { factEn: _fact, factId: _factId, citation: _citation, ...shipped } = storyCardFor(story('one', 3))!;
     expect(heldStoryCardFor(heldOf('one', 3))).toEqual(shipped);
+  });
+
+  it('a set with every member reviewed holds no set card', () => {
+    expect(buildStoryCards([story('one'), story('two')], [SET]).heldSetCardIds).toEqual([]);
   });
 
   it('a reviewed copy of a story wins over a held entry with the same id', () => {

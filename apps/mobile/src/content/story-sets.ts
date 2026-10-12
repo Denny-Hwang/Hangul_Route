@@ -8,8 +8,11 @@ import type { StorySetDef } from '../logic/awards/story-cards';
  * legendary card arrives when every member card is owned. Set cards make no
  * factual claim (no fact, no citation), and their art is the collection plate
  * of the member cards (D7), so they need no new drawing. A set's theme is
- * the most common theme of its member stories; titles and Korean words are
- * the spec's proposals.
+ * the most common theme of its member stories, a tie going to the theme of
+ * the first tied member in shelf order (Science, Art and Life: crafts and
+ * life have two members each, and the rain gauge comes first); the
+ * card-award integrity test checks it against the story files. Titles and
+ * Korean words are the spec's proposals.
  */
 const BLURB = 'Six stories, one collection.';
 
