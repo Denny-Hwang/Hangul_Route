@@ -34,6 +34,15 @@ const FAQ_KOREAN = {
   a: 'No — starting from zero is what we built it for. Instructions are in plain, simple English. Korean only appears as the thing being learned.',
 } as const;
 
+/**
+ * Both payment channels (F-SITE-002 §3.7, S-7, OD-13), word for word as the spec gives them: Stripe Checkout on
+ * app.hangulroute.com after sign-in (F-BILL-002), the stores in the native apps when they offer purchases
+ * (F-ENT-001 §3.5, F-IAP-002). The Privacy Policy and the Terms both open their payment text with it, so the
+ * copies cannot drift. English-authoritative (L10); no price (OD-7).
+ */
+const PAYMENT_CHANNELS =
+  'On the web, a grown-up pays through Stripe after signing in at app.hangulroute.com. In the iPhone and Android apps, purchases (when offered) go through the App Store or Google Play.';
+
 /** Values the legal pages pass to the few sentences that name the contact address or the level labels. */
 export interface LegalValues {
   email: string;
@@ -610,13 +619,25 @@ export const landing = {
         payments: {
           heading: 'Payments and subscriptions',
           paragraphs: {
-            p1: 'Subscriptions are billed through the Apple App Store or Google Play. We never see or store full card numbers — the store handles payment and gives us only the minimum needed to unlock the subscription on the account.',
+            /**
+             * The payment channels, then what the server keeps about a plan, never card data: `entitlements` (plan key,
+             * status, dates, `provider_ref` / `customer_ref`, `promo_code`) and, from F-BILL-002 B-3 (notice before it
+             * records anything; Stripe Live is off, so no real payment exists before then), `billing_events`
+             * (migration 0007: purchase, renewal, refund or a payment that did not go through; amount, currency, date, Stripe ids). F-SITE-002 S-7.
+             */
+            p1: `${PAYMENT_CHANNELS} We never see or store full card numbers — Stripe or the store handles payment. For each plan we keep the plan, its status and dates, the Stripe, store or contract reference ids, the number of seats on a school contract, any promotion code used, and a record of each payment and refund, and of any payment that did not go through (amount, currency, date and its reference id).`,
           },
         },
         thirdParty: {
           heading: 'Third-party services',
           bullets: {
-            stores: 'Apple App Store / Google Play — payments and subscription management.',
+            /**
+             * F-SITE-002 S-7: the web's payment processor, listed before the stores as in the payment sentence. Checkout
+             * is opened with the signed-in account's email (`customer_email`) and the plan's subject kind and id, plan key
+             * and any promotion code as metadata (`checkoutForm`, packages/backend lib/stripe.ts).
+             */
+            stripe: 'Stripe — payments and subscription management for plans bought on the web. We give Stripe the email address the grown-up signed in with, for receipts, and the plan, our reference ids for it and any promotion code used, so each payment is matched to the right plan.',
+            stores: 'Apple App Store / Google Play — payments and subscription management for in-app purchases.',
             cloudflare: 'Cloudflare — hosting, storage, and content delivery.',
             noTracking: 'We do not use third-party advertising or social-media tracking SDKs.',
           },
@@ -649,7 +670,7 @@ export const landing = {
     },
     terms: {
       title: 'Terms of Service',
-      effective: 'Effective May 22, 2026',
+      effective: 'Effective October 12, 2026',
       otherDocument: 'Privacy Policy',
       sections: {
         accepting: {
@@ -666,11 +687,25 @@ export const landing = {
         },
         billing: {
           heading: 'Subscriptions, billing, and cancellation',
+          /**
+           * F-SITE-002 §3.7 (S-7, OD-13): both payment channels (PAYMENT_CHANNELS), then the yearly renewal of web plans
+           * (AMENDMENTS-BILLING-FAMILY-YEARLY BY-D10 [BY]; "Billing" and "Manage subscription" are the console's own labels).
+           * The page renders these before the bullets. No price here (OD-7).
+           */
+          paragraphs: {
+            channels: PAYMENT_CHANNELS,
+            webRenewal:
+              'Plans bought on the web (the Family Plan and the Group License) renew every year until cancelled. Cancel any time in Billing, under Manage subscription; the plan stays active until the end of the year already paid.',
+            /** BY-D4: a sponsored Group License (100%-off code, `payment_method_collection=if_required`) has no card and lapses at the end of its year. */
+            sponsored:
+              'A Group License started with a code that makes its first year free needs no card; it ends when that year does unless a card is added under Manage subscription.',
+          },
+          /** The store terms, kept and marked as applying to in-app purchases (F-ENT-001 §3.5, F-IAP-002). */
           bullets: {
-            premium: 'Premium content is offered as an auto-renewing subscription billed through the Apple App Store or Google Play.',
-            renews: 'Your subscription renews automatically unless you cancel at least 24 hours before the end of the current period.',
-            manage: 'Manage or cancel anytime in your App Store or Google Play account settings.',
-            refunds: 'Refunds are handled by the store under its policy. A free trial, if offered, converts to a paid subscription unless cancelled before it ends.',
+            premium: 'In-app purchases: when offered, premium content is an auto-renewing subscription billed through the Apple App Store or Google Play.',
+            renews: 'In-app purchases: your subscription renews automatically unless you cancel at least 24 hours before the end of the current period.',
+            manage: 'In-app purchases: manage or cancel anytime in your App Store or Google Play account settings.',
+            refunds: 'In-app purchases: refunds are handled by the store under its policy. A free trial, if offered, converts to a paid subscription unless cancelled before it ends.',
           },
         },
         use: {
