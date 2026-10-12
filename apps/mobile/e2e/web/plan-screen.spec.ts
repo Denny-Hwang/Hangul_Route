@@ -194,3 +194,23 @@ test.describe('full route', () => {
     });
   }
 });
+
+/**
+ * Wide layout (B-9 review): at 1280 x 800 the running app, not only the static mock, keeps the Plan
+ * screen status only, describes Open billing by its hint and scrolls no sideways.
+ */
+test.describe('1280x800', () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test('family device: Plan details with no PIN, status only, Open billing described by its hint', async ({ page }) => {
+    await onboardChild(page, { name: 'Mina' });
+    await openPlanDetails(page, 'Mina');
+
+    await expect(page.getByText('Enter your 4-digit PIN to continue.')).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Mina: Free plan.' })).toBeVisible();
+    await expect(page.getByText('Mina is on the free plan.')).toBeVisible();
+    await expectStatusOnly(page);
+    await expect(page.getByRole('button', { name: 'Open billing' })).toHaveAccessibleDescription('Opens the billing page');
+    await page.screenshot({ path: test.info().outputPath('plan-screen-family-1280.png'), fullPage: true });
+  });
+});
