@@ -44,7 +44,7 @@ One button, top to bottom:
 | English title | `Body` semibold, the topic title in the UI language (`vocab-topic:<key>` overlay `title`, else `titleEn`) |
 | Korean title | `KoreanText` `sm`, `titleKo.ko` with its romanization; no gloss line: the title right above it is its meaning in the UI language, so the meaning is not printed twice |
 | Meter | `Progress variant="bar"`, `height = spacing.sm`, `max` = the topic's words, `value` = collected; no `label`; hidden from assistive technology (`accessibilityElementsHidden`, `importantForAccessibility="no-hide-descendants"`, `aria-hidden`), because `Progress` announces `now/max` |
-| Count | `Body size="sm" weight="semibold" tone="secondary"`: "5 collected" (`learner.vocab.topics.collected`), a plain count, never "5 of 12", never a percent |
+| Count | `Body weight="semibold" tone="secondary"` (18, the body floor, §3.8): "5 collected" (`learner.vocab.topics.collected`), a plain count, never "5 of 12", never a percent |
 
 - Fill `surface.paper`; border `borderWidth.base` in the **topic tint** (`colors.theme.*` or `colors.stage.stage2`, from the topic's `tint`): an accent only, never a text colour (`tokens.ts`, theme tints are fills). Pressed: `border.focus`. Radius `radii.lg`, padding `spacing.md`, gaps `spacing.sm`.
 - `minHeight` is `touchTarget.child` (80); the tiles in a row stretch to the tallest.

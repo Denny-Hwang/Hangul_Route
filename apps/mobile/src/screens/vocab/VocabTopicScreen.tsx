@@ -189,7 +189,7 @@ function TopicPage({ source, navigation, onBack }: { source: VocabTopic; navigat
                 onPress={() => open(a.opens)}
                 testID={`vocab-activity-${a.kind}`}
               />
-              <Body size="sm" tone="secondary">
+              <Body tone="secondary">
                 {a.line}
               </Body>
             </View>

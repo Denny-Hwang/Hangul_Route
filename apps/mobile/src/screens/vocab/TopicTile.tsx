@@ -80,7 +80,7 @@ export function TopicTile({
       <View {...HIDDEN}>
         <Progress variant="bar" value={view.collected} max={Math.max(view.total, 1)} height={spacing.sm} />
       </View>
-      <Body size="sm" weight="semibold" tone="secondary">
+      <Body weight="semibold" tone="secondary">
         {view.countLine}
       </Body>
     </Pressable>
