@@ -540,7 +540,7 @@ export class D1Db implements Db {
    * CAS wrote (status, reason and `ended_at` = now) and by the absence of an earlier event of its kind: a
    * request ends once, so a call that lost the race in the same millisecond inserts nothing.
    */
-  private async endTransfer(update: [string, unknown[]], ended: { transferId: string; status: 'declined' | 'cancelled'; endReason: TransferEndReason; at: string }, event: Omit<NewTransferEvent, 'transferId'> | undefined): Promise<number> {
+  private async endTransfer(update: [string, unknown[]], ended: { transferId: string; status: 'declined' | 'cancelled' | 'expired'; endReason: TransferEndReason; at: string }, event: Omit<NewTransferEvent, 'transferId'> | undefined): Promise<number> {
     if (!event) return this.changes(update[0], update[1]);
     const { transferId } = ended;
     const [changed] = await this.batchChanges([
@@ -553,11 +553,15 @@ export class D1Db implements Db {
     return changed ?? 0;
   }
 
-  expireTransfer(transferId: string, now: Date): Promise<number> {
+  expireTransfer(transferId: string, now: Date, event?: Omit<NewTransferEvent, 'transferId'>): Promise<number> {
     const at = now.toISOString();
-    return this.changes(
-      `UPDATE transfer_requests SET status = 'expired', end_reason = 'expired', end_actor = 'system', ended_at = ?, updated_at = ?, rev = rev + 1 WHERE id = ? AND ${OPEN} AND expires_at <= ?`,
-      [at, at, transferId, at],
+    return this.endTransfer(
+      [
+        `UPDATE transfer_requests SET status = 'expired', end_reason = 'expired', end_actor = 'system', ended_at = ?, updated_at = ?, rev = rev + 1 WHERE id = ? AND ${OPEN} AND expires_at <= ?`,
+        [at, at, transferId, at],
+      ],
+      { transferId, status: 'expired', endReason: 'expired', at },
+      event,
     );
   }
 

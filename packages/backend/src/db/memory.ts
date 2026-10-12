@@ -268,12 +268,14 @@ export class MemoryDb implements Db {
     return changed;
   }
 
-  async expireTransfer(transferId: string, now: Date): Promise<number> {
+  async expireTransfer(transferId: string, now: Date, event?: Omit<NewTransferEvent, 'transferId'>): Promise<number> {
     const at = now.toISOString();
-    return this.casTransfer(
-      transferId,
-      (t) => isOpenTransfer(t) && t.expiresAt <= at,
-      (t) => ({ ...t, status: 'expired', endReason: 'expired', endActor: 'system', endedAt: at, updatedAt: at }),
+    return this.endTransfer(transferId, event, () =>
+      this.casTransfer(
+        transferId,
+        (t) => isOpenTransfer(t) && t.expiresAt <= at,
+        (t) => ({ ...t, status: 'expired', endReason: 'expired', endActor: 'system', endedAt: at, updatedAt: at }),
+      ),
     );
   }
 

@@ -356,6 +356,22 @@ function transferContract(name: string, make: () => Db, dropLearnerRowOnly: Drop
         expect(await db.getTransfer(ID)).toMatchObject({ status: 'expired', endReason: 'expired', endActor: 'system', endedAt: iso(TRANSFER_WINDOW_MS) });
         expect(await db.expireTransfer(ID, at(TRANSFER_WINDOW_MS + DAY))).toBe(0);
       });
+
+      it('expireTransfer writes the system expired event with the CAS, once; an early or repeated call writes none', async () => {
+        await db.createTransfer(learnerSideRow(), created);
+        const expired = { at: iso(TRANSFER_WINDOW_MS), actorKind: 'system' as const, actorRef: null, event: 'expired' as const, slot: null, detail: null };
+        expect(await db.expireTransfer(ID, at(TRANSFER_WINDOW_MS - 1), { ...expired, at: iso(TRANSFER_WINDOW_MS - 1) })).toBe(0);
+        expect(await db.expireTransfer(ID, at(TRANSFER_WINDOW_MS), expired)).toBe(1);
+        expect(await db.expireTransfer(ID, at(TRANSFER_WINDOW_MS), expired)).toBe(0);
+        expect((await db.transferEvents(ID)).map((e) => [e.event, e.actorKind, e.actorRef, e.slot, e.detail])).toEqual([
+          ['created', 'account', 'mom', null, null],
+          ['expired', 'system', null, null, null],
+        ]);
+        const bad = { ...expired, actorKind: 'robot' as never };
+        expect(await db.createTransfer(sourceRow({ id: 'transfer:0002' }), created)).toBe('created');
+        await expect(db.expireTransfer('transfer:0002', at(TRANSFER_WINDOW_MS), bad)).rejects.toThrow(/CHECK/i);
+        expect(await db.getTransfer('transfer:0002')).toMatchObject({ status: 'requested', rev: 0 });
+      });
     });
 
     describe('settle steps', () => {

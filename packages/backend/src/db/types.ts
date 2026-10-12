@@ -119,8 +119,8 @@ export interface Db {
   declineSlot(id: string, slot: TransferSlot, endReason: TransferEndReason, endActor: TransferEndActor, now: Date, event?: Omit<NewTransferEvent, 'transferId'>): Promise<number>;
   /** End an open request as `cancelled`; `event` as for `declineSlot`. */
   cancelTransfer(id: string, endReason: TransferEndReason, endActor: TransferEndActor, now: Date, event?: Omit<NewTransferEvent, 'transferId'>): Promise<number>;
-  /** `expired` once `expiresAt <= now`. */
-  expireTransfer(id: string, now: Date): Promise<number>;
+  /** `expired` once `expiresAt <= now`; `event` (the system's `expired` row) as for `declineSlot`. */
+  expireTransfer(id: string, now: Date, event?: Omit<NewTransferEvent, 'transferId'>): Promise<number>;
   /** Archived source (section 4.13): a pending source slot becomes `not_required`. */
   markSourceNotRequired(id: string, now: Date): Promise<number>;
   /** `requested` -> `approved` when every slot is in. */
