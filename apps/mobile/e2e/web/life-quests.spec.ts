@@ -96,7 +96,9 @@ test('quest 5: Family at the Table pages through a 3-page Discover with a pictur
   await expect(page.getByText('엄마').first()).toBeVisible();
   await expect(page.getByText('가족').first()).toBeVisible();
   // 가족 carries the family-table card art (an svg), not the text-tile fallback.
-  await expect(page.getByTestId('discover-item-word:가족').locator('svg').first()).toBeVisible();
+  await expect(page.getByTestId('discover-item-word:가족').locator('svg')).toHaveCount(2);
+  // A theme page under its own caption: 엄마 and 가족 hold finals not taught yet, so it never says "Words you can read now".
+  await expect(page.getByText('Family words', { exact: true })).toBeVisible();
   await page.screenshot({ path: test.info().outputPath('life-q2-discover-page3.png'), fullPage: true });
   await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByText('Look and learn', { exact: true })).toHaveCount(0);

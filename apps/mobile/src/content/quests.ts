@@ -193,6 +193,8 @@ export const stage1Quests: Quest[] = [
               ],
             },
             {
+              // Theme words are for looking (R3): 엄마 and 가족 hold finals taught in quest 10, so not "Words you can read now".
+              captionEn: 'Family words',
               items: [
                 { type: 'word', word: { ko: '엄마', romanization: 'eomma', en: 'mom', syllables: ['eom', 'ma'] } },
                 { type: 'word', word: { ko: '가족', romanization: 'gajok', en: 'family', syllables: ['ga', 'jok'] }, picture: 'card:family-table' },
