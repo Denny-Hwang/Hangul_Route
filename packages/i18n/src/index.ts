@@ -20,6 +20,7 @@ export {
 export { pseudoLocaleEnabled, showAllLocalesEnabled } from './env';
 export { detectLocale } from './detect';
 export {
+  dictionaryLocale,
   ENGLISH_AUTHORITATIVE_PREFIXES,
   fallbackPaths,
   getMessages,

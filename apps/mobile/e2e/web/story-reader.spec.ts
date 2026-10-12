@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored, waitForSaved } from './helpers';
-import { back, filledDots, fullyVisible, next, position } from './story-reader-helpers';
+import { back, filledDots, fullyVisible, next, nextPage, position } from './story-reader-helpers';
 
 /**
  * F-STORY-002 PR 2.6a: the story reader on its replay route (`StoryReader`,
@@ -128,7 +128,7 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     await expect(page.getByTestId('story-reader-sources')).toBeVisible();
 
     // Next and Back: the page number goes down, the dots never do (D3).
-    await next(page).click();
+    await nextPage(page);
     await expect(position(page)).toHaveText('2 / 5');
     await expect.poll(() => filledDots(page)).toBe(2);
     await back(page).click();
@@ -142,7 +142,7 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     await expect(position(page)).toHaveText('1 / 5');
 
     for (const n of [2, 3, 4, 5]) {
-      await next(page).click();
+      await nextPage(page);
       await expect(position(page)).toHaveText(`${n} / 5`);
     }
     // Scene 5: authored words are chips, the whole-line gloss stays beneath; Next reads Finish.
@@ -156,7 +156,7 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     expect(shown).not.toContain('{kw:');
     expect(shown).not.toMatch(EMOJI);
 
-    await next(page).click();
+    await nextPage(page);
     await expect(page.getByRole('heading', { name: 'The End' })).toBeVisible();
     await expect(page.getByTestId('story-reader-end-primary')).toHaveText('Done');
     await expect(page.getByTestId('story-reader-read-again')).toBeVisible();
@@ -168,7 +168,7 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     await expect(position(page)).toHaveText('1 / 5');
     await expect.poll(() => filledDots(page)).toBe(5);
 
-    for (let i = 0; i < 5; i += 1) await next(page).click();
+    for (let i = 0; i < 5; i += 1) await nextPage(page);
     await page.getByTestId('story-reader-end-primary').click();
     await expect(page.getByText('Hi, Dami!')).toBeVisible();
     await expect(page.getByTestId('story-reader')).toHaveCount(0);
@@ -206,7 +206,7 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     await chip.click();
     await expect(gloss).toHaveCount(0);
     // A word of the Korean line opens the same card.
-    for (let i = 0; i < 4; i += 1) await next(page).click();
+    for (let i = 0; i < 4; i += 1) await nextPage(page);
     await page.getByTestId('story-reader-word-1').click();
     await expect(gloss).toContainText('congratulations');
     // Moving scene closes it.
@@ -233,7 +233,7 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     await block.click();
     await expect.poll(lines).toContain('Sejong');
     // The reveal lasts the scene only.
-    await next(page).click();
+    await nextPage(page);
     await expect(page.getByTestId('story-reader-term-hangeul')).not.toContainText('hangeul');
   });
 
@@ -271,7 +271,7 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     await page.evaluate(() => {
       (window as E2eWindow).__silentSpeech?.splice(0);
     });
-    await next(page).click();
+    await nextPage(page);
     await expect
       .poll(() => page.evaluate(() => (window as E2eWindow).__silentSpeech ?? []))
       .toContainEqual(expect.stringContaining('About 600 years ago'));
@@ -391,11 +391,11 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     await onboard(page);
     const id = await profileId(page);
     await openReader(page);
-    for (let i = 0; i < 5; i += 1) await next(page).click();
+    for (let i = 0; i < 5; i += 1) await nextPage(page);
     await expect(page.getByRole('heading', { name: 'The End' })).toBeVisible();
     // Read again and finish a second time: still one event for this mount.
     await page.getByTestId('story-reader-read-again').click();
-    for (let i = 0; i < 5; i += 1) await next(page).click();
+    for (let i = 0; i < 5; i += 1) await nextPage(page);
     await expect(page.getByRole('heading', { name: 'The End' })).toBeVisible();
     await page.getByTestId('story-reader-end-primary').click();
     await expect(page.getByText('Hi, Dami!')).toBeVisible();
@@ -411,8 +411,8 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     await openReader(page, 'listen', 3);
     await page.getByTestId('story-reader-term-hangeullal').click();
     await expect(page.getByTestId('story-reader-gloss')).toBeVisible();
-    await next(page).click();
-    await next(page).click();
+    await nextPage(page);
+    await nextPage(page);
     await expect(page.getByRole('heading', { name: 'The End' })).toBeVisible();
     const events = await storyEvents(page);
     expect(events).toHaveLength(2);
@@ -456,7 +456,7 @@ test.describe('story reader, replay route (fixture bundle)', () => {
       el.scrollTop = el.scrollHeight;
     });
     expect(await scroll.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
-    await next(page).click();
+    await nextPage(page);
     await expect(position(page)).toHaveText('2 / 5');
     await expect.poll(() => scroll.evaluate((el) => el.scrollTop)).toBe(0);
     const top = await scroll.boundingBox();
@@ -475,7 +475,7 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     await scroll.evaluate((el) => {
       el.scrollTop = el.scrollHeight;
     });
-    await next(page).click();
+    await nextPage(page);
     await expect(position(page)).toHaveText('2 / 4');
     await expect(page.getByTestId('story-reader-narration')).toBeFocused();
     const box = await scroll.boundingBox();
@@ -502,7 +502,7 @@ test.describe('story reader, replay route (fixture bundle)', () => {
           const shown = await page.getByTestId('story-reader').innerText();
           expect(shown, `${story.id} ${level} scene ${n}`).not.toContain('{kw:');
           expect(shown, `${story.id} ${level} scene ${n}`).not.toMatch(EMOJI);
-          await next(page).click();
+          await nextPage(page);
         }
         await expect(page.getByRole('heading', { name: 'The End' })).toBeVisible();
         await page.getByTestId('story-reader-end-primary').click();

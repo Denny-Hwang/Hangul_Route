@@ -4,7 +4,7 @@ import { flags } from '../config/flags';
 import { journeyContent, questJamo, stage1QuestIds } from '../content/sync-context';
 import { journeySummaryOf } from '../logic/my-route/summary';
 import { syncLearner } from '../logic/sync/engine';
-import { mergeSnapshots } from '../logic/sync/merge';
+import { mergeSnapshots, rebaseSnapshot } from '../logic/sync/merge';
 import { planRestore, type RestorePlan } from '../logic/sync/restore';
 import { createSyncScheduler } from '../logic/sync/scheduler';
 import { summarize } from '../logic/sync/summarize';
@@ -140,6 +140,25 @@ export const useSyncStore = create<State & Actions>((set, get) => {
     return update(profile.id, { secret: result.secret, rev: 0, lastError: null });
   }
 
+  /**
+   * Hand a merged snapshot back to progress. A write that landed while the
+   * request was in flight (a Results score, a card seen, a session end) is
+   * folded in, never replaced, and the result goes up on the next pass
+   * because the server does not hold it yet (issue #262).
+   */
+  function applyServerSnapshot(learnerId: string, sent: ProgressSnapshot, incoming: ProgressSnapshot): void {
+    const progress = useProgressStore.getState();
+    const current = progress.byProfile[learnerId];
+    if (!current || current === sent) {
+      progress.replaceSnapshot(learnerId, incoming);
+      return;
+    }
+    // The union can bring back a plan item the reconcile dropped; put the plans' answer back (F-PLAN-002 section 3.6).
+    const folded = usePlanStore.getState().reconcile(learnerId, rebaseSnapshot(sent, current, incoming, { now: new Date() }));
+    progress.replaceSnapshot(learnerId, folded);
+    get().requestSync(learnerId);
+  }
+
   return {
     byLearner: {},
 
@@ -186,10 +205,10 @@ export const useSyncStore = create<State & Actions>((set, get) => {
 
       if (outcome.status === 'error') return update(learnerId, { status: 'error', lastError: outcome.code });
       if (outcome.status === 'retry-later') {
-        useProgressStore.getState().replaceSnapshot(learnerId, outcome.snapshot);
+        applyServerSnapshot(learnerId, local, outcome.snapshot);
         return update(learnerId, { status: 'idle', rev: outcome.rev, lastError: 'conflict' });
       }
-      if (outcome.merged) useProgressStore.getState().replaceSnapshot(learnerId, outcome.snapshot);
+      if (outcome.merged) applyServerSnapshot(learnerId, local, outcome.snapshot);
       const synced = update(learnerId, { status: 'synced', rev: outcome.rev, lastSyncedAt: new Date().toISOString(), lastError: null });
       // Owner decision 2026-09-20: every learner gets a Rescue Code after the first cloud save.
       if (!synced.rescueCode) await get().issueRescueCode(learnerId);

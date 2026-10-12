@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { storiesAll, storyFixtureIds } from '../content/stories';
 import type { SourcesRouteParams } from '../logic/story/source-link';
 import { addTelemetryListener, type TelemetryEvent } from '../platform/telemetry';
+import { useQuestRunStore } from '../store/quest-run-store';
 
 /**
  * End-to-end entry to the replay reader, for fixture builds only
@@ -31,6 +32,8 @@ export interface StoryE2eHandle {
   stories(): Array<{ id: string; levels: StoryLevel[]; fixture: boolean; traditional: boolean }>;
   /** `story.*` telemetry events `track()` accepted since the hook mounted (the e2e build sends none). */
   events(): TelemetryEvent[];
+  /** The quest run's first-try tally (F-STORY-002 PR 2.9: proves a checkpoint round was scored, or was not). */
+  run(): { stepIndex: number; correctCount: number; totalCount: number; scoredRounds: string[] };
 }
 
 export function StoryE2eHook(): null {
@@ -43,6 +46,10 @@ export function StoryE2eHook(): null {
     });
     g.__hrStoryE2E = {
       events: () => events.map((e) => ({ ...e })),
+      run: () => {
+        const r = useQuestRunStore.getState();
+        return { stepIndex: r.stepIndex, correctCount: r.correctCount, totalCount: r.totalCount, scoredRounds: [...r.scoredRounds] };
+      },
       openReader: ({ storyId, level, sceneIndex }) =>
         navigation.navigate('StoryReader', { storyId, level, mode: 'replay', ...(sceneIndex === undefined ? {} : { sceneIndex }) }),
       openSources: (params) => navigation.navigate('StorySources', params),

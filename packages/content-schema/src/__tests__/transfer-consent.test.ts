@@ -232,6 +232,13 @@ describe('what the new teacher sees is generated from data (TEACHER_VISIBLE_SUMM
     expect(TEACHER_VISIBLE_SUMMARY_ITEMS.journey).toBe(TEACHER_VISIBLE_SUMMARY_ITEMS.stage1);
   });
 
+  it('discloses the level check behind journey known counts through the placement item (F-ROUTE-001 R-7a)', () => {
+    expect(TEACHER_VISIBLE_SUMMARY_KEYS).toContain('placement');
+    expect(TEACHER_VISIBLE_SUMMARY_ITEMS.placement).toBe('level_check');
+    expect(TEACHER_VISIBLE_ITEM_IDS).toContain('level_check');
+    expect(TRANSFER_CONSENT_TEXT.en.items.level_check).toBe('Level check results');
+  });
+
   it('gives every allow-listed key a consent item, and nothing else', () => {
     expect(Object.keys(TEACHER_VISIBLE_SUMMARY_ITEMS).sort()).toEqual([...TEACHER_VISIBLE_SUMMARY_KEYS].sort());
     for (const item of Object.values(TEACHER_VISIBLE_SUMMARY_ITEMS)) expect(TEACHER_VISIBLE_ITEM_IDS).toContain(item);

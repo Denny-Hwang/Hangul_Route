@@ -24,12 +24,17 @@ describe('console catalogue adapter over the shared catalogue', () => {
 
   it('takes the words around the title from the locale (titles are content)', () => {
     for (const locale of ['en', 'es', 'ko'] as const) {
-      expect(catalogLabel('episode', 'episode:stage1-life', locale)).toBe(getMessages(locale).console.plan.catalog.episodeLabel('Around the Korean Table', 2));
+      expect(catalogLabel('episode', 'episode:stage1-life', locale)).toBe(getMessages(locale).console.plan.catalog.episodeLabel('Around the Korean Table', 3));
     }
   });
 
   it('lists the quests of an episode in catalogue order', () => {
-    expect(questsOf('episode:stage1-life').map((q) => q.id)).toEqual(['quest:stage1-life-q1', 'quest:stage1-life-q2']);
+    expect(questsOf('episode:stage1-life').map((q) => q.id)).toEqual(['quest:stage1-life-q1', 'quest:stage1-life-q2', 'quest:stage1-life-q3']);
+    expect(questsOf('episode:stage1-life').map((q) => [q.title, q.minutes])).toEqual([
+      ['Hello Kimchi & Rice', 4],
+      ['Family at the Table', 4],
+      ['Picnic Snacks', 4],
+    ]);
     expect(questsOf('episode:stage1-letters').map((q) => q.minutes)).toEqual([5, 5, 5]);
     expect(questsOf('episode:stage2-letters')).toEqual([]);
     expect(questsOf('episode:nope')).toEqual([]);

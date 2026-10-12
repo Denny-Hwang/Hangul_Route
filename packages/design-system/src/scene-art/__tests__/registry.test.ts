@@ -3,7 +3,7 @@ import { HOYA_POSES } from '../hoya';
 import { LIBRARY, SCENE_ART_REGISTRY, hasItem } from '../registry';
 import { checkItem, checkScene } from '../rules';
 
-/** PR 2.3a seeded the Hoya poses; PR 2.3b adds the first library batch; PR 2.10a the records-joseon batch; PR 2.10b the hangul-printing batch; PR 2.10c the science-art-life batch. */
+/** PR 2.3a seeded the Hoya poses; PR 2.3b adds the first library batch; PR 2.10a the records-joseon batch; PR 2.10b the hangul-printing batch; PR 2.10c the science-art-life batch; PR 2.10d the seasons-tales batch. */
 const SETTINGS = [
   'scene:palace-courtyard',
   'scene:palace-hall',
@@ -18,6 +18,8 @@ const SETTINGS = [
   'scene:temple',
   // PR 2.10c: science-art-life cluster
   'scene:seashore',
+  // PR 2.10d: seasons-tales cluster
+  'scene:sea-palace',
 ];
 const PROPS = [
   'prop:fig-king',
@@ -129,6 +131,35 @@ const PROPS = [
   'prop:taffy-tray',
   'prop:shoes',
   'prop:fig-child-back',
+  // PR 2.10d: seasons-tales cluster
+  'prop:fig-woman',
+  'prop:fig-girl',
+  'prop:fig-bowing',
+  'prop:fig-elder-seated',
+  'prop:fig-pansori',
+  'prop:fig-yangban-mask',
+  'prop:dance-circle',
+  'prop:swing',
+  'prop:soban',
+  'prop:yut-sticks',
+  'prop:yut-board',
+  'prop:yut-throws',
+  'prop:songpyeon',
+  'prop:cabbages',
+  'prop:kimchi-jars',
+  'prop:lanterns',
+  'prop:sun-moon-screen',
+  'prop:persimmon-tree',
+  'prop:rice-field',
+  'prop:changpo',
+  'prop:ox',
+  'prop:swallow',
+  'prop:gourds',
+  'prop:turtle',
+  'prop:rabbit',
+  'prop:tiger-trickster',
+  'prop:sky-rope',
+  'prop:sorghum',
 ];
 
 const entries = Object.entries(SCENE_ART_REGISTRY);
@@ -233,6 +264,16 @@ describe('SCENE_ART_REGISTRY', () => {
       'prop:fig-child-back',
       'prop:rain-gauge',
       'prop:basket',
+      'prop:fig-woman',
+      'prop:fig-bowing',
+      'prop:fig-elder-seated',
+      'prop:dance-circle',
+      'prop:swing',
+      'prop:soban',
+      'prop:cabbages',
+      'prop:persimmon-tree',
+      'prop:rice-field',
+      'prop:tiger-trickster',
     ]) {
       const item = SCENE_ART_REGISTRY[id]!;
       expect(item.tintable, id).toBeDefined();
@@ -302,6 +343,28 @@ describe('SCENE_ART_REGISTRY', () => {
     const sago = SCENE_ART_REGISTRY['prop:sago-archive']!;
     const doors = JSON.stringify(sago.nodes).split(`"${sago.tintable}"`).length - 1;
     expect(doors).toBe(2);
+  });
+
+  // §3.9.10 against the opened sources (PR 2.10d): the Irworobongdo entry puts
+  // the sun on the right and the moon on the left; the yut entry counts 29
+  // stations; the folk-tale tiger is never drawn in Hoya's colours.
+  it('paints the sun-and-moon screen with the sun on the right and the moon on the left', () => {
+    const circles = SCENE_ART_REGISTRY['prop:sun-moon-screen']!.nodes.filter((n) => n.t === 'circle');
+    const sun = circles.find((n) => n.fill === 'brand.primary');
+    const moon = circles.find((n) => n.fill === 'surface.paper');
+    expect(sun && moon && sun.t === 'circle' && moon.t === 'circle' && sun.cx > moon.cx).toBe(true);
+  });
+
+  it('marks 29 stations on the yut board', () => {
+    const stations = SCENE_ART_REGISTRY['prop:yut-board']!.nodes.flatMap((n) => (n.t === 'path' && n.sw === 'thick' ? n.d.split('M').length - 1 : []));
+    expect(stations.reduce((a, b) => a + b, 0)).toBe(29);
+  });
+
+  it('draws the trickster tiger in no Hoya token and tintable away from his yellow', () => {
+    const tiger = SCENE_ART_REGISTRY['prop:tiger-trickster']!;
+    const json = JSON.stringify(tiger.nodes);
+    expect(json).not.toMatch(/hoya\.|feedback\.nudge"/);
+    expect(tiger.tintable).toBe('theme.letters');
   });
 
   it('answers hasItem for registered refs only', () => {

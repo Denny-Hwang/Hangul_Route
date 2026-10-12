@@ -90,7 +90,7 @@ export interface MyRouteModel {
   /** Finished quests with a tile-building game (grown-up view only). */
   tiles: number;
   gains: { stars: number; cards: number; storiesRead: number };
-  /** The start marker; always null until R-7a. */
+  /** The start marker (R-7a, section 3.6); null without a stored level-check result. */
   start: { stage: StageKey; questId: string | null } | null;
   /** Stages complete now by the derived rule and not yet in `stageDoneAt`. */
   latchesToWrite: StageKey[];
@@ -113,7 +113,7 @@ export interface MyRouteInput {
   themes: readonly Pick<ThemeDef, 'key' | 'order' | 'titleEn'>[];
   /** Injected; R-1 and R-3 pass "every shipped stage is playable" until OD-4. */
   isEntitled: (stage: StageKey) => boolean;
-  /** `effectiveRoute(placements, catalog, { isEntitled, completedQuestIds: new Set() })`; null until R-7a. */
+  /** `startRouteOf(snapshot.placements, catalog, isEntitled)` (R-7a): the route with no completions; null without a placement. */
   route: RouteSeed | null;
   /**
    * The placed-out quests the one cursor skips: `cursorContext(...).skipQuestIds`,

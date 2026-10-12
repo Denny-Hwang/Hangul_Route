@@ -44,6 +44,15 @@ export function getMessages(locale: MessageLocale): Messages {
 }
 
 /**
+ * The dictionary a UI locale is drawn with. A pseudo build (`EXPO_PUBLIC_PSEUDO_LOCALE=1`, a QA flag, §3.11)
+ * draws English as `en-XA`, so the layout matrix sees every English string padded and accented without a
+ * user-selectable locale; es and ko keep their own dictionaries. Without the flag every locale is itself.
+ */
+export function dictionaryLocale(locale: UiLocale, pseudo: boolean = pseudoLocaleEnabled()): MessageLocale {
+  return pseudo && locale === 'en' ? PSEUDO_LOCALE : locale;
+}
+
+/**
  * Dictionary subtrees that stay English in every locale on purpose: the Privacy Policy and the Terms of
  * Service are English-authoritative until legal review (decision L10, F-I18N-001 §4). es / ko show the
  * English text under a localized notice (`landing.legal.draft` and `backHome` stay translatable), so an

@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:jikji-metal-type",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "직지, 금속활자로 찍은 책",
     "romanization": "Jikji, geumsokhwaljaro jjigeun chaek",
@@ -802,9 +802,9 @@
     },
     {
       "id": "f8",
-      "rev": 1,
+      "rev": 2,
       "scope": "documented",
-      "claimEn": "UNESCO has a prize carrying Jikji's name, the UNESCO/Jikji Memory of the World Prize, awarded to individuals or institutions that have made significant contributions to the preservation and accessibility of documentary heritage.",
+      "claimEn": "UNESCO has a prize carrying Jikji's name, the UNESCO/Jikji Memory of the World Prize, awarded to individuals or institutions that have contributed significantly to preserving documentary heritage and making it accessible.",
       "claimKo": "유네스코에는 '직지'의 이름을 딴 '유네스코/직지 세계기록유산상(UNESCO/Jikji Memory of the World Prize)'이 있으며, 기록유산의 보존과 접근성 향상에 크게 기여한 개인이나 기관에 수여된다.",
       "sources": [
         {

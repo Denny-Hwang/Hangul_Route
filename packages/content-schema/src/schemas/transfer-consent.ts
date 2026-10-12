@@ -148,9 +148,11 @@ export const TEACHER_VISIBLE_SUMMARY_ITEMS: Readonly<Record<TeacherVisibleSummar
   planProgress: 'plan_progress',
   /**
    * Stage-level quest counts of My route, shown like `stage1` (F-ROUTE-001 OD-11).
-   * Its `known` count and `known` state come from the level check, which is the
-   * `level_check` item; they stay 0 while sync-store passes `route: null`. R-7a,
-   * which turns known pips on, re-checks this mapping or the `quests` wording.
+   * Re-checked in R-7a, which turns known pips on: the mapping stays `quests`.
+   * Its `known` count and `known` state come from the level check, and the
+   * teacher already sees level check results through `placement`, which is on
+   * this same allow-list as the `level_check` item, so the consent text needs
+   * no new line and no version bump (a test pins both items).
    */
   journey: 'quests',
 };

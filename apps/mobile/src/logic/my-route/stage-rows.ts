@@ -86,6 +86,8 @@ export interface StageRowsContext {
   pips: PipContext;
   cursorStage: StageKey | null;
   startStage: StageKey | null;
+  /** The stage the "You started here" tag sits on (R-7a); null without a start marker. */
+  startTagStage?: StageKey | null;
 }
 
 const ORDERS = [1, 2, 3, 4, 5, 6, 7] as const;
@@ -115,7 +117,7 @@ export function buildStageRows(input: MyRouteInput, ctx: StageRowsContext): Stag
       availability,
       latched,
       here: false,
-      isStart: false,
+      isStart: stage === ctx.startTagStage,
       pips,
       newPips,
       cells,

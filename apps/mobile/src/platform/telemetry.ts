@@ -61,10 +61,29 @@ async function readQueue(): Promise<QueuedEvent[]> {
   return (await readJson<QueuedEvent[]>(QUEUE_KEY)) ?? [];
 }
 
+/**
+ * Every read-modify-write of the stored queue runs one at a time on this
+ * chain (issue #261): a Results visit sends several events in one tick, and
+ * unchained writers each read the same queue and overwrite each other. A
+ * failed step never breaks the chain for the steps after it.
+ */
+let queueTail: Promise<unknown> = Promise.resolve();
+function serialized<T>(step: () => Promise<T>): Promise<T> {
+  const run = queueTail.then(step);
+  queueTail = run.catch(() => undefined);
+  return run;
+}
+
+/** Events this session has appended to the stored queue; a flush keeps the ones that arrive while it sends. */
+let appended = 0;
+
 async function queueEvent(event: TelemetryEvent, at: string): Promise<void> {
   try {
-    const current = await readQueue();
-    await writeJson(QUEUE_KEY, enqueue(current, { name: event.name, profileId: event.profileId, payload: event.payload, at }));
+    await serialized(async () => {
+      const current = await readQueue();
+      await writeJson(QUEUE_KEY, enqueue(current, { name: event.name, profileId: event.profileId, payload: event.payload, at }));
+      appended += 1;
+    });
   } catch {
     // Queueing is best effort — never surface storage errors into a game.
   }
@@ -85,7 +104,8 @@ export async function flushQueue(options?: TelemetryClientOptions): Promise<numb
   flushing = true;
   let sent = 0;
   try {
-    let queue = await readQueue();
+    const { queue: start, mark } = await serialized(async () => ({ queue: await readQueue(), mark: appended }));
+    let queue = start;
     while (queue.length > 0) {
       const { batch, rest } = takeBatch(queue);
       let failedAt = -1;
@@ -105,7 +125,13 @@ export async function flushQueue(options?: TelemetryClientOptions): Promise<numb
       }
       queue = rest;
     }
-    await writeJson(QUEUE_KEY, queue);
+    const unsent = queue;
+    await serialized(async () => {
+      // Events queued while the batches were sending sit at the end of the stored queue.
+      const arrived = appended - mark;
+      const late = arrived > 0 ? (await readQueue()).slice(-arrived) : [];
+      await writeJson(QUEUE_KEY, late.reduce((q, e) => enqueue(q, e), unsent));
+    });
   } catch {
     // leave whatever we have; next flush retries
   } finally {

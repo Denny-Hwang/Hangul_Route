@@ -1,4 +1,4 @@
-import { isTelemetryEventName } from '@hangul-route/content-schema';
+import { LearnerBasisSchema, TransferInitiatorSchema, TransferSlotSchema, isTelemetryEventName } from '@hangul-route/content-schema';
 import { Hono } from 'hono';
 import { fail, ok } from '../envelope';
 import { id, store, type TelemetryEvent } from '../store';
@@ -35,6 +35,28 @@ function clientTimestamp(raw: unknown, nowMs: number): string | null {
   return new Date(ms).toISOString();
 }
 
+/**
+ * Class-move events (F-SPACE-002 section 4.12) carry codes only: the keys
+ * `initiator`, `slot` and `basis` with their known values, and no profile id,
+ * so no class or learner identifier can ride along. Telemetry is never
+ * evidence of consent; the D1 audit (`transfer_events`) is.
+ */
+const TRANSFER_EVENT_PREFIX = 'space.transfer.';
+const TRANSFER_PAYLOAD_VALUES: Readonly<Record<string, ReadonlySet<string>>> = {
+  initiator: new Set(TransferInitiatorSchema.options),
+  slot: new Set(TransferSlotSchema.options),
+  basis: new Set(LearnerBasisSchema.options),
+};
+
+function transferPayload(payload: Record<string, unknown> | undefined): Record<string, unknown> | undefined {
+  const kept: Record<string, unknown> = {};
+  for (const [key, allowed] of Object.entries(TRANSFER_PAYLOAD_VALUES)) {
+    const value = payload?.[key];
+    if (typeof value === 'string' && allowed.has(value)) kept[key] = value;
+  }
+  return Object.keys(kept).length > 0 ? kept : undefined;
+}
+
 telemetryRoutes.post('/', async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown> | null;
   const name = body?.name;
@@ -43,12 +65,14 @@ telemetryRoutes.post('/', async (c) => {
   }
   const now = new Date();
   const receivedAt = now.toISOString();
-  const payload = body?.payload;
+  const rawPayload = body?.payload;
+  const payload = rawPayload && typeof rawPayload === 'object' && !Array.isArray(rawPayload) ? (rawPayload as Record<string, unknown>) : undefined;
+  const transfer = name.startsWith(TRANSFER_EVENT_PREFIX);
   const event: TelemetryEvent = {
     id: id('event'),
     name,
-    profileId: typeof body?.profileId === 'string' ? body.profileId : undefined,
-    payload: payload && typeof payload === 'object' && !Array.isArray(payload) ? (payload as Record<string, unknown>) : undefined,
+    profileId: !transfer && typeof body?.profileId === 'string' ? body.profileId : undefined,
+    payload: transfer ? transferPayload(payload) : payload,
     at: clientTimestamp(body?.at, now.getTime()) ?? receivedAt,
     receivedAt,
   };

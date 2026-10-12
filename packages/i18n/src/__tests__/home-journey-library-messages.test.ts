@@ -42,6 +42,27 @@ describe('learner.home (English wording as shipped)', () => {
   });
 });
 
+describe('learner.home.catchUp (F-STORY-006 §3.5, PR 6.5c)', () => {
+  const c = m.learner.home.catchUp;
+
+  it('says how many cards Hoya found, as a whole sentence with plural()', () => {
+    expect(c.line(1)).toBe('Hoya found 1 card you already earned!');
+    expect(c.line(22)).toBe('Hoya found 22 cards you already earned!');
+  });
+
+  it('names the one action', () => {
+    expect(c.cta).toBe('See my cards');
+  });
+
+  it('never states a fraction, a percentage or what is still missing (D3)', () => {
+    for (const out of [c.line(1), c.line(22), c.cta]) {
+      expect(out).not.toMatch(/\d+\s*(\/|of)\s*\d+/);
+      expect(out).not.toMatch(/%/);
+      expect(out.toLowerCase()).not.toMatch(/\b(missed|missing|left|remaining|behind|incomplete|failed)\b/);
+    }
+  });
+});
+
 describe('learner.journey', () => {
   it('keeps the heading, intro and notes', () => {
     const j = m.learner.journey;
