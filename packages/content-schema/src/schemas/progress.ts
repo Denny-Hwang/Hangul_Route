@@ -130,6 +130,14 @@ export const ProgressSnapshotSchema = z.object({
    * and the Worker's preserve rule keeps a stored slice when the key is absent.
    */
   vocab: VocabProgressSchema.optional(),
+  /**
+   * Quest latch (F-REPORT-001 section 3.3.1): quest id -> ISO time the quest was
+   * first completed. Only ever gains keys; the earliest instant wins on merge.
+   * Absent in snapshots written before it; readers treat a missing value as {}.
+   * Builds from RP-3a on always write the key (an empty record when nothing is
+   * latched), so "key absent" means "an older build".
+   */
+  questDoneAt: z.record(z.string(), z.string()).optional(),
 });
 /**
  * `placements` is optional in the *type* although the schema defaults it to
