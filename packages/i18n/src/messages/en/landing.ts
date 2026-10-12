@@ -337,7 +337,13 @@ export const landing = {
   trust: {
     label: 'Trust',
     items: {
-      coppa: { title: 'COPPA-compliant', body: 'No third-party tracking. Parent email is the only PII.' },
+      /**
+       * OD-4 (F-SITE-002): no compliance claim while the policies are drafts, so the title is the new home's
+       * `home.promises.items.safety`. The body makes no claim about which personal data we hold: the app backs up
+       * each learner's nickname and progress, and the parent email stays on the device (privacy-statements.test.ts).
+       * The key keeps its name until S-6 removes the old home.
+       */
+      coppa: { title: 'Child safety first', body: 'No third-party tracking. We collect as little as possible.' },
       ads: { title: 'No ads, ever', body: 'No third-party ads. No data sold. Revenue is in-app only.' },
       offline: {
         title: 'Works offline',
@@ -592,11 +598,13 @@ export const landing = {
           heading: 'Where your data lives',
           paragraphs: {
             /**
-             * What the app does (F-SYNC-002 `sync-store.ts`, F-RESTORE-001, the telemetry client): it backs up every learner
-             * profile and its progress on start and after each write, with no sign-in, and sends usage events that can carry
-             * the learner's id. Replaces "If a parent signs in, progress syncs…" (F-SITE-002 §3.7).
+             * What the app does (F-SYNC-002 `sync-store.ts`, F-RESTORE-001, the telemetry client), with no sign-in: it sends
+             * each learner's nickname, level and avatar once, the first time it saves them (`ensureRegistered`, POST
+             * /api/sync/learners; there is no update route, so a later edit is not sent, F-LEARN-001 §3.11), backs up their
+             * progress on start and after each write, and sends usage events that can carry the learner's id. Replaces
+             * "If a parent signs in, progress syncs…" (F-SITE-002 §3.7).
              */
-            p1: "Learning data is kept on the device and backed up to our servers (Cloudflare). The app backs up each learner's nickname, level, avatar and progress when it starts and after each change, with no sign-in needed, so they can be restored on a new device with a Rescue Code. The app also sends us usage events, such as a finished quest, which can include the learner's id. Data in transit is encrypted (HTTPS), and at rest it is access-controlled.",
+            p1: "Learning data is kept on the device and backed up to our servers (Cloudflare), with no sign-in needed. The first time the app saves a learner, it sends their nickname, level and avatar. It backs up their progress when it starts and after each change, so the learner can be restored on a new device with a Rescue Code. If you later change the nickname, level or avatar, the backup keeps the old ones for now; to change them, email us. The app also sends us usage events, such as a finished quest, which can include the learner's id. Data in transit is encrypted (HTTPS), and at rest it is access-controlled.",
           },
         },
         payments: {

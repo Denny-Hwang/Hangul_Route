@@ -965,7 +965,8 @@ export const consoleMsgs = {
         "Each learner's nickname and progress are kept on the device and backed up to our servers, so they can be restored with a Rescue Code.",
         "When a learner joins a class or family with a code, that space sees the name they join with and their progress. A family's grown-ups can also restore their progress.",
         "We never sell or share children's data with third parties.",
-        'You can export or delete all data with one tap.',
+        /** Removing a profile on a device leaves the backup; the server copy goes from the family space (`learner.delete`) or by email. */
+        "You can back up progress to a file at any time. To delete a learner's data on our servers, use your family space settings or email us.",
       ],
     },
     child: {
