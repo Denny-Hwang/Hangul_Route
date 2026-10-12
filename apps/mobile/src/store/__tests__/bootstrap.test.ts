@@ -1,4 +1,6 @@
-import type { Profile, ProgressSnapshot } from '@hangul-route/content-schema';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import type { InboxPlan, Profile, ProgressSnapshot } from '@hangul-route/content-schema';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mem = vi.hoisted(() => new Map<string, unknown>());
@@ -10,15 +12,20 @@ vi.mock('../../platform/storage', () => ({
 }));
 vi.mock('../../platform/telemetry', () => ({ track: vi.fn(async () => true) }));
 vi.mock('../../platform/locale', () => ({ deviceLanguages: () => [], takeLangHandoff: () => null, setDocumentLang: () => {} }));
+vi.mock('../../platform/device', () => ({ getDeviceId: vi.fn(async () => 'device-test') }));
 
 import { readJson, writeJson } from '../../platform/storage';
+import { useAccountStore } from '../account-store';
 import { useAudioStore } from '../audio-store';
 import { useLayoutStore } from '../layout-store';
 import { hydrateLearnerData } from '../bootstrap';
 import { useLocaleStore } from '../locale-store';
+import { rederiveAllLocal, useMembershipStore } from '../membership-store';
+import { usePlanStore } from '../plan-store';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
 import { useStoryStore } from '../story-store';
+import { useTierStore } from '../tier-store';
 
 const profile = (id: string, displayName: string): Profile => ({ id, displayName, ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't' });
 
@@ -45,6 +52,10 @@ describe('cold start (audit UX-01 / L16)', () => {
     useAudioStore.setState({ muted: false, hydrated: false });
     useLayoutStore.setState({ allowedSideways: false, hydrated: false });
     useStoryStore.setState({ byProfile: {}, hydratedFor: new Set(), pendingFor: new Set(), clearedFor: {} });
+    useAccountStore.setState({ subscription: null, hydrated: false });
+    useTierStore.setState({ byLearner: {}, spaceMembers: {} });
+    useMembershipStore.setState({ byLearner: {} });
+    usePlanStore.setState({ byLearner: {}, notReady: {} });
   });
 
   it("loads the profiles, then every profile's saved progress, before resolving", async () => {
@@ -197,5 +208,122 @@ describe('cold start (audit UX-01 / L16)', () => {
 
     expect(useLayoutStore.getState()).toMatchObject({ allowedSideways: false, hydrated: true });
     expect(mem.has('device:layout')).toBe(false);
+  });
+});
+
+describe('cold start: account, tier cache and spaces before the first derivation (F-ENT-003 section 3.4)', () => {
+  const classRow = { spaceId: 'space:c', kind: 'class' as const, name: 'Sunday Class A', role: 'student' as const, joinedAt: '2026-09-01T00:00:00.000Z' };
+  const stagePlan: InboxPlan = {
+    id: 'plan:term',
+    spaceId: 'space:c',
+    spaceKind: 'class',
+    spaceName: 'Sunday Class A',
+    title: 'Term',
+    items: [
+      { kind: 'quest', id: 'quest:stage1-letters-q1', targetDate: '2026-09-28' },
+      { kind: 'quest', id: 'quest:stage2-life-q1', targetDate: '2026-09-29' },
+    ],
+    publishedAt: '2026-09-20T00:00:00.000Z',
+    updatedAt: '2026-09-20T00:00:00.000Z',
+  };
+
+  beforeEach(() => {
+    mem.clear();
+    vi.mocked(readJson).mockReset().mockImplementation(async (k: string) => (mem.get(k) ?? null) as never);
+    useProfileStore.setState({ profiles: [], activeId: null, hydrated: false });
+    useProgressStore.setState({ byProfile: {}, hydratedFor: new Set(), pendingFor: new Set(), catchUp: {} });
+    useAccountStore.setState({ subscription: null, hydrated: false });
+    useTierStore.setState({ byLearner: {}, spaceMembers: {} });
+    useMembershipStore.setState({ byLearner: {} });
+    usePlanStore.setState({ byLearner: {}, notReady: {} });
+  });
+
+  it("loads the account, every profile's tier cache and every profile's spaces before resolving", async () => {
+    const tier = { tier: 'premium', source: { kind: 'class', spaceId: 'space:c', name: 'Sunday Class A' }, validUntil: '2026-09-28T00:00:00.000Z', fetchedAt: 't' };
+    mem.set('profiles', [profile('profile:a', 'Suni'), profile('profile:b', 'Bo')]);
+    mem.set('account:subscription', { status: 'active', plan: 'yearly', expiresAt: '2027-01-01T00:00:00.000Z' });
+    mem.set('tier:profile:a', tier);
+    mem.set('memberships:profile:b', [classRow]);
+
+    await hydrateLearnerData();
+
+    expect(useAccountStore.getState()).toMatchObject({ hydrated: true, subscription: { plan: 'yearly' } });
+    expect(useTierStore.getState().byLearner).toEqual({ 'profile:a': tier });
+    expect(useTierStore.getState().spaceMembers).toEqual({ 'profile:a': false, 'profile:b': true });
+    expect(useMembershipStore.getState().byLearner['profile:b']).toEqual([classRow]);
+  });
+
+  it('resolves only after the account and tier hydrates have resolved', async () => {
+    mem.set('profiles', [profile('profile:a', 'Suni')]);
+    let releaseTier: () => void = () => undefined;
+    let releaseAccount: () => void = () => undefined;
+    const tierRead = new Promise<void>((resolve) => (releaseTier = resolve));
+    const accountRead = new Promise<void>((resolve) => (releaseAccount = resolve));
+    vi.mocked(readJson).mockImplementation(async (k: string) => {
+      if (k === 'tier:profile:a') await tierRead;
+      if (k === 'account:subscription') await accountRead;
+      return (mem.get(k) ?? null) as never;
+    });
+
+    let resolved = false;
+    const started = hydrateLearnerData().then(() => {
+      resolved = true;
+    });
+    await new Promise((r) => setTimeout(r, 0));
+    expect(resolved).toBe(false);
+    releaseTier();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(resolved).toBe(false);
+    releaseAccount();
+    await started;
+    expect(resolved).toBe(true);
+    expect(useAccountStore.getState().hydrated).toBe(true);
+  });
+
+  it('a premium-via-space learner offline for ten days keeps every plan item after the first derivation', async () => {
+    mem.set('profiles', [profile('profile:a', 'Suni')]);
+    mem.set('tier:profile:a', { tier: 'premium', source: { kind: 'class', spaceId: 'space:c', name: 'Sunday Class A' }, validUntil: '2026-01-01T00:00:00.000Z', fetchedAt: 't' });
+    mem.set('memberships:profile:a', [classRow]);
+    mem.set('plans:profile:a', [stagePlan]);
+
+    // App.tsx: the bootstrap resolves, then `ready`, then `rederiveAllLocal()`.
+    await hydrateLearnerData();
+    await rederiveAllLocal();
+
+    expect(useProgressStore.getState().byProfile['profile:a']?.homework.map((h) => h.questId)).toEqual(['quest:stage1-letters-q1', 'quest:stage2-life-q1']);
+    expect(usePlanStore.getState().notReady['profile:a']).toEqual({});
+  });
+
+  it('a class learner whose device never heard from the server fails open: membership, no tier cache', async () => {
+    mem.set('profiles', [profile('profile:a', 'Suni')]);
+    mem.set('memberships:profile:a', [classRow]);
+    mem.set('plans:profile:a', [stagePlan]);
+
+    await hydrateLearnerData();
+    await rederiveAllLocal();
+
+    expect(useProgressStore.getState().byProfile['profile:a']?.homework.map((h) => h.questId)).toEqual(['quest:stage1-letters-q1', 'quest:stage2-life-q1']);
+  });
+
+  it('a free learner with no space still waits on Stage 2 plan items', async () => {
+    mem.set('profiles', [profile('profile:a', 'Suni')]);
+    mem.set('plans:profile:a', [stagePlan]);
+
+    await hydrateLearnerData();
+    await rederiveAllLocal();
+
+    expect(useProgressStore.getState().byProfile['profile:a']?.homework.map((h) => h.questId)).toEqual(['quest:stage1-letters-q1']);
+    expect(usePlanStore.getState().notReady['profile:a']).toEqual({ 'plan:term': 1 });
+  });
+
+  it('App.tsx derives only after the bootstrap resolves, and leaves the account hydrate to it', () => {
+    const app = readFileSync(join(__dirname, '../../../App.tsx'), 'utf8');
+    const boot = app.indexOf('hydrateLearnerData()');
+    const ready = app.indexOf('setReady(true)');
+    const derive = app.indexOf('await rederiveAllLocal()');
+    expect(boot).toBeGreaterThan(-1);
+    expect(ready).toBeGreaterThan(boot);
+    expect(derive).toBeGreaterThan(ready);
+    expect(app).not.toMatch(/hydrateAccount|useAccountStore/);
   });
 });
