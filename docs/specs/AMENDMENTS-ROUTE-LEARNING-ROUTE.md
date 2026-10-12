@@ -528,7 +528,7 @@ Small rows. Each one is TDD and behind `flags.myRouteEnabled` where it touches t
 
 These PRs edit their rows in F-ROUTE-001 instead of adding new PRs:
 - **R-4b** (Home strip): gains the "Goal" line and the new title.
-- **R-9b** (parent dashboard row): gains the new title and button (`MyRoute { profileId, viewer: 'grownup' }`) and the goal line "Goal: Stage {n} · {title}" from `pickGoal` over the local model.
+- **R-9b** (parent dashboard row): gains the new title and button (`MyRoute { profileId, viewer: 'grownup' }`) and the goal line "Goal: Stage {n} · {title}" from `pickGoal` over the local model. R-9b ships the line as a slot (`dashboardRowView({ goalStage })`, hidden while absent) because LR-3a is not on main; LR-5a passes the same goal it gives the route card.
 - **R-10**: covers the tab.
 
 **Order.**
