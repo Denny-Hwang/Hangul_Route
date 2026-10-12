@@ -73,7 +73,7 @@ export function noteDateText(m: Messages, locale: UiLocale, iso: string, now: Da
   return formatDate(locale, then, 'monthDay');
 }
 
-const HANGUL = /[ᄀ-ᇿ㄰-㆏ꥠ-꥿가-힯ힰ-퟿]/;
+const HANGUL = /[\u1100-\u11FF\u3130-\u318F\uA960-\uA97F\uAC00-\uD7AF\uD7B0-\uD7FF]/;
 
 /**
  * The `lang` of a grown-up's free text, so a screen reader picks a voice (section 6.11): Korean
