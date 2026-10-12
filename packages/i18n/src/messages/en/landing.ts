@@ -148,7 +148,8 @@ export const landing = {
    * The only cost words on the site (F-SITE-002 §3.9, OD-7): never a price, never a term. The cost line is the free
    * line, then the `paid` line the `paidPlans` claim picks. The free plan is all of Stage 1 (F-ENT-003 OD-1), so
    * `free.stage1` is the same in every state and says nothing about paid plans. Plans bought on the web renew
-   * yearly (BY-1); the signed-in billing page and the Terms say so, and no site line calls a plan one-time.
+   * yearly (BY-1): the signed-in billing page states the term (the Terms will too, S-7), and no site line names a
+   * term or calls a plan one-time.
    */
   plans: {
     title: 'What does it cost?',
