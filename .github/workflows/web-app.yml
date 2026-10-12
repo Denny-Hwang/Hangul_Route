@@ -8,10 +8,11 @@ name: Web App (PWA)
 # Layout (CI speed-up, 2026-10-12): one `build` job writes both bundles (the
 # release build dist/ and the fixture build dist-e2e/, back to back so the
 # second reuses the warm Metro cache) and hands them to parallel e2e jobs:
-# the main suite in 3 Playwright shards, and the fixture-bundle specs in 2
-# parts (both split by test with --fully-parallel). The required check 'Build PWA · offline e2e' is the last job: it
-# always runs and passes only when every job above passed (or when nothing the
-# PWA depends on changed, and the build job skipped its steps on purpose).
+# the main suite in 3 shards, and the fixture-bundle specs in 2 parts (both
+# dealt round-robin by test, scripts/e2e-shard-list.mjs). The required check
+# 'Build PWA · offline e2e' is the last job: it always runs and passes only
+# when every job above passed (or when nothing the PWA depends on changed, and
+# the build job skipped its steps on purpose).
 # A failed shard can be re-run alone; it downloads the same bundles.
 # scripts/__tests__/ci-workflows.test.mjs keeps this layout honest.
 
@@ -58,7 +59,7 @@ jobs:
           git fetch --no-tags --depth=1 origin "${{ github.event.pull_request.base.sha }}"
           changed=$(git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}")
           echo "$changed"
-          if echo "$changed" | grep -qE '^(apps/mobile/|packages/|\.github/workflows/web-app\.yml|\.github/actions/|package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|turbo\.json|\.nvmrc)'; then
+          if echo "$changed" | grep -qE '^(apps/mobile/|packages/|\.github/workflows/web-app\.yml|\.github/actions/|scripts/e2e-shard-list\.mjs|package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|turbo\.json|\.nvmrc)'; then
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
             echo "run=false" >> "$GITHUB_OUTPUT"
@@ -182,11 +183,27 @@ jobs:
           name: pwa-dist
           path: apps/mobile/dist
 
-      # --fully-parallel lets Playwright split by test instead of by file, so the
-      # shards come out even (a whole file per shard left one shard with half
-      # the work). Every test has its own browser context and none share state.
+      # The shard's tests come from scripts/e2e-shard-list.mjs, which deals the
+      # listed tests round-robin (Playwright's own --shard cuts the list into
+      # contiguous runs, and this suite's long and skipped specs cluster, so its
+      # shards came out 4:2:1). --fully-parallel then spreads the shard's tests
+      # over the workers by test; every test has its own browser context.
       - name: Offline e2e (release build, shard ${{ matrix.shard }} of 3)
-        run: pnpm --filter @hangul-route/mobile exec playwright test --fully-parallel --shard=${{ matrix.shard }}/3
+        working-directory: apps/mobile
+        env:
+          SHARD: ${{ matrix.shard }}/3
+        shell: bash
+        run: |
+          pnpm exec playwright test --list > "$RUNNER_TEMP/all-tests.txt"
+          node ../../scripts/e2e-shard-list.mjs --shard "$SHARD" < "$RUNNER_TEMP/all-tests.txt" > "$RUNNER_TEMP/shard-tests.txt"
+          # The list must select exactly one test per line (none lost, none doubled).
+          lines=$(grep -c . "$RUNNER_TEMP/shard-tests.txt")
+          selected=$(pnpm exec playwright test --list --test-list "$RUNNER_TEMP/shard-tests.txt" | sed -n 's/^Total: \([0-9]*\) tests\{0,1\} in .*/\1/p')
+          if [ "$selected" != "$lines" ]; then
+            echo "::error::the shard list has $lines tests but selects ${selected:-none}"
+            exit 1
+          fi
+          pnpm exec playwright test --fully-parallel --test-list "$RUNNER_TEMP/shard-tests.txt"
 
       - name: Save the Playwright browsers (main only)
         if: github.event_name == 'push' && steps.pw-cache.outputs.cache-hit != 'true' && success()
@@ -235,15 +252,17 @@ jobs:
       # Specs that open screens with no learner entry point yet, through the
       # e2e hooks of the fixture bundle, and read fixture-specific content.
       # With STORY_FIXTURES=1 the Playwright web server serves dist-e2e/.
+      # Every listing below goes into one list, dealt round-robin over the parts
+      # (scripts/e2e-shard-list.mjs); --test-list then runs exactly those tests.
       - name: Fixture e2e (part ${{ matrix.part }} of 2)
+        working-directory: apps/mobile
         env:
           STORY_FIXTURES: "1"
-          PART: ${{ matrix.part }}
+          SHARD: ${{ matrix.part }}/2
         shell: bash
         run: |
-          # Whole spec files: one Playwright run, split over the parts by --shard
-          # (by test, --fully-parallel), so the files share the workers. A file
-          # filter matches by name: story-reader covers every story-reader-*.spec.ts.
+          # Whole spec files. A file filter matches by name: story-reader covers
+          # every story-reader-*.spec.ts.
           files=(
             # F-STORY-002 PR 2.6a: the reader, through the __hrStoryE2E hook.
             story-reader
@@ -260,19 +279,28 @@ jobs:
             # F-VOC-003 C-4: the Words picker and topic page (Words stays behind its flag until C-7).
             vocab-topics
           )
-          pnpm --filter @hangul-route/mobile exec playwright test --fully-parallel --shard="$PART/2" "${files[@]}"
-
-          # One group of a spec file whose other tests expect the release build: one run each, in part 2.
-          if [ "$PART" = 2 ]; then
+          list() { pnpm exec playwright test --list "$@"; }
+          {
+            list "${files[@]}"
+            # One group of a spec file whose other tests expect the release build.
             # F-STORY-003 PR 3.5b: Story Order scene art plays the fixture story's shelf quest.
-            pnpm --filter @hangul-route/mobile exec playwright test story-order -g "scene art"
+            list story-order -g "scene art"
             # F-STORY-004 PR 4.6 / 4.7: Results' Episode page opens the story variant of the episode
             # page, and its Culture notes line opens that story's notes.
-            pnpm --filter @hangul-route/mobile exec playwright test story-results -g "Episode page"
+            list story-results -g "Episode page"
             # F-AUDIO-004 A-6: the clip path (precache, runtime cache, offline clip, clip > voice) on
             # the fixture tones; only that group, since the voice tests expect the release build.
-            pnpm --filter @hangul-route/mobile exec playwright test audio -g "bundled clips"
+            list audio -g "bundled clips"
+          } > "$RUNNER_TEMP/all-tests.txt"
+          node ../../scripts/e2e-shard-list.mjs --shard "$SHARD" < "$RUNNER_TEMP/all-tests.txt" > "$RUNNER_TEMP/shard-tests.txt"
+          # The list must select exactly one test per line (none lost, none doubled).
+          lines=$(grep -c . "$RUNNER_TEMP/shard-tests.txt")
+          selected=$(pnpm exec playwright test --list --test-list "$RUNNER_TEMP/shard-tests.txt" | sed -n 's/^Total: \([0-9]*\) tests\{0,1\} in .*/\1/p')
+          if [ "$selected" != "$lines" ]; then
+            echo "::error::the shard list has $lines tests but selects ${selected:-none}"
+            exit 1
           fi
+          pnpm exec playwright test --fully-parallel --test-list "$RUNNER_TEMP/shard-tests.txt"
 
   pwa:
     name: Build PWA · offline e2e

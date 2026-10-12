@@ -188,27 +188,26 @@ describe("unit tests run once, with coverage", () => {
 describe("PWA e2e", () => {
   const text = read(".github/workflows/web-app.yml");
 
-  test("the main suite shards cover 1..N of the --shard total", () => {
-    const total = Number(text.match(/--shard=\$\{\{ matrix\.shard \}\}\/(\d+)/)?.[1]);
-    assert.ok(total >= 2, "main suite runs as --shard=<i>/<N> with N >= 2");
-    const list = text.match(/^\s+shard: \[([^\]]+)\]/m)?.[1];
-    assert.ok(list, "matrix.shard is listed");
-    const shards = list.split(",").map((s) => Number(s.trim()));
-    assert.deepEqual(shards, Array.from({ length: total }, (_, i) => i + 1));
+  test("the release-build shards and the fixture parts each cover 1..N of their total", () => {
+    const shards = [...text.matchAll(/SHARD: \$\{\{ matrix\.(\w+) \}\}\/(\d+)/g)].map((m) => ({ key: m[1], total: Number(m[2]) }));
+    assert.deepEqual(shards.map((x) => x.key).sort(), ["part", "shard"]);
+    for (const { key, total } of shards) {
+      assert.ok(total >= 1);
+      const list = text.match(new RegExp(`^\\s+${key}: \\[([^\\]]+)\\]`, "m"))?.[1];
+      assert.ok(list, `matrix.${key} is listed`);
+      assert.deepEqual(list.split(",").map((v) => Number(v.trim())), Array.from({ length: total }, (_, i) => i + 1), key);
+    }
   });
 
-  test("the fixture parts cover 1..N of their --shard total", () => {
-    const total = Number(text.match(/--shard="\$PART\/(\d+)"/)?.[1]);
-    assert.ok(total >= 1);
-    const list = text.match(/^\s+part: \[([^\]]+)\]/m)?.[1];
-    assert.ok(list, "matrix.part is listed");
-    const parts = list.split(",").map((s) => Number(s.trim()));
-    assert.deepEqual(parts, Array.from({ length: total }, (_, i) => i + 1));
+  test("each e2e job runs its round-robin share of one full listing, checked before it runs", () => {
+    assert.equal(text.match(/e2e-shard-list\.mjs --shard "\$SHARD" < "\$RUNNER_TEMP\/all-tests\.txt"/g)?.length, 2);
+    assert.equal(text.match(/selected=\$\(pnpm exec playwright test --list --test-list /g)?.length, 2);
+    assert.equal(text.match(/pnpm exec playwright test --fully-parallel --test-list "\$RUNNER_TEMP\/shard-tests\.txt"/g)?.length, 2);
   });
 
   test("every spec that needs the fixture bundle runs in a fixture e2e run", () => {
-    // Filters: the entries of the `files=( ... )` list and the first argument of
-    // every single-group run (`playwright test <file> -g ...`).
+    // Filters: the entries of the `files=( ... )` list and the file of every
+    // single-group listing (`list <file> -g "..."`).
     const filters = new Set();
     const arr = text.match(/files=\(\n([\s\S]*?)\n\s*\)/);
     if (arr) {
@@ -217,7 +216,7 @@ describe("PWA e2e", () => {
         if (word) filters.add(word);
       }
     }
-    for (const m of text.matchAll(/playwright test ([a-z0-9-]+) -g /g)) filters.add(m[1]);
+    for (const m of text.matchAll(/\b([a-z0-9-]+) -g "/g)) filters.add(m[1]);
     assert.ok(filters.size > 0, "found the fixture runs");
 
     const dir = join(ROOT, "apps", "mobile", "e2e", "web");
