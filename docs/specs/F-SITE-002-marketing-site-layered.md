@@ -103,7 +103,7 @@ Wireframe: `design/wireframes/site/home.md`. Strings: appendix B.1.
 
 Order (each block is one `<section>` with a heading; the hero heading is the page's only `h1`):
 
-1. **Hero (L0).** h1 = the tagline ("Learn Hangul from zero, at any age."). One sentence of what you do. Primary `Start learning` (learner app, with `?lang=` from `/es` or `/ko` as today, `appEntryUrl`). Secondary text link "Parent or teacher? Find your page" to `#who` (in-page). Facts line: "Runs in your browser · Nothing to install · The app works offline after your first visit". Hoya waving art (decorative, `aria-hidden`), with the speech bubble that passes the taught letter in (`FIRST_LETTER`, F-I18N-001 §3.4 rule 5) and stays as today. The locale banner (`LocaleBanner`, `lib/locale-banner.ts`) stays above the hero, unchanged.
+1. **Hero (L0).** h1 = the tagline ("Learn Hangul from zero, at any age."). One sentence of what you do. Primary `Start learning` (learner app, with `?lang=` from `/es` or `/ko` as today, `appEntryUrl`). Secondary text link "Parent or teacher? Find your page" to `#who` (in-page). Facts line: "Runs in your browser · Nothing to install · The app works offline on most devices after your first visit". Hoya waving art (decorative, `aria-hidden`), with the speech bubble that passes the taught letter in (`FIRST_LETTER`, F-I18N-001 §3.4 rule 5) and stays as today. The locale banner (`LocaleBanner`, `lib/locale-banner.ts`) stays above the hero, unchanged.
 2. **Who is it for? (`#who`, L1).** Three persona cards in a list: Learners, Parents, Teachers. Each card is a single link (whole card clickable) to its L2 page, with a title and one line. Accessible name = title + line. On wide screens three columns; under 720 px one column.
 3. **How it works (L1).** Three numbered steps, one line each: open the app; learn in five-minute quests; collect culture cards and keep going. When the `learningRoute` claim is on, step 3's line becomes the Learning Route variant (appendix B.1).
 4. **Promises (L1).** Three titles, no body: No ads, ever · Child safety first (replaces "COPPA-compliant", OD-4) · No red marks. Heading visually hidden ("Our promises"). The explanations live on `/parents` and `/learners` (rule 3). "Works offline" is not repeated here; the facts line carries it.
@@ -132,7 +132,7 @@ Wireframe: `design/wireframes/site/parents.md`. Strings: appendix B.3. Caregiver
 
 1. h1 "For parents and caregivers" + lead (names grandparents and other caregivers) + primary `Sign in as a parent` (`siteLinks.signIn('parent')`) + secondary `Start learning`.
 2. **What they learn.** One line + link "What learners do" to `/learners`.
-3. **Safe by design.** Four bullets: no ads and no data sold; learning data stays on the device until a grown-up signs in or the learner joins a class or family with a code, and then only a short progress summary is shared with that space (true under F-SPACE-001 §3.5; pinned by a new `landing-claims.test.tsx` sentence, content and safety review in S-3); a grown-up gate guards anything that costs money or deletes data; siblings can share a device and each learner keeps their own stars and cards.
+3. **Safe by design.** Four bullets: no ads and no data sold; most learning data stays on the device; a grown-up's sign-in saves progress to our servers so it can be restored; a class or family join shares only a short progress summary with that space (true under F-SPACE-001 §3.5 and the Privacy Policy, which also hedges "most" because usage events are sent without sign-in; pinned by a new `landing-claims.test.tsx` sentence, content and safety review in S-3); a grown-up gate guards anything that costs money or deletes data; siblings can share a device and each learner keeps their own stars and cards.
 4. **Follow along.** Base line (true today on the console's family space): "Create a free family space, share its code, and see each learner's week: time practised, quests done and letters to revisit together." Extra lines, each behind its claim (section 3.9): `parentReports` (reports for today, this week, this month and all time, with what went well and what to practise next; F-REPORT-001) · `learningRoute` (open each learner's Learning Route; AMENDMENTS-ROUTE-LEARNING-ROUTE G6) · `feedbackNotes` (send a short note of encouragement; F-FEEDBACK-001) · `browseAsLearner` (with a family plan, browse every lesson exactly as your learner sees it; F-BROWSE-001; paid line, shown only when `paidPlans` is `inApp`).
 5. **Plans.** The cost line (section 3.9) + "Plans and billing are managed at app.hangulroute.com after you sign in." No price, no billing link.
 6. Three folded questions: does my learner need an account (no: learners never need an email or password); can I learn alongside them (keeps the pinned sentence "Learning Korean yourself? Play the same quests."); what can I see (the base line, plus the report line when its claim is on).
@@ -250,7 +250,7 @@ export function showsClaim(claims: SiteClaims, key: BooleanClaimKey): boolean;
 
 - **S-5** (with the new home): metadata (`landing.meta`) description and Open Graph lines drop "7 stages and 5 culture themes" and "8 mini-games" counts typed into copy; they say what is built (Stage 1, Korean culture cards, Hoya, no ads). New per-page titles and descriptions for the three persona pages (`siteMetadataFor` gains the pages; `SITE_PAGES` extends, so hreflang alternates cover them when a locale ships). "COPPA-compliant" becomes "Child safety first" (OD-4). The local-first sentence becomes the class-and-family-true wording of section 3.5.
 - **S-6**: Stage 1 card blurbs (`data/stage1-cards.ts`) lose audience wording while staying accurate (OD-9; content-skill review): gangaji "One of the first words heard in many Korean homes."; nabi "A tiny flying flower that flutters through many Korean songs."; paengi "Wooden tops spun on frozen ground in winter."; usan "Korea's rainy season lasts about a month. Keep one by the door."; ibul "Many Korean homes spread padded blankets on a warm floor to sleep." `audience-copy.test.ts` adds `data/stage1-cards.ts` and the three persona pages to `PUBLIC_SURFACES`.
-- **Offline**: no unqualified offline promise remains. The hero facts line says "The app works offline after your first visit"; the full answer on `/learners` keeps today's qualifier (most devices; letter sounds may need a Korean voice installed, `landing.ts:75`). Offline on iOS 14 is a known open issue (deploy state, 2026-10-11): if the owner wants the facts line off until it is fixed, OD-15 removes it (one string).
+- **Offline**: no unqualified offline promise remains. The hero facts line says "The app works offline on most devices after your first visit" (S-3 review); the full answer on `/learners` keeps today's qualifier (most devices; letter sounds may need a Korean voice installed, `landing.ts:75`). Offline on iOS 14 is a known open issue (deploy state, 2026-10-11): if the owner wants the facts line off until it is fixed, OD-15 removes it (one string).
 
 ## 4. Data and API (additive only)
 
@@ -269,7 +269,7 @@ New and changed keys (S-3 adds; old keys are removed only in S-6, after no page 
 | Key | Kind | Notes |
 |---|---|---|
 | `landing.nav.{label, learners, parents, teachers, signIn, start, skip, current}` | strings | `current` is the visually hidden "(current page)" suffix where `aria-current` is not announced |
-| `landing.home.hero.{title, lead, start, grownUps, facts}` and `landing.home.hero.bubble(letter)` | strings + 1 function | `title` = `landing.meta.tagline` value |
+| `landing.home.hero.{title, lead, start, grownUps, facts}` and `landing.home.hero.bubble(letter)` | strings + 1 function | `title` = `landing.meta.tagline` value (S-3 sets the tagline to the comma wording; a test ties them) |
 | `landing.home.who.{title, items.{learners,parents,teachers}.{title, body, linkLabel}}` | strings | |
 | `landing.home.how.{title, steps.{start,quests,collect}.{title, body}, routeBody}` | strings | `routeBody` only with `learningRoute` |
 | `landing.home.promises.{label, items.{ads,safety,noRed}}` | strings | titles only |
@@ -277,6 +277,7 @@ New and changed keys (S-3 adds; old keys are removed only in S-6, after no page 
 | `landing.plans.{title, free.{stage1, firstDays}, paid.{coming, inApp}, managedInApp}` | strings | the only cost words on the site |
 | `landing.persona.learners.*`, `landing.persona.parents.*`, `landing.persona.teachers.*` | strings + count functions | appendix B.2 to B.4; `cards.seeAll(n)` uses `plural`; learner `faq.adult` / `faq.korean` reuse today's `landing.faq.items.adult` / `.korean` text |
 | `landing.persona.closing.{learners, parents, teachers}` | strings | closing block lines |
+| `landing.persona.{plansTitle, faqTitle}` | strings | the persona pages' "Plans" h2 and visually hidden "Questions" h2 |
 | `landing.footer.{guide, app}` | strings | group headings added; `cards`, `games`, `dashboard`, `console` removed in S-6 |
 | `landing.notFound.{body, home, start}` | strings | 404 links |
 | `landing.meta.pages.{learners,parents,teachers}.{title, description}` | strings | per-page metadata |
@@ -311,7 +312,7 @@ New and changed keys (S-3 adds; old keys are removed only in S-6, after no page 
 - No age wording and no kids-only framing on any site page (CLAUDE.md §1; `audience-copy.test.ts` extended to the new pages and to `data/stage1-cards.ts`). Parent and teacher pages address grown-ups directly, still without an age range.
 - Anti-shame: no page shows or promises a ranking, a leaderboard or a learner-vs-learner comparison; the teacher page says so plainly, and the report lines say "never a ranking".
 - No student name in any URL (the site has none; links carry only `?persona=` and `?lang=`).
-- Child-safety promises shown are true and tested: data stays on the device until a grown-up signs in or the learner joins a class or family with a code, then only a short progress summary is shared with that space (section 3.5, reworded in S-5 because today's "until you sign in" is not true for class joins); the grown-up gate; no ads; siblings keep their own progress. The content and safety review signs the new sentence off in S-3.
+- Child-safety promises shown are true and tested: most learning data stays on the device, a grown-up's sign-in saves progress so it can be restored, and a class or family join shares only a short progress summary with that space (section 3.5, reworded in S-5 because today's "until you sign in" is not true for class joins); the grown-up gate; no ads; siblings keep their own progress. The content and safety review signs the new sentence off in S-3.
 
 ### 7.2 Telemetry
 
@@ -406,7 +407,7 @@ Coverage: `apps/web` new `lib/` and `data/` modules at 100 % lines (pure); page 
 | OD-12 | What "Sign in" means on the site | grown-ups only (parents, caregivers, teachers); learners use "Start learning", choose their profile in the app, or join a class or family with a code (F-APP-001 OD-2); `/learners` answers "Is there a sign-in for learners?" | S-3, S-4a | yes |
 | OD-13 | Factual corrections in the draft Privacy Policy and Terms | name both channels (Stripe on the web after sign-in; App Store / Google Play for in-app purchases when offered), keep the store paragraphs for in-app purchases, keep the draft banner, flag for counsel in the PR | S-7 | yes |
 | OD-14 | Header of the legal pages | no Sign in and no Start learning on `/privacy` and `/terms` (the native app links there) | S-4a, S-5 | yes |
-| OD-15 | Offline line while iOS 14 offline is an open issue | keep "The app works offline after your first visit" in the facts line, with the qualified answer on `/learners` | S-3 | yes (one string) |
+| OD-15 | Offline line while iOS 14 offline is an open issue | keep the offline fact in the facts line, hedged as "The app works offline on most devices after your first visit" (S-3 review), with the full answer on `/learners` | S-3 | yes (one string) |
 
 **Assumptions to verify** (with the PR that verifies each):
 
@@ -439,7 +440,7 @@ Console, sign-in and billing on app.hangulroute.com; forwarding of old grown-up 
 - hero.title "Learn Hangul from zero, at any age."
 - hero.lead "Short, playful quests teach you to read, hear and write the Korean alphabet, with Hoya the tiger as your guide."
 - hero.start "Start learning" · hero.grownUps "Parent or teacher? Find your page"
-- hero.facts "Runs in your browser · Nothing to install · The app works offline after your first visit"
+- hero.facts "Runs in your browser · Nothing to install · The app works offline on most devices after your first visit"
 - hero.bubble(letter) "Annyeong! Let's meet {letter}."
 - who.title "Who is it for?"
 - who.learners: title "Learners" · body "Five-minute quests, a guide who never scolds, and Korean culture cards to collect." · linkLabel "For learners"
@@ -448,7 +449,7 @@ Console, sign-in and billing on app.hangulroute.com; forwarding of old grown-up 
 - how.title "How it works"
 - how.start: "Open the app" · "Choose who is learning and begin."
 - how.quests: "Learn in five-minute quests" · "Letters, sounds and first words, with sound and pictures on every screen."
-- how.collect: "Collect and keep going" · "Earn Korean culture cards. Your progress stays on your device."
+- how.collect: "Collect and keep going" · "Earn Korean culture cards. Your progress is saved on your device."
 - how.routeBody "Earn Korean culture cards and see your whole Learning Route: where you are and what comes next."
 - promises.label "Our promises" · items: ads "No ads, ever" · safety "Child safety first" · noRed "No red marks"
 - plans.title "What does it cost?"
@@ -464,16 +465,16 @@ Console, sign-in and billing on app.hangulroute.com; forwarding of old grown-up 
 - title "For learners" · lead "Learn to read, hear and write Hangul, one five-minute quest at a time."
 - learn.title "What you learn first" · learn.body "Stage 1 is the Korean alphabet: the letters, their sounds and how they build syllables." · bullets "Read letters and syllables" / "Listen and match sounds" / "Write letters by tracing them"
 - quest.title "How a quest works" · bullets "Discover: see and hear a new letter." / "Play: short mini-games that use it." / "Check: a gentle round. Wrong answers get an amber nudge, never red." · hoya "Hoya the tiger guides every quest and never says “wrong.”" · gamesFold "See the mini-games"
-- cards.title "Collect Korean culture" · cards.body "Every letter you learn earns a card: a piece of Korean food, art or everyday life." · cards.seeAll(n) "See all {n} Stage 1 cards" (plural)
+- cards.title "Collect Korean culture" · cards.body "Every letter you learn earns a card: a piece of Korean food, art or everyday life." · cards.seeAll(n) "See all {n} Stage 1 cards" (plural; one: "See the Stage 1 card")
 - route.title "Your Learning Route" · route.body "One map shows where you started, where you are and what comes next."
-- faq: signIn "Is there a sign-in for learners?" / "No email or password needed. Open the app and choose your profile, or enter your class or family code. Moving to a new device? Use your Rescue Code." · code "I have a join code. Where do I enter it?" / "In the app: open Profile, then Classes and family, then Join." · offline "Does it work offline?" / "On most devices, yes: after your first visit the app opens without a connection. Letter sounds may need a Korean voice installed on your device." · adult (today's `landing.faq.items.adult`) · korean (today's `landing.faq.items.korean`)
+- faq: signIn "Is there a sign-in for learners?" / "No email or password needed. Open the app and choose your profile, or enter your class or family code. Moving to a new device? Use your Rescue Code." · code "I have a join code. Where do I enter it?" / "In the app: tap Profile, then go to Classes & family and tap Join a class." (the labels the learner taps; the console's `writeOnBoard` names the same path) · offline "Does it work offline?" / "On most devices, yes: after your first visit the app opens without a connection. Letter sounds may need a Korean voice installed on your device." · adult (today's `landing.faq.items.adult`) · korean (today's `landing.faq.items.korean`)
 - closing "Ready for your first letter?"
 
 ### B.3 Parents
 
 - title "For parents and caregivers" · lead "For parents, grandparents and every caregiver: short, kind lessons that keep your learner's data private." · signIn "Sign in as a parent"
 - learn.title "What they learn" · learn.body "The Korean alphabet first: reading, listening and writing, in five-minute quests." · learn.link "What learners do"
-- safe.title "Safe by design" · bullets "No ads, and no data sold." / "Learning data stays on the device until a grown-up signs in or the learner joins a class or family with a code. Then only a short progress summary is shared with that space." / "A grown-up gate guards anything that costs money or deletes data." / "Siblings can share a device. Each learner keeps their own stars and cards."
+- safe.title "Safe by design" · bullets "No ads, and no data sold." / "Most learning data stays on the device. When a grown-up signs in, progress is saved to our servers so it can be restored. When a learner joins a class or family with a code, only a short progress summary is shared with that space." / "A grown-up gate guards anything that costs money or deletes data." / "Siblings can share a device. Each learner keeps their own stars and cards."
 - follow.title "Follow along" · follow.body "Create a free family space, share its code, and see each learner's week: time practised, quests done and letters to revisit together."
 - follow.reports "Reports for today, this week, this month and all time show what went well and what to practise next."
 - follow.route "Open each learner's Learning Route to see where they are and what comes next."

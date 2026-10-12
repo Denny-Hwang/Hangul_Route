@@ -44,7 +44,7 @@ export const landing = {
   /** `<head>` metadata (`siteMetadata` in apps/web/src/data/landing-copy.ts). */
   meta: {
     title: 'Hangul Route — Learn Hangul from zero with Hoya',
-    tagline: 'Learn Hangul from zero — at any age.',
+    tagline: 'Learn Hangul from zero, at any age.',
     description:
       'Learn Hangul from zero with Hoya the tiger — for anyone, at any age: heritage families, K-culture fans and curious beginners. Five-minute quests, 8 mini-games, Korean culture cards to collect, and a Heritage Journey across 7 stages and 5 culture themes. Stage 1 is free and more stages are coming. No ads, ever.',
     keywords: ['learn Hangul', 'Korean alphabet', 'learn Korean', 'Korean for beginners', 'heritage Korean', 'K-culture learning', 'Hoya'],
@@ -101,7 +101,8 @@ export const landing = {
       lead: 'Short, playful quests teach you to read, hear and write the Korean alphabet, with Hoya the tiger as your guide.',
       start: 'Start learning',
       grownUps: 'Parent or teacher? Find your page',
-      facts: 'Runs in your browser · Nothing to install · The app works offline after your first visit',
+      /** Hedged like `persona.learners.faq.offline`: offline opening on iOS 14 is a known open issue (OD-15). */
+      facts: 'Runs in your browser · Nothing to install · The app works offline on most devices after your first visit',
       bubble: (letter: string) => `Annyeong! Let's meet ${letter}.`,
     },
     who: {
@@ -129,7 +130,7 @@ export const landing = {
       steps: {
         start: { title: 'Open the app', body: 'Choose who is learning and begin.' },
         quests: { title: 'Learn in five-minute quests', body: 'Letters, sounds and first words, with sound and pictures on every screen.' },
-        collect: { title: 'Collect and keep going', body: 'Earn Korean culture cards. Your progress stays on your device.' },
+        collect: { title: 'Collect and keep going', body: 'Earn Korean culture cards. Your progress is saved on your device.' },
       },
       routeBody: 'Earn Korean culture cards and see your whole Learning Route: where you are and what comes next.',
     },
@@ -189,13 +190,13 @@ export const landing = {
         title: 'Collect Korean culture',
         body: 'Every letter you learn earns a card: a piece of Korean food, art or everyday life.',
         /** The fold's summary; `cards` is `stage1Cards.length`, never a typed number. */
-        seeAll: (cards: number) => plural('en', cards, { one: `See the ${cards} Stage 1 card`, other: `See all ${cards} Stage 1 cards` }),
+        seeAll: (cards: number) => plural('en', cards, { one: 'See the Stage 1 card', other: `See all ${cards} Stage 1 cards` }),
       },
       route: {
         title: 'Your Learning Route',
         body: 'One map shows where you started, where you are and what comes next.',
       },
-      /** Folded questions, in page order. The join-code answer names the learner app's own labels. */
+      /** Folded questions, in page order. The join-code answer names the labels the learner taps (Home's Profile button). */
       faq: {
         signIn: {
           q: 'Is there a sign-in for learners?',
@@ -203,7 +204,7 @@ export const landing = {
         },
         code: {
           q: 'I have a join code. Where do I enter it?',
-          a: 'In the app: open Profiles & settings, then Classes & family, then Join a class.',
+          a: 'In the app: tap Profile, then go to Classes & family and tap Join a class.',
         },
         offline: {
           q: 'Does it work offline?',
@@ -226,9 +227,13 @@ export const landing = {
         title: 'Safe by design',
         bullets: {
           ads: 'No ads, and no data sold.',
-          /** True for class and family joins too (F-SPACE-001 §3.5); content and safety review in S-3. */
+          /**
+           * Content and safety review in S-3: "Most" matches the Privacy Policy (usage events such as a finished quest
+           * are sent without sign-in); a grown-up's sign-in syncs progress so it can be restored (Privacy Policy,
+           * security); a class or family join shares only a summary (F-SPACE-001 §3.5).
+           */
           localFirst:
-            'Learning data stays on the device until a grown-up signs in or the learner joins a class or family with a code. Then only a short progress summary is shared with that space.',
+            'Most learning data stays on the device. When a grown-up signs in, progress is saved to our servers so it can be restored. When a learner joins a class or family with a code, only a short progress summary is shared with that space.',
           gate: 'A grown-up gate guards anything that costs money or deletes data.',
           siblings: 'Siblings can share a device. Each learner keeps their own stars and cards.',
         },
@@ -289,6 +294,9 @@ export const landing = {
         try: { q: 'Can I try it first?', a: 'Yes. Open the app and play the first quests as a learner.' },
       },
     },
+    /** Section headings the persona pages share: the plans block's h2 and the folded questions' visually hidden h2. */
+    plansTitle: 'Plans',
+    faqTitle: 'Questions',
     /** The one line above each persona page's closing action. */
     closing: {
       learners: 'Ready for your first letter?',

@@ -49,7 +49,7 @@ A teacher needs one place to make a class, read the code aloud, and see who prac
 - Cap banner from **80 %** of the free cap (20) on classes; persistent at the cap.
 - Class roll-up computed client-side from summaries (`lib/console/rollup.ts`, pure): practiced this week (`minutesLast7d > 0`), Stage 1 anchor accuracy (mean of non-null), jamo to revisit together (most frequent `needsPractice`, ≤ 3), "haven't synced in 7+ days" count. No averages of time, no percentiles, no ranking.
 - Student cards sorted as the API returns them (most recent activity first): name, age, last active ("today" / "yesterday" / weekday / date), quests `done / total`, minutes this week, revisit jamo, "not synced yet" when there is no summary.
-- Empty: the code panel doubled in size + "Write it on the board — students join from Settings → Classes & family → Join a class." Plan / re-link / settings actions are visible but disabled with "coming with plans" (S4/S5).
+- Empty: the code panel doubled in size + "Write it on the board — students join from Profile → Classes & family → Join a class." Plan / re-link / settings actions are visible but disabled with "coming with plans" (S4/S5).
 - Copy on this surface passes the caregiver ban list (`lib/console/banned-text.ts`, mirror of `apps/mobile/src/logic/homework/banned-text.ts`), asserted in tests.
 
 ### 3.6 Landing

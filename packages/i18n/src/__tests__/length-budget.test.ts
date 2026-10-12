@@ -220,16 +220,18 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
     }
   });
 
-  // F-SITE-002 §5 (PR S-3): the site header, the persona cards and the persona primary actions. Room for es / ko
-  // growth; "Sign in as a parent" must fit one line at 320 px.
+  // F-SITE-002 §5 (PR S-3): the site header's text links, the persona cards and the pill actions. "Start learning"
+  // renders as a pill in the header, so it is budgeted with the pill actions, which leave room for es / ko growth
+  // ("Sign in as a parent" must fit one line at 320 px). Until es / ko have landing overlays these cases check the
+  // English fallback.
   describe('site budgets (F-SITE-002 S-3)', () => {
     const SITE_BUDGETS: ReadonlyArray<[label: string, max: number, paths: readonly string[]]> = [
-      ['nav label', 14, ['landing.nav.learners', 'landing.nav.parents', 'landing.nav.teachers', 'landing.nav.signIn', 'landing.nav.start']],
+      ['nav label', 14, ['landing.nav.learners', 'landing.nav.parents', 'landing.nav.teachers', 'landing.nav.signIn']],
       ['persona card body', 90, ['landing.home.who.items.learners.body', 'landing.home.who.items.parents.body', 'landing.home.who.items.teachers.body']],
       [
-        'persona primary action',
+        'pill action',
         24,
-        ['landing.home.hero.start', 'landing.persona.parents.signIn', 'landing.persona.teachers.signIn', 'landing.persona.teachers.tryIt'],
+        ['landing.nav.start', 'landing.home.hero.start', 'landing.persona.parents.signIn', 'landing.persona.teachers.signIn', 'landing.persona.teachers.tryIt'],
       ],
     ];
     for (const locale of LOCALES) {

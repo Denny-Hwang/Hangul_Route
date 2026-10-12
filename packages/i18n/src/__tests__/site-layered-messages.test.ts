@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { LOCALES } from '../locales';
 import { getMessages } from '../resolve';
 import { leafPaths, lookup } from '../tree';
+import { LANDING_PATHS_BEFORE_SITE } from './landing-paths-before-site';
 import { SAMPLES } from './samples';
 
 // F-SITE-002 PR S-3: the English strings of the layered intro site (appendix B), written before any
@@ -45,8 +46,17 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
     );
     expect(l.home.hero.start).toBe('Start learning');
     expect(l.home.hero.grownUps).toBe('Parent or teacher? Find your page');
-    expect(l.home.hero.facts).toBe('Runs in your browser · Nothing to install · The app works offline after your first visit');
+    expect(l.home.hero.facts).toBe('Runs in your browser · Nothing to install · The app works offline on most devices after your first visit');
     expect(l.home.hero.bubble('x')).toBe("Annyeong! Let's meet x.");
+  });
+
+  it('the hero title is the tagline (F-SITE-002 §5), so the footer and the hero cannot drift', () => {
+    expect(l.home.hero.title).toBe(l.meta.tagline);
+  });
+
+  it('the offline fact is hedged like the learners FAQ answer (iOS 14 offline is an open issue)', () => {
+    expect(l.home.hero.facts).toMatch(/offline on most devices/);
+    expect(l.persona.learners.faq.offline.a).toMatch(/^On most devices, yes/);
   });
 
   it('who is it for: three persona cards, each with a title, one line and a link label', () => {
@@ -76,7 +86,7 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
     expect(l.home.how.steps).toEqual({
       start: { title: 'Open the app', body: 'Choose who is learning and begin.' },
       quests: { title: 'Learn in five-minute quests', body: 'Letters, sounds and first words, with sound and pictures on every screen.' },
-      collect: { title: 'Collect and keep going', body: 'Earn Korean culture cards. Your progress stays on your device.' },
+      collect: { title: 'Collect and keep going', body: 'Earn Korean culture cards. Your progress is saved on your device.' },
     });
     expect(Object.keys(l.home.how.steps)).toEqual(['start', 'quests', 'collect']);
     expect(l.home.how.routeBody).toBe('Earn Korean culture cards and see your whole Learning Route: where you are and what comes next.');
@@ -136,7 +146,7 @@ describe('B.2 learners', () => {
     expect(p().cards.title).toBe('Collect Korean culture');
     expect(p().cards.body).toBe('Every letter you learn earns a card: a piece of Korean food, art or everyday life.');
     expect(p().cards.seeAll(24)).toBe('See all 24 Stage 1 cards');
-    expect(p().cards.seeAll(1)).toBe('See the 1 Stage 1 card');
+    expect(p().cards.seeAll(1)).toBe('See the Stage 1 card');
   });
 
   it('your Learning Route (shown only with its claim)', () => {
@@ -159,13 +169,21 @@ describe('B.2 learners', () => {
     expect(faq.korean).toEqual(l.faq.items.korean);
   });
 
-  it('the join-code answer names the app’s own labels: Profiles & settings, Classes & family, Join a class', () => {
+  it('the join-code answer names the labels the learner taps: Profile, Classes & family, Join a class', () => {
     const app = getMessages('en');
     const answer = p().faq.code.a;
-    expect(answer).toBe('In the app: open Profiles & settings, then Classes & family, then Join a class.');
-    expect(answer).toContain(app.learner.profile.title);
+    expect(answer).toBe('In the app: tap Profile, then go to Classes & family and tap Join a class.');
+    expect(answer).toContain(app.learner.home.profileLabel);
     expect(answer).toContain(app.caregiver.spaces.title);
     expect(answer).toContain(app.caregiver.spaces.join.cta);
+  });
+
+  it('the console tells teachers the same path the learners page gives students', () => {
+    const app = getMessages('en');
+    for (const label of [app.learner.home.profileLabel, app.caregiver.spaces.title, app.caregiver.spaces.join.cta]) {
+      expect(app.console.writeOnBoard).toContain(label);
+    }
+    expect(app.console.writeOnBoard).not.toMatch(/Settings/);
   });
 });
 
@@ -194,15 +212,29 @@ describe('B.3 parents', () => {
     expect(p().safe.bullets.siblings).toBe('Siblings can share a device. Each learner keeps their own stars and cards.');
   });
 
-  it('pins the local-first sentence that stays true for class and family joins (F-SPACE-001 §3.5)', () => {
+  it('pins the local-first sentence that stays true for usage events, sign-in sync and class and family joins', () => {
     const sentence = p().safe.bullets.localFirst;
     expect(sentence).toBe(
-      'Learning data stays on the device until a grown-up signs in or the learner joins a class or family with a code. Then only a short progress summary is shared with that space.',
+      'Most learning data stays on the device. When a grown-up signs in, progress is saved to our servers so it can be restored. When a learner joins a class or family with a code, only a short progress summary is shared with that space.',
     );
-    // Today's "until you sign in" is not true for a learner who joins a class with a code.
+    // Today's "until you sign in" is not true for a learner who joins a class with a code (F-SPACE-001 §3.5).
     expect(sentence).not.toMatch(/until you sign in/i);
     expect(sentence).toMatch(/joins a class or family with a code/);
     expect(sentence).toMatch(/only a short progress summary/);
+  });
+
+  it('the local-first sentence says what the Privacy Policy says, so the two cannot drift', () => {
+    const sentence = p().safe.bullets.localFirst;
+    const policy = l.legal.privacy.sections;
+    const policyText = JSON.stringify(policy);
+    // Usage events (a finished quest, an unlocked card) are sent before any sign-in, so never "all" and never
+    // "stays until": the policy's own hedge is "Most learning data stays on the device".
+    expect(sentence.startsWith('Most learning data stays on the device.')).toBe(true);
+    expect(policyText).toContain('Most learning data stays on the device');
+    expect(sentence).not.toMatch(/\ball learning data\b|stays on the device until/i);
+    // A grown-up's sign-in syncs progress so it can be restored; the policy says the same.
+    expect(sentence).toMatch(/signs in, progress is saved to our servers so it can be restored/);
+    expect(policyText).toMatch(/progress syncs to our servers \(Cloudflare\) so it can be restored/);
   });
 
   it('follow along: the base line and one line per claim', () => {
@@ -290,6 +322,11 @@ describe('B.4 teachers', () => {
 });
 
 describe('closing lines, footer groups, the 404 links and per-page metadata', () => {
+  it('the section headings the persona pages share', () => {
+    expect(l.persona.plansTitle).toBe('Plans');
+    expect(l.persona.faqTitle).toBe('Questions');
+  });
+
   it('closing block lines', () => {
     expect(l.persona.closing).toEqual({
       learners: 'Ready for your first letter?',
@@ -386,40 +423,22 @@ describe('Learning Route spelling in every landing value', () => {
     it(`${locale}: every landing value spells it "Learning Route"`, () => {
       const tree = getMessages(locale).landing;
       for (const path of leafPaths(tree)) {
-        for (const out of outputs(tree, path)) expect(misspelledLearningRoute(out), `landing.${path}: ${out}`).toBeNull();
+        for (const out of outputs(tree, path)) {
+          expect(misspelledLearningRoute(out), `landing.${path}: ${out}`).toBeNull();
+          // The retired name (AMENDMENTS-ROUTE-LEARNING-ROUTE §7.3) never reaches the site.
+          expect(out, `landing.${path}`).not.toMatch(/\bmy route\b/i);
+        }
       }
     });
   }
 });
 
 describe('no key of the current landing is removed before S-6', () => {
-  it.each([
-    'nav.playNow.cta',
-    'nav.cards',
-    'nav.games',
-    'nav.dashboard',
-    'hero.titleLines',
-    'hero.lead',
-    'hero.play.cta',
-    'hero.seeCards.cta',
-    'hero.facts',
-    'hero.bubble',
-    'trust.items.coppa.title',
-    'how.steps.collect.body',
-    'cards.title',
-    'games.eyebrow',
-    'hoya.title',
-    'parents.points.localFirst.body',
-    'pricing.footnote',
-    'faq.items.cost.a',
-    'get.play.cta',
-    'footer.product',
-    'footer.cards',
-    'footer.games',
-    'footer.dashboard',
-    'footer.console',
-    'meta.tagline',
-  ])('landing.%s is still there', (path) => {
+  it('the frozen list holds every leaf of the landing tree as it was before S-3', () => {
+    expect(LANDING_PATHS_BEFORE_SITE.length).toBe(225);
+  });
+
+  it.each(LANDING_PATHS_BEFORE_SITE)('landing.%s is still there', (path) => {
     expect(lookup(l, path)).toBeDefined();
   });
 });
