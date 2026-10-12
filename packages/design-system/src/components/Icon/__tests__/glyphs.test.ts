@@ -213,7 +213,7 @@ describe('notes glyphs (F-FEEDBACK-001 FB-6; design/components/Icon/spec.md)', (
     return out;
   };
   const widthOf = (part: IconGlyphPart | undefined): number => (part?.kind === 'stroke' ? part.width ?? 2 : 0);
-  const GAP = 0.5; // visible gap between two drawn parts at 20 dp
+  const GAP = 1; // clear space between two drawn parts on the 24 grid (about 0.8 dp at 20 dp)
 
   it('adds the note (Home card, notes list, grown-up rows) and the heart (the Thank you answer)', () => {
     for (const name of NOTES_GLYPHS) expect(iconNames, name).toContain(name);
@@ -242,14 +242,17 @@ describe('notes glyphs (F-FEEDBACK-001 FB-6; design/components/Icon/spec.md)', (
     const chunks = d.split('A');
     const lobes = chunks.slice(1).map((chunk, i) => {
       const before = (chunks[i]?.match(/-?\d+(\.\d+)?/g) ?? []).map(Number);
-      const [rx, ry, , , sweep, x2, y2] = (chunk.match(/-?\d+(\.\d+)?/g) ?? []).map(Number) as [number, number, number, number, number, number, number];
-      return { rx, ry, sweep, x1: before[before.length - 2] ?? 0, y1: before[before.length - 1] ?? 0, x2, y2 };
+      const [rx, ry, , large, sweep, x2, y2] = (chunk.match(/-?\d+(\.\d+)?/g) ?? []).map(Number) as [number, number, number, number, number, number, number];
+      return { rx, ry, large, sweep, x1: before[before.length - 2] ?? 0, y1: before[before.length - 1] ?? 0, x2, y2 };
     });
-    for (const { rx, ry, sweep, x1, y1, x2, y2 } of lobes) {
+    for (const { rx, ry, large, sweep, x1, y1, x2, y2 } of lobes) {
       expect(rx).toBe(ry);
       expect(y1).toBe(y2);
       expect(Math.hypot(x2 - x1, y2 - y1)).toBe(2 * rx);
+      // left to right with a clockwise sweep (y down) bulges upward: the lobe sits over the top, not under it
+      expect(x2).toBeGreaterThan(x1);
       expect(sweep).toBe(1);
+      expect(large).toBe(0);
     }
     expect(lobes[0]?.x2).toBe(12);
     expect(lobes[1]?.x1).toBe(12);
