@@ -40,8 +40,8 @@ export const WEB_ADDRESS = new RegExp(ADDRESS, 'i');
  * A source's publisher or title as a story card prints it (F-STORY-006 §3.8:
  * never a URL on a learner surface): every web address dropped, with the
  * separator or parentheses it leaves empty, and every name kept. So
- * "국가유산청 (Korea Heritage Service, heritage.go.kr)" prints as
- * "국가유산청 (Korea Heritage Service)". The grown-up Sources screen still
+ * "Korea Heritage Service (heritage.go.kr)" prints as "Korea Heritage
+ * Service". The grown-up Sources screen still
  * shows the source exactly as stored, with its address.
  */
 export function withoutWebAddresses(text: string): string {
