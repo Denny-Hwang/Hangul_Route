@@ -183,8 +183,8 @@ export const landing = {
       },
       quest: {
         /**
-         * "Most": `quest:stage1-nature-q1` and `quest:stage1-crafts-q1` have no Discover and Check steps until
-         * F-QUEST-002 Q-8 adds them; Q-8 may then drop the word.
+         * "Most": since F-QUEST-002 Q-8 all 15 Stage 1 quests have Discover and Check steps, but the five reading
+         * quests discover words, not a new letter, and the Stage 2 and Stage 4 taste quests have neither.
          */
         title: 'How most quests work',
         bullets: {
