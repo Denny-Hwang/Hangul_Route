@@ -1,4 +1,4 @@
-import type { HomeworkAssignment, ProgressSnapshot } from '@hangul-route/content-schema';
+import type { Episode, HomeworkAssignment, ProgressSnapshot } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodesAll, questsAll } from '../../content';
 import { questOpenPredicate } from '../content-access';
@@ -9,7 +9,7 @@ import type { DeriveSource } from '../homework/plan-derivation';
 import { gridEpisodes } from '../../content/episodes';
 import { placementStart } from '../placement/session';
 import { resultsTeaser } from '../quest-flow/results-teaser';
-import { planView, routeNext, type RouteNext, type RouteNextInput } from '../route-next';
+import { offplanFinishedEvent, planBeforeOf, planView, qualifiesForNext, routeNext, type RouteNext, type RouteNextInput } from '../route-next';
 import { selfRoute } from '../homework/__tests__/curriculum-fixture';
 
 /**
@@ -64,6 +64,8 @@ interface Case {
   sources: DeriveSource[];
   free?: boolean;
   cursor?: CursorContext;
+  /** Defaults to the shipped bundle's episodes. */
+  episodes?: Episode[];
 }
 
 const LIFE_Q2 = 'quest:stage1-life-q2';
@@ -106,6 +108,17 @@ const CASES: Case[] = [
     sources: [source('route:mine', 'self', [S2_NATURE, LIFE_Q2], '2026-10-01T00:00:00.000Z')],
     free: true,
   },
+  {
+    name: 'a due assignment in an episode that is not playable (draft), and a self plan item',
+    snapshot: snapshot([], [item('plan:cls', 'quest:stage1-nature-q1', TODAY, 'teacher'), item('route:mine', LIFE_Q2, '2026-10-14', 'system')]),
+    sources: [source('plan:cls', 'class', ['quest:stage1-nature-q1'], '2026-10-01T00:00:00.000Z'), source('route:mine', 'self', [LIFE_Q2], '2026-10-01T00:00:00.000Z')],
+    episodes: episodesAll.map((e) => (e.questIds.includes('quest:stage1-nature-q1') ? { ...e, status: 'draft' as const } : e)),
+  },
+  {
+    name: 'a due assignment whose quest is already done, and a self plan item',
+    snapshot: snapshot(['quest:stage1-nature-q1'], [item('plan:cls', 'quest:stage1-nature-q1', TODAY, 'teacher'), item('route:mine', LIFE_Q2, '2026-10-14', 'system')]),
+    sources: [source('plan:cls', 'class', ['quest:stage1-nature-q1'], '2026-10-01T00:00:00.000Z'), source('route:mine', 'self', [LIFE_Q2], '2026-10-01T00:00:00.000Z')],
+  },
 ];
 
 function inputOf(c: Case): RouteNextInput {
@@ -120,7 +133,7 @@ function inputOf(c: Case): RouteNextInput {
     today: TODAY,
     sources: c.sources,
     quests: questsAll,
-    episodes: episodesAll,
+    episodes: c.episodes ?? episodesAll,
     cursor: { ...cursor, isQuestOpen },
     isQuestOpen,
     gating: c.free ? { active: true, tier: 'free' } : { active: false, tier: 'premium' },
@@ -132,7 +145,7 @@ function homeCard2(input: RouteNextInput): string | undefined {
     profileId: P,
     snapshot: input.snapshot,
     quests: questsAll,
-    episodes: episodesAll,
+    episodes: input.episodes,
     today: TODAY,
     isEntitled: input.cursor.isEntitled,
     skipQuestIds: input.cursor.skipQuestIds,
@@ -145,7 +158,7 @@ function homeCard2(input: RouteNextInput): string | undefined {
     today: TODAY,
     enabled: true,
     titleOf: (id) => questsAll.find((q) => q.id === id)?.titleEn,
-    isQuestOpen: input.isQuestOpen,
+    isQuestOpen: qualifiesForNext(input),
   }).plan;
   return merged.cards.find((c) => c.slot === 2)?.questId;
 }
@@ -167,8 +180,16 @@ describe('routeNext agreement across surfaces (F-ENT-003 section 3.5)', () => {
       it('the Results teaser names routeNext with the quest just played counted as done', () => {
         const played = 'quest:stage1-letters-q1';
         const after = routeNext({ ...input, justCompleted: played });
-        const teaser = resultsTeaser({ snapshot: input.snapshot, quests: questsAll, episodes: episodesAll, questId: played, total: 5, route: input, planBefore: planView(input) });
+        const teaser = resultsTeaser({ snapshot: input.snapshot, quests: questsAll, episodes: input.episodes, questId: played, total: 5, route: input, planBefore: planBeforeOf(input) });
         expect(teaser?.questId).toBe(questOf(after));
+      });
+
+      it('playing routeNext\'s own quest is never off-plan: no "Back to your plan", no route.offplan_finished', () => {
+        if (next.kind !== 'quest') return;
+        const before = planBeforeOf(input);
+        const teaser = resultsTeaser({ snapshot: input.snapshot, quests: questsAll, episodes: input.episodes, questId: next.questId, total: 5, route: input, planBefore: before });
+        expect(teaser?.caption).not.toBe('backToPlan');
+        expect(offplanFinishedEvent(P, before, next.questId, input.episodes)).toBeNull();
       });
 
       it('the placement result with a closed start quest starts routeNext', () => {
@@ -186,7 +207,9 @@ describe('routeNext agreement across surfaces (F-ENT-003 section 3.5)', () => {
   }
 
   it('the worked examples hold on the shipped bundle', () => {
-    const [noPlan, self, famCls, sameRank, freeEnd, placedOut, closedItem] = CASES.map((c) => routeNext(inputOf(c)));
+    const [noPlan, self, famCls, sameRank, freeEnd, placedOut, closedItem, draftDue, doneDue] = CASES.map((c) => routeNext(inputOf(c)));
+    expect(draftDue).toMatchObject({ questId: LIFE_Q2, source: 'self' });
+    expect(doneDue).toMatchObject({ questId: LIFE_Q2, source: 'self' });
     expect(noPlan).toMatchObject({ questId: 'quest:stage1-letters-q2', source: 'cursor' });
     expect(self).toMatchObject({ questId: LIFE_Q2, source: 'self' });
     expect(famCls).toMatchObject({ questId: 'quest:stage1-rites-q1', source: 'family' });

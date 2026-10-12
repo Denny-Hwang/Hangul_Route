@@ -4,7 +4,7 @@ import { findJamo } from '../../content/jamo';
 import type { TelemetryEvent } from '../../platform/telemetry';
 import { localizeQuest } from '../content-locale';
 import { nextQuestAfter } from '../next-quest';
-import { isOffPlan, nextStartedEvent, routeNext, type NextSource, type PlanView, type RouteNextInput } from '../route-next';
+import { isOffPlan, nextStartedEvent, routeNext, type NextSource, type PlanBefore, type RouteNextInput } from '../route-next';
 import { questTeaches } from '../stage1/curriculum';
 
 /**
@@ -71,10 +71,11 @@ export interface ResultsTeaserInput {
    */
   route?: RouteNextInput;
   /**
-   * `planView` taken before the quest was completed: a quest outside it,
-   * while a leading source exists, makes the caption "Back to your plan".
+   * `planBeforeOf` taken before the quest was completed: an off-plan quest
+   * (`isOffPlan`: a leading source exists and the quest was not in the plan,
+   * not the one next and not a pending item) makes the caption "Back to your plan".
    */
-  planBefore?: PlanView;
+  planBefore?: PlanBefore;
 }
 
 /** The one line under the title: `teaserEn`, else the new letters from Discover, else `blurbEn`. */

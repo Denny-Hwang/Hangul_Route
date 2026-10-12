@@ -681,4 +681,24 @@ describe('card ② follows routeNext (F-ENT-003 section 3.7, PR E3-4)', () => {
     const after = build({ snapshot: snap, pinned, route: routeOf(snap, { isQuestOpen: closedC }), isQuestOpen: closedC });
     expect(after.cards.find((c) => c.slot === 2)).toMatchObject({ questId: 'quest:b', subtitle: 'nextInPlan' });
   });
+
+  it('a plan removed after the pin: the quest stays pinned and "Next in your plan" becomes "New"', () => {
+    const snap = { ...snapshot(), homework: [selfItem('quest:c', '2026-05-22')] };
+    const pinned = build({ snapshot: snap, route: routeOf(snap) });
+    const gone = build({ snapshot: snap, pinned, route: routeOf(snap, { sources: [] }) });
+    expect(gone.cards.find((c) => c.slot === 2)).toMatchObject({ questId: 'quest:c', subtitle: 'new' });
+    const cleared = { ...snap, homework: [] };
+    expect(build({ snapshot: cleared, pinned, route: routeOf(cleared) }).cards.find((c) => c.slot === 2)).toMatchObject({ questId: 'quest:c', subtitle: 'new' });
+  });
+
+  it('a pinned plan card played today keeps "Next in your plan" while its plan still holds it', () => {
+    const snap = { ...snapshot(), homework: [selfItem('quest:c', '2026-05-22')] };
+    const pinned = build({ snapshot: snap, route: routeOf(snap) });
+    const played = { ...snapshot([done('quest:c', TODAY, 1)]), homework: [selfItem('quest:c', '2026-05-22', `${TODAY}T09:00:00.000Z`)] };
+    expect(build({ snapshot: played, pinned, route: routeOf(played) }).cards.find((c) => c.slot === 2)).toMatchObject({
+      questId: 'quest:c',
+      subtitle: 'nextInPlan',
+      collected: true,
+    });
+  });
 });

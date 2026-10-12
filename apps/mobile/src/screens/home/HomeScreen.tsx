@@ -56,7 +56,7 @@ import { placementEntriesOn, questsDoneOf } from '../../logic/placement/entry';
 import { skippedEvent } from '../../logic/placement/events';
 import { homeQuietCard, levelCheckCard } from '../../logic/placement/home-card';
 import { DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
-import { nextStartedEvent, routeNext, routeNextInputOf } from '../../logic/route-next';
+import { nextStartedEvent, qualifiesForNext, routeNext, routeNextInputOf } from '../../logic/route-next';
 import { streakSessionDates } from '../../logic/sessions/session-log';
 import { computeStreak } from '../../logic/streak';
 import { emptyBookmarks } from '../../logic/story/bookmarks';
@@ -296,8 +296,8 @@ export function HomeScreen(): React.ReactElement {
       today,
       enabled: true,
       titleOf: (questId) => questsAll.find((q) => q.id === questId)?.titleEn,
-      // A closed assignment never takes the card, as in `routeNext` step 1 (F-ENT-003 section 3.5).
-      isQuestOpen: questOpen,
+      // Only an assignment `routeNext` step 1 would pick takes the card: known, playable, open, not done (section 3.5).
+      isQuestOpen: qualifiesForNext(routeInput),
     }).plan;
     pinnedPlan.current = merged;
     return merged;

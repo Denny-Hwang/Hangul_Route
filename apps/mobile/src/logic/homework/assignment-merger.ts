@@ -21,9 +21,10 @@ export interface MergeInput {
   /** Resolves a quest id to its learner-facing title. */
   titleOf: (questId: string) => string | undefined;
   /**
-   * May the learner start this quest (`useQuestAccess`, F-ENT-003 section 3.5)?
-   * A closed assignment is skipped like an unknown one, so card (2) names the
-   * same quest as `routeNext` step 1. Omitted means every quest is open.
+   * May the learner start this quest now (F-ENT-003 section 3.5)? Home
+   * passes `qualifiesForNext` (known, playable, open, not done); an assignment
+   * that fails is skipped like an unknown one, so card (2) names the same
+   * quest as `routeNext` step 1. Omitted means every quest qualifies.
    */
   isQuestOpen?: (questId: string) => boolean;
 }

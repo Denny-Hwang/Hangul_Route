@@ -213,6 +213,26 @@ export function routeNext(i: RouteNextInput): RouteNext {
   return endOf(i, false);
 }
 
+/**
+ * Step 1's qualification as a predicate: known, playable, open and not done.
+ * Home passes it to `mergeAssignments`, so an assignment card (2) shows is
+ * the one `routeNext` step 1 picks.
+ */
+export function qualifiesForNext(i: RouteNextInput): (questId: string) => boolean {
+  const f = factsOf(i);
+  return (questId) => qualifying(i, f, questId) !== null;
+}
+
+/** True while one of the input's plan sources still holds the quest (pending or done). */
+export function inAPlan(i: RouteNextInput, questId: string): boolean {
+  const ids = new Set(i.sources.map((s) => s.id));
+  return i.snapshot.homework.some((h) => {
+    if (h.profileId !== i.profileId || h.questId !== questId) return false;
+    const sourceId = sourceIdOf(h.id);
+    return sourceId !== null && ids.has(sourceId);
+  });
+}
+
 const EMPTY_VIEW: PlanView = { leadingSourceId: null, leadingKind: null, inPlanQuestIds: new Set(), inPlanEpisodeIds: new Set() };
 
 /**
@@ -223,7 +243,8 @@ const EMPTY_VIEW: PlanView = { leadingSourceId: null, leadingKind: null, inPlanQ
 export function planView(i: RouteNextInput): PlanView {
   const leading = leadingOf(i, factsOf(i));
   if (!leading) return EMPTY_VIEW;
-  const end = addDays(i.today, HORIZON_DAYS);
+  // The source's own derivation horizon (F-PLAN-002 section 3.6 rule 1): a curriculum's `horizonDays`; a classic plan the default.
+  const end = addDays(i.today, leading.source.meta?.horizonDays ?? HORIZON_DAYS);
   const inside = leading.items.filter((item) => item.assignment.targetDate <= end);
   return {
     leadingSourceId: leading.source.id,
@@ -265,9 +286,46 @@ export function routeNextInputOf(c: RouteNextContext): RouteNextInput {
   };
 }
 
-/** True when a leading source exists and the quest is not in its set (the view taken before the quest was completed). */
-export function isOffPlan(view: PlanView, questId: string): boolean {
-  return view.leadingKind !== null && !view.inPlanQuestIds.has(questId);
+/**
+ * What Results needs from before the write (its first render): the plan
+ * view, the quest that was `routeNext`, the learner's pending assignments and
+ * the quests already done.
+ */
+export interface PlanBefore {
+  view: PlanView;
+  /** The quest `routeNext` named before the play; null at `free-end` or `rest`. */
+  nextQuestId: string | null;
+  /** Quest ids of this learner's pending assignments (any plan source, or explicit), at any date. */
+  pendingQuestIds: ReadonlySet<string>;
+  /** Quests completed before the play. */
+  doneQuestIds: ReadonlySet<string>;
+}
+
+/** Takes the `PlanBefore` of an input whose snapshot does not yet hold the play. */
+export function planBeforeOf(i: RouteNextInput): PlanBefore {
+  const next = routeNext(i);
+  const pending = i.snapshot.homework.filter((h) => h.profileId === i.profileId && !h.completedAt).map((h) => h.questId);
+  return {
+    view: planView(i),
+    nextQuestId: next.kind === 'quest' ? next.questId : null,
+    pendingQuestIds: new Set(pending),
+    doneQuestIds: new Set(i.snapshot.quests.filter((q) => q.completedAt).map((q) => q.questId)),
+  };
+}
+
+/**
+ * Off-plan (section 3.8): a leading source exists and the quest was none of
+ * these before the play: in its "In your plan" set, the one next, or a
+ * pending plan or assigned item. A learner who plays what the app named is
+ * never off-plan.
+ */
+export function isOffPlan(before: PlanBefore, questId: string): boolean {
+  return (
+    before.view.leadingKind !== null &&
+    !before.view.inPlanQuestIds.has(questId) &&
+    before.nextQuestId !== questId &&
+    !before.pendingQuestIds.has(questId)
+  );
 }
 
 export type NextSurface = 'home' | 'results' | 'journey' | 'episode' | 'route' | 'placement';
@@ -278,18 +336,19 @@ export function nextStartedEvent(profileId: string | undefined, source: NextSour
 }
 
 /**
- * `route.offplan_finished { source, stage }` for a quest completed outside the
- * plan while a leading source exists (`before` is the plan view from before the
- * completion), else null. Codes and stage keys only.
+ * `route.offplan_finished { source, stage }` for a first completion of an
+ * off-plan quest (`isOffPlan`, with `before` taken before the completion),
+ * else null. A replay of a quest already done is review, not a detour, and
+ * sends nothing (section 3.12). Codes and stage keys only.
  */
 export function offplanFinishedEvent(
   profileId: string,
-  before: PlanView,
+  before: PlanBefore,
   questId: string,
   episodes: readonly Episode[],
 ): TelemetryEvent | null {
-  const source = before.leadingKind;
-  if (source === null || before.inPlanQuestIds.has(questId)) return null;
+  const source = before.view.leadingKind;
+  if (source === null || !isOffPlan(before, questId) || before.doneQuestIds.has(questId)) return null;
   const episode = episodes.find((e) => e.questIds.includes(questId));
   if (!episode) return null;
   return { name: 'route.offplan_finished', profileId, payload: { source, stage: episode.stage } };

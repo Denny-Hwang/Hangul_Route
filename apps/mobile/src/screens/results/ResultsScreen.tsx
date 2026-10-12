@@ -49,7 +49,7 @@ import {
   type ResultsTeaser,
 } from '../../logic/quest-flow/results-teaser';
 import { dayKey } from '../../logic/homework/mission-builder';
-import { offplanFinishedEvent, planView, routeNextInputOf, type PlanView } from '../../logic/route-next';
+import { offplanFinishedEvent, planBeforeOf, routeNextInputOf, type PlanBefore } from '../../logic/route-next';
 import { episodeReturn } from '../../logic/layout/quest-return';
 import { applyQuestResult, type QuestResultOutcome } from '../../logic/results-award';
 import { resultsCheerMessage, resultsHeadline } from '../../logic/results-copy';
@@ -193,10 +193,11 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
         : undefined,
     [profile, snapshot, plans, tier, questOpen],
   );
-  // "In your plan" as it was before this quest's score is written (the first render, before the effect
-  // above): a quest outside it, while a plan leads, reads "Back to your plan" (section 3.8).
-  const planBefore = useRef<PlanView | null>(null);
-  if (planBefore.current === null && routeInput) planBefore.current = planView(routeInput);
+  // The plan, the one next and the pending items as they were before this quest's score is written (the
+  // first render, before the effect above): an off-plan quest, while a plan leads, reads "Back to your
+  // plan" (section 3.8); the quest the app named, or any pending plan or assigned item, never does.
+  const planBefore = useRef<PlanBefore | null>(null);
+  if (planBefore.current === null && routeInput) planBefore.current = planBeforeOf(routeInput);
   const teaser = useMemo(
     () =>
       resultsTeaser({
@@ -213,7 +214,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
     [snapshot, questId, total, tier, questOpen, locale, routeInput],
   );
 
-  // `route.offplan_finished` once per results visit, for a completed quest outside the plan (section 3.12).
+  // `route.offplan_finished` once per results visit, for a first completion of an off-plan quest (section 3.12).
   const offplanSent = useRef(false);
   useEffect(() => {
     if (offplanSent.current || !profile || total === 0 || planBefore.current === null) return;

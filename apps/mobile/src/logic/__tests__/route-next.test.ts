@@ -4,12 +4,16 @@ import type { CursorContext } from '../cursor-context';
 import { assignmentsForToday } from '../homework/assignment-merger';
 import type { DeriveSource } from '../homework/plan-derivation';
 import {
+  inAPlan,
   isOffPlan,
   nextStartedEvent,
   offplanFinishedEvent,
+  planBeforeOf,
   planView,
+  qualifiesForNext,
   routeNext,
   routeNextInputOf,
+  type PlanBefore,
   type PlanView,
   type RouteNextInput,
 } from '../route-next';
@@ -331,6 +335,43 @@ describe('planView', () => {
   });
 });
 
+describe('planView: the derivation horizon of the leading source', () => {
+  const items = [hw('plan:cls', 'q4', '2026-10-19'), hw('plan:cls', 'q5', '2026-10-26')];
+
+  it('a curriculum uses its own horizonDays (14 days marks an item 14 days out)', () => {
+    const curriculum: DeriveSource = { ...source('plan:cls', 'class', ['q4', 'q5']), meta: { ...selfRoute().meta, horizonDays: 14 } };
+    const view = planView(input({ snapshot: snap([], items), sources: [curriculum] }));
+    expect([...view.inPlanQuestIds].sort()).toEqual(['quest:q4', 'quest:q5']);
+  });
+
+  it('a seven-day curriculum and a classic plan stop at today plus seven days', () => {
+    const plain: DeriveSource = { ...source('plan:cls', 'class', ['q4', 'q5']), meta: { ...selfRoute().meta, horizonDays: 7 } };
+    expect([...planView(input({ snapshot: snap([], items), sources: [plain] })).inPlanQuestIds]).toEqual(['quest:q4']);
+    expect([...planView(input({ snapshot: snap([], items), sources: [source('plan:cls', 'class', ['q4', 'q5'])] })).inPlanQuestIds]).toEqual(['quest:q4']);
+  });
+});
+
+describe('qualifiesForNext and inAPlan', () => {
+  it('qualifiesForNext is step 1\'s test: known, playable, open and not done', () => {
+    const q = qualifiesForNext(input({ snapshot: snap(['q1']), isQuestOpen: closed('q6'), justCompleted: 'quest:q2' }));
+    expect(q('quest:q3')).toBe(true);
+    expect(q('quest:q1')).toBe(false);
+    expect(q('quest:q2')).toBe(false);
+    expect(q('quest:q6')).toBe(false);
+    expect(q('quest:q7')).toBe(false);
+    expect(q('quest:nope')).toBe(false);
+  });
+
+  it('inAPlan holds while a listed plan source still has the quest, pending or done', () => {
+    const s = snap([], [hw('plan:cls', 'q4', TODAY, { completedAt: '2026-10-12T08:00:00.000Z' }), hw(null, 'q5', TODAY), hw('plan:cls', 'q6', TODAY, { profileId: 'profile:other' })]);
+    const i = input({ snapshot: s, sources: [source('plan:cls', 'class', ['q4', 'q6'])] });
+    expect(inAPlan(i, 'quest:q4')).toBe(true);
+    expect(inAPlan(i, 'quest:q5')).toBe(false);
+    expect(inAPlan(i, 'quest:q6')).toBe(false);
+    expect(inAPlan({ ...i, sources: [] }, 'quest:q4')).toBe(false);
+  });
+});
+
 describe('routeNextInputOf', () => {
   it('builds the sources from the plans and the self-route, and the cursor from the placements', () => {
     const plan: InboxPlan = {
@@ -392,22 +433,58 @@ describe('off-plan and telemetry', () => {
     inPlanEpisodeIds: new Set(['episode:s1-life']),
   };
   const none: PlanView = { leadingSourceId: null, leadingKind: null, inPlanQuestIds: new Set(), inPlanEpisodeIds: new Set() };
+  const before = (over: Partial<PlanBefore> = {}): PlanBefore => ({
+    view,
+    nextQuestId: 'quest:q4',
+    pendingQuestIds: new Set(['quest:q4']),
+    doneQuestIds: new Set(),
+    ...over,
+  });
 
-  it('isOffPlan: a leading source exists and the quest is not in its set', () => {
-    expect(isOffPlan(view, 'quest:q6')).toBe(true);
-    expect(isOffPlan(view, 'quest:q4')).toBe(false);
-    expect(isOffPlan(none, 'quest:q6')).toBe(false);
+  it('isOffPlan: a leading source exists and the quest is not in its set, not the next and not pending', () => {
+    expect(isOffPlan(before(), 'quest:q6')).toBe(true);
+    expect(isOffPlan(before(), 'quest:q4')).toBe(false);
+    expect(isOffPlan(before({ view: none }), 'quest:q6')).toBe(false);
+    expect(isOffPlan(before({ nextQuestId: 'quest:q6' }), 'quest:q6')).toBe(false);
+    expect(isOffPlan(before({ pendingQuestIds: new Set(['quest:q6']) }), 'quest:q6')).toBe(false);
   });
 
   it('route.offplan_finished carries the leading kind and the stage of the quest played', () => {
-    expect(offplanFinishedEvent(P, view, 'quest:q6', EPISODES)).toEqual({
+    expect(offplanFinishedEvent(P, before(), 'quest:q6', EPISODES)).toEqual({
       name: 'route.offplan_finished',
       profileId: P,
       payload: { source: 'self', stage: 'stage2' },
     });
-    expect(offplanFinishedEvent(P, view, 'quest:q4', EPISODES)).toBeNull();
-    expect(offplanFinishedEvent(P, none, 'quest:q6', EPISODES)).toBeNull();
-    expect(offplanFinishedEvent(P, view, 'quest:nope', EPISODES)).toBeNull();
+    expect(offplanFinishedEvent(P, before(), 'quest:q4', EPISODES)).toBeNull();
+    expect(offplanFinishedEvent(P, before({ view: none }), 'quest:q6', EPISODES)).toBeNull();
+    expect(offplanFinishedEvent(P, before(), 'quest:nope', EPISODES)).toBeNull();
+    expect(offplanFinishedEvent(P, before({ nextQuestId: 'quest:q6' }), 'quest:q6', EPISODES)).toBeNull();
+  });
+
+  it('a replay of a quest already done is not sent (review, not a detour)', () => {
+    expect(offplanFinishedEvent(P, before({ doneQuestIds: new Set(['quest:q6']) }), 'quest:q6', EPISODES)).toBeNull();
+  });
+
+  it('planBeforeOf: the Thursday class / today family case; playing the family item (the next) is not off-plan', () => {
+    const s = snap(['q1'], [hw('plan:cls', 'q5', '2026-10-15'), hw('plan:fam', 'q2', TODAY, { assignedBy: 'parent' })]);
+    const b = planBeforeOf(input({ snapshot: s, sources: [source('plan:cls', 'class', ['q5']), source('plan:fam', 'family', ['q2'])] }));
+    expect(b.nextQuestId).toBe('quest:q2');
+    expect([...b.view.inPlanQuestIds]).toEqual(['quest:q5']);
+    expect([...b.pendingQuestIds].sort()).toEqual(['quest:q2', 'quest:q5']);
+    expect([...b.doneQuestIds]).toEqual(['quest:q1']);
+    expect(isOffPlan(b, 'quest:q2')).toBe(false);
+    expect(offplanFinishedEvent(P, b, 'quest:q2', EPISODES)).toBeNull();
+    expect(isOffPlan(b, 'quest:q6')).toBe(true);
+  });
+
+  it('planBeforeOf: a classic plan item past the horizon is the next and not off-plan; rest has no next', () => {
+    const s = snap([], [hw('plan:cls', 'q5', '2026-10-22')]);
+    const b = planBeforeOf(input({ snapshot: s, sources: [source('plan:cls', 'class', ['q5'])] }));
+    expect(b.view.inPlanQuestIds.size).toBe(0);
+    expect(b.nextQuestId).toBe('quest:q5');
+    expect(isOffPlan(b, 'quest:q5')).toBe(false);
+    expect(offplanFinishedEvent(P, b, 'quest:q5', EPISODES)).toBeNull();
+    expect(planBeforeOf(input({ snapshot: snap(['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q8']) })).nextQuestId).toBeNull();
   });
 
   it('route.next_started carries the source and the surface', () => {

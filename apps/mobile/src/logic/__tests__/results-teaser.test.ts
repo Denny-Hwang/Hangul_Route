@@ -12,7 +12,7 @@ import {
   teaserTappedEvent,
   type ResultsTeaser,
 } from '../quest-flow/results-teaser';
-import { planView, type RouteNextInput } from '../route-next';
+import { offplanFinishedEvent, planBeforeOf, type RouteNextInput } from '../route-next';
 
 const nextUp = getMessages('en').learner.results.nextUp;
 const Q1 = discoverQuest('quest:q1', ['jamo:giyeok', 'jamo:nieun']);
@@ -270,14 +270,14 @@ describe('resultsTeaser: the target is routeNext (F-ENT-003 section 3.8, PR E3-4
   it('names the plan\'s next quest with the caption "Next in your plan", counting the quest just played as done', () => {
     const played = { ...withPlan, homework: [item('quest:q4', '2026-10-14'), item('quest:q2', '2026-10-15')] };
     const r = route(played);
-    const t = resultsTeaser({ ...base, snapshot: played, questId: 'quest:q4', total: 5, route: r, planBefore: planView(r) });
+    const t = resultsTeaser({ ...base, snapshot: played, questId: 'quest:q4', total: 5, route: r, planBefore: planBeforeOf(r) });
     expect(t).toMatchObject({ questId: 'quest:q2', caption: 'nextInPlan', source: 'self' });
     expect(teaserCaption(t!, learner)).toBe('Next in your plan');
   });
 
   it('the last plan item played: the default route with "Next up"', () => {
     const r = route(withPlan);
-    expect(resultsTeaser({ ...base, snapshot: withPlan, questId: 'quest:q4', total: 5, route: r, planBefore: planView(r) })).toMatchObject({
+    expect(resultsTeaser({ ...base, snapshot: withPlan, questId: 'quest:q4', total: 5, route: r, planBefore: planBeforeOf(r) })).toMatchObject({
       questId: 'quest:q1',
       caption: 'nextUp',
       source: 'cursor',
@@ -286,15 +286,47 @@ describe('resultsTeaser: the target is routeNext (F-ENT-003 section 3.8, PR E3-4
 
   it('after a quest outside the plan: "Back to your plan" and the plan\'s next quest', () => {
     const r = route(withPlan);
-    const before = planView(r);
+    const before = planBeforeOf(r);
     const t = resultsTeaser({ ...base, snapshot: withPlan, questId: 'quest:q5', total: 5, route: r, planBefore: before });
     expect(t).toMatchObject({ questId: 'quest:q4', caption: 'backToPlan', source: 'self' });
     expect(teaserCaption(t!, learner)).toBe('Back to your plan');
   });
 
+  it('the Thursday class / today family case: playing the family item Home named is not "Back to your plan"', () => {
+    const s = {
+      ...done(),
+      homework: [
+        { ...item('quest:q5', '2026-10-15'), id: 'plan:cls#quest:q5', assignedBy: 'teacher' as const },
+        { ...item('quest:q2', TODAY), id: 'plan:fam#quest:q2', assignedBy: 'parent' as const },
+      ],
+    };
+    const r = route(s, {
+      sources: [
+        { id: 'plan:cls', kind: 'class', assignedAt: '2026-10-01T00:00:00.000Z', items: [{ kind: 'quest', id: 'quest:q5' }], meta: null },
+        { id: 'plan:fam', kind: 'family', assignedAt: '2026-10-01T00:00:00.000Z', items: [{ kind: 'quest', id: 'quest:q2' }], meta: null },
+      ],
+    });
+    const before = planBeforeOf(r);
+    const t = resultsTeaser({ ...base, snapshot: s, questId: 'quest:q2', total: 5, route: r, planBefore: before });
+    expect(t).toMatchObject({ questId: 'quest:q5', caption: 'nextInPlan', source: 'class' });
+    expect(offplanFinishedEvent(P, before, 'quest:q2', EPISODES)).toBeNull();
+  });
+
+  it('a classic plan item ten days out, played as Home\'s next: "Next in your plan", no off-plan event', () => {
+    const s = { ...done(), homework: [item('quest:q4', '2026-10-22'), item('quest:q5', '2026-10-23')] };
+    const r = route(s, {
+      sources: [{ id: 'route:mine', kind: 'self', assignedAt: '2026-10-01T00:00:00.000Z', items: [{ kind: 'quest', id: 'quest:q4' }, { kind: 'quest', id: 'quest:q5' }], meta: null }],
+    });
+    const before = planBeforeOf(r);
+    expect(before.view.inPlanQuestIds.size).toBe(0);
+    const t = resultsTeaser({ ...base, snapshot: s, questId: 'quest:q4', total: 5, route: r, planBefore: before });
+    expect(t).toMatchObject({ questId: 'quest:q5', caption: 'nextInPlan' });
+    expect(offplanFinishedEvent(P, before, 'quest:q4', EPISODES)).toBeNull();
+  });
+
   it('no plan: the cursor with today\'s "Next up"', () => {
     const r = route(done(), { sources: [] });
-    const t = resultsTeaser({ ...base, snapshot: done(), questId: 'quest:q1', total: 5, route: r, planBefore: planView(r) });
+    const t = resultsTeaser({ ...base, snapshot: done(), questId: 'quest:q1', total: 5, route: r, planBefore: planBeforeOf(r) });
     expect(t).toMatchObject({ questId: 'quest:q2', caption: 'nextUp', source: 'cursor' });
     expect(teaserCaption(t!, learner)).toBe('Next up');
   });
@@ -319,7 +351,7 @@ describe('resultsTeaser: the target is routeNext (F-ENT-003 section 3.8, PR E3-4
 
   it('every game skipped: the same quest again, unchanged, no plan caption', () => {
     const r = route(withPlan);
-    const t = resultsTeaser({ ...base, snapshot: withPlan, questId: 'quest:q1', total: 0, route: r, planBefore: planView(r) });
+    const t = resultsTeaser({ ...base, snapshot: withPlan, questId: 'quest:q1', total: 0, route: r, planBefore: planBeforeOf(r) });
     expect(t).toMatchObject({ questId: 'quest:q1', again: true, caption: 'nextUp' });
     expect(t?.source).toBeUndefined();
   });
@@ -332,7 +364,7 @@ describe('resultsTeaser: the target is routeNext (F-ENT-003 section 3.8, PR E3-4
 
   it('route.next_started when the teaser is the one next; none for "Try this one again"', () => {
     const r = route(withPlan);
-    const t = resultsTeaser({ ...base, snapshot: withPlan, questId: 'quest:q5', total: 5, route: r, planBefore: planView(r) })!;
+    const t = resultsTeaser({ ...base, snapshot: withPlan, questId: 'quest:q5', total: 5, route: r, planBefore: planBeforeOf(r) })!;
     expect(teaserNextStartedEvent(P, t)).toEqual({ name: 'route.next_started', profileId: P, payload: { source: 'self', surface: 'results' } });
     const again = resultsTeaser({ ...base, snapshot: withPlan, questId: 'quest:q1', total: 0, route: r })!;
     expect(teaserNextStartedEvent(P, again)).toBeNull();

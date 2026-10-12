@@ -1,7 +1,7 @@
 import type { Episode, ProgressSnapshot, Quest } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import { nextQuestAfter, offerableQuests, playableEpisodes } from '../next-quest';
-import { routeNext, type RouteNextInput } from '../route-next';
+import { inAPlan, routeNext, type RouteNextInput } from '../route-next';
 import type { BookmarkFile } from '../story/bookmarks';
 import { entryForQuest, type StoryIndexEntry } from '../story/story-index';
 import { planOpenStory, type OpenStoryMode, type OpenStoryPlan } from '../story/open-story';
@@ -380,6 +380,8 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
       cards: repinPlacedOut(input.pinned.cards, input).map((card) => {
         const refreshed: MissionCard = { ...card, collected: isCollected(card, snapshot, today, card.collected) };
         if (card.kind === 'story') refreshed.storyReason = refreshedReason(card, input);
+        // A plan removed after the pin (unpublished, or the own plan archived): the quest stays, "Next in your plan" goes.
+        if (card.subtitle === 'nextInPlan' && card.questId && input.route && !inAPlan(input.route, card.questId)) refreshed.subtitle = 'new';
         return refreshed;
       }),
     };
