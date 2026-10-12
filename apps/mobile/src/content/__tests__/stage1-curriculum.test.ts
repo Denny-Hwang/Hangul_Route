@@ -25,7 +25,7 @@ import { questsAll } from '../quests';
 /**
  * The Stage 1 curriculum invariants (F-QUEST-002 section 5, T1-T11): the heart of the
  * spec. They run over the Stage 1 quests already rebuilt with a Discover step (Q-6a:
- * quests 1-3; Q-6b: quests 4-6; Q-7b and Q-8 add the rest), which must lead the Stage 1 order so
+ * quests 1-3; Q-6b: quests 4-6; Q-7b: quests 7-9; Q-8 adds the rest), which must lead the Stage 1 order so
  * "taught by this quest or earlier" means the real teaching order. T1 (all 30 symbols)
  * runs once all 15 quests are rebuilt.
  */
@@ -104,6 +104,13 @@ function scopeReading(scope: MinigameScope): { ids: string[]; words: string[] } 
   }
 }
 
+/** The symbols a Listen & Pick round asks: the written symbol, or every symbol of the answer syllable or word. */
+function roundTargets(round: { id: string; answerId: string }): string[] {
+  if (round.id.startsWith('lp:sym:')) return [round.answerId];
+  if (round.id.startsWith('lp:syl:') || round.id.startsWith('lp:word:')) return symbolsOf(round.answerId) ?? [];
+  return [];
+}
+
 /** Theme pages (pictured culture words) are exposure: a page of words only, one with a picture. */
 const isThemePage = (page: DiscoverPage): boolean =>
   page.items.every((i) => i.type === 'word') && page.items.some((i) => i.picture !== undefined);
@@ -162,14 +169,17 @@ function englishFieldsOf(quest: Quest): Array<{ where: string; text: string }> {
 const ctx = { exceptions: ROMANIZATION_EXCEPTIONS };
 
 describe('the rebuilt Stage 1 quests', () => {
-  it('starts with letters q1-q3 (Q-6a) and life q1-q3 (Q-6b), and they lead the Stage 1 order', () => {
-    expect(REBUILT.map((q) => q.id).slice(0, 6)).toEqual([
+  it('starts with letters q1-q3 (Q-6a), life q1-q3 (Q-6b) and rites q1-q3 (Q-7b), and they lead the Stage 1 order', () => {
+    expect(REBUILT.map((q) => q.id).slice(0, 9)).toEqual([
       'quest:stage1-letters-q1',
       'quest:stage1-letters-q2',
       'quest:stage1-letters-q3',
       'quest:stage1-life-q1',
       'quest:stage1-life-q2',
       'quest:stage1-life-q3',
+      'quest:stage1-rites-q1',
+      'quest:stage1-rites-q2',
+      'quest:stage1-rites-q3',
     ]);
     expect(STAGE1_QUESTS.slice(0, REBUILT.length)).toEqual(REBUILT);
   });
@@ -182,6 +192,105 @@ describe('the rebuilt Stage 1 quests', () => {
     expect(chars(REBUILT[3]!)).toEqual(['ㅈ', 'ㅊ']);
     expect(chars(REBUILT[4]!)).toEqual(['ㅂ', 'ㅅ']);
     expect(chars(REBUILT[5]!)).toEqual(['ㅋ', 'ㅌ']);
+    // The rites quests bring the first finals: a batchim has its own id (`jamo:*-batchim`), not the initial's.
+    expect(questTeaches(REBUILT[6]!)).toEqual(['jamo:nieun-batchim', 'jamo:rieul-batchim']);
+    expect(questTeaches(REBUILT[7]!)).toEqual(['jamo:ya', 'jamo:yeo', 'jamo:pieup', 'jamo:ieung-batchim']);
+    expect(questTeaches(REBUILT[8]!)).toEqual(['jamo:yo', 'jamo:yu', 'jamo:hieut', 'jamo:giyeok-batchim']);
+  });
+
+  it('keeps the rites titles and reward cards of section 3.6 (4, 5 and 5 minutes)', () => {
+    const rites = REBUILT.slice(6, 9);
+    expect(rites.map((q) => [q.titleEn, q.estimatedMinutes, q.rewardCardId])).toEqual([
+      ['Bow & Eat Tteokguk', 4, 'card:seollal'],
+      ['Rice Cakes of Chuseok', 5, 'card:chuseok'],
+      ['Hanbok and the Bow', 5, 'card:sebae'],
+    ]);
+  });
+
+  it('opens quest 7 with the Seollal greeting in hoyaLineKo (F-CNT-002 section 3.7 value), never in an English field', () => {
+    const intro = REBUILT[6]!.steps.find((s) => s.kind === 'intro')!;
+    expect(intro.hoyaLineKo).toEqual({ ko: '새해 복 많이 받으세요.', romanization: 'saehae bok mani badeuseyo', en: 'Happy New Year!' });
+    expect(intro.hoyaLineEn).toBeDefined();
+    expect(HANGUL.test(intro.hoyaLineEn ?? '')).toBe(false);
+  });
+
+  it('plays the section 3.6 Check rounds of quests 7-9: a final or a symbol, then a reading word', () => {
+    const checkOf = (q: Quest) => scopesOf(q).find((s) => s.kind === 'check')!.scope!.listenPick!.rounds;
+    const optionTexts = (round: { options: Array<{ text?: KoText }> }): string[] => round.options.map((o) => o.text?.ko ?? '').sort();
+    const table: Array<[string, string[], string, string[]]> = [
+      ['달', ['다', '달', '단'], '설날', ['설날', '설', '날', '달']],
+      ['송', ['소', '송', '손'], '송편', ['송편', '포도', '야구', '여우']],
+      ['ㅛ', ['ㅛ', 'ㅗ', 'ㅠ', 'ㅕ'], '한복', ['한복', '한국', '효도', '우유']],
+    ];
+    REBUILT.slice(6, 9).forEach((quest, i) => {
+      const [first0, firstOptions, word, wordOptions] = table[i]!;
+      const [first, second] = checkOf(quest);
+      expect(findJamo(first!.answerId)?.char ?? first!.answerId, quest.id).toBe(first0);
+      expect(optionTexts(first!), quest.id).toEqual([...firstOptions].sort());
+      expect(second!.answerId, quest.id).toBe(word);
+      expect(optionTexts(second!), quest.id).toEqual([...wordOptions].sort());
+    });
+  });
+
+  it('drills the quest 7 finals by ear: six syllables, each among no final, final n and final l', () => {
+    const practice = scopesOf(REBUILT[6]!).find((s) => s.kind === 'practice')!.scope!;
+    expect(practice.kind).toBe('listen-pick');
+    const rounds = practice.listenPick!.rounds;
+    expect(rounds.map((r) => r.answerId)).toEqual(['달', '단', '물', '문', '산', '살']);
+    for (const round of rounds) {
+      const open = round.answerId.normalize('NFD').slice(0, 2).normalize('NFC');
+      const finals = round.options.map((o) => (symbolsOf(o.id) ?? []).find((id) => id.endsWith('-batchim')) ?? 'none').sort();
+      expect(finals, round.id).toEqual(['jamo:nieun-batchim', 'jamo:rieul-batchim', 'none']);
+      expect(round.options.map((o) => o.id), round.id).toContain(open);
+    }
+  });
+
+  it('mixes the quest 9 practice: the sounds of ㅎ ㅛ ㅠ, then the syllables 복 한 학', () => {
+    const practice = scopesOf(REBUILT[8]!).find((s) => s.kind === 'practice')!.scope!;
+    expect(practice.kind).toBe('listen-pick');
+    const answers = practice.listenPick!.rounds.map((r) => findJamo(r.answerId)?.char ?? r.answerId);
+    expect(answers).toEqual(['ㅎ', 'ㅛ', 'ㅠ', '복', '한', '학']);
+  });
+
+  it('builds the closed syllables of quests 7 and 8 from explicit ids, the final as its batchim tile', () => {
+    const syllablesOf = (q: Quest) => scopesOf(q).find((s) => s.kind === 'apply')!.scope!.syllables!;
+    expect(syllablesOf(REBUILT[6]!).map((s) => [s.ko, s.romanization, s.jamoIds])).toEqual([
+      ['달', 'dal', ['jamo:digeut', 'jamo:a', 'jamo:rieul-batchim']],
+      ['물', 'mul', ['jamo:mieum', 'jamo:u', 'jamo:rieul-batchim']],
+      ['문', 'mun', ['jamo:mieum', 'jamo:u', 'jamo:nieun-batchim']],
+      ['산', 'san', ['jamo:siot', 'jamo:a', 'jamo:nieun-batchim']],
+    ]);
+    expect(syllablesOf(REBUILT[7]!).map((s) => [s.ko, s.romanization, s.jamoIds])).toEqual([
+      ['송', 'song', ['jamo:siot', 'jamo:o', 'jamo:ieung-batchim']],
+      ['편', 'pyeon', ['jamo:pieup', 'jamo:yeo', 'jamo:nieun-batchim']],
+      ['야', 'ya', ['jamo:ieung', 'jamo:ya']],
+      ['여', 'yeo', ['jamo:ieung', 'jamo:yeo']],
+    ]);
+  });
+
+  it('keeps "New Year Order" as the quest 9 apply step: the four Seollal steps with their romanization', () => {
+    const apply = scopesOf(REBUILT[8]!).find((s) => s.kind === 'apply')!;
+    expect(apply.ref).toBe('minigame:s1-rites-q3-apply');
+    expect(apply.scope!.kind).toBe('story-sequence');
+    expect(apply.scope!.storySteps!.map((p) => [p.labelEn, p.labelKo, p.romanization])).toEqual([
+      ['Wear hanbok', '한복 입기', 'hanbok ipgi'],
+      ['Bow to elders', '세배 드리기', 'sebae deurigi'],
+      ['Eat tteokguk', '떡국 먹기', 'tteokguk meokgi'],
+      ['Receive lucky money', '세뱃돈 받기', 'sebaetdon batgi'],
+    ]);
+  });
+
+  it('shows the rites theme words on their festival cards', () => {
+    const themeWords = (q: Quest) =>
+      q.steps.flatMap((s) => (s.discover?.pages ?? []).filter(isThemePage).flatMap((p) => p.items.map((i) => (i.type === 'word' ? [i.word.ko, i.picture] : []))));
+    expect(themeWords(REBUILT[6]!)).toEqual([
+      ['설날', 'card:seollal'],
+      ['떡국', 'card:tteokguk'],
+    ]);
+    expect(themeWords(REBUILT[7]!)).toEqual([
+      ['추석', 'card:chuseok'],
+      ['송편', 'card:songpyeon'],
+    ]);
   });
 
   it('keeps the life titles and reward cards of section 3.6, 4 minutes each', () => {
@@ -232,7 +341,7 @@ describe('the rebuilt Stage 1 quests', () => {
   it('gives an episode whose quests are all rebuilt the sum of their minutes (section 3.6: letters 15)', () => {
     const rebuilt = new Set(REBUILT.map((q) => q.id));
     const done = episodesAll.filter((e) => e.stage === 'stage1' && e.questIds.length > 0 && e.questIds.every((id) => rebuilt.has(id)));
-    expect(done.map((e) => e.id)).toEqual(expect.arrayContaining(['episode:stage1-letters', 'episode:stage1-life']));
+    expect(done.map((e) => e.id)).toEqual(expect.arrayContaining(['episode:stage1-letters', 'episode:stage1-life', 'episode:stage1-rites']));
     for (const episode of done) {
       const sum = episode.questIds.reduce((n, id) => n + (questsAll.find((q) => q.id === id)?.estimatedMinutes ?? 0), 0);
       expect(episode.estimatedMinutes, episode.id).toBe(sum);
@@ -241,6 +350,7 @@ describe('the rebuilt Stage 1 quests', () => {
     expect(letters?.estimatedMinutes).toBe(15);
     expect(letters?.subtitleEn).toBe('Twelve letters, and your first real words.');
     expect(episodesAll.find((e) => e.id === 'episode:stage1-life')?.estimatedMinutes).toBe(12);
+    expect(episodesAll.find((e) => e.id === 'episode:stage1-rites')?.estimatedMinutes).toBe(14);
   });
 });
 
@@ -326,10 +436,27 @@ describe.each(REBUILT.map((q) => [q.id, q] as const))('%s', (_id, quest) => {
     }
   });
 
-  it('T4 the practice Match Sound focuses exactly the symbols the quest teaches', () => {
+  it('T4 the practice drills the new symbols: a Match Sound focuses the new letters, a Listen & Pick answers every new symbol', () => {
     const practice = scopesOf(quest).find((s) => s.kind === 'practice')?.scope;
-    expect(practice?.kind).toBe('match-sound');
-    expect(practice?.focusJamoIds).toEqual(questTeaches(quest));
+    const taughtHere = questTeaches(quest);
+    if (practice?.kind === 'match-sound') {
+      // A final has no sound of its own to match, so Match Sound focuses the letters; finals are built and checked.
+      expect(practice.focusJamoIds).toEqual(taughtHere.filter((id) => findJamo(id)?.kind !== 'batchim'));
+    } else {
+      expect(practice?.kind).toBe('listen-pick');
+      const asked = new Set(practice!.listenPick!.rounds.flatMap(roundTargets));
+      for (const id of taughtHere) expect(asked.has(id), `${quest.id} practice asks ${id}`).toBe(true);
+    }
+  });
+
+  it('T4 asks every symbol the quest teaches in its practice, apply or Check', () => {
+    const asked = new Set<string>();
+    for (const { scope } of scopesOf(quest)) {
+      for (const id of scope?.focusJamoIds ?? []) asked.add(id);
+      for (const s of scope?.syllables ?? []) for (const id of s.jamoIds ?? symbolsOf(s.ko) ?? []) asked.add(id);
+      for (const round of scope?.listenPick?.rounds ?? []) for (const id of roundTargets(round)) asked.add(id);
+    }
+    for (const id of questTeaches(quest)) expect(asked.has(id), `${quest.id} asks ${id}`).toBe(true);
   });
 
   it('T5 repeats no minigame and every ref resolves to a scope of the same kind', () => {

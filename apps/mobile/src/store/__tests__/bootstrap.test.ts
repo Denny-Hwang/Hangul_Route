@@ -68,7 +68,16 @@ describe('cold start (audit UX-01 / L16)', () => {
     mem.set('profiles', [profile('profile:a', 'Suni')]);
     mem.set('progress:profile:a', {
       ...saved('profile:a', 'card:book'),
-      quests: [{ questId: 'quest:stage1-rites-q1', episodeId: 'episode:stage1-rites', startedAt: at, completedAt: at, stars: 1, attempts: 1, accuracy: 1 }],
+      // All three Holidays quests (F-QUEST-002 Q-7b) at 1 star: the episode is complete, no quest card was earned.
+      quests: ['quest:stage1-rites-q1', 'quest:stage1-rites-q2', 'quest:stage1-rites-q3'].map((questId) => ({
+        questId,
+        episodeId: 'episode:stage1-rites',
+        startedAt: at,
+        completedAt: at,
+        stars: 1 as const,
+        attempts: 1,
+        accuracy: 1,
+      })),
     });
 
     await hydrateLearnerData();

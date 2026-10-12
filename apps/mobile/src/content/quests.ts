@@ -4,7 +4,7 @@ import { storyQuests } from './stories';
 /**
  * Stage 1 quests are being rebuilt to the six-step pattern of F-QUEST-002 §3.6:
  * intro → discover → practice → apply → check → reward (letters q1-q3 in Q-6a,
- * life q1-q3 in Q-6b; the others follow in Q-7b and Q-8). The quests not yet rebuilt,
+ * life q1-q3 in Q-6b, rites q1-q3 in Q-7b; the others follow in Q-8). The quests not yet rebuilt,
  * and the Stage 2 / Stage 4 taste quests, keep the five-step pattern
  * intro → present → practice → apply → reward.
  * Each Stage 1 episode owns 1–3 quests.
@@ -247,20 +247,125 @@ export const stage1Quests: Quest[] = [
     rewardCardId: 'card:kimbap',
   },
 
-  // Holidays — Q1
+  // Holidays — Q7: final ㄴ and final ㄹ (F-QUEST-002 §3.6, quest 7)
   {
     id: 'quest:stage1-rites-q1',
     titleEn: 'Bow & Eat Tteokguk',
-    blurbEn: 'Learn to greet your elders on Seollal.',
-    estimatedMinutes: 5,
+    blurbEn: 'Your first final letters, n and l, and the words of Seollal.',
+    estimatedMinutes: 4,
     steps: [
       { id: 's1', kind: 'intro', titleEn: 'Happy New Year!', hoyaLineEn: 'Happy New Year! Let\'s learn the greeting.', hoyaLineKo: { ko: '새해 복 많이 받으세요.', romanization: 'saehae bok mani badeuseyo', en: 'Happy New Year!' }, durationSeconds: 8 },
-      { id: 's2', kind: 'present', titleEn: 'The Bow', minigameKind: 'card-match', minigameRef: 'minigame:s1-rites-card-1', durationSeconds: 60 },
-      { id: 's3', kind: 'practice', titleEn: 'Tteokguk!', minigameKind: 'match-sound', minigameRef: 'minigame:s1-rites-match-1', durationSeconds: 75 },
-      { id: 's4', kind: 'apply', titleEn: 'New Year Order', minigameKind: 'story-sequence', minigameRef: 'minigame:s1-rites-story-1', durationSeconds: 75 },
-      { id: 's5', kind: 'reward', titleEn: 'Seollal Card!', hoyaLineEn: 'A festival card joins your library!', durationSeconds: 8 },
+      {
+        id: 's2',
+        kind: 'discover',
+        titleEn: 'Letters at the Bottom',
+        hoyaLineEn: 'Tap Hear it to listen. A final letter sits at the bottom of the block.',
+        discover: {
+          pages: [
+            {
+              items: [
+                { type: 'jamo', jamoId: 'jamo:nieun-batchim', example: { ko: '문', romanization: 'mun', en: 'door' } },
+                { type: 'jamo', jamoId: 'jamo:rieul-batchim', example: { ko: '달', romanization: 'dal', en: 'moon' } },
+              ],
+            },
+            {
+              items: [
+                { type: 'word', word: { ko: '설날', romanization: 'seollal', en: 'Lunar New Year', syllables: ['seol', 'lal'] }, picture: 'card:seollal' },
+                { type: 'word', word: { ko: '떡국', romanization: 'tteokguk', en: 'rice cake soup', syllables: ['tteok', 'guk'] }, picture: 'card:tteokguk' },
+              ],
+            },
+          ],
+        },
+        durationSeconds: 40,
+      },
+      { id: 's3', kind: 'practice', titleEn: 'Hear the Final', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-rites-q1-play', durationSeconds: 75 },
+      { id: 's4', kind: 'apply', titleEn: 'Build a Block', minigameKind: 'build-letter', minigameRef: 'minigame:s1-rites-q1-apply', durationSeconds: 60 },
+      { id: 's5', kind: 'check', titleEn: 'Listen and Read', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-rites-q1-check', durationSeconds: 35 },
+      { id: 's6', kind: 'reward', titleEn: 'Seollal Card!', hoyaLineEn: 'A Lunar New Year card joins your library!', durationSeconds: 8 },
     ],
     rewardCardId: 'card:seollal',
+  },
+  // Holidays — Q8: ㅑ ㅕ ㅍ and final ㅇ (quest 8)
+  {
+    id: 'quest:stage1-rites-q2',
+    titleEn: 'Rice Cakes of Chuseok',
+    blurbEn: 'Two new vowels, ya and yeo, the letter p, and the final ng.',
+    estimatedMinutes: 5,
+    steps: [
+      { id: 's1', kind: 'intro', titleEn: 'Chuseok!', hoyaLineEn: 'It is Chuseok, the harvest festival. Families make rice cakes together!', durationSeconds: 8 },
+      {
+        id: 's2',
+        kind: 'discover',
+        titleEn: 'Four New Letters',
+        hoyaLineEn: 'Tap Hear it to listen to each one.',
+        discover: {
+          pages: [
+            {
+              items: [
+                { type: 'jamo', jamoId: 'jamo:ya', example: { ko: '야구', romanization: 'yagu', en: 'baseball', syllables: ['ya', 'gu'] } },
+                { type: 'jamo', jamoId: 'jamo:yeo', example: { ko: '여우', romanization: 'yeou', en: 'fox', syllables: ['yeo', 'u'] } },
+              ],
+            },
+            {
+              items: [
+                { type: 'jamo', jamoId: 'jamo:pieup', example: { ko: '포도', romanization: 'podo', en: 'grape', syllables: ['po', 'do'] } },
+                { type: 'jamo', jamoId: 'jamo:ieung-batchim', example: { ko: '송편', romanization: 'songpyeon', en: 'half-moon rice cake', syllables: ['song', 'pyeon'] } },
+              ],
+            },
+            {
+              items: [
+                { type: 'word', word: { ko: '추석', romanization: 'chuseok', en: 'harvest festival', syllables: ['chu', 'seok'] }, picture: 'card:chuseok' },
+                { type: 'word', word: { ko: '송편', romanization: 'songpyeon', en: 'half-moon rice cake', syllables: ['song', 'pyeon'] }, picture: 'card:songpyeon' },
+              ],
+            },
+          ],
+        },
+        durationSeconds: 60,
+      },
+      { id: 's3', kind: 'practice', titleEn: 'Match the Sound', minigameKind: 'match-sound', minigameRef: 'minigame:s1-rites-q2-play', durationSeconds: 90 },
+      { id: 's4', kind: 'apply', titleEn: 'Build a Letter', minigameKind: 'build-letter', minigameRef: 'minigame:s1-rites-q2-apply', durationSeconds: 75 },
+      { id: 's5', kind: 'check', titleEn: 'Listen and Read', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-rites-q2-check', durationSeconds: 35 },
+      { id: 's6', kind: 'reward', titleEn: 'Chuseok Card!', hoyaLineEn: 'A harvest festival card joins your library!', durationSeconds: 8 },
+    ],
+    rewardCardId: 'card:chuseok',
+  },
+  // Holidays — Q9: ㅛ ㅠ ㅎ and final ㄱ (quest 9)
+  {
+    id: 'quest:stage1-rites-q3',
+    titleEn: 'Hanbok and the Bow',
+    blurbEn: 'Two new vowels, yo and yu, the letter h, and the final k.',
+    estimatedMinutes: 5,
+    steps: [
+      { id: 's1', kind: 'intro', titleEn: 'Dress Up!', hoyaLineEn: 'On New Year, we wear hanbok and bow to our grandparents.', durationSeconds: 8 },
+      {
+        id: 's2',
+        kind: 'discover',
+        titleEn: 'Four New Letters',
+        hoyaLineEn: 'Tap Hear it to listen to each one.',
+        discover: {
+          pages: [
+            {
+              items: [
+                { type: 'jamo', jamoId: 'jamo:yo', example: { ko: '효도', romanization: 'hyodo', en: 'respect for parents', syllables: ['hyo', 'do'] } },
+                { type: 'jamo', jamoId: 'jamo:yu', example: { ko: '우유', romanization: 'uyu', en: 'milk', syllables: ['u', 'yu'] } },
+              ],
+            },
+            {
+              items: [
+                { type: 'jamo', jamoId: 'jamo:hieut', example: { ko: '한복', romanization: 'hanbok', en: 'hanbok, traditional clothes', syllables: ['han', 'bok'] } },
+                { type: 'jamo', jamoId: 'jamo:giyeok-batchim', example: { ko: '한국', romanization: 'hanguk', en: 'Korea', syllables: ['han', 'guk'] } },
+              ],
+            },
+          ],
+        },
+        durationSeconds: 40,
+      },
+      { id: 's3', kind: 'practice', titleEn: 'Listen and Pick', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-rites-q3-play', durationSeconds: 90 },
+      { id: 's4', kind: 'apply', titleEn: 'New Year Order', minigameKind: 'story-sequence', minigameRef: 'minigame:s1-rites-q3-apply', durationSeconds: 90 },
+      { id: 's5', kind: 'check', titleEn: 'Listen and Read', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-rites-q3-check', durationSeconds: 35 },
+      { id: 's6', kind: 'reward', titleEn: 'New Year Bow Card!', hoyaLineEn: 'A New Year bow card joins your library!', durationSeconds: 8 },
+    ],
+    rewardCardId: 'card:sebae',
   },
 
   // Nature — Q1
