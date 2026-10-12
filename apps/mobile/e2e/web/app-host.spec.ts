@@ -196,7 +196,9 @@ test.describe('app host: the learner app and the grown-up console (F-APP-001 A-3
     const before = await settledSaved(page);
     expect(Object.keys(before.idb)).toEqual(expect.arrayContaining(['hr:profiles', 'hr:account:parentPinHash']));
 
-    for (const path of consolePages()) {
+    const pages = consolePages();
+    for (const path of REQUIRED_PAGES) expect(pages, path).toContain(path);
+    for (const path of pages) {
       await page.goto(path);
       await page.waitForLoadState('networkidle');
       // The console booted from its own chunks, not the learner shell.
