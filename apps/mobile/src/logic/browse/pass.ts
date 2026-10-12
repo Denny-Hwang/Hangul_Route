@@ -22,9 +22,18 @@ export const PASS_FUTURE_SKEW_MS = 60_000;
 /** Browse refreshes `seen` on navigation at most once a minute (the F-APP-001 unlock rule). */
 export const BROWSE_SEEN_REFRESH_MS = 60_000;
 
+/**
+ * `issuedAt`, and for a gate pass also `seen`, may be at most
+ * `PASS_FUTURE_SKEW_MS` ahead of `now`: a `seen` refreshed while the clock ran
+ * ahead would otherwise switch off the 15-minute idle rule until the 60-minute
+ * ceiling (the learner PIN session rejects a future stamp too,
+ * `profiles/session.ts`). An account pass never reads `seen`.
+ */
 export function passActive(pass: BrowsePass, now: number): boolean {
   if (pass.issuedAt - now > PASS_FUTURE_SKEW_MS) return false;
-  if (pass.source === 'gate') return now - pass.seen < BROWSE_GATE_IDLE_MS && now - pass.issuedAt < BROWSE_GATE_MAX_MS;
+  if (pass.source === 'gate') {
+    return pass.seen - now <= PASS_FUTURE_SKEW_MS && now - pass.seen < BROWSE_GATE_IDLE_MS && now - pass.issuedAt < BROWSE_GATE_MAX_MS;
+  }
   return now - pass.issuedAt < (pass.fallback ? BROWSE_FALLBACK_MAX_MS : BROWSE_ACCOUNT_MAX_MS);
 }
 

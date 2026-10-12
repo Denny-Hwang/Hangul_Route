@@ -24,6 +24,14 @@ describe('passActive', () => {
     expect(passActive(gate({ seen: T0 + 59 * MIN }), T0 + BROWSE_GATE_MAX_MS)).toBe(false);
   });
 
+  it('gate: a seen stamp more than 1 minute ahead of the clock is not a pass (the idle rule cannot be pushed forward)', () => {
+    // the clock ran ahead, seen was refreshed, then the clock was corrected
+    expect(passActive(gate({ seen: T0 + 30 * MIN }), T0 + 5 * MIN)).toBe(false);
+    expect(passActive(gate({ seen: T0 + 6 * MIN }), T0 + 5 * MIN)).toBe(true);
+    expect(passActive(gate({ seen: T0 + 6 * MIN + 1 }), T0 + 5 * MIN)).toBe(false);
+    expect(refreshSeen(gate({ seen: T0 + 30 * MIN }), T0 + 5 * MIN)).toBeNull();
+  });
+
   it('account: 12 hours, whatever seen says', () => {
     expect(passActive(account({ seen: T0 }), T0 + 11 * 60 * MIN)).toBe(true);
     expect(passActive(account(), T0 + BROWSE_ACCOUNT_MAX_MS - 1)).toBe(true);
