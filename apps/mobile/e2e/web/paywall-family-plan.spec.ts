@@ -21,8 +21,10 @@ async function openPaywall(page: Page, name: string): Promise<void> {
   await expect(page.getByText(`Hi, ${name}!`)).toBeVisible();
   // The install guide shows from the third cached open and covers the Home tabs.
   const guide = page.getByTestId('install-guide');
-  await page.waitForTimeout(800);
-  if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+  // It may appear shortly after Home renders, or not at all.
+  if (await guide.waitFor({ state: 'visible', timeout: 1500 }).then(() => true, () => false)) {
+    await guide.getByRole('button', { name: 'Not now' }).click();
+  }
   await page.getByRole('button', { name: 'Profile and settings' }).click();
   await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
   const unlock = page.getByRole('button', { name: /Unlock the journey/ });
@@ -47,6 +49,8 @@ for (const vp of VIEWPORTS) {
 
       const text = await screenText(page);
       expect(text).not.toMatch(/lifetime|\bonce\b|one payment|nothing to cancel|for good/i);
+      // The offer and its lines fit the width: no sideways scroll at 320 px either.
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
       await offer.scrollIntoViewIfNeeded();
       await page.screenshot({ path: test.info().outputPath(`paywall-family-plan-${vp.width}.png`), fullPage: true });
     });
