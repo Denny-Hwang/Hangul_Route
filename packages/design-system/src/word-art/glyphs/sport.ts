@@ -15,6 +15,23 @@ const DETAIL = { s: 'text.primary', sw: 2 } as const;
 
 const at = (cx: number, cy: number, r: number, deg: number): [number, number] => [cx + r * Math.cos((deg * Math.PI) / 180), cy + r * Math.sin((deg * Math.PI) / 180)];
 
+/**
+ * A table-tennis paddle: a round wooden blade with the rubber face set in
+ * from its edge, and a short handle that flares towards its end. The handle
+ * points along `deg` (0 = straight down, positive = to the right).
+ */
+function paddle(cx: number, cy: number, deg: number, r: number, handle: number): WordArtShape[] {
+  const a = (deg * Math.PI) / 180;
+  const [ux, uy] = [Math.sin(a), Math.cos(a)];
+  const p = (along: number, across: number): string => `${n(cx + ux * along + uy * across)} ${n(cy + uy * along - ux * across)}`;
+  const [s0, s1, w0, w1] = [r - 4, r + handle, 4.5, 5.75];
+  return [
+    path(`M ${p(s0, -w0)} L ${p(s1 - 3, -w1)} Q ${p(s1, -w1)} ${p(s1, 0)} Q ${p(s1, w1)} ${p(s1 - 3, w1)} L ${p(s0, w0)} Z`, { f: 'vocab.brown', ...INK }),
+    circle(cx, cy, r, { f: 'vocab.brown', ...INK }),
+    circle(Math.round((cx - ux * 1.5) * 10) / 10, Math.round((cy - uy * 1.5) * 10) / 10, r - 3.5, { f: 'vocab.red' }),
+  ];
+}
+
 /** A football: an ink pentagon in the middle, seams out to five ink patches on the rim. */
 function football(cx: number, cy: number, r: number): WordArtShape[] {
   const angles = [0, 1, 2, 3, 4].map((k) => -90 + 72 * k);
@@ -106,13 +123,9 @@ export const SPORT_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
   // white ball, blue and yellow panels
   'sport-volleyball': [groundShadow(50, 84, 24), ...volleyball(50, 49, 31)],
 
-  // paddle and white ball
-  'sport-tabletennis': [
-    limb([58, 60], [74, 80], 11, { f: 'vocab.brown', ...INK }),
-    circle(44, 44, 24, { f: 'vocab.red', ...INK }),
-    circle(44, 44, 18, { f: 'vocab.red', ...DETAIL }),
-    circle(80, 22, 7, { f: 'surface.paper', ...INK }),
-  ],
+  // two paddles crossed at the handles, red rubber in a wooden rim, and the white ball above
+  // (W-6 review: one paddle on a long handle read as a magnifying glass)
+  'sport-tabletennis': [groundShadow(50, 86, 26), ...paddle(68, 44, -28, 17, 24), ...paddle(32, 44, 28, 17, 24), circle(50, 25, 7, { f: 'surface.paper', ...INK })],
 
   // swimmer's head, goggles, waves: a swim cap, one arm over the water
   'sport-swimming': [
