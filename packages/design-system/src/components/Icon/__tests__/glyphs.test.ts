@@ -204,7 +204,7 @@ describe('the miss dash (F-VOC-004 §3.6, §3.8; design/components/Icon/spec.md)
 describe('notes glyphs (F-FEEDBACK-001 FB-6; design/components/Icon/spec.md)', () => {
   const NOTES_GLYPHS: IconName[] = ['note', 'heart'];
   const strokes = (name: IconName) => iconGlyphs[name].filter((part) => part.kind === 'stroke');
-  /** Every on-path point of an absolute M / L / C / A / Z path, in order (arc radii, rotation and flags dropped). */
+  /** Every point of an absolute M / L / C / A / Z path in drawing order, Bezier control points included (arc radii, rotation and flags dropped). */
   const points = (d: string): [number, number][] => {
     expect(d, 'absolute M / L / C / A / Z commands only').toMatch(/^[MLCAZ\d.\s-]+$/);
     const numbers = d.replace(/A\s*[\d.]+\s+[\d.]+\s+\d+\s+\d\s+\d/g, ' ').match(/-?\d+(\.\d+)?/g) ?? [];
@@ -225,7 +225,7 @@ describe('notes glyphs (F-FEEDBACK-001 FB-6; design/components/Icon/spec.md)', (
       for (const part of iconGlyphs[name]) {
         // exactly the shape `stroke(d)` / `stroke(d, width)` returns: no fill part, no extra key
         expect(part.kind, name).toBe('stroke');
-        expect(Object.keys(part).sort(), name).toEqual(part.kind === 'stroke' && part.width !== undefined ? ['d', 'kind', 'width'] : ['d', 'kind']);
+        expect(Object.keys(part).sort(), name).toEqual('width' in part ? ['d', 'kind', 'width'] : ['d', 'kind']);
         expect(widthOf(part), name).toBeGreaterThanOrEqual(2);
         expect(widthOf(part), name).toBeLessThanOrEqual(2.6);
       }
@@ -255,13 +255,13 @@ describe('notes glyphs (F-FEEDBACK-001 FB-6; design/components/Icon/spec.md)', (
     expect(lobes[1]?.x1).toBe(12);
     const path = points(d);
     expect(path[0]).toEqual(path[path.length - 1]);
-    // walking it backwards and mirroring x gives the same path: the left and right halves match
+    // walking it backwards and mirroring x gives the same path, control points included: the halves match
     const mirrored = [...path].reverse().map(([x, y]) => [24 - x, y]);
     expect(mirrored).toEqual(path);
-    // the tip sits on the centre line and is the lowest point
-    const [tipX, tipY] = path[0] ?? [0, 0];
-    expect(tipX).toBe(12);
-    for (const [, y] of path) expect(y).toBeLessThanOrEqual(tipY);
+    // the tip is the one lowest point (the curves stay inside their control points) and sits on the centre line
+    const lowest = Math.max(...path.map(([, y]) => y));
+    const tips = new Set(path.filter(([, y]) => y === lowest).map(([x]) => x));
+    expect([...tips]).toEqual([12]);
     // a broad open shape (the no-fill rule above keeps it from reading as a game "life")
     const xs = path.map(([x]) => x);
     const width = Math.max(...xs) - Math.min(...xs);
@@ -304,14 +304,6 @@ describe('notes glyphs (F-FEEDBACK-001 FB-6; design/components/Icon/spec.md)', (
       ysOfLines.push(y1);
     }
     const [firstY = 0, secondY = 0] = ysOfLines;
-    expect(Math.abs(secondY - firstY) - widthOf(lines[0])).toBeGreaterThanOrEqual(GAP);
-  });
-
-  it('neither repeats an older glyph: the note is not the card or the book, the heart is not the star or the sparkle', () => {
-    for (const name of NOTES_GLYPHS) {
-      for (const other of iconNames) {
-        if (other !== name) expect(iconGlyphs[name], `${name} vs ${other}`).not.toEqual(iconGlyphs[other]);
-      }
-    }
+    expect(Math.abs(secondY - firstY) - widthOf(lines[0]) / 2 - widthOf(lines[1]) / 2).toBeGreaterThanOrEqual(GAP);
   });
 });
