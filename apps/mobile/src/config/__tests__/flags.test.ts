@@ -135,4 +135,38 @@ describe('flags', () => {
     const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
     expect(src).toContain('process.env.EXPO_PUBLIC_MY_ROUTE_ENABLED');
   });
+  it('vocabTopicsEnabled (F-VOC-003 section 3.1) is OFF by default and flips on with "true" or "1"', async () => {
+    delete process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED;
+    let mod = await reload();
+    expect(mod.flags.vocabTopicsEnabled).toBe(false);
+    expect(mod.launchDefaultFlags.vocabTopicsEnabled).toBe(false);
+    process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED = 'true';
+    mod = await reload();
+    expect(mod.flags.vocabTopicsEnabled).toBe(true);
+    process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED = '1';
+    mod = await reload();
+    expect(mod.flags.vocabTopicsEnabled).toBe(true);
+    process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED = 'maybe';
+    mod = await reload();
+    expect(mod.flags.vocabTopicsEnabled).toBe(false);
+  });
+
+  it('vocabShowDrafts (F-VOC-001 section 3.7, dev builds only) is OFF by default and flips on with "true"', async () => {
+    delete process.env.EXPO_PUBLIC_VOCAB_SHOW_DRAFTS;
+    let mod = await reload();
+    expect(mod.flags.vocabShowDrafts).toBe(false);
+    expect(mod.launchDefaultFlags.vocabShowDrafts).toBe(false);
+    process.env.EXPO_PUBLIC_VOCAB_SHOW_DRAFTS = 'true';
+    mod = await reload();
+    expect(mod.flags.vocabShowDrafts).toBe(true);
+    process.env.EXPO_PUBLIC_VOCAB_SHOW_DRAFTS = '0';
+    mod = await reload();
+    expect(mod.flags.vocabShowDrafts).toBe(false);
+  });
+
+  it('the vocabulary flags are read by their literal names, so a web build can carry the override', () => {
+    const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
+    expect(src).toContain('process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED');
+    expect(src).toContain('process.env.EXPO_PUBLIC_VOCAB_SHOW_DRAFTS');
+  });
 });

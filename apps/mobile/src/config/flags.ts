@@ -88,6 +88,19 @@ export interface Flags {
    * the beta. The stage latch writer (R-1b) runs with it off.
    */
   myRouteEnabled: boolean;
+
+  /**
+   * Words (F-VOC-003): the Library Words card, the topic picker, the topic
+   * page and the flashcards. OFF until the free-set topics are approved and
+   * native-reviewed (C-7 flips it).
+   */
+  vocabTopicsEnabled: boolean;
+
+  /**
+   * Lists `draft` vocabulary topics in the picker (F-VOC-001 section 3.7).
+   * OFF by default; set it only in dev and design-preview builds.
+   */
+  vocabShowDrafts: boolean;
 }
 
 const launchDefaults: Flags = {
@@ -100,6 +113,8 @@ const launchDefaults: Flags = {
   placementEnabled: false,
   audioClips: true,
   myRouteEnabled: false,
+  vocabTopicsEnabled: false,
+  vocabShowDrafts: false,
 };
 
 export const flags: Flags = {
@@ -118,6 +133,8 @@ export const flags: Flags = {
   placementEnabled: readBool('EXPO_PUBLIC_PLACEMENT_ENABLED', launchDefaults.placementEnabled),
   audioClips: parseBool(process.env.EXPO_PUBLIC_AUDIO_CLIPS, launchDefaults.audioClips),
   myRouteEnabled: parseBool(process.env.EXPO_PUBLIC_MY_ROUTE_ENABLED, launchDefaults.myRouteEnabled),
+  vocabTopicsEnabled: parseBool(process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED, launchDefaults.vocabTopicsEnabled),
+  vocabShowDrafts: parseBool(process.env.EXPO_PUBLIC_VOCAB_SHOW_DRAFTS, launchDefaults.vocabShowDrafts),
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;
