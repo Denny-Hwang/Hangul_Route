@@ -1,6 +1,9 @@
 import { LEARNER_LEVELS } from '@hangul-route/content-schema';
+import { getMessages } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import { PrivacyPage as PrivacyDocument } from '../../components/landing/PrivacyPage';
+import { TermsPage as TermsDocument } from '../../components/landing/TermsPage';
 import { CONTACT_EMAIL } from '../../data/contact';
 import PrivacyPage from '../(en)/privacy/page';
 import TermsPage from '../(en)/terms/page';
@@ -21,8 +24,22 @@ function textOf(html: string): string {
     .replace(/\s+/g, ' ');
 }
 
-const privacy = textOf(renderToStaticMarkup(<PrivacyPage />));
-const terms = textOf(renderToStaticMarkup(<TermsPage />));
+const privacyHtml = renderToStaticMarkup(<PrivacyPage />);
+const termsHtml = renderToStaticMarkup(<TermsPage />);
+const privacy = textOf(privacyHtml);
+const terms = textOf(termsHtml);
+
+/** Each paragraph and list item on its own, so a marking in one block cannot cover another. */
+function blocksOf(html: string): string[] {
+  return [...html.matchAll(/<(p|li)\b[^>]*>(.*?)<\/\1>/g)].map((m) => textOf(m[2] ?? '').trim());
+}
+
+/** The text between two section headings of a rendered document. */
+function between(text: string, from: string, to: string): string {
+  const start = text.indexOf(from);
+  const end = text.indexOf(to, start);
+  return start >= 0 && end > start ? text.slice(start + from.length, end) : '';
+}
 
 describe('privacy policy', () => {
   it('describes an all-ages audience where many learners are children', () => {
@@ -161,5 +178,130 @@ describe('terms of service', () => {
 
   it('is still marked as a draft pending legal review', () => {
     expect(terms).toContain('pending review by qualified legal counsel');
+  });
+});
+
+/**
+ * F-SITE-002 S-7 (section 3.7, OD-13): factual payment corrections to the drafts. The web is paid through
+ * Stripe after signing in at app.hangulroute.com; the iPhone and Android apps go through the App Store or
+ * Google Play when they offer purchases (F-ENT-001 §3.5, F-IAP-002). Web plans renew yearly until cancelled
+ * (AMENDMENTS-BILLING-FAMILY-YEARLY BY-D10). The store paragraphs stay, marked as applying to in-app purchases.
+ * English is authoritative (L10), the draft banner stays, and the PR flags the wording for counsel.
+ */
+describe('payment facts (F-SITE-002 S-7)', () => {
+  const CHANNELS =
+    'On the web, a grown-up pays through Stripe after signing in at app.hangulroute.com. In the iPhone and Android apps, purchases (when offered) go through the App Store or Google Play.';
+  const WEB_RENEWAL =
+    'Plans bought on the web (the Family Plan and the Group License) renew every year until cancelled. Cancel any time in Billing, under Manage subscription; the plan stays active until the end of the year already paid.';
+  const IN_APP = /^In-app purchases: /;
+  const STORE = /App Store|Google Play/;
+
+  const privacyPayments = between(privacy, 'Payments and subscriptions', 'Third-party services');
+  const privacyThirdParty = between(privacy, 'Third-party services', 'Parental rights and choices');
+  const termsBilling = between(terms, 'Subscriptions, billing, and cancellation', 'Acceptable use');
+
+  describe('Privacy Policy', () => {
+    it('names both payment channels in "Payments and subscriptions"', () => {
+      expect(privacyPayments).toContain(CHANNELS);
+    });
+
+    it('no longer says every subscription is billed through the stores', () => {
+      expect(privacy).not.toContain('Subscriptions are billed through the Apple App Store or Google Play.');
+      expect(privacy).not.toContain('the store handles payment and gives us');
+    });
+
+    it('keeps the card promise for both channels', () => {
+      expect(privacyPayments).toContain(
+        'We never see or store full card numbers — Stripe or the store handles payment, and we keep only the minimum needed to unlock the subscription on the account.',
+      );
+    });
+
+    it('lists Stripe for the web and keeps the stores, marked for in-app purchases, among the third-party services', () => {
+      expect(privacyThirdParty).toContain('Stripe — payments and subscription management for plans bought on the web.');
+      expect(privacyThirdParty).toContain('Apple App Store / Google Play — payments and subscription management for in-app purchases.');
+      expect(privacyThirdParty.indexOf('Stripe —')).toBeLessThan(privacyThirdParty.indexOf('Apple App Store /'));
+    });
+  });
+
+  describe('Terms of Service', () => {
+    it('names both payment channels, then the web renewal, before the in-app terms', () => {
+      const channels = termsBilling.indexOf(CHANNELS);
+      const renewal = termsBilling.indexOf(WEB_RENEWAL);
+      const inApp = termsBilling.indexOf('In-app purchases:');
+      expect(channels).toBeGreaterThan(-1);
+      expect(renewal).toBeGreaterThan(channels);
+      expect(inApp).toBeGreaterThan(renewal);
+    });
+
+    it('keeps the store subscription, auto-renew, management and refund paragraphs, each marked for in-app purchases', () => {
+      expect(termsBilling).toContain(
+        'In-app purchases: premium content is offered as an auto-renewing subscription billed through the Apple App Store or Google Play.',
+      );
+      expect(termsBilling).toContain(
+        'In-app purchases: your subscription renews automatically unless you cancel at least 24 hours before the end of the current period.',
+      );
+      expect(termsBilling).toContain('In-app purchases: manage or cancel anytime in your App Store or Google Play account settings.');
+      expect(termsBilling).toContain(
+        'In-app purchases: refunds are handled by the store under its policy. A free trial, if offered, converts to a paid subscription unless cancelled before it ends.',
+      );
+    });
+
+    it('marks every list item of the billing section as in-app, and no longer bills premium through the stores alone', () => {
+      const section = between(termsHtml, 'Subscriptions, billing, and cancellation', 'Acceptable use');
+      const items = [...section.matchAll(/<li\b[^>]*>(.*?)<\/li>/g)].map((m) => textOf(m[1] ?? '').trim());
+      expect(items).toHaveLength(4);
+      for (const item of items) expect(item).toMatch(IN_APP);
+      expect(terms).not.toContain('Premium content is offered as an auto-renewing subscription billed through the Apple App Store or Google Play.');
+      expect(terms).not.toMatch(/(^|\. )Your subscription renews automatically/);
+    });
+  });
+
+  describe('both documents', () => {
+    const documents = [
+      ['privacy', privacyHtml],
+      ['terms', termsHtml],
+    ] as const;
+
+    it.each(documents)('%s: every paragraph about the stores or renewal says which purchases it applies to', (_, html) => {
+      const blocks = blocksOf(html).filter((block) => STORE.test(block) || /\brenew/i.test(block));
+      expect(blocks.length).toBeGreaterThan(0);
+      for (const block of blocks) {
+        const scoped = block === CHANNELS || block.includes(CHANNELS) || block === WEB_RENEWAL || IN_APP.test(block) || /for in-app purchases\.$/.test(block);
+        expect(scoped, block).toBe(true);
+      }
+    });
+
+    it.each(documents)('%s: names no price and no one-time or lifetime purchase', (_, html) => {
+      const text = textOf(html);
+      expect(text).not.toMatch(/[$€£₩]\s?\d|\d\s?(USD|dollars?)\b|\b15\.30\b|\b153\b|\bper (year|month)\b|\/\s?(year|yr|month)\b/i);
+      expect(text).not.toMatch(/\blifetime\b|\bpay once\b|\bone payment\b|\bfor good\b|\bforever\b|\bnothing to cancel\b|\bno renewal\b/i);
+    });
+
+    it.each(documents)('%s: adds no sentence about site analytics', (_, html) => {
+      expect(textOf(html)).not.toMatch(/analytics/i);
+    });
+
+    it.each(documents)('%s: keeps the draft banner', (_, html) => {
+      expect(textOf(html)).toContain(
+        'Draft for review. This document is a working draft pending review by qualified legal counsel before public launch.',
+      );
+    });
+
+    it('Terms of Service: the effective date moves to 2026-10-12 with the payment facts; the Privacy Policy keeps 2026-10-12', () => {
+      expect(terms).toContain('Effective October 12, 2026');
+      expect(terms).not.toContain('Effective May 22, 2026');
+      expect(privacy).toContain('Effective October 12, 2026');
+    });
+
+    it.each(['es', 'ko'] as const)('%s: shows the same English payment facts under the English-authoritative notice (L10)', (locale) => {
+      const notice = getMessages(locale).landing.legal.englishAuthoritative;
+      const localizedPrivacy = textOf(renderToStaticMarkup(<PrivacyDocument locale={locale} />));
+      const localizedTerms = textOf(renderToStaticMarkup(<TermsDocument locale={locale} />));
+      expect(localizedPrivacy).toContain(notice);
+      expect(localizedTerms).toContain(notice);
+      expect(localizedPrivacy).toContain(CHANNELS);
+      expect(localizedTerms).toContain(CHANNELS);
+      expect(localizedTerms).toContain(WEB_RENEWAL);
+    });
   });
 });

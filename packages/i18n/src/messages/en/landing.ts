@@ -610,13 +610,20 @@ export const landing = {
         payments: {
           heading: 'Payments and subscriptions',
           paragraphs: {
-            p1: 'Subscriptions are billed through the Apple App Store or Google Play. We never see or store full card numbers — the store handles payment and gives us only the minimum needed to unlock the subscription on the account.',
+            /**
+             * Both payment channels (F-SITE-002 §3.7, S-7, OD-13): Stripe Checkout on app.hangulroute.com after sign-in
+             * (F-BILL-002), the stores in the native apps when they offer purchases (F-ENT-001 §3.5, F-IAP-002). The server
+             * keeps the plan, its status and the Stripe or store ids, never card data (`entitlements`). No price here (OD-7).
+             */
+            p1: 'On the web, a grown-up pays through Stripe after signing in at app.hangulroute.com. In the iPhone and Android apps, purchases (when offered) go through the App Store or Google Play. We never see or store full card numbers — Stripe or the store handles payment, and we keep only the minimum needed to unlock the subscription on the account.',
           },
         },
         thirdParty: {
           heading: 'Third-party services',
           bullets: {
-            stores: 'Apple App Store / Google Play — payments and subscription management.',
+            /** F-SITE-002 S-7: the web's payment processor, listed before the stores as in the payment sentence. */
+            stripe: 'Stripe — payments and subscription management for plans bought on the web.',
+            stores: 'Apple App Store / Google Play — payments and subscription management for in-app purchases.',
             cloudflare: 'Cloudflare — hosting, storage, and content delivery.',
             noTracking: 'We do not use third-party advertising or social-media tracking SDKs.',
           },
@@ -649,7 +656,7 @@ export const landing = {
     },
     terms: {
       title: 'Terms of Service',
-      effective: 'Effective May 22, 2026',
+      effective: 'Effective October 12, 2026',
       otherDocument: 'Privacy Policy',
       sections: {
         accepting: {
@@ -666,11 +673,23 @@ export const landing = {
         },
         billing: {
           heading: 'Subscriptions, billing, and cancellation',
+          /**
+           * F-SITE-002 §3.7 (S-7, OD-13): both payment channels, then the yearly renewal of web plans
+           * (AMENDMENTS-BILLING-FAMILY-YEARLY BY-D10 [BY]; "Billing" and "Manage subscription" are the console's own labels).
+           * The page renders these before the bullets. No price here (OD-7).
+           */
+          paragraphs: {
+            channels:
+              'On the web, a grown-up pays through Stripe after signing in at app.hangulroute.com. In the iPhone and Android apps, purchases (when offered) go through the App Store or Google Play.',
+            webRenewal:
+              'Plans bought on the web (the Family Plan and the Group License) renew every year until cancelled. Cancel any time in Billing, under Manage subscription; the plan stays active until the end of the year already paid.',
+          },
+          /** The store terms, kept and marked as applying to in-app purchases (F-ENT-001 §3.5, F-IAP-002). */
           bullets: {
-            premium: 'Premium content is offered as an auto-renewing subscription billed through the Apple App Store or Google Play.',
-            renews: 'Your subscription renews automatically unless you cancel at least 24 hours before the end of the current period.',
-            manage: 'Manage or cancel anytime in your App Store or Google Play account settings.',
-            refunds: 'Refunds are handled by the store under its policy. A free trial, if offered, converts to a paid subscription unless cancelled before it ends.',
+            premium: 'In-app purchases: premium content is offered as an auto-renewing subscription billed through the Apple App Store or Google Play.',
+            renews: 'In-app purchases: your subscription renews automatically unless you cancel at least 24 hours before the end of the current period.',
+            manage: 'In-app purchases: manage or cancel anytime in your App Store or Google Play account settings.',
+            refunds: 'In-app purchases: refunds are handled by the store under its policy. A free trial, if offered, converts to a paid subscription unless cancelled before it ends.',
           },
         },
         use: {
