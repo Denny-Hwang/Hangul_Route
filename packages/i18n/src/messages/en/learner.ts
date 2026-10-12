@@ -463,6 +463,8 @@ export const learner = {
     trace: {
       /** `romanization` is the letter's sound value. */
       heading: (romanization: string) => `Trace the letter ${romanization}`,
+      /** A final consonant (a `*-batchim` jamo, F-QUEST-002 quest 12): named as a final, like the Build a Letter tile. */
+      headingFinal: (romanization: string) => `Trace the final ${romanization}`,
       instruction: 'Draw the letter with your finger.',
       showMe: { cta: 'Show me' },
       clear: { cta: 'Clear' },

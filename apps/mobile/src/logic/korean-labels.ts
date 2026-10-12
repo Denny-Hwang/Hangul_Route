@@ -24,6 +24,30 @@ export function traceLetterA11yText(romanization: string, label: Messages['a11y'
   return label(a11yRomanization(romanization));
 }
 
+/** The traced jamo as the trace prompt needs it: a final consonant is named as a final. */
+export interface TraceTarget {
+  romanization: string;
+  kind: 'consonant' | 'vowel' | 'batchim';
+}
+
+/** The trace prompt heading: `heading`, or `headingFinal` over a final consonant (F-QUEST-002 quest 12). */
+export function traceHeadingText(
+  target: TraceTarget,
+  copy: Pick<Messages['learner']['minigame']['trace'], 'heading' | 'headingFinal'>,
+): string {
+  return target.kind === 'batchim' ? copy.headingFinal(target.romanization) : copy.heading(target.romanization);
+}
+
+/** Screen-reader text of the trace prompt heading: `traceLetter`, or `traceFinal` over a final consonant. */
+export function traceTargetA11yText(
+  target: TraceTarget,
+  labels: Pick<Messages['a11y']['minigame'], 'traceLetter' | 'traceFinal'>,
+): string {
+  return target.kind === 'batchim'
+    ? labels.traceFinal(a11yRomanization(target.romanization))
+    : traceLetterA11yText(target.romanization, labels.traceLetter);
+}
+
 /** Screen-reader label of the trace canvas (`a11y.minigame.traceCanvas`). */
 export function traceCanvasA11yLabel(romanization: string, label: Messages['a11y']['minigame']['traceCanvas']): string {
   return label(a11yRomanization(romanization));
