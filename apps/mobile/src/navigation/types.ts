@@ -32,7 +32,8 @@ export type RootStackParamList = {
    * active profile. Another profile opens read-only only while the grown-up gate is open; otherwise
    * the screen replaces itself with `PinEntry`. `source` is the entry, for `route_map.viewed`.
    */
-  MyRoute: { source: MyRouteSource; profileId?: string };
+  /** `viewer: 'grownup'`: opened by a grown-up (the parent dashboard row, R-9b), always read-only, also for the active profile (amendment section 5.1). */
+  MyRoute: { source: MyRouteSource; profileId?: string; viewer?: 'grownup' };
   /**
    * `resume`: open a story quest on its `story-read` step when the learner has a
    * bookmark for it at the quest's level (F-STORY-004 §3.8); otherwise step 0.

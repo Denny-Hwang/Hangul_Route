@@ -50,7 +50,13 @@ export function MyRouteScreen({ route, navigation }: Props): React.ReactElement 
   const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
   const { opensDirectly } = useAudience();
   const sessionOpen = isParentSessionValid(parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' }, Date.now());
-  const access = myRouteAccess({ requestedId: route.params?.profileId, activeId, profiles, gateOpen: opensDirectly(sessionOpen) });
+  const access = myRouteAccess({
+    requestedId: route.params?.profileId,
+    activeId,
+    profiles,
+    gateOpen: opensDirectly(sessionOpen),
+    grownup: route.params?.viewer === 'grownup',
+  });
   const gateFor = access.kind === 'gate' ? access.profileId : null;
 
   useEffect(() => {

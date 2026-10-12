@@ -20,6 +20,7 @@
     "apps/mobile/src/screens/parent/PinEntryScreen.tsx",
     "apps/mobile/src/screens/parent/PinResetScreen.tsx",
     "apps/mobile/src/screens/parent/ParentDashboardScreen.tsx",
+    "apps/mobile/src/screens/parent/LearningRouteRow.tsx",
     "apps/mobile/src/screens/paywall/PaywallScreen.tsx",
     "apps/mobile/src/components/PinPad.tsx",
     "apps/mobile/src/components/PinSetupField.tsx",
