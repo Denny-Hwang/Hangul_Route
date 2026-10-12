@@ -30,8 +30,9 @@ const privacy = textOf(privacyHtml);
 const terms = textOf(termsHtml);
 
 /**
- * Each heading, paragraph, list item and text box (the draft banner, the English-authoritative notice) on its own,
- * so a marking in one block cannot cover another. The legal pages nest no element inside these blocks except links.
+ * Each heading, paragraph (the English-authoritative notice is a `<p role="note">`), list item and the draft banner
+ * (a `<div>` holding only text) on its own, so a marking in one block cannot cover another. The legal pages nest no
+ * block inside these, so the lazy match ends at the block's own closing tag.
  */
 function blocksOf(html: string): string[] {
   return [...html.matchAll(/<(h[1-6]|p|li|div)\b[^>]*>(.*?)<\/\1>/g)].map((m) => textOf(m[2] ?? '').trim()).filter((b) => b.length > 0);
@@ -210,16 +211,22 @@ describe('payment facts (F-SITE-002 S-7)', () => {
 
   /**
    * Sentences about the stores or renewal that do not say which purchases they apply to. A block marked
-   * "In-app purchases:" scopes all of its sentences; elsewhere a sentence must be one of the channel or web-renewal
-   * sentences, or the third-party stores line itself.
+   * "In-app purchases:" scopes its sentences, so none of them may speak of the web or Stripe; elsewhere a sentence
+   * must be one of the channel or web-renewal sentences, or the third-party stores line itself.
    */
   function unscopedSentences(html: string): string[] {
     const allowed = new Set([...sentencesOf(`${CHANNELS} ${WEB_RENEWAL}`), STORES_LINE]);
-    return blocksOf(html)
+    const blocks = blocksOf(html);
+    const outside = blocks
       .filter((block) => !IN_APP.test(block))
       .flatMap(sentencesOf)
       .filter((sentence) => STORE.test(sentence) || /\brenew/i.test(sentence))
       .filter((sentence) => !allowed.has(sentence));
+    const insideAboutWeb = blocks
+      .filter((block) => IN_APP.test(block))
+      .flatMap(sentencesOf)
+      .filter((sentence) => /\bweb\b|Stripe/i.test(sentence));
+    return [...outside, ...insideAboutWeb];
   }
 
   const privacyPayments = between(privacy, 'Payments and subscriptions', 'Third-party services');
@@ -246,7 +253,7 @@ describe('payment facts (F-SITE-002 S-7)', () => {
 
     it('lists Stripe for the web and keeps the stores, marked for in-app purchases, among the third-party services', () => {
       expect(privacyThirdParty).toContain(
-        'Stripe — payments and subscription management for plans bought on the web. We give Stripe the email address the grown-up signed in with, for receipts, and our own reference ids for the plan, so each payment is matched to it.',
+        'Stripe — payments and subscription management for plans bought on the web. We give Stripe the email address the grown-up signed in with, for receipts, and the plan, our reference ids for it and any promotion code used, so each payment is matched to the right plan.',
       );
       expect(privacyThirdParty).toContain('Apple App Store / Google Play — payments and subscription management for in-app purchases.');
       expect(privacyThirdParty.indexOf('Stripe —')).toBeLessThan(privacyThirdParty.indexOf('Apple App Store /'));
@@ -301,6 +308,7 @@ describe('payment facts (F-SITE-002 S-7)', () => {
       const html = [
         `<p>${CHANNELS} Subscriptions renew automatically through Google Play.</p>`,
         '<li>In-app purchases: renews in the store.</li>',
+        '<li>In-app purchases: refunds are handled by the store. Web plans renew monthly.</li>',
         `<li>${STORES_LINE}</li>`,
         '<li>Every plan renews through the App Store or Google Play for in-app purchases.</li>',
         '<h2>Plans renew through Google Play</h2>',
@@ -311,18 +319,21 @@ describe('payment facts (F-SITE-002 S-7)', () => {
         'Every plan renews through the App Store or Google Play for in-app purchases.',
         'Plans renew through Google Play',
         'Billing renews yearly.',
+        'Web plans renew monthly.',
       ]);
     });
 
     /** A currency sign or code, a decimal amount, the two plan amounts, or an amount per period (OD-7). */
     const PRICE =
-      /[$€£₩]|\b(USD|EUR|GBP|KRW|dollars?|won)\b|\b\d+\.\d+\b|\b15\.3\b|\b153\b|\d\s*(a|an|per|each|every|\/)\s*(year|yr|month|mo)\b|\b(yearly|annual|monthly) (price|fee|cost)\b/i;
+      /[$€£₩]|\b(USD|EUR|GBP|KRW|dollars?)\b|\b\d+\.\d+\b|\b153\b|\d\s*(a|an|per|each|every|\/)\s*(year|yr|month|mo)\b|\b(yearly|annual|monthly) (price|fee|cost)\b/i;
 
     it('the price guard catches the usual ways of writing a price (self-check)', () => {
-      for (const sample of ['$15.30 a year', 'USD 15', '15.3 yearly', '153 per year', '15 / year', 'fifteen dollars yearly', 'the yearly price', '10 won']) {
+      for (const sample of ['$15.30 a year', 'USD 15', '15.3 yearly', '153 per year', '15 / year', 'fifteen dollars yearly', 'the yearly price', '₩20000', '20000 KRW']) {
         expect(sample).toMatch(PRICE);
       }
-      expect('Plans bought on the web renew every year until cancelled.').not.toMatch(PRICE);
+      for (const fine of ['Plans bought on the web renew every year until cancelled.', "We won't sell your data.", 'within 30 days']) {
+        expect(fine).not.toMatch(PRICE);
+      }
     });
 
     it.each(documents)('%s: names no price and no one-time or lifetime purchase', (_, html) => {

@@ -636,7 +636,7 @@ export const landing = {
              * is opened with the signed-in account's email (`customer_email`) and the plan's subject kind and id, plan key
              * and any promotion code as metadata (`checkoutForm`, packages/backend lib/stripe.ts).
              */
-            stripe: 'Stripe — payments and subscription management for plans bought on the web. We give Stripe the email address the grown-up signed in with, for receipts, and our own reference ids for the plan, so each payment is matched to it.',
+            stripe: 'Stripe — payments and subscription management for plans bought on the web. We give Stripe the email address the grown-up signed in with, for receipts, and the plan, our reference ids for it and any promotion code used, so each payment is matched to the right plan.',
             stores: 'Apple App Store / Google Play — payments and subscription management for in-app purchases.',
             cloudflare: 'Cloudflare — hosting, storage, and content delivery.',
             noTracking: 'We do not use third-party advertising or social-media tracking SDKs.',

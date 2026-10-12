@@ -116,7 +116,7 @@ describe('legal: payment facts (F-SITE-002 S-7, OD-13; English-authoritative, fl
 
   it('Privacy Policy: third-party services list Stripe for the web, then the stores for in-app purchases', () => {
     expect(privacy.thirdParty.bullets.stripe).toBe(
-      'Stripe — payments and subscription management for plans bought on the web. We give Stripe the email address the grown-up signed in with, for receipts, and our own reference ids for the plan, so each payment is matched to it.',
+      'Stripe — payments and subscription management for plans bought on the web. We give Stripe the email address the grown-up signed in with, for receipts, and the plan, our reference ids for it and any promotion code used, so each payment is matched to the right plan.',
     );
     expect(privacy.thirdParty.bullets.stores).toBe('Apple App Store / Google Play — payments and subscription management for in-app purchases.');
     expect(Object.keys(privacy.thirdParty.bullets)).toEqual(['stripe', 'stores', 'cloudflare', 'noTracking']);
