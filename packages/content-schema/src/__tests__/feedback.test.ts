@@ -5,6 +5,7 @@ import {
   InboxNoteSchema,
   NOTES_MODES,
   NOTE_LEARNER_ID_MAX,
+  NOTE_PAIR_DAILY_LIMIT,
   NOTE_PREFS_DEFAULT,
   NOTE_PREFS_UNREADABLE,
   NOTE_PRESETS_NEED_SUGGEST,
@@ -14,6 +15,7 @@ import {
   NOTE_REPORT_REASONS,
   NOTE_SEND_MAX_LEARNERS,
   NoteAccountReportSchema,
+  NoteAttestSchema,
   NoteDevicePrefsPutSchema,
   NoteIdSchema,
   NotePrefsPutSchema,
@@ -82,6 +84,12 @@ describe('note catalogues (section 6.3, 6.6, 6.11)', () => {
   it('caps one send at 300 learners and a learner id at 80 characters', () => {
     expect(NOTE_SEND_MAX_LEARNERS).toBe(300);
     expect(NOTE_LEARNER_ID_MAX).toBe(80);
+  });
+
+  it('shares the per-learner daily limit and the attest values (sections 7.1, 7.3, OD-14)', () => {
+    expect(NOTE_PAIR_DAILY_LIMIT).toBe(3);
+    expect(NoteAttestSchema.options).toEqual(['grown_up_pin', 'self']);
+    expect(NoteAttestSchema.safeParse('teacher').success).toBe(false);
   });
 
   it('pins the two inbox fallbacks for notePrefs and freezes them, so no consumer can loosen them', () => {

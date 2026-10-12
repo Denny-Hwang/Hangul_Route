@@ -523,4 +523,68 @@ export const caregiver = {
       either: 'the Family Plan or a Group License',
     },
   },
+  /**
+   * Notes from grown-ups in the in-app grown-up zone (F-FEEDBACK-001 FB-5; wireframes parent/notes.md
+   * and parent/note-report.md; FB-9 renders them). Behind the gate, so they address the grown-up and
+   * name the learner in the third person. Senders are labels (`common.notes`), never account names.
+   */
+  notes: {
+    /** One dashboard row per local profile with notes or memberships. */
+    row: { title: (learner: string) => `Notes for ${learner}` },
+    title: (learner: string) => `Notes for ${learner}`,
+    empty: (learner: string) => `No notes for ${learner} yet.`,
+    putAway: 'Put away on this device',
+    status: { opened: 'Opened' },
+    hide: {
+      cta: (learner: string) => `Hide from ${learner}`,
+      confirm: {
+        title: (learner: string) => `Hide this note from ${learner}?`,
+        body: "It goes away on every device. The sender sees 'Not shown'.",
+        cta: 'Hide',
+        cancel: { cta: 'Cancel' },
+      },
+    },
+    report: {
+      cta: 'Report',
+      title: 'Report this note',
+      why: 'Why?',
+      reasons: {
+        unkind: 'Unkind',
+        unsafe: 'Unsafe',
+        not_for_me: (learner: string) => `Not meant for ${learner}`,
+        other: 'Something else',
+      },
+      submit: { cta: 'Report and hide' },
+      line: (learner: string) => `The note goes away for ${learner} on every device. Our team looks at every report.`,
+      justHide: { cta: 'Just hide it' },
+      close: 'Close',
+      reported: 'Thank you. The note is gone.',
+      /** Shown after the reason Unsafe only. */
+      emergency: 'If someone is in danger, contact local emergency services.',
+      hidden: 'The note is hidden.',
+      done: { cta: 'Done' },
+      alreadyGone: 'This note is already gone.',
+      /** The report is queued with a local hide (one pending report per note). */
+      queued: 'We could not send the report. We will try again when you are online.',
+      tooMany: 'Too many reports today. The note is hidden on this device.',
+    },
+    /** The class-notes setting (`NOTES_MODES`). */
+    mode: {
+      title: 'Notes from classes',
+      options: { all: 'All notes', presets: 'Encouragements only', off: 'Off' },
+      familyAlways: 'Notes from your family always arrive.',
+      classScoped: 'Change this on a home device.',
+    },
+    /** The one-time class-notes card (section 6.10 item 5); `mode` is a `mode.options` value. */
+    oneTimeCard: {
+      line: (mode: string) => `Notes from classes: ${mode}.`,
+      keep: { cta: 'Keep' },
+      change: { cta: 'Change' },
+    },
+    disclosure: (learner: string) => `Teachers see the answer ${learner} picks on their notes.`,
+    offline: 'Connect to the internet to do this.',
+    saveFailed: 'That did not save. Try again.',
+    /** Web only: opens the family notes on app.hangulroute.com. */
+    sendNote: { cta: 'Send a note' },
+  },
 } as const;

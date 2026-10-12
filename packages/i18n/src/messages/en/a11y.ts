@@ -208,4 +208,18 @@ export const a11y = {
     growthTable: 'Quests and cards by month',
     loading: 'Loading the report',
   },
+  /**
+   * Notes from grown-ups (F-FEEDBACK-001 FB-5, section 6.12): the Home card read as one group, a list
+   * row, the learner's own answer and the announced pick. `preset` and `label` are already-rendered
+   * `common.notes` lines; `date` is the note date as drawn.
+   */
+  notes: {
+    card: (sender: string, preset: string) => `New note from ${sender}: ${preset} Read.`,
+    cardMany: (n: number, sender: string) => `${plural('en', n, { one: '1 new note', other: `${n} new notes` })}. Newest from ${sender}. Read.`,
+    row: (sender: string, preset: string, date: string, isNew: boolean) =>
+      `${isNew ? 'New. ' : ''}From ${sender}, ${date}. ${preset}`,
+    answer: (label: string) => `Your answer: ${label}`,
+    reactionPicked: (label: string) => `You picked: ${label}`,
+    questCard: (title: string) => `Try this quest: ${title}`,
+  },
 } as const;
