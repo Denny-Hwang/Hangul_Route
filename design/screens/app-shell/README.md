@@ -7,7 +7,7 @@ Built by:
 - **A-5a**: `AdultFrame` (persona switch, `ADULT_NAV`, phone layout, footer site links) and the teacher home (class rows, no-class state, cross-links) → `adult-frame.md`, `teacher-home.md`.
 - **A-5b**: the family home (card actions, empty state with the join hand-off, no-family state) → `parent-home.md`.
 - **A-5c**: the frame's Billing item (drawn in `adult-frame.md`; the billing page itself is F-BILL-002's).
-- **A-7**: the Welcome persona row, the Profile "Grown-up home" row, the ParentDashboard card, the PIN screen without a PIN → `learner-entry.md`.
+- **A-7**: the Welcome persona row, the Profile "Grown-up home" row, the ParentDashboard card → `learner-entry.md` (which also draws the PIN screen without a PIN as A-6, #404, built it).
 - Already shipped, drawn as built so every grown-up surface is on one board: the lock (A-4a, #387) → `grown-up-lock.md`; the offline page (A-2, #386) → `offline.md`.
 
 ## What is here

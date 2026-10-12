@@ -59,9 +59,9 @@ Let's start ends at 466 px at 320 x 568: the row never pushes it out of the firs
 
 Offline: Open disabled with "Needs the internet" right-aligned above it. `openGrownUpArea({ via: 'dashboard' })`.
 
-## PIN screen, destination `GrownUpArea`, no PIN stored
+## PIN screen, destination `GrownUpArea`, no PIN stored (built by A-6, #404)
 
-The verify screen's title ("Grown-up zone"), the lock glyph, one line "This device has no grown-up PIN. Sign in on the grown-up page instead." and **Continue** (primary, max 400) → `/signin`. No PIN pad, no Forgot PIN, never a create step.
+Drawn as `PinEntryScreen.tsx` renders it since A-6: the close button and the verify title ("Grown-up zone"), the line "This device has no grown-up PIN. Sign in on the grown-up page instead.", **Continue** (primary, large, full width) to the grown-up page, and **Cancel** (ghost). No PIN pad, no Forgot PIN, never a create step. **No change is proposed**; A-7 only adds the entries that lead here.
 
 ## Tokens
 
