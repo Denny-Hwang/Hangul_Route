@@ -21,17 +21,20 @@ import { episodeById, episodesAll, gridEpisodes, questsAll, stages, themes } fro
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeStage, localizeTheme } from '../../logic/content-locale';
 import { cursorEntitlement } from '../../logic/cursor-context';
-import { learnerCellMarks } from '../../logic/journey-grid';
+import { dayKey } from '../../logic/homework/mission-builder';
+import { learnerCellMarks, type JourneyAccessInput } from '../../logic/journey-grid';
 import { initialEpisode, latchedSelection, reconcileSelection, requestedSelection, type PaneLatch } from '../../logic/layout/pane-selection';
 import { journeyMarks } from '../../logic/placement/cell-look';
 import { appRouteCatalog } from '../../logic/placement/route-skip';
+import { planView, routeNext, routeNextInputOf } from '../../logic/route-next';
 import { defaultStoryIndex } from '../../logic/story/story-index';
 import type { MainTabParamList, RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
-import { useAccessTier } from '../../store/tier-store';
+import { usePlanStore } from '../../store/plan-store';
+import { useAccessTier, useQuestAccess } from '../../store/tier-store';
 import { EpisodeDetailView } from '../episode/EpisodeDetailView';
-import { flags } from '../../config/flags';
+import { bundleOs, flags, gatingActive } from '../../config/flags';
 
 /** The grid's episodes: a shelf episode is never a grid cell or a pane selection (F-STORY-004 §3.10). */
 const GRID_EPISODES = gridEpisodes(episodesAll);
@@ -101,6 +104,32 @@ export function JourneyScreen(): React.ReactElement {
     [snapQuests, marks, completedIds],
   );
 
+  // The route marks (F-ENT-003 section 3.7, E3-5): Next on the cell of the one next, the In your plan ring on
+  // the leading plan's cells inside the horizon, the dotted ring on a lesson this learner cannot start yet.
+  // The same input Home and Results build, so the three agree.
+  const questOpen = useQuestAccess();
+  const plans = usePlanStore((s) => (profile ? s.byLearner[profile.id] : undefined));
+  const access = useMemo<JourneyAccessInput | undefined>(() => {
+    if (!profile || !snap) return undefined;
+    const input = routeNextInputOf({
+      snapshot: snap,
+      profileId: profile.id,
+      today: dayKey(new Date().toISOString()),
+      plans,
+      quests: questsAll,
+      episodes: episodesAll,
+      tier,
+      gatingActive: gatingActive(flags, bundleOs()),
+      isQuestOpen: questOpen,
+    });
+    const next = routeNext(input);
+    return {
+      nextEpisodeId: next.kind === 'quest' ? next.episodeId : null,
+      inPlanEpisodeIds: planView(input).inPlanEpisodeIds,
+      isQuestOpen: questOpen,
+    };
+  }, [profile, snap, plans, tier, questOpen]);
+
   const grid = (
     <>
       <Heading level="title">{m.title}</Heading>
@@ -135,6 +164,7 @@ export function JourneyScreen(): React.ReactElement {
         quests={snapQuests}
         // A stories-only cell opens its cell page on one pane and on two (F-STORY-005 §3.6).
         onOpenStories={(stage, theme) => navigation.navigate('CellStories', { stage, theme, source: 'cell' })}
+        access={access}
       />
 
       <Card padding="md" tone="sunken">
