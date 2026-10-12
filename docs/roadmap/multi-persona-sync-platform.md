@@ -139,7 +139,7 @@ CREATE TABLE entitlements (
   id            TEXT PRIMARY KEY,
   subject_kind  TEXT NOT NULL CHECK (subject_kind IN ('account','space')),
   subject_id    TEXT NOT NULL,
-  plan_key      TEXT NOT NULL,      -- 'family_lifetime' | 'group_license' | 'school_seat' (결정 #30)
+  plan_key      TEXT NOT NULL,      -- 'family_lifetime' | 'group_license' | 'school_seat' (결정 #30; family_lifetime = 연간 Family Plan, 이름은 역사적, 2026-10-11)
   status        TEXT NOT NULL CHECK (status IN ('trial','active','past_due','expired','cancelled')),
   provider      TEXT NOT NULL CHECK (provider IN ('apple','google','stripe','manual')),
   provider_ref  TEXT,               -- 영수증 / Stripe subscription id / 계약번호
@@ -314,7 +314,7 @@ BP09 §3.5 / F-PAR-001 §3.2 의 대시보드 숫자가 전부 이 객체에서 
 | plan_key | 대상 | 가격 | 포함 | 결제 경로 |
 |---|---|---|---|---|
 | (free) | P-A, P-B, 자원봉사 교사 | $0 | Stage 1 전체, 로컬 진도, Rescue Code, 파일 백업; 학급은 학생 ≤ 20 | — |
-| `family_lifetime` | P-B (성인 개인 포함) | **$15.30 일회** (만료 없음) | 모든 Stage (현재+향후), 클라우드 동기화, 부모 대시보드, 가정 계획, 한 가족 space 학습자 ≤ 5 | 웹 Stripe (일회 결제) · 네이티브는 F-IAP-002 때 non-consumable |
+| `family_lifetime` (Family Plan) | P-B (성인 개인 포함) | **$15.30/년** (매년 갱신, 언제든 해지; 2026-10-11 일회 평생에서 변경) | 모든 Stage (활성 동안 신규 포함), 클라우드 동기화, 부모 대시보드, 가정 계획, 한 가족 space 학습자 ≤ 5 | 웹 Stripe 연간 구독 · 네이티브는 F-IAP-002 때 자동 갱신 연간 구독 |
 | `group_license` | P-C 교사 (단독 학급) · P-D 학교 | **$153/년** | 학급: 학생 전원 프리미엄(재학 중), 20명 cap 해제 · 학교: 교사 ≤ 10, 학생 ≤ 300, 전 학급 Pro, admin 대시보드 | Stripe 연간 구독 (웹 전용) |
 | `school_seat` | 상한 초과 (P-D 대규모 / P-E) | **Contact us** (계약) | 좌석 단위, SSO 검토 | `manual` |
 
@@ -356,7 +356,7 @@ BP09 §3.5 / F-PAR-001 §3.2 의 대시보드 숫자가 전부 이 객체에서 
 | DELETE | `/spaces/:id/learners/:lid/data` | learner.delete (family caregiver · school-consent 학급의 teacher) | 학습자 전체 삭제 (기기·스냅샷·membership·relink) — 구현됨 (§5.3) |
 | GET | `/entitlements` | account | 내 계정 + 내가 소유한 space 의 entitlement — 구현됨 (F-ENT-001) |
 | POST | `/entitlements/verify` | family owner | 영수증 (F-IAP-001 stub) → `family_lifetime` upsert — 구현됨 |
-| POST | `/entitlements/stripe/checkout` · `/stripe/portal` | 소유 space (family → lifetime 일회 결제, 단독 class/school → 연간 구독; portal 은 구독만) | Stripe Checkout / Billing Portal 세션 (`STRIPE_SECRET_KEY` + price id 없으면 `stripe_not_configured`) — 구현됨 |
+| POST | `/entitlements/stripe/checkout` · `/stripe/portal` | 소유 space (family · 단독 class/school 모두 연간 구독, 2026-10-11; portal 은 구독만) | Stripe Checkout / Billing Portal 세션 (`STRIPE_SECRET_KEY` + price id 없으면 `stripe_not_configured`) — 구현됨 |
 | POST | `/entitlements/stripe/webhook` | Stripe (서명 검증, 5분 허용) | checkout.session.completed · customer.subscription.* → `applyEntitlement` — 구현됨 |
 
 기존 `/api/auth/family`, `/api/profiles`, `/api/progress`, `/api/subscriptions` 는 위로 흡수 (인메모리 `store.ts` 도 같은 모양으로 교체 — 지금 라우트 테스트 패턴 유지).

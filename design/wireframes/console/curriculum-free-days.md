@@ -34,7 +34,7 @@ Then: the plan holds only lessons that will open for these learners (all of Stag
 | | (i) The free plan covers Stage 1 (lessons in     | |  <- warning `premium-needed` (new
 | |     weeks 1 to 7). 3 more lessons open with a    | |     wording), product by space kind:
 | |     Group License. They are left out of this     | |     class/school: a Group License
-| |     plan.                     [ Open billing -> ] | |     family: Family Lifetime
+| |     plan.                     [ Open billing -> ] | |     family: the Family Plan [BY]
 | +--------------------------------------------------+ |
 |                                                      |
 | This plan has lessons until week 7. After that it    |  <- short-plan line (only when the

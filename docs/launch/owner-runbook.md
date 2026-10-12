@@ -15,7 +15,7 @@ Workers & Pages → **Create** → Workers 탭 → **Import a repository** → `
 | Build command | `pnpm install --frozen-lockfile && pnpm --filter @hangul-route/mobile build:web` | `pnpm install --frozen-lockfile` | `pnpm install --frozen-lockfile && pnpm --filter @hangul-route/web build` |
 | Deploy command | `pnpm --filter @hangul-route/mobile exec wrangler deploy` | `pnpm --filter @hangul-route/api exec wrangler d1 migrations apply hangul-route --remote && pnpm --filter @hangul-route/api exec wrangler deploy` | `pnpm --filter @hangul-route/web exec wrangler deploy` |
 | Build variables (빌드 시 코드에 박힘) | `NODE_VERSION` = `22` · `EXPO_PUBLIC_API_BASE_URL` = API 주소 (Step 3 후) · (선택) `EXPO_PUBLIC_CONSOLE_URL` (F-BILL-002 가 더 읽지 않으면 삭제, §E S-3) · `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (§E S-1, 앱 호스트의 어른 페이지) · `EXPO_PUBLIC_SITE_URL` · `EXPO_PUBLIC_GROWN_UP_HOME` (§E S-3) | `NODE_VERSION` = `22` | `NODE_VERSION` = `22` · `NEXT_PUBLIC_API_BASE_URL` = API 주소 · `NEXT_PUBLIC_CONSOLE_DEV_AUTH` = `true` (Step 7 전까지만, 그때 삭제) · `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (Step 7) |
-| Runtime: Variables (Type: Text) | 없음 | `ALLOWED_ORIGINS` · `STRIPE_PRICE_FAMILY_LIFETIME` · `STRIPE_PRICE_GROUP_LICENSE_YEARLY` · `CONSOLE_URL` · (법률 검토 후) `SCHOOL_CONSENT_MODE` | 없음 |
+| Runtime: Variables (Type: Text) | 없음 | `ALLOWED_ORIGINS` · `STRIPE_PRICE_FAMILY_YEARLY` · `STRIPE_PRICE_GROUP_LICENSE_YEARLY` · `CONSOLE_URL` · (법률 검토 후) `SCHOOL_CONSENT_MODE` | 없음 |
 | Runtime: Secrets (Type: Secret) | 없음 | `CLERK_SECRET_KEY` · `STRIPE_SECRET_KEY` · `STRIPE_WEBHOOK_SECRET` · (권장, 한 번만) `RESCUE_PEPPER` | 없음 |
 | Custom domain | `app.hangulroute.com` | (workers.dev 주소 사용) | `hangulroute.com` · `www.hangulroute.com` |
 
@@ -83,19 +83,48 @@ Clerk 애플리케이션은 2026-10-07 에 만들었다 (Development 인스턴�
 **확인**: 콘솔 `/teach` 에 Clerk 로그인 위젯(이메일·Google)이 뜨고, 로그인하면 `/teach/home` 으로 간다. 학급을 하나 만들어 roster 가 열리면 API 쪽 검증까지 통과. API 주소의 `/health` 가 `"status":"ok"` 와 `"bindings":{"db":true,"clerk":true,…}` 를 돌려주면 바인딩도 정상 (값은 노출되지 않고 true/false 만).
 
 ### Step 8. Stripe (40분, Test mode 먼저)
-https://dashboard.stripe.com → Test mode
-1. Product catalog → 상품 2개 / 가격 2개
-   - `Family Lifetime` → Price **$15.30, One-off** → price id 복사
-   - `Group License` → Price **$153, Recurring, Yearly** → price id 복사
-2. `hangul-route-api` → Settings → Variables and Secrets → Type **Text** 로 `STRIPE_PRICE_FAMILY_LIFETIME`, `STRIPE_PRICE_GROUP_LICENSE_YEARLY`, `CONSOLE_URL` = `https://hangulroute.com` (도메인 전엔 `hangul-route-web` 의 workers.dev 주소)
-3. Developers → API keys → Secret key → 같은 화면에 Type **Secret** 으로 `STRIPE_SECRET_KEY`
-4. Developers → Webhooks → Add endpoint → URL `https://hangul-route-api.<계정>.workers.dev/api/entitlements/stripe/webhook` → 이벤트 4개: `checkout.session.completed` · `customer.subscription.created` · `customer.subscription.updated` · `customer.subscription.deleted` → 생성 후 Signing secret (`whsec_…`) → Type **Secret** 으로 `STRIPE_WEBHOOK_SECRET` → Deploy
+> **2026-10-11 변경**: Family 상품은 더 이상 일회 결제(평생)가 아니다. **Family Plan — $15.30 / 년, 매년 자동 갱신, 언제든 해지** (Group License 와 같은 연간 구독 방식). 근거와 동작은 `docs/specs/AMENDMENTS-BILLING-FAMILY-YEARLY.md`. Stripe 는 계속 **Test mode (샌드박스)** 만 쓴다. Live 는 오너가 켜라고 할 때까지 하지 않는다.
 
-**확인**: 콘솔 `/teach/billing` → Family Lifetime **Choose** → 테스트 카드 `4242 4242 4242 4242` → 돌아오면 "active · yours for good" 카드가 보인다. 실결제는 Live mode 에서 1–4 를 한 번 더 (키·price id 가 모두 다르다).
+https://dashboard.stripe.com → **Test mode**
+
+1. **Family Plan 연간 가격 만들기** — Product catalog → 가족용 상품 (이전 이름 `Family Lifetime`) 을 열어 이름을 **Family Plan** 으로 바꾼다 (없으면 새 상품 **Family Plan**) → **Add another price** → Pricing model *Flat rate* · **Recurring** · Billing period **Yearly** · Amount **15.30** · Currency **USD** → Save → price id (`price_…`) 복사.
+2. **예전 일회 가격 보관(Archive)** — 같은 상품의 **$15.30 One-off** 가격 → **Archive price**. (지난 결제 기록은 그대로 남고 새 결제에는 쓰이지 않는다.)
+3. **Group License** — 이미 있으면 그대로 둔다: Price **$153, Recurring, Yearly**. 없으면 같은 방법으로 만들고 price id 복사.
+4. **Worker 변수** — Cloudflare → `hangul-route-api` → Settings → Variables and Secrets → Type **Text** 로
+   - **`STRIPE_PRICE_FAMILY_YEARLY`** = 1번의 price id (**새 변수**)
+   - `STRIPE_PRICE_GROUP_LICENSE_YEARLY` = 3번의 price id (기존)
+   - `CONSOLE_URL` = `https://hangulroute.com` (기존; F-APP-001 S-4 때 `https://app.hangulroute.com`)
+   - **`STRIPE_PRICE_FAMILY_LIFETIME` 은 삭제** (코드가 더 이상 읽지 않는다. 남겨 둬도 무해)
+   → Deploy.
+   - **순서**: `STRIPE_PRICE_FAMILY_YEARLY` 는 BY-1 머지가 API Worker 와 웹 콘솔을 **둘 다** 배포한 뒤에 넣는다 (결제 화면에 "$15.30 / year" 가 보이면 완료). 그 전까지 Family Plan 결제는 `stripe_not_configured` 로 막혀 있어서, 예전 "$15.30 once" 화면에서 연간 구독이 시작되는 일은 없다.
+5. **Secret** — Developers → API keys → Secret key (`sk_test_…`) → 같은 화면에 Type **Secret** 으로 `STRIPE_SECRET_KEY` (기존이면 그대로).
+6. **웹훅** — Developers → Webhooks → 엔드포인트 `https://hangul-route-api.<계정>.workers.dev/api/entitlements/stripe/webhook` (없으면 Add endpoint) → **Select events** 에 7개:
+   - 지금 필요한 4개: `checkout.session.completed` · `customer.subscription.created` · `customer.subscription.updated` · `customer.subscription.deleted`
+   - 영수증·결제 기록용 3개 (F-BILL-002 B-3 배포 전에는 Worker 가 `applied: false` 로 200 응답): `invoice.paid` · `invoice.payment_failed` · `charge.refunded`
+   - 새로 만들었다면 Signing secret (`whsec_…`) → Type **Secret** 으로 `STRIPE_WEBHOOK_SECRET` → Deploy. (기존 엔드포인트에 이벤트만 추가하면 secret 은 그대로다.)
+   - 엔드포인트의 **API version** 을 여기에 적어 둔다: `____________`
+7. **Customer portal** — Settings → Billing → **Customer portal**:
+   - **Cancel subscriptions** 켜기 → 방식 **Cancel at end of billing period** (즉시 해지 아님)
+   - **Update payment methods** 켜기 · **Invoice history** 켜기
+   - **Switch plans** 끄기 · 수량 변경 끄기
+   - Business information: 개인정보 처리방침 `https://hangulroute.com/privacy` · 이용약관 `https://hangulroute.com/terms` → Save
+8. **구독 이메일과 실패 결제** — Settings → Billing → **Subscriptions and emails**:
+   - **Send emails about upcoming renewals** 켜기 → **30일 전** (연 단위 갱신 사전 고지; 정확한 기간은 Live 전에 법률 검토)
+   - 고객 이메일: **Successful payments** (영수증) 켜기 · **Failed payments** (카드 갱신 링크) 켜기
+   - **Manage failed payments**: Smart Retries 유지 → *If all retries for a payment fail* → **Cancel the subscription**
+
+**확인 (샌드박스)**:
+- 결제 화면 (`/teach/billing`, 나중에 `/account/billing`) → **Family Plan** → **Choose** → 테스트 카드 `4242 4242 4242 4242` → 돌아오면 카드가 "active · renews {1년 뒤 날짜}" 로 보인다.
+- **Manage subscription** → Cancel → 돌아오면 "cancelled · ends {날짜}" — 그 날짜까지는 학습자에게 전체 경로가 계속 열린다.
+- (선택) Developers → **Test clocks** 로 구독을 1년 앞으로 돌려 갱신이 되는지 본다.
+- Live mode 는 오너가 켤 때 1, 2, 3, 4, 6, 7, 8 을 Live 에서 한 번 더 한다 (Live 는 상품·가격·키·웹훅·포털 설정이 모두 따로다).
+- **Live 전 필수**: 이용약관 (`/terms`) 에 연간 자동 갱신·해지 방법 (Billing → Manage subscription)·남은 기간까지 이용·갱신 사전 고지 기간이 들어가야 한다 (F-SITE-002 S-7, 법률 검토 OD-13). 포털이 `/terms` 를 링크하므로 그 전에는 Live 를 켜지 않는다.
+- **중복 구독**: 한 space 에 구독이 두 개 보이면 (두 탭에서 거의 동시에 결제), 새 것의 인보이스를 환불하고 Customers → 해당 고객 → Subscriptions 에서 **즉시 해지** 한다. space 는 남은 구독으로 계속 열려 있다.
 
 ### Step 9. 프로모·레퍼럴 코드 (15분, 배포 불필요)
-Stripe → Product catalog → **Coupons** → New: 퍼센트 또는 정액 · Duration (`once` = Lifetime 결제와 라이선스 첫 해만, `forever` = 매년 갱신까지) · 선택: 총 사용 횟수, 만료 → 그 쿠폰에서 **Add promotion code** → 고객이 입력할 문자열 (런치용 `HOYA20`, 추천 교사별 `MSPARK`) · 코드별 최대 사용 / 만료 / 첫 구매만 / 최소 금액. 끄기 = inactive.
-**확인**: 콘솔 billing 에 코드 입력 → Apply → 행의 가격이 "$12.24 once with HOYA20 (20% off), was $15.30 once" 로 바뀐다.
+Stripe → Product catalog → **Coupons** → New: 퍼센트 또는 정액 · Duration (`once` = Family Plan 과 라이선스 모두 **첫 해만**, `forever` = 매년 갱신까지, `repeating` = 지정한 개월 수) · 선택: 총 사용 횟수, 만료 → 그 쿠폰에서 **Add promotion code** → 고객이 입력할 문자열 (런치용 `HOYA20`, 추천 교사별 `MSPARK`) · 코드별 최대 사용 / 만료 / 첫 구매만 / 최소 금액. 끄기 = inactive.
+- **100% 할인 Once 코드**: Family Plan 은 그래도 카드를 받는다 (`payment_method_collection=always`) → 첫 해 무료, 그 다음 해부터 그 카드로 $15.30 갱신 (갱신 사전 고지 메일 후). Group License 는 카드를 받지 않는다 (`if_required`) → 첫 갱신 때 결제가 안 되어 `past_due` 후 재시도가 끝나면 해지된다. 갱신 사전 고지 메일이 Manage subscription 에서 카드를 넣으라고 안내한다; 카드가 없으면 무료 1년 뒤 끝난다. 계속 후원할 학급이면 **Forever** 코드를 쓴다.
+**확인**: 콘솔 billing 에 코드 입력 → Apply → 행의 가격이 "$12.24 / year with HOYA20 (20% off, first year), was $15.30 / year" 로 바뀐다.
 
 ### 권장 — Rescue Code 키 `RESCUE_PEPPER` (5분, 한 번만, audit SEC-5)
 Rescue Code 는 서버에 해시로만 저장된다. 이 키를 넣으면 **새로 발급되는** 코드가 `HMAC-SHA-256(키, 코드)` 로 저장되어, DB 사본만 유출돼도 오프라인에서 코드를 추측할 수 없다. 이미 발급된 코드(단어 2개 + 숫자 4자리, 예: `PADDLE-GLACIER-4992`)는 키를 넣기 전·후 모두 그대로 복원된다.
