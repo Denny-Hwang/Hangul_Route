@@ -3,6 +3,7 @@ import { LOCALES, findBannedWord, getMessages, type UiLocale } from '@hangul-rou
 import { describe, expect, it } from 'vitest';
 import * as paywall from '../paywall';
 import {
+  billingHandOffStep,
   billingNote,
   billingOpenedEvent,
   billingPressStep,
@@ -262,5 +263,35 @@ describe('the price-bearing paywall helpers are gone (§4.7 "Removed from the le
   it('exports no offer, price or bullets builder', () => {
     expect('familyOffer' in paywall).toBe(false);
     expect('premiumBullets' in paywall).toBe(false);
+  });
+});
+
+describe('billingHandOffStep (F-BILL-002 B-9b)', () => {
+  const url = 'https://hangulroute.com/teach/billing';
+
+  it('same tab, opened: no line, no paywall.console_opened (openGrownUpArea sends shell.grown_up_handoff), no PIN screen', () => {
+    expect(billingHandOffStep({ kind: 'same-tab', outcome: 'opened' }, 'free', en)).toEqual({ note: null, event: null, askPin: false });
+  });
+
+  it('same tab, pin: a fresh PIN is needed first, so the PIN screen opens; no line and no event', () => {
+    expect(billingHandOffStep({ kind: 'same-tab', outcome: 'pin' }, 'premium', en)).toEqual({ note: null, event: null, askPin: true });
+  });
+
+  it('browser (flag off): the B-9 line and event, never the PIN screen', () => {
+    expect(billingHandOffStep({ kind: 'browser', outcome: 'opened', url }, 'covered', en)).toEqual({
+      note: null,
+      event: { name: 'paywall.console_opened', payload: { state: 'covered' } },
+      askPin: false,
+    });
+    expect(billingHandOffStep({ kind: 'browser', outcome: 'failed', url }, 'free', en)).toEqual({
+      note: billingNote('failed', url, en),
+      event: null,
+      askPin: false,
+    });
+    expect(billingHandOffStep({ kind: 'browser', outcome: 'offline', url }, 'free', en)).toEqual({
+      note: billingNote('offline', url, en),
+      event: null,
+      askPin: false,
+    });
   });
 });
