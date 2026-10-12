@@ -14,7 +14,7 @@
 export type { ExcludedTone, WordArtFamily, WordArtGlyph, WordArtMeta, WordArtPaint, WordArtShape, WordArtStatus, WordArtTone } from './types';
 export { isWordArtPath, parsePath, formatNumber } from './path';
 export type { PathCommand, PathCommandName } from './path';
-export { arc, blob, circle, curve, drop, ellipse, face, groundShadow, leaf, line, path, poly, r1, rect, star } from './builders';
+export { arc, blob, circle, curve, drop, ellipse, face, groundShadow, leaf, line, path, poly, pts, r1, rect, star } from './builders';
 export type { FaceOptions, Pt } from './builders';
 export { WORD_ART_TONES, isWordArtTone, resolveTone } from './tones';
 export { glyphToSvgString, toRenderList } from './render';
