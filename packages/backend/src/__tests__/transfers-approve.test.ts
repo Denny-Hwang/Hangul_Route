@@ -13,6 +13,7 @@ import {
   C,
   call,
   cancel,
+  countDbCalls,
   classCreate,
   CODE_B,
   consent,
@@ -161,6 +162,40 @@ describe('approve: teacher slots', () => {
     expect(await inClass(A)).toBe(false);
   });
 
+  it('stays idempotent after the move: the last approval sent twice answers 200 executed both times', async () => {
+    const created = requestOf(await create(FAMILY, 'mom', familyCreate()));
+    await approve(A, 'teacher-a', created.id, { slots: ['source'] });
+    travel(3 * DAY);
+    const first = await approve(B, 'teacher-b', created.id, { slots: ['destination'] });
+    expect(requestOf(first)).toMatchObject({ role: 'destination', status: 'executed' });
+    const resent = await approve(B, 'teacher-b', created.id, { slots: ['destination'] });
+    expect(resent.status).toBe(200);
+    expect(requestOf(resent)).toMatchObject({ role: 'destination', status: 'executed', learner: { name: 'Suni Kim' } });
+    expect((await db.transferEvents(created.id)).filter((e) => e.event === 'executed')).toHaveLength(1);
+    // the source and the guardian re-sending their own answers get the same 200
+    expect(requestOf(await approve(A, 'teacher-a', created.id, { slots: ['source'] }))).toMatchObject({ role: 'source', status: 'executed' });
+    expect(requestOf(await approve(FAMILY, 'mom', created.id, { slots: ['learner'], consent }))).toMatchObject({ role: 'learner_side', status: 'executed' });
+    // a slot that is not the caller's is still 404 after the move
+    expect((await approve(A, 'teacher-a', created.id, { slots: ['destination'] })).status).toBe(404);
+  });
+
+  it('a re-click of a filled slot on a due request runs the move and answers 200 executed, not 409', async () => {
+    const created = await agreedFamilyMove();
+    travel(AFTER_COOLING_OFF);
+    const r = await approve(A, 'teacher-a', created.id, { slots: ['source'] });
+    expect(r.status).toBe(200);
+    expect(requestOf(r)).toMatchObject({ role: 'source', status: 'executed' });
+    expect(await inClass(B)).toBe(true);
+  });
+
+  it('a declined request still answers 409 not_open to an approve of a slot already in', async () => {
+    const created = requestOf(await create(FAMILY, 'mom', familyCreate()));
+    await approve(A, 'teacher-a', created.id, { slots: ['source'] });
+    expect((await call('POST', `${base(B)}/${created.id}/decline`, { ...json, authorization: 'Bearer teacher-b' }, { slot: 'destination' })).status).toBe(200);
+    const r = await approve(A, 'teacher-a', created.id, { slots: ['source'] });
+    expect([r.status, r.body.error?.code]).toEqual([409, 'not_open']);
+  });
+
   it('is idempotent: a slot already in answers 200 and writes nothing', async () => {
     const created = requestOf(await create(FAMILY, 'mom', familyCreate()));
     await approve(A, 'teacher-a', created.id, { slots: ['source'] });
@@ -230,6 +265,15 @@ describe('approve: teacher slots', () => {
       expect(r.status, `${spaceId} ${user} ${JSON.stringify(body)}`).toBe(404);
     }
     expect((await approve(A, 'teacher-a', 'transfer:unknown', { slots: ['source'] })).status).toBe(404);
+    // a body only the learner side may send is judged after ownership: a stranger learns nothing from a 422
+    for (const [spaceId, user, body] of [
+      [A, 'stranger', { slots: ['source'], consent }],
+      [C, 'teacher-c', { slots: ['source'], consent }],
+      [C, 'teacher-c', { slots: ['destination'], introduce: true }],
+    ] as const) {
+      const r = await approve(spaceId, user, created.id, body);
+      expect([r.status, r.body.error?.code], `${spaceId} ${user} ${JSON.stringify(body)}`).toEqual([404, 'not_found']);
+    }
     const row = await db.getTransfer(created.id);
     expect([row?.source.state, row?.destination.state]).toEqual(['pending', 'pending']);
   });
@@ -345,6 +389,18 @@ describe('approve: the learner slot of a teacher-started request (caregiver rout
     expect((await db.getTransfer(created.id))?.learner.state).toBe('pending');
   });
 
+  it('guard 9 comes first: an account that passes only 9a learns nothing about the learner\'s own switch or the consent text', async () => {
+    const created = requestOf(await create(A, 'teacher-a', classCreate()));
+    await db.setTransferPref(SUNI, 'selfManaged', true, NOW);
+    await db.putAccount({ id: 'grandma', email: 'grandma@example.test', displayName: null, consent: null, createdAt: NOW.toISOString() });
+    await member(FAMILY, 'account', 'grandma', 'caregiver', NOW.toISOString());
+    const young = await approve(FAMILY, 'grandma', created.id, { slots: ['learner'], consent: { ...consent, textVersion: 'transfer-1999-01' } });
+    expect([young.status, young.body.error?.code]).toEqual([422, 'family_too_new']);
+    await member(FAMILY, 'account', 'teacher-b', 'caregiver', new Date(NOW.getTime() - 5 * DAY).toISOString());
+    const conflicted = await approve(FAMILY, 'teacher-b', created.id, { slots: ['learner'], consent });
+    expect([conflicted.status, conflicted.body.error?.code]).toEqual([409, 'conflicted_guardian']);
+  });
+
   it('IDOR: a guardian of another learner, or of a family the learner is not in, gets 404', async () => {
     const created = requestOf(await create(A, 'teacher-a', classCreate()));
     expect((await approve(FAMILY2, 'aunt', created.id, { slots: ['learner'], consent })).status).toBe(404);
@@ -411,11 +467,40 @@ describe('retry and the capacity block', () => {
     expect([ended.status, ended.body.error?.code]).toEqual([409, 'not_open']);
   });
 
+  it('answers 409 expired for a request past its 14 days, and the expiry is audited once', async () => {
+    const created = await agreedFamilyMove();
+    await fillB();
+    travel(15 * DAY);
+    const r = await retry(B, 'teacher-b', created.id);
+    expect([r.status, r.body.error?.code]).toEqual([409, 'expired']);
+    expect((await db.transferEvents(created.id)).filter((e) => e.event === 'expired')).toEqual([expect.objectContaining({ actorKind: 'system', actorRef: null })]);
+    expect(await inClass(A)).toBe(true);
+  });
+
   it('a scheduled move during the cooling-off stays scheduled on retry', async () => {
     const created = await agreedFamilyMove();
     travel(HOUR);
     expect(requestOf(await retry(B, 'teacher-b', created.id))).toMatchObject({ status: 'approved', scheduledFor: ahead(48 * HOUR), blockReason: null });
     expect(await inClass(B)).toBe(false);
+  });
+
+  it('a withdrawal that lands between settle\'s reads and the batch wins at the route: 409 not_open, both memberships stay (behaviour 15)', async () => {
+    const created = await agreedFamilyMove();
+    travel(AFTER_COOLING_OFF);
+    const real = db.executeTransfer.bind(db);
+    const spy = vi.spyOn(db, 'executeTransfer').mockImplementationOnce(async (input) => {
+      expect(await db.cancelTransfer(created.id, 'withdrawn_learner', 'family', at(AFTER_COOLING_OFF))).toBe(1);
+      return real(input);
+    });
+    try {
+      const r = await retry(B, 'teacher-b', created.id);
+      expect([r.status, r.body.error?.code]).toEqual([409, 'not_open']);
+    } finally {
+      spy.mockRestore();
+    }
+    expect(await inClass(A)).toBe(true);
+    expect(await inClass(B)).toBe(false);
+    expect((await db.transferEvents(created.id)).some((e) => e.event === 'executed')).toBe(false);
   });
 
   it('a withdrawal during the cooling-off wins: both memberships stay (behaviour 15)', async () => {
@@ -455,6 +540,28 @@ describe('freshness of the learner consent (section 4.6 step 5)', () => {
   it('a guardian who left the family before the move: the consent resets (behaviour 17)', async () => {
     const created = await agreedFamilyMove();
     await db.removeMembership(FAMILY, 'account', 'mom');
+    travel(AFTER_COOLING_OFF);
+    const r = await retry(B, 'teacher-b', created.id);
+    expect([r.status, r.body.error?.code]).toEqual([409, 'consent_outdated']);
+    expect(await db.transferEvents(created.id)).toContainEqual(expect.objectContaining({ event: 'consent_reset', detail: { why: 'guardian_changed' } }));
+    expect(await inClass(A)).toBe(true);
+  });
+
+  it('a destination that turns on anonymizeRoster before the move asks the guardian again (behaviour 16)', async () => {
+    const created = await agreedFamilyMove();
+    const b = await db.getSpace(B);
+    await db.putSpace({ ...b!, settings: { ...b!.settings, anonymizeRoster: true } });
+    travel(AFTER_COOLING_OFF);
+    const r = await retry(B, 'teacher-b', created.id);
+    expect([r.status, r.body.error?.code]).toEqual([409, 'consent_outdated']);
+    expect(await db.transferEvents(created.id)).toContainEqual(expect.objectContaining({ event: 'consent_reset', detail: { why: 'terms_changed' } }));
+    expect(await inClass(A)).toBe(true);
+    expect(await inClass(B)).toBe(false);
+  });
+
+  it('a learner taken out of the family before the move: the consent resets (behaviour 17)', async () => {
+    const created = await agreedFamilyMove();
+    await db.removeMembership(FAMILY, 'learner', SUNI);
     travel(AFTER_COOLING_OFF);
     const r = await retry(B, 'teacher-b', created.id);
     expect([r.status, r.body.error?.code]).toEqual([409, 'consent_outdated']);
@@ -583,6 +690,38 @@ describe('races at the route (the compare-and-set decides; section 4.7)', () => 
     expect(consented).toEqual([expect.objectContaining({ slot: 'source', actorRef: 'teacher-a' })]);
   });
 
+  it('a lost race whose re-plan finds every named slot in answers with the settled request (promoted), not the stale row', async () => {
+    const created = requestOf(await create(FAMILY, 'mom', familyCreate()));
+    expect((await approve(B, 'teacher-b', created.id, { slots: ['destination'] })).status).toBe(200);
+    const real = db.consentSlot.bind(db);
+    const spy = vi.spyOn(db, 'consentSlot').mockImplementationOnce(async (...args) => {
+      // another click of the same source lands first: every slot is now in, but nobody has promoted it yet
+      expect(await real(...args)).toBe(1);
+      return 0;
+    });
+    try {
+      const r = await approve(A, 'teacher-a', created.id, { slots: ['source'] });
+      expect(r.status).toBe(200);
+      expect(requestOf(r)).toMatchObject({ role: 'source', status: 'approved', scheduledFor: ahead(48 * HOUR) });
+    } finally {
+      spy.mockRestore();
+    }
+    expect((await db.getTransfer(created.id))?.status).toBe('approved');
+  });
+
+  it('a request that keeps changing under the click answers 409 request_changed (still open), never not_open', async () => {
+    const created = requestOf(await create(FAMILY, 'mom', familyCreate()));
+    const spy = vi.spyOn(db, 'consentSlot').mockResolvedValue(0);
+    try {
+      const r = await approve(A, 'teacher-a', created.id, { slots: ['source'] });
+      expect([r.status, r.body.error?.code]).toEqual([409, 'request_changed']);
+      expect(spy).toHaveBeenCalledTimes(3);
+    } finally {
+      spy.mockRestore();
+    }
+    expect(await db.getTransfer(created.id)).toMatchObject({ status: 'requested', source: { state: 'pending' } });
+  });
+
   it('two guardians at once: the first wins, the second gets 200 and writes no event', async () => {
     const created = requestOf(await create(A, 'teacher-a', classCreate()));
     const real = db.consentSlot.bind(db);
@@ -624,5 +763,76 @@ describe('races at the route (the compare-and-set decides; section 4.7)', () => 
       }
       expect((await db.transferEvents(created.id)).some((e) => e.event === 'consented')).toBe(false);
     }
+  });
+});
+
+/*
+ * Measured Db calls of the executing paths with a school parent (one call can be several statements; a batch
+ * counts each). The Free plan allows 50 D1 statements per invocation: these paths are still over it on the
+ * sqlite shim (executing approve 51 statements, 66 with a school parent), so bringing them under it is flip
+ * gate G7 of the spec. Until then these ceilings only stop the cost from growing, and the school size must
+ * never change it (the old-space audit used to read every school member's memberships one by one).
+ */
+const EXECUTING_APPROVE_DB_CALLS = 58;
+const EXECUTING_RETRY_DB_CALLS = 49;
+
+describe('query budget of the executing paths (D1 per-invocation limit)', () => {
+  /** Puts both classes under a school with `teachers` extra teacher accounts, so a per-account read would show. */
+  async function schoolWith(teachers: number): Promise<void> {
+    await db.putSpace(space(SCHOOL, 'school', 'admin'));
+    await member(SCHOOL, 'account', 'admin', 'owner');
+    for (let i = 0; i < teachers; i += 1) await member(SCHOOL, 'account', `teacher-${String(i).padStart(3, '0')}`, 'teacher');
+    const a = await db.getSpace(A);
+    const b = await db.getSpace(B);
+    await db.putSpace({ ...a!, parentSpaceId: SCHOOL });
+    await db.putSpace({ ...b!, parentSpaceId: SCHOOL });
+  }
+
+  async function executingApprove(): Promise<number> {
+    const created = requestOf(await create(FAMILY, 'mom', familyCreate()));
+    await approve(A, 'teacher-a', created.id, { slots: ['source'] });
+    travel(3 * DAY);
+    let status = '';
+    const n = await countDbCalls(async () => {
+      status = requestOf(await approve(B, 'teacher-b', created.id, { slots: ['destination'] })).status;
+    });
+    expect(status).toBe('executed');
+    return n;
+  }
+
+  async function executingRetry(): Promise<number> {
+    const created = await agreedFamilyMove();
+    travel(AFTER_COOLING_OFF);
+    let status = '';
+    const n = await countDbCalls(async () => {
+      status = requestOf(await retry(B, 'teacher-b', created.id)).status;
+    });
+    expect(status).toBe('executed');
+    return n;
+  }
+
+  it('an executing approve and an executing retry cost the same however many teachers the school has, and no more than measured', async () => {
+    await schoolWith(5);
+    const approveSmall = await executingApprove();
+    await db.reset();
+    await seed();
+    vi.setSystemTime(NOW);
+    await schoolWith(60);
+    const approveLarge = await executingApprove();
+    expect(approveLarge).toBe(approveSmall);
+    expect(approveLarge).toBeLessThanOrEqual(EXECUTING_APPROVE_DB_CALLS);
+
+    await db.reset();
+    await seed();
+    vi.setSystemTime(NOW);
+    await schoolWith(5);
+    const retrySmall = await executingRetry();
+    await db.reset();
+    await seed();
+    vi.setSystemTime(NOW);
+    await schoolWith(60);
+    const retryLarge = await executingRetry();
+    expect(retryLarge).toBe(retrySmall);
+    expect(retryLarge).toBeLessThanOrEqual(EXECUTING_RETRY_DB_CALLS);
   });
 });

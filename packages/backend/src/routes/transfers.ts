@@ -503,7 +503,7 @@ async function partyView(db: Db, party: Party, row: StoredTransfer, env: Transfe
   return party.kind === 'source' ? sourceView(row, look) : destinationView(row, look);
 }
 
-/** Loads the request, settles it, and refuses one that is no longer open. */
+/** Settles the request and refuses one that is no longer open (decline and cancel). */
 async function openRow(c: Ctx, db: Db, row: StoredTransfer, now: Date): Promise<StoredTransfer | Response> {
   const settled = (await settle(db, row, now, c.env)).request;
   if (!settled) return notFound(c);
@@ -594,32 +594,52 @@ const TEACHER_REFUSALS = {
 const APPROVE_ATTEMPTS = 3;
 
 /**
+ * Settles the request, then answers for one that is no longer open. Approve stays idempotent after the move:
+ * a request that has `executed` with every slot the caller named already in (`named`) answers 200 with its
+ * view, so a resent or double-tapped last approval never reads as "no longer open" (section 4.4). Any other
+ * closed request answers 409 `not_open` / `expired`. An open one comes back settled.
+ */
+async function approvableRow(c: Ctx, db: Db, party: Party, loaded: StoredTransfer, now: Date, named: (row: StoredTransfer) => boolean): Promise<StoredTransfer | Response> {
+  const settled = (await settle(db, loaded, now, c.env)).request;
+  if (!settled) return notFound(c);
+  if (isOpenTransfer(settled)) return settled;
+  if (settled.status === 'executed' && named(settled)) return ok(c, { request: await partyView(db, party, settled, c.env, now) });
+  return closed(c, settled);
+}
+
+/**
  * Teacher slots, on a class route. `:id` is the request's source or destination, live, and the caller
  * holds `learner.transfer` there (the destination only once the learner side said yes, T8); every slot
  * named is checked by `planTeacherConsent` against its own class, so one click fills both slots only for
- * a direct owner/teacher of both classes (T11) and a school admin fills one slot per action.
+ * a direct owner/teacher of both classes (T11) and a school admin fills one slot per action. Ownership is
+ * decided before anything about the body's content is answered, so no 422 tells a stranger the request exists.
  */
 async function approveTeacherSlots(c: Ctx, db: Db, account: Account, space: Space, loaded: StoredTransfer, body: TransferApproveBody, now: Date): Promise<Response> {
-  // A class never fills the learner slot (T10); the consent record and `introduce` are the learner side's alone.
+  // A class never fills the learner slot (T10).
   if (body.slots.includes('learner')) return notFound(c);
-  if (body.consent !== undefined || body.introduce !== undefined) return badRequest(c);
   const actor = await actorOf(db, account);
   const ownSlot = space.id === loaded.sourceSpaceId ? 'source' : space.id === loaded.destSpaceId ? 'destination' : null;
   const party = ownSlot ? await classParty(db, actor, space, loaded, ownSlot) : null;
   if (!party) return notFound(c);
+  // The consent record and `introduce` are the learner side's alone.
+  if (body.consent !== undefined || body.introduce !== undefined) return badRequest(c);
   const slots = body.slots.filter((slot): slot is 'source' | 'destination' => slot !== 'learner');
 
-  let row = await openRow(c, db, loaded, now);
-  if (row instanceof Response) return row;
-  const spaces = new Map((await db.getSpaces([row.sourceSpaceId, row.destSpaceId])).map((s) => [s.id, s]));
-  const source = spaces.get(row.sourceSpaceId);
-  const dest = spaces.get(row.destSpaceId);
+  const spaces = new Map((await db.getSpaces([loaded.sourceSpaceId, loaded.destSpaceId])).map((s) => [s.id, s]));
+  const source = spaces.get(loaded.sourceSpaceId);
+  const dest = spaces.get(loaded.destSpaceId);
   if (!source || !dest) return notFound(c);
   const ctx = { source: await spaceContext(db, source), destination: await spaceContext(db, dest) };
+  // Every named slot must be the caller's to answer (the per-slot rule of section 4.4), whatever state the request is in.
+  if (!slots.every((slot) => teacherVia(actor, ctx[slot]) !== null)) return notFound(c);
+  const settled = await approvableRow(c, db, party, loaded, now, (t) => slots.every((slot) => t[slot].state !== 'pending'));
+  if (settled instanceof Response) return settled;
+  let row = settled;
 
   for (let attempt = 0; attempt < APPROVE_ATTEMPTS; attempt += 1) {
     const plan = planTeacherConsent(actor, row, slots, ctx);
-    if (plan.kind === 'unchanged') return ok(c, { request: await partyView(db, party, row, c.env, now) });
+    // The first plan runs on a row settled just above; a row reloaded after a lost race is settled before it answers.
+    if (plan.kind === 'unchanged') return attempt === 0 ? ok(c, { request: await partyView(db, party, row, c.env, now) }) : settledView(c, db, party, row, now);
     if (plan.kind === 'refused') {
       if (plan.error === 'not_found') return notFound(c);
       if (plan.error === 'not_open') return closed(c, row);
@@ -634,34 +654,36 @@ async function approveTeacherSlots(c: Ctx, db: Db, account: Account, space: Spac
     if (!isOpenTransfer(reloaded)) return closed(c, reloaded);
     row = reloaded;
   }
-  return fail(c, 'not_open', 'This request changed while you answered. Please look at it again.', 409);
+  // Still open, but it kept changing under this click: not an ending, so not `not_open`.
+  return fail(c, 'request_changed', 'This request changed while you answered. Please look at it again.', 409);
 }
 
 /**
  * The learner slot, on the family route (a teacher-started request, or a learner-side request whose
- * consent was reset): guard 9 in full for this family, the learner's own switch, the consent text, and
- * the sheet the guardian saw (`termsDigest`, section 4.11). A guardian never fills a class slot.
+ * consent was reset): guard 9 in full for this family first (so an account that passes only 9a learns
+ * nothing about the learner's own switch), then the learner's own switch, the consent text, and the
+ * sheet the guardian saw (`termsDigest`, section 4.11). A guardian never fills a class slot.
  */
 async function approveLearnerSlot(c: Ctx, db: Db, account: Account, family: Space, loaded: StoredTransfer, body: TransferApproveBody, now: Date): Promise<Response> {
   if (body.slots.length !== 1 || body.slots[0] !== 'learner') return notFound(c);
   const party = await familyParty(db, account, family, loaded);
   if (!party) return notFound(c);
-  const row = await openRow(c, db, loaded, now);
+  const row = await approvableRow(c, db, party, loaded, now, (t) => t.learner.state === 'consented');
   if (row instanceof Response) return row;
   // Idempotent: a slot already in (another guardian answered first) answers 200 unchanged.
   if (row.learner.state !== 'pending') return ok(c, { request: await partyView(db, party, row, c.env, now) });
 
-  if ((await db.getTransferPrefs(row.learnerId)).selfManaged) return fail(c, 'learner_manages_own', 'This learner manages their own classes', 409);
-  // Checked with the body shape: the learner slot always carries a consent.
-  const consent = body.consent as TransferConsent;
-  if (!ACCEPTED_CONSENT_TEXT_VERSIONS.includes(consent.textVersion)) return fail(c, 'consent_text_stale', 'The consent text has changed', 422, { current: TRANSFER_CONSENT_TEXT_VERSION });
-  if (!isTransferConsentLocale(consent.locale)) return fail(c, 'consent_locale_unavailable', 'This consent text is not available in that language yet', 422);
   const guardian = await guardianOf(db, account.id, row.learnerId, partiesOf(row), now, { familyId: family.id });
   if (!guardian.ok) {
     if (guardian.error === 'family_too_new') return fail(c, 'family_too_new', 'Moves open one day after a family is set up', 422);
     if (guardian.error === 'conflicted_guardian') return fail(c, 'conflicted_guardian', 'A teacher of either class cannot answer for the family', 409);
     return notFound(c);
   }
+  if ((await db.getTransferPrefs(row.learnerId)).selfManaged) return fail(c, 'learner_manages_own', 'This learner manages their own classes', 409);
+  // Checked with the body shape: the learner slot always carries a consent.
+  const consent = body.consent as TransferConsent;
+  if (!ACCEPTED_CONSENT_TEXT_VERSIONS.includes(consent.textVersion)) return fail(c, 'consent_text_stale', 'The consent text has changed', 422, { current: TRANSFER_CONSENT_TEXT_VERSION });
+  if (!isTransferConsentLocale(consent.locale)) return fail(c, 'consent_locale_unavailable', 'This consent text is not available in that language yet', 422);
 
   const spaces = new Map((await db.getSpaces([row.sourceSpaceId, row.destSpaceId])).map((s) => [s.id, s]));
   const source = spaces.get(row.sourceSpaceId);
