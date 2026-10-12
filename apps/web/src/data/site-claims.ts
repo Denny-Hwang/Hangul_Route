@@ -7,14 +7,15 @@
  * flips its claim here in the same PR, never ahead of the feature. A spec that makes its feature paid-only also
  * sets its `CLAIM_REQUIRES_PAID` entry in that PR and words the line with the plan, never with a price.
  *
- * | Claim                              | Flipped by                                                  |
- * |------------------------------------|-------------------------------------------------------------|
- * | `learningRoute`                    | F-ROUTE-001 R-10 flag flip (Learning Route amendment LR-10) |
- * | `parentReports`, `teacherReports`  | F-REPORT-001 RP-11                                          |
- * | `feedbackNotes`                    | F-FEEDBACK-001 FB-14                                        |
- * | `browseAsLearner`                  | F-BROWSE-001 BR-10 (paid line: needs `paidPlans: 'inApp'`)  |
- * | `lectureMode`                      | F-TCH-004 presenter flip                                    |
- * | `paidPlans: 'inApp'`               | the owner's Stripe Live switch (sandbox checkout never)     |
+ * | Claim                              | Flipped by                                                               |
+ * |------------------------------------|--------------------------------------------------------------------------|
+ * | `learningRoute`                    | F-ROUTE-001 R-10 flag flip (Learning Route amendment LR-10 keeps it)     |
+ * | `parentReports`, `teacherReports`  | F-REPORT-001 RP-11                                                       |
+ * | `feedbackNotes`                    | F-FEEDBACK-001 FB-14                                                     |
+ * | `browseAsLearner`                  | F-BROWSE-001 BR-14 flag flip (paid line: needs `paidPlans: 'inApp'`)     |
+ * | `lectureMode`                      | the PR after the owner sets `NEXT_PUBLIC_LECTURE_MODE=enabled` on the    |
+ * |                                    | production console build (F-TCH-004 names no flip PR yet)                |
+ * | `paidPlans: 'inApp'`               | a PR after the owner turns on Stripe Live (sandbox never counts)         |
  *
  * Page components take `claims` as a prop that defaults to `SITE_CLAIMS`. F-BILL-002 B-7 reads the boolean
  * claims for its signed-in "what the plan includes" lines; `CLAIM_REQUIRES_PAID` applies to the public site only.
@@ -47,8 +48,8 @@ export type BooleanClaimKey = {
   [K in keyof SiteClaims]: SiteClaims[K] extends boolean ? K : never;
 }[keyof SiteClaims];
 
-/** What the site says today. */
-export const SITE_CLAIMS: SiteClaims = Object.freeze({
+/** What the site says today. Read-only by type and frozen at run time: only a reviewed flip PR changes it. */
+export const SITE_CLAIMS: Readonly<SiteClaims> = Object.freeze({
   freePlan: 'stage1',
   paidPlans: 'coming',
   learningRoute: false,
@@ -72,6 +73,6 @@ export const CLAIM_REQUIRES_PAID: Readonly<Record<keyof SiteClaims, boolean>> = 
 });
 
 /** True when the site shows the feature line of `key`: its claim is on, and paid plans are on sale if it is a paid feature. */
-export function showsClaim(claims: SiteClaims, key: BooleanClaimKey): boolean {
+export function showsClaim(claims: Readonly<SiteClaims>, key: BooleanClaimKey): boolean {
   return claims[key] && (!CLAIM_REQUIRES_PAID[key] || claims.paidPlans === 'inApp');
 }

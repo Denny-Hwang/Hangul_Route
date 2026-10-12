@@ -6,7 +6,7 @@ import type { SiteClaims } from '../site-claims';
  * persona-page tests. Test-only: no page or component imports it (`site-claims.test.ts` checks), so a
  * production build can never show an unlaunched claim.
  */
-export const ALL_CLAIMS_ON: SiteClaims = Object.freeze({
+export const ALL_CLAIMS_ON: Readonly<SiteClaims> = Object.freeze({
   freePlan: 'stage1',
   paidPlans: 'inApp',
   learningRoute: true,

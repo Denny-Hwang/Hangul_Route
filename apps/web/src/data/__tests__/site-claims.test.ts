@@ -33,6 +33,15 @@ describe('SITE_CLAIMS (what the site says today)', () => {
     expect(Object.isFrozen(SITE_CLAIMS)).toBe(true);
   });
 
+  it('is read-only by type, so only a reviewed flip PR switches a claim on', () => {
+    expectTypeOf(SITE_CLAIMS).toEqualTypeOf<Readonly<SiteClaims>>();
+    expect(() => {
+      // @ts-expect-error SITE_CLAIMS is read-only: a page cannot switch a claim on
+      SITE_CLAIMS.learningRoute = true;
+    }).toThrow(TypeError);
+    expect(SITE_CLAIMS.learningRoute).toBe(false);
+  });
+
   it('shows no feature line while every claim is at its default', () => {
     for (const key of BOOLEAN_KEYS) expect(showsClaim(SITE_CLAIMS, key), key).toBe(false);
   });
@@ -50,7 +59,7 @@ describe('SITE_CLAIMS (what the site says today)', () => {
   });
 
   it('turns the Learning Route line on only once the learner screen is called "Learning Route"', () => {
-    // AMENDMENTS-ROUTE-LEARNING-ROUTE G1: the claim flips with LR-8/R-10, after LR-1 renames the screen.
+    // AMENDMENTS-ROUTE-LEARNING-ROUTE G1: the claim flips with R-10 (LR-10 keeps the flip there), after LR-1 renames the screen.
     const screenTitle: string = en.learner.myRoute.title;
     expect(!SITE_CLAIMS.learningRoute || screenTitle === 'Learning Route').toBe(true);
   });
@@ -59,6 +68,11 @@ describe('SITE_CLAIMS (what the site says today)', () => {
 describe('ALL_CLAIMS_ON (test fixture, the longest state of every page)', () => {
   it('covers every key', () => {
     expect(Object.keys(ALL_CLAIMS_ON).sort()).toEqual(KEYS);
+  });
+
+  it('is read-only by type and at run time', () => {
+    expectTypeOf(ALL_CLAIMS_ON).toEqualTypeOf<Readonly<SiteClaims>>();
+    expect(Object.isFrozen(ALL_CLAIMS_ON)).toBe(true);
   });
 
   it('turns every feature line on, with paid plans in the app and the one free-plan value', () => {
