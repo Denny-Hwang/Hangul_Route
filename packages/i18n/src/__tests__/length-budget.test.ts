@@ -257,6 +257,104 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
     }
   });
 
+  // F-REPORT-001 RP-6 (section 3.11): a budget for every `report.*` and `a11y.report.*` key. The most specific row
+  // wins (a row names a key or a subtree); a key with no row fails, so a new report key needs a budget. Function
+  // messages render their SAMPLES rows, which run to the 20-character display name and the 40-character space
+  // name. Until es / ko have report overlays these cases check the English fallback.
+  describe('report budgets (F-REPORT-001 RP-6)', () => {
+    const REPORT_BUDGETS: ReadonlyArray<[label: string, max: number, paths: readonly string[]]> = [
+      ['document title', 32, ['report.documentTitle']],
+      ['page title', 64, ['report.title', 'report.you.title']],
+      ['tab', 12, ['report.period']],
+      ['stepper button', 16, ['report.step']],
+      ['stepper dates', 28, ['report.step.range']],
+      ['navigation item', 16, ['report.nav']],
+      [
+        'button',
+        28,
+        ['report.action', 'report.print.button', 'report.glance.openRoute', 'report.class.planLesson', 'report.growth.showTable', 'report.growth.hideTable', 'report.back.home'],
+      ],
+      ['back link with a space name', 56, ['report.back.space']],
+      [
+        'heading',
+        40,
+        [
+          'report.chooser',
+          'report.section',
+          'report.class.section',
+          'report.detail.lettersPractising',
+          'report.detail.lettersNew',
+          'report.detail.milestones',
+          'report.detail.levelCheck',
+          'report.detail.plan',
+          'report.class.lettersNew',
+          'report.class.revisit',
+          'report.you.detail',
+        ],
+      ],
+      ['heading with a name', 48, ['report.detail.lettersStrong']],
+      ['label', 20, ['report.figure', 'report.growth.quests', 'report.growth.cards', 'report.growth.month', 'report.strand.status', 'report.class.band']],
+      ['up marker', 36, ['report.figure.up']],
+      ['words inside a sentence', 32, ['report.when', 'report.previous']],
+      ['at-a-glance line', 48, ['report.glance.nowOn', 'report.glance.lastPractice']],
+      [
+        'line',
+        100,
+        [
+          'report.headline',
+          'report.horizon',
+          'report.insight',
+          'report.you.headline',
+          'report.you.insight',
+          'report.you.state',
+          'report.state',
+          'report.tip',
+          'report.detail',
+          'report.growth.since',
+          'report.class',
+          'report.print',
+        ],
+      ],
+      ['letter in a sentence', 16, ['report.letter']],
+      ['list in a sentence', 60, ['report.list']],
+      ['screen-reader label', 120, ['a11y.report']],
+    ];
+    const covers = (row: string, path: string): boolean => path === row || path.startsWith(`${row}.`);
+    /** The most specific row naming `path` (the longest matching key or subtree). */
+    function budgetOf(path: string): { label: string; max: number } | null {
+      let best: { label: string; max: number; depth: number } | null = null;
+      for (const [label, max, rows] of REPORT_BUDGETS) {
+        for (const row of rows) if (covers(row, path) && (best === null || row.length > best.depth)) best = { label, max, depth: row.length };
+      }
+      return best;
+    }
+    const reportPaths = (locale: (typeof LOCALES)[number]): string[] =>
+      leafPaths(getMessages(locale)).filter((path) => covers('report', path) || covers('a11y.report', path));
+
+    it('every report and a11y.report key has a budget', () => {
+      const paths = reportPaths('en');
+      expect(paths.length).toBeGreaterThan(150);
+      expect(paths.filter((path) => budgetOf(path) === null)).toEqual([]);
+    });
+
+    it('every budget row names a key or subtree that exists', () => {
+      const en = getMessages('en');
+      for (const [, , rows] of REPORT_BUDGETS) for (const row of rows) expect(lookup(en, row), row).toBeDefined();
+    });
+
+    for (const locale of LOCALES) {
+      it(`${locale}: every report and a11y.report rendering fits its budget`, () => {
+        const messages = getMessages(locale);
+        for (const path of reportPaths(locale)) {
+          const budget = budgetOf(path);
+          const outputs = renderings(lookup(messages, path), path);
+          expect(outputs, path).not.toBeNull();
+          for (const out of outputs ?? []) expect(out.length, `${path} (${budget?.label}): ${out}`).toBeLessThanOrEqual(budget?.max ?? 0);
+        }
+      });
+    }
+  });
+
   it('budgets the fixed words of the plan button, which also holds a user-entered title', () => {
     // `console.space.openPlan.label` is not a `cta` leaf because the plan title is user data;
     // its own words leave room for a short title inside the cta budget, and the button wraps.
