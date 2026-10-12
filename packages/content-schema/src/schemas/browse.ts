@@ -64,7 +64,12 @@ export type BrowseTarget = z.infer<typeof BrowseTargetSchema>;
 const PASS_SCOPE = z.enum(['full', 'sampler']);
 const EPOCH_MS = z.number().int().nonnegative();
 
-/** The pass in `sessionStorage[BROWSE_PASS_SESSION_KEY]` (§4.3). Strict: person data cannot ride along. */
+/**
+ * The pass in `sessionStorage[BROWSE_PASS_SESSION_KEY]` (§4.3). Strict: person data cannot ride along.
+ * The v1 shape is frozen: a precached app can run an older reader for a long time (Browse mounts no
+ * update banner), and that reader drops and removes any pass it cannot parse. New data goes in a
+ * sibling key (as §14 sketches for a plan order), never in a new field or a `v: 2` here.
+ */
 export const BrowsePassSchema = z
   .object({
     v: z.literal(1),

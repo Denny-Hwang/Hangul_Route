@@ -249,3 +249,102 @@ describe('preserveAdditiveFields (vocab entry, F-VOC-005 section 3.3 P6)', () =>
     expect(out.summary).toEqual({});
   });
 });
+
+describe('preserveAdditiveFields (quest latch entry, F-REPORT-001 section 3.3.1, RP-W1)', () => {
+  const latch = { 'letters-q1': '2026-10-01T09:00:00.000Z', 'letters-q2': '2026-10-05T10:00:00.000Z' };
+  const activity = { v: 1, tz: 540, asOf: '2026-10-11', days: [], months: [], total: { since: null, min: 12, q: 0, c: 0, w: 0, days: 1 }, milestones: [] };
+  const field = ADDITIVE_FIELDS.find((f) => f.payloadKey === 'questDoneAt');
+
+  it('lists questDoneAt with summary.activity as its counterpart, appended after every earlier field, with a merge', () => {
+    expect(field).toBeDefined();
+    expect(field?.summaryKey).toBe('activity');
+    expect(field?.merge).toBeDefined();
+    expect(ADDITIVE_FIELDS.map((f) => f.payloadKey)).toEqual(['placements', 'stageDoneAt', 'selfRoute', 'vocab', 'questDoneAt']);
+  });
+
+  it('treats only an absent key as unset: an empty record is a value (the VOCAB rule, not the stage-latch rule)', () => {
+    expect(field?.isUnset(undefined)).toBe(true);
+    expect(field?.isUnset({})).toBe(false);
+    expect(field?.isUnset(latch)).toBe(false);
+    expect(field?.isUnset(null)).toBe(false);
+  });
+
+  it('keeps the stored latch and summary.activity when an old build re-uploads without the key', () => {
+    const out = preserveAdditiveFields(incoming({ quests: ['new'] }, { streakDays: 3 }), stored({ quests: ['old'], questDoneAt: latch }, { streakDays: 1, activity }));
+    expect(out.payload).toEqual({ quests: ['new'], questDoneAt: latch });
+    expect(out.summary).toEqual({ streakDays: 3, activity });
+  });
+
+  it('keeps a stored empty latch and summary.activity too: a learner with sessions but no finished quest', () => {
+    const out = preserveAdditiveFields(incoming({ quests: [] }, { streakDays: 0 }), stored({ quests: [], questDoneAt: {} }, { activity }));
+    expect(out.payload).toEqual({ quests: [], questDoneAt: {} });
+    expect(out.summary).toEqual({ streakDays: 0, activity });
+  });
+
+  it('unions a sent record with the stored one, earliest time wins, so a lagging device erases nothing', () => {
+    const sent = { 'letters-q1': '2026-10-09T00:00:00.000Z', 'letters-q3': '2026-10-10T08:00:00.000Z' };
+    const fresh = { ...activity, total: { ...activity.total, q: 3 } };
+    const out = preserveAdditiveFields(incoming({ questDoneAt: sent }, { activity: fresh }), stored({ questDoneAt: latch }, { activity }));
+    expect(out.payload).toEqual({ questDoneAt: { ...latch, 'letters-q3': sent['letters-q3'] } });
+    // a build that sends the latch computes its own activity: the sent summary is kept as sent
+    expect(out.summary).toEqual({ activity: fresh });
+  });
+
+  it('an explicit empty record (a profile reset) is unioned, never a delete; its own summary is kept as sent', () => {
+    const reset = { ...activity, total: { since: null, min: 0, q: 0, c: 0, w: 0, days: 0 } };
+    const out = preserveAdditiveFields(incoming({ questDoneAt: {} }, { activity: reset }), stored({ questDoneAt: latch }, { activity }));
+    expect(out.payload).toEqual({ questDoneAt: latch });
+    expect(out.summary).toEqual({ activity: reset });
+  });
+
+  it('a sent record without a summary.activity keeps the stored one (a build with the latch writer but not the activity builder)', () => {
+    const sent = { 'letters-q3': '2026-10-10T08:00:00.000Z' };
+    const out = preserveAdditiveFields(incoming({ questDoneAt: sent }, { streakDays: 2 }), stored({ questDoneAt: latch }, { activity }));
+    // the latch is still unioned, and the stored activity (dated by its own asOf) is never erased
+    expect(out.payload).toEqual({ questDoneAt: { ...latch, ...sent } });
+    expect(out.summary).toEqual({ streakDays: 2, activity });
+  });
+
+  it('a sent record keeps the stored summary.activity for an explicit empty record too, and invents none when none is stored', () => {
+    const kept = preserveAdditiveFields(incoming({ questDoneAt: {} }, {}), stored({ questDoneAt: latch }, { activity }));
+    expect(kept.summary).toEqual({ activity });
+    for (const prior of [stored({ questDoneAt: latch }, {}), stored({ questDoneAt: latch }, null), stored({ questDoneAt: latch }, { activity: undefined })]) {
+      expect(preserveAdditiveFields(incoming({ questDoneAt: latch }, { streakDays: 2 }), prior).summary).toEqual({ streakDays: 2 });
+    }
+  });
+
+  it('only the quest latch keeps a stored summary when the field itself is sent: a sent placement list travels with exactly the summary sent', () => {
+    expect(ADDITIVE_FIELDS.filter((f) => f.keepStoredSummaryWhenSent).map((f) => f.payloadKey)).toEqual(['questDoneAt']);
+    const out = preserveAdditiveFields(incoming({ placements: [{ id: 'placement:b' }] }, {}), stored({ placements: [result] }, { placement }));
+    expect(out.summary).toEqual({});
+  });
+
+  it('invents nothing when no latch is stored, even when the stored summary has an activity', () => {
+    const inc = incoming({ quests: [] }, {});
+    const out = preserveAdditiveFields(inc, stored({ quests: [] }, { activity }));
+    expect(out.payload).toBe(inc.payload);
+    expect(out.summary).toBe(inc.summary);
+  });
+
+  it('merges with the stage-latch comparator: instants, not strings, and junk never wins', () => {
+    const merge = field?.merge;
+    expect(merge?.({ q: '2026-10-11T08:00:00+09:00' }, { q: '2026-10-11T00:00:00Z' })).toEqual({ q: '2026-10-11T08:00:00+09:00' });
+    expect(merge?.({ q: 'soon' }, { q: '2026-10-11T00:00:00.000Z' })).toEqual({ q: '2026-10-11T00:00:00.000Z' });
+    // two unparseable values fall back to the string order, whichever side holds the smaller one
+    expect(merge?.({ q: 'a' }, { q: 'b' })).toEqual({ q: 'a' });
+    expect(merge?.({ q: 'b' }, { q: 'a' })).toEqual({ q: 'a' });
+    expect(merge?.({ q: 7, r: '2026-10-12T00:00:00.000Z' }, ['x'])).toEqual({ r: '2026-10-12T00:00:00.000Z' });
+    expect(merge?.({ b: '2026-10-12T00:00:00.000Z', a: '2026-10-11T00:00:00.000Z' }, {})).toEqual({ a: '2026-10-11T00:00:00.000Z', b: '2026-10-12T00:00:00.000Z' });
+    expect(Object.keys(merge?.({ b: '2026-10-12T00:00:00.000Z', a: '2026-10-11T00:00:00.000Z' }, {}) as object)).toEqual(['a', 'b']);
+  });
+
+  it('preserves the quest latch, the stage latch and vocab together for a client that predates all three', () => {
+    const slice = { v: 1, items: [], topics: [] };
+    const out = preserveAdditiveFields(
+      incoming({ quests: [] }, {}),
+      stored({ quests: [], stageDoneAt: { stage1: '2026-10-01T00:00:00.000Z' }, vocab: slice, questDoneAt: latch }, { vocab: { n: 0 }, activity }),
+    );
+    expect(out.payload).toEqual({ quests: [], stageDoneAt: { stage1: '2026-10-01T00:00:00.000Z' }, vocab: slice, questDoneAt: latch });
+    expect(out.summary).toEqual({ vocab: { n: 0 }, activity });
+  });
+});
