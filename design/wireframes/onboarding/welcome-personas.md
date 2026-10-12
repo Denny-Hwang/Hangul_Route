@@ -1,4 +1,4 @@
-# Onboarding/Welcome-personas — learners start in one tap, grown-ups find their way in (wireframe v1)
+# Onboarding/Welcome-personas — learners start in one tap, grown-ups find their sign-in (wireframe v2)
 
 Spec: `docs/specs/F-APP-001-persona-app-shell.md` §3.6, §3.20 behaviours 1-2 · amends `onboarding/welcome.md` (the screen above the language row is unchanged)
 Audience: **anyone, any age** (shared surface) — the learner, or a parent, caregiver or teacher who opened the app. No age wording, never "for kids".
@@ -30,7 +30,7 @@ Panel A — first visit (no last persona on this browser)
 |                                  |
 |   ------------------------------ |  <- thin divider
 |   "Here to support a learner?"   |  <- one short line (placeholder)
-|   [ Parent or caregiver ] [ Teacher ]  <- two equal secondary buttons
+|   [ Parent or caregiver ] [ Teacher ]  <- two equal secondary buttons (sign-in only)
 |                                  |
 |   [language chips]  (if >1 locale shipped)
 |   1 muted trust line             |
@@ -43,11 +43,19 @@ Panel B — returning grown-up (this browser remembers persona = teacher)
 |   [[ LET'S START ]]              |
 |   [ I already have progress ]    |
 |   ------------------------------ |
-|   [ Continue as teacher ]        |  <- one secondary button
+|   [ Continue as teacher ]        |  <- one secondary button ("Continue as family" for the family persona)
 |   ( Someone else )               |  <- small text link -> shows Panel A row
 ```
 
-Panel C — native iOS / Android build, or flag off: today's `onboarding/welcome.md` (no divider, no row).
+Panel C — offline
+
+```
+|   "Here to support a learner?"   |
+|   [ Parent or caregiver ] [ Teacher ]   <- disabled (keep their labels)
+|   "Needs the internet"           |  <- one inline line; buttons re-enable when back online
+```
+
+Panel D — native iOS / Android build, or flag off: today's `onboarding/welcome.md` (no divider, no row).
 
 - The row never pushes "LET'S START" down on a phone at 320 wide: the row sits below the restore link; on short screens the screen scrolls, the primary stays in the first view.
 - Two buttons side by side when they fit, stacked otherwise; both meet the touch-target token.
@@ -55,7 +63,7 @@ Panel C — native iOS / Android build, or flag off: today's `onboarding/welcome
 ## Interaction points
 
 - [[ LET'S START ]] → `profiles/create-learner` flow as today; telemetry `shell.persona_chosen { persona: 'learner', from: 'welcome' }`
-- [ Parent or caregiver ] → (same tab) `shell/signin` with `?persona=parent`; `shell.persona_chosen { persona: 'parent', from: 'welcome' }`
+- [ Parent or caregiver ] → (same tab) `shell/signin` with `?persona=parent` (sign-in only; creating an account is behind the adult step there); `shell.persona_chosen { persona: 'parent', from: 'welcome' }`
 - [ Teacher ] → `shell/signin` with `?persona=teacher`; `{ persona: 'teacher', from: 'welcome' }`
 - [ Continue as teacher ] → `shell/signin` (no hint; the router sends a signed-in grown-up home); `{ persona: 'teacher', from: 'welcome-continue' }`
 - ( Someone else ) → replaces Panel B's button with Panel A's row (no navigation)
@@ -63,18 +71,18 @@ Panel C — native iOS / Android build, or flag off: today's `onboarding/welcome
 
 ## Navigation graph
 
-Enter from: cold launch with no learner profile · `shell/adult-frame` "Back to learning" on a browser without profiles · `shell/offline` "Back to learning"
+Enter from: cold launch with no learner profile · `shell/adult-frame` "Open the learner app" on a browser without profiles · `shell/offline` "Back to learning"
 Exit to:    `profiles/create-learner` · `sync/restore` · `shell/signin`
 
 ## States
 
 - **success**: Panels A / B as drawn.
 - **empty**: no last persona → Panel A (the normal first visit).
-- **error**: the last-persona key is unreadable or invalid → treated as absent (Panel A). Offline: the row still shows; tapping it lands on `shell/offline` (sign-in needs the internet).
+- **error**: the last-persona entry is unreadable or invalid → treated as absent (Panel A). Offline: Panel C (no navigation to a page that cannot load).
 
 ## Data needs
 
-- reads: `flags.grownUpHomeEnabled`; `Platform.OS === 'web'`; IndexedDB `hr:shell:lastPersona` (`LastPersonaSchema`, persona code only)
+- reads: `flags.grownUpHomeEnabled`; `Platform.OS === 'web'`; `navigator.onLine` and the `online` / `offline` events; shell store (`hr-shell` / `kv`) `lastPersona` (`LastPersonaSchema`, persona code only, read-only through `platform/shell-store.web.ts`)
 - writes: nothing (telemetry queue only)
 
 ## Open questions

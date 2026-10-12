@@ -1,4 +1,4 @@
-# Shell/Offline — grown-up pages need the internet; learning does not (wireframe v1)
+# Shell/Offline — grown-up pages need the internet; learning does not (wireframe v2)
 
 Spec: `docs/specs/F-APP-001-persona-app-shell.md` §3.4, §3.12
 Audience: **parent or caregiver, teacher** (grown-up page requested offline); may be seen by a learner who followed a grown-up link, so the copy is neutral
@@ -41,7 +41,7 @@ Then: instead of a browser error or the wrong app, a short page explains that gr
 
 ## Navigation graph
 
-Enter from: any offline navigation to a grown-up path (service worker `precacheFallback`) · `shell/grown-up-lock` PIN path return while offline · `onboarding/welcome-personas` persona buttons while offline
+Enter from: any offline navigation to a grown-up path (service worker `precacheFallback`: bookmarks, typed URLs, deep links) · `shell/grown-up-lock` PIN path return while offline. The learner-side entry buttons (Welcome row, Profile row, dashboard card) are disabled while `navigator.onLine` is false, so they normally do not lead here
 Exit to:    learner app `/` · the requested grown-up page (when online)
 
 ## States

@@ -1,46 +1,58 @@
-# Shell/Parent-home — a parent's first screen: my learners at a glance (wireframe v1)
+# Shell/Parent-home — the family home: each learner one tap from their report, a note and their route (wireframe v2)
 
-Spec: `docs/specs/F-APP-001-persona-app-shell.md` §3.8 (frame and first content) · reports spec (branch `docs/progress-reports`) owns the reports it links to · replaces the `/parent` demo (`parent/dashboard.md` web part, mock data)
-Audience: **parent or caregiver**
+Spec: `docs/specs/F-APP-001-persona-app-shell.md` §3.8 (frame, first content and every entry on this page) · the pages it opens belong to F-REPORT-001 (reports), F-FEEDBACK-001 (notes), the Learning Route amendment (route), F-BROWSE-001 (lessons) · replaces the `/parent` demo (`parent/dashboard.md` web part, mock data)
+Audience: **parent or caregiver, or an adult who set up a family space for their own learning** (persona "Family")
 Route: `/parent` inside `shell/adult-frame` (A-5b)
 
 ## Scenario (Given-When-Then)
 
-Given: a parent signs in (or switches to Parent) and their account has a family space with two learners
+Given: a parent signs in (or switches to Family) and their account has a family space with two learners
 When: `/parent` opens
-Then: they see each learner as one calm card (when they last learned, minutes this week) with one way in, and the family actions underneath; nothing compares the children
+Then: they see each learner as one calm card with direct ways to that learner's report, a note and their Learning Route, and the family actions underneath; nothing compares or ranks the children
 
 ## Screen goal
 
-"Open one learner's progress." (secondary: plan or manage the family)
+"Open one learner's report." (secondary: send a note, see the route, browse lessons, plan, manage the family)
 
 ## Box diagram
 
-Panel A — family with learners (phone)
+Panel A — family with learners (phone 375), every sibling flag on
 
 ```
 +-----------------------------------+
-| [frame: Parent · nav · Back to learning]
+| [frame: Family · Back to learning] |
+| Home | Reports | Notes | Lessons | Billing
 |-----------------------------------|
 |  Family name (heading)            |
-|                                   |
 |  +-----------------------------+  |
-|  | [avatar]  Display name      |  |  <- name shown on screen only, never in a URL
+|  | [avatar]  Display name      |  |  <- name on screen only, never in a URL
 |  | last active: weekday        |  |
-|  | minutes this week: n        |  |  <- a count, no target, no bar that drops
-|  |              [[ OPEN ]]     |  |  -> reports child page (id) / family space page until it lands
+|  | Minutes, last 7 days: n     |  |  <- a count, no target, no bar
+|  | [[ SEE REPORT ]]            |  |  -> learner report (ids)
+|  | ( Send a note ) ( Learning Route ) |  -> notes page · route page
+|  +-----------------------------+  |  <- whole first card fits at 375 x 667
 |  +-----------------------------+  |
-|  +-----------------------------+  |
-|  | [avatar]  Display name      |  |  <- order = API order (most recent activity), no "best"
-|  | ...                [[ OPEN ]] |  |
+|  | [avatar]  Display name      |  |  <- order = join order (stable), never activity
+|  | ...                          |  |
 |  +-----------------------------+  |
 |                                   |
+|  [ Lessons ]                      |  <- opens the lesson browser
 |  [ Plan the week ] [ Plan the term ]
 |  [ Family settings ] [ Add a learner ]
+|                                   |
+|  muted: "Also teach a class? Set up a class"
 +-----------------------------------+
 ```
 
-Panel B — wide: cards in two columns, actions in a side column on the right.
+Panel A' — the same card with every sibling flag off (before those pages ship)
+
+```
+|  | [avatar]  Display name      |  |
+|  | last active · Minutes, last 7 days: n
+|  |               [[ OPEN ]]    |  |  -> family roster /parent/space?id=
+```
+
+Panel B — wide: cards in two columns, family actions in a side column on the right.
 
 Panel C — family without learners (empty)
 
@@ -50,38 +62,50 @@ Panel C — family without learners (empty)
 |  +-----------------------------+   |
 |  |  JOIN CODE (large)   [Copy] |   |  <- existing code panel, doubled
 |  +-----------------------------+   |
-|  1-2 lines: how to join on the     |
-|  learner's device (Profile ->      |
-|  Classes and family -> Join)       |
-|  [[ OPEN THE APP ON THIS DEVICE ]] |  -> learner app /
+|  1 line: "On the learner's own     |
+|  device, open {Join} and enter     |  <- {Join} = the learner app's Join button label
+|  this code."                       |
+|  [[ OPEN THE APP ON THIS DEVICE ]] |  -> learner app; Join opens with the code filled in
+```
+
+Panel D — no family yet (the account holds only the teacher persona, or none of its spaces is a family)
+
+```
+|  "You don't have a family space yet."  (heading)
+|  [[ SET UP MY FAMILY ]]            |  -> /start?persona=parent
+|  [ Go to Classes ]                 |  <- only with the teacher persona
 ```
 
 ## Interaction points
 
-- [[ OPEN ]] → the reports spec's child page (`?id=<learnerId>`); before it lands → `/parent/space?id=<familyId>` (existing family roster)
-- [ Plan the week ] → `/parent/space/plan?id=` (existing plan builder)
-- [ Plan the term ] → `/parent/space/curriculum?id=` (existing wizard)
-- [ Family settings ] → `/parent/space/settings?id=`
+- [[ SEE REPORT ]] (when reports are on) → `/parent/space/learner?id=<familyId>&learner=<learnerId>`; [[ OPEN ]] (reports off) → `/parent/space?id=<familyId>` (family roster)
+- ( Send a note ) (notes on) → `/parent/space/notes?id=<familyId>` (learner preselect per F-FEEDBACK-001, ids only)
+- ( Learning Route ) (route page on) → `/parent/space/route?id=<familyId>&learner=<learnerId>`
+- [ Lessons ] (browse on) → lesson browser in its own window (F-BROWSE-001; full for a paying account, sampler otherwise; no price shown)
+- [ Plan the week ] → `/parent/space/plan?id=` · [ Plan the term ] → `/parent/space/curriculum?id=` · [ Family settings ] → `/parent/space/settings?id=`
 - [ Add a learner ] → scrolls to / shows the join code panel
 - [ Copy ] → copies the code, label changes to "Copied"
-- [[ OPEN THE APP ON THIS DEVICE ]] → learner app `/` (clears the unlock like Back to learning)
+- [[ OPEN THE APP ON THIS DEVICE ]] → writes the join hand-off (code only, 30 minutes), clears the unlock and the console session, opens the learner app
+- [[ SET UP MY FAMILY ]] → `/start?persona=parent` · [ Go to Classes ] → `shell/teacher-home`
+- muted cross-link: "Also teach a class? Set up a class" → `/start?persona=teacher` (no teacher persona) · "Your classes are under Teacher" → switch (teacher persona held)
 
 ## Navigation graph
 
-Enter from: `shell/signin` router · persona switch · frame "Home" · `shell/grown-up-lock` after unlock · `console/onboarding-role` after creating a family
-Exit to:    reports child page · `console/plan-builder` · `console/curriculum-planner` · `console/space-settings` · learner app `/`
+Enter from: `shell/signin` router · persona switch · frame "Home" · `shell/grown-up-lock` after unlock · `console/onboarding-role` after creating a family · `parent/grown-up-home-card` (Profile row, dashboard card)
+Exit to:    learner report · notes · Learning Route (adult) · lesson browser · `console/plan-builder` · `console/curriculum-planner` · `console/space-settings` · `console/onboarding-role` · `shell/teacher-home` · learner app `/`
 
 ## States
 
-- **success**: Panel A / B.
-- **empty**: Panel C. Two family spaces: one section each, newest first.
+- **success**: Panel A / A' / B.
+- **empty**: Panel C. Two family spaces: one section each, in creation order.
+- **no persona held**: Panel D.
 - **error**: one family's roster fails → that section shows one line + [ Try again ]; other sections render. Spaces fetch fails → page-level line + [ Try again ]. Loading → card outlines without numbers.
 
 ## Data needs
 
-- reads: `GET /api/spaces` (family spaces where role is owner or caregiver), `GET /api/spaces/:id/roster` per family (consented allow-list: `lastActiveAt`, `minutesLast7d`, avatar, display name)
-- writes: IndexedDB `hr:shell:lastPersona = parent`
+- reads: `GET /api/spaces` (family spaces where role is owner or caregiver), `GET /api/spaces/:id/roster` per family (consented allow-list: `joinedAt`, `lastActiveAt`, `minutesLast7d`, avatar, display name), the four console predicates
+- writes: shell store `lastPersona = parent` (only when the persona is held); `sessionStorage` `hr:shell:joinCode` from Panel C
 
 ## Open questions
 
-- Which two numbers sit on the card is the reports spec's call once its child page exists; default: last active + minutes this week (both already on the roster, both "only fill" within a week).
+- Which figures sit on the card once reports ship is F-REPORT-001's call; default: last active + minutes in the last 7 days (both already on the roster). The card never sorts by them.
