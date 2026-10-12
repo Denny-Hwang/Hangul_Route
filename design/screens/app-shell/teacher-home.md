@@ -15,7 +15,9 @@ Today's `/teach/home` with the Family group removed (families live under Family)
  | ( Class report )  ( Notes )                      |    each only when its flag is on
  +-------------------------------------------------+
  | Beginners B · 0 students ...                     |
- | Spring class (archived) · 9 students ( Open -> ) |    archived: surface.sunken, text.secondary, no links (D8)
+ | Spring class (archived) · 9 students ( Open -> ) |    archived: surface.sunken, text.secondary
+ |-------------------------------------------------|
+ | ( Class report )                                 |    archived: Class report stays, no Notes (D8)
  School (h2)
  | Riverside school · 4 classes        ( Open -> ) |
  ( Lessons )                                            browseEntryEnabled()
@@ -24,12 +26,13 @@ Today's `/teach/home` with the Family group removed (families live under Family)
 
 - Status lines and order are today's (`statusLine`, most recent first); "Hi, {name}" is dropped (README, D8).
 - Class report → `/teach/space/report?id=`; Notes → `/teach/space/notes?id=`. A school row has no Class report or Notes.
+- An archived class row keeps **Class report** (a teacher looks back at a past term; spec section 3.5 keeps archived spaces reachable) and drops **Notes** (an archived class takes no new notes). Its Open stays (README, D8).
 
 ## States
 
 | State | Drawn |
 |---|---|
-| Flags off | rows with Open only; no ruled line |
+| Flags off | rows with Open only; no ruled line (archived rows too) |
 | B · no teacher persona | one panel: h1 "You don't have a class yet.", **Set up a class** (primary) → `/start?persona=teacher`, **Go to Family** only with the family persona |
 | Teacher persona only through archived spaces | the archived rows, **+ New class** as the primary, the cross-link |
 | Spaces fetch failed | h1 and a panel "Can't reach the console right now." with Try again ("Showing the last list we loaded." when an older list is kept, as today); the frame shows no nav |

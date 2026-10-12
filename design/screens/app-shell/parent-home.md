@@ -1,6 +1,6 @@
 # /parent: the family home (design mock v1, for A-5b)
 
-Wireframe: `design/wireframes/shell/parent-home.md` (Panels A, A', B, C, D) · spec §3.8 (family home), §3.17 (anti-shame), §3.19 · mock: `mock/parent-home.html`, `mock/parent-home-states.html` · shots: `shots/parent-home-375-first.png`, `-320.png`, `-375.png`, `-1280.png`, `-320-text200.png`, `parent-home-states-375.png`, `-1280.png`
+Wireframe: `design/wireframes/shell/parent-home.md` (Panels A, A', B, C, D) · spec §3.8 (family home), §3.17 (anti-shame), §3.19 · mock: `mock/parent-home.html`, `mock/parent-home-states.html` · shots: `shots/parent-home-375-first.png`, `-320.png`, `-375.png`, `-768.png`, `-1280.png`, `-320-text200.png`, `parent-home-states-375.png`, `-1280.png`
 
 ## Phone (Panel A, every sibling flag on)
 
@@ -20,13 +20,19 @@ Wireframe: `design/wireframes/shell/parent-home.md` (Panels A, A', B, C, D) · s
  +------------------------------------+
  [ Lessons ] [ Plan the week ]                family actions: equal buttons in a grid
  [ Plan the term ] [ Family settings ]
- [ Add a learner ]
+ [ Add a learner ]                            a disclosure button (aria-expanded); opens the join panel inline below
  Your classes are under Teacher              cross-link (switch); "Also teach a class? Set up a class" without the teacher persona
 ```
 
 ## Wide (Panel B)
 
-Cards in two columns (`minmax(18rem, 1fr)`) and a 400 px side column (`layout.pane.master`) with the family actions and the cross-link, `spacing.xxl` apart. Tab order: card by card, then the side column.
+- From 45em (720 px) to 70em: one column; the cards two side by side, the family actions and the cross-link under them (`parent-home-768.png`).
+- From 70em (1120 px, `layout.maxWidth.full`): the cards (`minmax(18rem, 1fr)`, two side by side) and a 400 px side column (`layout.pane.master`) with the family actions and the cross-link, `spacing.xxl` apart. Below 70em the main column would be narrower than the 400 px side column, which would put the learner cards second (README, D6).
+- Tab order: card by card, then the family actions and the cross-link.
+
+## Add a learner (family with learners)
+
+**Add a learner** is a disclosure button: `aria-expanded`, `aria-controls` the panel. Pressed, the button takes `surface.sunken` and the family join panel (the same as state C: "Family code", the code, Copy) with the join line opens **inline directly under the family actions**, next in the Tab order; focus stays on the button (the disclosure pattern), so a second press closes it. Nothing else moves above it, and the page does not scroll by itself. **Open the app on this device** is not in this panel: it hands this tab to the learner app, which only state C needs. Drawn in `parent-home-states` ("A · Add a learner pressed").
 
 ## Card actions by flag
 
@@ -44,7 +50,7 @@ With every flag off (today) a card is: chip, name, the two lines and **Open** (`
 
 | State | Drawn |
 |---|---|
-| C · family without learners | family heading, "No learner has joined yet.", the join panel (label "Family code", the code in `size.display` monospace, Copy), the line `On the learner's own device, open "Join a class" and enter this code.`, **Open the app on this device** (primary, at most 400 px), then the family actions and the cross-link |
+| C · family without learners | family heading, "No learner has joined yet.", the join panel (label "Family code", the code in `size.display` monospace, Copy), the line `On the learner's own device, go to Profile, then Classes & family, then "Join a class", and enter this family code.`, **Open the app on this device** (primary, at most 400 px), then the family actions (without Add a learner: the panel is already open) and the cross-link |
 | D · no family persona | one panel: h1 "You don't have a family space yet.", **Set up my family** (primary) → `/start?persona=parent`, **Go to Classes** only with the teacher persona. Nothing else on the page |
 | Loading | the heading line and two card outlines in `surface.sunken`, no numbers, `aria-busy` |
 | One family failed | that family's heading and a panel "Can't reach the console right now." with Try again; the other family renders |
@@ -63,6 +69,12 @@ With every flag off (today) a card is: chip, name, the two lines and **Open** (`
 | Join panel | `surface.paper`, `radii.lg`, padding `spacing.xl` `spacing.lg`; label `size.caption` semibold `text.muted`; code `family.mono` `size.display` bold, `tracking.wide` |
 | Cross-link | text link `brand.secondaryDark`, `touchTarget.min` tall |
 | No-family panel | `surface.paper` panel, h1 `size.prompt`, buttons `spacing.md` apart |
+
+## Accessibility
+
+- The join code is read character by character: the visible code is `aria-hidden` and a visually hidden span holds the spaced characters ("K 7 M P Q 4"). Never an `aria-label` on the `<p>` (ARIA forbids naming a paragraph, so screen readers ignore it).
+- The family `section` is labelled by its heading; each learner card is an `article` named by the learner's name; the side column is an `aside` named by the family.
+- Add a learner: `aria-expanded` is the state; the panel follows the button in the DOM.
 
 ## Anti-shame and privacy
 

@@ -1,6 +1,6 @@
 # AdultFrame: header, persona switch, navigation, footer (design mock v1, for A-5a and A-5c)
 
-Wireframe: `design/wireframes/shell/adult-frame.md` (Panels A to C) · spec §3.8, §3.10, §3.16 · mock: `mock/frame-states.html` (and the frame of `parent-home.html`, `teacher-home.html`) · shots: `shots/frame-states-320.png`, `-375.png`, `-1280.png`, `-375-text200.png`, `parent-home-1280.png`, `teacher-home-1280.png`
+Wireframe: `design/wireframes/shell/adult-frame.md` (Panels A to C) · spec §3.8, §3.10, §3.16 · mock: `mock/frame-states.html` (and the frame of `parent-home.html`, `teacher-home.html`) · shots: `shots/frame-states-320.png`, `-375.png`, `-768.png`, `-1280.png`, `-375-text200.png`, `parent-home-1280.png`, `teacher-home-1280.png`
 
 Replaces `ConsoleShell` (`components/console/ui.tsx`): no "Back to site", no disabled Account button, no "Console" title.
 
@@ -28,6 +28,8 @@ One persona: `(HR) Teacher            (< Back to learning)` — brand mark, then
    ^^^^ current: bold text.primary, underline borderWidth.thick brand.primary
 ```
 
+- From 45em to 70em the brand is the mark alone (the name stays its accessible name); the name joins it from 70em (`layout.maxWidth.full`). So the header is one row at every width from 720 px up with both personas, Language and Sign out (measured at 720, 768, 800, 840, 1024, 1120 and 1280; `frame-states-768.png`, `parent-home-768.png`).
+
 - The header and nav are one paper band (`surface.paper`, bottom `borderWidth.thin` `border.subtle`); content sits on `surface.canvas`, at most `layout.maxWidth.full`.
 - DOM order is the visual order at both widths: brand, persona, way back, Language, Sign out (the last two `display: none` below 45em, so out of the Tab order), then the nav, the main content, the footer (whose Language and Sign out exist only below 45em).
 
@@ -47,7 +49,7 @@ Items are drawn exactly as section 3.8 registers them; an item whose predicate i
 | Both personas | the switch; choosing the other option writes the last persona and opens that home |
 | One persona | the persona's name as text after the brand mark |
 | Teacher's laptop (marker absent or `none`, no `hr:profiles`) | the way back reads **Open the learner app**; same place, same action |
-| `/teach/space…` or `/parent/space…` while the space kind loads | the switch with no option checked; only the items of both personas (Lessons, Billing), none highlighted |
+| `/teach/space…` or `/parent/space…` while the space kind loads | the switch with no option checked (or the persona text); the nav items of the **last persona** (the shell store's; Family when none), none highlighted. The tab row keeps its height, and with the usual answer (the last persona) its items do not change, so nothing shifts when the lookup returns |
 | `/account/billing` (A-5c) | Billing highlighted in the active persona's row |
 | Spaces fetch failed | brand, the way back, Language and Sign out only; no persona, no nav; the page shows its own Try again |
 | Lock deciding | as A-4a built it: an empty canvas for the read (README, D12); then the lock or the page with its frame |
@@ -57,7 +59,7 @@ Items are drawn exactly as section 3.8 registers them; an item whose predicate i
 | Part | Tokens |
 |---|---|
 | Bar | `surface.paper`; padding `spacing.sm` block, `layout.gutter.compact` / `.regular` (45em) / `.wide` (70em) inline; items `spacing.sm` apart (`spacing.md` wide) |
-| Brand | mark 48 (`spacing.xxxl`) `brand.primary` with `text.inverse` bold; name `size.bodyLg` bold `text.primary`, visually hidden below 45em (the link keeps its name) |
+| Brand | mark 48 (`spacing.xxxl`) `brand.primary` with `text.inverse` bold; name `size.bodyLg` bold `text.primary`, visually hidden below 70em (the link keeps its name) |
 | Persona switch | `role="radiogroup"`; outline `borderWidth.base` `brand.secondaryDark`, `radii.pill`; options at least 64 x 64, `size.bodySm` bold; selected: fill `brand.secondaryDark`, label `text.onSecondary`; unselected: `surface.paper`, label `brand.secondaryDark` |
 | Persona text | `text.secondary` semibold |
 | Way back | `surface.paper`, `borderWidth.thin` `border.strong`, `radii.pill`, glyph `arrow-left` 20, `size.bodySm` bold `text.primary`, `touchTarget.min` tall; flex basis 7.5rem on phones (README, Constants) |
@@ -68,7 +70,7 @@ Items are drawn exactly as section 3.8 registers them; an item whose predicate i
 
 ## Accessibility
 
-- Persona switch: `role="radiogroup"` labelled `a11y.shell.personaSwitch`, two `role="radio"` with `aria-checked`, roving `tabindex`, arrow keys move. Text labels at every width.
+- Persona switch: `role="radiogroup"` labelled `a11y.shell.personaSwitch` ("Switch between Family and Teacher"), two `role="radio"` with `aria-checked`, roving `tabindex`. **Manual activation**: arrow keys move focus only and never change `aria-checked`; Space, Enter or a click commits, writes the last persona and opens that home. Choosing navigates, so an arrow key alone must not (WCAG 3.2.2). A-5a tests that ArrowRight alone does not navigate. Text labels at every width.
 - `nav` labelled with the active persona's name; `aria-current="page"` on the current item (the underline and weight are its non-colour cues).
 - Contrast and state checks: README, "Greyscale and protanopia".
 - No sideways scroll at 320 and 375, also at 200 % text (the header wraps to a second row; `frame-states-375-text200.png`).

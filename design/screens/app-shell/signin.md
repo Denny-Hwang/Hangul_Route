@@ -46,7 +46,7 @@ One line "Taking you to your home…" in a polite live region (`a11y.shell.redir
 
 ## Panel D: reverification (OAuth on a device with learner profiles)
 
-A paper card like the lock's: h1 "Confirm it's you", the line ("This device has learner profiles. Enter the code we email you to open grown-up pages."), Clerk's reverification (email code, password or passkey) at most 400 px wide, and **Back to learning** as a secondary button. Cancelled: still signed in, the lock shows.
+A paper card like the lock's: h1 "Confirm it's you", the line ("This device has learner profiles. Confirm it's you to open grown-up pages.", which names no factor, so it is true for an email code, a password or a passkey), Clerk's reverification (whichever first factor the account has) at most 400 px wide, and **Back to learning** as a secondary button. Cancelled: still signed in, the lock shows.
 
 ## Errors
 
@@ -66,7 +66,7 @@ A paper card like the lock's: h1 "Confirm it's you", the line ("This device has 
 | Brand mark | 48 circle `brand.primary`, `text.inverse` bold `size.bodyLg` |
 | Title / intro | `size.title` bold `leading.tight` / `text.secondary` `leading.relaxed` |
 | Widget box | `surface.paper`, `borderWidth.thin` `border.subtle`, `radii.lg`, `shadows.card`; Clerk appearance variables from tokens (README, D13) |
-| Text links | `brand.secondaryDark` semibold, underline offset `spacing.xs`, `touchTarget.min` tall |
+| Text links | `brand.secondaryDark` semibold, underline offset `spacing.xs`, at least `touchTarget.min` tall and wide, padding `spacing.sm` inline (so a short link such as "Go now" is still a 64 x 64 target) |
 | Learners line | `text.muted` `size.bodySm`, max 400 px |
 | Checkbox row | `surface.paper`, `borderWidth.base` `border.strong`, `radii.md`, box `spacing.xl` square with `accent-color: brand.primary` |
 | Continue | primary: `brand.primary` / `text.onPrimary`, `radii.pill`, `touchTarget.min`, full column width; disabled `surface.sunken` / `text.muted` |
