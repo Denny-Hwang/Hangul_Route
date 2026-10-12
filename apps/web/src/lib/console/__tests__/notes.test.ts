@@ -261,9 +261,28 @@ describe('composerCheck (sections 6.2, 7.1)', () => {
     const bad = composerCheck(input({ text: 'see www.kim' }), 'en');
     expect(bad).toMatchObject({ canSend: false, textProblem: 'Links can\'t be sent in a note ("www.kim").', body: null });
     expect(composerCheck(input({ questId: 'quest:nowhere' }), 'en')).toMatchObject({ canSend: false, body: null });
-    // The strict schema is the last word: an id that is not a learner id, or the same learner twice, never leaves.
-    expect(composerCheck(input({ to: { kind: 'learners', ids: ['Mina'] } }), 'en')).toMatchObject({ canSend: false, body: null });
-    expect(composerCheck(input({ to: { kind: 'learners', ids: ['profile:a', 'profile:a'] } }), 'en')).toMatchObject({ canSend: false, body: null });
+    // The strict schema is the last word: an id that is not a learner id never leaves, and the adult is told why.
+    expect(composerCheck(input({ to: { kind: 'learners', ids: ['Mina'] } }), 'en')).toMatchObject({
+      canSend: false,
+      body: null,
+      textProblem: null,
+      recipientsProblem: 'Choose up to 300 learners.',
+    });
+  });
+
+  it('sends a learner picked twice once, and says why Send is off for more than 300 learners', () => {
+    const twice = composerCheck(input({ to: { kind: 'learners', ids: ['profile:a', 'profile:b', 'profile:a'] } }), 'en');
+    expect(twice).toMatchObject({ canSend: true, recipientsProblem: null });
+    expect(twice.body?.to).toEqual({ kind: 'learners', ids: ['profile:a', 'profile:b'] });
+    const many = Array.from({ length: 301 }, (_, i) => `profile:p${i}`);
+    expect(composerCheck(input({ to: { kind: 'learners', ids: many } }), 'en')).toMatchObject({
+      canSend: false,
+      body: null,
+      recipientsProblem: en.composer.recipientsProblem,
+    });
+    expect(composerCheck(input({ to: { kind: 'learners', ids: many.slice(0, 300) } }), 'en')).toMatchObject({ canSend: true, recipientsProblem: null });
+    // Other problems keep their own line, never the recipients one.
+    expect(composerCheck(input({ presetId: null }), 'en').recipientsProblem).toBeNull();
   });
 
   it('never sends a preset the sender\'s side may not pick', () => {
@@ -317,16 +336,31 @@ describe('server problems (section 7.2 errors, wireframe states)', () => {
     expect(sendProblem(f(422, 'bad_preset'), 'class', 'en')).toBe('Pick a quest for this encouragement.');
     expect(sendProblem(f(422, 'bad_suggest'), 'class', 'en')).toBe('That quest cannot be suggested. Pick another one.');
     expect(sendProblem(f(429, 'too_many', { scope: 'account', retryAfter: 60 }), 'class', 'en')).toBe('You have sent many notes today. You can send more tomorrow.');
+    expect(sendProblem(f(429, 'too_many', { scope: 'learner', retryAfter: 3600 }), 'class', 'en')).toBe(en.composer.errors.tooMany);
+    expect(sendProblem(f(422, 'not_in_space'), 'class', 'en')).toBe('Someone on this list is no longer in this space. Refresh and try again.');
     expect(sendProblem(f(-1), 'class', 'en')).toBe('Could not send. Check your connection and try again.');
     expect(sendProblem(f(500), 'class', 'en')).toBe('Something went wrong. Please try again.');
+  });
+
+  it('a short limiter 429 (several sends in a minute) asks for a minute, never "tomorrow"', () => {
+    expect(sendProblem(f(429, 'too_many_attempts', { retryAfterSeconds: 30 }), 'class', 'en')).toBe('Please wait a minute and try again.');
+    expect(sendProblem(f(429), 'family', 'en')).toBe(en.composer.errors.wait);
+    expect(sendProblem(f(429, 'too_many'), 'family', 'en')).toBe(en.composer.errors.wait);
   });
 
   it('words a take-back refusal and a family action refusal', () => {
     expect(withdrawProblem(f(409, 'note_reported'), 'en')).toBe('This note can no longer be changed.');
     expect(withdrawProblem(f(500), 'en')).toBe('That did not save. Try again.');
-    expect(familyActionProblem(f(429, 'too_many'), 'en')).toBe('Too many reports today. Write to hello@hangulroute.com if you need help now.');
-    expect(familyActionProblem(f(422, 'own_note'), 'en')).toBe('This is your own note. You can take it back instead.');
-    expect(familyActionProblem(f(-1), 'en')).toBe('That did not save. Try again.');
+    expect(familyActionProblem(f(429, 'too_many'), 'report', 'en')).toBe('Too many reports today. Write to hello@hangulroute.com if you need help now.');
+    expect(familyActionProblem(f(422, 'own_note'), 'report', 'en')).toBe('This is your own note. You can take it back instead.');
+    expect(familyActionProblem(f(-1), 'hide', 'en')).toBe('That did not save. Try again.');
+  });
+
+  it('only a refused report reads as the daily report limit; any other 429 asks for a minute', () => {
+    for (const action of ['hide', 'block', 'unblock', 'prefs', 'senders'] as const) {
+      expect(familyActionProblem(f(429, 'too_many'), action, 'en'), action).toBe('Please wait a minute and try again.');
+    }
+    expect(familyActionProblem(f(429, 'too_many_attempts', { retryAfterSeconds: 20 }), 'report', 'en')).toBe(en.family.wait);
   });
 });
 
@@ -380,6 +414,12 @@ describe('sentRowView (wireframe console/notes-sent.md)', () => {
     expect(sentRowView(batch, 'class', 'en')).toMatchObject({ key: 'batch:2', batch: true, to: 'To everyone (18 students)', reaction: null, quest: QUEST.title, canTakeBack: true });
   });
 
+  it('a batch row without a note id cannot be taken back from here (never posts to /notes/undefined)', () => {
+    const batch: SentNoteRow = { batchId: 'batch:3', to: 'everyone', size: 4, presetId: 'effort_keep_trying', text: null, suggest: null, label: null, createdAt: 't', status: 'sent', mine: true };
+    expect(sentRowView(batch, 'class', 'en')).toMatchObject({ key: 'batch:3', noteId: null, batch: true, canTakeBack: false });
+    expect(sentRowView({ ...batch, id: '' }, 'class', 'en')).toMatchObject({ noteId: null, canTakeBack: false });
+  });
+
   it('a note of another grown-up has no Take back; not shown and taken back cannot be taken back', () => {
     expect(sentRowView(learnerRow({ mine: false }), 'class', 'en')).toMatchObject({ byOther: 'Sent by another grown-up of this space', canTakeBack: false });
     expect(sentRowView(learnerRow({ status: 'not_shown', reaction: null }), 'class', 'en')).toMatchObject({ status: 'Not shown', canTakeBack: false, reaction: null });
@@ -416,7 +456,7 @@ describe('receivedRowView (wireframe console/family-notes.md A, section 8.2)', (
   it('a class note: from the class (teacher), never an account; status and answer; every action', () => {
     expect(receivedRowView(row(), 'en')).toEqual({
       id: 'note:aaaaaaaa',
-      from: 'From class Sunday Class A (teacher)',
+      from: 'From Sunday Class A (teacher)',
       sentBy: null,
       preset: 'Your reading is getting stronger.',
       text: 'Loved it',
@@ -438,6 +478,17 @@ describe('receivedRowView (wireframe console/family-notes.md A, section 8.2)', (
     expect(receivedRowView({ ...family, suggest: { kind: 'quest', id: QUEST.id } }, 'en').quest).toBe(QUEST.title);
   });
 
+  it('a row from a newer or broken Worker never renders "undefined" or names an account', () => {
+    const family = row({ spaceKind: 'family', spaceName: 'Kim family', from: { role: 'family', label: 'grandma' }, senderName: 'Sun Park' });
+    // An unknown label id signs "Your family".
+    const unknown = { ...family, from: { role: 'family', label: 'cousin' } } as unknown as OversightNote;
+    expect(receivedRowView(unknown, 'en').from).toBe('From home · signed Your family');
+    // A missing sender reads as a class note, without the account name.
+    const noFrom = { ...family, from: undefined } as unknown as OversightNote;
+    expect(receivedRowView(noFrom, 'en')).toMatchObject({ from: 'From Kim family (teacher)', sentBy: null });
+    expect(JSON.stringify(receivedRowView(unknown, 'en'))).not.toContain('undefined');
+  });
+
   it('words who acted, and leaves only the actions that still apply', () => {
     expect(receivedRowView(row({ status: 'hidden', hiddenBy: 'Sun Park' }), 'en')).toMatchObject({ status: 'Hidden by Sun Park', canHide: false, canReport: true, canBlock: true });
     expect(receivedRowView(row({ status: 'hidden', hiddenBy: 'device' }), 'en').status).toBe('Hidden on a device');
@@ -451,12 +502,14 @@ describe('receivedRowView (wireframe console/family-notes.md A, section 8.2)', (
 });
 
 describe('groupByDay (section 9: send time only)', () => {
-  const now = new Date('2026-10-12T15:00:00.000Z');
+  // Built from local components, so the days hold in every time zone the suite runs in.
+  const at = (day: number, hour: number) => new Date(2026, 9, day, hour).toISOString();
+  const now = new Date(2026, 9, 12, 15);
   const rows = [
-    { createdAt: '2026-10-12T10:00:00.000Z', status: 'not_shown', id: 1 },
-    { createdAt: '2026-10-12T08:00:00.000Z', status: 'sent', id: 2 },
-    { createdAt: '2026-10-11T08:00:00.000Z', status: 'opened', id: 3 },
-    { createdAt: '2026-10-03T08:00:00.000Z', status: 'withdrawn', id: 4 },
+    { createdAt: at(12, 10), status: 'not_shown', id: 1 },
+    { createdAt: at(12, 8), status: 'sent', id: 2 },
+    { createdAt: at(11, 8), status: 'opened', id: 3 },
+    { createdAt: at(3, 8), status: 'withdrawn', id: 4 },
   ];
 
   it('groups by day in the order the API gives (never sorted by status)', () => {
@@ -468,6 +521,21 @@ describe('groupByDay (section 9: send time only)', () => {
 
   it('an unreadable date keeps its row in its own group', () => {
     expect(groupByDay([{ createdAt: 'x', id: 9 }], now, 'en')).toEqual([{ day: '', rows: [{ createdAt: 'x', id: 9 }] }]);
+  });
+
+  it('reads the day in the viewer\'s time zone, not in UTC', () => {
+    const tz = process.env.TZ;
+    try {
+      // 01:00 UTC on Oct 12 is the evening of Oct 11 in Los Angeles and the morning of Oct 12 in Seoul.
+      const sent = [{ createdAt: '2026-10-12T01:00:00.000Z', id: 1 }];
+      const later = new Date('2026-10-12T12:00:00.000Z');
+      process.env.TZ = 'America/Los_Angeles';
+      expect(groupByDay(sent, later, 'en').map((g) => g.day)).toEqual(['Yesterday']);
+      process.env.TZ = 'Asia/Seoul';
+      expect(groupByDay(sent, later, 'en').map((g) => g.day)).toEqual(['Today']);
+    } finally {
+      process.env.TZ = tz;
+    }
   });
 });
 

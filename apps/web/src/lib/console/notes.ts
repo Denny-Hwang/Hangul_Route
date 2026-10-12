@@ -55,11 +55,12 @@ export type SentNoteStatus = 'sent' | 'opened' | 'not_shown' | 'withdrawn';
 
 /**
  * One row of the sent list. A send to everyone is one row without counts of opens or answers;
- * `id` is one note of that batch, which the take-back route names together with `batch: true`.
+ * `id` is one live note of that batch, which the take-back route names together with `batch: true`
+ * (section 7.2). A row without it cannot be taken back from here.
  */
 export type SentNoteRow =
   | {
-      id: string;
+      id?: string;
       batchId: string;
       to: 'everyone';
       size: number;
@@ -229,8 +230,10 @@ function reactionLine(reaction: string | null, locale: UiLocale): string | null 
   return reaction !== null && REACTIONS.has(reaction) ? getMessages(locale).common.notes.reactions[reaction as (typeof NOTE_REACTION_IDS)[number]] : null;
 }
 
-function labelLine(label: FamilyLabelId | null, locale: UiLocale): string {
-  return getMessages(locale).common.notes.familyLabels[label ?? 'family'];
+function labelLine(label: FamilyLabelId | null | undefined, locale: UiLocale): string {
+  const labels = getMessages(locale).common.notes.familyLabels;
+  // A label id this build does not know (a newer Worker) signs "Your family", never "undefined".
+  return label !== null && label !== undefined && Object.prototype.hasOwnProperty.call(labels, label) ? labels[label] : labels.family;
 }
 
 function questTitle(questId: string | null | undefined, catalog: Catalog): string | null {
@@ -366,6 +369,8 @@ export interface ComposerCheck {
   /** The preset needs a quest and none is picked ("Needed for this encouragement"). */
   questNeeded: boolean;
   textProblem: string | null;
+  /** The picked list cannot be sent as it is (more than a send takes, or an id the form cannot send). */
+  recipientsProblem: string | null;
   /** The `NoteSendSchema` body, or null while Send is off. */
   body: NoteSend | null;
 }
@@ -380,17 +385,21 @@ export function composerCheck(input: ComposerInput, locale: UiLocale = DEFAULT_L
   const presetOk = input.presetId !== null && allowedFor(input.presetId, side === 'family' ? 'family' : 'teacher');
   const hasTarget = input.to.kind === 'everyone' || input.to.ids.length > 0;
   if (!text.ok || questNeeded || !questOk || !presetOk || !hasTarget || input.presetId === null) {
-    return { canSend: false, questNeeded, textProblem: textError, body: null };
+    return { canSend: false, questNeeded, textProblem: textError, recipientsProblem: null, body: null };
   }
+  // A learner picked twice is sent once; the Worker refuses duplicates (`NoteSendSchema`).
+  const ids = input.to.kind === 'learners' ? [...new Set(input.to.ids)] : [];
   const body: NoteSend = {
-    to: input.to.kind === 'everyone' ? { kind: 'everyone' } : { kind: 'learners', ids: [...input.to.ids] },
+    to: input.to.kind === 'everyone' ? { kind: 'everyone' } : { kind: 'learners', ids },
     presetId: input.presetId,
     ...(text.text !== null ? { text: text.text, textLocale: locale } : {}),
     ...(input.questId !== null ? { suggest: { kind: 'quest' as const, id: input.questId } } : {}),
     ...(side === 'family' ? { label: input.label ?? 'family' } : {}),
   };
   const parsed = NoteSendSchema.safeParse(body);
-  return parsed.success ? { canSend: true, questNeeded: false, textProblem: null, body: parsed.data } : { canSend: false, questNeeded: false, textProblem: null, body: null };
+  if (parsed.success) return { canSend: true, questNeeded: false, textProblem: null, recipientsProblem: null, body: parsed.data };
+  // Text, preset, quest and label were checked above, so what is left is the learner list.
+  return { canSend: false, questNeeded: false, textProblem: null, recipientsProblem: getMessages(locale).console.notes.composer.recipientsProblem, body: null };
 }
 
 export interface NotePreview {
@@ -452,8 +461,18 @@ export function sendProblem(failure: NotesFailure, kind: SpaceKind, locale: UiLo
   }
   if (failure.code === 'bad_preset') return e.badPreset;
   if (failure.code === 'bad_suggest') return e.badSuggest;
-  if (failure.status === 429) return e.tooMany;
+  if (failure.code === 'not_in_space') return e.notInSpace;
+  if (failure.status === 429) return isDailyLimit(failure) ? e.tooMany : e.wait;
   return e.generic;
+}
+
+/**
+ * The daily limits answer `429 too_many { scope: 'account' | 'learner' }` (section 7.3); the
+ * per-minute limiter (`lib/rate-limit.ts`, `too_many_attempts`) and any other 429 are short waits.
+ */
+function isDailyLimit(failure: NotesFailure): boolean {
+  const scope = failure.details?.scope;
+  return failure.code === 'too_many' && (scope === 'account' || scope === 'learner');
 }
 
 /** The words for a refused take back: a reported note can no longer be changed. */
@@ -462,10 +481,13 @@ export function withdrawProblem(failure: NotesFailure, locale: UiLocale = DEFAUL
   return failure.code === 'note_reported' ? t.locked : t.failed;
 }
 
-/** The words for a refused family action (hide, report, stop, setting). */
-export function familyActionProblem(failure: NotesFailure, locale: UiLocale = DEFAULT_LOCALE): string {
+/** The family actions that can be refused; only `report` has a daily limit of its own (section 7.3). */
+export type FamilyAction = 'hide' | 'report' | 'block' | 'unblock' | 'prefs' | 'senders';
+
+/** The words for a refused family action (hide, report, stop, allow again, a setting). */
+export function familyActionProblem(failure: NotesFailure, action: FamilyAction, locale: UiLocale = DEFAULT_LOCALE): string {
   const f = getMessages(locale).console.notes.family;
-  if (failure.status === 429) return f.report.tooMany;
+  if (failure.status === 429) return action === 'report' && failure.code === 'too_many' ? f.report.tooMany : f.wait;
   if (failure.code === 'own_note') return f.report.ownNote;
   return f.saveFailed;
 }
@@ -482,8 +504,8 @@ export function statusText(status: SentNoteStatus, viewer: Side, locale: UiLocal
 export interface SentRowView {
   /** The batch id for a send to everyone, the note id otherwise. */
   key: string;
-  /** The note the take-back route names (with `batch: true` for a batch row). */
-  noteId: string;
+  /** The note the take-back route names (with `batch: true` for a batch row); null when the row carries none. */
+  noteId: string | null;
   batch: boolean;
   to: string;
   preset: string;
@@ -502,9 +524,10 @@ export function sentRowView(row: SentNoteRow, kind: SpaceKind, locale: UiLocale 
   const notes = getMessages(locale).console.notes;
   const side = sideOf(kind);
   const batch = row.to === 'everyone';
+  const noteId = typeof row.id === 'string' && row.id !== '' ? row.id : null;
   return {
     key: batch ? row.batchId : row.id,
-    noteId: row.id,
+    noteId,
     batch,
     to: row.to === 'everyone' ? notes.sent.to.everyone[side](row.size) : notes.sent.to.learner(row.displayName),
     preset: presetLine(row.presetId, locale),
@@ -514,7 +537,7 @@ export function sentRowView(row: SentNoteRow, kind: SpaceKind, locale: UiLocale 
     reaction: row.to === 'learner' ? reactionLine(row.reaction, locale) : null,
     signed: side === 'family' && row.label !== null ? notes.sent.signed(labelLine(row.label, locale)) : null,
     byOther: row.mine ? null : notes.sent.otherAdult,
-    canTakeBack: row.mine && (row.status === 'sent' || row.status === 'opened'),
+    canTakeBack: noteId !== null && row.mine && (row.status === 'sent' || row.status === 'opened'),
   };
 }
 
@@ -540,8 +563,10 @@ const DEVICE = 'device';
 export function receivedRowView(row: OversightNote, locale: UiLocale = DEFAULT_LOCALE, catalog: Catalog = CATALOG): ReceivedRowView {
   const m = getMessages(locale);
   const f = m.console.notes.family;
-  const from = row.from.role === 'family' ? `${f.from.home} · ${f.from.signed(labelLine(row.from.label, locale))}` : f.from.class(row.spaceName);
-  const sentBy = row.from.role !== 'family' ? null : row.mine ? f.youSent : row.senderName ? f.sentBy(row.senderName) : null;
+  // A row without a readable sender is read as a class note: it never names an account (section 8.2-a).
+  const fromFamily = isRecord(row.from) && row.from.role === 'family';
+  const from = fromFamily ? `${f.from.home} · ${f.from.signed(labelLine(row.from.label, locale))}` : f.from.class(row.spaceName);
+  const sentBy = !fromFamily ? null : row.mine ? f.youSent : row.senderName ? f.sentBy(row.senderName) : null;
   const live = row.status === 'live' || row.status === 'opened';
   return {
     id: row.id,
