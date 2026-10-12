@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { browserStorage, readItem, removeItem, writeItem, type KeyValueStorage } from '../safe-storage';
+import { browserStorage, indexedDbAvailable, readItem, removeItem, writeItem, type KeyValueStorage } from '../safe-storage';
 
 function fakeStorage(): KeyValueStorage & { map: Map<string, string> } {
   const map = new Map<string, string>();
@@ -75,5 +75,32 @@ describe('safe storage (F-I18N-001 §3.2, the web stand-in for packages/hooks)',
       },
     });
     expect(browserStorage('local')).toBeNull();
+  });
+});
+
+describe('indexedDbAvailable (F-APP-001 section 3.14)', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('is true when the browser offers IndexedDB and false without it (node, SSR)', () => {
+    vi.stubGlobal('indexedDB', {});
+    expect(indexedDbAvailable()).toBe(true);
+    vi.stubGlobal('indexedDB', undefined);
+    expect(indexedDbAvailable()).toBe(false);
+  });
+
+  it('is false when touching it throws (a SecurityError on access)', () => {
+    Object.defineProperty(globalThis, 'indexedDB', {
+      configurable: true,
+      get: () => {
+        throw new DOMException('denied', 'SecurityError');
+      },
+    });
+    try {
+      expect(indexedDbAvailable()).toBe(false);
+    } finally {
+      Reflect.deleteProperty(globalThis, 'indexedDB');
+    }
   });
 });

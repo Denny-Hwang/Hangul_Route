@@ -76,7 +76,8 @@
     "apps/mobile/src/screens/vocab/**",
     "apps/mobile/src/screens/episode/StoryEpisodeDetail.tsx",
     "apps/mobile/src/screens/episode/EpisodeDetailView.tsx",
-    "apps/mobile/src/screens/library/CultureSection.tsx"
+    "apps/mobile/src/screens/library/CultureSection.tsx",
+    "apps/web/src/components/console/GrownUpLock.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1
