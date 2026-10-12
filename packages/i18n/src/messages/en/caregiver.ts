@@ -116,13 +116,15 @@ export const caregiver = {
 
   dashboard: {
     title: 'Family Dashboard',
-    readOnly: 'Read-only — data stays on this device.',
+    /** The dashboard lists the learners saved on this device; their progress is also backed up (see `privacy.body`). */
+    readOnly: 'Read-only — learners on this device.',
     noProfiles: 'No profiles yet.',
     stats: { quests: 'Quests', cards: 'Cards', sessions: 'Sessions', minutes: 'Minutes' },
     recent: 'Recent',
     privacy: {
       title: 'Privacy',
-      body: 'All learning data stays on this device unless you sign in. We do not share with third parties.',
+      /** Leads with `landing.persona.parents.safe.bullets.backup`, word for word: the app backs up every learner with no sign-in. */
+      body: "Each learner's nickname and progress are kept on the device and backed up to our servers, so they can be restored with a Rescue Code. When a learner joins a class or family with a code, that space sees the name they join with and their progress. A family's grown-ups can also restore their progress. We do not share with third parties.",
     },
   },
 

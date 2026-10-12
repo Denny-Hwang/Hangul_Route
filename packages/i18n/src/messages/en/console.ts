@@ -960,9 +960,10 @@ export const consoleMsgs = {
     viewProgress: { cta: 'View progress →' },
     privacy: {
       title: 'Privacy',
+      /** The first two points are `landing.persona.parents.safe.bullets.backup`, word for word: the app backs up every learner with no sign-in. */
       points: [
-        'By default, all learning data stays on your device.',
-        'If you opt in to cloud sync, data is stored encrypted in our backend.',
+        "Each learner's nickname and progress are kept on the device and backed up to our servers, so they can be restored with a Rescue Code.",
+        "When a learner joins a class or family with a code, that space sees the name they join with and their progress. A family's grown-ups can also restore their progress.",
         "We never sell or share children's data with third parties.",
         'You can export or delete all data with one tap.',
       ],
