@@ -43,9 +43,20 @@ export interface JourneyGridProps {
   onOpen: (episodeId: string) => void;
   /** One learner's marks (completed, placed out, start); omitted: nothing done. */
   marksOf?: JourneyMarksOf;
+  /** Where each stage row sits in the grid, for scrolling to a stage (All lessons); omitted: not measured. */
+  onStageLayout?: (stage: StageKey, y: number) => void;
 }
 
-export function JourneyGrid({ stages, themes, gridEpisodes, paneMode, selectedId, onOpen, marksOf }: JourneyGridProps): React.ReactElement {
+export function JourneyGrid({
+  stages,
+  themes,
+  gridEpisodes,
+  paneMode,
+  selectedId,
+  onOpen,
+  marksOf,
+  onStageLayout,
+}: JourneyGridProps): React.ReactElement {
   const m = useMessages().learner.journey;
   const gridMax = journeyGridMaxWidth(spacing.xs, layout.columns.journeyCellMax);
   const rows = journeyGridRows({ stages, themes, gridEpisodes, paneMode, selectedId, marksOf });
@@ -68,7 +79,12 @@ export function JourneyGrid({ stages, themes, gridEpisodes, paneMode, selectedId
         const stage = stages.find((s) => s.key === row.stage) as StageDef;
         const isLocked = row.availability === 'soon';
         return (
-          <View key={row.stage} style={{ marginBottom: spacing.lg }}>
+          <View
+            key={row.stage}
+            testID={`journey-stage-${row.stage}`}
+            onLayout={onStageLayout ? (e) => onStageLayout(row.stage, e.nativeEvent.layout.y) : undefined}
+            style={{ marginBottom: spacing.lg }}
+          >
             {/*
               The stage header is a plain row, never a button: no lock, no door to the unlock page on a
               learner screen (F-ROUTE-001 R-J, OD-8; section 3.3). A screen reader reads the title, the

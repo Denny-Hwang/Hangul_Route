@@ -51,6 +51,8 @@ describe('catalogueTrail', () => {
       expect(row.fresh).toBe(false);
       expect(row.badge).toBe('number');
       expect(row.a11yLabel).not.toMatch(/You are here|You started here|played/);
+      // Screen readers hear the one-liner the row shows (the header label replaces its children).
+      expect(row.a11yLabel).toContain(`One-liner ${row.order}`);
     }
   });
 

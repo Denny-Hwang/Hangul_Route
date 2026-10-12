@@ -174,6 +174,13 @@ describe('JourneyGrid sources', () => {
     expect(grid).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/);
   });
 
+  it('each stage row is an anchor for scrolling to a stage, measured only when asked', () => {
+    expect(grid).toContain('testID={`journey-stage-${row.stage}`}');
+    expect(grid).toMatch(/onStageLayout\?: \(stage: StageKey, y: number\) => void/);
+    expect(grid).toContain('onLayout={onStageLayout ? (e) => onStageLayout(row.stage, e.nativeEvent.layout.y) : undefined}');
+    expect(screen).not.toContain('onStageLayout');
+  });
+
   it('the learner Journey draws the extracted grid with the learner marks', () => {
     expect(screen).toContain('<JourneyGrid');
     expect(screen).toContain('learnerCellMarks(');

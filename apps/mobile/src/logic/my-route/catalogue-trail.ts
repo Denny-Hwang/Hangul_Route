@@ -79,7 +79,8 @@ function stageRowView(row: StageRow, ctx: CopyContext, i: CatalogueTrailInput, t
     badge: 'number',
     captions: oneLiner ? [oneLiner] : [],
     tags: [],
-    a11yLabel: stageA11yLabel(row, ctx),
+    // The header button's label replaces its children for screen readers, so it reads the one-liner too.
+    a11yLabel: oneLiner ? `${stageA11yLabel(row, ctx)} ${oneLiner}` : stageA11yLabel(row, ctx),
     groups: [],
     fill: null,
     canDo: canDoCopy(row, ctx),
