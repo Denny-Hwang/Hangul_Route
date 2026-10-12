@@ -73,7 +73,7 @@ export const FAMILY_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
     ...figure({ height: 58, hair: 'short', hairTone: 'text.primary', clothes: 'brand.primary', x: 27, ground: 85, compact: true }),
     ...figure({ height: 54, hair: 'long', hairTone: 'text.primary', clothes: 'feedback.success', x: 43, ground: 85, compact: true }),
     ...figure({ height: 40, hair: 'short', hairTone: 'text.primary', clothes: 'hoya.fur', x: 60, ground: 85, compact: true }),
-    ...figure({ height: 34, hair: 'long', hairTone: 'text.primary', clothes: 'vocab.blue', x: 74, ground: 85, compact: true }),
+    ...figure({ height: 34, hair: 'long', hairTone: 'text.primary', clothes: 'brand.primary', x: 74, ground: 85, compact: true }),
   ],
   // one figure with a ring on the chest, a hand pointing to it
   'family-me': pointingFigure('hoya.fur'),
