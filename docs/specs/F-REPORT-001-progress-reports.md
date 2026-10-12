@@ -677,6 +677,7 @@ Spec decisions (engineering, reversible):
 | `report.print.hint` | "Turn off headers and footers in the print dialog." |
 | `report.print.footer` | "Private: shared from Hangul Route on {date}." |
 | `report.nav.reports` / `report.nav.classReports` | "Reports" / "Class reports" |
+| `report.action.seeReport` / `report.class.link` | "See report" / "Class report" (the section 3.1 entries: roster and dashboard cards, the roll-up link) |
 | `a11y.report.calendar` | "Practiced on {days}" |
 | `a11y.report.notSaved` | "Not saved yet: {days}" |
 | `a11y.report.periodChanged` | "Showing {period}" |

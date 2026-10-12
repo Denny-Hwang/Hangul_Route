@@ -148,7 +148,7 @@ describe('Appendix A drafts (English)', () => {
     expect(r.detail.lettersNew).toBe('New letters this period');
     expect(r.detail.totals(12, 5)).toBe('Since the start: 12 quests, 5 cards');
     expect([r.detail.milestones, r.detail.levelCheck, r.detail.plan]).toEqual(['Milestones', 'Level check', 'Plan']);
-    expect(r.action).toEqual({ addToPlan: 'Add to a plan', openPlan: 'Open the plan', sendNote: 'Send a note' });
+    expect(r.action).toEqual({ addToPlan: 'Add to a plan', openPlan: 'Open the plan', sendNote: 'Send a note', seeReport: 'See report' });
     expect(r.print.button).toBe('Print or save as PDF');
     expect(r.print.hint).toBe('Turn off headers and footers in the print dialog.');
     expect(r.print.footer('Oct 9, 2026')).toBe('Private: shared from Hangul Route on Oct 9, 2026.');
@@ -228,6 +228,7 @@ describe('Appendix A drafts (English)', () => {
     expect(c.revisit).toBe('Letters to revisit together');
     expect(c.medianMinutes(12)).toBe('Typical time for those who practiced: 12 minutes');
     expect(c.planLesson).toBe('Plan a lesson');
+    expect(c.link).toBe('Class report');
     expect(c.milestones(r.when.week)).toBe('Stage milestones this week');
     expect(c.milestone(1, 'Hangul', 3)).toBe('Stage 1: Hangul, finished by 3 learners');
     expect(c.milestone(1, 'Hangul', 1)).toBe('Stage 1: Hangul, finished by 1 learner');
@@ -502,7 +503,7 @@ describe('voices (OD-17): third person for grown-ups, second person on a self-on
   const PAIR_TWINS: readonly [you: string, third: string][] = [
     ['report.you.tip.syllable-reading', 'report.tip.syllable-reading'],
     ['report.you.tip.sentences', 'report.tip.sentences'],
-    ['report.you.words_revisit', 'report.insight.words_revisit'],
+    ['report.you.insight.words_revisit', 'report.insight.words_revisit'],
   ];
 
   it('every "together" line a device can show has a lone-learner twin, with the same arguments and no "together"', () => {
@@ -517,6 +518,10 @@ describe('voices (OD-17): third person for grown-ups, second person on a self-on
       if (typeof you === 'function') expect(you.length).toBe((third as (...a: unknown[]) => string).length);
       for (const { text } of render(you, youPath)) expect(text, youPath).not.toMatch(/\btogether\b/i);
     }
+  });
+
+  it('every report.you.insight key is an insight code, so a renderer can look up you.insight[code] ?? insight[code]', () => {
+    for (const code of Object.keys(en.report.you.insight)) expect(Object.keys(en.report.insight), code).toContain(code);
   });
 
   it('every report.you leaf has a twin, and a name twin takes the name as one more argument', () => {

@@ -217,6 +217,7 @@ export const report = {
       practice_days: (days: number) => `You practiced on ${dayCount(days)}.`,
       practice_day: 'You made time to practice.',
       free_days_done: 'You finished the free lessons.',
+      words_revisit: (words: string) => `${words}: worth another look.`,
     },
     state: {
       empty: 'You have not started yet. The report fills in after your first practice.',
@@ -226,7 +227,6 @@ export const report = {
       'syllable-reading': 'Read short words.',
       sentences: 'Read a short story.',
     },
-    words_revisit: (words: string) => `${words}: worth another look.`,
   },
   /**
    * One fixed tip per level-check strand (section 3.11), under `insight.strand_next`. `game` is the game's
@@ -244,6 +244,8 @@ export const report = {
     addToPlan: 'Add to a plan',
     openPlan: 'Open the plan',
     sendNote: 'Send a note',
+    /** The entry to a learner report: the roster card (RP-7a2) and the in-app dashboard card (RP-9), section 3.1. */
+    seeReport: 'See report',
   },
   /** Level-check strand statuses, as words (OD-6: no percentages). Keyed by `StrandStatus`. */
   strand: {
@@ -307,6 +309,8 @@ export const report = {
     minutesTotal: (minutes: number) => `Total time: ${minuteCount(minutes)}`,
     medianMinutes: (minutes: number) => `Typical time for those who practiced: ${minuteCount(minutes)}`,
     planLesson: 'Plan a lesson',
+    /** The roster roll-up's link to the class report (class spaces only, RP-8), section 3.1. */
+    link: 'Class report',
     planRow: (assigned: number, started: number, finished: number) => `Assigned to ${assigned}, started by ${started}, finished by ${finished}`,
     empty: 'No learners yet.',
     afterUpdate: "Appears after learners' apps update.",

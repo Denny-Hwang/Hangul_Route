@@ -272,7 +272,7 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       [
         'button',
         28,
-        ['report.action', 'report.print.button', 'report.glance.openRoute', 'report.class.planLesson', 'report.growth.showTable', 'report.growth.hideTable', 'report.back.home'],
+        ['report.action', 'report.print.button', 'report.glance.openRoute', 'report.class.planLesson', 'report.class.link', 'report.growth.showTable', 'report.growth.hideTable', 'report.back.home'],
       ],
       ['back link with a space name', 56, ['report.back.space']],
       [
@@ -308,7 +308,6 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
           'report.you.insight',
           'report.you.state',
           'report.you.tip',
-          'report.you.words_revisit',
           'report.state',
           'report.tip',
           'report.detail',

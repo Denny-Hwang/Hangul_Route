@@ -458,7 +458,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'report.class.cardsNew': [[1], [2400]],
   'report.class.milestones': [['this week'], ['in the week to Sep 30, 2026']],
   'report.class.milestone': [[1, 'Hangul', 1], [7, 'Self-expression', 120]],
-  'report.you.words_revisit': [['x (bap)'], ['x (bap), x (mul) and x (kimchi)']],
+  'report.you.insight.words_revisit': [['x (bap)'], ['x (bap), x (mul) and x (kimchi)']],
   'report.class.band.range': [[1, 2], [5, 9]],
   'report.class.band.atLeast': [[10]],
   'report.class.count': [['Not yet', 3], ['Not checked yet', 300]],
