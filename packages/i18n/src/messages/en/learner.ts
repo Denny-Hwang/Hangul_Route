@@ -231,7 +231,10 @@ export const learner = {
       /** The lesson page row: a plain count of the cell's stories, never "N of M". */
       row: 'Heritage stories for this cell',
       rowLabel: (count: number) =>
-        plural('en', count, { one: 'Heritage stories for this cell, 1 story', other: `Heritage stories for this cell, ${count} stories` }),
+        plural('en', count, {
+          one: 'Heritage stories for this cell, 1 heritage story',
+          other: `Heritage stories for this cell, ${count} heritage stories`,
+        }),
       /** A story page's home cell: a plain pill, never a lock. */
       homePill: (stage: number, themeTitle: string) => `Stage ${stage} · ${themeTitle}`,
       homePillLabel: (stage: number, stageTitle: string, themeTitle: string) =>

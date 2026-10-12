@@ -1,6 +1,6 @@
 import type { Episode, StageKey, ThemeKey } from '@hangul-route/content-schema';
 import { gridEpisodes } from '../../content/episodes';
-import { cellModel } from '../journey-cells';
+import { cellModel, isPlayable } from '../journey-cells';
 import { homeCellOf, type HomeCell } from './home-cell';
 import { entriesForCell, type StoryIndexEntry } from './story-index';
 
@@ -84,7 +84,7 @@ export function lessonRowCount(
   index: readonly StoryIndexEntry[],
 ): number {
   if (episode.placement === 'shelf') return 0;
-  if (episode.status !== 'shipped' && episode.status !== 'ready') return 0;
+  if (!isPlayable(episode)) return 0;
   return entriesForCell(index, episode.stage, episode.theme).length;
 }
 

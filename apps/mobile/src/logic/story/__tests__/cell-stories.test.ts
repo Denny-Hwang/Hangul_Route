@@ -285,6 +285,18 @@ describe('cell page sources (screens are covered by Playwright; these pin the wi
     expect(read('screens/episode/StoryEpisodeDetail.tsx')).toContain('homeCellLink(');
   });
 
+  it('one playable rule: the lesson-page row counts only on a page the map would open (review of PR 5.5b)', () => {
+    expect(read('logic/story/cell-stories.ts')).toMatch(/!isPlayable\(episode\)/);
+    expect(read('logic/story/cell-stories.ts')).not.toMatch(/status !== 'shipped'/);
+  });
+
+  it('the open event is keyed on the open, not on the profile id resolving later (review of PR 5.5b)', () => {
+    const effect = screen.slice(screen.indexOf('cellStoriesOpenedEvent(view, source)'));
+    const deps = /\}, \[([^\]]*)\]\);/.exec(effect)?.[1] ?? '';
+    expect(deps).toBe('route.params');
+    expect(screen).toContain('profileIdRef.current');
+  });
+
   it('the Library sections and the cell page share one tile grid', () => {
     expect(read('screens/library/StoryShelf.tsx')).toContain('<StoryTileGrid');
   });

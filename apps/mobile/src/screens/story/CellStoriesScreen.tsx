@@ -1,6 +1,6 @@
 import { Body, Button, Card, Heading, Icon, Screen, Spacer, colors, radii, spacing } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Pressable, View } from 'react-native';
 import { episodeById, episodesAll, stageByKey, themeByKey } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -51,12 +51,16 @@ export function CellStoriesScreen({ route, navigation }: Props): React.ReactElem
   const lessonSource = view.lessonEpisodeId ? episodeById(view.lessonEpisodeId) : undefined;
   const lesson = lessonSource ? localizeEpisode(lessonSource, locale) : undefined;
 
-  const { profileId } = tiles;
-  // Once per open (`view` is memoised on the cell): a progress change re-renders without a second event.
+  // The profile id rides along as of the open; it resolving or changing later is not a second open.
+  const profileIdRef = useRef(tiles.profileId);
+  profileIdRef.current = tiles.profileId;
+  // Once per open: on mount, and when a door brings this cell's page back with new params (`getId`
+  // returns to it), never on a progress change or on Back from a story opened here.
   useEffect(() => {
     const opened = cellStoriesOpenedEvent(view, source);
-    void track({ name: opened.name, profileId, payload: { ...opened.payload } });
-  }, [view, source, profileId]);
+    void track({ name: opened.name, profileId: profileIdRef.current, payload: { ...opened.payload } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the open (the params object), see above
+  }, [route.params]);
 
   const back = (): void => navigation.goBack();
 

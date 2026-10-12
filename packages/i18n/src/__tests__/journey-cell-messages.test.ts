@@ -108,8 +108,10 @@ describe('learner.journey.cellStories (F-STORY-005 PR 5.5b)', () => {
 
   it('the lesson page row: a plain count with plural(), never "N of M"', () => {
     expect(c.row).toBe('Heritage stories for this cell');
-    expect(c.rowLabel(1)).toBe('Heritage stories for this cell, 1 story');
-    expect(c.rowLabel(5)).toBe('Heritage stories for this cell, 5 stories');
+    expect(c.rowLabel(1)).toBe('Heritage stories for this cell, 1 heritage story');
+    expect(c.rowLabel(5)).toBe('Heritage stories for this cell, 5 heritage stories');
+    // The same count words as the Journey cell's own label (a11y.journeyCell).
+    expect(cell({ stories: 1 })).toContain('1 heritage story');
   });
 
   it('the story page home-cell pill and its label', () => {

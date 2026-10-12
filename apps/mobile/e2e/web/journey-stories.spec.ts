@@ -26,6 +26,7 @@ type E2eWindow = Window & {
 const LESSON_CELL = 'Stage 1 Hangul, Letters & Books: lesson, 1 heritage story';
 const STORIES_CELL = 'Stage 2 Words, Letters & Books: 1 heritage story';
 const PLACEHOLDER = 'Stage 3 Sentences, Holidays & Traditions, coming soon';
+const LESSON_ROW = 'Heritage stories for this cell, 1 heritage story';
 
 async function openJourney(page: Page): Promise<void> {
   await page.goto('/');
@@ -96,7 +97,7 @@ test.describe('heritage stories on the Journey (fixture bundle)', () => {
     await openJourney(page);
     await page.getByRole('button', { name: LESSON_CELL, exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Meet the Letters' })).toBeVisible();
-    const row = page.getByRole('button', { name: 'Heritage stories for this cell, 1 story', exact: true });
+    const row = page.getByRole('button', { name: LESSON_ROW, exact: true });
     await expect(row).toBeVisible();
     // After the quest list, before "Cards in this episode".
     const rowBox = await row.boundingBox();
@@ -121,7 +122,7 @@ test.describe('heritage stories on the Journey (fixture bundle)', () => {
     await openJourney(page);
     await page.getByRole('button', { name: LESSON_CELL, exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Meet the Letters' })).toBeVisible();
-    await page.getByRole('button', { name: 'Heritage stories for this cell, 1 story', exact: true }).click();
+    await page.getByRole('button', { name: LESSON_ROW, exact: true }).click();
     await expect(page.getByTestId('cell-stories-title')).toHaveText('Hangul · Letters & Books');
     await page.getByTestId('story-tile-story:hangul-day').click();
     await expect(page.getByTestId('story-episode-title')).toBeVisible();
@@ -165,6 +166,32 @@ test.describe('heritage stories on the Journey (fixture bundle)', () => {
     expect(await page.evaluate(controlsPastEdge)).toEqual([]);
   });
 });
+
+// Spec §3.12 / §5: a phone on its side, and the 200 % zoom proxy of a 1180x820 tablet (590x410) for large text.
+for (const vp of [
+  { name: 'phone landscape 844x390', width: 844, height: 390 },
+  { name: '200 % zoom proxy of 1180x820', width: 590, height: 410 },
+]) {
+  test.describe(`heritage stories on the Journey at ${vp.name} (fixture bundle)`, () => {
+    test.skip(!FIXTURE_BUILD, 'needs the fixture bundle (STORY_FIXTURES=1)');
+    test.use({ viewport: { width: vp.width, height: vp.height } });
+
+    test('the lesson-page row and the cell page fit, with no control past the edge', async ({ page }) => {
+      await openJourney(page);
+      await page.getByRole('button', { name: LESSON_CELL, exact: true }).click();
+      const row = page.getByRole('button', { name: LESSON_ROW, exact: true });
+      await row.scrollIntoViewIfNeeded();
+      await expect(row).toBeVisible();
+      await expectNoHorizontalOverflow(page, `lesson page at ${vp.name}`);
+      expect(await page.evaluate(controlsPastEdge)).toEqual([]);
+      await row.click();
+      await expect(page.getByTestId('cell-stories-title')).toHaveText('Hangul · Letters & Books');
+      await expect(page.getByTestId('story-tile-story:hangul-day')).toBeVisible();
+      await expectNoHorizontalOverflow(page, `cell page at ${vp.name}`);
+      expect(await page.evaluate(controlsPastEdge)).toEqual([]);
+    });
+  });
+}
 
 test.describe('heritage stories on the Journey, two panes (fixture bundle, 1180x820)', () => {
   test.skip(!FIXTURE_BUILD, 'needs the fixture bundle (STORY_FIXTURES=1)');
