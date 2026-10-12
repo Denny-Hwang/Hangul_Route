@@ -28,8 +28,8 @@ export { HALO_TONE, HALO_WIDTH, haloOf, haloPath, outlineD } from './generated/h
 export { COLOR_SWATCHES, STICKER_SCALE, SWATCH_RECT, colorGlyphs, swatch } from './generated/color';
 export type { SwatchTone } from './generated/color';
 export { COUNT_VALUES, count, countGlyphs } from './generated/count';
-export { BODY_ANCHORS, BODY_PARTS, bodyGlyphs, bodyPart, ring } from './generated/body';
-export type { BodyAnchor, BodyPart } from './generated/body';
+export { BODY_ANCHORS, BODY_PARTS, RINGED_BODY_PARTS, bodyGlyphs, bodyPart, ring } from './generated/body';
+export type { BodyAnchor, BodyPart, RingedBodyPart } from './generated/body';
 export { FIGURE_HAND, FIGURE_MAX_HEIGHT, FIGURE_MIN_HEIGHT, figure, figureTop, marker, siblings } from './generated/figure';
 export type { FigureAccessory, FigureHair, FigureOptions, SiblingHair } from './generated/figure';
 export { WORD_ART_DEFAULT_SIZE, WORD_ART_MONO_TONE, wordArtModel } from './model';
