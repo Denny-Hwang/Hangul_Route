@@ -6,6 +6,7 @@ import { useEffect, useMemo } from 'react';
 import { createConsoleApi, type ConsoleApi } from '@/lib/console/api';
 import { apiBaseUrl } from '@/lib/console/config';
 import { ROUTES } from '@/lib/console/routing';
+import { signedOutTarget } from '@/lib/console/signin-flow';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { useConsoleAuth } from './auth-context';
 
@@ -26,8 +27,9 @@ export interface ConsoleView {
 }
 
 /**
- * Session, API and messages for console pages; sends a signed-out visitor to /teach
- * (F-CONSOLE-001 §3.2, F-AUTH-002). `m` / `locale` follow the header language select.
+ * Session, API and messages for console pages; sends a signed-out visitor to
+ * `/signin?next=<this page and its query>` (F-CONSOLE-001 §3.2, F-AUTH-002; F-APP-001 section 3.7).
+ * `m` / `locale` follow the header language select.
  */
 export function useConsole(): ConsoleView {
   const router = useRouter();
@@ -35,7 +37,7 @@ export function useConsole(): ConsoleView {
   const { messages: m, locale } = useConsoleLocale();
 
   useEffect(() => {
-    if (auth.ready && !auth.session) router.replace(ROUTES.signIn);
+    if (auth.ready && !auth.session) router.replace(signedOutTarget(window.location.pathname, window.location.search));
   }, [auth.ready, auth.session, router]);
 
   const api = useMemo(() => {

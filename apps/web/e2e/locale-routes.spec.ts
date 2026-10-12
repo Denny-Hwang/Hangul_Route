@@ -42,7 +42,8 @@ test.describe('locale routes', () => {
     await expect.poll(() => announcerConnected(page)).toBe(true);
 
     await page.locator('header a[href="/teach"]').first().click();
-    await page.waitForURL('**/teach');
+    // The /teach router (F-APP-001 A-4b) sends a signed-out visitor on to /signin.
+    await page.waitForURL('**/signin');
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect.poll(() => announcerConnected(page)).toBe(true);
 

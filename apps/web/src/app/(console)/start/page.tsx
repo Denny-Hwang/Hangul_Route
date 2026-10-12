@@ -3,22 +3,26 @@
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
-import type { SpaceKind } from '@hangul-route/content-schema';
+import { personaHint, type SpaceKind } from '@hangul-route/content-schema';
 import { Button, ConsoleShell, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { useConsole } from '@/components/console/use-console';
 import { codeExpiry } from '@/lib/console/rollup';
-import { ROUTES, landingAfterCreate, prefillName, roleCards } from '@/lib/console/routing';
+import { ROUTES, landingAfterCreate, prefillName, presetKind, roleCards } from '@/lib/console/routing';
 
 type Step = { at: 'role' } | { at: 'name'; kind: SpaceKind } | { at: 'code'; spaceId: string; code: string; expiresAt: string | null };
 
-/** console/onboarding-role — F-CONSOLE-001 §3.3. */
+/**
+ * console/onboarding-role — F-CONSOLE-001 §3.3, at `/start` on the app host (F-APP-001 A-4b,
+ * moved from `/teach/start`, which now redirects here with its query). A persona hint
+ * (`?persona=` or `?as=`, from the router or a "not set up yet" state) preselects its role card.
+ */
 function StartInner(): JSX.Element {
   const router = useRouter();
   const params = useSearchParams();
   const fromHome = params.get('from') === 'home';
   const { ready, session, api, signOut, m, locale } = useConsole();
   const c = m.console;
-  const [kind, setKind] = useState<SpaceKind | null>(null);
+  const [kind, setKind] = useState<SpaceKind | null>(() => presetKind(personaHint(params)));
   const [name, setName] = useState('');
   const [step, setStep] = useState<Step>({ at: 'role' });
   const [busy, setBusy] = useState(false);

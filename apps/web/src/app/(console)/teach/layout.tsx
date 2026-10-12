@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { ConsoleAuthProvider } from '@/components/console/auth-context';
-import { LocaleProvider } from '@/lib/i18n/locale-context';
+import { GrownUpLayout } from '@/components/console/GrownUpLayout';
 
 export const metadata: Metadata = {
   title: 'Console — Hangul Route',
@@ -9,10 +8,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+/** The shared grown-up layout (F-APP-001 A-4b, section 3.7): locale, Clerk and the grown-up lock. */
 export default function TeachLayout({ children }: { children: ReactNode }): JSX.Element {
-  return (
-    <LocaleProvider>
-      <ConsoleAuthProvider>{children}</ConsoleAuthProvider>
-    </LocaleProvider>
-  );
+  return <GrownUpLayout>{children}</GrownUpLayout>;
 }

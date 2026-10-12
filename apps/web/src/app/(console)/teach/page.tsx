@@ -1,99 +1,29 @@
 'use client';
 
-import { SignIn } from '@clerk/clerk-react';
-import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { personaHint } from '@hangul-route/content-schema';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
+import { GrownUpRouter } from '@/components/console/GrownUpRouter';
+import { SignInColumn } from '@/components/console/SignInParts';
 import { useConsoleAuth } from '@/components/console/auth-context';
-import { Button, ConsoleShell, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
-import { createConsoleApi } from '@/lib/console/api';
-import { apiBaseUrl, devAuthEnabled } from '@/lib/console/config';
-import { ROUTES, landingAfterSignIn } from '@/lib/console/routing';
-import { useMessages } from '@/lib/i18n/locale-context';
 
 /**
- * console/sign-in — F-CONSOLE-001 §3.2 · F-AUTH-002 §3.1. Clerk's widget when the
- * build carries a publishable key (hash routing: no server, no catch-all route);
- * the dev form only on builds without one.
+ * `/teach` — the teacher persona's entry, now a router page (F-APP-001 A-4b, section 3.7). No UI
+ * beyond "Taking you to …" and a Go now link. It reads a hint from `?persona=` or `?as=` when
+ * present, otherwise none (old `/teach` bookmarks were the sign-in of every grown-up, families
+ * included). Signed out, the shared layout sends it to `/signin` with that hint (and `next` when
+ * the URL has a query); signed in, it goes to the persona home with that hint.
  */
-export default function SignInPage(): JSX.Element {
-  const router = useRouter();
+function TeachRouter(): JSX.Element {
+  const params = useSearchParams() ?? new URLSearchParams();
   const auth = useConsoleAuth();
-  const c = useMessages().console;
-  const [accountId, setAccountId] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [email, setEmail] = useState('');
-  const [busy, setBusy] = useState(false);
-  // A key, not text: worded at render time, so it follows the header language select.
-  const [message, setMessage] = useState<'cantReach' | null>(null);
-  const devAuth = devAuthEnabled();
-  const endpoint = apiBaseUrl();
+  return <SignInColumn>{auth.ready && auth.session ? <GrownUpRouter next={null} hint={personaHint(params)} /> : null}</SignInColumn>;
+}
 
-  useEffect(() => {
-    if (auth.ready && auth.session) router.replace(ROUTES.home);
-  }, [auth.ready, auth.session, router]);
-
-  const submitDev = async (): Promise<void> => {
-    const id = accountId.trim();
-    const name = displayName.trim();
-    if (!id || !name || !endpoint) return;
-    setBusy(true);
-    setMessage(null);
-    const api = createConsoleApi({ endpoint, token: id });
-    const spaces = await api.listSpaces();
-    setBusy(false);
-    if (!spaces.ok) {
-      setMessage('cantReach');
-      return;
-    }
-    auth.devSignIn({ token: id, accountId: id, displayName: name, email: email.trim() || undefined });
-    router.replace(landingAfterSignIn(spaces.data.length));
-  };
-
+export default function TeachRouterPage(): JSX.Element {
   return (
-    <ConsoleShell>
-      <div style={{ maxWidth: 520, margin: '0 auto' }}>
-        <h1 style={{ fontSize: typography.size.title, margin: `0 0 ${spacing.sm}px` }}>{c.signIn.title}</h1>
-        <ul style={{ color: colors.text.secondary, paddingLeft: spacing.lg, lineHeight: typography.leading.relaxed }}>
-          {c.whySignIn.map((line) => (
-            <li key={line}>{line}</li>
-          ))}
-        </ul>
-        <section style={{ ...panelStyle, marginTop: spacing.lg }} aria-label={c.signIn.panelLabel}>
-          {!endpoint ? (
-            <Muted>{c.shell.noApi}</Muted>
-          ) : auth.mode === 'clerk' ? (
-            <>
-              <Muted>{c.clerkIntro}</Muted>
-              <SignIn routing="hash" fallbackRedirectUrl={ROUTES.home} signUpFallbackRedirectUrl={ROUTES.start} />
-            </>
-          ) : devAuth ? (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                void submitDev();
-              }}
-            >
-              <Notice tone="nudge">{c.devSignInHint}</Notice>
-              <Field name="accountId" label={c.signIn.accountId.label} value={accountId} onChange={setAccountId} placeholder={c.signIn.accountId.placeholder} required maxLength={64} />
-              <Field name="displayName" label={c.signIn.displayName.label} value={displayName} onChange={setDisplayName} placeholder={c.signIn.displayName.placeholder} required maxLength={40} />
-              <Field name="email" label={c.signIn.email.label} value={email} onChange={setEmail} type="email" placeholder={c.signIn.email.placeholder} />
-              <Button type="submit" tone="primary" disabled={busy || !accountId.trim() || !displayName.trim()} testId="sign-in">
-                {busy ? c.signIn.submitting.cta : c.signIn.submit.cta}
-              </Button>
-              {message ? <Muted>{c[message]}</Muted> : null}
-            </form>
-          ) : (
-            <>
-              <p style={{ margin: 0 }}>{c.clerkPending}</p>
-              <Muted>
-                <a href="/">{c.signIn.backToSite}</a>
-              </Muted>
-            </>
-          )}
-        </section>
-        <Muted>{c.kidsNoAccount}</Muted>
-      </div>
-    </ConsoleShell>
+    <Suspense fallback={<SignInColumn>{null}</SignInColumn>}>
+      <TeachRouter />
+    </Suspense>
   );
 }
