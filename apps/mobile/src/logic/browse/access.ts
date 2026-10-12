@@ -1,14 +1,17 @@
 import type { BrowseScope, Episode, Quest } from '@hangul-route/content-schema';
 import { isContentLocked } from '../content-access';
 import { isStagePlayable } from '../entitlement';
+import { entryForQuest } from '../story/story-index';
 import { defaultBrowseBundle, episodeOfQuest, isOpenableEpisode, vocabTopicKey, type BrowseBundle } from './bundle';
 
 /**
  * Who can open what in All lessons (F-BROWSE-001 section 4.2). `full` opens
  * every shipped lesson; `sampler` opens exactly what a new free learner can,
- * through the learner's own predicates and the one switch
- * (`flags.contentGatingEnabled`, passed in as `gatingEnabled`); `none` sends
- * every item to the Access screen. With the switch off, sampler equals full.
+ * through the learner's own predicates and the one switch, passed in as
+ * `gatingEnabled` (the effective switch `gatingActive` of F-ENT-003 E3-2, read
+ * once at boot, never the raw env flag); `none` sends every item to the
+ * Access screen. With the switch off, sampler equals full. A story's own quest
+ * and its episode follow the story rule, never the lesson rule.
  */
 
 export type AccessItemKind = 'episode' | 'quest' | 'story' | 'vocab-topic' | 'card';
@@ -20,9 +23,10 @@ export type ItemAccess = 'open' | 'closed' | 'later' | 'access';
 export type FreeQuestOpen = (quest: Pick<Quest, 'id'>, episode: Pick<Episode, 'id' | 'stage'>) => boolean;
 
 /**
- * Today's learner rule: every quest of a playable stage (`isStagePlayable`).
- * F-ENT-003 E3-2 replaces it with `isQuestOpen({ questId, tier: 'free',
- * gatingEnabled, completedQuestIds: none })`; the table does not change.
+ * Today's learner rule for a lesson: every quest of a playable stage
+ * (`isStagePlayable`). F-ENT-003 E3-2 replaces it with `isQuestOpen({ questId,
+ * tier: 'free', gatingEnabled, completedQuestIds: none })`, with the same
+ * effective switch; the table does not change.
  */
 export const learnerFreeQuestOpen: FreeQuestOpen = (_quest, episode) => isStagePlayable(episode.stage);
 
@@ -53,21 +57,31 @@ function shippedState(item: { kind: AccessItemKind; id: string }, bundle: Browse
   }
 }
 
+/** A new free learner's story rule, with the free set of the bundle that lists the story. */
+function storyOpen(storyId: string, bundle: BrowseBundle): boolean {
+  return !isContentLocked({ kind: 'story', id: storyId, tier: 'free', gatingEnabled: true, registry: bundle.freeRegistry });
+}
+
+/** A quest under the sampler: a story quest opens with its story (F-ENT-003 leaves stories to `isContentLocked`), a lesson by the lesson rule. */
+function questOpen(questId: string, episode: Episode, ctx: AccessContext): boolean {
+  const story = entryForQuest(ctx.bundle.storyIndex, questId);
+  return story ? storyOpen(story.storyId, ctx.bundle) : ctx.freeQuestOpen({ id: questId }, episode);
+}
+
 /** A shipped item under a sampler pass with the switch on. */
 function samplerOpen(item: { kind: AccessItemKind; id: string }, ctx: AccessContext): boolean {
   switch (item.kind) {
-    case 'quest': {
-      const episode = episodeOfQuest(ctx.bundle, item.id) as Episode;
-      return ctx.freeQuestOpen({ id: item.id }, episode);
-    }
+    case 'quest':
+      return questOpen(item.id, episodeOfQuest(ctx.bundle, item.id) as Episode, ctx);
     case 'episode': {
+      // Open when any of its quests opens: a shelf episode with its story, a grid episode with any lesson.
       const episode = ctx.bundle.episodes.find((e) => e.id === item.id) as Episode;
-      return questsOf(ctx.bundle, episode).some((q) => ctx.freeQuestOpen(q, episode));
+      return questsOf(ctx.bundle, episode).some((q) => questOpen(q.id, episode, ctx));
     }
     case 'story':
-      return !isContentLocked({ kind: 'story', id: item.id, tier: 'free', gatingEnabled: true });
+      return storyOpen(item.id, ctx.bundle);
     case 'vocab-topic':
-      return !isContentLocked({ kind: 'vocab-topic', id: vocabTopicKey(item.id), tier: 'free', gatingEnabled: true });
+      return !isContentLocked({ kind: 'vocab-topic', id: vocabTopicKey(item.id), tier: 'free', gatingEnabled: true, registry: ctx.bundle.freeRegistry });
     case 'card':
       return true; // front and back for every adult (OD-7)
   }

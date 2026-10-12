@@ -36,6 +36,16 @@ function defaultRegistry(): FreeContentRegistry {
   return cachedRegistry;
 }
 
+/**
+ * The registry with its story sampler read from another story list, every
+ * other set the default one's: All lessons builds the free set from the
+ * bundle it shows (F-BROWSE-001 section 4.13), so its story rule and its
+ * story list never disagree.
+ */
+export function freeContentRegistryFor(stories: readonly Pick<(typeof storiesAll)[number], 'id' | 'shelf'>[]): FreeContentRegistry {
+  return { ...defaultRegistry(), samplerStories: new Set(stories.filter((s) => s.shelf?.sampler === true).map((s) => s.id)) };
+}
+
 export function isFreeContent(
   kind: ContentKind,
   id: string,

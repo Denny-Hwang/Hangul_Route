@@ -2,9 +2,10 @@ import type { Episode, Quest } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { isContentLocked } from '../../content-access';
 import { isStagePlayable } from '../../entitlement';
+import { entryForQuest } from '../../story/story-index';
 import { itemAccess, type AccessItemKind } from '../access';
 import { defaultBrowseBundle, episodeOfQuest, isOpenableEpisode, vocabTopicKey, type BrowseBundle } from '../bundle';
-import { fixtureBundle } from './browse-fixture';
+import { CULTURE_ID, TALE_ID, fixtureBundle } from './browse-fixture';
 
 /**
  * F-BROWSE-001 §4.2 and §4.13 (BR-4): what each scope may open. Sampler is
@@ -57,14 +58,17 @@ describe('itemAccess (F-BROWSE-001 §4.2)', () => {
   });
 
   it('switch on: sampler equals what a new free learner can open, item by item', () => {
+    // A new free learner's story rule, with the free set of this bundle (its sampler stories).
+    const storyOpen = (storyId: string): boolean => !isContentLocked({ kind: 'story', id: storyId, tier: 'free', gatingEnabled: true, registry: bundle.freeRegistry });
     for (const quest of openableQuests) {
       const episode = episodeOfQuest(bundle, quest.id) as Episode;
-      // Today's learner rule until F-ENT-003 E3-2: every quest of a shipped stage (isStagePlayable).
-      expect(itemAccess({ kind: 'quest', id: quest.id }, 'sampler', true, ctx), quest.id).toBe(isStagePlayable(episode.stage) ? 'open' : 'closed');
+      const story = entryForQuest(bundle.storyIndex, quest.id);
+      // A story quest follows its story; a lesson follows today's learner rule until F-ENT-003 E3-2 (isStagePlayable).
+      const open = story ? storyOpen(story.storyId) : isStagePlayable(episode.stage);
+      expect(itemAccess({ kind: 'quest', id: quest.id }, 'sampler', true, ctx), quest.id).toBe(open ? 'open' : 'closed');
     }
     for (const entry of bundle.storyIndex) {
-      const locked = isContentLocked({ kind: 'story', id: entry.storyId, tier: 'free', gatingEnabled: true });
-      expect(itemAccess({ kind: 'story', id: entry.storyId }, 'sampler', true, ctx), entry.storyId).toBe(locked ? 'closed' : 'open');
+      expect(itemAccess({ kind: 'story', id: entry.storyId }, 'sampler', true, ctx), entry.storyId).toBe(storyOpen(entry.storyId) ? 'open' : 'closed');
     }
     let closedTopics = 0;
     for (const topic of bundle.vocabTopics) {
@@ -75,14 +79,47 @@ describe('itemAccess (F-BROWSE-001 §4.2)', () => {
     expect(closedTopics).toBeGreaterThan(0); // the free set is a real subset of the topics
   });
 
-  it('the production bundle: switch off opens everything, and the free word topics are exactly the topics a learner may open today', () => {
+  it('switch on: a sampler story opens and a story without the sampler mark is closed (F-BROWSE-001 §4.13)', () => {
+    expect(itemAccess({ kind: 'story', id: TALE_ID }, 'sampler', true, ctx)).toBe('open');
+    expect(itemAccess({ kind: 'story', id: CULTURE_ID }, 'sampler', true, ctx)).toBe('closed');
+    expect(itemAccess({ kind: 'story', id: CULTURE_ID }, 'full', true, ctx)).toBe('open');
+    expect(itemAccess({ kind: 'story', id: CULTURE_ID }, 'sampler', false, ctx)).toBe('open');
+  });
+
+  it("switch on: a story's own quest and shelf episode open exactly when the story does", () => {
+    for (const [storyId, expected] of [
+      [TALE_ID, 'open'],
+      [CULTURE_ID, 'closed'],
+    ] as const) {
+      const entry = bundle.storyIndex.find((e) => e.storyId === storyId);
+      expect(entry, storyId).toBeDefined();
+      expect(itemAccess({ kind: 'quest', id: entry?.questId ?? '' }, 'sampler', true, ctx), storyId).toBe(expected);
+      expect(itemAccess({ kind: 'episode', id: entry?.episodeId ?? '' }, 'sampler', true, ctx), storyId).toBe(expected);
+      // the lesson predicate never decides a story quest
+      expect(itemAccess({ kind: 'quest', id: entry?.questId ?? '' }, 'sampler', true, { bundle, freeQuestOpen: () => expected === 'closed' }), storyId).toBe(expected);
+    }
+  });
+
+  it("an unreviewed story's quest and shelf episode are not in this bundle: \"Coming later\" for every scope", () => {
+    for (const item of [
+      { kind: 'quest' as const, id: 'quest:story-draft-tale-listen' },
+      { kind: 'episode' as const, id: 'episode:shelf-draft-tale' },
+      { kind: 'story' as const, id: 'story:draft-tale' },
+    ]) {
+      expect(itemAccess(item, 'full', false, ctx), item.id).toBe('later');
+      expect(itemAccess(item, 'sampler', true, ctx), item.id).toBe('later');
+    }
+  });
+
+  it('the production bundle: switch off opens everything; switch on follows the learner free set', () => {
     const production = defaultBrowseBundle();
     for (const episode of production.episodes.filter(isOpenableEpisode)) {
       expect(itemAccess({ kind: 'episode', id: episode.id }, 'sampler', false), episode.id).toBe('open');
     }
     for (const topic of production.vocabTopics) {
       expect(itemAccess({ kind: 'vocab-topic', id: topic.id }, 'sampler', false), topic.id).toBe('open');
-      expect(itemAccess({ kind: 'vocab-topic', id: topic.id }, 'sampler', true), topic.id).toBe('open');
+      const locked = isContentLocked({ kind: 'vocab-topic', id: vocabTopicKey(topic.id), tier: 'free', gatingEnabled: true });
+      expect(itemAccess({ kind: 'vocab-topic', id: topic.id }, 'sampler', true), topic.id).toBe(locked ? 'closed' : 'open');
     }
   });
 

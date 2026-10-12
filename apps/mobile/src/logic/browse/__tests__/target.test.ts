@@ -32,6 +32,8 @@ describe('resolveTarget', () => {
 
   it('a quest, a story and a word topic open their item page; a card opens over home', () => {
     expect(resolveTarget({ kind: 'quest', id: 'quest:stage1-letters-q2' }, bundle)).toEqual({ screen: 'item', kind: 'quest', id: 'quest:stage1-letters-q2' });
+    expect(resolveTarget({ kind: 'quest', id: 'quest:story-hangul-day-listen' }, bundle)).toEqual({ screen: 'item', kind: 'quest', id: 'quest:story-hangul-day-listen' });
+    expect(resolveTarget({ kind: 'episode', id: 'episode:shelf-hangul-day' }, bundle)).toEqual({ screen: 'episode', episodeId: 'episode:shelf-hangul-day' });
     expect(resolveTarget({ kind: 'story', id: TALE_ID }, bundle)).toEqual({ screen: 'item', kind: 'story', id: TALE_ID });
     expect(resolveTarget({ kind: 'vocab-topic', id: 'vocab-topic:food' }, bundle)).toEqual({ screen: 'item', kind: 'vocab-topic', id: 'vocab-topic:food' });
     expect(resolveTarget({ kind: 'card', id: 'card:hanji' }, bundle)).toEqual({ screen: 'card', cardId: 'card:hanji' });
@@ -60,6 +62,8 @@ describe('resolveTarget', () => {
       { kind: 'episode', id: 'episode:stage9-space' },
       { kind: 'quest', id: 'quest:stage9-space-q1' },
       { kind: 'story', id: 'story:draft-tale' }, // bundled but unreviewed: never reachable
+      { kind: 'quest', id: 'quest:story-draft-tale-listen' }, // ...not through its own quest
+      { kind: 'episode', id: 'episode:shelf-draft-tale' }, // ...nor through its shelf episode
       { kind: 'story', id: 'story:not-bundled' },
       { kind: 'vocab-topic', id: 'vocab-topic:space' },
       { kind: 'card', id: 'card:not-bundled' },
