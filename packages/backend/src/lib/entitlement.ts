@@ -1,5 +1,18 @@
-import { FREE_CLASS_STUDENT_CAP, PAST_DUE_GRACE_MS, SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS, type Entitlement, type Space, type Tier, type TierSource } from '@hangul-route/content-schema';
+import {
+  FREE_CLASS_STUDENT_CAP,
+  PAST_DUE_GRACE_MS,
+  SCHOOL_LICENSE_STUDENTS,
+  SCHOOL_LICENSE_TEACHERS,
+  type BrowseScopeResponse,
+  type Entitlement,
+  type Membership,
+  type Space,
+  type SpaceRole,
+  type Tier,
+  type TierSource,
+} from '@hangul-route/content-schema';
 import type { Db } from '../db';
+import { can } from './can';
 
 /**
  * Entitlement rules — F-ENT-001 §3.2 (roadmap §3.2). Yearly plans carry `expiresAt` = the Stripe
@@ -138,4 +151,59 @@ export async function tierAfterMove(db: Db, learnerId: string, fromSpaceId: stri
     if (destination) spaces.push(destination);
   }
   return tierFromSpaces(db, spaces, now);
+}
+
+/** Membership roles that make an account a grown-up of a space; `student` never counts. */
+const ADULT_ROLES: ReadonlySet<SpaceRole> = new Set(['owner', 'caregiver', 'teacher', 'admin']);
+
+/**
+ * Whether one space an adult belongs to is covered (F-BILL-002 section 5.3's
+ * card set). Live spaces: a family with an active family plan; a class with
+ * its own active group licence or under a live school with an active licence
+ * or seat contract; a school with an active licence or seat contract. An
+ * archived space counts only for its payer (`space.manage`, F-BILL-002
+ * section 4.2) while it still holds an active group licence, as the billing
+ * home keeps showing it to them.
+ */
+async function adultSpaceCovered(db: Db, accountId: string, memberships: Membership[], space: Space, now: Date): Promise<boolean> {
+  if (space.archivedAt) {
+    const parent = space.parentSpaceId ? await db.getSpace(space.parentSpaceId) : null;
+    const payer = can({ kind: 'account', accountId, memberships }, 'space.manage', { kind: 'space', ctx: { space, parent } });
+    return payer && (await hasActive(db, 'space', space.id, ['group_license'], now));
+  }
+  switch (space.kind) {
+    case 'family':
+      return hasActive(db, 'space', space.id, ['family_lifetime'], now);
+    case 'school':
+      return hasActive(db, 'space', space.id, ['group_license', 'school_seat'], now);
+    case 'class': {
+      if (await hasActive(db, 'space', space.id, ['group_license'], now)) return true;
+      // Unlike `classIsPro`, a class is not covered through a school that was archived.
+      const school = space.parentSpaceId ? await db.getSpace(space.parentSpaceId) : null;
+      return !!school && school.kind === 'school' && !school.archivedAt && (await hasActive(db, 'space', school.id, ['group_license', 'school_seat'], now));
+    }
+  }
+}
+
+/**
+ * The paying-grown-up rule (F-BROWSE-001 section 4.2), the one helper behind
+ * the browse scope and F-BILL-002's `adultAccess.coveredAny`: true when any
+ * space in which the account holds an `owner`, `caregiver`, `teacher` or
+ * `admin` membership is covered, or the account holds an active
+ * account-subject row (legacy). Learner memberships never count. Reads only.
+ */
+export async function adultCoveredAny(db: Db, accountId: string, now: Date): Promise<boolean> {
+  if ((await db.entitlementsFor('account', accountId)).some((e) => isEntitlementActive(e, now))) return true;
+  const memberships = await db.membershipsOf('account', accountId);
+  for (const m of memberships) {
+    if (m.memberKind !== 'account' || m.memberId !== accountId || !ADULT_ROLES.has(m.role)) continue;
+    const space = await db.getSpace(m.spaceId);
+    if (space && (await adultSpaceCovered(db, accountId, memberships, space, now))) return true;
+  }
+  return false;
+}
+
+/** Which lessons a signed-in grown-up may preview (F-BROWSE-001 section 4.2): every one when covered, else the free set. */
+export async function accountBrowseScope(db: Db, accountId: string, now: Date): Promise<BrowseScopeResponse['scope']> {
+  return (await adultCoveredAny(db, accountId, now)) ? 'full' : 'sampler';
 }

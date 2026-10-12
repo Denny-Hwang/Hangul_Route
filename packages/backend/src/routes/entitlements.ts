@@ -5,6 +5,7 @@ import { dbFor, type Db } from '../db';
 import { fail, ok } from '../envelope';
 import { accountActor, requireAccount, spaceContext } from '../lib/access';
 import { can } from '../lib/can';
+import { accountBrowseScope } from '../lib/entitlement';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
 import { isEntitlementActive } from '../lib/entitlement';
 import { checkoutForm, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, freshStripeEvent, lookupPromotionCode, mergeForStripeEvent, priceIdFor, verifyStripeSignature, type StripeEnv, type StripeEventLike } from '../lib/stripe';
@@ -43,6 +44,18 @@ entitlementRoutes.get('/', async (c) => {
   const entitlements = [];
   for (const e of rows) entitlements.push(await withSpaceName(db, e));
   return ok(c, { entitlements });
+});
+
+/**
+ * Which lessons the signed-in grown-up may preview in All lessons
+ * (F-BROWSE-001 section 5.2): `{ scope: 'full' | 'sampler' }`. Reads
+ * memberships, spaces and entitlements only; no write besides
+ * `requireAccount`'s first-sign-in upsert.
+ */
+entitlementRoutes.get('/browse', async (c) => {
+  const account = await requireAccount(c);
+  if (!('id' in account)) return account;
+  return ok(c, { scope: await accountBrowseScope(dbFor(c), account.id, new Date()) });
 });
 
 async function ownedSpace(c: Context, db: Db, account: Account, spaceId: string, kinds: readonly Space['kind'][]): Promise<Response | Space> {
