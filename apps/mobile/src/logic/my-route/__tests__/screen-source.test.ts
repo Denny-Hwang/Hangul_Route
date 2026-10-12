@@ -64,9 +64,62 @@ describe('screens/my-route sources', () => {
     expect(src.lastIndexOf('flags.myRouteEnabled ?', at)).toBeGreaterThan(0);
   });
 
-  it('PinEntry continues to the read-only page once the gate is open', () => {
+  it('PinEntry continues to the read-only page once the gate is open, as a grown-up', () => {
     const src = read(join(SRC, 'screens', 'parent', 'PinEntryScreen.tsx'));
-    expect(src).toContain("navigation.replace('MyRoute', { source: 'parent', profileId })");
+    expect(src).toContain("navigation.replace('MyRoute', { source: 'parent', profileId, viewer: 'grownup' })");
+  });
+
+  it('the screen forces read-only for a grown-up entry (amendment section 5.1)', () => {
+    const src = read(join(SCREEN_DIR, 'MyRouteScreen.tsx'));
+    expect(src).toContain("grownup: route.params?.viewer === 'grownup'");
+  });
+});
+
+/**
+ * The parent dashboard's Learning Route row (F-ROUTE-001 R-9b, section 3.12,
+ * amendment LR-A6; wireframes `journey/my-route-overview.md` H and
+ * `parent/learning-route.md` L1a).
+ */
+describe('parent dashboard Learning Route row sources', () => {
+  const ROW = join(SRC, 'screens', 'parent', 'LearningRouteRow.tsx');
+  const DASHBOARD = join(SRC, 'screens', 'parent', 'ParentDashboardScreen.tsx');
+  const row = read(ROW);
+  const dashboard = read(DASHBOARD);
+
+  it('the row shows only behind flags.myRouteEnabled', () => {
+    const at = dashboard.indexOf('<LearningRouteRow');
+    expect(at).toBeGreaterThan(0);
+    expect(dashboard.lastIndexOf('flags.myRouteEnabled ?', at)).toBeGreaterThan(0);
+  });
+
+  it('See Learning Route opens the root-stack page forced read-only, never the interactive one', () => {
+    expect(row).toContain("navigation.navigate('MyRoute', { source: 'parent', profileId, viewer: 'grownup' })");
+    for (const src of [row, dashboard]) {
+      for (const m of src.matchAll(/navigate\('MyRoute'[^)]*\)/g)) expect(m[0]).toContain("viewer: 'grownup'");
+    }
+  });
+
+  it('the row builds the same model as the page (cursor, start route) and never sends telemetry or writes seen', () => {
+    expect(row).toContain('cursorContext(');
+    expect(row).toContain('route: startRouteOf(snapshot.placements, journeyContent.catalog, cursor.isEntitled)');
+    expect(row).toContain('dashboardRowView(');
+    expect(row).not.toMatch(/track\(|writeSeen|viewedEvent|AsyncStorage|localStorage/);
+  });
+
+  it('no emoji-capable or arrow character, no colour literal, no ratio, no speaking UI', () => {
+    expect(row).not.toMatch(SYMBOL);
+    expect(row).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/);
+    expect(row).not.toMatch(/['"`][^'"`]*\d+\s*\/\s*\d+[^'"`]*['"`]/);
+    expect(row).not.toMatch(/voice-echo|VoiceEcho|microphone|speak/i);
+  });
+
+  it('names its design reference', () => {
+    expect(row).toMatch(/design\/(wireframes|components)\//);
+  });
+
+  it('the drawn segments are hidden from screen readers and a text list reads them', () => {
+    expect(row).toContain('accessibilityElementsHidden');
+    expect(row).toContain('segment.a11yLabel');
   });
 });
 
