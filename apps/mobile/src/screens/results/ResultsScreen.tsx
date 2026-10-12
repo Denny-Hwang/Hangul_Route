@@ -89,7 +89,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   const snapshot = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
   // The access tier (F-ENT-003 section 3.4): re-renders when the inbox, the spaces or the subscription change it.
   const tier = useAccessTier(profile?.id ?? '');
-  // May the active learner start a quest (F-ENT-003 section 3.6): "Next story" never offers a closed book story.
+  // May the active learner start a quest (F-ENT-003 sections 3.5 and 3.6): "Next up" and "Next story" offer open quests only.
   const questOpen = useQuestAccess();
   const bookmarks = useStoryStore((s) => (profile ? s.byProfile[profile.id] : undefined)) ?? NO_BOOKMARKS;
   const reducedMotion = useReducedMotion();
@@ -180,9 +180,9 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
         questId,
         total,
         locale,
-        ...cursorContext({ tier, placements: snapshot?.placements, quests: questsAll, episodes: episodesAll }),
+        ...cursorContext({ tier, placements: snapshot?.placements, quests: questsAll, episodes: episodesAll, isQuestOpen: questOpen }),
       }),
-    [snapshot, questId, total, tier, locale],
+    [snapshot, questId, total, tier, questOpen, locale],
   );
   const actions = resultsActions(teaser);
 
