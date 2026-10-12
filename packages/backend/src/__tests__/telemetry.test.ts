@@ -38,7 +38,7 @@ describe('POST /api/telemetry', () => {
 
   it('accepts the five F-ENT-003 names with their payloads (Worker first, E3-1b)', async () => {
     const events: Array<[string, Record<string, unknown>]> = [
-      ['access.preview_opened', { stage: 'stage2', day: 6, from: 'journey' }],
+      ['access.preview_opened', { stage: 'stage2', theme: 'life', from: 'journey' }],
       ['access.help_asked', { from: 'episode', audience: 'family' }],
       ['access.free_end_reached', { freeDays: 5, placedOut: false }],
       ['route.next_started', { source: 'class', surface: 'home' }],
