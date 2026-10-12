@@ -1,5 +1,6 @@
 import {
   Body,
+  Button,
   Caption,
   Card,
   Heading,
@@ -29,6 +30,10 @@ import { localizeStage } from '../../logic/content-locale';
 import { bandLabel } from '../../logic/placement/copy';
 import { startingSpotRow } from '../../logic/placement/report-page';
 import { practiceTotals } from '../../logic/sessions/session-log';
+import { isParentSessionValid } from '../../logic/profiles/session';
+import { reportEntry } from '../../logic/reports/entry';
+import { useAudience } from '../../store/audience';
+import { useUiStore } from '../../store/ui-store';
 import { LinkButton } from '../placement/parts';
 import { LearningRouteRow } from './LearningRouteRow';
 import type { RootStackParamList } from '../../navigation/types';
@@ -47,6 +52,17 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
   const locale = useLocale();
   const profiles = useProfileStore((s) => s.profiles);
   const byProfile = useProgressStore((s) => s.byProfile);
+  const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
+  const { opensDirectly } = useAudience();
+
+  // See report (F-REPORT-001 section 3.9, RP-9): straight to the report while the grown-up gate opens directly,
+  // else through the PIN screen when the 15-minute session has lapsed.
+  const openReport = (profileId: string): void => {
+    const sessionOpen = isParentSessionValid(parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' }, Date.now());
+    const entry = reportEntry(profileId, opensDirectly(sessionOpen));
+    if (entry.screen === 'LearnerReport') navigation.navigate('LearnerReport', entry.params);
+    else navigation.navigate('PinEntry', entry.params);
+  };
 
   // Every profile's snapshot, not only the active one: the cards and the Starting spot row read them.
   useEffect(() => {
@@ -159,6 +175,12 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
                       </View>
                     );
                   })}
+                </>
+              ) : null}
+              {flags.reportsEnabled ? (
+                <>
+                  <Spacer size="md" />
+                  <Button label={messages.report.action.seeReport} tone="primary" size="md" fullWidth onPress={() => openReport(p.id)} testID={`dashboard-see-report-${p.id}`} />
                 </>
               ) : null}
             </Card>

@@ -36,7 +36,7 @@ const STAGE_TITLES: Record<StageKey, string> = {
   stage6: 'Real-use',
   stage7: 'Self-expression',
 };
-const GLOSS: Record<string, { romanization: string; gloss: string }> = {
+const GLOSS: Record<string, { romanization: string; gloss: string | null }> = {
   ㅂ: { romanization: 'b/p (bieup)', gloss: "B — sounds like the start of 'boy'" },
 };
 
@@ -274,7 +274,7 @@ describe('inAppReportView: periods and steps', () => {
     let at: string | null = null;
     let steps = 0;
     for (;;) {
-      const prev = inAppReportView(input({ at })).stepper?.prev ?? null;
+      const prev: { at: string | null } | null = inAppReportView(input({ at })).stepper?.prev ?? null;
       if (prev === null) break;
       at = prev.at;
       steps += 1;

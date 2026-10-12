@@ -92,7 +92,11 @@ export function setSyncApiForTests(client: SyncApiClient | null): void {
   apiClient = client;
 }
 
-const summarizeFor = (snapshot: ProgressSnapshot) => {
+/**
+ * The summary this device uploads for a learner. Also the in-app report's local summary (F-REPORT-001 section 3.9,
+ * RP-9), so the device report and the console read the same figures for the same child.
+ */
+export const summarizeFor = (snapshot: ProgressSnapshot) => {
   const now = new Date();
   const plans = usePlanStore.getState();
   const inbox = plans.byLearner[snapshot.profileId];

@@ -31,7 +31,9 @@ export type GrownUpDestination =
   | 'Billing'
   /** F-FEEDBACK-001 section 6.10 (types from FB-7; the screens arrive with FB-9): a learner's notes in the grown-up zone, and the report sheet for one note (`PinEntry.noteId`). */
   | 'NotesGrownUp'
-  | 'NoteReport';
+  | 'NoteReport'
+  /** F-REPORT-001 section 3.9 (RP-9): one learner's in-app report (`PinEntry.profileId`). */
+  | 'LearnerReport';
 
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
@@ -81,7 +83,7 @@ export type RootStackParamList = {
     grownUpVia?: GrownUpVia;
     /** `next: 'Paywall'`: the surface that opened it, passed on to the paywall (default `'journey'`). */
     from?: 'journey' | 'library';
-    /** `next: 'EditProfile'`: the profile to edit (F-LEARN-001 §3.11); `next: 'MyRoute'`: the profile whose page opens read-only; `next: 'PlacementReport'`: whose report opens (F-PLC-001 section 3.9). */
+    /** `next: 'EditProfile'`: the profile to edit (F-LEARN-001 §3.11); `next: 'MyRoute'`: the profile whose page opens read-only; `next: 'PlacementReport'`: whose report opens (F-PLC-001 section 3.9); `next: 'LearnerReport'`: whose progress report opens (F-REPORT-001 section 3.9). */
     profileId?: string;
     /** `next: 'NoteReport'`: the note the report sheet opens for ("Tell a grown-up", F-FEEDBACK-001 section 6.10 item 4). */
     noteId?: string;
@@ -130,6 +132,11 @@ export type RootStackParamList = {
   Placement: { source: PlacementSource; retakeMode?: 'standard' | 'deep' };
   /** parent/placement-report — the grown-up report of the level check, behind the PIN gate (F-PLC-001 section 3.9). */
   PlacementReport: { profileId: string };
+  /**
+   * reports/in-app-report — one learner's progress report behind the grown-up gate (F-REPORT-001 section 3.9, RP-9).
+   * Registered only while `flags.reportsEnabled` is on. Read-only; with the gate closed the PIN screen replaces it.
+   */
+  LearnerReport: { profileId: string };
   /** vocab/topics — the Words topic picker (F-VOC-003 section 3.3). */
   VocabTopics: undefined;
   /** vocab/topic — a Words topic page (F-VOC-003 section 3.4). A key the picker does not show is "Topic not found". */

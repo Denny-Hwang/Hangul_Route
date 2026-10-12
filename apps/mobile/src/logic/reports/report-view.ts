@@ -177,8 +177,8 @@ export interface InAppReportInput {
   stageTitle: (stage: StageKey) => string;
   /** A quest's title in the UI locale; null for a quest this build does not hold. */
   questTitle: (id: string) => string | null;
-  /** A letter's content romanization and gloss (`content/episodes/stage-1/jamo.json`, localized); null when unknown. */
-  letterInfo: (letter: string) => { romanization: string; gloss: string } | null;
+  /** A letter's content sound value and its sound hint (the bundled jamo, localized); null when unknown. */
+  letterInfo: (letter: string) => { romanization: string; gloss: string | null } | null;
   /** The grown-up read-only Learning Route (L1) is on this build: the glance links to it. */
   learningRoute: boolean;
 }
@@ -429,7 +429,7 @@ export interface ReportThisPeriodView {
 
 /** A letter tile in More detail: the letter and its short sound, expanding to the content romanization and gloss. */
 export interface ReportLetterTile extends ReportLetterLabel {
-  detail: { romanization: string; gloss: string } | null;
+  detail: { romanization: string; gloss: string | null } | null;
 }
 
 export type ReportDetailBlock =

@@ -168,6 +168,11 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       const { profileId } = route.params;
       if (profileId === undefined) navigation.replace('ParentDashboard');
       else navigation.replace('PlacementReport', { profileId });
+    } else if (route.params.next === 'LearnerReport') {
+      // The in-app progress report (F-REPORT-001 section 3.9): See report, or the report itself after the session lapsed.
+      const { profileId } = route.params;
+      if (profileId === undefined) navigation.replace('ParentDashboard');
+      else navigation.replace('LearnerReport', { profileId });
     } else if (route.params.next === 'ExternalLink') {
       // Back to Sources with the gate open: native opens the waiting link, the web asks for one more tap (F-STORY-002 §3.8).
       navigation.goBack();
