@@ -17,7 +17,6 @@ import {
   motion,
   radii,
   spacing,
-  supportedCardIds,
   touchTarget,
   typography,
 } from '@hangul-route/design-system';
@@ -26,7 +25,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ScrollView, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { useLocale, useMessages } from '../../i18n/use-messages';
-import { resolvePicture, swatchColors } from '../../logic/picture-ref';
+import { resolvePicture } from '../../logic/picture-ref';
 import {
   buildDiscover,
   pageRender,
@@ -43,7 +42,7 @@ import { playPrompt, warmClips } from '../../platform/audio';
 import { useReducedMotion } from '../../platform/motion';
 import { useLocaleStore } from '../../store/locale-store';
 import { useProfileStore } from '../../store/profile-store';
-import { PictureArt } from '../minigames/PictureArt';
+import { PICTURE_CONTEXT, PictureArt } from '../minigames/PictureArt';
 
 /**
  * Discover (F-QUEST-002 §3.2): teach before play. One or two new things per
@@ -61,8 +60,6 @@ interface Props {
   /** Continue on the last page: the player advances and reports `quest.discover_completed`. */
   onDone: (result: { pages: number; heard: number }) => void;
 }
-
-const SWATCHES = swatchColors(colors);
 
 type DiscoverMessages = Messages['learner']['quest']['discover'];
 
@@ -247,7 +244,7 @@ function DiscoverItemCard({
   a11y: Messages['a11y'];
 }): React.ReactElement {
   const { item } = render;
-  const picture = resolvePicture(item.picture, { supportedCardIds, swatches: SWATCHES });
+  const picture = resolvePicture(item.picture, PICTURE_CONTEXT);
   const example = item.example;
 
   return (

@@ -229,6 +229,24 @@ export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot
 }
 
 /**
+ * Fold a server answer into a copy that changed while the request was in
+ * flight (issue #262). `base` is the snapshot that went up, `theirs` the one
+ * that came back (it already holds `base`), and `ours` is `base` plus the
+ * writes made since. Every collection only grows, so `mergeSnapshots` keeps
+ * both sides; only quest `attempts` is a sum, so the attempts `base` already
+ * gave `theirs` are taken out of `ours` first and each attempt counts once.
+ */
+export function rebaseSnapshot(base: ProgressSnapshot, ours: ProgressSnapshot, theirs: ProgressSnapshot, opts: MergeOptions): ProgressSnapshot {
+  const counted = new Map(base.quests.map((q) => [q.questId, q.attempts]));
+  const held = new Set(theirs.quests.map((q) => q.questId));
+  const quests = ours.quests.map((q) => {
+    const already = held.has(q.questId) ? (counted.get(q.questId) ?? 0) : 0;
+    return already === 0 ? q : { ...q, attempts: Math.max(0, q.attempts - already) };
+  });
+  return mergeSnapshots({ ...ours, quests }, theirs, opts);
+}
+
+/**
  * True when nothing in `local` is missing from `server` (upload not needed).
  * A card this device has seen counts as held only when the server copy is
  * seen too (F-STORY-006 section 3.6 M3), so a cleared "New" flag still uploads.

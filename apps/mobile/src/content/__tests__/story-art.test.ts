@@ -9,8 +9,9 @@ import { describe, expect, it } from 'vitest';
  * story state, names registered items and passes the composition rules
  * (§3.9.5) with no error; ready stories have art or `artPending` on every scene
  * (F-STORY-001 lint `art-missing`). The records-joseon (PR 2.10a),
- * hangul-printing (PR 2.10b) and science-art-life (PR 2.10c) clusters are
- * fully illustrated and passed review with no warnings either.
+ * hangul-printing (PR 2.10b), science-art-life (PR 2.10c) and seasons-tales
+ * (PR 2.10d) clusters are fully illustrated and passed review with no
+ * warnings either, so every launch scene now has art.
  */
 const DIR = join(__dirname, '../../../../../content/stories');
 const stories: Story[] = readdirSync(DIR)
@@ -47,16 +48,26 @@ const SCIENCE_ART_LIFE = [
   'story:kim-hongdo-genre-paintings',
 ];
 
+const SEASONS_TALES = [
+  'story:seollal-new-year',
+  'story:chuseok-ganggangsullae',
+  'story:dano-ssireum',
+  'story:gimjang-arirang',
+  'story:pansori-tales',
+  'story:sun-and-moon',
+];
+
 /** Every illustrated cluster, with its scene count (F-STORY-002 §3.9.8 cadence). */
 const CLUSTERS: ReadonlyArray<{ name: string; ids: readonly string[]; scenes: number }> = [
   { name: 'records-joseon', ids: RECORDS_JOSEON, scenes: 45 },
   { name: 'hangul-printing', ids: HANGUL_PRINTING, scenes: 46 },
   { name: 'science-art-life', ids: SCIENCE_ART_LIFE, scenes: 43 },
+  { name: 'seasons-tales', ids: SEASONS_TALES, scenes: 48 },
 ];
 
 describe('story scene art', () => {
   it('has art to check', () => {
-    expect(withArt.length).toBeGreaterThanOrEqual(134);
+    expect(withArt.length).toBeGreaterThanOrEqual(182);
   });
 
   it('every setting and layer ref is in the registry', () => {
@@ -172,6 +183,21 @@ describe('story scene art', () => {
     for (const id of GAT_FIGURES) {
       expect(hasItem(id), id).toBe(true);
       expect(refs, id).not.toContain(id);
+    }
+  });
+
+  // §3.9.5 R-S10 and §3.9.10 (PR 2.10d): the folk tale's peril is shown as
+  // setting and objects. The rotten rope (s6) and the sorghum field (s7) draw
+  // no tiger, so its fall is never pictured; the trickster tiger is never
+  // tinted into Hoya's yellow.
+  it('draws no tiger where the sun-and-moon tale tells of its fall', () => {
+    for (const id of ['s6', 's7']) {
+      const art = scenes.find((s) => s.story.id === 'story:sun-and-moon' && s.scene.id === id)?.scene.art;
+      expect(art, id).toBeDefined();
+      expect(art!.layers.map((l) => l.ref), id).not.toContain('prop:tiger-trickster');
+    }
+    for (const { scene } of withArt) {
+      for (const layer of scene.art!.layers.filter((l) => l.ref === 'prop:tiger-trickster')) expect(layer.tint ?? '').not.toBe('feedback.nudge');
     }
   });
 

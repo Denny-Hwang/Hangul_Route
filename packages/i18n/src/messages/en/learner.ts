@@ -184,6 +184,15 @@ export const learner = {
     },
     tip: "Tip — finish today's quest to keep your streak alive!",
     recentStars: 'Recent stars',
+    /**
+     * The one-time catch-up card (F-STORY-006 §3.5, PR 6.5c): cards the learner had already earned,
+     * found once per app session. A count of cards found, never a fraction or what is left (D3).
+     */
+    catchUp: {
+      line: (count: number) =>
+        plural('en', count, { one: 'Hoya found 1 card you already earned!', other: `Hoya found ${count} cards you already earned!` }),
+      cta: 'See my cards',
+    },
   },
 
   journey: {
@@ -264,7 +273,8 @@ export const learner = {
     },
     /** `title` is the previous quest's title (content). */
     buildsOn: (title: string) => `Builds on: ${title}`,
-    cards: { heading: 'Cards in this episode', waiting: 'Waiting for you' },
+    /** `waiting` is the earn hint on a card not earned yet (F-STORY-006 §3.7): what to do, never how far along. */
+    cards: { heading: 'Cards in this episode', waiting: 'Finish every quest to earn it' },
     /** The soft-prerequisite sheet (F-QUEST-002 §3.5): a note and a one-line offer, never a lock. */
     prereq: {
       message: (title: string) => `This one uses letters from ${title}. Start there?`,
@@ -302,6 +312,23 @@ export const learner = {
       announce: (title: string) => `New card for your library! ${title}`,
       see: { cta: 'See my card' },
       seeA11y: (title: string) => `See my card: ${title}`,
+    },
+    /**
+     * The extra cards a run brought besides the quest card: an episode, stage or set it completed
+     * (F-STORY-006 §3.7, wireframe results/extra-cards). Counts, never fractions (D3). `title` is
+     * the episode's or a card's title (content).
+     */
+    extraCards: {
+      title: (n: number) =>
+        plural('en', n, { one: '1 more card joined your Library!', other: `${n} more cards joined your Library!` }),
+      episodeDone: (title: string) => `You finished ${title}!`,
+      /** Under the row when more cards came than it shows. */
+      more: (n: number) => plural('en', n, { one: 'and 1 more in your Library', other: `and ${n} more in your Library` }),
+      /** One sentence for assistive tech: the count, then every card title. */
+      announce: (n: number, titles: readonly string[]) =>
+        `${plural('en', n, { one: '1 more card joined your Library', other: `${n} more cards joined your Library` })}: ${titles.join(', ')}`,
+      /** A thumbnail's label: distinct from the quest card's "See my card" button above it. */
+      seeA11y: (title: string) => `Open card: ${title}`,
     },
   },
 
@@ -672,9 +699,11 @@ export const learner = {
         moreInCultureNotes: { cta: 'More in Culture notes' },
         close: { cta: 'Close' },
       },
+      /** The inline checkpoint card (PR 2.9): "Quick question" in a quest, the unscored "Try it" in a replay. */
       checkpoint: {
         tryIt: 'Try it',
         skip: { cta: 'Skip' },
+        quickQuestion: 'Quick question',
       },
     },
     /** The reader's end page (F-STORY-002 §3.7): one primary, at most two ghosts. */

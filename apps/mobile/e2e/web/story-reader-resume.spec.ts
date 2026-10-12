@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored } from './helpers';
-import { next, position } from './story-reader-helpers';
+import { nextPage, position } from './story-reader-helpers';
 
 /**
  * F-STORY-004 PR 4.4b (§3.8, continue where you left off) on the fixture
@@ -68,8 +68,8 @@ async function leaveAtSceneThree(page: Page, id: string): Promise<void> {
   await expect(page.getByRole('heading', { name: 'Story time' })).toBeVisible();
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('button', { name: 'Play minigame' }).click();
-  await next(page).click();
-  await next(page).click();
+  await nextPage(page);
+  await nextPage(page);
   await expect(position(page)).toHaveText('3 / 5');
   await expect.poll(() => bookmarksOf(page, id)).toMatchObject({ v: 1, byStory: { [STORY]: { level: 'listen', sceneIndex: 2 } } });
   await page.getByTestId('story-reader-close').click();
@@ -78,7 +78,7 @@ async function leaveAtSceneThree(page: Page, id: string): Promise<void> {
 
 /** From the reader at its last scene: finish reading, skip the check and either order the story or skip it, then see results. */
 async function finishFromLastScene(page: Page, order: boolean): Promise<void> {
-  await next(page).click();
+  await nextPage(page);
   await page.getByTestId('story-reader-end-primary').click();
   await expect(stepHeading(page, 'A few questions')).toBeVisible();
   await page.getByRole('button', { name: 'Skip for now' }).click();
@@ -118,7 +118,7 @@ test.describe('story resume (fixture bundle)', () => {
     expect(await page.locator('body').innerText()).not.toMatch(EMOJI);
 
     // Reading on moves the bookmark forward.
-    await next(page).click();
+    await nextPage(page);
     await expect(position(page)).toHaveText('4 / 5');
     await expect.poll(async () => (await bookmarksOf(page, id))?.byStory[STORY]?.sceneIndex).toBe(3);
   });
@@ -167,10 +167,10 @@ test.describe('story resume (fixture bundle)', () => {
     await page.getByRole('button', { name: 'Play minigame' }).click();
     await expect(position(page)).toHaveText('3 / 5');
     for (const n of [4, 5]) {
-      await next(page).click();
+      await nextPage(page);
       await expect(position(page)).toHaveText(`${n} / 5`);
     }
-    await next(page).click();
+    await nextPage(page);
     await page.getByTestId('story-reader-end-primary').click();
     await expect(stepHeading(page, 'A few questions')).toBeVisible();
     await page.getByRole('button', { name: 'Skip for now' }).click();
@@ -232,7 +232,7 @@ test.describe('story resume (fixture bundle)', () => {
     await page.getByRole('button', { name: 'Continue' }).click();
     await page.getByRole('button', { name: 'Play minigame' }).click();
     for (const n of [2, 3, 4, 5]) {
-      await next(page).click();
+      await nextPage(page);
       await expect(position(page)).toHaveText(`${n} / 5`);
     }
     await finishFromLastScene(page, true);

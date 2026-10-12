@@ -1,6 +1,7 @@
-import type { Locator, Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { completeChildForm, forgetPin, keepSidewaysIfAsked, passDiscover, playCheck, typeDigits, unlockWithPin } from './helpers';
+import { expectNoHorizontalOverflow, expectReachable } from './viewport';
 
 /**
  * Short-phone and phone-landscape layout (audit p1-L1..L4, p2-L1..L3, UX-09):
@@ -21,35 +22,6 @@ const VIEWPORTS = [
   { name: 'iPad portrait', width: 768, height: 1024 },
   { name: 'iPad Air landscape / laptop', width: 1180, height: 820 },
 ] as const;
-
-async function fullyInViewport(page: Page, target: Locator): Promise<boolean> {
-  const vp = page.viewportSize();
-  const box = await target.boundingBox();
-  if (!vp || !box) return false;
-  return box.y >= 0 && box.x >= 0 && box.y + box.height <= vp.height && box.x + box.width <= vp.width;
-}
-
-/** Scroll the way a learner would (wheel over the screen), then require the target fully visible. */
-async function expectReachable(page: Page, target: Locator): Promise<void> {
-  await expect(target).toBeAttached();
-  const vp = page.viewportSize();
-  if (!vp) throw new Error('viewport size unavailable');
-  for (let i = 0; i < 15 && !(await fullyInViewport(page, target)); i++) {
-    await page.mouse.move(vp.width / 2, vp.height / 2);
-    await page.mouse.wheel(0, Math.round(vp.height / 2));
-    await page.waitForTimeout(120);
-  }
-  await expect(target).toBeInViewport({ ratio: 1 });
-}
-
-/** Nothing may force the page wider than the window (a fixed-width child would show as a sideways scrollbar). */
-async function expectNoHorizontalOverflow(page: Page): Promise<void> {
-  const { scrollWidth, innerWidth } = await page.evaluate(() => ({
-    scrollWidth: document.documentElement.scrollWidth,
-    innerWidth: window.innerWidth,
-  }));
-  expect(scrollWidth, 'horizontal overflow').toBeLessThanOrEqual(innerWidth);
-}
 
 /**
  * Onboard through the real form: "My child or a student" creates the grown-up PIN in the form, so the gate later asks for it.

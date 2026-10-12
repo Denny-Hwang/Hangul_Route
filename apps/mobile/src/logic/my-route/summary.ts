@@ -1,5 +1,6 @@
 import type { ProgressSnapshot, StageKey } from '@hangul-route/content-schema';
 import { buildMyRoute } from './model';
+import { startRouteOf } from './start-marker';
 import type { MyRouteInput, MyRouteModel, StageState } from './types';
 
 /**
@@ -45,14 +46,16 @@ export type JourneyContent = Pick<MyRouteInput, 'catalog' | 'episodes' | 'quests
 
 /**
  * The sync-store input (F-ROUTE-001 R-8): `summarizeJourney(buildMyRoute(...))`
- * for the snapshot about to upload. `route` stays null until R-7a adds the
- * start marker and known pips (before F-QUEST-002 Q-6a no quest can be placed
- * out, so `known` is 0 either way). Best effort: an error gives no journey and
- * the upload goes on without it, never blocking a sync.
+ * for the snapshot about to upload. The route comes from the stored level-check
+ * results with no completions (R-7a `startRouteOf`), so `known` counts the
+ * quests the level check placed out and the learner has not done. Best effort:
+ * an error gives no journey and the upload goes on without it, never blocking
+ * a sync.
  */
 export function journeySummaryOf(snapshot: ProgressSnapshot, content: JourneyContent, now: Date): JourneySummary | undefined {
   try {
-    return summarizeJourney(buildMyRoute({ snapshot, ...content, route: null, now }));
+    const route = startRouteOf(snapshot.placements, content.catalog, content.isEntitled);
+    return summarizeJourney(buildMyRoute({ snapshot, ...content, route, now }));
   } catch {
     return undefined;
   }

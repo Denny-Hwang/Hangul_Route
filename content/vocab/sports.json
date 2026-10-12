@@ -1,0 +1,168 @@
+{
+  "schemaVersion": 1,
+  "topic": {
+    "id": "vocab-topic:sports",
+    "key": "sports",
+    "order": 10,
+    "titleEn": "Sports",
+    "titleKo": {
+      "ko": "운동",
+      "romanization": "undong",
+      "en": "sports"
+    },
+    "blurbEn": "Sports and games to play or watch.",
+    "hoyaIntroEn": "Ready, set, go! Let's learn the words for sports.",
+    "tint": "theme.crafts",
+    "coverItemId": "vocab:chukgu",
+    "status": "draft",
+    "fixedOrder": false
+  },
+  "items": [
+    {
+      "id": "vocab:chukgu",
+      "ko": "축구",
+      "romanization": "chukgu",
+      "en": "soccer (football)",
+      "pos": "noun",
+      "topics": [
+        "sports"
+      ],
+      "level": 1,
+      "visual": "word:sport-soccer"
+    },
+    {
+      "id": "vocab:yagu",
+      "ko": "야구",
+      "romanization": "yagu",
+      "en": "baseball",
+      "pos": "noun",
+      "topics": [
+        "sports"
+      ],
+      "level": 1,
+      "visual": "word:sport-baseball"
+    },
+    {
+      "id": "vocab:nonggu",
+      "ko": "농구",
+      "romanization": "nonggu",
+      "en": "basketball",
+      "pos": "noun",
+      "topics": [
+        "sports"
+      ],
+      "level": 1,
+      "visual": "word:sport-basketball"
+    },
+    {
+      "id": "vocab:baegu",
+      "ko": "배구",
+      "romanization": "baegu",
+      "en": "volleyball",
+      "pos": "noun",
+      "topics": [
+        "sports"
+      ],
+      "level": 1,
+      "visual": "word:sport-volleyball"
+    },
+    {
+      "id": "vocab:takgu",
+      "ko": "탁구",
+      "romanization": "takgu",
+      "en": "table tennis",
+      "pos": "noun",
+      "topics": [
+        "sports"
+      ],
+      "level": 1,
+      "visual": "word:sport-tabletennis"
+    },
+    {
+      "id": "vocab:suyeong",
+      "ko": "수영",
+      "romanization": "suyeong",
+      "en": "swimming",
+      "pos": "noun",
+      "topics": [
+        "sports"
+      ],
+      "level": 1,
+      "visual": "word:sport-swimming"
+    },
+    {
+      "id": "vocab:taegwondo",
+      "ko": "태권도",
+      "romanization": "taegwondo",
+      "en": "taekwondo",
+      "pos": "noun",
+      "topics": [
+        "sports"
+      ],
+      "level": 2,
+      "visual": "word:sport-taekwondo",
+      "senseNote": "A Korean martial art, known for its high kicks."
+    },
+    {
+      "id": "vocab:dalligi",
+      "ko": "달리기",
+      "romanization": "dalligi",
+      "en": "running",
+      "pos": "noun",
+      "topics": [
+        "sports"
+      ],
+      "level": 2,
+      "visual": "word:sport-running"
+    },
+    {
+      "id": "vocab:julleomgi",
+      "ko": "줄넘기",
+      "romanization": "julleomgi",
+      "en": "jump rope",
+      "pos": "noun",
+      "topics": [
+        "sports"
+      ],
+      "level": 2,
+      "visual": "word:sport-jumprope"
+    },
+    {
+      "id": "vocab:jajeongeo",
+      "ko": "자전거",
+      "romanization": "jajeongeo",
+      "en": "bicycle",
+      "pos": "noun",
+      "topics": [
+        "sports"
+      ],
+      "level": 2,
+      "visual": "word:sport-bicycle"
+    },
+    {
+      "id": "vocab:seuki",
+      "ko": "스키",
+      "romanization": "seuki",
+      "en": "skiing",
+      "pos": "noun",
+      "topics": [
+        "sports"
+      ],
+      "level": 1,
+      "visual": "word:sport-skiing"
+    },
+    {
+      "id": "vocab:gong-ball",
+      "ko": "공",
+      "romanization": "gong",
+      "en": "ball",
+      "pos": "noun",
+      "topics": [
+        "sports"
+      ],
+      "level": 1,
+      "visual": "word:sport-ball",
+      "senseGroup": "gong"
+    }
+  ]
+}

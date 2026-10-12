@@ -30,14 +30,14 @@ export function readerAvailability(story: Story | undefined, level: StoryLevel):
 }
 
 /**
- * The checkpoint of each scene, for `initReader`. Until the inline question
- * card ships (PR 2.9, after F-STORY-003's `ChoiceCard`) a tier that defines
- * checkpoints simply reads straight through (§3.7): nothing is scored and no
- * learner is stuck on a card that cannot be drawn.
+ * The checkpoint of each scene, for `initReader` (§3.7): after that scene Next
+ * opens the inline question card (PR 2.9, `reader-checkpoint.ts`). An id the
+ * tier does not define reads straight through, so a content slip never shows
+ * an empty card.
  */
-export function readerCheckpoints(tier: Pick<StoryTier, 'scenes' | 'checkpoints'>, supported: boolean): Array<string | null> {
+export function readerCheckpoints(tier: Pick<StoryTier, 'scenes' | 'checkpoints'>): Array<string | null> {
   return tier.scenes.map((scene) => {
-    if (!supported || scene.checkpointId === undefined) return null;
+    if (scene.checkpointId === undefined) return null;
     return tier.checkpoints.some((c) => c.id === scene.checkpointId) ? scene.checkpointId : null;
   });
 }

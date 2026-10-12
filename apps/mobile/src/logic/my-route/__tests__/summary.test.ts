@@ -83,7 +83,7 @@ describe('journeySummaryOf: the sync-store input (F-ROUTE-001 R-8)', () => {
   });
   const now = new Date('2026-10-11T00:00:00.000Z');
 
-  it('equals summarizeJourney(buildMyRoute(...)) with no route until R-7a', () => {
+  it('equals summarizeJourney(buildMyRoute(...)) with no route when no level check is stored', () => {
     const snapshot = snapshotWith(['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3', 'quest:stage1-life-q1']);
     const summary = journeySummaryOf(snapshot, content(), now);
     expect(summary).toEqual(summarizeJourney(buildMyRoute({ snapshot, ...content(), route: null, now })));
