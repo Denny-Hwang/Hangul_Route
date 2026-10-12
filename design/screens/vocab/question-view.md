@@ -4,7 +4,7 @@ Spec: `docs/specs/F-VOC-004-speed-round.md` §3.2 (formats), §3.6 (question scr
 Wireframe: `design/wireframes/vocab/speed-round.md` frames B (word to picture), C (picture to word), D (sound to picture), E (right reveal), F (gentle miss reveal); `design/wireframes/vocab/flashcards.md` frame F (quick check).
 Code: `apps/mobile/src/screens/vocab/VocabQuestionView.tsx` (render and effects only); decisions in `apps/mobile/src/logic/vocab/question-flow.ts` (S-3) and the view-models in `apps/mobile/src/logic/vocab/question-view.ts` (100 % covered).
 Components: `ChoiceCard`, `KoreanText`, `HoyaBubble`, `Icon` (design system), `PictureArt` (app).
-Screenshots: `HR_SHOTS=1 STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test vocab-question` writes `apps/mobile/e2e/web/__shots__/vocab-question-*.png` (git-ignored).
+Screenshots: `pnpm --filter @hangul-route/mobile build:web:fixtures`, then `HR_SHOTS=1 STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test vocab-question` writes `apps/mobile/e2e/web/__shots__/vocab-question-*.png` (git-ignored). Until a host screen ships, the fixture bundle opens the view on catalogue words through `window.__hrVocabE2E` (`apps/mobile/src/navigation/vocab-question-e2e.tsx`).
 
 The view is the middle of a question screen. It has no header, no clock, no spark meter and no Back: the screen that hosts it (the Speed Round S-5, the flashcards' quick check C-5) draws those and decides what comes next. The view renders one question and tells the host when it was answered and when its reveal beat is over.
 
@@ -76,3 +76,5 @@ right option gets the thick focus ring. The right tap shows E, then the next que
 - The non-colour miss mark is `ChoiceCard`'s shared mark (the design system has no dash icon); the miss also says "Not this one" in words and keeps its amber tone.
 - The host gets every accepted tap through `host.answer(question.key, correct, { itemId })` (the first per key is the scored one); `onAnswer(optionId)` fires on the first tap only, for the Speed Round's session reducer; `onAdvance()` fires when the reveal beat is over.
 - Pausing and the clock are the host's: in Challenge the host hides the view behind the pause overlay.
+- Props: `{ question, mode, host, canPlay, romanizationShown, onAnswer?, onAdvance, ring?, hoya? }`. `ring` is the session's hint ring (speed, Relaxed at 20 s); `hoya` is the host's `{ tone, message }` line. A new `question.key` starts a fresh flow, so the host may keep one view mounted for a whole round.
+- The outcome line is announced by the native screen reader (`announceForAccessibility`) and, on the web, read from a visually hidden polite live line, so it is said once on each platform.

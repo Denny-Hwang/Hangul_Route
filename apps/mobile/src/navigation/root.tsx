@@ -28,6 +28,7 @@ import { StorySourcesScreen } from '../screens/story/StorySourcesScreen';
 import { PlacementScreen } from '../screens/placement/PlacementScreen';
 import { STORY_FIXTURES_BUILD, StoryE2eHook } from './story-e2e';
 import { PlacementE2eHook } from './placement-e2e';
+import { VocabE2eHook, VocabQuestionE2eScreen } from './vocab-question-e2e';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -53,6 +54,7 @@ export function RootNavigator(): React.ReactElement {
     <>
       {STORY_FIXTURES_BUILD ? <StoryE2eHook /> : null}
       {STORY_FIXTURES_BUILD ? <PlacementE2eHook /> : null}
+      {STORY_FIXTURES_BUILD ? <VocabE2eHook /> : null}
       <Stack.Navigator
         screenOptions={{ headerShown: false, animation: 'fade_from_bottom' }}
         initialRouteName={hasProfile ? 'Main' : 'Onboarding'}
@@ -79,6 +81,7 @@ export function RootNavigator(): React.ReactElement {
         <Stack.Screen name="StorySources" component={StorySourcesScreen} />
         <Stack.Screen name="Placement" component={PlacementScreen} options={{ gestureEnabled: false }} />
         <Stack.Screen name="PlacementReport" component={PlacementReportScreen} />
+        {STORY_FIXTURES_BUILD ? <Stack.Screen name="VocabQuestionE2e" component={VocabQuestionE2eScreen} /> : null}
       </Stack.Navigator>
     </>
   );
