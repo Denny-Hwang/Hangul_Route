@@ -40,6 +40,8 @@ export interface CursorContext {
   isEntitled: (stageKey: string) => boolean;
   /** Passed as `NextQuestInput.skipQuestIds`; undefined without a stored level-check result. */
   skipQuestIds: ReadonlySet<string> | undefined;
+  /** Passed as `NextQuestInput.isQuestOpen` (F-ENT-003 section 3.5); undefined when the caller gave none (every quest open). */
+  isQuestOpen?: (questId: string) => boolean;
 }
 
 export interface CursorContextInput {
@@ -49,11 +51,18 @@ export interface CursorContextInput {
   episodes: readonly Episode[];
   /** Tests only; the app always uses `CURSOR_STAGE_RULE`. */
   rule?: CursorStageRule;
+  /**
+   * May the learner start this quest: `useQuestAccess()` on a screen,
+   * `questOpenFor(learnerId, now)` elsewhere (F-ENT-003 section 3.4). Omitted
+   * means every quest is open, today's cursor.
+   */
+  isQuestOpen?: (questId: string) => boolean;
 }
 
 export function cursorContext(input: CursorContextInput): CursorContext {
   return {
     isEntitled: cursorEntitlement(input.tier, input.rule),
     skipQuestIds: placedOutSkipSet(input.placements, input.quests, input.episodes),
+    ...(input.isQuestOpen ? { isQuestOpen: input.isQuestOpen } : {}),
   };
 }

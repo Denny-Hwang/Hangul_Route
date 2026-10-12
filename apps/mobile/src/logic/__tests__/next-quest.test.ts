@@ -2,6 +2,7 @@ import type { Episode, Quest } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodesAll, questsAll } from '../../content';
 import { snapshotWith, plainQuest, episodeOf } from '../stage1/__tests__/fixtures';
+import { questOpenPredicate } from '../content-access';
 import { nextQuestAfter, offerableQuests, playableEpisodes } from '../next-quest';
 
 const QUESTS: Quest[] = ['a', 'b', 'c', 'd', 'e'].map((k) => plainQuest(`quest:${k}`));
@@ -117,5 +118,76 @@ describe('shipped content', () => {
     expect(nextQuestAfter({ snapshot: snap, quests: questsAll, episodes: episodesAll })?.id).toBe(
       'quest:stage1-letters-q1',
     );
+  });
+});
+
+describe('isQuestOpen (F-ENT-003 section 3.5: the cursor offers open quests only)', () => {
+  const closed = (...keys: string[]) => {
+    const ids = new Set(keys.map((k) => `quest:${k}`));
+    return (questId: string): boolean => !ids.has(questId);
+  };
+
+  it('offerableQuests drops closed quests, after the stage predicate', () => {
+    expect(offerableQuests(QUESTS, EPISODES, undefined, closed('b')).map((q) => q.id)).toEqual(['quest:a', 'quest:c', 'quest:e']);
+    const free = (stage: string) => stage === 'stage1';
+    expect(offerableQuests(QUESTS, EPISODES, free, closed('a')).map((q) => q.id)).toEqual(['quest:b', 'quest:c']);
+  });
+
+  it('omitted: every quest is open, as before', () => {
+    expect(offerableQuests(QUESTS, EPISODES, undefined, undefined)).toEqual(offerableQuests(QUESTS, EPISODES));
+    expect(nextQuestAfter({ ...base, snapshot: done('a'), isQuestOpen: undefined })?.id).toBe('quest:b');
+  });
+
+  it('the cursor skips a closed quest without marking it done', () => {
+    expect(nextQuestAfter({ ...base, snapshot: done(), isQuestOpen: closed('a') })?.id).toBe('quest:b');
+    expect(nextQuestAfter({ ...base, snapshot: done('a', 'b'), isQuestOpen: closed('c') })?.id).toBe('quest:e');
+  });
+
+  it('is undefined when every quest left is closed', () => {
+    expect(nextQuestAfter({ ...base, snapshot: done('a', 'b', 'c'), isQuestOpen: closed('e') })).toBeUndefined();
+  });
+
+  it('applies with the stage predicate and the placed-out set together', () => {
+    const free = (stage: string) => stage === 'stage1';
+    expect(
+      nextQuestAfter({ ...base, snapshot: done(), isEntitled: free, isQuestOpen: closed('b'), skipQuestIds: new Set(['quest:a']) })?.id,
+    ).toBe('quest:c');
+  });
+});
+
+describe('isQuestOpen on the shipped bundle (F-ENT-003 sections 3.3 and 3.5)', () => {
+  const offerable = offerableQuests(questsAll, episodesAll).map((q) => q.id);
+  const stage1 = offerable.filter((id) => episodesAll.some((e) => e.stage === 'stage1' && e.questIds.includes(id)));
+  const doneIds = (ids: readonly string[]) =>
+    snapshotWith(ids.map((questId) => ({ questId, episodeId: episodesAll.find((e) => e.questIds.includes(questId))?.id ?? '' })));
+  const predicate = (tier: 'free' | 'premium', gatingEnabled: boolean, ids: readonly string[]) =>
+    questOpenPredicate({ tier, gatingEnabled, completedQuestIds: new Set(ids) });
+
+  it('golden, switch off: the cursor is unchanged for every prefix of the route, free and premium', () => {
+    for (let n = 0; n <= offerable.length; n++) {
+      const ids = offerable.slice(0, n);
+      const snapshot = doneIds(ids);
+      const today = nextQuestAfter({ snapshot, quests: questsAll, episodes: episodesAll })?.id;
+      for (const tier of ['free', 'premium'] as const) {
+        const withSwitchOff = nextQuestAfter({ snapshot, quests: questsAll, episodes: episodesAll, isQuestOpen: predicate(tier, false, ids) });
+        expect(withSwitchOff?.id, `${tier}, ${n} done`).toBe(today);
+      }
+    }
+  });
+
+  it('switch on: a free learner who finished Stage 1 has no new quest; premium goes on into Stage 2', () => {
+    expect(offerable.length).toBeGreaterThan(stage1.length);
+    const snapshot = doneIds(stage1);
+    expect(nextQuestAfter({ snapshot, quests: questsAll, episodes: episodesAll, isQuestOpen: predicate('free', true, stage1) })).toBeUndefined();
+    const premium = nextQuestAfter({ snapshot, quests: questsAll, episodes: episodesAll, isQuestOpen: predicate('premium', true, stage1) });
+    expect(premium?.id).toBe(offerable[stage1.length]);
+  });
+
+  it('switch on: a free learner still has every Stage 1 lesson on the cursor', () => {
+    for (let n = 0; n < stage1.length; n++) {
+      const ids = stage1.slice(0, n);
+      const next = nextQuestAfter({ snapshot: doneIds(ids), quests: questsAll, episodes: episodesAll, isQuestOpen: predicate('free', true, ids) });
+      expect(next?.id).toBe(stage1[n]);
+    }
   });
 });
