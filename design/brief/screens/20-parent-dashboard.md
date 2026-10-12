@@ -33,8 +33,10 @@
 │                                      │
 │ ┌────────────────────────────────┐ │
 │ │ Privacy                          │ │
-│ │ All learning data stays on this  │ │
-│ │ device unless you sign in.       │ │
+│ │ Each learner's nickname and      │ │
+│ │ progress are kept on the device  │ │
+│ │ and backed up to our servers,    │ │
+│ │ so a Rescue Code restores them.  │ │
 │ └────────────────────────────────┘ │
 │                                      │
 │ [Open settings (md secondary)]       │
@@ -53,7 +55,7 @@
 - Title: **"Family Dashboard"** · sub: **"Read-only — settings live on the web."**
 - Per-profile summary: **"{quests} quests · {cards} cards · {streak}d streak"**
 - "Recent" sub-label
-- Privacy title: **"Privacy"** · body: **"All learning data stays on this device unless you sign in. We do not share with third parties."**
+- Privacy title: **"Privacy"** · body: **"Each learner's nickname and progress are kept on the device and backed up to our servers, so they can be restored with a Rescue Code. When a learner joins a class or family with a code, that space sees the name they join with and their progress. A family's grown-ups can also restore their progress. We do not share with third parties."** (`caregiver.dashboard.privacy.body`; until 2026-10-12 it said data stays on the device unless you sign in, which the app never did: it backs up every learner with no sign-in)
 - CTA: **"Open settings"**
 
 ## 5. Claude Design prompt
@@ -100,8 +102,12 @@ Layout (top to bottom, 48px horizontal padding):
 6. Privacy Card (Card sunken md, 48px padding):
    - "Privacy" — 66sp weight 700 #2A1F14
    - 12px gap
-   - "All learning data stays on this device unless you sign in. We do
-     not share with third parties." — 42sp #5C4A36
+   - "Each learner's nickname and progress are kept on the device and
+     backed up to our servers, so they can be restored with a Rescue Code.
+     When a learner joins a class or family with a code, that space sees
+     the name they join with and their progress. A family's grown-ups can
+     also restore their progress. We do not share with third parties."
+     — 42sp #5C4A36
 
 7. 48px gap
 

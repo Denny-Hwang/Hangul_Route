@@ -48,7 +48,7 @@ FOR FAMILIES
 • Several learner profiles on one device — siblings, parents and grandparents keep their own journeys
 • A PIN-protected grown-up zone with each learner's quests, cards and minutes — framed as growth, never as comparison
 • A daily three-card mission so every learner always knows what to do next
-• No account needed. No ads. No data sold. Everything stays on the device.
+• No account needed. No ads. No data sold. Progress is backed up, so a Rescue Code can bring it back on a new device.
 • Works offline — on the plane, at grandma's house, anywhere
 
 LEARNING ON YOUR OWN
