@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { MinigameKindSchema } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
+import { launchDefaultFlags } from '../../../config/flags';
 import { ACTIVITY_ROUTES, VOCAB_SCREENS, capabilities, vocabCapabilities } from '../caps';
 
 describe('vocab capabilities (F-VOC-003 section 3.4)', () => {
@@ -31,5 +32,12 @@ describe('VOCAB_SCREENS (the topic page draws an activity only when its screen i
   it('the topic routes this row adds are registered', () => {
     expect(registered('VocabTopics')).toBe(true);
     expect(registered('VocabTopic')).toBe(true);
+  });
+});
+
+describe('Words launches only with Learn (spec section 3.4: Learn is always available; the C-7 precondition)', () => {
+  it('the launch default of vocabTopicsEnabled is on only when the flashcards (VOCAB_SCREENS.learn) are in the build', () => {
+    // A topic page without Learn has no activity and no tappable word: C-7 must not flip the flag before C-5.
+    expect(!launchDefaultFlags.vocabTopicsEnabled || VOCAB_SCREENS.learn).toBe(true);
   });
 });

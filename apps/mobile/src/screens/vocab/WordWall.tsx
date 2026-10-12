@@ -13,7 +13,8 @@ const TILE_CHROME = 2 * (TILE_PADDING + borderWidth.base);
 /**
  * The word wall of a topic page (F-VOC-003 §3.4): every word of the topic in
  * file order, never re-sorted. A collected word shows its picture and its
- * Korean (`KoreanText`, romanization per the learner's setting); a new word
+ * Korean (`KoreanText`: romanization per the learner's setting, and the
+ * meaning in the UI language, D2); a new word
  * shows a soft silhouette named "Not collected yet" and no Korean. Columns are
  * as many 120 dp tiles as fit (`wallColumns`), so every word stays whole.
  * `onOpen` makes the collected tiles buttons (once the flashcards exist,
@@ -90,6 +91,7 @@ function WallTile({ tile, art, onOpen }: { tile: WallTileView; art: number; onOp
         ko={tile.ko}
         romanization={tile.romanization}
         romanizationShown={tile.romanizationShown}
+        gloss={tile.gloss}
         size="sm"
         accessibilityLabel={tile.accessibilityLabel}
       />

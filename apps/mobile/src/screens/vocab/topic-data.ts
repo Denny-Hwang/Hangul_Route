@@ -61,5 +61,5 @@ export function wordsOffered(): boolean {
   return flags.vocabTopicsEnabled && pickerTopics().length > 0;
 }
 
-/** Hoya's topic line once per topic per app session. */
+/** Hoya's topic line once per topic per learner per app session (keyed by profile). */
 export const topicIntroMemory = createIntroMemory();

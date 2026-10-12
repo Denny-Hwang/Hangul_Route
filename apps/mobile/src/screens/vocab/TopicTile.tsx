@@ -35,7 +35,10 @@ const HIDDEN = { 'aria-hidden': true, accessibilityElementsHidden: true, importa
  * language, the Korean title (`KoreanText`), a fill-only bar and the plain
  * count. The whole tile is one button (>= 80 dp) named "Food. 5 words
  * collected."; the bar is hidden from assistive technology because the count
- * is in the name. The tint is the border. Design: design/screens/vocab/topics.md.
+ * is in the name. The tint is the border. A locked tile (gating on only, D5)
+ * is drawn closed (F-ENT-003 OD-6): the sunken surface, a dotted border and
+ * "Not open yet" in place of the meter and count; no lock glyph, no price.
+ * Design: design/screens/vocab/topics.md.
  */
 export function TopicTile({
   view,
@@ -64,10 +67,11 @@ export function TopicTile({
         minHeight: touchTarget.child,
         padding: TOPIC_TILE_PADDING,
         gap: spacing.sm,
-        backgroundColor: colors.surface.paper,
+        backgroundColor: view.locked ? colors.surface.sunken : colors.surface.paper,
         borderRadius: radii.lg,
         borderWidth: borderWidth.base,
-        borderColor: pressed ? colors.border.focus : tintColor(view.tint),
+        borderStyle: view.locked ? 'dotted' : 'solid',
+        borderColor: pressed ? colors.border.focus : view.locked ? colors.border.shape : tintColor(view.tint),
       })}
     >
       <View style={{ alignItems: 'center' }}>
@@ -77,9 +81,11 @@ export function TopicTile({
       <View style={{ alignSelf: 'flex-start', maxWidth: '100%' }}>
         <KoreanText ko={view.ko} romanization={view.romanization} romanizationShown={view.romanizationShown} size="sm" />
       </View>
-      <View {...HIDDEN}>
-        <Progress variant="bar" value={view.collected} max={Math.max(view.total, 1)} height={spacing.sm} />
-      </View>
+      {view.locked ? null : (
+        <View {...HIDDEN}>
+          <Progress variant="bar" value={view.collected} max={Math.max(view.total, 1)} height={spacing.sm} />
+        </View>
+      )}
       <Body weight="semibold" tone="secondary">
         {view.countLine}
       </Body>

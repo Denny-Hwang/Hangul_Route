@@ -51,9 +51,9 @@ export interface TopicTileView {
   tint: VocabTopic['tint'];
   total: number;
   collected: number;
-  /** "5 collected": a plain count. */
+  /** "5 collected": a plain count; "Not open yet" on a locked tile (gating on only). */
   countLine: string;
-  /** "Food. 5 words collected." */
+  /** "Food. 5 words collected."; "Food. Not open yet." on a locked tile. */
   accessibilityLabel: string;
   locked: boolean;
 }
@@ -77,8 +77,9 @@ export function topicTileView(i: TopicTileInput): TopicTileView {
     tint: i.topic.tint,
     total: counts.total,
     collected: counts.collected,
-    countLine: i.copy.topics.collected(counts.collected),
-    accessibilityLabel: i.copy.topics.tileA11y(i.topic.titleEn, counts.collected),
+    // A locked tile (gating on only, D5) says "Not open yet" (F-ENT-003 OD-6) and nothing else about progress.
+    countLine: i.locked ? i.copy.topics.locked : i.copy.topics.collected(counts.collected),
+    accessibilityLabel: i.locked ? i.copy.topics.lockedA11y(i.topic.titleEn) : i.copy.topics.tileA11y(i.topic.titleEn, counts.collected),
     locked: i.locked,
   };
 }
@@ -171,15 +172,17 @@ export interface WallContext {
   copy: VocabCopy;
   /** `m.a11y.koreanItem`. */
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) => string;
+  /** The topic page's Show sound was tapped (reading practice): the wall's romanization shows too. */
+  revealed?: boolean;
 }
 
 /**
  * The word wall's tiles in the order given (file order, never re-sorted by
- * progress). Romanization follows the learner's setting with no reveal on the
- * wall: the flashcard reveals it.
+ * progress). Romanization follows the learner's setting; in reading practice
+ * the page's Show sound reveals it on the wall as on the title (`revealed`).
  */
 export function wallTileViews(items: readonly RuntimeVocabItem[], progress: VocabProgress, ctx: WallContext): WallTileView[] {
-  const shown = romanizationShown(ctx.romanizationMode, false);
+  const shown = romanizationShown(ctx.romanizationMode, ctx.revealed ?? false);
   return wallTiles(items, progress).map((tile, index) => {
     const item = items[index]!; // wallTiles maps `items` one to one
     if (tile.state === 'new') {
@@ -287,18 +290,34 @@ export function topicOpenedEvent(
 }
 
 export interface IntroMemory {
-  /** Hoya has not said this topic's line in this session yet. */
-  due(topicKey: string): boolean;
-  mark(topicKey: string): void;
+  /** Hoya has not said this topic's line to this learner in this session yet. */
+  due(profileId: string, topicKey: string): boolean;
+  mark(profileId: string, topicKey: string): void;
 }
 
-/** Hoya's topic line once per topic per session (section 3.4): one memory per app session. */
+/**
+ * Hoya's topic line once per topic per session (section 3.4): one memory per
+ * app session, kept per learner so each profile on a shared device hears it.
+ */
 export function createIntroMemory(): IntroMemory {
-  const said = new Set<string>();
+  const said = new Map<string, Set<string>>();
   return {
-    due: (topicKey) => !said.has(topicKey),
-    mark: (topicKey) => {
-      said.add(topicKey);
+    due: (profileId, topicKey) => !(said.get(profileId)?.has(topicKey) ?? false),
+    mark: (profileId, topicKey) => {
+      const topics = said.get(profileId) ?? new Set<string>();
+      topics.add(topicKey);
+      said.set(profileId, topics);
     },
   };
+}
+
+/**
+ * What the topic page does with its key (T8, F-STORY-004 section 3.9): a key
+ * the picker does not show is "Topic not found"; a locked topic (gating on
+ * only, never at launch, D5) goes through the grown-up gate, so every entry
+ * point (the grid, Home, a plan, Browse) is held to the same lock.
+ */
+export function topicPageAccess(i: { found: boolean; locked: boolean }): 'open' | 'not-found' | 'locked' {
+  if (!i.found) return 'not-found';
+  return i.locked ? 'locked' : 'open';
 }

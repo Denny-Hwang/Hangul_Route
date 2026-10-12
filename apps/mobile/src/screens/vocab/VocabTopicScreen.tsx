@@ -13,12 +13,15 @@ import {
 } from '@hangul-route/design-system';
 import { romanizationShown } from '@hangul-route/i18n';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
+import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
+import { isContentLocked } from '../../logic/content-access';
 import { contentWidth } from '../../logic/layout/pane-sizes';
 import { backOrHome } from '../../logic/navigation/screen-exits';
+import { lockedStoryGate } from '../../logic/story/story-tile';
 import { ACTIVITY_ROUTES, VOCAB_SCREENS, capabilities } from '../../logic/vocab/caps';
 import { vocabCopyOf } from '../../logic/vocab/copy';
 import { emptyVocab, vocabOf } from '../../logic/vocab/progress';
@@ -29,12 +32,15 @@ import {
   meterVariant,
   optionCountFor,
   topicActivities,
+  topicPageAccess,
   wallTileViews,
 } from '../../logic/vocab/topic-view';
 import { topicState } from '../../logic/vocab/topics';
 import type { RootStackParamList } from '../../navigation/types';
+import { useAudience } from '../../store/audience';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { useAccessTier } from '../../store/tier-store';
 import { BackButton } from './BackButton';
 import { pickerTopic, topicIntroMemory, topicWords } from './topic-data';
 import { WordWall } from './WordWall';
@@ -52,15 +58,34 @@ const HIDDEN = { 'aria-hidden': true, accessibilityElementsHidden: true, importa
  * title and Korean title, the collection meter and count, Hoya's line once per
  * topic per session, the activities (each drawn only when its screen is in the
  * build, `VOCAB_SCREENS`) and the word wall. A key the picker does not show is
- * "Topic not found" with a way back (T8). Writes nothing.
+ * "Topic not found" with a way back (T8); a locked topic (gating on only, D5)
+ * goes through the grown-up gate here too, whichever screen opened it. Writes nothing.
  * Design: design/screens/vocab/topic.md.
  */
 export function VocabTopicScreen({ route, navigation }: Props): React.ReactElement {
   const topic = pickerTopic(route.params.topicKey);
+  const profile = useProfileStore(activeProfileSelector);
+  // The access tier (F-ENT-003 section 3.4); nothing is locked while the switch is off (D5).
+  const tier = useAccessTier(profile?.id ?? '');
+  const { opensDirectly } = useAudience();
+  const access = topicPageAccess({
+    found: topic !== undefined,
+    locked: topic !== undefined && isContentLocked({ kind: 'vocab-topic', id: topic.key, tier, gatingEnabled: gatingActive(flags, bundleOs()) }),
+  });
+  // A locked topic takes the route a locked tile takes (TopicGrid), in place of this page.
+  const gated = useRef(false);
+  useEffect(() => {
+    if (access !== 'locked' || gated.current) return;
+    gated.current = true;
+    const gate = lockedStoryGate(opensDirectly(false));
+    if (gate.route === 'Paywall') navigation.replace('Paywall', gate.params);
+    else navigation.replace('PinEntry', gate.params);
+  }, [access, navigation, opensDirectly]);
   // With no history (a reload), Back lands on the Library's Words section (Cards when Words is not offered).
   const back = (): void => backOrHome(navigation, () => navigation.navigate('Main', { screen: 'Library', params: { section: 'theme-packs' } }));
+  if (access === 'locked') return <Screen tone="canvas" testID="vocab-topic-gate">{null}</Screen>;
   // Keyed by topic: a navigate to another topic over this one starts a fresh page (Hoya's memory, the reveal).
-  return topic ? (
+  return topic && access === 'open' ? (
     <TopicPage key={topic.key} source={topic} navigation={navigation} onBack={back} />
   ) : (
     <TopicNotFound onBack={back} />
@@ -111,15 +136,16 @@ function TopicPage({ source, navigation, onBack }: { source: VocabTopic; navigat
     [counts.collected, topic.key, progress, items, optionCount, copy],
   );
   const tiles = useMemo(
-    () => wallTileViews(items, progress, { locale, romanizationMode, copy, koreanItem: messages.a11y.koreanItem }),
-    [items, progress, locale, romanizationMode, copy, messages.a11y.koreanItem],
+    () => wallTileViews(items, progress, { locale, romanizationMode, copy, koreanItem: messages.a11y.koreanItem, revealed }),
+    [items, progress, locale, romanizationMode, copy, messages.a11y.koreanItem, revealed],
   );
 
-  // Hoya's line once per topic per app session: decided when the page opens, remembered once shown.
-  const [intro] = useState(() => topicIntroMemory.due(topic.key));
+  // Hoya's line once per topic per learner per app session: decided when the page opens, remembered once shown.
+  const learner = profile?.id ?? '';
+  const [intro] = useState(() => topicIntroMemory.due(learner, topic.key));
   useEffect(() => {
-    topicIntroMemory.mark(topic.key);
-  }, [topic.key]);
+    topicIntroMemory.mark(learner, topic.key);
+  }, [learner, topic.key]);
 
   const lc = useLayoutClass();
   const meter = meterVariant(counts.total, contentWidth(lc.windowWidth, lc.gutter, lc.maxWidth.reading), METER_DOT, spacing.sm);

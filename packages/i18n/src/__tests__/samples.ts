@@ -327,6 +327,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.vocab.library.collected': [[0], [1], [12]],
   'learner.vocab.topics.collected': [[0], [5]],
   'learner.vocab.topics.tileA11y': [['Food', 1], ['Food', 5]],
+  'learner.vocab.topics.lockedA11y': [['Food']],
   'learner.vocab.topic.collected': [[0], [5]],
   'learner.vocab.topic.speed.needMore': [[1], [3], [4]],
   'learner.vocab.cards.summary.newlyCollected': [[0], [1], [3]],

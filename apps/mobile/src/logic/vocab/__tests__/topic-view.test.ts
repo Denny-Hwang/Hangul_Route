@@ -8,6 +8,7 @@ import {
   WALL_TILE_MIN,
   cardsTarget,
   createIntroMemory,
+  topicPageAccess,
   localizedTopic,
   meterVariant,
   optionCountFor,
@@ -132,6 +133,13 @@ describe('topicTileView (section 3.3)', () => {
   it('carries the lock answer it was given', () => {
     expect(topicTileView({ ...base, locked: true }).locked).toBe(true);
   });
+
+  it('a locked tile (gating on only) says "Not open yet" instead of the count, in its line and its name (F-ENT-003 OD-6)', () => {
+    const v = topicTileView({ ...base, locked: true });
+    expect(v.countLine).toBe('Not open yet');
+    expect(v.accessibilityLabel).toBe('Food. Not open yet.');
+    expect(`${v.countLine} ${v.accessibilityLabel}`).not.toMatch(/premium|lock|\$|\d/i);
+  });
 });
 
 describe('wordsCollected (the Library Words count)', () => {
@@ -249,6 +257,14 @@ describe('wallTileViews (the word wall)', () => {
     expect(apple).toMatchObject({ gloss: 'manzana', romanizationShown: false, accessibilityLabel: 'Korean: 사과, sagwa, manzana' });
   });
 
+  it('in reading practice the page Show sound button reveals the wall romanization too', () => {
+    const tap = { ...ctx, romanizationMode: 'tap' as const };
+    const [apple] = wallTileViews(ITEMS, progress([state('a')]), { ...tap, revealed: true });
+    expect(apple).toMatchObject({ romanizationShown: true });
+    const [hidden] = wallTileViews(ITEMS, progress([state('a')]), { ...tap, revealed: false });
+    expect(hidden).toMatchObject({ romanizationShown: false });
+  });
+
   it('never re-sorts by progress', () => {
     const ids = (p: ReturnType<typeof progress>) => wallTileViews(ITEMS, p, ctx).map((t) => t.id);
     expect(ids(progress([state('c')]))).toEqual(ids(progress([state('a'), state('b')])));
@@ -359,21 +375,43 @@ describe('topicOpenedEvent (section 3.7)', () => {
   });
 });
 
-describe('createIntroMemory (Hoya once per topic per session)', () => {
+describe('createIntroMemory (Hoya once per topic per learner per session)', () => {
   it('a topic is due until it is marked; other topics stay due', () => {
     const memory = createIntroMemory();
-    expect(memory.due('food')).toBe(true);
-    memory.mark('food');
-    expect(memory.due('food')).toBe(false);
-    expect(memory.due('animals')).toBe(true);
-    memory.mark('food');
-    expect(memory.due('food')).toBe(false);
+    expect(memory.due('p1', 'food')).toBe(true);
+    memory.mark('p1', 'food');
+    expect(memory.due('p1', 'food')).toBe(false);
+    expect(memory.due('p1', 'animals')).toBe(true);
+    memory.mark('p1', 'food');
+    expect(memory.due('p1', 'food')).toBe(false);
+  });
+
+  it('each learner on a shared device hears the line once: two profiles on the same topic are both due', () => {
+    const memory = createIntroMemory();
+    memory.mark('p1', 'food');
+    expect(memory.due('p1', 'food')).toBe(false);
+    expect(memory.due('p2', 'food')).toBe(true);
+    // A key that looks like another profile's plus a topic never collides.
+    memory.mark('p', '1:food');
+    expect(memory.due('p2', 'food')).toBe(true);
   });
 
   it('each memory is its own session', () => {
     const a = createIntroMemory();
-    a.mark('food');
-    expect(createIntroMemory().due('food')).toBe(true);
+    a.mark('p1', 'food');
+    expect(createIntroMemory().due('p1', 'food')).toBe(true);
+  });
+});
+
+describe('topicPageAccess (every entry point checks the lock, not only the grid)', () => {
+  it('a topic the picker does not show is not found, whatever the lock says', () => {
+    expect(topicPageAccess({ found: false, locked: false })).toBe('not-found');
+    expect(topicPageAccess({ found: false, locked: true })).toBe('not-found');
+  });
+
+  it('a shown topic opens, or goes through the grown-up gate when it is locked (gating on only)', () => {
+    expect(topicPageAccess({ found: true, locked: false })).toBe('open');
+    expect(topicPageAccess({ found: true, locked: true })).toBe('locked');
   });
 });
 

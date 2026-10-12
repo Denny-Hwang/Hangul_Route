@@ -1218,6 +1218,9 @@ export const learner = {
         `${title}. ${plural('en', n, { one: '1 word collected', other: `${n} words collected` })}.`,
       empty: 'Words are on their way.',
       back: 'Back',
+      /** A closed topic tile (only with content gating on, D5): the closed-lesson words of F-ENT-003 OD-6, no lock, no price. */
+      locked: 'Not open yet',
+      lockedA11y: (title: string) => `${title}. Not open yet.`,
     },
     topic: {
       notFound: 'Topic not found',
