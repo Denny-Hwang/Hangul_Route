@@ -37,13 +37,14 @@ const MERGE = join(app, 'scripts', 'app-host', 'merge-console.mjs');
 const POSTBUILD = join(app, 'scripts', 'pwa-postbuild.mjs');
 const LEARNER_HEADERS = readFileSync(join(app, 'public', '_headers'), 'utf8');
 
-/** The five headers of section 3.17, in its order. */
+/** The six headers of section 3.17, in its order (X-Robots-Tag: 2026-10-12, A-3 review). */
 const SECTION_3_17 = [
   ['Cache-Control', 'no-store'],
   ['X-Frame-Options', 'DENY'],
   ['Content-Security-Policy', "frame-ancestors 'none'"],
   ['X-Content-Type-Options', 'nosniff'],
   ['Referrer-Policy', 'strict-origin-when-cross-origin'],
+  ['X-Robots-Tag', 'noindex, nofollow'],
 ];
 
 const LEARNER_DIST = {

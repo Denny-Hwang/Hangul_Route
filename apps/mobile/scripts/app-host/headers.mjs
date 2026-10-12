@@ -9,13 +9,17 @@
 // headers are tested as Workers would send them.
 import { PREFIX_SHAPE } from '../pwa/grown-ups.mjs';
 
-/** Response headers of every grown-up path (section 3.17), in its order. */
+/**
+ * Response headers of every grown-up path (section 3.17), in its order. `X-Robots-Tag` keeps every
+ * grown-up page of the app host out of search results (2026-10-12, A-3 review).
+ */
 export const GROWN_UP_HEADERS = [
   ['Cache-Control', 'no-store'],
   ['X-Frame-Options', 'DENY'],
   ['Content-Security-Policy', "frame-ancestors 'none'"],
   ['X-Content-Type-Options', 'nosniff'],
   ['Referrer-Policy', 'strict-origin-when-cross-origin'],
+  ['X-Robots-Tag', 'noindex, nofollow'],
 ];
 
 /** First line of the block merge-console.mjs appends; a dist that has it was merged already. */
@@ -26,7 +30,7 @@ export const GROWN_UP_HEADERS_MARKER = '# Grown-up pages (F-APP-001 section 3.17
  * `/teach/*`) plus its dotted names (`/teach.*`: the page's RSC payload `/teach.txt`, which R-1 counts
  * as a grown-up path too), each with every header of section 3.17. Grown-up pages are online-only and
  * never kept by a cache (`no-store`, which also keeps most browsers from putting them in the
- * back/forward cache), and never framed.
+ * back/forward cache), never framed and never indexed.
  *
  * @param {readonly string[]} prefixes GROWN_UP_PREFIXES of packages/content-schema
  * @returns {string}
@@ -40,7 +44,7 @@ export function grownUpHeadersBlock(prefixes) {
   }
   const lines = [
     GROWN_UP_HEADERS_MARKER,
-    '# Generated from GROWN_UP_PREFIXES (packages/content-schema): online-only, never cached, never framed.',
+    '# Generated from GROWN_UP_PREFIXES (packages/content-schema): online-only, never cached, never framed, never indexed.',
   ];
   for (const prefix of prefixes) {
     for (const pattern of [prefix, `${prefix}/*`, `${prefix}.*`]) {
