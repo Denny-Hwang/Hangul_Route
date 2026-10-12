@@ -13,6 +13,11 @@ export type LibrarySectionId = 'cards' | 'story-time' | 'culture' | 'theme-packs
 export interface LibrarySectionContext {
   /** The story index: playable and (in production) reviewed stories only. */
   entries: readonly StoryIndexEntry[];
+  /**
+   * Words (F-VOC-003 T1): `flags.vocabTopicsEnabled` is on and the topic picker
+   * has at least one topic to show. Absent = off.
+   */
+  words?: boolean;
 }
 
 export interface LibrarySection {
@@ -31,8 +36,8 @@ export const LIBRARY_SECTIONS: readonly LibrarySection[] = [
     id: 'culture',
     isAvailable: (ctx) => hasShelf(ctx, 'culture') || ctx.entries.some((e) => e.story.cultureNotes.length > 0),
   },
-  // Reserved: F-VOC-003 registers the Theme packs section together with its own flag.
-  { id: 'theme-packs', isAvailable: () => false },
+  // Words (F-VOC-003 T1): the reserved slot, titled "Words", offered with its flag and a ready topic.
+  { id: 'theme-packs', isAvailable: (ctx) => ctx.words === true },
 ];
 
 export function visibleSections(ctx: LibrarySectionContext): LibrarySectionId[] {
@@ -50,8 +55,8 @@ export function selectedSection(
   return requested !== undefined && visible.includes(requested) ? requested : 'cards';
 }
 
-/** The sections this build can draw (Theme packs joins with F-VOC-003). */
-export const DRAWN_LIBRARY_SECTIONS: ReadonlySet<LibrarySectionId> = new Set<LibrarySectionId>(['cards', 'story-time', 'culture']);
+/** The sections this build can draw (Words, the `theme-packs` slot, joined with F-VOC-003 C-4). */
+export const DRAWN_LIBRARY_SECTIONS: ReadonlySet<LibrarySectionId> = new Set<LibrarySectionId>(['cards', 'story-time', 'culture', 'theme-packs']);
 
 /**
  * The Library's tab row (§3.3): the offered sections this build draws, in

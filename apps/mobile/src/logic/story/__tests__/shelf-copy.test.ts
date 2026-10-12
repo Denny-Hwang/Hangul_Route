@@ -78,6 +78,8 @@ describe('learner.storyShelf (shelf copy)', () => {
     for (const section of LIBRARY_SECTIONS) expect(sectionTitle(section.id, COPY).length).toBeGreaterThan(0);
     expect(sectionTitle('story-time', COPY)).toBe('Story Time');
     expect(sectionTitle('cards', COPY)).toBe('Cards');
+    // F-VOC-003 T1: the reserved slot's tab matches the Words screens (not "Theme packs").
+    expect(sectionTitle('theme-packs', COPY)).toBe('Words');
   });
 
   it('follows the selected locale (pseudo-localised dictionary)', () => {

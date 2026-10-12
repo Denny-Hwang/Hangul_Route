@@ -10,6 +10,8 @@ import { nudgeFor } from '../logic/vocab/nudges';
 import { buildQuestions } from '../logic/vocab/question-builder';
 import type { QuestionFlowMode } from '../logic/vocab/question-flow';
 import { addTelemetryListener, type TelemetryEvent } from '../platform/telemetry';
+import { activeProfileSelector, useProfileStore } from '../store/profile-store';
+import { useProgressStore } from '../store/progress-store';
 import type { MinigameHost } from '../screens/minigames/host';
 import { PICTURE_CONTEXT } from '../screens/minigames/PictureArt';
 import { VocabQuestionView, type VocabQuestionHoya } from '../screens/vocab/VocabQuestionView';
@@ -22,6 +24,11 @@ import type { RootStackParamList } from './types';
  * installs the hook). No learner screen hosts the view until the Speed Round
  * (S-5) and the quick check (F-VOC-003 C-5) ship, so its e2e opens it here
  * through `window.__hrVocabE2E.openQuestion(...)`, on real catalogue words.
+ *
+ * The Words picker and topic page (F-VOC-003 C-4) are reachable in a learner
+ * build only with `flags.vocabTopicsEnabled`, which stays off until C-7; their
+ * e2e opens them with `openTopics()` / `openTopic(key)` and collects words with
+ * `collect(ids)` (the `introduced` event the flashcards will write, C-5).
  */
 
 export interface VocabQuestionE2eParams {
@@ -39,12 +46,18 @@ export interface VocabQuestionE2eParams {
 
 export interface VocabE2eHandle {
   openQuestion(params: VocabQuestionE2eParams): void;
+  /** The Words picker (`VocabTopics`). */
+  openTopics(): void;
+  /** A Words topic page (`VocabTopic`). */
+  openTopic(topicKey: string): void;
+  /** Marks these words collected for the active learner (`recordVocab` `introduced`); false without a learner. */
+  collect(ids: readonly string[]): boolean;
   /**
    * Every `host.answer` call since the screen opened, how many reveal beats ended, and how long each beat
    * lasted (ms from the last accepted tap to `onAdvance`).
    */
   log(): Log;
-  /** `audio.*` telemetry events `track()` accepted since the hook mounted (the e2e build sends none). */
+  /** `audio.*` and `vocab.*` telemetry events `track()` accepted since the hook mounted (the e2e build sends none). */
   events(): TelemetryEvent[];
 }
 
@@ -71,10 +84,21 @@ export function VocabE2eHook(): null {
     const g = globalThis as { __hrVocabE2E?: VocabE2eHandle };
     const events: TelemetryEvent[] = [];
     const stopListening = addTelemetryListener((e) => {
-      if (e.name.startsWith('audio.')) events.push(e);
+      if (e.name.startsWith('audio.') || e.name.startsWith('vocab.')) events.push(e);
     });
     g.__hrVocabE2E = {
       openQuestion: (params) => navigation.dispatch(StackActions.push('VocabQuestionE2e', params)),
+      openTopics: () => navigation.dispatch(StackActions.push('VocabTopics')),
+      openTopic: (topicKey) => navigation.dispatch(StackActions.push('VocabTopic', { topicKey })),
+      collect: (ids) => {
+        const profileId = activeProfileSelector(useProfileStore.getState())?.id;
+        if (profileId === undefined) return false;
+        useProgressStore.getState().recordVocab(
+          profileId,
+          ids.map((id) => ({ type: 'introduced', id })),
+        );
+        return true;
+      },
       log: () => ({
         answers: log.answers.map((a) => ({ ...a })),
         firstTaps: [...log.firstTaps],

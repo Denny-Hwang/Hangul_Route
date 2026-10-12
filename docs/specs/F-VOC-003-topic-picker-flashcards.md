@@ -66,7 +66,7 @@ Companion stories:
 ```ts
 VocabTopics: undefined;                                        // topic picker
 VocabTopic:  { topicKey: string };                             // topic page
-VocabCards:  { topicKey: string; chunk?: number };             // flashcards (chunk is 0-based; absent = the suggested chunk)
+VocabCards:  { topicKey: string; chunk?: number; startId?: string }; // flashcards (chunk is 0-based; absent = the suggested chunk; startId = a wall tile's word, back face; C-4)
 VocabMatch:  { topicKey: string };                             // Pic-Word Match on the topic's collected words (§3.9; only when that game exists)
 // F-VOC-004 adds VocabSpeedRound and VocabResults
 ```
@@ -100,13 +100,13 @@ VocabMatch:  { topicKey: string };                             // Pic-Word Match
 ### 3.4 Topic page (`screens/vocab/VocabTopicScreen.tsx`, wireframe B)
 
 - **Header**: Back (top-left, the same place on every screen), the English title, the Korean title (`KoreanText`), and the collection meter and count (a row of dots at full width, hidden from assistive technology like the tile's meter; the count is plain text).
-- **Word wall** (`WordWall`): all of the topic's words in file order as a grid (3 columns at 320 dp, 4 from 360; each tile >= `touchTarget.min`). A **collected** word shows its picture (`PictureArt` at 64-96), the Korean (`KoreanText` small, romanization per the setting) and is **tappable**: it opens that word's flashcard (`VocabCards { topicKey, chunk: <the chunk that contains it> }` starting at that card, back face). A **new** word shows a **silhouette** (`mono` tone, F-VOC-002 §3.7) with the accessible name "Not collected yet" and no Korean (no spoilers); it is not tappable. The wall never shows empty "lock" icons, never counts what is left, and never re-sorts.
-- **Three activities**, in this order, each a large button (>= `touchTarget.child`) with a one-line description; **the suggested one is the primary button** (`suggestActivity`), the others secondary (T7):
+- **Word wall** (`WordWall`): all of the topic's words in file order as a grid (as many columns as fit a 120 dp tile, 1 to 4: 2 on most phones, 3 from a 408 dp window, 4 on tablets; amended in C-4, see §9; each tile >= `touchTarget.min`). A **collected** word shows its picture (`PictureArt` at 64-96), the Korean (`KoreanText` small, romanization per the setting, revealed by the page's Show sound in reading practice) with its gloss in the UI language (D2) and is **tappable**: it opens that word's flashcard (`VocabCards { topicKey, chunk: <the chunk that contains it> }` starting at that card, back face). A **new** word shows a **silhouette** (`mono` tone, F-VOC-002 §3.7) with the accessible name "Not collected yet" and no Korean (no spoilers); it is not tappable. The wall never shows empty "lock" icons, never counts what is left, and never re-sorts.
+- **Three activities** (drawn **above** the word wall since C-4, §9), in this order, each a large button (>= `touchTarget.child`) with a one-line description; **the suggested one is the primary button** (`suggestActivity`), the others secondary (T7):
   - **Learn** -> `VocabCards { topicKey }`. Always available.
-  - **Speed round** -> `VocabSpeedRound { topicKey }` (F-VOC-004). Available when at least **4 words are collected** (the minimum for 4 options; for 3-option levels, 3); otherwise the button is present but shows "Learn 4 words first" and navigates to Learn (never a dead end).
-  - **Match** -> `VocabMatch { topicKey }` through the vocab host (§3.9). Shown only when F-QUEST-002's Pic-Word Match exists (`MinigameKindSchema` has `'pic-word-match'`, a boolean `capabilities.picWordMatch` from `logic/vocab/caps.ts`); available at >= 3 collected words.
+  - **Speed round** -> `VocabSpeedRound { topicKey }` (F-VOC-004). Available when at least **4 words are collected** (the minimum for 4 options; for 3-option levels, 3); otherwise the button is present but shows how many words are still to learn ("Learn 1 word first" with 3 of 4 collected; a positive next step, amended in C-4, §9) and navigates to Learn (never a dead end).
+  - **Match** -> `VocabMatch { topicKey }` through the vocab host (§3.9). Shown only when F-QUEST-002's Pic-Word Match exists (`MinigameKindSchema` has `'pic-word-match'`, a boolean `capabilities.picWordMatch` from `logic/vocab/caps.ts`); drawn only once it is available, at >= 3 collected words (it has no "learn first" line of its own; C-4, §9).
 - **`suggestActivity`**: `learn` when fewer than 4 words are collected or an uncollected chunk remains and no session happened today; `speed` when >= 4 words are collected and (all words are collected or the learner has done Learn today or a word is due, F-VOC-005 §3.6); `match` is never the default. The rule is a pure function of `(progress, now)` with a golden table in the test.
-- **Hoya line** from `hoyaIntroEn` once per topic per session (a `HoyaBubble`, tone `idle`; plain text, no age words).
+- **Hoya line** from `hoyaIntroEn` once per topic per learner per session (a `HoyaBubble`, tone `idle`; plain text, no age words).
 - **Empty / error**: a topic whose `topicKey` is unknown -> "Topic not found" + Back. A progress read that failed or has not hydrated -> the meter shows no dots filled and the Learn button still works (progress writes wait for hydration like `progress-store.ts:127-135`).
 
 ### 3.5 Flashcards (`screens/vocab/VocabCardsScreen.tsx`, wireframes D, E, F)
@@ -247,7 +247,7 @@ Component tests are not possible in the mobile vitest setup (node environment, n
 | C-4 | `feat(mobile)`: routes, `VocabTopicsScreen`, `VocabTopicScreen`, `TopicTile`, `WordWall`, the Library Words card; wireframes promoted to `design/wireframes/vocab/` **and the screens' design mocks in `design/screens/vocab/` before the code** (CLAUDE.md §5); screens use `PictureArt`; the lock check calls F-STORY-004's `isContentLocked` when `content-access.ts` exists, else the constant `false` (gating is off, D5) | M | C-3, F-VOC-002 W-7, F-I18N-001 PR 4 (`KoreanText`) |
 | C-5 | `feat(mobile)`: `VocabCardsScreen` (front, back, flip, listen with `playPrompt` fallback, reading-practice switch, quick check via F-VOC-004's `VocabQuestionView`, summary), design mock first, e2e (the e2e may follow as C-5b if the PR exceeds ~800 lines). FlipCard (design/components/FlipCard/spec.md): the card's labels carry the word (front) and the word with its meaning (back) and the new face is announced after a flip; the owner's iOS and Android flip pass from C-2 is recorded in this PR. **Merges only after the F-VOC-005 P-1 Worker deploy** (it is the first screen PR that records events) | L | C-4, F-VOC-004 S-2 (`buildQuestions`) and S-4b (`VocabQuestionView`), F-AUDIO-004 PR A-3 (`playPrompt`) |
 | C-6 | `feat(mobile)`: `VocabMatchScreen` (vocab host + F-QUEST-002 Pic-Word Match) | S | C-5, F-QUEST-002 Q-3b |
-| C-7 | `chore(flags)`: flip `vocabTopicsEnabled` to `true` in the launch defaults once the four free-set topics (Food, Animals, Colors, Numbers) are `approved` and native-reviewed (F-VOC-001 V-7) and the F-VOC-005 deploy checklist is ticked | S | all |
+| C-7 | `chore(flags)`: flip `vocabTopicsEnabled` to `true` in the launch defaults once the four free-set topics (Food, Animals, Colors, Numbers) are `approved` and native-reviewed (F-VOC-001 V-7) and the F-VOC-005 deploy checklist is ticked; precondition: `VOCAB_SCREENS.learn` is on (C-5 merged), which `logic/vocab/__tests__/caps.test.ts` pins | S | all |
 
 (`audio` dependencies degrade gracefully: until `playPrompt` exists, C-5 uses a thin interim `speak` wrapper that reports `'played'`, and the text line is always shown.) Rollback: set the flag to `false`; progress already written stays valid and unread.
 
@@ -260,10 +260,24 @@ Estimated effort: about 6-8 working days (screens and e2e dominate).
 
 ## 8. Unverified assumptions and open items
 
-1. **Library entry vs section tab**: T1 assumes F-STORY-004's `SectionTabs` will not have landed; if it has when C-4 starts, render `TopicGrid` inside the `theme-packs` section and skip the Words card.
+1. **Library entry vs section tab** (resolved in C-4: the tabs had landed, so `theme-packs` is the **Words** tab with `TopicGrid` inline and the card was never built): T1 assumed F-STORY-004's `SectionTabs` will not have landed; if it has when C-4 starts, render `TopicGrid` inside the `theme-packs` section and skip the Words card.
 2. **The reanimated flip extraction (C-2)** assumes `CardDetailScreen`'s share-gating (`isFlipping`) can be driven by `onFlippingChange` with no behaviour change; the existing F-MOTION-002 / F-CARD-003 behaviours are not covered by automated tests in the repo (the mobile vitest config cannot render), so C-2 needs a manual check on web and device.
 3. **Chunk sizes (4 / 4 / 6)** and "collected on first flip" are product judgements from the design input (4 words suit working memory), not measured; the telemetry (`cards.complete`) lets them be tuned.
 4. **A word-wall silhouette** for uncollected words assumes the silhouette (F-VOC-002 §3.7) is not itself a spoiler for easy pictures; if testing says it is, the wall can show a plain tile instead (a data-free change).
 5. **`romanizationShown`, `locale-store.setRomanizationMode` and `KoreanText`** are specified by F-I18N-001 but not yet in the repo (`packages/i18n` does not exist at `ecf6365`); until they land the interim constants of §3.5 apply.
 6. **`vocab.topic_opened` `source: 'plan'`** is reserved for F-PLAN-002 and unused at launch.
 7. **No device test** of the audio-on-card-appear behaviour on iOS Safari was possible: the first-gesture rule (F-AUDIO-004 §3.6) is assumed to cover it.
+
+## 9. Notes from C-4 (#414)
+
+Deviations from §3 taken while building C-4, measured and recorded in `design/screens/vocab/topic.md` and `topics.md`; C-5, C-6, F-VOC-004 S-5 and their reviews read these as the acceptance text.
+
+1. **Wall columns from the fit** (§3.4): the `sm` chip of a three-syllable word is about 109 dp and the romanization "geomeunsaek" about 104 dp at `bodySm`, so 3 columns at 320 dp and 4 at 360 would clip or break words. The wall shows as many 120 dp tiles as fit (1 to 4; the minimum grows with the font scale up to 2x).
+2. **Activities above the wall** (§3.4): twelve tiles are three to four rows, so under the wall every activity would start below the fold on a phone.
+3. **Match hidden until 3 words are collected** (§3.4): a drawn but unavailable Match would be a dead end.
+4. **Speed round line counts the words still to learn** ("Learn 1 word first"), not the threshold (§3.4): it names the next positive step. The "never counts what is left" rule is the word wall's (no remaining count on the wall, the tiles or the meter).
+5. **Collected wall tiles print the gloss** in the UI language under the romanization (D2, CLAUDE.md §8), and the page's **Show sound** reveals the wall's romanization too in reading practice.
+6. **Hoya's line is once per topic per learner** per app session (a shared device with several profiles).
+7. **The topic page checks the lock itself** (`topicPageAccess` with `isContentLocked`), so every entry point (P-3's Home card, BR-9, F-PLAN-002) is held to the same gate as the grid; a locked tile (gating on only) is drawn closed with "Not open yet" and a dotted border, never a lock glyph (F-ENT-003 OD-6).
+8. **`VocabCards.startId`** (§3.1): a collected wall tile opens its chunk at that word, back face.
+9. **Words tab, not the card** (§3.1, §8 item 1): the Library tab label "Theme packs" became **Words**; the card's two strings were dropped.
