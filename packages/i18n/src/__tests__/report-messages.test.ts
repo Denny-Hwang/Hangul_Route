@@ -130,8 +130,7 @@ describe('Appendix A drafts (English)', () => {
     expect(r.period).toEqual({ day: 'Today', week: 'This week', month: 'This month', all: 'All time' });
     expect([r.step.prevDay, r.step.prevWeek, r.step.prevMonth, r.step.next]).toEqual(['Yesterday', 'Last week', 'Last month', 'Next']);
     expect(r.glance.nowOn(1, 'Hangul')).toBe('Now on Stage 1: Hangul');
-    // RP-7a1 (design pass #429): the glance link reads `console.learningRoute.open`, so the report keeps no copy of it.
-    expect(r.glance).not.toHaveProperty('openRoute');
+    expect(r.glance.openRoute).toBe('Open Learning Route');
     expect(r.glance.lastPractice('Oct 9')).toBe('Last practice: Oct 9');
     expect(r.horizon('Oct 9')).toBe('Figures up to Oct 9.');
     expect(r.section).toEqual({ wentWell: 'What went well', practiceNext: 'What to practice next', thisPeriod: 'This period', moreDetail: 'More detail' });
@@ -218,6 +217,9 @@ describe('Appendix A drafts (English)', () => {
     expect(s.updateAction('Mina')).toBe("Open Hangul Route on Mina's device while online to update.");
     expect(s.stale('Oct 2')).toBe('Last saved Oct 2.');
     expect([s.unavailable, s.error, s.flagOff]).toEqual(['This report is not available.', "Can't load the report right now.", 'Reports are not available yet.']);
+    // RP-7a1: the archived line for a viewer without `space.manage`, never "until you unarchive it".
+    expect(s.archived).toEqual({ family: 'This family space is archived. Its report is read-only.', class: 'This class is archived. Its report is read-only.' });
+    for (const line of Object.values(s.archived)) expect(line).not.toMatch(/unarchive/i);
   });
 
   it('pins the class words (section 3.7, behaviour 5)', () => {

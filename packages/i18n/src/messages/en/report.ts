@@ -76,20 +76,21 @@ export const report = {
     space: (space: string) => `Back to ${space}`,
   },
   /**
-   * At a glance: two lines that do not depend on the period. `stage` is the stage's title. The link under "Now on" and
-   * the region's label are `console.learningRoute.open` / `.section` (LR-7), one copy of each for the report and the
-   * stage list page.
+   * At a glance: two lines that do not depend on the period. `stage` is the stage's title. `openRoute` is the learner
+   * app's link (RP-9); the console reads LR-7's `console.learningRoute.open` / `.section` for its glance region.
    */
   glance: {
     nowOn: (n: number, stage: string) => `Now on Stage ${n}: ${stage}`,
+    openRoute: 'Open Learning Route',
     lastPractice: (date: string) => `Last practice: ${date}`,
   },
   /**
-   * One sentence under the tabs (section 3.5 item 5). `when` is a `report.when` value for a day, a week or a
-   * month (never `when.all`). `practicedOn` is the `day` period's sentence ("Mina practiced today.");
-   * `stageDoneAll` the `all` period's; `noneThen` is `noneYet` for a window in the past ("No practice last week.");
-   * `noneEver` is the `all` period's (the class report's practice block); `noneSavedAfter` is `noneSaved` for a
-   * window in the past, with the device's last saved day ("Nothing saved from Mina's device after Oct 1 yet.").
+   * One sentence under the tabs (section 3.5 item 5). `when` is a `report.when` value; only `practiced` takes
+   * `when.all` ("Mina practiced on 23 days so far.", the `all` period). `practicedOn` is the `day` period's
+   * sentence ("Mina practiced today."); `stageDoneAll` the `all` period's; `noneThen` is `noneYet` for a window in
+   * the past ("No practice last week."); `noneEver` is the `all` period's (the class report's practice block);
+   * `noneSavedAfter` is `noneSaved` for a window in the past, with the device's last saved day ("Nothing saved from
+   * Mina's device after Oct 1 yet.").
    */
   headline: {
     practiced: practicedDays,
@@ -273,6 +274,14 @@ export const report = {
     unavailable: 'This report is not available.',
     error: "Can't load the report right now.",
     flagOff: 'Reports are not available yet.',
+    /**
+     * An archived space's report for a viewer who cannot unarchive it (no `space.manage`: a school admin, a co-teacher):
+     * neutral, without the settings sentence's "until you unarchive it" (`console.settings.archived.*`, owners only).
+     */
+    archived: {
+      family: 'This family space is archived. Its report is read-only.',
+      class: 'This class is archived. Its report is read-only.',
+    },
   },
   /** The class report (section 3.7): counts for the class as a whole, never a name or an order of learners. */
   class: {
