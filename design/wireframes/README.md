@@ -44,6 +44,8 @@
 | `classroom/lecture-presenter.md` | R | F-TCH-004 |
 | `layout/wide.md` | S | F-LAYOUT-001 §3.1-3.8 (PR 0; built in PRs 1-7: classes, Home columns, Journey / Library panes, portrait guard also in `pwa/system-banners.md` panel 4; adoption checklist in `.github/pull_request_template.md`) |
 | `console/class-transfer.md` | D | F-SPACE-002 |
+| `journey/grid-plan-and-access.md` · `episode/detail-access-preview.md` · `home/next-and-free-end-card.md` · `results/back-to-plan-and-free-end.md` · `library/access-and-plan-tags.md` | R | F-ENT-003 §3.7-3.8 (E3-0; mock E3-D) |
+| `billing/plan-status-free-lessons.md` | R | F-ENT-003 §3.9.1 (lines inside F-BILL-002's Plan screen, `billing/plan-status.md`) |
 | `journey/my-route-overview.md` | R | F-ROUTE-001 (screens A to I; J amends `placement/result.md` (was `placement.md` G) for F-PLC-001 AM-1 / AM-14, K is F-PLAN-002's weekly plan proposal, FP-B6) |
 | `home/notes-card.md` · `notes/list.md` · `notes/detail.md` | R | F-FEEDBACK-001 §6.5-6.7 (FB-0; built in FB-8) |
 
@@ -54,6 +56,7 @@
 | `console/sign-in.md` · `onboarding-role.md` · `home.md` | P | F-AUTH-001 · roadmap §1–2 |
 | `console/roster.md` · `space-settings.md` · `relink-approval.md` | D / P | F-TCH-001 · roadmap §5 |
 | `console/plan-builder.md` | P | roadmap §6 · F-HW-001 §3.4 |
+| `console/curriculum-free-days.md` · `console/free-lessons-line.md` | R | F-ENT-003 §3.9.2-3.9.3 (E3-0) |
 | `console/school-admin.md` | P | roadmap S7 |
 | `console/account.md` · `console/billing.md` | P | roadmap §5.3 · §7 |
 | `parent/notes.md` · `parent/note-report.md` | R | F-FEEDBACK-001 §6.10 (FB-0; built in FB-9) |

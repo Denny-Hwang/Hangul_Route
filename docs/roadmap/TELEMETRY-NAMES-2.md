@@ -157,3 +157,15 @@ Seven names in the new `notes.` namespace (the learner side of the adult-to-lear
 | 5 | `notes.suggest_started` | F-FEEDBACK-001 §10 | `{ fromRole }` (Start on a suggested quest) | FB-1 | FB-8 |
 | 6 | `notes.report_sent` | F-FEEDBACK-001 §10 | `{ reason: 'unkind' \| 'unsafe' \| 'not_for_me' \| 'other', via: 'note_page' \| 'grown_up_zone' }` | FB-1 | FB-9 |
 | 7 | `notes.prefs_changed` | F-FEEDBACK-001 §10 | `{ classes: 'all' \| 'presets' \| 'off' }` | FB-1 | FB-9 |
+
+## N. Free plan and plan-next names (F-ENT-003; added by its E3-0 docs PR)
+
+Three names in the new `access.` namespace and two in F-PLAN-002's `route.` namespace. None collides with sections A to M or with the names in `TELEMETRY_EVENT_NAMES` on `main` at `ea9049e4` (no existing name starts with `access.`; `route.next_started` and `route.offplan_finished` are new). Worker first: E3-1b adds all five to `TELEMETRY_EVENT_NAMES` and its exact-list tests, and the Worker deploys on merge before any app build that sends them (E3-4, E3-6, E3-7). Active profile only; codes, stage keys and counts only; no title, name, price, product or tier word; F-BROWSE-001 sends none of them. Changed payload of an existing name (section D style): `paywall.viewed.from` gains `episode`, `home`, `results` (F-BILL-002 keeps `paywall.viewed` for its Plan screen).
+
+| # | Name | Owning spec | Payload | Added to the list by | Emitted by |
+|---|---|---|---|---|---|
+| 1 | `access.preview_opened` | F-ENT-003 §3.12 | `{ stage: StageKey, day: number, from: 'journey' \| 'home' \| 'route' \| 'results' \| 'library' \| 'player' }` (a lesson page opens in preview; `day` is the internal route day) | E3-1b | E3-6 |
+| 2 | `access.help_asked` | F-ENT-003 §3.12 | `{ from: 'episode' \| 'home' \| 'results' \| 'library', audience: 'family' \| 'class' \| 'self' }` (the ask button, before the gate) | E3-1b | E3-6, E3-7 |
+| 3 | `access.free_end_reached` | F-ENT-003 §3.12 | `{ freeDays: number, placedOut: boolean }` (first time on this device for this profile) | E3-1b | E3-7 |
+| 4 | `route.next_started` | F-ENT-003 §3.12 | `{ source: 'class' \| 'school' \| 'family' \| 'self' \| 'cursor', surface: 'home' \| 'results' \| 'journey' \| 'episode' \| 'route' \| 'placement' }` (the `routeNext` quest is started) | E3-1b | E3-4, E3-6 |
+| 5 | `route.offplan_finished` | F-ENT-003 §3.12 | `{ source: 'class' \| 'school' \| 'family' \| 'self', stage: StageKey }` (a quest outside the plan is completed while a leading source exists) | E3-1b | E3-4 |
