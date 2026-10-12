@@ -5,8 +5,8 @@ import { borderWidth, colors, layout, radii, spacing, typography } from '@hangul
 import type { UiLocale } from '@hangul-route/i18n';
 import Link from 'next/link';
 import type { KeyboardEvent, ReactNode } from 'react';
-import { Notice } from '@/components/console/ui';
-import { dateRangeText, dayText, extraText, warningText, weekLabel, type WeekItem, type WeekRow } from '@/lib/console/curriculum';
+import { Button, Notice } from '@/components/console/ui';
+import { dateRangeText, dayText, extraText, warningText, weekLabel, type FreePlanWording, type WeekItem, type WeekRow } from '@/lib/console/curriculum';
 import { useMessages } from '@/lib/i18n/locale-context';
 
 /**
@@ -205,26 +205,61 @@ function WeekGrid({ rows, locale }: { rows: readonly WeekRow[]; locale: UiLocale
   );
 }
 
-/** The generator's warnings in plain words; a class's Premium line links to billing (section 3.8 step 4). */
-export function WarningList({ warnings, locale, billingLink }: { warnings: readonly CurriculumWarning[]; locale: UiLocale; billingLink: boolean }): JSX.Element | null {
-  const words = useMessages().console.curriculum.preview.warnings;
+/**
+ * The generator's warnings in plain words; a class's Premium line links to billing (section 3.8
+ * step 4). With `free` (an unlicensed space while the free-plan switch is on, F-ENT-003 section
+ * 3.9.3) the left-out line names the free plan and the product by space kind, and links
+ * **Open billing** for a class and a family alike.
+ */
+export function WarningList({
+  warnings,
+  locale,
+  billingLink,
+  free = null,
+}: {
+  warnings: readonly CurriculumWarning[];
+  locale: UiLocale;
+  billingLink: boolean;
+  free?: FreePlanWording | null;
+}): JSX.Element | null {
+  const words = useMessages().console;
   if (warnings.length === 0) return null;
+  const link = free ? words.access.openBilling.cta : billingLink ? words.curriculum.preview.warnings.seePlans.cta : null;
   return (
     <Notice tone="nudge">
       <ul style={{ margin: 0, paddingLeft: spacing.lg, lineHeight: typography.leading.relaxed }}>
         {warnings.map((warning) => (
           <li key={`${warning.code}:${warning.week ?? 0}`} data-testid="route-warning">
-            {warningText(warning, locale)}
-            {warning.code === 'premium-needed' && billingLink ? (
+            {warningText(warning, locale, free)}
+            {warning.code === 'premium-needed' && link ? (
               <>
                 {' '}
-                <Link href="/teach/billing">{words.seePlans.cta}</Link>
+                <Link href="/teach/billing">{link}</Link>
               </>
             ) : null}
           </li>
         ))}
       </ul>
     </Notice>
+  );
+}
+
+/**
+ * F-ENT-003 section 3.9.3: the plan's lessons end before the plan does (an unlicensed space with
+ * the free-plan switch on). Shown above **Use this route**; `shorterWeeks` adds **Use {weeks}
+ * weeks**, which re-runs the preview with that length preset. Using the long plan stays allowed.
+ */
+export function ShortPlanLine({ lastWeek, shorterWeeks, onUseWeeks }: { lastWeek: number; shorterWeeks: number | null; onUseWeeks: () => void }): JSX.Element {
+  const words = useMessages().console.curriculum.freeDays;
+  return (
+    <div data-testid="route-short-plan" style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap', margin: `${spacing.sm}px 0 ${spacing.md}px` }}>
+      <p style={{ margin: 0, color: colors.text.secondary, fontSize: typography.size.bodySm, lineHeight: typography.leading.relaxed }}>{words.shortPlan(lastWeek)}</p>
+      {shorterWeeks !== null ? (
+        <Button onClick={onUseWeeks} testId="route-use-weeks">
+          {words.useWeeks.cta(shorterWeeks)}
+        </Button>
+      ) : null}
+    </div>
   );
 }
 

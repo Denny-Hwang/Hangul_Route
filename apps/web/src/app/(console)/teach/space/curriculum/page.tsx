@@ -5,10 +5,11 @@ import { borderWidth, colors, radii, spacing, typography } from '@hangul-route/d
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { Chip, ChipGroup, WarningList, WeekTable, onRadioKeys } from '@/components/console/CurriculumParts';
+import { Chip, ChipGroup, ShortPlanLine, WarningList, WeekTable, onRadioKeys } from '@/components/console/CurriculumParts';
 import { Button, ConsoleShell, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { useConsole } from '@/components/console/use-console';
 import type { Roster } from '@/lib/console/api';
+import { contentGatingEnabled } from '@/lib/console/config';
 import {
   FOCUS_CHOICES,
   LENGTH_CHOICES,
@@ -18,6 +19,7 @@ import {
   STARTING_POINT_IDS,
   defaultsFor,
   draftPlanBody,
+  freeDaysView,
   learnerProblem,
   levelHint,
   statsText,
@@ -120,6 +122,8 @@ function CurriculumInner(): JSX.Element {
       return null;
     }
   }, [state, unlocked, problem]);
+  // F-ENT-003 section 3.9.3: an unlicensed space with the free-plan switch on (null otherwise: today's wording).
+  const free = useMemo(() => (draft ? freeDaysView(draft, unlocked, contentGatingEnabled()) : null), [draft, unlocked]);
 
   if (!ready || !session) return <ConsoleShell>{null}</ConsoleShell>;
 
@@ -177,6 +181,11 @@ function CurriculumInner(): JSX.Element {
 
   const rows = draft ? weekGroups(draft.weeks, draft.items).rows : [];
   const stats = draft ? statsText(draft.stats, locale) : null;
+  const shorter = free?.shorter ?? null;
+  // **Use {weeks} weeks** re-runs the preview with that length preset; the long plan stays allowed.
+  const pickShorter = (): void => {
+    if (shorter) update({ length: shorter.length });
+  };
 
   return (
     <ConsoleShell onSignOut={signOut} title={roster ? c.pageTitle(roster.space.name) : c.title}>
@@ -388,11 +397,14 @@ function CurriculumInner(): JSX.Element {
       {step === 4 && draft ? (
         <section aria-label={c.preview.title}>
           {stats ? <p style={{ margin: `0 0 ${spacing.md}px`, color: colors.text.secondary }} data-testid="route-stats">{stats}</p> : <Notice>{c.preview.empty}</Notice>}
-          <WarningList warnings={draft.warnings} locale={locale} billingLink={audience === 'class'} />
+          <WarningList warnings={draft.warnings} locale={locale} billingLink={audience === 'class'} free={free} />
           {stats ? (
             <div style={{ ...panelStyle, padding: spacing.md, marginBottom: spacing.md }}>
               <WeekTable rows={rows} locale={locale} />
             </div>
+          ) : null}
+          {free?.short && free.lastWeek !== null ? (
+            <ShortPlanLine lastWeek={free.lastWeek} shorterWeeks={shorter?.weeks ?? null} onUseWeeks={pickShorter} />
           ) : null}
           {error === 'saveFailed' ? <Notice tone="nudge">{c.preview.saveFailed}</Notice> : null}
           {stats ? <Muted>{c.preview.draftNote}</Muted> : null}

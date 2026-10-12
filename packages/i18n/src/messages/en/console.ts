@@ -38,6 +38,12 @@ const planTargets = (kind: 'family' | 'class' | 'school', n: number): string =>
     : kind === 'class'
       ? plural('en', n, { one: `${n} student`, other: `${n} students` })
       : plural('en', n, { one: `${n} member`, other: `${n} members` });
+/** "3 more lessons open with a Group License. They are left out of this plan." (F-ENT-003 section 3.9.3). */
+const leftOut = (n: number, product: string): string =>
+  plural('en', n, {
+    one: `${n} more lesson opens with ${product}. It is left out of this plan.`,
+    other: `${n} more lessons open with ${product}. They are left out of this plan.`,
+  });
 
 export const consoleMsgs = {
   whySignIn: ['Keep progress safe across devices', 'Bring cards back after a reinstall', 'Manage plans and billing'],
@@ -779,6 +785,20 @@ export const consoleMsgs = {
     catalog: {
       comingSoon: (title: string) => `${title} (coming soon)`,
     },
+    /**
+     * The wizard preview of an unlicensed space while the free-plan switch is on (F-ENT-003
+     * section 3.9.3, wireframe console/curriculum-free-days; `NEXT_PUBLIC_CONTENT_GATING_ENABLED`).
+     * `warning` replaces `preview.warnings.premium`; `product` is `console.access.product.*`.
+     * `warningNoLessons` is the same line when nothing open is scheduled (the wireframe's empty
+     * state). Never "day": the free plan is a set of lessons, not a time.
+     */
+    freeDays: {
+      warning: (lastWeek: number, n: number, product: string) =>
+        `The free plan covers Stage 1 (${plural('en', lastWeek, { one: 'lessons in week 1', other: `lessons in weeks 1 to ${lastWeek}` })}). ${leftOut(n, product)}`,
+      warningNoLessons: (n: number, product: string) => `The free plan covers Stage 1. ${leftOut(n, product)}`,
+      shortPlan: (lastWeek: number) => `This plan has lessons until week ${lastWeek}. After that it has stories and practice.`,
+      useWeeks: { cta: (weeks: number) => plural('en', weeks, { one: `Use ${weeks} week`, other: `Use ${weeks} weeks` }) },
+    },
   },
   /**
    * The roster's level-check line and the advisory hand-off (F-PLC-001 section 3.9, wireframe
@@ -1183,5 +1203,19 @@ export const consoleMsgs = {
     noPin: 'Set a grown-up PIN in the app, or sign in again.',
     pinRenew: 'To use the grown-up PIN here, set it again in the app, then sign in once.',
     signInOnly: 'Sign in again to open grown-up pages on this device.',
+  },
+  /**
+   * The free-plan words of grown-up console surfaces (F-ENT-003 section 3.11 glossary): the
+   * product that opens Stage 2 and later, named by space kind (a family space -> the Family Plan,
+   * which renews yearly [BY]; a class or school -> a Group License), and the link to the
+   * console's Billing route. No price, no "Premium"; the link is F-BILL-002's **Open billing**,
+   * never "See plans".
+   */
+  access: {
+    product: {
+      family: 'the Family Plan',
+      class: 'a Group License',
+    },
+    openBilling: { cta: 'Open billing' },
   },
 } as const;

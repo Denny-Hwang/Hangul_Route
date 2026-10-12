@@ -7,6 +7,8 @@ export interface ConsoleEnv {
   /** The learner web app (the lecture presenter lives at `${APP_URL}/present`, F-TCH-004 §3.2). */
   NEXT_PUBLIC_APP_URL?: string;
   NEXT_PUBLIC_LECTURE_MODE?: string;
+  /** The free-plan switch (F-ENT-003 section 3.4), the console twin of the learner app's `EXPO_PUBLIC_CONTENT_GATING_ENABLED`. */
+  NEXT_PUBLIC_CONTENT_GATING_ENABLED?: string;
   NODE_ENV?: string;
 }
 
@@ -25,6 +27,7 @@ export function buildEnv(): ConsoleEnv {
     NEXT_PUBLIC_SCHOOL_CONSENT_MODE: process.env.NEXT_PUBLIC_SCHOOL_CONSENT_MODE,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_LECTURE_MODE: process.env.NEXT_PUBLIC_LECTURE_MODE,
+    NEXT_PUBLIC_CONTENT_GATING_ENABLED: process.env.NEXT_PUBLIC_CONTENT_GATING_ENABLED,
     NODE_ENV: process.env.NODE_ENV,
   };
 }
@@ -63,6 +66,19 @@ export function schoolConsentModeEnabled(env: ConsoleEnv = buildEnv()): boolean 
  */
 export function lectureModeEnabled(env: ConsoleEnv = buildEnv()): boolean {
   return env.NEXT_PUBLIC_LECTURE_MODE === 'enabled';
+}
+
+/**
+ * The free-plan switch (F-ENT-003 section 3.4, OD-2): `NEXT_PUBLIC_CONTENT_GATING_ENABLED`, parsed
+ * like the learner app's flag (`'true'` or `'1'` is on; anything else, or unset, is the launch
+ * default, off). Off in production until the owner turns on Stripe Live. On the console it only
+ * changes words: the curriculum wizard's left-out warning and short-plan line (section 3.9.3)
+ * and the grown-up free-lessons line (section 3.9.2). The device stays the authority on what
+ * opens; the generator's input never depends on it.
+ */
+export function contentGatingEnabled(env: ConsoleEnv = buildEnv()): boolean {
+  const raw = env.NEXT_PUBLIC_CONTENT_GATING_ENABLED;
+  return raw === 'true' || raw === '1';
 }
 
 export const DEFAULT_APP_URL = 'https://app.hangulroute.com';

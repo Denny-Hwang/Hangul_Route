@@ -497,4 +497,9 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'caregiver.plan.openFailed': [['app.hangulroute.com']],
   'learner.profile.plan.open': [[null], ['Sunday Class A']],
   'a11y.planStatus': [['Mina', 'Free plan']],
+  // F-ENT-003 E3-9: the console wizard's free-plan warning and short-plan line.
+  'console.curriculum.freeDays.warning': [[7, 3, 'a Group License'], [1, 1, 'the Family Plan']],
+  'console.curriculum.freeDays.warningNoLessons': [[14, 'a Group License'], [1, 'the Family Plan']],
+  'console.curriculum.freeDays.shortPlan': [[7]],
+  'console.curriculum.freeDays.useWeeks.cta': [[4], [12]],
 };

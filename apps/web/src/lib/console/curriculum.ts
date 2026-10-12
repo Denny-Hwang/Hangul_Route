@@ -7,6 +7,7 @@ import {
   StageKeySchema,
   WEEKDAYS,
   addDays,
+  generateCurriculum,
   isDateKey,
   levelOrder,
   regenerateFrom,
@@ -235,6 +236,57 @@ export function unlockedStagesForSpace(entitlements: readonly Entitlement[], spa
   return covered ? [...StageKeySchema.options] : ['stage1'];
 }
 
+/**
+ * The free-plan view of a wizard preview (F-ENT-003 section 3.9.3; wireframe
+ * console/curriculum-free-days): only for a space no plan covers while the console's free-plan
+ * switch is on. The generator already plans Stage 1 only for such a space (`unlockedStages`,
+ * section 3.1 golden), so nothing here changes its input (OD-1).
+ */
+export interface FreeDaysView {
+  /** Names the product: a family space -> the Family Plan, a class or school -> a Group License. */
+  kind: WizardAudience;
+  /** The last week of the draft that holds a lesson; null when it holds none. */
+  lastWeek: number | null;
+  /** The plan runs on after its last lesson week: the preview says so above **Use this route**. */
+  short: boolean;
+  /** The shortest length preset, shorter than the plan, that still holds every lesson of it; null when none does. */
+  shorter: { length: LengthPresetId; weeks: number } | null;
+}
+
+const isLesson = (item: CurriculumItem, source: Catalog): boolean => item.kind === 'quest' && itemCategory(item.kind, item.id, source) === 'lesson';
+
+/** The last week of a draft that holds a lesson (a lesson quest; stories and coming-soon episodes do not count), or null when it holds none. */
+export function lastLessonWeek(items: readonly CurriculumItem[], source: Catalog = CATALOG): number | null {
+  const weeks = items.filter((item) => isLesson(item, source)).map((item) => item.week);
+  return weeks.length > 0 ? Math.max(...weeks) : null;
+}
+
+const PRESETS_SHORTEST_FIRST = (Object.keys(LENGTH_PRESETS) as LengthPresetId[]).sort((a, b) => LENGTH_PRESETS[a].weeks - LENGTH_PRESETS[b].weeks);
+
+/** The shortest preset, shorter than the draft, whose plan holds every lesson the draft holds (the same params, only the length and its review rhythm change). */
+function shorterPreset(draft: CurriculumDraft, source: Catalog): FreeDaysView['shorter'] {
+  const lessons = draft.items.filter((item) => isLesson(item, source)).map((item) => item.id);
+  for (const length of PRESETS_SHORTEST_FIRST) {
+    const { weeks, reviewEvery } = LENGTH_PRESETS[length];
+    if (weeks >= draft.params.weeks) break;
+    const held = new Set(generateCurriculum({ ...draft.params, weeks, reviewEvery }, source).items.filter((item) => isLesson(item, source)).map((item) => item.id));
+    if (lessons.every((id) => held.has(id))) return { length, weeks };
+  }
+  return null;
+}
+
+/**
+ * The free-plan view of a preview, or null with the switch off (`contentGatingEnabled()`) or for
+ * a covered space (`unlocked` holds every stage), where the wizard keeps today's wording. A
+ * failed entitlements read leaves the space at Stage 1, so it reads as unlicensed: fail safe.
+ */
+export function freeDaysView(draft: CurriculumDraft, unlocked: readonly StageKey[], gating: boolean, source: Catalog = CATALOG): FreeDaysView | null {
+  if (!gating || StageKeySchema.options.every((stage) => unlocked.includes(stage))) return null;
+  const lastWeek = lastLessonWeek(draft.items, source);
+  const short = lastWeek !== null && lastWeek < draft.params.weeks;
+  return { kind: draft.params.audience === 'family' ? 'family' : 'class', lastWeek, short, shorter: short ? shorterPreset(draft, source) : null };
+}
+
 export interface WeekItem {
   kind: PlanItem['kind'];
   id: string;
@@ -348,10 +400,23 @@ export function weekdayLabel(day: Weekday, locale: UiLocale = DEFAULT_LOCALE): s
   return formatDate(locale, addDays('2026-10-11', WEEKDAYS.indexOf(day)), 'weekday', { utc: true });
 }
 
-/** A generator warning in plain, invitational words (section 3.8 step 4). */
-export function warningText(warning: CurriculumWarning, locale: UiLocale = DEFAULT_LOCALE): string {
+/** What the free-plan wording of the left-out warning needs (F-ENT-003 section 3.9.3): the space kind and the last week that holds a lesson. */
+export type FreePlanWording = Pick<FreeDaysView, 'kind' | 'lastWeek'>;
+
+/**
+ * A generator warning in plain, invitational words (section 3.8 step 4). With `free` (an
+ * unlicensed space while the free-plan switch is on, `freeDaysView`) the left-out line names the
+ * free plan, the weeks that hold its lessons and the product that opens the rest, by space kind
+ * (F-ENT-003 section 3.9.3); without it every line keeps its wording.
+ */
+export function warningText(warning: CurriculumWarning, locale: UiLocale = DEFAULT_LOCALE, free: FreePlanWording | null = null): string {
   const words = getMessages(locale).console.curriculum.preview.warnings;
   const count = warning.count ?? 0;
+  if (warning.code === 'premium-needed' && free) {
+    const messages = getMessages(locale).console;
+    const product = messages.access.product[free.kind];
+    return free.lastWeek === null ? messages.curriculum.freeDays.warningNoLessons(count, product) : messages.curriculum.freeDays.warning(free.lastWeek, count, product);
+  }
   switch (warning.code) {
     case 'content-runs-out':
       return words.contentRunsOut(warning.week ?? 1);
