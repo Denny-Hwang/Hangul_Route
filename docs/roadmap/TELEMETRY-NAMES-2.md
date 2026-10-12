@@ -211,6 +211,8 @@ Three names in the new `billing.` namespace, recorded from the Stripe webhook. B
 | 4 | `billing.checkout_started` | F-BILL-002 §10 | `{ planKey, mode, promo: boolean }` (a Stripe Checkout session was created; `promo` when a validated code was applied) | B-5 | B-5 (Worker, `POST /api/entitlements/stripe/checkout`) |
 | 5 | `billing.checkout_refused` | F-BILL-002 §10 | `{ planKey, reason }`, `reason` one of `reverify_required` (403 step-up), `already_active` (the 409 that landed in BY-1, #371), `live_not_enabled` (503 live guard), `not_configured` (no Stripe key or price bound). No event for a caller who may not buy for the space (403 forbidden) | B-5 | B-5 (Worker, checkout) |
 | 6 | `billing.portal_opened` | F-BILL-002 §10 | `{ planKey, mode }` (a Billing Portal session was created; `planKey` of the subscription row it manages) | B-5 | B-5 (Worker, `POST /api/entitlements/stripe/portal`) |
+| 7 | `billing.summary_viewed` | F-BILL-002 §10 | `{ cards: n, payerCards: n, mode }` (`GET /api/billing/summary` answered without `poll=1`; counts are whole numbers) | B-4 | B-4 (Worker, `GET /api/billing/summary`) |
+| 8 | `billing.receipts_viewed` | F-BILL-002 §10 | `{ rows: n }` (`GET /api/billing/receipts` answered a payer; at most 50) | B-4 | B-4 (Worker, `GET /api/billing/receipts`) |
 
 A retried webhook delivery writes no second history row and sends no second `payment_failed` or `refund_recorded`. `checkout_completed` is sent each time a completion is applied. Every event is recorded only after the whole webhook request has succeeded, so a request that fails and is retried sends it once.
 

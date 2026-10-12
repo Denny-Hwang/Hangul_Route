@@ -124,6 +124,8 @@ describe('telemetry event names (one list for the client type and the API whitel
         'billing.checkout_refused',
         'billing.portal_opened',
         'journey.cell_stories_opened',
+        'billing.summary_viewed',
+        'billing.receipts_viewed',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);
@@ -243,18 +245,16 @@ describe('telemetry event names (one list for the client type and the API whitel
     expect(isTelemetryEventName('notes.note_read')).toBe(false);
   });
 
-  it('lists the billing names of F-BILL-002 section 10, appended in order (B-3, then B-5; B-4 appends its own)', () => {
+  it('lists the eight billing names of F-BILL-002 section 10, appended in order (B-3, B-5, then B-4)', () => {
     const webhook = ['billing.checkout_completed', 'billing.payment_failed', 'billing.refund_recorded'];
     const checkout = ['billing.checkout_started', 'billing.checkout_refused', 'billing.portal_opened'];
-    for (const name of [...webhook, ...checkout]) {
+    const views = ['billing.summary_viewed', 'billing.receipts_viewed'];
+    for (const name of [...webhook, ...checkout, ...views]) {
       expect(TELEMETRY_EVENT_NAMES.filter((n) => n === name)).toHaveLength(1);
       expect(isTelemetryEventName(name)).toBe(true);
     }
-    expect(TELEMETRY_EVENT_NAMES.filter((n) => n.startsWith('billing.'))).toEqual([...webhook, ...checkout]);
-    // Not yet: B-4 adds these with the code that sends them.
-    for (const later of ['billing.summary_viewed', 'billing.receipts_viewed']) {
-      expect(isTelemetryEventName(later)).toBe(false);
-    }
+    expect(TELEMETRY_EVENT_NAMES.filter((n) => n.startsWith('billing.'))).toEqual([...webhook, ...checkout, ...views]);
+    expect(isTelemetryEventName('billing.receipt_opened')).toBe(false);
   });
 
   it('narrows unknown input with isTelemetryEventName', () => {

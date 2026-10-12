@@ -5,6 +5,7 @@ import { healthReport, type RuntimeEnv } from './lib/runtime';
 import { cardRoutes } from './routes/cards';
 import { contentRoutes } from './routes/content';
 import { recoveryRoutes } from './routes/recovery';
+import { billingRoutes } from './routes/billing';
 import { entitlementRoutes } from './routes/entitlements';
 import { relinkRoutes } from './routes/relink';
 import { schoolRoutes } from './routes/school';
@@ -63,6 +64,8 @@ app.route('/api/spaces', relinkRoutes);
 app.route('/api/spaces', transferSpaceRoutes);
 // Entitlements (F-ENT-001): one table for receipts, Stripe and contracts; learners inherit through memberships.
 app.route('/api/entitlements', entitlementRoutes);
+// Billing home (F-BILL-002 B-4): plan status per persona, payer-only receipts, fresh receipt links.
+app.route('/api/billing', billingRoutes);
 // School admin (F-SCHOOL-001): class tree, teacher invites, seats — aggregates only.
 app.route('/api/spaces', schoolRoutes);
 // Progress reports (F-REPORT-001 section 3.8): one learner's report from the roster's projection; read-only, archived spaces included.
