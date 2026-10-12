@@ -1,7 +1,11 @@
 import { FREE_CLASS_STUDENT_CAP, PAST_DUE_GRACE_MS, SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS, type Entitlement, type Space, type Tier, type TierSource } from '@hangul-route/content-schema';
 import type { Db } from '../db';
 
-/** Entitlement rules — F-ENT-001 §3.2 (roadmap §3.2). A lifetime plan is `active` with `expiresAt` null, so it never lapses. */
+/**
+ * Entitlement rules — F-ENT-001 §3.2 (roadmap §3.2). Yearly plans carry `expiresAt` = the Stripe
+ * period end; a cancelled one covers until then. A row with `expiresAt` null (a legacy one-time
+ * sandbox purchase, AMENDMENTS-BILLING-FAMILY-YEARLY BY-D2, or a manual contract) does not lapse.
+ */
 export function isEntitlementActive(e: Entitlement, now: Date): boolean {
   const t = now.getTime();
   const future = e.expiresAt ? Date.parse(e.expiresAt) > t : null;
@@ -90,7 +94,7 @@ export async function schoolIsFull(db: Db, cls: Space, now: Date, joiningLearner
 
 /**
  * The tier rule, in one place (F-SPACE-002 T7): premium when any live space in
- * `spaces` grants it — a family with an active lifetime plan, or a pro class.
+ * `spaces` grants it — a family with an active Family Plan (`family_lifetime`), or a pro class.
  * The first covering space, in the order given, is the source. Archived
  * spaces are skipped.
  */

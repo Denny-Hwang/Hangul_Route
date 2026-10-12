@@ -131,9 +131,11 @@ export type TeacherVisibleSummaryKey = Extract<(typeof TEACHER_VISIBLE_SUMMARY_K
  * is read by the learner's family space only, never by a class or school.
  * `vocab` (F-VOC-005 section 3.8) stays hidden until the console PR that shows
  * it (F-VOC-005 P-4) moves it to the allow-list with its consent item, so the
- * consent text never lags what a teacher receives.
+ * consent text never lags what a teacher receives. `activity` (F-REPORT-001
+ * section 3.8) stays hidden until RP-W2 moves it to the allow-list with the new
+ * consent sentence and a text version bump.
  */
-export const TEACHER_HIDDEN_SUMMARY_KEYS = ['schemaVersion', 'stage1Anchor', 'selfRoute', 'vocab'] as const;
+export const TEACHER_HIDDEN_SUMMARY_KEYS = ['schemaVersion', 'stage1Anchor', 'selfRoute', 'vocab', 'activity'] as const;
 export type TeacherHiddenSummaryKey = Extract<(typeof TEACHER_HIDDEN_SUMMARY_KEYS)[number], keyof ProgressSummary>;
 
 export const TEACHER_VISIBLE_SUMMARY_ITEMS: Readonly<Record<TeacherVisibleSummaryKey, TeacherVisibleItemId>> = {

@@ -110,5 +110,5 @@ thread alive.
 | "Is the audio accurate?" | "Pronunciation is your device's Korean voice today; recordings by a native speaker are in progress. Romanization is Revised, not McCune-Reischauer." |
 | "Can I try it on Android?" | "Yes — Expo Go QR + APK are both linked at hangulroute.com/get. Native Play Store build lands D+7." |
 | "What about adults learning Korean?" | "Not yet. The whole design assumes a 5–11 year old. We'll consider an adult mode once Stage 3 (sentences) ships." |
-| "How do you make money?" | "First 12 cards free, then 12-card packs at $4.99. No ads. No data sold. Parents can pre-order Stage 2 for $14.99 lifetime." |
+| "How do you make money?" | "Stage 1 is free. The Family Plan is $15.30 a year for up to 5 learners, cancel any time; classes have a yearly Group License. No ads. No data sold." (Before Stripe Live: "Stage 1 is free. No ads. No data sold. Plans are coming.") |
 | "Is this COPPA compliant?" | "Yes. No third-party ad tracking. Parent email is the only PII we store. Default mode keeps all learning data on-device." |

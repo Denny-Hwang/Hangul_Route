@@ -9,6 +9,7 @@ import { PlacementSummarySchema } from './placement';
 import { InboxTransferSchema, lenientArray } from './transfer';
 import { VocabIdSchema } from './vocab';
 import { VocabProgressSchema } from './vocab-progress';
+import { ActivitySummarySchema } from './report';
 
 /**
  * Sync contracts — F-SYNC-001. Shared by the Worker (validation) and the
@@ -132,6 +133,12 @@ export const ProgressSummarySchema = z.object({
    * everything else from syncing.
    */
   vocab: VocabSummarySchema.optional().catch(undefined),
+  /**
+   * Bounded day-by-day activity for progress reports (F-REPORT-001 section
+   * 3.3.3); absent from builds before RP-4. Malformed or oversized is dropped,
+   * never a 422 (the `journey` pattern). Hidden from every roster until RP-W2.
+   */
+  activity: ActivitySummarySchema.optional().catch(undefined),
 });
 export type ProgressSummary = z.infer<typeof ProgressSummarySchema>;
 
