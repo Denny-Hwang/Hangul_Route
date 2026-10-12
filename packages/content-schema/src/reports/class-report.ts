@@ -36,10 +36,11 @@ import { addMonths, firstRowDayOf, lettersIn, monthOf, rowsFromOf, sumDays, toda
  * while its letters and milestones are from the join day on.
  *
  * "Not saved" is never shown as "did not practice": a learner whose window the class cannot vouch for (it lies
- * wholly after their device's last saved day, before the first day the class copy holds, or before the day rows
- * with no month row to stand in) is left out of every window figure (practiced, the bands, the sums, the letters,
- * the milestones and the comparison). They still count as members in the headline and the class line, and a device
- * not saved in 7 days counts in `notSaved7d`.
+ * wholly after their device's last saved day or has not begun in their offset, it ends before they joined, or it is
+ * older than their day rows with no month row to stand in) is left out of every window figure (practiced, the bands,
+ * the sums, the letters, the milestones and the comparison) and counted in `practice.notSaved` instead, so the bands
+ * and `notSaved` add up to `withActivity`. They still count as members in the headline and the class line. A member
+ * in the class for the window whose device saved past its start reads a known 0 on days with no row.
  */
 
 /** One member of the class as the Worker hands it over: the class projection of their summary, and no id or name. */
@@ -48,6 +49,13 @@ export interface ClassReportLearner {
   summary: ReportSummary | null;
   /** The server's last sync of this learner; null when never synced. */
   lastSyncedAt: string | null;
+  /**
+   * When the learner joined this class (`memberships.joined_at`, the instant RP-W2 clips the class copy with). Its
+   * learner-local day (at `activity.tz`) is where the class's view begins, so a member who joined long ago and has
+   * no row in a window reads 0 there, and a member who joined after it sits out. Unreadable or null: the first day
+   * the class copy holds stands in (today when it holds nothing).
+   */
+  joinedAt: string | null;
 }
 
 /** The class's plans (`plansOf`): only published, non-archived plans are homework rows. */
@@ -107,11 +115,18 @@ function letterCounts(counts: ReadonlyMap<string, number>, order: ReadonlyMap<st
     .map(([letter, learners]) => ({ letter, learners }));
 }
 
+/** Later instants first; equal ones tie (0). */
+const byNewest = (x: string, y: string): number => (x === y ? 0 : x > y ? -1 : 1);
+
 const add = (counts: Map<string, number>, key: string): void => {
   counts.set(key, (counts.get(key) ?? 0) + 1);
 };
 
-/** Last saved more than 7 days ago, by the server's sync or by the device's last day (section 3.5 item 2). */
+/**
+ * Last saved more than 7 days ago, by the server's sync or by the device's last day (section 3.5 item 2). A member
+ * whose device never saved a summary has neither, so is never counted here (the class line still shows them:
+ * `learners - withActivity - olderApp`).
+ */
 function staleOf(summary: ReportSummary, lastSyncedAt: string | null, clock: Date | null): boolean {
   if (clock === null) return false;
   const syncMs = lastSyncedAt === null ? Number.NaN : Date.parse(lastSyncedAt);
@@ -140,16 +155,15 @@ interface Known {
 
 /**
  * The part of `from`..`to` the class can vouch for, or null when it cannot. Days after `asOf` are not saved and count
- * nowhere; a class copy starts at its first row (`firstRowDayOf`, on or after the join day; today when it holds
- * nothing). `month`: the month row stands for the whole month, and a month with no row is a known empty month when
- * the learner was in the class before it began and the device would have kept its row. `whole`: the learner must have
- * been in the class for all of it (the comparison never reads a window the class saw only in part).
+ * nowhere; the class's view starts at `floor` (the learner-local join day). `month`: the month row stands for the
+ * whole month, and a month with no row is a known empty month when the learner was in the class before it began and
+ * the device would have kept its row. `whole`: the learner must have been in the class for all of it (the comparison
+ * never reads a window the class saw only in part).
  */
-function knownOf(activity: ActivitySummary, today: string, from: string, to: string, month: boolean, whole: boolean): Known | null {
+function knownOf(activity: ActivitySummary, floor: string, from: string, to: string, month: boolean, whole: boolean): Known | null {
   const { asOf } = activity;
   if (from > asOf) return null;
   const upTo = to < asOf ? to : asOf;
-  const floor = firstRowDayOf(activity) ?? today;
   const seen = floor > from ? floor : from;
   const drawn = seen <= upTo && seen >= rowsFromOf(asOf);
   const rows = drawn ? { from: seen, to: upTo } : null;
@@ -179,9 +193,24 @@ const stagesOf = (activity: ActivitySummary, from: string | null, to: string | n
       return stage.success ? [stage.data] : [];
     });
 
+/** The learner-local day of the join instant, else the first day the class copy holds, else today. */
+function floorOf(activity: ActivitySummary, joinedAt: string | null, today: string): string {
+  const ms = joinedAt === null ? Number.NaN : Date.parse(joinedAt);
+  return Number.isFinite(ms) ? todayFor(new Date(ms), activity.tz) : (firstRowDayOf(activity) ?? today);
+}
+
+/** `at` names a window that has not begun yet in this learner's offset (a day or month east of theirs). */
+function notBegun(period: ReportPeriod, at: string | null, today: string): boolean {
+  if (at === null) return false;
+  return period === 'month' ? monthOf(at) > monthOf(today) : at > today;
+}
+
 /** One learner's share, or null when the class cannot vouch for their window (counted in no window figure). */
-function shareOf(activity: ActivitySummary, period: ReportPeriod, at: string | null, clock: Date | null): Share | null {
+function shareOf(activity: ActivitySummary, joinedAt: string | null, period: ReportPeriod, at: string | null, clock: Date | null): Share | null {
   const today = clock ? todayFor(clock, activity.tz) : activity.asOf;
+  // `windowOf` would read a day after this learner's today as their current window: their previous day under the
+  // requested one. The window has not begun for them, so nothing of it is saved.
+  if (period !== 'all' && notBegun(period, at, today)) return null;
   const window = windowOf(period, today, at, activity, true);
   if (period === 'all') {
     // Every day row the class copy holds (none after `asOf`).
@@ -189,10 +218,11 @@ function shareOf(activity: ActivitySummary, period: ReportPeriod, at: string | n
     return { now: { days, min, q, c, w }, letters: lettersIn(activity.days, window.from, activity.asOf), milestones: stagesOf(activity, null, null), prev: null };
   }
   const month = period === 'month';
-  const known = knownOf(activity, today, window.from, window.to, month, false);
+  const floor = floorOf(activity, joinedAt, today);
+  const known = knownOf(activity, floor, window.from, window.to, month, false);
   if (known === null) return null;
   const { prevFrom, prevTo } = window;
-  const prev = prevFrom !== undefined && prevTo !== undefined ? (knownOf(activity, today, prevFrom, prevTo, month, true)?.sums ?? null) : null;
+  const prev = prevFrom !== undefined && prevTo !== undefined ? (knownOf(activity, floor, prevFrom, prevTo, month, true)?.sums ?? null) : null;
   return {
     now: known.sums,
     letters: known.rows ? lettersIn(activity.days, known.rows.from, known.rows.to) : [],
@@ -252,12 +282,11 @@ export function classReport(input: ClassReportInput): ClassReport {
   const strands = PlacementStrandSchema.options.map((strand) => ({ strand, secure: 0, gettingThere: 0, notYet: 0, notTested: 0 }));
   let checks = 0;
 
-  for (const { summary, lastSyncedAt } of input.learners) {
-    if (summary === null) {
-      // A device that never saved progress here: "not saved", never "did not practice".
-      notSaved7d += 1;
-      continue;
-    }
+  let notSaved = 0;
+  for (const { summary, lastSyncedAt, joinedAt } of input.learners) {
+    // A device that never saved progress here: a member, "not saved", never "did not practice"; never "last saved
+    // more than 7 days ago" either (it never saved).
+    if (summary === null) continue;
     if (staleOf(summary, lastSyncedAt, clock)) notSaved7d += 1;
     for (const letter of new Set(summary.needsPractice ?? [])) if (ReportLetterSchema.safeParse(letter).success) add(revisit, letter);
     const placement = summary.placement;
@@ -273,8 +302,11 @@ export function classReport(input: ClassReportInput): ClassReport {
       continue;
     }
     withActivity += 1;
-    const share = shareOf(activity, period, at, clock);
-    if (share === null) continue;
+    const share = shareOf(activity, joinedAt, period, at, clock);
+    if (share === null) {
+      notSaved += 1;
+      continue;
+    }
     practiceDays.push(share.now.days);
     if (share.now.days > 0) practicedMinutes.push(share.now.min);
     total.min += share.now.min;
@@ -297,9 +329,10 @@ export function classReport(input: ClassReportInput): ClassReport {
   const dayBands = bandsOf(period, practiceDays);
 
   const plans = input.plans
-    .filter((plan) => plan.archivedAt === null && plan.publishedAt !== null)
-    // Newest first; plans created at the same instant by id (ids are unique).
-    .sort((x, y) => (x.createdAt === y.createdAt ? (x.id < y.id ? -1 : 1) : x.createdAt > y.createdAt ? -1 : 1))
+    .flatMap((plan) => (plan.archivedAt === null && plan.publishedAt !== null ? [{ ...plan, publishedAt: plan.publishedAt }] : []))
+    // Newest published first (homework is new to the class when it is published), then newest created, then by id
+    // (ids are unique).
+    .sort((x, y) => byNewest(x.publishedAt, y.publishedAt) || byNewest(x.createdAt, y.createdAt) || (x.id < y.id ? -1 : 1))
     .slice(0, PLANS_MAX)
     .map((plan) => {
       const row = { planId: plan.id, title: plan.title, assigned: 0, started: 0, finished: 0, itemsDone: 0 };
@@ -326,7 +359,7 @@ export function classReport(input: ClassReportInput): ClassReport {
       milestones: [...milestones.entries()].sort(([x], [y]) => STAGES.indexOf(x) - STAGES.indexOf(y)).map(([stage, count]) => ({ stage, count })),
     },
     revisit: letterCounts(revisit, order),
-    practice: dayBands === undefined ? {} : { dayBands },
+    practice: dayBands === undefined ? {} : { dayBands, notSaved },
     time: {
       minutesTotal: { count: total.min, ...up('min') },
       minutesMedian: practiced >= MEDIAN_MIN_LEARNERS ? medianOf(practicedMinutes) : null,

@@ -20,13 +20,19 @@ const class20 = (period: ReportPeriod, extra: Partial<ClassReportInput> = {}): C
 /** 15 October 2026 at 12:00 UTC; the learners built below are in UTC, so today is the 15th. */
 const NOW_UTC = new Date('2026-10-15T12:00:00.000Z');
 
-/** A UTC class member who practiced on `rows` (day key -> minutes or counts), saved today, synced an hour ago. */
+/**
+ * A UTC class member who practiced on `rows` (day key -> minutes or counts), saved today, synced an hour ago, and who
+ * joined the class on the first day their class copy holds (none: `joinedAt` null).
+ */
 function member(rows: Readonly<Record<string, Partial<Omit<ActivityDay, 'd'>>>>, extra: Partial<ReportSummary> = {}, activity: Partial<ActivitySummary> = {}): ClassReportLearner {
   const days: ActivityDay[] = Object.entries(rows)
     .sort(([x], [y]) => (x < y ? -1 : 1))
     .map(([d, row]) => ({ d, min: 10, q: 0, c: 0, w: 0, j: [], ...row }));
   const total = (key: 'min' | 'q' | 'c'): number => days.reduce((n, row) => n + row[key], 0);
+  const firsts = [days[0]?.d, activity.months?.[0] ? `${activity.months[0].m}-01` : undefined, ...(activity.milestones ?? []).map((row) => row.on)];
+  const joined = firsts.filter((day): day is string => day !== undefined).sort()[0];
   return {
+    joinedAt: joined === undefined ? null : `${joined}T12:00:00.000Z`,
     summary: {
       lastActiveAt: '2026-10-15T09:00:00.000Z',
       needsPractice: [],
@@ -58,8 +64,9 @@ describe('the class of 20, this week (section 3.15 fixtures)', () => {
     expect(r.headline).toEqual({ code: 'class_practiced', practiced: 9, learners: 20 });
   });
 
-  it('class line: members, with day-by-day data, on an older app, and not saved in 7 days (never synced counts here)', () => {
-    expect(r.class).toEqual({ learners: 20, withActivity: 13, olderApp: 4, notSaved7d: 3 });
+  it('class line: members, with day-by-day data, on an older app, and last saved more than 7 days ago (never saved: neither)', () => {
+    // The 3 members whose devices never saved are `learners - withActivity - olderApp`, never "last saved 7 days ago".
+    expect(r.class).toEqual({ learners: 20, withActivity: 13, olderApp: 4, notSaved7d: 0 });
   });
 
   it('what went well: letters by number of learners then letter order; sums; Stage 1 finished 3 times this week', () => {
@@ -84,7 +91,7 @@ describe('the class of 20, this week (section 3.15 fixtures)', () => {
     ]);
   });
 
-  it('day bands: 0, 1-2, 3-4, 5-7 among learners with day-by-day data', () => {
+  it('day bands: 0, 1-2, 3-4, 5-7 among learners with day-by-day data; none not saved this week', () => {
     expect(r.practice).toEqual({
       dayBands: [
         { band: '0', learners: 4 },
@@ -92,7 +99,16 @@ describe('the class of 20, this week (section 3.15 fixtures)', () => {
         { band: '3-4', learners: 9 },
         { band: '5-7', learners: 0 },
       ],
+      notSaved: 0,
     });
+  });
+
+  it('the bands and notSaved add up to withActivity, on every period with bands and on a past window', () => {
+    for (const [period, at] of [['day', null], ['week', null], ['month', null], ['day', '2026-10-13'], ['week', '2026-10-08'], ['month', '2026-09-10']] as const) {
+      const c = class20(period, { at });
+      const sum = (c.practice.dayBands ?? []).reduce((n, band) => n + band.learners, 0) + (c.practice.notSaved ?? 0);
+      expect(sum, `${period} ${at}`).toBe(c.class.withActivity);
+    }
   });
 
   it('time: the total and the median of those who practiced; no up marker when it did not grow (40 -> 36)', () => {
@@ -180,8 +196,8 @@ describe('the class of 20 by period', () => {
     const r = class20('week', { at: '2026-10-08' });
     // 2 to 8 October: Mina 2 days (40 minutes), Sora 7 days (70 minutes); Jun nothing.
     expect(r.headline).toEqual({ code: 'class_practiced', practiced: 9, learners: 20 });
-    // Against 25 September to 1 October, among learners the class saw all of that week: Mina 15 minutes each, Jun none
-    // (Sora joined the class's view on 1 October, so she sits out the comparison).
+    // Against 25 September to 1 October, among learners the class saw all of that week (all joined on 1 September):
+    // Mina 15 minutes each, Jun none, Sora 10 minutes on 1 October.
     expect(r.time.minutesTotal).toEqual({ count: 450, up: true });
     expect(r.practice.dayBands).toEqual([
       { band: '0', learners: 4 },
@@ -407,12 +423,14 @@ describe('details', () => {
     const oldAsOf = member({ '2026-10-01': {} }, {}, { asOf: '2026-10-07' });
     const fresh = member({ '2026-10-14': {} });
     const unreadable = { ...fresh, lastSyncedAt: 'yesterday' };
-    const never = { summary: STEADY, lastSyncedAt: null };
-    expect(report({ now: NOW_UTC, learners: [oldSync, oldAsOf, fresh, unreadable, never, { summary: null, lastSyncedAt: null }] }).class.notSaved7d).toBe(3);
+    const never = { summary: STEADY, lastSyncedAt: null, joinedAt: null };
+    // A device that never saved a summary is not "last saved more than 7 days ago".
+    const r = report({ now: NOW_UTC, learners: [oldSync, oldAsOf, fresh, unreadable, never, { summary: null, lastSyncedAt: null, joinedAt: null }] });
+    expect(r.class).toEqual({ learners: 6, withActivity: 5, olderApp: 0, notSaved7d: 2 });
   });
 
   it('an invalid clock never breaks the report: each learner\'s today is their last saved day and nothing is stale', () => {
-    const r = report({ now: new Date('nonsense'), learners: [member({ '2026-10-15': { min: 7 } }), { summary: GAP, lastSyncedAt: '2020-01-01T00:00:00.000Z' }] });
+    const r = report({ now: new Date('nonsense'), learners: [member({ '2026-10-15': { min: 7 } }), { summary: GAP, lastSyncedAt: '2020-01-01T00:00:00.000Z', joinedAt: null }] });
     expect(r.class.notSaved7d).toBe(0);
     expect(r.time.minutesTotal.count).toBe(7);
   });
@@ -452,7 +470,7 @@ describe('details', () => {
   });
 
   it('a summary with no letters to revisit and no level check adds nothing there', () => {
-    const r = report({ learners: [{ summary: { lastActiveAt: '2026-10-10T08:00:00.000Z' }, lastSyncedAt: null }] });
+    const r = report({ learners: [{ summary: { lastActiveAt: '2026-10-10T08:00:00.000Z' }, lastSyncedAt: null, joinedAt: null }] });
     expect([r.revisit, r.levelCheck, r.class.olderApp]).toEqual([[], [], 1]);
   });
 
@@ -478,6 +496,74 @@ describe('details', () => {
       { planId: 'plan:b', title: 'B', assigned: 1, started: 0, finished: 0, itemsDone: 0 },
       { planId: 'plan:c', title: 'C', assigned: 0, started: 0, finished: 0, itemsDone: 0 },
     ]);
+  });
+});
+
+describe('the join day: where the class\'s view of a member begins', () => {
+  const bands = (r: ClassReport): Record<string, number> => Object.fromEntries((r.practice.dayBands ?? []).map((b) => [b.band, b.learners]));
+  const longAgo = '2026-09-01T12:00:00.000Z';
+
+  it('two quiet members who joined long ago read 0 this week, whether their device saved today or yesterday', () => {
+    const today = { ...member({}), joinedAt: longAgo };
+    const yesterday = { ...member({}, {}, { asOf: '2026-10-14' }), joinedAt: longAgo };
+    const r = report({ now: NOW_UTC, learners: [today, yesterday] });
+    expect(r.practice).toEqual({ dayBands: [{ band: '0', learners: 2 }, { band: '1-2', learners: 0 }, { band: '3-4', learners: 0 }, { band: '5-7', learners: 0 }], notSaved: 0 });
+    // On `day`, today is not saved yet on the second device: not "Not yet".
+    expect(report({ now: NOW_UTC, period: 'day', learners: [today, yesterday] }).practice).toEqual({
+      dayBands: [{ band: 'practiced', learners: 0 }, { band: 'not_yet', learners: 1 }],
+      notSaved: 1,
+    });
+  });
+
+  it('a past week: a member in the class then reads 0 though their first row is later; one who joined after it is not saved', () => {
+    const quietThen = { ...member({ '2026-10-13': { min: 20 } }), joinedAt: longAgo };
+    const joinedLater = { ...member({ '2026-10-13': { min: 20 } }), joinedAt: '2026-10-10T12:00:00.000Z' };
+    const r = report({ now: NOW_UTC, at: '2026-10-08', learners: [quietThen, joinedLater] });
+    expect(r.practice).toEqual({ dayBands: [{ band: '0', learners: 1 }, { band: '1-2', learners: 0 }, { band: '3-4', learners: 0 }, { band: '5-7', learners: 0 }], notSaved: 1 });
+    expect(r.headline).toEqual({ code: 'class_practiced', practiced: 0, learners: 2 });
+  });
+
+  it('the join day is the learner-local one (at activity.tz); an unreadable join time falls back to the first day the copy holds', () => {
+    // Joined at 03:00 UTC on 9 October: 8 October in Los Angeles, so the week to 8 October is known (0) there.
+    const la = { ...member({ '2026-10-13': {} }, {}, { tz: -420 }), joinedAt: '2026-10-09T03:00:00.000Z' };
+    const utc = { ...member({ '2026-10-13': {} }), joinedAt: '2026-10-09T03:00:00.000Z' };
+    expect(report({ now: NOW_UTC, at: '2026-10-08', learners: [la] }).practice.notSaved).toBe(0);
+    expect(report({ now: NOW_UTC, at: '2026-10-08', learners: [utc] }).practice.notSaved).toBe(1);
+    // 'soon' does not parse: the first row (13 October) stands in, so the week to 8 October is not saved.
+    const soon = { ...member({ '2026-10-13': {} }), joinedAt: 'soon' };
+    expect(report({ now: NOW_UTC, at: '2026-10-08', learners: [soon] }).practice.notSaved).toBe(1);
+  });
+
+  it('a day or month not begun in a member\'s offset is not saved for them, never their previous day under its name', () => {
+    // 03:00 UTC on 15 October: today is the 14th in Los Angeles (tz -420), the 15th in Seoul.
+    const early = new Date('2026-10-15T03:00:00.000Z');
+    const la = { ...member({ '2026-10-14': { min: 25 } }, {}, { tz: -420, asOf: '2026-10-14' }), joinedAt: longAgo };
+    const seoul = { ...member({ '2026-10-15': { min: 5 } }, {}, { tz: 540 }), joinedAt: longAgo };
+    const day = report({ now: early, period: 'day', at: '2026-10-15', learners: [la, seoul] });
+    expect(day.practice).toEqual({ dayBands: [{ band: 'practiced', learners: 1 }, { band: 'not_yet', learners: 0 }], notSaved: 1 });
+    expect(day.time.minutesTotal).toEqual({ count: 5 });
+    expect(report({ now: early, period: 'week', at: '2026-10-15', learners: [la, seoul] }).practice.notSaved).toBe(1);
+    // The current window (no `at`) is each member's own today.
+    expect(report({ now: early, period: 'day', learners: [la, seoul] }).time.minutesTotal).toEqual({ count: 30 });
+    // 1 November in Seoul, still 31 October in Los Angeles: November has not begun there.
+    const nov = new Date('2026-11-01T03:00:00.000Z');
+    const month = report({ now: nov, period: 'month', at: '2026-11-01', learners: [la] });
+    expect(month.practice.notSaved).toBe(1);
+    expect(report({ now: nov, period: 'month', at: '2026-10-20', learners: [la] }).practice.notSaved).toBe(0);
+  });
+});
+
+describe('homework order', () => {
+  it('newest published first: a plan drafted weeks ago and published today comes first; then newest created, then id', () => {
+    const plan = (id: string, createdAt: string, publishedAt: string): ClassReportPlan => ({ id, title: id.slice(5), publishedAt, archivedAt: null, createdAt });
+    const plans = [
+      plan('plan:old-draft', '2026-09-01T08:00:00.000Z', '2026-10-15T08:00:00.000Z'),
+      plan('plan:week', '2026-10-05T08:00:00.000Z', '2026-10-05T09:00:00.000Z'),
+      plan('plan:letters', '2026-09-20T08:00:00.000Z', '2026-09-20T09:00:00.000Z'),
+      plan('plan:twin-b', '2026-09-10T08:00:00.000Z', '2026-09-20T09:00:00.000Z'),
+    ];
+    expect(report({ learners: [], plans }).plans.map((row) => row.planId)).toEqual(['plan:old-draft', 'plan:week', 'plan:letters']);
+    expect(report({ learners: [], plans: [...plans].reverse() }).plans.map((row) => row.planId)).toEqual(['plan:old-draft', 'plan:week', 'plan:letters']);
   });
 });
 
@@ -533,7 +619,7 @@ describe('hard rules (section 3.7)', () => {
   });
 
   it('the input has no slot for an id, a name or a space kind', () => {
-    expectTypeOf<keyof ClassReportLearner>().toEqualTypeOf<'summary' | 'lastSyncedAt'>();
+    expectTypeOf<keyof ClassReportLearner>().toEqualTypeOf<'summary' | 'lastSyncedAt' | 'joinedAt'>();
     expectTypeOf<keyof ClassReportInput>().toEqualTypeOf<'learners' | 'plans' | 'period' | 'at' | 'now' | 'catalog'>();
   });
 

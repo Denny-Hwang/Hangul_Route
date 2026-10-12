@@ -15,9 +15,12 @@ import { GAP, LAST_SYNCED, LEGACY, STALE4, STEADY } from './activity-2026-10';
  * - 3 x Sora (saved 4 days ago, tz 0): 3 practice days, 30 minutes, 7 new quests, 4 cards, letters ㄷ ㄹ and Stage 1
  *   finished this week.
  * - 3 members whose devices never saved progress to the class (`summary: null`).
+ *
+ * Every member joined on 1 September (`joinedAt` at 12:00 UTC: 1 September in each of their offsets).
  */
 
 const JOINED = '2026-09-01';
+const JOINED_AT = `${JOINED}T12:00:00.000Z`;
 
 /** The class copy of a summary (RP-W2 `activityOf` for `kind: 'class'` and the roster's allow-list). */
 function forClass(summary: ReportSummary, planProgress: NonNullable<ReportSummary['planProgress']>): ReportSummary {
@@ -53,12 +56,14 @@ export const CLASS_20: readonly ClassReportLearner[] = [
   ...times(6, () => ({
     summary: forClass(STEADY, { 'plan:class-week': { done: 3, total: 5, notReady: 0 }, 'plan:class-letters': { done: 4, total: 4, notReady: 0 } }),
     lastSyncedAt: LAST_SYNCED.steady,
+    joinedAt: JOINED_AT,
   })),
-  ...times(4, () => ({ summary: forClass(GAP, { 'plan:class-week': { done: 5, total: 5, notReady: 0 } }), lastSyncedAt: LAST_SYNCED.gap })),
-  ...times(4, () => ({ summary: forClass(LEGACY, { 'plan:class-week': { done: 1, total: 4, notReady: 2 } }), lastSyncedAt: LAST_SYNCED.legacy })),
+  ...times(4, () => ({ summary: forClass(GAP, { 'plan:class-week': { done: 5, total: 5, notReady: 0 } }), lastSyncedAt: LAST_SYNCED.gap, joinedAt: JOINED_AT })),
+  ...times(4, () => ({ summary: forClass(LEGACY, { 'plan:class-week': { done: 1, total: 4, notReady: 2 } }), lastSyncedAt: LAST_SYNCED.legacy, joinedAt: JOINED_AT })),
   ...times(3, () => ({
     summary: forClass(STALE4, { 'plan:class-week': { done: 0, total: 5, notReady: 0 }, 'plan:class-old': { done: 2, total: 2, notReady: 0 } }),
     lastSyncedAt: LAST_SYNCED.stale4,
+    joinedAt: JOINED_AT,
   })),
-  ...times(3, () => ({ summary: null, lastSyncedAt: null })),
+  ...times(3, () => ({ summary: null, lastSyncedAt: null, joinedAt: JOINED_AT })),
 ];
