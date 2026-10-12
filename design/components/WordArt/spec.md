@@ -69,3 +69,23 @@ Open for the owner's review:
 
 - Counts at the 48 dp minimum: the ten-frame is 70 by 28 units, so at 48 dp the frame is about 13 px tall and a dot has a radius of about 2.2 px; 7 against 8 and 9 against 10 are hard to tell apart. Picture games draw at hero size today. If a count is ever drawn below about 64 dp, either raise the minimum size for the count family in `PictureArt` or scale the frame up to the 88-unit width as the swatches do (with a C2 waiver), and add a 48 dp check of `count-7` against `count-8` to the sheet.
 - Colour words and their sticker objects (red and the apple, brown and the bear, and so on) are look-alike pictures. Before a question builder runs over a cross-topic universe, those pairs must be excluded as distractors of each other (derived from `COLOR_SWATCHES[*].object`).
+
+## Checklist for batch D (W-6)
+
+Registered, all `status: 'approved'`: the eleven other travel glyphs (the bus is from W-1b), the eleven other sport glyphs (the football is from W-1b), the seven K-Culture glyphs and the twelve science glyphs, so every family reaches its plan. The owner's per-batch review is replaced by a multi-agent review against the §3.12 checklist (owner decision, 2026-10-11, production level), the K-Culture keys under the heritage accuracy bar; this section is its record, for the owner to spot-check. People in motion (taekwondo, running, skiing, the dance) are drawn from the parts in `src/word-art/glyphs/pose.ts`: capsule limbs, a paper head with a hair cap and the smile of `face()`, paper hands, so they match `figure()` (C12). W7 is raised to 160 KB raw / 48 KB gzipped in this batch as in W-5 (spec §8.1 (b)).
+
+Review sheet: `w6-review.png` in this folder (96 px, 48 px, silhouette), all 43 keys of the four families. Result against the checklist:
+
+- Recognisable at 48 px. In silhouette the vehicles, buildings, people and objects each have their own outline. The balls (football, baseball, basketball, volleyball, playground ball) are discs in silhouette, like the W-1b football; their seams and panels tell them apart in colour, and no two share markings. The playground ball is red with paper and blue stripes, and the volleyball has three swirling panels in yellow, blue and white.
+- Every face smiles through `face()`: the people, and the robot's screen face.
+- Tokens only. At most 4 fill tones, except `science-rainbow`: its six arc colours plus the white of its two clouds make 7, so it has `maxTones: 7` with a reason. The spec's "6" did not count the clouds, and §3.3 is amended. No text, digits or emoji: the passport emblem is a ring and a bar, the ticket carries a star, the TV a play triangle, the map a dotted route and a pin.
+- **K-Culture, against the heritage accuracy bar**:
+  - `culture-hanok`: a giwa tile roof whose eaves lift at both ends (the curved cheoma line), a dark ridge (yongmaru), tile rows down the slope, a wooden frame with white walls, a lattice door (changhoji) and a stone base (gidan).
+  - `culture-bibimbap`: a dark stone bowl (dolsot) seen from a little above, with namul in wedges round a fried egg (spinach green, carrot orange, bean-sprout yellow). There is no gochujang, which would be a fifth tone; the egg and the toppings in wedges are the recognisable cue.
+  - `culture-tteokbokki`: short white cylinders of garae-tteok in a red-orange sauce, with spring onion and steam. It is told apart from `food-tteok` (white slices on a plate) by the sauce.
+  - `culture-hangul`: three solid toy blocks (a bar, a cube, a ball) in three of the five traditional colours (obangsaek: yellow, blue, red). They allude to the shape-based design of Hangul without drawing a letter; every shape is a solid, never a stroke, so none reads as ㅇ, ㅁ or ㅡ.
+  - `culture-dance`: a figure with raised arms and an open folding fan in each hand, as in the fan dance (buchaechum), with no costume beyond the brief (C12).
+  - `culture-song` (beamed eighth notes and sound arcs) and `culture-drama` (a TV with a play triangle) are culture-neutral by design.
+- Sport accuracy: the taekwondo figure wears a white dobok with a V collar and a black belt tied at the front, and makes a high side kick. The baseball has two red stitched seams.
+- Fixes made during review: the map pin was upside down. The volleyball's first panels read as a pie chart and were redrawn as swirls. Eight glyphs were past C2, mostly where a curve's control points overshot (the car's body is now a rounded polygon), and were brought in. A crack on the stone was replaced by a highlight.
+

@@ -29,7 +29,8 @@ import type { WordArtFamily } from '../types';
  * and science (12) and pins their counts. Batch W-3 drew food, color and
  * count (they left the map, so their full check is on) and the colour-swatch
  * objects of later families: `animal-bear` and `animal-elephant` (animal now
- * waits for 8) and `nature-flower` (nature waits for 7).
+ * waits for 8) and `nature-flower` (nature waits for 7). Batch W-6 drew
+ * travel, sport, culture and science, so they left the map.
  */
 interface Awaiting {
   /** The PR that draws the family (F-VOC-002 §6). */
@@ -44,10 +45,6 @@ const AWAITING_ART: Readonly<Partial<Record<WordArtFamily, Awaiting>>> = {
   family: { batch: 'W-5', missing: 12 },
   school: { batch: 'W-5', missing: 10 },
   nature: { batch: 'W-5', missing: 7 },
-  travel: { batch: 'W-6', missing: 11 },
-  sport: { batch: 'W-6', missing: 11 },
-  culture: { batch: 'W-6', missing: 7 },
-  science: { batch: 'W-6', missing: 12 },
 };
 
 const VOCAB_DIR = join(__dirname, '..', '..', '..', '..', '..', 'content', 'vocab');
