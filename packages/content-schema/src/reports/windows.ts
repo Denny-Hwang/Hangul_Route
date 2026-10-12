@@ -54,9 +54,13 @@ export interface ReportWindow {
 }
 
 export interface WindowOptions {
-  /** The first day the day rows cover (`rowsFromOf(asOf)`); by default the 35 days ending today. */
-  rowsFrom?: string;
-  /** `all`: the first practice day; today when there is none. */
+  /**
+   * The device's last saved day (`activity.asOf`): the day rows are the 35 days that end there, so a month that
+   * starts before them is totals only. Pass it whenever the window reads an activity; the default (today) is right
+   * only for a device that saved today.
+   */
+  asOf?: string;
+  /** `all`: the first day the report holds (`firstDayOf`); today when there is none. */
   since?: string | null;
 }
 
@@ -81,7 +85,7 @@ export function windowOf(period: ReportPeriod, today: string, at?: string | null
       to: month === monthOf(today) ? today : monthEnd(month),
       prevFrom: monthStart(prev),
       prevTo: monthEnd(prev),
-      totalsOnly: from < (opts.rowsFrom ?? rowsFromOf(today)),
+      totalsOnly: from < rowsFromOf(opts.asOf ?? today),
     };
   }
   const since = opts.since ?? today;
@@ -95,16 +99,44 @@ const pastMonths = (activity: ActivitySummary, today: string): string[] => {
 };
 
 /**
- * `at` as a URL carries it, within the stepper's limits (OD-18), or null for the current window. `day`: one of the
- * 35 days that end at `asOf`, or an unsaved day after it; `week`: a week whose 7 days are all within the same
- * limits; `month`: a month in `activity.months` before this one, as its first day; `all`: never. Anything else
- * (malformed, out of the limits, the current window itself) is null (section 3.2).
+ * The first day the activity holds anything: `total.since` (the first practice day), else the oldest day row,
+ * month or milestone, else null. A class's copy has no `since` and nothing from before the learner joined (RP-W2
+ * `activityOf`), so there it is a day on or after the join day.
+ */
+export function firstDayOf(activity: ActivitySummary): string | null {
+  const firsts = [activity.days[0]?.d, activity.months[0] ? `${activity.months[0].m}-01` : undefined, ...activity.milestones.map((row) => row.on)];
+  const known = firsts.filter((day): day is string => day !== undefined).sort();
+  return activity.total.since ?? known[0] ?? null;
+}
+
+/**
+ * The first day the report speaks for: the first of the 35 day rows; for a class, whose copy has no history before
+ * the learner joined (`total.since` null), the first day it shows anything. The stepper never reaches a window that
+ * ends before it, and the up-only marker never compares with a week that starts before it (a clipped week).
+ */
+export function shownFromOf(activity: ActivitySummary, today: string): string {
+  const rowsFrom = rowsFromOf(activity.asOf);
+  if (activity.total.since !== null) return rowsFrom;
+  const first = firstDayOf(activity) ?? today;
+  return first > rowsFrom ? first : rowsFrom;
+}
+
+/**
+ * A past day or week the stepper may show: all of it within the 35 day rows (so no unknown day looks empty), and
+ * ending on or after `shownFromOf` (a class sees at least one day of it). Unsaved days after `asOf` are fine.
+ */
+const reachable = (activity: ActivitySummary, today: string, from: string, to: string): boolean =>
+  from >= rowsFromOf(activity.asOf) && to >= shownFromOf(activity, today);
+
+/**
+ * `at` as a URL carries it, within the stepper's limits (OD-18), or null for the current window. `day` and `week`:
+ * a past window that is `reachable`; `month`: a month in `activity.months` before this one, as its first day; `all`:
+ * never. Anything else (malformed, out of the limits, the current window itself) is null.
  */
 export function clampAt(period: ReportPeriod, today: string, at: string | null | undefined, activity: ActivitySummary): string | null {
   if (!pastOrToday(at, today) || at === today) return null;
-  const rowsFrom = rowsFromOf(activity.asOf);
-  if (period === 'day') return at >= rowsFrom ? at : null;
-  if (period === 'week') return addDays(at, -6) >= rowsFrom ? at : null;
+  if (period === 'day') return reachable(activity, today, at, at) ? at : null;
+  if (period === 'week') return reachable(activity, today, addDays(at, -6), at) ? at : null;
   if (period === 'month') return pastMonths(activity, today).includes(monthOf(at)) ? monthStart(monthOf(at)) : null;
   return null;
 }
@@ -116,7 +148,7 @@ export interface ReportStep {
 
 /**
  * Previous / Next from the window at `at` (null: the current window). Null when there is no step that way, so the
- * button is hidden: Next on the current window, Previous past the saved rows or the oldest month with activity.
+ * button is hidden: Next on the current window, Previous past what is `reachable` or the oldest month with activity.
  */
 export function stepOf(period: ReportPeriod, today: string, at: string | null, dir: 'prev' | 'next', activity: ActivitySummary): ReportStep | null {
   if (period === 'all' || (dir === 'next' && at === null)) return null;
@@ -138,7 +170,7 @@ export function stepOf(period: ReportPeriod, today: string, at: string | null, d
     return { at: next >= today ? null : next };
   }
   const prev = addDays(end, -size);
-  return addDays(prev, -(size - 1)) >= rowsFromOf(activity.asOf) ? { at: prev } : null;
+  return reachable(activity, today, addDays(prev, -(size - 1)), prev) ? { at: prev } : null;
 }
 
 export interface ReportHorizon {
@@ -164,30 +196,31 @@ export interface DaySums {
   q: number;
   c: number;
   w: number;
-  /** Letters that became strong in the window (`j`). */
-  letters: number;
 }
 
-const inRange = (row: ActivityDay, from: string, to: string): boolean => row.d >= from && row.d <= to;
+const rowsIn = (days: readonly ActivityDay[], from: string, to: string): ActivityDay[] => days.filter((row) => row.d >= from && row.d <= to);
 
 /** The day rows of `from`..`to` (both included), summed. */
 export function sumDays(days: readonly ActivityDay[], from: string, to: string): DaySums {
-  const out: DaySums = { days: 0, min: 0, q: 0, c: 0, w: 0, letters: 0 };
-  for (const row of days) {
-    if (!inRange(row, from, to)) continue;
+  const out: DaySums = { days: 0, min: 0, q: 0, c: 0, w: 0 };
+  for (const row of rowsIn(days, from, to)) {
     out.days += 1;
     out.min += row.min;
     out.q += row.q;
     out.c += row.c;
     out.w += row.w;
-    out.letters += row.j.length;
   }
   return out;
 }
 
 /** Practice days in `from`..`to` (section 3.2: a session started, a first finish, a card or a first word). */
 export function practiceDaysIn(days: readonly ActivityDay[], from: string, to: string): number {
-  return days.filter((row) => inRange(row, from, to)).length;
+  return sumDays(days, from, to).days;
+}
+
+/** Letters that became strong in `from`..`to`, in the order learned, each once (`days[].j`). */
+export function lettersIn(days: readonly ActivityDay[], from: string, to: string): string[] {
+  return [...new Set(rowsIn(days, from, to).flatMap((row) => row.j))];
 }
 
 /**

@@ -4,7 +4,22 @@ import { StageKeySchema, type StageKey } from '../schemas/heritage-card';
 import { PlacementStrandSchema, type PlacementStrand, type StrandStatus } from '../schemas/placement';
 import { reportPeriodOf, type ActivityDay, type ActivitySummary, type ReportPeriod } from '../schemas/report';
 import type { ReportSummary } from '../schemas/report-response';
-import { clampAt, horizonOf, monthOf, rowsFromOf, stepOf, sumDays, todayFor, windowOf, type DaySums, type ReportStep, type ReportWindow } from './windows';
+import { TEACHER_HIDDEN_SUMMARY_KEYS } from '../schemas/transfer-consent';
+import {
+  clampAt,
+  firstDayOf,
+  horizonOf,
+  lettersIn,
+  monthOf,
+  shownFromOf,
+  stepOf,
+  sumDays,
+  todayFor,
+  windowOf,
+  type DaySums,
+  type ReportStep,
+  type ReportWindow,
+} from './windows';
 
 /**
  * The learner report — F-REPORT-001 section 3.5 (RP-2a): one learner's summary turned into a report for a period,
@@ -22,10 +37,11 @@ export type ReportViewer = 'family' | 'class' | 'device';
 export type ReportVoice = 'third' | 'second';
 
 /**
- * Word figures stay hidden for every viewer, console and device, until F-VOC-005 P-4 adds their consent item
- * (section 3.10); P-4 flips this, and RP-2b's W10 / P5 read it too.
+ * Word figures stay hidden for every viewer, console and device, while `vocab` is on the hidden list (section 3.10):
+ * F-VOC-005 P-4 moves it to the allow-list with its consent item, and the Worker (`roster-summary.ts` stops zeroing
+ * `w`) and every report show words from the same change. RP-2b's W10 and P5 read it too.
  */
-export const REPORT_WORDS_VISIBLE: boolean = false;
+export const REPORT_WORDS_VISIBLE: boolean = !(TEACHER_HIDDEN_SUMMARY_KEYS as readonly string[]).includes('vocab');
 
 export interface LearnerReportInput {
   /** The roster projection (console) or the full local summary (device); null when the server holds none. */
@@ -99,7 +115,10 @@ export interface LearnerReport {
   viewer: ReportViewer;
   voice: ReportVoice;
   period: ReportPeriod;
-  /** Last saved more than 7 days ago, by sync or by `asOf`: the older learner-local day. */
+  /**
+   * Last saved more than 7 days ago, by sync or by `asOf`: the older of the two, as a learner-local day (the sync day
+   * in the learner's offset; a summary without `activity` has none, so its sync day is the UTC one).
+   */
   stale: { lastSaved: string } | null;
   horizon: { asOf: string; partial: boolean } | null;
   /** Two lines that do not depend on the period. */
@@ -129,8 +148,11 @@ export interface LearnerReport {
   } | null;
   /** `week`: 7 cells; `month`: one per day of the window; otherwise null. */
   calendar: ReportCalendarCell[] | null;
-  /** `all`: quests and cards before the first month listed, then the running sum per month. */
-  growth: { baseline: { quests: number; cards: number }; months: { m: string; quests: number; cards: number }[] } | null;
+  /**
+   * `all`: quests and cards before the first month listed, then the running sum per month; `since` is the first
+   * practice day, null for a class (it may lie before the learner joined, RP-W2), so "since" is never shown there.
+   */
+  growth: { since: string | null; baseline: { quests: number; cards: number }; months: { m: string; quests: number; cards: number }[] } | null;
   detail: LearnerReportDetail | null;
 }
 
@@ -230,28 +252,27 @@ function milestonesOf(activity: ActivitySummary): (ReportStage & { on: string })
     .sort((x, y) => byCodeUnit(x.on, y.on) || x.n - y.n);
 }
 
-/** The first day anything happened: `total.since`, else the oldest row, month or milestone (a class reads no `since`). */
-function sinceOf(activity: ActivitySummary): string | null {
-  const firsts = [activity.days[0]?.d, activity.months[0] ? `${activity.months[0].m}-01` : undefined, ...activity.milestones.map((row) => row.on)];
-  const known = firsts.filter((d): d is string => d !== undefined).sort(byCodeUnit);
-  return activity.total.since ?? known[0] ?? null;
-}
-
 const figure = (count: number, prev: number | null): ReportFigure =>
   prev !== null && prev > 0 && count > prev ? { count, up: true } : { count };
 
 const monthSums = (activity: ActivitySummary, month: string): DaySums | null => {
   const row = activity.months.find((m) => m.m === month);
-  return row ? { days: row.days, min: row.min, q: row.q, c: row.c, w: row.w, letters: 0 } : null;
+  return row ? { days: row.days, min: row.min, q: row.q, c: row.c, w: row.w } : null;
 };
 
-/** The previous window's sums for the up-only marker, or null when there is nothing whole to compare with. */
-function previousOf(activity: ActivitySummary, window: ReportWindow): DaySums | null {
-  if (window.period === 'week' && (window.prevFrom as string) >= rowsFromOf(activity.asOf)) {
-    return sumDays(activity.days, window.prevFrom as string, window.prevTo as string);
+/**
+ * The previous window for the up-only marker, or null when there is nothing whole to compare with: a week only when
+ * all of it is shown (`shownFromOf`: saved, and for a class after the learner joined), a month from its month row
+ * (a class has no row for its join month or before).
+ */
+function previousOf(activity: ActivitySummary, window: ReportWindow, today: string): (DaySums & { letters: number | null }) | null {
+  const prevFrom = window.prevFrom as string;
+  const prevTo = window.prevTo as string;
+  if (window.period === 'week' && prevFrom >= shownFromOf(activity, today)) {
+    return { ...sumDays(activity.days, prevFrom, prevTo), letters: lettersIn(activity.days, prevFrom, prevTo).length };
   }
-  if (window.period === 'month') return monthSums(activity, monthOf(window.prevFrom as string));
-  return null;
+  const row = window.period === 'month' ? monthSums(activity, monthOf(prevFrom)) : null;
+  return row ? { ...row, letters: null } : null;
 }
 
 function stepLabel(period: ReportPeriod, today: string, at: string | null): 'current' | 'previous' | 'earlier' {
@@ -274,6 +295,7 @@ function calendarOf(activity: ActivitySummary, window: ReportWindow): ReportCale
 }
 
 function growthOf(activity: ActivitySummary): NonNullable<LearnerReport['growth']> {
+  const since = activity.total.since;
   // A class reads lifetime totals with the months before it joined removed: they fold into the baseline.
   let quests = Math.max(0, activity.total.q - sum(activity.months.map((row) => row.q)));
   let cards = Math.max(0, activity.total.c - sum(activity.months.map((row) => row.c)));
@@ -283,7 +305,7 @@ function growthOf(activity: ActivitySummary): NonNullable<LearnerReport['growth'
     cards += row.c;
     return { m: row.m, quests, cards };
   });
-  return { baseline, months };
+  return { since, baseline, months };
 }
 
 /** Section 3.5: the learner report of one learner for one period. Pure; time comes in as `now`. */
@@ -319,27 +341,23 @@ export function learnerReport(input: LearnerReportInput): LearnerReport {
 
   const today = todayFor(now, activity.tz);
   const at = clampAt(period, today, input.at, activity);
-  const window = windowOf(period, today, at, { rowsFrom: rowsFromOf(activity.asOf), since: sinceOf(activity) });
+  const window = windowOf(period, today, at, { asOf: activity.asOf, since: firstDayOf(activity) });
   const horizon = horizonOf(window, activity.asOf);
   const all = period === 'all';
-  const strongCount = new Set(summary.jamoRecognized ?? []).size;
+  const lettersNew = all || window.totalsOnly ? null : lettersIn(activity.days, window.from, horizon.upTo);
 
+  // A month reads its month row whenever there is one, so a past month keeps the same figures when it ages out of
+  // the day rows; a class has no row for the month it joined in, which then sums its rows from the join day.
+  const monthRow = window.period === 'month' ? monthSums(activity, monthOf(window.from)) : null;
   const current: DaySums = all
-    ? { days: activity.total.days, min: activity.total.min, q: activity.total.q, c: activity.total.c, w: activity.total.w, letters: strongCount }
-    : window.totalsOnly
-      ? (monthSums(activity, monthOf(window.from)) ?? { days: 0, min: 0, q: 0, c: 0, w: 0, letters: 0 })
-      : sumDays(activity.days, window.from, horizon.upTo);
-  const prev = previousOf(activity, window);
+    ? { days: activity.total.days, min: activity.total.min, q: activity.total.q, c: activity.total.c, w: activity.total.w }
+    : (monthRow ?? (window.totalsOnly ? { days: 0, min: 0, q: 0, c: 0, w: 0 } : sumDays(activity.days, window.from, horizon.upTo)));
+  const prev = previousOf(activity, window, today);
   const milestones = milestonesOf(activity).filter((row) => all || (row.on >= window.from && row.on <= horizon.upTo));
   const newest = milestones[milestones.length - 1];
 
   let code: ReportHeadlineCode = newest ? 'stage_done' : current.days > 0 ? 'practiced' : horizon.saved ? 'none_yet' : 'none_saved';
   if ((code === 'practiced' || code === 'none_yet') && activity.total.days < 2) code = 'getting_started';
-
-  const lettersNew =
-    all || window.totalsOnly
-      ? null
-      : [...new Set(activity.days.filter((row) => row.d >= window.from && row.d <= horizon.upTo).flatMap((row) => row.j))];
 
   base.horizon = { asOf: horizon.asOf, partial: horizon.partial };
   base.window = {
@@ -358,8 +376,8 @@ export function learnerReport(input: LearnerReportInput): LearnerReport {
     minutes: figure(current.min, prev?.min ?? null),
     quests: figure(current.q, prev?.q ?? null),
     cards: figure(current.c, prev?.c ?? null),
-    // A month's row has no letters: only a week compares them.
-    letters: window.totalsOnly ? null : figure(current.letters, window.period === 'week' ? (prev?.letters ?? null) : null),
+    // `all`: the letters known well; a totals-only month has none; a month row has no letters to compare with.
+    letters: all ? figure(new Set(summary.jamoRecognized ?? []).size, null) : lettersNew === null ? null : figure(lettersNew.length, prev?.letters ?? null),
     words: REPORT_WORDS_VISIBLE ? figure(current.w, prev?.w ?? null) : null,
   };
   base.calendar = calendarOf(activity, window);

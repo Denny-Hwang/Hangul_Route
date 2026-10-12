@@ -142,6 +142,28 @@ describe('a past window never changes when later activity is added', () => {
   });
 });
 
+describe('a month that ages out of the day rows keeps its counts', () => {
+  it('days, minutes, quests and cards are the same day by day and from the month row', () => {
+    let checked = 0;
+    for (let seed = 1; seed <= RUNS; seed += 1) {
+      const events = stream(seed, SPAN);
+      const earlier = addDays(START, 250);
+      const month = monthOf(addDays(`${monthOf(earlier)}-01`, -1));
+      const covered = addDays(`${monthOf(earlier)}-01`, 2);
+      const before = reportOn(events, covered, 'month', `${month}-10`);
+      const after = reportOn(events, addDays(covered, 60), 'month', `${month}-10`);
+      if (before.window?.at === null || after.window?.at === null) continue;
+      expect(before.window?.totalsOnly, `seed ${seed}`).toBe(false);
+      expect(after.window?.totalsOnly, `seed ${seed}`).toBe(true);
+      const { letters: _l1, ...countsBefore } = counts(before);
+      const { letters: _l2, ...countsAfter } = counts(after);
+      expect(countsAfter, `seed ${seed} ${month}`).toEqual(countsBefore);
+      checked += 1;
+    }
+    expect(checked).toBeGreaterThan(RUNS / 2);
+  });
+});
+
 describe('the growth line only rises (OD-10)', () => {
   it('along its months, from the baseline', () => {
     for (let seed = 1; seed <= RUNS; seed += 1) {

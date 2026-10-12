@@ -2,11 +2,14 @@ import { describe, expect, it } from 'vitest';
 import type { ActivityDay, ActivitySummary } from '../../schemas/report';
 import {
   clampAt,
+  firstDayOf,
   horizonOf,
+  lettersIn,
   localRunEndingAt,
   monthOf,
   practiceDaysIn,
   rowsFromOf,
+  shownFromOf,
   stepOf,
   sumDays,
   todayFor,
@@ -27,7 +30,8 @@ function activity(over: Partial<ActivitySummary> = {}): ActivitySummary {
     asOf: '2026-10-15',
     days: [],
     months: [],
-    total: { since: null, min: 0, q: 0, c: 0, w: 0, days: 0 },
+    // A family or device copy knows the first practice day; a class copy (RP-W2) has none.
+    total: { since: '2026-01-04', min: 5, q: 0, c: 0, w: 0, days: 1 },
     milestones: [],
     ...over,
   };
@@ -119,7 +123,7 @@ describe('windowOf: the four periods', () => {
       totalsOnly: true,
     });
     // The day rows of a device whose last day is 2 October reach back to 29 August: September is drawn day by day.
-    expect(windowOf('month', today, '2026-09-20', { rowsFrom: rowsFromOf('2026-10-02') }).totalsOnly).toBe(false);
+    expect(windowOf('month', today, '2026-09-20', { asOf: '2026-10-02' }).totalsOnly).toBe(false);
     expect(windowOf('month', '2026-10-05', '2026-09-03').totalsOnly).toBe(false);
   });
 
@@ -146,6 +150,37 @@ describe('windowOf: the four periods', () => {
     for (const at of ['2026-10-16', '2026-02-30', 'yesterday', '', '2026-1-05', null, undefined]) {
       expect(windowOf('week', today, at)).toEqual(windowOf('week', today));
     }
+  });
+});
+
+describe('firstDayOf and shownFromOf: where a report may start', () => {
+  const today = '2026-10-15';
+
+  it('the first practice day when the activity knows it', () => {
+    expect(firstDayOf(activity({ total: { since: '2026-03-04', min: 9, q: 1, c: 0, w: 0, days: 3 } }))).toBe('2026-03-04');
+  });
+
+  it('a class copy (no since): the oldest day row, month or milestone it holds', () => {
+    const clipped = activity({
+      days: [day('2026-10-12')],
+      months: [{ m: '2026-10', min: 9, q: 1, c: 0, w: 0, days: 1 }],
+      milestones: [{ stage: 'stage1', on: '2026-10-11' }],
+      total: { since: null, min: 90, q: 9, c: 3, w: 0, days: 20 },
+    });
+    expect(firstDayOf(clipped)).toBe('2026-10-01');
+    const noSince = { since: null, min: 0, q: 0, c: 0, w: 0, days: 0 };
+    expect(firstDayOf(activity({ milestones: [{ stage: 'stage1', on: '2026-10-11' }], total: noSince }))).toBe('2026-10-11');
+    expect(firstDayOf(activity({ total: noSince }))).toBeNull();
+  });
+
+  it('the first of the 35 day rows, or for a class copy the first day it shows anything', () => {
+    expect(shownFromOf(activity({ total: { since: '2026-03-04', min: 9, q: 1, c: 0, w: 0, days: 3 } }), today)).toBe('2026-09-11');
+    // A class that sees the learner from 12 October on.
+    expect(shownFromOf(activity({ days: [day('2026-10-12')], total: { since: null, min: 90, q: 9, c: 3, w: 0, days: 20 } }), today)).toBe('2026-10-12');
+    // A class that has seen the learner for months: the day rows bound it.
+    expect(shownFromOf(activity({ months: [{ m: '2026-05', min: 9, q: 1, c: 0, w: 0, days: 1 }], total: { since: null, min: 9, q: 1, c: 0, w: 0, days: 1 } }), today)).toBe('2026-09-11');
+    // A class that sees nothing yet: today.
+    expect(shownFromOf(activity({ total: { since: null, min: 90, q: 9, c: 3, w: 0, days: 20 } }), today)).toBe(today);
   });
 });
 
@@ -180,6 +215,16 @@ describe('clampAt: looking back stays within the saved 35 days and 24 months (OD
     expect(clampAt('month', today, '2026-05-31', a)).toBe('2026-05-01');
     expect(clampAt('month', today, '2026-09-10', a)).toBeNull();
     expect(clampAt('month', today, '2026-10-02', a)).toBeNull();
+  });
+
+  it('a class never steps into days before it sees the learner', () => {
+    const clipped = activity({ asOf: today, days: [day('2026-10-12')], total: { since: null, min: 90, q: 9, c: 3, w: 0, days: 20 } });
+    expect(clampAt('day', today, '2026-10-12', clipped)).toBe('2026-10-12');
+    expect(clampAt('day', today, '2026-10-11', clipped)).toBeNull();
+    expect(clampAt('week', today, '2026-10-08', clipped)).toBeNull();
+    expect(stepOf('day', today, '2026-10-12', 'prev', clipped)).toBeNull();
+    expect(stepOf('day', today, '2026-10-13', 'prev', clipped)).toEqual({ at: '2026-10-12' });
+    expect(stepOf('week', today, null, 'prev', clipped)).toBeNull();
   });
 
   it('all has no stepper; a malformed at is the current window', () => {
@@ -233,6 +278,26 @@ describe('stepOf: Previous and Next', () => {
     expect(stepOf('month', today, null, 'prev', activity({ asOf: today }))).toBeNull();
   });
 
+  it('month: never further back than the 24 months a device keeps', () => {
+    const months = Array.from({ length: 24 }, (_, i) => {
+      const index = 2026 * 12 + 9 - 23 + i;
+      return { m: `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, '0')}`, min: 5, q: 1, c: 0, w: 0, days: 1 };
+    });
+    expect(months[0]?.m).toBe('2024-11');
+    expect(months[23]?.m).toBe('2026-10');
+    const full = activity({ asOf: today, months });
+    let at: string | null = null;
+    let steps = 0;
+    for (let step = stepOf('month', today, at, 'prev', full); step !== null; step = stepOf('month', today, at, 'prev', full)) {
+      at = step.at;
+      steps += 1;
+    }
+    expect(steps).toBe(23);
+    expect(at).toBe('2024-11-01');
+    expect(clampAt('month', today, '2024-10-15', full)).toBeNull();
+    expect(clampAt('month', today, '2024-11-15', full)).toBe('2024-11-01');
+  });
+
   it('all has no stepper', () => {
     expect(stepOf('all', today, null, 'prev', a)).toBeNull();
   });
@@ -253,7 +318,7 @@ describe('horizonOf: the data stop at asOf', () => {
   });
 });
 
-describe('sumDays and practiceDaysIn', () => {
+describe('sumDays, practiceDaysIn and lettersIn', () => {
   const days = [
     day('2026-10-01', { min: 5, q: 1, j: ['ㄱ'] }),
     day('2026-10-09', { min: 12, q: 1, c: 1, w: 2, j: ['ㄴ', 'ㄷ'] }),
@@ -262,15 +327,22 @@ describe('sumDays and practiceDaysIn', () => {
   ];
 
   it('sums the rows of a window, both ends included', () => {
-    expect(sumDays(days, '2026-10-09', '2026-10-15')).toEqual({ days: 3, min: 27, q: 1, c: 3, w: 2, letters: 2 });
-    expect(sumDays(days, '2026-10-02', '2026-10-08')).toEqual({ days: 0, min: 0, q: 0, c: 0, w: 0, letters: 0 });
-    expect(sumDays([], '2026-10-01', '2026-10-31')).toEqual({ days: 0, min: 0, q: 0, c: 0, w: 0, letters: 0 });
+    expect(sumDays(days, '2026-10-09', '2026-10-15')).toEqual({ days: 3, min: 27, q: 1, c: 3, w: 2 });
+    expect(sumDays(days, '2026-10-02', '2026-10-08')).toEqual({ days: 0, min: 0, q: 0, c: 0, w: 0 });
+    expect(sumDays([], '2026-10-01', '2026-10-31')).toEqual({ days: 0, min: 0, q: 0, c: 0, w: 0 });
   });
 
   it('counts a day with a session of 0 minutes as a practice day', () => {
     expect(practiceDaysIn(days, '2026-10-12', '2026-10-12')).toBe(1);
     expect(practiceDaysIn(days, '2026-10-01', '2026-10-31')).toBe(4);
     expect(practiceDaysIn(days, '2026-10-16', '2026-10-31')).toBe(0);
+  });
+
+  it('lists the letters that became strong, in the order learned, each once', () => {
+    expect(lettersIn(days, '2026-10-01', '2026-10-31')).toEqual(['ㄱ', 'ㄴ', 'ㄷ']);
+    expect(lettersIn(days, '2026-10-02', '2026-10-15')).toEqual(['ㄴ', 'ㄷ']);
+    expect(lettersIn([day('2026-10-01', { j: ['ㄱ'] }), day('2026-10-02', { j: ['ㄱ', 'ㅏ'] })], '2026-10-01', '2026-10-02')).toEqual(['ㄱ', 'ㅏ']);
+    expect(lettersIn(days, '2026-10-16', '2026-10-31')).toEqual([]);
   });
 });
 

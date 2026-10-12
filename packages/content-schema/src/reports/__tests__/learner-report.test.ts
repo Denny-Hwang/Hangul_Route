@@ -213,6 +213,20 @@ describe('periods', () => {
     expect(r.detail?.lettersNew).toEqual(['ㅇ', 'ㄱ', 'ㄴ']);
   });
 
+  it('month: figures come from the month row, so a past month keeps them when it ages out of the day rows', () => {
+    // On 2 October the day rows reach back to 29 August: September is drawn day by day.
+    const early = withActivity(STEADY, { asOf: '2026-10-02', days: STEADY.activity.days.filter((row) => row.d <= '2026-10-02'), months: [STEADY.activity.months[0] as ActivitySummary['months'][number]] });
+    const onSecond = report({ summary: early, period: 'month', at: '2026-09-20', now: new Date('2026-10-02T12:00:00.000Z') });
+    expect(onSecond.window).toMatchObject({ from: '2026-09-01', to: '2026-09-30', totalsOnly: false });
+    expect(onSecond.figures).toEqual({ days: { count: 6 }, minutes: { count: 95 }, quests: { count: 3 }, cards: { count: 3 }, letters: { count: 5 }, words: null });
+    expect(onSecond.calendar).toHaveLength(30);
+    // On 15 October September is older than the rows: the same counts, totals only.
+    expect(report({ summary: STEADY, period: 'month', at: '2026-09-20' }).figures).toEqual({ days: { count: 6 }, minutes: { count: 95 }, quests: { count: 3 }, cards: { count: 3 }, letters: null, words: null });
+    // A month row that rounds its minutes once reads as the device wrote it.
+    const rounded = withActivity(STEADY, { months: [STEADY.activity.months[0] as ActivitySummary['months'][number], { m: '2026-10', min: 77, q: 4, c: 2, w: 0, days: 5 }] });
+    expect(report({ summary: rounded, period: 'month' }).figures?.minutes).toEqual({ count: 77 });
+  });
+
   it('month older than the day rows: totals only, from activity.months; no calendar and no letters', () => {
     const r = report({ summary: STEADY, period: 'month', at: '2026-09-20' });
     expect(r.window).toEqual({ period: 'month', from: '2026-09-01', to: '2026-09-30', at: '2026-09-01', step: 'previous', totalsOnly: true, prev: null, next: { at: null } });
@@ -230,6 +244,7 @@ describe('periods', () => {
     expect(r.headline).toEqual({ code: 'practiced', days: 11, quests: 7, stage: null });
     expect(r.calendar).toBeNull();
     expect(r.growth).toEqual({
+      since: '2026-09-05',
       baseline: { quests: 0, cards: 0 },
       months: [
         { m: '2026-09', quests: 3, cards: 3 },
@@ -433,14 +448,28 @@ describe('a class reads only what it may (behaviour 15)', () => {
     const all = report({ summary: STEADY_FOR_CLASS, viewer: 'class', period: 'all' });
     expect(all.figures).toMatchObject({ days: { count: 11 }, quests: { count: 7 } });
     expect(all.window).toMatchObject({ from: '2026-10-12' });
-    expect(all.growth).toEqual({ baseline: { quests: 7, cards: 5 }, months: [] });
+    // No "since" for a class: the first practice day may lie before the learner joined.
+    expect(all.growth).toEqual({ since: null, baseline: { quests: 7, cards: 5 }, months: [] });
   });
 
   it('a class that sees no day, month or milestone yet starts the all window today', () => {
-    const joinedToday = { ...STEADY_FOR_CLASS, activity: { ...STEADY_FOR_CLASS.activity, days: [], months: [], milestones: [] } } as ReportSummary;
+    const joinedToday = withActivity(STEADY_FOR_CLASS, { days: [], months: [], milestones: [] });
     const all = report({ summary: joinedToday, viewer: 'class', period: 'all' });
     expect(all.window).toMatchObject({ from: '2026-10-15', to: '2026-10-15' });
     expect(all.figures?.days).toEqual({ count: 11 });
+  });
+
+  it('compares no week the class saw only in part: a learner who joined on Monday 5 October', () => {
+    const joinedMonday = withActivity(STEADY_FOR_CLASS, { days: STEADY.activity.days.filter((row) => row.d >= '2026-10-05') });
+    const week = report({ summary: joinedMonday, viewer: 'class' });
+    // 3 days and 36 minutes against the 1 day (20 minutes) the class saw of the week before: no "more than last week".
+    expect(week.figures).toEqual({ days: { count: 3 }, minutes: { count: 36 }, quests: { count: 2 }, cards: { count: 1 }, letters: { count: 2 }, words: null });
+    // The stepper stops at the week that holds the first day the class sees.
+    expect(week.window?.prev).toEqual({ at: '2026-10-08' });
+    expect(report({ summary: joinedMonday, viewer: 'class', at: '2026-10-08' }).window).toMatchObject({ at: '2026-10-08', prev: null });
+    expect(report({ summary: joinedMonday, viewer: 'class', at: '2026-10-01' }).window).toMatchObject({ at: null });
+    // A family reads the same weeks whole, and compares them.
+    expect(report({ summary: STEADY }).figures?.days).toEqual({ count: 3, up: true });
   });
 
   it('the plan block holds this class\'s plans only, never a self-route', () => {
