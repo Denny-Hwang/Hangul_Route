@@ -166,6 +166,10 @@ const BILLING_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, Fie
   'billing.checkout_completed': { planKey, mode: stripeMode, duplicate: isBoolean },
   'billing.payment_failed': { planKey, mode: stripeMode },
   'billing.refund_recorded': { planKey, full: isBoolean, mode: stripeMode },
+  // B-5: checkout and portal (routes/entitlements.ts).
+  'billing.checkout_started': { planKey, mode: stripeMode, promo: isBoolean },
+  'billing.checkout_refused': { planKey, reason: oneOf(['reverify_required', 'already_active', 'live_not_enabled', 'not_configured']) },
+  'billing.portal_opened': { planKey, mode: stripeMode },
 };
 
 /** Only the payload fields that fit their rule; a name without rules keeps none. */

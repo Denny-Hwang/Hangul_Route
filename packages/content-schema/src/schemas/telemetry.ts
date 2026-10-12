@@ -146,6 +146,10 @@ export const TELEMETRY_EVENT_NAMES = [
   'billing.checkout_completed',
   'billing.payment_failed',
   'billing.refund_recorded',
+  // F-BILL-002 §10, B-5 (recorded by the Worker on checkout and portal; codes only: planKey, mode, promo flag, refusal reason)
+  'billing.checkout_started',
+  'billing.checkout_refused',
+  'billing.portal_opened',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);
