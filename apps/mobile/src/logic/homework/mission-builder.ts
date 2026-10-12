@@ -102,12 +102,15 @@ export interface BuildMissionInput {
   isEntitled?: (stageKey: string) => boolean;
   /**
    * The story card's world (F-STORY-004 §3.7): the story index, the profile's
-   * bookmarks and the lock (`storyLockFor`). Absent → no story cards.
+   * bookmarks, the lock (`storyLockFor`) and the fit (`storyFitsFor`,
+   * F-STORY-005 §3.4: fitting stories come first among `next`; it only
+   * orders). Absent → no story cards.
    */
   stories?: {
     entries: readonly StoryIndexEntry[];
     bookmarks: BookmarkFile;
     isLocked: (entry: StoryIndexEntry) => boolean;
+    fits?: (entry: StoryIndexEntry) => boolean;
   };
 }
 
@@ -230,6 +233,7 @@ function storyLink(...reasons: StoryReason[]): Link {
       snapshot: input.snapshot,
       bookmarks: input.stories.bookmarks,
       isLocked: input.stories.isLocked,
+      fits: input.stories.fits,
       excludeStoryIds: [...used.stories],
       excludeQuestIds: [...used.quests],
       reasons,
