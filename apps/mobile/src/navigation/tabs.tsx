@@ -1,19 +1,55 @@
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createBottomTabNavigator, type BottomTabNavigationOptions } from '@react-navigation/bottom-tabs';
 import { useIsFocused } from '@react-navigation/native';
-import { Icon, borderWidth, colors, tabBarMetrics, typography, useLayoutClass } from '@hangul-route/design-system';
+import { Icon, borderWidth, colors, spacing, tabBarMetrics, typography, useLayoutClass } from '@hangul-route/design-system';
 import React, { useEffect } from 'react';
+import { Text, type TextStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { flags } from '../config/flags';
 import { useMessages } from '../i18n/use-messages';
+import { FOUR_TAB_LABEL_FIT, TAB_ICON, mainTabs, type MainTabName } from '../logic/my-route/tab';
 import { HomeScreen } from '../screens/home/HomeScreen';
 import { JourneyScreen } from '../screens/journey/JourneyScreen';
 import { LibraryScreen } from '../screens/library/LibraryScreen';
+import { MyRouteTabScreen } from '../screens/my-route/MyRouteScreen';
 import { useUiStore } from '../store/ui-store';
 import type { MainTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
+const SCREENS: Readonly<Record<MainTabName, React.ComponentType>> = {
+  Home: HomeScreen,
+  Route: MyRouteTabScreen,
+  Journey: JourneyScreen,
+  Library: LibraryScreen,
+};
+
+const LABEL_STYLE: TextStyle = { fontSize: typography.size.caption, fontWeight: '600' };
+/** The navigator's own label offset beside the icon (wide windows), on the spacing scale. */
+const LABEL_BESIDE: TextStyle = { marginLeft: spacing.lg + spacing.xs, marginTop: spacing.xxs };
+
+/**
+ * The four-tab bar's label (design/screens/learning-route/tab-bar.md, "Large text"): the navigator's
+ * own label look, plus the native cap at 1.3 x caption that shrinks to fit instead of cutting off.
+ */
+function fittedLabel(text: string): NonNullable<BottomTabNavigationOptions['tabBarLabel']> {
+  return function FittedTabLabel({ color, position }) {
+    return (
+      <Text {...FOUR_TAB_LABEL_FIT} style={[{ textAlign: 'center', color }, position === 'beside-icon' ? LABEL_BESIDE : null, LABEL_STYLE]}>
+        {text}
+      </Text>
+    );
+  };
+}
+
+/**
+ * The learner tab bar. Flag off: Today, Journey, Library, exactly as before. Flag on
+ * (`flags.myRouteEnabled`): Today, Route, Journey, Library (AMENDMENTS-ROUTE-LEARNING-ROUTE
+ * section 5.1, LR-OD-2); the Route tab draws the `route` glyph over "Route" and is announced as
+ * "Learning Route". Design: design/screens/learning-route/tab-bar.md, mock/tab-bar.html.
+ */
 export function MainTabs(): React.ReactElement {
-  const tabs = useMessages().a11y.tabs;
+  const messages = useMessages();
+  const tabs = messages.a11y.tabs;
   // The tab row sits above the home indicator instead of a fixed 24px pad
   // that overlapped it (audit p2-L2), clears a landscape notch, and is centred
   // inside `layout.maxWidth.full` on a wide window (F-LAYOUT-001 §3.2, LD6).
@@ -31,13 +67,18 @@ export function MainTabs(): React.ReactElement {
     setTabBarHeight(focused ? height : 0);
     return () => setTabBarHeight(0);
   }, [focused, height, setTabBarHeight]);
+
+  const order = mainTabs(flags.myRouteEnabled);
+  // Only the four-tab bar caps its native label; the three-tab bar keeps the navigator's plain label.
+  const fourTabs = order.length === 4;
+  const labels: Readonly<Record<MainTabName, string>> = { Home: tabs.home, Route: tabs.route, Journey: tabs.journey, Library: tabs.library };
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: colors.brand.primary,
         tabBarInactiveTintColor: colors.text.muted,
-        tabBarLabelStyle: { fontSize: typography.size.caption, fontWeight: '600' },
+        tabBarLabelStyle: LABEL_STYLE,
         tabBarStyle: {
           backgroundColor: colors.surface.paper,
           borderTopColor: colors.border.subtle,
@@ -48,19 +89,21 @@ export function MainTabs(): React.ReactElement {
           paddingLeft,
           paddingRight,
         },
-        tabBarIcon: ({ color, size }) => {
-          const map: Record<string, 'home' | 'journey' | 'library'> = {
-            Home: 'home',
-            Journey: 'journey',
-            Library: 'library',
-          };
-          return <Icon name={map[route.name] ?? 'home'} size={size} color={color} />;
-        },
+        tabBarIcon: ({ color, size }) => <Icon name={TAB_ICON[route.name]} size={size} color={color} />,
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: tabs.home }} />
-      <Tab.Screen name="Journey" component={JourneyScreen} options={{ tabBarLabel: tabs.journey }} />
-      <Tab.Screen name="Library" component={LibraryScreen} options={{ tabBarLabel: tabs.library }} />
+      {order.map((name) => (
+        <Tab.Screen
+          key={name}
+          name={name}
+          component={SCREENS[name]}
+          options={{
+            ...(fourTabs ? { tabBarLabel: fittedLabel(labels[name]) } : { tabBarLabel: labels[name] }),
+            // The tab says "Route" (the 12-character tab budget); its accessibility label is the full name (LR-OD-1).
+            ...(name === 'Route' ? { tabBarAccessibilityLabel: messages.a11y.myRoute.tab } : {}),
+          }}
+        />
+      ))}
     </Tab.Navigator>
   );
 }

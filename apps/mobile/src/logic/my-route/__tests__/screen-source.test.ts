@@ -57,21 +57,23 @@ describe('screens/my-route sources', () => {
     expect(input).not.toMatch(/route:\s*null/);
   });
 
-  it('the Journey header button exists only behind flags.myRouteEnabled', () => {
+  it('the Journey header button exists only behind flags.myRouteEnabled and opens the Route tab (LR-4, LR-OD-11)', () => {
     const src = read(join(SRC, 'screens', 'journey', 'JourneyScreen.tsx'));
-    const at = src.indexOf("navigate('MyRoute'");
+    const at = src.indexOf("navigation.navigate('Main', { screen: 'Route' })");
     expect(at).toBeGreaterThan(0);
     expect(src.lastIndexOf('flags.myRouteEnabled ?', at)).toBeGreaterThan(0);
+    expect(src.lastIndexOf('messages.learner.myRoute.open.cta', at)).toBeGreaterThan(0);
+    expect(src).not.toContain("navigate('MyRoute'");
   });
 
   it('PinEntry continues to the read-only page once the gate is open, as a grown-up', () => {
     const src = read(join(SRC, 'screens', 'parent', 'PinEntryScreen.tsx'));
-    expect(src).toContain("navigation.replace('MyRoute', { source: 'parent', profileId, viewer: 'grownup' })");
+    expect(src).toContain("navigation.replace('MyRoute', { profileId, viewer: 'grownup' })");
   });
 
   it('the screen forces read-only for a grown-up entry (amendment section 5.1)', () => {
     const src = read(join(SCREEN_DIR, 'MyRouteScreen.tsx'));
-    expect(src).toContain("grownup: route.params?.viewer === 'grownup'");
+    expect(src).toContain('entry: myRouteEntryOf(route.params)');
     // Read-only builds the grown-up view, which carries no episode, tile or stories link (view.test.ts).
     expect(src).toContain("viewer: readOnly ? 'grownup' : 'self'");
   });
@@ -95,7 +97,7 @@ describe('parent dashboard Learning Route row sources', () => {
   });
 
   it('See Learning Route opens the root-stack page forced read-only, never the interactive one', () => {
-    expect(row).toContain("navigation.navigate('MyRoute', { source: 'parent', profileId, viewer: 'grownup' })");
+    expect(row).toContain("navigation.navigate('MyRoute', { profileId, viewer: 'grownup' })");
     for (const src of [row, dashboard]) {
       for (const m of src.matchAll(/navigate\('MyRoute'[^)]*\)/g)) expect(m[0]).toContain("viewer: 'grownup'");
     }
@@ -170,11 +172,12 @@ describe('the Home route strip (F-ROUTE-001 R-4b)', () => {
     expect(strip).not.toContain('<Heading');
   });
 
-  it('Home builds the strip from the shared model and opens the page from Home', () => {
+  it('Home builds the strip from the shared model and opens the Route tab from Home (LR-4)', () => {
     expect(home).toContain('homeStripView(');
     expect(home).toContain('buildMyRoute(routeModelInput(');
     expect(home).toContain('localizedRouteContent(locale)');
-    expect(home).toContain("navigation.navigate('MyRoute', { source: 'home' })");
+    expect(home).toContain("<RouteStrip view={routeStrip} onPress={() => navigation.navigate('Main', { screen: 'Route' })} />");
+    expect(home).not.toContain("navigate('MyRoute'");
   });
 
   it('the strip replaces the "Stage 1 progress" bar only behind flags.myRouteEnabled', () => {
@@ -187,5 +190,88 @@ describe('the Home route strip (F-ROUTE-001 R-4b)', () => {
     // One ternary: the strip when the flag is on, the old bar otherwise (never both).
     expect(bar).toBeGreaterThan(strip);
     expect(home.slice(strip, bar)).toMatch(/\)\s*:\s*\(/);
+  });
+});
+
+/** Every source file under src/ except tests, for the navigation contract checks. */
+const sourceFiles = (dir: string): string[] =>
+  readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) return entry.name === '__tests__' ? [] : sourceFiles(path);
+    return /\.tsx?$/.test(entry.name) ? [path] : [];
+  });
+
+/**
+ * The Route tab and its entries (AMENDMENTS-ROUTE-LEARNING-ROUTE LR-4, sections
+ * 5.1 and 5.2; design/screens/learning-route/tab-bar.md, mock/route-tab.html).
+ */
+describe('the Route tab (LR-4)', () => {
+  const tabs = read(join(SRC, 'navigation', 'tabs.tsx'));
+  const types = read(join(SRC, 'navigation', 'types.ts'));
+  const screen = read(join(SCREEN_DIR, 'MyRouteScreen.tsx'));
+
+  it('the tab bar takes its order from mainTabs(flags.myRouteEnabled), so the Route tab shows only behind the flag', () => {
+    expect(tabs).toContain('mainTabs(flags.myRouteEnabled)');
+    expect(tabs).toContain('Route: MyRouteTabScreen');
+    // No Tab.Screen is written out by hand: the order and the flag live in one place (logic/my-route/tab.ts).
+    expect(tabs.match(/<Tab\.Screen/g)).toHaveLength(1);
+    expect(types).toMatch(/MainTabParamList = \{[^}]*Route: undefined;/s);
+  });
+
+  it('the Route tab draws the route glyph from Icon, labelled Route with the accessibility label Learning Route', () => {
+    expect(tabs).toContain('<Icon name={TAB_ICON[route.name]}');
+    expect(tabs).toContain('Route: tabs.route');
+    expect(tabs).toContain('messages.a11y.myRoute.tab');
+    expect(tabs).not.toMatch(SYMBOL);
+    expect(tabs).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/);
+  });
+
+  it('only the four-tab bar caps its native label at 1.3 x caption and shrinks to fit; the three-tab bar keeps its plain labels', () => {
+    expect(tabs).toContain('{...FOUR_TAB_LABEL_FIT}');
+    expect(tabs).toMatch(/fourTabs \? \{ tabBarLabel: fittedLabel\(/);
+    expect(tabs).toMatch(/design\/screens\/learning-route\/tab-bar\.md/);
+  });
+
+  it('the tab variant has no back button, shows the title and the purpose line, and sends route_map.viewed with source tab once per focus', () => {
+    expect(screen).toContain('export function MyRouteTabScreen(');
+    expect(screen).toContain("variant=\"tab\"");
+    expect(screen).toMatch(/variant === 'stack' \? back : null/);
+    expect(screen).toContain('{m.purpose}');
+    expect(screen).toContain('useFocusEffect(');
+    expect(screen).toContain("source: 'tab'");
+    expect(screen).toMatch(/viewedFor\.current !== focusKey/);
+    expect(screen).toMatch(/design\/screens\/learning-route\//);
+  });
+
+  it('the root-stack screen is grown-up only: a learner access moves to the tab instead of opening a second copy', () => {
+    expect(screen).toContain("navigation.replace('Main', { screen: selfEntryTab(flags.myRouteEnabled) })");
+    expect(types).toContain("MyRoute: { profileId: string; viewer: 'grownup' };");
+  });
+
+  it("every navigate('MyRoute' or replace('MyRoute' passes profileId and viewer 'grownup'", () => {
+    let calls = 0;
+    for (const file of sourceFiles(SRC)) {
+      for (const m of read(file).matchAll(/(navigate|replace)\('MyRoute'[^)]*\)/g)) {
+        calls += 1;
+        expect(m[0], file).toMatch(/\{ profileId(: \w+)?, viewer: 'grownup' \}/);
+      }
+    }
+    // The dashboard row and the PIN screen's continue.
+    expect(calls).toBeGreaterThanOrEqual(2);
+  });
+
+  it('the active learner reaches the tab from the level-check result, behind the same flag', () => {
+    const placement = read(join(SRC, 'screens', 'placement', 'PlacementScreen.tsx'));
+    const result = read(join(SRC, 'screens', 'placement', 'ResultScreen.tsx'));
+    expect(placement).toContain('myRouteEnabled: flags.myRouteEnabled');
+    expect(placement).toMatch(/case 'seeMyRoute':\s*resetTo\(\[\{ name: 'Main', params: \{ screen: 'Route' \} \}\]\);/);
+    expect(result).toContain("seeMyRoute: 'seeMyRoute'");
+  });
+
+  it('no billing, plans or ask link anywhere under screens/my-route/', () => {
+    for (const file of files) {
+      const src = read(join(SCREEN_DIR, file));
+      expect(src, file).not.toMatch(/Paywall|[Bb]illing|navigate\('Plans|askGrown|askParent/);
+    }
   });
 });

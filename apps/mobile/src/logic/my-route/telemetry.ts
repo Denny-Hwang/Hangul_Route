@@ -8,8 +8,13 @@ import type { MyRouteModel, StageRow } from './types';
  * grown-up viewing another profile read-only sends nothing (null).
  */
 
-/** Where the page was opened from: the Journey header (R-3), the Home strip, the level-check result, the parent dashboard. */
-export type MyRouteSource = 'home' | 'journey' | 'result' | 'parent';
+/**
+ * Where the page was opened from. Since LR-4 only the Route tab sends `route_map.viewed` (`'tab'`, once per
+ * focus): the Journey header, the Home strip and the level-check result open the tab, and the root-stack
+ * screen is grown-up only and read-only, so it sends nothing. The older values stay in the type for the
+ * events already stored.
+ */
+export type MyRouteSource = 'tab' | 'home' | 'journey' | 'result' | 'parent';
 
 /** Exactly one stage is `here` (section 3.3). */
 const hereOf = (model: MyRouteModel): StageKey => (model.stages.find((s) => s.here) as StageRow).stage;
