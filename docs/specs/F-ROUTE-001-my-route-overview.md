@@ -449,9 +449,9 @@ Coverage: `apps/mobile/src/logic` >= 90 % with `logic/my-route/` at 100 %; `pack
 | R-2b | `feat(design-system)`: `PipRow` (five drawn shapes, cursor and start markers), border token via `design/tokens/` + `design-token-sync` | M | design mock |
 | R-3 | `feat(mobile)`: `MyRoute` screen (phone / regular / wide single column), navigation + gate check, `learner.myRoute` / `a11y.myRoute` en strings, Journey header button, flag | L | R-1a, R-1b, R-2b, R-W1 deployed, R-4a (so Home and My route share one cursor for a placed-out learner) |
 | R-4a | `feat(mobile)`: `NextQuestInput.skipQuestIds`; Home and Results pass the same `isEntitled` / `skipQuestIds`; Home keeps its replay fallback; the one predicate is `logic/entitlement.ts` `isStagePlayable`, which `content/sync-context.ts` `journeyContent` (`summary.journey`, R-8) already binds | S | OD-4 |
-| R-4b | `feat(mobile)`: Home route strip replaces the bar (`HomeScreen.tsx:199-202`) | M | R-3, OD-3, F-STORY-004 4.4a, F-LAYOUT-001 5c |
+| R-4b | `feat(mobile)`: Home route strip replaces the bar (`HomeScreen.tsx:199-202`); `logic/my-route/home-strip.ts` takes optional `goalStage` and `week`, fed by LR-5a and R-7b | M | R-3, OD-3, F-STORY-004 4.4a, F-LAYOUT-001 5c |
 | R-7a | `feat(mobile)`: start marker and known pips; once `summary.journey` carries a non-zero `known`, re-check its consent item (`transfer-consent.ts` maps `journey` to `quests`, while `known` comes from the level check) | S | F-PLC-001 P-5, F-QUEST-002 Q-6a |
-| R-7b | `feat(mobile)`: weekly plan line | S | F-PLAN-002 P2-7a |
+| R-7b | `feat(mobile)`: weekly plan line, and the same week passed to the Home strip (`homeStripView({ week })`) | S | F-PLAN-002 P2-7a |
 | R-7c | `feat(mobile)`: letter wall + jamo-id adapter | S | Q-6a (partial), Q-8 (complete) |
 | R-8 | `feat(content-schema,mobile)`: `JourneySummarySchema`, sync-store input, backend tests | M | R-1a; deploy in D2 |
 | R-9a | `feat(web)`: `journey-strip.ts`, roster card strip (class and family) | M | R-8 deployed |
