@@ -520,6 +520,13 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.access.planWaiting': [['Mina', 3, 'a Group License'], ['Sam', 1, 'the Family Plan']],
   'console.access.freePlan': [[11, 'the Family Plan'], [1, 'a Group License']],
   'caregiver.access.freeEnd': [['Mina', 'the Family Plan'], ['Sam', 'a Group License']],
+  // F-ENT-003 E3-8: the Plan screen's free-plan lines.
+  'caregiver.plan.freePlan.line': [[15, 24, 65], [1, 1, 1]],
+  'caregiver.plan.freePlan.lineNoLetters': [[15, 65], [1, 1]],
+  'caregiver.plan.freePlan.stories': [[6], [1]],
+  'caregiver.plan.freePlan.topics': [[4], [1]],
+  'caregiver.plan.freePlan.classLine.family': [['Mina']],
+  'caregiver.plan.freePlan.freeEnd.family': [['Mina']],
   // Learning Route LR-7: the grown-up card, the stage list page and the class plan line (console.learningRoute).
   'console.learningRoute.title': [['Sam'], ['M. K.']],
   'console.learningRoute.now': [['Sam', 1, 'Hangul'], ['Mina', 7, 'Self-expression']],
