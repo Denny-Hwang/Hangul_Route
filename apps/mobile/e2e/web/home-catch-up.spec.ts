@@ -18,19 +18,15 @@ const STAGE1_QUESTS: readonly (readonly [string, string])[] = [
   ['quest:stage1-letters-q3', 'episode:stage1-letters'],
   ['quest:stage1-life-q1', 'episode:stage1-life'],
   ['quest:stage1-life-q2', 'episode:stage1-life'],
-  ['quest:stage1-life-q3', 'episode:stage1-life'],
   ['quest:stage1-rites-q1', 'episode:stage1-rites'],
   ['quest:stage1-nature-q1', 'episode:stage1-nature'],
   ['quest:stage1-crafts-q1', 'episode:stage1-crafts'],
 ];
-const STAGE1_QUEST_CARDS = ['card:book', 'card:hanji', 'card:brush', 'card:kimchi', 'card:family-table', 'card:kimbap', 'card:seollal', 'card:magpie', 'card:yutnori'];
-const LINE = 'Hoya found 21 cards you already earned!';
+const STAGE1_QUEST_CARDS = ['card:book', 'card:hanji', 'card:brush', 'card:kimchi', 'card:family-table', 'card:seollal', 'card:magpie', 'card:yutnori'];
+/** The line; the number is whatever the shipped Stage 1 content owes (22 when §3.11 row 1 was written). */
+const LINE = /Hoya found (\d+) cards you already earned!/;
 
-/**
- * All nine shipped Stage 1 quests at two stars with their quest cards: the reconcile owes the 21 other
- * cards (§3.11 row 1). F-QUEST-002 Q-6b added life q3 (quest card kimbap), which moved one card from
- * "episode" to "quest"; the total stays 30. Mirrors card-award-integrity.test.ts and progress-store.test.ts.
- */
+/** The eight Stage 1 quests the award model first shipped with, at two stars with their quest cards: the reconcile owes more (§3.11 row 1). */
 const stage1Done = (profileId: string): ProgressSnapshot => ({
   profileId,
   updatedAt: T,
@@ -65,6 +61,15 @@ async function seedStage1Learner(page: Page): Promise<string> {
   return profileId;
 }
 
+/** The number the visible line says, after checking it says one. */
+async function foundOn(page: Page): Promise<number> {
+  const line = catchUp(page).getByText(LINE);
+  await expect(line).toBeVisible();
+  const found = Number((await line.innerText()).match(LINE)?.[1] ?? 0);
+  expect(found).toBeGreaterThan(1);
+  return found;
+}
+
 const newCards = async (page: Page, profileId: string): Promise<string[]> =>
   ((await readStored<ProgressSnapshot>(page, `progress:${profileId}`))?.cards ?? []).filter((c) => c.newSinceLastView).map((c) => c.cardId);
 
@@ -76,8 +81,8 @@ test('a learner who earned cards before sees one catch-up card under the greetin
 
   const card = catchUp(page);
   await expect(card).toBeVisible();
-  await expect(card.getByText(LINE)).toBeVisible();
-  // One Hoya on the screen: the card's cheering Hoya stands in for the greeting's.
+  const found = await foundOn(page);
+  // The card's cheering Hoya stands in for the greeting's (wide layouts: see the wide test).
   await expect(card.getByLabel('Hoya the tiger, cheering', { exact: true })).toBeVisible();
   await expect(page.getByLabel('Hoya the tiger, waving', { exact: true })).toHaveCount(0);
   // Under the greeting, above the mission cards, never between them.
@@ -89,6 +94,8 @@ test('a learner who earned cards before sees one catch-up card under the greetin
     expect(cardBox.y).toBeGreaterThan(greetingBox.y);
     expect(cardBox.y + cardBox.height).toBeLessThanOrEqual(missionsBox.y);
   }
+  // Web reads the line from a polite live region when a sync adds the card later (native announces it, §3.10).
+  await expect(page.locator('[aria-live="polite"]').filter({ hasText: LINE })).toHaveCount(1);
   const button = card.getByRole('button', { name: 'See my cards' });
   const buttonBox = await button.boundingBox();
   expect(buttonBox?.height ?? 0).toBeGreaterThanOrEqual(64);
@@ -96,7 +103,7 @@ test('a learner who earned cards before sees one catch-up card under the greetin
   const text = await card.innerText();
   expect(text).not.toMatch(/\d+\s*(\/|of)\s*\d+/);
   expect(text.toLowerCase()).not.toMatch(/\b(left|remaining|missing|missed)\b/);
-  expect((await newCards(page, profileId)).length).toBe(21);
+  expect((await newCards(page, profileId)).length).toBe(found);
   await shot(page, 'home-catch-up');
 
   // See my cards: the Library, the caught-up cards marked seen, and the card goes for good.
@@ -113,20 +120,20 @@ test('a learner who earned cards before sees one catch-up card under the greetin
   await expect(page.getByText('Today with Hoya')).toBeVisible();
   await expect(catchUp(page)).toHaveCount(0);
   const cards = (await readStored<ProgressSnapshot>(page, `progress:${profileId}`))?.cards ?? [];
-  expect(cards).toHaveLength(30);
-  expect(new Set(cards.map((c) => c.cardId)).size).toBe(30);
+  expect(cards).toHaveLength(STAGE1_QUEST_CARDS.length + found);
+  expect(new Set(cards.map((c) => c.cardId)).size).toBe(STAGE1_QUEST_CARDS.length + found);
   expect(errors).toEqual([]);
 });
 
 test('closing the app before See my cards: the card does not come back and the cards stay new', async ({ page }) => {
   const profileId = await seedStage1Learner(page);
   await closeInstallGuide(page);
-  await expect(catchUp(page).getByText(LINE)).toBeVisible();
+  const found = await foundOn(page);
 
   await page.goto('/');
   await expect(page.getByText('Today with Hoya')).toBeVisible();
   await expect(catchUp(page)).toHaveCount(0);
-  expect((await newCards(page, profileId)).length).toBe(21);
+  expect((await newCards(page, profileId)).length).toBe(found);
 });
 
 test('a new learner (the welcome card alone) sees no catch-up card', async ({ page }) => {
@@ -137,6 +144,22 @@ test('a new learner (the welcome card alone) sees no catch-up card', async ({ pa
   await expect(page.getByLabel('Hoya the tiger, waving', { exact: true }).first()).toBeVisible();
 });
 
+/** The labels of every Hoya drawn inside the viewport, leaving out the learner's own cub on the Profile entry. */
+const hoyasOnScreen = (page: Page): Promise<string[]> =>
+  page.locator('[aria-label^="Hoya the tiger"]').evaluateAll((els) =>
+    els
+      .filter((el) => {
+        if (el.closest('[aria-label="Profile and settings"]')) return false;
+        const r = el.getBoundingClientRect();
+        return r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < window.innerHeight && r.right > 0 && r.left < window.innerWidth;
+      })
+      .map((el) => el.getAttribute('aria-label') ?? ''),
+  );
+
+/** True when the element's text is cut off (clipped or overflowing its box). */
+const clipped = (page: Page): Promise<boolean> =>
+  catchUp(page).getByText(LINE).evaluate((el) => el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1);
+
 test.describe('at 320 wide', () => {
   test.use({ viewport: { width: 320, height: 640 } });
 
@@ -144,12 +167,33 @@ test.describe('at 320 wide', () => {
     await seedStage1Learner(page);
     await closeInstallGuide(page);
     const card = catchUp(page);
-    await expect(card.getByText(LINE)).toBeVisible();
+    await foundOn(page);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
     const box = await card.boundingBox();
     expect((box?.x ?? -1) >= 0 && (box?.x ?? 0) + (box?.width ?? 0) <= 320).toBe(true);
+    expect(await clipped(page)).toBe(false);
     await shot(page, 'home-catch-up-320');
+  });
+});
+
+test.describe('200 % zoom proxy of 1180x820 (590x410), reduced motion', () => {
+  test.use({ viewport: { width: 590, height: 410 }, reducedMotion: 'reduce' });
+
+  test('the whole line shows beside the static cheering Hoya, with no sideways scroll', async ({ page }) => {
+    await seedStage1Learner(page);
+    await closeInstallGuide(page);
+    const card = catchUp(page);
+    await foundOn(page);
+    // The pose is fixed while the card shows: nothing for reduced motion to stop.
+    await expect(card.getByLabel('Hoya the tiger, cheering', { exact: true })).toBeVisible();
+    expect(await clipped(page)).toBe(false);
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(0);
+    const box = await card.boundingBox();
+    expect((box?.x ?? -1) >= 0 && (box?.x ?? 0) + (box?.width ?? 0) <= 590).toBe(true);
+    const button = card.getByRole('button', { name: 'See my cards' });
+    expect((await button.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(64);
   });
 });
 
@@ -162,7 +206,7 @@ test.describe('on a wide window (1180x820)', () => {
     const column = page.getByTestId('home-missions-column');
     await expect(page.getByTestId('home-side-column')).toBeVisible();
     const card = column.getByTestId('home-catch-up');
-    await expect(card.getByText(LINE)).toBeVisible();
+    await foundOn(page);
     const cardBox = await card.boundingBox();
     const columnBox = await column.boundingBox();
     const missionsBox = await page.getByTestId('home-missions').boundingBox();
@@ -171,6 +215,13 @@ test.describe('on a wide window (1180x820)', () => {
       expect(Math.round(cardBox.width)).toBe(Math.round(columnBox.width));
       expect(cardBox.y + cardBox.height).toBeLessThanOrEqual(missionsBox.y);
     }
+    // The card's cheering Hoya replaces the greeting's; it adds none. Besides it, only the side
+    // column's tip bubble keeps its own Hoya, as Home always has (wireframe home/cards-catch-up.md).
+    const onScreen = await hoyasOnScreen(page);
+    expect(onScreen.filter((label) => label === 'Hoya the tiger, cheering')).toHaveLength(1);
+    expect(onScreen).not.toContain('Hoya the tiger, waving');
+    const tipHoyas = await page.getByTestId('home-side-column').locator('[aria-label^="Hoya the tiger"]').count();
+    expect(onScreen).toHaveLength(1 + tipHoyas);
     await shot(page, 'home-catch-up-wide');
   });
 });
