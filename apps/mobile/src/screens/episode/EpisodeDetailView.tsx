@@ -41,6 +41,8 @@ export interface EpisodeDetailViewProps {
   onOpenStory: (target: StoryTarget) => void;
   /** Story episodes: Sources of the page's story (`StorySources { storyId, from: 'episode' }`). */
   onOpenSources: (storyId: string) => void;
+  /** Story episodes: the "Culture notes: N found" line (`CultureNotes { storyId }`); the hosts pass it once the route exists (PR 4.7). */
+  onOpenCultureNotes?: (storyId: string) => void;
 }
 
 export function EpisodeDetailView({
@@ -50,6 +52,7 @@ export function EpisodeDetailView({
   onBack,
   onOpenStory,
   onOpenSources,
+  onOpenCultureNotes,
 }: EpisodeDetailViewProps): React.ReactElement {
   const messages = useMessages();
   const m = messages.learner.episode;
@@ -101,6 +104,7 @@ export function EpisodeDetailView({
         onOpenStory={onOpenStory}
         onOpenCard={onOpenCard}
         onOpenSources={onOpenSources}
+        onOpenCultureNotes={onOpenCultureNotes}
         onBack={onBack}
       />
     );
