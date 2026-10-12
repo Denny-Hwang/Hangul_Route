@@ -575,7 +575,7 @@
   ],
   "coverSceneId": "s1",
   "rewardCardIds": {
-    "listen": "card:hanji",
+    "listen": "card:story-hangul-day-revised",
     "read": "card:book"
   },
   "pillarTags": [
@@ -583,8 +583,8 @@
   ],
   "companionId": "hoya",
   "card": {
-    "titleEn": "Hangul Day",
-    "keywordId": "hangeullal",
+    "titleEn": "Hangul",
+    "keywordId": "hangeul",
     "factId": "f3"
   },
   "facts": [

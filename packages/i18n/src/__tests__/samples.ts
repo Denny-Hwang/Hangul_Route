@@ -26,6 +26,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.home.catchUp.line': [[1], [22]],
   'learner.library.collected.line': [[1], [12]],
   'learner.cardDetail.earn.quest': [['Meet g, n, d, l', 1], ['Meet g, n, d, l', 2]],
+  'learner.cardDetail.citation.source': [['National Hangeul Museum', 'Hangul Day']],
+  'learner.cardDetail.citation.more': [[1], [3]],
   'a11y.missionCard': [['Meet Hoya', 'Say hello', false], ['Meet Hoya', 'Say hello', true]],
   'a11y.gridCell': [['Letters', 'hangul', false], ['Letters', 'hangul', true]],
   'a11y.gridCellMarked': [['Letters', 'hangul', true, false], ['Letters', 'hangul', false, true], ['Letters', 'hangul', true, true]],

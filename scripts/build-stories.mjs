@@ -8,6 +8,8 @@
 //   storiesAll     Story[]    one object literal per ready story
 //   storyEpisodes  Episode[]  one shelf episode per story with a `shelf` block
 //   storyQuests    Quest[]    its five-step quest (F-STORY-003 §3.1 skeleton)
+//   heldStoryCards HeldStoryCard[]  the card of each held story (a draft with a `card` and
+//                              a `shelf` block), so an owned card stays visible (F-STORY-006 §3.8)
 //
 // The literals are typed by contextual typing, so `tsc --noEmit` proves the
 // data matches the schema; there is no runtime parse. The zod schema test is
@@ -178,17 +180,46 @@ export function buildBundle(stories) {
   return { stories: sorted, episodes, quests };
 }
 
+/**
+ * Pure: the cards a held story keeps (F-STORY-006 §3.8 "Reviewed only", rule
+ * 1). A hold sets a reviewed story back to `draft` (F-STORY-001 §3.7), which
+ * drops it from the bundle; a learner who already owns its card must still
+ * see it. So every draft story with a `card` and a `shelf` block (one that
+ * passed the review gate) keeps the card's title, its Korean word and the
+ * story's summary, theme and stage. No fact and no citation: the story's
+ * claims are under correction. A card whose keyword does not resolve is
+ * skipped (story lint fails it). Ready stories are ignored; sorted by id.
+ */
+export function heldStoryCards(stories) {
+  const held = [];
+  for (const story of stories) {
+    if (story.state !== "draft" || !story.card || !story.shelf) continue;
+    const keyword = (story.keywords ?? []).find((k) => k.id === story.card.keywordId);
+    if (!keyword) continue;
+    held.push({
+      storyId: story.id,
+      titleEn: story.card.titleEn,
+      keyword: { ko: keyword.ko, romanization: keyword.romanization },
+      summaryEn: story.summaryEn,
+      theme: story.theme,
+      recommendedStage: story.recommendedStage,
+    });
+  }
+  return held.sort((a, b) => (a.storyId < b.storyId ? -1 : a.storyId > b.storyId ? 1 : 0));
+}
+
 function literal(value) {
   return JSON.stringify(value, null, 2);
 }
 
-export function renderBundle({ stories, episodes, quests }) {
+export function renderBundle({ stories, episodes, quests, held = [] }) {
   return (
     GENERATED_HEADER +
-    "import type { Episode, Quest, Story } from '@hangul-route/content-schema';\n\n" +
+    "import type { Episode, HeldStoryCard, Quest, Story } from '@hangul-route/content-schema';\n\n" +
     `export const storiesAll: Story[] = ${literal(stories)};\n\n` +
     `export const storyEpisodes: Episode[] = ${literal(episodes)};\n\n` +
-    `export const storyQuests: Quest[] = ${literal(quests)};\n`
+    `export const storyQuests: Quest[] = ${literal(quests)};\n\n` +
+    `export const heldStoryCards: HeldStoryCard[] = ${literal(held)};\n`
   );
 }
 
@@ -218,12 +249,12 @@ export function artBytes(stories) {
  * the module loads. Content stories keep their typed literals; episodes and
  * quests are derived from both as usual.
  */
-export function renderFixtureBundle({ stories, fixtures, episodes, quests }) {
+export function renderFixtureBundle({ stories, fixtures, episodes, quests, held = [] }) {
   const sortedFixtures = [...fixtures].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   return (
     GENERATED_HEADER +
     "// E2E FIXTURE BUNDLE (--include-fixtures): never commit; run node scripts/build-stories.mjs to restore.\n" +
-    "import { parseStory, type Episode, type Quest, type Story } from '@hangul-route/content-schema';\n\n" +
+    "import { parseStory, type Episode, type HeldStoryCard, type Quest, type Story } from '@hangul-route/content-schema';\n\n" +
     `const contentStories: Story[] = ${literal(stories)};\n\n` +
     `const fixtureStories: Story[] = (${literal(sortedFixtures)} as unknown[]).map((raw) => parseStory(raw));\n\n` +
     "export const storiesAll: Story[] = [...contentStories, ...fixtureStories].sort((a, b) =>\n" +
@@ -231,6 +262,7 @@ export function renderFixtureBundle({ stories, fixtures, episodes, quests }) {
     ");\n\n" +
     `export const storyEpisodes: Episode[] = ${literal(episodes)};\n\n` +
     `export const storyQuests: Quest[] = ${literal(quests)};\n\n` +
+    `export const heldStoryCards: HeldStoryCard[] = ${literal(held)};\n\n` +
     "/** Only an e2e bundle has this export: it switches on the e2e entry (apps/mobile navigation/story-e2e.tsx). */\n" +
     `export const storyFixtureIds: string[] = ${literal(sortedFixtures.map((f) => f.id))};\n`
   );
@@ -305,7 +337,8 @@ function checkFixtureIds(stories, fixtures) {
   }
 }
 
-function readStories(root, includeDrafts) {
+/** Every story file of content/stories, drafts included (the caller decides what ships). */
+function readStories(root) {
   const dir = join(root, "content", "stories");
   if (!existsSync(dir)) return [];
   const names = readdirSync(dir, { withFileTypes: true })
@@ -337,7 +370,7 @@ function readStories(root, includeDrafts) {
     }
     if (seen.has(story.id)) throw fail(`duplicate id ${story.id} (also in ${seen.get(story.id)})`);
     seen.set(story.id, rel);
-    if (story.state === "ready" || includeDrafts) stories.push(story);
+    stories.push(story);
   }
   return stories;
 }
@@ -394,12 +427,13 @@ export function main(argv, root) {
   let bundle;
   let fixtures = [];
   try {
-    const stories = readStories(root, opts.includeDrafts);
+    const all = readStories(root);
+    const stories = all.filter((s) => s.state === "ready" || opts.includeDrafts);
     if (opts.includeFixtures) {
       fixtures = readFixtureStories(root);
       checkFixtureIds(stories, fixtures);
     }
-    bundle = buildBundle(stories);
+    bundle = { ...buildBundle(stories), held: heldStoryCards(all) };
     if (opts.includeFixtures) {
       const all = buildBundle([...stories, ...fixtures]);
       bundle = { ...bundle, episodes: all.episodes, quests: all.quests };

@@ -44,7 +44,7 @@ The card page's actions are unchanged (flip, Hear it, Share); the back face adds
 ```
 
 - A card with no citation (the 42 older cards, set cards) keeps today's three bands.
-- The claim is the fact's `claimEn` (or its locale overlay) exactly; the source line is the first source's publisher and title in their own language.
+- The claim is the fact's `claimEn` (or its locale overlay) exactly; the source line is the first source's publisher and title in their own language, with any web address dropped (a publisher stored as "국가유산청 (Korea Heritage Service, heritage.go.kr)" prints as "국가유산청 (Korea Heritage Service)"). Story lint `card-source-address-only` makes sure a name is left to print; the grown-up Sources screen shows the source as stored, address included.
 - The grown-up Sources row on the story's episode page lists every source; this face never links out.
 
 ---
@@ -66,8 +66,9 @@ Exit to: back (the caller) · nothing new
 
 - **success**: G as drawn.
 - **empty**: a card without a citation: today's back face.
-- **error**: a `factId` that no longer resolves (content update) drops the citation band and keeps the summary; never an error box.
-- **long text / 200 % text**: the claim wraps (it is capped at 180 characters by lint); the source line wraps to two lines then truncates, with the full line in the accessible label.
+- **error**: a `factId` (or its first source) that no longer resolves keeps the card, with its title, Korean word and summary, and drops the fact and the citation band, so an owned card never leaves the Library; never an error box. Story lint (`card-fact-unknown`, `card-fact-single-source`) and T-AWARD-6 keep such content from shipping. A held story's card (F-STORY-005 §3.9) looks the same.
+- **long text / 200 % text**: the claim wraps (it is capped at 180 characters by lint); the source line wraps to two lines then truncates on the back face. The full line is in the blurb and fact card under the flip card (front face), untruncated.
+- **screen reader**: the flip card is one button (its label is the flip action), so nothing on a face inside it is read. The blurb and fact card under it carries the claim and the full source line as plain text; Korean spans of the publisher and title (Hangul, and Hanja given with it) are marked `lang="ko"` (not an English gloss), so they are read in Korean. No accessible label replaces the text. Per-span language works on the web; on native iOS and Android React Native flattens nested text, so the line is read in the device language.
 - **offline**: bundled content.
 - **reduced motion**: no flip animation.
 

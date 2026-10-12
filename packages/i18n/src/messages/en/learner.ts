@@ -269,6 +269,14 @@ export const learner = {
         }),
       later: 'This card comes in a later quest.',
     },
+    /**
+     * The source line under a story card's fact on its back face (F-STORY-006 §3.8): the fact's first
+     * source, then how many others it has. `publisher` and `title` are content, printed as given; no link.
+     */
+    citation: {
+      source: (publisher: string, title: string) => `Source: ${publisher}, ${title}`,
+      more: (n: number) => plural('en', n, { one: 'and 1 more source', other: `and ${n} more sources` }),
+    },
   },
 
   episode: {
