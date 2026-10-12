@@ -17,6 +17,7 @@ import {
   STEP_UP_MAX_AGE_MIN,
   StripeModeSchema,
   UsageSchema,
+  parseBillingSummary,
 } from '../index';
 
 /** F-BILL-002 §5.2 — billing summary, receipts and webhook history schemas. */
@@ -100,6 +101,8 @@ describe('BillingEventSchema', () => {
     expect(BillingEventSchema.safeParse({ ...event, providerRef: '' }).success).toBe(false);
     expect(BillingEventSchema.safeParse({ ...event, subjectId: '' }).success).toBe(false);
     expect(BillingEventSchema.safeParse({ ...event, livemode: 0 }).success).toBe(false);
+    // null is the documented "unknown"; an empty ref would never match a refund lookup.
+    expect(BillingEventSchema.safeParse({ ...event, paymentRef: '' }).success).toBe(false);
   });
 });
 
@@ -134,7 +137,7 @@ describe('CoverageSchema', () => {
 
   it('rejects an unknown state and missing or wrong fields', () => {
     expect(CoverageSchema.safeParse({ state: 'trial' }).success).toBe(false);
-    const own = { state: 'own', planKey: 'group_license', status: 'active', expiresAt: null, statusSince: 't' };
+    const own = { state: 'own', planKey: 'group_license', status: 'active', expiresAt: null, statusSince: '2026-10-11T00:00:00.000Z' };
     expect(CoverageSchema.safeParse(own).success).toBe(false);
     expect(CoverageSchema.safeParse({ ...own, endsAtPeriodEnd: false, status: 'paused' }).success).toBe(false);
     expect(CoverageSchema.safeParse({ state: 'school', schoolName: 'S', planKey: 'family_lifetime', expiresAt: null }).success).toBe(false);
@@ -171,17 +174,66 @@ describe('BillingSpaceCardSchema', () => {
     expect(BillingSpaceCardSchema.safeParse({ ...card, receipts: [receipt, receipt, receipt, receipt] }).success).toBe(false);
     expect(BillingSpaceCardSchema.safeParse({ ...card, actions: { buy: 'school_seat', manage: false, contact: true } }).success).toBe(false);
     expect(BillingSpaceCardSchema.safeParse({ ...card, spaceId: 'fam' }).success).toBe(false);
-    expect(BillingSpaceCardSchema.safeParse({ ...card, role: 'student' }).success).toBe(true);
+    // Cards exist only where the account is owner, caregiver, teacher or admin (§5.3).
+    for (const role of ['owner', 'caregiver', 'teacher', 'admin']) {
+      expect(BillingSpaceCardSchema.safeParse({ ...card, role }).success).toBe(true);
+    }
+    expect(BillingSpaceCardSchema.safeParse({ ...card, role: 'student' }).success).toBe(false);
     expect(BillingSpaceCardSchema.safeParse({ ...card, role: 'guest' }).success).toBe(false);
     expect(BillingSpaceCardSchema.safeParse({ ...card, readOnlyReason: 'account' }).success).toBe(false);
+  });
+  it('carries no usage line for a school seen by a teacher member (seat counts are for payers only)', () => {
+    const schoolViewer = {
+      ...card,
+      spaceId: 'space:school',
+      kind: 'school',
+      name: 'Hanbit School',
+      role: 'teacher',
+      payer: false,
+      readOnlyReason: 'school',
+      coverage: { state: 'school', schoolName: 'Hanbit School', planKey: 'group_license', expiresAt: '2027-10-11T00:00:00.000Z' },
+      usage: null,
+      actions: { buy: null, manage: false, contact: false },
+      receipts: [],
+      hasReceipts: false,
+    };
+    expect(BillingSpaceCardSchema.parse(schoolViewer)).toMatchObject({ usage: null, readOnlyReason: 'school' });
+    expect(BillingSpaceCardSchema.safeParse({ ...schoolViewer, usage: undefined }).success).toBe(false);
+  });
+});
+
+describe('BillingAccountCardSchema', () => {
+  const accountCard = {
+    coverage: { state: 'own', planKey: 'group_license', status: 'active', expiresAt: '2027-10-11T00:00:00.000Z', statusSince: '2026-10-11T00:00:00.000Z', endsAtPeriodEnd: false },
+    actions: { manage: true },
+    receipts: [receipt],
+    legacyNoHistory: false,
+  };
+
+  it('parses a legacy account card with a manage action and inline receipts only', () => {
+    expect(BillingAccountCardSchema.parse(accountCard)).toEqual(accountCard);
+    // No All receipts link: the receipts page takes a space id, so the account card has no `hasReceipts`.
+    expect(Object.keys(BillingAccountCardSchema.shape).sort()).toEqual(['actions', 'coverage', 'legacyNoHistory', 'receipts']);
+    expect(BillingAccountCardSchema.parse({ ...accountCard, hasReceipts: true })).not.toHaveProperty('hasReceipts');
+  });
+
+  it('rejects a missing coverage or action, more than three receipts and wrong types', () => {
+    const { coverage: _coverage, ...noCoverage } = accountCard;
+    expect(BillingAccountCardSchema.safeParse(noCoverage).success).toBe(false);
+    const { actions: _actions, ...noActions } = accountCard;
+    expect(BillingAccountCardSchema.safeParse(noActions).success).toBe(false);
+    expect(BillingAccountCardSchema.safeParse({ ...accountCard, receipts: [receipt, receipt, receipt, receipt] }).success).toBe(false);
+    expect(BillingAccountCardSchema.safeParse({ ...accountCard, actions: { manage: 'yes' } }).success).toBe(false);
+    expect(BillingAccountCardSchema.safeParse({ ...accountCard, legacyNoHistory: 1 }).success).toBe(false);
+    expect(BillingAccountCardSchema.safeParse({ ...accountCard, coverage: { state: 'trial' } }).success).toBe(false);
   });
 });
 
 describe('BillingSummarySchema', () => {
   const account = {
-    coverage: { state: 'own', planKey: 'group_license', status: 'active', expiresAt: null, statusSince: 't', endsAtPeriodEnd: false },
+    coverage: { state: 'own', planKey: 'group_license', status: 'active', expiresAt: null, statusSince: '2026-10-11T00:00:00.000Z', endsAtPeriodEnd: false },
+    actions: { manage: true },
     receipts: [],
-    hasReceipts: false,
     legacyNoHistory: true,
   };
 
@@ -210,8 +262,58 @@ describe('BillingSummarySchema', () => {
     expect(result.data.account[0]).not.toHaveProperty('extra');
   });
 
-  it('rejects an unknown mode or a missing card list', () => {
+  it('is the strict Worker contract: an unknown mode, a missing card list or a fourth inline receipt fails', () => {
     expect(BillingSummarySchema.safeParse({ mode: 'prod', purchasesOpen: true, cards: [], account: [] }).success).toBe(false);
     expect(BillingSummarySchema.safeParse({ mode: 'test', purchasesOpen: true, account: [] }).success).toBe(false);
+    expect(BillingSummarySchema.safeParse({ mode: 'test', purchasesOpen: true, cards: [{ ...card, receipts: [receipt, receipt, receipt, receipt] }], account: [] }).success).toBe(false);
+  });
+});
+
+describe('parseBillingSummary (the page side: a newer Worker never blanks an older page)', () => {
+  const account = {
+    coverage: { state: 'own', planKey: 'group_license', status: 'active', expiresAt: null, statusSince: '2026-10-11T00:00:00.000Z', endsAtPeriodEnd: false },
+    actions: { manage: true },
+    receipts: [],
+    legacyNoHistory: true,
+  };
+  const summary = { mode: 'test', purchasesOpen: true, cards: [card], account: [account] };
+
+  it('returns a valid summary as is and strips unknown keys', () => {
+    expect(parseBillingSummary(summary)).toEqual(summary);
+    expect(parseBillingSummary({ ...summary, futureFlag: true, cards: [{ ...card, joinCode: 'ABCDEF' }] })).toEqual(summary);
+  });
+
+  it('drops only the card a newer value breaks; its siblings survive', () => {
+    const school = { ...card, spaceId: 'space:school', kind: 'school', name: 'Hanbit School' };
+    const parsed = parseBillingSummary({
+      ...summary,
+      cards: [card, { ...school, coverage: { state: 'trial' } }, { ...school, spaceId: 'space:new-reason', readOnlyReason: 'contract' }, 'not a card'],
+      account: [{ ...account, coverage: { state: 'gift' } }, account],
+    });
+    expect(parsed?.cards).toEqual([card]);
+    expect(parsed?.account).toEqual([account]);
+  });
+
+  it('drops an unreadable receipt row and keeps at most three inline rows', () => {
+    const rows = ['bev:a', 'bev:b', 'bev:c', 'bev:d', 'bev:e'].map((id) => ({ ...receipt, id }));
+    const parsed = parseBillingSummary({
+      ...summary,
+      cards: [{ ...card, receipts: [{ ...receipt, id: 'bev:dispute', kind: 'dispute' }, ...rows] }],
+      account: [{ ...account, receipts: rows }],
+    });
+    expect(parsed?.cards[0]?.receipts.map((r) => r.id)).toEqual(['bev:a', 'bev:b', 'bev:c']);
+    expect(parsed?.account[0]?.receipts).toHaveLength(RECEIPTS_CARD_LIMIT);
+  });
+
+  it('reads an unknown mode as none, which turns every buy and manage button off', () => {
+    expect(parseBillingSummary({ ...summary, mode: 'restricted' })?.mode).toBe('none');
+  });
+
+  it('answers null when the summary itself is unreadable', () => {
+    expect(parseBillingSummary(null)).toBeNull();
+    expect(parseBillingSummary('summary')).toBeNull();
+    expect(parseBillingSummary({ mode: 'test', purchasesOpen: true, account: [] })).toBeNull();
+    expect(parseBillingSummary({ ...summary, purchasesOpen: 'yes' })).toBeNull();
+    expect(parseBillingSummary({ ...summary, cards: {} })).toBeNull();
   });
 });
