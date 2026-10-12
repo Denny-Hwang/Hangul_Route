@@ -136,9 +136,17 @@ Five names in the `route.` namespace (F-PLAN-002's dated weekly plan; F-ROUTE-00
 | 4 | `route.proposal_skipped` | F-PLAN-002 §3.11 (FP-B7) | `{ source }` (Just start / Not now) | P2-4 | P2-7a |
 | 5 | `route.updated` | F-PLAN-002 §3.11 (FP-B7) | `{ source: 'retake' \| 'override', itemsRemoved, itemsAdded }` (a retake or an override reseeds the route) | P2-4 | P2-7a |
 
-## L. Notes from grown-ups names (F-FEEDBACK-001; added by its FB-0 docs PR)
+## L. Progress report names (F-REPORT-001; added by its RP-0 docs PR)
 
-Seven names in the new `notes.` namespace (the learner side of the adult-to-learner feedback channel). None collides with sections A to K or with `TELEMETRY_EVENT_NAMES` on `main` at `ea9049e4` (no existing name starts with `notes.`). If another spec's docs PR claims letter L first, this section is relettered on rebase; the names do not change. Worker first: FB-1 adds all seven to `TELEMETRY_EVENT_NAMES` and its exact-list test, and the API Worker is deployed with FB-1 before the app builds that send them (FB-8, FB-9). App only (the console has no telemetry client). Payloads never carry note text, a note or batch id, a sender label, a space name or id, an account id or a learner name; **every** `notes.*` event is sent **without `profileId`**, so the server holds no per-learner log of opened notes.
+One name in the new `report.` namespace (grown-up reports of a learner or a class). None collides with sections A to K or with `TELEMETRY_EVENT_NAMES` on `main` at `ea9049e4` (no existing name starts with `report.`; the level check's grown-up report screen sends no event of its own). Worker first: RP-W1 adds the name to `TELEMETRY_EVENT_NAMES`, its exact-list test and a `report.*` payload filter in `routes/telemetry.ts` (keeps only `scope`, `space`, `period` with their enum values; always drops `profileId`), and is deployed before RP-5 records it and before any app build with RP-9 sends it. **Two emitters**: the console has no telemetry client, so the Worker records the event itself inside the two report routes (`packages/backend/src/lib/server-events.ts` appends to the same in-memory store as `POST /api/telemetry`); the learner app sends it through `track()` from the in-app report. Codes only: **no `profileId`, no space id, no learner id, no name**.
+
+| # | Name | Owning spec | Payload | Added to the list by | Emitted by |
+|---|---|---|---|---|---|
+| 1 | `report.viewed` | F-REPORT-001 §3.13 | `{ scope: 'learner' \| 'class', space: 'family' \| 'class' \| 'device', period: 'day' \| 'week' \| 'month' \| 'all' }` (a report opens, its period changes or it steps to a past window) | RP-W1 | RP-5 / RP-5b (Worker, console views), RP-9 (learner app, `space: 'device'`) |
+
+## M. Notes from grown-ups names (F-FEEDBACK-001; added by its FB-0 docs PR)
+
+Seven names in the new `notes.` namespace (the learner side of the adult-to-learner feedback channel). None collides with sections A to L or with `TELEMETRY_EVENT_NAMES` on `main` at `ea9049e4` (no existing name starts with `notes.`). Worker first: FB-1 adds all seven to `TELEMETRY_EVENT_NAMES` and its exact-list test, and the API Worker is deployed with FB-1 before the app builds that send them (FB-8, FB-9). App only (the console has no telemetry client). Payloads never carry note text, a note or batch id, a sender label, a space name or id, an account id or a learner name; **every** `notes.*` event is sent **without `profileId`**, so the server holds no per-learner log of opened notes.
 
 | # | Name | Owning spec | Payload | Added to the list by | Emitted by |
 |---|---|---|---|---|---|

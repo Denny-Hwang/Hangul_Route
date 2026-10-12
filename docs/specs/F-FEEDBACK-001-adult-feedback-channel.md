@@ -598,7 +598,7 @@ The public privacy page gains one line about notes (FB-13; English-authoritative
 
 ## 10. Telemetry (Worker first)
 
-Names are appended to `TELEMETRY_EVENT_NAMES` (`packages/content-schema/src/schemas/telemetry.ts:9`) in FB-1, and the exact-list test is updated (TELEMETRY-NAMES-2 rule 2). The API Worker must be deployed with FB-1 before any app build that sends them (rule 1); FB-8 and FB-9 are merged only after that deploy. The console has no telemetry client (F-PLAN-002 section 3.11), so adult actions send no events. Rows go to `docs/roadmap/TELEMETRY-NAMES-2.md` section L in FB-0.
+Names are appended to `TELEMETRY_EVENT_NAMES` (`packages/content-schema/src/schemas/telemetry.ts:9`) in FB-1, and the exact-list test is updated (TELEMETRY-NAMES-2 rule 2). The API Worker must be deployed with FB-1 before any app build that sends them (rule 1); FB-8 and FB-9 are merged only after that deploy. The console has no telemetry client (F-PLAN-002 section 3.11), so adult actions send no events. Rows go to `docs/roadmap/TELEMETRY-NAMES-2.md` section M in FB-0.
 
 **Every `notes.*` event is sent without `profileId`**, so the server never holds a per-learner log of which notes were opened.
 
@@ -689,7 +689,7 @@ Coverage targets: `docs/tests/coverage-targets.md` rows for `packages/content-sc
 
 | PR | Content | Size | Needs |
 |---|---|---|---|
-| FB-0 | `docs`: this spec; the nine wireframes; `docs/roadmap/TELEMETRY-NAMES-2.md` section L; F-ROUTE-001 section 6.4 row 2a; `docs/blueprints/10-app-map.md` screen rows; specs and wireframes README index rows; one-line cross-references in F-TCH-001 section 4 and F-PAR-001 section 3.4 | S | — |
+| FB-0 | `docs`: this spec; the nine wireframes; `docs/roadmap/TELEMETRY-NAMES-2.md` section M; F-ROUTE-001 section 6.4 row 2a; `docs/blueprints/10-app-map.md` screen rows; specs and wireframes README index rows; one-line cross-references in F-TCH-001 section 4 and F-PAR-001 section 3.4 | S | — |
 | FB-1 | `feat(content-schema)`: `schemas/feedback.ts`, inbox fields, `note_replies` consent item + version bump (old version kept accepted), `TEACHER_VISIBLE_NOTE_FIELDS`, seven telemetry names (append) | M | FB-0 |
 | FB-1b | `feat(i18n)`: `src/note-text.ts` (guard, `NOTE_LINK_TLDS`, `NOTE_TONE_ALLOW`), subpath export `./note-text`, tests at 100 % | S | FB-0 |
 | FB-2 | `feat(api)`: migration `NNNN_feedback_notes.sql` (additive, six tables), set-based `Db` methods in types / memory / d1, `deleteLearner` extension, `RESET_TABLES` and memory reset, `learnerRateKeys` keys; sqlite round-trip and statement-count tests. **Merge and deploy before FB-3a / FB-4a** | M | FB-1 |
