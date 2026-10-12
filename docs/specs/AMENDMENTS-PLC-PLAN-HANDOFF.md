@@ -49,20 +49,20 @@ defaultId =  '4-week'   when lastLessonWeek <= DEFAULT_SHORT_MAX (4)
 
 The length follows **what there is to teach** at the chosen pace. A plan is never padded with free practice by default. Stories fill empty slots only **when reviewed stories are bundled**; on today's bundle (no story, `apps/mobile/src/content/stories.generated.ts:4-8`) the slots after the last lesson are free practice, and the preview says so (`content-runs-out`).
 
-### 1.2 Resulting defaults (hand-estimated from F-PLAN-002 section 3.3 steps 3 to 7; the P2-3b golden test is authoritative and this table follows it)
+### 1.2 Resulting defaults (pinned by the P2-3b golden test `packages/content-schema/src/__tests__/curriculum-propose.test.ts`, which is authoritative; this table follows it)
 
-Column A: **after F-QUEST-002 Q-8 and reviewed stories** (frozen `packages/content-schema/src/__tests__/fixtures/catalog-2026-10.ts`: 15 Stage 1 quests, 24 stories ready, free tier = Stage 1). Column B: **the bundle shipped today** (`catalog/data.ts`: 8 Stage 1 lessons with empty `teaches`, `:81-91`; no story ready). `LLW` = estimated last lesson week.
+Column A: **after F-QUEST-002 Q-8 and reviewed stories** (frozen `packages/content-schema/src/__tests__/fixtures/catalog-2026-10.ts`: 15 Stage 1 quests, 24 stories ready, free tier = Stage 1). Column B: **the bundle shipped when this was written** (frozen `packages/content-schema/src/__tests__/fixtures/catalog-2026-10-bundle8.ts`, the `catalog/data.ts` of #175: 8 Stage 1 lessons with empty `teaches`; no story ready). `LLW` = last lesson week of the 52-week probe. Self learner, free tier = Stage 1 unless noted, start Monday 2026-10-12. P2-3b corrected the hand estimates of band 1 Brisk, band 2 Gentle and Steady and the all-stages Gentle note. The live `catalog/data.ts` (since Q-8: 15 Stage 1 lessons, no story reviewed yet) is checked against the rule in the same test, not pinned, so content PRs never touch it.
 
-| Start | Pace | A: after Q-8 + stories | B: shipped today |
+| Start | Pace | A: after Q-8 + stories | B: 8-lesson bundle |
 |---|---|---|---|
 | no check, or `stage1` band 0 | Gentle 2 | **12 weeks** (LLW 11) | **12 weeks** (LLW 5: weeks 1-3, review week 4, week 5) |
 | | Steady 3 | **12 weeks** (LLW 7) | **4 weeks** (LLW 3) |
 | | Brisk 4 | **12 weeks** (LLW 6) | **4 weeks** (LLW 2) |
-| `stage1` band 1 | Gentle / Steady / Brisk | 12 / 12 / 12 (LLW 9 / 6 / 5) | same as band 0 (nothing is placed out while `teaches` is empty) |
-| `stage1` band 2 | Gentle / Steady / Brisk | 12 / 12 / 4 (LLW 7 / 5 / 3) | same as band 0 |
+| `stage1` band 1 | Gentle / Steady / Brisk | 12 / 12 / 4 (LLW 9 / 6 / 3) | same as band 0 (nothing is placed out while `teaches` is empty) |
+| `stage1` band 2 | Gentle / Steady / Brisk | 12 / 4 / 4 (LLW 6 / 3 / 3) | same as band 0 |
 | `stage1` band 3 | Gentle / Steady / Brisk | 4 / 4 / 4 (LLW 3 / 2 / 2) | same as band 0 |
 | `stage2` band 0 or higher, free tier | any | **4 weeks**, stories and word topics | **no proposal** (`proposeRoute` returns `null`: no lesson, no story) |
-| all stages unlocked (a licence), band 0 | Gentle / Steady / Brisk | 12 / 12 / 12 (Gentle LLW about 13; the preview warns 2 lessons do not fit and offers "Add weeks") | 12 / 12 / 4 (LLW 7 / 5 / 3) |
+| all stages unlocked (a licence), band 0 | Gentle / Steady / Brisk | 12 / 12 / 12 (LLW 13 / 9 / 6; at Gentle the 12-week card still holds every lesson, the last in week 12, because its final week is never a review) | 12 / 12 / 4 (LLW 7 / 5 / 3) |
 
 The 4-week default is not a ceiling: all three lengths are shown, **Choose weeks** allows 1 to 52, and "Add N weeks" extends later (F-PLAN-002 section 3.7).
 
