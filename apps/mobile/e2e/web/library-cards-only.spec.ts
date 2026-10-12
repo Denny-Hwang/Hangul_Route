@@ -16,11 +16,20 @@ import { completeChildForm, keepSidewaysIfAsked } from './helpers';
  *
  * Words (F-VOC-003) is its own Library section behind `vocabTopicsEnabled`
  * (off until C-7). With it off, Cards is the only section and there is no tab
- * row at all; once it is on, the row holds Cards and Words only.
+ * row at all; once it is on, the row holds Cards and Words only. The tab row
+ * is drawn in the same render as the gallery (its sections are a memo over
+ * bundled data), so once the gallery is up the row is either there or not.
+ *
+ * A deliberate tripwire: the first content PR that marks a story reviewed turns
+ * the shelf on in the regular build, and this suite then fails with SHELF_ON.
+ * That PR removes this file (story-shelf.spec.ts then covers the shelf on both
+ * builds) or inverts it.
  */
 
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
 const STORY_WORDS = /Story Time|Culture notes|Picked for you|A short story|Keep reading|Read it again/;
+const SHELF_ON =
+  'the regular build shows the story shelf: a reviewed story is in the bundle. Expected once the first story is reviewed; that PR removes or inverts library-cards-only.spec.ts (F-STORY-004 §6, PR 4.8)';
 
 async function onboard(page: Page): Promise<void> {
   await page.goto('/');
@@ -50,10 +59,13 @@ test.describe('Library with no reviewed story (regular build)', () => {
     await expect(page.getByRole('button', { name: /^All/ }).first()).toBeVisible();
 
     // No Story Time or Culture tab, and none of the shelf's surfaces.
-    await expect(page.getByRole('tab', { name: 'Story Time', exact: true })).toHaveCount(0);
-    await expect(page.getByRole('tab', { name: 'Culture', exact: true })).toHaveCount(0);
-    await expect(page.locator('[data-testid^="library-shelf-"], [data-testid="library-hero"], [data-testid="library-culture"]')).toHaveCount(0);
-    await expect(page.locator('[data-testid^="story-tile-"]')).toHaveCount(0);
+    await expect(page.getByRole('tab', { name: 'Story Time', exact: true }), SHELF_ON).toHaveCount(0);
+    await expect(page.getByRole('tab', { name: 'Culture', exact: true }), SHELF_ON).toHaveCount(0);
+    await expect(
+      page.locator('[data-testid^="library-shelf-"], [data-testid="library-hero"], [data-testid="library-culture"]'),
+      SHELF_ON,
+    ).toHaveCount(0);
+    await expect(page.locator('[data-testid^="story-tile-"]'), SHELF_ON).toHaveCount(0);
 
     // Cards alone draws no tab row; Words, when its flag is on, is the only other tab. (The app's
     // bottom bar is a tablist of its own, so the Library's row is looked up by its name.)
@@ -63,10 +75,10 @@ test.describe('Library with no reviewed story (regular build)', () => {
       await expect(sections).toHaveCount(0);
       await expect(page.getByTestId('library-sections')).toHaveCount(0);
     } else {
-      expect(labels).toEqual(['Cards', 'Words']);
+      expect(labels, SHELF_ON).toEqual(['Cards', 'Words']);
     }
 
-    expect(await page.locator('body').innerText()).not.toMatch(STORY_WORDS);
+    expect(await page.locator('body').innerText(), SHELF_ON).not.toMatch(STORY_WORDS);
     expect(errors).toEqual([]);
   });
 
@@ -78,7 +90,7 @@ test.describe('Library with no reviewed story (regular build)', () => {
 
     // Day one: the first Journey quest and the current episode to look at; never a story.
     expect(labels).toContain('Meet the Letters. Take a look.');
-    for (const label of labels) expect(label).not.toMatch(/A short story|Keep reading|Read it again|Story time/);
-    await expect(missions.locator('[data-testid^="home-mission-cover-"]')).toHaveCount(0);
+    for (const label of labels) expect(label, SHELF_ON).not.toMatch(/A short story|Keep reading|Read it again|Story time/);
+    await expect(missions.locator('[data-testid^="home-mission-cover-"]'), SHELF_ON).toHaveCount(0);
   });
 });
