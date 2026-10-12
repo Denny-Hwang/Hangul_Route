@@ -23,7 +23,7 @@ import * as nodeModule from 'node:module';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { CONSOLE_ASSET_DIR } from '../pwa/grown-ups.mjs';
-import { GROWN_UP_HEADERS_MARKER, grownUpHeadersBlock, immutableConsoleRules, parseHeaders } from './headers.mjs';
+import { GROWN_UP_HEADERS_MARKER, grownUpHeadersBlock, longCacheConsoleRules, parseHeaders } from './headers.mjs';
 
 /** `pnpm` arguments of the console role build (apps/web `build:console`, section 3.3). */
 export const CONSOLE_BUILD_ARGS = ['--filter', '@hangul-route/web', 'build:console'];
@@ -136,14 +136,13 @@ export function mergeConsole({ dist, consoleOut, isGrownUpPath, prefixes }) {
   const headersPath = join(dist, '_headers');
   const learnerHeaders = existsSync(headersPath) ? readFileSync(headersPath, 'utf8') : '';
   if (learnerHeaders.includes(GROWN_UP_HEADERS_MARKER)) throw new Error(`${headersPath} already holds the grown-up block (merged twice?)`);
-  const risky = immutableConsoleRules(parseHeaders(learnerHeaders));
+  const risky = longCacheConsoleRules(parseHeaders(learnerHeaders));
   if (risky.length > 0) {
     throw new Error(
-      `${headersPath} gives /_next/ a year-long cache, but the single-page fallback answers a missing chunk with index.html, which a browser would then keep for a year (section 3.3): ${risky.join(', ')}`,
+      `${headersPath} lets a browser keep /_next/ files, but the single-page fallback answers a missing chunk with index.html, which a browser would then keep under the chunk URL (section 3.3): ${risky.join(', ')}`,
     );
   }
   const block = grownUpHeadersBlock(prefixes);
-  const shell = readFileSync(join(dist, 'index.html'));
 
   for (const rel of files) {
     const target = join(dist, rel);
@@ -152,7 +151,6 @@ export function mergeConsole({ dist, consoleOut, isGrownUpPath, prefixes }) {
   }
   const separator = learnerHeaders === '' ? '' : learnerHeaders.endsWith('\n') ? '\n' : '\n\n';
   writeFileSync(headersPath, `${learnerHeaders}${separator}${block}`);
-  if (!readFileSync(join(dist, 'index.html')).equals(shell)) throw new Error('index.html changed during the merge');
   return { files, pages: files.filter(isPage).length };
 }
 

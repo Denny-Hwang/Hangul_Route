@@ -16,7 +16,7 @@ import {
   GROWN_UP_HEADERS_MARKER,
   grownUpHeadersBlock,
   headersFor,
-  immutableConsoleRules,
+  longCacheConsoleRules,
   parseHeaders,
   patternMatches,
 } from '../app-host/headers.mjs';
@@ -99,9 +99,9 @@ describe('the grown-up _headers block (section 3.17)', () => {
   const block = grownUpHeadersBlock(GROWN_UP_PREFIXES);
   const rules = parseHeaders(block);
 
-  it('starts with its marker and has two patterns per prefix, in prefix order', () => {
+  it('starts with its marker and has the two patterns of section 3.17 per prefix, plus its dotted names (R-1), in prefix order', () => {
     expect(block.startsWith(`${GROWN_UP_HEADERS_MARKER}\n`)).toBe(true);
-    expect(rules.map((r) => r.pattern)).toEqual(GROWN_UP_PREFIXES.flatMap((p) => [p, `${p}/*`]));
+    expect(rules.map((r) => r.pattern)).toEqual(GROWN_UP_PREFIXES.flatMap((p) => [p, `${p}/*`, `${p}.*`]));
   });
 
   it('gives every pattern every header of section 3.17', () => {
@@ -111,7 +111,9 @@ describe('the grown-up _headers block (section 3.17)', () => {
 
   it('reaches every grown-up page, deep pages and payloads included', () => {
     for (const prefix of GROWN_UP_PREFIXES) {
-      for (const path of [prefix, `${prefix}/`, `${prefix}/home`, `${prefix}/space/settings`, `${prefix}/home.txt`]) {
+      // `/teach.txt` is the RSC payload of the page `/teach`; R-1 counts it as a grown-up path too.
+      for (const path of [prefix, `${prefix}/`, `${prefix}/home`, `${prefix}/space/settings`, `${prefix}/home.txt`, `${prefix}.txt`, `${prefix}.html`]) {
+        expect(isGrownUpPath(path), path).toBe(true);
         const got = headersFor(rules, path);
         expect(got, path).toEqual(Object.fromEntries(SECTION_3_17.map(([k, v]) => [k.toLowerCase(), v])));
       }
@@ -119,7 +121,8 @@ describe('the grown-up _headers block (section 3.17)', () => {
   });
 
   it('reaches no learner path and no near miss', () => {
-    for (const path of ['/', '/index.html', '/sw.js', '/teacher', '/parents', '/signing', '/starts', '/accounts', '/present', '/browse', '/_next/static/chunks/a.js', '/grown-ups-offline.html']) {
+    for (const path of ['/', '/index.html', '/sw.js', '/teacher', '/teachers.txt', '/parents', '/parent-x.txt', '/signing', '/starts', '/accounts', '/present', '/browse', '/_next/static/chunks/a.js', '/grown-ups-offline.html']) {
+      expect(isGrownUpPath(path), path).toBe(false);
       expect(headersFor(rules, path), path).toEqual({});
     }
   });
@@ -137,6 +140,14 @@ describe('parseHeaders, patternMatches and headersFor (the Workers assets _heade
       { pattern: '/a', headers: [['X-One', '1'], ['X-Two', 'two: parts']] },
       { pattern: '/b/*', headers: [['Cache-Control', 'no-cache']] },
     ]);
+  });
+
+  it('reads a detach line ("! Name"), which removes a header an earlier rule set', () => {
+    const rules = parseHeaders('/*\n  X-Robots-Tag: noindex\n  X-A: 1\n/teach/*\n  ! X-Robots-Tag\n  X-A: 2\n');
+    expect(rules[1]).toEqual({ pattern: '/teach/*', headers: [['X-Robots-Tag', null], ['X-A', '2']] });
+    expect(headersFor(rules, '/teach/home')).toEqual({ 'x-a': '1, 2' });
+    expect(headersFor(rules, '/')).toEqual({ 'x-robots-tag': 'noindex', 'x-a': '1' });
+    expect(() => parseHeaders('/a\n  ! \n')).toThrow(/line 2/);
   });
 
   it('refuses a header before any pattern and a header line without a name', () => {
@@ -160,10 +171,19 @@ describe('parseHeaders, patternMatches and headersFor (the Workers assets _heade
     expect(headersFor(rules, '/')).toEqual({ 'x-a': '1' });
   });
 
-  it('finds an immutable rule that a missing /_next/ file would match (section 3.3)', () => {
-    expect(immutableConsoleRules(parseHeaders('/_next/static/*\n  Cache-Control: public, max-age=31536000, immutable\n'))).toEqual(['/_next/static/*']);
-    expect(immutableConsoleRules(parseHeaders('/*\n  Cache-Control: max-age=31536000, IMMUTABLE\n'))).toEqual(['/*']);
-    expect(immutableConsoleRules(parseHeaders('/_next/*\n  Cache-Control: no-cache\n/assets/*\n  Cache-Control: immutable\n'))).toEqual([]);
+  it('finds a rule that would let a browser keep a missing /_next/ file (section 3.3)', () => {
+    expect(longCacheConsoleRules(parseHeaders('/_next/static/*\n  Cache-Control: public, max-age=31536000, immutable\n'))).toEqual(['/_next/static/*']);
+    expect(longCacheConsoleRules(parseHeaders('/*\n  Cache-Control: max-age=31536000, IMMUTABLE\n'))).toEqual(['/*']);
+    // any /_next/ subtree, and a long max-age without `immutable`
+    for (const pattern of ['/_next/static/css/*', '/_next/static/media/*', '/_next/static/chunks/app/*', '/:folder/static/*']) {
+      expect(longCacheConsoleRules(parseHeaders(`${pattern}\n  Cache-Control: public, max-age=31536000, immutable\n`)), pattern).toEqual([pattern]);
+    }
+    expect(longCacheConsoleRules(parseHeaders('/_next/*\n  Cache-Control: public, max-age=86400\n'))).toEqual(['/_next/*']);
+    expect(longCacheConsoleRules(parseHeaders('/_next/*\n  Cache-Control: s-maxage=600\n'))).toEqual(['/_next/*']);
+    // revalidating rules, and long rules elsewhere, are fine
+    expect(
+      longCacheConsoleRules(parseHeaders('/_next/*\n  Cache-Control: no-cache\n/_next/static/*\n  Cache-Control: public, max-age=0, must-revalidate\n/assets/*\n  Cache-Control: immutable\n/sw.js\n  Cache-Control: max-age=600\n')),
+    ).toEqual([]);
   });
 });
 
@@ -171,7 +191,7 @@ describe('apps/mobile/public/_headers', () => {
   const rules = parseHeaders(LEARNER_HEADERS);
 
   it('has no year-long rule under /_next/: the single-page fallback answers a missing chunk with index.html (section 3.3)', () => {
-    expect(immutableConsoleRules(rules)).toEqual([]);
+    expect(longCacheConsoleRules(rules)).toEqual([]);
   });
 
   it('keeps the learner rules', () => {

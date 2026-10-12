@@ -2,10 +2,12 @@
 //
 // Workers static assets read `dist/_headers` (the Pages convention): a line without leading
 // whitespace is a URL pattern (`*` a splat over any characters, `:name` one segment), each indented
-// `Name: value` line under it a response header, `#` a comment. When several rules match, a header
-// they share gets their values joined with ", ". Pure and dependency-free: merge-console.mjs writes
-// the grown-up block with it, and scripts/serve-dist.mjs answers e2e requests with the same rules,
-// so the merged build's headers are tested as Workers would send them.
+// `Name: value` line under it a response header, an indented `! Name` line removes that header, `#`
+// starts a comment. Matching rules apply in file order; a header that several of them set gets their
+// values joined with ", ". Pure, no package import: merge-console.mjs writes the grown-up block with
+// it, and scripts/serve-dist.mjs answers e2e requests with the same rules, so the merged build's
+// headers are tested as Workers would send them.
+import { PREFIX_SHAPE } from '../pwa/grown-ups.mjs';
 
 /** Response headers of every grown-up path (section 3.17), in its order. */
 export const GROWN_UP_HEADERS = [
@@ -19,13 +21,12 @@ export const GROWN_UP_HEADERS = [
 /** First line of the block merge-console.mjs appends; a dist that has it was merged already. */
 export const GROWN_UP_HEADERS_MARKER = '# Grown-up pages (F-APP-001 section 3.17): appended by scripts/app-host/merge-console.mjs';
 
-/** One plain lower-case segment (`/teach`), the shape GROWN_UP_PREFIXES has and scripts/pwa/grown-ups.mjs requires. */
-const PREFIX_SHAPE = /^\/[a-z][a-z0-9-]*$/;
-
 /**
- * The grown-up block of `dist/_headers`: two patterns per prefix (`/teach` and `/teach/*`), each with
- * every header of section 3.17. Grown-up pages are online-only and never kept by a cache (`no-store`, which
- * also keeps most browsers from putting them in the back/forward cache), and never framed.
+ * The grown-up block of `dist/_headers`: the two patterns of section 3.17 per prefix (`/teach` and
+ * `/teach/*`) plus its dotted names (`/teach.*`: the page's RSC payload `/teach.txt`, which R-1 counts
+ * as a grown-up path too), each with every header of section 3.17. Grown-up pages are online-only and
+ * never kept by a cache (`no-store`, which also keeps most browsers from putting them in the
+ * back/forward cache), and never framed.
  *
  * @param {readonly string[]} prefixes GROWN_UP_PREFIXES of packages/content-schema
  * @returns {string}
@@ -42,7 +43,7 @@ export function grownUpHeadersBlock(prefixes) {
     '# Generated from GROWN_UP_PREFIXES (packages/content-schema): online-only, never cached, never framed.',
   ];
   for (const prefix of prefixes) {
-    for (const pattern of [prefix, `${prefix}/*`]) {
+    for (const pattern of [prefix, `${prefix}/*`, `${prefix}.*`]) {
       lines.push(pattern, ...GROWN_UP_HEADERS.map(([name, value]) => `  ${name}: ${value}`));
     }
   }
@@ -51,7 +52,8 @@ export function grownUpHeadersBlock(prefixes) {
 
 /**
  * @param {string} text the content of a `_headers` file
- * @returns {Array<{ pattern: string, headers: Array<[string, string]> }>} its rules, in file order
+ * @returns {Array<{ pattern: string, headers: Array<[string, string | null]> }>} its rules, in file order;
+ *   a `null` value is a detach (`! Name`)
  */
 export function parseHeaders(text) {
   const rules = [];
@@ -64,6 +66,11 @@ export function parseHeaders(text) {
     }
     const rule = rules[rules.length - 1];
     if (!rule) throw new Error(`_headers line ${index + 1}: a header before any pattern`);
+    const detach = /^\s+!\s*([A-Za-z0-9-]+)$/.exec(line);
+    if (detach) {
+      rule.headers.push([detach[1], null]);
+      return;
+    }
     const colon = line.indexOf(':');
     const name = colon === -1 ? '' : line.slice(0, colon).trim();
     if (!/^[A-Za-z0-9-]+$/.test(name)) throw new Error(`_headers line ${index + 1}: "${line.trim()}" is not a "Name: value" header`);
@@ -84,8 +91,8 @@ export function patternMatches(pattern, pathname) {
 }
 
 /**
- * The headers the rules give a request path, by lower-case name; a header set by several matching rules
- * has their values joined with ", " in file order.
+ * The headers the rules give a request path, by lower-case name: matching rules apply in file order, a
+ * header set by several of them has their values joined with ", ", and a detach removes what came before.
  * @param {ReturnType<typeof parseHeaders>} rules
  * @param {string} pathname
  * @returns {Record<string, string>}
@@ -96,25 +103,36 @@ export function headersFor(rules, pathname) {
     if (!patternMatches(rule.pattern, pathname)) continue;
     for (const [name, value] of rule.headers) {
       const key = name.toLowerCase();
-      out[key] = key in out ? `${out[key]}, ${value}` : value;
+      if (value === null) delete out[key];
+      else out[key] = key in out ? `${out[key]}, ${value}` : value;
     }
   }
   return out;
 }
 
-/** A file that is not there: what the single-page fallback answers with index.html. */
-const MISSING_CONSOLE_FILE = '/_next/static/chunks/hr-missing-chunk.js';
+/** Console files that are not there, one per kind Next writes: what the single-page fallback answers with index.html. */
+const MISSING_CONSOLE_FILES = [
+  '/_next/static/chunks/hr-missing-chunk.js',
+  '/_next/static/css/hr-missing.css',
+  '/_next/static/media/hr-missing.woff2',
+  '/_next/static/hr-missing-build/_buildManifest.js',
+  '/_next/hr-missing',
+];
+
+/** A Cache-Control value that lets a browser keep the answer: `immutable`, or a positive `max-age` / `s-maxage`. */
+const KEEPS = (value) => /\bimmutable\b/i.test(value) || /\b(?:max-age|s-maxage)\s*=\s*"?0*[1-9]/i.test(value);
 
 /**
- * Patterns that would give a missing `/_next/` file a year-long cache. On this Worker the single-page
- * fallback answers such a miss with `index.html` (200, `text/html`), so an `immutable` rule there would let a
- * browser keep that page under the chunk URL for a year (section 3.3, 2026-10-12 amendment).
+ * Patterns that would let a browser keep a missing `/_next/` file. On this Worker the single-page fallback
+ * answers such a miss with `index.html` (200, `text/html`), so a long rule there would let a browser keep
+ * that page under the chunk URL (section 3.3, 2026-10-12 amendment). A rule counts when its pattern is under
+ * `/_next/` or matches a missing console file, and its Cache-Control keeps the answer.
  * @param {ReturnType<typeof parseHeaders>} rules
  * @returns {string[]}
  */
-export function immutableConsoleRules(rules) {
+export function longCacheConsoleRules(rules) {
   return rules
-    .filter((rule) => patternMatches(rule.pattern, MISSING_CONSOLE_FILE))
-    .filter((rule) => rule.headers.some(([name, value]) => name.toLowerCase() === 'cache-control' && /\bimmutable\b/i.test(value)))
+    .filter((rule) => rule.pattern.startsWith('/_next/') || MISSING_CONSOLE_FILES.some((path) => patternMatches(rule.pattern, path)))
+    .filter((rule) => rule.headers.some(([name, value]) => name.toLowerCase() === 'cache-control' && value !== null && KEEPS(value)))
     .map((rule) => rule.pattern);
 }

@@ -155,6 +155,7 @@ test.describe('app host: the learner app and the grown-up console (F-APP-001 A-3
       const payload = await request.get(`${path}.txt`);
       expect(payload.status(), `${path}.txt`).toBe(200);
       expect(payload.headers()['content-type'], `${path}.txt`).toContain('text/plain');
+      for (const [name, value] of Object.entries(GROWN_UP_HEADERS)) expect(payload.headers()[name], `${path}.txt ${name}`).toBe(value);
     }
   });
 

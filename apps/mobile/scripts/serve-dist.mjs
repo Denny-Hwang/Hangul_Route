@@ -4,7 +4,8 @@
 // console pages merged in by scripts/app-host/merge-console.mjs, F-APP-001 A-3),
 // not_found_handling = "single-page-application" (any other miss → index.html,
 // 200), and the rules of dist/_headers on every answer, so the e2e reads the
-// headers Workers would send.
+// headers Workers would send. Not emulated: the 307 Workers sends for a `.html`
+// or trailing-slash URL (served here as is), and the hiding of _headers itself.
 import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';
