@@ -71,6 +71,7 @@
     "apps/mobile/src/screens/profile/EditProfileScreen.tsx",
     "apps/mobile/src/screens/my-route/**",
     "apps/web/src/components/console/JourneyParts.tsx",
+    "apps/web/src/components/console/ClassGoalParts.tsx",
     "apps/mobile/src/screens/parent/PlacementReportScreen.tsx",
     "apps/mobile/src/screens/results/**",
     "apps/mobile/src/screens/quest/QuestPlayerView.tsx",
@@ -80,8 +81,7 @@
     "apps/mobile/src/screens/library/CultureSection.tsx",
     "apps/web/src/components/console/GrownUpLock.tsx",
     "apps/web/src/components/console/FreeLessonsParts.tsx",
-    "apps/web/src/components/console/VocabWordsParts.tsx",
-    "apps/web/src/components/console/ClassGoalParts.tsx"
+    "apps/web/src/components/console/VocabWordsParts.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1
