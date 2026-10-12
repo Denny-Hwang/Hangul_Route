@@ -4,7 +4,7 @@ import { PLACEMENT_KEEP } from '@hangul-route/content-schema';
 import { seededRandom } from '../../listen-pick';
 import { placementResult } from '../../placement/__tests__/fixtures';
 import { selfRoute } from '../../homework/__tests__/curriculum-fixture';
-import { compareInstant, isSubsetOf, mergeCard, mergeSnapshots, withSnapshotDefaults } from '../merge';
+import { compareInstant, isSubsetOf, mergeCard, mergeSnapshots, rebaseSnapshot, withSnapshotDefaults } from '../merge';
 
 const NOW = new Date('2026-09-21T12:00:00.000Z');
 const base = (over: Partial<ProgressSnapshot> = {}): ProgressSnapshot => ({
@@ -491,5 +491,54 @@ describe('selfRoute, the learner weekly plan (F-PLAN-002 section 3.5)', () => {
     expect(isSubsetOf(base({ selfRoute: route }), base({ selfRoute: selfRoute({ id: 'route:other', updatedAt: edited.updatedAt }) }))).toBe(false);
     expect(isSubsetOf(legacy(), base({ selfRoute: route }))).toBe(true);
     expect(isSubsetOf(base({ selfRoute: null }), legacy())).toBe(true);
+  });
+});
+
+describe('rebaseSnapshot (issue #262: a write that lands while a sync is in flight)', () => {
+  // base = what went up; theirs = the server's answer, which already holds base;
+  // ours = base plus the writes made while the request was in flight.
+  it('keeps the writes made after base and everything theirs added', () => {
+    const sent = base({ quests: [quest('q1', 2, 0.7)] });
+    const theirs = base({ quests: [quest('q1', 2, 0.7), quest('q2', 1, 0.5)], updatedAt: '2026-09-20T02:00:00.000Z' });
+    const ours = base({
+      quests: [quest('q1', 2, 0.7), quest('q3', 3, 1)],
+      cards: [{ cardId: 'card:a', unlockedAt: '2026-09-20T03:00:00Z', newSinceLastView: true }],
+      sessions: [session('s1', '2026-09-20T03:00:00Z')],
+      updatedAt: '2026-09-20T03:00:00.000Z',
+    });
+    const m = rebaseSnapshot(sent, ours, theirs, { now: NOW });
+    expect(m.quests.map((q) => q.questId)).toEqual(['q1', 'q2', 'q3']);
+    expect(m.cards.map((c) => c.cardId)).toEqual(['card:a']);
+    expect(m.sessions.map((s) => s.id)).toEqual(['s1']);
+    expect(m.updatedAt).toBe('2026-09-20T03:00:00.000Z');
+  });
+
+  it('counts each attempt once: the attempts base gave theirs are not summed twice', () => {
+    const sent = base({ quests: [quest('q1', 2, 0.7, 3)] });
+    // The server held 2 attempts from another device; theirs = 3 + 2.
+    const theirs = base({ quests: [quest('q1', 2, 0.7, 5)] });
+    // One more run on this device during the request: 3 + 1, now 3 stars.
+    const ours = base({ quests: [quest('q1', 3, 0.95, 4)] });
+    const q1 = rebaseSnapshot(sent, ours, theirs, { now: NOW }).quests[0];
+    expect(q1?.attempts).toBe(6);
+    expect(q1?.stars).toBe(3);
+    // No write in between: the result is theirs, attempts unchanged.
+    expect(rebaseSnapshot(sent, sent, theirs, { now: NOW }).quests[0]?.attempts).toBe(5);
+  });
+
+  it('a card seen during the request stays seen; a quest new on both sides sums both runs', () => {
+    const card = { cardId: 'card:a', unlockedAt: '2026-09-20T00:00:00Z', newSinceLastView: true };
+    const sent = base({ cards: [card] });
+    const theirs = base({ cards: [card], quests: [quest('q9', 1, 0.5, 2)] });
+    const ours = base({ cards: [{ ...card, newSinceLastView: false }], quests: [quest('q9', 2, 0.8, 1)] });
+    const m = rebaseSnapshot(sent, ours, theirs, { now: NOW });
+    expect(m.cards[0]?.newSinceLastView).toBe(false);
+    expect(m.quests[0]).toMatchObject({ questId: 'q9', stars: 2, attempts: 3 });
+  });
+
+  it('never subtracts below what ours holds when theirs lacks the quest', () => {
+    const sent = base({ quests: [quest('q1', 2, 0.7, 3)] });
+    const ours = base({ quests: [quest('q1', 2, 0.7, 4)] });
+    expect(rebaseSnapshot(sent, ours, base(), { now: NOW }).quests[0]?.attempts).toBe(4);
   });
 });

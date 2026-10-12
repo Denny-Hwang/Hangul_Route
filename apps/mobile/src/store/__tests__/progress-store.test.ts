@@ -549,11 +549,12 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
     ['quest:stage1-letters-q3', 'episode:stage1-letters'],
     ['quest:stage1-life-q1', 'episode:stage1-life'],
     ['quest:stage1-life-q2', 'episode:stage1-life'],
+    ['quest:stage1-life-q3', 'episode:stage1-life'],
     ['quest:stage1-rites-q1', 'episode:stage1-rites'],
     ['quest:stage1-nature-q1', 'episode:stage1-nature'],
     ['quest:stage1-crafts-q1', 'episode:stage1-crafts'],
   ];
-  const STAGE1_QUEST_CARDS = ['card:book', 'card:hanji', 'card:brush', 'card:kimchi', 'card:family-table', 'card:seollal', 'card:magpie', 'card:yutnori'];
+  const STAGE1_QUEST_CARDS = ['card:book', 'card:hanji', 'card:brush', 'card:kimchi', 'card:family-table', 'card:kimbap', 'card:seollal', 'card:magpie', 'card:yutnori'];
   const notified: string[] = [];
 
   const quest = (questId: string, episodeId: string, stars: 0 | 1 | 2 | 3, completedAt = T): ProgressSnapshot['quests'][number] => ({
@@ -709,13 +710,13 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
   });
 
   describe('catch-up for existing learners (§3.5)', () => {
-    it('hydrate ends with a reconcile: a learner who finished Stage 1 receives the 22 cards once', async () => {
+    it('hydrate ends with a reconcile: a learner who finished Stage 1 receives the 21 other cards once', async () => {
       mem.set('progress:profile:a', stage1Done());
       await useProgressStore.getState().hydrate('profile:a');
       const snap = useProgressStore.getState().byProfile['profile:a'];
       expect(snap?.cards).toHaveLength(30);
       const added = (snap?.cards ?? []).filter((c) => !STAGE1_QUEST_CARDS.includes(c.cardId));
-      expect(added).toHaveLength(22);
+      expect(added).toHaveLength(21);
       expect(added.every((c) => c.newSinceLastView)).toBe(true);
       expect(added.find((c) => c.cardId === 'card:hangul-day')?.unlockedAt).toBe(T);
       expect(added.find((c) => c.cardId === 'card:tiger')?.unlockedAt).toBe(CREATED);
@@ -723,7 +724,7 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
       expect([...(useProgressStore.getState().catchUp['profile:a'] ?? [])].sort()).toEqual(added.map((c) => c.cardId).sort());
       // One aggregate event, never a per-card card.unlocked for a retro card.
       expect(vi.mocked(track).mock.calls.map(([e]) => e)).toEqual([
-        { name: 'card.catchup_granted', profileId: 'profile:a', payload: { count: 22, episode: 18, stage: 3, welcome: 1, quest: 0, set: 0 } },
+        { name: 'card.catchup_granted', profileId: 'profile:a', payload: { count: 21, episode: 17, stage: 3, welcome: 1, quest: 0, set: 0 } },
       ]);
     });
 

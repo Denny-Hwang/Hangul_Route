@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:pansori-tales",
   "state": "ready",
-  "contentVer": 1,
+  "contentVer": 2,
   "title": {
     "ko": "판소리로 듣는 흥부와 놀부, 토끼와 자라",
     "romanization": "Pansoriro deunneun Heungbuwa Nolbu, tokkiwa jara",
@@ -133,8 +133,46 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "A singer in a white hanbok holding a folding fan, standing on a straw mat; a seated drummer with a round barrel drum beside her; Hoya in the audience."
+          "artBrief": "A singer in a white hanbok holding a folding fan, standing on a straw mat; a seated drummer with a round barrel drum beside her; Hoya in the audience.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:fig-writer-seated",
+                "x": 318,
+                "y": 262,
+                "s": 1.0,
+                "z": "back",
+                "tint": "surface.sunken"
+              },
+              {
+                "ref": "prop:fig-pansori",
+                "x": 190,
+                "y": 262,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:drum",
+                "x": 302,
+                "y": 272,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:crowd-seated",
+                "x": 132,
+                "y": 300,
+                "s": 1.05,
+                "z": "front"
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 40,
+                "y": 298,
+                "s": 0.6
+              }
+            ],
+            "altEn": "A pansori singer with a fan stands beside a seated drummer and his barrel drum, and Hoya watches from the audience."
+          }
         },
         {
           "id": "s2",
@@ -163,8 +201,33 @@
               "timeRelative": false
             }
           ],
-          "artPending": true,
-          "artBrief": "The drummer mid-shout with one hand raised, the singer opening her fan; five small scroll shapes floating above, two of them glowing."
+          "artBrief": "The drummer mid-shout with one hand raised, the singer opening her fan; five small scroll shapes floating above, two of them glowing.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:fig-writer-seated",
+                "x": 272,
+                "y": 268,
+                "s": 1.25,
+                "z": "back",
+                "tint": "surface.sunken"
+              },
+              {
+                "ref": "prop:fig-pansori",
+                "x": 140,
+                "y": 272,
+                "s": 1.45
+              },
+              {
+                "ref": "prop:drum",
+                "x": 252,
+                "y": 280,
+                "s": 1.1
+              }
+            ],
+            "altEn": "The drummer calls out chuimsae cheers like Eolssigu! as the singer opens her fan and sings on."
+          }
         },
         {
           "id": "s3",
@@ -182,8 +245,26 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "A kind man in patched clothes cupping a baby swallow and tying a tiny strip of cloth around its leg outside a humble straw hut."
+          "artBrief": "A kind man in patched clothes cupping a baby swallow and tying a tiny strip of cloth around its leg outside a humble straw hut.",
+          "art": {
+            "setting": "scene:village-lane",
+            "layers": [
+              {
+                "ref": "prop:fig-villager",
+                "x": 200,
+                "y": 280,
+                "s": 1.35,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:swallow",
+                "x": 250,
+                "y": 198,
+                "s": 1.1
+              }
+            ],
+            "altEn": "Kind Heungbu gently binds the broken leg of a baby swallow outside his straw-roofed home."
+          }
         },
         {
           "id": "s4",
@@ -201,8 +282,38 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Huge round white gourds on a thatched roof; a family sawing one open with a two-person saw as rice and shining treasures spill out; a swallow circling."
+          "artBrief": "Huge round white gourds on a thatched roof; a family sawing one open with a two-person saw as rice and shining treasures spill out; a swallow circling.",
+          "art": {
+            "setting": "scene:village-lane",
+            "layers": [
+              {
+                "ref": "prop:gourds",
+                "x": 200,
+                "y": 290,
+                "s": 1.6
+              },
+              {
+                "ref": "prop:fig-villager",
+                "x": 62,
+                "y": 284,
+                "s": 0.95
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 338,
+                "y": 284,
+                "s": 0.95,
+                "tint": "brand.secondaryLight"
+              },
+              {
+                "ref": "prop:swallow",
+                "x": 290,
+                "y": 110,
+                "s": 0.9
+              }
+            ],
+            "altEn": "Heungbu's family splits open a huge gourd and rice and gold coins pour out, while the swallow circles overhead."
+          }
         },
         {
           "id": "s5",
@@ -220,8 +331,35 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Two brothers in hanbok embracing in front of a modest house, one looking ashamed and grateful; a swallow perched on the eaves."
+          "artBrief": "Two brothers in hanbok embracing in front of a modest house, one looking ashamed and grateful; a swallow perched on the eaves.",
+          "art": {
+            "setting": "scene:village-lane",
+            "layers": [
+              {
+                "ref": "prop:fig-villager",
+                "x": 170,
+                "y": 280,
+                "s": 1.25,
+                "tint": "brand.secondaryLight"
+              },
+              {
+                "ref": "prop:fig-villager",
+                "x": 236,
+                "y": 280,
+                "s": 1.25,
+                "flip": true,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:swallow",
+                "x": 318,
+                "y": 128,
+                "s": 0.8,
+                "flip": true
+              }
+            ],
+            "altEn": "In well-known versions the greedy brother Nolbu is sorry, and the two brothers make peace while a swallow looks on."
+          }
         },
         {
           "id": "s6",
@@ -240,8 +378,26 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "An undersea palace of coral and seaweed; a dragon king resting on a cushion; a small soft-shelled turtle in an official's hat bowing and volunteering."
+          "artBrief": "An undersea palace of coral and seaweed; a dragon king resting on a cushion; a small soft-shelled turtle in an official's hat bowing and volunteering.",
+          "art": {
+            "setting": "scene:sea-palace",
+            "layers": [
+              {
+                "ref": "prop:fig-king-seated",
+                "x": 196,
+                "y": 236,
+                "s": 1.35
+              },
+              {
+                "ref": "prop:turtle",
+                "x": 300,
+                "y": 282,
+                "s": 1.25,
+                "flip": true
+              }
+            ],
+            "altEn": "In the Dragon King's palace under the sea, a soft-shelled turtle in an official's hat offers to help the sick king."
+          }
         },
         {
           "id": "s7",
@@ -259,8 +415,39 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "The rabbit arriving wide-eyed in the undersea palace beside the turtle, fish courtiers watching; the king pointing; bubbles everywhere, nothing frightening."
+          "artBrief": "The rabbit arriving wide-eyed in the undersea palace beside the turtle, fish courtiers watching; the king pointing; bubbles everywhere, nothing frightening.",
+          "art": {
+            "setting": "scene:sea-palace",
+            "layers": [
+              {
+                "ref": "prop:fig-king-seated",
+                "x": 200,
+                "y": 232,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:fig-officials-kneeling",
+                "x": 86,
+                "y": 282,
+                "s": 0.75
+              },
+              {
+                "ref": "prop:turtle",
+                "x": 282,
+                "y": 288,
+                "s": 1.0,
+                "flip": true
+              },
+              {
+                "ref": "prop:rabbit",
+                "x": 346,
+                "y": 286,
+                "s": 1.05,
+                "flip": true
+              }
+            ],
+            "altEn": "The rabbit arrives at the undersea palace beside the turtle, and the Dragon King and his courtiers look on."
+          }
         },
         {
           "id": "s8",
@@ -278,8 +465,46 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "A rabbit bounding happily into a green forest from a sandy shore while the turtle watches from the waves; Hoya in the audience cheering with raised paws."
+          "artBrief": "A rabbit bounding happily into a green forest from a sandy shore while the turtle watches from the waves; Hoya in the audience cheering with raised paws.",
+          "art": {
+            "setting": "scene:seashore",
+            "layers": [
+              {
+                "ref": "prop:leafy-tree",
+                "x": 58,
+                "y": 250,
+                "s": 1.5,
+                "z": "back"
+              },
+              {
+                "ref": "prop:leafy-tree",
+                "x": 126,
+                "y": 232,
+                "s": 1.1,
+                "z": "back"
+              },
+              {
+                "ref": "prop:rabbit",
+                "x": 180,
+                "y": 264,
+                "s": 1.5,
+                "flip": true
+              },
+              {
+                "ref": "prop:turtle",
+                "x": 296,
+                "y": 210,
+                "s": 0.9
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 336,
+                "y": 296,
+                "s": 0.68
+              }
+            ],
+            "altEn": "Back on the shore the clever rabbit hops off into the forest, the turtle watches from the waves, and Hoya cheers."
+          }
         }
       ],
       "checks": [

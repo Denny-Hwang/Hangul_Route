@@ -92,6 +92,9 @@ describe('telemetry event names (one list for the client type and the API whitel
         'vocab.cards.start',
         'vocab.cards.complete',
         'home.vocab_card.shown',
+        'vocab.round.start',
+        'vocab.round.complete',
+        'vocab.challenge_toggled',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);
@@ -138,6 +141,15 @@ describe('telemetry event names (one list for the client type and the API whitel
     expect(isTelemetryEventName('home.vocab_card.shown')).toBe(true);
     expect(TELEMETRY_EVENT_NAMES.filter((n) => n === 'home.vocab_card.shown')).toHaveLength(1);
     expect(isTelemetryEventName('home.vocab_card.opened')).toBe(false);
+  });
+
+  it('lists the three Speed Round names of F-VOC-004 section 3.10 (Worker first, S-1)', () => {
+    for (const name of ['vocab.round.start', 'vocab.round.complete', 'vocab.challenge_toggled']) {
+      expect(TELEMETRY_EVENT_NAMES.filter((n) => n === name)).toHaveLength(1);
+      expect(isTelemetryEventName(name)).toBe(true);
+    }
+    expect(isTelemetryEventName('vocab.round.finished')).toBe(false);
+    expect(isTelemetryEventName('vocab.challenge_toggle')).toBe(false);
   });
 
   it('narrows unknown input with isTelemetryEventName', () => {

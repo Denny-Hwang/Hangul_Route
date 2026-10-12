@@ -8,7 +8,7 @@ import {
   type PlacementRunState,
   type SpeechLang,
 } from '@hangul-route/content-schema';
-import { Screen, colors, supportedCardIds } from '@hangul-route/design-system';
+import { Screen } from '@hangul-route/design-system';
 import { availableLocales, getMessages } from '@hangul-route/i18n';
 import { CommonActions } from '@react-navigation/native';
 import { createNativeStackNavigator, type NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -37,7 +37,7 @@ import {
 import { bankHasClips, flowCapability, placementKoreanAudio, speechLangOf } from '../../logic/placement/options-view';
 import { resultView } from '../../logic/placement/result-view';
 import { completedAtOf, newResponse, resultRoutes, rungPosition, startTarget } from '../../logic/placement/session';
-import { resolvePicture, swatchColors } from '../../logic/picture-ref';
+import { resolvePicture } from '../../logic/picture-ref';
 import { effectiveLearnerType, gateRequired } from '../../logic/profiles/learner-type';
 import type { PlacementStackParamList, RootStackParamList } from '../../navigation/types';
 import { getCapability, hasVoiceFor, playPrompt, stop } from '../../platform/audio';
@@ -57,6 +57,7 @@ import { OptionsScreen } from './OptionsScreen';
 import { ResultScreen } from './ResultScreen';
 import { ResumeScreen } from './ResumeScreen';
 import { SoundNeededScreen } from './SoundNeededScreen';
+import { PICTURE_CONTEXT } from '../minigames/PictureArt';
 import { WarmupScreen } from './WarmupScreen';
 import {
   PlacementProvider,
@@ -81,8 +82,7 @@ import {
 type Props = NativeStackScreenProps<RootStackParamList, 'Placement'>;
 
 const Stack = createNativeStackNavigator<PlacementStackParamList>();
-const SWATCHES = swatchColors(colors);
-const resolvesPicture = (ref: string): boolean => resolvePicture(ref, { supportedCardIds, swatches: SWATCHES }).kind !== 'text';
+const resolvesPicture = (ref: string): boolean => resolvePicture(ref, PICTURE_CONTEXT).kind !== 'text';
 /** The bank's prompts are spoken by the Korean voice until it carries clips (section 3.11). */
 const PLACEMENT_HAS_CLIPS = bankHasClips(PLACEMENT_BANK, PLACEMENT_WARMUP);
 const koreanAudioNow = (): boolean => placementKoreanAudio(getCapability(), PLACEMENT_HAS_CLIPS);

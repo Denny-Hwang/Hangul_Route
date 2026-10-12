@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked, readStored } from './helpers';
-import { back, filledDots, fullyVisible, next, position, primaryButtons } from './story-reader-helpers';
+import { back, filledDots, fullyVisible, next, nextPage, position, primaryButtons } from './story-reader-helpers';
 
 /**
  * F-STORY-002 PR 2.6b: the story reader as a quest step (`StoryReadGame`,
@@ -16,8 +16,8 @@ import { back, filledDots, fullyVisible, next, position, primaryButtons } from '
  * `story:hangul-day` has a shelf block, so the generator derives
  * `episode:shelf-hangul-day` and the five-step `quest:story-hangul-day-listen`
  * (intro, read, check, sequence, reward; F-STORY-001 §3.9). Its listen tier has
- * five scenes and one checkpoint, which the reader reads straight through
- * until the inline question card ships (PR 2.9).
+ * five scenes and one checkpoint after scene 3 (the inline question card, PR 2.9;
+ * these tests Skip it, story-reader-checkpoints.spec.ts answers it).
  */
 
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
@@ -80,22 +80,23 @@ test.describe('story reader, quest step (fixture bundle)', () => {
     await expect(page.getByTestId('story-reader-narration-text')).toContainText('Long ago, King');
 
     // Back works and the dots never drop (D3).
-    await next(page).click();
+    await nextPage(page);
     await expect(position(page)).toHaveText('2 / 5');
     await back(page).click();
     await expect(position(page)).toHaveText('1 / 5');
     await expect.poll(() => filledDots(page)).toBe(2);
 
-    // The checkpoint scene reads straight through (no card before PR 2.9): five Nexts reach the end.
+    // After scene 3 the checkpoint card opens; Skip records nothing and the story carries on
+    // (story-reader-checkpoints.spec.ts answers it).
     for (const n of [2, 3, 4, 5]) {
-      await next(page).click();
+      await nextPage(page);
       await expect(position(page)).toHaveText(`${n} / 5`);
     }
     await expect(next(page)).toHaveText('Finish');
     const shown = await page.getByTestId('story-reader').innerText();
     expect(shown).not.toContain('{kw:');
     expect(shown).not.toMatch(EMOJI);
-    await next(page).click();
+    await nextPage(page);
 
     // The end page in quest mode: Continue is the one primary, Read again a ghost; no Done.
     await expect(page.getByRole('heading', { name: 'The End' })).toBeVisible();
@@ -124,8 +125,8 @@ test.describe('story reader, quest step (fixture bundle)', () => {
     const id = profiles?.[0]?.id;
     expect(id).toBeTruthy();
     await startReading(page);
-    await next(page).click();
-    await next(page).click();
+    await nextPage(page);
+    await nextPage(page);
     await expect(position(page)).toHaveText('3 / 5');
 
     // No confirmation: reading records no score, so nothing is lost by leaving (§3.3).
@@ -166,7 +167,7 @@ test.describe('story reader, quest step (fixture bundle)', () => {
       await startReading(page);
       await expect.poll(() => fullyVisible(page, next(page))).toBe(true);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-      for (let i = 0; i < 5; i += 1) await next(page).click();
+      for (let i = 0; i < 5; i += 1) await nextPage(page);
       const primary = page.getByTestId('story-reader-end-primary');
       await expect(primary).toHaveText('Continue');
       await expect(page.getByTestId('story-reader-read-again')).toBeVisible();

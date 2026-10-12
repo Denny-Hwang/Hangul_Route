@@ -1,7 +1,7 @@
 # WordArt (component spec v1)
 
 Spec: `docs/specs/F-VOC-002-wordart-svg-system.md` §3.7 (renderer, accessibility, modes) and PR W-1c in §6 · art brief: `design/brief/illustrations/word-art.md` · the screens that show it: `design/wireframes/vocab/topics.md`, `flashcards.md`, `speed-round.md` (the picture is the content of those screens, it has no wireframe of its own)
-Code: `packages/design-system/src/components/WordArt/` (`WordArt.tsx` paint, `types.ts`, `index.ts`; imported from `@hangul-route/design-system/components/WordArt`, not the package root, so an app start that shows no word picture does not load the glyph registry) over the pure `packages/design-system/src/word-art/` (`model.ts`, `render.ts`, `registry.ts`); the web contact sheet draws the same render list as an svg string (`glyphToSvgString`)
+Code: `packages/design-system/src/components/WordArt/` (`WordArt.tsx` paint, `types.ts`, `index.ts`; imported by the app from the package root, with `WORD_ART_KEYS`, because Metro does not read package `exports` (amended at W-7; the `components/WordArt` subpath stays for tools that do)) over the pure `packages/design-system/src/word-art/` (`model.ts`, `render.ts`, `registry.ts`); the web contact sheet draws the same render list as an svg string (`glyphToSvgString`)
 
 ## What it is
 
@@ -35,7 +35,7 @@ A vocabulary word's picture: a square, vector, drawn from data on a `0 0 100 100
 | Fills and strokes | the tone paths in the glyph data: any `colors.*` leaf except `feedback.danger`, `feedback.dangerLight`, `surface.overlay`, `surface.inkScrim` and `rarity.*`; `colors.vocab.*` only inside WordArt |
 | Outline | `text.primary`, 3 (main outline) and 2 (details); round caps and joins set by the renderer |
 | Silhouette | `border.strong` |
-| Background | none: the caller's tile (`surface.paper`, `border.subtle`) |
+| Background | none: the caller's tile (`surface.paper`, `border.subtle`, padding `spacing.xs`, border `borderWidth.thin`, radius `radii.lg`), the same tile `PictureArt` draws round card art (W-7) |
 
 ## Accessibility
 

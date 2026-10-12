@@ -27,10 +27,12 @@ import { Pressable, View } from 'react-native';
 import { InstallGuideSheet } from '../../components/InstallGuideSheet';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import type { SceneArt } from '@hangul-route/content-schema';
+import { welcomeCardIds } from '../../content/award-world';
 import { flags } from '../../config/flags';
 import { episodesAll, questsAll } from '../../content';
 import { PLACEMENT_BANK } from '../../content/placement.generated';
 import { useLocale, useMessages } from '../../i18n/use-messages';
+import { catchUpCard } from '../../logic/awards/catch-up';
 import { localizeMissionCard } from '../../logic/content-locale';
 import { cursorContext } from '../../logic/cursor-context';
 import {
@@ -142,12 +144,50 @@ function MissionTile({
   );
 }
 
+/**
+ * The one-time catch-up card (F-STORY-006 §3.5, wireframe `home/cards-catch-up.md` E): cards the
+ * learner had already earned, found by the reconcile at start. Hoya cheers (static: the pose never
+ * changes while it shows), one line says how many cards, and one button opens the Library. No
+ * timer and no counter of what is left; it lives for this app session only.
+ */
+function CatchUpCard({
+  count,
+  hoyaSize,
+  onSeeCards,
+}: {
+  count: number;
+  hoyaSize: number;
+  onSeeCards: () => void;
+}): React.ReactElement {
+  const m = useMessages();
+  return (
+    <View testID="home-catch-up">
+      <Card padding="md" tone="brand">
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+          <Hoya pose="cheering" size={hoyaSize} accessibilityLabel={m.a11y.hoya('cheering')} />
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Body weight="semibold" size="lg">
+              {m.learner.home.catchUp.line(count)}
+            </Body>
+          </View>
+        </View>
+        <Spacer size="md" />
+        <Button label={m.learner.home.catchUp.cta} tone="primary" size="lg" fullWidth onPress={onSeeCards} />
+      </Card>
+    </View>
+  );
+}
+
 export function HomeScreen(): React.ReactElement {
   const m = useMessages();
   const { copy } = useAudience();
   const profile = useProfileStore(activeProfileSelector);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const ensure = useProgressStore((s) => s.ensure);
+  const markCardsSeen = useProgressStore((s) => s.markCardsSeen);
+  // Session-only (F-STORY-006 §3.5): the cards a reconcile added this app session.
+  const catchUpListed = useProgressStore((s) => (profile ? s.catchUp[profile.id] : undefined));
+  const catchUp = useMemo(() => catchUpCard(catchUpListed, welcomeCardIds), [catchUpListed]);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
   // Re-renders Home when the inbox changes the tier, as Results does, so the
   // cursor follows OD-4 on both (F-ROUTE-001 R-4a).
@@ -310,6 +350,24 @@ export function HomeScreen(): React.ReactElement {
   const layoutClass = useLayoutClass();
   const hoyaSize = useMediaSize(HOYA_SIZE);
 
+  // See my cards: the Library, and those cards are seen, so the catch-up card goes for good.
+  const seeCaughtUpCards = (): void => {
+    if (profile && catchUp) markCardsSeen(profile.id, catchUp.cardIds);
+    navigation.navigate('Main', { screen: 'Library' });
+  };
+
+  // Always mounted, so assistive tech is watching when the card arrives with the reconcile.
+  const catchUpView = (
+    <View accessibilityLiveRegion="polite" aria-live="polite">
+      {catchUp ? (
+        <>
+          <CatchUpCard count={catchUp.count} hoyaSize={hoyaSize} onSeeCards={seeCaughtUpCards} />
+          <Spacer size="lg" />
+        </>
+      ) : null}
+    </View>
+  );
+
   const missions =
     mission && mission.cards.length > 0 ? (
       <>
@@ -379,7 +437,8 @@ export function HomeScreen(): React.ReactElement {
     <View style={{ flex: 1 }}>
     <Screen tone="canvas" edges={TAB_SCREEN_EDGES} width={twoColumns ? 'full' : 'reading'}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-        <Hoya pose="waving" size={hoyaSize} accessibilityLabel={m.a11y.hoya('waving')} />
+        {/* One Hoya on the screen: the catch-up card's cheering Hoya stands in while it shows. */}
+        {catchUp ? null : <Hoya pose="waving" size={hoyaSize} accessibilityLabel={m.a11y.hoya('waving')} />}
         <View style={{ flex: 1 }}>
           <Heading level="title">{m.learner.home.greeting(profile?.displayName ?? null)}</Heading>
           <Body tone="secondary">{m.learner.home.subtitle}</Body>
@@ -414,6 +473,8 @@ export function HomeScreen(): React.ReactElement {
           {/* The mission cards keep their slot order in every class (F-HW-001 §3.2). */}
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xl }}>
             <View testID="home-missions-column" style={{ flex: MISSIONS_FLEX, minWidth: 0 }}>
+              {/* Under the greeting, spanning the mission column; never between the mission cards. */}
+              {catchUpView}
               {missions}
               {quietCard ? (
                 <>
@@ -429,12 +490,9 @@ export function HomeScreen(): React.ReactElement {
         </>
       ) : (
         <>
-          {missions ? (
-            <>
-              <Spacer size="lg" />
-              {missions}
-            </>
-          ) : null}
+          {catchUp || missions ? <Spacer size="lg" /> : null}
+          {catchUpView}
+          {missions}
           {quietCard ? (
             <>
               <Spacer size="lg" />
