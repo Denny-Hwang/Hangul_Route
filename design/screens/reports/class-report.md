@@ -76,4 +76,4 @@ From 60em: layer 1 left, layer 2 right, More detail across. The class-level line
 - No "top", "most", "least", "best", "lowest"; no average per learner, no maximum, no minimum.
 - No count of learners per stage or level (OD-4); no percentages (OD-6); no red; nothing about speaking.
 - Up-only markers only on the headline, Total time and New quests; never a down marker.
-- **Small classes** (README, decisions): only the median is hidden under 3 learners who practiced (section 3.7). Bands, level-check counts and homework counts show in a class of 1 or 2 too; this is accepted for v1 because the page and its print are the teacher's, who can open each learner's own report anyway, and a suppression rule would change RP-2c's output.
+- **Small classes** (README, decisions): only the median is hidden under 3 learners who practiced (section 3.7). Bands, level-check counts and homework counts show in a class of 1 or 2 too; this is accepted for v1 because the page and its print are for viewers with `summary.read` on the class (teacher, co-teacher, school admin), each of whom can already open every learner's own report, and a suppression rule would change RP-2c's output.

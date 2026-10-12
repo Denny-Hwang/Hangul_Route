@@ -76,7 +76,9 @@
 .period-tab { min-height: var(--touch-min); padding: var(--spacing-xs) var(--spacing-sm); border-radius: var(--radii-md); border: var(--border-width-base) solid transparent; background: transparent; color: var(--colors-text-secondary); font: inherit; font-size: var(--size-bodySm); font-weight: var(--weight-semibold); line-height: var(--leading-tight); text-align: center; }
 .period-tab[aria-selected="true"] { background: var(--colors-surface-paper); border-color: var(--colors-brand-primary); color: var(--colors-text-primary); font-weight: var(--weight-bold); }
 .period-tab:disabled { color: var(--colors-text-muted); }
-.period-tab:focus-visible, .step-button:focus-visible, .disclosure:focus-visible, .section-tab:focus-visible { outline: var(--border-width-thick) solid var(--colors-border-focus); outline-offset: var(--border-width-base); }
+.period-tab:focus-visible, .step-button:focus-visible, .disclosure:focus-visible, .section-tab:focus-visible, button.icon-button:focus-visible { outline: var(--border-width-thick) solid var(--colors-border-focus); outline-offset: var(--border-width-base); }
+/* The in-app back control is a real button (LR-D's .icon-button look): no UA padding, the app font. */
+button.icon-button { padding: 0; font: inherit; cursor: pointer; }
 
 /* Previous / Next stepper (OD-18): the window's dates sit between the two buttons. Next is absent on the current window. */
 .stepper { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--spacing-sm); row-gap: var(--spacing-xxs); }

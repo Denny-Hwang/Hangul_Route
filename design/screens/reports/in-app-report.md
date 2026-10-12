@@ -45,7 +45,7 @@ The link navigates on the root stack to `MyRoute { source: 'parent', profileId: 
 
 ## Preview lessons (reserved for F-BROWSE-001 BR-12a)
 
-F-BROWSE-001 section 4.11 item 2 and its BR-12a row put a **Preview lessons** entry in the in-app report. Its place is drawn here: one LR-D `link-button` (`touchTarget.min` tall) at the end of the What to practice next section, after its lines, never inside a line. It opens `{ kind: 'stage', stage: journey.here }` (else `stage1`) through `openBrowseFromGate` with source `'report'`, content ids only. It renders only where BR-12a renders it: on web, with the browse flag on; otherwise the section ends with its lines. Letters stay disclosures (section 3.9), so this row is the app report's only way into Browse. RP-9 leaves the slot to BR-12a (it does not render the row itself); the label is F-BROWSE-001's word (its "One name everywhere" rule), added by BR-12a.
+F-BROWSE-001 section 4.11 item 2 (amended with this design, see its review log) and its BR-12a row put one **Preview lessons** entry in the in-app report. Its place is drawn here: one LR-D `link-button` (`touchTarget.min` tall) at the end of the What to practice next section, after its lines, never inside a line. It calls `openBrowseFromGate({ kind: 'stage', stage: journey.here ?? 'stage1' })`, F-BROWSE-001 section 4.3's gate hand-off with its optional target: the pass source is `'gate'` (`BrowsePassSchema` is unchanged) and so is the fragment source (`/browse#t=stage:stage1&s=gate`), content ids only. It renders only where BR-12a renders it, on web with the browse flag on, and only when the What to practice next section itself renders: in the empty state (no practice ever, no P4 line) there is no section and no row; otherwise, off web or with the flag off, the section ends with its lines. Letters stay disclosures (section 3.9) and no quest is linked, so this row is the app report's only way into Browse. RP-9 leaves the slot to BR-12a (it does not render the row itself); the label is F-BROWSE-001's word (its "One name everywhere" rule), added by BR-12a.
 
 ## Skills rows (device only, OD-8)
 
@@ -57,7 +57,7 @@ The last block of More detail, drawn as `SkillsCard` draws them on the Learning 
 
 ## Voice (OD-17)
 
-The second voice is for an adult learning alone reading their **own** report. RP-9 renders `voice: 'second'` when both hold:
+The second voice is for an adult learning alone reading their **own** report. One pure helper decides it, `reportVoice({ profiles, activeProfileId, profileId }): ReportVoice` in `apps/mobile/src/logic/reports/voice.ts` (spec section 5, 100 % covered with `logic/reports/`), never logic inside the screen. It returns `'second'` when both hold:
 
 - the device is self-only: `deviceAudience(profiles) === 'self'` (`logic/profiles/learner-type.ts`; every learner profile is effectively an adult), and
 - the report's `profileId` is the device's active profile.
@@ -66,7 +66,7 @@ Otherwise it renders third person. `gateOpensDirectly` is **not** the check: it 
 
 In the second voice every sentence that names the learner uses its `report.you.*` twin: `you.title`, `you.headline.*`, `you.insight.*`, `you.detail.lettersStrong`, `you.state.empty`, `you.tip.*`. Lines that do not name the learner ("More practice time than last week: 36 minutes.", "2 plan items are ready to play.") read the same in both voices. The board's first item draws the whole screen in the second voice.
 
-RP-9's tests for the voice: a family device with the grown-up session open renders third person; a self-only device viewing another self profile's report renders third person; a self-only device viewing the active profile's report renders second person (with and without an open session).
+RP-9's tests for the voice (`logic/reports/__tests__/voice.test.ts`, spec section 5): a family device with the grown-up session open -> third person; a self-only device viewing another self profile's report -> third person; a self-only device viewing the active profile's report -> second person, with and without an open session (the helper takes no session input, so the session cannot change it); a device with only parent profiles (`deviceAudience` is `'family'` with no learner) -> third person.
 
 ## States (board `mock/in-app-report-states.html`)
 
@@ -86,7 +86,7 @@ RP-9's tests for the voice: a family device with the grown-up session open rende
 
 ## Accessibility
 
-- The stack's back button is labelled `common.buttons.back`. Tabs are `SectionTabs` with the row named `a11y.report.periods` and `a11y.report.periodChanged` announced on change; every tab is a Tab stop and Enter or Space selects (SectionTabs' model; the console's roving tab stop is not used here).
+- The stack's back button is labelled `common.buttons.back`; the mock draws it as a real `<button>` (focusable, in the Tab order), as the native stack header's back control is. Tabs are `SectionTabs` with the row named `a11y.report.periods` and `a11y.report.periodChanged` announced on change; every tab is a Tab stop and Enter or Space selects (SectionTabs' model; the console's roving tab stop is not used here).
 - Calendar and growth line carry the same text alternatives as the console; letter tiles announce the letter (`lang="ko"`) and its romanization from their visible content, plus their expanded state.
 - Tabs: each `SectionTabs` tab has `aria-controls` the report panel, and the report below the tabs is the `tabpanel` labelled by the selected tab (as the console, `learner-report.md`).
 - Read-only: nothing on this screen writes progress or changes the active profile; `report.viewed` goes without `profileId` (spec section 3.13).
