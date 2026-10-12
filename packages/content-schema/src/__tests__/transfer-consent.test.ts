@@ -2,10 +2,12 @@ import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import {
   ACCEPTED_CONSENT_TEXT_VERSIONS,
+  InboxNoteSchema,
   ProgressSummarySchema,
   TEACHER_HIDDEN_SUMMARY_KEYS,
   TEACHER_ROSTER_ADDRESS_FIELDS,
   TEACHER_VISIBLE_ITEM_IDS,
+  TEACHER_VISIBLE_NOTE_FIELDS,
   TEACHER_VISIBLE_ROSTER_FIELDS,
   TEACHER_VISIBLE_SUMMARY_ITEMS,
   TEACHER_VISIBLE_SUMMARY_KEYS,
@@ -17,6 +19,7 @@ import {
   UI_LOCALES,
   isTransferConsentLocale,
   transferConsentLineIds,
+  type TeacherVisibleItemId,
   type TransferConsentContext,
   type TransferConsentLocale,
 } from '../index';
@@ -35,15 +38,31 @@ const PINNED_HASHES: Record<string, Partial<Record<TransferConsentLocale, string
   'transfer-2026-10b': {
     en: '191a3fcf5bb65dcff7ac96c7df77100374d620e1ff990571613833f06e01d0af',
   },
+  // F-FEEDBACK-001 section 7.7: the note_replies item, added to the 10b text.
+  'transfer-2026-10c': {
+    en: 'dd15f08a9f2ada18e81d2ea1b4e81db3fa4cfc8d3456251f0918cf6896de521b',
+  },
 };
 
-function canonical(locale: TransferConsentLocale): string {
+/**
+ * The canonical text the hash is taken over. `earlier` rebuilds an earlier
+ * version from the current text: items it drops and item wordings it restores,
+ * so a test can prove what a bump changed and nothing else.
+ */
+function canonical(
+  locale: TransferConsentLocale,
+  earlier: { drop?: readonly TeacherVisibleItemId[]; items?: Partial<Record<TeacherVisibleItemId, string>> } = {},
+): string {
   const text = TRANSFER_CONSENT_TEXT[locale];
+  const dropped = new Set(earlier.drop ?? []);
   return JSON.stringify({
     lines: TRANSFER_CONSENT_LINES.map((line) => [line.id, line.when, line.kind, text.lines[line.id]]),
-    items: TEACHER_VISIBLE_ITEM_IDS.map((id) => [id, text.items[id]]),
+    items: TEACHER_VISIBLE_ITEM_IDS.filter((id) => !dropped.has(id)).map((id) => [id, earlier.items?.[id] ?? text.items[id]]),
   });
 }
+
+/** The `activity` item before F-REPORT-001 RP-W2 (`transfer-2026-10`). */
+const ACTIVITY_BEFORE_RP_W2 = 'When {learner} was last active, minutes this week and days in a row';
 
 function sha256(value: string): string {
   return createHash('sha256').update(value).digest('hex');
@@ -239,11 +258,12 @@ describe('what the new teacher sees is generated from data (TEACHER_VISIBLE_SUMM
     expect(TRANSFER_CONSENT_TEXT.en.items.cards_letters).toBe('Cards earned, letters learned and letters that need practice');
   });
 
-  it('bumps the text version for the new sentence and keeps the old version accepted (F-REPORT-001 section 3.10)', () => {
-    expect(TRANSFER_CONSENT_TEXT_VERSION).toBe('transfer-2026-10b');
+  it('bumped the text version for the new sentence and keeps it and the old version accepted (F-REPORT-001 section 3.10)', () => {
+    // transfer-2026-10b carried the new sentence; F-FEEDBACK-001 FB-1 then moved the current version on to transfer-2026-10c.
     expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toContain('transfer-2026-10b');
     expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toContain('transfer-2026-10');
-    expect(PINNED_HASHES['transfer-2026-10b']?.en).not.toBe(PINNED_HASHES['transfer-2026-10']?.en);
+    // transfer-2026-10 is transfer-2026-10b with the earlier activity sentence and without note_replies, and nothing else.
+    expect(sha256(canonical('en', { drop: ['note_replies'], items: { activity: ACTIVITY_BEFORE_RP_W2 } }))).toBe(PINNED_HASHES['transfer-2026-10']?.en);
   });
 
   it('classifies every ProgressSummarySchema key exactly once (a new key fails here until classified)', () => {
@@ -291,8 +311,55 @@ describe('what the new teacher sees is generated from data (TEACHER_VISIBLE_SUMM
   });
 
   it('uses every consent item for at least one field, so the list never shows an empty promise', () => {
-    const used = new Set([...Object.values(TEACHER_VISIBLE_SUMMARY_ITEMS), ...Object.values(TEACHER_VISIBLE_ROSTER_FIELDS)]);
+    const used = new Set([
+      ...Object.values(TEACHER_VISIBLE_SUMMARY_ITEMS),
+      ...Object.values(TEACHER_VISIBLE_ROSTER_FIELDS),
+      ...Object.values(TEACHER_VISIBLE_NOTE_FIELDS),
+    ]);
     expect([...used].sort()).toEqual([...TEACHER_VISIBLE_ITEM_IDS].sort());
-    expect(TEACHER_VISIBLE_ITEM_IDS).toEqual(['name_picture_level', 'activity', 'quests', 'cards_letters', 'level_check', 'plan_progress', 'sync_time']);
+    expect(TEACHER_VISIBLE_ITEM_IDS).toEqual([
+      'name_picture_level',
+      'activity',
+      'quests',
+      'cards_letters',
+      'level_check',
+      'plan_progress',
+      'sync_time',
+      'note_replies',
+    ]);
+  });
+});
+
+describe('what a class sender sees of a note (F-FEEDBACK-001 section 7.7, OD-8)', () => {
+  it('adds the note_replies item with the spec text', () => {
+    expect(TEACHER_VISIBLE_ITEM_IDS).toContain('note_replies');
+    expect(TRANSFER_CONSENT_TEXT.en.items.note_replies).toBe('The answer {learner} picks on a note from the teacher');
+  });
+
+  it('maps the reaction only: no readAt, no text, nothing else of the note', () => {
+    expect(TEACHER_VISIBLE_NOTE_FIELDS).toEqual({ reaction: 'note_replies' });
+    expect(Object.keys(TEACHER_VISIBLE_NOTE_FIELDS)).not.toContain('readAt');
+    for (const field of Object.keys(TEACHER_VISIBLE_NOTE_FIELDS)) expect(Object.keys(InboxNoteSchema.shape)).toContain(field);
+  });
+
+  it('bumped the consent text version over the RP-W2 text and still accepts a sheet signed before the change', () => {
+    expect(TRANSFER_CONSENT_TEXT_VERSION).toBe('transfer-2026-10c');
+    expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toContain(TRANSFER_CONSENT_TEXT_VERSION);
+    expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toContain('transfer-2026-10b');
+    expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toContain('transfer-2026-10');
+    // transfer-2026-10c is exactly transfer-2026-10b plus the note_replies item: the RP-W2 sentence is kept.
+    expect(sha256(canonical('en', { drop: ['note_replies'] }))).toBe(PINNED_HASHES['transfer-2026-10b']?.en);
+    expect(sha256(canonical('en'))).toBe(PINNED_HASHES['transfer-2026-10c']?.en);
+  });
+
+  it('pins a hash for the current text that no earlier version shares', () => {
+    const current = sha256(canonical('en'));
+    for (const [version, hashes] of Object.entries(PINNED_HASHES)) {
+      if (version !== TRANSFER_CONSENT_TEXT_VERSION) expect(hashes.en, version).not.toBe(current);
+    }
+  });
+
+  it('keeps every pinned version accepted, so the accepted list only grows when a later PR bumps the text', () => {
+    for (const version of Object.keys(PINNED_HASHES)) expect(ACCEPTED_CONSENT_TEXT_VERSIONS, version).toContain(version);
   });
 });

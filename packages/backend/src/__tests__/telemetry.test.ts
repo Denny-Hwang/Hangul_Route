@@ -50,6 +50,49 @@ describe('POST /api/telemetry', () => {
     expect(store.events.map((e) => [e.name, e.payload])).toEqual(events);
   });
 
+  it('accepts the seven F-FEEDBACK-001 notes names with their payloads (Worker first, FB-1)', async () => {
+    const events: Array<[string, Record<string, unknown>]> = [
+      ['notes.card_shown', { unread: 1 }],
+      ['notes.list_viewed', { notes: 3, unread: 1 }],
+      ['notes.note_opened', { presetId: 'progress_reading', fromRole: 'teacher', hasText: true, hasSuggest: true, suggestOpen: false }],
+      ['notes.reaction_picked', { reaction: 'thanks', fromRole: 'family', changed: false }],
+      ['notes.suggest_started', { fromRole: 'teacher' }],
+      ['notes.report_sent', { reason: 'unkind', via: 'note_page' }],
+      ['notes.prefs_changed', { classes: 'presets' }],
+    ];
+    for (const [name, payload] of events) {
+      expect((await post({ name, payload })).status, name).toBe(201);
+    }
+    expect(store.events.map((e) => [e.name, e.payload])).toEqual(events);
+  });
+
+  it('never stores a profile id on a notes event, even when a client sends one (F-FEEDBACK-001 section 10)', async () => {
+    const events: Array<[string, Record<string, unknown>]> = [
+      ['notes.card_shown', { unread: 1 }],
+      ['notes.note_opened', { presetId: 'effort_proud', fromRole: 'family', hasText: false, hasSuggest: false, suggestOpen: false }],
+      ['notes.report_sent', { reason: 'other', via: 'grown_up_zone' }],
+    ];
+    for (const [name, payload] of events) {
+      expect((await post({ name, profileId: 'profile:a', payload })).status, name).toBe(201);
+    }
+    expect(store.events).toHaveLength(3);
+    expect(store.events.map((e) => e.profileId)).toEqual([undefined, undefined, undefined]);
+    expect(store.events.map((e) => [e.name, e.payload])).toEqual(events);
+    // An ordinary event still keeps the profile id it was sent with.
+    await post({ name: 'session.start', profileId: 'profile:a' });
+    expect(store.events.at(-1)?.profileId).toBe('profile:a');
+  });
+
+  it('stores a notes payload without note text, ids, labels or a profile id, whatever a client sends', async () => {
+    const smuggled = { profileId: 'profile:a', noteId: 'note:0b7c2f9e-1d2a', spaceId: 'space:class-a', label: 'mom', text: 'Meet me after class' };
+    expect((await post({ name: 'notes.reaction_picked', payload: { ...smuggled, reaction: 'thanks', fromRole: 'teacher', changed: false } })).status).toBe(201);
+    expect((await post({ name: 'notes.list_viewed', payload: smuggled })).status).toBe(201);
+    expect(store.events.map((e) => [e.name, e.profileId, e.payload])).toEqual([
+      ['notes.reaction_picked', undefined, { reaction: 'thanks', fromRole: 'teacher', changed: false }],
+      ['notes.list_viewed', undefined, undefined],
+    ]);
+  });
+
   it('rejects unknown or missing event names with 422', async () => {
     for (const body of [{ name: 'unknown.event' }, { name: 'parent.notify.queued' }, {}, { name: 42 }]) {
       const r = await post(body);

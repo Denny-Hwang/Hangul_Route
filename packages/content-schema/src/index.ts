@@ -55,3 +55,4 @@ export * from './schemas/report';
 export * from './schemas/report-response';
 export * from './schemas/billing';
 export * from './route/goal';
+export * from './schemas/feedback';

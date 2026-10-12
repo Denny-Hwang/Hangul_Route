@@ -110,6 +110,13 @@ describe('telemetry event names (one list for the client type and the API whitel
         'route.next_started',
         'route.offplan_finished',
         'report.viewed',
+        'notes.card_shown',
+        'notes.list_viewed',
+        'notes.note_opened',
+        'notes.reaction_picked',
+        'notes.suggest_started',
+        'notes.report_sent',
+        'notes.prefs_changed',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);
@@ -204,6 +211,24 @@ describe('telemetry event names (one list for the client type and the API whitel
     expect(isTelemetryEventName('report.viewed')).toBe(true);
     expect(isTelemetryEventName('report.opened')).toBe(false);
     expect(TELEMETRY_EVENT_NAMES.filter((n) => n.startsWith('report.'))).toEqual(['report.viewed']);
+  });
+
+  it('lists the seven notes names of F-FEEDBACK-001 section 10 (Worker first, FB-1)', () => {
+    const notes = [
+      'notes.card_shown',
+      'notes.list_viewed',
+      'notes.note_opened',
+      'notes.reaction_picked',
+      'notes.suggest_started',
+      'notes.report_sent',
+      'notes.prefs_changed',
+    ];
+    for (const name of notes) {
+      expect(TELEMETRY_EVENT_NAMES.filter((n) => n === name)).toHaveLength(1);
+      expect(isTelemetryEventName(name)).toBe(true);
+    }
+    expect(TELEMETRY_EVENT_NAMES.filter((n) => n.startsWith('notes.'))).toEqual(notes);
+    expect(isTelemetryEventName('notes.note_read')).toBe(false);
   });
 
   it('narrows unknown input with isTelemetryEventName', () => {

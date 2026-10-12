@@ -133,6 +133,14 @@ export const TELEMETRY_EVENT_NAMES = [
   'route.offplan_finished',
   // F-REPORT-001 §3.13 (payload { scope, space, period }: codes only, never a profileId, space id, learner id or name)
   'report.viewed',
+  // F-FEEDBACK-001 §10 (ids, codes and counts only; every notes.* event is sent without profileId)
+  'notes.card_shown',
+  'notes.list_viewed',
+  'notes.note_opened',
+  'notes.reaction_picked',
+  'notes.suggest_started',
+  'notes.report_sent',
+  'notes.prefs_changed',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);
