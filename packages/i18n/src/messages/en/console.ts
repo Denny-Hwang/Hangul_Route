@@ -1048,4 +1048,55 @@ export const consoleMsgs = {
     pinRenew: 'To use the grown-up PIN here, set it again in the app, then sign in once.',
     signInOnly: 'Sign in again to open grown-up pages on this device.',
   },
+  /**
+   * The grown-up Learning Route (AMENDMENTS-ROUTE-LEARNING-ROUTE sections 6.1, 6.3 and 11.1, LR-7;
+   * wireframes console/learning-route.md and parent/learning-route.md): the goal line, the route
+   * card, the stage list page of one learner and the class plan line. Written about the learner
+   * from the roster name; it may address the grown-up ("Your class's ...").
+   * - Case 1 (`learnerGoal`, `fromLead`, `reached`, `goalTag`) is the only one that names the
+   *   learner's own goal: the family space holds `summary.routeGoal`, the goal the learner's device
+   *   shows. Cases 2 and 3 speak about the plan or the road, never "{name}'s goal" (section 7.3).
+   * - No count of zero, no ratio, no ranking, no date pressure and no billing words: the stage line
+   *   leaves its zero parts out (`knownLine` is the known part alone, worded as `journey.stageLine`).
+   * - "Weekly plan" names every dated plan; the page is "Learning Route" in title case (LR-OD-1).
+   * The can-do lines are the shared `learner.myRoute.stage.canDo` entry, never copied here.
+   */
+  learningRoute: {
+    title: (name: string) => `${name}'s Learning Route`,
+    /** The report's "At a glance" link (F-REPORT-001 RP-7a2) and the family home card link (F-APP-001). */
+    open: 'Open Learning Route',
+    /** The label of the card's section on the report. */
+    section: 'Learning Route',
+    back: { report: 'Back to the report', class: 'Back to the class', family: 'Back to the family' },
+    now: (name: string, n: number, title: string) => `${name} is on Stage ${n}: ${title}.`,
+    learnerGoal: (name: string, n: number, title: string) => `${name}'s goal: Stage ${n} · ${title}`,
+    /** Who set the goal the learner's device shows (`summary.routeGoal.from`). */
+    fromLead: {
+      class: "From the class's weekly plan",
+      school: "From the school's weekly plan",
+      family: "From your family's weekly plan",
+      self: (name: string) => `From ${name}'s own weekly plan`,
+      default: "Hoya's suggestion: the next open stage",
+    },
+    reached: (name: string, n: number, title: string) => `${name} reached the goal: Stage ${n} · ${title}.`,
+    planReaches: {
+      class: (n: number, title: string) => `Your class's weekly plan reaches Stage ${n} · ${title}`,
+      family: (n: number, title: string) => `Your family's weekly plan reaches Stage ${n} · ${title}`,
+    },
+    stageReached: (name: string) => `${name} reached this stage.`,
+    nextOpen: (n: number, title: string) => `Next open stage: Stage ${n} · ${title}`,
+    canDoLead: (name: string) => `By the end of this stage, ${name} can:`,
+    /** The date arrives formatted; grown-up views only (LR-OD-7), never "late" or "behind". */
+    planEnds: (date: string) => `Plan ends ${date}`,
+    endOfRoad: (name: string) => `${name} reached the end of the open road. More is coming.`,
+    hereTag: (name: string) => `${name} is here`,
+    startTag: (name: string) => `${name} started here`,
+    goalTag: (name: string) => `${name}'s goal`,
+    planGoalTag: 'Plan goal',
+    updated: (date: string) => `Updated ${date}`,
+    notSynced: (name: string) => `The Learning Route appears after ${name}'s next sync on the newest app.`,
+    notFound: 'We could not find this learner in this space.',
+    /** A stage line with nothing done: the known part of `journey.stageLine` alone, so a row never reads "0 quests done". */
+    knownLine: (known: number) => `${known} known from the level check`,
+  },
 } as const;
