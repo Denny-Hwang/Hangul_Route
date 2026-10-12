@@ -1,3 +1,4 @@
+import type { Episode } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { flags } from '../../../config/flags';
@@ -5,8 +6,10 @@ import { localizeStage } from '../../content-locale';
 import { NO_CELL_MARKS } from '../../journey-grid';
 import type { StageRowView } from '../../my-route/view';
 import { playableEpisodes } from '../../next-quest';
-import { LIBRARY_SECTIONS } from '../../story/library-sections';
-import { browseJourneyRows, browseLibrary, browseRouteTrail, browseSections, defaultBrowseSection, stageOneLiners } from '../catalogue';
+import { LIBRARY_SECTIONS, visibleSections } from '../../story/library-sections';
+import { isOpenableEpisode, type BrowseBundle } from '../bundle';
+import { browseJourneyRows, browseLibrary, browseRouteTrail, browseSections, defaultBrowseSection, stageOneLiners, type BrowseLibraryGroup } from '../catalogue';
+import { episodeOutline } from '../facts';
 import { CULTURE_ID, DRAFT_ID, TALE_ID, fixtureBundle, fixtureStories } from './browse-fixture';
 
 /**
@@ -28,6 +31,7 @@ describe('browseSections', () => {
 
 describe('browseJourneyRows', () => {
   const rows = browseJourneyRows({ bundle, scope: 'full', gatingEnabled: false });
+  const cellOf = (r: ReturnType<typeof browseJourneyRows>, key: string) => r.flatMap((x) => x.cells).find((c) => c.key === key);
 
   it('seven stage rows of five cells, in stage and theme order, with no learner marks', () => {
     expect(rows.map((r) => r.stage)).toEqual(bundle.stages.map((s) => s.key));
@@ -55,17 +59,33 @@ describe('browseJourneyRows', () => {
   it('a closed episode is drawn closed only for a sampler pass with the switch on', () => {
     const life = bundle.episodes.find((e) => e.id === 'episode:stage1-life')?.questIds ?? [];
     const lettersOnly = (questId: string): boolean => !life.includes(questId);
-    const cellOf = (r: ReturnType<typeof browseJourneyRows>, key: string) => r.flatMap((x) => x.cells).find((c) => c.key === key);
     const sampler = browseJourneyRows({ bundle, scope: 'sampler', gatingEnabled: true, freeQuestOpen: lettersOnly });
     expect(cellOf(sampler, 'stage1-life')?.state).toBe('closed');
     expect(cellOf(sampler, 'stage1-letters')?.state).toBe('open');
-    expect(cellOf(sampler, 'stage3-life')?.state).toBe('later');
+    const placeholder = rows.flatMap((r) => r.cells).find((c) => c.state === 'later');
+    expect(cellOf(sampler, placeholder?.key ?? '')?.state).toBe('later');
     expect(cellOf(browseJourneyRows({ bundle, scope: 'full', gatingEnabled: true, freeQuestOpen: lettersOnly }), 'stage1-life')?.state).toBe('open');
     expect(cellOf(browseJourneyRows({ bundle, scope: 'sampler', gatingEnabled: false, freeQuestOpen: lettersOnly }), 'stage1-life')?.state).toBe('open');
     // the learner rule by default: a free learner's lessons are all of Stage 1
     const learner = browseJourneyRows({ bundle, scope: 'sampler', gatingEnabled: true });
     expect(cellOf(learner, 'stage1-life')?.state).toBe('open');
     expect(cellOf(learner, 'stage2-life')?.state).toBe('closed');
+  });
+
+  it('an openable episode with no quest left in this bundle is drawn later, as its outline reads "Coming later"', () => {
+    const first = rows.flatMap((r) => r.cells).find((c) => c.state === 'open');
+    const episode = bundle.episodes.find((e) => e.id === first?.episodeId) as Episode;
+    const emptied: BrowseBundle = { ...bundle, quests: bundle.quests.filter((q) => !episode.questIds.includes(q.id)) };
+    expect(isOpenableEpisode(episode)).toBe(true);
+    expect(episodeOutline(episode.id, emptied)?.comingLater).toBe(true);
+    for (const scope of ['full', 'sampler'] as const) {
+      for (const gatingEnabled of [false, true]) {
+        // one pane: a later cell does nothing, exactly as the learner Journey's
+        expect(cellOf(browseJourneyRows({ bundle: emptied, scope, gatingEnabled }), first?.key ?? ''), `${scope} ${gatingEnabled}`).toMatchObject({ state: 'later', disabled: true });
+      }
+    }
+    // two panes: it can be selected, and its page says "Coming later"
+    expect(cellOf(browseJourneyRows({ bundle: emptied, scope: 'full', gatingEnabled: false, paneMode: true }), first?.key ?? '')).toMatchObject({ state: 'later', disabled: false });
   });
 
   it('two panes: a selected cell and selectable later cells, as the learner Journey does', () => {
@@ -112,12 +132,29 @@ describe('stageOneLiners', () => {
 
 describe('browseLibrary', () => {
   const library = browseLibrary(bundle);
+  type GroupOf<S> = S extends 'cards'
+    ? Extract<BrowseLibraryGroup, { cards: unknown }>
+    : S extends 'words'
+      ? Extract<BrowseLibraryGroup, { rows: unknown }>
+      : Extract<BrowseLibraryGroup, { entries: unknown }>;
+  const group = <S extends BrowseLibraryGroup['section']>(groups: BrowseLibraryGroup[], section: S) => groups.find((g) => g.section === section) as GroupOf<S> | undefined;
 
-  it('story groups follow the learner Library registry, reviewed stories only', () => {
-    const learnerOrder = LIBRARY_SECTIONS.map((s) => s.id).filter((id) => id === 'story-time' || id === 'culture');
-    expect(library.stories.map((g) => g.section)).toEqual(learnerOrder);
-    expect(library.stories.map((g) => g.entries.map((e) => e.storyId))).toEqual([[TALE_ID], [CULTURE_ID]]);
-    expect(library.stories.flatMap((g) => g.entries).some((e) => e.storyId === DRAFT_ID)).toBe(false);
+  it('groups in the learner Library registry order: Cards, Story Time, Culture, then Words in the slot F-VOC-003 registers', () => {
+    expect(library.map((g) => g.section)).toEqual(['cards', 'story-time', 'culture', 'words']);
+    // the learner tab order, Words standing in for the reserved `theme-packs` ("Words") slot
+    const learnerOrder = LIBRARY_SECTIONS.map((s) => (s.id === 'theme-packs' ? 'words' : s.id));
+    const sections = library.map((g) => g.section as string);
+    expect(sections).toEqual(learnerOrder.filter((id) => sections.includes(id)));
+    // every story group is one the learner Library offers for the same index
+    const learner = visibleSections({ entries: bundle.storyIndex });
+    for (const section of sections.filter((s) => s === 'story-time' || s === 'culture')) expect(learner).toContain(section);
+  });
+
+  it('story groups: the shelf entries of the reviewed index, in shelf order', () => {
+    expect(group(library, 'story-time')?.entries.map((e) => e.storyId)).toEqual([TALE_ID]);
+    expect(group(library, 'culture')?.entries.map((e) => e.storyId)).toEqual([CULTURE_ID]);
+    const stories = library.flatMap((g) => (g.section === 'story-time' || g.section === 'culture' ? g.entries : []));
+    expect(stories.some((e) => e.storyId === DRAFT_ID)).toBe(false);
   });
 
   it('the review gate holds even when the dev widening flag is on', () => {
@@ -131,14 +168,25 @@ describe('browseLibrary', () => {
     expect(fixtureStories().map((s) => s.id)).toContain(DRAFT_ID);
   });
 
-  it('an empty story group is left out', () => {
+  it('a group with nothing in this build is left out, as the learner Library leaves out its tab; Cards always stays', () => {
     const onlyTale = fixtureBundle({ stories: fixtureStories().slice(0, 1) });
-    expect(browseLibrary(onlyTale).stories.map((g) => g.section)).toEqual(['story-time']);
+    expect(browseLibrary(onlyTale).map((g) => g.section)).toEqual(['cards', 'story-time', 'words']);
+    const bare = fixtureBundle({ stories: [], vocabTopics: [] });
+    expect(browseLibrary(bare).map((g) => g.section)).toEqual(['cards']);
+  });
+
+  it("a Culture tab that only holds a learner's found notes is not a group: notes are learner state", () => {
+    const onlyTale = fixtureBundle({ stories: fixtureStories().slice(0, 1) });
+    expect(onlyTale.storyIndex.some((e) => e.story.cultureNotes.length > 0)).toBe(true);
+    expect(visibleSections({ entries: onlyTale.storyIndex })).toContain('culture');
+    expect(group(browseLibrary(onlyTale), 'culture')).toBeUndefined();
   });
 
   it('words: one row per topic in topic order, with its word count and three sample words', () => {
-    expect(library.words.map((w) => w.topic.id)).toEqual(bundle.vocabTopics.map((t) => t.id));
-    for (const row of library.words) {
+    const rows = group(library, 'words')?.rows ?? [];
+    expect(rows.map((w) => w.topic.id)).toEqual(bundle.vocabTopics.map((t) => t.id));
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
       const items = bundle.topicItems(row.topic.key);
       expect(row.count).toBe(items.length);
       expect(row.samples).toEqual(items.slice(0, 3));
@@ -150,6 +198,6 @@ describe('browseLibrary', () => {
   });
 
   it('cards: every heritage card, face up', () => {
-    expect(library.cards.map((c) => c.id)).toEqual(bundle.cards.map((c) => c.id));
+    expect(group(library, 'cards')?.cards.map((c) => c.id)).toEqual(bundle.cards.map((c) => c.id));
   });
 });

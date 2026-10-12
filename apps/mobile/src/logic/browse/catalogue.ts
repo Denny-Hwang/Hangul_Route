@@ -6,7 +6,7 @@ import { journeyGridRows, type JourneyCellView, type JourneyStageView } from '..
 import { catalogueTrail } from '../my-route/catalogue-trail';
 import type { TrailRowView } from '../my-route/view';
 import { appRouteCatalog } from '../placement/route-skip';
-import { LIBRARY_SECTIONS } from '../story/library-sections';
+import { LIBRARY_SECTIONS, type LibrarySectionId } from '../story/library-sections';
 import { shelfEntries, type ShelfCategory, type StoryIndexEntry } from '../story/story-index';
 import { itemAccess, type FreeQuestOpen } from './access';
 import type { BrowseBundle } from './bundle';
@@ -47,7 +47,12 @@ export interface BrowseJourneyInput {
   selectedId?: string | null;
 }
 
-/** The learner Journey grid with no learner marks; an open cell whose episode the pass cannot open is `closed`. */
+/**
+ * The learner Journey grid with no learner marks. An open cell follows its
+ * episode's access: `closed` when the pass cannot open it, `later` when the
+ * episode has no quest left in this bundle (the outline reads "Coming later"
+ * too), drawn as the learner Journey draws a later cell.
+ */
 export function browseJourneyRows(i: BrowseJourneyInput): BrowseStageView[] {
   const rows = journeyGridRows({
     stages: i.bundle.stages,
@@ -64,7 +69,10 @@ export function browseJourneyRows(i: BrowseJourneyInput): BrowseStageView[] {
         bundle: i.bundle,
         ...(i.freeQuestOpen ? { freeQuestOpen: i.freeQuestOpen } : {}),
       });
-      return access === 'closed' ? { ...cell, state: 'closed' as const } : cell;
+      if (access === 'closed') return { ...cell, state: 'closed' as const };
+      // One pane: a later cell does nothing; two panes: it is selectable (the learner rule, `journeyCell`).
+      if (access === 'later') return { ...cell, state: 'later' as const, disabled: !(i.paneMode ?? false) };
+      return cell;
     }),
   }));
 }
@@ -96,11 +104,6 @@ export function stageOneLiners(bundle: Pick<BrowseBundle, 'stages'>, locale: UiL
   });
 }
 
-export interface BrowseStoryGroup {
-  section: ShelfCategory;
-  entries: StoryIndexEntry[];
-}
-
 export interface BrowseWordRow {
   topic: VocabTopic;
   count: number;
@@ -108,27 +111,46 @@ export interface BrowseWordRow {
   samples: RuntimeVocabItem[];
 }
 
-export interface BrowseLibrary {
-  stories: BrowseStoryGroup[];
-  words: BrowseWordRow[];
-  cards: HeritageCard[];
+/** One Library group: the learner section it stands in for, and what it lists. */
+export type BrowseLibraryGroup =
+  | { section: 'cards'; cards: HeritageCard[] }
+  | { section: ShelfCategory; entries: StoryIndexEntry[] }
+  | { section: 'words'; rows: BrowseWordRow[] };
+
+/** A learner Library section as All lessons shows it, or `null` when this bundle has nothing for it. */
+function groupFor(section: LibrarySectionId, bundle: BrowseBundle): BrowseLibraryGroup | null {
+  switch (section) {
+    case 'cards':
+      return { section, cards: [...bundle.cards] };
+    case 'story-time':
+    case 'culture': {
+      const entries = shelfEntries(bundle.storyIndex, section);
+      return entries.length > 0 ? { section, entries } : null;
+    }
+    case 'theme-packs': {
+      // The slot F-VOC-003 registers as "Words" (its T1).
+      const rows = bundle.vocabTopics.map((topic) => {
+        const items = bundle.topicItems(topic.key);
+        return { topic, count: items.length, samples: items.slice(0, 3) };
+      });
+      return rows.length > 0 ? { section: 'words', rows } : null;
+    }
+  }
 }
 
-const STORY_SECTIONS: readonly ShelfCategory[] = LIBRARY_SECTIONS.flatMap((s) => (s.id === 'story-time' || s.id === 'culture' ? [s.id] : []));
-
 /**
- * The Library groups: Stories (shelf entries of the reviewed index, grouped
- * and ordered as the learner Library's sections), Words (one row per topic),
- * Cards (every card, face up). An empty story group is left out; the screen
- * shows "Coming later" for an empty group.
+ * The Library groups in the learner Library's own order (the
+ * `LIBRARY_SECTIONS` registry): Cards (every card, face up), Story Time and
+ * Culture (the shelf entries of the reviewed index, in shelf order), then
+ * Words (one row per topic) in the slot F-VOC-003 registers. A group with
+ * nothing in this build is left out, as the learner Library leaves out its
+ * tab; Cards always stays. The learner Culture tab can also hold only a
+ * learner's found culture notes: that is learner state, so it is not a group
+ * here.
  */
-export function browseLibrary(bundle: BrowseBundle): BrowseLibrary {
-  return {
-    stories: STORY_SECTIONS.map((section) => ({ section, entries: shelfEntries(bundle.storyIndex, section) })).filter((g) => g.entries.length > 0),
-    words: bundle.vocabTopics.map((topic) => {
-      const items = bundle.topicItems(topic.key);
-      return { topic, count: items.length, samples: items.slice(0, 3) };
-    }),
-    cards: [...bundle.cards],
-  };
+export function browseLibrary(bundle: BrowseBundle): BrowseLibraryGroup[] {
+  return LIBRARY_SECTIONS.flatMap((s) => {
+    const group = groupFor(s.id, bundle);
+    return group ? [group] : [];
+  });
 }
