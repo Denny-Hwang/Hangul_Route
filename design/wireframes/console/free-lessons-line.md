@@ -67,9 +67,9 @@ Exit to: billing page · the learner report / Learning Route (existing card acti
 
 ## States
 
-- **Console, plan-waiting**: a plan of this space has `notReady > 0` and `done === total` -> card line A.
+- **Console, plan-waiting** (F-ENT-003 section 3.9.2, revision 3.2): a live plan of this space that reaches the learner has `done === total > 0` and `notReady > 0`, holds closed lessons (`planFreeFacts`), has no open item past the horizon measured from the device's last derivation day, and the device skipped at least as many items as the closed lessons inside that horizon -> card line A with `{closed}` = the plan's closed-lesson count. **Open billing** is described by its line, so several cards never list identical links without context.
 - **Console, any other case**: no line on the card (the console cannot tell which lessons were finished; it never guesses). The report page shows the neutral `free-plan` line C.
-- **Device, free-end**: `routeNext` for that learner is `free-end` -> row line B.
+- **Device, free-end** (row E3-12b, after E3-4): `routeNext` for that learner is `free-end` -> row line B.
 - **Covered space, switch off, viewer not the owner**: nothing.
 - **Empty** (no learners): unchanged empty state of the host.
 - **Error** (entitlements request failed): no line (never claim a limit the console cannot confirm).

@@ -505,6 +505,11 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.curriculum.freeDays.useWeeks.cta': [[4], [12]],
   'console.curriculum.freeDays.warningNeutral': [[3], [1]],
   'console.curriculum.freeDays.comingSoon': [[5, 5, 'a Group License'], [1, 1, 'the Family Plan'], [5, 3, 'a Group License'], [5, 1, 'the Family Plan']],
+  // F-ENT-003 E3-12: the grown-up free-lessons line.
+  'console.access.freeEnd': [['Mina', 'the Family Plan']],
+  'console.access.planWaiting': [['Mina', 3, 'a Group License'], ['Sam', 1, 'the Family Plan']],
+  'console.access.freePlan': [[11, 'the Family Plan'], [1, 'a Group License']],
+  'caregiver.access.freeEnd': [['Mina', 'the Family Plan'], ['Sam', 'a Group License']],
   // Learning Route LR-7: the grown-up card, the stage list page and the class plan line (console.learningRoute).
   'console.learningRoute.title': [['Sam'], ['M. K.']],
   'console.learningRoute.now': [['Sam', 1, 'Hangul'], ['Mina', 7, 'Self-expression']],

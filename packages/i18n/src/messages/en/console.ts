@@ -1231,6 +1231,18 @@ export const consoleMsgs = {
       class: 'a Group License',
     },
     openBilling: { cta: 'Open billing' },
+    /**
+     * The free-lessons line (F-ENT-003 section 3.9.2, E3-12; wireframe console/free-lessons-line),
+     * worded from `freeLessonsLine`'s code: `freeEnd` (the device knows), `planWaiting` (a roster
+     * card: every open item of this plan is done, `n` closed items remain), `freePlan` (the
+     * learner report's neutral line; `lessons` from `freeLessonsFacts`). Shown to the space
+     * owner only, followed by **Open billing**.
+     */
+    freeEnd: (name: string, product: string) => `${name} finished the free lessons. Stage 2 and later open with ${product}.`,
+    planWaiting: (name: string, n: number, product: string) =>
+      `${name} finished everything open in this plan. ${plural('en', n, { one: `${n} more lesson opens with ${product}.`, other: `${n} more lessons open with ${product}.` })}`,
+    freePlan: (lessons: number, product: string) =>
+      `On the free plan, all of Stage 1 is open (${plural('en', lessons, { one: `${lessons} lesson`, other: `${lessons} lessons` })}). Stage 2 and later open with ${product}.`,
   },
   /**
    * The grown-up Learning Route (AMENDMENTS-ROUTE-LEARNING-ROUTE sections 6.1, 6.3 and 11.1, LR-7;

@@ -16,8 +16,13 @@ export interface PlanLike {
   updatedAt: string;
 }
 
+/** The published plans that are not archived, newest published first. */
+export function livePublished<T extends PlanLike>(plans: readonly T[]): T[] {
+  return plans.filter((p) => p.publishedAt && !p.archivedAt).sort((a, b) => (b.publishedAt as string).localeCompare(a.publishedAt as string));
+}
+
 export function latestPublished<T extends PlanLike>(plans: readonly T[]): T | null {
-  return plans.filter((p) => p.publishedAt && !p.archivedAt).sort((a, b) => (b.publishedAt as string).localeCompare(a.publishedAt as string))[0] ?? null;
+  return livePublished(plans)[0] ?? null;
 }
 
 /**
