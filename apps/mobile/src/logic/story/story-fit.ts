@@ -1,5 +1,13 @@
-import { StageKeySchema, type Episode, type PlacementResult, type ProgressSnapshot, type StageKey, type Story } from '@hangul-route/content-schema';
-import { gridEpisodes } from '../../content/episodes';
+import {
+  StageKeySchema,
+  placementStageNumber,
+  type Episode,
+  type PlacementResult,
+  type ProgressSnapshot,
+  type StageKey,
+  type Story,
+} from '@hangul-route/content-schema';
+import { episodesAll, gridEpisodes } from '../../content/episodes';
 
 /**
  * When a story is offered (F-STORY-005 §3.4). Pure; nothing is stored.
@@ -13,9 +21,9 @@ import { gridEpisodes } from '../../content/episodes';
 const FIRST_STAGE = 1;
 const LAST_STAGE = StageKeySchema.options.length;
 
-/** `'stage3'` -> 3. */
+/** `'stage3'` -> 3. One mapping with placement's (`placementStageNumber`), so the two never drift apart. */
 export function stageNumber(stage: StageKey): number {
-  return StageKeySchema.options.indexOf(stage) + 1;
+  return placementStageNumber(stage);
 }
 
 /**
@@ -32,7 +40,9 @@ export function reachedStage(
 ): number {
   const stageOfQuest = new Map<string, number>();
   for (const episode of gridEpisodes(grid)) {
-    for (const questId of episode.questIds) stageOfQuest.set(questId, stageNumber(episode.stage));
+    const stage = stageNumber(episode.stage);
+    // A quest listed in more than one grid episode counts for its highest stage.
+    for (const questId of episode.questIds) stageOfQuest.set(questId, Math.max(stageOfQuest.get(questId) ?? FIRST_STAGE, stage));
   }
   let reached = FIRST_STAGE;
   for (const q of snapshot?.quests ?? []) {
@@ -71,4 +81,16 @@ export interface StoryFitsInput {
 export function storyFitsFor(input: StoryFitsInput): (entry: { story: Pick<Story, 'recommendedStage'> }) => boolean {
   const reached = reachedStage(input.snapshot, input.episodes, placementStageOf(input.placements));
   return (entry) => storyFit(entry.story.recommendedStage, reached) === 'ready';
+}
+
+/**
+ * The `fits` Home (`next`) and the Library hero (`pickedForYou`) pass: the
+ * learner's grid progress and stored level-check results, read from one
+ * snapshot, against every bundled episode by default.
+ */
+export function storyFitsForSnapshot(
+  snapshot: (Pick<ProgressSnapshot, 'quests'> & { placements?: readonly Pick<PlacementResult, 'level'>[] }) | undefined,
+  episodes: readonly Episode[] = episodesAll,
+): (entry: { story: Pick<Story, 'recommendedStage'> }) => boolean {
+  return storyFitsFor({ snapshot, episodes, placements: snapshot?.placements });
 }

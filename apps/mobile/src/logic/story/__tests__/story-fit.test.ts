@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { StageKeySchema, type Episode, type StageKey } from '@hangul-route/content-schema';
 import { emptyBookmarks } from '../bookmarks';
-import { placementStageOf, reachedStage, stageNumber, storyFit, storyFitsFor } from '../story-fit';
+import { placementStageOf, reachedStage, stageNumber, storyFit, storyFitsFor, storyFitsForSnapshot } from '../story-fit';
+import { shelfEntries } from '../story-index';
 import { pickedForYou, pickStoryForHome, type StoryPickInput } from '../story-pick';
 import { bookEpisode, questId, shelfEpisode, shelfIndex, snapshot, story } from './shelf-fixture';
 
@@ -50,6 +51,13 @@ describe('reachedStage', () => {
     const shelfStory = story('stage5-tale', { recommendedStage: 5 });
     const withShelf = [...GRID, shelfEpisode(shelfStory, { stage: 'stage5' })];
     expect(reachedStage(done(questId('stage5-tale')), withShelf)).toBe(1);
+  });
+
+  it('a quest listed in grid episodes of two stages counts for the higher stage, in either order', () => {
+    const low = lesson('episode:stage2-review', 'stage2', ['quest:shared']);
+    const high = lesson('episode:stage4-review', 'stage4', ['quest:shared']);
+    expect(reachedStage(done('quest:shared'), [high, low])).toBe(4);
+    expect(reachedStage(done('quest:shared'), [low, high])).toBe(4);
   });
 
   it('a quest id no episode lists counts for nothing', () => {
@@ -109,6 +117,31 @@ describe('storyFitsFor', () => {
   });
 });
 
+describe('storyFitsForSnapshot (the fits Home and the Library hero pass)', () => {
+  const s2 = story('s2', { recommendedStage: 2 });
+  const s3 = story('s3', { recommendedStage: 3 });
+  const s6 = story('s6', { recommendedStage: 6 });
+
+  it('without a snapshot, only stories recommending stage 2 or lower fit', () => {
+    const fits = storyFitsForSnapshot(undefined, GRID);
+    expect(fits({ story: s2 })).toBe(true);
+    expect(fits({ story: s3 })).toBe(false);
+  });
+
+  it('reads both grid progress and the stored level-check results of the snapshot', () => {
+    expect(storyFitsForSnapshot(done('quest:s2-a'), GRID)({ story: s3 })).toBe(true);
+    const placedAt5 = { ...snapshot([]), placements: [placed('stage5')] };
+    expect(storyFitsForSnapshot(placedAt5, GRID)({ story: s6 })).toBe(true);
+    expect(storyFitsForSnapshot({ ...snapshot([]), placements: [] }, GRID)({ story: s3 })).toBe(false);
+  });
+
+  it('defaults to the bundled episodes', () => {
+    const fits = storyFitsForSnapshot(snapshot([]));
+    expect(fits({ story: s2 })).toBe(true);
+    expect(fits({ story: s6 })).toBe(false);
+  });
+});
+
 /** Behaviour #3 (F-STORY-005 §3.14): fit only orders `pickedForYou` / `next`; it never removes a story. */
 describe('fit ordering in the story pick', () => {
   // Shelf order puts the stage 3 and 4 stories first, so only fit can move the stage 1-2 ones ahead.
@@ -139,6 +172,13 @@ describe('fit ordering in the story pick', () => {
     const snap = done(questId('near'), questId('first'));
     const fits = storyFitsFor({ snapshot: snap, episodes: GRID });
     expect(pickedForYou({ ...input({ snapshot: snap, fits }), category: 'culture' })?.entry.storyId).toBe('story:far');
+  });
+
+  it('the Library shelf ignores fit: a learner who has played nothing still sees all four, in shelf order', () => {
+    const fits = storyFitsForSnapshot(snapshot([]), GRID);
+    const listed = shelfEntries(index, 'culture');
+    expect(listed.map((e) => e.storyId)).toEqual(['story:far', 'story:stretch', 'story:near', 'story:first']);
+    expect(listed.filter((e) => !fits(e)).map((e) => e.storyId)).toEqual(['story:far', 'story:stretch']);
   });
 
   it('never removes a story: walking the pick through every finish offers all four', () => {

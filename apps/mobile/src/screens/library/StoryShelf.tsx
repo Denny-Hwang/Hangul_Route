@@ -17,7 +17,6 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { View, type LayoutChangeEvent } from 'react-native';
 import { flags } from '../../config/flags';
-import { episodesAll } from '../../content/episodes';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { isContentLocked } from '../../logic/content-access';
 import { localizeStory } from '../../logic/content-locale';
@@ -26,7 +25,7 @@ import { emptyBookmarks } from '../../logic/story/bookmarks';
 import { planOpenStory } from '../../logic/story/open-story';
 import { shelfCopy } from '../../logic/story/shelf-copy';
 import { shelfEntries, type ShelfCategory, type StoryIndexEntry } from '../../logic/story/story-index';
-import { storyFitsFor } from '../../logic/story/story-fit';
+import { storyFitsForSnapshot } from '../../logic/story/story-fit';
 import { pickedForYou } from '../../logic/story/story-pick';
 import { storyStatus, type StoryStatus } from '../../logic/story/story-status';
 import {
@@ -109,7 +108,7 @@ export function StoryShelf({ category, index }: { category: ShelfCategory; index
 
   const hero = useMemo(() => {
     // F-STORY-005 §3.4: stories near the learner's stage come first; it only orders, never hides.
-    const fits = storyFitsFor({ snapshot: snap, episodes: episodesAll, placements: snap?.placements });
+    const fits = storyFitsForSnapshot(snap);
     const pick = pickedForYou({ entries: items.map((i) => i.entry), snapshot: snap, bookmarks, isLocked, category, fits });
     return pick ? items.find((i) => i.entry.questId === pick.entry.questId) ?? null : null;
   }, [items, snap, bookmarks, isLocked, category]);
