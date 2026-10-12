@@ -88,15 +88,7 @@ const META: WordArtMetaOverrides = {
   ...Object.fromEntries(Object.keys(COLOR_SWATCHES).map((k) => [k, { status: 'review', bboxWaived: true, reason: SWATCH_REASON }])),
   ...Object.fromEntries(COUNT_VALUES.map((n) => [`count-${n}`, { status: 'review' }])),
   // batch W-6: travel, sport, K-Culture and science, approved by the batch review that stands in for the owner's (2026-10-11)
-  ...Object.fromEntries(
-    [
-      ...['airplane', 'train', 'taxi', 'subway', 'car', 'boat', 'map', 'passport', 'ticket', 'airport', 'hotel'].map((k) => `travel-${k}`),
-      ...['baseball', 'basketball', 'volleyball', 'tabletennis', 'swimming', 'taekwondo', 'running', 'jumprope', 'bicycle', 'skiing', 'ball'].map((k) => `sport-${k}`),
-      ...['hangul', 'hanok', 'bibimbap', 'tteokbokki', 'song', 'dance', 'drama'].map((k) => `culture-${k}`),
-      ...['fire', 'ice', 'stone', 'magnet', 'earth', 'space', 'robot', 'seed', 'shadow', 'wind', 'light'].map((k) => `science-${k}`),
-    ]
-      .map((k) => [k, { status: 'approved' }]),
-  ),
+  ...Object.fromEntries([...['airplane', 'train', 'taxi', 'subway', 'car', 'boat', 'map', 'passport', 'ticket', 'airport', 'hotel'].map((k) => `travel-${k}`), ...['baseball', 'basketball', 'volleyball', 'tabletennis', 'swimming', 'taekwondo', 'running', 'jumprope', 'bicycle', 'skiing', 'ball'].map((k) => `sport-${k}`), ...['hangul', 'hanok', 'bibimbap', 'tteokbokki', 'song', 'dance', 'drama'].map((k) => `culture-${k}`), ...['fire', 'ice', 'stone', 'magnet', 'earth', 'space', 'robot', 'seed', 'shadow', 'wind', 'light'].map((k) => `science-${k}`)].map((k) => [k, { status: 'approved' }])),
   'science-rainbow': { status: 'approved', maxTones: 7, reason: 'A rainbow needs its six arc colours, and the two clouds at its feet are a seventh, white (§3.12 brief: six arcs, two clouds).' },
 };
 
