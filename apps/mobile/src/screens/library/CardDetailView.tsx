@@ -25,6 +25,7 @@ import { cardById } from '../../content';
 import { awardWorld } from '../../content/award-world';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { earnHint } from '../../logic/awards/earn-hint';
+import { cardDetailDisplay, type CardDetailState } from '../../logic/library/card-detail-state';
 import { localizeCard, localizeEpisode } from '../../logic/content-locale';
 import { nextFace, type FlipFace } from '../../logic/flip';
 import { playPrompt, stop } from '../../platform/audio';
@@ -41,17 +42,23 @@ export interface CardDetailViewProps {
   onClose?: () => void;
   /** A locked card says how it is earned (F-LAYOUT-001 §3.6, F-STORY-006 §3.7): the Library pane and the stack screen pass it. */
   showHowToEarn?: boolean;
+  /**
+   * `learner` (default): today's card for the active profile. `preview` (All lessons, F-BROWSE-001 §4.7):
+   * front and back as an earned card looks, no earn hint, no share action, no profile read.
+   */
+  state?: CardDetailState;
 }
 
-export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardDetailViewProps): React.ReactElement {
+export function CardDetailView({ cardId, onClose, showHowToEarn = false, state = 'learner' }: CardDetailViewProps): React.ReactElement {
   const messages = useMessages();
   const m = messages.learner.cardDetail;
   const locale = useLocale();
   const source = cardById(cardId);
   const card = source && localizeCard(source, locale);
   const profile = useProfileStore(activeProfileSelector);
-  const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
-  const unlocked = snap?.cards.some((c) => c.cardId === cardId) ?? false;
+  // A preview reads no learner's cards: it shows every card as an earned one.
+  const snap = useProgressStore((s) => (state === 'preview' || !profile ? undefined : s.byProfile[profile.id]));
+  const earned = snap?.cards.some((c) => c.cardId === cardId) ?? false;
   // How a locked card is earned, from its award rule, with the episode title in the UI language (F-STORY-006 §3.7).
   const hint = useMemo(() => {
     if (!source) return null;
@@ -61,6 +68,8 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardD
   const lockedLabel = hint ? messages.a11y.lockedCardHint(hint) : messages.a11y.lockedCard;
   const [face, setFace] = useState<FlipFace>('front');
   const [shareAvailable, setShareAvailable] = useState(false);
+  const display = cardDetailDisplay({ state, earned, showHowToEarn, shareAvailable });
+  const unlocked = display.faceUp;
   const [shareError, setShareError] = useState<string | null>(null);
   const captureRef = useRef<View>(null);
   // The Korean name is printed on the card; the panel only says why it is silent (F-AUDIO-004 A-5b).
@@ -139,7 +148,7 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardD
         />
       </View>
 
-      {showHowToEarn && !unlocked ? <HowToEarn hint={hint} /> : null}
+      {display.howToEarn ? <HowToEarn hint={hint} /> : null}
 
       {/* The blurb + fact card is shown only on the front face (the back face
           already contains this content). Keeps the back face from duplicating. */}
@@ -185,8 +194,8 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardD
       ) : null}
 
       {/* F-CARD-003 — Share button. Shown only when card is unlocked AND
-          OS sharing is available. */}
-      {unlocked && shareAvailable ? (
+          OS sharing is available; never in a preview. */}
+      {display.share ? (
         <>
           <Spacer size="sm" />
           <Button
