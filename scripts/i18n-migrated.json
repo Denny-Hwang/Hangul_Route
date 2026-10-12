@@ -71,7 +71,9 @@
     "apps/web/src/components/console/JourneyParts.tsx",
     "apps/mobile/src/screens/parent/PlacementReportScreen.tsx",
     "apps/mobile/src/screens/results/**",
-    "apps/mobile/src/screens/quest/QuestPlayerView.tsx"
+    "apps/mobile/src/screens/quest/QuestPlayerView.tsx",
+    "apps/mobile/src/screens/episode/StoryEpisodeDetail.tsx",
+    "apps/mobile/src/screens/episode/EpisodeDetailView.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1

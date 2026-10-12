@@ -332,6 +332,6 @@ describe('story episode copy', () => {
       COPY.episode.sources.cta,
       COPY.episode.rowLabel('Start', 'Hangul Day'),
     ];
-    for (const line of lines) expect(scanLearnerCopy(line)).toEqual([]);
+    expect(scanLearnerCopy(lines)).toEqual([]);
   });
 });

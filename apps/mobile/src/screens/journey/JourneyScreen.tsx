@@ -158,6 +158,8 @@ export function JourneyScreen(): React.ReactElement {
       episodeId={selectedEpisode.id}
       onStartQuest={(questId, episodeId) => navigation.navigate('QuestPlayer', { questId, episodeId })}
       onOpenCard={(cardId) => navigation.navigate('CardDetail', { cardId })}
+      onOpenStory={(t) => (t.route === 'StoryReader' ? navigation.navigate('StoryReader', t.params) : navigation.navigate('QuestPlayer', t.params))}
+      onOpenSources={(storyId) => navigation.navigate('StorySources', { storyId, from: 'episode' })}
     />
   ) : (
     <ComingSoonPane />

@@ -26,6 +26,9 @@ import { buildsOnLine, prereqSheet, softPrerequisite, type PrereqSheet as Prereq
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { usePrereqSheetStore } from '../../store/prereq-sheet-store';
 import { useProgressStore } from '../../store/progress-store';
+import { storyEpisodeEntries } from '../../logic/story/story-episode';
+import { defaultStoryIndex } from '../../logic/story/story-index';
+import { StoryEpisodeDetail, type StoryTarget } from './StoryEpisodeDetail';
 
 export interface EpisodeDetailViewProps {
   episodeId: string;
@@ -34,9 +37,20 @@ export interface EpisodeDetailViewProps {
   onOpenCard: (cardId: string) => void;
   /** Renders the back arrow when given (the stack screen passes it; a split pane does not). */
   onBack?: () => void;
+  /** Story episodes (F-STORY-004 §3.6): a story action's route (`QuestPlayer`, optionally resumed, or the replay `StoryReader`). */
+  onOpenStory: (target: StoryTarget) => void;
+  /** Story episodes: Sources of the page's story (`StorySources { storyId, from: 'episode' }`). */
+  onOpenSources: (storyId: string) => void;
 }
 
-export function EpisodeDetailView({ episodeId, onStartQuest, onOpenCard, onBack }: EpisodeDetailViewProps): React.ReactElement {
+export function EpisodeDetailView({
+  episodeId,
+  onStartQuest,
+  onOpenCard,
+  onBack,
+  onOpenStory,
+  onOpenSources,
+}: EpisodeDetailViewProps): React.ReactElement {
   const messages = useMessages();
   const m = messages.learner.episode;
   const locale = useLocale();
@@ -60,11 +74,35 @@ export function EpisodeDetailView({ episodeId, onStartQuest, onOpenCard, onBack 
     return new Map(snap.quests.filter((q) => q.episodeId === episode.id).map((q) => [q.questId, q.stars]));
   }, [episode, snap]);
 
+  // A story episode that is not a preview, with every story in the index, is the story page; else the quest list.
+  const storyEntries = useMemo(() => (episode ? storyEpisodeEntries(episode, defaultStoryIndex()) : null), [episode]);
+
   if (!episode) {
     return (
       <Screen>
         <Body>{m.notFound}</Body>
+        {onBack ? (
+          <>
+            <Spacer size="lg" />
+            <View style={{ alignSelf: 'flex-start' }}>
+              <Button label={messages.common.buttons.back} tone="secondary" size="md" onPress={onBack} testID="episode-not-found-back" />
+            </View>
+          </>
+        ) : null}
       </Screen>
+    );
+  }
+
+  if (storyEntries) {
+    return (
+      <StoryEpisodeDetail
+        episode={episode}
+        entries={storyEntries}
+        onOpenStory={onOpenStory}
+        onOpenCard={onOpenCard}
+        onOpenSources={onOpenSources}
+        onBack={onBack}
+      />
     );
   }
 
