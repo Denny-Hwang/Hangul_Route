@@ -14,13 +14,17 @@ import {
 import { levelLabel, type StageKey } from '@hangul-route/content-schema';
 import { formatDate, type Messages } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
 import { questsAll, stages } from '../../content';
-import { flags } from '../../config/flags';
+import { bundleOs, flags } from '../../config/flags';
+import { grownUpEntriesOn } from '../../logic/shell/entry-points';
+import { grownUpPinParams } from '../../logic/shell/handoff-rules';
+import { openGrownUpArea } from '../../platform/grown-up-handoff';
+import { GrownUpHomeCard } from './GrownUpHomeCard';
 import { localizeStage } from '../../logic/content-locale';
 import { bandLabel } from '../../logic/placement/copy';
 import { startingSpotRow } from '../../logic/placement/report-page';
@@ -49,6 +53,21 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
     for (const p of profiles) void useProgressStore.getState().hydrate(p.id);
   }, [profiles]);
 
+  // F-APP-001 A-7 (section 3.6, web, flag on): the grown-up area on the app host. A PIN entered in
+  // the last 2 minutes to reach this dashboard counts; a gate the 15-minute session opened does not,
+  // so the PIN screen asks first (`openGrownUpArea`).
+  const grownUpHome = grownUpEntriesOn(flags.grownUpHomeEnabled, bundleOs());
+  const [leaving, setLeaving] = useState(false);
+  const openGrownUpHome = (): void => {
+    if (leaving) return;
+    setLeaving(true);
+    void openGrownUpArea({ via: 'dashboard' })
+      .then((result) => {
+        if (result === 'pin') navigation.navigate('PinEntry', grownUpPinParams({ via: 'dashboard' }));
+      })
+      .finally(() => setLeaving(false));
+  };
+
   const stageTitle = (key: StageKey): string => {
     const stage = stages.find((s) => s.key === key);
     return stage === undefined ? '' : localizeStage(stage, locale).titleEn;
@@ -67,6 +86,12 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
       </View>
 
       <Spacer size="lg" />
+      {grownUpHome ? (
+        <>
+          <GrownUpHomeCard onOpen={openGrownUpHome} />
+          <Spacer size="lg" />
+        </>
+      ) : null}
       {profiles.length === 0 ? (
         <Body>{m.noProfiles}</Body>
       ) : (

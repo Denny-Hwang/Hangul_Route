@@ -19,7 +19,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
-import { flags } from '../../config/flags';
+import { bundleOs, flags } from '../../config/flags';
 import { placementEntriesOn } from '../../logic/placement/entry';
 import { planCardView } from '../../logic/paywall';
 import { effectiveTier } from '../../store/tier-store';
@@ -40,6 +40,10 @@ import { LanguageCard } from '../../components/LanguageCard';
 import { useMessages } from '../../i18n/use-messages';
 import { BackupCard } from '../../components/BackupCard';
 import { SpacesCard } from '../../components/SpacesCard';
+import { grownUpEntriesOn } from '../../logic/shell/entry-points';
+import { grownUpPinParams } from '../../logic/shell/handoff-rules';
+import { openGrownUpArea } from '../../platform/grown-up-handoff';
+import { GrownUpHomeRow } from './GrownUpHomeRow';
 
 export function ProfileScreen(): React.ReactElement {
   const m = useMessages();
@@ -92,6 +96,20 @@ export function ProfileScreen(): React.ReactElement {
       return;
     }
     navigation.navigate('PinEntry', next === 'EditProfile' ? { next, profileId } : { next });
+  };
+
+  // F-APP-001 A-7 (section 3.6, web, flag on): the grown-up area on the app host, after a fresh PIN
+  // where the device has one (`openGrownUpArea`), with no stop at the local dashboard.
+  const grownUpHome = grownUpEntriesOn(flags.grownUpHomeEnabled, bundleOs());
+  const [leaving, setLeaving] = useState(false);
+  const openGrownUpHome = (): void => {
+    if (leaving) return;
+    setLeaving(true);
+    void openGrownUpArea({ via: 'profile' })
+      .then((result) => {
+        if (result === 'pin') navigation.navigate('PinEntry', grownUpPinParams({ via: 'profile' }));
+      })
+      .finally(() => setLeaving(false));
   };
 
   return (
@@ -279,6 +297,13 @@ export function ProfileScreen(): React.ReactElement {
               navigation.navigate('Main', { screen: 'Home' });
             }}
           />
+        </>
+      ) : null}
+
+      {grownUpHome ? (
+        <>
+          <Spacer size="lg" />
+          <GrownUpHomeRow onOpen={openGrownUpHome} />
         </>
       ) : null}
 
