@@ -1,8 +1,10 @@
 import {
   StoryLevelSchema,
+  decomposeSyllable,
   localize,
   type Episode,
   type KoText,
+  type ListenPickRound,
   type Quest,
   type QuestStepKind,
   type StageKey,
@@ -11,11 +13,14 @@ import {
   type UiLocale,
 } from '@hangul-route/content-schema';
 import { localizeEpisode, localizeQuest, localizeScope, localizeStory } from '../content-locale';
+import type { MinigameScope } from '../minigame-config';
 import { SKILLS, questSkills } from '../my-route/skills';
 import type { Skill } from '../my-route/types';
 import { questTeaches } from '../stage1/curriculum';
 import { homeCellOf } from '../story/home-cell';
+import { recapWords } from '../story/recap';
 import { entryForStory, type StoryIndexEntry } from '../story/story-index';
+import { parseStoryMinigameRef, type StoryRef } from '../story/story-ref';
 import { localizedGloss } from '../vocab/catalog';
 import { episodeOfQuest, isOpenableEpisode, vocabTopicKey, type BrowseBundle } from './bundle';
 
@@ -61,7 +66,7 @@ export interface QuestFacts {
   minutes: number;
   /** The letters its Discover step introduces, in page order. */
   letters: LetterFact[];
-  /** Words met in Discover and in the game scopes, once each. */
+  /** Words met in Discover and in every game scope (a story step: its level's recap words), once each. */
   words: WordFact[];
   /** Syllables its games build, once each and none already in `words` (a syllable has no gloss). */
   syllables: SyllableFact[];
@@ -111,9 +116,72 @@ export type ItemFacts = QuestFacts | StoryFacts | TopicFacts;
 
 const wordOf = (text: Pick<KoText, 'ko' | 'romanization' | 'en'>): WordFact => ({ ko: text.ko, romanization: text.romanization, gloss: text.en });
 
+/** The same Korean with or without a closing mark ("Hello!" and its reply "Hello") is one entry. */
+const koKey = (ko: string): string => ko.trim().replace(/[!?.]+$/u, '');
+
 function uniqueByKo<T extends { ko: string }>(list: readonly T[]): T[] {
   const seen = new Set<string>();
-  return list.filter((item) => (seen.has(item.ko) ? false : (seen.add(item.ko), true)));
+  return list.filter((item) => {
+    const key = koKey(item.ko);
+    return seen.has(key) ? false : (seen.add(key), true);
+  });
+}
+
+/** Taught Korean is never shown without its romanization: an item that has none is left out. */
+function glossed(ko: string, romanization: string | undefined, gloss: string): WordFact[] {
+  return romanization ? [{ ko, romanization, gloss }] : [];
+}
+
+/** Jamo ids are `jamo:<name>` (`JamoSchema`). */
+const isLetterId = (id: string): boolean => id.startsWith('jamo:');
+
+/**
+ * What a Listen & Pick round practises (F-QUEST-002 section 3.10): a sound ->
+ * symbol round a letter (the letters row lists it), a syllable round (every
+ * option one block, one final apart from the prompt) a syllable, a word or
+ * picture round its word. Only the answer is taught; the other options are not.
+ */
+function listenPickTarget(round: ListenPickRound): 'letter' | 'syllable' | 'word' {
+  const answer = round.options.find((o) => o.id === round.answerId);
+  if (answer?.pictureRef) return 'word';
+  if (isLetterId(round.answerId)) return 'letter';
+  const prompt = decomposeSyllable(round.prompt.ko);
+  const oneFinalApart = round.options.every((o) => {
+    const parts = decomposeSyllable(o.text?.ko ?? '');
+    return prompt !== null && parts !== null && parts.initial === prompt.initial && parts.medial === prompt.medial;
+  });
+  return oneFinalApart ? 'syllable' : 'word';
+}
+
+/**
+ * The Korean one game scope practises, already in the UI language: card pairs,
+ * Build a Letter syllables, every Pic-Word board word, the answer of each
+ * Listen & Pick round, each dialogue line with its right reply, and the Korean
+ * labels of Story Order steps.
+ */
+function scopeWords(scope: MinigameScope): { words: WordFact[]; syllables: SyllableFact[] } {
+  const words: WordFact[] = [];
+  const syllables: SyllableFact[] = [];
+  for (const pair of scope.cardPairs ?? []) words.push(...glossed(pair.ko, pair.romanization, pair.en));
+  for (const s of scope.syllables ?? []) syllables.push({ ko: s.ko, romanization: s.romanization });
+  for (const board of scope.picWord?.boards ?? []) words.push(...board.pairs.map((pair) => wordOf(pair.word)));
+  for (const round of scope.listenPick?.rounds ?? []) {
+    const target = listenPickTarget(round);
+    if (target === 'word') words.push(wordOf(round.prompt));
+    if (target === 'syllable') syllables.push({ ko: round.prompt.ko, romanization: round.prompt.romanization });
+  }
+  for (const turn of scope.dialogue ?? []) {
+    words.push(...glossed(turn.npcKo, turn.npcRomanization, turn.npcEn));
+    for (const option of turn.options) if (option.isCorrect) words.push(...glossed(option.ko, option.romanization, option.en));
+  }
+  for (const step of scope.storySteps ?? []) if (step.labelKo) words.push(...glossed(step.labelKo, step.romanization, step.labelEn));
+  return { words, syllables };
+}
+
+/** A story step's words: what its level's recap teaches, from the bundle's (reviewed) story only. */
+function storyStepWords(ref: StoryRef, bundle: BrowseBundle, locale: UiLocale): WordFact[] {
+  const entry = entryForStory(bundle.storyIndex, ref.storyId);
+  return entry ? recapWords(localizeStory(entry.story, locale), ref.level).map(wordOf) : [];
 }
 
 function lettersOf(quest: Quest, bundle: BrowseBundle): LetterFact[] {
@@ -134,18 +202,22 @@ function wordsOf(quest: Quest, bundle: BrowseBundle, locale: UiLocale): { words:
     }
   }
   for (const { minigameRef: ref } of local.steps) {
-    const scope = ref ? bundle.scopeFor(ref) : undefined;
-    if (!ref || !scope) continue;
-    const localScope = localizeScope(scope, ref, locale);
-    for (const pair of localScope.cardPairs ?? []) {
-      if (pair.romanization) words.push({ ko: pair.ko, romanization: pair.romanization, gloss: pair.en });
+    if (!ref) continue;
+    const story = parseStoryMinigameRef(ref);
+    if (story) {
+      words.push(...storyStepWords(story, bundle, locale));
+      continue;
     }
-    for (const s of localScope.syllables ?? []) syllables.push({ ko: s.ko, romanization: s.romanization });
+    const scope = bundle.scopeFor(ref);
+    if (!scope) continue;
+    const found = scopeWords(localizeScope(scope, ref, locale));
+    words.push(...found.words);
+    syllables.push(...found.syllables);
   }
   const uniqueWords = uniqueByKo(words);
   // A syllable that is also a word (ga, "the sound ga") is listed once, as the word.
-  const wordKo = new Set(uniqueWords.map((w) => w.ko));
-  return { words: uniqueWords, syllables: uniqueByKo(syllables).filter((s) => !wordKo.has(s.ko)) };
+  const wordKo = new Set(uniqueWords.map((w) => koKey(w.ko)));
+  return { words: uniqueWords, syllables: uniqueByKo(syllables).filter((s) => !wordKo.has(koKey(s.ko))) };
 }
 
 function skillsOf(quest: Pick<Quest, 'steps'>): Skill[] {
