@@ -28,9 +28,13 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
-import { heritageCardsAll, themes } from '../../content';
+import { themes } from '../../content';
+import { awardWorld } from '../../content/award-world';
 import { useLocale, useMessages } from '../../i18n/use-messages';
-import { localizeCard, localizeTheme } from '../../logic/content-locale';
+import { earnHint } from '../../logic/awards/earn-hint';
+import { libraryExplainer } from '../../logic/awards/explainer';
+import { obtainableCards } from '../../logic/awards/obtainable';
+import { localizeCard, localizeEpisode, localizeTheme } from '../../logic/content-locale';
 import { initialCard, latchedSelection, reconcileSelection, type PaneLatch } from '../../logic/layout/pane-selection';
 import {
   cardGalleryColumns,
@@ -68,6 +72,7 @@ export function LibraryScreen(): React.ReactElement {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
+  const markCardsSeen = useProgressStore((s) => s.markCardsSeen);
   const [filter, setFilter] = useState<ThemeKey | 'all'>('all');
 
   // Library sections (F-STORY-004 §3.3): reviewed stories only (D14), so a production build with no
@@ -119,10 +124,22 @@ export function LibraryScreen(): React.ReactElement {
   ) : null;
 
   const unlockedIds = useMemo(() => new Set((snap?.cards ?? []).map((c) => c.cardId)), [snap]);
+  // Earned since the learner last opened them (a catch-up or a Results award): a New pill until opened.
+  const newIds = useMemo(() => new Set((snap?.cards ?? []).filter((c) => c.newSinceLastView).map((c) => c.cardId)), [snap]);
+
+  // Only cards the learner holds or can still earn (F-STORY-006 §3.7): a card no rule can award is never a lock.
+  const listed = useMemo(() => obtainableCards(awardWorld, unlockedIds), [unlockedIds]);
+  const collected = listed.filter((c) => unlockedIds.has(c.id)).length;
+  const explainer = libraryExplainer(awardWorld, listed, m.how);
+  // Earn hints name episodes in the UI language.
+  const hintWorld = useMemo(
+    () => ({ ...awardWorld, episodes: awardWorld.episodes.map((e) => localizeEpisode(e, locale)) }),
+    [locale],
+  );
 
   const visible = useMemo(() => {
-    return filter === 'all' ? heritageCardsAll : heritageCardsAll.filter((c) => c.theme === filter);
-  }, [filter]);
+    return filter === 'all' ? listed : listed.filter((c) => c.theme === filter);
+  }, [filter, listed]);
 
   // Two panes (wide window, F-LAYOUT-001 §3.6, §3.7): a card tap selects it and the right pane shows the
   // card page; one pane: a tap opens the card screen as always. 3 columns on regular and in the master pane.
@@ -155,28 +172,34 @@ export function LibraryScreen(): React.ReactElement {
   const gridWidth = phoneGallery ? fallbackWidth : galleryGridWidth(measured, galleryMode, fallbackWidth);
   const artSize = cardThumbArtSize(useMediaSize(THUMB_ART), gridCellWidth(gridWidth, columns, GALLERY_GAP), THUMB_CHROME);
 
-  const thumb = (card: HeritageCard, cellStyle: ViewStyle): React.ReactElement => (
-    <CardThumb
-      key={card.id}
-      card={card}
-      unlocked={unlockedIds.has(card.id)}
-      cellStyle={cellStyle}
-      artSize={artSize}
-      narrow={paneMode}
-      selected={paneMode ? card.id === selectedId : undefined}
-      onPress={() => (paneMode ? setSelected(card.id) : navigation.navigate('CardDetail', { cardId: card.id }))}
-    />
-  );
+  const thumb = (card: HeritageCard, cellStyle: ViewStyle): React.ReactElement => {
+    const unlocked = unlockedIds.has(card.id);
+    return (
+      <CardThumb
+        key={card.id}
+        card={card}
+        unlocked={unlocked}
+        isNew={unlocked && newIds.has(card.id)}
+        hint={unlocked ? null : (earnHint(card, hintWorld, m.earnHint)?.text ?? messages.learner.cardDetail.earn.later)}
+        cellStyle={cellStyle}
+        artSize={artSize}
+        narrow={paneMode}
+        selected={paneMode ? card.id === selectedId : undefined}
+        onPress={() => {
+          // Opening an owned card clears its New pill (wireframe library/earn-hints).
+          if (unlocked && profile) markCardsSeen(profile.id, [card.id]);
+          if (paneMode) setSelected(card.id);
+          else navigation.navigate('CardDetail', { cardId: card.id });
+        }}
+      />
+    );
+  };
 
   const gallery = (
     <>
-      <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm }}>
-        <View style={{ flex: 1 }}>
-          <Heading level="title">{m.title}</Heading>
-          <Caption tone="muted">{m.collected.line(unlockedIds.size, heritageCardsAll.length)}</Caption>
-        </View>
-        <Pill label={m.collected.pill(unlockedIds.size, heritageCardsAll.length)} tone="primary" />
-      </View>
+      {/* A plain count, no N/M pill: the total grows with every release (F-STORY-006 §3.7, decision 3). */}
+      <Heading level="title">{m.title}</Heading>
+      <Caption tone="muted">{m.collected.line(collected)}</Caption>
       {tabs}
       {panel(
         <>
@@ -212,10 +235,15 @@ export function LibraryScreen(): React.ReactElement {
 
           <Card padding="md" tone="brand">
             <Heading level="prompt">{m.how.title}</Heading>
-            <Spacer size="xs" />
-            <Body tone="secondary" size="sm">
-              {m.how.body}
-            </Body>
+            {/* One line per award rule this build can fire, so the explainer never promises more. */}
+            {explainer.map((line) => (
+              <React.Fragment key={line}>
+                <Spacer size="xs" />
+                <Body tone="secondary" size="sm">
+                  {line}
+                </Body>
+              </React.Fragment>
+            ))}
           </Card>
           <Spacer size="xl" />
         </>,
@@ -272,6 +300,8 @@ function FilterChip({ label, active, onPress }: { label: string; active: boolean
 function CardThumb({
   card: source,
   unlocked,
+  isNew,
+  hint,
   cellStyle,
   artSize,
   narrow,
@@ -280,6 +310,10 @@ function CardThumb({
 }: {
   card: HeritageCard;
   unlocked: boolean;
+  /** Earned since the learner last opened it: the New pill. */
+  isNew: boolean;
+  /** A locked card's earn hint (how it is earned, never how far along); null when unlocked. */
+  hint: string | null;
   /** `flexBasis: '47%'` in the phone gallery, `flex: 1` in a row of the 3-column gallery. */
   cellStyle: ViewStyle;
   artSize: number;
@@ -297,7 +331,7 @@ function CardThumb({
       onPress={onPress}
       accessibilityRole="button"
       aria-selected={selected}
-      accessibilityLabel={unlocked ? card.titleEn : messages.a11y.lockedCard}
+      accessibilityLabel={unlocked ? (isNew ? messages.a11y.newCard(card.titleEn) : card.titleEn) : messages.a11y.lockedCardHint(hint ?? '')}
       style={{
         ...cellStyle,
         backgroundColor: unlocked ? colors.surface.paper : colors.surface.sunken,
@@ -309,14 +343,27 @@ function CardThumb({
       }}
     >
       {!unlocked ? (
-        <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+        <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1, gap: spacing.xs }}>
           <Icon name="lock" size={32} color={colors.text.muted} />
-          <Caption tone="muted">{m.locked}</Caption>
+          {/* The earn hint, at most two lines; the full text is in the label and on the card page. */}
+          <Text
+            numberOfLines={2}
+            style={{
+              fontSize: typography.size.caption,
+              lineHeight: typography.size.caption * typography.leading.normal,
+              fontWeight: typography.weight.medium,
+              color: colors.text.muted,
+              textAlign: 'center',
+            }}
+          >
+            {hint}
+          </Text>
         </View>
       ) : (
         <>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: spacing.xxs }}>
             <Pill tone={card.rarity === 'legendary' ? 'nudge' : card.rarity === 'rare' ? 'info' : card.rarity === 'uncommon' ? 'success' : 'neutral'} label={m.rarity[card.rarity]} size="sm" />
+            {isNew ? <Pill tone="info" label={m.new.pill} size="sm" /> : null}
           </View>
           <Spacer size="xs" />
           {supportedCardIds.includes(card.id) ? (

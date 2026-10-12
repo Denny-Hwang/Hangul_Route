@@ -30,11 +30,42 @@ describe('Library screens (F-STORY-006 PR 6.1)', () => {
     expect(src.match(/<Icon name="sparkle"/g)?.length).toBe(2);
   });
 
-  it('the Library explainer no longer promises a stage-completion card', () => {
-    const body = getMessages('en').learner.library.how.body;
-    expect(body).toBe('Finish quests to unlock cards.');
-    expect(body).not.toMatch(/whole stage/i);
-    expect(body).not.toMatch(/Legendary cards appear/i);
-    expect(read('LibraryScreen.tsx')).toContain('m.how.body');
+  it('the Library explainer says only what a rule of this build can do (F-STORY-006 PR 6.5b)', () => {
+    const how = getMessages('en').learner.library.how;
+    expect(Object.values(how).filter((v) => typeof v === 'string').join(' ')).not.toMatch(/Legendary cards appear/i);
+    const src = read('LibraryScreen.tsx');
+    expect(src).toContain('libraryExplainer(');
+    expect(src).not.toContain('m.how.body');
+  });
+
+  it('the Library header is a plain count with no N/M pill (F-STORY-006 §3.7, decision 3)', () => {
+    const src = read('LibraryScreen.tsx');
+    expect(src).toContain('m.collected.line(');
+    expect(src).not.toContain('m.collected.pill');
+    expect(src).not.toContain('heritageCardsAll.length');
+  });
+
+  it('the Library lists only obtainable or owned cards, and a locked tile shows its earn hint', () => {
+    const src = read('LibraryScreen.tsx');
+    expect(src).toContain('obtainableCards(');
+    expect(src).toContain('earnHint(');
+    expect(src).toContain('a11y.lockedCardHint(');
+    expect(src).toContain('numberOfLines={2}');
+    expect(src).not.toContain('m.locked}');
+  });
+
+  it('a card earned since the last visit wears a New pill, cleared when it is opened', () => {
+    const library = read('LibraryScreen.tsx');
+    expect(library).toContain('newSinceLastView');
+    expect(library).toContain('m.new.pill');
+    expect(library).toContain('markCardsSeen(');
+    expect(read('CardDetailScreen.tsx')).toContain('markCardsSeen(');
+  });
+
+  it('a locked card page names its earn hint and says how to earn it on both the stack screen and the pane', () => {
+    const view = read('CardDetailView.tsx');
+    expect(view).toContain('earnHint(');
+    expect(view).toContain('a11y.lockedCardHint(');
+    expect(read('CardDetailScreen.tsx')).toContain('showHowToEarn');
   });
 });

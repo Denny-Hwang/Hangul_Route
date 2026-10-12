@@ -246,3 +246,69 @@ describe('en-XA covers the new keys', () => {
     });
   }
 });
+
+// F-PLC-001 P-8: the placement report, the Choose a different start sheet and the dashboard's
+// Starting spot row (section 3.9, wireframe placement/report). Plain words, no price, no plan
+// name, no purchase words, never a comparison with other learners.
+describe('caregiver.placementReport (F-PLC-001 P-8)', () => {
+  const r = c.placementReport;
+
+  it('names the report, the route and the retakes', () => {
+    expect(r.takenOn('Oct 9', 'English')).toBe('Checked Oct 9, in English');
+    expect(r.whereStarts).toBe('Where the route starts');
+    expect(r.changedByGrownUp).toBe('Changed by a grown-up');
+    expect(r.takeAgain).toBe('Take the check again');
+    expect(r.takeFirst).toBe('Take the level check');
+    expect(r.noCheck).toBe('No check taken yet.');
+    expect(r.retryHidden).toBe('Try it with the sound guide hidden');
+    expect(r.needsStage('Sam', 2)).toBe('Sam is ready for Stage 2. Stage 2 lessons are not included with this account yet.');
+    expect(r.noStart('Sam')).toBe('Sam knows everything that is open right now. More is coming.');
+    expect(r.examples).toEqual({ known: 'Knows', fresh: 'New for now' });
+  });
+
+  it('has the Choose a different start sheet', () => {
+    expect(r.chooseStart).toBe('Choose a different start');
+    expect(r.sheet).toEqual({
+      title: 'Choose a different start',
+      help: 'Quests before the one you pick are skipped. It and every quest after it stay on the route.',
+      state: { start: 'starts here', done: 'done', placedOut: 'skipped ahead' },
+    });
+    expect(r.saved).toBe('The start is changed.');
+  });
+
+  it('has the dashboard row', () => {
+    expect(r.row).toEqual({ label: 'Starting spot', seeCheck: 'See the check' });
+  });
+
+  it('has the one skills note (F-ROUTE-001 section 3.12)', () => {
+    expect(c.skillsNote).toBe(
+      'The level check looks at reading and listening. Writing is practiced with tracing games and is not scored. The rows count finished quests that include these games; a game skipped inside a quest still counts.',
+    );
+  });
+
+  it('never names a price, a plan, a purchase, Premium or a comparison', () => {
+    const texts = [
+      r.takenOn('Oct 9', 'English'),
+      r.whereStarts,
+      r.changedByGrownUp,
+      r.takeAgain,
+      r.takeFirst,
+      r.noCheck,
+      r.retryHidden,
+      r.needsStage('Sam', 2),
+      r.noStart('Sam'),
+      r.examples.known,
+      r.examples.fresh,
+      r.chooseStart,
+      r.sheet.title,
+      r.sheet.help,
+      ...Object.values(r.sheet.state),
+      r.saved,
+      r.row.label,
+      r.row.seeCheck,
+    ];
+    for (const text of texts) {
+      expect(text).not.toMatch(/\$|price|premium|upgrade|buy|purchase|subscri|plan\b|behind|other learners|ahead of|score|test\b/i);
+    }
+  });
+});

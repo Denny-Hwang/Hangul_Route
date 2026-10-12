@@ -90,3 +90,12 @@ export function skippedEvent(profileId: string, source: 'onboarding' | 'home') {
     payload: { source },
   } satisfies PlacementTelemetryEvent<Record<string, unknown>>;
 }
+
+/** A grown-up chose a different start on the report (section 3.9). */
+export function overrideAppliedEvent(profileId: string) {
+  return {
+    name: 'placement.override_applied',
+    profileId,
+    payload: { by: 'parent' },
+  } satisfies PlacementTelemetryEvent<Record<string, unknown>>;
+}

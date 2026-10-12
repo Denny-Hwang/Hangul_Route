@@ -55,7 +55,18 @@
 | `console/plan-builder.md` | P | roadmap §6 · F-HW-001 §3.4 |
 | `console/school-admin.md` | P | roadmap S7 |
 | `console/account.md` · `console/billing.md` | P | roadmap §5.3 · §7 |
+| `billing/billing-home.md` · `checkout-return.md` · `receipts.md` · `step-up.md` · `plan-status.md` | R | F-BILL-002 (supersedes `console/billing.md`; `plan-status` supersedes the body of `paywall/upgrade.md`; page at `/account/billing` inside F-APP-001's frame) |
 | `reports/learner-report.md` · `reports/class-report.md` · `reports/print.md` (console, app.hangulroute.com) · `reports/in-app-report.md` (learner app, behind the grown-up gate); supersede `parent/learner-detail.md` and the web part of `parent/dashboard.md` | R | F-REPORT-001 (RP-0) |
+
+### D. App shell — persona sign-in on app.hangulroute.com (F-APP-001)
+| 파일 | 상태 | 스펙 |
+|---|---|---|
+| `onboarding/welcome-personas.md` | R | F-APP-001 §3.6 (amends `onboarding/welcome.md`; web only, flag) |
+| `parent/grown-up-home-card.md` | R | F-APP-001 §3.6, §3.9 (Profile "Grown-up home" row and dashboard card; amends `parent/dashboard.md`) |
+| `shell/signin.md` | R | F-APP-001 §3.7 (supersedes `console/sign-in.md` on the app host; adult step for account creation) |
+| `shell/adult-frame.md` · `shell/parent-home.md` · `shell/teacher-home.md` | R | F-APP-001 §3.8 (teacher home amends `console/home.md`; parent home replaces the `/parent` demo) |
+| `shell/grown-up-lock.md` | R | F-APP-001 §3.9 |
+| `shell/offline.md` | R | F-APP-001 §3.12 |
 
 ## 다음 단계
 1. Open questions 의 코드-스펙 불일치를 스펙에 반영 (특히 `parent/gate` ↔ `profiles/pin-entry` 통합, 계획 gating 규칙 F-HW-001 §3.4 vs F-TCH-001 §3.3).
