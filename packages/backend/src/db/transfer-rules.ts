@@ -1,5 +1,5 @@
 import { TRANSFER_COOLING_OFF_MS, type TransferSlot } from '@hangul-route/content-schema';
-import { ENDED_TRANSFER_STATUSES, OPEN_TRANSFER_STATUSES, type LearnerConsentRecord, type StoredLearnerSlot, type StoredTransfer, type TransferPrefKey, type TransferSlotConsent } from './transfer-types';
+import { ENDED_TRANSFER_STATUSES, OPEN_TRANSFER_STATUSES, type LearnerConsentRecord, type NewTransferEvent, type StoredLearnerSlot, type StoredTransfer, type TransferPrefKey, type TransferSlotConsent } from './transfer-types';
 
 /*
  * Rules both Db backends share for the class-transfer rows (F-SPACE-002
@@ -98,6 +98,11 @@ export function assertNewTransfer(t: StoredTransfer): void {
   if (t.executeAfter !== executeAfter) refuse('execute_after must be the learner consent + 48 h, and null while the learner slot is pending');
   const fresh = t.rev === 0 && t.approvedAt === null && t.executedAt === null && t.endedAt === null && t.endReason === null && t.endActor === null && t.blockReason === null;
   if (!fresh) refuse('a new request carries no approval, execution, end or block fields, and rev 0');
+}
+
+/** The `transfer_events` CHECK of migration 0005 (`actor_kind`), applied by the memory backend before it writes. */
+export function assertTransferEventChecks(e: Pick<NewTransferEvent, 'actorKind'>): void {
+  if (e.actorKind !== 'account' && e.actorKind !== 'device' && e.actorKind !== 'system') throw new Error('CHECK constraint failed: transfer_events.actor_kind');
 }
 
 /** The slot a decline names, refused when it is not one of the three (the column maps never see caller text). */

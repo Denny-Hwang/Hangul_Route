@@ -262,17 +262,30 @@ function classCommon(t: StoredTransfer, mine: TransferEndActor): ClassViewCommon
   };
 }
 
-/** Live names a batch of views needs, read set-based (one call per table, not one per row). */
+/**
+ * Live names a batch of views needs, read set-based (one call per table, not one per row), and the
+ * destination facts of the learner-side views, read once per distinct destination as the views ask.
+ */
 export interface ViewLookups {
   learners: Map<string, Learner>;
   spaces: Map<string, Space>;
+  facts: Map<string, Promise<DestinationFacts>>;
 }
 
 export async function viewLookups(db: Db, rows: readonly StoredTransfer[]): Promise<ViewLookups> {
   const learnerIds = new Set(rows.map((t) => t.learnerId));
   const spaceIds = new Set(rows.flatMap((t) => [t.sourceSpaceId, t.destSpaceId]));
   const [learners, spaces] = await Promise.all([db.getLearners([...learnerIds]), db.getSpaces([...spaceIds])]);
-  return { learners: new Map(learners.map((l) => [l.id, l])), spaces: new Map(spaces.map((s) => [s.id, s])) };
+  return { learners: new Map(learners.map((l) => [l.id, l])), spaces: new Map(spaces.map((s) => [s.id, s])), facts: new Map() };
+}
+
+/** `destinationFacts` once per destination per batch of views. */
+function factsOnce(db: Db, dest: Space, look: ViewLookups, now: Date): Promise<DestinationFacts> {
+  const known = look.facts.get(dest.id);
+  if (known) return known;
+  const facts = destinationFacts(db, dest, now);
+  look.facts.set(dest.id, facts);
+  return facts;
 }
 
 /** The roster name a space shows (F-TCH-001 section 10.3 anonymize). */
@@ -327,7 +340,7 @@ export async function learnerSideView(db: Db, t: StoredTransfer, look: ViewLooku
   const dest = look.spaces.get(t.destSpaceId);
   const ended = isEndedTransfer(t);
   const terms = isOpenTransfer(t) && source && dest ? await learnerSideTerms(db, t.learnerId, source, dest, ctx.now) : NEUTRAL_TERMS(dest);
-  const facts: DestinationFacts = dest ? await destinationFacts(db, dest, ctx.now) : { ownerName: null, schoolName: null, ageBucket: null, learnerCount: 0 };
+  const facts: DestinationFacts = dest ? await factsOnce(db, dest, look, ctx.now) : { ownerName: null, schoolName: null, ageBucket: null, learnerCount: 0 };
   return {
     id: t.id,
     role: 'learner_side',

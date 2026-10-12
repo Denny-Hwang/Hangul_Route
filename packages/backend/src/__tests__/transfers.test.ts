@@ -164,6 +164,36 @@ async function seedRow(input: { id: string; learnerId?: string; initiator: 'lear
   return row;
 }
 
+/** Runs `fn` with every Db call counted (the routes read the fallback Db). */
+async function countDbCalls(fn: () => Promise<void>): Promise<number> {
+  const calls = { n: 0 };
+  const spy = new Proxy(db, {
+    get(target, prop, receiver) {
+      const value = Reflect.get(target, prop, receiver) as unknown;
+      if (typeof value !== 'function') return value;
+      return (...args: unknown[]) => {
+        calls.n += 1;
+        return (value as (...a: unknown[]) => unknown).apply(target, args);
+      };
+    },
+  });
+  const { setFallbackDb, fallbackDb } = await import('../db');
+  const before = fallbackDb();
+  setFallbackDb(spy);
+  try {
+    await fn();
+  } finally {
+    setFallbackDb(before);
+  }
+  return calls.n;
+}
+
+/** A learner in class A (and nowhere else), for tests that need many rows. */
+async function filler(id: string, spaceId = A) {
+  await db.putLearner({ id, displayName: `Filler ${id.slice(8)}`, ageGroup: '8-9', avatar: 'hoya-orange', recoveryHash: null, createdAt: OLD, lastActiveAt: OLD });
+  await member(spaceId, 'learner', id, 'student');
+}
+
 beforeEach(async () => {
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(NOW);
@@ -223,6 +253,7 @@ describe('preview (writes nothing)', () => {
         { kind: 'class', name: 'Sunday Class A', ownerName: 'Mr Han' },
         { kind: 'family', name: 'Kim family', ownerName: 'Mom' },
       ]),
+      termsDigest: expect.stringMatching(/^[0-9a-f]{64}$/),
     });
     expect((r.body.data as { visibleToday: unknown[] }).visibleToday).toHaveLength(2);
     // never an email
@@ -276,12 +307,15 @@ describe('preview (writes nothing)', () => {
     expect(r.body.error?.code).toBe('too_many_attempts');
   });
 
-  it('has a per-client in-memory limiter on preview and create', async () => {
-    const headers = { ...bearer('teacher-a'), 'cf-connecting-ip': '203.0.113.9' };
-    for (let i = 0; i < TRANSFER_CLIENT_LIMIT; i += 1) expect((await call('POST', `${base(A)}/preview`, headers, { learnerId: SUNI, code: CODE_B })).status).toBe(200);
-    const r = await call('POST', base(A), headers, classCreate());
+  it('has a per-account in-memory limiter on preview and create; accounts behind one school IP do not share it', async () => {
+    const ip = { 'cf-connecting-ip': '203.0.113.9' };
+    for (let i = 0; i < TRANSFER_CLIENT_LIMIT; i += 1) expect((await call('POST', `${base(A)}/preview`, { ...bearer('teacher-a'), ...ip }, { learnerId: SUNI, code: CODE_B })).status).toBe(200);
+    const r = await call('POST', base(A), { ...bearer('teacher-a'), 'cf-connecting-ip': '198.51.100.7' }, classCreate());
     expect(r.status).toBe(429);
     expect(r.body.error?.code).toBe('too_many_attempts');
+    // a second teacher of the class on the same NAT address still has their own allowance
+    await member(A, 'account', 'teacher-c', 'teacher');
+    expect((await call('POST', `${base(A)}/preview`, { ...bearer('teacher-c'), ...ip }, { learnerId: SUNI, code: CODE_B })).status).toBe(200);
   });
 
   it('guard 2: a caller not entitled to the learner learns nothing about the destination and spends no code attempt', async () => {
@@ -357,6 +391,22 @@ describe('preview (writes nothing)', () => {
       expect(r.body.error?.code).toBe('bad_request');
     }
     expect((await call('POST', `${base(A)}/preview`, bearer('teacher-a'), 'not json')).status).toBe(422);
+  });
+
+  it('a missing or non-string code is a bad body, not a failed code attempt (guard 4 counts codes only)', async () => {
+    for (const body of [{ learnerId: SUNI }, { learnerId: SUNI, code: 123456 }, { learnerId: SUNI, code: null }]) {
+      const r = await preview(A, 'teacher-a', body);
+      expect([r.status, r.body.error?.code], JSON.stringify(body)).toEqual([422, 'bad_request']);
+    }
+    expect(await db.countRateHits(transferRateKey.codeAccount('teacher-a'), new Date(0))).toBe(0);
+  });
+
+  it('expired rows nobody listed do not keep a destination busy', async () => {
+    for (let i = 0; i < TRANSFER_MAX_OPEN_PER_DESTINATION; i += 1) {
+      await filler(`profile:stale-${i}`);
+      await seedRow({ id: `transfer:stale-${i}`, learnerId: `profile:stale-${i}`, initiator: 'source', createdAgo: 15 * DAY });
+    }
+    expect((await preview(A, 'teacher-a', { learnerId: SUNI, code: CODE_B })).status).toBe(200);
   });
 });
 
@@ -506,6 +556,52 @@ describe('create', () => {
     expect(await stored()).toEqual([]);
   });
 
+  it('binds the consent to what the sheet showed: a terms digest from the preview that no longer matches answers 409 terms_changed', async () => {
+    const digestOf = async (): Promise<string> => ((await preview(FAMILY, 'mom', { learnerId: SUNI, code: CODE_B, fromSpaceId: A })).body.data as { termsDigest: string }).termsDigest;
+    const shown = await digestOf();
+    expect(await digestOf()).toBe(shown);
+    // the destination teacher renames the class between preview and create
+    await db.putSpace(space(B, 'class', 'teacher-b', { name: 'Trusted Class', joinCode: CODE_B, joinCodeExpiresAt: ahead(20 * DAY), createdAt: ago(90 * DAY) }));
+    const renamed = await create(FAMILY, 'mom', familyCreate({ consent: { ...consent, termsDigest: shown } }));
+    expect([renamed.status, renamed.body.error?.code]).toEqual([409, 'terms_changed']);
+    // a conditional line appears (a source plan now reaches the learner)
+    const fresh = await digestOf();
+    await db.putPlan({ id: 'plan:1', spaceId: A, authorAccountId: 'teacher-a', title: 'Week 1', items: [], targetLearnerIds: null, publishedAt: OLD, archivedAt: null, createdAt: OLD, updatedAt: OLD, meta: null });
+    const planned = await create(FAMILY, 'mom', familyCreate({ consent: { ...consent, termsDigest: fresh } }));
+    expect([planned.status, planned.body.error?.code]).toEqual([409, 'terms_changed']);
+    expect(await stored()).toEqual([]);
+    // what was shown is what is recorded
+    const ok = await create(FAMILY, 'mom', familyCreate({ consent: { ...consent, termsDigest: await digestOf() } }));
+    expect(ok.status).toBe(201);
+    const [row] = await stored();
+    expect(row?.learner.shown?.lineIds).toContain('homework_drops');
+    expect(row?.learner.shown?.flags.premiumChange).toBe(row?.learner.terms?.premiumChange);
+    // a malformed digest is a bad body
+    await db.reset();
+    await seed();
+    const bad = await create(FAMILY, 'mom', familyCreate({ consent: { ...consent, termsDigest: 'nope' } }));
+    expect([bad.status, bad.body.error?.code]).toEqual([422, 'bad_request']);
+  });
+
+  it('settles the open request before deciding: an expired one nobody listed does not come back as live (day 15)', async () => {
+    const first = requestOf(await create(FAMILY, 'mom', familyCreate()));
+    vi.setSystemTime(new Date(NOW.getTime() + 15 * DAY));
+    const again = await create(FAMILY, 'mom', familyCreate());
+    expect(again.status).toBe(201);
+    expect(requestOf(again).id).not.toBe(first.id);
+    expect(requestOf(again).status).toBe('requested');
+    expect((await db.getTransfer(first.id))?.status).toBe('expired');
+  });
+
+  it('settles the open request before deciding: a request from a class the learner left does not block the new class', async () => {
+    const old = requestOf(await create(FAMILY, 'mom', familyCreate()));
+    await db.removeMembership(A, 'learner', SUNI);
+    await member(C, 'learner', SUNI, 'student');
+    const r = await create(C, 'teacher-c', classCreate());
+    expect(r.status).toBe(201);
+    expect(await db.getTransfer(old.id)).toMatchObject({ status: 'cancelled', endReason: 'learner_left_source' });
+  });
+
   it('the code must still resolve to the class that was previewed (409 destination_changed)', async () => {
     const r = await create(FAMILY, 'mom', familyCreate({ destinationSpaceId: C }));
     expect([r.status, r.body.error?.code]).toEqual([409, 'destination_changed']);
@@ -639,35 +735,99 @@ describe('list and views', () => {
     expect((await db.getTransfer(row.id))?.status).toBe('requested');
   });
 
-  it('builds views with set-based reads: 20 source rows cost a bounded number of Db calls', async () => {
+  it('builds views with set-based reads: 20 ended source rows cost a bounded number of Db calls', async () => {
     for (let i = 0; i < 20; i += 1) {
-      const id = `profile:row-${i}`;
-      await db.putLearner({ id, displayName: `Row ${i}`, ageGroup: '8-9', avatar: 'hoya-orange', recoveryHash: null, createdAt: OLD, lastActiveAt: OLD });
-      await member(A, 'learner', id, 'student');
-      const row = await seedRow({ id: `transfer:row-${i}`, learnerId: id, initiator: 'source', createdAgo: (i + 1) * HOUR });
+      await filler(`profile:row-${i}`);
+      const row = await seedRow({ id: `transfer:row-${i}`, learnerId: `profile:row-${i}`, initiator: 'source', createdAgo: (i + 1) * HOUR });
       await db.cancelTransfer(row.id, 'cancelled_initiator', 'source', new Date(NOW.getTime() - 10 * 60 * 1000));
     }
-    const calls = { n: 0 };
-    const spy = new Proxy(db, {
-      get(target, prop, receiver) {
-        const value = Reflect.get(target, prop, receiver) as unknown;
-        if (typeof value !== 'function') return value;
-        return (...args: unknown[]) => {
-          calls.n += 1;
-          return (value as (...a: unknown[]) => unknown).apply(target, args);
-        };
-      },
+    let rows = 0;
+    const n = await countDbCalls(async () => {
+      rows = requestsOf(await list(A, 'teacher-a')).length;
     });
-    const { setFallbackDb, fallbackDb } = await import('../db');
-    const before = fallbackDb();
-    setFallbackDb(spy);
-    try {
-      const r = await list(A, 'teacher-a');
-      expect(requestsOf(r)).toHaveLength(20);
-    } finally {
-      setFallbackDb(before);
+    expect(rows).toBe(20);
+    expect(n).toBeLessThan(20);
+  });
+
+  it('open source rows cost only their settle reads: views add nothing per row', async () => {
+    const seedOpen = async (from: number, to: number) => {
+      for (let i = from; i < to; i += 1) {
+        await filler(`profile:open-${i}`);
+        await seedRow({ id: `transfer:open-${i}`, learnerId: `profile:open-${i}`, initiator: 'source', createdAgo: (i + 1) * 60 * 1000 });
+      }
+    };
+    await seedOpen(0, 10);
+    const ten = await countDbCalls(async () => {
+      expect(requestsOf(await list(A, 'teacher-a'))).toHaveLength(10);
+    });
+    await seedOpen(10, 20);
+    const twenty = await countDbCalls(async () => {
+      expect(requestsOf(await list(A, 'teacher-a'))).toHaveLength(20);
+    });
+    // settle reads the row, both spaces and the source membership: three calls per open row, no more
+    expect((twenty - ten) / 10).toBeLessThanOrEqual(3);
+  });
+
+  it('the family list reads destination facts once per destination, not once per row', async () => {
+    const seedEnded = async (from: number, to: number) => {
+      for (let i = from; i < to; i += 1) {
+        // older than a day, so they do not count against today's create limits
+        const row = await seedRow({ id: `transfer:fam-${i}`, learnerId: MINA, initiator: 'learner_side', dest: i % 2 === 0 ? B : C, createdAgo: DAY + (i + 2) * HOUR });
+        await db.cancelTransfer(row.id, 'withdrawn_learner', 'family', new Date(NOW.getTime() - DAY - (i + 1) * HOUR));
+      }
+    };
+    await seedEnded(0, 10);
+    requestOf(await create(FAMILY, 'mom', familyCreate()));
+    const ten = await countDbCalls(async () => {
+      expect(requestsOf(await list(FAMILY, 'mom'))).toHaveLength(11);
+    });
+    await seedEnded(10, 20);
+    const twenty = await countDbCalls(async () => {
+      expect(requestsOf(await list(FAMILY, 'mom'))).toHaveLength(21);
+    });
+    expect(twenty - ten).toBeLessThanOrEqual(2);
+  });
+
+  it('the school counts read open rows set-based and settle none of them: the cost does not grow with the rows', async () => {
+    await db.putSpace(space(SCHOOL, 'school', 'admin'));
+    await member(SCHOOL, 'account', 'admin', 'owner');
+    await db.putSpace(space(A, 'class', 'teacher-a', { name: 'Sunday Class A', parentSpaceId: SCHOOL }));
+    await db.putSpace(space(C, 'class', 'teacher-c', { parentSpaceId: SCHOOL, joinCode: CODE_C, joinCodeExpiresAt: ahead(20 * DAY) }));
+    const seedOpen = async (from: number, to: number) => {
+      for (let i = from; i < to; i += 1) {
+        await filler(`profile:sch-${i}`);
+        await seedRow({ id: `transfer:sch-${i}`, learnerId: `profile:sch-${i}`, initiator: 'source', dest: C, createdAgo: (i + 1) * 60 * 1000 });
+      }
+    };
+    await seedOpen(0, 5);
+    const five = await countDbCalls(async () => {
+      expect((await list(SCHOOL, 'admin')).body.data).toEqual({ requests: [], counts: expect.arrayContaining([{ spaceId: A, waiting: 5 }, { spaceId: C, waiting: 0 }]) });
+    });
+    await seedOpen(5, 20);
+    // an expired row nobody settled is not waiting
+    await filler('profile:sch-stale');
+    await seedRow({ id: 'transfer:sch-stale', learnerId: 'profile:sch-stale', initiator: 'source', dest: C, createdAgo: 15 * DAY });
+    const twenty = await countDbCalls(async () => {
+      expect((await list(SCHOOL, 'admin')).body.data).toEqual({ requests: [], counts: expect.arrayContaining([{ spaceId: A, waiting: 20 }, { spaceId: C, waiting: 0 }]) });
+    });
+    expect(twenty).toBe(five);
+    expect((await db.getTransfer('transfer:sch-stale'))?.status).toBe('requested');
+  });
+
+  it('newer ended rows never push an open request out of a class list or the school count', async () => {
+    await db.putSpace(space(SCHOOL, 'school', 'admin'));
+    await member(SCHOOL, 'account', 'admin', 'owner');
+    await db.putSpace(space(B, 'class', 'teacher-b', { name: 'Saturday Class B', parentSpaceId: SCHOOL, joinCode: CODE_B, joinCodeExpiresAt: ahead(20 * DAY) }));
+    const open = await seedRow({ id: 'transfer:waiting', initiator: 'learner_side', createdAgo: 2 * DAY });
+    // 210 newer source-started requests to B, each cancelled: the destination never sees them
+    await filler('profile:spam');
+    for (let i = 0; i < 210; i += 1) {
+      const row = await seedRow({ id: `transfer:spam-${i}`, learnerId: 'profile:spam', initiator: 'source', createdAgo: DAY - (i + 1) * 60 * 1000 });
+      await db.cancelTransfer(row.id, 'cancelled_initiator', 'source', new Date(NOW.getTime() - DAY + (i + 1) * 60 * 1000 + 1));
     }
-    expect(calls.n).toBeLessThan(20);
+    expect(requestsOf(await list(B, 'teacher-b')).map((t) => t.id)).toEqual([open.id]);
+    expect(requestsOf(await list(A, 'teacher-a'))[0]).toMatchObject({ id: open.id, status: 'requested' });
+    expect((await list(SCHOOL, 'admin')).body.data).toEqual({ requests: [], counts: [{ spaceId: B, waiting: 1 }] });
   });
 });
 
@@ -678,7 +838,7 @@ describe('decline', () => {
     expect(r.status).toBe(200);
     expect(requestOf(r)).toMatchObject({ status: 'ended', endedByYou: true, endReason: 'declined_destination', endedAt: NOW.toISOString(), steps: null });
     expect(await db.getTransfer(created.id)).toMatchObject({ status: 'declined', endReason: 'declined_destination', endActor: 'destination' });
-    expect(await db.transferEvents(created.id)).toContainEqual(expect.objectContaining({ event: 'declined', slot: 'destination', actorRef: 'teacher-b', detail: { reason: 'no_room' } }));
+    expect(await db.transferEvents(created.id)).toContainEqual(expect.objectContaining({ event: 'declined', slot: 'destination', actorRef: 'teacher-b', detail: { reason: 'no_room', via: 'owner' } }));
 
     const [src] = requestsOf(await list(A, 'teacher-a'));
     expect(src).toMatchObject({ status: 'ended', endedByYou: false, endReason: null, learner: null, steps: null });
@@ -730,6 +890,23 @@ describe('decline', () => {
     expect((await db.getTransfer(fam.id))?.status).toBe('requested');
   });
 
+  it('a school admin declines through the cascade; the audit records via school_admin (A12)', async () => {
+    await db.putSpace(space(SCHOOL, 'school', 'admin'));
+    await member(SCHOOL, 'account', 'admin', 'owner');
+    await db.putSpace(space(B, 'class', 'teacher-b', { name: 'Saturday Class B', parentSpaceId: SCHOOL, joinCode: CODE_B, joinCodeExpiresAt: ahead(20 * DAY) }));
+    const fam = requestOf(await create(FAMILY, 'mom', familyCreate()));
+    const r = await decline(B, 'admin', fam.id, { slot: 'destination', reason: 'not_now' });
+    expect(r.status).toBe(200);
+    expect(requestOf(r)).toMatchObject({ role: 'destination', endedByYou: true });
+    expect(await db.transferEvents(fam.id)).toContainEqual(expect.objectContaining({ event: 'declined', slot: 'destination', actorRef: 'admin', detail: { reason: 'not_now', via: 'school_admin' } }));
+    // a guardian's decline carries no class detail
+    await db.reset();
+    await seed();
+    const teacher = requestOf(await create(A, 'teacher-a', classCreate()));
+    await decline(FAMILY, 'mom', teacher.id, { slot: 'learner' });
+    expect(await db.transferEvents(teacher.id)).toContainEqual(expect.objectContaining({ event: 'declined', slot: 'learner', actorRef: 'mom', detail: null }));
+  });
+
   it('the destination cannot see or decline a request before the learner side consented', async () => {
     const teacher = requestOf(await create(A, 'teacher-a', classCreate()));
     expect((await decline(B, 'teacher-b', teacher.id, { slot: 'destination' })).status).toBe(404);
@@ -752,11 +929,39 @@ describe('cancel', () => {
     expect(r.status).toBe(200);
     expect(requestOf(r)).toMatchObject({ role: 'source', status: 'ended', endedByYou: true, endReason: 'cancelled_initiator' });
     expect(await db.getTransfer(teacher.id)).toMatchObject({ status: 'cancelled', endReason: 'cancelled_initiator', endActor: 'source' });
-    expect(await db.transferEvents(teacher.id)).toContainEqual(expect.objectContaining({ event: 'cancelled', actorRef: 'teacher-a' }));
+    expect(await db.transferEvents(teacher.id)).toEqual([expect.objectContaining({ event: 'created' }), expect.objectContaining({ event: 'cancelled', actorRef: 'teacher-a', slot: 'source', detail: { via: 'owner' } })]);
 
     const fam = requestOf(await create(FAMILY, 'mom', familyCreate({ destinationSpaceId: C, code: CODE_C })));
     expect((await cancel(A, 'teacher-a', fam.id)).status).toBe(404);
     expect((await cancel(C, 'teacher-c', fam.id)).status).toBe(404);
+  });
+
+  it('IDOR: an unknown :tid or a foreign :id answers 404 and changes nothing', async () => {
+    const teacher = requestOf(await create(A, 'teacher-a', classCreate()));
+    expect((await cancel(A, 'teacher-a', 'transfer:unknown')).status).toBe(404);
+    expect((await cancel(B, 'teacher-b', teacher.id)).status).toBe(404); // the destination class
+    expect((await cancel(C, 'teacher-c', teacher.id)).status).toBe(404); // an unrelated class
+    expect((await cancel(FAMILY2, 'aunt', teacher.id)).status).toBe(404); // a family without this learner
+    expect((await cancel(A, 'stranger', teacher.id)).status).toBe(404);
+    expect((await cancel('space:nope', 'teacher-a', teacher.id)).status).toBe(404);
+    expect((await db.getTransfer(teacher.id))?.status).toBe('requested');
+  });
+
+  it('a school admin cancels a request the class started, through the cascade; the audit records via school_admin', async () => {
+    await db.putSpace(space(SCHOOL, 'school', 'admin'));
+    await member(SCHOOL, 'account', 'admin', 'owner');
+    await db.putSpace(space(A, 'class', 'teacher-a', { name: 'Sunday Class A', parentSpaceId: SCHOOL }));
+    const teacher = requestOf(await create(A, 'teacher-a', classCreate()));
+    const r = await cancel(A, 'admin', teacher.id);
+    expect(r.status).toBe(200);
+    expect(await db.getTransfer(teacher.id)).toMatchObject({ status: 'cancelled', endReason: 'cancelled_initiator', endActor: 'source' });
+    expect(await db.transferEvents(teacher.id)).toContainEqual(expect.objectContaining({ event: 'cancelled', slot: 'source', actorRef: 'admin', detail: { via: 'school_admin' } }));
+  });
+
+  it('a guardian\'s cancel carries no class detail', async () => {
+    const teacher = requestOf(await create(A, 'teacher-a', classCreate()));
+    await cancel(FAMILY, 'dad', teacher.id);
+    expect(await db.transferEvents(teacher.id)).toContainEqual(expect.objectContaining({ event: 'cancelled', slot: 'learner', actorRef: 'dad', detail: null }));
   });
 
   it('any guardian of the learner can cancel any request, even one who could not consent (veto needs guard 9a only)', async () => {
@@ -792,10 +997,34 @@ describe('transfer prefs (guardian switch)', () => {
       [A, SUNI, 'teacher-a'],
       [FAMILY2, SUNI, 'aunt'],
       [FAMILY, 'profile:nobody', 'mom'],
+      [FAMILY, MINA, 'aunt'], // a guardian of Mina through another family, acting on this one
     ] as const) {
       expect((await prefs(spaceId, learnerId, user, { blockTeacherRequests: false })).status, `${spaceId} ${user}`).toBe(404);
     }
     expect((await prefs(FAMILY, SUNI, 'mom', { selfManaged: true })).status).toBe(422);
     expect((await prefs(FAMILY, SUNI, 'mom', { blockTeacherRequests: false })).body.data).toEqual({ prefs: { blockTeacherRequests: false, selfManaged: false } });
+  });
+
+  it('turning the block off is the unsafe direction: it needs the whole of guard 9, while turning it on needs 9a only', async () => {
+    // a caregiver who joined an hour ago may switch teacher requests off, not back on
+    await member(FAMILY, 'account', 'stranger', 'caregiver', ago(HOUR));
+    expect((await prefs(FAMILY, SUNI, 'stranger', { blockTeacherRequests: true })).status).toBe(200);
+    const young = await prefs(FAMILY, SUNI, 'stranger', { blockTeacherRequests: false });
+    expect([young.status, young.body.error?.code]).toEqual([422, 'family_too_new']);
+    expect((await db.getTransferPrefs(SUNI)).blockTeacherRequests).toBe(true);
+    // the source teacher who is also a caregiver is conflicted (9c)
+    await member(FAMILY, 'account', 'teacher-a', 'caregiver');
+    const conflicted = await prefs(FAMILY, SUNI, 'teacher-a', { blockTeacherRequests: false });
+    expect([conflicted.status, conflicted.body.error?.code]).toEqual([409, 'conflicted_guardian']);
+    // so is an admin of the school above the learner's class
+    await db.putSpace(space(SCHOOL, 'school', 'admin'));
+    await db.putSpace(space(A, 'class', 'teacher-a', { name: 'Sunday Class A', parentSpaceId: SCHOOL }));
+    await member(FAMILY, 'account', 'admin', 'caregiver');
+    expect((await prefs(FAMILY, SUNI, 'admin', { blockTeacherRequests: false })).body.error?.code).toBe('conflicted_guardian');
+    expect((await db.getTransferPrefs(SUNI)).blockTeacherRequests).toBe(true);
+    // an aged, unconflicted guardian may; a learner in no class at all needs only 9a and 9b
+    expect((await prefs(FAMILY, SUNI, 'dad', { blockTeacherRequests: false })).status).toBe(200);
+    expect((await prefs(FAMILY, MINA, 'dad', { blockTeacherRequests: false })).status).toBe(200);
+    expect((await prefs(FAMILY, MINA, 'stranger', { blockTeacherRequests: false })).body.error?.code).toBe('family_too_new');
   });
 });

@@ -492,18 +492,44 @@ export class D1Db implements Db {
     return this.changes(`UPDATE transfer_requests SET ${sets.join(', ')}, updated_at = ?, rev = rev + 1 WHERE id = ? AND ${OPEN} AND ${where.join(' AND ')}`, [...params, at, transferId]);
   }
 
-  async declineSlot(transferId: string, slot: TransferSlot, endReason: TransferEndReason, endActor: TransferEndActor, now: Date): Promise<number> {
+  async declineSlot(transferId: string, slot: TransferSlot, endReason: TransferEndReason, endActor: TransferEndActor, now: Date, event?: Omit<NewTransferEvent, 'transferId'>): Promise<number> {
     assertTransferSlot(slot);
     const at = now.toISOString();
-    return this.changes(
-      `UPDATE transfer_requests SET ${SLOT_STATE_COLUMN[slot]} = 'declined', status = 'declined', end_reason = ?, end_actor = ?, ended_at = ?, updated_at = ?, rev = rev + 1 WHERE id = ? AND ${OPEN}`,
-      [endReason, endActor, at, at, transferId],
+    return this.endTransfer(
+      [
+        `UPDATE transfer_requests SET ${SLOT_STATE_COLUMN[slot]} = 'declined', status = 'declined', end_reason = ?, end_actor = ?, ended_at = ?, updated_at = ?, rev = rev + 1 WHERE id = ? AND ${OPEN}`,
+        [endReason, endActor, at, at, transferId],
+      ],
+      { transferId, status: 'declined', endReason, at },
+      event,
     );
   }
 
-  cancelTransfer(transferId: string, endReason: TransferEndReason, endActor: TransferEndActor, now: Date): Promise<number> {
+  cancelTransfer(transferId: string, endReason: TransferEndReason, endActor: TransferEndActor, now: Date, event?: Omit<NewTransferEvent, 'transferId'>): Promise<number> {
     const at = now.toISOString();
-    return this.changes(`UPDATE transfer_requests SET status = 'cancelled', end_reason = ?, end_actor = ?, ended_at = ?, updated_at = ?, rev = rev + 1 WHERE id = ? AND ${OPEN}`, [endReason, endActor, at, at, transferId]);
+    return this.endTransfer(
+      [`UPDATE transfer_requests SET status = 'cancelled', end_reason = ?, end_actor = ?, ended_at = ?, updated_at = ?, rev = rev + 1 WHERE id = ? AND ${OPEN}`, [endReason, endActor, at, at, transferId]],
+      { transferId, status: 'cancelled', endReason, at },
+      event,
+    );
+  }
+
+  /**
+   * The ending CAS alone, or with its audit row in one transaction. The event is guarded by the ending this
+   * CAS wrote (status, reason and `ended_at` = now) and by the absence of an earlier event of its kind: a
+   * request ends once, so a call that lost the race in the same millisecond inserts nothing.
+   */
+  private async endTransfer(update: [string, unknown[]], ended: { transferId: string; status: 'declined' | 'cancelled'; endReason: TransferEndReason; at: string }, event: Omit<NewTransferEvent, 'transferId'> | undefined): Promise<number> {
+    if (!event) return this.changes(update[0], update[1]);
+    const { transferId } = ended;
+    const [changed] = await this.batchChanges([
+      update,
+      [
+        'INSERT INTO transfer_events (transfer_id, at, actor_kind, actor_ref, event, slot, detail_json) SELECT ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM transfer_requests WHERE id = ? AND status = ? AND end_reason = ? AND ended_at = ?) AND NOT EXISTS (SELECT 1 FROM transfer_events WHERE transfer_id = ? AND event = ?)',
+        [transferId, event.at, event.actorKind, event.actorRef, event.event, event.slot, event.detail === null ? null : JSON.stringify(event.detail), transferId, ended.status, ended.endReason, ended.at, transferId, event.event],
+      ],
+    ]);
+    return changed ?? 0;
   }
 
   expireTransfer(transferId: string, now: Date): Promise<number> {
@@ -601,6 +627,16 @@ export class D1Db implements Db {
     const column = role === 'source' ? 'source_space_id' : 'dest_space_id';
     return this.many(`SELECT * FROM transfer_requests WHERE ${column} = ? ORDER BY created_at DESC, id DESC LIMIT ?`, [spaceId, limit], toTransfer);
   }
+  async openTransfersOfSpaces(spaceIds: readonly string[], role: 'source' | 'destination'): Promise<StoredTransfer[]> {
+    const column = role === 'source' ? 'source_space_id' : 'dest_space_id';
+    const unique = [...new Set(spaceIds)];
+    const out: StoredTransfer[] = [];
+    for (let i = 0; i < unique.length; i += IN_CHUNK) {
+      const chunk = unique.slice(i, i + IN_CHUNK);
+      out.push(...(await this.many(`SELECT * FROM transfer_requests WHERE ${column} IN (${chunk.map(() => '?').join(', ')}) AND ${OPEN}`, chunk, toTransfer)));
+    }
+    return out.sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id));
+  }
   transfersOfLearner(learnerId: string): Promise<StoredTransfer[]> {
     return this.many('SELECT * FROM transfer_requests WHERE learner_id = ? ORDER BY created_at DESC, id DESC', [learnerId], toTransfer);
   }
@@ -630,7 +666,8 @@ export class D1Db implements Db {
   countTransfersCreatedForLearner(learnerId: string, since: Date): Promise<number> {
     return this.count('SELECT COUNT(*) AS n FROM transfer_requests WHERE learner_id = ? AND created_at >= ?', [learnerId, since.toISOString()]);
   }
-  countOpenTransfersTo(spaceId: string): Promise<number> {
+  countOpenTransfersTo(spaceId: string, now?: Date): Promise<number> {
+    if (now) return this.count(`SELECT COUNT(*) AS n FROM transfer_requests WHERE dest_space_id = ? AND ${OPEN} AND expires_at > ?`, [spaceId, now.toISOString()]);
     return this.count(`SELECT COUNT(*) AS n FROM transfer_requests WHERE dest_space_id = ? AND ${OPEN}`, [spaceId]);
   }
   transferEvents(transferId: string): Promise<TransferEvent[]> {
