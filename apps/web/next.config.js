@@ -7,6 +7,9 @@ const nextConfig = {
   // same shape as the learner app. No server runtime, no adapter.
   output: 'export',
   images: { unoptimized: true },
+  // F-APP-001's site build variable: where the site's grown-up links point (lib/site-links.ts,
+  // F-SITE-002 §3.8). Inlined in server and client code alike; unset = the site's own origin.
+  env: { CONSOLE_ORIGIN: process.env.CONSOLE_ORIGIN ?? '' },
   transpilePackages: [
     '@hangul-route/content-schema',
     '@hangul-route/shared-types',
