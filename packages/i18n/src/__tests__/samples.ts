@@ -309,4 +309,9 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.parent.child.quests': [[1], [9]],
   'console.parent.child.cards': [[1], [14]],
   'console.parent.child.stars': [[3]],
+  'learner.results.extraCards.title': [[1], [4]],
+  'learner.results.extraCards.episodeDone': [['Meet the Letters']],
+  'learner.results.extraCards.more': [[1], [3]],
+  'learner.results.extraCards.announce': [[1, ['Rice']], [2, ['Rice', 'Chopsticks']]],
+  'learner.results.extraCards.seeA11y': [['Hanbok']],
 };
