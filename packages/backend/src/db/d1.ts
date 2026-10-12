@@ -3,6 +3,7 @@ import { id, type Account, type Learner, type LearnerDevice, type SnapshotRecord
 import {
   learnerRateKeys,
   mergeEntitlement,
+  type EntitlementMerge,
   type ConsentResetReason,
   type Db,
   type ExecuteTransferInput,
@@ -214,6 +215,9 @@ const OPEN = `status IN (${sqlList(OPEN_TRANSFER_STATUSES)})`;
 const ENDED = `status IN (${sqlList(ENDED_TRANSFER_STATUSES)})`;
 const ALL_SLOTS_IN = "l_state = 'consented' AND s_state IN ('consented','not_required') AND d_state = 'consented'";
 /** The row count a write reports; a binding that does not say is an error, never zero. */
+/** Lost races an entitlement write tolerates before it fails (and Stripe retries the delivery). */
+const ENTITLEMENT_WRITE_ATTEMPTS = 5;
+
 const readChanges = (result: D1RunResultLike | undefined): number => {
   const changed = result?.meta?.changes;
   if (typeof changed !== 'number') throw new Error('D1 did not report meta.changes for a compare-and-set write');
@@ -420,14 +424,30 @@ export class D1Db implements Db {
   entitlementsFor(subjectKind: Entitlement['subjectKind'], subjectId: string): Promise<Entitlement[]> {
     return this.many('SELECT * FROM entitlements WHERE subject_kind = ? AND subject_id = ? ORDER BY plan_key', [subjectKind, subjectId], toEntitlement);
   }
-  async applyEntitlement(input: EntitlementApply, now: Date): Promise<Entitlement> {
-    const existing = await this.one('SELECT * FROM entitlements WHERE subject_kind = ? AND subject_id = ? AND plan_key = ?', [input.subjectKind, input.subjectId, input.planKey], toEntitlement);
-    const e = mergeEntitlement(existing, input, now, () => id('ent'));
-    await this.run(
-      'INSERT INTO entitlements (id, subject_kind, subject_id, plan_key, status, provider, provider_ref, customer_ref, seats, expires_at, promo_code, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(subject_kind, subject_id, plan_key) DO UPDATE SET status = excluded.status, provider = excluded.provider, provider_ref = excluded.provider_ref, customer_ref = excluded.customer_ref, seats = excluded.seats, expires_at = excluded.expires_at, promo_code = excluded.promo_code, updated_at = excluded.updated_at',
-      [e.id, e.subjectKind, e.subjectId, e.planKey, e.status, e.provider, e.providerRef, e.customerRef, e.seats, e.expiresAt, e.promoCode, e.updatedAt],
-    );
-    return e;
+  /**
+   * A compare-and-set (BY-D5): read, merge in code, then write only if the row is still
+   * what was read (`INSERT … DO NOTHING` for none, `UPDATE … WHERE` every column for one).
+   * Stripe sends a subscription's events and its checkout completion together; a write that
+   * lost the race reads again and merges onto the winner instead of overwriting it.
+   */
+  async applyEntitlement(input: EntitlementApply, now: Date, merge: EntitlementMerge = 'set'): Promise<Entitlement> {
+    for (let attempt = 0; attempt < ENTITLEMENT_WRITE_ATTEMPTS; attempt += 1) {
+      const existing = await this.one('SELECT * FROM entitlements WHERE subject_kind = ? AND subject_id = ? AND plan_key = ?', [input.subjectKind, input.subjectId, input.planKey], toEntitlement);
+      const e = mergeEntitlement(existing, input, now, () => id('ent'), merge);
+      if (existing && e === existing) return e;
+      const won = existing
+        ? await this.changes(
+            'UPDATE entitlements SET status = ?, provider = ?, provider_ref = ?, customer_ref = ?, seats = ?, expires_at = ?, promo_code = ?, updated_at = ? WHERE id = ? AND status = ? AND provider = ? AND provider_ref IS ? AND customer_ref IS ? AND seats IS ? AND expires_at IS ? AND promo_code IS ? AND updated_at = ?',
+            [e.status, e.provider, e.providerRef, e.customerRef, e.seats, e.expiresAt, e.promoCode, e.updatedAt, existing.id, existing.status, existing.provider, existing.providerRef, existing.customerRef, existing.seats, existing.expiresAt, existing.promoCode, existing.updatedAt],
+          )
+        : await this.changes(
+            'INSERT INTO entitlements (id, subject_kind, subject_id, plan_key, status, provider, provider_ref, customer_ref, seats, expires_at, promo_code, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(subject_kind, subject_id, plan_key) DO NOTHING',
+            [e.id, e.subjectKind, e.subjectId, e.planKey, e.status, e.provider, e.providerRef, e.customerRef, e.seats, e.expiresAt, e.promoCode, e.updatedAt],
+          );
+      if (won > 0) return e;
+    }
+    // Stripe retries a failed delivery, and the retry merges onto whatever is stored then.
+    throw new Error('entitlement_write_conflict');
   }
 
   addWaitlist(e: Omit<WaitlistEntry, 'unsubscribedAt'>): Promise<void> {
