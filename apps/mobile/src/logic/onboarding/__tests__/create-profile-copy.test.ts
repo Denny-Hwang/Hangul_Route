@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { LEARNER_LEVELS } from '@hangul-route/content-schema';
+import { en, retiredDataPromises } from '@hangul-route/i18n';
 import { CREATE_PROFILE_COPY, whoCopy } from '../create-profile-copy';
 
 const strings = (value: unknown): string[] =>
@@ -29,8 +30,18 @@ describe('create-profile copy (F-LEARN-001 §3.2, §3.3)', () => {
     }
   });
 
-  it('keeps the ready line honest about sync (it used to say nothing leaves the device)', () => {
-    expect(CREATE_PROFILE_COPY.ready.line).toBe('Your name and choices are saved on this device. Sign-in and sync are optional.');
+  it('keeps the ready line honest about sync: the app backs up every learner, with no sign-in (F-SYNC-002)', () => {
+    // It used to say nothing leaves the device, then that sync was optional; the app backs up the name, level
+    // and cub (and later the progress) on start and after each change, whether or not anyone signs in.
+    expect(CREATE_PROFILE_COPY.ready.line).toBe('Your name and choices are saved on this device and backed up to our servers. No sign-in needed.');
+    // The same words as the site's backup sentence (packages/i18n privacy-statements.test.ts).
+    expect(en.landing.persona.parents.safe.bullets.backup).toContain('backed up to our servers');
+  });
+
+  it('makes no retired data promise anywhere on the form (stays on the device, sync optional, until you sign in)', () => {
+    const all = strings(CREATE_PROFILE_COPY).concat(strings(whoCopy('self')), strings(whoCopy('child')));
+    for (const s of all) expect(retiredDataPromises(s), s).toEqual([]);
+    expect(retiredDataPromises('Your name and choices are saved on this device. Sign-in and sync are optional.')).not.toEqual([]);
   });
 
   it('words the two consent boxes as the spec does, each naming the Privacy Policy', () => {

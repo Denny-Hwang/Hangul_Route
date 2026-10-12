@@ -41,7 +41,8 @@ export const CREATE_PROFILE_COPY = {
   privacyLink: 'Read the Privacy Policy',
   ready: {
     heading: 'Ready to go!',
-    line: 'Your name and choices are saved on this device. Sign-in and sync are optional.',
+    /** The app backs up the name, level and cub on start and after each change, with no sign-in (F-SYNC-002). */
+    line: 'Your name and choices are saved on this device and backed up to our servers. No sign-in needed.',
   },
   back: 'Go back',
   continue: 'Continue',
