@@ -56,6 +56,17 @@
 | `console/school-admin.md` | P | roadmap S7 |
 | `console/account.md` · `console/billing.md` | P | roadmap §5.3 · §7 |
 
+### D. App shell — persona sign-in on app.hangulroute.com (F-APP-001)
+| 파일 | 상태 | 스펙 |
+|---|---|---|
+| `onboarding/welcome-personas.md` | R | F-APP-001 §3.6 (amends `onboarding/welcome.md`; web only, flag) |
+| `parent/grown-up-home-card.md` | R | F-APP-001 §3.6, §3.9 (amends `parent/dashboard.md`) |
+| `shell/signin.md` | R | F-APP-001 §3.7 (supersedes `console/sign-in.md` on the app host) |
+| `shell/adult-frame.md` · `shell/parent-home.md` · `shell/teacher-home.md` | R | F-APP-001 §3.8 (teacher home amends `console/home.md`; parent home replaces the `/parent` demo) |
+| `shell/grown-up-lock.md` | R | F-APP-001 §3.9 |
+| `shell/offline.md` | R | F-APP-001 §3.12 |
+| `shell/moved.md` | R | F-APP-001 §3.13 (hangulroute.com redirect stubs) |
+
 ## 다음 단계
 1. Open questions 의 코드-스펙 불일치를 스펙에 반영 (특히 `parent/gate` ↔ `profiles/pin-entry` 통합, 계획 gating 규칙 F-HW-001 §3.4 vs F-TCH-001 §3.3).
 2. `frontend-design-skill` 로 시안 (`design/screens/`) — 순서는 `10-app-map.md` §6.
