@@ -1292,6 +1292,7 @@ describe('card rules (F-STORY-006 §3.8)', () => {
     'card-fact-too-long',
     'card-fact-single-source',
     'card-reward-mismatch',
+    'card-source-address-only',
   ];
   const cardFindings = (story: Story): Finding[] => lint(story).filter((f) => CARD_RULES.includes(f.rule));
 
@@ -1344,6 +1345,20 @@ describe('card rules (F-STORY-006 §3.8)', () => {
     expect(hits(lint(story), 'card-fact-single-source')).toEqual([
       { rule: 'card-fact-single-source', level: 'error', path: 'facts[2].sources', message: expect.stringContaining('f3') },
     ]);
+  });
+
+  it('card-source-address-only: the printed source keeps a name once its web address is dropped', () => {
+    const glossed = withStory((s) => (s.facts[2]!.sources[0]!.publisher = '국가유산청 (Korea Heritage Service, heritage.go.kr)'));
+    expect(hits(lint(glossed), 'card-source-address-only')).toEqual([]);
+    const bare = withStory((s) => (s.facts[2]!.sources[0]!.publisher = 'www.heritage.go.kr'));
+    expect(hits(lint(bare), 'card-source-address-only')).toEqual([
+      { rule: 'card-source-address-only', level: 'error', path: 'facts[2].sources[0].publisher', message: expect.stringContaining('f3') },
+    ]);
+    const title = withStory((s) => (s.facts[2]!.sources[0]!.title = 'heritage.go.kr/hangul'));
+    expect(hits(lint(title), 'card-source-address-only').map((f) => f.path)).toEqual(['facts[2].sources[0].title']);
+    // Only the first source is printed on the card; the others are only counted.
+    const second = withStory((s) => (s.facts[2]!.sources[1]!.publisher = 'heritage.go.kr'));
+    expect(hits(lint(second), 'card-source-address-only')).toEqual([]);
   });
 
   it('card-reward-mismatch: rewardCardIds.listen is card:story-<slug>, never another card or missing', () => {

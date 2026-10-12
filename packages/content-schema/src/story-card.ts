@@ -28,6 +28,33 @@ export function storyCardRarity(recommendedStage: number): Rarity {
   return 'rare';
 }
 
+// A web address: an optional scheme and `www.`, dot-separated labels ending in a
+// top-level domain, and an optional path. The fixed list of endings keeps
+// abbreviations such as "U.S." or "St." out of it.
+const ADDRESS = String.raw`(?:https?:\/\/)?(?:www\.)?(?:[a-z0-9-]+\.)+(?:kr|org|com|net|int|edu|gov|info)\b(?:\/[^\s,()]*)?`;
+
+/** Matches a web address anywhere in a text (the card's printed source line must not). */
+export const WEB_ADDRESS = new RegExp(ADDRESS, 'i');
+
+/**
+ * A source's publisher or title as a story card prints it (F-STORY-006 §3.8:
+ * never a URL on a learner surface): every web address dropped, with the
+ * separator or parentheses it leaves empty, and every name kept. So
+ * "국가유산청 (Korea Heritage Service, heritage.go.kr)" prints as
+ * "국가유산청 (Korea Heritage Service)". The grown-up Sources screen still
+ * shows the source exactly as stored, with its address.
+ */
+export function withoutWebAddresses(text: string): string {
+  return text
+    .replace(new RegExp(ADDRESS, 'gi'), '')
+    .replace(/\(\s*,\s*/g, '(')
+    .replace(/,\s*\)/g, ')')
+    .replace(/\s*\(\s*\)/g, '')
+    .replace(/\s+,/g, ',')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 /**
  * What the bundle keeps of a held story's card (F-STORY-006 §3.8 "Reviewed
  * only", rule 1, D3). A hold sets the story back to `draft`, so the story

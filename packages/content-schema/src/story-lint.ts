@@ -9,7 +9,7 @@ import {
   type StoryTier,
 } from './schemas/story';
 import { HANGUL, type StoryCheck } from './schemas/story-check';
-import { STORY_CARD_FACT_MAX_CHARS, STORY_CARD_MIN_SOURCES, storyCardId } from './story-card';
+import { STORY_CARD_FACT_MAX_CHARS, STORY_CARD_MIN_SOURCES, storyCardId, withoutWebAddresses } from './story-card';
 import { isAllowlistedHost, isAuthoritativeHost } from './story-sources';
 
 /**
@@ -828,6 +828,18 @@ function lintCard(story: Story, add: Add): void {
         at('facts', fi, 'sources'),
         `${fact.id} is the card fact and needs at least ${STORY_CARD_MIN_SOURCES} sources (has ${fact.sources.length})`,
       );
+    }
+    // The card prints its first source without web addresses; a name must be left to print.
+    const first = fact.sources[0];
+    for (const field of ['publisher', 'title'] as const) {
+      if (first && withoutWebAddresses(first[field]) === '') {
+        add(
+          'card-source-address-only',
+          'error',
+          at('facts', fi, 'sources', 0, field),
+          `${fact.id} is the card fact; its first source's ${field} is only a web address, which the card never prints: give the ${field} by name`,
+        );
+      }
     }
   }
   const expected = storyCardId(story.id);
