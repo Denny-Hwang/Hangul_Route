@@ -1,13 +1,14 @@
 import {
   ProgressSummarySchema,
   VocabSummarySchema,
+  type ActivitySummary,
   type ProgressSnapshot,
   type VocabItemState,
   type VocabProgress,
 } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { placementResult } from '../../placement/__tests__/fixtures';
-import { placementSummaryOf, planProgressOf, summarize, vocabSummaryOf } from '../summarize';
+import { letterSignalsOf, placementSummaryOf, planProgressOf, summarize, vocabSummaryOf } from '../summarize';
 
 const NOW = new Date('2026-09-21T12:00:00.000Z');
 const snap: ProgressSnapshot = {
@@ -183,6 +184,39 @@ describe('summarize: summary.routeGoal (Learning Route section 9, LR-6)', () => 
   it('leaves the key out when no goal is given (summarize stays pure)', () => {
     expect(summarize({ snapshot: snap, now: NOW, stage1QuestIds: ['q1'], questJamo: {} })).not.toHaveProperty('routeGoal');
     expect(summarize({ snapshot: snap, now: NOW, stage1QuestIds: ['q1'], questJamo: {}, routeGoal: undefined })).not.toHaveProperty('routeGoal');
+  });
+});
+
+describe('summarize: summary.activity (F-REPORT-001 section 3.3.4, RP-4)', () => {
+  const activity: ActivitySummary = {
+    v: 1,
+    tz: 540,
+    asOf: '2026-09-21',
+    days: [{ d: '2026-09-20', min: 15, q: 1, c: 0, w: 0, j: ['ㄱ'] }],
+    months: [{ m: '2026-09', min: 15, q: 1, c: 0, w: 0, days: 1 }],
+    total: { since: '2026-09-20', min: 15, q: 1, c: 0, w: 0, days: 1 },
+    milestones: [],
+    revisit: 'q2',
+  };
+
+  it('passes the activity input through unchanged, schemaVersion staying 1', () => {
+    const out = summarize({ snapshot: snap, now: NOW, stage1QuestIds: ['q1'], questJamo: {}, activity });
+    expect(out.activity).toEqual(activity);
+    expect(out.schemaVersion).toBe(1);
+    expect(ProgressSummarySchema.parse(out).activity).toEqual(activity);
+  });
+
+  it('leaves the key out when no activity is given (summarize stays pure)', () => {
+    expect(summarize({ snapshot: snap, now: NOW, stage1QuestIds: ['q1'], questJamo: {} })).not.toHaveProperty('activity');
+    expect(summarize({ snapshot: snap, now: NOW, stage1QuestIds: ['q1'], questJamo: {}, activity: undefined })).not.toHaveProperty('activity');
+  });
+});
+
+describe('letterSignalsOf', () => {
+  it('is the summary\'s own letter lists, so the report revisit and the summary never disagree', () => {
+    const questJamo = { q1: ['ㄱ', 'ㄴ'], q2: ['ㄴ', 'ㄷ'], stage2: ['ㅁ'] };
+    const out = summarize({ snapshot: snap, now: NOW, stage1QuestIds: ['q1', 'q2', 'q3'], questJamo });
+    expect(letterSignalsOf(snap, questJamo)).toEqual({ jamoRecognized: out.jamoRecognized, needsPractice: out.needsPractice });
   });
 });
 

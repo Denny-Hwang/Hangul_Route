@@ -31,6 +31,8 @@ export interface SummarizeInput {
   journey?: ProgressSummary['journey'];
   /** The Learning Route goal, computed by sync-store (Learning Route LR-6); left out when absent. */
   routeGoal?: ProgressSummary['routeGoal'];
+  /** The report activity, computed by sync-store (F-REPORT-001 RP-4, `buildActivity`); left out when absent. */
+  activity?: ProgressSummary['activity'];
 }
 
 /** done / total per plan from the plan-derived assignments, plus what was skipped. */
@@ -128,7 +130,34 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export const RECOGNIZED_ACCURACY = 0.8;
 export const PRACTICE_ACCURACY = 0.6;
 
-export function summarize({ snapshot, now, stage1QuestIds, questJamo, planNotReady, journey, routeGoal }: SummarizeInput): ProgressSummary {
+/**
+ * The letter signals of the summary: letters strong in a finished quest (best
+ * accuracy at least `RECOGNIZED_ACCURACY`) and up to three to practice (below
+ * `PRACTICE_ACCURACY` and not strong anywhere, topped up with the level
+ * check's priority symbols). The activity builder reads the same list for its
+ * revisit quest (F-REPORT-001 section 3.3.4 step 9), so the two never disagree.
+ */
+export function letterSignalsOf(
+  snapshot: Pick<ProgressSnapshot, 'quests' | 'placements'>,
+  questJamo: Readonly<Record<string, readonly string[]>>,
+): { jamoRecognized: string[]; needsPractice: string[] } {
+  const recognized = new Set<string>();
+  const shaky = new Set<string>();
+  for (const q of snapshot.quests) {
+    if (!q.completedAt) continue;
+    const jamo = questJamo[q.questId] ?? [];
+    if (q.accuracy >= RECOGNIZED_ACCURACY) jamo.forEach((j) => recognized.add(j));
+    else if (q.accuracy < PRACTICE_ACCURACY) jamo.forEach((j) => shaky.add(j));
+  }
+  // The level check's priority symbols make a new grown-up view meaningful;
+  // real practice data comes first and they fill what is left (F-PLC-001
+  // section 3.7, consumer 5).
+  const practiced = [...shaky].filter((j) => !recognized.has(j));
+  const seeded = prioritySymbols(snapshot.placements).filter((j) => !recognized.has(j));
+  return { jamoRecognized: [...recognized].sort(), needsPractice: [...new Set([...practiced, ...seeded])].slice(0, 3) };
+}
+
+export function summarize({ snapshot, now, stage1QuestIds, questJamo, planNotReady, journey, routeGoal, activity }: SummarizeInput): ProgressSummary {
   const completed = snapshot.quests.filter((q) => q.completedAt);
   const stage1Set = new Set(stage1QuestIds);
   const stage1Done = completed.filter((q) => stage1Set.has(q.questId));
@@ -140,19 +169,7 @@ export function summarize({ snapshot, now, stage1QuestIds, questJamo, planNotRea
     .filter((s) => new Date(s.startedAt).getTime() >= weekAgo)
     .reduce((sum, s) => sum + countedSeconds(s), 0);
 
-  const recognized = new Set<string>();
-  const shaky = new Set<string>();
-  for (const q of completed) {
-    const jamo = questJamo[q.questId] ?? [];
-    if (q.accuracy >= RECOGNIZED_ACCURACY) jamo.forEach((j) => recognized.add(j));
-    else if (q.accuracy < PRACTICE_ACCURACY) jamo.forEach((j) => shaky.add(j));
-  }
-  // The level check's priority symbols make a new grown-up view meaningful;
-  // real practice data comes first and they fill what is left (F-PLC-001
-  // section 3.7, consumer 5).
-  const practiced = [...shaky].filter((j) => !recognized.has(j));
-  const seeded = prioritySymbols(snapshot.placements).filter((j) => !recognized.has(j));
-  const needsPractice = [...new Set([...practiced, ...seeded])].slice(0, 3);
+  const { jamoRecognized, needsPractice } = letterSignalsOf(snapshot, questJamo);
 
   const placement = placementSummaryOf(snapshot.placements);
   const words = vocabOf(snapshot);
@@ -172,12 +189,13 @@ export function summarize({ snapshot, now, stage1QuestIds, questJamo, planNotRea
     },
     cardsUnlocked: snapshot.cards.length,
     minutesLast7d: Math.round(secondsLast7d / 60),
-    jamoRecognized: [...recognized].sort(),
+    jamoRecognized,
     needsPractice,
     planProgress: planProgressOf(snapshot, planNotReady),
     ...(placement ? { placement } : {}),
     ...(journey ? { journey } : {}),
     ...(routeGoal ? { routeGoal } : {}),
+    ...(activity ? { activity } : {}),
     // Omitted for a learner with no words, so their summary stays byte-identical (F-VOC-005 section 3.8).
     ...(words.items.length > 0 ? { vocab: vocabSummaryOf(words, localDay(now)) } : {}),
   };
