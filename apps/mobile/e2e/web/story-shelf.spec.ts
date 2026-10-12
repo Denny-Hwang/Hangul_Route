@@ -85,6 +85,40 @@ const tile = (page: Page): Locator => shown(page, `story-tile-${STORY}`);
 const bookmarksOf = (page: Page, id: string): Promise<StoredBookmarks | null> => readStored<StoredBookmarks>(page, `story:bookmarks:${id}`);
 const snapshotOf = (page: Page, id: string): Promise<StoredSnapshot | null> => readStored<StoredSnapshot>(page, `progress:${id}`);
 
+/**
+ * Elements under the visible `testId` that reach past the window's left or right edge. The page's
+ * Screen is a react-native-web ScrollView, which clips sideways overflow, so the document's own
+ * scrollWidth cannot see it; this reads every box instead. Elements inside a sideways scroller of
+ * their own (overflow-x auto or scroll) are skipped: scrolling sideways is that row's design.
+ */
+function outsideWindow(page: Page, testId: string): Promise<string[]> {
+  return shown(page, testId).evaluate((root) => {
+    const out: string[] = [];
+    const scrollsSideways = (el: Element): boolean => {
+      for (let p = el.parentElement; p && p !== root; p = p.parentElement) {
+        const x = getComputedStyle(p).overflowX;
+        if (x === 'auto' || x === 'scroll') return true;
+      }
+      return false;
+    };
+    for (const el of Array.from(root.querySelectorAll('*'))) {
+      const r = el.getBoundingClientRect();
+      if (r.width <= 1 || r.height <= 1) continue;
+      if (r.left >= -1 && r.right <= window.innerWidth + 1) continue;
+      if (scrollsSideways(el)) continue;
+      out.push(`${el.getAttribute('data-testid') ?? el.tagName.toLowerCase()} [${Math.round(r.left)}, ${Math.round(r.right)}]`);
+    }
+    return out;
+  });
+}
+
+/** The left edge and width of the visible `testId`. */
+async function boxOf(page: Page, testId: string): Promise<{ x: number; width: number; height: number }> {
+  const box = await shown(page, testId).boundingBox();
+  expect(box, testId).not.toBeNull();
+  return { x: box?.x ?? 0, width: box?.width ?? 0, height: box?.height ?? 0 };
+}
+
 function events(page: Page, name: string): Promise<Array<Record<string, unknown> | undefined>> {
   return page.evaluate(
     (n) => ((window as E2eWindow).__hrStoryE2E?.events() ?? []).filter((e) => e.name === n).map((e) => e.payload),
@@ -148,6 +182,8 @@ test.describe('story shelf (fixture bundle)', () => {
     // old "Story time" label on a lesson episode is gone.
     await expect(missionCards(page)).toHaveCount(3);
     await expect(missionCards(page).first()).toHaveAccessibleName('Hangul Day. A short story.');
+    // Slot 2 is the Journey cursor, which comes from the grid alone: never the shelf quest (§3.14 rows 1, 9).
+    await expect(missionCards(page).nth(1)).toHaveAccessibleName('Meet a, eo, g, n. Something new today.');
     await expect(missionCards(page).nth(2)).toHaveAccessibleName('Meet the Letters. Take a look.');
     await expect(page.getByTestId('home-missions').locator('[data-testid^="home-mission-cover-"]')).toHaveCount(1);
     await expect(page.getByTestId('home-missions')).not.toContainText('Story time');
@@ -213,7 +249,23 @@ test.describe('story shelf (fixture bundle)', () => {
     const group = shown(page, 'culture-notes-group-letters');
     await expect(group).toContainText('Letters & Books');
     await expect(group.getByTestId(`culture-note-${NOTE}`)).toBeVisible();
-    await expect(shown(page, `culture-note-story-${NOTE}`)).toContainText('Hangul Day');
+    await expect(shown(page, `culture-note-story-${NOTE}`)).toContainText('From the story: Hangul Day');
+    // "Where this comes from": closed at first; open, it lists the sources as plain text (no links).
+    const sources = shown(page, `culture-note-sources-${NOTE}`);
+    await expect(sources).toHaveAttribute('aria-expanded', 'false');
+    await expect(shown(page, `culture-note-source-list-${NOTE}`)).toHaveCount(0);
+    await sources.click();
+    await expect(sources).toHaveAttribute('aria-expanded', 'true');
+    const sourceList = shown(page, `culture-note-source-list-${NOTE}`);
+    await expect(sourceList).toBeVisible();
+    expect((await sourceList.innerText()).trim().length).toBeGreaterThan(0);
+    await expect(sourceList.locator('a[href]')).toHaveCount(0);
+    // "From the story" opens that story's episode page.
+    await shown(page, `culture-note-story-${NOTE}`).click();
+    await expect(shown(page, 'story-episode-title')).toHaveText('Hangul Day');
+    await expect(shown(page, `story-episode-state-${STORY}`)).toHaveText('Finished');
+    await page.getByLabel('Go back').filter({ visible: true }).first().click();
+    await expect(shown(page, 'culture-notes-count')).toHaveText('1 found');
 
     // Story Time: the tile says Finished with its stars; the hero offers Read it again.
     await shown(page, 'culture-notes-back').click();
@@ -227,10 +279,11 @@ test.describe('story shelf (fixture bundle)', () => {
   });
 
   // Known bug, booked as F-STORY-004 PR 4.8c: Home pins the day's plan in a ref inside HomeScreen, and
-  // Results' Back home resets the stack to Main, which mounts Home again. The pin is lost and the plan
-  // is built again, so the finished story's slot turns into an "again" card ("Read it again") instead
-  // of keeping its story with the collected look (§3.7 "Pinned all day", F-HW-001 §3.2). Remove the
-  // fixme when 4.8c lands.
+  // Results' Back home resets the stack to Main after every quest, which mounts Home again. The pin is
+  // lost and the plan is built again, so the finished story's slot turns into an "again" card ("Read it
+  // again") instead of keeping its story with the collected look (§3.7 "Pinned all day", F-HW-001 §3.2).
+  // Grid cards lose their pin the same way; 4.8c fixes both and adds the grid check on the regular
+  // build. Remove the fixme when 4.8c lands.
   test.fixme('Back home after finishing the Home story card: the slot keeps "A short story", collected', async ({ page }) => {
     const id = await onboard(page);
     await expect(storyCard(page)).toHaveAccessibleName('Hangul Day. A short story.');
@@ -277,6 +330,7 @@ test.describe('story shelf (fixture bundle)', () => {
     await expect(hero).toContainText('about 4 min');
     await expect(shown(page, 'library-hero-cta')).toHaveText('Start');
     await expect(shown(page, 'library-hero-cta')).toHaveAccessibleName('Start: Hangul Day');
+    expect((await boxOf(page, 'library-hero-cta')).height).toBeGreaterThanOrEqual(64);
     await expect(shown(page, 'library-shelf-story-time-grid').getByRole('button')).toHaveCount(1);
     await expect(tile(page)).toHaveAccessibleName('Hangul Day. New. About 4 minutes.');
     const tileBox = await tile(page).boundingBox();
@@ -356,7 +410,7 @@ test.describe('story shelf (fixture bundle)', () => {
     await expect(shown(page, 'story-episode-cards').locator(`[data-testid="story-episode-card-${REWARD_CARD}"]`)).toHaveCount(1);
     await expect(shown(page, 'story-episode-cards').getByRole('button')).toHaveCount(0);
 
-    // In progress: Keep reading resumes; Start over clears the bookmark and opens the intro.
+    // In progress: Keep reading resumes on the saved scene, with the intro skipped.
     await seedSceneThree(page, id);
     await openLibrary(page);
     await openSection(page, 'Story Time');
@@ -364,6 +418,19 @@ test.describe('story shelf (fixture bundle)', () => {
     await expect(shown(page, `story-episode-state-${STORY}`)).toHaveText('Keep reading');
     await expect(shown(page, `story-episode-continue-${STORY}`)).toHaveText('Keep reading');
     await expect(shown(page, `story-episode-restart-${STORY}`)).toHaveText('Start over');
+    await shown(page, `story-episode-continue-${STORY}`).click();
+    await expect(stepHeading(page, 'Read the story')).toBeVisible();
+    await expect(stepHeading(page, 'Story time')).toHaveCount(0);
+    expect(await events(page, 'story.opened')).toEqual([{ storyId: STORY, source: 'episode', mode: 'continue' }]);
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await expect(position(page)).toHaveText('3 / 5');
+
+    // Start over clears the bookmark and opens the intro. (The app loads again, so the event buffer is new.)
+    await reloadHome(page);
+    await expect.poll(async () => (await bookmarksOf(page, id))?.byStory[STORY]).toMatchObject({ level: 'listen', sceneIndex: 2 });
+    await openLibrary(page);
+    await openSection(page, 'Story Time');
+    await tile(page).click();
     await shown(page, `story-episode-restart-${STORY}`).click();
     await expect(stepHeading(page, 'Story time')).toBeVisible();
     await expect.poll(async () => (await bookmarksOf(page, id))?.byStory).toEqual({});
@@ -412,6 +479,28 @@ test.describe('story shelf (fixture bundle)', () => {
     await shown(page, `story-episode-read-again-${STORY}`).click();
     await expect(page.getByTestId('story-reader-next')).toBeVisible();
     expect((await events(page, 'story.opened')).at(-1)).toEqual({ storyId: STORY, source: 'episode', mode: 'read-again' });
+
+    // The earned card opens its Card detail. (That screen's close control has no label to find it by,
+    // so the app loads again to leave it.)
+    await reloadHome(page);
+    await openLibrary(page);
+    await openSection(page, 'Story Time');
+    await tile(page).click();
+    await shown(page, `story-episode-card-${REWARD_CARD}`).click();
+    await expect(page.getByRole('heading', { name: 'Hanji Paper', exact: true }).filter({ visible: true })).toBeVisible();
+    await expect(shown(page, 'card-detail-hear')).toBeVisible();
+
+    // Play again: the scored quest from its intro (the app loads again, so the event buffer is new).
+    await reloadHome(page);
+    await openLibrary(page);
+    await openSection(page, 'Story Time');
+    await tile(page).click();
+    await shown(page, `story-episode-play-again-${STORY}`).click();
+    await expect(stepHeading(page, 'Story time')).toBeVisible();
+    expect(await events(page, 'story.opened')).toEqual([{ storyId: STORY, source: 'episode', mode: 'play-again' }]);
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await expect(position(page)).toHaveText('1 / 5');
   });
 
   // A guard on the default build's copy: it proves no story surface draws lock or Premium copy with
@@ -437,6 +526,9 @@ test.describe('story shelf (fixture bundle)', () => {
     await expect(tile(page)).toBeVisible();
     await tile(page).click();
     await expect(shown(page, 'story-episode-title')).toHaveText('Hangul Day');
+    // The tap opened the episode page: no lock event and no grown-up PIN screen.
+    expect(await events(page, 'story.locked.tapped')).toEqual([]);
+    await expect(page.getByRole('button', { name: 'Unlock', exact: true }).filter({ visible: true })).toHaveCount(0);
     surfaces.push(['episode page', await shown(page, 'story-episode').innerText()]);
 
     for (const [name, text] of surfaces) {
@@ -461,11 +553,26 @@ test.describe('story shelf (fixture bundle)', () => {
       await openSection(page, 'Story Time');
       await expect(tile(page)).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-      // The tile, the hero (side by side from three columns) and its button all lie inside the window.
+      // The tile, the hero and its button all lie inside the window, and nothing in Story Time reaches past it.
       for (const testId of [`story-tile-${STORY}`, 'library-hero', 'library-hero-cta']) {
-        const box = await shown(page, testId).boundingBox();
-        expect(box, testId).not.toBeNull();
-        expect((box?.x ?? -1) >= 0 && (box?.x ?? 0) + (box?.width ?? 0) <= vp.width + 0.5, testId).toBe(true);
+        const box = await boxOf(page, testId);
+        expect(box.x >= 0 && box.x + box.width <= vp.width + 0.5, testId).toBe(true);
+      }
+      expect(await outsideWindow(page, 'library-shelf-story-time'), 'Story Time').toEqual([]);
+      // §3.4 columns: 1 under 360, 2 up to 767, 3 or 4 from 768 (the one tile is one cell of the grid).
+      const columns = vp.width < 360 ? 1 : vp.width < 768 ? 2 : vp.width < 1024 ? 3 : 4;
+      const share = (await boxOf(page, `story-tile-${STORY}`)).width / (await boxOf(page, 'library-shelf-story-time-grid')).width;
+      const [least, most] = columns === 1 ? [0.95, 1.01] : columns === 2 ? [0.4, 0.55] : [0.15, 0.34];
+      expect(share, `${columns} column(s)`).toBeGreaterThan(least);
+      expect(share, `${columns} column(s)`).toBeLessThanOrEqual(most);
+      // The hero: cover and text side by side from three columns, stacked below that.
+      const hero = await boxOf(page, 'library-hero');
+      const cta = await boxOf(page, 'library-hero-cta');
+      if (columns >= 3) {
+        expect(cta.x, 'hero side by side: the button sits right of the cover').toBeGreaterThan(hero.x + hero.width * 0.2);
+        expect(cta.width, 'hero side by side: the button is not full width').toBeLessThan(hero.width * 0.6);
+      } else {
+        expect(cta.width, 'hero stacked: a full-width button').toBeGreaterThan(hero.width * 0.8);
       }
       await page.screenshot({ path: `test-results/story-shelf-${vp.width}x${vp.height}.png`, fullPage: true });
 
@@ -473,6 +580,7 @@ test.describe('story shelf (fixture bundle)', () => {
       await tile(page).click();
       await expect(shown(page, `story-episode-start-${STORY}`)).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'episode page').toBe(true);
+      expect(await outsideWindow(page, 'story-episode'), 'episode page').toEqual([]);
       const start = await shown(page, `story-episode-start-${STORY}`).boundingBox();
       expect((start?.x ?? -1) >= 0 && (start?.x ?? 0) + (start?.width ?? 0) <= vp.width + 0.5, 'Start').toBe(true);
       await page.getByLabel('Go back').filter({ visible: true }).first().click();
@@ -480,6 +588,7 @@ test.describe('story shelf (fixture bundle)', () => {
       await shown(page, 'library-culture-notes').click();
       await expect(shown(page, 'culture-notes-empty')).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'Culture notes').toBe(true);
+      expect(await outsideWindow(page, 'culture-notes'), 'Culture notes').toEqual([]);
     });
   }
 });
