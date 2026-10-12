@@ -280,6 +280,44 @@ describe('cold start: account, tier cache and spaces before the first derivation
     expect(useAccountStore.getState().hydrated).toBe(true);
   });
 
+  it('a hydrate that fails still waits for every other one, the account (PIN hash) included, then passes the failure on', async () => {
+    mem.set('profiles', [profile('profile:a', 'Suni')]);
+    mem.set('account:subscription', { status: 'active', plan: 'yearly', expiresAt: '2027-01-01T00:00:00.000Z' });
+    let releaseAccount: () => void = () => undefined;
+    const accountRead = new Promise<void>((resolve) => (releaseAccount = resolve));
+    vi.mocked(readJson).mockImplementation(async (k: string) => {
+      if (k === 'account:subscription') await accountRead;
+      return (mem.get(k) ?? null) as never;
+    });
+    const original = useAudioStore.getState().hydrate;
+    const failure = new Error('disk');
+    useAudioStore.setState({
+      hydrate: async () => {
+        throw failure;
+      },
+    });
+    try {
+      let settled = false;
+      const started = hydrateLearnerData().then(
+        () => {
+          settled = true;
+          return null;
+        },
+        (error: unknown) => {
+          settled = true;
+          return error;
+        },
+      );
+      await new Promise((r) => setTimeout(r, 0));
+      expect(settled).toBe(false);
+      releaseAccount();
+      expect(await started).toBe(failure);
+      expect(useAccountStore.getState()).toMatchObject({ hydrated: true, subscription: { plan: 'yearly' } });
+    } finally {
+      useAudioStore.setState({ hydrate: original });
+    }
+  });
+
   it('a premium-via-space learner offline for ten days keeps every plan item after the first derivation', async () => {
     mem.set('profiles', [profile('profile:a', 'Suni')]);
     mem.set('tier:profile:a', { tier: 'premium', source: { kind: 'class', spaceId: 'space:c', name: 'Sunday Class A' }, validUntil: '2026-01-01T00:00:00.000Z', fetchedAt: 't' });

@@ -40,7 +40,9 @@ export async function hydrateLearnerData(): Promise<void> {
   const stories = useStoryStore.getState();
   const tiers = useTierStore.getState();
   const memberships = useMembershipStore.getState();
-  await Promise.all([
+  // Every hydrate finishes before this settles, even when one fails, so `ready`
+  // never comes while another read (the account's PIN hash) is still pending.
+  const results = await Promise.allSettled([
     useAudioStore.getState().hydrate(),
     useLayoutStore.getState().hydrate(),
     useLocaleStore.getState().hydrate(profiles.map((p) => p.id)),
@@ -50,4 +52,6 @@ export async function hydrateLearnerData(): Promise<void> {
     ...profiles.map((p) => tiers.hydrate(p.id)),
     ...profiles.map((p) => memberships.hydrate(p.id)),
   ]);
+  const failed = results.find((r): r is PromiseRejectedResult => r.status === 'rejected');
+  if (failed) throw failed.reason;
 }
