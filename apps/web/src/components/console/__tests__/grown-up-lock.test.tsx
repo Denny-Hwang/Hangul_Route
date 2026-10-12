@@ -384,6 +384,7 @@ describe('GrownUpLockScreen (wireframe Panels A and B)', () => {
     const html = screen({ state: 'locked', pinPath: true, line: 'default' });
     expect(html).toMatch(/<section role="region" aria-labelledby="grown-up-lock-title"/);
     expect(html).toMatch(/<h1 id="grown-up-lock-title" tabindex="-1"[^>]*>Grown-ups only<\/h1>/i);
+    expect(html).toMatch(/<h1[^>]*style="[^"]*outline:none/);
     expect(text(html)).not.toMatch(/\d/);
     expect(html).not.toMatch(/role="timer"|aria-live/);
   });

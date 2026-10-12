@@ -267,7 +267,8 @@ function LockButton({ tone, onClick, testId, children }: { tone: keyof typeof TO
 
 /**
  * Panel A (PIN path available) and Panel B (sign-in only). No frame navigation, no name, no
- * number, no countdown; the same single column at every width. Focus moves to the heading.
+ * number, no countdown; the same single column at every width. Focus moves to the heading (a
+ * reading start point for screen readers, not a control, so it draws no focus ring).
  */
 export function GrownUpLockScreen({ decision, onUsePin, onSignInAgain, onBackToLearning }: LockHandlers & { decision: LockedDecision }): JSX.Element {
   const lock = useMessages().console.lock;
@@ -285,7 +286,7 @@ export function GrownUpLockScreen({ decision, onUsePin, onSignInAgain, onBackToL
         </LockButton>
         <section role="region" aria-labelledby={TITLE_ID} data-testid="grown-up-lock" style={sectionStyle}>
           <IconSvg name="lock" size={spacing.xxxl} color={colors.text.secondary} />
-          <h1 id={TITLE_ID} tabIndex={-1} ref={headingRef} style={{ margin: 0, fontSize: typography.size.title, fontWeight: typography.weight.bold, lineHeight: typography.leading.tight }}>
+          <h1 id={TITLE_ID} tabIndex={-1} ref={headingRef} style={{ margin: 0, fontSize: typography.size.title, fontWeight: typography.weight.bold, lineHeight: typography.leading.tight, outline: 'none' }}>
             {lock.title}
           </h1>
           <p style={{ margin: 0, marginBottom: spacing.sm, fontSize: typography.size.body, lineHeight: typography.leading.relaxed, color: colors.text.secondary }}>{line}</p>
