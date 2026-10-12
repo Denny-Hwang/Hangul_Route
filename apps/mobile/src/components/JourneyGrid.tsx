@@ -15,7 +15,7 @@ import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useMessages } from '../i18n/use-messages';
 import { stagePillLabel, themeCellInitial, themeColumnLabel } from '../logic/journey';
-import { cellLabel, countMarkOf } from '../logic/journey-cells';
+import { cellLabel, cellTestId, countMarkOf } from '../logic/journey-cells';
 import { journeyGridRows, type JourneyCellView, type JourneyMarksOf } from '../logic/journey-grid';
 import { journeyGridMaxWidth } from '../logic/layout/pane-sizes';
 import type { StoryIndexEntry } from '../logic/story/story-index';
@@ -33,6 +33,8 @@ import type { StoryIndexEntry } from '../logic/story/story-index';
 const MARK_SIZE = spacing.lg;
 /** The story count mark: a 20 dp circle in the top-right corner (F-STORY-005 §3.6). */
 const COUNT_MARK = spacing.lg + spacing.xs;
+/** The glyph a stories-only or not-yet-open cell draws in place of its letter (books, lock). */
+const CELL_GLYPH = spacing.lg + spacing.xs;
 const STAGE_RING = 32;
 
 export interface JourneyGridProps {
@@ -204,15 +206,7 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories }: GridC
       accessibilityRole="button"
       aria-selected={paneMode && !storiesOnly ? cell.selected : undefined}
       accessibilityLabel={cellLabel(model, stage, theme, messages.a11y.journeyCell, cell.marks)}
-      testID={
-        isStart
-          ? 'journey-cell-start'
-          : placedOut
-            ? 'journey-cell-placed-out'
-            : storiesOnly
-              ? `journey-cell-stories-${cell.stage}-${cell.theme}`
-              : undefined
-      }
+      testID={cellTestId(model.kind, cell.stage, cell.theme, cell.marks)}
       style={{
         flex: 1,
         aspectRatio: 1,
@@ -233,9 +227,9 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories }: GridC
       }}
     >
       {storiesOnly ? (
-        <Icon name="library" size={20} color={colors.text.secondary} />
+        <Icon name="library" size={CELL_GLYPH} color={colors.text.secondary} />
       ) : isLater ? (
-        <Icon name="lock" size={20} color={colors.text.muted} />
+        <Icon name="lock" size={CELL_GLYPH} color={colors.text.muted} />
       ) : (
         <Text style={{ fontSize: typography.size.title, fontWeight: '700', color: colors.text.primary }}>{themeCellInitial(theme)}</Text>
       )}

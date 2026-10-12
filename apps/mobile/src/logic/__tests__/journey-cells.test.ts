@@ -3,7 +3,7 @@ import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { stages, themes } from '../../content';
 import { scanLearnerCopy } from '../homework/banned-text';
-import { COUNT_MARK_MAX, cellLabel, cellModel, countMarkOf, type CellModel } from '../journey-cells';
+import { COUNT_MARK_MAX, cellLabel, cellModel, cellTestId, countMarkOf, type CellModel } from '../journey-cells';
 import { NO_CELL_MARKS } from '../journey-grid';
 import { buildStoryIndex } from '../story/story-index';
 import { bookEpisode, questId, shelfEpisode, shelfIndex, story, storyQuest, unreviewed } from '../story/__tests__/shelf-fixture';
@@ -193,5 +193,22 @@ describe('cellLabel', () => {
     expect(labels).toHaveLength(70);
     expect(scanLearnerCopy(labels)).toEqual([]);
     for (const l of labels) expect(l).not.toMatch(/stage\d|episode for/);
+  });
+});
+
+describe('cellTestId (F-STORY-005 PR 5.5a review)', () => {
+  const marks = { completed: false, placedOut: false, isStart: false };
+
+  it('a stories-only cell keeps its stories id even when it is also the start or a placed-out cell', () => {
+    expect(cellTestId('stories-only', 'stage2', 'letters', { ...marks, isStart: true })).toBe('journey-cell-stories-stage2-letters');
+    expect(cellTestId('stories-only', 'stage2', 'letters', { ...marks, placedOut: true })).toBe('journey-cell-stories-stage2-letters');
+    expect(cellTestId('stories-only', 'stage3', 'rites', marks)).toBe('journey-cell-stories-stage3-rites');
+  });
+
+  it('other cells keep the start, then the placed-out id, and no id otherwise', () => {
+    expect(cellTestId('lesson', 'stage1', 'letters', { ...marks, isStart: true, placedOut: true })).toBe('journey-cell-start');
+    expect(cellTestId('lesson', 'stage1', 'letters', { ...marks, placedOut: true })).toBe('journey-cell-placed-out');
+    expect(cellTestId('book', 'stage5', 'crafts', marks)).toBeUndefined();
+    expect(cellTestId('placeholder', 'stage4', 'life', marks)).toBeUndefined();
   });
 });
