@@ -1,5 +1,6 @@
 import type { LearnerMembership } from '@hangul-route/content-schema';
 import { create } from 'zustand';
+import { flags } from '../config/flags';
 import { routeGoalInputsChanged } from '../logic/my-route/summary';
 import type { JoinErrorCode } from '../logic/spaces/join-code';
 import type { RestorePlan } from '../logic/sync/restore';
@@ -7,6 +8,7 @@ import { getDeviceId } from '../platform/device';
 import { readJson, writeJson } from '../platform/storage';
 import type { DeviceCredentials, RosterName, SyncApiClient } from '../platform/sync-api';
 import { track } from '../platform/telemetry';
+import { useNotesStore } from './notes-store';
 import { usePlanStore } from './plan-store';
 import { useProfileStore } from './profile-store';
 import { useTierStore } from './tier-store';
@@ -91,6 +93,8 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       if (!client) return offline();
       const creds = await credentialsFor(learnerId, false);
       if (!creds) return offline();
+      // Queued note reads, reactions and reports go first, so this inbox already reflects them (F-FEEDBACK-001 section 6.9).
+      if (flags.notesEnabled) await useNotesStore.getState().flush(learnerId, client, creds);
       const result = await client.getInbox(learnerId, creds);
       if (result.status !== 'ok') return offline();
       const rows = put(learnerId, result.inbox.memberships);
@@ -101,6 +105,8 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       const applied = await usePlanStore.getState().applyPlans(learnerId, result.inbox.plans);
       // A plan change that moves only the Learning Route goal (or the first inbox, before which the goal is left out) is sent too.
       if (applied.changed || routeGoalInputsChanged(before, result.inbox.plans)) useSyncStore.getState().requestSync(learnerId);
+      // Notes from grown-ups ride the same inbox, which is authoritative for which notes exist.
+      if (flags.notesEnabled) await useNotesStore.getState().applyInbox(learnerId, { notes: result.inbox.notes, notePrefs: result.inbox.notePrefs });
       return rows;
     },
 
