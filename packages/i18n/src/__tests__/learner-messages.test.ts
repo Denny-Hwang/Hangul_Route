@@ -104,12 +104,13 @@ describe('learner.profile (English wording as shipped)', () => {
 
   it('keeps the sound and plan cards', () => {
     expect([p.sound.label, p.sound.on, p.sound.off]).toEqual(['Sound', 'On', 'Off']);
-    expect(p.plan.premium).toBe('Premium');
+    // F-BILL-002 B-9 (§6.3): Full route / Everything is open / Plan details replaced Premium, unlocked and Unlock the journey.
     expect(p.plan.free).toBe('Free plan');
-    expect(p.plan.unlocked(null)).toBe('The full journey is unlocked.');
-    expect(p.plan.unlocked('Mrs. Kim')).toBe('The full journey is unlocked — covered by Mrs. Kim.');
+    expect(p.plan.fullRoute).toBe('Full route');
+    expect(p.plan.open(null)).toBe('Everything is open.');
     expect(p.plan.freeNote).toBe('Stage 1 is free. More stages are on the way.');
-    expect([p.plan.pillActive, p.plan.pillFree, p.plan.unlock]).toEqual(['Active', 'Free', 'Unlock the journey']);
+    expect([p.plan.pillActive, p.plan.pillFree, p.plan.details.cta]).toEqual(['Active', 'Free', 'Plan details']);
+    for (const gone of ['premium', 'unlocked', 'unlock']) expect(gone in p.plan, gone).toBe(false);
     expect([p.install.label, p.install.a11yLabel]).toEqual(['Install on this device', 'Install Hangul Route on this device']);
   });
 

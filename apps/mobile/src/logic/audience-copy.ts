@@ -34,9 +34,6 @@ export interface AudienceCopy {
   joinCodeFull: string;
   /** A code that is not a class code was entered. */
   joinCodeNotForLearners: string;
-  promoHint: string;
-  paywallBuyOnWeb: string;
-  paywallBuyLater: string;
   profileSwitchHint: string;
   /** Label of the account and backup section. */
   zoneLabel: string;

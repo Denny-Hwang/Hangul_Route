@@ -54,10 +54,8 @@ describe('audienceCopy: neutral strings for both audiences (F-LEARN-001 §3.9)',
         expect(c.joinCodeFull).toBe("You're already in three classes. Leave one under Classes & family in your Profile first.");
         expect(c.joinCodeNotForLearners).toBe("That code isn't for joining as a learner. Ask for a class code.");
       });
-      it('paywall', () => {
-        expect(c.promoHint).toBe('Have a promo or referral code? Enter it on the web console.');
-        expect(c.paywallBuyOnWeb.startsWith('Buy it on the web console')).toBe(true);
-        expect(c.paywallBuyLater.endsWith('you can buy it on the web console.')).toBe(true);
+      it('has no paywall lines: the learner Plan screen shows no purchase path (F-BILL-002 B-9, §6.4)', () => {
+        for (const gone of ['promoHint', 'paywallBuyOnWeb', 'paywallBuyLater']) expect(gone in c, gone).toBe(false);
       });
       it('profile switcher', () => {
         expect(c.profileSwitchHint).toBe('Tap a profile to switch.');
@@ -180,7 +178,6 @@ describe('the audience-free lines logic modules use come from the message subtre
       const c = audienceCopy(audience);
       expect(c.joinCodeFull).toBe(enAudience.shared.joinCodeFull);
       expect(c.joinCodeNotForLearners).toBe(enAudience.shared.joinCodeNotForLearners);
-      expect(c.promoHint).toBe(enAudience.shared.promoHint);
       expect(c.restoreCardsBack).toBe(enAudience.shared.restoreCardsBack);
     }
   });

@@ -21,6 +21,7 @@ import { Pressable, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { flags } from '../../config/flags';
 import { placementEntriesOn } from '../../logic/placement/entry';
+import { planCardView } from '../../logic/paywall';
 import { effectiveTier } from '../../store/tier-store';
 import { isParentSessionValid } from '../../logic/profiles/session';
 import type { RootStackParamList } from '../../navigation/types';
@@ -50,7 +51,7 @@ export function ProfileScreen(): React.ReactElement {
   const snap = useProgressStore((s) => (active ? s.byProfile[active.id] : undefined));
   const cachedTier = useTierStore((s) => (active ? s.byLearner[active.id] : undefined));
   const entitled = effectiveTier(active?.id ?? '', new Date());
-  const tier = entitled.tier;
+  const card = planCardView(entitled.tier, entitled.source, t.plan);
   void cachedTier; // subscribe so the card re-renders when the inbox updates the tier
   // Mute is a persisted device preference (F-AUDIO-004 AD7); the switch shows its inverse.
   const soundOn = useAudioStore((s) => !s.muted);
@@ -73,7 +74,7 @@ export function ProfileScreen(): React.ReactElement {
     Date.now(),
   );
   const openGrownUps = (
-    next: 'ParentDashboard' | 'AddProfile' | 'Restore' | 'SaveProgress' | 'Paywall' | 'EditProfile',
+    next: 'ParentDashboard' | 'AddProfile' | 'Restore' | 'SaveProgress' | 'EditProfile',
     profileId?: string,
   ): void => {
     if (opensDirectly(parentSessionOpen)) {
@@ -85,8 +86,6 @@ export function ProfileScreen(): React.ReactElement {
         navigation.navigate('Restore', { from: 'settings' });
       } else if (next === 'SaveProgress') {
         navigation.navigate('SaveProgress');
-      } else if (next === 'Paywall') {
-        navigation.navigate('Paywall', { from: 'settings' });
       } else {
         navigation.navigate('ParentDashboard');
       }
@@ -244,28 +243,17 @@ export function ProfileScreen(): React.ReactElement {
       ) : null}
 
       <Spacer size="lg" />
-      <Card padding="md" tone={tier === 'premium' ? 'success' : 'sunken'}>
+      {/* The plan card (F-BILL-002 §4.7, §6.3; mock design/screens/billing/plan-status.md): every tier opens the Plan screen, no PIN. */}
+      <Card padding="md" tone={card.tone === 'success' ? 'success' : 'sunken'}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>
           <View style={{ flex: 1 }}>
-            <Body weight="semibold">{tier === 'premium' ? t.plan.premium : t.plan.free}</Body>
-            <Caption tone="muted">
-              {tier === 'premium'
-                ? t.plan.unlocked(entitled.source?.name ?? null)
-                : t.plan.freeNote}
-            </Caption>
+            <Body weight="semibold">{card.title}</Body>
+            <Caption tone="muted">{card.note}</Caption>
           </View>
-          <Pill
-            tone={tier === 'premium' ? 'success' : 'neutral'}
-            label={tier === 'premium' ? t.plan.pillActive : t.plan.pillFree}
-            size="sm"
-          />
+          <Pill tone={card.tone} label={card.pill} size="sm" />
         </View>
-        {tier !== 'premium' ? (
-          <>
-            <Spacer size="sm" />
-            <Button label={t.plan.unlock} tone="secondary" size="md" accessibilityLabel={copy.gatedA11y(t.plan.unlock, pinSet)} onPress={() => openGrownUps('Paywall')} />
-          </>
-        ) : null}
+        <Spacer size="sm" />
+        <Button label={card.cta} tone="secondary" size="md" onPress={() => navigation.navigate('Paywall', { from: 'settings' })} />
       </Card>
 
       <Spacer size="lg" />

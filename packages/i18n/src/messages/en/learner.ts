@@ -75,15 +75,11 @@ export const learner = {
     stats: { quests: 'Quests done', cards: 'Cards', threeStar: '3-star quests' },
     sound: { label: 'Sound', on: 'On', off: 'Off' },
     plan: {
-      premium: 'Premium',
       free: 'Free plan',
-      unlocked: (sponsor: string | null) =>
-        sponsor === null ? 'The full journey is unlocked.' : `The full journey is unlocked — covered by ${sponsor}.`,
       freeNote: 'Stage 1 is free. More stages are on the way.',
       pillActive: 'Active',
       pillFree: 'Free',
-      unlock: 'Unlock the journey',
-      /** F-BILL-002 B-6 (§6.3): the card's words for every tier; B-9 drops premium / unlocked / unlock. */
+      /** F-BILL-002 B-6 (§6.3): the card's words for every tier (B-9 removed Premium, unlocked and Unlock the journey). */
       fullRoute: 'Full route',
       open: (source: string | null) => (source === null || source.trim() === '' ? 'Everything is open.' : `Everything is open, from ${source}.`),
       details: { cta: 'Plan details' },

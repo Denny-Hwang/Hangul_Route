@@ -144,6 +144,9 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       navigation.replace('SaveProgress');
     } else if (route.params.next === 'Paywall') {
       navigation.replace('Paywall', { from: route.params.from ?? 'journey' });
+    } else if (route.params.next === 'Billing') {
+      // Back to the Plan screen with the gate open: it opens Billing for the press that waited (F-BILL-002 §4.7).
+      navigation.goBack();
     } else if (route.params.next === 'EditProfile') {
       const { profileId } = route.params;
       if (profileId === undefined) navigation.goBack();

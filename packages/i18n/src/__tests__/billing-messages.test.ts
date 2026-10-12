@@ -819,3 +819,37 @@ describe('learner-reachable words (§4.7, §4.8, §6.5)', () => {
     }
   });
 });
+
+/** F-BILL-002 B-9 (§6.4): the price-bearing paywall's keys are deleted with their es / ko entries; two move to `caregiver.plan`. */
+const REMOVED_IN_B9 = [
+  'caregiver.paywall',
+  'caregiver.audience.shared.paywallBuyOnWeb',
+  'caregiver.audience.shared.paywallBuyLater',
+  'caregiver.audience.shared.promoHint',
+  'a11y.familyOffer',
+  'learner.profile.plan.premium',
+  'learner.profile.plan.unlocked',
+  'learner.profile.plan.unlock',
+];
+
+describe('keys removed in B-9 (§6.4)', () => {
+  it('are gone from every locale', () => {
+    for (const locale of LOCALES) {
+      for (const path of REMOVED_IN_B9) expect(lookup(getMessages(locale), path), `${locale}:${path}`).toBeUndefined();
+    }
+    for (const [name, overlay] of Object.entries({ es, ko })) {
+      for (const path of REMOVED_IN_B9) expect(lookup(overlay, path), `${name}:${path}`).toBeUndefined();
+    }
+  });
+
+  it('the two kept lines live on under caregiver.plan with the same English', () => {
+    expect(en.caregiver.plan.learnerFallback).toBe('Your learner');
+    expect(en.caregiver.plan.free.open).toBe('Stage 1 is always free.');
+  });
+
+  it('nothing in the samples table still names a removed key', () => {
+    for (const path of Object.keys(SAMPLES)) {
+      for (const gone of REMOVED_IN_B9) expect(path === gone || path.startsWith(`${gone}.`), path).toBe(false);
+    }
+  });
+});
