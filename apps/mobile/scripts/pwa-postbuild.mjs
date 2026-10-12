@@ -26,6 +26,7 @@ import {
   grownUpNavigationRule,
   renderGrownUpsOffline,
 } from './pwa/grown-ups.mjs';
+import { assertPresenterFontPrecached, presenterFontFace } from './pwa/presenter-font.mjs';
 
 const dist = process.argv[2] ?? 'dist';
 
@@ -74,7 +75,7 @@ const head = `
     #trace-canvas { touch-action: none; }
     /* NEVER add a max-width / border rule on #root here (F-LAYOUT-001 LD3): the content width
        is capped inside Screen (design-system layout.maxWidth) so backgrounds, the tab bar,
-       banners and the lecture presenter use the whole window. */
+       banners and the lecture presenter use the whole window. */${presenterFontFace(tokens.presenter.font)}
   </style>`;
 
 const sw = `
@@ -171,5 +172,7 @@ if (gaps.length > 0) throw new Error(`pwa-postbuild: clips missing from the prec
 if (leaks.length > 0) throw new Error(`pwa-postbuild: runtime-cached clips found in the precache: ${leaks.join(', ')}`);
 // No console file by path or by content (a Next 404.html), and the offline page present.
 assertLearnerPrecache(manifestUrls, isGrownUpPath, (url) => readFileSync(join(dist, url), 'utf8'));
+// The lecture presenter's Hangul font works offline (F-TCH-004 §3.6, §3.8).
+assertPresenterFontPrecached(manifestUrls);
 
 process.stdout.write(`pwa-postbuild: precached ${count} files (${(size / 1024 / 1024).toFixed(2)} MB), ${clips.length} audio clips built\n`);
