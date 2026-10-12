@@ -97,7 +97,7 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
     expect(l.home.how.steps).toEqual({
       start: { title: 'Open the app', body: 'Choose who is learning and begin.' },
       quests: { title: 'Learn in five-minute quests', body: 'Letters, sounds and first words, with sound and pictures on every screen.' },
-      collect: { title: 'Collect and keep going', body: 'Earn Korean culture cards. Your progress is saved on your device.' },
+      collect: { title: 'Collect and keep going', body: 'Earn Korean culture cards. Your progress is saved and backed up.' },
     });
     expect(Object.keys(l.home.how.steps)).toEqual(['start', 'quests', 'collect']);
     expect(l.home.how.routeBody).toBe('Earn Korean culture cards and see your whole Learning Route: where you are and what comes next.');

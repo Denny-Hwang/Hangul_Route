@@ -117,13 +117,14 @@ describe('caregiver dashboard, paywall, spaces and backup', () => {
   it('keeps the Family Dashboard', () => {
     const d = c.dashboard;
     expect(d.title).toBe('Family Dashboard');
-    expect(d.readOnly).toBe('Read-only — data stays on this device.');
+    expect(d.readOnly).toBe('Read-only — learners on this device.');
     expect(d.noProfiles).toBe('No profiles yet.');
     expect(d.stats).toEqual({ quests: 'Quests', cards: 'Cards', sessions: 'Sessions', minutes: 'Minutes' });
     expect(d.recent).toBe('Recent');
     expect(d.privacy.title).toBe('Privacy');
+    // The app backs up every learner with no sign-in: the card leads with the backup sentence (privacy-statements.test.ts).
     expect(d.privacy.body).toBe(
-      'All learning data stays on this device unless you sign in. We do not share with third parties.',
+      "Each learner's nickname and progress are kept on the device and backed up to our servers, so they can be restored with a Rescue Code. When a learner joins a class or family with a code, that space sees the name they join with and their progress. A family's grown-ups can also restore their progress. We do not share with third parties.",
     );
   });
 

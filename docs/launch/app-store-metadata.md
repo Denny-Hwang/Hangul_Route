@@ -3,6 +3,7 @@
 > 글자 수 제한을 이미 맞췄다. 바꾸면 다시 세어야 한다.
 > 카피 규칙: `docs/launch/product-review-2026-06-09.md` §"카피 수치 정합성" — **8 mini-games (active)**, **30 Stage 1 cards** (+ 12 taste cards 는 언급 안 함), "streak" 표현은 스토어 카피에서 제외.
 > 대상 표현 (오너 결정 2026-10-09, CLAUDE.md §1): **Hangul 을 배우는 누구나, 모든 연령**. "for kids" · "ages 5–11" · 아이가 주 대상이라는 암시는 쓰지 않는다 — Kids Category 가 아닌 앱이 그렇게 쓰면 App Review 2.3.8 / 5.1.4 리젝 사유가 된다 (감사 UF-11).
+> **빌드별 데이터 문구 (2026-10-12, #395)**: §6 App Review Notes 와 `app-store-submission.md` §5 개인정보 라벨은 `EXPO_PUBLIC_API_BASE_URL` 이 **없는** 빌드를 설명한다 (서버 백업 · Rescue Code · 사용 이벤트 전송 없음). 그래서 §3 설명은 어느 빌드에서도 맞도록 백업을 약속하지 않는다. API 주소가 설정된 빌드는 로그인 없이 모든 학습자를 서버에 백업하므로, 그 빌드를 제출하기 전에 §6 과 개인정보 라벨을 백업 문장 (`landing.persona.parents.safe.bullets.backup`) 에 맞춰 다시 쓴다. `apps/web` 의 `privacy-statements.test.tsx` 가 §6 이 백업 없는 빌드를 설명하는 동안 §3 에 백업 · Rescue Code 약속이 들어오면 실패한다.
 
 ## 1. 이름 · 부제 (각 ≤ 30자)
 
@@ -48,7 +49,7 @@ FOR FAMILIES
 • Several learner profiles on one device — siblings, parents and grandparents keep their own journeys
 • A PIN-protected grown-up zone with each learner's quests, cards and minutes — framed as growth, never as comparison
 • A daily three-card mission so every learner always knows what to do next
-• No account needed. No ads. No data sold. Everything stays on the device.
+• No account needed. No ads. No data sold.
 • Works offline — on the plane, at grandma's house, anywhere
 
 LEARNING ON YOUR OWN

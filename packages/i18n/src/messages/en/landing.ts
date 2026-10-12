@@ -131,7 +131,8 @@ export const landing = {
       steps: {
         start: { title: 'Open the app', body: 'Choose who is learning and begin.' },
         quests: { title: 'Learn in five-minute quests', body: 'Letters, sounds and first words, with sound and pictures on every screen.' },
-        collect: { title: 'Collect and keep going', body: 'Earn Korean culture cards. Your progress is saved on your device.' },
+        /** "Saved and backed up": the app backs up every learner's progress with no sign-in (see `persona.parents.safe.bullets.backup`). */
+        collect: { title: 'Collect and keep going', body: 'Earn Korean culture cards. Your progress is saved and backed up.' },
       },
       routeBody: 'Earn Korean culture cards and see your whole Learning Route: where you are and what comes next.',
     },
@@ -336,7 +337,13 @@ export const landing = {
   trust: {
     label: 'Trust',
     items: {
-      coppa: { title: 'COPPA-compliant', body: 'No third-party tracking. Parent email is the only PII.' },
+      /**
+       * OD-4 (F-SITE-002): no compliance claim while the policies are drafts, so the title is the new home's
+       * `home.promises.items.safety`. The body makes no claim about which personal data we hold: the app backs up
+       * each learner's nickname and progress, and the parent email stays on the device (privacy-statements.test.ts).
+       * The key keeps its name until S-6 removes the old home.
+       */
+      coppa: { title: 'Child safety first', body: 'No third-party tracking. We collect as little as possible.' },
       ads: { title: 'No ads, ever', body: 'No third-party ads. No data sold. Revenue is in-app only.' },
       offline: {
         title: 'Works offline',
@@ -402,7 +409,14 @@ export const landing = {
     title: 'Five minutes a day. Nothing creepy.',
     body: 'Many of our learners are children, so Hangul Route is built for tired parents too. Hand the phone over for five minutes; come back to one new Korean letter and one heritage card. Learning Korean yourself? Play the same quests. Bring it on a long flight — the app works offline after your first visit.',
     points: {
-      localFirst: { title: 'Local-first by default.', body: 'All learning data stays on the device until you sign in.' },
+      /**
+       * The key keeps its name until S-6 removes the old home; the words are the backup sentence, because the app backs
+       * up every learner with no sign-in (`persona.parents.safe.bullets.backup`, privacy-statements.test.ts).
+       */
+      localFirst: {
+        title: 'Progress is backed up.',
+        body: "Each learner's nickname and progress are kept on the device and backed up to our servers, so they can be restored with a Rescue Code. When a learner joins a class or family with a code, that space sees the name they join with and their progress. A family's grown-ups can also restore their progress.",
+      },
       gate: { title: 'Parent-gate.', body: 'Anything that costs money or deletes data is behind a simple multiplication question.' },
       shared: { title: 'Siblings share a device.', body: 'Each learner keeps their own stars and cards. No upsell.' },
     },
@@ -498,7 +512,8 @@ export const landing = {
       /** Said in words: the page shows no cross-mark glyph (no emoji, CLAUDE.md). */
       noRed: 'No red X marks for wrong answers — Hoya nudges with amber.',
       noAds: 'No ads, ever. No ads designed at children. Period.',
-      localFirst: 'Local-first: data stays on the device until you sign in.',
+      /** The first sentence of `persona.parents.safe.bullets.backup`, word for word (F-SITE-002 §3.12; privacy-statements.test.ts). */
+      localFirst: "Each learner's nickname and progress are kept on the device and backed up to our servers, so they can be restored with a Rescue Code.",
       gate: 'Parent-gate behind multiplication for any commerce or destructive action.',
     },
     feedback: {
@@ -519,14 +534,15 @@ export const landing = {
     draft: 'Draft for review. This document is a working draft pending review by qualified legal counsel before public launch.',
     privacy: {
       title: 'Privacy Policy',
-      effective: 'Effective October 11, 2026',
+      effective: 'Effective October 12, 2026',
       /** Footer link to the other document. */
       otherDocument: 'Terms of Service',
       sections: {
         short: {
           heading: 'The short version',
           paragraphs: {
-            p1: 'Hangul Route is for anyone learning Hangul, at any age — and many of our learners are children. We collect as little as possible, never show ads, and never sell data. Most learning data stays on the device until the account holder chooses to sign in. When the learner is a child, a parent is always in control.',
+            /** The backup sentence's first sentence replaces "until the account holder chooses to sign in" (F-SITE-002 §3.7). */
+            p1: "Hangul Route is for anyone learning Hangul, at any age — and many of our learners are children. We collect as little as possible, never show ads, and never sell data. Each learner's nickname and progress are kept on the device and backed up to our servers, so they can be restored with a Rescue Code. When the learner is a child, a parent is always in control.",
           },
         },
         account: {
@@ -581,7 +597,14 @@ export const landing = {
         where: {
           heading: 'Where your data lives',
           paragraphs: {
-            p1: 'By default, learning data is stored locally on the device. If a parent signs in, progress syncs to our servers (Cloudflare) so it can be restored on a new device. Data in transit is encrypted (HTTPS), and at rest it is access-controlled.',
+            /**
+             * What the app does (F-SYNC-002 `sync-store.ts`, F-RESTORE-001, the telemetry client), with no sign-in: it sends
+             * each learner's nickname, level and avatar once, the first time it saves them (`ensureRegistered`, POST
+             * /api/sync/learners; there is no update route, so a later edit is not sent, F-LEARN-001 §3.11), backs up their
+             * progress on start and after each write, and sends usage events that can carry the learner's id. Replaces
+             * "If a parent signs in, progress syncs…" (F-SITE-002 §3.7).
+             */
+            p1: "Learning data is kept on the device and backed up to our servers (Cloudflare), with no sign-in needed. The first time the app saves a learner, it sends their nickname, level and avatar. It backs up their progress when it starts and after each change, so the learner can be restored on a new device with a Rescue Code. If you later change the nickname, level or avatar, the backup keeps the old ones for now; to change them, email us. The app also sends us usage events, such as a finished quest, which can include the learner's id. Data in transit is encrypted (HTTPS), and at rest it is access-controlled.",
           },
         },
         payments: {
