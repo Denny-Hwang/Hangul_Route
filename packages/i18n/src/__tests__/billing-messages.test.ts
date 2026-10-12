@@ -143,7 +143,16 @@ const A11Y_ADDED = ['a11y.planStatus'];
 const B6_PATHS = [...BILLING_ADDED, ...STATUS_CHANGED, ...PLAN_SCREEN, ...PROFILE_ADDED, ...A11Y_ADDED];
 
 /** Existing keys the new lines name (the page, its manage button, the plan titles): drafted with them so a page never names one thing two ways. */
-const NAMED_BY_NEW_LINES = ['console.billing.title', 'console.billing.manage.cta', 'console.billing.planTitle.free', 'console.billing.planTitle.family_lifetime', 'console.billing.planTitle.group_license', 'console.billing.planTitle.school_seat'];
+const NAMED_BY_NEW_LINES = [
+  'console.billing.title',
+  'console.billing.manage.cta',
+  'console.billing.planTitle.free',
+  'console.billing.planTitle.family_lifetime',
+  'console.billing.planTitle.group_license',
+  'console.billing.planTitle.school_seat',
+  // The status line beside the two changed past-due values: drafted whole, so one card never mixes languages.
+  ...['trial', 'trialEnds', 'active', 'activeRenews', 'cancelled', 'cancelledEnds', 'ended', 'endedOn'].map((k) => `console.entitlementStatus.${k}`),
+];
 
 type Message = (...args: unknown[]) => string;
 
@@ -183,7 +192,7 @@ describe('console.billing additions (F-BILL-002 §6.1, BY-D9 values)', () => {
     expect(b.coverage.free).toBe('Free plan');
     expect(b.coverage.family).toBe('Family Plan');
     expect(b.coverage.license).toBe('Group License');
-    expect(b.coverage.contract).toBe('School contract');
+    expect(b.coverage.contract).toBe('School Contract');
     expect(b.coverage.school('Maple School')).toBe("Covered by Maple School's license");
     expect(b.coverage.schoolUntil('Maple School', 'Jun 30, 2027')).toBe("Covered by Maple School's license until Jun 30, 2027");
     // A name that already ends in a possessive takes no second one; any other name does.
@@ -339,6 +348,7 @@ describe('the yearly Family Plan words (AMENDMENTS-BILLING-FAMILY-YEARLY BY-D9, 
       const title = bill.planTitle;
       expect(bill.coverage.family, locale).toBe(title.family_lifetime);
       expect(bill.coverage.license, locale).toBe(title.group_license);
+      expect(bill.coverage.contract, locale).toBe(title.school_seat);
       expect(bill.buy.family_lifetime.cta, locale).toContain(title.family_lifetime);
       expect(bill.buy.group_license.cta, locale).toContain(title.group_license);
       const plan = getMessages(locale).caregiver.plan;
@@ -619,6 +629,20 @@ describe('es / ko overlay entries for native review (§6, F-I18N-001 §3.10)', (
   /** "{name}: {state}." is arguments and punctuation only: nothing in it to translate. */
   const ALL_ARGUMENTS = new Set(['a11y.planStatus']);
 
+  it('es / ko: the whole status line is drafted, never half English beside the past-due values', () => {
+    const STATUS = NAMED_BY_NEW_LINES.filter((x) => x.startsWith('console.entitlementStatus.'));
+    expect(STATUS).toHaveLength(8);
+    for (const [path, out] of outputs('ko', STATUS)) expect(HANGUL.test(out), `ko:${path}: ${out}`).toBe(true);
+    for (const path of STATUS) expect(renderings('es', path).map((r) => r.out), `es:${path}`).not.toEqual(renderings('en', path).map((r) => r.out));
+  });
+
+  it('ko: the open note puts no particle after the source name', () => {
+    const open = getMessages('ko').learner.profile.plan.open;
+    expect(open('Sunday Class A')).toBe('Sunday Class A 덕분에 모두 열려 있어요.');
+    expect(open(null)).toBe('모두 열려 있어요.');
+    expect(open(' ')).toBe('모두 열려 있어요.');
+  });
+
   it('ko: every new value is written in Korean', () => {
     for (const [path, out] of outputs('ko', B6_PATHS.filter((x) => !ALL_ARGUMENTS.has(x)))) expect(HANGUL.test(out), `ko:${path}: ${out}`).toBe(true);
   });
@@ -762,6 +786,10 @@ describe('learner-reachable words (§4.7, §4.8, §6.5)', () => {
         expect(out, `${locale}:${path}`).not.toMatch(/%|\d+ ?\/ ?\d+/);
       }
     }
+  });
+
+  it('ko learner-reachable words never say 보호자 (guardian): the family audience is any age (owner decision)', () => {
+    for (const [path, out] of outputs('ko', LEARNER_PATHS)) expect(out, `ko:${path}`).not.toMatch(/보호자/);
   });
 
   it('self-audience strings never say grown-up', () => {

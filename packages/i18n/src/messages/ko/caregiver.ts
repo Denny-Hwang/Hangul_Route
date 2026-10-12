@@ -1,8 +1,8 @@
 import type { DeepPartial, Messages } from '../../types';
 
 /**
- * Korean draft of the learner Plan screen (F-BILL-002 B-6, §6.2), for the owner's native review
- * (F-I18N-001 §3.10; no review-ledger entry yet, `ko` stays hidden). Status only: no price, no
+ * Korean draft of the learner Plan screen (F-BILL-002 B-6, §6.2), reviewed by the multi-agent ko/es
+ * review in the F-I18N-001 translation PR (PR 16) before `ko` ships (F-I18N-001 §3.10; no review-ledger entry yet, `ko` stays hidden). Status only: no price, no
  * purchase word, and nothing a native build renders mentions the web (§4.8). Names stand before a
  * colon, never before a particle.
  */
@@ -29,7 +29,7 @@ export const caregiver = {
     },
     openBilling: {
       cta: '결제 화면 열기',
-      caption: { family: '플랜과 영수증은 보호자용 결제 페이지에 있어요.', self: '내 플랜과 영수증은 결제 페이지에 있어요.' },
+      caption: { family: '플랜과 영수증은 어른용 결제 페이지에 있어요.', self: '내 플랜과 영수증은 결제 페이지에 있어요.' },
       a11yHint: '결제 페이지를 열어요',
     },
     openFailed: (url: string) => `브라우저에서 이 주소를 열어 주세요: ${url}`,

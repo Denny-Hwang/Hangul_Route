@@ -1,18 +1,27 @@
 import type { DeepPartial, Messages } from '../../types';
 
 /**
- * Korean draft of the console keys F-BILL-002 B-6 adds or changes (§6.1), for the owner's native
- * review (F-I18N-001 §3.10): there is no review-ledger entry yet, so `i18n-status` reports the
+ * Korean draft of the console keys F-BILL-002 B-6 adds or changes (§6.1), reviewed by the
+ * multi-agent ko/es review in the F-I18N-001 translation PR (PR 16) before `ko` ships (§3.10): there is no review-ledger entry yet, so `i18n-status` reports the
  * namespace "not reviewed", and `ko` stays hidden (`LOCALE_STATUS`). Every other console key falls
  * back to English until the translation PR. 해요체; no particle that changes with a final consonant
  * is attached to an argument (names, dates and amounts arrive as arguments). Four existing keys the
- * new lines name (`title`, `manage.cta`, `planTitle`) are drafted too, so one page never names a
- * plan, the page or a button two ways.
+ * new lines name (`title`, `manage.cta`, `planTitle`) are drafted too, and the whole
+ * `entitlementStatus` object beside the two changed values, so one page or card never names a plan,
+ * a status, the page or a button two ways or in two languages.
  */
 export const consoleMsgs = {
   entitlementStatus: {
+    trial: '체험',
+    trialEnds: (date: string) => `체험 · 종료일: ${date}`,
+    active: '이용 중',
+    activeRenews: (date: string) => `이용 중 · 갱신일: ${date}`,
     pastDueKept: '결제 확인 필요 · 전체 루트 일주일 유지',
     pastDuePaused: '결제 확인 필요 · 전체 루트 일시 중지',
+    cancelled: '해지됨',
+    cancelledEnds: (date: string) => `해지됨 · 종료일: ${date}`,
+    ended: '종료됨',
+    endedOn: (date: string) => `종료됨 · ${date}`,
   },
   billing: {
     title: '결제',

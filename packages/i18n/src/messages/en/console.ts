@@ -459,7 +459,7 @@ export const consoleMsgs = {
       free: 'Free plan',
       family: 'Family Plan',
       license: 'Group License',
-      contract: 'School contract',
+      contract: 'School Contract',
       school: (school: string) => `Covered by ${licenseOf(school)}`,
       schoolUntil: (school: string, date: string) => `Covered by ${licenseOf(school)} until ${date}`,
     },

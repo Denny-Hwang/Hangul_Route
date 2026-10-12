@@ -8,18 +8,27 @@ const usageCount =
     cap === null ? plural('es', n, { one: `${n} ${one}`, other: `${n} ${other}` }) : plural('es', cap, { one: `${n} de ${cap} ${one}`, other: `${n} de ${cap} ${other}` });
 
 /**
- * Spanish draft of the console keys F-BILL-002 B-6 adds or changes (§6.1), for native review
- * (F-I18N-001 §3.10): there is no review-ledger entry yet, so `i18n-status` reports the namespace
+ * Spanish draft of the console keys F-BILL-002 B-6 adds or changes (§6.1), reviewed by the
+ * multi-agent ko/es review in the F-I18N-001 translation PR (PR 15) before `es` ships (§3.10): there is no review-ledger entry yet, so `i18n-status` reports the namespace
  * "not reviewed", and `es` stays hidden (`LOCALE_STATUS`). Every other console key falls back to
  * English until the translation PR. Neutral international Spanish, "tú", no gendered adjective
  * about a person; names, dates and amounts arrive as arguments. Four existing keys the new lines
- * name (`title`, `manage.cta`, `planTitle`) are drafted too, so one page never names a plan, the
- * page or a button two ways.
+ * name (`title`, `manage.cta`, `planTitle`) are drafted too, and the whole `entitlementStatus`
+ * object beside the two changed values, so one page or card never names a plan, a status, the page
+ * or a button two ways or in two languages.
  */
 export const consoleMsgs = {
   entitlementStatus: {
+    trial: 'prueba',
+    trialEnds: (date: string) => `prueba · termina el ${date}`,
+    active: 'activo',
+    activeRenews: (date: string) => `activo · se renueva el ${date}`,
     pastDueKept: 'el pago necesita atención · la ruta completa sigue una semana',
     pastDuePaused: 'el pago necesita atención · ruta completa en pausa',
+    cancelled: 'cancelado',
+    cancelledEnds: (date: string) => `cancelado · termina el ${date}`,
+    ended: 'terminó',
+    endedOn: (date: string) => `terminó el ${date}`,
   },
   billing: {
     title: 'Facturación',
@@ -39,7 +48,7 @@ export const consoleMsgs = {
       free: 'Plan gratuito',
       family: 'Plan Familiar',
       license: 'Licencia de Grupo',
-      contract: 'Contrato escolar',
+      contract: 'Contrato Escolar',
       school: (school: string) => `Con la licencia de ${school}`,
       schoolUntil: (school: string, date: string) => `Con la licencia de ${school} hasta el ${date}`,
     },
