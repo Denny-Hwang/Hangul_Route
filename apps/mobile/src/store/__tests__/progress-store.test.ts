@@ -590,7 +590,7 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
 
   beforeEach(() => {
     resetStore();
-    useProgressStore.setState({ catchUp: {} });
+    useProgressStore.setState({ catchUp: {}, catchUpFound: {} });
     useProfileStore.setState({
       profiles: [{ id: 'profile:a', displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: CREATED }],
       activeId: 'profile:a',
@@ -945,6 +945,29 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
       expect(useProgressStore.getState().catchUp['profile:a']).toBeUndefined();
       expect(writeJson).not.toHaveBeenCalled();
       expect(notified).toEqual([]);
+    });
+
+    it('keeps the number found while cards opened elsewhere leave the list, and drops it with the list', async () => {
+      mem.set('progress:profile:a', ritesDone(1));
+      await useProgressStore.getState().hydrate('profile:a');
+      const found = [...(useProgressStore.getState().catchUpFound['profile:a'] ?? [])].sort();
+      expect(found).toEqual([...RITES, 'card:tiger'].sort());
+      useProgressStore.getState().markCardsSeen('profile:a', ['card:sebae']);
+      expect([...(useProgressStore.getState().catchUpFound['profile:a'] ?? [])].sort()).toEqual(found);
+      useProgressStore.getState().markCardsSeen('profile:a', [...RITES, 'card:tiger']);
+      expect(useProgressStore.getState().catchUpFound['profile:a']).toBeUndefined();
+    });
+
+    it('a reset and a removed profile drop the found list with the catch-up list', async () => {
+      mem.set('progress:profile:a', ritesDone(1));
+      await useProgressStore.getState().hydrate('profile:a');
+      useProgressStore.getState().reset('profile:a');
+      expect(useProgressStore.getState().catchUpFound['profile:a']).toBeUndefined();
+      useProgressStore.setState({ byProfile: { 'profile:a': ritesDone(1) }, hydratedFor: new Set(['profile:a']) });
+      useProgressStore.getState().reconcileAwards('profile:a');
+      expect(useProgressStore.getState().catchUpFound['profile:a']).toBeDefined();
+      notifyProfileRemoved('profile:a');
+      expect(useProgressStore.getState().catchUpFound['profile:a']).toBeUndefined();
     });
 
     it('takes the seen cards off the catch-up list, and drops the list once it is empty', async () => {

@@ -61,7 +61,15 @@ interface State {
    * nothing when a reconcile added only the welcome card.
    */
   catchUp: Record<string, string[]>;
+  /**
+   * Every card listed in `catchUp` since the profile's list was last empty
+   * (session-only). Cards opened elsewhere leave `catchUp` but stay here, so
+   * the catch-up card's number is the cards found, never what is left (D3).
+   */
+  catchUpFound: Record<string, string[]>;
 }
+
+type CatchUpState = Pick<State, 'catchUp' | 'catchUpFound'>;
 
 /** A card to add; without `unlockedAt` it is unlocked now. */
 export interface CardUnlock {
@@ -237,11 +245,14 @@ function withAwards(profileId: string, snap: ProgressSnapshot): { snap: Progress
   }
 }
 
-/** The catch-up list after a reconcile added `added`: only non-welcome cards announce (§3.5). */
-function catchUpAfter(catchUp: Record<string, string[]>, profileId: string, added: readonly DerivedAward[]): Record<string, string[]> {
+/** The catch-up lists after a reconcile added `added`: only non-welcome cards announce (§3.5). */
+function catchUpAfter(s: CatchUpState, profileId: string, added: readonly DerivedAward[]): CatchUpState {
   const ids = added.map((a) => a.cardId);
-  if (!ids.some((id) => !WELCOME_CARD_IDS.has(id))) return catchUp;
-  return { ...catchUp, [profileId]: unionIds(catchUp[profileId] ?? [], ids) };
+  if (!ids.some((id) => !WELCOME_CARD_IDS.has(id))) return { catchUp: s.catchUp, catchUpFound: s.catchUpFound };
+  return {
+    catchUp: { ...s.catchUp, [profileId]: unionIds(s.catchUp[profileId] ?? [], ids) },
+    catchUpFound: { ...s.catchUpFound, [profileId]: unionIds(s.catchUpFound[profileId] ?? [], ids) },
+  };
 }
 
 /** One `card.catchup_granted` per reconcile that added more than the welcome card (§3.5); never a per-card event. */
@@ -250,10 +261,15 @@ function announceCatchUp(profileId: string, added: readonly DerivedAward[]): voi
   if (payload) void track({ name: 'card.catchup_granted', profileId, payload });
 }
 
-function withoutCatchUp(catchUp: Record<string, string[]>, profileId: string): Record<string, string[]> {
-  if (!(profileId in catchUp)) return catchUp;
-  const { [profileId]: _dropped, ...others } = catchUp;
+function withoutKey(record: Record<string, string[]>, profileId: string): Record<string, string[]> {
+  if (!(profileId in record)) return record;
+  const { [profileId]: _dropped, ...others } = record;
   return others;
+}
+
+/** The profile's catch-up list and its found list go together. */
+function withoutCatchUp(s: CatchUpState, profileId: string): CatchUpState {
+  return { catchUp: withoutKey(s.catchUp, profileId), catchUpFound: withoutKey(s.catchUpFound, profileId) };
 }
 
 /** Union in first-seen order, so a card is never listed twice. */
@@ -275,6 +291,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
   hydratedFor: new Set(),
   pendingFor: new Set(),
   catchUp: {},
+  catchUpFound: {},
 
   hydrate: (profileId) => {
     if (get().hydratedFor.has(profileId)) return Promise.resolve();
@@ -297,7 +314,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
         byProfile: snap ? { ...s.byProfile, [profileId]: snap } : s.byProfile,
         hydratedFor: new Set([...s.hydratedFor, profileId]),
         pendingFor: without(s.pendingFor, profileId),
-        catchUp: catchUpAfter(s.catchUp, profileId, added),
+        ...catchUpAfter(s, profileId, added),
       }));
       announceCatchUp(profileId, added);
       // One write for the pending writes, an added latch and the cards they
@@ -325,7 +342,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     // In memory only, never saved on its own (see `hydrate`): the card is
     // deterministic (`profile.createdAt`), and the next real write saves it.
     const { snap, added } = withAwards(profileId, fresh);
-    set((s) => ({ byProfile: { ...s.byProfile, [profileId]: snap }, catchUp: catchUpAfter(s.catchUp, profileId, added) }));
+    set((s) => ({ byProfile: { ...s.byProfile, [profileId]: snap }, ...catchUpAfter(s, profileId, added) }));
     announceCatchUp(profileId, added);
     return snap;
   },
@@ -382,7 +399,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     if (!current) return [];
     const { snap, added } = withAwards(profileId, current);
     if (added.length === 0) return [];
-    set((s) => ({ byProfile: { ...s.byProfile, [profileId]: snap }, catchUp: catchUpAfter(s.catchUp, profileId, added) }));
+    set((s) => ({ byProfile: { ...s.byProfile, [profileId]: snap }, ...catchUpAfter(s, profileId, added) }));
     persist(profileId, snap);
     announceCatchUp(profileId, added);
     return added;
@@ -390,7 +407,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
 
   recordCatchUp: (profileId, added) => {
     if (added.length === 0) return;
-    set((s) => ({ catchUp: catchUpAfter(s.catchUp, profileId, added) }));
+    set((s) => catchUpAfter(s, profileId, added));
     announceCatchUp(profileId, added);
   },
 
@@ -399,7 +416,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     const listed = get().catchUp[profileId];
     if (listed) {
       const left = listed.filter((id) => !seen.has(id));
-      set((s) => ({ catchUp: left.length > 0 ? { ...s.catchUp, [profileId]: left } : withoutCatchUp(s.catchUp, profileId) }));
+      set((s) => (left.length > 0 ? { catchUp: { ...s.catchUp, [profileId]: left } } : withoutCatchUp(s, profileId)));
     }
     const snap = get().byProfile[profileId];
     if (!snap?.cards.some((c) => c.newSinceLastView && seen.has(c.cardId))) return;
@@ -478,7 +495,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
   reset: (profileId) => {
     const fresh = blankSnapshot(profileId);
     settle(profileId, fresh);
-    set((s) => ({ catchUp: withoutCatchUp(s.catchUp, profileId) }));
+    set((s) => withoutCatchUp(s, profileId));
     save(profileId, fresh);
   },
 
@@ -490,7 +507,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     const latched = withLatches(snapshot, new Date());
     const { snap, added } = withAwards(profileId, latched);
     settle(profileId, snap);
-    if (added.length > 0) set((s) => ({ catchUp: catchUpAfter(s.catchUp, profileId, added) }));
+    if (added.length > 0) set((s) => catchUpAfter(s, profileId, added));
     announceCatchUp(profileId, added);
     void writeJson(key(profileId), snap);
     if (snap !== snapshot) notifyProgressPersisted(profileId);
@@ -498,4 +515,4 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
 }));
 
 // A removed profile's catch-up list goes with it (F-STORY-006 §3.5).
-onProfileRemoved((profileId) => useProgressStore.setState((s) => ({ catchUp: withoutCatchUp(s.catchUp, profileId) })));
+onProfileRemoved((profileId) => useProgressStore.setState((s) => withoutCatchUp(s, profileId)));

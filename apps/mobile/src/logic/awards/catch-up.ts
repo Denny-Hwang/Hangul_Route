@@ -27,14 +27,39 @@ export interface CatchUpCard {
  * The Home catch-up card for the session-only list a reconcile wrote (`progress-store` `catchUp`).
  * Null when nothing is listed or only the welcome card is: a new profile is not a catch-up, and
  * the card stays away once `See my cards` (or the Library) has seen the others.
+ *
+ * `found` is every card listed since the list was last empty (`progress-store` `catchUpFound`).
+ * The count comes from it, so a card opened in the Library leaves the list without the line
+ * counting down ("Hoya found 22 cards" stays 22): never a counter of what is left (D3).
  */
 export function catchUpCard(
   listed: readonly string[] | undefined,
   welcomeCardIds: ReadonlySet<string> | readonly string[],
+  found?: readonly string[],
 ): CatchUpCard | null {
   if (!listed || listed.length === 0) return null;
   const welcome = new Set(welcomeCardIds);
   const cardIds = [...new Set(listed)];
   if (!cardIds.some((id) => !welcome.has(id))) return null;
-  return { cardIds, count: cardIds.length };
+  return { cardIds, count: new Set([...(found ?? []), ...cardIds]).size };
+}
+
+/**
+ * The catch-up line to announce (F-STORY-006 §3.10), once per profile and line per app session:
+ * the card is usually on Home's first render (the reconcile runs before the navigator mounts),
+ * where a live region says nothing, and iOS has no live regions. The line's number is fixed while
+ * the card shows, so a tab switch or re-render never repeats it; a later catch-up in the same
+ * session (after See my cards) has its own line and is announced. Records it in `announced`.
+ * Null when no card shows or this profile has already heard this line.
+ */
+export function takeCatchUpAnnouncement(
+  announced: Set<string>,
+  profileId: string | undefined,
+  line: string | null,
+): string | null {
+  if (!profileId || line === null) return null;
+  const key = `${profileId}|${line}`;
+  if (announced.has(key)) return null;
+  announced.add(key);
+  return line;
 }
