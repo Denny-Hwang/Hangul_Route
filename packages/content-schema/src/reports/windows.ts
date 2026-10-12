@@ -6,9 +6,10 @@ import { REPORT_DAYS_MAX, type ActivityDay, type ActivitySummary, type ReportPer
  * the learner's device saw it (OD-12); the only clock is `now`, passed in. Pure: no locale, no host time zone.
  *
  * - `week` is the 7 days ending today, rolling (OD-1); `month` is the calendar month to date (OD-2).
- * - Looking back (OD-18) stays within the 35 day rows that end at `activity.asOf` and the months in
- *   `activity.months`; an older month shows totals only.
+ * - Looking back (OD-18) stays within the 35 day rows that end at `activity.asOf` and the months there are (the
+ *   month rows, up to 24); a month the rows do not draw whole shows totals only.
  * - Days after `asOf` are not saved yet: they count nowhere (`horizonOf`).
+ * - A class's copy starts at the learner's join day (RP-W2): nothing here reaches or compares with earlier days.
  */
 
 const MINUTE_MS = 60_000;
