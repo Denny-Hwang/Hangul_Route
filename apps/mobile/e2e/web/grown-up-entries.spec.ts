@@ -68,6 +68,14 @@ async function openProfile(page: Page, name: string): Promise<void> {
   await expect(page.getByRole('button', { name: /^(Grown-up zone|Account & backup)/ })).toBeVisible();
 }
 
+/** The focused element's accessible name as a keyboard user meets it: its label, or its text. */
+function focusedName(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const el = document.activeElement as HTMLElement | null;
+    return (el?.getAttribute('aria-label') ?? el?.innerText ?? '').trim();
+  });
+}
+
 function noSidewaysScroll(page: Page): Promise<boolean> {
   return page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 }
@@ -133,6 +141,32 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true)', () => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Parent or caregiver' }).click();
     await expect(page).toHaveURL(/\/signin\?persona=parent$/);
+  });
+
+  test('keyboard: Tab order equals the visual order in Panel A and Panel B (section 3.16)', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('button', { name: 'Parent or caregiver' })).toBeVisible();
+    await page.getByRole('button', { name: "Let's start" }).focus();
+    const panelA: string[] = [await focusedName(page)];
+    for (let i = 0; i < 3; i += 1) {
+      await page.keyboard.press('Tab');
+      panelA.push(await focusedName(page));
+    }
+    expect(panelA).toEqual(["Let's start", 'I already have progress', 'Parent or caregiver', 'Teacher']);
+
+    await seedLastPersona(page, 'parent');
+    await page.goto('/');
+    await expect(page.getByRole('button', { name: 'Continue as family' })).toBeVisible();
+    await page.getByRole('button', { name: 'I already have progress' }).focus();
+    const panelB: string[] = [];
+    for (let i = 0; i < 2; i += 1) {
+      await page.keyboard.press('Tab');
+      panelB.push(await focusedName(page));
+    }
+    expect(panelB).toEqual(['Continue as family', 'Someone else']);
+    // Someone else removes the control that had focus; focus moves to Parent or caregiver.
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('button', { name: 'Parent or caregiver' })).toBeFocused();
   });
 
   test('Let\'s start still starts the learner in one tap', async ({ page }) => {
@@ -209,6 +243,16 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true)', () => {
     expect(await page.evaluate((k) => sessionStorage.getItem(k), UNLOCK)).toBeNull();
   });
 
+  test('a self-only device\'s dashboard card says "Account home" too (D9)', async ({ page }) => {
+    await onboardSelf(page, { name: 'Sam' });
+    await openProfile(page, 'Sam');
+    await page.getByRole('button', { name: /^Account & backup/ }).click();
+    const card = page.getByTestId('dashboard-grown-up-home');
+    await expect(card).toBeVisible();
+    await expect(card.getByText('Account home')).toBeVisible();
+    await expect(card.getByText('Grown-up home')).toHaveCount(0);
+  });
+
   test('dashboard: the card on top, and a PIN entered to open the dashboard is not asked again', async ({ page }) => {
     await standInSignIn(page);
     await onboardChild(page, { name: 'Mina' });
@@ -250,6 +294,28 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true)', () => {
     await context.setOffline(false);
     await expect(open).toBeEnabled();
   });
+
+  test('offline: the Plan screen\'s Open billing is disabled with "Needs the internet" and re-enables online', async ({ page, context }) => {
+    await onboardSelf(page, { name: 'Sam' });
+    await openProfile(page, 'Sam');
+    const details = page.getByRole('button', { name: 'Plan details', exact: true });
+    await details.scrollIntoViewIfNeeded();
+    await details.click();
+    const open = page.getByRole('button', { name: 'Open billing' });
+    await expect(open).toBeEnabled();
+    await expect(page.getByTestId('plan-open-billing-offline')).toHaveCount(0);
+
+    await context.setOffline(true);
+    await expect(open).toBeDisabled();
+    await expect(open).toHaveAccessibleDescription('Needs the internet');
+    await expect(page.getByTestId('plan-open-billing-offline')).toHaveText('Needs the internet');
+    await shot(page, 'a7-plan-offline-375');
+
+    await context.setOffline(false);
+    await expect(open).toBeEnabled();
+    await expect(open).toHaveAccessibleDescription('Opens the billing page');
+    await expect(page.getByTestId('plan-open-billing-offline')).toHaveCount(0);
+  });
 });
 
 test('Join prefill: a family code handed over in this tab fills the Join screen once', async ({ page }) => {
@@ -274,4 +340,6 @@ test('Join prefill: a code older than 30 minutes is dropped', async ({ page }) =
   await openProfile(page, 'Mina');
   await page.getByRole('button', { name: 'Join a class' }).click();
   await expect(page.getByLabel('Class code')).toHaveValue('');
+  // The reader ran: the stale code is removed, not left for a later screen.
+  expect(await page.evaluate((k) => sessionStorage.getItem(k), JOIN_HANDOFF)).toBeNull();
 });
