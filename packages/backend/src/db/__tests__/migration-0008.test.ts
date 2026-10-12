@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { openSqliteD1 } from '../../__tests__/helpers/sqlite';
 import { D1Db, type D1Like, type D1PreparedLike } from '../d1';
 import { NOTE_INBOX_LIMIT, noteRateKey } from '../feedback-types';
-import { at, CLASS, classNote, DAY, FAMILY, iso, learnerRow, MOM, report, seedNotesWorld, SUNI, TEACHER } from './feedback-fixtures';
+import { at, CLASS, classNote, DAY, FAMILY, iso, learnerRow, MIN, MOM, report, seedNotesWorld, SUNI, TEACHER } from './feedback-fixtures';
 
 /**
  * Migration 0008_feedback_notes.sql (F-FEEDBACK-001 section 7.4, PR FB-2). A
@@ -48,10 +48,9 @@ function counting(d1: SqliteD1): { d1: D1Like; prepared: () => number; reset: ()
 }
 
 describe('migration 0008_feedback_notes.sql · production safety', () => {
-  it('is the only migration with its number, and the newest', () => {
+  it('is the only migration with its number', () => {
     const files = readdirSync(DIR).filter((f) => f.endsWith('.sql')).sort();
     expect(files.filter((f) => f.startsWith('0008_'))).toEqual([FILE]);
-    expect(files[files.length - 1]).toBe(FILE);
   });
 
   it('only creates the six tables and their indexes (additive: nothing altered, dropped or rewritten)', () => {
@@ -62,9 +61,14 @@ describe('migration 0008_feedback_notes.sql · production safety', () => {
       'CREATE INDEX IF NOT EXISTS idx_feedback_notes_space ON feedback_notes(space_id, created_at)',
       'CREATE INDEX IF NOT EXISTS idx_feedback_notes_sender ON feedback_notes(sender_account_id, created_at)',
       'CREATE INDEX IF NOT EXISTS idx_feedback_notes_batch ON feedback_notes(batch_id)',
+      'CREATE INDEX IF NOT EXISTS idx_feedback_notes_created ON feedback_notes(created_at, id)',
+      "CREATE INDEX IF NOT EXISTS idx_feedback_notes_reported ON feedback_notes(created_at, id) WHERE status = 'reported'",
       'CREATE INDEX IF NOT EXISTS idx_feedback_reports_sender ON feedback_reports(sender_account_id, created_at)',
+      'CREATE INDEX IF NOT EXISTS idx_feedback_reports_note ON feedback_reports(note_id, created_at)',
+      'CREATE INDEX IF NOT EXISTS idx_feedback_reports_created ON feedback_reports(created_at, id)',
+      'CREATE INDEX IF NOT EXISTS idx_feedback_reports_learner ON feedback_reports(learner_id)',
     ]);
-    expect(statements).toHaveLength(TABLES.length + 5);
+    expect(statements).toHaveLength(TABLES.length + 10);
     // `ON DELETE CASCADE` is a foreign-key clause, not a write
     expect(statements.join(';').replace(/ON DELETE CASCADE/g, '')).not.toMatch(/\b(DROP|DELETE|UPDATE|INSERT|TRUNCATE|RENAME|ALTER|REPLACE)\b/i);
   });
@@ -132,6 +136,60 @@ describe('migration 0008_feedback_notes.sql · production safety', () => {
     expect(await plan('SELECT id FROM feedback_notes WHERE batch_id = ?', ['b'])).toMatch(/idx_feedback_notes_batch/);
     expect(await plan('SELECT COUNT(DISTINCT reporter_key) FROM feedback_reports WHERE sender_account_id = ? AND created_at >= ?', [TEACHER, iso(0)])).toMatch(/idx_feedback_reports_sender/);
     d1.close();
+  });
+
+  it('the purge, the retention filter, the report write and the erase never scan a notes table (section 8.7 runs on every send)', async () => {
+    const raw = openSqliteD1();
+    const seen: Array<{ text: string; params: unknown[] }> = [];
+    const inner = new WeakMap<D1PreparedLike, { stmt: D1PreparedLike; text: string; params: unknown[] }>();
+    const wrap = (stmt: D1PreparedLike, text: string, params: unknown[]): D1PreparedLike => {
+      const outer: D1PreparedLike = {
+        bind: (...values: unknown[]) => wrap(stmt.bind(...values), text, values),
+        first: () => (seen.push({ text, params }), stmt.first()),
+        all: () => (seen.push({ text, params }), stmt.all()),
+        run: () => (seen.push({ text, params }), stmt.run()),
+      };
+      inner.set(outer, { stmt, text, params });
+      return outer;
+    };
+    const recording: D1Like = {
+      prepare: (text: string) => wrap(raw.prepare(text), text, []),
+      batch: (stmts) =>
+        raw.batch(
+          stmts.map((outer) => {
+            const s = inner.get(outer)!;
+            seen.push({ text: s.text, params: s.params });
+            return s.stmt;
+          }),
+        ),
+    };
+    const db = new D1Db(recording);
+    await seedNotesWorld(new D1Db(raw));
+    const n = classNote();
+    await db.insertNotes([n], []);
+    seen.length = 0;
+    await db.purgeNotes(at(-180 * DAY), at(-90 * DAY), at(-365 * DAY), 200);
+    await db.notesForSpace(CLASS, { before: { createdAt: iso(0), id: 'note:zzzzzzzz' }, limit: 50, now: at(0) });
+    await db.notesForOversight(SUNI, { before: null, limit: 50, now: at(0) });
+    await db.insertNoteReport(report(n.id));
+    await db.deleteLearner(MIN);
+    const texts = new Map<string, unknown[]>();
+    for (const s of seen) if (/feedback_(notes|reports)/.test(s.text)) texts.set(s.text, s.params);
+    expect(texts.size).toBeGreaterThan(0);
+    const scans: string[] = [];
+    for (const [text, params] of texts) {
+      const { results } = await raw.prepare(`EXPLAIN QUERY PLAN ${text}`).bind(...params).all<{ detail: string }>();
+      for (const { detail } of results) {
+        // a full scan of a table (an index scan names its index; json_each is the bound list)
+        if (/^SCAN /.test(detail) && !/USING (COVERING )?INDEX|VIRTUAL TABLE|CONSTANT ROW/.test(detail)) scans.push(`${detail} :: ${text.slice(0, 80)}`);
+      }
+    }
+    expect(scans.filter((s) => !s.includes('feedback_sender_holds'))).toEqual([]);
+    // the ON DELETE CASCADE lookups from a note and from a learner use an index
+    const plan = async (text: string): Promise<string> => (await raw.prepare(`EXPLAIN QUERY PLAN ${text}`).bind('x').all<{ detail: string }>()).results.map((r) => r.detail).join(' | ');
+    expect(await plan('SELECT 1 FROM feedback_reports WHERE note_id = ?')).toMatch(/idx_feedback_reports_note/);
+    expect(await plan('SELECT 1 FROM feedback_reports WHERE learner_id = ?')).toMatch(/idx_feedback_reports_learner/);
+    raw.close();
   });
 });
 

@@ -245,8 +245,9 @@ export interface Db {
 
   // notes from grown-ups (F-FEEDBACK-001 section 7.4, migration 0008). Every method that takes a list is
   // set-based: the list is bound as one JSON array and read with `json_each`, so the statement count does
-  // not grow with it and the 100-parameter cap never applies. Every read applies the retention cut-offs of
-  // section 8.7 (`now`), so a row past them is never seen before the purge removes it.
+  // not grow with it and the 100-parameter cap never applies. Every list and the inbox apply the retention
+  // cut-offs of section 8.7 (`now`), and a report never revives a row past them, so a row past them is never
+  // seen before the purge removes it (`getNote` alone reads the stored row, for the routes' checks).
   /** The ids among `learnerIds` that are current `student` members of the space; order not guaranteed. */
   studentsOf(spaceId: string, learnerIds: readonly string[]): Promise<string[]>;
   /** The prefs rows of these learners; a learner without a row is left out (class notes `all`, OD-3). */
@@ -273,6 +274,10 @@ export interface Db {
   notesForSpace(spaceId: string, options: { before: NoteCursor | null; limit: number; now: Date; learnerId?: string }): Promise<StoredNote[]>;
   /** Every note to a learner from any space, every status, newest first (the family view). */
   notesForOversight(learnerId: string, options: { before: NoteCursor | null; limit: number; now: Date }): Promise<StoredNote[]>;
+  /**
+   * The stored row whatever its age (the routes' ownership and status checks). A row past the cut-offs of
+   * section 8.7 is never listed, and `insertNoteReport` refuses it, so acting on it changes nothing visible.
+   */
   getNote(id: string): Promise<StoredNote | null>;
   /** Sets `readAt` once, on a live note; answers rows changed (0 when already read or not live). */
   setNoteRead(id: string, at: Date): Promise<number>;
@@ -284,8 +289,12 @@ export interface Db {
   withdrawNote(id: string, at: Date): Promise<number>;
   /** Every live note of a batch sent by this account -> `withdrawn`. Answers rows changed. */
   withdrawBatch(batchId: string, senderAccountId: string, at: Date): Promise<number>;
-  /** The report row and the note's status `reported`, together in one transaction. */
-  insertNoteReport(row: StoredNoteReport): Promise<void>;
+  /**
+   * The report row and the note's status `reported`, together in one transaction, only while the note is
+   * within the retention of section 8.7 at `row.createdAt` (any status otherwise). Answers whether it recorded:
+   * false for a missing note or one every list already hides, which a report never brings back.
+   */
+  insertNoteReport(row: StoredNoteReport): Promise<boolean>;
   /** Distinct reporting families (`reporter_key`) with a report against this sender at or after `since` (section 8.4). */
   countReportersAgainst(accountId: string, since: Date): Promise<number>;
   getSenderHold(accountId: string): Promise<StoredSenderHold | null>;
@@ -306,8 +315,10 @@ export interface Db {
   deleteNotesForMembership(learnerId: string, spaceId: string): Promise<number>;
   /**
    * Bounded retention purge (section 8.7), at most `limit` rows per step: live, hidden and withdrawn notes
-   * created before `before`; reported notes with no report at or after `reportedBefore` (and their reports);
-   * report rows before `reportedBefore`; holds lifted before `liftedBefore`. Answers the rows removed.
+   * created before `before` (and their reports); reported notes with no report at or after `reportedBefore`
+   * (and their reports); report rows before `reportedBefore` of a note no longer reported (a note under review
+   * keeps every report); holds lifted before `liftedBefore`. Each step reads an index (migration 0008).
+   * Answers the rows removed.
    */
   purgeNotes(before: Date, reportedBefore: Date, liftedBefore: Date, limit: number): Promise<number>;
 

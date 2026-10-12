@@ -43,6 +43,10 @@ CREATE INDEX IF NOT EXISTS idx_feedback_notes_learner ON feedback_notes(learner_
 CREATE INDEX IF NOT EXISTS idx_feedback_notes_space   ON feedback_notes(space_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_feedback_notes_sender  ON feedback_notes(sender_account_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_feedback_notes_batch   ON feedback_notes(batch_id);
+-- the bounded retention purge (section 8.7), which runs on every send and oversight read: oldest notes first,
+-- and reported notes alone
+CREATE INDEX IF NOT EXISTS idx_feedback_notes_created  ON feedback_notes(created_at, id);
+CREATE INDEX IF NOT EXISTS idx_feedback_notes_reported ON feedback_notes(created_at, id) WHERE status = 'reported';
 
 CREATE TABLE IF NOT EXISTS feedback_reports (
   id                  TEXT PRIMARY KEY,                                   -- notereport:<uuid>
@@ -59,6 +63,11 @@ CREATE TABLE IF NOT EXISTS feedback_reports (
   outcome             TEXT CHECK (outcome IN ('kept_hidden','restored','sender_held'))
 );
 CREATE INDEX IF NOT EXISTS idx_feedback_reports_sender ON feedback_reports(sender_account_id, created_at);
+-- the reports of one note (the ON DELETE CASCADE from a note, the retention filter of every list), the purge of
+-- old report rows, and the reports of one learner (the erase and the cascade from learners)
+CREATE INDEX IF NOT EXISTS idx_feedback_reports_note    ON feedback_reports(note_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_feedback_reports_created ON feedback_reports(created_at, id);
+CREATE INDEX IF NOT EXISTS idx_feedback_reports_learner ON feedback_reports(learner_id);
 
 CREATE TABLE IF NOT EXISTS feedback_sender_holds (
   account_id  TEXT PRIMARY KEY,

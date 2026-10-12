@@ -5,6 +5,7 @@ import { assertNoteChecks, assertOneSender } from './feedback-rules';
 import {
   noteRetentionCuts,
   notePairPrefix,
+  type DeliveredNote,
   type LearnerNotesInbox,
   type NewNote,
   type NoteActVia,
@@ -614,7 +615,21 @@ export class MemoryDb implements Db {
     const notes = delivered
       .sort(newestNoteFirst)
       .slice(0, limit)
-      .map((n) => (n.senderRole === 'teacher' && mode === 'presets' ? { ...n, body: null } : n));
+      .map(
+        (n): DeliveredNote => ({
+          id: n.id,
+          spaceId: n.spaceId,
+          senderRole: n.senderRole,
+          senderLabel: n.senderLabel,
+          presetId: n.presetId,
+          body: n.senderRole === 'teacher' && mode === 'presets' ? null : n.body,
+          bodyLocale: n.bodyLocale,
+          suggest: n.suggest,
+          createdAt: n.createdAt,
+          readAt: n.readAt,
+          reaction: n.reaction,
+        }),
+      );
     return { notes: clone(notes), prefs: clone(prefs) };
   }
   async notesForSpace(spaceId: string, options: { before: NoteCursor | null; limit: number; now: Date; learnerId?: string }): Promise<StoredNote[]> {
@@ -662,11 +677,15 @@ export class MemoryDb implements Db {
     }
     return changed;
   }
-  async insertNoteReport(r: StoredNoteReport): Promise<void> {
+  async insertNoteReport(r: StoredNoteReport): Promise<boolean> {
+    const note = this.notes.get(r.noteId);
+    // within retention at the report time (section 8.7), or nothing is written
+    if (!note || !this.isVisible(note, new Date(r.createdAt))) return false;
     if (this.noteReports.has(r.id)) throw new Error('UNIQUE constraint failed: feedback_reports.id');
-    if (!this.notes.has(r.noteId) || !this.learners.has(r.learnerId)) throw new Error('FOREIGN KEY constraint failed: feedback_reports');
+    if (!this.learners.has(r.learnerId)) throw new Error('FOREIGN KEY constraint failed: feedback_reports');
     this.noteReports.set(r.id, clone(r));
     this.casNote(r.noteId, () => true, (n) => ({ ...n, status: 'reported' }));
+    return true;
   }
   async countReportersAgainst(accountId: string, since: Date): Promise<number> {
     const from = since.toISOString();
@@ -728,7 +747,7 @@ export class MemoryDb implements Db {
       .slice(0, limit);
     for (const n of stale) this.deleteNoteRow(n.id);
     const reports = [...this.noteReports.values()]
-      .filter((r) => r.createdAt < reportCut)
+      .filter((r) => r.createdAt < reportCut && this.notes.get(r.noteId)?.status !== 'reported')
       .sort((a, b) => (a.createdAt === b.createdAt ? (a.id < b.id ? -1 : 1) : a.createdAt < b.createdAt ? -1 : 1))
       .slice(0, limit);
     for (const r of reports) this.noteReports.delete(r.id);

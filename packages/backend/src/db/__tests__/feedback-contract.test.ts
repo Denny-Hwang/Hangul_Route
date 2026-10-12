@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { openSqliteD1 } from '../../__tests__/helpers/sqlite';
 import { D1Db } from '../d1';
-import { NOTE_INBOX_LIMIT, noteRateKey, type NewNote, type StoredNote } from '../feedback-types';
+import { NOTE_INBOX_LIMIT, noteRateKey, type DeliveredNote, type NewNote, type StoredNote } from '../feedback-types';
 import { MemoryDb } from '../memory';
 import type { Db } from '../types';
 import {
@@ -37,6 +37,21 @@ const stored = (n: NewNote, over: Partial<StoredNote> = {}): StoredNote => ({
   reactionAt: null,
   hiddenAt: null,
   withdrawnAt: null,
+  ...over,
+});
+/** What the inbox delivers of a fresh row: the learner-facing fields only, never the sender's account (section 8.1). */
+const delivered = (n: NewNote, over: Partial<DeliveredNote> = {}): DeliveredNote => ({
+  id: n.id,
+  spaceId: n.spaceId,
+  senderRole: n.senderRole,
+  senderLabel: n.senderLabel,
+  presetId: n.presetId,
+  body: n.body,
+  bodyLocale: n.bodyLocale,
+  suggest: n.suggest,
+  createdAt: n.createdAt,
+  readAt: null,
+  reaction: null,
   ...over,
 });
 const ids = (notes: ReadonlyArray<{ id: string }>): string[] => notes.map((n) => n.id);
@@ -165,7 +180,9 @@ function feedbackContract(name: string, make: () => Db): void {
         await send(newer);
         const box = await inbox();
         expect(box.prefs).toBeNull();
-        expect(box.notes).toEqual([stored(newer), stored(older)]);
+        expect(box.notes).toEqual([delivered(newer), delivered(older)]);
+        // the sender's account, the batch and the moderation columns never reach the device
+        for (const n of box.notes) expect(Object.keys(n).sort()).toEqual(Object.keys(delivered(newer)).sort());
         expect(await inbox('full', MIN)).toEqual({ notes: [], prefs: null });
         expect(await inbox('full', 'profile:nobody')).toEqual({ notes: [], prefs: null });
       });
@@ -213,11 +230,11 @@ function feedbackContract(name: string, make: () => Db): void {
         await db.putNotePrefs({ ...prefs, classes: 'presets' });
         const presets = await inbox();
         expect(presets.prefs).toEqual({ ...prefs, classes: 'presets' });
-        expect(presets.notes).toEqual([stored(f), stored(c, { body: null })]);
+        expect(presets.notes).toEqual([delivered(f), delivered(c, { body: null })]);
         // the stored row keeps the text for the sender and the family
         expect((await db.getNote(c.id))?.body).toBe('Loved your work today');
         await db.putNotePrefs({ ...prefs, classes: 'off' });
-        expect((await inbox()).notes).toEqual([stored(f)]);
+        expect((await inbox()).notes).toEqual([delivered(f)]);
         await db.putNotePrefs({ ...prefs, classes: 'all' });
         expect(ids((await inbox()).notes)).toEqual([f.id, c.id]);
       });
@@ -324,7 +341,28 @@ function feedbackContract(name: string, make: () => Db): void {
         await db.insertNoteReport(report(b.id, { senderAccountId: MOM, via: 'device', evidence: 'device-1', reporterKey: `family:${FAMILY}`, attest: 'grown_up_pin', reason: 'unsafe' }));
         expect((await db.getNote(a.id))?.status).toBe('reported');
         expect(await db.getNote(b.id)).toEqual(stored(b, { status: 'reported', withdrawnAt: iso(0) }));
-        await expect(db.insertNoteReport(report('note:missing0', { id: 'notereport:x' }))).rejects.toThrow(/FOREIGN KEY/);
+        expect(await db.insertNoteReport(report('note:missing0', { id: 'notereport:x' }))).toBe(false);
+        expect(await db.countReportersAgainst(TEACHER, at(-DAY))).toBe(1);
+      });
+
+      it('insertNoteReport records nothing on a note already past retention at the report time, so it never comes back (section 8.7)', async () => {
+        const expired = classNote({ createdAt: iso(-181 * DAY) });
+        const stale = classNote({ createdAt: iso(-100 * DAY) });
+        await send(expired);
+        await send(stale);
+        // a reported note whose only report is past 90 days is gone too, even before the purge
+        expect(await db.insertNoteReport(report(stale.id, { createdAt: iso(-91 * DAY) }))).toBe(true);
+        expect(await db.insertNoteReport(report(expired.id))).toBe(false);
+        expect(await db.insertNoteReport(report(stale.id, { id: 'notereport:again' }))).toBe(false);
+        expect((await db.getNote(expired.id))?.status).toBe('live');
+        expect(await db.notesForSpace(CLASS, { before: null, limit: 50, now: NOW })).toEqual([]);
+        expect(await db.notesForOversight(SUNI, { before: null, limit: 50, now: NOW })).toEqual([]);
+        expect(await db.countReportersAgainst(TEACHER, at(-DAY))).toBe(0);
+        // the edge: a note exactly 180 days old at the report time is still reportable
+        const edge = classNote({ createdAt: iso(-180 * DAY) });
+        await send(edge);
+        expect(await db.insertNoteReport(report(edge.id))).toBe(true);
+        expect(ids(await db.notesForOversight(SUNI, { before: null, limit: 50, now: NOW }))).toEqual([edge.id]);
       });
 
       it('countReportersAgainst counts distinct reporting families from `since` on', async () => {
@@ -476,6 +514,22 @@ function feedbackContract(name: string, make: () => Db): void {
         expect(await db.getSenderHold('acct-kept')).not.toBeNull();
         expect(await db.getSenderHold('acct-active')).not.toBeNull();
         expect(await db.countReportersAgainst(TEACHER, cut(400))).toBe(1);
+      });
+
+      it('purgeNotes keeps every report of a note still under review, and drops a stale reported note with its reports', async () => {
+        const underReview = classNote({ createdAt: iso(-150 * DAY) });
+        const stale = classNote({ createdAt: iso(-150 * DAY) });
+        for (const n of [underReview, stale]) await send(n);
+        await db.insertNoteReport(report(underReview.id, { id: 'notereport:first', createdAt: iso(-95 * DAY), reporterKey: 'family:first' }));
+        await db.insertNoteReport(report(underReview.id, { id: 'notereport:second', createdAt: iso(-10 * DAY), reporterKey: 'family:second' }));
+        await db.insertNoteReport(report(stale.id, { id: 'notereport:stale', createdAt: iso(-120 * DAY), reporterKey: 'family:stale' }));
+        const cut = (days: number) => at(-days * DAY);
+        // only the stale note goes (its report with it); the first report of the note under review stays for the owner's queue
+        expect(await db.purgeNotes(cut(180), cut(90), cut(365), 10)).toBe(1);
+        expect(await db.getNote(stale.id)).toBeNull();
+        expect((await db.getNote(underReview.id))?.status).toBe('reported');
+        expect(await db.countReportersAgainst(TEACHER, cut(400))).toBe(2);
+        expect(await db.purgeNotes(cut(180), cut(90), cut(365), 10)).toBe(0);
       });
 
       it("deleteLearner erases the learner's notes, reports, prefs, blocks and note counters, and nobody else's", async () => {

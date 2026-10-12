@@ -27,6 +27,7 @@ import { ENDED_TRANSFER_STATUSES, OPEN_TRANSFER_STATUSES } from './transfer-type
 import {
   noteRetentionCuts,
   notePairPrefix,
+  type DeliveredNote,
   type LearnerNotesInbox,
   type NewNote,
   type NoteActVia,
@@ -285,6 +286,20 @@ const toNote = (r: Row): StoredNote => ({
   hiddenAt: nstr(r.hidden_at),
   withdrawnAt: nstr(r.withdrawn_at),
 });
+/** The learner-facing fields of an inbox row (section 8.1): no sender account, batch or moderation column. */
+const toDeliveredNote = (r: Row): DeliveredNote => ({
+  id: str(r.id),
+  spaceId: str(r.space_id),
+  senderRole: str(r.sender_role) as DeliveredNote['senderRole'],
+  senderLabel: nstr(r.sender_label) as DeliveredNote['senderLabel'],
+  presetId: str(r.preset_id),
+  body: nstr(r.body),
+  bodyLocale: nstr(r.body_locale),
+  suggest: r.suggest_kind === 'quest' ? { kind: 'quest', id: str(r.suggest_id) } : null,
+  createdAt: str(r.created_at),
+  readAt: nstr(r.read_at),
+  reaction: nstr(r.reaction),
+});
 /** A prefs row; `p` is the column prefix the inbox query uses for the joined row. */
 const toNotePrefs = (r: Row, p = ''): StoredNotePrefs => ({
   learnerId: str(r[`${p}learner_id`]),
@@ -327,7 +342,8 @@ const NOTE_VISIBLE = "((n.status <> 'reported' AND n.created_at >= ?) OR (n.stat
 const NOTE_BEFORE = '(n.created_at < ? OR (n.created_at = ? AND n.id < ?))';
 /**
  * The inbox query, section 6.8 rules 1-7, in one statement with the learner's prefs row. The outer
- * one-row select carries the prefs even when no note is delivered. Binds (learnerId, learnerId,
+ * one-row select carries the prefs even when no note is delivered. It selects the learner-facing
+ * columns only: the sender's account id is used by rules 5-6 and never returned (section 8.1). Binds (learnerId, learnerId,
  * notesSince, scope, limit).
  */
 const INBOX_SQL = `SELECT p.learner_id AS p_learner_id, p.classes AS p_classes, p.acknowledged_at AS p_acknowledged_at, p.updated_at AS p_updated_at,
@@ -335,10 +351,9 @@ const INBOX_SQL = `SELECT p.learner_id AS p_learner_id, p.classes AS p_classes, 
   FROM (SELECT ? AS lid) x
   LEFT JOIN learner_note_prefs p ON p.learner_id = x.lid
   LEFT JOIN (
-    SELECT n.id, n.learner_id, n.space_id, n.sender_account_id, n.sender_role, n.sender_label, n.batch_id, n.batch_kind, n.preset_id,
+    SELECT n.id, n.space_id, n.sender_role, n.sender_label, n.preset_id,
       CASE WHEN n.sender_role = 'teacher' AND COALESCE(np.classes, 'all') = 'presets' THEN NULL ELSE n.body END AS body,
-      n.body_locale, n.suggest_kind, n.suggest_id, n.status, n.hidden_via, n.acted_by_account_id, n.created_at, n.read_at,
-      n.reaction, n.reaction_at, n.hidden_at, n.withdrawn_at
+      n.body_locale, n.suggest_kind, n.suggest_id, n.created_at, n.read_at, n.reaction
     FROM feedback_notes n
     JOIN spaces s ON s.id = n.space_id
     JOIN memberships lm ON lm.space_id = n.space_id AND lm.member_kind = 'learner' AND lm.member_id = n.learner_id AND lm.role = 'student'
@@ -1016,7 +1031,7 @@ export class D1Db implements Db {
     const first = rows[0];
     return {
       prefs: first && first.p_learner_id !== null && first.p_learner_id !== undefined ? toNotePrefs(first, 'p_') : null,
-      notes: rows.filter((r) => r.id !== null && r.id !== undefined).map(toNote),
+      notes: rows.filter((r) => r.id !== null && r.id !== undefined).map(toDeliveredNote),
     };
   }
   notesForSpace(spaceId: string, options: { before: NoteCursor | null; limit: number; now: Date; learnerId?: string }): Promise<StoredNote[]> {
@@ -1066,13 +1081,19 @@ export class D1Db implements Db {
   withdrawBatch(batchId: string, senderAccountId: string, at: Date): Promise<number> {
     return this.changes("UPDATE feedback_notes SET status = 'withdrawn', withdrawn_at = ? WHERE batch_id = ? AND sender_account_id = ? AND status = 'live'", [at.toISOString(), batchId, senderAccountId]);
   }
-  async insertNoteReport(r: StoredNoteReport): Promise<void> {
-    await this.d1.batch([
+  async insertNoteReport(r: StoredNoteReport): Promise<boolean> {
+    // Only while the note is still within retention at the report time (section 8.7): a report never brings
+    // back a note that every list already hides. The status follows only the row this batch inserted.
+    const cuts = noteRetentionCuts(new Date(r.createdAt));
+    const results = await this.d1.batch([
       this.d1
-        .prepare('INSERT INTO feedback_reports (id, note_id, learner_id, sender_account_id, reason, via, evidence, reporter_key, attest, created_at, reviewed_at, outcome) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-        .bind(r.id, r.noteId, r.learnerId, r.senderAccountId, r.reason, r.via, r.evidence, r.reporterKey, r.attest, r.createdAt, r.reviewedAt, r.outcome),
-      this.d1.prepare("UPDATE feedback_notes SET status = 'reported' WHERE id = ?").bind(r.noteId),
+        .prepare(
+          `INSERT INTO feedback_reports (id, note_id, learner_id, sender_account_id, reason, via, evidence, reporter_key, attest, created_at, reviewed_at, outcome) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM feedback_notes n WHERE n.id = ? AND ${NOTE_VISIBLE})`,
+        )
+        .bind(r.id, r.noteId, r.learnerId, r.senderAccountId, r.reason, r.via, r.evidence, r.reporterKey, r.attest, r.createdAt, r.reviewedAt, r.outcome, r.noteId, cuts.notesSince, cuts.reportsSince),
+      this.d1.prepare("UPDATE feedback_notes SET status = 'reported' WHERE id = ? AND EXISTS (SELECT 1 FROM feedback_reports WHERE id = ? AND note_id = ?)").bind(r.noteId, r.id, r.noteId),
     ]);
+    return readChanges(results[0]) === 1;
   }
   countReportersAgainst(accountId: string, since: Date): Promise<number> {
     return this.count('SELECT COUNT(DISTINCT reporter_key) AS n FROM feedback_reports WHERE sender_account_id = ? AND created_at >= ?', [accountId, since.toISOString()]);
@@ -1135,8 +1156,13 @@ export class D1Db implements Db {
       this.d1
         .prepare("DELETE FROM feedback_notes WHERE id IN (SELECT n.id FROM feedback_notes n WHERE n.status = 'reported' AND NOT EXISTS (SELECT 1 FROM feedback_reports r WHERE r.note_id = n.id AND r.created_at >= ?) ORDER BY n.created_at, n.id LIMIT ?)")
         .bind(reportedBefore.toISOString(), limit),
-      // report rows past the cut whose note stays (the owner restored it)
-      this.d1.prepare('DELETE FROM feedback_reports WHERE id IN (SELECT id FROM feedback_reports WHERE created_at < ? ORDER BY created_at, id LIMIT ?)').bind(reportedBefore.toISOString(), limit),
+      // report rows past the cut of a note that is no longer under review (the owner restored or hid it); a note
+      // still reported keeps every report, older ones included, until it goes with them
+      this.d1
+        .prepare(
+          "DELETE FROM feedback_reports WHERE id IN (SELECT r.id FROM feedback_reports r JOIN feedback_notes n ON n.id = r.note_id WHERE r.created_at < ? AND n.status <> 'reported' ORDER BY r.created_at, r.id LIMIT ?)",
+        )
+        .bind(reportedBefore.toISOString(), limit),
       this.d1.prepare('DELETE FROM feedback_sender_holds WHERE account_id IN (SELECT account_id FROM feedback_sender_holds WHERE lifted_at IS NOT NULL AND lifted_at < ? ORDER BY lifted_at, account_id LIMIT ?)').bind(liftedBefore.toISOString(), limit),
     ]);
     return results.reduce((sum, r) => sum + readChanges(r), 0);

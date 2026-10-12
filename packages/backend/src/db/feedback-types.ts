@@ -49,11 +49,13 @@ export interface StoredNote {
 export type NewNote = Pick<StoredNote, 'id' | 'learnerId' | 'spaceId' | 'senderAccountId' | 'senderRole' | 'senderLabel' | 'batchId' | 'batchKind' | 'presetId' | 'body' | 'bodyLocale' | 'suggest' | 'createdAt'>;
 
 /**
- * One note as the inbox delivers it (section 6.8): the stored row, except that
- * the text of a class note is null while the learner's class notes are in
+ * One note as the inbox delivers it (section 6.8): only the fields the
+ * learner's device shows (`InboxNoteSchema`). The sender's account id, the
+ * batch and the moderation columns never leave the Worker (section 8.1). The
+ * text of a class note is null while the learner's class notes are in
  * `presets` mode (the stored row keeps it for the sender and the family).
  */
-export type DeliveredNote = StoredNote;
+export type DeliveredNote = Pick<StoredNote, 'id' | 'spaceId' | 'senderRole' | 'senderLabel' | 'presetId' | 'body' | 'bodyLocale' | 'suggest' | 'createdAt' | 'readAt' | 'reaction'>;
 
 /** One `feedback_reports` row. `evidence` is an account id or a device id, never a name. */
 export interface StoredNoteReport {
