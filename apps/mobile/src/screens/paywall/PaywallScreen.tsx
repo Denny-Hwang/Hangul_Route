@@ -5,31 +5,18 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { billingNote, billingOpenedEvent, billingPressStep, pendingBillingStep, planView } from '../../logic/paywall';
-import { gateOpensDirectly } from '../../logic/profiles/gate-route';
-import { isParentSessionValid } from '../../logic/profiles/session';
 import type { RootStackParamList } from '../../navigation/types';
 import { openBilling } from '../../platform/billing-handoff';
 import { HAND_OFF_NEEDS_TAP } from '../../platform/external-link';
 import { focusForScreenReader } from '../../platform/screen-reader';
 import { track } from '../../platform/telemetry';
-import { useAccountStore } from '../../store/account-store';
 import { useAudience } from '../../store/audience';
+import { gateOpensDirectlyNow } from '../../store/gate-now';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { effectiveTier, useTierStore } from '../../store/tier-store';
-import { useUiStore } from '../../store/ui-store';
 import { FreePlanLines, PlanGuidanceLine } from './PlanSlots';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Paywall'>;
-
-/** Whether Open billing skips the PIN screen right now, read fresh from the stores (F-LEARN-001 L7): the PIN screen opens the session just before it returns here. */
-function gateOpenNow(): boolean {
-  const openedAt = useUiStore.getState().parentGateOpenedAt;
-  return gateOpensDirectly({
-    profiles: useProfileStore.getState().profiles,
-    parentPinHash: useAccountStore.getState().parentPinHash,
-    sessionOpen: isParentSessionValid(openedAt === null ? null : { openedAt, profileId: 'family' }, Date.now()),
-  });
-}
 
 /**
  * The learner Plan screen — F-BILL-002 B-9 (§4.7, §4.8; wireframe billing/plan-status; mock
@@ -74,7 +61,7 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
   const gateDone = view.billing?.gateDone ?? null;
   useFocusEffect(
     useCallback(() => {
-      const step = pendingBillingStep(pending.current, gateOpenNow(), HAND_OFF_NEEDS_TAP);
+      const step = pendingBillingStep(pending.current, gateOpensDirectlyNow(), HAND_OFF_NEEDS_TAP);
       pending.current = false;
       if (step === 'open') void handOff();
       else if (step === 'tap-again' && gateDone !== null) {
@@ -86,7 +73,7 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
 
   const onOpenBilling = (): void => {
     setNote(null);
-    if (billingPressStep(gateOpenNow()) === 'open') {
+    if (billingPressStep(gateOpensDirectlyNow()) === 'open') {
       // Called straight from the press so the web hand-off keeps the tap (pop-up rules).
       void handOff();
       return;

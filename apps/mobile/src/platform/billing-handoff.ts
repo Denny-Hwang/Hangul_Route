@@ -8,6 +8,9 @@ import { openExternalUrl } from './external-link';
  * uses. On the web that is a new tab opened inside the tap, with its opener cleared, and a blocked
  * tab is reported as `failed` so the screen can show the address to type. `openExternalUrl` is
  * called before anything is awaited, so the tap's user activation reaches `window.open`.
+ * The billing base must be `https:` (`EXPO_PUBLIC_CONSOLE_URL`, default hangulroute.com): the hand-off
+ * refuses any other scheme, so an `http://localhost` console in a dev build comes back as `failed`
+ * and the screen shows the address to type instead of opening it.
  * B-9b adds the same-tab `openGrownUpArea` branch behind `flags.grownUpHomeEnabled`.
  */
 export async function openBilling(): Promise<{ outcome: OpenLinkOutcome; url: string }> {

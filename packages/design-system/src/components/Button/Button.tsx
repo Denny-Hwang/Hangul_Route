@@ -121,7 +121,7 @@ export function Button({
           </Text>
           {trailing ? <View style={{ marginLeft: spacing.sm }}>{trailing}</View> : null}
           {webHint ? (
-            <Text nativeID={hintId} style={{ display: 'none' }}>
+            <Text id={hintId} style={{ display: 'none' }}>
               {accessibilityHint}
             </Text>
           ) : null}
