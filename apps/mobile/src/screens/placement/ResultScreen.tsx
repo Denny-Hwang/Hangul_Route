@@ -50,7 +50,7 @@ const PRIMARY_ACTION: Readonly<Record<ResultPrimary, ResultAction>> = {
 };
 
 const LINK_ACTION: Readonly<Record<ResultLink, ResultAction>> = {
-  seeMyRoute: 'seeMap',
+  seeMyRoute: 'seeMyRoute',
   seeMap: 'seeMap',
   forGrownUps: 'forGrownUps',
   forGrownUpsPlan: 'forGrownUps',

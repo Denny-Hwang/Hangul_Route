@@ -102,7 +102,7 @@ export function JourneyScreen(): React.ReactElement {
       <Spacer size="xs" />
       <Body tone="secondary">{m.intro}</Body>
       {flags.myRouteEnabled ? (
-        // F-ROUTE-001 R-3: the first entry to My route, under the intro line.
+        // The Journey header link "See Learning Route" (LR-OD-11) opens the Route tab (AMENDMENTS-ROUTE-LEARNING-ROUTE section 5.2).
         <>
           <Spacer size="sm" />
           <View style={{ alignSelf: 'flex-start' }}>
@@ -110,7 +110,7 @@ export function JourneyScreen(): React.ReactElement {
               label={messages.learner.myRoute.open.cta}
               tone="secondary"
               size="md"
-              onPress={() => navigation.navigate('MyRoute', { source: 'journey' })}
+              onPress={() => navigation.navigate('Main', { screen: 'Route' })}
               testID="journey-my-route"
             />
           </View>

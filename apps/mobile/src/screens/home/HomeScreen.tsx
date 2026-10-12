@@ -436,7 +436,7 @@ export function HomeScreen(): React.ReactElement {
   // Block 5 of the Home stack (F-ROUTE-001 section 6.4): the route strip replaces the
   // "Stage 1 progress" bar when the flag is on (OD-3); with the flag off Home is unchanged.
   const progressBlock = flags.myRouteEnabled ? (
-    routeStrip ? <RouteStrip view={routeStrip} onPress={() => navigation.navigate('MyRoute', { source: 'home' })} /> : null
+    routeStrip ? <RouteStrip view={routeStrip} onPress={() => navigation.navigate('Main', { screen: 'Route' })} /> : null
   ) : (
     <>
       <Heading level="prompt">{m.learner.home.progress.heading}</Heading>
