@@ -295,6 +295,16 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
           teachWord(word);
         }
         return;
+      case 'pic-word-match':
+        // Every word on every board, in board order (F-QUEST-002 §3.11): KoText always carries romanization and a gloss.
+        for (const board of listOf(scope.picWord?.boards)) {
+          for (const pair of board.pairs) {
+            const word = { ko: pair.word.ko, romanization: pair.word.romanization, gloss: pair.word.en };
+            push(`${path}/${pair.word.ko}`, { kind: 'vocab', word });
+            teachWord(word);
+          }
+        }
+        return;
       case 'story-sequence': {
         const steps: SequenceStep[] = [];
         for (const step of listOf(scope.storySteps)) {
