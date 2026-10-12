@@ -1,0 +1,44 @@
+name: Source Links
+
+# F-STORY-001 §3.7 "Link rot": a monthly (and manual) check of every source URL
+# the stories cite. It opens one issue per run when links are broken. It never
+# runs on a pull request or a push, so a slow or blocking host can never fail
+# a PR or turn main red, and it is not one of the required checks.
+on:
+  schedule:
+    - cron: "17 3 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: source-links
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Story source links
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Check every cited URL
+        id: links
+        run: node scripts/check-source-links.mjs --out "$RUNNER_TEMP/source-links.md"
+
+      - name: Open an issue listing the problems
+        if: steps.links.outputs.problems != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROBLEMS: ${{ steps.links.outputs.problems }}
+        run: gh issue create --title "Source link check: $PROBLEMS problem(s), $(date -u +%F)" --body-file "$RUNNER_TEMP/source-links.md"

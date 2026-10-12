@@ -21,6 +21,8 @@
 | `build-overlays.mjs` | F-I18N-001 §3.6 | `.github/workflows/content-validation.yml` (and `pnpm run test:scripts`, whose self-test runs `--check` on the repository) | `content/i18n/{es,ko}/*.json` → `packages/content-schema/src/i18n-overlays.generated.ts` (`OVERLAYS`, only allowed fields); `--check` fails on drift. Authoring rules: `content/i18n/README.md` |
 | `i18n-status.mjs` | F-I18N-001 §3.10 | `.github/workflows/ci.yml` (and `pnpm run test:scripts`, whose self-test runs it on the repository) | per locale and namespace of `packages/i18n/src/messages/en/`: missing keys (`fallbackPaths`; the English-authoritative legal text is not counted), native review from `packages/i18n/src/messages/review-ledger.json` (current / stale when the English file's sha256 changed / not reviewed), `LOCALE_STATUS`. Prints the current `enSha` of each English namespace (reviewers copy it into the ledger; CRLF is hashed as LF). Fails on missing keys in a `'shipped'` locale and on the automatable parts of the §3.10 step 5 release gate (a ledger entry per namespace, the locale in `HANGUL_ROUTE_STRICT_LOCALES` of `content-validation.yml`, declared once); with `--base <ref>` (CI on a pull request) the PR that flips a locale to `'shipped'` also needs every review current. Stale namespaces of a shipped locale warn. The §3.11 layout matrix is not checked here; it stays a manual gate for PR 15 / 16. `--list` prints the missing paths (R8 input). Loads the TypeScript dictionary through `ts-loader.mjs` |
 | `import-heritage.mjs` | F-STORY-001 | (none: one-time, run by hand) | `content/stories/research/<cluster>.final.json` → `content/stories/<slug>.json` drafts (`--dry-run` is the default, `--write` writes, never overwrites an authored story) |
+| `check-story-versions.mjs` | F-STORY-001 §3.7 | `.github/workflows/content-validation.yml` (checkout with `fetch-depth: 0`) | each `content/stories/*.json` against `git show origin/main:<path>` (`--base <ref>` to change): `content-ver-not-bumped`, `fact-rev-not-bumped`, `fact-removed-silently`, `version-decreased` when the base is `ready`; append-only errata and `contentVer: 1` for a new file always. Plain JSON, no schema import |
+| `check-source-links.mjs` | F-STORY-001 §3.7 | `.github/workflows/source-links.yml` (monthly + manual, never on a PR; opens one issue per run with problems) | every unique `facts[].sources[].url` of `content/stories/*.json`: HEAD then GET, 10 s timeout, 2 requests per host per second; reports 4xx/5xx, redirects to another host, TLS failures and unreachable URLs. Hosts in `scripts/source-link-ignore.json` are skipped. Always exit 0 |
 
 Run locally:
 
@@ -43,6 +45,9 @@ node scripts/build-placement-bank.mjs --check   # drift detector (CI)
 node scripts/build-overlays.mjs           # regenerate the content overlays
 node scripts/build-overlays.mjs --check   # drift detector (CI)
 node scripts/import-heritage.mjs --src content/stories/research --dry-run   # report only (one-time importer)
+node scripts/check-story-versions.mjs      # story version rules against origin/main (git fetch origin first)
+node scripts/check-source-links.mjs --list   # the cited source URLs (no requests)
+node scripts/check-source-links.mjs          # check every cited URL (network; about a minute)
 ```
 
 각 스크립트는 (a) gate 충족, 또는 (b) 검사할 데이터가 아직 없을 때 (커버리지 리포트 부재 / `content/*.json` 부재 / 토큰 MD 부재) **exit 0** 으로 통과하고, 그 외에는 `::error::` annotation 과 함께 **exit 1** 로 실패한다.
