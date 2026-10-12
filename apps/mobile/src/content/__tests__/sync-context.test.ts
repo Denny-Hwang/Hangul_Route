@@ -1,7 +1,6 @@
 import { JourneySummarySchema, type ProgressSnapshot } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { isStagePlayable } from '../../logic/entitlement';
-import { scopeFor } from '../../logic/minigame-config';
 import { journeySummaryOf } from '../../logic/my-route/summary';
 import { STAGE1_QUESTS, questTeaches } from '../../logic/stage1/curriculum';
 import { episodesAll } from '../episodes';
@@ -13,12 +12,15 @@ const charOf = new Map(jamoAll.map((j) => [j.id, j.char]));
 
 /**
  * The grown-up summary (`jamoRecognized`, `needsPractice`) credits a finished quest with
- * what it teaches: the Discover symbols of a rebuilt quest (F-QUEST-002 Q-6a), never the
- * review symbols its practice, apply or Check scopes also ask.
+ * what it teaches: its Discover symbols (F-QUEST-002 Q-6a), never the review symbols its
+ * practice, apply or Check scopes also ask. Since Q-8 every Stage 1 quest has a Discover
+ * step, so the five reading quests (R5) credit no letter. A final is credited as its
+ * letter (one compatibility jamo, the shape `needsPractice` consumers read).
  */
 describe('questJamo: the symbols each Stage 1 quest teaches', () => {
-  it('lists every Stage 1 quest', () => {
+  it('lists every Stage 1 quest: all 15, so the summary counts 15', () => {
     expect(Object.keys(questJamo).sort()).toEqual([...stage1QuestIds].sort());
+    expect(stage1QuestIds).toHaveLength(15);
   });
 
   it('credits letters q1-q3 with their Discover symbols only', () => {
@@ -27,14 +29,18 @@ describe('questJamo: the symbols each Stage 1 quest teaches', () => {
     expect(questJamo['quest:stage1-letters-q3']).toEqual(['ㅡ', 'ㅣ', 'ㄷ', 'ㄹ']);
   });
 
-  it('falls back to the scope symbols for a quest without a Discover step yet', () => {
-    const notRebuilt = STAGE1_QUESTS.filter((q) => questTeaches(q).length === 0);
-    expect(notRebuilt.length).toBeGreaterThan(0);
-    for (const quest of notRebuilt) {
-      const fromScopes = new Set(
-        quest.steps.flatMap((step) => (step.minigameRef ? scopeFor(step.minigameRef)?.jamoIds ?? [] : [])).map((id) => charOf.get(id)),
-      );
-      expect(new Set(questJamo[quest.id])).toEqual(fromScopes);
+  it('credits every Stage 1 quest with exactly its Discover symbols, a final as its letter', () => {
+    for (const quest of STAGE1_QUESTS) {
+      expect(quest.steps.some((s) => s.kind === 'discover'), quest.id).toBe(true);
+      expect(questJamo[quest.id], quest.id).toEqual([...new Set(questTeaches(quest).map((id) => charOf.get(id)))]);
+    }
+    expect(questJamo['quest:stage1-rites-q1']).toEqual(['ㄴ', 'ㄹ']);
+    expect(questJamo['quest:stage1-nature-q1']).toEqual(['ㅁ', 'ㅂ']);
+  });
+
+  it('credits no letter for the reading quests 11-15, whatever their games ask (the quest 12 trace asks four finals)', () => {
+    for (const id of ['nature-q2', 'nature-q3', 'crafts-q1', 'crafts-q2', 'crafts-q3']) {
+      expect(questJamo[`quest:stage1-${id}`], id).toEqual([]);
     }
   });
 });
