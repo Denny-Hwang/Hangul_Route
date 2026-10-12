@@ -215,7 +215,10 @@ describe('14-day simulation on the launch vocabulary (section 3.6)', () => {
     const picked = selectSpeedWords({ collected: catalog.topicItems('food'), progress: v, today, count: 10, seed: 6 });
     expect(picked).toHaveLength(10);
     expect(new Set(picked.map((i) => i.id)).size).toBe(10);
+    // Day 6 has due words (the miss of day 5 among them): an empty head would check nothing.
+    expect(due.length).toBeGreaterThan(0);
     const head = picked.slice(0, Math.min(6, due.length)).map((i) => stateOf(v, i.id));
+    expect(head.length).toBeGreaterThan(0);
     for (const s of head) expect(s && isDue(s, today)).toBe(true);
     const dues = head.map((s) => s?.due ?? '');
     expect(dues).toEqual([...dues].sort());
@@ -383,7 +386,9 @@ describe('30-day simulation: three topics, Daily Tests, Speed Rounds and a week 
     expect([...home.pools.a, ...home.pools.b, ...home.pools.d].sort()).toEqual(waiting);
     // Nothing the learner sees or a caregiver reads knows how long they were away.
     const nudge = vocabNudge(home.before, topicOf, dayOf(21));
-    if (nudge) expect(Object.keys(nudge).sort()).toEqual(['due', 'topicKey']);
+    // Many words wait on day 21, so a nudge is built: its keys are checked, not skipped.
+    expect(nudge).not.toBeNull();
+    expect(Object.keys(nudge ?? {}).sort()).toEqual(['due', 'topicKey']);
     expect(Object.keys(vocabSummaryOf(home.before, dayOf(21))).sort()).toEqual(['collected', 'firstTryRate', 'needsPractice', 'strong', 'topicsPracticed7d', 'topicsStarted']);
   });
 
@@ -554,7 +559,11 @@ describe('two devices: phone and tablet (sections 3.3 and 3.11, behaviours 6, 7 
     }
   });
 
-  it('a reset sends the empty slice; only a device that still holds the words brings them back (behaviour 15)', async () => {
+  // The reset snapshot is built here as the store's reset writes it for a profile that held words
+  // (`progress-store.reset`: the empty slice, not an absent key; pinned by progress-store.test.ts,
+  // "reset writes the empty slice"). memoryServer does not model the Worker's absent-key preserve
+  // rule; backend sync.test.ts and additive-fields.test.ts cover it.
+  it('a reset sends the empty slice; a device that still holds the words brings them back (behaviour 15)', async () => {
     const { server, phone, tablet } = await converge('phone-first');
     expect(server.stored?.snapshot.vocab?.items).toHaveLength(12);
     // The phone is up to date with the server through the engine itself, not by hand.
@@ -574,7 +583,9 @@ describe('two devices: phone and tablet (sections 3.3 and 3.11, behaviours 6, 7 
     expect(mergeSnapshots(snapshotWith('profile:mina', emptyVocab(), at(12)), tablet.snapshot, { now: at(12) }).vocab).toEqual(tablet.snapshot.vocab);
   });
 
-  it('a reset on a device behind the server is undone by its own conflict merge (section 3.10)', async () => {
+  // Pins today's behaviour, not a decision: whether a reset should stick on a stale device is
+  // open item 10 of the spec (an owner decision; cards and quests behave the same way).
+  it('a reset on a device behind the server is undone by its own conflict merge (section 3.10, behaviour 15, open item 10)', async () => {
     const server = memoryServer();
     const phone: Device = { name: 'phone', snapshot: snapshotWith('profile:mina', phone0, at(11, 10)), rev: 0 };
     const tablet: Device = { name: 'tablet', snapshot: snapshotWith('profile:mina', tablet0, at(11, 11)), rev: 0 };
