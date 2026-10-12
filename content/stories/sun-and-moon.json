@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:sun-and-moon",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "해님 달님",
     "romanization": "Haenim Dallim",
@@ -166,7 +166,7 @@
                 "s": 0.9
               }
             ],
-            "altEn": "Hoya sits ready for story time in front of a folding screen painted with the sun, the moon and five peaks."
+            "altEn": "Hoya is ready for story time in front of a folding screen painted with the sun, the moon and five peaks."
           }
         },
         {
@@ -204,7 +204,7 @@
                 "flip": true
               }
             ],
-            "altEn": "On her way home over a hill, a mother carrying rice cakes meets a round, silly-looking tiger."
+            "altEn": "On her way home over a hill, a mother meets a round, silly-looking tiger."
           }
         },
         {
@@ -228,7 +228,7 @@
             "setting": "scene:hanok-room",
             "layers": [
               {
-                "ref": "prop:fig-girl",
+                "ref": "prop:fig-child",
                 "x": 150,
                 "y": 286,
                 "s": 1.4
@@ -237,18 +237,11 @@
                 "ref": "prop:fig-child",
                 "x": 222,
                 "y": 286,
-                "s": 1.3
-              },
-              {
-                "ref": "prop:tiger-trickster",
-                "x": 346,
-                "y": 292,
-                "s": 1.0,
-                "flip": true,
-                "tint": "brand.primary"
+                "s": 1.3,
+                "tint": "brand.secondaryLight"
               }
             ],
-            "altEn": "Inside the house a brother and sister look toward the door, where a silly tiger pretends to be their mother."
+            "altEn": "Inside the house a brother and sister look toward the closed door, unsure who is knocking."
           }
         },
         {
@@ -363,7 +356,7 @@
                 "s": 1.15
               }
             ],
-            "altEn": "The tiger slips and slides down the oily tree trunk, and the brother and sister giggle safely above."
+            "altEn": "The tiger stands stuck at the foot of the oily tree while the brother and sister giggle safely above."
           }
         },
         {

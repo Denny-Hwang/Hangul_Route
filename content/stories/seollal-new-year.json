@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:seollal-new-year",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "호야의 설날 아침",
     "romanization": "Hoyaui Seollal achim",
@@ -442,7 +442,7 @@
         },
         {
           "id": "s8",
-          "narrationEn": "In 2023, Korea listed five traditional holidays as National Intangible Heritage. One is Seol and Daeboreum: the New Year and the first full moon. Yunnori was listed in 2022. Hoya bows: 'Saehae bok mani badeuseyo!'",
+          "narrationEn": "In 2023, Korea listed five traditional holidays as National Intangible Heritage. One is Seol and Daeboreum: the New Year and the first full moon. Yunnori was listed in 2022. Hoya waves: 'Saehae bok mani badeuseyo!'",
           "captionEn": "Two National Intangible Heritage listings",
           "keyword": {
             "id": "gukga-muhyeong-yusan",

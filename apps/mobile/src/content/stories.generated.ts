@@ -1361,7 +1361,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:chuseok-ganggangsullae",
     "state": "ready",
-    "contentVer": 2,
+    "contentVer": 3,
     "title": {
       "ko": "추석 송편과 보름달",
       "romanization": "Chuseok songpyeongwa boreumdal",
@@ -1527,7 +1527,7 @@ export const storiesAll: Story[] = [
                   "s": 0.95
                 }
               ],
-              "altEn": "Golden rice fields and persimmon trees heavy with orange fruit at harvest time, as a farmer works and Hoya stretches up happily."
+              "altEn": "Golden rice fields and persimmon trees heavy with orange fruit at harvest time, as a farmer works and Hoya cheers."
             }
           },
           {
@@ -1667,7 +1667,7 @@ export const storiesAll: Story[] = [
                   "s": 0.7
                 }
               ],
-              "altEn": "Freshly steamed half-moon songpyeon rest on fragrant pine needles, and Hoya leans in to smell them."
+              "altEn": "Freshly steamed half-moon songpyeon rest on fragrant pine needles, and Hoya is ready to taste one."
             }
           },
           {
@@ -1823,7 +1823,7 @@ export const storiesAll: Story[] = [
                   "s": 0.85
                 }
               ],
-              "altEn": "By the sea at night, dancers sit low in a line for the fern-picking game, and Hoya wonders what ganggangsullae means."
+              "altEn": "By the sea at night, dancers crouch low in a line for the fern-picking game, and Hoya wonders what ganggangsullae means."
             }
           },
           {
@@ -1853,6 +1853,12 @@ export const storiesAll: Story[] = [
                   "s": 1.1
                 },
                 {
+                  "ref": "prop:full-moon",
+                  "x": 228,
+                  "y": 150,
+                  "s": 1
+                },
+                {
                   "ref": "prop:fig-elder-seated",
                   "x": 200,
                   "y": 262,
@@ -1878,7 +1884,7 @@ export const storiesAll: Story[] = [
                   "s": 0.65
                 }
               ],
-              "altEn": "With the moon in the window at night, the family shares rice cakes and fruit, and Hoya joins them."
+              "altEn": "With the full moon in the window at night, the family shares rice cakes and fruit, and Hoya joins them."
             }
           }
         ],
@@ -2322,7 +2328,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:dano-ssireum",
     "state": "ready",
-    "contentVer": 2,
+    "contentVer": 3,
     "title": {
       "ko": "단옷날의 그네, 탈, 씨름",
       "romanization": "Danonnarui geune, tal, ssireum",
@@ -2515,7 +2521,7 @@ export const storiesAll: Story[] = [
                   "s": 0.6
                 }
               ],
-              "altEn": "By a stream a woman stands beside tall sweet flag, the plant once boiled for Dano hair washing, and Hoya sniffs its leaves."
+              "altEn": "By a stream a woman stands beside tall sweet flag, the plant once boiled for Dano hair washing, and Hoya stands nearby."
             }
           },
           {
@@ -4016,7 +4022,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:gimjang-arirang",
     "state": "ready",
-    "contentVer": 2,
+    "contentVer": 3,
     "title": {
       "ko": "김장하는 날과 아리랑",
       "romanization": "Gimjanghaneun nalgwa Arirang",
@@ -4494,7 +4500,7 @@ export const storiesAll: Story[] = [
                   "s": 0.9
                 }
               ],
-              "altEn": "Hoya walks a winding mountain path past little groups of people, each singing their own Arirang."
+              "altEn": "Hoya waves beside a winding mountain path past little groups of people, each singing their own Arirang."
             }
           }
         ],
@@ -11202,7 +11208,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:pansori-tales",
     "state": "ready",
-    "contentVer": 2,
+    "contentVer": 3,
     "title": {
       "ko": "판소리로 듣는 흥부와 놀부, 토끼와 자라",
       "romanization": "Pansoriro deunneun Heungbuwa Nolbu, tokkiwa jara",
@@ -11338,12 +11344,11 @@ export const storiesAll: Story[] = [
               "setting": "scene:hanji-backdrop",
               "layers": [
                 {
-                  "ref": "prop:fig-writer-seated",
+                  "ref": "prop:fig-elder-seated",
                   "x": 318,
                   "y": 262,
                   "s": 1,
-                  "z": "back",
-                  "tint": "surface.sunken"
+                  "z": "back"
                 },
                 {
                   "ref": "prop:fig-pansori",
@@ -11406,12 +11411,11 @@ export const storiesAll: Story[] = [
               "setting": "scene:hanji-backdrop",
               "layers": [
                 {
-                  "ref": "prop:fig-writer-seated",
+                  "ref": "prop:fig-elder-seated",
                   "x": 272,
                   "y": 268,
                   "s": 1.25,
-                  "z": "back",
-                  "tint": "surface.sunken"
+                  "z": "back"
                 },
                 {
                   "ref": "prop:fig-pansori",
@@ -11463,7 +11467,7 @@ export const storiesAll: Story[] = [
                   "s": 1.1
                 }
               ],
-              "altEn": "Kind Heungbu gently binds the broken leg of a baby swallow outside his straw-roofed home."
+              "altEn": "Kind Heungbu stands outside his straw-roofed home as the baby swallow he helped flies beside him."
             }
           },
           {
@@ -13063,7 +13067,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:seollal-new-year",
     "state": "ready",
-    "contentVer": 2,
+    "contentVer": 3,
     "title": {
       "ko": "호야의 설날 아침",
       "romanization": "Hoyaui Seollal achim",
@@ -13503,7 +13507,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s8",
-            "narrationEn": "In 2023, Korea listed five traditional holidays as National Intangible Heritage. One is Seol and Daeboreum: the New Year and the first full moon. Yunnori was listed in 2022. Hoya bows: 'Saehae bok mani badeuseyo!'",
+            "narrationEn": "In 2023, Korea listed five traditional holidays as National Intangible Heritage. One is Seol and Daeboreum: the New Year and the first full moon. Yunnori was listed in 2022. Hoya waves: 'Saehae bok mani badeuseyo!'",
             "captionEn": "Two National Intangible Heritage listings",
             "keyword": {
               "id": "gukga-muhyeong-yusan",
@@ -17299,7 +17303,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:sun-and-moon",
     "state": "ready",
-    "contentVer": 2,
+    "contentVer": 3,
     "title": {
       "ko": "해님 달님",
       "romanization": "Haenim Dallim",
@@ -17463,7 +17467,7 @@ export const storiesAll: Story[] = [
                   "s": 0.9
                 }
               ],
-              "altEn": "Hoya sits ready for story time in front of a folding screen painted with the sun, the moon and five peaks."
+              "altEn": "Hoya is ready for story time in front of a folding screen painted with the sun, the moon and five peaks."
             }
           },
           {
@@ -17501,7 +17505,7 @@ export const storiesAll: Story[] = [
                   "flip": true
                 }
               ],
-              "altEn": "On her way home over a hill, a mother carrying rice cakes meets a round, silly-looking tiger."
+              "altEn": "On her way home over a hill, a mother meets a round, silly-looking tiger."
             }
           },
           {
@@ -17525,7 +17529,7 @@ export const storiesAll: Story[] = [
               "setting": "scene:hanok-room",
               "layers": [
                 {
-                  "ref": "prop:fig-girl",
+                  "ref": "prop:fig-child",
                   "x": 150,
                   "y": 286,
                   "s": 1.4
@@ -17534,18 +17538,11 @@ export const storiesAll: Story[] = [
                   "ref": "prop:fig-child",
                   "x": 222,
                   "y": 286,
-                  "s": 1.3
-                },
-                {
-                  "ref": "prop:tiger-trickster",
-                  "x": 346,
-                  "y": 292,
-                  "s": 1,
-                  "flip": true,
-                  "tint": "brand.primary"
+                  "s": 1.3,
+                  "tint": "brand.secondaryLight"
                 }
               ],
-              "altEn": "Inside the house a brother and sister look toward the door, where a silly tiger pretends to be their mother."
+              "altEn": "Inside the house a brother and sister look toward the closed door, unsure who is knocking."
             }
           },
           {
@@ -17660,7 +17657,7 @@ export const storiesAll: Story[] = [
                   "s": 1.15
                 }
               ],
-              "altEn": "The tiger slips and slides down the oily tree trunk, and the brother and sister giggle safely above."
+              "altEn": "The tiger stands stuck at the foot of the oily tree while the brother and sister giggle safely above."
             }
           },
           {

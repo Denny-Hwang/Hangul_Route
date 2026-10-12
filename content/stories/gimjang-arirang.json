@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:gimjang-arirang",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "김장하는 날과 아리랑",
     "romanization": "Gimjanghaneun nalgwa Arirang",
@@ -480,7 +480,7 @@
                 "s": 0.9
               }
             ],
-            "altEn": "Hoya walks a winding mountain path past little groups of people, each singing their own Arirang."
+            "altEn": "Hoya waves beside a winding mountain path past little groups of people, each singing their own Arirang."
           }
         }
       ],
