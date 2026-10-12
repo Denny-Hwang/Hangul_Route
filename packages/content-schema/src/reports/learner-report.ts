@@ -38,7 +38,7 @@ export type ReportVoice = 'third' | 'second';
 
 /**
  * Word figures stay hidden for every viewer, console and device, while `vocab` is on the hidden list (section 3.10):
- * F-VOC-005 P-4 moves it to the allow-list with its consent item, and the Worker (`roster-summary.ts` stops zeroing
+ * F-VOC-005 P-4b moves it to the allow-list with its consent item, and the Worker (`roster-summary.ts` stops zeroing
  * `w`) and every report show words from the same change. RP-2b's W10 and P5 read it too.
  */
 export const REPORT_WORDS_VISIBLE: boolean = !(TEACHER_HIDDEN_SUMMARY_KEYS as readonly string[]).includes('vocab');
@@ -148,7 +148,7 @@ export interface LearnerReport {
     cards: ReportFigure;
     /** Null for a totals-only month. */
     letters: ReportFigure | null;
-    /** Null until F-VOC-005 P-4 (`REPORT_WORDS_VISIBLE`). */
+    /** Null until F-VOC-005 P-4b (`REPORT_WORDS_VISIBLE`). */
     words: ReportFigure | null;
   } | null;
   /** `week`: 7 cells; `month`: one per day of the window; otherwise null. */

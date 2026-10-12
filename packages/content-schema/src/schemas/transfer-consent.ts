@@ -132,8 +132,8 @@ export type TeacherVisibleSummaryKey = Extract<(typeof TEACHER_VISIBLE_SUMMARY_K
 /**
  * Summary keys a teacher never receives. `selfRoute` (F-PLAN-002 section 3.10)
  * is read by the learner's family space only, never by a class or school.
- * `vocab` (F-VOC-005 section 3.8) stays hidden until the console PR that shows
- * it (F-VOC-005 P-4) moves it to the allow-list with its consent item, so the
+ * `vocab` (F-VOC-005 section 3.8) stays hidden until the consent row for the
+ * console's word lines (F-VOC-005 P-4b; P-4 shipped them dormant) moves it to the allow-list with its consent item, so the
  * consent text never lags what a teacher receives. `routeGoal` (Learning Route
  * section 9) follows the `selfRoute` precedent: family space only.
  */
@@ -167,7 +167,7 @@ export const TEACHER_VISIBLE_SUMMARY_ITEMS: Readonly<Record<TeacherVisibleSummar
    * quests, stage finish dates and the next lesson are covered by `quests`,
    * per-day cards and letters and the lesson to revisit by `cards_letters`
    * (the mapping goes to counsel at gate G2, F-REPORT-001 review log).
-   * Words stay zeroed for every viewer until F-VOC-005 P-4 adds their own item,
+   * Words stay zeroed for every viewer until F-VOC-005 P-4b adds their own item,
    * and a class or school sees no day before the learner joined
    * (`activityOf` in packages/backend/src/lib/roster-summary.ts).
    */

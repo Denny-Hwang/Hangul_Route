@@ -200,6 +200,8 @@ export const consoleMsgs = {
       anchor: (accuracy: string) => `Stage 1 anchor: ${accuracy}`,
       revisit: (jamo: string) => `Jamo to revisit together: ${jamo}`,
       notSynced: (count: number) => plural('en', count, { one: `${count} hasn't synced in a week`, other: `${count} haven't synced in a week` }),
+      /** F-VOC-005 P-4: up to three words most often on the students' lists, never a ranking of students. The page fills the words. */
+      wordsRevisit: (words: string) => `Words to revisit together: ${words}`,
     },
     /** The latest plan's button. Holds a user-entered plan title, so it is not a budgeted `cta`; its fixed words are budgeted in length-budget.test.ts and the button wraps. */
     openPlan: { label: (plan: string) => `Plan: ${plan}` },
@@ -223,7 +225,13 @@ export const consoleMsgs = {
       revisit: (jamo: string) => `Revisit: ${jamo}`,
       planReadout: (plan: string, readout: string) => `${plan}: ${readout}`,
       joined: (when: string) => `joined ${when}`,
+      /** F-VOC-005 P-4 (section 3.8): counts only; the first-try rate stays off the roster. */
+      words: (collected: number, strong: number) => `Words: ${collected} collected · ${strong} strong`,
+      /** Up to three words to look at together. The page fills the words (Korean marked lang="ko", romanization and gloss). */
+      wordsRevisit: (words: string) => `Words to revisit: ${words}`,
     },
+    /** One taught word after its Hangul: the romanization and the gloss in the UI language (CLAUDE.md section 1). */
+    wordGloss: (romanization: string, gloss: string) => `${romanization} (${gloss})`,
   },
   /** Re-link approval (`/teach/space/relink`, `relink.ts`): identity and timing only, no progress numbers. */
   relink: {

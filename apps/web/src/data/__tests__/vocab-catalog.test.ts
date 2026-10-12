@@ -1,5 +1,6 @@
 import { checkRomanization } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
+import { consoleGloss, consoleWord } from '../../lib/console/vocab-words';
 import { VOCAB_CATALOG } from '../vocab-catalog';
 
 /** F-VOC-001 §3.7: the generated roster mirror for the console and the WordArt sheet. */
@@ -23,5 +24,27 @@ describe('VOCAB_CATALOG (generated from content/vocab)', () => {
     for (const entry of VOCAB_CATALOG) {
       expect(checkRomanization(entry.ko, entry.romanization), entry.id).toEqual([]);
     }
+  });
+});
+
+/** F-VOC-005 P-4 (section 3.8): the console reads its words to revisit from this catalogue. */
+describe('VOCAB_CATALOG lookup for the console', () => {
+  it('carries the English gloss on every entry, and a Spanish one from the overlay', () => {
+    for (const entry of VOCAB_CATALOG) {
+      expect(entry.glosses.en, entry.id).toBe(entry.en);
+      expect(entry.glosses.es, entry.id).toMatch(/\S/);
+    }
+  });
+
+  it('finds a known id with its Hangul, romanization and gloss', () => {
+    expect(consoleWord('vocab:sagwa-apple', 'en')).toEqual({ id: 'vocab:sagwa-apple', ko: '사과', romanization: 'sagwa', gloss: 'apple' });
+    // The gloss is the catalogue's English one, shaped for the line after the romanization (consoleGloss).
+    for (const entry of VOCAB_CATALOG) {
+      expect(consoleWord(entry.id, 'en'), entry.id).toEqual({ id: entry.id, ko: entry.ko, romanization: entry.romanization, gloss: consoleGloss(entry.en, entry.romanization) });
+    }
+  });
+
+  it('shows an unknown id by its romanized slug, with no Hangul', () => {
+    expect(consoleWord('vocab:mirae-future', 'en')).toEqual({ id: 'vocab:mirae-future', ko: null, romanization: 'mirae-future', gloss: null });
   });
 });

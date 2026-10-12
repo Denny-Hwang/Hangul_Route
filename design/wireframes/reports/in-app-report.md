@@ -60,7 +60,7 @@ Then: without scrolling they read the headline, what went well and what to pract
 
 - **All time** swaps the calendar for the cumulative growth line (only rises) with a text list.
 - On this device every day up to today is saved, so there are no "not saved yet" cells.
-- No print button in the app (print lives on the console, OD-7). Words stay hidden until F-VOC-005 P-4, as on the console.
+- No print button in the app (print lives on the console, OD-7). Words stay hidden until F-VOC-005 P-4b, as on the console.
 - Never: other profiles' figures next to this one, percentages, red, "missed", a price, speaking.
 
 ## Interaction points

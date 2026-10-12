@@ -78,7 +78,8 @@
     "apps/mobile/src/screens/episode/EpisodeDetailView.tsx",
     "apps/mobile/src/screens/library/CultureSection.tsx",
     "apps/web/src/components/console/GrownUpLock.tsx",
-    "apps/web/src/components/console/FreeLessonsParts.tsx"
+    "apps/web/src/components/console/FreeLessonsParts.tsx",
+    "apps/web/src/components/console/VocabWordsParts.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1

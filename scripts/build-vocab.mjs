@@ -10,7 +10,8 @@
 //       VOCAB_ITEMS   RuntimeVocabItem[]   topic order, then file order, `glosses` assembled
 //       VOCAB_SENSES  sense groups of content/vocab/_senses.json
 //   apps/web/src/data/vocab-catalog.ts
-//       VOCAB_CATALOG id, ko, romanization, en, primary topic, visual (console roster, WordArt sheet)
+//       VOCAB_CATALOG id, ko, romanization, en, primary topic, visual, glosses
+//                     (console roster in its UI language, WordArt sheet)
 //
 // This is a shaper: it applies the schema defaults (`pos`, `fixedOrder`), drops
 // unknown fields and fails on JSON it cannot read or a field it must emit. Semantic
@@ -161,11 +162,14 @@ export function renderWeb({ items }) {
     en: i.en,
     topic: i.topics[0],
     visual: i.visual,
+    glosses: i.glosses,
   }));
   return (
     GENERATED_HEADER +
     "export interface VocabCatalogEntry {\n" +
-    "  id: string;\n  ko: string;\n  romanization: string;\n  en: string;\n  topic: string;\n  visual: string;\n}\n\n" +
+    "  id: string;\n  ko: string;\n  romanization: string;\n  en: string;\n  topic: string;\n  visual: string;\n" +
+    "  /** The gloss in each UI language that has one; `en` always. */\n" +
+    "  glosses: { en: string; es?: string; ko?: string };\n}\n\n" +
     `export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = ${literal(catalog)};\n`
   );
 }

@@ -241,7 +241,7 @@ describe('what the new teacher sees is generated from data (TEACHER_VISIBLE_SUMM
       'activity',
     ]);
     // selfRoute: the family space reads it, a class or school never does (F-PLAN-002 section 3.10).
-    // vocab: hidden until F-VOC-005 P-4 adds the console line and its consent item.
+    // vocab: hidden until F-VOC-005 P-4b adds its consent item (P-4 shipped the console line dormant).
     // routeGoal: the family space reads it, a class or school never does (Learning Route section 9, LR-W1).
     expect([...TEACHER_HIDDEN_SUMMARY_KEYS]).toEqual(['schemaVersion', 'stage1Anchor', 'selfRoute', 'vocab', 'routeGoal']);
   });
