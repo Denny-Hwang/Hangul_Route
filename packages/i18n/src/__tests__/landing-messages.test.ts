@@ -116,7 +116,8 @@ describe('landing: the lines other PRs rely on stay byte-identical', () => {
   });
 
   it('keeps the legal effective dates and the draft notice (#149)', () => {
-    expect(l.legal.privacy.effective).toBe('Effective October 11, 2026');
+    // October 12, 2026: the backup sentences replace "until … sign in" (privacy-statements.test.ts).
+    expect(l.legal.privacy.effective).toBe('Effective October 12, 2026');
     expect(l.legal.terms.effective).toBe('Effective May 22, 2026');
     expect(l.legal.draft).toBe('Draft for review. This document is a working draft pending review by qualified legal counsel before public launch.');
   });

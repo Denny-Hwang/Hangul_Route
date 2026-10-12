@@ -485,3 +485,83 @@ describe('members listing (F-TCH-001 §10.3)', () => {
     expect((await get('/api/spaces/space:nope/members', bearer('mom'))).status).toBe(404);
   });
 });
+
+describe('summary.activity on the roster (F-REPORT-001 section 3.8, RP-W2: the roster passes each membership\'s joinedAt)', () => {
+  const shift = (day: string, days: number): string => new Date(Date.parse(`${day}T00:00:00.000Z`) + days * 86_400_000).toISOString().slice(0, 10);
+
+  it('gives the family the whole activity, and a class teacher and a school admin only what is from the join day on', async () => {
+    const sch = await createSpace('principal', 'school', 'School');
+    const schCode = await issueCode('principal', sch.space.id);
+    await joinAs(sch.space.id, bearer('teacher'), { code: schCode });
+    const cls = await createSpace('teacher', 'class', 'A', { parentSpaceId: sch.space.id });
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    const famCode = await issueCode('mom', fam.space.id);
+    const suni = await registerLearner('device-suni0001', 'Suni');
+    expect((await joinAs(cls.space.id, suni.auth, { code: cls.joinCode, learnerId: suni.learnerId })).status).toBe(201);
+    expect((await joinAs(fam.space.id, suni.auth, { code: famCode, learnerId: suni.learnerId })).status).toBe(201);
+
+    const rowOf = async (spaceId: string, user: string): Promise<{ joinedAt: string; summary: Record<string, unknown> }> => {
+      const r = await get(`/api/spaces/${spaceId}/roster`, bearer(user));
+      expect(r.status).toBe(200);
+      return (r.body.data as { learners: Array<{ joinedAt: string; summary: Record<string, unknown> }> }).learners[0] as { joinedAt: string; summary: Record<string, unknown> };
+    };
+    // Days are built around the class membership's real join time (tz 0: the local day is the UTC day).
+    const joinDay = (await rowOf(cls.space.id, 'teacher')).joinedAt.slice(0, 10);
+    const before = shift(joinDay, -3);
+    const asOf = shift(joinDay, 1);
+    const activity = {
+      v: 1,
+      tz: 0,
+      asOf,
+      days: [
+        { d: before, min: 10, q: 1, c: 0, w: 2, j: ['ㄱ'] },
+        { d: joinDay, min: 12, q: 1, c: 1, w: 1, j: [] },
+        { d: asOf, min: 9, q: 0, c: 0, w: 0, j: ['ㅂ'] },
+      ],
+      months: [
+        { m: shift(joinDay, -40).slice(0, 7), min: 20, q: 1, c: 1, w: 1, days: 2 },
+        { m: joinDay.slice(0, 7), min: 31, q: 2, c: 1, w: 3, days: 3 },
+      ],
+      total: { since: shift(joinDay, -45), min: 51, q: 3, c: 2, w: 4, days: 5 },
+      milestones: [
+        { stage: 'stage1', on: before },
+        { stage: 'stage2', on: joinDay },
+      ],
+      next: { end: true },
+    };
+    const upload = await call('PUT', `/api/sync/learners/${suni.learnerId}/snapshot`, suni.auth, { baseRev: 0, snapshot: snapshotFor(suni.learnerId), summary: { ...summary, activity }, schemaVer: 1, contentVer: '2026.10' });
+    expect(upload.status).toBe(200);
+
+    const zeroW = <T extends { w: number }>(row: T): T => ({ ...row, w: 0 });
+    expect((await rowOf(fam.space.id, 'mom')).summary.activity).toEqual({
+      ...activity,
+      days: activity.days.map(zeroW),
+      months: activity.months.map(zeroW),
+      total: zeroW(activity.total),
+    });
+
+    const clipped = {
+      v: 1,
+      tz: 0,
+      asOf,
+      days: [zeroW(activity.days[1] as (typeof activity.days)[number]), zeroW(activity.days[2] as (typeof activity.days)[number])],
+      months: [],
+      total: { ...zeroW(activity.total), since: null },
+      milestones: [{ stage: 'stage2', on: joinDay }],
+    };
+    expect((await rowOf(cls.space.id, 'teacher')).summary.activity).toEqual(clipped);
+    expect((await rowOf(cls.space.id, 'principal')).summary.activity).toEqual(clipped);
+    expect(TEACHER_VISIBLE_SUMMARY_KEYS).toContain('activity');
+  });
+
+  it('a learner whose app sends no activity reads back without the key (the legacy state)', async () => {
+    const cls = await createSpace('teacher', 'class', 'A');
+    const suni = await registerLearner('device-suni0001', 'Suni');
+    expect((await joinAs(cls.space.id, suni.auth, { code: cls.joinCode, learnerId: suni.learnerId })).status).toBe(201);
+    expect((await call('PUT', `/api/sync/learners/${suni.learnerId}/snapshot`, suni.auth, { baseRev: 0, snapshot: snapshotFor(suni.learnerId), summary, schemaVer: 1, contentVer: '2026.10' })).status).toBe(200);
+    const r = await get(`/api/spaces/${cls.space.id}/roster`, bearer('teacher'));
+    const row = (r.body.data as { learners: Array<{ summary: Record<string, unknown> }> }).learners[0];
+    expect(row?.summary).not.toHaveProperty('activity');
+    expect(row?.summary).toMatchObject({ cardsUnlocked: 2 });
+  });
+});

@@ -30,7 +30,8 @@ export const CREATE_PROFILE_COPY = {
   },
   email: {
     label: 'Email (optional)',
-    caption: 'For progress backup and receipts.',
+    /** The email is saved on the device only (`account-store`); the backup never uses it, so the caption does not tie them. */
+    caption: 'Kept on this device. Learning and backup work without it.',
     placeholder: 'name@email.com',
     invalid: 'That email looks off. Check the spelling.',
   },
@@ -41,12 +42,23 @@ export const CREATE_PROFILE_COPY = {
   privacyLink: 'Read the Privacy Policy',
   ready: {
     heading: 'Ready to go!',
-    line: 'Your name and choices are saved on this device. Sign-in and sync are optional.',
+    /**
+     * With no sign-in, the app sends the name, level and cub the first time it saves the learner, then backs up the
+     * progress on start and after each change (F-SYNC-002). Shown on a build with cloud saving on (`readyLine`).
+     */
+    line: 'Your name and choices are saved on this device and backed up to our servers. No sign-in needed.',
+    /** A build with cloud saving off (no API, or `flags.syncEnabled` off) backs nothing up, so it says only this. */
+    lineDeviceOnly: 'Your name and choices are saved on this device.',
   },
   back: 'Go back',
   continue: 'Continue',
   namePlaceholder: 'Type a name',
 } as const;
+
+/** The "Ready to go!" line: the backup sentence only on a build that backs up (`syncApi()` not null). */
+export function readyLine(cloudSavingOn: boolean): string {
+  return cloudSavingOn ? CREATE_PROFILE_COPY.ready.line : CREATE_PROFILE_COPY.ready.lineDeviceOnly;
+}
 
 export interface WhoCopy {
   nameLabel: string;

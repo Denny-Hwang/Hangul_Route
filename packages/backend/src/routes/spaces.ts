@@ -370,8 +370,8 @@ spacesRoutes.get('/:id/roster', async (c) => {
       avatar: learner.avatar,
       joinedAt: m.joinedAt,
       lastActiveAt: learner.lastActiveAt,
-      // selfRoute reaches a family space only (F-PLAN-002 section 3.10).
-      summary: rosterSummary(snapshot?.summary, planIds, space.kind),
+      // selfRoute reaches a family space only (F-PLAN-002 section 3.10); a class sees no activity day before joinedAt (F-REPORT-001 section 3.8).
+      summary: rosterSummary(snapshot?.summary, planIds, space.kind, { joinedAt: m.joinedAt }),
       lastSyncedAt: snapshot?.updatedAt ?? null,
     });
   }

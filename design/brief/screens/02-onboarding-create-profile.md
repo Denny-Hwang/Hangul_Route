@@ -36,7 +36,7 @@
 │                                      │
 │ ┌─────────────────────────────────┐ │
 │ │ 🐯 Ready to go!                 │ │
-│ │    Your name stays on this dev. │ │
+│ │    Saved and backed up.         │ │
 │ └─────────────────────────────────┘ │
 │                                      │
 │ ┌─────────────────────────────────┐ │
@@ -63,7 +63,7 @@
   - 8–9 — "Some reading and sentences"
   - 10–11 — "Stories and conversations"
 - Section label: **"Pick a Hoya"**
-- Summary card title: **"Ready to go!"** with subtitle "Your name and choices stay on this device."
+- Summary card title: **"Ready to go!"** with subtitle "Your name and choices are saved on this device and backed up to our servers. No sign-in needed." (`CREATE_PROFILE_COPY.ready.line`; on a build with cloud saving off, "Your name and choices are saved on this device.", F-LEARN-001 §3.3; the old "stay on this device" was untrue, #395)
 - CTA: **"Continue"**
 
 ## 5. Claude Design prompt
@@ -120,7 +120,8 @@ Layout (top to bottom, 48px horizontal padding):
     (#FAD9C6 fill), no border. Inner row:
     - Left: small Hoya cheering pose, 168 × 168 sp
     - Right: "Ready to go!" 54sp bold #2A1F14 + "Your name and choices
-      stay on this device." 42sp muted #8A7860 below
+      are saved on this device and backed up to our servers. No sign-in
+      needed." 42sp muted #8A7860 below
 
 19. 48px gap
 

@@ -78,12 +78,17 @@ quests per session, then asks for more.
 ## Trust & privacy
 
 **Q. Is this COPPA compliant?**
-A. Yes. No third-party ad tracking, no PII on children, default mode
-keeps learning data on-device. Parent email is the only PII stored.
+A. Child safety comes first, and our Privacy Policy is a draft with
+legal counsel for review. No ads and no third-party ad tracking. Each
+learner's nickname and progress are kept on the device and backed up
+to our servers, so they can be restored with a Rescue Code. When a
+learner joins a class or family with a code, that space sees the name
+they join with and their progress.
 
 **Q. GDPR?**
-A. Yes. EU users can request export/delete via in-app settings or
-email.
+A. Families can back up progress to a file in the app at any time. To
+have a learner's data on our servers exported or deleted, email us; a
+family's grown-ups can also delete it in their family space.
 
 **Q. Do you sell data?**
 A. No. We have a written policy banning it. Revenue is from in-app

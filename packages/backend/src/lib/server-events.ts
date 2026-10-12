@@ -1,4 +1,7 @@
 import {
+  BrowseScopeSchema,
+  BrowseSourceSchema,
+  BrowseTargetSchema,
   LearnerBasisSchema,
   REPORT_TELEMETRY_PAYLOAD,
   REPORT_TELEMETRY_PREFIX,
@@ -79,15 +82,67 @@ function codesOnlyPayload(
 }
 
 /**
+ * All lessons events (F-BROWSE-001 sections 5.2 and 9) carry no profile id
+ * and, per name, only the documented keys in their documented shapes: codes
+ * from their enums, booleans, `minutes` a whole number 0-60, and `itemId` a
+ * content id of the event's own `kind`. A value of any other shape is
+ * dropped, so no account, learner or space identifier can be stored.
+ */
+const BROWSE_EVENT_PREFIX = 'browse.';
+
+/** Whether a payload value may be stored; `payload` is the whole payload (`itemId` checks `kind`). */
+type FieldRule = (value: unknown, payload: Record<string, unknown>) => boolean;
+
+const oneOf = (values: readonly string[]): FieldRule => {
+  const allowed: ReadonlySet<string> = new Set(values);
+  return (value) => typeof value === 'string' && allowed.has(value);
+};
+const isBoolean: FieldRule = (value) => typeof value === 'boolean';
+const isMinutes: FieldRule = (value) => typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 60;
+/** A content id that is a valid target of the payload's `kind`, which must itself be one of `kinds`. */
+const contentIdOf = (kinds: readonly string[]): FieldRule => {
+  const kindOk = oneOf(kinds);
+  return (value, payload) => kindOk(payload.kind, payload) && typeof value === 'string' && BrowseTargetSchema.safeParse({ kind: payload.kind, id: value }).success;
+};
+
+const ITEM_KINDS = ['episode', 'quest', 'story', 'vocab-topic', 'card'] as const;
+const PREVIEW_KINDS = ['quest', 'story', 'vocab-topic'] as const;
+
+const BROWSE_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, FieldRule>>>> = {
+  'browse.opened': {
+    source: oneOf(BrowseSourceSchema.options),
+    scope: oneOf(BrowseScopeSchema.options),
+    passFrom: oneOf(['account', 'kept', 'gate', 'none']),
+    offlineReady: isBoolean,
+  },
+  'browse.item_viewed': { kind: oneOf(ITEM_KINDS), itemId: contentIdOf(ITEM_KINDS), access: oneOf(['open', 'closed']) },
+  'browse.preview_started': { kind: oneOf(PREVIEW_KINDS), itemId: contentIdOf(PREVIEW_KINDS) },
+  'browse.preview_ended': { kind: oneOf(PREVIEW_KINDS), itemId: contentIdOf(PREVIEW_KINDS), reachedEnd: isBoolean, minutes: isMinutes },
+  'browse.plans_tapped': { kind: oneOf(PREVIEW_KINDS) },
+};
+
+function browsePayload(name: string, payload: Record<string, unknown> | undefined): Record<string, unknown> | undefined {
+  const rules = BROWSE_PAYLOAD_RULES[name] ?? {};
+  if (!payload) return undefined;
+  const kept: Record<string, unknown> = {};
+  for (const [key, fits] of Object.entries(rules)) {
+    if (fits(payload[key], payload)) kept[key] = payload[key];
+  }
+  return Object.keys(kept).length > 0 ? kept : undefined;
+}
+
+/**
  * The profile id and payload stored for an event: an ordinary event keeps a
  * string profile id and its payload as given; a codes-only event keeps only its
- * codes and never a profile id.
+ * codes and never a profile id; a `browse.*` event keeps only its documented
+ * fields (F-BROWSE-001 section 9) and never a profile id.
  */
 export function keptEventFields(
   name: TelemetryEventName,
   payload: Record<string, unknown> | undefined,
   profileId: unknown,
 ): Pick<TelemetryEvent, 'profileId' | 'payload'> {
+  if (name.startsWith(BROWSE_EVENT_PREFIX)) return { profileId: undefined, payload: browsePayload(name, payload) };
   const codesOnly = codesOnlyValues(name);
   if (codesOnly) return { profileId: undefined, payload: codesOnlyPayload(payload, codesOnly) };
   return { profileId: typeof profileId === 'string' ? profileId : undefined, payload };

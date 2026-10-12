@@ -960,11 +960,13 @@ export const consoleMsgs = {
     viewProgress: { cta: 'View progress →' },
     privacy: {
       title: 'Privacy',
+      /** The first two points are `landing.persona.parents.safe.bullets.backup`, word for word: the app backs up every learner with no sign-in. */
       points: [
-        'By default, all learning data stays on your device.',
-        'If you opt in to cloud sync, data is stored encrypted in our backend.',
+        "Each learner's nickname and progress are kept on the device and backed up to our servers, so they can be restored with a Rescue Code.",
+        "When a learner joins a class or family with a code, that space sees the name they join with and their progress. A family's grown-ups can also restore their progress.",
         "We never sell or share children's data with third parties.",
-        'You can export or delete all data with one tap.',
+        /** Removing a profile on a device leaves the backup; the server copy goes from the family space (`learner.delete`) or by email. */
+        "You can back up progress to a file at any time. To delete a learner's data on our servers, use your family space settings or email us.",
       ],
     },
     child: {
@@ -1011,5 +1013,18 @@ export const consoleMsgs = {
       open: 'Open',
       later: 'Coming later',
     },
+  },
+  /**
+   * The offline page of grown-up paths on the app host (F-APP-001 sections 3.4 and 3.12, A-2;
+   * wireframe `design/wireframes/shell/offline.md`). Not drawn by the console: the learner app's
+   * `scripts/pwa-postbuild.mjs` reads it at build time into `dist/grown-ups-offline.html`, which
+   * the service worker serves when a grown-up page is opened without a network. A learner may
+   * follow a grown-up link and see it, so the copy is neutral (no age wording).
+   */
+  offline: {
+    title: "You're offline",
+    line: 'Grown-up pages need the internet. Learning still works offline.',
+    back: 'Back to learning',
+    retry: 'Try again',
   },
 } as const;
