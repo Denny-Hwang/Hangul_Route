@@ -632,7 +632,7 @@ Flag `flags.placementEnabled` (`apps/mobile/src/config/flags.ts`, `readBool('EXP
 
 - **Upstream:** F-LEARN-001 PR 1 (`levelOrder`; already in `packages/content-schema/src/schemas/learner-level.ts`), F-I18N-001 PR 1-4 (`UiLocale`, `getMessages`, `KoreanText`), F-AUDIO-004 (`playPrompt`, `canPlayKorean`), F-QUEST-002 Q-1 (`KoTextSchema`, `PictureRefSchema` if not yet created: P-2 creates them with exactly the F-QUEST-002 shapes), F-CNT-002 (converter and checker already in `romanization/`), F-PLAN-001 (plans for the advisory hand-off), F-STORY-004 PR 4.2 (`isFreeContent`, only read, never called here).
 - **Downstream:** F-PLAN-002 (level input, shared coarse mapping, `RouteCatalog`), F-RVW-001 (shared engine, Pool C seeding), F-STORY-005 (`reachedStage` floor), F-PAR-001 (report), F-TCH-001 / F-CONSOLE-001 (roster line), F-QUEST-002 (the `teaches` symbol keys), F-TCH-004.
-- **External:** native Korean review of the sentence and reply templates; a native Spanish reviewer for the overlay; counsel is not involved (no new personal data; nothing leaves the device but the snapshot).
+- **External:** none for review: the Korean sentence and reply templates are reviewed (the three-lens review, assumption 1, 2026-10-11), and the Spanish and Korean overlay strings go through the F-I18N-001 §3.10 multi-agent review (owner decision 2026-10-12); counsel is not involved (no new personal data; nothing leaves the device but the snapshot).
 
 ## 8. Decisions
 
