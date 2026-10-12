@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { meta as curriculumMeta } from '@/lib/console/__tests__/fixtures/learning-route';
 
 /**
  * Learning Route LR-8 (amendment section 6.1): the stage list page `/teach/space/route?id=&learner=`.
@@ -40,7 +41,7 @@ const SPACE = {
   archivedAt: null,
   createdAt: '2026-09-01T00:00:00.000Z',
 };
-const LEARNER = {
+const LEARNER: { id: string; displayName: string; summary: Record<string, unknown> } & Record<string, unknown> = {
   id: 'l:1',
   displayName: 'Mina',
   ageGroup: 'starter',
@@ -70,9 +71,24 @@ const LEARNER = {
   },
 };
 
+/** A published, unarchived curriculum plan for the whole class, started today. */
+const curriculumPlan = () => ({
+  id: 'plan:route',
+  spaceId: SPACE.id,
+  authorAccountId: 'teacher-kim',
+  title: 'Term route',
+  items: [{ kind: 'quest', id: 'quest:stage1-letters-q1' }],
+  targetLearnerIds: null,
+  publishedAt: `${today}T07:00:00.000Z`,
+  archivedAt: null,
+  createdAt: `${today}T06:00:00.000Z`,
+  updatedAt: `${today}T07:00:00.000Z`,
+  meta: curriculumMeta(today, 4),
+});
+
 type Result<T> = { ok: true; data: T } | { ok: false; error: string; status: number };
 const calls: string[] = [];
-const responses: { roster: () => Result<unknown>; plans: () => Result<unknown> } = { roster: () => ok(roster()), plans: () => ok([]) };
+const responses: { roster: () => Result<unknown> | Promise<Result<unknown>>; plans: () => Result<unknown> } = { roster: () => ok(roster()), plans: () => ok([]) };
 const ok = <T,>(data: T): Result<T> => ({ ok: true, data });
 const roster = () => ({ space: SPACE, learners: [LEARNER], joinCode: null, joinCodeExpiresAt: null });
 const api = new Proxy(
@@ -161,7 +177,7 @@ describe('the Learning Route page, switched on', () => {
     expect(root.findAll((n) => n.type === 'a' && String(n.props.href).includes('billing'))).toHaveLength(1);
   });
 
-  it('a class plan for everyone: "Your class\'s weekly plan reaches ..." and its Plan goal tag', async () => {
+  it('a classic plan (no curriculum meta) is homework, not a route: still case 3, no Plan goal tag', async () => {
     vi.stubEnv('NEXT_PUBLIC_LEARNING_ROUTE_ENABLED', 'true');
     responses.plans = () =>
       ok([
@@ -185,6 +201,60 @@ describe('the Learning Route page, switched on', () => {
     expect(textOf(root)).not.toContain(lr.planGoalTag);
   });
 
+  it('a live whole-class curriculum plan reaches the view: "Your class\'s weekly plan reaches ...", its end and the Plan goal tag', async () => {
+    vi.stubEnv('NEXT_PUBLIC_LEARNING_ROUTE_ENABLED', 'true');
+    responses.plans = () => ok([curriculumPlan()]);
+    const root = await page();
+    const card = root.find((n) => n.type === 'section' && n.props['aria-label'] === lr.section);
+    expect(textOf(card)).toContain(lr.planReaches.class(1, 'Hangul'));
+    expect(textOf(card)).toContain(lr.planEnds('').trim());
+    expect(textOf(card)).not.toContain(lr.nextOpen(1, 'Hangul'));
+    const [first] = root.findAll((n) => n.type === 'li');
+    expect(first && textOf(first)).toContain(lr.planGoalTag);
+  });
+
+  it('a family space: the goal the learner\'s device shows (case 1) and "Back to the family"', async () => {
+    vi.stubEnv('NEXT_PUBLIC_LEARNING_ROUTE_ENABLED', 'true');
+    SPACE.kind = 'family';
+    const withGoal = { ...LEARNER, summary: { ...LEARNER.summary, routeGoal: { stage: 'stage2', from: 'class' } } };
+    responses.roster = () => ok({ ...roster(), learners: [withGoal] });
+    const root = await page();
+    const card = root.find((n) => n.type === 'section' && n.props['aria-label'] === lr.section);
+    expect(textOf(card)).toContain(lr.learnerGoal('Mina', 2, 'Words'));
+    expect(textOf(card)).toContain(lr.fromLead.class);
+    const back = root.findAll((n) => n.type === 'a').find((a) => textOf(a) === lr.back.family);
+    expect(back?.props.href).toBe('/teach/space?id=space%3Ac1');
+  });
+
+  it('loading: the kind-neutral way back to the space, then the placeholders', async () => {
+    vi.stubEnv('NEXT_PUBLIC_LEARNING_ROUTE_ENABLED', 'true');
+    responses.roster = () => new Promise(() => undefined);
+    const root = await page();
+    expect(root.findAll((n) => n.props['aria-busy'] === 'true')).toHaveLength(1);
+    const back = root.findAll((n) => n.type === 'a').find((a) => textOf(a) === lr.back.space);
+    expect(back?.props.href).toBe('/teach/space?id=space%3Ac1');
+  });
+
+  it('only the newest load draws: an older answer that arrives late is dropped', async () => {
+    vi.stubEnv('NEXT_PUBLIC_LEARNING_ROUTE_ENABLED', 'true');
+    let releaseOld: (r: Result<unknown>) => void = () => undefined;
+    responses.roster = () => new Promise((resolve) => (releaseOld = resolve));
+    const root = await page();
+    // The address changes to another space before the first roster answers.
+    nav.query = 'id=space%3Ac2&learner=l%3A1';
+    responses.roster = () => ok({ ...roster(), learners: [{ ...LEARNER, displayName: 'Jun' }] });
+    const { default: Page } = await import('@/app/(console)/teach/space/route/page');
+    await act(async () => {
+      mounted?.update(<Page />);
+    });
+    expect(textOf(root)).toContain(lr.title('Jun'));
+    await act(async () => {
+      releaseOld(ok(roster()));
+    });
+    expect(textOf(root)).toContain(lr.title('Jun'));
+    expect(textOf(root)).not.toContain(lr.title('Mina'));
+  });
+
   it('a learner id that is not on this roster: the message and the way back, no other learner', async () => {
     vi.stubEnv('NEXT_PUBLIC_LEARNING_ROUTE_ENABLED', 'true');
     nav.query = 'id=space%3Ac1&learner=l%3A9';
@@ -202,12 +272,12 @@ describe('the Learning Route page, switched on', () => {
     expect(nav.replaced).toEqual(['/teach/space?id=space%3Ac1']);
   });
 
-  it('cannot reach the roster: the console wording, Try again, and a way back', async () => {
+  it('cannot reach the roster: the console wording, Try again, and the way back to the space', async () => {
     vi.stubEnv('NEXT_PUBLIC_LEARNING_ROUTE_ENABLED', 'true');
     responses.roster = () => ({ ok: false, error: 'network', status: -1 });
     const root = await page();
     expect(textOf(root)).toContain(en.cantReach);
-    expect(root.findAll((n) => n.type === 'a' && n.props.href === '/teach/home' && textOf(n) === en.shell.home).length).toBeGreaterThanOrEqual(1);
+    expect(root.findAll((n) => n.type === 'a' && n.props.href === '/teach/space?id=space%3Ac1' && textOf(n) === lr.back.space)).toHaveLength(1);
     const retry = root.find((n) => n.type === 'button' && textOf(n) === en.tryAgain);
     responses.roster = () => ok(roster());
     await act(async () => {
@@ -216,13 +286,26 @@ describe('the Learning Route page, switched on', () => {
     expect(textOf(root)).toContain(lr.title('Mina'));
   });
 
-  it('forbidden or gone: the space wording', async () => {
+  it('forbidden or gone: the space wording, and no Try again that would get the same answer', async () => {
     vi.stubEnv('NEXT_PUBLIC_LEARNING_ROUTE_ENABLED', 'true');
+    const noRetry = (root: ReactTestInstance) => root.findAll((n) => n.type === 'button' && textOf(n) === en.tryAgain);
     responses.roster = () => ({ ok: false, error: 'forbidden', status: 403 });
-    expect(textOf(await page())).toContain(en.space.forbidden);
+    const forbidden = await page();
+    expect(textOf(forbidden)).toContain(en.space.forbidden);
+    expect(noRetry(forbidden)).toHaveLength(0);
     act(() => mounted?.unmount());
     responses.roster = () => ({ ok: false, error: 'not_found', status: 404 });
-    expect(textOf(await page())).toContain(en.space.gone);
+    const gone = await page();
+    expect(textOf(gone)).toContain(en.space.gone);
+    expect(noRetry(gone)).toHaveLength(0);
+  });
+
+  it('a failed read with no space id in the address: the way back is the console home', async () => {
+    vi.stubEnv('NEXT_PUBLIC_LEARNING_ROUTE_ENABLED', 'true');
+    nav.query = 'learner=l%3A1';
+    responses.roster = () => ({ ok: false, error: 'network', status: -1 });
+    const root = await page();
+    expect(root.findAll((n) => n.type === 'a' && n.props.href === '/teach/home' && textOf(n) === en.shell.home).length).toBeGreaterThanOrEqual(1);
   });
 
   it('the plans did not load: no card that could miss a plan; the console wording instead', async () => {

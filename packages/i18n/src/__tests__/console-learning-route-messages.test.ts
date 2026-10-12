@@ -36,7 +36,7 @@ describe('console.learningRoute (English, section 11.1)', () => {
     expect(lr.section).toBe('Learning Route');
     // The heading over the stage list (LR-D, design/screens/learning-route/stage-list.md).
     expect(lr.stagesTitle).toBe('Stages');
-    expect(lr.back).toEqual({ report: 'Back to the report', class: 'Back to the class', family: 'Back to the family' });
+    expect(lr.back).toEqual({ report: 'Back to the report', class: 'Back to the class', family: 'Back to the family', space: 'Back' });
   });
 
   it('words case 1: the goal the learner device shows (family viewer only)', () => {
@@ -74,6 +74,8 @@ describe('console.learningRoute (English, section 11.1)', () => {
     const journey = getMessages('en').console.journey;
     expect(lr.knownLine(8)).toBe('8 known from the level check');
     expect(lr.knownLine(1)).toBe('1 known from the level check');
+    // A stage row's heading is one dictionary string, so a locale can reorder or re-punctuate it (LR-8).
+    expect(lr.stageRow(2, 'Words', 'Open')).toBe('2. Words · Open');
     for (const known of [1, 4, 8]) expect(journey.stageLine(known, 2).startsWith(`${lr.knownLine(known)}, `)).toBe(true);
   });
 });

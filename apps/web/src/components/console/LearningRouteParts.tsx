@@ -72,8 +72,9 @@ export function BackLink({ link }: { link: LearningRouteLink }): JSX.Element {
 
 /**
  * One goal line: the flag only when the line names a goal or a plan's destination (cases 1 and 2);
- * "Next open stage" (case 3) names neither, so it has none. The report's goal line under "Now on"
- * (F-REPORT-001 RP-7a2) is this line alone.
+ * "Next open stage" (case 3) names neither, so it has none. This is the card's line (`bodyLg`, bold); the
+ * report's goal line under "Now on" (F-REPORT-001 RP-7a2) reads the same `goal.line` but is `body` size,
+ * `weight.semibold` (stage-list.md), so RP-7a2 adds that style rather than reusing this one as is.
  */
 export function RouteGoalLine({ goal }: { goal: LearningRouteGoal }): JSX.Element {
   return (
@@ -187,21 +188,27 @@ const rowQuiet: CSSProperties = { ...rowBase, backgroundColor: 'transparent', bo
 const rowBody: CSSProperties = { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: spacing.xs };
 const stateWordStyle: CSSProperties = { fontWeight: typography.weight.regular, color: colors.text.secondary };
 
+/**
+ * A row heading from one dictionary string ("2. Words · Open", "Stages 5 to 7: Coming later"): bold, with the
+ * trailing state word in the quieter style. A locale whose sentence does not end with the state word keeps it whole.
+ */
+function RowHeading({ text, stateWord }: { text: string; stateWord: string }): JSX.Element {
+  const split = text.endsWith(stateWord) && text.length > stateWord.length;
+  return (
+    <p style={{ ...reset, fontWeight: typography.weight.bold }}>
+      {split ? text.slice(0, -stateWord.length) : text}
+      {split ? <span style={stateWordStyle}>{stateWord}</span> : null}
+    </p>
+  );
+}
+
 function StageRowItem({ row }: { row: LearningRouteRow }): JSX.Element {
   if (row.kind === 'later') {
-    // "Stages 5 to 7: Coming later": the range bold, the state word as on a single row. A locale that does not end
-    // the sentence with the state word keeps it whole.
-    const split = row.text.endsWith(row.stateWord) && row.text.length > row.stateWord.length;
-    const head = split ? row.text.slice(0, -row.stateWord.length) : row.text;
-    const tail = split ? row.stateWord : '';
     return (
       <li style={rowQuiet}>
         <StageShape state="later" stage={row.stages[0] ?? 'stage7'} />
         <div style={rowBody}>
-          <p style={{ ...reset, fontWeight: typography.weight.bold }}>
-            {head}
-            {tail ? <span style={stateWordStyle}>{tail}</span> : null}
-          </p>
+          <RowHeading text={row.text} stateWord={row.stateWord} />
         </div>
       </li>
     );
@@ -210,9 +217,7 @@ function StageRowItem({ row }: { row: LearningRouteRow }): JSX.Element {
     <li style={row.state === 'later' ? rowQuiet : rowBase}>
       <StageShape state={row.state} stage={row.stage} />
       <div style={rowBody}>
-        <p style={{ ...reset, fontWeight: typography.weight.bold }}>
-          {row.order}. {row.title} <span style={stateWordStyle}>· {row.stateWord}</span>
-        </p>
+        <RowHeading text={row.text} stateWord={row.stateWord} />
         {row.canDo ? <p style={reset}>{row.canDo}</p> : null}
         {row.line ? <p style={secondaryLine}>{row.line}</p> : null}
         {row.tags.length > 0 ? (
@@ -266,7 +271,8 @@ export function LearningRouteContent({ view }: { view: LearningRouteView }): JSX
       {head}
       <GrownUpRouteCard card={view.card} />
       <h2 style={{ fontSize: typography.size.bodyLg, margin: `${spacing.sm}px 0 0` }}>{view.stagesTitle}</h2>
-      <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
+      {/* role="list": WebKit drops the list semantics of an unstyled list, and VoiceOver must still say "list, 7 items" (section 10). */}
+      <ol role="list" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
         {view.stages.map((row) => (
           <StageRowItem key={row.kind === 'later' ? `later-${row.from}` : row.stage} row={row} />
         ))}
@@ -275,13 +281,16 @@ export function LearningRouteContent({ view }: { view: LearningRouteView }): JSX
   );
 }
 
-/** Loading: three sunken placeholder rows, busy, with no text (stage-list.md, States). */
-export function LearningRouteLoading(): JSX.Element {
+/** Loading: the back link, then three sunken placeholder rows, busy, with no text (stage-list.md, States). */
+export function LearningRouteLoading({ back }: { back: LearningRouteLink }): JSX.Element {
   return (
-    <div style={readingColumn} aria-busy="true">
-      {[0, 1, 2].map((i) => (
-        <div key={i} data-testid="route-placeholder" style={{ height: spacing.xxxl, borderRadius: radii.md, backgroundColor: colors.surface.sunken }} />
-      ))}
+    <div style={readingColumn}>
+      <BackLink link={back} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }} aria-busy="true">
+        {[0, 1, 2].map((i) => (
+          <div key={i} data-testid="route-placeholder" style={{ height: spacing.xxxl, borderRadius: radii.md, backgroundColor: colors.surface.sunken }} />
+        ))}
+      </div>
     </div>
   );
 }

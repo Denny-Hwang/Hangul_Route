@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { BackLink, LearningRouteContent, LearningRouteLoading, readingColumn } from '@/components/console/LearningRouteParts';
 import { Button, ConsoleShell, panelStyle } from '@/components/console/ui';
 import { useConsole } from '@/components/console/use-console';
@@ -34,12 +34,16 @@ function LearningRouteInner(): JSX.Element {
   const [data, setData] = useState<{ roster: Roster; plans: PlanView[] } | null>(null);
   // A key, not text: the words are looked up at render time, so they follow the header language select.
   const [error, setError] = useState<SpaceError | null>(null);
+  // Only the newest load may draw: an answer to an older address or an earlier Try again is dropped.
+  const latest = useRef(0);
 
   const load = useCallback(async (): Promise<void> => {
     if (!api || !enabled) return;
+    const call = ++latest.current;
     setError(null);
     setData(null);
     const [roster, plans] = await Promise.all([api.roster(spaceId), api.listPlans(spaceId)]);
+    if (call !== latest.current) return;
     if (!roster.ok) {
       setError(roster.error === 'forbidden' ? 'forbidden' : roster.error === 'not_found' ? 'gone' : 'cantReach');
       return;
@@ -77,20 +81,24 @@ function LearningRouteInner(): JSX.Element {
   if (away || !ready || !session) return <ConsoleShell>{null}</ConsoleShell>;
 
   const lr = m.console.learningRoute;
+  // Before the roster names the space's kind (loading, or a read that failed): the kind-neutral "Back" to the space,
+  // or the console home when the address names no space.
+  const back = spaceId ? { href: ROUTES.space(spaceId), text: lr.back.space } : { href: ROUTES.home, text: m.console.shell.home };
   return (
     <ConsoleShell onSignOut={signOut} title={lr.section}>
       {error ? (
         <div style={readingColumn}>
-          <BackLink link={{ href: ROUTES.home, text: m.console.shell.home }} />
+          <BackLink link={back} />
           <div style={panelStyle}>
             <p style={{ margin: 0 }}>{spaceErrorText(error, locale)}</p>
-            <Button onClick={() => void load()}>{m.console.tryAgain}</Button>
+            {/* Only a read that did not arrive can succeed on a retry; a 403 or a 404 will answer the same. */}
+            {error === 'cantReach' ? <Button onClick={() => void load()}>{m.console.tryAgain}</Button> : null}
           </div>
         </div>
       ) : view ? (
         <LearningRouteContent view={view} />
       ) : (
-        <LearningRouteLoading />
+        <LearningRouteLoading back={back} />
       )}
     </ConsoleShell>
   );

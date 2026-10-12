@@ -147,6 +147,9 @@ describe("one learner's Learning Route page (Learning Route amendment section 6.
     expect(ROUTES.learnerRoute('space:c', 'learner:1')).toBe('/teach/space/route?id=space%3Ac&learner=learner%3A1');
   });
 
+  // F-APP-001 A-5b restores these with the /parent/space/route twin (its SPACE_PAGES test checks the twin exists).
+  it.todo("A-5b: sends a family to /parent/space/route and never yields a /teach path for a family space");
+
   it('points only at a page this console has', () => {
     const page = new URL('../../../app/(console)/teach/space/route/page.tsx', import.meta.url);
     expect(existsSync(page)).toBe(true);

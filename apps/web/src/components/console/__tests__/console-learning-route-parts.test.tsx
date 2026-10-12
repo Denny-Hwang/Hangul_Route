@@ -148,6 +148,8 @@ describe('the stage list page, family case 1 (mock stage-list-family.html)', () 
 
   it('lists the stages as an ol of li rows: shape, name and state word, can-do line, count line and tags', () => {
     const list = between(html, '<ol', '</ol>');
+    // An unstyled list keeps its list semantics in WebKit only with an explicit role (section 10).
+    expect(list).toMatch(/^<ol role="list"/);
     expect(list.match(/<li/g)).toHaveLength(5);
     const rows = list.split('<li').slice(1).map((r) => textOf(`<li${r}`));
     expect(rows[0]).toBe(`1. Hangul · Open ${canDo[1]} 4 known from the level check, 2 quests done ${lr.hereTag('Sam')} ${lr.startTag('Sam')}`);
@@ -257,11 +259,12 @@ describe('page states (section 6.1, mock stage-list-states.html)', () => {
     expect(html).not.toMatch(/Sam|Mina/);
   });
 
-  it('loading: three placeholder rows, busy, with no text', () => {
-    const html = renderToStaticMarkup(<LearningRouteLoading />);
+  it('loading: the back link, then three placeholder rows, busy, with no other text', () => {
+    const html = renderToStaticMarkup(<LearningRouteLoading back={{ href: ROUTES.space('space:fam'), text: lr.back.space }} />);
     expect(html).toContain('aria-busy="true"');
     expect(html.match(/data-testid="route-placeholder"/g)).toHaveLength(3);
-    expect(textOf(html)).toBe('');
+    expect(textOf(html)).toBe(lr.back.space);
+    expect(html).toContain(`href="${ROUTES.space('space:fam')}"`);
   });
 });
 
