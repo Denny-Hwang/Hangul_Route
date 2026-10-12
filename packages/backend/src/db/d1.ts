@@ -18,11 +18,29 @@ import {
   type TransferPrefKey,
   type TransferPrefs,
   type TransferSlotConsent,
+  type NoteCursor,
   type WaitlistEntry,
 } from './types';
 import { assertBillingLimit, billingEventFields, REFUNDABLE_BILLING_KINDS } from './billing-rules';
 import { assertNewTransfer, assertTransferPrefKey, assertTransferSlot, consentedLearnerSlot, finiteCap, teacherSlotsOf } from './transfer-rules';
 import { ENDED_TRANSFER_STATUSES, OPEN_TRANSFER_STATUSES } from './transfer-types';
+import {
+  noteRetentionCuts,
+  notePairPrefix,
+  type DeliveredNote,
+  type LearnerNotesInbox,
+  type NewNote,
+  type NoteActVia,
+  type NoteDeviceScope,
+  type RateHitRow,
+  type StoredNote,
+  type StoredNotePrefs,
+  type StoredNoteReport,
+  type StoredSendGrant,
+  type StoredSenderBlock,
+  type StoredSenderHold,
+} from './feedback-types';
+import { assertOneSender, prefixUpperBound } from './feedback-rules';
 
 /** What `run()` resolves to on D1 (`D1Result`): `meta.changes` is the row count the statement wrote. */
 export interface D1RunResultLike {
@@ -245,6 +263,118 @@ const readChanges = (result: D1RunResultLike | undefined): number => {
   if (typeof changed !== 'number') throw new Error('D1 did not report meta.changes for a compare-and-set write');
   return changed;
 };
+const toNote = (r: Row): StoredNote => ({
+  id: str(r.id),
+  learnerId: str(r.learner_id),
+  spaceId: str(r.space_id),
+  senderAccountId: str(r.sender_account_id),
+  senderRole: str(r.sender_role) as StoredNote['senderRole'],
+  senderLabel: nstr(r.sender_label) as StoredNote['senderLabel'],
+  batchId: str(r.batch_id),
+  batchKind: str(r.batch_kind) as StoredNote['batchKind'],
+  presetId: str(r.preset_id),
+  body: nstr(r.body),
+  bodyLocale: nstr(r.body_locale),
+  suggest: r.suggest_kind === 'quest' ? { kind: 'quest', id: str(r.suggest_id) } : null,
+  status: str(r.status) as StoredNote['status'],
+  hiddenVia: nstr(r.hidden_via) as StoredNote['hiddenVia'],
+  actedByAccountId: nstr(r.acted_by_account_id),
+  createdAt: str(r.created_at),
+  readAt: nstr(r.read_at),
+  reaction: nstr(r.reaction),
+  reactionAt: nstr(r.reaction_at),
+  hiddenAt: nstr(r.hidden_at),
+  withdrawnAt: nstr(r.withdrawn_at),
+});
+/** The learner-facing fields of an inbox row (section 8.1): no sender account, batch or moderation column. */
+const toDeliveredNote = (r: Row): DeliveredNote => ({
+  id: str(r.id),
+  spaceId: str(r.space_id),
+  senderRole: str(r.sender_role) as DeliveredNote['senderRole'],
+  senderLabel: nstr(r.sender_label) as DeliveredNote['senderLabel'],
+  presetId: str(r.preset_id),
+  body: nstr(r.body),
+  bodyLocale: nstr(r.body_locale),
+  suggest: r.suggest_kind === 'quest' ? { kind: 'quest', id: str(r.suggest_id) } : null,
+  createdAt: str(r.created_at),
+  readAt: nstr(r.read_at),
+  reaction: nstr(r.reaction),
+});
+/** A prefs row; `p` is the column prefix the inbox query uses for the joined row. */
+const toNotePrefs = (r: Row, p = ''): StoredNotePrefs => ({
+  learnerId: str(r[`${p}learner_id`]),
+  classes: str(r[`${p}classes`]) as StoredNotePrefs['classes'],
+  acknowledgedAt: nstr(r[`${p}acknowledged_at`]),
+  updatedAt: str(r[`${p}updated_at`]),
+  updatedVia: str(r[`${p}updated_via`]) as StoredNotePrefs['updatedVia'],
+  updatedByAccount: nstr(r[`${p}updated_by_account`]),
+});
+const toSenderHold = (r: Row): StoredSenderHold => ({ accountId: str(r.account_id), reason: str(r.reason) as StoredSenderHold['reason'], createdAt: str(r.created_at), liftedAt: nstr(r.lifted_at) });
+const toSenderBlock = (r: Row): StoredSenderBlock => ({ learnerId: str(r.learner_id), senderAccountId: str(r.sender_account_id), familySpaceId: str(r.family_space_id), createdByAccount: str(r.created_by_account), createdAt: str(r.created_at) });
+const toSendGrant = (r: Row): StoredSendGrant => ({ spaceId: str(r.space_id), accountId: str(r.account_id), grantedBy: str(r.granted_by), grantedAt: str(r.granted_at) });
+
+/** The note columns in table order, for the set-based insert (section 7.4). */
+const NOTE_INSERT_COLUMNS = ['id', 'learner_id', 'space_id', 'sender_account_id', 'sender_role', 'sender_label', 'batch_id', 'batch_kind', 'preset_id', 'body', 'body_locale', 'suggest_kind', 'suggest_id', 'created_at'] as const;
+const noteInsertJson = (n: NewNote): Record<(typeof NOTE_INSERT_COLUMNS)[number], string | null> => ({
+  id: n.id,
+  learner_id: n.learnerId,
+  space_id: n.spaceId,
+  sender_account_id: n.senderAccountId,
+  sender_role: n.senderRole,
+  sender_label: n.senderLabel,
+  batch_id: n.batchId,
+  batch_kind: n.batchKind,
+  preset_id: n.presetId,
+  body: n.body,
+  body_locale: n.bodyLocale,
+  suggest_kind: n.suggest?.kind ?? null,
+  suggest_id: n.suggest?.id ?? null,
+  created_at: n.createdAt,
+});
+/** No active hold on the sender (the hold re-check inside the send's transaction, section 8.4). */
+const NOT_HELD = 'NOT EXISTS (SELECT 1 FROM feedback_sender_holds h WHERE h.account_id = ? AND h.lifted_at IS NULL)';
+/**
+ * Section 8.7 for every list: a live, hidden or withdrawn note of the last 180 days, or a reported note
+ * with a report of the last 90 days. Binds (notesSince, reportsSince).
+ */
+const NOTE_VISIBLE = "((n.status <> 'reported' AND n.created_at >= ?) OR (n.status = 'reported' AND EXISTS (SELECT 1 FROM feedback_reports r WHERE r.note_id = n.id AND r.created_at >= ?)))";
+/** Keyset paging, newest first: rows strictly older than the cursor. Binds (createdAt, createdAt, id). */
+const NOTE_BEFORE = '(n.created_at < ? OR (n.created_at = ? AND n.id < ?))';
+/**
+ * The inbox query, section 6.8 rules 1-7, in one statement with the learner's prefs row. The outer
+ * one-row select carries the prefs even when no note is delivered. It selects the learner-facing
+ * columns only: the sender's account id is used by rules 5-6 and never returned (section 8.1). Binds (learnerId, learnerId,
+ * notesSince, scope, limit).
+ */
+const INBOX_SQL = `SELECT p.learner_id AS p_learner_id, p.classes AS p_classes, p.acknowledged_at AS p_acknowledged_at, p.updated_at AS p_updated_at,
+    p.updated_via AS p_updated_via, p.updated_by_account AS p_updated_by_account, d.*
+  FROM (SELECT ? AS lid) x
+  LEFT JOIN learner_note_prefs p ON p.learner_id = x.lid
+  LEFT JOIN (
+    SELECT n.id, n.space_id, n.sender_role, n.sender_label, n.preset_id,
+      CASE WHEN n.sender_role = 'teacher' AND COALESCE(np.classes, 'all') = 'presets' THEN NULL ELSE n.body END AS body,
+      n.body_locale, n.suggest_kind, n.suggest_id, n.created_at, n.read_at, n.reaction
+    FROM feedback_notes n
+    JOIN spaces s ON s.id = n.space_id
+    JOIN memberships lm ON lm.space_id = n.space_id AND lm.member_kind = 'learner' AND lm.member_id = n.learner_id AND lm.role = 'student'
+    JOIN memberships am ON am.space_id = n.space_id AND am.member_kind = 'account' AND am.member_id = n.sender_account_id
+    LEFT JOIN learner_note_prefs np ON np.learner_id = n.learner_id
+    WHERE n.learner_id = ?
+      AND n.status = 'live' AND n.created_at >= ?
+      AND s.archived_at IS NULL
+      AND (? = 'full' OR s.kind = 'class')
+      AND (n.sender_role = 'family' OR COALESCE(np.classes, 'all') <> 'off')
+      AND NOT EXISTS (SELECT 1 FROM feedback_sender_blocks b WHERE b.learner_id = n.learner_id AND b.sender_account_id = n.sender_account_id)
+      AND (
+        (s.kind = 'class' AND n.sender_role = 'teacher' AND am.role IN ('teacher', 'owner'))
+        OR (s.kind = 'family' AND n.sender_role = 'family' AND (am.role = 'owner'
+          OR (am.role = 'caregiver' AND EXISTS (SELECT 1 FROM feedback_send_grants g WHERE g.space_id = n.space_id AND g.account_id = n.sender_account_id))))
+      )
+    ORDER BY n.created_at DESC, n.id DESC
+    LIMIT ?
+  ) d ON 1
+  ORDER BY d.created_at DESC, d.id DESC`;
+
 /** D1 binds at most 100 parameters per statement. */
 const IN_CHUNK = 90;
 
@@ -254,7 +384,10 @@ const IN_CHUNK = 90;
  */
 /** The tables of migration 0005 (F-SPACE-002 PR T-3b), children first. */
 const TRANSFER_TABLES = ['transfer_events', 'transfer_requests', 'learner_transfer_prefs', 'rate_hits'] as const;
+/** The tables of migration 0008 (F-FEEDBACK-001 FB-2), children first. */
+const FEEDBACK_TABLES = ['feedback_reports', 'feedback_notes', 'learner_note_prefs', 'feedback_sender_blocks', 'feedback_send_grants', 'feedback_sender_holds'] as const;
 const RESET_TABLES = [
+  ...FEEDBACK_TABLES,
   ...TRANSFER_TABLES,
   'billing_events',
   'waitlist',
@@ -317,21 +450,27 @@ export class D1Db implements Db {
   }
   async deleteLearner(learnerId: string): Promise<boolean> {
     const existed = !!(await this.getLearner(learnerId));
-    // learner_devices, snapshots, relink_requests and the transfer tables cascade from learners; memberships and
-    // rate_hits hold a plain id. Each is deleted explicitly anyway, children first, in one transaction
-    // (F-SPACE-002 section 4.7). A transfer table is named only once migration 0005 has created it: an erase is
-    // the live caregiver route, and "no such table" would roll the whole batch back if this Worker ever ran
-    // before the migration.
-    const present = await this.presentTables(TRANSFER_TABLES);
+    // learner_devices, snapshots, relink_requests, the transfer tables and the notes tables cascade from
+    // learners; memberships and rate_hits hold a plain id. Each is deleted explicitly anyway, children first, in
+    // one transaction (F-SPACE-002 section 4.7, F-FEEDBACK-001 section 7.4). A table of migration 0005 or 0008
+    // is named only once that migration has created it: an erase is the live caregiver route, and "no such
+    // table" would roll the whole batch back if this Worker ever ran before the migration.
+    const present = await this.presentTables([...FEEDBACK_TABLES, ...TRANSFER_TABLES]);
     const rateKeys = learnerRateKeys(learnerId);
-    const transferStatements: Array<[(typeof TRANSFER_TABLES)[number], string, unknown[]]> = [
+    const pairPrefix = notePairPrefix(learnerId);
+    const guarded: Array<[string, string, unknown[]]> = [
+      ['feedback_reports', 'DELETE FROM feedback_reports WHERE learner_id = ?', [learnerId]],
+      ['feedback_notes', 'DELETE FROM feedback_notes WHERE learner_id = ?', [learnerId]],
+      ['learner_note_prefs', 'DELETE FROM learner_note_prefs WHERE learner_id = ?', [learnerId]],
+      ['feedback_sender_blocks', 'DELETE FROM feedback_sender_blocks WHERE learner_id = ?', [learnerId]],
       ['transfer_events', 'DELETE FROM transfer_events WHERE transfer_id IN (SELECT id FROM transfer_requests WHERE learner_id = ?)', [learnerId]],
       ['transfer_requests', 'DELETE FROM transfer_requests WHERE learner_id = ?', [learnerId]],
       ['learner_transfer_prefs', 'DELETE FROM learner_transfer_prefs WHERE learner_id = ?', [learnerId]],
-      ['rate_hits', `DELETE FROM rate_hits WHERE key IN (${rateKeys.map(() => '?').join(', ')})`, rateKeys],
+      // the learner's own keys, and every `note:pair:<learnerId>:<account>` key by its prefix (a range, so no wildcard applies)
+      ['rate_hits', `DELETE FROM rate_hits WHERE key IN (${rateKeys.map(() => '?').join(', ')}) OR (key >= ? AND key < ?)`, [...rateKeys, pairPrefix, prefixUpperBound(pairPrefix)]],
     ];
     const statements: Array<[string, unknown[]]> = [
-      ...transferStatements.filter(([table]) => present.has(table)).map(([, sql, params]): [string, unknown[]] => [sql, params]),
+      ...guarded.filter(([table]) => present.has(table)).map(([, sql, params]): [string, unknown[]] => [sql, params]),
       ["DELETE FROM memberships WHERE member_kind = 'learner' AND member_id = ?", [learnerId]],
       ['DELETE FROM relink_requests WHERE learner_id = ?', [learnerId]],
       ['DELETE FROM learner_devices WHERE learner_id = ?', [learnerId]],
@@ -843,6 +982,190 @@ export class D1Db implements Db {
       value ? 1 : 0,
       now.toISOString(),
     ]);
+  }
+
+  // ---- notes from grown-ups (F-FEEDBACK-001 section 7.4, migration 0008) ----
+  // Lists are bound as one JSON array and read with json_each: one statement whatever their length (D11).
+
+  studentsOf(spaceId: string, learnerIds: readonly string[]): Promise<string[]> {
+    if (learnerIds.length === 0) return Promise.resolve([]);
+    return this.many(
+      "SELECT member_id FROM memberships WHERE space_id = ? AND member_kind = 'learner' AND role = 'student' AND member_id IN (SELECT value FROM json_each(?))",
+      [spaceId, JSON.stringify(learnerIds)],
+      (r) => str(r.member_id),
+    );
+  }
+  notePrefsFor(learnerIds: readonly string[]): Promise<StoredNotePrefs[]> {
+    if (learnerIds.length === 0) return Promise.resolve([]);
+    return this.many('SELECT * FROM learner_note_prefs WHERE learner_id IN (SELECT value FROM json_each(?))', [JSON.stringify(learnerIds)], (r) => toNotePrefs(r));
+  }
+  blocksFor(learnerIds: readonly string[], senderAccountId: string): Promise<string[]> {
+    if (learnerIds.length === 0) return Promise.resolve([]);
+    return this.many('SELECT learner_id FROM feedback_sender_blocks WHERE sender_account_id = ? AND learner_id IN (SELECT value FROM json_each(?))', [senderAccountId, JSON.stringify(learnerIds)], (r) => str(r.learner_id));
+  }
+  async countRateHitsByKeys(keys: readonly string[], since: Date): Promise<Map<string, number>> {
+    if (keys.length === 0) return new Map();
+    const rows = await this.many('SELECT key, COUNT(*) AS n FROM rate_hits WHERE key IN (SELECT value FROM json_each(?)) AND at >= ? GROUP BY key', [JSON.stringify(keys), since.toISOString()], (r): [string, number] => [str(r.key), num(r.n)]);
+    return new Map(rows);
+  }
+  async addRateHits(rows: readonly RateHitRow[]): Promise<void> {
+    if (rows.length === 0) return;
+    await this.run("INSERT INTO rate_hits (key, at) SELECT json_extract(value, '$.key'), json_extract(value, '$.at') FROM json_each(?)", [JSON.stringify(rows)]);
+  }
+  async insertNotes(rows: readonly NewNote[], rateHits: readonly RateHitRow[]): Promise<number> {
+    const sender = assertOneSender(rows);
+    if (sender === null) return 0;
+    const columns = NOTE_INSERT_COLUMNS.join(', ');
+    const values = NOTE_INSERT_COLUMNS.map((c) => `json_extract(value, '$.${c}')`).join(', ');
+    // Both inserts carry the hold re-check, so a hold placed after the route's own check writes nothing at all.
+    const statements = [this.d1.prepare(`INSERT INTO feedback_notes (${columns}) SELECT ${values} FROM json_each(?) WHERE ${NOT_HELD}`).bind(JSON.stringify(rows.map(noteInsertJson)), sender)];
+    if (rateHits.length > 0) {
+      statements.push(this.d1.prepare(`INSERT INTO rate_hits (key, at) SELECT json_extract(value, '$.key'), json_extract(value, '$.at') FROM json_each(?) WHERE ${NOT_HELD}`).bind(JSON.stringify(rateHits), sender));
+    }
+    const results = await this.d1.batch(statements);
+    return readChanges(results[0]);
+  }
+  async notesForLearner(learnerId: string, scope: NoteDeviceScope, now: Date, limit: number): Promise<LearnerNotesInbox> {
+    const { notesSince } = noteRetentionCuts(now);
+    const rows = await this.many(INBOX_SQL, [learnerId, learnerId, notesSince, scope, limit], (r) => r);
+    const first = rows[0];
+    return {
+      prefs: first && first.p_learner_id !== null && first.p_learner_id !== undefined ? toNotePrefs(first, 'p_') : null,
+      notes: rows.filter((r) => r.id !== null && r.id !== undefined).map(toDeliveredNote),
+    };
+  }
+  notesForSpace(spaceId: string, options: { before: NoteCursor | null; limit: number; now: Date; learnerId?: string }): Promise<StoredNote[]> {
+    const cuts = noteRetentionCuts(options.now);
+    const where = ['n.space_id = ?', NOTE_VISIBLE];
+    const params: unknown[] = [spaceId, cuts.notesSince, cuts.reportsSince];
+    if (options.learnerId !== undefined) {
+      where.push('n.learner_id = ?');
+      params.push(options.learnerId);
+    }
+    if (options.before) {
+      where.push(NOTE_BEFORE);
+      params.push(options.before.createdAt, options.before.createdAt, options.before.id);
+    }
+    return this.many(`SELECT n.* FROM feedback_notes n WHERE ${where.join(' AND ')} ORDER BY n.created_at DESC, n.id DESC LIMIT ?`, [...params, options.limit], toNote);
+  }
+  notesForOversight(learnerId: string, options: { before: NoteCursor | null; limit: number; now: Date }): Promise<StoredNote[]> {
+    const cuts = noteRetentionCuts(options.now);
+    const where = ['n.learner_id = ?', NOTE_VISIBLE];
+    const params: unknown[] = [learnerId, cuts.notesSince, cuts.reportsSince];
+    if (options.before) {
+      where.push(NOTE_BEFORE);
+      params.push(options.before.createdAt, options.before.createdAt, options.before.id);
+    }
+    return this.many(`SELECT n.* FROM feedback_notes n WHERE ${where.join(' AND ')} ORDER BY n.created_at DESC, n.id DESC LIMIT ?`, [...params, options.limit], toNote);
+  }
+  getNote(noteId: string): Promise<StoredNote | null> {
+    return this.one('SELECT * FROM feedback_notes WHERE id = ?', [noteId], toNote);
+  }
+  setNoteRead(noteId: string, at: Date): Promise<number> {
+    return this.changes("UPDATE feedback_notes SET read_at = ? WHERE id = ? AND status = 'live' AND read_at IS NULL", [at.toISOString(), noteId]);
+  }
+  setNoteReaction(noteId: string, reaction: string, at: Date): Promise<number> {
+    return this.changes("UPDATE feedback_notes SET reaction = ?, reaction_at = ? WHERE id = ? AND status = 'live'", [reaction, at.toISOString(), noteId]);
+  }
+  hideNote(noteId: string, via: NoteActVia, at: Date, actedBy?: string): Promise<number> {
+    return this.changes("UPDATE feedback_notes SET status = 'hidden', hidden_via = ?, hidden_at = ?, acted_by_account_id = ? WHERE id = ? AND status = 'live'", [
+      via,
+      at.toISOString(),
+      via === 'family' ? (actedBy ?? null) : null,
+      noteId,
+    ]);
+  }
+  withdrawNote(noteId: string, at: Date): Promise<number> {
+    return this.changes("UPDATE feedback_notes SET status = 'withdrawn', withdrawn_at = ? WHERE id = ? AND status = 'live'", [at.toISOString(), noteId]);
+  }
+  withdrawBatch(batchId: string, senderAccountId: string, at: Date): Promise<number> {
+    return this.changes("UPDATE feedback_notes SET status = 'withdrawn', withdrawn_at = ? WHERE batch_id = ? AND sender_account_id = ? AND status = 'live'", [at.toISOString(), batchId, senderAccountId]);
+  }
+  async insertNoteReport(r: StoredNoteReport): Promise<boolean> {
+    // Only while the note is still within retention at the report time (section 8.7): a report never brings
+    // back a note that every list already hides. The status follows only the row this batch inserted.
+    const cuts = noteRetentionCuts(new Date(r.createdAt));
+    const results = await this.d1.batch([
+      this.d1
+        .prepare(
+          `INSERT INTO feedback_reports (id, note_id, learner_id, sender_account_id, reason, via, evidence, reporter_key, attest, created_at, reviewed_at, outcome) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM feedback_notes n WHERE n.id = ? AND ${NOTE_VISIBLE})`,
+        )
+        .bind(r.id, r.noteId, r.learnerId, r.senderAccountId, r.reason, r.via, r.evidence, r.reporterKey, r.attest, r.createdAt, r.reviewedAt, r.outcome, r.noteId, cuts.notesSince, cuts.reportsSince),
+      this.d1.prepare("UPDATE feedback_notes SET status = 'reported' WHERE id = ? AND EXISTS (SELECT 1 FROM feedback_reports WHERE id = ? AND note_id = ?)").bind(r.noteId, r.id, r.noteId),
+    ]);
+    return readChanges(results[0]) === 1;
+  }
+  countReportersAgainst(accountId: string, since: Date): Promise<number> {
+    return this.count('SELECT COUNT(DISTINCT reporter_key) AS n FROM feedback_reports WHERE sender_account_id = ? AND created_at >= ?', [accountId, since.toISOString()]);
+  }
+  getSenderHold(accountId: string): Promise<StoredSenderHold | null> {
+    return this.one('SELECT * FROM feedback_sender_holds WHERE account_id = ?', [accountId], toSenderHold);
+  }
+  async putSenderHold(h: StoredSenderHold): Promise<boolean> {
+    const written = await this.changes(
+      'INSERT INTO feedback_sender_holds (account_id, reason, created_at, lifted_at) VALUES (?, ?, ?, ?) ON CONFLICT(account_id) DO UPDATE SET reason = excluded.reason, created_at = excluded.created_at, lifted_at = excluded.lifted_at WHERE feedback_sender_holds.lifted_at IS NOT NULL',
+      [h.accountId, h.reason, h.createdAt, h.liftedAt],
+    );
+    return written === 1;
+  }
+  getNotePrefs(learnerId: string): Promise<StoredNotePrefs | null> {
+    return this.one('SELECT * FROM learner_note_prefs WHERE learner_id = ?', [learnerId], (r) => toNotePrefs(r));
+  }
+  putNotePrefs(p: StoredNotePrefs): Promise<void> {
+    return this.run(
+      'INSERT INTO learner_note_prefs (learner_id, classes, acknowledged_at, updated_at, updated_via, updated_by_account) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(learner_id) DO UPDATE SET classes = excluded.classes, acknowledged_at = COALESCE(excluded.acknowledged_at, learner_note_prefs.acknowledged_at), updated_at = excluded.updated_at, updated_via = excluded.updated_via, updated_by_account = excluded.updated_by_account',
+      [p.learnerId, p.classes, p.acknowledgedAt, p.updatedAt, p.updatedVia, p.updatedByAccount],
+    );
+  }
+  putBlock(b: StoredSenderBlock): Promise<void> {
+    return this.run('INSERT INTO feedback_sender_blocks (learner_id, sender_account_id, family_space_id, created_by_account, created_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(learner_id, sender_account_id) DO NOTHING', [
+      b.learnerId,
+      b.senderAccountId,
+      b.familySpaceId,
+      b.createdByAccount,
+      b.createdAt,
+    ]);
+  }
+  async deleteBlock(learnerId: string, senderAccountId: string): Promise<boolean> {
+    return (await this.changes('DELETE FROM feedback_sender_blocks WHERE learner_id = ? AND sender_account_id = ?', [learnerId, senderAccountId])) > 0;
+  }
+  listBlocks(learnerId: string): Promise<StoredSenderBlock[]> {
+    return this.many('SELECT * FROM feedback_sender_blocks WHERE learner_id = ? ORDER BY created_at DESC, sender_account_id DESC', [learnerId], toSenderBlock);
+  }
+  getSendGrant(spaceId: string, accountId: string): Promise<StoredSendGrant | null> {
+    return this.one('SELECT * FROM feedback_send_grants WHERE space_id = ? AND account_id = ?', [spaceId, accountId], toSendGrant);
+  }
+  putSendGrant(g: StoredSendGrant): Promise<void> {
+    return this.run('INSERT INTO feedback_send_grants (space_id, account_id, granted_by, granted_at) VALUES (?, ?, ?, ?) ON CONFLICT(space_id, account_id) DO UPDATE SET granted_by = excluded.granted_by, granted_at = excluded.granted_at', [
+      g.spaceId,
+      g.accountId,
+      g.grantedBy,
+      g.grantedAt,
+    ]);
+  }
+  async deleteSendGrant(spaceId: string, accountId: string): Promise<boolean> {
+    return (await this.changes('DELETE FROM feedback_send_grants WHERE space_id = ? AND account_id = ?', [spaceId, accountId])) > 0;
+  }
+  deleteNotesForMembership(learnerId: string, spaceId: string): Promise<number> {
+    return this.changes("DELETE FROM feedback_notes WHERE learner_id = ? AND space_id = ? AND status <> 'reported'", [learnerId, spaceId]);
+  }
+  async purgeNotes(before: Date, reportedBefore: Date, liftedBefore: Date, limit: number): Promise<number> {
+    const results = await this.d1.batch([
+      this.d1.prepare("DELETE FROM feedback_notes WHERE id IN (SELECT id FROM feedback_notes WHERE status <> 'reported' AND created_at < ? ORDER BY created_at, id LIMIT ?)").bind(before.toISOString(), limit),
+      // a reported note goes with its reports (ON DELETE CASCADE) once no report is newer than the cut
+      this.d1
+        .prepare("DELETE FROM feedback_notes WHERE id IN (SELECT n.id FROM feedback_notes n WHERE n.status = 'reported' AND NOT EXISTS (SELECT 1 FROM feedback_reports r WHERE r.note_id = n.id AND r.created_at >= ?) ORDER BY n.created_at, n.id LIMIT ?)")
+        .bind(reportedBefore.toISOString(), limit),
+      // report rows past the cut of a note that is no longer under review (the owner restored or hid it); a note
+      // still reported keeps every report, older ones included, until it goes with them
+      this.d1
+        .prepare(
+          "DELETE FROM feedback_reports WHERE id IN (SELECT r.id FROM feedback_reports r JOIN feedback_notes n ON n.id = r.note_id WHERE r.created_at < ? AND n.status <> 'reported' ORDER BY r.created_at, r.id LIMIT ?)",
+        )
+        .bind(reportedBefore.toISOString(), limit),
+      this.d1.prepare('DELETE FROM feedback_sender_holds WHERE account_id IN (SELECT account_id FROM feedback_sender_holds WHERE lifted_at IS NOT NULL AND lifted_at < ? ORDER BY lifted_at, account_id LIMIT ?)').bind(liftedBefore.toISOString(), limit),
+    ]);
+    return results.reduce((sum, r) => sum + readChanges(r), 0);
   }
 
   /** Tests only. Child tables first; a table whose migration has not landed yet is skipped. */
