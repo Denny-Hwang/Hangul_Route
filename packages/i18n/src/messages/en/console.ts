@@ -1251,6 +1251,8 @@ export const consoleMsgs = {
     open: 'Open Learning Route',
     /** The label of the card's section on the report. */
     section: 'Learning Route',
+    /** The heading over the stage list page's list of stages (LR-D). */
+    stagesTitle: 'Stages',
     back: { report: 'Back to the report', class: 'Back to the class', family: 'Back to the family' },
     now: (name: string, n: number, title: string) => `${name} is on Stage ${n}: ${title}.`,
     learnerGoal: (name: string, n: number, title: string) => `${name}'s goal: Stage ${n} · ${title}`,

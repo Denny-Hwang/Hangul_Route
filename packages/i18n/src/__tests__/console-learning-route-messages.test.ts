@@ -34,6 +34,8 @@ describe('console.learningRoute (English, section 11.1)', () => {
     expect(lr.title('Sam')).toBe("Sam's Learning Route");
     expect(lr.open).toBe('Open Learning Route');
     expect(lr.section).toBe('Learning Route');
+    // The heading over the stage list (LR-D, design/screens/learning-route/stage-list.md).
+    expect(lr.stagesTitle).toBe('Stages');
     expect(lr.back).toEqual({ report: 'Back to the report', class: 'Back to the class', family: 'Back to the family' });
   });
 

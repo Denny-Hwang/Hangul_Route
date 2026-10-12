@@ -1,6 +1,6 @@
 import { StageKeySchema, pickGoal, routeCatalogOf, stageAvailabilityOf, type StageKey } from '@hangul-route/content-schema';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PlanView, RosterLearner } from '../api';
 import * as viewModule from '../learning-route-view';
 import { goalSourcesOf, learningRouteView, planEndText, type LearningRouteInput, type LearningRouteReady, type LearningRouteRow, type LearningRouteStageRow } from '../learning-route-view';
@@ -18,6 +18,15 @@ const PSEUDO = 'en-XA' as UiLocale;
 vi.mock('@hangul-route/i18n', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@hangul-route/i18n')>();
   return { ...actual, formatDate: (locale: UiLocale, ...rest: Parameters<typeof actual.formatDate> extends [UiLocale, ...infer R] ? R : never) => actual.formatDate(locale === PSEUDO ? 'en' : locale, ...rest) };
+});
+
+// Pin the browser time zone: "Updated {date}" is read in the viewer's zone, so every test names the zone it runs in
+// (UTC unless it says otherwise). Stubs are undone after each test, also when an assertion fails.
+beforeEach(() => {
+  vi.stubEnv('TZ', 'UTC');
+});
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 const en = getMessages('en');
@@ -53,7 +62,7 @@ const tagsOf = (view: LearningRouteReady, stage: StageKey): string[] => stageRow
 const textsOf = (value: unknown): string[] => {
   if (typeof value === 'string') return [value];
   if (Array.isArray(value)) return value.flatMap(textsOf);
-  if (value !== null && typeof value === 'object') return Object.entries(value).flatMap(([key, v]) => (key === 'href' || key === 'stage' || key === 'stages' || key === 'kind' || key === 'state' || key === 'status' ? [] : textsOf(v)));
+  if (value !== null && typeof value === 'object') return Object.entries(value).flatMap(([key, v]) => (key === 'href' || key === 'stage' || key === 'stages' || key === 'kind' || key === 'state' || key === 'availability' || key === 'status' ? [] : textsOf(v)));
   return [];
 };
 
@@ -88,6 +97,17 @@ describe('learningRouteView: which space and which learner (section 6.1)', () =>
     expect(ready({ today: '2026-12-31', learners: [learner({ lastSyncedAt: '2027-01-01T01:00:00.000Z' })] }).updated).toBe('Updated Jan 1');
     expect(ready({ learners: [learner({ lastSyncedAt: null })] }).updated).toBeNull();
     expect(ready({ learners: [learner({ lastSyncedAt: 'not a date' })] }).updated).toBeNull();
+  });
+
+  it("words the sync date in the viewer's time zone, the year rule alike in every zone", () => {
+    // 15:00 UTC on Oct 11 is already Oct 12 in Seoul and still Oct 11 in Los Angeles.
+    vi.stubEnv('TZ', 'Asia/Seoul');
+    expect(ready().updated).toBe('Updated Oct 12');
+    expect(ready({ today: '2027-01-01', learners: [learner({ lastSyncedAt: '2026-12-31T12:00:00.000Z' })] }).updated).toBe('Updated Dec 31');
+    vi.stubEnv('TZ', 'America/Los_Angeles');
+    expect(ready().updated).toBe('Updated Oct 11');
+    expect(ready({ today: '2026-12-31', learners: [learner({ lastSyncedAt: '2027-01-01T12:00:00.000Z' })] }).updated).toBe('Updated Jan 1');
+    expect(ready({ learners: [learner({ lastSyncedAt: '2025-12-30T15:00:00.000Z' })] }).updated).toBe('Updated Dec 30, 2025');
   });
 
   it('goes back to the report once F-REPORT-001 gives its address, else to the class or the family', () => {
@@ -141,12 +161,35 @@ describe('learningRouteView: the stage list (section 6.1 "The stage list page")'
       order: 1,
       state: 'open',
       title: 'Hangul',
+      availability: 'open',
       stateWord: 'Open',
       canDo: canDo[1],
       line: '4 known from the level check, 2 quests done',
       tags: [{ kind: 'here', text: 'Sam is here' }],
     });
-    expect(stageRow(rows, 'stage4')).toMatchObject({ title: 'Dialogue', stateWord: 'Open', canDo: canDo[4], line: '1 quest done' });
+    expect(stageRow(rows, 'stage4')).toMatchObject({ title: 'Dialogue', availability: 'taste', stateWord: 'A taste', canDo: canDo[4], line: '1 quest done' });
+  });
+
+  it('words an open taste stage "A taste", the learner page word, and every other state with its console word', () => {
+    const rows = ready().stages;
+    // Stage 2 and Stage 4 are tastes in the October 2026 catalogue (wireframes parent/learning-route.md and console/learning-route.md).
+    expect(stageRow(rows, 'stage2')).toMatchObject({ state: 'open', availability: 'taste', stateWord: en.learner.myRoute.state.taste });
+    expect(stageRow(rows, 'stage2').stateWord).toBe('A taste');
+    expect(stageRow(rows, 'stage1')).toMatchObject({ state: 'open', availability: 'open', stateWord: 'Open' });
+    expect(stageRow(rows, 'stage3')).toMatchObject({ state: 'later', availability: 'soon', stateWord: 'Coming later' });
+    const done = ready({ learners: withSummary({ journey: journey(journeyRows({ stage1: { state: 'known' }, stage2: { state: 'explored' }, stage4: { state: 'complete' } }), null) }) }).stages;
+    expect(stageRow(done, 'stage1').stateWord).toBe('Known from the level check');
+    expect(stageRow(done, 'stage2')).toMatchObject({ availability: 'taste', stateWord: 'Explored' });
+    expect(stageRow(done, 'stage4')).toMatchObject({ availability: 'taste', stateWord: 'Complete' });
+  });
+
+  it('reads the taste word in the locale it is given', () => {
+    vi.stubEnv('NEXT_PUBLIC_PSEUDO_LOCALE', '1');
+    expect(stageRow(ready({ locale: PSEUDO }).stages, 'stage2').stateWord).toBe(getMessages(PSEUDO).learner.myRoute.state.taste);
+  });
+
+  it('heads the stage list "Stages"', () => {
+    expect(ready().stagesTitle).toBe('Stages');
   });
 
   it('ignores entries with an unknown stage, an unknown state, unreadable counts or a repeated stage, and sorts by stage', () => {
@@ -188,7 +231,8 @@ describe('learningRouteView: the stage list (section 6.1 "The stage list page")'
   it('merges a run of coming-later stages into one row and keeps a lone one as a titled row with no can-do line', () => {
     const rows = ready().stages;
     expect(rows.at(-1)).toEqual({ kind: 'later', stages: ['stage5', 'stage6', 'stage7'], from: 5, to: 7, stateWord: 'Coming later', text: 'Stages 5 to 7: Coming later' });
-    expect(stageRow(rows, 'stage3')).toEqual({ kind: 'stage', stage: 'stage3', order: 3, state: 'later', title: 'Sentences', stateWord: 'Coming later', canDo: null, line: null, tags: [] });
+    // The design keeps a coming-later row quiet: its name and "Coming later" only (design/screens/learning-route/stage-list.md).
+    expect(stageRow(rows, 'stage3')).toEqual({ kind: 'stage', stage: 'stage3', order: 3, state: 'later', availability: 'soon', title: 'Sentences', stateWord: 'Coming later', canDo: null, line: null, tags: [] });
   });
 
   it('never merges across a stage it could not read, or a coming-later stage that holds a count', () => {
@@ -215,13 +259,18 @@ describe('learningRouteView: the stage list (section 6.1 "The stage list page")'
     expect(stageRow(view.stages, 'stage5').tags).toEqual([]);
   });
 
-  it('tags where the learner is, the goal and where the level check started them, as text', () => {
+  it('tags where the learner is, the goal and where the level check started them, as text, in that order', () => {
     const view = ready({ learners: withSummary({ placement: placement('stage1', 2), routeGoal: { stage: 'stage2', from: 'class' } }) });
     expect(stageRow(view.stages, 'stage1').tags).toEqual([
       { kind: 'here', text: 'Sam is here' },
       { kind: 'start', text: 'Sam started here' },
     ]);
     expect(stageRow(view.stages, 'stage2').tags).toEqual([{ kind: 'goal', text: "Sam's goal" }]);
+    // All three on one stage: here, goal, start (section 10 and LR-D: the goal tag sits between the other two).
+    const all = ready({ learners: withSummary({ placement: placement('stage1', 2), routeGoal: { stage: 'stage1', from: 'class' } }) });
+    expect(stageRow(all.stages, 'stage1').tags.map((t) => t.kind)).toEqual(['here', 'goal', 'start']);
+    const plan1 = ready({ space: { id: 'space:c', kind: 'class' }, learners: withSummary({ placement: placement('stage1', 2) }), plans: [plan({ id: 'plan:c', items: [quest('quest:stage1-life-q1')] })] });
+    expect(stageRow(plan1.stages, 'stage1').tags.map((t) => t.text)).toEqual(['Sam is here', 'Plan goal', 'Sam started here']);
     // A placement level reaches Stage 2 too.
     expect(tagsOf(ready({ learners: withSummary({ placement: placement('stage2', 0) }) }), 'stage2')).toContain('Sam started here');
   });
@@ -243,7 +292,6 @@ describe('learningRouteView: the stage list (section 6.1 "The stage list page")'
     expect(view.title).toMatch(/^\[.*\]$/);
     // The date is drawn inside the pseudo words.
     expect(view.updated).toMatch(/^\[.* 11~*\]$/);
-    vi.unstubAllEnvs();
   });
 });
 
@@ -293,6 +341,8 @@ describe('case 1: a family viewer with summary.routeGoal, the goal the learner d
     const at = (state: string, stage: StageKey, from = 'class') =>
       view({ stage, from }, { journey: journey(journeyRows({ [stage]: { state } } as Parameters<typeof journeyRows>[0]), 'stage4') }).card.goal?.line;
     expect(at('complete', 'stage1')).toBe('Sam reached the goal: Stage 1 · Hangul.');
+    expect(view({ stage: 'stage1', from: 'class' }, { journey: journey(journeyRows({ stage1: { state: 'complete' } }), 'stage4') }).card.goal).toMatchObject({ canDoLead: null, canDo: null });
+    expect(view({ stage: 'stage1', from: 'default' }, { journey: journey(journeyRows({ stage1: { state: 'complete' } }), 'stage4') }).card.goal).toMatchObject({ canDoLead: 'By the end of this stage, Sam can:', canDo: canDo[1] });
     expect(at('known', 'stage1')).toBe('Sam reached the goal: Stage 1 · Hangul.');
     expect(at('explored', 'stage2')).toBe('Sam reached the goal: Stage 2 · Words.');
     expect(at('open', 'stage2')).toBe("Sam's goal: Stage 2 · Words");
@@ -422,6 +472,11 @@ describe('case 2: this space has a live curriculum plan for the learner', () => 
     expect(reached('open', 'stage2')).toBeNull();
   });
 
+  it('drops the can-do line once the plan stage is reached, as the learner card does (section 6.1)', () => {
+    const goal = classView([plan({ id: 'plan:c', items: [quest('quest:stage1-life-q1')] })], { journey: journey(journeyRows({ stage1: { state: 'complete' } }), 'stage4') }).card.goal;
+    expect(goal).toMatchObject({ reached: 'Sam reached this stage.', canDoLead: null, canDo: null });
+  });
+
   it('a draft, an archived plan, a plan for another learner, a classic plan or a finished plan never sets the goal', () => {
     for (const p of [
       plan({ id: 'plan:draft', publishedAt: null }),
@@ -534,6 +589,15 @@ describe('goalSourcesOf: the console sources of section 4.1 ("Who passes which s
     expect(goalSourcesOf(plans, 'family', 'learner:sam').every((s) => s.kind === 'family')).toBe(true);
   });
 
+  it('reads a meta it cannot parse as no curriculum, so a malformed plan never throws and sets no goal', () => {
+    const broken = [{ kind: 'curriculum', weeks: 'nope' }, { kind: 'curriculum' }, { ...meta(), params: null }, 'meta', 7] as unknown as PlanView['meta'][];
+    for (const bad of broken) {
+      const p = plan({ id: 'plan:bad', meta: bad });
+      expect(goalSourcesOf([p], 'class', 'learner:sam')).toEqual([{ id: 'plan:bad', kind: 'class', assignedAt: p.publishedAt, items: p.items, meta: null }]);
+      expect(ready({ space: { id: 'space:c', kind: 'class' }, plans: [p] }).card.goal?.case).toBe(3);
+    }
+  });
+
   it('with no learner keeps only the plans for everyone (the class line, section 6.3)', () => {
     const plans = [plan({ id: 'plan:all' }), plan({ id: 'plan:me', targetLearnerIds: ['learner:sam'] }), plan({ id: 'plan:empty', targetLearnerIds: [] })];
     expect(goalSourcesOf(plans, 'class', null).map((s) => s.id)).toEqual(['plan:all']);
@@ -551,9 +615,11 @@ describe('planEndText: the grown-up plan end (LR-OD-7)', () => {
   });
 
   it('reads the date in UTC, so the day never shifts with the browser time zone', () => {
-    vi.stubEnv('TZ', 'America/Los_Angeles');
-    expect(planEndText('2026-11-01', TODAY)).toBe('Plan ends Nov 1');
-    vi.unstubAllEnvs();
+    for (const zone of ['America/Los_Angeles', 'Asia/Seoul']) {
+      vi.stubEnv('TZ', zone);
+      expect(planEndText('2026-11-01', TODAY), zone).toBe('Plan ends Nov 1');
+      expect(planEndText('2027-01-01', TODAY), zone).toBe('Plan ends Jan 1, 2027');
+    }
   });
 });
 

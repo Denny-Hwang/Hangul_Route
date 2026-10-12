@@ -1,5 +1,6 @@
 import {
   CATALOG,
+  CurriculumMetaSchema,
   RouteGoalSummarySchema,
   StageKeySchema,
   isDateKey,
@@ -12,6 +13,7 @@ import {
   type GoalFrom,
   type GoalSource,
   type RouteGoal,
+  type RouteStageAvailability,
   type StageKey,
 } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, formatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
@@ -83,14 +85,22 @@ export interface LearningRouteStageRow {
   /** 1 to 7. */
   order: number;
   state: JourneyState;
+  /** What the catalogue ships for the stage (`stageAvailabilityOf`): a full stage, a taste or nothing yet. */
+  availability: RouteStageAvailability;
   title: string;
-  /** "Open", "Coming later": the word that carries the row when there is no count line. */
+  /**
+   * "Open", "A taste", "Coming later": the word that carries the row when there is no count line. An open taste
+   * stage reads the learner page's "A taste" (`learner.myRoute.state.taste`), as the wireframes and the app do.
+   */
   stateWord: string;
-  /** "Read everyday words and know what they mean." (`learner.myRoute.stage.canDo`); null for a stage coming later. */
+  /**
+   * "Read everyday words and know what they mean." (`learner.myRoute.stage.canDo`); null for a stage coming later,
+   * whose row stays quiet with its name and "Coming later" only (`design/screens/learning-route/stage-list.md`).
+   */
   canDo: string | null;
   /** "4 known from the level check, 2 quests done" with every zero part left out; null when both are 0. */
   line: string | null;
-  /** In the order here, start, goal (the order of the stage row's accessibility label, section 10). */
+  /** In the order here, goal, start (the order of the stage row's accessibility label, section 10). */
   tags: LearningRouteTag[];
 }
 
@@ -127,9 +137,10 @@ export interface LearningRouteGoal {
   reached: string | null;
   /** "Plan ends Nov 1" (grown-up views only, LR-OD-7); null when the plan end is not known here. */
   planEnds: string | null;
-  /** "By the end of this stage, {name} can:". */
-  canDoLead: string;
-  canDo: string;
+  /** "By the end of this stage, {name} can:"; null once the goal is reached (section 6.1), as on the learner card. */
+  canDoLead: string | null;
+  /** The goal stage's can-do line; null exactly when `canDoLead` is. */
+  canDo: string | null;
   familyPlan: LearningRouteFamilyPlanLine | null;
 }
 
@@ -150,6 +161,8 @@ export interface LearningRouteReady {
   updated: string | null;
   back: LearningRouteLink;
   card: LearningRouteCard;
+  /** "Stages": the heading over the stage list. */
+  stagesTitle: string;
   stages: LearningRouteRow[];
 }
 
@@ -182,13 +195,16 @@ const isLivePlan = (plan: PlanView): plan is PlanView & { publishedAt: string } 
  * unarchived plans that reach the learner (`targetLearnerIds` null, or naming the learner), each
  * a source of the space's kind assigned when it was published. With `learnerId` null, only the
  * plans for everyone in the space (the class line, section 6.3). Classic plans stay in the list
- * with `meta: null`: `pickGoal` gives them no goal, as on the device.
+ * with `meta: null`: `pickGoal` gives them no goal, as on the device. The meta arrives from the
+ * network as cast JSON, so it is parsed: one this build cannot read is treated as no curriculum,
+ * and a malformed plan can never throw in `pickGoal`.
  */
 export function goalSourcesOf(plans: readonly PlanView[], kind: GoalSource['kind'], learnerId: string | null): GoalSource[] {
   return plans.flatMap((plan) => {
     if (!isLivePlan(plan)) return [];
     if (learnerId === null ? plan.targetLearnerIds !== null : !planReaches(plan, learnerId)) return [];
-    return [{ id: plan.id, kind, assignedAt: plan.publishedAt, items: plan.items, meta: plan.meta ?? null }];
+    const meta = CurriculumMetaSchema.safeParse(plan.meta);
+    return [{ id: plan.id, kind, assignedAt: plan.publishedAt, items: plan.items, meta: meta.success ? meta.data : null }];
   });
 }
 
@@ -295,7 +311,10 @@ function buildCard(
   const stages = entries.map((e) => ({ stage: e.stage, state: e.state }));
   const orderOf = (stage: StageKey): number => StageKeySchema.options.indexOf(stage) + 1;
   const ends = (endsOn: string | null | undefined): string | null => planEndText(endsOn, today, locale);
-  const goalParts = (stage: StageKey) => ({ canDoLead: lr.canDoLead(name), canDo: canDoOf[orderOf(stage) as keyof typeof canDoOf] });
+  // The can-do line shows only while the goal is not reached (section 6.1): "By the end of this stage" reads wrongly
+  // for a stage already reached.
+  const goalParts = (stage: StageKey, reached: boolean) =>
+    reached ? { canDoLead: null, canDo: null } : { canDoLead: lr.canDoLead(name), canDo: canDoOf[orderOf(stage) as keyof typeof canDoOf] };
 
   const now = here === null ? null : lr.now(name, here.order, stageTitle(here.stage));
   // One pick over this space's own plans for the learner: a plan goal when one of them is live (cases 1 and 2),
@@ -342,7 +361,7 @@ function buildCard(
           from: from === 'self' ? lr.fromLead.self(name) : lr.fromLead[from],
           reached: null,
           planEnds,
-          ...goalParts(stage),
+          ...goalParts(stage, reached),
           familyPlan,
         },
         endOfRoad: null,
@@ -364,7 +383,7 @@ function buildCard(
           from: null,
           reached: spacePlan.reached ? lr.stageReached(name) : null,
           planEnds: ends(spacePlan.endsOn),
-          ...goalParts(stage),
+          ...goalParts(stage, spacePlan.reached),
           familyPlan: null,
         },
         endOfRoad: null,
@@ -386,7 +405,7 @@ function buildCard(
         from: null,
         reached: null,
         planEnds: null,
-        ...goalParts(open.stage),
+        ...goalParts(open.stage, false),
         familyPlan: null,
       },
       endOfRoad: null,
@@ -427,24 +446,28 @@ export function learningRouteView(input: LearningRouteInput): LearningRouteView 
   const { card, goalTag } = buildCard(kind, learner, summary, entries, here, input, locale, m);
   const startStage = startStageOf(summary, locale);
   const canDoOf = m.learner.myRoute.stage.canDo;
+  const catalog = input.catalog ?? CATALOG;
 
   const rows = entries.map((entry): LearningRouteStageRow => {
+    // Here, goal, start: the order of the learner page's tags and of the row's spoken label (section 10, LR-D).
     const tags: LearningRouteTag[] = [];
     if (entry === here) tags.push({ kind: 'here', text: lr.hereTag(name) });
-    if (entry.order === startStage) tags.push({ kind: 'start', text: lr.startTag(name) });
     if (goalTag !== null && goalTag.stage === entry.stage) tags.push(goalTag.tag);
+    if (entry.order === startStage) tags.push({ kind: 'start', text: lr.startTag(name) });
+    const availability = stageAvailabilityOf(catalog, entry.stage);
     return {
       kind: 'stage',
       stage: entry.stage,
       order: entry.order,
       state: entry.state,
+      availability,
       title: input.stageTitle(entry.stage),
-      stateWord: m.console.journey.state[entry.state],
+      stateWord: entry.state === 'open' && availability === 'taste' ? m.learner.myRoute.state.taste : m.console.journey.state[entry.state],
       canDo: entry.state === 'later' ? null : canDoOf[entry.order as keyof typeof canDoOf],
       line: stageLineOf(entry, m),
       tags,
     };
   });
 
-  return { status: 'ready', title, updated, back, card, stages: mergeLaterRuns(rows, m) };
+  return { status: 'ready', title, updated, back, card, stagesTitle: lr.stagesTitle, stages: mergeLaterRuns(rows, m) };
 }

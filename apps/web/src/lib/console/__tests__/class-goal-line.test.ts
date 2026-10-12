@@ -1,5 +1,6 @@
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { PlanView } from '../api';
 import * as lineModule from '../class-goal-line';
 import { classGoalLine, type ClassGoalLineInput } from '../class-goal-line';
 import { ROUTE_CATALOG, TODAY, meta, plan, quest, stageTitle } from './fixtures/learning-route';
@@ -24,6 +25,11 @@ const input = (over: Partial<ClassGoalLineInput> = {}): ClassGoalLineInput => ({
   stageTitle,
   catalog: ROUTE_CATALOG,
   ...over,
+});
+
+// Undo env stubs after each test, also when an assertion fails.
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 describe('classGoalLine (section 6.3)', () => {
@@ -52,12 +58,14 @@ describe('classGoalLine (section 6.3)', () => {
     expect(classGoalLine(input({ plans: [some, whole] }))?.stage).toBe('stage1');
   });
 
-  it('a draft, an archived plan, a classic plan or a finished plan gives no line', () => {
+  it('a draft, an archived plan, a classic plan, an unreadable meta or a finished plan gives no line', () => {
     for (const p of [
       plan({ id: 'plan:draft', publishedAt: null }),
       plan({ id: 'plan:archived', archivedAt: '2026-10-08T00:00:00.000Z' }),
       plan({ id: 'plan:classic', meta: null }),
       plan({ id: 'plan:none', meta: undefined }),
+      // A meta this build cannot parse is no curriculum: no line, and nothing throws.
+      plan({ id: 'plan:broken', meta: { kind: 'curriculum', weeks: 'nope' } as unknown as PlanView['meta'] }),
       // Four weeks from Sep 1: the last day is Sep 28, before today. A finished plan sets no goal anywhere (section 4.1 rule 1).
       plan({ id: 'plan:done', meta: meta('2026-09-01') }),
     ]) {
@@ -98,6 +106,5 @@ describe('classGoalLine (section 6.3)', () => {
     const line = classGoalLine(input({ locale: PSEUDO }));
     expect(line?.line).toBe(getMessages(PSEUDO).console.learningRoute.planReaches.class(2, 'Words'));
     expect(line?.line).toMatch(/^\[.*\]$/);
-    vi.unstubAllEnvs();
   });
 });
