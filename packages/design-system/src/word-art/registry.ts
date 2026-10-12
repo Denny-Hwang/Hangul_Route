@@ -70,7 +70,12 @@ export type WordArtMetaOverrides = Readonly<Record<string, Partial<Omit<WordArtM
 /** Why every colour swatch carries the C2 waiver (§3.6.1). No swatch needs a fifth fill tone (§3.3): each stays at 4 or fewer. */
 const SWATCH_REASON = 'The swatch square fills the frame (88 of 100 units, margin 6), so its subject box is past the 60-70 % rule by design (§3.6.1).';
 
-/** Review state and waivers. A key not listed is a `draft`. */
+/**
+ * Review state and waivers. A key not listed is a `draft`. The W-1b samples,
+ * the props and the W-3 keys stay `review` until the follow-up review pass;
+ * F-VOC-003 C-7 waits for every non-prop key of a shown topic to be `approved`
+ * (§6).
+ */
 const META: WordArtMetaOverrides = {
   'food-apple': { status: 'review' },
   'animal-cat': { status: 'review' },
