@@ -2,7 +2,7 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 import { CATALOG_2026_10 } from '../../__tests__/fixtures/catalog-2026-10';
 import { ClassReportSchema, type ActivityDay, type ActivitySummary, type ClassReport, type ReportPeriod } from '../../schemas/report';
 import type { ReportSummary } from '../../schemas/report-response';
-import { classReport, type ClassReportInput, type ClassReportLearner, type ClassReportPlan } from '../class-report';
+import { classAtOf, classReport, type ClassReportInput, type ClassReportLearner, type ClassReportPlan } from '../class-report';
 import { NOW, STEADY, GAP } from './fixtures/activity-2026-10';
 import { CLASS_20, CLASS_PLANS } from './fixtures/class-2026-10';
 
@@ -141,12 +141,13 @@ describe('the class of 20 by period', () => {
     ]);
   });
 
-  it('day: practiced and not yet; each learner\'s day ends at their own last saved day', () => {
+  it('day: practiced and not yet; a learner whose device has not saved today is in neither band', () => {
     const r = class20('day');
     expect(r.headline).toEqual({ code: 'class_practiced', practiced: 6, learners: 20 });
+    // Jun (saved yesterday) and Sora (saved 4 days ago): today is not saved on their devices, so not "Not yet".
     expect(r.practice.dayBands).toEqual([
       { band: 'practiced', learners: 6 },
-      { band: 'not_yet', learners: 7 },
+      { band: 'not_yet', learners: 0 },
     ]);
     expect(r.time).toEqual({ minutesTotal: { count: 90 }, minutesMedian: 15 });
     expect(r.wentWell.milestones).toEqual([]);
@@ -278,10 +279,125 @@ describe('the up-only marker (OD-11): against the class\'s own previous window, 
     expect(report({ now: new Date('2026-09-28T12:00:00.000Z'), period: 'month', learners: [later] }).time.minutesTotal).toEqual({ count: 20 });
   });
 
+  it('a month: a member with no row for last month, who was in the class before it, counts as 0 then (back this month)', () => {
+    const aug = { m: '2026-08', min: 10, q: 1, c: 0, w: 0, days: 1 };
+    const both = member({ '2026-10-03': { min: 30, q: 2 } }, {}, { months: [aug, { m: '2026-09', min: 10, q: 1, c: 0, w: 0, days: 1 }, { m: '2026-10', min: 30, q: 2, c: 0, w: 0, days: 1 }] });
+    const back = (): ClassReportLearner => member({ '2026-10-03': { min: 20, q: 1 } }, {}, { months: [aug, { m: '2026-10', min: 20, q: 1, c: 0, w: 0, days: 1 }] });
+    const r = report({ now: NOW_UTC, period: 'month', learners: [both, back(), back()] });
+    // October: 3 practiced, 70 minutes, 4 quests; September: 1 practiced (10 minutes, 1 quest), 0 for the other two.
+    expect(r.headline).toEqual({ code: 'class_practiced', practiced: 3, learners: 3, up: true });
+    expect(r.time.minutesTotal).toEqual({ count: 70, up: true });
+    expect(r.wentWell.questsNew).toEqual({ count: 4, up: true });
+  });
+
+  it('a month: a member whose first row is in last month (joined then) sits out the comparison', () => {
+    const known = member({ '2026-10-03': { min: 10 } }, {}, { months: [{ m: '2026-08', min: 40, q: 0, c: 0, w: 0, days: 2 }, { m: '2026-09', min: 30, q: 0, c: 0, w: 0, days: 2 }, { m: '2026-10', min: 10, q: 0, c: 0, w: 0, days: 1 }] });
+    // The class copy starts on 20 September (no September row: the join month), so September is not known whole.
+    const joined = member({ '2026-09-20': { min: 5 }, '2026-10-04': { min: 60 } }, {}, { months: [{ m: '2026-10', min: 60, q: 0, c: 0, w: 0, days: 1 }] });
+    const r = report({ now: NOW_UTC, period: 'month', learners: [known, joined] });
+    // Compared: the known member only, 10 minutes against 30. With the newcomer it would read 70 against 35.
+    expect(r.time.minutesTotal).toEqual({ count: 70 });
+    expect(r.headline).toEqual({ code: 'class_practiced', practiced: 2, learners: 2 });
+  });
+
+  it('a month: a month older than the newest 24 month rows the device keeps is not known as empty', () => {
+    // 24 rows, November 2024 to October 2026, and a stage finished in June 2024 (the class copy starts there).
+    const months = Array.from({ length: 24 }, (_, i) => {
+      const index = 2024 * 12 + 10 + i;
+      return { m: `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, '0')}`, min: 5, q: 0, c: 0, w: 0, days: 1 };
+    });
+    expect([months[0]?.m, months[23]?.m]).toEqual(['2024-11', '2026-10']);
+    const milestones = [{ stage: 'stage1', on: '2024-06-01' }];
+    const full = member({ '2026-10-02': { min: 5 } }, {}, { months, milestones });
+    const bands = (r: ClassReport): number => (r.practice.dayBands ?? []).reduce((n, b) => n + b.learners, 0);
+    // October 2024 has no row and is older than the oldest kept one: its row may have been dropped, so it is unknown.
+    expect(bands(report({ now: NOW_UTC, period: 'month', at: '2024-10-10', learners: [full] }))).toBe(0);
+    // With 23 rows nothing was dropped: no October 2024 row means no practice then.
+    const fewer = member({ '2026-10-02': { min: 5 } }, {}, { months: months.slice(1), milestones });
+    const r = report({ now: NOW_UTC, period: 'month', at: '2024-10-10', learners: [fewer] });
+    expect(r.practice.dayBands?.[0]).toEqual({ band: '0', learners: 1 });
+  });
+
   it('day and all never carry the marker', () => {
     const grew = member({ '2026-10-14': { min: 10 }, '2026-10-15': { min: 40 } });
     expect(report({ now: NOW_UTC, period: 'day', learners: [grew] }).time.minutesTotal).toEqual({ count: 40 });
     expect(report({ now: NOW_UTC, period: 'all', learners: [grew] }).time.minutesTotal).toEqual({ count: 50 });
+  });
+});
+
+describe('not saved is never "did not practice"', () => {
+  const bands = (r: ClassReport): Record<string, number> => Object.fromEntries((r.practice.dayBands ?? []).map((b) => [b.band, b.learners]));
+
+  it('a member who joined after a past week is in no band for it, and counts no figure there', () => {
+    const steady = member({ '2026-09-15': {}, '2026-10-06': { min: 20 } });
+    const newcomer = member({ '2026-10-13': { min: 50, j: ['ㄱ'] } }, {}, { milestones: [{ stage: 'stage1', on: '2026-10-13' }] });
+    const r = report({ now: NOW_UTC, at: '2026-10-08', learners: [steady, newcomer] });
+    expect(r.headline).toEqual({ code: 'class_practiced', practiced: 1, learners: 2 });
+    expect(bands(r)).toEqual({ '0': 0, '1-2': 1, '3-4': 0, '5-7': 0 });
+    expect(r.time.minutesTotal).toEqual({ count: 20 });
+    expect(r.wentWell.lettersNew).toEqual([]);
+    expect(r.wentWell.milestones).toEqual([]);
+    // This week the newcomer counts.
+    expect(bands(report({ now: NOW_UTC, learners: [steady, newcomer] }))).toEqual({ '0': 1, '1-2': 1, '3-4': 0, '5-7': 0 });
+  });
+
+  it('a device whose last saved day is before the window is in no band for it (and counts as not saved in 7 days)', () => {
+    const fresh = member({ '2026-10-14': {} });
+    const stale = member({ '2026-09-28': {}, '2026-10-01': {} }, {}, { asOf: '2026-10-01' });
+    const r = report({ now: NOW_UTC, learners: [fresh, stale] });
+    expect(bands(r)).toEqual({ '0': 0, '1-2': 1, '3-4': 0, '5-7': 0 });
+    expect(r.class.notSaved7d).toBe(1);
+    expect(r.headline).toEqual({ code: 'class_practiced', practiced: 1, learners: 2 });
+    // A week that reaches past the last saved day reads its saved part: Jun's quiet saved days are "Not yet".
+    const partial = member({ '2026-09-28': {} }, {}, { asOf: '2026-10-13' });
+    expect(bands(report({ now: NOW_UTC, learners: [partial] }))).toEqual({ '0': 1, '1-2': 0, '3-4': 0, '5-7': 0 });
+  });
+
+  it('a past day older than a learner\'s day rows: that learner sits out', () => {
+    // In the class since July. asOf 15 October: day rows from 11 September.
+    const current = member({ '2026-09-15': {}, '2026-10-14': {} }, {}, { months: [{ m: '2026-07', min: 10, q: 0, c: 0, w: 0, days: 1 }] });
+    // Saved on 20 September: day rows from 17 August.
+    const early = member({ '2026-08-20': {}, '2026-09-10': {} }, {}, { asOf: '2026-09-20' });
+    expect(bands(report({ now: NOW_UTC, period: 'day', at: '2026-09-10', learners: [current, early] }))).toEqual({ practiced: 1, not_yet: 0 });
+    // Both hold 12 September in their day rows, with no practice: "Not yet" for both.
+    expect(bands(report({ now: NOW_UTC, period: 'day', at: '2026-09-12', learners: [current, early] }))).toEqual({ practiced: 0, not_yet: 2 });
+    // A day before the first day the class copy holds: the member sits out.
+    expect(bands(report({ now: NOW_UTC, period: 'day', at: '2026-09-12', learners: [member({ '2026-09-15': {} })] }))).toEqual({ practiced: 0, not_yet: 0 });
+  });
+
+  it('`all` reads lifetime totals: practice from before the learner joined counts, letters and milestones do not', () => {
+    // The class copy: total kept (20 days, 300 minutes, 9 quests, 4 cards), day rows from the join day only.
+    const joined = member({ '2026-10-10': { min: 10, j: ['ㄴ'] } }, {}, { total: { since: null, min: 300, q: 9, c: 4, w: 0, days: 20 } });
+    const r = report({ now: NOW_UTC, period: 'all', learners: [joined] });
+    expect(r.headline).toEqual({ code: 'class_practiced', practiced: 1, learners: 1 });
+    expect(r.time.minutesTotal).toEqual({ count: 300 });
+    expect(r.wentWell.questsNew).toEqual({ count: 9 });
+    expect(r.wentWell.cardsNew).toBe(4);
+    expect(r.wentWell.lettersNew).toEqual([{ letter: 'ㄴ', learners: 1 }]);
+  });
+});
+
+describe('the class stepper limits (section 3.2): `at` outside them reads as the current window', () => {
+  it('classAtOf: day and week within the 35 day rows of the widest offsets; month within 24 months; all never', () => {
+    // NOW_UTC 15 October 12:00 UTC: the westernmost today is 14 October, the easternmost 16 October.
+    expect(classAtOf('week', '2026-10-08', NOW_UTC)).toBe('2026-10-08');
+    expect(classAtOf('day', '2026-09-10', NOW_UTC)).toBe('2026-09-10');
+    expect(classAtOf('day', '2026-09-09', NOW_UTC)).toBeNull();
+    expect(classAtOf('week', '2026-10-16', NOW_UTC)).toBe('2026-10-16');
+    expect(classAtOf('week', '2026-10-17', NOW_UTC)).toBeNull();
+    expect(classAtOf('week', '2020-01-07', NOW_UTC)).toBeNull();
+    expect(classAtOf('month', '2024-10-20', NOW_UTC)).toBe('2024-10-01');
+    expect(classAtOf('month', '2024-09-30', NOW_UTC)).toBeNull();
+    expect(classAtOf('all', '2026-10-08', NOW_UTC)).toBeNull();
+    expect(classAtOf('year' as ReportPeriod, '2026-10-08', NOW_UTC)).toBe('2026-10-08');
+    for (const bad of [null, undefined, '', '2026-02-30', 'last-week']) expect(classAtOf('week', bad, NOW_UTC)).toBeNull();
+    expect(classAtOf('week', '2026-10-08', new Date('nonsense'))).toBeNull();
+  });
+
+  it('an out-of-range week or month reads as the current one', () => {
+    expect(class20('week', { at: '2020-01-07' })).toEqual(class20('week'));
+    expect(class20('month', { at: '2023-05-10' })).toEqual(class20('month'));
+    expect(class20('day', { at: '2026-08-01' })).toEqual(class20('day'));
   });
 });
 

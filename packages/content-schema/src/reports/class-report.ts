@@ -1,10 +1,12 @@
 import type { Catalog } from '../catalog/schema';
-import { daysBetween } from '../curriculum/dates';
+import { addDays, daysBetween, isDateKey } from '../curriculum/dates';
 import { StageKeySchema, type StageKey } from '../schemas/heritage-card';
 import { PlacementStrandSchema, type StrandStatus } from '../schemas/placement';
 import type { Plan } from '../schemas/plan';
 import {
   CLASS_DAY_BANDS_BY_PERIOD,
+  REPORT_DAYS_MAX,
+  REPORT_MONTHS_MAX,
   ReportLetterSchema,
   reportPeriodOf,
   type ActivitySummary,
@@ -13,7 +15,8 @@ import {
   type ReportPeriod,
 } from '../schemas/report';
 import type { ReportSummary } from '../schemas/report-response';
-import { lettersIn, monthOf, shownFromOf, sumDays, todayFor, windowOf, type DaySums } from './windows';
+import { teachingOrder } from './learner-report';
+import { addMonths, firstRowDayOf, lettersIn, monthOf, rowsFromOf, sumDays, todayFor, windowOf, type DaySums } from './windows';
 
 /**
  * Class statistics — F-REPORT-001 section 3.7 (RP-2c): a class's projected summaries turned into aggregates for one
@@ -27,7 +30,16 @@ import { lettersIn, monthOf, shownFromOf, sumDays, todayFor, windowOf, type DayS
  * 409 (RP-5b), and the input has no slot for a space at all.
  *
  * Each learner's window is their own: it ends at their own last saved day, in their own offset, and a class copy
- * holds nothing from before the learner joined (RP-W2), so a day before the join day counts nowhere.
+ * holds no day row, month row or milestone from before the learner joined (RP-W2), so for `day`, `week` and `month`
+ * a day before the join day counts nowhere. `all` reads `activity.total`, which the class copy keeps as lifetime
+ * totals (RP-W2): its practiced count, minutes, quests and cards include practice from before the learner joined,
+ * while its letters and milestones are from the join day on.
+ *
+ * "Not saved" is never shown as "did not practice": a learner whose window the class cannot vouch for (it lies
+ * wholly after their device's last saved day, before the first day the class copy holds, or before the day rows
+ * with no month row to stand in) is left out of every window figure (practiced, the bands, the sums, the letters,
+ * the milestones and the comparison). They still count as members in the headline and the class line, and a device
+ * not saved in 7 days counts in `notSaved7d`.
  */
 
 /** One member of the class as the Worker hands it over: the class projection of their summary, and no id or name. */
@@ -46,7 +58,10 @@ export interface ClassReportInput {
   learners: readonly ClassReportLearner[];
   plans: readonly ClassReportPlan[];
   period: ReportPeriod;
-  /** A day that selects a past window (OD-18); anything malformed or after today reads as the current window. */
+  /**
+   * A day that selects a past window (OD-18), as the URL carries it. Anything malformed, after today or outside the
+   * class stepper's limits (`classAtOf`) reads as the current window.
+   */
   at?: string | null;
   now: Date;
   /** The catalogue: the order letters are taught in. */
@@ -61,13 +76,25 @@ const PLANS_MAX = 3;
 const MEDIAN_MIN_LEARNERS = 3;
 const STAGES = StageKeySchema.options;
 const ZERO: DaySums = { days: 0, min: 0, q: 0, c: 0, w: 0 };
+/** The widest learner offset either way (`activity.tz`, minutes). */
+const TZ_MAX = 840;
 
-
-/** Each taught symbol's first place in the catalogue (quest order, then each quest's `teaches`). */
-function teachingOrder(catalog: Catalog): Map<string, number> {
-  const order = new Map<string, number>();
-  for (const quest of catalog.quests) for (const symbol of quest.teaches) if (!order.has(symbol)) order.set(symbol, order.size);
-  return order;
+/**
+ * `at` within the class stepper's limits, or null for the current window (section 3.2: an `at` that is malformed or
+ * outside the limits reads as the current window). Members keep their own offsets, so the limits are the widest
+ * any member can have: `day` and `week`, a day from the first of the 35 day rows of the westernmost today to the
+ * easternmost today; `month`, a day in the current month or the 24 before it (the first day of that month); `all`,
+ * never. RP-5b and RP-8 echo this value, so the page labels the window the figures read.
+ */
+export function classAtOf(period: ReportPeriod, at: string | null | undefined, now: Date): string | null {
+  if (typeof at !== 'string' || !isDateKey(at) || Number.isNaN(now.getTime())) return null;
+  const west = todayFor(now, -TZ_MAX);
+  const east = todayFor(now, TZ_MAX);
+  if (at > east) return null;
+  const p = reportPeriodOf(period);
+  if (p === 'day' || p === 'week') return at >= addDays(west, -(REPORT_DAYS_MAX - 1)) ? at : null;
+  if (p === 'month') return monthOf(at) >= addMonths(monthOf(west), -REPORT_MONTHS_MAX) ? `${monthOf(at)}-01` : null;
+  return null;
 }
 
 /** Letters with the number of learners for each: most learners first, then the order they are taught in. */
@@ -99,6 +126,42 @@ const monthRowOf = (activity: ActivitySummary, month: string): DaySums | null =>
   return row ? { days: row.days, min: row.min, q: row.q, c: row.c, w: row.w } : null;
 };
 
+/** Every month older than the oldest month row was dropped by the device (it keeps the newest 24 with activity). */
+const monthKept = (activity: ActivitySummary, month: string): boolean => {
+  const oldest = activity.months[0];
+  return activity.months.length < REPORT_MONTHS_MAX || (oldest !== undefined && month >= oldest.m);
+};
+
+/** What the class can vouch for in a window of one learner: its sums, and the day rows read (null: none). */
+interface Known {
+  sums: DaySums;
+  rows: { from: string; to: string } | null;
+}
+
+/**
+ * The part of `from`..`to` the class can vouch for, or null when it cannot. Days after `asOf` are not saved and count
+ * nowhere; a class copy starts at its first row (`firstRowDayOf`, on or after the join day; today when it holds
+ * nothing). `month`: the month row stands for the whole month, and a month with no row is a known empty month when
+ * the learner was in the class before it began and the device would have kept its row. `whole`: the learner must have
+ * been in the class for all of it (the comparison never reads a window the class saw only in part).
+ */
+function knownOf(activity: ActivitySummary, today: string, from: string, to: string, month: boolean, whole: boolean): Known | null {
+  const { asOf } = activity;
+  if (from > asOf) return null;
+  const upTo = to < asOf ? to : asOf;
+  const floor = firstRowDayOf(activity) ?? today;
+  const seen = floor > from ? floor : from;
+  const drawn = seen <= upTo && seen >= rowsFromOf(asOf);
+  const rows = drawn ? { from: seen, to: upTo } : null;
+  if (month) {
+    const row = monthRowOf(activity, monthOf(from));
+    if (row) return { sums: row, rows };
+    if (!drawn && floor < from && monthKept(activity, monthOf(from))) return { sums: ZERO, rows: null };
+  }
+  if (whole && floor > from) return null;
+  return rows ? { sums: sumDays(activity.days, rows.from, rows.to), rows } : null;
+}
+
 /** One learner's share of the window: figures, letters, milestones, and the previous window when it is known. */
 interface Share {
   now: DaySums;
@@ -108,31 +171,34 @@ interface Share {
   prev: DaySums | null;
 }
 
-function shareOf(activity: ActivitySummary, period: ReportPeriod, at: string | null | undefined, clock: Date | null): Share {
-  const today = clock ? todayFor(clock, activity.tz) : activity.asOf;
-  const window = windowOf(period, today, at, activity, true);
-  const upTo = window.to < activity.asOf ? window.to : activity.asOf;
-  const all = period === 'all';
-  const month = period === 'month' ? monthRowOf(activity, monthOf(window.from)) : null;
-  const now: DaySums = all
-    ? { days: activity.total.days, min: activity.total.min, q: activity.total.q, c: activity.total.c, w: activity.total.w }
-    : (month ?? (window.totalsOnly ? ZERO : sumDays(activity.days, window.from, upTo)));
-  const letters = window.totalsOnly ? [] : lettersIn(activity.days, window.from, upTo);
-  const milestones = activity.milestones
-    .filter((row) => all || (row.on >= window.from && row.on <= upTo))
+const stagesOf = (activity: ActivitySummary, from: string | null, to: string | null): StageKey[] =>
+  activity.milestones
+    .filter((row) => from === null || to === null || (row.on >= from && row.on <= to))
     .flatMap((row) => {
       const stage = StageKeySchema.safeParse(row.stage);
       return stage.success ? [stage.data] : [];
     });
 
-  let prev: DaySums | null = null;
-  const { prevFrom, prevTo } = window;
-  if (prevFrom !== undefined && prevTo !== undefined) {
-    // A month row is whole; otherwise the day rows must hold all of the previous window the class could see.
-    const row = period === 'month' ? monthRowOf(activity, monthOf(prevFrom)) : null;
-    prev = row ?? (prevFrom >= shownFromOf(activity, today, true) ? sumDays(activity.days, prevFrom, prevTo) : null);
+/** One learner's share, or null when the class cannot vouch for their window (counted in no window figure). */
+function shareOf(activity: ActivitySummary, period: ReportPeriod, at: string | null, clock: Date | null): Share | null {
+  const today = clock ? todayFor(clock, activity.tz) : activity.asOf;
+  const window = windowOf(period, today, at, activity, true);
+  if (period === 'all') {
+    // Every day row the class copy holds (none after `asOf`).
+    const { days, min, q, c, w } = activity.total;
+    return { now: { days, min, q, c, w }, letters: lettersIn(activity.days, window.from, activity.asOf), milestones: stagesOf(activity, null, null), prev: null };
   }
-  return { now, letters, milestones, prev };
+  const month = period === 'month';
+  const known = knownOf(activity, today, window.from, window.to, month, false);
+  if (known === null) return null;
+  const { prevFrom, prevTo } = window;
+  const prev = prevFrom !== undefined && prevTo !== undefined ? (knownOf(activity, today, prevFrom, prevTo, month, true)?.sums ?? null) : null;
+  return {
+    now: known.sums,
+    letters: known.rows ? lettersIn(activity.days, known.rows.from, known.rows.to) : [],
+    milestones: stagesOf(activity, window.from, window.to < activity.asOf ? window.to : activity.asOf),
+    prev,
+  };
 }
 
 /** The bands of `period` with the number of learners in each, in the fixed order; `all` has none. */
@@ -167,6 +233,7 @@ const STATUS_KEY: Readonly<Record<StrandStatus, 'secure' | 'gettingThere' | 'not
 export function classReport(input: ClassReportInput): ClassReport {
   const period = reportPeriodOf(input.period);
   const clock = Number.isNaN(input.now.getTime()) ? null : input.now;
+  const at = classAtOf(period, input.at, input.now);
   const order = teachingOrder(input.catalog);
   const compares = period === 'week' || period === 'month';
 
@@ -206,7 +273,8 @@ export function classReport(input: ClassReportInput): ClassReport {
       continue;
     }
     withActivity += 1;
-    const share = shareOf(activity, period, input.at, clock);
+    const share = shareOf(activity, period, at, clock);
+    if (share === null) continue;
     practiceDays.push(share.now.days);
     if (share.now.days > 0) practicedMinutes.push(share.now.min);
     total.min += share.now.min;
