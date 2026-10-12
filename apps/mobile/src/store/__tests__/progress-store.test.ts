@@ -568,6 +568,65 @@ describe('recordVocab (F-VOC-005 section 3.2)', () => {
   });
 });
 
+describe('applyPlacementOverride (F-PLC-001 section 3.9)', () => {
+  const notified: string[] = [];
+
+  beforeEach(() => {
+    resetStore();
+    notified.length = 0;
+    setProgressPersistListener((id) => notified.push(id));
+  });
+
+  afterEach(() => {
+    setProgressPersistListener(null);
+  });
+
+  it('stores the override on that result only, persists and notifies sync', async () => {
+    mem.set('progress:p1', savedSnapshot());
+    await useProgressStore.getState().hydrate('p1');
+    const older = placementResult({ id: 'placement:old', completedAt: '2026-10-01T00:00:00Z' });
+    const newer = placementResult({ id: 'placement:new', completedAt: '2026-10-02T00:00:00Z' });
+    useProgressStore.getState().recordPlacement('p1', older);
+    useProgressStore.getState().recordPlacement('p1', newer);
+    notified.length = 0;
+    const before = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+
+    expect(useProgressStore.getState().applyPlacementOverride('p1', 'placement:new', 'quest:q2')).toBe(true);
+    const after = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    const changed = after.placements?.find((r) => r.id === 'placement:new');
+    expect(changed?.override).toMatchObject({ by: 'parent', startQuestId: 'quest:q2' });
+    expect(changed?.override?.at).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect(after.placements?.find((r) => r.id === 'placement:old')?.override).toBeUndefined();
+    // Nothing but the placement record changes: no quest, card, homework or streak.
+    const { placements: _p, updatedAt: _u, ...restAfter } = after;
+    const { placements: _q, updatedAt: _v, ...restBefore } = before;
+    expect(restAfter).toEqual(restBefore);
+    expect(stored()?.placements?.find((r) => r.id === 'placement:new')?.override?.startQuestId).toBe('quest:q2');
+    expect(notified).toEqual(['p1']);
+  });
+
+  it('a second override replaces the first', async () => {
+    await useProgressStore.getState().hydrate('p1');
+    useProgressStore.getState().recordPlacement('p1', placementResult());
+    useProgressStore.getState().applyPlacementOverride('p1', 'placement:a1', 'quest:q2');
+    useProgressStore.getState().applyPlacementOverride('p1', 'placement:a1', 'quest:q5');
+    expect(useProgressStore.getState().byProfile['p1']?.placements?.[0]?.override?.startQuestId).toBe('quest:q5');
+  });
+
+  it('changes nothing for an unknown result, a profile without results or an empty quest id', async () => {
+    expect(useProgressStore.getState().applyPlacementOverride('p1', 'placement:a1', 'quest:q2')).toBe(false);
+    mem.set('progress:p1', savedSnapshot());
+    await useProgressStore.getState().hydrate('p1');
+    expect(useProgressStore.getState().applyPlacementOverride('p1', 'placement:a1', 'quest:q2')).toBe(false);
+    useProgressStore.getState().recordPlacement('p1', placementResult());
+    notified.length = 0;
+    expect(useProgressStore.getState().applyPlacementOverride('p1', 'placement:other', 'quest:q2')).toBe(false);
+    expect(useProgressStore.getState().applyPlacementOverride('p1', 'placement:a1', '')).toBe(false);
+    expect(useProgressStore.getState().byProfile['p1']?.placements?.[0]?.override).toBeUndefined();
+    expect(notified).toEqual([]);
+  });
+});
+
 describe('stage latch writer (F-ROUTE-001 R-1b, runs with flags.myRouteEnabled off)', () => {
   const notified: string[] = [];
   /** The live Stage 1 grid quests; no count is pinned here. */

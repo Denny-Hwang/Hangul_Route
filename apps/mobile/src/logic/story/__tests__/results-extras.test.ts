@@ -1,7 +1,14 @@
+import type { Quest, Story } from '@hangul-route/content-schema';
 import { getMessages, pseudoLocalize, pseudoText } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { scanLearnerCopy } from '../../homework/banned-text';
-import { storyResultsExtras as storyResultsExtrasWith, type StoryResultsInput } from '../results-extras';
+import {
+  resultsStoryOf,
+  storyResultsActionEvent,
+  storyResultsExtras as storyResultsExtrasWith,
+  type StoryResultsInput,
+} from '../results-extras';
+import { readyStory } from './story-fixture';
 
 // The words are learner.story.results (F-I18N-001 PR 7b); these tests read the dictionary.
 const COPY = getMessages('en').learner.story.results;
@@ -119,5 +126,46 @@ describe('storyResultsExtras takes its words as a parameter (F-I18N-001 §3.4 ru
     expect(out.secondary.map((a) => a.label)).toEqual([pseudoText('Read it again'), pseudoText('Episode page')]);
     expect(out.cultureNote?.label).toBe(pseudoText('Learn about Seollal'));
     expect(out.encouragement).toBe(pseudoText('Every read helps. Want to read it again?'));
+  });
+});
+
+describe('resultsStoryOf (PR 3.7: is this a story quest, and which story)', () => {
+  const story = readyStory();
+  const slug = story.id.replace(/^story:/, '');
+  const quest = (ref: string | undefined): Pick<Quest, 'steps'> => ({
+    steps: [
+      { id: 's1', kind: 'intro', titleEn: 'Story time', hoyaLineEn: 'Hi', durationSeconds: 8 },
+      ...(ref === undefined
+        ? []
+        : [{ id: 's2', kind: 'present' as const, titleEn: 'Read', minigameKind: 'story-read' as const, minigameRef: ref, durationSeconds: 60 }]),
+    ],
+  });
+  const find = (id: string): Story | undefined => (id === story.id ? story : undefined);
+
+  it('reads the story, level and title from the quest story-read step', () => {
+    expect(resultsStoryOf(quest(`minigame:story-read-along-${slug}`), find)).toEqual({
+      storyId: story.id,
+      level: 'read-along',
+      title: { ko: story.title.ko, romanization: story.title.romanization, en: story.title.en },
+    });
+  });
+
+  it('is null for a quest without a story-read step, an unknown quest, an unbundled story or a missing level', () => {
+    expect(resultsStoryOf(quest(undefined), find)).toBeNull();
+    expect(resultsStoryOf(undefined, find)).toBeNull();
+    expect(resultsStoryOf(quest('minigame:story-read-listen-not-bundled'), find)).toBeNull();
+    expect(resultsStoryOf(quest(`minigame:story-read-read-${slug}`), find)).toBeNull();
+  });
+});
+
+describe('storyResultsActionEvent (story.results.action, spec §3.9)', () => {
+  it('ids and the action only', () => {
+    for (const action of ['next-story', 'read-again', 'episode', 'home', 'culture-note'] as const) {
+      expect(storyResultsActionEvent('p1', 'quest:story-x-listen', 'story:x', action)).toEqual({
+        name: 'story.results.action',
+        profileId: 'p1',
+        payload: { questId: 'quest:story-x-listen', storyId: 'story:x', action },
+      });
+    }
   });
 });
