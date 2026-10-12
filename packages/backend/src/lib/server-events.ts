@@ -161,6 +161,8 @@ const NOTES_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, Field
  */
 const planKey = oneOf(PlanKeySchema.options);
 const stripeMode = oneOf(StripeModeSchema.options);
+/** A count of cards or rows: a whole number, never an identifier. */
+const isCount: FieldRule = (value) => typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
 
 const BILLING_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, FieldRule>>>> = {
   'billing.checkout_completed': { planKey, mode: stripeMode, duplicate: isBoolean },
@@ -170,6 +172,9 @@ const BILLING_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, Fie
   'billing.checkout_started': { planKey, mode: stripeMode, promo: isBoolean },
   'billing.checkout_refused': { planKey, reason: oneOf(['reverify_required', 'already_active', 'live_not_enabled', 'not_configured']) },
   'billing.portal_opened': { planKey, mode: stripeMode },
+  // B-4: the billing home and receipts page (routes/billing.ts); counts only.
+  'billing.summary_viewed': { cards: isCount, payerCards: isCount, mode: stripeMode },
+  'billing.receipts_viewed': { rows: isCount },
 };
 
 /** Only the payload fields that fit their rule; a name without rules keeps none. */

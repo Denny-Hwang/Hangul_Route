@@ -187,6 +187,15 @@ describe('checkout and portal billing events (F-BILL-002 B-5, section 10)', () =
   });
 });
 
+describe('billing home events (F-BILL-002 B-4, section 10)', () => {
+  it('keeps the counts and the mode only', () => {
+    const smuggled = { spaceId: 'space:fam', accountId: 'acct:1', names: ['Kim family'] };
+    expect(keptEventFields('billing.summary_viewed', { ...smuggled, cards: 3, payerCards: 1, mode: 'test' }, 'profile:a')).toEqual({ profileId: undefined, payload: { cards: 3, payerCards: 1, mode: 'test' } });
+    expect(keptEventFields('billing.receipts_viewed', { ...smuggled, rows: 50 }, undefined).payload).toEqual({ rows: 50 });
+    for (const bad of [-1, 1.5, '3', Number.NaN, null]) expect(keptEventFields('billing.receipts_viewed', { rows: bad }, undefined).payload).toBeUndefined();
+  });
+});
+
 describe('appendEvent', () => {
   it('pushes and trims from the front once past the cap', () => {
     store.events = Array.from({ length: MAX_EVENTS }, (_, i) => ({ id: `event:${i}`, name: 'session.start', at: NOW.toISOString() }));

@@ -32,8 +32,8 @@ describe('POST /api/telemetry', () => {
 
   it('refuses every billing.* name from a client with 422, listed or not, and stores nothing (F-BILL-002 B-3)', async () => {
     const billing = TELEMETRY_EVENT_NAMES.filter((n) => n.startsWith('billing.'));
-    expect(billing).toEqual(['billing.checkout_completed', 'billing.payment_failed', 'billing.refund_recorded', 'billing.checkout_started', 'billing.checkout_refused', 'billing.portal_opened']);
-    for (const name of [...billing, 'billing.summary_viewed', 'billing.made_up']) {
+    expect(billing).toEqual(['billing.checkout_completed', 'billing.payment_failed', 'billing.refund_recorded', 'billing.checkout_started', 'billing.checkout_refused', 'billing.portal_opened', 'billing.summary_viewed', 'billing.receipts_viewed']);
+    for (const name of [...billing, 'billing.made_up']) {
       const r = await post({ name, payload: { planKey: 'family_lifetime', mode: 'test', duplicate: false } });
       expect(r.status, name).toBe(422);
       expect(r.body.error?.code).toBe('bad_request');
