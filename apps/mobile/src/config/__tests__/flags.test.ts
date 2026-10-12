@@ -164,6 +164,28 @@ describe('flags', () => {
     expect(mod.flags.vocabShowDrafts).toBe(false);
   });
 
+  it('vocabShowDrafts ignores the env value in a release build (__DEV__ false or NODE_ENV production)', async () => {
+    const g = globalThis as { __DEV__?: boolean };
+    const hadDev = '__DEV__' in g;
+    const dev = g.__DEV__;
+    try {
+      process.env.EXPO_PUBLIC_VOCAB_SHOW_DRAFTS = 'true';
+      g.__DEV__ = false;
+      let mod = await reload();
+      expect(mod.flags.vocabShowDrafts).toBe(false);
+      g.__DEV__ = true;
+      mod = await reload();
+      expect(mod.flags.vocabShowDrafts).toBe(true);
+      delete g.__DEV__;
+      process.env.NODE_ENV = 'production';
+      mod = await reload();
+      expect(mod.flags.vocabShowDrafts).toBe(false);
+    } finally {
+      if (hadDev) g.__DEV__ = dev;
+      else delete g.__DEV__;
+    }
+  });
+
   it('the vocabulary flags are read by their literal names, so a web build can carry the override', () => {
     const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
     expect(src).toContain('process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED');
