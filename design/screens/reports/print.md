@@ -14,12 +14,12 @@ The page as the screen shows it, in the same order, with More detail expanded, a
 | Adult frame, back link, Send a note, Print and its hint | hidden |
 | `h1` with the avatar chip, "Now on", the goal line, "Last practice" | printed; **Open Learning Route** hidden |
 | Period tabs | only the selected tab, as plain bold text, followed by the window's dates from the stepper row ("This week  Oct 6 to Oct 12"); the step buttons are hidden |
-| Headline, horizon line, insight lines | printed; line actions hidden; links print as plain text without URLs |
+| Headline, horizon line, insight lines | printed; line actions hidden (Add to a plan, Preview, Open the plan); links print as plain text without URLs; the strand tip prints as a plain line |
 | Figures | printed as tiles (outline `border.strong` so they hold on paper) |
 | Calendar | the grid is hidden; its sentence prints ("Practiced on Wednesday, Thursday and Monday.", plus "Not saved yet: ..." when partial) |
 | Growth line (All time) | the chart, legend and axis are hidden; the table prints, even when it was closed on screen |
 | More detail | the disclosure button is hidden; the panel prints expanded |
-| Class report | every block in screen order; bands and strands as their text rows; homework rows; no names anywhere |
+| Class report | every block in screen order; bands and strands as their text rows; each homework link block as its title and counts line, without the box; no names anywhere |
 | Footer | `report.print.footer(date)` at `size.caption` `text.secondary` above a `border.strong` rule, at the bottom of every page |
 
 ## Page
@@ -33,7 +33,7 @@ The page as the screen shows it, in the same order, with More detail expanded, a
 
 | Page | Pages | Notes |
 |---|---|---|
-| Learner report, week (parent) | 2 | page 1: the glance to the Milestones block; page 2: level check (with the starting spot) and plan; footer on both, nothing under it |
+| Learner report, week (parent) | 2 | page 1: the glance to the letter blocks of More detail (with the "Since the start" line); page 2: level check (with the starting spot) and plan; footer on both, nothing under it |
 | Class report, week | 2 | page 1: the class lines to Time; page 2: level-check counts and homework; footer on both, nothing under it |
 | Learner report, all time | 2 | the growth table prints in place of the chart; page 1 ends with the letters known well and being practiced, page 2 starts with the new letters; footer on both, nothing under it |
 
