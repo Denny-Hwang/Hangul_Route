@@ -22,18 +22,28 @@ import { nextPage, position } from './story-reader-helpers';
  *
  * Content gating: this suite checks the launch default (gating off: nothing is
  * locked and no "Premium" text). The fixture bundle's one shelf story is the
- * sampler, which stays open with gating on too, so no bundle can draw a locked
- * tile yet; the locked tile's gate (`lockedStoryGate`, `storyTileView`) is
- * covered by logic/story/__tests__/story-tile.test.ts.
+ * sampler, which stays open with gating on too, so this bundle cannot draw a
+ * locked tile. The gated half of the row (a locked tile sends
+ * `story.locked.tapped` and lands on PIN entry or the paywall) is F-STORY-004
+ * PR 4.8b, on a gating fixture bundle of its own; until then the gate's rules
+ * (`lockedStoryGate`, `storyTileView`) are covered by
+ * logic/story/__tests__/story-tile.test.ts.
  */
 
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
 const STORY = 'story:hangul-day';
 const QUEST = 'quest:story-hangul-day-listen';
 const NOTE = 'cn-hangul-day';
+/** The listen tier's reward card (`rewardCardIds.listen` of the fixture). */
+const REWARD_CARD = 'card:hanji';
+/** The story's Hoya line (`hoyaIntroEn`), shown on its episode page. */
+const HOYA_INTRO = 'Want to hear how the Korean alphabet began?';
 const EMOJI = /\p{Extended_Pictographic}/u;
-/** No gating copy anywhere in the feature with the flag off (D5); "Not open yet" is F-ENT-003's closed-tile line. */
-const GATING_WORDS = /premium|locked|not open yet/i;
+/**
+ * No gating copy on a story surface with the flag off (D5); "Not open yet" is F-ENT-003's closed-tile
+ * line. Whole words only, so learner copy such as "unlocked" never trips it.
+ */
+const GATING_WORDS = /\bpremium\b|\blocked\b|not open yet/i;
 
 /** The listen tier's checks: the correct option id (ids are stable, display order is shuffled). */
 const CHECK_ANSWERS = ['a', 'a', 't'];
@@ -162,6 +172,9 @@ test.describe('story shelf (fixture bundle)', () => {
     // Keep reading: straight to the read step (the intro skipped), the reader on scene 3.
     await storyCard(page).click();
     await expect(stepHeading(page, 'Read the story')).toBeVisible();
+    // "2 / 5" here is the quest's step counter (read is step 2 of 5): the reader is not open yet, so
+    // its own "n / 5" scene position cannot be the match. The scene is pinned below, after Play.
+    await expect(position(page)).toHaveCount(0);
     await expect(page.getByText('2 / 5', { exact: true })).toBeVisible();
     await expect(stepHeading(page, 'Story time')).toHaveCount(0);
     expect(await events(page, 'story.opened')).toEqual([{ storyId: STORY, source: 'home', mode: 'continue' }]);
@@ -179,7 +192,12 @@ test.describe('story shelf (fixture bundle)', () => {
     await expect(page.getByRole('button', { name: /^See my card/ })).toBeVisible();
     await expect(page.getByTestId('story-results-title-en')).toHaveText('Hangul Day');
     await expect.poll(async () => (await snapshotOf(page, id))?.quests.find((q) => q.questId === QUEST)?.stars).toBe(3);
+    await expect.poll(async () => (await snapshotOf(page, id))?.cards.map((c) => c.cardId)).toContain(REWARD_CARD);
     await expect.poll(async () => (await bookmarksOf(page, id))?.byStory).toEqual({});
+    // Results is a story surface too: no gating copy and no emoji with the flag off.
+    const results = await page.locator('body').innerText();
+    expect(results).not.toMatch(GATING_WORDS);
+    expect(results).not.toMatch(EMOJI);
 
     await page.getByTestId('story-results-home').click();
     await expect(page.getByText('Hi, Dami!')).toBeVisible();
@@ -206,6 +224,30 @@ test.describe('story shelf (fixture bundle)', () => {
     const body = await page.locator('body').innerText();
     expect(body).not.toMatch(EMOJI);
     expect(errors).toEqual([]);
+  });
+
+  // Known bug, booked as F-STORY-004 PR 4.8c: Home pins the day's plan in a ref inside HomeScreen, and
+  // Results' Back home resets the stack to Main, which mounts Home again. The pin is lost and the plan
+  // is built again, so the finished story's slot turns into an "again" card ("Read it again") instead
+  // of keeping its story with the collected look (§3.7 "Pinned all day", F-HW-001 §3.2). Remove the
+  // fixme when 4.8c lands.
+  test.fixme('Back home after finishing the Home story card: the slot keeps "A short story", collected', async ({ page }) => {
+    const id = await onboard(page);
+    await expect(storyCard(page)).toHaveAccessibleName('Hangul Day. A short story.');
+    await storyCard(page).click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    for (const n of [2, 3, 4, 5]) {
+      await nextPage(page);
+      await expect(position(page)).toHaveText(`${n} / 5`);
+    }
+    await finishFromLastScene(page);
+    await expect.poll(async () => (await snapshotOf(page, id))?.quests.find((q) => q.questId === QUEST)?.stars).toBe(3);
+    await page.getByTestId('story-results-home').click();
+    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+
+    await expect(missionCards(page)).toHaveCount(3);
+    await expect(missionCards(page).first()).toHaveAccessibleName('Hangul Day. A short story. Collected.');
   });
 
   test('Library: the section tabs, the Story Time hero and tile, the Culture section before a note is found', async ({ page }) => {
@@ -277,6 +319,8 @@ test.describe('story shelf (fixture bundle)', () => {
 
     await shown(page, 'library-hero-cta').click();
     await expect(stepHeading(page, 'Read the story')).toBeVisible();
+    // The quest's step counter (read is step 2 of 5), not a scene: the reader is not open yet.
+    await expect(position(page)).toHaveCount(0);
     await expect(page.getByText('2 / 5', { exact: true })).toBeVisible();
     expect(await events(page, 'story.opened')).toEqual([{ storyId: STORY, source: 'library', mode: 'continue' }]);
     await page.getByRole('button', { name: 'Play minigame' }).click();
@@ -289,16 +333,28 @@ test.describe('story shelf (fixture bundle)', () => {
     await openSection(page, 'Story Time');
     await tile(page).click();
 
-    // New: the story pills (never the "Hangul" stage pill), the titles, Hoya, one large Start.
-    await expect(shown(page, 'story-episode-pills')).toHaveText(/Story Time.*Letters & Books.*4 min/);
+    // New: the three story pills (never the "Hangul" stage pill), the titles, Hoya, one large Start.
+    const pills = shown(page, 'story-episode-pills');
+    await expect(pills).toHaveText(/Story Time.*Letters & Books.*4 min/);
+    await expect(pills.locator(':scope > *')).toHaveCount(3);
+    await expect(pills).not.toContainText(/\bHangul\b/);
     await expect(shown(page, 'story-episode-title')).toHaveText('Hangul Day');
+    await expect(shown(page, 'story-episode-title-ko')).toContainText('한글날');
+    await expect(shown(page, 'story-episode')).toContainText(HOYA_INTRO);
     await expect(shown(page, `story-episode-state-${STORY}`)).toHaveText('New');
     await expect(shown(page, `story-episode-start-${STORY}`)).toHaveAccessibleName('Start: Hangul Day');
     await expect(shown(page, 'story-episode').locator(`[data-testid$="-${STORY}"][role="button"]`)).toHaveCount(1);
-    await expect(shown(page, 'story-episode-words')).toContainText('한글날');
-    // No note is found yet, so no Culture notes line; the reward card is a silhouette.
+    // The word chips, each with its own speaker.
+    const words = shown(page, 'story-episode-words');
+    await expect(words).toContainText('한글날');
+    const chips = words.locator('[data-testid^="story-episode-word-"]');
+    const chipCount = await chips.count();
+    expect(chipCount).toBeGreaterThan(0);
+    await expect(words.locator('[data-testid^="story-episode-hear-"]')).toHaveCount(chipCount);
+    // No note is found yet, so no Culture notes line; the reward card is a silhouette, which opens nothing.
     await expect(shown(page, 'story-episode-notes')).toHaveCount(0);
-    await expect(shown(page, 'story-episode-cards').locator('[data-testid^="story-episode-card-"]')).toHaveCount(1);
+    await expect(shown(page, 'story-episode-cards').locator(`[data-testid="story-episode-card-${REWARD_CARD}"]`)).toHaveCount(1);
+    await expect(shown(page, 'story-episode-cards').getByRole('button')).toHaveCount(0);
 
     // In progress: Keep reading resumes; Start over clears the bookmark and opens the intro.
     await seedSceneThree(page, id);
@@ -338,8 +394,12 @@ test.describe('story shelf (fixture bundle)', () => {
     await expect(shown(page, `story-episode-play-again-${STORY}`)).toHaveText('Play again');
     await expect(shown(page, `story-episode-read-again-${STORY}`)).toHaveText('Read it again');
     await expect(shown(page, `story-episode-start-${STORY}`)).toHaveCount(0);
-    // The earned card has a title now (no silhouette).
-    await expect(shown(page, 'story-episode-cards').getByRole('button')).toHaveCount(1);
+    // The earned card is a button with its picture and title now (no silhouette).
+    const earned = shown(page, 'story-episode-cards').getByRole('button');
+    await expect(earned).toHaveCount(1);
+    await expect(earned).toHaveAttribute('data-testid', `story-episode-card-${REWARD_CARD}`);
+    await expect(earned).toContainText('Hanji Paper');
+    await expect(earned).toContainText('한지');
 
     const line = shown(page, 'story-episode-notes');
     await expect(line).toHaveText('Culture notes: 1 found');
@@ -354,30 +414,45 @@ test.describe('story shelf (fixture bundle)', () => {
     expect((await events(page, 'story.opened')).at(-1)).toEqual({ storyId: STORY, source: 'episode', mode: 'read-again' });
   });
 
-  test('gating off (the launch default): nothing is locked and no "Premium" text on any story surface', async ({ page }) => {
+  // A guard on the default build's copy: it proves no story surface draws lock or Premium copy with
+  // the flag at its launch default. The bundle's one shelf story is the sampler, open either way, so
+  // it cannot tell gating off from gating on; the gated build is PR 4.8b.
+  test('default build: no lock or "Premium" copy and no emoji on any story surface', async ({ page }) => {
     await onboard(page);
-    const surfaces: string[] = [await page.getByTestId('home-missions').innerText()];
+    await expect(missionCards(page)).toHaveCount(3);
+    await expect(storyCard(page)).toBeVisible();
+    const surfaces: Array<[string, string]> = [['Home', await page.getByTestId('home-missions').innerText()]];
 
     await openLibrary(page);
     await openSection(page, 'Story Time');
     await expect(tile(page)).toBeVisible();
-    surfaces.push(await shown(page, 'library-shelf-story-time').innerText());
+    surfaces.push(['Story Time', await shown(page, 'library-shelf-story-time').innerText()]);
     await openSection(page, 'Culture');
-    surfaces.push(await shown(page, 'library-culture').innerText());
-    await openSection(page, 'Story Time');
+    await expect(shown(page, 'library-culture-notes')).toBeVisible();
+    surfaces.push(['Culture', await shown(page, 'library-culture').innerText()]);
+    await shown(page, 'library-culture-notes').click();
+    await expect(shown(page, 'culture-notes')).toBeVisible();
+    surfaces.push(['Culture notes', await shown(page, 'culture-notes').innerText()]);
+    await shown(page, 'culture-notes-to-story-time').click();
+    await expect(tile(page)).toBeVisible();
     await tile(page).click();
-    await expect(shown(page, 'story-episode')).toBeVisible();
-    surfaces.push(await shown(page, 'story-episode').innerText());
+    await expect(shown(page, 'story-episode-title')).toHaveText('Hangul Day');
+    surfaces.push(['episode page', await shown(page, 'story-episode').innerText()]);
 
-    for (const text of surfaces) expect(text).not.toMatch(GATING_WORDS);
-    // No lock anywhere: tiles and rows carry no Locked state, and no tap went to a gate.
-    expect(await events(page, 'story.locked.tapped')).toEqual([]);
-    await expect(page.getByText('Enter your 4-digit PIN to continue.')).toHaveCount(0);
+    for (const [name, text] of surfaces) {
+      expect(text, `${name}: lock or Premium copy`).not.toMatch(GATING_WORDS);
+      expect(text, `${name}: emoji`).not.toMatch(EMOJI);
+    }
+    // Results is checked in the first test, where the story is finished.
   });
 
+  // §3.12's four layouts, plus a wide window (four columns).
   for (const vp of [
     { width: 320, height: 568 },
+    { width: 375, height: 667 },
+    { width: 844, height: 390 },
     { width: 768, height: 1024 },
+    { width: 1280, height: 800 },
   ]) {
     test(`${vp.width}x${vp.height}: Story Time fits the window with no sideways scroll`, async ({ page }) => {
       await page.setViewportSize(vp);
@@ -386,8 +461,12 @@ test.describe('story shelf (fixture bundle)', () => {
       await openSection(page, 'Story Time');
       await expect(tile(page)).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-      const box = await tile(page).boundingBox();
-      expect((box?.x ?? -1) >= 0 && (box?.x ?? 0) + (box?.width ?? 0) <= vp.width + 0.5).toBe(true);
+      // The tile, the hero (side by side from three columns) and its button all lie inside the window.
+      for (const testId of [`story-tile-${STORY}`, 'library-hero', 'library-hero-cta']) {
+        const box = await shown(page, testId).boundingBox();
+        expect(box, testId).not.toBeNull();
+        expect((box?.x ?? -1) >= 0 && (box?.x ?? 0) + (box?.width ?? 0) <= vp.width + 0.5, testId).toBe(true);
+      }
       await page.screenshot({ path: `test-results/story-shelf-${vp.width}x${vp.height}.png`, fullPage: true });
     });
   }
