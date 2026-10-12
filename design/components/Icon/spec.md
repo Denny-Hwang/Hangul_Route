@@ -49,12 +49,12 @@ Spec: `docs/specs/F-VOC-004-speed-round.md` §3.6 ("a non-colour mark (a short h
 ## `note` and `heart`: notes from grown-ups (F-FEEDBACK-001 FB-6)
 
 Spec: `docs/specs/F-FEEDBACK-001-adult-feedback-channel.md` §6.5 (Home card, notes list), §6.6 (reactions), §6.10 item 1 (grown-up dashboard rows), §6.11 (no red), §6.12 (a picked answer is not shown by colour alone), §13 (glyph test row), PR FB-6 in §14.1 · wireframes: `design/wireframes/home/notes-card.md` and `notes/list.md` (`[note icon]`, the learner's own `[heart]` answer), `notes/detail.md` (the reaction row, frames A and C), `parent/notes.md` (`[note icon]` on the dashboard rows), `console/notes-sent.md` and `console/family-notes.md` (`[heart] Thank you`, icon plus label)
-Code: `packages/design-system/src/components/Icon/glyphs.ts` · `types.ts` · tests `Icon/__tests__/glyphs.test.ts` (block "notes glyphs") · the console draws the same data through `IconSvg` (`@hangul-route/design-system/icon-glyphs/dom`)
+Code: `packages/design-system/src/components/Icon/glyphs.ts` · `types.ts` · tests `Icon/__tests__/glyphs.test.ts` (block "notes glyphs") · console pages draw the same data through `IconSvg` (`@hangul-route/design-system/icon-glyphs/dom`)
 Preview: `notes-glyphs-v1.png` (20, 24, 48 and 96 dp next to `card` and `book`, which the note must not be mistaken for, the other three reaction glyphs `pencil`, `check-circle` and `sparkle`, and the filled `star`)
 
 | Glyph | Meaning | Where | Geometry |
 |---|---|---|---|
-| `note` | A note from a grown-up | Home card row 2a and the notes list rows (FB-8); the grown-up dashboard rows "Notes for <learner>" (FB-9); console notes pages (FB-11a, FB-11b, FB-12) | portrait sheet 13 x 18 centred on x 12, stroke 2.2, its top-right corner cut at 45 degrees; the fold drawn from one end of the cut to the other, stroke 2; two level lines of writing, the second shorter, stroke 2 |
+| `note` | A note from a grown-up | Home card row 2a and the notes list rows (FB-8); the grown-up dashboard rows "Notes for <learner>" (FB-9) | portrait sheet 13 x 18 centred on x 12, stroke 2.2, its top-right corner cut at 45 degrees; the fold drawn from one end of the cut to the other, stroke 2; two level lines of writing, the second shorter, stroke 2 |
 | `heart` | Thank you: the `thanks` reaction (§6.6) | the reaction row on the note page and the learner's own answer on the list (FB-8); the answer on the console sent list and the family view (FB-11a, FB-12) | one closed outline, stroke 2.2: two half-circle lobes r 4.25 that meet at (12, 8.75), sides that curve down to the tip at (12, 20.5); mirror-symmetric on x 12 |
 
 ```
