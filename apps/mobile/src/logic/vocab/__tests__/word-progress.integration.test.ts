@@ -245,12 +245,19 @@ describe('30-day simulation: three topics, Daily Tests, Speed Rounds and a week 
     { type: 'session', topicKey, kind: 'cards' },
   ];
 
+  /** Day 22: the learner flips through the cards of all three topics again and taps "Got it" on every one. */
+  const CARDS_AGAIN = 22;
+
   interface Day {
     n: number;
     before: VocabProgress;
     after: VocabProgress;
     pools: ReturnType<typeof vocabPools>;
     speedTopic: string | null;
+    /** The Speed Round of the day: the slice around it and the words answered right with the idle hint. */
+    speed: { before: VocabProgress; after: VocabProgress; hintedRight: string[] } | null;
+    /** The flashcards of day 22: the slice around them. */
+    cards: { before: VocabProgress; after: VocabProgress } | null;
   }
 
   function run(seed: number): Day[] {
@@ -262,8 +269,19 @@ describe('30-day simulation: three topics, Daily Tests, Speed Rounds and a week 
       const before = v;
       const pools = vocabPools(v, today);
       let speedTopic: string | null = null;
+      let speed: Day['speed'] = null;
+      let cards: Day['cards'] = null;
       if (!AWAY.has(n)) {
         const events: VocabEvent[] = [];
+        if (n === CARDS_AGAIN) {
+          const was = v;
+          const again = (ids: readonly string[], topicKey: string): VocabEvent[] => [
+            ...ids.filter((id) => id !== steady).map((id): VocabEvent => ({ type: 'self', id, known: true })),
+            { type: 'session', topicKey, kind: 'cards' },
+          ];
+          v = applyVocabEvents(v, [...again(food, 'food'), ...again(animals, 'animals'), ...again(colors, 'colors')], at(n, 8));
+          cards = { before: was, after: v };
+        }
         if (n === 3) events.push(...meet(animals, 'animals'));
         if (n === 8) events.push(...meet(colors, 'colors'));
         // Every third day Home's pinned plan carries the "Words are ready" card (built at the start of
@@ -273,21 +291,24 @@ describe('30-day simulation: three topics, Daily Tests, Speed Rounds and a week 
           speedTopic = nudge.topicKey;
           const collected = catalog.topicItems(nudge.topicKey).filter((i: RuntimeVocabItem) => i.id !== steady && stateOf(v, i.id) !== undefined);
           const round = selectSpeedWords({ collected, progress: v, today, count: 10, seed: seed + n });
-          const answers = round.map((i): VocabEvent => ({ type: 'answer', id: i.id, correct: rand() < 0.85, source: 'speed', format: 'pick-meaning', ms: 1500 }));
+          // Relaxed mode: now and then the idle hint (F-VOC-004 section 3.6) is showing when the learner answers.
+          const answers = round.map((i): VocabEvent => {
+            const correct = rand() < 0.85;
+            return { type: 'answer', id: i.id, correct, hinted: rand() < 0.2, source: 'speed', format: 'pick-meaning', ms: 1500 };
+          });
           const right = answers.filter((e) => e.type === 'answer' && e.correct).length;
           const stars = right >= 9 ? 3 : right >= 7 ? 2 : 1;
+          const was = v;
           v = applyVocabEvents(v, [...answers, { type: 'session', topicKey: nudge.topicKey, kind: 'speed', stars, mode: 'relaxed', endedBy: 'questions' }], at(n, 9));
+          speed = { before: was, after: v, hintedRight: answers.flatMap((e) => (e.type === 'answer' && e.correct && e.hinted ? [e.id] : [])) };
         }
-        // The Daily Test: every word still due, right 80 % of the time, now and then with the idle hint.
+        // The Daily Test: every word still due, right 80 % of the time.
         const left = vocabPools(v, today);
-        for (const id of [...left.a, ...left.b, ...left.d]) {
-          const correct = id === steady ? true : rand() < 0.8;
-          events.push(id === steady || !correct || rand() >= 0.1 ? recordReviewAnswer(id, correct) : { type: 'answer', id, correct, hinted: true, source: 'review' });
-        }
+        for (const id of [...left.a, ...left.b, ...left.d]) events.push(recordReviewAnswer(id, id === steady ? true : rand() < 0.8));
         v = applyVocabEvents(v, events, at(n));
       }
       expectDayInvariants(before, v, today, at(n, 19));
-      days.push({ n, before, after: v, pools, speedTopic });
+      days.push({ n, before, after: v, pools, speedTopic, speed, cards });
     }
     return days;
   }
@@ -319,11 +340,38 @@ describe('30-day simulation: three topics, Daily Tests, Speed Rounds and a week 
     for (const id of gotIt) expect(stateOf(day(1).before, id)).toMatchObject({ box: 2, bestBox: 2, due: dayOf(3), seen: 0 });
   });
 
+  it('caps a later "Got it" at box 2: a word already in box 2 or higher keeps its box, best box and day (P4)', () => {
+    const cards = day(CARDS_AGAIN).cards;
+    expect(cards).not.toBeNull();
+    if (!cards) return;
+    const words = [...food, ...animals, ...colors].filter((id) => id !== steady).map((id) => ({ was: stateOf(cards.before, id), is: stateOf(cards.after, id) }));
+    const higher = words.filter((w) => (w.was?.box ?? 0) >= 2);
+    // The run reaches both cases the cap guards: a word in box 2 and a word in box 4 or higher.
+    expect(higher.some((w) => w.was?.box === 2)).toBe(true);
+    expect(higher.some((w) => (w.was?.box ?? 0) >= 4)).toBe(true);
+    for (const { was, is } of higher) expect(is).toMatchObject({ box: was?.box, bestBox: was?.bestBox, due: was?.due, seen: was?.seen, right: was?.right });
+    // A word in box 1 is raised to box 2 and comes back three days later.
+    for (const { was, is } of words.filter((w) => w.was?.box === 1)) {
+      expect(is).toMatchObject({ box: 2, bestBox: Math.max(2, was?.bestBox ?? 0), due: dayOf(CARDS_AGAIN + 3) });
+    }
+  });
+
+  it('never promotes a right Speed Round answer given with the idle hint, and never demotes it (P3)', () => {
+    const hinted = days.flatMap((d) => (d.speed ? d.speed.hintedRight.map((id) => ({ id, n: d.n, speed: d.speed })) : []));
+    expect(hinted.length).toBeGreaterThanOrEqual(2);
+    for (const { id, n, speed } of hinted) {
+      const was = speed && stateOf(speed.before, id);
+      const is = speed && stateOf(speed.after, id);
+      expect(is, `${id} on day ${n}`).toMatchObject({ box: was?.box, bestBox: was?.bestBox, right: was?.right, seen: (was?.seen ?? 0) + 1 });
+    }
+  });
+
   it('runs Speed Rounds only from three due words, and they count as practice', () => {
     const rounds = days.filter((d) => d.speedTopic !== null);
     expect(rounds.length).toBeGreaterThanOrEqual(3);
     const speedSessions = (v: VocabProgress): number => v.topics.reduce((sum, t) => sum + t.sessions, 0);
-    expect(speedSessions(day(30).after)).toBe(3 + rounds.length);
+    // Three first meetings, the three topics' cards again on day 22, and one session per round.
+    expect(speedSessions(day(30).after)).toBe(6 + rounds.length);
     for (const d of rounds) expect(['food', 'animals', 'colors']).toContain(d.speedTopic);
   });
 
@@ -498,22 +546,23 @@ describe('two devices: phone and tablet (sections 3.3 and 3.11, behaviours 6, 7 
     const skewed = applyVocabEvents(emptyVocab(), [{ type: 'introduced', id: shared }, recordReviewAnswer(shared, false)], ahead);
     for (const merged of [mergeVocab(phone0, skewed), mergeVocab(skewed, phone0)]) {
       const s = merged && stateOf(merged, shared);
+      // The schedule: the skewed device's later `at` wins, so the word is in box 1, due the day after its clock.
+      expect(s).toMatchObject({ box: 1, due: addDays(localDay(ahead), 1) });
+      // What was earned: the larger counts, the best box and the first day, whatever the clock said.
       expect(s).toMatchObject({ bestBox: 4, seen: 3, right: 3, first: dayOf(0) });
       expect(merged?.items).toHaveLength(6);
     }
   });
 
   it('a reset sends the empty slice; only a device that still holds the words brings them back (behaviour 15)', async () => {
-    const server = memoryServer();
-    const phone: Device = { name: 'phone', snapshot: snapshotWith('profile:mina', phone0, at(11, 10)), rev: 0 };
-    const tablet: Device = { name: 'tablet', snapshot: snapshotWith('profile:mina', tablet0, at(11, 11)), rev: 0 };
-    await sync(phone, server, at(11, 12));
-    await sync(tablet, server, at(11, 12));
+    const { server, phone, tablet } = await converge('phone-first');
     expect(server.stored?.snapshot.vocab?.items).toHaveLength(12);
+    // The phone is up to date with the server through the engine itself, not by hand.
+    expect(phone.rev).toBe(server.rev);
+    expect(tablet.rev).toBeLessThan(server.rev);
 
     // A grown-up resets the phone's progress: the next upload carries the empty slice, not an absent key.
     phone.snapshot = snapshotWith('profile:mina', emptyVocab(), at(12));
-    phone.rev = server.rev;
     expect(await sync(phone, server, at(12))).toBe(false);
     expect(server.stored?.snapshot.vocab).toEqual({ v: 1, items: [], topics: [] });
     // An empty slice reports no words to caregivers.
@@ -523,5 +572,24 @@ describe('two devices: phone and tablet (sections 3.3 and 3.11, behaviours 6, 7 
     expect(await sync(tablet, server, at(12, 13))).toBe(true);
     expect(server.stored?.snapshot.vocab).toEqual(mergeVocab(phone0, tablet0));
     expect(mergeSnapshots(snapshotWith('profile:mina', emptyVocab(), at(12)), tablet.snapshot, { now: at(12) }).vocab).toEqual(tablet.snapshot.vocab);
+  });
+
+  it('a reset on a device behind the server is undone by its own conflict merge (section 3.10)', async () => {
+    const server = memoryServer();
+    const phone: Device = { name: 'phone', snapshot: snapshotWith('profile:mina', phone0, at(11, 10)), rev: 0 };
+    const tablet: Device = { name: 'tablet', snapshot: snapshotWith('profile:mina', tablet0, at(11, 11)), rev: 0 };
+    expect(await sync(phone, server, at(11, 12))).toBe(false);
+    expect(await sync(tablet, server, at(11, 12))).toBe(true);
+    // The phone last synced at rev 1; the tablet's merged upload moved the server on.
+    expect(phone.rev).toBeLessThan(server.rev);
+
+    phone.snapshot = snapshotWith('profile:mina', emptyVocab(), at(12));
+    const puts = server.puts.length;
+    // The empty slice meets a 409; the engine folds the server copy in (the union keeps every word) and retries.
+    expect(await sync(phone, server, at(12))).toBe(true);
+    expect(server.puts.slice(puts).map((p) => p.status)).toEqual(['conflict', 'ok']);
+    expect(phone.snapshot.vocab).toEqual(mergeVocab(phone0, tablet0));
+    expect(server.stored?.snapshot.vocab).toEqual(mergeVocab(phone0, tablet0));
+    expect(server.stored?.summary.vocab?.collected).toBe(12);
   });
 });
