@@ -126,6 +126,11 @@ describe('Learning Route English values (AMENDMENTS-ROUTE-LEARNING-ROUTE section
     expect(en.a11y.myRoute.tab).toBe('Learning Route');
   });
 
+  it('reads a tab of the four-tab bar with its place on iOS (LR-4)', () => {
+    expect(en.a11y.tabPosition(en.a11y.myRoute.tab, 2, 4)).toBe('Learning Route, tab, 2 of 4');
+    expect(en.a11y.tabPosition(en.a11y.tabs.home, 1, 4)).toBe('Today, tab, 1 of 4');
+  });
+
   it('keeps the values section 7.2 leaves unchanged on purpose', () => {
     expect(en.learner.placement.result.routeStays).toBe('Your route stays right where it is.');
     expect(en.learner.journey.title).toBe('Heritage Journey');

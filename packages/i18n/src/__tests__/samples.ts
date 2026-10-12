@@ -4,6 +4,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.stars': [[2]],
   'a11y.hoya': [['waving']],
   'a11y.cardArt': [['Book']],
+  'a11y.tabPosition': [['Learning Route', 2, 4]],
   'a11y.koreanItem': [[{ ko: 'x', romanization: 'g', gloss: 'dog' }], [{ ko: 'x', romanization: 'g' }]],
   'learner.language.sameAsDevice': [['English']],
   'learner.language.confirmProfile': [['English']],

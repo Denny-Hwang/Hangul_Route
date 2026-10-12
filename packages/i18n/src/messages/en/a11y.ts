@@ -10,8 +10,18 @@ export const a11y = {
   hoya: (pose: string) => `Hoya the tiger, ${pose}`,
   dismissHoya: 'Close Hoya message',
   goBack: 'Go back',
-  /** Bottom tab labels. `route` is the Learning Route tab (LR-OD-1: the tab budget is 12; its accessibility label is `myRoute.tab`). */
+  /**
+   * Bottom tab labels. `route` is the Learning Route tab (LR-OD-1: the tab budget is 12; its accessibility label is `myRoute.tab`).
+   * Translators: with the Route tab the bar has four items of 80 px at a 320 px width, so each label must fit 80 px at the
+   * caption size (14 px), in one word where the language allows. The 12-character budget alone does not guarantee this,
+   * because it counts characters, not width (design/screens/learning-route/tab-bar.md, "Other languages").
+   */
   tabs: { home: 'Today', journey: 'Journey', library: 'Library', route: 'Route' },
+  /**
+   * The four-tab bar's spoken tab name on iOS, where a tab reads as a button: the name, the word "tab" and its place,
+   * e.g. "Learning Route, tab, 2 of 4" (AMENDMENTS-ROUTE-LEARNING-ROUTE LR-4). Read aloud, never drawn.
+   */
+  tabPosition: (name: string, position: number, count: number) => `${name}, tab, ${position} of ${count}`,
   cardArt: (title: string) => `Card art for ${title}`,
   /** The cub button on Home: the only way to profiles, backup, classes and the grown-up zone. */
   profileEntry: 'Profile and settings',

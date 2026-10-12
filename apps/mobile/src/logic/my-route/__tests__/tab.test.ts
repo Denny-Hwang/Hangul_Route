@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FOUR_TAB_LABEL_FIT, TAB_ICON, mainTabs } from '../tab';
+import { FOUR_TAB_LABEL_FIT, TAB_ICON, mainTabs, tabAccessibilityLabel } from '../tab';
 
 /**
  * The learner tab bar (AMENDMENTS-ROUTE-LEARNING-ROUTE section 5.1, LR-OD-2,
@@ -28,5 +28,29 @@ describe('FOUR_TAB_LABEL_FIT: the native label cap of the four-tab bar (tab-bar.
 
   it('a capped label never shrinks below the caption size (minimumFontScale x the cap = 1)', () => {
     expect(FOUR_TAB_LABEL_FIT.minimumFontScale * FOUR_TAB_LABEL_FIT.maxFontSizeMultiplier).toBeCloseTo(1, 10);
+  });
+});
+
+describe('tabAccessibilityLabel: what a screen reader says for each tab of the four-tab bar', () => {
+  const spoken = {
+    labels: { Home: 'Today', Route: 'Route', Journey: 'Journey', Library: 'Library' },
+    routeName: 'Learning Route',
+    position: (name: string, position: number, count: number) => `${name}, tab, ${position} of ${count}`,
+  } as const;
+  const order = mainTabs(true);
+
+  it('iOS (a tab reads as a button there): every tab keeps "tab, n of 4", and the Route tab says the full name', () => {
+    expect(order.map((name) => tabAccessibilityLabel(name, order, spoken, 'ios'))).toEqual([
+      'Today, tab, 1 of 4',
+      'Learning Route, tab, 2 of 4',
+      'Journey, tab, 3 of 4',
+      'Library, tab, 4 of 4',
+    ]);
+  });
+
+  it('Android and web announce the tab role and place themselves: only the Route tab is renamed', () => {
+    for (const os of ['android', 'web']) {
+      expect(order.map((name) => tabAccessibilityLabel(name, order, spoken, os))).toEqual([undefined, 'Learning Route', undefined, undefined]);
+    }
   });
 });

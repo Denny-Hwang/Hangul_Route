@@ -2,11 +2,11 @@ import { createBottomTabNavigator, type BottomTabNavigationOptions } from '@reac
 import { useIsFocused } from '@react-navigation/native';
 import { Icon, borderWidth, colors, spacing, tabBarMetrics, typography, useLayoutClass } from '@hangul-route/design-system';
 import React, { useEffect } from 'react';
-import { Text, type TextStyle } from 'react-native';
+import { Platform, Text, type TextStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { flags } from '../config/flags';
 import { useMessages } from '../i18n/use-messages';
-import { FOUR_TAB_LABEL_FIT, TAB_ICON, mainTabs, type MainTabName } from '../logic/my-route/tab';
+import { FOUR_TAB_LABEL_FIT, TAB_ICON, mainTabs, tabAccessibilityLabel, type MainTabName } from '../logic/my-route/tab';
 import { HomeScreen } from '../screens/home/HomeScreen';
 import { JourneyScreen } from '../screens/journey/JourneyScreen';
 import { LibraryScreen } from '../screens/library/LibraryScreen';
@@ -72,6 +72,13 @@ export function MainTabs(): React.ReactElement {
   // Only the four-tab bar caps its native label; the three-tab bar keeps the navigator's plain label.
   const fourTabs = order.length === 4;
   const labels: Readonly<Record<MainTabName, string>> = { Home: tabs.home, Route: tabs.route, Journey: tabs.journey, Library: tabs.library };
+  // The tab says "Route" (the 12-character tab budget); it is read as the full name (LR-OD-1). The four-tab label is a
+  // component, so on iOS each tab spells out its "tab, n of 4" itself (tabAccessibilityLabel).
+  const spoken = { labels, routeName: messages.a11y.myRoute.tab, position: messages.a11y.tabPosition };
+  const accessibilityLabelOf = (name: MainTabName): { tabBarAccessibilityLabel?: string } => {
+    const said = tabAccessibilityLabel(name, order, spoken, Platform.OS);
+    return said === undefined ? {} : { tabBarAccessibilityLabel: said };
+  };
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -97,11 +104,7 @@ export function MainTabs(): React.ReactElement {
           key={name}
           name={name}
           component={SCREENS[name]}
-          options={{
-            ...(fourTabs ? { tabBarLabel: fittedLabel(labels[name]) } : { tabBarLabel: labels[name] }),
-            // The tab says "Route" (the 12-character tab budget); its accessibility label is the full name (LR-OD-1).
-            ...(name === 'Route' ? { tabBarAccessibilityLabel: messages.a11y.myRoute.tab } : {}),
-          }}
+          options={fourTabs ? { tabBarLabel: fittedLabel(labels[name]), ...accessibilityLabelOf(name) } : { tabBarLabel: labels[name] }}
         />
       ))}
     </Tab.Navigator>

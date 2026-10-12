@@ -222,6 +222,10 @@ describe('the Route tab (LR-4)', () => {
     expect(tabs).toContain('<Icon name={TAB_ICON[route.name]}');
     expect(tabs).toContain('Route: tabs.route');
     expect(tabs).toContain('messages.a11y.myRoute.tab');
+    // The four-tab bar names every tab through tabAccessibilityLabel (iOS keeps "tab, n of 4"); the three-tab bar is untouched.
+    expect(tabs).toContain('tabAccessibilityLabel(name, order, spoken, Platform.OS)');
+    expect(tabs).toContain('position: messages.a11y.tabPosition');
+    expect(tabs).toContain(': { tabBarLabel: labels[name] }}');
     expect(tabs).not.toMatch(SYMBOL);
     expect(tabs).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/);
   });
@@ -239,12 +243,17 @@ describe('the Route tab (LR-4)', () => {
     expect(screen).toContain('{m.purpose}');
     expect(screen).toContain('useFocusEffect(');
     expect(screen).toContain("source: 'tab'");
-    expect(screen).toMatch(/viewedFor\.current !== focusKey/);
+    // The per-focus decision is the pure focusEffects (logic/my-route/focus.ts, unit-tested); the screen applies it.
+    expect(screen).toContain('focusEffects({ focusKey, viewedFor: viewedFor.current, seenFor, seenWrittenFor: seenWrittenFor.current, readOnly');
+    expect(screen).toMatch(/if \(fx\.sendViewed\)/);
+    expect(screen).toMatch(/if \(fx\.writeSeen\)/);
     expect(screen).toMatch(/design\/screens\/learning-route\//);
   });
 
   it('the root-stack screen is grown-up only: a learner access moves to the tab instead of opening a second copy', () => {
-    expect(screen).toContain("navigation.replace('Main', { screen: selfEntryTab(flags.myRouteEnabled) })");
+    // navigate returns to the Main route already below (replace would stack a second Main).
+    expect(screen).toContain("navigation.navigate('Main', { screen: selfEntryTab(flags.myRouteEnabled) })");
+    expect(screen).not.toContain("navigation.replace('Main'");
     expect(types).toContain("MyRoute: { profileId: string; viewer: 'grownup' };");
   });
 

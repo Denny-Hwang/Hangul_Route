@@ -9,6 +9,7 @@ import { questsAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
 import { myRouteAccess, myRouteEntryOf, selfEntryTab } from '../../logic/my-route/access';
+import { focusEffects } from '../../logic/my-route/focus';
 import { buildMyRoute } from '../../logic/my-route/model';
 import { localizedRouteContent, routeModelInput } from '../../logic/my-route/route-input';
 import { readSeen, seenFrom, writeSeen } from '../../logic/my-route/seen';
@@ -79,7 +80,9 @@ export function MyRouteScreen({ route, navigation }: Props): React.ReactElement 
     // The gate is closed: the PIN screen replaces this one (section 3.1).
     if (gateFor !== null) navigation.replace('PinEntry', { next: 'MyRoute', profileId: gateFor });
     // A learner's own page is the Route tab: an old call moves there, so there is never a second copy (section 5.1).
-    else if (access.kind === 'self') navigation.replace('Main', { screen: selfEntryTab(flags.myRouteEnabled) });
+    // `navigate`, not the section's literal `replace`: `Main` is always below this screen, and navigate returns to
+    // that same route (popping this one), where replace would stack a second `Main` with its own tab bar.
+    else if (access.kind === 'self') navigation.navigate('Main', { screen: selfEntryTab(flags.myRouteEnabled) });
     else if (access.kind === 'none' && navigation.canGoBack()) navigation.goBack();
   }, [gateFor, access.kind, navigation]);
 
@@ -124,12 +127,14 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   );
 
   // The record this open starts from (section 3.10), read again on every focus; for the active learner only.
+  // The read waits for the previous focus's write, so a quick tab switch never reads the record from before it.
   const [seen, setSeen] = useState<SeenRecord | undefined>(undefined);
   const [seenFor, setSeenFor] = useState(0);
+  const pendingWrite = useRef<Promise<unknown>>(Promise.resolve());
   useEffect(() => {
     if (readOnly || focusKey === 0) return;
     let live = true;
-    void readSeen(STORAGE, profileId).then((record) => {
+    void pendingWrite.current.then(() => readSeen(STORAGE, profileId)).then((record) => {
       if (!live) return;
       setSeen(record);
       setSeenFor(focusKey);
@@ -175,15 +180,16 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   const viewedFor = useRef(0);
   const seenWrittenFor = useRef(0);
   useEffect(() => {
-    if (model === null || focusKey === 0) return;
-    if (viewedFor.current !== focusKey) {
+    if (model === null) return;
+    const fx = focusEffects({ focusKey, viewedFor: viewedFor.current, seenFor, seenWrittenFor: seenWrittenFor.current, readOnly, modelReady: true });
+    if (fx.sendViewed) {
       viewedFor.current = focusKey;
       const event = viewedEvent({ profileId, model, source: 'tab', hasPlan: false, readOnly });
       if (event) void track(event);
     }
-    if (!readOnly && seenFor === focusKey && seenWrittenFor.current !== focusKey) {
+    if (fx.writeSeen) {
       seenWrittenFor.current = focusKey;
-      void writeSeen(STORAGE, profileId, seenFrom(model, new Date()), { readOnly });
+      pendingWrite.current = writeSeen(STORAGE, profileId, seenFrom(model, new Date()), { readOnly });
     }
   }, [model, focusKey, seenFor, profileId, readOnly]);
 

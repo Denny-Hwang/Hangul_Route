@@ -40,3 +40,27 @@ export const FOUR_TAB_LABEL_FIT = {
   adjustsFontSizeToFit: true,
   minimumFontScale: 1 / 1.3,
 } as const;
+
+/**
+ * What a screen reader says for a tab of the four-tab bar (LR-4, LR-OD-1). On
+ * iOS the navigator draws a tab as a button and adds "tab, n of N" only to a
+ * plain string label; the four-tab bar's label is a component (the native cap
+ * above), so on iOS every tab spells it out itself: "Today, tab, 1 of 4",
+ * "Learning Route, tab, 2 of 4". Elsewhere the tab role and its place are
+ * announced by the platform, so only the Route tab is renamed to the full
+ * name and the others keep their drawn label (`undefined`).
+ */
+export function tabAccessibilityLabel(
+  name: MainTabName,
+  order: readonly MainTabName[],
+  spoken: {
+    labels: Readonly<Record<MainTabName, string>>;
+    routeName: string;
+    position: (name: string, position: number, count: number) => string;
+  },
+  os: string,
+): string | undefined {
+  const said = name === 'Route' ? spoken.routeName : spoken.labels[name];
+  if (os === 'ios') return spoken.position(said, order.indexOf(name) + 1, order.length);
+  return name === 'Route' ? said : undefined;
+}

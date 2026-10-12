@@ -79,7 +79,14 @@ test.describe('flag on: the Route tab (LR-4)', () => {
     test(`320 x 568, ${locale}: Today, Route, Journey, Library; each label fits its item; Route is announced as Learning Route`, async ({ page }) => {
       await page.setViewportSize({ width: 320, height: 568 });
       await learnerOnHome(page);
-      if (locale !== 'en') await seedStored(page, 'device:settings', { uiLocale: locale });
+      if (locale !== 'en') {
+        // The locale is read at start-up: store it, then reload so the whole app comes up in it.
+        await seedStored(page, 'device:settings', { uiLocale: locale });
+        await page.reload();
+        await closeInstallGuide(page);
+      }
+      // The UI really is in this locale before the labels are measured.
+      await expect(page.locator('html')).toHaveAttribute('lang', new RegExp(`^${locale}`));
       const m = getMessages(locale);
       await expect(tabLinks(page)).toHaveCount(4);
       const labels = await labelFit(page);
