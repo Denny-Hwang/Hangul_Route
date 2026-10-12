@@ -22,7 +22,7 @@ import {
 } from '@hangul-route/design-system';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { AccessibilityInfo, Platform, Pressable, View } from 'react-native';
 import { InstallGuideSheet } from '../../components/InstallGuideSheet';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
@@ -42,7 +42,6 @@ import {
   planHomeStoryOpen,
   storyCardShownEvent,
   type MissionCard,
-  type MissionPlan,
 } from '../../logic/homework/mission-builder';
 import { dueTodayCount, showsTodayCount } from '../../logic/homework/assignment-groups';
 import { mergeAssignments } from '../../logic/homework/assignment-merger';
@@ -69,6 +68,7 @@ import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
 import { usePlacementRunStore } from '../../store/placement-run-store';
 import { usePlanStore } from '../../store/plan-store';
+import { pinMission, pinnedMission } from '../../store/mission-pin-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
@@ -233,9 +233,9 @@ export function HomeScreen(): React.ReactElement {
     return computeStreak(streakSessionDates(snap?.sessions ?? []));
   }, [snap]);
 
-  // Today's mission — the plan is pinned for the day so finishing one card
-  // never reshuffles the other two under the learner (F-HW-001 §3.2).
-  const pinnedPlan = useRef<MissionPlan | null>(null);
+  // Today's mission: the plan is pinned for the day so finishing one card never reshuffles the other
+  // two under the learner (F-HW-001 §3.2). The pin lives in a session store keyed by profile and day,
+  // not in this screen, so Results' Back home (which mounts Home again) keeps it (F-STORY-004 PR 4.8c).
   // The one next (F-ENT-003 section 3.5): due today, then the leading plan source, then the default route.
   const routeInput = useMemo(
     () =>
@@ -264,7 +264,7 @@ export function HomeScreen(): React.ReactElement {
       quests: questsAll,
       episodes: episodesAll,
       today,
-      pinned: pinnedPlan.current,
+      pinned: pinnedMission(profile.id, today),
       // The same stages and placed-out quests as Results and My route (F-ROUTE-001 R-4a).
       ...cursorContext({
         tier,
@@ -299,7 +299,7 @@ export function HomeScreen(): React.ReactElement {
       // Only an assignment `routeNext` step 1 would pick takes the card: known, playable, open, not done (section 3.5).
       isQuestOpen: qualifiesForNext(routeInput),
     }).plan;
-    pinnedPlan.current = merged;
+    pinMission(merged);
     return merged;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, snap, tier, questOpen, routeInput, bookmarks, storyIndex]);
