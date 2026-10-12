@@ -280,6 +280,11 @@ describe('the rebuilt Stage 1 quests', () => {
     ]);
   });
 
+  it('titles the rites theme pages by their festival, since a theme word may hold letters not taught yet (R3)', () => {
+    const themePages = REBUILT.slice(6, 9).flatMap((q) => q.steps.flatMap((s) => (s.discover?.pages ?? []).filter(isThemePage)));
+    expect(themePages.map((p) => p.captionEn)).toEqual(['Words of Seollal', 'Words of Chuseok']);
+  });
+
   it('shows the rites theme words on their festival cards', () => {
     const themeWords = (q: Quest) =>
       q.steps.flatMap((s) => (s.discover?.pages ?? []).filter(isThemePage).flatMap((p) => p.items.map((i) => (i.type === 'word' ? [i.word.ko, i.picture] : []))));

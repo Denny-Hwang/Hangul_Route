@@ -269,6 +269,8 @@ export const stage1Quests: Quest[] = [
               ],
             },
             {
+              // Theme words are for looking (R3): 떡국 holds letters not taught yet, so not "Words you can read now".
+              captionEn: 'Words of Seollal',
               items: [
                 { type: 'word', word: { ko: '설날', romanization: 'seollal', en: 'Lunar New Year', syllables: ['seol', 'lal'] }, picture: 'card:seollal' },
                 { type: 'word', word: { ko: '떡국', romanization: 'tteokguk', en: 'rice cake soup', syllables: ['tteok', 'guk'] }, picture: 'card:tteokguk' },
@@ -313,6 +315,7 @@ export const stage1Quests: Quest[] = [
               ],
             },
             {
+              captionEn: 'Words of Chuseok',
               items: [
                 { type: 'word', word: { ko: '추석', romanization: 'chuseok', en: 'harvest festival', syllables: ['chu', 'seok'] }, picture: 'card:chuseok' },
                 { type: 'word', word: { ko: '송편', romanization: 'songpyeon', en: 'half-moon rice cake', syllables: ['song', 'pyeon'] }, picture: 'card:songpyeon' },
