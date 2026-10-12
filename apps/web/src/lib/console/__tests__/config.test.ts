@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { DEFAULT_APP_URL, apiBaseUrl, appUrl, buildEnv, clerkPublishableKey, contentGatingEnabled, devAuthEnabled, lectureModeEnabled, learningRouteEnabled, notesEnabled, schoolConsentModeEnabled } from '../config';
+import { DEFAULT_APP_URL, apiBaseUrl, appUrl, buildEnv, clerkPublishableKey, contentGatingEnabled, devAuthEnabled, lectureModeEnabled, learningRouteEnabled, notesEnabled, REPORT_REVIEWED_LOCALES, reportsEnabled, schoolConsentModeEnabled } from '../config';
 
 describe('console config (F-CONSOLE-001 §3.2)', () => {
   it('apiBaseUrl trims and rejects the placeholder', () => {
@@ -126,5 +126,37 @@ describe('learningRouteEnabled', () => {
     vi.stubEnv('NEXT_PUBLIC_LEARNING_ROUTE_ENABLED', 'true');
     expect(buildEnv().NEXT_PUBLIC_LEARNING_ROUTE_ENABLED).toBe('true');
     expect(learningRouteEnabled()).toBe(true);
+  });
+});
+
+/**
+ * F-REPORT-001 section 3.1 (RP-7a1): reports show only with `NEXT_PUBLIC_REPORTS_ENABLED` on and, until the ko / es
+ * review of `report.*` lands, only on an English console.
+ */
+describe('reportsEnabled', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('is off unless NEXT_PUBLIC_REPORTS_ENABLED is "true" or "1"', () => {
+    expect(reportsEnabled('en', {})).toBe(false);
+    expect(reportsEnabled('en', { NEXT_PUBLIC_REPORTS_ENABLED: 'true' })).toBe(true);
+    expect(reportsEnabled('en', { NEXT_PUBLIC_REPORTS_ENABLED: '1' })).toBe(true);
+    for (const off of ['false', '0', 'enabled', 'TRUE', '', ' true']) expect(reportsEnabled('en', { NEXT_PUBLIC_REPORTS_ENABLED: off }), off).toBe(false);
+  });
+
+  it('stays off for a console locale whose report words are not reviewed yet (ko, es)', () => {
+    const on = { NEXT_PUBLIC_REPORTS_ENABLED: 'true' };
+    expect(reportsEnabled('ko', on)).toBe(false);
+    expect(reportsEnabled('es', on)).toBe(false);
+    expect(REPORT_REVIEWED_LOCALES).toEqual(['en']);
+  });
+
+  it('reads the build value by its literal name and is off by default', () => {
+    expect(reportsEnabled('en')).toBe(false);
+    vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'true');
+    expect(buildEnv().NEXT_PUBLIC_REPORTS_ENABLED).toBe('true');
+    expect(reportsEnabled('en')).toBe(true);
+    expect(reportsEnabled('ko')).toBe(false);
   });
 });

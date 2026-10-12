@@ -1,4 +1,4 @@
-import { APP_ROUTES, SpaceKindSchema, type AdultPersona, type SpaceKind } from '@hangul-route/content-schema';
+import { APP_ROUTES, SpaceKindSchema, isDateKey, type AdultPersona, type ReportPeriod, type SpaceKind } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { SpaceListItem } from './api';
 
@@ -40,7 +40,44 @@ export const ROUTES = {
     `${opts.learner ? `&learner=${encodeURIComponent(opts.learner)}` : ''}` +
     `${opts.quest ? `&quest=${encodeURIComponent(opts.quest)}` : ''}` +
     `${opts.tab ? `&tab=${opts.tab}` : ''}`,
+  /**
+   * One learner's report (F-REPORT-001 section 3.1): `period` (week by default), an optional past window `at` (a
+   * learner-local day key; never on All time, which has no stepper) and `from` for the back link. Ids and codes only,
+   * so a learner's name never reaches the URL. A class reads `/teach/space/learner`; a family goes there too until
+   * RP-7c moves its branch to `/parent/learner` (F-APP-001 keeps the `/teach` path working for family ids).
+   */
+  learnerReport: (opts: LearnerReportRoute) =>
+    `/teach/space/learner?id=${encodeURIComponent(opts.spaceId)}&learner=${encodeURIComponent(opts.learnerId)}` +
+    reportWindowQuery(opts.period, opts.at) +
+    `${opts.from ? `&from=${opts.from}` : ''}`,
+  /** One class's statistics (F-REPORT-001 section 3.1, RP-8): aggregates only, so the URL holds the class id and the window. */
+  classReport: (opts: ClassReportRoute) => `/teach/space/report?id=${encodeURIComponent(opts.spaceId)}${reportWindowQuery(opts.period, opts.at)}`,
 } as const;
+
+/** Where the grown-up opened a learner report from: the back link goes there (F-REPORT-001 section 3.1). */
+export type ReportFrom = 'home' | 'roster' | 'nav';
+
+/** The options of `ROUTES.learnerReport`: ids and codes, never a name. */
+export interface LearnerReportRoute {
+  spaceId: string;
+  learnerId: string;
+  kind: SpaceKind;
+  period?: ReportPeriod;
+  at?: string | null;
+  from?: ReportFrom | null;
+}
+
+/** The options of `ROUTES.classReport`. */
+export interface ClassReportRoute {
+  spaceId: string;
+  period?: ReportPeriod;
+  at?: string | null;
+}
+
+/** `&period=<p>` (week by default) and `&at=<day>` when it is a day key and the period has a stepper. */
+function reportWindowQuery(period: ReportPeriod = 'week', at?: string | null): string {
+  return `&period=${period}${period !== 'all' && typeof at === 'string' && isDateKey(at) ? `&at=${at}` : ''}`;
+}
 
 /** The options of `ROUTES.spaceNotes`. */
 export interface SpaceNotesOptions {
