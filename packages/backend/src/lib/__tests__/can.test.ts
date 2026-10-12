@@ -42,8 +42,8 @@ describe('can() — F-SPACE-001 §3.4', () => {
     const mom = account('mom', [member('space:fam', 'mom', 'owner')]);
     const dad = account('dad', [member('space:fam', 'dad', 'caregiver')]);
     const ctx = { space: family, parent: null };
-    expect([...allowedOnSpace(mom as never, ctx)].sort()).toEqual(['learner.delete', 'plan.write', 'roster.manage', 'snapshot.read', 'space.manage', 'summary.read']);
-    expect([...allowedOnSpace(dad as never, ctx)].sort()).toEqual(['learner.delete', 'plan.write', 'roster.manage', 'snapshot.read', 'summary.read']);
+    expect([...allowedOnSpace(mom as never, ctx)].sort()).toEqual(['feedback.oversee', 'feedback.send', 'learner.delete', 'plan.write', 'roster.manage', 'snapshot.read', 'space.manage', 'summary.read']);
+    expect([...allowedOnSpace(dad as never, ctx)].sort()).toEqual(['feedback.oversee', 'learner.delete', 'plan.write', 'roster.manage', 'snapshot.read', 'summary.read']);
     expect(can(dad, 'snapshot.read', { kind: 'learner', learnerId: 'profile:a', spaces: [ctx] })).toBe(true);
     expect(can(dad, 'space.manage', { kind: 'space', ctx })).toBe(false);
   });
@@ -152,5 +152,54 @@ describe('learner.transfer (F-SPACE-002 §4.5, T10)', () => {
     const granted = allowedOnSpace(dad as never, familyCtx);
     expect(granted.has('roster.manage')).toBe(true);
     expect(granted.has('learner.transfer')).toBe(false);
+  });
+});
+
+describe('feedback.send and feedback.oversee (F-FEEDBACK-001 section 6.1)', () => {
+  const famCtx = { space: family, parent: null };
+  const classCtx = { space: klass, parent: school };
+  const onSpace = (actor: Actor, action: Action, ctx: { space: Space; parent: Space | null; sendGrant?: boolean }) => can(actor, action, { kind: 'space', ctx });
+
+  it("the family owner sends and oversees; a caregiver oversees, and sends only with the owner's grant", () => {
+    const mom = account('mom', [member('space:fam', 'mom', 'owner')]);
+    const dad = account('dad', [member('space:fam', 'dad', 'caregiver')]);
+    expect(onSpace(mom, 'feedback.send', famCtx)).toBe(true);
+    expect(onSpace(mom, 'feedback.oversee', famCtx)).toBe(true);
+    expect(onSpace(dad, 'feedback.send', famCtx)).toBe(false);
+    expect(onSpace(dad, 'feedback.send', { ...famCtx, sendGrant: false })).toBe(false);
+    expect(onSpace(dad, 'feedback.send', { ...famCtx, sendGrant: true })).toBe(true);
+    expect(onSpace(dad, 'feedback.oversee', famCtx)).toBe(true);
+    expect(onSpace(dad, 'feedback.oversee', { ...famCtx, sendGrant: true })).toBe(true);
+  });
+
+  it('a class teacher and the class owner send; nobody oversees a class', () => {
+    const owner = account('teacher', [member('space:cls', 'teacher', 'owner')]);
+    const co = account('co', [member('space:cls', 'co', 'teacher')]);
+    for (const actor of [owner, co]) {
+      expect(onSpace(actor, 'feedback.send', classCtx)).toBe(true);
+      expect(onSpace(actor, 'feedback.oversee', classCtx)).toBe(false);
+    }
+  });
+
+  it('school admins and school-level teachers never send to a class, and a grant means nothing outside a family (OD-6)', () => {
+    const principal = account('principal', [member('space:sch', 'principal', 'owner')]);
+    const admin = account('admin', [member('space:sch', 'admin', 'admin')]);
+    const schoolTeacher = account('t2', [member('space:sch', 't2', 'teacher')]);
+    for (const actor of [principal, admin, schoolTeacher]) {
+      expect(onSpace(actor, 'feedback.send', { ...classCtx, sendGrant: true })).toBe(false);
+      expect(onSpace(actor, 'feedback.send', { space: school, parent: null, sendGrant: true })).toBe(false);
+      expect(onSpace(actor, 'feedback.oversee', classCtx)).toBe(false);
+    }
+  });
+
+  it('a student membership, an outsider and a class caregiver row grant neither', () => {
+    const impostor = account('profile:a', [member('space:fam', 'profile:a', 'student', 'learner')]);
+    const stranger = account('x', [member('space:other', 'x', 'owner')]);
+    const odd = account('odd', [member('space:cls', 'odd', 'caregiver')]);
+    for (const action of ['feedback.send', 'feedback.oversee'] as const) {
+      expect(onSpace(impostor, action, { ...famCtx, sendGrant: true })).toBe(false);
+      expect(onSpace(stranger, action, { ...famCtx, sendGrant: true })).toBe(false);
+      expect(onSpace(odd, action, { ...classCtx, sendGrant: true })).toBe(false);
+    }
   });
 });
