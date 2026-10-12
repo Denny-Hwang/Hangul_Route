@@ -3,10 +3,10 @@
  * differ (F-VOC-004 §3.3 rule 1): the builder never shows the two words of a
  * pair in one question, as answer and option or as two options. Never relaxed.
  *
- * - 공 "ball" against each ball sport: the sport glyphs of F-VOC-002 §3.11 are
- *   drawn as their ball, so two pictures would read as "ball".
- * - 불 "fire" against 빛 "light": 불 also means a light that is on (its note
- *   says so), so the bulb picture of 빛 is a right answer for 불.
+ * - gong "ball" against each ball sport: the sport glyphs of F-VOC-002 §3.11
+ *   are drawn as their ball, so two pictures would read as "ball".
+ * - bul "fire" against bit "light": bul also means a light that is on (its
+ *   note says so), so the bulb picture of bit is a right answer for bul.
  */
 export const VOCAB_EXCLUDED_PAIRS: readonly (readonly [string, string])[] = Object.freeze([
   ['vocab:gong-ball', 'vocab:chukgu'],
