@@ -102,6 +102,43 @@ export function consoleLeaks(manifestUrls, isGrownUpPath) {
     .sort();
 }
 
+/**
+ * A page that loads the console's Next code: a `src`/`href` into `/_next/`, or Next's
+ * own boot data. Prose that only mentions the folder is not a match.
+ */
+const CONSOLE_HTML = /\b(?:src|href)\s*=\s*["']?\/_next\/|__NEXT_DATA__|self\.__next_f\b/;
+
+/**
+ * Precached HTML pages that load console code, whatever their path (a Next export's
+ * root `404.html` is no grown-up path). Only `.html` entries are read.
+ *
+ * @param {readonly string[]} manifestUrls the precache manifest's urls
+ * @param {(url: string) => string} readFile reads a precached file (a manifest url, relative to dist) as text
+ */
+export function consolePages(manifestUrls, readFile) {
+  return manifestUrls.filter((url) => /\.html$/i.test(url.split('?')[0]) && CONSOLE_HTML.test(readFile(url))).sort();
+}
+
+/**
+ * The build's checks on the learner precache once Workbox has globbed it: no console
+ * file by path (`consoleLeaks`) or by content (`consolePages`), and the offline page
+ * of grown-up paths present. Throws with the build's message; returns nothing.
+ *
+ * @param {readonly string[]} manifestUrls the precache manifest's urls
+ * @param {(pathname: string) => boolean} isGrownUpPath the R-1 predicate of packages/content-schema
+ * @param {(url: string) => string} readFile reads a precached file (a manifest url, relative to dist) as text
+ */
+export function assertLearnerPrecache(manifestUrls, isGrownUpPath, readFile) {
+  const byPath = consoleLeaks(manifestUrls, isGrownUpPath);
+  const byContent = consolePages(
+    manifestUrls.filter((url) => !byPath.includes(url)),
+    readFile,
+  );
+  const leaks = [...byPath, ...byContent].sort();
+  if (leaks.length > 0) throw new Error(`pwa-postbuild: console files found in the learner precache: ${leaks.join(', ')}`);
+  if (!manifestUrls.includes(GROWN_UPS_OFFLINE_FILE)) throw new Error(`pwa-postbuild: ${GROWN_UPS_OFFLINE_FILE} is missing from the precache`);
+}
+
 // --- The offline page (wireframe design/wireframes/shell/offline.md) -----------------
 
 const OFFLINE_KEYS = ['title', 'line', 'back', 'retry'];

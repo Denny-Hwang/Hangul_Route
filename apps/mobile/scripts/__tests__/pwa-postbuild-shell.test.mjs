@@ -16,7 +16,9 @@ import {
   CONSOLE_ASSET_DIR,
   GROWN_UPS_OFFLINE_FILE,
   GROWN_UPS_OFFLINE_URL,
+  assertLearnerPrecache,
   consoleLeaks,
+  consolePages,
   grownUpDenylist,
   grownUpGlobIgnores,
   grownUpNavigationRule,
@@ -182,6 +184,55 @@ describe('precache exclusions and the consoleLeaks guard', () => {
     ]);
     expect(consoleLeaks(['index.html', 'sw.js', 'manifest.webmanifest'], isGrownUpPath)).toEqual([]);
   });
+
+  // A Next export always writes a root 404.html that loads console code; its path is no
+  // grown-up path, so only its content gives it away.
+  const NEXT_404 = '<!DOCTYPE html><html><head><link rel="stylesheet" href="/_next/static/css/app.css"></head><body><script src="/_next/static/chunks/main-123.js" async=""></script></body></html>';
+  const NEXT_FLIGHT = '<!DOCTYPE html><html><body><script>(self.__next_f=self.__next_f||[]).push([0])</script></body></html>';
+  const LEARNER_INDEX = '<!DOCTYPE html><html><head><title>Hangul Route</title></head><body><div id="root"></div><script src="/_expo/static/js/web/index-abc.js" defer></script></body></html>';
+  const files = {
+    'index.html': LEARNER_INDEX,
+    'grown-ups-offline.html': renderGrownUpsOffline({
+      locales: [{ locale: 'en', lang: 'en', strings: { title: 'a', line: 'b', back: 'c', retry: 'd' } }],
+      tokens: designTokens,
+    }),
+    'present.html': LEARNER_INDEX,
+    '404.html': NEXT_404,
+    '_not-found.html': NEXT_FLIGHT,
+    'notes/next.html': '<p>Built with Next: chunks live under /_next/ in the console build.</p>',
+    'sw.js': 'self.__next_f = 1; importScripts("/_next/static/x.js");',
+  };
+  const read = (url) => {
+    if (!(url in files)) throw new Error(`unexpected read of ${url}`);
+    return files[url];
+  };
+
+  it('flags a precached HTML page that loads console code, whatever its path, and reads HTML only', () => {
+    expect(consolePages(Object.keys(files), read)).toEqual(['404.html', '_not-found.html']);
+    expect(consolePages(['index.html', 'present.html', 'grown-ups-offline.html', 'sw.js'], read)).toEqual([]);
+  });
+
+  it('passes a learner precache with the offline page in it', () => {
+    expect(() => assertLearnerPrecache(['index.html', GROWN_UPS_OFFLINE_FILE, 'present.html', 'sw.js'], isGrownUpPath, read)).not.toThrow();
+  });
+
+  it('fails the build on a console file by path, listing every one', () => {
+    expect(() =>
+      assertLearnerPrecache(['index.html', GROWN_UPS_OFFLINE_FILE, 'teach/home.html', '_next/static/chunks/app.js'], isGrownUpPath, read),
+    ).toThrow('pwa-postbuild: console files found in the learner precache: _next/static/chunks/app.js, teach/home.html');
+  });
+
+  it('fails the build on a console page by content (a Next 404.html)', () => {
+    expect(() => assertLearnerPrecache(['index.html', GROWN_UPS_OFFLINE_FILE, '404.html'], isGrownUpPath, read)).toThrow(
+      'pwa-postbuild: console files found in the learner precache: 404.html',
+    );
+  });
+
+  it('fails the build when the offline page is not precached', () => {
+    expect(() => assertLearnerPrecache(['index.html', 'present.html'], isGrownUpPath, read)).toThrow(
+      `pwa-postbuild: ${GROWN_UPS_OFFLINE_FILE} is missing from the precache`,
+    );
+  });
 });
 
 describe('renderGrownUpsOffline', () => {
@@ -246,13 +297,64 @@ describe('renderGrownUpsOffline', () => {
       renderGrownUpsOffline({ locales: [{ locale: 'en', lang: 'en', strings: { ...en, retry: '' } }], tokens: designTokens }),
     ).toThrow(/retry/);
     expect(() => renderGrownUpsOffline({ locales: [], tokens: designTokens })).toThrow(/locale/);
+    expect(() => renderGrownUpsOffline({ locales: [{ locale: 'en', lang: '', strings: en }], tokens: designTokens })).toThrow(
+      /locale "en" has no lang/,
+    );
+  });
+});
+
+describe('the offline page picks its locale from navigator.languages (section 3.16: lang follows the pick)', () => {
+  const en = { title: "You're offline", line: 'Grown-up pages need the internet. Learning still works offline.', back: 'Back to learning', retry: 'Try again' };
+  const ko = { title: '오프라인이에요', line: '어른 페이지는 인터넷이 필요해요. 학습은 오프라인에서도 돼요.', back: '학습으로 돌아가기', retry: '다시 시도' };
+  const html = renderGrownUpsOffline({
+    locales: [
+      { locale: 'en', lang: 'en', strings: en },
+      { locale: 'ko', lang: 'ko', strings: ko },
+    ],
+    tokens: designTokens,
+  });
+  const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1] ?? '';
+  const keys = [...html.matchAll(/data-k="([a-z]+)"/g)].map((m) => m[1]);
+
+  /** Runs the page's own inline script against a stand-in document drawn in English, as the HTML is. */
+  function pick(languages, language) {
+    const nodes = keys.map((key) => ({ textContent: en[key], getAttribute: (name) => (name === 'data-k' ? key : null) }));
+    const doc = { documentElement: { lang: 'en' }, title: en.title, querySelectorAll: (selector) => (selector === '[data-k]' ? nodes : []) };
+    // eslint-disable-next-line no-new-func
+    new Function('document', 'navigator', script)(doc, { languages, language });
+    return { lang: doc.documentElement.lang, title: doc.title, text: Object.fromEntries(nodes.map((n, i) => [keys[i], n.textContent])) };
+  }
+
+  it('draws every string of the page under a data-k the script can swap', () => {
+    expect(script).not.toBe('');
+    expect([...keys].sort()).toEqual([...OFFLINE_KEYS].sort());
+  });
+
+  it('takes the first listed language it ships, with its region dropped', () => {
+    expect(pick(['ko-KR', 'en'])).toEqual({ lang: 'ko', title: ko.title, text: ko });
+    expect(pick(['fr', 'ko'])).toEqual({ lang: 'ko', title: ko.title, text: ko });
+  });
+
+  it('matches upper-case and regional tags', () => {
+    expect(pick(['EN-us', 'ko'])).toEqual({ lang: 'en', title: en.title, text: en });
+    expect(pick(['KO'])).toEqual({ lang: 'ko', title: ko.title, text: ko });
+  });
+
+  it('keeps English when no listed language ships, or the list is empty', () => {
+    expect(pick(['fr'])).toEqual({ lang: 'en', title: en.title, text: en });
+    expect(pick([])).toEqual({ lang: 'en', title: en.title, text: en });
+    expect(pick(undefined, undefined)).toEqual({ lang: 'en', title: en.title, text: en });
+  });
+
+  it('falls back to navigator.language when navigator.languages is empty', () => {
+    expect(pick([], 'ko-KR')).toEqual({ lang: 'ko', title: ko.title, text: ko });
   });
 });
 
 describe('public/_headers', () => {
   const headers = readFileSync(join(here, '..', '..', 'public', '_headers'), 'utf8');
 
-  it('marks the console chunks immutable, as apps/web does', () => {
+  it('marks the console chunks immutable (inert until A-3, which keeps a /_next/ miss off the single-page fallback)', () => {
     expect(headers).toMatch(/^\/_next\/static\/\*\n  Cache-Control: public, max-age=31536000, immutable$/m);
   });
 
@@ -341,5 +443,31 @@ describe('pwa-postbuild.mjs on a stand-in export', () => {
     expect(index).toContain(`background: ${designTokens.colors.surface.canvas}`);
     expect(index).toContain(`<meta name="theme-color" content="${designTokens.colors.brand.primary}">`);
     expect(index).toContain("register('/sw.js')");
+  });
+});
+
+describe('pwa-postbuild.mjs refuses an export whose precache would carry console code', () => {
+  let dist;
+  let run;
+
+  beforeAll(() => {
+    dist = mkdtempSync(join(tmpdir(), 'hr-pwa-leak-'));
+    const files = {
+      'index.html': '<!doctype html><html><head><meta name="viewport" content="width=device-width"></head><body><div id="root"></div></body></html>',
+      // A Next export's root 404.html: no grown-up path, but it loads the console's code.
+      '404.html': '<!DOCTYPE html><html><body><script src="/_next/static/chunks/main-123.js" async=""></script></body></html>',
+    };
+    for (const [path, body] of Object.entries(files)) writeFileSync(join(dist, path), body);
+    run = spawnSync(process.execPath, [postbuild, dist], { encoding: 'utf8' });
+  }, 120_000);
+
+  afterAll(() => {
+    if (dist) rmSync(dist, { recursive: true, force: true });
+  });
+
+  it('fails the build and names the page', () => {
+    expect(run.status).not.toBe(0);
+    expect(run.stderr).toContain('pwa-postbuild: console files found in the learner precache: 404.html');
+    expect(run.stdout).not.toMatch(/pwa-postbuild: precached/);
   });
 });

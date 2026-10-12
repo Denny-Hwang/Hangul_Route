@@ -9,7 +9,8 @@
 // console under GROWN_UP_PREFIXES (from A-3), so the worker never answers a grown-up
 // navigation with the learner shell (denylist), sends it to the network only (with
 // the precached grown-ups-offline.html when offline), and the build fails if a
-// console file reaches the learner precache (consoleLeaks).
+// console file reaches the learner precache, by path (consoleLeaks) or by content
+// (consolePages: an HTML page that loads /_next/ code, such as a Next 404.html).
 // app.json (adaptive icon) and public/manifest.webmanifest keep a copy of brand.primary: keep them equal to the token.
 import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 import * as nodeModule from 'node:module';
@@ -19,7 +20,7 @@ import { generateSW, getManifest } from 'workbox-build';
 import { AUDIO_PRECACHE_IGNORES, audioRuntimeCaching, precacheGaps, precacheLeaks } from './audio/lib.mjs';
 import {
   GROWN_UPS_OFFLINE_FILE,
-  consoleLeaks,
+  assertLearnerPrecache,
   grownUpDenylist,
   grownUpGlobIgnores,
   grownUpNavigationRule,
@@ -168,8 +169,7 @@ const gaps = precacheGaps(clips, manifestUrls);
 const leaks = precacheLeaks(manifestUrls);
 if (gaps.length > 0) throw new Error(`pwa-postbuild: clips missing from the precache: ${gaps.join(', ')}`);
 if (leaks.length > 0) throw new Error(`pwa-postbuild: runtime-cached clips found in the precache: ${leaks.join(', ')}`);
-const consoleFiles = consoleLeaks(manifestUrls, isGrownUpPath);
-if (consoleFiles.length > 0) throw new Error(`pwa-postbuild: console files found in the learner precache: ${consoleFiles.join(', ')}`);
-if (!manifestUrls.includes(GROWN_UPS_OFFLINE_FILE)) throw new Error(`pwa-postbuild: ${GROWN_UPS_OFFLINE_FILE} is missing from the precache`);
+// No console file by path or by content (a Next 404.html), and the offline page present.
+assertLearnerPrecache(manifestUrls, isGrownUpPath, (url) => readFileSync(join(dist, url), 'utf8'));
 
 process.stdout.write(`pwa-postbuild: precached ${count} files (${(size / 1024 / 1024).toFixed(2)} MB), ${clips.length} audio clips built\n`);
