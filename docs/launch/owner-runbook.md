@@ -67,7 +67,7 @@ D1 `hangul-route` 는 2026-10-07 에 대시보드에서 만들었고 (Database I
 `hangulroute.com` 은 Cloudflare Registrar 로 구매해 이미 Cloudflare DNS 에 있다 (2026-10-07). 네임서버 변경·전파 대기는 없다. Custom domain 을 붙이면 DNS 레코드와 인증서가 자동으로 만들어진다 (보통 몇 분).
 1. `hangul-route-app` → Settings → Domains & Routes → Add → Custom domain `app.hangulroute.com`
 2. `hangul-route-web` → 같은 메뉴 → `hangulroute.com`, 그리고 한 번 더 `www.hangulroute.com`
-3. `hangul-route-api` → Settings → Variables and Secrets → Add → Type **Text** → `ALLOWED_ORIGINS` = `https://hangulroute.com,https://www.hangulroute.com,https://app.hangulroute.com` → Deploy. (비워 두면 같은 기본값 + localhost + `*.workers.dev` 가 허용되므로 도메인 전엔 생략해도 된다.)
+3. `hangul-route-api` → Settings → Variables and Secrets → Add → Type **Text** → `ALLOWED_ORIGINS` = `https://hangulroute.com,https://www.hangulroute.com,https://app.hangulroute.com` → Deploy. (비워 두면 같은 기본값 + localhost + `*.workers.dev` 가 허용되므로 도메인 전엔 생략해도 된다.) 이 목록은 Clerk 로그인 토큰의 `authorizedParties` 이기도 하다 (F-APP-001 A-9): 여기서 빠진 사이트에서 발급된 로그인 토큰은 API 가 401 로 거절하므로, 세 주소 중 하나라도 빼면 그 사이트의 콘솔 로그인이 API 에서 막힌다. 프로덕션 (`ENVIRONMENT` 미설정) 에서는 비워 두어도 토큰에는 localhost · `*.workers.dev` 가 허용되지 않는다.
 
 **확인**: https://app.hangulroute.com 과 https://hangulroute.com/teach 가 열린다 (DNS 탭에 Worker 가 만든 레코드가 보인다). Step 5 의 `EXPO_PUBLIC_CONSOLE_URL` 은 지워도 된다 (지우면 Retry deployment).
 - F-APP-001 이후 (§E S-1 뒤): 콘솔 주소는 **https://app.hangulroute.com/signin** 이다. 확인은 https://app.hangulroute.com/signin 이 로그인 위젯을 보여 주는지로 한다. hangulroute.com/teach 는 F-SITE-002 S-10 전까지 그대로 열리고, 그 뒤에는 앱 호스트의 같은 경로로 리다이렉트된다. 학습자 앱의 개인정보 링크 등 사이트 주소는 `EXPO_PUBLIC_SITE_URL` (기본 `https://hangulroute.com`) 이 `EXPO_PUBLIC_CONSOLE_URL` 을 대신한다.
