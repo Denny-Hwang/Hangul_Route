@@ -454,7 +454,7 @@ test.describe('story shelf (fixture bundle)', () => {
     { width: 768, height: 1024 },
     { width: 1280, height: 800 },
   ]) {
-    test(`${vp.width}x${vp.height}: Story Time fits the window with no sideways scroll`, async ({ page }) => {
+    test(`${vp.width}x${vp.height}: Story Time, the episode page and Culture notes fit the window with no sideways scroll`, async ({ page }) => {
       await page.setViewportSize(vp);
       await onboard(page);
       await openLibrary(page);
@@ -468,6 +468,18 @@ test.describe('story shelf (fixture bundle)', () => {
         expect((box?.x ?? -1) >= 0 && (box?.x ?? 0) + (box?.width ?? 0) <= vp.width + 0.5, testId).toBe(true);
       }
       await page.screenshot({ path: `test-results/story-shelf-${vp.width}x${vp.height}.png`, fullPage: true });
+
+      // The story's episode page and the Culture notes screen fit too.
+      await tile(page).click();
+      await expect(shown(page, `story-episode-start-${STORY}`)).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'episode page').toBe(true);
+      const start = await shown(page, `story-episode-start-${STORY}`).boundingBox();
+      expect((start?.x ?? -1) >= 0 && (start?.x ?? 0) + (start?.width ?? 0) <= vp.width + 0.5, 'Start').toBe(true);
+      await page.getByLabel('Go back').filter({ visible: true }).first().click();
+      await openSection(page, 'Culture');
+      await shown(page, 'library-culture-notes').click();
+      await expect(shown(page, 'culture-notes-empty')).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'Culture notes').toBe(true);
     });
   }
 });
