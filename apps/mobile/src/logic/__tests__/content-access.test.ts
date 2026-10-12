@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { CATALOG, FREE_ROUTE_STAGES, freeRouteQuestIds, gridLessonIds, type Story } from '@hangul-route/content-schema';
+import { CATALOG, FREE_ROUTE_STAGES, cellIsReady, freeRouteQuestIds, gridLessonIds, type Story } from '@hangul-route/content-schema';
 import { questsAll } from '../../content';
 import { storiesAll } from '../../content/stories';
 import { VOCAB_TOPICS } from '../../content/__generated__/vocab';
@@ -25,7 +25,17 @@ const registry: FreeContentRegistry = {
   gridLessons: new Set(['quest:free-one', 'quest:paid-one']),
 };
 
-const STAGE1_LESSONS = [
+// The expected sets come from the catalogue (F-ENT-003 section 3.1), so they grow with Stage 1 (F-QUEST-002 Q-8).
+const LESSON_IDS = new Set(CATALOG.quests.filter((q) => q.kind === 'lesson').map((q) => q.id));
+const lessonsOfReadyCells = (stage?: string): string[] =>
+  CATALOG.cells
+    .filter((c) => cellIsReady(c) && (stage === undefined || c.stage === stage))
+    .flatMap((c) => c.questIds.filter((id) => LESSON_IDS.has(id)));
+const STAGE1_LESSONS = lessonsOfReadyCells('stage1');
+const GRID_LESSONS = lessonsOfReadyCells();
+const LATER_LESSONS = GRID_LESSONS.filter((id) => !STAGE1_LESSONS.includes(id));
+/** Today's free lessons (`CATALOG_VERSION` 4): the free set always includes them. */
+const TODAY_STAGE1_LESSONS = [
   'quest:stage1-letters-q1',
   'quest:stage1-letters-q2',
   'quest:stage1-letters-q3',
@@ -38,7 +48,7 @@ const STAGE1_LESSONS = [
   'quest:stage1-nature-q1',
   'quest:stage1-crafts-q1',
 ];
-const LATER_LESSONS = ['quest:stage2-life-q1', 'quest:stage2-nature-q1', 'quest:stage4-rites-q1'];
+const CHANGED = 'The free lessons changed: check F-ENT-003 section 3.1 (all of Stage 1 is free, OD-1)';
 
 describe('free-set constants', () => {
   it('pins the intended free set', () => {
@@ -104,8 +114,16 @@ describe('isFreeContent (default registry)', () => {
   it('builds the free quests and the grid lessons from the shared catalogue', () => {
     const free = questsAll.filter((q) => isFreeContent('quest', q.id)).map((q) => q.id);
     expect(new Set(free)).toEqual(freeRouteQuestIds(CATALOG));
-    expect([...freeRouteQuestIds(CATALOG)].sort()).toEqual([...STAGE1_LESSONS].sort());
-    expect([...gridLessonIds(CATALOG)].sort()).toEqual([...STAGE1_LESSONS, ...LATER_LESSONS].sort());
+    expect([...freeRouteQuestIds(CATALOG)].sort(), CHANGED).toEqual([...STAGE1_LESSONS].sort());
+    expect([...gridLessonIds(CATALOG)].sort()).toEqual([...GRID_LESSONS].sort());
+  });
+
+  it("the free lessons are exactly Stage 1's lesson quests and include today's eleven (OD-1)", () => {
+    const free = freeRouteQuestIds(CATALOG);
+    for (const id of TODAY_STAGE1_LESSONS) expect(free.has(id), `${CHANGED}: ${id}`).toBe(true);
+    for (const id of free) expect(id.startsWith('quest:stage1-'), `${CHANGED}: ${id}`).toBe(true);
+    // A later stage always has lessons to close, or the switch would have nothing to do.
+    expect(LATER_LESSONS.length).toBeGreaterThan(0);
   });
 
   it('has an empty sampler while the bundle has no sampler story', () => {
