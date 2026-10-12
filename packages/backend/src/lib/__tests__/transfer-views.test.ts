@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { MemoryDb } from '../../db';
-import { DAY, DEST, FAMILY, LEARNER, SOURCE, T0, at, iso, learnerSideRow, seedWorld } from '../../db/__tests__/transfer-fixtures';
+import { DAY, DEST, FAMILY, LEARNER, SOURCE, T0, at, iso, learnerSideRow, seedWorld, sourceRow } from '../../db/__tests__/transfer-fixtures';
 import type { StoredTransfer } from '../../db';
-import { ageBucket, destinationView, hasCaregiverRoute, learnerRouteFor, learnerSideView, sourceView, viewLookups, viewStatus } from '../transfer-views';
+import { consentTermsDigest, consentTermsFor } from '../transfer';
+import { ageBucket, destinationView, hasCaregiverRoute, learnerRouteFor, learnerSideTerms, learnerSideView, sourceView, viewLookups, viewStatus } from '../transfer-views';
 
 /* Class-transfer views — F-SPACE-002 section 4.2 "Views" (PR T-5a). */
 
@@ -81,6 +82,24 @@ describe('learnerSideView', () => {
     const ended: StoredTransfer = { ...learnerSideRow(), status: 'cancelled', endReason: 'withdrawn_learner', endActor: 'device', endedAt: iso(DAY) };
     const lonely = await learnerSideView(db, ended, { learners: new Map(), spaces: new Map(), facts: new Map() }, { ...ctx, family: null });
     expect(lonely).toMatchObject({ status: 'ended', endedFrom: 'device', executeAfter: null, learner: { id: LEARNER, name: '?' }, from: { spaceId: SOURCE, name: '?' }, to: { name: '?', ownerName: null, learnerCount: 0 }, destinationConsentMode: 'parent' });
+    expect(view.termsDigest).toBeNull();
+    expect(lonely.termsDigest).toBeNull();
+  });
+
+  it('carries the digest of the sheet it shows while the learner slot waits on an open request (section 4.11, T-5b)', async () => {
+    const db = new MemoryDb();
+    await seedWorld(db);
+    const ctx = { family: await db.getSpace(FAMILY), selfManaged: false, caregiverRoute: true, deviceConsent: false, now: at(DAY) };
+    const waiting = sourceRow();
+    const view = await learnerSideView(db, waiting, await viewLookups(db, [waiting]), ctx);
+    const [source, dest] = [await db.getSpace(SOURCE), await db.getSpace(DEST)];
+    if (!source || !dest) throw new Error('seed');
+    const sheet = await learnerSideTerms(db, LEARNER, source, dest, ctx.now);
+    const terms = await consentTermsFor(db, LEARNER, source, dest, ctx.now, sheet.premiumChange);
+    expect(view.termsDigest).toBe(await consentTermsDigest(terms, { premiumChange: sheet.premiumChange, destinationConsentMode: sheet.destinationConsentMode, relinkAffected: sheet.relinkAffected, sourcePlansAffected: sheet.sourcePlansAffected }));
+    // the learner side already agreed: nothing left to bind
+    const consented = learnerSideRow();
+    expect((await learnerSideView(db, consented, await viewLookups(db, [consented]), ctx)).termsDigest).toBeNull();
   });
 });
 

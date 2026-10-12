@@ -269,6 +269,25 @@ describe('myRouteView: other states', () => {
     expect(v.newQuests).toBeNull();
   });
 
+  it('read-only has nothing to tap that plays or opens the Library as the active learner (amendment 5.1, 6.2): no episode cell, no tile link, no stories link', () => {
+    const m = model(APPENDIX_C);
+    const v = view({ ...m, gains: { stars: 3, cards: 2, storiesRead: 1 } }, { viewer: 'grownup', name: 'Sam', hasStories: true });
+    const cells = v.trail.flatMap((row) => (row.kind === 'stage' ? row.cells : []));
+    expect(cells.length).toBeGreaterThan(0);
+    expect(cells.every((c) => c.episodeId === null)).toBe(true);
+    expect(v.gains.map((g) => [g.key, g.opensLibrary])).toEqual([
+      ['stars', false],
+      ['cards', false],
+      ['stories', false],
+    ]);
+    expect(v.storiesNote).toBeNull();
+    // The learner's own page keeps all three.
+    const self = view({ ...m, gains: { stars: 3, cards: 2, storiesRead: 1 } }, { hasStories: true });
+    expect(self.trail.flatMap((row) => (row.kind === 'stage' ? row.cells : [])).some((c) => c.episodeId !== null)).toBe(true);
+    expect(self.gains.filter((g) => g.opensLibrary).map((g) => g.key)).toEqual(['cards', 'stories']);
+    expect(self.storiesNote).not.toBeNull();
+  });
+
   it('OD-4 other branch: a not-open-yet stage keeps its own row and reads "Not open yet"; its cells are not buttons', () => {
     const v = view(model([], { isEntitled: (s) => s === 'stage1' }));
     const s2 = stageRow(v, 'stage2');

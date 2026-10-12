@@ -20,6 +20,7 @@
     "apps/mobile/src/screens/parent/PinEntryScreen.tsx",
     "apps/mobile/src/screens/parent/PinResetScreen.tsx",
     "apps/mobile/src/screens/parent/ParentDashboardScreen.tsx",
+    "apps/mobile/src/screens/parent/LearningRouteRow.tsx",
     "apps/mobile/src/screens/paywall/PaywallScreen.tsx",
     "apps/mobile/src/components/PinPad.tsx",
     "apps/mobile/src/components/PinSetupField.tsx",
@@ -71,7 +72,9 @@
     "apps/web/src/components/console/JourneyParts.tsx",
     "apps/mobile/src/screens/parent/PlacementReportScreen.tsx",
     "apps/mobile/src/screens/results/**",
-    "apps/mobile/src/screens/quest/QuestPlayerView.tsx"
+    "apps/mobile/src/screens/quest/QuestPlayerView.tsx",
+    "apps/mobile/src/screens/episode/StoryEpisodeDetail.tsx",
+    "apps/mobile/src/screens/episode/EpisodeDetailView.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1

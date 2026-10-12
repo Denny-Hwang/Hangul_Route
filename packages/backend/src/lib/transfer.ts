@@ -491,18 +491,25 @@ export interface ExecuteOutcome {
 /**
  * Accounts that held `learner.transfer` on the source and can still read the
  * learner's snapshot through another space (a family): counts only, for the
- * `old_space_still_has_access` audit event (§4.6, §4.10).
+ * `old_space_still_has_access` audit event (§4.6, §4.10). Set-based: `can()`
+ * looks only at memberships in a target space and its parent, so the members
+ * of the source, its school and the learner's own spaces (with their parents)
+ * are all it needs, one read per space, however many teachers the school has.
  */
 async function oldSpaceAccessCount(db: Db, sourceSpaceId: string, learnerId: string): Promise<number> {
   const source = await db.getSpace(sourceSpaceId);
   if (!source) return 0;
   const ctx = await spaceContext(db, source);
-  const members = [...(await db.membersOf(source.id)), ...(ctx.parent ? await db.membersOf(ctx.parent.id) : [])];
-  const accountIds = new Set([source.ownerAccountId, ...members.filter((m) => m.memberKind === 'account').map((m) => m.memberId)]);
   const contexts = await learnerContexts(db, learnerId);
+  const sourceIds = [ctx.space.id, ...(ctx.parent ? [ctx.parent.id] : [])];
+  const spaceIds = new Set([...sourceIds, ...contexts.flatMap((c) => [c.space.id, ...(c.parent ? [c.parent.id] : [])])]);
+  const rows = (await Promise.all([...spaceIds].map((id) => db.membersOf(id)))).flat().filter((m) => m.memberKind === 'account');
+  const byAccount = new Map<string, typeof rows>();
+  for (const m of rows) byAccount.set(m.memberId, [...(byAccount.get(m.memberId) ?? []), m]);
+  const candidates = new Set([source.ownerAccountId, ...rows.filter((m) => sourceIds.includes(m.spaceId)).map((m) => m.memberId)]);
   let count = 0;
-  for (const accountId of accountIds) {
-    const actor: AccountActor = { kind: 'account', accountId, memberships: await db.membershipsOf('account', accountId) };
+  for (const accountId of candidates) {
+    const actor: AccountActor = { kind: 'account', accountId, memberships: byAccount.get(accountId) ?? [] };
     if (can(actor, 'learner.transfer', { kind: 'space', ctx }) && can(actor, 'snapshot.read', { kind: 'learner', learnerId, spaces: contexts })) count += 1;
   }
   return count;
@@ -609,18 +616,18 @@ export async function settle(db: Db, request: StoredTransfer, now: Date, env: Tr
   if (!row || !isOpenTransfer(row)) return unchanged(row);
 
   if (at >= row.expiresAt) {
-    await db.expireTransfer(id, now);
+    await db.expireTransfer(id, now, { ...systemEvent(id, now), event: 'expired', detail: null });
     return unchanged(await db.getTransfer(id));
   }
 
   const spaces = new Map((await db.getSpaces([row.sourceSpaceId, row.destSpaceId])).map((s) => [s.id, s]));
   const dest = spaces.get(row.destSpaceId);
   if (!dest || dest.archivedAt) {
-    await db.cancelTransfer(id, 'destination_archived', 'system', now);
+    await db.cancelTransfer(id, 'destination_archived', 'system', now, { ...systemEvent(id, now), event: 'cancelled', detail: { reason: 'destination_archived' } });
     return unchanged(await db.getTransfer(id));
   }
   if (!(await db.membership(row.sourceSpaceId, 'learner', row.learnerId))) {
-    await db.cancelTransfer(id, 'learner_left_source', 'system', now);
+    await db.cancelTransfer(id, 'learner_left_source', 'system', now, { ...systemEvent(id, now), event: 'cancelled', detail: { reason: 'learner_left_source' } });
     return unchanged(await db.getTransfer(id));
   }
   if (spaces.get(row.sourceSpaceId)?.archivedAt && row.source.state === 'pending') {

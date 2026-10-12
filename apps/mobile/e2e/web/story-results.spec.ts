@@ -182,8 +182,12 @@ test.describe('story Results (fixture bundle)', () => {
     await onboard(page);
     await playQuest(page);
     await page.getByTestId('story-results-episode').click();
-    // The story's episode page (the shelf episode), with this quest's stars on it.
-    await expect(page.getByRole('heading', { name: 'Quests' })).toBeVisible();
+    // The story variant of the episode page (F-STORY-004 §3.6): the finished tale row with its two buttons.
+    await expect(page.getByTestId('story-episode')).toBeVisible();
+    await expect(page.getByTestId('story-episode-title')).toHaveText('Hangul Day');
+    await expect(page.getByTestId(`story-episode-state-${STORY}`)).toHaveText('Finished');
+    await expect(page.getByTestId(`story-episode-play-again-${STORY}`)).toBeVisible();
+    await expect(page.getByTestId(`story-episode-read-again-${STORY}`)).toBeVisible();
     await expect(page.getByTestId('story-results-extras')).toBeHidden();
     await page.getByLabel('Go back').first().click();
     await expect(page.getByTestId('story-results-extras')).toBeVisible();
