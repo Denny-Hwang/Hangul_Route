@@ -230,6 +230,11 @@ describe('the Route tab (LR-4)', () => {
     expect(tabs).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/);
   });
 
+  it('the tab labels use the type tokens only (caption, semibold)', () => {
+    expect(tabs).toContain('fontWeight: typography.weight.semibold');
+    expect(tabs).not.toMatch(/fontWeight: '\d+'/);
+  });
+
   it('only the four-tab bar caps its native label at 1.3 x caption and shrinks to fit; the three-tab bar keeps its plain labels', () => {
     expect(tabs).toContain('{...FOUR_TAB_LABEL_FIT}');
     expect(tabs).toMatch(/fourTabs \? \{ tabBarLabel: fittedLabel\(/);
@@ -248,6 +253,21 @@ describe('the Route tab (LR-4)', () => {
     expect(screen).toMatch(/if \(fx\.sendViewed\)/);
     expect(screen).toMatch(/if \(fx\.writeSeen\)/);
     expect(screen).toMatch(/design\/screens\/learning-route\//);
+  });
+
+  it('the tab stays mounted, so each focus is a fresh open: read chained on the write, view gated, hero focus and fill per focus', () => {
+    // The read scheduling and the view gate are the pure seenReadAfter / seenForView (focus.ts, unit-tested).
+    expect(screen).toContain('seenReadAfter(pendingWrite.current, () => readSeen(STORAGE, profileId), () => live)');
+    expect(screen).toContain('pendingWrite.current = writeSeen(');
+    expect(screen).toContain('seenForView({ focusKey, seenFor, focused, seen: seenRead })');
+    expect(screen).toMatch(/return \(\) => \{\s*setFocused\(false\);/);
+    // Screen-reader focus lands on the hero sentence on every focus, not only on mount (F-ROUTE-001 section 3.14).
+    expect(screen).toContain('focusToken={focusKey}');
+    const hero = read(join(SCREEN_DIR, 'HeroCard.tsx'));
+    expect(hero).toMatch(/focusForScreenReader\(sentenceRef\.current\);\s*\}, \[focusToken\]\);/);
+    // The one-time fill restarts from faded whenever it turns on, so it plays on a later focus too.
+    const trail = read(join(SCREEN_DIR, 'TrailRow.tsx'));
+    expect(trail).toMatch(/if \(!animate\) return;\s*opacity\.setValue\(FRESH_FROM\);/);
   });
 
   it('the root-stack screen is grown-up only: a learner access moves to the tab instead of opening a second copy', () => {

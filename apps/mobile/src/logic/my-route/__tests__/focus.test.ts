@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { focusEffects, type FocusState } from '../focus';
+import { focusEffects, seenForView, seenReadAfter, type FocusState } from '../focus';
+import type { SeenRecord } from '../types';
 
 /**
  * The Route tab's per-focus effects (AMENDMENTS-ROUTE-LEARNING-ROUTE sections
@@ -76,5 +77,87 @@ describe('focusEffects: the read-only grown-up screen', () => {
     for (const focusKey of [1, 2, 3]) {
       expect(focusEffects({ ...base, readOnly: true, focusKey, seenFor: focusKey })).toEqual({ sendViewed: false, writeSeen: false });
     }
+  });
+});
+
+/** A promise the test resolves or rejects by hand. */
+function deferred<T>(): { promise: Promise<T>; resolve: (v: T) => void; reject: (e: unknown) => void } {
+  let resolve!: (v: T) => void;
+  let reject!: (e: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}
+
+const flush = (): Promise<void> => new Promise((r) => setTimeout(r, 0));
+const record = (at: string): SeenRecord => ({ totals: {}, doneKeys: [], at });
+
+describe('seenReadAfter: each focus reads the record only after the previous focus wrote it', () => {
+  it('waits for the pending write before it reads, then returns the record', async () => {
+    const write = deferred<unknown>();
+    const reads: string[] = [];
+    const read = async (): Promise<SeenRecord | undefined> => {
+      reads.push('read');
+      return record('written-by-focus-1');
+    };
+    const result = seenReadAfter(write.promise, read, () => true);
+    await flush();
+    expect(reads).toEqual([]);
+    write.resolve(true);
+    await expect(result).resolves.toEqual({ record: record('written-by-focus-1') });
+    expect(reads).toEqual(['read']);
+  });
+
+  it('a read superseded by a newer focus resolves to null, so the screen ignores it', async () => {
+    const write = deferred<unknown>();
+    let live = true;
+    const result = seenReadAfter(write.promise, async () => record('stale'), () => live);
+    // Focus 2 starts before focus 1's write lands: focus 1's read is cancelled.
+    live = false;
+    write.resolve(true);
+    await expect(result).resolves.toBeNull();
+  });
+
+  it('a superseded focus does not read at all', async () => {
+    let reads = 0;
+    const result = seenReadAfter(Promise.resolve(), async () => {
+      reads += 1;
+      return undefined;
+    }, () => false);
+    await expect(result).resolves.toBeNull();
+    expect(reads).toBe(0);
+  });
+
+  it('a failed write still lets the next focus read', async () => {
+    const write = deferred<unknown>();
+    const result = seenReadAfter(write.promise, async () => record('kept'), () => true);
+    write.reject(new Error('storage full'));
+    await expect(result).resolves.toEqual({ record: record('kept') });
+  });
+
+  it('an empty record (first open on this device) is a result, not a cancel', async () => {
+    await expect(seenReadAfter(Promise.resolve(), async () => undefined, () => true)).resolves.toEqual({ record: undefined });
+  });
+});
+
+describe('seenForView: the view compares against this open only', () => {
+  const seen = record('focus-1');
+
+  it('uses the record once this focus has read it, while the tab is in front', () => {
+    expect(seenForView({ focusKey: 2, seenFor: 2, focused: true, seen })).toBe(seen);
+  });
+
+  it('shows nothing new between a focus and its read (no stale "new" from the previous open)', () => {
+    expect(seenForView({ focusKey: 2, seenFor: 1, focused: true, seen })).toBeUndefined();
+  });
+
+  it('shows nothing new while the tab is behind another screen, so the one-time fill never plays unseen', () => {
+    expect(seenForView({ focusKey: 2, seenFor: 2, focused: false, seen })).toBeUndefined();
+  });
+
+  it('shows nothing before the first focus', () => {
+    expect(seenForView({ focusKey: 0, seenFor: 0, focused: false, seen })).toBeUndefined();
   });
 });
