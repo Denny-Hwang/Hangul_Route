@@ -182,3 +182,15 @@ Three names in the new `shell.` namespace (the learner app's entries into the gr
 | 1 | `shell.persona_chosen` | F-APP-001 §3.18 | `{ persona: 'learner' \| 'parent' \| 'teacher', from: 'welcome' \| 'welcome-continue' }` (a Welcome persona button, Continue as, or Let's start) | A-1 | A-7 |
 | 2 | `shell.grown_up_handoff` | F-APP-001 §3.18 | `{ via: 'profile' \| 'dashboard' \| 'plan' \| 'lock', target: 'router' \| 'billing' \| 'next' }` (the learner app hands the tab to the grown-up area after the gate) | A-1 | A-6 (lock), A-7 (profile, dashboard, plan) |
 | 3 | `shell.path_bounced` | F-APP-001 §3.18 | `{ prefix: 'signin' \| 'start' \| 'teach' \| 'parent' \| 'account' }` (the learner bundle booted on a grown-up path with no file and sent the tab to the persona entry) | A-1 | A-6 |
+
+## P. All lessons names (F-BROWSE-001; added by its BR-1 PR)
+
+Five names in the new `browse.` namespace (a paying parent's or teacher's All lessons root, `/browse`). None collides with sections A to O or with `TELEMETRY_EVENT_NAMES` on `main` at `8dce58d3` (no existing name starts with `browse.`). Worker first: BR-1 adds all five to `TELEMETRY_EVENT_NAMES`, its exact-list test and `BROWSE_EVENT_NAMES` (`schemas/browse.ts`, the list the browse telemetry fence allows); BR-2 adds the server-side payload allow-list for `browse.*` in `routes/telemetry.ts` (drops any `profileId` and every payload key not listed here); both deploy before BR-6, the first sender. The browse root has no profile: **every** `browse.*` event is sent **without `profileId`**, on its own queue (`browse:telemetry-queue`). `itemId` is a content id, never a person id; no account id, space, learner id or name. The console has no telemetry client and sends none.
+
+| # | Name | Owning spec | Payload | Added to the list by | Emitted by |
+|---|---|---|---|---|---|
+| 1 | `browse.opened` | F-BROWSE-001 §9 | `{ source: BrowseSource, scope: 'full' \| 'sampler' \| 'none', passFrom: 'account' \| 'kept' \| 'gate' \| 'none', offlineReady: boolean }` (the root resolved its pass) | BR-1 | BR-6 |
+| 2 | `browse.item_viewed` | F-BROWSE-001 §9 | `{ kind: 'episode' \| 'quest' \| 'story' \| 'vocab-topic' \| 'card', itemId, access: 'open' \| 'closed' }` (an episode outline, item page or card opens) | BR-1 | BR-7 |
+| 3 | `browse.preview_started` | F-BROWSE-001 §9 | `{ kind: 'quest' \| 'story' \| 'vocab-topic', itemId }` (Preview this lesson) | BR-1 | BR-8 |
+| 4 | `browse.preview_ended` | F-BROWSE-001 §9 | `{ kind, itemId, reachedEnd: boolean, minutes }` (`minutes` rounded down, capped at 60; the preview end screen, or leaving early) | BR-1 | BR-8 |
+| 5 | `browse.plans_tapped` | F-BROWSE-001 §9 | `{ kind: 'quest' \| 'story' \| 'vocab-topic' }` (See plans on a closed item; only with `flags.contentGatingEnabled` on) | BR-1 | BR-7 |
