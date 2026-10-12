@@ -126,7 +126,7 @@ describe('latchQuests, the quest latch writer (F-REPORT-001 section 3.3.1, M5)',
     expect(latchQuests(after)).toBe(after);
   });
 
-  it('never moves an entry: a replay that moved completedAt keeps the first finish', () => {
+  it('never moves an entry later: a replay that moved completedAt keeps the first finish', () => {
     const before = snapshot({ quests: [done('quest:a', '2026-10-09T08:00:00.000Z')], questDoneAt: { 'quest:a': '2026-10-01T09:05:00.000Z' } });
     expect(latchQuests(before)).toBe(before);
   });
@@ -166,9 +166,36 @@ describe('latchQuests, the quest latch writer (F-REPORT-001 section 3.3.1, M5)',
     expect(ProgressSnapshotSchema.safeParse(after).success).toBe(true);
   });
 
-  it('keeps the first record of a quest listed twice', () => {
-    const before = snapshot({ quests: [done('quest:a', '2026-10-01T09:05:00.000Z'), done('quest:a', '2026-10-05T09:05:00.000Z')] });
+  it('a quest listed twice keeps the earlier finish, whatever the order', () => {
+    const early = done('quest:a', '2026-10-01T09:05:00.000Z');
+    const late = done('quest:a', '2026-10-05T09:05:00.000Z');
+    expect(latchQuests(snapshot({ quests: [early, late] })).questDoneAt).toEqual({ 'quest:a': '2026-10-01T09:05:00.000Z' });
+    expect(latchQuests(snapshot({ quests: [late, early] })).questDoneAt).toEqual({ 'quest:a': '2026-10-01T09:05:00.000Z' });
+  });
+
+  it('is never later than the quest\'s own finish: a merge that brought an earlier completedAt pulls the entry back', () => {
+    // Device B backfilled a replay time; the sync merge then kept device A's earlier finish as completedAt.
+    const before = snapshot({ quests: [done('quest:a', '2026-10-01T09:05:00.000Z')], questDoneAt: { 'quest:a': '2026-10-09T08:00:00.000Z' } });
     expect(latchQuests(before).questDoneAt).toEqual({ 'quest:a': '2026-10-01T09:05:00.000Z' });
+    // instants, not strings: 18:00+09:00 is 09:00Z, earlier than 09:05Z
+    const offset = snapshot({ quests: [done('quest:a', '2026-10-01T18:00:00.000+09:00')], questDoneAt: { 'quest:a': '2026-10-01T09:05:00.000Z' } });
+    expect(latchQuests(offset).questDoneAt).toEqual({ 'quest:a': '2026-10-01T18:00:00.000+09:00' });
+    // an entry that does not name an instant gives way to a real finish
+    const junk = snapshot({ quests: [done('quest:a', '2026-10-01T09:05:00.000Z')], questDoneAt: { 'quest:a': 'soon' } });
+    expect(latchQuests(junk).questDoneAt).toEqual({ 'quest:a': '2026-10-01T09:05:00.000Z' });
+  });
+
+  it('drops a held entry the Worker would refuse, so one bad entry never blocks every later sync', () => {
+    const before = {
+      ...snapshot({ quests: [done('quest:b', '2026-10-03T10:00:00.000Z')] }),
+      questDoneAt: { 'quest:a': '2026-10-01T09:05:00.000Z', 'quest:n': 123, '': '2026-10-01T09:05:00.000Z', [`q${'x'.repeat(64)}`]: '2026-10-01T09:05:00.000Z', 'quest:long': 'x'.repeat(41), 'quest:empty': '' },
+    } as unknown as ProgressSnapshot;
+    const after = latchQuests(before);
+    expect(after.questDoneAt).toEqual({ 'quest:a': '2026-10-01T09:05:00.000Z', 'quest:b': '2026-10-03T10:00:00.000Z' });
+    expect(ProgressSnapshotSchema.safeParse(after).success).toBe(true);
+    // a held entry within the bounds that is not a time is kept: the Worker accepts it and the merge ranks it last
+    const odd = snapshot({ questDoneAt: { 'quest:x': 'soon' } });
+    expect(latchQuests(odd)).toBe(odd);
   });
 
   it('a key that names an Object.prototype member is still a quest to latch', () => {

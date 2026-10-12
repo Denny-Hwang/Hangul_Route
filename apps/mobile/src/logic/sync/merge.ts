@@ -117,14 +117,20 @@ export function mergeStageDoneAt(
   l: Readonly<Record<string, string>> | undefined,
   s: Readonly<Record<string, string>> | undefined,
 ): Record<string, string> | undefined {
+  const out = unionLatch(l, s);
+  return out.size === 0 ? undefined : Object.fromEntries([...out.entries()].sort(([a], [b]) => a.localeCompare(b)));
+}
+
+/** The key union of two latches (stage or quest), the earliest time per key (`earlierLatchTime`). */
+function unionLatch(l: Readonly<Record<string, string>> | undefined, s: Readonly<Record<string, string>> | undefined): Map<string, string> {
   const out = new Map<string, string>();
   for (const side of [l ?? {}, s ?? {}]) {
-    for (const [stage, at] of Object.entries(side)) {
-      const prev = out.get(stage);
-      out.set(stage, prev === undefined ? at : earlierLatchTime(prev, at));
+    for (const [key, at] of Object.entries(side)) {
+      const prev = out.get(key);
+      out.set(key, prev === undefined ? at : earlierLatchTime(prev, at));
     }
   }
-  return out.size === 0 ? undefined : Object.fromEntries([...out.entries()].sort(([a], [b]) => a.localeCompare(b)));
+  return out;
 }
 
 /**
@@ -140,14 +146,7 @@ export function mergeQuestDoneAt(
   s: Readonly<Record<string, string>> | undefined,
 ): Record<string, string> | undefined {
   if (l === undefined && s === undefined) return undefined;
-  const out = new Map<string, string>();
-  for (const side of [l ?? {}, s ?? {}]) {
-    for (const [questId, at] of Object.entries(side)) {
-      const prev = out.get(questId);
-      out.set(questId, prev === undefined ? at : earlierLatchTime(prev, at));
-    }
-  }
-  return Object.fromEntries([...out.entries()].sort(([a], [b]) => codePointCompare(a, b)));
+  return Object.fromEntries([...unionLatch(l, s).entries()].sort(([a], [b]) => codePointCompare(a, b)));
 }
 
 /**
@@ -174,7 +173,8 @@ const codePointCompare = (a: string, b: string): number => (a < b ? -1 : a > b ?
  * reads its own snapshot without parsing, so a snapshot saved before an
  * additive key existed lacks it at runtime. Only `recordPlacement` applies
  * this: `hydrate` and `replaceSnapshot` keep a stored snapshot's shape (the P-2
- * rule, pinned by a progress-store test), and every reader treats a missing
+ * rule, pinned by a progress-store test) except for the quest latch key, which
+ * they always add (`latchQuests`, F-REPORT-001 section 3.3.1), and every reader treats a missing
  * `placements` as `[]` and a missing `selfRoute` (F-PLAN-002 section 3.5) as
  * null. A server copy always carries both keys (the Worker stores the
  * zod-parsed payload), so `mergeSnapshots` writes them on the first sync.

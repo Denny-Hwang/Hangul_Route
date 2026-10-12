@@ -837,6 +837,20 @@ describe('quest latch writer (F-REPORT-001 section 3.3.1, RP-3a, M5)', () => {
     expect(notified).toEqual(['p1']);
   });
 
+  it('a sync that brings an earlier finish of a backfilled quest pulls the entry back and announces it', async () => {
+    // This device replayed quest:a on an older build, so the backfill dates it by the replay.
+    const replayed = '2026-10-09T08:00:00.000Z';
+    mem.set('progress:p1', { ...savedBeforeLatch(), quests: [{ ...savedSnapshot().quests[0]!, completedAt: replayed }] });
+    await useProgressStore.getState().hydrate('p1');
+    expect(stored()?.questDoneAt).toEqual({ 'quest:a': replayed });
+    notified.length = 0;
+    // The merge with the server copy keeps another device's earlier finish as completedAt.
+    const merged = { ...(useProgressStore.getState().byProfile['p1'] as ProgressSnapshot), quests: savedSnapshot().quests };
+    useProgressStore.getState().replaceSnapshot('p1', merged);
+    expect(stored()?.questDoneAt).toEqual({ 'quest:a': SAVED_DONE });
+    expect(notified).toEqual(['p1']);
+  });
+
   it('replaceSnapshot keeps an incoming latch and does not announce when nothing is added', () => {
     const latch = { 'quest:a': '2026-09-30T08:00:00.000Z', 'quest:elsewhere': '2026-09-29T08:00:00.000Z' };
     useProgressStore.getState().replaceSnapshot('p1', { ...savedBeforeLatch(), questDoneAt: latch });
