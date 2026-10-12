@@ -20,7 +20,8 @@ export const ROUTES = {
    * One learner's Learning Route stage list (Learning Route amendment section 6.1, LR-7): a family
    * under `/parent/space/route`, a class (or `kind` omitted, which renders every kind; F-APP-001
    * section 3.8) under `/teach/space/route`. Ids only, as query parameters (a static export): a
-   * learner's name never reaches the URL.
+   * learner's name never reaches the URL. A caller passes `'family'` once the `/parent/space/route`
+   * twin page exists (F-APP-001 A-5b or LR-8, whichever lands second); until then it omits the kind.
    */
   learnerRoute: (spaceId: string, learnerId: string, kind?: SpaceKind) =>
     `/${kind === 'family' ? 'parent' : 'teach'}/space/route?id=${encodeURIComponent(spaceId)}&learner=${encodeURIComponent(learnerId)}`,

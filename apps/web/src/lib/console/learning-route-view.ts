@@ -18,7 +18,7 @@ import { DEFAULT_LOCALE, formatDate, getMessages, type UiLocale } from '@hangul-
 import type { PlanView, RosterLearner, RosterSummary } from './api';
 import { isLive } from './curriculum';
 import { readJourney, type JourneyEntry, type JourneyState } from './journey-strip';
-import { placementBandLabel } from './placement';
+import { startingSpotLine } from './placement';
 import { planReaches } from './plans';
 import { ROUTES } from './routing';
 
@@ -228,15 +228,13 @@ function deviceGoalOf(summary: RosterSummary): { stage: StageKey; from: GoalFrom
 }
 
 /**
- * The stage the level check started the learner at, when the roster row holds a check the
- * starting-spot line can show (`startingSpotLine`, `placement.ts`): a level this build can word
- * (the check measures Stage 1 to Stage 3; the roster is cast, not parsed) and a readable date.
- * So the tag and the roster card's starting-spot line never disagree.
+ * The stage the level check started the learner at, exactly when the roster card shows its
+ * starting-spot line (`startingSpotLine`, `placement.ts`: a level this build can word and a
+ * readable date; the roster is cast, not parsed). So the tag and that line never disagree.
  */
-function startStageOf(summary: RosterSummary): number | null {
+function startStageOf(summary: RosterSummary, locale: UiLocale): number | null {
   const placement = summary.placement;
-  if (!placement || placementBandLabel(placement.level) === null || Number.isNaN(new Date(placement.takenAt).getTime())) return null;
-  return placementStageNumber(placement.level.stage);
+  return placement !== undefined && startingSpotLine(summary, locale) !== null ? placementStageNumber(placement.level.stage) : null;
 }
 
 const isEmptyLater = (row: LearningRouteStageRow): boolean => row.state === 'later' && row.line === null && row.tags.length === 0;
@@ -300,11 +298,11 @@ function buildCard(
   const goalParts = (stage: StageKey) => ({ canDoLead: lr.canDoLead(name), canDo: canDoOf[orderOf(stage) as keyof typeof canDoOf] });
 
   const now = here === null ? null : lr.now(name, here.order, stageTitle(here.stage));
+  // One pick over this space's own plans for the learner: a plan goal when one of them is live (cases 1 and 2),
+  // else the next open stage (case 3), or null at the end of the open road.
+  const picked = pickGoal({ sources: goalSourcesOf(input.plans, kind, learner.id), catalog, stages, availability, today });
   /** This space's own leading live curriculum plan for the learner; null when none is live. */
-  const spacePlan: RouteGoal | null = ((): RouteGoal | null => {
-    const goal = pickGoal({ sources: goalSourcesOf(input.plans, kind, learner.id), catalog, stages, availability, today });
-    return goal !== null && goal.from !== 'default' ? goal : null;
-  })();
+  const spacePlan: RouteGoal | null = picked !== null && picked.from !== 'default' ? picked : null;
 
   // Case 1: the family viewer holds the goal the learner's device shows.
   const device = kind === 'family' ? deviceGoalOf(summary) : null;
@@ -321,8 +319,10 @@ function buildCard(
       spacePlan !== null && !familyLeads
         ? { stage: spacePlan.stage, line: lr.planReaches.family(orderOf(spacePlan.stage), stageTitle(spacePlan.stage)), planEnds: ends(spacePlan.endsOn) }
         : null;
-    // The end of the source that leads, when this page can see it: the learner's own plan, or this family's.
-    const planEnds = from === 'self' ? ends(summary.selfRoute?.endsOn) : familyLeads ? ends(spacePlan.endsOn) : null;
+    // The end of the source that leads, when this page can see it: the learner's own plan (never a past end from a
+    // summary synced before it ended: it would read as late), or this family's live plan.
+    const ownEnd = summary.selfRoute?.endsOn;
+    const planEnds = from === 'self' ? (ownEnd !== undefined && ownEnd >= today ? ends(ownEnd) : null) : familyLeads ? ends(spacePlan.endsOn) : null;
     return {
       card: {
         now,
@@ -364,8 +364,8 @@ function buildCard(
     };
   }
 
-  // Case 3: the next open stage of the road, or its end.
-  const open = pickGoal({ sources: [], catalog, stages, availability, today });
+  // Case 3: the next open stage of the road (the default rule, section 4.1 rule 4), or its end.
+  const open = picked;
   if (open === null) return { card: { now, goal: null, endOfRoad: lr.endOfRoad(name) }, goalTag: null };
   return {
     card: {
@@ -414,7 +414,7 @@ export function learningRouteView(input: LearningRouteInput): LearningRouteView 
 
   const { entries, here } = journey;
   const { card, goalTag } = buildCard(kind, learner, summary, entries, here, input, locale, m);
-  const startStage = startStageOf(summary);
+  const startStage = startStageOf(summary, locale);
   const canDoOf = m.learner.myRoute.stage.canDo;
 
   const rows = entries.map((entry): LearningRouteStageRow => {

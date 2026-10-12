@@ -327,6 +327,9 @@ describe('case 1: a family viewer with summary.routeGoal, the goal the learner d
     const selfRoute = { done: 3, total: 9, notReady: 0, weeks: 12, endsOn: '2026-12-20' };
     expect(view({ stage: 'stage1', from: 'self' }, { selfRoute }).card.goal?.planEnds).toBe('Plan ends Dec 20');
     expect(view({ stage: 'stage1', from: 'self' }, { selfRoute: { ...selfRoute, endsOn: '20 Dec' } }).card.goal?.planEnds).toBeNull();
+    // A summary from before the own plan ended: a past end is never shown (it would read as late).
+    expect(view({ stage: 'stage1', from: 'self' }, { selfRoute: { ...selfRoute, endsOn: '2026-10-10' } }).card.goal?.planEnds).toBeNull();
+    expect(view({ stage: 'stage1', from: 'self' }, { selfRoute: { ...selfRoute, endsOn: TODAY } }).card.goal?.planEnds).toBe('Plan ends Oct 11');
     expect(view({ stage: 'stage1', from: 'self' }).card.goal?.planEnds).toBeNull();
     for (const from of ['class', 'school', 'default']) expect(view({ stage: 'stage2', from }, { selfRoute }, { plans: [familyPlan] }).card.goal?.planEnds).toBeNull();
   });
