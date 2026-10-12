@@ -1,10 +1,11 @@
-import { LearnerRegisterSchema, SnapshotPutSchema, TIER_GRACE_MS } from '@hangul-route/content-schema';
+import { LearnerRegisterSchema, NoteStatePutSchema, SnapshotPutSchema, TIER_GRACE_MS } from '@hangul-route/content-schema';
 import { Hono } from 'hono';
-import { dbFor } from '../db';
+import { dbFor, NOTE_INBOX_LIMIT } from '../db';
 import { fail, ok } from '../envelope';
 import { authorizeDevice, hashSecret, newDeviceSecret } from '../lib/device-auth';
 import { preserveAdditiveFields } from '../lib/additive-fields';
 import { tierForLearner } from '../lib/entitlement';
+import { inboxNoteView, notePrefsView } from '../lib/note-views';
 import { id, type Learner, type SnapshotRecord } from '../store';
 import { inboxPlansFor } from './plans';
 import { learnerMembershipRows } from './spaces';
@@ -120,6 +121,8 @@ syncRoutes.get('/learners/:id/inbox', async (c) => {
   // F-PLAN-002 section 3.5: a curriculum reaches only an app that derives with a horizon (`?cap=curriculum`).
   const plans = (await inboxPlansFor(db, learnerId)).filter((p) => p.meta === null || acceptsCurriculum(c.req.queries('cap')));
   const memberships = await learnerMembershipRows(db, learnerId);
+  // Notes from grown-ups (F-FEEDBACK-001 section 6.8): delivery rules 1-7 and the prefs row in one query.
+  const notes = await db.notesForLearner(learnerId, classScoped ? 'class' : 'full', now, NOTE_INBOX_LIMIT);
   return ok(c, {
     rev: (await db.getSnapshot(learnerId))?.rev ?? 0,
     plans: classScoped ? plans.filter((p) => p.spaceKind !== 'family') : plans,
@@ -128,5 +131,31 @@ syncRoutes.get('/learners/:id/inbox', async (c) => {
     tierSource: source,
     tierValidUntil: tier === 'premium' ? new Date(now.getTime() + TIER_GRACE_MS).toISOString() : null,
     serverTime: now.toISOString(),
+    notes: notes.notes.map(inboxNoteView),
+    notePrefs: notePrefsView(notes.prefs),
   });
+});
+
+/**
+ * The learner's read state and reaction on one note (F-FEEDBACK-001 section 7.6). Any device of the learner,
+ * a class-scoped one included, but only for a note this device is delivered (the inbox rules): anything else,
+ * hidden, withdrawn, another learner's or a family note on a class device, is 404. Idempotent: `readAt` is set
+ * once, the last reaction wins.
+ */
+syncRoutes.put('/learners/:id/notes/:noteId/state', async (c) => {
+  const learnerId = c.req.param('id');
+  const noteId = c.req.param('noteId');
+  const auth = await authorizeDevice(c, learnerId, { allowClassScope: true });
+  if (typeof auth !== 'string') return auth;
+  const parsed = NoteStatePutSchema.safeParse(await c.req.json().catch(() => null));
+  if (!parsed.success) return fail(c, 'bad_request', 'Invalid note state body', 422, { issues: parsed.error.issues });
+  const db = dbFor(c);
+  const now = new Date();
+  const scope = (await db.getDevice(learnerId, auth))?.scope === 'class' ? 'class' : 'full';
+  const delivered = (await db.notesForLearner(learnerId, scope, now, NOTE_INBOX_LIMIT)).notes.some((n) => n.id === noteId);
+  if (!delivered) return fail(c, 'not_found', 'Note not found', 404);
+  if (parsed.data.read) await db.setNoteRead(noteId, now);
+  if (parsed.data.reaction) await db.setNoteReaction(noteId, parsed.data.reaction, now);
+  const note = await db.getNote(noteId);
+  return ok(c, { readAt: note?.readAt ?? null, reaction: note?.reaction ?? null });
 });
