@@ -19,6 +19,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
+import { flags } from '../../config/flags';
+import { placementEntriesOn } from '../../logic/placement/entry';
 import { effectiveTier } from '../../store/tier-store';
 import { isParentSessionValid } from '../../logic/profiles/session';
 import type { RootStackParamList } from '../../navigation/types';
@@ -181,6 +183,27 @@ export function ProfileScreen(): React.ReactElement {
           </View>
         </View>
       </Card>
+
+      {active && placementEntriesOn(flags.placementEnabled) ? (
+        <>
+          {/* F-PLC-001 section 3.10: not behind the PIN (a learner may do this alone; the result is only a start). */}
+          <Spacer size="lg" />
+          <Card padding="md">
+            <Pressable
+              testID="profile-placement-row"
+              onPress={() => navigation.navigate('Placement', { source: 'profile' })}
+              accessibilityRole="button"
+              accessibilityLabel={m.learner.placement.profileRow}
+              style={{ minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}
+            >
+              <Body weight="semibold" style={{ flex: 1 }}>
+                {m.learner.placement.profileRow}
+              </Body>
+              <Icon name="arrow-right" size={24} color={colors.text.muted} />
+            </Pressable>
+          </Card>
+        </>
+      ) : null}
 
       <Spacer size="lg" />
       <Card padding="md">
