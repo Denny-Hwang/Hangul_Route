@@ -51,33 +51,37 @@ export function keptPassActive(kept: BrowseKeptPass, now: number): boolean {
 export type PassFrom = 'account' | 'gate' | 'kept';
 
 export type ResolvedPass =
-  | { status: 'active'; scope: BrowseKeptPass['scope']; from: PassFrom; fallback: boolean; uiLocale?: UiLocale; removeKept: boolean }
-  | { status: 'none'; reason: 'none' | 'expired'; expiredSource: BrowsePass['source'] | null; removeKept: boolean };
+  | { status: 'active'; scope: BrowseKeptPass['scope']; from: PassFrom; fallback: boolean; uiLocale?: UiLocale; removeSession: boolean; removeKept: boolean }
+  | { status: 'none'; reason: 'none' | 'expired'; expiredSource: BrowsePass['source'] | null; removeSession: boolean; removeKept: boolean };
 
 /**
- * The pass Browse runs with. A session pass decides when there is one (the
- * kept pass is read only without it); an expired one keeps its source for the
- * Access screen. A kept pass counts as an account pass from `kept`; an expired
- * kept pass is removed on read.
+ * The pass Browse runs with. An active session pass decides (the kept pass is
+ * not read). Without one, an active kept pass counts as an account pass from
+ * `kept`, and an expired session pass it replaces is removed: a tab restored
+ * after its pass ran out gets in exactly as a new tab would (OD-4, kept 7
+ * days, also offline). Otherwise an expired session pass keeps its source for
+ * the Access screen. An expired kept pass is removed on read.
  */
 export function resolvePass(i: { session: BrowsePass | null; kept: BrowseKeptPass | null; now: number }): ResolvedPass {
   const { session, kept, now } = i;
-  if (session) {
-    if (!passActive(session, now)) return { status: 'none', reason: 'expired', expiredSource: session.source, removeKept: false };
+  if (session && passActive(session, now)) {
     return {
       status: 'active',
       scope: session.scope,
       from: session.source,
       fallback: session.fallback === true,
       ...(session.uiLocale ? { uiLocale: session.uiLocale } : {}),
+      removeSession: false,
       removeKept: false,
     };
   }
-  if (kept) {
-    if (keptPassActive(kept, now)) return { status: 'active', scope: kept.scope, from: 'kept', fallback: false, removeKept: false };
-    return { status: 'none', reason: 'expired', expiredSource: 'account', removeKept: true };
+  if (kept && keptPassActive(kept, now)) {
+    return { status: 'active', scope: kept.scope, from: 'kept', fallback: false, removeSession: session !== null, removeKept: false };
   }
-  return { status: 'none', reason: 'none', expiredSource: null, removeKept: false };
+  const removeKept = kept !== null;
+  if (session) return { status: 'none', reason: 'expired', expiredSource: session.source, removeSession: false, removeKept };
+  if (kept) return { status: 'none', reason: 'expired', expiredSource: 'account', removeSession: false, removeKept };
+  return { status: 'none', reason: 'none', expiredSource: null, removeSession: false, removeKept: false };
 }
 
 export type AccessSource = 'account' | 'gate' | 'unknown';

@@ -75,7 +75,7 @@ describe('keep on this device (OD-4)', () => {
 
 describe('resolvePass', () => {
   it('no pass at all: none', () => {
-    expect(resolvePass({ session: null, kept: null, now: T0 })).toEqual({ status: 'none', reason: 'none', expiredSource: null, removeKept: false });
+    expect(resolvePass({ session: null, kept: null, now: T0 })).toEqual({ status: 'none', reason: 'none', expiredSource: null, removeSession: false, removeKept: false });
   });
 
   it('an active session pass wins and the kept pass is not read', () => {
@@ -85,14 +85,34 @@ describe('resolvePass', () => {
       from: 'gate',
       fallback: false,
       uiLocale: 'ko',
+      removeSession: false,
       removeKept: false,
     });
     expect(resolvePass({ session: account({ scope: 'sampler', fallback: true }), kept: null, now: T0 })).toMatchObject({ status: 'active', from: 'account', fallback: true });
+    // even an expired kept pass is left alone while the tab's own pass decides
+    expect(resolvePass({ session: account(), kept: kept({ keptAt: T0 - BROWSE_KEEP_MS }), now: T0 })).toMatchObject({ status: 'active', from: 'account', removeKept: false });
   });
 
-  it('an expired session pass is expired, with its source, even when a kept pass exists', () => {
-    expect(resolvePass({ session: gate(), kept: kept(), now: T0 + 16 * MIN })).toEqual({ status: 'none', reason: 'expired', expiredSource: 'gate', removeKept: false });
+  it('an expired session pass with no kept pass is expired, with its source, and stays for the Access screen', () => {
+    expect(resolvePass({ session: gate(), kept: null, now: T0 + 16 * MIN })).toEqual({ status: 'none', reason: 'expired', expiredSource: 'gate', removeSession: false, removeKept: false });
     expect(resolvePass({ session: account(), kept: null, now: T0 + BROWSE_ACCOUNT_MAX_MS })).toMatchObject({ reason: 'expired', expiredSource: 'account' });
+  });
+
+  it('an expired session pass gives way to an active kept pass, and is removed (OD-4: kept 7 days, also offline)', () => {
+    // a tab restored 13 hours later: a new tab would get in with the kept pass, so this one does too
+    expect(resolvePass({ session: account(), kept: kept({ scope: 'sampler' }), now: T0 + 13 * 60 * MIN })).toEqual({
+      status: 'active',
+      scope: 'sampler',
+      from: 'kept',
+      fallback: false,
+      removeSession: true,
+      removeKept: false,
+    });
+    expect(resolvePass({ session: gate(), kept: kept(), now: T0 + 16 * MIN })).toMatchObject({ status: 'active', from: 'kept', removeSession: true });
+  });
+
+  it('an expired session pass and an expired kept pass: expired with the session source, and the kept pass is removed', () => {
+    expect(resolvePass({ session: gate(), kept: kept(), now: T0 + BROWSE_KEEP_MS })).toEqual({ status: 'none', reason: 'expired', expiredSource: 'gate', removeSession: false, removeKept: true });
   });
 
   it('without a session pass, a kept pass counts as an account pass from kept', () => {
@@ -101,12 +121,13 @@ describe('resolvePass', () => {
       scope: 'sampler',
       from: 'kept',
       fallback: false,
+      removeSession: false,
       removeKept: false,
     });
   });
 
   it('an expired kept pass is removed and reads as an expired account pass', () => {
-    expect(resolvePass({ session: null, kept: kept(), now: T0 + BROWSE_KEEP_MS })).toEqual({ status: 'none', reason: 'expired', expiredSource: 'account', removeKept: true });
+    expect(resolvePass({ session: null, kept: kept(), now: T0 + BROWSE_KEEP_MS })).toEqual({ status: 'none', reason: 'expired', expiredSource: 'account', removeSession: false, removeKept: true });
   });
 });
 

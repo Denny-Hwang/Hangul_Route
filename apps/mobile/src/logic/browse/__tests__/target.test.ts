@@ -12,7 +12,7 @@ import { TALE_ID, fixtureBundle } from './browse-fixture';
  */
 const bundle = fixtureBundle();
 const stage1 = stage1QuestsFrom(bundle.episodes, bundle.quests);
-const active: ResolvedPass = { status: 'active', scope: 'full', from: 'account', fallback: false, removeKept: false };
+const active: ResolvedPass = { status: 'active', scope: 'full', from: 'account', fallback: false, removeSession: false, removeKept: false };
 
 describe('resolveTarget', () => {
   it('no target opens home on its default section', () => {
@@ -84,8 +84,8 @@ describe('resolveEntry', () => {
   });
 
   it('no active pass always lands on the Access screen, whatever the target', () => {
-    const none: ResolvedPass = { status: 'none', reason: 'none', expiredSource: null, removeKept: false };
-    const expired: ResolvedPass = { status: 'none', reason: 'expired', expiredSource: 'gate', removeKept: false };
+    const none: ResolvedPass = { status: 'none', reason: 'none', expiredSource: null, removeSession: false, removeKept: false };
+    const expired: ResolvedPass = { status: 'none', reason: 'expired', expiredSource: 'gate', removeSession: false, removeKept: false };
     expect(resolveEntry({ target: { kind: 'quest', id: 'quest:stage1-letters-q1' }, pass: none, lastPersona: null, bundle })).toEqual({ screen: 'access', reason: 'none', source: 'unknown' });
     expect(resolveEntry({ target: null, pass: none, lastPersona: 'teacher', bundle })).toEqual({ screen: 'access', reason: 'none', source: 'account' });
     expect(resolveEntry({ target: { kind: 'card', id: 'card:hanji' }, pass: expired, lastPersona: 'parent', bundle })).toEqual({ screen: 'access', reason: 'expired', source: 'gate' });
