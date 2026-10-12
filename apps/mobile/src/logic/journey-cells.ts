@@ -99,3 +99,20 @@ export function cellLabel(
     placedOut: marks.placedOut,
   });
 }
+
+/**
+ * The cell's test id. A stories-only cell keeps `journey-cell-stories-<stage>-<theme>` even when the
+ * level check also marks it as the start or placed out, so the cell page's door is always findable;
+ * other cells keep the start id, then the placed-out id (F-PLC-001 section 3.7), and none otherwise.
+ */
+export function cellTestId(
+  kind: CellKind,
+  stage: StageKey,
+  theme: ThemeKey,
+  marks: Pick<JourneyCellMarks, 'isStart' | 'placedOut'>,
+): string | undefined {
+  if (kind === 'stories-only') return `journey-cell-stories-${stage}-${theme}`;
+  if (marks.isStart) return 'journey-cell-start';
+  if (marks.placedOut) return 'journey-cell-placed-out';
+  return undefined;
+}

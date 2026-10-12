@@ -257,6 +257,12 @@ describe('JourneyGrid sources', () => {
     expect(grid).not.toMatch(/\bheight: COUNT_MARK/);
   });
 
+  it('draws its glyphs at a token size and takes the cell id from cellTestId (F-STORY-005 PR 5.5a review)', () => {
+    expect(grid).not.toMatch(/size=\{\d+\}/);
+    expect(grid).toMatch(/const CELL_GLYPH = spacing\./);
+    expect(grid).toContain('testID={cellTestId(model.kind, cell.stage, cell.theme, cell.marks)}');
+  });
+
   it('each stage row is an anchor for scrolling to a stage, measured only when asked', () => {
     expect(grid).toContain('testID={`journey-stage-${row.stage}`}');
     expect(grid).toMatch(/onStageLayout\?: \(stage: StageKey, y: number\) => void/);
