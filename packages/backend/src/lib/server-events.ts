@@ -1,4 +1,5 @@
 import {
+  BILLING_TELEMETRY_PREFIX,
   BrowseScopeSchema,
   BrowseSourceSchema,
   BrowseTargetSchema,
@@ -7,10 +8,12 @@ import {
   NOTE_PRESET_IDS,
   NOTE_REACTION_IDS,
   NOTE_REPORT_REASONS,
+  PlanKeySchema,
   REPORT_TELEMETRY_PAYLOAD,
   REPORT_TELEMETRY_PREFIX,
   SHELL_TELEMETRY_PAYLOADS,
   SHELL_TELEMETRY_PREFIX,
+  StripeModeSchema,
   TransferInitiatorSchema,
   TransferSlotSchema,
   isTelemetryEventName,
@@ -149,6 +152,22 @@ const NOTES_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, Field
   'notes.prefs_changed': { classes: oneOf(NOTES_MODES) },
 };
 
+/**
+ * Billing events (F-BILL-002 section 10) are recorded by the Worker only (a
+ * client sending a `billing.*` name gets 422, routes/telemetry.ts) and carry
+ * codes only: the plan key, the Stripe mode, and per name one flag. Never an
+ * account, space or learner id, an amount, a currency, a promo code or a URL,
+ * and never a profile id. B-5 and B-4 add their names' rows here.
+ */
+const planKey = oneOf(PlanKeySchema.options);
+const stripeMode = oneOf(StripeModeSchema.options);
+
+const BILLING_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, FieldRule>>>> = {
+  'billing.checkout_completed': { planKey, mode: stripeMode, duplicate: isBoolean },
+  'billing.payment_failed': { planKey, mode: stripeMode },
+  'billing.refund_recorded': { planKey, full: isBoolean, mode: stripeMode },
+};
+
 /** Only the payload fields that fit their rule; a name without rules keeps none. */
 function ruledPayload(
   rules: Readonly<Record<string, FieldRule>> | undefined,
@@ -167,7 +186,7 @@ function ruledPayload(
  * string profile id and its payload as given; a codes-only event keeps only its
  * codes and never a profile id; a `browse.*` event keeps only its documented
  * fields (F-BROWSE-001 section 9) and never a profile id; so does a `notes.*`
- * event (F-FEEDBACK-001 section 10).
+ * event (F-FEEDBACK-001 section 10) and a `billing.*` event (F-BILL-002 section 10).
  */
 export function keptEventFields(
   name: TelemetryEventName,
@@ -176,6 +195,7 @@ export function keptEventFields(
 ): Pick<TelemetryEvent, 'profileId' | 'payload'> {
   if (name.startsWith(BROWSE_EVENT_PREFIX)) return { profileId: undefined, payload: ruledPayload(BROWSE_PAYLOAD_RULES[name], payload) };
   if (name.startsWith(NOTES_EVENT_PREFIX)) return { profileId: undefined, payload: ruledPayload(NOTES_PAYLOAD_RULES[name], payload) };
+  if (name.startsWith(BILLING_TELEMETRY_PREFIX)) return { profileId: undefined, payload: ruledPayload(BILLING_PAYLOAD_RULES[name], payload) };
   const codesOnly = codesOnlyValues(name);
   if (codesOnly) return { profileId: undefined, payload: codesOnlyPayload(payload, codesOnly) };
   return { profileId: typeof profileId === 'string' ? profileId : undefined, payload };

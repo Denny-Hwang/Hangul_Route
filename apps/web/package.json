@@ -12,6 +12,7 @@
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit && tsc --noEmit -p e2e/tsconfig.json",
     "build": "next build && node scripts/prune-hidden-locales.mjs out",
+    "build:console": "next build && node scripts/console-split.mjs out && node scripts/prune-hidden-locales.mjs out",
     "deploy": "wrangler deploy"
   },
   "dependencies": {

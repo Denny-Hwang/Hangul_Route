@@ -1,5 +1,7 @@
 # Icon: My route glyphs `pin`, `check-circle`, `book`, `ear`, `pencil` (component spec v1)
 
+Sections on this sheet: the My route glyphs (R-2a, below) · [`dash`](#dash-the-miss-mark-of-a-locked-answer-f-voc-004-s-4b) (F-VOC-004 S-4b) · [`note` and `heart`](#note-and-heart-notes-from-grown-ups-f-feedback-001-fb-6) (F-FEEDBACK-001 FB-6)
+
 Spec: `docs/specs/F-ROUTE-001-my-route-overview.md` §3.3 (stage badges), §3.6 (start marker), §3.7 (skill rows), §3.14 (no colour-only meaning), PR R-2a in §6.1 · wireframe: `design/wireframes/journey/my-route-overview.md` (legend `pin`; screens A, B and C1 to C5: stage badges, tags and the practice rows) · also needed by F-PLC-001 P-7 (start pin and placed-out look, amendment AM-10)
 Code: `packages/design-system/src/components/Icon/glyphs.ts` (geometry, pure data) · `types.ts` (`IconName`) · tests `Icon/__tests__/glyphs.test.ts`
 Preview: `route-glyphs-v1.png` (20, 24, 48 and 96 dp next to `check`, `journey` and `card` for family fit)
@@ -45,3 +47,28 @@ Spec: `docs/specs/F-VOC-004-speed-round.md` §3.6 ("a non-colour mark (a short h
 - Never a cross or an X: a short bar, drawn in `text.primary` on `feedback.nudgeLight` (14:1), always next to the amber tone and the words "Not this one" in the card's name. Never `feedback.danger`.
 - 10 dp long on the 24 grid (shorter than the `plus` bar, 14), so at 24 dp it reads as a dash, not a divider. Stroke 2.6 like `check` and `close`, the other status marks.
 - Tests: the glyph block in `Icon/__tests__/glyphs.test.ts` pins one horizontal stroke centred on y 12, 8 to 13 long, at least 2.4 wide, with no vertical part.
+
+## `note` and `heart`: notes from grown-ups (F-FEEDBACK-001 FB-6)
+
+Spec: `docs/specs/F-FEEDBACK-001-adult-feedback-channel.md` §6.5 (Home card, notes list), §6.6 (reactions), §6.10 item 1 (grown-up dashboard rows), §6.11 (no red), §6.12 (a picked answer is not shown by colour alone), §13 (glyph test row), PR FB-6 in §14.1 · wireframes: `design/wireframes/home/notes-card.md` and `notes/list.md` (`[note icon]`, the learner's own `[heart]` answer), `notes/detail.md` (the reaction row, frames A and C), `parent/notes.md` (`[note icon]` on the dashboard rows), `console/notes-sent.md` and `console/family-notes.md` (`[heart] Thank you`, icon plus label)
+Code: `packages/design-system/src/components/Icon/glyphs.ts` · `types.ts` · tests `Icon/__tests__/glyphs.test.ts` (block "notes glyphs") · console pages draw the same data through `IconSvg` (`@hangul-route/design-system/icon-glyphs/dom`)
+Preview: `notes-glyphs-v1.png` (20, 24, 48 and 96 dp next to `card` and `book`, which the note must not be mistaken for; `pin`, the other outline that ends in a point at the bottom; the other three reaction glyphs `pencil`, `check-circle` and `sparkle`; and the filled `star`)
+
+| Glyph | Meaning | Where | Geometry |
+|---|---|---|---|
+| `note` | A note from a grown-up | Home card row 2a and the notes list rows (FB-8); the grown-up dashboard rows "Notes for <learner>" (FB-9) | portrait sheet 13 x 18 centred on x 12, stroke 2.2, its top-right corner cut at 45 degrees; the fold drawn from one end of the cut to the other, stroke 2; two level lines of writing, the second shorter, stroke 2 |
+| `heart` | Thank you: the `thanks` reaction (§6.6) | the reaction row on the note page and the learner's own answer on the list (FB-8); the answer on the console sent list and the family view (FB-11a, FB-12) | one closed outline, stroke 2.2: two half-circle lobes r 4.25 that meet at (12, 8.75), sides that curve down to the tip at (12, 20.5); mirror-symmetric on x 12 |
+
+```
+note:   stroke M5.5 3 L13 3 L18.5 8.5 L18.5 21 L5.5 21 Z (2.2) + stroke M13 3 L13 8.5 L18.5 8.5 + stroke M9 13 L15 13 + stroke M9 17 L13 17
+heart:  stroke M12 20.5 C9 17.5 3.5 13.5 3.5 8.75 A4.25 4.25 0 0 1 12 8.75 A4.25 4.25 0 0 1 20.5 8.75 C20.5 13.5 15 17.5 12 20.5 Z (2.2)
+```
+
+- **Tokens only.** Callers pass a colour token (`colors.text.primary` by default, `colors.text.muted` on a quiet row). Never `colors.feedback.danger` or any red: a note is encouragement and the heart is thanks, and §6.11 allows no red or danger colour on the notes screens. Every use sits next to words that say what it is: the sender label or the new-notes count on the Home card, the sender label on a list row, "Notes for <learner>" on a dashboard row, the reaction's label ("Thank you") on the heart. A screen that draws the heart checks its colour token in its own test.
+- **Outline only.** Both glyphs are drawn with the `stroke` helper and have no fill part. The heart is never filled: a solid heart reads as a game "life", and the app has none (F-VOC-004 §4, F-QUEST-002 §3.9). A picked answer shows the radio mark and the `check` beside its word (`notes/detail.md` frame C, §6.12); the heart itself never fills or changes colour.
+- **An answer, not a score.** The heart appears only for the `thanks` reaction. It is never a count, a like total, a favourite toggle or a rating, and never sits on a quiz, a streak or a meter. In the reaction row it is drawn at the same dp size as `pencil`, `check-circle` and `sparkle`, at the outline weight of `pencil` and `check-circle` (stroke 2 to 2.4); every reaction carries its own label in the same type, so the words, not the glyphs, are what the learner picks between.
+- **Filled is not picked.** `sparkle`, the `happy` reaction, is a solid shape by design (it predates this sheet), so the reaction row mixes three outline glyphs with one filled glyph. A filled glyph never means "picked": the picked reaction is shown only by the radio mark and `check` beside its label (§6.12), and the unpicked reactions keep the same glyph and colour.
+- **No unread dot.** "New" is a text pill beside the note (§6.12). The glyph looks the same for a read and an unread note; nothing is drawn on it.
+- **Sizes.** Minimum 20 dp (list rows, the reaction chips); 24 dp on the Home card and the dashboard rows. Checked at 20 and 24 dp in the preview: the note stays apart from `card` (landscape, with a band) and `book`; the heart from `pin` (a round head with a solid dot), `star` and `sparkle`.
+- **Accessibility.** Decorative, as for the glyphs above: the row, card or radio label carries the words (`a11y.notes.card` on the Home card, the reaction's label in the radio group), and the console's `IconSvg` is `aria-hidden`.
+- **Tests.** The "notes glyphs" block in `Icon/__tests__/glyphs.test.ts` checks that both names exist and that every part is exactly a `stroke(d)` or `stroke(d, width)` value at width 2 to 2.6 with no fill. For the heart it checks one closed outline, mirror-symmetric on x 12, with two level half-circle lobes drawn left to right over the top that meet on x 12, and the tip as its one lowest point on x 12. For the note it checks a portrait sheet centred on x 12 with one diagonal edge (the 45-degree cut at the top right), a fold from the cut's start to its end through the inside corner, and two level lines inside the sheet and below the fold, each at least 1 unit clear of every other part on the 24 grid (about 0.8 dp at 20 dp). The set-wide tests (every name drawn, valid paths, all glyphs distinct, inside the 24 x 24 box, stroke band 1.5 to 3) cover both as well.

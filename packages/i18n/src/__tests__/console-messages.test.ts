@@ -97,8 +97,9 @@ describe('console: formatter words', () => {
     expect(s.active).toBe('active');
     expect(s).not.toHaveProperty('activeForGood'); // the Family Plan renews yearly: it says when (BY-D9)
     expect(s.activeRenews('Oct 21, 2026')).toBe('active · renews Oct 21, 2026');
-    expect(s.pastDueKept).toBe('payment needs attention · premium kept for a week');
-    expect(s.pastDuePaused).toBe('payment needs attention · premium paused');
+    // F-BILL-002 B-6 (§6.1): "full route", never "premium".
+    expect(s.pastDueKept).toBe('payment needs attention · full route kept for a week');
+    expect(s.pastDuePaused).toBe('payment needs attention · full route paused');
     expect(s.cancelled).toBe('cancelled');
     expect(s.cancelledEnds('Oct 21, 2026')).toBe('cancelled · ends Oct 21, 2026');
     expect(s.ended).toBe('ended');

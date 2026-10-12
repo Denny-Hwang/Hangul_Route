@@ -171,6 +171,43 @@ export const caregiver = {
     },
   },
 
+  /**
+   * The learner Plan screen (F-BILL-002 §4.7, §6.2, wireframe billing/plan-status): status only, no
+   * PIN, never a price, an offer or a purchase word. One variant per audience (`family` names the
+   * learner, `self` speaks to them). `openBilling` and `openFailed` are web only; a native build
+   * renders none of them (§4.8). F-ENT-003 E3-8 adds `freePlan` here.
+   */
+  plan: {
+    title: 'Plan',
+    /** The learner's name when there is no active profile. */
+    learnerFallback: 'Your learner',
+    covered: {
+      title: {
+        family: (name: string, source: string) => `${name} is covered by ${source}.`,
+        self: (source: string) => `You're covered by ${source}.`,
+      },
+      note: { family: 'Everything is open while they are in it.', self: 'Everything is open while you are in it.' },
+      sourceFallback: 'the class',
+    },
+    full: {
+      title: { family: (name: string) => `${name} has the full route.`, self: 'You have the full route.' },
+      fromFamily: { family: "From your family's Family Plan.", self: 'From your Family Plan.' },
+      noSource: 'Everything is open.',
+    },
+    free: {
+      title: { family: (name: string) => `${name} is on the free plan.`, self: "You're on the free plan." },
+      /** The free slot while F-ENT-003's switch is off (moved from `paywall.free.bubble`, same words). */
+      open: 'Stage 1 is always free.',
+    },
+    openBilling: {
+      cta: 'Open billing',
+      caption: { family: 'Plans and receipts are on the billing page for grown-ups.', self: 'Your plan and receipts are on the billing page.' },
+      a11yHint: 'Opens the billing page',
+    },
+    openFailed: (url: string) => `Open ${url} in a browser.`,
+    backToJourney: { cta: 'Back to journey' },
+  },
+
   /** Settings card: the learner's classes and family. */
   spaces: {
     title: 'Classes & family',

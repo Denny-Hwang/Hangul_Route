@@ -71,6 +71,18 @@ export const ReceiptViewSchema = z.object({
 });
 export type ReceiptView = z.infer<typeof ReceiptViewSchema>;
 
+/**
+ * Billing telemetry (F-BILL-002 §10): the console has no telemetry client, so every `billing.*`
+ * event is recorded by the Worker itself (`recordServerEvent`), never sent by an app.
+ * `POST /api/telemetry` refuses these names with 422, so no client can forge one.
+ */
+export const BILLING_TELEMETRY_PREFIX = 'billing.';
+
+/** Whether a telemetry name is one only the Worker records (every `billing.*` name). */
+export function isServerOnlyTelemetryName(name: unknown): boolean {
+  return typeof name === 'string' && name.startsWith(BILLING_TELEMETRY_PREFIX);
+}
+
 /** From the bound Stripe key prefix: `sk_test_` / `rk_test_`, `sk_live_` / `rk_live_`, or no key. */
 export const StripeModeSchema = z.enum(['test', 'live', 'none']);
 export type StripeMode = z.infer<typeof StripeModeSchema>;

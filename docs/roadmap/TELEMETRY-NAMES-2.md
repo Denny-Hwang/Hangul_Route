@@ -194,3 +194,21 @@ Five names in the new `browse.` namespace (a paying parent's or teacher's All le
 | 3 | `browse.preview_started` | F-BROWSE-001 §9 | `{ kind: 'quest' \| 'story' \| 'vocab-topic', itemId }` (Preview this lesson) | BR-1 | BR-8 |
 | 4 | `browse.preview_ended` | F-BROWSE-001 §9 | `{ kind, itemId, reachedEnd: boolean, minutes }` (`minutes` rounded down, capped at 60; the preview end screen, or leaving early) | BR-1 | BR-8 |
 | 5 | `browse.plans_tapped` | F-BROWSE-001 §9 | `{ kind: 'quest' \| 'story' \| 'vocab-topic' }` (See plans on a closed item; only with `flags.contentGatingEnabled` on) | BR-1 | BR-7 |
+
+## Q. Billing names (F-BILL-002; added by its B-3 PR)
+
+Three names in the new `billing.` namespace, recorded from the Stripe webhook. B-5 and B-4 append their five rows here (`billing.checkout_started`, `billing.checkout_refused`, `billing.portal_opened`, `billing.summary_viewed`, `billing.receipts_viewed`), each in the same PR as the only code that sends it. None collides with sections A to P or with `TELEMETRY_EVENT_NAMES` on `main` at `cdb59c7b` (no existing name starts with `billing.`).
+
+**Worker-only.** The console has no telemetry client (F-APP-001 OD-9), so the Worker records these events itself with `recordServerEvent` (`packages/backend/src/lib/server-events.ts`) into the same capped in-memory store that `POST /api/telemetry` writes. They are transient diagnostics, not a metric of record. The record of money is the D1 `billing_events` table. `POST /api/telemetry` refuses every `billing.*` name from a client with 422 (`isServerOnlyTelemetryName`, `schemas/billing.ts`), so an app cannot forge one.
+
+**Codes only.** For each name, `keptEventFields` keeps only the keys listed below in their documented shapes (`BILLING_PAYLOAD_RULES`): `planKey` is one of `PlanKeySchema`, `mode` is one of `StripeModeSchema` (`test` / `live` / `none`; a webhook event is `live` only when Stripe's `livemode` is true), and the flags are booleans. An event never carries an account, space or learner id, an amount, a currency, a promo code, a URL or a `profileId`.
+
+| # | Name | Owning spec | Payload | Added to the list by | Emitted by |
+|---|---|---|---|---|---|
+| 1 | `billing.checkout_completed` | F-BILL-002 §10 | `{ planKey, mode, duplicate: boolean }` (the webhook applied a `checkout.session.completed`; `duplicate` is set when another Stripe subscription of the same plan already covered the space, §4.4, best effort) | B-3 | B-3 (Worker, webhook) |
+| 2 | `billing.payment_failed` | F-BILL-002 §10 | `{ planKey, mode }` (the webhook recorded an `invoice.payment_failed` row for the first time) | B-3 | B-3 (Worker, webhook) |
+| 3 | `billing.refund_recorded` | F-BILL-002 §10 | `{ planKey, full: boolean, mode }` (the webhook recorded a `charge.refunded` row for the first time; `full` when the whole charge is refunded) | B-3 | B-3 (Worker, webhook) |
+
+A retried webhook delivery writes no second history row and sends no second `payment_failed` or `refund_recorded`. `checkout_completed` is sent each time a completion is applied. Every event is recorded only after the whole webhook request has succeeded, so a request that fails and is retried sends it once.
+
+Payload note on an existing name (section D style): `paywall.viewed` keeps the payload `{ from, state }`, where `state` is `covered | premium | free`. F-BILL-002 keeps it for the status-only Plan screen (B-9). `paywall.console_opened` is sent on the web only, when Open billing actually opens after the gate. A native build never sends it, because the button does not exist there.
