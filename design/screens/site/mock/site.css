@@ -3,6 +3,8 @@
  * Every value below is a token of packages/design-system/src/tokens.ts, copied as a custom property named after it
  * (generated from the tokens module on 2026-10-11). The components never use a literal; S-4a / S-5 build the same
  * rules with token imports in apps/web (inline styles plus the breakpoint classes in globals.css).
+ * Text sizes are written in rem (token / 16) and breakpoints in em (px / 16), so a browser text-size setting of
+ * 200 % enlarges every line and moves the layout switches with it (spec 3.11, assumption b).
  */
 :root {
   --colors-brand-primary: #B24915;
@@ -54,14 +56,14 @@
   --radii-xxl: 32px;
   --radii-pill: 999px;
   --radii-circle: 9999px;
-  --size-caption: 14px;
-  --size-bodySm: 16px;
-  --size-body: 18px;
-  --size-bodyLg: 20px;
-  --size-prompt: 22px;
-  --size-title: 28px;
-  --size-display: 36px;
-  --size-hero: 48px;
+  --size-caption: 0.875rem; /* 14 */
+  --size-bodySm: 1rem; /* 16 */
+  --size-body: 1.125rem; /* 18 */
+  --size-bodyLg: 1.25rem; /* 20 */
+  --size-prompt: 1.375rem; /* 22 */
+  --size-title: 1.75rem; /* 28 */
+  --size-display: 2.25rem; /* 36 */
+  --size-hero: 3rem; /* 48 */
   --weight-regular: 400;
   --weight-medium: 500;
   --weight-semibold: 600;
@@ -81,6 +83,17 @@
   --gutter-regular: 24px;
   --gutter-wide: 32px;
   --shadow-card: 0 2px 8px rgba(42, 31, 20, 0.06);
+  --z-sticky: 20;
+
+  /* Mock constants that are not tokens; each is derived from one (README, "Constants"). S-4a / S-5 write them as
+     named constants next to the component, never as bare literals. */
+  --hero-art-max: 240px;        /* 5 x spacing.xxxl */
+  --hero-art-max-wide: 360px;   /* layout.maxWidth.reading / 2 */
+  --hero-text-ratio: 1.4fr;     /* layout.mediaScale.wide */
+  --hoya-share: 62%;            /* Hoya inside the art square, leaving room for the bubble */
+  --lead-measure: 34em;         /* reading measure, about 60 characters */
+  --footer-col-min: 8rem;       /* 2 x spacing.jumbo at default text size */
+  --field-basis: 12rem;         /* 3 x spacing.jumbo at default text size */
 }
 
 /* ---------- base ---------- */
@@ -102,8 +115,8 @@ a { color: inherit; text-decoration: none; }
   clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
 .wrap { max-width: var(--max-width-full); margin: 0 auto; padding: 0 var(--gutter-compact); }
-@media (min-width: 720px) { .wrap { padding: 0 var(--gutter-regular); } }
-@media (min-width: 1120px) { .wrap { padding: 0 var(--gutter-wide); } }
+@media (min-width: 45em) { .wrap { padding: 0 var(--gutter-regular); } }
+@media (min-width: 70em) { .wrap { padding: 0 var(--gutter-wide); } }
 
 /* ---------- shared hit area: every link and button is at least touchTarget.min by touchTarget.min ---------- */
 .hit {
@@ -113,7 +126,7 @@ a { color: inherit; text-decoration: none; }
 
 /* ---------- skip link (first Tab stop, shown on focus) ---------- */
 .skip {
-  position: absolute; left: var(--spacing-sm); top: var(--spacing-sm); z-index: 20;
+  position: absolute; left: var(--spacing-sm); top: var(--spacing-sm); z-index: var(--z-sticky);
   padding: 0 var(--spacing-lg);
   background: var(--colors-surface-paper); color: var(--colors-text-primary);
   font-weight: var(--weight-bold); border-radius: var(--radii-md);
@@ -161,22 +174,22 @@ a { color: inherit; text-decoration: none; }
 }
 .signin:hover { border-color: var(--colors-text-secondary); }
 /* Phones: brand and Sign in only. display:none also takes the items out of the Tab order. */
-@media (max-width: 719px) {
+@media (max-width: 44.99em) {
   .header-start, .site-nav { display: none; }
 }
 /* 720 to 959: every item fits one row once the name steps down to the mark (the name stays the link's name). */
-@media (min-width: 720px) and (max-width: 959px) {
+@media (min-width: 45em) and (max-width: 59.99em) {
   .brand-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 }
 /* Phones: Sign in sits at the far right. Wide: Start stays next to the brand (wireframe default), the persona
    links and Sign in sit at the right. Auto margins only; nothing uses `order`. */
 .signin { margin-left: auto; }
-@media (min-width: 720px) {
+@media (min-width: 45em) {
   .site-nav { margin-left: auto; }
   .signin { margin-left: var(--spacing-xs); }
 }
 /* 320 px phones: the name keeps the row; the mark steps out (existing rule hr-landing-logo-mark). */
-@media (max-width: 359px) {
+@media (max-width: 22.49em) {
   .brand-mark { display: none; }
 }
 
@@ -193,9 +206,10 @@ a { color: inherit; text-decoration: none; }
   border: var(--border-width-base) solid var(--colors-brand-primary); color: var(--colors-brand-primary);
   background: transparent;
 }
-.btn-secondary:hover { background: var(--colors-brand-primaryLight); }
+/* brand.primary on brand.primaryLight is below AA for normal text (contrast.test.ts): the label darkens on hover. */
+.btn-secondary:hover { background: var(--colors-brand-primaryLight); color: var(--colors-brand-primaryDark); }
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-md); margin-top: var(--spacing-xl); }
-@media (max-width: 719px) { .actions .btn { width: 100%; } }
+@media (max-width: 44.99em) { .actions .btn { width: 100%; } }
 .text-link {
   color: var(--colors-brand-primaryDark); font-weight: var(--weight-semibold);
   text-decoration: underline; text-decoration-thickness: var(--border-width-thin); text-underline-offset: var(--spacing-xs);
@@ -204,26 +218,26 @@ a { color: inherit; text-decoration: none; }
 /* ---------- hero (home L0) ---------- */
 .hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--spacing-xl); padding: var(--spacing-xl) 0 var(--spacing-xxl); }
 .hero h1 { font-size: var(--size-display); line-height: var(--leading-tight); margin: 0; }
-.lead { margin: var(--spacing-md) 0 0; font-size: var(--size-body); line-height: var(--leading-relaxed); color: var(--colors-text-secondary); max-width: 34em; }
+.lead { margin: var(--spacing-md) 0 0; font-size: var(--size-body); line-height: var(--leading-relaxed); color: var(--colors-text-secondary); max-width: var(--lead-measure); }
 .hero .grown-ups { margin-top: var(--spacing-xs); }
 .facts { margin: var(--spacing-xs) 0 0; font-size: var(--size-caption); color: var(--colors-text-muted); }
 .hero-art {
-  position: relative; justify-self: center; width: 100%; max-width: 240px; aspect-ratio: 1 / 1;
+  position: relative; justify-self: center; width: 100%; max-width: var(--hero-art-max); aspect-ratio: 1 / 1;
   background: var(--colors-brand-primaryLight); border-radius: var(--radii-xxl);
   display: flex; align-items: center; justify-content: center; overflow: hidden;
 }
-.hero-art .hoya { width: 62%; aspect-ratio: 1 / 1; display: flex; margin-bottom: var(--spacing-xl); }
+.hero-art .hoya { width: var(--hoya-share); aspect-ratio: 1 / 1; display: flex; margin-bottom: var(--spacing-xl); }
 .bubble {
   position: absolute; left: var(--spacing-md); right: var(--spacing-md); bottom: var(--spacing-md);
   padding: var(--spacing-xs) var(--spacing-md); border-radius: var(--radii-pill);
   background: var(--colors-surface-paper); box-shadow: var(--shadow-card);
   font-size: var(--size-caption); font-weight: var(--weight-semibold); text-align: center;
 }
-@media (min-width: 720px) {
-  .hero { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); align-items: center; gap: var(--spacing-xxl); padding: var(--spacing-xxxl) 0; }
+@media (min-width: 45em) {
+  .hero { grid-template-columns: minmax(0, var(--hero-text-ratio)) minmax(0, 1fr); align-items: center; gap: var(--spacing-xxl); padding: var(--spacing-xxxl) 0; }
   .hero h1 { font-size: var(--size-hero); }
   .lead { font-size: var(--size-bodyLg); }
-  .hero-art { max-width: 360px; }
+  .hero-art { max-width: var(--hero-art-max-wide); }
   .bubble { font-size: var(--size-bodySm); padding: var(--spacing-sm) var(--spacing-md); }
 }
 
@@ -231,14 +245,14 @@ a { color: inherit; text-decoration: none; }
 .section { padding: var(--spacing-xl) 0; border-top: var(--border-width-thin) solid var(--colors-border-subtle); }
 .section h2 { font-size: var(--size-prompt); line-height: var(--leading-tight); margin: 0 0 var(--spacing-md); }
 .section p { margin: 0; line-height: var(--leading-relaxed); }
-@media (min-width: 720px) {
+@media (min-width: 45em) {
   .section { padding: var(--spacing-xxxl) 0; }
   .section h2 { font-size: var(--size-title); }
 }
 
 /* ---------- persona chooser (#who) ---------- */
 .persona-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--spacing-md); }
-@media (min-width: 720px) { .persona-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-lg); } }
+@media (min-width: 45em) { .persona-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-lg); } }
 .persona-card {
   display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; column-gap: var(--spacing-md);
   min-height: var(--touch-child); height: 100%;
@@ -285,8 +299,8 @@ a { color: inherit; text-decoration: none; }
   font-weight: var(--weight-semibold);
 }
 .section.tight { padding: var(--spacing-lg) 0; }
-@media (min-width: 720px) { .section.tight { padding: var(--spacing-xl) 0; } }
-@media (min-width: 720px) {
+@media (min-width: 45em) { .section.tight { padding: var(--spacing-xl) 0; } }
+@media (min-width: 45em) {
   .row-2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: var(--spacing-xxxl); }
   .row-2 > .section { border-top: 0; }
   .row-2-wrap { border-top: var(--border-width-thin) solid var(--colors-border-subtle); }
@@ -296,7 +310,7 @@ a { color: inherit; text-decoration: none; }
 /* ---------- launch news (existing WaitlistForm, drawn as it renders today) ---------- */
 .news-form { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); margin-top: var(--spacing-lg); }
 .news-form .field {
-  flex: 1 1 12rem; min-width: 0; min-height: var(--touch-min); padding: 0 var(--spacing-lg);
+  flex: 1 1 var(--field-basis); min-width: 0; min-height: var(--touch-min); padding: 0 var(--spacing-lg);
   border: var(--border-width-base) solid var(--colors-border-strong); border-radius: var(--radii-md);
   background: var(--colors-surface-paper); color: var(--colors-text-muted); display: flex; align-items: center;
 }
@@ -326,7 +340,7 @@ details .answer { padding: 0 var(--spacing-lg) var(--spacing-lg); color: var(--c
 /* ---------- page head (persona pages) and closing block ---------- */
 .page-head { padding: var(--spacing-xl) 0 var(--spacing-xxl); }
 .page-head h1 { font-size: var(--size-display); line-height: var(--leading-tight); margin: 0; }
-@media (min-width: 720px) {
+@media (min-width: 45em) {
   .page-head { padding: var(--spacing-xxxl) 0; }
   .page-head h1 { font-size: var(--size-hero); }
 }
@@ -336,8 +350,8 @@ details .answer { padding: 0 var(--spacing-lg) var(--spacing-lg); color: var(--c
   display: grid; gap: var(--spacing-lg); justify-items: start;
 }
 .closing p { margin: 0; font-size: var(--size-prompt); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
-@media (max-width: 719px) { .closing .btn { width: 100%; } }
-@media (min-width: 720px) {
+@media (max-width: 44.99em) { .closing .btn { width: 100%; } }
+@media (min-width: 45em) {
   .closing { grid-template-columns: minmax(0, 1fr) auto; align-items: center; padding: var(--spacing-xxl); margin: var(--spacing-xxxl) 0; }
 }
 
@@ -346,14 +360,14 @@ details .answer { padding: 0 var(--spacing-lg) var(--spacing-lg); color: var(--c
 .footer-tag { margin: 0 0 var(--spacing-lg); color: var(--colors-text-secondary); }
 .footer-tag strong { color: var(--colors-text-primary); }
 /* Two columns on phones; one column once large text makes a column narrower than its words (200 % text at 320 px). */
-.footer-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr)); column-gap: var(--spacing-lg); row-gap: var(--spacing-lg); }
+.footer-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--footer-col-min)), 1fr)); column-gap: var(--spacing-lg); row-gap: var(--spacing-lg); }
 .footer-col { display: grid; align-content: start; row-gap: var(--spacing-lg); }
 .footer-group h2 { margin: 0; font-size: var(--size-bodySm); font-weight: var(--weight-bold); color: var(--colors-text-primary); }
 .footer-group ul { list-style: none; margin: 0; padding: 0; }
 .footer-group a { justify-content: flex-start; color: var(--colors-text-secondary); }
 .footer-group a:hover { color: var(--colors-text-primary); text-decoration: underline; }
 .copyright { margin: var(--spacing-lg) 0 0; font-size: var(--size-caption); color: var(--colors-text-muted); }
-@media (min-width: 720px) {
+@media (min-width: 45em) {
   .footer-groups { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .footer-col { display: contents; }
 }

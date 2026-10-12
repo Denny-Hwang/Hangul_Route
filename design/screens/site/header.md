@@ -13,6 +13,7 @@ Wireframe: `design/wireframes/site/header-footer.md` · spec §3.2, §6 · strin
 - Sign in takes the free space with `margin-left: auto`; nothing uses `order`.
 - Below 360 px the mark steps out (today's `hr-landing-logo-mark` rule) so the name and Sign in keep one row at 320 px.
 - With enlarged text the row wraps (`flex-wrap: wrap`): Sign in drops to a second row, right-aligned. Never a third row, never a sideways scroll.
+- Breakpoints are in em (720 px = 45em, 360 px = 22.5em, 960 px = 60em), so with 200 % browser text a 720 to 1,439 px window keeps this phone row instead of overflowing the wide one (`shots/header-720-text200.png`; README, "Enlarged text").
 
 ## Wide, 720 px and up (one row)
 
@@ -40,7 +41,7 @@ Brand only on phones; brand and the three persona links on wide screens. No Star
 | Nav link | padding inline `spacing.md`, `text.secondary` semibold `size.body`; hover `text.primary` |
 | Current page | `aria-current="page"`, `text.primary`, underline `borderWidth.thick` in `brand.primary`, offset `spacing.sm` (non-colour marker); visually hidden `landing.nav.current` after the label |
 | Sign in | outline pill: `borderWidth.base` `border.strong`, `radii.pill`, padding inline `spacing.lg`, `text.primary` semibold; hover border `text.secondary` |
-| Skip link | first Tab stop, off screen until focused; `surface.paper`, bold, `radii.md`, padding inline `spacing.lg`, at `spacing.sm` from the top left, `z.sticky` |
+| Skip link | first Tab stop, off screen until focused; `surface.paper`, bold, `radii.md`, padding inline `spacing.lg`, at `spacing.sm` from the top left, `z.sticky` (`--z-sticky` in the mock) |
 | Focus ring (every link) | `outline: borderWidth.thick solid border.focus`, offset `spacing.xxs` (`:focus-visible`) |
 
 ## Footer
@@ -63,7 +64,7 @@ Brand only on phones; brand and the three persona links on wide screens. No Star
 | Part | Tokens |
 |---|---|
 | Band | `surface.sunken`; padding top `spacing.xxl`, bottom `spacing.xl` |
-| Tagline | `text.secondary`, brand name `text.primary` bold (`landing.brand.name`, `landing.meta.tagline`) |
+| Tagline | `text.secondary`, brand name `text.primary` bold (`landing.brand.name`, `landing.meta.tagline`; S-3 sets the tagline equal to `landing.home.hero.title`, and a test ties them) |
 | Group heading (`h2`) | `size.bodySm` bold `text.primary`; groups `spacing.lg` apart |
 | Link | `touchTarget.min` tall, left-aligned, `text.secondary` `size.body`; hover `text.primary` underlined |
 | Copyright | `size.caption` `text.muted`, margin top `spacing.lg` |
