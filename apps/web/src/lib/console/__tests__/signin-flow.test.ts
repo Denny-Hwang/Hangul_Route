@@ -2,12 +2,14 @@ import { describe, expect, it, vi } from 'vitest';
 import type { DeviceGateRead } from '../grown-up-lock';
 import {
   CLERK_LOAD_TIMEOUT_MS,
+  DEVICE_READ_TIMEOUT_MS,
   REVERIFY_CONFIG,
   SIGNIN_PROOF_MS,
   acceptedNext,
   clerkUnreachable,
   createModeUrl,
   deviceCanLock,
+  finishReverify,
   grantSignInUnlock,
   isSecretFactor,
   isStandaloneDisplay,
@@ -18,13 +20,17 @@ import {
   proofAtSignIn,
   proofFromSignIn,
   proofFromSignUp,
+  resolveDestination,
   reverifyOnce,
   routerDestination,
+  settleSignIn,
   signInReturnUrl,
   signedOutTarget,
   showStandaloneFinish,
   signedInHere,
   withTimeout,
+  type SignInIo,
+  type SpacesResult,
 } from '../signin-flow';
 
 /**
@@ -388,5 +394,113 @@ describe('withTimeout', () => {
     ).toBe(0);
     expect(await withTimeout(() => Promise.reject(new Error('x')), 0, 50)).toBe(0);
     expect(await withTimeout(() => new Promise<number>(() => undefined), 7, 10)).toBe(7);
+  });
+});
+
+describe('settleSignIn and finishReverify: the router spends the sign-in record of this tab', () => {
+  const now = 2_000_000;
+  function io(record: Parameters<typeof planAfterSignIn>[0]['record'], device: DeviceGateRead | (() => Promise<DeviceGateRead>)) {
+    const calls = { cleared: 0, granted: [] as Array<[DeviceGateRead, number]> };
+    const value: SignInIo = {
+      now: () => now,
+      readRecord: () => record,
+      clearRecord: () => {
+        calls.cleared += 1;
+      },
+      readDevice: typeof device === 'function' ? device : async () => device,
+      grant: async (d, at) => {
+        calls.granted.push([d, at]);
+      },
+    };
+    return { io: value, calls };
+  }
+  const proof = (secret: boolean) => ({ v: 1 as const, kind: 'proof' as const, sessionId: 'sess_1', secret, at: now - 10 });
+
+  it('no record: nothing read, nothing written', async () => {
+    const readDevice = vi.fn(async () => PIN);
+    const { io: value, calls } = io(null, readDevice);
+    expect(await settleSignIn(value, 'sess_1')).toBeNull();
+    expect(readDevice).not.toHaveBeenCalled();
+    expect(calls).toEqual({ cleared: 0, granted: [] });
+  });
+
+  it('a secret proof grants the unlock, then spends the record', async () => {
+    const { io: value, calls } = io(proof(true), PIN);
+    expect(await settleSignIn(value, 'sess_1')).toBeNull();
+    expect(calls.granted).toEqual([[PIN, now]]);
+    expect(calls.cleared).toBe(1);
+  });
+
+  it('an OAuth proof on a device that can lock asks for reverification and keeps the record', async () => {
+    const { io: value, calls } = io(proof(false), NOPIN);
+    expect(await settleSignIn(value, 'sess_1')).toEqual({ reverify: NOPIN });
+    expect(calls).toEqual({ cleared: 0, granted: [] });
+  });
+
+  it('a device read that hangs counts as failed (the lock can close): reverification', async () => {
+    vi.useFakeTimers();
+    const { io: value } = io(proof(false), () => new Promise<DeviceGateRead>(() => undefined));
+    const pending = settleSignIn(value, 'sess_1');
+    await vi.advanceTimersByTimeAsync(DEVICE_READ_TIMEOUT_MS);
+    expect(await pending).toEqual({ reverify: { readable: false, reason: 'failed' } });
+    vi.useRealTimers();
+  });
+
+  it('an OAuth proof on a device without a lock, or a record of another session, spends the record and asks nothing', async () => {
+    for (const [record, device, session] of [
+      [proof(false), NONE, 'sess_1'],
+      [proof(true), PIN, 'sess_other'],
+    ] as const) {
+      const { io: value, calls } = io(record, device);
+      expect(await settleSignIn(value, session)).toBeNull();
+      expect(calls).toEqual({ cleared: 1, granted: [] });
+    }
+  });
+
+  it('a finished reverification grants the unlock; a cancelled one only spends the record', async () => {
+    const ok = io(proof(false), PIN);
+    await finishReverify(ok.io, PIN, true);
+    expect(ok.calls).toEqual({ cleared: 1, granted: [[PIN, now]] });
+    const cancelled = io(proof(false), PIN);
+    await finishReverify(cancelled.io, PIN, false);
+    expect(cancelled.calls).toEqual({ cleared: 1, granted: [] });
+  });
+});
+
+describe('resolveDestination: spaces, then the last persona, then routerDestination', () => {
+  const spaces = (data: SpacesResult) => async () => data;
+  it('lands a teacher on /teach/home and honours an accepted next', async () => {
+    const io = { listSpaces: spaces({ ok: true, data: [{ space: { kind: 'class' }, role: 'owner' }] }), readLastPersona: async () => null };
+    expect(await resolveDestination(io, { next: null, hint: null })).toBe('/teach/home');
+    expect(await resolveDestination(io, { next: '/teach/space?id=sp_1', hint: null })).toBe('/teach/space?id=sp_1');
+  });
+
+  it('sends an account with no space to /start with the hint', async () => {
+    const io = { listSpaces: spaces({ ok: true, data: [] }), readLastPersona: async () => 'teacher' as const };
+    expect(await resolveDestination(io, { next: null, hint: 'parent' })).toBe('/start?persona=parent');
+  });
+
+  it('a failed or throwing spaces fetch gives no destination (no wrong home)', async () => {
+    expect(await resolveDestination({ listSpaces: spaces({ ok: false }), readLastPersona: async () => null }, { next: null, hint: null })).toBeNull();
+    expect(
+      await resolveDestination(
+        {
+          listSpaces: async () => {
+            throw new Error('offline');
+          },
+          readLastPersona: async () => null,
+        },
+        { next: null, hint: null },
+      ),
+    ).toBeNull();
+  });
+
+  it('a last-persona read that fails counts as none', async () => {
+    const io = {
+      listSpaces: spaces({ ok: true, data: [{ space: { kind: 'family' }, role: 'owner' }, { space: { kind: 'class' }, role: 'owner' }] }),
+      readLastPersona: () => Promise.reject(new Error('blocked')),
+    };
+    // Both personas, no last: Family first (OD-11), which is /teach/home until A-5b.
+    expect(await resolveDestination(io, { next: null, hint: 'teacher' })).toBe('/teach/home');
   });
 });

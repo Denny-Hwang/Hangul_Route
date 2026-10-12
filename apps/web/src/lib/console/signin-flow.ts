@@ -263,7 +263,8 @@ export function createModeUrl(params: { get(name: string): string | null }, crea
 
 interface DisplayWindow {
   matchMedia?: (query: string) => { matches: boolean };
-  navigator?: { standalone?: boolean };
+  /** iOS Safari's own flag; absent from the DOM typings. */
+  navigator?: object;
 }
 
 /** An installed PWA (`display-mode: standalone`, or iOS `navigator.standalone`), where an OAuth redirect may finish in Safari. */
@@ -271,7 +272,7 @@ export function isStandaloneDisplay(win: DisplayWindow | null | undefined): bool
   try {
     if (!win) return false;
     if (win.matchMedia?.('(display-mode: standalone)').matches) return true;
-    return win.navigator?.standalone === true;
+    return (win.navigator as { standalone?: unknown } | undefined)?.standalone === true;
   } catch {
     return false;
   }
@@ -319,4 +320,64 @@ export function withTimeout<T>(read: () => Promise<T>, fallback: T, ms: number):
       done(fallback);
     }
   });
+}
+
+/** How long the router waits for the device read before it counts as failed (as the lock does, section 3.9). */
+export const DEVICE_READ_TIMEOUT_MS = 3_000;
+
+const FAILED_DEVICE_READ: DeviceGateRead = { readable: false, reason: 'failed' };
+
+/** What the router reads and writes in the browser, injectable for tests. */
+export interface SignInIo {
+  now: () => number;
+  readRecord: () => SignInRecord | null;
+  clearRecord: () => void;
+  readDevice: () => Promise<DeviceGateRead>;
+  grant: (device: DeviceGateRead, now: number) => Promise<void>;
+}
+
+/**
+ * The router's first step for a signed-in visitor: spend the sign-in record of this tab. A secret
+ * proof writes the unlock (and the trusted epoch); an OAuth sign-in on a device the lock can close
+ * returns `reverify` with the device it read, and the record stays until the reverification ends
+ * (Clerk may reload the page meanwhile: the next load asks again instead of opening). Anything
+ * else clears the record and asks nothing.
+ */
+export async function settleSignIn(io: SignInIo, sessionId: string | null): Promise<{ reverify: DeviceGateRead } | null> {
+  const record = io.readRecord();
+  if (!record) return null;
+  const device = await withTimeout(io.readDevice, FAILED_DEVICE_READ, DEVICE_READ_TIMEOUT_MS);
+  const now = io.now();
+  const plan = planAfterSignIn({ record, sessionId, device, now });
+  if (plan === 'reverify') return { reverify: device };
+  if (plan === 'unlock') await io.grant(device, now);
+  io.clearRecord();
+  return null;
+}
+
+/** The reverification ended: a success writes the unlock as a secret-proving sign-in would; either way the record is spent. */
+export async function finishReverify(io: SignInIo, device: DeviceGateRead, verified: boolean): Promise<void> {
+  if (verified) await io.grant(device, io.now());
+  io.clearRecord();
+}
+
+/** The account's spaces as `GET /api/spaces` returns them, or a failure. */
+export type SpacesResult = { ok: true; data: readonly { space: { kind: SpaceKind }; role: SpaceRole }[] } | { ok: false };
+
+export interface RouteIo {
+  listSpaces: () => Promise<SpacesResult>;
+  readLastPersona: () => Promise<AdultPersona | null>;
+}
+
+/** The router's destination, or null when the spaces fetch failed (one line and Try again, never a wrong home). */
+export async function resolveDestination(io: RouteIo, input: { next: string | null; hint: AdultPersona | null }): Promise<string | null> {
+  let spaces: SpacesResult;
+  try {
+    spaces = await io.listSpaces();
+  } catch {
+    return null;
+  }
+  if (!spaces.ok) return null;
+  const last = await withTimeout(io.readLastPersona, null, DEVICE_READ_TIMEOUT_MS);
+  return routerDestination({ next: input.next, personas: personasOfSpaces(spaces.data), last, hint: input.hint });
 }
