@@ -66,8 +66,8 @@ export interface WordArtEntry {
 /** Per-key meta beyond the family, which the key prefix gives. */
 export type WordArtMetaOverrides = Readonly<Record<string, Partial<Omit<WordArtMeta, 'family'>>>>;
 
-/** Why every colour swatch carries the C2 waiver and a fifth fill tone (§3.6.1, §3.3). */
-const SWATCH_REASON = 'The swatch square fills the frame (88 of 100 units, margin 6) and the object sticker adds its own colours to the swatch colour (§3.6.1).';
+/** Why every colour swatch carries the C2 waiver (§3.6.1). No swatch needs a fifth fill tone (§3.3): each stays at 4 or fewer. */
+const SWATCH_REASON = 'The swatch square fills the frame (88 of 100 units, margin 6), so its subject box is past the 60-70 % rule by design (§3.6.1).';
 
 /** Review state and waivers. A key not listed is a `draft`. */
 const META: WordArtMetaOverrides = {
@@ -85,7 +85,7 @@ const META: WordArtMetaOverrides = {
   ...Object.fromEntries(
     ['food-banana', 'food-milk', 'food-bread', 'food-ramyeon', 'food-water', 'food-egg', 'food-strawberry', 'food-tteok', 'animal-bear', 'animal-elephant', 'nature-flower'].map((k) => [k, { status: 'review' }]),
   ),
-  ...Object.fromEntries(Object.keys(COLOR_SWATCHES).map((k) => [k, { status: 'review', bboxWaived: true, maxTones: 5, reason: SWATCH_REASON }])),
+  ...Object.fromEntries(Object.keys(COLOR_SWATCHES).map((k) => [k, { status: 'review', bboxWaived: true, reason: SWATCH_REASON }])),
   ...Object.fromEntries(COUNT_VALUES.map((n) => [`count-${n}`, { status: 'review' }])),
 };
 

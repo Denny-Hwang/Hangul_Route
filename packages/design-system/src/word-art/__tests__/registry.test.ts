@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { circle } from '../builders';
 import { COLOR_SWATCHES, colorGlyphs } from '../generated/color';
 import { COUNT_VALUES, count } from '../generated/count';
+import { fillTones } from './glyph-checks';
 import { WORD_ART, WORD_ART_FAMILIES, WORD_ART_KEYS, WORD_ART_KEY_RE, WORD_ART_PLAN, buildRegistry, getWordArt, wordArtKeyOf } from '../registry';
 import type { WordArtFamily } from '../types';
 
@@ -97,11 +98,45 @@ describe('batch W-3 (§3.12)', () => {
     for (const key of W3_COLORS) expect(getWordArt(key), key).toEqual(expected[key]);
   });
 
-  it('gives every swatch the size waiver and the fifth colour, each with its reason, waiting for review', () => {
+  it('gives every swatch the size waiver with its reason, and no tone waiver, waiting for review', () => {
     for (const key of W3_COLORS) {
-      const { meta } = WORD_ART[key]!;
-      expect(meta, key).toMatchObject({ family: 'color', status: 'review', bboxWaived: true, maxTones: 5 });
-      expect(meta.reason, key).toMatch(/88 of 100/);
+      expect(WORD_ART[key]!.meta, key).toEqual({ family: 'color', status: 'review', bboxWaived: true, reason: expect.stringMatching(/88 of 100/) as unknown as string });
+    }
+  });
+
+  it('grants a tone waiver (maxTones) only where the glyph really needs a fifth fill tone (§3.3)', () => {
+    for (const key of WORD_ART_KEYS) {
+      const { glyph, meta } = WORD_ART[key]!;
+      if (meta.maxTones !== undefined) expect(fillTones(glyph).length, key).toBeGreaterThan(4);
+    }
+  });
+
+  it('draws every swatch object from a registered hand family, never a generated one', () => {
+    const generated = new Set(['color', 'count', 'body']);
+    for (const [key, { object }] of Object.entries(COLOR_SWATCHES)) {
+      expect(generated.has(object.split('-')[0]!), `${key} draws ${object}`).toBe(false);
+      expect(WORD_ART[object]?.meta.status, `${key} needs ${object}`).toBe('review');
+    }
+  });
+
+  it('starts every registered swatch with the square in its own vocab tone (independent of the generator)', () => {
+    const tones: Record<string, string> = {
+      'color-red': 'vocab.red',
+      'color-orange': 'vocab.orange',
+      'color-yellow': 'vocab.yellow',
+      'color-green': 'vocab.green',
+      'color-blue': 'vocab.blue',
+      'color-purple': 'vocab.purple',
+      'color-skyblue': 'vocab.skyBlue',
+      'color-brown': 'vocab.brown',
+      'color-gray': 'vocab.gray',
+      'color-white': 'vocab.white',
+      'color-black': 'vocab.black',
+      'color-pink': 'vocab.pink',
+    };
+    expect(Object.keys(tones).sort()).toEqual([...W3_COLORS].sort());
+    for (const [key, tone] of Object.entries(tones)) {
+      expect(getWordArt(key)?.[0], key).toEqual({ t: 'rect', x: 6, y: 6, w: 88, h: 88, r: 14, f: tone, s: 'text.primary', sw: 3 });
     }
   });
 
