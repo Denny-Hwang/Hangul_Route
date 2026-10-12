@@ -21,7 +21,8 @@ export interface CardCitationView {
 // Hangul syllables, jamo and compatibility jamo (the range of `hasHangul` in story/source-link.ts).
 const HANGUL = '[\\u1100-\\u11ff\\u3130-\\u318f\\uac00-\\ud7a3]';
 // A Korean span: Hangul words with only spaces between them, so a Korean phrase is read as one piece.
-const KOREAN_SPAN = new RegExp(`${HANGUL}+(?:\\s+${HANGUL}+)*`, 'g');
+// The capture group makes `split` keep the spans, at the odd indices.
+const KOREAN_SPAN = new RegExp(`(${HANGUL}+(?:\\s+${HANGUL}+)*)`);
 
 /**
  * Splits `text` at the edges of its Korean spans, so only the Hangul is
@@ -32,16 +33,10 @@ const KOREAN_SPAN = new RegExp(`${HANGUL}+(?:\\s+${HANGUL}+)*`, 'g');
  * searched for. The runs always join back to `text`.
  */
 export function hangulRuns(text: string): TextRun[] {
-  const runs: TextRun[] = [];
-  let cursor = 0;
-  for (const match of text.matchAll(KOREAN_SPAN)) {
-    const start = match.index ?? 0;
-    if (start > cursor) runs.push({ text: text.slice(cursor, start), korean: false });
-    runs.push({ text: match[0], korean: true });
-    cursor = start + match[0].length;
-  }
-  if (cursor < text.length) runs.push({ text: text.slice(cursor), korean: false });
-  return runs;
+  return text
+    .split(KOREAN_SPAN)
+    .map((piece, i) => ({ text: piece, korean: i % 2 === 1 }))
+    .filter((run) => run.text !== '');
 }
 
 /**
