@@ -169,6 +169,6 @@ describe('learner.portraitGuard (F-LAYOUT-001 §3.4)', () => {
 
 describe('the dictionary is wired', () => {
   it('exposes learner and caregiver next to common and a11y', () => {
-    expect(Object.keys(en).sort()).toEqual(['a11y', 'caregiver', 'common', 'console', 'landing', 'learner']);
+    expect(Object.keys(en).sort()).toEqual(['a11y', 'caregiver', 'common', 'console', 'landing', 'learner', 'report']);
   });
 });

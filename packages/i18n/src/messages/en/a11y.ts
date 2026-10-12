@@ -178,4 +178,20 @@ export const a11y = {
       revealPlain: 'Not this one.',
     },
   },
+  /**
+   * Progress reports (F-REPORT-001 section 3.12, RP-6): the period tabs and stepper, the live region, and the
+   * text alternatives of the calendar and the growth line. `days` is a list of formatted days
+   * (`report.list`); `window` is a `report.when` value ("last week", "the next week").
+   */
+  report: {
+    periods: 'Report period',
+    periodChanged: (window: string) => `Showing ${window}`,
+    periodChangedAll: 'Showing all time',
+    step: (window: string) => `Show ${window}`,
+    calendar: (days: string) => `Practiced on ${days}.`,
+    calendarNone: 'No practice days in this period.',
+    notSaved: (days: string) => `Not saved yet: ${days}.`,
+    growthTable: 'Quests and cards by month',
+    loading: 'Loading the report',
+  },
 } as const;
