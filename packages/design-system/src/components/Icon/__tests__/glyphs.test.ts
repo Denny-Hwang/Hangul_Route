@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { iconGlyphs, iconNames } from '../glyphs';
+import type { IconGlyphPart } from '../glyphs';
 import type { IconName } from '../types';
 
 const EXPECTED_NAMES: IconName[] = [
@@ -29,6 +30,8 @@ const EXPECTED_NAMES: IconName[] = [
   'ear',
   'pencil',
   'dash',
+  'note',
+  'heart',
 ];
 
 describe('icon glyphs', () => {
@@ -195,5 +198,120 @@ describe('the miss dash (F-VOC-004 §3.6, §3.8; design/components/Icon/spec.md)
     expect(iconGlyphs.dash).not.toEqual(iconGlyphs.close);
     expect(iconGlyphs.dash).not.toEqual(iconGlyphs.plus);
     expect(iconGlyphs.dash.some((part) => /V/.test(part.d))).toBe(false);
+  });
+});
+
+describe('notes glyphs (F-FEEDBACK-001 FB-6; design/components/Icon/spec.md)', () => {
+  const NOTES_GLYPHS: IconName[] = ['note', 'heart'];
+  const strokes = (name: IconName) => iconGlyphs[name].filter((part) => part.kind === 'stroke');
+  /** Every on-path point of an absolute M / L / C / A / Z path, in order (arc radii, rotation and flags dropped). */
+  const points = (d: string): [number, number][] => {
+    expect(d, 'absolute M / L / C / A / Z commands only').toMatch(/^[MLCAZ\d.\s-]+$/);
+    const numbers = d.replace(/A\s*[\d.]+\s+[\d.]+\s+\d+\s+\d\s+\d/g, ' ').match(/-?\d+(\.\d+)?/g) ?? [];
+    const out: [number, number][] = [];
+    for (let i = 0; i + 1 < numbers.length; i += 2) out.push([Number(numbers[i]), Number(numbers[i + 1])]);
+    return out;
+  };
+  const widthOf = (part: IconGlyphPart | undefined): number => (part?.kind === 'stroke' ? part.width ?? 2 : 0);
+  const GAP = 0.5; // visible gap between two drawn parts at 20 dp
+
+  it('adds the note (Home card, notes list, grown-up rows) and the heart (the Thank you answer)', () => {
+    for (const name of NOTES_GLYPHS) expect(iconNames, name).toContain(name);
+  });
+
+  it('draws both with the stroke helper only: outline parts, no solid fill, at the hairline-safe width 2 to 2.6', () => {
+    for (const name of NOTES_GLYPHS) {
+      expect(iconGlyphs[name].length, name).toBeGreaterThan(0);
+      for (const part of iconGlyphs[name]) {
+        // exactly the shape `stroke(d)` / `stroke(d, width)` returns: no fill part, no extra key
+        expect(part.kind, name).toBe('stroke');
+        expect(Object.keys(part).sort(), name).toEqual(part.kind === 'stroke' && part.width !== undefined ? ['d', 'kind', 'width'] : ['d', 'kind']);
+        expect(widthOf(part), name).toBeGreaterThanOrEqual(2);
+        expect(widthOf(part), name).toBeLessThanOrEqual(2.6);
+      }
+    }
+  });
+
+  it('heart is one closed outline, mirror-symmetric on the centre line, two round lobes and a tip at the bottom', () => {
+    const [outline] = strokes('heart');
+    expect(iconGlyphs.heart).toHaveLength(1);
+    const d = outline?.d ?? '';
+    expect(d).toMatch(/Z$/);
+    expect(d.match(/A/g)).toHaveLength(2);
+    // each lobe is a level half circle drawn over the top, and the two meet on the centre line
+    const chunks = d.split('A');
+    const lobes = chunks.slice(1).map((chunk, i) => {
+      const before = (chunks[i]?.match(/-?\d+(\.\d+)?/g) ?? []).map(Number);
+      const [rx, ry, , , sweep, x2, y2] = (chunk.match(/-?\d+(\.\d+)?/g) ?? []).map(Number) as [number, number, number, number, number, number, number];
+      return { rx, ry, sweep, x1: before[before.length - 2] ?? 0, y1: before[before.length - 1] ?? 0, x2, y2 };
+    });
+    for (const { rx, ry, sweep, x1, y1, x2, y2 } of lobes) {
+      expect(rx).toBe(ry);
+      expect(y1).toBe(y2);
+      expect(Math.hypot(x2 - x1, y2 - y1)).toBe(2 * rx);
+      expect(sweep).toBe(1);
+    }
+    expect(lobes[0]?.x2).toBe(12);
+    expect(lobes[1]?.x1).toBe(12);
+    const path = points(d);
+    expect(path[0]).toEqual(path[path.length - 1]);
+    // walking it backwards and mirroring x gives the same path: the left and right halves match
+    const mirrored = [...path].reverse().map(([x, y]) => [24 - x, y]);
+    expect(mirrored).toEqual(path);
+    // the tip sits on the centre line and is the lowest point
+    const [tipX, tipY] = path[0] ?? [0, 0];
+    expect(tipX).toBe(12);
+    for (const [, y] of path) expect(y).toBeLessThanOrEqual(tipY);
+    // a broad open shape (the no-fill rule above keeps it from reading as a game "life")
+    const xs = path.map(([x]) => x);
+    const width = Math.max(...xs) - Math.min(...xs);
+    expect(width).toBeGreaterThanOrEqual(14);
+  });
+
+  it('note is a portrait sheet with a folded corner and two text lines that stay clear of its edges', () => {
+    const [sheet, fold, ...lines] = strokes('note');
+    expect(lines).toHaveLength(2);
+    const outline = points(sheet?.d ?? '');
+    expect(sheet?.d).toMatch(/Z$/);
+    const xs = outline.map(([x]) => x);
+    const ys = outline.map(([, y]) => y);
+    const [left, right, top, bottom] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+    // portrait (taller than wide), so it never reads as the landscape `card`
+    expect(bottom - top).toBeGreaterThan(right - left);
+    expect((left + right) / 2).toBe(12);
+    // the cut corner: the only diagonal edge of the sheet, at the top right
+    const edges = outline.map((point, i) => [point, outline[(i + 1) % outline.length] ?? point] as const);
+    const diagonals = edges.filter(([[x1, y1], [x2, y2]]) => x1 !== x2 && y1 !== y2);
+    expect(diagonals).toHaveLength(1);
+    const [cutStart, cutEnd] = diagonals[0] ?? [[0, 0], [0, 0]];
+    expect(cutStart).toEqual([cutEnd[0] - (cutEnd[1] - cutStart[1]), top]);
+    expect(cutEnd).toEqual([right, cutEnd[1]]);
+    // the fold runs from one end of the cut to the other through the corner inside the sheet
+    const foldPoints = points(fold?.d ?? '');
+    expect(foldPoints).toEqual([cutStart, [cutStart[0], cutEnd[1]], cutEnd]);
+    // the text lines are level, below the fold, inside the sheet with a visible gap, and apart from each other
+    const sheetInset = widthOf(sheet) / 2;
+    const ysOfLines: number[] = [];
+    for (const line of lines) {
+      const [[x1, y1] = [0, 0], [x2, y2] = [0, 0], ...rest] = points(line?.d ?? '');
+      expect(rest).toHaveLength(0);
+      expect(y1).toBe(y2);
+      const half = widthOf(line) / 2;
+      expect(Math.min(x1, x2) - half).toBeGreaterThanOrEqual(left + sheetInset + GAP);
+      expect(Math.max(x1, x2) + half).toBeLessThanOrEqual(right - sheetInset - GAP);
+      expect(y1 - half).toBeGreaterThanOrEqual(cutEnd[1] + widthOf(fold) / 2 + GAP);
+      expect(y1 + half).toBeLessThanOrEqual(bottom - sheetInset - GAP);
+      ysOfLines.push(y1);
+    }
+    const [firstY = 0, secondY = 0] = ysOfLines;
+    expect(Math.abs(secondY - firstY) - widthOf(lines[0])).toBeGreaterThanOrEqual(GAP);
+  });
+
+  it('neither repeats an older glyph: the note is not the card or the book, the heart is not the star or the sparkle', () => {
+    for (const name of NOTES_GLYPHS) {
+      for (const other of iconNames) {
+        if (other !== name) expect(iconGlyphs[name], `${name} vs ${other}`).not.toEqual(iconGlyphs[other]);
+      }
+    }
   });
 });
