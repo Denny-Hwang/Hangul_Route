@@ -14,7 +14,13 @@ import { defineConfig } from 'vitest/config';
  */
 export default defineConfig({
   // Same `@/` alias as tsconfig, so tests can server-render pages that import `@/data/...`.
-  resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
+  // and `react-native-svg` maps to DOM SVG, as in next.config.js, for the design system's HeritageCardArt.
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      'react-native-svg': fileURLToPath(new URL('./src/shims/react-native-svg.tsx', import.meta.url)),
+    },
+  },
   // tsconfig keeps `jsx: preserve` for Next; tests that server-render a page
   // (src/app/__tests__/*.test.tsx) need esbuild to compile JSX itself.
   esbuild: { jsx: 'automatic' },
