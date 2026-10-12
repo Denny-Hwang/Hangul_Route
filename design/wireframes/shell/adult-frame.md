@@ -83,7 +83,7 @@ Nav registry (this spec registers every item; hidden when its predicate is off �
 ## Navigation graph
 
 Enter from: every grown-up page renders inside it
-Exit to:    `shell/parent-home` · `shell/teacher-home` · `/account/billing` · report, notes and Learning Route pages (sibling specs) · lesson browser `/browse` (new window) · learner app `/` · `shell/signin` · hangulroute.com
+Exit to:    `shell/parent-home` · `shell/teacher-home` · `/account/billing` · report, notes and Learning Route pages (sibling specs) · lesson browser `/browse` (same tab, after the pass hand-off) · learner app `/` · `shell/signin` · hangulroute.com
 
 ## States
 

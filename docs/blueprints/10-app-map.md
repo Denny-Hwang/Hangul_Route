@@ -131,7 +131,7 @@ Hangul Route
 | P-B 가정 | ✓ · Lecture presenter (A15, `/present`, 가족 TV, 프로필 없음) · All lessons (A17, `/browse`, 어른만, 프로필 없음) | ✓ 앱+웹 | C10 만 (가족 공간 `caregiver`; `plan.write` 와 같은 조건, F-TCH-004 §3.11) | Family Plan (`family_lifetime`, $15.30/년, 매년 갱신) |
 | P-C 학급 학생 | ✓ + Join code | (부모가 있으면 ✓) | – | 교사가 지불 |
 | P-C 교사 | Lecture presenter (A15, `/present`) · All lessons (A17, `/browse`) — 둘 다 프로필 없음 | – | ✓ C1–C6, C8, C10 | 학생 ≤ 20 무료 → group_license ($153/yr) |
-| P-D 학교 관리자 | – | – | ✓ C7, C8 | group_license ($153/yr) / 상한 초과 seat 계약 |
+| P-D 학교 관리자 | All lessons (A17, `/browse`, 프로필 없음) | – | ✓ C7, C8 | group_license ($153/yr) / 상한 초과 seat 계약 |
 | P-6 성인 초보 학습자 (외국인, 2026-09-20 추가) | ✓ 아이와 동일 화면 (Stage 1 은 성인에게도 유효) · Rescue Code | – | – | Free → family_lifetime 과 동일 플랜 (개인 결제) |
 
 ---
@@ -328,7 +328,7 @@ journey/grid-with-stories ─┬─ (lesson 셀) ─▶ episode/detail ─▶ ep
 [web, 로그인 없음] /present ─▶ classroom/lecture-presenter (A home: Recent · Quick lesson ─▶ B start ─▶ C stage) — 프로필·진도를 읽거나 쓰지 않음 (F-TCH-004 §3.9)
 [web, 같은 탭 pass] /browse (#t=<target>&s=<source>, 첫 그리기 전에 주소에서 지움) ─┬─ (활성 pass 없음) ─▶ browse/access ─▶ /?gate=browse (BR-12b, 그 전엔 /) · /parent · /teach/home · /signin
                                                                                  └─ (pass 있음) ─▶ browse/home (target 이 있으면 그 화면으로: stage → Journey · episode → browse/episode · quest·story·vocab-topic·jamo·char → browse/item · card → library/card-detail)
-browse/home ─┬─ Route · Journey (셀) ─▶ browse/episode ─▶ browse/item
+browse/home ─┬─ Route (stage 행) ─▶ Journey (그 stage) ; Journey (셀) ─▶ browse/episode ─▶ browse/item
              ├─ Library (카드 ─▶ library/card-detail preview · 이야기·낱말 타일 ─▶ browse/item)
              ├─▶ browse/show-as (sheet)
              └─ [ Close ] ─▶ history.back() (같은 origin 에서 왔을 때) · 아니면 페르소나 홈 (계정 pass) 또는 / (gate·kept pass)
