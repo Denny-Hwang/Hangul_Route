@@ -50,3 +50,5 @@ export * from './localize';
 export { OVERLAYS } from './i18n-overlays.generated';
 export * from './schemas/vocab-progress';
 export * from './schemas/app-shell';
+export * from './schemas/report';
+export * from './schemas/report-response';
