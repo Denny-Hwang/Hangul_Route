@@ -1,6 +1,6 @@
 # Billing/Plan status — the learner's plan, status only (wireframe v2)
 
-Spec: `docs/specs/F-BILL-002-billing-in-app-all-personas.md` §4.7, §4.8, §4.12 · supersedes the body of `paywall/upgrade.md` (F-ENT-001 §3.5) · free slot content: `paywall/free-plan-days.md` (F-ENT-003 E3-8) · gate for Open billing: `profiles/pin-entry` · hand-off: F-APP-001 `openGrownUpArea`
+Spec: `docs/specs/F-BILL-002-billing-in-app-all-personas.md` §4.7, §4.8, §4.12 · supersedes the body of `paywall/upgrade.md` (F-ENT-001 §3.5) · free-plan lines: `billing/plan-status-free-lessons.md` (F-ENT-003 §3.9.1, E3-8) · gate for Open billing: `profiles/pin-entry` · hand-off: F-APP-001 `openGrownUpArea`
 Screen ID: `billing/plan-status` · Navigation route key stays `Paywall` (title "Plan")
 Audience: **any learner** (status, no PIN), **their grown-up** for Open billing (after the PIN gate) on a family device, and **the learner themself** on a self-only device (the gate opens directly when no PIN is set). Same screen for every age; no age wording.
 
@@ -25,7 +25,7 @@ Web, free plan, family audience, F-ENT-003 switch off:
 |         [ Hoya, idle pose ]       |
 |                                   |
 |  <Name> is on the free plan.      |  <- summary heading (first accessible element)
-|  Stage 1 is always free.          |  <- free slot (F-ENT-003 owns; this line until E3-8 / switch off)
+|  Stage 1 is always free.          |  <- free slot: this spec's line until E3-8, and whenever F-ENT-003's switch is off
 |                                   |
 |  Plans and receipts are on the    |  <- web only (self: "Your plan and receipts are
 |  billing page for grown-ups.      |     on the billing page.")
@@ -35,16 +35,16 @@ Web, free plan, family audience, F-ENT-003 switch off:
 +-----------------------------------+
 ```
 
-Web, free plan, F-ENT-003 switch on (the slot holds the What is free block; no offer, no price, no button inside it):
+Web, free plan, F-ENT-003 switch on (the slot holds F-ENT-003's free-plan lines; no offer, no price, no button, no link inside it; exact words in `billing/plan-status-free-lessons.md`):
 
 ```
 |  <Name> is on the free plan.      |
-|  What is free                     |  <- F-ENT-003 E3-8 block, counts from data
-|   - Day 1 and Day 2 of the route: |
-|     {6} quests, {18} letters      |
-|   - {4} word topics               |
-|   - Everything your learner       |
-|     finished stays theirs.        |
+|  [ F-ENT-003 free-lessons line:   |  <- counts from data, never typed
+|    the first lessons, letters,    |
+|    minutes; everything finished   |
+|    stays ]                        |
+|  [ optional: stories, word topics]|
+|  [ optional: one situation line ] |
 |  Plans and receipts are on the    |
 |  billing page for grown-ups.      |
 |  [ Open billing ]                 |
@@ -66,7 +66,7 @@ Native (iOS / Android), free plan:
 Other states (web and native identical except the web-only block):
 
 ```
-full route, family source | [ Hoya, cheering ] | <Name> has the full route.    | From your family's Family Lifetime plan. | (web: caption + Open billing) | [[ BACK TO JOURNEY ]]
+full route, family source | [ Hoya, cheering ] | <Name> has the full route.    | From your family's Family Lifetime plan. | [ guidance slot: F-ENT-003 line, may be empty ] | (web: caption + Open billing) | [[ BACK TO JOURNEY ]]
 full route, no source     | [ Hoya, cheering ] | <Name> has the full route.    | Everything is open.                      | (web: caption + Open billing) | [[ BACK TO JOURNEY ]]
 covered (class / school)  | [ Hoya, cheering ] | <Name> is covered by <space>. | Everything is open while they are in it. |                               | [[ BACK TO JOURNEY ]]
 self audience             | "You're on the free plan." · "You have the full route." · "From your Family Lifetime plan." · "You're covered by <space>." · "Everything is open while you are in it."

@@ -15,8 +15,8 @@ Owner request (2026-10-11), items covered here: **8** (every persona can see the
 | Id | Short name | What it owns that this spec uses | Branch |
 |---|---|---|---|
 | **F-APP-001** | SHELL | the app host serving grown-up pages; `APP_ROUTES.billing = '/account/billing'`; the `/account/billing` route, its layout and the frame's Billing item (A-5c); the legacy `/teach/billing` redirect (A-5c, A-8 `legacyConsoleTarget`); the service-worker denylist and grown-up offline page (A-2); `billingReturnUrl(env, suffix)` (A-9); `openGrownUpArea` and the PIN destination `GrownUpArea` (A-6); `AdultFrame` (A-5a); `/start` (A-4) | `docs/persona-app-shell` |
-| **F-SITE-002** | SITE | hangulroute.com content; the site redirect table `site-routes.json` (S-9, S-10); `SITE_CLAIMS` in `apps/web/src/data/site-claims.ts` (S-2) | `docs/marketing-site-layered` |
-| **F-ENT-003** | FREE | what is free (Day 1 and Day 2) and the "full route" wording; the **What is free** block (E3-8) and its keys `caregiver.paywall.freePlan` | `docs/free-day2-unlocked-curriculum` |
+| **F-SITE-002** | SITE | hangulroute.com content (no billing link, no price); `SITE_CLAIMS` in `apps/web/src/data/site-claims.ts` (S-2); builds no redirect table (old URLs are F-APP-001's stubs) | `docs/marketing-site-layered` |
+| **F-ENT-003** | FREE | what is free (the first lessons) and the access words; the free-plan lines on the Plan screen (E3-8) and their keys `caregiver.plan.freePlan` | `docs/free-day2-unlocked-curriculum` |
 | **F-BROWSE-001** | BROWSE | lesson browsing for paying grown-ups; its own access rule `accountBrowseScope`; its [ See plans ] link targets `APP_ROUTES.billing` | `docs/adult-content-browser` |
 | F-REPORT-001, F-FEEDBACK-001 | REPORTS, NOTES | features named in the billing page's "what you get" lines, through `SITE_CLAIMS` | `docs/progress-reports`, `docs/adult-feedback-channel` |
 
@@ -27,11 +27,11 @@ Owner request (2026-10-11), items covered here: **8** (every persona can see the
 | Path of the billing page | F-APP-001 `APP_ROUTES.billing` (`/account/billing`) | imports it; never spells the path |
 | Route file, grown-up layout, `noindex`, frame nav item | F-APP-001 A-4, A-5a, A-5c | fills the page body (B-8a) |
 | Old address on the app host (`/teach/billing`) | F-APP-001 A-5c redirect page | nothing |
-| Old address on hangulroute.com | F-APP-001 A-8 stubs, then F-SITE-002 S-10 `_redirects` | nothing; asks for one hop (section 4.1) |
+| Old address on hangulroute.com | F-APP-001 A-8 stub pages (behind `CONSOLE_ORIGIN`), one hop via `legacyConsoleTarget` | nothing |
 | Service-worker denylist and offline page for grown-up paths | F-APP-001 A-2 | nothing |
 | Stripe return and portal URL helper `billingReturnUrl(env, suffix)` | F-APP-001 A-9 | B-5 adds `&plan=&id=` to the success suffix only |
 | Learner app to billing hand-off | F-APP-001 A-6 `openGrownUpArea` | B-9b calls it from the Plan screen |
-| What is free, and its wording | F-ENT-003 E3-8 | B-9 leaves a slot on the Plan screen for it |
+| What is free, and its wording | F-ENT-003 E3-8 (`caregiver.plan.freePlan`) | B-9 leaves slots on the Plan screen for it and owns the switch-off line `caregiver.plan.free.open` |
 | "Paying grown-up" for browsing | F-BROWSE-001 `accountBrowseScope` | nothing (no second rule) |
 
 ---
@@ -102,7 +102,7 @@ Today every money surface sits on the wrong host or shows the wrong thing to the
 | `https://app.hangulroute.com/account/billing` | **The billing home** (wireframe `billing/billing-home`). Signed-in grown-ups only (Clerk), inside F-APP-001's grown-up layout and lock. | route: F-APP-001 A-5c · content: this spec B-8a |
 | `https://app.hangulroute.com/account/billing/receipts?id=<spaceId>` | All receipts of one space the viewer pays for (wireframe `billing/receipts`). Query parameter, not a path segment, because the web build is a static export (F-CONSOLE-001 §3.7). The id is the opaque `space:…` id; no learner or space name ever appears in a URL. Inside F-APP-001's `/account/*` reservation (its section 3.2). | this spec B-8c |
 | `https://app.hangulroute.com/teach/billing` | Client redirect to `/account/billing`, query kept. | F-APP-001 A-5c |
-| `https://hangulroute.com/teach/billing` (and with a trailing slash) | Forwarded to `https://app.hangulroute.com/account/billing` with the query. Before F-SITE-002 S-10: F-APP-001 A-8's stub page (`legacyConsoleTarget('/teach/billing') = '/account/billing'`, one hop). After S-10: F-SITE-002's `_redirects`, which must carry a specific `/teach/billing*` → `{origin}/account/billing` rule above `/teach/*` (section 13, amendment S1), so the hop count stays one. Without that rule it is two hops (edge to `/teach/billing` on the app host, then A-5c's redirect page) and still lands with the query. | F-APP-001, F-SITE-002 |
+| `https://hangulroute.com/teach/billing` (and with a trailing slash) | Forwarded to `https://app.hangulroute.com/account/billing` with the query and fragment, in one hop, by F-APP-001 A-8's static stub page (`legacyConsoleTarget('/teach/billing') = '/account/billing'`), live once the owner sets `CONSOLE_ORIGIN` on the site build (F-APP-001 M3). F-SITE-002 adds no second forwarding layer. Until then the old page keeps rendering on hangulroute.com, as today. | F-APP-001 |
 | Any other hangulroute.com page | No price, no plan list, no "Buy", no checkout or portal URL, no link to the billing page. It may link to the app's sign-in (F-SITE-002 decides the CTA). B-10 adds a guard test. | F-SITE-002 |
 
 - **Path constants.** This spec never writes the path: the web page, the Worker and the mobile app read `APP_ROUTES.billing` from `packages/content-schema/src/schemas/app-shell.ts` (F-APP-001 A-1). `billing.ts` adds only `BILLING_RECEIPTS_PATH = \`${APP_ROUTES.billing}/receipts\``.
@@ -208,7 +208,7 @@ Replaces the current price-bearing paywall body. The navigation route key stays 
 | **premium**, no source (legacy subscription, F-SUB-001) | "*Name* has the full route." · "Everything is open." | "You have the full route." · "Everything is open." |
 | **free** | "*Name* is on the free plan." | "You're on the free plan." |
 
-- **Free state slot.** Under the free title the screen renders `<FreePlanLines />`, a slot owned by F-ENT-003: until E3-8 fills it, and whenever F-ENT-003's switch is off, it renders the existing line "Stage 1 is always free." (`caregiver.paywall.free.bubble`); with the switch on, E3-8 renders its **What is free** block there (counts from data, keys `caregiver.paywall.freePlan`, no price). The slot never holds an offer, a price, a button, a promo hint or a terms line.
+- **Slots for F-ENT-003.** Under the free title the screen renders `<FreePlanLines />`: until E3-8 fills it, and whenever F-ENT-003's effective switch is off, it renders this spec's line `caregiver.plan.free.open`, "Stage 1 is always free." (today's wording, moved from `caregiver.paywall.free.bubble`); with the switch on, E3-8 renders F-ENT-003 §3.9.1's free-plan lines there (the free-lessons line with counts from data, the optional stories and topics list, at most one situation line; keys `caregiver.plan.freePlan`). Under the full-route lines the screen renders `<PlanGuidanceLine />`, empty until E3-8 adds F-ENT-003's "Set a plan to guide what comes next." line. Neither slot ever holds an offer, a price, a button, a link, a promo hint or a terms line.
 - **Web only** (`Platform.OS === 'web'`): under the state, one caption ("Plans and receipts are on the billing page for grown-ups." for the family audience; "Your plan and receipts are on the billing page." for self) and a secondary button **Open billing**. Pressing it goes through the grown-up gate (`openGrownUps('Billing')`; it opens directly while a grown-up session is open or on a self-only device without a PIN, F-LEARN-001 L7). After the gate:
   - B-9 (before the shell hand-off): `Linking.openURL(consoleBillingUrl())`, today's target and behaviour.
   - B-9b (F-APP-001 A-6 merged, `flags.grownUpHomeEnabled` on): `openGrownUpArea({ via: 'paywall', target: APP_ROUTES.billing })` in the **same tab**. It writes F-APP-001's per-tab unlock, so the billing page opens without the "Grown-ups only" lock, and the unlock survives the Stripe round trip; **Back to learning** in the frame returns to the app. This replaces the "paywall same-origin billing" item of F-APP-001 A-7 (amendment A2).
@@ -473,6 +473,7 @@ Deleted in B-8c with their `ko` / `es` entries: `console.billingKidsLine` (repla
 | `full.fromFamily.family` / `.self` | From your family's Family Lifetime plan. / From your Family Lifetime plan. |
 | `full.noSource` | Everything is open. |
 | `free.title.family(name)` / `.self` | {name} is on the free plan. / You're on the free plan. |
+| `free.open` | Stage 1 is always free. (moved from `caregiver.paywall.free.bubble`; F-ENT-003's lines replace it while its switch is on) |
 | `openBilling.cta` | Open billing |
 | `openBilling.caption.family` / `.self` | Plans and receipts are on the billing page for grown-ups. / Your plan and receipts are on the billing page. |
 | `openBilling.a11yHint` | Opens the billing page |
@@ -493,8 +494,8 @@ Kept: `free`, `freeNote`, `pillActive`, `pillFree`. Deleted (B-9): `premium` ("P
 
 ### 6.4 Keys removed in B-9 (with their `ko` / `es` entries)
 
-- `caregiver.paywall`: `learnerFallback` (moved to `caregiver.plan.learnerFallback`), `backToJourney`, `covered`, `premium`, `free.unlocks`, `free.openConsole`, `free.openFailed`, `free.terms`, `bullets`, `offer`.
-- **Kept** in `caregiver.paywall`: `free.bubble` ("Stage 1 is always free.", the free slot's switch-off line) and anything F-ENT-003 adds (`freePlan`). The key namespace for the free slot is therefore `caregiver.paywall.*` in both specs.
+- `caregiver.paywall`, the whole object: `learnerFallback` moves to `caregiver.plan.learnerFallback`, `free.bubble` moves to `caregiver.plan.free.open` (same English), and `backToJourney`, `covered`, `premium`, `free.unlocks`, `free.openConsole`, `free.openFailed`, `free.terms`, `bullets`, `offer` are deleted.
+- The namespace for every Plan screen string, F-ENT-003's included, is `caregiver.plan.*`: F-ENT-003 E3-8 adds `caregiver.plan.freePlan` to the object B-6 creates.
 - `caregiver.audience.shared.paywallBuyOnWeb`, `.paywallBuyLater`, `.promoHint`; `a11y.lifetimeOffer`; `learner.profile.plan.premium`, `.unlocked`, `.unlock`.
 
 ### 6.5 Copy checks
@@ -507,7 +508,7 @@ Buttons ≤ 24 characters in English and ≤ 32 in `es` (F-I18N-001 §3.11 budge
 2. **B-9 merges** (mobile, needs only B-6). The learner Plan screen loses its price and its native link at once. **B-9b** follows once F-APP-001 A-6 is in.
 3. **F-APP-001 serves grown-up pages on app.hangulroute.com** (A-2, A-3, A-4, A-5a, A-5c; M1). **S-4** (Stripe return base to the app host) waits until A-2 has been in production at least 14 days (section 4.1).
 4. **B-8a … B-8c merge** (web). The new page replaces the re-export at `/account/billing`; the old `/teach/billing` path redirects there (F-APP-001 A-5c).
-5. **B-10** (guard test) after F-SITE-002 S-10. **B-11** e2e on the merged state. **B-12** any time after B-8a.
+5. **B-10** (guard test) after F-SITE-002's page PRs and F-APP-001 A-8. **B-11** e2e on the merged state. **B-12** any time after B-8a.
 
 Rollback: every step is a revert. Setting `CONSOLE_URL` back returns checkouts to the old path, which the sibling redirects still handle; the table stays (additive, unused).
 
@@ -572,9 +573,9 @@ The console has no telemetry client (F-APP-001 OD-9). Billing events are therefo
 | `apps/web/src/lib/console/__tests__/checkout-return.test.ts` | the return state machine: checking → done, → still processing after 10 polls, check again, offline pauses without using attempts and resumes on online, poll error, cancelled, success without plan / id, done with a 0-learner family shows the next step |
 | `apps/web/src/app/__tests__/billing-page.test.tsx` | renders inside the grown-up layout with `noindex`; test banner, live-off, not configured, offline panel, error panel; step-up dialog flow against the real Clerk hint body (`useReverification` mocked at the fetcher boundary), retry refused twice → unavailable line, cancel → "Nothing was changed."; `already_active` note; no price or receipt on viewer cards |
 | `apps/web/src/app/__tests__/receipts-page.test.tsx` | rows, test pill, View receipt opens a blank tab then sets its location with `opener` cleared, link failure line, not-yours and error states, 320 px list layout |
-| `apps/web/src/app/__tests__/site-no-billing.test.ts` (B-10) | scans `app/(en)`, `app/(loc)` and `components/landing` for **links and amounts only**: hrefs to `APP_ROUTES.billing`, `/teach/billing` or `/billing`, Stripe checkout or portal URLs, and price patterns (reuses the landing-claims banned-price regexes); allows the legal pages' prose (Terms and Privacy may say payments go through Stripe, F-SITE-002 S-7) and F-SITE-002's `site-routes.json` redirect table |
+| `apps/web/src/app/__tests__/site-no-billing.test.ts` (B-10) | scans `app/(en)`, `app/(loc)` and `components/landing` for **links and amounts only**: hrefs to `APP_ROUTES.billing`, `/teach/billing` or `/billing`, Stripe checkout or portal URLs, and price patterns (reuses the landing-claims banned-price regexes); allows the legal pages' prose (Terms and Privacy may say payments go through Stripe, F-SITE-002 S-7); F-SITE-002's own `site-links` and page tests pin the same rule from the site's side |
 | `apps/mobile/src/logic/__tests__/paywall.test.ts` (extended) | `paywallState` unchanged; the plan view model picks the right keys per state, source and audience |
-| `apps/mobile/src/screens/paywall/__tests__/PaywallScreen.test.tsx` | every state on `web`, `ios`, `android`, both audiences: no price text anywhere; native renders no URL-opening control and none of the deny-list words (section 4.8); web renders one Open billing button that calls the gate with destination `Billing`; the free slot renders "Stage 1 is always free." by default; no banned learner word |
+| `apps/mobile/src/screens/paywall/__tests__/PaywallScreen.test.tsx` | every state on `web`, `ios`, `android`, both audiences: no price text anywhere; native renders no URL-opening control and none of the deny-list words (section 4.8); web renders one Open billing button that calls the gate with destination `Billing`; the free slot renders "Stage 1 is always free." by default and the guidance slot renders nothing; no banned learner word |
 | `apps/mobile/src/screens/profile/__tests__/ProfileScreen.test.tsx` (extended) | Plan details shows for free, premium and covered tiers and opens the Plan screen without a PIN; the card says "Full route" and never "Premium" or "unlock" |
 | `apps/mobile/src/platform/__tests__/billing-handoff.test.ts` (B-9b) | with `flags.grownUpHomeEnabled` the `Billing` destination calls `openGrownUpArea({ via: 'paywall', target: APP_ROUTES.billing })`; without it, `Linking.openURL(consoleBillingUrl())` |
 | `packages/i18n/src/__tests__/billing-messages.test.ts` | new keys exist in `en`, typed in `ko` / `es` overlays; removed keys gone; every string a billing wireframe draws has a key (a list kept in the test); no message contains a digit-dollar pattern or a hard-coded limit; banned words (`kids`, age ranges) absent from `console.billing`; learner banned fixture passes for `caregiver.plan` and `learner.profile.plan` |
@@ -600,11 +601,11 @@ Coverage: `packages/content-schema` 100 %, `packages/backend` ≥ 90 %, `apps/we
 | B-8c | `feat(web)`: `/account/billing/receipts` page, receipt-link opening, step-up around it; removal of the old `console.*` billing keys of section 6.1 | M | B-8a, B-8b |
 | B-9 | `feat(mobile)`: Plan screen (status only, ungated, family / self wording, free slot, web-only Open billing through the gate destination `Billing` → today's `consoleBillingUrl()`, native no link), Profile card words and Plan details for every tier, removed paywall keys + tests | M | B-6 |
 | B-9b | `feat(mobile)`: the `Billing` destination hands off in the same tab through `openGrownUpArea({ via: 'paywall', target: APP_ROUTES.billing })` when `flags.grownUpHomeEnabled` is on (replaces F-APP-001 A-7's paywall item) | S | B-9, F-APP-001 A-6 |
-| B-10 | `test(web)`: `site-no-billing` guard test (links and amounts only, allow-list of section 11) | S | F-SITE-002 S-10, F-APP-001 A-5c |
+| B-10 | `test(web)`: `site-no-billing` guard test (links and amounts only, allow-list of section 11) | S | F-SITE-002 S-5 (last page PR), F-APP-001 A-8 |
 | B-11 | `test(e2e)`: web billing spec and PWA plan-status spec on the merged app-host build | S | B-8c, B-9b, F-APP-001 A-3 |
 | B-12 | `feat(web)`: space settings archive confirm names the active plan it affects (section 4.6) | S | B-8a |
 
-B-1 and B-6 can run in parallel right after B-0 (B-1 also needs F-APP-001 A-1, a small PR with no dependencies). B-2 → B-3 → B-5 → B-4 is the server chain. B-9 needs only B-6 and ships before anything on the app host (it removes the native link and the price at once). F-ENT-003 E3-8 lands after B-9 (it fills B-9's free slot).
+B-1 and B-6 can run in parallel right after B-0 (B-1 also needs F-APP-001 A-1, a small PR with no dependencies). B-2 → B-3 → B-5 → B-4 is the server chain. B-9 needs only B-6 and ships before anything on the app host (it removes the native link and the price at once). F-ENT-003 E3-8 lands after B-9 (it fills B-9's slots and adds `caregiver.plan.freePlan`).
 
 ## 13. Owner decisions and sibling amendments
 
@@ -633,17 +634,18 @@ B-1 and B-6 can run in parallel right after B-0 (B-1 also needs F-APP-001 A-1, a
 | A2 | F-APP-001 | A-7 drops "paywall same-origin billing": the learner Plan screen's hand-off is F-BILL-002 B-9b, through A-6's `openGrownUpArea`. |
 | A3 | F-APP-001 | A-9's `billingReturnUrl(env, suffix)` is the only return-URL helper; F-BILL-002 B-5 supplies the success suffix `?checkout=success&plan=<k>&id=<spaceId>`. |
 | A4 | F-APP-001 | (optional copy) the `/start` parent role card reads "For me or my family", matching the billing empty state, so adult self-learners recognise it. |
-| S1 | F-SITE-002 | `site-routes.json`: `paths.billing` = `/account/billing`, and a rule `/teach/billing*` → `{origin}/account/billing` above `/teach/*`, so an old Stripe return is one hop. The site renders no billing link (`billing()` stays unused by pages or is removed). |
+| S1 | F-SITE-002 | (answered, superseded) F-SITE-002 revision 2 builds no `_redirects` and no `site-routes.json`; F-APP-001's stubs forward `/teach/billing` in one hop and the site renders no billing link. Remaining edit: F-SITE-002's sentences that mention "F-BILL-002's `/teach/billing` forwarder", `BILLING_URL` and `EXPO_PUBLIC_BILLING_URL` describe revision 1; revision 2 has none of them (the old address on the app host is F-APP-001 A-5c's redirect page; the learner app keeps `consoleBillingUrl()` until B-9b hands off through F-APP-001). |
 | S2 | F-SITE-002 | B-10's guard scans links and amounts only and allows the S-7 legal prose; if F-SITE-002 ships its own equivalent guard, B-10 reuses it. |
-| F1 | F-ENT-003 | §3.9, wireframe `paywall/free-plan-days.md` and E3-8: the free state renders only the **What is free** block, in F-BILL-002's free slot on the Plan screen (`billing/plan-status`); the offer card, price, "Open the web console" button, promo hint and terms line are gone; `freePlan.everyLesson` moves to the billing page (`console.billing.includesLines.family.everyLesson`). E3-8 depends on B-9. The switch-off line stays "Stage 1 is always free." (`caregiver.paywall.free.bubble`). |
+| F1 | F-ENT-003 | (adopted in F-ENT-003 revision 2: §3.9.1, wireframe `billing/plan-status-free-lessons.md`, E3-8 after B-9, keys `caregiver.plan.freePlan`, "Every lesson of every Stage, now and later" moved to the billing page.) Remaining edit: the switch-off line F-ENT-003 quotes is `caregiver.plan.free.open` = "Stage 1 is always free." (today's wording), not "Stage 1 is open to everyone." (revision 1). |
 | F2 | F-ENT-003 | The Profile `learner.profile.plan.freeNote` ("Stage 1 is free. More stages are on the way.") is not true once the switch is on; E3-8 swaps it under the switch. |
+| F3 | F-ENT-003 | §3.9.2's **Open billing** link: there is no `billingUrl()` in F-BILL-002 revision 2. On the console it is `APP_ROUTES.billing`; on the learner device it is the Plan screen's gated **Open billing** (B-9 / B-9b); nothing on native. |
 | B1 | F-BROWSE-001 | [ See plans ] targets `APP_ROUTES.billing` on the app host; F-BILL-002 exposes no "paying grown-up" flag (BROWSE's `accountBrowseScope` is the only rule). |
 
 Assumptions this spec relies on (and what happens if they change):
 
 - **AS1.** F-APP-001 serves grown-up pages on app.hangulroute.com with Clerk on that origin. If it slips, B-0 to B-7 and B-9 still ship; only B-8a onward waits, and the old page keeps working at `/teach/billing` on hangulroute.com.
 - **AS2.** The family cap of 5 learners stays on every family space, paid or not (`spaces.ts:300`). This spec does not change it.
-- **AS3.** F-ENT-003 decides what is free; the Plan screen renders its slot. Until E3-8, the slot says "Stage 1 is always free."
+- **AS3.** F-ENT-003 decides what is free; the Plan screen renders its slots. Until E3-8, the free slot says "Stage 1 is always free."
 - **AS4.** Production Clerk session tokens carry `fva` (checked once, section 4.4).
 
 ## 14. Out of scope
@@ -663,7 +665,7 @@ Assumptions this spec relies on (and what happens if they change):
 - F-CONSOLE-001 (static export, `?id=` addressing) and F-AUTH-002 (Clerk console sign-in).
 - F-I18N-001 (dictionary, budgets, overlays).
 - F-PWA-001 (telemetry names list) and F-LEARN-001 / F-PROF-001 (gate, `gateOpensDirectly`, audience copy).
-- F-APP-001 (A-1, A-2, A-4, A-5a, A-5c, A-6, A-9), F-SITE-002 (S-2, S-10), F-ENT-003 (E3-8 after B-9), F-BROWSE-001 (link target only).
+- F-APP-001 (A-1, A-2, A-4, A-5a, A-5c, A-6, A-8, A-9), F-SITE-002 (S-2, S-5), F-ENT-003 (E3-8 after B-9), F-BROWSE-001 (link target only).
 
 ## Review log
 
@@ -673,8 +675,8 @@ Assumptions this spec relies on (and what happens if they change):
 
 | Finding | Resolution |
 |---|---|
-| R1-B1 three specs disagree on path, forwarder and return helper | Applied. Path = F-APP-001 `APP_ROUTES.billing` (`/account/billing`); this spec's forwarder (`billingForward`, the moved-notice wireframe, OD-10) is removed; app-host legacy redirect = F-APP-001 A-5c; site-host = F-APP-001 A-8 then F-SITE-002 S-10 with a one-hop rule requested (S1); `billingReturnUrl` = F-APP-001 A-9 only, `BILLING_URL` dropped; ownership table in the header; B-10 depends on S-10 and A-5c by name. |
-| R1-B2 learner Plan screen contradicts F-ENT-003 | Applied. Plan screen has a free slot owned by F-ENT-003; keys stay in `caregiver.paywall.*` (`free.bubble`, `freePlan`), §6.4 deletes only the removed keys; the invented "Stage 1 is open to everyone." is replaced by the existing "Stage 1 is always free."; E3-8 after B-9 (amendment F1). |
+| R1-B1 three specs disagree on path, forwarder and return helper | Applied. Path = F-APP-001 `APP_ROUTES.billing` (`/account/billing`); this spec's forwarder (`billingForward`, the moved-notice wireframe, OD-10) is removed; app-host legacy redirect = F-APP-001 A-5c; site-host = F-APP-001 A-8 stubs, one hop (F-SITE-002 revision 2 dropped its `_redirects`, so S1 is superseded); `billingReturnUrl` = F-APP-001 A-9 only, `BILLING_URL` dropped; ownership table in the header; B-10 depends on F-SITE-002's page PRs and F-APP-001 A-8 by name. |
+| R1-B2 learner Plan screen contradicts F-ENT-003 | Applied. Plan screen has slots for F-ENT-003's lines; one namespace for both specs, `caregiver.plan.*` (F-ENT-003 revision 2 chose `caregiver.plan.freePlan`); §6.4 deletes only the removed keys and moves the rest; the invented "Stage 1 is open to everyone." is replaced by the existing "Stage 1 is always free."; E3-8 after B-9 (amendment F1). |
 | R1-M1 new tab breaks the grown-up unlock | Applied. B-9b uses `openGrownUpArea` in the same tab; a11y hint "Opens the billing page"; tests and e2e updated. |
 | R1-M2 learner cannot reach own plan status | Applied. Plan details for every tier, Plan screen ungated (only Open billing is gated), Profile card says "Full route" / "Everything is open…"; tests for reachability and banned words. |
 | R1-M3 purchase with no learner; no self-learner path | Applied. Connect a learner step (links to F-APP-001's family page with the join panel; the code is not added to the billing summary, to keep it out of a money response), self-learner story with steps, audience-specific copy, new done line. |
@@ -693,3 +695,5 @@ Assumptions this spec relies on (and what happens if they change):
 | R2 minor: telemetry is transient; `summary_viewed` inflated by polls | Applied. |
 | R2 minor: step-up strings missing | Applied (`stepUp.cancelled`, `stepUp.unavailable`). |
 | R2 minor: no index on `entitlements.provider_ref`; disputes | Applied (index in 0007; disputes out of scope). |
+
+**2026-10-11, revision 2 (sibling pass)**: re-read the sibling specs as revised in parallel. F-SITE-002 revision 2 dropped its redirect table, so the old site address is F-APP-001 A-8's one-hop stub only (amendment S1 closed; B-10 now depends on F-SITE-002's page PRs and A-8). F-ENT-003 revision 2 moved its lines onto the Plan screen under `caregiver.plan.freePlan`; this spec now uses `caregiver.plan.*` for every Plan screen string, moves `free.bubble` to `caregiver.plan.free.open` with the same words, and adds a guidance slot for F-ENT-003's premium no-plan line (amendments F1 to F3 updated).
