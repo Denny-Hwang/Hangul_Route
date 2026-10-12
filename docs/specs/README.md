@@ -88,8 +88,8 @@ F-XXX-<slug>.md
 - `F-SPACE-002-class-transfer.md` — move a learner between classes with learner-side, releasing and receiving consent (flag-locked) · **ready**
 - `F-ROUTE-001-my-route-overview.md` — My route: the whole journey at a glance (stage trail, pips that only fill, read / listen / write inventory, grown-up and console views) and the weekly plan proposed after the level check (companion `AMENDMENTS-PLC-PLAN-HANDOFF.md`, applied to F-PLC-001 and F-PLAN-002) · **ready**
 - `F-QUEST-002` amended: initial ㅇ is spoken by its name (see F-AUDIO-004)
-- `F-ENT-003-free-day2-unlocked-curriculum.md` — free plan to Day 2 of the route (previews past it, kept quests stay open, one switch off until Stripe Live), everything open for subscribers, one "next" that follows the learner's plan · **ready**
-  - wireframes `design/wireframes/journey/grid-plan-and-access.md`, `episode/detail-access-preview.md`, `home/next-and-free-end-card.md`, `results/back-to-plan-and-free-end.md`, `library/access-and-plan-tags.md`, `paywall/free-plan-days.md`, `console/curriculum-free-days.md`
+- `F-ENT-003-free-day2-unlocked-curriculum.md` — free plan to about day 2 (the first lessons open, everything else visible as "Not open yet", kept quests and the Stage 1 promise stay open, one switch off until Stripe Live and web only until F-IAP-002), everything open for subscribers, one "next" and one "In your plan" that follow the learner's plan (owner of `questAccess`, `routeNext` and the access glossary for the 2026-10-11 specs) · **ready**
+  - wireframes `design/wireframes/journey/grid-plan-and-access.md`, `episode/detail-access-preview.md`, `home/next-and-free-end-card.md`, `results/back-to-plan-and-free-end.md`, `library/access-and-plan-tags.md`, `billing/plan-status-free-lessons.md`, `console/curriculum-free-days.md`, `console/free-lessons-line.md`
 
 ### Phase 2 / planned
 - `F-PROF-001-device-profiles.md` — multi-learner · **draft** (code shipped PR #13, full spec covers cloud sync)
