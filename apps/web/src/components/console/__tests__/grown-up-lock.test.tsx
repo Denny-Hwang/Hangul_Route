@@ -22,12 +22,15 @@ import {
   GrownUpLock,
   GrownUpLockGate,
   GrownUpLockScreen,
+  LOCK_READ_TIMEOUT_MS,
   browserLockEnvironment,
   createGrownUpLockController,
+  lockActions,
   lockView,
-  type GrownUpLockEnvironment,
+  returnPath,
   type LockState,
 } from '../GrownUpLock';
+import { EXPIRED, SIGNED_IN, flush, harness, inputEvent, pageEvent, type Harness } from './lock-harness';
 import { expectAllPseudo } from './pseudo-text';
 
 /**
@@ -35,77 +38,11 @@ import { expectAllPseudo } from './pseudo-text';
  * node without a DOM, so the component is split: `createGrownUpLockController` owns the reads,
  * the decision and the back/forward-cache and tab re-checks (driven here with real
  * EventTargets), `lockView` picks what to render, and `GrownUpLockGate` / `GrownUpLockScreen`
- * render it (server-rendered here). `GrownUpLock` binds them with two effects.
+ * render it (server-rendered here). `GrownUpLock` binds them with two effects; its wiring is
+ * covered with react-test-renderer in `grown-up-lock-wiring.test.tsx`.
  */
 const lock = getMessages('en').console.lock;
-const NOW = 1_800_000_000_000;
-const EPOCH = 1_790_000_000_000;
-
 const text = (html: string): string => html.replace(/<[^>]+>/g, ' ').replace(/&#x27;/g, "'").replace(/\s+/g, ' ').trim();
-
-class FakeDocument extends EventTarget {
-  visibilityState: DocumentVisibilityState = 'visible';
-}
-
-function pageEvent(type: 'pageshow' | 'pagehide', persisted: boolean): Event {
-  return Object.assign(new Event(type), { persisted });
-}
-
-interface Harness {
-  env: GrownUpLockEnvironment;
-  win: EventTarget;
-  doc: FakeDocument;
-  device: { value: DeviceGateRead };
-  unlock: { value: GrownUpUnlock | null };
-  trusted: { value: number | null };
-  calls: string[];
-  assigned: string[];
-}
-
-function harness(): Harness {
-  const win = new EventTarget();
-  const doc = new FakeDocument();
-  const device = { value: { readable: true, marker: { v: 1, gate: 'pin', pinEpoch: EPOCH }, hasProfiles: true } as DeviceGateRead };
-  const unlock = { value: null as GrownUpUnlock | null };
-  const trusted = { value: EPOCH as number | null };
-  const calls: string[] = [];
-  const assigned: string[] = [];
-  const env: GrownUpLockEnvironment = {
-    now: () => NOW,
-    readDevice: async () => {
-      calls.push('readDevice');
-      return device.value;
-    },
-    readTrustedEpoch: async () => {
-      calls.push('readTrustedEpoch');
-      return trusted.value;
-    },
-    readUnlock: () => {
-      calls.push('readUnlock');
-      return unlock.value;
-    },
-    touchUnlock: () => {
-      calls.push('touchUnlock');
-    },
-    clearConsoleSession: () => {
-      calls.push('clearConsoleSession');
-    },
-    clearGrownUpTab: () => {
-      calls.push('clearGrownUpTab');
-    },
-    origin: () => 'https://app.hangulroute.com',
-    assign: (url) => {
-      assigned.push(url);
-    },
-    window: win,
-    document: doc,
-  };
-  return { env, win, doc, device, unlock, trusted, calls, assigned };
-}
-
-const flush = async (): Promise<void> => {
-  for (let i = 0; i < 5; i += 1) await Promise.resolve();
-};
 
 function recorder(): { states: LockState[]; hides: number[]; latest: () => LockState | undefined } {
   const states: LockState[] = [];
@@ -129,7 +66,7 @@ describe('createGrownUpLockController: the decision', () => {
 
   it('an open decision refreshes seen (a navigation) and keeps the console session', async () => {
     const h = harness();
-    h.unlock.value = { v: 1, at: NOW - 1000, seen: NOW - 1000, src: 'signin' };
+    h.unlock.value = SIGNED_IN;
     const r = recorder();
     const c = createGrownUpLockController({ env: h.env, getPath: () => '/teach/home', onState: (s) => r.states.push(s), onHide: () => r.hides.push(1) });
     c.start();
@@ -184,10 +121,75 @@ describe('createGrownUpLockController: the decision', () => {
   });
 });
 
+describe('createGrownUpLockController: reads that fail or hang fail closed (A-4a review, 2026-10-12)', () => {
+  it('a device read that never settles locks to sign-in only after the time limit, with the plain sign-in line', async () => {
+    vi.useFakeTimers();
+    try {
+      const h = harness();
+      h.env.readDevice = () => new Promise<DeviceGateRead>(() => undefined); // Safari 14.1: the first IndexedDB open can hang
+      const r = recorder();
+      const c = createGrownUpLockController({ env: h.env, getPath: () => '/parent', onState: (s) => r.states.push(s), onHide: () => undefined });
+      c.start();
+      c.check();
+      await vi.advanceTimersByTimeAsync(LOCK_READ_TIMEOUT_MS - 1);
+      expect(r.states).toEqual([]);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(r.latest()).toEqual({ path: '/parent', decision: { state: 'locked', pinPath: false, line: 'signInOnly' }, hidden: false });
+      expect(h.calls).toContain('clearConsoleSession');
+      c.stop();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('a sign-in unlock still opens a page whose device read hung (sign-in is the way out)', async () => {
+    const h = harness();
+    h.env.readDevice = () => new Promise<DeviceGateRead>(() => undefined);
+    h.unlock.value = SIGNED_IN;
+    const r = recorder();
+    const c = createGrownUpLockController({ env: h.env, getPath: () => '/parent', onState: (s) => r.states.push(s), onHide: () => undefined, readTimeoutMs: 5 });
+    c.start();
+    c.check();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(r.latest()?.decision).toEqual({ state: 'open' });
+    c.stop();
+  });
+
+  it('a trusted-epoch read that hangs counts as none: the PIN path stays off', async () => {
+    const h = harness();
+    h.env.readTrustedEpoch = () => new Promise<number | null>(() => undefined);
+    const r = recorder();
+    const c = createGrownUpLockController({ env: h.env, getPath: () => '/parent', onState: (s) => r.states.push(s), onHide: () => undefined, readTimeoutMs: 5 });
+    c.start();
+    c.check();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(r.latest()?.decision).toEqual({ state: 'locked', pinPath: false, line: 'firstSignIn' });
+    c.stop();
+  });
+
+  it('reads that reject or throw fail closed the same way, and an unlock read that throws counts as none', async () => {
+    const h = harness();
+    h.env.readDevice = () => Promise.reject(new Error('UnknownError'));
+    h.env.readTrustedEpoch = () => {
+      throw new Error('SecurityError');
+    };
+    h.env.readUnlock = () => {
+      throw new Error('blocked');
+    };
+    const r = recorder();
+    const c = createGrownUpLockController({ env: h.env, getPath: () => '/parent', onState: (s) => r.states.push(s), onHide: () => undefined });
+    c.start();
+    c.check();
+    await flush();
+    expect(r.latest()?.decision).toEqual({ state: 'locked', pinPath: false, line: 'signInOnly' });
+    c.stop();
+  });
+});
+
 describe('createGrownUpLockController: back/forward cache and tab re-checks (section 3.9)', () => {
   async function opened(): Promise<{ h: Harness; r: ReturnType<typeof recorder>; c: ReturnType<typeof createGrownUpLockController> }> {
     const h = harness();
-    h.unlock.value = { v: 1, at: NOW - 1000, seen: NOW - 1000, src: 'signin' };
+    h.unlock.value = SIGNED_IN;
     const r = recorder();
     const c = createGrownUpLockController({ env: h.env, getPath: () => '/parent', onState: (s) => r.states.push(s), onHide: () => r.hides.push(r.states.length) });
     c.start();
@@ -222,7 +224,7 @@ describe('createGrownUpLockController: back/forward cache and tab re-checks (sec
 
   it('visibilitychange to visible hides synchronously, then re-decides (the idle time ran out)', async () => {
     const { h, r, c } = await opened();
-    h.unlock.value = { v: 1, at: NOW - 20 * 60_000, seen: NOW - 16 * 60_000, src: 'signin' };
+    h.unlock.value = EXPIRED;
     h.doc.visibilityState = 'visible';
     h.doc.dispatchEvent(new Event('visibilitychange'));
     expect(r.hides).toHaveLength(1);
@@ -231,12 +233,14 @@ describe('createGrownUpLockController: back/forward cache and tab re-checks (sec
     c.stop();
   });
 
-  it('visibilitychange to hidden does nothing', async () => {
+  it('visibilitychange to hidden covers a page that only an unlock keeps open, so the tab switcher never shows it', async () => {
     const { h, r, c } = await opened();
+    const before = r.states.length;
     h.doc.visibilityState = 'hidden';
     h.doc.dispatchEvent(new Event('visibilitychange'));
+    expect(r.hides).toHaveLength(1);
     await flush();
-    expect(r.hides).toEqual([]);
+    expect(r.states).toHaveLength(before); // no re-check while hidden
     c.stop();
   });
 
@@ -257,6 +261,31 @@ describe('createGrownUpLockController: back/forward cache and tab re-checks (sec
     c.stop();
   });
 
+  it('a page that cannot lock (marker none) is never covered on a tab switch; a return re-checks in the background', async () => {
+    const h = harness();
+    h.device.value = { readable: true, marker: { v: 1, gate: 'none' }, hasProfiles: true };
+    const r = recorder();
+    const c = createGrownUpLockController({ env: h.env, getPath: () => '/teach/home', onState: (s) => r.states.push(s), onHide: () => r.hides.push(1) });
+    c.start();
+    c.check();
+    await flush();
+    expect(r.latest()?.decision).toEqual({ state: 'open' });
+    h.doc.visibilityState = 'hidden';
+    h.doc.dispatchEvent(new Event('visibilitychange'));
+    h.doc.visibilityState = 'visible';
+    h.calls.length = 0;
+    h.doc.dispatchEvent(new Event('visibilitychange'));
+    expect(r.hides).toEqual([]); // no flicker, scroll and focus untouched on a teacher laptop
+    await flush();
+    expect(h.calls).toContain('readDevice');
+    // the device gained child profiles meanwhile: the background re-check locks it
+    h.device.value = { readable: true, marker: { v: 1, gate: 'nopin' }, hasProfiles: true };
+    h.doc.dispatchEvent(new Event('visibilitychange'));
+    await flush();
+    expect(r.latest()?.decision).toEqual({ state: 'locked', pinPath: false, line: 'noPin' });
+    c.stop();
+  });
+
   it('without window or document (SSR) start and stop are harmless', () => {
     const h = harness();
     const c = createGrownUpLockController({ env: { ...h.env, window: null, document: null }, getPath: () => '/parent', onState: () => undefined, onHide: () => undefined });
@@ -264,6 +293,118 @@ describe('createGrownUpLockController: back/forward cache and tab re-checks (sec
       c.start();
       c.stop();
     }).not.toThrow();
+  });
+});
+
+describe('createGrownUpLockController: interaction within and after the 15 idle minutes (sections 3.9, 3.10)', () => {
+  async function opened(unlock: GrownUpUnlock = SIGNED_IN): Promise<{ h: Harness; r: ReturnType<typeof recorder>; c: ReturnType<typeof createGrownUpLockController> }> {
+    const h = harness();
+    h.unlock.value = unlock;
+    const r = recorder();
+    const c = createGrownUpLockController({ env: h.env, getPath: () => '/parent', onState: (s) => r.states.push(s), onHide: () => r.hides.push(1) });
+    c.start();
+    c.check();
+    await flush();
+    expect(r.latest()?.decision).toEqual({ state: 'open' });
+    h.calls.length = 0;
+    return { h, r, c };
+  }
+
+  it('a pointer, key, click or wheel within the window refreshes seen and lets the action through', async () => {
+    const { h, r, c } = await opened();
+    for (const type of ['pointerdown', 'keydown', 'click', 'wheel'] as const) {
+      const event = inputEvent(type);
+      h.win.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(false);
+    }
+    expect(h.calls.filter((call) => call === 'touchUnlock')).toHaveLength(4);
+    expect(r.hides).toEqual([]);
+    c.stop();
+  });
+
+  it('a pointer after 15 idle minutes is stopped, covers the page before it lands, and the re-check locks', async () => {
+    const { h, r, c } = await opened();
+    h.unlock.value = EXPIRED;
+    const down = inputEvent('pointerdown');
+    h.win.dispatchEvent(down);
+    expect(down.defaultPrevented).toBe(true);
+    expect(r.hides).toHaveLength(1); // synchronously, before the click
+    // the click that follows the pointer while the re-check runs never reaches the page
+    const click = inputEvent('click');
+    h.win.dispatchEvent(click);
+    expect(click.defaultPrevented).toBe(true);
+    expect(h.calls).not.toContain('touchUnlock');
+    await flush();
+    expect(r.latest()?.decision).toEqual({ state: 'locked', pinPath: true, line: 'default' });
+    c.stop();
+  });
+
+  it('a key after 15 idle minutes is stopped the same way (Enter on a button, typing in a field)', async () => {
+    const { h, r, c } = await opened();
+    h.unlock.value = EXPIRED;
+    const key = inputEvent('keydown');
+    h.win.dispatchEvent(key);
+    expect(key.defaultPrevented).toBe(true);
+    expect(r.hides).toHaveLength(1);
+    await flush();
+    expect(r.latest()?.decision.state).toBe('locked');
+    c.stop();
+  });
+
+  it('a wheel after 15 idle minutes covers and re-checks (it cannot be stopped: a passive listener)', async () => {
+    const { h, r, c } = await opened();
+    h.unlock.value = EXPIRED;
+    const wheel = inputEvent('wheel');
+    h.win.dispatchEvent(wheel);
+    expect(wheel.defaultPrevented).toBe(false);
+    expect(r.hides).toHaveLength(1);
+    await flush();
+    expect(r.latest()?.decision.state).toBe('locked');
+    c.stop();
+  });
+
+  it('interaction on a page that cannot lock, or on the lock screen, is left alone', async () => {
+    const h = harness();
+    h.device.value = { readable: true, marker: { v: 1, gate: 'none' }, hasProfiles: false };
+    const r = recorder();
+    const c = createGrownUpLockController({ env: h.env, getPath: () => '/teach/home', onState: (s) => r.states.push(s), onHide: () => r.hides.push(1) });
+    c.start();
+    c.check();
+    await flush();
+    h.device.value = { readable: true, marker: { v: 1, gate: 'nopin' }, hasProfiles: true };
+    c.check();
+    await flush();
+    expect(r.latest()?.decision.state).toBe('locked');
+    const down = inputEvent('pointerdown');
+    h.win.dispatchEvent(down);
+    expect(down.defaultPrevented).toBe(false);
+    expect(r.hides).toEqual([]);
+    c.stop();
+  });
+
+  it('while a tab-return re-check covers the page, clicks and keys are held back; after it opens they pass', async () => {
+    const { h, r, c } = await opened();
+    h.doc.dispatchEvent(new Event('visibilitychange'));
+    expect(r.hides).toHaveLength(1);
+    const early = inputEvent('click');
+    h.win.dispatchEvent(early);
+    expect(early.defaultPrevented).toBe(true);
+    await flush();
+    expect(r.latest()).toEqual({ path: '/parent', decision: { state: 'open' }, hidden: false });
+    const later = inputEvent('click');
+    h.win.dispatchEvent(later);
+    expect(later.defaultPrevented).toBe(false);
+    c.stop();
+  });
+
+  it('stop removes the interaction listeners', async () => {
+    const { h, r, c } = await opened();
+    c.stop();
+    h.unlock.value = EXPIRED;
+    const down = inputEvent('pointerdown');
+    h.win.dispatchEvent(down);
+    expect(down.defaultPrevented).toBe(false);
+    expect(r.hides).toEqual([]);
   });
 });
 
@@ -316,7 +457,7 @@ describe('GrownUpLockGate: locked and pending render no children', () => {
     expect(html).toContain('data-testid="grown-up-lock"');
   });
 
-  it('open: the child inside a wrapper that stays mounted; hidden while a re-check runs', () => {
+  it('open: the child inside a wrapper that stays mounted; covered, not collapsed, while a re-check runs', () => {
     const shown = renderToStaticMarkup(
       <GrownUpLockGate view={{ kind: 'open', hidden: false }} {...handlers}>
         <Child probe={() => undefined} />
@@ -328,7 +469,14 @@ describe('GrownUpLockGate: locked and pending render no children', () => {
         <Child probe={() => undefined} />
       </GrownUpLockGate>,
     );
-    expect(hidden).toMatch(/^<div hidden="" aria-hidden="true" style="display:none" data-testid="grown-up-content">/);
+    // the page keeps its layout (no scroll jump) and its focus; an opaque cover sits over it
+    expect(hidden).toMatch(/^<div aria-hidden="true" data-testid="grown-up-content"><p>Mina, 42 minutes<\/p><\/div><div aria-hidden="true" data-testid="grown-up-cover" style="/);
+    expect(hidden).not.toContain('display:none');
+    const cover = /data-testid="grown-up-cover" style="([^"]+)"/.exec(hidden)?.[1] ?? '';
+    expect(cover).toMatch(/position:fixed/);
+    expect(cover).toMatch(/top:0;right:0;bottom:0;left:0/);
+    expect(cover).toMatch(/z-index:\d+/);
+    expect(cover).toMatch(/background-color:#/); // a token colour, opaque
   });
 });
 
@@ -340,7 +488,7 @@ describe('GrownUpLock: first paint', () => {
       return <p>roster</p>;
     }
     const html = renderToStaticMarkup(
-      <GrownUpLock path="/parent" onSignInAgain={() => undefined}>
+      <GrownUpLock pathname="/parent" search="?id=sp_1" onSignInAgain={() => undefined}>
         <Child />
       </GrownUpLock>,
     );
@@ -350,7 +498,7 @@ describe('GrownUpLock: first paint', () => {
 
   it('is exempt on /signin: the page renders at once', () => {
     const html = renderToStaticMarkup(
-      <GrownUpLock path="/signin" exempt onSignInAgain={() => undefined}>
+      <GrownUpLock pathname="/signin" exempt onSignInAgain={() => undefined}>
         <p>sign-in widget</p>
       </GrownUpLock>,
     );
@@ -372,7 +520,7 @@ describe('GrownUpLockScreen (wireframe Panels A and B)', () => {
   });
 
   it('Panel B: sign-in only with the line of its case, Sign in again becomes the primary', () => {
-    for (const line of ['pinChanged', 'firstSignIn', 'noPin'] as const) {
+    for (const line of ['pinChanged', 'firstSignIn', 'pinRenew', 'signInOnly', 'noPin'] as const) {
       const html = screen({ state: 'locked', pinPath: false, line });
       expect(text(html)).toBe(`${lock.backToLearning.cta} ${lock.title} ${lock[line]} ${lock.signInAgain.cta}`);
       expect(html).not.toContain('grown-up-lock-pin');
@@ -484,5 +632,48 @@ describe('browserLockEnvironment: the default wiring', () => {
     expect(await env.readTrustedEpoch()).toBeNull();
     expect(env.readUnlock()).toBeNull();
     expect(env.origin()).toBe('');
+  });
+});
+
+describe('lockActions: the three buttons (A-4a review, 2026-10-12)', () => {
+  it('Use the grown-up PIN opens the learner gate with this page and its query as next', () => {
+    const h = harness();
+    lockActions(h.env, '/teach/space?id=sp_1', () => undefined).onUsePin();
+    expect(h.assigned).toEqual(['/?gate=grown-up&next=%2Fteach%2Fspace%3Fid%3Dsp_1']);
+  });
+
+  it('Sign in again hands /signin with this page as next to the sign-out', () => {
+    const h = harness();
+    const urls: string[] = [];
+    lockActions(h.env, '/parent', (url) => urls.push(url)).onSignInAgain();
+    expect(urls).toEqual(['/signin?next=%2Fparent']);
+    expect(h.assigned).toEqual([]);
+  });
+
+  it('Back to learning clears this tab first, then leaves for the learner home of this origin', () => {
+    const order: string[] = [];
+    const h = harness();
+    h.env.clearGrownUpTab = () => {
+      order.push('clear');
+    };
+    h.env.assign = (url) => {
+      order.push(`assign ${url}`);
+    };
+    lockActions(h.env, '/parent', () => undefined).onBackToLearning();
+    expect(order).toEqual(['clear', 'assign /']);
+    h.env.origin = () => 'https://hangulroute.com';
+    order.length = 0;
+    lockActions(h.env, '/parent', () => undefined).onBackToLearning();
+    expect(order).toEqual(['clear', 'assign https://app.hangulroute.com/']);
+  });
+});
+
+describe('returnPath: the lock targets carry the pathname and the query', () => {
+  it('joins them with one ?, with or without a leading ? on the query', () => {
+    expect(returnPath('/parent')).toBe('/parent');
+    expect(returnPath('/parent', '')).toBe('/parent');
+    expect(returnPath('/teach/space', 'id=sp_1')).toBe('/teach/space?id=sp_1');
+    expect(returnPath('/teach/space', '?id=sp_1&tab=plan')).toBe('/teach/space?id=sp_1&tab=plan');
+    expect(returnPath('/teach/space', '?')).toBe('/teach/space');
   });
 });

@@ -1,8 +1,8 @@
 'use client';
 
-import type { GrownUpUnlock } from '@hangul-route/content-schema';
+import { unlockActive, type GrownUpUnlock } from '@hangul-route/content-schema';
 import { IconSvg } from '@hangul-route/design-system/icon-glyphs/dom';
-import { borderWidth, colors, layout, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
+import { borderWidth, colors, layout, radii, spacing, touchTarget, typography, z } from '@hangul-route/design-system/tokens';
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { flushSync } from 'react-dom';
 import { readDeviceGate } from '@/lib/console/device-marker';
@@ -14,12 +14,29 @@ import { useMessages } from '@/lib/i18n/locale-context';
 
 /**
  * The grown-up lock (F-APP-001 section 3.9, OD-3; wireframe design/wireframes/shell/grown-up-lock.md).
- * Wraps every grown-up page except `/signin`. Before the decision it renders no page content,
- * so the page makes no API call; locked, it renders the lock screen and removes the console
- * session from this tab; open, it renders the page. A back/forward-cache restore or a return to
- * the tab hides the page synchronously and decides again; a new `path` (a client navigation)
- * decides again before the new page renders. The decision itself is `lib/console/grown-up-lock.ts`.
+ * Wraps every grown-up page except `/signin`. Before the decision it renders no page content;
+ * locked, it renders the lock screen and removes the console session from this tab; open, it
+ * renders the page. The decision itself is `lib/console/grown-up-lock.ts`.
+ *
+ * Contract for the layouts that mount it (A-4b, A-5a): every provider that calls the API
+ * (`useConsole`, the frame's spaces fetch for the persona switch) and every frame data fetch must
+ * sit inside `GrownUpLock`. Only its children wait for the decision, so anything outside it would
+ * call the API, and could show grown-up data, before the lock decides.
+ *
+ * Re-checks:
+ * - a new pathname (a client navigation to another page) decides again before that page renders;
+ *   a query-only change (a page's own `router.replace`) keeps the page mounted and re-checks in
+ *   the background;
+ * - a back/forward-cache restore covers the page before the next paint and decides again;
+ * - on a page that only an unlock keeps open (a device that can lock), leaving the tab covers it
+ *   and the return decides again; a pointer, key, click or wheel refreshes `seen` within the 15
+ *   idle minutes, and after them is stopped, covers the page and decides again.
+ * The page is covered, never collapsed, so its layout, scroll position and focus survive a
+ * re-check that opens it again (A-4a review 2026-10-12).
  */
+
+/** How long a device or trusted-epoch read may take before the lock decides without it. */
+export const LOCK_READ_TIMEOUT_MS = 3_000;
 
 /** Everything the lock touches in the browser, injectable for tests. */
 export interface GrownUpLockEnvironment {
@@ -56,7 +73,7 @@ export function browserLockEnvironment(): GrownUpLockEnvironment {
   };
 }
 
-/** A decision, the path it was made for, and whether the page is hidden while a re-check runs. */
+/** A decision, the pathname it was made for, and whether the page is covered while a re-check runs. */
 export interface LockState {
   path: string;
   decision: LockDecision;
@@ -64,56 +81,139 @@ export interface LockState {
 }
 
 export interface GrownUpLockController {
-  /** Listens for back/forward-cache restores and returns to the tab. */
+  /** Listens for back/forward-cache restores, tab switches and interaction. */
   start: () => void;
   /** Reads and decides for the current path; only the latest check reports. */
   check: () => void;
   stop: () => void;
 }
 
+/**
+ * A device read that failed or hung (WebKit can hang the first IndexedDB open) counts as a
+ * device that may hold learner profiles: a sign-in opens it, nothing else does.
+ */
+const FAILED_READ: DeviceGateRead = { readable: false, reason: 'failed' };
+
+/** The read's value, or `fallback` when it throws, rejects or takes longer than `ms`. */
+function settle<T>(read: () => Promise<T>, fallback: T, ms: number): Promise<T> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(fallback), ms);
+    const done = (value: T): void => {
+      clearTimeout(timer);
+      resolve(value);
+    };
+    try {
+      read().then(done, () => done(fallback));
+    } catch {
+      done(fallback);
+    }
+  });
+}
+
+const CAPTURE: AddEventListenerOptions = { capture: true };
+const PASSIVE_CAPTURE: AddEventListenerOptions = { capture: true, passive: true };
+/** Interaction that can be stopped before it reaches the page, and the one that cannot (wheel is passive). */
+const STOPPABLE_INPUT = ['pointerdown', 'keydown', 'click'] as const;
+
 export function createGrownUpLockController(options: {
   env: GrownUpLockEnvironment;
   getPath: () => string;
   onState: (state: LockState) => void;
-  /** Must hide the page before the next paint (the component flushes synchronously). */
+  /** Must cover the page before the next paint (the component flushes synchronously). */
   onHide: () => void;
+  readTimeoutMs?: number;
 }): GrownUpLockController {
-  const { env, getPath, onState, onHide } = options;
+  const { env, getPath, onState, onHide, readTimeoutMs = LOCK_READ_TIMEOUT_MS } = options;
   let latest = 0;
   let stopped = false;
+  /** The page is open. */
+  let open = false;
+  /** The page is open only because of an unlock: without it the device would be locked. */
+  let guarded = false;
+  /** The open page is covered while a re-check runs. */
+  let covered = false;
+
+  const readUnlockSafely = (): GrownUpUnlock | null => {
+    try {
+      return env.readUnlock();
+    } catch {
+      return null;
+    }
+  };
 
   const run = async (): Promise<void> => {
     const id = ++latest;
     const path = getPath();
-    const [device, trustedEpoch] = await Promise.all([env.readDevice(), env.readTrustedEpoch()]);
+    const [device, trustedEpoch] = await Promise.all([settle(env.readDevice, FAILED_READ, readTimeoutMs), settle(env.readTrustedEpoch, null, readTimeoutMs)]);
     if (stopped || id !== latest) return;
     const now = env.now();
-    const decision = decideGrownUpLock({ device, unlock: env.readUnlock(), trustedEpoch, now });
+    const input = { device, unlock: readUnlockSafely(), trustedEpoch, now };
+    const decision = decideGrownUpLock(input);
+    open = decision.state === 'open';
+    guarded = open && decideGrownUpLock({ ...input, unlock: null }).state === 'locked';
+    covered = false;
     if (decision.state === 'locked') env.clearConsoleSession();
     else env.touchUnlock(now);
     onState({ path, decision, hidden: false });
   };
 
-  const recheck = (): void => {
+  const cover = (): void => {
+    if (open) covered = true;
     onHide();
+  };
+  const recheck = (): void => {
+    cover();
     void run();
   };
   const onPageShow = (event: Event): void => {
     if ((event as PageTransitionEvent).persisted) recheck();
   };
-  // Hidden before the page enters the back/forward cache, so a restore never paints it.
+  // Covered before the page enters the back/forward cache, so a restore never paints it.
   const onPageHide = (event: Event): void => {
-    if ((event as PageTransitionEvent).persisted) onHide();
+    if ((event as PageTransitionEvent).persisted) cover();
   };
   const onVisibility = (): void => {
-    if (env.document?.visibilityState === 'visible') recheck();
+    const visibility = env.document?.visibilityState;
+    // Covered before the tab switcher takes its picture; a page that cannot lock is left as it is.
+    if (visibility === 'hidden') {
+      if (guarded) cover();
+      return;
+    }
+    if (visibility !== 'visible') return;
+    if (guarded) recheck();
+    else void run();
   };
+  const interact = (event: Event, stoppable: boolean): void => {
+    const stop = (): void => {
+      if (!stoppable) return;
+      event.preventDefault();
+      event.stopPropagation();
+    };
+    // A re-check is covering the page: nothing reaches it until the decision.
+    if (covered) {
+      stop();
+      return;
+    }
+    if (!guarded) return;
+    const now = env.now();
+    if (unlockActive(readUnlockSafely(), now)) {
+      env.touchUnlock(now);
+      return;
+    }
+    // The 15 idle minutes ran out while the page stayed open: stop this action, cover, decide again.
+    stop();
+    recheck();
+  };
+  const onInput = (event: Event): void => interact(event, true);
+  const onWheel = (event: Event): void => interact(event, false);
 
   return {
     start: () => {
       env.window?.addEventListener('pageshow', onPageShow);
       env.window?.addEventListener('pagehide', onPageHide);
       env.document?.addEventListener('visibilitychange', onVisibility);
+      for (const type of STOPPABLE_INPUT) env.window?.addEventListener(type, onInput, CAPTURE);
+      env.window?.addEventListener('wheel', onWheel, PASSIVE_CAPTURE);
     },
     check: () => {
       if (!stopped) void run();
@@ -123,6 +223,8 @@ export function createGrownUpLockController(options: {
       env.window?.removeEventListener('pageshow', onPageShow);
       env.window?.removeEventListener('pagehide', onPageHide);
       env.document?.removeEventListener('visibilitychange', onVisibility);
+      for (const type of STOPPABLE_INPUT) env.window?.removeEventListener(type, onInput, CAPTURE);
+      env.window?.removeEventListener('wheel', onWheel, PASSIVE_CAPTURE);
     },
   };
 }
@@ -131,11 +233,17 @@ type LockedDecision = Extract<LockDecision, { state: 'locked' }>;
 
 export type LockView = { kind: 'pending' } | { kind: 'open'; hidden: boolean } | { kind: 'locked'; decision: LockedDecision };
 
-/** Pending until a decision exists for this very path; the lock screen shows no data, so it stays during a re-check. */
+/** Pending until a decision exists for this very pathname; the lock screen shows no data, so it stays during a re-check. */
 export function lockView(state: LockState | null, path: string): LockView {
   if (!state || state.path !== path) return { kind: 'pending' };
   if (state.decision.state === 'open') return { kind: 'open', hidden: state.hidden };
   return { kind: 'locked', decision: state.decision };
+}
+
+/** The page the lock returns to: the pathname and its query (with or without a leading `?`). */
+export function returnPath(pathname: string, search = ''): string {
+  const query = search.startsWith('?') ? search.slice(1) : search;
+  return query ? `${pathname}?${query}` : pathname;
 }
 
 interface LockHandlers {
@@ -144,21 +252,50 @@ interface LockHandlers {
   onBackToLearning: () => void;
 }
 
+/** The three lock buttons for the page at `path` (pathname and query). */
+export function lockActions(env: GrownUpLockEnvironment, path: string, onSignInAgain: (signInUrl: string) => void): LockHandlers {
+  return {
+    onUsePin: () => env.assign(pinPathUrl(path)),
+    onSignInAgain: () => onSignInAgain(signInAgainUrl(path)),
+    onBackToLearning: () => {
+      env.clearGrownUpTab();
+      env.assign(learnerHome(env.origin()));
+    },
+  };
+}
+
+/** Above every layer of the design system, opaque, over the whole viewport. */
+const coverStyle: CSSProperties = {
+  position: 'fixed',
+  top: 0,
+  right: 0,
+  bottom: 0,
+  left: 0,
+  zIndex: Math.max(...Object.values(z)),
+  backgroundColor: colors.surface.canvas,
+};
+
 export function GrownUpLockGate({ view, children, ...handlers }: LockHandlers & { view: LockView; children: ReactNode }): JSX.Element {
   if (view.kind === 'pending') return <div aria-busy="true" data-testid="grown-up-lock-pending" />;
   if (view.kind === 'locked') return <GrownUpLockScreen decision={view.decision} {...handlers} />;
-  // One wrapper in both states, so hiding during a re-check keeps the page mounted (a half-typed form survives).
+  // One wrapper in both states: covering during a re-check keeps the page mounted, laid out and
+  // focused where it was (a half-typed form survives, the scroll position does not jump).
   return (
-    <div hidden={view.hidden || undefined} aria-hidden={view.hidden || undefined} style={view.hidden ? { display: 'none' } : undefined} data-testid="grown-up-content">
-      {children}
-    </div>
+    <>
+      <div aria-hidden={view.hidden || undefined} data-testid="grown-up-content">
+        {children}
+      </div>
+      {view.hidden ? <div aria-hidden="true" data-testid="grown-up-cover" style={coverStyle} /> : null}
+    </>
   );
 }
 
 export interface GrownUpLockProps {
   children: ReactNode;
-  /** This page's path and query; a change (a client navigation) decides again. */
-  path: string;
+  /** This page's pathname, the decision key: a new one (a client navigation to another page) decides again before that page renders. */
+  pathname: string;
+  /** This page's query, with or without `?`: a change keeps the page mounted and re-checks in the background; the lock's return targets carry it. */
+  search?: string;
   /** `/signin` is exempt (section 3.7). */
   exempt?: boolean;
   /** Sign in again: sign out, then go to `signInUrl` (`/signin?next=…`). */
@@ -166,9 +303,10 @@ export interface GrownUpLockProps {
   environment?: GrownUpLockEnvironment;
 }
 
-export function GrownUpLock({ children, path, exempt = false, onSignInAgain, environment }: GrownUpLockProps): JSX.Element {
+export function GrownUpLock({ children, pathname, search = '', exempt = false, onSignInAgain, environment }: GrownUpLockProps): JSX.Element {
   const [state, setState] = useState<LockState | null>(null);
-  const pathRef = useRef(path);
+  const pathRef = useRef(pathname);
+  const decidedPathRef = useRef<string | null>(null);
   const envRef = useRef<GrownUpLockEnvironment | null>(environment ?? null);
   const controllerRef = useRef<GrownUpLockController | null>(null);
   const envOf = (): GrownUpLockEnvironment => (envRef.current ??= browserLockEnvironment());
@@ -179,34 +317,32 @@ export function GrownUpLock({ children, path, exempt = false, onSignInAgain, env
       env: envOf(),
       getPath: () => pathRef.current,
       onState: setState,
-      onHide: () => flushSync(() => setState((s) => (s ? { ...s, hidden: true } : s))),
+      onHide: () => flushSync(() => setState((s) => (s && !s.hidden ? { ...s, hidden: true } : s))),
     });
     controllerRef.current = controller;
     controller.start();
     return () => {
       controller.stop();
       controllerRef.current = null;
+      // A return from an exempt page (/signin) decides again before the page renders.
+      setState(null);
     };
     // The controller lives as long as the exemption does; envOf and the path are read through refs.
   }, [exempt]);
 
   useEffect(() => {
-    pathRef.current = path;
+    pathRef.current = pathname;
+    if (decidedPathRef.current !== pathname) {
+      decidedPathRef.current = pathname;
+      // A decision from an earlier visit to a pathname is never reused (X, then Y, then X again).
+      setState(null);
+    }
     controllerRef.current?.check();
-  }, [path, exempt]);
+  }, [pathname, search, exempt]);
 
   if (exempt) return <>{children}</>;
   return (
-    <GrownUpLockGate
-      view={lockView(state, path)}
-      onUsePin={() => envOf().assign(pinPathUrl(path))}
-      onSignInAgain={() => onSignInAgain(signInAgainUrl(path))}
-      onBackToLearning={() => {
-        const env = envOf();
-        env.clearGrownUpTab();
-        env.assign(learnerHome(env.origin()));
-      }}
-    >
+    <GrownUpLockGate view={lockView(state, pathname)} {...lockActions(envOf(), returnPath(pathname, search), onSignInAgain)}>
       {children}
     </GrownUpLockGate>
   );
