@@ -359,7 +359,7 @@ export function HomeScreen(): React.ReactElement {
     if (card.questId && card.episodeId) {
       navigation.navigate('QuestPlayer', { questId: card.questId, episodeId: card.episodeId });
     } else if (card.episodeId) {
-      navigation.navigate('EpisodeDetail', { episodeId: card.episodeId });
+      navigation.navigate('EpisodeDetail', { episodeId: card.episodeId, from: 'home' });
     }
   };
 

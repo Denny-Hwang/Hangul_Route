@@ -101,7 +101,7 @@ export function useStoryTiles(entries: readonly StoryIndexEntry[], openEpisode?:
         return;
       }
       if (openEpisode) openEpisode(item.entry.episodeId);
-      else navigation.navigate('EpisodeDetail', { episodeId: item.entry.episodeId });
+      else navigation.navigate('EpisodeDetail', { episodeId: item.entry.episodeId, from: 'library' });
     },
     [profileId, opensDirectly, navigation, openEpisode],
   );
