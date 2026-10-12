@@ -24,7 +24,7 @@ It shows **no lesson, title or card**. It is the root's only screen when no pass
 | unknown | On a family device, open them from the grown-up area. Parents and teachers can also open them from their account. | Back to the grown-up area → `/?gate=browse` | Sign in |
 
 **Until BR-12b ships** (no `gate=browse` boot intent):
-- **gate**: the line gains "Then open the grown-up area again." and the only button is [[ Back to the app ]].
+- **gate**: the line gains "Go back to the app, then open the grown-up area again." (spec §4.3, amended: the old "Then open…" had no step before it) and the only button is [[ Back to the app ]].
 - **unknown**: the primary becomes [[ Back to the app ]] and Sign in stays as the secondary. The line is the spec's line unchanged: it already says to open lessons from the grown-up area, and "again" would be wrong for a visitor who was never there.
 
 The spec names this form for the gate source only. The unknown source uses the same `/?gate=browse` target, so it takes the same primary (README decision 4).
