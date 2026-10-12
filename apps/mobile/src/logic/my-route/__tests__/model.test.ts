@@ -215,3 +215,27 @@ describe('tier changes', () => {
     expect(m.skills.find((s) => s.skill === 'read')?.nextReachable).toBe(true);
   });
 });
+
+describe('the shared cursor context (R-3: My route spreads cursorContext, as Home and Results do)', () => {
+  it('skips the placed-out quests it is given, before any start marker or known pip exists (R-7a)', () => {
+    const skip = new Set(['quest:stage1-letters-q1', 'quest:stage1-letters-q2']);
+    const m = build([], { skipQuestIds: skip });
+    expect(m.cursor?.questId).toBe('quest:stage1-letters-q3');
+    // Pips stay as they are until R-7a passes the route: placed out is not drawn as known yet.
+    expect(states(m, 'stage1')).toEqual(Array(8).fill('open'));
+    expect(row(m, 'stage1')?.pips.filter((p) => p.isCursor).map((p) => p.questId)).toEqual(['quest:stage1-letters-q3']);
+    expect(m.start).toBeNull();
+  });
+
+  it('a done quest in the skip set changes nothing, and the set joins the route placed-out set', () => {
+    expect(build(['quest:stage1-letters-q1'], { skipQuestIds: new Set(['quest:stage1-letters-q1']) }).cursor?.questId).toBe('quest:stage1-letters-q2');
+    const m = build([], { skipQuestIds: new Set(['quest:stage1-letters-q2']), route: seed(['quest:stage1-letters-q1']) });
+    expect(m.cursor?.questId).toBe('quest:stage1-letters-q3');
+  });
+
+  it('every offerable quest skipped: no cursor, the rest hero', () => {
+    const m = build(STAGE1_8.slice(0, 4), { skipQuestIds: new Set(BUNDLE_8.quests.map((q) => q.id)) });
+    expect(m.cursor).toBeNull();
+    expect(m.hero).toBe('rest');
+  });
+});

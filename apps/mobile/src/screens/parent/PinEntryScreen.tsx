@@ -121,6 +121,11 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       const { profileId } = route.params;
       if (profileId === undefined) navigation.goBack();
       else navigation.replace('EditProfile', { profileId });
+    } else if (route.params.next === 'MyRoute') {
+      // Another profile's My route, read-only now that the gate is open (F-ROUTE-001 section 3.1).
+      const { profileId } = route.params;
+      if (profileId === undefined) navigation.goBack();
+      else navigation.replace('MyRoute', { source: 'parent', profileId });
     } else if (route.params.next === 'PlacementReport') {
       const { profileId } = route.params;
       if (profileId === undefined) navigation.replace('ParentDashboard');

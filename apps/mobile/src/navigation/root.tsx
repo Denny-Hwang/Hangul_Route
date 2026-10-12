@@ -6,6 +6,7 @@ import { MainTabs } from './tabs';
 import type { RootStackParamList } from './types';
 import { CardDetailScreen } from '../screens/library/CardDetailScreen';
 import { EpisodeDetailScreen } from '../screens/episode/EpisodeDetailScreen';
+import { MyRouteScreen } from '../screens/my-route/MyRouteScreen';
 import { OnboardingStack } from './onboarding';
 import { withOwnSafeArea } from './with-own-safe-area';
 import { ParentDashboardScreen } from '../screens/parent/ParentDashboardScreen';
@@ -59,6 +60,7 @@ export function RootNavigator(): React.ReactElement {
         <Stack.Screen name="Onboarding" component={OnboardingStack} />
         <Stack.Screen name="Main" component={MainTabs} />
         <Stack.Screen name="EpisodeDetail" component={EpisodeDetailScreen} />
+        <Stack.Screen name="MyRoute" component={MyRouteScreen} />
         <Stack.Screen name="QuestPlayer" component={QuestPlayerScreen} />
         <Stack.Screen name="Minigame" component={MinigameScreen} />
         <Stack.Screen name="Results" component={ResultsScreen} options={{ animation: 'fade' }} />

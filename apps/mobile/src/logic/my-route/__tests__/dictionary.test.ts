@@ -1,0 +1,126 @@
+import { describe, expect, it } from 'vitest';
+import type { UiLocale } from '@hangul-route/content-schema';
+import { getMessages } from '@hangul-route/i18n';
+import { myRouteMessages } from '../view';
+import { copyViolations, type Surface } from './copy-rules';
+import { DRAFT_EN } from './fixtures/messages-draft';
+
+/**
+ * F-ROUTE-001 section 5, `copy.test.ts` split (R-3 part): the copy rules and
+ * the length budget on the real `learner.myRoute` / `a11y.myRoute`
+ * dictionary (and the grown-up slice the read-only page reads) in en / es /
+ * ko. es / ko fall back to English until their native-reviewed overlays land
+ * (F-I18N-001 PR 15); the rules then run on the translations unchanged.
+ */
+
+const LOCALES: readonly UiLocale[] = ['en', 'es', 'ko'];
+const N = [0, 1, 2, 7];
+const NAMES = ['Sam', 'Alex'];
+const TITLES: Array<[number, string]> = [
+  [1, 'Hangul'],
+  [4, 'Dialogue'],
+  [7, 'Self-expression'],
+];
+const QUEST_TITLES = ['Family at the Table', 'Meet the First Letters'];
+const WORDS = ['Open', 'Complete', 'Coming later'];
+const SAMPLES: Record<string, unknown[][]> = {
+  'learner.myRoute.hero.here': TITLES,
+  'learner.myRoute.hero.next': QUEST_TITLES.map((t) => [t]),
+  'learner.myRoute.caption.played': N.filter((n) => n > 0).map((n) => [n]),
+  'learner.myRoute.laterGroup': [
+    [5, 7],
+    [2, 3],
+  ],
+  'learner.myRoute.newQuests': N.filter((n) => n > 0).map((n) => [n, 1]),
+  'learner.myRoute.skill.quests': N.filter((n) => n > 0).map((n) => [n]),
+  'learner.myRoute.games.title': [['Read'], ['Listen'], ['Write']],
+  'caregiver.journey.here': NAMES.flatMap((name) => TITLES.map(([n, t]) => [name, n, t])),
+  'caregiver.journey.next': QUEST_TITLES.map((t) => [t]),
+  'caregiver.journey.canDoLead': NAMES.map((n) => [n]),
+  'caregiver.journey.started': NAMES.map((n) => [n]),
+  'caregiver.journey.known': NAMES.map((n) => [n]),
+  'caregiver.journey.quests': NAMES.flatMap((name) => [1, 4].map((n) => [name, n])),
+  'caregiver.journey.viewing': NAMES.map((n) => [n]),
+  'caregiver.journey.tiles': [[1], [2]],
+  'caregiver.journey.start': NAMES.map((n) => [n]),
+  'caregiver.journey.rest': NAMES.map((n) => [n]),
+  'caregiver.journey.beyond': NAMES.map((n) => [n]),
+  'caregiver.journey.hereTag': NAMES.map((n) => [n]),
+  'caregiver.journey.ready': NAMES.map((n) => [n]),
+  'caregiver.journey.explored': NAMES.map((n) => [n]),
+  'caregiver.journey.skillsTitle': NAMES.map((n) => [n]),
+  'a11y.myRoute.stage': TITLES.flatMap(([n, t]) => WORDS.map((w, i) => [n, t, w, i === 0, i === 1, N[i]])),
+  'a11y.myRoute.stageGrownup': TITLES.flatMap(([n, t]) => WORDS.map((w, i) => ['Sam', n, t, w, i === 0, i === 1, N[i]])),
+  'a11y.myRoute.later': [['Stages 5 to 7', 'Coming later']],
+  'a11y.myRoute.cell': [['Letters and Books', 'Meet the Letters', 'Complete']],
+  'a11y.myRoute.skill': [['Read', 'In 4 quests you finished']],
+  'a11y.myRoute.gain': [['Stars', 9]],
+};
+
+type Rendered = { path: string; text: string; surface: Surface; args: unknown[] };
+
+function render(node: unknown, path: string, surface: Surface, out: Rendered[], unsampled: string[]): void {
+  if (typeof node === 'string') out.push({ path, text: node, surface, args: [] });
+  else if (typeof node === 'function') {
+    const samples = SAMPLES[path];
+    if (samples === undefined) unsampled.push(path);
+    for (const args of samples ?? []) out.push({ path, text: (node as (...a: unknown[]) => string)(...args), surface, args });
+  } else if (node !== null && typeof node === 'object') for (const [k, v] of Object.entries(node)) render(v, `${path}.${k}`, surface, out, unsampled);
+}
+
+function renderLocale(locale: UiLocale): { rendered: Rendered[]; unsampled: string[] } {
+  const m = getMessages(locale);
+  const rendered: Rendered[] = [];
+  const unsampled: string[] = [];
+  render(m.learner.myRoute, 'learner.myRoute', 'learner', rendered, unsampled);
+  render(m.caregiver.journey, 'caregiver.journey', 'caregiver', rendered, unsampled);
+  render(m.caregiver.skillsNote, 'caregiver.skillsNote', 'caregiver', rendered, unsampled);
+  render(m.a11y.myRoute, 'a11y.myRoute', 'a11y', rendered, unsampled);
+  return { rendered, unsampled };
+}
+
+/** The pill and button words (F-I18N-001 budgets: pill 24, cta 28). */
+const PILL_PATHS = /^learner\.myRoute\.(state|tag|cell)\./;
+const CTA_PATHS = /^learner\.myRoute\.(open\.cta|hero\.cta\.|cta\.)/;
+
+describe('the real My route dictionary keeps the copy rules (F-ROUTE-001 section 3.13)', () => {
+  for (const locale of LOCALES) {
+    const { rendered, unsampled } = renderLocale(locale);
+
+    it(`${locale}: every message renders with realistic samples`, () => {
+      expect(unsampled).toEqual([]);
+      expect(rendered.length).toBeGreaterThan(90);
+    });
+
+    it(`${locale}: no banned, speaking, ratio, percent, emoji-capable or stray-digit text`, () => {
+      const bad = rendered.flatMap((r) => copyViolations(r.text, locale, r.surface, r.args).map((v) => `${r.path} "${r.text}": ${v}`));
+      expect(bad).toEqual([]);
+    });
+
+    it(`${locale}: pills fit 24 and buttons 28 characters`, () => {
+      for (const r of rendered.filter((x) => PILL_PATHS.test(x.path))) expect(r.text.length, r.text).toBeLessThanOrEqual(24);
+      for (const r of rendered.filter((x) => CTA_PATHS.test(x.path))) expect(r.text.length, r.text).toBeLessThanOrEqual(28);
+    });
+
+    it(`${locale}: the grown-up slice never speaks to the child`, () => {
+      for (const r of rendered.filter((x) => x.path.startsWith('caregiver.') || x.path === 'a11y.myRoute.stageGrownup'))
+        expect(r.text, r.path).not.toMatch(/\byou(r|rs|rself|'re|'ve|'ll)?\b/i);
+    });
+  }
+
+  it('the English dictionary is the Appendix B copy the selectors were written against', () => {
+    const real = myRouteMessages(getMessages('en'));
+    const draft: Rendered[] = [];
+    const final: Rendered[] = [];
+    render(DRAFT_EN.learner, 'learner.myRoute', 'learner', draft, []);
+    render(DRAFT_EN.grownup, 'caregiver.journey', 'caregiver', draft, []);
+    render(DRAFT_EN.skillsNote, 'caregiver.skillsNote', 'caregiver', draft, []);
+    render(DRAFT_EN.a11y, 'a11y.myRoute', 'a11y', draft, []);
+    render(real.learner, 'learner.myRoute', 'learner', final, []);
+    render(real.grownup, 'caregiver.journey', 'caregiver', final, []);
+    render(real.skillsNote, 'caregiver.skillsNote', 'caregiver', final, []);
+    render(real.a11y, 'a11y.myRoute', 'a11y', final, []);
+    const byKey = new Map(final.map((r) => [`${r.path}|${JSON.stringify(r.args)}`, r.text]));
+    for (const d of draft) expect(byKey.get(`${d.path}|${JSON.stringify(d.args)}`), d.path).toBe(d.text);
+  });
+});

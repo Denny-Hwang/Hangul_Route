@@ -59,7 +59,7 @@ export function buildMyRoute(input: MyRouteInput): MyRouteModel {
     quests: input.quests,
     episodes: input.episodes,
     isEntitled,
-    skipQuestIds: new Set([...placedOut].filter((id) => !done.has(id))),
+    skipQuestIds: new Set([...placedOut, ...(input.skipQuestIds ?? [])].filter((id) => !done.has(id))),
   });
   const cursorEntry = order.find((e) => e.questId === cursorQuest?.id);
   const cursor = cursorEntry ? { questId: cursorEntry.questId, episodeId: cursorEntry.episodeId, stage: cursorEntry.stage } : null;

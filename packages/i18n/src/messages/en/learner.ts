@@ -1033,6 +1033,98 @@ export const learner = {
   },
 
   /**
+   * My route (F-ROUTE-001 R-3, Appendix B): the whole journey at a glance, one stage row each.
+   * Absolute, positive words only: never a ratio, a percent, "left" or a level, no commerce word
+   * and no speaking word (owner decision 2026-10-10). Digits come only from arguments (Stage {n},
+   * counts). The can-do lines and the state words never say "you", so the grown-up view uses them too.
+   */
+  myRoute: {
+    title: 'My route',
+    /** The Journey header entry (section 3.1, entry 1). */
+    open: { cta: 'See my route' },
+    hero: {
+      start: 'Your Hangul route starts here.',
+      goal: 'Your first goal: read every Hangul letter.',
+      here: (n: number, title: string) => `You are on Stage ${n}: ${title}.`,
+      next: (title: string) => `Next: ${title}`,
+      rest: 'You did everything that is open right now. More is coming.',
+      beyond: 'You know a lot! More adventures are coming.',
+      cta: { start: 'Start', continue: 'Continue' },
+    },
+    cta: { stories: 'Open stories', library: 'Open Library' },
+    /** The stage and cell words (section 3.3). `notOpen` is used only under OD-4's other branch. */
+    state: {
+      complete: 'Complete',
+      known: 'You knew this',
+      explored: 'Explored',
+      open: 'Open',
+      taste: 'A taste',
+      later: 'Coming later',
+      notOpen: 'Not open yet',
+    },
+    tag: { here: 'You are here', start: 'You started here' },
+    cell: { playing: 'Playing' },
+    caption: {
+      played: (n: number) => `${count(n, 'quest', 'quests')} played`,
+      ready: 'Ready when you are',
+      explored: 'You explored everything that is open right now',
+      newJoined: 'New quests joined',
+    },
+    canDoLead: 'By the end of this stage you can:',
+    /** One line per stage (Appendix A), no number and no target. */
+    stage: {
+      canDo: {
+        1: 'Read any Hangul letter and syllable and know its sound.',
+        2: 'Read everyday words and know what they mean.',
+        3: 'Read and build short, simple sentences.',
+        4: 'Follow a short greeting conversation and pick a reply.',
+        5: 'Read a short story from start to end.',
+        6: 'Read menus, signs and short messages.',
+        7: 'Write a few sentences about daily life and favorite things.',
+      },
+    },
+    laterGroup: (from: number, to: number) => `Stages ${from} to ${to}`,
+    laterNote: 'It will appear here when it is ready.',
+    newQuests: (n: number, stage: number) =>
+      `${plural('en', n, { one: '1 new quest', other: `${n} new quests` })} joined Stage ${stage}.`,
+    /** "This stage builds" chips in an open stage: design intent, not a claim that content exists. */
+    builds: 'This stage builds',
+    skills: { title: 'What your quests practice' },
+    skill: {
+      read: 'Read',
+      listen: 'Listen',
+      write: 'Write',
+      quests: (n: number) => `In ${count(n, 'quest', 'quests')} you finished`,
+    },
+    /** The sheet a skill row opens: the games that count for it (section 3.7, OD-5). */
+    games: {
+      title: (skill: string) => `Games that count for ${skill}`,
+      note: 'A finished quest counts here when it has one of these games.',
+      matchSound: 'Hear a sound, find its letter',
+      tapRespond: 'Hear it, then tap the answer',
+      listenPick: 'Listen and pick',
+      matchShape: 'Match the shapes',
+      oddOneOut: 'Find the one that is different',
+      picWordMatch: 'Match a picture to its word',
+      storyRead: 'Read a story',
+      traceStroke: 'Trace a letter',
+    },
+    /** The pip legend in an open stage (section 3.4): drawn shapes plus these words. */
+    legend: {
+      title: 'What the shapes mean',
+      done: 'Played',
+      known: 'You knew this',
+      open: 'Ready to play',
+      new: 'New',
+      later: 'Coming later',
+      cursor: 'Next',
+    },
+    /** Gains (section 3.8): absolute numbers, shown only when greater than zero. */
+    gains: { stars: 'Stars', cards: 'Cards', stories: 'Stories read' },
+    storiesNote: 'Heritage stories are open any time.',
+  },
+
+  /**
    * Vocabulary practice (F-VOC-003 / F-VOC-004). `speed.nudge` holds Hoya's Speed Round lines
    * (F-VOC-004 §3.7): encouraging only, never a number of misses, a lost spark, a streak, combo or
    * lives, a percentage, an age or a comparison with anyone (`logic/vocab/nudges.ts` scans them).

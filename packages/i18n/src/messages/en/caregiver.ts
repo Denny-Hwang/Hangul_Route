@@ -455,6 +455,28 @@ export const caregiver = {
     row: { label: 'Starting spot', seeCheck: 'See the check' },
   },
 
+  /**
+   * My route about a child (F-ROUTE-001 sections 3.12, Appendix B): a grown-up viewing another
+   * profile's page read-only. Every sentence is written about the child, from the profile name.
+   */
+  journey: {
+    here: (name: string, n: number, title: string) => `${name} is on Stage ${n}: ${title}.`,
+    next: (title: string) => `Next: ${title}`,
+    canDoLead: (name: string) => `By the end of this stage, ${name} can:`,
+    started: (name: string) => `${name} started here.`,
+    known: (name: string) => `${name} already knew this.`,
+    quests: (name: string, n: number) => `In ${plural('en', n, { one: '1 quest', other: `${n} quests` })} ${name} finished`,
+    viewing: (name: string) => `Viewing ${name}'s journey`,
+    tiles: (n: number) => `Spelling with tiles: ${plural('en', n, { one: '1 quest', other: `${n} quests` })}`,
+    start: (name: string) => `${name}'s Hangul route starts here.`,
+    goal: 'First goal: read every Hangul letter.',
+    rest: (name: string) => `${name} did everything that is open right now. More is coming.`,
+    beyond: (name: string) => `${name} knows a lot! More adventures are coming.`,
+    hereTag: (name: string) => `${name} is here`,
+    ready: (name: string) => `Ready when ${name} is`,
+    explored: (name: string) => `${name} explored everything that is open right now`,
+    skillsTitle: (name: string) => `What ${name}'s quests practice`,
+  },
   /** One wording everywhere (F-ROUTE-001 section 3.12): the placement report and My route's skills rows. */
   skillsNote:
     'The level check looks at reading and listening. Writing is practiced with tracing games and is not scored. The rows count finished quests that include these games; a game skipped inside a quest still counts.',
