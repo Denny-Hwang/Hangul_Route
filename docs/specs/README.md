@@ -94,6 +94,8 @@ F-XXX-<slug>.md
 - `F-HW-001-homework-page.md` — Homework tab · **draft**
 - `F-RVW-001-review-tests.md` — Reviews · **draft**
 - `F-PAR-001-parent-dashboard.md` — Parent dashboard · **draft**
+- `F-REPORT-001-progress-reports.md` — progress reports for parents and teachers on app.hangulroute.com: a per-learner dashboard with day / week / month / all-time reports in three layers (headline, what went well, what to practice next first), class statistics without ranking, the in-app report behind the grown-up gate, print; supersedes F-PAR-001 sections 3.2 and 3.3 · **ready**
+  - wireframes `design/wireframes/reports/{learner-report,class-report,in-app-report,print}.md` (RP-0)
 - `F-TCH-001-teacher-classroom.md` — Teacher classroom · **draft** (Phase 2 stub)
 
 ### Deferred (spec exists, ship-when triggers defined)
