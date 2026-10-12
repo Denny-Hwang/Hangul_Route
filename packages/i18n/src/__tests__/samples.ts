@@ -211,6 +211,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.storyShelf.cultureNotes.fromStory': [['The Sun and the Moon']],
   'learner.storyShelf.cultureNotes.source': [['Hangul Day', 'National Institute of Korean Language']],
   'learner.storyShelf.cultureNotes.hearTerm': [['hangeullal']],
+  'learner.storyShelf.cultureNotes.cardLabel': [[3, 'Hangul Day', 'Seollal'], [1, 'Hangul Day'], [0]],
+  'learner.storyShelf.cultureNotes.listLabel': [['Letters & Books']],
   'learner.storyShelf.heroLabel': [['Start', 'The Sun and the Moon'], ['Read it again', 'Hangul Day']],
   'console.plan.titleFor': [['Class A']],
   'console.plan.back': [['Class A'], [null]],

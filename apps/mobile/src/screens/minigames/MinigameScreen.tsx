@@ -6,7 +6,7 @@ import { questById } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeScope } from '../../logic/content-locale';
 import { scopeFor } from '../../logic/minigame-config';
-import { resolveScreenExits, type ScreenExitProps } from '../../logic/navigation/screen-exits';
+import { resolveOptionalExit, resolveScreenExits, type ScreenExitProps } from '../../logic/navigation/screen-exits';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
 import { useQuestRunStore } from '../../store/quest-run-store';
@@ -32,10 +32,16 @@ import { VoiceEchoGame } from './VoiceEchoGame';
  */
 type Props = {
   route: { params: RootStackParamList['Minigame'] };
-  navigation?: Pick<NativeStackScreenProps<RootStackParamList, 'Minigame'>['navigation'], 'goBack'>;
+  navigation?: Pick<NativeStackScreenProps<RootStackParamList, 'Minigame'>['navigation'], 'goBack' | 'push'>;
+  /**
+   * The story step's "More in Culture notes" (F-STORY-004 PR 4.7); the learner default pushes
+   * `CultureNotes { noteId, from: 'quest' }` (Back only, so the quest run is never unwound).
+   * `null`, or no learner stack, draws no button.
+   */
+  onOpenCultureNote?: ((noteId: string) => void) | null;
 } & ScreenExitProps;
 
-export function MinigameScreen({ route, navigation, ...exitProps }: Props): React.ReactElement {
+export function MinigameScreen({ route, navigation, onOpenCultureNote, ...exitProps }: Props): React.ReactElement {
   const { questId, stepIndex } = route.params;
   const quest = questById(questId);
   const step = quest?.steps[stepIndex];
@@ -52,6 +58,10 @@ export function MinigameScreen({ route, navigation, ...exitProps }: Props): Reac
   // Learner default: back to the quest player. A game has no home or link exit of its own.
   const learnerBack = (): void => navigation?.goBack();
   const exits = resolveScreenExits(exitProps, { back: learnerBack, home: learnerBack, openLink: () => undefined });
+  const openCultureNote = resolveOptionalExit(
+    onOpenCultureNote,
+    navigation ? (noteId: string): void => navigation.push('CultureNotes', { noteId, from: 'quest' }) : undefined,
+  );
 
   const close = (): void => {
     if (scope) {
@@ -115,7 +125,7 @@ export function MinigameScreen({ route, navigation, ...exitProps }: Props): Reac
     case 'tap-respond':
       return <TapRespondGame scope={scope} onFinish={close} />;
     case 'story-read':
-      return <StoryReadGame scope={scope} onFinish={close} onBack={exits.back} />;
+      return <StoryReadGame scope={scope} onFinish={close} onBack={exits.back} onOpenCultureNote={openCultureNote} />;
     case 'story-check':
       return <StoryCheckGame scope={scope} onFinish={close} onBack={exits.back} />;
     default:

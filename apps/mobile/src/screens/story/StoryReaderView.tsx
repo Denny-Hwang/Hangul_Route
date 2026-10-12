@@ -666,7 +666,15 @@ function ReaderBody({
           dispatch({ type: 'reveal', id: note.itemId });
           audio.play(termSteps(note.term));
         }}
-        onMore={onOpenCultureNote ? () => onOpenCultureNote(note.id) : undefined}
+        onMore={
+          onOpenCultureNote
+            ? () => {
+                // Narration or a term clip never plays on under the Culture notes screen.
+                audio.stop();
+                onOpenCultureNote(note.id);
+              }
+            : undefined
+        }
         onClose={() => dispatch({ type: 'closeTerm' })}
         compact={compactHeight}
       />

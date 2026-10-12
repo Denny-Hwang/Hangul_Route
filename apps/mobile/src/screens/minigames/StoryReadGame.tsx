@@ -8,6 +8,7 @@ import { activeProfileSelector, useProfileStore } from '../../store/profile-stor
 import { useQuestRunStore } from '../../store/quest-run-store';
 import { StoryReaderView } from '../story/StoryReaderView';
 import { useReaderBookmark } from '../story/use-reader-bookmark';
+import { useStoryNotesFound } from '../story/use-story-notes-found';
 
 interface Props {
   scope: MinigameScope;
@@ -15,6 +16,8 @@ interface Props {
   onFinish: () => void;
   /** Back to the quest step without completing it (Close, the back gesture, the fallback's Back). */
   onBack: () => void;
+  /** "More in Culture notes", from the game shell (`MinigameScreen`); drawn only once the story's notes are found. */
+  onOpenCultureNote?: (noteId: string) => void;
 }
 
 /**
@@ -26,13 +29,16 @@ interface Props {
  * quest run, and its end-page Continue completes the step. Reading itself
  * scores nothing. The rules are in `logic/story/read-game.ts`.
  */
-export function StoryReadGame({ scope, onFinish, onBack }: Props): React.ReactElement {
+export function StoryReadGame({ scope, onFinish, onBack, onOpenCultureNote }: Props): React.ReactElement {
   const locale = useLocale();
   const { story: source, level } = useMemo(() => readGameTarget(scope), [scope]);
   // The story in the UI language, with the voice of the narration shown in each scene (PR 2.8).
   const { story, narrationLangs } = useMemo(() => readerStory(source, level, locale), [source, level, locale]);
   const profileId = useProfileStore((s) => activeProfileSelector(s)?.id ?? null);
-  const bookmark = useReaderBookmark(profileId, story?.id ?? scope.story?.storyId ?? '', level, sceneCountOf(story, level));
+  const storyId = story?.id ?? scope.story?.storyId ?? '';
+  const bookmark = useReaderBookmark(profileId, storyId, level, sceneCountOf(story, level));
+  // On a first read the notes are not found yet, so the screen would not show the note: no button.
+  const notesFound = useStoryNotesFound(storyId);
 
   // Rebuilt on every render on purpose: the shell's `onFinish` / `onBack` are new each render, and
   // the reader reads its callbacks through a live ref, so no effect re-runs on a new identity.
@@ -54,6 +60,7 @@ export function StoryReadGame({ scope, onFinish, onBack }: Props): React.ReactEl
       onAnswer={handlers.onAnswer}
       onFinish={handlers.onFinish}
       onClose={handlers.onClose}
+      onOpenCultureNote={notesFound ? onOpenCultureNote : undefined}
       narrationLangs={narrationLangs}
       sourceStory={source}
     />
