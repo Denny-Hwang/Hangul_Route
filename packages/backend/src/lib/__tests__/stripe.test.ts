@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { checkoutForm, checkoutMode, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, isSubscriptionRef, lookupPromotionCode, mapStripeStatus, parseStripeSignature, priceIdFor, promoFromStripe, signStripePayload, verifyStripeSignature } from '../stripe';
+import { checkoutForm, checkoutMode, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, lookupPromotionCode, mapStripeStatus, parseStripeSignature, priceIdFor, promoFromStripe, signStripePayload, verifyStripeSignature } from '../stripe';
 
 const secret = 'whsec_test';
 const body = '{"id":"evt_1","type":"customer.subscription.updated"}';
@@ -87,9 +87,6 @@ describe('stripe helpers (F-ENT-001 §3.3)', () => {
     // Both products renew yearly (owner decision 2026-10-11).
     expect(checkoutMode('family_lifetime')).toBe('subscription');
     expect(checkoutMode('group_license')).toBe('subscription');
-    // The portal manages subscriptions only; a legacy one-time payment or session ref has nothing to manage.
-    expect(isSubscriptionRef('sub_1')).toBe(true);
-    expect([isSubscriptionRef('pi_1'), isSubscriptionRef('cs_1'), isSubscriptionRef(null), isSubscriptionRef(undefined)]).toEqual([false, false, false, false]);
     const form = checkoutForm({ priceId: 'price_gl_y', subjectKind: 'space', subjectId: 'space:cls', planKey: 'group_license', successUrl: 's', cancelUrl: 'c', customerEmail: 'kim@example.com' });
     expect(form).toMatchObject({ mode: 'subscription', 'line_items[0][price]': 'price_gl_y', 'metadata[planKey]': 'group_license', 'subscription_data[metadata][subjectId]': 'space:cls', customer_email: 'kim@example.com' });
     expect(form).not.toHaveProperty('customer_creation');

@@ -1,4 +1,4 @@
-import { CheckoutCreateSchema, PLAN_PRICING, PromoCheckSchema, discountedUsd, type Entitlement, type Space } from '@hangul-route/content-schema';
+import { CheckoutCreateSchema, PLAN_PRICING, PromoCheckSchema, discountedUsd, isStripeSubscriptionRef, type Entitlement, type Space } from '@hangul-route/content-schema';
 import type { Account } from '../store';
 import { Hono, type Context } from 'hono';
 import { dbFor, type Db } from '../db';
@@ -6,7 +6,7 @@ import { fail, ok } from '../envelope';
 import { accountActor, requireAccount, spaceContext } from '../lib/access';
 import { can } from '../lib/can';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
-import { checkoutForm, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, isSubscriptionRef, lookupPromotionCode, priceIdFor, verifyStripeSignature, type StripeEnv, type StripeEventLike } from '../lib/stripe';
+import { checkoutForm, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, lookupPromotionCode, priceIdFor, verifyStripeSignature, type StripeEnv, type StripeEventLike } from '../lib/stripe';
 
 /** Promo lookups are guessable strings: 20 per minute per client (F-ENT-002 §3.2). */
 export const PROMO_LIMIT = 20;
@@ -122,7 +122,7 @@ entitlementRoutes.post('/stripe/portal', async (c) => {
   }
   // Any Stripe subscription can be managed: the Family Plan and the Group License both renew
   // yearly (BY-D6). A legacy one-time sandbox row (payment intent or session ref) has nothing to manage.
-  const customer = (await db.entitlementsFor(subjectKind, subjectId)).find((e) => e.provider === 'stripe' && e.customerRef && isSubscriptionRef(e.providerRef))?.customerRef;
+  const customer = (await db.entitlementsFor(subjectKind, subjectId)).find((e) => e.provider === 'stripe' && e.customerRef && isStripeSubscriptionRef(e.providerRef))?.customerRef;
   if (!customer) return fail(c, 'not_found', 'No Stripe subscription for this subject', 404);
   const env = c.env ?? {};
   if (!env.STRIPE_SECRET_KEY) return fail(c, 'stripe_not_configured', 'Billing portal is not set up on this deployment yet', 500);

@@ -5,7 +5,7 @@ import type { EntitlementView, SpaceListItem } from '../api';
 import { billingNoteText, checkoutReturnNote, currentPlanCards, freePlanLine, isActive, planIncludes, planPrice, planRowsFor, planTitle, promoNoteText, promoPriceLine, rowPrice, sourceLine, statusLine } from '../billing';
 
 const now = new Date('2026-09-21T12:00:00.000Z');
-const ent = (over: Partial<EntitlementView>): EntitlementView => ({ id: 'ent:1', subjectKind: 'space', subjectId: 'space:fam', planKey: 'group_license', status: 'active', provider: 'stripe', providerRef: 'sub', customerRef: 'cus', seats: null, expiresAt: '2026-10-21T00:00:00.000Z', promoCode: null, updatedAt: '2026-09-20T00:00:00.000Z', subjectName: 'Kim family', ...over });
+const ent = (over: Partial<EntitlementView>): EntitlementView => ({ id: 'ent:1', subjectKind: 'space', subjectId: 'space:fam', planKey: 'group_license', status: 'active', provider: 'stripe', providerRef: 'sub_1', customerRef: 'cus', seats: null, expiresAt: '2026-10-21T00:00:00.000Z', promoCode: null, updatedAt: '2026-09-20T00:00:00.000Z', subjectName: 'Kim family', ...over });
 const space = (id: string, kind: SpaceListItem['space']['kind'], role: SpaceListItem['role'] = 'owner', archivedAt: string | null = null): SpaceListItem => ({
   space: { id, kind, name: id, parentSpaceId: id === 'space:inschool' ? 'space:sch' : null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt, createdAt: 't' },
   role,
@@ -27,8 +27,12 @@ describe('billing view models (F-ENT-001 §3.6)', () => {
     expect(statusLine(ent({ status: 'trial', expiresAt: null }), now)).toBe('trial');
     expect(statusLine(ent({}), now)).toBe('active · renews Oct 21, 2026');
     expect(statusLine(ent({ expiresAt: null }), now)).toBe('active');
-    expect(statusLine(ent({ planKey: 'family_lifetime', expiresAt: null }), now)).toBe('active · yours for good');
-    expect(isActive(ent({ planKey: 'family_lifetime', expiresAt: null }), new Date('2099-01-01T00:00:00.000Z'))).toBe(true); // never lapses
+    // The Family Plan renews yearly like a licence (BY-D9); a legacy one-time sandbox row has no date (BY-D2).
+    expect(statusLine(ent({ planKey: 'family_lifetime' }), now)).toBe('active · renews Oct 21, 2026');
+    expect(statusLine(ent({ planKey: 'family_lifetime', status: 'cancelled' }), now)).toBe('cancelled · ends Oct 21, 2026');
+    expect(statusLine(ent({ planKey: 'family_lifetime', expiresAt: null, providerRef: 'pi_1' }), now)).toBe('active');
+    expect(isActive(ent({ planKey: 'family_lifetime', expiresAt: '2026-09-01T00:00:00.000Z' }), now)).toBe(false); // a year that ran out
+    expect(isActive(ent({ planKey: 'family_lifetime', expiresAt: null, providerRef: 'pi_1' }), new Date('2099-01-01T00:00:00.000Z'))).toBe(true); // legacy row stays readable
     expect(statusLine(ent({ status: 'past_due' }), now)).toContain('kept for a week');
     expect(statusLine(ent({ status: 'past_due', updatedAt: '2026-09-01T00:00:00.000Z' }), now)).toContain('paused');
     expect(statusLine(ent({ status: 'cancelled' }), now)).toBe('cancelled · ends Oct 21, 2026');
@@ -38,9 +42,19 @@ describe('billing view models (F-ENT-001 §3.6)', () => {
   });
 
   it('builds current-plan cards and role-aware plan rows with one recommendation', () => {
-    const cards = currentPlanCards([ent({ subjectId: 'space:cls', subjectName: 'Class A' }), ent({ id: 'ent:2', planKey: 'family_lifetime', provider: 'stripe', customerRef: 'cus_fam', expiresAt: null })], now);
+    const cards = currentPlanCards(
+      [
+        ent({ subjectId: 'space:cls', subjectName: 'Class A' }),
+        ent({ id: 'ent:2', planKey: 'family_lifetime', provider: 'stripe', providerRef: 'sub_fam', customerRef: 'cus_fam' }),
+        ent({ id: 'ent:3', planKey: 'family_lifetime', provider: 'stripe', providerRef: 'pi_old', customerRef: 'cus_old', expiresAt: null, subjectName: 'Lee family' }),
+        ent({ id: 'ent:4', subjectId: 'space:cls2', provider: 'stripe', providerRef: null, customerRef: 'cus_x' }),
+      ],
+      now,
+    );
     expect(cards[0]).toMatchObject({ title: 'Group License', subject: 'Class A', active: true, canManage: true });
-    expect(cards[1]).toMatchObject({ title: 'Family Lifetime', subject: 'Kim family', status: 'active · yours for good', canManage: false }); // nothing to cancel
+    expect(cards[1]).toMatchObject({ title: 'Family Plan', subject: 'Kim family', status: 'active · renews Oct 21, 2026', canManage: true }); // cancel any time
+    expect(cards[2]).toMatchObject({ title: 'Family Plan', subject: 'Lee family', status: 'active', canManage: false }); // legacy one-time row: no subscription
+    expect(cards[3]?.canManage).toBe(false); // no subscription id, nothing for the portal
 
     const rows = planRowsFor('me', [space('space:fam', 'family'), space('space:cls', 'class'), space('space:inschool', 'class'), space('space:sch', 'school'), space('space:old', 'family', 'owner', 'a'), space('space:other', 'family', 'caregiver')], [], now);
     expect(rows.map((r) => [r.planKey, r.subjectId, r.action, r.recommended])).toEqual([
@@ -50,7 +64,7 @@ describe('billing view models (F-ENT-001 §3.6)', () => {
       ['group_license', 'space:sch', 'choose', false],
       ['school_seat', 'space:sch', 'contact', false],
     ]); // the class inside the school gets no row of its own
-    expect(rows[1]?.price).toBe('$15.30 once');
+    expect(rows[1]?.price).toBe('$15.30 / year');
     expect(rows[2]?.price).toBe('$153 / year');
     expect(rows[4]?.price).toBe('Contact us');
     const withLicence = planRowsFor('me', [space('space:cls', 'class')], [ent({ subjectId: 'space:cls' })], now);
@@ -61,7 +75,8 @@ describe('billing view models (F-ENT-001 §3.6)', () => {
 
   it('prices a plan with a promo code (F-ENT-002)', () => {
     const pct = { id: 'promo_1', code: 'HOYA20', name: 'Launch', percentOff: 20, amountOffCents: null, duration: 'once' as const };
-    expect(promoPriceLine('family_lifetime', pct)).toBe('$12.24 once with HOYA20 (20% off), was $15.30 once');
+    expect(promoPriceLine('family_lifetime', pct)).toBe('$12.24 / year with HOYA20 (20% off, first year), was $15.30 / year');
+    expect(promoPriceLine('family_lifetime', { ...pct, duration: 'forever' })).toBe('$12.24 / year with HOYA20 (20% off), was $15.30 / year');
     expect(promoPriceLine('group_license', pct)).toBe('$122.40 / year with HOYA20 (20% off, first year), was $153 / year');
     expect(promoPriceLine('group_license', { ...pct, duration: 'forever', percentOff: null, amountOffCents: 300 })).toBe('$150.00 / year with HOYA20 ($3.00 off), was $153 / year');
     expect(promoPriceLine('school_seat', pct)).toBeNull();
@@ -102,12 +117,12 @@ describe('sourceLine', () => {
 
 describe('billing words and prices per locale (F-I18N-001 PR 9)', () => {
   it('prices plans from PLAN_PRICING amounts through formatUsd, never the English label (F-I18N-001 §3.1)', () => {
-    expect(planPrice('family_lifetime')).toBe('$15.30 once');
+    expect(planPrice('family_lifetime')).toBe('$15.30 / year');
     expect(planPrice('group_license')).toBe('$153 / year');
-    expect((['free', 'family_lifetime', 'group_license', 'school_seat'] as const).map((k) => rowPrice(k))).toEqual(['$0', '$15.30 once', '$153 / year', 'Contact us']);
+    expect((['free', 'family_lifetime', 'group_license', 'school_seat'] as const).map((k) => rowPrice(k))).toEqual(['$0', '$15.30 / year', '$153 / year', 'Contact us']);
     for (const locale of ['en', 'es', 'ko'] as const) {
       const price = getMessages(locale).console.price;
-      expect(planPrice('family_lifetime', locale)).toBe(price.once(formatUsd(locale, PLAN_PRICING.family_lifetime.amountUsd)));
+      expect(planPrice('family_lifetime', locale)).toBe(price.year(formatUsd(locale, PLAN_PRICING.family_lifetime.amountUsd)));
       expect(planPrice('group_license', locale)).toBe(price.year(formatUsd(locale, PLAN_PRICING.group_license.amountUsd)));
     }
   });
@@ -141,10 +156,10 @@ describe('billing page words per locale (F-I18N-001 PR 10b)', () => {
   });
 
   it('keeps the English plan names and includes lines', () => {
-    expect((['free', 'family_lifetime', 'group_license', 'school_seat'] as const).map((k) => planTitle(k))).toEqual(['Free', 'Family Lifetime', 'Group License', 'School Contract']);
+    expect((['free', 'family_lifetime', 'group_license', 'school_seat'] as const).map((k) => planTitle(k))).toEqual(['Free', 'Family Plan', 'Group License', 'School Contract']);
     expect(planTitle('group_license')).toBe('Group License');
     expect(planIncludes('free')).toBe('Stage 1, local progress, Rescue Code, file backup; classes up to 20 students');
-    expect(planIncludes('family_lifetime')).toBe('Every Stage, now and later, for one family: up to 5 learners, cloud sync, grown-up dashboard and plans');
+    expect(planIncludes('family_lifetime')).toBe('Every Stage, new ones included, for one family: up to 5 learners, cloud sync, grown-up dashboard and plans');
     expect(planIncludes('group_license')).toBe('A class or school: every student premium while enrolled, no 20-student cap; a school holds up to 10 teachers / 300 students');
     expect(planIncludes('school_seat')).toBe('Beyond 300 students or 10 teachers — seats by contract');
     expect(currentPlanCards([ent({ subjectKind: 'account', subjectId: 'me' })], now)[0]?.subject).toBe('your account');

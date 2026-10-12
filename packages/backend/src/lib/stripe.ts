@@ -173,11 +173,6 @@ export function entitlementFromStripeEvent(event: StripeEventLike): EntitlementA
   return null;
 }
 
-/** A Stripe subscription id (`sub_…`): what the Billing Portal can manage. */
-export function isSubscriptionRef(ref: string | null | undefined): boolean {
-  return typeof ref === 'string' && ref.startsWith('sub_');
-}
-
 export function priceIdFor(env: StripeEnv, planKey: PurchasablePlanKey): string | null {
   return (planKey === 'family_lifetime' ? env.STRIPE_PRICE_FAMILY_YEARLY : env.STRIPE_PRICE_GROUP_LICENSE_YEARLY) ?? null;
 }

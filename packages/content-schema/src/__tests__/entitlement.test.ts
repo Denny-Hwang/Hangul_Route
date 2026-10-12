@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CheckoutCreateSchema, EntitlementApplySchema, EntitlementSchema, FAMILY_LIFETIME_LEARNERS, MemberAddSchema, PLAN_PRICING, PromoCheckSchema, PromoSchema, ReceiptVerifySchema, discountedUsd, normalizePromoCode, promoLabel, SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS, SyncInboxSchema, TIER_GRACE_MS } from '../index';
+import { CheckoutCreateSchema, EntitlementApplySchema, EntitlementSchema, FAMILY_LIFETIME_LEARNERS, isStripeSubscriptionRef, MemberAddSchema, PLAN_PRICING, PromoCheckSchema, PromoSchema, ReceiptVerifySchema, discountedUsd, normalizePromoCode, promoLabel, SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS, SyncInboxSchema, TIER_GRACE_MS } from '../index';
 
 describe('entitlement schemas (F-ENT-001 §3.1)', () => {
   const row = { id: 'ent:abc', subjectKind: 'space', subjectId: 'space:fam', planKey: 'family_lifetime', status: 'active', provider: 'stripe', providerRef: 'sub_1', customerRef: 'cus_1', seats: null, expiresAt: null, updatedAt: 't' };
@@ -16,6 +16,9 @@ describe('entitlement schemas (F-ENT-001 §3.1)', () => {
     // The Family Plan renews yearly at the same price (owner decision 2026-10-11, AMENDMENTS-BILLING-FAMILY-YEARLY).
     expect(PLAN_PRICING.family_lifetime).toEqual({ amountUsd: 15.3, per: 'year', label: '$15.30 / year' });
     expect(Object.values(PLAN_PRICING).every((p) => p.per === 'year')).toBe(true);
+    // The portal manages subscriptions only (BY-D6).
+    expect(isStripeSubscriptionRef('sub_1')).toBe(true);
+    expect([isStripeSubscriptionRef('pi_1'), isStripeSubscriptionRef('cs_1'), isStripeSubscriptionRef(null), isStripeSubscriptionRef(undefined)]).toEqual([false, false, false, false]);
     expect(PLAN_PRICING.group_license).toEqual({ amountUsd: 153, per: 'year', label: '$153 / year' });
     expect(FAMILY_LIFETIME_LEARNERS).toBe(5);
     expect(EntitlementSchema.parse(row).promoCode).toBeNull();

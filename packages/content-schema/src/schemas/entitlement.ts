@@ -71,6 +71,15 @@ export const PLAN_PRICING: Record<PurchasablePlanKey, PlanPricing> = {
   group_license: { amountUsd: 153, per: 'year', label: '$153 / year' },
 };
 
+/**
+ * A Stripe subscription id (`sub_…`): what the Billing Portal can manage. Both plans are
+ * subscriptions; a legacy one-time sandbox row (payment intent `pi_…` or session `cs_…`,
+ * AMENDMENTS-BILLING-FAMILY-YEARLY BY-D2) has nothing to manage.
+ */
+export function isStripeSubscriptionRef(ref: string | null | undefined): boolean {
+  return typeof ref === 'string' && ref.startsWith('sub_');
+}
+
 /** A Family Plan (key `family_lifetime`) covers one family space with up to this many learners. */
 export const FAMILY_LIFETIME_LEARNERS = 5;
 

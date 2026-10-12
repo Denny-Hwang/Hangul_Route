@@ -92,7 +92,7 @@ function BillingInner(): JSX.Element {
   };
 
   const manage = async (subjectKind: 'account' | 'space', subjectId: string): Promise<void> => {
-    // Only yearly group licences have a Stripe subscription to manage; lifetime has nothing to cancel.
+    // Both yearly plans (Family Plan, Group License) are Stripe subscriptions; a legacy one-time row has nothing to manage.
     if (!api) return;
     setBusy(true);
     setNote(null);
