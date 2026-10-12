@@ -113,6 +113,10 @@ export const TELEMETRY_EVENT_NAMES = [
   'vocab.round.start',
   'vocab.round.complete',
   'vocab.challenge_toggled',
+  // F-APP-001 §3.18 (learner app only; codes only, never a profileId)
+  'shell.persona_chosen',
+  'shell.grown_up_handoff',
+  'shell.path_bounced',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);
