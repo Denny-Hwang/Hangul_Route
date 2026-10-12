@@ -1,5 +1,6 @@
-import type { Entitlement, EntitlementApply, MemberKind, Membership, Plan, RelinkRequest, Space } from '@hangul-route/content-schema';
+import { isStripeSubscriptionRef, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type RelinkRequest, type Space } from '@hangul-route/content-schema';
 import type { TransferBlockReason, TransferEndReason, TransferSlot } from '@hangul-route/content-schema';
+import { isEntitlementActive } from '../lib/entitlement';
 import type { Account, Learner, LearnerDevice, SnapshotRecord } from '../store';
 import type {
   ConsentResetReason,
@@ -84,8 +85,12 @@ export interface Db {
 
   // entitlements (F-ENT-001)
   entitlementsFor(subjectKind: Entitlement['subjectKind'], subjectId: string): Promise<Entitlement[]>;
-  /** Upsert one row per (subject, plan), keeping refs unless replaced. */
-  applyEntitlement(input: EntitlementApply, now: Date): Promise<Entitlement>;
+  /**
+   * Upsert one row per (subject, plan), keeping refs unless replaced, by the rules of
+   * `mergeEntitlement` (`merge` defaults to 'set'). The write never replaces a row it
+   * did not read: a lost race reads again and merges onto the winner (BY-D5).
+   */
+  applyEntitlement(input: EntitlementApply, now: Date, merge?: EntitlementMerge): Promise<Entitlement>;
 
   // waitlist (launch invites; no email is sent from here)
   /** Insert-if-absent by address: an existing row (and any unsubscribe on it) is left untouched. Says nothing about whether it existed. */
@@ -181,8 +186,52 @@ export interface Db {
   reset(): Promise<void>;
 }
 
-/** The upsert rule shared by both backends (F-ENT-001 §3.1). */
-export function mergeEntitlement(existing: Entitlement | null, input: EntitlementApply, now: Date, newId: () => string): Entitlement {
+/**
+ * How an input lands on the stored row (AMENDMENTS-BILLING-FAMILY-YEARLY BY-D5):
+ * - 'set': every provider path and every subscription event. The input's status applies;
+ *   a field it leaves out keeps the stored value.
+ * - 'checkout': a subscription checkout's completion. Its subscription's own events own
+ *   status and end, and Stripe may deliver them first.
+ */
+export type EntitlementMerge = 'set' | 'checkout';
+
+/**
+ * A Stripe subscription event for a different subscription than the one the row carries,
+ * that would take a covering row out of cover (a duplicate's deletion, BY-D5).
+ */
+function isSupersededSubscription(existing: Entitlement, next: Entitlement, now: Date): boolean {
+  return (
+    existing.provider === 'stripe' &&
+    isStripeSubscriptionRef(existing.providerRef) &&
+    isStripeSubscriptionRef(next.providerRef) &&
+    existing.providerRef !== next.providerRef &&
+    isEntitlementActive(existing, now) &&
+    !isEntitlementActive(next, now)
+  );
+}
+
+/**
+ * The upsert rule shared by both backends (F-ENT-001 §3.1, BY-D5). Returns `existing`
+ * itself when the input changes nothing that may change, so callers can skip the write.
+ */
+export function mergeEntitlement(existing: Entitlement | null, input: EntitlementApply, now: Date, newId: () => string, merge: EntitlementMerge = 'set'): Entitlement {
+  if (merge === 'checkout') {
+    if (existing && input.providerRef && existing.providerRef === input.providerRef) {
+      // The subscription's events landed first: only fill what the completion knows.
+      const customerRef = input.customerRef ?? existing.customerRef;
+      const promoCode = input.promoCode ?? existing.promoCode;
+      if (customerRef === existing.customerRef && promoCode === existing.promoCode) return existing;
+      return { ...existing, customerRef, promoCode, updatedAt: now.toISOString() };
+    }
+    // A new row, or a new subscription replacing a lapsed one or a legacy payment: covered
+    // at once with no end until the subscription's own event sets it.
+    return applied(existing, { ...input, expiresAt: null }, now, newId);
+  }
+  const next = applied(existing, input, now, newId);
+  return existing && isSupersededSubscription(existing, next, now) ? existing : next;
+}
+
+function applied(existing: Entitlement | null, input: EntitlementApply, now: Date, newId: () => string): Entitlement {
   return {
     id: existing?.id ?? newId(),
     subjectKind: input.subjectKind,

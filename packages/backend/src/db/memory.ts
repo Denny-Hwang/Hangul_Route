@@ -4,6 +4,7 @@ import { allSlotsIn, assertNewTransfer, assertTransferChecks, assertTransferEven
 import {
   learnerRateKeys,
   mergeEntitlement,
+  type EntitlementMerge,
   type ConsentResetReason,
   type Db,
   type ExecuteTransferInput,
@@ -166,9 +167,9 @@ export class MemoryDb implements Db {
   async entitlementsFor(subjectKind: Entitlement['subjectKind'], subjectId: string): Promise<Entitlement[]> {
     return clone([...this.entitlements.values()].filter((e) => e.subjectKind === subjectKind && e.subjectId === subjectId));
   }
-  async applyEntitlement(input: EntitlementApply, now: Date): Promise<Entitlement> {
+  async applyEntitlement(input: EntitlementApply, now: Date, merge: EntitlementMerge = 'set'): Promise<Entitlement> {
     const k = entitlementKey(input.subjectKind, input.subjectId, input.planKey);
-    const next = mergeEntitlement(this.entitlements.get(k) ?? null, input, now, () => id('ent'));
+    const next = mergeEntitlement(this.entitlements.get(k) ?? null, input, now, () => id('ent'), merge);
     this.entitlements.set(k, next);
     return clone(next);
   }

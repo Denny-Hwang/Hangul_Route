@@ -39,9 +39,9 @@ export const caregiver = {
       joinCodeNotForLearners: "That code isn't for joining as a learner. Ask for a class code.",
       promoHint: 'Have a promo or referral code? Enter it on the web console.',
       paywallBuyOnWeb:
-        'Buy it once on the web console, so no store fees reach your family. Sign in there and come back — this device updates on its next sync.',
+        'Buy it on the web console, so no store fees reach your family. Sign in there and come back — this device updates on its next sync.',
       paywallBuyLater:
-        'Buying inside this app arrives with the store update. Until then, you can buy it once on the web console.',
+        'Buying inside this app arrives with the store update. Until then, you can buy it on the web console.',
       profileSwitchHint: 'Tap a profile to switch.',
     },
     /** "Grown-up zone" stays a family caregiver surface (CLAUDE.md §1). */
@@ -142,14 +142,14 @@ export const caregiver = {
     },
     free: {
       bubble: 'Stage 1 is always free.',
-      unlocks: (offer: string) => `What ${offer} unlocks`,
+      unlocks: (offer: string) => `What the ${offer} unlocks`,
       openConsole: { cta: 'Open the web console' },
       openFailed: (url: string) => `Open ${url} on a computer or phone browser.`,
-      terms: 'One payment, no renewal. Terms and privacy are on the website.',
+      terms: 'Renews yearly until cancelled. Terms and privacy are on the website.',
     },
-    /** What the family plan adds (decision #30: one payment, every Stage, one family). */
+    /** What the Family Plan adds (every Stage, one family; renews yearly since 2026-10-11). */
     bullets: {
-      everyStage: 'Every Stage, now and later',
+      everyStage: 'Every Stage, new ones included',
       cloudSave: 'Cloud save on every device',
       dashboard: 'Grown-up dashboard and plans',
       learners: (n: number) =>
@@ -157,8 +157,8 @@ export const caregiver = {
     },
     /** The single offer; the amount arrives already formatted (`formatUsd`) and is never written here. */
     offer: {
-      name: 'Family Lifetime',
-      line: 'One payment. No subscription, nothing to cancel.',
+      name: 'Family Plan',
+      line: 'Renews every year. Cancel any time.',
       price: { once: (amount: string) => `${amount} once`, year: (amount: string) => `${amount} / year` },
     },
   },

@@ -198,7 +198,7 @@ Changes in `logic/homework/mission-builder.ts` (pure) and `HomeScreen.tsx`.
 
 ### 3.9 Content access (D5)
 
-> **Amended by F-ENT-003 (2026-10-11).** The registry gains a `quest` kind (`freeQuests` = the free lessons, `freeRouteQuestIds`; `gridLessons`; `promiseQuests`) and `questAccess` / `isQuestOpen`; `contentGatingEnabled`, read through `gatingActive` (web only until F-IAP-002), becomes the one switch for every free-tier limit (grid lessons, stories, word topics), still off by default; a closed tile reads "Not open yet" with the dotted ring in place of the lock glyph (F-ENT-003 §3.3, §3.4, §3.7, §3.11). `isStageEntitled` and `isContentLocked` keep their results.
+> **Amended by F-ENT-003 (2026-10-11).** The registry gains a `quest` kind (`freeQuests` = the free lessons, all of Stage 1 since F-ENT-003 OD-1, `freeRouteQuestIds`; `gridLessons`) and `questAccess` / `isQuestOpen`; `contentGatingEnabled`, read through `gatingActive` (web only until F-IAP-002), becomes the one switch for every free-tier limit (grid lessons, stories, word topics), still off by default; a closed tile reads "Not open yet" with the dotted ring in place of the lock glyph (F-ENT-003 §3.3, §3.4, §3.7, §3.11). `isStageEntitled` and `isContentLocked` keep their results.
 
 New `apps/mobile/src/logic/content-access.ts`; if a F-VOC PR already added it, reuse and extend that file.
 
