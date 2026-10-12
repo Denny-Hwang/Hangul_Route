@@ -80,6 +80,24 @@ describe('landing: sentences that take a value render the former text', () => {
   });
 });
 
+describe('privacy: progress report lines (F-REPORT-001 RP-0b)', () => {
+  const bullets = l.legal.privacy.sections.collect.bullets;
+
+  it('extends the progress bullet with the day-by-day details and their limits', () => {
+    expect(bullets.progress).toBe(
+      'Learning progress: quests completed, stars earned, cards unlocked, streaks, and which jamo a learner recognizes — so the journey can resume and a parent can see progress. For progress reports we also keep practice days and minutes per day for the last 35 days, monthly totals for up to 24 months, the letters that became strong each day, and the next lesson.',
+    );
+  });
+
+  it('says who can see progress and reports, right after the progress bullet', () => {
+    expect(bullets.progressWho).toBe(
+      "Who can see progress and reports: the learner's family caregivers, and the teacher and school admin of a class the learner joined. A class sees day-by-day history only from the day the learner joined.",
+    );
+    const keys = Object.keys(bullets);
+    expect(keys.indexOf('progressWho')).toBe(keys.indexOf('progress') + 1);
+  });
+});
+
 describe('landing: the lines other PRs rely on stay byte-identical', () => {
   it('keeps the launch-news line of #get and the waitlist copy (#146)', () => {
     expect(l.get.body).toBe(

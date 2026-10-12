@@ -276,7 +276,10 @@ export const landing = {
             profile: ({ levels }: LegalValues) =>
               `Learner profile: a display nickname and a starting level the learner picks (${levels}). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. A real name is optional and only stored if a parent enters it.`,
             progress:
-              'Learning progress: quests completed, stars earned, cards unlocked, streaks, and which jamo a learner recognizes — so the journey can resume and a parent can see progress.',
+              'Learning progress: quests completed, stars earned, cards unlocked, streaks, and which jamo a learner recognizes — so the journey can resume and a parent can see progress. For progress reports we also keep practice days and minutes per day for the last 35 days, monthly totals for up to 24 months, the letters that became strong each day, and the next lesson.',
+            /** F-REPORT-001 section 3.10: who can see the progress above and the reports built from it. */
+            progressWho:
+              "Who can see progress and reports: the learner's family caregivers, and the teacher and school admin of a class the learner joined. A class sees day-by-day history only from the day the learner joined.",
             contact: 'Account contact: a parent email, used for sign-in, receipts, and account recovery.',
             device: 'Basic device and diagnostic data: app version, device type, and crash logs, to keep the app stable.',
           },
