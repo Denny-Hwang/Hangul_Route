@@ -216,21 +216,24 @@ export function WarningList({
   locale,
   billingLink,
   free = null,
+  neutral = false,
 }: {
   warnings: readonly CurriculumWarning[];
   locale: UiLocale;
   billingLink: boolean;
   free?: FreePlanWording | null;
+  /** `leftOutNeutral`: the switch is on but this viewer cannot tell the coverage, so neutral product words and no link. */
+  neutral?: boolean;
 }): JSX.Element | null {
   const words = useMessages().console;
   if (warnings.length === 0) return null;
-  const link = free ? words.access.openBilling.cta : billingLink ? words.curriculum.preview.warnings.seePlans.cta : null;
+  const link = free ? words.access.openBilling.cta : neutral ? null : billingLink ? words.curriculum.preview.warnings.seePlans.cta : null;
   return (
     <Notice tone="nudge">
       <ul style={{ margin: 0, paddingLeft: spacing.lg, lineHeight: typography.leading.relaxed }}>
         {warnings.map((warning) => (
           <li key={`${warning.code}:${warning.week ?? 0}`} data-testid="route-warning">
-            {warningText(warning, locale, free)}
+            {warningText(warning, locale, free, neutral)}
             {warning.code === 'premium-needed' && link ? (
               <>
                 {' '}
@@ -253,11 +256,14 @@ export function WarningList({
 export function ShortPlanLine({
   lastWeek,
   storiesAfter,
+  soonAfter = false,
   shorterWeeks,
   onUseWeeks,
 }: {
   lastWeek: number;
   storiesAfter: boolean;
+  /** Coming-soon episodes sit after the last lesson week: the line says they are listed there. */
+  soonAfter?: boolean;
   shorterWeeks: number | null;
   onUseWeeks: () => void;
 }): JSX.Element {
@@ -266,6 +272,7 @@ export function ShortPlanLine({
     <div data-testid="route-short-plan" style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap', margin: `${spacing.sm}px 0 ${spacing.md}px` }}>
       <p style={{ margin: 0, color: colors.text.secondary, fontSize: typography.size.bodySm, lineHeight: typography.leading.relaxed }}>
         {storiesAfter ? words.shortPlan(lastWeek) : words.shortPlanPractice(lastWeek)}
+        {soonAfter ? ` ${words.shortPlanSoon}` : null}
       </p>
       {shorterWeeks !== null ? (
         <Button onClick={onUseWeeks} testId="route-use-weeks">

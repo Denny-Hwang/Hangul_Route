@@ -1,6 +1,7 @@
 import {
   AUDIENCE_DEFAULTS,
   CATALOG,
+  FREE_ROUTE_STAGES,
   CURRICULUM_MAX_ITEMS,
   LENGTH_PRESETS,
   PICTURES_FIRST_MINUTES,
@@ -282,6 +283,14 @@ export interface FreeDaysView {
   storiesAfter: boolean;
   /** The shortest length preset, shorter than the plan, that still holds every lesson of it; null when none does. */
   shorter: { length: LengthPresetId; weeks: number } | null;
+  /**
+   * The draft's coming-soon episodes past the free stages: once released they open with the
+   * product, not on their dates (the generator places coming-soon episodes of every stage, OD-1
+   * keeps its input). The coming-soon line says so instead of "start on their dates".
+   */
+  comingSoonClosed: number;
+  /** Whether coming-soon episodes sit after the last lesson week (the short-plan line lists them). */
+  soonAfter: boolean;
 }
 
 const isLesson = (item: CurriculumItem, source: Catalog): boolean => item.kind === 'quest' && itemCategory(item.kind, item.id, source) === 'lesson';
@@ -291,6 +300,12 @@ export function lessonWeeks(items: readonly CurriculumItem[], source: Catalog = 
   const weeks = items.filter((item) => isLesson(item, source)).map((item) => item.week);
   return weeks.length > 0 ? { first: Math.min(...weeks), last: Math.max(...weeks) } : null;
 }
+
+/** A coming-soon episode of the draft whose cell is past the free stages (Stage 1, OD-1): it never opens on the free plan. */
+const isClosedSoon = (item: CurriculumItem, source: Catalog): boolean =>
+  item.kind === 'episode' &&
+  itemCategory(item.kind, item.id, source) === 'coming-soon' &&
+  !FREE_ROUTE_STAGES.includes(source.cells.find((cell) => cell.episodeId === item.id)?.stage ?? 'stage1');
 
 /** The length presets shorter than `weeks`, shortest first (the order of the wizard's chips). */
 const shorterPresets = (weeks: number): LengthPresetId[] =>
@@ -318,14 +333,27 @@ export function freeDaysView(draft: CurriculumDraft, coverage: SpaceCoverage, ga
   if (!gating || coverage !== 'uncovered') return null;
   const weeks = lessonWeeks(draft.items, source);
   const short = weeks !== null && weeks.last < draft.params.weeks;
+  const after = (category: ItemCategory): boolean => short && draft.items.some((item) => item.week > (weeks?.last ?? 0) && itemCategory(item.kind, item.id, source) === category);
   return {
     kind: draft.params.audience === 'family' ? 'family' : 'class',
     firstWeek: weeks?.first ?? null,
     lastWeek: weeks?.last ?? null,
     short,
-    storiesAfter: short && draft.items.some((item) => item.week > (weeks?.last ?? 0) && itemCategory(item.kind, item.id, source) === 'story'),
+    storiesAfter: after('story'),
     shorter: short ? shorterPreset(draft, source) : null,
+    comingSoonClosed: draft.items.filter((item) => isClosedSoon(item, source)).length,
+    soonAfter: after('coming-soon'),
   };
+}
+
+/**
+ * The free-plan switch is on but this viewer cannot tell whether a plan covers the space (a
+ * co-teacher, a co-caregiver, a class in a school someone else owns, a failed read): the
+ * left-out line uses the glossary's neutral words (F-ENT-003 section 3.11: "the Family Plan or a
+ * Group License"), never "Premium", and carries no billing link.
+ */
+export function leftOutNeutral(coverage: SpaceCoverage, gating: boolean): boolean {
+  return gating && coverage !== 'uncovered';
 }
 
 export interface WeekItem {
@@ -442,24 +470,29 @@ export function weekdayLabel(day: Weekday, locale: UiLocale = DEFAULT_LOCALE): s
 }
 
 /** What the free-plan wording of the left-out warning needs (F-ENT-003 section 3.9.3): the space kind and the weeks that hold lessons. */
-export type FreePlanWording = Pick<FreeDaysView, 'kind' | 'firstWeek' | 'lastWeek'>;
+export type FreePlanWording = Pick<FreeDaysView, 'kind' | 'firstWeek' | 'lastWeek'> & Partial<Pick<FreeDaysView, 'comingSoonClosed'>>;
 
 /**
  * A generator warning in plain, invitational words (section 3.8 step 4). With `free` (an
  * unlicensed space while the free-plan switch is on, `freeDaysView`) the left-out line names the
- * free plan, the weeks that hold its lessons and the product that opens the rest, by space kind
- * (F-ENT-003 section 3.9.3); without it every line keeps its wording.
+ * free plan, the weeks that hold its lessons and the product that opens the rest, by space kind,
+ * and the coming-soon line says which episodes open with that product once released (F-ENT-003
+ * section 3.9.3). With `neutral` (`leftOutNeutral`) the left-out line names both products and
+ * never "Premium". Without either, every line keeps its wording.
  */
-export function warningText(warning: CurriculumWarning, locale: UiLocale = DEFAULT_LOCALE, free: FreePlanWording | null = null): string {
+export function warningText(warning: CurriculumWarning, locale: UiLocale = DEFAULT_LOCALE, free: FreePlanWording | null = null, neutral = false): string {
   const words = getMessages(locale).console.curriculum.preview.warnings;
+  const freeDays = getMessages(locale).console.curriculum.freeDays;
   const count = warning.count ?? 0;
   if (warning.code === 'premium-needed' && free) {
-    const messages = getMessages(locale).console;
-    const product = messages.access.product[free.kind];
+    const product = getMessages(locale).console.access.product[free.kind];
     const { firstWeek, lastWeek } = free;
-    return firstWeek === null || lastWeek === null
-      ? messages.curriculum.freeDays.warningNoLessons(count, product)
-      : messages.curriculum.freeDays.warning(firstWeek, lastWeek, count, product);
+    return firstWeek === null || lastWeek === null ? freeDays.warningNoLessons(count, product) : freeDays.warning(firstWeek, lastWeek, count, product);
+  }
+  if (warning.code === 'premium-needed' && neutral) return freeDays.warningNeutral(count);
+  // Coming-soon episodes past Stage 1 open with the product once released, not on their dates.
+  if (warning.code === 'coming-soon-included' && free && (free.comingSoonClosed ?? 0) > 0) {
+    return freeDays.comingSoon(count, Math.min(free.comingSoonClosed ?? 0, count), getMessages(locale).console.access.product[free.kind]);
   }
   switch (warning.code) {
     case 'content-runs-out':

@@ -21,6 +21,7 @@ import {
   draftPlanBody,
   freeDaysView,
   learnerProblem,
+  leftOutNeutral,
   levelHint,
   spaceCoverage,
   statsText,
@@ -89,6 +90,8 @@ function CurriculumInner(): JSX.Element {
   const load = useCallback(async (): Promise<void> => {
     if (!api) return;
     setError(null);
+    // A coverage from an earlier load never outlives it (as the roster page does).
+    setCoverage('unknown');
     const gating = contentGatingEnabled();
     const [r, e, memberships] = await Promise.all([api.roster(spaceId), api.entitlements(), gating ? api.listSpaces() : null]);
     if (!r.ok) {
@@ -130,6 +133,8 @@ function CurriculumInner(): JSX.Element {
   }, [state, unlocked, problem]);
   // F-ENT-003 section 3.9.3: an uncovered space with the free-plan switch on (null otherwise: today's wording). Only the preview step shows it.
   const free = useMemo(() => (step === STEPS && draft ? freeDaysView(draft, coverage, contentGatingEnabled()) : null), [step, draft, coverage]);
+  // The switch is on but this viewer cannot tell the coverage: neutral product words, no link (section 3.11).
+  const neutral = leftOutNeutral(coverage, contentGatingEnabled());
 
   if (!ready || !session) return <ConsoleShell>{null}</ConsoleShell>;
 
@@ -406,14 +411,14 @@ function CurriculumInner(): JSX.Element {
       {step === 4 && draft ? (
         <section aria-label={c.preview.title}>
           {stats ? <p style={{ margin: `0 0 ${spacing.md}px`, color: colors.text.secondary }} data-testid="route-stats">{stats}</p> : <Notice>{c.preview.empty}</Notice>}
-          <WarningList warnings={draft.warnings} locale={locale} billingLink={audience === 'class'} free={free} />
+          <WarningList warnings={draft.warnings} locale={locale} billingLink={audience === 'class'} free={free} neutral={neutral} />
           {stats ? (
             <div style={{ ...panelStyle, padding: spacing.md, marginBottom: spacing.md }}>
               <WeekTable rows={rows} locale={locale} />
             </div>
           ) : null}
           {free?.short && free.lastWeek !== null ? (
-            <ShortPlanLine lastWeek={free.lastWeek} storiesAfter={free.storiesAfter} shorterWeeks={shorter?.weeks ?? null} onUseWeeks={pickShorter} />
+            <ShortPlanLine lastWeek={free.lastWeek} storiesAfter={free.storiesAfter} soonAfter={free.soonAfter} shorterWeeks={shorter?.weeks ?? null} onUseWeeks={pickShorter} />
           ) : null}
           {error === 'saveFailed' ? <Notice tone="nudge">{c.preview.saveFailed}</Notice> : null}
           {stats ? <Muted>{c.preview.draftNote}</Muted> : null}

@@ -801,6 +801,17 @@ export const consoleMsgs = {
       shortPlan: (lastWeek: number) => `This plan has lessons until week ${lastWeek}. After that it has stories and practice.`,
       shortPlanPractice: (lastWeek: number) => `This plan has lessons until week ${lastWeek}. After that it has practice.`,
       useWeeks: { cta: (weeks: number) => plural('en', weeks, { one: `Use ${weeks} week`, other: `Use ${weeks} weeks` }) },
+      /** Appended to the short-plan line when coming-soon episodes sit after the last lesson week. */
+      shortPlanSoon: 'Episodes that are not released yet are listed there as well.',
+      /** The left-out line while the switch is on and this viewer cannot tell whether a plan covers the space (section 3.11's neutral product words; no billing link). */
+      warningNeutral: (n: number) => leftOut(n, 'the Family Plan or a Group License'),
+      /** Replaces `preview.warnings.comingSoon` when `closed` of the `n` coming-soon episodes are past Stage 1: those open with `product` once released, not on their dates. */
+      comingSoon: (n: number, closed: number, product: string) =>
+        `${plural('en', n, { one: '1 episode is not released yet.', other: `${n} episodes are not released yet.` })} ${
+          closed >= n
+            ? plural('en', n, { one: `It is past Stage 1 and opens with ${product} once it is released.`, other: `They are past Stage 1 and open with ${product} once they are released.` })
+            : `${plural('en', closed, { one: `1 of them is past Stage 1 and opens with ${product} once released.`, other: `${closed} of them are past Stage 1 and open with ${product} once released.` })} The others start on their dates once they are released.`
+        }`,
     },
   },
   /**

@@ -56,6 +56,22 @@ describe('WarningList with the free-plan switch on', () => {
     expect(family).not.toContain('href="/teach/billing"');
   });
 
+  it('with the switch on and the coverage unknown: neutral product words, no Premium, no link (section 3.11)', () => {
+    const pseudo = pseudoWords();
+    const html = renderToStaticMarkup(<WarningList warnings={warnings} locale={PSEUDO} billingLink neutral />);
+    expect(html).toContain(pseudo.curriculum.freeDays.warningNeutral(3));
+    expect(html).not.toContain(pseudo.curriculum.preview.warnings.premium(3));
+    expect(html).not.toContain('<a');
+    expectAllPseudo(html, [], 2);
+  });
+
+  it('words the coming-soon line through the free view when episodes past Stage 1 are in the plan', () => {
+    const pseudo = pseudoWords();
+    const html = renderToStaticMarkup(<WarningList warnings={warnings} locale={PSEUDO} billingLink free={{ kind: 'class', firstWeek: 1, lastWeek: 7, comingSoonClosed: 5 }} />);
+    expect(html).toContain(pseudo.curriculum.freeDays.comingSoon(5, 5, pseudo.access.product.class).replace(/&/g, '&amp;'));
+    expect(html).not.toContain(pseudo.curriculum.preview.warnings.comingSoon(5));
+  });
+
   it('renders nothing when there is no warning', () => {
     expect(renderToStaticMarkup(<WarningList warnings={[]} locale={PSEUDO} billingLink free={{ kind: 'class', firstWeek: 1, lastWeek: 7 }} />)).toBe('');
   });
@@ -76,6 +92,13 @@ describe('ShortPlanLine', () => {
     expect(html).toContain(pseudo.curriculum.freeDays.shortPlanPractice(7));
     expect(html).not.toContain(pseudo.curriculum.freeDays.shortPlan(7));
     expect(html).not.toContain('<button');
+  });
+
+  it('adds that coming-soon episodes are listed after the lessons when they are', () => {
+    const pseudo = pseudoWords();
+    const html = renderToStaticMarkup(<ShortPlanLine lastWeek={11} storiesAfter soonAfter shorterWeeks={null} onUseWeeks={noop} />);
+    expect(html).toContain(`${pseudo.curriculum.freeDays.shortPlan(11)} ${pseudo.curriculum.freeDays.shortPlanSoon}`);
+    expect(renderToStaticMarkup(<ShortPlanLine lastWeek={11} storiesAfter shorterWeeks={null} onUseWeeks={noop} />)).not.toContain(pseudo.curriculum.freeDays.shortPlanSoon);
   });
 
   it('reads in plain English', () => {

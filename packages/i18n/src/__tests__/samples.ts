@@ -503,4 +503,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.curriculum.freeDays.shortPlan': [[7]],
   'console.curriculum.freeDays.shortPlanPractice': [[7]],
   'console.curriculum.freeDays.useWeeks.cta': [[4], [12]],
+  'console.curriculum.freeDays.warningNeutral': [[3], [1]],
+  'console.curriculum.freeDays.comingSoon': [[5, 5, 'a Group License'], [1, 1, 'the Family Plan'], [5, 3, 'a Group License'], [5, 1, 'the Family Plan']],
 };

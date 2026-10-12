@@ -49,6 +49,21 @@ describe('console.access and console.curriculum.freeDays (English)', () => {
     expect(f.useWeeks.cta(4)).toBe('Use 4 weeks');
     expect(f.useWeeks.cta(12)).toBe('Use 12 weeks');
   });
+
+  it('words coming-soon episodes past Stage 1, the neutral left-out line and the short-plan addition (review 2026-10-12)', () => {
+    const f = en.curriculum.freeDays;
+    expect(f.comingSoon(5, 5, 'a Group License')).toBe('5 episodes are not released yet. They are past Stage 1 and open with a Group License once they are released.');
+    expect(f.comingSoon(1, 1, 'the Family Plan')).toBe('1 episode is not released yet. It is past Stage 1 and opens with the Family Plan once it is released.');
+    expect(f.comingSoon(5, 3, 'a Group License')).toBe(
+      '5 episodes are not released yet. 3 of them are past Stage 1 and open with a Group License once released. The others start on their dates once they are released.',
+    );
+    expect(f.comingSoon(5, 1, 'the Family Plan')).toBe(
+      '5 episodes are not released yet. 1 of them is past Stage 1 and opens with the Family Plan once released. The others start on their dates once they are released.',
+    );
+    expect(f.warningNeutral(3)).toBe('3 more lessons open with the Family Plan or a Group License. They are left out of this plan.');
+    expect(f.warningNeutral(1)).toBe('1 more lesson opens with the Family Plan or a Group License. It is left out of this plan.');
+    expect(f.shortPlanSoon).toBe('Episodes that are not released yet are listed there as well.');
+  });
 });
 
 describe('the free-plan console words stay calm in every locale', () => {

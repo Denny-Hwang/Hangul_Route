@@ -3,8 +3,8 @@ import { findBannedWord, getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { itemCategory } from '@/data/catalog';
 // The frozen October 2026 catalogue (Stage 1 complete, every story ready): pinned figures stay true while the live catalogue grows.
-import { CATALOG_2026_10 } from '../../../../../../packages/content-schema/src/__tests__/fixtures/catalog-2026-10';
-import { defaultsFor, freeDaysView, lessonWeeks, spaceCoverage, toParams, warningText, type WizardState } from '../curriculum';
+import { CATALOG_2026_10 } from '@hangul-route/content-schema/testing/catalog-2026-10';
+import { defaultsFor, freeDaysView, leftOutNeutral, lessonWeeks, spaceCoverage, toParams, warningText, type WizardState } from '../curriculum';
 
 /**
  * F-ENT-003 section 3.9.3 (E3-9; wireframe console/curriculum-free-days): for a space this viewer
@@ -111,7 +111,7 @@ describe('freeDaysView: only with the switch on, for a space the viewer knows is
 
   it('a free class at 2 sessions a week for 12 weeks: lessons end in week 11, stories follow, no shorter preset holds them all', () => {
     const draft = draftOf(stateFor('class', { length: '12-week' }), FROZEN);
-    expect(view(draft, FROZEN)).toEqual({ kind: 'class', firstWeek: 1, lastWeek: 11, short: true, storiesAfter: true, shorter: null });
+    expect(view(draft, FROZEN)).toMatchObject({ kind: 'class', firstWeek: 1, lastWeek: 11, short: true, storiesAfter: true, shorter: null });
     expect(lessonIds(draftOf(stateFor('class', { length: '4-week' }), FROZEN).items, FROZEN).length).toBeLessThan(lessonIds(draft.items, FROZEN).length);
   });
 
@@ -160,13 +160,14 @@ describe('freeDaysView: only with the switch on, for a space the viewer knows is
   });
 
   it('keeps the warning without a short-plan line when nothing open is scheduled', () => {
-    expect(view(draftOf(stateFor('class', { length: '12-week', start: 'first-words' })))).toEqual({
+    expect(view(draftOf(stateFor('class', { length: '12-week', start: 'first-words' })))).toMatchObject({
       kind: 'class',
       firstWeek: null,
       lastWeek: null,
       short: false,
       storiesAfter: false,
       shorter: null,
+      soonAfter: false,
     });
   });
 
@@ -177,6 +178,78 @@ describe('freeDaysView: only with the switch on, for a space the viewer knows is
     const before = JSON.stringify(draft);
     view(draft);
     expect(JSON.stringify(draft)).toBe(before);
+  });
+});
+
+describe('coming-soon episodes past Stage 1 with the switch on (review 2026-10-12)', () => {
+  const soonStage = (source: Catalog, id: string): string | undefined => source.cells.find((cell) => cell.episodeId === id)?.stage;
+  const soon = (draft: CurriculumDraft, source: Catalog) => draft.items.filter((i) => itemCategory(i.kind, i.id, source) === 'coming-soon');
+
+  it('counts the coming-soon episodes of the draft whose cell is past Stage 1', () => {
+    for (const source of [CATALOG, FROZEN]) {
+      for (const audience of ['class', 'family'] as const) {
+        const draft = draftOf(stateFor(audience, { length: '6-month' }), source);
+        const closed = soon(draft, source).filter((i) => soonStage(source, i.id) !== 'stage1').length;
+        expect(view(draft, source)?.comingSoonClosed, `${audience}`).toBe(closed);
+      }
+    }
+    // The frozen catalogue has coming-soon cells only past Stage 1: every placeholder the 6-month plan holds is one.
+    const draft = draftOf(stateFor('class', { length: '6-month' }), FROZEN);
+    expect(soon(draft, FROZEN).length).toBeGreaterThan(0);
+    expect(view(draft, FROZEN)?.comingSoonClosed).toBe(soon(draft, FROZEN).length);
+  });
+
+  it('a Stage 1 coming-soon episode is not closed', () => {
+    const stage1Soon: Catalog = { ...FROZEN, cells: FROZEN.cells.map((cell) => (cell.stage === 'stage1' && cell.theme === 'letters' ? { ...cell, status: 'draft' as const } : cell)) };
+    const id = stage1Soon.cells.find((cell) => cell.stage === 'stage1' && cell.theme === 'letters')?.episodeId ?? '';
+    const draft = { ...draftOf(stateFor('class', { length: '6-month' }), FROZEN) };
+    const withStage1 = { ...draft, items: [...draft.items, { kind: 'episode' as const, id, week: 2 }] };
+    const closedBefore = view(draft, stage1Soon)?.comingSoonClosed ?? 0;
+    expect(view(withStage1, stage1Soon)?.comingSoonClosed).toBe(closedBefore);
+  });
+
+  it('says they open with the product once released, not on their dates; Stage 1-only coming-soon keeps the old line', () => {
+    const warning = { code: 'coming-soon-included', week: 7, count: 5 } as const;
+    expect(warningText(warning, 'en', { kind: 'class', firstWeek: 1, lastWeek: 7, comingSoonClosed: 5 })).toBe(
+      '5 episodes are not released yet. They are past Stage 1 and open with a Group License once they are released.',
+    );
+    expect(warningText(warning, 'en', { kind: 'family', firstWeek: 1, lastWeek: 7, comingSoonClosed: 2 })).toBe(
+      '5 episodes are not released yet. 2 of them are past Stage 1 and open with the Family Plan once released. The others start on their dates once they are released.',
+    );
+    expect(warningText({ code: 'coming-soon-included', week: 3, count: 1 }, 'en', { kind: 'family', firstWeek: 1, lastWeek: 7, comingSoonClosed: 1 })).toBe(
+      '1 episode is not released yet. It is past Stage 1 and opens with the Family Plan once it is released.',
+    );
+    expect(warningText(warning, 'en', { kind: 'class', firstWeek: 1, lastWeek: 7, comingSoonClosed: 0 })).toBe(m.curriculum.preview.warnings.comingSoon(5));
+    expect(warningText(warning, 'en')).toBe(m.curriculum.preview.warnings.comingSoon(5));
+  });
+
+  it('the short-plan view says when coming-soon episodes sit after the last lesson week', () => {
+    for (const source of [CATALOG, FROZEN]) {
+      const draft = draftOf(stateFor('class', { length: '6-month' }), source);
+      const result = view(draft, source);
+      const last = result?.lastWeek ?? 0;
+      expect(result?.soonAfter).toBe(Boolean(result?.short) && draft.items.some((i) => i.week > last && itemCategory(i.kind, i.id, source) === 'coming-soon'));
+    }
+    const off = draftOf(stateFor('class', { length: '6-month', includeComingSoon: false }), FROZEN);
+    expect(view(off, FROZEN)).toMatchObject({ comingSoonClosed: 0, soonAfter: false });
+  });
+});
+
+describe('leftOutNeutral: the switch is on and this viewer cannot tell the coverage', () => {
+  it('is on only with the switch on and a coverage that is not "uncovered"', () => {
+    expect(leftOutNeutral('unknown', true)).toBe(true);
+    expect(leftOutNeutral('covered', true)).toBe(true);
+    expect(leftOutNeutral('uncovered', true)).toBe(false);
+    for (const coverage of ['unknown', 'covered', 'uncovered'] as const) expect(leftOutNeutral(coverage, false)).toBe(false);
+  });
+
+  it('names both products and never Premium; the switch-off wording is unchanged', () => {
+    expect(warningText({ code: 'premium-needed', count: 3 }, 'en', null, true)).toBe(
+      '3 more lessons open with the Family Plan or a Group License. They are left out of this plan.',
+    );
+    expect(warningText({ code: 'premium-needed', count: 1 }, 'en', null, true)).toBe('1 more lesson opens with the Family Plan or a Group License. It is left out of this plan.');
+    expect(warningText({ code: 'premium-needed', count: 3 }, 'en', null, false)).toBe(m.curriculum.preview.warnings.premium(3));
+    expect(warningText({ code: 'coming-soon-included', week: 7, count: 5 }, 'en', null, true)).toBe(m.curriculum.preview.warnings.comingSoon(5));
   });
 });
 
@@ -231,6 +304,9 @@ describe('the left-out warning with the switch on (section 3.9.3)', () => {
       free.shortPlan(7),
       free.shortPlanPractice(7),
       free.useWeeks.cta(4),
+      free.shortPlanSoon,
+      free.warningNeutral(3),
+      free.comingSoon(5, 2, m.access.product.class),
       m.access.openBilling.cta,
     ];
     for (const text of texts) {
