@@ -3,7 +3,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { Linking, Platform, Pressable, View } from 'react-native';
 import { useLocale, useMessages } from '../../i18n/use-messages';
-import { consoleBillingUrl, lifetimeOffer, paywallState, premiumBullets } from '../../logic/paywall';
+import { consoleBillingUrl, familyOffer, paywallState, premiumBullets } from '../../logic/paywall';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
@@ -21,7 +21,7 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
   const locale = useLocale();
   const messages = useMessages();
   const m = messages.caregiver.paywall;
-  const offer = lifetimeOffer(locale, m);
+  const offer = familyOffer(locale, m);
   const profile = useProfileStore(activeProfileSelector);
   const cached = useTierStore((s) => (profile ? s.byLearner[profile.id] : undefined));
   const entitled = effectiveTier(profile?.id ?? '', new Date());
@@ -100,7 +100,7 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
           ))}
           <Spacer size="lg" />
           <View
-            accessibilityLabel={messages.a11y.lifetimeOffer(offer.label, offer.price)}
+            accessibilityLabel={messages.a11y.familyOffer(offer.label, offer.price)}
             style={{
               padding: spacing.md,
               borderRadius: radii.lg,

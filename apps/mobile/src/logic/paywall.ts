@@ -20,18 +20,19 @@ export function paywallState(tier: Tier, source: TierSource | null): PaywallStat
 
 type Paywall = Messages['caregiver']['paywall'];
 
-/** What the family plan adds (decision #30: one payment, every Stage, one family). */
+/** What the Family Plan adds (every Stage, one family; renews yearly since 2026-10-11). */
 export function premiumBullets(m: Paywall, learners: number = FAMILY_LIFETIME_LEARNERS): readonly string[] {
   return [m.bullets.everyStage, m.bullets.cloudSave, m.bullets.dashboard, m.bullets.learners(learners)];
 }
 
 /**
- * The single offer the child-side paywall shows; checkout itself lives on the web console.
+ * The single offer the child-side paywall shows: the Family Plan, renewing yearly (owner
+ * decision 2026-10-11, AMENDMENTS-BILLING-FAMILY-YEARLY); checkout itself lives on the web console.
  * The amount is `PLAN_PRICING` run through `formatUsd` for the locale: no price is
  * written into a message (F-I18N-001 §3.1). Codes are typed on the console, never in
  * the child app (F-ENT-002 §3.4), so the promo hint is `audience.promoHint`.
  */
-export function lifetimeOffer(
+export function familyOffer(
   locale: UiLocale,
   m: Paywall,
   pricing: Pick<PlanPricing, 'amountUsd' | 'per'> = PLAN_PRICING.family_lifetime,
