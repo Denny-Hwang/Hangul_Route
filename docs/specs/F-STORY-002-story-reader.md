@@ -241,7 +241,7 @@ Pure functions in `scene-art/` (outside `components/`, so they count toward the 
 
 #### 3.9.4 Registry, Hoya, cards and renderers
 
-- **Files** (all under `packages/design-system/src/scene-art/`): `types.ts`, `tokens-map.ts` (`resolveColor`, `ColorToken`), `resolve.ts`, `rules.ts`, `hoya.ts` (`hoyaNodes(pose): Shape[]`), `settings/*.ts`, `props/*.ts` (grouped: `people.ts`, `writing.ts`, `books.ts`, `architecture.ts`, `nature.ts`, `objects.ts`, `science.ts`, `festival.ts`, `food.ts`), `registry.ts` (`SCENE_ART_REGISTRY: Record<string, ItemDef>`, `hasItem(ref)`), `index.ts` (pure, no React, no react-native).
+- **Files** (all under `packages/design-system/src/scene-art/`): `types.ts`, `tokens-map.ts` (`resolveColor`, `ColorToken`), `resolve.ts`, `rules.ts`, `hoya.ts` (`hoyaNodes(pose): Shape[]`), `settings/*.ts`, `props/*.ts` (grouped: `people.ts`, `writing.ts`, `books.ts`, `architecture.ts`, `nature.ts`, `objects.ts`, `science.ts`, `festival.ts`, `food.ts`, `seasons.ts` (the seasons-tales batch of PR 2.10d: holiday, game and folk-tale props); the settings include `sea-palace.ts`, the Dragon King's undersea hall of the same batch), `registry.ts` (`SCENE_ART_REGISTRY: Record<string, ItemDef>`, `hasItem(ref)`), `index.ts` (pure, no React, no react-native).
 - **Hoya**: `hoyaNodes(pose)` is a **data port** of `Hoya.tsx`'s geometry (head 44 r, ears, stripes, belly, eyes per pose, mouth per pose, ThoughtCloud/CheerSparkles/Book accents) onto the same 128-unit box, preserving the contract in its header comment (thinking looks up-right, cheeks only in idle/cheering/waving, no sharp teeth). `Hoya.tsx` is **not** changed (it has animation and is used everywhere); a parity guard keeps the two honest: the contact-sheet library page shows `hoyaNodes(pose)` for all five poses next to the shipped component's reference image from the design-preview components page, and a test asserts the data port uses only tokens that `Hoya.tsx` uses (a text-scan of the two files). Refactoring `Hoya.tsx` to render from `hoyaNodes` is a recorded follow-up (§4).
 - **Cards**: `card:<id>` is resolved by the **react-native renderer only**, by nesting `<HeritageCardArt>` as a sub-`Svg` at the layer's position (react-native-svg supports nested `Svg` with x/y/width/height). The web contact sheet shows a labelled placeholder box for card layers ("card:hangul-day — shown in the app"), because `HeritageCardArt` is JSX. Converting the 30 card drawings to data is out of scope (§4). Reserved for F-CARD-S5-001 key scenes.
 - **Renderers**:
@@ -263,7 +263,7 @@ Scene rules (R-S):
 7. **No text in the image**: writing, inscriptions and books are drawn as stroke rows (`prop:writing-lines`) and blank pages; letter shapes appear only as drawn *shapes* in props such as `prop:jamo-g` (path geometry, with alt text), never as glyphs.
 8. **Layers <= 8; resolved shapes <= 160** (full) and **<= 80** (thumb).
 9. **Alt text**: `altEn` states what is shown and what it means in one sentence (<= 140 chars) — not "Hoya smiling" alone; it never contains Hangul (a `{kw:}`-free plain sentence), never starts with "Image of".
-10. **No violence or fear** in depictions: no weapons pointed at figures, no fire shown consuming, no frightened faces (faces are blank or smiling anyway). A scene whose narration has an advisory (`war`, `loss`, `mild-peril`) shows the *setting and objects*, not the event.
+10. **No violence or fear** in depictions: no weapons pointed at figures, no fire shown consuming, no frightened faces (faces are blank or smiling anyway). A scene whose narration has an advisory (`war`, `loss`, `mild-peril`) shows the *setting and objects*, not the event. Reading used for the folk tale (post-merge review of #310): a comic trickster that the brief itself puts in the picture, away from the people it threatens (sun-and-moon s2 peeking at the hill pass, s5 stuck at the foot of the tree), counts as setting; the tiger at the children's door (s3) and its fall (s6, s7) are events and are not drawn. The culture reviewer confirms s2 and s3 before `review.culture` is set.
 
 #### 3.9.6 Contact-sheet review — `/design-preview/scenes` (and `/library`)
 
@@ -279,7 +279,7 @@ Extends the F-VR-001 surface (`docs/specs/F-VR-001-visual-regression-surface.md`
 
 | Budget | Limit | Enforced by |
 |---|---|---|
-| Registry (all settings + props + Hoya), serialised JSON | <= 200 KB raw, <= 55 KB gzip | `scene-art/__tests__/budget.test.ts` (`zlib.gzipSync`) |
+| Registry (all settings + props + Hoya), serialised JSON | <= 200 KiB (204,800 B) raw, <= 55 KiB gzip | `scene-art/__tests__/budget.test.ts` (`zlib.gzipSync`) |
 | Any prop / any setting | <= 3 KB / <= 6 KB; <= 40 / <= 60 shapes | `checkItem` |
 | One scene description (`art`) in story JSON | <= 700 bytes; <= 8 layers | `checkScene`, counted in F-STORY-001's story budget |
 | Scene art for the 182 launch scenes | <= 130 KB raw (mean 450 B x 182 = about 82 KB estimated; measured after PR 2.10a: 15.6 KB over 45 scenes, mean 346 B, max 536 B; after PR 2.10b: 31.6 KB over 91 scenes, mean 347 B, max 539 B; after PR 2.10c: 45.3 KB over 134 scenes, mean 338 B, max 539 B; after PR 2.10d: 63.1 KB over all 182 scenes, mean 347 B, max 546 B) | `build-stories.mjs --report` (`BUDGET.artRaw`: compact JSON of every bundled scene's `art`, fails over 130 000 B; part of F-STORY-001's 1.0 MB) |
@@ -412,6 +412,7 @@ No D1 migration, no API route, no `ProgressSnapshot` field. One additive optiona
 - Raster art, AI-generated images, emoji, third-party illustration packs, Lottie.
 - A native content-advisory channel, in-reader feedback/report-an-error button (a mailto/support route is a follow-up; the correction process is F-STORY-001 §3.7).
 - Translating the launch stories (overlays are supported; content is later).
+- **Follow-up F-STORY-002-FU1, scene-art registry headroom** (recorded after PR 2.10d; owner: the main session, decided with the owner). The registry has about 0.6 KB raw left under the 200 KiB cap (gzip about 49.9 KB of 55 KiB), so `scene:shrine` and `prop:fig-teacher-seated` (lexicon entries from the post-merge review of #265, for science-art-life scenes that already have art), the crown-prince item awaiting culture review, and a paper-free seated Dragon King for `pansori-tales` s6-s7 (today `prop:fig-king-seated`, which holds paper and a brush) cannot be built. Before any of them lands, a spec change picks one of: slim named existing items, or raise the raw cap in `budget.test.ts` (for example to 220 KiB, with gzip kept at or below 55 KiB). Until then no art PR adds registry bytes.
 
 ## 5. Tests
 
@@ -430,7 +431,7 @@ TDD; mobile vitest only picks up `src/{logic,store,content,config,platform}/**/*
 | `…/rules.test.ts` | unit | every R-I and R-S rule with a passing and failing item/scene (shape caps, colour caps incl. Hoya's fixed palette left out of the item and scene caps and a tint on Hoya counted, red share, focal point, Hoya count/scale/placement, band, canvas, alt text, thumb legibility) | same |
 | `…/registry.test.ts` | unit | every registry entry passes `checkItem`; ids unique and well-formed; every heritage artefact has `sourceRef` + `accuracyNote`; `hoyaNodes` for 5 poses pass; every token resolves | same |
 | `…/tokens-only.test.ts` | unit | source scan of `scene-art/**` for `#[0-9a-f]{3,8}`, `rgb(`, `hsl(`, `<text`, `<image`, emoji ranges; fails on any | same |
-| `…/budget.test.ts` | unit | registry <= 200 KB raw / 55 KB gzip; per-item caps | same |
+| `…/budget.test.ts` | unit | registry <= 200 KiB (204,800 B) raw / 55 KiB gzip; per-item caps | same |
 | `…/hoya-parity.test.ts` | unit | tokens used by `hoyaNodes` ⊆ tokens used by `Hoya.tsx`; five poses present | same |
 | `content-schema/src/__tests__/story-content.test.ts` (F-STORY-001) + `mobile/content/__tests__/story-art.test.ts` | integration | every non-draft story's `setting` and `ref`s exist in `SCENE_ART_REGISTRY`; `checkScene` has no error for any scene; no scene without `altEn`; `artPending` count reported | n/a |
 | `mobile/content/__tests__/scene-art-type.test.ts` | type | `SceneArt` (content-schema) assignable to `SceneArtLike` (design-system) | n/a |
