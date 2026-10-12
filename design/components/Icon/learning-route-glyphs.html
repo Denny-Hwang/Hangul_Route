@@ -90,6 +90,14 @@
   --leading-tight: 1.15;
   --leading-normal: 1.35;
   --leading-relaxed: 1.55;
+  --family-mono: Menlo, Courier, monospace;
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 20;
+  --z-drawer: 30;
+  --z-modal: 40;
+  --z-toast: 50;
+  --z-hoyaBubble: 60;
   --touch-min: 64px;
   --touch-child: 80px;
   --touch-hero: 96px;
@@ -109,8 +117,7 @@
   --sheet-row-pad: 24px;      /* sheet layout only: a row is the glyph size plus this */
   --tab-row: 320px;           /* the 320 dp phone width of the tab bar sample */
   --in-plan-ring: 16px;       /* placeholder ring; F-ENT-003 E3-D owns it */
-  --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-  --font-board: Menlo, Courier, monospace;
+  --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; /* typography.family.sans ('System') as the app's web build renders it */
 }
 *, *::before, *::after { box-sizing: border-box; }
 p, h1, h2 { margin: 0; }
@@ -129,7 +136,7 @@ h2 { font-size: var(--size-body); margin: var(--spacing-xl) 0 var(--spacing-sm) 
 .grey { filter: grayscale(1); }
 .row { display: flex; flex-wrap: wrap; gap: var(--spacing-xl); align-items: flex-start; }
 .panel { background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); padding: var(--spacing-lg); display: flex; flex-direction: column; gap: var(--spacing-sm); }
-.cap { font-family: var(--font-board); font-size: var(--size-caption); color: var(--colors-text-muted); }
+.cap { font-family: var(--family-mono); font-size: var(--size-caption); color: var(--colors-text-muted); }
 .tabs { display: flex; width: var(--tab-row); border-top: var(--border-width-thin) solid var(--colors-border-subtle); padding: var(--spacing-xs) 0 var(--spacing-sm); }
 .tab { flex: 1 1 0; min-height: var(--touch-min); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--spacing-xxs); font-size: var(--size-caption); font-weight: var(--weight-semibold); color: var(--colors-text-muted); }
 .tab[aria-selected="true"] { color: var(--colors-brand-primary); }

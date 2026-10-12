@@ -95,6 +95,14 @@
   --leading-tight: 1.15;
   --leading-normal: 1.35;
   --leading-relaxed: 1.55;
+  --family-mono: Menlo, Courier, monospace;
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 20;
+  --z-drawer: 30;
+  --z-modal: 40;
+  --z-toast: 50;
+  --z-hoyaBubble: 60;
   --touch-min: 64px;
   --touch-child: 80px;
   --touch-hero: 96px;
@@ -119,9 +127,8 @@
   --in-plan-ring: 16px;         /* placeholder: F-ENT-003 E3-D owns the "In your plan" ring */
   --tab-label-cap: 18.2px;      /* 1.3 x typography.size.caption: LR-4's maxFontSizeMultiplier 1.3 on the tab label */
   --pip-row-min-width: 360px;   /* PIP_ROW_MIN_WIDTH, logic/my-route/view.ts (written out in the media queries below) */
-  --board-column-min: 22rem;    /* design board only: one card per row at 375, two side by side at 1280 */
-  --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; /* the system stack the app's web build renders */
-  --font-board: Menlo, Courier, monospace; /* design board labels only, not UI */
+  --board-column-min: 22rem;    /* design board only, not UI: one card per row at 375, two side by side at 1280 */
+  --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; /* typography.family.sans ('System') as the app's web build renders it */
 }
 
 /* ------------------------------------------------------------------------------------------ */
@@ -192,7 +199,7 @@ ol, ul { padding: var(--spacing-none); list-style: none; }
 .trail-title { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--spacing-sm); row-gap: var(--spacing-xxs); }
 .trail-title b { font-size: var(--size-bodyLg); }
 .trail-caption { color: var(--colors-text-secondary); }
-.badge { position: relative; z-index: 1; width: var(--badge-size); height: var(--badge-size); flex: none; border-radius: var(--radii-circle); display: inline-flex; align-items: center; justify-content: center; font-weight: var(--weight-bold); }
+.badge { position: relative; z-index: var(--z-raised); width: var(--badge-size); height: var(--badge-size); flex: none; border-radius: var(--radii-circle); display: inline-flex; align-items: center; justify-content: center; font-weight: var(--weight-bold); }
 .badge-open { background: var(--colors-surface-paper); border: var(--border-width-thick) solid; }
 .badge-known { background: var(--colors-surface-paper); border: var(--border-width-thick) solid var(--colors-border-shape); }
 .badge-dot { width: var(--badge-known-disc); height: var(--badge-known-disc); border-radius: var(--radii-circle); background: var(--colors-border-shape); }
@@ -220,7 +227,7 @@ ol, ul { padding: var(--spacing-none); list-style: none; }
 .section-title { font-size: var(--size-bodyLg); font-weight: var(--weight-bold); }
 
 /* Tab bar (navigation/tabs.tsx: paper, a thin top rule, items of touchTarget.min, caption labels) */
-.tab-bar { position: sticky; bottom: 0; z-index: 2; background: var(--colors-surface-paper); border-top: var(--border-width-thin) solid var(--colors-border-subtle); padding: var(--spacing-xs) 0 var(--spacing-sm); }
+.tab-bar { position: sticky; bottom: 0; z-index: var(--z-sticky); background: var(--colors-surface-paper); border-top: var(--border-width-thin) solid var(--colors-border-subtle); padding: var(--spacing-xs) 0 var(--spacing-sm); }
 .tab-bar-inner { display: flex; max-width: var(--max-width-full); margin: 0 auto; }
 .tab { flex: 1 1 0; min-width: 0; min-height: var(--touch-min); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--spacing-xxs); font-size: var(--size-caption); font-weight: var(--weight-semibold); color: var(--colors-text-muted); text-align: center; }
 .tab[aria-selected="true"] { color: var(--colors-brand-primary); }
@@ -255,7 +262,7 @@ ol, ul { padding: var(--spacing-none); list-style: none; }
 .stage-count { color: var(--colors-text-secondary); font-size: var(--size-bodySm); }
 /* The reserved F-BROWSE-001 slot: drawn only to show where it goes; it renders nothing until BR-11. */
 .slot { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--spacing-sm); min-height: var(--touch-min); padding: var(--spacing-xs) var(--spacing-md); border: var(--border-width-thin) dashed var(--colors-border-strong); border-radius: var(--radii-pill); color: var(--colors-text-muted); font-size: var(--size-caption); align-self: flex-start; }
-.slot-note { font-family: var(--font-board); overflow-wrap: anywhere; min-width: 0; }
+.slot-note { font-family: var(--family-mono); overflow-wrap: anywhere; min-width: 0; }
 .link-button { display: inline-flex; align-items: center; min-height: var(--touch-min); padding: var(--spacing-sm) var(--spacing-lg); border-radius: var(--radii-pill); border: var(--border-width-thin) solid var(--colors-border-strong); background: var(--colors-surface-paper); color: var(--colors-text-primary); font-weight: var(--weight-bold); font-size: var(--size-bodySm); align-self: flex-start; text-decoration: none; }
 .glance { display: flex; flex-direction: column; gap: var(--spacing-xs); }
 .glance h1 { font-size: var(--size-title); line-height: var(--leading-tight); margin-bottom: var(--spacing-xs); }
@@ -270,7 +277,7 @@ ol, ul { padding: var(--spacing-none); list-style: none; }
 .board { padding: var(--spacing-lg) var(--gutter-compact) var(--spacing-jumbo); display: flex; flex-direction: column; gap: var(--spacing-xl); max-width: var(--max-width-full); margin: 0 auto; }
 .board-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--board-column-min)), 1fr)); gap: var(--spacing-xl); align-items: start; }
 .board-item { display: flex; flex-direction: column; gap: var(--spacing-sm); }
-.board-label { font-family: var(--font-board); font-size: var(--size-caption); color: var(--colors-text-muted); padding-left: var(--spacing-sm); border-left: var(--border-width-thick) solid var(--colors-border-strong); }
+.board-label { font-family: var(--family-mono); font-size: var(--size-caption); color: var(--colors-text-muted); padding-left: var(--spacing-sm); border-left: var(--border-width-thick) solid var(--colors-border-strong); }
 .board-title { font-size: var(--size-bodyLg); font-weight: var(--weight-bold); }
 .frame { border: var(--border-width-thin) solid var(--colors-border-strong); border-radius: var(--radii-md); overflow: hidden; background: var(--colors-surface-canvas); }
 .frame-pad { padding: var(--spacing-lg); }
