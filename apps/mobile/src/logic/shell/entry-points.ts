@@ -40,6 +40,12 @@ export function personaSignInPath(persona: AdultPersona | null): string {
 
 export type PersonaChosenFrom = 'welcome' | 'welcome-continue';
 
+/** A Welcome persona button: the persona it names (or Continue remembers) and which panel it is on. */
+export interface PersonaChoice {
+  persona: AdultPersona;
+  from: PersonaChosenFrom;
+}
+
 export interface PersonaChosenEvent {
   name: Extract<TelemetryEventName, 'shell.persona_chosen'>;
   payload: { persona: Persona; from: PersonaChosenFrom };

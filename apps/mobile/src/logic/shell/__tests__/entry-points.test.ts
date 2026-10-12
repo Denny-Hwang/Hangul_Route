@@ -61,13 +61,13 @@ describe('personaChosen (shell.persona_chosen, section 3.18)', () => {
 
   it('sends only names and values the Worker keeps', () => {
     expect(TELEMETRY_EVENT_NAMES).toContain('shell.persona_chosen');
-    const allowed = SHELL_TELEMETRY_PAYLOADS['shell.persona_chosen'];
+    const allowed = SHELL_TELEMETRY_PAYLOADS['shell.persona_chosen'] ?? {};
     for (const persona of ['learner', 'parent', 'teacher'] as const) {
       for (const from of ['welcome', 'welcome-continue'] as const) {
         const event = personaChosen(persona, from);
         expect(Object.keys(event.payload).sort()).toEqual(Object.keys(allowed).sort());
-        expect(allowed.persona).toContain(event.payload.persona);
-        expect(allowed.from).toContain(event.payload.from);
+        expect(allowed.persona ?? []).toContain(event.payload.persona);
+        expect(allowed.from ?? []).toContain(event.payload.from);
         expect(event).not.toHaveProperty('profileId');
       }
     }
