@@ -1,4 +1,5 @@
 import {
+  APP_ROUTES,
   CATALOG,
   INITIAL_JAMO,
   INITIAL_RR,
@@ -196,6 +197,9 @@ const monthText = (day: string, locale: UiLocale): string => formatDate(locale, 
 /** The weekday of a day key ("Mon"). */
 const weekdayText = (day: string, locale: UiLocale): string => formatDate(locale, `${day}${DAY_KEY_TIME}`, 'weekday', { utc: true });
 
+/** The whole weekday of a day key ("Monday"): the calendar sentence names days in full (section 3.12). */
+const weekdayLongText = (day: string, locale: UiLocale): string => formatDate(locale, `${day}${DAY_KEY_TIME}`, 'weekdayLong', { utc: true });
+
 /** The learner-local today the report reads (its own clock rule: an invalid clock reads as the last saved day). */
 function todayOf(report: LearnerReport, summary: ReportSummary | null, now: Date | null): string {
   const activity = summary?.activity;
@@ -372,9 +376,6 @@ export interface ReportLink {
   text: string;
 }
 
-/** The parent home (F-APP-001 section 3.8): where `from=home` returns. Only RP-7c's parent home card sends it. */
-const PARENT_HOME = '/parent';
-
 /** The space a report belongs to, as the back link reads it. */
 export interface ReportSpaceRef {
   id: string;
@@ -389,7 +390,8 @@ export interface ReportSpaceRef {
  */
 export function reportBackLink(from: ReportFrom | null, space: ReportSpaceRef | null, locale: UiLocale = DEFAULT_LOCALE): ReportLink {
   const back = getMessages(locale).report.back;
-  if (from === 'home') return { href: PARENT_HOME, text: back.home };
+  // The parent home (F-APP-001 section 3.8, the app's route table): only RP-7c's parent home card sends `from=home`.
+  if (from === 'home') return { href: APP_ROUTES.parentHome, text: back.home };
   if (space === null) return { href: ROUTES.home, text: back.home };
   return { href: ROUTES.space(space.id), text: back.space(space.name) };
 }
@@ -448,7 +450,10 @@ export interface ReportStepButton {
   href: string;
   /** "Last week" for the first step back, else the dates of the window it opens; "Next" forward. */
   label: string;
-  /** `a11y.report.step`: "Show last week", "Show Sep 25 to Oct 1". */
+  /**
+   * The accessible name, holding the visible label (WCAG 2.5.3): Previous `a11y.report.step` ("Show last week", "Show
+   * Sep 25 to Oct 1"), Next `a11y.report.stepNext` ("Next: show this week").
+   */
   name: string;
 }
 
@@ -489,7 +494,7 @@ export interface ReportCalendarCellView {
   day: string;
   kind: ReportCalendarKind;
   minutes: number;
-  /** The short weekday ("Mon"), in the console locale. */
+  /** The short weekday ("Mon"), in the console locale: the cell label. The calendar sentences name days in full. */
   weekday: string;
   /** The day of the month. */
   date: number;
@@ -635,7 +640,7 @@ function calendarView(report: LearnerReport, w: ReportWords): ReportCalendarView
   const first = cells[0] as (typeof cells)[number];
   // Monday-first: Sunday (0) is the seventh column.
   const lead = report.period === 'month' ? (new Date(`${first.day}${DAY_KEY_TIME}`).getUTCDay() + 6) % 7 : 0;
-  const nameOf = (day: string): string => (report.period === 'week' ? weekdayText(day, w.locale) : dayText(day, w));
+  const nameOf = (day: string): string => (report.period === 'week' ? weekdayLongText(day, w.locale) : dayText(day, w));
   const practiced = cells.filter((cell) => cell.kind === 'practiced').map((cell) => nameOf(cell.day));
   const unsaved = cells.filter((cell) => cell.kind === 'not_saved').map((cell) => nameOf(cell.day));
   const a11y = w.m.a11y.report;
@@ -701,7 +706,7 @@ function detailView(report: LearnerReport, summary: ReportSummary, w: ReportWord
       heading: d.levelCheck,
       lines: [
         ...(spot === null ? [] : [spot]),
-        d.levelCheckOn(formatDate(w.locale, detail.levelCheck.takenAt, 'monthDay')),
+        ...levelCheckOnOf(detail.levelCheck.takenAt, summary, w),
         ...detail.levelCheck.strands.map((row) => d.strand(strandName(row.strand, m), statuses[row.status])),
       ],
     });
@@ -721,6 +726,13 @@ function detailView(report: LearnerReport, summary: ReportSummary, w: ReportWord
 }
 
 /** "Last practice: Oct 12": the learner-local day of `lastActiveAt` (UTC without day-by-day data). */
+/** "Checked Oct 10" on the learner-local day of the check (OD-12), like every other date here; none for an unreadable time. */
+function levelCheckOnOf(takenAt: string, summary: ReportSummary, w: ReportWords): string[] {
+  const ms = Date.parse(takenAt);
+  if (!Number.isFinite(ms)) return [];
+  return [w.m.report.detail.levelCheckOn(dayText(todayFor(new Date(ms), summary.activity?.tz ?? 0), w))];
+}
+
 function lastPracticeOf(summary: ReportSummary, w: ReportWords): string | null {
   const ms = Date.parse(summary.lastActiveAt ?? '');
   if (!Number.isFinite(ms)) return null;
@@ -789,15 +801,19 @@ export function learnerReportView(input: LearnerReportViewInput): LearnerReportV
   let stepper: ReportStepper | null = null;
   if (ready && report.window !== null && report.period !== 'all') {
     const window = report.window;
-    const button = (step: { at: string | null } | null, label: (target: NonNullable<LearnerReport['window']>) => string): ReportStepButton | null => {
+    const button = (
+      step: { at: string | null } | null,
+      label: (target: NonNullable<LearnerReport['window']>) => string,
+      nameOf: (window: string) => string,
+    ): ReportStepButton | null => {
       if (step === null) return null;
       const target = make(step.at).window as NonNullable<LearnerReport['window']>;
-      return { href: href(report.period, step.at), label: label(target), name: m.a11y.report.step(windowName(target, w)) };
+      return { href: href(report.period, step.at), label: label(target), name: nameOf(windowName(target, w)) };
     };
     stepper = {
       range: rangeOf(window, w),
-      prev: button(window.prev, (target) => (target.step === 'previous' ? firstStep(report.period, m) : rangeOf(target, w))),
-      next: button(window.next, () => m.report.step.next),
+      prev: button(window.prev, (target) => (target.step === 'previous' ? firstStep(report.period, m) : rangeOf(target, w)), m.a11y.report.step),
+      next: button(window.next, () => m.report.step.next, m.a11y.report.stepNext),
     };
   }
 
@@ -814,7 +830,14 @@ export function learnerReportView(input: LearnerReportViewInput): LearnerReportV
     tabs: ready ? REPORT_PERIODS.map((period) => ({ period, label: m.report.period[period], selected: period === report.period, href: href(period, null) })) : null,
     stepper,
     announce: ready ? (report.period === 'all' ? m.a11y.report.periodChangedAll : m.a11y.report.periodChanged(windowName(report.window as NonNullable<LearnerReport['window']>, w))) : null,
-    headline: headline === null ? null : { text: headline, horizon: report.horizon?.partial ? m.report.horizon(dayText(report.horizon.asOf, w)) : null },
+    // A window wholly after `asOf` draws no figure tiles, so it has no "Figures up to" line (the stale notice dates it).
+    headline:
+      headline === null
+        ? null
+        : {
+            text: headline,
+            horizon: report.horizon?.partial && report.headline?.code !== 'none_saved' ? m.report.horizon(dayText(report.horizon.asOf, w)) : null,
+          },
     wentWell: section(m.report.section.wentWell, wentWell(ctx)),
     practiceNext: section(m.report.section.practiceNext, practiceNext(ctx)),
     thisPeriod: ready

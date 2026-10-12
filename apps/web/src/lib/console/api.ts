@@ -1,4 +1,4 @@
-import { LearnerReportResponseSchema, ReceiptViewSchema, parseBillingSummary, type BillingSummary, type ReceiptView } from '@hangul-route/content-schema';
+import { LearnerReportResponseSchema, ProgressSummarySchema, ReportSummarySchema, ReceiptViewSchema, parseBillingSummary, type BillingSummary, type ReceiptView } from '@hangul-route/content-schema';
 import type {
   CurriculumMeta,
   Entitlement,
@@ -9,6 +9,7 @@ import type {
   Promo,
   PurchasablePlanKey,
   ReportPeriod,
+  ReportSummary,
   SpaceKind,
   SpaceRole,
   TeacherVisibleSummaryKey,
@@ -320,11 +321,46 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
       call<unknown>(`${base}/${encodeURIComponent(spaceId)}/learners/${encodeURIComponent(learnerId)}/report?period=${period}`, { method: 'GET' }, [200]).then(
         (r): ApiResult<LearnerReportResponse> => {
           if (!r.ok) return r;
-          const parsed = LearnerReportResponseSchema.safeParse(r.data);
-          return parsed.success ? { ok: true, data: parsed.data } : { ok: false, error: 'unknown', status: 200, code: 'bad_response' };
+          const data = parseLearnerReport(r.data);
+          return data === null ? { ok: false, error: 'unknown', status: 200, code: 'bad_response' } : { ok: true, data };
         },
       ),
   };
 }
 
 export type ConsoleApi = ReturnType<typeof createConsoleApi>;
+
+const REPORT_ENVELOPE = LearnerReportResponseSchema.omit({ summary: true });
+const PLAN_ROW = ProgressSummarySchema.shape.planProgress.valueSchema;
+const isPlainRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/**
+ * The learner report body (F-REPORT-001 section 3.8), read as leniently as the Worker writes it (`reportSummaryOf`):
+ * the envelope (space, learner, times) must parse, but each summary key, and each plan of `planProgress`, is checked
+ * on its own and a key this bundle cannot read is dropped. So a Worker deployed first with a wider schema never turns
+ * every report into a failed load while an older console bundle is still cached. Null for a body it cannot read.
+ */
+function parseLearnerReport(raw: unknown): LearnerReportResponse | null {
+  const envelope = REPORT_ENVELOPE.safeParse(raw);
+  if (!envelope.success || !isPlainRecord(raw)) return null;
+  const source = raw.summary;
+  if (source === null || source === undefined) return { ...envelope.data, summary: null };
+  if (!isPlainRecord(source)) return null;
+  const summary: Record<string, unknown> = {};
+  for (const [key, field] of Object.entries(ReportSummarySchema.shape)) {
+    const value = source[key];
+    if (value === undefined) continue;
+    if (key === 'planProgress' && isPlainRecord(value)) {
+      summary.planProgress = Object.fromEntries(
+        Object.entries(value).flatMap(([planId, row]) => {
+          const checked = PLAN_ROW.safeParse(row);
+          return checked.success ? [[planId, checked.data]] : [];
+        }),
+      );
+      continue;
+    }
+    const checked = field.safeParse(value);
+    if (checked.success && checked.data !== undefined) summary[key] = checked.data;
+  }
+  return { ...envelope.data, summary: summary as ReportSummary };
+}

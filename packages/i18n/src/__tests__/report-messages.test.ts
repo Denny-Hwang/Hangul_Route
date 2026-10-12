@@ -244,8 +244,10 @@ describe('Appendix A drafts (English)', () => {
     expect(a.periodChanged(r.when.week)).toBe('Showing this week');
     expect(a.step(r.when.prevWeek)).toBe('Show last week');
     expect(a.step(r.step.range('Sep 24', 'Sep 30'))).toBe('Show Sep 24 to Sep 30');
-    // Next names the window it opens too, the current one included.
+    // Next names the window it opens too, the current one included, after its visible label (WCAG 2.5.3).
     expect(a.step(r.when.week)).toBe('Show this week');
+    expect(a.stepNext(r.when.week)).toBe(`${r.step.next}: show this week`);
+    expect(a.stepNext(r.when.prevWeek).startsWith(r.step.next)).toBe(true);
     expect(a.periodChanged(r.when.prevMonth)).toBe('Showing last month');
   });
 

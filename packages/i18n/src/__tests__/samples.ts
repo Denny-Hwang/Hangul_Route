@@ -483,8 +483,9 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'report.list': [[['Mon']], [['Mon', 'Wed']], [['Mon', 'Wed', 'Thu']]],
   'a11y.report.periodChanged': [['this week'], ['Dec 28, 2026 to Jan 3, 2027']],
   'a11y.report.step': [['last week'], ['Dec 28, 2026 to Jan 3, 2027']],
-  'a11y.report.calendar': [['Mon'], ['Mon, Tue, Wed, Thu, Fri, Sat and Sun']],
-  'a11y.report.notSaved': [['Sun'], ['Mon, Tue, Wed, Thu, Fri, Sat and Sun']],
+  'a11y.report.stepNext': [['this week'], ['Dec 28, 2026 to Jan 3, 2027']],
+  'a11y.report.calendar': [['Monday'], ['Monday, Tuesday, Wednesday, Thursday, Friday, Saturday and Sunday']],
+  'a11y.report.notSaved': [['Sunday'], ['Monday, Tuesday, Wednesday, Thursday, Friday, Saturday and Sunday']],
   // F-BILL-002 B-6: the billing home, the learner Plan screen, the Profile plan card.
   'console.billing.coverage.school': [['Maple School']],
   'console.billing.coverage.schoolUntil': [['Maple School', 'Jun 30, 2027']],

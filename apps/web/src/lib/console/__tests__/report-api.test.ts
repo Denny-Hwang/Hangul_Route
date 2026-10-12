@@ -53,6 +53,31 @@ describe('getLearnerReport', () => {
     expect(res.ok && res.data.summary !== null && 'activity' in res.data.summary ? res.data.summary.activity : undefined).toBeUndefined();
   });
 
+  it('drops only a summary field this bundle cannot read (a Worker deployed first with a wider schema), as the Worker does', async () => {
+    const skewed = {
+      ...body,
+      summary: {
+        ...body.summary,
+        placement: { status: 'a-status-from-a-newer-worker' },
+        needsPractice: 'not a list',
+        planProgress: { 'plan:a': { done: 1, total: 2, notReady: 0 }, 'plan:b': { done: 'x' } },
+      },
+    };
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValueOnce(json(200, { data: skewed }));
+    const api = createConsoleApi({ endpoint: 'https://api.example.com', token: 't', fetchImpl });
+    const res = await api.getLearnerReport('space:c', 'profile:mina', 'week');
+    expect(res).toEqual({
+      ok: true,
+      data: { ...body, summary: { lastActiveAt: body.summary?.lastActiveAt, jamoRecognized: ['ㄱ'], planProgress: { 'plan:a': { done: 1, total: 2, notReady: 0 } } } },
+    });
+  });
+
+  it('answers a summary that is neither an object nor null as a failed load (never as the no_data state)', async () => {
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValueOnce(json(200, { data: { ...body, summary: 'nonsense' } }));
+    const api = createConsoleApi({ endpoint: 'https://api.example.com', token: 't', fetchImpl });
+    expect(await api.getLearnerReport('space:c', 'profile:mina', 'week')).toEqual({ ok: false, error: 'unknown', status: 200, code: 'bad_response' });
+  });
+
   it('answers a body it cannot read (a kind this bundle does not know, a missing learner) as a failed load', async () => {
     const fetchImpl = vi.fn<typeof fetch>()
       .mockResolvedValueOnce(json(200, { data: { ...body, space: { ...body.space, kind: 'district' } } }))

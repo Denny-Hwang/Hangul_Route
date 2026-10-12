@@ -23,7 +23,7 @@ import {
   type LearnerReportViewInput,
   type ReportSentence,
 } from '../report-view';
-import { EMPTY, LEGACY, NOW, STALE, STEADY, response, stageTitle } from './fixtures/report';
+import { EMPTY, LEGACY, NOW, PLACEMENT, STALE, STEADY, response, stageTitle } from './fixtures/report';
 
 /** F-REPORT-001 RP-7a1: the console's report words, links and states from the report module's codes. */
 
@@ -143,7 +143,7 @@ describe('the week report of a steady learner (behaviour 1, family viewer)', () 
       ['2026-10-15', 'practiced', 'Thu', 15],
     ]);
     expect(calendar?.lead).toBe(0);
-    expect(calendar?.practiced).toBe('Practiced on Mon, Wed and Thu.');
+    expect(calendar?.practiced).toBe('Practiced on Monday, Wednesday and Thursday.');
     expect(calendar?.notSaved).toBeNull();
     expect(v.thisPeriod?.growth).toBeNull();
   });
@@ -180,6 +180,20 @@ describe('the week report of a steady learner (behaviour 1, family viewer)', () 
       ],
     });
     expect(detail?.blocks[5]).toEqual({ kind: 'lines', heading: 'Plan', lines: ["This week's plan: 3 done, 2 ready to play", 'Own route: 2 done, 2 ready to play'] });
+  });
+
+  it('dates the level check on the learner-local day, with the year when it is not this year', () => {
+    // 05:00 UTC on Oct 11 is 22:00 on Oct 10 in Los Angeles, the learner's zone (OD-12).
+    const late = view({ ...STEADY, placement: { ...PLACEMENT, takenAt: '2026-10-11T05:00:00.000Z' } });
+    const lines = (v2: LearnerReportView): string[] => {
+      const block = v2.moreDetail?.blocks.find((b) => 'heading' in b && b.heading === 'Level check');
+      return block?.kind === 'lines' ? block.lines : [];
+    };
+    expect(lines(late)).toContain('Checked Oct 10');
+    const lastYear = view({ ...STEADY, placement: { ...PLACEMENT, takenAt: '2025-10-11T05:00:00.000Z' } });
+    expect(lines(lastYear)).toContain('Checked Oct 10, 2025');
+    const unreadable = view({ ...STEADY, placement: { ...PLACEMENT, takenAt: 'not a date' } });
+    expect(lines(unreadable).some((line) => line.startsWith('Checked'))).toBe(false);
   });
 
   it('never prints a percentage, a speaking word or a comparison with anyone else', () => {
@@ -254,7 +268,7 @@ describe('periods and steps', () => {
         label: 'Sep 25 to Oct 1',
         name: 'Show Sep 25 to Oct 1',
       },
-      next: { href: '/teach/space/learner?id=space%3Akim-family&learner=profile%3Amina&period=week&from=roster', label: 'Next', name: 'Show this week' },
+      next: { href: '/teach/space/learner?id=space%3Akim-family&learner=profile%3Amina&period=week&from=roster', label: 'Next', name: 'Next: show this week' },
     });
     expect(v.thisPeriod?.figures?.find((f) => f.key === 'minutes')?.up).toBe('More than the week before');
     expect(v.wentWell?.lines.map((l) => l.code)).not.toContain('plan_done');
@@ -263,7 +277,7 @@ describe('periods and steps', () => {
   it('two weeks back: the window is named by its end date', () => {
     const v = view(STEADY, { query: { period: 'week', at: '2026-10-01', from: null } });
     expect(v.headline?.text).toBe('Mina practiced on 1 day in the week to Oct 1.');
-    expect(v.stepper?.next).toEqual({ href: '/teach/space/learner?id=space%3Akim-family&learner=profile%3Amina&period=week&at=2026-10-08', label: 'Next', name: 'Show last week' });
+    expect(v.stepper?.next).toEqual({ href: '/teach/space/learner?id=space%3Akim-family&learner=profile%3Amina&period=week&at=2026-10-08', label: 'Next', name: 'Next: show last week' });
   });
 
   it('a day back and two days back', () => {
@@ -271,7 +285,7 @@ describe('periods and steps', () => {
     const older = view(STEADY, { query: { period: 'day', at: '2026-10-12', from: null } });
     expect(older.headline?.text).toBe('Mina practiced on Oct 12.');
     expect(older.stepper?.prev?.label).toBe('Oct 11');
-    expect(older.stepper?.next?.name).toBe('Show Oct 13');
+    expect(older.stepper?.next?.name).toBe('Next: show Oct 13');
     expect(view(STEADY, { query: { period: 'day', at: '2026-10-13', from: null } }).headline?.text).toBe('No practice on Oct 13.');
   });
 
@@ -293,7 +307,7 @@ describe('periods and steps', () => {
     expect(v.headline?.text).toBe('Mina practiced on 6 days last month.');
     expect(v.stepper?.range).toBe('September 2026');
     expect(v.stepper?.prev).toBeNull();
-    expect(v.stepper?.next).toEqual({ href: '/teach/space/learner?id=space%3Akim-family&learner=profile%3Amina&period=month', label: 'Next', name: 'Show this month' });
+    expect(v.stepper?.next).toEqual({ href: '/teach/space/learner?id=space%3Akim-family&learner=profile%3Amina&period=month', label: 'Next', name: 'Next: show this month' });
     expect(v.thisPeriod?.calendar).toBeNull();
     expect(v.thisPeriod?.figures?.map((f) => f.key)).toEqual(['days', 'minutes', 'quests', 'cards']);
   });
@@ -302,7 +316,7 @@ describe('periods and steps', () => {
     const older = { ...STEADY, activity: { ...STEADY.activity, months: [{ m: '2026-08', min: 30, q: 1, c: 0, w: 0, days: 2 }, ...STEADY.activity.months] } };
     const v = view(older, { query: { period: 'month', at: '2026-08-01', from: null } });
     expect(v.headline?.text).toBe('Mina practiced on 2 days in August 2026.');
-    expect(v.stepper?.next).toEqual({ href: '/teach/space/learner?id=space%3Akim-family&learner=profile%3Amina&period=month&at=2026-09-01', label: 'Next', name: 'Show last month' });
+    expect(v.stepper?.next).toEqual({ href: '/teach/space/learner?id=space%3Akim-family&learner=profile%3Amina&period=month&at=2026-09-01', label: 'Next', name: 'Next: show last month' });
     expect(view(older, { query: { period: 'month', at: '2026-09-01', from: null } }).stepper?.prev?.label).toBe('August 2026');
   });
 
@@ -338,12 +352,13 @@ describe('states (section 3.14)', () => {
   it('stale, a week wholly after the last save: the neutral lines, the none_saved headline, no figures, no went-well, dashed days', () => {
     const v = view(STALE);
     expect(v.notices).toEqual(['Last saved Oct 2.', "Open Hangul Route on Mina's device while online to update."]);
-    expect(v.headline?.text).toBe("Nothing saved from Mina's device this week yet.");
+    // No figure tiles under this headline, so no "Figures up to" line either (the stale notice already dates it).
+    expect(v.headline).toEqual({ text: "Nothing saved from Mina's device this week yet.", horizon: null });
     expect(v.wentWell).toBeNull();
     expect(v.thisPeriod?.figures).toBeNull();
     expect(v.thisPeriod?.calendar?.cells.every((cell) => cell.kind === 'not_saved')).toBe(true);
     expect(v.thisPeriod?.calendar?.practiced).toBe('No practice days in this period.');
-    expect(v.thisPeriod?.calendar?.notSaved).toBe('Not saved yet: Fri, Sat, Sun, Mon, Tue, Wed and Thu.');
+    expect(v.thisPeriod?.calendar?.notSaved).toBe('Not saved yet: Friday, Saturday, Sunday, Monday, Tuesday, Wednesday and Thursday.');
     expect(v.practiceNext?.lines.map((l) => l.code)).not.toContain('rhythm');
   });
 
@@ -665,5 +680,49 @@ describe('reportLoadProblem: which state a failed load shows', () => {
 
   it('the flag-off words', () => {
     expect(en.report.state.flagOff).toBe('Reports are not available yet.');
+  });
+});
+
+describe('the stepper buttons and the console locale', () => {
+  it('every step button has its visible label inside its accessible name (WCAG 2.5.3)', () => {
+    const queries = [
+      { period: 'day', at: null },
+      { period: 'day', at: '2026-10-13' },
+      { period: 'week', at: null },
+      { period: 'week', at: '2026-10-08' },
+      { period: 'week', at: '2026-10-01' },
+      { period: 'month', at: null },
+      { period: 'month', at: '2026-09-01' },
+    ] as const;
+    let checked = 0;
+    for (const q of queries) {
+      const stepper = view(STEADY, { query: { ...q, from: null } }).stepper;
+      for (const button of [stepper?.prev, stepper?.next]) {
+        if (!button) continue;
+        expect(button.name.toLowerCase()).toContain(button.label.toLowerCase());
+        checked += 1;
+      }
+    }
+    expect(checked).toBeGreaterThanOrEqual(10);
+  });
+
+  it('formats every date in Korean (the report words stay English until their translations land)', () => {
+    const week = view(STEADY, { locale: 'ko' });
+    expect(week.stepper?.range).toBe('10월 9일 to 10월 15일');
+    expect(week.thisPeriod?.calendar?.cells.map((cell) => cell.weekday)).toEqual(['금', '토', '일', '월', '화', '수', '목']);
+    expect(week.thisPeriod?.calendar?.practiced).toBe('Practiced on 월요일, 수요일 and 목요일.');
+    expect(week.glance?.lastPractice).toBe('Last practice: 10월 15일');
+    const month = view(STEADY, { locale: 'ko', query: { period: 'month', at: null, from: null } });
+    expect(month.stepper?.range).toBe('2026년 10월');
+  });
+
+  it('formats every date in Spanish', () => {
+    const week = view(STEADY, { locale: 'es' });
+    expect(week.stepper?.range).toBe('9 oct to 15 oct');
+    expect(week.thisPeriod?.calendar?.cells.map((cell) => cell.weekday)).toEqual(['vie', 'sáb', 'dom', 'lun', 'mar', 'mié', 'jue']);
+    expect(week.thisPeriod?.calendar?.practiced).toBe('Practiced on lunes, miércoles and jueves.');
+    expect(week.glance?.lastPractice).toBe('Last practice: 15 oct');
+    const month = view(STEADY, { locale: 'es', query: { period: 'month', at: null, from: null } });
+    expect(month.stepper?.range).toBe('octubre de 2026');
   });
 });
