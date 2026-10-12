@@ -6,8 +6,6 @@ import { AccessibilityInfo, Platform, ScrollView, View, type LayoutChangeEvent }
 import { storyById } from '../../content/stories';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeStory } from '../../logic/content-locale';
-import { gateOpensDirectly } from '../../logic/profiles/gate-route';
-import { isParentSessionValid } from '../../logic/profiles/session';
 import { backOrHome, linkOpenRoute, resolveScreenExits, type ScreenExitProps } from '../../logic/navigation/screen-exits';
 import {
   findSourceLink,
@@ -24,9 +22,8 @@ import type { RootStackParamList } from '../../navigation/types';
 import { HAND_OFF_NEEDS_TAP, openExternalUrl } from '../../platform/external-link';
 import { copyText } from '../../platform/pwa';
 import { track } from '../../platform/telemetry';
-import { useAccountStore } from '../../store/account-store';
+import { gateOpensDirectlyNow } from '../../store/gate-now';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
-import { useUiStore } from '../../store/ui-store';
 import { CitationText, CorrectionsList, Disclosure, FactCard, SeeFactRow, SourcesHeader, SourcesHeading } from './SourcesParts';
 
 /**
@@ -37,16 +34,6 @@ type Props = {
   route: { params: RootStackParamList['StorySources'] };
   navigation?: Pick<NativeStackScreenProps<RootStackParamList, 'StorySources'>['navigation'], 'canGoBack' | 'goBack' | 'navigate'>;
 } & ScreenExitProps;
-
-/** Whether a grown-up action skips the PIN screen right now, read fresh from the stores (F-LEARN-001 L7). */
-function gateOpenNow(): boolean {
-  const openedAt = useUiStore.getState().parentGateOpenedAt;
-  return gateOpensDirectly({
-    profiles: useProfileStore.getState().profiles,
-    parentPinHash: useAccountStore.getState().parentPinHash,
-    sessionOpen: isParentSessionValid(openedAt === null ? null : { openedAt, profileId: 'family' }, Date.now()),
-  });
-}
 
 /**
  * Sources — `StorySources { storyId, factId?, sceneIndex?, from }`
@@ -166,7 +153,7 @@ export function StorySourcesScreen({ route, navigation, ...exitProps }: Props): 
   useFocusEffect(
     useCallback(() => {
       const waiting = pending.current;
-      const step = pendingLinkStep(waiting?.link ?? null, gateOpenNow(), HAND_OFF_NEEDS_TAP);
+      const step = pendingLinkStep(waiting?.link ?? null, gateOpensDirectlyNow(), HAND_OFF_NEEDS_TAP);
       pending.current = null;
       if (!waiting) return;
       if (step === 'open') void handOff(waiting.link, waiting.key);
@@ -180,7 +167,7 @@ export function StorySourcesScreen({ route, navigation, ...exitProps }: Props): 
       setNote(key, copy.openFailed(source.url));
       return;
     }
-    const route = linkOpenRoute(exitProps.onOpenLink, () => openLinkStep(gateOpenNow()) === 'open');
+    const route = linkOpenRoute(exitProps.onOpenLink, () => openLinkStep(gateOpensDirectlyNow()) === 'open');
     if (route === 'hand-off') {
       // Called straight from the press so the web hand-off keeps the tap (pop-up rules).
       void handOff(link, key);
