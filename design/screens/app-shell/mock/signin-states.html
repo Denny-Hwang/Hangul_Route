@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign-in states (F-APP-001 mock, /signin)</title>
+<link rel="stylesheet" href="app-shell.css">
+</head>
+<body>
+<div class="board"><h1 class="page-title">/signin: every state</h1><p class="annot">Each frame is the page at the board column width. Clerk widgets are drawn approximately (Clerk owns their inside).</p><div class="board-grid"><div class="board-item"><p class="board-label">A · ?persona=teacher (or ?as=teacher)</p><p class="board-title">Teacher intro</p><div class="sample"><div class="solo"><main class="solo-column">
+<a class="btn btn-quiet" href="#" style="align-self: flex-start"><svg class="icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-secondary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg>Back to learning</a>
+<div class="signin-head"><span class="brand-mark" aria-hidden="true">HR</span><h1>Grown-ups sign in</h1><p class="intro">Sign in to see your classes.</p></div>
+<div class="signin-widget"><div class="clerk" role="img" aria-label="Clerk sign-in widget (drawn approximately)">
+  <p class="clerk-title" aria-hidden="true">Sign in</p>
+  <div class="clerk-social" aria-hidden="true">Continue with Google</div><div class="clerk-or" aria-hidden="true">or</div><div class="clerk-field" aria-hidden="true">Email address<div class="clerk-input"></div></div><div class="clerk-continue" aria-hidden="true">Continue</div>
+  <p class="clerk-note">Clerk &lt;SignIn routing="hash"&gt;, footerAction hidden (no sign-up link)</p>
+</div></div>
+<div class="signin-below">
+  <a class="text-link" href="#">New here? Create a grown-up account</a>
+  <p class="muted">Learners don't need an account. They start learning right away, or join a class with a code.</p>
+  <a class="text-link" href="#">I'm here to learn</a>
+</div>
+</main></div></div></div>
+<div class="board-item"><p class="board-label">A · no hint, or an unknown persona value</p><p class="board-title">Neutral intro</p><div class="sample"><div class="solo"><main class="solo-column">
+<a class="btn btn-quiet" href="#" style="align-self: flex-start"><svg class="icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-secondary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg>Back to learning</a>
+<div class="signin-head"><span class="brand-mark" aria-hidden="true">HR</span><h1>Grown-ups sign in</h1><p class="intro">Sign in to your grown-up account.</p></div>
+<div class="signin-widget"><div class="clerk" role="img" aria-label="Clerk sign-in widget (drawn approximately)">
+  <p class="clerk-title" aria-hidden="true">Sign in</p>
+  <div class="clerk-social" aria-hidden="true">Continue with Google</div><div class="clerk-or" aria-hidden="true">or</div><div class="clerk-field" aria-hidden="true">Email address<div class="clerk-input"></div></div><div class="clerk-continue" aria-hidden="true">Continue</div>
+  <p class="clerk-note">Clerk &lt;SignIn routing="hash"&gt;, footerAction hidden (no sign-up link)</p>
+</div></div>
+<div class="signin-below">
+  <a class="text-link" href="#">New here? Create a grown-up account</a>
+  <p class="muted">Learners don't need an account. They start learning right away, or join a class with a code.</p>
+  <a class="text-link" href="#">I'm here to learn</a>
+</div>
+</main></div></div></div>
+<div class="board-item"><p class="board-label">C1 · ?mode=create, not ticked</p><p class="board-title">Adult step: Continue disabled</p><div class="sample"><div class="solo"><main class="solo-column">
+<a class="btn btn-quiet" href="#" style="align-self: flex-start"><svg class="icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-secondary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg>Back to sign in</a>
+<div class="signin-head"><span class="brand-mark" aria-hidden="true">HR</span><h1>Grown-ups sign in</h1></div>
+<form class="affirm">
+  <p class="affirm-lead" id="affirm-lead">Grown-up accounts are for parents, guardians and teachers.</p>
+  <label class="check"><input type="checkbox" aria-describedby="affirm-lead"><span>I am a parent, guardian or teacher</span></label>
+  <button type="submit" class="btn  btn-block" disabled>Continue</button>
+</form>
+</main></div></div></div>
+<div class="board-item"><p class="board-label">C2 · ?mode=create, ticked</p><p class="board-title">Adult step: Continue enabled</p><div class="sample"><div class="solo"><main class="solo-column">
+<a class="btn btn-quiet" href="#" style="align-self: flex-start"><svg class="icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-secondary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg>Back to sign in</a>
+<div class="signin-head"><span class="brand-mark" aria-hidden="true">HR</span><h1>Grown-ups sign in</h1></div>
+<form class="affirm">
+  <p class="affirm-lead" id="affirm-lead">Grown-up accounts are for parents, guardians and teachers.</p>
+  <label class="check ticked"><input type="checkbox" checked aria-describedby="affirm-lead"><span>I am a parent, guardian or teacher</span></label>
+  <button type="submit" class="btn btn-primary btn-block">Continue</button>
+</form>
+</main></div></div></div>
+<div class="board-item"><p class="board-label">C3 · after Continue</p><p class="board-title">Clerk sign-up (only now rendered)</p><div class="sample"><div class="solo"><main class="solo-column">
+<a class="btn btn-quiet" href="#" style="align-self: flex-start"><svg class="icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-secondary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg>Back to sign in</a>
+<div class="signin-head"><span class="brand-mark" aria-hidden="true">HR</span><h1>Grown-ups sign in</h1></div>
+<div class="signin-widget"><div class="clerk" role="img" aria-label="Clerk sign-up widget (drawn approximately)">
+  <p class="clerk-title" aria-hidden="true">Create your account</p>
+  <div class="clerk-social" aria-hidden="true">Continue with Google</div>
+  <div class="clerk-or" aria-hidden="true">or</div>
+  <div class="clerk-field" aria-hidden="true">Email address<div class="clerk-input"></div></div>
+  <div class="clerk-continue" aria-hidden="true">Continue</div>
+  <p class="clerk-note">Clerk &lt;SignUp&gt; with unsafeMetadata.adultAffirmedAt; email verification on (S-2)</p>
+</div></div>
+</main></div></div></div>
+<div class="board-item"><p class="board-label">B · signed in (or just signed in)</p><p class="board-title">Router: one moment, then home</p><div class="sample"><div class="solo"><main class="solo-column"><div class="router"><p role="status" aria-live="polite">Taking you to your home…</p><a class="text-link" href="#">Go now</a></div></main></div></div></div>
+<div class="board-item"><p class="board-label">D · OAuth on a device with learner profiles</p><p class="board-title">Reverification</p><div class="sample"><div class="solo"><main class="solo-column">
+<section class="solo-card" aria-labelledby="rv-title">
+  <h1 id="rv-title">Confirm it's you</h1>
+  <p class="line">This device has learner profiles. Enter the code we email you to open grown-up pages.</p>
+  <div class="signin-widget"><div class="clerk" role="img" aria-label="Clerk reverification (drawn approximately)"><div class="clerk-field" aria-hidden="true">Code<div class="clerk-input"></div></div><div class="clerk-continue" aria-hidden="true">Continue</div><p class="clerk-note">Clerk useReverification, first factor: email code / password / passkey</p></div></div>
+  <a class="btn btn-col" href="#">Back to learning</a>
+</section>
+</main></div></div></div>
+<div class="board-item"><p class="board-label">A · installed PWA (display-mode: standalone)</p><p class="board-title">Email code listed first</p><div class="sample"><div class="solo"><main class="solo-column">
+<a class="btn btn-quiet" href="#" style="align-self: flex-start"><svg class="icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-secondary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg>Back to learning</a>
+<div class="signin-head"><span class="brand-mark" aria-hidden="true">HR</span><h1>Grown-ups sign in</h1><p class="intro">Sign in to see your family's learning.</p></div>
+<div class="signin-widget"><div class="clerk" role="img" aria-label="Clerk sign-in widget (drawn approximately)">
+  <p class="clerk-title" aria-hidden="true">Sign in</p>
+  <div class="clerk-field" aria-hidden="true">Email address<div class="clerk-input"></div></div><div class="clerk-continue" aria-hidden="true">Continue</div><div class="clerk-or" aria-hidden="true">or</div><div class="clerk-social" aria-hidden="true">Continue with Google</div>
+  <p class="clerk-note">Clerk &lt;SignIn routing="hash"&gt;, footerAction hidden (no sign-up link); standalone: email code first</p>
+</div></div>
+<div class="signin-below">
+  <a class="text-link" href="#">New here? Create a grown-up account</a>
+  <p class="muted">Learners don't need an account. They start learning right away, or join a class with a code.</p>
+  <a class="text-link" href="#">I'm here to learn</a>
+</div>
+</main></div></div></div>
+<div class="board-item"><p class="board-label">Error · standalone, Google finished in Safari</p><p class="board-title">Finish here with an email code</p><div class="sample"><div class="solo"><main class="solo-column">
+<a class="btn btn-quiet" href="#" style="align-self: flex-start"><svg class="icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-secondary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg>Back to learning</a>
+<div class="signin-head"><span class="brand-mark" aria-hidden="true">HR</span><h1>Grown-ups sign in</h1><p class="intro">Sign in to see your family's learning.</p></div>
+<div class="signin-widget"><p class="notice-line" role="status">Finish signing in here with an email code</p><div class="clerk" role="img" aria-label="Clerk sign-in widget (drawn approximately)">
+  <p class="clerk-title" aria-hidden="true">Sign in</p>
+  <div class="clerk-field" aria-hidden="true">Email address<div class="clerk-input"></div></div><div class="clerk-continue" aria-hidden="true">Continue</div><div class="clerk-or" aria-hidden="true">or</div><div class="clerk-social" aria-hidden="true">Continue with Google</div>
+  <p class="clerk-note">Clerk &lt;SignIn routing="hash"&gt;, footerAction hidden (no sign-up link); standalone: email code first</p>
+</div></div>
+<div class="signin-below">
+  <a class="text-link" href="#">New here? Create a grown-up account</a>
+  <p class="muted">Learners don't need an account. They start learning right away, or join a class with a code.</p>
+  <a class="text-link" href="#">I'm here to learn</a>
+</div>
+</main></div></div></div>
+<div class="board-item"><p class="board-label">Error · Clerk unreachable</p><p class="board-title">One line, Try again, the ways back stay</p><div class="sample"><div class="solo"><main class="solo-column">
+<a class="btn btn-quiet" href="#" style="align-self: flex-start"><svg class="icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-secondary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg>Back to learning</a>
+<div class="signin-head"><span class="brand-mark" aria-hidden="true">HR</span><h1>Grown-ups sign in</h1><p class="intro">Sign in to see your family's learning.</p></div>
+<div class="panel stack" style="max-width: var(--pane-master); width: 100%; margin: 0 auto"><p>Sign-in can't load right now.</p><button type="button" class="btn btn-small" style="align-self: flex-start">Try again</button></div>
+<div class="signin-below">
+  <a class="text-link" href="#">New here? Create a grown-up account</a>
+  <p class="muted">Learners don't need an account. They start learning right away, or join a class with a code.</p>
+  <a class="text-link" href="#">I'm here to learn</a>
+</div>
+</main></div></div></div>
+<div class="board-item"><p class="board-label">Error · spaces fetch failed after sign-in</p><p class="board-title">One line, Try again (no wrong home)</p><div class="sample"><div class="solo"><main class="solo-column"><div class="router"><p>Can't reach the console right now.</p><button type="button" class="btn btn-small">Try again</button></div></main></div></div></div></div></div>
+</body>
+</html>
