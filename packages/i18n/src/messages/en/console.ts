@@ -1277,7 +1277,8 @@ export const consoleMsgs = {
     section: 'Learning Route',
     /** The heading over the stage list page's list of stages (LR-D). */
     stagesTitle: 'Stages',
-    back: { report: 'Back to the report', class: 'Back to the class', family: 'Back to the family' },
+    /** `space`: the kind-neutral words while the space is still loading or could not be read (LR-8). */
+    back: { report: 'Back to the report', class: 'Back to the class', family: 'Back to the family', space: 'Back' },
     now: (name: string, n: number, title: string) => `${name} is on Stage ${n}: ${title}.`,
     learnerGoal: (name: string, n: number, title: string) => `${name}'s goal: Stage ${n} · ${title}`,
     /** Who set the goal the learner's device shows (`summary.routeGoal.from`). */
@@ -1308,6 +1309,8 @@ export const consoleMsgs = {
     notFound: 'We could not find this learner in this space.',
     /** A stage line with nothing done: the known part of `journey.stageLine` alone, so a row never reads "0 quests done". */
     knownLine: (known: number) => `${known} known from the level check`,
+    /** A stage row's heading, "2. Words · Open": the order, the stage title and its state word, ordered by the locale (LR-8). */
+    stageRow: (n: number, title: string, state: string) => `${n}. ${title} · ${state}`,
   },
   /**
    * Notes from grown-ups on app.hangulroute.com (F-FEEDBACK-001 FB-5; wireframes console/note-composer.md,

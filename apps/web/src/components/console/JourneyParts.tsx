@@ -4,7 +4,7 @@ import { borderWidth, colors, spacing } from '@hangul-route/design-system/tokens
 import { PIP_SIZE, cursorMarkerParts, markerBand, pipInk, pipParts, type PipPart } from '@hangul-route/design-system/pip-geometry';
 import type { CSSProperties } from 'react';
 import type { RosterSummary } from '@/lib/console/api';
-import { journeyStrip, type JourneySegment } from '@/lib/console/journey-strip';
+import { journeyStrip, type JourneySegment, type JourneyState } from '@/lib/console/journey-strip';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 
 /**
@@ -19,24 +19,27 @@ import { useConsoleLocale } from '@/lib/i18n/locale-context';
 const SIZE = PIP_SIZE.stage;
 const BAND = markerBand(SIZE);
 
-/** Stage state -> drawn parts. Every state differs in geometry, not only in ink (spec section 3.14). */
-function segmentParts(segment: JourneySegment): PipPart[] {
-  switch (segment.state) {
+/**
+ * Stage state -> drawn parts at `size`. Every state differs in geometry, not only in ink (spec section 3.14).
+ * Shared with the Learning Route stage list (LR-8), which draws the same shapes at 24 dp.
+ */
+export function stageStateParts(state: JourneyState, size: number = SIZE): PipPart[] {
+  switch (state) {
     case 'complete':
-      return pipParts('done', SIZE);
+      return pipParts('done', size);
     case 'known':
-      return pipParts('known', SIZE);
+      return pipParts('known', size);
     case 'explored':
       // The check of a done pip without its disc: explored is never drawn as complete.
-      return pipParts('done', SIZE).filter((part) => part.kind === 'path');
+      return pipParts('done', size).filter((part) => part.kind === 'path');
     case 'open':
-      return pipParts('open', SIZE);
+      return pipParts('open', size);
     case 'later':
-      return pipParts('later', SIZE);
+      return pipParts('later', size);
   }
 }
 
-function Part({ part, accent }: { part: PipPart; accent: string }): JSX.Element {
+export function PipShape({ part, accent }: { part: PipPart; accent: string }): JSX.Element {
   const stroke = part.stroke === undefined ? undefined : pipInk(part.stroke, accent);
   if (part.kind === 'circle') {
     return (
@@ -59,10 +62,10 @@ function Segment({ segment }: { segment: JourneySegment }): JSX.Element {
   const accent = colors.stage[segment.stage];
   return (
     <svg width={SIZE} height={SIZE + BAND} viewBox={`0 0 ${SIZE} ${SIZE + BAND}`} focusable="false">
-      {segment.here ? cursorMarkerParts(SIZE).map((part, i) => <Part key={`m${i}`} part={part} accent={accent} />) : null}
+      {segment.here ? cursorMarkerParts(SIZE).map((part, i) => <PipShape key={`m${i}`} part={part} accent={accent} />) : null}
       <g transform={`translate(0 ${BAND})`}>
-        {segmentParts(segment).map((part, i) => (
-          <Part key={i} part={part} accent={accent} />
+        {stageStateParts(segment.state).map((part, i) => (
+          <PipShape key={i} part={part} accent={accent} />
         ))}
       </g>
     </svg>

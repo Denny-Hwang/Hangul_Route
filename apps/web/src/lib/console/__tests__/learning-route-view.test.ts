@@ -171,6 +171,7 @@ describe('learningRouteView: the stage list (section 6.1 "The stage list page")'
       title: 'Hangul',
       availability: 'open',
       stateWord: 'Open',
+      text: '1. Hangul · Open',
       canDo: canDo[1],
       line: '4 known from the level check, 2 quests done',
       tags: [{ kind: 'here', text: 'Sam is here' }],
@@ -242,7 +243,7 @@ describe('learningRouteView: the stage list (section 6.1 "The stage list page")'
     const rows = ready().stages;
     expect(rows.at(-1)).toEqual({ kind: 'later', stages: ['stage5', 'stage6', 'stage7'], from: 5, to: 7, stateWord: 'Coming later', text: 'Stages 5 to 7: Coming later' });
     // The design keeps a coming-later row quiet: its name and "Coming later" only (design/screens/learning-route/stage-list.md).
-    expect(stageRow(rows, 'stage3')).toEqual({ kind: 'stage', stage: 'stage3', order: 3, state: 'later', availability: 'soon', title: 'Sentences', stateWord: 'Coming later', canDo: null, line: null, tags: [] });
+    expect(stageRow(rows, 'stage3')).toEqual({ kind: 'stage', stage: 'stage3', order: 3, state: 'later', availability: 'soon', title: 'Sentences', stateWord: 'Coming later', text: '3. Sentences · Coming later', canDo: null, line: null, tags: [] });
   });
 
   it('never merges across a stage it could not read, or a coming-later stage that holds a count', () => {

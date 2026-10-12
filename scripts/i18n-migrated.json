@@ -80,7 +80,9 @@
     "apps/mobile/src/screens/library/CultureSection.tsx",
     "apps/web/src/components/console/GrownUpLock.tsx",
     "apps/web/src/components/console/FreeLessonsParts.tsx",
-    "apps/web/src/components/console/VocabWordsParts.tsx"
+    "apps/web/src/components/console/VocabWordsParts.tsx",
+    "apps/web/src/app/(console)/teach/space/route/page.tsx",
+    "apps/web/src/components/console/LearningRouteParts.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1

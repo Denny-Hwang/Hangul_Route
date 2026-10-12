@@ -11,6 +11,8 @@ export interface ConsoleEnv {
   NEXT_PUBLIC_CONTENT_GATING_ENABLED?: string;
   /** Notes from grown-ups (F-FEEDBACK-001), the console twin of the learner app's `EXPO_PUBLIC_NOTES_ENABLED`. */
   NEXT_PUBLIC_NOTES_ENABLED?: string;
+  /** The grown-up Learning Route page (Learning Route amendment section 6.1, F-APP-001's reader), default off. */
+  NEXT_PUBLIC_LEARNING_ROUTE_ENABLED?: string;
   NODE_ENV?: string;
 }
 
@@ -31,6 +33,7 @@ export function buildEnv(): ConsoleEnv {
     NEXT_PUBLIC_LECTURE_MODE: process.env.NEXT_PUBLIC_LECTURE_MODE,
     NEXT_PUBLIC_CONTENT_GATING_ENABLED: process.env.NEXT_PUBLIC_CONTENT_GATING_ENABLED,
     NEXT_PUBLIC_NOTES_ENABLED: process.env.NEXT_PUBLIC_NOTES_ENABLED,
+    NEXT_PUBLIC_LEARNING_ROUTE_ENABLED: process.env.NEXT_PUBLIC_LEARNING_ROUTE_ENABLED,
     NODE_ENV: process.env.NODE_ENV,
   };
 }
@@ -92,6 +95,16 @@ export function contentGatingEnabled(env: ConsoleEnv = buildEnv()): boolean {
  */
 export function notesEnabled(env: ConsoleEnv = buildEnv()): boolean {
   const raw = env.NEXT_PUBLIC_NOTES_ENABLED;
+  return raw === 'true' || raw === '1';
+}
+
+/**
+ * The grown-up Learning Route (AMENDMENTS-ROUTE-LEARNING-ROUTE section 6.1; F-APP-001 section 3.8
+ * names the reader): the stage list page `/teach/space/route` and every entry to it render only with
+ * `NEXT_PUBLIC_LEARNING_ROUTE_ENABLED` set to `'true'` or `'1'`. Off by default.
+ */
+export function learningRouteEnabled(env: ConsoleEnv = buildEnv()): boolean {
+  const raw = env.NEXT_PUBLIC_LEARNING_ROUTE_ENABLED;
   return raw === 'true' || raw === '1';
 }
 

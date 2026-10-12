@@ -539,6 +539,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.learningRoute.updated': [['Oct 11']],
   'console.learningRoute.notSynced': [['Mina']],
   'console.learningRoute.knownLine': [[1], [8]],
+  'console.learningRoute.stageRow': [[1, 'Hangul', 'Open'], [5, 'Dialogue', 'Coming later']],
   // F-FEEDBACK-001 FB-5: notes from grown-ups.
   'common.notes.teacherLabel': [['Sunday Class A']],
   'learner.notes.home.title': [['Grandma'], ['Your teacher · Sunday Class A']],

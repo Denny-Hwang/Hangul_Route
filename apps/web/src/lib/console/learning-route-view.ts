@@ -93,6 +93,8 @@ export interface LearningRouteStageRow {
    * stage reads the learner page's "A taste" (`learner.myRoute.state.taste`), as the wireframes and the app do.
    */
   stateWord: string;
+  /** The row's heading, "2. Words · Open" (`console.learningRoute.stageRow`): one dictionary string, never glued in code. */
+  text: string;
   /**
    * "Read everyday words and know what they mean." (`learner.myRoute.stage.canDo`); null for a stage coming later,
    * whose row stays quiet with its name and "Coming later" only (`design/screens/learning-route/stage-list.md`).
@@ -456,14 +458,17 @@ export function learningRouteView(input: LearningRouteInput): LearningRouteView 
     if (goalTag !== null && goalTag.stage === entry.stage) tags.push(goalTag.tag);
     if (entry.order === startStage) tags.push({ kind: 'start', text: lr.startTag(name) });
     const availability = stageAvailabilityOf(catalog, entry.stage);
+    const title = input.stageTitle(entry.stage);
+    const stateWord = entry.state === 'open' && availability === 'taste' ? m.learner.myRoute.state.taste : m.console.journey.state[entry.state];
     return {
       kind: 'stage',
       stage: entry.stage,
       order: entry.order,
       state: entry.state,
       availability,
-      title: input.stageTitle(entry.stage),
-      stateWord: entry.state === 'open' && availability === 'taste' ? m.learner.myRoute.state.taste : m.console.journey.state[entry.state],
+      title,
+      stateWord,
+      text: lr.stageRow(entry.order, title, stateWord),
       canDo: entry.state === 'later' ? null : canDoOf[entry.order as keyof typeof canDoOf],
       line: stageLineOf(entry, m),
       tags,

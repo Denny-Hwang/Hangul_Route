@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { DEFAULT_APP_URL, apiBaseUrl, appUrl, buildEnv, clerkPublishableKey, contentGatingEnabled, devAuthEnabled, lectureModeEnabled, notesEnabled, schoolConsentModeEnabled } from '../config';
+import { DEFAULT_APP_URL, apiBaseUrl, appUrl, buildEnv, clerkPublishableKey, contentGatingEnabled, devAuthEnabled, lectureModeEnabled, learningRouteEnabled, notesEnabled, schoolConsentModeEnabled } from '../config';
 
 describe('console config (F-CONSOLE-001 §3.2)', () => {
   it('apiBaseUrl trims and rejects the placeholder', () => {
@@ -105,5 +105,26 @@ describe('notesEnabled', () => {
     vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'true');
     expect(buildEnv().NEXT_PUBLIC_NOTES_ENABLED).toBe('true');
     expect(notesEnabled()).toBe(true);
+  });
+});
+
+/** Learning Route amendment section 6.1 (LR-8; F-APP-001's reader): the stage list page and its entries, default off. */
+describe('learningRouteEnabled', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('is off unless NEXT_PUBLIC_LEARNING_ROUTE_ENABLED is "true" or "1"', () => {
+    expect(learningRouteEnabled({})).toBe(false);
+    expect(learningRouteEnabled({ NEXT_PUBLIC_LEARNING_ROUTE_ENABLED: 'true' })).toBe(true);
+    expect(learningRouteEnabled({ NEXT_PUBLIC_LEARNING_ROUTE_ENABLED: '1' })).toBe(true);
+    for (const off of ['false', '0', 'enabled', 'TRUE', '', ' true']) expect(learningRouteEnabled({ NEXT_PUBLIC_LEARNING_ROUTE_ENABLED: off }), off).toBe(false);
+    expect(typeof learningRouteEnabled()).toBe('boolean');
+  });
+
+  it('reads the build value by its literal name', () => {
+    vi.stubEnv('NEXT_PUBLIC_LEARNING_ROUTE_ENABLED', 'true');
+    expect(buildEnv().NEXT_PUBLIC_LEARNING_ROUTE_ENABLED).toBe('true');
+    expect(learningRouteEnabled()).toBe(true);
   });
 });
