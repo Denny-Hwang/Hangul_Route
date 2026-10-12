@@ -5,6 +5,7 @@ import { storiesAll, storyFixtureIds } from '../content/stories';
 import type { SourcesRouteParams } from '../logic/story/source-link';
 import { addTelemetryListener, type TelemetryEvent } from '../platform/telemetry';
 import { useQuestRunStore } from '../store/quest-run-store';
+import type { RootStackParamList } from './types';
 
 /**
  * End-to-end entry to the replay reader, for fixture builds only
@@ -28,6 +29,8 @@ export interface StoryE2eHandle {
    * `resume` as a Keep reading card passes it (F-STORY-004 PR 4.4b).
    */
   openQuest(params: { questId: string; episodeId: string; resume?: boolean }): void;
+  /** A cell page by its params, as a stale link would open it (F-STORY-005 PR 5.5b: the empty card). */
+  openCellStories(params: RootStackParamList['CellStories']): void;
   /** Every bundled story with its tiers, so the e2e can smoke-read the real content too. */
   stories(): Array<{ id: string; levels: StoryLevel[]; fixture: boolean; traditional: boolean }>;
   /** `story.*`, `culture.*` and `journey.*` telemetry events `track()` accepted since the hook mounted (the e2e build sends none). */
@@ -55,6 +58,7 @@ export function StoryE2eHook(): null {
       openSources: (params) => navigation.navigate('StorySources', params),
       openQuest: ({ questId, episodeId, resume }) =>
         navigation.navigate('QuestPlayer', { questId, episodeId, ...(resume ? { resume: true } : {}) }),
+      openCellStories: (params) => navigation.navigate('CellStories', params),
       stories: () =>
         storiesAll.map((s) => ({
           id: s.id,

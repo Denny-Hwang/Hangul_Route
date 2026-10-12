@@ -54,7 +54,11 @@ export interface StoryTiles {
   profileId: string | undefined;
 }
 
-export function useStoryTiles(entries: readonly StoryIndexEntry[]): StoryTiles {
+/**
+ * `openEpisode` replaces the default open (`navigate('EpisodeDetail')`, right for the Library, whose stack
+ * holds no episode page); the cell page pushes instead, so Back returns to it.
+ */
+export function useStoryTiles(entries: readonly StoryIndexEntry[], openEpisode?: (episodeId: string) => void): StoryTiles {
   const messages = useMessages();
   const copy = useMemo(() => shelfCopy(messages), [messages]);
   const locale = useLocale();
@@ -96,9 +100,10 @@ export function useStoryTiles(entries: readonly StoryIndexEntry[]): StoryTiles {
         else navigation.navigate('PinEntry', gate.params);
         return;
       }
-      navigation.navigate('EpisodeDetail', { episodeId: item.entry.episodeId });
+      if (openEpisode) openEpisode(item.entry.episodeId);
+      else navigation.navigate('EpisodeDetail', { episodeId: item.entry.episodeId });
     },
-    [profileId, opensDirectly, navigation],
+    [profileId, opensDirectly, navigation, openEpisode],
   );
 
   return { items, openTile, isLocked, snap, bookmarks, copy, romanizationShown, profileId };

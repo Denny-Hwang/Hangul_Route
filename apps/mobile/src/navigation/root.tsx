@@ -31,6 +31,7 @@ import { CultureNotesScreen } from '../screens/story/CultureNotesScreen';
 import { PlacementScreen } from '../screens/placement/PlacementScreen';
 import { VocabTopicScreen } from '../screens/vocab/VocabTopicScreen';
 import { VocabTopicsScreen } from '../screens/vocab/VocabTopicsScreen';
+import { cellStoriesRouteId } from '../logic/story/cell-stories';
 import { STORY_FIXTURES_BUILD, StoryE2eHook } from './story-e2e';
 import { PlacementE2eHook } from './placement-e2e';
 import { VocabE2eHook, VocabQuestionE2eScreen } from './vocab-question-e2e';
@@ -41,6 +42,10 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const CardDetailModal = withOwnSafeArea(CardDetailScreen);
 const PinEntryModal = withOwnSafeArea(PinEntryScreen);
 const PinResetModal = withOwnSafeArea(PinResetScreen);
+
+// One stack entry per cell page: `navigate` goes back to that cell's page, or pushes it (F-STORY-005 §3.6).
+// `EpisodeDetail` has none (see `cellStoriesRouteId`): the cell page opens episodes with push or Back.
+const cellStoriesRouteIdOf = ({ params }: { params: RootStackParamList['CellStories'] }): string => cellStoriesRouteId(params);
 
 export function RootNavigator(): React.ReactElement {
   const profiles = useProfileStore((s) => s.profiles);
@@ -67,7 +72,7 @@ export function RootNavigator(): React.ReactElement {
         <Stack.Screen name="Onboarding" component={OnboardingStack} />
         <Stack.Screen name="Main" component={MainTabs} />
         <Stack.Screen name="EpisodeDetail" component={EpisodeDetailScreen} />
-        <Stack.Screen name="CellStories" component={CellStoriesScreen} />
+        <Stack.Screen name="CellStories" component={CellStoriesScreen} getId={cellStoriesRouteIdOf} />
         <Stack.Screen name="MyRoute" component={MyRouteScreen} />
         <Stack.Screen name="QuestPlayer" component={QuestPlayerScreen} />
         <Stack.Screen name="Minigame" component={MinigameScreen} />

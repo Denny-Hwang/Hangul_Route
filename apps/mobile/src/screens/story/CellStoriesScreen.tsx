@@ -1,11 +1,11 @@
 import { Body, Button, Card, Heading, Icon, Screen, Spacer, colors, radii, spacing } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { Pressable, View } from 'react-native';
 import { episodeById, episodesAll, stageByKey, themeByKey } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeEpisode, localizeStage, localizeTheme } from '../../logic/content-locale';
-import { cellStoriesOpenedEvent, cellStoriesView } from '../../logic/story/cell-stories';
+import { cellStoriesOpenedEvent, cellStoriesView, episodeOpenFromCellPage } from '../../logic/story/cell-stories';
 import { defaultStoryIndex } from '../../logic/story/story-index';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
@@ -31,7 +31,17 @@ export function CellStoriesScreen({ route, navigation }: Props): React.ReactElem
   const locale = useLocale();
 
   const view = useMemo(() => cellStoriesView({ stage, theme, episodes: episodesAll, index: defaultStoryIndex() }), [stage, theme]);
-  const tiles = useStoryTiles(view.entries);
+  // A tile or the lesson row: Back when the page under this one is that episode, else push (so Back returns here).
+  const openEpisode = useCallback(
+    (episodeId: string): void => {
+      const state = navigation.getState();
+      const under = state.routes[state.index - 1];
+      if (episodeOpenFromCellPage(under, episodeId) === 'back') navigation.goBack();
+      else navigation.push('EpisodeDetail', { episodeId });
+    },
+    [navigation],
+  );
+  const tiles = useStoryTiles(view.entries, openEpisode);
   const grid = useTileGridWidth();
 
   const stageDef = stageByKey(stage);
@@ -84,7 +94,7 @@ export function CellStoriesScreen({ route, navigation }: Props): React.ReactElem
             <Spacer size="lg" />
             <CellLinkRow
               label={m.lessonRow(lesson.titleEn)}
-              onPress={() => navigation.navigate('EpisodeDetail', { episodeId: lesson.id })}
+              onPress={() => openEpisode(lesson.id)}
               testID="cell-stories-lesson"
             />
           </>

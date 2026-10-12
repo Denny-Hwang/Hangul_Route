@@ -36,6 +36,33 @@ export function cellStoriesView(i: {
   };
 }
 
+/**
+ * The back history through the cell page (review of PR 5.5b). React Navigation 6's `navigate` goes back to
+ * any earlier route of the same name and replaces its params, so a tile that navigated to `EpisodeDetail`
+ * turned the lesson page under the cell page into the story page and dropped the cell page from Back.
+ *
+ * - `CellStories` has a route id (`getId`, one entry per cell; the door is not part of it): the lesson
+ *   row and a story's pill return to that cell's page when it is in the stack, and push it otherwise.
+ * - `EpisodeDetail` has no id (Culture notes pushes a second copy of a page on purpose, and an id would
+ *   move the first copy instead), so the cell page opens episodes with `episodeOpenFromCellPage`.
+ */
+export function cellStoriesRouteId(params: { stage: StageKey; theme: ThemeKey }): string {
+  return `${params.stage}:${params.theme}`;
+}
+
+/**
+ * How the cell page opens an episode (a tile or its lesson row): Back when the page right under it is
+ * that same episode (lesson > row > lesson row; story > pill > that story's tile), so the stack never
+ * grows without end; otherwise push, so Back returns to the cell page.
+ */
+export function episodeOpenFromCellPage(
+  under: { name: string; params?: object } | undefined,
+  episodeId: string,
+): 'back' | 'push' {
+  const params = under?.params as { episodeId?: unknown } | undefined;
+  return under?.name === 'EpisodeDetail' && params?.episodeId === episodeId ? 'back' : 'push';
+}
+
 /** Sent once each time the cell page opens: ids and counts only (§3.11). */
 export function cellStoriesOpenedEvent(
   view: Pick<CellStoriesView, 'stage' | 'theme' | 'entries'>,

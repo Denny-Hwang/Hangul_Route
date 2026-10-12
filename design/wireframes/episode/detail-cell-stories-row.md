@@ -2,7 +2,7 @@
 
 Spec: `docs/specs/F-STORY-005-episode-catalogue-grid.md` §3.6 (lesson page row), §3.12; base page `episode/detail.md`; locked-card earn hints of the same page in F-STORY-006 (`library/earn-hints.md`)
 Audience: anyone learning Hangul, any age (CLAUDE.md §1). The row is an invitation beside the lesson, never a requirement.
-Code: planned in PR 5.5b inside `apps/mobile/src/screens/episode/EpisodeDetailView.tsx` (the body extracted by F-LAYOUT-001 PR 4, so the row also shows in the Journey detail pane); count from `entriesForCell` (PR 5.3). Brief: `design/brief/screens/06-episode-detail.md` (stories row section).
+Code: built (PR 5.5b) inside `apps/mobile/src/screens/episode/EpisodeDetailView.tsx` with `screens/story/CellLinkRow.tsx` and `lessonRowCount` (`logic/story/cell-stories.ts`); a Stage 5 book page gets the same row with the first book (PR 5.6) (the body extracted by F-LAYOUT-001 PR 4, so the row also shows in the Journey detail pane); count from `entriesForCell` (PR 5.3). Brief: `design/brief/screens/06-episode-detail.md` (stories row section).
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary or ghost, `n >` a plain count with a chevron.
 
 Promoted by F-STORY-005 PR 5.0 from panel C of the one-file draft (`journey/grid-with-stories.md`).

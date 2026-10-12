@@ -1,9 +1,10 @@
 import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import type { Episode } from '@hangul-route/content-schema';
 import { TELEMETRY_EVENT_NAMES } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { cellStoriesOpenedEvent, cellStoriesView, homeCellLink, lessonRowCount } from '../cell-stories';
+import { cellStoriesOpenedEvent, cellStoriesRouteId, cellStoriesView, episodeOpenFromCellPage, homeCellLink, lessonRowCount } from '../cell-stories';
 import { buildStoryIndex } from '../story-index';
 import { bookEpisode, questId, shelfEpisode, shelfIndex, story, storyQuest } from './shelf-fixture';
 
@@ -113,6 +114,148 @@ describe('homeCellLink', () => {
   });
 });
 
+/**
+ * The back history through the cell page (review of PR 5.5b). React Navigation 6's `navigate` goes back
+ * to any earlier route of the same name and replaces its params, so "lesson > stories row > tile" turned
+ * the lesson page into the story page and dropped the cell page. This drives the app's own StackRouter
+ * (`@react-navigation/routers`, reached through native > core) the way the screens call it.
+ */
+describe('the back history through the cell page', () => {
+  type Params = Record<string, unknown> | undefined;
+  interface NavRoute {
+    name: string;
+    params?: Params;
+  }
+  interface NavState {
+    index: number;
+    routes: NavRoute[];
+  }
+  interface Router {
+    getInitialState(o: object): NavState;
+    getStateForAction(s: NavState, a: object, o: object): NavState | null;
+  }
+  const requireFrom = (from: string) => createRequire(from);
+  const native = requireFrom(__filename).resolve('@react-navigation/native');
+  const core = requireFrom(native).resolve('@react-navigation/core');
+  const routers = requireFrom(core)('@react-navigation/routers') as {
+    StackRouter: (o: object) => Router;
+    CommonActions: { navigate: (name: string, params?: object) => object; goBack: () => object };
+    StackActions: { push: (name: string, params?: object) => object };
+  };
+  const routeNames = ['Main', 'EpisodeDetail', 'CellStories', 'CultureNotes'];
+
+  /** `fixed`: the root stack as built (a `CellStories` id, the cell page's own opener); else the first cut. */
+  function stack(fixed: boolean) {
+    const router = routers.StackRouter({});
+    const routeGetIdList = fixed
+      ? { CellStories: ({ params }: { params?: Params }) => cellStoriesRouteId(params as { stage: 'stage1'; theme: 'letters' }) }
+      : {};
+    const options = { routeNames, routeParamList: {}, routeGetIdList };
+    let state = router.getInitialState(options);
+    const apply = (action: object): void => {
+      state = router.getStateForAction(state, action, options) ?? state;
+    };
+    return {
+      navigate: (name: string, params?: object) => apply(routers.CommonActions.navigate(name, params)),
+      push: (name: string, params?: object) => apply(routers.StackActions.push(name, params)),
+      back: () => apply(routers.CommonActions.goBack()),
+      /** A tile or the lesson row on the cell page (`CellStoriesScreen.openEpisode`). */
+      openFromCell: (episodeId: string) => {
+        if (!fixed) return apply(routers.CommonActions.navigate('EpisodeDetail', { episodeId }));
+        if (episodeOpenFromCellPage(state.routes[state.index - 1], episodeId) === 'back') apply(routers.CommonActions.goBack());
+        else apply(routers.StackActions.push('EpisodeDetail', { episodeId }));
+      },
+      trail: () => state.routes.map((r) => `${r.name}${r.params ? `(${Object.values(r.params).slice(0, 2).join('/')})` : ''}`),
+    };
+  }
+  const LESSON = { episodeId: 'episode:s1-letters' };
+  const STORY = { episodeId: 'episode:shelf-hangeul-day' };
+  const CELL = { stage: 'stage1', theme: 'letters', source: 'lesson-row' };
+
+  it('one cell page per cell (the door is not part of the id)', () => {
+    expect(cellStoriesRouteId({ stage: 'stage2', theme: 'life' })).toBe('stage2:life');
+  });
+
+  it('the cell page goes Back only to the same episode right under it, else pushes', () => {
+    expect(episodeOpenFromCellPage({ name: 'EpisodeDetail', params: LESSON }, LESSON.episodeId)).toBe('back');
+    expect(episodeOpenFromCellPage({ name: 'EpisodeDetail', params: STORY }, LESSON.episodeId)).toBe('push');
+    expect(episodeOpenFromCellPage({ name: 'Main' }, LESSON.episodeId)).toBe('push');
+    expect(episodeOpenFromCellPage(undefined, LESSON.episodeId)).toBe('push');
+  });
+
+  it('the first cut: a tile on the cell page replaced the lesson page (the bug)', () => {
+    const nav = stack(false);
+    nav.navigate('EpisodeDetail', LESSON);
+    nav.navigate('CellStories', CELL);
+    nav.openFromCell(STORY.episodeId);
+    expect(nav.trail()).toEqual(['Main', 'EpisodeDetail(episode:shelf-hangeul-day)']);
+  });
+
+  it('lesson > stories row > tile: Back shows the cell page, then the lesson page', () => {
+    const nav = stack(true);
+    nav.navigate('EpisodeDetail', LESSON);
+    nav.navigate('CellStories', CELL);
+    nav.openFromCell(STORY.episodeId);
+    expect(nav.trail()).toEqual([
+      'Main',
+      'EpisodeDetail(episode:s1-letters)',
+      'CellStories(stage1/letters)',
+      'EpisodeDetail(episode:shelf-hangeul-day)',
+    ]);
+    nav.back();
+    expect(nav.trail().at(-1)).toBe('CellStories(stage1/letters)');
+    nav.back();
+    expect(nav.trail().at(-1)).toBe('EpisodeDetail(episode:s1-letters)');
+  });
+
+  it("the cell page's lesson row and a story's pill go back to the page they came from, so the stack never grows", () => {
+    const nav = stack(true);
+    nav.navigate('EpisodeDetail', LESSON);
+    nav.navigate('CellStories', CELL);
+    nav.openFromCell(LESSON.episodeId);
+    expect(nav.trail()).toEqual(['Main', 'EpisodeDetail(episode:s1-letters)']);
+
+    nav.navigate('CellStories', CELL);
+    nav.openFromCell(STORY.episodeId);
+    nav.navigate('CellStories', { ...CELL, source: 'story-pill' });
+    expect(nav.trail()).toEqual(['Main', 'EpisodeDetail(episode:s1-letters)', 'CellStories(stage1/letters)']);
+  });
+
+  it('Library story page > pill > cell page > lesson row keeps the story page under it', () => {
+    const nav = stack(true);
+    nav.navigate('EpisodeDetail', STORY);
+    nav.navigate('CellStories', { ...CELL, source: 'story-pill' });
+    nav.openFromCell(LESSON.episodeId);
+    expect(nav.trail()).toEqual([
+      'Main',
+      'EpisodeDetail(episode:shelf-hangeul-day)',
+      'CellStories(stage1/letters)',
+      'EpisodeDetail(episode:s1-letters)',
+    ]);
+  });
+
+  it("a cell page lower in the stack is not reused for another cell", () => {
+    const nav = stack(true);
+    nav.navigate('CellStories', { stage: 'stage2', theme: 'letters', source: 'cell' });
+    nav.openFromCell(STORY.episodeId);
+    nav.navigate('CellStories', CELL);
+    expect(nav.trail()).toEqual(['Main', 'CellStories(stage2/letters)', 'EpisodeDetail(episode:shelf-hangeul-day)', 'CellStories(stage1/letters)']);
+  });
+
+  it("EpisodeDetail keeps no id: Culture notes' push of the same page still stacks a second copy", () => {
+    const nav = stack(true);
+    nav.navigate('EpisodeDetail', STORY);
+    nav.push('CultureNotes', { storyId: 'story:hangeul-day' });
+    nav.push('EpisodeDetail', STORY);
+    expect(nav.trail()).toEqual([
+      'Main',
+      'EpisodeDetail(episode:shelf-hangeul-day)',
+      'CultureNotes(story:hangeul-day)',
+      'EpisodeDetail(episode:shelf-hangeul-day)',
+    ]);
+  });
+});
+
 describe('cell page sources (screens are covered by Playwright; these pin the wiring)', () => {
   const SRC = join(__dirname, '..', '..', '..');
   const read = (rel: string): string => readFileSync(join(SRC, rel), 'utf8');
@@ -126,14 +269,20 @@ describe('cell page sources (screens are covered by Playwright; these pin the wi
     expect(screen).not.toMatch(/tone="primary"/);
   });
 
-  it('the route and its three doors', () => {
-    expect(read('navigation/types.ts')).toContain('CellStories: { stage: StageKey; theme: ThemeKey; source: CellStoriesSource };');
-    expect(read('navigation/root.tsx')).toContain('<Stack.Screen name="CellStories" component={CellStoriesScreen} />');
-    expect(read('screens/journey/JourneyScreen.tsx')).toContain("navigation.navigate('CellStories', { stage, theme, source: 'cell' })");
+  it('the route, its id and its three doors', () => {
+    expect(read('navigation/types.ts')).toMatch(/CellStories: \{[^}]*source: CellStoriesSource/);
+    const root = read('navigation/root.tsx');
+    expect(root).toMatch(/name="CellStories"[^>]*getId=\{cellStoriesRouteIdOf\}/);
+    expect(root).not.toMatch(/name="EpisodeDetail"[^>]*getId/);
+    // The cell page opens episodes with push or Back (episodeOpenFromCellPage), never navigate.
+    expect(screen).toContain('episodeOpenFromCellPage(');
+    expect(screen).toContain("navigation.push('EpisodeDetail'");
+    expect(screen).not.toContain("navigate('EpisodeDetail'");
+    expect(read('screens/journey/JourneyScreen.tsx')).toMatch(/'CellStories',[^)]*source: 'cell'/);
     const detail = read('screens/episode/EpisodeDetailView.tsx');
-    expect(detail).toContain("onOpenCellStories(episode.stage, episode.theme, 'lesson-row')");
-    expect(detail).toContain("onOpenCellStories(stage, theme, 'story-pill')");
-    expect(read('screens/episode/StoryEpisodeDetail.tsx')).toContain('homeCellLink(sourceEntries)');
+    expect(detail).toMatch(/onOpenCellStories\([^)]*'lesson-row'\)/);
+    expect(detail).toMatch(/onOpenCellStories\([^)]*'story-pill'\)/);
+    expect(read('screens/episode/StoryEpisodeDetail.tsx')).toContain('homeCellLink(');
   });
 
   it('the Library sections and the cell page share one tile grid', () => {
