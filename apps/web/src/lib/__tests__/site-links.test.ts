@@ -52,6 +52,14 @@ describe('grownUpOrigin', () => {
     expect(grownUpOrigin({ CONSOLE_ORIGIN: 'not a url' })).toBe(SITE_DEFAULT_CONSOLE_ORIGIN);
   });
 
+  it('takes plain http only on this machine, so Sign in links never go out over plaintext', () => {
+    expect(grownUpOrigin({ CONSOLE_ORIGIN: 'http://app.hangulroute.com' })).toBe(SITE_DEFAULT_CONSOLE_ORIGIN);
+    expect(grownUpOrigin({ CONSOLE_ORIGIN: 'http://example.com:8080/' })).toBe(SITE_DEFAULT_CONSOLE_ORIGIN);
+    expect(grownUpOrigin({ CONSOLE_ORIGIN: 'http://localhost:3000/' })).toBe('http://localhost:3000');
+    expect(grownUpOrigin({ CONSOLE_ORIGIN: 'http://127.0.0.1:3000' })).toBe('http://127.0.0.1:3000');
+    expect(grownUpOrigin({ CONSOLE_ORIGIN: 'http://[::1]:3000' })).toBe('http://[::1]:3000');
+  });
+
   it('reads the build variable by default', () => {
     expect(grownUpOrigin()).toBe('');
     vi.stubEnv('CONSOLE_ORIGIN', 'https://app.hangulroute.com/');
@@ -162,5 +170,49 @@ describe('next.config.js passes CONSOLE_ORIGIN to server and client code', () =>
   it('inlines an empty string when the variable is not set (same origin)', () => {
     vi.stubEnv('CONSOLE_ORIGIN', undefined);
     expect(freshConfig().env).toEqual({ CONSOLE_ORIGIN: '' });
+  });
+
+  it('inlines a blank value as it is (grownUpOrigin reads it as unset)', () => {
+    vi.stubEnv('CONSOLE_ORIGIN', '  ');
+    expect(freshConfig().env).toEqual({ CONSOLE_ORIGIN: '  ' });
+  });
+
+  it.each(['app.hangulroute.com', 'http://app.hangulroute.com', 'not a url', 'javascript:alert(1)'])(
+    'fails the build for %j, so a mistyped origin never ships links that silently stay on the site',
+    (value) => {
+      vi.stubEnv('CONSOLE_ORIGIN', value);
+      expect(() => freshConfig()).toThrow(/CONSOLE_ORIGIN/);
+    },
+  );
+
+  // next.config.js is CommonJS and cannot import this module, so it repeats the rule. Both must agree: a
+  // non-blank value fails the build exactly when grownUpOrigin would ignore it.
+  it.each([
+    'https://app.hangulroute.com',
+    ' https://app.hangulroute.com/ ',
+    'https://app.hangulroute.com/teach?x=1#y',
+    'http://localhost:3000/',
+    'http://127.0.0.1:3000',
+    'http://[::1]:3000',
+    'app.hangulroute.com',
+    'http://app.hangulroute.com',
+    'ftp://app.hangulroute.com',
+    'javascript:alert(1)',
+    'not a url',
+  ])('agrees with grownUpOrigin on %j', (value) => {
+    vi.stubEnv('CONSOLE_ORIGIN', value);
+    const ignored = grownUpOrigin({ CONSOLE_ORIGIN: value }) === SITE_DEFAULT_CONSOLE_ORIGIN;
+    if (ignored) expect(() => freshConfig()).toThrow(/CONSOLE_ORIGIN/);
+    else expect(freshConfig().env).toEqual({ CONSOLE_ORIGIN: value });
+  });
+});
+
+describe('turbo passes CONSOLE_ORIGIN to the site build', () => {
+  // Turbo runs in strict env mode: a variable that is not NEXT_PUBLIC_ and not listed is dropped from the task
+  // and left out of its cache key, so `pnpm run build` would inline '' or replay an out/ built for another value.
+  it('lists the variable on the @hangul-route/web#build task', () => {
+    const load = createRequire(import.meta.url);
+    const turbo = load('../../../../../turbo.json') as { tasks: Record<string, { env?: string[] }> };
+    expect(turbo.tasks['@hangul-route/web#build']?.env).toContain('CONSOLE_ORIGIN');
   });
 });

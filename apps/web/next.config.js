@@ -1,5 +1,36 @@
 const path = require('node:path');
 
+/** Hosts where a plain-http CONSOLE_ORIGIN is allowed: this machine only. */
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
+
+/**
+ * CONSOLE_ORIGIN as the build inlines it: unset = '', a blank value as it is (both mean the site's own
+ * origin). Any other value must be an https URL (plain http only on LOCAL_HOSTS), the rule of grownUpOrigin in
+ * src/lib/site-links.ts, which this CommonJS file cannot import; site-links.test.ts checks they agree. A value
+ * that grownUpOrigin would ignore (the likeliest typo leaves out "https://") fails the build, and a failed
+ * build keeps the previous deployment live, instead of shipping Sign in links that silently stay on the site.
+ * @param {string | undefined} raw
+ * @returns {string}
+ */
+function consoleOrigin(raw) {
+  const value = raw ?? '';
+  const trimmed = value.trim();
+  if (!trimmed) return value;
+  let url = null;
+  try {
+    url = new URL(trimmed);
+  } catch {
+    url = null;
+  }
+  const allowed = url !== null && (url.protocol === 'https:' || (url.protocol === 'http:' && LOCAL_HOSTS.has(url.hostname)));
+  if (!allowed) {
+    throw new Error(
+      `CONSOLE_ORIGIN must be an https origin such as https://app.hangulroute.com (plain http only for localhost), got ${JSON.stringify(value)}. Unset it to keep grown-up links on this site.`,
+    );
+  }
+  return value;
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -7,9 +38,9 @@ const nextConfig = {
   // same shape as the learner app. No server runtime, no adapter.
   output: 'export',
   images: { unoptimized: true },
-  // F-APP-001's site build variable: where the site's grown-up links point (lib/site-links.ts,
-  // F-SITE-002 §3.8). Inlined in server and client code alike; unset = the site's own origin.
-  env: { CONSOLE_ORIGIN: process.env.CONSOLE_ORIGIN ?? '' },
+  // The site build variable of F-SITE-002 §3.8: where the site's grown-up links point (lib/site-links.ts).
+  // Inlined in server and client code alike; unset = the site's own origin.
+  env: { CONSOLE_ORIGIN: consoleOrigin(process.env.CONSOLE_ORIGIN) },
   transpilePackages: [
     '@hangul-route/content-schema',
     '@hangul-route/shared-types',
