@@ -27,7 +27,26 @@ export const ROUTES = {
    */
   learnerRoute: (spaceId: string, learnerId: string, kind?: SpaceKind) =>
     `/${kind === 'family' ? 'parent' : 'teach'}/space/route?id=${encodeURIComponent(spaceId)}&learner=${encodeURIComponent(learnerId)}`,
+  /**
+   * The notes page of a space (F-FEEDBACK-001 section 6.13): a family under `/parent`, a class or a
+   * school under `/teach`. `compose` opens the composer sub-view, `learner` preselects an opaque
+   * `profile:` id, `quest` prefills a catalogue quest id, `tab` picks the family tab. Never a name.
+   */
+  spaceNotes: (id: string, kind: SpaceKind, opts: SpaceNotesOptions = {}) =>
+    `${kind === 'family' ? '/parent' : '/teach'}/space/notes?id=${encodeURIComponent(id)}` +
+    `${opts.compose ? '&compose=1' : ''}` +
+    `${opts.learner ? `&learner=${encodeURIComponent(opts.learner)}` : ''}` +
+    `${opts.quest ? `&quest=${encodeURIComponent(opts.quest)}` : ''}` +
+    `${opts.tab ? `&tab=${opts.tab}` : ''}`,
 } as const;
+
+/** The options of `ROUTES.spaceNotes`. */
+export interface SpaceNotesOptions {
+  learner?: string;
+  compose?: boolean;
+  quest?: string;
+  tab?: 'received' | 'sent';
+}
 
 /**
  * The console is a static export (one assets-only Worker, no server), so a space

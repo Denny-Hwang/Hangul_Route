@@ -32,6 +32,7 @@ import type { WordArtFamily } from '../types';
  * waits for 8) and `nature-flower` (nature waits for 7).
  * Batch W-4 drew the other eight animals and registered the twelve body
  * parts, so animal and body left the map.
+ * Batch W-5 drew family, school and nature, so they left the map.
  */
 interface Awaiting {
   /** The PR that draws the family (F-VOC-002 §6). */
@@ -41,9 +42,6 @@ interface Awaiting {
 }
 
 const AWAITING_ART: Readonly<Partial<Record<WordArtFamily, Awaiting>>> = {
-  family: { batch: 'W-5', missing: 12 },
-  school: { batch: 'W-5', missing: 10 },
-  nature: { batch: 'W-5', missing: 7 },
   travel: { batch: 'W-6', missing: 11 },
   sport: { batch: 'W-6', missing: 11 },
   culture: { batch: 'W-6', missing: 7 },

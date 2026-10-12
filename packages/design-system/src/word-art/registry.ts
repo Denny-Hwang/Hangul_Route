@@ -95,6 +95,8 @@ const META: WordArtMetaOverrides = {
   ...Object.fromEntries(COUNT_VALUES.map((n) => [`count-${n}`, { status: 'review' }])),
   // batch W-4: the other animals and the body parts, approved by the batch review that stands in for the owner's (2026-10-11)
   ...Object.fromEntries([...['puppy', 'rabbit', 'bird', 'fish', 'duck', 'fox', 'monkey', 'butterfly'].map((a) => `animal-${a}`), ...BODY_PARTS.map((p) => `body-${p}`)].map((k) => [k, { status: 'approved' }])),
+  // batch W-5: family, school and nature, approved by the batch review that stands in for the owner's (2026-10-11)
+  ...Object.fromEntries([...['mom', 'dad', 'grandma', 'grandpa', 'eonni', 'nuna', 'oppa', 'hyeong', 'dongsaeng', 'baby', 'family', 'me'].map((k) => `family-${k}`), ...['school', 'teacher', 'friend', 'pencil', 'bag', 'notebook', 'eraser', 'desk', 'scissors', 'board'].map((k) => `school-${k}`), ...['sky', 'sun', 'star', 'tree', 'rain', 'snow', 'river'].map((k) => `nature-${k}`)].map((k) => [k, { status: 'approved' }])),
 };
 
 /** One glyph file: the family it holds, and its glyphs by key. */
