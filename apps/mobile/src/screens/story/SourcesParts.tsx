@@ -285,7 +285,8 @@ export function FactCard({
   onToggleKorean: () => void;
   noteFor: (sourceIndex: number) => string | null;
   onCopy: (source: SourceView, sourceIndex: number) => void;
-  onOpen: (source: SourceView, sourceIndex: number) => void;
+  /** `null`: links are copy-only (All lessons, F-BROWSE-001 §4.7), so no Open action shows. */
+  onOpen: ((source: SourceView, sourceIndex: number) => void) | null;
   onLayout: (e: LayoutChangeEvent) => void;
 }): React.ReactElement {
   const id = `story-sources-fact-${fact.id}`;
@@ -319,7 +320,7 @@ export function FactCard({
                 source={source}
                 note={noteFor(i)}
                 onCopy={() => onCopy(source, i)}
-                onOpen={source.openable ? () => onOpen(source, i) : null}
+                onOpen={source.openable && onOpen !== null ? () => onOpen(source, i) : null}
                 testID={`${id}-source-${i}`}
               />
             </View>
