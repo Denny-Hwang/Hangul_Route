@@ -81,3 +81,30 @@ describe('old upload bodies and backup files still parse', () => {
     expect(BackupFileSchema.parse({ ...file, snapshot: { ...legacy, stageDoneAt: latch } }).snapshot.stageDoneAt).toEqual(latch);
   });
 });
+
+describe('ProgressSnapshotSchema.questDoneAt (F-REPORT-001 section 3.3.1, additive quest latch)', () => {
+  const quests = { 'letters-q1': '2026-10-11T09:30:00.000Z', 'letters-q2': '2026-10-12T18:05:00.000Z' };
+
+  it('parses a snapshot stored before the field without inventing it', () => {
+    expect(ProgressSnapshotSchema.parse(legacy)).not.toHaveProperty('questDoneAt');
+  });
+
+  it('round-trips quest id to ISO time entries, an empty record included', () => {
+    expect(ProgressSnapshotSchema.parse({ ...legacy, questDoneAt: quests }).questDoneAt).toEqual(quests);
+    expect(ProgressSnapshotSchema.parse({ ...legacy, questDoneAt: {} }).questDoneAt).toEqual({});
+  });
+
+  it('rejects a malformed value', () => {
+    for (const bad of [null, [], 'letters-q1', { 'letters-q1': 1 }, { 'letters-q1': null }]) {
+      expect(ProgressSnapshotSchema.safeParse({ ...legacy, questDoneAt: bad }).success).toBe(false);
+    }
+  });
+
+  it('is optional in the legacy-tolerant ProgressSnapshot type and carried by an upload body', () => {
+    const old: ProgressSnapshot = legacy;
+    expect(old.questDoneAt ?? {}).toEqual({});
+    const body = SnapshotPutSchema.parse({ baseRev: 0, snapshot: { ...legacy, questDoneAt: quests }, summary, schemaVer: 1, contentVer: '2026.10' });
+    expect(body.snapshot.questDoneAt).toEqual(quests);
+    expect(SnapshotPutSchema.parse({ baseRev: 0, snapshot: legacy, summary, schemaVer: 1, contentVer: '2026.10' }).snapshot).not.toHaveProperty('questDoneAt');
+  });
+});
