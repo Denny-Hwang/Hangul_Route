@@ -91,6 +91,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.story.check.pictureOptionLabel': [['Rice cake soup']],
   'learner.story.recap.wordsLabel': [[1], [3]],
   'learner.story.recap.hearWord': [['seollal']],
+  'learner.story.recap.revealWord': [['x']],
   'learner.story.sequence.positionLabel': [[1, 4]],
   'learner.story.sequence.slotLabel': [[2, 4], [2, 4, 'Eat']],
   'learner.story.results.cultureNote': [['Seollal']],
