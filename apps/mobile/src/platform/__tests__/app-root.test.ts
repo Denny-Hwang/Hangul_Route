@@ -1,12 +1,24 @@
-import { describe, expect, it } from 'vitest';
-import { pickRoot as pickNativeRoot } from '../app-root';
-import { pickRoot } from '../app-root.web';
+import { CONSOLE_SESSION_KEY, UNLOCK_SESSION_KEY } from '@hangul-route/content-schema';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('../storage', () => ({
+  readJson: vi.fn(async () => null),
+  readJsonStrict: vi.fn(async () => null),
+  writeJson: vi.fn(async () => undefined),
+  removeKey: vi.fn(async () => undefined),
+}));
+vi.mock('../telemetry', () => ({ track: vi.fn(async () => true) }));
+vi.mock('../locale', () => ({ deviceLanguages: () => [], takeLangHandoff: () => null, setDocumentLang: () => undefined }));
+
+import * as nativeRoot from '../app-root';
+import { bootRoot, consumeBootIntent, peekBootIntent, pickRoot, type RootEnv } from '../app-root.web';
+import { LEAVE_TELEMETRY_WAIT_MS, type SessionArea } from '../grown-up-handoff.web';
+import type { TelemetryEvent } from '../telemetry';
 
 /**
- * F-BROWSE-001 §4.1 (BR-3): the root chooser picks the browse root for
- * `/browse` and `/browse/...` before `App` mounts. F-TCH-004 PR 6
- * (`/present`) and F-APP-001 A-6 (the grown-up bounce) add their branches
- * here; until then those paths still get the learner app, as today.
+ * The root chooser of the learner web build (F-APP-001 sections 3.4, 3.9 and 3.11; F-BROWSE-001
+ * section 4.1), chosen in `index.ts` before `App` mounts. Order: `/present` (F-TCH-004 PR 6, not
+ * yet in), `/browse`, the grown-up bounce, else the app.
  */
 describe('pickRoot (web)', () => {
   it('chooses the browse root for /browse and every path under it', () => {
@@ -15,17 +27,296 @@ describe('pickRoot (web)', () => {
     }
   });
 
-  it('keeps the learner app everywhere else', () => {
-    for (const pathname of ['/', '', '/browsex', '/browser', '/Browse', '/x/browse', '/present', '/teach', '/parent/space', '/index.html']) {
+  it('chooses the grown-up bounce for a grown-up path that is not its own persona entry', () => {
+    for (const pathname of ['/teach/zzz', '/teach/space', '/parent/space', '/parent/mina', '/signin/x', '/start', '/start/x', '/account/billing', '/teach.html']) {
+      expect(pickRoot({ pathname }), pathname).toBe('grown-up-bounce');
+    }
+  });
+
+  it('keeps the learner app everywhere else, the persona entries included (no bounce loop on a host without them)', () => {
+    for (const pathname of ['/', '', '/browsex', '/browser', '/Browse', '/x/browse', '/present', '/teach', '/teach/', '/parent', '/signin', '/teacher', '/index.html']) {
       expect(pickRoot({ pathname }), pathname).toBe('app');
     }
   });
 });
 
 describe('pickRoot (native stub)', () => {
-  it('always chooses the learner app: native builds have no /browse root (OD-10)', () => {
-    expect(pickNativeRoot({ pathname: '/browse' })).toBe('app');
-    expect(pickNativeRoot({ pathname: '/' })).toBe('app');
-    expect(pickNativeRoot()).toBe('app');
+  it('always chooses the learner app: native builds have no other root (OD-6, F-BROWSE-001 OD-10)', () => {
+    expect(nativeRoot.pickRoot({ pathname: '/browse' })).toBe('app');
+    expect(nativeRoot.pickRoot({ pathname: '/teach/zzz' })).toBe('app');
+    expect(nativeRoot.pickRoot({ pathname: '/' })).toBe('app');
+    expect(nativeRoot.pickRoot()).toBe('app');
+  });
+
+  it('boots the learner app with no intent and nothing to clear', () => {
+    expect(nativeRoot.bootRoot()).toBe('app');
+    expect(nativeRoot.peekBootIntent()).toBeNull();
+    expect(() => nativeRoot.consumeBootIntent()).not.toThrow();
+  });
+});
+
+function memoryArea(initial: Record<string, string>): SessionArea & { data: Map<string, string> } {
+  const data = new Map(Object.entries(initial));
+  return {
+    data,
+    getItem: (key) => data.get(key) ?? null,
+    setItem: (key, value) => {
+      data.set(key, value);
+    },
+    removeItem: (key) => {
+      data.delete(key);
+    },
+  };
+}
+
+interface Harness {
+  env: RootEnv;
+  area: ReturnType<typeof memoryArea>;
+  log: string[];
+  events: TelemetryEvent[];
+}
+
+function harness(url: string, options: { replaceStateThrows?: boolean } = {}): Harness {
+  const parsed = new URL(url, 'https://app.hangulroute.com');
+  const area = memoryArea({ [UNLOCK_SESSION_KEY]: '{"v":1}', [CONSOLE_SESSION_KEY]: '{"token":"t"}', 'hr:browse:pass': '{}' });
+  const log: string[] = [];
+  const events: TelemetryEvent[] = [];
+  const env: RootEnv = {
+    location: {
+      pathname: parsed.pathname,
+      search: parsed.search,
+      hash: parsed.hash,
+      replace: (to) => {
+        log.push(`replace ${to}`);
+      },
+    },
+    history: {
+      state: { s: 1 },
+      replaceState: (state, _unused, to) => {
+        if (options.replaceStateThrows) throw new Error('SecurityError');
+        log.push(`replaceState ${JSON.stringify(state)} ${to}`);
+      },
+    },
+    area: () => area,
+    track: async (event) => {
+      log.push(`track ${event.name}`);
+      events.push(event);
+      return true;
+    },
+    wait: () => new Promise(() => undefined),
+  };
+  return { env, area, log, events };
+}
+
+const flush = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
+
+describe('bootRoot (web): what each root does before it mounts', () => {
+  afterEach(() => {
+    consumeBootIntent();
+    vi.unstubAllGlobals();
+  });
+
+  it('the app root removes the grown-up unlock and the console session of this tab, nothing else', () => {
+    const h = harness('/');
+    expect(bootRoot(h.env)).toBe('app');
+    expect([...h.area.data.keys()]).toEqual(['hr:browse:pass']);
+    expect(h.log).toEqual([]);
+    expect(peekBootIntent()).toBeNull();
+  });
+
+  it('a gate=grown-up intent keeps both keys, leaves the address, and waits for the navigator', () => {
+    const h = harness('/?gate=grown-up&next=%2Fparent');
+    expect(bootRoot(h.env)).toBe('app');
+    expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(true);
+    expect(h.area.data.has(CONSOLE_SESSION_KEY)).toBe(true);
+    expect(h.log).toEqual(['replaceState {"s":1} /']);
+    expect(peekBootIntent()).toEqual({ kind: 'grown-up', next: '/parent' });
+    expect(peekBootIntent()).toEqual({ kind: 'grown-up', next: '/parent' });
+    consumeBootIntent();
+    expect(peekBootIntent()).toBeNull();
+  });
+
+  it('keeps the lang hand-off, the other keys and the hash in the address', () => {
+    const h = harness('/?lang=es&gate=grown-up&next=%2Fteach%2Fhome&from=site#top');
+    bootRoot(h.env);
+    expect(h.log).toEqual(['replaceState {"s":1} /?lang=es&from=site#top']);
+    expect(peekBootIntent()).toEqual({ kind: 'grown-up', next: '/teach/home' });
+  });
+
+  it('a gate intent whose next is refused is no intent: the keys are cleared and the query still goes', () => {
+    const h = harness('/?gate=grown-up&next=https%3A%2F%2Fevil.example');
+    expect(bootRoot(h.env)).toBe('app');
+    expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(false);
+    expect(h.area.data.has(CONSOLE_SESSION_KEY)).toBe(false);
+    expect(h.log).toEqual(['replaceState {"s":1} /']);
+    expect(peekBootIntent()).toBeNull();
+  });
+
+  it('a history that refuses still keeps the intent', () => {
+    const h = harness('/?gate=grown-up&next=%2Fparent', { replaceStateThrows: true });
+    expect(bootRoot(h.env)).toBe('app');
+    expect(peekBootIntent()).toEqual({ kind: 'grown-up', next: '/parent' });
+  });
+
+  it('a later boot without an intent forgets an earlier one', () => {
+    bootRoot(harness('/?gate=grown-up&next=%2Fparent').env);
+    bootRoot(harness('/').env);
+    expect(peekBootIntent()).toBeNull();
+  });
+
+  it('a persona entry the host had no page for mounts the learner app (and clears, like any app boot)', () => {
+    const h = harness('/teach');
+    expect(bootRoot(h.env)).toBe('app');
+    expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(false);
+    expect(h.log).toEqual([]);
+  });
+
+  it('/browse mounts the learner app until F-BROWSE-001 BR-6 wires BrowseApp, so it boots as the app does', () => {
+    const h = harness('/browse');
+    expect(bootRoot(h.env)).toBe('browse');
+    expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(false);
+    expect(h.area.data.has('hr:browse:pass')).toBe(true);
+  });
+
+  it('the grown-up bounce emits shell.path_bounced, then replaces the address with the persona entry; it clears nothing', async () => {
+    const h = harness('/teach/does-not-exist?x=1');
+    expect(bootRoot(h.env)).toBe('grown-up-bounce');
+    await flush();
+    expect(h.log).toEqual(['track shell.path_bounced', 'replace /teach']);
+    expect(h.events).toEqual([{ name: 'shell.path_bounced', payload: { prefix: 'teach' } }]);
+    expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(true);
+    expect(h.area.data.has(CONSOLE_SESSION_KEY)).toBe(true);
+    expect(peekBootIntent()).toBeNull();
+  });
+
+  it('bounces each prefix to its entry', async () => {
+    for (const [url, target, prefix] of [
+      ['/parent/space?id=sp_1', '/parent', 'parent'],
+      ['/account/billing', '/signin', 'account'],
+      ['/start', '/signin', 'start'],
+      ['/signin/x', '/signin', 'signin'],
+    ] as const) {
+      const h = harness(url);
+      expect(bootRoot(h.env), url).toBe('grown-up-bounce');
+      await flush();
+      expect(h.log, url).toEqual(['track shell.path_bounced', `replace ${target}`]);
+      expect(h.events[0]?.payload, url).toEqual({ prefix });
+    }
+  });
+
+  it('no location (not a browser): the app, untouched', () => {
+    const h = harness('/');
+    expect(bootRoot({ ...h.env, location: null })).toBe('app');
+    expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(true);
+  });
+
+  it('reads the browser globals by default', async () => {
+    const replace = vi.fn();
+    const replaceState = vi.fn();
+    const area = memoryArea({ [UNLOCK_SESSION_KEY]: '{}', [CONSOLE_SESSION_KEY]: '{}' });
+    vi.stubGlobal('location', { pathname: '/', search: '?gate=grown-up&next=%2Fparent', hash: '', replace });
+    vi.stubGlobal('history', { state: null, replaceState });
+    vi.stubGlobal('sessionStorage', area);
+    expect(bootRoot()).toBe('app');
+    expect(replaceState).toHaveBeenCalledWith(null, '', '/');
+    expect(area.data.size).toBe(2);
+    expect(peekBootIntent()).toEqual({ kind: 'grown-up', next: '/parent' });
+
+    vi.stubGlobal('location', { pathname: '/', search: '', hash: '', replace });
+    expect(bootRoot()).toBe('app');
+    expect(area.data.size).toBe(0);
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  describe('a learner page restored from the back/forward cache clears again', () => {
+    function withRestore(url: string): Harness & { restore: () => void; registered: () => number } {
+      const h = harness(url);
+      const handlers: Array<() => void> = [];
+      h.env.onRestore = (handler) => {
+        handlers.push(handler);
+      };
+      return { ...h, restore: () => handlers.forEach((f) => f()), registered: () => handlers.length };
+    }
+
+    it('the app root clears the unlock and the console session written after its boot', () => {
+      const h = withRestore('/');
+      bootRoot(h.env);
+      h.area.data.set(UNLOCK_SESSION_KEY, '{"v":1}');
+      h.area.data.set(CONSOLE_SESSION_KEY, '{}');
+      h.restore();
+      expect([...h.area.data.keys()]).toEqual(['hr:browse:pass']);
+    });
+
+    it('so does an app root that booted with a gate intent (the unlock it wrote was for the page it left)', () => {
+      const h = withRestore('/?gate=grown-up&next=%2Fparent');
+      bootRoot(h.env);
+      expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(true);
+      h.restore();
+      expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(false);
+      expect(h.area.data.has(CONSOLE_SESSION_KEY)).toBe(false);
+    });
+
+    it('the bounce registers nothing', () => {
+      const h = withRestore('/teach/zzz');
+      bootRoot(h.env);
+      expect(h.registered()).toBe(0);
+    });
+
+    it('listens for pageshow by default and acts only on a restore', () => {
+      const listeners: Array<(event: { persisted?: boolean }) => void> = [];
+      const area = memoryArea({ [UNLOCK_SESSION_KEY]: '{}' });
+      vi.stubGlobal('location', { pathname: '/', search: '', hash: '', replace: vi.fn() });
+      vi.stubGlobal('history', { state: null, replaceState: vi.fn() });
+      vi.stubGlobal('sessionStorage', area);
+      vi.stubGlobal('addEventListener', (type: string, listener: (event: { persisted?: boolean }) => void) => {
+        if (type === 'pageshow') listeners.push(listener);
+      });
+      bootRoot();
+      expect(listeners).toHaveLength(1);
+      area.data.set(UNLOCK_SESSION_KEY, '{}');
+      listeners[0]?.({ persisted: false });
+      expect(area.data.has(UNLOCK_SESSION_KEY)).toBe(true);
+      listeners[0]?.({ persisted: true });
+      expect(area.data.has(UNLOCK_SESSION_KEY)).toBe(false);
+    });
+
+    it('a window that throws on addEventListener still boots', () => {
+      vi.stubGlobal('location', { pathname: '/', search: '', hash: '', replace: vi.fn() });
+      vi.stubGlobal('history', { state: null, replaceState: vi.fn() });
+      vi.stubGlobal('addEventListener', () => {
+        throw new Error('no events');
+      });
+      expect(bootRoot()).toBe('app');
+    });
+  });
+
+  it('blocked sessionStorage: the app still boots and nothing throws', () => {
+    vi.stubGlobal('location', { pathname: '/', search: '', hash: '', replace: vi.fn() });
+    vi.stubGlobal('history', { state: null, replaceState: vi.fn() });
+    Object.defineProperty(globalThis, 'sessionStorage', {
+      configurable: true,
+      get() {
+        throw new Error('SecurityError');
+      },
+    });
+    try {
+      expect(bootRoot()).toBe('app');
+    } finally {
+      delete (globalThis as { sessionStorage?: unknown }).sessionStorage;
+    }
+  });
+
+  it('the bounce leaves even when telemetry never answers (the cap)', async () => {
+    vi.useFakeTimers();
+    try {
+      const h = harness('/parent/zzz');
+      h.env.track = () => new Promise(() => undefined);
+      delete h.env.wait;
+      expect(bootRoot(h.env)).toBe('grown-up-bounce');
+      await vi.advanceTimersByTimeAsync(LEAVE_TELEMETRY_WAIT_MS);
+      expect(h.log).toEqual(['replace /parent']);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
