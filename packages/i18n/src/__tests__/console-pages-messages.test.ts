@@ -30,8 +30,8 @@ describe('space kinds (routing.ts KIND_LABEL, KIND_GROUP)', () => {
   });
 });
 
-describe('sign-in page (teach/page.tsx)', () => {
-  it('keeps the title, the dev form and the links', () => {
+describe('sign-in page (signin/page.tsx, F-APP-001 A-4b; was teach/page.tsx)', () => {
+  it('keeps the title and the dev form; the Back to Hangul Route link left with the page move', () => {
     const s = c.signIn;
     expect(s.title).toBe('Grown-ups sign in');
     expect(s.panelLabel).toBe('Sign in');
@@ -40,7 +40,7 @@ describe('sign-in page (teach/page.tsx)', () => {
     expect(s.email).toEqual({ label: 'Email (optional)', placeholder: 'kim@example.com' });
     expect(s.submit.cta).toBe('Continue');
     expect(s.submitting.cta).toBe('Signing in…');
-    expect(s.backToSite).toBe('Back to Hangul Route');
+    expect((s as Record<string, unknown>).backToSite).toBeUndefined();
   });
 });
 

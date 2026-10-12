@@ -1,11 +1,13 @@
-import { SpaceKindSchema, type SpaceKind } from '@hangul-route/content-schema';
+import { APP_ROUTES, SpaceKindSchema, type AdultPersona, type SpaceKind } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { SpaceListItem } from './api';
 
 /** Where the console sends an adult — F-CONSOLE-001 §3.2–3.4. */
 export const ROUTES = {
-  signIn: '/teach',
-  start: '/teach/start',
+  /** Grown-up sign-in and the router into the grown-up area (F-APP-001 A-4b, section 3.7). */
+  signIn: APP_ROUTES.signIn,
+  /** The first space for a grown-up, moved from `/teach/start` (F-APP-001 A-4b; `/teach/start` redirects here). */
+  start: APP_ROUTES.start,
   home: '/teach/home',
   space: (id: string) => `/teach/space?id=${encodeURIComponent(id)}`,
   /** With `planId` the builder opens that plan (the curriculum wizard's draft, F-PLAN-002 section 3.8). */
@@ -56,13 +58,16 @@ export function spaceIdFrom(params: { get(name: string): string | null } | null)
   return params?.get('id')?.trim() ?? '';
 }
 
-export function landingAfterSignIn(spaceCount: number): string {
-  return spaceCount > 0 ? ROUTES.home : ROUTES.start;
-}
-
 export function landingAfterCreate(kind: SpaceKind, spaceId: string, fromHome: boolean): string {
   if (kind === 'class') return ROUTES.space(spaceId);
   return fromHome ? ROUTES.home : ROUTES.home;
+}
+
+/** The role card a persona hint preselects on `/start` (F-APP-001 section 3.5): Family → family, Teacher → class. */
+export function presetKind(hint: AdultPersona | null): SpaceKind | null {
+  if (hint === 'parent') return 'family';
+  if (hint === 'teacher') return 'class';
+  return null;
 }
 
 export interface RoleCard {

@@ -9,12 +9,13 @@ import {
   type UiLocale,
 } from '@hangul-route/i18n';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { browserLanguages, pickConsoleLocale, readStoredLocale, writeStoredLocale } from './console-locale';
+import { browserLanguages, pickConsoleLocale, queryLocale, readStoredLocale, writeStoredLocale } from './console-locale';
 
 /**
  * Console locale provider — F-I18N-001 §3.2. The static HTML is always English
- * (the locale of the `/teach` route); after mount the stored choice, else the
- * browser languages, picks the locale among `availableLocales()`, and the client
+ * (the locale of the `/teach` route); after mount a valid `?lang=` (stored as the
+ * choice, F-APP-001 section 3.7), else the stored choice, else the browser
+ * languages, picks the locale among `availableLocales()`, and the client
  * re-renders in place. `<html lang>` follows the choice and is restored when the
  * console unmounts. No telemetry: the web console has no telemetry client.
  */
@@ -41,7 +42,11 @@ export function LocaleProvider({ children, available }: { children: ReactNode; a
   const [locale, setLocaleState] = useState<UiLocale>(DEFAULT_LOCALE);
 
   useEffect(() => {
-    setLocaleState(pickConsoleLocale({ stored: readStoredLocale(), languages: browserLanguages(), available: offered }));
+    // A valid `?lang=` (a hand-off from the learner app or the site) wins and becomes the stored choice (F-APP-001 section 3.7).
+    const query = queryLocale(typeof window === 'undefined' ? '' : window.location.search);
+    const picked = pickConsoleLocale({ query, stored: readStoredLocale(), languages: browserLanguages(), available: offered });
+    if (query !== null && picked === query) writeStoredLocale(picked);
+    setLocaleState(picked);
   }, [offered]);
 
   useEffect(() => {

@@ -83,7 +83,14 @@
     "apps/web/src/components/console/FreeLessonsParts.tsx",
     "apps/web/src/components/console/VocabWordsParts.tsx",
     "apps/web/src/app/(console)/teach/space/route/page.tsx",
-    "apps/web/src/components/console/LearningRouteParts.tsx"
+    "apps/web/src/components/console/LearningRouteParts.tsx",
+    "apps/web/src/app/(console)/signin/page.tsx",
+    "apps/web/src/app/(console)/start/page.tsx",
+    "apps/web/src/components/console/SignInParts.tsx",
+    "apps/web/src/components/console/ClerkSignIn.tsx",
+    "apps/web/src/components/console/GrownUpRouter.tsx",
+    "apps/web/src/components/console/GrownUpLayout.tsx",
+    "apps/web/src/components/console/LegacyRedirect.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1

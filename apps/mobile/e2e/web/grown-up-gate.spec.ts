@@ -53,16 +53,18 @@ test('a family device whose PIN is gone says nopin', async ({ page }) => {
 });
 
 test('a grown-up URL the host has no page for bounces to its persona entry', async ({ page }) => {
-  // `/teach` is a console page of the merged build (A-3): the bounce lands there, not in the learner app.
+  // `/teach` is a console page of the merged build (A-3): the bounce lands there, not in the learner app,
+  // and the /teach router (A-4b) sends a signed-out visitor on to /signin.
   await page.goto('/teach/does-not-exist?id=sp_1');
-  await expect(page).toHaveURL(/\/teach$/);
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await expect(page).toHaveURL(/\/signin$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'Grown-ups sign in' })).toBeVisible();
   await expect(page.getByRole('button', { name: "Let's start" })).toHaveCount(0);
 
-  // TODO(F-APP-001 A-4b): `/signin` becomes a console page; until then the learner app answers it.
+  // `/signin` is a console page from A-4b: an unknown `/account` path (no billing page until A-5c) lands on it.
   await page.goto('/account/billing?checkout=success');
   await expect(page).toHaveURL(/\/signin$/);
-  await expect(page.getByRole('button', { name: "Let's start" })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Grown-ups sign in' })).toBeVisible();
+  await expect(page.getByRole('button', { name: "Let's start" })).toHaveCount(0);
 });
 
 test('a learner boot removes the grown-up unlock and the console session of its tab', async ({ page }) => {

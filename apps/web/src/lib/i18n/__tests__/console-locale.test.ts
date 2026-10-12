@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { KeyValueStorage } from '../safe-storage';
-import { CONSOLE_LOCALE_KEY, browserLanguages, pickConsoleLocale, readStoredLocale, writeStoredLocale } from '../console-locale';
+import { CONSOLE_LOCALE_KEY, browserLanguages, pickConsoleLocale, queryLocale, readStoredLocale, writeStoredLocale } from '../console-locale';
 
 function fakeStorage(initial: Record<string, string> = {}): KeyValueStorage & { map: Map<string, string> } {
   const map = new Map<string, string>(Object.entries(initial));
@@ -52,6 +52,34 @@ describe('pickConsoleLocale: stored choice > navigator > en (F-I18N-001 §3.2)',
   it('never picks a hidden locale: a stored or detected es is ignored while only en ships', () => {
     expect(pickConsoleLocale({ stored: 'es', languages: ['es-MX'], available: ['en'] })).toBe('en');
     expect(pickConsoleLocale({ stored: 'ko', languages: ['es-MX', 'en'], available: ['en', 'es'] })).toBe('es');
+  });
+});
+
+// F-APP-001 A-4b, section 3.7: the console reads a valid `?lang=` first (the F-I18N-001 hand-off
+// convention: the learner app, the site and the bounce append it), then the stored choice.
+describe('pickConsoleLocale: ?lang= first (F-APP-001 section 3.7)', () => {
+  it('a valid, available ?lang= wins over the stored choice and the browser', () => {
+    expect(pickConsoleLocale({ query: 'es', stored: 'ko', languages: ['ko'], available: ALL })).toBe('es');
+  });
+
+  it('a hidden or missing ?lang= falls through to the stored choice, then the browser', () => {
+    expect(pickConsoleLocale({ query: 'es', stored: 'ko', languages: [], available: ['en', 'ko'] })).toBe('ko');
+    expect(pickConsoleLocale({ query: null, stored: null, languages: ['ko-KR'], available: ALL })).toBe('ko');
+  });
+});
+
+describe('queryLocale: the ?lang= of a URL', () => {
+  it('reads a UI locale from the query, with or without the leading ?', () => {
+    expect(queryLocale('?lang=es')).toBe('es');
+    expect(queryLocale('persona=parent&lang=ko')).toBe('ko');
+  });
+
+  it('ignores a missing, empty or unknown value', () => {
+    expect(queryLocale('')).toBeNull();
+    expect(queryLocale('?lang=')).toBeNull();
+    expect(queryLocale('?lang=fr')).toBeNull();
+    expect(queryLocale('?lang=ES')).toBeNull();
+    expect(queryLocale('?next=%2Fteach')).toBeNull();
   });
 });
 

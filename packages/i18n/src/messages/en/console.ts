@@ -46,11 +46,8 @@ const leftOut = (n: number, product: string): string =>
   });
 
 export const consoleMsgs = {
-  whySignIn: ['Keep progress safe across devices', 'Bring cards back after a reinstall', 'Manage plans and billing'],
-  kidsNoAccount: "Kids don't need an account — they join with a code.",
   devSignInHint: 'Development sign-in: the account id stands in for a verified session until the Clerk connection lands.',
   clerkPending: 'Sign-in is not set up on this build yet. The learner app works without an account.',
-  clerkIntro: 'Sign in with your email or Google. Kids never need this page.',
   cantReach: "Can't reach the console right now.",
   tryAgain: 'Try again',
   noSpaces: "You're not in any space yet.",
@@ -131,7 +128,36 @@ export const consoleMsgs = {
     email: { label: 'Email (optional)', placeholder: 'kim@example.com' },
     submit: { cta: 'Continue' },
     submitting: { cta: 'Signing in…' },
-    backToSite: 'Back to Hangul Route',
+    /**
+     * `/signin` on the app host (F-APP-001 A-4b, section 3.7; design/screens/app-shell/signin.md).
+     * A shared surface a child can reach: no age wording, never "kids". The intro follows the
+     * persona hint (`?persona=`, or its alias `?as=`); none or an unknown value gets the neutral line.
+     */
+    persona: {
+      parent: { intro: "Sign in to see your family's learning." },
+      teacher: { intro: 'Sign in to see your classes.' },
+    },
+    neutralIntro: 'Sign in to your grown-up account.',
+    learnersNoAccount: "Learners don't need an account. They start learning right away, or join a class with a code.",
+    imLearning: "I'm here to learn",
+    /** The adult step before Clerk's sign-up (`?mode=create`, OD-13): the sign-up form renders only after the tick. */
+    create: {
+      link: 'New here? Create a grown-up account',
+      lead: 'Grown-up accounts are for parents, guardians and teachers.',
+      affirm: 'I am a parent, guardian or teacher',
+      continue: { cta: 'Continue' },
+      back: { cta: 'Back to sign in' },
+    },
+    /** The router's visible link (section 3.16); the polite "Taking you to your home…" line is `a11y.shell.redirecting`. */
+    router: { goNow: 'Go now' },
+    unreachable: "Sign-in can't load right now.",
+    /** An installed iOS PWA where Google finished in Safari (section 3.19): the email code keeps the sign-in in this window. */
+    standaloneFinish: 'Finish signing in here with an email code',
+    /** Reverification after an OAuth sign-in on a device with learner profiles (section 3.9); names no factor. */
+    reverify: {
+      title: "Confirm it's you",
+      line: "This device has learner profiles. Confirm it's you to open grown-up pages.",
+    },
   },
   /** New space (`/teach/start`): role, then name, then (for a class) the code. */
   start: {

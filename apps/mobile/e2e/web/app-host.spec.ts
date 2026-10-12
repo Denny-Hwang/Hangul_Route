@@ -15,11 +15,11 @@ import { completeChildForm } from './helpers';
 const dist = join(__dirname, '..', '..', 'dist');
 
 /**
- * Console pages every merged build has today. TODO(F-APP-001 A-4b): add '/signin' and '/start'.
+ * Console pages every merged build has today; A-4b added '/signin' and '/start'.
  * TODO(F-APP-001 A-5c): add '/account/billing'. Section 5 requires them; the walk below would also pick
  * them up, but only a name here fails the build when a page never reaches dist.
  */
-const REQUIRED_PAGES = ['/teach', '/teach/home', '/parent'];
+const REQUIRED_PAGES = ['/teach', '/teach/home', '/parent', '/signin', '/start'];
 
 /** Section 3.17, as the Worker sends it for every grown-up path. */
 const GROWN_UP_HEADERS: Record<string, string> = {
@@ -189,7 +189,8 @@ test.describe('app host: the learner app and the grown-up console (F-APP-001 A-3
 
   test('an unknown grown-up path bounces to its persona entry, a console page (A-6, section 3.4)', async ({ page }) => {
     await page.goto('/teach/zzz');
-    await expect(page).toHaveURL(/\/teach$/);
+    // The /teach router (A-4b) sends a signed-out visitor on to /signin, a console page too.
+    await expect(page).toHaveURL(/\/signin$/);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await expect(page.getByRole('button', { name: "Let's start" })).toHaveCount(0);
   });

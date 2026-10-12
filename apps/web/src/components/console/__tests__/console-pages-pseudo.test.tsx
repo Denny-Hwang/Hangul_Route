@@ -12,9 +12,11 @@ import * as homePage from '@/app/(console)/teach/home/page';
 import * as lecturePage from '@/app/(console)/teach/space/lecture/page';
 import * as planPage from '@/app/(console)/teach/space/plan/page';
 import * as relinkPage from '@/app/(console)/teach/space/relink/page';
-import * as signInPage from '@/app/(console)/teach/page';
+import * as signInPage from '@/app/(console)/signin/page';
+import * as teachRouterPage from '@/app/(console)/teach/page';
+import * as teachStartPage from '@/app/(console)/teach/start/page';
 import * as spacePage from '@/app/(console)/teach/space/page';
-import * as startPage from '@/app/(console)/teach/start/page';
+import * as startPage from '@/app/(console)/start/page';
 
 /**
  * F-I18N-001 PRs 10a and 10b, §3.11: the migrated console pages take every word from the
@@ -71,6 +73,15 @@ describe('console pages render only dictionary text (en-XA)', () => {
     auth.session = { accountId: 'teacher-kim', displayName: 'Ms Kim' };
     expect(html).toContain('name="accountId"');
     expectAllPseudo(html);
+  });
+
+  it('the /teach router and the /teach/start redirect: the polite line only (F-APP-001 A-4b)', () => {
+    const router = render(teachRouterPage);
+    expect(router).toContain('role="status"');
+    expectAllPseudo(router, [], 1);
+    const redirect = render(teachStartPage);
+    expect(redirect).toContain('aria-live="polite"');
+    expectAllPseudo(redirect, [], 1);
   });
 
   it('start, role step', () => {
