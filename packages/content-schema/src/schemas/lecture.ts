@@ -178,9 +178,13 @@ export type LectureRosterMessage = z.infer<typeof LectureRosterMessageSchema>;
  * build-time `EXPO_PUBLIC_CONSOLE_ORIGINS` list for preview deployments.
  * `http://localhost:3000` is safe in production: only the opener window can
  * deliver a message and the payload is limited to labels.
+ * `https://app.hangulroute.com` is the console's home from F-APP-001 (the
+ * same origin as the presenter); the site entries stay for consoles still
+ * open on hangulroute.com during the move.
  */
 export const LECTURE_CONSOLE_ORIGINS = [
   'https://hangulroute.com',
   'https://www.hangulroute.com',
   'http://localhost:3000',
+  'https://app.hangulroute.com',
 ] as const;

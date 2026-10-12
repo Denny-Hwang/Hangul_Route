@@ -173,9 +173,19 @@ Three names in the new `access.` namespace and two in F-PLAN-002's `route.` name
 | 4 | `route.next_started` | F-ENT-003 §3.12 | `{ source: 'class' \| 'school' \| 'family' \| 'self' \| 'cursor', surface: 'home' \| 'results' \| 'journey' \| 'episode' \| 'route' \| 'placement' }` (the `routeNext` quest is started) | E3-1b | E3-4, E3-6 |
 | 5 | `route.offplan_finished` | F-ENT-003 §3.12 | `{ source: 'class' \| 'school' \| 'family' \| 'self', stage: StageKey }` (a quest outside the plan is completed while a leading source exists) | E3-1b | E3-4 |
 
-## O. All lessons names (F-BROWSE-001; added by its BR-1 PR)
+## O. Persona app shell names (F-APP-001; added by its A-0 docs PR)
 
-Five names in the new `browse.` namespace (a paying parent's or teacher's All lessons root, `/browse`). None collides with sections A to N or with `TELEMETRY_EVENT_NAMES` on `main` at `3f6d989a` (no existing name starts with `browse.`). Worker first: BR-1 adds all five to `TELEMETRY_EVENT_NAMES`, its exact-list test and `BROWSE_EVENT_NAMES` (`schemas/browse.ts`, the list the browse telemetry fence allows); BR-2 adds the server-side payload allow-list for `browse.*` in `routes/telemetry.ts` (drops any `profileId` and every payload key not listed here); both deploy before BR-6, the first sender. The browse root has no profile: **every** `browse.*` event is sent **without `profileId`**, on its own queue (`browse:telemetry-queue`). `itemId` is a content id, never a person id; no account id, space, learner id or name. The console has no telemetry client and sends none.
+Three names in the new `shell.` namespace (the learner app's entries into the grown-up area on app.hangulroute.com). None collides with sections A to N or with `TELEMETRY_EVENT_NAMES` on `main` at `ba78478c` (no existing name starts with `shell.`). Worker first: A-1 adds all three to `TELEMETRY_EVENT_NAMES` and its exact-list test, and the API Worker deploys on merge before any app build that sends them (A-6, A-7). Sent by the learner app only (the console has no telemetry client, F-APP-001 OD-9). **No `profileId`** on any of them: codes only, never a name, an email, a path with ids or a space id. The Worker enforces it: for `shell.*` it drops `profileId` and keeps only the keys and values listed below (`SHELL_TELEMETRY_PAYLOADS`), as it does for `space.transfer.*`. Before A-6 merges, confirm the API deployment includes A-1 (F-APP-001 section 3.18). `paywall.console_opened` keeps firing where F-BILL-002 keeps it (flag off).
+
+| # | Name | Owning spec | Payload | Added to the list by | Emitted by |
+|---|---|---|---|---|---|
+| 1 | `shell.persona_chosen` | F-APP-001 §3.18 | `{ persona: 'learner' \| 'parent' \| 'teacher', from: 'welcome' \| 'welcome-continue' }` (a Welcome persona button, Continue as, or Let's start) | A-1 | A-7 |
+| 2 | `shell.grown_up_handoff` | F-APP-001 §3.18 | `{ via: 'profile' \| 'dashboard' \| 'plan' \| 'lock', target: 'router' \| 'billing' \| 'next' }` (the learner app hands the tab to the grown-up area after the gate) | A-1 | A-6 (lock), A-7 (profile, dashboard, plan) |
+| 3 | `shell.path_bounced` | F-APP-001 §3.18 | `{ prefix: 'signin' \| 'start' \| 'teach' \| 'parent' \| 'account' }` (the learner bundle booted on a grown-up path with no file and sent the tab to the persona entry) | A-1 | A-6 |
+
+## P. All lessons names (F-BROWSE-001; added by its BR-1 PR)
+
+Five names in the new `browse.` namespace (a paying parent's or teacher's All lessons root, `/browse`). None collides with sections A to O or with `TELEMETRY_EVENT_NAMES` on `main` at `8dce58d3` (no existing name starts with `browse.`). Worker first: BR-1 adds all five to `TELEMETRY_EVENT_NAMES`, its exact-list test and `BROWSE_EVENT_NAMES` (`schemas/browse.ts`, the list the browse telemetry fence allows); BR-2 adds the server-side payload allow-list for `browse.*` in `routes/telemetry.ts` (drops any `profileId` and every payload key not listed here); both deploy before BR-6, the first sender. The browse root has no profile: **every** `browse.*` event is sent **without `profileId`**, on its own queue (`browse:telemetry-queue`). `itemId` is a content id, never a person id; no account id, space, learner id or name. The console has no telemetry client and sends none.
 
 | # | Name | Owning spec | Payload | Added to the list by | Emitted by |
 |---|---|---|---|---|---|
