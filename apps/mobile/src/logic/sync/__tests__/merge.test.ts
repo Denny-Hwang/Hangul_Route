@@ -88,6 +88,17 @@ describe('mergeSnapshots (F-SYNC-001 §3.3)', () => {
     expect(m.updatedAt).toBe('2026-09-20T00:00:00.000Z');
   });
 
+  it('recomputes the streak from quest sessions only: story, game and level-check time never moves it (F-REPORT-001 OD-19)', () => {
+    const local = base({ sessions: [session('session:time:2026-09-21T09:00:00Z', '2026-09-21T09:00:00Z')] });
+    const server = base({ sessions: [session('s1', '2026-09-20T09:00:00Z')] });
+    const m = mergeSnapshots(local, server, { now: NOW });
+    expect(m.sessions).toHaveLength(2);
+    // the story day (today) is not a streak day: only yesterday's quest counts
+    expect(m.streakDays).toBe(1);
+    const quest = mergeSnapshots(base({ sessions: [session('s2', '2026-09-21T09:00:00Z')] }), server, { now: NOW });
+    expect(quest.streakDays).toBe(2);
+  });
+
   it('is commutative and idempotent (profileId aside)', () => {
     const a = base({ quests: [quest('q1', 1, 0.5)], cards: [{ cardId: 'c', unlockedAt: 'x', newSinceLastView: true }] });
     const b = base({ profileId: 'profile:b', quests: [quest('q2', 3, 1)], sessions: [session('s', '2026-09-21T00:00:00Z')] });

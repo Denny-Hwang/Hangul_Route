@@ -56,6 +56,7 @@ import { placementEntriesOn, questsDoneOf } from '../../logic/placement/entry';
 import { skippedEvent } from '../../logic/placement/events';
 import { homeQuietCard, levelCheckCard } from '../../logic/placement/home-card';
 import { DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
+import { streakSessionDates } from '../../logic/sessions/session-log';
 import { computeStreak } from '../../logic/streak';
 import { emptyBookmarks } from '../../logic/story/bookmarks';
 import { storyCoverArt } from '../../logic/story/scene-view';
@@ -224,8 +225,8 @@ export function HomeScreen(): React.ReactElement {
   const recentStars = (snap?.quests.slice(-1)[0]?.stars ?? 0) as 0 | 1 | 2 | 3;
 
   const streak = useMemo(() => {
-    const dates = snap?.sessions.map((s) => s.startedAt) ?? [];
-    return computeStreak(dates);
+    // Quest sessions only: story, game and level-check time never moves the streak (F-REPORT-001 OD-19).
+    return computeStreak(streakSessionDates(snap?.sessions ?? []));
   }, [snap]);
 
   // Today's mission — the plan is pinned for the day so finishing one card

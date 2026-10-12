@@ -8,6 +8,7 @@ import {
   type VocabSummary,
 } from '@hangul-route/content-schema';
 import { planIdOf } from '../homework/plan-derivation';
+import { countedSeconds } from '../sessions/session-log';
 import { codePoint, localDay, vocabOf } from '../vocab/progress';
 import { addDays } from '../vocab/srs';
 import { compareInstant } from './merge';
@@ -137,7 +138,7 @@ export function summarize({ snapshot, now, stage1QuestIds, questJamo, planNotRea
   const weekAgo = now.getTime() - 7 * DAY_MS;
   const secondsLast7d = snapshot.sessions
     .filter((s) => new Date(s.startedAt).getTime() >= weekAgo)
-    .reduce((sum, s) => sum + (s.durationSeconds ?? 0), 0);
+    .reduce((sum, s) => sum + countedSeconds(s), 0);
 
   const recognized = new Set<string>();
   const shaky = new Set<string>();

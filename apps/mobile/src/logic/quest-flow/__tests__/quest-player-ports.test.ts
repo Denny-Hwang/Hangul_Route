@@ -37,25 +37,29 @@ const storyQuest: Quest = {
 const mark = (level: Bookmark['level']): Bookmark => ({ level, sceneIndex: 2, updatedAt: '2026-10-11T09:00:00.000Z' });
 
 function sessionDeps(overrides: Partial<Parameters<typeof learnerQuestSession>[0]> = {}) {
+  const release = vi.fn();
   return {
     profileId: 'p1' as string | null,
     resume: undefined as boolean | undefined,
     questById: vi.fn((_id: string): Quest | undefined => storyQuest),
     bookmarkOf: vi.fn((_profileId: string, _storyId: string): Bookmark | undefined => undefined),
-    beginSession: vi.fn(),
-    endSession: vi.fn(),
+    /** What `holdSession` hands back: the release the player calls on `end`. */
+    release,
+    holdSession: vi.fn((_profileId: string, _options: { owner: string; streak: boolean }) => release),
     ...overrides,
   };
 }
 
-describe('learnerQuestSession (today: questStartStep + beginSession / endSession)', () => {
-  it('starts at step 0 and begins a session for the active profile', () => {
-    const deps = sessionDeps();
+const heldDeps = sessionDeps;
+
+describe('learnerQuestSession (questStartStep + a held session, F-REPORT-001 RP-3b)', () => {
+  it('starts at step 0 and holds a streak session owned by the quest for the active profile', () => {
+    const deps = heldDeps();
     const session = learnerQuestSession(deps);
     expect(session.start('quest:q1', 'episode:e1')).toBe(0);
     expect(deps.questById).toHaveBeenCalledWith('quest:q1');
-    expect(deps.beginSession).toHaveBeenCalledWith('p1');
-    expect(deps.endSession).not.toHaveBeenCalled();
+    expect(deps.holdSession).toHaveBeenCalledWith('p1', { owner: 'quest:quest:q1', streak: true });
+    expect(deps.release).not.toHaveBeenCalled();
   });
 
   it('reads no bookmark without resume', () => {
@@ -68,7 +72,7 @@ describe('learnerQuestSession (today: questStartStep + beginSession / endSession
     const deps = sessionDeps({ resume: true, bookmarkOf: vi.fn(() => mark('listen')) });
     expect(learnerQuestSession(deps).start('quest:q1', 'episode:e1')).toBe(1);
     expect(deps.bookmarkOf).toHaveBeenCalledWith('p1', 'story:sun-and-moon');
-    expect(deps.beginSession).toHaveBeenCalledWith('p1');
+    expect(deps.holdSession).toHaveBeenCalledTimes(1);
   });
 
   it('a bookmark for another level starts at step 0', () => {
@@ -87,10 +91,24 @@ describe('learnerQuestSession (today: questStartStep + beginSession / endSession
     expect(learnerQuestSession(deps).start('quest:missing', 'episode:e1')).toBe(0);
   });
 
-  it('end closes the session of the same profile', () => {
-    const deps = sessionDeps();
-    learnerQuestSession(deps).end();
-    expect(deps.endSession).toHaveBeenCalledWith('p1');
+  it('end releases the session the start held, once', () => {
+    const deps = heldDeps();
+    const session = learnerQuestSession(deps);
+    session.start('quest:q1', 'episode:e1');
+    session.end();
+    session.end();
+    expect(deps.release).toHaveBeenCalledTimes(1);
+  });
+
+  it('end without a start releases nothing; a second start releases the first hold first', () => {
+    const deps = heldDeps();
+    const session = learnerQuestSession(deps);
+    session.end();
+    expect(deps.release).not.toHaveBeenCalled();
+    session.start('quest:q1', 'episode:e1');
+    session.start('quest:q2', 'episode:e1');
+    expect(deps.release).toHaveBeenCalledTimes(1);
+    expect(deps.holdSession).toHaveBeenLastCalledWith('p1', { owner: 'quest:quest:q2', streak: true });
   });
 
   it('with no active profile nothing begins and nothing ends (the run is not started)', () => {
@@ -98,8 +116,8 @@ describe('learnerQuestSession (today: questStartStep + beginSession / endSession
     const session = learnerQuestSession(deps);
     expect(session.start('quest:q1', 'episode:e1')).toBeNull();
     session.end();
-    expect(deps.beginSession).not.toHaveBeenCalled();
-    expect(deps.endSession).not.toHaveBeenCalled();
+    expect(deps.holdSession).not.toHaveBeenCalled();
+    expect(deps.release).not.toHaveBeenCalled();
     expect(deps.questById).not.toHaveBeenCalled();
   });
 });
