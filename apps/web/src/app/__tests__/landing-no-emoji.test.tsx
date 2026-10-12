@@ -76,48 +76,52 @@ const SOURCES = [
   'data/mock-family.ts',
 ];
 
-type Params = Readonly<Record<string, string>>;
-type PageModule = { default: (props: { params: Params }) => JSX.Element };
+/** A page module, typed by the params its route gives it. */
+type PageModule<P> = { default: (props: { params: P }) => JSX.Element };
+/** The English site pages take no params. */
+type SitePage = PageModule<Record<string, never>>;
+
+function render<P>(page: PageModule<P>, params: P): string {
+  const Page = page.default;
+  return renderToStaticMarkup(<Page params={params} />);
+}
+
+/** A page bound to its params, so a list can hold pages whose params differ and the type checker still pairs them. */
+const at =
+  <P,>(page: PageModule<P>, params: P) =>
+  (): string =>
+    render(page, params);
 
 /**
  * Pages that read the i18n dictionary (so the en-XA render proves the pseudo strings went through). Each carries
  * its module and its path: the en-XA check below loads the path again, fresh, under the pseudo dictionary.
  */
-const SITE_PAGES = [
+const SITE_PAGES: ReadonlyArray<readonly [string, SitePage, string]> = [
   ['landing', enLandingPage, '../(en)/page'],
   ['about', enAboutPage, '../(en)/about/page'],
   ['privacy', enPrivacyPage, '../(en)/privacy/page'],
   ['terms', enTermsPage, '../(en)/terms/page'],
-] as const;
+];
 
 /** The same pages under `/es` and `/ko` (prerendered by the web build even while hidden). */
-const LOCALE_PAGES = siteLocaleParams().flatMap(({ locale }) =>
-  (
-    [
-      ['', locLandingPage],
-      ['/about', locAboutPage],
-      ['/privacy', locPrivacyPage],
-      ['/terms', locTermsPage],
-    ] as const
-  ).map(([suffix, page]) => [`${locale}${suffix}`, page, { locale }] as const),
-);
+const LOCALE_PAGES: ReadonlyArray<readonly [string, () => string]> = siteLocaleParams().flatMap(({ locale }) => [
+  [locale, at(locLandingPage, { locale })] as const,
+  [`${locale}/about`, at(locAboutPage, { locale })] as const,
+  [`${locale}/privacy`, at(locPrivacyPage, { locale })] as const,
+  [`${locale}/terms`, at(locTermsPage, { locale })] as const,
+]);
 
 /** The /parent demo dashboard (English-only sample data), one click from the landing nav; statically exported per child. */
-const PARENT_PAGES = [
-  ['parent', parentPage, { childId: '' }],
-  ...mockFamily().profiles.map((p) => [`parent/${p.slug}`, childPage, { childId: p.slug }] as const),
-] as const;
+const PARENT_PAGES: ReadonlyArray<readonly [string, () => string]> = [
+  ['parent', at(parentPage, {})],
+  ...mockFamily().profiles.map((p) => [`parent/${p.slug}`, at(childPage, { childId: p.slug })] as const),
+];
 
-const PAGES: ReadonlyArray<readonly [string, object, Params?]> = [
-  ...SITE_PAGES.map(([name, page]) => [name, page] as const),
+const PAGES: ReadonlyArray<readonly [string, () => string]> = [
+  ...SITE_PAGES.map(([name, page]) => [name, at(page, {})] as const),
   ...LOCALE_PAGES,
   ...PARENT_PAGES,
 ];
-
-function render(page: object, params: Params = {}): string {
-  const Page = (page as PageModule).default;
-  return renderToStaticMarkup(<Page params={params} />);
-}
 
 const found = (text: string): string[] => [...text.matchAll(EMOJI)].map((m) => `U+${m[0].codePointAt(0)!.toString(16).toUpperCase()}`);
 
@@ -149,9 +153,9 @@ describe('site pages render no emoji (en, every site locale, /parent)', () => {
     expect(LOCALE_PAGES.map(([name]) => name)).toEqual(expect.arrayContaining(['es', 'ko', 'es/about', 'ko/terms']));
   });
 
-  for (const [name, page, params] of PAGES) {
+  for (const [name, markup] of PAGES) {
     it(name, () => {
-      expect(found(render(page, params))).toEqual([]);
+      expect(found(markup())).toEqual([]);
     });
   }
 });
@@ -165,7 +169,7 @@ describe('the art that replaced the emoji is drawn', () => {
   };
 
   it('hero: Hoya waving; Meet Hoya: Hoya idle', () => {
-    const html = render(enLandingPage);
+    const html = render(enLandingPage, {});
     expect(inside(html, 'hr-landing-hero-art')).toContain('data-pose="waving"');
     expect(inside(html, 'hr-landing-split-art')).toContain('data-pose="idle"');
   });
@@ -203,6 +207,71 @@ const PINNED: ReadonlyArray<readonly [string, object]> = [
   ['@hangul-route/design-system/word-art-budget', wordArtBudget],
 ];
 
+const repo = join(src, '..', '..', '..');
+
+/** The workspace package a pinned module id belongs to: `@hangul-route/design-system/tokens` -> `design-system`. */
+const packageOf = (id: string): string => id.split('/')[1]!;
+
+/** Every non-test `.ts`/`.tsx` file under `dir`, as absolute paths. */
+const sourcesIn = (dir: string): string[] =>
+  readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    const path = join(dir, e.name);
+    if (e.isDirectory()) return e.name === '__tests__' ? [] : sourcesIn(path);
+    return /\.tsx?$/.test(e.name) && !/\.test\.tsx?$/.test(e.name) ? [path] : [];
+  });
+
+/** A static or dynamic import (or require) of `@hangul-route/i18n` or one of its subpaths; a mention in a comment is not one. */
+const IMPORTS_I18N = /(?:from\s*|import\s*\(\s*|require\s*\(\s*|^\s*import\s*)['"]@hangul-route\/i18n(?:\/[^'"]*)?['"]/m;
+
+/**
+ * What makes pinning safe, checked rather than assumed: a pinned module keeps the dictionary it loaded with, so if
+ * one ever read `@hangul-route/i18n`, its strings would skip the pseudo check below without any test failing.
+ */
+describe('the modules the en-XA check pins read no dictionary', () => {
+  const packages = [...new Set(PINNED.map(([id]) => packageOf(id)))];
+
+  it('pins only the content schema and the design system', () => {
+    expect(packages.sort()).toEqual(['content-schema', 'design-system']);
+  });
+
+  for (const pkg of packages) {
+    it(`${pkg} does not depend on @hangul-route/i18n`, () => {
+      const manifest = JSON.parse(readFileSync(join(repo, 'packages', pkg, 'package.json'), 'utf8')) as Record<string, unknown>;
+      for (const field of ['dependencies', 'peerDependencies', 'devDependencies', 'optionalDependencies']) {
+        expect(Object.keys((manifest[field] as Record<string, string> | undefined) ?? {}), `${pkg} ${field}`).not.toContain('@hangul-route/i18n');
+      }
+    });
+
+    it(`${pkg} source imports nothing from @hangul-route/i18n`, () => {
+      const files = sourcesIn(join(repo, 'packages', pkg, 'src'));
+      expect(files.length).toBeGreaterThan(0);
+      expect(files.filter((file) => IMPORTS_I18N.test(readFileSync(file, 'utf8'))).map((file) => relative(repo, file))).toEqual([]);
+    });
+  }
+
+  it('the import check catches each import form', () => {
+    for (const line of [
+      "import { getMessages } from '@hangul-route/i18n';",
+      'import type { UiLocale } from "@hangul-route/i18n/locales";',
+      "const m = await import('@hangul-route/i18n');",
+      "import '@hangul-route/i18n';",
+    ]) expect(IMPORTS_I18N.test(line), line).toBe(true);
+    expect(IMPORTS_I18N.test(' * (`@hangul-route/i18n/note-text`) judges its length')).toBe(false);
+  });
+});
+
+/**
+ * Each site page carries its module and its path: the renders above use the module and the en-XA check below the
+ * path. They must name the same page, or the en-XA check would cover a page other than the one named.
+ */
+describe('each site page path loads the module it is paired with', () => {
+  for (const [name, page, path] of SITE_PAGES) {
+    it(name, async () => {
+      expect(((await import(path)) as SitePage).default).toBe(page.default);
+    });
+  }
+});
+
 /**
  * The one check that loads the pages fresh: the module registry is reset and the pages are imported again under
  * the pseudo dictionary, so even a string a module reads when it loads goes through en-XA. It keeps that work
@@ -226,7 +295,7 @@ describe('site pages render no emoji (en-XA)', { timeout: 15_000 }, () => {
       return { ...i18n, getMessages: (locale: Parameters<typeof i18n.getMessages>[0]) => (locale === 'en' ? pseudo : i18n.getMessages(locale)) };
     });
     for (const [name, , path] of SITE_PAGES) {
-      const html = render(await import(path));
+      const html = render((await import(path)) as SitePage, {});
       expect(html, name).toContain('[');
       expect(found(html), name).toEqual([]);
     }
