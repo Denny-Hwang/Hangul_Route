@@ -25,6 +25,11 @@
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"]
     },
+    "@hangul-route/web#test:coverage": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/content/stories/**"],
+      "outputs": ["coverage/**"]
+    },
     "typecheck": {
       "dependsOn": ["^build"]
     },

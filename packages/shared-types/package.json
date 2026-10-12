@@ -11,6 +11,7 @@
   "scripts": {
     "lint": "echo '(no lint yet — @hangul-route/shared-types)'",
     "test": "echo '(no tests yet — @hangul-route/shared-types)'",
+    "test:coverage": "echo '(no tests yet — @hangul-route/shared-types)'",
     "typecheck": "tsc --noEmit",
     "build": "echo '(no build output yet — @hangul-route/shared-types)'"
   },
