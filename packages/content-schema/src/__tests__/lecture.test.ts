@@ -58,6 +58,7 @@ describe('lecture constants', () => {
       'https://hangulroute.com',
       'https://www.hangulroute.com',
       'http://localhost:3000',
+      'https://app.hangulroute.com',
     ]);
   });
 

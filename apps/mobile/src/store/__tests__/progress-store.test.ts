@@ -743,10 +743,12 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
     ['quest:stage1-life-q2', 'episode:stage1-life'],
     ['quest:stage1-life-q3', 'episode:stage1-life'],
     ['quest:stage1-rites-q1', 'episode:stage1-rites'],
+    ['quest:stage1-rites-q2', 'episode:stage1-rites'],
+    ['quest:stage1-rites-q3', 'episode:stage1-rites'],
     ['quest:stage1-nature-q1', 'episode:stage1-nature'],
     ['quest:stage1-crafts-q1', 'episode:stage1-crafts'],
   ];
-  const STAGE1_QUEST_CARDS = ['card:book', 'card:hanji', 'card:brush', 'card:kimchi', 'card:family-table', 'card:kimbap', 'card:seollal', 'card:magpie', 'card:yutnori'];
+  const STAGE1_QUEST_CARDS = ['card:book', 'card:hanji', 'card:brush', 'card:kimchi', 'card:family-table', 'card:kimbap', 'card:seollal', 'card:chuseok', 'card:sebae', 'card:magpie', 'card:yutnori'];
   const notified: string[] = [];
 
   const quest = (questId: string, episodeId: string, stars: 0 | 1 | 2 | 3, completedAt = T): ProgressSnapshot['quests'][number] => ({
@@ -770,7 +772,10 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
     streakDays: 0,
     ...over,
   });
-  const ritesDone = (stars: 0 | 1 | 2 | 3 = 1): ProgressSnapshot => snapshotWith({ quests: [quest('quest:stage1-rites-q1', 'episode:stage1-rites', stars)] });
+  /** The Holidays quests: three since F-QUEST-002 Q-7b, all needed to complete the episode. */
+  const RITES_QUESTS = ['quest:stage1-rites-q1', 'quest:stage1-rites-q2', 'quest:stage1-rites-q3'];
+  const ritesQuests = (ids: readonly string[], stars: 0 | 1 | 2 | 3 = 1): ProgressSnapshot['quests'] => ids.map((id) => quest(id, 'episode:stage1-rites', stars));
+  const ritesDone = (stars: 0 | 1 | 2 | 3 = 1): ProgressSnapshot => snapshotWith({ quests: ritesQuests(RITES_QUESTS, stars) });
   const stage1Done = (): ProgressSnapshot =>
     snapshotWith({
       quests: STAGE1_QUESTS.map(([q, e]) => quest(q, e, 2)),
@@ -902,13 +907,13 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
   });
 
   describe('catch-up for existing learners (§3.5)', () => {
-    it('hydrate ends with a reconcile: a learner who finished Stage 1 receives the 21 other cards once', async () => {
+    it('hydrate ends with a reconcile: a learner who finished Stage 1 receives the 19 other cards once', async () => {
       mem.set('progress:profile:a', stage1Done());
       await useProgressStore.getState().hydrate('profile:a');
       const snap = useProgressStore.getState().byProfile['profile:a'];
       expect(snap?.cards).toHaveLength(30);
       const added = (snap?.cards ?? []).filter((c) => !STAGE1_QUEST_CARDS.includes(c.cardId));
-      expect(added).toHaveLength(21);
+      expect(added).toHaveLength(19);
       expect(added.every((c) => c.newSinceLastView)).toBe(true);
       expect(added.find((c) => c.cardId === 'card:hangul-day')?.unlockedAt).toBe(T);
       expect(added.find((c) => c.cardId === 'card:tiger')?.unlockedAt).toBe(CREATED);
@@ -916,7 +921,7 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
       expect([...(useProgressStore.getState().catchUp['profile:a'] ?? [])].sort()).toEqual(added.map((c) => c.cardId).sort());
       // One aggregate event, never a per-card card.unlocked for a retro card.
       expect(vi.mocked(track).mock.calls.map(([e]) => e)).toEqual([
-        { name: 'card.catchup_granted', profileId: 'profile:a', payload: { count: 21, episode: 17, stage: 3, welcome: 1, quest: 0, set: 0 } },
+        { name: 'card.catchup_granted', profileId: 'profile:a', payload: { count: 19, episode: 15, stage: 3, welcome: 1, quest: 0, set: 0 } },
       ]);
     });
 
@@ -984,11 +989,17 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
     });
 
     it('cards earned before the saved copy loads are merged with it and saved with one write', async () => {
-      mem.set('progress:profile:a', snapshotWith({ quests: [quest('quest:stage1-life-q1', 'episode:stage1-life', 3)], cards: [{ cardId: 'card:kimchi', unlockedAt: T, newSinceLastView: false }] }));
-      useProgressStore.getState().recordQuestComplete('profile:a', { questId: 'quest:stage1-rites-q1', episodeId: 'episode:stage1-rites', stars: 1, accuracy: 0.5, attempts: 1 });
+      mem.set(
+        'progress:profile:a',
+        snapshotWith({
+          quests: [quest('quest:stage1-life-q1', 'episode:stage1-life', 3), ...ritesQuests(RITES_QUESTS.slice(0, 2))],
+          cards: [{ cardId: 'card:kimchi', unlockedAt: T, newSinceLastView: false }],
+        }),
+      );
+      useProgressStore.getState().recordQuestComplete('profile:a', { questId: 'quest:stage1-rites-q3', episodeId: 'episode:stage1-rites', stars: 1, accuracy: 0.5, attempts: 1 });
       await settle();
       const stored = storedA();
-      expect(stored?.quests.map((q) => q.questId).sort()).toEqual(['quest:stage1-life-q1', 'quest:stage1-rites-q1']);
+      expect(stored?.quests.map((q) => q.questId).sort()).toEqual(['quest:stage1-life-q1', ...RITES_QUESTS]);
       expect(cardsOf(stored)).toEqual(['card:kimchi', ...RITES, 'card:tiger'].sort());
       expect(stored?.cards.find((c) => c.cardId === 'card:kimchi')?.newSinceLastView).toBe(false);
       expect(writesTo('profile:a')).toBe(1);
@@ -996,9 +1007,12 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
     });
 
     it('cards the live path unlocked in the same tick are not taken over by a later reconcile', () => {
-      useProgressStore.setState({ byProfile: { 'profile:a': snapshotWith({ cards: [{ cardId: 'card:tiger', unlockedAt: CREATED, newSinceLastView: false }] }) }, hydratedFor: new Set(['profile:a']) });
+      useProgressStore.setState({
+        byProfile: { 'profile:a': snapshotWith({ quests: ritesQuests(RITES_QUESTS.slice(0, 2)), cards: [{ cardId: 'card:tiger', unlockedAt: CREATED, newSinceLastView: false }] }) },
+        hydratedFor: new Set(['profile:a']),
+      });
       const store = useProgressStore.getState();
-      store.recordQuestComplete('profile:a', { questId: 'quest:stage1-rites-q1', episodeId: 'episode:stage1-rites', stars: 2, accuracy: 1, attempts: 1 });
+      store.recordQuestComplete('profile:a', { questId: 'quest:stage1-rites-q3', episodeId: 'episode:stage1-rites', stars: 2, accuracy: 1, attempts: 1 });
       store.unlockCards('profile:a', RITES.map((cardId) => ({ cardId })));
       expect(store.reconcileAwards('profile:a')).toEqual([]);
       expect(useProgressStore.getState().catchUp['profile:a']).toBeUndefined();
@@ -1095,7 +1109,7 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
       expect(writeJson).not.toHaveBeenCalled();
       await settle();
       const snap = useProgressStore.getState().byProfile['profile:a'];
-      expect(snap?.quests.map((q) => q.questId)).toEqual(['quest:stage1-rites-q1']);
+      expect(snap?.quests.map((q) => q.questId)).toEqual(RITES_QUESTS);
       expect(snap).toHaveProperty('placements', []);
       expect(cardsOf(snap)).toEqual([...RITES, 'card:tiger'].sort());
     });

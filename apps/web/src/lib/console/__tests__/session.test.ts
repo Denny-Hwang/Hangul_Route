@@ -59,3 +59,11 @@ describe('console session (F-CONSOLE-001 §3.2)', () => {
     expect(writeSession({ token: 't', accountId: 'a', displayName: 'n' })).toBe(false);
   });
 });
+
+describe('session key (F-APP-001 section 3.14)', () => {
+  it('is the one key named in content-schema, unchanged so signed-in tabs stay signed in', async () => {
+    const { CONSOLE_SESSION_KEY } = await import('@hangul-route/content-schema');
+    expect(SESSION_KEY).toBe(CONSOLE_SESSION_KEY);
+    expect(SESSION_KEY).toBe('hr:console:session');
+  });
+});

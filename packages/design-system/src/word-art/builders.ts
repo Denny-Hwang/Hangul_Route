@@ -15,6 +15,18 @@ export function r1(v: number): number {
 
 const pt = ([x, y]: Pt): string => `${n(x)} ${n(y)}`;
 
+/**
+ * A flat list of numbers as points: `pts(50, 33, 63, 27)` is
+ * `[[50, 33], [63, 27]]`. The art batches write outlines this way, so a glyph
+ * costs fewer source bytes (W7, §8.1 (a)); throws on an odd count.
+ */
+export function pts(...xy: readonly number[]): Pt[] {
+  if (xy.length % 2 !== 0) throw new Error(`pts needs an even count of numbers (x, y pairs): ${xy.length}`);
+  const out: Pt[] = [];
+  for (let i = 0; i < xy.length; i += 2) out.push([xy[i]!, xy[i + 1]!]);
+  return out;
+}
+
 export function circle(x: number, y: number, r: number, paint: WordArtPaint = {}): WordArtShape {
   return { t: 'circle', x: r1(x), y: r1(y), r: r1(r), ...paint };
 }

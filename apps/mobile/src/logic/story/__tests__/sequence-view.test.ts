@@ -180,9 +180,9 @@ describe('sequenceSummary and payload', () => {
       replayed: true,
       skipped: false,
     });
-    expect(sequenceFinishedPayload({ storyId: null, sequenceId: 'minigame:s1-rites-story-1' }, summary, true)).toMatchObject({
+    expect(sequenceFinishedPayload({ storyId: null, sequenceId: 'minigame:s1-rites-q3-apply' }, summary, true)).toMatchObject({
       storyId: null,
-      sequenceId: 'minigame:s1-rites-story-1',
+      sequenceId: 'minigame:s1-rites-q3-apply',
       skipped: true,
     });
   });

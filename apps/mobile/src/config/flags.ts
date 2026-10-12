@@ -28,6 +28,16 @@ function parseBool(raw: string | undefined, fallback: boolean): boolean {
   return fallback;
 }
 
+/**
+ * True in a development build only: React Native and Metro set the global
+ * `__DEV__`; elsewhere (tests, scripts) a non-production `NODE_ENV` counts.
+ */
+function isDevBuild(): boolean {
+  const dev = (globalThis as { __DEV__?: unknown }).__DEV__;
+  if (typeof dev === 'boolean') return dev;
+  return process.env.NODE_ENV !== 'production';
+}
+
 export interface Flags {
   /**
    * VoiceEcho mini-game. STT accuracy on young learners' Korean voices is
@@ -88,6 +98,21 @@ export interface Flags {
    * the beta. The stage latch writer (R-1b) runs with it off.
    */
   myRouteEnabled: boolean;
+
+  /**
+   * Words (F-VOC-003): the Library Words card, the topic picker, the topic
+   * page and the flashcards. OFF until the free-set topics are approved and
+   * native-reviewed (C-7 flips it).
+   */
+  vocabTopicsEnabled: boolean;
+
+  /**
+   * Lists `draft` vocabulary topics in the picker (F-VOC-001 section 3.7).
+   * OFF by default and dev builds only: a release build ignores the env
+   * value, so a leftover override can never put unreviewed topics in front
+   * of learners.
+   */
+  vocabShowDrafts: boolean;
 }
 
 const launchDefaults: Flags = {
@@ -100,6 +125,8 @@ const launchDefaults: Flags = {
   placementEnabled: false,
   audioClips: true,
   myRouteEnabled: false,
+  vocabTopicsEnabled: false,
+  vocabShowDrafts: false,
 };
 
 export const flags: Flags = {
@@ -118,6 +145,9 @@ export const flags: Flags = {
   placementEnabled: readBool('EXPO_PUBLIC_PLACEMENT_ENABLED', launchDefaults.placementEnabled),
   audioClips: parseBool(process.env.EXPO_PUBLIC_AUDIO_CLIPS, launchDefaults.audioClips),
   myRouteEnabled: parseBool(process.env.EXPO_PUBLIC_MY_ROUTE_ENABLED, launchDefaults.myRouteEnabled),
+  vocabTopicsEnabled: parseBool(process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED, launchDefaults.vocabTopicsEnabled),
+  vocabShowDrafts:
+    isDevBuild() && parseBool(process.env.EXPO_PUBLIC_VOCAB_SHOW_DRAFTS, launchDefaults.vocabShowDrafts),
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;

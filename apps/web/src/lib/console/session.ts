@@ -1,3 +1,4 @@
+import { CONSOLE_SESSION_KEY } from '@hangul-route/content-schema';
 import { browserStorage, readItem, removeItem, writeItem, type KeyValueStorage } from '../i18n/safe-storage';
 
 /**
@@ -14,7 +15,8 @@ export interface ConsoleSession {
 
 export type { KeyValueStorage };
 
-export const SESSION_KEY = 'hr:console:session';
+/** Named once in content-schema (F-APP-001 section 3.14), so the learner app clears the same key. */
+export const SESSION_KEY = CONSOLE_SESSION_KEY;
 
 function defaultStorage(): KeyValueStorage | null {
   return browserStorage('session');

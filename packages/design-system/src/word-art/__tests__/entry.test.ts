@@ -82,6 +82,8 @@ describe('./word-art entry', () => {
       'marker',
       'siblings',
       'wordArtModel',
+      // W-3: dense point lists for the art batches
+      'pts',
     ]) {
       expect(entry, name).toHaveProperty(name);
     }

@@ -26,7 +26,10 @@ import type { WordArtFamily } from '../types';
  * drawn) and nature (9 word: visuals, the cloud drawn) and pins their counts.
  * F-VOC-001 V-6b serves travel (12, the bus drawn), sport (12, the soccer ball
  * drawn), culture (7 word: visuals; the other five K-Culture words are cards)
- * and science (12) and pins their counts.
+ * and science (12) and pins their counts. Batch W-3 drew food, color and
+ * count (they left the map, so their full check is on) and the colour-swatch
+ * objects of later families: `animal-bear` and `animal-elephant` (animal now
+ * waits for 8) and `nature-flower` (nature waits for 7).
  */
 interface Awaiting {
   /** The PR that draws the family (F-VOC-002 §6). */
@@ -36,14 +39,11 @@ interface Awaiting {
 }
 
 const AWAITING_ART: Readonly<Partial<Record<WordArtFamily, Awaiting>>> = {
-  food: { batch: 'W-3', missing: 8 },
-  color: { batch: 'W-3', missing: 12 },
-  count: { batch: 'W-3', missing: 12 },
-  animal: { batch: 'W-4', missing: 10 },
+  animal: { batch: 'W-4', missing: 8 },
   body: { batch: 'W-4', missing: 12 },
   family: { batch: 'W-5', missing: 12 },
   school: { batch: 'W-5', missing: 10 },
-  nature: { batch: 'W-5', missing: 8 },
+  nature: { batch: 'W-5', missing: 7 },
   travel: { batch: 'W-6', missing: 11 },
   sport: { batch: 'W-6', missing: 11 },
   culture: { batch: 'W-6', missing: 7 },

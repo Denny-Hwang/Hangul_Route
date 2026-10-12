@@ -18,6 +18,7 @@
     "./icon-glyphs": "./src/components/Icon/glyphs.ts",
     "./icon-glyphs/dom": "./src/components/Icon/dom.tsx",
     "./pip-geometry": "./src/components/PipRow/geometry.ts",
+    "./heritage-card-ids": "./src/components/HeritageCardArt/card-ids.ts",
     "./components/*": "./src/components/*/index.ts"
   },
   "scripts": {
