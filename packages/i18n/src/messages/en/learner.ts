@@ -830,6 +830,8 @@ export const learner = {
       approximation: (text: string, rationale: string) => `About “${text}”: ${rationale}`,
       dependsOnToday: 'This depends on today’s date.',
       usedInQuestions: 'Used in questions and notes',
+      /** The last Sources bucket: a fact only the story card's back face cites (F-STORY-006 §3.8). */
+      onTheCard: 'On the story card',
       highlighted: { pill: 'Highlighted' },
       /** A grown-up action: the link is opened only after the gate. */
       openLink: { cta: 'Open link' },
@@ -1060,7 +1062,8 @@ export const learner = {
     playAgain: { cta: 'Play again' },
     startOver: { cta: 'Start over' },
     /** The state line of a tile or tale row: always words, never colour alone. */
-    state: { new: 'New', inProgress: 'Keep reading', finished: 'Finished', locked: 'Locked' },
+    /** `locked` is a tile outside the free set (switch on): the closed-lesson word of F-ENT-003 section 3.11, with the dotted ring. */
+    state: { new: 'New', inProgress: 'Keep reading', finished: 'Finished', locked: 'Not open yet' },
     minutes: { pill: (minutes: number) => `about ${minutes} min` },
     /**
      * The one label of a whole story tile: `title` is the story's title (content), `state` a `state`
@@ -1464,14 +1467,26 @@ export const learner = {
   /**
    * Lessons a learner cannot start yet (F-ENT-003 section 3.11, Appendix A). One calm word for the boundary,
    * with the dotted ring; never a lock, a price or a product name. E3-5 draws `notOpen` in the Journey legend
-   * line; the episode page, Home and Library words join this group in E3-6 and E3-7. The Learning Route page
-   * (LR-5b) reads `notOpen`, and `openForYou` with `practiceWords.cta` for its free-end hero.
+   * line; the episode page, Home and Library words join this group in E3-6 and E3-7. Any age reads these, so
+   * they never count and never say "trial" or "day". `ask.*` is the episode page's ask button by device and
+   * learner (`askFor`): `self` never says "grown-up". `freeEnd.title` and `openForYou` are the end of the free
+   * lessons (E3-7 draws them on Home and Results). The Learning Route page (LR-5b) reads `notOpen`, and
+   * `openForYou` with `practiceWords.cta` for its free-end hero.
    */
   access: {
     /** Equal to `myRoute.state.notOpen` and `myRoute.legend.notOpen` (amendment section 7.3). */
     notOpen: 'Not open yet',
+    preview: { line: 'This lesson is not open yet. You can still see what it teaches.' },
+    ask: { family: 'Ask a grown-up', class: 'Ask your teacher or a grown-up', self: 'See how to open it' },
+    back: { cta: 'Back to open lessons' },
+    freeEnd: { title: 'You finished your first lessons!' },
     openForYou: 'You played every quest that is open for you.',
     practiceWords: { cta: 'Practice words' },
+    readStory: { cta: 'Read a story' },
+    replay: { cta: 'Play a favorite again' },
+    home: { cta: 'Back home' },
+    /** `topicTitle`: the practice card names a free word topic, "Food words" (E3-D D10; a function, word order differs in ko and es). */
+    practice: { subtitle: 'Keep practicing', topicTitle: (title: string) => `${title} words` },
   },
   /**
    * The Stage 1 ceremony (F-QUEST-002 §3.8, wireframe results/stage1-complete): Hoya cheering, the
@@ -1532,6 +1547,97 @@ export const learner = {
       everyLetter: 'Every letter!',
       backHome: { cta: 'Back home' },
       seeCards: { cta: 'See my cards' },
+    },
+  },
+  /**
+   * The learner's own weekly plan (F-PLAN-002 section 3.9, AMENDMENTS-PLC-PLAN-HANDOFF FP-B6, FP-B15,
+   * P2-7a): the Home prompt, the Profile row and the proposal screen (wireframe
+   * journey/my-route-overview.md K1). Learner copy says "plan", never "route" (OD-7). No price, no
+   * plan product name and no "Premium": locked or unreleased lessons read only "More lessons are
+   * coming." Projections, never deadlines; nothing is ever late. Reading, listening and writing only.
+   */
+  weeklyPlan: {
+    homePrompt: {
+      line: 'Hoya can make a weekly plan for you',
+      make: { cta: 'Make my plan' },
+      notNow: { cta: 'Not now' },
+    },
+    profileRow: { make: 'Make a weekly plan', open: 'Your weekly plan' },
+    proposal: {
+      title: 'Your weekly plan',
+      intro: 'Hoya made a weekly plan for you.',
+      /** Section 3.10: a class or home plan is already there; it comes first on a day. */
+      otherPlanFirst: {
+        teacher: 'Your teacher has a weekly plan for you. You can add your own; theirs comes first.',
+        home: 'There is a weekly plan from home for you. You can add your own; that one comes first.',
+      },
+      /** Where the plan starts, by `RouteProposal.headline`; the level is never named. */
+      headline: {
+        'start-stage1': 'We start with the first Hangul letters.',
+        'continue-stage1': 'We go on with Hangul from where you are.',
+        'continue-lessons': 'We go on with new lessons from where you are.',
+        'stories-and-words': 'Heritage stories and word topics come next.',
+        'beyond-content': 'Stories and practice come next. New lessons are on the way.',
+      },
+      paceTitle: 'How many days a week?',
+      pace: { gentle: 'Gentle', steady: 'Steady', brisk: 'Brisk' },
+      paceDays: (days: number) => plural('en', days, { one: '1 day a week', other: `${days} days a week` }),
+      paceLabel: (pace: string, days: number) => plural('en', days, { one: `${pace}, 1 day a week`, other: `${pace}, ${days} days a week` }),
+      lengthTitle: 'How long?',
+      length: { '4-week': '4 weeks', '12-week': '12 weeks', '6-month': '6 months', custom: 'Choose weeks' },
+      suggested: { pill: 'Hoya suggests' },
+      weeks: (weeks: number) => plural('en', weeks, { one: '1 week', other: `${weeks} weeks` }),
+      fewerWeeks: 'One week less',
+      moreWeeks: 'One week more',
+      /** One sentence per length card (AMENDMENTS section 1.3): a projection, never a deadline or a finish it does not reach. */
+      preview: {
+        lessonsAndStories: (stage: number, week: number) => `Stage ${stage} is done around week ${week}, then heritage stories.`,
+        cutShort: (weeks: number) =>
+          plural('en', weeks, {
+            one: 'The first part of the lessons fits in 1 week. More weeks finish them.',
+            other: `The first part of the lessons fits in ${weeks} weeks. More weeks finish them.`,
+          }),
+        freePractice: (weeks: number) =>
+          plural('en', weeks, {
+            one: 'About 1 week of lessons is ready now. The rest is free practice.',
+            other: `About ${weeks} weeks of lessons are ready now. The rest is free practice.`,
+          }),
+        lessonsFill: (weeks: number) =>
+          plural('en', weeks, { one: 'Lessons fill the whole week.', other: `Lessons fill all ${weeks} weeks.` }),
+        storiesAndWords: (stories: number) =>
+          stories === 0
+            ? 'Word topics and free practice.'
+            : plural('en', stories, { one: '1 heritage story and word topics.', other: `${stories} heritage stories and word topics.` }),
+        moreComing: 'More lessons are coming.',
+      },
+      startTitle: 'Starts',
+      start: { today: 'Today', tomorrow: 'Tomorrow', pick: 'Pick a day' },
+      pickDay: 'Pick the first day',
+      pickDayLabel: (weekday: string, date: string) => `${weekday}, ${date}`,
+      changeDays: { cta: 'Change days and time' },
+      hideDays: { cta: 'Hide days and time' },
+      daysTitle: 'Which days?',
+      daysHint: (days: number) => plural('en', days, { one: 'Pick 1 day.', other: `Pick ${days} days.` }),
+      minutesTitle: 'Minutes a day',
+      minutes: (minutes: number) => `${minutes} min`,
+      minutesLabel: (minutes: number) => `${minutes} minutes a day`,
+      firstWeek: 'First week',
+      firstWeekEmpty: 'This week is free practice.',
+      comingSoonItem: (title: string) => `${title} (coming soon)`,
+      weekRowLabel: (day: string, title: string) => `${day}: ${title}`,
+      startPlan: { cta: 'Start this plan' },
+      starting: { cta: 'Starting...' },
+      notNow: { cta: 'Not now' },
+      saveFailed: 'That did not work. Try again.',
+      nothingReady: 'New lessons are on the way. Hoya can make a plan when they are here.',
+      back: { cta: 'Back' },
+      /** The learner already follows an own plan (the overview arrives with P2-7b). */
+      hasPlan: {
+        title: 'You have a weekly plan.',
+        line: 'It moves along with you, one week at a time.',
+        thisWeek: 'This week',
+        nothingThisWeek: 'Nothing is planned this week. Play anything you like.',
+      },
     },
   },
 } as const;

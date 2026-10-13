@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:uigwe-royal-birthday",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "왕실 잔치를 그림으로 남긴 의궤",
     "romanization": "Wangsil janchireul geurimeuro namgin uigwe",
     "en": "A Picture Record of a Royal Birthday"
   },
   "summaryEn": "Uigwe were detailed reports, full of pictures, of royal ceremonies and projects. Hoya opens the Wonhaeng Eulmyo Jeongni Uigwe, the record of King Jeongjo's 1795 celebration for his mother's 60th birthday.",
+  "hoyaIntroEn": "Let's open a royal report full of pictures, made for a big birthday celebration!",
+  "hoyaOutroEn": "Words and pictures kept the royal celebration alive. Now you know what an uigwe is!",
   "theme": "rites",
   "kind": "documentary",
   "recommendedStage": 5,
@@ -25,9 +27,11 @@
     "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
   },
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "advisory": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "advisory": [],
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-13"
   },
   "keywords": [
     {
@@ -352,7 +356,7 @@
                 "flip": true
               }
             ],
-            "altEn": "Court dancers perform beside a feast table, and a fine curtain screens the seat of Lady Hyegyeong, the guest of honour."
+            "altEn": "Court dancers perform beside a feast table, and a fine curtain screens the seat of Lady Hyegyeong, the guest of honor."
           }
         },
         {
@@ -575,8 +579,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-uigwe-royal-birthday"
+  },
+  "shelf": {
+    "category": "culture",
+    "order": 17,
+    "sampler": false,
+    "minutes": 5
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Royal Picture Record",
+    "keywordId": "uigwe",
+    "factId": "f1"
+  },
   "facts": [
     {
       "id": "f1",
@@ -826,7 +844,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification."
+    "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
   },
   "authorNotes": "Narration omits the ages in the silk-gift entry (70+ and those turning 61) because they come from a single source; the Korean line '어르신' is a vocabulary item. 회갑 (source term) and 환갑 (everyday term) both mean the 60th birthday; 환갑 is taught. The feast date is given on the lunar calendar as recorded; the KHS English page says 'February 1795', which refers to the lunar leap 2nd month. The leap-month wording was rewritten simply ('an extra leap month after the second month'). The Hwaseong feast (13th of the leap 2nd month) took place during the 1795 trip celebrating her 60th year; her actual birthday fell in the 6th lunar month and the Encyclopedia notes a formal feast on 6/18 in Seoul, so narration says 'a celebration of her 60th birthday' and never says the Hwaseong feast was on the birthday itself. Revision: the uigwe is now named (원행을묘정리의궤); banchado described as 'long pictures' not paintings; 'woodblock' was REMOVED - Korean authorities (Encyclopedia of Korean Culture) say only 판화 (prints), and no Korean institutional source found says woodblock specifically (a Cambridge/Amsterdam UP page suggested by a checker did not mention woodcuts when re-fetched). The encyclopedia calls this 'the first uigwe printed with movable type'; narration says 'unusually' to stay conservative. UNESCO page text is paraphrased (unesco.org unreachable for re-quoting); UNESCO nomination-form quotes were re-checked against a saved copy of the PDF; the draft's banchado caption quote ('Banchado in color ... excellent clarity') could not be found in the PDF text and was replaced by the §1 Summary sentence on Banchado and Doseol. Omitted: the length of a painting (15.4 m, single source), page counts beyond f7, the story of Prince Sado (tragic), and the 1866 removal of Oegyujanggak uigwe to France and their 2011 return (war-related). PASS 3: second source for 판화 found (정병모, 판화사적 연구: 'prints' - and specifically 목판화, woodblock prints, with 정리자 metal type); narration stays at the more general 'prints'. Silk gifts (f6) confirmed directly in the original Annals entry text (命進饌時參班老人, 七十以上及六十一歲人, 各賜帛一匹); single primary source kept, no numbers in narration.",
   "errata": []

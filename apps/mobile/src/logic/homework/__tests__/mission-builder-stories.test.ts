@@ -5,6 +5,7 @@ import { episodesAll } from '../../../content/episodes';
 import { questsAll } from '../../../content/quests';
 import { storiesAll } from '../../../content/stories';
 import { scanLearnerCopy } from '../banned-text';
+import type { RouteNextInput } from '../../route-next';
 import { emptyBookmarks, type BookmarkFile } from '../../story/bookmarks';
 import { defaultStoryIndex, type StoryIndexEntry } from '../../story/story-index';
 import { storyLockFor } from '../../story/story-pick';
@@ -516,6 +517,63 @@ describe('production gate: the shipped bundle (D14, F-STORY-004 §6 "ships dark"
       expect(defaultStoryIndex()).toEqual([]);
       expect(plan.cards[0]?.kind).toBe('explore');
     }
+  });
+});
+
+describe('a class plan item for a shelf story, on the shipped bundle (F-STORY-001 PR 1.9)', () => {
+  const qid = 'quest:story-seollal-new-year-listen';
+
+  function planWithClassItem(): MissionPlan {
+    // The class plan derived into the learner's homework (plan-derivation does this on Home).
+    const snap: ProgressSnapshot = {
+      ...snapshot(),
+      homework: [
+        {
+          id: `plan:class-1#${qid}`,
+          profileId: 'profile:kid1',
+          questId: qid,
+          episodeId: 'episode:shelf-seollal-new-year',
+          assignedBy: 'teacher',
+          assignedAt: '2026-05-01T00:00:00.000Z',
+          targetDate: TODAY,
+        },
+      ],
+    };
+    const route: RouteNextInput = {
+      snapshot: snap,
+      profileId: 'profile:kid1',
+      today: TODAY,
+      sources: [{ id: 'plan:class-1', kind: 'class', assignedAt: '2026-05-01T00:00:00.000Z', items: [{ kind: 'quest', id: qid }], meta: null }],
+      quests: questsAll,
+      episodes: episodesAll,
+      cursor: { isEntitled: () => true, skipQuestIds: undefined },
+      isQuestOpen: () => true,
+      gating: { active: false, tier: 'premium' },
+    };
+    return buildTodaysMission({
+      profileId: 'profile:kid1',
+      snapshot: snap,
+      quests: questsAll,
+      episodes: episodesAll,
+      today: TODAY,
+      route,
+      stories: { entries: defaultStoryIndex(), bookmarks: emptyBookmarks(), isLocked: () => false },
+    });
+  }
+
+  it('the story listen quest is slot 2, "Next in your plan", opening its shelf episode', () => {
+    expect(planWithClassItem().cards[1]).toMatchObject({
+      kind: 'new',
+      questId: qid,
+      episodeId: 'episode:shelf-seollal-new-year',
+      subtitle: 'nextInPlan',
+    });
+  });
+
+  it('the story slots do not offer the same story again', () => {
+    const plan = planWithClassItem();
+    const seollal = plan.cards.filter((c) => c.questId === qid || c.storyId === 'story:seollal-new-year');
+    expect(seollal.map((c) => c.slot)).toEqual([2]);
   });
 });
 

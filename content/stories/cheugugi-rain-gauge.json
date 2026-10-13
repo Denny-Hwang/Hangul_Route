@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:cheugugi-rain-gauge",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "비를 재는 그릇, 측우기",
     "romanization": "Bireul jaeneun geureut, cheugugi",
     "en": "The Bowl That Measured the Rain"
   },
   "summaryEn": "Hoya follows the Joseon crown prince's rain experiments to the 1442 rain gauge, the cheugugi, and meets the only Joseon rain-gauge vessel known to survive.",
+  "hoyaIntroEn": "Pitter-patter! Let's find out how Joseon measured the rain.",
+  "hoyaOutroEn": "Now you know how people in Joseon measured the rain. Listen for the raindrops next time it rains!",
   "theme": "crafts",
   "kind": "science",
   "recommendedStage": 1,
@@ -24,9 +26,11 @@
     "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
   },
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "advisory": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "advisory": [],
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-13"
   },
   "keywords": [
     {
@@ -491,8 +495,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-cheugugi-rain-gauge"
+  },
+  "shelf": {
+    "category": "culture",
+    "order": 6,
+    "sampler": true,
+    "minutes": 4
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Rain Gauge",
+    "keywordId": "cheugugi",
+    "factId": "f7"
+  },
   "facts": [
     {
       "id": "f1",
@@ -652,6 +670,29 @@
           "quoteOrLocator": "English name as printed in the page footer: \"Copyright ⓒ National Meteorological Museum of Korea All rights reserved\""
         }
       ]
+    },
+    {
+      "id": "f7",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "In 1442 a cast-metal rain gauge, named cheugugi ('rain-measuring instrument'), was set on a stand; after each rain an official measured the water in it and wrote it down.",
+      "claimKo": "1442년(세종 24) 쇠로 주조한 비 재는 기구에 측우기라는 이름을 붙여 대 위에 두고, 비가 온 뒤마다 관원이 고인 물의 깊이를 재어 기록하였다.",
+      "sources": [
+        {
+          "title": "세종실록 96권, 세종 24년(1442) 5월 8일 정묘 1번째 기사 「호조에서 우량을 측정하는 일에 관해 아뢰다」",
+          "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+          "url": "https://sillok.history.go.kr/id/kda_12405008_001",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "국역: \"서울에서는 쇠를 주조(鑄造)하여 기구(器具)를 만들어 명칭을 측우기(測雨器)라 하니 … 서운관(書雲觀)에 대(臺)를 만들어 측우기를 대(臺) 위에 두고 매양 비가 온 후에는 본관(本觀)의 관원이 친히 비가 내린 상황을 보고는, 주척(周尺)으로써 물의 깊고 얕은 것을 측량하여 … 상세히 써서 … 기록해 둘 것이며\""
+        },
+        {
+          "title": "국보 공주 충청감영 측우기 (Rain Gauge of Chungcheong Provincial Office, Gongju)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111103290000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"1442년(세종 24)에 발명된 측우기는 … 땅에 스며든 물의 깊이를 측정하던 이전의 비합리적인 강우 측정방식에서 벗어나 본격적으로 강수량을 정량적으로 측정 가능케 한 발명품\""
+        }
+      ]
     }
   ],
   "referenceDisplay": "Sources: 국사편찬위원회 조선왕조실록(세종실록)·우리역사넷; 국가유산청 국가유산포털; 한국민족문화대백과사전; 국립기상박물관",
@@ -659,7 +700,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
+    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 culture review: f7 added for the story card, a shortened restatement of f3 with the same sources."
   },
   "authorNotes": "Attribution: popular retellings often say Jang Yeong-sil invented the rain gauge, but the Sejong Sillok (1441-04-29, lunar) credits the crown prince's (later King Munjong's) experiments and encykorea's 통영 측우대 entry says the system was made under the crown prince's lead; Jang Yeong-sil is therefore not mentioned. Deliberately omitted: the KHS description's comparative claim that the cheugugi was the world's first scientific rain gauge, about 200 years before the West (priority claims are contested); the 1441-08-18 proposal's dimensions and the 1442 standard size (1 cheok 5 chon by 7 chon); the Gongju gauge's removal to Japan (KHS: c.1915; encykorea: early 1910s) and return in 1971 (colonial-era history is out of scope); the 1770/1771 revival under King Yeongjo (sources differ on the year). Materials: the Sillok uses 銅 (copper/bronze) for the crown prince's 1441 vessel and 鐵 (cast metal/iron) for the 1442 standard, so narration says 'copper' and 'metal' respectively; the Gongju gauge is bronze (encykorea). All Sillok dates are lunar. Theme set to 'crafts' to match BP04/BP05 Pillar E (E3 측우기). REVISION: (a) Scene 6/summary/learning goal now say only one gauge VESSEL survives; stone stands (대석/측우대) also survive (encykorea E0007902; Tongyeong stand is a Treasure, E0068941). (b) Museum English name 'National Meteorological Museum of Korea' taken from the museum's own website footer (science.kma.go.kr/museum/); the KHS portal lists only the Korean name. (c) Romanization of 서운관 is Seoun-gwan (seo-un-gwan); 'Seounwan' (proposed by one fact-check) would transcribe 서운완, so it was not adopted. (d) Second source added for f2 (신편한국사 via 우리역사넷); new sources accessed 2026-10-10. PR 1.8c: check c1 distractors replaced with options the story contradicts (s2: the water soaked in; the crown prince dug), so the item has one answer from the story text.",
   "errata": []

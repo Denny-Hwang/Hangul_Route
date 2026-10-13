@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:pansori-tales",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "판소리로 듣는 흥부와 놀부, 토끼와 자라",
     "romanization": "Pansoriro deunneun Heungbuwa Nolbu, tokkiwa jara",
     "en": "Pansori Tales: Heungbu's Swallow and the Clever Rabbit (Traditional Tales)"
   },
   "summaryEn": "Hoya visits a pansori performance (UNESCO 2003/2008) and hears two traditional stories from its five surviving works: kind Heungbu and the grateful swallow, and the clever rabbit who escapes the Dragon King's palace. This Korean rabbit-and-turtle tale is a different story from Aesop's 'The Tortoise and the Hare'.",
+  "hoyaIntroEn": "Let's listen to pansori! One singer and one drummer tell two old tales.",
+  "hoyaOutroEn": "A kind brother, a grateful swallow and a clever rabbit. Eolssigu, what a show!",
   "theme": "crafts",
   "kind": "folk-tale",
   "recommendedStage": 2,
@@ -25,13 +27,15 @@
     "retellingNoteEn": "Shortened and made gentler; versions differ."
   },
   "review": {
-    "language": "draft",
-    "culture": "draft",
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
     "advisory": [
       "mild-peril",
       "trickery"
     ],
-    "advisoryNoteEn": "Tricksters, a swallow hurt on purpose and a moment of danger, told gently; the harshest parts are left out."
+    "advisoryNoteEn": "Tricksters, a swallow hurt on purpose and a moment of danger, told gently; the harshest parts are left out.",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-13"
   },
   "keywords": [
     {
@@ -616,8 +620,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-pansori-tales"
+  },
+  "shelf": {
+    "category": "story-time",
+    "order": 6,
+    "sampler": false,
+    "minutes": 6
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Pansori",
+    "keywordId": "pansori",
+    "factId": "f1"
+  },
   "facts": [
     {
       "id": "f1",
@@ -992,7 +1010,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
+    "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
   },
   "authorNotes": "REVISED 2026-10-10. Traditional stories: narration describes the tales' content (basic plot per the Encyclopedia of Korean Culture and the National Folk Museum's folk-literature dictionary), not history. Names: the pansori work is 흥보가 (Heungbo/Nolbo) and the novel is 흥부전 (Heungbu/Nolbu); narration uses Heungbu/Nolbu. Ending: the repentance/reconciliation is in the basic plot of the novel Heungbu-jeon (E0066012) AND in the Park Bong-sul and Jeong Gwang-su sung texts (한국민속문학사전 '놀보박타령'); the Encyclopedia's Heungboga entry itself says only that Nolbo is ruined; endings differ (e.g. the 경판본 version ends differently; 신재효's text is described as similar to Jeong Gwang-su's), so narration says 'In well-known versions'. Softened on purpose: Heungbu being beaten and his paid stand-in beatings (매품팔이); Nolbu breaking the swallow's leg is shown only as 'hurt a swallow on purpose'; harmful things from Nolbu's gourds not detailed. Rabbit tale: 'liver' kept because the plot needs it, with a reassurance line right after; the turtle's fate (dies on land or returns empty-handed; in some versions the rabbit's droppings cure the king) is left out. 별주부 (鼈主簿) is the turtle's title, not a name; the 도사 is a sage (道士: one who cultivates the Way). The Korean tale is explicitly distinguished from Aesop's race (summary, scene 6, reference_display, f11). 구토지설: 한국민속문학사전 '수궁가' says Sugungga's frame is the 구토지설 told by Seon Do-hae to Kim Chun-chu and recorded in the Samguk sagi's biographies; the Encyclopedia ('토끼전') names the 구토 tale in the Kim Yu-sin biography as a documented example - narration says only 'an early form is recorded in the Samguk sagi'. Both sources note the older Indian Buddhist (Jataka) roots; not used. 추임새 is now taught in scene 2 and added to vocab (형제 dropped from vocab; it remains the scene 5 Korean word). Combined in one episode to keep the cluster at 6. Theme 'crafts' because the app files performing arts under Play & Crafts. FINAL PASS (3rd check, 2026-10-10): scene 2 now says UNESCO named pansori a masterpiece in 2003 and added it to the Representative List in 2008 (UNESCO page: inscribed 2008, originally proclaimed 2003). f11 now gives the Aesop title as in the cited Townsend text ('The Hare and the Tortoise', also known as 'The Tortoise and the Hare'). 'Greedy' for Nolbu rests on the NFM 놀보박타령 entry, which was added to f5. AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Fact scope: f1-f3, f5, f8 (the works and novels), f11 and f12 are documented; f6, f7, f9, f10 (plot) are in-the-tale. 'Let's hear two' (s2) carries an approximation entry. Advisory note now names the hurt swallow. REVIEW 2026-10-11 (PR 1.8d): narration spells Heungbujeon, Tokkijeon; s3 'One day' (rescue undated); s5 follows f7; s6-s8 past tense; PR #208 fixes: s6 caption drops 'loyal' (f8); 'the rabbit' in s7-s8.",
   "errata": []

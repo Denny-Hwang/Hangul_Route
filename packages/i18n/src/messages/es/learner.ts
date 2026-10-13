@@ -648,6 +648,7 @@ export const learner = {
       approximation: (text: string, rationale: string) => `Sobre “${text}”: ${rationale}`,
       dependsOnToday: 'Esto depende de la fecha de hoy.',
       usedInQuestions: 'Se usa en preguntas y notas',
+      onTheCard: 'En la tarjeta',
       highlighted: { pill: 'Destacado' },
       openLink: { cta: 'Abrir enlace' },
       copyLink: { cta: 'Copiar enlace' },
@@ -841,7 +842,7 @@ export const learner = {
     readAgain: { cta: 'Leer otra vez' },
     playAgain: { cta: 'Jugar otra vez' },
     startOver: { cta: 'Empezar de cero' },
-    state: { new: 'Nueva', inProgress: 'Seguir leyendo', finished: 'Terminada', locked: 'Bloqueada' },
+    state: { new: 'Nueva', inProgress: 'Seguir leyendo', finished: 'Terminada', locked: 'Aún sin abrir' },
     minutes: { pill: (minutes: number) => `cerca de ${minutes} min` },
     tileLabel: (title: string, state: string, minutes: number, stars = 0) =>
       `${title}. ${state}. ${plural('es', minutes, { one: 'Cerca de 1 minuto', other: `Unos ${minutes} minutos` })}.` +
@@ -890,8 +891,29 @@ export const learner = {
       rest: 'Hiciste todo lo que está abierto ahora. Viene más.',
       beyond: '¡Sabes mucho! Vienen más aventuras.',
       cta: { start: 'Empezar', continue: 'Continuar' },
+      error: 'Hoya no pudo abrir tu Ruta de aprendizaje.',
     },
     cta: { stories: 'Abrir historias', library: 'Abrir la colección' },
+    now: { label: 'Ahora' },
+    goal: {
+      label: 'Meta',
+      stage: (n: number, title: string) => `Etapa ${n} · ${title}`,
+      inGoal: (n: number, title: string) => `Etapa ${n} · ${title}: estás en tu etapa meta`,
+      explore: (n: number, title: string) => `Explora la Etapa ${n} · ${title}`,
+      exploreInGoal: (n: number, title: string) => `Explora la Etapa ${n} · ${title}: estás en tu etapa meta`,
+      tasteLine: 'Prueba las primeras misiones de esta etapa.',
+      reachedStage: (n: number, title: string) => `Etapa ${n} · ${title} · alcanzada`,
+      keepGoing: (title: string) => `Sigue adelante: ${title}`,
+      reachedHoya: 'Llegaste a tu meta. ¡Hoya está orgulloso!',
+      endOfRoad: 'Llegaste al final del camino abierto. Viene más.',
+      from: {
+        class: 'Del plan semanal de tu clase',
+        school: 'Del plan semanal de tu escuela',
+        family: 'Del plan semanal de tu familia',
+        self: 'De tu propio plan semanal',
+        default: 'Sugerencia de Hoya',
+      },
+    },
     state: {
       complete: 'Completa',
       known: 'Ya lo sabías',
@@ -901,7 +923,7 @@ export const learner = {
       later: 'Más adelante',
       notOpen: 'Aún sin abrir',
     },
-    tag: { here: 'Estás aquí', start: 'Empezaste aquí' },
+    tag: { here: 'Estás aquí', goal: 'Tu meta', start: 'Empezaste aquí' },
     cell: { playing: 'Jugando' },
     caption: {
       played: (n: number) => `${count(n, 'misión jugada', 'misiones jugadas')}`,
@@ -964,6 +986,12 @@ export const learner = {
         week: (n: number) => `Semana ${n} de tu plan semanal`,
         stages: 'Siete etapas',
       },
+    },
+    wall: {
+      title: 'Muro de letras',
+      lead: 'Una letra se ilumina cuando se termina la misión que la enseña.',
+      state: { met: 'Vista en una misión', known: 'Ya conocida', ahead: 'Llega en una misión' },
+      final: 'al final',
     },
   },
 

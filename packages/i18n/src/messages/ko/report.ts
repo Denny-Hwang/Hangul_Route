@@ -93,6 +93,7 @@ export const report = {
   },
   detail: {
     lettersStrong: (name: string) => `${name}: 잘 아는 글자`,
+    lettersMore: (n: number) => `그 밖에 글자 ${n}개 더`,
     lettersPractising: '연습하고 있는 글자',
     lettersNew: '이 기간에 새로 배운 글자',
     totals: (quests: number, cards: number) => `처음부터 지금까지: 퀘스트 ${quests}개, 카드 ${cards}장`,
@@ -209,6 +210,8 @@ export const report = {
     learners: (count: number) => `학습자 ${count}명`,
     olderApp: (count: number) => `학습자 ${count}명은 앱이 예전 버전이에요. 업데이트하면 날짜별 기록이 보여요.`,
     notSaved: (count: number) => `학습자 ${count}명은 마지막으로 저장한 지 7일이 넘었어요.`,
+    windowNotSaved: (count: number) => `학습자 ${count}명은 이 기간에 아직 저장된 기록이 없어요.`,
+    allBeforeJoin: '전체에는 학습자가 반에 들어오기 전에 한 연습도 포함돼요.',
     section: {
       practiceTogether: '함께 연습해요',
       daysPracticed: '연습한 날',

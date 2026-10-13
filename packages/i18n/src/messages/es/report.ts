@@ -104,6 +104,7 @@ export const report = {
   },
   detail: {
     lettersStrong: (name: string) => `Letras que ${name} conoce bien`,
+    lettersMore: (n: number) => plural('es', n, { one: 'Y 1 letra más', other: `Y ${n} letras más` }),
     lettersPractising: 'Letras en práctica',
     lettersNew: 'Letras nuevas en este periodo',
     totals: (quests: number, cards: number) => `Desde el inicio: ${questCount(quests)}, ${cardCount(cards)}`,
@@ -234,6 +235,12 @@ export const report = {
         one: '1 estudiante guardó por última vez hace más de 7 días.',
         other: `${count} estudiantes guardaron por última vez hace más de 7 días.`,
       }),
+    windowNotSaved: (count: number) =>
+      plural('es', count, {
+        one: '1 estudiante aún no tiene nada guardado de este periodo.',
+        other: `${count} estudiantes aún no tienen nada guardado de este periodo.`,
+      }),
+    allBeforeJoin: 'El total incluye la práctica de cada estudiante de antes de unirse a la clase.',
     section: {
       practiceTogether: 'Practicar en grupo',
       daysPracticed: 'Días de práctica',

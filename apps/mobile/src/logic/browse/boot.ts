@@ -201,6 +201,11 @@ const PERSONA_HOME: Readonly<Record<AdultPersona, string>> = {
   teacher: APP_ROUTES.teacherHome,
 };
 
+/** The persona home (`/parent`, `/teach/home`) for the last grown-up persona, else sign-in. Never a learner id. */
+export function accountHomeUrl(lastPersona: AdultPersona | null): string {
+  return lastPersona ? PERSONA_HOME[lastPersona] : APP_ROUTES.signIn;
+}
+
 /**
  * [ Close ] on the catalogue (section 4.1): back to the page the tab came from
  * when it is on this origin and the tab's history has it (`canGoBack`, from
@@ -210,6 +215,6 @@ const PERSONA_HOME: Readonly<Record<AdultPersona, string>> = {
  * to the same address (`fallbackUrl`).
  */
 export function closeAction(i: { canGoBack: boolean; from: PassFrom; lastPersona: AdultPersona | null }): CloseAction {
-  const url = i.from === 'account' ? (i.lastPersona ? PERSONA_HOME[i.lastPersona] : APP_ROUTES.signIn) : APP_ROUTES.learn;
+  const url = i.from === 'account' ? accountHomeUrl(i.lastPersona) : APP_ROUTES.learn;
   return i.canGoBack ? { kind: 'back', fallbackUrl: url } : { kind: 'assign', url };
 }

@@ -115,7 +115,7 @@ export const consoleMsgs = {
     /** The persona switch and the persona name; the parent persona is labelled Family (OD-14). */
     persona: { parent: 'Family', teacher: 'Teacher' },
     /** Adult nav labels (F-APP-001 `ADULT_NAV`); an item whose sibling flag is off is not drawn. */
-    nav: { home: 'Home', reports: 'Reports', notes: 'Notes', classes: 'Classes', lessons: 'Lessons', billing: 'Billing' },
+    nav: { home: 'Home', reports: 'Reports', notes: 'Notes', classes: 'Classes', lessons: 'Lessons', billing: 'Billing', classReports: 'Class reports' },
     noApi: 'The console needs an API address (NEXT_PUBLIC_API_BASE_URL) on this build.',
   },
   /** Space kinds: a label ("Class code") and the home-page group heading. */
@@ -622,6 +622,17 @@ export const consoleMsgs = {
     },
     /** One neutral note above the cards while a payer card is past due (never the danger colour). */
     pastDue: "A payment didn't go through. Update your card in Manage subscription; learners keep the full route for a week.",
+    /**
+     * F-BILL-002 B-12 (section 4.6): the space settings archive confirm names the plan the archive
+     * affects. Archiving pauses the plan for learners; it never stops a subscription from renewing.
+     */
+    archiveConfirm: {
+      familyLoses: (space: string) => `Learners in ${space} lose the Family Plan while it is archived.`,
+      familyRenews: 'It keeps renewing until you cancel it in Billing.',
+      licenseRenews: 'The Group License keeps renewing until you cancel it in Billing.',
+      // A Family Plan past due beyond its grace week: learners already lost it, but Stripe still retries the renewal.
+      familyRenewsAlone: 'The Family Plan keeps renewing until you cancel it in Billing.',
+    },
   },
 
   /**
@@ -1825,5 +1836,18 @@ export const consoleMsgs = {
         line: 'Anyone with the family code can join. Only grown-ups you turn on here can send notes.',
       },
     },
+  },
+  /**
+   * All lessons from the console (F-BROWSE-001 sections 4.3, 4.11 and 6; wireframe browse/entry-points.md): the
+   * line beside an entry when the plan check failed or the browser blocks this page's storage, and the deep-link
+   * buttons (BR-11). One name everywhere: the navigation item is `shell.nav.lessons`; "Browse" is in no string.
+   */
+  browse: {
+    checkFailed: 'Could not check your plan.',
+    tryAgain: { cta: 'Try again' },
+    openFree: { cta: 'Open free lessons' },
+    storageBlocked: "Your browser blocked this page's storage, so lessons cannot open here.",
+    preview: { cta: 'Preview' },
+    previewLessons: { cta: 'Preview lessons' },
   },
 } as const;

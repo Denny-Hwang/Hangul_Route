@@ -77,7 +77,7 @@ export const consoleMsgs = {
     privacy: '개인정보',
     terms: '이용약관',
     persona: { parent: '가족', teacher: '선생님' },
-    nav: { home: '홈', reports: '리포트', notes: '쪽지', classes: '반', lessons: '레슨', billing: '결제' },
+    nav: { home: '홈', reports: '리포트', notes: '쪽지', classes: '반', lessons: '레슨', billing: '결제', classReports: '반 리포트' },
     noApi: '이 버전에서 콘솔을 쓰려면 API 주소(NEXT_PUBLIC_API_BASE_URL)가 필요해요.',
   },
   kind: {
@@ -473,6 +473,12 @@ export const consoleMsgs = {
       sharedDevice: '공유 기기인가요? 다 쓰면 로그아웃해 주세요.',
     },
     pastDue: '결제가 처리되지 않았어요. 구독 관리에서 카드를 바꿔 주세요. 학습자는 일주일 동안 전체 루트를 계속 이용할 수 있어요.',
+    archiveConfirm: {
+      familyLoses: (space: string) => `보관하는 동안 ${space}의 학습자는 가족 플랜을 이용할 수 없어요.`,
+      familyRenews: '플랜은 결제 화면에서 해지할 때까지 계속 갱신돼요.',
+      licenseRenews: '그룹 라이선스는 결제 화면에서 해지할 때까지 계속 갱신돼요.',
+      familyRenewsAlone: '가족 플랜은 결제 화면에서 해지할 때까지 계속 갱신돼요.',
+    },
   },
   curriculum: {
     title: '학기 계획하기',
@@ -1294,5 +1300,14 @@ export const consoleMsgs = {
       failed: '보내지 못했습니다',
     },
     a11y: { close: '닫기' },
+  },
+  /** All lessons from the console (F-BROWSE-001 BR-10, BR-11). */
+  browse: {
+    checkFailed: '플랜을 확인하지 못했어요.',
+    tryAgain: { cta: '다시 해 보기' },
+    openFree: { cta: '무료 레슨 열기' },
+    storageBlocked: '브라우저가 이 페이지의 저장 공간을 막았어요. 여기서는 레슨을 열 수 없어요.',
+    preview: { cta: '미리 보기' },
+    previewLessons: { cta: '레슨 미리 보기' },
   },
 } satisfies DeepPartial<Messages['console']>;

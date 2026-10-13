@@ -414,7 +414,8 @@ export function myRouteView(i: MyRouteViewInput): MyRouteView {
     }),
     // The learner's own weekly plan week only: grown-up views carry the plan end date instead (LR-OD-7).
     planLine: i.viewer === 'self' && typeof week === 'number' && week >= 1 ? messages.learner.myRoute.home.strip.week(week) : null,
-    pose: hoyaPoseFor(model, i.seen),
+    // Hoya cheers on the first visit that shows a reached goal (LR-5c), as after a newly completed episode.
+    pose: i.viewer === 'self' && i.firstReached === true ? 'cheering' : hoyaPoseFor(model, i.seen),
     viewing: viewingCopy(ctx),
     newQuests: newQuestsCopy(model, ctx),
     trail: withConnectors(rows, model),

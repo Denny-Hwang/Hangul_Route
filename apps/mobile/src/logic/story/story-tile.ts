@@ -9,8 +9,8 @@ import type { StoryStatus } from './story-status';
  * Pure: the screen passes the dictionary subtree (`shelfCopy`) and the
  * localised story, and paints the result. The state line is always words
  * (colour is never the only cue); a 0-star finish draws no stars (D3); a
- * locked tile says "Locked" and nothing else about progress (only possible
- * with `contentGatingEnabled`, D5).
+ * closed tile says "Not open yet" with the dotted ring and nothing else about
+ * progress (only with the free-plan switch on, D5, F-ENT-003 section 3.7).
  */
 
 export type StoryTileState = StoryStatus['state'] | 'locked';
@@ -34,6 +34,8 @@ export interface StoryTileView {
   /** The cover scene's art; null draws the theme tint with the Korean title. */
   cover: SceneArt | null;
   locked: boolean;
+  /** The story's quest is in the learner's plan (`planView`, F-ENT-003 section 3.7): the In your plan tag. Never on a closed tile. */
+  inPlan: boolean;
 }
 
 /** The art of the story's `coverSceneId` scene, in whichever tier holds it; null when none has art. */
@@ -63,11 +65,20 @@ export function storyTileView(input: {
   status: StoryStatus;
   locked: boolean;
   copy: StoryShelfCopy;
+  /** The In your plan word (`learner.routeNext.tag.inPlan`) when the story's quest is in the plan; absent otherwise. */
+  inPlanWord?: string | null;
+  /**
+   * The All lessons catalogue (F-BROWSE-001 section 4.5, BD2): no learner state. An open tile has no
+   * state line and this label (title and length); a closed tile still says "Not open yet".
+   */
+  catalogueLabel?: (title: string, minutes: number) => string;
 }): StoryTileView {
-  const { entry, status, locked, copy } = input;
+  const { entry, status, locked, copy, catalogueLabel } = input;
+  const inPlanWord = locked ? null : (input.inPlanWord ?? null);
   const state: StoryTileState = locked ? 'locked' : status.state;
-  const stars = state === 'finished' ? status.stars : 0;
-  const stateLine = stateLineOf(state, copy);
+  const stars = state === 'finished' && !catalogueLabel ? status.stars : 0;
+  const catalogueOpen = catalogueLabel !== undefined && !locked;
+  const stateLine = catalogueOpen ? '' : stateLineOf(state, copy);
   const title = entry.story.title;
   return {
     storyId: entry.storyId,
@@ -80,9 +91,12 @@ export function storyTileView(input: {
     stateLine,
     stars,
     minutesLine: copy.minutes.pill(entry.minutes),
-    accessibilityLabel: copy.tileLabel(title.en, stateLine, entry.minutes, stars),
+    accessibilityLabel: catalogueOpen
+      ? catalogueLabel(title.en, entry.minutes)
+      : copy.tileLabel(title.en, stateLine, entry.minutes, stars) + (inPlanWord === null ? '' : ` ${inPlanWord}.`),
     cover: coverArtOf(entry.story),
     locked,
+    inPlan: inPlanWord !== null,
   };
 }
 

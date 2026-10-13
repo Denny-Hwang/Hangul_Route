@@ -54,7 +54,10 @@ interface ClassViewCommon {
   id: string;
   status: TransferViewStatus;
   steps: TransferSteps | null;
-  /** "Agreed by the school admin." on both class pages (T11). */
+  /**
+   * "Agreed by the school admin." when this class's own slot was filled through the school cascade (T11,
+   * D17): never the other class's, so the destination does not learn that the source agreed (T8).
+   */
   agreedBySchoolAdmin: boolean;
   /** The earliest move date, once everyone agreed (`approved`). */
   scheduledFor: string | null;
@@ -248,15 +251,15 @@ export function learnerRouteFor(input: { initiator: TransferInitiator; selfManag
 
 const endedFromOf = (actor: TransferEndActor | null): TransferEndedFrom | null => (actor === 'family' || actor === 'device' ? actor : null);
 
-/** The shared tail of both class views; `mine` is the end actor that means "this class decided". */
-function classCommon(t: StoredTransfer, mine: TransferEndActor): ClassViewCommon {
+/** The shared tail of both class views; `mine` is this class's slot, which is also the end actor that means "this class decided". */
+function classCommon(t: StoredTransfer, mine: 'source' | 'destination'): ClassViewCommon {
   const approved = t.status === 'approved';
   const byYou = isEndedTransfer(t) && t.endActor === mine;
   return {
     id: t.id,
     status: viewStatus(t),
     steps: stepsOf(t),
-    agreedBySchoolAdmin: t.source.via === 'school_admin' || t.destination.via === 'school_admin',
+    agreedBySchoolAdmin: t[mine].via === 'school_admin',
     scheduledFor: approved ? t.executeAfter : null,
     blockReason: approved ? t.blockReason : null,
     createdAt: t.createdAt,
@@ -283,6 +286,40 @@ export async function viewLookups(db: Db, rows: readonly StoredTransfer[]): Prom
   const spaceIds = new Set(rows.flatMap((t) => [t.sourceSpaceId, t.destSpaceId]));
   const [learners, spaces] = await Promise.all([db.getLearners([...learnerIds]), db.getSpaces([...spaceIds])]);
   return { learners: new Map(learners.map((l) => [l.id, l])), spaces: new Map(spaces.map((s) => [s.id, s])), facts: new Map() };
+}
+
+/**
+ * The destination facts of every learner-side view in this batch, read
+ * set-wise: three reads (owners, parents, members) whatever the number of
+ * distinct destinations, so a long history cannot spend the D1 per-invocation
+ * statement budget (T-5c review). `factsOnce` then finds them all.
+ */
+export async function primeDestinationFacts(db: Db, look: ViewLookups, rows: readonly StoredTransfer[], now: Date): Promise<void> {
+  const dests = [...new Set(rows.map((t) => t.destSpaceId))].flatMap((id) => {
+    const s = look.spaces.get(id);
+    return s && !look.facts.has(id) ? [s] : [];
+  });
+  if (dests.length === 0) return;
+  const parentIds = dests.flatMap((d) => (d.parentSpaceId ? [d.parentSpaceId] : []));
+  const [owners, parents, members] = await Promise.all([
+    db.getAccounts(dests.map((d) => d.ownerAccountId)),
+    db.getSpaces(parentIds),
+    db.membersOfSpaces(dests.map((d) => d.id)),
+  ]);
+  const ownerById = new Map(owners.map((a) => [a.id, a]));
+  const parentById = new Map(parents.map((s) => [s.id, s]));
+  for (const dest of dests) {
+    const parent = dest.parentSpaceId ? parentById.get(dest.parentSpaceId) : undefined;
+    look.facts.set(
+      dest.id,
+      Promise.resolve({
+        ownerName: ownerById.get(dest.ownerAccountId)?.displayName ?? null,
+        schoolName: parent?.kind === 'school' ? parent.name : null,
+        ageBucket: ageBucket(dest.createdAt, now),
+        learnerCount: members.filter((m) => m.spaceId === dest.id && m.memberKind === 'learner').length,
+      }),
+    );
+  }
 }
 
 /** `destinationFacts` once per destination per batch of views. */

@@ -1,5 +1,14 @@
 import {
+  InboxTransferSchema,
+  InboxVisibleSpaceSchema,
   SyncInboxSchema,
+  lenientArray,
+  type DeviceTransferApproveBody,
+  type DeviceTransferCreateBody,
+  type DeviceTransferPreviewBody,
+  type DeviceTransferPrefsBody,
+  type InboxTransfer,
+  type InboxVisibleSpace,
   type LearnerLevelId,
   type LearnerMembership,
   type NoteDevicePrefsPut,
@@ -10,6 +19,7 @@ import {
   type SpaceKind,
   type SyncInbox,
 } from '@hangul-route/content-schema';
+import { z } from 'zod';
 import type { PutResult } from '../logic/sync/engine';
 
 /**
@@ -96,6 +106,78 @@ export type GetResult =
 export type NoteWriteResult = { status: 'ok'; http: number } | { status: 'error'; http: number; code: string };
 export type NoteStateResult = { status: 'ok'; http: number; readAt: string | null; reaction: string | null } | { status: 'error'; http: number; code: string };
 
+/**
+ * A class-move call that did not land (F-SPACE-002 section 4.4). `http` is the status (-1 = no
+ * network); `code` is the Worker's error code, `network`, `invalid` (an answer this app cannot read)
+ * or `http_<status>`. `already_open` says who started the open request; a 429 carries the wait.
+ */
+export interface TransferCallError {
+  status: 'error';
+  http: number;
+  code: string;
+  startedBy?: 'class' | 'learner_side';
+  retryAfterSeconds?: number;
+}
+
+/** The learner-side preview a device gets (section 4.4): what the consent sheet shows. */
+export interface DeviceTransferPreview {
+  destination: { id: string; name: string; ownerName: string | null; schoolName: string | null; ageBucket: string | null; learnerCount: number | null };
+  premiumChange: string;
+  destinationConsentMode: string;
+  relinkAffected: boolean;
+  sourcePlansAffected: boolean;
+  visibleToday: InboxVisibleSpace[];
+  /** The digest of the sheet shown, sent back with the consent (section 4.11); null when the Worker sent none. */
+  termsDigest: string | null;
+  blockReason: string | null;
+}
+
+export type TransferPreviewResult = { status: 'ok'; preview: DeviceTransferPreview } | TransferCallError;
+/** `created` is false when the Worker answered 200 with this device's own open request (a repeated create). */
+export type TransferCreateResult = { status: 'ok'; created: boolean; request: InboxTransfer } | TransferCallError;
+export type TransferRequestResult = { status: 'ok'; request: InboxTransfer } | TransferCallError;
+export type TransferPrefsResult = { status: 'ok'; selfManaged: boolean } | TransferCallError;
+
+/** Lenient where a field only decorates the sheet; strict where the sheet cannot be drawn without it. */
+const DeviceTransferPreviewSchema = z.object({
+  destination: z.object({
+    id: z.string(),
+    name: z.string(),
+    ownerName: z.string().nullable().catch(null),
+    schoolName: z.string().nullable().catch(null),
+    ageBucket: z.string().nullable().catch(null),
+    learnerCount: z.number().int().nonnegative().nullable().catch(null),
+  }),
+  premiumChange: z.string(),
+  destinationConsentMode: z.string(),
+  relinkAffected: z.boolean(),
+  sourcePlansAffected: z.boolean(),
+  visibleToday: lenientArray(InboxVisibleSpaceSchema),
+  termsDigest: z
+    .string()
+    .regex(/^[0-9a-f]{64}$/)
+    .nullable()
+    .catch(null),
+  blockReason: z.string().nullable().catch(null),
+});
+
+const RequestDataSchema = z.object({ request: InboxTransferSchema });
+const PrefsDataSchema = z.object({ prefs: z.object({ selfManaged: z.boolean() }) });
+
+function transferError(r: { status: number; body: Record<string, unknown> }): TransferCallError {
+  if (r.status === -1) return { status: 'error', http: -1, code: 'network' };
+  const code = errorCode(r.body);
+  if (code === null) return { status: 'error', http: r.status, code: `http_${r.status}` };
+  const err = r.body.error as { details?: unknown };
+  const details = err.details && typeof err.details === 'object' ? (err.details as Record<string, unknown>) : {};
+  const out: TransferCallError = { status: 'error', http: r.status, code };
+  if (code === 'already_open') out.startedBy = details.startedBy === 'class' ? 'class' : 'learner_side';
+  if (typeof details.retryAfterSeconds === 'number') out.retryAfterSeconds = details.retryAfterSeconds;
+  return out;
+}
+
+const unreadable = (http: number): TransferCallError => ({ status: 'error', http, code: 'invalid' });
+
 function authHeader(c: DeviceCredentials): Record<string, string> {
   return { 'Content-Type': 'application/json', Authorization: `Device ${c.deviceId}:${c.secret}` };
 }
@@ -130,6 +212,17 @@ export function createSyncApi(opts: SyncApiOptions) {
   const base = `${opts.endpoint}/api/sync`;
   const recovery = `${opts.endpoint}/api/recovery`;
   const spaces = `${opts.endpoint}/api/spaces`;
+
+  async function requestCall(learnerId: string, transferId: string, action: 'approve' | 'decline' | 'cancel', body: unknown, creds: DeviceCredentials): Promise<TransferRequestResult> {
+    const r = await call(fetchImpl, `${base}/learners/${encodeURIComponent(learnerId)}/transfer-requests/${encodeURIComponent(transferId)}/${action}`, {
+      method: 'POST',
+      headers: authHeader(creds),
+      body: JSON.stringify(body),
+    });
+    if (r.status !== 200) return transferError(r);
+    const parsed = RequestDataSchema.safeParse(r.body.data);
+    return parsed.success ? { status: 'ok', request: parsed.data.request } : unreadable(r.status);
+  }
 
   return {
     async register(
@@ -262,6 +355,47 @@ export function createSyncApi(opts: SyncApiOptions) {
       if (r.status !== 200) return { status: 'error', code: `http_${r.status}` };
       const parsed = SyncInboxSchema.safeParse(r.body.data);
       return parsed.success ? { status: 'ok', inbox: parsed.data } : { status: 'error', code: 'invalid' };
+    },
+
+    // Class moves from the learner's own device (F-SPACE-002 section 4.4). Online only: consent is never queued.
+
+    /** POST /learners/:id/transfer-requests/preview: what the consent sheet shows; writes nothing. */
+    async previewTransfer(learnerId: string, body: DeviceTransferPreviewBody, creds: DeviceCredentials): Promise<TransferPreviewResult> {
+      const r = await call(fetchImpl, `${base}/learners/${encodeURIComponent(learnerId)}/transfer-requests/preview`, { method: 'POST', headers: authHeader(creds), body: JSON.stringify(body) });
+      if (r.status !== 200) return transferError(r);
+      const parsed = DeviceTransferPreviewSchema.safeParse(r.body.data);
+      return parsed.success ? { status: 'ok', preview: parsed.data } : unreadable(r.status);
+    },
+
+    /** POST /learners/:id/transfer-requests: start a move with this device's consent claim. */
+    async createTransfer(learnerId: string, body: DeviceTransferCreateBody, creds: DeviceCredentials): Promise<TransferCreateResult> {
+      const r = await call(fetchImpl, `${base}/learners/${encodeURIComponent(learnerId)}/transfer-requests`, { method: 'POST', headers: authHeader(creds), body: JSON.stringify(body) });
+      if (r.status !== 200 && r.status !== 201) return transferError(r);
+      const parsed = RequestDataSchema.safeParse(r.body.data);
+      return parsed.success ? { status: 'ok', created: r.status === 201, request: parsed.data.request } : unreadable(r.status);
+    },
+
+    /** POST …/:tid/approve: a yes again for this device's own request after its consent was reset. */
+    async approveTransfer(learnerId: string, transferId: string, body: DeviceTransferApproveBody, creds: DeviceCredentials): Promise<TransferRequestResult> {
+      return requestCall(learnerId, transferId, 'approve', body, creds);
+    },
+
+    /** POST …/:tid/decline: the learner side says no (the veto, guard 11). */
+    async declineTransfer(learnerId: string, transferId: string, creds: DeviceCredentials): Promise<TransferRequestResult> {
+      return requestCall(learnerId, transferId, 'decline', {}, creds);
+    },
+
+    /** POST …/:tid/cancel: the learner side withdraws any open request (the veto, guard 11). */
+    async cancelTransfer(learnerId: string, transferId: string, creds: DeviceCredentials): Promise<TransferRequestResult> {
+      return requestCall(learnerId, transferId, 'cancel', {}, creds);
+    },
+
+    /** PUT /learners/:id/transfer-prefs: the learner's own switch (`selfManaged`, guard 13). */
+    async putTransferPrefs(learnerId: string, body: DeviceTransferPrefsBody, creds: DeviceCredentials): Promise<TransferPrefsResult> {
+      const r = await call(fetchImpl, `${base}/learners/${encodeURIComponent(learnerId)}/transfer-prefs`, { method: 'PUT', headers: authHeader(creds), body: JSON.stringify(body) });
+      if (r.status !== 200) return transferError(r);
+      const parsed = PrefsDataSchema.safeParse(r.body.data);
+      return parsed.success ? { status: 'ok', selfManaged: parsed.data.prefs.selfManaged } : unreadable(r.status);
     },
 
     /** PUT /learners/:id/notes/:noteId/state: read once, last reaction wins (idempotent). */

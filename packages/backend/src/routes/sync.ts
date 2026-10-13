@@ -8,8 +8,10 @@ import { tierForLearner } from '../lib/entitlement';
 import { deviceReporterKey, holdAfterReport } from '../lib/note-holds';
 import { NOTE_LIMIT_DEVICE_REPORTS_PER_LEARNER_PER_DAY, NOTE_LIMIT_WINDOW_MS } from '../lib/note-limits';
 import { inboxNoteView, notePrefsView } from '../lib/note-views';
+import type { TransferEnv } from '../lib/transfer';
 import { id, type Learner, type SnapshotRecord } from '../store';
 import { inboxPlansFor } from './plans';
+import { inboxTransfers } from './transfer-device';
 import { learnerMembershipRows } from './spaces';
 
 /**
@@ -117,9 +119,13 @@ syncRoutes.get('/learners/:id/inbox', async (c) => {
   if (typeof auth !== 'string') return auth;
   const db = dbFor(c);
   const now = new Date();
-  const { tier, source } = await tierForLearner(db, learnerId, now);
   // A class-approved device sees class and school spaces only — family plans stay with the family (SEC-4).
   const classScoped = (await db.getDevice(learnerId, auth))?.scope === 'class';
+  // Class moves (F-SPACE-002 section 4.4, T15): the lock is read before any transfer table; locked, all off and empty.
+  // Read first: settling can perform a due move (section 4.6), so the tier, plans and memberships below already
+  // reflect it and an `executed` row never arrives next to the old class (sections 4.10, 4.12).
+  const transfers = await inboxTransfers(db, learnerId, classScoped ? 'class' : 'full', c.env as TransferEnv | undefined, now);
+  const { tier, source } = await tierForLearner(db, learnerId, now);
   // F-PLAN-002 section 3.5: a curriculum reaches only an app that derives with a horizon (`?cap=curriculum`).
   const plans = (await inboxPlansFor(db, learnerId)).filter((p) => p.meta === null || acceptsCurriculum(c.req.queries('cap')));
   const memberships = await learnerMembershipRows(db, learnerId);
@@ -135,6 +141,10 @@ syncRoutes.get('/learners/:id/inbox', async (c) => {
     serverTime: now.toISOString(),
     notes: notes.notes.map(inboxNoteView),
     notePrefs: notePrefsView(notes.prefs),
+    ...transfers,
+    // The calling device's own scope (F-SPACE-002 section 4.12): a tablet a class relinked before the app kept a
+    // marker learns it here, locked or not (no extra read).
+    deviceScope: classScoped ? 'class' : 'full',
   });
 });
 

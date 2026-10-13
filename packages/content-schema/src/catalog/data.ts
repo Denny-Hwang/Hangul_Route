@@ -10,10 +10,11 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * Since F-QUEST-002 Q-8 this file lists the 15 Stage 1 quests the bundle ships: Q-6a
  * filled `teaches` for letters q1-q3, Q-6b for life q1-q3 (adding life q3), Q-7b for
  * rites q1-q3 (adding rites q2-q3) and Q-8 for nature q1 (adding nature and crafts q2-q3).
- * Every story is a `draft` until a native reviewer signs it and the bundle holds
- * its `shelf` block; flipping a story to `ready` is that reviewer's change.
+ * A story is a `draft` until its language and culture review sign it and the bundle
+ * holds its `shelf` block; flipping a story to `ready` is that review's change.
+ * Version 6 (F-STORY-001 PR 1.9): all 24 stories are `ready`.
  */
-export const CATALOG_VERSION = 5;
+export const CATALOG_VERSION = 6;
 
 const cell = (
   stage: StageKey,
@@ -141,7 +142,9 @@ const stories: CatalogStory[] = storyRows.map(([slug, title, stage, theme, minut
   minutes,
   anchor: anchor ?? null,
   sampler: sampler === true,
-  status: 'draft',
+  // F-PLAN-002 section 3.2: every story file is ready with its shelf block and both review
+  // sign-offs since F-STORY-001 PR 1.9 (catalog-parity.test.ts checks the rule per file).
+  status: 'ready',
 }));
 
 /** One listen quest per story (F-STORY-004 section 3.1), on the shelf episode of its slug. */

@@ -19,6 +19,7 @@ import {
   type Story,
   type ThemeKey,
 } from '@hangul-route/content-schema';
+import { supportedCardIds } from '@hangul-route/design-system/heritage-card-ids';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { heldStoryCards as heldStoryCardsOf } from '../../../../../scripts/build-stories.mjs';
@@ -26,14 +27,16 @@ import { derivedAwards, missingAwards, stageCanComplete } from '../../logic/awar
 import { obtainableCards } from '../../logic/awards/obtainable';
 import { parseUnlockedBy } from '../../logic/awards/rules';
 import { buildStoryCards } from '../../logic/awards/story-cards';
+import { cardArtSource } from '../../logic/card-art';
 import { cardCitationView } from '../../logic/library/card-citation';
+import { storyCoverArt } from '../../logic/story/scene-view';
 import type { AwardWorld } from '../../logic/awards/types';
 import { playableEpisodes } from '../../logic/next-quest';
 import { awardWorld } from '../award-world';
 import { episodesAll } from '../episodes';
 import { heritageCardsAll, stage1Cards, stage2Cards, stage4Cards } from '../heritage-cards';
 import { questsAll } from '../quests';
-import { heldStoryCards, storiesAll } from '../stories';
+import { heldStoryCards, storiesAll, storyById } from '../stories';
 import { heldSetCardIds, heldStoryCardIds, storyCards, storySets } from '../story-cards';
 import { storySetDefs } from '../story-sets';
 
@@ -74,11 +77,20 @@ function finished(ids: readonly string[], stars: 1 | 2 | 3, episodes: readonly E
   };
 }
 
+/**
+ * Every episode a learner can play: the playable grid episodes and the shelf
+ * story episodes (F-STORY-004 §3.1), whose quests award the story cards.
+ */
+function offeredEpisodes(episodes: readonly Episode[]): Episode[] {
+  const shelf = episodes.filter((e) => e.placement === 'shelf' && (e.status === 'shipped' || e.status === 'ready'));
+  return [...playableEpisodes(episodes), ...shelf];
+}
+
 /** T-AWARD-1 over a world: each card in `cards` is listed to a learner who owns nothing, and finishing every playable quest at 1 star earns it. */
 function expectEarnable(w: AwardWorld, cards: readonly HeritageCard[]): void {
   const listed = new Set(obtainableCards(w, new Set()).map((c) => c.id));
   expect(cards.map((c) => c.id).filter((id) => !listed.has(id))).toEqual([]);
-  const all = playableEpisodes([...w.episodes]).flatMap((e) => e.questIds);
+  const all = offeredEpisodes(w.episodes).flatMap((e) => e.questIds);
   const earned = new Set(derivedAwards(w, finished(all, 1, w.episodes), PROFILE).map((a) => a.cardId));
   expect(cards.map((c) => c.id).filter((id) => !earned.has(id))).toEqual([]);
 }
@@ -94,7 +106,7 @@ describe('card award integrity (F-STORY-006 T-AWARD-1..5)', () => {
   });
 
   it('T-AWARD-1: finishing every playable quest, even at 1 star, earns every card', () => {
-    const all = playableEpisodes(episodesAll).flatMap((e) => e.questIds);
+    const all = offeredEpisodes(episodesAll).flatMap((e) => e.questIds);
     const earned = new Set(derivedAwards(world, finished(all, 1), PROFILE).map((a) => a.cardId));
     expect(earnable.map((c) => c.id).filter((id) => !earned.has(id))).toEqual([]);
   });
@@ -375,7 +387,8 @@ describe('heritage story cards (F-STORY-006 T-AWARD-6, T-AWARD-7)', () => {
     const shelfWorld = (shelved: readonly Story[], cardsOf: { cards: HeritageCard[]; sets: AwardWorld['sets'] }): AwardWorld => ({
       cards: [...handWritten, ...cardsOf.cards],
       episodes: [
-        ...episodesAll,
+        // The grid as shipped; the shelf is exactly the stories given here.
+        ...episodesAll.filter((e) => e.placement !== 'shelf'),
         ...shelved.map((s) => ({
           ...episodesAll[0]!,
           id: `episode:shelf-${slugOf(s.id)}`,
@@ -465,6 +478,110 @@ describe('heritage story cards (F-STORY-006 T-AWARD-6, T-AWARD-7)', () => {
       const count = (t: ThemeKey): number => themes.filter((x) => x === t).length;
       const top = Math.max(...themes.map(count));
       expect(def.theme, def.id).toBe(themes.find((t) => count(t) === top));
+    }
+  });
+});
+
+/**
+ * The fact on a story card's back face says what the card names (F-STORY-001
+ * PR 1.9 culture review; F-STORY-006 §3.8 as built), and reads as learner text
+ * with no Hangul. "Names the subject" is checked as: the claim contains the
+ * headword's romanization, or a word of four letters or more from the card
+ * title (a trailing plural "s" dropped), case-insensitively.
+ */
+describe('story card facts name their subject (F-STORY-006 §3.8 as built)', () => {
+  const HANGUL = /[ᄀ-ᇿ㄰-㆏가-힯]/;
+  const namesSubject = (claim: string, titleEn: string, romanization: string): boolean => {
+    const text = claim.toLowerCase();
+    if (text.includes(romanization.toLowerCase())) return true;
+    return titleEn
+      .toLowerCase()
+      .split(/[^a-z]+/)
+      .filter((w) => w.length >= 4)
+      .map((w) => w.replace(/s$/, ''))
+      .some((w) => text.includes(w));
+  };
+
+  it('the check itself: a matching title word or romanization passes, an unrelated fact fails', () => {
+    expect(namesSubject('Gimjang is the custom of making kimchi.', 'Making Winter Kimchi', 'gimjang')).toBe(true);
+    expect(namesSubject('The five basic consonant letters were made...', 'Consonants', 'jaeum')).toBe(true);
+    expect(namesSubject('Arirang exists in many regional versions.', 'Making Winter Kimchi', 'gimjang')).toBe(false);
+    expect(namesSubject('Soil differs in dryness and dampness.', 'Rain Gauge', 'cheugugi')).toBe(false);
+  });
+
+  it('every bundled story card fact names the card subject and carries no Hangul', () => {
+    const withCard = storiesAll.filter((s) => s.card);
+    expect(withCard.length).toBeGreaterThan(0);
+    for (const story of withCard) {
+      const card = story.card;
+      if (!card) continue;
+      const keyword = story.keywords.find((k) => k.id === card.keywordId);
+      const fact = story.facts.find((f) => f.id === card.factId);
+      if (!keyword || !fact) throw new Error(`${story.id}: card keyword or fact does not resolve`);
+      expect(namesSubject(fact.claimEn, card.titleEn, keyword.romanization), `${story.id} ${card.titleEn}: ${fact.id}`).toBe(true);
+      expect(fact.claimEn, `${story.id}: ${fact.id}`).not.toMatch(HANGUL);
+    }
+  });
+});
+
+/**
+ * F-STORY-006 PR 6.8: the story cards and set cards as reviewed. The 24 card
+ * blocks and `rewardCardIds.listen` came with F-STORY-001 PR 1.9 (#506) and
+ * its multi-agent language and culture review; 6.8 closes the row's two other
+ * clauses: every story card's face is its cover scene cropped by `StoryScene`
+ * (not the word fallback), and the four set names are pinned as reviewed.
+ */
+describe('reviewed story and set cards (F-STORY-006 6.8)', () => {
+  // The same deps `CardArt.tsx` renders with: the design system's drawn ids and `storyById`.
+  const deps = {
+    drawnCardIds: supportedCardIds,
+    storyCover: (storyId: string) => {
+      const story = storyById(storyId);
+      return story ? storyCoverArt(story) : null;
+    },
+    world: awardWorld,
+  };
+
+  it("every bundled story card's face is its story's cover scene, and every set card's face is its full plate", () => {
+    const story = heritageCardsAll.filter((c) => c.storyId !== undefined);
+    expect(story).toHaveLength(24);
+    for (const card of story) {
+      expect(supportedCardIds, card.id).not.toContain(card.id);
+      const src = cardArtSource(card, deps);
+      expect(src.kind, card.id).toBe('cover');
+      // A cover with nothing to draw would pass on kind alone: it names a backdrop and its alt text.
+      if (src.kind === 'cover') expect([src.art.setting, src.art.altEn.length > 0], card.id).toEqual([expect.stringMatching(/^scene:/), true]);
+    }
+    const sets = heritageCardsAll.filter((c) => c.unlockedBy.startsWith('set:'));
+    expect(sets).toHaveLength(4);
+    for (const card of sets) {
+      const src = cardArtSource(card, deps);
+      expect(src.kind, card.id).toBe('plate');
+      const def = storySetDefs.find((d) => d.cardId === card.id);
+      const expected = (def?.memberStoryIds ?? []).map((id) => storyCardId(id));
+      expect(expected, card.id).toHaveLength(6);
+      if (src.kind === 'plate') expect(src.members.map((m) => m.id), card.id).toEqual(expected);
+    }
+  });
+
+  /**
+   * The set names after the 6.8 review (language and culture lenses, recorded
+   * in the spec's 6.8 as-built note). The Hangul and Printing set holds two
+   * woodblock stories (Tripitaka Koreana, Janggyeong Panjeon), so its card
+   * names printing (inswae), not movable type (hwalja), which only the Jikji story is about.
+   */
+  const REVIEWED_SETS: ReadonlyArray<readonly [cardId: string, titleEn: string, romanization: string, gloss: string]> = [
+    ['card:set-records-joseon', 'Record', 'girok', 'record'],
+    ['card:set-hangul-printing', 'Printing', 'inswae', 'printing'],
+    ['card:set-science-art-life', 'Treasure', 'bomul', 'treasure'],
+    ['card:set-seasons-tales', 'Arirang', 'arirang', 'Arirang (a folk song)'],
+  ];
+
+  it('the four set cards carry their reviewed names', () => {
+    expect(storySetDefs.map((d) => [d.cardId, d.titleEn, d.headword.romanization, d.headword.en])).toEqual(REVIEWED_SETS);
+    for (const [cardId, titleEn, romanization] of REVIEWED_SETS) {
+      const card = heritageCardsAll.find((c) => c.id === cardId);
+      expect([card?.titleEn, card?.romanization], cardId).toEqual([titleEn, romanization]);
     }
   });
 });

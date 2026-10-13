@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:kim-hongdo-genre-paintings",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "김홍도의 풍속화, 씨름과 서당",
     "romanization": "Gimhongdoui pungsokhwa, ssireumgwa seodang",
     "en": "Kim Hongdo's Pictures of Everyday Life"
   },
   "summaryEn": "Hoya looks closely at Ssireum and Seodang from Danwon's genre painting album at the National Museum of Korea, spotting a taffy seller, shoes that someone has taken off, and a sniffling schoolboy.",
+  "hoyaIntroEn": "Let's look closely at old pictures of everyday life. What can you spot?",
+  "hoyaOutroEn": "A taffy seller, shoes taken off, a sniffling schoolboy: you have sharp eyes!",
   "theme": "life",
   "kind": "art",
   "recommendedStage": 1,
@@ -24,9 +26,11 @@
     "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
   },
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "advisory": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "advisory": [],
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-13"
   },
   "keywords": [
     {
@@ -526,8 +530,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-kim-hongdo-genre-paintings"
+  },
+  "shelf": {
+    "category": "culture",
+    "order": 7,
+    "sampler": false,
+    "minutes": 5
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Genre Painting",
+    "keywordId": "pungsokhwa",
+    "factId": "f4"
+  },
   "facts": [
     {
       "id": "f1",
@@ -710,7 +728,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
+    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
   },
   "authorNotes": "Attribution caution: NMK and encykorea both report scholarly debate about the album (differences in skill between leaves, retouching, many similar copies); some scholars regard leaves such as Ssireum and Mudong as genuine and weaker leaves as copies, and one view treats the whole album as a later model book. Only 13 of the 25 leaves bear the seal 김홍도인 (encykorea). Narration therefore calls it the album 'known as' Danwon's album and describes what the paintings show; the fact claim says 'attributed to'. The KHS designation text names the school leaf 〈글방〉; NMK and encykorea use 서당. Omitted: the switch (회초리) mentioned in an encykorea media caption for 서당; the album's purchase history (1918) and the 1957 remounting that separated two 군선도 leaves (NMK); Kim Hong-do's death (c.1806 per encykorea; KHS gives '?'). The 2018 UNESCO inscription was a joint inscription by both Koreas; this is not mentioned in narration. Scene 5 claim about shoes follows NMK ('벗어 놓은 신발'), without saying whose shoes they are. REVISION: (a) 'kicked-off shoes' removed; museum text says only 벗어 놓은 신발 (shoes taken off), at the right, narrowing the open space (NMK relicId=551); seller at the left, 'outside the spectators' attention'. 우리역사넷 says the shoes are the two wrestlers' and the seller looks into the distance; NMK's curator page says the seller looks outward, but narration stays with the museum's catalog wording. (b) Seodang layout softened to 'gathered around' because NMK says 둥글게 배치 around the boy while an encykorea caption says pupils sit side by side on both sides of the teacher. (c) Ssireum crowd: NMK says two groups arranged roundly above and below; narration says 'two curved groups'. (d) Quiz distractor for museum changed to other national museums. PR 1.8c review: check c3 now asks who stands at the left of Ssireum (f5), because three similar museum names tested memory of a name rather than the story. Check c3 says 'outside the crowd's attention', following f5 and the museum text, not 'away from the crowd'.",
   "errata": []

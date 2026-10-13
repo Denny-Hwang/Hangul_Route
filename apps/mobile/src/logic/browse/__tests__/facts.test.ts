@@ -279,6 +279,45 @@ describe('itemFacts: quest', () => {
     }
   });
 
+  it('a Build a Letter syllable that is a bundle word is listed under Words with its gloss; a block that is not a word stays a syllable (section 4.6)', () => {
+    // Content anchors (change with the content): Lunch Box Words builds 산, 달 and 곰. 산 and 곰 are words of
+    // the bundled word topics; 달 is one sense of a homonym (moon or month), so it stays a syllable.
+    const lunch = { quest: quest('quest:stage2-life-q1') };
+    expect(scopesOf(lunch.quest).some(({ scope }) => scope.kind === 'build-letter')).toBe(true);
+    const facts = questFacts(lunch.quest.id);
+    const glossOf = (ko: string, locale: 'en' | 'es' = 'en'): string => {
+      const item = bundle.vocabItems.find((i) => i.ko === ko);
+      return item ? localizedGloss(item, locale) : '';
+    };
+    for (const ko of ['산', '곰']) {
+      const item = bundle.vocabItems.find((i) => i.ko === ko);
+      expect(item, ko).toBeDefined();
+      expect(facts.words, ko).toContainEqual({ ko, romanization: item?.romanization, gloss: glossOf(ko) });
+      expect(facts.syllables.map((s) => s.ko), ko).not.toContain(ko);
+    }
+    expect(bundle.vocabItems.find((i) => i.ko === '달')?.senseGroup).toBe('dal');
+    expect(facts.syllables.map((s) => s.ko)).toContain('달');
+    expect(facts.words.map((w) => w.ko)).not.toContain('달');
+    const es = questFacts(lunch.quest.id, 'es');
+    expect(es.words.find((w) => w.ko === '곰')?.gloss).toBe(glossOf('곰', 'es'));
+    expect(questFacts(Q1).syllables.map((s) => s.ko)).toContain('거');
+    // a word of a draft topic is not a bundle word: the syllable stays a syllable
+    const noWords = itemFacts({ kind: 'quest', id: lunch.quest.id }, { ...bundle, vocabItems: [] }) as QuestFacts;
+    expect(noWords.syllables.map((s) => s.ko)).toEqual(expect.arrayContaining(['산', '달', '곰']));
+  });
+
+  it('a Stage 1 built block is a sound, never glossed as a word it happens to spell; a homonym spelling is never guessed (heritage accuracy)', () => {
+    const like = (ko: string): (typeof bundle.vocabItems)[number] => ({ ...(bundle.vocabItems[0] as (typeof bundle.vocabItems)[number]), id: `vocab:probe-${ko}`, ko });
+    // Meet a, eo, g, n builds 거; even if a topic held the word 거, a Stage 1 block stays a syllable.
+    const withGeo = itemFacts({ kind: 'quest', id: Q1 }, { ...bundle, vocabItems: [...bundle.vocabItems, like('거')] }) as QuestFacts;
+    expect(withGeo.syllables.map((s) => s.ko)).toContain('거');
+    expect(withGeo.words.map((w) => w.ko)).not.toContain('거');
+    // Two bundle words with the Korean of a built block: which one the lesson means is unknown, so neither.
+    const twoGom = itemFacts({ kind: 'quest', id: 'quest:stage2-life-q1' }, { ...bundle, vocabItems: [...bundle.vocabItems, like('곰')] }) as QuestFacts;
+    expect(twoGom.syllables.map((s) => s.ko)).toContain('곰');
+    expect(twoGom.words.map((w) => w.ko)).not.toContain('곰');
+  });
+
   it('Discover glosses follow the UI language; the Korean and its romanization never change', () => {
     const es = questFacts(Q1, 'es');
     expect(es.words[0]).toEqual(asWord(discoverOf(quest(Q1), 'es')[0] as { ko: string; romanization: string; en: string }));
@@ -426,9 +465,29 @@ describe('itemFacts: word topic', () => {
     const food = itemFacts({ kind: 'vocab-topic', id: 'vocab-topic:food' }, bundle, 'es') as TopicFacts;
     const items = bundle.topicItems('food');
     expect(food).toMatchObject({ kind: 'vocab-topic', id: 'vocab-topic:food', key: 'food', count: items.length });
-    expect(food.words).toEqual(items.map((i) => ({ id: i.id, ko: i.ko, romanization: i.romanization, gloss: localizedGloss(i, 'es'), visual: i.visual })));
+    expect(food.words).toEqual(
+      items.map((i) => ({
+        id: i.id,
+        ko: i.ko,
+        romanization: i.romanization,
+        gloss: localizedGloss(i, 'es'),
+        visual: i.visual,
+        speech: { text: i.spokenKo ?? i.ko, ...(i.audioRef !== undefined ? { audioRef: i.audioRef } : {}) },
+      })),
+    );
     expect(food.titleKo.romanization.length).toBeGreaterThan(0);
     expect(itemFacts({ kind: 'vocab-topic', id: 'vocab-topic:space' }, bundle)).toBeNull();
+  });
+
+  it('a word is heard as the learner hears it (BR-9): its recording when it has one, else its spoken form, else its Korean', () => {
+    const [first] = bundle.topicItems('food');
+    if (!first) throw new Error('the food topic has words');
+    const recorded = { ...first, spokenKo: 'sagwa-spoken', audioRef: 'audio/vocab/food-apple.mp3' };
+    const withClip = { ...bundle, topicItems: (key: string) => (key === 'food' ? [recorded] : bundle.topicItems(key)) };
+    const word = (itemFacts({ kind: 'vocab-topic', id: 'vocab-topic:food' }, withClip) as TopicFacts).words[0];
+    expect(word?.speech).toEqual({ text: 'sagwa-spoken', audioRef: 'audio/vocab/food-apple.mp3' });
+    // no recording and no spoken form: the device voice says the Korean itself (playPrompt's fallback)
+    expect((itemFacts({ kind: 'vocab-topic', id: 'vocab-topic:food' }, bundle) as TopicFacts).words[0]?.speech).toEqual({ text: first.ko });
   });
 });
 

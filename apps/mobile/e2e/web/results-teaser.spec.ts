@@ -1,6 +1,13 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, jamoOfSpoken, journeyCellName, passDiscover, waitForNextListenPickRound } from './helpers';
+import {
+  completeChildForm,
+  jamoOfSpoken,
+  journeyCellName,
+  openLettersEpisode,
+  passDiscover,
+  waitForNextListenPickRound,
+} from './helpers';
 
 /**
  * F-QUEST-002 Q-5b: the Results "Next up" teaser and the soft prerequisite on
@@ -111,7 +118,7 @@ async function skipAllGames(page: Page): Promise<void> {
 async function lettersEpisodeWithNothingDone(page: Page): Promise<void> {
   await startFirstQuest(page);
   await home(page);
-  await page.getByRole('button', { name: /Meet the Letters/ }).click();
+  await openLettersEpisode(page);
 }
 
 test('a played quest teases the real next quest, and the CTA goes there', async ({ page }) => {

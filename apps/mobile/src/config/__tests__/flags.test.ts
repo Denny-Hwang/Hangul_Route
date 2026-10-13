@@ -325,4 +325,25 @@ describe('flags', () => {
     const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
     expect(src).toContain('process.env.EXPO_PUBLIC_REPORTS_ENABLED');
   });
+
+  it('routeEnabled (F-PLAN-002 section 6, P2-7a) is OFF by default and flips on with "true" or "1"', async () => {
+    delete process.env.EXPO_PUBLIC_ROUTE_ENABLED;
+    let mod = await reload();
+    expect(mod.flags.routeEnabled).toBe(false);
+    expect(mod.launchDefaultFlags.routeEnabled).toBe(false);
+    process.env.EXPO_PUBLIC_ROUTE_ENABLED = 'true';
+    mod = await reload();
+    expect(mod.flags.routeEnabled).toBe(true);
+    process.env.EXPO_PUBLIC_ROUTE_ENABLED = '1';
+    mod = await reload();
+    expect(mod.flags.routeEnabled).toBe(true);
+    process.env.EXPO_PUBLIC_ROUTE_ENABLED = 'false';
+    mod = await reload();
+    expect(mod.flags.routeEnabled).toBe(false);
+  });
+
+  it('routeEnabled is read by its literal name, so a web build can carry the override', () => {
+    const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
+    expect(src).toContain('process.env.EXPO_PUBLIC_ROUTE_ENABLED');
+  });
 });

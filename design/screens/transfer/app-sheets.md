@@ -30,8 +30,8 @@ Answers under the field (one at a time, `role="alert"`, the field `aria-invalid`
 | `429 cooldown` | "You can ask again in about a week." |
 | `409 caregiver_required` (a family account appeared since the inbox was read) | "Ask the grown-up with the account to start this move in the console." |
 | `422 device_consent_locked` | "Moves can't be started on this device yet." |
-| `409 already_open`, started by a class | "A class already asked about moving {Name}. Look on the Classes card." |
-| `409 already_open`, started by the learner side | "A move for {Name} is already waiting. Look on the Classes card." |
+| `409 already_open`, started by a class | "A class already asked about moving {Name}. Look on the Classes & family card." |
+| `409 already_open`, started by the learner side | "A move for {Name} is already waiting. Look on the Classes & family card." |
 | `409 same_space` | "That code is for the class {Name} is in now." |
 | `422 not_transferable` | "That code can't be used for a move." |
 | `409 destination_busy` | "That class has many moves waiting. Try again in a few days." |

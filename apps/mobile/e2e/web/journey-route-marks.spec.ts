@@ -90,7 +90,7 @@ test.describe('Journey route marks (F-ENT-003 E3-5)', () => {
     }
 
     // A coming-later cell is sunken and empty: no glyph (D5), no lock anywhere on the grid.
-    const later = page.getByRole('button', { name: /^Stage 3 Sentences, Letters & Books, coming soon$/ });
+    const later = page.getByRole('button', { name: /^Stage 3 Sentences, Holidays & Traditions, coming soon$/ });
     await expect(later).toBeDisabled();
     await expect(later.locator('svg')).toHaveCount(0);
     await expect(page.getByText(/locked|premium|not open yet/i)).toHaveCount(0);

@@ -311,6 +311,20 @@ const toNotePrefs = (r: Row, p = ''): StoredNotePrefs => ({
   updatedVia: str(r[`${p}updated_via`]) as StoredNotePrefs['updatedVia'],
   updatedByAccount: nstr(r[`${p}updated_by_account`]),
 });
+const toNoteReport = (r: Row): StoredNoteReport => ({
+  id: str(r.id),
+  noteId: str(r.note_id),
+  learnerId: str(r.learner_id),
+  senderAccountId: str(r.sender_account_id),
+  reason: str(r.reason) as StoredNoteReport['reason'],
+  via: str(r.via) as StoredNoteReport['via'],
+  evidence: str(r.evidence),
+  reporterKey: str(r.reporter_key),
+  attest: nstr(r.attest) as StoredNoteReport['attest'],
+  createdAt: str(r.created_at),
+  reviewedAt: nstr(r.reviewed_at),
+  outcome: nstr(r.outcome) as StoredNoteReport['outcome'],
+});
 const toSenderHold = (r: Row): StoredSenderHold => ({ accountId: str(r.account_id), reason: str(r.reason) as StoredSenderHold['reason'], createdAt: str(r.created_at), liftedAt: nstr(r.lifted_at) });
 const toSenderBlock = (r: Row): StoredSenderBlock => ({ learnerId: str(r.learner_id), senderAccountId: str(r.sender_account_id), familySpaceId: str(r.family_space_id), createdByAccount: str(r.created_by_account), createdAt: str(r.created_at) });
 const toSendGrant = (r: Row): StoredSendGrant => ({ spaceId: str(r.space_id), accountId: str(r.account_id), grantedBy: str(r.granted_by), grantedAt: str(r.granted_at) });
@@ -1013,7 +1027,7 @@ export class D1Db implements Db {
       e.detail === null ? null : JSON.stringify(e.detail),
     ]);
   }
-  private async byIds<T>(table: 'learners' | 'spaces', ids: readonly string[], map: (r: Row) => T): Promise<T[]> {
+  private async byIds<T>(table: 'learners' | 'spaces' | 'accounts', ids: readonly string[], map: (r: Row) => T): Promise<T[]> {
     const unique = [...new Set(ids)];
     const out: T[] = [];
     for (let i = 0; i < unique.length; i += IN_CHUNK) {
@@ -1027,6 +1041,9 @@ export class D1Db implements Db {
   }
   getSpaces(ids: readonly string[]): Promise<Space[]> {
     return this.byIds('spaces', ids, toSpace);
+  }
+  getAccounts(ids: readonly string[]): Promise<Account[]> {
+    return this.byIds('accounts', ids, toAccount);
   }
   purgeTransfers(endedBefore: Date, executedBefore: Date, limit: number): Promise<number> {
     // One bounded statement (section 4.1); the events go with their rows through ON DELETE CASCADE.
@@ -1197,6 +1214,10 @@ export class D1Db implements Db {
       this.d1.prepare("UPDATE feedback_notes SET status = 'reported' WHERE id = ? AND EXISTS (SELECT 1 FROM feedback_reports WHERE id = ? AND note_id = ?)").bind(r.noteId, r.id, r.noteId),
     ]);
     return readChanges(results[0]) === 1;
+  }
+  async reportsForNotes(noteIds: readonly string[]): Promise<StoredNoteReport[]> {
+    if (noteIds.length === 0) return [];
+    return this.many('SELECT * FROM feedback_reports WHERE note_id IN (SELECT value FROM json_each(?)) ORDER BY created_at, id', [JSON.stringify([...new Set(noteIds)])], toNoteReport);
   }
   countReportersAgainst(accountId: string, since: Date): Promise<number> {
     return this.count("SELECT COUNT(DISTINCT reporter_key) AS n FROM feedback_reports WHERE sender_account_id = ? AND created_at >= ? AND (outcome IS NULL OR outcome <> 'restored')", [accountId, since.toISOString()]);

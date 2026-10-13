@@ -369,6 +369,11 @@ describe('caregiver.plan: the learner Plan screen (F-BILL-002 §6.2, §4.7)', ()
     expect(p.backToJourney.cta).toBe('Back to journey');
   });
 
+  it('names the way back from the Library and from the Home and Results asks (F-ENT-003 E3-6)', () => {
+    expect(p.backToLibrary.cta).toBe('Back to library');
+    expect(p.backHome.cta).toBe('Back home');
+  });
+
   it('words the covered state per audience', () => {
     expect(p.covered.title.family('Mina', 'Sunday Class A')).toBe('Mina is covered by Sunday Class A.');
     expect(p.covered.title.self('Sunday Class A')).toBe("You're covered by Sunday Class A.");

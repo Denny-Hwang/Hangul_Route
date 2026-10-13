@@ -35,6 +35,11 @@ import { CultureNotesScreen } from '../screens/story/CultureNotesScreen';
 import { PlacementScreen } from '../screens/placement/PlacementScreen';
 import { VocabResultsScreen } from '../screens/vocab/VocabResultsScreen';
 import { VocabSpeedRoundScreen } from '../screens/vocab/VocabSpeedRoundScreen';
+import { RouteProposalScreen } from '../screens/route/RouteProposalScreen';
+import { NoteDetailScreen } from '../screens/notes/NoteDetailScreen';
+import { NotesScreen } from '../screens/notes/NotesScreen';
+import { NoteReportScreen } from '../screens/parent/NoteReportScreen';
+import { NotesGrownUpScreen } from '../screens/parent/NotesGrownUpScreen';
 import { VocabTopicScreen } from '../screens/vocab/VocabTopicScreen';
 import { VocabTopicsScreen } from '../screens/vocab/VocabTopicsScreen';
 import { cellStoriesRouteId } from '../logic/story/cell-stories';
@@ -103,6 +108,14 @@ export function RootNavigator(): React.ReactElement {
         <Stack.Screen name="PlacementReport" component={PlacementReportScreen} />
         {/* F-REPORT-001 section 3.9 (RP-9): registered only with the reports flag on. */}
         {flags.reportsEnabled ? <Stack.Screen name="LearnerReport" component={LearnerReportScreen} /> : null}
+        {/* The weekly plan proposal (F-PLAN-002 P2-7a): its entries (Home prompt, Profile row) need flags.routeEnabled. */}
+        {flags.routeEnabled ? <Stack.Screen name="RouteProposal" component={RouteProposalScreen} /> : null}
+        {/* Notes from grown-ups (F-FEEDBACK-001 FB-8): My notes and the note page, only with flags.notesEnabled. */}
+        {flags.notesEnabled ? <Stack.Screen name="Notes" component={NotesScreen} /> : null}
+        {flags.notesEnabled ? <Stack.Screen name="NoteDetail" component={NoteDetailScreen} /> : null}
+        {/* The grown-up zone of notes (FB-9): Notes for <learner> and the report sheet, behind the gate. */}
+        {flags.notesEnabled ? <Stack.Screen name="NotesGrownUp" component={NotesGrownUpScreen} /> : null}
+        {flags.notesEnabled ? <Stack.Screen name="NoteReport" component={NoteReportScreen} /> : null}
         {/* Words (F-VOC-003): reachable only from the Library Words section, which needs flags.vocabTopicsEnabled. */}
         <Stack.Screen name="VocabTopics" component={VocabTopicsScreen} />
         <Stack.Screen name="VocabTopic" component={VocabTopicScreen} />

@@ -23,6 +23,7 @@ export {
 } from './windows';
 export {
   learnerReport,
+  teachingOrder,
   REPORT_WORDS_VISIBLE,
   type ReportViewer,
   type ReportVoice,

@@ -14,6 +14,7 @@ import type {
   LearningRouteView,
 } from '@/lib/console/learning-route-view';
 import { useMessages } from '@/lib/i18n/locale-context';
+import { BrowseLink, useBrowseLinksShown } from './BrowseLink';
 import { PipShape, stageStateParts } from './JourneyParts';
 import { Notice, panelStyle } from './ui';
 
@@ -192,17 +193,17 @@ const stateWordStyle: CSSProperties = { fontWeight: typography.weight.regular, c
  * A row heading from one dictionary string ("2. Words · Open", "Stages 5 to 7: Coming later"): bold, with the
  * trailing state word in the quieter style. A locale whose sentence does not end with the state word keeps it whole.
  */
-function RowHeading({ text, stateWord }: { text: string; stateWord: string }): JSX.Element {
+function RowHeading({ text, stateWord, id }: { text: string; stateWord: string; id?: string }): JSX.Element {
   const split = text.endsWith(stateWord) && text.length > stateWord.length;
   return (
-    <p style={{ ...reset, fontWeight: typography.weight.bold }}>
+    <p id={id} style={{ ...reset, fontWeight: typography.weight.bold }}>
       {split ? text.slice(0, -stateWord.length) : text}
       {split ? <span style={stateWordStyle}>{stateWord}</span> : null}
     </p>
   );
 }
 
-function StageRowItem({ row }: { row: LearningRouteRow }): JSX.Element {
+function StageRowItem({ row, preview, previewLabel }: { row: LearningRouteRow; preview: boolean; previewLabel: string }): JSX.Element {
   if (row.kind === 'later') {
     return (
       <li style={rowQuiet}>
@@ -217,7 +218,7 @@ function StageRowItem({ row }: { row: LearningRouteRow }): JSX.Element {
     <li style={row.state === 'later' ? rowQuiet : rowBase}>
       <StageShape state={row.state} stage={row.stage} />
       <div style={rowBody}>
-        <RowHeading text={row.text} stateWord={row.stateWord} />
+        <RowHeading id={`route-stage-${row.stage}`} text={row.text} stateWord={row.stateWord} />
         {row.canDo ? <p style={reset}>{row.canDo}</p> : null}
         {row.line ? <p style={secondaryLine}>{row.line}</p> : null}
         {row.tags.length > 0 ? (
@@ -226,6 +227,11 @@ function StageRowItem({ row }: { row: LearningRouteRow }): JSX.Element {
               <Tag key={tag.kind} tag={tag} />
             ))}
           </p>
+        ) : null}
+        {preview && row.state !== 'later' ? (
+          <span>
+            <BrowseLink target={{ kind: 'stage', stage: row.stage }} source="route" label={previewLabel} describedBy={`route-stage-${row.stage}`} testId={`route-preview-${row.stage}`} />
+          </span>
         ) : null}
       </div>
     </li>
@@ -240,7 +246,9 @@ const updatedStyle: CSSProperties = { ...reset, fontSize: typography.size.bodySm
  * the card, "Stages" and the `ol`. The not-synced and not-found states keep the back link, so no
  * state is a dead end; not-found lists no other learner.
  */
-export function LearningRouteContent({ view }: { view: LearningRouteView }): JSX.Element {
+export function LearningRouteContent({ view, preview }: { view: LearningRouteView; /** [ Preview lessons ] per stage row (F-BROWSE-001 BR-11); omitted, `browseLinksShown()` decides. */ preview?: boolean }): JSX.Element {
+  const shown = useBrowseLinksShown();
+  const previewLabel = useMessages().console.browse.previewLessons.cta;
   if (view.status === 'notFound') {
     return (
       <div style={readingColumn}>
@@ -274,7 +282,7 @@ export function LearningRouteContent({ view }: { view: LearningRouteView }): JSX
       {/* role="list": WebKit drops the list semantics of an unstyled list, and VoiceOver must still say "list, 7 items" (section 10). */}
       <ol role="list" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
         {view.stages.map((row) => (
-          <StageRowItem key={row.kind === 'later' ? `later-${row.from}` : row.stage} row={row} />
+          <StageRowItem key={row.kind === 'later' ? `later-${row.from}` : row.stage} row={row} preview={preview ?? shown} previewLabel={previewLabel} />
         ))}
       </ol>
     </div>

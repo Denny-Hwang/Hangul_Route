@@ -170,6 +170,9 @@ export const caregiver = {
     /** Web only: back from a correct PIN, a browser may block a tab opened outside a tap, so one more tap opens it (as Sources' gateDone). */
     gateDone: 'PIN accepted. Tap Open billing again.',
     backToJourney: { cta: 'Back to journey' },
+    /** The way back when the Plan screen was opened from the Library or from the Home and Results asks (F-ENT-003 E3-6): it names where it goes. */
+    backToLibrary: { cta: 'Back to library' },
+    backHome: { cta: 'Back home' },
     /**
      * F-ENT-003 section 3.9.1 (E3-8; wireframe billing/plan-status-free-lessons): the lines on what
      * is free, shown in the Plan screen's slots only while F-ENT-003's effective switch is on. `line`
@@ -649,6 +652,9 @@ export const caregiver = {
     disclosure: (learner: string) => `Teachers see the answer ${learner} picks on their notes.`,
     offline: 'Connect to the internet to do this.',
     saveFailed: 'That did not save. Try again.',
+    /** The device's notes could not be read (the console's family notes wording). */
+    error: 'Notes could not load. Try again.',
+    retry: { cta: 'Try again' },
     /** Web only: opens the family notes on app.hangulroute.com. */
     sendNote: { cta: 'Send a note' },
   },
@@ -665,11 +671,155 @@ export const caregiver = {
       title: 'All lessons',
       close: { cta: 'Close' },
       howTo: 'Tap a lesson to see what it teaches, then play it. Nothing is saved.',
+      /** The header chip that opens the Lesson display sheet (home and the item page). */
+      lessonDisplay: { cta: 'Lesson display' },
+      /** Beside the title while the device is offline. */
+      offline: 'Offline',
+      /** Only with the content switch on (section 4.5 item 3): a sampler pass, or a fallback pass. */
+      scope: {
+        sampler: "Your learner's free lessons are open. The others show what they teach.",
+        fallback: 'Showing free lessons. We could not check your plan.',
+      },
+      /** Account passes that are not kept, online only; links to the persona home (no learner identifier). */
+      pointer: 'To see how your learner is doing, open your home page.',
+      /** A deep link's note (section 4.4), dismissible. */
+      note: {
+        letterAcrossStage1: 'This letter is practiced across Stage 1.',
+        notInVersion: 'This lesson is not in this version of the app yet.',
+        dismiss: 'Dismiss',
+      },
+      /** The section control (a radiogroup), in the learner's order. */
+      section: {
+        label: 'Show lessons by',
+        route: 'Route',
+        journey: 'Journey',
+        library: 'Library',
+      },
+      /** The Journey's collapsed stage line when the Route section is absent, and its expansion. */
+      stages: {
+        line: (n: number) => `${n} stages, from letters to your own words`,
+        item: (order: number, title: string) => `Stage ${order} · ${title}`,
+      },
+      /** A Route stage row's accessible name: the learner row's own label, then where it goes. */
+      routeRowA11y: (rowLabel: string) => `${rowLabel} Shows it on the Journey.`,
+      /** The Library's card theme filter group. */
+      themes: 'Themes',
+      /** A card slot in the Library: the rarity word, then the episode row's name. */
+      cardSlotA11y: (rarity: string, title: string, ko: string, romanization: string) => `${rarity}, ${title}, ${ko} ${romanization}. Opens the card.`,
+      /** One Words row: "· 12 words" beside the topic title. */
+      wordCount: (n: number) => plural('en', n, { one: `· ${n} word`, other: `· ${n} words` }),
+      wordsRowA11y: (topic: string, n: number) => plural('en', n, { one: `${topic}, ${n} word. Opens the topic.`, other: `${topic}, ${n} words. Opens the topic.` }),
+      /** A Story Time or Culture tile's one label: the title and its length, with no learner state (section 4.5). */
+      storyTileA11y: (title: string, minutes: number) =>
+        `${title}. ${plural('en', minutes, { one: `About ${minutes} minute`, other: `About ${minutes} minutes` })}.`,
+    },
+    /** The keep switch at the foot of home (account passes that are not a fallback). */
+    keep: {
+      label: 'Keep lessons on this device for 7 days, also offline',
+      /** Under the switch when turning it on did not keep the lessons (the switch is back off). */
+      failed: 'Lessons could not be kept on this device.',
+    },
+    /** The Lesson display sheet (section 4.9). It changes only this preview. */
+    display: {
+      title: 'Lesson display',
+      romanization: 'Romanization',
+      always: 'Always shown',
+      tap: 'Hidden until tap',
+      language: 'Language',
+      note: "These choices change only this preview. No learner's settings change.",
+      done: { cta: 'Done' },
+    },
+    /** The episode outline (section 4.6). */
+    episode: {
+      back: 'Back to all lessons',
+      stagePill: (order: number, title: string) => `Stage ${order} · ${title}`,
+      lessons: 'Lessons',
+      stories: 'Stories',
+      cards: 'Cards in this episode',
+      comingLater: 'Coming later',
+      open: { cta: 'Open' },
+      openA11y: (title: string) => `Open ${title}`,
+      storyMeta: (levels: number, scenes: number) =>
+        `${plural('en', levels, { one: `${levels} level`, other: `${levels} levels` })} · ${plural('en', scenes, { one: `${scenes} scene`, other: `${scenes} scenes` })}`,
+    },
+    /** A card row (episode outline, item page): the English title, then the Korean and its romanization. */
+    cardRowA11y: (title: string, ko: string, romanization: string) => `${title}, ${ko} ${romanization}. Opens the card.`,
+    /** "About N minutes" (the outline sums its lessons). */
+    minutes: (n: number) => plural('en', n, { one: `About ${n} minute`, other: `About ${n} minutes` }),
+    /** The item page (section 4.6): one template for a lesson, a story and a word topic. */
+    item: {
+      back: 'Back',
+      kind: { quest: 'Lesson', story: 'Story', vocabTopic: 'Words' },
+      teaches: 'What this teaches',
+      where: {
+        title: 'Where it sits',
+        stage: (order: number) => `Stage ${order}`,
+        lesson: (n: number, of: number) => `lesson ${n} of ${of}`,
+        see: { cta: 'See on the Journey' },
+      },
+      card: 'The card it awards',
+      /** "Taught here:" before the letter chip, when opened for a letter. */
+      focus: 'Taught here:',
+      focusChipA11y: (letter: string, romanization: string) => `${letter}, ${romanization}, taught here`,
+      preview: { cta: 'Preview this lesson' },
+      previewStory: { cta: 'Preview this story' },
+      previewQuestions: { cta: 'Preview the questions' },
+      /** The grown-up line in place of the preview button (switch on, sampler pass); F-ENT-003 section 3.11 [BY]. */
+      closed: 'Opens with the Family Plan or a Group License',
+      /** Under the closed line, an account pass that is not kept and not a fallback (F-BILL-002's label). */
+      openBilling: { cta: 'Open billing' },
+      /** A word topic's count beside its kind word in the item header. */
+      wordCount: (n: number) => plural('en', n, { one: `${n} word`, other: `${n} words` }),
+    },
+    /** The rows of "What this teaches". */
+    facts: {
+      letters: 'Letters',
+      words: 'Words',
+      syllables: 'Syllables',
+      skills: 'Skills',
+      steps: 'Steps',
+      levels: 'Levels',
+      levelGroup: 'Level',
+      level: { listen: 'Listen', readAlong: 'Read along', read: 'Read' },
+      scenes: 'Scenes',
+      keywords: 'Key words',
+      sources: 'Sources',
+      seeSources: { cta: 'See the sources' },
+    },
+    /** The word topic page (BR-9): each word row's Hear button, named by the romanization. */
+    topic: {
+      hearA11y: (romanization: string) => `Hear ${romanization}`,
     },
     /** The preview strip on lesson screens and the preview end screen (`PreviewFrame`). */
     preview: {
       strip: 'Preview. Nothing is saved.',
       leave: { cta: 'Leave preview' },
+      /** [ Leave preview ] asks once (mock preview-player.md C); Leave goes to the item page, no end screen. */
+      leaveConfirm: {
+        title: 'Leave this preview?',
+        keep: { cta: 'Keep going' },
+        leave: { cta: 'Leave' },
+      },
+    },
+    /** The preview end screen (section 4.8, BD9): what a learner gets here, never stars, a score or an earned card. */
+    end: {
+      lesson: {
+        title: 'That is the whole lesson.',
+        line: 'At this point a learner sees 1 to 3 stars and collects:',
+        /** A lesson that awards no card. */
+        lineNoCard: 'At this point a learner sees 1 to 3 stars.',
+      },
+      story: {
+        title: 'That is the whole story.',
+        line: 'A learner can read it again any time.',
+      },
+      next: { cta: 'Next lesson' },
+      again: { cta: 'Preview again' },
+      /** Also the error screen's way out of a lesson that fails to render (section 4.7). */
+      back: { cta: 'Back to the lesson page' },
+      nextStory: { cta: 'Next story' },
+      readAgain: { cta: 'Read again' },
+      backToStory: { cta: 'Back to the story page' },
     },
     /** The Access screen: no active pass. No lesson, title or card is shown (section 4.3). */
     access: {
@@ -687,6 +837,106 @@ export const caregiver = {
       signIn: { cta: 'Sign in' },
       /** Offline, under the account actions (account and unknown sources). */
       offline: 'Grown-up pages need the internet.',
+    },
+  },
+  /**
+   * Class moves in the learner app (F-SPACE-002 section 4.12, PR T-7d): the Classes card variants and Move (T-7b,
+   * `design/screens/transfer/classes-card.md`), MoveClass, ApproveTransfer, the read-only and planned sheets and the
+   * Home line (T-7c, `app-sheets.md`); mocks #472, word for word. Rendered only while the inbox says
+   * `transfersEnabled` (CLASS_TRANSFER stays off until counsel, flip gate G2), so these keys are unused until then.
+   * Not here: the consent lines (content-schema `TRANSFER_CONSENT_TEXT`, en / ko / es) and the frame the app sheet
+   * shares with the console (`console.transfer.consent`: title, language, identity block, reading hint, Yes, Not now);
+   * `consent` below adds only the self-audience frame. Offline reads `retry.offline`, Back and Done read
+   * `common.buttons`, the gate mark reads `audience.gated`. "Move" is the user-facing word, "learner", "class" and
+   * "grown-up" the nouns; no age, no countdown, no number, no red, and no line names who said no.
+   */
+  transfer: {
+    /** Buttons. A gated one carries the lock glyph and `audience.gated(…, true)` as its accessible name. */
+    actions: {
+      move: { cta: 'Move' },
+      review: { cta: 'Review' },
+      setUpPin: { cta: 'Set up PIN' },
+      find: { cta: 'Find class' },
+      sending: { cta: 'Sending…' },
+      notNow: { cta: 'Not now' },
+      /** The veto on a learner-side request (device cancel). */
+      cancelRequest: { cta: 'Cancel the request' },
+      /** The planned (cooling-off) sheet. */
+      cancelMove: { cta: 'Cancel the move' },
+      /** The Home line while a move is planned. */
+      cancel: { cta: 'Cancel' },
+    },
+    /** Classes card quiet lines (variants a, b, d, d') and the pending row's first line. */
+    card: {
+      classScope: 'Use your rescue code first.',
+      askConsole: 'Ask the grown-up with the account to answer this in the console.',
+      needsPin: 'A grown-up needs to set up a PIN first. Open Profile, then Grown-up zone.',
+      pinTooNew: 'Moves open one day after the PIN is set.',
+      /** Teacher-started (`initiator: 'source'`). */
+      sourceAsked: (source: string) => `${source} asked about a move.`,
+      /** Learner-side, and any initiator value this app does not know. */
+      learnerAsked: (destination: string) => `Asked: a move to ${destination}.`,
+    },
+    /** State lines the card, the sheets and Home share; one short sentence each, dates arrive formatted. */
+    lines: {
+      checkAgain: 'Please check this again.',
+      waitingOther: 'Waiting for the other class to answer.',
+      waitingClasses: 'Waiting for the classes to answer.',
+      waitingRoom: 'Waiting for room in the new class.',
+      cannotAnswer: "This move can't be answered here.",
+      planned: (date: string) => `A move is planned for ${date}.`,
+      ended: 'This request ended.',
+      /** A one-off `role="status"` after a class tablet's inbox answers 401. */
+      joinAgain: 'Join your new class again.',
+      /** A one-off `role="status"` when the inbox shows `executed`. */
+      moved: (name: string, destination: string) => `Moved. ${name} is now in ${destination}. Cards and stars stayed with ${name}.`,
+      /** The read-only sheet's first line and the teacher-started Home line. */
+      askedMoving: (source: string, name: string, destination: string) => `${source} asked about moving ${name} to ${destination}.`,
+      consoleAnswers: 'A grown-up with an account answers this in the console.',
+      /** Not now's description on a teacher-started read-only sheet; it names the `actions.notNow` button. */
+      notNowEnds: 'Not now ends this request.',
+    },
+    /** MoveClass (device route, learner-started only). The code field reuses `join.code.rules` and `join.code.placeholder`. */
+    move: {
+      title: 'Move to another class',
+      step1: 'Ask the new teacher for their class code.',
+      codeLabel: 'Class code',
+      sent: 'Request sent. Nothing changes until everyone says yes.',
+    },
+    /** One line per preview / create answer under the code field (`role="alert"`); consent is never queued. */
+    errors: {
+      codeNotFound: "That code didn't work.",
+      codeExpired: 'That code is too old. Ask for a new one.',
+      full: 'That class is full right now.',
+      alreadyMember: (name: string) => `${name} is already in that class.`,
+      tooManyAttempts: 'Too many tries. Try again later.',
+      cooldown: 'You can ask again in about a week.',
+      caregiverRequired: 'Ask the grown-up with the account to start this move in the console.',
+      deviceConsentLocked: "Moves can't be started on this device yet.",
+      alreadyOpenClass: (name: string) => `A class already asked about moving ${name}. Look on the Classes & family card.`,
+      alreadyOpenLearner: (name: string) => `A move for ${name} is already waiting. Look on the Classes & family card.`,
+      sameSpace: (name: string) => `That code is for the class ${name} is in now.`,
+      notTransferable: "That code can't be used for a move.",
+      destinationBusy: 'That class has many moves waiting. Try again in a few days.',
+      tooManyRequests: 'Too many moves were started today. Try again tomorrow.',
+      localeUnavailable: 'Not available in your language yet.',
+    },
+    /** The self-audience consent frame; the rest of the frame is `console.transfer.consent`. */
+    consent: {
+      titleSelf: (destination: string) => `Move to ${destination}?`,
+      yesSelf: 'Yes, move me',
+    },
+    /** The read-only sheet (guard 11): the request, where the yes happens, and only the veto and Back. */
+    readOnly: { title: 'A move is waiting' },
+    /** One calm line under the Hoya tip when the learner side must answer; the teacher-started one is `lines.askedMoving`. */
+    home: {
+      learnerWaiting: (destination: string) => `A move to ${destination} is waiting.`,
+      selfWaiting: 'A move is waiting for you.',
+    },
+    /** Read aloud, never drawn. */
+    a11y: {
+      review: 'Review the move',
+      move: (space: string) => `Move from ${space}`,
     },
   },
 } as const;

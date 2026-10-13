@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest';
+import { CATALOG, generateCurriculum, toMeta, toPlanItems, type InboxPlan } from '@hangul-route/content-schema';
+import { getMessages } from '@hangul-route/i18n';
 import { episodesAll, heritageCardsAll, questsAll, stages, themes } from '../../../content';
 import { journeyContent } from '../../../content/sync-context';
 import { localizeEpisode, localizeStage, localizeTheme } from '../../content-locale';
 import { cursorContext } from '../../cursor-context';
 import { buildMyRoute } from '../model';
 import { planView, routeNext, routeNextInputOf } from '../../route-next';
-import { goalSourcesOf, localizedRouteContent, routeLetterWall, routeModelInput } from '../route-input';
+import { goalSourcesOf, localizedRouteContent, routeLetterWall, routeModelInput, routeWeekOf } from '../route-input';
+import { homeStripView } from '../home-strip';
+import { archivedRoute, selfRouteOf } from '../../route/self-route';
+import { myRouteView } from '../view';
 import { startRouteOf } from '../start-marker';
 import type { SeenRecord } from '../types';
 import { emptySnapshot } from '../view';
@@ -130,5 +135,122 @@ describe('routeModelInput with F-ENT-003\'s input (LR-5a)', () => {
 
   it('goalSourcesOf: a classic plan without meta reads as meta null', () => {
     expect(goalSourcesOf({ sources: [{ id: 'plan:a', kind: 'class', assignedAt: 't', items: [] }] })).toEqual([{ id: 'plan:a', kind: 'class', assignedAt: 't', items: [], meta: null }]);
+  });
+});
+
+describe('routeWeekOf: the live weekly plan week for the page line and the Home strip (R-7b)', () => {
+  const localized = localizedRouteContent('en');
+  const EN = getMessages('en');
+  const draftOf = (audience: 'self' | 'class', startDate: string) =>
+    generateCurriculum(
+      {
+        audience,
+        level: { stage: 'stage1', band: 0 },
+        completedQuestIds: [],
+        startDate,
+        weeks: 4,
+        sessionsPerWeek: 3,
+        minutesPerSession: 15,
+        unlockedStages: ['stage1'],
+      },
+      CATALOG,
+    );
+  // The learner's own plan, as P2-7a's route-store stores it in the snapshot (`setSelfRoute`).
+  const selfPlan = selfRouteOf(draftOf('self', '2026-10-12'), 'route:self-0001', '2026-10-12T09:00:00.000Z');
+  const classDraft = draftOf('class', '2026-10-05');
+  const classPlan: InboxPlan = {
+    id: 'plan:class-1',
+    spaceId: 'space:c',
+    spaceKind: 'class',
+    spaceName: 'Room 3',
+    title: 'Hangul',
+    items: toPlanItems(classDraft),
+    publishedAt: '2026-10-04T00:00:00.000Z',
+    updatedAt: '2026-10-04T00:00:00.000Z',
+    meta: toMeta(classDraft),
+  };
+  const build = (opts: { selfRoute?: typeof selfPlan | null; plans?: InboxPlan[]; today: string }) => {
+    const snapshot = { ...emptySnapshot('p1'), selfRoute: opts.selfRoute ?? null };
+    const next = routeNextInputOf({
+      snapshot,
+      profileId: 'p1',
+      today: opts.today,
+      plans: opts.plans,
+      quests: questsAll,
+      episodes: episodesAll,
+      tier: 'premium',
+      gatingActive: false,
+      isQuestOpen: () => true,
+    });
+    const model = buildMyRoute(routeModelInput({ snapshot, tier: 'premium', localized, now: NOW, next }));
+    return { model, next };
+  };
+
+  it("reads the learner's own weekly plan from the snapshot: the week holding today", () => {
+    const first = build({ selfRoute: selfPlan, today: '2026-10-12' });
+    expect(first.model.goal?.from).toBe('self');
+    expect(routeWeekOf(first.model, first.next)).toBe(1);
+    const third = build({ selfRoute: selfPlan, today: '2026-10-28' });
+    expect(routeWeekOf(third.model, third.next)).toBe(3);
+  });
+
+  it("reads the class's weekly plan, which leads the learner's own (the goal's plan)", () => {
+    const both = build({ selfRoute: selfPlan, plans: [classPlan], today: '2026-10-13' });
+    expect(both.model.goal?.from).toBe('class');
+    expect(routeWeekOf(both.model, both.next)).toBe(2);
+    const classOnly = build({ plans: [classPlan], today: '2026-10-05' });
+    expect(routeWeekOf(classOnly.model, classOnly.next)).toBe(1);
+  });
+
+  it("a class plan that has not started yet leads the learner's running plan, so no week shows until it starts (amendment 4.1, 4.3)", () => {
+    // Intended: the week is the goal plan's week, and pickGoal counts an assigned class plan as live
+    // from assignment, so the goal moves to the class plan and the self plan's week 3 is not shown.
+    const laterDraft = draftOf('class', '2026-11-02');
+    const laterClass: InboxPlan = { ...classPlan, id: 'plan:class-2', items: toPlanItems(laterDraft), meta: toMeta(laterDraft) };
+    const mixed = build({ selfRoute: selfPlan, plans: [laterClass], today: '2026-10-28' });
+    expect(mixed.model.goal?.from).toBe('class');
+    expect(routeWeekOf(mixed.model, mixed.next)).toBeNull();
+    const selfOnly = build({ selfRoute: selfPlan, today: '2026-10-28' });
+    expect(routeWeekOf(selfOnly.model, selfOnly.next)).toBe(3);
+  });
+
+  it('is null with no plan, an archived plan, a classic plan, before the plan starts, after it ends, or without the input', () => {
+    const none = build({ today: '2026-10-12' });
+    expect(routeWeekOf(none.model, none.next)).toBeNull();
+    const archived = build({ selfRoute: archivedRoute(selfPlan, '2026-10-13T00:00:00.000Z'), today: '2026-10-13' });
+    expect(routeWeekOf(archived.model, archived.next)).toBeNull();
+    const classic = build({ plans: [{ ...classPlan, meta: null }], today: '2026-10-13' });
+    expect(routeWeekOf(classic.model, classic.next)).toBeNull();
+    const early = build({ selfRoute: selfPlan, today: '2026-10-11' });
+    expect(routeWeekOf(early.model, early.next)).toBeNull();
+    const after = build({ selfRoute: selfPlan, today: '2026-11-09' });
+    expect(routeWeekOf(after.model, after.next)).toBeNull();
+    expect(routeWeekOf(none.model, undefined)).toBeNull();
+  });
+
+  it('the page line and the Home strip show the same week, and neither carries a Next title', () => {
+    const { model, next } = build({ selfRoute: selfPlan, today: '2026-10-20' });
+    const week = routeWeekOf(model, next);
+    expect(week).toBe(2);
+    const strip = homeStripView({ model, messages: EN, goalStage: model.goal?.stage ?? null, week });
+    const page = myRouteView({
+      model,
+      messages: EN,
+      viewer: 'self',
+      name: '',
+      themeTitles: Object.fromEntries(localized.themes.map((t) => [t.key, t.titleEn])) as Parameters<typeof myRouteView>[0]['themeTitles'],
+      nextTitle: 'Family at the Table',
+      hasStories: false,
+      seen: undefined,
+      week,
+    });
+    expect(strip.week).toBe('Week 2 of your weekly plan');
+    expect(page.planLine).toBe(strip.week);
+    for (const line of [strip.week, page.planLine]) {
+      expect(line).not.toMatch(/Next|Family at the Table/);
+      expect(line).not.toMatch(/\d+\s*(of|\/)\s*\d+/);
+    }
+    // The strip's screen-reader label names the same week.
+    expect(strip.a11yLabel).toContain('Week 2 of your weekly plan');
   });
 });

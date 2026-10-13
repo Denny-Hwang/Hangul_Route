@@ -25,11 +25,15 @@ import * as enLandingPage from '../(en)/page';
 import * as enPrivacyPage from '../(en)/privacy/page';
 import * as enTermsPage from '../(en)/terms/page';
 import * as enLearnersPage from '../(en)/learners/page';
+import * as enParentsPage from '../(en)/parents/page';
+import * as enTeachersPage from '../(en)/teachers/page';
 import * as locAboutPage from '../(loc)/[locale]/about/page';
 import * as locLandingPage from '../(loc)/[locale]/page';
 import * as locPrivacyPage from '../(loc)/[locale]/privacy/page';
 import * as locTermsPage from '../(loc)/[locale]/terms/page';
 import * as locLearnersPage from '../(loc)/[locale]/learners/page';
+import * as locParentsPage from '../(loc)/[locale]/parents/page';
+import * as locTeachersPage from '../(loc)/[locale]/teachers/page';
 
 /**
  * No emoji in rendered output (CLAUDE.md): the public site (landing, About, Privacy, Terms, in English
@@ -99,6 +103,8 @@ const SITE_PAGES: ReadonlyArray<readonly [string, SitePage, string]> = [
   ['privacy', enPrivacyPage, '../(en)/privacy/page'],
   ['terms', enTermsPage, '../(en)/terms/page'],
   ['learners', enLearnersPage, '../(en)/learners/page'],
+  ['parents', enParentsPage, '../(en)/parents/page'],
+  ['teachers', enTeachersPage, '../(en)/teachers/page'],
 ];
 
 /** The same pages under `/es` and `/ko` (prerendered by the web build even while hidden). */
@@ -108,6 +114,8 @@ const LOCALE_PAGES: ReadonlyArray<readonly [string, () => string]> = siteLocaleP
   [`${locale}/privacy`, at(locPrivacyPage, { locale })] as const,
   [`${locale}/terms`, at(locTermsPage, { locale })] as const,
   [`${locale}/learners`, at(locLearnersPage, { locale })] as const,
+  [`${locale}/parents`, at(locParentsPage, { locale })] as const,
+  [`${locale}/teachers`, at(locTeachersPage, { locale })] as const,
 ]);
 
 const PAGES: ReadonlyArray<readonly [string, () => string]> = [
@@ -128,7 +136,7 @@ describe('landing sources carry no emoji code point', () => {
   it('lists real files', () => {
     for (const file of SOURCES) expect(statSync(join(src, file)).isFile(), file).toBe(true);
     expect(SOURCES.filter((f) => f.startsWith('components/landing/')).length).toBeGreaterThanOrEqual(4);
-    expect(SOURCES).toEqual(expect.arrayContaining(['components/landing/LandingPage.tsx', 'components/landing/AboutPage.tsx', 'app/(en)/page.tsx', 'app/(loc)/[locale]/page.tsx']));
+    expect(SOURCES).toEqual(expect.arrayContaining(['components/landing/HomePage.tsx', 'components/landing/AboutPage.tsx', 'app/(en)/page.tsx', 'app/(loc)/[locale]/page.tsx']));
   });
 
   for (const file of SOURCES) {
@@ -160,10 +168,9 @@ describe('the art that replaced the emoji is drawn', () => {
     return html.slice(start, html.indexOf('</svg>', start) + 6);
   };
 
-  it('hero: Hoya waving; Meet Hoya: Hoya idle', () => {
-    const html = render(enLandingPage, {});
-    expect(inside(html, 'hr-landing-hero-art')).toContain('data-pose="waving"');
-    expect(inside(html, 'hr-landing-split-art')).toContain('data-pose="idle"');
+  it('home hero: Hoya waving (F-SITE-002 §3.3); /learners: Hoya waving beside the quest line (§3.4)', () => {
+    expect(inside(render(enLandingPage, {}), 'hr-site-hero-art')).toContain('data-pose="waving"');
+    expect(render(enLearnersPage, {})).toMatch(/<span aria-hidden="true"[^>]*><svg[^>]*data-pose="waving"/);
   });
 
   it('mini-games gallery: one design-system icon per game', () => {
