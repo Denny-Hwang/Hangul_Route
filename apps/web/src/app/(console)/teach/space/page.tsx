@@ -9,6 +9,7 @@ import { AdultFrame } from '@/components/console/AdultFrame';
 import { AvatarChip } from '@/components/AvatarChip';
 import { SchoolAdmin } from '@/components/console/SchoolAdmin';
 import { StartingSpot } from '@/components/console/PlacementParts';
+import { PlanUpdateLine } from '@/components/console/PlanUpdateParts';
 import { JourneyStrip } from '@/components/console/JourneyParts';
 import { FreeLessonsLine } from '@/components/console/FreeLessonsParts';
 import { ClassGoalLineView } from '@/components/console/ClassGoalParts';
@@ -218,6 +219,7 @@ function SpaceInner(): JSX.Element {
                       <div style={{ color: colors.text.secondary, fontSize: typography.size.bodySm, marginTop: spacing.xs, lineHeight: typography.leading.relaxed }}>
                         <div>{c.space.learner.lastActive(relativeDay(l.summary.lastActiveAt, now, locale))}</div>
                         <StartingSpot summary={l.summary} spaceId={spaceId} learnerId={l.id} learnerName={l.displayName} kind={roster.space.kind} />
+                        <PlanUpdateLine kind={roster.space.kind} learner={l} plans={plans} today={today} api={api} spaceId={spaceId} onSaved={() => void load()} />
                         <div>{c.space.learner.questsCards(l.summary.stage1.questsDone, l.summary.stage1.questsTotal, l.summary.cardsUnlocked)}</div>
                         <div>{c.space.learner.minutesThisWeek(l.summary.minutesLast7d)}</div>
                         <JourneyStrip kind={roster.space.kind} summary={l.summary} />

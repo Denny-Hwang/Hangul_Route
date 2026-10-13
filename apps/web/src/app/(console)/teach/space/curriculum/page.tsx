@@ -1,11 +1,11 @@
 'use client';
 
-import { CATALOG, ThemeKeySchema, WEEKDAYS, generateCurriculum, type CurriculumDraft, type StageKey, type ThemeKey, type Weekday } from '@hangul-route/content-schema';
+import { CATALOG, PACES, ThemeKeySchema, WEEKDAYS, generateCurriculum, type CurriculumDraft, type PaceId, type StageKey, type ThemeKey, type Weekday } from '@hangul-route/content-schema';
 import { borderWidth, colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { Chip, ChipGroup, ShortPlanLine, WarningList, WeekTable, onRadioKeys } from '@/components/console/CurriculumParts';
+import { Chip, ChipGroup, ShortPlanLine, SuggestedTag, WarningList, WeekTable, onRadioKeys } from '@/components/console/CurriculumParts';
 import { Button, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
@@ -16,22 +16,30 @@ import {
   LENGTH_CHOICES,
   MAX_DAYS_OFF,
   MINUTE_CHOICES,
-  SESSION_CHOICES,
+  PACE_CHOICES,
   STARTING_POINT_IDS,
   defaultsFor,
   draftPlanBody,
+  followProposal,
   freeDaysView,
   learnerProblem,
   leftOutNeutral,
+  lengthPreviewText,
   levelHint,
+  paceOf,
+  pacePatch,
+  prefilledState,
   spaceCoverage,
   statsText,
+  suggestedPace,
   toParams,
   unlockedStagesForSpace,
   weekGroups,
   weekdayLabel,
   weeksOf,
   wizardProblem,
+  wizardProposal,
+  type ProposalContext,
   type SpaceCoverage,
   type WizardProblem,
   type WizardState,
@@ -55,9 +63,11 @@ const labelStyle: CSSProperties = { display: 'block', fontSize: typography.size.
 /**
  * console/curriculum-wizard — F-PLAN-002 section 3.8 (wireframe console/curriculum-planner A-D).
  * Four steps; the generator runs in the page (no network), and **Use this route** saves an
- * unpublished plan with its meta and opens the plan builder on it. Owner decisions OD-12 /
- * OD-13 (pace chips, a suggested length) are not decided yet, so no length is pre-selected
- * (PR P2-6b). The step controls wait for the roster, so a route always knows its audience.
+ * unpublished plan with its meta and opens the plan builder on it. The wizard starts from
+ * `proposeRoute` (PR P2-6b, FP-B5; OD-12 / OD-13): the suggested pace and length are pre-selected
+ * and tagged *Suggested*, each length carries one honest preview line, and the start, focus,
+ * themes and motivation are prefilled; the length follows the start and the pace until the
+ * grown-up picks one. The step controls wait for the roster, so a route always knows its audience.
  */
 function CurriculumInner(): JSX.Element {
   const spaceId = spaceIdFrom(useSearchParams());
@@ -101,10 +111,16 @@ function CurriculumInner(): JSX.Element {
     }
     setRoster(r.data);
     const kind = r.data.space.kind === 'family' ? 'family' : 'class';
-    // The audience always follows the roster; a form already touched keeps its other choices.
-    setState((s) => (touched.current ? { ...s, audience: kind, learnerId: kind === 'family' && r.data.learners.some((l) => l.id === s.learnerId) ? s.learnerId : null } : defaultsFor(kind, r.data.learners, today)));
     // Without the entitlement list the route plans Stage 1 only and lists the rest as locked: honest, never more than allowed.
-    if (e.ok) setUnlocked(unlockedStagesForSpace(e.data, r.data.space, new Date()));
+    const stages: StageKey[] = e.ok ? unlockedStagesForSpace(e.data, r.data.space, new Date()) : ['stage1'];
+    setUnlocked(stages);
+    // The audience always follows the roster; a form already touched keeps its other choices. An
+    // untouched form starts from the proposal for this roster and tier (P2-6b).
+    setState((s) =>
+      touched.current
+        ? { ...s, audience: kind, learnerId: kind === 'family' && r.data.learners.some((l) => l.id === s.learnerId) ? s.learnerId : null }
+        : prefilledState(kind, { learners: r.data.learners, unlockedStages: stages, today }),
+    );
     if (gating) setCoverage(spaceCoverage(e.ok ? e.data : null, memberships?.ok ? memberships.data : null, r.data.space, new Date()));
   }, [api, spaceId, today]);
 
@@ -115,9 +131,17 @@ function CurriculumInner(): JSX.Element {
   const audience = roster?.space.kind === 'family' ? 'family' : 'class';
   const learners = useMemo(() => roster?.learners ?? [], [roster]);
 
+  const context: ProposalContext = useMemo(() => ({ learners, unlockedStages: unlocked, today }), [learners, unlocked, today]);
+
   const update = (patch: Partial<WizardState>): void => {
     touched.current = true;
     setState((s) => ({ ...s, ...patch }));
+  };
+
+  // A change of the start, the learner or the pace: the length follows the new suggestion until the grown-up picks one.
+  const updateAndFollow = (patch: Partial<WizardState>): void => {
+    touched.current = true;
+    setState((s) => followProposal({ ...s, ...patch }, context));
   };
 
   const problem: WizardProblem | null = wizardProblem(state, today);
@@ -136,11 +160,19 @@ function CurriculumInner(): JSX.Element {
   const free = useMemo(() => (step === STEPS && draft ? freeDaysView(draft, coverage, contentGatingEnabled()) : null), [step, draft, coverage]);
   // The switch is on but this viewer cannot tell the coverage: neutral product words, no link (section 3.11).
   const neutral = leftOutNeutral(coverage, contentGatingEnabled());
+  // The *Suggested* length and the line under each length chip (step 2 only: four generator runs).
+  const pace = paceOf(state);
+  const proposal = useMemo(
+    () => (step === 2 && roster !== null ? wizardProposal(state, context) : null),
+    // The proposal reads the start, the learner, the pace, the start day and the motivation; nothing else of the form.
+    [step, roster, context, state.audience, state.start, state.learnerId, pace, state.startDate, state.motivation],
+  );
 
   if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
 
   const hint = audience === 'class' || learners.length >= 3 ? levelHint(learners) : null;
   const weeks = weeksOf(state);
+  const suggested = suggestedPace(state, learners);
 
   const problemText = (p: WizardProblem): string => {
     switch (p) {
@@ -166,12 +198,21 @@ function CurriculumInner(): JSX.Element {
       update({ learnerId: null });
       return;
     }
-    const next = defaultsFor('family', learners, today, id);
-    update({ learnerId: next.learnerId, start: next.start, minutesPerSession: next.minutesPerSession });
+    // The proposal for this learner: start, pace, length, minutes, start day, focus, themes and motivation (FP-B5).
+    const next = prefilledState('family', context, id);
+    touched.current = true;
+    setState((s) => ({
+      ...next,
+      daysOff: s.daysOff,
+      customWeeks: s.customWeeks,
+      culturalAnchors: s.culturalAnchors,
+      includeComingSoon: s.includeComingSoon,
+      ...(s.lengthPicked ? { length: s.length, lengthPicked: true } : {}),
+    }));
   };
 
   const toggleDay = (day: Weekday): void => {
-    update({ sessionDays: state.sessionDays.includes(day) ? state.sessionDays.filter((d) => d !== day) : [...state.sessionDays, day] });
+    updateAndFollow({ sessionDays: state.sessionDays.includes(day) ? state.sessionDays.filter((d) => d !== day) : [...state.sessionDays, day] });
   };
 
   const toggleTheme = (theme: ThemeKey): void => {
@@ -238,7 +279,7 @@ function CurriculumInner(): JSX.Element {
           <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.sm}px` }}>{c.start.title}</h2>
           <div role="radiogroup" aria-label={c.start.label} onKeyDown={onRadioKeys} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: spacing.sm }}>
             {STARTING_POINT_IDS.map((id) => (
-              <Chip key={id} wide selected={state.start === id} disabled={loading} onClick={() => update({ start: id })} testId={`start-${id}`}>
+              <Chip key={id} wide selected={state.start === id} disabled={loading} onClick={() => updateAndFollow({ start: id })} testId={`start-${id}`}>
                 <span style={{ display: 'block', fontWeight: typography.weight.bold }}>{c.start.points[id].title}</span>
                 <span style={{ display: 'block', color: colors.text.secondary, fontSize: typography.size.caption }}>{c.start.points[id].line}</span>
               </Chip>
@@ -261,12 +302,36 @@ function CurriculumInner(): JSX.Element {
       {step === 2 ? (
         <section aria-label={c.rhythm.title}>
           <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.md}px` }}>{c.rhythm.title}</h2>
-          <ChipGroup label={c.rhythm.length}>
-            {LENGTH_CHOICES.map((choice) => (
-              <Chip key={choice} selected={state.length === choice} onClick={() => update({ length: choice })} testId={`length-${choice}`}>
-                {c.rhythm.lengths[choice].cta}
+          <ChipGroup label={c.rhythm.pace}>
+            {PACE_CHOICES.map((id: PaceId) => (
+              <Chip key={id} selected={pace === id} onClick={() => updateAndFollow(pacePatch(id))} testId={`pace-${id}`}>
+                {c.rhythm.paceOption(c.rhythm.paces[id], PACES[id])}
+                {suggested === id ? <SuggestedTag /> : null}
               </Chip>
             ))}
+          </ChipGroup>
+          {pace === null ? (
+            <div style={{ margin: `-${spacing.sm}px 0 ${spacing.lg}px` }}>
+              <Muted>{c.rhythm.offChips}</Muted>
+            </div>
+          ) : null}
+          <ChipGroup label={c.rhythm.length} grid>
+            {LENGTH_CHOICES.map((choice) => {
+              const option = choice === 'custom' ? undefined : proposal?.options.find((o) => o.id === choice);
+              return (
+                <Chip key={choice} wide selected={state.length === choice} onClick={() => update({ length: choice, lengthPicked: true })} testId={`length-${choice}`}>
+                  <span style={{ display: 'block', fontWeight: typography.weight.bold }}>
+                    {c.rhythm.lengths[choice].cta}
+                    {proposal?.defaultId === choice ? <SuggestedTag /> : null}
+                  </span>
+                  {option ? (
+                    <span style={{ display: 'block', color: colors.text.secondary, fontSize: typography.size.caption }} data-testid={`length-line-${choice}`}>
+                      {lengthPreviewText(option, locale)}
+                    </span>
+                  ) : null}
+                </Chip>
+              );
+            })}
           </ChipGroup>
           {state.length === 'custom' ? (
             <label style={{ display: 'block', marginBottom: spacing.lg }}>
@@ -297,18 +362,7 @@ function CurriculumInner(): JSX.Element {
             <div style={{ marginBottom: spacing.lg }}>
               <Muted>{c.rhythm.daysChosen(state.sessionDays.length)}</Muted>
             </div>
-          ) : (
-            <label style={{ display: 'block', margin: `${spacing.sm}px 0 ${spacing.lg}px` }}>
-              <span style={labelStyle}>{c.rhythm.sessions}</span>
-              <select value={state.sessionsPerWeek} onChange={(e) => update({ sessionsPerWeek: Number(e.target.value) })} style={inputStyle}>
-                {SESSION_CHOICES.map((n) => (
-                  <option key={n} value={n}>
-                    {c.rhythm.sessionsOption(n)}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
+          ) : null}
           <ChipGroup label={c.rhythm.minutes}>
             {MINUTE_CHOICES.map((n) => (
               <Chip key={n} selected={state.minutesPerSession === n} onClick={() => update({ minutesPerSession: n })}>

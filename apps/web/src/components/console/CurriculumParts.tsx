@@ -82,15 +82,50 @@ export function onRadioKeys(event: KeyboardEvent<HTMLElement>): void {
   next.click();
 }
 
-/** A group label and its chips, wrapping on a narrow window. */
-export function ChipGroup({ label, children, role = 'radiogroup' }: { label: string; children: ReactNode; role?: 'radiogroup' | 'group' }): JSX.Element {
+/** The narrowest wide card in a grid group: three across a regular window, one on a phone (like the starting-point cards). */
+const CARD_MIN = layout.breakpoint.regular / 3;
+
+/** A group label and its chips, wrapping on a narrow window; `grid` lays wide cards in columns that fold to one on a phone. */
+export function ChipGroup({ label, children, role = 'radiogroup', grid = false }: { label: string; children: ReactNode; role?: 'radiogroup' | 'group'; grid?: boolean }): JSX.Element {
+  const layoutStyle = grid
+    ? { display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(${CARD_MIN}px, 1fr))`, gap: spacing.sm }
+    : { display: 'flex', flexWrap: 'wrap' as const, gap: spacing.sm };
   return (
     <div style={{ marginBottom: spacing.lg }}>
       <div style={{ fontSize: typography.size.caption, color: colors.text.muted, marginBottom: spacing.xs }}>{label}</div>
-      <div role={role} aria-label={label} onKeyDown={role === 'radiogroup' ? onRadioKeys : undefined} style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.sm }}>
+      <div role={role} aria-label={label} onKeyDown={role === 'radiogroup' ? onRadioKeys : undefined} style={layoutStyle}>
         {children}
       </div>
     </div>
+  );
+}
+
+/**
+ * The *Suggested* tag on the recommended pace and length (F-PLAN-002 P2-6b, FP-B5; wireframe
+ * journey/my-route-overview K2): written text inside the chip, so a screen reader hears it with
+ * the choice and it never rests on colour alone.
+ */
+export function SuggestedTag(): JSX.Element {
+  const words = useMessages().console.curriculum.rhythm;
+  return (
+    <span
+      data-testid="suggested-tag"
+      style={{
+        display: 'inline-block',
+        marginLeft: spacing.sm,
+        fontSize: typography.size.caption,
+        fontWeight: typography.weight.bold,
+        padding: `${spacing.xxs}px ${spacing.sm}px`,
+        borderRadius: radii.pill,
+        border: `${borderWidth.thin}px solid ${colors.border.strong}`,
+        backgroundColor: colors.surface.paper,
+        color: colors.text.secondary,
+        whiteSpace: 'nowrap',
+        verticalAlign: 'middle',
+      }}
+    >
+      {words.suggested}
+    </span>
   );
 }
 
