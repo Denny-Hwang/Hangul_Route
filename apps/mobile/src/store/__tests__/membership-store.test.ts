@@ -27,7 +27,7 @@ import { usePlanStore } from '../plan-store';
 import { useTierStore } from '../tier-store';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
-import { setSyncApiForTests, useSyncStore } from '../sync-store';
+import { setSyncApiForTests, useSyncStore, type LearnerSyncState } from '../sync-store';
 
 const snap: ProgressSnapshot = { profileId: 'profile:a', updatedAt: 't', episodes: [], quests: [], cards: [], sessions: [], homework: [], reviews: [], streakDays: 0 };
 const classRow = { spaceId: 'space:cls', kind: 'class' as const, name: 'Sunday Class A', role: 'student' as const, joinedAt: 't' };
@@ -304,17 +304,18 @@ describe('app start and foreground: the automatic re-pace (F-PLAN-002 section 3.
   }
   const routeOf = () => useProgressStore.getState().byProfile['profile:a']?.selfRoute;
 
-  it('with sync on, asks for a sync first and moves the plan along only once the sync merged, then pushes it', async () => {
+  it('with sync on, syncs first and moves the plan along only once the sync merged, then pushes it', async () => {
     const { dayKey } = await import('../../logic/homework/mission-builder');
     setSyncApiForTests(fakeApi() as never);
     await planTenDaysAgo();
-    const requestSync = vi.spyOn(useSyncStore.getState(), 'requestSync');
+    const syncNow = vi.spyOn(useSyncStore.getState(), 'syncNow').mockImplementation(async (id) => ({ ...(useSyncStore.getState().byLearner[id] as LearnerSyncState), status: 'synced' }));
+    const requestSync = vi.spyOn(useSyncStore.getState(), 'requestSync').mockImplementation(() => undefined);
     const before = routeOf()?.updatedAt;
     await rederiveAllLocal();
-    // A stale copy is never re-paced before the server's copy is merged.
+    // A stale copy is never re-paced before the server's copy is merged: the onSynced listener does it.
     expect(routeOf()?.updatedAt).toBe(before);
-    expect(requestSync).toHaveBeenCalledWith('profile:a');
-    requestSync.mockClear();
+    expect(syncNow).toHaveBeenCalledWith('profile:a');
+    syncNow.mockClear();
     expect(await repaceAfterSync('profile:a')).toBe(true);
     expect(routeOf()?.meta.repacedAt?.slice(0, 10)).toBe(dayKey(new Date().toISOString()));
     expect(requestSync).toHaveBeenCalledWith('profile:a');
@@ -324,7 +325,38 @@ describe('app start and foreground: the automatic re-pace (F-PLAN-002 section 3.
     expect(await repaceAfterSync('profile:a')).toBe(false);
     await rederiveAllLocal();
     expect(routeOf()?.updatedAt).toBe(moved);
+    expect(syncNow).not.toHaveBeenCalled();
     expect(requestSync).not.toHaveBeenCalled();
+    syncNow.mockRestore();
+    requestSync.mockRestore();
+  });
+
+  it.each([
+    ['offline (the upload fails)', 'error'],
+    ['a conflict to retry later', 'idle'],
+  ] as const)('with sync on but %s, moves the plan along on this copy the same day', async (_label, status) => {
+    const { dayKey } = await import('../../logic/homework/mission-builder');
+    setSyncApiForTests(fakeApi() as never);
+    await planTenDaysAgo();
+    const syncNow = vi.spyOn(useSyncStore.getState(), 'syncNow').mockImplementation(async (id) => ({ ...(useSyncStore.getState().byLearner[id] as LearnerSyncState), status }));
+    const requestSync = vi.spyOn(useSyncStore.getState(), 'requestSync').mockImplementation(() => undefined);
+    await rederiveAllLocal();
+    expect(routeOf()?.meta.repacedAt?.slice(0, 10)).toBe(dayKey(new Date().toISOString()));
+    // Once that day.
+    const moved = routeOf()?.updatedAt;
+    await rederiveAllLocal();
+    expect(routeOf()?.updatedAt).toBe(moved);
+    syncNow.mockRestore();
+    requestSync.mockRestore();
+  });
+
+  it('with sync on and the upload failing for real (offline), still moves the plan along', async () => {
+    const { dayKey } = await import('../../logic/homework/mission-builder');
+    setSyncApiForTests(fakeApi({ putSnapshot: vi.fn(async () => Promise.reject(new Error('offline'))) }) as never);
+    await planTenDaysAgo();
+    const requestSync = vi.spyOn(useSyncStore.getState(), 'requestSync').mockImplementation(() => undefined);
+    await rederiveAllLocal();
+    expect(routeOf()?.meta.repacedAt?.slice(0, 10)).toBe(dayKey(new Date().toISOString()));
     requestSync.mockRestore();
   });
 

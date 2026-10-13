@@ -480,8 +480,11 @@ export async function repaceAfterSync(learnerId: string): Promise<boolean> {
 
 /**
  * `rederiveLocal` for every learner on the device: app start and back in the foreground. When a
- * learner's own weekly plan is due to move along, a sync is asked for first and the re-pace runs
- * once it has merged (`repaceAfterSync`); without sync it runs here.
+ * learner's own weekly plan is due to move along, it syncs first and the re-pace runs once the sync
+ * merged (`repaceAfterSync` from `onSynced`). A sync that does not get through (offline, an error,
+ * a conflict to retry later) never holds the plan back: the re-pace runs on this copy, and the
+ * stopped-or-replaced rule of the merge keeps a later sync right (section 3.7). Without sync it
+ * runs here.
  */
 export async function rederiveAllLocal(): Promise<void> {
   const learners = useProfileStore.getState().profiles.filter((p) => p.role === 'learner');
@@ -496,7 +499,13 @@ export async function rederiveAllLocal(): Promise<void> {
       .getState()
       .repaceDue(p.id)
       .catch(() => false);
-    if (due) useSyncStore.getState().requestSync(p.id);
+    if (!due) continue;
+    const synced = await useSyncStore
+      .getState()
+      .syncNow(p.id)
+      .then((r) => r.status === 'synced')
+      .catch(() => false);
+    if (!synced) await repaceAfterSync(p.id);
   }
 }
 
