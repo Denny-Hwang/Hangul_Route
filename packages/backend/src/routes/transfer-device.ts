@@ -169,6 +169,16 @@ async function deviceViews(db: Db, learnerId: string, rows: readonly StoredTrans
  */
 export async function inboxTransfers(db: Db, learnerId: string, scope: 'full' | 'class', env: TransferEnv | undefined, now: Date): Promise<InboxTransferFields> {
   if (!classTransferEnabled(env)) return INBOX_LOCKED;
+  try {
+    return await inboxTransfersOn(db, learnerId, scope, env, now);
+  } catch {
+    // A failure here must not cost the learner's plans, tier and classes: this answer reads as locked (the app
+    // offers nothing), and the next inbox tries again.
+    return INBOX_LOCKED;
+  }
+}
+
+async function inboxTransfersOn(db: Db, learnerId: string, scope: 'full' | 'class', env: TransferEnv | undefined, now: Date): Promise<InboxTransferFields> {
   if (scope === 'class') return { transfersEnabled: true, transferDeviceConsent: false, selfManaged: false, transfers: [] };
   const [prefs, all] = await Promise.all([db.getTransferPrefs(learnerId), db.transfersOfLearner(learnerId)]);
   const rows = (await settleAll(db, all, now, env))
@@ -444,6 +454,10 @@ transferSyncRoutes.put('/learners/:id/transfer-prefs', async (c) => {
   if (typeof deviceId !== 'string') return deviceId;
   const body = await readBody(c, DeviceTransferPrefsBodySchema);
   if (!body) return badRequest(c);
+  // On, the switch shuts the caregiver route (`learner_manages_own`), which a guardian cannot clear (A11). While
+  // moves cannot be agreed on a device it would leave nobody able to say yes, so it opens with the device lock
+  // (G6). Off is the safe direction and is always accepted.
+  if (body.selfManaged && !transferDeviceConsentEnabled(c.env)) return deviceLocked(c);
   const db = dbFor(c);
   await db.setTransferPref(learnerId, 'selfManaged', body.selfManaged, new Date());
   return ok(c, { prefs: { selfManaged: (await db.getTransferPrefs(learnerId)).selfManaged } });

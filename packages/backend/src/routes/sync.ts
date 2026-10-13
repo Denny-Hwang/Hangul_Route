@@ -142,6 +142,9 @@ syncRoutes.get('/learners/:id/inbox', async (c) => {
     notes: notes.notes.map(inboxNoteView),
     notePrefs: notePrefsView(notes.prefs),
     ...transfers,
+    // The calling device's own scope (F-SPACE-002 section 4.12): a tablet a class relinked before the app kept a
+    // marker learns it here, locked or not (no extra read).
+    deviceScope: classScoped ? 'class' : 'full',
   });
 });
 

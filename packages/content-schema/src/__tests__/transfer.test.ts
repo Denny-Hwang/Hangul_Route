@@ -392,4 +392,14 @@ describe('SyncInboxSchema transfer additions (F-SPACE-002 §4.4)', () => {
   it('a non-array transfers value reads as empty', () => {
     expect(SyncInboxSchema.parse({ ...newWorker, transfers: null }).transfers).toEqual([]);
   });
+
+  it('deviceScope: the value the Worker sends, else null (unknown, never a guess), and never costs the rest', () => {
+    expect(SyncInboxSchema.parse(oldWorker).deviceScope).toBeNull();
+    expect(SyncInboxSchema.parse({ ...newWorker, deviceScope: 'class' }).deviceScope).toBe('class');
+    expect(SyncInboxSchema.parse({ ...newWorker, deviceScope: 'full' }).deviceScope).toBe('full');
+    const odd = SyncInboxSchema.parse({ ...newWorker, deviceScope: 'kiosk' });
+    expect(odd.deviceScope).toBeNull();
+    expect(odd.memberships).toEqual([membership]);
+    expect(PreTransferSyncInboxSchema.safeParse({ ...newWorker, deviceScope: 'class' }).success).toBe(true);
+  });
 });

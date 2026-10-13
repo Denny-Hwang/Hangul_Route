@@ -135,7 +135,6 @@ describe('the release locks (T15, decision A4)', () => {
     const created = requestOf(await create(FAMILY, 'mom', familyCreate()));
     expect(transfersOf(await inbox(SUNI, suniPhone, ON)).map((t) => t.id)).toEqual([created.id]);
     expect((await dCancel(SUNI, suniPhone, created.id, ON)).status).toBe(200);
-    expect((await dPrefs(SUNI, suniPhone, { selfManaged: true }, ON)).status).toBe(200);
     expect((await dPrefs(SUNI, suniPhone, { selfManaged: false }, ON)).status).toBe(200);
     const teacher = requestOf(await create(A, 'teacher-a', classCreate({ learnerId: SUNI })));
     expect((await dDecline(SUNI, suniPhone, teacher.id, ON)).status).toBe(200);
@@ -196,6 +195,14 @@ describe('device credentials (guard 8)', () => {
     const r = await inbox(SUNI, suniTablet);
     expect(r.status).toBe(200);
     expect(r.body.data).toMatchObject({ transfersEnabled: true, transferDeviceConsent: false, selfManaged: false, transfers: [] });
+  });
+
+  it('the inbox tells a device its own scope, locked or not, so a tablet relinked before the app knew learns it is class-scoped', async () => {
+    for (const env of ['locked', ON, DEVICE_ON] as Env[]) {
+      expect((await inbox(SUNI, suniTablet, env)).body.data, String(env)).toMatchObject({ deviceScope: 'class' });
+      expect((await inbox(SUNI, suniPhone, env)).body.data, String(env)).toMatchObject({ deviceScope: 'full' });
+    }
+    expect(SyncInboxSchema.parse((await inbox(SUNI, suniTablet)).body.data).deviceScope).toBe('class');
   });
 
   it('answers 401 without credentials and 403 for a device bound to another learner', async () => {
@@ -272,6 +279,27 @@ describe('the inbox (section 4.4)', () => {
     const created = requestOf(await create(A, 'teacher-a', classCreate({ learnerId: SUNI })));
     const [row] = transfersOf(await inbox(SUNI, suniPhone));
     expect(row).toMatchObject({ id: created.id, initiator: 'source', learnerState: 'pending', sourceState: 'yes', learnerRoute: 'caregiver', canVeto: true });
+  });
+
+  it('a failure in the transfer path never costs the rest of the inbox: plans, tier and classes still arrive, moves read as off', async () => {
+    const failing = new Proxy(db, {
+      get(target, prop, receiver) {
+        if (prop === 'transfersOfLearner') return () => Promise.reject(new Error('d1 down'));
+        const value = Reflect.get(target, prop, receiver) as unknown;
+        return typeof value === 'function' ? (value as (...a: unknown[]) => unknown).bind(target) : value;
+      },
+    }) as Db;
+    const { setFallbackDb, fallbackDb } = await import('../db');
+    const before = fallbackDb();
+    setFallbackDb(failing);
+    try {
+      const r = await inbox(SUNI, suniPhone);
+      expect(r.status).toBe(200);
+      expect(r.body.data).toMatchObject({ transfersEnabled: false, transferDeviceConsent: false, selfManaged: false, transfers: [], deviceScope: 'full' });
+      expect((r.body.data as { memberships: unknown[] }).memberships.length).toBeGreaterThan(0);
+    } finally {
+      setFallbackDb(before);
+    }
   });
 
   it('reports the learner switch and the device lock as they are', async () => {
@@ -645,6 +673,16 @@ describe('the learner veto (guard 11)', () => {
 });
 
 describe('the learner switch (guard 13)', () => {
+  it('turning the switch on needs device consent on (it would only shut the caregiver route); turning it off never does', async () => {
+    const on = await dPrefs(SUNI, suniPhone, { selfManaged: true }, ON);
+    expect([on.status, on.body.error?.code]).toEqual([422, 'device_consent_locked']);
+    expect((await db.getTransferPrefs(SUNI)).selfManaged).toBe(false);
+    await db.setTransferPref(SUNI, 'selfManaged', true, NOW);
+    const off = await dPrefs(SUNI, suniPhone, { selfManaged: false }, ON);
+    expect([off.status, off.body.data]).toEqual([200, { prefs: { selfManaged: false } }]);
+    expect((await dPrefs(SUNI, suniPhone, { selfManaged: true }, DEVICE_ON)).status).toBe(200);
+  });
+
   it("the device sets selfManaged and never touches the family's switch", async () => {
     await db.setTransferPref(SUNI, 'blockTeacherRequests', true, NOW);
     const r = await dPrefs(SUNI, suniPhone, { selfManaged: true });
