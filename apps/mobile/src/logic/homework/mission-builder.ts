@@ -351,17 +351,19 @@ function use(used: Used, card: MissionCard, input: BuildMissionInput): void {
 /**
  * Is a pinned slot (1) or (3) card closed now (F-STORY-004 PR 4.8d)? A story
  * card follows `stories.isLocked`, a replay `input.isQuestOpen`, an explore
- * card needs one open quest in its episode, as their chain links do. A card
- * this build cannot judge (a story that left the index, no story world, an
- * episode gone from the content) and the daily test stay open.
+ * card needs one open quest in its episode, as their chain links do. A story
+ * card whose entry this build cannot find (it left the index, or there is no
+ * story world) falls back to `input.isQuestOpen` for its quest. A card with
+ * nothing to judge (no quest, an episode gone from the content) and the daily
+ * test stay open.
  */
 function isClosed(card: MissionCard, input: BuildMissionInput): boolean {
   if (card.kind === 'story') {
     const stories = input.stories;
     const entry = stories?.entries.find((e) => e.questId === card.questId);
-    return stories !== undefined && entry !== undefined && stories.isLocked(entry);
+    if (stories !== undefined && entry !== undefined) return stories.isLocked(entry);
   }
-  if (card.kind === 'replay') return card.questId !== undefined && !isOpen(input, card.questId);
+  if (card.kind === 'story' || card.kind === 'replay') return card.questId !== undefined && !isOpen(input, card.questId);
   if (card.kind === 'explore') {
     const episode = input.episodes.find((e) => e.id === card.episodeId);
     return episode !== undefined && !episode.questIds.some((id) => isOpen(input, id));
