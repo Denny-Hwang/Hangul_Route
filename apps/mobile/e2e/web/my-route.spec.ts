@@ -30,7 +30,11 @@ const VIEWPORTS = [
   { width: 1180, height: 820 },
 ] as const;
 
-/** The Stage 1 lesson with the longest title: the hardest Next line to fit above the tab bar. */
+/**
+ * The Stage 1 lesson with the longest English title: the hardest Next line to fit above the tab bar. English only:
+ * the fit test below runs in the en UI. Once R-10 ships es and ko, the fit is measured again with each locale's
+ * longest localized Stage 1 title (`localizeQuest`), which may be longer.
+ */
 const LONGEST_STAGE1 = [...CATALOG.quests]
   .filter((q) => q.stage === 'stage1' && q.kind === 'lesson')
   .sort((a, b) => b.title.length - a.title.length || a.id.localeCompare(b.id))[0];
@@ -237,17 +241,24 @@ test.describe('the Route tab and its route card (LR-10)', () => {
     expect(await firstStep(page)).toEqual(fromRoute);
   });
 
-  test('320 x 568: Continue sits fully above the tab bar on the first screen with the longest Stage 1 title as Next', async ({ page }) => {
-    // Known failure, reported in the LR-10 PR: since Stage 1 grew to 15 quests (F-QUEST-002 Q-8) the goal pips wrap
-    // to two rows at 320, and the card's Continue ends about 75 px under the tab bar's top edge (LR-D measured
-    // 13 px to spare with 8 pips). The fix is a layout change before R-10 flips the flag; this mark then turns
-    // red, and the fix PR removes it.
-    test.fail(true, 'Continue is below the tab bar at 320 x 568 (finding of the LR-10 run)');
+  test('320 x 568: where Continue ends against the tab bar, with the longest Stage 1 title as Next (blocks R-10)', async ({ page }) => {
+    // Known finding of the LR-10 run (issue linked in the spec's review log, section 16): since Stage 1 grew to 15
+    // quests (F-QUEST-002 Q-8) the goal pips wrap to two rows at 320, and the card's Continue ends about 75 px under
+    // the tab bar's top edge (LR-D measured 13 px to spare with 8 pips). Every setup step below is asserted as usual,
+    // so a broken setup fails this test; only the measured overlap records the finding. The layout fix PR turns the
+    // last assertion into `toBeLessThanOrEqual(0)` (Continue fully above the tab bar), a precondition of R-10's flip.
+    test.info().annotations.push({ type: 'finding', description: 'LR-10: Continue is below the tab bar at 320 x 568; fix before R-10 flips the flag' });
     await classPlanOnRoute(page);
     await openRouteTab(page);
     await expect(page.getByTestId('my-route-card-next')).toHaveText(m.hero.next(LONGEST_STAGE1.title));
-    const [button, bar] = await Promise.all([page.getByTestId('my-route-card-cta').boundingBox(), page.getByRole('tablist').boundingBox()]);
-    expect(button && bar).toBeTruthy();
-    if (button && bar) expect(button.y + button.height).toBeLessThanOrEqual(bar.y);
+    const cta = page.getByTestId('my-route-card-cta');
+    await expect(cta).toHaveAccessibleName(m.hero.cta.continue);
+    const bar = page.getByRole('tablist');
+    await expect(bar).toBeVisible();
+    const [buttonBox, barBox] = await Promise.all([cta.boundingBox(), bar.boundingBox()]);
+    if (buttonBox === null || barBox === null) throw new Error('Continue or the tab bar has no box');
+    const overlap = buttonBox.y + buttonBox.height - barBox.y;
+    test.info().annotations.push({ type: 'overlap-px', description: String(Math.round(overlap)) });
+    expect(overlap, 'LR-10 finding: Continue ends under the tab bar at 320 x 568').toBeGreaterThan(0);
   });
 });
