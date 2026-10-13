@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as parentSpacePage from '@/app/(console)/parent/space/page';
 import * as teachSpacePage from '@/app/(console)/teach/space/page';
 import type { SpaceListItem } from '../api';
-import { ROUTES, spacePath, groupSpaces, isKnownSpaceKind, landingAfterCreate, loadErrorKey, prefillName, presetKind, roleCards, spaceErrorText, spaceIdFrom, statusLine } from '../routing';
+import { ROUTES, spacePath, groupSpaces, isKnownSpaceKind, landingAfterCreate, loadErrorKey, prefillName, presetKind, roleCards, spaceErrorText, spaceIdFrom, spaceKindOfPath, statusLine } from '../routing';
 
 const item = (id: string, kind: SpaceListItem['space']['kind'], createdAt: string, over: Partial<SpaceListItem> = {}, archivedAt: string | null = null): SpaceListItem => ({
   space: { id, kind, name: id, parentSpaceId: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt, createdAt },
@@ -258,9 +258,19 @@ describe('ROUTES.learnerReport and ROUTES.classReport', () => {
     );
   });
 
-  it('keeps a family on /teach/space/learner until RP-7c moves the family branch to /parent/learner', () => {
-    // Section 3.1: F-APP-001 keeps /teach/space/learner working for family ids, so no link breaks when RP-7c lands.
-    expect(ROUTES.learnerReport({ spaceId: 'space:f', learnerId: 'profile:2', kind: 'family', from: 'home' })).toBe('/teach/space/learner?id=space%3Af&learner=profile%3A2&period=week&from=home');
+  it('opens the learner report of a family under /parent/learner (RP-7c)', () => {
+    // Section 3.1: /teach/space/learner?id=<family> still renders the same page, so no older link breaks.
+    expect(ROUTES.learnerReport({ spaceId: 'space:f', learnerId: 'profile:2', kind: 'family', from: 'home' })).toBe('/parent/learner?id=space%3Af&learner=profile%3A2&period=week&from=home');
+    expect(ROUTES.learnerReport({ spaceId: 'space:f', learnerId: 'profile:2', kind: 'family', period: 'month', at: '2026-09-01', from: 'nav' })).toBe(
+      '/parent/learner?id=space%3Af&learner=profile%3A2&period=month&at=2026-09-01&from=nav',
+    );
+    // A school has no learner report of its own: anything that is not a family stays on the class path.
+    expect(ROUTES.learnerReport({ spaceId: 'space:s', learnerId: 'profile:3', kind: 'school' })).toBe('/teach/space/learner?id=space%3As&learner=profile%3A3&period=week');
+  });
+
+  it('the two choosers: /parent/learner without a learner, /teach/space/report without a class (RP-7c, RP-8)', () => {
+    expect(ROUTES.learnerReportChooser).toBe('/parent/learner');
+    expect(ROUTES.classReportChooser).toBe('/teach/space/report');
   });
 
   it('drops an `at` that is not a day key and any `at` on All time (no stepper there)', () => {
@@ -300,5 +310,18 @@ describe('ROUTES.learnerReport and ROUTES.classReport', () => {
     for (const url of [new URL(ROUTES.learnerReport(all), 'https://app.example'), new URL(ROUTES.classReport(all), 'https://app.example')]) {
       for (const name of ['name', 'displayName', 'learnerName', 'n']) expect(url.searchParams.has(name)).toBe(false);
     }
+  });
+});
+
+/** F-APP-001 A-5b and F-REPORT-001 RP-7c: the kind a page's own prefix tells before any data names it. */
+describe('spaceKindOfPath', () => {
+  it('a /parent/space page and the /parent/learner report belong to a family; /teach tells nothing', () => {
+    expect(spaceKindOfPath('/parent/space')).toBe('family');
+    expect(spaceKindOfPath('/parent/space/learner')).toBe('family');
+    expect(spaceKindOfPath('/parent/learner')).toBe('family');
+    expect(spaceKindOfPath('/parent/learner.html')).toBe('family');
+    expect(spaceKindOfPath('/parent/learners')).toBeUndefined();
+    expect(spaceKindOfPath('/parent')).toBeUndefined();
+    expect(spaceKindOfPath('/teach/space/learner')).toBeUndefined();
   });
 });

@@ -34,7 +34,8 @@ import { stageTitle } from '@/lib/console/stage-titles';
 /**
  * One learner's report (F-REPORT-001 RP-7a2, sections 3.1, 3.5, 3.6, 3.12 and 3.14; screen spec
  * `design/screens/reports/learner-report.md`): `/teach/space/learner?id=<spaceId>&learner=<learnerId>&period=<p>`,
- * ids and codes only. A family opens it here too until RP-7c adds `/parent/learner`, which re-exports this component.
+ * ids and codes only. A family opens it at `/parent/learner` (RP-7c), which renders this component when a learner is
+ * named; `/teach/space/learner?id=<family>` and the `/parent/space/learner` twin still render it, so no link breaks.
  *
  * Who: anyone who can open the roster (`summary.read`), on every plan (no entitlement call, no price). Data: the
  * learner route (`getLearnerReport`, one learner's projected summary; the Worker records one `report.viewed` per call,

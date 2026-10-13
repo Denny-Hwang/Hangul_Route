@@ -17,12 +17,16 @@ export function spacePath(sub: string, query: string, kind?: SpaceKind): string 
 }
 
 /**
- * The space kind a page's own prefix tells before any data names it: a `/parent/space…` page belongs to a
- * family (F-APP-001 A-5b); `/teach/space…` renders every kind, so it tells nothing.
+ * The space kind a page's own prefix tells before any data names it: a `/parent/space…` page and the family learner
+ * report `/parent/learner` belong to a family (F-APP-001 A-5b, F-REPORT-001 RP-7c); `/teach/space…` renders every
+ * kind, so it tells nothing.
  */
 export function spaceKindOfPath(pathname: string): 'family' | undefined {
-  return /^\/parent\/space(?:[/.]|$)/.test(pathname) ? 'family' : undefined;
+  return /^\/parent\/(?:space|learner)(?:[/.]|$)/.test(pathname) ? 'family' : undefined;
 }
+
+/** The family learner report and, with no learner, its chooser (F-REPORT-001 section 3.1, RP-7c). */
+const LEARNER_REPORT_CHOOSER = '/parent/learner';
 
 /** Where the console sends an adult — F-CONSOLE-001 §3.2–3.4. */
 export const ROUTES = {
@@ -84,11 +88,11 @@ export const ROUTES = {
   /**
    * One learner's report (F-REPORT-001 section 3.1): `period` (week by default), an optional past window `at` (a
    * learner-local day key; never on All time, which has no stepper) and `from` for the back link. Ids and codes only,
-   * so a learner's name never reaches the URL. A class reads `/teach/space/learner`; a family goes there too until
-   * RP-7c moves its branch to `/parent/learner` (F-APP-001 keeps the `/teach` path working for family ids).
+   * so a learner's name never reaches the URL. A family reads `/parent/learner` (RP-7c), anything else
+   * `/teach/space/learner`; `/teach/space/learner?id=<family>` still renders the same page, so no older link breaks.
    */
   learnerReport: (opts: LearnerReportRoute) =>
-    `/teach/space/learner?id=${encodeURIComponent(opts.spaceId)}&learner=${encodeURIComponent(opts.learnerId)}` +
+    `${opts.kind === 'family' ? LEARNER_REPORT_CHOOSER : '/teach/space/learner'}?id=${encodeURIComponent(opts.spaceId)}&learner=${encodeURIComponent(opts.learnerId)}` +
     reportWindowQuery(opts.period, opts.at) +
     `${opts.from ? `&from=${opts.from}` : ''}`,
   /**
@@ -98,6 +102,10 @@ export const ROUTES = {
   notesHub: (persona: AdultPersona) => (persona === 'parent' ? '/parent/notes' : '/teach/notes'),
   /** One class's statistics (F-REPORT-001 section 3.1, RP-8): aggregates only, so the URL holds the class id and the window. */
   classReport: (opts: ClassReportRoute) => spacePath('report', `${idQuery(opts.spaceId)}${reportWindowQuery(opts.period, opts.at)}`, opts.kind),
+  /** The parent chooser (RP-7c): `/parent/learner` with no learner lists the family learners; one learner opens directly. */
+  learnerReportChooser: LEARNER_REPORT_CHOOSER,
+  /** The class chooser (RP-8): `/teach/space/report` with no id lists the account's classes; one class opens directly. */
+  classReportChooser: spacePath('report', ''),
 } as const;
 
 /** Where the grown-up opened a learner report from: the back link goes there (F-REPORT-001 section 3.1). */

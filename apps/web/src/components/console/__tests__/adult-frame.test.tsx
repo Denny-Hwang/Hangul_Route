@@ -257,7 +257,7 @@ describe('the active persona and the navigation (section 3.8)', () => {
       },
     };
     const r = await render(fakeEnv({ pathname: '/parent' }));
-    expect(byTestId(r, 'nav-reports')[0]?.props.href).toBe('/teach/space/learner?id=sp_f&learner=lrn_1&period=week&from=nav');
+    expect(byTestId(r, 'nav-reports')[0]?.props.href).toBe('/parent/learner?id=sp_f&learner=lrn_1&period=week&from=nav');
     act(() => mounted?.unmount());
     mounted = null;
     await render(fakeEnv({ pathname: '/parent' }));

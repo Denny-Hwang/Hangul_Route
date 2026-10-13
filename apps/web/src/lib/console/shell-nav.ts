@@ -11,7 +11,7 @@ import { ROUTES } from './routing';
  * whose predicate is off is not drawn (never a disabled "coming soon" button).
  */
 
-export type NavId = 'home' | 'reports' | 'notes' | 'classes' | 'teacherNotes' | 'lessons' | 'billing';
+export type NavId = 'home' | 'reports' | 'notes' | 'classes' | 'classReports' | 'teacherNotes' | 'lessons' | 'billing';
 
 /**
  * A link. `document` marks a learner root of this origin (Lessons opens All lessons at `/browse`, F-BROWSE-001), a
@@ -71,7 +71,10 @@ export const ADULT_NAV: readonly AdultNavItem[] = [
     persona: 'parent',
     labelKey: 'reports',
     target: (ctx) =>
-      ctx.soloLearner ? { href: ROUTES.learnerReport({ spaceId: ctx.soloLearner.spaceId, learnerId: ctx.soloLearner.learnerId, kind: 'family', from: 'nav' }) } : familyHome(),
+      // One family learner opens that report; otherwise the parent chooser (F-REPORT-001 RP-7c).
+      ctx.soloLearner
+        ? { href: ROUTES.learnerReport({ spaceId: ctx.soloLearner.spaceId, learnerId: ctx.soloLearner.learnerId, kind: 'family', from: 'nav' }) }
+        : { href: ROUTES.learnerReportChooser },
     enabled: (ctx) => ctx.flags.reports,
   },
   {
@@ -83,6 +86,8 @@ export const ADULT_NAV: readonly AdultNavItem[] = [
     enabled: (ctx) => ctx.flags.notes,
   },
   { id: 'classes', persona: 'teacher', labelKey: 'classes', target: () => ({ href: personaHome('teacher') }), enabled: () => true },
+  // The class chooser, which opens the one class directly (F-REPORT-001 RP-7c, RP-8).
+  { id: 'classReports', persona: 'teacher', labelKey: 'classReports', target: () => ({ href: ROUTES.classReportChooser }), enabled: (ctx) => ctx.flags.reports },
   { id: 'teacherNotes', persona: 'teacher', labelKey: 'notes', target: () => ({ href: ROUTES.notesHub('teacher') }), enabled: (ctx) => ctx.flags.notes },
   { id: 'lessons', persona: 'both', labelKey: 'lessons', target: () => ({ href: BROWSE_PATH, document: true }), enabled: (ctx) => ctx.flags.browse },
   { id: 'billing', persona: 'both', labelKey: 'billing', target: () => ({ href: ROUTES.billing }), enabled: () => true },
@@ -113,14 +118,16 @@ export function navItemsFor(ctx: NavContext): NavEntry[] {
 
 const BILLING_PAGE = /^\/(?:account\/billing|teach\/billing)(?:[/.]|$)/;
 const SPACE_PAGE = /^\/(?:teach|parent)\/space(?:[/.]|$)/;
-const REPORT_PAGE = /^\/(?:teach|parent)\/space\/(?:learner|report)(?:[/.]|$)/;
+const REPORT_PAGE = /^\/(?:(?:teach|parent)\/space\/(?:learner|report)|parent\/learner)(?:[/.]|$)/;
+const CLASS_REPORT_PAGE = /^\/teach\/space\/report(?:[/.]|$)/;
 const NOTES_PAGE = /^\/(?:teach|parent)\/(?:space\/)?notes(?:[/.]|$)/;
 const PARENT_HOME_PAGE = /^\/parent(?:\/|\.html)?$/;
 const TEACHER_HOME_PAGE = /^\/teach\/home(?:\/|\.html)?$/;
 
 /**
  * The item to highlight (`aria-current="page"`, section 3.8): Billing on the billing pages; on the
- * active persona's pages, Reports on theirs (Family rows only), Notes on the notes pages and hubs (each
+ * active persona's pages, Reports on theirs (Family rows only), Class reports on the class report
+ * and its chooser (Teacher row, F-REPORT-001 RP-7c), Notes on the notes pages and hubs (each
  * persona's own Notes item, F-FEEDBACK-001 FB-11b), else the persona's home
  * item. Nothing while the persona is only a guess, and nothing on a page of no persona. On a home,
  * the persona's home item only when it links to this very home: on a home the account does not
@@ -130,6 +137,7 @@ export function currentNavItem(pathname: string, persona: AdultPersona, resolved
   if (BILLING_PAGE.test(pathname)) return 'billing';
   if (!resolved) return null;
   if (persona === 'parent' && REPORT_PAGE.test(pathname)) return 'reports';
+  if (persona === 'teacher' && CLASS_REPORT_PAGE.test(pathname)) return 'classReports';
   if (NOTES_PAGE.test(pathname)) return persona === 'parent' ? 'notes' : 'teacherNotes';
   const homeItem: NavId = persona === 'parent' ? 'home' : 'classes';
   const pageHome = PARENT_HOME_PAGE.test(pathname) ? APP_ROUTES.parentHome : TEACHER_HOME_PAGE.test(pathname) ? APP_ROUTES.teacherHome : null;
