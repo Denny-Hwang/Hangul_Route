@@ -430,9 +430,8 @@ export function learningRouteView(input: LearningRouteInput): LearningRouteView 
   const m = getMessages(locale);
   const lr = m.console.learningRoute;
 
-  // Section 6.1 asks for `ROUTES.space(spaceId, kind)`; `ROUTES.space` takes no kind and no `/parent/space` page exists
-  // before F-APP-001 A-5b, so a family goes to the one space page there is. The page's PR (LR-8) passes the kind once it can.
-  const toSpace: LearningRouteLink = { href: ROUTES.space(space.id), text: lr.back[kind] };
+  // Section 6.1: back to the space page under the prefix of its kind (`/parent/space` for a family, F-APP-001 A-5b).
+  const toSpace: LearningRouteLink = { href: ROUTES.space(space.id, kind), text: lr.back[kind] };
   const learner = input.learners.find((row) => row.id === learnerId);
   if (learner === undefined) return { status: 'notFound', message: lr.notFound, back: toSpace };
 

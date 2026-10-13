@@ -42,7 +42,6 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'console.curriculum.goals.themeNames.nature': 'the one word "Naturaleza" (10) against "Nature" (6)',
   'console.curriculum.preview.table.items': 'the table header "Elementos" (9) against "Items" (5); the table scrolls',
   'console.lecture.outline.block.cards': '"tarjetas del patrimonio", one letter over, an outline row that wraps',
-  'console.parent.kidsTitle': '"Estudiantes" replaces "Kids" under the owner audience rule (no age wording); a heading',
   'console.notes.composer.preview.title': '"Vista previa", one letter over, a heading',
   'console.notes.family.report.why': 'Spanish questions open with "¿": "¿Por qué?" is one letter over',
   'caregiver.notes.report.why': 'Spanish questions open with "¿": "¿Por qué?" is one letter over',
@@ -481,9 +480,6 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       'console.school.classes.assign.cta',
       'console.school.classes.open.cta',
       'console.school.classes.add.cta',
-      'console.parent.sample.pill',
-      'console.parent.viewProgress.cta',
-      'console.parent.child.assign.cta',
     ]) {
       expect(paths).toContain(expected);
     }

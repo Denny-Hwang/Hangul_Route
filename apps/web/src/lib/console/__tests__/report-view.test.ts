@@ -117,7 +117,7 @@ describe('the week report of a steady learner (behaviour 1, family viewer)', () 
   it('lists what to practice next with the plan actions a grown-up with plan.write gets', () => {
     expect(v.practiceNext?.heading).toBe('What to practice next');
     expect(texts(v.practiceNext?.lines)).toEqual(['ㅂ (b) and ㅅ (s): worth another visit.', 'Sounds of letters is next to grow.', '4 plan items are ready to play.']);
-    expect(v.practiceNext?.lines[0]?.action).toEqual({ href: '/teach/space/plan?id=space%3Akim-family&add=quest%3Astage1-life-q2', text: 'Add to a plan' });
+    expect(v.practiceNext?.lines[0]?.action).toEqual({ href: '/parent/space/plan?id=space%3Akim-family&add=quest%3Astage1-life-q2', text: 'Add to a plan' });
     expect(v.practiceNext?.lines[1]?.tip?.text).toBe('Listening games help: try Listen and pick.');
     expect(v.practiceNext?.lines[1]?.action).toBeNull();
     // Two plans hold the open items (the family plan and the own route): no single plan to open.
@@ -461,7 +461,7 @@ describe('states (section 3.14)', () => {
   });
 
   it('links the glance to the Learning Route only when that page exists on the build', () => {
-    expect(view(STEADY, { learningRoute: true }).glance?.route).toEqual({ href: '/teach/space/route?id=space%3Akim-family&learner=profile%3Amina', text: 'Open Learning Route' });
+    expect(view(STEADY, { learningRoute: true }).glance?.route).toEqual({ href: '/parent/space/route?id=space%3Akim-family&learner=profile%3Amina', text: 'Open Learning Route' });
     expect(view(STEADY).glance?.route).toBeNull();
   });
 
@@ -649,12 +649,12 @@ describe('the back link (section 3.1)', () => {
   it('goes home from the parent home and to the roster from the roster', () => {
     expect(reportBackLink('home', space)).toEqual({ href: '/parent', text: 'Back to home' });
     expect(reportBackLink('roster', cls)).toEqual({ href: '/teach/space?id=space%3Asunflower', text: 'Back to Sunflower' });
-    expect(reportBackLink('roster', space)).toEqual({ href: '/teach/space?id=space%3Akim-family', text: 'Back to Kim family' });
+    expect(reportBackLink('roster', space)).toEqual({ href: '/parent/space?id=space%3Akim-family', text: 'Back to Kim family' });
   });
 
   it('goes to the space from the navigation or without `from` (the persona home until RP-7c)', () => {
     expect(reportBackLink('nav', cls)).toEqual({ href: '/teach/space?id=space%3Asunflower', text: 'Back to Sunflower' });
-    expect(reportBackLink(null, space)).toEqual({ href: '/teach/space?id=space%3Akim-family', text: 'Back to Kim family' });
+    expect(reportBackLink(null, space)).toEqual({ href: '/parent/space?id=space%3Akim-family', text: 'Back to Kim family' });
   });
 
   it('goes to the console home when the space is not known (a failed load)', () => {

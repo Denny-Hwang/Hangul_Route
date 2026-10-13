@@ -6,11 +6,12 @@ import { BackLink, LearningRouteContent, LearningRouteLoading, readingColumn } f
 import { Button, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
+import { useGrownUpLocation } from '@/components/console/grown-up-location';
 import type { PlanView, Roster } from '@/lib/console/api';
 import { learningRouteEnabled } from '@/lib/console/config';
 import { learningRouteView } from '@/lib/console/learning-route-view';
 import { dateKey } from '@/lib/console/plans';
-import { ROUTES, type SpaceError, spaceErrorText, spaceIdFrom } from '@/lib/console/routing';
+import { ROUTES, type SpaceError, spaceErrorText, spaceIdFrom, spaceKindOfPath } from '@/lib/console/routing';
 import { stageTitle } from '@/lib/console/stage-titles';
 
 /**
@@ -75,16 +76,21 @@ function LearningRouteInner(): JSX.Element {
   // A space with no roster view (a school, or a kind this bundle does not know) is the space page's to draw.
   const away = !enabled || (data !== null && view === null);
 
+  // The kind the roster names, or the one the page's prefix tells before it arrives (a family under /parent/space).
+  const routed = useGrownUpLocation();
+  const pathKind = spaceKindOfPath(routed?.pathname ?? (typeof window === 'undefined' ? '' : window.location.pathname));
+  const kind = data?.roster.space.kind ?? pathKind;
+  const home = kind === 'family' ? ROUTES.parentHome : ROUTES.home;
   useEffect(() => {
-    if (away) router.replace(spaceId ? ROUTES.space(spaceId) : ROUTES.home);
-  }, [away, router, spaceId]);
+    if (away) router.replace(spaceId ? ROUTES.space(spaceId, kind) : home);
+  }, [away, router, spaceId, kind, home]);
 
   if (away || !ready || !session) return <AdultFrame>{null}</AdultFrame>;
 
   const lr = m.console.learningRoute;
   // Before the roster names the space's kind (loading, or a read that failed): the kind-neutral "Back" to the space,
   // or the console home when the address names no space.
-  const back = spaceId ? { href: ROUTES.space(spaceId), text: lr.back.space } : { href: ROUTES.home, text: m.console.shell.home };
+  const back = spaceId ? { href: ROUTES.space(spaceId, kind), text: lr.back.space } : { href: home, text: m.console.shell.home };
   return (
     <AdultFrame onSignOut={signOut} title={lr.section}>
       {error ? (

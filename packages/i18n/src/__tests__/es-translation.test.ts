@@ -141,7 +141,6 @@ const LITERALLY_SHARED: readonly string[] = [
   'console.curriculum.preview.itemLine',
   'console.curriculum.builder.planChip',
   'console.school.licence.line',
-  'console.parent.child.stars',
   'console.learningRoute.stageRow',
   'report.detail.strand',
   'report.class.count',

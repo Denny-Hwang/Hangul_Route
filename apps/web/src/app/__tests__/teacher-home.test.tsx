@@ -7,7 +7,7 @@ import type { SpaceListItem } from '@/lib/console/api';
 
 /**
  * F-APP-001 A-5a, section 3.8 (design/screens/app-shell/teacher-home.md): the teacher home. No
- * Family group once the family home is live; each class row's Class report and Notes by flag; an
+ * Family group (families live under /parent, A-5b); each class row's Class report and Notes by flag; an
  * archived class keeps Class report; + New class; Lessons; the no-class state and the cross-links.
  */
 vi.mock('next/link', () => ({
@@ -22,17 +22,6 @@ const nav = vi.hoisted(() => ({ pushed: [] as string[] }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: (url: string) => nav.pushed.push(url), replace: () => undefined }),
 }));
-
-const live = vi.hoisted(() => ({ value: true }));
-vi.mock('@/lib/console/personas', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/lib/console/personas')>();
-  return {
-    ...actual,
-    get FAMILY_HOME_LIVE() {
-      return live.value;
-    },
-  };
-});
 
 const shellWrites = vi.hoisted(() => ({ personas: [] as string[] }));
 vi.mock('@/lib/console/shell-store', () => ({
@@ -89,7 +78,6 @@ beforeAll(() => {
 let mounted: ReactTestRenderer | null = null;
 beforeEach(() => {
   nav.pushed = [];
-  live.value = true;
   shellWrites.personas = [];
   frame.spaces = [];
   vi.unstubAllEnvs();
@@ -208,13 +196,5 @@ describe('the teacher home (F-APP-001 A-5a)', () => {
     const r = await render('fail');
     expect(frame.spaces.at(-1)).toBe('failed');
     expect(allText(r)).toContain(en.cantReach);
-  });
-
-  it('while /parent is still the demo, keeps the Family group so a family account reaches its spaces', async () => {
-    live.value = false;
-    const r = await render([family, klass]);
-    expect(headings(r, 'h2')).toEqual(['Family']);
-    expect(byTestId(r, 'space-row-sp_f')).toHaveLength(1);
-    expect(byTestId(r, 'cross-to-family')).toHaveLength(0);
   });
 });

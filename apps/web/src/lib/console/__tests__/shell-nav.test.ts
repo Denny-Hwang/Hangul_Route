@@ -17,7 +17,7 @@ const ALL_ON = { reports: true, notes: true, browse: true };
 const ALL_OFF = { reports: false, notes: false, browse: false };
 
 function ctx(over: Partial<NavContext>): NavContext {
-  return { persona: 'parent', spaces: [], soloLearner: null, flags: ALL_OFF, live: true, ...over };
+  return { persona: 'parent', spaces: [], soloLearner: null, flags: ALL_OFF, ...over };
 }
 
 const ids = (c: NavContext): string[] => navItemsFor(c).map((entry) => entry.id);
@@ -83,10 +83,6 @@ describe('navItemsFor', () => {
     expect(teacher.find((entry) => entry.id === 'classes')?.target).toEqual({ href: '/teach/home' });
   });
 
-  it('while /parent is still the demo, Home opens the console home', () => {
-    expect(navItemsFor(ctx({ live: false })).find((entry) => entry.id === 'home')?.target).toEqual({ href: '/teach/home' });
-  });
-
   it('Reports opens the one learner report for one family with one learner, else the family home (the cards are the index)', () => {
     const one = navItemsFor(ctx({ flags: ALL_ON, spaces: [item('sp_f', 'family', 'owner', 1)], soloLearner: { spaceId: 'sp_f', learnerId: 'lrn_1' } }));
     expect(one.find((entry) => entry.id === 'reports')?.target).toEqual({ href: '/teach/space/learner?id=sp_f&learner=lrn_1&period=week&from=nav' });
@@ -121,7 +117,7 @@ describe('ownFamilySpaces and soloFamilyLearnerSpace', () => {
 
 describe('currentNavItem', () => {
   it('highlights the persona home item on its home and on the space pages of that persona', () => {
-    expect(currentNavItem('/parent', 'parent', true, true)).toBe('home');
+    expect(currentNavItem('/parent', 'parent', true)).toBe('home');
     expect(currentNavItem('/teach/home', 'teacher', true)).toBe('classes');
     expect(currentNavItem('/teach/space', 'teacher', true)).toBe('classes');
     expect(currentNavItem('/teach/space/plan', 'parent', true)).toBe('home');
@@ -144,13 +140,11 @@ describe('currentNavItem', () => {
 
   it('on a home the account does not hold, highlights no item: the home item of the other persona links elsewhere', () => {
     // /parent for a teacher-only account (the "not set up yet" family state): Classes links to /teach/home.
-    expect(currentNavItem('/parent', 'teacher', true, true)).toBeNull();
-    // /teach/home for a family-only account once /parent is live: Home links to /parent.
-    expect(currentNavItem('/teach/home', 'parent', true, true)).toBeNull();
-    // While /parent is still the demo, the Family Home item opens /teach/home, so it is the current page there.
-    expect(currentNavItem('/teach/home', 'parent', true, false)).toBe('home');
-    expect(currentNavItem('/parent', 'parent', true, true)).toBe('home');
-    expect(currentNavItem('/teach/home', 'teacher', true, true)).toBe('classes');
+    expect(currentNavItem('/parent', 'teacher', true)).toBeNull();
+    // /teach/home for a family-only account: Home links to /parent.
+    expect(currentNavItem('/teach/home', 'parent', true)).toBeNull();
+    expect(currentNavItem('/parent', 'parent', true)).toBe('home');
+    expect(currentNavItem('/teach/home', 'teacher', true)).toBe('classes');
   });
 
   it('highlights nothing while the persona is a guess, or on a page of no persona', () => {

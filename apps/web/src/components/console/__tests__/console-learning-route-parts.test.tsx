@@ -130,8 +130,8 @@ describe('the stage list page, family case 1 (mock stage-list-family.html)', () 
   });
 
   it('goes back to the space until the report exists, as a link at least touchTarget.min tall', () => {
-    expect(v.back).toEqual({ href: ROUTES.space('space:fam'), text: lr.back.family });
-    expect(html).toMatch(/<a href="\/teach\/space\?id=space%3Afam" style="[^"]*min-height:64px/);
+    expect(v.back).toEqual({ href: ROUTES.space('space:fam', 'family'), text: lr.back.family });
+    expect(html).toMatch(/<a href="\/parent\/space\?id=space%3Afam" style="[^"]*min-height:64px/);
   });
 
   it('draws the card as a section labelled "Learning Route" with every line of case 1', () => {

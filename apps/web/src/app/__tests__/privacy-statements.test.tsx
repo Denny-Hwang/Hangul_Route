@@ -4,13 +4,10 @@ import { fileURLToPath } from 'node:url';
 import { getMessages, retiredDataPromises } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { mockFamily } from '@/data/mock-family';
 import { siteLocaleParams } from '@/lib/site-locales';
 // The pages are imported here, once, not inside each test: a page load pulls in the whole landing graph (i18n
 // dictionaries, content schema, design-system art), and inside a test body it counted against the 5 s test
 // timeout, which a busy CI runner came close to. Imported at the top, they load while the file is collected.
-import * as childPage from '../(console)/parent/[childId]/page';
-import * as parentPage from '../(console)/parent/page';
 import * as enAboutPage from '../(en)/about/page';
 import * as enLandingPage from '../(en)/page';
 import * as enPrivacyPage from '../(en)/privacy/page';
@@ -24,8 +21,8 @@ import * as locLearnersPage from '../(loc)/[locale]/learners/page';
 
 /**
  * What a visitor reads about where learning data lives, on the pages that are live today: the site
- * (home, About, Privacy, Terms, in English and under every site locale), the `/parent` demo and the
- * paste-ready launch text.
+ * (home, About, Privacy, Terms, in English and under every site locale) and the paste-ready launch text
+ * (the `/parent` demo left with F-APP-001 A-5b, OD-4).
  *
  * With no sign-in, the learner app sends each learner's nickname, level and avatar to our servers the
  * first time it saves them and backs up their progress when it starts and after each change (F-SYNC-002),
@@ -85,11 +82,6 @@ const SITE_PAGES: ReadonlyArray<readonly [string, () => string]> = [
   ]),
 ];
 
-const PARENT_PAGES: ReadonlyArray<readonly [string, () => string]> = [
-  ['/parent', at(parentPage, {})],
-  ...mockFamily().profiles.map((p) => [`/parent/${p.slug}`, at(childPage, { childId: p.slug })] as const),
-];
-
 /** The text of a page that takes no params. */
 function render(page: PageModule<Record<string, never>>): string {
   return textOf(html(page, {}));
@@ -99,12 +91,11 @@ const BACKUP = getMessages('en').landing.persona.parents.safe.bullets.backup;
 const BACKUP_FIRST = BACKUP.slice(0, BACKUP.indexOf('.') + 1);
 
 describe('no live page promises that data stays on the device until someone signs in', () => {
-  it('covers the site in every locale and the /parent demo', () => {
+  it('covers the site in every locale', () => {
     expect(SITE_PAGES.map(([name]) => name)).toEqual(expect.arrayContaining(['/', '/about', '/privacy', '/es/about', '/ko/privacy']));
-    expect(PARENT_PAGES.length).toBeGreaterThan(1);
   });
 
-  for (const [name, markup] of [...SITE_PAGES, ...PARENT_PAGES]) {
+  for (const [name, markup] of SITE_PAGES) {
     it(name, () => {
       expect(retiredDataPromises(blocksOf(markup()))).toEqual([]);
     });
@@ -151,10 +142,6 @@ describe('the pages say what the app does, in the backup sentence', () => {
     const privacy = render(enPrivacyPage);
     expect(privacy).toContain('pending review by qualified legal counsel');
     expect(privacy).toContain('Effective October 12, 2026');
-  });
-
-  it('/parent demo: the privacy list leads with the backup sentence', () => {
-    expect(render(parentPage)).toContain(BACKUP);
   });
 
   it('old home: the trust strip says "Child safety first" (OD-4) and makes no claim about which personal data we hold', () => {

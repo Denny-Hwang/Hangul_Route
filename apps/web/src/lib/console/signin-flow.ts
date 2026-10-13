@@ -9,7 +9,7 @@ import {
   type SpaceRole,
 } from '@hangul-route/content-schema';
 import { decideGrownUpLock, trustableEpoch, type DeviceGateRead } from './grown-up-lock';
-import { ROUTES, isKnownSpaceKind } from './routing';
+import { isKnownSpaceKind } from './routing';
 import { writeTrustedEpoch } from './shell-store';
 import type { SignInProof, SignInRecord } from './signin-record';
 import { writeSignInUnlock } from './unlock';
@@ -209,26 +209,12 @@ export function acceptedNext(raw: string | null | undefined): string | null {
 }
 
 /**
- * The persona home as it ships today: `/parent` is still the demo on mock data until F-APP-001
- * A-5b replaces it with the real family home, so the Family persona's home is the console home
- * (which lists the account's Family spaces) until then. A-5b removes this mapping.
- */
-function shippedHome(path: string): string {
-  return path === APP_ROUTES.parentHome ? ROUTES.home : path;
-}
-
-/** The `/parent` demo pages (mock data) until A-5b: never a `next` for a real account. A-5b removes this. */
-const DEMO_PARENT_PATH = /^\/parent(?:[/?.#]|$)/;
-
-/**
  * Where the router sends a signed-in grown-up (sections 3.5, 3.7): an accepted `next`, else the
  * persona home (`homeFor`: no persona → `/start` with the hint; a hint; the last persona; the only
- * persona; else Family, OD-11). Until A-5b a `next` into the `/parent` demo falls back to the home.
+ * persona; else Family, OD-11). Family is `/parent`, the real family home since F-APP-001 A-5b.
  */
 export function routerDestination(input: { next: string | null | undefined; personas: readonly AdultPersona[]; last: AdultPersona | null; hint: AdultPersona | null }): string {
-  const next = acceptedNext(input.next);
-  if (next && !DEMO_PARENT_PATH.test(next)) return next;
-  return shippedHome(homeFor({ personas: input.personas, last: input.last, hint: input.hint }));
+  return acceptedNext(input.next) ?? homeFor({ personas: input.personas, last: input.last, hint: input.hint });
 }
 
 const TEACH_ROUTER = /^\/teach(?:\/|\.html)?$/;

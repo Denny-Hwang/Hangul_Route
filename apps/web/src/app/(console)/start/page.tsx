@@ -7,6 +7,7 @@ import { personaHint, type SpaceKind } from '@hangul-route/content-schema';
 import { Button, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
+import { homeOfHint } from '@/lib/console/personas';
 import { codeExpiry } from '@/lib/console/rollup';
 import { ROUTES, landingAfterCreate, prefillName, presetKind, roleCards } from '@/lib/console/routing';
 
@@ -101,7 +102,7 @@ function StartInner(): JSX.Element {
               >
                 {c.start.continue.cta}
               </Button>
-              {fromHome ? <Button onClick={() => router.push(ROUTES.home)}>{c.start.back.cta}</Button> : null}
+              {fromHome ? <Button onClick={() => router.push(homeOfHint(personaHint(params)))}>{c.start.back.cta}</Button> : null}
             </div>
           </>
         ) : step.at === 'name' ? (
@@ -134,7 +135,7 @@ function StartInner(): JSX.Element {
               <Button onClick={() => void copy(step.code)}>{copied ? c.joinCode.copied.cta : c.joinCode.copy.cta}</Button>
             </div>
             <Notice tone="success">{c.writeOnBoard}</Notice>
-            <Button tone="primary" onClick={() => router.replace(ROUTES.space(step.spaceId))}>
+            <Button tone="primary" onClick={() => router.replace(ROUTES.space(step.spaceId, 'class'))}>
               {c.start.goToClass.cta}
             </Button>
           </>

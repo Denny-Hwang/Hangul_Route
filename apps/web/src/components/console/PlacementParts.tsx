@@ -1,6 +1,7 @@
 'use client';
 
 import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
+import type { SpaceKind } from '@hangul-route/content-schema';
 import Link from 'next/link';
 import { buttonBase } from '@/components/console/ui';
 import type { RosterSummary } from '@/lib/console/api';
@@ -21,11 +22,14 @@ export function StartingSpot({
   spaceId,
   learnerId,
   learnerName,
+  kind,
 }: {
   summary: Pick<RosterSummary, 'placement'> | null;
   spaceId: string;
   learnerId: string;
   learnerName: string;
+  /** The space kind, so the link uses its persona prefix (F-APP-001 A-5b). */
+  kind?: SpaceKind;
 }): JSX.Element | null {
   const { messages, locale } = useConsoleLocale();
   const line = startingSpotLine(summary, locale);
@@ -38,7 +42,7 @@ export function StartingSpot({
         {changed ? <span style={{ display: 'block', color: colors.text.muted, fontSize: typography.size.caption }}>{changed}</span> : null}
       </span>
       <Link
-        href={suggestStartHref(spaceId, learnerId)}
+        href={suggestStartHref(spaceId, learnerId, kind)}
         data-testid="suggest-start"
         aria-label={messages.console.placement.suggest.label(learnerName.trim())}
         style={{ ...buttonBase, display: 'inline-block', textDecoration: 'none' }}

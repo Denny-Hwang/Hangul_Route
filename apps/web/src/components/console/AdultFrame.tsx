@@ -9,7 +9,7 @@ import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 
 import type { ConsoleApi, SpaceListItem } from '@/lib/console/api';
 import { readDeviceGate } from '@/lib/console/device-marker';
 import { learnerHome, type DeviceGateRead } from '@/lib/console/grown-up-lock';
-import { FAMILY_HOME_LIVE, activePersona, fallbackPersona, heldPersonas, homeToRecord, pageArea, personaHome, showPersonaSwitch } from '@/lib/console/personas';
+import { activePersona, fallbackPersona, heldPersonas, homeToRecord, pageArea, personaHome, showPersonaSwitch } from '@/lib/console/personas';
 import { ROUTES } from '@/lib/console/routing';
 import { readLastPersona, writeLastPersona } from '@/lib/console/shell-store';
 import { currentNavItem, navFlags, navItemsFor, soloFamilyLearnerSpace, type NavEntry, type SoloLearner } from '@/lib/console/shell-nav';
@@ -266,12 +266,11 @@ export function AdultFrame({
   const pathname = routed ? routed.pathname : where.pathname;
   const search = routed ? routed.search : where.search;
   const area = pageArea(pathname, search);
-  const live = FAMILY_HOME_LIVE;
-  const active = activePersona({ area, spaces: list, last, live });
+  const active = activePersona({ area, spaces: list, last });
   const held = heldPersonas(list);
   const flags = navFlags(locale, undefined, origin);
   const soloSpace = flags.reports && list ? soloFamilyLearnerSpace(list) : null;
-  const toRecord = homeToRecord(area, active, held, live);
+  const toRecord = homeToRecord(area, active, held);
 
   useEffect(() => {
     if (toRecord) browser.writeLastPersona(toRecord);
@@ -292,10 +291,10 @@ export function AdultFrame({
   const shell = m.console.shell;
   const names: Record<AdultPersona, string> = { parent: shell.persona.parent, teacher: shell.persona.teacher };
   const navPersona = list ? active.persona : fallbackPersona(last, null);
-  const items: NavEntry[] = failed ? [] : navItemsFor({ persona: navPersona, spaces: list ?? [], soloLearner: solo, flags, live });
-  const current = list ? currentNavItem(pathname, active.persona, active.resolved, live) : currentNavItem(pathname, navPersona, false, live);
-  const withSwitch = !!list && showPersonaSwitch(held, live);
-  const brandHref = list && held.length > 0 ? personaHome(active.persona, live) : ROUTES.signIn;
+  const items: NavEntry[] = failed ? [] : navItemsFor({ persona: navPersona, spaces: list ?? [], soloLearner: solo, flags });
+  const current = list ? currentNavItem(pathname, active.persona, active.resolved) : currentNavItem(pathname, navPersona, false);
+  const withSwitch = !!list && showPersonaSwitch(held);
+  const brandHref = list && held.length > 0 ? personaHome(active.persona) : ROUTES.signIn;
   const doSignOut = (): void => {
     // The per-tab roster read belongs to this account: the next one to sign in here reads its own.
     resetFrameMemory();
@@ -305,7 +304,7 @@ export function AdultFrame({
   const choose = (persona: AdultPersona): void => {
     if (active.resolved && persona === active.persona) return;
     browser.writeLastPersona(persona);
-    router.push(personaHome(persona, live));
+    router.push(personaHome(persona));
   };
   const goBack = (): void => {
     browser.clearGrownUpTab();

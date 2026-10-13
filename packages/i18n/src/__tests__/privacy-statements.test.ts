@@ -112,15 +112,6 @@ describe('every statement about where learning data lives says the same thing', 
     expect(body).not.toMatch(/backed up|Rescue Code|our servers/);
   });
 
-  it('console /parent demo: its first two privacy points are the backup sentence, and the last says how to delete the copy we keep', () => {
-    const points = en.console.parent.privacy.points;
-    expect(points).toHaveLength(4);
-    expect(`${points[0]} ${points[1]}`).toBe(BACKUP);
-    // Removing a profile on a device leaves the backup; the server copy goes from the family space (learner.delete) or by email.
-    expect(points[3]).toBe("You can back up progress to a file at any time. To delete a learner's data on our servers, use your family space settings or email us.");
-    expect(points[3]).not.toMatch(/one tap/);
-  });
-
   it('old home trust strip: "Child safety first" (OD-4), with no claim about which personal data we hold', () => {
     expect(en.landing.trust.items.coppa).toEqual({ title: 'Child safety first', body: 'No third-party tracking. We collect as little as possible.' });
     expect(en.landing.home.promises.items.safety).toBe(en.landing.trust.items.coppa.title);

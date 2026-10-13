@@ -392,7 +392,7 @@ export function reportBackLink(from: ReportFrom | null, space: ReportSpaceRef | 
   // The parent home (F-APP-001 section 3.8, the app's route table): only RP-7c's parent home card sends `from=home`.
   if (from === 'home') return { href: APP_ROUTES.parentHome, text: back.home };
   if (space === null) return { href: ROUTES.home, text: back.home };
-  return { href: ROUTES.space(space.id), text: back.space(space.name) };
+  return { href: ROUTES.space(space.id, space.kind), text: back.space(space.name) };
 }
 
 /** The page address of a report (`ROUTES.learnerReport`), read leniently: anything unknown reads as the default. */
@@ -779,8 +779,8 @@ export function learnerReportView(input: LearnerReportViewInput): LearnerReportV
     const links = 'links' in line ? line.links : undefined;
     let action: ReportLink | null = null;
     if (rights.planWrite && !archived && links) {
-      if ('addToPlan' in links) action = { href: `${ROUTES.spacePlan(space.id)}&add=${encodeURIComponent(links.addToPlan)}`, text: m.report.action.addToPlan };
-      else action = { href: ROUTES.spacePlan(space.id, links.openPlan), text: m.report.action.openPlan };
+      if ('addToPlan' in links) action = { href: `${ROUTES.spacePlan(space.id, undefined, space.kind)}&add=${encodeURIComponent(links.addToPlan)}`, text: m.report.action.addToPlan };
+      else action = { href: ROUTES.spacePlan(space.id, links.openPlan, space.kind), text: m.report.action.openPlan };
     }
     return { ...out, action };
   };

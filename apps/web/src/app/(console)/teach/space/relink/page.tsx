@@ -80,7 +80,7 @@ function RelinkInner(): JSX.Element {
   return (
     <AdultFrame onSignOut={signOut} title={roster ? c.relink.titleFor(roster.space.name) : c.relink.title}>
       <Muted>
-        <Link href={ROUTES.space(spaceId)}>{c.relink.back(roster?.space.name ?? null)}</Link>
+        <Link href={ROUTES.space(spaceId, roster?.space.kind)}>{c.relink.back(roster?.space.name ?? null)}</Link>
       </Muted>
       {failed ? (
         <div style={panelStyle}>

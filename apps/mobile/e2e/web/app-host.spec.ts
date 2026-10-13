@@ -232,7 +232,7 @@ test.describe('app host: the learner app and the grown-up console (F-APP-001 A-3
     expect(errors).toEqual([]);
   });
 
-  test('a console page moves to another over its RSC payload, and Back returns (same document)', async ({ page }) => {
+  test('a console page moves to another over its RSC payload, in the same document', async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(String(e)));
     const payloads: Array<{ path: string; status: number; type: string }> = [];
@@ -245,27 +245,18 @@ test.describe('app host: the learner app and the grown-up console (F-APP-001 A-3
     await page.goto('/');
     await controlledBySw(page);
 
-    // The family page links to each learner's page (the demo until A-5b, whose real home links to a space).
+    // The family home (F-APP-001 A-5b) needs a grown-up: signed out, its layout moves the tab to /signin with the
+    // page as next, by a client navigation that loads the sign-in page's RSC payload (the /parent demo that linked
+    // to learner pages without a sign-in left with A-5b).
     await page.goto('/parent');
-    const link = page.locator('main a[href^="/parent/"]').first();
-    await expect(link).toBeVisible();
-    const href = (await link.getAttribute('href')) ?? '';
-    expect(href).toMatch(/^\/parent\/[a-z0-9-]+$/);
-    await page.evaluate(() => {
-      (window as Window & { __hrSameDocument?: boolean }).__hrSameDocument = true;
-    });
-    const sameDocument = (): Promise<boolean> => page.evaluate(() => (window as Window & { __hrSameDocument?: boolean }).__hrSameDocument === true);
-
-    await link.click();
-    await expect(page).toHaveURL(new RegExp(`${href}$`));
+    await expect(page).toHaveURL(/\/signin\?next=%2Fparent$/);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    await expect.poll(() => payloads.some((p) => p.path === `${href}.txt` && p.status === 200 && p.type.startsWith('text/plain'))).toBe(true);
-    expect(await sameDocument(), 'the move was a client navigation').toBe(true);
-
-    await page.goBack();
-    await expect(page).toHaveURL(/\/parent$/);
-    await expect(link).toBeVisible();
-    expect(await sameDocument(), 'Back stayed in the same document').toBe(true);
+    await expect.poll(() => payloads.some((p) => p.path === '/signin.txt' && p.status === 200 && p.type.startsWith('text/plain'))).toBe(true);
+    const documentPath = await page.evaluate(() => new URL((performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming).name).pathname);
+    expect(documentPath, 'the move was a client navigation in the /parent document').toBe('/parent');
+    // TODO(F-APP-001 A-10): "Back returns in the same document" needs a signed-in client push (home → space → Back);
+    // signed-out pages only replace or load a new document, so grown-up-shell.spec.ts (A-10, dev auth bridge) owns it.
+    // Recorded in spec section 5 (the app-host.spec and grown-up-shell.spec rows).
     // The payloads and chunks went to the network: the learner worker keeps no console file.
     expect((await cachedPaths(page)).filter((path) => isConsoleFile(path) || path.endsWith('.txt'))).toEqual([]);
     expect(errors).toEqual([]);

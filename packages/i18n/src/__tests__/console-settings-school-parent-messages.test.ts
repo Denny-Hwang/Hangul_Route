@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { getMessages } from '../resolve';
 
-// F-I18N-001 PR 10c: the space settings page (teach/space/settings), the school admin view
-// (SchoolAdmin, school.ts) and the /parent demo read the dictionary. English is the source and
-// must render exactly what they hard-coded before (§3.4 rule 1), so every value below is the
-// former literal, byte for byte. The demo's quest and card counts go through plural(); the
-// demo data has no count of one, so its English is unchanged.
+// F-I18N-001 PR 10c: the space settings page (teach/space/settings) and the school admin view
+// (SchoolAdmin, school.ts) read the dictionary. English is the source and must render exactly
+// what they hard-coded before (§3.4 rule 1), so every value below is the former literal, byte for
+// byte. (The /parent demo's words left with the demo, F-APP-001 A-5b, OD-4.)
 const c = getMessages('en').console;
 
 describe('space settings (teach/space/settings/page.tsx)', () => {
@@ -166,44 +165,3 @@ describe('school admin (SchoolAdmin.tsx, school.ts)', () => {
   });
 });
 
-describe('/parent demo (parent/page.tsx, parent/[childId]/page.tsx)', () => {
-  const p = c.parent;
-
-  it('keeps the family dashboard', () => {
-    expect(p.title).toBe('Family Dashboard');
-    expect(p.demoNote).toBe("Demo preview — the stats below are sample data. The live dashboard reads your kids' progress from this device.");
-    expect(p.sample.pill).toBe('Sample data');
-    expect(p.stats).toEqual({ profiles: 'Profiles', cards: 'Total cards', weekMinutes: 'This week (min)', streak: 'Longest streak' });
-    expect(p.kidsTitle).toBe('Kids');
-    expect(p.kidLine(9, 14, 5)).toBe('9 quests · 14 cards · 5-day streak');
-    expect(p.kidLine(1, 1, 1)).toBe('1 quest · 1 card · 1-day streak');
-    expect(p.viewProgress.cta).toBe('View progress →');
-    expect(p.privacy.title).toBe('Privacy');
-    expect(p.privacy.points).toEqual([
-      // The app backs up every learner with no sign-in: the first two points are the backup sentence (privacy-statements.test.ts).
-      "Each learner's nickname and progress are kept on the device and backed up to our servers, so they can be restored with a Rescue Code.",
-      "When a learner joins a class or family with a code, that space sees the name they join with and their progress. A family's grown-ups can also restore their progress.",
-      "We never sell or share children's data with third parties.",
-      // Removing a profile on a device leaves the backup: the server copy goes from the family space or by email.
-      "You can back up progress to a file at any time. To delete a learner's data on our servers, use your family space settings or email us.",
-    ]);
-  });
-
-  it('keeps the child page', () => {
-    const k = p.child;
-    expect(k.back).toBe('← Family Dashboard');
-    expect(k.quests(9)).toBe('9 quests');
-    expect(k.quests(1)).toBe('1 quest');
-    expect(k.cards(14)).toBe('14 cards');
-    expect(k.cards(1)).toBe('1 card');
-    expect(k.demoNote).toBe('Demo preview — sample data.');
-    expect(k.recentTitle).toBe('Recent activity');
-    expect(k.noRecent).toBe('No recent quests.');
-    expect(k.stars(3)).toBe('3★');
-    expect(k.weeklyTitle).toBe('Weekly time');
-    expect(k.cardsTitle).toBe('Cards collected');
-    expect(k.homeworkTitle).toBe('Send homework');
-    expect(k.assign.cta).toBe('+ Assign a quest');
-    expect(k.comingSoon).toBe('Coming soon — for now, Hoya picks the next quest.');
-  });
-});

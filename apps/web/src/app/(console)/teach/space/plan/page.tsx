@@ -105,7 +105,7 @@ function PlanInner(): JSX.Element {
       setDirty(true);
       setEditing(true);
       setSuggestedFor(suggestId);
-      router.replace(ROUTES.spacePlan(spaceId));
+      router.replace(ROUTES.spacePlan(spaceId, undefined, roster?.space.kind));
       return;
     }
     const current = selectedPlan(plansRes.data, selectedId);
@@ -224,7 +224,7 @@ function PlanInner(): JSX.Element {
   return (
     <AdultFrame onSignOut={signOut} title={roster ? p.titleFor(roster.space.name) : p.title}>
       <Muted>
-        <Link href={ROUTES.space(spaceId)}>{p.back(roster?.space.name ?? null)}</Link>
+        <Link href={ROUTES.space(spaceId, roster?.space.kind)}>{p.back(roster?.space.name ?? null)}</Link>
       </Muted>
       {!api ? <Notice tone="nudge">{c.shell.noApi}</Notice> : null}
       {error ? (
@@ -262,7 +262,7 @@ function PlanInner(): JSX.Element {
               />
             ) : undefined
           }
-          presentHref={presentable ? ROUTES.spaceLecture(spaceId, 'plan', current.id) : undefined}
+          presentHref={presentable ? ROUTES.spaceLecture(spaceId, 'plan', current.id, roster?.space.kind) : undefined}
         />
       ) : (
         <section aria-label={p.builderLabel}>
@@ -271,7 +271,7 @@ function PlanInner(): JSX.Element {
           {plans && plans.length === 0 ? (
             <Notice>
               {c.noPlanYet}{' '}
-              <Link href={ROUTES.spaceCurriculum(spaceId)}>
+              <Link href={ROUTES.spaceCurriculum(spaceId, roster?.space.kind)}>
                 <Button testId="plan-from-template">{c.curriculum.builder.fromTemplate.cta}</Button>
               </Link>
             </Notice>
