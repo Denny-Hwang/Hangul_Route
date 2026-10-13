@@ -1,5 +1,5 @@
 import type { Space } from '@hangul-route/content-schema';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NewNote } from '../db';
 import app from '../index';
 import { hashSecret } from '../lib/device-auth';
@@ -453,5 +453,18 @@ describe('the family owner’s "Can send notes" switches (sections 6.1 and 8.2-b
     expect((await call('GET', `/api/spaces/${CLASS}/note-senders`, bearer('teacher'))).status).toBe(404);
     for (const body of [{}, { canSend: 'yes' }, { canSend: true, extra: 1 }, null]) expect((await setSender('grandma', body)).status, JSON.stringify(body)).toBe(422);
     expect(await db.getSendGrant(FAMILY, 'grandma')).toBeNull();
+  });
+});
+
+describe('the family view stays within the per-request query budget', () => {
+  it('a page of 50 notes from one caregiver without a grant reads the grant once', async () => {
+    const many = Array.from({ length: 50 }, (_, i) => familyNote({ senderAccountId: 'grandma', senderLabel: 'grandma', createdAt: ago(HOUR + i * 1000) }));
+    expect(await db.insertNotes(many, [])).toBe(50);
+    const spy = vi.spyOn(db, 'getSendGrant');
+    const rows = rowsOf(await oversight('mom'));
+    expect(rows).toHaveLength(50);
+    expect(rows.every((r) => r.status === 'not_shown')).toBe(true);
+    expect(spy).toHaveBeenCalledTimes(1);
+    spy.mockRestore();
   });
 });

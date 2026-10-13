@@ -364,10 +364,14 @@ notesRoutes.get('/:familyId/learners/:learnerId/notes', async (c) => {
   const blocked = new Set((await db.listBlocks(learnerId)).map((b) => b.senderAccountId));
   const roles = new Map<string, Map<string, string>>();
   for (const spaceId of spaces.keys()) roles.set(spaceId, new Map((await db.membersOf(spaceId)).filter((m) => m.memberKind === 'account').map((m) => [m.memberId, m.role])));
+  // One grant read per family caregiver who sent, whatever the number of their notes on the page.
   const granted = new Set<string>();
+  const checked = new Set<string>();
   for (const n of notes) {
     const key = `${n.spaceId}\n${n.senderAccountId}`;
-    if (spaces.get(n.spaceId)?.kind === 'family' && roles.get(n.spaceId)?.get(n.senderAccountId) === 'caregiver' && !granted.has(key) && (await db.getSendGrant(n.spaceId, n.senderAccountId))) granted.add(key);
+    if (checked.has(key) || spaces.get(n.spaceId)?.kind !== 'family' || roles.get(n.spaceId)?.get(n.senderAccountId) !== 'caregiver') continue;
+    checked.add(key);
+    if (await db.getSendGrant(n.spaceId, n.senderAccountId)) granted.add(key);
   }
   const maySend = (n: StoredNote): boolean => {
     const role = roles.get(n.spaceId)?.get(n.senderAccountId);
