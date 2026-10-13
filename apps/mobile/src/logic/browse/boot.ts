@@ -167,6 +167,33 @@ export function navigationCheck(i: {
   return { write: null, expired: !(i.inLesson && LESSON.has(i.to)) };
 }
 
+/**
+ * A later link (`hashchange`) while the boot still reads the kept pass is left
+ * for the boot, which reads the latest fragment when it resolves (nothing is
+ * mounted to reset yet); once the pass is resolved, the link resolves again.
+ */
+export function linkStep(booted: boolean): 'reenter' | 'boot-reads-it' {
+  return booted ? 'reenter' : 'boot-reads-it';
+}
+
+/**
+ * Why the root resolves its pass again: a later link, a session pass that ran
+ * out (at a navigation or when the tab is shown), or a page restored from the
+ * back/forward cache (a learner page in this tab may have removed the pass).
+ */
+export type Reentry = 'link' | 'expired' | 'restored';
+
+/**
+ * Whether resolving again replaces the stack on screen. A later link always
+ * opens its own target. Otherwise the screen stays while a pass is still
+ * active (an active kept pass took over from a session pass that ran out, so
+ * the destination just tapped stays; or a restored tab's pass still holds),
+ * and the Access screen replaces it when none is (section 4.3).
+ */
+export function reentryResets(why: Reentry, fresh: ResolvedPass): boolean {
+  return why === 'link' || fresh.status !== 'active';
+}
+
 export type CloseAction = { kind: 'back'; fallbackUrl: string } | { kind: 'assign'; url: string };
 
 const PERSONA_HOME: Readonly<Record<AdultPersona, string>> = {

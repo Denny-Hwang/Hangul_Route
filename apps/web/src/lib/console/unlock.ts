@@ -1,4 +1,4 @@
-import { GrownUpUnlockSchema, UNLOCK_SESSION_KEY, parseLenient, unlockActive, type GrownUpUnlock } from '@hangul-route/content-schema';
+import { BROWSE_PASS_SESSION_KEY, GrownUpUnlockSchema, UNLOCK_SESSION_KEY, parseLenient, unlockActive, type GrownUpUnlock } from '@hangul-route/content-schema';
 import { browserStorage, readItem, removeItem, writeItem, type KeyValueStorage } from '../i18n/safe-storage';
 import { clearSession } from './session';
 
@@ -45,8 +45,14 @@ export function clearUnlock(storage: KeyValueStorage | null = defaultStorage()):
   removeItem(storage, UNLOCK_SESSION_KEY);
 }
 
-/** Back to learning, Open the app on this device and Sign out: this tab keeps no unlock and no console session. */
+/**
+ * Back to learning, Open the app on this device and Sign out: this tab keeps no unlock, no
+ * console session and no All lessons pass (`hr:browse:pass`, F-BROWSE-001 section 4.3), so a
+ * device handed back cannot reopen All lessons from this tab with Back, Forward or a typed
+ * `/browse` (F-BROWSE-001 BR-6 review).
+ */
 export function clearGrownUpTab(storage: KeyValueStorage | null = defaultStorage()): void {
   clearUnlock(storage);
   clearSession(storage);
+  removeItem(storage, BROWSE_PASS_SESSION_KEY);
 }

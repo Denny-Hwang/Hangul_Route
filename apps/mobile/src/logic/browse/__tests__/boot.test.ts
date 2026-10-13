@@ -5,9 +5,11 @@ import {
   closeAction,
   entryStack,
   lessonAfter,
+  linkStep,
   navigationCheck,
   openedEvent,
   readBootFragment,
+  reentryResets,
   type BrowseRouteName,
 } from '../boot';
 import type { ResolvedPass } from '../pass';
@@ -183,5 +185,41 @@ describe('closeAction', () => {
   it('a gate or kept pass with nothing to go back to goes to the learner app, never to an account page', () => {
     expect(closeAction({ canGoBack: false, from: 'gate', lastPersona: 'parent' })).toEqual({ kind: 'assign', url: '/' });
     expect(closeAction({ canGoBack: false, from: 'kept', lastPersona: 'teacher' })).toEqual({ kind: 'assign', url: '/' });
+  });
+});
+
+describe('linkStep', () => {
+  it('a later link while the boot still reads the kept pass is left for the boot, which takes the latest one', () => {
+    expect(linkStep(false)).toBe('boot-reads-it');
+  });
+
+  it('a later link once the pass is resolved resolves again and opens its own target', () => {
+    expect(linkStep(true)).toBe('reenter');
+  });
+});
+
+describe('reentryResets', () => {
+  const expiredGate: ResolvedPass = { status: 'none', reason: 'expired', expiredSource: 'gate', removeSession: false, removeKept: false };
+  const keptTakesOver = active({ from: 'kept', removeSession: true });
+
+  it('a later link always opens its own target, with or without a pass', () => {
+    expect(reentryResets('link', active())).toBe(true);
+    expect(reentryResets('link', none)).toBe(true);
+  });
+
+  it('a pass that ran out with an active kept pass behind it keeps the tapped destination on screen (section 4.3)', () => {
+    expect(reentryResets('expired', keptTakesOver)).toBe(false);
+  });
+
+  it('a pass that ran out with nothing behind it shows the Access screen', () => {
+    expect(reentryResets('expired', expiredGate)).toBe(true);
+    expect(reentryResets('expired', none)).toBe(true);
+  });
+
+  it('a page restored from the back/forward cache keeps its screen while its pass holds, and shows Access once a learner page removed it', () => {
+    expect(reentryResets('restored', active({ from: 'gate' }))).toBe(false);
+    expect(reentryResets('restored', keptTakesOver)).toBe(false);
+    expect(reentryResets('restored', none)).toBe(true);
+    expect(reentryResets('restored', expiredGate)).toBe(true);
   });
 });

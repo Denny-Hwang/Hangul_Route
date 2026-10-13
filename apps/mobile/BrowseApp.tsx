@@ -9,7 +9,18 @@ import type { AdultPersona, BrowsePass } from '@hangul-route/content-schema';
 import type { UiLocale } from '@hangul-route/i18n';
 import { flags, bundleOs, gatingActive } from './src/config/flags';
 import { useDocumentLang, useMessages } from './src/i18n/use-messages';
-import { entryStack, lessonAfter, navigationCheck, readBootFragment, type BootFragment, type BrowseEntryRoute, type BrowseRouteName } from './src/logic/browse/boot';
+import {
+  entryStack,
+  lessonAfter,
+  linkStep,
+  navigationCheck,
+  readBootFragment,
+  reentryResets,
+  type BootFragment,
+  type BrowseEntryRoute,
+  type BrowseRouteName,
+  type Reentry,
+} from './src/logic/browse/boot';
 import { defaultBrowseBundle } from './src/logic/browse/bundle';
 import type { ResolvedPass } from './src/logic/browse/pass';
 import { resolveEntry } from './src/logic/browse/target';
@@ -22,7 +33,7 @@ import { canRenderPicture } from './src/screens/vocab/topic-data';
 import { installGestureUnlock } from './src/platform/audio';
 import { writeSessionPass } from './src/platform/browse';
 import { readLastPersonaInTime, resolveBrowseBoot, type BrowseBoot } from './src/platform/browse-boot';
-import { isOnline, onFragmentChange, onPageVisible } from './src/platform/browse-env';
+import { isOnline, markBootSettled, onFragmentChange, onPageRestored, onPageVisible } from './src/platform/browse-env';
 import { announceBrowseOpened } from './src/platform/browse-opened';
 import { startBrowse as runBrowseStart, type BrowseStart } from './src/platform/browse-start';
 import { isOfflineReady, subscribePwa } from './src/platform/pwa';
@@ -112,23 +123,32 @@ export default function BrowseApp(): React.ReactElement {
   useEffect(() => {
     let live = true;
     const uninstallUnlock = installGestureUnlock();
-    void useAudioStore.getState().hydrate().catch(() => undefined);
+    const audioReady = useAudioStore.getState().hydrate().catch(() => undefined);
     localeReady.current = useLocaleStore.getState().hydrate([]).catch(() => undefined);
-    const opened = (resolved: ResolvedPass): void =>
-      void announceBrowseOpened({ source: fragmentRef.current.source, resolved, offlineReady: isOfflineReady(), localeReady: localeReady.current, applyLocale });
+    const opened = (resolved: ResolvedPass): Promise<void> =>
+      announceBrowseOpened({ source: fragmentRef.current.source, resolved, offlineReady: isOfflineReady(), localeReady: localeReady.current, applyLocale });
+    let booted: Promise<unknown>;
     if (start.fast) {
-      opened(start.fast.resolved);
-      void readLastPersonaInTime().then((lastPersona) => {
-        if (live) setVisit((v) => (v.status === 'ready' ? { ...v, lastPersona } : v));
-      });
+      booted = Promise.all([
+        opened(start.fast.resolved),
+        readLastPersonaInTime().then((lastPersona) => {
+          if (live) setVisit((v) => (v.status === 'ready' ? { ...v, lastPersona } : v));
+        }),
+      ]);
     } else {
-      void resolveBrowseBoot(Date.now()).then((boot) => {
-        if (!live) return;
+      booted = resolveBrowseBoot(Date.now()).then((boot) => {
+        if (!live) return undefined;
         passRef.current = { session: boot.session, resolved: boot.resolved };
         setVisit({ status: 'ready', ...boot, initial: stackFor(fragmentRef.current, boot) });
-        opened(boot.resolved);
+        return opened(boot.resolved);
       });
     }
+    // Every boot read, write and send has finished: the page says so (an e2e waits on it, never on a timer).
+    void Promise.all([booted, audioReady, localeReady.current])
+      .catch(() => undefined)
+      .then(() => {
+        if (live) markBootSettled();
+      });
     const offPwa = subscribePwa((event) => {
       if (event === 'went-offline') setOnline(false);
       if (event === 'back-online') {
@@ -146,14 +166,16 @@ export default function BrowseApp(): React.ReactElement {
   /**
    * Resolves the pass again and shows where it lands: a new link (`link`, which
    * also applies its pass's language and sends `browse.opened` for its source,
-   * as the first boot does) or a pass that ran out (silent: not a link).
+   * as the first boot does), a pass that ran out (`expired`) or a page restored
+   * from the back/forward cache (`restored`); the last two are silent (not a
+   * link) and keep the screen while a pass is still active (`reentryResets`).
    */
   const reenter = useCallback(
-    async (fragment: BootFragment, why: 'link' | 'expired'): Promise<void> => {
+    async (fragment: BootFragment, why: Reentry): Promise<void> => {
       const boot = await resolveBrowseBoot(Date.now());
       passRef.current = { session: boot.session, resolved: boot.resolved };
       setVisit((v) => (v.status === 'ready' ? { ...v, session: boot.session, resolved: boot.resolved, lastPersona: boot.lastPersona } : v));
-      if (navigation.isReady()) navigation.reset(routesOf(stackFor(fragment, boot)));
+      if (reentryResets(why, boot.resolved) && navigation.isReady()) navigation.reset(routesOf(stackFor(fragment, boot)));
       if (why === 'link') {
         void announceBrowseOpened({ source: fragment.source, resolved: boot.resolved, offlineReady: isOfflineReady(), localeReady: localeReady.current, applyLocale });
       }
@@ -168,7 +190,7 @@ export default function BrowseApp(): React.ReactElement {
       onFragmentChange((raw) => {
         const fragment = readBootFragment(raw);
         fragmentRef.current = fragment;
-        if (passRef.current !== null) void reenter(fragment, 'link');
+        if (linkStep(passRef.current !== null) === 'reenter') void reenter(fragment, 'link');
       }),
     [reenter],
   );
@@ -204,6 +226,18 @@ export default function BrowseApp(): React.ReactElement {
             expiring.current = false;
           });
         }
+      }),
+    [reenter],
+  );
+
+  // A page restored from the back/forward cache keeps its memory: read the pass again, since a learner page in this
+  // tab (Close or Back to the app, then Forward) removed it at its boot (F-APP-001 section 3.9 clearing). Without an
+  // active pass the Access screen replaces the screen, even inside a lesson (section 4.3, BR-6 review).
+  useEffect(
+    () =>
+      onPageRestored(() => {
+        if (passRef.current === null) return;
+        void reenter({ target: null, source: 'direct' }, 'restored');
       }),
     [reenter],
   );

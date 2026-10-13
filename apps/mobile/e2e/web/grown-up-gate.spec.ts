@@ -67,7 +67,7 @@ test('a grown-up URL the host has no page for bounces to its persona entry', asy
   await expect(page.getByRole('button', { name: "Let's start" })).toHaveCount(0);
 });
 
-test('a learner boot removes the grown-up unlock and the console session of its tab', async ({ page }) => {
+test('a learner boot removes the grown-up unlock, the console session and the All lessons pass of its tab', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(
     ([u, c]) => {
@@ -81,7 +81,8 @@ test('a learner boot removes the grown-up unlock and the console session of its 
   await expect(page.getByRole('button', { name: "Let's start" })).toBeVisible();
   expect(await sessionValue(page, UNLOCK)).toBeNull();
   expect(await sessionValue(page, CONSOLE_SESSION)).toBeNull();
-  expect(await sessionValue(page, 'hr:browse:pass')).toBe('{}');
+  // F-BROWSE-001 section 4.3 (BR-6 review): a device handed back cannot reopen All lessons from this tab.
+  expect(await sessionValue(page, 'hr:browse:pass')).toBeNull();
 });
 
 test.describe('the lock PIN path', () => {

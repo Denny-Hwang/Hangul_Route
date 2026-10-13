@@ -17,8 +17,8 @@ interface BrowserLike {
     removeEventListener?: (type: string, listener: () => void) => void;
   };
   navigator?: { onLine?: boolean };
-  addEventListener?: (type: string, listener: () => void) => void;
-  removeEventListener?: (type: string, listener: () => void) => void;
+  addEventListener?: (type: string, listener: (event?: unknown) => void) => void;
+  removeEventListener?: (type: string, listener: (event?: unknown) => void) => void;
   setTimeout?: (fn: () => void, ms: number) => unknown;
 }
 
@@ -189,6 +189,37 @@ export function onPageVisible(handler: () => void): () => void {
     }
     w.removeEventListener?.('focus', handler);
   };
+}
+
+/**
+ * Calls `handler` when this page is shown again from the back/forward cache
+ * (`pageshow` with `persisted`); returns the unsubscribe. A restored page keeps
+ * its memory, so the root reads its pass again: a learner page in this tab may
+ * have removed it meanwhile (F-BROWSE-001 section 4.3, BR-6 review).
+ */
+export function onPageRestored(handler: () => void): () => void {
+  const w = browser();
+  if (typeof w.addEventListener !== 'function') return () => undefined;
+  const listener = (event?: unknown): void => {
+    if ((event as { persisted?: unknown } | undefined)?.persisted === true) handler();
+  };
+  w.addEventListener('pageshow', listener);
+  return () => w.removeEventListener?.('pageshow', listener);
+}
+
+/**
+ * Marks the page once the root's first boot has finished its reads, its
+ * removals, `browse.opened` and the flush (`data-hr-boot="settled"` on the
+ * document element). Nothing reads it in the app: it is the positive signal an
+ * end-to-end check waits for before comparing the device's stored data.
+ */
+export function markBootSettled(): void {
+  try {
+    const root = (globalThis as { document?: { documentElement?: { setAttribute?: (name: string, value: string) => void } } }).document?.documentElement;
+    root?.setAttribute?.('data-hr-boot', 'settled');
+  } catch {
+    // A document that refuses attributes only loses the test signal.
+  }
 }
 
 /** `navigator.onLine`; a browser that does not say counts as online. */

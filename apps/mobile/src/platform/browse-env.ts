@@ -24,6 +24,14 @@ export function onPageVisible(_handler: () => void): () => void {
   return () => undefined;
 }
 
+export function onPageRestored(_handler: () => void): () => void {
+  return () => undefined;
+}
+
+export function markBootSettled(): void {
+  // No document on native.
+}
+
 export function leaveTo(_url: string): void {
   // Nowhere to go on native.
 }

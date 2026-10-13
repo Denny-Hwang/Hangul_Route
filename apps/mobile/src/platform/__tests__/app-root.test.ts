@@ -117,10 +117,11 @@ describe('bootRoot (web): what each root does before it mounts', () => {
     vi.unstubAllGlobals();
   });
 
-  it('the app root removes the grown-up unlock and the console session of this tab, nothing else', () => {
+  it('the app root removes the grown-up unlock, the console session and the All lessons pass of this tab', () => {
     const h = harness('/');
     expect(bootRoot(h.env)).toBe('app');
-    expect([...h.area.data.keys()]).toEqual(['hr:browse:pass']);
+    // F-BROWSE-001 section 4.3 (BR-6 review): a device handed back cannot reopen All lessons from this tab.
+    expect([...h.area.data.keys()]).toEqual([]);
     expect(h.log).toEqual([]);
     expect(peekBootIntent()).toBeNull();
   });
@@ -129,7 +130,7 @@ describe('bootRoot (web): what each root does before it mounts', () => {
     const h = harness('/?gate=grown-up&next=%2Fparent');
     expect(bootRoot(h.env)).toBe('app');
     // The lock already removed the console session and could not use the unlock; a new one comes after the PIN.
-    expect([...h.area.data.keys()]).toEqual(['hr:browse:pass']);
+    expect([...h.area.data.keys()]).toEqual([]);
     expect(h.log).toEqual(['replaceState {"s":1} /']);
     expect(peekBootIntent()).toEqual({ kind: 'grown-up', next: '/parent' });
     expect(peekBootIntent()).toEqual({ kind: 'grown-up', next: '/parent' });
@@ -266,13 +267,15 @@ describe('bootRoot (web): what each root does before it mounts', () => {
       return { ...h, restore: () => handlers.forEach((f) => f()), registered: () => handlers.length };
     }
 
-    it('the app root clears the unlock and the console session written after its boot', () => {
+    it('the app root clears the unlock, the console session and an All lessons pass written after its boot', () => {
       const h = withRestore('/');
       bootRoot(h.env);
       h.area.data.set(UNLOCK_SESSION_KEY, '{"v":1}');
       h.area.data.set(CONSOLE_SESSION_KEY, '{}');
+      // The gate hand-off wrote a pass and left for /browse; Close or Back restored this page.
+      h.area.data.set('hr:browse:pass', '{}');
       h.restore();
-      expect([...h.area.data.keys()]).toEqual(['hr:browse:pass']);
+      expect([...h.area.data.keys()]).toEqual([]);
     });
 
     it('so does an app root that booted with a gate intent (the unlock it wrote was for the page it left)', () => {

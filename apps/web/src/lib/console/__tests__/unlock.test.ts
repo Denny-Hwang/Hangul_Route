@@ -123,10 +123,11 @@ describe('clearing', () => {
     expect(s.map.has(CONSOLE_SESSION_KEY)).toBe(true);
   });
 
-  it('clearGrownUpTab removes the unlock and the console session (Back to learning, Sign out)', () => {
+  it('clearGrownUpTab removes the unlock, the console session and the All lessons pass (Back to learning, Sign out)', () => {
     const s = fakeStorage();
     writeSignInUnlock(NOW, s);
     s.map.set(CONSOLE_SESSION_KEY, '{"token":"t"}');
+    s.map.set('hr:browse:pass', '{"v":1}');
     s.map.set('hr:other', 'kept');
     clearGrownUpTab(s);
     expect([...s.map.keys()]).toEqual(['hr:other']);

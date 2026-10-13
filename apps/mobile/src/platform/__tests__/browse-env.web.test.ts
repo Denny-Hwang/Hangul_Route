@@ -1,6 +1,17 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as nativeEnv from '../browse-env';
-import { cameFromSameOrigin, canGoBack, goBack, isOnline, leaveTo, onFragmentChange, onPageVisible, takeFragment } from '../browse-env.web';
+import {
+  cameFromSameOrigin,
+  canGoBack,
+  goBack,
+  isOnline,
+  leaveTo,
+  markBootSettled,
+  onFragmentChange,
+  onPageRestored,
+  onPageVisible,
+  takeFragment,
+} from '../browse-env.web';
 
 /**
  * F-BROWSE-001 sections 4.1 and 4.4 (BR-6): the browse root reads the link's
@@ -293,6 +304,50 @@ describe('onPageVisible', () => {
   });
 });
 
+describe('onPageRestored', () => {
+  it('calls the handler only for a page restored from the back/forward cache (pageshow with persisted)', () => {
+    const w = stubWindow();
+    const seen = vi.fn();
+    const off = onPageRestored(seen);
+    const pageshow = w.listeners.get('pageshow') as ((event: unknown) => void) | undefined;
+    expect(pageshow).toBeDefined();
+    pageshow?.({ persisted: false });
+    pageshow?.(undefined);
+    expect(seen).not.toHaveBeenCalled();
+    pageshow?.({ persisted: true });
+    expect(seen).toHaveBeenCalledTimes(1);
+    off();
+    expect(w.listeners.has('pageshow')).toBe(false);
+  });
+
+  it('without window events it returns a no-op', () => {
+    vi.stubGlobal('addEventListener', undefined);
+    expect(() => onPageRestored(() => undefined)()).not.toThrow();
+  });
+});
+
+describe('markBootSettled', () => {
+  it('sets data-hr-boot="settled" on the document element', () => {
+    const setAttribute = vi.fn();
+    vi.stubGlobal('document', { documentElement: { setAttribute } });
+    markBootSettled();
+    expect(setAttribute).toHaveBeenCalledWith('data-hr-boot', 'settled');
+  });
+
+  it('a missing or refusing document never throws', () => {
+    vi.stubGlobal('document', undefined);
+    expect(() => markBootSettled()).not.toThrow();
+    vi.stubGlobal('document', {
+      documentElement: {
+        setAttribute: () => {
+          throw new Error('refused');
+        },
+      },
+    });
+    expect(() => markBootSettled()).not.toThrow();
+  });
+});
+
 describe('isOnline', () => {
   it('follows navigator.onLine; unknown counts as online', () => {
     stubWindow({ onLine: false });
@@ -310,6 +365,8 @@ describe('native stub (All lessons is web only, OD-10)', () => {
     expect(nativeEnv.cameFromSameOrigin()).toBe(false);
     expect(nativeEnv.canGoBack()).toBe(false);
     expect(() => nativeEnv.onPageVisible(() => undefined)()).not.toThrow();
+    expect(() => nativeEnv.onPageRestored(() => undefined)()).not.toThrow();
+    expect(() => nativeEnv.markBootSettled()).not.toThrow();
     expect(nativeEnv.isOnline()).toBe(true);
     expect(() => nativeEnv.onFragmentChange(() => undefined)()).not.toThrow();
     expect(() => nativeEnv.leaveTo('/')).not.toThrow();

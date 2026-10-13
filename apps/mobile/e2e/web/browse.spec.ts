@@ -15,6 +15,7 @@ import { shot } from './shots';
  */
 const PASS_KEY = 'hr:browse:pass';
 const UNLOCK_KEY = 'hr:grownup:unlock';
+const CONSOLE_KEY = 'hr:console:session';
 const LEARNER_QUEUE = 'hr:telemetry:queue';
 const BROWSE_QUEUE = 'hr:browse:telemetry-queue';
 const SEEDED_QUEUE = JSON.stringify([{ id: 'e2e-learner-1', name: 'quest.completed', profileId: 'e2e-profile', at: '2026-10-12T08:00:00.000Z' }]);
@@ -51,6 +52,72 @@ function readAllStored(page: Page): Promise<Stored> {
         };
       }),
   );
+}
+
+/**
+ * Everything the device keeps for this origin that a reused screen could write through another API than
+ * `platform/storage`: every entry of the `keyval-store` and `hr-shell` IndexedDB databases (a database that
+ * does not exist is not opened, so the check never creates one), every `localStorage` key and every
+ * `sessionStorage` key except the tab's pass. Keys are prefixed by where they live.
+ */
+function snapshotDevice(page: Page): Promise<Stored> {
+  return page.evaluate(async (passKey) => {
+    const out: Record<string, string> = {};
+    const text = (value: unknown): string => (typeof value === 'string' ? value : JSON.stringify(value));
+    const names = new Set((await indexedDB.databases()).map((d) => d.name));
+    for (const name of ['keyval-store', 'hr-shell']) {
+      if (!names.has(name)) continue;
+      await new Promise<void>((resolve, reject) => {
+        const open = indexedDB.open(name);
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const db = open.result;
+          const stores = [...db.objectStoreNames];
+          if (stores.length === 0) {
+            db.close();
+            resolve();
+            return;
+          }
+          const tx = db.transaction(stores);
+          for (const store of stores) {
+            const cursor = tx.objectStore(store).openCursor();
+            cursor.onsuccess = () => {
+              const at = cursor.result;
+              if (!at) return;
+              out[`idb:${name}/${store}:${String(at.key)}`] = text(at.value);
+              at.continue();
+            };
+          }
+          tx.oncomplete = () => {
+            db.close();
+            resolve();
+          };
+          tx.onerror = () => reject(tx.error);
+        };
+      });
+    }
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i);
+      if (key !== null) out[`local:${key}`] = localStorage.getItem(key) ?? '';
+    }
+    for (let i = 0; i < sessionStorage.length; i += 1) {
+      const key = sessionStorage.key(i);
+      if (key !== null && key !== passKey) out[`session:${key}`] = sessionStorage.getItem(key) ?? '';
+    }
+    return out;
+  }, PASS_KEY);
+}
+
+/** The keys whose value differs between two snapshots, the browse root's own `browse:*` IndexedDB keys aside. */
+function changedOutsideBrowse(before: Stored, after: Stored): string[] {
+  return [...new Set([...Object.keys(before), ...Object.keys(after)])]
+    .filter((k) => before[k] !== after[k])
+    .filter((k) => !k.startsWith('idb:keyval-store/keyval:hr:browse:'));
+}
+
+/** The root marks the page once its first boot finished its reads, removals, `browse.opened` and flush. */
+async function bootSettled(page: Page): Promise<void> {
+  await expect(page.locator('html[data-hr-boot="settled"]')).toHaveCount(1);
 }
 
 /** Writes one stored value the way `platform/storage` does (no reload). */
@@ -123,10 +190,17 @@ test('a gate pass opens All lessons: the fragment leaves the address, the title 
   await page.goto('/');
   await expect(page.getByText('Hi, Mina!')).toBeVisible();
   await putStored(page, LEARNER_QUEUE, SEEDED_QUEUE);
-  await page.evaluate((k) => sessionStorage.setItem(k, '{"v":1,"at":1,"seen":1,"src":"pin"}'), UNLOCK_KEY);
+  await page.evaluate(
+    ([u, c]) => {
+      sessionStorage.setItem(u, '{"v":1,"at":1,"seen":1,"src":"pin"}');
+      sessionStorage.setItem(c, '{"token":"t"}');
+    },
+    [UNLOCK_KEY, CONSOLE_KEY] as const,
+  );
   const before = await readAllStored(page);
   expect(before[LEARNER_QUEUE]).toBe(SEEDED_QUEUE);
   expect(Object.keys(before).some((k) => k.startsWith('hr:profiles'))).toBe(true);
+  const deviceBefore = await snapshotDevice(page);
 
   await writeGatePass(page);
   // The learner app opens All lessons in this tab (BR-12a), so the tab can go back: its unlock stays (BD1).
@@ -137,10 +211,9 @@ test('a gate pass opens All lessons: the fragment leaves the address, the title 
   await expect(page).toHaveTitle('Hangul Route lessons');
   await shot(page, 'br6-browse-home-pixel5');
 
-  // A check that nothing was written needs a settle window with no positive signal to wait for: let the boot
-  // finish its reads (each gives up after BOOT_READ_TIMEOUT_MS, 2.5 s), its event and its flush, then compare
-  // the whole store.
-  await page.waitForTimeout(3500);
+  // Compare only once the boot says it finished its reads (each gives up after BOOT_READ_TIMEOUT_MS, 2.5 s),
+  // its removals, its event and its flush: a positive signal, never a timer.
+  await bootSettled(page);
   const after = await readAllStored(page);
   const changed = [...new Set([...Object.keys(before), ...Object.keys(after)])].filter((k) => before[k] !== after[k]);
   expect(changed.filter((k) => !k.startsWith('hr:browse:')), changed.join(', ')).toEqual([]);
@@ -150,8 +223,14 @@ test('a gate pass opens All lessons: the fragment leaves the address, the title 
   // order (fences and the browse queue before anything) by platform/__tests__/browse-start.test.ts. What this
   // case proves end to end: the learner queue is byte-identical and no other telemetry key appears.
   expect(Object.keys(after).filter((k) => k.includes('telemetry') && k !== LEARNER_QUEUE && k !== BROWSE_QUEUE)).toEqual([]);
-  // All lessons never clears the grown-up unlock of its tab (F-BROWSE-001 BD1).
-  expect(await page.evaluate((k) => sessionStorage.getItem(k), UNLOCK_KEY)).not.toBeNull();
+  // Nothing else of the device changed either: the hr-shell database, localStorage and this tab's sessionStorage.
+  // In a tab that can go back (a same-origin referrer and an earlier history entry), All lessons keeps the
+  // grown-up unlock and the console session (BD1); a tab with nothing to go back to clears both at boot
+  // (platform/browse-start.ts, the typed-address and new-tab cases below).
+  const deviceAfter = await snapshotDevice(page);
+  expect(changedOutsideBrowse(deviceBefore, deviceAfter)).toEqual([]);
+  expect(deviceAfter[`session:${UNLOCK_KEY}`]).toBeDefined();
+  expect(deviceAfter[`session:${CONSOLE_KEY}`]).toBe('{"token":"t"}');
 
   // The pass lives in the tab: a reload keeps it.
   await page.reload();
@@ -234,8 +313,16 @@ test('Close goes back to the page the tab came from, else to the learner app for
   await expect(home(page)).toBeVisible();
   await page.getByRole('button', { name: 'Close' }).click();
   await expect(page).toHaveURL(/\/\?from=e2e$/);
+  await expect(page.getByRole('button', { name: "Let's start" })).toBeVisible();
+
+  // Back in the learner app, the pass is gone (F-APP-001 section 3.9 clearing): a device handed back cannot
+  // reopen All lessons from this tab by typing /browse (section 4.3, BR-6 review).
+  expect(await page.evaluate((k) => sessionStorage.getItem(k), PASS_KEY)).toBeNull();
+  await page.goto('/browse');
+  await expect(accessTitle(page)).toBeVisible();
 
   // Typed into the address bar: no referrer, so a gate pass leaves for the learner app, and the tab keeps no unlock.
+  await writeGatePass(page);
   await page.evaluate((k) => sessionStorage.setItem(k, '{"v":1,"at":1,"seen":1,"src":"pin"}'), UNLOCK_KEY);
   await page.goto('/browse');
   await expect(home(page)).toBeVisible();

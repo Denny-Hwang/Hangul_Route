@@ -215,10 +215,11 @@ describe('forgetFreshPin', () => {
 });
 
 describe('clearGrownUpTab', () => {
-  it('removes the unlock and the console session of this tab, nothing else', () => {
+  it('removes the unlock, the console session and the All lessons pass of this tab, nothing else', () => {
     const area = memoryArea({ [UNLOCK_SESSION_KEY]: '{}', [CONSOLE_SESSION_KEY]: '{}', 'hr:browse:pass': '{}', other: 'x' });
     clearGrownUpTab(area);
-    expect([...area.data.keys()].sort()).toEqual(['hr:browse:pass', 'other']);
+    // A device handed back after Close or Back cannot reopen All lessons from this tab (F-BROWSE-001 section 4.3, BR-6 review).
+    expect([...area.data.keys()].sort()).toEqual(['other']);
   });
 
   it('never throws on blocked or missing storage', () => {
