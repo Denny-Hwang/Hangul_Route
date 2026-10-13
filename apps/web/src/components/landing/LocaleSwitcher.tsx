@@ -1,5 +1,6 @@
 import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
 import { LOCALE_META, type UiLocale } from '@hangul-route/i18n';
+import type { CSSProperties } from 'react';
 import type { SitePage } from '../../lib/site-metadata';
 import { sitePath } from '../../lib/site-path';
 
@@ -8,8 +9,22 @@ import { sitePath } from '../../lib/site-path';
  * the same page in each shown locale, named by their endonyms (fixed constants, so a visitor who cannot read
  * the current language still finds their own), each with `hreflang` and `lang`. Plain `<a>`: each locale is
  * its own document (`<html lang>`), so a switch loads a new page. Renders nothing while only English ships.
+ * `linkStyle` adds to each link's style: the layered site's footer passes its 64 x 64 hit area (F-SITE-002 §3.2);
+ * the old landing passes none, so it renders as before.
  */
-export function LocaleSwitcher({ locale, page, label, shown }: { locale: UiLocale; page: SitePage; label: string; shown: readonly UiLocale[] }): JSX.Element | null {
+export function LocaleSwitcher({
+  locale,
+  page,
+  label,
+  shown,
+  linkStyle,
+}: {
+  locale: UiLocale;
+  page: SitePage;
+  label: string;
+  shown: readonly UiLocale[];
+  linkStyle?: CSSProperties;
+}): JSX.Element | null {
   if (shown.length < 2) return null;
   return (
     <nav aria-label={label}>
@@ -32,7 +47,7 @@ export function LocaleSwitcher({ locale, page, label, shown }: { locale: UiLocal
               hrefLang={htmlLang}
               lang={htmlLang}
               aria-current={current ? 'page' : undefined}
-              style={{ color: current ? colors.text.primary : colors.text.secondary, fontWeight: current ? typography.weight.bold : typography.weight.regular }}
+              style={{ ...linkStyle, color: current ? colors.text.primary : colors.text.secondary, fontWeight: current ? typography.weight.bold : typography.weight.regular }}
             >
               {endonym}
             </a>

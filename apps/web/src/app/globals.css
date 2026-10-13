@@ -87,3 +87,307 @@ button {
     display: none;
   }
 }
+
+/*
+ * Layered site (F-SITE-002 §3.2 to §3.6, §3.11; design/screens/site/README.md, mock/site.css). Every value is a
+ * token, read from the custom properties `siteCssVars()` sets on the site root (`.hr-site`, `SiteShell`), so this
+ * block holds no colour or length of its own. Only the properties that change at a breakpoint, on hover or on focus
+ * live here; the rest is inline from tokens. Mobile first: the narrow rule is the default and a `min-width` query in
+ * em overrides it (no `max-width` query, so no fractional width falls between two rules). Breakpoints in em and text
+ * in rem, so a visitor's browser text size moves the layout switches with the text. Nothing uses `order`: the DOM
+ * order is the visual order and the Tab order (WCAG 2.4.3).
+ */
+.hr-site-wide-only {
+  display: none;
+}
+
+.hr-site {
+  /* Long words (app.hangulroute.com, the contact address) wrap instead of scrolling sideways at 200 % text. */
+  overflow-wrap: anywhere;
+}
+
+.hr-site a:focus-visible,
+.hr-site summary:focus-visible {
+  outline: var(--hr-site-border-thick) solid var(--hr-site-focus);
+  outline-offset: var(--hr-site-xxs);
+}
+
+.hr-site-wrap {
+  padding-inline: var(--hr-site-gutter-compact);
+}
+
+/* Skip link: the first Tab stop, off screen until it has keyboard focus. */
+.hr-site-skip {
+  position: absolute;
+  left: var(--hr-site-sm);
+  top: var(--hr-site-sm);
+  z-index: var(--hr-site-z-sticky);
+  transform: translateY(-200%);
+}
+
+.hr-site-skip:focus {
+  transform: none;
+}
+
+/* Header: phones show the brand and Sign in on one row; the mark steps in from 22.5em (360 px). */
+.hr-site-brand-mark {
+  display: none;
+}
+
+.hr-site-nav-link {
+  color: var(--hr-site-text-secondary);
+}
+
+.hr-site-nav-link:hover {
+  color: var(--hr-site-text);
+}
+
+.hr-site-signin {
+  margin-left: auto;
+  border-color: var(--hr-site-border-strong);
+}
+
+.hr-site-signin:hover {
+  border-color: var(--hr-site-text-secondary);
+}
+
+/* Actions: the primary pill and the outline pill. brand.primary on brand.primaryLight is below AA for normal text,
+   so the outline pill's label darkens on hover. */
+.hr-site-primary {
+  background-color: var(--hr-site-brand);
+  color: var(--hr-site-on-primary);
+}
+
+.hr-site-primary:hover {
+  background-color: var(--hr-site-brand-dark);
+}
+
+.hr-site-secondary {
+  border-color: var(--hr-site-brand);
+  color: var(--hr-site-brand);
+  background-color: transparent;
+}
+
+.hr-site-secondary:hover {
+  background-color: var(--hr-site-brand-light);
+  color: var(--hr-site-brand-dark);
+}
+
+.hr-site-text-link {
+  color: var(--hr-site-brand-dark);
+}
+
+/* Page head, sections and actions (full width on phones). */
+.hr-site-page-head {
+  padding-block: var(--hr-site-xl);
+}
+
+.hr-site-h1 {
+  font-size: var(--hr-site-size-display);
+}
+
+.hr-site-lead {
+  font-size: var(--hr-site-size-body);
+}
+
+.hr-site-actions > a {
+  width: 100%;
+}
+
+.hr-site-section {
+  padding-block: var(--hr-site-lg);
+  border-top: var(--hr-site-border-thin) solid var(--hr-site-border-subtle);
+}
+
+.hr-site-h2 {
+  font-size: var(--hr-site-size-prompt);
+}
+
+/* Card tiles on /learners: three across at 320 px, fewer as text grows, never sideways. */
+.hr-site-tiles {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--hr-site-tile-min)), 1fr));
+  gap: var(--hr-site-sm);
+}
+
+.hr-site-tile {
+  padding: var(--hr-site-sm);
+}
+
+/* Folds: the summary stays a block (older WebKit does not lay out a summary that is a grid or flex container);
+   its inner span is the grid and draws the chevron, which turns when open, without animation. */
+.hr-site-summary {
+  display: block;
+  list-style: none;
+}
+
+.hr-site-summary::-webkit-details-marker {
+  display: none;
+}
+
+.hr-site-fold-q {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--hr-site-xl);
+  align-items: center;
+  column-gap: var(--hr-site-md);
+  min-height: var(--hr-site-touch-min);
+  padding: var(--hr-site-sm) var(--hr-site-lg);
+}
+
+.hr-site-fold-q::after {
+  content: "";
+  width: var(--hr-site-sm);
+  height: var(--hr-site-sm);
+  justify-self: center;
+  border-right: var(--hr-site-border-base) solid var(--hr-site-brand-dark);
+  border-bottom: var(--hr-site-border-base) solid var(--hr-site-brand-dark);
+  transform: rotate(45deg);
+  margin-top: calc(-1 * var(--hr-site-xs));
+}
+
+.hr-site-fold[open] > .hr-site-summary .hr-site-fold-q::after {
+  transform: rotate(225deg);
+  margin-top: var(--hr-site-xs);
+}
+
+/* Closing block: the line, then the action (full width on phones; line left, action right on wide screens). */
+.hr-site-closing {
+  display: grid;
+  justify-items: start;
+  gap: var(--hr-site-lg);
+  margin-block: var(--hr-site-xxl);
+  padding: var(--hr-site-xl);
+}
+
+.hr-site-closing > a {
+  width: 100%;
+}
+
+/* Footer: two columns on phones (Guide and App on the left, Company on the right), one once large text makes a
+   column narrower than its words, three on wide screens (the same DOM order). */
+.hr-site-footer-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--hr-site-footer-col-min)), 1fr));
+  gap: var(--hr-site-lg);
+}
+
+.hr-site-footer-col {
+  display: grid;
+  align-content: start;
+  row-gap: var(--hr-site-lg);
+}
+
+.hr-site-footer-link {
+  color: var(--hr-site-text-secondary);
+}
+
+.hr-site-footer-link:hover {
+  color: var(--hr-site-text);
+  text-decoration: underline;
+}
+
+@media (min-width: 22.5em) {
+  .hr-site-brand-mark {
+    display: flex;
+  }
+}
+
+@media (min-width: 45em) {
+  .hr-site-header-start {
+    display: inline-flex;
+  }
+
+  .hr-site-nav {
+    display: flex;
+    margin-left: auto;
+  }
+
+  .hr-site-signin {
+    margin-left: var(--hr-site-xs);
+  }
+
+  /* 720 to 959 px: the brand shows the mark only; the name stays the link's accessible name. */
+  .hr-site-brand-name {
+    position: absolute;
+    width: var(--hr-site-border-thin);
+    height: var(--hr-site-border-thin);
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .hr-site-wrap {
+    padding-inline: var(--hr-site-gutter-regular);
+  }
+
+  .hr-site-page-head {
+    padding-block: var(--hr-site-xxxl);
+  }
+
+  .hr-site-h1 {
+    font-size: var(--hr-site-size-hero);
+  }
+
+  .hr-site-lead {
+    font-size: var(--hr-site-size-body-lg);
+  }
+
+  .hr-site-actions > a {
+    width: auto;
+  }
+
+  .hr-site-section {
+    padding-block: var(--hr-site-xxxl);
+  }
+
+  .hr-site-h2 {
+    font-size: var(--hr-site-size-title);
+  }
+
+  .hr-site-steps-wide {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .hr-site-tiles {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: var(--hr-site-md);
+  }
+
+  .hr-site-tile {
+    padding: var(--hr-site-md);
+  }
+
+  .hr-site-closing {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    margin-block: var(--hr-site-xxxl);
+    padding: var(--hr-site-xxl);
+  }
+
+  .hr-site-closing > a {
+    width: auto;
+  }
+
+  .hr-site-footer-groups {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .hr-site-footer-col {
+    display: contents;
+  }
+}
+
+@media (min-width: 60em) {
+  .hr-site-brand-name {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+  }
+}
+
+@media (min-width: 70em) {
+  .hr-site-wrap {
+    padding-inline: var(--hr-site-gutter-wide);
+  }
+}

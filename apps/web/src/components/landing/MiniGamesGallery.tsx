@@ -1,7 +1,7 @@
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import { IconSvg } from '@hangul-route/design-system/icon-glyphs/dom';
 import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
-import { minigameCatalog, type MinigameFamily } from '../../data/minigame-catalog';
+import { minigameCatalog, type LandingMinigame, type MinigameFamily } from '../../data/minigame-catalog';
 
 const familyTint: Record<MinigameFamily, string> = {
   recognition: colors.theme.letters,
@@ -10,11 +10,14 @@ const familyTint: Record<MinigameFamily, string> = {
   review: colors.theme.nature,
 };
 
-const shippedCount = minigameCatalog.filter((g) => g.status === 'shipped').length;
-const betaCount = minigameCatalog.length - shippedCount;
-
-export function MiniGamesGallery({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }): JSX.Element {
+/**
+ * The mini-games gallery. `games` defaults to the whole catalogue (the old landing); `/learners` passes the games
+ * without a speaking one (`siteGames`, F-SITE-002 §3.4: no speaking line). The counts come from the list shown.
+ */
+export function MiniGamesGallery({ locale = DEFAULT_LOCALE, games = minigameCatalog }: { locale?: UiLocale; games?: readonly LandingMinigame[] }): JSX.Element {
   const t = getMessages(locale).landing.games;
+  const shippedCount = games.filter((g) => g.status === 'shipped').length;
+  const betaCount = games.length - shippedCount;
   return (
     <section
       aria-labelledby="games-heading"
@@ -67,7 +70,7 @@ export function MiniGamesGallery({ locale = DEFAULT_LOCALE }: { locale?: UiLocal
           gap: spacing.md,
         }}
       >
-        {minigameCatalog.map((game) => (
+        {games.map((game) => (
           <article
             key={game.kind}
             role="listitem"

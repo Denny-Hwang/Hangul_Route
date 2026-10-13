@@ -15,10 +15,12 @@ import * as enAboutPage from '../(en)/about/page';
 import * as enLandingPage from '../(en)/page';
 import * as enPrivacyPage from '../(en)/privacy/page';
 import * as enTermsPage from '../(en)/terms/page';
+import * as enLearnersPage from '../(en)/learners/page';
 import * as locAboutPage from '../(loc)/[locale]/about/page';
 import * as locLandingPage from '../(loc)/[locale]/page';
 import * as locPrivacyPage from '../(loc)/[locale]/privacy/page';
 import * as locTermsPage from '../(loc)/[locale]/terms/page';
+import * as locLearnersPage from '../(loc)/[locale]/learners/page';
 
 /**
  * What a visitor reads about where learning data lives, on the pages that are live today: the site
@@ -73,11 +75,13 @@ const SITE_PAGES: ReadonlyArray<readonly [string, () => string]> = [
   ['/about', at(enAboutPage, {})],
   ['/privacy', at(enPrivacyPage, {})],
   ['/terms', at(enTermsPage, {})],
+  ['/learners', at(enLearnersPage, {})],
   ...siteLocaleParams().flatMap(({ locale }) => [
     [`/${locale}`, at(locLandingPage, { locale })] as const,
     [`/${locale}/about`, at(locAboutPage, { locale })] as const,
     [`/${locale}/privacy`, at(locPrivacyPage, { locale })] as const,
     [`/${locale}/terms`, at(locTermsPage, { locale })] as const,
+    [`/${locale}/learners`, at(locLearnersPage, { locale })] as const,
   ]),
 ];
 

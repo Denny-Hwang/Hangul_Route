@@ -41,12 +41,12 @@ describe('siteAlternates (hreflang)', () => {
 });
 
 describe('siteMetadataFor', () => {
-  it('lists the four site pages', () => {
-    expect(SITE_PAGES).toEqual(['/', '/about', '/privacy', '/terms']);
+  it('lists the site pages: home, About, the legal pages and /learners (F-SITE-002 S-4a)', () => {
+    expect(SITE_PAGES).toEqual(['/', '/about', '/privacy', '/terms', '/learners']);
   });
 
   it('English while only English ships: the site metadata as before, plus the base for absolute URLs', () => {
-    for (const page of SITE_PAGES) {
+    for (const page of ['/', '/about', '/privacy', '/terms'] as const) {
       const meta = siteMetadataFor('en', page);
       const { metadataBase, ...rest } = meta;
       expect(rest).toEqual(siteMetadata);
@@ -71,6 +71,25 @@ describe('siteMetadataFor', () => {
     expect(meta.alternates).toEqual({ canonical: locale === 'en' ? '/terms' : `/${locale}/terms`, ...siteAlternates('/terms', true) });
     expect(siteMetadataFor(locale, '/', true).alternates?.canonical).toBe(locale === 'en' ? '/' : `/${locale}`);
     expect(meta.openGraph).toMatchObject({ locale: LOCALE_META[locale].ogLocale });
+  });
+
+  it.each(['en', 'es', 'ko'] as const)('%s /learners: its own title and description, in <title>, Open Graph and Twitter', (locale) => {
+    const meta = siteMetadataFor(locale, '/learners', false);
+    const site = getMessages(locale).landing.meta;
+    const { title, description } = site.pages.learners;
+    expect(meta.title).toBe(title);
+    expect(meta.description).toBe(description);
+    expect(meta.openGraph).toMatchObject({ title, description, locale: LOCALE_META[locale].ogLocale, siteName: getMessages(locale).landing.brand.name });
+    expect(meta.twitter).toMatchObject({ title, description });
+    expect(meta.keywords).toEqual([...site.keywords]);
+    expect(meta.metadataBase).toEqual(new URL(SITE_URL));
+  });
+
+  it('/learners links itself in every shown locale on a QA build', () => {
+    expect(siteAlternates('/learners', true)).toEqual({
+      languages: { en: '/learners', es: '/es/learners', ko: '/ko/learners', 'x-default': '/learners' },
+    });
+    expect(siteMetadataFor('es', '/learners', true).alternates?.canonical).toBe('/es/learners');
   });
 
   it('the site address is the production origin (hreflang URLs are absolute)', () => {

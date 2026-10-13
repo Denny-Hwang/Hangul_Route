@@ -17,11 +17,13 @@ import * as consoleLayout from '../(console)/layout';
 import * as enAboutPage from '../(en)/about/page';
 import * as enLayout from '../(en)/layout';
 import * as enLandingPage from '../(en)/page';
+import * as enLearnersPage from '../(en)/learners/page';
 import * as enPrivacyPage from '../(en)/privacy/page';
 import * as enTermsPage from '../(en)/terms/page';
 import * as locAboutPage from '../(loc)/[locale]/about/page';
 import * as locLayout from '../(loc)/[locale]/layout';
 import * as locLandingPage from '../(loc)/[locale]/page';
+import * as locLearnersPage from '../(loc)/[locale]/learners/page';
 import * as locPrivacyPage from '../(loc)/[locale]/privacy/page';
 import * as locTermsPage from '../(loc)/[locale]/terms/page';
 import * as rootLayout from '../layout';
@@ -31,7 +33,7 @@ import * as notFoundPage from '../not-found';
  * F-I18N-001 PR 11b, §3.4: the static export has no middleware, and the root layout cannot see a
  * `[locale]` param unless it lives inside that segment. So the app is three route groups, each rendering
  * its own `<html>` (the top layout holds only the stylesheet and the site metadata):
- *   (en)              `/`, `/about`, `/privacy`, `/terms` with `<html lang="en">`
+ *   (en)              `/`, `/about`, `/privacy`, `/terms`, `/learners` with `<html lang="en">`
  *   (loc)/[locale]    the same pages under `/es` and `/ko` with `<html lang={locale}>`; a locale that
  *                     has not shipped is marked and removed from the export after the build
  *   (console)         `/teach`, `/parent`, `/design-preview`, `<html lang="en">`, client-side locale
@@ -59,7 +61,7 @@ function walk(dir: string, base: string = dir): string[] {
 type LayoutProps = { children: ReactNode; params?: { locale: string } };
 type PageProps = { params: { locale: string } };
 
-const SITE_PAGES = ['page.tsx', join('about', 'page.tsx'), join('privacy', 'page.tsx'), join('terms', 'page.tsx')];
+const SITE_PAGES = ['page.tsx', join('about', 'page.tsx'), join('privacy', 'page.tsx'), join('terms', 'page.tsx'), join('learners', 'page.tsx')];
 
 describe('three route groups, each with its own document', () => {
   it('the top layout carries the stylesheet and the site metadata, and renders no <html>', () => {
@@ -179,6 +181,7 @@ describe('/es and /ko are prerendered but hidden until shipped', () => {
     'about/page': locAboutPage,
     'privacy/page': locPrivacyPage,
     'terms/page': locTermsPage,
+    'learners/page': locLearnersPage,
   } as const;
 
   it.each(Object.keys(LOCALE_PAGES) as Array<keyof typeof LOCALE_PAGES>)('(loc)/[locale]/%s is a 404 for a locale that is not a site locale', (page) => {
@@ -195,6 +198,7 @@ describe('locale pages are the English pages with locale links', () => {
     ['about', enAboutPage, locAboutPage],
     ['privacy', enPrivacyPage, locPrivacyPage],
     ['terms', enTermsPage, locTermsPage],
+    ['learners', enLearnersPage, locLearnersPage],
   ] as const;
 
   const hrefs = (html: string): string[] => [...html.matchAll(/href="([^"]*)"/g)].map((m) => m[1] ?? '');
@@ -223,7 +227,7 @@ describe('locale pages are the English pages with locale links', () => {
       const toLocale = (href: string): string =>
         href === '/'
           ? `/${locale}`
-          : ['/about', '/privacy', '/terms'].includes(href)
+          : ['/about', '/privacy', '/terms', '/learners', '/parents', '/teachers'].includes(href)
             ? `/${locale}${href}`
             : href === 'https://app.hangulroute.com'
               ? `${href}?lang=${locale}`

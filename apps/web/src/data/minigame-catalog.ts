@@ -105,3 +105,12 @@ export const minigameCatalog: LandingMinigame[] = [
     status: 'beta',
   },
 ];
+
+/** Mini-games the learner plays by speaking (the beta voice echo). */
+export const SPEAKING_GAME_KINDS: readonly string[] = ['voice-echo'];
+
+/**
+ * The mini-games the layered site shows on `/learners`: reading, listening and writing only, so no speaking game
+ * (owner decision 2026-10-10; F-SITE-002 §3.4 "no speaking line anywhere").
+ */
+export const siteGames: readonly LandingMinigame[] = minigameCatalog.filter((game) => !SPEAKING_GAME_KINDS.includes(game.kind));
