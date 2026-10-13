@@ -96,9 +96,10 @@ describe('stagePillState', () => {
 });
 
 describe('completeStages: which stage rows read Complete', () => {
+  const AT = '2026-10-01T09:00:00.000Z';
   const stage1Done = gridEpisodes(episodesAll)
     .filter((e) => e.stage === 'stage1')
-    .flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id, completedAt: '2026-10-01T09:00:00.000Z' })));
+    .flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id, startedAt: AT, completedAt: AT, stars: 1 as const, attempts: 1, accuracy: 0.5 })));
 
   it('is empty for a new learner', () => {
     expect(completeStages({ quests: [] }, episodesAll)).toEqual(new Set());
@@ -124,7 +125,7 @@ describe('completeStages: which stage rows read Complete', () => {
   it('never completes a taste stage from its shipped quests alone', () => {
     const stage2 = gridEpisodes(episodesAll)
       .filter((e) => e.stage === 'stage2')
-      .flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id, completedAt: '2026-10-01T09:00:00.000Z' })));
+      .flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id, startedAt: AT, completedAt: AT, stars: 1 as const, attempts: 1, accuracy: 0.5 })));
     expect(completeStages({ quests: stage2 }, episodesAll).has('stage2')).toBe(false);
   });
 });

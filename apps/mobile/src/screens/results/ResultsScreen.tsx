@@ -54,6 +54,7 @@ import { episodeReturn } from '../../logic/layout/quest-return';
 import { applyQuestResult, type QuestResultOutcome } from '../../logic/results-award';
 import { resultsCheerMessage, resultsHeadline } from '../../logic/results-copy';
 import { extraCardsAnnouncement, extraCardsView } from '../../logic/results-extra-cards';
+import { PRIZE_STAGE, opensStagePrize } from '../../logic/stage1/stage-complete';
 import { emptyBookmarks } from '../../logic/story/bookmarks';
 import { resultsStoryOf, storyResultsActionEvent, storyResultsExtras } from '../../logic/story/results-extras';
 import { bookmarkClearedByResults } from '../../logic/story/resume';
@@ -222,7 +223,9 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
     const event = offplanFinishedEvent(profile.id, planBefore.current, questId, episodesAll);
     if (event) void track(event);
   }, [profile, total, questId, routeInput]);
-  const actions = resultsActions(teaser);
+  // The run that completed Stage 1 leads to its ceremony (F-QUEST-002 §3.8): See your Stage 1 prize is the one primary.
+  const stagePrize = opensStagePrize(outcome);
+  const actions = resultsActions(teaser, stagePrize);
 
   // The story variant (F-STORY-003 §3.7): a story quest whose story is bundled gets the story card and
   // its own actions (one primary: Next story, else Back home), in place of "Next up" and the two
@@ -384,12 +387,25 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
           ) : null}
 
           <Spacer size="xl" />
-          {teaser ? (
+          {actions.stagePrize ? (
+            <>
+              <Button
+                label={m.stagePrize.cta}
+                tone={actions.stagePrize.tone}
+                size={actions.stagePrize.size}
+                fullWidth
+                testID="results-stage-prize"
+                onPress={() => navigation.navigate('StageComplete', { stageKey: PRIZE_STAGE })}
+              />
+              <Spacer size="sm" />
+            </>
+          ) : null}
+          {teaser && actions.teaser ? (
             <>
               <Button
                 label={teaserCtaLabel(teaser, m.nextUp)}
-                tone="primary"
-                size="hero"
+                tone={actions.teaser.tone}
+                size={actions.teaser.size}
                 fullWidth
                 onPress={() => {
                   if (profile) {
