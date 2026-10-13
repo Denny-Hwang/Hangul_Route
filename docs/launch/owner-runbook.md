@@ -396,9 +396,12 @@ DELETE FROM feedback_notes WHERE id = '<note_id>' AND NOT EXISTS (SELECT 1 FROM 
 **선행 조건 (모두 예일 때만)**
 1. F-ENT-003 E3-12b 와 E3-12c 가 머지됨 (어른 화면의 무료 레슨 줄).
 2. 다음 문구 그룹의 ko · es 오버레이가 들어 있고 원어민 검토를 마침: `console.access`, `console.curriculum.freeDays`, `caregiver.access`, `caregiver.plan.freePlan`. 없으면 한국어·스페인어 콘솔과 Plan 화면이 이 줄들을 영어로 보여 준다.
-3. 배포할 커밋에서 스위치를 켠 e2e 레인이 통과함 (저장소 쪽에서 돌리고 결과를 PR 에 남긴다):
+3. 배포할 커밋에서 스위치를 켠 e2e 레인이 통과함 (F-ENT-003 E3-13 부터 CI 레인이 있다):
+   - CI 레인: GitHub → Actions → **Switch-on e2e (content gating on)** → **Run workflow** (브랜치 `main`, 배포할 커밋이 main 의 맨 위일 때). 쪽지 빌드 플래그도 같은 릴리스에서 켜면 **notes** 를 체크한다 (앱과 콘솔의 쪽지 플래그를 함께 켜고, `E2E_NOTES` 를 읽는 모든 spec 도 `E2E_NOTES=1` 로 돈다). 잡 **PWA · switch-on e2e (content gating on, nightly and on demand)** 가 초록이고, 그 실행의 커밋 SHA 가 배포할 커밋과 같아야 한다. 이 잡은 두 스위치를 켠 `dist` 를 Metro · Next 캐시 없이 빌드하고, `E2E_CONTENT_GATING` 을 읽는 모든 spec 을 `E2E_CONTENT_GATING=1` 로 (새 spec 도 자동으로) 돌린 뒤, 게이팅 픽스처 번들에서 `story-shelf-gated.spec` 과 `free-days.spec` 을 돌린다. 매일 밤 (UTC 09:23) main 에서도 같은 잡이 돈다. 필수 체크가 아니므로, 빨간 밤 실행은 머지를 막지 않고 알림도 소유자에게 오지 않을 수 있다. 스위치를 켜기 전에 이 워크플로의 최근 밤 실행 결과를 직접 확인한다.
+   - main 이 배포할 커밋보다 앞서 나갔으면: 그 SHA 에 브랜치나 태그를 만들고 (`git push origin <SHA>:refs/heads/switch-on-check`), **Run workflow** 에서 그 브랜치를 고른 뒤, 실행의 SHA 가 배포할 커밋과 같은지 확인한다. 그렇게 할 수 없으면 아래 수동 실행을 쓴다.
+   - 아래 수동 실행은 CI 레인을 돌릴 수 없을 때의 대안이다 (같은 내용).
    - 스위치를 켠 빌드 (운영과 같은 두 변수, 콘솔도 스위치가 켜진 채로 합쳐진다): `EXPO_PUBLIC_CONTENT_GATING_ENABLED=true NEXT_PUBLIC_CONTENT_GATING_ENABLED=true pnpm --filter @hangul-route/mobile build:web`, 그다음 `E2E_CONTENT_GATING=1 pnpm --filter @hangul-route/mobile exec playwright test free-days plan-next plan-free-lines free-end episode-access dashboard-free-line`
-   - 스위치를 켠 레인은 `E2E_CONTENT_GATING` 을 읽는 모든 spec 이다. 새 spec 이 빠지지 않게 목록을 `git grep -l E2E_CONTENT_GATING apps/mobile/e2e/web` 으로 다시 확인한다. 쪽지 빌드 플래그도 같은 릴리스에서 켜면 `E2E_NOTES=1 E2E_CONTENT_GATING=1 pnpm --filter @hangul-route/mobile exec playwright test notes-screens` 도 돌린다 (쪽지 플래그도 켠 빌드에서). F-ENT-003 E3-13 의 CI 레인이 생기기 전까지는 이 수동 실행이 유일한 확인이므로, 결과에 커밋 SHA 를 함께 적는다.
+   - 스위치를 켠 레인은 `E2E_CONTENT_GATING` 을 읽는 모든 spec 이다. 새 spec 이 빠지지 않게 목록을 `git grep -l E2E_CONTENT_GATING apps/mobile/e2e/web` 으로 다시 확인한다. 쪽지 빌드 플래그도 같은 릴리스에서 켜면 `E2E_NOTES=1 E2E_CONTENT_GATING=1 pnpm --filter @hangul-route/mobile exec playwright test notes-screens notes-grown-up` 도 돌린다 (빌드에 `EXPO_PUBLIC_NOTES_ENABLED=true NEXT_PUBLIC_NOTES_ENABLED=true` 도 더해서). 수동으로 돌렸으면 결과에 커밋 SHA 를 함께 적는다.
    - 게이팅 픽스처 번들: `pnpm --filter @hangul-route/mobile build:web:fixtures:gated`, 그다음 `STORY_FIXTURES_GATED=1 pnpm --filter @hangul-route/mobile exec playwright test story-shelf-gated.spec free-days`
    - 같은 커밋의 CI `Build PWA · offline e2e` 가 초록 (shard 1 이 게이팅 픽스처 번들에서 `story-shelf-gated.spec` 과 `free-days.spec` 의 직접 이동 케이스를 돌린다, F-STORY-004 PR 4.8b 의 릴리스 게이트).
 4. F-STORY-004 PR 4.8d (고정된 Home 카드의 접근 재확인, #488) 와 PR 4.8e (Home 카드를 누를 때의 접근 확인) 가 머지됨.
