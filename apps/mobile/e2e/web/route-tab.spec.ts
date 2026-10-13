@@ -8,30 +8,26 @@ import { shot } from './shots';
 /**
  * The Route tab (AMENDMENTS-ROUTE-LEARNING-ROUTE LR-4, section 5.1 and 5.2;
  * design/screens/learning-route/tab-bar.md, mock/tab-bar.html and
- * mock/route-tab.html). The tab lives behind `flags.myRouteEnabled` (off), so
- * a default build checks that the bar is the three tabs of today, and a build
- * made with the flag on checks the four-tab bar:
- *
- *   EXPO_PUBLIC_MY_ROUTE_ENABLED=true pnpm --filter @hangul-route/mobile build:web
- *   E2E_MY_ROUTE=1 pnpm --filter @hangul-route/mobile exec playwright test route-tab
+ * mock/route-tab.html). `flags.myRouteEnabled` is on by default since the
+ * F-ROUTE-001 R-10b beta flip, so every build has the four-tab bar and CI
+ * runs this spec on the release build (the three-tab bar of a build made with
+ * `EXPO_PUBLIC_MY_ROUTE_ENABLED=false` is pinned by `mainTabs` unit tests).
  *
  * The label fit runs per UI locale the build ships (`availableLocales`; add
  * `EXPO_PUBLIC_SHOW_ALL_LOCALES=1` to the build and `E2E_ALL_LOCALES=1` to the
- * run for the hidden ones). R-10 keeps the flag flip and LR-10 the route card.
+ * run for the hidden ones).
  *
- * LR-10 (amendment section 13) adds two entry cases to the flag-on block:
- * (a) the parent dashboard row of the active learner, through the PIN gate,
- * opens the read-only page; (b) a finished level check's "See Learning Route"
- * opens the Route tab. The level check has no learner entry while
- * `flags.placementEnabled` is off, so (b) opens it through the fixture
- * bundle's `window.__hrPlacementE2E` hook: build that bundle with the same
- * flags and run with `STORY_FIXTURES=1` as well:
+ * LR-10 (amendment section 13) adds two entry cases: (a) the parent dashboard
+ * row of the active learner, through the PIN gate, opens the read-only page;
+ * (b) a finished level check's "See Learning Route" opens the Route tab. The
+ * level check has no learner entry while `flags.placementEnabled` is off, so
+ * (b) opens it through the fixture bundle's `window.__hrPlacementE2E` hook and
+ * runs in CI's fixture run (its own describe, "the level check entry"):
  *
- *   EXPO_PUBLIC_MY_ROUTE_ENABLED=true pnpm --filter @hangul-route/mobile build:web:fixtures
- *   STORY_FIXTURES=1 E2E_MY_ROUTE=1 pnpm --filter @hangul-route/mobile exec playwright test route-tab
+ *   pnpm --filter @hangul-route/mobile build:web:fixtures
+ *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test route-tab -g "level check entry"
  */
 
-const ROUTE_TAB = process.env.E2E_MY_ROUTE === '1';
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
 const LOCALES: UiLocale[] = availableLocales(process.env.E2E_ALL_LOCALES === '1');
 const en = getMessages('en');
@@ -105,21 +101,7 @@ async function learnerOnHome(page: Page): Promise<void> {
   await closeInstallGuide(page);
 }
 
-test.describe('flag off: the bar is the three tabs of today', () => {
-  test.skip(ROUTE_TAB, 'a build made with EXPO_PUBLIC_MY_ROUTE_ENABLED=true has the four-tab bar');
-  test.use({ viewport: { width: 320, height: 568 } });
-
-  test('Today, Journey, Library and no Route tab', async ({ page }) => {
-    await learnerOnHome(page);
-    await expect(tabLinks(page)).toHaveCount(3);
-    await expect(page.getByRole('tablist').getByRole('link', { name: en.a11y.myRoute.tab })).toHaveCount(0);
-    expect((await labelFit(page)).map((l) => l.text)).toEqual([en.a11y.tabs.home, en.a11y.tabs.journey, en.a11y.tabs.library]);
-  });
-});
-
-test.describe('flag on: the Route tab (LR-4)', () => {
-  test.skip(!ROUTE_TAB, 'needs a build made with EXPO_PUBLIC_MY_ROUTE_ENABLED=true (E2E_MY_ROUTE=1)');
-
+test.describe('the Route tab (LR-4)', () => {
   for (const locale of LOCALES) {
     test(`320 x 568, ${locale}: Today, Route, Journey, Library; each label fits its item; Route is announced as Learning Route`, async ({ page }) => {
       await page.setViewportSize({ width: 320, height: 568 });
@@ -297,9 +279,12 @@ test.describe('flag on: the Route tab (LR-4)', () => {
     await page.getByRole('button', { name: en.a11y.goBack, exact: true }).click();
     await expect(page.getByTestId(`dashboard-route-${id}-open`)).toBeVisible();
   });
+});
+
+test.describe('the level check entry (LR-10 case b)', () => {
+  test.skip(!FIXTURE_BUILD, 'the level check opens through the fixture bundle hook (STORY_FIXTURES=1, dist-e2e/)');
 
   test("(b) a finished level check's See Learning Route opens the Route tab", async ({ page }) => {
-    test.skip(!FIXTURE_BUILD, 'the level check opens through the fixture bundle hook (STORY_FIXTURES=1, dist-e2e/)');
     await page.setViewportSize({ width: 375, height: 667 });
     await learnerOnHome(page);
     type E2eWindow = Window & { __hrPlacementE2E?: { open(source: string): void } };

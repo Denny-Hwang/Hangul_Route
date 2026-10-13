@@ -8,18 +8,18 @@ import { shot } from './shots';
 /**
  * The Learning Route page as the Route tab and its route card (AMENDMENTS-ROUTE-LEARNING-ROUTE section 12,
  * `my-route.spec.ts` row, LR-10; design/screens/learning-route/route-card.md and tab-bar.md). F-ROUTE-001 R-10
- * extends this spec with the Home strip entry and flips the flag; until then the whole spec needs a build made
- * with the flag on:
+ * extends this spec with the Home strip entry; `flags.myRouteEnabled` is on by default since the R-10b flip, so CI
+ * runs this spec on the release build, and the assumption h case on the gating fixture bundle. The evidence run
+ * with every UI locale and the telemetry case:
  *
- *   EXPO_PUBLIC_MY_ROUTE_ENABLED=true EXPO_PUBLIC_SHOW_ALL_LOCALES=1 EXPO_PUBLIC_API_BASE_URL=https://api.e2e.invalid \
+ *   EXPO_PUBLIC_SHOW_ALL_LOCALES=1 EXPO_PUBLIC_API_BASE_URL=https://api.e2e.invalid \
  *     pnpm --filter @hangul-route/mobile build:web
- *   E2E_MY_ROUTE=1 E2E_ALL_LOCALES=1 E2E_TELEMETRY=1 pnpm --filter @hangul-route/mobile exec playwright test my-route route-tab
+ *   E2E_ALL_LOCALES=1 E2E_TELEMETRY=1 pnpm --filter @hangul-route/mobile exec playwright test my-route route-tab
  *
- * CI builds with the flag off, so it skips this spec. The tab labels per shipped UI locale are measured by
- * `route-tab.spec.ts`; the 5-second comprehension check (LR-OD-3, assumption g) reads this spec's screenshots.
+ * The tab labels per shipped UI locale are measured by `route-tab.spec.ts`; the 5-second comprehension check
+ * (LR-OD-3, assumption g) reads this spec's screenshots.
  */
 
-const ROUTE_TAB = process.env.E2E_MY_ROUTE === '1';
 /** The gating fixture bundle (`build:web:fixtures:gated`, served from dist-e2e-gated/): the free-plan switch on. */
 const GATED_BUILD = process.env.STORY_FIXTURES_GATED === '1';
 const en = getMessages('en');
@@ -161,7 +161,6 @@ async function openRouteTab(page: Page): Promise<Locator> {
 }
 
 test.describe('the Route tab and its route card (LR-10)', () => {
-  test.skip(!ROUTE_TAB, 'needs a build made with EXPO_PUBLIC_MY_ROUTE_ENABLED=true (E2E_MY_ROUTE=1)');
 
   for (const size of VIEWPORTS) {
     test(`${size.width} x ${size.height}: four tabs, the route card's words, the goal tag on the trail, no side scroll`, async ({ page }) => {
@@ -294,9 +293,9 @@ test.describe('the Route tab and its route card (LR-10)', () => {
 
   test('320 x 568: "Not open yet" and "Coming later" share the dotted ring and are told apart by their words and the legend (assumption h)', async ({ page }) => {
     // A free learner on the gating fixture bundle: Stage 2's playable quests are not open (F-ENT-003), its other
-    // cells are coming later. Build it with the flag on:
-    //   EXPO_PUBLIC_MY_ROUTE_ENABLED=true pnpm --filter @hangul-route/mobile build:web:fixtures:gated
-    //   STORY_FIXTURES_GATED=1 E2E_MY_ROUTE=1 pnpm --filter @hangul-route/mobile exec playwright test my-route -g "assumption h"
+    // cells are coming later. CI's gating run plays it:
+    //   pnpm --filter @hangul-route/mobile build:web:fixtures:gated
+    //   STORY_FIXTURES_GATED=1 pnpm --filter @hangul-route/mobile exec playwright test my-route.spec -g "assumption h"
     test.skip(!GATED_BUILD, 'needs the gating fixture bundle (STORY_FIXTURES_GATED=1, dist-e2e-gated/)');
     await page.setViewportSize({ width: 320, height: 568 });
     await learnerOnHome(page);
@@ -336,8 +335,8 @@ test.describe('the Route tab and its route card (LR-10)', () => {
  * The telemetry case needs a build with an API address, so `track` posts (the route below answers it; nothing
  * leaves the machine):
  *
- *   EXPO_PUBLIC_MY_ROUTE_ENABLED=true EXPO_PUBLIC_API_BASE_URL=https://api.e2e.invalid pnpm --filter @hangul-route/mobile build:web
- *   E2E_MY_ROUTE=1 E2E_TELEMETRY=1 pnpm --filter @hangul-route/mobile exec playwright test my-route -g "Home strip"
+ *   EXPO_PUBLIC_API_BASE_URL=https://api.e2e.invalid pnpm --filter @hangul-route/mobile build:web
+ *   E2E_TELEMETRY=1 pnpm --filter @hangul-route/mobile exec playwright test my-route -g "Home strip"
  *
  * Without E2E_TELEMETRY=1 that case is reported as skipped, not passed. The flip PR's evidence run is the full
  * command in the file header, which sets both.
@@ -345,7 +344,6 @@ test.describe('the Route tab and its route card (LR-10)', () => {
 const TELEMETRY_BUILD = process.env.E2E_TELEMETRY === '1';
 
 test.describe('the Home strip entry (R-10)', () => {
-  test.skip(!ROUTE_TAB, 'needs a build made with EXPO_PUBLIC_MY_ROUTE_ENABLED=true (E2E_MY_ROUTE=1)');
   test.use({ serviceWorkers: 'block' });
 
   for (const size of [

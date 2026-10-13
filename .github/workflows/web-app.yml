@@ -334,6 +334,10 @@ jobs:
             # F-AUDIO-004 A-6: the clip path (precache, runtime cache, offline clip, clip > voice) on
             # the fixture tones; only that group, since the voice tests expect the release build.
             list audio -g "bundled clips"
+            # F-ROUTE-001 R-10b (LR-10 case b): a finished level check's See Learning Route opens the
+            # Route tab, through the fixture bundle's level check hook; the spec's other groups run on
+            # the release build.
+            list route-tab -g "level check entry"
           } > "$RUNNER_TEMP/all-tests.txt"
           node ../../scripts/e2e-shard-list.mjs --shard "$SHARD" < "$RUNNER_TEMP/all-tests.txt" > "$RUNNER_TEMP/shard-tests.txt"
           # The list must select exactly one test per line (none lost, none doubled).
@@ -352,13 +356,21 @@ jobs:
       # run it and this run never runs theirs. Release gate: a build that turns
       # contentGatingEnabled on depends on it. F-ENT-003 E3-11: free-days.spec
       # runs here too; only its gating fixture group (the QuestPlayer guard on a
-      # closed quest) runs on this bundle, its other groups skip.
+      # closed quest) runs on this bundle, its other groups skip. F-ROUTE-001
+      # R-10b: my-route.spec's assumption h case ("Not open yet" and "Coming
+      # later" on a free learner's Learning Route) runs here, only that case.
       - name: Offline e2e (gating fixture bundle, shard 1)
         if: ${{ !cancelled() && matrix.shard == 1 }}
         working-directory: apps/mobile
         env:
           STORY_FIXTURES_GATED: "1"
-        run: pnpm exec playwright test story-shelf-gated.spec free-days.spec
+        shell: bash
+        run: |
+          # Both lines run, so one failing does not hide the other's result.
+          status=0
+          pnpm exec playwright test story-shelf-gated.spec free-days.spec || status=1
+          pnpm exec playwright test my-route.spec -g "assumption h" || status=1
+          exit "$status"
 
       # F-PLAN-002 P2-8 (section 6, before the flip of flags.routeEnabled): the
       # weekly plan bundle. E2E_ROUTE=1 serves dist-e2e-route/ and turns on the
