@@ -7,15 +7,19 @@ import {
   STARTING_LEVELS,
   STARTING_POINT_IDS,
   THEMES,
+  routesAfterStart,
+  setupBasisOf,
   setupFromChoice,
   setupFromStored,
   setupParams,
   startingPointOf,
   stepReady,
   toggleTheme,
+  tooManyItems,
   type SetupContext,
   type SetupState,
 } from '../setup-flow';
+import { selfRouteOf } from '../self-route';
 
 const TODAY = '2026-10-12';
 const proposal = safePropose(proposalInputOf({ placements: undefined, completedQuestIds: [], ageGroup: '8-9', unlockedStages: ['stage1'], today: TODAY }))!;
@@ -131,5 +135,70 @@ describe('setup steps (F-PLAN-002 section 3.9, wireframe G1)', () => {
     expect(other.level).toEqual({ stage: 'stage1', band: 0 });
     expect(other.placedOutQuestIds).toBeUndefined();
     expect(setupParams({ ...ctx, level: { stage: 'stage1', band: 0 } }, state({ start: 'brand-new' })).placedOutQuestIds).toBeUndefined();
+  });
+});
+
+describe('what the set-up steps start from (section 3.9: the proposal or the plan in force)', () => {
+  const stored = selfRouteOf(
+    generateCurriculum(
+      {
+        audience: 'self',
+        level: { stage: 'stage2', band: 1 },
+        placedOutQuestIds: ['quest:stage1-letters-q1'],
+        startDate: '2026-09-01',
+        weeks: 26,
+        sessionsPerWeek: 4,
+        minutesPerSession: 10,
+        goals: { focus: 'culture', motivation: 'kculture' },
+        unlockedStages: ['stage1'],
+      },
+      CATALOG,
+    ),
+    'route:r-0001',
+    '2026-09-01T08:00:00.000Z',
+  );
+
+  it('the plan in force wins: its level, placed-out set and motivation, with today\'s tier and completions', () => {
+    const basis = setupBasisOf({ active: stored, proposal, completedQuestIds: ['quest:x'], unlockedStages: ['stage1', 'stage2'], today: TODAY });
+    expect(basis?.ctx).toEqual({
+      completedQuestIds: ['quest:x'],
+      unlockedStages: ['stage1', 'stage2'],
+      level: { stage: 'stage2', band: 1 },
+      placedOutQuestIds: ['quest:stage1-letters-q1'],
+      motivation: 'kculture',
+    });
+    expect(basis?.state).toMatchObject({ pace: 'brisk', length: '6-month', minutes: 10, start: 'first-words', focus: 'culture', startDate: TODAY });
+  });
+
+  it('without a plan: the proposal\'s params, and the choice made on it when one is passed', () => {
+    const basis = setupBasisOf({ active: null, proposal, completedQuestIds: [], unlockedStages: ['stage1'], today: TODAY });
+    expect(basis?.ctx).toEqual({ completedQuestIds: [], unlockedStages: ['stage1'], level: proposal.params.level });
+    expect(basis?.state).toEqual(setupFromChoice(initialChoice(proposal), proposal.params));
+    const choice: PlanChoice = { ...initialChoice(proposal), pace: 'gentle', minutes: 5 };
+    expect(setupBasisOf({ active: null, proposal, choice, completedQuestIds: [], unlockedStages: ['stage1'], today: TODAY })?.state).toMatchObject({ pace: 'gentle', minutes: 5 });
+    const placed = { ...proposal, params: { ...proposal.params, placedOutQuestIds: ['quest:a'], goals: { focus: 'balanced' as const, motivation: 'heritage' as const } } };
+    expect(setupBasisOf({ active: null, proposal: placed, completedQuestIds: [], unlockedStages: ['stage1'], today: TODAY })?.ctx).toMatchObject({ placedOutQuestIds: ['quest:a'], motivation: 'heritage' });
+  });
+
+  it('nothing to start from: null', () => {
+    expect(setupBasisOf({ active: null, proposal: null, completedQuestIds: [], unlockedStages: ['stage1'], today: TODAY })).toBeNull();
+  });
+
+  it('more items than a plan holds stops the length step (section 3.11)', () => {
+    expect(tooManyItems(state({ pace: 'brisk', length: '6-month' }))).toBe(false);
+    expect(tooManyItems(state({ pace: 'brisk', length: 'custom', customWeeks: 52 }))).toBe(false);
+    expect(tooManyItems({ ...state({ length: 'custom', customWeeks: 52 }), days: ['sun', 'mon', 'tue', 'wed', 'thu', 'fri'] })).toBe(true);
+    expect(stepReady('length', { ...state({ length: 'custom', customWeeks: 52 }), days: ['sun', 'mon', 'tue', 'wed', 'thu', 'fri'] })).toBe(false);
+  });
+});
+
+describe('leaving the plan screens after Start this plan', () => {
+  it('drops the proposal, set-up and preview screens and ends on the overview', () => {
+    const routes = [{ name: 'Main' }, { name: 'Profile' }, { name: 'RouteProposal' }, { name: 'RouteSetup' }, { name: 'RoutePreview' }];
+    expect(routesAfterStart(routes, { name: 'RouteOverview' })).toEqual([{ name: 'Main' }, { name: 'Profile' }, { name: 'RouteOverview' }]);
+    expect(routesAfterStart([{ name: 'Main' }, { name: 'RouteOverview' }, { name: 'RouteSetup' }, { name: 'RoutePreview' }], { name: 'RouteOverview' })).toEqual([
+      { name: 'Main' },
+      { name: 'RouteOverview' },
+    ]);
   });
 });

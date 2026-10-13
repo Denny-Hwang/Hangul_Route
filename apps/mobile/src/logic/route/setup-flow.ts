@@ -1,4 +1,5 @@
 import {
+  CURRICULUM_MAX_ITEMS,
   LENGTH_PRESETS,
   PACES,
   ThemeKeySchema,
@@ -11,12 +12,14 @@ import {
   type Motivation,
   type PaceId,
   type PlacementLevel,
+  type RouteProposal,
+  type SelfRoute,
   type StageKey,
   type StoredCurriculumParams,
   type ThemeKey,
   type Weekday,
 } from '@hangul-route/content-schema';
-import { MINUTE_CHOICES, PACE_IDS, daysReady, weeksOfChoice, type LengthChoice, type MinuteChoice, type PlanChoice } from './proposal-flow';
+import { MINUTE_CHOICES, PACE_IDS, daysReady, initialChoice, weeksOfChoice, type LengthChoice, type MinuteChoice, type PlanChoice } from './proposal-flow';
 
 /**
  * The four set-up steps of the learner's weekly plan (F-PLAN-002 section 3.9, wireframe
@@ -103,9 +106,16 @@ export function setupFromStored(params: StoredCurriculumParams, today: DateKey):
   };
 }
 
-/** Whether a step may go on: the days match the pace on the time step; every other step always can. */
+/** More sessions than a plan holds (section 3.11: "That is more than a plan can hold."). */
+export function tooManyItems(state: SetupState): boolean {
+  return weeksOfChoice(state) * (state.days?.length ?? PACES[state.pace]) > CURRICULUM_MAX_ITEMS;
+}
+
+/** Whether a step may go on: the days match the pace on the time step, the plan fits on the length step. */
 export function stepReady(step: SetupStep, state: SetupState): boolean {
-  return step === 'time' ? daysReady(state) : true;
+  if (step === 'time') return daysReady(state);
+  if (step === 'length') return !tooManyItems(state);
+  return true;
 }
 
 /** Tap a theme: added at the end (its priority), or taken out; never more than five. */
@@ -147,3 +157,45 @@ export function setupParams(ctx: SetupContext, state: SetupState): CurriculumPar
 
 /** The lengths the "how long" step offers, the custom one last. */
 export const SETUP_LENGTHS: readonly LengthChoice[] = ['4-week', '12-week', '6-month', 'custom'];
+
+export interface SetupBasisInput {
+  /** The plan in force; its answers win, so "Change the plan" starts from what the learner follows. */
+  active: SelfRoute | null;
+  /** Hoya's proposal for a learner with no plan yet. */
+  proposal: RouteProposal | null;
+  /** The choice already shaped on the proposal screen, when the steps were opened from there. */
+  choice?: PlanChoice;
+  completedQuestIds: readonly string[];
+  unlockedStages: readonly StageKey[];
+  today: DateKey;
+}
+
+/**
+ * The context and the first answers of the set-up steps (section 3.9: "prefilled from the
+ * proposal"; G1 "pre-selected from the level check"): the plan in force first, else the proposal
+ * with the choice made on it; null when there is neither.
+ */
+export function setupBasisOf(i: SetupBasisInput): { ctx: SetupContext; state: SetupState } | null {
+  const params = i.active?.meta.params ?? i.proposal?.params ?? null;
+  if (params === null) return null;
+  const ctx: SetupContext = {
+    completedQuestIds: [...i.completedQuestIds],
+    unlockedStages: [...i.unlockedStages],
+    level: params.level,
+    ...(params.placedOutQuestIds === undefined ? {} : { placedOutQuestIds: [...params.placedOutQuestIds] }),
+    ...(params.goals.motivation === undefined ? {} : { motivation: params.goals.motivation }),
+  };
+  if (i.active !== null) return { ctx, state: setupFromStored(i.active.meta.params, i.today) };
+  const proposal = i.proposal as RouteProposal;
+  return { ctx, state: setupFromChoice(i.choice ?? initialChoice(proposal), proposal.params) };
+}
+
+/** The screens of making a plan; after Start this plan none of them stays behind the overview. */
+const PLAN_FLOW = new Set(['RouteProposal', 'RouteSetup', 'RoutePreview', 'RouteOverview']);
+
+/** The stack after Start this plan: the screens below the plan flow, then the overview. */
+export function routesAfterStart<R extends { name: string }>(routes: readonly R[], overview: R): R[] {
+  const first = routes.findIndex((r) => PLAN_FLOW.has(r.name));
+  const below = first === -1 ? [...routes] : routes.slice(0, first);
+  return [...below, overview];
+}
