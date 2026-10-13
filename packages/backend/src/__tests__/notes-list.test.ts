@@ -296,10 +296,24 @@ describe('POST /:id/notes/:noteId/withdraw · take back is soft (sections 7.2, 8
     expect((await stored(n.id))?.status).toBe('live');
   });
 
-  it('a family caregiver without the owner’s grant cannot take back (feedback.send)', async () => {
+  it('take back needs no current feedback.send: a caregiver whose grant was withdrawn, or a teacher made a plain member, takes back its own notes; a non-member gets 403', async () => {
+    await db.putSendGrant({ spaceId: FAMILY, accountId: 'dad', grantedBy: 'mom', grantedAt: T });
     const n = familyNote({ senderAccountId: 'dad', senderLabel: 'dad' });
     await put(n);
-    expect((await withdraw(FAMILY, 'dad', n.id)).status).toBe(403);
+    await db.deleteSendGrant(FAMILY, 'dad');
+    const res = await withdraw(FAMILY, 'dad', n.id);
+    expect(res.status).toBe(200);
+    expect(res.body.data).toEqual({ withdrawn: 1 });
+    expect((await stored(n.id))?.status).toBe('withdrawn');
+
+    const fromCoteacher = note({ senderAccountId: 'coteacher' });
+    await put(fromCoteacher);
+    await db.removeMembership(CLASS, 'account', 'coteacher');
+    const gone = await withdraw(CLASS, 'coteacher', fromCoteacher.id);
+    expect(gone.status).toBe(403);
+    expect(gone.body.error?.code).toBe('not_allowed');
+    expect((await stored(fromCoteacher.id))?.status).toBe('live');
+    expect((await withdraw('space:missing', 'teacher', n.id)).status).toBe(404);
   });
 
   it('a reported note answers 409 note_reported; a batch take back skips it and takes back the rest', async () => {
@@ -312,13 +326,35 @@ describe('POST /:id/notes/:noteId/withdraw · take back is soft (sections 7.2, 8
     expect(single.status).toBe(409);
     expect(single.body.error?.code).toBe('note_reported');
 
+    // the batch row keeps its first note (a, reported) as its id; take back names it with batch: true
     const [row] = rowsOf(await list(CLASS, 'teacher'));
-    expect(row).toMatchObject({ id: b.id, to: 'everyone', size: 2, status: 'sent' });
+    expect(row).toMatchObject({ id: a.id, to: 'everyone', size: 2, status: 'sent' });
     const res = await withdraw(CLASS, 'teacher', String(row!.id), { batch: true });
     expect(res.body.data).toEqual({ withdrawn: 1 });
     expect((await stored(a.id))?.status).toBe('reported');
     expect((await stored(b.id))?.status).toBe('withdrawn');
     expect(rowsOf(await list(CLASS, 'teacher'))[0]).toMatchObject({ to: 'everyone', size: 2, status: 'withdrawn' });
+  });
+
+  it('a note taken back and then reported from a device still reads withdrawn to its sender, a family adult included (rule 8.2-c)', async () => {
+    const fromMom = familyNote();
+    const fromTeacher = note();
+    await put(fromMom, fromTeacher);
+    for (const [spaceId, user, n] of [[FAMILY, 'mom', fromMom], [CLASS, 'teacher', fromTeacher]] as const) {
+      expect((await withdraw(spaceId, user, n.id)).body.data).toEqual({ withdrawn: 1 });
+      expect(await db.insertNoteReport({ id: `notereport:${n.id.slice(5)}`, noteId: n.id, learnerId: SUNI, senderAccountId: n.senderAccountId, reason: 'unkind', via: 'device', evidence: 'dev-1', reporterKey: `family:${FAMILY}`, attest: null, createdAt: new Date().toISOString(), reviewedAt: null, outcome: null })).toBe(true);
+      expect((await stored(n.id))?.status).toBe('reported');
+      expect(await statusOf(spaceId, user, n.id)).toBe('withdrawn');
+      expect(rowsOf(await list(spaceId, user)).find((r) => r.id === n.id)?.status).toBe('withdrawn');
+    }
+    // a batch taken back and then reported still reads withdrawn too
+    const batchId = 'notebatch:everyone-2';
+    const a = note({ batchId, batchKind: 'everyone' });
+    const b = note({ batchId, batchKind: 'everyone', learnerId: MIN, createdAt: a.createdAt });
+    await put(a, b);
+    expect((await withdraw(CLASS, 'teacher', b.id, { batch: true })).body.data).toEqual({ withdrawn: 2 });
+    expect(await db.insertNoteReport({ id: 'notereport:batch2', noteId: a.id, learnerId: SUNI, senderAccountId: 'teacher', reason: 'unkind', via: 'device', evidence: 'dev-1', reporterKey: `family:${FAMILY}`, attest: null, createdAt: new Date().toISOString(), reviewedAt: null, outcome: null })).toBe(true);
+    expect(rowsOf(await list(CLASS, 'teacher')).find((r) => r.batchId === batchId)).toMatchObject({ id: a.id, to: 'everyone', size: 2, status: 'withdrawn' });
   });
 
   it('refuses a body other than {} or { batch: true }', async () => {
@@ -355,14 +391,22 @@ describe('cleanup when a membership ends (section 7.5)', () => {
     expect((await stored(elsewhere.id))?.status).toBe('live');
   });
 
-  it('an adult removing a learner deletes that learner’s notes of the space only', async () => {
-    const suni = note();
-    const min = note({ learnerId: MIN });
-    await put(suni, min);
+  it('an adult removing a learner keeps that learner’s notes: a teacher cannot erase a taken-back note before the family looks', async () => {
+    const harmful = note();
+    const other = note();
+    await put(harmful, other);
+    await db.setNoteRead(harmful.id, new Date());
+    expect((await withdraw(CLASS, 'teacher', harmful.id)).status).toBe(200);
     const res = await call('DELETE', `/api/spaces/${CLASS}/members/learner/${SUNI}`, bearer('teacher'));
     expect(res.status).toBe(200);
-    expect(await stored(suni.id)).toBeNull();
-    expect((await stored(min.id))?.status).toBe('live');
+    expect((await stored(harmful.id))?.status).toBe('withdrawn');
+    expect((await stored(other.id))?.status).toBe('live');
+    // the family still sees both (D5) and delivery stops (rule 2)
+    expect((await db.notesForOversight(SUNI, { before: null, limit: 10, now: new Date() })).map((n) => n.id).sort()).toEqual([harmful.id, other.id].sort());
+    expect(await delivered()).toEqual([]);
+    // the sender's list reads not_shown for a learner no longer in the space; the taken-back one stays withdrawn
+    expect(await statusOf(CLASS, 'teacher', other.id)).toBe('not_shown');
+    expect(await statusOf(CLASS, 'teacher', harmful.id)).toBe('withdrawn');
   });
 
   it('removing a family adult deletes its send grant; a class removal touches no grant', async () => {

@@ -135,13 +135,14 @@ export interface LearnerNotesInbox {
 
 /**
  * One row of a space's sent list (GET /api/spaces/:id/notes, section 7.2, PR FB-3b): a note to chosen
- * learners, or one `everyone` batch collapsed to one of its notes (a live one while any is live, else a
- * withdrawn one). `batch` carries no count of opens or reactions, only its size and live notes (section 9).
+ * learners, or one `everyone` batch collapsed to its first note (the batch's lowest-rowid note every list
+ * still shows, so the row keeps its id and page position when a note of it is taken back). `batch` carries
+ * no count of opens or reactions, only its size, live notes and taken-back notes (section 9).
  */
 export interface SpaceNoteListRow {
   note: StoredNote;
-  /** For an `everyone` batch: the notes of the batch every list still shows, and how many are live; null otherwise. */
-  batch: { size: number; live: number } | null;
+  /** For an `everyone` batch: the notes every list still shows, how many are live, how many were taken back; null otherwise. */
+  batch: { size: number; live: number; withdrawn: number } | null;
 }
 
 /** Days a live, hidden or withdrawn note is kept and delivered (OD-9). */

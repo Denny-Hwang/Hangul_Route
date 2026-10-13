@@ -51,7 +51,7 @@ function recipientMode(space: Space, classes: NotesMode, blocked: boolean): Note
  * `not_allowed` without `feedback.send` (a caregiver without the owner's grant too), 409 for an archived
  * space. The grant row is read only for a family caregiver, and passed to `can()` with the membership.
  */
-async function sender(c: Ctx, db: Db, spaceId: string, options: { allowArchived?: boolean } = {}): Promise<Response | { account: Account; space: Space }> {
+async function sender(c: Ctx, db: Db, spaceId: string): Promise<Response | { account: Account; space: Space }> {
   const account = await requireAccount(c);
   if (!('id' in account)) return account;
   const space = await db.getSpace(spaceId);
@@ -62,7 +62,7 @@ async function sender(c: Ctx, db: Db, spaceId: string, options: { allowArchived?
   const sendGrant = space.kind === 'family' && role === 'caregiver' ? (await db.getSendGrant(space.id, account.id)) !== null : false;
   // `feedback.send` is never cascaded from a school, so the parent space is not needed here.
   if (!can(actor, 'feedback.send', { kind: 'space', ctx: { space, parent: null, sendGrant } })) return fail(c, 'not_allowed', 'You cannot send notes here', 403);
-  if (space.archivedAt && options.allowArchived !== true) return fail(c, 'space_archived', 'This space is archived', 409);
+  if (space.archivedAt) return fail(c, 'space_archived', 'This space is archived', 409);
   return { account, space };
 }
 
@@ -156,7 +156,8 @@ notesRoutes.post('/:id/notes', async (c) => {
   if (role === 'teacher') for (const learnerId of to) if ((modes.get(learnerId) ?? 'all') === 'presets') presetsOnly.push(learnerId);
 
   // The lazy retention step (section 8.7): one bounded purge per send, so old notes go even between daily runs.
-  await purgeNotesLazily(db, now);
+  // Housekeeping never fails a send: a failed step is retried by the next send and by the daily run.
+  await purgeNotesLazily(db, now).catch(() => 0);
 
   const at = now.toISOString();
   const batchId = `notebatch:${crypto.randomUUID()}`;
@@ -202,7 +203,9 @@ function withdrawBody(raw: unknown): { batch: boolean } | null {
 async function listFacts(db: Db, space: Space, notes: readonly StoredNote[]): Promise<{ facts: (n: StoredNote) => SentNoteFacts; names: Map<string, string> }> {
   const learnerIds = [...new Set(notes.map((n) => n.learnerId))];
   const senders = [...new Set(notes.map((n) => n.senderAccountId))];
-  const roles = new Map((await db.membersOf(space.id)).filter((m) => m.memberKind === 'account').map((m) => [m.memberId, m.role]));
+  const members = await db.membersOf(space.id);
+  const roles = new Map(members.filter((m) => m.memberKind === 'account').map((m) => [m.memberId, m.role]));
+  const students = new Set(members.filter((m) => m.memberKind === 'learner' && m.role === 'student').map((m) => m.memberId));
   const maySend = new Set<string>();
   for (const accountId of senders) {
     const role = roles.get(accountId);
@@ -223,6 +226,7 @@ async function listFacts(db: Db, space: Space, notes: readonly StoredNote[]): Pr
       spaceKind: space.kind,
       mode: modes.get(n.learnerId) ?? 'all',
       blocked: blocked.has(`${n.learnerId}\n${n.senderAccountId}`),
+      learnerInSpace: students.has(n.learnerId),
       senderMaySend: maySend.has(n.senderAccountId) && n.senderRole === (space.kind === 'class' ? 'teacher' : 'family'),
     }),
   };
@@ -257,7 +261,7 @@ notesRoutes.get('/:id/notes', async (c) => {
   const { facts, names } = await listFacts(db, space, page.filter((r) => r.batch === null).map((r) => r.note));
   const rows = page.map(({ note: n, batch }) => {
     const common = { id: n.id, batchId: n.batchId, presetId: n.presetId, text: n.body, suggest: n.suggest, label: n.senderLabel, createdAt: n.createdAt, mine: n.senderAccountId === account.id };
-    if (batch) return { ...common, to: 'everyone' as const, size: batch.size, status: batchStatus(n, batch) };
+    if (batch) return { ...common, to: 'everyone' as const, size: batch.size, status: batchStatus(batch) };
     const f = facts(n);
     const status = sentNoteStatus(n, f);
     return { ...common, to: 'learner' as const, learnerId: n.learnerId, displayName: names.get(n.learnerId) ?? '', status, reaction: sentNoteReaction(n, status, f) };
@@ -268,10 +272,13 @@ notesRoutes.get('/:id/notes', async (c) => {
 
 notesRoutes.post('/:id/notes/:noteId/withdraw', async (c) => {
   const db = dbFor(c);
-  // Taking a note back only lowers exposure, so an archived space allows it.
-  const who = await sender(c, db, c.req.param('id'), { allowArchived: true });
-  if (who instanceof Response) return who;
-  const { account, space } = who;
+  const account = await requireAccount(c);
+  if (!('id' in account)) return account;
+  const space = await db.getSpace(c.req.param('id'));
+  if (!space) return notFound(c);
+  // Taking a note back only lowers exposure, so it needs no current `feedback.send`: an adult member of the space
+  // takes back its own notes even after its grant or teacher role went, and an archived space allows it too.
+  if (!(await db.membership(space.id, 'account', account.id))) return fail(c, 'not_allowed', 'You cannot take back notes here', 403);
   // No body reads as `{}`; a body that is not JSON is refused like any other bad body.
   const text = await c.req.text().catch(() => '');
   let raw: unknown = {};

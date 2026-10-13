@@ -94,6 +94,15 @@ describe('the lazy purge on every send (section 8.7 item 1)', () => {
     expect(await db.getSenderHold('someone')).toBeNull();
   });
 
+  it('a failed purge step never fails the send: the note is written and the next send or daily run retries', async () => {
+    const purge = vi.spyOn(db, 'purgeNotes').mockRejectedValueOnce(new Error('D1_ERROR: timeout'));
+    const res = await app.request(`/api/spaces/${CLASS}/notes`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer teacher' }, body: JSON.stringify({ to: { kind: 'learners', ids: [SUNI] }, presetId: 'effort_proud' }) }, { NOTES_SEND: 'enabled' });
+    expect(purge).toHaveBeenCalledTimes(1);
+    purge.mockRestore();
+    expect(res.status).toBe(201);
+    expect(((await res.json()) as { data: { sent: number } }).data.sent).toBe(1);
+  });
+
   it('a send refused before the insert (switch off) purges nothing', async () => {
     expect(await db.insertNotes(old(3, 181 * DAY), [])).toBe(3);
     const res = await app.request(`/api/spaces/${CLASS}/notes`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer teacher' }, body: JSON.stringify({ to: { kind: 'learners', ids: [SUNI] }, presetId: 'effort_proud' }) }, {});

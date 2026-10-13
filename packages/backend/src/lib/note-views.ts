@@ -45,12 +45,18 @@ export interface SentNoteFacts {
   blocked: boolean;
   /** The sender still holds `feedback.send` in the space (delivery rule 6). */
   senderMaySend: boolean;
+  /** The learner is still a student of the space (delivery rule 2; an adult's removal keeps the notes, section 7.5). */
+  learnerInSpace: boolean;
 }
 
-/** The status word of section 7.2 for one note. */
-export function sentNoteStatus(note: Pick<StoredNote, 'status' | 'readAt'>, facts: SentNoteFacts): SentNoteStatus {
-  if (note.status === 'withdrawn') return 'withdrawn';
-  if (note.status !== 'live' || facts.blocked || !facts.senderMaySend) return 'not_shown';
+/**
+ * The status word of section 7.2 for one note. A note taken back reads `withdrawn` for good, from
+ * `withdrawnAt`, even after a report changes its status: otherwise a report of a taken-back note would turn
+ * it `not_shown` and tell its sender, a family adult included, that the learner reported it (rule 8.2-c).
+ */
+export function sentNoteStatus(note: Pick<StoredNote, 'status' | 'readAt' | 'withdrawnAt'>, facts: SentNoteFacts): SentNoteStatus {
+  if (note.withdrawnAt !== null || note.status === 'withdrawn') return 'withdrawn';
+  if (note.status !== 'live' || facts.blocked || !facts.senderMaySend || !facts.learnerInSpace) return 'not_shown';
   if (facts.spaceKind === 'class') return facts.mode === 'off' ? 'not_shown' : 'sent';
   return note.readAt === null ? 'sent' : 'opened';
 }
@@ -62,9 +68,12 @@ export function sentNoteReaction(note: Pick<StoredNote, 'reaction'>, status: Sen
   return note.reaction;
 }
 
-/** A collapsed `everyone` batch reads `withdrawn` once none of it is live and its representative was taken back; otherwise `sent`. */
-export function batchStatus(note: Pick<StoredNote, 'status'>, batch: { live: number }): 'sent' | 'withdrawn' {
-  return batch.live === 0 && note.status === 'withdrawn' ? 'withdrawn' : 'sent';
+/**
+ * A collapsed `everyone` batch reads `withdrawn` once none of it is live and a note of it was taken back
+ * (`withdrawnAt`, so a later report of a taken-back note changes nothing); otherwise `sent`.
+ */
+export function batchStatus(batch: { live: number; withdrawn: number }): 'sent' | 'withdrawn' {
+  return batch.live === 0 && batch.withdrawn > 0 ? 'withdrawn' : 'sent';
 }
 
 const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?Z$/;
