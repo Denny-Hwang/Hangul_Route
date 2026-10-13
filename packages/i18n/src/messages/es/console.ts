@@ -551,6 +551,11 @@ export const consoleMsgs = {
       sessionsNote: (sessions: number, weeks: number) =>
         `En total: ${plural('es', sessions, { one: `${sessions} sesión`, other: `${sessions} sesiones` })} en ${plural('es', weeks, { one: `${weeks} semana`, other: `${weeks} semanas` })}.`,
       tooMany: 'Es más de lo que cabe en un plan. Elige menos semanas o sesiones.',
+      pace: '¿Cuántos días por semana?',
+      paces: { gentle: 'Suave', steady: 'Constante', brisk: 'Ágil' },
+      paceOption: (pace: string, n: number) => `${pace} · ${plural('es', n, { one: `${n} día por semana`, other: `${n} días por semana` })}`,
+      suggested: 'Sugerido',
+      offChips: 'Los días elegidos marcan el ritmo. Elige un ritmo para ver una duración sugerida.',
     },
     goals: {
       title: '¿Qué importa más?',
@@ -689,6 +694,41 @@ export const consoleMsgs = {
       planTerm: { cta: 'Planear este periodo' },
       ownRoute: (done: number, total: number, weeks: number) =>
         `Ruta propia: ${done} / ${total} hasta ahora · ${plural('es', weeks, { one: `${weeks} semana`, other: `${weeks} semanas` })}`,
+    },
+    proposal: {
+      lessonsAndStories: (stage: number, week: number) =>
+        stage === 1
+          ? `La etapa 1 termina hacia la semana ${week}; después, historias de herencia.`
+          : `Las lecciones listas hoy terminan hacia la semana ${week}; después, historias de herencia.`,
+      lessonsCutShort: (weeks: number) => `Las primeras lecciones caben en ${weeks} semanas. Con más semanas cabe el resto.`,
+      lessonsThenFree: (weeks: number) =>
+        plural('es', weeks, {
+          one: 'Hay cerca de 1 semana de lecciones lista. El resto es práctica libre.',
+          other: `Hay cerca de ${weeks} semanas de lecciones listas. El resto es práctica libre.`,
+        }),
+      lessonsFill: (weeks: number) => `Las lecciones llenan las ${weeks} semanas.`,
+      storiesAndWords: (stories: number) =>
+        stories > 0
+          ? plural('es', stories, {
+              one: 'No quedan lecciones desde este punto: 1 historia de herencia y temas de palabras.',
+              other: `No quedan lecciones desde este punto: ${stories} historias de herencia y temas de palabras.`,
+            })
+          : 'No quedan lecciones desde este punto: temas de palabras y práctica libre.',
+    },
+    update: {
+      line: (name: string) => `La prueba más reciente de ${name} encontró un punto de partida más adelante.`,
+      cta: 'Actualizar el plan',
+      label: (name: string) => `Actualizar el plan de ${name}`,
+      ask: (removed: number, added: number, next: string | null) => {
+        const parts = [
+          ...(removed > 0 ? [plural('es', removed, { one: '1 elemento sale del plan', other: `${removed} elementos salen del plan` })] : []),
+          ...(added > 0 ? [plural('es', added, { one: '1 elemento entra en el plan', other: `${added} elementos entran en el plan` })] : []),
+        ];
+        const counts = parts.length > 0 ? ` ${parts.join(' y ')}.` : '';
+        return `¿Actualizar el plan? Avanza desde hoy y mantiene la misma fecha de fin.${counts}${next ? ` Siguiente: ${next}.` : ''} Lo hecho sigue hecho.`;
+      },
+      done: 'Actualizado. Los dispositivos reciben el plan nuevo en su próxima sincronización.',
+      failed: 'No se pudo actualizar el plan ahora. Inténtalo de nuevo.',
     },
     catalog: {
       comingSoon: (title: string) => `${title} (muy pronto)`,

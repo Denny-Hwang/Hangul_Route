@@ -17,7 +17,9 @@ import {
   type Entitlement,
   type PlanItem,
   type StageKey,
+  type ThemeKey,
   type WeekMeta,
+  type Weekday,
 } from '@hangul-route/content-schema';
 import { CATALOG_2026_10 } from '@hangul-route/content-schema/testing/catalog-2026-10';
 import { findBannedWord, getMessages } from '@hangul-route/i18n';
@@ -32,6 +34,7 @@ import {
   pacePatch,
   planUpdateOffer,
   prefilledState,
+  relearnedState,
   reseedSaveBody,
   suggestedPace,
   updateAskText,
@@ -793,7 +796,62 @@ describe('followProposal: the suggested length follows the start and the pace un
     const base = prefilledState('family', c);
     const offChips = followProposal({ ...base, sessionDays: ['mon', 'tue', 'wed', 'thu', 'fri'] }, c);
     expect(offChips.length).toBe(base.length);
+    expect(offChips.lengthPicked).toBe(false);
     expect(wizardProposal(offChips, c)).toBeNull();
+  });
+
+  it('follows the reading focus with the start until the grown-up picks a focus (F-PLC-001 AM-4)', () => {
+    const hearsMore = ctx([learner('ana', '10-11', placedWith('stage1', 1, 'stage3'))]);
+    const base = prefilledState('family', hearsMore);
+    expect(base.focus).toBe('reading');
+    // A much later start: the oral stage is no longer two stages ahead, so the reading focus ends.
+    const later = followProposal({ ...base, start: 'first-sentences' }, hearsMore);
+    expect(later.focus).toBe('balanced');
+    expect(followProposal({ ...later, start: 'some-letters' }, hearsMore).focus).toBe('reading');
+    const picked = { ...base, focus: 'stories' as const, focusPicked: true };
+    expect(followProposal({ ...picked, start: 'first-sentences' }, hearsMore).focus).toBe('stories');
+  });
+});
+
+describe('relearnedState: another learner picked in a family keeps what the grown-up chose', () => {
+  const family = [learner('kid', '5-7'), learner('sam', '10-11', placedWith('stage1', 3))];
+  const c = ctx(family);
+  const LATER_DAY = '2026-10-19';
+
+  it('the first pick (nothing touched) is the proposal for that learner', () => {
+    expect(relearnedState(prefilledState('family', c), c, 'sam')).toMatchObject({ learnerId: 'sam', start: 'reads-words', sessionsPerWeek: 3, length: '4-week' });
+  });
+
+  it('keeps the weekdays, minutes, start day, themes, focus and a picked length on a re-pick', () => {
+    const edited = {
+      ...relearnedState(prefilledState('family', c), c, 'kid'),
+      sessionDays: ['mon', 'wed', 'fri'] as Weekday[],
+      minutesPerSession: 20,
+      rhythmPicked: true,
+      startDate: LATER_DAY,
+      themes: ['crafts'] as ThemeKey[],
+      goalsPicked: true,
+      focus: 'stories' as const,
+      focusPicked: true,
+      length: '6-month' as const,
+      lengthPicked: true,
+    };
+    expect(relearnedState(edited, c, 'sam')).toMatchObject({
+      learnerId: 'sam',
+      start: 'reads-words',
+      sessionDays: ['mon', 'wed', 'fri'],
+      minutesPerSession: 20,
+      startDate: LATER_DAY,
+      themes: ['crafts'],
+      focus: 'stories',
+      length: '6-month',
+    });
+  });
+
+  it('an untouched rhythm follows the new learner (Pictures-first Gentle to Steady), and the length with it', () => {
+    const kid = relearnedState(prefilledState('family', c), c, 'kid');
+    expect(kid).toMatchObject({ sessionsPerWeek: 2, minutesPerSession: 10 });
+    expect(relearnedState(kid, c, 'sam')).toMatchObject({ sessionsPerWeek: 3, minutesPerSession: 15, length: '4-week' });
   });
 });
 
@@ -990,6 +1048,27 @@ describe('Update the plan: a family learner card after a newer level check (rese
     expect(planUpdateOffer('family', sam(placedWith('stage1', 3)), [older, newer], LATER, FROZEN)?.plan.id).toBe('plan:route-sam');
   });
 
+  it('skips a stored meta this build cannot read (a newer Worker\'s shape) and never throws in render', () => {
+    const check = sam(placedWith('stage1', 3));
+    const plan = familyRoute();
+    const newer = { ...plan, meta: { ...plan.meta, params: { ...plan.meta.params, goals: { focus: 'speaking' } } } } as unknown as typeof plan;
+    expect(() => planUpdateOffer('family', check, [newer], LATER, FROZEN)).not.toThrow();
+    expect(planUpdateOffer('family', check, [newer], LATER, FROZEN)).toBeNull();
+    const badDate = { ...plan, meta: { ...plan.meta, params: { ...plan.meta.params, startDate: 'soon' } } };
+    expect(planUpdateOffer('family', check, [badDate], LATER, FROZEN)).toBeNull();
+    // An older readable route still gets its offer when the newest one is unreadable.
+    const older = { ...plan, id: 'plan:older', publishedAt: '2026-10-01T00:00:00.000Z' };
+    expect(planUpdateOffer('family', check, [newer, older], LATER, FROZEN)?.plan.id).toBe('plan:older');
+  });
+
+  it('every placement level places out no more lessons than the params hold (40), so the seed never throws', () => {
+    for (const stage of StageKeySchema.options) {
+      for (const band of [0, 1, 2, 3]) {
+        expect(questsPlacedOutAtLevel({ stage, band }, routeCatalogOf(CATALOG)).length).toBeLessThanOrEqual(40);
+      }
+    }
+  });
+
   it('offers nothing once the route has ended (nothing ahead to move)', () => {
     expect(planUpdateOffer('family', sam(placedWith('stage1', 3)), [familyRoute()], '2027-02-01', FROZEN)).toBeNull();
   });
@@ -1001,5 +1080,22 @@ describe('Update the plan: a family learner card after a newer level check (rese
       m.update.ask(3, 1, FROZEN.quests.find((quest) => quest.id === 'quest:stage1-nature-q2')?.title ?? ''),
     );
     expect(updateAskText({ itemsRemoved: 2, itemsAdded: 0, newStartQuestId: null }, 'en', FROZEN)).toBe(m.update.ask(2, 0, null));
+  });
+
+  it('words only the joins when nothing leaves, and no count when nothing changes in number', () => {
+    expect(m.update.ask(0, 2, null)).toBe('Update the plan? It moves ahead from today and keeps the same end date. 2 items join the plan. What is done stays done.');
+    expect(m.update.ask(0, 0, null)).toBe('Update the plan? It moves ahead from today and keeps the same end date. What is done stays done.');
+    expect(m.update.ask(1, 1, null)).toBe('Update the plan? It moves ahead from today and keeps the same end date. 1 item leaves the plan, 1 joins it. What is done stays done.');
+    expect(m.update.ask(0, 2, null)).not.toMatch(/\b0\b/);
+  });
+
+  it('the Spanish console words the pace chips, the preview lines and Update the plan (no English fallback)', () => {
+    const es = getMessages('es').console.curriculum;
+    expect(es.rhythm.paceOption(es.rhythm.paces.gentle, 2)).toBe('Suave · 2 días por semana');
+    expect(es.rhythm.suggested).toBe('Sugerido');
+    expect(es.update.cta).toBe('Actualizar el plan');
+    expect(es.update.ask(0, 1, null)).not.toMatch(/\b0\b/);
+    expect(lengthPreviewText({ preview: 'lessons-cut-short', weeks: 4 } as Parameters<typeof lengthPreviewText>[0], 'es')).toBe(es.proposal.lessonsCutShort(4));
+    expect(es.proposal.lessonsCutShort(4)).not.toBe(m.proposal.lessonsCutShort(4));
   });
 });

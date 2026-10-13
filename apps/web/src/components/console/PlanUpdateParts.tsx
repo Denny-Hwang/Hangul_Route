@@ -1,8 +1,8 @@
 'use client';
 
 import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
-import { useMemo, useState } from 'react';
-import { buttonBase } from '@/components/console/ui';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Button } from '@/components/console/ui';
 import type { ConsoleApi, PlanView, RosterLearner } from '@/lib/console/api';
 import { planUpdateOffer, reseedSaveBody, updateAskText } from '@/lib/console/curriculum';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
@@ -38,7 +38,18 @@ export function PlanUpdateLine({
   const offer = useMemo(() => planUpdateOffer(kind, learner, plans, today), [kind, learner, plans, today]);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<'done' | 'failed' | null>(null);
-  if (status === 'done') return <div data-testid="plan-update-done">{words.done}</div>;
+  const doneRef = useRef<HTMLDivElement>(null);
+  // Focus follows the save onto its message, so a screen reader hears it and focus never falls to the page.
+  useEffect(() => {
+    if (status === 'done') doneRef.current?.focus();
+  }, [status]);
+  if (status === 'done') {
+    return (
+      <div ref={doneRef} tabIndex={-1} role="status" aria-live="polite" data-testid="plan-update-done">
+        {words.done}
+      </div>
+    );
+  }
   if (offer === null) return null;
   const name = learner.displayName.trim();
 
@@ -46,30 +57,29 @@ export function PlanUpdateLine({
     if (!api || busy || !window.confirm(updateAskText(offer.diff, locale))) return;
     setBusy(true);
     setStatus(null);
-    const result = await api.savePlan(spaceId, reseedSaveBody(offer, today, new Date().toISOString()));
+    let ok = false;
+    try {
+      const result = await api.savePlan(spaceId, reseedSaveBody(offer, today, new Date().toISOString()));
+      ok = result.ok;
+    } catch {
+      // A plan the generator cannot re-seed, or a network throw: the failed line, never a blank card.
+      ok = false;
+    }
     setBusy(false);
-    setStatus(result.ok ? 'done' : 'failed');
-    if (result.ok) onSaved();
+    setStatus(ok ? 'done' : 'failed');
+    if (ok) onSaved();
   };
 
   return (
     <div data-testid="plan-update" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.xs, margin: `${spacing.xxs}px 0` }}>
       <span style={{ minWidth: 0 }}>{words.line(name)}</span>
-      <button
-        type="button"
-        data-testid="plan-update-cta"
-        aria-label={words.label(name)}
-        disabled={!api || busy}
-        onClick={() => void apply()}
-        style={{ ...buttonBase, opacity: !api || busy ? 0.5 : 1, cursor: !api || busy ? 'default' : 'pointer' }}
-      >
+      <Button testId="plan-update-cta" ariaLabel={words.label(name)} disabled={!api || busy} onClick={() => void apply()}>
         {words.cta}
-      </button>
-      {status === 'failed' ? (
-        <span role="status" style={{ display: 'block', width: '100%', color: colors.text.secondary, fontSize: typography.size.caption }}>
-          {words.failed}
-        </span>
-      ) : null}
+      </Button>
+      {/* Always in the DOM so the failed line is announced when its text arrives. */}
+      <span role="status" aria-live="polite" style={{ display: 'block', width: '100%', color: colors.text.secondary, fontSize: typography.size.caption }}>
+        {status === 'failed' ? words.failed : null}
+      </span>
     </div>
   );
 }

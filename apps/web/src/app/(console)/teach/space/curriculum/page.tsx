@@ -29,6 +29,7 @@ import {
   paceOf,
   pacePatch,
   prefilledState,
+  relearnedState,
   spaceCoverage,
   statsText,
   suggestedPace,
@@ -198,25 +199,17 @@ function CurriculumInner(): JSX.Element {
       update({ learnerId: null });
       return;
     }
-    // The proposal for this learner: start, pace, length, minutes, start day, focus, themes and motivation (FP-B5).
-    const next = prefilledState('family', context, id);
+    // The proposal for this learner (FP-B5); what the grown-up already chose stays.
     touched.current = true;
-    setState((s) => ({
-      ...next,
-      daysOff: s.daysOff,
-      customWeeks: s.customWeeks,
-      culturalAnchors: s.culturalAnchors,
-      includeComingSoon: s.includeComingSoon,
-      ...(s.lengthPicked ? { length: s.length, lengthPicked: true } : {}),
-    }));
+    setState((s) => relearnedState(s, context, id));
   };
 
   const toggleDay = (day: Weekday): void => {
-    updateAndFollow({ sessionDays: state.sessionDays.includes(day) ? state.sessionDays.filter((d) => d !== day) : [...state.sessionDays, day] });
+    updateAndFollow({ rhythmPicked: true, sessionDays: state.sessionDays.includes(day) ? state.sessionDays.filter((d) => d !== day) : [...state.sessionDays, day] });
   };
 
   const toggleTheme = (theme: ThemeKey): void => {
-    update({ themes: state.themes.includes(theme) ? state.themes.filter((t) => t !== theme) : [...state.themes, theme] });
+    update({ goalsPicked: true, themes: state.themes.includes(theme) ? state.themes.filter((t) => t !== theme) : [...state.themes, theme] });
   };
 
   const save = async (): Promise<void> => {
@@ -304,7 +297,7 @@ function CurriculumInner(): JSX.Element {
           <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.md}px` }}>{c.rhythm.title}</h2>
           <ChipGroup label={c.rhythm.pace}>
             {PACE_CHOICES.map((id: PaceId) => (
-              <Chip key={id} selected={pace === id} onClick={() => updateAndFollow(pacePatch(id))} testId={`pace-${id}`}>
+              <Chip key={id} selected={pace === id} onClick={() => updateAndFollow({ ...pacePatch(id), rhythmPicked: true })} testId={`pace-${id}`}>
                 {c.rhythm.paceOption(c.rhythm.paces[id], PACES[id])}
                 {suggested === id ? <SuggestedTag /> : null}
               </Chip>
@@ -365,7 +358,7 @@ function CurriculumInner(): JSX.Element {
           ) : null}
           <ChipGroup label={c.rhythm.minutes}>
             {MINUTE_CHOICES.map((n) => (
-              <Chip key={n} selected={state.minutesPerSession === n} onClick={() => update({ minutesPerSession: n })}>
+              <Chip key={n} selected={state.minutesPerSession === n} onClick={() => update({ minutesPerSession: n, rhythmPicked: true })}>
                 {c.rhythm.minutesOption(n)}
               </Chip>
             ))}
@@ -418,7 +411,7 @@ function CurriculumInner(): JSX.Element {
           <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.md}px` }}>{c.goals.title}</h2>
           <ChipGroup label={c.goals.focusLabel}>
             {FOCUS_CHOICES.map((focus) => (
-              <Chip key={focus} selected={state.focus === focus} onClick={() => update({ focus })}>
+              <Chip key={focus} selected={state.focus === focus} onClick={() => update({ focus, focusPicked: true })}>
                 {c.goals.focus[focus]}
               </Chip>
             ))}

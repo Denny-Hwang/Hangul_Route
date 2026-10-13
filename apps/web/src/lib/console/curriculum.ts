@@ -3,6 +3,7 @@ import {
   CATALOG,
   FREE_ROUTE_STAGES,
   CURRICULUM_MAX_ITEMS,
+  CurriculumMetaSchema,
   LENGTH_PRESETS,
   PACES,
   PICTURES_FIRST_MINUTES,
@@ -102,6 +103,12 @@ export interface WizardState {
   length: LengthChoice | null;
   /** The grown-up picked the length: it no longer follows the suggestion when the start or the pace changes. */
   lengthPicked: boolean;
+  /** The grown-up picked a focus: it no longer follows the start (AM-4 reading focus). */
+  focusPicked?: boolean | undefined;
+  /** The grown-up set the pace, the weekdays or the minutes: another learner's pick keeps them. */
+  rhythmPicked?: boolean | undefined;
+  /** The grown-up set the themes: another learner's pick keeps them. */
+  goalsPicked?: boolean | undefined;
   customWeeks: number;
   startDate: string;
   sessionsPerWeek: number;
@@ -357,11 +364,45 @@ export function prefilledState(audience: WizardAudience, context: ProposalContex
   };
 }
 
-/** After the start or the pace changes: the length follows the new suggestion until the grown-up picks one. */
+/**
+ * After the start or the pace changes: the length follows the new suggestion until the grown-up
+ * picks one, and so does the focus (a later start can end the reading focus, AM-4) until the
+ * grown-up picks a focus. Off the pace chips the length stays as it was (still a valid choice,
+ * shown without the *Suggested* tag).
+ */
 export function followProposal(state: WizardState, context: ProposalContext): WizardState {
-  if (state.lengthPicked) return state;
+  if (state.lengthPicked && state.focusPicked === true) return state;
   const proposal = wizardProposal(state, context);
-  return proposal === null ? state : { ...state, length: proposal.defaultId };
+  if (proposal === null) return state;
+  return {
+    ...state,
+    ...(state.lengthPicked ? {} : { length: proposal.defaultId }),
+    ...(state.focusPicked === true ? {} : { focus: proposal.params.goals.focus }),
+  };
+}
+
+/**
+ * Another learner picked in a family (step 1): the proposal for that learner, keeping what the
+ * grown-up already chose (the length, the rhythm, the goals, the start day, days off, custom weeks
+ * and the extras). Only the untouched fields follow the new learner.
+ */
+export function relearnedState(current: WizardState, context: ProposalContext, learnerId: string): WizardState {
+  const next = prefilledState('family', context, learnerId);
+  const merged: WizardState = {
+    ...next,
+    daysOff: current.daysOff,
+    customWeeks: current.customWeeks,
+    culturalAnchors: current.culturalAnchors,
+    includeComingSoon: current.includeComingSoon,
+    ...(current.lengthPicked ? { length: current.length, lengthPicked: true } : {}),
+    ...(current.rhythmPicked === true
+      ? { sessionsPerWeek: current.sessionsPerWeek, sessionDays: current.sessionDays, minutesPerSession: current.minutesPerSession, rhythmPicked: true }
+      : {}),
+    ...(current.startDate !== context.today ? { startDate: current.startDate } : {}),
+    ...(current.goalsPicked === true ? { themes: current.themes, motivation: current.motivation, goalsPicked: true } : {}),
+    ...(current.focusPicked === true ? { focus: current.focus, focusPicked: true } : {}),
+  };
+  return followProposal(merged, context);
 }
 
 /** The honest line under a length chip (AMENDMENTS section 1.3): a projection, never a deadline or a finish the card does not reach. */
@@ -417,24 +458,33 @@ export function planUpdateOffer<T extends UpdatablePlan>(
 ): PlanUpdateOffer<T> | null {
   const placement = learner.summary?.placement;
   if (kind !== 'family' || !placement) return null;
+  // The stored meta is read as untrusted: a newer Worker's shape (or a damaged row) is skipped, never thrown in render.
   const own = plans
-    .filter((plan): plan is T & { meta: CurriculumMeta } => isLive(plan) && plan.meta !== null && plan.meta !== undefined)
-    .filter((plan) => plan.targetLearnerIds?.length === 1 && plan.targetLearnerIds[0] === learner.id)
-    .sort(newestPublished)[0];
+    .filter((plan) => isLive(plan) && plan.targetLearnerIds?.length === 1 && plan.targetLearnerIds[0] === learner.id)
+    .sort(newestPublished)
+    .flatMap((plan): (T & { meta: CurriculumMeta })[] => {
+      const meta = CurriculumMetaSchema.safeParse(plan.meta);
+      return meta.success ? [{ ...plan, meta: meta.data }] : [];
+    })[0];
   if (!own || placementLevelRank(placement.level) <= placementLevelRank(own.meta.params.level)) return null;
-  const placedOutQuestIds = questsPlacedOutAtLevel(placement.level, routeCatalogOf(source));
-  const proposal = proposeRoute({
-    audience: 'family',
-    seed: { level: placement.level, oralStage: placement.oralStage ?? null, placedOutQuestIds, themeOrder: themeOrderFor(undefined), startQuestId: null },
-    completedQuestIds: [],
-    levelOrder: null,
-    unlockedStages: own.meta.params.unlockedStages,
-    catalog: source,
-    today,
-    existing: { meta: own.meta, items: own.items },
-  });
-  if (proposal?.kind !== 'update' || proposal.diff === undefined) return null;
-  return { plan: own, level: placement.level, placedOutQuestIds, diff: proposal.diff };
+  try {
+    const placedOutQuestIds = questsPlacedOutAtLevel(placement.level, routeCatalogOf(source));
+    const proposal = proposeRoute({
+      audience: 'family',
+      seed: { level: placement.level, oralStage: placement.oralStage ?? null, placedOutQuestIds, themeOrder: themeOrderFor(undefined), startQuestId: null },
+      completedQuestIds: [],
+      levelOrder: null,
+      unlockedStages: own.meta.params.unlockedStages,
+      catalog: source,
+      today,
+      existing: { meta: own.meta, items: own.items },
+    });
+    if (proposal?.kind !== 'update' || proposal.diff === undefined) return null;
+    return { plan: own, level: placement.level, placedOutQuestIds, diff: proposal.diff };
+  } catch {
+    // A plan the generator cannot read shows no offer; the card itself always renders.
+    return null;
+  }
 }
 
 /** The confirm before **Update the plan**: what leaves and joins the plan, its next lesson, and that the end date stays. */
@@ -456,6 +506,7 @@ export function reseedSaveBody(
   source: Catalog = CATALOG,
 ): { id: string; title: string; items: CurriculumItem[]; targetLearnerIds: string[] | null; publish: true; meta: CurriculumMeta } {
   const { plan } = offer;
+  // Throws on a plan the generator cannot read; the caller turns that into its failed state.
   const draft = regenerateFrom({ meta: plan.meta, items: plan.items }, today, source, {
     mode: 'reseed',
     paramsPatch: { level: offer.level, placedOutQuestIds: [...offer.placedOutQuestIds] },

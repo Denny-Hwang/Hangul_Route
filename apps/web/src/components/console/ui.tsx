@@ -25,7 +25,7 @@ export const buttonBase: CSSProperties = {
   cursor: 'pointer',
 };
 
-export function Button({ children, tone = 'secondary', disabled, onClick, type = 'button', testId }: { children: ReactNode; tone?: 'primary' | 'secondary' | 'danger'; disabled?: boolean; onClick?: () => void; type?: 'button' | 'submit'; testId?: string }): JSX.Element {
+export function Button({ children, tone = 'secondary', disabled, onClick, type = 'button', testId, ariaLabel }: { children: ReactNode; tone?: 'primary' | 'secondary' | 'danger'; disabled?: boolean; onClick?: () => void; type?: 'button' | 'submit'; testId?: string; ariaLabel?: string }): JSX.Element {
   const toneStyle: CSSProperties =
     tone === 'primary'
       ? { backgroundColor: colors.brand.primary, color: colors.text.onPrimary, borderColor: colors.brand.primary }
@@ -33,7 +33,7 @@ export function Button({ children, tone = 'secondary', disabled, onClick, type =
         ? { color: colors.feedback.danger, borderColor: colors.feedback.danger }
         : {};
   return (
-    <button type={type} disabled={disabled} onClick={onClick} data-testid={testId} style={{ ...buttonBase, ...toneStyle, opacity: disabled ? 0.5 : 1, cursor: disabled ? 'default' : 'pointer' }}>
+    <button type={type} disabled={disabled} onClick={onClick} data-testid={testId} aria-label={ariaLabel} style={{ ...buttonBase, ...toneStyle, opacity: disabled ? 0.5 : 1, cursor: disabled ? 'default' : 'pointer' }}>
       {children}
     </button>
   );

@@ -201,4 +201,44 @@ describe('Update the plan on a family learner card', () => {
     const root = await rosterPage();
     expect(byTestId(root, 'plan-update')).toHaveLength(0);
   });
+
+  it('a stored route this build cannot read shows no offer and the card still renders', async () => {
+    const readable = api.listPlans;
+    api.listPlans = async () => {
+      const plan = samRoute();
+      return ok([{ ...plan, meta: { ...plan.meta, params: { ...plan.meta.params, goals: { focus: 'speaking' } } } } as unknown as ReturnType<typeof samRoute>]);
+    };
+    try {
+      const root = await rosterPage();
+      expect(byTestId(root, 'plan-update')).toHaveLength(0);
+      expect(textOf(root)).toContain('Sam');
+    } finally {
+      api.listPlans = readable;
+    }
+  });
+
+  it('announces the saved line as a status', async () => {
+    const root = await rosterPage();
+    await press(root);
+    const [done] = byTestId(root, 'plan-update-done');
+    expect(done?.props.role).toBe('status');
+    expect(done?.props.tabIndex).toBe(-1);
+  });
+});
+
+describe('PlanUpdateLine without an api (signed-out or loading)', () => {
+  it('shows the button disabled and never saves', async () => {
+    const { PlanUpdateLine } = await import('@/components/console/PlanUpdateParts');
+    await act(async () => {
+      mounted = create(<PlanUpdateLine kind="family" learner={SAM} plans={[samRoute()]} today={today} api={null} spaceId="space:f1" onSaved={() => undefined} />);
+    });
+    if (!mounted) throw new Error('not mounted');
+    const [button] = byTestId(mounted.root, 'plan-update-cta');
+    expect(button?.props.disabled).toBe(true);
+    await act(async () => {
+      (button?.props.onClick as () => void)();
+    });
+    expect(confirm).not.toHaveBeenCalled();
+    expect(saved).toHaveLength(0);
+  });
 });

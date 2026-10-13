@@ -299,7 +299,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.curriculum.proposal.storiesAndWords': [[1], [9], [0]],
   'console.curriculum.update.line': [['Sam']],
   'console.curriculum.update.label': [['Sam']],
-  'console.curriculum.update.ask': [[3, 1, 'Meet the Letters'], [1, 0, null]],
+  'console.curriculum.update.ask': [[3, 1, 'Meet the Letters'], [1, 0, null], [0, 2, null], [0, 0, 'Meet the Letters']],
   'learner.placement.item.questionLabel': [[4], [1]],
   'learner.placement.item.pictureChoice': [[2]],
   'console.placement.startingSpot': [[1, 'Letters and sounds', 'Oct 9'], [3, 'First sentences', 'Oct 11']],

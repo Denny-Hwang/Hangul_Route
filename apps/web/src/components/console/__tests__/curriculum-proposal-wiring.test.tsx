@@ -179,4 +179,39 @@ describe('the wizard pre-selects proposeRoute\'s pace and length (P2-6b)', () =>
     expect(tagged(root, 'pace-gentle')).toBe(true);
     expect(checked(root, 'length-12-week')).toBe(true);
   });
+
+  it('a learner re-picked after step 2 keeps the pace, minutes and start day the grown-up set; the start follows the learner', async () => {
+    learners = [learner('l:sam', 'Sam', '10-11', 3), learner('l:kid', 'Kid', '5-7', null)];
+    const { default: Page } = await import('@/app/(console)/teach/space/curriculum/page');
+    await act(async () => {
+      mounted = create(<Page />, { createNodeMock: () => null });
+    });
+    if (!mounted) throw new Error('not mounted');
+    const root = mounted.root;
+    const pick = async (id: string): Promise<void> => {
+      const select = one(root, 'route-learner');
+      await act(async () => {
+        (select.props.onChange as (e: { target: { value: string } }) => void)({ target: { value: id } });
+      });
+    };
+    await pick('l:kid');
+    await click(root, 'route-next');
+    await click(root, 'pace-brisk');
+    const minutes = root.findAll((node) => node.type === 'button' && textOf(node) === c.rhythm.minutesOption(20))[0];
+    if (!minutes) throw new Error('no 20 min');
+    await act(async () => {
+      (minutes.props.onClick as () => void)();
+    });
+    const back = root.findAll((node) => node.type === 'button' && textOf(node) === c.previous.cta)[0];
+    if (!back) throw new Error('no back');
+    await act(async () => {
+      (back.props.onClick as () => void)();
+    });
+    await pick('l:sam');
+    expect(checked(root, 'start-reads-words')).toBe(true);
+    await click(root, 'route-next');
+    expect(checked(root, 'pace-brisk')).toBe(true);
+    const twenty = root.findAll((node) => node.type === 'button' && textOf(node) === c.rhythm.minutesOption(20))[0];
+    expect(twenty?.props['aria-checked']).toBe(true);
+  });
 });

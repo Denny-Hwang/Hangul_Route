@@ -872,10 +872,17 @@ export const consoleMsgs = {
       line: (name: string) => `${name}'s newest check found a later place to start.`,
       cta: 'Update the plan',
       label: (name: string) => `Update the plan for ${name}`,
-      ask: (removed: number, added: number, next: string | null) =>
-        `Update the plan? It moves ahead from today and keeps the same end date. ${plural('en', removed, { one: '1 item leaves the plan', other: `${removed} items leave the plan` })}${
-          added > 0 ? `, ${plural('en', added, { one: '1 joins it', other: `${added} join it` })}` : ''
-        }.${next ? ` Next: ${next}.` : ''} What is done stays done.`,
+      ask: (removed: number, added: number, next: string | null) => {
+        const counts =
+          removed > 0
+            ? ` ${plural('en', removed, { one: '1 item leaves the plan', other: `${removed} items leave the plan` })}${
+                added > 0 ? `, ${plural('en', added, { one: '1 joins it', other: `${added} join it` })}` : ''
+              }.`
+            : added > 0
+              ? ` ${plural('en', added, { one: '1 item joins the plan', other: `${added} items join the plan` })}.`
+              : '';
+        return `Update the plan? It moves ahead from today and keeps the same end date.${counts}${next ? ` Next: ${next}.` : ''} What is done stays done.`;
+      },
       done: 'Updated. Devices pick up the new plan on their next sync.',
       failed: "Couldn't update the plan right now. Try again.",
     },
