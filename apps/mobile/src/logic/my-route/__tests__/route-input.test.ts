@@ -202,6 +202,18 @@ describe('routeWeekOf: the live weekly plan week for the page line and the Home 
     expect(routeWeekOf(classOnly.model, classOnly.next)).toBe(1);
   });
 
+  it("a class plan that has not started yet leads the learner's running plan, so no week shows until it starts (amendment 4.1, 4.3)", () => {
+    // Intended: the week is the goal plan's week, and pickGoal counts an assigned class plan as live
+    // from assignment, so the goal moves to the class plan and the self plan's week 3 is not shown.
+    const laterDraft = draftOf('class', '2026-11-02');
+    const laterClass: InboxPlan = { ...classPlan, id: 'plan:class-2', items: toPlanItems(laterDraft), meta: toMeta(laterDraft) };
+    const mixed = build({ selfRoute: selfPlan, plans: [laterClass], today: '2026-10-28' });
+    expect(mixed.model.goal?.from).toBe('class');
+    expect(routeWeekOf(mixed.model, mixed.next)).toBeNull();
+    const selfOnly = build({ selfRoute: selfPlan, today: '2026-10-28' });
+    expect(routeWeekOf(selfOnly.model, selfOnly.next)).toBe(3);
+  });
+
   it('is null with no plan, an archived plan, a classic plan, before the plan starts, after it ends, or without the input', () => {
     const none = build({ today: '2026-10-12' });
     expect(routeWeekOf(none.model, none.next)).toBeNull();

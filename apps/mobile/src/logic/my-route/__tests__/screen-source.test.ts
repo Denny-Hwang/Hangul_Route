@@ -77,7 +77,7 @@ describe('screens/my-route sources', () => {
     const page = read(join(SCREEN_DIR, 'MyRouteScreen.tsx'));
     const home = read(join(SRC, 'screens', 'home', 'HomeScreen.tsx'));
     expect(page).toContain('week: routeWeekOf(model, next)');
-    expect(home).toMatch(/homeStripView\(\{[^\n]*week: routeWeekOf\(model, routeInput \?\? undefined\)/);
+    expect(home).toMatch(/homeStripView\(\{[\s\S]*?week:\s*routeWeekOf\(\s*model,\s*routeInput/);
     // The strip's model is built from the same input as the week, so the goal and the week name one plan.
     expect(home).toContain('...(routeInput ? { next: routeInput } : {})');
   });
@@ -401,7 +401,7 @@ describe('the route card wiring (Learning Route LR-5a)', () => {
   });
 
   it('the Home strip and the parent dashboard row name the same goal from the same input', () => {
-    expect(home).toContain('homeStripView({ model, messages: m, goalStage: model.goal?.stage ?? null, week: routeWeekOf(model, routeInput ?? undefined) })');
+    expect(home).toMatch(/homeStripView\(\{\s*model,\s*messages: m,\s*goalStage: model\.goal\?\.stage \?\? null,\s*week: routeWeekOf\(\s*model,\s*routeInput/);
     expect(home).toContain('...(routeInput ? { next: routeInput } : {})');
     expect(row).toContain('dashboardRowView({ model, messages, name, started, goalStage: model.goal?.stage ?? null })');
     expect(row).toContain('buildMyRoute(routeModelInput({ snapshot, tier, localized, now, next }))');
