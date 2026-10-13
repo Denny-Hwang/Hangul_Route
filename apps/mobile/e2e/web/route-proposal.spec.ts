@@ -146,11 +146,11 @@ test.describe('weekly plan proposal (flag on)', () => {
     expect(fromPlan.length).toBeGreaterThan(0);
     expect(fromPlan.every((h) => h.assignedBy === 'system' && (h.targetDate ?? '') <= '2026-10-19')).toBe(true);
 
-    // Profile now reads "Your weekly plan" and shows this week.
+    // Profile now reads "Your weekly plan" and opens the overview with this week (P2-7b, G3).
     await page.getByRole('button', { name: /profile/i }).first().click();
     await page.getByTestId('profile-plan-row').click();
-    await expect(page.getByTestId('route-proposal-has-plan')).toBeVisible();
-    await expect(page.getByTestId('route-proposal-this-week').locator('[aria-label]')).not.toHaveCount(0);
+    await expect(page.getByText('We found a path for you.')).toBeVisible();
+    await expect(page.getByTestId('route-overview-current-rows').locator('[aria-label]')).not.toHaveCount(0);
     await shot(page, 'route-proposal-has-plan');
     expect(errors).toEqual([]);
   });

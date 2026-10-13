@@ -6,10 +6,20 @@ const rn = vi.hoisted(() => ({
   removed: 0,
   focused: [] as number[],
   handles: new Map<object, number | null>(),
+  os: 'ios' as string,
+  announced: [] as string[],
 }));
 vi.mock('react-native', () => ({
   findNodeHandle: (node: object | null) => (node === null ? null : (rn.handles.get(node) ?? null)),
+  Platform: {
+    get OS() {
+      return rn.os;
+    },
+  },
   AccessibilityInfo: {
+    announceForAccessibility: (text: string) => {
+      rn.announced.push(text);
+    },
     setAccessibilityFocus: (tag: number) => {
       rn.focused.push(tag);
     },
@@ -25,7 +35,7 @@ vi.mock('react-native', () => ({
   },
 }));
 
-import { focusForScreenReader, isScreenReaderEnabled, subscribeScreenReader } from '../screen-reader';
+import { announceForScreenReader, focusForScreenReader, isScreenReaderEnabled, subscribeScreenReader } from '../screen-reader';
 
 beforeEach(() => {
   rn.enabled.mockReset();
@@ -33,6 +43,8 @@ beforeEach(() => {
   rn.removed = 0;
   rn.focused.length = 0;
   rn.handles.clear();
+  rn.os = 'ios';
+  rn.announced.length = 0;
 });
 
 describe('platform/screen-reader (F-PLC-001 section 3.1 step 3, assumption 5)', () => {
@@ -72,5 +84,13 @@ describe('platform/screen-reader (F-PLC-001 section 3.1 step 3, assumption 5)', 
     focusForScreenReader(null);
     focusForScreenReader({});
     expect(rn.focused).toEqual([]);
+  });
+
+  it('announces a new status line on iOS only (Android reads the live region)', () => {
+    announceForScreenReader('Done. Now 2 days a week.');
+    expect(rn.announced).toEqual(['Done. Now 2 days a week.']);
+    rn.os = 'android';
+    announceForScreenReader('again');
+    expect(rn.announced).toHaveLength(1);
   });
 });

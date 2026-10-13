@@ -110,9 +110,9 @@ describe('the class-moves page (T-6d family variant)', () => {
     expect(root.find((n) => n.type === 'a').props.href).toBe('/parent/space?id=space%3Af');
   });
 
-  it('a class or school id waits for the requests page (T-6b); a lost role reads the forbidden line', async () => {
+  it('a school id has no page of its own (T-6b: its home row links to each class); a lost role reads the forbidden line', async () => {
     vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
-    state.kind = 'class';
+    state.kind = 'school';
     let root = await render(<TransfersPage />);
     expect(textOf(root)).toContain(t.states.locked);
     expect(state.calls).not.toContain('transferRequests');

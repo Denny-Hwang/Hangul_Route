@@ -13,7 +13,7 @@ vi.mock('../../platform/sync-api', () => ({ apiBaseUrl: vi.fn(() => 'https://api
 vi.mock('../../platform/telemetry', () => ({ track: vi.fn(async () => undefined) }));
 // The free-tier switch stays off, as in the node lane (plan derivation reads quest access, F-ENT-003 section 3.6).
 vi.mock('../../config/flags', () => ({
-  flags: { syncEnabled: true, telemetryEnabled: false, telemetryNetwork: false, voiceEchoEnabled: false, contentGatingEnabled: false },
+  flags: { syncEnabled: true, telemetryEnabled: false, telemetryNetwork: false, voiceEchoEnabled: false, contentGatingEnabled: false, routeEnabled: true },
   bundleOs: () => undefined,
   gatingActive: () => false,
 }));
@@ -21,12 +21,13 @@ vi.mock('../../config/flags', () => ({
 import { readJson } from '../../platform/storage';
 import { apiBaseUrl } from '../../platform/sync-api';
 import { track } from '../../platform/telemetry';
-import { rederiveAllLocal, useMembershipStore } from '../membership-store';
+import { flags } from '../../config/flags';
+import { rederiveAllLocal, repaceAfterSync, useMembershipStore } from '../membership-store';
 import { usePlanStore } from '../plan-store';
 import { useTierStore } from '../tier-store';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
-import { setSyncApiForTests, useSyncStore } from '../sync-store';
+import { setSyncApiForTests, useSyncStore, type LearnerSyncState } from '../sync-store';
 
 const snap: ProgressSnapshot = { profileId: 'profile:a', updatedAt: 't', episodes: [], quests: [], cards: [], sessions: [], homework: [], reviews: [], streakDays: 0 };
 const classRow = { spaceId: 'space:cls', kind: 'class' as const, name: 'Sunday Class A', role: 'student' as const, joinedAt: 't' };
@@ -285,5 +286,107 @@ describe('re-link on a new device (F-TCH-001 §10.1)', () => {
     setSyncApiForTests(null);
     expect(await useMembershipStore.getState().requestRelink('space:cls', 'K7M2X9', 'profile:m')).toEqual({ ok: false, error: 'off' });
     expect(await useMembershipStore.getState().pollRelink('space:cls', 'relink:1')).toEqual({ state: 'error', error: 'off' });
+  });
+});
+
+describe('app start and foreground: the automatic re-pace (F-PLAN-002 section 3.7)', () => {
+  async function planTenDaysAgo(): Promise<void> {
+    const { CATALOG, generateCurriculum } = await import('@hangul-route/content-schema');
+    const { useRouteStore } = await import('../route-store');
+    const { dayKey } = await import('../../logic/homework/mission-builder');
+    const tenDaysAgo = new Date(Date.now() - 10 * 86_400_000);
+    const draft = generateCurriculum(
+      { audience: 'self', level: { stage: 'stage1', band: 0 }, startDate: dayKey(tenDaysAgo.toISOString()), weeks: 12, sessionsPerWeek: 3, minutesPerSession: 15, unlockedStages: ['stage1'] },
+      CATALOG,
+    );
+    useRouteStore.setState({ ui: {} });
+    await useRouteStore.getState().create('profile:a', draft, { from: 'setup', changed: false }, tenDaysAgo);
+  }
+  const routeOf = () => useProgressStore.getState().byProfile['profile:a']?.selfRoute;
+
+  it('with sync on, syncs first and moves the plan along only once the sync merged, then pushes it', async () => {
+    const { dayKey } = await import('../../logic/homework/mission-builder');
+    setSyncApiForTests(fakeApi() as never);
+    await planTenDaysAgo();
+    const syncNow = vi.spyOn(useSyncStore.getState(), 'syncNow').mockImplementation(async (id) => ({ ...(useSyncStore.getState().byLearner[id] as LearnerSyncState), status: 'synced' }));
+    const requestSync = vi.spyOn(useSyncStore.getState(), 'requestSync').mockImplementation(() => undefined);
+    const before = routeOf()?.updatedAt;
+    await rederiveAllLocal();
+    // A stale copy is never re-paced before the server's copy is merged: the onSynced listener does it.
+    expect(routeOf()?.updatedAt).toBe(before);
+    expect(syncNow).toHaveBeenCalledWith('profile:a');
+    syncNow.mockClear();
+    expect(await repaceAfterSync('profile:a')).toBe(true);
+    expect(routeOf()?.meta.repacedAt?.slice(0, 10)).toBe(dayKey(new Date().toISOString()));
+    expect(requestSync).toHaveBeenCalledWith('profile:a');
+    requestSync.mockClear();
+    // Once a day: the next sync and the next foreground the same day leave the plan alone.
+    const moved = routeOf()?.updatedAt;
+    expect(await repaceAfterSync('profile:a')).toBe(false);
+    await rederiveAllLocal();
+    expect(routeOf()?.updatedAt).toBe(moved);
+    expect(syncNow).not.toHaveBeenCalled();
+    expect(requestSync).not.toHaveBeenCalled();
+    syncNow.mockRestore();
+    requestSync.mockRestore();
+  });
+
+  it.each([
+    ['offline (the upload fails)', 'error'],
+    ['a conflict to retry later', 'idle'],
+  ] as const)('with sync on but %s, moves the plan along on this copy the same day', async (_label, status) => {
+    const { dayKey } = await import('../../logic/homework/mission-builder');
+    setSyncApiForTests(fakeApi() as never);
+    await planTenDaysAgo();
+    const syncNow = vi.spyOn(useSyncStore.getState(), 'syncNow').mockImplementation(async (id) => ({ ...(useSyncStore.getState().byLearner[id] as LearnerSyncState), status }));
+    const requestSync = vi.spyOn(useSyncStore.getState(), 'requestSync').mockImplementation(() => undefined);
+    await rederiveAllLocal();
+    expect(routeOf()?.meta.repacedAt?.slice(0, 10)).toBe(dayKey(new Date().toISOString()));
+    // Once that day.
+    const moved = routeOf()?.updatedAt;
+    await rederiveAllLocal();
+    expect(routeOf()?.updatedAt).toBe(moved);
+    syncNow.mockRestore();
+    requestSync.mockRestore();
+  });
+
+  it('with sync on and the upload failing for real (offline), still moves the plan along', async () => {
+    const { dayKey } = await import('../../logic/homework/mission-builder');
+    setSyncApiForTests(fakeApi({ putSnapshot: vi.fn(async () => Promise.reject(new Error('offline'))) }) as never);
+    await planTenDaysAgo();
+    const requestSync = vi.spyOn(useSyncStore.getState(), 'requestSync').mockImplementation(() => undefined);
+    await rederiveAllLocal();
+    expect(routeOf()?.meta.repacedAt?.slice(0, 10)).toBe(dayKey(new Date().toISOString()));
+    requestSync.mockRestore();
+  });
+
+  it('without sync, moves the plan along straight away', async () => {
+    const { dayKey } = await import('../../logic/homework/mission-builder');
+    vi.mocked(apiBaseUrl).mockReturnValue(null);
+    setSyncApiForTests(null);
+    await planTenDaysAgo();
+    const requestSync = vi.spyOn(useSyncStore.getState(), 'requestSync');
+    await rederiveAllLocal();
+    expect(routeOf()?.meta.repacedAt?.slice(0, 10)).toBe(dayKey(new Date().toISOString()));
+    expect(requestSync).not.toHaveBeenCalled();
+    requestSync.mockRestore();
+  });
+
+  it('with flags.routeEnabled off, a synced plan is left alone: no re-pace, no event, no sync', async () => {
+    await planTenDaysAgo();
+    vi.mocked(track).mockClear();
+    const requestSync = vi.spyOn(useSyncStore.getState(), 'requestSync');
+    const before = routeOf();
+    flags.routeEnabled = false;
+    try {
+      await rederiveAllLocal();
+      expect(await repaceAfterSync('profile:a')).toBe(false);
+    } finally {
+      flags.routeEnabled = true;
+    }
+    expect(routeOf()).toEqual(before);
+    expect(requestSync).not.toHaveBeenCalled();
+    expect(vi.mocked(track).mock.calls.some(([e]) => (e as { name: string }).name === 'route.repaced')).toBe(false);
+    requestSync.mockRestore();
   });
 });
