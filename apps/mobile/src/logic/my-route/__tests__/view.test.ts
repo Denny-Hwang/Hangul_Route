@@ -396,6 +396,13 @@ describe('myRouteView: the route card, the weekly plan line and the plan cells (
     expect(view(reached).routeCard.hoya).toBeNull();
   });
 
+  it('Hoya cheers on the first reached visit (LR-5c), for the learner only', () => {
+    const reached = { ...model(APPENDIX_C), goal: { stage: 'stage1' as const, from: 'class' as const, sourceId: 'plan:c', endsOn: '2026-11-01', reached: true, taste: false } };
+    expect(view(reached, { firstReached: true }).pose).toBe('cheering');
+    expect(view(reached, { firstReached: false }).pose).toBe('idle');
+    expect(view(reached, { firstReached: true, viewer: 'grownup' }).pose).toBe('idle');
+  });
+
   it('the weekly plan line names the week only, never a Next title; learner only', () => {
     const v = view(model(APPENDIX_C, { routeNext, planView }), { nextTitle: 'Family at the Table', week: 3 });
     expect(v.planLine).toBe('Week 3 of your weekly plan');

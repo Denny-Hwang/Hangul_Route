@@ -6,11 +6,13 @@ import { borderWidth, colors, layout, radii, spacing, touchTarget, typography } 
 import Link from 'next/link';
 import { forwardRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { avatarChipModel } from '@/lib/console/avatar-chip';
+import { GROWTH_BOX, growthAxisShown, growthChart } from '@/lib/console/report-growth';
 import type {
   LearnerReportView,
   ReportCalendarView,
   ReportDetailBlock,
   ReportGlance,
+  ReportGrowthView,
   ReportLineView,
   ReportLink,
   ReportMoreDetail,
@@ -58,6 +60,11 @@ const CHECK_SHARE = '60%';
 export const REPORT_PANEL_ID = 'hr-report-panel';
 const PRINT_HINT_ID = 'hr-report-print-hint';
 const DETAIL_ID = 'hr-report-detail';
+const GROWTH_TABLE_ID = 'hr-report-growth-table';
+/** The growth chart's marks, in the drawing box's units (design: 2 px lines, 8 px markers ringed in paper, 6 4 dashes). */
+const GROWTH_LINE = 2;
+const GROWTH_MARKER_R = 4;
+const GROWTH_DASH = '6 4';
 export const reportTabId = (period: ReportPeriod): string => `hr-report-tab-${period}`;
 
 const focusRing = `outline:${px(borderWidth.thick)} solid ${colors.border.focus};outline-offset:${px(borderWidth.base)}`;
@@ -142,9 +149,32 @@ export const REPORT_CSS = `
 .hr-report-tile{min-width:${px(touchTarget.min)};min-height:${px(touchTarget.min)};padding:${rem(spacing.xxs)} ${rem(spacing.sm)};display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:${px(radii.md)};background:${colors.surface.paper};border:${px(borderWidth.thin)} solid ${colors.border.strong};box-sizing:border-box}
 .hr-report-tile [lang="ko"]{font-size:${rem(typography.size.prompt)};line-height:${typography.leading.tight}}
 .hr-report-rom{font-size:${rem(typography.size.caption)};color:${colors.text.secondary}}
+.hr-report-growth{display:flex;flex-direction:column;gap:${rem(spacing.sm)};max-width:${px(layout.maxWidth.reading)}}
+.hr-report-growth-legend{display:flex;flex-wrap:wrap;gap:${rem(spacing.lg)};font-size:${rem(typography.size.bodySm)};color:${colors.text.secondary}}
+.hr-report-growth-legend li{display:inline-flex;align-items:center;gap:${rem(spacing.xs)}}
+.hr-report-growth-legend b{color:${colors.text.primary}}
+.hr-report-swatch{display:inline-block;width:${rem(spacing.xl)};height:0;border-top:${px(borderWidth.base)} solid ${colors.brand.primary}}
+.hr-report-swatch-cards{border-top-style:dashed;border-top-color:${colors.brand.secondary}}
+.hr-report-growth-chart{width:100%;height:auto;display:block;background:${colors.surface.paper};border-radius:${px(radii.md)};border:${px(borderWidth.thin)} solid ${colors.border.subtle}}
+.hr-report-growth-axis{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);text-align:center;font-size:${rem(typography.size.caption)};color:${colors.text.muted}}
+.hr-report-growth-table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:${rem(typography.size.bodySm)}}
+.hr-report-growth-table caption{text-align:left;font-weight:${typography.weight.bold};padding-bottom:${rem(spacing.xs)}}
+.hr-report-growth-table th,.hr-report-growth-table td{padding:${rem(spacing.xs)} ${rem(spacing.sm)};overflow-wrap:anywhere;border-bottom:${px(borderWidth.thin)} solid ${colors.border.subtle};text-align:left}
+.hr-report-growth-table[hidden]{display:none}
+.hr-report-growth>.hr-report-link-button{align-self:flex-start}
 .hr-report-skeleton{height:${rem(spacing.xxxl)};border-radius:${px(radii.md)};background:${colors.surface.sunken}}
 .hr-report-skeleton-tall{height:calc(3 * ${rem(spacing.xxxl)})}
 .hr-report-skeleton-title{display:inline-block;width:50%;height:${rem(typography.size.title)};border-radius:${px(radii.sm)};background:${colors.surface.sunken}}
+@media screen{.hr-report-print-footer{display:none}}
+@media print{
+@page{margin:0}
+.hr-report{padding:${rem(spacing.xxl)} ${rem(spacing.xxl)} ${rem(spacing.jumbo)};background:${colors.surface.paper};color:${colors.text.primary}}
+.hr-report-tab[aria-selected="true"]{font-size:${rem(typography.size.body)}}
+.hr-report-controls{gap:${rem(spacing.sm)}}
+.hr-report-figure,.hr-report-tile{border-color:${colors.border.strong}}
+.hr-report-insight-text>p:first-child::before,.hr-report-chip{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.hr-report .hr-report-print-footer{padding:${rem(spacing.md)} ${rem(spacing.xxl)};font-size:${rem(typography.size.caption)};color:${colors.text.secondary};border-top:${px(borderWidth.thin)} solid ${colors.border.strong};background:${colors.surface.paper}}
+}
 @media (min-width:${WIDE}){
 .hr-report-top{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between;column-gap:${rem(spacing.sm)}}
 .hr-report-buttons{justify-content:flex-end;column-gap:${rem(spacing.sm)}}
@@ -259,7 +289,7 @@ export function ReportStateBlock({ lines, error, onRetry }: { lines: string[]; e
       {error ? (
         <>
           <p data-testid="report-error-line">{error.message}</p>
-          <button type="button" className="hr-report-link-button" onClick={onRetry} data-testid="report-retry">
+          <button type="button" className="hr-report-link-button hr-report-actions" onClick={onRetry} data-testid="report-retry">
             {error.retry}
           </button>
         </>
@@ -506,9 +536,88 @@ function CalendarBlock({ calendar, month }: { calendar: ReportCalendarView; mont
   );
 }
 
-/** This period (layer 2): figure tiles, then the calendar. The All-time growth block is RP-7b's. */
+/**
+ * The All-time growth block (RP-7b; design "All time: the growth block"): a legend with each series' latest value, two
+ * cumulative lines that only rise (quests solid, cards dashed; `role="img"` named by the table caption), the months
+ * under their points, the since line, then **Show as table** and the table, its required alternative. On paper the
+ * table prints in place of the chart, even when it is closed on screen.
+ */
+export function ReportGrowthBlock({ growth }: { growth: ReportGrowthView }): JSX.Element {
+  const [open, setOpen] = useState(false);
+  const chart = growthChart(growth.rows);
+  const shown = growthAxisShown(growth.rows.length);
+  const line = (points: string, color: string, dashed: boolean): JSX.Element => (
+    <polyline points={points} fill="none" stroke={color} strokeWidth={GROWTH_LINE} strokeLinejoin="round" strokeLinecap="round" strokeDasharray={dashed ? GROWTH_DASH : undefined} />
+  );
+  const markers = (points: { x: number; y: number }[], color: string, key: string): JSX.Element[] =>
+    points.map((p, index) => <circle key={`${key}-${index}`} cx={p.x} cy={p.y} r={GROWTH_MARKER_R} fill={color} stroke={colors.surface.paper} strokeWidth={GROWTH_LINE} />);
+  return (
+    <div className="hr-report-growth" data-testid="report-growth">
+      <ul className="hr-report-growth-legend" aria-hidden="true">
+        <li>
+          <span className="hr-report-swatch" />
+          {growth.quests} <b>{growth.latest.quests}</b>
+        </li>
+        <li>
+          <span className="hr-report-swatch hr-report-swatch-cards" />
+          {growth.cards} <b>{growth.latest.cards}</b>
+        </li>
+      </ul>
+      {growth.rows.length > 0 ? (
+        <>
+          <svg className="hr-report-growth-chart" viewBox={`0 0 ${GROWTH_BOX.width} ${GROWTH_BOX.height}`} role="img" aria-label={growth.caption} focusable="false" data-testid="report-growth-chart">
+            {chart.grid.map((y) => (
+              <line key={y} x1={0} x2={GROWTH_BOX.width} y1={y} y2={y} stroke={colors.border.subtle} strokeWidth={borderWidth.thin} />
+            ))}
+            {line(chart.questsPoints, colors.brand.primary, false)}
+            {markers(chart.quests, colors.brand.primary, 'q')}
+            {line(chart.cardsPoints, colors.brand.secondary, true)}
+            {markers(chart.cards, colors.brand.secondary, 'c')}
+          </svg>
+          <ol className="hr-report-growth-axis" aria-hidden="true">
+            {growth.rows.map((row, index) => (
+              <li key={row.m}>{shown[index] ? row.short : null}</li>
+            ))}
+          </ol>
+        </>
+      ) : null}
+      {growth.since ? <p className="hr-report-muted">{growth.since}</p> : null}
+      <button
+        type="button"
+        className="hr-report-link-button hr-report-actions"
+        aria-expanded={open}
+        aria-controls={GROWTH_TABLE_ID}
+        onClick={() => setOpen(!open)}
+        data-testid="report-growth-toggle"
+      >
+        {open ? growth.hideTable : growth.showTable}
+      </button>
+      <table className="hr-report-growth-table" id={GROWTH_TABLE_ID} hidden={!open} data-testid="report-growth-table">
+        <caption>{growth.caption}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{growth.month}</th>
+            <th scope="col">{growth.quests}</th>
+            <th scope="col">{growth.cards}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {growth.rows.map((row) => (
+            <tr key={row.m}>
+              <th scope="row">{row.label}</th>
+              <td>{row.quests}</td>
+              <td>{row.cards}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/** This period (layer 2): figure tiles, then the calendar (a week or a month) or the growth block (All time). */
 export function ReportThisPeriodBlock({ block, month }: { block: ReportThisPeriod; month: boolean }): JSX.Element | null {
-  if (block.figures === null && block.calendar === null) return null;
+  if (block.figures === null && block.calendar === null && block.growth === null) return null;
   return (
     <section className="hr-report-section" data-testid="report-this-period">
       <h2>{block.heading}</h2>
@@ -524,6 +633,7 @@ export function ReportThisPeriodBlock({ block, month }: { block: ReportThisPerio
         </dl>
       ) : null}
       {block.calendar ? <CalendarBlock calendar={block.calendar} month={month} /> : null}
+      {block.growth ? <ReportGrowthBlock growth={block.growth} /> : null}
     </section>
   );
 }
@@ -564,7 +674,7 @@ export function ReportMoreDetailBlock({ detail }: { detail: ReportMoreDetail }):
   const [open, setOpen] = useState(false);
   return (
     <section className="hr-report-more" data-testid="report-more">
-      <h2>
+      <h2 className="hr-report-more-heading">
         <button type="button" className="hr-report-disclosure hr-report-actions" aria-expanded={open} aria-controls={DETAIL_ID} onClick={() => setOpen(!open)} data-testid="report-more-button">
           <span>{detail.button}</span>
           <IconSvg name="arrow-right" size={GLYPH} color={colors.text.secondary} />

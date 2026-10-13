@@ -353,9 +353,10 @@ describe('periods and steps', () => {
       hideTable: 'Hide table',
       baseline: { quests: 0, cards: 0 },
       rows: [
-        { m: '2026-09', label: 'September 2026', quests: 3, cards: 3 },
-        { m: '2026-10', label: 'October 2026', quests: 7, cards: 5 },
+        { m: '2026-09', label: 'September 2026', short: 'Sep', quests: 3, cards: 3 },
+        { m: '2026-10', label: 'October 2026', short: 'Oct', quests: 7, cards: 5 },
       ],
+      latest: { quests: 7, cards: 5 },
     });
     expect(v.moreDetail?.blocks.map((b) => ('heading' in b ? b.heading : null))).not.toContain('New letters this period');
   });
@@ -903,5 +904,27 @@ describe('the month grid header (RP-7a2)', () => {
     const es = view(STEADY, { query: { period: 'month', at: null, from: null }, locale: 'es' });
     expect(es.thisPeriod?.calendar?.weekdays).toHaveLength(7);
     expect(es.thisPeriod?.calendar?.weekdays[0]).not.toBe('Mon');
+  });
+});
+
+describe('the printed footer (RP-7b, section 3.10)', () => {
+  it('reads "Private: shared from Hangul Route" with the print date on the viewer\'s day, never a name', () => {
+    expect(view(STEADY).printFooter).toBe('Private: shared from Hangul Route on Oct 15.');
+    expect(view(STEADY).printFooter).not.toContain('Mina');
+    expect(view(null).printFooter).toBe('Private: shared from Hangul Route on Oct 15.');
+  });
+
+  it('an invalid clock prints the learner\'s last saved day instead of an empty date', () => {
+    expect(view(STEADY, { now: new Date('not a time') }).printFooter).toBe('Private: shared from Hangul Route on Oct 15.');
+  });
+});
+
+describe('the growth legend (RP-7b)', () => {
+  it('names the last month\'s counts, or the earlier baseline when no month is held', () => {
+    expect(view(STEADY, { query: { period: 'all', at: null, from: null } }).thisPeriod?.growth?.latest).toEqual({ quests: 7, cards: 5 });
+    const noMonths = { ...STEADY, activity: { ...STEADY.activity, months: [] } };
+    const growth = view(noMonths, { query: { period: 'all', at: null, from: null } }).thisPeriod?.growth;
+    expect(growth?.rows).toEqual([]);
+    expect(growth?.latest).toEqual(growth?.baseline);
   });
 });

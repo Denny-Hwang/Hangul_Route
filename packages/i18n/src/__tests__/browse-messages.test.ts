@@ -191,3 +191,46 @@ describe('caregiver.browse (BR-7)', () => {
     expect(browse.display.note).toBe("These choices change only this preview. No learner's settings change.");
   });
 });
+
+/**
+ * F-BROWSE-001 BR-10 (sections 4.3, 4.11, 6): the console strings beside an entry and the deep-link buttons, in
+ * English, Spanish and Korean; the navigation label is `console.shell.nav.lessons`.
+ */
+describe('console.browse (BR-10)', () => {
+  const consoleBrowse = getMessages('en').console.browse;
+
+  it('says what section 4.3 says: the failed check, its two actions and the blocked storage line', () => {
+    expect(consoleBrowse.checkFailed).toBe('Could not check your plan.');
+    expect(consoleBrowse.tryAgain.cta).toBe('Try again');
+    expect(consoleBrowse.openFree.cta).toBe('Open free lessons');
+    expect(consoleBrowse.storageBlocked).toBe("Your browser blocked this page's storage, so lessons cannot open here.");
+    expect(consoleBrowse.preview.cta).toBe('Preview');
+    expect(consoleBrowse.previewLessons.cta).toBe('Preview lessons');
+    expect(getMessages('en').console.shell.nav.lessons).toBe('Lessons');
+  });
+
+  it('holds exactly these keys, each with its Spanish and Korean value', () => {
+    const paths = leafPaths(consoleBrowse).sort();
+    expect(paths).toEqual(['checkFailed', 'openFree.cta', 'preview.cta', 'previewLessons.cta', 'storageBlocked', 'tryAgain.cta']);
+    for (const locale of ['es', 'ko'] as const) {
+      const local = getMessages(locale).console.browse;
+      for (const path of paths) expect(String(lookup(local, path)), `${locale} ${path}`).not.toBe(String(lookup(consoleBrowse, path)));
+      expect(getMessages(locale).console.shell.nav.lessons, locale).not.toBe('Lessons');
+    }
+  });
+
+  it('passes the caregiver ban list in every locale; no "Browse", no age, no price, no lock word, no Hangul in English', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const local = getMessages(locale).console.browse;
+      for (const path of leafPaths(local)) {
+        const s = String(lookup(local, path));
+        expect(findBannedWord(s, locale, 'caregiver'), `${locale} ${path}: ${s}`).toBeNull();
+        expect(s, `${locale} ${path}`).not.toMatch(/\bbrowse\b|\bkids?\b|premium|upgrade|unlock|\$|\d/i);
+        if (locale === 'en') {
+          for (const { name, re } of KIDS_ONLY_FRAMING) expect(re.test(s), `${path} matches ${name}`).toBe(false);
+          expect(s, path).not.toMatch(/[ᄀ-ᇿ㄰-㆏가-힯]/);
+        }
+      }
+    }
+  });
+});

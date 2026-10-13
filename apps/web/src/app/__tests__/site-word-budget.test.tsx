@@ -1,6 +1,8 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { LearnersPage } from '../../components/landing/LearnersPage';
+import { ParentsPage } from '../../components/landing/ParentsPage';
+import { TeachersPage } from '../../components/landing/TeachersPage';
 import { ALL_CLAIMS_ON } from '../../data/__tests__/site-claims-fixtures';
 
 /**
@@ -34,8 +36,12 @@ function visibleWords(html: string): string[] {
 }
 
 describe('visible-word budgets with every claim on (F-SITE-002 §3.11)', () => {
-  it(`/learners: at most ${PERSONA_PAGE_WORDS} words`, () => {
-    const words = visibleWords(renderToStaticMarkup(<LearnersPage locale="en" claims={ALL_CLAIMS_ON} />));
+  it.each([
+    ['/learners', LearnersPage],
+    ['/parents', ParentsPage],
+    ['/teachers', TeachersPage],
+  ] as const)(`%s: at most ${PERSONA_PAGE_WORDS} words`, (_path, Page) => {
+    const words = visibleWords(renderToStaticMarkup(<Page locale="en" claims={ALL_CLAIMS_ON} />));
     expect(words.length).toBeGreaterThan(100);
     expect(words.length).toBeLessThanOrEqual(PERSONA_PAGE_WORDS);
   });
