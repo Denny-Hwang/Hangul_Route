@@ -3,7 +3,8 @@ import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { AskFrom } from '../logic/access-copy';
 import type { PreviewFrom } from '../logic/episode-access';
 import type { PinResetMethod } from '../logic/profiles/pin-flow';
-import type { ProposalSource } from '../logic/route/proposal-flow';
+import type { PlanChoice, ProposalSource } from '../logic/route/proposal-flow';
+import type { SetupState } from '../logic/route/setup-flow';
 import type { GrownUpVia } from '../logic/shell/handoff-rules';
 import type { CellStoriesSource } from '../logic/story/cell-stories';
 import type { LibrarySectionId } from '../logic/story/library-sections';
@@ -38,7 +39,9 @@ export type GrownUpDestination =
   /** F-REPORT-001 section 3.9 (RP-9): one learner's in-app report (`PinEntry.profileId`). */
   | 'LearnerReport'
   /** F-PLAN-002 section 3.9 (P2-7a): a child profile's "Make a weekly plan" row, through the gate when the device needs it (`PinEntry.profileId`). */
-  | 'RouteProposal';
+  | 'RouteProposal'
+  /** F-PLAN-002 section 3.9 (P2-7b): a child's **Change the plan** when the gate is closed (`PinEntry.profileId`). */
+  | 'RouteSetup';
 
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
@@ -83,6 +86,16 @@ export type RootStackParamList = {
    * update after a retake (`mode: 'update'`, K3) arrives with F-PLC-001 P-7b.
    */
   RouteProposal: { source: ProposalSource; profileId: string };
+  /**
+   * **Change the plan** (F-PLAN-002 section 3.9, wireframe console/curriculum-planner.md G1): four
+   * steps with large chips, prefilled from the plan in force, else from the proposal and the
+   * `choice` made on it.
+   */
+  RouteSetup: { profileId: string; choice?: PlanChoice };
+  /** The new plan before it starts (G2): the first four weeks, the stats and the learner notices. */
+  RoutePreview: { profileId: string; setup: SetupState };
+  /** "Your weekly plan" (G3): this week first, later weeks folded, Move my plan along, Change, Stop. */
+  RouteOverview: { profileId: string };
   /** The Stage 1 prize ceremony (F-QUEST-002 §3.8), opened from Results on the run that completed the stage. */
   StageComplete: { stageKey: StageKey };
   /** The Hangul Check (F-QUEST-002 §3.9), from the ceremony and the Journey Stage 1 header; never gates anything. */

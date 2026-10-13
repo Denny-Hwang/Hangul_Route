@@ -43,9 +43,14 @@ function weeksOf(meta: Pick<CurriculumMeta, 'weeks'>, items: readonly PlanItem[]
   });
 }
 
+/** Every week of a draft with its items (G2's later weeks, once opened). */
+export function draftWeeks(draft: CurriculumDraft): PlanWeek[] {
+  return weeksOf(draft, toPlanItems(draft));
+}
+
 /** G2: the first four weeks open, and how many later weeks follow. */
 export function previewWeeks(draft: CurriculumDraft): { open: PlanWeek[]; later: number } {
-  const all = weeksOf(draft, toPlanItems(draft));
+  const all = draftWeeks(draft);
   return { open: all.slice(0, PREVIEW_OPEN_WEEKS), later: Math.max(0, all.length - PREVIEW_OPEN_WEEKS) };
 }
 

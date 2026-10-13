@@ -1,6 +1,6 @@
 import { CATALOG, generateCurriculum, type CurriculumDraft } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { PREVIEW_OPEN_WEEKS, learnerNotices, planOverview, previewStats, previewWeeks } from '../plan-view';
+import { PREVIEW_OPEN_WEEKS, draftWeeks, learnerNotices, planOverview, previewStats, previewWeeks } from '../plan-view';
 import { selfRouteOf } from '../self-route';
 
 const draft = (weeks: number, over: Partial<Parameters<typeof generateCurriculum>[0]> = {}): CurriculumDraft =>
@@ -19,6 +19,9 @@ describe('the plan preview (wireframe G2)', () => {
     expect(open[0]?.rows.map((r) => r.date)).toEqual(['2026-10-12', '2026-10-14', '2026-10-17']);
     expect(open.every((w) => Array.isArray(w.extras))).toBe(true);
     expect(previewWeeks(draft(2)).later).toBe(0);
+    // Opening the later weeks shows every week, the first four the same as before.
+    expect(draftWeeks(d)).toHaveLength(12);
+    expect(draftWeeks(d).slice(0, PREVIEW_OPEN_WEEKS)).toEqual(open);
   });
 
   it('keeps a culture week\'s lead story for its label', () => {

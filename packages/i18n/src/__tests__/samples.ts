@@ -721,7 +721,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.weeklyPlan.planPreview.stats': [[1, 15], [18, 270]],
   'learner.weeklyPlan.planPreview.week': [[1], [12]],
   'learner.weeklyPlan.planPreview.cultureWeek': [['The New Year']],
-  'learner.weeklyPlan.planPreview.later': [[1], [8]],
+  'learner.weeklyPlan.planPreview.showLater': [[1], [8]],
   'learner.weeklyPlan.planPreview.extras.vocab': [['Food']],
   'learner.weeklyPlan.planPreview.notices.contentRunsOut': [[5]],
   'learner.weeklyPlan.planPreview.notices.didNotFit': [[1], [2]],

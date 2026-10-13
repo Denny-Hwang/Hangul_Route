@@ -37,7 +37,7 @@ describe('automatic re-pace (section 3.7)', () => {
   const today = '2026-09-20';
 
   it('counts pending past-dated items of this plan only', () => {
-    const list = [hw(route, 'q1', '2026-09-14'), hw(route, 'q2', '2026-09-20'), hw(route, 'q3', '2026-09-15', 'done'), { ...hw(route, 'q4', '2026-09-14'), id: 'plan:x#q4' }, { ...hw(route, 'q5', '2026-09-14'), targetDate: undefined }];
+    const list = [hw(route, 'q1', '2026-09-14'), hw(route, 'q2', '2026-09-20'), hw(route, 'q3', '2026-09-15', 'done'), { ...hw(route, 'q4', '2026-09-14'), id: 'plan:x#q4' }];
     expect(pendingPastOf(route, list, today).map((h) => h.questId)).toEqual(['q1']);
   });
 

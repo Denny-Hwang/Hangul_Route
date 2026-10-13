@@ -1592,16 +1592,11 @@ export const learner = {
       startPlan: { cta: 'Start this plan' },
       starting: { cta: 'Starting...' },
       notNow: { cta: 'Not now' },
+      /** Opens the four set-up steps (G1), prefilled from this proposal. */
+      moreChoices: { cta: 'More choices' },
       saveFailed: 'That did not work. Try again.',
       nothingReady: 'New lessons are on the way. Hoya can make a plan when they are here.',
       back: { cta: 'Back' },
-      /** The learner already follows an own plan (the overview arrives with P2-7b). */
-      hasPlan: {
-        title: 'You have a weekly plan.',
-        line: 'It moves along with you, one week at a time.',
-        thisWeek: 'This week',
-        nothingThisWeek: 'Nothing is planned this week. Play anything you like.',
-      },
     },
     /**
      * P2-7b: **Change the plan** (wireframe G1, four steps with large chips), the preview of the new
@@ -1647,8 +1642,7 @@ export const learner = {
       kind: { learn: 'Learn', culture: 'Culture', review: 'Review and collect', break: 'Days off' },
       cultureWeek: (story: string) => `Culture week: ${story}`,
       weekEmpty: 'Free practice. Play anything you like.',
-      later: (weeks: number) => plural('en', weeks, { one: '1 more week', other: `${weeks} more weeks` }),
-      showLater: { cta: 'Show the next weeks' },
+      showLater: (weeks: number) => plural('en', weeks, { one: 'Show 1 more week', other: `Show ${weeks} more weeks` }),
       hideLater: { cta: 'Hide the next weeks' },
       extras: { vocab: (topic: string) => `Words you can try: ${topic}`, wordsOptional: 'You can skip it.', hangulCheck: 'Hangul Check' },
       notices: {

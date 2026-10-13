@@ -28,7 +28,7 @@ export const AUTO_REPACE_OLDEST_DAYS = 7;
 
 /** Pending plan homework of this route dated before today. */
 export function pendingPastOf(route: Pick<SelfRoute, 'id'>, homework: readonly HomeworkAssignment[], today: DateKey): HomeworkAssignment[] {
-  return homework.filter((h) => !h.completedAt && h.id.startsWith(`${route.id}#`) && h.targetDate !== undefined && h.targetDate < today);
+  return homework.filter((h) => !h.completedAt && h.id.startsWith(`${route.id}#`) && h.targetDate < today);
 }
 
 export interface AutoRepaceInput {
@@ -49,7 +49,7 @@ export function autoRepaceDue(i: AutoRepaceInput): boolean {
   if (route.meta.repacedAt !== null && route.meta.repacedAt.slice(0, 10) === i.today) return false;
   const pending = pendingPastOf(route, i.homework, i.today);
   if (pending.length >= AUTO_REPACE_PENDING) return true;
-  const oldest = pending.reduce<string | null>((min, h) => (min === null || (h.targetDate as string) < min ? (h.targetDate as string) : min), null);
+  const oldest = pending.reduce<string | null>((min, h) => (min === null || h.targetDate < min ? h.targetDate : min), null);
   return oldest !== null && oldest <= addDays(i.today, -AUTO_REPACE_OLDEST_DAYS);
 }
 
