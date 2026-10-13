@@ -326,6 +326,8 @@ describe('ROUTES.spaceTransfers (T14: the space id only)', () => {
     expect(ROUTES.spaceTransfers('space:abc')).toBe('/teach/space/transfers?id=space%3Aabc');
     expect(ROUTES.spaceTransfers('space:abc', 'class')).toBe('/teach/space/transfers?id=space%3Aabc');
     expect(ROUTES.spaceTransfers('a&b=c#d')).toBe('/teach/space/transfers?id=a%26b%3Dc%23d');
+    expect(ROUTES.spaceTransfers('space:f', 'family')).toBe('/parent/space/transfers?id=space%3Af');
+    expect(ROUTES.spaceTransfers('space:s', 'school')).toBe('/teach/space/transfers?id=space%3As');
   });
 
   it('property: for any id, the URL holds the id and nothing else', () => {
