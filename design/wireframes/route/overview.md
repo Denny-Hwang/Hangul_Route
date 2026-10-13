@@ -96,5 +96,5 @@ Exit to: `route/setup` · `route/proposal` (**Make a new plan**) · `vocab/topic
 
 ## Open questions
 
-- **Owner item (section 3.7 notes, blocks the production flip):** may a child answer the Hoya check-in alone? Until it is decided, the check-in shows on a child profile only while plan changes are open (`planChangesOpen`, the gate), and `flags.routeEnabled` stays off in production.
+- **Owner decision OD-17 (decided 2026-10-13, section 3.7 notes):** a child does not answer the Hoya check-in alone. On a device that needs the grown-up gate the check-in shows on a child profile only while plan changes are open (`planChangesOpen`, the gate). With it decided, P2-8b turns `flags.routeEnabled` on (English only until the es and ko review is signed).
 - The "answered once" mark is per device, so a second device can ask once more (accepted limit).
