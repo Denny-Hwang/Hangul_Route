@@ -15,9 +15,19 @@ const LEAD = 48;
  * not a guilt trip: no day count and no word about a delay. A collected card
  * keeps its slot and switches tone, as every mission card does (F-HW-001
  * section 3.2). The button is the one control, so its accessible name carries
- * the card's lines and where it goes (section 3.10).
+ * the card's lines and where it goes (section 3.10), and the
+ * text above it is hidden from assistive tech so it is not read twice.
  */
-export function VocabMissionCard({ card, onPress }: { card: MissionCard; onPress: () => void }): React.ReactElement {
+export function VocabMissionCard({
+  card,
+  icon,
+  onPress,
+}: {
+  card: MissionCard;
+  /** Home's `ICON_FOR.vocab`, the one map from a card kind to its icon. */
+  icon: React.ComponentProps<typeof Icon>['name'];
+  onPress: () => void;
+}): React.ReactElement {
   const m = useMessages();
   const { title, subtitle } = missionCardText(card, m.learner);
   return (
@@ -25,9 +35,10 @@ export function VocabMissionCard({ card, onPress }: { card: MissionCard; onPress
       <Card padding="md" tone={card.collected ? 'success' : 'paper'}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: touchTarget.min }}>
           <View style={{ width: LEAD, alignItems: 'center' }}>
-            <Icon name="library" size={32} color={colors.text.secondary} />
+            <Icon name={icon} size={32} color={colors.text.secondary} />
           </View>
-          <View style={{ flex: 1, minWidth: 0 }}>
+          {/* The button's accessible name carries these lines, so they are read once, on the button. */}
+          <View style={{ flex: 1, minWidth: 0 }} aria-hidden importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
             <Body weight="semibold" size="lg">
               {title}
             </Body>

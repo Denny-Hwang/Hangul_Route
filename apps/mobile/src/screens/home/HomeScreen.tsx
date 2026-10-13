@@ -590,7 +590,7 @@ export function HomeScreen(): React.ReactElement {
                 />
               );
             }
-            if (card.kind === 'vocab') return <VocabMissionCard key={card.slot} card={card} onPress={() => openCard(card)} />;
+            if (card.kind === 'vocab') return <VocabMissionCard key={card.slot} card={card} icon={ICON_FOR.vocab} onPress={() => openCard(card)} />;
             const storyQuest = card.kind === 'story' || card.practiceKind === 'story' ? card.questId : undefined;
             const entry = storyQuest ? entryForQuest(storyIndex, storyQuest) : undefined;
             const topicCover = card.topicKey ? freeTopics.find((t) => t.key === card.topicKey)?.cover : undefined;
