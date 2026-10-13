@@ -325,7 +325,7 @@ function CurriculumInner(): JSX.Element {
                     {proposal?.defaultId === choice ? <SuggestedTag /> : null}
                   </span>
                   {option ? (
-                    <span style={{ display: 'block', color: colors.text.secondary, fontSize: typography.size.caption }} data-testid={`length-line-${choice}`}>
+                    <span style={{ display: 'block', color: colors.text.secondary, fontSize: typography.size.caption, fontWeight: typography.weight.regular }} data-testid={`length-line-${choice}`}>
                       {lengthPreviewText(option, locale)}
                     </span>
                   ) : null}

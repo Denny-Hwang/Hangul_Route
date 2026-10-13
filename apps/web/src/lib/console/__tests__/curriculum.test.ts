@@ -833,6 +833,14 @@ describe('the same input as the app gives the same defaultId and options (sectio
     expect(wizard?.options).toEqual(app?.options);
   });
 
+  it('carries a motivation into the proposal and the params, and reads a cleared start day as today', () => {
+    const family = [learner('sam', '10-11')];
+    const state: WizardState = { ...prefilledState('family', ctx(family)), motivation: 'kculture' };
+    expect(wizardProposal(state, ctx(family))?.params.goals.motivation).toBe('kculture');
+    expect(toParams(state, ['stage1'])?.goals).toEqual({ focus: 'balanced', motivation: 'kculture' });
+    expect(wizardProposal({ ...state, startDate: '' }, ctx(family))?.params.startDate).toBe(MONDAY);
+  });
+
   it('uses the chosen start day (a class: its next class day)', () => {
     const later = followProposal({ ...prefilledState('class', ctx([])), startDate: '2026-10-18' }, ctx([]));
     expect(wizardProposal(later, ctx([]))?.params.startDate).toBe('2026-10-18');

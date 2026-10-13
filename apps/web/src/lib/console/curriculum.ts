@@ -113,7 +113,7 @@ export interface WizardState {
   /** In priority order. */
   themes: ThemeKey[];
   /** Prefilled from `proposeRoute` (the console has no motivation of its own); carried into the params. */
-  motivation?: Motivation;
+  motivation?: Motivation | undefined;
   culturalAnchors: boolean;
   includeComingSoon: boolean;
 }
@@ -298,9 +298,9 @@ export function suggestedPace(state: Pick<WizardState, 'audience' | 'learnerId'>
  * the seed (its placed-out lessons from the shared catalogue; a family learner's oral stage from
  * the newest check), no completions (the console only reads counts), the D1 reading level of a
  * family's learner or the roster's for a class, the start day, and the entitlement of the space.
- * `pace` absent = the default chip; the rhythm's chip otherwise. Null off the chips.
+ * The pace is a chip: the suggested one for the first state, the rhythm's chip after.
  */
-function proposalInput(state: WizardState, context: ProposalContext, pace: PaceId | undefined): ProposeInput {
+function proposalInput(state: WizardState, context: ProposalContext, pace: PaceId): ProposeInput {
   const source = context.source ?? CATALOG;
   const level = STARTING_LEVELS[state.start];
   const picked = pickedLearner(state, context.learners);
@@ -317,7 +317,7 @@ function proposalInput(state: WizardState, context: ProposalContext, pace: PaceI
     ...(state.motivation === undefined ? {} : { motivation: state.motivation }),
     completedQuestIds: [],
     levelOrder: levelOrderOf(state, context.learners),
-    ...(pace === undefined ? {} : { pace }),
+    pace,
     ...(state.audience === 'class' ? { rosterLevelOrders } : {}),
     unlockedStages: [...context.unlockedStages],
     catalog: source,
@@ -341,18 +341,19 @@ export function wizardProposal(state: WizardState, context: ProposalContext): Ro
  */
 export function prefilledState(audience: WizardAudience, context: ProposalContext, learnerId: string | null = null): WizardState {
   const base = defaultsFor(audience, context.learners, context.today, learnerId);
-  const proposal = proposeRoute(proposalInput(base, context, undefined));
+  const pace = suggestedPace(base, context.learners);
+  const proposal = proposeRoute(proposalInput(base, context, pace));
   if (proposal === null) return base;
   const { params } = proposal;
   return {
     ...base,
-    ...(proposal.pace === null ? {} : pacePatch(proposal.pace)),
+    ...pacePatch(pace),
     length: proposal.defaultId,
     minutesPerSession: params.minutesPerSession,
     startDate: params.startDate,
     focus: params.goals.focus,
     themes: [...(params.goals.themes ?? [])],
-    ...(params.goals.motivation === undefined ? {} : { motivation: params.goals.motivation }),
+    motivation: params.goals.motivation,
   };
 }
 
