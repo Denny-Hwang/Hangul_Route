@@ -448,8 +448,9 @@ describe('device create (sections 4.2 guard 10, 4.4)', () => {
   it('checks the consent text, the locale and the sheet the device showed', async () => {
     const stale = await dCreate(JUN, junPhone, junCreate({ consent: { ...pinConsent, textVersion: 'transfer-1999' } }));
     expect([stale.status, stale.body.error?.code, stale.body.error?.details]).toEqual([422, 'consent_text_stale', { current: TRANSFER_CONSENT_TEXT_VERSION }]);
-    const locale = await dCreate(JUN, junPhone, junCreate({ consent: { ...pinConsent, locale: 'ko' } }));
-    expect([locale.status, locale.body.error?.code]).toEqual([422, 'consent_locale_unavailable']);
+    // Every UI locale has a consent text (T-6d); a locale outside the UI locales is a bad body.
+    const locale = await dCreate(JUN, junPhone, junCreate({ consent: { ...pinConsent, locale: 'fr' as never } }));
+    expect([locale.status, locale.body.error?.code]).toEqual([422, 'bad_request']);
     const noAttest = await dCreate(JUN, junPhone, junCreate({ consent: { textVersion: TRANSFER_CONSENT_TEXT_VERSION, locale: 'en' } }));
     expect([noAttest.status, noAttest.body.error?.code]).toEqual([422, 'bad_request']);
     const changed = await dCreate(JUN, junPhone, junCreate({ consent: { ...pinConsent, termsDigest: 'f'.repeat(64) } }));
