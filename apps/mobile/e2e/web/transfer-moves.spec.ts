@@ -127,7 +127,15 @@ async function seedSynced(page: Page, pinAgeHours: number | null): Promise<void>
     const at = NOW - pinAgeHours * 3_600_000;
     await seedStored(page, 'account:pinCreatedAt', at);
   }
-  await seedStored(page, `sync:${id}`, { secret: 'secret-e2e', rev: 1, lastSyncedAt: new Date().toISOString(), rescueCode: null });
+  // The app's own first sign-up try (no secret yet, 404 here) can still write its blank sync state after the
+  // seed lands; reload and check, so every test starts from a synced device.
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    await seedStored(page, `sync:${id}`, { secret: 'secret-e2e', rev: 1, lastSyncedAt: new Date().toISOString(), rescueCode: null });
+    await page.goto('/');
+    const stored = await readStored<{ secret: string | null }>(page, `sync:${id}`);
+    if (stored?.secret === 'secret-e2e') return;
+  }
+  throw new Error('the seeded sync state did not stick');
 }
 
 async function openProfile(page: Page, name: string): Promise<void> {
