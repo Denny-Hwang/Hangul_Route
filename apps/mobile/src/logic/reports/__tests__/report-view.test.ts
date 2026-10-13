@@ -171,13 +171,13 @@ describe('inAppReportView: a steady week, third person', () => {
     const calendar = view.thisPeriod?.calendar;
     expect(calendar?.lead).toBe(0);
     expect(calendar?.cells.map((cell) => `${cell.weekday}${cell.date}:${cell.kind}`)).toEqual([
-      'T6:none',
-      'W7:practiced',
-      'T8:practiced',
-      'F9:none',
-      'S10:none',
-      'S11:none',
-      'M12:practiced',
+      'Tue6:none',
+      'Wed7:practiced',
+      'Thu8:practiced',
+      'Fri9:none',
+      'Sat10:none',
+      'Sun11:none',
+      'Mon12:practiced',
     ]);
     expect(calendar?.sentence).toBe('Practiced on Wednesday, Thursday and Monday.');
   });
@@ -539,9 +539,9 @@ describe('dates without Intl', () => {
       throw new RangeError('no Intl');
     });
     const view = inAppReportView(input({ period: 'month' }));
-    expect(view.stepper?.range).toBe('Oct 1, 2026');
+    expect(view.stepper?.range).toBe('Oct 2026');
     const week = inAppReportView(input());
-    expect(week.thisPeriod?.calendar?.sentence).toBe('Practiced on Wed, Thu and Mon.');
+    expect(week.thisPeriod?.calendar?.sentence).toBe('Practiced on Wednesday, Thursday and Monday.');
     expect(week.thisPeriod?.calendar?.cells[0]?.weekday).toBe('Tue');
   });
 });

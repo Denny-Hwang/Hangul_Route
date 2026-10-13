@@ -20,7 +20,7 @@ import {
   type ReportVoice,
   type StageKey,
 } from '@hangul-route/content-schema';
-import { LOCALE_META, formatDate, type Messages, type UiLocale } from '@hangul-route/i18n';
+import { formatDate, type Messages, type UiLocale } from '@hangul-route/i18n';
 
 /**
  * The in-app learner report in words — F-REPORT-001 section 3.9 (RP-9; sections 3.5, 3.6, 3.11, 3.12; design
@@ -131,31 +131,19 @@ function letterPart(letter: string, m: Messages): Placed {
 const DAY_KEY_TIME = 'T00:00:00.000Z';
 const instantOf = (day: string): string => `${day}${DAY_KEY_TIME}`;
 
-/** An `Intl` date in the locale (UTC), or the given fallback where `Intl` is missing or rejects the options. */
-function intlDate(locale: UiLocale, day: string, options: Intl.DateTimeFormatOptions, fallback: () => string): string {
-  try {
-    return new Intl.DateTimeFormat(LOCALE_META[locale].speechLang, { ...options, timeZone: 'UTC' }).format(new Date(instantOf(day)));
-  } catch {
-    return fallback();
-  }
-}
-
 /** "Oct 12", with the year when it is not `today`'s year. */
 function dayText(day: string, locale: UiLocale, today: string): string {
   return formatDate(locale, instantOf(day), day.slice(0, 4) === today.slice(0, 4) ? 'monthDay' : 'monthDayYear', { utc: true });
 }
 
 /** "October 2026". */
-const monthText = (day: string, locale: UiLocale): string =>
-  intlDate(locale, `${day.slice(0, 7)}-01`, { month: 'long', year: 'numeric' }, () => formatDate(locale, instantOf(`${day.slice(0, 7)}-01`), 'monthDayYear', { utc: true }));
+const monthText = (day: string, locale: UiLocale): string => formatDate(locale, instantOf(`${day.slice(0, 7)}-01`), 'monthYear', { utc: true });
 
 /** "Monday": the calendar sentence names days in full (section 3.12). */
-const weekdayLongText = (day: string, locale: UiLocale): string =>
-  intlDate(locale, day, { weekday: 'long' }, () => formatDate(locale, instantOf(day), 'weekday', { utc: true }));
+const weekdayLongText = (day: string, locale: UiLocale): string => formatDate(locale, instantOf(day), 'weekdayLong', { utc: true });
 
-/** "M": the cell's narrow weekday (seven cells fit 320 px). */
-const weekdayNarrowText = (day: string, locale: UiLocale): string =>
-  intlDate(locale, day, { weekday: 'narrow' }, () => formatDate(locale, instantOf(day), 'weekday', { utc: true }));
+/** "Mon": the cell's weekday label. */
+const weekdayText = (day: string, locale: UiLocale): string => formatDate(locale, instantOf(day), 'weekday', { utc: true });
 
 // ---------------------------------------------------------------------------------------------
 // The input and the words of one report
@@ -390,7 +378,7 @@ export interface ReportCalendarCellView {
   day: string;
   /** The device saves every day up to today: a not-saved cell can only be a day another device holds, drawn as none. */
   kind: Exclude<ReportCalendarKind, 'not_saved'>;
-  /** The narrow weekday ("M"). */
+  /** The short weekday ("Mon"). */
   weekday: string;
   /** The day of the month. */
   date: number;
@@ -498,7 +486,7 @@ function calendarView(report: LearnerReport, w: ReportWords): ReportCalendarView
     cells: cells.map((cell) => ({
       day: cell.day,
       kind: cell.kind === 'practiced' ? 'practiced' : 'none',
-      weekday: weekdayNarrowText(cell.day, w.locale),
+      weekday: weekdayText(cell.day, w.locale),
       date: Number(cell.day.slice(8, 10)),
     })),
     // Practiced days only: the sentence never says a day was missed (design: in-app calendar).
