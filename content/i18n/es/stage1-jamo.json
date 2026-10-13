@@ -1,0 +1,120 @@
+{
+  "locale": "es",
+  "domain": "stage1-jamo",
+  "entries": {
+    "jamo:giyeok": {
+      "soundHint": "una g suave y ligera, entre la g de «gato» y la c de «casa»",
+      "exampleWord.gloss": "familia"
+    },
+    "jamo:nieun": {
+      "soundHint": "como la n de «nube»",
+      "exampleWord.gloss": "árbol"
+    },
+    "jamo:digeut": {
+      "soundHint": "una d suave y ligera, entre la d de «dedo» y la t de «taza»",
+      "exampleWord.gloss": "luna"
+    },
+    "jamo:rieul": {
+      "soundHint": "un toque rápido de la lengua, como la r de «cara»",
+      "exampleWord.gloss": "ramen coreano"
+    },
+    "jamo:mieum": {
+      "soundHint": "como la m de «mamá»",
+      "exampleWord.gloss": "agua"
+    },
+    "jamo:bieup": {
+      "soundHint": "una b suave y ligera, entre la b de «bebé» y la p de «papá»",
+      "exampleWord.gloss": "arroz"
+    },
+    "jamo:siot": {
+      "soundHint": "como la s de «sol»",
+      "exampleWord.gloss": "montaña"
+    },
+    "jamo:ieung": {
+      "soundHint": "muda al inicio de un bloque; al final suena como la n de «tengo»",
+      "exampleWord.gloss": "niño o niña"
+    },
+    "jamo:jieut": {
+      "soundHint": "una ch suave y ligera, sin soplo de aire",
+      "exampleWord.gloss": "casa"
+    },
+    "jamo:chieut": {
+      "soundHint": "como la ch de «chocolate», con un soplo de aire",
+      "exampleWord.gloss": "libro"
+    },
+    "jamo:kieuk": {
+      "soundHint": "como la c de «casa», con un soplo de aire",
+      "exampleWord.gloss": "nariz"
+    },
+    "jamo:tieut": {
+      "soundHint": "como la t de «taza», con un soplo de aire",
+      "exampleWord.gloss": "conejo"
+    },
+    "jamo:pieup": {
+      "soundHint": "como la p de «papá», con un soplo de aire",
+      "exampleWord.gloss": "uva"
+    },
+    "jamo:hieut": {
+      "soundHint": "como una j muy suave, casi solo aire",
+      "exampleWord.gloss": "cielo"
+    },
+    "jamo:a": {
+      "soundHint": "como la a de «casa»",
+      "exampleWord.gloss": "papá"
+    },
+    "jamo:ya": {
+      "soundHint": "como «ya» en «yate»",
+      "exampleWord.gloss": "béisbol"
+    },
+    "jamo:eo": {
+      "soundHint": "entre la o y la a, con la boca bien abierta",
+      "exampleWord.gloss": "mamá"
+    },
+    "jamo:yeo": {
+      "soundHint": "como «yo», con la boca bien abierta",
+      "exampleWord.gloss": "zorro"
+    },
+    "jamo:o": {
+      "soundHint": "como la o de «oso», con los labios redondos",
+      "exampleWord.gloss": "pato"
+    },
+    "jamo:yo": {
+      "soundHint": "como «yo» en «yogur»",
+      "exampleWord.gloss": "cocina, comida"
+    },
+    "jamo:u": {
+      "soundHint": "como la u de «luna»",
+      "exampleWord.gloss": "leche"
+    },
+    "jamo:yu": {
+      "soundHint": "como «yu» en «yuca»",
+      "exampleWord.gloss": "vidrio"
+    },
+    "jamo:eu": {
+      "soundHint": "di «u» con los labios estirados, sin redondear",
+      "exampleWord.gloss": "lo mejor, lo primero"
+    },
+    "jamo:i": {
+      "soundHint": "como la i de «isla»",
+      "exampleWord.gloss": "nombre"
+    },
+    "jamo:giyeok-batchim": {
+      "soundHint": "una k corta y cerrada, sin soltar el aire"
+    },
+    "jamo:nieun-batchim": {
+      "soundHint": "termina como la n de «pan»"
+    },
+    "jamo:rieul-batchim": {
+      "soundHint": "termina como la l de «sol»"
+    },
+    "jamo:mieum-batchim": {
+      "soundHint": "termina como la m de «álbum», con los labios cerrados"
+    },
+    "jamo:bieup-batchim": {
+      "soundHint": "una p corta y cerrada, con los labios juntos"
+    },
+    "jamo:ieung-batchim": {
+      "soundHint": "termina como la n de «tengo»"
+    }
+  }
+}

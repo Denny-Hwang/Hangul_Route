@@ -1,0 +1,191 @@
+{
+  "locale": "es",
+  "domain": "minigames",
+  "entries": {
+    "minigame:s1-letters-q1-check": {
+      "listenPick.rounds.lp-sym-jamo-eo.prompt": "la letra eo",
+      "listenPick.rounds.1.prompt": "tú"
+    },
+    "minigame:s1-letters-q2-check": {
+      "listenPick.rounds.lp-sym-jamo-u.prompt": "la letra u",
+      "listenPick.rounds.1.prompt": "árbol"
+    },
+    "minigame:s1-letters-q3-check": {
+      "listenPick.rounds.lp-sym-jamo-eu.prompt": "la letra eu",
+      "listenPick.rounds.1.prompt": "pierna, puente"
+    },
+    "minigame:s1-life-q1-check": {
+      "listenPick.rounds.lp-sym-jamo-chieut.prompt": "la letra chieut",
+      "listenPick.rounds.1.prompt": "queso"
+    },
+    "minigame:s1-life-q2-check": {
+      "listenPick.rounds.lp-sym-jamo-siot.prompt": "la letra siot",
+      "listenPick.rounds.1.prompt": "padre"
+    },
+    "minigame:s1-life-q3-apply": {
+      "cardPairs.tomato.gloss": "Tomate",
+      "cardPairs.kokoa.gloss": "Cacao",
+      "cardPairs.kuki.gloss": "Galleta",
+      "cardPairs.toseuteu.gloss": "Pan tostado",
+      "cardPairs.gimbap.gloss": "Kimbap"
+    },
+    "minigame:s1-life-q3-check": {
+      "listenPick.rounds.lp-sym-jamo-kieuk.prompt": "la letra kieuk",
+      "listenPick.rounds.1.prompt": "tomate"
+    },
+    "minigame:s1-rites-q1-play": {
+      "listenPick.rounds.0.prompt": "luna",
+      "listenPick.rounds.1.prompt": "la sílaba dan",
+      "listenPick.rounds.2.prompt": "agua",
+      "listenPick.rounds.3.prompt": "puerta",
+      "listenPick.rounds.4.prompt": "montaña",
+      "listenPick.rounds.5.prompt": "la sílaba sal"
+    },
+    "minigame:s1-rites-q1-check": {
+      "listenPick.rounds.0.prompt": "luna",
+      "listenPick.rounds.1.prompt": "Año Nuevo lunar"
+    },
+    "minigame:s1-rites-q2-check": {
+      "listenPick.rounds.0.prompt": "la sílaba song",
+      "listenPick.rounds.1.prompt": "pastel de arroz en media luna"
+    },
+    "minigame:s1-rites-q3-play": {
+      "listenPick.rounds.lp-sym-jamo-hieut.prompt": "la letra hieut",
+      "listenPick.rounds.lp-sym-jamo-yo.prompt": "la letra yo",
+      "listenPick.rounds.lp-sym-jamo-yu.prompt": "la letra yu",
+      "listenPick.rounds.3.prompt": "suerte",
+      "listenPick.rounds.4.prompt": "la sílaba han",
+      "listenPick.rounds.5.prompt": "la sílaba hak"
+    },
+    "minigame:s1-rites-q3-apply": {
+      "storySteps.a.label": "Ponerse el hanbok",
+      "storySteps.b.label": "Saludar a los mayores con una reverencia",
+      "storySteps.c.label": "Comer tteokguk",
+      "storySteps.d.label": "Recibir dinero de la suerte"
+    },
+    "minigame:s1-rites-q3-check": {
+      "listenPick.rounds.lp-sym-jamo-yo.prompt": "la letra yo",
+      "listenPick.rounds.1.prompt": "hanbok, ropa tradicional"
+    },
+    "minigame:s1-nature-q1-play": {
+      "listenPick.rounds.0.prompt": "oso",
+      "listenPick.rounds.1.prompt": "primavera (estación)",
+      "listenPick.rounds.2.prompt": "arroz",
+      "listenPick.rounds.3.prompt": "casa",
+      "listenPick.rounds.4.prompt": "boca",
+      "listenPick.rounds.5.prompt": "caqui (fruta)"
+    },
+    "minigame:s1-nature-q1-check": {
+      "listenPick.rounds.0.prompt": "oso",
+      "listenPick.rounds.1.prompt": "casa"
+    },
+    "minigame:s1-nature-q2-play": {
+      "listenPick.rounds.0.prompt": "montaña",
+      "listenPick.rounds.1.prompt": "río",
+      "listenPick.rounds.2.prompt": "mar",
+      "listenPick.rounds.3.prompt": "cielo",
+      "listenPick.rounds.4.prompt": "estrella",
+      "listenPick.rounds.5.prompt": "oso"
+    },
+    "minigame:s1-nature-q2-check": {
+      "listenPick.rounds.0.prompt": "montaña",
+      "listenPick.rounds.1.prompt": "río"
+    },
+    "minigame:s1-nature-q3-play": {
+      "listenPick.rounds.0.prompt": "luna",
+      "listenPick.rounds.1.prompt": "estrella",
+      "listenPick.rounds.2.prompt": "noche",
+      "listenPick.rounds.3.prompt": "luna llena",
+      "listenPick.rounds.4.prompt": "cielo",
+      "listenPick.rounds.5.prompt": "montaña"
+    },
+    "minigame:s1-nature-q3-check": {
+      "listenPick.rounds.0.prompt": "luna",
+      "listenPick.rounds.1.prompt": "luna llena"
+    },
+    "minigame:s1-crafts-q1-check": {
+      "listenPick.rounds.0.prompt": "cometa",
+      "listenPick.rounds.1.prompt": "juego"
+    },
+    "minigame:s1-crafts-q2-play": {
+      "listenPick.rounds.0.prompt": "papel coreano",
+      "listenPick.rounds.1.prompt": "papel",
+      "listenPick.rounds.2.prompt": "cerámica celadón",
+      "listenPick.rounds.3.prompt": "cerámica",
+      "listenPick.rounds.4.prompt": "cometa",
+      "listenPick.rounds.5.prompt": "pelota"
+    },
+    "minigame:s1-crafts-q2-check": {
+      "listenPick.rounds.0.prompt": "cerámica celadón",
+      "listenPick.rounds.1.prompt": "papel coreano"
+    },
+    "minigame:s1-crafts-q3-play": {
+      "listenPick.rounds.0.prompt": "el alfabeto coreano",
+      "listenPick.rounds.1.prompt": "Hoya, el tigre",
+      "listenPick.rounds.2.prompt": "hola, adiós (entre amigos)",
+      "listenPick.rounds.3.prompt": "amor",
+      "listenPick.rounds.4.prompt": "Corea",
+      "listenPick.rounds.5.prompt": "hanbok, ropa tradicional"
+    },
+    "minigame:s1-crafts-q3-check": {
+      "listenPick.rounds.0.prompt": "el alfabeto coreano",
+      "listenPick.rounds.1.prompt": "hola, adiós (entre amigos)"
+    },
+    "minigame:s2-life-card-1": {
+      "cardPairs.sagwa.gloss": "Manzana",
+      "cardPairs.uyu.gloss": "Leche",
+      "cardPairs.ppang.gloss": "Pan",
+      "cardPairs.gimbap.gloss": "Kimbap",
+      "cardPairs.bap.gloss": "Arroz"
+    },
+    "minigame:s2-life-quiz-1": {
+      "cardPairs.sagwa.gloss": "Manzana",
+      "cardPairs.uyu.gloss": "Leche",
+      "cardPairs.ppang.gloss": "Pan",
+      "cardPairs.gimchi.gloss": "Kimchi",
+      "cardPairs.mul.gloss": "Agua"
+    },
+    "minigame:s2-nature-card-1": {
+      "cardPairs.haneul.gloss": "Cielo",
+      "cardPairs.kkot.gloss": "Flor",
+      "cardPairs.namu.gloss": "Árbol",
+      "cardPairs.san.gloss": "Montaña",
+      "cardPairs.bada.gloss": "Mar"
+    },
+    "minigame:s2-nature-quiz-1": {
+      "cardPairs.haneul.gloss": "Cielo",
+      "cardPairs.byeol.gloss": "Estrella",
+      "cardPairs.gang.gloss": "Río",
+      "cardPairs.bom.gloss": "Primavera",
+      "cardPairs.nun.gloss": "Nieve"
+    },
+    "minigame:s4-rites-respond-1": {
+      "dialogue.0.npc": "¡Hola!",
+      "dialogue.1.npc": "¿Cómo te llamas?",
+      "dialogue.2.npc": "¡Mucho gusto!",
+      "dialogue.0.options.annyeonghaseyo.gloss": "Hola",
+      "dialogue.0.options.jal-gayo.gloss": "Adiós",
+      "dialogue.0.options.gomawoyo.gloss": "Gracias",
+      "dialogue.1.options.jeoneun-hoyayeyo.gloss": "Soy Hoya",
+      "dialogue.1.options.ne-joayo.gloss": "Sí, está bien",
+      "dialogue.1.options.sagwa-juseyo.gloss": "Una manzana, por favor",
+      "dialogue.2.options.jeodo-bangawoyo.gloss": "Igualmente, mucho gusto",
+      "dialogue.2.options.aniyo.gloss": "No",
+      "dialogue.2.options.mollayo.gloss": "No sé"
+    },
+    "minigame:s4-rites-card-1": {
+      "cardPairs.annyeong.gloss": "Hola",
+      "cardPairs.gamsa.gloss": "Gracias",
+      "cardPairs.chingu.gloss": "Amigo, amiga",
+      "cardPairs.ireum.gloss": "Nombre",
+      "cardPairs.insa.gloss": "Saludo"
+    },
+    "minigame:s4-rites-quiz-1": {
+      "cardPairs.annyeong.gloss": "Hola",
+      "cardPairs.gamsa.gloss": "Gracias",
+      "cardPairs.chingu.gloss": "Amigo, amiga",
+      "cardPairs.ireum.gloss": "Nombre",
+      "cardPairs.insa.gloss": "Saludo"
+    }
+  }
+}
