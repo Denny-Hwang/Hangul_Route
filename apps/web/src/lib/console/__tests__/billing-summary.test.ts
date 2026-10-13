@@ -3,7 +3,7 @@ import { formatDate, formatMinorAmount, getMessages, UI_LOCALES } from '@hangul-
 import { describe, expect, it } from 'vitest';
 import { CONTACT_EMAIL } from '../../../data/contact';
 import { SITE_CLAIMS, type SiteClaims } from '../../../data/site-claims';
-import { billingHomeView, contactHref, includesLines, receiptRow, summaryFailureNotice, type BillingHomeView } from '../billing-summary';
+import { actionNoteFor, actionNoteText, billingHomeView, contactHref, includesLines, receiptRow, summaryFailureNotice, type BillingActionNote, type BillingHomeView } from '../billing-summary';
 import { planPrice, promoPriceLine } from '../billing';
 
 /**
@@ -347,5 +347,32 @@ describe('empty state, help and failures', () => {
       expect(v.cards[0]?.readOnly).toBe(getMessages(locale).console.billing.readOnly.family);
       expect(JSON.stringify(v)).not.toMatch(/\$|15[.,]30/);
     }
+  });
+});
+
+describe('action notes after checkout or Manage subscription (B-8a)', () => {
+  it('maps the server codes to one neutral note per action', () => {
+    expect(actionNoteFor('checkout', 'already_active')).toBe('alreadyActive');
+    expect(actionNoteFor('checkout', 'stripe_not_configured')).toBe('notConfigured');
+    expect(actionNoteFor('portal', 'not_configured')).toBe('notConfigured');
+    expect(actionNoteFor('checkout', 'live_not_enabled')).toBe('liveOff');
+    expect(actionNoteFor('portal', 'live_not_enabled')).toBe('liveOff');
+    expect(actionNoteFor('checkout', 'stripe_error')).toBe('checkoutFailed');
+    expect(actionNoteFor('checkout', undefined)).toBe('checkoutFailed');
+    expect(actionNoteFor('portal', 'already_active')).toBe('portalFailed');
+    expect(actionNoteFor('portal', undefined)).toBe('portalFailed');
+  });
+
+  it('words each note from the dictionary', () => {
+    const notes: Record<BillingActionNote, string> = {
+      alreadyActive: b.alreadyActive,
+      notConfigured: b.notConfigured,
+      liveOff: b.liveOff,
+      checkoutFailed: b.checkoutFailed,
+      portalFailed: b.portalFailed,
+    };
+    for (const [note, text] of Object.entries(notes)) expect(actionNoteText(note as BillingActionNote, 'en')).toBe(text);
+    expect(actionNoteText('alreadyActive')).toBe(b.alreadyActive);
+    expect(actionNoteText('alreadyActive', 'ko')).toBe(getMessages('ko').console.billing.alreadyActive);
   });
 });

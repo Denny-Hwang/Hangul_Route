@@ -388,3 +388,18 @@ export function summaryFailureNotice(offline: boolean, locale: UiLocale = DEFAUL
   const billing = getMessages(locale).console.billing;
   return { text: offline ? billing.offline : billing.cantCheck, retry: billing.retry.cta };
 }
+
+/** A note above the cards after Get … or Manage subscription did not reach Stripe (section 4.4; neutral tone). */
+export type BillingActionNote = 'alreadyActive' | 'notConfigured' | 'liveOff' | 'checkoutFailed' | 'portalFailed';
+
+/** The note for a refused checkout or portal call, from the server's error code. */
+export function actionNoteFor(action: 'checkout' | 'portal', code: string | undefined): BillingActionNote {
+  if (action === 'checkout' && code === 'already_active') return 'alreadyActive';
+  if (code === 'stripe_not_configured' || code === 'not_configured') return 'notConfigured';
+  if (code === 'live_not_enabled') return 'liveOff';
+  return action === 'checkout' ? 'checkoutFailed' : 'portalFailed';
+}
+
+export function actionNoteText(note: BillingActionNote, locale: UiLocale = DEFAULT_LOCALE): string {
+  return getMessages(locale).console.billing[note];
+}
