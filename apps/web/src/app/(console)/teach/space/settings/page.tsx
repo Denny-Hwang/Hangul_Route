@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { SettingsSections } from '@/components/console/SettingsParts';
-import { Button, ConsoleShell, LoadErrorPanel, Muted, Notice } from '@/components/console/ui';
+import { Button, LoadErrorPanel, Muted, Notice } from '@/components/console/ui';
+import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
 import type { MemberView, Roster } from '@/lib/console/api';
 import { schoolConsentModeEnabled } from '@/lib/console/config';
@@ -51,7 +52,7 @@ function SettingsInner(): JSX.Element {
     void load();
   }, [load]);
 
-  if (!ready || !session) return <ConsoleShell>{null}</ConsoleShell>;
+  if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
 
   const run = async (action: () => Promise<{ ok: boolean }>, okNote: SettingsNote, failNote: SettingsNote): Promise<void> => {
     if (!api) return;
@@ -67,7 +68,7 @@ function SettingsInner(): JSX.Element {
   const archived = !!space?.archivedAt;
 
   return (
-    <ConsoleShell onSignOut={signOut} title={space ? s.titleFor(space.name) : s.title}>
+    <AdultFrame onSignOut={signOut} title={space ? s.titleFor(space.name) : s.title}>
       <Muted>
         <Link href={ROUTES.space(spaceId)}>{s.back(space?.name ?? null)}</Link>
       </Muted>
@@ -116,13 +117,13 @@ function SettingsInner(): JSX.Element {
           {archived ? <Button onClick={() => router.push(ROUTES.home)}>{s.backToConsole.cta}</Button> : null}
         </>
       ) : null}
-    </ConsoleShell>
+    </AdultFrame>
   );
 }
 
 export default function SettingsPage(): JSX.Element {
   return (
-    <Suspense fallback={<ConsoleShell>{null}</ConsoleShell>}>
+    <Suspense fallback={<AdultFrame>{null}</AdultFrame>}>
       <SettingsInner />
     </Suspense>
   );

@@ -408,8 +408,6 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
   it('covers the console page buttons (PR 10a)', () => {
     const paths = leafPaths(getMessages('en')).filter((p) => BUDGETS[p.split('.').pop() ?? ''] !== undefined);
     for (const expected of [
-      'console.shell.account.cta',
-      'console.shell.billing.cta',
       'console.shell.signOut.cta',
       'console.joinCode.copy.cta',
       'console.joinCode.copied.cta',
@@ -421,7 +419,7 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       'console.start.creating.cta',
       'console.start.goToClass.cta',
       'console.home.open.cta',
-      'console.home.newSpace.cta',
+      'console.home.newClass.cta',
       'console.space.regenerate.cta',
       'console.space.createCode.cta',
       'console.space.relinkRequests.cta',

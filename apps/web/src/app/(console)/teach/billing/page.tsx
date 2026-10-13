@@ -4,7 +4,8 @@ import { spacing, typography } from '@hangul-route/design-system/tokens';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { CurrentPlanList, PlanRowList } from '@/components/console/BillingParts';
-import { Button, ConsoleShell, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
+import { Button, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
+import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
 import type { Promo } from '@hangul-route/content-schema';
 import type { EntitlementView, SpaceListItem } from '@/lib/console/api';
@@ -43,7 +44,7 @@ function BillingInner(): JSX.Element {
     void load();
   }, [load]);
 
-  if (!ready || !session) return <ConsoleShell>{null}</ConsoleShell>;
+  if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
 
   const cards = entitlements ? currentPlanCards(entitlements, now, locale) : [];
   const rows = spaces && entitlements ? planRowsFor(session.accountId, spaces, entitlements, now, locale) : [];
@@ -106,7 +107,7 @@ function BillingInner(): JSX.Element {
   };
 
   return (
-    <ConsoleShell onSignOut={signOut} title={b.title}>
+    <AdultFrame onSignOut={signOut} title={b.title}>
       {!api ? <Notice tone="nudge">{c.shell.noApi}</Notice> : null}
       {note ? <Notice tone={note === 'success' ? 'success' : 'nudge'}>{billingNoteText(note, locale)}</Notice> : null}
       {pastDue ? <Notice tone="nudge">{c.billingPastDue}</Notice> : null}
@@ -144,13 +145,13 @@ function BillingInner(): JSX.Element {
       </section>
 
       <Muted>{c.billingKidsLine}</Muted>
-    </ConsoleShell>
+    </AdultFrame>
   );
 }
 
 export default function BillingPage(): JSX.Element {
   return (
-    <Suspense fallback={<ConsoleShell>{null}</ConsoleShell>}>
+    <Suspense fallback={<AdultFrame>{null}</AdultFrame>}>
       <BillingInner />
     </Suspense>
   );

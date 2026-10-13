@@ -6,7 +6,8 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Chip, ChipGroup, ShortPlanLine, WarningList, WeekTable, onRadioKeys } from '@/components/console/CurriculumParts';
-import { Button, ConsoleShell, Muted, Notice, panelStyle } from '@/components/console/ui';
+import { Button, Muted, Notice, panelStyle } from '@/components/console/ui';
+import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
 import type { Roster } from '@/lib/console/api';
 import { contentGatingEnabled } from '@/lib/console/config';
@@ -136,7 +137,7 @@ function CurriculumInner(): JSX.Element {
   // The switch is on but this viewer cannot tell the coverage: neutral product words, no link (section 3.11).
   const neutral = leftOutNeutral(coverage, contentGatingEnabled());
 
-  if (!ready || !session) return <ConsoleShell>{null}</ConsoleShell>;
+  if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
 
   const hint = audience === 'class' || learners.length >= 3 ? levelHint(learners) : null;
   const weeks = weeksOf(state);
@@ -202,7 +203,7 @@ function CurriculumInner(): JSX.Element {
   };
 
   return (
-    <ConsoleShell onSignOut={signOut} title={roster ? c.pageTitle(roster.space.name) : c.title}>
+    <AdultFrame onSignOut={signOut} title={roster ? c.pageTitle(roster.space.name) : c.title}>
       <Muted>
         <Link href={ROUTES.space(spaceId)}>{c.back(roster?.space.name ?? null)}</Link>
       </Muted>
@@ -434,13 +435,13 @@ function CurriculumInner(): JSX.Element {
           </div>
         </section>
       ) : null}
-    </ConsoleShell>
+    </AdultFrame>
   );
 }
 
 export default function CurriculumPage(): JSX.Element {
   return (
-    <Suspense fallback={<ConsoleShell>{null}</ConsoleShell>}>
+    <Suspense fallback={<AdultFrame>{null}</AdultFrame>}>
       <CurriculumInner />
     </Suspense>
   );

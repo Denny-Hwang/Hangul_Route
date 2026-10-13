@@ -29,6 +29,10 @@ vi.mock('@/components/console/LanguageSelect', () => ({ LanguageSelect: () => nu
 // next/link needs the app router's context; a plain anchor keeps its href and text.
 vi.mock('next/link', () => ({ default: ({ href, children }: { href: string; children: ReactNode }) => <a href={href}>{children}</a> }));
 
+// The adult frame (F-APP-001 A-5a) reads the spaces list and draws its own links; adult-frame.test.tsx covers it.
+// Here it passes the page through, so the calls and the links below are the page's own.
+vi.mock('@/components/console/AdultFrame', () => ({ AdultFrame: ({ children }: { children: ReactNode }) => <>{children}</> }));
+
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: () => undefined, push: () => undefined }),
   useSearchParams: () => new URLSearchParams('id=space%3Ac1'),

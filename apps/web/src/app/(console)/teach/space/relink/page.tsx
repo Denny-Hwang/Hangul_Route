@@ -4,7 +4,8 @@ import { colors, spacing, typography } from '@hangul-route/design-system/tokens'
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
-import { Button, ConsoleShell, Muted, Notice, panelStyle } from '@/components/console/ui';
+import { Button, Muted, Notice, panelStyle } from '@/components/console/ui';
+import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
 import type { RelinkView, Roster } from '@/lib/console/api';
 import { RELINK_REFRESH_MS, type RelinkNote, canReissueRescueCode, expiresLabel, relinkNoteText, requestedLabel } from '@/lib/console/relink';
@@ -45,7 +46,7 @@ function RelinkInner(): JSX.Element {
     return () => clearInterval(handle);
   }, [load]);
 
-  if (!ready || !session) return <ConsoleShell>{null}</ConsoleShell>;
+  if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
 
   const decide = async (req: RelinkView, approve: boolean): Promise<void> => {
     if (!api) return;
@@ -77,7 +78,7 @@ function RelinkInner(): JSX.Element {
   const asking = aroundSlot(c.relink.askingToBe);
 
   return (
-    <ConsoleShell onSignOut={signOut} title={roster ? c.relink.titleFor(roster.space.name) : c.relink.title}>
+    <AdultFrame onSignOut={signOut} title={roster ? c.relink.titleFor(roster.space.name) : c.relink.title}>
       <Muted>
         <Link href={ROUTES.space(spaceId)}>{c.relink.back(roster?.space.name ?? null)}</Link>
       </Muted>
@@ -143,13 +144,13 @@ function RelinkInner(): JSX.Element {
           <Muted>{c.relinkCardsComeBack}</Muted>
         </section>
       )}
-    </ConsoleShell>
+    </AdultFrame>
   );
 }
 
 export default function RelinkPage(): JSX.Element {
   return (
-    <Suspense fallback={<ConsoleShell>{null}</ConsoleShell>}>
+    <Suspense fallback={<AdultFrame>{null}</AdultFrame>}>
       <RelinkInner />
     </Suspense>
   );

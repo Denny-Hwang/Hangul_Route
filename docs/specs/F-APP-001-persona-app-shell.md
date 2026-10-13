@@ -417,7 +417,7 @@ A grown-up who is also a learner on the same device uses both: learning at `/`, 
 | `caregiver.grownUpHome.title`, `.line`, `.cta` | ParentDashboard card | |
 | `caregiver.grownUpHome.noPin`, `.continue.cta` | PinEntry `GrownUpArea` without a PIN | button keyed `.cta` for the 28-character budget (A-6) |
 | `console.shell.backToLearning`, `.openLearnerApp`, `.aboutSite`, `.privacy`, `.terms` | frame | `backToSite` is removed (unused after A-5a) |
-| `console.shell.persona.groupLabel`, `.parent` ("Family"), `.teacher` | frame switch | |
+| `console.shell.persona.parent` ("Family"), `.teacher` | frame switch | the switch's group label is `a11y.shell.personaSwitch` (A-5a; no `persona.groupLabel` key) |
 | `console.shell.nav.home`, `.reports`, `.notes`, `.classes`, `.lessons`, `.billing` | frame | registered here (section 3.8) |
 | `console.signIn.persona.parent.intro`, `.teacher.intro`, `console.signIn.neutralIntro`, `console.signIn.learnersNoAccount`, `console.signIn.imLearning` | `/signin` | replaces `kidsNoAccount` on this page |
 | removed: `console.whySignIn`, `console.clerkIntro`, `console.kidsNoAccount` (A-4b); `console.home.title` ("Hi, {name}"), `console.home.newSpace` (A-5a) | — | not drawn by the design pass (D8, D14); the PR that removes the last reader deletes the key with its `es` and `ko` overlays (2026-10-12) |

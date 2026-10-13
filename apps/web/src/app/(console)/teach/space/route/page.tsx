@@ -3,7 +3,8 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { BackLink, LearningRouteContent, LearningRouteLoading, readingColumn } from '@/components/console/LearningRouteParts';
-import { Button, ConsoleShell, panelStyle } from '@/components/console/ui';
+import { Button, panelStyle } from '@/components/console/ui';
+import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
 import type { PlanView, Roster } from '@/lib/console/api';
 import { learningRouteEnabled } from '@/lib/console/config';
@@ -78,14 +79,14 @@ function LearningRouteInner(): JSX.Element {
     if (away) router.replace(spaceId ? ROUTES.space(spaceId) : ROUTES.home);
   }, [away, router, spaceId]);
 
-  if (away || !ready || !session) return <ConsoleShell>{null}</ConsoleShell>;
+  if (away || !ready || !session) return <AdultFrame>{null}</AdultFrame>;
 
   const lr = m.console.learningRoute;
   // Before the roster names the space's kind (loading, or a read that failed): the kind-neutral "Back" to the space,
   // or the console home when the address names no space.
   const back = spaceId ? { href: ROUTES.space(spaceId), text: lr.back.space } : { href: ROUTES.home, text: m.console.shell.home };
   return (
-    <ConsoleShell onSignOut={signOut} title={lr.section}>
+    <AdultFrame onSignOut={signOut} title={lr.section}>
       {error ? (
         <div style={readingColumn}>
           <BackLink link={back} />
@@ -100,13 +101,13 @@ function LearningRouteInner(): JSX.Element {
       ) : (
         <LearningRouteLoading back={back} />
       )}
-    </ConsoleShell>
+    </AdultFrame>
   );
 }
 
 export default function LearningRoutePage(): JSX.Element {
   return (
-    <Suspense fallback={<ConsoleShell>{null}</ConsoleShell>}>
+    <Suspense fallback={<AdultFrame>{null}</AdultFrame>}>
       <LearningRouteInner />
     </Suspense>
   );

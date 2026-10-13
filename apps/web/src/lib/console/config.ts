@@ -17,6 +17,8 @@ export interface ConsoleEnv {
   NEXT_PUBLIC_LEARNING_ROUTE_ENABLED?: string;
   /** Progress reports (F-REPORT-001), the console twin of the learner app's `EXPO_PUBLIC_REPORTS_ENABLED`. */
   NEXT_PUBLIC_REPORTS_ENABLED?: string;
+  /** All lessons, the grown-up Lessons entry (F-BROWSE-001 section 5.4; F-APP-001 section 3.8), `enabled` to show it; default off. */
+  NEXT_PUBLIC_BROWSE?: string;
   NODE_ENV?: string;
 }
 
@@ -39,6 +41,7 @@ export function buildEnv(): ConsoleEnv {
     NEXT_PUBLIC_NOTES_ENABLED: process.env.NEXT_PUBLIC_NOTES_ENABLED,
     NEXT_PUBLIC_LEARNING_ROUTE_ENABLED: process.env.NEXT_PUBLIC_LEARNING_ROUTE_ENABLED,
     NEXT_PUBLIC_REPORTS_ENABLED: process.env.NEXT_PUBLIC_REPORTS_ENABLED,
+    NEXT_PUBLIC_BROWSE: process.env.NEXT_PUBLIC_BROWSE,
     NODE_ENV: process.env.NODE_ENV,
   };
 }
@@ -129,6 +132,23 @@ export const REPORT_REVIEWED_LOCALES: readonly UiLocale[] = ['en'];
 export function reportsEnabled(locale: UiLocale, env: ConsoleEnv = buildEnv()): boolean {
   const raw = env.NEXT_PUBLIC_REPORTS_ENABLED;
   return (raw === 'true' || raw === '1') && REPORT_REVIEWED_LOCALES.includes(locale);
+}
+
+/**
+ * All lessons (F-BROWSE-001 section 5.4; the one predicate of F-APP-001 section 3.8, amended by F-BROWSE-001 BR-0b):
+ * `NEXT_PUBLIC_BROWSE=enabled`, the `lectureModeEnabled()` pattern. Off by default, so no Lessons entry is drawn
+ * before the lesson browser is deployed (BR-14 flips it).
+ */
+export function browseEnabled(env: ConsoleEnv = buildEnv()): boolean {
+  return env.NEXT_PUBLIC_BROWSE === 'enabled';
+}
+
+/**
+ * Whether a Lessons entry shows on this page (F-APP-001 section 3.8, F-BROWSE-001 section 4.3): `browseEnabled()`
+ * and the console runs on the app origin (`/browse` is a learner root of that origin only, never of the site).
+ */
+export function browseEntryShown(origin: string, env: ConsoleEnv = buildEnv()): boolean {
+  return browseEnabled(env) && origin === appUrl(env);
 }
 
 export const DEFAULT_APP_URL = 'https://app.hangulroute.com';

@@ -15,7 +15,8 @@ import {
   lectureSectionStyle,
   type LectureOptionValues,
 } from '@/components/console/LectureParts';
-import { Button, ConsoleShell, Field, Muted, Notice } from '@/components/console/ui';
+import { Button, Field, Muted, Notice } from '@/components/console/ui';
+import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
 import type { PlanView, Roster } from '@/lib/console/api';
 import { appUrl, lectureModeEnabled } from '@/lib/console/config';
@@ -143,7 +144,7 @@ function LectureInner(): JSX.Element {
     setCopied(false);
   }, [title, blocks, romanization, strokeGuide, sound, presenterLocale, picker]);
 
-  if (!ready || !session) return <ConsoleShell>{null}</ConsoleShell>;
+  if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
 
   const back = (
     <Muted>
@@ -153,11 +154,11 @@ function LectureInner(): JSX.Element {
 
   if (!enabled) {
     return (
-      <ConsoleShell onSignOut={signOut} title={l.title}>
+      <AdultFrame onSignOut={signOut} title={l.title}>
         {back}
         <h1 style={{ fontSize: typography.size.title, margin: `0 0 ${spacing.xs}px` }}>{l.title}</h1>
         <Notice>{l.comingSoon}</Notice>
-      </ConsoleShell>
+      </AdultFrame>
     );
   }
 
@@ -230,7 +231,7 @@ function LectureInner(): JSX.Element {
   };
 
   return (
-    <ConsoleShell onSignOut={signOut} title={roster ? l.titleFor(roster.space.name) : l.title}>
+    <AdultFrame onSignOut={signOut} title={roster ? l.titleFor(roster.space.name) : l.title}>
       {back}
       {!api ? <Notice tone="nudge">{c.shell.noApi}</Notice> : null}
       {loading && !roster ? <Muted>{c.space.loading}</Muted> : null}
@@ -299,13 +300,13 @@ function LectureInner(): JSX.Element {
           {namesMode ? <Muted>{l.copyNoNames}</Muted> : null}
         </>
       ) : null}
-    </ConsoleShell>
+    </AdultFrame>
   );
 }
 
 export default function LecturePage(): JSX.Element {
   return (
-    <Suspense fallback={<ConsoleShell>{null}</ConsoleShell>}>
+    <Suspense fallback={<AdultFrame>{null}</AdultFrame>}>
       <LectureInner />
     </Suspense>
   );

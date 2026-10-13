@@ -98,15 +98,24 @@ export const consoleMsgs = {
   schoolAtLimit: 'At the licence limit — new students will be asked to check with their teacher.',
   schoolLicenceLapsed: 'The licence needs attention. Classes stay readable; students keep Stage 1 either way.',
 
-  /** The header of every console page (`ConsoleShell`), and the note shown when the build has no API address. */
+  /**
+   * The adult frame of every grown-up page (`AdultFrame`, F-APP-001 A-5a, section 3.8;
+   * design/screens/app-shell/adult-frame.md), and the note shown when the build has no API address.
+   */
   shell: {
-    backToSite: '← Hangul Route',
     home: 'Console',
-    account: { cta: 'Account' },
-    billing: { cta: 'Billing' },
     signOut: { cta: 'Sign out' },
-    /** Adult nav labels (F-APP-001 `ADULT_NAV`); `notes` is F-FEEDBACK-001's item, shown only with the notes flag. */
-    nav: { notes: 'Notes' },
+    /** The way back to the learner app; "Open the learner app" on a device with no learner profile (a teacher's laptop). */
+    backToLearning: 'Back to learning',
+    openLearnerApp: 'Open the learner app',
+    /** Footer links to the site (hangulroute.com). */
+    aboutSite: 'About Hangul Route',
+    privacy: 'Privacy',
+    terms: 'Terms',
+    /** The persona switch and the persona name; the parent persona is labelled Family (OD-14). */
+    persona: { parent: 'Family', teacher: 'Teacher' },
+    /** Adult nav labels (F-APP-001 `ADULT_NAV`); an item whose sibling flag is off is not drawn. */
+    nav: { home: 'Home', reports: 'Reports', notes: 'Notes', classes: 'Classes', lessons: 'Lessons', billing: 'Billing' },
     noApi: 'The console needs an API address (NEXT_PUBLIC_API_BASE_URL) on this build.',
   },
   /** Space kinds: a label ("Class code") and the home-page group heading. */
@@ -189,13 +198,22 @@ export const consoleMsgs = {
       schoolDefault: 'Our school',
     },
   },
-  /** Console home (`/teach/home`): counts only, no names, no percentages. */
+  /**
+   * The teacher home (`/teach/home`, F-APP-001 A-5a, section 3.8; design/screens/app-shell/teacher-home.md):
+   * counts only, no names, no percentages. The row links show only with their sibling flags.
+   */
   home: {
-    title: (name: string) => `Hi, ${name}`,
     lastList: 'Showing the last list we loaded.',
     archived: '(archived)',
     open: { cta: 'Open →' },
-    newSpace: { cta: '+ New space' },
+    newClass: { cta: '+ New class' },
+    classReport: 'Class report',
+    notes: 'Notes',
+    lessons: 'Lessons',
+    /** The account holds no class or school space yet (section 3.8). */
+    noClass: { title: "You don't have a class yet.", setUp: 'Set up a class', goFamily: 'Go to Family' },
+    /** The quiet cross-link at the bottom: set up the other persona, or switch to it. */
+    cross: { addFamily: 'Learning at home too? Set up a family space', toFamily: 'Your family is under Family' },
   },
   /** A class or family roster (`/teach/space`). */
   space: {
