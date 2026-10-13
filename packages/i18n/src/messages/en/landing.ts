@@ -446,6 +446,13 @@ export const landing = {
             /** F-REPORT-001 section 3.10: who can see the progress above and the reports built from it. */
             progressWho:
               "Who can see progress and reports: the learner's family caregivers, who can also recover the full saved progress; the teacher of a class the learner joined; and the owner and admins of that class's school. A class sees day-by-day history only from the day the learner joined, and all-time totals without the first practice day.",
+            /**
+             * F-FEEDBACK-001 section 8.7 (FB-13): notes from grown-ups. Who can send (6.1, OD-17), the learner's only
+             * answer (6.6, four fixed reactions), what a class sender sees (8.2, OD-8, reaction only in `all` mode),
+             * the family's controls (8.3, 8.5), the device's put away and report, retention (OD-9, 8.7) and deletion.
+             */
+            notes: ({ email }: LegalValues) =>
+              `Notes from grown-ups: the learner's family, and the teacher of a class the learner joined, can send the learner short notes that start from a set of reviewed messages. In a family, only the family owner and the adults the owner allows can send. The learner cannot write back: they can only pick one of four fixed answers, such as "Thank you". A teacher sees the notes sent in their class and, unless the family limits class notes, that answer, but never whether a note was opened. The learner's family caregivers see every note to the learner, and which family adult sent a note from home, and can hide or report a note or stop notes from one sender. A note can also be put away or reported from the learner's device. A sender can take a note back at any time: it leaves the learner's devices, and the learner's family can still see it. We keep notes for 180 days, and a reported note until 90 days after its last report so we can review it. To have a note deleted sooner, the learner's family can email ${email}.`,
             contact: 'Account contact: a parent email, used for sign-in, receipts, and account recovery.',
             device: 'Basic device and diagnostic data: app version, device type, and crash logs, to keep the app stable.',
           },

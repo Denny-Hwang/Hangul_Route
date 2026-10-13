@@ -7,7 +7,12 @@ import { BrowseCardScreen } from '../screens/browse/BrowseCardScreen';
 import { BrowseEpisodeScreen } from '../screens/browse/BrowseEpisodeScreen';
 import { BrowseHomeScreen } from '../screens/browse/BrowseHomeScreen';
 import { BrowseItemScreen } from '../screens/browse/BrowseItemScreen';
+import { BrowseMinigameScreen, BrowseStoryReaderScreen, BrowseStorySourcesScreen } from '../screens/browse/BrowseLessonScreens';
+import { PreviewEndScreen } from '../screens/browse/PreviewEndScreen';
+import { PreviewQuestScreen } from '../screens/browse/PreviewQuestScreen';
 import type { RootStackParamList } from './types';
+import type { StoryLevel } from '@hangul-route/content-schema';
+import type { PreviewReturn } from '../logic/browse/preview';
 
 /**
  * The All lessons stack (F-BROWSE-001 section 4.1): its own native stack, no
@@ -21,7 +26,8 @@ export type BrowseStackParamList = {
   BrowseHome: BrowseHomeParams | undefined;
   BrowseEpisode: { episodeId: string };
   BrowseItem: { kind: 'quest' | 'story' | 'vocab-topic'; id: string; focusJamoId?: string };
-  PreviewQuest: { questId: string; episodeId: string };
+  /** `returnTo`: the item page the preview started from, when not the quest's own (a story's questions). */
+  PreviewQuest: { questId: string; episodeId: string; returnTo?: PreviewReturn };
   /** The learner `MinigameScreen`, through the navigation adapter (BR-5c). */
   Minigame: RootStackParamList['Minigame'];
   /** The learner story reader's replay route, which writes nothing. */
@@ -29,7 +35,8 @@ export type BrowseStackParamList = {
   /** Story sources, copy-only links in All lessons. */
   StorySources: RootStackParamList['StorySources'];
   CardDetail: { cardId: string };
-  PreviewEnd: { kind: 'quest' | 'story' | 'vocab-topic'; id: string; episodeId?: string };
+  /** `level`: the level a story was read at, for Read again; `returnTo` as on `PreviewQuest`. */
+  PreviewEnd: { kind: 'quest' | 'story' | 'vocab-topic'; id: string; episodeId?: string; level?: StoryLevel; returnTo?: PreviewReturn };
   BrowseAccess: { reason: 'none' | 'expired'; source: AccessSource };
 };
 
@@ -41,6 +48,12 @@ export const BROWSE_REGISTERED_ROUTES: ReadonlySet<BrowseRouteName> = new Set<Br
   'BrowseEpisode',
   'BrowseItem',
   'CardDetail',
+  // BR-8: the preview, the learner lesson screens through the navigation adapter, and the end screen.
+  'PreviewQuest',
+  'Minigame',
+  'StoryReader',
+  'StorySources',
+  'PreviewEnd',
 ]);
 
 const Stack = createNativeStackNavigator<BrowseStackParamList>();
@@ -52,6 +65,11 @@ export function BrowseNavigator(): React.ReactElement {
       <Stack.Screen name="BrowseEpisode" component={BrowseEpisodeScreen} />
       <Stack.Screen name="BrowseItem" component={BrowseItemScreen} />
       <Stack.Screen name="CardDetail" component={BrowseCardScreen} options={{ presentation: 'modal' }} />
+      <Stack.Screen name="PreviewQuest" component={PreviewQuestScreen} />
+      <Stack.Screen name="Minigame" component={BrowseMinigameScreen} />
+      <Stack.Screen name="StoryReader" component={BrowseStoryReaderScreen} />
+      <Stack.Screen name="StorySources" component={BrowseStorySourcesScreen} />
+      <Stack.Screen name="PreviewEnd" component={PreviewEndScreen} options={{ gestureEnabled: false }} />
       <Stack.Screen name="BrowseAccess" component={BrowseAccessScreen} options={{ gestureEnabled: false }} />
     </Stack.Navigator>
   );

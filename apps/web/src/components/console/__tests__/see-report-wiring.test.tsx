@@ -175,3 +175,23 @@ describe('the roster card See report (RP-7a2)', () => {
     expect(calls).not.toContain('getLearnerReport');
   });
 });
+
+describe('the roll-up Class report link (RP-8)', () => {
+  const classLink = (root: ReactTestInstance): ReactTestInstance[] => root.findAll((n) => n.type === 'a' && textOf(n) === report.class.link);
+
+  it('a class with reports on: one Class report link in the roll-up, the class id only', async () => {
+    vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'true');
+    const root = await roster();
+    expect(classLink(root).map((a) => a.props.href)).toEqual(['/teach/space/report?id=space%3Ac1&period=week']);
+  });
+
+  it('none with reports off, and none for a family (siblings are never compared)', async () => {
+    let root = await roster();
+    expect(classLink(root)).toHaveLength(0);
+    act(() => mounted?.unmount());
+    vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'true');
+    SPACE.kind = 'family';
+    root = await roster();
+    expect(classLink(root)).toHaveLength(0);
+  });
+});

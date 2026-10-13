@@ -47,6 +47,7 @@ vi.mock('@/components/console/use-console', async () => {
     },
     createTransfer: async () => state.create,
     transferRequests: async () => ({ ok: true, data: { requests: [], options: [] } }),
+    billingSummary: async () => ({ ok: false, error: 'network', status: -1 }),
   };
   const session = { accountId: 'acc_1', displayName: 'Mr Han' };
   return { useConsole: () => ({ ready: true, session, api, signOut: () => undefined, m: messages('en'), locale: 'en' }) };
