@@ -284,6 +284,67 @@ button {
   width: 100%;
 }
 
+/* Home hero (L0): one column on phones, text and art side by side from 45em; the art is capped so the first
+   screen keeps the header, the h1, the lead and Start learning. */
+.hr-site-hero {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--hr-site-xl);
+  padding-block: var(--hr-site-xl);
+}
+
+.hr-site-hero-art {
+  max-width: var(--hr-site-hero-art-max);
+}
+
+.hr-site-bubble {
+  font-size: var(--hr-site-size-caption);
+  padding: var(--hr-site-xs) var(--hr-site-md);
+}
+
+/* Persona cards (#who): one column on phones, three from 45em. The whole card is one link. */
+.hr-site-persona-list {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--hr-site-md);
+}
+
+.hr-site-persona-card {
+  border-color: var(--hr-site-border-subtle);
+}
+
+.hr-site-persona-card:hover {
+  border-color: var(--hr-site-border-strong);
+}
+
+.hr-site-persona-chev {
+  background-color: var(--hr-site-brand-light);
+  color: var(--hr-site-brand-dark);
+}
+
+.hr-site-persona-card:hover .hr-site-persona-chev {
+  background-color: var(--hr-site-brand);
+  color: var(--hr-site-on-primary);
+}
+
+.hr-site-persona-card:active {
+  background-color: var(--hr-site-sunken);
+  box-shadow: none;
+}
+
+.hr-site-promises {
+  padding-block: var(--hr-site-lg);
+}
+
+/* Launch news: the existing WaitlistForm on today's brand.primary band. border.focus is under 3:1 on
+   brand.primary, so the band's focus ring is text.onPrimary (a band rule, not a change to the form). */
+.hr-site-news {
+  margin-bottom: var(--hr-site-xl);
+  padding: var(--hr-site-lg);
+}
+
+.hr-site-news :focus-visible {
+  outline-color: var(--hr-site-on-primary);
+}
+
 /* Footer: two columns on phones (Guide and App on the left, Company on the right), one once large text makes a
    column narrower than its words, three on wide screens (the same DOM order). */
 .hr-site-footer-groups {
@@ -296,6 +357,14 @@ button {
   display: grid;
   align-content: start;
   row-gap: var(--hr-site-lg);
+}
+
+.hr-site-locales > nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--hr-site-md);
+  margin-top: var(--hr-site-sm);
 }
 
 .hr-site-footer-link {
@@ -370,6 +439,36 @@ button {
 
   .hr-site-steps-wide {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .hr-site-hero {
+    grid-template-columns: minmax(0, var(--hr-site-hero-ratio)) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--hr-site-xxl);
+    padding-block: var(--hr-site-xxxl);
+  }
+
+  .hr-site-hero-art {
+    max-width: var(--hr-site-hero-art-max-wide);
+  }
+
+  .hr-site-bubble {
+    font-size: var(--hr-site-size-body-sm);
+    padding: var(--hr-site-sm) var(--hr-site-md);
+  }
+
+  .hr-site-persona-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--hr-site-lg);
+  }
+
+  .hr-site-promises {
+    padding-block: var(--hr-site-xl);
+  }
+
+  .hr-site-news {
+    margin-bottom: var(--hr-site-xxxl);
+    padding: var(--hr-site-xxl);
   }
 
   /* Grown-up pages: two columns under the page head; the top rule sits above the pair, not above each column. */

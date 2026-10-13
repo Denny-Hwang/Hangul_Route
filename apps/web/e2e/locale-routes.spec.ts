@@ -8,7 +8,7 @@ import { expect, test } from '@playwright/test';
 const HIDDEN = ['/es', '/es/', '/es/about', '/es/privacy', '/es/terms', '/ko', '/ko/about'] as const;
 
 test.describe('locale routes', () => {
-  for (const path of ['/', '/about', '/privacy', '/terms', '/teach']) {
+  for (const path of ['/', '/about', '/privacy', '/terms', '/learners', '/parents', '/teachers', '/teach']) {
     test(`${path} is an English document`, async ({ page }) => {
       const response = await page.goto(path);
       expect(response?.status()).toBe(200);
@@ -41,8 +41,8 @@ test.describe('locale routes', () => {
     await page.goto('/');
     await expect.poll(() => announcerConnected(page)).toBe(true);
 
-    await page.locator('header a[href="/teach"]').first().click();
-    // The /teach router (F-APP-001 A-4b) sends a signed-out visitor on to /signin.
+    // The site's Sign in (F-SITE-002 §3.2) is a plain <a> to F-APP-001's /signin in the console group.
+    await page.locator('header a[href="/signin"]').first().click();
     await page.waitForURL('**/signin');
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect.poll(() => announcerConnected(page)).toBe(true);

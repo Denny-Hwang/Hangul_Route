@@ -17,17 +17,16 @@ describe('landing page · launch-invite signup', () => {
     expect(html).not.toMatch(/<form[^>]*target="_blank"/);
   });
 
-  it('puts the form inside the #get section, which keeps its heading and "Play now" link', () => {
-    const section = /<section id="get"[\s\S]*?<\/section>/.exec(html)?.[0] ?? '';
-    expect(section).toContain('Try Hangul Route this week.');
+  it('puts the form inside the #news band under "Get the launch news" (F-SITE-002 §3.3 block 6)', () => {
+    const section = /<section id="news"[\s\S]*?<\/section>/.exec(html)?.[0] ?? '';
+    expect(section).toContain('Get the launch news');
     expect(section).toMatch(/<form/);
     expect(section).toMatch(/<input[^>]*type="email"/);
     expect(section).toContain('Send me the invite');
-    expect(section).toContain('Play now');
   });
 
   it('shows the consent line with a link to /privacy right under the field', () => {
-    const section = /<section id="get"[\s\S]*?<\/section>/.exec(html)?.[0] ?? '';
+    const section = /<section id="news"[\s\S]*?<\/section>/.exec(html)?.[0] ?? '';
     expect(section).toContain('We use your email only to send Hangul Route launch news.');
     expect(section).toMatch(/href="\/privacy"/);
     expect(section.indexOf('</form>')).toBeLessThan(section.indexOf('We use your email only'));
