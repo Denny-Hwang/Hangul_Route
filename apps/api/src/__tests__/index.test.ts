@@ -58,6 +58,27 @@ describe("apps/api router", () => {
     }
   });
 
+  it("mounts the learner device class-move routes locked: 422 transfers_locked without CLASS_TRANSFER, device_consent_locked for create and approve without CLASS_TRANSFER_DEVICE_CONSENT (F-SPACE-002 T-5c)", async () => {
+    const routes: Array<[string, string]> = [
+      ["POST", "/api/sync/learners/profile:x/transfer-requests/preview"],
+      ["POST", "/api/sync/learners/profile:x/transfer-requests"],
+      ["POST", "/api/sync/learners/profile:x/transfer-requests/transfer:x/approve"],
+      ["POST", "/api/sync/learners/profile:x/transfer-requests/transfer:x/decline"],
+      ["POST", "/api/sync/learners/profile:x/transfer-requests/transfer:x/cancel"],
+      ["PUT", "/api/sync/learners/profile:x/transfer-prefs"],
+    ];
+    for (const [method, path] of routes) {
+      const res = await app.request(path, { method });
+      expect(res.status, `${method} ${path}`).toBe(422);
+      expect(await res.json()).toMatchObject({ ok: false, error: { code: "transfers_locked" } });
+    }
+    for (const [method, path] of routes.filter(([, p]) => p.endsWith("/transfer-requests") || p.endsWith("/approve"))) {
+      const res = await app.request(path, { method }, { CLASS_TRANSFER: "enabled" });
+      expect(res.status, `${method} ${path}`).toBe(422);
+      expect(await res.json()).toMatchObject({ ok: false, error: { code: "device_consent_locked" } });
+    }
+  });
+
   it("mounts the note send routes switched off: 404 not_found without NOTES_SEND, before any binding is needed (F-FEEDBACK-001 FB-3a)", async () => {
     for (const [method, path] of [
       ["POST", "/api/spaces/space:a/notes"],
