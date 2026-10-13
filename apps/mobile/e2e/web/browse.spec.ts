@@ -500,8 +500,8 @@ test('at 320 wide the Access screen keeps 64 targets and nothing runs off the pa
 /* ---------------------------------------------------------------------------------------------
  * BR-7 (sections 4.2 to 4.6, 4.9, 7; mocks design/screens/browse/home.md, episode.md, item.md,
  * lesson-display.md): home, the episode outline, the item page, the card, Lesson display and the
- * keep switch. The learner Route tab is off in this build (`flags.myRouteEnabled`), so the section
- * control has two segments and the Journey starts with the stage line.
+ * keep switch. The learner Route tab is on in this build (`flags.myRouteEnabled`, F-ROUTE-001 R-10b), so the
+ * section control has three segments, home opens on Route, and the Journey has no stage line (section 4.2).
  * ------------------------------------------------------------------------------------------- */
 
 /** The account pass the console's `openBrowse` writes (BR-10). */
@@ -545,9 +545,15 @@ test('home: the layers in order for an account pass, one-row section control, no
   await expect(pointer).toBeVisible();
   await expect(page.getByRole('button', { name: 'Lesson display' })).toBeVisible();
   const group = page.getByRole('radiogroup', { name: 'Show lessons by' });
-  await expect(group.getByRole('radio')).toHaveCount(2);
+  await expect(group.getByRole('radio')).toHaveCount(3);
+  expect(await group.getByRole('radio').allInnerTexts()).toEqual(['Route', 'Journey', 'Library']);
+  // Route is the first section and home opens on it (section 4.2, the learner's order).
+  await expect(group.getByRole('radio', { name: 'Route' })).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByTestId('browse-route')).toBeVisible();
+  await group.getByRole('radio', { name: 'Journey' }).click();
   await expect(group.getByRole('radio', { name: 'Journey' })).toHaveAttribute('aria-checked', 'true');
-  await expect(page.getByRole('button', { name: '7 stages, from letters to your own words' })).toBeVisible();
+  // With the Route section present the Journey has no stage line: Route already lists the stages.
+  await expect(page.getByRole('button', { name: '7 stages, from letters to your own words' })).toHaveCount(0);
   await expect(page.getByRole('switch', { name: 'Keep lessons on this device for 7 days, also offline' })).toHaveAttribute('aria-checked', 'false');
   // Reading order: title, how-to, pointer, sections, keep switch.
   const tops = await Promise.all(
@@ -559,10 +565,6 @@ test('home: the layers in order for an account pass, one-row section control, no
   await expect(page.locator('[data-testid^="journey-ring-notOpen"]')).toHaveCount(0);
   await expect(page.getByTestId('journey-legend')).toHaveCount(0);
   await shot(page, 'br7-browse-home-journey-pixel5');
-
-  // The stage line opens the stage one-liners.
-  await page.getByRole('button', { name: '7 stages, from letters to your own words' }).click();
-  await expect(page.getByText('Stage 1 · Hangul')).toBeVisible();
 
   // Library: Cards (theme chips) and Words; arrow keys move the section control.
   await group.getByRole('radio', { name: 'Journey' }).focus();
@@ -619,6 +621,7 @@ test('at 320 wide the section control stays on one row and every target is at le
 
 test('Journey cell, episode outline, item page with Where it sits, See on the Journey and the card', async ({ page }) => {
   await openBrowse(page, 'account');
+  await page.getByRole('radio', { name: 'Journey' }).click();
   await page.getByTestId('journey-stage-stage1').getByRole('button').first().click();
   await expect(page.getByTestId('browse-episode-screen')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Back to all lessons' })).toBeVisible();
