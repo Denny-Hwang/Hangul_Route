@@ -75,3 +75,23 @@ describe('Button accessibilityHint', () => {
     }
   });
 });
+
+describe('Button softDisabled (a waiting button that stays focusable)', () => {
+  it('reads as disabled (aria-disabled and accessibilityState) but keeps focus: no hard disabled, and a press does nothing', () => {
+    platform.OS = 'web';
+    const onPress = vi.fn();
+    const el = pressable({ softDisabled: true, onPress, accessibilityHint: HINT });
+    expect(el.props.disabled).toBe(false);
+    expect(el.props['aria-disabled']).toBe(true);
+    expect(el.props.accessibilityState).toEqual({ disabled: true });
+    (el.props.onPress as (() => void) | undefined)?.();
+    expect(onPress).not.toHaveBeenCalled();
+    expect(el.props['aria-describedby']).toBe(':hint:');
+  });
+
+  it('a hard disabled still wins, and a plain button has no aria-disabled', () => {
+    platform.OS = 'web';
+    expect(pressable({ softDisabled: true, disabled: true }).props.disabled).toBe(true);
+    expect('aria-disabled' in pressable({}).props).toBe(false);
+  });
+});

@@ -2,7 +2,7 @@ import type { InboxTransfer } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import type { DeviceFacts } from '../consent-gate';
-import { classesCardView, homeLineView, moveErrorLine, readOnlySheetView, type CardInput, type TransfersFacts } from '../transfer-views';
+import { MOVE_RELOAD, REQUEST_RELOAD, classesCardView, homeLineView, moveEntry, moveErrorLine, readOnlySheetView, type CardInput, type TransfersFacts } from '../transfer-views';
 
 /*
  * What the Classes card, the Home line and the read-only sheet draw for a class move — F-SPACE-002
@@ -138,6 +138,11 @@ describe('classesCardView (T-7b)', () => {
     expect(v.pending).toMatchObject({ text: 'Asked: a move to Saturday Class B.', room: 'Waiting for room in the new class.', button: 'review' });
   });
 
+  it('approved and waiting for room reads "Asked: a move to {Destination}." whoever started it (app-sheets.md)', () => {
+    const v = classesCardView(input({ transfers: transfers({ requests: [req({ status: 'approved', initiator: 'source', blockReason: 'cap_class' })] }) }), t, date);
+    expect(v.pending).toMatchObject({ text: 'Asked: a move to Saturday Class B.', room: 'Waiting for room in the new class.' });
+  });
+
   it('planned (cooling-off): the date with a gated Cancel', () => {
     const v = classesCardView(input({ transfers: transfers({ requests: [req({ status: 'approved', executeAfter: '2026-10-14T09:00:00.000Z' })] }) }), t, date);
     expect(v.pending).toMatchObject({ text: 'A move is planned for <2026-10-14>.', button: 'cancel', gated: true, room: null });
@@ -152,6 +157,17 @@ describe('classesCardView (T-7b)', () => {
     const v = classesCardView(input({ transfers: transfers({ requests: [req({ status: 'declined' })] }) }), t, date);
     expect(v.line).toBe('This request ended.');
     expect(v.move).toEqual({ gated: true, disabled: false });
+  });
+
+  it('an ended request still listed keeps its line next to the PIN lines of (d) and (d\')', () => {
+    const ended = transfers({ requests: [req({ status: 'declined' })] });
+    expect(classesCardView(input({ transfers: ended, device: managed({ parentPinHash: null }) }), t, date)).toEqual({
+      move: null,
+      pending: null,
+      line: 'This request ended. A grown-up needs to set up a PIN first. Open Profile, then Grown-up zone.',
+      setUpPin: true,
+    });
+    expect(classesCardView(input({ transfers: ended, device: managed({ pinCreatedAt: NOW - 2 * HOUR }) }), t, date).line).toBe('This request ended. Moves open one day after the PIN is set.');
   });
 });
 
@@ -219,6 +235,10 @@ describe('readOnlySheetView (guard 11: the veto and Back only)', () => {
     expect(view(req({ status: 'approved', blockReason: 'cap_class' }))).toEqual({ lines: ['Asked: a move to Saturday Class B.'], room: 'Waiting for room in the new class.', veto: 'cancel', vetoNote: null });
   });
 
+  it('approved, waiting for room, teacher-started: the same first line as the mock', () => {
+    expect(view(req({ status: 'approved', initiator: 'source', blockReason: 'cap_class' }))).toEqual({ lines: ['Asked: a move to Saturday Class B.'], room: 'Waiting for room in the new class.', veto: 'cancel', vetoNote: null });
+  });
+
   it('learner-side reset on caregiver, none, or a device that cannot answer yet', () => {
     expect(view(req({ learnerState: 'pending', learnerRoute: 'caregiver' })).lines).toEqual(['Asked: a move to Saturday Class B. Please check this again.', 'A grown-up with an account answers this in the console.']);
     expect(view(req({ learnerState: 'pending', learnerRoute: 'none' })).lines[1]).toBe("This move can't be answered here.");
@@ -253,6 +273,14 @@ describe('moveErrorLine (MoveClass answers, one at a time)', () => {
     expect(line('destination_busy')).toBe('That class has many moves waiting. Try again in a few days.');
     expect(line('too_many_requests')).toBe('Too many moves were started today. Try again tomorrow.');
     expect(line('consent_locale_unavailable')).toBe('Not available in your language yet.');
+    expect(line('consent_text_stale')).toBe('Update the app to see the new text.');
+  });
+
+  it('a stale consent text is never reloaded: the bundled text cannot change, so the app asks for an update', () => {
+    expect(MOVE_RELOAD.has('consent_text_stale')).toBe(false);
+    expect(REQUEST_RELOAD.has('consent_text_stale')).toBe(false);
+    expect([...MOVE_RELOAD].sort()).toEqual(['destination_changed', 'terms_changed']);
+    expect([...REQUEST_RELOAD].sort()).toEqual(['request_changed', 'terms_changed']);
   });
 
   it('offline, no API, a locked switch or anything unknown: calm retry lines, nothing queued', () => {
@@ -260,5 +288,20 @@ describe('moveErrorLine (MoveClass answers, one at a time)', () => {
     expect(line('off')).toBe('This needs internet. Try again when you are online.');
     expect(line('transfers_locked')).toBe("Moves can't be started on this device yet.");
     expect(line('mystery')).toBe('Something went wrong. Try again in a moment.');
+  });
+});
+
+describe('moveEntry (who may skip the PIN screen)', () => {
+  it('a self-only device with no PIN opens directly', () => {
+    expect(moveEntry({ gateOpen: true, gated: false })).toBe('direct');
+  });
+
+  it('a managed device always asks for the PIN: the Classes card and the Home line are learner surfaces, so a lingering grown-up session never carries a move', () => {
+    expect(moveEntry({ gateOpen: true, gated: true })).toBe('pin');
+    expect(moveEntry({ gateOpen: false, gated: true })).toBe('pin');
+  });
+
+  it('a closed gate always asks for the PIN', () => {
+    expect(moveEntry({ gateOpen: false, gated: false })).toBe('pin');
   });
 });

@@ -11,6 +11,7 @@ import { confirm } from '../platform/dialog';
 import { useAudience } from '../store/audience';
 import { useMembershipStore } from '../store/membership-store';
 import { RoomBlock } from '../screens/transfer/RoomBlock';
+import { StatusLine } from '../screens/transfer/StatusLine';
 import { useLearnerTransfers, useMoveDate, useOpenMove, useTransferDevice } from '../screens/transfer/use-transfer';
 import { useOnline } from './use-online';
 
@@ -92,13 +93,17 @@ export function SpacesCard({ profile, onJoin }: SpacesCardProps): React.ReactEle
       <Heading level="prompt">{m.title}</Heading>
       <Spacer size="xs" />
       {rejoinLine ? (
-        <View accessibilityRole={'status' as never} style={{ paddingBottom: spacing.sm }}>
-          <Body>{t.lines.joinAgain}</Body>
+        <View style={{ paddingBottom: spacing.sm }}>
+          <StatusLine>
+            <Body>{t.lines.joinAgain}</Body>
+          </StatusLine>
         </View>
       ) : null}
       {movedLine ? (
-        <View accessibilityRole={'status' as never} style={{ paddingBottom: spacing.sm }}>
-          <Body>{movedLine}</Body>
+        <View style={{ paddingBottom: spacing.sm }}>
+          <StatusLine>
+            <Body>{movedLine}</Body>
+          </StatusLine>
         </View>
       ) : null}
       {rows.length === 0 ? (

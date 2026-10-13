@@ -1,4 +1,4 @@
-import { Body, Button, Heading, Icon, Screen, Spacer, spacing, touchTarget } from '@hangul-route/design-system';
+import { Body, Button, Icon, Screen, Spacer, spacing, touchTarget } from '@hangul-route/design-system';
 import { TRANSFER_CONSENT_TEXT } from '@hangul-route/content-schema';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
@@ -7,17 +7,16 @@ import { useOnline } from '../../components/use-online';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { isOpenRequest, requestAction } from '../../logic/transfers/consent-gate';
 import { deviceConsentRecord, sheetDataFromRequest, sheetLocaleOf } from '../../logic/transfers/consent-sheet';
-import { moveErrorLine, readOnlySheetView } from '../../logic/transfers/transfer-views';
+import { REQUEST_RELOAD, moveErrorLine, readOnlySheetView } from '../../logic/transfers/transfer-views';
 import type { RootStackParamList } from '../../navigation/types';
 import { useMembershipStore, type TransferRequestOutcome } from '../../store/membership-store';
 import { useProfileStore } from '../../store/profile-store';
 import { ConsentSheet } from './ConsentSheet';
+import { FocusTitle } from './FocusTitle';
 import { RoomBlock } from './RoomBlock';
-import { useGateOpen, useLearnerTransfers, useMoveDate, useTransferDevice } from './use-transfer';
+import { useEndsGateOnLeave, useGateOpen, useLearnerTransfers, useMoveDate, useTransferDevice } from './use-transfer';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ApproveTransfer'>;
-
-const RELOAD = new Set(['terms_changed', 'consent_text_stale', 'request_changed']);
 
 /**
  * The sheet of one open move request — F-SPACE-002 section 4.12, T-7c (`design/screens/transfer/app-sheets.md`).
@@ -44,10 +43,14 @@ export function ApproveTransferScreen({ route, navigation }: Props): React.React
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // Bumped on every reload, so the sheet is drawn fresh (read to the end again) even when the digest is unchanged.
+  const [reloads, setReloads] = useState(0);
 
   useEffect(() => {
     if (!gateOpen) navigation.replace('PinEntry', { next: 'ApproveTransfer', profileId, transferId });
   }, [gateOpen, navigation, profileId, transferId]);
+  // On a managed device the PIN was entered for this sheet only: the grown-up session ends when it closes.
+  useEndsGateOnLeave(navigation);
 
   const request = transfers?.requests.find((r) => r.id === transferId) ?? null;
   const open = request !== null && isOpenRequest(request) && transfers?.scope === 'full';
@@ -68,8 +71,9 @@ export function ApproveTransferScreen({ route, navigation }: Props): React.React
       navigation.goBack();
       return;
     }
-    if (RELOAD.has(result.error)) {
+    if (REQUEST_RELOAD.has(result.error)) {
       setNotice(messages.console.transfer.consent.updated);
+      setReloads((n) => n + 1);
       await refresh(profileId);
       return;
     }
@@ -99,7 +103,7 @@ export function ApproveTransferScreen({ route, navigation }: Props): React.React
     return (
       <Screen tone="canvas" scrollable>
         {back}
-        <Heading level="title">{t.readOnly.title}</Heading>
+        <FocusTitle text={t.readOnly.title} />
         <Spacer size="md" />
         <Body tone="secondary">{t.lines.ended}</Body>
         <Spacer size="lg" />
@@ -113,7 +117,7 @@ export function ApproveTransferScreen({ route, navigation }: Props): React.React
     return (
       <Screen tone="canvas" scrollable={false}>
         <ConsentSheet
-          key={request.termsDigest ?? request.id}
+          key={`${request.termsDigest ?? request.id}:${reloads}`}
           data={sheetDataFromRequest(request, name)}
           initialLocale={sheetLocaleOf(locale)}
           self={attest === 'self'}
@@ -123,6 +127,7 @@ export function ApproveTransferScreen({ route, navigation }: Props): React.React
           header={back}
           onYes={(l) => void answer(() => approveMove(profileId, transferId, deviceConsentRecord(l, attest, request.termsDigest)))}
           onNotNow={() => void answer(() => declineMove(profileId, transferId))}
+          notNowNote={t.lines.notNowEnds}
         />
       </Screen>
     );
@@ -132,7 +137,7 @@ export function ApproveTransferScreen({ route, navigation }: Props): React.React
     return (
       <Screen tone="canvas" scrollable>
         {back}
-        <Heading level="title">{t.lines.planned(date(request.executeAfter ?? request.expiresAt))}</Heading>
+        <FocusTitle text={t.lines.planned(date(request.executeAfter ?? request.expiresAt))} />
         <Spacer size="md" />
         <Body>{TRANSFER_CONSENT_TEXT[sheetLocaleOf(locale)].lines.cooling_off}</Body>
         <Spacer size="xl" />
@@ -148,7 +153,7 @@ export function ApproveTransferScreen({ route, navigation }: Props): React.React
   return (
     <Screen tone="canvas" scrollable>
       {back}
-      <Heading level="title">{t.readOnly.title}</Heading>
+      <FocusTitle text={t.readOnly.title} />
       <Spacer size="md" />
       <View style={{ gap: spacing.sm }}>
         {view.lines.map((line) => (

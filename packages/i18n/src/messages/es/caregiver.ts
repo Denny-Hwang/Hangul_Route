@@ -554,6 +554,7 @@ export const caregiver = {
       destinationBusy: 'Esa clase tiene muchos cambios pendientes. Inténtalo en unos días.',
       tooManyRequests: 'Hoy se empezaron muchos cambios. Inténtalo mañana.',
       localeUnavailable: 'Aún no está disponible en tu idioma.',
+      updateApp: 'Actualiza la app para ver el texto nuevo.',
     },
     consent: {
       titleSelf: (destination: string) => `¿Cambiarte a ${destination}?`,

@@ -1,4 +1,4 @@
-import { Body, Button, Caption, Card, Heading, Icon, Screen, Spacer, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system';
+import { Body, Button, Caption, Card, Icon, Screen, Spacer, borderWidth, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
@@ -6,18 +6,17 @@ import { useOnline } from '../../components/use-online';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { deviceAttest } from '../../logic/transfers/consent-gate';
 import { deviceConsentRecord, sheetDataFromPreview, sheetLocaleOf, type ConsentSheetData } from '../../logic/transfers/consent-sheet';
-import { moveErrorLine } from '../../logic/transfers/transfer-views';
+import { MOVE_RELOAD, moveErrorLine } from '../../logic/transfers/transfer-views';
 import { cleanJoinCode, isCompleteJoinCode } from '../../logic/spaces/join-code';
 import type { RootStackParamList } from '../../navigation/types';
 import { useMembershipStore } from '../../store/membership-store';
 import { useProfileStore } from '../../store/profile-store';
 import { ConsentSheet } from './ConsentSheet';
-import { useGateOpen, useLearnerTransfers, useTransferDevice } from './use-transfer';
+import { FocusTitle } from './FocusTitle';
+import { StatusLine } from './StatusLine';
+import { useEndsGateOnLeave, useGateOpen, useLearnerTransfers, useTransferDevice } from './use-transfer';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MoveClass'>;
-
-/** Answers that mean the sheet the device showed is no longer the one the server would record: read it again. */
-const RELOAD = new Set(['terms_changed', 'destination_changed', 'consent_text_stale']);
 
 /**
  * MoveClass — F-SPACE-002 section 4.12, T-7c (`design/screens/transfer/app-sheets.md`): enter the new
@@ -45,11 +44,15 @@ export function MoveClassScreen({ route, navigation }: Props): React.ReactElemen
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
+  // Bumped on every reload, so the sheet is drawn fresh (read to the end again) even when the digest is unchanged.
+  const [reloads, setReloads] = useState(0);
 
   // The gate guards this screen too: a closed gate sends it back through the PIN screen.
   useEffect(() => {
     if (!gateOpen && !sent) navigation.replace('PinEntry', { next: 'MoveClass', profileId, fromSpaceId });
   }, [gateOpen, sent, navigation, profileId, fromSpaceId]);
+  // On a managed device the PIN was entered for this move only: the grown-up session ends when the screen closes.
+  useEndsGateOnLeave(navigation);
 
   const name = profile?.displayName ?? '';
   const claim = device ? deviceAttest(device) : null;
@@ -64,11 +67,16 @@ export function MoveClassScreen({ route, navigation }: Props): React.ReactElemen
     setBusy(true);
     const result = await previewMove(profileId, fromSpaceId, code);
     setBusy(false);
+    // A failed find (also a reload's) leaves the code step with its line: no stale sheet stays up.
     if (!result.ok) {
+      setSheet(null);
+      setNotice(null);
       setError(moveErrorLine(result, name, messages.caregiver));
       return;
     }
     if (result.preview.blockReason) {
+      setSheet(null);
+      setNotice(null);
       setError(moveErrorLine({ ok: false, error: result.preview.blockReason }, name, messages.caregiver));
       return;
     }
@@ -97,8 +105,9 @@ export function MoveClassScreen({ route, navigation }: Props): React.ReactElemen
       setSent(true);
       return;
     }
-    if (RELOAD.has(result.error)) {
+    if (MOVE_RELOAD.has(result.error)) {
       setNotice(messages.console.transfer.consent.updated);
+      setReloads((n) => n + 1);
       await find();
       return;
     }
@@ -118,12 +127,12 @@ export function MoveClassScreen({ route, navigation }: Props): React.ReactElemen
     return (
       <Screen tone="canvas" scrollable>
         {back}
-        <Heading level="title">{t.move.title}</Heading>
+        <FocusTitle text={t.move.title} />
         <Spacer size="lg" />
         <Card padding="lg" tone="success" testID="move-sent">
-          <View accessibilityRole={'status' as never}>
+          <StatusLine>
             <Body align="center">{t.move.sent}</Body>
-          </View>
+          </StatusLine>
           <Spacer size="lg" />
           <Button label={messages.common.buttons.done} tone="primary" size="lg" fullWidth onPress={() => navigation.goBack()} />
         </Card>
@@ -135,7 +144,7 @@ export function MoveClassScreen({ route, navigation }: Props): React.ReactElemen
     return (
       <Screen tone="canvas" scrollable={false}>
         <ConsentSheet
-          key={sheet.termsDigest ?? sheet.destination.name}
+          key={`${sheet.termsDigest ?? sheet.destination.name}:${reloads}`}
           data={sheet}
           initialLocale={sheetLocaleOf(locale)}
           self={claim?.kind === 'attest' && claim.attest === 'self'}
@@ -153,7 +162,7 @@ export function MoveClassScreen({ route, navigation }: Props): React.ReactElemen
   return (
     <Screen tone="canvas" scrollable>
       {back}
-      <Heading level="title">{t.move.title}</Heading>
+      <FocusTitle text={t.move.title} />
       <Spacer size="xs" />
       <Body tone="secondary">{t.move.step1}</Body>
       <Spacer size="lg" />
@@ -174,16 +183,17 @@ export function MoveClassScreen({ route, navigation }: Props): React.ReactElemen
         maxLength={6}
         accessibilityLabel={t.move.codeLabel}
         aria-invalid={error !== null}
+        {...{ 'aria-describedby': error || !online ? 'move-code-line' : undefined }}
         testID="move-code"
         style={{
           minHeight: touchTarget.hero,
           textAlign: 'center',
           fontSize: typography.size.display,
-          fontWeight: '700',
+          fontWeight: typography.weight.bold,
           letterSpacing: spacing.sm,
           color: colors.text.primary,
           backgroundColor: colors.surface.paper,
-          borderWidth: 2,
+          borderWidth: borderWidth.base,
           borderColor: colors.border.subtle,
           borderRadius: radii.lg,
         }}
@@ -203,10 +213,10 @@ export function MoveClassScreen({ route, navigation }: Props): React.ReactElemen
         onPress={() => void find()}
         testID="move-find"
       />
-      {error || !online ? (
-        <View accessibilityRole="alert" style={{ paddingTop: spacing.md }}>
+      {error || !online || !allowed ? (
+        <View accessibilityRole="alert" accessibilityLiveRegion="polite" {...{ id: 'move-code-line' }} style={{ paddingTop: spacing.md }}>
           <Body tone="secondary" align="center">
-            {error ?? messages.caregiver.retry.offline}
+            {error ?? (online ? t.errors.deviceConsentLocked : messages.caregiver.retry.offline)}
           </Body>
         </View>
       ) : null}

@@ -1,6 +1,6 @@
 import type { BrowserContext, Page, Route } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild, onboardSelf, readStored, seedStored, unlockWithPin } from './helpers';
+import { onboardChild, onboardSelf, openGrownUpZone, readStored, seedStored, unlockWithPin } from './helpers';
 import { shot, shotFile, shotsEnabled } from './shots';
 
 /**
@@ -294,4 +294,78 @@ test('Leave keeps its confirm and says when it did not go through', async ({ pag
   const confirm = page.getByRole('button', { name: 'Leave' }).last();
   if (await confirm.isVisible().catch(() => false)) await confirm.click();
   await expect(page.getByText('This needs internet. Try again when you are online.')).toBeVisible();
+});
+
+test.describe('a wide window', () => {
+  test.use({ viewport: { width: 1280, height: 2400 } });
+
+  test('a consent sheet shorter than the window starts with Yes enabled (D2), and a language switch keeps it readable', async ({ page, context }) => {
+    await mockApi(context, {});
+    await onboardSelf(page, { name: 'Rio' });
+    await seedSynced(page, null);
+    await openProfile(page, 'Rio');
+    await page.getByRole('button', { name: 'Move from Sunday Class A' }).click();
+    await page.getByTestId('move-code').fill('ABC234');
+    await page.getByRole('button', { name: 'Find class' }).click();
+    await expect(page.getByRole('heading', { name: 'Move to Saturday Class B?' })).toBeVisible();
+    await expect(page.getByTestId('consent-yes')).toBeEnabled();
+    await page.getByTestId('consent-language-es').click();
+    await expect(page.getByTestId('consent-yes')).toBeEnabled();
+  });
+});
+
+test('a waiting Yes stays focusable and says why (aria-disabled, not removed from the tab order)', async ({ page, context }) => {
+  await mockApi(context, {});
+  await onboardSelf(page, { name: 'Rio' });
+  await seedSynced(page, null);
+  await openProfile(page, 'Rio');
+  await page.getByRole('button', { name: 'Move from Sunday Class A' }).click();
+  await page.getByTestId('move-code').fill('ABC234');
+  await page.getByRole('button', { name: 'Find class' }).click();
+  const yes = page.getByTestId('consent-yes');
+  await expect(yes).toHaveAttribute('aria-disabled', 'true');
+  await expect(yes).not.toHaveAttribute('disabled', /.*/);
+  await expect(yes).toHaveAccessibleDescription('Read to the end to continue.');
+  await yes.focus();
+  await expect(yes).toBeFocused();
+});
+
+test('switching the sheet language after reading asks for the new text to be read again', async ({ page, context }) => {
+  await mockApi(context, {});
+  await onboardSelf(page, { name: 'Rio' });
+  await seedSynced(page, null);
+  await openProfile(page, 'Rio');
+  await page.getByRole('button', { name: 'Move from Sunday Class A' }).click();
+  await page.getByTestId('move-code').fill('ABC234');
+  await page.getByRole('button', { name: 'Find class' }).click();
+  const yes = page.getByTestId('consent-yes');
+  await page.getByTestId('consent-end').scrollIntoViewIfNeeded();
+  await expect(yes).toBeEnabled();
+  await page.getByTestId('consent-language-es').scrollIntoViewIfNeeded();
+  await page.getByTestId('consent-language-es').click();
+  await expect(yes).toBeDisabled();
+  await page.getByTestId('consent-end').scrollIntoViewIfNeeded();
+  await expect(yes).toBeEnabled();
+});
+
+test('a grown-up session left open elsewhere never carries the Home line: Review asks for the PIN again', async ({ page, context }) => {
+  await mockApi(context, { transfers: [request()] });
+  await onboardChild(page, { name: 'Mina' });
+  await seedSynced(page, 30);
+  await openGrownUpZone(page, 'Mina');
+  await unlockWithPin(page);
+  await expect(page.getByRole('heading', { name: 'Grown-up zone' })).toBeVisible();
+  // Back to the learner (in the app, so the session stays open), then the Home line.
+  while (!(await page.getByText('Hi, Mina!').isVisible().catch(() => false))) {
+    await page.getByRole('button', { name: 'Go back' }).first().click();
+  }
+  await page.getByRole('button', { name: 'Review the move (PIN required)' }).click();
+  await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();
+  await unlockWithPin(page);
+  await expect(page.getByRole('heading', { name: 'A move is waiting' })).toBeVisible();
+  // Leaving the sheet ends the session: the next Review asks again.
+  await page.getByRole('button', { name: 'Back', exact: true }).click();
+  await expect(page.getByText('Hi, Mina!')).toBeVisible();
+  await page.getByRole('button', { name: 'Review the move (PIN required)' }).click();
+  await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();
 });

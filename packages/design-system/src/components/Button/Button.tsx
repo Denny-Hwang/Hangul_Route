@@ -61,6 +61,7 @@ export function Button({
   tone = 'primary',
   size = 'md',
   disabled = false,
+  softDisabled = false,
   fullWidth = false,
   leading,
   trailing,
@@ -74,16 +75,21 @@ export function Button({
   // react-native-web drops accessibilityHint: describe the button by a hidden copy of the hint instead.
   const webHint = accessibilityHint !== undefined && Platform.OS === 'web';
   const describedBy: Record<string, string> = webHint ? { 'aria-describedby': hintId } : {};
+  // Soft: looks and reads disabled, keeps focus (no hard `disabled`), and ignores presses.
+  const soft = softDisabled && !disabled;
+  const looksDisabled = disabled || soft;
+  const ariaDisabled: Record<string, boolean> = soft ? { 'aria-disabled': true } : {};
   return (
     <Pressable
       {...describedBy}
+      {...ariaDisabled}
       ref={pressableRef}
-      onPress={disabled ? undefined : onPress}
+      onPress={looksDisabled ? undefined : onPress}
       disabled={disabled}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityHint={accessibilityHint}
-      accessibilityState={expanded === undefined ? { disabled } : { disabled, expanded }}
+      accessibilityState={expanded === undefined ? { disabled: looksDisabled } : { disabled: looksDisabled, expanded }}
       aria-expanded={expanded}
       testID={testID}
       hitSlop={spacing.sm}
@@ -92,14 +98,14 @@ export function Button({
         paddingHorizontal: sizePaddingX[size],
         paddingVertical: spacing.sm,
         borderRadius: radii.pill,
-        backgroundColor: disabled
+        backgroundColor: looksDisabled
           ? colors.surface.sunken
           : pressed
             ? tonePressedBg[tone]
             : toneBg[tone],
         borderWidth: tone === 'ghost' ? 2 : 0,
         borderColor: tone === 'ghost' ? colors.brand.primary : 'transparent',
-        opacity: disabled ? 0.6 : 1,
+        opacity: looksDisabled ? 0.6 : 1,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
@@ -111,7 +117,7 @@ export function Button({
           {leading ? <View style={{ marginRight: spacing.sm }}>{leading}</View> : null}
           <Text
             style={{
-              color: disabled ? colors.text.muted : pressed ? tonePressedFg[tone] : toneFg[tone],
+              color: looksDisabled ? colors.text.muted : pressed ? tonePressedFg[tone] : toneFg[tone],
               fontSize: sizeFont[size],
               fontWeight: typography.weight.semibold,
               letterSpacing: typography.tracking.normal,

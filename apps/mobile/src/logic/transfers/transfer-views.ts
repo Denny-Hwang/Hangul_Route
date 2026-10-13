@@ -77,8 +77,9 @@ function needsLine(a: RequestAction, t: TransferCopy): string | null {
 function pendingCard(r: InboxTransfer, a: RequestAction, t: TransferCopy, date: DateFormat): CardView {
   const row = { transferId: r.id, room: null, button: 'review' as const, primary: false, gated: a.gated };
   if (a.sheet === 'planned') return { ...NOTHING, pending: { ...row, button: 'cancel', text: t.lines.planned(date(r.executeAfter ?? r.expiresAt)) } };
+  // Approved and waiting for room reads "Asked: a move to {Destination}." whoever started it (app-sheets.md).
+  if (r.status === 'approved') return { ...NOTHING, pending: { ...row, text: t.card.learnerAsked(r.to.name), room: t.lines.waitingRoom } };
   const first = askedLine(r, t);
-  if (r.status === 'approved') return { ...NOTHING, pending: { ...row, text: first, room: t.lines.waitingRoom } };
   if (r.learnerState !== 'pending') return { ...NOTHING, pending: { ...row, text: sentence(first, waitingLine(r, t)) } };
   if (a.answerHere) return { ...NOTHING, pending: { ...row, primary: true, text: sentence(first, t.lines.checkAgain) } };
   if (a.cannotAnswerHere) return { ...NOTHING, pending: { ...row, text: sentence(first, t.lines.cannotAnswer) } };
@@ -111,8 +112,10 @@ export function classesCardView(i: CardInput, t: TransferCopy, date: DateFormat)
   if (!x.enabled) return NOTHING;
   const ended = x.requests.some((r) => !isOpenRequest(r)) ? t.lines.ended : null;
   if (rule.variant === 'move') return { ...NOTHING, move: { gated: rule.gated, disabled: !i.online }, line: ended };
-  if (rule.variant === 'needs_pin') return { ...NOTHING, line: t.card.needsPin, setUpPin: true };
-  if (rule.variant === 'pin_too_new') return { ...NOTHING, line: t.card.pinTooNew };
+  // An ended request still listed keeps its own line, before the PIN line of (d) or (d').
+  const withEnded = (line: string): string => (ended ? sentence(ended, line) : line);
+  if (rule.variant === 'needs_pin') return { ...NOTHING, line: withEnded(t.card.needsPin), setUpPin: true };
+  if (rule.variant === 'pin_too_new') return { ...NOTHING, line: withEnded(t.card.pinTooNew) };
   return { ...NOTHING, line: ended };
 }
 
@@ -158,7 +161,7 @@ export function readOnlySheetView(r: InboxTransfer, device: DeviceFacts, learner
   const veto = source && r.status === 'requested' ? 'decline' : 'cancel';
   const out = (lines: string[], room: string | null = null): ReadOnlySheetView => ({ lines, room, veto, vetoNote: veto === 'decline' ? t.lines.notNowEnds : null });
   const first = source ? t.lines.askedMoving(r.from.name, learnerName, r.to.name) : t.card.learnerAsked(r.to.name);
-  if (r.status === 'approved') return out([first], r.blockReason === null ? null : t.lines.waitingRoom);
+  if (r.status === 'approved') return out([t.card.learnerAsked(r.to.name)], r.blockReason === null ? null : t.lines.waitingRoom);
   if (r.learnerState !== 'pending') return out([first, waitingLine(r, t)]);
   const head = source ? first : sentence(first, t.lines.checkAgain);
   if (a?.cannotAnswerHere) return out([head, t.lines.cannotAnswer]);
@@ -199,10 +202,32 @@ export function moveErrorLine(f: { ok: false; error: string; startedBy?: 'class'
       return e.tooManyRequests;
     case 'consent_locale_unavailable':
       return e.localeUnavailable;
+    case 'consent_text_stale':
+      // The sheet's text is bundled with the app: reading it again cannot help, only an update can.
+      return e.updateApp;
     case 'network':
     case 'off':
       return c.retry.offline;
     default:
       return f.error.startsWith('cap_') ? e.full : c.retry.unknown;
   }
+}
+
+/**
+ * MoveClass answers that mean the sheet shown is no longer the one the server would record: it reloads with
+ * "This text was updated. Please read it again." `consent_text_stale` is not one of them: the text is
+ * bundled, so a reload would draw the same text and loop; it gets `errors.updateApp` instead (spec 4 item 7).
+ */
+export const MOVE_RELOAD: ReadonlySet<string> = new Set(['terms_changed', 'destination_changed']);
+/** The same for a yes again on ApproveTransfer (the request is read again from the inbox). */
+export const REQUEST_RELOAD: ReadonlySet<string> = new Set(['terms_changed', 'request_changed']);
+
+/**
+ * Whether a move screen opens directly or through the PIN screen. The Classes card and the Home line are
+ * learner surfaces, so on a managed device (`gated`) the PIN is asked every time: a grown-up session left
+ * open for something else never carries a consent yes, a decline or a cancel (the screens end the session
+ * when they close). A self-only device with no PIN opens directly.
+ */
+export function moveEntry(i: { gateOpen: boolean; gated: boolean }): 'direct' | 'pin' {
+  return !i.gated && i.gateOpen ? 'direct' : 'pin';
 }
