@@ -230,7 +230,7 @@ describe('PlanUpdateLine without an api (signed-out or loading)', () => {
   it('shows the button disabled and never saves', async () => {
     const { PlanUpdateLine } = await import('@/components/console/PlanUpdateParts');
     await act(async () => {
-      mounted = create(<PlanUpdateLine kind="family" learner={SAM} plans={[samRoute()]} today={today} api={null} spaceId="space:f1" onSaved={() => undefined} />);
+      mounted = create(<PlanUpdateLine kind="family" learner={SAM as unknown as Parameters<typeof PlanUpdateLine>[0]["learner"]} plans={[samRoute()]} today={today} api={null} spaceId="space:f1" onSaved={() => undefined} />);
     });
     if (!mounted) throw new Error('not mounted');
     const [button] = byTestId(mounted.root, 'plan-update-cta');

@@ -808,8 +808,8 @@ describe('followProposal: the suggested length follows the start and the pace un
     const later = followProposal({ ...base, start: 'first-sentences' }, hearsMore);
     expect(later.focus).toBe('balanced');
     expect(followProposal({ ...later, start: 'some-letters' }, hearsMore).focus).toBe('reading');
-    const picked = { ...base, focus: 'stories' as const, focusPicked: true };
-    expect(followProposal({ ...picked, start: 'first-sentences' }, hearsMore).focus).toBe('stories');
+    const picked = { ...base, focus: 'culture' as const, focusPicked: true };
+    expect(followProposal({ ...picked, start: 'first-sentences' }, hearsMore).focus).toBe('culture');
   });
 });
 
@@ -826,12 +826,12 @@ describe('relearnedState: another learner picked in a family keeps what the grow
     const edited = {
       ...relearnedState(prefilledState('family', c), c, 'kid'),
       sessionDays: ['mon', 'wed', 'fri'] as Weekday[],
-      minutesPerSession: 20,
+      minutesPerSession: 20 as const,
       rhythmPicked: true,
       startDate: LATER_DAY,
       themes: ['crafts'] as ThemeKey[],
       goalsPicked: true,
-      focus: 'stories' as const,
+      focus: 'culture' as const,
       focusPicked: true,
       length: '6-month' as const,
       lengthPicked: true,
@@ -843,7 +843,7 @@ describe('relearnedState: another learner picked in a family keeps what the grow
       minutesPerSession: 20,
       startDate: LATER_DAY,
       themes: ['crafts'],
-      focus: 'stories',
+      focus: 'culture',
       length: '6-month',
     });
   });
