@@ -1,6 +1,6 @@
 import type { Episode, ProgressSnapshot, Quest } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
-import type { PracticeTarget } from '../free-end';
+import { favoriteReplay, type PracticeTarget } from '../free-end';
 import { nextQuestAfter, offerableQuests, playableEpisodes } from '../next-quest';
 import { inAPlan, routeNext, type RouteNextInput } from '../route-next';
 import type { BookmarkFile } from '../story/bookmarks';
@@ -371,13 +371,32 @@ function repinFreeEnd(cards: readonly MissionCard[], input: BuildMissionInput): 
   if (second && second.kind !== 'free-end' && second.kind !== 'practice') {
     if (isCollected(second, input.snapshot, input.today, second.collected)) return cards;
     const end = freeEndCard(input);
-    return end ? cards.map((card) => (card === second ? end : card)) : cards;
+    return end ? swapSecond(cards, second, end, input) : cards;
   }
   const pinned = second;
   if (!pinned) return cards;
   const fresh = secondCard(input);
   if (!fresh || fresh.kind === pinned.kind) return cards;
-  return cards.map((card) => (card === pinned ? fresh : card));
+  return swapSecond(cards, pinned, fresh, input);
+}
+
+/**
+ * Puts `next` in card (2)'s place. A practice card that replays a quest another pinned card
+ * already offers (cards (1) and (3) were chosen before it, around a different card (2)) takes
+ * the next kept replay instead, so the row keeps three different cards; when none is left it
+ * stays as it is.
+ */
+function swapSecond(cards: readonly MissionCard[], pinned: MissionCard, next: MissionCard, input: BuildMissionInput): readonly MissionCard[] {
+  let replacement = next;
+  if (next.kind === 'practice' && next.practiceKind === 'replay' && next.questId) {
+    const taken = new Set(cards.filter((card) => card !== pinned && card.questId).map((card) => card.questId as string));
+    if (taken.has(next.questId)) {
+      const other = favoriteReplay(input.snapshot, input.quests, input.episodes, taken);
+      const episode = other ? input.episodes.find((e) => e.questIds.includes(other.id)) : undefined;
+      if (other && episode) replacement = practiceCard({ kind: 'replay', questId: other.id, episodeId: episode.id, title: other.titleEn });
+    }
+  }
+  return cards.map((card) => (card === pinned ? replacement : card));
 }
 
 /**

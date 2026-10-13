@@ -30,16 +30,22 @@ type Kept = ProgressSnapshot['quests'][number] & { completedAt: string };
  * "Play a favorite again": the kept grid quest that most needs a replay (lowest accuracy, then
  * the most recent), else the first lesson. A shelf story is never a scored replay.
  */
-export function favoriteReplay(snapshot: ProgressSnapshot, quests: readonly Quest[], episodes: readonly Episode[]): Quest | null {
+export function favoriteReplay(
+  snapshot: ProgressSnapshot,
+  quests: readonly Quest[],
+  episodes: readonly Episode[],
+  /** Quests another card of the day already offers (Home keeps its three cards different). */
+  exclude: ReadonlySet<string> = new Set(),
+): Quest | null {
   const grid = new Set(episodes.filter((e) => e.placement !== 'shelf').flatMap((e) => e.questIds));
   const kept = snapshot.quests
-    .filter((q): q is Kept => Boolean(q.completedAt) && grid.has(q.questId))
+    .filter((q): q is Kept => Boolean(q.completedAt) && grid.has(q.questId) && !exclude.has(q.questId))
     .sort((a, b) => a.accuracy - b.accuracy || b.completedAt.localeCompare(a.completedAt));
   for (const k of kept) {
     const quest = quests.find((q) => q.id === k.questId);
     if (quest) return quest;
   }
-  return quests.find((q) => q.id === FIRST_LESSON) ?? null;
+  return exclude.has(FIRST_LESSON) ? null : (quests.find((q) => q.id === FIRST_LESSON) ?? null);
 }
 
 /** A sampler story bundled in this build (F-STORY-004 D5). */

@@ -787,6 +787,29 @@ describe('card ② at the end of the free lessons (F-ENT-003 section 3.7, PR E3-
     expect(opened.cards).toHaveLength(3);
   });
 
+  it('the day pin: a practice replay that repeats another pinned card takes the next kept replay (three different cards)', () => {
+    const snap = all();
+    const built = build({ snapshot: snap, route: freeEndRoute(snap), isQuestOpen: closedC, freeEnd: { seen: false, practice: topic } });
+    // Card (1) replays quest:a; card (3) offers no quest.
+    const pinned = {
+      ...built,
+      cards: built.cards.map((c) =>
+        c.slot === 1
+          ? { ...c, kind: 'replay' as const, questId: 'quest:a', episodeId: 'episode:one' }
+          : c.slot === 3
+            ? { slot: 3 as const, kind: 'daily-test' as const, titleEn: null, subtitle: 'dailyTest' as const, collected: false }
+            : c,
+      ),
+    };
+    const replay = { kind: 'replay' as const, questId: 'quest:a', episodeId: 'episode:one', title: 'Meet g, n, d' };
+    const seen = build({ snapshot: snap, pinned, route: freeEndRoute(snap), isQuestOpen: closedC, freeEnd: { seen: true, practice: replay } });
+    expect(seen.cards.find((c) => c.slot === 2)).toMatchObject({ kind: 'practice', practiceKind: 'replay', questId: 'quest:b', episodeId: 'episode:one' });
+    // With every kept quest on another card there is nothing else to replay: the practice card stays as given.
+    const full = { ...pinned, cards: pinned.cards.map((c) => (c.slot === 3 ? { ...c, kind: 'replay' as const, questId: 'quest:b', episodeId: 'episode:one' } : c)) };
+    const kept = build({ snapshot: snap, pinned: full, route: freeEndRoute(snap), isQuestOpen: closedC, freeEnd: { seen: true, practice: replay } });
+    expect(kept.cards.find((c) => c.slot === 2)).toMatchObject({ kind: 'practice', questId: 'quest:a' });
+  });
+
   it('the day pin: a card pinned before the end was known (the access tier read late) gives way to the celebration, then the practice card', () => {
     const snap = all();
     const off = freeEndRoute(snap, { gating: { active: false, tier: 'free' }, isQuestOpen: () => true });
