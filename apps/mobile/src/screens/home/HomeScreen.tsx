@@ -466,7 +466,7 @@ export function HomeScreen(): React.ReactElement {
           resumable,
         });
   // F-PLAN-002's weekly plan card (prompt, check-in or moved line) shares the slot; the level check wins while it is eligible (AM-6).
-  const planSlot = usePlanSlot(profile, snap, plans);
+  const { slot: planSlot, closeCheckIn } = usePlanSlot(profile, snap, plans);
   const quiet = homeQuietCard(levelCheck, planSlot !== null);
   const levelCheckCopy = m.learner.placement.homeCard;
   const quietCard =
@@ -498,6 +498,7 @@ export function HomeScreen(): React.ReactElement {
         profileId={profileId}
         onOpen={() => navigation.navigate('RouteProposal', { source: 'home', profileId })}
         onOverview={() => navigation.navigate('RouteOverview', { profileId })}
+        onCloseCheckIn={closeCheckIn}
       />
     ) : null;
 

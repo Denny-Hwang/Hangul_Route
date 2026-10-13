@@ -176,7 +176,7 @@ test.describe('weekly plan set-up, preview and overview (flag on)', () => {
     await expect(page.getByText('Hi, Ola!')).toBeVisible();
     await expect.poll(async () => (await storedRoute(page, profileId))?.meta.params.sessionsPerWeek ?? 0).toBe(3);
 
-    // 29 days on, nothing finished in weeks 1 to 4: the plan moved along by itself and Hoya asks.
+    // 29 days on, nothing finished in weeks 1 to 4: Hoya asks.
     await page.clock.setFixedTime(NOW + 29 * DAY);
     await page.goto('/');
     await expect(page.getByText('Hi, Ola!')).toBeVisible();
@@ -199,5 +199,35 @@ test.describe('weekly plan set-up, preview and overview (flag on)', () => {
     await page.goto('/');
     await expect(page.getByText('Hi, Ola!')).toBeVisible();
     await expect(page.getByTestId('home-plan-check-in')).toHaveCount(0);
+  });
+
+  test('week 5: answered on the overview, Home lets its card go without a reload', async ({ page }) => {
+    const profileId = await selfLearnerWithAQuest(page, 'Ida');
+    await page.getByRole('button', { name: 'Make my plan' }).click();
+    await page.getByRole('radio', { name: /^12 weeks/ }).click();
+    await page.getByRole('button', { name: 'Start this plan' }).click();
+    await expect(page.getByText('Hi, Ida!')).toBeVisible();
+    await expect.poll(async () => (await storedRoute(page, profileId))?.meta.params.sessionsPerWeek ?? 0).toBe(3);
+
+    await page.clock.setFixedTime(NOW + 29 * DAY);
+    await page.goto('/');
+    await expect(page.getByText('Hi, Ida!')).toBeVisible();
+    await closeInstallGuide(page);
+    await expect(page.getByTestId('home-plan-check-in')).toBeVisible();
+
+    // The same offer on the overview; Not now there closes it for this plan.
+    await page.getByRole('button', { name: /profile/i }).first().click();
+    await page.getByTestId('profile-plan-row').click();
+    await expect(page.getByTestId('route-overview-check-in')).toBeVisible();
+    await page.getByTestId('route-overview-check-in-not-now').click();
+    await expect(page.getByTestId('route-overview-check-in')).toHaveCount(0);
+    await expect.poll(() => readStored<{ checkInFor?: string }>(page, `route-ui:${profileId}`).then((ui) => ui?.checkInFor ?? null)).not.toBeNull();
+
+    // Back to Home through the app (no reload): the card is gone, the plan kept its pace.
+    await page.getByTestId('route-overview-back').click();
+    await page.getByRole('button', { name: /home/i }).first().click();
+    await expect(page.getByText('Hi, Ida!')).toBeVisible();
+    await expect(page.getByTestId('home-plan-check-in')).toHaveCount(0);
+    expect((await storedRoute(page, profileId))?.meta.params.sessionsPerWeek).toBe(3);
   });
 });

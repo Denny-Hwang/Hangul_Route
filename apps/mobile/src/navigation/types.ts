@@ -92,8 +92,12 @@ export type RootStackParamList = {
    * `choice` made on it.
    */
   RouteSetup: { profileId: string; choice?: PlanChoice };
-  /** The new plan before it starts (G2): the first four weeks, the stats and the learner notices. */
-  RoutePreview: { profileId: string; setup: SetupState };
+  /**
+   * The new plan before it starts (G2): the first four weeks, the stats and the learner notices.
+   * `replacing` is the plan in force when the set-up steps began (null: none); Start this plan
+   * replaces only that one, and refuses when another plan became active meanwhile.
+   */
+  RoutePreview: { profileId: string; setup: SetupState; replacing: string | null };
   /** "Your weekly plan" (G3): this week first, later weeks folded, Move my plan along, Change, Stop. */
   RouteOverview: { profileId: string };
   /** The Stage 1 prize ceremony (F-QUEST-002 §3.8), opened from Results on the run that completed the stage. */

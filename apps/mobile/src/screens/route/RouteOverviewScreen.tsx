@@ -6,7 +6,6 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useLocale, useMessages } from '../../i18n/use-messages';
-import { dayKey } from '../../logic/homework/mission-builder';
 import { isParentSessionValid } from '../../logic/profiles/session';
 import { effectiveLearnerType } from '../../logic/profiles/learner-type';
 import { movedLineVisible } from '../../logic/route/home-slot';
@@ -23,6 +22,7 @@ import { useUiStore } from '../../store/ui-store';
 import { LinkButton } from '../placement/parts';
 import { CheckInCard, useShownOffer } from './CheckInCard';
 import { PlanWeekCard } from './parts';
+import { useToday } from './use-today';
 
 /**
  * "Your weekly plan" (F-PLAN-002 section 3.9, wireframe console/curriculum-planner.md G3 as
@@ -45,11 +45,13 @@ export function RouteOverviewScreen({ route, navigation }: Props): React.ReactEl
   const ui = useRouteStore((s) => s.ui[profileId]);
   const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
   const { opensDirectly } = useAudience();
-  const today = useMemo(() => dayKey(new Date().toISOString()), []);
+  // Read again on focus and when the app comes back: the screen may stay open across midnight.
+  const today = useToday();
   const [showLater, setShowLater] = useState(false);
   const [confirmStop, setConfirmStop] = useState(false);
   const [busy, setBusy] = useState(false);
   const [movedByHand, setMovedByHand] = useState(false);
+  const [failed, setFailed] = useState(false);
   // The calm line is read once per visit: it stays on screen for this visit and is marked seen.
   const [movedLine, setMovedLine] = useState(false);
 
@@ -97,21 +99,32 @@ export function RouteOverviewScreen({ route, navigation }: Props): React.ReactEl
   };
   const changePlan = (): void => openGated('RouteSetup');
 
-  const moveAlong = async (): Promise<void> => {
-    if (busy) return;
+  /** Runs one plan change; anything that did not work shows the calm failed line and never leaves the buttons off. */
+  const run = async (change: () => Promise<boolean>): Promise<boolean> => {
+    if (busy) return false;
     setBusy(true);
-    const moved = await useRouteStore.getState().repaceNow(profileId);
-    setBusy(false);
-    setMovedByHand(moved);
+    setFailed(false);
+    let ok = false;
+    try {
+      ok = await change();
+    } catch {
+      ok = false;
+    } finally {
+      setBusy(false);
+    }
+    setFailed(!ok);
+    return ok;
+  };
+
+  const moveAlong = async (): Promise<void> => {
+    setMovedByHand(await run(() => useRouteStore.getState().repaceNow(profileId)));
   };
 
   const stop = async (): Promise<void> => {
-    if (busy) return;
-    setBusy(true);
-    await useRouteStore.getState().archive(profileId);
-    setBusy(false);
-    setConfirmStop(false);
+    if (await run(() => useRouteStore.getState().archive(profileId))) setConfirmStop(false);
   };
+
+  const openTopic = (topicKey: string): void => navigation.navigate('VocabTopic', { topicKey });
 
   const header = (
     <>
@@ -209,7 +222,7 @@ export function RouteOverviewScreen({ route, navigation }: Props): React.ReactEl
           <Heading level="prompt">{view.status === 'upcoming' ? t.firstWeek : t.thisWeek}</Heading>
           {view.status === 'upcoming' ? <Body tone="secondary">{t.startsOn(startsOn)}</Body> : null}
           <Spacer size="sm" />
-          {view.current !== null ? <PlanWeekCard week={view.current} locale={locale} testID="route-overview-current" /> : <Body tone="secondary">{t.nothingThisWeek}</Body>}
+          {view.current !== null ? <PlanWeekCard week={view.current} locale={locale} onOpenTopic={openTopic} testID="route-overview-current" /> : <Body tone="secondary">{t.nothingThisWeek}</Body>}
           {view.later.length > 0 ? (
             <>
               <Spacer size="md" />
@@ -224,7 +237,7 @@ export function RouteOverviewScreen({ route, navigation }: Props): React.ReactEl
               {showLater ? (
                 <View style={{ gap: spacing.md, marginTop: spacing.sm }} accessibilityLabel={t.nextWeeks}>
                   {view.later.map((week) => (
-                    <PlanWeekCard key={week.index} week={week} locale={locale} testID={`route-overview-week-${week.index}`} />
+                    <PlanWeekCard key={week.index} week={week} locale={locale} onOpenTopic={openTopic} testID={`route-overview-week-${week.index}`} />
                   ))}
                 </View>
               ) : null}
@@ -254,6 +267,14 @@ export function RouteOverviewScreen({ route, navigation }: Props): React.ReactEl
         </>
       )}
 
+      {failed ? (
+        <>
+          <Spacer size="sm" />
+          <Body tone="secondary" testID="route-overview-failed">
+            {m.learner.weeklyPlan.planPreview.saveFailed}
+          </Body>
+        </>
+      ) : null}
       <Spacer size="lg" />
       {confirmStop ? (
         <Card padding="md" tone="sunken" testID="route-overview-stop-confirm">

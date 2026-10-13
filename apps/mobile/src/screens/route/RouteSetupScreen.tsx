@@ -79,14 +79,18 @@ export function RouteSetupScreen({ route, navigation }: Props): React.ReactEleme
   const t = m.learner.weeklyPlan.setup;
   const p = m.learner.weeklyPlan.proposal;
   const locale = useLocale();
-  const { ready, basis } = usePlanBasis(profileId, choice);
+  const { ready, basis, active } = usePlanBasis(profileId, choice);
   const othersFirst = usePlanStore((s) => (s.byLearner[profileId]?.length ?? 0) > 0);
   const [state, setState] = useState<SetupState | null>(null);
+  // The plan in force when the steps began (null: none): the preview replaces that one only.
+  const [replacing, setReplacing] = useState<string | null>(null);
   const [step, setStep] = useState<SetupStep>('start');
 
   useEffect(() => {
-    if (state === null && basis !== null) setState(basis.state);
-  }, [basis, state]);
+    if (state !== null || basis === null) return;
+    setState(basis.state);
+    setReplacing(active?.id ?? null);
+  }, [basis, state, active]);
 
   const index = SETUP_STEPS.indexOf(step);
   const leave = (): void => {
@@ -312,7 +316,7 @@ export function RouteSetupScreen({ route, navigation }: Props): React.ReactEleme
         fullWidth
         disabled={!canGoOn}
         onPress={() => {
-          if (last) navigation.navigate('RoutePreview', { profileId, setup: state });
+          if (last) navigation.navigate('RoutePreview', { profileId, setup: state, replacing });
           else setStep(SETUP_STEPS[index + 1] as SetupStep);
         }}
         testID={last ? 'route-setup-see' : 'route-setup-next'}

@@ -1,5 +1,5 @@
 import { Body, Button, Heading, Icon, Screen, Spacer, spacing } from '@hangul-route/design-system';
-import { CATALOG, generateCurriculum, type CurriculumDraft } from '@hangul-route/content-schema';
+import { CATALOG, generateCurriculum, type CurriculumDraft, type SelfRoute } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -41,11 +41,11 @@ function noticeText(t: PreviewMessages['notices'], notice: LearnerNotice): strin
 }
 
 export function RoutePreviewScreen({ route, navigation }: Props): React.ReactElement {
-  const { profileId, setup } = route.params;
+  const { profileId, setup, replacing } = route.params;
   const m = useMessages();
   const t = m.learner.weeklyPlan.planPreview;
   const locale = useLocale();
-  const { basis, active } = usePlanBasis(profileId);
+  const { basis } = usePlanBasis(profileId);
   const [showLater, setShowLater] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -68,11 +68,16 @@ export function RoutePreviewScreen({ route, navigation }: Props): React.ReactEle
     if (draft === null || busy) return;
     setBusy(true);
     setFailed(false);
-    // Change the plan replaces the plan these steps started from (section 3.9), and only that one.
-    const created = await useRouteStore
-      .getState()
-      .create(profileId, draft, { from: 'setup', changed: true, ...(active === null ? {} : { replacing: active.id }) });
-    setBusy(false);
+    // Change the plan replaces the plan these steps started from (section 3.9), and only that one: a plan
+    // that became active meanwhile (a sync, another tab) is never overwritten, the failed line shows instead.
+    let created: SelfRoute | null = null;
+    try {
+      created = await useRouteStore.getState().create(profileId, draft, { from: 'setup', changed: true, ...(replacing === null ? {} : { replacing }) });
+    } catch {
+      created = null;
+    } finally {
+      setBusy(false);
+    }
     if (created === null) {
       setFailed(true);
       return;
@@ -105,7 +110,7 @@ export function RoutePreviewScreen({ route, navigation }: Props): React.ReactEle
       <Spacer size="sm" />
       {stats !== null && ready ? (
         <Body tone="secondary" testID="route-preview-stats">
-          {t.stats(stats.items, stats.minutes)}
+          {t.stats(stats.items, stats.minutes, stats.stage)}
         </Body>
       ) : null}
       {notices.length > 0 ? (

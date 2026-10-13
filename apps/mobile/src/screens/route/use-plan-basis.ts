@@ -1,6 +1,5 @@
 import type { SelfRoute, StageKey } from '@hangul-route/content-schema';
 import { useEffect, useMemo } from 'react';
-import { dayKey } from '../../logic/homework/mission-builder';
 import { proposalInputOf, safePropose, type PlanChoice } from '../../logic/route/proposal-flow';
 import { activeSelfRoute, completedQuestIdsOf } from '../../logic/route/self-route';
 import { setupBasisOf, type SetupContext, type SetupState } from '../../logic/route/setup-flow';
@@ -8,6 +7,7 @@ import { unlockedStagesFor } from '../../store/plan-store';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useAccessTier } from '../../store/tier-store';
+import { useToday } from './use-today';
 
 export interface PlanBasis {
   /** False until the profile and its saved snapshot are read. */
@@ -28,7 +28,8 @@ export function usePlanBasis(profileId: string, choice?: PlanChoice): PlanBasis 
   const snapshot = useProgressStore((s) => s.byProfile[profileId]);
   // The access tier re-renders when the inbox or the subscription changes what is open (F-ENT-003 section 3.4).
   const tier = useAccessTier(profileId);
-  const today = useMemo(() => dayKey(new Date().toISOString()), []);
+  // Read again on focus and when the app comes back: the steps may stay open across midnight.
+  const today = useToday();
 
   useEffect(() => {
     void useProgressStore.getState().hydrate(profileId);
@@ -39,8 +40,8 @@ export function usePlanBasis(profileId: string, choice?: PlanChoice): PlanBasis 
     if (profile === null || snapshot === undefined) return null;
     const completedQuestIds = completedQuestIdsOf(snapshot.quests);
     const unlockedStages = unlockedStagesFor(new Date(), profileId) as StageKey[];
-    const proposal =
-      active !== null ? null : safePropose(proposalInputOf({ placements: snapshot.placements, completedQuestIds, ageGroup: profile.ageGroup, unlockedStages, today }));
+    // From the newest level check (`effectiveRoute`), with or without a plan in force: a later place to start moves Change the plan's start.
+    const proposal = safePropose(proposalInputOf({ placements: snapshot.placements, completedQuestIds, ageGroup: profile.ageGroup, unlockedStages, today }));
     return setupBasisOf({ active, proposal, ...(choice === undefined ? {} : { choice }), completedQuestIds, unlockedStages, today });
     // `tier` is read through `unlockedStagesFor`; it is listed so a tier change plans again.
     // eslint-disable-next-line react-hooks/exhaustive-deps

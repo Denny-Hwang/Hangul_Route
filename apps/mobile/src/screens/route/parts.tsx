@@ -7,9 +7,10 @@ import { episodesAll, questsAll } from '../../content';
 import { useMessages } from '../../i18n/use-messages';
 import { vocabTopic } from '../../content/vocab';
 import { localizeEpisode, localizeQuest } from '../../logic/content-locale';
-import type { PlanWeek } from '../../logic/route/plan-view';
+import { openableTopicKey, type PlanWeek } from '../../logic/route/plan-view';
 import type { WeekRow } from '../../logic/route/proposal-flow';
 import { localizedTopicTitle } from '../../logic/vocab/question-view';
+import { LinkButton } from '../placement/parts';
 
 /**
  * Pieces the weekly plan screens share (F-PLAN-002 section 3.9): the proposal (K1), the set-up
@@ -144,9 +145,20 @@ function extraText(extra: WeekExtra, locale: UiLocale, t: Messages['learner']['w
 
 /**
  * One week of a plan (G2 preview, G3 overview): its number and first day, its kind as a text
- * badge (never colour alone), the days with their lesson or story, and the optional extras.
+ * badge (never colour alone), the days with their lesson or story, and the optional extras. With
+ * `onOpenTopic` (the overview), an optional word topic bundled in this build opens its Words page.
  */
-export function PlanWeekCard({ week, locale, testID }: { week: PlanWeek; locale: UiLocale; testID: string }): React.ReactElement {
+export function PlanWeekCard({
+  week,
+  locale,
+  onOpenTopic,
+  testID,
+}: {
+  week: PlanWeek;
+  locale: UiLocale;
+  onOpenTopic?: (topicKey: string) => void;
+  testID: string;
+}): React.ReactElement {
   const m = useMessages();
   const t = m.learner.weeklyPlan.planPreview;
   const story = week.storyQuestId === null ? undefined : questsAll.find((q) => q.id === week.storyQuestId);
@@ -161,12 +173,19 @@ export function PlanWeekCard({ week, locale, testID }: { week: PlanWeek; locale:
       </View>
       <Spacer size="sm" />
       {week.rows.length > 0 ? <WeekList rows={week.rows} locale={locale} testID={`${testID}-rows`} /> : <Body tone="secondary">{t.weekEmpty}</Body>}
-      {week.extras.map((extra) => (
-        <View key={extra.kind === 'vocab' ? extra.topicId : extra.kind} style={{ marginTop: spacing.sm }}>
-          <Body>{extraText(extra, locale, t.extras)}</Body>
-          {extra.kind === 'vocab' ? <Caption tone="secondary">{t.extras.wordsOptional}</Caption> : null}
-        </View>
-      ))}
+      {week.extras.map((extra) => {
+        const topicKey = extra.kind === 'vocab' && onOpenTopic !== undefined ? openableTopicKey(extra.topicId, (key) => vocabTopic(key) !== undefined) : null;
+        return (
+          <View key={extra.kind === 'vocab' ? extra.topicId : extra.kind} style={{ marginTop: spacing.sm, alignItems: 'flex-start' }}>
+            {topicKey !== null && onOpenTopic !== undefined ? (
+              <LinkButton label={extraText(extra, locale, t.extras)} onPress={() => onOpenTopic(topicKey)} testID={`${testID}-topic-${topicKey}`} />
+            ) : (
+              <Body>{extraText(extra, locale, t.extras)}</Body>
+            )}
+            {extra.kind === 'vocab' ? <Caption tone="secondary">{t.extras.wordsOptional}</Caption> : null}
+          </View>
+        );
+      })}
     </Card>
   );
 }

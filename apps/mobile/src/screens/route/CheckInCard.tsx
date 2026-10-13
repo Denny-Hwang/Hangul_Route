@@ -1,6 +1,6 @@
 import { Body, Button, Card, Hoya, Spacer, spacing } from '@hangul-route/design-system';
 import { PACES } from '@hangul-route/content-schema';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import type { CheckInOffer } from '../../logic/route/repace';
@@ -36,8 +36,14 @@ export function CheckInCard({
   const answer = async (yes: boolean): Promise<void> => {
     if (busy) return;
     setBusy(true);
-    const done = await useRouteStore.getState().answerCheckIn(profileId, yes ? offer : null);
-    setBusy(false);
+    let done = false;
+    try {
+      done = await useRouteStore.getState().answerCheckIn(profileId, yes ? offer : null);
+    } catch {
+      done = false;
+    } finally {
+      setBusy(false);
+    }
     if (done && yes) setApplied(days);
     else onClose();
   };
@@ -77,12 +83,12 @@ export function useShownOffer(offer: CheckInOffer | null): [CheckInOffer | null,
   const [closed, setClosed] = useState(false);
   useEffect(() => {
     if (offer !== null && shown === null && !closed) setShown(offer);
+    // Once the answer has landed the computed offer is null: a later plan's own check-in may show again.
+    else if (offer === null && closed) setClosed(false);
   }, [offer, shown, closed]);
-  return [
-    closed ? null : shown,
-    () => {
-      setClosed(true);
-      setShown(null);
-    },
-  ];
+  const close = useCallback(() => {
+    setClosed(true);
+    setShown(null);
+  }, []);
+  return [closed ? null : shown, close];
 }
