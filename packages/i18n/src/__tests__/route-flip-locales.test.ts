@@ -13,7 +13,22 @@ const ROUTE_KEYS = ['a11y.tabs.route', 'a11y.tabPosition'] as const;
 const isRoutePath = (path: string): boolean =>
   ROUTE_PATHS.some((prefix) => path.startsWith(prefix)) || (ROUTE_KEYS as readonly string[]).includes(path);
 
+const enStage = getMessages('en').a11y.myRoute;
+const enGoalPart = enStage
+  .stage(1, 'T', 'S', true, false, 0, true)
+  .slice(enStage.stage(1, 'T', 'S', true, false, 0, false).length)
+  .trim();
+const enGrownGoalPart = enStage
+  .stageGrownup('Mina', 1, 'T', 'S', true, false, 0, true)
+  .slice(enStage.stageGrownup('Mina', 1, 'T', 'S', true, false, 0, false).length)
+  .trim();
+
 describe('Learning Route strings in es and ko (R-10)', () => {
+  it('en: the goal parts the es and ko checks compare against are not empty', () => {
+    expect(enGoalPart.length).toBeGreaterThan(0);
+    expect(enGrownGoalPart).toContain('Mina');
+  });
+
   for (const locale of ['es', 'ko'] as const) {
     it(`${locale}: no English fallback under learner.myRoute, a11y.myRoute, a11y.tabs.route and a11y.tabPosition`, () => {
       expect(fallbackPaths(locale).filter(isRoutePath)).toEqual([]);
@@ -33,6 +48,14 @@ describe('Learning Route strings in es and ko (R-10)', () => {
       const grownGoal = stageGrownup('Mina', 1, 'T', 'S', true, false, 0, true);
       expect(grownGoal.startsWith(`${grownHere} `)).toBe(true);
       expect(grownGoal.slice(grownHere.length)).toContain('Mina');
+
+      // The goal part is the locale's own words: not the English goal part, and not a copy of the here or start part.
+      const startPart = all.slice(hereGoal.length).trim();
+      expect(goalPart).not.toBe(enGoalPart);
+      expect(here.endsWith(goalPart)).toBe(false);
+      expect(goalPart).not.toBe(startPart);
+      const grownGoalPart = grownGoal.slice(grownHere.length).trim();
+      expect(grownGoalPart).not.toBe(enGrownGoalPart);
     });
   }
 });

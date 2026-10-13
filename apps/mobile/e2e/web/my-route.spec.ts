@@ -11,8 +11,9 @@ import { shot } from './shots';
  * extends this spec with the Home strip entry and flips the flag; until then the whole spec needs a build made
  * with the flag on:
  *
- *   EXPO_PUBLIC_MY_ROUTE_ENABLED=true EXPO_PUBLIC_SHOW_ALL_LOCALES=1 pnpm --filter @hangul-route/mobile build:web
- *   E2E_MY_ROUTE=1 E2E_ALL_LOCALES=1 pnpm --filter @hangul-route/mobile exec playwright test my-route route-tab
+ *   EXPO_PUBLIC_MY_ROUTE_ENABLED=true EXPO_PUBLIC_SHOW_ALL_LOCALES=1 EXPO_PUBLIC_API_BASE_URL=https://api.e2e.invalid \
+ *     pnpm --filter @hangul-route/mobile build:web
+ *   E2E_MY_ROUTE=1 E2E_ALL_LOCALES=1 E2E_TELEMETRY=1 pnpm --filter @hangul-route/mobile exec playwright test my-route route-tab
  *
  * CI builds with the flag off, so it skips this spec. The tab labels per shipped UI locale are measured by
  * `route-tab.spec.ts`; the 5-second comprehension check (LR-OD-3, assumption g) reads this spec's screenshots.
@@ -24,6 +25,10 @@ const GATED_BUILD = process.env.STORY_FIXTURES_GATED === '1';
 const en = getMessages('en');
 const m = en.learner.myRoute;
 const AT = '2026-10-09T10:00:00.000Z';
+
+// The browser and the seeds agree on the calendar: `seedClassPlan` takes this week's Monday in UTC, so the page
+// reads the plan's week in UTC too, whatever the host's timezone.
+test.use({ timezoneId: 'UTC' });
 
 const VIEWPORTS = [
   { width: 320, height: 568 },
@@ -314,6 +319,9 @@ test.describe('the Route tab and its route card (LR-10)', () => {
  *
  *   EXPO_PUBLIC_MY_ROUTE_ENABLED=true EXPO_PUBLIC_API_BASE_URL=https://api.e2e.invalid pnpm --filter @hangul-route/mobile build:web
  *   E2E_MY_ROUTE=1 E2E_TELEMETRY=1 pnpm --filter @hangul-route/mobile exec playwright test my-route -g "Home strip"
+ *
+ * Without E2E_TELEMETRY=1 that case is reported as skipped, not passed. The flip PR's evidence run is the full
+ * command in the file header, which sets both.
  */
 const TELEMETRY_BUILD = process.env.E2E_TELEMETRY === '1';
 
@@ -354,13 +362,7 @@ test.describe('the Home strip entry (R-10)', () => {
     });
   }
 
-  test('a tap opens the Route tab: the page, its purpose line, no back button, and route_map.viewed once', async ({ page }) => {
-    const viewed: Array<Record<string, unknown>> = [];
-    await page.route('**/api/telemetry', async (route) => {
-      const body = route.request().postDataJSON() as { name?: string; payload?: Record<string, unknown> } | null;
-      if (body?.name === 'route_map.viewed' && body.payload) viewed.push(body.payload);
-      await route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' });
-    });
+  test('a tap opens the Route tab: the page, its purpose line, no back button', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 568 });
     await learnerOnHome(page);
 
@@ -374,11 +376,30 @@ test.describe('the Home strip entry (R-10)', () => {
     await expect(page.getByRole('tablist').getByRole('link')).toHaveCount(4);
     await expect(page.getByTestId('home-route-strip')).toBeHidden();
     await shot(page, 'home-route-strip-opens-route-320');
+  });
 
-    if (TELEMETRY_BUILD) {
-      await expect.poll(() => viewed.length).toBe(1);
-      expect(viewed[0]).toMatchObject({ source: 'tab', stage: 'stage1' });
-    }
+  test('a tap sends route_map.viewed exactly once, with source tab', async ({ page }) => {
+    test.skip(!TELEMETRY_BUILD, 'route_map.viewed not asserted: needs E2E_TELEMETRY=1 on a build with EXPO_PUBLIC_API_BASE_URL');
+    const viewed: Array<Record<string, unknown>> = [];
+    await page.route('**/api/telemetry', async (route) => {
+      const body = route.request().postDataJSON() as { name?: string; payload?: Record<string, unknown> } | null;
+      if (body?.name === 'route_map.viewed' && body.payload) viewed.push(body.payload);
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' });
+    });
+    await page.setViewportSize({ width: 320, height: 568 });
+    await learnerOnHome(page);
+
+    const strip = page.getByTestId('home-route-strip');
+    await strip.scrollIntoViewIfNeeded();
+    await strip.click();
+    await expect(page.getByTestId('my-route-screen')).toBeVisible();
+
+    await expect.poll(() => viewed.length).toBe(1);
+    // "Exactly once" is a check that nothing more arrives, so it needs a window: a second send from a second focus
+    // or a re-render would land within it (the client posts at once; it queues only offline).
+    await page.waitForTimeout(1500);
+    expect(viewed).toHaveLength(1);
+    expect(viewed[0]).toMatchObject({ source: 'tab', stage: 'stage1' });
   });
 });
 

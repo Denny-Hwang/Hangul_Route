@@ -232,7 +232,9 @@ describe("PWA e2e", () => {
    * Lines inside a top-level describe that skips unless `E2E_MY_ROUTE=1` (`test.skip(!ROUTE_TAB, ...)`): the
    * Learning Route flag-on blocks. CI builds with `flags.myRouteEnabled` off, so no CI run can play them on any
    * bundle; they run on a local flag-on build that the F-ROUTE-001 R-10 flip PR links (AMENDMENTS-ROUTE-LEARNING-ROUTE
-   * LR-10). They are exempt from the "a CI fixture run selects it" checks below until R-10 turns the flag on.
+   * LR-10). They are exempt from the "a CI fixture run selects it" checks below until R-10b turns the flag on; the
+   * R-10b flip PR must then add those blocks to the fixture and gating greps in web-app.yml (the tripwire test
+   * below fails while the flag defaults to on and any block is still exempt).
    */
   const flagOnOnly = (lines) => {
     const out = new Set();
@@ -356,5 +358,21 @@ describe("PWA e2e", () => {
     // A describe without the ROUTE_TAB skip is never exempt; one with it is exempt from its skip line on.
     const lines = ["test.describe('a', () => {", "  test.skip(!FIXTURE_BUILD, 'x');", "});", "test.describe('b', () => {", "  test.skip(!ROUTE_TAB, 'y');", "  test.skip(!GATED_BUILD, 'z');", "});"];
     assert.deepEqual([...flagOnOnly(lines)], [4, 5, 6]);
+  });
+
+  test("the flag-on exemption ends when flags.myRouteEnabled defaults to on (F-ROUTE-001 R-10b)", () => {
+    const flags = read("apps/mobile/src/config/flags.ts");
+    const defaults = flags.slice(flags.indexOf("launchDefaults"));
+    const value = defaults.slice(0, defaults.indexOf("};")).match(/myRouteEnabled:\s*(true|false)\b/);
+    assert.ok(value, "launchDefaults in flags.ts names myRouteEnabled");
+    const on = value[1] === "true";
+    if (!on) return;
+    const dir = join(ROOT, "apps", "mobile", "e2e", "web");
+    const stillExempt = readdirSync(dir).filter((n) => n.endsWith(".spec.ts") && flagOnOnly(readFileSync(join(dir, n), "utf8").split("\n")).size > 0);
+    assert.deepEqual(
+      stillExempt,
+      [],
+      "R-10b flip: remove the E2E_MY_ROUTE (ROUTE_TAB) gates and the flagOnOnly exemption, add route-tab case (b) to the fixture run and the my-route assumption h describe to the gating run in web-app.yml, and extend the expected gated list",
+    );
   });
 });
