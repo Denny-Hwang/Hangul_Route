@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { firstGoalReachedFor, focusEffects, seenForView, seenReadAfter, type FocusState } from '../focus';
+import { firstGoalReachedFor, focusEffects, goalRecordFor, seenForView, seenReadAfter, type FocusState } from '../focus';
 import { withGoalReached } from '../seen';
 import type { RouteGoal } from '@hangul-route/content-schema';
 import type { SeenRecord } from '../types';
@@ -208,5 +208,34 @@ describe('firstGoalReachedFor: the first time the tab shows a reached plan goal 
     expect(firstGoalReachedFor({ ...ready, goal: goal({ reached: false }), seen })).toBe(false);
     expect(firstGoalReachedFor({ ...ready, goal: goal({ from: 'default', sourceId: null }), seen })).toBe(false);
     expect(firstGoalReachedFor({ ...ready, goal: null, seen })).toBe(false);
+  });
+});
+
+describe('goalRecordFor: the reached goal is recorded and sent once per focus, also when reached mid-focus (LR-5c review)', () => {
+  const goal: RouteGoal = { stage: 'stage2', from: 'class', sourceId: 'plan:c', endsOn: '2026-11-01', reached: true, taste: false };
+  const base = { focusKey: 3, seenWrittenFor: 2, writeSeenNow: true, firstReached: true, goal, recordedFor: null };
+
+  it('with the focus\'s seen write when it happens now', () => {
+    expect(goalRecordFor(base)).toEqual({ mark: '3|class:plan:c:stage2', withSeenWrite: true });
+  });
+
+  it('on its own after this focus\'s seen write, when the goal is reached while the tab is in front', () => {
+    expect(goalRecordFor({ ...base, writeSeenNow: false, seenWrittenFor: 3 })).toEqual({ mark: '3|class:plan:c:stage2', withSeenWrite: false });
+  });
+
+  it('not before this focus\'s seen write: that write will carry it', () => {
+    expect(goalRecordFor({ ...base, writeSeenNow: false, seenWrittenFor: 2 })).toBeNull();
+  });
+
+  it('once: nothing again for the same goal in the same focus', () => {
+    expect(goalRecordFor({ ...base, writeSeenNow: false, seenWrittenFor: 3, recordedFor: '3|class:plan:c:stage2' })).toBeNull();
+    // A new focus, or another goal, is a new mark.
+    expect(goalRecordFor({ ...base, focusKey: 4, recordedFor: '3|class:plan:c:stage2' })?.mark).toBe('4|class:plan:c:stage2');
+    expect(goalRecordFor({ ...base, writeSeenNow: false, seenWrittenFor: 3, recordedFor: '3|class:plan:c:stage2', goal: { ...goal, sourceId: 'plan:d' } })?.mark).toBe('3|class:plan:d:stage2');
+  });
+
+  it('nothing unless this is the first reached visit, or with no goal', () => {
+    expect(goalRecordFor({ ...base, firstReached: false })).toBeNull();
+    expect(goalRecordFor({ ...base, goal: null })).toBeNull();
   });
 });

@@ -12,7 +12,7 @@ import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
 import { dayKey } from '../../logic/homework/mission-builder';
 import { myRouteAccess, myRouteEntryOf, selfEntryTab } from '../../logic/my-route/access';
-import { firstGoalReachedFor, focusEffects, seenForView, seenReadAfter } from '../../logic/my-route/focus';
+import { firstGoalReachedFor, focusEffects, goalRecordFor, seenForView, seenReadAfter } from '../../logic/my-route/focus';
 import { practiceTopicOf } from '../../logic/my-route/free-end';
 import { buildMyRoute } from '../../logic/my-route/model';
 import { planWeekOf } from '../../logic/my-route/plan-week';
@@ -233,6 +233,7 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   // read-only: the grown-up screen sends and writes nothing, section 8).
   const viewedFor = useRef(0);
   const seenWrittenFor = useRef(0);
+  const goalRecordedFor = useRef<string | null>(null);
   useEffect(() => {
     if (model === null) return;
     const fx = focusEffects({ focusKey, viewedFor: viewedFor.current, seenFor, seenWrittenFor: seenWrittenFor.current, readOnly, modelReady: true });
@@ -241,14 +242,34 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
       const event = viewedEvent({ profileId, model, source: 'tab', readOnly });
       if (event) void track(event);
     }
+    // A goal reached for the first time (LR-5c) is recorded once per focus: with this focus's seen write, or on
+    // its own when it is reached later while the tab is in front.
+    const goalRecord = goalRecordFor({ focusKey, seenWrittenFor: seenWrittenFor.current, writeSeenNow: fx.writeSeen, firstReached, goal: model.goal, recordedFor: goalRecordedFor.current });
+    if (goalRecord) goalRecordedFor.current = goalRecord.mark;
+    const goal = goalRecord ? model.goal : null;
+    let written: Promise<boolean> | null = null;
     if (fx.writeSeen) {
       seenWrittenFor.current = focusKey;
       // The record this open read is passed on, so the goals already reached (LR-3b) are kept; a goal reached
       // for the first time joins them now, so the next visit no longer cheers (LR-5c).
       const record = seenFrom(model, new Date(), seenRead);
-      pendingWrite.current = writeSeen(STORAGE, profileId, firstReached && model.goal !== null ? withGoalReached(record, model.goal) : record, { readOnly });
-      const reached = goalReachedEvent({ profileId, goal: model.goal, firstReached, readOnly });
-      if (reached) void track(reached);
+      written = writeSeen(STORAGE, profileId, goal !== null ? withGoalReached(record, goal) : record, { readOnly });
+    } else if (goal !== null) {
+      // Reached after this focus's write: the stored record (after any write still running) gains the key.
+      const fallback = seenFrom(model, new Date(), seenRead);
+      written = pendingWrite.current
+        .then(() => readSeen(STORAGE, profileId))
+        .then((stored) => writeSeen(STORAGE, profileId, withGoalReached(stored ?? fallback, goal), { readOnly }));
+    }
+    if (written !== null) {
+      pendingWrite.current = written;
+      // route_map.goal_reached once the key is stored, so a failed write never sends it twice (section 12).
+      const reached = goalReachedEvent({ profileId, goal, firstReached, readOnly });
+      if (reached) {
+        void written.then((ok) => {
+          if (ok) void track(reached);
+        });
+      }
     }
   }, [model, focusKey, seenFor, profileId, readOnly, seenRead, firstReached]);
 

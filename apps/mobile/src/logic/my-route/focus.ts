@@ -1,5 +1,5 @@
 import type { RouteGoal } from '@hangul-route/content-schema';
-import { isFirstGoalReached } from './seen';
+import { goalReachedKey, isFirstGoalReached } from './seen';
 import type { SeenRecord } from './types';
 
 /**
@@ -80,4 +80,26 @@ export function firstGoalReachedFor(s: {
   if (s.readOnly || !s.focused || s.focusKey === 0 || s.seenFor !== s.focusKey) return false;
   if (s.goal === null || s.goal.from === 'default') return false;
   return isFirstGoalReached(s.goal, s.seen);
+}
+
+/**
+ * When to record a first reached goal (its key in `seen.goalsReached`) and send
+ * `route_map.goal_reached` (LR-5c): once per focus and goal (`mark`). With this
+ * focus's seen write when that write happens now; on its own when the goal is
+ * reached after that write, while the tab is in front; never before the write,
+ * which will carry it. Null when there is nothing to record.
+ */
+export function goalRecordFor(s: {
+  focusKey: number;
+  seenWrittenFor: number;
+  writeSeenNow: boolean;
+  firstReached: boolean;
+  goal: RouteGoal | null;
+  recordedFor: string | null;
+}): { mark: string; withSeenWrite: boolean } | null {
+  if (!s.firstReached || s.goal === null) return null;
+  const mark = `${s.focusKey}|${goalReachedKey(s.goal)}`;
+  if (s.recordedFor === mark) return null;
+  if (s.writeSeenNow) return { mark, withSeenWrite: true };
+  return s.seenWrittenFor === s.focusKey ? { mark, withSeenWrite: false } : null;
 }

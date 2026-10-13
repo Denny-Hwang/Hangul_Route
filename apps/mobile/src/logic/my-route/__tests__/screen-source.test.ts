@@ -274,7 +274,8 @@ describe('the Route tab (LR-4)', () => {
   it('the tab stays mounted, so each focus is a fresh open: read chained on the write, view gated, hero focus and fill per focus', () => {
     // The read scheduling and the view gate are the pure seenReadAfter / seenForView (focus.ts, unit-tested).
     expect(screen).toContain('seenReadAfter(pendingWrite.current, () => readSeen(STORAGE, profileId), () => live)');
-    expect(screen).toContain('pendingWrite.current = writeSeen(');
+    expect(screen).toContain('written = writeSeen(');
+    expect(screen).toContain('pendingWrite.current = written;');
     // The write carries the record this open read, so goalsReached survives every later focus (LR-3b, LR-5c).
     expect(screen).toContain('seenFrom(model, new Date(), seenRead)');
     expect(screen).toContain('seenForView({ focusKey, seenFor, focused, seen: seenRead })');
@@ -292,9 +293,12 @@ describe('the Route tab (LR-4)', () => {
     // The decision is the pure firstGoalReachedFor (focus.ts, unit-tested): only after this focus's read, never read-only.
     expect(screen).toContain('firstGoalReachedFor({ focusKey, seenFor, focused, readOnly, goal: model?.goal ?? null, seen: seenRead })');
     expect(screen).toMatch(/myRouteView\(\{[\s\S]*?firstReached,/);
-    // The key is written with this focus's seen record, and the event is sent with it, once per focus.
-    expect(screen).toMatch(/if \(fx\.writeSeen\) \{[\s\S]*?withGoalReached\(/);
-    expect(screen).toMatch(/if \(fx\.writeSeen\) \{[\s\S]*?goalReachedEvent\(\{ profileId, goal: model\.goal, firstReached, readOnly \}\)/);
+    // The key is written once per focus (goalRecordFor, unit-tested): with this focus's seen record, or on its
+    // own when the goal is reached mid-focus; the event is sent only after the write succeeds.
+    expect(screen).toContain('goalRecordFor({ focusKey, seenWrittenFor: seenWrittenFor.current, writeSeenNow: fx.writeSeen, firstReached, goal: model.goal, recordedFor: goalRecordedFor.current })');
+    expect(screen).toMatch(/if \(fx\.writeSeen\) \{[\s\S]*?withGoalReached\(record, goal\)/);
+    expect(screen).toMatch(/withGoalReached\(stored \?\? fallback, goal\)/);
+    expect(screen).toMatch(/goalReachedEvent\(\{ profileId, goal, firstReached, readOnly \}\)[\s\S]*?written\.then\(\(ok\) => \{\s*if \(ok\) void track\(reached\);/);
   });
 
   it('the root-stack screen is grown-up only: a learner access moves to the tab instead of opening a second copy', () => {
