@@ -139,6 +139,13 @@ describe('planOfferOf (F-PLC-001 section 3.1 step 7, AM-1, AM-2, AM-5)', () => {
     expect(planOfferOf(offerInput({ context: levelOnly, active }))).toBeNull();
   });
 
+  it('a plan whose future would change for another reason (a stage newly open, quests finished): not a later start, no update', () => {
+    const active = planAtBand0();
+    const done = active.items.filter((item) => item.kind === 'quest').slice(0, 3).map((item) => item.id);
+    const offer = planOfferOf(offerInput({ active, context: context({ completedQuestIds: done, unlockedStages: ['stage1', 'stage2', 'stage4'] }) }));
+    expect(offer).toBeNull();
+  });
+
   it('with a plan and nothing new: null (no strip, the plan stays)', () => {
     expect(planOfferOf(offerInput({ active: planAtBand0() }))).toBeNull();
   });
