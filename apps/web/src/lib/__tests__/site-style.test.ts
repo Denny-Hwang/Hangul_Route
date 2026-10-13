@@ -42,6 +42,11 @@ describe('SITE_SIZES', () => {
     expect(SITE_SIZES.tileMin).toBe(rem(touchTarget.child + spacing.sm));
     expect(SITE_SIZES.tileMin).toBe('5.5rem');
     expect(SITE_SIZES.leadMeasure).toBe('34em');
+    expect(SITE_SIZES.heroArtMax).toBe(`${5 * spacing.xxxl}px`);
+    expect(SITE_SIZES.heroArtMax).toBe('240px');
+    expect(SITE_SIZES.heroArtMaxWide).toBe(`${layout.maxWidth.reading / 2}px`);
+    expect(SITE_SIZES.heroRatio).toBe('1.4fr');
+    expect(SITE_SIZES.hoyaShare).toBe('62%');
   });
 });
 
@@ -74,6 +79,9 @@ describe('siteCssVars', () => {
     expect(vars['--hr-site-size-prompt']).toBe(rem(typography.size.prompt));
     expect(vars['--hr-site-z-sticky']).toBe(String(z.sticky));
     expect(vars['--hr-site-tile-min']).toBe(SITE_SIZES.tileMin);
+    expect(vars['--hr-site-hero-art-max']).toBe(SITE_SIZES.heroArtMax);
+    expect(vars['--hr-site-hero-art-max-wide']).toBe(SITE_SIZES.heroArtMaxWide);
+    expect(vars['--hr-site-hero-ratio']).toBe(SITE_SIZES.heroRatio);
     const tokenValues = new Set<string>([
       ...Object.values(colors).flatMap((group) => Object.values(group as Record<string, string>)),
       ...Object.values(spacing).map((v) => `${v}px`),
@@ -84,6 +92,9 @@ describe('siteCssVars', () => {
       String(z.sticky),
       SITE_SIZES.footerColumnMin,
       SITE_SIZES.tileMin,
+      SITE_SIZES.heroArtMax,
+      SITE_SIZES.heroArtMaxWide,
+      SITE_SIZES.heroRatio,
     ]);
     for (const [key, value] of Object.entries(vars)) expect(tokenValues, key).toContain(value);
   });

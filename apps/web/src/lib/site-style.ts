@@ -47,6 +47,14 @@ export const SITE_SIZES = {
    * fit across at 320 px and fewer as text grows.
    */
   tileMin: rem(touchTarget.child + spacing.sm),
+  /** Home hero art cap on phones: 5 x `spacing.xxxl` (240 px), so the first screen keeps the h1, lead and action. */
+  heroArtMax: `${5 * spacing.xxxl}px`,
+  /** Home hero art cap from 720 px: half the reading width (360 px). */
+  heroArtMaxWide: `${layout.maxWidth.reading / 2}px`,
+  /** Home hero text column against the art column from 720 px (`layout.mediaScale.wide`). */
+  heroRatio: `${layout.mediaScale.wide}fr`,
+  /** Hoya inside the hero art square, leaving room for the bubble under Hoya. */
+  hoyaShare: '62%',
 } as const;
 
 /** `#RRGGBB` as `r, g, b`, so a shadow can take the token colour with the token opacity. */
@@ -100,6 +108,9 @@ export function siteCssVars(): CSSProperties {
     '--hr-site-z-sticky': String(z.sticky),
     '--hr-site-footer-col-min': SITE_SIZES.footerColumnMin,
     '--hr-site-tile-min': SITE_SIZES.tileMin,
+    '--hr-site-hero-art-max': SITE_SIZES.heroArtMax,
+    '--hr-site-hero-art-max-wide': SITE_SIZES.heroArtMaxWide,
+    '--hr-site-hero-ratio': SITE_SIZES.heroRatio,
   };
   return vars as CSSProperties;
 }

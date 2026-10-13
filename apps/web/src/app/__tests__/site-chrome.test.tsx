@@ -7,6 +7,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SiteFooter } from '../../components/landing/SiteFooter';
 import { PERSONA_PAGES, SHIPPED_PERSONA_PAGES, SiteHeader } from '../../components/landing/SiteHeader';
 import { SiteShell } from '../../components/landing/SiteShell';
+import AboutPage from '../(en)/about/page';
+import PrivacyPage from '../(en)/privacy/page';
+import TermsPage from '../(en)/terms/page';
+import NotFoundPage from '../not-found';
 import { CONTACT_EMAIL } from '../../data/contact';
 import { learnerStart, signIn } from '../../lib/site-links';
 import { SITE_PAGES } from '../../lib/site-metadata';
@@ -250,6 +254,50 @@ describe('SiteShell', () => {
   it('sets the token custom properties the stylesheet reads, and text in rem so browser text size scales it', () => {
     expect(html).toMatch(/<div class="hr-site" style="[^"]*--hr-site-brand:/);
     expect(html).toMatch(/<div class="hr-site" style="[^"]*font-size:1.125rem/);
+  });
+});
+
+describe('About, Privacy, Terms and the 404 page get the site chrome (F-SITE-002 §3.7, S-5)', () => {
+  const about = renderToStaticMarkup(<AboutPage />);
+  const legal = [
+    ['privacy', renderToStaticMarkup(<PrivacyPage />)],
+    ['terms', renderToStaticMarkup(<TermsPage />)],
+  ] as const;
+
+  it('About: the full header and footer around its body, which keeps Back home; no current persona page', () => {
+    const items = controls(about);
+    expect(items.map((c) => c.text)).toEqual(expect.arrayContaining([t.nav.start, t.nav.signIn, t.about.backHome]));
+    expect(about).toMatch(/<main id="content"[\s\S]*<h1[^>]*>[^<]*<\/h1>/);
+    expect(about).not.toContain('aria-current="page"');
+    expect(about.match(/<h1\b/g)).toHaveLength(1);
+    expect(about.match(/<main\b/g)).toHaveLength(1);
+  });
+
+  it.each(legal)('%s: the legal variant (no Sign in, no Start learning, no App group) around the unchanged document', (_name, html) => {
+    expect(html).not.toContain(`href="${signIn()}"`);
+    expect(html).not.toContain(`href="${learnerStart('en')}"`);
+    expect([...html.matchAll(/<h2 id="footer-[^"]*"[^>]*>([^<]*)<\/h2>/g)].map((m) => m[1])).toEqual([t.footer.guide, t.footer.company]);
+    expect(html.match(/<main\b/g)).toHaveLength(1);
+    expect(html).toContain(t.legal.draft);
+  });
+
+  it('every link of About and the legal pages has a 64 px hit area', () => {
+    for (const html of [about, ...legal.map(([, h]) => h)]) {
+      for (const c of controls(html)) expect(c.attrs, c.text).toMatch(/min-height:(64|80)px/);
+    }
+  });
+
+  it('404: an English document with Next\'s body, our line and links to / and Start learning', () => {
+    const html = renderToStaticMarkup(<NotFoundPage />);
+    expect(html).toMatch(/^<html lang="en">/);
+    expect(html).toContain('This page could not be found.');
+    expect(html).toContain(t.notFound.body);
+    const links = controls(html);
+    expect(links.map((c) => [hrefOf(c), c.text])).toEqual([
+      ['/', t.notFound.home],
+      [learnerStart('en'), t.notFound.start],
+    ]);
+    for (const c of links) expect(c.attrs).toMatch(/min-height:(64|80)px/);
   });
 });
 

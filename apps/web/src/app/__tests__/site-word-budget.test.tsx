@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import { HomePage } from '../../components/landing/HomePage';
 import { LearnersPage } from '../../components/landing/LearnersPage';
 import { ParentsPage } from '../../components/landing/ParentsPage';
 import { TeachersPage } from '../../components/landing/TeachersPage';
@@ -13,6 +14,7 @@ import { ALL_CLAIMS_ON } from '../../data/__tests__/site-claims-fixtures';
  * words either. The e2e budget (`e2e/site-budgets.spec.ts`) measures the real export with `innerText`.
  */
 const PERSONA_PAGE_WORDS = 550;
+const HOME_WORDS = 280;
 
 /** Removes every element `<tag …class="…name…">…</tag>` (no nesting of the same tag inside). */
 function dropByClass(html: string, tag: string, name: string): string {
@@ -44,6 +46,12 @@ describe('visible-word budgets with every claim on (F-SITE-002 §3.11)', () => {
     const words = visibleWords(renderToStaticMarkup(<Page locale="en" claims={ALL_CLAIMS_ON} />));
     expect(words.length).toBeGreaterThan(100);
     expect(words.length).toBeLessThanOrEqual(PERSONA_PAGE_WORDS);
+  });
+
+  it(`/: at most ${HOME_WORDS} words`, () => {
+    const words = visibleWords(renderToStaticMarkup(<HomePage locale="en" claims={ALL_CLAIMS_ON} />));
+    expect(words.length).toBeGreaterThan(80);
+    expect(words.length).toBeLessThanOrEqual(HOME_WORDS);
   });
 
   it('the counter drops folded bodies, phone-hidden header items, hidden headings and the skip link (self-check)', () => {

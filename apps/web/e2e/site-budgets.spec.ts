@@ -18,9 +18,16 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
  *
  * - At 320 px, at default and 200 % text, every fold opened keeps its content inside the fold's content box.
  *
- * S-4a measures `/learners`; S-4b adds `/parents` and `/teachers`; S-5 adds `/`.
+ * S-4a measures `/learners`; S-4b adds `/parents` and `/teachers`; S-5 adds `/`, and the header checks on About and
+ * the legal pages (their header is the legal variant: the brand alone on phones).
  */
 const en = getMessages('en').landing;
+/**
+ * A QA build shows every locale, so the footer adds the locale switcher (one row) that production only shows once a
+ * second locale ships. The heights are budgets of the production export; F-I18N-001's ship PR for a locale runs this
+ * spec on its own export, so they are checked again then.
+ */
+const QA = process.env.NEXT_PUBLIC_SHOW_ALL_LOCALES === '1';
 
 interface SitePageBudget {
   path: string;
@@ -33,12 +40,17 @@ interface SitePageBudget {
   phoneHeadroom: number;
   wideMax: number;
   words: number;
+  /** A persona page marks itself in the header nav. */
+  current: boolean;
 }
 
 /** Persona page budgets (§3.11): 5 screens at 375 x 812 (headroom 3,700), 3,200 px at 1280 x 800, 550 words. */
-const PERSONA = { phoneMax: 4060, phoneHeadroom: 3700, wideMax: 3200, words: 550 } as const;
+const PERSONA = { phoneMax: 4060, phoneHeadroom: 3700, wideMax: 3200, words: 550, current: true } as const;
+/** Home budgets (§3.11): about 3.5 screens at 375 x 812 (headroom 2,750), 2,100 px at 1280 x 800, 280 words. */
+const HOME = { phoneMax: 2900, phoneHeadroom: 2750, wideMax: 2100, words: 280, current: false } as const;
 
 const PAGES: readonly SitePageBudget[] = [
+  { path: '/', h1: en.home.hero.title, lead: en.home.hero.lead, primary: en.home.hero.start, ...HOME },
   { path: '/learners', h1: en.persona.learners.title, lead: en.persona.learners.lead, primary: en.nav.start, ...PERSONA },
   { path: '/parents', h1: en.persona.parents.title, lead: en.persona.parents.lead, primary: en.persona.parents.signIn, ...PERSONA },
   { path: '/teachers', h1: en.persona.teachers.title, lead: en.persona.teachers.lead, primary: en.persona.teachers.signIn, ...PERSONA },
@@ -97,8 +109,10 @@ for (const budget of PAGES) {
       await page.setViewportSize({ width: 375, height: 812 });
       await page.goto(budget.path);
       const height = await page.evaluate(() => document.documentElement.scrollHeight);
-      expect(height).toBeLessThanOrEqual(budget.phoneMax);
-      expect(height, 'headroom budget while claims are off').toBeLessThanOrEqual(budget.phoneHeadroom);
+      if (!QA) {
+        expect(height).toBeLessThanOrEqual(budget.phoneMax);
+        expect(height, 'headroom budget while claims are off').toBeLessThanOrEqual(budget.phoneHeadroom);
+      }
       const words = await page.evaluate(() => document.body.innerText.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length);
       expect(words).toBeGreaterThan(50);
       expect(words).toBeLessThanOrEqual(budget.words);
@@ -107,7 +121,7 @@ for (const budget of PAGES) {
     test(`at 1280 x 800: at most ${budget.wideMax} px tall and ${budget.words} visible words`, async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto(budget.path);
-      expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThanOrEqual(budget.wideMax);
+      if (!QA) expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThanOrEqual(budget.wideMax);
       const words = await page.evaluate(() => document.body.innerText.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length);
       expect(words).toBeLessThanOrEqual(budget.words);
     });
@@ -196,7 +210,7 @@ for (const budget of PAGES) {
       });
     }
 
-    test('at 1280 px the header is one row with every item, the current page marked', async ({ page }) => {
+    test(`at 1280 px the header is one row with every item${budget.current ? ', the current page marked' : ', none marked'}`, async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto(budget.path);
       const { height, rows } = await headerRows(page);
@@ -205,7 +219,53 @@ for (const budget of PAGES) {
       const nav = page.getByRole('navigation', { name: en.nav.label });
       // Every persona page ships from S-4b (SHIPPED_PERSONA_PAGES).
       await expect(nav.getByRole('link')).toHaveText([en.nav.learners, en.nav.parents, en.nav.teachers]);
-      await expect(nav.locator('a[aria-current="page"]')).toHaveAttribute('href', budget.path);
+      if (budget.current) await expect(nav.locator('a[aria-current="page"]')).toHaveAttribute('href', budget.path);
+      else await expect(nav.locator('a[aria-current="page"]')).toHaveCount(0);
+    });
+  });
+}
+
+/** The header on the other site pages (§3.11 "measured on every site page"); the legal pages use the legal variant. */
+for (const { path, legal } of [
+  { path: '/about', legal: false },
+  { path: '/privacy', legal: true },
+  { path: '/terms', legal: true },
+]) {
+  test.describe(`${path} header`, () => {
+    for (const width of [320, 375]) {
+      test(`at ${width} px: one row, at most ${HEADER_MAX} px tall`, async ({ page }) => {
+        await page.setViewportSize({ width, height: 812 });
+        await page.goto(path);
+        const { height, rows } = await headerRows(page);
+        expect(rows).toBe(1);
+        expect(height).toBeLessThanOrEqual(HEADER_MAX);
+        const signIn = page.locator('header.hr-site-header').getByRole('link', { name: en.nav.signIn, exact: true });
+        if (legal) await expect(signIn).toHaveCount(0);
+        else await expect(signIn).toBeVisible();
+      });
+    }
+
+    for (const width of [320, 720]) {
+      test(`with 200 % text at ${width} px: at most two rows, nothing scrolls sideways`, async ({ page }) => {
+        await page.setViewportSize({ width, height: 812 });
+        await page.goto(path);
+        await setText200(page);
+        const { rows } = await headerRows(page);
+        expect(rows).toBeLessThanOrEqual(2);
+        const { doc } = await page.evaluate(() => ({ doc: document.documentElement.scrollWidth }));
+        const culprits = doc > width ? await overflowing(page, width) : '';
+        expect(doc, culprits).toBeLessThanOrEqual(width);
+      });
+    }
+
+    test('at 1280 px: one row; the legal variant has no Sign in and no Start learning', async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto(path);
+      const { rows } = await headerRows(page);
+      expect(rows).toBe(1);
+      const header = page.locator('header.hr-site-header');
+      await expect(header.getByRole('link', { name: en.nav.start, exact: true })).toHaveCount(legal ? 0 : 1);
+      await expect(header.getByRole('link', { name: en.nav.signIn, exact: true })).toHaveCount(legal ? 0 : 1);
     });
   });
 }
