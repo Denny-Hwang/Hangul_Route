@@ -1193,8 +1193,8 @@ export const consoleMsgs = {
           family: (n: number) => `Enviada a ${n} ${studentsWord(n)}.`,
         },
         notesOff: {
-          class: (n: number) => plural('es', n, { one: 'Notas apagadas: 1 estudiante.', other: `Notas apagadas: ${n} estudiantes.` }),
-          family: (n: number) => plural('es', n, { one: 'Notas apagadas: 1 estudiante.', other: `Notas apagadas: ${n} estudiantes.` }),
+          class: (n: number) => plural('es', n, { one: 'Notas desactivadas: 1 estudiante.', other: `Notas desactivadas: ${n} estudiantes.` }),
+          family: (n: number) => plural('es', n, { one: 'Notas desactivadas: 1 estudiante.', other: `Notas desactivadas: ${n} estudiantes.` }),
         },
         presetsOnly: (n: number) => plural('es', n, { one: '1 estudiante recibe solo el ánimo.', other: `${n} estudiantes reciben solo el ánimo.` }),
         limit: {
@@ -1247,7 +1247,7 @@ export const consoleMsgs = {
         block: { cta: 'Bloquear sus notas' },
       },
       hideConfirm: {
-        title: (learner: string) => `¿Ocultar esta nota a ${learner}?`,
+        title: (learner: string) => `¿Ocultarle esta nota a ${learner}?`,
         body: (learner: string) => `Desaparece de la app de ${learner} en la próxima sincronización. Quien la envió ve 'No se mostró'.`,
         cta: 'Ocultar',
         cancel: { cta: 'Cancelar' },
