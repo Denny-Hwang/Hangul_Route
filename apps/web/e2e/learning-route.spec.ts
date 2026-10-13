@@ -1,6 +1,6 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
 import { CATALOG, generateCurriculum, toMeta } from '@hangul-route/content-schema';
-import { getMessages } from '@hangul-route/i18n';
+import { formatDate, getMessages } from '@hangul-route/i18n';
 import { API, NOW, SESSION_KEY, mockReport, reportUrl } from './report-fixtures';
 
 /**
@@ -47,6 +47,18 @@ const JOURNEY = {
   ],
 };
 
+/** Mina's level check, 9 October: Stage 1 at band 2, so the Stage 1 row carries "Mina started here". */
+const PLACEMENT = {
+  takenAt: '2026-10-09T12:00:00.000Z',
+  level: { stage: 'stage1', band: 2 },
+  oralStage: null,
+  strands: { 'hangul-recognition': 'secure', 'sound-letter': 'secure', 'syllable-reading': 'getting-there', vocabulary: 'not-tested', sentences: 'not-tested' },
+  beyondContent: false,
+  overridden: false,
+};
+
+const LAST_SYNCED_AT = '2026-10-15T09:31:00.000Z';
+
 const SUMMARY = {
   lastActiveAt: '2026-10-15T09:30:00.000Z',
   streakDays: 2,
@@ -56,6 +68,7 @@ const SUMMARY = {
   jamoRecognized: ['ㄱ', 'ㄴ'],
   needsPractice: [],
   journey: JOURNEY,
+  placement: PLACEMENT,
 };
 
 /** The class's live weekly plan (a curriculum from Monday 12 October, four weeks) whose one lesson is in Stage 2. */
@@ -111,7 +124,7 @@ async function mockRoster(page: Page, kind: Kind): Promise<void> {
   };
   // The family device sends the goal it shows (LR-W1, family only); the class card reads its own plan instead.
   const summary = kind === 'family' ? { ...SUMMARY, routeGoal: { stage: 'stage1', from: 'default' } } : SUMMARY;
-  const learner = { id: 'profile:mina', displayName: 'Mina', avatar: 'hoya-orange', joinedAt: '2026-09-02T00:00:00.000Z', lastActiveAt: SUMMARY.lastActiveAt, ageGroup: 'starter', lastSyncedAt: '2026-10-15T09:31:00.000Z', summary };
+  const learner = { id: 'profile:mina', displayName: 'Mina', avatar: 'hoya-orange', joinedAt: '2026-09-02T00:00:00.000Z', lastActiveAt: SUMMARY.lastActiveAt, ageGroup: 'starter', lastSyncedAt: LAST_SYNCED_AT, summary };
   await page.route(`${API}/**`, async (route) => {
     const request = route.request();
     if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' } });
@@ -136,6 +149,7 @@ async function calmWords(page: Page): Promise<void> {
   const main = page.getByRole('main');
   const text = await main.innerText();
   expect(text).not.toMatch(/\/\s*\d+/);
+  expect(text).not.toMatch(/\bof \d/);
   expect(text).not.toMatch(/\b0 quests\b/i);
   expect(text).not.toMatch(/\bbehind\b/i);
   expect(text).not.toMatch(/billing|premium|upgrade|\$/i);
@@ -145,9 +159,11 @@ async function calmWords(page: Page): Promise<void> {
 test.describe('Learning Route switched off (the default export)', () => {
   test.skip(FULL, 'the export was built with the Learning Route on');
 
-  test('the stage list address goes back to the space page', async ({ page }) => {
+  test('the stage list address goes back to the class space page', async ({ page }) => {
+    // A signed-in session, so the address that comes back is the switch's and not the sign-in guard's.
+    await mockRoster(page, 'class');
     await page.goto(routeUrl('class'));
-    await expect(page).not.toHaveURL(/\/space\/route/);
+    await expect(page).toHaveURL(new RegExp(`/teach/space/?\\?id=${encodeURIComponent(SPACE.class.id)}$`));
     await expect(page.locator('ol')).toHaveCount(0);
   });
 });
@@ -183,6 +199,17 @@ test.describe('the stage list page (LR-8)', () => {
         await expect(list.getByText(canDo[1], { exact: true })).toBeVisible();
         await expect(list.getByText(canDo[2], { exact: true })).toBeVisible();
         await expect(list.getByText(lr.hereTag('Mina'), { exact: true })).toBeVisible();
+        // The rows' tags (section 6.1): here and started on Stage 1, and the goal on its own stage: the learner's goal
+        // (case 1, the family device's routeGoal) or the plan's (case 2, the class plan reaches Stage 2).
+        const row = (n: 1 | 2) => list.getByRole('listitem').filter({ hasText: canDo[n] });
+        await expect(row(1).getByText(lr.startTag('Mina'), { exact: true })).toBeVisible();
+        if (kind === 'class') await expect(row(2).getByText(lr.planGoalTag, { exact: true })).toBeVisible();
+        else await expect(row(1).getByText(lr.goalTag('Mina'), { exact: true })).toBeVisible();
+        // A stage line only where there is something to say: Stage 1 has both parts, Stage 2 (nothing done, nothing known) none.
+        await expect(row(1).getByText(en.console.journey.stageLine(4, 2), { exact: true })).toBeVisible();
+        await expect(row(2)).not.toContainText(/quests? done|known from the level check/);
+        // When the device last synced, in the viewer's words.
+        await expect(page.getByText(lr.updated(formatDate('en', LAST_SYNCED_AT, 'monthDay')), { exact: true })).toBeVisible();
 
         await calmWords(page);
         await noSidewaysScroll(page);
