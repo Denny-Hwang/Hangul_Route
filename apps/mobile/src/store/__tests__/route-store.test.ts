@@ -121,3 +121,69 @@ describe('route-store: create and archive (F-PLAN-002 section 3.9)', () => {
     expect(await useRouteStore.getState().archive('profile:a', NOW)).toBe(false);
   });
 });
+
+describe('route-store: re-pace and the Hoya check-in (section 3.7, FP-B14)', () => {
+  const DAY = 86_400_000;
+  const plan = (startOffsetDays: number, weeks = 12): CurriculumDraft =>
+    generateCurriculum(
+      {
+        audience: 'self',
+        level: { stage: 'stage1', band: 0 },
+        startDate: dayKey(new Date(NOW.getTime() + startOffsetDays * DAY).toISOString()),
+        weeks,
+        sessionsPerWeek: 3,
+        minutesPerSession: 15,
+        unlockedStages: ['stage1'],
+      },
+      CATALOG,
+    );
+
+  it('autoRepace moves a plan along once when past items wait, notes it for the overview and fires route.repaced', async () => {
+    // A plan that started 10 days ago: its first-week items are past and pending.
+    const created = await useRouteStore.getState().create('profile:a', plan(-10), { from: 'setup', changed: true }, new Date(NOW.getTime() - 10 * DAY));
+    await usePlanStore.getState().rederive('profile:a');
+    vi.mocked(track).mockClear();
+    expect(await useRouteStore.getState().autoRepace('profile:a', NOW)).toBe(true);
+    const route = useProgressStore.getState().byProfile['profile:a']?.selfRoute;
+    expect(route?.id).toBe(created?.id);
+    expect(route?.meta.repacedAt).toBe(NOW.toISOString());
+    expect(useRouteStore.getState().ui['profile:a']?.movedAt).toBe(NOW.toISOString());
+    expect(track).toHaveBeenCalledWith(expect.objectContaining({ name: 'route.repaced', payload: expect.objectContaining({ mode: 'auto' }) }));
+    // Once a day.
+    expect(await useRouteStore.getState().autoRepace('profile:a', NOW)).toBe(false);
+  });
+
+  it('autoRepace does nothing without a plan, or while a session is open', async () => {
+    expect(await useRouteStore.getState().autoRepace('profile:a', NOW)).toBe(false);
+    await useRouteStore.getState().create('profile:a', plan(-10), { from: 'setup', changed: true }, new Date(NOW.getTime() - 10 * DAY));
+    await usePlanStore.getState().rederive('profile:a');
+    useProgressStore.setState({ openSession: { profileId: 'profile:a', sessionId: 's', owner: 'quest:x', streak: true } });
+    expect(await useRouteStore.getState().autoRepace('profile:a', NOW)).toBe(false);
+    useProgressStore.setState({ openSession: null });
+  });
+
+  it('repaceNow moves the plan along by hand (route.repaced manual); false without a plan', async () => {
+    expect(await useRouteStore.getState().repaceNow('profile:a', NOW)).toBe(false);
+    await useRouteStore.getState().create('profile:a', plan(-3), { from: 'setup', changed: true }, new Date(NOW.getTime() - 3 * DAY));
+    vi.mocked(track).mockClear();
+    expect(await useRouteStore.getState().repaceNow('profile:a', NOW)).toBe(true);
+    expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute?.meta.repacedAt).toBe(NOW.toISOString());
+    expect(track).toHaveBeenCalledWith(expect.objectContaining({ name: 'route.repaced', payload: expect.objectContaining({ mode: 'manual' }) }));
+  });
+
+  it('answerCheckIn applies the new pace with yes, and either answer closes the check-in for this plan', async () => {
+    const created = await useRouteStore.getState().create('profile:a', plan(-29), { from: 'setup', changed: true }, new Date(NOW.getTime() - 29 * DAY));
+    expect(await useRouteStore.getState().answerCheckIn('profile:a', { kind: 'lighter', pace: 'gentle' }, NOW)).toBe(true);
+    expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute?.meta.params.sessionsPerWeek).toBe(2);
+    expect(useRouteStore.getState().ui['profile:a']?.checkInFor).toBe(created?.id);
+    expect(await useRouteStore.getState().answerCheckIn('profile:a', null, NOW)).toBe(true);
+    expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute?.meta.params.sessionsPerWeek).toBe(2);
+  });
+
+  it('answerCheckIn is false without a plan; markMovedSeen remembers the line was seen', async () => {
+    expect(await useRouteStore.getState().answerCheckIn('profile:a', null, NOW)).toBe(false);
+    await useRouteStore.getState().markMovedSeen('profile:a', NOW.toISOString());
+    expect(useRouteStore.getState().ui['profile:a']?.movedSeenAt).toBe(NOW.toISOString());
+    expect(mem.get('route-ui:profile:a')).toEqual({ movedSeenAt: NOW.toISOString() });
+  });
+});

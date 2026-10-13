@@ -1,7 +1,9 @@
-import type { CurriculumDraft, SelfRoute } from '@hangul-route/content-schema';
+import { CATALOG, type CurriculumDraft, type SelfRoute } from '@hangul-route/content-schema';
 import { z } from 'zod';
 import { create } from 'zustand';
+import { dayKey } from '../logic/homework/mission-builder';
 import { createdEvent } from '../logic/route/proposal-flow';
+import { applyCheckIn, autoRepaceDue, pendingPastOf, repaceSelfRoute, repacedEvent, type CheckInOffer } from '../logic/route/repace';
 import { activeSelfRoute, archivedRoute, newSelfRouteId, selfRouteOf } from '../logic/route/self-route';
 import { readJson, writeJson } from '../platform/storage';
 import { track } from '../platform/telemetry';
@@ -19,7 +21,15 @@ import { useProgressStore } from './progress-store';
 
 const uiKey = (profileId: string): string => `route-ui:${profileId}`;
 
-const RouteUiSchema = z.object({ dismissedAt: z.string().optional() });
+const RouteUiSchema = z.object({
+  /** The plan prompt's Not now (AM-6, OD-16). */
+  dismissedAt: z.string().optional(),
+  /** The plan whose Hoya check-in was answered (FP-B14): it shows once per plan. */
+  checkInFor: z.string().optional(),
+  /** The last automatic re-pace, and when its calm line was last seen (section 3.7). */
+  movedAt: z.string().optional(),
+  movedSeenAt: z.string().optional(),
+});
 export type RouteUi = z.infer<typeof RouteUiSchema>;
 
 export interface CreateOptions {
@@ -41,9 +51,51 @@ interface Actions {
   create: (profileId: string, draft: CurriculumDraft, opts: CreateOptions, now?: Date) => Promise<SelfRoute | null>;
   /** Stop the active plan; false when there is none. */
   archive: (profileId: string, now?: Date) => Promise<boolean>;
+  /**
+   * The automatic re-pace (section 3.7): at most once per UTC day, never while a session is open,
+   * when three or more past-dated plan items wait or the oldest is a week old. True when it ran.
+   */
+  autoRepace: (profileId: string, now?: Date) => Promise<boolean>;
+  /** "Move my plan along": the same re-pace by hand; false without an active plan. */
+  repaceNow: (profileId: string, now?: Date) => Promise<boolean>;
+  /** The Hoya check-in's answer: an offer applies the new pace, null is Not now; either closes it for this plan. */
+  answerCheckIn: (profileId: string, offer: CheckInOffer | null, now?: Date) => Promise<boolean>;
+  /** The calm "Hoya moved your plan along" line was seen. */
+  markMovedSeen: (profileId: string, at: string) => Promise<void>;
 }
 
-export const useRouteStore = create<State & Actions>((set, get) => ({
+const completedOf = (profileId: string): string[] =>
+  (useProgressStore.getState().byProfile[profileId]?.quests ?? []).filter((q) => q.completedAt !== undefined).map((q) => q.questId);
+
+export const useRouteStore = create<State & Actions>((set, get) => {
+  const mark = async (profileId: string, patch: RouteUi): Promise<void> => {
+    const ui = { ...get().ui[profileId], ...patch };
+    set((s) => ({ ui: { ...s.ui, [profileId]: ui } }));
+    await writeJson(uiKey(profileId), ui).catch(() => undefined);
+  };
+
+  /** The active plan, after the saved snapshot is read; null when there is none. */
+  const activeOf = async (profileId: string): Promise<SelfRoute | null> => {
+    await useProgressStore.getState().hydrate(profileId);
+    return activeSelfRoute(useProgressStore.getState().byProfile[profileId]);
+  };
+
+  /** Store the changed plan and derive its week again (section 3.6 rule 2 reconciles the dates). */
+  const replace = async (profileId: string, route: SelfRoute): Promise<void> => {
+    useProgressStore.getState().setSelfRoute(profileId, route);
+    await usePlanStore.getState().rederive(profileId);
+  };
+
+  const repace = async (profileId: string, active: SelfRoute, mode: 'auto' | 'manual', now: Date): Promise<void> => {
+    const today = dayKey(now.toISOString());
+    const homework = useProgressStore.getState().byProfile[profileId]?.homework ?? [];
+    const pending = pendingPastOf(active, homework, today).length;
+    await replace(profileId, repaceSelfRoute(active, completedOf(profileId), today, CATALOG, now.toISOString()));
+    const event = repacedEvent(profileId, mode, pending);
+    void track({ name: event.name, profileId, payload: { ...event.payload } });
+  };
+
+  return {
   ui: {},
 
   loadUi: async (profileId) => {
@@ -54,11 +106,9 @@ export const useRouteStore = create<State & Actions>((set, get) => ({
     return ui;
   },
 
-  markDismissed: async (profileId, at) => {
-    const ui = { ...get().ui[profileId], dismissedAt: at };
-    set((s) => ({ ui: { ...s.ui, [profileId]: ui } }));
-    await writeJson(uiKey(profileId), ui).catch(() => undefined);
-  },
+  markDismissed: (profileId, at) => mark(profileId, { dismissedAt: at }),
+
+  markMovedSeen: (profileId, at) => mark(profileId, { movedSeenAt: at }),
 
   create: async (profileId, draft, opts, now = new Date()) => {
     const progress = useProgressStore.getState();
@@ -89,4 +139,37 @@ export const useRouteStore = create<State & Actions>((set, get) => ({
     await usePlanStore.getState().rederive(profileId);
     return true;
   },
-}));
+
+  autoRepace: async (profileId, now = new Date()) => {
+    const active = await activeOf(profileId);
+    const progress = useProgressStore.getState();
+    const due = autoRepaceDue({
+      route: active,
+      homework: progress.byProfile[profileId]?.homework ?? [],
+      today: dayKey(now.toISOString()),
+      sessionOpen: progress.openSession?.profileId === profileId,
+    });
+    if (!due || active === null) return false;
+    await repace(profileId, active, 'auto', now);
+    await mark(profileId, { movedAt: now.toISOString() });
+    return true;
+  },
+
+  repaceNow: async (profileId, now = new Date()) => {
+    const active = await activeOf(profileId);
+    if (active === null) return false;
+    await repace(profileId, active, 'manual', now);
+    return true;
+  },
+
+  answerCheckIn: async (profileId, offer, now = new Date()) => {
+    const active = await activeOf(profileId);
+    if (active === null) return false;
+    if (offer !== null) {
+      await replace(profileId, applyCheckIn(active, offer, completedOf(profileId), dayKey(now.toISOString()), CATALOG, now.toISOString()));
+    }
+    await mark(profileId, { checkInFor: active.id });
+    return true;
+  },
+  };
+});
