@@ -367,7 +367,8 @@ function LeaveSheet({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onStay} accessibilityViewIsModal>
       <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: colors.surface.overlay }} testID="hangul-check-leave">
-        <Pressable onPress={onStay} accessibilityRole="button" accessibilityLabel={m.stay.cta} style={{ flex: 1 }} />
+        {/* A tap on the dimmed area stays; hidden from assistive tech, which has the Keep going button below. */}
+        <Pressable onPress={onStay} focusable={false} aria-hidden accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ flex: 1 }} />
         <View
           style={{
             backgroundColor: colors.surface.paper,

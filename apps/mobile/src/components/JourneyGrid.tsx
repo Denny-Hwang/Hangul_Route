@@ -190,7 +190,7 @@ export function JourneyGrid({
                 ) : null}
                 {/* The Hangul Check, beside a complete Stage 1's pill: never required (F-QUEST-002 §3.9). */}
                 {row.stage === 'stage1' && pill === 'complete' && onOpenHangulCheck ? (
-                  <Button label={m.hangulCheck.cta} tone="secondary" size="sm" onPress={onOpenHangulCheck} testID="journey-hangul-check" />
+                  <Button label={m.hangulCheck.cta} tone="ghost" size="sm" onPress={onOpenHangulCheck} testID="journey-hangul-check" />
                 ) : null}
               </View>
             </View>
