@@ -53,8 +53,9 @@ describe('class views after the move', () => {
     await db.putLearner({ ...(await db.getLearner(LEARNER))!, displayName: 'Suni Kim' });
     const row = executed(learnerSideRow());
     const look = await viewLookups(db, [row]);
-    expect(sourceView(row, look)).toMatchObject({ status: 'executed', learner: null, learnerId: null, steps: { learner: 'yes', source: 'yes', destination: 'yes' }, agreedBySchoolAdmin: true, executedAt: iso(3 * DAY), scheduledFor: null });
-    expect(destinationView(row, look)).toMatchObject({ status: 'executed', learner: { name: 'S. K.', avatar: 'hoya-orange' } });
+    // The school admin answered for the destination only: the destination's page says so, the source's does not (T11, T-5d).
+    expect(sourceView(row, look)).toMatchObject({ status: 'executed', learner: null, learnerId: null, steps: { learner: 'yes', source: 'yes', destination: 'yes' }, agreedBySchoolAdmin: false, executedAt: iso(3 * DAY), scheduledFor: null });
+    expect(destinationView(row, look)).toMatchObject({ status: 'executed', learner: { name: 'S. K.', avatar: 'hoya-orange' }, agreedBySchoolAdmin: true });
     await db.putSpace({ ...dest, settings: { ...dest.settings, anonymizeRoster: false } });
     expect(destinationView(row, await viewLookups(db, [row])).learner?.name).toBe('Suni Kim');
   });

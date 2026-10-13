@@ -279,6 +279,12 @@ export const InboxTransferSchema = z.object({
     ownerName: z.string().nullable(),
     schoolName: z.string().nullable(),
     ageBucket: z.string().nullable(),
+    /**
+     * How many learners the destination has (T-5d), shown with the owner name and age so a free-text
+     * class name is not the only identity (section 4.11). Lenient: an older Worker omits it and a bad
+     * value reads as null, never dropping the row; the app then draws the age alone.
+     */
+    learnerCount: z.number().int().nonnegative().nullable().catch(null),
   }),
   learnerState: z.string(),
   sourceState: z.string(),

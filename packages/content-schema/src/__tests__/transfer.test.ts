@@ -62,7 +62,7 @@ const inboxTransfer = {
   status: 'requested',
   initiator: 'source',
   from: { spaceId: 'space:a', name: 'Sunday Class A' },
-  to: { spaceId: 'space:b', name: 'Saturday Class B', ownerName: 'Ms Park', schoolName: null, ageBucket: 'months' },
+  to: { spaceId: 'space:b', name: 'Saturday Class B', ownerName: 'Ms Park', schoolName: null, ageBucket: 'months', learnerCount: 12 },
   learnerState: 'pending',
   sourceState: 'yes',
   destinationState: 'waiting',
@@ -307,6 +307,17 @@ describe('InboxTransferSchema is lenient on the wire', () => {
       expect(row.success, String(bad)).toBe(true);
       expect(row.success && row.data.termsDigest, String(bad)).toBeNull();
     }
+  });
+
+  it('reads to.learnerCount leniently (T-5d): an older Worker omits it and a bad value never drops the row', () => {
+    const { learnerCount: _count, ...olderTo } = inboxTransfer.to;
+    expect(InboxTransferSchema.parse({ ...inboxTransfer, to: olderTo }).to.learnerCount).toBeNull();
+    for (const bad of [-1, 1.5, '12', null, Number.NaN]) {
+      const row = InboxTransferSchema.safeParse({ ...inboxTransfer, to: { ...inboxTransfer.to, learnerCount: bad } });
+      expect(row.success, String(bad)).toBe(true);
+      expect(row.success && row.data.to.learnerCount, String(bad)).toBeNull();
+    }
+    expect(InboxTransferSchema.parse({ ...inboxTransfer, to: { ...inboxTransfer.to, learnerCount: 0 } }).to.learnerCount).toBe(0);
   });
 
   it('rejects a row without an id or with a malformed one', () => {
