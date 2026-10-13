@@ -119,8 +119,8 @@ export const REPORT_CSS = `
 .hr-report-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:${rem(spacing.xs)};max-width:${px(layout.maxWidth.reading)}}
 .hr-report-cal-day{display:flex;flex-direction:column;align-items:center;gap:${rem(spacing.xxs)};min-width:0}
 .hr-report-cal-head{text-align:center;font-size:${rem(typography.size.caption)};font-weight:${typography.weight.semibold};color:${colors.text.muted};overflow:hidden}
-.hr-report-cal-label{display:flex;flex-direction:column;align-items:center;font-size:${rem(typography.size.caption)};line-height:${typography.leading.tight};color:${colors.text.secondary}}
-.hr-report-cal-dow{font-weight:${typography.weight.semibold};color:${colors.text.muted}}
+.hr-report-cal-label{display:flex;flex-direction:column;align-items:center;max-width:100%;overflow:hidden;font-size:${rem(typography.size.caption)};line-height:${typography.leading.tight};color:${colors.text.secondary}}
+.hr-report-cal-dow{max-width:100%;overflow:hidden;text-overflow:clip;white-space:nowrap;font-weight:${typography.weight.semibold};color:${colors.text.muted}}
 .hr-report-cal-mark{width:100%;max-width:${px(spacing.xxxl)};aspect-ratio:1;border-radius:${px(radii.sm)};display:flex;align-items:center;justify-content:center;box-sizing:border-box}
 .hr-report-cal-mark svg{width:${CHECK_SHARE};height:${CHECK_SHARE}}
 .hr-report-cal-practiced{background:${colors.brand.secondary};border:${px(borderWidth.base)} solid ${colors.brand.secondaryDark}}
