@@ -171,7 +171,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'landing.legal.terms.sections.contact.paragraphs.ask': [[{ email: 'hello@example.com', levels: 'New reader / Some reading' }]],
   'console.start.prefill.family': [['Kim']],
   'console.start.prefill.school': [['Seoul Hangul']],
-  'console.home.title': [['Ms Kim']],
   'console.space.title.family': [['Kim family', 1], ['Kim family', 2]],
   'console.space.title.class': [['Class A', 1], ['Class A', 3]],
   'console.space.title.school': [['Seoul school', 1], ['Seoul school', 40]],
