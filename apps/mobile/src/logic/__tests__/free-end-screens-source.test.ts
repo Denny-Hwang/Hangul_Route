@@ -34,6 +34,8 @@ describe('Home (section 3.7)', () => {
     expect(card).toMatch(/access\.freeEnd\.title/);
     expect(card).toMatch(/access\.openForYou/);
     expect(card).toMatch(/access\.replay\.cta/);
+    // With neither a word topic nor a sampler story, Play a favorite again is the one primary (never only the ask).
+    expect(card).toMatch(/tone=\{primary \? 'secondary' : 'primary'\}/);
     expect(card).not.toMatch(/name=["']lock["']/);
     for (const s of [src, card]) {
       expect(s).not.toMatch(SYMBOL);
@@ -62,6 +64,20 @@ describe('Results (section 3.8)', () => {
     expect(party).toMatch(/onAsk/);
     expect(view).not.toMatch(SYMBOL);
     expect(view).not.toMatch(COLOUR);
+  });
+});
+
+describe('Results when the same run completes Stage 1 (F-QUEST-002 section 3.8)', () => {
+  const src = read('screens/results/ResultsScreen.tsx');
+  const view = read('screens/results/ResultsFreeEnd.tsx');
+
+  it('keeps See your Stage 1 prize on the celebration and on the calm line, as the one primary', () => {
+    expect(src).toMatch(/const freeEndPrize = actions\.stagePrize/);
+    expect(src.match(/stagePrize=\{freeEndPrize\}/g)).toHaveLength(2);
+    expect(view).toMatch(/testID="results-stage-prize"/);
+    expect(view.match(/<StagePrizeButton stagePrize=\{stagePrize\} \/>/g)).toHaveLength(2);
+    // Back home steps down when the prize is there.
+    expect(view).toMatch(/tone=\{stagePrize \? 'secondary' : 'primary'\}/);
   });
 });
 

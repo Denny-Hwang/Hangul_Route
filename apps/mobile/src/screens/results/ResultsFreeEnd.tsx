@@ -21,7 +21,9 @@ const facesThatFit = (width: number): number => Math.max(0, Math.floor((width + 
  * design/components/RouteMarkers/spec.md "The cards", D8, D9): a paper card with Hoya cheering
  * beside "You finished your first lessons!" and one line of the cards earned in the free lessons
  * (as many as fit, at most six, then "and N more in your Library"); then Back home, Practice words
- * and the ask. Replaces the teaser card and its buttons.
+ * and the ask. Replaces the teaser card and its buttons. The run that finishes Stage 1 is also the
+ * run that reaches the free end (all of Stage 1 is free): See your Stage 1 prize (F-QUEST-002
+ * section 3.8) then stays, as the one primary, and Back home steps down to secondary.
  */
 export function ResultsFreeEndCelebration({
   cards,
@@ -30,6 +32,7 @@ export function ResultsFreeEndCelebration({
   onHome,
   askLabel,
   onAsk,
+  stagePrize = null,
 }: {
   /** The cards earned from the free lessons, newest first. */
   cards: readonly HeritageCard[];
@@ -39,6 +42,8 @@ export function ResultsFreeEndCelebration({
   onHome: () => void;
   askLabel: string;
   onAsk: () => void;
+  /** See your Stage 1 prize, when this run completed Stage 1; null otherwise. */
+  stagePrize?: StagePrizeAction | null;
 }): React.ReactElement {
   const m = useMessages();
   const access = m.learner.access;
@@ -106,7 +111,15 @@ export function ResultsFreeEndCelebration({
         </Card>
       </View>
       <Spacer size="xl" />
-      <Button label={access.home.cta} tone="primary" size="hero" fullWidth onPress={onHome} testID="results-free-end-home" />
+      <StagePrizeButton stagePrize={stagePrize} />
+      <Button
+        label={access.home.cta}
+        tone={stagePrize ? 'secondary' : 'primary'}
+        size={stagePrize ? 'md' : 'hero'}
+        fullWidth
+        onPress={onHome}
+        testID="results-free-end-home"
+      />
       {practiceLabel ? (
         <>
           <Spacer size="sm" />
@@ -130,6 +143,7 @@ export function ResultsOpenForYou({
   onHome,
   episodeLabel,
   onEpisode,
+  stagePrize = null,
 }: {
   practiceLabel: string | null;
   onPractice: () => void;
@@ -137,22 +151,34 @@ export function ResultsOpenForYou({
   /** The episode page button's label; null when the quest has no episode page. */
   episodeLabel: string | null;
   onEpisode: () => void;
+  /** See your Stage 1 prize, when this run completed Stage 1; null otherwise (then it is the one primary). */
+  stagePrize?: StagePrizeAction | null;
 }): React.ReactElement {
   const m = useMessages();
+  // One primary: the Stage 1 prize when this run earned it, else Practice words, else Back home.
+  const homePrimary = !practiceLabel && !stagePrize;
   return (
     <View testID="results-open-for-you">
       <Body weight="semibold">{m.learner.access.openForYou}</Body>
       <Spacer size="xl" />
+      <StagePrizeButton stagePrize={stagePrize} />
       {practiceLabel ? (
         <>
-          <Button label={practiceLabel} tone="primary" size="hero" fullWidth onPress={onPractice} testID="results-open-for-you-practice" />
+          <Button
+            label={practiceLabel}
+            tone={stagePrize ? 'secondary' : 'primary'}
+            size={stagePrize ? 'md' : 'hero'}
+            fullWidth
+            onPress={onPractice}
+            testID="results-open-for-you-practice"
+          />
           <Spacer size="sm" />
         </>
       ) : null}
       <Button
         label={m.learner.access.home.cta}
-        tone={practiceLabel ? 'ghost' : 'primary'}
-        size={practiceLabel ? 'md' : 'hero'}
+        tone={homePrimary ? 'primary' : 'ghost'}
+        size={homePrimary ? 'hero' : 'md'}
         fullWidth
         onPress={onHome}
       />
@@ -163,5 +189,21 @@ export function ResultsOpenForYou({
         </>
       ) : null}
     </View>
+  );
+}
+
+/** See your Stage 1 prize on a free-end Results (F-QUEST-002 section 3.8): the Results stage-prize button. */
+export interface StagePrizeAction {
+  label: string;
+  onPress: () => void;
+}
+
+function StagePrizeButton({ stagePrize }: { stagePrize: StagePrizeAction | null }): React.ReactElement | null {
+  if (!stagePrize) return null;
+  return (
+    <>
+      <Button label={stagePrize.label} tone="primary" size="hero" fullWidth onPress={stagePrize.onPress} testID="results-stage-prize" />
+      <Spacer size="sm" />
+    </>
   );
 }

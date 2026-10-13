@@ -58,7 +58,15 @@ export function FreeEndCard({
             <Spacer size="sm" />
           </>
         ) : null}
-        <Button label={access.replay.cta} tone="secondary" size="md" fullWidth onPress={onReplay} testID="home-free-end-replay" />
+        {/* With no word topic or sampler story in this build, Play a favorite again is the card's one primary. */}
+        <Button
+          label={access.replay.cta}
+          tone={primary ? 'secondary' : 'primary'}
+          size={primary ? 'md' : 'lg'}
+          fullWidth
+          onPress={onReplay}
+          testID="home-free-end-replay"
+        />
         <Spacer size="sm" />
         <Button label={askLabel} tone="ghost" size="md" fullWidth onPress={onAsk} testID="home-free-end-ask" />
       </Card>

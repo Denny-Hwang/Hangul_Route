@@ -273,6 +273,10 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
     if (gate.route === 'Paywall') navigation.navigate('Paywall', gate.params);
     else navigation.navigate('PinEntry', gate.params);
   };
+  // The run that finishes Stage 1 reaches the free end too: the prize stays on the free-end Results.
+  const freeEndPrize = actions.stagePrize
+    ? { label: m.stagePrize.cta, onPress: () => navigation.navigate('StageComplete', { stageKey: PRIZE_STAGE }) }
+    : null;
   const practice = freeEndPrimary(firstFreeTopicKey(), samplerStoryOf(defaultStoryIndex()));
   const practiceLabel = practice === null ? null : practice.kind === 'story' ? messages.learner.access.readStory.cta : messages.learner.access.practiceWords.cta;
   const onPractice = (): void => {
@@ -440,6 +444,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
             onHome={goHome}
             askLabel={ask.label}
             onAsk={onAsk}
+            stagePrize={freeEndPrize}
           />
         </>
       ) : freeEnd === 'open-for-you' ? (
@@ -451,6 +456,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
             onHome={goHome}
             episodeLabel={episode ? m.episodePage.cta : null}
             onEpisode={openEpisodePage}
+            stagePrize={freeEndPrize}
           />
         </>
       ) : (
