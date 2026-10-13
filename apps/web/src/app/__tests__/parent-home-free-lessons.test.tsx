@@ -3,6 +3,7 @@ import type { SpaceRole } from '@hangul-route/content-schema';
 import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import Page from '@/app/(console)/parent/page';
 
 /**
  * F-ENT-003 E3-12c (section 3.9.2 Console; wireframe design/wireframes/console/free-lessons-line.md,
@@ -156,7 +157,6 @@ function textOf(node: ReactTestInstance | string): string {
 }
 
 async function home(): Promise<ReactTestInstance> {
-  const { default: Page } = await import('@/app/(console)/parent/page');
   await act(async () => {
     mounted = create(<Page />);
   });

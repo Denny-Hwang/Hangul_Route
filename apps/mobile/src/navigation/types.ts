@@ -207,7 +207,8 @@ export type RootStackParamList = {
   VocabMatch: { topicKey: string };
   /**
    * vocab/speed-start — the Speed Round (F-VOC-004 section 3.1, S-5): the start sheet, then the questions. The topic
-   * page launches it. `mode` is read once Challenge ships (S-6); until then every round is Relaxed.
+   * page launches it. `mode` preselects Challenge only for a profile that has opted in (`initialMode`, S8); Play
+   * again passes the previous round's mode.
    */
   VocabSpeedRound: { topicKey: string; mode?: 'relaxed' | 'challenge' };
   /**

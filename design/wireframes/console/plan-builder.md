@@ -98,3 +98,53 @@ Exit to:    `console/roster` · `parent/dashboard` · `parent/learner-detail` ·
 - Cap stacking: F-TCH-001 §3.5 lets teacher 1 + parent 1 per day; should the parent builder show "your teacher already planned Sunday"? Would leak class data into the family — default no.
 - Family builder: does "Send homework" belong on `parent/dashboard` (per card) or only here? Default: dashboard card link opens this screen with that learner preselected.
 - Templates / worksheet PDF (F-TCH-002 / 003) are out of scope; leave room in the top bar.
+
+---
+
+## F-PLAN-002: week groups, plan switcher, readout and re-pace (promoted in P2-8)
+
+Promoted from `console/curriculum-planner.md` E and F, drawn as P2-6 shipped (`apps/web/src/app/(console)/teach/space/plan/page.tsx`, `apps/web/src/components/console/RoutePlanParts.tsx`, `lib/console/plans.ts`, `lib/console/curriculum.ts`). A plan with `meta` (made by `console/curriculum-wizard.md`) reads as a route; a classic plan keeps the screen above.
+
+E. Draft with week groups and the plan switcher
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│ ← Back to <space>                                               │
+│ Plan: "Route · 12 weeks"                    draft - [[ PUBLISH PLAN ]] │
+│ Plans: [Route · 12 weeks (active)] [Week 3] [Draft]   [ + New ] │  <- switcher: active route first
+│ Week 1 · Oct 15 – Oct 21 · Learn                                │
+│   1. <quest title>   Thu Oct 15  [date] [note] [^][v][x]        │
+│   2. <quest title>   Sat Oct 17  [date] [note] [^][v][x]        │
+│ Week 4 · Nov 5 – Nov 11 · Review   No items: a week to catch up or replay. │
+│ Week 6 · Nov 19 – Nov 25 · Days off   Days off: no sessions this week.     │
+│ Not in a week yet   (items added by hand)                       │
+│ Who is this for:  (o) everyone   ( ) only: [ ] Minho [ ] Suji   │
+│ [ Save draft ]  [ Archive ]                                     │
+└────────────────────────────────────────────────────────────────┘
+```
+
+- Items keep the existing controls. **Spread dates** is hidden for a route (dates come from the calendar); editing one date is allowed. A coming-soon item shows its title with a "coming soon" tag.
+
+F. Published readout and re-pace
+
+```
+│ Route · 12 weeks                         Published Oct 15       │
+│ 30 items · for 1 learner                                        │
+│ [ Edit ] [ Archive ] [ New plan ]                               │
+│ ┌ This week (week 1) ────────────────────────────────────────┐ │
+│ │ Week 1 · Oct 15 – Oct 21 · Learn                            │ │
+│ │  Oct 15 · <title>   Oct 17 · <title>   Oct 20 · <title>     │ │
+│ │ Most recent activity first — not a ranking.                 │ │
+│ │ Minho    2 so far · 36 planned · today                      │ │  <- "so far": a device holds one week
+│ │ Suji     waiting for the next sync                          │ │
+│ └─────────────────────────────────────────────────────────────┘ │
+│ ▸ All weeks (collapsed)                                         │
+│ [ Re-pace from today ]  Keeps what is done and lays the rest from the next session. │
+└────────────────────────────────────────────────────────────────┘
+```
+
+- No ranking, no percent, no sort by progress. **Re-pace from today** asks once with the new first date ("Re-pace from today? What is done stays done. The rest moves to the next sessions, from <date>.") and saves the same plan id, still published, so devices pick up the new dates. When no session is left before the end: "No sessions are left before the route ends. Add weeks to keep going." with **Add N weeks and re-pace**.
+- A stored meta this build cannot read shows one line and a **Refresh** button instead of the readout; it never crashes.
+- States: **success** as drawn; **empty** (no plans) shows **Start from a template** -> `console/curriculum-wizard`; **error** on save or re-pace: one line, the plan unchanged; **offline**: saving needs the API.
+- Checked end to end by `apps/web/e2e/curriculum.spec.ts` (P2-8): draft, week groups, publish, readout, at 320 and 1280.
+- **Open question (found by P2-8):** the readout lists every learner of the space even for a plan made "only" for one learner, so the other learners read "waiting for the next sync" for a plan they never receive. Default proposal: list only the plan's `targetLearnerIds` when it has them (F-PLAN-001 readout; a follow-up fix, not in P2-8).

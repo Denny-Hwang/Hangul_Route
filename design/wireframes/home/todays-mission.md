@@ -90,3 +90,27 @@ Exit to: `QuestPlayer` · `EpisodeDetail` · `StoryReader`
 - Persisting the day's plan: currently rebuilt per render from the pinned plan
   passed in. Where the pin lives (progress store vs a homework store) is a
   storage decision, deliberately left to the wiring task.
+
+---
+
+## F-PLAN-002: the weekly plan on Home (promoted in P2-8)
+
+Promoted from `console/curriculum-planner.md` H (with the FP-B6 / FP-B13 amendment), drawn as P2-5, P2-7a and P2-7b shipped (`screens/route/PlanPromptCard.tsx`, `screens/route/CheckInCard.tsx`, `logic/route/home-slot.ts`). Behind `flags.routeEnabled`.
+
+```
+ Today with Hoya (3 cards)
+ ┌ ① ... ┐
+ ┌ ② <quest title>  "Picked just for you" ┐   <- card ② takes today's item: class > family > own plan
+ ┌ ③ ... ┐
+ ┌ one quiet card, at most one of these ───────────────┐
+ │ before a plan:  Hoya can make a weekly plan for you │
+ │                 [[ Make my plan ]]  [ Not now ]     │  -> route/proposal
+ │ week 5 only:    Want a lighter week? / Want to go a bit faster?
+ │                 [[ Yes, lighter ]]  [ Not now ]     │  (route/overview check-in)
+ │ after a move:   Hoya moved your plan along.  [ See my plan ] -> route/overview
+ └─────────────────────────────────────────────────────┘
+```
+
+- Once a plan exists there is no separate plan card with week dots; its week is one line in the Learning Route strip (`journey/learning-route.md`).
+- The prompt shows for a self profile with a finished quest and no plan (AM-6); never on a child profile (the Profile row and the gate are the way in). The check-in shows on a child profile only while plan changes are open (the gate).
+- Card ② follows the plan the same day it is made (P2-8 `apps/mobile/e2e/web/route.spec.ts`). Copy never says behind, late, missed or overdue, and no counts of skipped days.

@@ -7,17 +7,16 @@ import { GATE_BROWSE_INTENT_SHIPPED, accessView, gateBrowseUrl } from '../access
  * mock design/screens/browse/access.md): one line and the action that fits how
  * the visitor arrived. No lesson, title or card is ever part of it.
  */
-describe('accessView before BR-12b (no gate=browse boot intent yet)', () => {
-  it('the intent has not shipped, so no action leads to /?gate=browse', () => {
-    expect(GATE_BROWSE_INTENT_SHIPPED).toBe(false);
+describe('accessView without the gate=browse boot intent (gateIntent false: the form before BR-12b, kept for a build without it)', () => {
+  it('no action leads to /?gate=browse', () => {
     for (const source of ['gate', 'account', 'unknown'] as const) {
-      const view = accessView({ source, lastPersona: 'parent', online: true });
+      const view = accessView({ source, lastPersona: 'parent', online: true, gateIntent: false });
       expect([view.primary.href, view.secondary?.href]).not.toContain(gateBrowseUrl());
     }
   });
 
   it('gate: the grown-up time ended; back to the app, the only button', () => {
-    expect(accessView({ source: 'gate', lastPersona: null, online: true })).toEqual({
+    expect(accessView({ source: 'gate', lastPersona: null, online: true, gateIntent: false })).toEqual({
       line: 'gateUntilIntent',
       primary: { label: 'backToApp', href: APP_ROUTES.learn },
       secondary: null,
@@ -54,7 +53,7 @@ describe('accessView before BR-12b (no gate=browse boot intent yet)', () => {
   });
 
   it('unknown: the spec line unchanged, back to the app leads, sign in stays', () => {
-    expect(accessView({ source: 'unknown', lastPersona: null, online: true })).toEqual({
+    expect(accessView({ source: 'unknown', lastPersona: null, online: true, gateIntent: false })).toEqual({
       line: 'unknown',
       primary: { label: 'backToApp', href: APP_ROUTES.learn },
       secondary: { label: 'signIn', href: APP_ROUTES.signIn },
@@ -69,7 +68,13 @@ describe('accessView before BR-12b (no gate=browse boot intent yet)', () => {
   });
 });
 
-describe('accessView once BR-12b ships the gate=browse boot intent', () => {
+describe('accessView with the gate=browse boot intent (BR-12b, the shipped default)', () => {
+  it('the intent has shipped: the default view leads the gate and unknown sources to /?gate=browse', () => {
+    expect(GATE_BROWSE_INTENT_SHIPPED).toBe(true);
+    expect(accessView({ source: 'gate', lastPersona: null, online: true }).primary.href).toBe(gateBrowseUrl());
+    expect(accessView({ source: 'unknown', lastPersona: null, online: true }).primary.href).toBe(gateBrowseUrl());
+  });
+
   it('gate: back to the grown-up area (PIN, then a fresh gate pass), or back to the app', () => {
     expect(accessView({ source: 'gate', lastPersona: null, online: true, gateIntent: true })).toEqual({
       line: 'gate',

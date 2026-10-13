@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LEGACY, NOW, STEADY, response } from '@/lib/console/__tests__/fixtures/report';
+import Page from '@/app/(console)/teach/space/learner/page';
 
 /**
  * F-REPORT-001 RP-7a2: the learner report page `/teach/space/learner?id=&learner=&period=`. It loads the learner route
@@ -105,7 +106,6 @@ function textOf(node: ReactTestInstance | string): string {
 }
 
 async function page(): Promise<ReactTestInstance> {
-  const { default: Page } = await import('@/app/(console)/teach/space/learner/page');
   await act(async () => {
     mounted = create(<Page />);
   });
@@ -117,7 +117,6 @@ async function page(): Promise<ReactTestInstance> {
 async function follow(): Promise<void> {
   const to = nav.pushed[nav.pushed.length - 1] ?? '';
   nav.query = to.slice(to.indexOf('?') + 1);
-  const { default: Page } = await import('@/app/(console)/teach/space/learner/page');
   await act(async () => {
     mounted?.update(<Page />);
   });
