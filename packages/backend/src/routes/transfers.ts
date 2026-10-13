@@ -75,8 +75,8 @@ import { rosterName } from './spaces';
  * retry and the move itself through `settle`, PR T-5b) and the guardian's
  * `transfer-prefs` switch. `:id` is the acting space: the source or the
  * destination class (a manager holding `learner.transfer`), the family (a
- * guardian, guard 9) or, for the list only, a school (counts). The device
- * routes and the inbox come with T-5c.
+ * guardian, guard 9) or, for the list only, a school (counts). The learner's
+ * device routes and the inbox fields are in `transfer-device.ts` (PR T-5c).
  *
  * Every handler checks the `CLASS_TRANSFER` lock first (T15): locked, it
  * answers 422 `transfers_locked` before it reads a header, a body or the
@@ -85,17 +85,17 @@ import { rosterName } from './spaces';
  */
 export const transferSpaceRoutes = new Hono<{ Bindings: TransferEnv }>();
 
-type Ctx = Context<{ Bindings: TransferEnv }>;
+export type Ctx = Context<{ Bindings: TransferEnv }>;
 
-const HOUR_MS = 60 * 60 * 1000;
-const DAY_MS = 24 * HOUR_MS;
+export const HOUR_MS = 60 * 60 * 1000;
+export const DAY_MS = 24 * HOUR_MS;
 /** Ended and executed requests stay on a class or family page this long (wireframe: "Terminal cards stay 30 days"). */
 const HISTORY_MS = 30 * DAY_MS;
 /** History rows (ended or executed) read per role before filtering; open rows are read apart, with no window. */
 const LIST_FETCH = 200;
 /** Bounded purge on create (section 4.1). */
-const PURGE_TRANSFERS_LIMIT = 50;
-const PURGE_RATE_HITS_LIMIT = 200;
+export const PURGE_TRANSFERS_LIMIT = 50;
+export const PURGE_RATE_HITS_LIMIT = 200;
 
 /**
  * Per-account limiter on preview + create, in memory per isolate (section 4.2 guard 4). Keyed by the
@@ -105,11 +105,11 @@ const PURGE_RATE_HITS_LIMIT = 200;
 export const TRANSFER_CLIENT_LIMIT = 20;
 export const transferClientLimiter = createRateLimiter(TRANSFER_CLIENT_LIMIT, HOUR_MS);
 
-const locked = (c: Ctx): Response => fail(c, 'transfers_locked', 'Class moves are not available yet', 422);
-const notFound = (c: Ctx): Response => fail(c, 'not_found', 'Not found', 404);
-const badRequest = (c: Ctx): Response => fail(c, 'bad_request', 'Invalid move request', 422);
-const tooMany = (c: Ctx, code: string, retryAfterSeconds: number, message = 'Too many attempts — try again later'): Response => fail(c, code, message, 429, { retryAfterSeconds });
-const closed = (c: Ctx, row: StoredTransfer): Response => (row.status === 'expired' ? fail(c, 'expired', 'This request has expired', 409) : fail(c, 'not_open', 'This request is no longer open', 409));
+export const locked = (c: Ctx): Response => fail(c, 'transfers_locked', 'Class moves are not available yet', 422);
+export const notFound = (c: Ctx): Response => fail(c, 'not_found', 'Not found', 404);
+export const badRequest = (c: Ctx): Response => fail(c, 'bad_request', 'Invalid move request', 422);
+export const tooMany = (c: Ctx, code: string, retryAfterSeconds: number, message = 'Too many attempts — try again later'): Response => fail(c, code, message, 429, { retryAfterSeconds });
+export const closed = (c: Ctx, row: StoredTransfer): Response => (row.status === 'expired' ? fail(c, 'expired', 'This request has expired', 409) : fail(c, 'not_open', 'This request is no longer open', 409));
 /** One neutral answer for every reason a teacher may not start a request (section 4.9): no reason, no days, no hint that anyone said no. */
 const cannotSend = (c: Ctx): Response => fail(c, 'cannot_send', 'This request cannot be sent right now', 422);
 
@@ -120,7 +120,7 @@ async function actorOf(db: Db, account: Account): Promise<AccountActor> {
 // ---------------------------------------------------------------------------
 // Bodies
 
-interface ParsedSchema<T> {
+export interface ParsedSchema<T> {
   safeParse(input: unknown): { success: true; data: T } | { success: false; error: { issues: ReadonlyArray<{ path: ReadonlyArray<string | number> }> } };
 }
 
@@ -134,7 +134,7 @@ const PLACEHOLDER_CODE = 'AAAAAA';
  * Only a code that was typed counts: a missing or non-string `code` is a bad
  * body, so a buggy client cannot brake an account without trying a code.
  */
-async function readCodeBody<T>(c: Ctx, schema: ParsedSchema<T>): Promise<{ data: T; codeInvalid: boolean } | null> {
+export async function readCodeBody<T>(c: Ctx, schema: ParsedSchema<T>): Promise<{ data: T; codeInvalid: boolean } | null> {
   const raw: unknown = await c.req.json().catch(() => null);
   const first = schema.safeParse(raw);
   if (first.success) return { data: first.data, codeInvalid: false };
@@ -143,7 +143,7 @@ async function readCodeBody<T>(c: Ctx, schema: ParsedSchema<T>): Promise<{ data:
   return second.success ? { data: second.data, codeInvalid: true } : null;
 }
 
-async function readBody<T>(c: Ctx, schema: ParsedSchema<T>): Promise<T | null> {
+export async function readBody<T>(c: Ctx, schema: ParsedSchema<T>): Promise<T | null> {
   const parsed = schema.safeParse(await c.req.json().catch(() => null));
   return parsed.success ? parsed.data : null;
 }
@@ -155,7 +155,7 @@ async function readBody<T>(c: Ctx, schema: ParsedSchema<T>): Promise<T | null> {
 type StartingSide = { kind: 'class'; source: Space; via: TransferVia } | { kind: 'family'; family: Space; source: Space; role: TransferGuardianRole; consent: TransferConsent | null };
 
 /** Seconds until the failed-code brake opens, or null while it is open (D1-backed, whatever the isolate). */
-async function codeBrake(db: Db, key: string, now: Date): Promise<number | null> {
+export async function codeBrake(db: Db, key: string, now: Date): Promise<number | null> {
   if ((await db.countRateHits(key, new Date(now.getTime() - HOUR_MS))) >= TRANSFER_CODE_FAILS_PER_HOUR) return HOUR_MS / 1000;
   if ((await db.countRateHits(key, new Date(now.getTime() - DAY_MS))) >= TRANSFER_CODE_FAILS_PER_DAY) return DAY_MS / 1000;
   return null;
@@ -172,7 +172,7 @@ async function familyViewContext(db: Db, family: Space, learnerId: string, env: 
  * (`premiumChange` is computed a single time): the preview's sheet, the create's record and the digest
  * that ties the two together (section 4.11).
  */
-async function consentSheet(db: Db, learnerId: string, source: Space, dest: Space, now: Date) {
+export async function consentSheet(db: Db, learnerId: string, source: Space, dest: Space, now: Date) {
   const sheet = await learnerSideTerms(db, learnerId, source, dest, now);
   const flags = { premiumChange: sheet.premiumChange, destinationConsentMode: sheet.destinationConsentMode, relinkAffected: sheet.relinkAffected, sourcePlansAffected: sheet.sourcePlansAffected };
   const terms = await consentTermsFor(db, learnerId, source, dest, now, sheet.premiumChange);
@@ -361,7 +361,7 @@ transferSpaceRoutes.post('/:id/transfer-requests', (c) => startMove(c, 'create')
 // Open rows are read apart from the history window, so newer ended rows can never hide one.
 
 /** Brings open rows up to date (expiry, archived destination, learner left). There is no scheduler; reads do it. */
-async function settleAll(db: Db, rows: readonly StoredTransfer[], now: Date, env: TransferEnv | undefined): Promise<StoredTransfer[]> {
+export async function settleAll(db: Db, rows: readonly StoredTransfer[], now: Date, env: TransferEnv | undefined): Promise<StoredTransfer[]> {
   const out: StoredTransfer[] = [];
   for (const row of rows) {
     if (!isOpenTransfer(row)) {
@@ -380,13 +380,13 @@ function withHistory(settled: readonly StoredTransfer[], history: readonly Store
   return [...settled, ...history.filter((t) => !isOpenTransfer(t) && !seen.has(t.id))];
 }
 
-const recent = (t: StoredTransfer, now: Date): boolean => {
+export const recent = (t: StoredTransfer, now: Date): boolean => {
   const since = new Date(now.getTime() - HISTORY_MS).toISOString();
   return isOpenTransfer(t) || (t.status === 'executed' && (t.executedAt ?? '') >= since) || (isEndedTransfer(t) && (t.endedAt ?? '') >= since);
 };
 
 /** Open first, then newest first; stable within a refresh. */
-const listOrder = (a: StoredTransfer, b: StoredTransfer): number => Number(isOpenTransfer(b)) - Number(isOpenTransfer(a)) || b.createdAt.localeCompare(a.createdAt) || a.id.localeCompare(b.id);
+export const listOrder = (a: StoredTransfer, b: StoredTransfer): number => Number(isOpenTransfer(b)) - Number(isOpenTransfer(a)) || b.createdAt.localeCompare(a.createdAt) || a.id.localeCompare(b.id);
 
 /**
  * Whether the destination may know of a request at all (T8): once the learner

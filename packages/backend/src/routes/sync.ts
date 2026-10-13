@@ -8,8 +8,10 @@ import { tierForLearner } from '../lib/entitlement';
 import { deviceReporterKey, holdAfterReport } from '../lib/note-holds';
 import { NOTE_LIMIT_DEVICE_REPORTS_PER_LEARNER_PER_DAY, NOTE_LIMIT_WINDOW_MS } from '../lib/note-limits';
 import { inboxNoteView, notePrefsView } from '../lib/note-views';
+import type { TransferEnv } from '../lib/transfer';
 import { id, type Learner, type SnapshotRecord } from '../store';
 import { inboxPlansFor } from './plans';
+import { inboxTransfers } from './transfer-device';
 import { learnerMembershipRows } from './spaces';
 
 /**
@@ -125,6 +127,8 @@ syncRoutes.get('/learners/:id/inbox', async (c) => {
   const memberships = await learnerMembershipRows(db, learnerId);
   // Notes from grown-ups (F-FEEDBACK-001 section 6.8): delivery rules 1-7 and the prefs row in one query.
   const notes = await db.notesForLearner(learnerId, classScoped ? 'class' : 'full', now, NOTE_INBOX_LIMIT);
+  // Class moves (F-SPACE-002 section 4.4, T15): the lock is read before any transfer table; locked, all off and empty.
+  const transfers = await inboxTransfers(db, learnerId, classScoped ? 'class' : 'full', c.env as TransferEnv | undefined, now);
   return ok(c, {
     rev: (await db.getSnapshot(learnerId))?.rev ?? 0,
     plans: classScoped ? plans.filter((p) => p.spaceKind !== 'family') : plans,
@@ -135,6 +139,7 @@ syncRoutes.get('/learners/:id/inbox', async (c) => {
     serverTime: now.toISOString(),
     notes: notes.notes.map(inboxNoteView),
     notePrefs: notePrefsView(notes.prefs),
+    ...transfers,
   });
 });
 
