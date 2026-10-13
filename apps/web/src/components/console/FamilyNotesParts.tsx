@@ -85,7 +85,7 @@ export const FAMILY_NOTES_CSS = `
 `;
 
 /** Free words are shown as typed; Hangul in them is marked Korean for screen readers (section 6.11). */
-const HANGUL = /[ᄀ-ᇿ㄰-㆏가-힣]/;
+const HANGUL = /[\u1100-\u11FF\u3130-\u318F\uAC00-\uD7A3]/;
 const wordsLang = (text: string): string | undefined => (HANGUL.test(text) ? 'ko' : undefined);
 
 type ListState = 'loading' | 'ready' | 'error';
