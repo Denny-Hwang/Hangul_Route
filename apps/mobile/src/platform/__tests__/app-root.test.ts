@@ -117,10 +117,11 @@ describe('bootRoot (web): what each root does before it mounts', () => {
     vi.unstubAllGlobals();
   });
 
-  it('the app root removes the grown-up unlock and the console session of this tab, nothing else', () => {
+  it('the app root removes the grown-up unlock, the console session and the All lessons pass of this tab', () => {
     const h = harness('/');
     expect(bootRoot(h.env)).toBe('app');
-    expect([...h.area.data.keys()]).toEqual(['hr:browse:pass']);
+    // F-BROWSE-001 section 4.3 (BR-6 review): a device handed back cannot reopen All lessons from this tab.
+    expect([...h.area.data.keys()]).toEqual([]);
     expect(h.log).toEqual([]);
     expect(peekBootIntent()).toBeNull();
   });
@@ -129,7 +130,7 @@ describe('bootRoot (web): what each root does before it mounts', () => {
     const h = harness('/?gate=grown-up&next=%2Fparent');
     expect(bootRoot(h.env)).toBe('app');
     // The lock already removed the console session and could not use the unlock; a new one comes after the PIN.
-    expect([...h.area.data.keys()]).toEqual(['hr:browse:pass']);
+    expect([...h.area.data.keys()]).toEqual([]);
     expect(h.log).toEqual(['replaceState {"s":1} /']);
     expect(peekBootIntent()).toEqual({ kind: 'grown-up', next: '/parent' });
     expect(peekBootIntent()).toEqual({ kind: 'grown-up', next: '/parent' });
@@ -172,11 +173,13 @@ describe('bootRoot (web): what each root does before it mounts', () => {
     expect(h.log).toEqual([]);
   });
 
-  it('/browse mounts the learner app until F-BROWSE-001 BR-6 wires BrowseApp, so it clears as the app does', () => {
+  it('/browse mounts BrowseApp and the root chooser clears neither the unlock nor the console session (F-BROWSE-001 BD1, section 4.10; BrowseApp removes both itself only in a tab with nothing to go back to, browse-start.test.ts)', () => {
     const h = harness('/browse');
     expect(bootRoot(h.env)).toBe('browse');
-    expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(false);
+    expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(true);
+    expect(h.area.data.has(CONSOLE_SESSION_KEY)).toBe(true);
     expect(h.area.data.has('hr:browse:pass')).toBe(true);
+    expect(h.log).toEqual([]);
   });
 
   it('/browse reads no boot intent: the query stays for the browse root, nothing opens the PIN screen', () => {
@@ -184,7 +187,17 @@ describe('bootRoot (web): what each root does before it mounts', () => {
     expect(bootRoot(h.env)).toBe('browse');
     expect(peekBootIntent()).toBeNull();
     expect(h.log).toEqual([]);
-    expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(false);
+    expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(true);
+  });
+
+  it('/browse restored from the back/forward cache clears nothing either: [ Close ] goes back to the console page that needs both', () => {
+    const h = harness('/browse');
+    const handlers: Array<() => void> = [];
+    h.env.onRestore = (handler) => {
+      handlers.push(handler);
+    };
+    bootRoot(h.env);
+    expect(handlers).toHaveLength(0);
   });
 
   it('the bounce carries the query keys its entry reads', async () => {
@@ -254,13 +267,15 @@ describe('bootRoot (web): what each root does before it mounts', () => {
       return { ...h, restore: () => handlers.forEach((f) => f()), registered: () => handlers.length };
     }
 
-    it('the app root clears the unlock and the console session written after its boot', () => {
+    it('the app root clears the unlock, the console session and an All lessons pass written after its boot', () => {
       const h = withRestore('/');
       bootRoot(h.env);
       h.area.data.set(UNLOCK_SESSION_KEY, '{"v":1}');
       h.area.data.set(CONSOLE_SESSION_KEY, '{}');
+      // The gate hand-off wrote a pass and left for /browse; Close or Back restored this page.
+      h.area.data.set('hr:browse:pass', '{}');
       h.restore();
-      expect([...h.area.data.keys()]).toEqual(['hr:browse:pass']);
+      expect([...h.area.data.keys()]).toEqual([]);
     });
 
     it('so does an app root that booted with a gate intent (the unlock it wrote was for the page it left)', () => {

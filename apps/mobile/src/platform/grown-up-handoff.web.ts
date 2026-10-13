@@ -1,5 +1,6 @@
 import {
   APP_ROUTES,
+  BROWSE_PASS_SESSION_KEY,
   CONSOLE_SESSION_KEY,
   UNLOCK_SESSION_KEY,
   safeNextPath,
@@ -146,12 +147,16 @@ export async function openGrownUpArea(request: GrownUpHandoffRequest, env: Hando
 }
 
 /**
- * Removes the grown-up unlock and the console session of this tab (section 3.9): every boot of
- * a learner root and a learner page restored from the back/forward cache. Nothing else in
- * `sessionStorage` is touched; blocked or missing storage is a no-op.
+ * Removes the grown-up unlock, the console session and the All lessons pass of this tab
+ * (section 3.9; the pass is F-BROWSE-001 section 4.3's `hr:browse:pass`): every boot of a learner
+ * root and a learner page restored from the back/forward cache. A device handed back to a child
+ * after [ Close ] or Back therefore cannot reopen All lessons from this tab by typing `/browse` or
+ * pressing Forward (BR-6 review). The gate hand-off writes its pass after this boot, just before it
+ * leaves, so it is unaffected. Nothing else in `sessionStorage` is touched; blocked or missing
+ * storage is a no-op.
  */
 export function clearGrownUpTab(area: SessionArea | null = sessionArea()): void {
-  for (const key of [UNLOCK_SESSION_KEY, CONSOLE_SESSION_KEY]) {
+  for (const key of [UNLOCK_SESSION_KEY, CONSOLE_SESSION_KEY, BROWSE_PASS_SESSION_KEY]) {
     try {
       area?.removeItem(key);
     } catch {

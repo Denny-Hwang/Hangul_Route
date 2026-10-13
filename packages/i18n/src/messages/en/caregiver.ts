@@ -629,4 +629,41 @@ export const caregiver = {
     /** Web only: opens the family notes on app.hangulroute.com. */
     sendNote: { cta: 'Send a note' },
   },
+  /**
+   * All lessons, the grown-up lesson browser at app.hangulroute.com/browse (F-BROWSE-001 sections
+   * 4.1, 4.3, 4.5, 4.7 and 6; OD-8; mocks `design/screens/browse/`). One name everywhere: page
+   * "All lessons", strip "Preview. Nothing is saved.", exits "Close" and "Leave preview"; the word
+   * "Browse" is in no string. BR-6 adds the root's strings; BR-7 to BR-9 add the rest.
+   */
+  browse: {
+    /** `document.title` on every browse screen: never a route name or an item title. */
+    documentTitle: 'Hangul Route lessons',
+    home: {
+      title: 'All lessons',
+      close: { cta: 'Close' },
+      howTo: 'Tap a lesson to see what it teaches, then play it. Nothing is saved.',
+    },
+    /** The preview strip on lesson screens and the preview end screen (`PreviewFrame`). */
+    preview: {
+      strip: 'Preview. Nothing is saved.',
+      leave: { cta: 'Leave preview' },
+    },
+    /** The Access screen: no active pass. No lesson, title or card is shown (section 4.3). */
+    access: {
+      title: 'This page is for parents and teachers.',
+      line: {
+        gate: 'Your time in the grown-up area ended.',
+        /** The gate line until BR-12b ships the `gate=browse` boot intent. */
+        gateUntilIntent: 'Your time in the grown-up area ended. Go back to the app, then open the grown-up area again.',
+        account: 'Open lessons again from your account.',
+        unknown: 'On a family device, open them from the grown-up area. Parents and teachers can also open them from their account.',
+      },
+      backToGrownUp: { cta: 'Back to the grown-up area' },
+      backToApp: { cta: 'Back to the app' },
+      openFromAccount: { cta: 'Open lessons from my account' },
+      signIn: { cta: 'Sign in' },
+      /** Offline, under the account actions (account and unknown sources). */
+      offline: 'Grown-up pages need the internet.',
+    },
+  },
 } as const;

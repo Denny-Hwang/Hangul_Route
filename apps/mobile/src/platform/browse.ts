@@ -16,3 +16,7 @@ export function writeSessionPass(_pass: BrowsePass): boolean {
 export function removeSessionPass(): void {
   // Nothing to remove on native.
 }
+
+export function clearGrownUpSession(): void {
+  // No grown-up tab state on native.
+}

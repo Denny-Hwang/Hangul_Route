@@ -91,7 +91,10 @@
     "apps/web/src/components/console/GrownUpRouter.tsx",
     "apps/web/src/components/console/GrownUpLayout.tsx",
     "apps/web/src/components/console/LegacyRedirect.tsx",
-    "apps/mobile/src/screens/paywall/PlanSlots.tsx"
+    "apps/mobile/src/screens/paywall/PlanSlots.tsx",
+    "apps/mobile/BrowseApp.tsx",
+    "apps/mobile/src/screens/browse/**",
+    "apps/mobile/src/navigation/browse.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1

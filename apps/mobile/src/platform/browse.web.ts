@@ -1,12 +1,13 @@
-import { BROWSE_PASS_SESSION_KEY, BrowsePassSchema, type BrowsePass } from '@hangul-route/content-schema';
+import { BROWSE_PASS_SESSION_KEY, BrowsePassSchema, CONSOLE_SESSION_KEY, UNLOCK_SESSION_KEY, type BrowsePass } from '@hangul-route/content-schema';
 
 /**
  * The browse pass in `sessionStorage['hr:browse:pass']` on the app origin
  * (F-BROWSE-001 section 4.3): written by the console's `openBrowse` or the
  * learner app's gate hand-off, read by the browse root synchronously before
  * first paint. Per tab: it survives a reload and dies with the tab. This
- * module is the only place Browse touches `sessionStorage`, and only this
- * key. Every access is guarded: blocked or missing storage reads as no pass,
+ * module is the only place Browse touches `sessionStorage`: it reads and
+ * writes only this key, and removes only the grown-up unlock and the console
+ * session, in a tab with nothing to go back to (`clearGrownUpSession`). Every access is guarded: blocked or missing storage reads as no pass,
  * a write reports `false`, and nothing throws.
  */
 interface SessionArea {
@@ -75,5 +76,22 @@ export function writeSessionPass(pass: BrowsePass): boolean {
     return true;
   } catch {
     return false;
+  }
+}
+
+/**
+ * Removes the grown-up unlock and the console session of this tab
+ * (F-APP-001 section 3.9 keys). The browse root calls it at boot when the tab
+ * has no earlier page to go back to (`platform/browse-start.ts`, BR-6 review):
+ * BD1 keeps both only for [ Close ] back to the console page in the same tab.
+ * A storage that refuses is left as it is.
+ */
+export function clearGrownUpSession(): void {
+  for (const key of [UNLOCK_SESSION_KEY, CONSOLE_SESSION_KEY]) {
+    try {
+      sessionArea()?.removeItem(key);
+    } catch {
+      // A storage that refuses keeps nothing we could remove.
+    }
   }
 }
