@@ -1,6 +1,6 @@
 import type { LearnerReportResponse } from '@hangul-route/content-schema';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
-import { createConsoleApi, type ApiResult } from '../api';
+import { createConsoleApi, type ApiResult, type LearnerReportBody } from '../api';
 
 /** F-REPORT-001 section 3.8 (RP-7a1): the console client of `GET /api/spaces/:id/learners/:learnerId/report`. */
 
@@ -14,12 +14,21 @@ const body: LearnerReportResponse = {
   serverTime: '2026-10-15T12:00:00.000Z',
 };
 
+/** What the client keeps of `body`: the envelope fields the report reads, and the summary. */
+const kept = (from: LearnerReportResponse): LearnerReportBody => ({
+  space: { id: from.space.id, kind: from.space.kind, name: from.space.name, archivedAt: from.space.archivedAt },
+  learner: { id: from.learner.id, displayName: from.learner.displayName },
+  summary: from.summary,
+  lastSyncedAt: from.lastSyncedAt,
+  serverTime: from.serverTime,
+});
+
 describe('getLearnerReport', () => {
   it('asks for one learner and one period, ids encoded, with the bearer', async () => {
     const fetchImpl = vi.fn<typeof fetch>().mockResolvedValueOnce(json(200, { data: body }));
     const api = createConsoleApi({ endpoint: 'https://api.example.com', token: 'teacher-kim', fetchImpl });
     const res = await api.getLearnerReport('space:c', 'profile:mina', 'month');
-    expect(res).toEqual({ ok: true, data: body });
+    expect(res).toEqual({ ok: true, data: kept(body) });
     const [url, init] = fetchImpl.mock.calls[0] as [string, RequestInit];
     expect(url).toBe('https://api.example.com/api/spaces/space%3Ac/learners/profile%3Amina/report?period=month');
     expect(init.method).toBe('GET');
@@ -41,8 +50,8 @@ describe('getLearnerReport', () => {
     const fetchImpl = vi.fn<typeof fetch>().mockResolvedValueOnce(json(200, { data: extra }));
     const api = createConsoleApi({ endpoint: 'https://api.example.com', token: 't', fetchImpl });
     const res = await api.getLearnerReport('space:c', 'profile:mina', 'week');
-    expect(res).toEqual({ ok: true, data: body });
-    expectTypeOf(res).toEqualTypeOf<ApiResult<LearnerReportResponse>>();
+    expect(res).toEqual({ ok: true, data: kept(body) });
+    expectTypeOf(res).toEqualTypeOf<ApiResult<LearnerReportBody>>();
   });
 
   it('reads a malformed `activity` as absent (the legacy state), never as a failure', async () => {
@@ -50,7 +59,20 @@ describe('getLearnerReport', () => {
     const fetchImpl = vi.fn<typeof fetch>().mockResolvedValueOnce(json(200, { data: withBad }));
     const api = createConsoleApi({ endpoint: 'https://api.example.com', token: 't', fetchImpl });
     const res = await api.getLearnerReport('space:c', 'profile:mina', 'week');
-    expect(res.ok && res.data.summary !== null && 'activity' in res.data.summary ? res.data.summary.activity : undefined).toBeUndefined();
+    expect(res.ok).toBe(true);
+    expect(res).toEqual({ ok: true, data: kept(body) });
+  });
+
+  it('never fails a report on an envelope field it does not read (a Worker deployed first that widens one)', async () => {
+    const wider = {
+      ...body,
+      space: { ...body.space, name: 'S'.repeat(60), settings: { consentMode: 'district-managed' }, parentSpaceId: 42, createdAt: undefined },
+      learner: { ...body.learner, avatar: { kind: 'new' }, joinedAt: null },
+    };
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValueOnce(json(200, { data: wider }));
+    const api = createConsoleApi({ endpoint: 'https://api.example.com', token: 't', fetchImpl });
+    const res = await api.getLearnerReport('space:c', 'profile:mina', 'week');
+    expect(res).toEqual({ ok: true, data: { ...kept(body), space: { ...kept(body).space, name: 'S'.repeat(60) } } });
   });
 
   it('drops only a summary field this bundle cannot read (a Worker deployed first with a wider schema), as the Worker does', async () => {
@@ -68,7 +90,7 @@ describe('getLearnerReport', () => {
     const res = await api.getLearnerReport('space:c', 'profile:mina', 'week');
     expect(res).toEqual({
       ok: true,
-      data: { ...body, summary: { lastActiveAt: body.summary?.lastActiveAt, jamoRecognized: ['ㄱ'], planProgress: { 'plan:a': { done: 1, total: 2, notReady: 0 } } } },
+      data: { ...kept(body), summary: { lastActiveAt: body.summary?.lastActiveAt, jamoRecognized: ['ㄱ'], planProgress: { 'plan:a': { done: 1, total: 2, notReady: 0 } } } },
     });
   });
 
@@ -78,13 +100,21 @@ describe('getLearnerReport', () => {
     expect(await api.getLearnerReport('space:c', 'profile:mina', 'week')).toEqual({ ok: false, error: 'unknown', status: 200, code: 'bad_response' });
   });
 
-  it('answers a body it cannot read (a kind this bundle does not know, a missing learner) as a failed load', async () => {
-    const fetchImpl = vi.fn<typeof fetch>()
-      .mockResolvedValueOnce(json(200, { data: { ...body, space: { ...body.space, kind: 'district' } } }))
-      .mockResolvedValueOnce(json(200, { data: { ...body, learner: undefined } }));
+  it('answers a body it cannot read (a kind this bundle does not know, a missing or mistyped read field) as a failed load', async () => {
+    const unreadable = [
+      { ...body, space: { ...body.space, kind: 'district' } },
+      { ...body, learner: undefined },
+      { ...body, learner: { ...body.learner, displayName: 7 } },
+      { ...body, space: { ...body.space, archivedAt: undefined } },
+      { ...body, serverTime: null },
+      'nonsense',
+    ];
+    const fetchImpl = vi.fn<typeof fetch>();
+    for (const data of unreadable) fetchImpl.mockResolvedValueOnce(json(200, { data }));
     const api = createConsoleApi({ endpoint: 'https://api.example.com', token: 't', fetchImpl });
-    expect(await api.getLearnerReport('space:c', 'profile:mina', 'week')).toEqual({ ok: false, error: 'unknown', status: 200, code: 'bad_response' });
-    expect(await api.getLearnerReport('space:c', 'profile:mina', 'week')).toEqual({ ok: false, error: 'unknown', status: 200, code: 'bad_response' });
+    for (let i = 0; i < unreadable.length; i += 1) {
+      expect(await api.getLearnerReport('space:c', 'profile:mina', 'week')).toEqual({ ok: false, error: 'unknown', status: 200, code: 'bad_response' });
+    }
   });
 
   it('passes the Worker failures through with their codes (403 outsider, 404 not_member, 409 wrong_kind, network)', async () => {

@@ -16,7 +16,6 @@ import {
   type InsightCode,
   type InsightLine,
   type LearnerReport,
-  type LearnerReportResponse,
   type LearnerReportState,
   type PlacementStrand,
   type ReportCalendarKind,
@@ -28,7 +27,7 @@ import {
   type StageKey,
 } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, formatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
-import type { ApiResult } from './api';
+import type { ApiResult, LearnerReportBody } from './api';
 import { startingSpotLine } from './placement';
 import { ROUTES, spaceIdFrom, type ReportFrom } from './routing';
 import { consoleWord } from './vocab-words';
@@ -577,7 +576,7 @@ export interface LearnerReportView {
 
 export interface LearnerReportViewInput {
   /** `getLearnerReport`'s body. */
-  data: LearnerReportResponse;
+  data: LearnerReportBody;
   query: Pick<ReportQuery, 'period' | 'at' | 'from'>;
   /** The viewer's clock: today for the learner is computed from it and the learner's offset (section 3.2). */
   now: Date;
@@ -604,13 +603,14 @@ export interface ReportViewerRights {
 }
 
 /**
- * The viewer's rights from its `listSpaces()` role (design pass #444, the `can.ts` rule): `owner` -> both; a class
- * `teacher` or a family `caregiver` -> `plan.write`; anyone else, or a viewer whose spaces do not list the space (a
- * school admin reading through the school) -> neither.
+ * The viewer's rights from its `listSpaces()` role in a space of this kind (design pass #444, the `can.ts` rule):
+ * `owner` -> both; a class `teacher` or a family `caregiver` -> `plan.write` (a teacher of a family or a caregiver of a
+ * class has no `plan.write`, as `can.ts` BASE keys it by kind); anyone else, or a viewer whose spaces do not list the
+ * space (a school admin reading through the school) -> neither.
  */
-export function reportViewerRights(role: SpaceRole | null): ReportViewerRights {
+export function reportViewerRights(role: SpaceRole | null, kind: SpaceKind): ReportViewerRights {
   if (role === 'owner') return { manage: true, planWrite: true };
-  return { manage: false, planWrite: role === 'teacher' || role === 'caregiver' };
+  return { manage: false, planWrite: (kind === 'class' && role === 'teacher') || (kind === 'family' && role === 'caregiver') };
 }
 
 /** A space kind with a learner report: a school has none (its admin opens the class's). */
@@ -769,7 +769,7 @@ export function learnerReportView(input: LearnerReportViewInput): LearnerReportV
   const w = reportWordsOf(report, { name, stageTitle: input.stageTitle, tipGames: input.tipGames, catalog, locale, summary, now });
   const space = { id: data.space.id, kind: data.space.kind, name: data.space.name };
   const archived = data.space.archivedAt !== null;
-  const rights = reportViewerRights(input.role);
+  const rights = reportViewerRights(input.role, space.kind);
   const href = (period: ReportPeriod, at: string | null): string =>
     ROUTES.learnerReport({ spaceId: space.id, learnerId: data.learner.id, kind: space.kind, period, at, from: query.from });
 
@@ -793,7 +793,7 @@ export function learnerReportView(input: LearnerReportViewInput): LearnerReportV
   const ready = report.state === 'ready' && report.window !== null;
   const glanceOf = (): ReportGlance | null => {
     if (summary === null) return null;
-    const route = input.learningRoute ? { href: ROUTES.learnerRoute(space.id, data.learner.id), text: m.console.learningRoute.open } : null;
+    const route = input.learningRoute ? { href: ROUTES.learnerRoute(space.id, data.learner.id, space.kind), text: m.console.learningRoute.open } : null;
     // The empty state shows "Now on" without "Last practice" (design: states); the module has no glance for it.
     const stage = report.glance?.nowOn ?? (report.state === 'empty' ? emptyStageOf(summary) : null);
     return {

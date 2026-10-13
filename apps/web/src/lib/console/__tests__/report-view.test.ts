@@ -7,7 +7,7 @@ import {
   type ReportSummary,
 } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { ApiResult } from '../api';
 import {
   headlineText,
@@ -23,6 +23,7 @@ import {
   type LearnerReportViewInput,
   type ReportSentence,
 } from '../report-view';
+import { ROUTES } from '../routing';
 import { EMPTY, LEGACY, NOW, PLACEMENT, STALE, STEADY, response, stageTitle } from './fixtures/report';
 
 /** F-REPORT-001 RP-7a1: the console's report words, links and states from the report module's codes. */
@@ -401,6 +402,15 @@ describe('states (section 3.14)', () => {
     expect(v.moreDetail?.blocks.map((b) => ('heading' in b ? b.heading : b.line))).toEqual(['Since the start: 3 quests, 2 cards', 'Letters Mina knows well', 'Letters being practiced', 'Plan']);
   });
 
+  it('legacy P1: the letters line still shows, with their sound values, and no Add to a plan (it names no quest)', () => {
+    const v = view(LEGACY, { kind: 'class', role: 'teacher' });
+    const line = v.practiceNext?.lines[0];
+    expect(line?.code).toBe('letters_revisit');
+    expect(line?.sentence.text).toBe('ㄴ (n): worth another visit.');
+    expect(line?.sentence.parts).toContainEqual(expect.objectContaining({ kind: 'letter', letter: 'ㄴ', romanization: 'n' }));
+    expect(line?.action).toBeNull();
+  });
+
   it('legacy and stale says the update line once', () => {
     const v = view(LEGACY, { data: response(LEGACY, { lastSyncedAt: '2026-09-20T10:00:00.000Z' }) });
     expect(v.notices).toEqual(['Last saved Sep 20.', 'Day-by-day figures are not available yet.', "Open Hangul Route on Mina's device while online to update."]);
@@ -452,6 +462,19 @@ describe('states (section 3.14)', () => {
 
   it('links the glance to the Learning Route only when that page exists on the build', () => {
     expect(view(STEADY, { learningRoute: true }).glance?.route).toEqual({ href: '/teach/space/route?id=space%3Akim-family&learner=profile%3Amina', text: 'Open Learning Route' });
+    expect(view(STEADY).glance?.route).toBeNull();
+  });
+
+  it('passes the space kind to the Learning Route builder, so F-APP-001 A-5b changes only the builder', () => {
+    const spy = vi.spyOn(ROUTES, 'learnerRoute');
+    try {
+      view(STEADY, { learningRoute: true });
+      expect(spy).toHaveBeenLastCalledWith('space:kim-family', 'profile:mina', 'family');
+      view(STEADY, { kind: 'class', learningRoute: true });
+      expect(spy).toHaveBeenLastCalledWith('space:sunflower', 'profile:mina', 'class');
+    } finally {
+      spy.mockRestore();
+    }
   });
 
   it('the strand tip needs the game title from the content catalogue, else it is left out', () => {
@@ -601,13 +624,21 @@ describe('headlines in both voices', () => {
 });
 
 describe('reportViewerRights: the role in listSpaces() decides the archived sentence and the plan actions', () => {
-  it('owner: manage and plan.write; teacher or caregiver: plan.write; anyone else or unlisted: neither', () => {
-    expect(reportViewerRights('owner')).toEqual({ manage: true, planWrite: true });
-    expect(reportViewerRights('teacher')).toEqual({ manage: false, planWrite: true });
-    expect(reportViewerRights('caregiver')).toEqual({ manage: false, planWrite: true });
-    expect(reportViewerRights('admin')).toEqual({ manage: false, planWrite: false });
-    expect(reportViewerRights('student')).toEqual({ manage: false, planWrite: false });
-    expect(reportViewerRights(null)).toEqual({ manage: false, planWrite: false });
+  it('owner: manage and plan.write; a class teacher or a family caregiver: plan.write; anyone else or unlisted: neither', () => {
+    expect(reportViewerRights('owner', 'family')).toEqual({ manage: true, planWrite: true });
+    expect(reportViewerRights('owner', 'class')).toEqual({ manage: true, planWrite: true });
+    expect(reportViewerRights('teacher', 'class')).toEqual({ manage: false, planWrite: true });
+    expect(reportViewerRights('caregiver', 'family')).toEqual({ manage: false, planWrite: true });
+    expect(reportViewerRights('admin', 'class')).toEqual({ manage: false, planWrite: false });
+    expect(reportViewerRights('student', 'class')).toEqual({ manage: false, planWrite: false });
+    expect(reportViewerRights(null, 'class')).toEqual({ manage: false, planWrite: false });
+  });
+
+  it('keys plan.write by kind as can.ts does: a teacher of a family or a caregiver of a class has none', () => {
+    expect(reportViewerRights('teacher', 'family')).toEqual({ manage: false, planWrite: false });
+    expect(reportViewerRights('caregiver', 'class')).toEqual({ manage: false, planWrite: false });
+    expect(view(STEADY, { kind: 'family', role: 'teacher' }).practiceNext?.lines.some((line) => line.action !== null)).toBe(false);
+    expect(view(STEADY, { kind: 'class', role: 'caregiver' }).practiceNext?.lines.some((line) => line.action !== null)).toBe(false);
   });
 });
 

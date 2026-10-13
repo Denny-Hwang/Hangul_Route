@@ -1,4 +1,4 @@
-import { LearnerReportResponseSchema, ProgressSummarySchema, ReportSummarySchema, ReceiptViewSchema, parseBillingSummary, type BillingSummary, type ReceiptView } from '@hangul-route/content-schema';
+import { ProgressSummarySchema, ReportSummarySchema, ReceiptViewSchema, SpaceKindSchema, parseBillingSummary, type BillingSummary, type ReceiptView } from '@hangul-route/content-schema';
 import type {
   CurriculumMeta,
   Entitlement,
@@ -317,9 +317,9 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
      * report module reads a known shape: keys it does not read are stripped, a malformed `activity` reads as absent
      * (the legacy state), and a body it cannot read at all (a space kind this bundle does not know) is a failed load.
      */
-    getLearnerReport: (spaceId: string, learnerId: string, period: ReportPeriod): Promise<ApiResult<LearnerReportResponse>> =>
+    getLearnerReport: (spaceId: string, learnerId: string, period: ReportPeriod): Promise<ApiResult<LearnerReportBody>> =>
       call<unknown>(`${base}/${encodeURIComponent(spaceId)}/learners/${encodeURIComponent(learnerId)}/report?period=${period}`, { method: 'GET' }, [200]).then(
-        (r): ApiResult<LearnerReportResponse> => {
+        (r): ApiResult<LearnerReportBody> => {
           if (!r.ok) return r;
           const data = parseLearnerReport(r.data);
           return data === null ? { ok: false, error: 'unknown', status: 200, code: 'bad_response' } : { ok: true, data };
@@ -330,21 +330,54 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
 
 export type ConsoleApi = ReturnType<typeof createConsoleApi>;
 
-const REPORT_ENVELOPE = LearnerReportResponseSchema.omit({ summary: true });
 const PLAN_ROW = ProgressSummarySchema.shape.planProgress.valueSchema;
 const isPlainRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /**
- * The learner report body (F-REPORT-001 section 3.8), read as leniently as the Worker writes it (`reportSummaryOf`):
- * the envelope (space, learner, times) must parse, but each summary key, and each plan of `planProgress`, is checked
- * on its own and a key this bundle cannot read is dropped. So a Worker deployed first with a wider schema never turns
- * every report into a failed load while an older console bundle is still cached. Null for a body it cannot read.
+ * The part of `LearnerReportResponse` a report reads (F-REPORT-001 section 3.8): the space's id, kind, name and
+ * archived time, the learner's id and roster name, the summary and the two times. The Worker's other envelope fields
+ * (the space's settings, parent and creation time, the learner's avatar and dates) are not read, so they are not
+ * checked or kept: a Worker deployed first that widens one of them cannot fail a report on a cached console bundle.
  */
-function parseLearnerReport(raw: unknown): LearnerReportResponse | null {
-  const envelope = REPORT_ENVELOPE.safeParse(raw);
-  if (!envelope.success || !isPlainRecord(raw)) return null;
+export interface LearnerReportBody {
+  space: Pick<LearnerReportResponse['space'], 'id' | 'kind' | 'name' | 'archivedAt'>;
+  learner: Pick<LearnerReportResponse['learner'], 'id' | 'displayName'>;
+  summary: ReportSummary | null;
+  lastSyncedAt: string | null;
+  serverTime: string;
+}
+
+const isStringOrNull = (value: unknown): value is string | null => value === null || typeof value === 'string';
+
+/** The envelope's read fields, each checked on its own type only; null when one is missing or a space kind is unknown. */
+function reportEnvelopeOf(raw: Record<string, unknown>): Omit<LearnerReportBody, 'summary'> | null {
+  const { space, learner, lastSyncedAt, serverTime } = raw;
+  if (!isPlainRecord(space) || !isPlainRecord(learner)) return null;
+  const kind = SpaceKindSchema.safeParse(space.kind);
+  if (!kind.success || typeof space.id !== 'string' || typeof space.name !== 'string' || !isStringOrNull(space.archivedAt)) return null;
+  if (typeof learner.id !== 'string' || typeof learner.displayName !== 'string') return null;
+  if (!isStringOrNull(lastSyncedAt) || typeof serverTime !== 'string') return null;
+  return {
+    space: { id: space.id, kind: kind.data, name: space.name, archivedAt: space.archivedAt },
+    learner: { id: learner.id, displayName: learner.displayName },
+    lastSyncedAt,
+    serverTime,
+  };
+}
+
+/**
+ * The learner report body (F-REPORT-001 section 3.8), read as leniently as the Worker writes it (`reportSummaryOf`):
+ * the envelope keeps only the fields the report reads (`LearnerReportBody`), and each summary key, and each plan of
+ * `planProgress`, is checked on its own and a key this bundle cannot read is dropped. So a Worker deployed first with
+ * a wider schema never turns every report into a failed load while an older console bundle is still cached. Null for
+ * a body it cannot read (a missing read field, or a space kind this bundle does not know).
+ */
+function parseLearnerReport(raw: unknown): LearnerReportBody | null {
+  if (!isPlainRecord(raw)) return null;
+  const envelope = reportEnvelopeOf(raw);
+  if (envelope === null) return null;
   const source = raw.summary;
-  if (source === null || source === undefined) return { ...envelope.data, summary: null };
+  if (source === null || source === undefined) return { ...envelope, summary: null };
   if (!isPlainRecord(source)) return null;
   const summary: Record<string, unknown> = {};
   for (const [key, field] of Object.entries(ReportSummarySchema.shape)) {
@@ -362,5 +395,5 @@ function parseLearnerReport(raw: unknown): LearnerReportResponse | null {
     const checked = field.safeParse(value);
     if (checked.success && checked.data !== undefined) summary[key] = checked.data;
   }
-  return { ...envelope.data, summary: summary as ReportSummary };
+  return { ...envelope, summary: summary as ReportSummary };
 }
