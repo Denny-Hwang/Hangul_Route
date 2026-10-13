@@ -215,11 +215,7 @@ describe('splitConsole', () => {
   });
 });
 
-// Each test here starts a fresh node process (about 0.3 s alone, 1.5 s on a loaded machine); the start-up is the cost,
-// not the script, so these tests get 15 s instead of the 5 s default (precedent: #431).
-const SPAWN_TIMEOUT = 15_000;
-
-describe('console-split.mjs (the CLI, prefixes read from packages/content-schema)', { timeout: SPAWN_TIMEOUT }, () => {
+describe('console-split.mjs (the CLI, prefixes read from packages/content-schema)', () => {
   it('writes <out>-console next to the export', () => {
     const run = spawnSync(process.execPath, [SCRIPT, out], { encoding: 'utf8' });
     expect(run.stderr).toBe('');

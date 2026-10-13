@@ -194,13 +194,11 @@ describe('buildSceneSheet', () => {
     expect(s.stories).toHaveLength(1);
   });
 
-  // Reads and lints every story file on disk: the file reads are the cost (about 0.5 s alone, about 1 s on a loaded
-  // machine), so this one test gets 15 s instead of the 5 s default (precedent: #431).
   it('builds a section for every real story file without a parse failure', () => {
     const real = readStoryFiles();
     const s = buildSceneSheet(real, SCENE_ART_REGISTRY, { today: TODAY });
     expect(s.failed).toEqual([]);
     expect(s.counts.stories).toBe(real.length);
     expect(s.counts.scenes).toBe(s.stories.reduce((n, st) => n + st.scenes.length, 0));
-  }, 15_000);
+  });
 });
