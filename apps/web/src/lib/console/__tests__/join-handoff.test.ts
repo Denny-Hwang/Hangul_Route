@@ -1,5 +1,5 @@
 import { JOIN_HANDOFF_KEY, JoinHandoffSchema, UNLOCK_SESSION_KEY, CONSOLE_SESSION_KEY } from '@hangul-route/content-schema';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { KeyValueStorage } from '../../i18n/safe-storage';
 import { openAppWithJoinCode, writeJoinHandoff } from '../join-handoff';
 
@@ -60,5 +60,18 @@ describe('openAppWithJoinCode', () => {
     const opened: string[] = [];
     openAppWithJoinCode({ code: 'K7MPQ4', now: 5, origin: 'https://hangulroute.com', storage: memory(), assign: (url) => opened.push(url) });
     expect(opened).toEqual(['https://app.hangulroute.com/']);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('in the browser, reads this origin and leaves the tab for the learner app by itself', () => {
+    const opened: string[] = [];
+    const store = memory();
+    vi.stubGlobal('window', { location: { origin: 'https://app.hangulroute.com', assign: (url: string) => opened.push(url) }, sessionStorage: store });
+    openAppWithJoinCode({ code: 'K7MPQ4', now: 9 });
+    expect(opened).toEqual(['/']);
+    expect(JSON.parse(store.data.get(JOIN_HANDOFF_KEY) ?? 'null')).toEqual({ v: 1, code: 'K7MPQ4', at: 9 });
   });
 });
