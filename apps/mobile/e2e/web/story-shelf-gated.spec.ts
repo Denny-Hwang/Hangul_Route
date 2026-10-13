@@ -23,6 +23,8 @@ import { completeChildForm, completeSelfForm, keepSidewaysIfAsked, unlockWithPin
  * §3.11 changes its value from "Locked" to "Not open yet" (with the dotted ring for the lock glyph) in
  * PR E3-7, and this spec follows the key, so it holds before and after that PR.
  *
+ * The Plan screen opened from the Library goes back to the Library with a label that names it (F-ENT-003 E3-6).
+ *
  * Release gate: any PR that turns `contentGatingEnabled` on for a build that ships a reviewed
  * non-sampler shelf story (the F-ENT-003 free-plan rollout) depends on this spec. The gating-off
  * half is story-shelf.spec.ts on the fixture bundle.
@@ -33,6 +35,7 @@ const LOCKED = 'story:cell-stories-fixture';
 const LOCKED_TITLE = 'The Hangul Book';
 const SAMPLER = 'story:hangul-day';
 const SHELF = getMessages('en').learner.storyShelf;
+const PLAN = getMessages('en').caregiver.plan;
 /** The closed-tile word ("Not open yet" once F-ENT-003 E3-7 lands). */
 const CLOSED = SHELF.state.locked;
 const EMOJI = /\p{Extended_Pictographic}/u;
@@ -118,6 +121,10 @@ test.describe('story shelf, content gating on (gating fixture bundle)', () => {
     await expect(page.getByText('Enter your 4-digit PIN to continue.')).toHaveCount(0);
     await expect.poll(() => events(page, 'paywall.viewed')).toEqual([{ state: 'free', from: 'library' }]);
     await expect(shown(page, 'story-episode-title')).toHaveCount(0);
+    // The way back names the Library and goes there, not "Back to journey" (F-ENT-003 E3-6).
+    await expect(page.getByRole('button', { name: PLAN.backToJourney.cta, exact: true })).toHaveCount(0);
+    await page.getByRole('button', { name: PLAN.backToLibrary.cta, exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeVisible();
     expect(errors).toEqual([]);
   });
 });

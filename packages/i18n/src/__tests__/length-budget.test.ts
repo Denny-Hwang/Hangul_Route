@@ -176,6 +176,8 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       'caregiver.pin.entry.forgot.cta',
       'caregiver.pin.reset.noCode.cta',
       'caregiver.plan.backToJourney.cta',
+      'caregiver.plan.backToLibrary.cta',
+      'caregiver.plan.backHome.cta',
       'caregiver.plan.openBilling.cta',
       'caregiver.spaces.leave.cta',
       'caregiver.spaces.join.cta',

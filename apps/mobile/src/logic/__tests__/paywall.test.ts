@@ -364,3 +364,33 @@ describe('billingHandOffStep (F-BILL-002 B-9b)', () => {
     });
   });
 });
+
+describe('the way back names the surface that opened the Plan screen (F-ENT-003 E3-6; F-STORY-004 PR 4.8b)', () => {
+  const base = { tier: 'free' as const, source: null, audience: 'family' as const, name: 'Mina', platform: 'web' };
+
+  it('a Plan screen opened from the Library goes back to the Library and says so, not "Back to journey"', () => {
+    const v = planView({ ...base, from: 'library' }, en);
+    expect(v.back).toBe('Back to library');
+    expect(v.backTo).toBe('Library');
+  });
+
+  it('the Home free-end ask and the Results ask go back home', () => {
+    for (const from of ['home', 'results'] as const) {
+      const v = planView({ ...base, from }, en);
+      expect(v.back, from).toBe('Back home');
+      expect(v.backTo, from).toBe('Home');
+    }
+  });
+
+  it('the Journey, the lesson page, Settings and no from keep Back to journey', () => {
+    for (const from of ['journey', 'episode', 'settings', undefined] as const) {
+      const v = planView({ ...base, ...(from === undefined ? {} : { from }) }, en);
+      expect(v.back, String(from)).toBe('Back to journey');
+      expect(v.backTo, String(from)).toBe('Journey');
+    }
+  });
+
+  it('planTexts carries the back label, so the deny-list scan reads it', () => {
+    expect(planTexts(planView({ ...base, from: 'library' }, en))).toContain('Back to library');
+  });
+});
