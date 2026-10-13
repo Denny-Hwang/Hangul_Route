@@ -1,22 +1,49 @@
 # Route card: where you are and where you are going (screen spec v1)
 
 Spec: `docs/specs/AMENDMENTS-ROUTE-LEARNING-ROUTE.md` sections 4.3, 4.4, 4.5, 6.2, 10 · wireframe `design/wireframes/journey/learning-route.md` A to J, `parent/learning-route.md` L1
-Mock: `mock/route-card.html` (board of states), `mock/route-tab.html` (the card on the Route tab) · shots `shots/route-card-states-375.png`, `-1280.png`, `shots/route-tab-320-first.png`, `shots/route-card-three-tags-320.png`, `-320-text200.png`
+Mock: `mock/route-card.html` (board of states), `mock/route-tab.html` (the card on the Route tab) · shots `shots/route-card-states-375.png`, `-1280.png`, `shots/route-tab-320-first.png`, `shots/route-card-three-tags-320.png`, `-320-text200.png`, app shots `shots/app-route-first-320.png`, `app-route-class-plan-first-320.png` (LR-11)
 Code (planned): `screens/my-route/RouteCard.tsx` (LR-5a), copy selectors in `logic/my-route/copy.ts` (LR-3b)
 
 ## Anatomy
 
-`Card` (`radii.lg`, `shadows.card`, padding `spacing.lg`, or `spacing.md` below `PIP_ROW_MIN_WIDTH`). Its parts are a column, `spacing.md` apart:
+`Card` (`radii.lg`, `shadows.card`, padding `spacing.lg`, or `spacing.md` below `PIP_ROW_MIN_WIDTH`). Its parts are a column, `spacing.md` apart (`spacing.sm` below `PIP_ROW_MIN_WIDTH`; see "Narrow width"):
 
 1. **Hoya line** (only start, reached, free-end, end of road, error): Hoya 64 (`cheering` only for the first reached visit, else `idle`) beside one sentence at `typography.size.prompt`, bold.
 2. **Where block**, one group with its source line (`spacing.xs` apart):
    - **Goal equals Now** (collapsed): `[pin][flag]` (20 dp glyphs, `text.primary`) and the line `goal.inGoal` at `prompt` size, bold.
    - **Goal differs**: caption label "Now" over `[pin] Stage {n} · {title}`, then caption label "Goal" over `[flag] ...`, each line at `bodyLg`, bold. Labels are `text.muted`, `weight.semibold`.
    - **Source line**: `bodySm`, `text.secondary` ("From your class's weekly plan", "Hoya's suggestion", ...). Grown-up L1 adds "Plan ends {date}" under it, same style.
-3. **Can-do**: lead `canDoLead` (caption, semibold, muted) over the stage line (`body`). Taste goal: the one line `goal.tasteLine` instead. Reached goal: none.
-4. **Goal pips**: the goal stage's `PipRow` at 20 dp in the stage colour, with the cursor only when Next is in that stage. No digits, no "of", no bar.
+3. **Can-do**: lead `canDoLead` (caption, semibold, muted) over the stage line (`body`). Taste goal: the one line `goal.tasteLine` instead. Reached goal: none. Not drawn below `PIP_ROW_MIN_WIDTH` ("Narrow width").
+4. **Goal pips**: the goal stage's `PipRow` at 20 dp in the stage colour, with the cursor only when Next is in that stage. No digits, no "of", no bar. The row is drawn with `bandsPerLine`: each line reserves only the cursor and start bands its own pips use (LR-11).
 5. **Next row**: with no Hoya line, Hoya 48 beside "Next: {title}" (bold). With a Hoya line, the Next or "Keep going" line alone.
-6. **Button**: `Button` `lg` (`touchTarget.child`), primary, full width. The grown-up L1 card has none.
+6. **Button**: `Button` `lg` (`touchTarget.child`), primary, full width, `spacing.lg` below the summary (`spacing.md` below `PIP_ROW_MIN_WIDTH`). The grown-up L1 card has none.
+
+## Narrow width (below `PIP_ROW_MIN_WIDTH`, 360; LR-11)
+
+**Why.** LR-D fitted the card to 320 x 568 with 8 Stage 1 pips on one line (13 px to spare). Stage 1 now has 15 quests (F-QUEST-002 Q-8), so the goal pips take two lines, and the LR-10 run measured Continue about 75 px under the tab bar (a new learner's Start about 78 px), with the longest Stage 1 title as Next on two lines (issue #530). G2 ("one tap away") needs the button fully above the bar on the first screen.
+
+**The narrow card** (`routeCardLook(windowWidth)` in `logic/my-route/view.ts`; the same switch as the trail's `stageRowLook`):
+
+| Part | 360 and wider (LR-D) | Below 360 (LR-11) | Saves at 320 |
+|---|---|---|---|
+| Card padding | `spacing.lg` | `spacing.md` (unchanged from LR-D) | |
+| Gap between the parts | `spacing.md` | `spacing.sm` | 4 px per gap |
+| Can-do lead and line | shown | **not drawn**: the trail's open stage row right under the card (the `here` row is open on first view) shows the same lead and line. When the goal stage is ahead (A2), its own row shows them when opened. The card's summary label still reads them, so a screen reader hears the card as before | about 76 px |
+| Goal pips | one wrapping row; every line keeps the cursor and start bands any pip uses | `PipRow bandsPerLine` (all widths): the row measures its width and each line reserves only the bands of its own pips, so a second line without the cursor or the start pin is just the pips | 24 px (cursor and start on line 1), 9 px (cursor only) |
+| Space above the button | `spacing.lg` | `spacing.md` | 4 px |
+
+Nothing else changes: the same words, the same order of the parts, the same Hoya sizes (64 beside a Hoya line, 48 beside Next), the same 18 body floor and `touchTarget.child` button. The taste line (E) stays: it is one line and it is the card's only words about a taste goal.
+
+**Measured at 320 x 568** (web build with the flag on, `my-route.spec.ts`):
+
+| Case | Before (LR-10) | After (LR-11) |
+|---|---|---|
+| Started learner, class plan, Next is the longest Stage 1 title (two lines), cursor and start on pip line 1 | Continue ends 74 px under the bar | 41 px above the bar |
+| New learner (Hoya line, Goal only, cursor on the first pip) | Start ends 78 px under the bar | 27 px above the bar |
+
+A native 20 pt status bar moves the card down by 20 px; both buttons stay above the bar. R-10b repeats the check on a device or simulator with real insets and at 200 % text (where the button is expected below the first screen, as every line grows; nothing is cut off and the page scrolls).
+
+**Rejected.** Smaller pips at 320 (16 dp still takes two lines and the cursor reads worse); dropping Hoya beside Next (the Next title stays on two lines, so no height is saved); the trail's fill bar on the card (the card's pips are the only pips on the first screen, section 4.3 "no bar"); moving the can-do lines under the button (a line after the page's one action reads as a second action, and it would be outside the summary).
 
 ## States (board order)
 
