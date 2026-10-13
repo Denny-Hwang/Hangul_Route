@@ -25,4 +25,10 @@ describe('RouteProposal navigation', () => {
     const gate: RootStackParamList['PinEntry'] = { next: 'RouteSetup', profileId: 'profile:a' };
     expect(gate.next).toBe('RouteSetup');
   });
+
+  it('a child\'s Stop this plan goes through the gate back to the overview', () => {
+    expectTypeOf<'RouteOverview'>().toMatchTypeOf<GrownUpDestination>();
+    const gate: RootStackParamList['PinEntry'] = { next: 'RouteOverview', profileId: 'profile:a' };
+    expect(gate.next).toBe('RouteOverview');
+  });
 });

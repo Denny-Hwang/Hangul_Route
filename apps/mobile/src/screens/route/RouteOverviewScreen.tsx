@@ -3,25 +3,21 @@ import { CATALOG } from '@hangul-route/content-schema';
 import { formatDate } from '@hangul-route/i18n';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useLocale, useMessages } from '../../i18n/use-messages';
-import { isParentSessionValid } from '../../logic/profiles/session';
-import { effectiveLearnerType } from '../../logic/profiles/learner-type';
 import { movedLineVisible } from '../../logic/route/home-slot';
 import { planOverview } from '../../logic/route/plan-view';
-import { profileRowOpens } from '../../logic/route/proposal-flow';
-import { checkInOffer } from '../../logic/route/repace';
-import { activeSelfRoute, completedQuestIdsOf } from '../../logic/route/self-route';
+import { activeSelfRoute } from '../../logic/route/self-route';
 import type { RootStackParamList } from '../../navigation/types';
-import { useAudience } from '../../store/audience';
+import { announceForScreenReader } from '../../platform/screen-reader';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useRouteStore } from '../../store/route-store';
-import { useUiStore } from '../../store/ui-store';
 import { LinkButton } from '../placement/parts';
-import { CheckInCard, useShownOffer } from './CheckInCard';
+import { CheckInCard, useCheckInOffer, useShownOffer } from './CheckInCard';
 import { PlanWeekCard } from './parts';
+import { usePlanChangesOpen } from './use-plan-gate';
 import { useToday } from './use-today';
 
 /**
@@ -30,7 +26,9 @@ import { useToday } from './use-today';
  * optional extras, the Hoya check-in of week 5 when it applies (FP-B14), and **Move my plan
  * along**, **Change the plan** and **Stop this plan** (confirmed; what was finished stays). Never
  * behind, late, missed or overdue; the level is never named ("We found a path for you"). The calm
- * line "Hoya moved your plan along" shows once after an automatic re-pace (section 3.7).
+ * line "Hoya moved your plan along" shows once after an automatic re-pace (section 3.7). A child's
+ * plan is a grown-up's: Change the plan and Stop this plan go through the grown-up gate when the
+ * device needs it, and the check-in shows only while it is open.
  */
 
 type Props = NativeStackScreenProps<RootStackParamList, 'RouteOverview'>;
@@ -43,8 +41,7 @@ export function RouteOverviewScreen({ route, navigation }: Props): React.ReactEl
   const profile = useProfileStore((s) => s.profiles.find((p) => p.id === profileId) ?? null);
   const snapshot = useProgressStore((s) => s.byProfile[profileId]);
   const ui = useRouteStore((s) => s.ui[profileId]);
-  const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
-  const { opensDirectly } = useAudience();
+  const changesOpen = usePlanChangesOpen(profile);
   // Read again on focus and when the app comes back: the screen may stay open across midnight.
   const today = useToday();
   const [showLater, setShowLater] = useState(false);
@@ -52,6 +49,8 @@ export function RouteOverviewScreen({ route, navigation }: Props): React.ReactEl
   const [busy, setBusy] = useState(false);
   const [movedByHand, setMovedByHand] = useState(false);
   const [failed, setFailed] = useState(false);
+  // Stop this plan pressed with the gate closed: back from the gate, open, the confirm step shows.
+  const stopAfterGate = useRef(false);
   // The calm line is read once per visit: it stays on screen for this visit and is marked seen.
   const [movedLine, setMovedLine] = useState(false);
 
@@ -73,10 +72,26 @@ export function RouteOverviewScreen({ route, navigation }: Props): React.ReactEl
     }, [profileId]),
   );
 
+  useFocusEffect(
+    useCallback(() => {
+      if (!stopAfterGate.current) return undefined;
+      stopAfterGate.current = false;
+      if (changesOpen) setConfirmStop(true);
+      return undefined;
+    }, [changesOpen]),
+  );
+
+  const failedLine = m.learner.weeklyPlan.planPreview.saveFailed;
+  useEffect(() => {
+    if (failed) announceForScreenReader(failedLine);
+  }, [failed, failedLine]);
+  useEffect(() => {
+    if (movedByHand) announceForScreenReader(t.movedDone);
+  }, [movedByHand, t.movedDone]);
+
   const active = activeSelfRoute(snapshot);
-  const completed = useMemo(() => completedQuestIdsOf(snapshot?.quests), [snapshot]);
   const view = useMemo(() => (active === null ? null : planOverview(active, today)), [active, today]);
-  const offer = ui === undefined ? null : checkInOffer({ route: active, completedQuestIds: completed, today, answeredFor: ui.checkInFor });
+  const offer = useCheckInOffer({ route: active, quests: snapshot?.quests, today, ready: ui !== undefined, answeredFor: ui?.checkInFor, changesOpen });
   const [shownOffer, closeOffer] = useShownOffer(offer, `${profileId}|${active?.id ?? ''}`);
   const stale = active !== null && active.meta.catalogVersion !== CATALOG.version;
 
@@ -88,8 +103,7 @@ export function RouteOverviewScreen({ route, navigation }: Props): React.ReactEl
   // Change the plan, Make a new plan and Make a weekly plan: a child's plan goes through the grown-up gate (section 3.9).
   const openGated = (next: 'RouteSetup' | 'RouteProposal'): void => {
     if (profile === null) return;
-    const sessionOpen = isParentSessionValid(parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' }, Date.now());
-    if (profileRowOpens({ learnerType: effectiveLearnerType(profile), opensDirectly: opensDirectly(sessionOpen) }) !== 'proposal') {
+    if (!changesOpen) {
       navigation.navigate('PinEntry', { next, profileId });
     } else if (next === 'RouteSetup') {
       navigation.navigate('RouteSetup', { profileId });
@@ -118,6 +132,17 @@ export function RouteOverviewScreen({ route, navigation }: Props): React.ReactEl
 
   const moveAlong = async (): Promise<void> => {
     setMovedByHand(await run(() => useRouteStore.getState().repaceNow(profileId)));
+  };
+
+  // A child's Stop this plan goes through the grown-up gate first (section 3.9): nothing is stopped by a child's tap.
+  const askStop = (): void => {
+    if (changesOpen) {
+      setConfirmStop(true);
+      return;
+    }
+    if (profile === null) return;
+    stopAfterGate.current = true;
+    navigation.navigate('PinEntry', { next: 'RouteOverview', profileId });
   };
 
   const stop = async (): Promise<void> => {
@@ -189,11 +214,13 @@ export function RouteOverviewScreen({ route, navigation }: Props): React.ReactEl
               {t.moved}
             </Body>
           ) : null}
-          {movedByHand ? (
-            <Body tone="secondary" testID="route-overview-moved-by-hand">
-              {t.movedDone}
-            </Body>
-          ) : null}
+          <View accessibilityLiveRegion="polite">
+            {movedByHand ? (
+              <Body tone="secondary" testID="route-overview-moved-by-hand">
+                {t.movedDone}
+              </Body>
+            ) : null}
+          </View>
         </View>
       </View>
 
@@ -267,14 +294,16 @@ export function RouteOverviewScreen({ route, navigation }: Props): React.ReactEl
         </>
       )}
 
-      {failed ? (
-        <>
-          <Spacer size="sm" />
-          <Body tone="secondary" testID="route-overview-failed">
-            {m.learner.weeklyPlan.planPreview.saveFailed}
-          </Body>
-        </>
-      ) : null}
+      <View accessibilityLiveRegion="polite">
+        {failed ? (
+          <>
+            <Spacer size="sm" />
+            <Body tone="secondary" testID="route-overview-failed">
+              {failedLine}
+            </Body>
+          </>
+        ) : null}
+      </View>
       <Spacer size="lg" />
       {confirmStop ? (
         <Card padding="md" tone="sunken" testID="route-overview-stop-confirm">
@@ -286,7 +315,7 @@ export function RouteOverviewScreen({ route, navigation }: Props): React.ReactEl
           </View>
         </Card>
       ) : (
-        <LinkButton label={t.stop.cta} onPress={() => setConfirmStop(true)} testID="route-overview-stop" />
+        <LinkButton label={t.stop.cta} onPress={askStop} testID="route-overview-stop" />
       )}
       <Spacer size="xl" />
     </Screen>

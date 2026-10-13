@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import type { ProgressSnapshot, SelfRoute } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
-import { onboardSelf, readStored, seedStored } from './helpers';
+import { onboardChild, onboardSelf, readStored, seedStored, unlockWithPin } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -230,5 +230,47 @@ test.describe('weekly plan set-up, preview and overview (flag on)', () => {
     await expect(page.getByText('Hi, Ida!')).toBeVisible();
     await expect(page.getByTestId('home-plan-check-in')).toHaveCount(0);
     expect((await storedRoute(page, profileId))?.meta.params.sessionsPerWeek).toBe(3);
+  });
+
+  test('a child\'s plan: no check-in without the grown-up, and Stop this plan asks for the grown-up PIN first', async ({ page }) => {
+    await page.clock.setFixedTime(NOW);
+    await onboardChild(page, { name: 'Dani', startJourney: false });
+    await page.goto('/');
+    await expect(page.getByText('Hi, Dani!')).toBeVisible();
+    const profileId = (await readStored<string>(page, 'profiles:active')) as string;
+    await seedStored(page, `progress:${profileId}`, snapshotWithOneQuest(profileId));
+    await expect(page.getByText('Hi, Dani!')).toBeVisible();
+    await closeInstallGuide(page);
+    // The grown-up makes the plan through the gate.
+    await page.getByRole('button', { name: /profile/i }).first().click();
+    await page.getByTestId('profile-plan-row').click();
+    await unlockWithPin(page);
+    await page.getByRole('radio', { name: /^12 weeks/ }).click();
+    await page.getByRole('button', { name: 'Start this plan' }).click();
+    await expect.poll(async () => (await storedRoute(page, profileId))?.meta.params.sessionsPerWeek ?? 0).toBeGreaterThan(0);
+    const pace = (await storedRoute(page, profileId))?.meta.params.sessionsPerWeek;
+
+    // Week 5, a new visit (the grown-up session is over): Hoya does not ask the child; the plan moved along quietly.
+    await page.clock.setFixedTime(NOW + 29 * DAY);
+    await page.goto('/');
+    await expect(page.getByText('Hi, Dani!')).toBeVisible();
+    await closeInstallGuide(page);
+    await expect(page.getByTestId('home-plan-moved')).toBeVisible();
+    await expect(page.getByTestId('home-plan-check-in')).toHaveCount(0);
+
+    // See my plan opens the overview with no check-in; Stop this plan goes to the grown-up PIN, not the confirm step.
+    await page.getByTestId('home-plan-moved-open').click();
+    await expect(page.getByTestId('route-overview-current')).toBeVisible();
+    await expect(page.getByTestId('route-overview-check-in')).toHaveCount(0);
+    await page.getByTestId('route-overview-stop').click();
+    await expect(page.getByTestId('route-overview-stop-confirm')).toHaveCount(0);
+    await unlockWithPin(page);
+    // Back on the overview with the gate open: the confirm step shows, and the check-in is the grown-up's to answer.
+    await expect(page.getByTestId('route-overview-stop-confirm')).toBeVisible();
+    await expect(page.getByTestId('route-overview-check-in')).toBeVisible();
+    expect((await storedRoute(page, profileId))?.archivedAt).toBeNull();
+    expect((await storedRoute(page, profileId))?.meta.params.sessionsPerWeek).toBe(pace);
+    await page.getByTestId('route-overview-stop-yes').click();
+    await expect.poll(async () => (await storedRoute(page, profileId))?.archivedAt ?? null).not.toBeNull();
   });
 });

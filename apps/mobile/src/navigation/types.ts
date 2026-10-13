@@ -41,7 +41,9 @@ export type GrownUpDestination =
   /** F-PLAN-002 section 3.9 (P2-7a): a child profile's "Make a weekly plan" row, through the gate when the device needs it (`PinEntry.profileId`). */
   | 'RouteProposal'
   /** F-PLAN-002 section 3.9 (P2-7b): a child's **Change the plan** when the gate is closed (`PinEntry.profileId`). */
-  | 'RouteSetup';
+  | 'RouteSetup'
+  /** F-PLAN-002 section 3.9 (P2-7b): a child's **Stop this plan** when the gate is closed; back to the overview underneath (`PinEntry.profileId`). */
+  | 'RouteOverview';
 
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;

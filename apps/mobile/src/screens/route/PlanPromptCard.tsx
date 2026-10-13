@@ -10,14 +10,14 @@ import { hasPlanNow } from '../../logic/plan-free-lines';
 import { effectiveLearnerType } from '../../logic/profiles/learner-type';
 import { movedLineVisible, planSlotOf, type PlanSlot } from '../../logic/route/home-slot';
 import { newestResultAt, planPromptEligible, proposalSkippedEvent } from '../../logic/route/proposal-flow';
-import { checkInOffer } from '../../logic/route/repace';
-import { activeSelfRoute, completedQuestIdsOf } from '../../logic/route/self-route';
+import { activeSelfRoute } from '../../logic/route/self-route';
 import { track } from '../../platform/telemetry';
 import { usePlanStore } from '../../store/plan-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useRouteStore } from '../../store/route-store';
 import { LinkButton } from '../placement/parts';
-import { CheckInCard, useShownOffer } from './CheckInCard';
+import { CheckInCard, useCheckInOffer, useShownOffer } from './CheckInCard';
+import { usePlanChangesOpen } from './use-plan-gate';
 import { useToday } from './use-today';
 
 /**
@@ -89,7 +89,8 @@ export interface PlanSlotState {
 /**
  * Home's one quiet card for the weekly plan (F-PLAN-002 sections 3.7 and 3.9): the prompt before a
  * plan exists; with a plan, the Hoya check-in of week 5 (FP-B14) or, once after an automatic
- * re-pace, "Hoya moved your plan along". Home stays mounted, so the slot is looked at again each
+ * re-pace, "Hoya moved your plan along". A child's check-in shows only while the grown-up gate is
+ * open (section 3.9). Home stays mounted, so the slot is looked at again each
  * time Home comes into focus: a check-in answered here (its "now N days a week" line) or on the
  * overview leaves, and a moved line that was drawn and marked seen does not come back.
  */
@@ -103,10 +104,9 @@ export function usePlanSlot(
   const ui = useRouteStore((s) => (profileId === null ? undefined : s.ui[profileId]));
   const today = useToday();
   const active = flags.routeEnabled ? activeSelfRoute(snapshot) : null;
-  const offer =
-    active === null || ui === undefined || snapshot === undefined
-      ? null
-      : checkInOffer({ route: active, completedQuestIds: completedQuestIdsOf(snapshot.quests), today, answeredFor: ui.checkInFor });
+  // A child's check-in waits for the grown-up gate (section 3.9): yes changes the plan a grown-up set.
+  const changesOpen = usePlanChangesOpen(profile);
+  const offer = useCheckInOffer({ route: active, quests: snapshot?.quests, today, ready: ui !== undefined && snapshot !== undefined, answeredFor: ui?.checkInFor, changesOpen });
   const [shownOffer, closeOffer] = useShownOffer(offer, `${profileId ?? ''}|${active?.id ?? ''}`);
   const [moved, setMoved] = useState(false);
   const movedNow = active !== null && ui !== undefined && movedLineVisible(ui);
