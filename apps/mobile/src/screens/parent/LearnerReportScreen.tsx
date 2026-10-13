@@ -105,6 +105,64 @@ function ReportHeading({ level, children, testID }: { level: 1 | 2 | 3; children
   );
 }
 
+/**
+ * LR-D's `link-button` (design README "Reused"): an outlined pill on paper, `touchTarget.min` tall, named by its
+ * visible text. The report's quieter controls use it: Open Learning Route, the step buttons, the table toggle and,
+ * full width and square-cornered, the More detail disclosure.
+ */
+function OutlineButton({
+  label,
+  onPress,
+  accessibilityLabel,
+  leading,
+  trailing,
+  expanded,
+  block = false,
+  pressableRef,
+  testID,
+}: {
+  label: string;
+  onPress: () => void;
+  accessibilityLabel?: string;
+  leading?: React.ReactNode;
+  trailing?: React.ReactNode;
+  expanded?: boolean;
+  block?: boolean;
+  pressableRef?: React.Ref<View>;
+  testID?: string;
+}): React.ReactElement {
+  const disclosure = expanded === undefined ? {} : { 'aria-expanded': expanded };
+  return (
+    <Pressable
+      ref={pressableRef}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityState={expanded === undefined ? undefined : { expanded }}
+      {...disclosure}
+      testID={testID}
+      style={({ pressed }) => ({
+        minHeight: touchTarget.min,
+        minWidth: touchTarget.min,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: block ? 'space-between' : 'center',
+        alignSelf: block ? 'stretch' : 'flex-start',
+        gap: spacing.sm,
+        paddingHorizontal: spacing.lg,
+        borderRadius: block ? radii.md : radii.pill,
+        borderWidth: borderWidth.base,
+        borderColor: pressed ? colors.border.focus : colors.border.strong,
+        backgroundColor: colors.surface.paper,
+      })}
+    >
+      {leading}
+      <Body weight="bold">{label}</Body>
+      {trailing}
+    </Pressable>
+  );
+}
+
 export function LearnerReportScreen({ route, navigation }: Props): React.ReactElement {
   const messages = useMessages();
   const locale = useLocale();
@@ -321,11 +379,9 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
         <View testID="learner-report-more-detail">
           <Spacer size="lg" />
           <View {...headingLevel(2)}>
-            <Button
+            <OutlineButton
               label={view.moreDetail.button}
-              tone="secondary"
-              size="md"
-              fullWidth
+              block
               expanded={detailOpen}
               onPress={() => setDetailOpen((open) => !open)}
               trailing={<View style={{ transform: [{ rotate: detailOpen ? '-90deg' : '90deg' }] }}><Icon name="arrow-right" size={20} /></View>}
@@ -355,16 +411,12 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
         <View style={{ gap: spacing.xs, marginTop: spacing.xs }} testID="learner-report-glance">
           {view.glance.nowOn !== null ? <Body>{view.glance.nowOn}</Body> : null}
           {view.glance.openRoute !== null ? (
-            <View style={{ alignItems: 'flex-start' }}>
-              <Button
-                label={view.glance.openRoute}
-                tone="secondary"
-                size="md"
-                // The grown-up's read-only view of this report's profile (L1), never the learner's own page.
-                onPress={() => navigation.navigate('MyRoute', { profileId, viewer: 'grownup' })}
-                testID="learner-report-open-route"
-              />
-            </View>
+            <OutlineButton
+              label={view.glance.openRoute}
+              // The grown-up's read-only view of this report's profile (L1), never the learner's own page.
+              onPress={() => navigation.navigate('MyRoute', { profileId, viewer: 'grownup' })}
+              testID="learner-report-open-route"
+            />
           ) : null}
           {view.glance.lastPractice !== null ? <Caption tone="muted">{view.glance.lastPractice}</Caption> : null}
         </View>
@@ -386,11 +438,9 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
           {stepper !== null ? (
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm }}>
               {stepper.prev !== null ? (
-                <Button
+                <OutlineButton
                   label={stepper.prev.label}
                   accessibilityLabel={stepper.prev.name}
-                  tone="secondary"
-                  size="sm"
                   leading={<Icon name="arrow-left" size={20} />}
                   onPress={() => step('prev')}
                   pressableRef={prevRef}
@@ -401,11 +451,9 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
                 {stepper.range}
               </Body>
               {stepper.next !== null ? (
-                <Button
+                <OutlineButton
                   label={stepper.next.label}
                   accessibilityLabel={stepper.next.name}
-                  tone="secondary"
-                  size="sm"
                   trailing={<Icon name="arrow-right" size={20} />}
                   onPress={() => step('next')}
                   pressableRef={nextRef}
@@ -577,7 +625,7 @@ function GrowthBlock({ growth }: { growth: ReportGrowthView }): React.ReactEleme
       {count > 0 ? (
         <>
           <View style={{ alignItems: 'flex-start' }}>
-            <Button label={tableOpen ? growth.hideTable : growth.showTable} tone="ghost" size="sm" expanded={tableOpen} onPress={() => setTableOpen((open) => !open)} testID="learner-report-growth-toggle" />
+            <OutlineButton label={tableOpen ? growth.hideTable : growth.showTable} expanded={tableOpen} onPress={() => setTableOpen((open) => !open)} testID="learner-report-growth-toggle" />
           </View>
           {/* The table is the line's text alternative: visible when opened, read by screen readers always. */}
           {tableOpen ? table : <View style={srOnly}>{table}</View>}
