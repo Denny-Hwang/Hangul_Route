@@ -360,6 +360,16 @@ describe('flags', () => {
     expect(fresh.routeEnabledFor('ko')).toBe(false);
   });
 
+  it('every shipped UI locale is a reviewed weekly plan locale, so a plan is never left without its Change and Stop entries', async () => {
+    // The re-pace, Homework and Today's mission follow an existing plan in any locale; the entries follow
+    // routeEnabledFor. Shipping es or ko before adding it to ROUTE_REVIEWED_LOCALES would strand a plan, so the two
+    // lists move in the same PR (F-PLAN-002 section 6).
+    const { LOCALE_STATUS, LOCALES } = await import('@hangul-route/i18n');
+    const mod = await reload();
+    const stranded = LOCALES.filter((l) => LOCALE_STATUS[l] === 'shipped' && !mod.ROUTE_REVIEWED_LOCALES.includes(l));
+    expect(stranded).toEqual([]);
+  });
+
   it('routeEnabled is read by its literal name, so a web build can carry the override', () => {
     const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
     expect(src).toContain('process.env.EXPO_PUBLIC_ROUTE_ENABLED');

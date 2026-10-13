@@ -246,7 +246,8 @@ export const ROUTE_REVIEWED_LOCALES: readonly UiLocale[] = ['en'];
  * The effective weekly plan switch for the learner entries (F-PLAN-002 P2-8b): the flag is on **and** the UI
  * locale is in `ROUTE_REVIEWED_LOCALES`. The QA build that shows every locale (`EXPO_PUBLIC_SHOW_ALL_LOCALES=1`,
  * never a release build) plays every locale, so the es and ko 320 px pass keeps running. Home's plan slot and the
- * Profile row read this, never the raw flag.
+ * Profile row read this, never the raw flag. Release builds offer only `en` today, so the locale check is a guard for
+ * the day es or ko ships; `flags.test.ts` requires every shipped locale to be in `ROUTE_REVIEWED_LOCALES`.
  */
 export function routeEnabledFor(
   locale: UiLocale,
