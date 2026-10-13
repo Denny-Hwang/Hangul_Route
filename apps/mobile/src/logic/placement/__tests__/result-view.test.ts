@@ -7,6 +7,9 @@ import {
   reportView,
   resultView,
   shortHintFires,
+  stripSkipped,
+  withPlanKept,
+  withPlanMade,
   type ResultViewInput,
 } from '../result-view';
 import { gate, placementResult } from './fixtures';
@@ -62,6 +65,7 @@ const input = (over: Partial<ResultViewInput> = {}): ResultViewInput => ({
   proposalAvailable: true,
   planPromptDismissed: false,
   hasActivePlan: false,
+  planUpdateAvailable: true,
   hasReviewedShelfStory: true,
   gateRequired: false,
   ...over,
@@ -136,7 +140,7 @@ describe('resultView: headline, cards and route lines (section 3.1 step 7)', () 
     expect(view.routeLine).toBe('routeStays');
     expect(view.strip).toBe(false);
     expect(view.primary).toBe('start');
-    expect(resultView(input({ before: seed(), after: seed(), hasActivePlan: true })).routeLine).toBe('planStays');
+    expect(resultView(input({ before: seed(), after: seed(), hasActivePlan: true, planUpdateAvailable: false })).routeLine).toBe('planStays');
   });
 
   it('a retake that raises the start with an active self plan: Update my plan / Keep my plan', () => {
@@ -149,6 +153,32 @@ describe('resultView: headline, cards and route lines (section 3.1 step 7)', () 
     const child = resultView(input({ before: seed(), after: raisedSeed, hasActivePlan: true, profileType: 'child' }));
     expect(child.planUpdate).toBe(false);
     expect(child.primary).toBe('start');
+  });
+
+  it('no update offer for the plan (flag off, or the re-seed would change nothing): no Update my plan', () => {
+    const view = resultView(input({ before: seed(), after: raisedSeed, hasActivePlan: true, planUpdateAvailable: false }));
+    expect(view.planUpdate).toBe(false);
+    expect(view.strip).toBe(false);
+    expect(view.primary).toBe('start');
+    expect(view.secondary).toBeNull();
+  });
+
+  it('withPlanMade: once a plan exists (made through Change), the strip gives way to Start', () => {
+    const view = resultView(input());
+    expect(view.strip).toBe(true);
+    const made = withPlanMade(view);
+    expect(made).toMatchObject({ strip: false, primary: 'start', secondary: null });
+    expect(made.links).toEqual(view.links);
+    // Nothing to change on a view without the strip.
+    const plain = resultView(input({ routeEnabled: false }));
+    expect(withPlanMade(plain)).toBe(plain);
+  });
+
+  it('withPlanKept: Keep my plan folds the update into the plan-stays line and Start', () => {
+    const view = resultView(input({ before: seed(), after: raisedSeed, hasActivePlan: true }));
+    expect(withPlanKept(view)).toMatchObject({ planUpdate: false, primary: 'start', secondary: null, routeLine: 'planStays' });
+    const plain = resultView(input());
+    expect(withPlanKept(plain)).toBe(plain);
   });
 
   it('reading not tested: the good-place headline and line; the one-tap retake only on a self profile', () => {
@@ -182,18 +212,47 @@ describe('resultView: headline, cards and route lines (section 3.1 step 7)', () 
 
   it('a retake that only raises the level keeps the route: it stays where it is, no Update my plan', () => {
     const levelOnly = seed({ level: { stage: 'stage1', band: 2 } });
-    const view = resultView(input({ before: seed(), after: levelOnly, hasActivePlan: true }));
+    // The offer reads the plan: a level that rises alone moves none of its future, so no update is offered.
+    const view = resultView(input({ before: seed(), after: levelOnly, hasActivePlan: true, planUpdateAvailable: false }));
     expect(view.planUpdate).toBe(false);
     expect(view.routeLine).toBe('planStays');
     expect(view.primary).toBe('start');
     expect(resultView(input({ before: seed(), after: levelOnly })).routeLine).toBe('routeStays');
   });
 
-  it('a retake that places out more but keeps the start: no "stays" line and no Update my plan', () => {
+  it('a retake that places out more but keeps the start: no "stays" line; Update my plan only when the plan is behind', () => {
     const more = seed({ placedOutQuestIds: ['quest:q3'] });
-    const view = resultView(input({ before: seed(), after: more, hasActivePlan: true }));
-    expect(view.planUpdate).toBe(false);
-    expect(view.routeLine).toBeNull();
+    const behind = resultView(input({ before: seed(), after: more, hasActivePlan: true }));
+    expect(behind.planUpdate).toBe(true);
+    expect(behind.routeLine).toBeNull();
+    const current = resultView(input({ before: seed(), after: more, hasActivePlan: true, planUpdateAvailable: false }));
+    expect(current.planUpdate).toBe(false);
+    expect(current.routeLine).toBeNull();
+  });
+
+  it('a first check after a plan made from Home that found a later start: Update my plan (read from the plan, AM-7)', () => {
+    const view = resultView(input({ before: null, after: raisedSeed, hasActivePlan: true }));
+    expect(view).toMatchObject({ planUpdate: true, strip: false, primary: 'updatePlan', secondary: 'keepPlan', routeLine: null });
+  });
+
+  it('a retake that matches the last one while the plan is still behind: Update my plan, not "Your plan stays"', () => {
+    const view = resultView(input({ before: raisedSeed, after: raisedSeed, hasActivePlan: true }));
+    expect(view).toMatchObject({ planUpdate: true, primary: 'updatePlan', routeLine: null });
+    const current = resultView(input({ before: raisedSeed, after: raisedSeed, hasActivePlan: true, planUpdateAvailable: false }));
+    expect(current).toMatchObject({ planUpdate: false, primary: 'start', routeLine: 'planStays' });
+  });
+
+  it('a free-tier learner placed at Stage 2 or later: no strip, You know a lot! unchanged, even with a proposal (AM-7)', () => {
+    const none = seed({ startQuestId: null, startEpisodeId: null, level: { stage: 'stage2', band: 0 }, needsStage: 'stage2', placedOutQuestIds: ['quest:q1', 'quest:q2', 'quest:q3', 'quest:q4'] });
+    const view = resultView(input({ after: none, proposalAvailable: true, hasReviewedShelfStory: false, myRouteEnabled: false }));
+    expect(view).toMatchObject({ headline: 'knowALot', strip: false, planUpdate: false, primary: 'seeMap', secondary: null });
+  });
+
+  it('stripSkipped: the proposal screen\'s Not now after this result folds the strip; an older dismissal does not', () => {
+    const at = '2026-10-12T09:00:00.000Z';
+    expect(stripSkipped('2026-10-12T09:05:00.000Z', at)).toBe(true);
+    expect(stripSkipped('2026-10-12T08:00:00.000Z', at)).toBe(false);
+    expect(stripSkipped(undefined, at)).toBe(false);
   });
 
   it('a retake that reaches You know a lot! with an active plan offers stories or the map, not Update my plan', () => {
