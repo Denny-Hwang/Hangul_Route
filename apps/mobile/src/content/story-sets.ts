@@ -13,9 +13,11 @@ import type { StorySetDef } from '../logic/awards/story-cards';
  * life have two members each, and the rain gauge comes first); the
  * card-award integrity test checks it against the story files. Titles and
  * Korean words passed the F-STORY-006 PR 6.8 language and culture review
- * (pinned in card-award-integrity.test.ts): the Hangul and Printing set names
- * printing (inswae), not movable type (hwalja), because two of its stories
- * are about woodblock printing.
+ * (pinned in card-award-integrity.test.ts): the Hangul and Printing set's
+ * word names the collection's printing half, printing (inswae), not movable
+ * type (hwalja), because two of its printing stories are about woodblocks; the
+ * Hangul half is named by the collection title. Treasure (bomul) is the
+ * everyday word, not the official Treasure designation tier.
  */
 const BLURB = 'Six stories, one collection.';
 
