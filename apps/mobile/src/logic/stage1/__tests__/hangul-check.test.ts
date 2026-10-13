@@ -6,6 +6,7 @@ import {
   HANGUL_CHECK_WORDS,
   buildHangulCheck,
   isSymbolItem,
+  symbolRound,
 } from '../hangul-check';
 import { confusablesOf } from '../confusables';
 
@@ -105,5 +106,14 @@ describe('buildHangulCheck: the 35 items of the Hangul Check (F-QUEST-002 §3.9)
     expect(isSymbolItem('jamo:giyeok')).toBe(true);
     expect(isSymbolItem('jamo:ieung-batchim')).toBe(true);
     expect(isSymbolItem('word:hangeul')).toBe(false);
+  });
+});
+
+describe('symbolRound: never a dead item', () => {
+  it('throws for a symbol it does not know, and for a final with no distractor row', () => {
+    expect(() => symbolRound('jamo:nope')).toThrow(/Unknown symbol/);
+    const final = jamoAll.find((j) => j.id === 'jamo:giyeok-batchim')!;
+    expect(() => symbolRound('jamo:odd-batchim', [{ ...final, id: 'jamo:odd-batchim' }])).toThrow(/No final syllables/);
+    expect(() => symbolRound('jamo:giyeok-batchim', [{ ...final, spokenKo: undefined }])).toThrow(/No final syllables/);
   });
 });

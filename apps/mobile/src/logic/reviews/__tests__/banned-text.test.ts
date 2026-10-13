@@ -20,6 +20,7 @@ describe('leafStrings', () => {
   it('collects every string of a message tree and samples its functions', () => {
     const tree = { a: 'one', b: { c: 'two', d: (x: string) => `three ${x}` }, e: 4 };
     expect(leafStrings(tree)).toEqual(['one', 'two', 'three x']);
+    expect(leafStrings({ n: () => 3, z: null })).toEqual([]);
   });
 });
 

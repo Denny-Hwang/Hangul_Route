@@ -1,5 +1,5 @@
-import type { KoText, ListenPickRound, PictureRef, ThemeKey } from '@hangul-route/content-schema';
-import { findJamo, jamoAll } from '../../content/jamo';
+import type { Jamo, KoText, ListenPickRound, PictureRef, ThemeKey } from '@hangul-route/content-schema';
+import { jamoAll } from '../../content/jamo';
 import { seededRandom, shuffleOptions } from '../listen-pick';
 import { lp } from '../scope-builders';
 
@@ -67,8 +67,12 @@ export function isSymbolItem(id: string): boolean {
   return id.startsWith('jamo:');
 }
 
-function symbolRound(jamoId: string): ListenPickRound {
-  const jamo = findJamo(jamoId);
+/**
+ * One symbol's round, its id the jamo id. `records` defaults to the bundle; a symbol it does not
+ * know, or a final with no distractor row, throws (the content test would fail, never a dead item).
+ */
+export function symbolRound(jamoId: string, records: readonly Jamo[] = jamoAll): ListenPickRound {
+  const jamo = records.find((j) => j.id === jamoId);
   if (!jamo) throw new Error(`Unknown symbol ${jamoId}`);
   if (jamo.kind !== 'batchim') return { ...lp.sym(jamoId, ALL_SYMBOL_IDS), id: jamoId };
   const distractors = FINAL_DISTRACTORS[jamoId];
