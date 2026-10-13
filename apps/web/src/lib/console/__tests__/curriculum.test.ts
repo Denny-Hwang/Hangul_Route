@@ -90,13 +90,13 @@ const classState = (patch: Partial<WizardState> = {}): WizardState => ({
   ...patch,
 });
 
-/** Every story signed off, so culture weeks and story labels appear (the shipped catalogue still has them as drafts). */
+/** Every story signed off, so culture weeks and story labels appear. Since CATALOG_VERSION 6 the shipped catalogue has all 24 stories ready too, so this equals CATALOG for stories; it stays so these tests do not depend on the shipped review state. */
 const READY: Catalog = { ...CATALOG, stories: CATALOG.stories.map((story) => ({ ...story, status: 'ready' as const })) };
 
-function classPlan(patch: Partial<WizardState> = {}): { id: string; meta: CurriculumMeta; items: PlanItem[] } {
+function classPlan(patch: Partial<WizardState> = {}, source: Catalog = CATALOG): { id: string; meta: CurriculumMeta; items: PlanItem[] } {
   const params = toParams(classState(patch), ['stage1']);
   if (!params) throw new Error('params');
-  const draft = generateCurriculum(params, CATALOG);
+  const draft = generateCurriculum(params, source);
   return { id: 'plan:route', meta: toMeta(draft), items: toPlanItems(draft) };
 }
 
@@ -472,7 +472,20 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
     const items = plan.items.filter((item) => item.targetDate !== '2026-10-28');
     const result = repacePlan({ ...plan, items }, '2026-10-26', '2026-10-26T09:00:00.000Z');
     expect(result.items.map((i) => i.targetDate)).toEqual(['2026-10-18', '2026-10-21', '2026-10-25', '2026-10-28', '2026-11-01', '2026-11-04', '2026-11-08']);
-    expect(result.items.map((i) => i.id)).toEqual(items.map((i) => i.id));
+    // The same items; lessons keep their order. A story may move to the next story slot of its week (section 3.4 cadence).
+    expect(result.items.map((i) => i.id).sort()).toEqual(items.map((i) => i.id).sort());
+    const lessonsOf = (list: readonly { id: string }[]): string[] => list.map((i) => i.id).filter((id) => !id.startsWith('quest:story-'));
+    expect(lessonsOf(result.items)).toEqual(lessonsOf(items));
+    // A story stays in its week or moves to the next one, never earlier and never further.
+    const weekBefore = new Map(items.map((i) => [i.id, i.targetDate === undefined ? undefined : weekOfDate(plan.meta.weeks, i.targetDate)]));
+    const storyItems = result.items.filter((i) => i.id.startsWith('quest:story-'));
+    expect(storyItems.length).toBeGreaterThan(0);
+    for (const item of storyItems) {
+      const before = weekBefore.get(item.id);
+      const after = item.targetDate === undefined ? undefined : weekOfDate(result.meta.weeks, item.targetDate);
+      if (before === undefined || after === undefined) throw new Error(`${item.id} has no week`);
+      expect([before, before + 1], item.id).toContain(after);
+    }
     expect(result.planId).toBe('plan:route');
     expect(result.meta).toMatchObject({ kind: 'curriculum', repacedAt: '2026-10-26T09:00:00.000Z', horizonDays: plan.meta.horizonDays });
     expect(result.nextDate).toBe('2026-10-28');
@@ -495,13 +508,27 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
   });
 
   it('counts coming-soon episodes that no longer fit, which the generator leaves out of its warning', () => {
-    const plan = classPlan({ length: '12-week', start: 'first-words' });
+    // A catalogue with no story offered, so this Stage 2 route holds coming-soon episodes only.
+    const noStories: Catalog = { ...CATALOG, stories: CATALOG.stories.map((story) => ({ ...story, status: 'draft' as const })) };
+    const plan = classPlan({ length: '12-week', start: 'first-words' }, noStories);
     expect(plan.items.every((item) => item.kind === 'episode')).toBe(true);
     const squeezed = { ...plan, meta: { ...plan.meta, params: { ...plan.meta.params, daysOff: [{ from: '2026-11-01', to: '2027-01-09' }] } } };
-    const result = repacePlan(squeezed, '2026-10-26', '2026-10-26T09:00:00.000Z');
+    const result = repacePlan(squeezed, '2026-10-26', '2026-10-26T09:00:00.000Z', 0, noStories);
     expect(result.items).toHaveLength(plan.items.length - 1);
     expect(result.leftOver).toBe(1);
-    expect(weeksToFit(squeezed, '2026-10-26')).toBe(1);
+    expect(weeksToFit(squeezed, '2026-10-26', noStories)).toBe(1);
+  });
+
+  it('on the shipped catalogue (stories ready), a squeezed Stage 2 route counts what no longer fits and the weeks that keep it', () => {
+    const plan = classPlan({ length: '12-week', start: 'first-words' });
+    expect(plan.items.some((item) => item.id.startsWith('quest:story-'))).toBe(true);
+    const squeezed = { ...plan, meta: { ...plan.meta, params: { ...plan.meta.params, daysOff: [{ from: '2026-11-01', to: '2026-11-21' }] } } };
+    const result = repacePlan(squeezed, '2026-10-26', '2026-10-26T09:00:00.000Z');
+    expect(result.leftOver).toBeGreaterThan(0);
+    const extra = weeksToFit(squeezed, '2026-10-26');
+    if (extra === null) throw new Error('expected extra weeks');
+    expect(repacePlan(squeezed, '2026-10-26', '', extra).leftOver).toBe(0);
+    expect(repacePlan(squeezed, '2026-10-26', '', extra - 1).leftOver).toBeGreaterThan(0);
   });
 
   it('needs no extra weeks when everything fits, and finds none past 52 weeks', () => {
@@ -537,8 +564,8 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
     return { id: 'plan:route', meta: toMeta(draft), items: toPlanItems(draft) };
   }
 
-  it('offers Refresh route on every route saved from catalogue version 1 to 4 (F-QUEST-002 Q-6a bumps it to 2, Q-6b to 3, Q-7b to 4, Q-8 to 5)', () => {
-    expect(CATALOG.version).toBe(5);
+  it('offers Refresh route on every route saved from catalogue version 1 to 5 (F-QUEST-002 Q-6a bumps it to 2, Q-6b to 3, Q-7b to 4, Q-8 to 5, F-STORY-001 PR 1.9 to 6)', () => {
+    expect(CATALOG.version).toBe(6);
     expect(v1Plan('brand-new').meta.catalogVersion).toBe(1);
     expect(isStaleCatalog(v1Plan('brand-new').meta)).toBe(true);
     expect(isStaleCatalog(v1Plan('some-letters').meta)).toBe(true);
@@ -548,6 +575,8 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
     expect(isStaleCatalog({ ...v1Plan('brand-new').meta, catalogVersion: 3 })).toBe(true);
     // A route saved between Q-7b and Q-8 (version 4, before nature and crafts q2-q3 joined) asks once too.
     expect(isStaleCatalog({ ...v1Plan('brand-new').meta, catalogVersion: 4 })).toBe(true);
+    // A route saved before the 24 stories turned ready (version 5) asks once too.
+    expect(isStaleCatalog({ ...v1Plan('brand-new').meta, catalogVersion: 5 })).toBe(true);
   });
 
   it('a new route on the shipped catalogue can schedule the new nature and crafts quests after their q1 (F-QUEST-002 Q-8)', () => {

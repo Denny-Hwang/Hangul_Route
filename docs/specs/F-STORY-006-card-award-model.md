@@ -264,7 +264,7 @@ Proposal for the 24 `card` blocks (headword = `keywords[]` entry whose id is the
 | ilseongnok-daily-reflection | card:story-ilseongnok-daily-reflection | Daily Reflections | 일성록 · Ilseongnok | f1 | rare |
 | uigwe-royal-birthday | card:story-uigwe-royal-birthday | Royal Picture Record | 의궤 · uigwe | f1 | rare |
 | joseon-records-today | card:story-joseon-records-today | Hwaseong Fortress | 화성 · Hwaseong | f2 | rare |
-| sejong-new-letters | card:story-sejong-new-letters | King Sejong | 세종대왕 · Sejong Daewang | f1 | common |
+| sejong-new-letters | card:story-sejong-new-letters | King Sejong | 세종대왕 · Sejongdaewang | f1 | common |
 | shapes-of-hangeul | card:story-shapes-of-hangeul | Consonants | 자음 · jaeum | f1 | common |
 | hangeul-day | card:story-hangeul-day | National Treasure | 국보 · gukbo | f1 | common |
 | jikji-metal-type | card:story-jikji-metal-type | Metal Type | 금속활자 · geumsokhwalja | f1 | uncommon |
@@ -272,9 +272,9 @@ Proposal for the 24 `card` blocks (headword = `keywords[]` entry whose id is the
 | janggyeong-panjeon | card:story-janggyeong-panjeon | Wind | 바람 · baram | f2 | uncommon |
 | cheugugi-rain-gauge | card:story-cheugugi-rain-gauge | Rain Gauge | 측우기 · cheugugi | f2 | common |
 | angbuilgu-sundial | card:story-angbuilgu-sundial | Sundial | 앙부일구 · angbuilgu | f1 | uncommon |
-| jagyeongnu-water-clock | card:story-jagyeongnu-water-clock | Water Clock | 자격루 · Jagyeongnu | f1 | uncommon |
+| jagyeongnu-water-clock | card:story-jagyeongnu-water-clock | Water Clock | 자격루 · jagyeongnu | f1 | uncommon |
 | donguibogam | card:story-donguibogam | Medicine Book | 동의보감 · Donguibogam | f3 | rare |
-| nanjung-ilgi | card:story-nanjung-ilgi | War Diary | 난중일기 · Nanjung ilgi | f2 | rare |
+| nanjung-ilgi | card:story-nanjung-ilgi | War Diary | 난중일기 · Nanjungilgi | f2 | rare |
 | kim-hongdo-genre-paintings | card:story-kim-hongdo-genre-paintings | Genre Painting | 풍속화 · pungsokhwa | f1 | common |
 | seollal-new-year | card:story-seollal-new-year | Words of Blessing | 덕담 · deokdam | f2 | common |
 | dano-ssireum | card:story-dano-ssireum | Dano | 단오 · dano | f2 | uncommon |
@@ -282,6 +282,8 @@ Proposal for the 24 `card` blocks (headword = `keywords[]` entry whose id is the
 | gimjang-arirang | card:story-gimjang-arirang | Making Winter Kimchi | 김장 · gimjang | f8 | uncommon |
 | sun-and-moon | card:story-sun-and-moon | Strong Rope | 동아줄 · dongajul | f5 | common |
 | pansori-tales | card:story-pansori-tales | Pansori | 판소리 · pansori | f1 | uncommon |
+
+*As built (F-STORY-001 PR 1.9, the multi-agent culture review and its adjudication):* the card fact must also name what the card names (its claim contains the headword's romanization or a word of the card title, checked by `card-award-integrity.test.ts`) and read as learner text (no Hangul, not even single letters, "Hangul" not "Hangeul", names without hyphens, F-CNT-002 rule 8). Six `factId`s moved off the first-fact proposal to another fact of the same story that meets the rule: janggyeong-panjeon f5, sillok-mountain-archives f7, seollal-new-year f5, chuseok-ganggangsullae f11, kim-hongdo-genre-paintings f4, nanjung-ilgi f3. Where no existing fact met it, a new short fact was added with the sources of the longer fact it condenses (same claim, learner wording): gimjang-arirang f11 (from f1), cheugugi-rain-gauge f7 (from f3), hangeul-day f11 (from f7, National Treasure and Memory of the World) and shapes-of-hangeul f8 (from f2, without the letters). The other fourteen keep the table's value. Headword romanization (language review): the table shows each keyword's `romanization` as shipped, the machine-checked Revised Romanization of the Korean word written as one token (F-CNT-002), capitalised for a proper name or title (Sejongdaewang, Nanjungilgi, Seungjeongwon, Ilseongnok, Donguibogam, Hwaseong, Daejanggyeong) and lower case for a common noun, including the kinds of instrument (jagyeongnu, cheugugi, angbuilgu); the earlier spaced forms in this table were proposals.
 
 (`factId` values are the first fact with `claimEn` <= 180 characters and >= 2 sources in `records-joseon.final.json`, `hangul-printing.final.json`, `science-art-life.final.json` and `seasons-tales.final.json` as of 2026-10-10 (re-run by the import step). Three stories — cheugugi, kim-hongdo, sun-and-moon — have no fact under 141 characters, so their cards use a 141-162 character claim; the 180-character cap keeps all 24 valid.) The headwords avoid every existing card's Korean (책, 설날, 추석, 한글날 …), so the Library never shows two cards with the same word.
 

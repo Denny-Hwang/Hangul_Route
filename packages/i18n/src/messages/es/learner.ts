@@ -648,6 +648,7 @@ export const learner = {
       approximation: (text: string, rationale: string) => `Sobre “${text}”: ${rationale}`,
       dependsOnToday: 'Esto depende de la fecha de hoy.',
       usedInQuestions: 'Se usa en preguntas y notas',
+      onTheCard: 'En la tarjeta',
       highlighted: { pill: 'Destacado' },
       openLink: { cta: 'Abrir enlace' },
       copyLink: { cta: 'Copiar enlace' },

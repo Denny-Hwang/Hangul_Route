@@ -26,8 +26,10 @@ import { storyStatus, type StoryStatus } from '../story/story-status';
  * `again` card, never as a scored replay (decision of F-STORY-004 §3.7, PR
  * 4.4a). `explore` (a playable grid episode, "Take a look") replaces the old
  * fallback that labelled any episode "Story time" (audit UX-19), so the row
- * keeps three cards when no story exists — as in production while every
- * bundled story is still a draft (the story index holds reviewed stories only).
+ * keeps three cards when no story can be offered: a build with no reviewed
+ * story, or a learner with every offerable story finished (the story index
+ * holds reviewed stories only). Since F-STORY-001 PR 1.9 production fills
+ * the story slots with shelf stories.
  *
  * Slot ③ is capability-gated: F-RVW-001 has not shipped, so until it does the
  * slot falls back down its own chain rather than rendering a card that

@@ -20,8 +20,8 @@ import { nextPage, position } from './story-reader-helpers';
  * Its shelf quest `quest:story-hangul-day-listen` is intro, read, check,
  * sequence, reward; the listen tier has five scenes. The window's
  * `__hrStoryE2E.events()` is read only to check the `story.*` and `culture.*`
- * telemetry the surfaces send. A build with no reviewed story is
- * library-cards-only.spec.ts.
+ * telemetry the surfaces send. The release bundle's own shelf (the 24 reviewed
+ * launch stories, F-STORY-001 PR 1.9) is library-shelf-live.spec.ts.
  *
  * Content gating: this suite checks the launch default (gating off: nothing is
  * locked and no "Premium" text). This bundle is built with gating off, so it

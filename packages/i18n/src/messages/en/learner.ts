@@ -830,6 +830,8 @@ export const learner = {
       approximation: (text: string, rationale: string) => `About “${text}”: ${rationale}`,
       dependsOnToday: 'This depends on today’s date.',
       usedInQuestions: 'Used in questions and notes',
+      /** The last Sources bucket: a fact only the story card's back face cites (F-STORY-006 §3.8). */
+      onTheCard: 'On the story card',
       highlighted: { pill: 'Highlighted' },
       /** A grown-up action: the link is opened only after the gate. */
       openLink: { cta: 'Open link' },

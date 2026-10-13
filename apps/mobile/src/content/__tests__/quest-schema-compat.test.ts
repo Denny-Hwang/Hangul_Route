@@ -2,6 +2,7 @@ import { JamoSchema, QuestSchema } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { jamoAll } from '../jamo';
 import { questsAll, stage1Quests, stage2Quests, stage4Quests } from '../quests';
+import { storyQuests } from '../stories';
 
 /**
  * F-QUEST-002 Q-1: the quest schema grew (discover / check, teaserEn) and must
@@ -9,11 +10,11 @@ import { questsAll, stage1Quests, stage2Quests, stage4Quests } from '../quests';
  * (Until now no test parsed app content with the schema, audit story-mode #1.)
  */
 describe('shipped content still parses after the F-QUEST-002 schema changes', () => {
-  it('has Stage 1, Stage 2 and Stage 4 quests to check', () => {
+  it('has Stage 1, Stage 2 and Stage 4 quests to check, plus the generated story quests', () => {
     expect(stage1Quests.length).toBeGreaterThan(0);
     expect(stage2Quests.length).toBeGreaterThan(0);
     expect(stage4Quests.length).toBeGreaterThan(0);
-    expect(questsAll).toHaveLength(stage1Quests.length + stage2Quests.length + stage4Quests.length);
+    expect(questsAll).toHaveLength(stage1Quests.length + stage2Quests.length + stage4Quests.length + storyQuests.length);
   });
 
   it.each(questsAll.map((q) => [q.id, q] as const))('%s passes QuestSchema', (_id, quest) => {

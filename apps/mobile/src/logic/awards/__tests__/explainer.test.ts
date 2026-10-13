@@ -61,12 +61,13 @@ describe('libraryExplainer (F-STORY-006 §3.7, wireframe library/earn-hints F)',
     expect(libraryExplainer(orphan, orphan.cards, how)).toEqual([]);
   });
 
-  it('for the shipped bundle: the four lines, never a fraction, a percent or a shaming word', () => {
+  it('for the shipped bundle: the five lines, never a fraction, a percent or a shaming word', () => {
     const shipped = lines(awardWorld);
     expect(shipped).toEqual([
       'Finish a quest to earn its card.',
       'Finish every quest in an episode to earn more cards.',
       'Finish all of Stage 1 for the legendary cards.',
+      'Finish a story to earn its card.',
       "Hoya's tiger card is a welcome gift.",
     ]);
     for (const line of shipped) expect(line).not.toMatch(/\d\s*\/\s*\d|%/);
