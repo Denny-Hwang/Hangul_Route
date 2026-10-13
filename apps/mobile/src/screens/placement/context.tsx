@@ -1,9 +1,10 @@
-import type { PlacementEvent, PlacementResult, PlacementRunState, RouteCatalog } from '@hangul-route/content-schema';
+import type { PaceId, PlacementEvent, PlacementResult, PlacementRunState, RouteCatalog } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { createContext, useCallback, useContext } from 'react';
 import type { FlowCapability, FlowEvent, FlowState, ResumeOffer } from '../../logic/placement/flow';
+import type { PlanOffer } from '../../logic/placement/plan-offer';
 import type { ResultView } from '../../logic/placement/result-view';
 import type { PlacementStackParamList } from '../../navigation/types';
 import type { PlayResult } from '../../platform/audio';
@@ -23,9 +24,20 @@ export interface FinishedCheck {
   placedOut: ReadonlySet<string>;
   completed: ReadonlySet<string>;
   startQuest: { questId: string; episodeId: string } | null;
+  /** The weekly plan offered with this result (P-7b): a new proposal per pace, or the update of the plan; null without. */
+  offer: PlanOffer | null;
 }
 
-export type ResultAction = 'start' | 'seeMap' | 'seeMyRoute' | 'openStories' | 'forGrownUps' | 'tryStandard' | 'retryHidden';
+export type ResultAction =
+  | 'start'
+  | 'seeMap'
+  | 'seeMyRoute'
+  | 'openStories'
+  | 'forGrownUps'
+  | 'tryStandard'
+  | 'retryHidden'
+  | 'changePlan'
+  | 'justStart';
 
 export interface PlacementContextValue {
   profileId: string;
@@ -51,6 +63,10 @@ export interface PlacementContextValue {
   /** "For grown-ups: finish now": behind the PIN when the device needs one. */
   finishForGrownUp: () => void;
   onResultAction: (action: ResultAction) => void;
+  /** **Use this plan** at the pace shown (one tap, no PIN: OD-14), then the start quest; false when nothing was stored. */
+  acceptPlan: (pace: PaceId) => Promise<boolean>;
+  /** **Update my plan**, then the start quest; false when nothing was stored. */
+  updatePlan: () => Promise<boolean>;
   /** Leaves the check (nothing recorded unless a result was). */
   leave: () => void;
   target: PlacementRoute;

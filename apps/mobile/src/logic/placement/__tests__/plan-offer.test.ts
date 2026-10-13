@@ -7,6 +7,7 @@ import {
   questsPlacedOutAtLevel,
   type CurriculumDraft,
   type PlacementResult,
+  type RouteProposal,
   type SelfRoute,
 } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
@@ -196,7 +197,7 @@ describe('the strip and the grown-up card', () => {
   it('draftOfOffer is null when the params break a cap', () => {
     const offer = planOfferOf(offerInput());
     if (offer?.kind !== 'new' || offer.byPace.steady === undefined) throw new Error('expected a new offer');
-    const broken = { ...offer.byPace.steady, params: { ...offer.byPace.steady.params, minutesPerSession: -1 } };
+    const broken = { ...offer.byPace.steady, params: { ...offer.byPace.steady.params, minutesPerSession: -1 } } as unknown as RouteProposal;
     expect(draftOfOffer(broken)).toBeNull();
   });
 

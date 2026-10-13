@@ -26,7 +26,6 @@ import {
   proposalInputOf,
   safePropose,
   type ProposalContext,
-  type RouteEvent,
 } from '../route/proposal-flow';
 
 /**
@@ -173,7 +172,7 @@ export function updatedEvent(
   profileId: string,
   source: UpdateSource,
   diff: RouteProposal['diff'],
-): RouteEvent<{ source: UpdateSource; itemsRemoved: number; itemsAdded: number }> {
+): { name: 'route.updated'; profileId: string; payload: { source: UpdateSource; itemsRemoved: number; itemsAdded: number } } {
   return {
     name: 'route.updated',
     profileId,

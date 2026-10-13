@@ -30,19 +30,28 @@ export function proposalContextFor(profileId: string, now: Date): ProposalContex
   };
 }
 
-/** The offer for a profile: `enabled` is `flags.routeEnabled`; the plan prompt's dismissal is read first. */
-export async function loadPlanOffer(profileId: string, enabled: boolean, now: Date): Promise<PlanOffer | null> {
+/**
+ * The offer for a profile from what the stores hold now (the plan prompt's dismissal as last
+ * read by `loadUi`): `enabled` is `flags.routeEnabled`.
+ */
+export function planOfferNow(profileId: string, enabled: boolean, now: Date): PlanOffer | null {
   if (!enabled) return null;
-  const ui = await useRouteStore.getState().loadUi(profileId);
   const context = proposalContextFor(profileId, now);
   if (context === null) return null;
   return planOfferOf({
     enabled,
     context,
     active: activeSelfRoute(useProgressStore.getState().byProfile[profileId]),
-    dismissedAt: ui.dismissedAt,
+    dismissedAt: useRouteStore.getState().ui[profileId]?.dismissedAt,
     nowMs: now.getTime(),
   });
+}
+
+/** `planOfferNow` after reading the plan prompt's dismissal from storage. */
+export async function loadPlanOffer(profileId: string, enabled: boolean, now: Date): Promise<PlanOffer | null> {
+  if (!enabled) return null;
+  await useRouteStore.getState().loadUi(profileId);
+  return planOfferNow(profileId, enabled, now);
 }
 
 /** **Use this plan**: the plan exactly as shown (its pace, the suggested length or the one picked); null when nothing was stored. */

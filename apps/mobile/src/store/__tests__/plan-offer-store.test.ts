@@ -1,4 +1,4 @@
-import { CATALOG, generateCurriculum, questsPlacedOutAtLevel, routeCatalogOf, type PlacementResult } from '@hangul-route/content-schema';
+import { CATALOG, generateCurriculum, questsPlacedOutAtLevel, routeCatalogOf, type PlacementResult, type RouteProposal } from '@hangul-route/content-schema';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mem = vi.hoisted(() => new Map<string, unknown>());
@@ -14,7 +14,7 @@ import { dayKey } from '../../logic/homework/mission-builder';
 import { selfRouteOf } from '../../logic/route/self-route';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../account-store';
-import { acceptPlanOffer, applyPlanUpdate, loadPlanOffer, proposalContextFor } from '../plan-offer-store';
+import { acceptPlanOffer, applyPlanUpdate, loadPlanOffer, planOfferNow, proposalContextFor } from '../plan-offer-store';
 import { usePlanStore } from '../plan-store';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
@@ -109,6 +109,14 @@ describe('loadPlanOffer', () => {
   it('null when the profile is gone', async () => {
     expect(await loadPlanOffer('profile:none', true, NOW)).toBeNull();
   });
+
+  it('planOfferNow reads the dismissal already in memory, without storage', () => {
+    seedSnapshot([result()]);
+    expect(planOfferNow('profile:a', false, NOW)).toBeNull();
+    expect(planOfferNow('profile:a', true, NOW)?.kind).toBe('new');
+    useRouteStore.setState({ ui: { 'profile:a': { dismissedAt: NOW.toISOString() } } });
+    expect(planOfferNow('profile:a', true, NOW)).toBeNull();
+  });
 });
 
 describe('acceptPlanOffer (Use this plan, one tap, no PIN: OD-14)', () => {
@@ -126,7 +134,7 @@ describe('acceptPlanOffer (Use this plan, one tap, no PIN: OD-14)', () => {
     seedSnapshot([result()]);
     const offer = await loadPlanOffer('profile:a', true, NOW);
     if (offer?.kind !== 'new' || offer.byPace.steady === undefined) throw new Error('expected a new offer');
-    const broken = { ...offer.byPace.steady, params: { ...offer.byPace.steady.params, minutesPerSession: -1 } };
+    const broken = { ...offer.byPace.steady, params: { ...offer.byPace.steady.params, minutesPerSession: -1 } } as unknown as RouteProposal;
     expect(await acceptPlanOffer('profile:a', broken, { changed: false }, NOW)).toBeNull();
     const route = await acceptPlanOffer('profile:a', offer.byPace.steady, { changed: true, length: '6-month' }, NOW);
     expect(route?.meta.params.weeks).toBe(26);
