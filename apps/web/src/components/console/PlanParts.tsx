@@ -4,6 +4,7 @@ import { colors, radii, spacing, typography } from '@hangul-route/design-system/
 import type { PlanItem, SpaceKind } from '@hangul-route/content-schema';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
+import { BrowseLink, useBrowseLinksShown } from '@/components/console/BrowseLink';
 import { Button, Muted, panelStyle } from '@/components/console/ui';
 import { catalogLabel } from '@/data/catalog';
 import type { PlanView } from '@/lib/console/api';
@@ -104,6 +105,7 @@ export function DraftItemRow({
   onDown,
   onRemove,
   onUpdate,
+  preview,
 }: {
   item: PlanItem;
   number: number;
@@ -113,16 +115,23 @@ export function DraftItemRow({
   onDown: () => void;
   onRemove: () => void;
   onUpdate: (patch: Partial<PlanItem>) => void;
+  /** [ Preview ] into All lessons (F-BROWSE-001 BR-11); omitted, `browseLinksShown()` for this page decides. */
+  preview?: boolean;
 }): JSX.Element {
   const { messages, locale } = useConsoleLocale();
   const y = messages.console.plan.yours;
+  const shown = useBrowseLinksShown();
+  const titleId = `plan-item-title-${number}`;
   return (
     <div style={{ borderTop: `1px solid ${colors.border.subtle}`, padding: `${spacing.sm}px 0` }} data-testid="draft-item">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' }}>
-        <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+        <span id={titleId} style={{ minWidth: 0, overflowWrap: 'anywhere' }}>
           {number}. {catalogLabel(item.kind, item.id, locale)}
         </span>
-        <span style={{ display: 'flex', gap: spacing.xxs }}>
+        <span style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.xxs }}>
+          {(preview ?? shown) ? (
+            <BrowseLink target={{ kind: item.kind, id: item.id }} source="plan" label={messages.console.browse.preview.cta} describedBy={titleId} testId={`plan-preview-${number}`} />
+          ) : null}
           <Button disabled={!canUp} onClick={onUp}>{y.moveUp.cta}</Button>
           <Button disabled={!canDown} onClick={onDown}>{y.moveDown.cta}</Button>
           <Button onClick={onRemove}>{y.remove.cta}</Button>

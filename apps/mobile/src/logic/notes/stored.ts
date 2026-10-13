@@ -67,7 +67,13 @@ export function readStoredNotes(raw: unknown): NotesData {
     putAway: (Array.isArray(raw.putAway) ? raw.putAway : []).filter((id): id is string => typeof id === 'string'),
     classNotesCardSeen: raw.classNotesCardSeen === true,
     queue,
+    ...(Array.isArray(raw.grownUpSeenIds) ? { grownUpSeenIds: raw.grownUpSeenIds.filter((id): id is string => typeof id === 'string') } : {}),
   };
+}
+
+/** Both records' grown-up zone marks: a note seen in either was seen. */
+function seenIds(a: readonly string[] | undefined, b: readonly string[] | undefined): { grownUpSeenIds?: string[] } {
+  return a === undefined && b === undefined ? {} : { grownUpSeenIds: [...new Set([...(a ?? []), ...(b ?? [])])] };
 }
 
 /**
@@ -97,5 +103,6 @@ export function mergeUnloaded(stored: NotesData, memory: NotesData): NotesData {
     putAway: [...new Set([...stored.putAway, ...memory.putAway])].filter((id) => ids.has(id)),
     classNotesCardSeen: fresh ? memory.classNotesCardSeen : stored.classNotesCardSeen || memory.classNotesCardSeen,
     queue,
+    ...seenIds(stored.grownUpSeenIds, memory.grownUpSeenIds),
   };
 }

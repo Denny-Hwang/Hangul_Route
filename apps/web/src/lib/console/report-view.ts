@@ -289,6 +289,11 @@ export interface ReportLineView {
    * F-BROWSE-001 BR-11 appends **Preview** to P1's group; each action is described by the line's sentence on the page.
    */
   actions: ReportLink[];
+  /**
+   * F-BROWSE-001 BR-11: P1's quest as an All lessons target (a content id only), whatever the viewer's role, when this
+   * build's catalogue names it; the page draws **Preview** for it only behind `browseLinksShown()`.
+   */
+  preview?: { kind: 'quest'; id: string } | null;
 }
 
 const strandName = (strand: PlacementStrand, m: Messages): string => m.caregiver.placementReport.strand[strand];
@@ -816,7 +821,8 @@ export function learnerReportView(input: LearnerReportViewInput): LearnerReportV
         if (plannableQuest(links.addToPlan, catalog)) actions.push({ href: ROUTES.spacePlan(space.id, undefined, space.kind, links.addToPlan), text: m.report.action.addToPlan });
       } else actions.push({ href: ROUTES.spacePlan(space.id, links.openPlan, space.kind), text: m.report.action.openPlan });
     }
-    return { ...out, actions };
+    const preview = links && 'addToPlan' in links && questTitleOf(links.addToPlan, catalog) !== null ? { kind: 'quest' as const, id: links.addToPlan } : null;
+    return { ...out, actions, preview };
   };
   const section = (heading: string, lines: InsightLine[]): ReportSection | null => {
     const views = lines.map(lineView).filter((line): line is ReportLineView => line !== null);

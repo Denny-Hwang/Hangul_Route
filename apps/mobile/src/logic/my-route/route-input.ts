@@ -7,6 +7,7 @@ import type { Tier } from '../entitlement';
 import { planView, routeNext, type RouteNextInput } from '../route-next';
 import { STAGE1_QUESTS } from '../stage1/curriculum';
 import { letterWallOf, type LetterTile } from './letter-wall';
+import { planWeekOf } from './plan-week';
 import { startRouteOf } from './start-marker';
 import type { MyRouteInput, MyRouteModel, SeenRecord } from './types';
 
@@ -51,6 +52,19 @@ export interface RouteModelInputArgs {
 
 /** The goal sources of F-ENT-003's input: `sourcesOf(plans, snapshot.selfRoute)`, a classic plan's meta as null. */
 export const goalSourcesOf = (input: Pick<RouteNextInput, 'sources'>): GoalSource[] => input.sources.map((s) => ({ ...s, meta: s.meta ?? null }));
+
+/**
+ * The live weekly plan week (F-ROUTE-001 R-7b, section 3.9; amendment section 4.3): the
+ * week of the goal's own plan that holds today, read from the same F-ENT-003 input the
+ * model was built from. That input lists the class, school and family plans from the
+ * inbox and the learner's own plan (`snapshot.selfRoute`, stored by F-PLAN-002's
+ * route-store), so the Learning Route's plan line and the Home strip's week line
+ * (`homeStripView({ week })`) always name one week. Null without the input, without a
+ * dated plan, or outside the plan's weeks.
+ */
+export function routeWeekOf(model: Pick<MyRouteModel, 'goal'>, next: Pick<RouteNextInput, 'sources' | 'today'> | undefined): number | null {
+  return next === undefined ? null : planWeekOf(model.goal, goalSourcesOf(next), next.today);
+}
 
 export function routeModelInput(i: RouteModelInputArgs): MyRouteInput {
   const cursor = cursorContext({ tier: i.tier, placements: i.snapshot.placements, quests: questsAll, episodes: episodesAll });

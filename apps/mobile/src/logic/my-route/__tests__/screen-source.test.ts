@@ -73,6 +73,15 @@ describe('screens/my-route sources', () => {
     expect(input).not.toMatch(/route:\s*null/);
   });
 
+  it('the page line and the Home strip read one live weekly plan week (R-7b)', () => {
+    const page = read(join(SCREEN_DIR, 'MyRouteScreen.tsx'));
+    const home = read(join(SRC, 'screens', 'home', 'HomeScreen.tsx'));
+    expect(page).toContain('week: routeWeekOf(model, next)');
+    expect(home).toMatch(/homeStripView\(\{[\s\S]*?week:\s*routeWeekOf\(\s*model,\s*routeInput/);
+    // The strip's model is built from the same input as the week, so the goal and the week name one plan.
+    expect(home).toContain('...(routeInput ? { next: routeInput } : {})');
+  });
+
   it('the Journey header button exists only behind flags.myRouteEnabled and opens the Route tab (LR-4, LR-OD-11)', () => {
     const src = read(join(SRC, 'screens', 'journey', 'JourneyScreen.tsx'));
     const at = src.indexOf("navigation.navigate('Main', { screen: 'Route' })");
@@ -365,7 +374,7 @@ describe('the route card wiring (Learning Route LR-5a)', () => {
 
   it('the card names the next quest and the plan week; the grown-up card gets the plan end formatter', () => {
     expect(screen).toContain('model.next ? questsAll.find((q) => q.id === model.next?.questId)');
-    expect(screen).toContain('planWeekOf(model.goal, goalSourcesOf(next), next.today)');
+    expect(screen).toContain('week: routeWeekOf(model, next)');
     expect(screen).toContain("formatDay: (day) => formatDate(locale, `${day}T00:00:00.000Z`, 'monthDay', { utc: true })");
     expect(screen).toContain('testID="my-route-plan-line"');
   });
@@ -392,7 +401,7 @@ describe('the route card wiring (Learning Route LR-5a)', () => {
   });
 
   it('the Home strip and the parent dashboard row name the same goal from the same input', () => {
-    expect(home).toContain('homeStripView({ model, messages: m, goalStage: model.goal?.stage ?? null })');
+    expect(home).toMatch(/homeStripView\(\{\s*model,\s*messages: m,\s*goalStage: model\.goal\?\.stage \?\? null,\s*week: routeWeekOf\(\s*model,\s*routeInput/);
     expect(home).toContain('...(routeInput ? { next: routeInput } : {})');
     expect(row).toContain('dashboardRowView({ model, messages, name, started, goalStage: model.goal?.stage ?? null })');
     expect(row).toContain('buildMyRoute(routeModelInput({ snapshot, tier, localized, now, next }))');

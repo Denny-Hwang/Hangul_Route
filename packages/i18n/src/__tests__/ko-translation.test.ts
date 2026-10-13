@@ -173,9 +173,6 @@ describe('the Korean review lenses, pinned (§3.10 step 3)', () => {
       ['console.school.footer', (v) => ko.console.school.footer(v)],
       ['console.lecture.source.revisitWith', (v) => ko.console.lecture.source.revisitWith(v)],
       ['landing.home.hero.bubble', (v) => ko.landing.home.hero.bubble(v, 'g/k')],
-      ['landing.hero.bubble', (v) => ko.landing.hero.bubble(v)],
-      ['landing.hero.lead', (v) => ko.landing.hero.lead(v)],
-      ['landing.hoya.points.wrong.body', (v) => ko.landing.hoya.points.wrong.body(v)],
     ];
     for (const [path, render] of SLOTTED) expect(render(SENTINEL).split(SENTINEL).length - 1, path).toBe(1);
   });

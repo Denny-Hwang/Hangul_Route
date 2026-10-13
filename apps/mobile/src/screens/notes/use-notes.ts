@@ -33,10 +33,15 @@ export interface ActiveNotes {
  * `logic/notes/view.ts`. Notes are per profile: a profile switch changes everything here.
  */
 export function useActiveNotes(): ActiveNotes {
+  const profile = useProfileStore(activeProfileSelector);
+  return useProfileNotes(profile?.id ?? null);
+}
+
+/** The same for one profile by id (the grown-up zone reads any local profile, FB-9). */
+export function useProfileNotes(profileId: string | null): ActiveNotes {
   const m = useMessages();
   const locale = useLocale();
-  const profile = useProfileStore(activeProfileSelector);
-  const profileId = profile?.id ?? null;
+  const profile = useProfileStore((s) => (profileId === null ? undefined : s.profiles.find((p) => p.id === profileId)));
   const data = useNotesStore((s) => (profileId === null ? undefined : s.byProfile[profileId]));
   const memberships = useMembershipStore((s) => (profileId === null ? undefined : s.byLearner[profileId])) ?? NO_MEMBERSHIPS;
   const [status, setStatus] = useState<ActiveNotes['status']>('loading');

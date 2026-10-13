@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { cardsByRarity, stage1Cards, type CardRarity, type CardTheme } from '../stage1-cards';
 
@@ -59,5 +62,34 @@ describe('cardsByRarity', () => {
     const groups = cardsByRarity();
     const total = groups.common.length + groups.uncommon.length + groups.rare.length + groups.legendary.length;
     expect(total).toBe(stage1Cards.length);
+  });
+});
+
+describe('stage1Cards mirror content/episodes/stage-1/cards.json', () => {
+  interface SourceCard {
+    id: string;
+    title: string;
+    ko: string;
+    romanization: string;
+    theme: string;
+    rarity: string;
+    unlockedBy: string;
+  }
+  const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..', '..');
+  const source = JSON.parse(readFileSync(join(repoRoot, 'content', 'episodes', 'stage-1', 'cards.json'), 'utf8')) as SourceCard[];
+  const pick = ({ id, title, ko, romanization, theme, rarity, unlockedBy }: SourceCard | (typeof stage1Cards)[number]) => ({
+    id,
+    title,
+    ko,
+    romanization,
+    theme,
+    rarity,
+    unlockedBy,
+  });
+
+  // The short `en` gloss and the blurbs are site wording (the blurbs: F-SITE-002 S-6, OD-9) and may differ from the
+  // app's; the card itself must match.
+  it('same cards, in the same order, with the same ids, titles, Korean, romanization, theme, rarity and unlock', () => {
+    expect(stage1Cards.map(pick)).toEqual(source.map(pick));
   });
 });
