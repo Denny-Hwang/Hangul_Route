@@ -7,7 +7,7 @@ Status: ready
 **Scope**: `packages/content-schema` (step kinds, discover data, two minigame kinds, review/summary additions, telemetry names) · `apps/mobile` (`screens/quest/`, `screens/minigames/`, `screens/results/`, `screens/reviews/`, `logic/`, `content/`, `store/`) · `packages/design-system` (small: `SyllableBlock`, reuse of `ChoiceCard` / `KoreanText`) · `apps/web` (teacher plan-builder catalog mirror only)
 **Owner**: solo dev
 **Rollout**: Stage 1 content pass, after F-STORY-003 (`ChoiceCard`), F-STORY-006 (card-award engine) and F-AUDIO-004 (prompt audio). PR order in §6.
-**Wireframes**: promoted from the single drafted file `wireframes/quest-discover-check.md` into `design/wireframes/quest/discover.md` · `quest/check.md` · `minigame/listen-pick.md` · `minigame/pic-word-match.md` · `results/next-quest-teaser.md` · `results/stage1-complete.md` · `reviews/hangul-check.md`
+**Wireframes**: `design/wireframes/quest/discover.md` · `quest/check.md` · `minigame/listen-pick.md` · `minigame/pic-word-match.md` · `results/next-quest-teaser.md` · `results/stage1-complete.md` · `reviews/hangul-check.md` (promoted from the single drafted file, which became `quest/discover.md`, and split in PR Q-11; the soft-prerequisite screen lives in `episode/detail.md`)
 
 Parent / siblings: F-001 §3.2 (first-try scoring, revised 2026-10-10, PR #94) and §3.3 (audio fallback) · F-003 (Build a Letter) · F-004 (Trace Stroke) · F-010 (Odd-One-Out, Culture Quiz) · F-011 / F-012 (Stage 2 / 4 taste quests, untouched) · F-MOTION-003 §3.5 (card at 2+ stars) · F-RVW-001 §3.1 / §3.3 / §3.4 (stars-only learner surface, Feedback Review, Stage Review) · F-STORY-003 (`ChoiceCard`, check pattern) · F-STORY-004 (`isFreeContent`, grid selectors) · F-STORY-006 (`unlockedBy` award engine) · F-AUDIO-004 (spoken forms, prompt audio) · F-CNT-002 (romanization policy) · F-I18N-001 (messages, `KoreanText`, `romanizationShown`) · F-PLAN-001 (plan catalog mirror) · audit `conf-learning` (Stage 1 anchor, 15 quests, Discover/Check, missing catalog games, reward loop) · blueprint 04 §3.4 / §4 · blueprint 05 §1 · blueprint 06 §1 ② ③ and §3–4 ⑥ ⑨ ⑩ ⑫
 
@@ -380,6 +380,8 @@ export function playPrompt(spec: { text: string; audioRef?: string; language?: '
 ### 3.15 Gating and "Premium" (D5)
 
 Stage 1 is the intended free set (`isFreeContent('stage', 'stage1')`, F-STORY-004 §3.9) and is already free (`entitlement.ts:16`). This spec adds **no** gating: the Discover and Check steps, both games, the ceremony and the Hangul Check are free; it draws no lock and no "Premium" pill; the teaser offers the stages `cursorContext` allows (§3.5; under the F-ROUTE-001 OD-4 default every shipped stage, under its `'tier'` alternative only the stages `isStageEntitled` allows); the existing Journey "Premium" pill for later stages is unchanged by this spec (`JourneyScreen.tsx:100`; F-ROUTE-001 R-J, OD-8, later removed it). Nothing here reads a flag that is switched off.
+
+*Note (2026-10-12, PR Q-11):* the free plan is all of Stage 1 (F-ENT-003 E3-0b), so completing Stage 1 is the free-plan finish line. The ceremony and the Hangul Check stay free and show no plan, price or Premium word; what a free learner sees next is F-ENT-003's free-end card and line (`home/next-and-free-end-card.md`, `results/back-to-plan-and-free-end.md`), never a purchase on these screens.
 
 ## 4. Out of scope, and the follow-up game specs
 

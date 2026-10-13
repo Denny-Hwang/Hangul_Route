@@ -98,6 +98,26 @@ note: 참조용 문서. 구현 명세는 docs/specs/ 를 따름.
 
 ### 1.3 5 Episode 학습 목표 분해
 
+> **Amended 2026-10-12 by F-QUEST-002 (§3.6, PR Q-11): the shipped Stage 1 plan.** The five pillar episodes below (훈민정음, 팔만대장경, 실록, 김홍도, 측우기) are kept as history and as future tags; the grid authority is the 7 x 5 theme grid (D9), so Stage 1 ships as **five theme episodes x 3 quests = 15 quests**. The plan below never assigned ㅑ ㅕ ㅛ ㅠ and taught only three finals; the shipped plan teaches **all 30 symbols, each once** (14 consonants, 10 vowels, 6 finals), at most 2 consonant-type symbols and 2 vowels per quest, then five reading quests that teach nothing new:
+>
+> | # | Quest (episode) | New symbols | Reading words |
+> |---|---|---|---|
+> | 1 | letters q1 | ㅏ ㅓ ㄱ ㄴ | 나, 너, 가, 거 |
+> | 2 | letters q2 | ㅗ ㅜ ㅁ ㅇ | 나무, 너무, 가구, 오 |
+> | 3 | letters q3 | ㅡ ㅣ ㄷ ㄹ | 다리, 아이, 어머니, 드라마 |
+> | 4 | life q1 | ㅈ ㅊ | 자두, 치즈, 고추, 차 |
+> | 5 | life q2 | ㅂ ㅅ | 아버지, 아기, 바나나, 두부 |
+> | 6 | life q3 | ㅋ ㅌ | 토마토, 코코아, 쿠키, 토스트 |
+> | 7 | rites q1 | **final ㄴ, final ㄹ** | 달, 물, 문, 설날 |
+> | 8 | rites q2 | ㅍ **ㅑ ㅕ**, **final ㅇ** | 송편, 포도, 야구, 여우 |
+> | 9 | rites q3 | ㅎ **ㅛ ㅠ**, **final ㄱ** | 한복, 한국, 효도, 우유 |
+> | 10 | nature q1 | **final ㅁ, final ㅂ** | 곰, 봄, 밥, 집 |
+> | 11-15 | nature q2-q3, crafts q1-q3 | none (reading quests) | 산 강 바다 하늘 · 달 별 밤 보름달 · 연 공 줄 놀이 · 한지 종이 청자 도자기 · 한글 호야 안녕 사랑 |
+>
+> So ㅑ ㅕ ㅛ ㅠ are taught in rites q2 and q3, and the batchim quests are rites q1-q3 and nature q1 (finals ㄴ ㄹ, ㅇ, ㄱ, ㅁ ㅂ). Every quest is 6 steps (Hook, Discover, two games, a two-question Check, Celebrate), 4-5 minutes; the stage is about 65 minutes. The full table, the games and the Discover pages are in `docs/specs/F-QUEST-002-discover-check-stage1-complete.md` §3.6.
+>
+> **§1.4 in the app:** the graduation check is the **Hangul Check** (F-QUEST-002 §3.9): 35 items, one per symbol plus one word per theme, never gating. Its caregiver verdict `stage1Anchor.met` is "27 or more of the 30 symbols (90 %) and 4 or more of the 5 words" right on the first try; the learner sees stars only.
+
 #### Episode 1.A1 — 훈민정음 (집현전)
 **격자 좌표**: Stage 1 × Theme A1 (글과 책 / 훈민정음)
 **학습 목표 (3 Quest 분배)**:

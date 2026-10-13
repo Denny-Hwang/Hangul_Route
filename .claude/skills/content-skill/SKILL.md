@@ -65,12 +65,24 @@ fixture 작성 기준·공공누리 자료 라이선스 처리까지 커버한�
 
 합계 **3-4분**. 초과하면 Quest 분할.
 
+> **Amended 2026-10-12 (F-QUEST-002 §3.1, §3.6, PR Q-11): Discover and Check are real step kinds now.** `QuestStepKindSchema` is `intro | present | discover | practice | apply | check | reward` (`packages/content-schema/src/schemas/quest.ts`). The five beats above map to six steps in every Stage 1 quest:
+>
+> | Beat | Step kind | What the code does | Stage 1 timing |
+> |---|---|---|---|
+> | Hook | `intro` | Hoya line (English, or `hoyaLineKo` with romanization and gloss) | 6-8 s |
+> | Discover | `discover` | `discover.pages` (1-3 pages, 1-2 items each: a symbol with its sound, hint and example word, or a word with its picture); unscored, Continue always enabled, never skipped | 40-60 s |
+> | Play | `practice` + `apply` | two games from the catalog, 6 + 4 scored rounds | 75-90 s + 60-75 s |
+> | Check | `check` | a Listen & Pick scope of exactly 2 rounds (a symbol or picture, then a reading word), scored first try, launcher "Two quick ones" with no Skip | about 35 s |
+> | Celebrate | `reward` | stars, the quest card at 2+ stars, the next-quest teaser | about 8 s |
+>
+> So a Stage 1 quest is 6 steps and 4-5 minutes (the extra minute is the Discover step and the two check rounds); the 3-7 step and 3-15 minute schema limits are unchanged. The schema's `superRefine` enforces the order (Discover before Play, Check after Play and before the reward; at most one of each). A quest with a Check step shows no separate Feedback Review (F-RVW-001 §3.3, amended). Stage 2 / Stage 4 taste quests keep their five steps and `present` until they adopt Discover / Check (data only, no code change). Every new symbol is taught in exactly one quest's Discover step and asked many times after (F-QUEST-002 rules R1-R6).
+
 ### 3.2 Episode 계층
 
 ```
 Stage (S1..S7) × Theme (T1..T5) = Episode
 Episode = { quests: Quest[3], completion_card: Card }
-Quest   = { hook, discover, play, check, celebrate, learning_elements[] }
+Quest   = { hook, discover, play, check, celebrate, learning_elements[] }   // in code: steps intro, discover, practice, apply, check, reward (§3.1 note)
 Card    = { pillar, title, image_url, source { institution, license, attribution } }
 ```
 

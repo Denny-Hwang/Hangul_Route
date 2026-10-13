@@ -1,6 +1,7 @@
 # Reviews/Stage-Review — anchor audit and certificate handoff (wireframe v1)
 
 Spec: `docs/specs/F-RVW-001-review-tests.md` §3.4 (+ §3.1 star rules)
+Stage 1: replaced by `reviews/hangul-check.md` (F-QUEST-002 §3.9, 35 items, amended by PR Q-11); this file stays the pattern for later stages.
 Audience: **learner (P4/P5 child, 5–11)**; the certificate is designed to be shown to a grown-up afterwards
 
 ## Scenario (Given-When-Then)
@@ -86,8 +87,8 @@ Exit to:    `results/celebrate` (certificate variant) · `library/gallery` · `l
 
 - reads: active profile · stage completion state from `ProgressSnapshot` · Stage 1 review item seed grouped by pillar · cards unlocked in this stage · feature flag `reviews.stageReview`
 - computed by `logic/reviews/stage-balance` (≥ 1 item per pillar) and `logic/reviews/star-calc`
-- writes: `ReviewAttempt` (kind `stage`) · certificate record (stage, date, stars) on the snapshot · `stage_anchor_accuracy` event to the caregiver channel (the actual percentage — never rendered here)
-- telemetry: `review.stage.invited` (accepted | later), `review.stage.completed` (stars), `certificate.shared`
+- writes: `ReviewAttempt` (kind `stage`) · certificate record (stage, date, stars) on the snapshot · for the caregiver channel, a `stage-certificate` review entry from which `summarize` writes `ProgressSummary.stage1Anchor` (replaces the `stage_anchor_accuracy` event, F-QUEST-002 PR Q-11; numbers never rendered here)
+- telemetry: `review.start` and `review.complete` (the shared names, F-QUEST-002 §3.13; they replace the drafted `review.stage.*` names), `certificate.shared` (later)
 
 ## Open questions
 
