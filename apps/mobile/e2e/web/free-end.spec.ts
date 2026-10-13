@@ -73,6 +73,7 @@ test.describe('free plan switch on (web)', () => {
   for (const viewport of [
     { width: 375, height: 667 },
     { width: 320, height: 568 },
+    { width: 1180, height: 820 },
   ] as const) {
     test(`${viewport.width}: the celebration once on Home, then the practice card with no ask`, async ({ page }) => {
       const errors: string[] = [];
