@@ -76,6 +76,7 @@ The board labels use `typography.family.mono`, and the badge and the sticky tab 
 | `shots/stage-list-class-320.png`, `-1280.png` | page | `/teach/space/route`: Mina, case 2 reached, Plan goal tag, start tag |
 | `shots/stage-list-states-375.png` | board | loading, not synced, not found, end of road, case 3 (Now stage and another stage), Hoya's suggestion source, cannot reach |
 | `shots/tab-bar-320.png`, `-375.png`, `-1280.png`, `-320-text200.png` | board | three tabs (flag off), four tabs with Route or Journey selected, the two headers |
+| `shots/native-ios-tab-bar-375-text214.png`, `-text264.png`; `shots/native-ios-three-tags-375-text214.png`, `-text264.png`; `shots/native-ios-route-tab-375-text214.png` | app, iOS Simulator | F-ROUTE-001 R-10b: the native 200 % checks of assumptions a and f on a flag-on Release build made with xcodebuild (iPhone SE 3rd generation, 375 x 667 pt; iOS text sizes Accessibility Large, React Native font scale 2.14, and Accessibility Extra Large, 2.64). Result in the amendment's section 16 R-10b entry |
 
 ## Measured on the mock (Chromium)
 
@@ -90,7 +91,7 @@ The board labels use `typography.family.mono`, and the badge and the sticky tab 
 | Adult page targets | at least 44 px (section 10) | back link, Open Learning Route, Try again and the reserved slot are 64 px tall (`touchTarget.min`) |
 | Adult page at 320 and 1280 | one reading column, reflows at 200 % (section 10) | one column at both sizes; no sideways scroll at 320 with 200 % text |
 
-These are the mock's numbers. LR-4 and LR-10 measure the real screens (`apps/mobile/e2e/web/my-route.spec.ts`), and LR-10 does the same for `apps/web/e2e/learning-route.spec.ts`.
+These are the mock's numbers. LR-4 and LR-10 measure the real screens (`apps/mobile/e2e/web/my-route.spec.ts`), and LR-10 does the same for `apps/web/e2e/learning-route.spec.ts`. The native 200 % checks of assumptions a and f ran on the app in R-10b (the `native-ios-*` shots above).
 
 ## Decisions taken in this design pass
 
