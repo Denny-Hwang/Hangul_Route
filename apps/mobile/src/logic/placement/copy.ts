@@ -24,13 +24,20 @@ export const PLACEMENT_DIGIT_ALLOW_LIST = [
 export const SCREEN_READER_DIGIT_ALLOW_LIST = ['learner.placement.item.questionLabel', 'learner.placement.item.pictureChoice'] as const;
 
 /**
+ * The weekly-plan strip's line in words ("4 weeks, 3 days a week, about 15 minutes a day",
+ * J1, P-7b): a schedule the learner picks, never a level, a score or a count of answers.
+ */
+export const PLAN_DIGIT_ALLOW_LIST = ['learner.placement.result.strip.basis'] as const;
+
+/**
  * The arguments each function message of `learner.placement` is scanned
  * with. A function message missing here is reported by the scan, so none
  * bypasses it.
  */
-export const PLACEMENT_FUNCTION_SAMPLES: Readonly<Record<string, ReadonlyArray<readonly number[]>>> = {
+export const PLACEMENT_FUNCTION_SAMPLES: Readonly<Record<string, ReadonlyArray<readonly (number | string)[]>>> = {
   'learner.placement.item.questionLabel': [[4], [1]],
   'learner.placement.item.pictureChoice': [[2]],
+  'learner.placement.result.strip.basis': [['4 weeks', 3, 15], ['12 weeks', 1, 10]],
 };
 
 /** Stands for a function message with no samples (a control character no copy holds). */
@@ -52,7 +59,7 @@ function walk(node: unknown, path: string, out: CopyEntry[]): void {
   else if (typeof node === 'function') {
     const samples = PLACEMENT_FUNCTION_SAMPLES[path];
     if (samples === undefined) out.push([path, NO_SAMPLES]);
-    else for (const args of samples) out.push([path, String((node as (...a: readonly number[]) => unknown)(...args))]);
+    else for (const args of samples) out.push([path, String((node as (...a: readonly (number | string)[]) => unknown)(...args))]);
   }
   else if (Array.isArray(node)) for (const item of node) walk(item, path, out);
   else if (node !== null && typeof node === 'object') {
@@ -77,7 +84,7 @@ function problemsOf(path: string, text: string, locale: UiLocale): string[] {
   if (banned !== null) out.push(`banned word ${banned}`);
   if (text.includes('%')) out.push('percent');
   if (RATIO.test(text)) out.push('ratio');
-  const digitsAllowed = [...PLACEMENT_DIGIT_ALLOW_LIST, ...SCREEN_READER_DIGIT_ALLOW_LIST] as readonly string[];
+  const digitsAllowed = [...PLACEMENT_DIGIT_ALLOW_LIST, ...SCREEN_READER_DIGIT_ALLOW_LIST, ...PLAN_DIGIT_ALLOW_LIST] as readonly string[];
   if (/\d/.test(text) && !digitsAllowed.includes(path)) out.push('digit');
   if (/\btests?\b/i.test(text)) out.push('the word test');
   if (locale !== 'ko' && HANGUL.test(text)) out.push('Hangul');
@@ -97,7 +104,7 @@ export function copyProblems(m: Messages, locale: UiLocale, entries: readonly Co
  */
 export function stripCopyProblems(m: Messages, texts?: readonly string[]): string[] {
   const strip = m.learner.placement.result.strip;
-  const all = texts ?? [strip.title, strip.usePlan, strip.change, strip.justStart];
+  const all = texts ?? [strip.title, strip.usePlan, strip.change, strip.justStart, strip.basis('4 weeks', 3, 15)];
   return all.flatMap((text) => {
     const out: string[] = [];
     if (text.includes('%')) out.push('percent');
