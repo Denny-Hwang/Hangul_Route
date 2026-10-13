@@ -16,13 +16,13 @@ export const SITE_URL = 'https://hangulroute.com';
 
 /**
  * The site's pages, as English paths; `sitePath` puts the locale in front. The persona pages of F-SITE-002 (§3.4 to
- * §3.6) join as they ship: `/learners` in S-4a.
+ * §3.6) join as they ship: `/learners` in S-4a, `/parents` and `/teachers` in S-4b.
  */
-export const SITE_PAGES = ['/', '/about', '/privacy', '/terms', '/learners'] as const;
+export const SITE_PAGES = ['/', '/about', '/privacy', '/terms', '/learners', '/parents', '/teachers'] as const;
 export type SitePage = (typeof SITE_PAGES)[number];
 
 /** The persona pages, keyed by path, and the key of their own title and description (`landing.meta.pages`). */
-const PERSONA_META = { '/learners': 'learners' } as const satisfies Partial<Record<SitePage, string>>;
+const PERSONA_META = { '/learners': 'learners', '/parents': 'parents', '/teachers': 'teachers' } as const satisfies Partial<Record<SitePage, string>>;
 
 /** A persona page's own title and description in `<title>`, Open Graph and Twitter (F-SITE-002 §3.12); else none. */
 function pageWords(locale: UiLocale, page: SitePage): Metadata {

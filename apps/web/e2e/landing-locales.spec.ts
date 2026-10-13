@@ -50,6 +50,9 @@ const PAGES: readonly LandingPage[] = [
   { path: '/learners', lang: 'en', cta: SITE_PRIMARY },
   { path: '/es/learners', lang: 'es', cta: SITE_PRIMARY },
   { path: '/ko/learners', lang: 'ko', cta: SITE_PRIMARY },
+  ...(['parents', 'teachers'] as const).flatMap((page) =>
+    (['en', 'es', 'ko'] as const).map((lang) => ({ path: lang === 'en' ? `/${page}` : `/${lang}/${page}`, lang, cta: SITE_PRIMARY })),
+  ),
   { path: '/about', lang: 'en', cta: BACK_HOME },
   { path: '/es', lang: 'es', cta: PLAY_NOW },
   { path: '/ko', lang: 'ko', cta: PLAY_NOW },

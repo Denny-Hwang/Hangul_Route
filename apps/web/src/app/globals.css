@@ -372,6 +372,21 @@ button {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  /* Grown-up pages: two columns under the page head; the top rule sits above the pair, not above each column. */
+  .hr-site-row-2-wrap {
+    border-top: var(--hr-site-border-thin) solid var(--hr-site-border-subtle);
+  }
+
+  .hr-site-row-2 {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: var(--hr-site-xxxl);
+  }
+
+  .hr-site-row-2 > div > .hr-site-section:first-child {
+    border-top: 0;
+  }
+
   .hr-site-tiles {
     grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: var(--hr-site-md);
