@@ -78,7 +78,8 @@ const REPORT_ONLY: Readonly<Record<UiLocale, readonly string[]>> = {
     'último lugar',
     'el más bajo',
   ],
-  ko: [],
+  // F-I18N-001 PR 16: the Korean equivalents (substrings, as `findWord` matches ko).
+  ko: ['약점', '부족', '최악', '최하', '순위', '등수', '랭킹', '평균', '비교', '뒤떨어', '꼴찌', '못했', '최저', '해야 했'],
 };
 
 /**
@@ -128,10 +129,16 @@ describe('report namespace registration', () => {
     expect(en.a11y.report.periods).toBe('Report period');
   });
 
-  it('keeps ko empty for report until its review, so it falls back to English; es is translated (F-I18N-001 PR 15)', () => {
-    expect(leafPaths(ko).filter((path) => REPORT_ROOTS.some((root) => path === root || path.startsWith(`${root}.`)))).toEqual([]);
-    expect(getMessages('ko').report.headline.practiced('Mina', 3, 'this week')).toBe(en.report.headline.practiced('Mina', 3, 'this week'));
-    expect(getMessages('ko').a11y.report.loading).toBe(en.a11y.report.loading);
+  it('translates report in es (F-I18N-001 PR 15) and ko (PR 16), so every rule below runs on their own words', () => {
+    expect(leafPaths(ko).filter((path) => REPORT_ROOTS.some((root) => path === root || path.startsWith(`${root}.`))).length).toBeGreaterThan(150);
+    const k = getMessages('ko').report;
+    // A name stands before a colon (never before a particle that changes with the final consonant); no plural in ko.
+    expect(k.headline.practiced('Mina', 3, k.when.week)).toBe('Mina: 이번 주 3일 연습했어요.');
+    expect(k.headline.practiced('Mina', 1, k.when.prevWeek)).toBe('Mina: 지난주 1일 연습했어요.');
+    expect(k.you.headline.practiced(3, k.when.week)).toBe('이번 주 3일 연습했어요.');
+    expect(k.class.headline(2, 12, k.when.week)).toBe('학습자 12명 중 2명이 이번 주 연습했어요.');
+    expect(k.list(['a', 'b', 'c'])).toBe('a, b, c');
+    expect(getMessages('ko').a11y.report.loading).toBe('리포트를 불러오는 중');
     const r = getMessages('es').report;
     expect(r.headline.practiced('Mina', 1, r.when.week)).toBe('Mina practicó 1 día esta semana.');
     expect(r.headline.practiced('Mina', 3, r.when.prevWeek)).toBe('Mina practicó 3 días la semana pasada.');

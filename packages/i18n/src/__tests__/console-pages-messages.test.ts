@@ -336,3 +336,41 @@ describe('Spanish console counts, n = 1 and n = 2 (F-I18N-001 PR 15)', () => {
     [es.curriculum.preview.stats(2, 40, 2), '2 lecciones e historias · cerca de 40 minutos · termina en la Etapa 2'],
   ])('%s', (actual, expected) => expect(actual).toBe(expected));
 });
+
+// F-I18N-001 §10, PR 16: the Korean n = 1 / n = 2 wording of the same console counts. Korean has no plural, so n = 1
+// and n = 2 differ only in the number; the rows pin the counter word ("명", "개", "장") and the word order around it.
+describe('Korean console counts, n = 1 and n = 2 (F-I18N-001 PR 16)', () => {
+  const ko = getMessages('ko').console;
+  it.each([
+    [ko.space.title.family('Kim family', 1), 'Kim family · 학습자 1명'],
+    [ko.space.title.family('Kim family', 2), 'Kim family · 학습자 2명'],
+    [ko.space.title.school('Seoul School', 1), 'Seoul School · 구성원 1명'],
+    [ko.space.week.notSynced(1), '1명은 일주일 동안 동기화하지 않았어요'],
+    [ko.space.week.notSynced(2), '2명은 일주일 동안 동기화하지 않았어요'],
+    [ko.space.learner.questsCards(7, 24, 1), '퀘스트 7 / 24 · 카드 1장'],
+    [ko.space.learner.questsCards(7, 24, 2), '퀘스트 7 / 24 · 카드 2장'],
+    [ko.planCounts.items(1), '항목 1개'],
+    [ko.planCounts.items(2), '항목 2개'],
+    [ko.planCounts.targets('school', 2), '구성원 2명'],
+    [ko.spaceCounts.students(1), '학생 1명'],
+    [ko.plan.summary.some.class(7, 1), '항목 7개 · 학생 1명에게'],
+    [ko.plan.summary.some.class(1, 2), '항목 1개 · 학생 2명에게'],
+    [ko.billing.seats(1), '좌석 1개'],
+    [ko.billing.seats(2), '좌석 2개'],
+    [ko.school.classes.line('Ms Park', 1, '오늘', true), 'Ms Park · 학생 1명 · 활동: 오늘 · 계획 게시됨'],
+    [ko.school.classes.line(null, 2, '어제', false), '아직 선생님 없음 · 학생 2명 · 활동: 어제'],
+    [ko.parent.child.quests(1), '퀘스트 1개'],
+    [ko.parent.child.cards(2), '카드 2장'],
+    [ko.space.week.practiced(1, 5), '이번 주 학생 5명 중 1명이 연습했어요'],
+    [ko.space.week.practiced(2, 5), '이번 주 학생 5명 중 2명이 연습했어요'],
+    [ko.space.learner.words(1, 1), '낱말: 1개 모음 · 1개 탄탄함'],
+    [ko.school.week.line(1, 1, 1, 1), '학생 1명 중 1명이 연습했어요 · 반 1개 중 1개에 게시된 계획이 있어요'],
+    [ko.school.week.line(2, 5, 2, 3), '학생 5명 중 2명이 연습했어요 · 반 3개 중 2개에 게시된 계획이 있어요'],
+    [ko.journey.stageLine(1, 1), '수준 확인으로 1개 알고 있음, 퀘스트 1개 완료'],
+    [ko.journey.stageLine(0, 2), '퀘스트 2개 완료'],
+    [ko.learningRoute.knownLine(2), '수준 확인으로 2개 알고 있음'],
+    [ko.curriculum.readout.line(1, 2, 36), '지금까지 1 / 2 · 36개 계획됨'],
+    [ko.curriculum.preview.stats(1, 1, 1), '레슨과 이야기 1개 · 약 1분 · 1단계에서 끝나요'],
+    [ko.curriculum.preview.stats(2, 40, 2), '레슨과 이야기 2개 · 약 40분 · 2단계에서 끝나요'],
+  ])('%s', (actual, expected) => expect(actual).toBe(expected));
+});
