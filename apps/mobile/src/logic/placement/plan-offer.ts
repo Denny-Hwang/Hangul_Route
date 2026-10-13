@@ -19,6 +19,7 @@ import {
   type RouteProposal,
   type SelfRoute,
 } from '@hangul-route/content-schema';
+import type { Messages } from '@hangul-route/i18n';
 import {
   PACE_IDS,
   newestResultAt,
@@ -146,6 +147,21 @@ export function grownUpWarnings(draft: Pick<CurriculumDraft, 'warnings'> | null)
         return [];
     }
   });
+}
+
+/** A warning's sentence for the grown-up, in the screen's language. */
+export function grownUpWarningText(m: Messages, w: GrownUpWarning): string {
+  const words = m.caregiver.placementReport.plan.warning;
+  switch (w.code) {
+    case 'notIncluded':
+      return words.notIncluded(w.count);
+    case 'notReleased':
+      return words.notReleased(w.count);
+    case 'runsOut':
+      return words.runsOut(w.week);
+    case 'didNotFit':
+      return words.didNotFit(w.count);
+  }
 }
 
 /**

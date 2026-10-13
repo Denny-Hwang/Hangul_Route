@@ -10,11 +10,13 @@ import {
   type RouteProposal,
   type SelfRoute,
 } from '@hangul-route/content-schema';
+import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { proposalInputOf, type ProposalContext } from '../../route/proposal-flow';
 import { selfRouteOf } from '../../route/self-route';
 import {
   draftOfOffer,
+  grownUpWarningText,
   grownUpWarnings,
   planOfferOf,
   planUpdateSource,
@@ -220,6 +222,26 @@ describe('the strip and the grown-up card', () => {
     ]);
     expect(grownUpWarnings(null)).toEqual([]);
     expect(grownUpWarnings({ warnings: [{ code: 'premium-needed' }] } as unknown as CurriculumDraft)).toEqual([{ code: 'notIncluded', count: 0 }]);
+  });
+});
+
+describe('grownUpWarningText', () => {
+  it('one plain sentence per warning, with no price, plan name or purchase word, in every language', () => {
+    const warnings = [
+      { code: 'notIncluded', count: 3 },
+      { code: 'notReleased', count: 5 },
+      { code: 'runsOut', week: 6 },
+      { code: 'didNotFit', count: 2 },
+    ] as const;
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const m = getMessages(locale);
+      for (const w of warnings) {
+        const text = grownUpWarningText(m, w);
+        expect(text.length).toBeGreaterThan(0);
+        expect(text).not.toMatch(/premium|\$|price|precio|upgrade|buy|comprar|가격|구매|프리미엄/i);
+      }
+    }
+    expect(grownUpWarningText(getMessages('en'), { code: 'notIncluded', count: 3 })).toBe('3 lessons are not included with this account yet and are not in the plan.');
   });
 });
 
