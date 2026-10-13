@@ -303,6 +303,8 @@ Coverage targets (CLAUDE.md §6): `packages/content-schema` **100 %**; `packages
 
 **Deploy checklist** (in the P-1 PR description, ticked by the owner before P-3 merges and before `vocabTopicsEnabled` is flipped): (1) the Worker deploy of P-1 is live; (2) a test learner `PUT` with a `vocab` block returns 200 and the following `GET` returns the block; (3) a second `PUT` without `vocab` leaves it in place; (4) the Rescue Code restore of that learner returns the block. (I could not run any of this against production from here; it is a checklist, not a result.)
 
+*Amendment 2026-10-13 (P-3 review, #579; the owner may revert it):* the P-3 merge gate is item (1), the Worker deploy of P-1, the same gate F-VOC-003 C-5 and F-VOC-004 S-5 (#496) merged on. P-1 is #287 (merged 2026-10-11), the Worker auto-deploys from main, and `GET /health` on the production Worker returns `{"status":"ok","environment":"production",...}` on 2026-10-13. Items (2) to (4) move wholly to the flag flip (F-VOC-003 C-7): P-3 ships behind `flags.vocabTopicsEnabled` (off), so no release build writes a `vocab` slice and the sync paths those items check carry none until the flip. The owner still ticks the whole checklist before C-7.
+
 Rollback: `flags.vocabTopicsEnabled = false` stops new data; the slice already stored is inert (the schemas keep parsing it). The schedule's rules can change without a data migration because the stored fields (`box`, `due`) are interpreted by the app. Estimated effort: about 5-7 working days.
 
 ## 7. Dependencies
