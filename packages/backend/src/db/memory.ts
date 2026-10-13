@@ -755,6 +755,12 @@ export class MemoryDb implements Db {
     this.casNote(r.noteId, () => true, (n) => ({ ...n, status: 'reported' }));
     return true;
   }
+  async reportsForNotes(noteIds: readonly string[]): Promise<StoredNoteReport[]> {
+    const wanted = new Set(noteIds);
+    const rows = [...this.noteReports.values()].filter((r) => wanted.has(r.noteId));
+    rows.sort((a, b) => (a.createdAt === b.createdAt ? (a.id < b.id ? -1 : 1) : a.createdAt < b.createdAt ? -1 : 1));
+    return clone(rows);
+  }
   async countReportersAgainst(accountId: string, since: Date): Promise<number> {
     const from = since.toISOString();
     return new Set([...this.noteReports.values()].filter((r) => r.senderAccountId === accountId && r.createdAt >= from && r.outcome !== 'restored').map((r) => r.reporterKey)).size;

@@ -336,6 +336,8 @@ export interface Db {
   insertNoteReport(row: StoredNoteReport): Promise<boolean>;
   /** Distinct reporting families (`reporter_key`) with a report against this sender at or after `since`, a report the owner restored left out (section 8.4). */
   countReportersAgainst(accountId: string, since: Date): Promise<number>;
+  /** The report rows of these notes, oldest first, in one statement (the family view's "reported by", PR FB-4b-family). */
+  reportsForNotes(noteIds: readonly string[]): Promise<StoredNoteReport[]>;
   getSenderHold(accountId: string): Promise<StoredSenderHold | null>;
   /** Places a hold; an active hold is never rewritten, a lifted one is replaced. Answers whether it wrote. */
   putSenderHold(row: StoredSenderHold): Promise<boolean>;

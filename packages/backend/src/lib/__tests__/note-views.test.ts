@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { batchStatus, encodeNoteCursor, parseNoteCursor, sentNoteReaction, sentNoteStatus, type SentNoteFacts } from '../note-views';
+import { accountLabel, batchStatus, encodeNoteCursor, oversightStatus, parseNoteCursor, senderRefFor, sentNoteReaction, sentNoteStatus, type SentNoteFacts } from '../note-views';
 
 /** The sent-list mapping of F-FEEDBACK-001 section 7.2 (PR FB-3b): statuses, reactions and the page cursor. */
 const facts = (over: Partial<SentNoteFacts> = {}): SentNoteFacts => ({ spaceKind: 'class', mode: 'all', blocked: false, senderMaySend: true, learnerInSpace: true, ...over });
@@ -65,5 +65,35 @@ describe('the page cursor', () => {
 
   it('refuses anything else', () => {
     for (const raw of ['', 'yesterday', '2026-10-12', '2026-10-12T01:02:03+09:00', '2026-13-45T01:02:03Z', '2026-10-12T01:02:03Z~bad', '2026-10-12T01:02:03Z~note:abcdefgh~x']) expect(parseNoteCursor(raw), raw).toBeNull();
+  });
+});
+
+describe('the family view (FB-4b-family)', () => {
+  const of = (over: Partial<Parameters<typeof oversightStatus>[1]> = {}) => ({ delivered: true, viewerIsSender: false, reportedOnDevice: false, ...over });
+
+  it('oversightStatus: every status to the family; not_shown when delivery would not show it; rule 8.2-c for the sender', () => {
+    expect(oversightStatus(live, of())).toBe('live');
+    expect(oversightStatus(read, of())).toBe('opened');
+    expect(oversightStatus(read, of({ delivered: false }))).toBe('not_shown');
+    expect(oversightStatus({ status: 'hidden', readAt: null }, of({ delivered: false }))).toBe('hidden');
+    expect(oversightStatus({ status: 'withdrawn', readAt: null }, of())).toBe('withdrawn');
+    expect(oversightStatus({ status: 'reported', readAt: null }, of({ reportedOnDevice: true }))).toBe('reported');
+    expect(oversightStatus({ status: 'reported', readAt: null }, of({ viewerIsSender: true }))).toBe('reported');
+    expect(oversightStatus({ status: 'reported', readAt: null }, of({ viewerIsSender: true, reportedOnDevice: true }))).toBe('not_shown');
+  });
+
+  it('accountLabel: the display name, else the email, else empty', () => {
+    expect(accountLabel({ displayName: 'Mina', email: 'm@example.com' })).toBe('Mina');
+    expect(accountLabel({ displayName: null, email: 'm@example.com' })).toBe('m@example.com');
+    expect(accountLabel({ displayName: '', email: null })).toBe('');
+    expect(accountLabel(null)).toBe('');
+  });
+
+  it('senderRefFor: stable, 32 hex characters, per family, never the account id', async () => {
+    const a = await senderRefFor('space:fam', 'acct-1');
+    expect(a).toMatch(/^[0-9a-f]{32}$/);
+    expect(await senderRefFor('space:fam', 'acct-1')).toBe(a);
+    expect(await senderRefFor('space:other', 'acct-1')).not.toBe(a);
+    expect(await senderRefFor('space:fam', 'acct-2')).not.toBe(a);
   });
 });

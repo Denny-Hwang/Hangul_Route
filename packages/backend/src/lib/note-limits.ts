@@ -50,3 +50,6 @@ export function sendCounterHits(accountId: string, learnerIds: readonly string[]
 
 /** Device reports for one learner per day (section 7.3): `429 too_many { scope: 'learner' }`. */
 export const NOTE_LIMIT_DEVICE_REPORTS_PER_LEARNER_PER_DAY = 10;
+
+/** Family reports from one account per day (section 7.3): `429 too_many { scope: 'account' }`. */
+export const NOTE_LIMIT_FAMILY_REPORTS_PER_ACCOUNT_PER_DAY = 20;
