@@ -7,6 +7,8 @@ import {
   reportView,
   resultView,
   shortHintFires,
+  withPlanKept,
+  withPlanMade,
   type ResultViewInput,
 } from '../result-view';
 import { gate, placementResult } from './fixtures';
@@ -62,6 +64,7 @@ const input = (over: Partial<ResultViewInput> = {}): ResultViewInput => ({
   proposalAvailable: true,
   planPromptDismissed: false,
   hasActivePlan: false,
+  planUpdateAvailable: true,
   hasReviewedShelfStory: true,
   gateRequired: false,
   ...over,
@@ -149,6 +152,32 @@ describe('resultView: headline, cards and route lines (section 3.1 step 7)', () 
     const child = resultView(input({ before: seed(), after: raisedSeed, hasActivePlan: true, profileType: 'child' }));
     expect(child.planUpdate).toBe(false);
     expect(child.primary).toBe('start');
+  });
+
+  it('no update offer for the plan (flag off, or the re-seed would change nothing): no Update my plan', () => {
+    const view = resultView(input({ before: seed(), after: raisedSeed, hasActivePlan: true, planUpdateAvailable: false }));
+    expect(view.planUpdate).toBe(false);
+    expect(view.strip).toBe(false);
+    expect(view.primary).toBe('start');
+    expect(view.secondary).toBeNull();
+  });
+
+  it('withPlanMade: once a plan exists (made through Change), the strip gives way to Start', () => {
+    const view = resultView(input());
+    expect(view.strip).toBe(true);
+    const made = withPlanMade(view);
+    expect(made).toMatchObject({ strip: false, primary: 'start', secondary: null });
+    expect(made.links).toEqual(view.links);
+    // Nothing to change on a view without the strip.
+    const plain = resultView(input({ routeEnabled: false }));
+    expect(withPlanMade(plain)).toBe(plain);
+  });
+
+  it('withPlanKept: Keep my plan folds the update into the plan-stays line and Start', () => {
+    const view = resultView(input({ before: seed(), after: raisedSeed, hasActivePlan: true }));
+    expect(withPlanKept(view)).toMatchObject({ planUpdate: false, primary: 'start', secondary: null, routeLine: 'planStays' });
+    const plain = resultView(input());
+    expect(withPlanKept(plain)).toBe(plain);
   });
 
   it('reading not tested: the good-place headline and line; the one-tap retake only on a self profile', () => {

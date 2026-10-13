@@ -75,6 +75,8 @@ export interface ResultViewInput {
   planPromptDismissed: boolean;
   /** The profile has an active self plan. */
   hasActivePlan: boolean;
+  /** `planOfferOf` offers an update of that plan (the re-seed moves its future; P-7b). */
+  planUpdateAvailable: boolean;
   /** A reviewed shelf story exists (the "You know a lot!" destination). */
   hasReviewedShelfStory: boolean;
   /** Device-level (a PIN or a child on the device): never changes what shows, only whether "For grown-ups" needs the PIN. */
@@ -144,7 +146,7 @@ export function resultView(input: ResultViewInput): ResultView {
   const notTested = decodingNotTested(input.result);
   // "Hoya found a later place to start": only when the start itself moved to a quest.
   const startMoved = input.before !== null && !noStart && input.after.startQuestId !== input.before.startQuestId;
-  const planUpdate = retake && startMoved && self && input.hasActivePlan;
+  const planUpdate = retake && startMoved && self && input.hasActivePlan && input.planUpdateAvailable;
   const strip =
     input.routeEnabled &&
     self &&
@@ -187,6 +189,19 @@ export function resultView(input: ResultViewInput): ResultView {
     links,
     grownUpsNeedsPin: input.gateRequired,
   };
+}
+
+/**
+ * A plan now exists (made through **Change** and the proposal screen, then back here): the
+ * strip and **Just start** give way to **Start**; the links stay.
+ */
+export function withPlanMade(view: ResultView): ResultView {
+  return view.strip ? { ...view, strip: false, primary: 'start', secondary: null } : view;
+}
+
+/** **Keep my plan**: the update card folds into "Your plan stays right where it is." and **Start**. */
+export function withPlanKept(view: ResultView): ResultView {
+  return view.planUpdate ? { ...view, planUpdate: false, primary: 'start', secondary: null, routeLine: 'planStays' } : view;
 }
 
 // ---------------------------------------------------------------------------
