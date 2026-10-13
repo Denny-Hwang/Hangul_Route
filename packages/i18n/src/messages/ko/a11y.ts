@@ -18,6 +18,8 @@ export const a11y = {
   profileEntry: '프로필과 설정',
   openHomework: '숙제 열기',
   missionCard: (title: string, subtitle: string, collected: boolean) => `${title}. ${subtitle}.${collected ? ' 모았어요.' : ''}`,
+  vocabMissionCard: (title: string, subtitle: string, collected: boolean) =>
+    `${title}. ${subtitle}.${collected ? ' 모았어요.' : ''} 짧은 라운드가 열려요.`,
   journeyCell: (c: {
     stage: number;
     stageTitle: string;

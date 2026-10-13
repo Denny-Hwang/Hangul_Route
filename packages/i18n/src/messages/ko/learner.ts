@@ -152,6 +152,11 @@ export const learner = {
         assigned: '나를 위해 골랐어요',
         dailyTest: '호야와 잠깐 함께',
       },
+      vocab: {
+        title: '낱말이 준비됐어요',
+        subtitle: (n: number) => `낱말 ${n}개가 다시 만나고 싶어 해요`,
+        cta: '다시 인사하기',
+      },
     },
     progress: {
       heading: '1단계 진도',
