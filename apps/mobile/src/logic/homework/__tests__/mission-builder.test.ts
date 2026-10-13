@@ -787,6 +787,22 @@ describe('card ② at the end of the free lessons (F-ENT-003 section 3.7, PR E3-
     expect(opened.cards).toHaveLength(3);
   });
 
+  it('the day pin: a card pinned before the end was known (the access tier read late) gives way to the celebration, then the practice card', () => {
+    const snap = all();
+    const off = freeEndRoute(snap, { gating: { active: false, tier: 'free' }, isQuestOpen: () => true });
+    const early = build({ snapshot: snap, route: off, freeEnd: { seen: false, practice: topic } });
+    expect(early.cards.find((c) => c.slot === 2)).toMatchObject({ kind: 'new', questId: 'quest:c' });
+    const late = build({ snapshot: snap, pinned: early, route: freeEndRoute(snap), isQuestOpen: closedC, freeEnd: { seen: false, practice: topic } });
+    expect(late.cards.find((c) => c.slot === 2)).toMatchObject({ kind: 'free-end' });
+    expect(late.cards).toHaveLength(3);
+    const seen = build({ snapshot: snap, pinned: early, route: freeEndRoute(snap), isQuestOpen: closedC, freeEnd: { seen: true, practice: topic } });
+    expect(seen.cards.find((c) => c.slot === 2)).toMatchObject({ kind: 'practice', topicKey: 'food' });
+    // Without the free-end input (an old caller), the pin is kept as before.
+    expect(build({ snapshot: snap, pinned: early, route: freeEndRoute(snap), isQuestOpen: closedC }).cards.find((c) => c.slot === 2)).toMatchObject({
+      questId: 'quest:c',
+    });
+  });
+
   it('subscribers and the switch-off state never get the free-end or practice card', () => {
     const snap = all();
     const off = freeEndRoute(snap, { gating: { active: false, tier: 'free' }, isQuestOpen: () => true });

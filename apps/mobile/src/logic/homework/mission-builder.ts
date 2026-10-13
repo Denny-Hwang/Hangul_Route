@@ -361,11 +361,20 @@ function secondCard(input: BuildMissionInput): MissionCard | null {
 /**
  * The end of the free lessons under the day pin: a pinned celebration gives way to the practice
  * card once it was seen, and a pinned celebration or practice card gives way to the one next once
- * something opens (the learner became premium). The practice card's own target stays all day.
+ * something opens (the learner became premium). The practice card's own target stays all day. A
+ * card (2) pinned before the end was known (the access tier read after the first Home render) and
+ * not played today gives way to the celebration or the practice card.
  */
 function repinFreeEnd(cards: readonly MissionCard[], input: BuildMissionInput): readonly MissionCard[] {
-  const pinned = cards.find((card) => card.slot === 2 && (card.kind === 'free-end' || card.kind === 'practice'));
-  if (!pinned || !input.route) return cards;
+  if (!input.route) return cards;
+  const second = cards.find((card) => card.slot === 2);
+  if (second && second.kind !== 'free-end' && second.kind !== 'practice') {
+    if (isCollected(second, input.snapshot, input.today, second.collected)) return cards;
+    const end = freeEndCard(input);
+    return end ? cards.map((card) => (card === second ? end : card)) : cards;
+  }
+  const pinned = second;
+  if (!pinned) return cards;
   const fresh = secondCard(input);
   if (!fresh || fresh.kind === pinned.kind) return cards;
   return cards.map((card) => (card === pinned ? fresh : card));
