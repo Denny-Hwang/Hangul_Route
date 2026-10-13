@@ -328,7 +328,7 @@ export function EpisodeDetailView({
                   ? softPrerequisite({ snapshot: snap, quests: questsAll, episodes: episodesAll, questId: q.id })
                   : undefined;
               const letters = action === 'closed' ? taughtLetters(q) : [];
-              // The tags as words (section 3.14): "Family at the Table. Next. In your plan."
+              // The tags as words (section 3.14), after the row's own lines the group would otherwise hide.
               const tagWords = [row?.next ? messages.a11y.access.next : null, row?.inPlan ? messages.a11y.access.inPlan : null].filter(
                 (w): w is string => w !== null,
               );
@@ -336,7 +336,17 @@ export function EpisodeDetailView({
                 <Card key={q.id} padding="md" style={{ marginBottom: spacing.sm }} testID={`episode-quest-${q.id}`}>
                   <View
                     accessible={tagWords.length > 0}
-                    accessibilityLabel={tagWords.length > 0 ? [q.titleEn, ...tagWords].join('. ') : undefined}
+                    accessibilityLabel={
+                      tagWords.length > 0
+                        ? messages.a11y.access.row(
+                            q.titleEn,
+                            [q.blurbEn, buildsOn ? buildsOnLine(buildsOn, m) : null, messages.a11y.stars(stars)].filter(
+                              (line): line is string => Boolean(line),
+                            ),
+                            tagWords,
+                          )
+                        : undefined
+                    }
                     style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}
                   >
                     <View

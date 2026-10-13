@@ -48,8 +48,8 @@ test.describe('release build (switch off)', () => {
     await expect(page.getByTestId('episode-tag-next')).toHaveCount(1);
     await expect(page.getByTestId('episode-tag-next')).toHaveText(tags.next);
     await expect(page.getByTestId('episode-next-marker')).toHaveCount(1);
-    // The first row is the one next: its label reads the tag as a word.
-    await expect(page.getByLabel(/\. Next$/)).toHaveCount(1);
+    // The first row is the one next: its label reads its stars and the tag as a word.
+    await expect(page.getByLabel(/0 of 3 stars earned\. Next\.$/)).toHaveCount(1);
     await expect(page.getByTestId('episode-preview-card')).toHaveCount(0);
     await expect(page.getByText(access.notOpen)).toHaveCount(0);
 

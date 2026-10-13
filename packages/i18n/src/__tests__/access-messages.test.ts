@@ -72,4 +72,11 @@ describe('learner.access (F-ENT-003 E3-6)', () => {
     const m = getMessages('en').learner;
     expect(m.myRoute.state.notOpen).toBe(m.access.notOpen);
   });
+
+  it('a tagged lesson row reads the title, its lines and the tags in order (section 3.14)', () => {
+    const a = getMessages('en').a11y.access;
+    expect(a.row('Family at the Table', ['Meet the family.', '0 of 3 stars earned'], [a.next, a.inPlan])).toBe(
+      'Family at the Table. Meet the family. 0 of 3 stars earned. Next. In your plan.',
+    );
+  });
 });
