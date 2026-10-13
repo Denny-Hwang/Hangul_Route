@@ -112,8 +112,12 @@ describe('myRouteView: wireframe A (Appendix C, today mid-progress)', () => {
   it('Stage 1: open, here, four discs then four rings in one group, the cursor on life q2', () => {
     const s1 = stageRow(v, 'stage1');
     expect(s1).toMatchObject({ title: 'Hangul', stateWord: 'Open', tone: 'primary', badge: 'number', captions: ['4 quests played'], order: 1 });
-    expect(s1.tags).toEqual([{ label: 'You are here', pin: false }]);
-    expect(s1.a11yLabel).toBe('Stage 1, Hangul. Open. You are here. 4 quests played.');
+    // Stage 1 is also the goal (Hoya's suggestion): the flag tag after "You are here" (LR-5a).
+    expect(s1.tags).toEqual([
+      { label: 'You are here', glyph: null },
+      { label: 'Your goal', glyph: 'flag' },
+    ]);
+    expect(s1.a11yLabel).toBe('Stage 1, Hangul. Open. You are here. Your goal. 4 quests played.');
     expect(s1.groups).toHaveLength(1);
     expect(s1.groups[0]?.map((p) => p.state)).toEqual(['done', 'done', 'done', 'done', 'open', 'open', 'open', 'open']);
     expect(s1.groups[0]?.filter((p) => p.isCursor).map((p) => p.key)).toEqual(['quest:stage1-life-q2']);
@@ -230,12 +234,14 @@ describe('myRouteView: other states', () => {
   it('a start marker tag carries the pin glyph (R-7a sets isStart)', () => {
     const m = model([]);
     const stages = m.stages.map((s) => (s.stage === 'stage1' ? { ...s, isStart: true } : s));
+    // Here, goal, start: the order the tags show, each with its own glyph (LR-D "Three tags at 320").
     expect(stageRow(view({ ...m, stages }), 'stage1').tags).toEqual([
-      { label: 'You are here', pin: false },
-      { label: 'You started here', pin: true },
+      { label: 'You are here', glyph: null },
+      { label: 'Your goal', glyph: 'flag' },
+      { label: 'You started here', glyph: 'pin' },
     ]);
     const notHere = m.stages.map((s) => (s.stage === 'stage2' ? { ...s, isStart: true } : s));
-    expect(stageRow(view({ ...m, stages: notHere }), 'stage2').tags).toEqual([{ label: 'You started here', pin: true }]);
+    expect(stageRow(view({ ...m, stages: notHere }), 'stage2').tags).toEqual([{ label: 'You started here', glyph: 'pin' }]);
   });
 
   it('latched at 8 of 8 with 7 new quests: the earned group, then the new group; the bar stays full; the new-quests line', () => {
@@ -266,7 +272,10 @@ describe('myRouteView: other states', () => {
     expect(v.skills[0]?.detail).toBe('In 4 quests Sam finished');
     expect(v.skillsNote).toBe(EN.caregiver.skillsNote);
     expect(v.tiles).toBe('Spelling with tiles: 2 quests');
-    expect(stageRow(v, 'stage1').tags).toEqual([{ label: 'Sam is here', pin: false }]);
+    expect(stageRow(v, 'stage1').tags).toEqual([
+      { label: 'Sam is here', glyph: null },
+      { label: "Sam's goal", glyph: 'flag' },
+    ]);
     expect(v.newQuests).toBeNull();
   });
 
@@ -352,5 +361,95 @@ describe('the letter wall on the open Stage 1 (R-7c, section 3.11)', () => {
   it('is the same wall in the grown-up view (its words never say "you")', () => {
     const v = view(model(APPENDIX_C), { letterWall: tiles, viewer: 'grownup' });
     expect(stageRow(v, 'stage1').letterWall).toEqual(letterWallView(tiles, EN));
+  });
+});
+
+describe('myRouteView: the route card, the weekly plan line and the plan cells (Learning Route LR-5a)', () => {
+  const planView = {
+    leadingSourceId: 'plan:c',
+    leadingKind: 'class' as const,
+    inPlanQuestIds: new Set(['quest:stage1-life-q2']),
+    inPlanEpisodeIds: new Set(['episode:stage1-life']),
+  };
+  const routeNext = { kind: 'quest' as const, questId: 'quest:stage1-life-q2', episodeId: 'episode:stage1-life', stage: 'stage1' as const, source: 'class' as const, sourceId: 'plan:c' };
+
+  it('the card reads the model: the collapsed goal line, Next and the one button', () => {
+    const v = view(model(APPENDIX_C, { routeNext, planView }), { nextTitle: 'Family at the Table' });
+    expect(v.routeCard.where).toEqual({ kind: 'collapsed', line: 'Stage 1 · Hangul: you are in your goal stage' });
+    expect(v.routeCard.from).toBe("Hoya's suggestion");
+    expect(v.routeCard.next).toBe('Next: Family at the Table');
+    expect(v.routeCard.planEnds).toBeNull();
+    expect(v.heroCopy.cta).toEqual({ action: 'quest', label: 'Continue' });
+  });
+
+  it('the grown-up card has no button and carries the plan end only with a formatter', () => {
+    const v = view(model(APPENDIX_C, { routeNext, planView }), { viewer: 'grownup', nextTitle: 'Family at the Table', formatDay: (d) => `on ${d}` });
+    expect(v.heroCopy.cta).toBeNull();
+    expect(v.routeCard.where).toEqual({ kind: 'collapsed', line: 'Stage 1 · Hangul: Sam is in the goal stage' });
+    // The default goal has no plan, so no plan end.
+    expect(v.routeCard.planEnds).toBeNull();
+  });
+
+  it('the first reached visit passes through to the card (LR-5c sets it)', () => {
+    const reached = { ...model(APPENDIX_C), goal: { stage: 'stage1' as const, from: 'class' as const, sourceId: 'plan:c', endsOn: '2026-11-01', reached: true, taste: false } };
+    expect(view(reached, { firstReached: true }).routeCard.hoya).toBe('You reached your goal. Hoya is proud!');
+    expect(view(reached).routeCard.hoya).toBeNull();
+  });
+
+  it('the weekly plan line names the week only, never a Next title; learner only', () => {
+    const v = view(model(APPENDIX_C, { routeNext, planView }), { nextTitle: 'Family at the Table', week: 3 });
+    expect(v.planLine).toBe('Week 3 of your weekly plan');
+    expect(v.planLine).not.toMatch(/Next|Family at the Table/);
+    expect(view(model(APPENDIX_C), { week: null }).planLine).toBeNull();
+    expect(view(model(APPENDIX_C)).planLine).toBeNull();
+    expect(view(model(APPENDIX_C), { week: 0 }).planLine).toBeNull();
+    expect(view(model(APPENDIX_C), { viewer: 'grownup', week: 3 }).planLine).toBeNull();
+  });
+
+  it('cells of the plan view carry "In your plan" with the word in their label; the grown-up view never does', () => {
+    const v = view(model(APPENDIX_C, { routeNext, planView }));
+    const cells = stageRow(v, 'stage1').cells;
+    const life = cells.find((c) => c.key === 'stage1-life');
+    expect(life?.inPlan).toBe('In your plan');
+    expect(life?.a11yLabel).toBe('Life: Around the Korean Table. Playing. In your plan.');
+    expect(cells.filter((c) => c.inPlan !== null)).toHaveLength(1);
+    const g = view(model(APPENDIX_C, { routeNext, planView }), { viewer: 'grownup' });
+    expect(stageRow(g, 'stage1').cells.every((c) => c.inPlan === null)).toBe(true);
+  });
+
+  it('the goal tag follows the goal stage; no goal, no tag', () => {
+    const goal2 = { ...model(APPENDIX_C), goal: { stage: 'stage2' as const, from: 'class' as const, sourceId: 'plan:c', endsOn: '2026-11-01', reached: false, taste: true } };
+    const v = view(goal2);
+    expect(stageRow(v, 'stage1').tags.map((t) => t.glyph)).toEqual([null]);
+    expect(stageRow(v, 'stage2').tags).toEqual([{ label: 'Your goal', glyph: 'flag' }]);
+    const none = view({ ...model(APPENDIX_C), goal: null });
+    expect(none.trail.flatMap((r) => (r.kind === 'stage' ? r.tags : [])).some((t) => t.glyph === 'flag')).toBe(false);
+  });
+
+  it('a goal stage with no shipped content keeps its own compact row with the goal tag (section 4.3, collapsed goal row)', () => {
+    const goal6 = { ...model(APPENDIX_C), goal: { stage: 'stage6' as const, from: 'class' as const, sourceId: 'plan:c', endsOn: '2026-11-01', reached: false, taste: false } };
+    const later = laterRows(view(goal6));
+    expect(later.map((r) => [r.key, r.merged])).toEqual([
+      ['later:stage3', false],
+      ['later:stage5', false],
+      ['later:stage6', false],
+      ['later:stage7', false],
+    ]);
+    const s6 = later.find((r) => r.stage === 'stage6');
+    expect(s6?.tags).toEqual([{ label: 'Your goal', glyph: 'flag' }]);
+    expect(s6?.a11yLabel).toContain('Your goal.');
+    expect(later.filter((r) => r.stage !== 'stage6').every((r) => r.tags.length === 0)).toBe(true);
+    const g = laterRows(view(goal6, { viewer: 'grownup' })).find((r) => r.stage === 'stage6');
+    expect(g?.tags).toEqual([{ label: "Sam's goal", glyph: 'flag' }]);
+    expect(g?.a11yLabel).toContain("Sam's goal.");
+    // Without a goal there, Stages 5 to 7 stay one merged row with no tag.
+    const run = laterRows(view(model(APPENDIX_C))).find((r) => r.merged);
+    expect(run).toMatchObject({ key: 'later:stage5-stage6-stage7', tags: [] });
+  });
+
+  it('a cell in the plan reads "In your plan" through the dictionary', () => {
+    const planned = view({ ...model(APPENDIX_C), inPlanEpisodeIds: ['episode:stage1-life'] });
+    const cell = stageRow(planned, 'stage1').cells.find((c) => c.inPlan !== null);
+    expect(cell?.a11yLabel).toBe(EN.a11y.myRoute.cellInPlan(EN.a11y.myRoute.cell(cell?.themeLabel ?? '', cell?.title ?? '', cell?.word ?? ''), 'In your plan'));
   });
 });

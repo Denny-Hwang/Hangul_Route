@@ -312,13 +312,14 @@ export function HomeScreen(): React.ReactElement {
     if (!routeContent || !profile) return null;
     try {
       const snapshot = snap ?? emptySnapshot(profile.id);
-      const model = buildMyRoute(routeModelInput({ snapshot, tier, localized: routeContent, now: new Date() }));
-      return homeStripView({ model, messages: m });
+      // The same F-ENT-003 input as card (2), so the strip's goal is the Learning Route's (LR-5a).
+      const model = buildMyRoute(routeModelInput({ snapshot, tier, localized: routeContent, now: new Date(), ...(routeInput ? { next: routeInput } : {}) }));
+      return homeStripView({ model, messages: m, goalStage: model.goal?.stage ?? null });
     } catch {
       // Content that cannot be read leaves the slot empty; the page itself shows the retry.
       return null;
     }
-  }, [profile, snap, tier, routeContent, m]);
+  }, [profile, snap, tier, routeContent, routeInput, m]);
 
   // Native screen readers hear the catch-up line once (F-STORY-006 §3.10): the card is usually on
   // the first render, where a live region says nothing, and iOS has no live regions. The web reads

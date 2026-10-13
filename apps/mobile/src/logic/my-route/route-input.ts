@@ -1,9 +1,10 @@
-import { CATALOG, routeCatalogOf, type Episode, type ProgressSnapshot, type StageDef, type ThemeDef, type UiLocale } from '@hangul-route/content-schema';
+import { CATALOG, routeCatalogOf, type Episode, type GoalSource, type ProgressSnapshot, type StageDef, type ThemeDef, type UiLocale } from '@hangul-route/content-schema';
 import { episodesAll, heritageCardsAll, jamoAll, questsAll, stages, themes } from '../../content';
 import { journeyContent } from '../../content/sync-context';
 import { localizeEpisode, localizeStage, localizeTheme } from '../content-locale';
 import { cursorContext } from '../cursor-context';
 import type { Tier } from '../entitlement';
+import { planView, routeNext, type RouteNextInput } from '../route-next';
 import { STAGE1_QUESTS } from '../stage1/curriculum';
 import { letterWallOf, type LetterTile } from './letter-wall';
 import { startRouteOf } from './start-marker';
@@ -15,6 +16,12 @@ import type { MyRouteInput, MyRouteModel, SeenRecord } from './types';
  * and start route (R-7a), with the stage, theme and episode titles in the UI
  * locale. Both screens call it, so the strip and the page always name the same
  * stage and pips.
+ *
+ * With F-ENT-003's input (`routeNextInputOf`, the one Home and Results build)
+ * the model also gets the goal sources, the plan day, the one next, the plan
+ * view and quest access (Learning Route amendment section 4.4, LR-5a), so the
+ * page, the Home strip and the parent dashboard row name one goal and Home,
+ * Results and the page one next.
  */
 
 export interface LocalizedRouteContent {
@@ -38,7 +45,12 @@ export interface RouteModelInputArgs {
   /** The page's "new since you last looked" record (section 3.10); the strip passes none. */
   seen?: SeenRecord;
   now: Date;
+  /** F-ENT-003's `routeNextInputOf(...)` for this learner; absent: the catalogue cursor and the default goal. */
+  next?: RouteNextInput;
 }
+
+/** The goal sources of F-ENT-003's input: `sourcesOf(plans, snapshot.selfRoute)`, a classic plan's meta as null. */
+export const goalSourcesOf = (input: Pick<RouteNextInput, 'sources'>): GoalSource[] => input.sources.map((s) => ({ ...s, meta: s.meta ?? null }));
 
 export function routeModelInput(i: RouteModelInputArgs): MyRouteInput {
   const cursor = cursorContext({ tier: i.tier, placements: i.snapshot.placements, quests: questsAll, episodes: episodesAll });
@@ -55,6 +67,15 @@ export function routeModelInput(i: RouteModelInputArgs): MyRouteInput {
     route: startRouteOf(i.snapshot.placements, journeyContent.catalog, cursor.isEntitled),
     seen: i.seen,
     now: i.now,
+    ...(i.next === undefined
+      ? {}
+      : {
+          sources: goalSourcesOf(i.next),
+          today: i.next.today,
+          routeNext: routeNext(i.next),
+          planView: planView(i.next),
+          isQuestOpen: i.next.isQuestOpen,
+        }),
   };
 }
 

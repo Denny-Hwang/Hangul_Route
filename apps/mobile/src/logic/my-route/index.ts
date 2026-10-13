@@ -61,6 +61,7 @@ export {
   stageA11yLabel,
   stageCaptions,
   stageStateWord,
+  stageTagList,
   stageTags,
   tilesCopy,
   trailEntries,
@@ -74,6 +75,7 @@ export {
   type RouteCardCopy,
   type RouteCardExtra,
   type RouteCardLine,
+  type StageTagKind,
   type TrailEntry,
   type Viewer,
 } from './copy';

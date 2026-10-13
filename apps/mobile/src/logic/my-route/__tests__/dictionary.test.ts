@@ -59,6 +59,7 @@ const SAMPLES: Record<string, unknown[][]> = {
   'a11y.myRoute.stageGrownup': TITLES.flatMap(([n, t]) => WORDS.map((w, i) => ['Sam', n, t, w, i === 0, i === 1, N[i]])),
   'a11y.myRoute.later': [['Stages 5 to 7', 'Coming later']],
   'a11y.myRoute.cell': [['Letters and Books', 'Meet the Letters', 'Complete']],
+  'a11y.myRoute.cellInPlan': [['Letters and Books: Meet the Letters. Open.', 'In your plan']],
   'a11y.myRoute.skill': [['Read', 'In 4 quests you finished']],
   'a11y.myRoute.gain': [['Stars', 9]],
   'learner.myRoute.home.strip.goal': TITLES,

@@ -13,6 +13,7 @@ import { offplanFinishedEvent, planBeforeOf, planView, qualifiesForNext, routeNe
 import { selfRoute } from '../homework/__tests__/curriculum-fixture';
 import { journeyContent } from '../../content/sync-context';
 import { buildMyRoute } from '../my-route/model';
+import { localizedRouteContent, routeModelInput } from '../my-route/route-input';
 
 /**
  * F-ENT-003 section 3.5, the cross-spec golden (PR E3-4): on each snapshot below, Home card (2)
@@ -211,6 +212,16 @@ describe('routeNext agreement across surfaces (F-ENT-003 section 3.5)', () => {
         expect(model.next?.questId).toBe(questOf(next));
         expect(model.nextKind).toBe(next.kind);
         if (next.kind === 'quest') expect(model.next?.source).toBe(next.source);
+        expect(new Set(model.inPlanEpisodeIds)).toEqual(new Set(planView(input).inPlanEpisodeIds));
+        const markers = model.stages.flatMap((s) => [...s.pips, ...s.newPips]).filter((p) => p.isCursor);
+        expect(markers.map((p) => p.questId)).toEqual(next.kind === 'quest' ? [next.questId] : []);
+      });
+
+      it('the screen\'s own path (routeModelInput with this input) names routeNext and marks planView\'s episodes (LR-5a)', () => {
+        const localized = { ...localizedRouteContent('en'), episodes: [...input.episodes] };
+        const model = buildMyRoute(routeModelInput({ snapshot: input.snapshot, tier: c.free ? 'free' : 'premium', localized, now: new Date(`${TODAY}T08:00:00.000Z`), next: input }));
+        expect(model.next?.questId).toBe(questOf(next));
+        expect(model.nextKind).toBe(next.kind);
         expect(new Set(model.inPlanEpisodeIds)).toEqual(new Set(planView(input).inPlanEpisodeIds));
         const markers = model.stages.flatMap((s) => [...s.pips, ...s.newPips]).filter((p) => p.isCursor);
         expect(markers.map((p) => p.questId)).toEqual(next.kind === 'quest' ? [next.questId] : []);

@@ -190,6 +190,8 @@ export const a11y = {
     later: (label: string, stateWord: string) => `${label}. ${stateWord}.`,
     trail: 'Stage list',
     cell: (theme: string, title: string, word: string) => `${theme}: ${title}. ${word}.`,
+    /** A cell label with F-ENT-003's "In your plan" word after it (LR-5a), the learner's own page only. */
+    cellInPlan: (cellLabel: string, tag: string) => `${cellLabel} ${tag}.`,
     skill: (label: string, detail: string) => `${label}. ${detail}.`,
     gain: (word: string, n: number) => `${word}: ${n}`,
     /** The Home route strip read as one button (R-4b): no middle dot, each line a sentence; `progress` is the here stage's caption. */

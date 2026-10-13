@@ -1,43 +1,48 @@
-import { Body, Button, Card, Heading, Icon, Screen, Spacer, colors, spacing, useLayoutClass } from '@hangul-route/design-system';
+import { Body, Button, Card, Heading, Hoya, Icon, Screen, Spacer, colors, spacing, useLayoutClass, useMediaSize } from '@hangul-route/design-system';
 import type { ThemeKey } from '@hangul-route/content-schema';
+import { formatDate } from '@hangul-route/i18n';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { flags } from '../../config/flags';
-import { questsAll } from '../../content';
+import { bundleOs, flags, gatingActive } from '../../config/flags';
+import { episodesAll, questsAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
+import { dayKey } from '../../logic/homework/mission-builder';
 import { myRouteAccess, myRouteEntryOf, selfEntryTab } from '../../logic/my-route/access';
 import { focusEffects, seenForView, seenReadAfter } from '../../logic/my-route/focus';
 import { buildMyRoute } from '../../logic/my-route/model';
-import { localizedRouteContent, routeLetterWall, routeModelInput } from '../../logic/my-route/route-input';
+import { planWeekOf } from '../../logic/my-route/plan-week';
+import { goalSourcesOf, localizedRouteContent, routeLetterWall, routeModelInput } from '../../logic/my-route/route-input';
 import { readSeen, seenFrom, writeSeen } from '../../logic/my-route/seen';
 import { continueTappedEvent, stageOpenedEvent, viewedEvent } from '../../logic/my-route/telemetry';
 import type { MyRouteModel, SeenRecord } from '../../logic/my-route/types';
 import { emptySnapshot, myRouteView, stageRowLook } from '../../logic/my-route/view';
 import { isParentSessionValid } from '../../logic/profiles/session';
+import { nextStartedEvent, routeNextInputOf } from '../../logic/route-next';
 import { defaultStoryIndex } from '../../logic/story/story-index';
 import type { RootStackParamList } from '../../navigation/types';
 import { useReducedMotion } from '../../platform/motion';
 import { readJson, writeJson } from '../../platform/storage';
 import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
+import { usePlanStore } from '../../store/plan-store';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
-import { useAccessTier } from '../../store/tier-store';
+import { questOpenFor, useAccessTier, useQuestAccess } from '../../store/tier-store';
 import { useUiStore } from '../../store/ui-store';
 import { GainsCard, StoriesNote } from './GainsCard';
-import { HeroCard } from './HeroCard';
+import { RouteCard } from './RouteCard';
 import { SkillsCard } from './SkillsCard';
 import { LaterRowItem, StageRowItem } from './TrailRow';
 
 /**
  * My route (F-ROUTE-001 R-3): where the learner is in the whole journey, at a
  * glance. One reading column on phone, tablet and desktop (sections 3.11,
- * F-LAYOUT-001 `Screen width="reading"`): the hero, the new-quests line, the
- * trail of seven stages, what the quests practice (reading, listening and
- * writing only), gains and the stories note. Wireframe:
+ * F-LAYOUT-001 `Screen width="reading"`): the route card, the weekly plan line,
+ * the new-quests line, the trail of seven stages, what the quests practice
+ * (reading, listening and writing only), gains and the stories note. Wireframe:
  * `design/wireframes/journey/my-route-overview.md` (A to G, L); the drawn pips:
  * `design/components/PipRow/spec.md`. Everything is derived from the local
  * snapshot and the bundle, so it works offline.
@@ -50,6 +55,14 @@ import { LaterRowItem, StageRowItem } from './TrailRow';
  *   `route_map.viewed` with `source: 'tab'` once per focus.
  * - `stack`: the root-stack `MyRoute` screen (`MyRouteScreen`), grown-up only
  *   and always read-only, behind the gate. It sends nothing.
+ *
+ * The route card (LR-5a; `design/screens/learning-route/route-card.md`): the
+ * page builds F-ENT-003's `routeNextInputOf(...)` exactly as Home does and
+ * passes it to `routeModelInput`, so the card's Next is Home card (2)'s quest,
+ * the goal comes from the same weekly plans, and the cells of the plan view
+ * carry "In your plan". Quest access comes from F-ENT-003's tier store:
+ * `useQuestAccess()` on the learner's tab, `questOpenFor(profileId)` for the
+ * grown-up's read-only view of a learner.
  */
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MyRoute'>;
@@ -115,6 +128,11 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   const snap = useProgressStore((s) => s.byProfile[profileId]);
   // The access tier (F-ENT-003 section 3.4); re-renders when it changes, as Home and Results do.
   const tier = useAccessTier(profileId);
+  // Quest access (F-ENT-003 section 3.4): the active learner's own, or the viewed learner's for a grown-up.
+  const activeQuestOpen = useQuestAccess();
+  // The learner's cached inbox plans: the goal and the one next follow them (amendment sections 4.1, 4.4).
+  const plans = usePlanStore((s) => s.byLearner[profileId]);
+  const hoyaSize = useMediaSize(64);
   const { windowWidth } = useLayoutClass();
   const reducedMotion = useReducedMotion();
 
@@ -155,22 +173,37 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   const [attempt, setAttempt] = useState(0);
   const localized = useMemo(() => localizedRouteContent(locale), [locale]);
 
-  const built = useMemo((): { model: MyRouteModel } | { error: true } => {
+  const built = useMemo((): { model: MyRouteModel; week: number | null } | { error: true } => {
     try {
       const snapshot = snap ?? emptySnapshot(profileId);
-      const model = buildMyRoute(routeModelInput({ snapshot, tier, localized, seen, now: new Date() }));
-      return { model };
+      const now = new Date();
+      // The same input Home builds (F-ENT-003 section 3.5), so the page names Home card (2)'s quest.
+      const next = routeNextInputOf({
+        snapshot,
+        profileId,
+        today: dayKey(now.toISOString()),
+        plans,
+        quests: questsAll,
+        episodes: episodesAll,
+        tier,
+        gatingActive: gatingActive(flags, bundleOs()),
+        isQuestOpen: readOnly ? questOpenFor(profileId, now, snapshot) : activeQuestOpen,
+      });
+      const model = buildMyRoute(routeModelInput({ snapshot, tier, localized, seen, now, next }));
+      return { model, week: planWeekOf(model.goal, goalSourcesOf(next), next.today) };
     } catch {
       return { error: true };
     }
     // `attempt` is the retry.
-  }, [snap, profileId, tier, localized, seen, attempt]);
+  }, [snap, profileId, tier, plans, readOnly, activeQuestOpen, localized, seen, attempt]);
   const model = 'model' in built ? built.model : null;
+  const week = 'model' in built ? built.week : null;
 
   const view = useMemo(() => {
     if (model === null) return null;
     const themeTitles = Object.fromEntries(localized.themes.map((t) => [t.key, t.titleEn])) as Record<ThemeKey, string>;
-    const quest = model.cursor ? questsAll.find((q) => q.id === model.cursor?.questId) : undefined;
+    // The card names F-ENT-003's one next (amendment section 4.4), not the catalogue cursor.
+    const quest = model.next ? questsAll.find((q) => q.id === model.next?.questId) : undefined;
     return myRouteView({
       model,
       messages,
@@ -181,8 +214,11 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
       hasStories: defaultStoryIndex().some((e) => e.placement === 'shelf'),
       seen,
       letterWall: routeLetterWall(model),
+      week,
+      // "Plan ends {date}" on the grown-up card only (LR-OD-7); a plan day is a UTC calendar day.
+      formatDay: (day) => formatDate(locale, `${day}T00:00:00.000Z`, 'monthDay', { utc: true }),
     });
-  }, [model, messages, readOnly, profile?.displayName, localized, locale, seen]);
+  }, [model, messages, readOnly, profile?.displayName, localized, locale, seen, week]);
 
   // Once per focus: route_map.viewed from the tab, then remember what this open saw (active learner only, never
   // read-only: the grown-up screen sends and writes nothing, section 8).
@@ -193,14 +229,15 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
     const fx = focusEffects({ focusKey, viewedFor: viewedFor.current, seenFor, seenWrittenFor: seenWrittenFor.current, readOnly, modelReady: true });
     if (fx.sendViewed) {
       viewedFor.current = focusKey;
-      const event = viewedEvent({ profileId, model, source: 'tab', hasPlan: false, readOnly });
+      const event = viewedEvent({ profileId, model, source: 'tab', readOnly });
       if (event) void track(event);
     }
     if (fx.writeSeen) {
       seenWrittenFor.current = focusKey;
-      pendingWrite.current = writeSeen(STORAGE, profileId, seenFrom(model, new Date()), { readOnly });
+      // The record this open read is passed on, so the goals already reached (LR-3b) are kept.
+      pendingWrite.current = writeSeen(STORAGE, profileId, seenFrom(model, new Date(), seenRead), { readOnly });
     }
-  }, [model, focusKey, seenFor, profileId, readOnly]);
+  }, [model, focusKey, seenFor, profileId, readOnly, seenRead]);
 
   // One row open at a time; the `here` stage is open on first view.
   const [openKey, setOpenKey] = useState<string | null | undefined>(undefined);
@@ -234,14 +271,23 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   );
 
   if (model === null || view === null) {
+    // State J (LR-D `route-card.md`): Hoya, one calm line and Try again.
+    const line = readOnly ? messages.caregiver.journey.error(profile?.displayName ?? '') : m.hero.error;
     return (
       <Screen tone="canvas">
         {header}
         <Spacer size="lg" />
-        <Card padding="lg">
-          <Body>{messages.common.errors.generic}</Body>
-          <Spacer size="md" />
-          <Button label={messages.common.buttons.tryAgain} tone="secondary" size="md" onPress={() => setAttempt((n) => n + 1)} />
+        <Card padding="lg" elevation="card" testID="my-route-error">
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+            <View aria-hidden importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+              <Hoya pose="thinking" size={hoyaSize} />
+            </View>
+            <Heading level="prompt" style={{ flex: 1 }}>
+              {line}
+            </Heading>
+          </View>
+          <Spacer size="lg" />
+          <Button label={messages.common.buttons.tryAgain} tone="primary" size="lg" fullWidth onPress={() => setAttempt((n) => n + 1)} />
         </Card>
       </Screen>
     );
@@ -258,13 +304,15 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
     if (event) void track(event);
   };
 
+  // The card's one button: Continue (or Start) opens F-ENT-003's one next, the quest Home card (2) names.
   const onHero = (): void => {
     const cta = view.heroCopy.cta;
     if (cta === null) return;
-    if (cta.action === 'quest' && model.cursor) {
+    if (cta.action === 'quest' && model.next) {
       const event = continueTappedEvent({ profileId, model, readOnly });
       if (event) void track(event);
-      navigation.navigate('QuestPlayer', { questId: model.cursor.questId, episodeId: model.cursor.episodeId });
+      if (!readOnly) void track(nextStartedEvent(profileId, model.next.source, 'route'));
+      navigation.navigate('QuestPlayer', { questId: model.next.questId, episodeId: model.next.episodeId });
     } else openLibrary();
   };
 
@@ -279,7 +327,24 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
       ) : null}
       <Spacer size="md" />
 
-      <HeroCard copy={view.heroCopy} pose={view.pose} onAction={onHero} focusToken={focusKey} />
+      <RouteCard
+        copy={view.routeCard}
+        pips={model.goalPips}
+        goalStage={model.goal?.stage ?? null}
+        cta={view.heroCopy.cta}
+        pose={view.pose}
+        onAction={onHero}
+        focusToken={focusKey}
+      />
+
+      {view.planLine !== null ? (
+        <>
+          <Spacer size="sm" />
+          <Body tone="secondary" testID="my-route-plan-line">
+            {view.planLine}
+          </Body>
+        </>
+      ) : null}
 
       {view.newQuests !== null ? (
         <>
