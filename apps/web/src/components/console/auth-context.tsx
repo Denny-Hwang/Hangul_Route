@@ -1,11 +1,12 @@
 'use client';
 
-import { ClerkProvider, useAuth, useClerk, useUser } from '@clerk/clerk-react';
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { ClerkProvider, useAuth, useClerk, useReverification, useUser } from '@clerk/clerk-react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { sessionFromClerkUser } from '@/lib/console/clerk';
 import { clerkPublishableKey } from '@/lib/console/config';
 import { ROUTES } from '@/lib/console/routing';
 import { readSession, writeSession, type ConsoleSession } from '@/lib/console/session';
+import { settleReverify, type ReverifyOutcome } from '@/lib/console/step-up';
 import { clearSignInTab } from '@/lib/console/signin-record';
 import { clearGrownUpTab } from '@/lib/console/unlock';
 
@@ -38,6 +39,12 @@ export interface ConsoleAuth {
   signOut: (redirectUrl?: string) => Promise<void>;
   /** Dev mode only: store a dev session. No-op under Clerk. */
   devSignIn: (session: ConsoleSession) => void;
+  /**
+   * F-BILL-002 B-8b: after the page's "Confirm it's you", runs `fetcher` through Clerk's `useReverification`
+   * (Clerk's own verification, then one retry). Dev mode has no token to step up (the Worker skips step-up there,
+   * section 4.4), so it simply runs `fetcher` once more.
+   */
+  reverify: <T>(fetcher: () => Promise<T>) => Promise<ReverifyOutcome<T>>;
 }
 
 const SIGNED_OUT: ConsoleAuth = {
@@ -48,6 +55,7 @@ const SIGNED_OUT: ConsoleAuth = {
   getToken: async () => null,
   signOut: async () => undefined,
   devSignIn: () => undefined,
+  reverify: async () => ({ kind: 'unavailable' }),
 };
 
 const ConsoleAuthContext = createContext<ConsoleAuth>(SIGNED_OUT);
@@ -60,6 +68,13 @@ function ClerkBridge({ children }: { children: ReactNode }): JSX.Element {
   const { isLoaded, user } = useUser();
   const { getToken, sessionId } = useAuth();
   const clerk = useClerk();
+  // One enhanced fetcher for the whole tab; each step-up hands it the request to retry.
+  const pending = useRef<() => Promise<unknown>>(async () => undefined);
+  const enhanced = useReverification(() => pending.current());
+  const reverify = useCallback(<T,>(fetcher: () => Promise<T>): Promise<ReverifyOutcome<T>> => {
+    pending.current = fetcher;
+    return settleReverify(() => enhanced() as Promise<T>);
+  }, [enhanced]);
   const value = useMemo<ConsoleAuth>(
     () => ({
       mode: 'clerk',
@@ -73,8 +88,9 @@ function ClerkBridge({ children }: { children: ReactNode }): JSX.Element {
         return clerk.signOut({ redirectUrl });
       },
       devSignIn: () => undefined,
+      reverify,
     }),
-    [isLoaded, user, sessionId, getToken, clerk],
+    [isLoaded, user, sessionId, getToken, clerk, reverify],
   );
   return <ConsoleAuthContext.Provider value={value}>{children}</ConsoleAuthContext.Provider>;
 }
@@ -104,6 +120,7 @@ function DevBridge({ children }: { children: ReactNode }): JSX.Element {
         if (redirectUrl) window.location.assign(redirectUrl);
       },
       devSignIn,
+      reverify: (fetcher) => settleReverify(fetcher),
     }),
     [ready, session, devSignIn],
   );
