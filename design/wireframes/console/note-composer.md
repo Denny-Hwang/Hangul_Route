@@ -91,7 +91,7 @@ Then: the composer opens on its own; they pick who gets it, pick one encourageme
 | a preset | click / arrows | selects it; preview updates; `next_try_this` marks step 4 as needed |
 | text field | type | live check with the shared guard (`checkNoteText`, `@hangul-route/i18n/note-text`); counter announced at 100 and 120; Enter does not add a line |
 | quest picker | click | a list of catalogue quests by stage and theme; one pick; [ Remove ] clears it; closed-quest line per F-ENT-003 `freeRouteQuestIds` when `contentGatingEnabled()` and the space is unlicensed |
-| Preview (FB-15) | click | `openBrowse({ kind: 'quest', id }, 'notes')` (F-BROWSE-001): the lesson exactly as a learner sees it, in another tab |
+| Preview (FB-15) | click | `openBrowse({ kind: 'quest', id }, 'notes')` (F-BROWSE-001): the lesson exactly as a learner sees it, in the same tab (F-BROWSE-001 section 4.3; [ Close ] returns to the composer) |
 | Sign as | select | family label id; preview updates |
 | Send | click / Enter on the button | `POST /api/spaces/:id/notes`; button busy "Sending…"; then B |
 | Cancel / × / Escape | click / key | closes the sub-view (URL drops `&compose=1`); nothing sent; focus returns to the button that opened it |

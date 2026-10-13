@@ -331,7 +331,7 @@ journey/grid-with-stories ─┬─ (lesson 셀) ─▶ episode/detail ─▶ ep
 browse/home ─┬─ Route (stage 행) ─▶ Journey (그 stage) ; Journey (셀) ─▶ browse/episode ─▶ browse/item
              ├─ Library (카드 ─▶ library/card-detail preview · 이야기·낱말 타일 ─▶ browse/item)
              ├─▶ browse/show-as (sheet)
-             └─ [ Close ] ─▶ history.back() (같은 origin 에서 왔을 때) · 아니면 페르소나 홈 (계정 pass) 또는 / (gate·kept pass)
+             └─ [ Close ] ─▶ history.go(-(1+depth)) (referrer 가 같은 origin 이고 탭에 이전 항목이 있을 때, canGoBack) · 아니면 페르소나 홈 / sign-in (계정 pass) 또는 / (gate·kept pass); 1 s 안에 떠나지 않으면 그 주소로 이동
 browse/item ─ [[ Preview this lesson ]] ─▶ browse/preview-player (PreviewQuest ─▶ Minigame · StoryReader replay · StorySources Copy link) ─▶ browse/preview-end ─┬─▶ browse/item (Next lesson · Back to the lesson page)
                                                                                                                                                               └─▶ browse/preview-player (Preview again)
 browse/preview-player ─ [ Leave preview ] ─▶ browse/item (end 화면 없이)
@@ -366,7 +366,7 @@ shell/grown-up-lock ─ 학습자 프로필이 있는 기기에서 모든 어른
 shell/adult-frame ─┬─ [Family]  ─▶ shell/parent-home (/parent) ─▶ /parent/space/** (roster · plan · settings …)
                    ├─ [Teacher] ─▶ shell/teacher-home (/teach/home) ─▶ /teach/space/** (roster · plan · lecture …)
                    ├─▶ console/billing (/account/billing)
-                   ├─ [Lessons] ─▶ browse/home (/browse, 같은 탭, 계정 pass; unlock 은 지우지 않음 — [ Close ] 가 history.back() 으로 돌아옴; F-BROWSE-001 BR-10)
+                   ├─ [Lessons] ─▶ browse/home (/browse, 같은 탭, 계정 pass; unlock 은 지우지 않음 — [ Close ] 가 history.go(-(1+depth)) 로 돌아옴; 돌아갈 곳이 없는 탭(새 탭, 직접 입력한 주소)은 unlock 과 console session 을 지움, BR-6; F-BROWSE-001 BR-10)
                    └─▶ Back to learning (/) — unlock 과 콘솔 세션을 지움
 ```
 
