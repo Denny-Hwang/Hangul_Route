@@ -59,6 +59,17 @@ export function freeContentRegistryFor(stories: readonly Pick<(typeof storiesAll
   return { ...defaultRegistry(), samplerStories: new Set(stories.filter((s) => s.shelf?.sampler === true).map((s) => s.id)) };
 }
 
+/**
+ * The What is free list of the Plan screen (F-ENT-003 section 3.9.1): the sampler stories in this
+ * build's bundle and the free word topics among the topics this build lists (`vocabTopics` keys).
+ */
+export function freeExtrasCount(
+  topicKeys: readonly string[],
+  registry: FreeContentRegistry = defaultRegistry(),
+): { stories: number; topics: number } {
+  return { stories: registry.samplerStories.size, topics: topicKeys.filter((key) => registry.vocabTopics.has(key)).length };
+}
+
 export function isFreeContent(
   kind: ContentKind,
   id: string,

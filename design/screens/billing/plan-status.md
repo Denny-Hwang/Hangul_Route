@@ -11,7 +11,7 @@ Code: `apps/mobile/src/screens/paywall/PaywallScreen.tsx` (route key stays `Payw
 3. **Title** (`Heading level="title"`, centred): the state sentence of section 4.7 in the device's audience.
 4. **Lines** (`Body tone="secondary"`, centred):
    - free: the free slot `<FreePlanLines />`. Until F-ENT-003 E3-8 fills it (and whenever its switch is off), it holds `caregiver.plan.free.open`, "Stage 1 is always free."
-   - full route: `full.fromFamily` (source family) or `full.noSource` (no source), then the guidance slot `<PlanGuidanceLine />`, empty until E3-8.
+   - full route: `full.fromFamily` (source family) or `full.noSource` (no source), then the guidance slot `<PlanGuidanceLine />`: F-ENT-003 §3.9.1's "Set a plan to guide what comes next." (and on the web "Plans are made in the grown-up area: Plan the term.") when the learner has no plan, whatever the switch (E3-8); empty otherwise.
    - covered: `covered.note`.
    Neither slot ever holds an offer, a price, a button, a link, a promo hint or a terms line.
 5. **Web only** (`Platform.OS === 'web'`, every state), `spacing.xl` above:

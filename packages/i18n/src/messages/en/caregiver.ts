@@ -170,6 +170,44 @@ export const caregiver = {
     /** Web only: back from a correct PIN, a browser may block a tab opened outside a tap, so one more tap opens it (as Sources' gateDone). */
     gateDone: 'PIN accepted. Tap Open billing again.',
     backToJourney: { cta: 'Back to journey' },
+    /**
+     * F-ENT-003 section 3.9.1 (E3-8; wireframe billing/plan-status-free-lessons): the lines on what
+     * is free, shown in the Plan screen's slots only while F-ENT-003's effective switch is on. `line`
+     * replaces `free.open` (OD-9); every figure comes from `freeLessonsFacts` and the build's
+     * bundle, never typed here. At most one situation line (`classLine`, then `freeEnd`). The
+     * premium no-plan line is `setPlan`; `setPlanWeb` names the grown-up page on the web only, with
+     * no link. Never "day" (OD-8), no price, no offer.
+     */
+    freePlan: {
+      line: (lessons: number, letters: number, minutes: number) =>
+        `Stage 1 is free: ${plural('en', lessons, { one: `${lessons} lesson`, other: `${lessons} lessons` })}, ${plural('en', letters, {
+          one: `${letters} letter`,
+          other: `${letters} letters`,
+        })}, about ${plural('en', minutes, { one: `${minutes} minute`, other: `${minutes} minutes` })}. Everything finished stays.`,
+      /** When the free lessons teach no letter. */
+      lineNoLetters: (lessons: number, minutes: number) =>
+        `Stage 1 is free: ${plural('en', lessons, { one: `${lessons} lesson`, other: `${lessons} lessons` })}, about ${plural('en', minutes, {
+          one: `${minutes} minute`,
+          other: `${minutes} minutes`,
+        })}. Everything finished stays.`,
+      /** The What is free list; a line whose count is 0 is not shown. */
+      stories: (n: number) => plural('en', n, { one: `${n} short story`, other: `${n} short stories` }),
+      topics: (n: number) => plural('en', n, { one: `${n} word topic`, other: `${n} word topics` }),
+      /** The learner's only space membership is a class or school. */
+      classLine: {
+        family: (name: string) => `${name}'s teacher can open every lesson for the class.`,
+        self: 'Your teacher can open every lesson for the class.',
+      },
+      /** The learner has finished everything open on the free plan. */
+      freeEnd: {
+        family: (name: string) => `${name} finished the free lessons.`,
+        self: 'You finished the free lessons.',
+      },
+      /** Full route with no plan (section 3.9.4). */
+      setPlan: 'Set a plan to guide what comes next.',
+      /** Web only, after `setPlan`: names the grown-up page, no link (F-BILL-002 owns links on this screen). */
+      setPlanWeb: 'Plans are made in the grown-up area: Plan the term.',
+    },
   },
 
   /** Settings card: the learner's classes and family. */

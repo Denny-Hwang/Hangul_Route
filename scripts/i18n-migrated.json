@@ -90,7 +90,8 @@
     "apps/web/src/components/console/ClerkSignIn.tsx",
     "apps/web/src/components/console/GrownUpRouter.tsx",
     "apps/web/src/components/console/GrownUpLayout.tsx",
-    "apps/web/src/components/console/LegacyRedirect.tsx"
+    "apps/web/src/components/console/LegacyRedirect.tsx",
+    "apps/mobile/src/screens/paywall/PlanSlots.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1

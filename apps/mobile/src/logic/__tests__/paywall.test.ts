@@ -15,6 +15,7 @@ import {
   paywallState,
   type PlanView,
 } from '../paywall';
+import type { FreePlanContext } from '../plan-free-lines';
 import type { DeviceAudience } from '../profiles/learner-type';
 
 /**
@@ -71,7 +72,7 @@ describe('planView: the words per state, source and audience (§4.7, §6.2)', ()
 
   it('covered by a class or school: the space by name, Hoya cheering, no slot', () => {
     const v = view('premium', klass, 'family');
-    expect(v).toMatchObject({ state: 'covered', pose: 'cheering', title: 'Mina is covered by Sunday Class A.', lines: ['Everything is open while they are in it.'], freeSlotLine: null, guidanceSlot: false });
+    expect(v).toMatchObject({ state: 'covered', pose: 'cheering', title: 'Mina is covered by Sunday Class A.', lines: ['Everything is open while they are in it.'], freeSlot: null, guidance: [] });
     expect(view('premium', school, 'self')).toMatchObject({ title: "You're covered by Maple School.", lines: ['Everything is open while you are in it.'] });
   });
 
@@ -80,15 +81,22 @@ describe('planView: the words per state, source and audience (§4.7, §6.2)', ()
     expect(view('premium', { ...klass, name: '  ' }, 'self').title).toBe("You're covered by the class.");
   });
 
-  it('full route from the family plan, and with no source (legacy subscription): the guidance slot follows', () => {
-    expect(view('premium', family, 'family')).toMatchObject({ state: 'premium', pose: 'cheering', title: 'Mina has the full route.', lines: ["From your family's Family Plan."], freeSlotLine: null, guidanceSlot: true });
+  it('full route from the family plan, and with no source (legacy subscription): the guidance slot is empty while the switch is off', () => {
+    expect(view('premium', family, 'family')).toMatchObject({ state: 'premium', pose: 'cheering', title: 'Mina has the full route.', lines: ["From your family's Family Plan."], freeSlot: null, guidance: [] });
     expect(view('premium', family, 'self')).toMatchObject({ title: 'You have the full route.', lines: ['From your Family Plan.'] });
-    expect(view('premium', null, 'family')).toMatchObject({ title: 'Mina has the full route.', lines: ['Everything is open.'], guidanceSlot: true });
+    expect(view('premium', null, 'family')).toMatchObject({ title: 'Mina has the full route.', lines: ['Everything is open.'], guidance: [] });
     expect(view('premium', null, 'self')).toMatchObject({ title: 'You have the full route.', lines: ['Everything is open.'] });
   });
 
-  it('free: Hoya idle, the free slot holds "Stage 1 is always free." until F-ENT-003 fills it', () => {
-    expect(view('free', null, 'family')).toMatchObject({ state: 'free', pose: 'idle', title: 'Mina is on the free plan.', lines: [], freeSlotLine: 'Stage 1 is always free.', guidanceSlot: false });
+  it('free: Hoya idle, the free slot holds "Stage 1 is always free." while F-ENT-003\'s switch is off', () => {
+    expect(view('free', null, 'family')).toMatchObject({
+      state: 'free',
+      pose: 'idle',
+      title: 'Mina is on the free plan.',
+      lines: [],
+      freeSlot: { line: 'Stage 1 is always free.', list: [], extra: null },
+      guidance: [],
+    });
     expect(view('free', null, 'self').title).toBe("You're on the free plan.");
   });
 
@@ -177,6 +185,67 @@ describe('Open billing is web only (§4.7, §4.8)', () => {
     ]);
     const native = planView({ tier: 'premium', source: klass, audience: 'self', name: 'Rio', platform: 'android' }, en);
     expect(planTexts(native)).toEqual(['Plan', 'Rio: Full route.', "You're covered by Sunday Class A.", 'Everything is open while you are in it.', 'Back to journey']);
+  });
+});
+
+describe('F-ENT-003 E3-8: the free-plan lines in the slots (F-ENT-003 section 3.9.1)', () => {
+  const ON: FreePlanContext = { gatingActive: true, facts: { lessons: 15, letters: 24, minutes: 65 }, stories: 0, topics: 4, classOnly: false, freeEnd: false, hasPlan: false };
+  const web = (tier: 'free' | 'premium', source: TierSource | null, freePlan: FreePlanContext | null, audience: DeviceAudience = 'family'): PlanView =>
+    planView({ tier, source, audience, name: 'Mina', platform: 'web', freePlan }, en);
+
+  it('switch on, free: the free-plan line replaces "Stage 1 is always free.", then the list and one situation line', () => {
+    const v = web('free', null, { ...ON, freeEnd: true });
+    expect(v.freeSlot).toEqual({ line: 'Stage 1 is free: 15 lessons, 24 letters, about 65 minutes. Everything finished stays.', list: ['4 word topics'], extra: 'Mina finished the free lessons.' });
+    expect(planTexts(v)).not.toContain('Stage 1 is always free.');
+    expect(planTexts(v).slice(3, 6)).toEqual([v.freeSlot?.line, '4 word topics', 'Mina finished the free lessons.']);
+  });
+
+  it('switch on, full route with no plan: the guidance lines follow the full-route line', () => {
+    const v = web('premium', family, ON);
+    expect(v.guidance).toEqual(['Set a plan to guide what comes next.', 'Plans are made in the grown-up area: Plan the term.']);
+    expect(planTexts(v).slice(3, 6)).toEqual(["From your family's Family Plan.", 'Set a plan to guide what comes next.', 'Plans are made in the grown-up area: Plan the term.']);
+    expect(web('premium', family, { ...ON, hasPlan: true }).guidance).toEqual([]);
+    expect(web('premium', klass, ON).guidance).toEqual([]);
+  });
+
+  it('switch off, full route with no plan: the guidance lines show anyway (item 10 ships on merge)', () => {
+    expect(web('premium', family, { ...ON, gatingActive: false }).guidance).toEqual(['Set a plan to guide what comes next.', 'Plans are made in the grown-up area: Plan the term.']);
+    expect(web('premium', klass, { ...ON, gatingActive: false }).guidance).toEqual([]);
+  });
+
+  it('switch off with a plan: the view is exactly the one without F-ENT-003 data (OD-2)', () => {
+    for (const { tier, source } of TIERS) {
+      for (const audience of AUDIENCES) {
+        const off = web(tier, source, { ...ON, gatingActive: false, classOnly: true, freeEnd: true, stories: 3, hasPlan: true }, audience);
+        expect(off).toEqual(web(tier, source, null, audience));
+      }
+    }
+  });
+
+  it('a hidden free-plan line (facts unreadable) leaves the list in planTexts and nothing in its place', () => {
+    const v = web('free', null, { ...ON, facts: null });
+    expect(v.freeSlot).toEqual({ line: null, list: ['4 word topics'], extra: null });
+    expect(planTexts(v).slice(2, 4)).toEqual(['Mina is on the free plan.', '4 word topics']);
+  });
+
+  it('the class line names the teacher in the family audience and speaks to a self learner', () => {
+    expect(web('free', null, { ...ON, classOnly: true }).freeSlot?.extra).toBe("Mina's teacher can open every lesson for the class.");
+    expect(web('free', null, { ...ON, classOnly: true }, 'self').freeSlot?.extra).toBe('Your teacher can open every lesson for the class.');
+  });
+
+  it('no switch-on line shows a price, a purchase word or a banned word, in any locale', () => {
+    const PURCHASE = /\b(premium|price|buy|pay|payment|purchase|unlock|unlocked|trial|offer|promo|terms|lifetime|days?)\b|[$€£₩]/i;
+    for (const locale of LOCALES) {
+      const m = getMessages(locale);
+      for (const ctx of [{ ...ON, stories: 2, classOnly: true }, { ...ON, freeEnd: true }, { ...ON, facts: { lessons: 3, letters: 0, minutes: 9 } }]) {
+        for (const { tier, source } of TIERS) {
+          for (const text of planTexts(planView({ tier, source, audience: 'family', name: 'Mina', platform: 'web', freePlan: ctx }, m))) {
+            if (locale === 'en') expect(text).not.toMatch(PURCHASE);
+            expect(findBannedWord(text, locale, 'learner'), `${locale}: ${text}`).toBeNull();
+          }
+        }
+      }
+    }
   });
 });
 

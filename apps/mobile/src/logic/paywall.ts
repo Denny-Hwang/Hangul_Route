@@ -1,5 +1,6 @@
 import type { Tier, TierSource } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
+import { planFreeLines, type FreePlanContext, type FreeSlot } from './plan-free-lines';
 import type { DeviceAudience } from './profiles/learner-type';
 import type { OpenLinkOutcome } from './story/source-link';
 
@@ -30,10 +31,14 @@ export interface PlanView {
   title: string;
   /** The lines under the title (none on the free plan: the free slot speaks there). */
   lines: readonly string[];
-  /** The free slot's default line (`caregiver.plan.free.open`) on the free plan; F-ENT-003 E3-8 replaces it while its switch is on. */
-  freeSlotLine: string | null;
-  /** Whether the guidance slot follows the full-route lines (empty until F-ENT-003 E3-8). */
-  guidanceSlot: boolean;
+  /**
+   * The free slot on the free plan (null otherwise): "Stage 1 is always free." (`caregiver.plan.free.open`)
+   * while F-ENT-003's switch is off; with it on, F-ENT-003 section 3.9.1's free-plan line, the What
+   * is free list and at most one situation line (`planFreeLines`, row E3-8).
+   */
+  freeSlot: FreeSlot | null;
+  /** The guidance slot under the full-route lines: F-ENT-003's no-plan line (item 10, any switch) when the learner has no plan, else empty. */
+  guidance: readonly string[];
   /**
    * Web only: the caption, the Open billing button, its hint and the line shown back from a correct
    * PIN (one more tap opens billing; see `pendingBillingStep`). Null on native builds (section 4.8).
@@ -50,6 +55,8 @@ export interface PlanViewInput {
   name: string | null;
   /** `Platform.OS`. Only `web` gets the billing block. */
   platform: string;
+  /** F-ENT-003 section 3.9.1's data for the slots; omitted or null keeps F-BILL-002's lines. */
+  freePlan?: FreePlanContext | null;
 }
 
 const named = (value: string | null | undefined): string | null => (value === null || value === undefined || value.trim() === '' ? null : value);
@@ -72,6 +79,7 @@ export function planView(input: PlanViewInput, messages: Pick<Messages, 'caregiv
   } else {
     title = family ? m.free.title.family(name) : m.free.title.self;
   }
+  const slots = planFreeLines({ state, audience: input.audience, name, platform: input.platform, context: input.freePlan ?? null }, m);
   return {
     state,
     pose: state === 'free' ? 'idle' : 'cheering',
@@ -79,8 +87,8 @@ export function planView(input: PlanViewInput, messages: Pick<Messages, 'caregiv
     summary: messages.a11y.planStatus(name, state === 'free' ? card.free : card.fullRoute),
     title,
     lines,
-    freeSlotLine: state === 'free' ? m.free.open : null,
-    guidanceSlot: state === 'premium',
+    freeSlot: slots.free,
+    guidance: slots.guidance,
     billing:
       input.platform === 'web'
         ? {
@@ -101,7 +109,8 @@ export function planTexts(view: PlanView): string[] {
     view.summary,
     view.title,
     ...view.lines,
-    ...(view.freeSlotLine === null ? [] : [view.freeSlotLine]),
+    ...(view.freeSlot === null ? [] : [...(view.freeSlot.line === null ? [] : [view.freeSlot.line]), ...view.freeSlot.list, ...(view.freeSlot.extra === null ? [] : [view.freeSlot.extra])]),
+    ...view.guidance,
     ...(view.billing === null ? [] : [view.billing.caption, view.billing.cta, view.billing.hint, view.billing.gateDone]),
     view.back,
   ];

@@ -212,4 +212,9 @@ describe('lockedStoryGate (§3.4: a locked tile opens the grown-up gate Journey 
   it('otherwise the PIN entry, which then opens the paywall attributed to the Library', () => {
     expect(lockedStoryGate(false)).toEqual({ route: 'PinEntry', params: { next: 'Paywall', from: 'library' } });
   });
+
+  it('keeps the PIN gate in front of the status-only Plan screen on purpose (F-BILL-002 F4, closed by F-ENT-003 E3-8)', () => {
+    // The locked story and topic entries ask a grown-up, as F-ENT-003 section 3.7's ask rows do.
+    expect(lockedStoryGate(false).route).not.toBe('Paywall');
+  });
 });

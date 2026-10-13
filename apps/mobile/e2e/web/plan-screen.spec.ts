@@ -95,6 +95,9 @@ async function openPlanDetails(page: Page, name: string, card = 'Free plan'): Pr
 
 async function expectStatusOnly(page: Page): Promise<void> {
   await expect(page.getByText('Stage 1 is always free.')).toBeVisible();
+  // F-ENT-003 E3-8: the release build's switch is off, so the free slot holds only that line.
+  await expect(page.getByTestId('plan-free-list')).toHaveCount(0);
+  await expect(page.getByText(/^Stage 1 is free:/)).toHaveCount(0);
   const text = await screenText(page);
   expect(text).not.toMatch(/\$|\d+\.\d{2}|\/ year|lifetime|premium|unlock|\bbuy\b|promo|terms|web console/i);
   // Status, caption and both buttons fit the width: no sideways scroll at 320 px either.
@@ -192,6 +195,17 @@ test.describe('full route', () => {
       await expect(page.getByText(row.title)).toBeVisible();
       await expect(page.getByText(row.line)).toBeVisible();
       await expect(page.getByText('Stage 1 is always free.')).toHaveCount(0);
+      // F-ENT-003 E3-8 (section 3.9.4, item 10): a family-plan learner with no plan gets the guidance
+      // line and, on the web, the grown-up page line (no link), with the switch off too; a class
+      // covers the learner, and the covered state has no guidance slot.
+      if (row.kind === 'family') {
+        await expect(page.getByTestId('plan-guidance')).toBeVisible();
+        await expect(page.getByText('Set a plan to guide what comes next.')).toBeVisible();
+        await expect(page.getByText('Plans are made in the grown-up area: Plan the term.')).toBeVisible();
+        await expect(page.getByTestId('plan-guidance').getByRole('link')).toHaveCount(0);
+      } else {
+        await expect(page.getByTestId('plan-guidance')).toHaveCount(0);
+      }
       await expect(page.getByRole('button', { name: 'Open billing' })).toBeVisible();
       const text = await screenText(page);
       expect(text).not.toMatch(/\$|\d+\.\d{2}|\/ year|lifetime|premium|unlock|\bbuy\b|promo|terms|web console/i);
