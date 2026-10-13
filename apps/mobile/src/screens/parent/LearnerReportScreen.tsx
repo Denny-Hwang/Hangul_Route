@@ -20,16 +20,16 @@ import {
 import { CATALOG, type ReportPeriod, type StageKey } from '@hangul-route/content-schema';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, Pressable, Text, View } from 'react-native';
+import { AccessibilityInfo, Platform, Pressable, Text, View } from 'react-native';
 import Svg, { Polyline } from 'react-native-svg';
-import { flags } from '../../config/flags';
+import { flags, reportsEnabledFor } from '../../config/flags';
 import { jamoAll, questsAll, stages } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeJamo, localizeQuest, localizeStage } from '../../logic/content-locale';
 import { buildMyRoute } from '../../logic/my-route/model';
 import { localizedRouteContent, routeModelInput } from '../../logic/my-route/route-input';
 import { emptySnapshot, type SkillRowView } from '../../logic/my-route/view';
-import { isParentSessionValid } from '../../logic/profiles/session';
+import { isParentSessionValid, parentSessionRemainingMs } from '../../logic/profiles/session';
 import { reportEntry } from '../../logic/reports/entry';
 import { reportViewedEvent } from '../../logic/reports/events';
 import {
@@ -46,6 +46,7 @@ import {
 import { reportSkillsView, type ReportSkillsView } from '../../logic/reports/skills-view';
 import { reportVoice } from '../../logic/reports/voice';
 import type { RootStackParamList } from '../../navigation/types';
+import { focusForScreenReader } from '../../platform/screen-reader';
 import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
 import { useProfileStore } from '../../store/profile-store';
@@ -73,8 +74,10 @@ import { SKILL_ACCENT } from '../my-route/SkillsCard';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'LearnerReport'>;
 
-/** The report below the tabs is their panel (`aria-controls` / `aria-labelledby`). */
+/** The report below the tabs is their panel (`aria-controls` / `aria-labelledby`); the stepper controls it too. */
 const PANEL_ID = 'learner-report-panel';
+/** The More detail disclosure's panel (`aria-controls`). */
+const DETAIL_PANEL_ID = 'learner-report-more-detail-panel';
 /** Read by assistive tech, drawn nowhere (the 1 x 1 clipped box of the web sr-only pattern). */
 const srOnly = { position: 'absolute', width: 1, height: 1, margin: -1, overflow: 'hidden' } as const;
 /** Figure tiles: two a row on a phone (design README "Constants": 7rem). */
@@ -117,6 +120,7 @@ function OutlineButton({
   leading,
   trailing,
   expanded,
+  controls,
   block = false,
   pressableRef,
   testID,
@@ -127,11 +131,16 @@ function OutlineButton({
   leading?: React.ReactNode;
   trailing?: React.ReactNode;
   expanded?: boolean;
+  /** The id of the region this button changes (web `aria-controls`). */
+  controls?: string;
   block?: boolean;
   pressableRef?: React.Ref<View>;
   testID?: string;
 }): React.ReactElement {
-  const disclosure = expanded === undefined ? {} : { 'aria-expanded': expanded };
+  const disclosure = {
+    ...(expanded === undefined ? {} : { 'aria-expanded': expanded }),
+    ...(controls === undefined ? {} : { 'aria-controls': controls }),
+  };
   return (
     <Pressable
       ref={pressableRef}
@@ -172,18 +181,33 @@ export function LearnerReportScreen({ route, navigation }: Props): React.ReactEl
   const profile = profiles.find((p) => p.id === profileId);
   const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
   const { opensDirectly } = useAudience();
-  const sessionOpen = isParentSessionValid(parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' }, Date.now());
+  const session = parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' };
+  const sessionOpen = isParentSessionValid(session, Date.now());
   const gateOpen = opensDirectly(sessionOpen);
-
-  // The gate is closed (the session lapsed): the PIN screen replaces this one and comes back to it. An unknown
-  // profile (deleted meanwhile) returns to the dashboard.
+  const allowed = reportsEnabledFor(locale);
+  // A render when the grown-up session lapses, so a report left open hands over to the PIN screen (below).
+  const [, setLapsed] = useState(0);
   useEffect(() => {
+    const left = parentSessionRemainingMs(parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' }, Date.now());
+    if (left <= 0) return undefined;
+    const timer = setTimeout(() => setLapsed((n) => n + 1), left);
+    return () => clearTimeout(timer);
+  }, [parentGateOpenedAt]);
+
+  // An unknown profile (deleted meanwhile, or a stale navigation state) or a UI locale whose report words are not
+  // reviewed yet leaves for the previous screen, or the dashboard when there is none. Otherwise a closed gate (the
+  // session lapsed) hands over to the PIN screen, which comes back here.
+  useEffect(() => {
+    if (!allowed || profile === undefined) {
+      if (navigation.canGoBack()) navigation.goBack();
+      else navigation.replace('ParentDashboard');
+      return;
+    }
     const entry = reportEntry(profileId, gateOpen);
     if (entry.screen === 'PinEntry') navigation.replace('PinEntry', entry.params);
-    else if (profile === undefined && navigation.canGoBack()) navigation.goBack();
-  }, [gateOpen, profile, profileId, navigation]);
+  }, [allowed, gateOpen, profile, profileId, navigation]);
 
-  if (!gateOpen || profile === undefined) return <Screen tone="canvas">{null}</Screen>;
+  if (!allowed || !gateOpen || profile === undefined) return <Screen tone="canvas">{null}</Screen>;
   return <ReportBody key={profileId} profileId={profileId} name={profile.displayName} voice={reportVoice({ profiles, activeProfileId: activeId, profileId })} navigation={navigation} locale={locale} messages={messages} />;
 }
 
@@ -277,8 +301,18 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
     if (step === null) return;
     lastStep.current = null;
     const target = step === 'next' && stepper?.next === null ? prevRef.current : step === 'prev' && stepper?.prev === null ? nextRef.current : null;
-    if (target !== null && Platform.OS === 'web') (target as unknown as { focus?: () => void }).focus?.();
+    if (target === null) return;
+    // A view's own focus() moves keyboard focus on the web; VoiceOver and TalkBack need their own call.
+    if (Platform.OS === 'web') (target as unknown as { focus?: () => void }).focus?.();
+    else focusForScreenReader(target);
   }, [stepper]);
+
+  // The polite announcement after a period change or a step (section 3.12). The live region below speaks on the web
+  // and on Android; VoiceOver does not read live regions, so iOS announces it (the ResultsScreen pattern).
+  const announce = changed ? (built?.view.announce ?? null) : null;
+  useEffect(() => {
+    if (announce !== null && Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility(announce);
+  }, [announce]);
 
   const back = (
     <View style={{ flexDirection: 'row' }}>
@@ -384,19 +418,22 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
               label={view.moreDetail.button}
               block
               expanded={detailOpen}
+              controls={DETAIL_PANEL_ID}
               onPress={() => setDetailOpen((open) => !open)}
               trailing={<View style={{ transform: [{ rotate: detailOpen ? '-90deg' : '90deg' }] }}><Icon name="arrow-right" size={20} /></View>}
               testID="learner-report-more-detail-toggle"
             />
           </View>
-          {detailOpen ? (
-            <View style={{ gap: spacing.lg, paddingTop: spacing.md }}>
-              {view.moreDetail.blocks.map((detail) => (
-                <DetailBlock key={'key' in detail ? detail.key : detail.kind} block={detail} />
-              ))}
-              {skills !== null ? <SkillsBlock skills={skills} /> : null}
-            </View>
-          ) : null}
+          <View nativeID={DETAIL_PANEL_ID} {...{ id: DETAIL_PANEL_ID }}>
+            {detailOpen ? (
+              <View style={{ gap: spacing.lg, paddingTop: spacing.md }}>
+                {view.moreDetail.blocks.map((detail) => (
+                  <DetailBlock key={'key' in detail ? detail.key : detail.kind} block={detail} />
+                ))}
+                {skills !== null ? <SkillsBlock skills={skills} /> : null}
+              </View>
+            ) : null}
+          </View>
         </View>
       ) : null}
     </>
@@ -444,6 +481,7 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
                   accessibilityLabel={stepper.prev.name}
                   leading={<Icon name="arrow-left" size={20} />}
                   onPress={() => step('prev')}
+                  controls={PANEL_ID}
                   pressableRef={prevRef}
                   testID="learner-report-step-prev"
                 />
@@ -457,6 +495,7 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
                   accessibilityLabel={stepper.next.name}
                   trailing={<Icon name="arrow-right" size={20} />}
                   onPress={() => step('next')}
+                  controls={PANEL_ID}
                   pressableRef={nextRef}
                   testID="learner-report-step-next"
                 />
@@ -465,7 +504,7 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
           ) : null}
           {/* A polite announcement after a period change or a step (section 3.12). */}
           <View style={srOnly} accessibilityLiveRegion="polite" {...{ 'aria-live': 'polite' }}>
-            <Text>{changed ? (view.announce ?? '') : ''}</Text>
+            <Text>{announce ?? ''}</Text>
           </View>
           <View {...{ role: 'tabpanel', id: PANEL_ID, 'aria-labelledby': sectionTabId(PANEL_ID, view.tabs.value) }}>{body}</View>
         </>
@@ -610,8 +649,16 @@ function GrowthBlock({ growth }: { growth: ReportGrowthView }): React.ReactEleme
       {count > 0 ? (
         <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" {...{ 'aria-hidden': true }}>
           <Svg width="100%" height={GROWTH_BOX.height} viewBox={`0 0 ${GROWTH_BOX.width} ${GROWTH_BOX.height}`} preserveAspectRatio="none">
-            <Polyline points={line('quests')} fill="none" stroke={colors.brand.primary} strokeWidth={borderWidth.thick} />
-            <Polyline points={line('cards')} fill="none" stroke={colors.brand.secondary} strokeWidth={borderWidth.thick} strokeDasharray={GROWTH_DASH} />
+            {/* The box stretches to the column; strokes keep their width and dash length (non-scaling-stroke). */}
+            <Polyline points={line('quests')} fill="none" stroke={colors.brand.primary} strokeWidth={borderWidth.thick} vectorEffect="non-scaling-stroke" />
+            <Polyline
+              points={line('cards')}
+              fill="none"
+              stroke={colors.brand.secondary}
+              strokeWidth={borderWidth.thick}
+              strokeDasharray={GROWTH_DASH}
+              vectorEffect="non-scaling-stroke"
+            />
           </Svg>
           <View style={{ flexDirection: 'row' }}>
             {growth.rows.map((row) => (
@@ -673,8 +720,11 @@ function LetterTiles({ heading, tiles, id }: { heading: string; tiles: ReportLet
               onPress={() => setOpen(expanded ? null : tile.letter)}
               testID={`learner-report-tile-${id}-${tile.letter}`}
               style={{
-                width: touchTarget.min,
-                height: touchTarget.min,
+                // At least a touch target, and free to grow so large text never clips the romanization (section 3.12).
+                minWidth: touchTarget.min,
+                minHeight: touchTarget.min,
+                paddingHorizontal: spacing.xs,
+                paddingVertical: spacing.xs,
                 alignItems: 'center',
                 justifyContent: 'center',
                 borderRadius: radii.md,

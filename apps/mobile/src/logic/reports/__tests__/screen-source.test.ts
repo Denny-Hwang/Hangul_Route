@@ -43,8 +43,26 @@ describe('LearnerReportScreen source rules', () => {
     expect(screenCode).not.toMatch(/print|sendNote|openBrowse/i);
   });
 
-  it('read-only: no progress write, no profile switch', () => {
-    expect(screenCode).not.toMatch(/setActive|recordQuest|unlockCard|beginSession|writeJson/);
+  it('read-only: no progress write, no profile switch (hydrate only reads and reconciles, as the dashboard does)', () => {
+    expect(screenCode).not.toMatch(/setActive|recordQuest|unlockCard|beginSession|writeJson|setState|reconcileAwards|\.ensure\(/);
+    expect(screenCode.match(/getState\(\)\.\w+/g)).toEqual(['getState().hydrate']);
+  });
+
+  it('leaves for the previous screen or the dashboard on an unknown profile or an unreviewed locale', () => {
+    expect(screenCode).toContain('const allowed = reportsEnabledFor(locale);');
+    expect(screenCode).toContain("if (navigation.canGoBack()) navigation.goBack();\n      else navigation.replace('ParentDashboard');");
+  });
+
+  it('iOS hears the period announcement; native screen readers get the stepper focus hand-off', () => {
+    expect(screenCode).toContain("Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility(announce)");
+    expect(screenCode).toContain('else focusForScreenReader(target);');
+    expect(screenCode.match(/controls=\{PANEL_ID\}/g)).toHaveLength(2);
+    expect(screenCode).toContain('controls={DETAIL_PANEL_ID}');
+  });
+
+  it('a report left open past the grown-up session re-renders when it lapses, so the PIN screen takes over', () => {
+    expect(screenCode).toContain('parentSessionRemainingMs(');
+    expect(screenCode).toMatch(/setTimeout\(\(\) => setLapsed/);
   });
 });
 
@@ -53,8 +71,9 @@ describe('entries', () => {
     expect(root).toContain('{flags.reportsEnabled ? <Stack.Screen name="LearnerReport" component={LearnerReportScreen} /> : null}');
   });
 
-  it('the dashboard draws See report only with the flag on, through reportEntry', () => {
-    expect(dashboard).toMatch(/flags\.reportsEnabled \? \(/);
+  it('the dashboard draws See report only with the flag on and a reviewed locale, through reportEntry', () => {
+    expect(dashboard).toContain('{reportsEnabledFor(locale) ? (');
+    expect(dashboard).not.toContain('flags.reportsEnabled');
     expect(dashboard).toContain('messages.report.action.seeReport');
     expect(dashboard).toContain('reportEntry(profileId, opensDirectly(sessionOpen))');
   });

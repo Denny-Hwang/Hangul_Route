@@ -310,6 +310,17 @@ describe('flags', () => {
     expect(mod.flags.reportsEnabled).toBe(false);
   });
 
+  it('reportsEnabledFor shows reports only with the flag on and a reviewed locale, as the console does (section 3.1)', async () => {
+    const mod = await reload();
+    expect(mod.REPORT_REVIEWED_LOCALES).toEqual(['en']);
+    expect(mod.reportsEnabledFor('en', { reportsEnabled: true })).toBe(true);
+    expect(mod.reportsEnabledFor('ko', { reportsEnabled: true })).toBe(false);
+    expect(mod.reportsEnabledFor('es', { reportsEnabled: true })).toBe(false);
+    expect(mod.reportsEnabledFor('en', { reportsEnabled: false })).toBe(false);
+    delete process.env.EXPO_PUBLIC_REPORTS_ENABLED;
+    expect((await reload()).reportsEnabledFor('en')).toBe(false);
+  });
+
   it('reportsEnabled is read by its literal name, so a web build can carry the override (RP-11 flips it)', () => {
     const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
     expect(src).toContain('process.env.EXPO_PUBLIC_REPORTS_ENABLED');

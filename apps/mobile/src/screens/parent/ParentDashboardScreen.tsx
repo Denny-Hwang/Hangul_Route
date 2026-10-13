@@ -21,7 +21,7 @@ import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
 import { questsAll, stages } from '../../content';
-import { bundleOs, flags } from '../../config/flags';
+import { bundleOs, flags, reportsEnabledFor } from '../../config/flags';
 import { grownUpEntriesOn, runGrownUpHandoff } from '../../logic/shell/entry-points';
 import { grownUpPinParams } from '../../logic/shell/handoff-rules';
 import { openGrownUpArea } from '../../platform/grown-up-handoff';
@@ -177,7 +177,7 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
                   })}
                 </>
               ) : null}
-              {flags.reportsEnabled ? (
+              {reportsEnabledFor(locale) ? (
                 <>
                   <Spacer size="md" />
                   <Button label={messages.report.action.seeReport} tone="primary" size="md" fullWidth onPress={() => openReport(p.id)} testID={`dashboard-see-report-${p.id}`} />
