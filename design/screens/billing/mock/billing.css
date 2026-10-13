@@ -16,7 +16,7 @@
 :root {
   --plan-card-min: 22rem;       /* billing card column: one card per row on phones, two or three across from 45em */
   --dialog-max: 28rem;          /* step-up dialog: the reading column of a confirm dialog; full width minus the gutters below it */
-  --receipt-amount-min: 6rem;   /* table layout: the amount column keeps "$153.00" on one line */
+  --receipt-amount-min: 6rem;   /* table layout: amounts ("$15.30", "$153"; formatUsd drops whole-dollar cents) stay on one line */
   --receipts-table-min: 36rem;  /* the receipts table needs a 576 px column at the default text size (written out in the container query); narrower, rows reflow */
 }
 

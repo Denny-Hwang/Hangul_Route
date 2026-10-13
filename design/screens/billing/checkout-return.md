@@ -29,7 +29,7 @@ The notice: the console `Notice` (`role="status"`, `aria-live="polite"`, one reg
 
 ## Accessibility
 
-- One polite live region, announced once per state change; the glyphs are decoration (`aria-hidden`), the words carry the state.
+- One polite live region for all return states, announced once per state change. The page notes and each card's promo result line keep their own `role="status"` regions (`billing-home.md`); the glyphs are decoration (`aria-hidden`), the words carry the state.
 - Done moves focus to the bought space's card heading, which reads "Family · Kim family" followed by its new plan line.
 - The outline is a shape cue (`borderWidth.thick`, `brand.secondary`, 5.20:1 on paper) next to the notice's words, never colour alone.
 - No motion: the checking glyph does not spin.

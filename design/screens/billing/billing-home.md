@@ -72,7 +72,7 @@ Native `details` / `summary`, the summary a `touchTarget.min` row in `brand.seco
 | past due | 7 | the note above the cards; the card's status line; Manage enabled |
 | offline (summary failed, browser offline) | 16 | a `panel` with `console.billing.offline` and **Try again**; no cards, no offers, no Help; reloads by itself on `online` |
 | error (failed while online) | 17 | the same panel with "Can't check your plan right now." |
-| offline after the cards loaded | 18 | the offline line above the cards; buy, Manage and Apply code disabled until `online` |
+| offline after the cards loaded | 18 | the offline line above the cards; buy, Manage and Apply code disabled until `online` (the board draws a free family next to an active class, so the disabled **Manage subscription** sits beside an enabled **Receipts**) |
 | signed out, locked, opening the URL offline | not drawn | F-APP-001: `/signin?next=`, the grown-up lock, the grown-up offline page |
 
 Disabled buttons: `surface.sunken`, no border colour of their own, `text.muted` (5.07:1), the native `disabled` attribute.
@@ -82,7 +82,7 @@ Disabled buttons: `surface.sunken`, no border colour of their own, `text.muted` 
 - One h1; one h2 per section; one h3 per card (an h4 for the offer inside a card). Cards are `section` elements labelled by their h3.
 - Every state is in words: plan, status and usage lines; the pill has text; the marked card's outline is a second cue, never the only one.
 - Disclosures are native `details` / `summary`.
-- Notes are `role="status"`; the checkout return's notice is the one polite live region (`checkout-return.md`).
+- Each page note (offline, already active, Nothing was changed, past due) and each card's promo result line is its own `role="status"` (polite) region. The checkout return uses one region for all of its states, so each change is announced once (`checkout-return.md`); it does not replace the other status regions.
 - Every control is at least `touchTarget.min` tall; keyboard order is the visual order; the focus ring is `borderWidth.thick` `border.focus`.
 - At 320 px with 200 % text nothing scrolls sideways (`shots/billing-home-320-text200.png`, `billing-home-teacher-320-text200.png`); long space names and the e-mail address wrap.
 
