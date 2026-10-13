@@ -1,9 +1,10 @@
 import {
   Body,
   Caption,
-  Icon,
   KOREAN_LANGUAGE,
   KoreanText,
+  RouteTag,
+  TagMark,
   StarRow,
   StoryScene,
   borderWidth,
@@ -65,18 +66,26 @@ export function CoverFallback({ ko, coverWidth }: { ko: string; coverWidth: numb
  * tint with the Korean title), the English title, the Korean title with its
  * romanization (`KoreanText`), "about N min" and a state line in words, with
  * stars only on a finish that earned some. The whole tile is one button
- * (>= 64 dp) whose label carries title, state and duration. A locked tile
- * (gating on only) shows the lock and "Locked". Design:
- * design/components/StoryTile/spec.md, wireframe design/wireframes/library/stories.md B, G, H.
+ * (>= 64 dp) whose label carries title, state and duration. A closed tile
+ * (free-plan switch on only) shows the dotted ring and "Not open yet", and its hint is the ask; a
+ * story in the plan carries the In your plan tag (F-ENT-003 section 3.7). Design:
+ * design/components/StoryTile/spec.md, wireframe design/wireframes/library/stories.md B, G, H,
+ * design/wireframes/library/access-and-plan-tags.md, design/components/RouteMarkers/spec.md.
  */
 export function StoryTile({
   view,
   width,
   romanizationShown,
   onPress,
+  hint,
+  inPlanLabel,
   testID,
 }: {
   view: StoryTileView;
+  /** A closed tile's hint: the ask label (`askFor`). */
+  hint?: string;
+  /** The In your plan word when the story is in the plan (the chip on its own line under the minutes). */
+  inPlanLabel?: string;
   /**
    * D2: false when the profile hides romanization until a tap. The whole tile is one button, so the
    * shelf has no tap-to-reveal: the romanization is left off here and revealed in the reader.
@@ -94,6 +103,7 @@ export function StoryTile({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={view.accessibilityLabel}
+      accessibilityHint={hint}
       style={({ pressed }) => ({
         width,
         minHeight: touchTarget.min,
@@ -121,13 +131,14 @@ export function StoryTile({
           <KoreanText ko={view.ko} romanization={view.romanization} romanizationShown={romanizationShown} size="sm" />
         </View>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm }}>
-          {view.locked ? <Icon name="lock" size={STAR_SIZE} color={colors.text.secondary} /> : null}
+          {view.locked ? <TagMark kind="notOpen" testID="story-tile-not-open" /> : null}
           <Body size="sm" weight="semibold" tone="secondary">
             {view.stateLine}
           </Body>
           {view.stars > 0 ? <StarRow stars={view.stars} size={STAR_SIZE} /> : null}
         </View>
         <Caption tone="muted">{view.minutesLine}</Caption>
+        {inPlanLabel ? <RouteTag kind="inPlan" label={inPlanLabel} testID="story-tile-in-plan" /> : null}
       </View>
     </Pressable>
   );
