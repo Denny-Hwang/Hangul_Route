@@ -52,7 +52,7 @@ interface Actions {
   /** Send the queued writes, reports first, at most `FLUSH_MAX_WRITES`; stops at the first write that has to wait (offline, 5xx, 401, a limited state write). */
   flush: (profileId: string, client: NotesClient, creds: DeviceCredentials) => Promise<FlushResult[]>;
   /** The grown-up opened this learner's notes in the grown-up zone (FB-9): the dashboard row's "New" starts over. */
-  markGrownUpSeen: (profileId: string, now?: Date) => Promise<void>;
+  markGrownUpSeen: (profileId: string) => Promise<void>;
   /**
    * A grown-up hid the note on every device (the hide route answered): it leaves this device now, with
    * its put-away id and a pending state write, before the next inbox says so. A pending report stays.
@@ -217,10 +217,15 @@ export const useNotesStore = create<State & Actions>((set, get) => {
       return run;
     },
 
-    markGrownUpSeen: async (profileId, now = new Date()) => {
+    markGrownUpSeen: async (profileId) => {
       const gen = genOf(profileId);
       await hydrate(profileId);
-      update(profileId, gen, (current) => ({ ...current, grownUpSeenAt: now.toISOString() }));
+      update(profileId, gen, (current) => {
+        const ids = current.notes.map((n) => n.id);
+        const seen = new Set(current.grownUpSeenIds ?? []);
+        // Nothing new since the last look: no write.
+        return current.grownUpSeenIds !== undefined && ids.every((id) => seen.has(id)) ? undefined : { ...current, grownUpSeenIds: ids };
+      });
     },
 
     forgetNote: async (profileId, noteId) => {

@@ -106,19 +106,18 @@ describe('mergeUnloaded (a read that failed, then one that worked)', () => {
   });
 });
 
-describe('grownUpSeenAt (FB-9, section 6.9: the stored shape only gains a field)', () => {
-  it('is read when it is a string and left out otherwise', () => {
-    expect(readStoredNotes({ notes: [], grownUpSeenAt: '2026-10-10T00:00:00.000Z' }).grownUpSeenAt).toBe('2026-10-10T00:00:00.000Z');
-    expect('grownUpSeenAt' in readStoredNotes({ notes: [], grownUpSeenAt: 3 })).toBe(false);
-    expect('grownUpSeenAt' in readStoredNotes({ notes: [] })).toBe(false);
+describe('grownUpSeenIds (FB-9, section 6.9: the stored shape only gains a field)', () => {
+  it('is read when it is a list (strings only) and left out otherwise', () => {
+    expect(readStoredNotes({ notes: [], grownUpSeenIds: ['note:aaaaaaaa', 3] }).grownUpSeenIds).toEqual(['note:aaaaaaaa']);
+    expect('grownUpSeenIds' in readStoredNotes({ notes: [], grownUpSeenIds: 'note:aaaaaaaa' })).toBe(false);
+    expect('grownUpSeenIds' in readStoredNotes({ notes: [] })).toBe(false);
   });
 
-  it('a merge keeps the later of the two marks', () => {
-    const a = data({ grownUpSeenAt: '2026-10-10T00:00:00.000Z' });
-    const b = data({ grownUpSeenAt: '2026-10-11T00:00:00.000Z' });
-    expect(mergeUnloaded(a, b).grownUpSeenAt).toBe('2026-10-11T00:00:00.000Z');
-    expect(mergeUnloaded(b, a).grownUpSeenAt).toBe('2026-10-11T00:00:00.000Z');
-    expect(mergeUnloaded(a, data()).grownUpSeenAt).toBe('2026-10-10T00:00:00.000Z');
-    expect('grownUpSeenAt' in mergeUnloaded(data(), data())).toBe(false);
+  it('a merge keeps a note seen in either record', () => {
+    const a = data({ grownUpSeenIds: ['note:aaaaaaaa'] });
+    const b = data({ grownUpSeenIds: ['note:bbbbbbbb', 'note:aaaaaaaa'] });
+    expect(mergeUnloaded(a, b).grownUpSeenIds).toEqual(['note:aaaaaaaa', 'note:bbbbbbbb']);
+    expect(mergeUnloaded(a, data()).grownUpSeenIds).toEqual(['note:aaaaaaaa']);
+    expect('grownUpSeenIds' in mergeUnloaded(data(), data())).toBe(false);
   });
 });

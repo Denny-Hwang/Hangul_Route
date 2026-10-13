@@ -76,10 +76,11 @@ export function NotesGrownUpScreen({ navigation, route }: Props): React.ReactEle
     else if (!gateOpen) navigation.replace('PinEntry', { next: 'NotesGrownUp', profileId });
   }, [gateOpen, profile, profileId, navigation]);
 
-  // Opening this learner's notes clears the dashboard row's "New".
+  // Opening this learner's notes clears the dashboard row's "New" (a note that arrives while it is open is seen too).
+  const noteIds = data?.notes.map((n) => n.id).join(',') ?? '';
   useEffect(() => {
     if (gateOpen && profile !== undefined) void useNotesStore.getState().markGrownUpSeen(profileId);
-  }, [gateOpen, profile, profileId]);
+  }, [gateOpen, profile, profileId, noteIds]);
 
   const rows = useMemo(() => (data === undefined ? [] : grownUpNotes(data, ctx)), [data, ctx]);
   const prefs = data?.prefs ?? null;
@@ -172,14 +173,21 @@ export function NotesGrownUpScreen({ navigation, route }: Props): React.ReactEle
       {card !== null ? (
         <View style={{ backgroundColor: colors.brand.secondaryLight, borderRadius: radii.lg, padding: spacing.lg, gap: spacing.md, marginBottom: spacing.lg }} testID="notes-one-time-card">
           <Body>{t.oneTimeCard.line(t.mode.options[card.mode])}</Body>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-            <View style={{ flexGrow: 1, flexBasis: CARD_BUTTON_BASIS }}>
-              <Button label={t.oneTimeCard.keep.cta} tone="secondary" size="md" fullWidth disabled={!online || busy} {...offlineDescribed} onPress={() => void answerCard(false)} testID="notes-card-keep" />
+          {classScoped ? (
+            // A class-scoped device cannot answer it (every save is refused): it says where, with no buttons.
+            <Body tone="secondary" testID="notes-card-class-scoped">
+              {t.mode.classScoped}
+            </Body>
+          ) : (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+              <View style={{ flexGrow: 1, flexBasis: CARD_BUTTON_BASIS }}>
+                <Button label={t.oneTimeCard.keep.cta} tone="secondary" size="md" fullWidth disabled={!online || busy} {...offlineDescribed} onPress={() => void answerCard(false)} testID="notes-card-keep" />
+              </View>
+              <View style={{ flexGrow: 1, flexBasis: CARD_BUTTON_BASIS }}>
+                <Button label={t.oneTimeCard.change.cta} tone="secondary" size="md" fullWidth disabled={!online || busy} {...offlineDescribed} onPress={() => void answerCard(true)} testID="notes-card-change" />
+              </View>
             </View>
-            <View style={{ flexGrow: 1, flexBasis: CARD_BUTTON_BASIS }}>
-              <Button label={t.oneTimeCard.change.cta} tone="secondary" size="md" fullWidth disabled={!online || busy} {...offlineDescribed} onPress={() => void answerCard(true)} testID="notes-card-change" />
-            </View>
-          </View>
+          )}
         </View>
       ) : null}
 
@@ -264,7 +272,8 @@ export function NotesGrownUpScreen({ navigation, route }: Props): React.ReactEle
         </>
       ) : null}
 
-      {hasClass ? (
+      {/* Teachers get the reaction only while class notes are "All notes" (section 7.2), so the line shows only then (or while the mode is not known yet). */}
+      {hasClass && shownMode !== 'presets' && shownMode !== 'off' ? (
         <>
           <Spacer size="lg" />
           <Body tone="secondary" testID="notes-disclosure">

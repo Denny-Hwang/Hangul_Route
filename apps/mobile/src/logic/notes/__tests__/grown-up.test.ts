@@ -2,6 +2,7 @@ import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import {
   attestFor,
+  endsGateOnLeave,
   grownUpNotes,
   grownUpRow,
   hideOutcome,
@@ -30,8 +31,15 @@ describe('grownUpRow: the dashboard row "Notes for <learner>" (section 6.10 item
   it('is New while a note arrived after the grown-up last opened this learner\'s notes', () => {
     const d = data({ notes: [note('aaaaaaaa', { createdAt: at(12, 9) })] });
     expect(grownUpRow({ data: d, memberships: [] })).toEqual({ isNew: true });
-    expect(grownUpRow({ data: { ...d, grownUpSeenAt: at(12, 10) }, memberships: [] })).toEqual({ isNew: false });
-    expect(grownUpRow({ data: { ...d, grownUpSeenAt: at(12, 8) }, memberships: [] })).toEqual({ isNew: true });
+    expect(grownUpRow({ data: { ...d, grownUpSeenIds: ['note:aaaaaaaa'] }, memberships: [] })).toEqual({ isNew: false });
+    expect(grownUpRow({ data: { ...d, grownUpSeenIds: [] }, memberships: [] })).toEqual({ isNew: true });
+  });
+
+  it('counts arrival on this device, not the time a note was written (a late or offline delivery is New)', () => {
+    // Written before the grown-up looked, delivered after: it was not on the device then, so it is New.
+    const late = note('bbbbbbbb', { createdAt: at(11, 9) });
+    const d = data({ notes: [note('aaaaaaaa', { createdAt: at(12, 9) }), late], grownUpSeenIds: ['note:aaaaaaaa'] });
+    expect(grownUpRow({ data: d, memberships: [] })).toEqual({ isNew: true });
   });
 });
 
@@ -125,5 +133,11 @@ describe('telemetry, attestation and where Done goes', () => {
   it('Done returns to My notes from the note page, else back to Notes for <learner>', () => {
     expect(noteReportDoneTarget('note_page')).toBe('Notes');
     expect(noteReportDoneTarget('grown_up_zone')).toBe('back');
+  });
+
+  it('ends the grown-up session on leaving only on the learner path of a gated device', () => {
+    expect(endsGateOnLeave('note_page', false)).toBe(true);
+    expect(endsGateOnLeave('note_page', true)).toBe(false);
+    expect(endsGateOnLeave('grown_up_zone', false)).toBe(false);
   });
 });

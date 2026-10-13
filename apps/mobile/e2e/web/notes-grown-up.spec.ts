@@ -76,6 +76,28 @@ async function openNotesForMina(page: Page): Promise<void> {
   await expect(page.getByRole('heading', { name: 'Notes for Mina' })).toBeVisible();
 }
 
+/** From Home: Profile, My notes, the newest note, Tell a grown-up, the PIN; the report sheet is open. */
+async function reportFromNotePage(page: Page): Promise<void> {
+  await page.goto('/');
+  await expect(page.getByText('Hi, Mina!')).toBeVisible();
+  const guide = page.getByTestId('install-guide');
+  await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+  await page.getByRole('button', { name: /profile/i }).first().click();
+  await page.getByTestId('profile-notes-row').click();
+  await page.getByTestId('notes-group-new').getByRole('link').first().click();
+  await page.getByRole('link', { name: 'Tell a grown-up (PIN required)' }).click();
+  await unlockWithPin(page);
+  await expect(page.getByRole('heading', { name: 'Report this note' })).toBeVisible();
+}
+
+/** On Profile, with no reload: the grown-up zone asks for the PIN again (the session is closed). */
+async function expectZoneLocked(page: Page): Promise<void> {
+  await expect(page.getByTestId('profile-notes-row')).toBeVisible();
+  await page.getByRole('button', { name: /^Grown-up zone/ }).click();
+  await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();
+}
+
 test.describe('grown-up notes (flag on)', () => {
   test.skip(!NOTES, 'needs a build with EXPO_PUBLIC_NOTES_ENABLED=true and E2E_NOTES=1');
 
@@ -104,7 +126,7 @@ test.describe('grown-up notes (flag on)', () => {
     await shot(page, 'notes-grown-up');
 
     // Opening the learner's notes cleared the dashboard row's New.
-    await expect.poll(async () => (await readStored<{ grownUpSeenAt?: string }>(page, `notes:${profileId}`))?.grownUpSeenAt ?? null).not.toBeNull();
+    await expect.poll(async () => (await readStored<{ grownUpSeenIds?: string[] }>(page, `notes:${profileId}`))?.grownUpSeenIds ?? null).toEqual(['note:aaaaaaaa', 'note:bbbbbbbb']);
 
     // A call that cannot reach the Worker leaves the choice as it was and says so, amber, never red.
     await page.getByRole('radio', { name: 'Off' }).click();
@@ -148,16 +170,7 @@ test.describe('grown-up notes (flag on)', () => {
 
   test('Tell a grown-up: the PIN, then the sheet; Done goes back to My notes without the note', async ({ page }) => {
     await childWithNotes(page);
-    await page.goto('/');
-    await expect(page.getByText('Hi, Mina!')).toBeVisible();
-    const guide = page.getByTestId('install-guide');
-    await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
-    if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
-    await page.getByRole('button', { name: /profile/i }).first().click();
-    await page.getByTestId('profile-notes-row').click();
-    await page.getByTestId('notes-group-new').getByRole('link').first().click();
-    await page.getByRole('link', { name: 'Tell a grown-up (PIN required)' }).click();
-    await unlockWithPin(page);
+    await reportFromNotePage(page);
     await expect(page.getByRole('heading', { name: 'Report this note' })).toBeVisible();
     await expect(page.getByTestId('note-report-quote')).toContainText('Thinking of you. Have fun learning today.');
     await page.getByRole('radio', { name: 'Unkind' }).click();
@@ -167,6 +180,28 @@ test.describe('grown-up notes (flag on)', () => {
     await page.getByTestId('note-report-done').click();
     await expect(page.getByRole('heading', { name: 'My notes' })).toBeVisible();
     await expect(page.getByTestId('notes-list').getByRole('link')).toHaveCount(1);
+    // One My notes on the stack, and the grown-up session ended with the report.
+    await page.getByTestId('notes-screen').getByTestId('notes-back').click();
+    await expectZoneLocked(page);
+  });
+
+  test('Tell a grown-up: closing the sheet without a report ends the grown-up session too', async ({ page }) => {
+    await childWithNotes(page);
+    await reportFromNotePage(page);
+    await page.getByTestId('note-report-close').click();
+    await expect(page.getByTestId('note-page')).toBeVisible();
+    await page.getByTestId('note-detail-screen').getByTestId('notes-back').click();
+    await page.getByTestId('notes-screen').getByTestId('notes-back').click();
+    await expectZoneLocked(page);
+  });
+
+  test('the disclosure line shows only while class notes are All notes (teachers get no answer otherwise)', async ({ page }) => {
+    const profileId = await childWithNotes(page);
+    await seedStored(page, `notes:${profileId}`, { notes: NOTES_SEED, prefs: { classes: 'presets', acknowledged: true }, putAway: [], classNotesCardSeen: true, queue: [] });
+    await openNotesForMina(page);
+    await expect(page.getByRole('radio', { name: 'Encouragements only' })).toHaveAttribute('aria-checked', 'true');
+    await expect(page.getByTestId('notes-disclosure')).toHaveCount(0);
+    await expect(page.getByTestId('notes-one-time-card')).toHaveCount(0);
   });
 
   test('offline: Hide, the card and the setting wait for the internet; Report stays', async ({ page, context }) => {

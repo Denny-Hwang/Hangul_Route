@@ -44,10 +44,12 @@ export interface NotesData {
   classNotesCardSeen: boolean;
   queue: PendingWrite[];
   /**
-   * When a grown-up last opened this learner's notes in the grown-up zone (FB-9, section 6.10 item 1):
-   * the dashboard row says "New" for a note that arrived later. Optional, read leniently.
+   * The note ids this device held when a grown-up last opened this learner's notes in the grown-up
+   * zone (FB-9, section 6.10 item 1): the dashboard row says "New" for a note that arrived on this
+   * device since, whenever it was written (a late or offline delivery still counts, and the device
+   * clock plays no part). Optional, read leniently; never sent to the server.
    */
-  grownUpSeenAt?: string;
+  grownUpSeenIds?: string[];
 }
 
 /** A fresh empty record; every call returns its own object. */

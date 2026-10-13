@@ -51,7 +51,7 @@ export function applyInbox(local: NotesData, inbox: { notes: readonly InboxNote[
       classNotesCardSeen: inbox.notePrefs.acknowledged,
       queue: local.queue.filter((write) => write.kind === 'report' || seen.has(write.noteId)),
       // Device state of the grown-up zone (FB-9), never on the server.
-      ...(local.grownUpSeenAt === undefined ? {} : { grownUpSeenAt: local.grownUpSeenAt }),
+      ...(local.grownUpSeenIds === undefined ? {} : { grownUpSeenIds: local.grownUpSeenIds.filter((id) => seen.has(id)) }),
     },
     added: [...seen].filter((id) => !cached.has(id)),
     removed: local.notes.filter((n) => !seen.has(n.id)).map((n) => n.id),
