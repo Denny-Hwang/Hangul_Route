@@ -24,6 +24,7 @@ import { bundleOs, flags } from '../../config/flags';
 import { grownUpEntriesOn, runGrownUpHandoff } from '../../logic/shell/entry-points';
 import { grownUpPinParams } from '../../logic/shell/handoff-rules';
 import { openGrownUpArea } from '../../platform/grown-up-handoff';
+import { FreeLessonsRow } from './FreeLessonsRow';
 import { GrownUpHomeCard } from './GrownUpHomeCard';
 import { localizeStage } from '../../logic/content-locale';
 import { bandLabel } from '../../logic/placement/copy';
@@ -161,6 +162,8 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
                   })}
                 </>
               ) : null}
+              {/* F-ENT-003 E3-12b: the free-lessons line, owner only (draws nothing otherwise). */}
+              <FreeLessonsRow profileId={p.id} name={p.displayName} testID={`dashboard-free-line-${p.id}`} />
             </Card>
           );
         })
