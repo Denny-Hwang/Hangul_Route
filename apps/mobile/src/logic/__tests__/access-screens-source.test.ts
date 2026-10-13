@@ -17,6 +17,11 @@ const EPISODE = 'screens/episode/EpisodeDetailView.tsx';
 describe('the episode page (E3-6)', () => {
   const src = read(EPISODE);
 
+  it('a tagged row still reads its blurb, builds-on line and stars (the group hides them otherwise)', () => {
+    expect(src).toMatch(/messages\.a11y\.access\.row\(/);
+    expect(src).toMatch(/\[q\.blurbEn, buildsOn \? buildsOnLine\(buildsOn, m\) : null, messages\.a11y\.stars\(stars\)\]/);
+  });
+
   it('draws no lock glyph in any state (D7: the waiting card tile has no glyph)', () => {
     expect(src).not.toMatch(/name=["']lock["']/);
   });
@@ -58,7 +63,9 @@ describe('the quest player guard (section 3.6)', () => {
     const src = read('screens/quest/QuestPlayerScreen.tsx');
     expect(src).toMatch(/playerGuard\(questOpen, questId, episodeId\)/);
     expect(src).toMatch(/navigation\.replace\('EpisodeDetail', guard\)/);
-    expect(src).toMatch(/if \(guard\) return null;/);
+    expect(src).toMatch(/if \(!settled \|\| guard\) return null;/);
+    // A closed answer is checked again once the tier and memberships are read (never redirect an owned quest).
+    expect(src).toMatch(/settledPlayerGuard\(\{ learnerId, questId, episodeId \}\)/);
   });
 });
 
