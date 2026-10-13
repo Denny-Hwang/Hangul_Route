@@ -42,7 +42,7 @@ export function emptySnapshot(profileId: string): ProgressSnapshot {
 
 /** The four dictionary slices the copy selectors read, from one locale's dictionary. */
 export function myRouteMessages(m: Messages): MyRouteMessages {
-  return { learner: m.learner.myRoute, grownup: m.caregiver.journey, skillsNote: m.caregiver.skillsNote, a11y: m.a11y.myRoute };
+  return { learner: m.learner.myRoute, access: m.learner.access, grownup: m.caregiver.journey, skillsNote: m.caregiver.skillsNote, a11y: m.a11y.myRoute };
 }
 
 /** The badge glyph per stage state (section 3.3: a non-colour cue for every state). */
@@ -106,6 +106,11 @@ export interface StageRowView {
   connector: Connector;
   /** The letter wall drawn when the stage is open (R-7c): Stage 1 only, null without tiles. */
   letterWall: LetterWallView | null;
+  /**
+   * The row draws a not-open pip (`laterReason: 'notOpen'`), so its legend lists "Not open yet" beside
+   * "Coming later" (amendment section 4.5, LR-5b): the word, not the shared dotted ring, tells them apart.
+   */
+  notOpenLegend: boolean;
 }
 
 export interface LaterRowView {
@@ -199,6 +204,14 @@ export interface MyRouteViewInput {
   formatDay?: (day: DateKey) => string;
   /** The first visit that shows this reached goal (LR-5c); never in read-only mode. */
   firstReached?: boolean;
+  /** The first free word topic this build lists (`practiceTopicOf`); the free-end hero's Practice words. Absent or null: Open Library. */
+  practiceTopic?: string | null;
+  /**
+   * The episode page shows F-ENT-003's preview, with its own ask, for a quest that is not open
+   * (E3-6). Until then the page does not check quest access, so a not-open cell opens nothing: the
+   * route never offers a quest it just called "Not open yet". E3-6 passes true (amendment section 4.5).
+   */
+  notOpenPreview?: boolean;
 }
 
 const TONE: Readonly<Record<Exclude<StageState, 'open'>, PillTone>> = {
@@ -292,7 +305,15 @@ function stageRowView(row: StageRow, ctx: CopyContext, i: MyRouteViewInput, fres
         word,
         pips: cell.pips,
         // A grown-up never opens an episode from here: EpisodeDetail plays as the device's active learner (amendment 5.1, 6.2).
-        episodeId: cell.state === 'later' || ctx.viewer === 'grownup' ? null : cell.episodeId,
+        // A not-open cell (F-ENT-003 quest access, `laterReason: 'notOpen'`) in a stage the learner may enter opens its
+        // page once that page is F-ENT-003's preview with its own ask (`notOpenPreview`, E3-6), so the route page itself
+        // has none (section 4.5). A coming-later cell, or any cell of a stage the learner is not entitled to (OD-4's other
+        // branch), opens nothing.
+        episodeId:
+          ctx.viewer === 'grownup' ||
+          (cell.state === 'later' && (i.notOpenPreview !== true || row.state === 'later' || !cell.pips.some((p) => p.laterReason === 'notOpen')))
+            ? null
+            : cell.episodeId,
         inPlan: planTag,
         a11yLabel: planTag === null ? label : i.messages.a11y.myRoute.cellInPlan(label, planTag),
       };
@@ -300,6 +321,7 @@ function stageRowView(row: StageRow, ctx: CopyContext, i: MyRouteViewInput, fres
     fresh: [...row.pips, ...row.newPips].some((p) => fresh.has(p.key)),
     connector: null,
     letterWall: row.stage === 'stage1' ? letterWallView(i.letterWall ?? [], i.messages) : null,
+    notOpenLegend: row.cells.some((cell) => cell.pips.some((p) => p.laterReason === 'notOpen')),
   };
 }
 
@@ -384,7 +406,7 @@ export function myRouteView(i: MyRouteViewInput): MyRouteView {
   const here = model.stages.find((s) => s.here) as StageRow;
   return {
     hero: model.hero,
-    heroCopy: heroCopy(model, ctx, { nextTitle: i.nextTitle, hasStories: i.hasStories }),
+    heroCopy: heroCopy(model, ctx, { nextTitle: i.nextTitle, hasStories: i.hasStories, canPracticeWords: typeof i.practiceTopic === 'string' }),
     routeCard: routeCardCopy(model, ctx, {
       nextTitle: i.nextTitle,
       ...(i.firstReached === undefined ? {} : { firstReached: i.firstReached }),

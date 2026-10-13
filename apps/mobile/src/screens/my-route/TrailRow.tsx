@@ -129,10 +129,15 @@ function BuildChips({ builds }: { builds: { label: string; icon: RouteIcon }[] }
   );
 }
 
-const LEGEND: readonly PipState[] = ['done', 'known', 'open', 'new', 'later'];
+const LEGEND_BEFORE: readonly PipState[] = ['done', 'known', 'open', 'new'];
+const LEGEND_AFTER: readonly PipState[] = ['later'];
 
-/** "What the shapes mean": each drawn shape with its word (section 3.4). */
-function PipLegend({ accent }: { accent: string }): React.ReactElement {
+/**
+ * "What the shapes mean": each drawn shape with its word (section 3.4). A row with a not-open pip adds
+ * "Not open yet" with the same dotted ring, just before "Coming later" (amendment section 4.5, LR-5b;
+ * mock `design/screens/learning-route/mock/route-card.html` state D): the word tells them apart.
+ */
+function PipLegend({ accent, notOpen }: { accent: string; notOpen: boolean }): React.ReactElement {
   const m = useMessages().learner.myRoute.legend;
   const [open, setOpen] = useState(false);
   return (
@@ -140,7 +145,19 @@ function PipLegend({ accent }: { accent: string }): React.ReactElement {
       <Button label={m.title} tone="ghost" size="sm" onPress={() => setOpen((v) => !v)} expanded={open} />
       {open ? (
         <View style={{ gap: spacing.xs, paddingTop: spacing.xs }}>
-          {LEGEND.map((state) => (
+          {LEGEND_BEFORE.map((state) => (
+            <View key={state} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+              <Pip state={state} context="cell" accent={accent} />
+              <Body size="sm">{m[state]}</Body>
+            </View>
+          ))}
+          {notOpen ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }} testID="my-route-legend-not-open">
+              <Pip state="later" context="cell" accent={accent} />
+              <Body size="sm">{m.notOpen}</Body>
+            </View>
+          ) : null}
+          {LEGEND_AFTER.map((state) => (
             <View key={state} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
               <Pip state={state} context="cell" accent={accent} />
               <Body size="sm">{m[state]}</Body>
@@ -304,7 +321,7 @@ export function StageRowItem({ row, open, look, reducedMotion, onToggle, onOpenE
                 );
               })}
             </View>
-            <PipLegend accent={accent} />
+            <PipLegend accent={accent} notOpen={row.notOpenLegend} />
           </View>
           {row.letterWall ? <LetterWall wall={row.letterWall} /> : null}
         </View>

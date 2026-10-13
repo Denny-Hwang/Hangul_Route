@@ -453,3 +453,60 @@ describe('myRouteView: the route card, the weekly plan line and the plan cells (
     expect(cell?.a11yLabel).toBe(EN.a11y.myRoute.cellInPlan(EN.a11y.myRoute.cell(cell?.themeLabel ?? '', cell?.title ?? '', cell?.word ?? ''), 'In your plan'));
   });
 });
+
+describe('myRouteView: not-open pips and the free-end hero (Learning Route LR-5b)', () => {
+  const stage2Closed = (id: string) => !id.startsWith('quest:stage2-');
+
+  it('a stage row with a not-open pip asks its legend for the "Not open yet" row; other rows and an all-open page do not', () => {
+    const v = view(model(APPENDIX_C, { isQuestOpen: stage2Closed }));
+    expect(stageRow(v, 'stage2').notOpenLegend).toBe(true);
+    expect(stageRow(v, 'stage1').notOpenLegend).toBe(false);
+    const open = view(model(APPENDIX_C));
+    expect(open.trail.every((r) => r.kind !== 'stage' || !r.notOpenLegend)).toBe(true);
+  });
+
+  it('the not-open stage reads "Not open yet" in its caption and its row label keeps the stage word; its cells say "Not open yet"', () => {
+    const s2 = stageRow(view(model(APPENDIX_C, { isQuestOpen: stage2Closed })), 'stage2');
+    expect(s2.captions).toEqual(['Not open yet']);
+    expect(s2.stateWord).toBe('A taste');
+    const playable = s2.cells.filter((c) => c.pips.some((p) => p.kind === 'quest'));
+    expect(playable.length).toBeGreaterThan(0);
+    expect(playable.every((c) => c.word === 'Not open yet')).toBe(true);
+  });
+
+  it('until F-ENT-003 E3-6 ships the preview, a not-open cell opens nothing (the page never offers a quest it calls "Not open yet")', () => {
+    const cells = stageRow(view(model(APPENDIX_C, { isQuestOpen: stage2Closed })), 'stage2').cells;
+    expect(cells.some((c) => c.pips.some((p) => p.laterReason === 'notOpen'))).toBe(true);
+    expect(cells.every((c) => c.episodeId === null)).toBe(true);
+    expect(stageRow(view(model(APPENDIX_C, { isQuestOpen: stage2Closed }), { notOpenPreview: false }), 'stage2').cells.every((c) => c.episodeId === null)).toBe(true);
+  });
+
+  it('with the E3-6 preview, a not-open cell row opens its episode page (the preview carries the ask); coming-later cells and grown-ups never do', () => {
+    const v = view(model(APPENDIX_C, { isQuestOpen: stage2Closed }), { notOpenPreview: true });
+    const cells = stageRow(v, 'stage2').cells;
+    expect(cells.some((c) => c.pips.some((p) => p.laterReason === 'notOpen'))).toBe(true);
+    for (const c of cells) {
+      const notOpen = c.pips.some((p) => p.laterReason === 'notOpen');
+      expect(c.episodeId !== null, c.key).toBe(notOpen);
+    }
+    const g = view(model(APPENDIX_C, { isQuestOpen: stage2Closed }), { viewer: 'grownup', notOpenPreview: true });
+    expect(stageRow(g, 'stage2').cells.every((c) => c.episodeId === null)).toBe(true);
+  });
+
+  it('the not-open word is the access word the Journey uses (one value, amendment section 7.3)', () => {
+    expect(EN.learner.access.notOpen).toBe('Not open yet');
+    expect(EN.learner.myRoute.legend.notOpen).toBe(EN.learner.access.notOpen);
+    expect(EN.learner.myRoute.state.notOpen).toBe(EN.learner.access.notOpen);
+  });
+
+  it('free-end: the card says open-for-you with Practice words when a free word topic exists, else Open Library', () => {
+    const m = model(STAGE1_8, { isQuestOpen: stage2Closed, routeNext: { kind: 'free-end', placedOut: false } });
+    const withTopic = view(m, { practiceTopic: 'food' });
+    expect(withTopic.routeCard.hoya).toBe('You played every quest that is open for you.');
+    expect(withTopic.heroCopy.cta).toEqual({ action: 'practice', label: 'Practice words' });
+    expect(view(m, { practiceTopic: null }).heroCopy.cta).toEqual({ action: 'library', label: 'Open Library' });
+    expect(view(m).heroCopy.cta).toEqual({ action: 'library', label: 'Open Library' });
+    // About a child: no button.
+    expect(view(m, { viewer: 'grownup', practiceTopic: 'food' }).heroCopy.cta).toBeNull();
+  });
+});

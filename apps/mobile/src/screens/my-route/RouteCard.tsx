@@ -159,7 +159,7 @@ export function RouteCard({ copy, pips, goalStage, cta, pose, onAction, focusTok
         ) : null}
         {copy.tasteLine !== null ? <Body>{copy.tasteLine}</Body> : null}
 
-        {where !== null && goalStage !== null && pips.length > 0 ? (
+        {copy.showPips && where !== null && goalStage !== null && pips.length > 0 ? (
           <PipRow groups={[[...pips]]} context="stage" accent={colors.stage[goalStage]} testID={`${testID}-pips`} />
         ) : null}
 

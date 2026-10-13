@@ -104,6 +104,8 @@ function stageRowView(row: StageRow, ctx: CopyContext, i: CatalogueTrailInput, t
     connector: null,
     // All lessons never opens a stage in place, so it draws no letter wall.
     letterWall: null,
+    // No learner, so no access: nothing is not open in the catalogue.
+    notOpenLegend: false,
   };
 }
 

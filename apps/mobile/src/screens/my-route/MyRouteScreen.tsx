@@ -7,11 +7,13 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Pressable, View } from 'react-native';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { episodesAll, questsAll } from '../../content';
+import { vocabTopics } from '../../content/vocab';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
 import { dayKey } from '../../logic/homework/mission-builder';
 import { myRouteAccess, myRouteEntryOf, selfEntryTab } from '../../logic/my-route/access';
 import { focusEffects, seenForView, seenReadAfter } from '../../logic/my-route/focus';
+import { practiceTopicOf } from '../../logic/my-route/free-end';
 import { buildMyRoute } from '../../logic/my-route/model';
 import { planWeekOf } from '../../logic/my-route/plan-week';
 import { goalSourcesOf, localizedRouteContent, routeLetterWall, routeModelInput } from '../../logic/my-route/route-input';
@@ -172,6 +174,8 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
 
   const [attempt, setAttempt] = useState(0);
   const localized = useMemo(() => localizedRouteContent(locale), [locale]);
+  // The free-end hero's Practice words: the first free word topic this build lists (LR-5b).
+  const practiceTopic = useMemo(() => practiceTopicOf(vocabTopics.map((t) => t.key)), []);
 
   const built = useMemo((): { model: MyRouteModel; week: number | null } | { error: true } => {
     try {
@@ -212,13 +216,14 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
       themeTitles,
       nextTitle: quest ? localizeQuest(quest, locale).titleEn : null,
       hasStories: defaultStoryIndex().some((e) => e.placement === 'shelf'),
+      practiceTopic,
       seen,
       letterWall: routeLetterWall(model),
       week,
       // "Plan ends {date}" on the grown-up card only (LR-OD-7); a plan day is a UTC calendar day.
       formatDay: (day) => formatDate(locale, `${day}T00:00:00.000Z`, 'monthDay', { utc: true }),
     });
-  }, [model, messages, readOnly, profile?.displayName, localized, locale, seen, week]);
+  }, [model, messages, readOnly, profile?.displayName, localized, locale, seen, week, practiceTopic]);
 
   // Once per focus: route_map.viewed from the tab, then remember what this open saw (active learner only, never
   // read-only: the grown-up screen sends and writes nothing, section 8).
@@ -313,6 +318,9 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
       if (event) void track(event);
       if (!readOnly) void track(nextStartedEvent(profileId, model.next.source, 'route'));
       navigation.navigate('QuestPlayer', { questId: model.next.questId, episodeId: model.next.episodeId });
+    } else if (cta.action === 'practice' && practiceTopic !== null) {
+      // The free-end hero (LR-5b): practice words that stay open; the route page never asks (section 4.5).
+      navigation.navigate('VocabTopic', { topicKey: practiceTopic });
     } else openLibrary();
   };
 
