@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Family notes states (F-FEEDBACK-001 mock, board)</title>
+<link rel="stylesheet" href="notes.css">
+</head>
+<body>
+<main class="board"><h1 class="board-title">Console / Family notes (FB-12; Sent tab FB-11a)</h1><p class="annot">Wireframe design/wireframes/console/family-notes.md. One learner at a time; every note from every space, also taken-back ones, newest first; never sorted by sender or status. The teacher is never named; a family note names the sending account (adult to adult inside the family). Row actions follow FB-10 receivedRowView.</p><section class="board-wide"><h2 class="board-title">Sheets</h2><div class="board-grid"><div class="board-item"><p class="board-label">B · Report (same reasons as the app)</p><div class="sample"><div class="sheet-page console"><div class="sheet short" role="dialog" aria-modal="true" aria-labelledby="fs-312"><div class="sheet-head"><h2 id="fs-312">Report this note</h2></div><div class="note-quote"><p class="gz-meta">From Saturday Class B (teacher)</p><p class="gz-preset">Your practice is helping you.</p><p class="note-words">Call me at the number below</p></div><fieldset class="choices"><legend>Why?</legend><label class="choice"><input type="radio" name="fr-311"><span>Unkind</span></label><label class="choice"><input type="radio" name="fr-311" checked><span>Unsafe</span></label><label class="choice"><input type="radio" name="fr-311"><span>Not meant for Mina</span></label><label class="choice"><input type="radio" name="fr-311"><span>Something else</span></label></fieldset><p class="quiet-line">Our team looks at every report.</p><div class="sheet-actions"><button type="button" class="btn btn-primary">Report and hide</button><button type="button" class="btn">Cancel</button></div></div></div></div></div>
+<div class="board-item"><p class="board-label">Hide confirm</p><div class="sample"><div class="sheet-page console"><div class="sheet short" role="dialog" aria-modal="true" aria-labelledby="fs-313"><div class="sheet-head"><h2 id="fs-313">Hide this note from Mina?</h2></div><p class="secondary">It goes away from Mina's app at the next sync. The sender sees 'Not shown'.</p><div class="sheet-actions"><button type="button" class="btn btn-primary">Hide</button><button type="button" class="btn">Cancel</button></div></div></div></div></div>
+<div class="board-item"><p class="board-label">Stop notes from this sender confirm</p><div class="sample"><div class="sheet-page console"><div class="sheet short" role="dialog" aria-modal="true" aria-labelledby="fs-314"><div class="sheet-head"><h2 id="fs-314">Stop notes from this sender?</h2></div><p class="secondary">Mina will not get notes from this sender. The sender is not told.</p><div class="sheet-actions"><button type="button" class="btn btn-primary">Stop notes</button><button type="button" class="btn">Cancel</button></div></div></div></div></div>
+<div class="board-item"><p class="board-label">own note reported (422 own_note)</p><div class="sample"><div class="sample-pad"><p class="problem" role="alert">This is your own note. You can take it back instead.</p></div></div></div></div></section>
+<section class="board-wide"><h2 class="board-title">Settings and D. Can send notes</h2><div class="board-grid"><div class="board-item"><p class="board-label">settings open after a change: Saved, last changed by, stopped senders</p><div class="sample"><div class="sample-pad"><div><button type="button" class="disclosure-btn" data-toggle aria-expanded="true" aria-controls="set-315"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.5 6 L15.5 12 L9.5 18" style="fill: none; stroke: var(--colors-text-secondary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Settings for Mina</span></button><div class="settings-panel" id="set-315"><fieldset class="choices"><legend>Notes from classes</legend><label class="choice"><input type="radio" name="cm-316" checked><span>All notes</span></label><label class="choice"><input type="radio" name="cm-316"><span>Encouragements only</span></label><label class="choice"><input type="radio" name="cm-316"><span>Off</span></label><p class="quiet-line">Notes from your family always arrive.</p><p class="quiet-line">Last changed by Ji-woo Kim</p><p class="saved" role="status"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12.5 L10 17.5 L19 6.5" style="fill: none; stroke: var(--colors-feedback-successDark); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg>Saved</p></fieldset><p class="quiet-line">Teachers see the answer Mina picks on their notes. They do not see when a note was read.</p><div class="stack"><h3>Stopped senders</h3><div class="stopped-row"><span>Your teacher · Sunday Class A</span><button type="button" class="btn btn-small">Allow again</button></div></div></div></div></div></div></div>
+<div class="board-item"><p class="board-label">settings, learner in no class: only stopped senders</p><div class="sample"><div class="sample-pad"><div><button type="button" class="disclosure-btn" data-toggle aria-expanded="true" aria-controls="set-317"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.5 6 L15.5 12 L9.5 18" style="fill: none; stroke: var(--colors-text-secondary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Settings for Mina</span></button><div class="settings-panel" id="set-317"><div class="stack"><h3>Stopped senders</h3><div class="stopped-row"><span>Your teacher · Sunday Class A</span><button type="button" class="btn btn-small">Allow again</button></div></div></div></div></div></div></div>
+<div class="board-item"><p class="board-label">D · family settings page, owner: one switch per caregiver</p><div class="sample"><div class="sample-pad"><section class="panel stack-md" aria-labelledby="sp-321"><h2 class="group-title" id="sp-321">Grown-ups in this family</h2><p class="unchanged" aria-hidden="true">Family settings page: name, join code, learners, Danger zone (unchanged)</p><div class="sender-row"><span class="sender-name">Ji-woo Kim (you)</span><span class="secondary">Can send notes: always</span></div><div class="sender-row"><span class="sender-name" id="sn-319">grandma.park@example.com</span><button type="button" class="switch" role="switch" aria-checked="true" aria-labelledby="sn-319 swl-322"><span id="swl-322">Can send notes</span><span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span></button></div><div class="sender-row"><span class="sender-name" id="sn-320">Min-ho Kim</span><button type="button" class="switch" role="switch" aria-checked="false" aria-labelledby="sn-320 swl-323"><span id="swl-323">Can send notes</span><span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span></button></div><p class="quiet-line">Anyone with the family code can join. Only grown-ups you turn on here can send notes.</p></section></div></div></div>
+<div class="board-item"><p class="board-label">D · other caregivers: the same list, read-only</p><div class="sample"><div class="sample-pad"><section class="panel stack-md" aria-labelledby="sp-326"><h2 class="group-title" id="sp-326">Grown-ups in this family</h2><p class="unchanged" aria-hidden="true">Family settings page: name, join code, learners, Danger zone (unchanged)</p><div class="sender-row"><span class="sender-name">Ji-woo Kim</span><span class="secondary">Can send notes: always</span></div><div class="sender-row"><span class="sender-name" id="sn-324">grandma.park@example.com</span><button type="button" class="switch" role="switch" aria-checked="true" aria-labelledby="sn-324 swl-327" disabled><span id="swl-327">Can send notes</span><span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span></button></div><div class="sender-row"><span class="sender-name" id="sn-325">Min-ho Kim (you)</span><button type="button" class="switch" role="switch" aria-checked="false" aria-labelledby="sn-325 swl-328" disabled><span id="swl-328">Can send notes</span><span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span></button></div><p class="quiet-line">Anyone with the family code can join. Only grown-ups you turn on here can send notes.</p></section></div></div></div></div></section>
+<section class="board-wide"><h2 class="board-title">States</h2><div class="board-wide"><div class="board-item"><p class="board-label">empty, learner in a class; family with one learner (no Learner select)</p><div class="sample"><div class="frame">
+<header class="frame-top">
+  <div class="frame-bar">
+    <a class="brand" href="#"><span class="brand-mark" aria-hidden="true">HR</span><span class="brand-name">Hangul Route</span></a>
+    <span class="persona-text">Family</span>
+    <a class="way-back" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Back to learning</span></a>
+    <select class="select wide-only" aria-label="Language"><option>English</option></select>
+    <button type="button" class="btn btn-quiet btn-small wide-only">Sign out</button>
+  </div>
+  <nav class="frame-nav" aria-label="Family"><ul class="nav-list"><li><a class="nav-item" href="#">Home</a></li><li><a class="nav-item" href="#">Reports</a></li><li><a class="nav-item" href="#" aria-current="page">Notes</a></li><li><a class="nav-item" href="#">Billing</a></li></ul></nav>
+</header>
+<main class="frame-main" id="content-333">
+<div class="notes-layout"><div class="page-head"><h1>Notes</h1><button type="button" class="btn btn-primary">Send a note</button></div><div class="tabs" role="tablist" aria-label="Notes for this learner"><button type="button" class="tab" role="tab" id="tabs-332-r" aria-selected="true" aria-controls="tabs-332-p">Received</button><button type="button" class="tab" role="tab" id="tabs-332-s" aria-selected="false" aria-controls="tabs-332-p" tabindex="-1">Sent</button></div><div class="stack-md" role="tabpanel" id="tabs-332-p" aria-labelledby="tabs-332-r"><p class="visually-hidden" role="status" aria-live="polite"></p><p class="secondary">No notes for Mina yet.</p><div><button type="button" class="disclosure-btn" data-toggle aria-expanded="false" aria-controls="set-329"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.5 6 L15.5 12 L9.5 18" style="fill: none; stroke: var(--colors-text-secondary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Settings for Mina</span></button><div class="settings-panel" id="set-329" hidden><fieldset class="choices"><legend>Notes from classes</legend><label class="choice"><input type="radio" name="cm-330" checked><span>All notes</span></label><label class="choice"><input type="radio" name="cm-330"><span>Encouragements only</span></label><label class="choice"><input type="radio" name="cm-330"><span>Off</span></label><p class="quiet-line">Notes from your family always arrive.</p><p class="quiet-line">Last changed by Ji-woo Kim</p></fieldset><p class="quiet-line">Teachers see the answer Mina picks on their notes. They do not see when a note was read.</p><div class="stack"><h3>Stopped senders</h3><div class="stopped-row"><span>Your teacher · Sunday Class A</span><button type="button" class="btn btn-small">Allow again</button></div></div></div></div></div></div>
+</main>
+<footer class="frame-foot"><div class="frame-foot-inner">
+  <div class="foot-links"><a href="#">About Hangul Route</a><a href="#">Privacy</a><a href="#">Terms</a></div>
+  <div class="foot-tools"><select class="select" aria-label="Language"><option>English</option></select><button type="button" class="btn btn-small">Sign out</button></div>
+</div></footer>
+</div></div></div>
+<div class="board-item"><p class="board-label">caregiver without the send grant: Send a note says why</p><div class="sample"><div class="frame">
+<header class="frame-top">
+  <div class="frame-bar">
+    <a class="brand" href="#"><span class="brand-mark" aria-hidden="true">HR</span><span class="brand-name">Hangul Route</span></a>
+    <span class="persona-text">Family</span>
+    <a class="way-back" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Back to learning</span></a>
+    <select class="select wide-only" aria-label="Language"><option>English</option></select>
+    <button type="button" class="btn btn-quiet btn-small wide-only">Sign out</button>
+  </div>
+  <nav class="frame-nav" aria-label="Family"><ul class="nav-list"><li><a class="nav-item" href="#">Home</a></li><li><a class="nav-item" href="#">Reports</a></li><li><a class="nav-item" href="#" aria-current="page">Notes</a></li><li><a class="nav-item" href="#">Billing</a></li></ul></nav>
+</header>
+<main class="frame-main" id="content-337">
+<div class="notes-layout"><div class="page-head"><h1>Notes</h1><button type="button" class="btn btn-primary" aria-disabled="true">Send a note</button></div><p class="quiet-line">The family owner can let you send notes.</p><label class="field-inline" for="lrn-335">Learner<select class="select" id="lrn-335"><option selected>Mina</option><option>Jun</option></select></label><div class="tabs" role="tablist" aria-label="Notes for this learner"><button type="button" class="tab" role="tab" id="tabs-336-r" aria-selected="true" aria-controls="tabs-336-p">Received</button><button type="button" class="tab" role="tab" id="tabs-336-s" aria-selected="false" aria-controls="tabs-336-p" tabindex="-1">Sent</button></div><div class="stack-md" role="tabpanel" id="tabs-336-p" aria-labelledby="tabs-336-r"><p class="visually-hidden" role="status" aria-live="polite"></p><ul class="sent-rows"><li class="sent-card"><p class="sent-to" id="rr-334">Today · From Saturday Class B (teacher)</p><p class="sent-preset">Your reading is getting stronger.</p><p class="note-words" lang="en">Loved your reading in class today</p><p class="status-line"><span>Opened</span><span class="sep" aria-hidden="true">·</span><span class="answer"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 20.5 C9 17.5 3.5 13.5 3.5 8.75 A4.25 4.25 0 0 1 12 8.75 A4.25 4.25 0 0 1 20.5 8.75 C20.5 13.5 15 17.5 12 20.5 Z" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round"/></svg>Thank you</span></p><div class="row-wrap"><button type="button" class="btn btn-small" aria-describedby="rr-334">Hide</button><button type="button" class="btn btn-small" aria-describedby="rr-334">Report</button><button type="button" class="btn btn-small" aria-describedby="rr-334">Stop notes from this sender</button></div></li></ul></div></div>
+</main>
+<footer class="frame-foot"><div class="frame-foot-inner">
+  <div class="foot-links"><a href="#">About Hangul Route</a><a href="#">Privacy</a><a href="#">Terms</a></div>
+  <div class="foot-tools"><select class="select" aria-label="Language"><option>English</option></select><button type="button" class="btn btn-small">Sign out</button></div>
+</div></footer>
+</div></div></div>
+<div class="board-item"><p class="board-label">no learners in the family</p><div class="sample"><div class="frame">
+<header class="frame-top">
+  <div class="frame-bar">
+    <a class="brand" href="#"><span class="brand-mark" aria-hidden="true">HR</span><span class="brand-name">Hangul Route</span></a>
+    <span class="persona-text">Family</span>
+    <a class="way-back" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Back to learning</span></a>
+    <select class="select wide-only" aria-label="Language"><option>English</option></select>
+    <button type="button" class="btn btn-quiet btn-small wide-only">Sign out</button>
+  </div>
+  <nav class="frame-nav" aria-label="Family"><ul class="nav-list"><li><a class="nav-item" href="#">Home</a></li><li><a class="nav-item" href="#">Reports</a></li><li><a class="nav-item" href="#" aria-current="page">Notes</a></li><li><a class="nav-item" href="#">Billing</a></li></ul></nav>
+</header>
+<main class="frame-main" id="content-338">
+<div class="notes-layout"><div class="page-head"><h1>Notes</h1></div><div class="state-note"><p>Add a learner to your family first.</p></div></div>
+</main>
+<footer class="frame-foot"><div class="frame-foot-inner">
+  <div class="foot-links"><a href="#">About Hangul Route</a><a href="#">Privacy</a><a href="#">Terms</a></div>
+  <div class="foot-tools"><select class="select" aria-label="Language"><option>English</option></select><button type="button" class="btn btn-small">Sign out</button></div>
+</div></footer>
+</div></div></div></div></section>
+<section class="board-wide"><h2 class="board-title">Loading, errors, limits</h2><div class="board-grid"><div class="board-item"><p class="board-label">loading</p><div class="sample"><div class="sample-pad"><div class="sent-rows" aria-busy="true"><div class="skeleton-card"><div class="skeleton-line short"></div><div class="skeleton-line"></div></div><div class="skeleton-card"><div class="skeleton-line short"></div><div class="skeleton-line"></div></div><div class="skeleton-card"><div class="skeleton-line short"></div><div class="skeleton-line"></div></div></div></div></div></div>
+<div class="board-item"><p class="board-label">load error</p><div class="sample"><div class="sample-pad"><div class="state-note"><p>Notes could not load. Try again.</p><button type="button" class="btn">Try again</button></div></div></div></div>
+<div class="board-item"><p class="board-label">an action failed: the change snaps back</p><div class="sample"><div class="sample-pad"><p class="problem" role="alert">That did not save. Try again.</p></div></div></div>
+<div class="board-item"><p class="board-label">short wait (per-minute limiter)</p><div class="sample"><div class="sample-pad"><p class="problem" role="alert">Please wait a minute and try again.</p></div></div></div>
+<div class="board-item"><p class="board-label">report limit (20 a day)</p><div class="sample"><div class="sample-pad"><p class="problem" role="alert">Too many reports today. Write to hello@hangulroute.com if you need help now.</p></div></div></div></div></section></main>
+<script>
+document.addEventListener('click', function (e) {
+  var t = e.target.closest('[data-toggle]');
+  if (t) {
+    var p = document.getElementById(t.getAttribute('aria-controls'));
+    var open = t.getAttribute('aria-expanded') !== 'true';
+    t.setAttribute('aria-expanded', String(open));
+    if (p) p.hidden = !open;
+    return;
+  }
+  var r = e.target.closest('[role="radio"]');
+  if (r && !r.hasAttribute('aria-disabled')) {
+    var g = r.closest('[role="radiogroup"]');
+    g.querySelectorAll('[role="radio"]').forEach(function (x) { x.setAttribute('aria-checked', String(x === r)); x.tabIndex = x === r ? 0 : -1; });
+    var live = g.querySelector('[data-live]');
+    if (live) live.textContent = r.getAttribute('data-picked');
+  }
+});
+</script>
+</body>
+</html>

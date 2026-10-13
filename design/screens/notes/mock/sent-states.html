@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class notes states (F-FEEDBACK-001 mock, board)</title>
+<link rel="stylesheet" href="notes.css">
+</head>
+<body>
+<main class="board"><h1 class="board-title">Console / Notes sent (FB-11a)</h1><p class="annot">Wireframe design/wireframes/console/notes-sent.md. Send time only, no sort or filter by status, no counts, no open rate. A batch is one row (&quot;To everyone (18 students)&quot;) and never lists who has not answered. A class sender never reads &quot;Opened&quot;.</p><section class="board-wide"><h2 class="board-title">B. Take back confirm</h2><div class="board-grid"><div class="board-item"><p class="board-label">one learner</p><div class="sample"><div class="sheet-page console"><div class="sheet short" role="dialog" aria-modal="true" aria-labelledby="tb-277"><div class="sheet-head"><h2 id="tb-277">Take back this note?</h2></div><p class="secondary">It goes away from Mina Kim's app at the next sync. The family can still see that it was sent.</p><div class="sheet-actions"><button type="button" class="btn btn-primary">Take back</button><button type="button" class="btn">Cancel</button></div></div></div></div></div>
+<div class="board-item"><p class="board-label">a send to everyone (batch: true)</p><div class="sample"><div class="sheet-page console"><div class="sheet short" role="dialog" aria-modal="true" aria-labelledby="tb-278"><div class="sheet-head"><h2 id="tb-278">Take back this note?</h2></div><p class="secondary">It goes away from everyone's app at the next sync. The family can still see that it was sent.</p><div class="sheet-actions"><button type="button" class="btn btn-primary">Take back</button><button type="button" class="btn">Cancel</button></div></div></div></div></div></div></section>
+<section class="board-wide"><h2 class="board-title">States</h2><div class="board-wide"><div class="board-item"><p class="board-label">filtered by one learner: their row of a batch, with its own status and answer</p><div class="sample"><div class="frame">
+<header class="frame-top">
+  <div class="frame-bar">
+    <a class="brand" href="#"><span class="brand-mark" aria-hidden="true">HR</span><span class="brand-name">Hangul Route</span></a>
+    <span class="persona-text">Teacher</span>
+    <a class="way-back" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Back to learning</span></a>
+    <select class="select wide-only" aria-label="Language"><option>English</option></select>
+    <button type="button" class="btn btn-quiet btn-small wide-only">Sign out</button>
+  </div>
+  <nav class="frame-nav" aria-label="Teacher"><ul class="nav-list"><li><a class="nav-item" href="#">Classes</a></li><li><a class="nav-item" href="#" aria-current="page">Notes</a></li><li><a class="nav-item" href="#">Billing</a></li></ul></nav>
+</header>
+<main class="frame-main" id="content-284">
+<div class="notes-layout"><a class="back-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-brand-secondaryDark); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Back to class</span></a>
+<div class="page-head"><h1>Notes · Saturday Class B</h1><button type="button" class="btn btn-primary">New note</button></div>
+<p class="quiet-line">Teachers see the answer a student picks. They do not see when a note was read.</p><label class="field-inline" for="show-279">Show<select class="select" id="show-279"><option>Everyone</option><option selected>Mina Kim</option><option>Jun Park</option><option>Sora Lee</option></select></label><p class="visually-hidden" role="status" aria-live="polite"></p><section class="day-group" aria-labelledby="day-280"><h2 id="day-280">Today</h2><ul class="sent-rows"><li class="sent-card"><p class="sent-to" id="sr-281">To Mina Kim</p><p class="sent-preset">You keep trying. That is how we learn.</p><p class="note-words" lang="en">Great work in class today, everyone</p><div class="sent-foot"><p class="status-line"><span>Sent</span><span class="sep" aria-hidden="true">·</span><span class="answer"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2 L13 9 L20 10 L13 11 L12 18 L11 11 L4 10 L11 9 Z" style="fill: var(--colors-text-primary)"/></svg>This made me happy</span></p><div class="row-wrap"><button type="button" class="btn btn-small" aria-describedby="sr-281">Take back</button></div></div></li></ul></section><section class="day-group" aria-labelledby="day-282"><h2 id="day-282">Yesterday</h2><ul class="sent-rows"><li class="sent-card"><p class="sent-to" id="sr-283">To Mina Kim</p><p class="sent-preset">Your reading is getting stronger.</p><p class="note-words" lang="en">Loved your reading in class today</p><div class="sent-foot"><p class="status-line"><span>Sent</span><span class="sep" aria-hidden="true">·</span><span class="answer"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 20.5 C9 17.5 3.5 13.5 3.5 8.75 A4.25 4.25 0 0 1 12 8.75 A4.25 4.25 0 0 1 20.5 8.75 C20.5 13.5 15 17.5 12 20.5 Z" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round"/></svg>Thank you</span></p><div class="row-wrap"><button type="button" class="btn btn-small" aria-describedby="sr-283">Take back</button></div></div></li></ul></section><button type="button" class="btn">Show older</button></div>
+</main>
+<footer class="frame-foot"><div class="frame-foot-inner">
+  <div class="foot-links"><a href="#">About Hangul Route</a><a href="#">Privacy</a><a href="#">Terms</a></div>
+  <div class="foot-tools"><select class="select" aria-label="Language"><option>English</option></select><button type="button" class="btn btn-small">Sign out</button></div>
+</div></footer>
+</div></div></div>
+<div class="board-item"><p class="board-label">take back of a reported note (409 note_reported): the row reads Not shown</p><div class="sample"><div class="frame">
+<header class="frame-top">
+  <div class="frame-bar">
+    <a class="brand" href="#"><span class="brand-mark" aria-hidden="true">HR</span><span class="brand-name">Hangul Route</span></a>
+    <span class="persona-text">Teacher</span>
+    <a class="way-back" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Back to learning</span></a>
+    <select class="select wide-only" aria-label="Language"><option>English</option></select>
+    <button type="button" class="btn btn-quiet btn-small wide-only">Sign out</button>
+  </div>
+  <nav class="frame-nav" aria-label="Teacher"><ul class="nav-list"><li><a class="nav-item" href="#">Classes</a></li><li><a class="nav-item" href="#" aria-current="page">Notes</a></li><li><a class="nav-item" href="#">Billing</a></li></ul></nav>
+</header>
+<main class="frame-main" id="content-288">
+<div class="notes-layout"><a class="back-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-brand-secondaryDark); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Back to class</span></a>
+<div class="page-head"><h1>Notes · Saturday Class B</h1><button type="button" class="btn btn-primary">New note</button></div>
+<p class="quiet-line">Teachers see the answer a student picks. They do not see when a note was read.</p><label class="field-inline" for="show-285">Show<select class="select" id="show-285"><option selected>Everyone</option><option>Mina Kim</option><option>Jun Park</option><option>Sora Lee</option></select></label><p class="problem" role="alert">This note can no longer be changed.</p><p class="visually-hidden" role="status" aria-live="polite"></p><section class="day-group" aria-labelledby="day-286"><h2 id="day-286">Yesterday</h2><ul class="sent-rows"><li class="sent-card"><p class="sent-to" id="sr-287">To Mina Kim</p><p class="sent-preset">Your reading is getting stronger.</p><p class="note-words" lang="en">Loved your reading in class today</p><div class="sent-foot"><p class="status-line"><span>Not shown</span></p></div></li></ul></section><button type="button" class="btn">Show older</button></div>
+</main>
+<footer class="frame-foot"><div class="frame-foot-inner">
+  <div class="foot-links"><a href="#">About Hangul Route</a><a href="#">Privacy</a><a href="#">Terms</a></div>
+  <div class="foot-tools"><select class="select" aria-label="Language"><option>English</option></select><button type="button" class="btn btn-small">Sign out</button></div>
+</div></footer>
+</div></div></div>
+<div class="board-item"><p class="board-label">anonymized class: names follow the class setting</p><div class="sample"><div class="frame">
+<header class="frame-top">
+  <div class="frame-bar">
+    <a class="brand" href="#"><span class="brand-mark" aria-hidden="true">HR</span><span class="brand-name">Hangul Route</span></a>
+    <span class="persona-text">Teacher</span>
+    <a class="way-back" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Back to learning</span></a>
+    <select class="select wide-only" aria-label="Language"><option>English</option></select>
+    <button type="button" class="btn btn-quiet btn-small wide-only">Sign out</button>
+  </div>
+  <nav class="frame-nav" aria-label="Teacher"><ul class="nav-list"><li><a class="nav-item" href="#">Classes</a></li><li><a class="nav-item" href="#" aria-current="page">Notes</a></li><li><a class="nav-item" href="#">Billing</a></li></ul></nav>
+</header>
+<main class="frame-main" id="content-296">
+<div class="notes-layout"><a class="back-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-brand-secondaryDark); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Back to class</span></a>
+<div class="page-head"><h1>Notes · Saturday Class B</h1><button type="button" class="btn btn-primary">New note</button></div>
+<p class="quiet-line">Teachers see the answer a student picks. They do not see when a note was read.</p><label class="field-inline" for="show-289">Show<select class="select" id="show-289"><option selected>Everyone</option><option>Mina Kim</option><option>Jun Park</option><option>Sora Lee</option></select></label><p class="visually-hidden" role="status" aria-live="polite"></p><section class="day-group" aria-labelledby="day-290"><h2 id="day-290">Yesterday</h2><ul class="sent-rows"><li class="sent-card"><p class="sent-to" id="sr-291">To M. K.</p><p class="sent-preset">Your reading is getting stronger.</p><p class="note-words" lang="en">Loved your reading in class today</p><div class="sent-foot"><p class="status-line"><span>Sent</span><span class="sep" aria-hidden="true">·</span><span class="answer"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 20.5 C9 17.5 3.5 13.5 3.5 8.75 A4.25 4.25 0 0 1 12 8.75 A4.25 4.25 0 0 1 20.5 8.75 C20.5 13.5 15 17.5 12 20.5 Z" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round"/></svg>Thank you</span></p><div class="row-wrap"><button type="button" class="btn btn-small" aria-describedby="sr-291">Take back</button></div></div></li></ul></section><section class="day-group" aria-labelledby="day-292"><h2 id="day-292">Oct 10</h2><ul class="sent-rows"><li class="sent-card"><p class="sent-to" id="sr-293">To J. P.</p><p class="sent-preset">Try this quest next. I think you will like it.</p><p class="sent-meta">Try this quest: Family at the Table</p><div class="sent-foot"><p class="status-line"><span>Sent</span></p><div class="row-wrap"><button type="button" class="btn btn-small" aria-describedby="sr-293">Take back</button></div></div></li></ul></section><section class="day-group" aria-labelledby="day-294"><h2 id="day-294">Oct 9</h2><ul class="sent-rows"><li class="sent-card"><p class="sent-to" id="sr-295">To S. L.</p><p class="sent-preset">See you in class soon.</p><div class="sent-foot"><p class="status-line"><span>Not shown</span></p></div></li></ul></section><button type="button" class="btn">Show older</button></div>
+</main>
+<footer class="frame-foot"><div class="frame-foot-inner">
+  <div class="foot-links"><a href="#">About Hangul Route</a><a href="#">Privacy</a><a href="#">Terms</a></div>
+  <div class="foot-tools"><select class="select" aria-label="Language"><option>English</option></select><button type="button" class="btn btn-small">Sign out</button></div>
+</div></footer>
+</div></div></div>
+<div class="board-item"><p class="board-label">C · family Sent tab: Signed, Sent by another grown-up, Opened</p><div class="sample"><div class="frame">
+<header class="frame-top">
+  <div class="frame-bar">
+    <a class="brand" href="#"><span class="brand-mark" aria-hidden="true">HR</span><span class="brand-name">Hangul Route</span></a>
+    <span class="persona-text">Family</span>
+    <a class="way-back" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Back to learning</span></a>
+    <select class="select wide-only" aria-label="Language"><option>English</option></select>
+    <button type="button" class="btn btn-quiet btn-small wide-only">Sign out</button>
+  </div>
+  <nav class="frame-nav" aria-label="Family"><ul class="nav-list"><li><a class="nav-item" href="#">Home</a></li><li><a class="nav-item" href="#">Reports</a></li><li><a class="nav-item" href="#" aria-current="page">Notes</a></li><li><a class="nav-item" href="#">Billing</a></li></ul></nav>
+</header>
+<main class="frame-main" id="content-276">
+<div class="notes-layout"><div class="page-head"><h1>Notes</h1><button type="button" class="btn btn-primary">Send a note</button></div><label class="field-inline" for="lrn-274">Learner<select class="select" id="lrn-274"><option selected>Mina</option><option>Jun</option></select></label><div class="tabs" role="tablist" aria-label="Notes for this learner"><button type="button" class="tab" role="tab" id="tabs-275-r" aria-selected="false" aria-controls="tabs-275-p" tabindex="-1">Received</button><button type="button" class="tab" role="tab" id="tabs-275-s" aria-selected="true" aria-controls="tabs-275-p">Sent</button></div><div class="stack-md" role="tabpanel" id="tabs-275-p" aria-labelledby="tabs-275-s"><p class="visually-hidden" role="status" aria-live="polite"></p><section class="day-group" aria-labelledby="day-266"><h2 id="day-266">Today</h2><ul class="sent-rows"><li class="sent-card"><p class="sent-to" id="sr-267">To Mina</p><p class="sent-meta">Signed Grandma</p><p class="sent-preset">Thinking of you. Have fun learning today.</p><p class="note-words" lang="ko">할머니가 많이 사랑해</p><div class="sent-foot"><p class="status-line"><span>Opened</span><span class="sep" aria-hidden="true">·</span><span class="answer"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 20.5 C9 17.5 3.5 13.5 3.5 8.75 A4.25 4.25 0 0 1 12 8.75 A4.25 4.25 0 0 1 20.5 8.75 C20.5 13.5 15 17.5 12 20.5 Z" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round"/></svg>Thank you</span></p><div class="row-wrap"><button type="button" class="btn btn-small" aria-describedby="sr-267">Take back</button></div></div></li></ul></section><section class="day-group" aria-labelledby="day-268"><h2 id="day-268">Yesterday</h2><ul class="sent-rows"><li class="sent-card"><p class="sent-to" id="sr-269">To everyone (2 learners)</p><p class="sent-meta">Signed Your family</p><p class="sent-preset">We love learning Korean with you.</p><div class="sent-foot"><p class="status-line"><span>Sent</span></p><div class="row-wrap"><button type="button" class="btn btn-small" aria-describedby="sr-269">Take back</button></div></div></li></ul></section><section class="day-group" aria-labelledby="day-270"><h2 id="day-270">Oct 10</h2><ul class="sent-rows"><li class="sent-card"><p class="sent-to" id="sr-271">To Jun</p><p class="sent-meta">Signed Mom</p><p class="sent-preset">Hoya and I are cheering for you.</p><p class="note-words" lang="en">Go Jun go</p><div class="sent-foot"><p class="status-line"><span>Not shown</span></p></div></li></ul></section><section class="day-group" aria-labelledby="day-272"><h2 id="day-272">Oct 9</h2><ul class="sent-rows"><li class="sent-card"><p class="sent-to" id="sr-273">To Jun</p><p class="sent-meta">Signed Dad</p><p class="sent-meta">Sent by another grown-up of this space</p><p class="sent-preset">I am proud of how hard you worked.</p><div class="sent-foot"><p class="status-line"><span>Sent</span></p></div></li></ul></section><button type="button" class="btn">Show older</button></div></div>
+</main>
+<footer class="frame-foot"><div class="frame-foot-inner">
+  <div class="foot-links"><a href="#">About Hangul Route</a><a href="#">Privacy</a><a href="#">Terms</a></div>
+  <div class="foot-tools"><select class="select" aria-label="Language"><option>English</option></select><button type="button" class="btn btn-small">Sign out</button></div>
+</div></footer>
+</div></div></div></div></section>
+<section class="board-wide"><h2 class="board-title">Empty, loading, error</h2><div class="board-grid"><div class="board-item"><p class="board-label">empty</p><div class="sample"><div class="sample-pad"><div class="notes-layout"><a class="back-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-brand-secondaryDark); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Back to class</span></a>
+<div class="page-head"><h1>Notes · Saturday Class B</h1><button type="button" class="btn btn-primary">New note</button></div>
+<p class="quiet-line">Teachers see the answer a student picks. They do not see when a note was read.</p><p class="visually-hidden" role="status" aria-live="polite"></p><div class="state-note"><p>No notes sent yet.</p><button type="button" class="btn btn-primary">New note</button></div></div></div></div></div>
+<div class="board-item"><p class="board-label">loading</p><div class="sample"><div class="sample-pad"><div class="notes-layout"><a class="back-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-brand-secondaryDark); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Back to class</span></a>
+<div class="page-head"><h1>Notes · Saturday Class B</h1><button type="button" class="btn btn-primary">New note</button></div>
+<p class="quiet-line">Teachers see the answer a student picks. They do not see when a note was read.</p><label class="field-inline" for="show-298">Show<select class="select" id="show-298"><option selected>Everyone</option><option>Mina Kim</option><option>Jun Park</option><option>Sora Lee</option></select></label><p class="visually-hidden" role="status" aria-live="polite"></p><div class="sent-rows" aria-busy="true"><div class="skeleton-card"><div class="skeleton-line short"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div><div class="skeleton-card"><div class="skeleton-line short"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div><div class="skeleton-card"><div class="skeleton-line short"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div></div></div></div></div>
+<div class="board-item"><p class="board-label">error</p><div class="sample"><div class="sample-pad"><div class="notes-layout"><a class="back-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-brand-secondaryDark); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg><span>Back to class</span></a>
+<div class="page-head"><h1>Notes · Saturday Class B</h1><button type="button" class="btn btn-primary">New note</button></div>
+<p class="quiet-line">Teachers see the answer a student picks. They do not see when a note was read.</p><label class="field-inline" for="show-299">Show<select class="select" id="show-299"><option selected>Everyone</option><option>Mina Kim</option><option>Jun Park</option><option>Sora Lee</option></select></label><p class="visually-hidden" role="status" aria-live="polite"></p><div class="state-note"><p>Notes could not load. Try again.</p><button type="button" class="btn">Try again</button></div></div></div></div></div></div></section></main>
+<script>
+document.addEventListener('click', function (e) {
+  var t = e.target.closest('[data-toggle]');
+  if (t) {
+    var p = document.getElementById(t.getAttribute('aria-controls'));
+    var open = t.getAttribute('aria-expanded') !== 'true';
+    t.setAttribute('aria-expanded', String(open));
+    if (p) p.hidden = !open;
+    return;
+  }
+  var r = e.target.closest('[role="radio"]');
+  if (r && !r.hasAttribute('aria-disabled')) {
+    var g = r.closest('[role="radiogroup"]');
+    g.querySelectorAll('[role="radio"]').forEach(function (x) { x.setAttribute('aria-checked', String(x === r)); x.tabIndex = x === r ? 0 : -1; });
+    var live = g.querySelector('[data-live]');
+    if (live) live.textContent = r.getAttribute('data-picked');
+  }
+});
+</script>
+</body>
+</html>

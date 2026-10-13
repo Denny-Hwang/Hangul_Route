@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Report a note (F-FEEDBACK-001 mock)</title>
+<link rel="stylesheet" href="notes.css">
+</head>
+<body>
+<div class="sheet-page app"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="rs-66-t"><div class="sheet-head"><h1 id="rs-66-t">Report this note</h1><button type="button" class="sheet-close" aria-label="Close"><svg class="icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5 L17.5 17.5" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/><path d="M17.5 6.5 L6.5 17.5" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg></button></div><div class="note-quote"><p class="gz-meta">Your teacher · Saturday Class B · Today</p><p class="gz-preset">Your reading is getting stronger.</p><p class="note-words">Loved your reading in class today</p></div><fieldset class="choices"><legend>Why?</legend><label class="choice"><input type="radio" name="why-67" checked><span>Unkind</span></label><label class="choice"><input type="radio" name="why-67"><span>Unsafe</span></label><label class="choice"><input type="radio" name="why-67"><span>Not meant for Mina</span></label><label class="choice"><input type="radio" name="why-67"><span>Something else</span></label></fieldset><div class="stack"><button type="button" class="btn btn-primary btn-block" aria-describedby="rl-68">Report and hide</button><p class="quiet-line" id="rl-68">The note goes away for Mina on every device. Our team looks at every report.</p></div><button type="button" class="btn btn-block">Just hide it</button></div></div>
+<script>
+document.addEventListener('click', function (e) {
+  var t = e.target.closest('[data-toggle]');
+  if (t) {
+    var p = document.getElementById(t.getAttribute('aria-controls'));
+    var open = t.getAttribute('aria-expanded') !== 'true';
+    t.setAttribute('aria-expanded', String(open));
+    if (p) p.hidden = !open;
+    return;
+  }
+  var r = e.target.closest('[role="radio"]');
+  if (r && !r.hasAttribute('aria-disabled')) {
+    var g = r.closest('[role="radiogroup"]');
+    g.querySelectorAll('[role="radio"]').forEach(function (x) { x.setAttribute('aria-checked', String(x === r)); x.tabIndex = x === r ? 0 : -1; });
+    var live = g.querySelector('[data-live]');
+    if (live) live.textContent = r.getAttribute('data-picked');
+  }
+});
+</script>
+</body>
+</html>
