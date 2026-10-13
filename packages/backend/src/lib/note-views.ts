@@ -117,9 +117,18 @@ export interface OversightFacts {
   reportedOnDevice: boolean;
 }
 
-export function oversightStatus(note: Pick<StoredNote, 'status' | 'readAt'>, facts: OversightFacts): OversightStatus {
+/**
+ * The section 7.2 family status of one note. Rule 8.2-c: a device report never changes what the note's own
+ * sender sees, so a note taken back or hidden before the report keeps reading `withdrawn` or `hidden` to them
+ * (as `sentNoteStatus` does for the sent list), and any other reported note reads `not_shown`.
+ */
+export function oversightStatus(note: Pick<StoredNote, 'status' | 'readAt' | 'withdrawnAt' | 'hiddenAt'>, facts: OversightFacts): OversightStatus {
   if (note.status === 'withdrawn' || note.status === 'hidden') return note.status;
-  if (note.status === 'reported') return facts.viewerIsSender && facts.reportedOnDevice ? 'not_shown' : 'reported';
+  if (note.status === 'reported') {
+    if (!facts.viewerIsSender || !facts.reportedOnDevice) return 'reported';
+    if (note.withdrawnAt !== null) return 'withdrawn';
+    return note.hiddenAt !== null ? 'hidden' : 'not_shown';
+  }
   if (!facts.delivered) return 'not_shown';
   return note.readAt === null ? 'live' : 'opened';
 }

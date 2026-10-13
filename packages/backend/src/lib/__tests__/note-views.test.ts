@@ -72,14 +72,28 @@ describe('the family view (FB-4b-family)', () => {
   const of = (over: Partial<Parameters<typeof oversightStatus>[1]> = {}) => ({ delivered: true, viewerIsSender: false, reportedOnDevice: false, ...over });
 
   it('oversightStatus: every status to the family; not_shown when delivery would not show it; rule 8.2-c for the sender', () => {
-    expect(oversightStatus(live, of())).toBe('live');
-    expect(oversightStatus(read, of())).toBe('opened');
-    expect(oversightStatus(read, of({ delivered: false }))).toBe('not_shown');
-    expect(oversightStatus({ status: 'hidden', readAt: null }, of({ delivered: false }))).toBe('hidden');
-    expect(oversightStatus({ status: 'withdrawn', readAt: null }, of())).toBe('withdrawn');
-    expect(oversightStatus({ status: 'reported', readAt: null }, of({ reportedOnDevice: true }))).toBe('reported');
-    expect(oversightStatus({ status: 'reported', readAt: null }, of({ viewerIsSender: true }))).toBe('reported');
-    expect(oversightStatus({ status: 'reported', readAt: null }, of({ viewerIsSender: true, reportedOnDevice: true }))).toBe('not_shown');
+    expect(oversightStatus({ ...live, hiddenAt: null }, of())).toBe('live');
+    expect(oversightStatus({ ...read, hiddenAt: null }, of())).toBe('opened');
+    expect(oversightStatus({ ...read, hiddenAt: null }, of({ delivered: false }))).toBe('not_shown');
+    const none = { readAt: null, withdrawnAt: null, hiddenAt: null };
+    expect(oversightStatus({ ...none, status: 'hidden', hiddenAt: TAKEN_BACK }, of({ delivered: false }))).toBe('hidden');
+    expect(oversightStatus({ ...none, status: 'withdrawn', withdrawnAt: TAKEN_BACK }, of())).toBe('withdrawn');
+    expect(oversightStatus({ ...none, status: 'reported' }, of({ reportedOnDevice: true }))).toBe('reported');
+    expect(oversightStatus({ ...none, status: 'reported' }, of({ viewerIsSender: true }))).toBe('reported');
+    expect(oversightStatus({ ...none, status: 'reported' }, of({ viewerIsSender: true, reportedOnDevice: true }))).toBe('not_shown');
+  });
+
+  it('oversightStatus: a device report never changes what the sender saw before it (rule 8.2-c)', () => {
+    const none = { readAt: null, withdrawnAt: null, hiddenAt: null };
+    const sender = of({ viewerIsSender: true, reportedOnDevice: true });
+    // Taken back, then reported on a device: still "withdrawn" to its sender, as in the sent list.
+    expect(oversightStatus({ ...none, status: 'reported', withdrawnAt: TAKEN_BACK }, sender)).toBe('withdrawn');
+    // Hidden, then reported on a device: still "hidden" to its sender.
+    expect(oversightStatus({ ...none, status: 'reported', hiddenAt: TAKEN_BACK }, sender)).toBe('hidden');
+    // Other caregivers see the report.
+    expect(oversightStatus({ ...none, status: 'reported', withdrawnAt: TAKEN_BACK }, of({ reportedOnDevice: true }))).toBe('reported');
+    // A family report is shown to its sender as reported, adult to adult (section 8.2).
+    expect(oversightStatus({ ...none, status: 'reported', withdrawnAt: TAKEN_BACK }, of({ viewerIsSender: true }))).toBe('reported');
   });
 
   it('accountLabel: the display name, else the email, else empty', () => {

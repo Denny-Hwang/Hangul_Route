@@ -373,11 +373,11 @@ describe('stop a sender and allow again (section 8.5)', () => {
     const [listed] = await blocks();
     expect(listed).toMatchObject({ label: 'dad@example.com', role: 'family', name: 'dad@example.com' });
     expect(listed?.senderRef).not.toBe('dad');
-    // the same sender seen from another family has another reference
+    // another family of the learner neither lists this family's block nor lifts it
     await db.addMembership({ spaceId: FAMILY_B, memberKind: 'learner', memberId: SUNI, role: 'student', joinedAt: T });
-    const fromB = ((await call('GET', `${base(SUNI, FAMILY_B)}/blocks`, bearer('otherParent'))).body.data as { blocks: Row[] }).blocks;
-    expect(fromB).toHaveLength(1);
-    expect(fromB[0]?.senderRef).not.toBe(listed?.senderRef);
+    expect(((await call('GET', `${base(SUNI, FAMILY_B)}/blocks`, bearer('otherParent'))).body.data as { blocks: Row[] }).blocks).toEqual([]);
+    expect((await call('DELETE', `${base(SUNI, FAMILY_B)}/blocks/${String(listed?.senderRef)}`, bearer('otherParent'))).status).toBe(404);
+    expect(await blocks()).toHaveLength(1);
   });
 
   it('refuses the viewer’s own note (422), a bad body (422), another learner’s note (404); outsiders 403', async () => {
@@ -444,8 +444,14 @@ describe('the family owner’s "Can send notes" switches (sections 6.1 and 8.2-b
     expect((await familySend('grandma')).status).toBe(403);
   });
 
-  it('only the owner: a caregiver gets 403 (the list is read-only for them); the owner cannot be turned off (409); 404 for a non-member or a class; 422 for a bad body', async () => {
-    expect((await senders('dad')).status).toBe(403);
+  it('every caregiver reads the list (rule 8.2-b); only the owner changes it (403); the owner cannot be turned off (409); 404 for a non-member or a class; 422 for a bad body', async () => {
+    const owners = await senders();
+    for (const user of ['dad', 'grandma']) {
+      const res = await senders(user);
+      expect(res.status, user).toBe(200);
+      expect(res.body.data).toEqual(owners.body.data);
+    }
+    for (const user of ['teacher', 'otherParent', 'stranger']) expect((await senders(user)).status, user).toBe(403);
     expect((await setSender('grandma', { canSend: true }, 'dad')).status).toBe(403);
     expect((await setSender('mom', { canSend: false })).body.error?.code).toBe('owner');
     expect((await setSender('mom', { canSend: true })).status).toBe(200);
@@ -453,6 +459,129 @@ describe('the family owner’s "Can send notes" switches (sections 6.1 and 8.2-b
     expect((await call('GET', `/api/spaces/${CLASS}/note-senders`, bearer('teacher'))).status).toBe(404);
     for (const body of [{}, { canSend: 'yes' }, { canSend: true, extra: 1 }, null]) expect((await setSender('grandma', body)).status, JSON.stringify(body)).toBe(422);
     expect(await db.getSendGrant(FAMILY, 'grandma')).toBeNull();
+  });
+});
+
+// A minute ago, so a family report made in the test is always the later one.
+const deviceReport = (noteId: string, senderAccountId: string, id = 'notereport:dev1') =>
+  db.insertNoteReport({ id, noteId, learnerId: SUNI, senderAccountId, reason: 'unkind', via: 'device', evidence: 'device-1', reporterKey: `family:${FAMILY}`, attest: null, createdAt: ago(60_000), reviewedAt: null, outcome: null });
+
+describe('rule 8.2-c: a device report never changes what the sender saw before it', () => {
+  it('a note taken back, then reported on a device, still reads withdrawn to its sender, in the family view and the sent list', async () => {
+    const fromDad = familyNote();
+    await put(fromDad);
+    expect((await call('POST', `/api/spaces/${FAMILY}/notes/${fromDad.id}/withdraw`, bearer('dad'), {})).status).toBe(200);
+    expect(await deviceReport(fromDad.id, 'dad')).toBe(true);
+    expect(await rowOf('dad', fromDad.id)).toMatchObject({ status: 'withdrawn', hiddenBy: null, reportedBy: null });
+    expect(JSON.stringify(rowsOf(await oversight('dad')))).not.toMatch(/"reported"|"device"|not_shown/);
+    const sent = await call('GET', `/api/spaces/${FAMILY}/notes?learner=${encodeURIComponent(SUNI)}`, bearer('dad'));
+    expect(((sent.body.data as { rows: Row[] }).rows.find((r) => r.id === fromDad.id))?.status).toBe('withdrawn');
+    expect(await rowOf('mom', fromDad.id)).toMatchObject({ status: 'reported', reportedBy: 'device' });
+  });
+
+  it('a note hidden by a caregiver, then reported on a device, still reads hidden to its sender', async () => {
+    const fromDad = familyNote();
+    await put(fromDad);
+    expect((await hide('mom', fromDad.id)).status).toBe(200);
+    expect(await deviceReport(fromDad.id, 'dad')).toBe(true);
+    expect(await rowOf('dad', fromDad.id)).toMatchObject({ status: 'hidden', hiddenBy: 'Mina Kim', reportedBy: null });
+    expect(await rowOf('grandma', fromDad.id)).toMatchObject({ status: 'reported', reportedBy: 'device' });
+  });
+
+  it('a device report and a later family report: still not_shown to the sender, with no actor', async () => {
+    const fromDad = familyNote();
+    await put(fromDad);
+    expect(await deviceReport(fromDad.id, 'dad')).toBe(true);
+    expect((await report('mom', fromDad.id)).status).toBe(201);
+    expect(await rowOf('dad', fromDad.id)).toMatchObject({ status: 'not_shown', reportedBy: null, hiddenBy: null });
+    expect(await rowOf('grandma', fromDad.id)).toMatchObject({ status: 'reported', reportedBy: 'device' });
+  });
+
+  it('hide of the sender’s own not_shown note answers one 409 whether a device report or a delivery rule hides it', async () => {
+    const reported = familyNote();
+    const ungranted = familyNote();
+    const shown = familyNote();
+    await put(reported, ungranted, shown);
+    expect(await deviceReport(reported.id, 'dad')).toBe(true);
+    const viaReport = await hide('dad', reported.id);
+    expect((await rowOf('dad', shown.id))?.status).toBe('live');
+    await db.deleteSendGrant(FAMILY, 'dad');
+    expect((await rowOf('dad', ungranted.id))?.status).toBe('not_shown');
+    const viaRule = await hide('dad', ungranted.id);
+    expect(viaReport.status).toBe(409);
+    expect(viaRule.status).toBe(viaReport.status);
+    expect(viaRule.body.error).toEqual(viaReport.body.error);
+    expect((await db.getNote(ungranted.id))?.status).toBe('live');
+    await db.putSendGrant({ spaceId: FAMILY, accountId: 'dad', grantedBy: 'mom', grantedAt: T });
+    expect((await hide('dad', shown.id)).status).toBe(200);
+    expect((await rowOf('dad', shown.id))).toMatchObject({ status: 'hidden', hiddenBy: 'dad@example.com' });
+  });
+});
+
+describe('a learner who is a student of two families (section 8.2: adult to adult inside the family)', () => {
+  beforeEach(async () => {
+    await db.addMembership({ spaceId: FAMILY_B, memberKind: 'learner', memberId: SUNI, role: 'student', joinedAt: T });
+  });
+
+  it('another family’s adults are never named: no sender name, and their hides and reports read that family’s space name', async () => {
+    const fromB = note({ spaceId: FAMILY_B, senderAccountId: 'otherParent', senderRole: 'family', senderLabel: 'mom', presetId: 'warm_learning_together' });
+    const hiddenByB = note();
+    const reportedByB = note();
+    await put(fromB, hiddenByB, reportedByB);
+    expect((await hide('otherParent', hiddenByB.id, SUNI)).status).toBe(403);
+    expect((await call('POST', `${base(SUNI, FAMILY_B)}/notes/${hiddenByB.id}/hide`, bearer('otherParent'))).status).toBe(200);
+    expect((await report('otherParent', reportedByB.id, { reason: 'unkind' }, SUNI, FAMILY_B)).status).toBe(201);
+    const rows = rowsOf(await oversight('mom'));
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    expect(byId.get(fromB.id)).toMatchObject({ spaceKind: 'family', spaceName: 'Park family', senderName: null, mine: false });
+    expect(byId.get(hiddenByB.id)).toMatchObject({ status: 'hidden', hiddenBy: 'Park family' });
+    expect(byId.get(reportedByB.id)).toMatchObject({ status: 'reported', reportedBy: 'Park family' });
+    expect(JSON.stringify(rows)).not.toContain('Other Parent');
+    // the other family names its own adult
+    const theirs = ((await call('GET', `${base(SUNI, FAMILY_B)}/notes`, bearer('otherParent'))).body.data as { rows: Row[] }).rows;
+    expect(theirs.find((r) => r.id === hiddenByB.id)).toMatchObject({ hiddenBy: 'Other Parent' });
+  });
+
+  it('each family lists and lifts only its own blocks; a blocked adult of the other family reads that family’s name', async () => {
+    const fromTeacher = note();
+    const fromB = note({ spaceId: FAMILY_B, senderAccountId: 'otherParent', senderRole: 'family', senderLabel: 'mom', presetId: 'warm_learning_together' });
+    await put(fromTeacher, fromB);
+    const placed = await call('POST', `${base(SUNI, FAMILY_B)}/blocks`, bearer('otherParent'), { noteId: fromTeacher.id });
+    expect(placed.status).toBe(201);
+    expect(await blocks()).toEqual([]);
+    const theirRef = String(placed.body.data?.senderRef);
+    expect((await call('DELETE', `${base()}/blocks/${theirRef}`, bearer('mom'))).status).toBe(404);
+    expect(await db.listBlocks(SUNI)).toHaveLength(1);
+    expect((await block('mom', { noteId: fromB.id })).status).toBe(201);
+    expect(await blocks()).toEqual([{ senderRef: expect.any(String), label: 'Park family', role: 'family', name: 'Park family', createdAt: expect.any(String) }]);
+  });
+});
+
+describe('the remaining branches of the family view', () => {
+  it('a blocked teacher who left every shared class reads former; a second report adds a row and names one reporter', async () => {
+    const n = note();
+    await put(n);
+    expect((await block('mom', { noteId: n.id })).status).toBe(201);
+    await db.removeMembership(CLASS, 'account', 'teacher');
+    expect(await blocks()).toEqual([{ senderRef: expect.any(String), label: 'A former sender', role: 'former', name: null, createdAt: expect.any(String) }]);
+
+    const twice = note({ senderAccountId: 'stranger' });
+    await put(twice);
+    expect((await report('mom', twice.id)).status).toBe(201);
+    expect((await report('grandma', twice.id)).status).toBe(201);
+    expect(await db.reportsForNotes([twice.id])).toHaveLength(2);
+    const row = await rowOf('dad', twice.id);
+    expect(row?.status).toBe('reported');
+    expect(['Mina Kim', 'Grandma Kim']).toContain(row?.reportedBy);
+    expect(await reporters('stranger')).toBe(1);
+  });
+
+  it('a caregiver hides a live note that delivery does not show (no grant): 200, hidden', async () => {
+    const fromGrandma = familyNote({ senderAccountId: 'grandma', senderLabel: 'grandma' });
+    await put(fromGrandma);
+    expect((await rowOf('mom', fromGrandma.id))?.status).toBe('not_shown');
+    expect((await hide('mom', fromGrandma.id)).status).toBe(200);
+    expect(await rowOf('mom', fromGrandma.id)).toMatchObject({ status: 'hidden', hiddenBy: 'Mina Kim' });
   });
 });
 
