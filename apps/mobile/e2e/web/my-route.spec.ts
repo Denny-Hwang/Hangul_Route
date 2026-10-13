@@ -252,25 +252,44 @@ test.describe('the Route tab and its route card (LR-10)', () => {
     expect(await firstStep(page)).toEqual(fromRoute);
   });
 
-  test('320 x 568: where Continue ends against the tab bar, with the longest Stage 1 title as Next (blocks R-10)', async ({ page }) => {
-    // Known finding of the LR-10 run (issue linked in the spec's review log, section 16): since Stage 1 grew to 15
-    // quests (F-QUEST-002 Q-8) the goal pips wrap to two rows at 320, and the card's Continue ends about 75 px under
-    // the tab bar's top edge (LR-D measured 13 px to spare with 8 pips). Every setup step below is asserted as usual,
-    // so a broken setup fails this test; only the measured overlap records the finding. The layout fix PR turns the
-    // last assertion into `toBeLessThanOrEqual(0)` (Continue fully above the tab bar), a precondition of R-10's flip.
-    test.info().annotations.push({ type: 'finding', description: 'LR-10: Continue is below the tab bar at 320 x 568; fix before R-10 flips the flag' });
+  /** How far the card's button ends below the tab bar's top edge (px); at most 0 means fully above the bar. */
+  async function ctaOverlap(page: Page, cta: Locator): Promise<number> {
+    const bar = page.getByRole('tablist');
+    await expect(bar).toBeVisible();
+    // Measure after the web fonts load: the longest title's line breaks depend on them.
+    await page.evaluate(() => document.fonts.ready.then(() => undefined));
+    const [buttonBox, barBox] = await Promise.all([cta.boundingBox(), bar.boundingBox()]);
+    if (buttonBox === null || barBox === null) throw new Error('the button or the tab bar has no box');
+    const overlap = buttonBox.y + buttonBox.height - barBox.y;
+    test.info().annotations.push({ type: 'overlap-px', description: String(Math.round(overlap)) });
+    return overlap;
+  }
+
+  test('320 x 568: Continue sits fully above the tab bar, with the longest Stage 1 title as Next (G2; LR-11, precondition of R-10)', async ({ page }) => {
+    // The LR-10 run found Continue about 75 px under the tab bar once Stage 1 grew to 15 quests (F-QUEST-002 Q-8;
+    // issue #530). LR-11's narrow-width card (design/screens/learning-route/route-card.md, "Narrow width") brings it
+    // back onto the first screen: one tap away without scrolling.
     await classPlanOnRoute(page);
     await openRouteTab(page);
     await expect(page.getByTestId('my-route-card-next')).toHaveText(m.hero.next(LONGEST_STAGE1.title));
     const cta = page.getByTestId('my-route-card-cta');
     await expect(cta).toHaveAccessibleName(m.hero.cta.continue);
-    const bar = page.getByRole('tablist');
-    await expect(bar).toBeVisible();
-    const [buttonBox, barBox] = await Promise.all([cta.boundingBox(), bar.boundingBox()]);
-    if (buttonBox === null || barBox === null) throw new Error('Continue or the tab bar has no box');
-    const overlap = buttonBox.y + buttonBox.height - barBox.y;
-    test.info().annotations.push({ type: 'overlap-px', description: String(Math.round(overlap)) });
-    expect(overlap, 'LR-10 finding: Continue ends under the tab bar at 320 x 568').toBeGreaterThan(0);
+    expect(await ctaOverlap(page, cta), 'Continue ends under the tab bar at 320 x 568').toBeLessThanOrEqual(0);
+    expect(await noSideScroll(page)).toBe(true);
+    // The first screen the 5-second check (LR-OD-3, assumption g) reads again for LR-11.
+    await page.screenshot({ path: test.info().outputPath('route-first-class-plan-320.png') });
+  });
+
+  test('320 x 568: a new learner\'s Start sits fully above the tab bar (G2; LR-11)', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await learnerOnHome(page);
+    await openRouteTab(page);
+    const card = page.getByTestId('my-route-card');
+    await expect(card.getByText(m.hero.start, { exact: true })).toBeVisible();
+    const cta = page.getByTestId('my-route-card-cta');
+    await expect(cta).toHaveAccessibleName(m.hero.cta.start);
+    expect(await ctaOverlap(page, cta), 'Start ends under the tab bar at 320 x 568').toBeLessThanOrEqual(0);
+    expect(await noSideScroll(page)).toBe(true);
   });
 
   test('320 x 568: "Not open yet" and "Coming later" share the dotted ring and are told apart by their words and the legend (assumption h)', async ({ page }) => {

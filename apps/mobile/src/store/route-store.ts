@@ -29,6 +29,10 @@ const RouteUiSchema = z.object({
   /** The last automatic re-pace, and when its calm line was last seen (section 3.7). */
   movedAt: z.string().optional(),
   movedSeenAt: z.string().optional(),
+  /** The grown-up report's Not now on the Suggested weekly plan card (F-PLC-001 P-7b): that card only. */
+  reportDismissedAt: z.string().optional(),
+  /** Keep my plan / Not now on a plan update: the start change it answered (`planChangeAt`); the update stays hidden until the next one. */
+  keptFor: z.string().optional(),
 });
 export type RouteUi = z.infer<typeof RouteUiSchema>;
 
@@ -76,6 +80,10 @@ interface Actions {
   answerCheckIn: (profileId: string, offer: CheckInOffer | null, now?: Date) => Promise<CheckInAnswer>;
   /** The calm "Hoya moved your plan along" line was seen. */
   markMovedSeen: (profileId: string, at: string) => Promise<void>;
+  /** The report card's Not now (F-PLC-001 P-7b): hides that card for 14 days or until the next result. */
+  markReportDismissed: (profileId: string, at: string) => Promise<void>;
+  /** Keep my plan / Not now on a plan update, for the start change `changeAt` (F-PLC-001 P-7b). */
+  markKept: (profileId: string, changeAt: string) => Promise<void>;
 }
 
 const completedOf = (profileId: string): string[] => completedQuestIdsOf(useProgressStore.getState().byProfile[profileId]?.quests);
@@ -162,6 +170,10 @@ export const useRouteStore = create<State & Actions>((set, get) => {
     markDismissed: (profileId, at) => mark(profileId, { dismissedAt: at }),
 
     markMovedSeen: (profileId, at) => mark(profileId, { movedSeenAt: at }),
+
+    markReportDismissed: (profileId, at) => mark(profileId, { reportDismissedAt: at }),
+
+    markKept: (profileId, changeAt) => mark(profileId, { keptFor: changeAt }),
 
     create: async (profileId, draft, opts, now = new Date()) => {
       const progress = useProgressStore.getState();

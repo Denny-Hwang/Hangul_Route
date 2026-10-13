@@ -44,7 +44,8 @@
 | `classroom/projection-mode.md` | D | F-TCH-001 §3.4 (연기: 자원봉사 학생용 옵션; 교사 수업은 `classroom/lecture-presenter.md`, F-TCH-004) |
 | `vocab/topics.md` · `vocab/flashcards.md` · `vocab/speed-round.md` | D | F-VOC-003 · F-VOC-004 |
 | `placement/placement.md` (flow overview) · `placement/invite.md` · `language.md` · `options.md` · `handoff.md` · `warmup.md` · `item.md` · `item-short.md` · `pause.md` · `sound-needed.md` · `result.md` · `report.md` · `home-entry.md` | R | F-PLC-001 (promoted in P-0) |
-| `console/curriculum-planner.md` | D | F-PLAN-002 |
+| `console/curriculum-planner.md` | S | F-PLAN-002 (design record; promoted in P2-8 to the files below) |
+| `route/proposal.md` · `route/setup.md` · `route/overview.md` | S | F-PLAN-002 §3.9 (P2-7a, P2-7b; promoted in P2-8; behind `flags.routeEnabled`) |
 | `classroom/lecture-presenter.md` | R | F-TCH-004 |
 | `layout/wide.md` | S | F-LAYOUT-001 §3.1-3.8 (PR 0; built in PRs 1-7: classes, Home columns, Journey / Library panes, portrait guard also in `pwa/system-banners.md` panel 4; adoption checklist in `.github/pull_request_template.md`) |
 | `console/class-transfer.md` | D | F-SPACE-002 |
@@ -59,7 +60,8 @@
 | `parent/dashboard.md` · `learner-detail.md` · `voice-recorder.md` | S / R | F-PAR-001 |
 | `console/sign-in.md` · `onboarding-role.md` · `home.md` | P | F-AUTH-001 · roadmap §1–2 |
 | `console/roster.md` · `space-settings.md` · `relink-approval.md` | D / P | F-TCH-001 · roadmap §5 |
-| `console/plan-builder.md` | P | roadmap §6 · F-HW-001 §3.4 |
+| `console/plan-builder.md` | S | roadmap §6 · F-HW-001 §3.4 · F-PLAN-002 §3.7-3.8 (week groups, readout, re-pace; P2-8) |
+| `console/curriculum-wizard.md` | S | F-PLAN-002 §3.8 (P2-6, P2-6b; promoted in P2-8) |
 | `console/curriculum-free-days.md` · `console/free-lessons-line.md` | R | F-ENT-003 §3.9.2-3.9.3 (E3-0) |
 | `console/school-admin.md` | P | roadmap S7 |
 | `browse/home.md` · `browse/episode.md` · `browse/item.md` · `browse/preview-player.md` · `browse/preview-end.md` · `browse/show-as.md` · `browse/access.md` · `browse/entry-points.md` | R | F-BROWSE-001 (All lessons: paying parents and teachers preview every lesson as a learner sees it, at `app.hangulroute.com/browse`, same-tab entry from the adult navigation and the grown-up area; BR-0) |

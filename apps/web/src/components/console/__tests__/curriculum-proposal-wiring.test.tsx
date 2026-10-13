@@ -2,6 +2,7 @@ import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import Page from '@/app/(console)/teach/space/curriculum/page';
 
 /**
  * F-PLAN-002 PR P2-6b (section 3.8 steps 1 and 2, FP-B5; OD-12 / OD-13): the wizard page starts
@@ -99,7 +100,6 @@ const checked = (root: ReactTestInstance, id: string): boolean => one(root, id).
 const tagged = (root: ReactTestInstance, id: string): boolean => byTestId(one(root, id), 'suggested-tag').length === 1;
 
 async function stepTwo(): Promise<ReactTestInstance> {
-  const { default: Page } = await import('@/app/(console)/teach/space/curriculum/page');
   await act(async () => {
     mounted = create(<Page />, { createNodeMock: (element) => (element.type === 'h1' ? { focus: () => undefined } : null) });
   });
@@ -110,7 +110,6 @@ async function stepTwo(): Promise<ReactTestInstance> {
 
 describe('the wizard pre-selects proposeRoute\'s pace and length (P2-6b)', () => {
   it('prefills the only learner\'s start and pre-selects Steady and 4 weeks, both tagged Suggested', async () => {
-    const { default: Page } = await import('@/app/(console)/teach/space/curriculum/page');
     await act(async () => {
       mounted = create(<Page />, { createNodeMock: () => null });
     });
@@ -164,7 +163,6 @@ describe('the wizard pre-selects proposeRoute\'s pace and length (P2-6b)', () =>
 
   it('a Pictures-first learner picked from several: Gentle and 12 weeks', async () => {
     learners = [learner('l:sam', 'Sam', '10-11', 2), learner('l:kid', 'Kid', '5-7', null)];
-    const { default: Page } = await import('@/app/(console)/teach/space/curriculum/page');
     await act(async () => {
       mounted = create(<Page />, { createNodeMock: () => null });
     });
@@ -182,7 +180,6 @@ describe('the wizard pre-selects proposeRoute\'s pace and length (P2-6b)', () =>
 
   it('a learner re-picked after step 2 keeps the pace, minutes and start day the grown-up set; the start follows the learner', async () => {
     learners = [learner('l:sam', 'Sam', '10-11', 3), learner('l:kid', 'Kid', '5-7', null)];
-    const { default: Page } = await import('@/app/(console)/teach/space/curriculum/page');
     await act(async () => {
       mounted = create(<Page />, { createNodeMock: () => null });
     });

@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import type { HomeworkAssignment, ProgressSnapshot, SelfRoute } from '@hangul-route/content-schema';
+import { CATALOG, generateCurriculum, toMeta, toPlanItems, type CurriculumParamsInput, type HomeworkAssignment, type InboxPlan, type ProgressSnapshot, type SelfRoute } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
 import { onboardChild, readStored, seedStored } from './helpers';
 import { shot } from './shots';
@@ -135,4 +135,77 @@ test('the own weekly plan is derived on the device with no inbox and reads "Your
   // Saved on the device: the derived item only, nothing past the horizon.
   await expect.poll(async () => (await readStored<ProgressSnapshot>(page, `progress:${profileId}`))?.homework.map((h) => h.id)).toEqual(['route:mine#quest:stage1-letters-q2']);
   await shot(page, 'homework-your-plan');
+});
+
+/**
+ * F-PLAN-002 section 6 beta check, the console side as a device receives it: a class term and two family
+ * routes, published from the console (`meta.kind: curriculum`, `horizonDays: 7`) and kept on the device as
+ * its last inbox copy (`plans:<learner>`, what `getInbox(?cap=curriculum)` stores). The app derives them at
+ * start with no network (section 3.6 rule 1, `rederiveAllLocal`); no learner screen lists more than seven
+ * days ahead, today or a week later. The `?cap=curriculum` request itself is covered by
+ * `src/platform/__tests__/sync-api.test.ts` and the Worker's `plans-curriculum.test.ts`: the e2e bundles
+ * have no API origin, so no inbox call leaves the browser here.
+ */
+test('beta check: a class term and two family routes from the console list one week at a time', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  await page.clock.setFixedTime(NOW);
+  await onboardChild(page, { name: 'Sora', startJourney: false });
+  await page.goto('/');
+  await expect(page.getByText('Hi, Sora!')).toBeVisible();
+  const profileId = (await readStored<string>(page, 'profiles:active')) as string;
+
+  const start = dayKey(-2);
+  const base: Pick<CurriculumParamsInput, 'level' | 'startDate' | 'minutesPerSession' | 'goals' | 'unlockedStages'> = {
+    level: { stage: 'stage1', band: 0 },
+    startDate: start,
+    minutesPerSession: 15,
+    goals: { focus: 'balanced' },
+    unlockedStages: ['stage1'],
+  };
+  const published = (id: string, spaceKind: InboxPlan['spaceKind'], spaceName: string, params: CurriculumParamsInput): InboxPlan => {
+    const draft = generateCurriculum(params, CATALOG);
+    const at = new Date(NOW - 3 * DAY_MS).toISOString();
+    return { id, spaceId: `space:${id.slice(5)}`, spaceKind, spaceName, title: spaceName, items: toPlanItems(draft), publishedAt: at, updatedAt: at, meta: toMeta(draft) };
+  };
+  const plans: InboxPlan[] = [
+    published('plan:sunflower-term', 'class', 'Sunflower', { ...base, audience: 'class', weeks: 12, sessionsPerWeek: 2, sessionDays: ['tue', 'thu'] }),
+    published('plan:kim-family', 'family', 'Kim family', { ...base, audience: 'family', weeks: 12, sessionsPerWeek: 3 }),
+    published('plan:lee-family', 'family', 'Lee family', { ...base, audience: 'family', weeks: 26, sessionsPerWeek: 4 }),
+  ];
+  for (const plan of plans) {
+    expect(plan.meta?.kind).toBe('curriculum');
+    expect(plan.meta?.horizonDays).toBe(7);
+    // The published plan holds the whole term; only the window may reach the learner's lists.
+    expect(plan.items.some((item) => (item.targetDate ?? '') > dayKey(30))).toBe(true);
+  }
+  await seedStored(page, `plans:${profileId}`, plans);
+
+  for (const offset of [0, 7]) {
+    const at = NOW + offset * DAY_MS;
+    await page.clock.setFixedTime(at);
+    await page.goto('/');
+    await expect(page.getByText('Hi, Sora!')).toBeVisible();
+    const horizon = dayKey(offset + 7);
+    await expect
+      .poll(async () => {
+        const homework = (await readStored<ProgressSnapshot>(page, `progress:${profileId}`))?.homework ?? [];
+        return plans.map((plan) => homework.some((h) => h.id.startsWith(`${plan.id}#`)));
+      })
+      .toEqual([true, true, true]);
+    const homework = (await readStored<ProgressSnapshot>(page, `progress:${profileId}`))?.homework ?? [];
+    for (const h of homework) expect(h.targetDate ?? '', h.id).not.toBe('');
+    for (const h of homework) expect((h.targetDate ?? '') <= horizon, `${h.id} on ${h.targetDate} is past ${horizon}`).toBe(true);
+
+    await openHomework(page);
+    await expect(page.getByRole('heading', { name: 'Homework' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /, (Today|Tomorrow|In \d+ days)$/ }).first()).toBeVisible();
+    const labels = await page.getByRole('button', { name: /, In \d+ days$/ }).evaluateAll((els) => els.map((el) => el.getAttribute('aria-label') ?? ''));
+    for (const label of labels) expect(Number(/In (\d+) days$/.exec(label)?.[1])).toBeLessThanOrEqual(7);
+    await expect(page.getByTestId('homework-later')).toHaveCount(0);
+    const text = await page.locator('body').innerText();
+    expect(text).not.toMatch(/\blate\b|\bmissed\b|\boverdue\b|\bbehind\b|%|\d\s*\/\s*\d/i);
+    await shot(page, `homework-console-plans-${dayKey(offset)}`);
+  }
+  expect(errors).toEqual([]);
 });

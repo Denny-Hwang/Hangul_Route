@@ -180,6 +180,14 @@ export const a11y = {
       rightPlain: 'Correcto.',
       revealPlain: 'Esta no.',
     },
+    speed: {
+      sparks: (n: number) => plural('es', n, { one: '1 chispa', other: `${n} chispas` }),
+      sparksFull: 'Chispas al máximo',
+      timeLeft: (seconds: number) =>
+        plural('es', seconds, { one: 'Tiempo restante: 1 segundo', other: `Tiempo restante: ${seconds} segundos` }),
+      modes: 'Tipo de ronda',
+      scales: 'Duración del reloj',
+    },
   },
   report: {
     periods: 'Periodo del informe',

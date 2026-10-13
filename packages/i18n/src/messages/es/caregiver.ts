@@ -400,6 +400,48 @@ export const caregiver = {
     },
     saved: 'El inicio cambió.',
     row: { label: 'Punto de partida', seeCheck: 'Ver la prueba' },
+    plan: {
+      title: (name: string) => `Plan semanal sugerido para ${name}`,
+      basis: (level: string, days: number, minutes: number) =>
+        plural('es', days, {
+          one: `Según: ${level}, 1 día por semana, ${minutes} minutos`,
+          other: `Según: ${level}, ${days} días por semana, ${minutes} minutos`,
+        }),
+      paceTitle: 'Ritmo',
+      lengthTitle: 'Duración',
+      suggested: 'Sugerido',
+      headsUp: 'Ten en cuenta',
+      warning: {
+        notIncluded: (count: number) =>
+          plural('es', count, {
+            one: '1 lección todavía no está incluida en esta cuenta y no está en el plan.',
+            other: `${count} lecciones todavía no están incluidas en esta cuenta y no están en el plan.`,
+          }),
+        notReleased: (count: number) =>
+          plural('es', count, {
+            one: '1 episodio todavía no salió. Empieza cuando salga.',
+            other: `${count} episodios todavía no salieron. Empiezan cuando salgan.`,
+          }),
+        runsOut: (week: number) => `Desde la semana ${week} todavía no hay lecciones nuevas. La práctica libre llena esas semanas.`,
+        didNotFit: (count: number) =>
+          plural('es', count, {
+            one: '1 lección no entró. Un plan más largo o más días la incluyen.',
+            other: `${count} lecciones no entraron. Un plan más largo o más días las incluyen.`,
+          }),
+      },
+      usePlan: 'Usar este plan',
+      change: 'Cambiar',
+      notNow: 'Ahora no',
+      made: (name: string) => `${name} ya tiene un plan semanal. Aparece en Inicio.`,
+      laterStart: (name: string) => `La prueba más reciente de ${name} encontró un punto de partida más adelante.`,
+      laterLine: 'El plan semanal puede avanzar y mantener la misma fecha final.',
+      updatePlan: 'Actualizar el plan',
+      updated: 'El plan semanal avanzó.',
+      failed: 'No funcionó. Inténtalo de nuevo.',
+      newStart: (name: string) => `El plan de ${name} puede seguir el inicio que elegiste.`,
+      newStartLine: 'Los próximos días del plan siguen el nuevo inicio. La duración y la fecha final no cambian.',
+      followed: 'El plan semanal sigue el nuevo inicio.',
+    },
   },
 
   journey: {

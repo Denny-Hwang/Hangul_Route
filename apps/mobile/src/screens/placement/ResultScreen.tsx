@@ -14,8 +14,8 @@ import {
   spacing,
   touchTarget,
 } from '@hangul-route/design-system';
-import type { StageKey, ThemeKey } from '@hangul-route/content-schema';
-import React, { useEffect } from 'react';
+import type { PaceId, StageKey, ThemeKey } from '@hangul-route/content-schema';
+import React, { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { episodesAll, questsAll } from '../../content';
 import { gridEpisodes } from '../../content/episodes';
@@ -23,9 +23,16 @@ import { stages, themes } from '../../content/stages';
 import { localizeQuest, localizeStage } from '../../logic/content-locale';
 import { cellLook, startCell } from '../../logic/placement/cell-look';
 import { bandLabel } from '../../logic/placement/copy';
-import type { ResultLink, ResultPrimary } from '../../logic/placement/result-view';
+import { stripLineOf } from '../../logic/placement/plan-offer';
+import { stripSkipped, withPlanKept, withPlanMade, type ResultLink, type ResultPrimary } from '../../logic/placement/result-view';
+import { PACE_IDS } from '../../logic/route/proposal-flow';
+import { activeSelfRoute } from '../../logic/route/self-route';
+import { keepPlan } from '../../store/plan-offer-store';
+import { useProgressStore } from '../../store/progress-store';
+import { useRouteStore } from '../../store/route-store';
 import { usePlacement, type FinishedCheck, type ResultAction } from './context';
 import { LinkButton } from './parts';
+import { PlanStrip, PlanUpdateCard } from './PlanParts';
 
 /**
  * Result (F-PLC-001 section 3.1 step 7, wireframe placement G): Hoya
@@ -33,8 +40,12 @@ import { LinkButton } from './parts';
  * level: never a number, ratio, percent or "score"), a mini map with a pin on
  * the start cell and a light outline on cells the route skips ahead of, and
  * three route cards. A retake that changes nothing says so; a route with no
- * entitled quest left says "You know a lot!". The weekly-plan strip arrives
- * with P-7b; until then the primary is **Start**.
+ * entitled quest left says "You know a lot!". Behind `flags.routeEnabled`
+ * (P-7b, wireframe journey/my-route-overview.md J1, J3, K3): a self profile
+ * gets the weekly-plan strip (**Use this plan** with one tap, no PIN, OD-14;
+ * **Change**; **Just start**), below the not-tested line when reading was not
+ * tested; a retake that found a later start with a plan gets **Update my
+ * plan** / **Keep my plan**. Without either the primary is **Start**.
  */
 export function ResultScreen(): React.ReactElement | null {
   const { finished } = usePlacement();
@@ -58,9 +69,31 @@ const LINK_ACTION: Readonly<Record<ResultLink, ResultAction>> = {
 };
 
 function ResultView({ check }: { check: FinishedCheck }): React.ReactElement {
-  const { m, flow, say, screenReader, onResultAction } = usePlacement();
+  const { m, flow, say, screenReader, onResultAction, acceptPlan, updatePlan, profileId } = usePlacement();
   const copy = m.learner.placement.result;
-  const { view } = check;
+  // A plan made meanwhile (Change, then the proposal screen), or the proposal screen's Not now
+  // after this result, replaces the strip with Start.
+  const planMade = useProgressStore((s) => activeSelfRoute(s.byProfile[profileId]) !== null);
+  const skipped = useRouteStore((s) => stripSkipped(s.ui[profileId]?.dismissedAt, check.result.completedAt));
+  const [kept, setKept] = useState(false);
+  const madeView = planMade || skipped ? withPlanMade(check.view) : check.view;
+  const view = kept ? withPlanKept(madeView) : madeView;
+  const offer = check.offer;
+  const [pace, setPace] = useState<PaceId>(offer?.kind === 'new' ? offer.pace : 'steady');
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
+  // Two taps in one frame both see `busy` false; the ref lets only the first one through.
+  const acting = useRef(false);
+  const act = async (work: () => Promise<boolean>): Promise<void> => {
+    if (acting.current) return;
+    acting.current = true;
+    setBusy(true);
+    setFailed(false);
+    const ok = await work();
+    acting.current = false;
+    setBusy(false);
+    if (!ok) setFailed(true);
+  };
   const locale = flow.testLocale;
   const headline = copy[view.headline];
 
@@ -77,6 +110,11 @@ function ResultView({ check }: { check: FinishedCheck }): React.ReactElement {
     return stage === undefined ? '' : localizeStage(stage, locale).titleEn;
   };
   const primaryLabel = { start: copy.start.cta, seeMap: copy.seeMap, openStories: copy.openStories, usePlan: copy.start.cta, updatePlan: copy.start.cta }[view.primary];
+  // With the strip or the update card the one primary sits inside the card (J1, K3), not pinned.
+  const inCard = view.strip || view.planUpdate;
+  const shown = offer?.kind === 'new' ? offer.byPace[pace] : undefined;
+  const line = shown === undefined ? null : stripLineOf(shown);
+  const t = m.learner.weeklyPlan.proposal;
   const linkLabel: Record<ResultLink, string> = {
     seeMyRoute: copy.seeMyRoute,
     seeMap: copy.seeMap,
@@ -90,6 +128,7 @@ function ResultView({ check }: { check: FinishedCheck }): React.ReactElement {
       tone="canvas"
       testID="placement-result"
       footer={
+        inCard ? undefined : (
         <Button
           label={primaryLabel}
           tone="primary"
@@ -99,6 +138,7 @@ function ResultView({ check }: { check: FinishedCheck }): React.ReactElement {
           onPress={() => onResultAction(PRIMARY_ACTION[view.primary])}
           testID="placement-result-primary"
         />
+        )
       }
     >
       <View style={{ alignItems: 'center', gap: spacing.md, paddingTop: spacing.lg }}>
@@ -147,6 +187,49 @@ function ResultView({ check }: { check: FinishedCheck }): React.ReactElement {
           </Card>
         </>
       )}
+
+      {view.strip && line !== null && offer?.kind === 'new' ? (
+        <>
+          <Spacer size="lg" />
+          <PlanStrip
+            m={m}
+            pace={pace}
+            paces={PACE_IDS.filter((id) => offer.byPace[id] !== undefined)}
+            basis={copy.strip.basis(t.length[line.length], line.days, line.minutes)}
+            busy={busy}
+            failed={failed}
+            onPace={setPace}
+            onUse={() => void act(() => acceptPlan(pace))}
+            onChange={() => onResultAction('changePlan')}
+          />
+          <Spacer size="sm" />
+          <Button
+            label={copy.strip.justStart}
+            tone="ghost"
+            size="lg"
+            fullWidth
+            disabled={busy}
+            onPress={() => {
+              // Once: a second tap before the stack resets would skip (and count the skip) twice.
+              if (acting.current) return;
+              acting.current = true;
+              setBusy(true);
+              onResultAction('justStart');
+            }}
+            testID="placement-plan-just-start"
+          />
+        </>
+      ) : null}
+      {view.planUpdate ? (
+        <>
+          <Spacer size="lg" />
+          <PlanUpdateCard m={m} busy={busy} failed={failed} onUpdate={() => void act(updatePlan)} onKeep={() => {
+              setKept(true);
+              // The report's update card stays quiet for this change too.
+              void keepPlan(profileId);
+            }} />
+        </>
+      ) : null}
 
       <Spacer size="md" />
       <View style={{ alignItems: 'center' }}>

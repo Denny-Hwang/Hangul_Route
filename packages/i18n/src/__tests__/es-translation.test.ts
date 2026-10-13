@@ -166,6 +166,7 @@ const LITERALLY_SHARED: readonly string[] = [
   'console.settings.grownUps.role.admin',
   'landing.footer.app',
   'learner.audio.voiceHelp.sections.android.title',
+  'learner.vocab.speed.challenge.scale.normal', // "Normal", the Speed Round clock length (F-VOC-004 S-6)
   // Names, sample values and glyphs: the brand, sample ids and addresses, arrows and the close cross.
   'console.shell.backToSite',
   'console.signIn.accountId.placeholder',

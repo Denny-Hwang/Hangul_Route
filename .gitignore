@@ -6,6 +6,7 @@ node_modules/
 dist/
 dist-e2e/
 dist-e2e-gated/
+dist-e2e-route/
 build/
 out/
 # the console role of apps/web (F-APP-001 A-3), merged into apps/mobile/dist

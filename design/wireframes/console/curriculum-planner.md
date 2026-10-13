@@ -5,6 +5,8 @@ Audience: **teacher** (class space) and **parent** (family space) in the console
 Code (planned): `apps/web/src/app/(console)/teach/space/curriculum/page.tsx`, `apps/web/src/app/(console)/teach/space/plan/page.tsx` (week groups, readout, switcher), `apps/web/src/lib/console/curriculum.ts`; `apps/mobile/src/screens/route/{RouteSetupScreen,RoutePreviewScreen,RouteOverviewScreen}.tsx`, `screens/home/HomeScreen.tsx` (route card), `screens/homework/HomeworkScreen.tsx` (week window)
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary or ghost, `(o)` / `( )` radio, `[x]` / `[ ]` checkbox or switch, `~~ ko ~~` taught Korean drawn with `KoreanText`. No colours, fonts or pixel sizes; every sentence in a box is a placeholder that says what the sentence does.
 
+> **Promoted (F-PLAN-002 P2-8, 2026-10-13).** The screens now live one per file, drawn as shipped: A to D -> `console/curriculum-wizard.md`; E and F -> `console/plan-builder.md` (section "F-PLAN-002"); G1 and G2 -> `route/setup.md`; G3 -> `route/overview.md`; the proposal (`journey/my-route-overview.md` K1, K3) -> `route/proposal.md`; H -> `home/todays-mission.md` and `homework/list.md` (sections "F-PLAN-002"). Edit those files; this one is kept as the design record and is not updated any more.
+
 This file holds the screens in one place (house style is one file per screen; split when promoted to `design/wireframes/console/curriculum-wizard.md`, `console/plan-builder.md`, `route/setup.md`, `route/overview.md`):
 
 - A. Wizard step 1: starting point

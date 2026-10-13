@@ -50,6 +50,8 @@ export interface VocabE2eHandle {
   openTopics(): void;
   /** A Words topic page (`VocabTopic`). */
   openTopic(topicKey: string): void;
+  /** The Speed Round start sheet of a topic (`VocabSpeedRound`), also when the topic page would not offer it. */
+  openSpeed(topicKey: string): void;
   /** Marks these words collected for the active learner (`recordVocab` `introduced`); false without a learner. */
   collect(ids: readonly string[]): boolean;
   /**
@@ -90,6 +92,7 @@ export function VocabE2eHook(): null {
       openQuestion: (params) => navigation.dispatch(StackActions.push('VocabQuestionE2e', params)),
       openTopics: () => navigation.dispatch(StackActions.push('VocabTopics')),
       openTopic: (topicKey) => navigation.dispatch(StackActions.push('VocabTopic', { topicKey })),
+      openSpeed: (topicKey) => navigation.dispatch(StackActions.push('VocabSpeedRound', { topicKey })),
       collect: (ids) => {
         const profileId = activeProfileSelector(useProfileStore.getState())?.id;
         if (profileId === undefined) return false;

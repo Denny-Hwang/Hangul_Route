@@ -183,6 +183,13 @@ export const a11y = {
       rightPlain: '맞아요.',
       revealPlain: '이건 아니에요.',
     },
+    speed: {
+      sparks: (n: number) => `반짝이 ${n}개`,
+      sparksFull: '반짝이가 가득해요',
+      timeLeft: (seconds: number) => `남은 시간: ${seconds}초`,
+      modes: '라운드 종류',
+      scales: '시계 길이',
+    },
   },
   report: {
     periods: '리포트 기간',

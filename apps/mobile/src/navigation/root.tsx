@@ -35,6 +35,8 @@ import { StorySourcesScreen } from '../screens/story/StorySourcesScreen';
 import { CellStoriesScreen } from '../screens/story/CellStoriesScreen';
 import { CultureNotesScreen } from '../screens/story/CultureNotesScreen';
 import { PlacementScreen } from '../screens/placement/PlacementScreen';
+import { VocabResultsScreen } from '../screens/vocab/VocabResultsScreen';
+import { VocabSpeedRoundScreen } from '../screens/vocab/VocabSpeedRoundScreen';
 import { RouteOverviewScreen } from '../screens/route/RouteOverviewScreen';
 import { RoutePreviewScreen } from '../screens/route/RoutePreviewScreen';
 import { RouteProposalScreen } from '../screens/route/RouteProposalScreen';
@@ -129,6 +131,9 @@ export function RootNavigator(): React.ReactElement {
         {/* Words (F-VOC-003): reachable only from the Library Words section, which needs flags.vocabTopicsEnabled. */}
         <Stack.Screen name="VocabTopics" component={VocabTopicsScreen} />
         <Stack.Screen name="VocabTopic" component={VocabTopicScreen} />
+        {/* The Speed Round (F-VOC-004 S-5): launched from a topic page, so also behind flags.vocabTopicsEnabled. */}
+        <Stack.Screen name="VocabSpeedRound" component={VocabSpeedRoundScreen} />
+        <Stack.Screen name="VocabResults" component={VocabResultsScreen} />
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="VocabQuestionE2e" component={VocabQuestionE2eScreen} /> : null}
       </Stack.Navigator>
       {/* After the stack, so the navigator is registered when the boot intent opens the PIN screen (F-APP-001 section 3.9). */}
