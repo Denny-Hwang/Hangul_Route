@@ -46,6 +46,7 @@ import { SpacesCard } from '../../components/SpacesCard';
 import { grownUpEntriesOn, runGrownUpHandoff } from '../../logic/shell/entry-points';
 import { grownUpPinParams } from '../../logic/shell/handoff-rules';
 import { openGrownUpArea } from '../../platform/grown-up-handoff';
+import { MyNotesRow } from '../notes/MyNotesRow';
 import { GrownUpHomeRow } from './GrownUpHomeRow';
 
 export function ProfileScreen(): React.ReactElement {
@@ -330,6 +331,9 @@ export function ProfileScreen(): React.ReactElement {
           <GrownUpHomeRow onOpen={openGrownUpHome} />
         </>
       ) : null}
+
+      {/* F-FEEDBACK-001 FB-8 (section 6.5 item 2): My notes, below Grown-up home; no gate (the learner's own notes). */}
+      <MyNotesRow onOpen={() => navigation.navigate('Notes')} />
 
       <Spacer size="lg" />
       <Button
