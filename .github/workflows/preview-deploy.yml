@@ -68,12 +68,14 @@ jobs:
           for f in index.html learners.html parents.html teachers.html robots.txt sitemap.xml; do
             test -f "apps/web/out/$f" || { echo "missing apps/web/out/$f"; exit 1; }
           done
-          grep -qx 'Disallow: /design-preview/' apps/web/out/robots.txt
+          grep -qx 'Disallow: /design-preview' apps/web/out/robots.txt
           grep -qx 'Sitemap: https://hangulroute.com/sitemap.xml' apps/web/out/robots.txt
           for page in '' /learners /parents /teachers /about /privacy /terms; do
             grep -q "<loc>https://hangulroute.com${page:-/}</loc>" apps/web/out/sitemap.xml || { echo "sitemap misses ${page:-/}"; exit 1; }
           done
-          # never a grown-up path or the contact sheets, at the root or under a locale prefix (whole segments)
+          # never a grown-up path or the contact sheets, at the root or under a locale prefix (whole segments).
+          # The alternation is GROWN_UP_PREFIXES (packages/content-schema app-shell.ts) plus design-preview;
+          # site-surface.test.ts fails when the two drift apart.
           if grep -Eq 'hangulroute\.com(/[a-z]{2})?/(signin|start|teach|parent|account|design-preview)([/.?"<]|$)' apps/web/out/sitemap.xml; then
             echo "sitemap.xml lists a grown-up path or /design-preview"; exit 1
           fi
