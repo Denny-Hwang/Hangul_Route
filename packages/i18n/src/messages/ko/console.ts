@@ -1240,9 +1240,9 @@ export const consoleMsgs = {
    * picks Korean. No particle is attached to an argument. The rest of `console.transfer` falls back to English.
    */
   transfer: {
-    lines: { notNowEnds: '"나중에"를 누르면 이 요청이 끝납니다. 언제든지 직접 이동을 시작할 수 있습니다.' },
+    lines: { notNowEnds: '"지금은 안 함"을 누르면 이 요청이 끝납니다. 언제든지 직접 이동을 시작할 수 있습니다.' },
     consent: {
-      title: (name: string, destination: string) => `${name} 학습자를 ${destination} 반으로 옮기시겠습니까?`,
+      title: (name: string, destination: string) => `${name} 학습자를 새 반(${destination})으로 옮기시겠습니까?`,
       language: '언어',
       who: '새 반은 어떤 반입니까?',
       teacher: (owner: string) => `선생님: ${owner}`,
@@ -1255,7 +1255,7 @@ export const consoleMsgs = {
       updated: '이 내용이 바뀌었습니다. 다시 읽어 주십시오.',
       unavailable: '아직 이 언어로는 볼 수 없습니다.',
       yes: (name: string) => `네, ${name} 학습자를 옮깁니다`,
-      notNow: { cta: '나중에' },
+      notNow: { cta: '지금은 안 함' },
       tryAgain: { cta: '다시 시도' },
       failed: '보내지 못했습니다',
     },

@@ -146,6 +146,15 @@ describe('console.transfer.consent in Korean and Spanish (F-SPACE-002 T-6d: the 
     visibleFamily: ['Lee family', 'Bo'],
     yes: ['Mina'],
   };
+  for (const locale of ['en', 'ko', 'es'] as const) {
+    it(`${locale}: the Not now line names the sheet's own Not now button, so it never reads as its opposite`, () => {
+      const t = getMessages(locale).console.transfer;
+      expect(t.lines.notNowEnds).toContain(t.consent.notNow.cta);
+    });
+  }
+  it('ko: never puts the counter word 반 after a class name ("햇살반 반")', () => {
+    expect(getMessages('ko').console.transfer.consent.title('{a}', '{b}')).not.toMatch(/\{b\}\s*반/);
+  });
   for (const locale of ['ko', 'es'] as const) {
     it(`${locale}: every frame string is its own, caregiver-safe, and no Korean particle follows an argument`, () => {
       const c = getMessages(locale).console.transfer.consent;

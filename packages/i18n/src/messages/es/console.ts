@@ -1313,7 +1313,7 @@ export const consoleMsgs = {
    * `console.transfer` falls back to English until the next Spanish draft.
    */
   transfer: {
-    lines: { notNowEnds: 'Ahora no termina esta solicitud. Puedes empezar un cambio tú cuando quieras.' },
+    lines: { notNowEnds: 'Si eliges "Ahora no", esta solicitud termina. Puedes empezar un cambio tú cuando quieras.' },
     consent: {
       title: (name: string, destination: string) => `¿Cambiar a ${name} a ${destination}?`,
       language: 'Idioma',
