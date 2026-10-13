@@ -409,6 +409,21 @@ describe('the route card wiring (Learning Route LR-5a)', () => {
   });
 });
 
+describe('the narrow-width route card (Learning Route LR-11)', () => {
+  const card = read(join(SCREEN_DIR, 'RouteCard.tsx'));
+
+  it('takes its padding, gaps and can-do lines from routeCardLook (unit-tested) and draws the goal pips with bands per line', () => {
+    expect(card).toContain('const look = routeCardLook(windowWidth);');
+    expect(card).toContain('<Card padding={look.padding}');
+    expect(card).toContain('gap: spacing[look.gap]');
+    expect(card).toContain('marginTop: spacing[look.ctaGap]');
+    expect(card).toContain('copy.canDo !== null && look.showCanDo');
+    expect(card).toMatch(/<PipRow groups=\{\[\[\.\.\.pips\]\]\}[^>]*bandsPerLine/);
+    // The summary label is not narrowed: it still reads the can-do lines the open stage row shows.
+    expect(card).toContain('accessibilityLabel={copy.a11yLabel}');
+  });
+});
+
 describe('not-open pips and the free-end hero (Learning Route LR-5b)', () => {
   const screen = read(join(SCREEN_DIR, 'MyRouteScreen.tsx'));
   const card = read(join(SCREEN_DIR, 'RouteCard.tsx'));

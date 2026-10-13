@@ -60,6 +60,27 @@ export const PIP_ROW_MIN_WIDTH = 360;
 
 export const stageRowLook = (windowWidth: number): 'pips' | 'bar' => (windowWidth < PIP_ROW_MIN_WIDTH ? 'bar' : 'pips');
 
+/** How the route card is laid out at a window width: spacing token names and whether the can-do lines show. */
+export interface RouteCardLook {
+  padding: 'md' | 'lg';
+  /** The gap between the card's parts. */
+  gap: 'sm' | 'md';
+  /** The space above the button. */
+  ctaGap: 'md' | 'lg';
+  showCanDo: boolean;
+}
+
+/**
+ * The route card below `PIP_ROW_MIN_WIDTH` (LR-11, design/screens/learning-route/route-card.md "Narrow width"):
+ * with 15 Stage 1 pips on two lines, the LR-D card put Continue about 75 px under the tab bar at 320 x 568. The
+ * compact card takes the tighter padding and gaps and leaves the can-do lead and line to the open stage row right
+ * under it (the `here` row is open on first view and shows the same two lines); the card's label still reads them.
+ */
+export const routeCardLook = (windowWidth: number): RouteCardLook =>
+  windowWidth < PIP_ROW_MIN_WIDTH
+    ? { padding: 'md', gap: 'sm', ctaGap: 'md', showCanDo: false }
+    : { padding: 'lg', gap: 'md', ctaGap: 'lg', showCanDo: true };
+
 export interface TagView {
   label: string;
   /** "You started here" carries the pin glyph, "Your goal" the flag (LR-5a); "You are here" none. */

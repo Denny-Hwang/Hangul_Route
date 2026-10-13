@@ -12,6 +12,7 @@ import {
   gamesFor,
   myRouteMessages,
   myRouteView,
+  routeCardLook,
   stageFill,
   stageGroups,
   stageRowLook,
@@ -90,6 +91,21 @@ describe('stageRowLook (section 3.4: below 360 a bar, else the pips)', () => {
     expect(stageRowLook(359)).toBe('bar');
     expect(stageRowLook(360)).toBe('pips');
     expect(stageRowLook(1180)).toBe('pips');
+  });
+});
+
+describe('routeCardLook (LR-11: the route card fits 320 x 568 with Continue above the tab bar)', () => {
+  it('below 360 the card is compact: tighter padding and gaps, the can-do lines left to the open stage row', () => {
+    const narrow = { padding: 'md', gap: 'sm', ctaGap: 'md', showCanDo: false };
+    expect(routeCardLook(320)).toEqual(narrow);
+    expect(routeCardLook(PIP_ROW_MIN_WIDTH - 1)).toEqual(narrow);
+  });
+
+  it('from 360 the card keeps the LR-D layout', () => {
+    const wide = { padding: 'lg', gap: 'md', ctaGap: 'lg', showCanDo: true };
+    expect(routeCardLook(PIP_ROW_MIN_WIDTH)).toEqual(wide);
+    expect(routeCardLook(375)).toEqual(wide);
+    expect(routeCardLook(1180)).toEqual(wide);
   });
 });
 

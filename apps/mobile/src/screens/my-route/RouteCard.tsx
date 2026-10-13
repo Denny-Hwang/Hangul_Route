@@ -17,7 +17,7 @@ import type { StageKey } from '@hangul-route/content-schema';
 import React, { useEffect, useRef } from 'react';
 import { View } from 'react-native';
 import type { HeroCopy, RouteCardCopy, RouteCardLine } from '../../logic/my-route/copy';
-import { PIP_ROW_MIN_WIDTH } from '../../logic/my-route/view';
+import { routeCardLook } from '../../logic/my-route/view';
 import { focusForScreenReader } from '../../platform/screen-reader';
 
 /**
@@ -87,6 +87,8 @@ function Decorative({ children }: { children: React.ReactNode }): React.ReactEle
 
 export function RouteCard({ copy, pips, goalStage, cta, pose, onAction, focusToken, testID = 'my-route-card' }: RouteCardProps): React.ReactElement {
   const { windowWidth } = useLayoutClass();
+  // Below 360 the compact card (LR-11): Continue (or Start) stays above the tab bar at 320 x 568.
+  const look = routeCardLook(windowWidth);
   const hoyaLine = useMediaSize(64);
   const hoyaNext = useMediaSize(48);
   const summaryRef = useRef<object | null>(null);
@@ -97,7 +99,7 @@ export function RouteCard({ copy, pips, goalStage, cta, pose, onAction, focusTok
   const { where } = copy;
 
   return (
-    <Card padding={windowWidth < PIP_ROW_MIN_WIDTH ? 'md' : 'lg'} elevation="card" testID={testID}>
+    <Card padding={look.padding} elevation="card" testID={testID}>
       <View
         ref={(node) => {
           summaryRef.current = node;
@@ -106,7 +108,7 @@ export function RouteCard({ copy, pips, goalStage, cta, pose, onAction, focusTok
         focusable
         accessibilityRole="summary"
         accessibilityLabel={copy.a11yLabel}
-        style={{ gap: spacing.md }}
+        style={{ gap: spacing[look.gap] }}
         testID={`${testID}-summary`}
       >
         {copy.hoya !== null ? (
@@ -149,8 +151,8 @@ export function RouteCard({ copy, pips, goalStage, cta, pose, onAction, focusTok
           </View>
         ) : null}
 
-        {copy.canDo !== null ? (
-          <View>
+        {copy.canDo !== null && look.showCanDo ? (
+          <View testID={`${testID}-can-do`}>
             <Caption tone="muted" weight="semibold">
               {copy.canDo.lead}
             </Caption>
@@ -160,7 +162,7 @@ export function RouteCard({ copy, pips, goalStage, cta, pose, onAction, focusTok
         {copy.tasteLine !== null ? <Body>{copy.tasteLine}</Body> : null}
 
         {copy.showPips && where !== null && goalStage !== null && pips.length > 0 ? (
-          <PipRow groups={[[...pips]]} context="stage" accent={colors.stage[goalStage]} testID={`${testID}-pips`} />
+          <PipRow groups={[[...pips]]} context="stage" accent={colors.stage[goalStage]} bandsPerLine testID={`${testID}-pips`} />
         ) : null}
 
         {copy.next !== null ? (
@@ -182,7 +184,7 @@ export function RouteCard({ copy, pips, goalStage, cta, pose, onAction, focusTok
       </View>
 
       {cta !== null ? (
-        <View style={{ marginTop: spacing.lg }}>
+        <View style={{ marginTop: spacing[look.ctaGap] }}>
           <Button label={cta.label} tone="primary" size="lg" fullWidth onPress={onAction} testID={`${testID}-cta`} />
         </View>
       ) : null}
