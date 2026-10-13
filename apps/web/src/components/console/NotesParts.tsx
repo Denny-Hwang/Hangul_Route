@@ -23,8 +23,10 @@ import {
   type SentRowView,
 } from '@/lib/console/notes';
 import { composerPrefill, questOptions, reactionGlyph } from '@/lib/console/notes-page';
+import { notesEnabled } from '@/lib/console/config';
 import { ROUTES } from '@/lib/console/routing';
 import { stageTitle } from '@/lib/console/stage-titles';
+import { BrowseLink, useBrowseLinksShown } from './BrowseLink';
 import { MoveButton, TransferSheet } from './TransferParts';
 
 /**
@@ -262,7 +264,9 @@ type ToMode = 'everyone' | 'learners';
 /**
  * The composer, a labelled dialog over the notes page (full height below 45em, `TransferSheet`): To, Pick an
  * encouragement, a few words, a quest, Sign as (family), the preview, Send. `closedLine` words a picked quest the
- * learner may not open (F-ENT-003, never a price or a link). `onClose(sent)` drops `&compose=1`.
+ * learner may not open (F-ENT-003, never a price or a link). `onClose(sent)` drops `&compose=1`. A picked quest
+ * carries [ Preview ] into All lessons (FB-15, `openBrowse({ kind: 'quest', id }, 'notes')`, the BR-11 pill), only
+ * with All lessons on for this page and the notes flag on.
  */
 export function NoteComposer({
   notesApi,
@@ -273,6 +277,7 @@ export function NoteComposer({
   m,
   locale,
   onClose,
+  preview: questPreview,
 }: {
   notesApi: NotesApi;
   space: ComposerSpace;
@@ -282,8 +287,12 @@ export function NoteComposer({
   m: Messages;
   locale: UiLocale;
   onClose: (sent: boolean) => void;
+  /** [ Preview ] on a picked quest (FB-15); omitted, `browseLinksShown()` for this page and `notesEnabled()` decide. */
+  preview?: boolean;
 }): JSX.Element {
   const c = m.console.notes.composer;
+  const browseShown = useBrowseLinksShown();
+  const previewShown = questPreview ?? (browseShown && notesEnabled());
   const side = space.kind === 'family' ? 'family' : 'class';
   const ids = useId();
   const [recipients, setRecipients] = useState<NoteRecipient[] | null>(null);
@@ -532,9 +541,12 @@ export function NoteComposer({
           {questId && questTitle ? (
             <div className="hr-compose-quest">
               <IconSvg name="book" size={GLYPH_ROW} color={colors.brand.primaryDark} />
-              <span className="hr-compose-quest-title" data-testid="compose-quest">
+              <span className="hr-compose-quest-title" id={`${ids}-quest`} data-testid="compose-quest">
                 {questTitleOf(questId)}
               </span>
+              {previewShown ? (
+                <BrowseLink target={{ kind: 'quest', id: questId }} source="notes" label={m.console.browse.preview.cta} describedBy={`${ids}-quest`} testId="compose-quest-preview" />
+              ) : null}
               <button type="button" className="hr-notes-btn" onClick={() => setQuestId(null)}>
                 {c.quest.remove.cta}
               </button>

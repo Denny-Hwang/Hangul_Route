@@ -205,7 +205,7 @@ type BrowseTarget =
   | { kind: 'card'; id: string }         // CARD_ID_RE
   | { kind: 'jamo'; id: string }         // LECTURE_JAMO_ID_RE
   | { kind: 'char'; char: string };      // LECTURE_REVISIT_CHAR_RE: one compatibility jamo, as ProgressSummary.needsPractice holds it
-type BrowseSource = 'nav' | 'report' | 'route' | 'plan' | 'roster' | 'gate' | 'direct';
+type BrowseSource = 'nav' | 'report' | 'route' | 'plan' | 'roster' | 'gate' | 'direct' | 'notes'; // 'notes': F-FEEDBACK-001 FB-15, the composer's quest Preview
 ```
 
 - BR-1 exports `EPISODE_ID_RE`, `QUEST_ID_RE` and `CARD_ID_RE` from `schemas/episode.ts`, `quest.ts` and `heritage-card.ts` (additive; the schemas use the constants, same values) and `lecture.ts` imports them, so each regex exists once.
@@ -351,7 +351,7 @@ export const BROWSE_ACCOUNT_MAX_MS = 12 * 60 * 60_000;
 export const BROWSE_FALLBACK_MAX_MS = 60 * 60_000;
 export const BROWSE_KEEP_MS = 7 * 24 * 60 * 60_000;
 export const BrowseScopeSchema = z.enum(['full', 'sampler', 'none']);
-export const BrowseSourceSchema = z.enum(['nav', 'report', 'route', 'plan', 'roster', 'gate', 'direct']);
+export const BrowseSourceSchema = z.enum(['nav', 'report', 'route', 'plan', 'roster', 'gate', 'direct', 'notes']); // 'notes' appended by F-FEEDBACK-001 FB-15
 export const BrowseTargetSchema = z.discriminatedUnion('kind', [ /* §4.4, every member .strict(), regexes imported */ ]);
 export const BrowsePassSchema = /* §4.3 */;
 export const BrowseKeptPassSchema = z.object({ v: z.literal(1), scope: z.enum(['full', 'sampler']), keptAt: z.number().int().nonnegative() }).strict();

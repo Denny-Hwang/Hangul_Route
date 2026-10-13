@@ -26,7 +26,7 @@ Send a note                                           [ x ]   composer.title / c
    [ Loved your reading in class today          ]
                                          33 of 120            text.counter, describes the field
 (4) Suggest a quest (optional)                                quest.title
-   [art] Meet o, u, m and the circle          ( Remove )      or ( Choose a quest )
+   [art] Meet o, u, m and the circle  ( Preview )  ( Remove )   or ( Choose a quest ); Preview: FB-15 only
 (5) Sign as  [ Grandma v ]                                    family spaces only: signAs, familyLabels
 Preview                                                       preview.title
 ┌ Your reading is getting stronger. ─────────┐
@@ -41,6 +41,7 @@ Teachers see the answer a student picks. ...                         preview.dis
 
 - Step numbers are decoration (`aria-hidden`); the legends carry the names. Disabled picker rows are described by their line, so the reason is read.
 - **Problems** sit under their field on `feedback.nudgeLight` with a `feedback.nudge` bar (decoration, 1.86:1) and `text.primary` words; the field gets `aria-invalid` and a thick `text.primary` border (16:1), never red. Send is `aria-disabled` (still focusable) and described by the problem, by `quest.needed` ("Needed for this encouragement") for `next_try_this` without a quest, or by the server line.
+- **Preview (FB-15)**: a picked quest's row carries [ Preview ] between the title and Remove, only with All lessons on for the page (`browseLinksShown()`: `browseEnabled()` on the app origin) and the notes flag on. It is the F-BROWSE-001 BR-11 Preview pill of the plan rows and the report P1 slot (`BrowseLink`, `console.browse.preview.cta`, described by the quest title), opens `openBrowse({ kind: 'quest', id }, 'notes')` in the same tab ([ Close ] there returns to the composer), and a failed plan check or blocked storage shows BR-10's line under it. The link holds the quest id only.
 - The closed-quest line (`composer.closedMark`) sits under a picked quest only with content gating on and an unlicensed space; never a price, a plan or a link.
 - The presets are never ordered by progress and there is no "needs encouragement" hint; a report prefills the learner and maybe the quest, never the preset.
 
