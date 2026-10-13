@@ -126,10 +126,12 @@ export default function ParentHomePage(): JSX.Element {
   const [entitlements, setEntitlements] = useState<EntitlementView[] | null>(null);
 
   const loadRoster = useCallback(
-    async (spaceId: string): Promise<void> => {
+    async (spaceId: string, role: SpaceListItem['role']): Promise<void> => {
       if (!api) return;
       setRosters((prev) => ({ ...prev, [spaceId]: { state: 'loading' } }));
-      const [result, planList] = await Promise.all([api.roster(spaceId).catch(() => null), contentGatingEnabled() ? api.listPlans(spaceId).catch(() => null) : null]);
+      // Plans only for a family this account owns: the line is owner only, so a co-caregiver's family needs no plan read.
+      const readPlans = contentGatingEnabled() && role === 'owner';
+      const [result, planList] = await Promise.all([api.roster(spaceId).catch(() => null), readPlans ? api.listPlans(spaceId).catch(() => null) : null]);
       if (planList?.ok) setPlans((prev) => ({ ...prev, [spaceId]: planList.data }));
       setRosters((prev) => ({ ...prev, [spaceId]: result?.ok ? { state: 'ready', roster: result.data } : { state: 'failed' } }));
     },
@@ -147,7 +149,7 @@ export default function ParentHomePage(): JSX.Element {
     }
     setItems(result.data);
     const view = parentHomeView(result.data);
-    if (view.state === 'families') await Promise.all(view.families.map((family) => loadRoster(family.space.id)));
+    if (view.state === 'families') await Promise.all(view.families.map((family) => loadRoster(family.space.id, family.role)));
   }, [api, loadRoster]);
 
   useEffect(() => {
@@ -343,7 +345,7 @@ export default function ParentHomePage(): JSX.Element {
           {entry.state === 'failed' ? (
             <div style={{ ...panelStyle, margin: 0 }}>
               <p style={{ margin: `0 0 ${spacing.sm}px` }}>{c.cantReach}</p>
-              <Button testId={`family-retry-${id}`} onClick={() => void loadRoster(id)}>
+              <Button testId={`family-retry-${id}`} onClick={() => void loadRoster(id, family.role)}>
                 {c.tryAgain}
               </Button>
             </div>

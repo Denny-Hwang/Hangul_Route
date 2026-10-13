@@ -79,7 +79,30 @@ const LEARNER = {
   },
 };
 
-const state = vi.hoisted(() => ({ calls: [] as string[], role: 'owner' as string }));
+const FAMILY_PLAN = {
+  id: 'ent:family-1',
+  subjectKind: 'space' as const,
+  subjectId: SPACE.id,
+  planKey: 'family_lifetime' as const,
+  status: 'active' as const,
+  provider: 'stripe' as const,
+  providerRef: 'sub_1',
+  customerRef: 'cus_1',
+  seats: null,
+  expiresAt: new Date(NOW.getTime() + 300 * 86_400_000).toISOString(),
+  promoCode: null,
+  updatedAt: '2026-10-01T00:00:00.000Z',
+  subjectName: 'Kim family',
+};
+
+const state = vi.hoisted(() => ({
+  calls: [] as string[],
+  role: 'owner' as string,
+  /** The account's entitlements read: none owned, an active Family Plan on the family, a failed read, or a thrown one. */
+  entitlements: 'none' as 'none' | 'covered' | 'failed' | 'throws',
+  /** The family's plans read: the published plan, or a thrown read. */
+  plans: 'ok' as 'ok' | 'throws',
+}));
 vi.mock('@/components/console/use-console', async () => {
   const { getMessages: messages } = await import('@hangul-route/i18n');
   const ok = <T,>(data: T) => ({ ok: true as const, data });
@@ -94,10 +117,14 @@ vi.mock('@/components/console/use-console', async () => {
     },
     listPlans: async () => {
       state.calls.push('listPlans');
+      if (state.plans === 'throws') throw new Error('network');
       return ok([PLAN]);
     },
     entitlements: async () => {
       state.calls.push('entitlements');
+      if (state.entitlements === 'throws') throw new Error('network');
+      if (state.entitlements === 'failed') return { ok: false as const, error: { code: 'server_error', status: 500 } };
+      if (state.entitlements === 'covered') return ok([FAMILY_PLAN]);
       return ok([]);
     },
   };
@@ -118,6 +145,8 @@ afterEach(() => {
   mounted = null;
   state.calls.length = 0;
   state.role = 'owner';
+  state.entitlements = 'none';
+  state.plans = 'ok';
   vi.unstubAllEnvs();
 });
 
@@ -160,12 +189,50 @@ describe('the parent home child card with the free-plan switch (F-ENT-003 E3-12c
     const [link] = line.findAllByType('a');
     expect(link?.props.href).toBe('/account/billing');
     expect(link?.props['aria-describedby']).toBe(line.findByType('p').props.id);
+    // Reading order (section 3.9.2, wireframe box A): under the card's figures, before the card's actions.
+    const children = card.children.filter((child): child is ReactTestInstance => typeof child !== 'string');
+    const holds = (child: ReactTestInstance, target: ReactTestInstance): boolean => child === target || child.findAll((node) => node === target).length > 0;
+    const at = children.findIndex((child) => holds(child, line));
+    const figures = children.findIndex((child) => child.type === 'div' && textOf(child).includes('12'));
+    const [primaryAction] = card.findAll((node) => node.type === 'a' && node.props.href !== '/account/billing');
+    if (!primaryAction) throw new Error('no card action');
+    const firstAction = children.findIndex((child) => holds(child, primaryAction));
+    expect(figures).toBeGreaterThanOrEqual(0);
+    expect(at).toBeGreaterThan(figures);
+    expect(firstAction).toBeGreaterThan(at);
   });
 
   it('on, a co-caregiver of the family: no line', async () => {
     vi.stubEnv('NEXT_PUBLIC_CONTENT_GATING_ENABLED', 'true');
     state.role = 'caregiver' satisfies SpaceRole;
     const root = await home();
+    expect(cards(root)).toHaveLength(1);
+    expect(state.calls).not.toContain('listPlans');
+    expect(lines(root)).toHaveLength(0);
+  });
+
+  it('on, a family an active Family Plan covers: no line', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CONTENT_GATING_ENABLED', 'true');
+    state.entitlements = 'covered';
+    const root = await home();
+    expect(cards(root)).toHaveLength(1);
+    expect(state.calls).toContain('entitlements');
+    expect(lines(root)).toHaveLength(0);
+  });
+
+  it.each(['failed', 'throws'] as const)('on, the entitlements read %s: coverage unknown, no line (fails closed)', async (mode) => {
+    vi.stubEnv('NEXT_PUBLIC_CONTENT_GATING_ENABLED', 'true');
+    state.entitlements = mode;
+    const root = await home();
+    expect(cards(root)).toHaveLength(1);
+    expect(lines(root)).toHaveLength(0);
+  });
+
+  it('on, the plans read throws: the card shows, no line (fails closed)', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CONTENT_GATING_ENABLED', 'true');
+    state.plans = 'throws';
+    const root = await home();
+    expect(state.calls).toContain('listPlans');
     expect(cards(root)).toHaveLength(1);
     expect(lines(root)).toHaveLength(0);
   });
