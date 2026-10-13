@@ -27,14 +27,30 @@ function testFiles(dir: string): string[] {
   });
 }
 
-const PAGE_IMPORT = /\bimport\(\s*['"](?:@\/app\/|(?:\.\.?\/)+[^'"]*\bpage['"])/;
+/**
+ * A dynamic import whose specifier is a page module: the `@/app/` alias, or a relative path whose last segment is
+ * `page` (with or without a `.ts`/`.tsx` extension). Quoted or template-literal specifiers both count. A type-only
+ * `typeof import('...')` loads nothing at runtime, so it is skipped. Group 1 is the specifier.
+ */
+const PAGE_IMPORT = /(?<!typeof\s*)\bimport\(\s*['"`]((?:@\/app\/[^'"`]*|(?:\.\.?\/)+[^'"`]*\bpage(?:\.tsx?)?))['"`]/g;
+
+function pageImports(source: string): string[] {
+  return Array.from(source.matchAll(PAGE_IMPORT), (match) => match[1] ?? '');
+}
+
+function isPageImport(source: string): boolean {
+  return pageImports(source).length > 0;
+}
 
 /**
+ * Files that load some pages lazily on purpose, each with the only specifiers it may load that way.
  * landing-locales maps each marketing route to a lazy page loader so a table-driven test renders the en and
- * localized page of the same route. The marketing pages are static and light (no console hooks), so their load
- * stays well inside the 5 s budget.
+ * localized page of the same route. The marketing pages under `(en)` and `(loc)` are static and light (no console
+ * hooks), so their load stays inside the 5 s budget. Any other lazy page import in that file still fails.
  */
-const ALLOWED = new Set(['app/__tests__/landing-locales.test.tsx']);
+const ALLOWED: ReadonlyMap<string, RegExp> = new Map([
+  ['app/__tests__/landing-locales.test.tsx', /^\.\.\/\((?:en|loc)\)\//],
+]);
 
 describe('web tests import page modules at the top of the file', () => {
   it('finds the test files to check', () => {
@@ -44,29 +60,47 @@ describe('web tests import page modules at the top of the file', () => {
   it('no test file loads a page with an in-test dynamic import', () => {
     const offenders = testFiles(SRC)
       .filter((path) => path !== __filename)
-      .filter((path) => PAGE_IMPORT.test(readFileSync(path, 'utf8')))
-      .map((path) => relative(SRC, path).split('\\').join('/'))
-      .filter((path) => !ALLOWED.has(path));
+      .flatMap((path) => {
+        const rel = relative(SRC, path).split('\\').join('/');
+        const allowed = ALLOWED.get(rel);
+        return pageImports(readFileSync(path, 'utf8'))
+          .filter((specifier) => !allowed?.test(specifier))
+          .map((specifier) => `${rel}: ${specifier}`);
+      });
     expect(offenders).toEqual([]);
   });
 
   it('the pattern matches the in-test forms it guards against', () => {
-    expect(PAGE_IMPORT.test("const { default: Page } = await import('@/app/(console)/teach/space/notes/page');")).toBe(true);
-    expect(PAGE_IMPORT.test("const load = () => import('@/app/(console)/teach/space/notes/page');")).toBe(true);
-    expect(PAGE_IMPORT.test("const { default: Page } = await import('../page');")).toBe(true);
-    expect(PAGE_IMPORT.test("import('../../app/(en)/about/page').then((m) => m.default);")).toBe(true);
+    expect(isPageImport("const { default: Page } = await import('@/app/(console)/teach/space/notes/page');")).toBe(true);
+    expect(isPageImport("const load = () => import('@/app/(console)/teach/space/notes/page');")).toBe(true);
+    expect(isPageImport("const { default: Page } = await import('../page');")).toBe(true);
+    expect(isPageImport("import('../../app/(en)/about/page').then((m) => m.default);")).toBe(true);
+    expect(isPageImport('const { default: Page } = await import(`@/app/(console)/teach/space/page`);')).toBe(true);
+    expect(isPageImport("const { default: Page } = await import('../page.tsx');")).toBe(true);
   });
 
   it('the pattern lets top-level imports and non-page modules through', () => {
-    expect(PAGE_IMPORT.test("import Page from '@/app/(console)/teach/space/notes/page';")).toBe(false);
-    expect(PAGE_IMPORT.test("import Page from '../page';")).toBe(false);
-    expect(PAGE_IMPORT.test("const actual = await import('../pager-utils');")).toBe(false);
-    expect(PAGE_IMPORT.test("const catalog = await import('@hangul-route/i18n');")).toBe(false);
+    expect(isPageImport("import Page from '@/app/(console)/teach/space/notes/page';")).toBe(false);
+    expect(isPageImport("import Page from '../page';")).toBe(false);
+    expect(isPageImport("const actual = await import('../pager-utils');")).toBe(false);
+    expect(isPageImport("const catalog = await import('@hangul-route/i18n');")).toBe(false);
+    expect(isPageImport("const actual = await importOriginal<typeof import('@/app/(console)/teach/space/page')>();")).toBe(
+      false,
+    );
+  });
+
+  it('the landing-locales exemption covers only the marketing pages', () => {
+    const allowed = ALLOWED.get('app/__tests__/landing-locales.test.tsx');
+    expect(allowed?.test('../(en)/about/page')).toBe(true);
+    expect(allowed?.test('../(loc)/[locale]/about/page')).toBe(true);
+    expect(allowed?.test('@/app/(console)/teach/space/page')).toBe(false);
+    expect(allowed?.test('../(console)/teach/space/page')).toBe(false);
   });
 
   it('every allowlisted file still exists and still needs its exemption', () => {
-    for (const path of ALLOWED) {
-      expect(PAGE_IMPORT.test(readFileSync(join(SRC, path), 'utf8'))).toBe(true);
+    for (const [path, allowed] of ALLOWED) {
+      const specifiers = pageImports(readFileSync(join(SRC, path), 'utf8'));
+      expect(specifiers.some((specifier) => allowed.test(specifier))).toBe(true);
     }
   });
 });
