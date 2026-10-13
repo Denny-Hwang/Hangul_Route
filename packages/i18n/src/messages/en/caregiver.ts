@@ -503,6 +503,50 @@ export const caregiver = {
     saved: 'The start is changed.',
     /** The dashboard's row under each profile's stats. */
     row: { label: 'Starting spot', seeCheck: 'See the check' },
+    /**
+     * The "Suggested weekly plan" card at the top of the report (AM-5, AM-10; wireframe
+     * journey/my-route-overview.md K2, K3): the basis in words, the pace and the length, plain
+     * warnings (no price, no plan name, no purchase button). The grown-up is through the gate.
+     */
+    plan: {
+      title: (name: string) => `Suggested weekly plan for ${name}`,
+      basis: (level: string, days: number, minutes: number) =>
+        plural('en', days, {
+          one: `Based on: ${level}, 1 day a week, ${minutes} minutes`,
+          other: `Based on: ${level}, ${days} days a week, ${minutes} minutes`,
+        }),
+      paceTitle: 'Pace',
+      lengthTitle: 'Length',
+      suggested: 'Suggested',
+      headsUp: 'Good to know',
+      warning: {
+        notIncluded: (count: number) =>
+          plural('en', count, {
+            one: '1 lesson is not included with this account yet and is not in the plan.',
+            other: `${count} lessons are not included with this account yet and are not in the plan.`,
+          }),
+        notReleased: (count: number) =>
+          plural('en', count, {
+            one: '1 episode is not released yet. It starts once it is.',
+            other: `${count} episodes are not released yet. They start once they are.`,
+          }),
+        runsOut: (week: number) => `From week ${week} there are no new lessons yet. Free practice fills those weeks.`,
+        didNotFit: (count: number) =>
+          plural('en', count, {
+            one: '1 lesson did not fit. A longer plan or more days include it.',
+            other: `${count} lessons did not fit. A longer plan or more days include them.`,
+          }),
+      },
+      usePlan: 'Use this plan',
+      change: 'Change',
+      notNow: 'Not now',
+      made: (name: string) => `${name} has a weekly plan now. It shows on Home.`,
+      laterStart: (name: string) => `${name}'s newest check found a later place to start.`,
+      laterLine: 'The weekly plan can move ahead and keep the same end date.',
+      updatePlan: 'Update the plan',
+      updated: 'The weekly plan moved ahead.',
+      failed: 'That did not work. Try again.',
+    },
   },
 
   /**

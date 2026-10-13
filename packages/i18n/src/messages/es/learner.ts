@@ -822,6 +822,11 @@ export const learner = {
         usePlan: 'Usar este plan',
         change: 'Cambiar',
         justStart: 'Solo empezar',
+        basis: (length: string, days: number, minutes: number) =>
+          plural('es', days, {
+            one: `${length}, 1 día por semana, unos ${minutes} minutos al día`,
+            other: `${length}, ${days} días por semana, unos ${minutes} minutos al día`,
+          }),
       },
     },
     homeCard: {
