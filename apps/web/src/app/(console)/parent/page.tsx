@@ -8,6 +8,7 @@ import { AvatarChip } from '@/components/AvatarChip';
 import { AdultFrame, type FrameSpaces } from '@/components/console/AdultFrame';
 import { FreeLessonsLine } from '@/components/console/FreeLessonsParts';
 import { Button, Muted, buttonBase, panelStyle } from '@/components/console/ui';
+import { useMovesWaiting } from '@/components/console/MovesEntry';
 import { useConsole } from '@/components/console/use-console';
 import type { EntitlementView, PlanView, Roster, RosterLearner, SpaceListItem } from '@/lib/console/api';
 import { browseEntryShown, contentGatingEnabled, learningRouteEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
@@ -18,7 +19,7 @@ import { familyActionLinks, isArchivedFamily, joinOrder, learnerCardActions, man
 import { personaHome } from '@/lib/console/personas';
 import { dateKey, livePublished } from '@/lib/console/plans';
 import { codeExpiry, relativeDay } from '@/lib/console/rollup';
-import { spaceErrorText } from '@/lib/console/routing';
+import { ROUTES, spaceErrorText } from '@/lib/console/routing';
 import { writeLastPersona } from '@/lib/console/shell-store';
 import { BROWSE_PATH } from '@/lib/console/shell-nav';
 import { START_CLASS, START_FAMILY } from '@/lib/console/teacher-home';
@@ -35,6 +36,9 @@ import { START_CLASS, START_FAMILY } from '@/lib/console/teacher-home';
  * family's plans and the account's entitlements, and a child card shows the `plan-waiting` free-lessons line
  * under its figures for the owner of a family no Family Plan covers, with **Open billing** described by it.
  * With the switch off it reads neither and shows no line.
+ *
+ * Class moves (F-SPACE-002 T-6b, requests-page.md "Entry points"):
+ * the family actions gain "N class moves waiting" to the family's page, only while a move waits for the family.
  */
 
 /** One family's roster read: loading, failed (that section alone shows Try again) or loaded. */
@@ -124,6 +128,8 @@ export default function ParentHomePage(): JSX.Element {
   // The free-lessons line (F-ENT-003 section 3.9.2): each family's plans and the account's entitlements, read only with the switch on.
   const [plans, setPlans] = useState<Record<string, PlanView[]>>({});
   const [entitlements, setEntitlements] = useState<EntitlementView[] | null>(null);
+  const homeView = items ? parentHomeView(items) : null;
+  const moves = useMovesWaiting(api, homeView?.state === 'families' ? homeView.families.map((family) => family.space.id) : []);
 
   const loadRoster = useCallback(
     async (spaceId: string, role: SpaceListItem['role']): Promise<void> => {
@@ -166,7 +172,7 @@ export default function ParentHomePage(): JSX.Element {
   const gating = contentGatingEnabled();
   const today = dateKey(now);
   const lessons = browseEntryShown(typeof window === 'undefined' ? '' : window.location.origin);
-  const view = items ? parentHomeView(items) : null;
+  const view = homeView;
   const joinLine = p.empty.line(m.learner.home.profileLabel, m.caregiver.spaces.title, m.caregiver.spaces.join.cta);
 
   const toTeacher = (): void => {
@@ -326,6 +332,11 @@ export default function ParentHomePage(): JSX.Element {
           >
             {p.actions.addLearner}
           </button>
+        ) : null}
+        {(moves[id] ?? 0) > 0 ? (
+          <Link href={ROUTES.spaceTransfers(id, 'family')} style={button} data-testid="family-moves-waiting">
+            {c.transfer.waiting(moves[id] ?? 0)}
+          </Link>
         ) : null}
       </div>
     );
