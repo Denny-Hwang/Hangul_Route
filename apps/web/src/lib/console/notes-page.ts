@@ -1,4 +1,4 @@
-import { CATALOG, type Catalog, type NoteReactionId, type SpaceKind, type StageKey } from '@hangul-route/content-schema';
+import { CATALOG, type Catalog, type NoteReactionId, type SpaceKind, type SpaceRole, type StageKey } from '@hangul-route/content-schema';
 import type { iconNames } from '@hangul-route/design-system/icon-glyphs';
 import type { RecipientRow } from './notes';
 import { ROUTES, spaceIdFrom } from './routing';
@@ -105,15 +105,26 @@ export function reactionGlyph(reaction: string | null): IconName | null {
 }
 
 /**
+ * Whether this viewer's role sends notes in this space (section 6.1): the owner, a class's teachers, a family's
+ * caregivers. A school admin, a student and an unknown role never do (no cascade, section 8.2 and OD-6), and a school
+ * has no notes page at all. The Worker still decides; this only keeps the console from offering what it would refuse.
+ */
+export function notesSender(role: SpaceRole | null, kind: SpaceKind): boolean {
+  if (kind === 'school' || role === null) return false;
+  return role === 'owner' || (kind === 'class' && role === 'teacher') || (kind === 'family' && role === 'caregiver');
+}
+
+/**
  * The roster's notes entries (section 6.13 item 3): **Notes** in the roster header and **Send a note** on each student
- * card, the composer with that learner preselected. None while the flag is off; an archived space keeps Notes (its
+ * card, the composer with that learner preselected. None while the flag is off, and none for a viewer whose role does
+ * not send here (`notesSender`: a school admin opening a class roster sees neither). An archived space keeps Notes (its
  * list and take back still work) and has no Send a note (an archived space cannot send, section 6.1 item 3).
  */
-export function rosterNotesLinks(opts: { enabled: boolean; archived: boolean; spaceId: string; kind: SpaceKind }): {
+export function rosterNotesLinks(opts: { enabled: boolean; archived: boolean; role: SpaceRole | null; spaceId: string; kind: SpaceKind }): {
   header: string | null;
   card: (learnerId: string) => string | null;
 } {
-  if (!opts.enabled) return { header: null, card: () => null };
+  if (!opts.enabled || !notesSender(opts.role, opts.kind)) return { header: null, card: () => null };
   return {
     header: ROUTES.spaceNotes(opts.spaceId, opts.kind),
     card: (learnerId) => (opts.archived ? null : ROUTES.spaceNotes(opts.spaceId, opts.kind, { compose: true, learner: learnerId })),

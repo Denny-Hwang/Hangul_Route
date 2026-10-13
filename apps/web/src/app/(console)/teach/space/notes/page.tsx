@@ -14,7 +14,7 @@ import type { Roster } from '@/lib/console/api';
 import { contentGatingEnabled, notesEnabled } from '@/lib/console/config';
 import { spaceCoverage, type SpaceCoverage } from '@/lib/console/curriculum';
 import { questClosedLine, withdrawProblem, type SentNoteRow, type SentRowView } from '@/lib/console/notes';
-import { FAMILY_TABS, notesPageHref, notesPageQuery, questPrefill, type FamilyTab } from '@/lib/console/notes-page';
+import { FAMILY_TABS, notesPageHref, notesPageQuery, notesSender, questPrefill, type FamilyTab } from '@/lib/console/notes-page';
 import { ROUTES, isKnownSpaceKind, spaceErrorText, spaceKindOfPath, type SpaceError } from '@/lib/console/routing';
 
 /** The arrow-left glyph of the back link (design/screens/notes/README.md, Constants: 20 px on rows and lines). */
@@ -44,6 +44,9 @@ function NotesInner(): JSX.Element {
   const [rosterError, setRosterError] = useState<SpaceError | null>(null);
   const [gating, setGating] = useState(false);
   const [coverage, setCoverage] = useState<SpaceCoverage>('unknown');
+  // Whether this viewer's role sends here (section 6.1). Unknown (the spaces read failed) leaves the action in place:
+  // the Worker decides, and the composer words its refusal.
+  const [canSend, setCanSend] = useState(true);
   const [rows, setRows] = useState<SentNoteRow[]>([]);
   const [next, setNext] = useState<string | null>(null);
   const [listState, setListState] = useState<SentListState>('loading');
@@ -53,18 +56,27 @@ function NotesInner(): JSX.Element {
   const [notice, setNotice] = useState<string | null>(null);
   // Only the newest list read may draw: an answer for an older filter or an earlier retry is dropped.
   const latest = useRef(0);
+  // The composer opened from this page's own New note: closing it goes back, so history keeps one copy of the list.
+  const openedHere = useRef(false);
 
   useEffect(() => {
     if (!enabled) router.replace(ROUTES.space(q.spaceId, pathKind));
   }, [enabled, router, q.spaceId, pathKind]);
 
+  // Schools have no notes page (section 6.13): the address goes to the school's own page.
+  const [school, setSchool] = useState(false);
+  useEffect(() => {
+    if (school) router.replace(ROUTES.space(q.spaceId, 'school'));
+  }, [school, router, q.spaceId]);
+
   const loadRoster = useCallback(async (): Promise<void> => {
     if (!api || !enabled) return;
     setRosterError(null);
-    // The closed-quest mark needs the free-plan switch and this viewer's view of the space's plan (F-ENT-003).
+    // The closed-quest mark needs the free-plan switch and this viewer's view of the space's plan (F-ENT-003); the
+    // spaces read also gives this viewer's role, which decides whether the page offers sending at all.
     const gate = contentGatingEnabled();
     setGating(gate);
-    const [result, spaces, entitlements] = await Promise.all([api.roster(q.spaceId), gate ? api.listSpaces() : null, gate ? api.entitlements() : null]);
+    const [result, spaces, entitlements] = await Promise.all([api.roster(q.spaceId), api.listSpaces(), gate ? api.entitlements() : null]);
     if (!result.ok) {
       setRosterError(result.error === 'forbidden' ? 'forbidden' : result.error === 'not_found' ? 'gone' : 'cantReach');
       return;
@@ -73,12 +85,23 @@ function NotesInner(): JSX.Element {
       setRosterError('cantReach');
       return;
     }
+    // Schools have no notes page (section 6.13): the address goes to the school's own page.
+    if (result.data.space.kind === 'school') {
+      setSchool(true);
+      return;
+    }
+    if (spaces.ok) {
+      const mine = spaces.data.find((item) => item.space.id === result.data.space.id);
+      setCanSend(mine ? notesSender(mine.role, result.data.space.kind) : true);
+    }
     setRoster(result.data);
     if (gate) setCoverage(spaceCoverage(entitlements?.ok ? entitlements.data : null, spaces?.ok ? spaces.data : null, result.data.space, new Date()));
   }, [api, enabled, q.spaceId]);
 
+  // The list waits for the roster: a school, a space this viewer cannot open or one that is gone never asks for it.
+  const rosterReady = roster !== null;
   const loadList = useCallback(async (): Promise<void> => {
-    if (!notesApi || !enabled) return;
+    if (!notesApi || !enabled || !rosterReady) return;
     const call = ++latest.current;
     setListState('loading');
     setRows([]);
@@ -89,7 +112,7 @@ function NotesInner(): JSX.Element {
       setNext(result.data.next);
       setListState('ready');
     } else setListState('error');
-  }, [notesApi, enabled, q.spaceId, q.learner]);
+  }, [notesApi, enabled, rosterReady, q.spaceId, q.learner]);
 
   useEffect(() => {
     void loadRoster();
@@ -99,7 +122,7 @@ function NotesInner(): JSX.Element {
     void loadList();
   }, [loadList]);
 
-  if (!ready || !session || !enabled) return <AdultFrame>{null}</AdultFrame>;
+  if (!ready || !session || !enabled || school) return <AdultFrame>{null}</AdultFrame>;
 
   const n = m.console.notes;
   const kind = roster?.space.kind ?? pathKind ?? 'class';
@@ -107,9 +130,17 @@ function NotesInner(): JSX.Element {
   const side = family ? 'family' : 'class';
   const tab: FamilyTab | undefined = family ? q.tab : undefined;
 
-  const openComposer = (): void => router.push(notesPageHref(q.spaceId, kind, { learner: q.learner, compose: true, tab }));
+  const openComposer = (): void => {
+    openedHere.current = true;
+    router.push(notesPageHref(q.spaceId, kind, { learner: q.learner, compose: true, tab }));
+  };
+  // Opened here: back to the list entry New note pushed over. Arrived with `&compose=1` (the roster, the report, the
+  // family home): replace, so the list is where Back from it leads.
   const closeComposer = (sent: boolean): void => {
-    router.replace(notesPageHref(q.spaceId, kind, { learner: q.learner, tab }));
+    if (openedHere.current) {
+      openedHere.current = false;
+      router.back();
+    } else router.replace(notesPageHref(q.spaceId, kind, { learner: q.learner, tab }));
     if (sent) void loadList();
   };
   const filter = (learner: string): void => router.replace(notesPageHref(q.spaceId, kind, { learner: learner || null, tab }));
@@ -173,7 +204,7 @@ function NotesInner(): JSX.Element {
           setNotice(null);
           setTakeBack({ view, name: raw.to === 'learner' ? raw.displayName : null });
         }}
-        onNewNote={openComposer}
+        onNewNote={canSend && !rosterError ? openComposer : undefined}
       />
     </>
   );
@@ -188,19 +219,23 @@ function NotesInner(): JSX.Element {
         </Link>
         <div className="hr-notes-head">
           <h1>{title}</h1>
-          <button type="button" className="hr-notes-btn hr-notes-primary" onClick={openComposer} data-testid="notes-new">
-            {family ? n.sendNote.cta : n.newNote.cta}
-          </button>
+          {canSend && !rosterError ? (
+            <button type="button" className="hr-notes-btn hr-notes-primary" onClick={openComposer} data-testid="notes-new">
+              {family ? n.sendNote.cta : n.newNote.cta}
+            </button>
+          ) : null}
         </div>
         {rosterError ? (
           <div className="hr-notes-state" role="alert">
             <p>{spaceErrorText(rosterError, locale)}</p>
-            <button type="button" className="hr-notes-btn" onClick={() => void loadRoster()}>
-              {m.console.tryAgain}
-            </button>
+            {rosterError === 'cantReach' ? (
+              <button type="button" className="hr-notes-btn" onClick={() => void loadRoster()}>
+                {m.console.tryAgain}
+              </button>
+            ) : null}
           </div>
         ) : null}
-        {family ? (
+        {rosterError ? null : family ? (
           <>
             <NotesTabs<FamilyTab>
               tabs={FAMILY_TABS}
@@ -218,7 +253,7 @@ function NotesInner(): JSX.Element {
           <div className="hr-notes-panel">{list}</div>
         )}
       </div>
-      {q.compose && roster && notesApi ? (
+      {q.compose && roster && notesApi && canSend ? (
         <NoteComposer
           notesApi={notesApi}
           space={{ id: roster.space.id, kind: roster.space.kind, name: roster.space.name, archived: roster.space.archivedAt !== null }}

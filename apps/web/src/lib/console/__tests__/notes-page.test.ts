@@ -8,6 +8,7 @@ import {
   questOptions,
   questPrefill,
   reactionGlyph,
+  notesSender,
   rosterNotesLinks,
 } from '../notes-page';
 import type { RecipientRow } from '../notes';
@@ -114,26 +115,54 @@ describe('reactionGlyph', () => {
 
 describe('rosterNotesLinks', () => {
   it('flag off: no Notes action and no Send a note', () => {
-    const links = rosterNotesLinks({ enabled: false, archived: false, spaceId: 'space:c1', kind: 'class' });
+    const links = rosterNotesLinks({ enabled: false, archived: false, role: 'owner', spaceId: 'space:c1', kind: 'class' });
     expect(links.header).toBeNull();
     expect(links.card('profile:a')).toBeNull();
   });
 
   it('flag on: the header opens the notes page; a card opens the composer with that learner, ids only', () => {
-    const links = rosterNotesLinks({ enabled: true, archived: false, spaceId: 'space:c1', kind: 'class' });
+    const links = rosterNotesLinks({ enabled: true, archived: false, role: 'teacher', spaceId: 'space:c1', kind: 'class' });
     expect(links.header).toBe('/teach/space/notes?id=space%3Ac1');
     expect(links.card('profile:a')).toBe('/teach/space/notes?id=space%3Ac1&compose=1&learner=profile%3Aa');
   });
 
   it('a family uses the /parent prefix', () => {
-    const links = rosterNotesLinks({ enabled: true, archived: false, spaceId: 'space:f1', kind: 'family' });
+    const links = rosterNotesLinks({ enabled: true, archived: false, role: 'caregiver', spaceId: 'space:f1', kind: 'family' });
     expect(links.header).toBe('/parent/space/notes?id=space%3Af1');
     expect(links.card('profile:a')).toBe('/parent/space/notes?id=space%3Af1&compose=1&learner=profile%3Aa');
   });
 
   it('an archived space keeps Notes (the list and take back still work) and has no Send a note', () => {
-    const links = rosterNotesLinks({ enabled: true, archived: true, spaceId: 'space:c1', kind: 'class' });
+    const links = rosterNotesLinks({ enabled: true, archived: true, role: 'owner', spaceId: 'space:c1', kind: 'class' });
     expect(links.header).toBe('/teach/space/notes?id=space%3Ac1');
     expect(links.card('profile:a')).toBeNull();
+  });
+
+  it('a viewer whose role does not send here gets neither entry (a school admin on a class roster, section 8.2)', () => {
+    for (const [role, kind] of [
+      ['admin', 'class'],
+      ['student', 'class'],
+      ['caregiver', 'class'],
+      ['teacher', 'family'],
+      [null, 'class'],
+      ['owner', 'school'],
+    ] as const) {
+      const links = rosterNotesLinks({ enabled: true, archived: false, role, spaceId: 'space:c1', kind });
+      expect(links.header).toBeNull();
+      expect(links.card('profile:a')).toBeNull();
+    }
+  });
+});
+
+describe('notesSender', () => {
+  it('the owner, a class teacher and a family caregiver send; nobody sends in a school', () => {
+    expect(notesSender('owner', 'class')).toBe(true);
+    expect(notesSender('owner', 'family')).toBe(true);
+    expect(notesSender('teacher', 'class')).toBe(true);
+    expect(notesSender('caregiver', 'family')).toBe(true);
+    expect(notesSender('admin', 'class')).toBe(false);
+    expect(notesSender('admin', 'school')).toBe(false);
+    expect(notesSender('owner', 'school')).toBe(false);
+    expect(notesSender(null, 'family')).toBe(false);
   });
 });

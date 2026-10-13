@@ -63,7 +63,8 @@ function SpaceInner(): JSX.Element {
       api.roster(spaceId),
       api.listPlans(spaceId),
       api.relinkRequests(spaceId),
-      lectureModeEnabled() || gating ? api.listSpaces() : null,
+      // Notes (FB-11a) read the role too: only a role that sends here sees the roster's notes entries.
+      lectureModeEnabled() || gating || notesEnabled() ? api.listSpaces() : null,
       gating ? api.entitlements() : null,
     ]);
     if (spaceList?.ok) setSpaces(spaceList.data);
@@ -120,7 +121,7 @@ function SpaceInner(): JSX.Element {
   // One line about the newest live whole-class plan (Learning Route section 6.3, LR-9); a class only, never about learners.
   const goalLine = roster ? classGoalLine({ kind: roster.space.kind, plans, today, stageTitle, locale }) : null;
   // Notes (F-FEEDBACK-001 FB-11a, section 6.13 item 3): the roster header's Notes and each card's Send a note, by flag.
-  const notesLinks = roster ? rosterNotesLinks({ enabled: notesEnabled(), archived: roster.space.archivedAt !== null, spaceId, kind: roster.space.kind }) : null;
+  const notesLinks = roster ? rosterNotesLinks({ enabled: notesEnabled(), archived: roster.space.archivedAt !== null, role: spaces?.find((item) => item.space.id === spaceId)?.role ?? null, spaceId, kind: roster.space.kind }) : null;
 
   return (
     <AdultFrame onSignOut={signOut} title={roster ? c.space.title[roster.space.kind](roster.space.name, roster.learners.length) : c.space.loading}>

@@ -28,9 +28,9 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-const nav = { query: '', path: '/teach/space/notes', pushed: [] as string[], replaced: [] as string[] };
+const nav = { query: '', path: '/teach/space/notes', pushed: [] as string[], replaced: [] as string[], backs: 0 };
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ replace: (href: string) => nav.replaced.push(href), push: (href: string) => nav.pushed.push(href) }),
+  useRouter: () => ({ replace: (href: string) => nav.replaced.push(href), push: (href: string) => nav.pushed.push(href), back: () => void (nav.backs += 1) }),
   useSearchParams: () => new URLSearchParams(nav.query),
   usePathname: () => nav.path,
 }));
@@ -47,10 +47,11 @@ const SPACE = {
 const learner = (id: string, displayName: string) => ({ id, displayName, ageGroup: 'starter', avatar: 'tiger', joinedAt: '2026-09-02T00:00:00.000Z', lastActiveAt: null, lastSyncedAt: null, summary: null });
 let rosterLearners = [learner('profile:mina', 'Mina'), learner('profile:jun', 'Jun')];
 let role = 'teacher';
+let rosterFailure: 'forbidden' | 'not_found' | 'network' | null = null;
 
 const ok = <T,>(data: T) => ({ ok: true as const, data });
 const api = {
-  roster: async () => ok({ space: SPACE, learners: rosterLearners, joinCode: null, joinCodeExpiresAt: null }),
+  roster: async () => (rosterFailure ? { ok: false as const, error: rosterFailure } : ok({ space: SPACE, learners: rosterLearners, joinCode: null, joinCodeExpiresAt: null })),
   listSpaces: async () => ok([{ space: SPACE, role, counts: { learners: rosterLearners.length, accounts: 1, classes: 0 }, joinCode: null, joinCodeExpiresAt: null }]),
   entitlements: async () => ok([]),
 };
@@ -64,6 +65,10 @@ vi.mock('@/components/console/use-console', async () => {
 
 const now = new Date().toISOString();
 let sentRows: SentNoteRow[] = [];
+type SentAnswer = { ok: true; data: { rows: SentNoteRow[]; next: string | null } } | { ok: false; failure: NotesFailure };
+// Answers handed out in order before the default one (the rows above, no next page); a pending one waits for `release`.
+let sentQueue: Array<SentAnswer | Promise<SentAnswer>> = [];
+let withdrawAnswer: { ok: true; data: { withdrawn: number } } | { ok: false; failure: NotesFailure } = { ok: true, data: { withdrawn: 1 } };
 let recipients: NoteRecipient[] = [];
 let recipientsFailure: NotesFailure | null = null;
 let sendAnswer: { ok: true; data: NoteSendResult } | { ok: false; failure: NotesFailure } = { ok: true, data: { batchId: 'b', sent: 1, skipped: [], presetsOnly: [] } };
@@ -71,7 +76,7 @@ const calls: Array<{ name: string; args: unknown[] }> = [];
 const notesApi = {
   sent: async (...args: unknown[]) => {
     calls.push({ name: 'sent', args });
-    return ok({ rows: sentRows, next: null });
+    return sentQueue.shift() ?? ok({ rows: sentRows, next: null });
   },
   recipients: async (...args: unknown[]) => {
     calls.push({ name: 'recipients', args });
@@ -83,7 +88,7 @@ const notesApi = {
   },
   withdraw: async (...args: unknown[]) => {
     calls.push({ name: 'withdraw', args });
-    return ok({ withdrawn: 1 });
+    return withdrawAnswer;
   },
 };
 vi.mock('@/components/console/use-notes-api', () => ({ useNotesApi: () => notesApi }));
@@ -107,6 +112,10 @@ afterEach(() => {
   nav.path = '/teach/space/notes';
   nav.pushed = [];
   nav.replaced = [];
+  nav.backs = 0;
+  rosterFailure = null;
+  sentQueue = [];
+  withdrawAnswer = { ok: true, data: { withdrawn: 1 } };
   SPACE.kind = 'class';
   SPACE.archivedAt = null;
   SPACE.settings.anonymizeRoster = false;
@@ -247,6 +256,7 @@ describe('class view (console/notes-sent.md A)', () => {
 describe('family view (console/family-notes.md, Sent tab)', () => {
   it('a tab list with the Sent tab, no class disclosure, Send a note, rows signed with the label and Opened shown', async () => {
     SPACE.kind = 'family';
+    role = 'owner';
     SPACE.name = 'Kim family';
     sentRows = [rowOf({ status: 'opened', label: 'grandma' })];
     const root = await page('id=space%3Af1', '/parent/space/notes');
@@ -291,6 +301,7 @@ describe('composer sub-view (console/note-composer.md)', () => {
 
   it('a family with one learner auto-selects that learner and shows Sign as', async () => {
     SPACE.kind = 'family';
+    role = 'caregiver';
     rosterLearners = [learner('profile:mina', 'Mina')];
     recipients = [rec('profile:mina', 'Mina')];
     const root = await page('id=space%3Af1&compose=1', '/parent/space/notes');
@@ -378,5 +389,171 @@ describe('composer sub-view (console/note-composer.md)', () => {
     vi.stubEnv('NEXT_PUBLIC_CONTENT_GATING_ENABLED', 'true');
     const gated = await page(`id=space%3Ac1&compose=1&quest=${encodeURIComponent(closed ?? '')}`);
     expect(textOf(dialog(gated) as ReactTestInstance)).toContain(n.composer.closedMark);
+  });
+});
+
+describe('review follow-ups: who sees what, and the list states', () => {
+  const newNote = (root: ReactTestInstance) => root.findAll((x) => x.type === 'button' && x.props['data-testid'] === 'notes-new');
+
+  it('a school id goes to the school page and never asks for a sent list (schools have no notes page)', async () => {
+    SPACE.kind = 'school';
+    const root = await page('id=space%3As1');
+    expect(nav.replaced).toEqual(['/teach/space?id=space%3As1']);
+    expect(newNote(root)).toHaveLength(0);
+    expect(calls.filter((c) => c.name === 'sent')).toHaveLength(0);
+  });
+
+  it('a school admin on a class: no New note, no send action in the empty list, no composer on &compose=1', async () => {
+    role = 'admin';
+    const root = await page('id=space%3Ac1&compose=1');
+    expect(newNote(root)).toHaveLength(0);
+    expect(byText(root, 'button', n.newNote.cta)).toHaveLength(0);
+    expect(textOf(root)).toContain(n.sent.empty);
+    expect(dialog(root)).toBeUndefined();
+  });
+
+  it('a roster the viewer cannot open: the access line only, no send action, no tabs and no sent list', async () => {
+    rosterFailure = 'forbidden';
+    const root = await page('id=space%3Ac1');
+    expect(root.findAll((x) => x.props.role === 'alert')).toHaveLength(1);
+    expect(newNote(root)).toHaveLength(0);
+    expect(byText(root, 'button', en.console.tryAgain)).toHaveLength(0);
+    expect(calls.filter((c) => c.name === 'sent')).toHaveLength(0);
+  });
+
+  it('a roster that cannot be reached offers Try again, which loads the roster and then the list', async () => {
+    rosterFailure = 'network';
+    const root = await page('id=space%3Ac1');
+    expect(calls.filter((c) => c.name === 'sent')).toHaveLength(0);
+    rosterFailure = null;
+    await act(async () => byText(root, 'button', en.console.tryAgain)[0]?.props.onClick());
+    await act(async () => undefined);
+    expect(newNote(root)).toHaveLength(1);
+    expect(calls.filter((c) => c.name === 'sent')).toHaveLength(1);
+  });
+
+  it('a family empty Sent tab offers the page primary, Send a note', async () => {
+    SPACE.kind = 'family';
+    role = 'owner';
+    const root = await page('id=space%3Af1', '/parent/space/notes');
+    expect(textOf(root)).toContain(n.sent.empty);
+    expect(byText(root, 'button', n.sendNote.cta)).toHaveLength(2);
+    expect(byText(root, 'button', n.newNote.cta)).toHaveLength(0);
+  });
+
+  it('the sent list failing shows its line and Try again, which reads it again', async () => {
+    sentQueue = [{ ok: false, failure: { status: 500, code: 'internal', details: null } }];
+    sentRows = [rowOf()];
+    const root = await page('id=space%3Ac1');
+    expect(textOf(root)).toContain(n.sent.error);
+    await act(async () => byText(root, 'button', n.sent.retry.cta)[0]?.props.onClick());
+    expect(root.findAll((x) => x.props['data-testid'] === 'sent-row')).toHaveLength(1);
+  });
+
+  it('Show older appends the next page with the cursor and the filter', async () => {
+    sentQueue = [ok({ rows: [rowOf()], next: 'cursor:1' }), ok({ rows: [rowOf({ id: 'note:older001' })], next: null })];
+    const root = await page('id=space%3Ac1&learner=profile%3Amina');
+    await act(async () => byText(root, 'button', n.sent.older.cta)[0]?.props.onClick());
+    expect(calls.filter((c) => c.name === 'sent').at(-1)?.args).toEqual(['space:c1', { before: 'cursor:1', learner: 'profile:mina' }]);
+    expect(root.findAll((x) => x.props['data-testid'] === 'sent-row')).toHaveLength(2);
+    expect(byText(root, 'button', n.sent.older.cta)).toHaveLength(0);
+  });
+
+  it('an older page that answers after a newer list read is dropped', async () => {
+    let release: (answer: SentAnswer) => void = () => undefined;
+    sentQueue = [ok({ rows: [rowOf()], next: 'cursor:1' }), new Promise<SentAnswer>((resolve) => (release = resolve)), ok({ rows: [rowOf({ id: 'note:fresh001' })], next: null })];
+    const root = await page('id=space%3Ac1');
+    act(() => void byText(root, 'button', n.sent.older.cta)[0]?.props.onClick());
+    // A take back reloads the list while the older page is still on its way.
+    sentRows = [];
+    await act(async () => byText(root, 'button', n.sent.takeBack.cta)[0]?.props.onClick());
+    await act(async () => byText(dialog(root) as ReactTestInstance, 'button', n.sent.takeBack.confirm.cta)[0]?.props.onClick());
+    await act(async () => release(ok({ rows: [rowOf({ id: 'note:stale001' })], next: null })));
+    // Only the fresh read's one row: the stale older page was not appended.
+    expect(root.findAll((x) => x.props['data-testid'] === 'sent-row')).toHaveLength(1);
+  });
+
+  it('take back of an answered note that was reported: the locked line, and the list reloads', async () => {
+    sentRows = [rowOf()];
+    withdrawAnswer = { ok: false, failure: { status: 409, code: 'note_reported', details: null } };
+    const root = await page('id=space%3Ac1');
+    await act(async () => byText(root, 'button', n.sent.takeBack.cta)[0]?.props.onClick());
+    await act(async () => byText(dialog(root) as ReactTestInstance, 'button', n.sent.takeBack.confirm.cta)[0]?.props.onClick());
+    expect(textOf(root)).toContain(n.sent.takeBack.locked);
+    expect(calls.filter((c) => c.name === 'sent')).toHaveLength(2);
+  });
+
+  it('New note then Cancel goes back (one copy of the list in history)', async () => {
+    recipients = [{ id: 'profile:mina', displayName: 'Mina', notes: 'all', today: 0 }];
+    const root = await page('id=space%3Ac1');
+    act(() => newNote(root)[0]?.props.onClick());
+    expect(nav.pushed).toEqual(['/teach/space/notes?id=space%3Ac1&compose=1']);
+    // The pushed address renders the composer over the same page instance.
+    nav.query = 'id=space%3Ac1&compose=1';
+    const { default: Page } = await import('@/app/(console)/teach/space/notes/page');
+    await act(async () => mounted?.update(<Page />));
+    await act(async () => undefined);
+    act(() => byText(dialog(root) as ReactTestInstance, 'button', n.composer.cancel.cta)[0]?.props.onClick());
+    expect(nav.backs).toBe(1);
+    expect(nav.replaced).toEqual([]);
+  });
+
+  it('Send another clears the form for a new note to the same space', async () => {
+    recipients = [{ id: 'profile:mina', displayName: 'Mina', notes: 'all', today: 0 }];
+    const root = await page('id=space%3Ac1&compose=1&learner=profile%3Amina');
+    const radio = (id: string) => (dialog(root) as ReactTestInstance).findAll((x) => x.type === 'input' && x.props.name === 'note-preset' && x.props.value === id)[0];
+    act(() => radio('effort_proud')?.props.onChange());
+    await act(async () => byText(dialog(root) as ReactTestInstance, 'button', n.composer.send.cta)[0]?.props.onClick());
+    await act(async () => byText(dialog(root) as ReactTestInstance, 'button', n.composer.result.another.cta)[0]?.props.onClick());
+    expect((dialog(root) as ReactTestInstance).findAll((x) => x.type === 'input' && x.props.name === 'note-preset' && x.props.checked)).toHaveLength(0);
+    expect(byText(dialog(root) as ReactTestInstance, 'button', n.composer.send.cta)[0]?.props['aria-disabled']).toBe(true);
+  });
+
+  it('a caregiver without the send grant (unreadable to them: note-senders is owner-only) gets the not-granted line', async () => {
+    SPACE.kind = 'family';
+    role = 'caregiver';
+    rosterLearners = [learner('profile:mina', 'Mina')];
+    recipients = [{ id: 'profile:mina', displayName: 'Mina', notes: 'all', today: 0 }];
+    sendAnswer = { ok: false, failure: { status: 403, code: 'not_allowed', details: null } };
+    const root = await page('id=space%3Af1&compose=1', '/parent/space/notes');
+    const radio = (dialog(root) as ReactTestInstance).findAll((x) => x.type === 'input' && x.props.name === 'note-preset' && x.props.value === 'effort_proud')[0];
+    act(() => radio?.props.onChange());
+    await act(async () => byText(dialog(root) as ReactTestInstance, 'button', n.composer.send.cta)[0]?.props.onClick());
+    expect(textOf(dialog(root) as ReactTestInstance)).toContain(n.composer.errors.notAllowed);
+  });
+
+  it('the quest picker starts on a labelled placeholder, never a blank entry', async () => {
+    recipients = [{ id: 'profile:mina', displayName: 'Mina', notes: 'all', today: 0 }];
+    const root = await page('id=space%3Ac1&compose=1');
+    act(() => byText(dialog(root) as ReactTestInstance, 'button', n.composer.quest.choose.cta)[0]?.props.onClick());
+    const first = (dialog(root) as ReactTestInstance).findAllByType('option')[0];
+    expect(first?.props.value).toBe('');
+    expect(first?.props.disabled).toBe(true);
+    expect(textOf(first as ReactTestInstance)).toBe(n.composer.quest.choose.cta);
+  });
+});
+
+describe('NotesTabs (section 6.12, arrow-key tabs)', () => {
+  it('arrows, Home and End select the next tab and move the focus onto it', async () => {
+    const { NotesTabs } = await import('@/components/console/NotesParts');
+    const focused: string[] = [];
+    const selected: string[] = [];
+    const tabs = ['received', 'sent'] as const;
+    act(() => {
+      mounted = create(<NotesTabs tabs={tabs} current="received" label="Notes" labelOf={(t) => t} panelId="p" onSelect={(t) => selected.push(t)} />, {
+        createNodeMock: (element) => ({ focus: () => focused.push(String(element.props.id)) }),
+      });
+    });
+    const tab = (id: string) => (mounted as ReactTestRenderer).root.findAll((x) => x.type === 'button' && x.props.id === `p-tab-${id}`)[0];
+    const key = (id: string, k: string) => act(() => tab(id)?.props.onKeyDown({ key: k, preventDefault: () => undefined }));
+    key('received', 'ArrowRight');
+    key('sent', 'ArrowRight');
+    key('received', 'ArrowLeft');
+    key('sent', 'Home');
+    key('received', 'End');
+    expect(selected).toEqual(['sent', 'received', 'sent', 'received', 'sent']);
+    expect(focused).toEqual(['p-tab-sent', 'p-tab-received', 'p-tab-sent', 'p-tab-received', 'p-tab-sent']);
+    expect(tab('received')?.props.tabIndex).toBe(0);
+    expect(tab('sent')?.props.tabIndex).toBe(-1);
   });
 });

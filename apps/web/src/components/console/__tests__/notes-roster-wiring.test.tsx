@@ -185,6 +185,26 @@ describe('the roster notes entries (FB-11a)', () => {
     expect(sendNote(root)).toHaveLength(0);
   });
 
+  it('a school admin opening a class roster sees neither entry (no cascade, section 8.2 and OD-6)', async () => {
+    vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'true');
+    role = 'admin';
+    const root = await roster();
+    expect(calls).toContain('listSpaces');
+    // The frame's own nav keeps its Notes item (F-APP-001); the roster adds no space notes link of its own.
+    expect(notesAction(root).filter((a) => String(a.props.href).includes('/space/notes'))).toEqual([]);
+    expect(sendNote(root)).toHaveLength(0);
+  });
+
+  it('a family caregiver sees both entries; a teacher of the class too', async () => {
+    vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'true');
+    role = 'teacher';
+    expect(sendNote(await roster())).toHaveLength(1);
+    act(() => mounted?.unmount());
+    SPACE.kind = 'family';
+    role = 'caregiver';
+    expect(sendNote(await roster())).toHaveLength(1);
+  });
+
   it('adds no request to the roster page', async () => {
     vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'true');
     await roster();

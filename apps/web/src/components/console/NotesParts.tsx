@@ -185,7 +185,8 @@ export function SentList({
   onRetry: () => void;
   onOlder: () => void;
   onTakeBack: (view: SentRowView, raw: SentNoteRow) => void;
-  onNewNote: () => void;
+  /** Absent for a viewer whose role does not send here: the empty state then offers no send action. */
+  onNewNote?: () => void;
 }): JSX.Element {
   const s = m.console.notes.sent;
   const baseId = useId();
@@ -212,9 +213,12 @@ export function SentList({
     return (
       <div className="hr-notes-state">
         <p>{s.empty}</p>
-        <button type="button" className="hr-notes-btn hr-notes-primary" onClick={onNewNote}>
-          {m.console.notes.newNote.cta}
-        </button>
+        {onNewNote ? (
+          <button type="button" className="hr-notes-btn hr-notes-primary" onClick={onNewNote}>
+            {/* The page's own primary: Send a note on a family's Sent tab (family-notes.md), New note in a class. */}
+            {kind === 'family' ? m.console.notes.sendNote.cta : m.console.notes.newNote.cta}
+          </button>
+        ) : null}
       </div>
     );
   }
@@ -549,7 +553,10 @@ export function NoteComposer({
                   }
                 }}
               >
-                <option value="" />
+                {/* A labelled placeholder, never picked: a screen reader hears what the list is for, not a blank entry. */}
+                <option value="" disabled>
+                  {c.quest.choose.cta}
+                </option>
                 {questOptions(stageTitle).map((group) => (
                   <optgroup key={group.stage} label={group.title}>
                     {group.quests.map((quest) => (
@@ -641,16 +648,26 @@ function questTitleOf(questId: string): string {
 
 /** The family page's tab list (section 6.12: arrow keys move between tabs). FB-11a has the Sent tab; FB-12 adds Received. */
 export function NotesTabs<T extends string>({ tabs, current, label, labelOf, panelId, onSelect }: { tabs: readonly T[]; current: T; label: string; labelOf: (tab: T) => string; panelId: string; onSelect: (tab: T) => void }): JSX.Element {
+  const buttons = useRef(new Map<T, HTMLButtonElement>());
+  // The roving tab stop follows the selection: the newly selected tab takes the focus (section 6.12, arrow-key tabs).
+  const select = (next: T | undefined): void => {
+    if (next === undefined) return;
+    onSelect(next);
+    buttons.current.get(next)?.focus();
+  };
   const move = (from: T, step: number): void => {
     const at = tabs.indexOf(from);
-    const next = tabs[(at + step + tabs.length) % tabs.length];
-    if (next !== undefined) onSelect(next);
+    select(tabs[(at + step + tabs.length) % tabs.length]);
   };
   return (
     <div className="hr-notes-tabs" role="tablist" aria-label={label}>
       {tabs.map((tab) => (
         <button
           key={tab}
+          ref={(node) => {
+            if (node) buttons.current.set(tab, node);
+            else buttons.current.delete(tab);
+          }}
           type="button"
           role="tab"
           className="hr-notes-tab"
@@ -662,6 +679,10 @@ export function NotesTabs<T extends string>({ tabs, current, label, labelOf, pan
           onKeyDown={(event) => {
             if (event.key === 'ArrowRight') move(tab, 1);
             else if (event.key === 'ArrowLeft') move(tab, -1);
+            else if (event.key === 'Home') select(tabs[0]);
+            else if (event.key === 'End') select(tabs[tabs.length - 1]);
+            else return;
+            event.preventDefault();
           }}
         >
           {labelOf(tab)}
