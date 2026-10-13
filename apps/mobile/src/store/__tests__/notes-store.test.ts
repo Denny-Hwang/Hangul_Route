@@ -367,6 +367,6 @@ describe('notes-store (F-FEEDBACK-001 section 6.9)', () => {
     await useNotesStore.getState().queueReport('profile:a', 'note:aaaaaaaa', 'unsafe', 'grown_up_pin');
     const c = client({ reportNote: vi.fn<NotesClient['reportNote']>(async () => ({ status: 'error', http: 429, code: 'too_many' })) });
     const outcomes = await useNotesStore.getState().flush('profile:a', c, creds);
-    expect(outcomes).toEqual([{ kind: 'report', noteId: 'note:aaaaaaaa', outcome: 'limited' }]);
+    expect(outcomes).toEqual([{ kind: 'report', noteId: 'note:aaaaaaaa', outcome: 'limited', http: 429 }]);
   });
 });

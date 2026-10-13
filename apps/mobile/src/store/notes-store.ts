@@ -30,6 +30,8 @@ export interface FlushResult {
   kind: PendingWrite['kind'];
   noteId: string;
   outcome: FlushOutcome;
+  /** The route's HTTP status (`-1`: no network): a `drop` for a gone note (404 / 409) is not a refusal. */
+  http: number;
 }
 
 /** The parts of the sync client the flush uses. */
@@ -205,9 +207,10 @@ export const useNotesStore = create<State & Actions>((set, get) => {
         const data = await hydrate(profileId);
         for (const write of flushOrder(data.queue)) {
           if (genOf(profileId) !== gen) break; // the profile was removed
-          const outcome = outcomeOf(await send(profileId, write, client, creds));
+          const http = await send(profileId, write, client, creds);
+          const outcome = outcomeOf(http);
           update(profileId, gen, (current) => settleWrite(current, write, outcome));
-          results.push({ kind: write.kind, noteId: write.noteId, outcome });
+          results.push({ kind: write.kind, noteId: write.noteId, outcome, http });
           // Offline, a server problem or stale credentials: the rest waits for the next sync, so the inbox is not held up.
           if (staysQueued(write, outcome)) break;
         }

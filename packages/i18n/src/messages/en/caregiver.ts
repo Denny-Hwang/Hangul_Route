@@ -652,6 +652,9 @@ export const caregiver = {
     disclosure: (learner: string) => `Teachers see the answer ${learner} picks on their notes.`,
     offline: 'Connect to the internet to do this.',
     saveFailed: 'That did not save. Try again.',
+    /** The device's notes could not be read (the console's family notes wording). */
+    error: 'Notes could not load. Try again.',
+    retry: { cta: 'Try again' },
     /** Web only: opens the family notes on app.hangulroute.com. */
     sendNote: { cta: 'Send a note' },
   },

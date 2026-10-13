@@ -42,7 +42,7 @@ export async function reportNoteNow(profileId: string, noteId: string, reason: N
   const mine = (results: readonly FlushResult[]): FlushResult | undefined => results.find((r) => r.kind === 'report' && r.noteId === noteId);
   // A flush already running started before this report was queued: wait for it, then send once more.
   const result = mine(await flushNow()) ?? mine(await flushNow());
-  const answer = reportOutcome(result?.outcome);
+  const answer = reportOutcome(result?.outcome, result?.http);
   // Already gone on the server: it leaves this device now, so Notes for <learner> no longer lists it.
   if (answer === 'alreadyGone') await useNotesStore.getState().forgetNote(profileId, noteId);
   return answer;

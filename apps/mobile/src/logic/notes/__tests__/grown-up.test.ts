@@ -96,7 +96,12 @@ describe('answers of the device routes', () => {
   it('a report: sent, today\'s limit, gone, or waiting for the next sync', () => {
     expect(reportOutcome('done')).toBe('reported');
     expect(reportOutcome('limited')).toBe('tooMany');
-    expect(reportOutcome('drop')).toBe('alreadyGone');
+    expect(reportOutcome('drop', 404)).toBe('alreadyGone');
+    expect(reportOutcome('drop', 409)).toBe('alreadyGone');
+    // Any other refusal recorded nothing: never "already gone".
+    expect(reportOutcome('drop', 422)).toBe('refused');
+    expect(reportOutcome('drop', 403)).toBe('refused');
+    expect(reportOutcome('drop')).toBe('refused');
     expect(reportOutcome('retry')).toBe('queued');
     expect(reportOutcome(undefined)).toBe('queued');
   });

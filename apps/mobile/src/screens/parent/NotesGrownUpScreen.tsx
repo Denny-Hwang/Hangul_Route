@@ -16,12 +16,11 @@ import {
 import { NOTES_MODES, type NotesMode } from '@hangul-route/content-schema';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, Pressable, Text, View } from 'react-native';
+import { AccessibilityInfo, Platform, Pressable, Text, View, findNodeHandle } from 'react-native';
 import { useOnline } from '../../components/use-online';
 import { bundleOs, flags } from '../../config/flags';
 import { useMessages } from '../../i18n/use-messages';
 import { attestFor, grownUpNotes, oneTimeCard, prefsChangedEvent, showModeSetting, type GrownUpNoteRow } from '../../logic/notes/grown-up';
-import { isParentSessionValid } from '../../logic/profiles/session';
 import { grownUpEntriesOn } from '../../logic/shell/entry-points';
 import { grownUpPinParams } from '../../logic/shell/handoff-rules';
 import type { RootStackParamList } from '../../navigation/types';
@@ -30,11 +29,11 @@ import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
 import { useNotesStore } from '../../store/notes-store';
 import { useProfileStore } from '../../store/profile-store';
-import { useUiStore } from '../../store/ui-store';
 import { HideConfirmSheet } from '../notes/HideConfirmSheet';
 import { hideNoteNow, putNotePrefsNow } from '../notes/note-actions';
 import { BackButton, ROW_GLYPH, glyphColor } from '../notes/parts';
 import { useProfileNotes } from '../notes/use-notes';
+import { useGateLapse } from './use-gate-lapse';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'NotesGrownUp'>;
 
@@ -57,13 +56,13 @@ export function NotesGrownUpScreen({ navigation, route }: Props): React.ReactEle
   const t = m.caregiver.notes;
   const { profileId } = route.params;
   const profile = useProfileStore((s) => s.profiles.find((p) => p.id === profileId));
-  const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
   const { opensDirectly } = useAudience();
-  const sessionOpen = isParentSessionValid(parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' }, Date.now());
+  // Re-checked when the session lapses or the screen is back in focus: a screen left open goes to the PIN.
+  const { sessionOpen, stillOpen } = useGateLapse(navigation);
   const gateOpen = opensDirectly(sessionOpen);
   const selfManaged = opensDirectly(false);
   const online = useOnline();
-  const { data, ctx, memberships } = useProfileNotes(profileId);
+  const { data, status, retry, ctx, memberships } = useProfileNotes(profileId);
   const [classScoped, setClassScoped] = useState(false);
   const [failed, setFailed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -93,7 +92,11 @@ export function NotesGrownUpScreen({ navigation, route }: Props): React.ReactEle
   const name = profile.displayName;
   const attest = attestFor(selfManaged);
 
+  // Every Worker call carries the grown-up attestation: it goes out only while the session is still open.
+  const mayAct = (): boolean => opensDirectly(stillOpen());
+
   const savePrefs = async (classes: NotesMode, acknowledge: boolean): Promise<boolean> => {
+    if (!mayAct()) return false;
     setBusy(true);
     setFailed(false);
     const outcome = await putNotePrefsNow(profileId, { classes, ...(acknowledge ? { acknowledge: true as const } : {}), attest });
@@ -107,9 +110,12 @@ export function NotesGrownUpScreen({ navigation, route }: Props): React.ReactEle
   const pickMode = async (next: NotesMode): Promise<void> => {
     if (next === shownMode || busy) return;
     setMode(next);
-    const ok = await savePrefs(next, false);
+    // Picking a mode is looking at the setting: the one-time card is answered with it (no repeat prompt).
+    const answersCard = card !== null;
+    const ok = await savePrefs(next, answersCard);
     // The choice snaps back when the Worker did not take it.
     setMode(null);
+    if (ok && answersCard) await useNotesStore.getState().markClassNotesCardSeen(profileId);
     if (ok) void track(prefsChangedEvent(next));
   };
 
@@ -117,11 +123,25 @@ export function NotesGrownUpScreen({ navigation, route }: Props): React.ReactEle
     if (card === null || busy) return;
     const ok = await savePrefs(card.mode, true);
     if (ok) await useNotesStore.getState().markClassNotesCardSeen(profileId);
-    if (ok && change) settingRef.current?.focus?.();
+    if (ok && change) focusSetting();
+  };
+
+  const focusSetting = (): void => {
+    if (Platform.OS === 'web') {
+      settingRef.current?.focus?.();
+      return;
+    }
+    // A native View has no focus(): move the screen reader to the setting instead.
+    const node = settingRef.current === null ? null : findNodeHandle(settingRef.current);
+    if (node !== null) AccessibilityInfo.setAccessibilityFocus(node);
   };
 
   const hide = async (): Promise<void> => {
     if (hiding === null) return;
+    if (!mayAct()) {
+      setHiding(null);
+      return;
+    }
     setBusy(true);
     setFailed(false);
     const outcome = await hideNoteNow(profileId, hiding);
@@ -191,7 +211,12 @@ export function NotesGrownUpScreen({ navigation, route }: Props): React.ReactEle
         </View>
       ) : null}
 
-      {rows.length === 0 ? (
+      {status === 'error' && data === undefined ? (
+        <View style={{ gap: spacing.md }} testID="notes-grown-up-load-error">
+          <Body>{t.error}</Body>
+          <Button label={t.retry.cta} tone="secondary" size="md" onPress={retry} testID="notes-grown-up-retry" />
+        </View>
+      ) : rows.length === 0 ? (
         <Body testID="notes-grown-up-empty">{t.empty(name)}</Body>
       ) : (
         <View style={{ gap: spacing.md }}>

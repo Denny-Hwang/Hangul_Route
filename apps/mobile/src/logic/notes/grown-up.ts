@@ -91,13 +91,15 @@ export function oneTimeCard(i: { memberships: readonly LearnerMembership[]; data
   return i.data.notes.some((n) => n.from.role === 'teacher') ? { mode: prefs.classes } : null;
 }
 
-export type ReportAnswer = 'reported' | 'tooMany' | 'alreadyGone' | 'queued';
+/** `refused`: the Worker turned the report down for another reason (422, 403): nothing was recorded. */
+export type ReportAnswer = 'reported' | 'tooMany' | 'alreadyGone' | 'queued' | 'refused';
 
 /** What the report sheet says after Report and hide, from the flush outcome of its report (none: still waiting). */
-export function reportOutcome(outcome: FlushOutcome | undefined): ReportAnswer {
+export function reportOutcome(outcome: FlushOutcome | undefined, http?: number): ReportAnswer {
   if (outcome === 'done') return 'reported';
   if (outcome === 'limited') return 'tooMany';
-  if (outcome === 'drop') return 'alreadyGone';
+  // Only a gone note (404) or one that changed on the server (409) is "already gone"; any other refusal is not.
+  if (outcome === 'drop') return http === 404 || http === 409 ? 'alreadyGone' : 'refused';
   return 'queued';
 }
 

@@ -135,12 +135,28 @@ describe('reportNoteNow (section 6.10 item 4)', () => {
     expect(ids()).toEqual(['note:bbbbbbbb']);
   });
 
-  it('offline or no connection: queued with the local hide', async () => {
+  it('refused for another reason (422, 403): not "already gone", nothing forgotten, the note listed again', async () => {
+    for (const refusal of [err(422, 'invalid_body'), err(403, 'forbidden')]) {
+      api.client = client({ report: [refusal] });
+      expect(await reportNoteNow(P, 'note:aaaaaaaa', 'unkind', 'grown_up_pin')).toBe('refused');
+      expect(ids()).toEqual(['note:aaaaaaaa', 'note:bbbbbbbb']);
+      expect(useNotesStore.getState().byProfile[P]?.queue).toEqual([]);
+    }
+  });
+
+  it('no connection: queued with the local hide', async () => {
     api.client = null;
     expect(await reportNoteNow(P, 'note:aaaaaaaa', 'unsafe', 'self')).toBe('queued');
     expect(useNotesStore.getState().byProfile[P]?.queue).toEqual([expect.objectContaining({ kind: 'report', noteId: 'note:aaaaaaaa', reason: 'unsafe', attest: 'self' })]);
-    api.client = client({ report: [err(-1, 'network'), err(-1, 'network')] });
+  });
+
+  it('offline: this report itself is tried, then stays queued', async () => {
+    const c = client({ report: [err(-1, 'network'), err(-1, 'network')] });
+    api.client = c;
     expect(await reportNoteNow(P, 'note:bbbbbbbb', 'unkind', 'self')).toBe('queued');
+    expect(c.reportNote).toHaveBeenCalledWith(P, 'note:bbbbbbbb', { reason: 'unkind', attest: 'self' }, expect.anything());
+    expect(c.reportNote.mock.calls.every((call) => (call as unknown[])[1] === 'note:bbbbbbbb')).toBe(true);
+    expect(useNotesStore.getState().byProfile[P]?.queue).toEqual([expect.objectContaining({ kind: 'report', noteId: 'note:bbbbbbbb' })]);
   });
 
   it('a flush already running: waits for it, then sends the new report at once', async () => {

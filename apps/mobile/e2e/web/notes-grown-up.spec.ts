@@ -53,8 +53,10 @@ const MEMBERSHIPS = [
   { spaceId: 'space:fam', kind: 'family', name: 'Kim family', role: 'student', joinedAt: iso(500) },
 ];
 
-async function childWithNotes(page: Page, putAway: string[] = []): Promise<string> {
-  await page.clock.setFixedTime(NOW);
+async function childWithNotes(page: Page, putAway: string[] = [], o: { runningClock?: boolean } = {}): Promise<string> {
+  // A running clock lets a test move past the 15-minute grown-up session; otherwise the time stands still.
+  if (o.runningClock) await page.clock.install({ time: NOW });
+  else await page.clock.setFixedTime(NOW);
   await onboardChild(page, { name: 'Mina', startJourney: false });
   await page.goto('/');
   await expect(page.getByText('Hi, Mina!')).toBeVisible();
@@ -202,6 +204,51 @@ test.describe('grown-up notes (flag on)', () => {
     await expect(page.getByRole('radio', { name: 'Encouragements only' })).toHaveAttribute('aria-checked', 'true');
     await expect(page.getByTestId('notes-disclosure')).toHaveCount(0);
     await expect(page.getByTestId('notes-one-time-card')).toHaveCount(0);
+  });
+
+  test('the one-time card: Keep that cannot reach the Worker says so, and the card stays', async ({ page }) => {
+    await childWithNotes(page);
+    await openNotesForMina(page);
+    await page.getByTestId('notes-card-keep').click();
+    await expect(page.getByTestId('notes-grown-up-failed')).toHaveText('That did not save. Try again.');
+    await expect(page.getByTestId('notes-one-time-card')).toContainText('Notes from classes: All notes.');
+    await page.getByTestId('notes-card-change').click();
+    await expect(page.getByTestId('notes-grown-up-failed')).toBeVisible();
+    await expect(page.getByTestId('notes-one-time-card')).toBeVisible();
+  });
+
+  test('Just hide it on the report sheet: the confirm first, Cancel closes it, a hide that cannot be sent says so', async ({ page }) => {
+    await childWithNotes(page);
+    await openNotesForMina(page);
+    await page.getByTestId('notes-grown-up-row-note:aaaaaaaa').getByRole('button', { name: 'Report' }).click();
+    await expect(page.getByRole('heading', { name: 'Report this note' })).toBeVisible();
+
+    await page.getByTestId('note-report-just-hide').click();
+    await expect(page.getByTestId('notes-hide-confirm')).toContainText('Hide this note from Mina?');
+    await page.getByTestId('notes-hide-confirm-cancel').click();
+    await expect(page.getByTestId('notes-hide-confirm')).toHaveCount(0);
+
+    await page.getByTestId('note-report-just-hide').click();
+    await page.getByTestId('notes-hide-confirm-hide').click();
+    await expect(page.getByTestId('notes-hide-confirm')).toHaveCount(0);
+    await expect(page.getByText('That did not save. Try again.')).toBeVisible();
+    // Nothing was hidden: the sheet still quotes the note, with no report queued.
+    await expect(page.getByTestId('note-report-quote')).toBeVisible();
+  });
+
+  test('a grown-up screen left open: when the 15-minute session ends, the PIN comes back, then the same screen', async ({ page }) => {
+    await childWithNotes(page, [], { runningClock: true });
+    await openNotesForMina(page);
+    await page.clock.fastForward('15:01');
+    await unlockWithPin(page);
+    await expect(page.getByRole('heading', { name: 'Notes for Mina' })).toBeVisible();
+
+    // The report sheet left open hands over the same way.
+    await page.getByTestId('notes-grown-up-row-note:aaaaaaaa').getByRole('button', { name: 'Report' }).click();
+    await expect(page.getByRole('heading', { name: 'Report this note' })).toBeVisible();
+    await page.clock.fastForward('15:01');
+    await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();
+    await expect(page.getByTestId('note-report-submit')).toHaveCount(0);
   });
 
   test('offline: Hide, the card and the setting wait for the internet; Report stays', async ({ page, context }) => {

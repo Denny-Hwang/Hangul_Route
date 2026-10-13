@@ -491,6 +491,8 @@ export const caregiver = {
     disclosure: (learner: string) => `선생님은 자기가 보낸 쪽지에서 ${learner}의 답을 볼 수 있어요.`,
     offline: '인터넷에 연결한 뒤에 할 수 있어요.',
     saveFailed: '저장하지 못했어요. 다시 해 보세요.',
+    error: '쪽지를 불러오지 못했어요. 다시 해 보세요.',
+    retry: { cta: '다시 해 보기' },
     sendNote: { cta: '쪽지 보내기' },
   },
   browse: {

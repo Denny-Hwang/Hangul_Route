@@ -6,7 +6,6 @@ import { Pressable, Text, View } from 'react-native';
 import { useOnline } from '../../components/use-online';
 import { useMessages } from '../../i18n/use-messages';
 import { attestFor, endsGateOnLeave, grownUpNotes, noteReportDoneTarget, reportSentEvent, type ReportAnswer } from '../../logic/notes/grown-up';
-import { isParentSessionValid } from '../../logic/profiles/session';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
@@ -16,13 +15,14 @@ import { backToNotes } from '../notes/back-to-notes';
 import { HideConfirmSheet } from '../notes/HideConfirmSheet';
 import { hideNoteNow, reportNoteNow } from '../notes/note-actions';
 import { useProfileNotes } from '../notes/use-notes';
+import { useGateLapse } from './use-gate-lapse';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'NoteReport'>;
 
 /** The line under Report and hide describes it (web `aria-describedby`). */
 const LINE_ID = 'note-report-line';
 
-type Done = ReportAnswer | 'hidden';
+type Done = Exclude<ReportAnswer, 'refused'> | 'hidden';
 
 /**
  * The report sheet of one note (F-FEEDBACK-001 section 6.10 item 4, FB-9; mock
@@ -40,13 +40,13 @@ export function NoteReportScreen({ navigation, route }: Props): React.ReactEleme
   const { noteId, profileId } = route.params;
   const via = route.params.via ?? 'note_page';
   const profile = useProfileStore((s) => s.profiles.find((p) => p.id === profileId));
-  const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
   const { opensDirectly } = useAudience();
-  const sessionOpen = isParentSessionValid(parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' }, Date.now());
+  // Re-checked when the session lapses or the sheet is back in focus: a sheet left open goes to the PIN.
+  const { sessionOpen, stillOpen } = useGateLapse(navigation);
   const gateOpen = opensDirectly(sessionOpen);
   const selfManaged = opensDirectly(false);
   const online = useOnline();
-  const { data, status, ctx } = useProfileNotes(profileId);
+  const { data, status, retry, ctx } = useProfileNotes(profileId);
   const [reason, setReason] = useState<NoteReportReason | null>(null);
   const [done, setDone] = useState<Done | null>(null);
   const [busy, setBusy] = useState(false);
@@ -55,7 +55,10 @@ export function NoteReportScreen({ navigation, route }: Props): React.ReactEleme
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    if (profile === undefined) navigation.goBack();
+    if (profile === undefined) {
+      if (navigation.canGoBack()) navigation.goBack();
+      else navigation.replace('ParentDashboard');
+    }
     else if (!gateOpen) navigation.replace('PinEntry', { next: 'NoteReport', noteId, profileId, noteVia: via });
   }, [gateOpen, profile, noteId, profileId, via, navigation]);
 
@@ -78,7 +81,8 @@ export function NoteReportScreen({ navigation, route }: Props): React.ReactEleme
   const name = profile.displayName;
   const attest = attestFor(selfManaged);
   // Already gone before anything was sent here: the note left this device (hidden, withdrawn, reported elsewhere).
-  const shown: Done | null = done ?? (quoted === null && !busy ? 'alreadyGone' : null);
+  // Only a record that was read can say so: a read error offers Try again instead.
+  const shown: Done | null = done ?? (quoted === null && !busy && status === 'ready' ? 'alreadyGone' : null);
 
   const close = (): void => {
     if (endsGate) useUiStore.getState().resetParentGate();
@@ -92,17 +96,27 @@ export function NoteReportScreen({ navigation, route }: Props): React.ReactEleme
     backToNotes(navigation);
   };
 
+  // The report carries the grown-up attestation: it goes out only while the session is still open.
+  const mayAct = (): boolean => opensDirectly(stillOpen());
+
   const submit = async (): Promise<void> => {
-    if (reason === null || busy) return;
+    if (reason === null || busy || !mayAct()) return;
     setBusy(true);
+    setFailed(false);
     const answer = await reportNoteNow(profileId, noteId, reason, attest);
     // Counted once the report is sent or waiting to be sent, never for a note that was already gone or a limit.
     if (answer === 'reported' || answer === 'queued') void track(reportSentEvent(reason, via));
     setBusy(false);
-    setDone(answer);
+    // Refused (not a gone note): nothing was recorded, so the sheet stays with the note and says it did not send.
+    if (answer === 'refused') setFailed(true);
+    else setDone(answer);
   };
 
   const justHide = async (): Promise<void> => {
+    if (!mayAct()) {
+      setConfirming(false);
+      return;
+    }
     setBusy(true);
     setFailed(false);
     const outcome = await hideNoteNow(profileId, noteId);
@@ -156,6 +170,20 @@ export function NoteReportScreen({ navigation, route }: Props): React.ReactEleme
           </View>
           <Spacer size="xl" />
           <Button label={r.done.cta} tone="primary" size="lg" fullWidth onPress={finish} testID="note-report-done" />
+        </View>
+      </Screen>
+    );
+  }
+
+  if (status === 'error' && data === undefined) {
+    return (
+      <Screen tone="canvas" scrollable testID="note-report">
+        <View style={{ width: '100%', maxWidth: layout.maxWidth.reading, alignSelf: 'center', gap: spacing.md }}>
+          {header}
+          <View accessibilityRole="alert" testID="note-report-load-error">
+            <Body>{t.error}</Body>
+          </View>
+          <Button label={t.retry.cta} tone="secondary" size="md" onPress={retry} testID="note-report-retry" />
         </View>
       </Screen>
     );
