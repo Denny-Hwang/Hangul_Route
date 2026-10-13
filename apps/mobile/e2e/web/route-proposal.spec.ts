@@ -10,14 +10,15 @@ import { shot } from './shots';
  * live behind `flags.routeEnabled` (off), so a default build checks that none of them shows,
  * and a build made with the flag on checks the flow:
  *
- *   EXPO_PUBLIC_ROUTE_ENABLED=true pnpm --filter @hangul-route/mobile build:web
+ *   pnpm --filter @hangul-route/mobile build:web:route      (writes dist-e2e-route/)
  *   E2E_ROUTE=1 pnpm --filter @hangul-route/mobile exec playwright test route-proposal
  *
- * Metro caches the inlined `EXPO_PUBLIC_*` values: when switching the flag between local builds,
- * export once with `expo export --clear`, or the previous value stays in the bundle.
+ * CI plays it on that bundle in its own step of web-app.yml (F-PLAN-002 P2-8).
+ *
+ * build:web:route exports on a Metro cache of its own, so the flag never leaks into the release build.
  *
  * The browser clock is fixed on a Monday at midday UTC, so the app and the test agree on today.
- * P2-8 adds the nightly route.spec.ts and flips the flag.
+ * P2-8 adds route.spec.ts (the journey, the seven-day window, the 320 px pass in es and ko).
  */
 
 const ROUTE = process.env.E2E_ROUTE === '1';

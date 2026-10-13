@@ -10,8 +10,10 @@ import { shot } from './shots';
  * along, Stop this plan, and the Hoya check-in at the start of week 5. The screens live behind
  * `flags.routeEnabled` (off), so this runs on a build made with the flag on:
  *
- *   EXPO_PUBLIC_ROUTE_ENABLED=true pnpm --filter @hangul-route/mobile build:web
+ *   pnpm --filter @hangul-route/mobile build:web:route      (writes dist-e2e-route/)
  *   E2E_ROUTE=1 pnpm --filter @hangul-route/mobile exec playwright test route-plan
+ *
+ * CI plays it on that bundle in its own step of web-app.yml (F-PLAN-002 P2-8).
  *
  * The browser clock is fixed on a Monday at midday UTC; the check-in test moves it 29 days on.
  */
