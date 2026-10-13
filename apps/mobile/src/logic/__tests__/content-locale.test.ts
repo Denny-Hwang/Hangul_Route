@@ -138,6 +138,14 @@ describe('content-locale: one helper per kind of shipped content', () => {
     expect(localizeMissionCard({ ...storyCard, storyId: 'story:none' }, 'es', local).titleEn).toBe('The Tiger');
   });
 
+  it('localizes a practice card of a word topic from its topic overlay (F-ENT-003 E3-7)', () => {
+    const local: Overlays = { es: { 'vocab-topic:food': { title: 'Comida' } }, ko: {} };
+    const practice: MissionCard = { slot: 2, kind: 'practice', subtitle: 'practice', practiceKind: 'topic', topicKey: 'food', collected: false, titleEn: 'Food' };
+    expect(localizeMissionCard(practice, 'es', local).titleEn).toBe('Comida');
+    expect(localizeMissionCard({ ...practice, topicKey: 'none' }, 'es', local).titleEn).toBe('Food');
+    expect(localizeMissionCard({ ...practice, topicKey: undefined }, 'es', local)).toEqual({ ...practice, topicKey: undefined });
+  });
+
   it('swaps the overlay title into anything that carries an entity title (the Results teaser)', () => {
     const teaser = { questId: quest.id, titleEn: quest.titleEn, line: 'x' };
     expect(localizeTitle(teaser, quest.id, 'es', overlays)).toEqual({ ...teaser, titleEn: 'Primeras letras' });
