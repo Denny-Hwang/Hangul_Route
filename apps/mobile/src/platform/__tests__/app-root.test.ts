@@ -172,7 +172,7 @@ describe('bootRoot (web): what each root does before it mounts', () => {
     expect(h.log).toEqual([]);
   });
 
-  it('/browse mounts BrowseApp, which clears neither the unlock nor the console session (F-BROWSE-001 BD1, section 4.10)', () => {
+  it('/browse mounts BrowseApp and the root chooser clears neither the unlock nor the console session (F-BROWSE-001 BD1, section 4.10; BrowseApp removes both itself only in a tab with nothing to go back to, browse-start.test.ts)', () => {
     const h = harness('/browse');
     expect(bootRoot(h.env)).toBe('browse');
     expect(h.area.data.has(UNLOCK_SESSION_KEY)).toBe(true);
