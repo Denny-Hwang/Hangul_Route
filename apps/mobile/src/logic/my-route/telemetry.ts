@@ -1,4 +1,4 @@
-import type { StageKey } from '@hangul-route/content-schema';
+import type { RouteGoal, StageKey } from '@hangul-route/content-schema';
 import type { TelemetryEvent } from '../../platform/telemetry';
 import type { MyRouteModel, StageRow } from './types';
 
@@ -47,4 +47,15 @@ export function continueTappedEvent(i: { profileId: string; model: MyRouteModel;
   const { hero, next } = i.model;
   if (i.readOnly || next === null || (hero !== 'start' && hero !== 'continue')) return null;
   return { name: 'route_map.continue_tapped', profileId: i.profileId, payload: { stage: hereOf(i.model), hero, from: next.source } };
+}
+
+/**
+ * `route_map.goal_reached` (amendment section 8, LR-5c): the first time the tab shows a reached plan goal
+ * on this device (`firstGoalReachedFor`). The stage and which plan set it; codes only, no plan id, no date.
+ * Never read-only and never for a default goal (it is never reached). The Worker knows the name since LR-W1.
+ */
+export function goalReachedEvent(i: { profileId: string; goal: RouteGoal | null; firstReached: boolean; readOnly: boolean }): TelemetryEvent | null {
+  const { goal } = i;
+  if (i.readOnly || !i.firstReached || goal === null || !goal.reached || goal.from === 'default') return null;
+  return { name: 'route_map.goal_reached', profileId: i.profileId, payload: { stage: goal.stage, goalFrom: goal.from } };
 }
