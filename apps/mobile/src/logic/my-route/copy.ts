@@ -230,7 +230,9 @@ export function stageStateWord(row: StageRow, ctx: CopyContext): string {
     case 'later':
       return laterWord(row, ctx);
     case 'open':
-      return row.availability === 'taste' ? state.taste : state.open;
+      if (row.availability === 'taste') return state.taste;
+      // A full stage whose every quest is not open never reads "Open" beside its "Not open yet" caption.
+      return allQuestsNotOpen(row) ? ctx.m.access.notOpen : state.open;
   }
 }
 

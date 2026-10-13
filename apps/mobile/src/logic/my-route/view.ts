@@ -206,6 +206,12 @@ export interface MyRouteViewInput {
   firstReached?: boolean;
   /** The first free word topic this build lists (`practiceTopicOf`); the free-end hero's Practice words. Absent or null: Open Library. */
   practiceTopic?: string | null;
+  /**
+   * The episode page shows F-ENT-003's preview, with its own ask, for a quest that is not open
+   * (E3-6). Until then the page does not check quest access, so a not-open cell opens nothing: the
+   * route never offers a quest it just called "Not open yet". E3-6 passes true (amendment section 4.5).
+   */
+  notOpenPreview?: boolean;
 }
 
 const TONE: Readonly<Record<Exclude<StageState, 'open'>, PillTone>> = {
@@ -299,11 +305,13 @@ function stageRowView(row: StageRow, ctx: CopyContext, i: MyRouteViewInput, fres
         word,
         pips: cell.pips,
         // A grown-up never opens an episode from here: EpisodeDetail plays as the device's active learner (amendment 5.1, 6.2).
-        // A not-open cell (F-ENT-003 quest access, `laterReason: 'notOpen'`) in a stage the learner may enter still opens
-        // its page: F-ENT-003 shows it as a preview with its own ask, so the route page itself has none (section 4.5). A
-        // coming-later cell, or any cell of a stage the learner is not entitled to (OD-4's other branch), opens nothing.
+        // A not-open cell (F-ENT-003 quest access, `laterReason: 'notOpen'`) in a stage the learner may enter opens its
+        // page once that page is F-ENT-003's preview with its own ask (`notOpenPreview`, E3-6), so the route page itself
+        // has none (section 4.5). A coming-later cell, or any cell of a stage the learner is not entitled to (OD-4's other
+        // branch), opens nothing.
         episodeId:
-          ctx.viewer === 'grownup' || (cell.state === 'later' && (row.state === 'later' || !cell.pips.some((p) => p.laterReason === 'notOpen')))
+          ctx.viewer === 'grownup' ||
+          (cell.state === 'later' && (i.notOpenPreview !== true || row.state === 'later' || !cell.pips.some((p) => p.laterReason === 'notOpen')))
             ? null
             : cell.episodeId,
         inPlan: planTag,

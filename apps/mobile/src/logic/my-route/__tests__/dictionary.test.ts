@@ -118,12 +118,14 @@ function renderLocale(locale: UiLocale): { rendered: Rendered[]; unsampled: stri
   render(m.caregiver.journey, 'caregiver.journey', 'caregiver', rendered, unsampled);
   render(m.caregiver.skillsNote, 'caregiver.skillsNote', 'caregiver', rendered, unsampled);
   render(m.a11y.myRoute, 'a11y.myRoute', 'a11y', rendered, unsampled);
+  // F-ENT-003's access words the route page shows (LR-5b): the same copy rules and CTA budget.
+  render(m.learner.access, 'learner.access', 'learner', rendered, unsampled);
   return { rendered, unsampled };
 }
 
 /** The pill and button words (F-I18N-001 budgets: pill 24, cta 28). */
 const PILL_PATHS = /^learner\.myRoute\.(state|tag|cell)\./;
-const CTA_PATHS = /^learner\.myRoute\.(open\.cta|hero\.cta\.|cta\.)/;
+const CTA_PATHS = /^learner\.(myRoute\.(open\.cta|hero\.cta\.|cta\.)|access\.practiceWords\.cta)/;
 
 describe('the real My route dictionary keeps the copy rules (F-ROUTE-001 section 3.13)', () => {
   for (const locale of LOCALES) {

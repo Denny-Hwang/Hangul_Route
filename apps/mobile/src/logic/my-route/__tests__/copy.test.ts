@@ -141,6 +141,18 @@ describe('stage words, captions and tags (sections 3.3, 3.11)', () => {
     expect(stageCaptions(row(closed, 'stage1'), self)).toEqual(['1 quest played']);
   });
 
+  it('LR-5b: a full stage whose every quest is not open never reads "Open" beside "Not open yet"', () => {
+    const closed = model([], { isQuestOpen: () => false });
+    expect(row(closed, 'stage1')).toMatchObject({ state: 'open', availability: 'open' });
+    expect(stageStateWord(row(closed, 'stage1'), self)).toBe('Not open yet');
+    expect(stageCaptions(row(closed, 'stage1'), self)).toEqual(['Not open yet']);
+    for (const ctx of [self, grownup])
+      for (const r of closed.stages) {
+        const words = [stageStateWord(r, ctx), ...stageCaptions(r, ctx)];
+        expect(words.includes('Open') && words.includes('Not open yet'), r.stage).toBe(false);
+      }
+  });
+
   it('LR-5b: a kept quest is open, so a stage with one kept quest and the rest not open keeps its played caption', () => {
     const kept = model(['quest:stage2-life-q1'], { isQuestOpen: (id) => !id.startsWith('quest:stage2-') });
     expect(stageCaptions(row(kept, 'stage2'), self)).toEqual(['1 quest played']);
@@ -628,6 +640,7 @@ describe('routeCardCopy (Learning Route amendment sections 4.3, 6.2 and 10; LR-3
       canDo: null,
       tasteLine: null,
       next: 'Next: Family at the Table',
+      showPips: false,
       a11yLabel: 'Next: Family at the Table.',
     });
     expect(routeCardCopy(m, grownup, { nextTitle: 'Family at the Table' }).next).toBe('Next: Family at the Table');

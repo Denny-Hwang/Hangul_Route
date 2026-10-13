@@ -474,15 +474,22 @@ describe('myRouteView: not-open pips and the free-end hero (Learning Route LR-5b
     expect(playable.every((c) => c.word === 'Not open yet')).toBe(true);
   });
 
-  it('a not-open cell row still opens its episode page (F-ENT-003 shows it as a preview with its own ask); coming-later cells and grown-ups never do', () => {
-    const v = view(model(APPENDIX_C, { isQuestOpen: stage2Closed }));
+  it('until F-ENT-003 E3-6 ships the preview, a not-open cell opens nothing (the page never offers a quest it calls "Not open yet")', () => {
+    const cells = stageRow(view(model(APPENDIX_C, { isQuestOpen: stage2Closed })), 'stage2').cells;
+    expect(cells.some((c) => c.pips.some((p) => p.laterReason === 'notOpen'))).toBe(true);
+    expect(cells.every((c) => c.episodeId === null)).toBe(true);
+    expect(stageRow(view(model(APPENDIX_C, { isQuestOpen: stage2Closed }), { notOpenPreview: false }), 'stage2').cells.every((c) => c.episodeId === null)).toBe(true);
+  });
+
+  it('with the E3-6 preview, a not-open cell row opens its episode page (the preview carries the ask); coming-later cells and grown-ups never do', () => {
+    const v = view(model(APPENDIX_C, { isQuestOpen: stage2Closed }), { notOpenPreview: true });
     const cells = stageRow(v, 'stage2').cells;
     expect(cells.some((c) => c.pips.some((p) => p.laterReason === 'notOpen'))).toBe(true);
     for (const c of cells) {
       const notOpen = c.pips.some((p) => p.laterReason === 'notOpen');
       expect(c.episodeId !== null, c.key).toBe(notOpen);
     }
-    const g = view(model(APPENDIX_C, { isQuestOpen: stage2Closed }), { viewer: 'grownup' });
+    const g = view(model(APPENDIX_C, { isQuestOpen: stage2Closed }), { viewer: 'grownup', notOpenPreview: true });
     expect(stageRow(g, 'stage2').cells.every((c) => c.episodeId === null)).toBe(true);
   });
 
