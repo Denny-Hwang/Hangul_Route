@@ -23,15 +23,15 @@ vi.mock('@clerk/clerk-react', () => ({
   useAuth: () => ({ getToken: async () => 'token', sessionId: 'sess_1' }),
   useClerk: () => ({ signOut: async () => undefined }),
   useReverification:
-    (fetcher: () => Promise<unknown>) =>
-    async (): Promise<unknown> => {
-      const first = await fetcher();
+    (fetcher: (...args: unknown[]) => Promise<unknown>) =>
+    async (...args: unknown[]): Promise<unknown> => {
+      const first = await fetcher(...args);
       const hint = (first as { clerk_error?: { type?: string; reason?: string } }).clerk_error;
       if (hint?.type !== 'forbidden' || hint.reason !== 'reverification-error') return first;
       clerk.opened += 1;
       if (clerk.verification === 'throw') throw new Error('Clerk could not be reached');
       if (clerk.verification === 'cancel') throw Object.assign(new Error('User cancelled attempted verification'), { code: 'reverification_cancelled' });
-      return fetcher();
+      return fetcher(...args);
     },
 }));
 
@@ -65,24 +65,23 @@ afterEach(() => {
   mounted = null;
   auth = null;
   vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
 });
 
-const reverify = <T,>(fetcher: () => Promise<T>) => (auth as ConsoleAuth).reverify(fetcher);
+const reverify = <T,>(fetcher: () => Promise<T>, first: T = HINT as T) => (auth as ConsoleAuth).reverify(fetcher, first);
 
 describe('reverify under Clerk (useReverification at the fetcher boundary)', () => {
-  it('the stale request is verified and retried once: its answer', async () => {
-    const answers: unknown[] = [HINT, { ok: true, data: { url: 'https://checkout.stripe.com/c/pay/cs_test_1' } }];
+  it('the stale request is verified and retried once: its answer; the hint in hand is not sent again', async () => {
+    const answer = { ok: true, data: { url: 'https://checkout.stripe.com/c/pay/cs_test_1' } };
     let calls = 0;
-    const outcome = await reverify(async () => answers[calls++]);
-    expect(outcome).toEqual({ kind: 'result', result: answers[1] });
-    expect(calls).toBe(2);
+    const outcome = await reverify(async () => {
+      calls += 1;
+      return answer as unknown;
+    });
+    expect(outcome).toEqual({ kind: 'result', result: answer });
+    // Only Clerk's retry reaches the Worker: one refused call per step-up, one refused-checkout diagnostic.
+    expect(calls).toBe(1);
     expect(clerk.opened).toBe(1);
-  });
-
-  it('a fresh sign-in (no hint): the answer, with no verification', async () => {
-    const outcome = await reverify(async () => ({ ok: true, data: { url: 'https://billing.stripe.com/p/session/x' } }));
-    expect(outcome.kind).toBe('result');
-    expect(clerk.opened).toBe(0);
   });
 
   it('refused again after verifying (a token without fva): unavailable, one retry only', async () => {
@@ -92,7 +91,19 @@ describe('reverify under Clerk (useReverification at the fetcher boundary)', () 
       return HINT;
     });
     expect(outcome).toEqual({ kind: 'unavailable' });
-    expect(calls).toBe(2);
+    expect(calls).toBe(1);
+  });
+
+  it('offline: unavailable without opening Clerk or sending the request', async () => {
+    vi.stubGlobal('navigator', { onLine: false });
+    let calls = 0;
+    const outcome = await reverify(async () => {
+      calls += 1;
+      return HINT;
+    });
+    expect(outcome).toEqual({ kind: 'unavailable' });
+    expect(calls).toBe(0);
+    expect(clerk.opened).toBe(0);
   });
 
   it('the grown-up closes Clerk’s verification: cancelled', async () => {

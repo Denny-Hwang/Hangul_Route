@@ -40,3 +40,67 @@ export async function settleReverify<T>(attempt: () => Promise<T>): Promise<Reve
     return isReverificationCancelled(error) ? { kind: 'cancelled' } : { kind: 'unavailable' };
   }
 }
+
+/**
+ * Clerk's modal backdrop, by its stable appearance class (`cl-` + the element descriptor, Clerk's documented
+ * `appearance.elements` key `modalBackdrop`). Its presence means Clerk's own verification UI opened.
+ */
+export const CLERK_MODAL_SELECTOR = '.cl-modalBackdrop';
+
+/**
+ * How long Continue waits for Clerk's verification UI to open before it reads "Can't confirm right now". Clerk's
+ * handler only settles once its UI calls back; if the UI never mounts (its script blocked or offline), the promise
+ * never settles, so a missing UI is the "Clerk cannot be reached" row of section 4.12.
+ */
+export const CLERK_UI_OPEN_TIMEOUT_MS = 10_000;
+/** How often the guard looks for Clerk's UI while it waits. */
+export const CLERK_UI_POLL_MS = 250;
+
+export interface ReverifyGuard {
+  /** False when the browser says it is offline: Clerk cannot be reached, so no attempt is made. */
+  online: () => boolean;
+  /** True once Clerk's verification UI is on the page. */
+  uiOpen: () => boolean;
+  openTimeoutMs?: number;
+  pollMs?: number;
+}
+
+/**
+ * Runs one reverification attempt with a way out: offline is `unavailable` at once, and an attempt whose Clerk UI
+ * has not opened within `openTimeoutMs` is `unavailable` (its late answer, if any, is dropped). Once Clerk's UI has
+ * been seen, the attempt settles on its own (verified and retried, or cancelled), however long the grown-up takes.
+ */
+export function guardReverify<T>(attempt: () => Promise<ReverifyOutcome<T>>, guard: ReverifyGuard): Promise<ReverifyOutcome<T>> {
+  if (!guard.online()) return Promise.resolve({ kind: 'unavailable' });
+  const openTimeoutMs = guard.openTimeoutMs ?? CLERK_UI_OPEN_TIMEOUT_MS;
+  const pollMs = guard.pollMs ?? CLERK_UI_POLL_MS;
+  return new Promise<ReverifyOutcome<T>>((resolve) => {
+    let settled = false;
+    let waited = 0;
+    const finish = (outcome: ReverifyOutcome<T>): void => {
+      if (settled) return;
+      settled = true;
+      clearInterval(timer);
+      resolve(outcome);
+    };
+    const timer = setInterval(() => {
+      if (guard.uiOpen()) {
+        clearInterval(timer);
+        return;
+      }
+      waited += pollMs;
+      if (waited >= openTimeoutMs) finish({ kind: 'unavailable' });
+    }, pollMs);
+    attempt().then(finish, () => finish({ kind: 'unavailable' }));
+  });
+}
+
+/** Whether Clerk's verification UI is on the page (false without a DOM). */
+export function clerkUiOpen(): boolean {
+  return typeof document !== 'undefined' && document.querySelector(CLERK_MODAL_SELECTOR) !== null;
+}
+
+/** False only when the browser says it is offline. */
+export function browserOnline(): boolean {
+  return typeof navigator === 'undefined' || navigator.onLine !== false;
+}
