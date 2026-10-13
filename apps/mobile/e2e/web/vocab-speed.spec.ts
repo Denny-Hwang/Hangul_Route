@@ -342,8 +342,10 @@ test.describe('Speed Round, Relaxed (fixture bundle)', () => {
     await expect(page.getByTestId('vocab-topic')).toBeVisible();
     await expect(page.getByTestId('vocab-results')).toHaveCount(0);
     expect((await events(page)).filter((e) => e.name === 'vocab.round.complete')).toEqual([]);
+    await expect
+      .poll(async () => (await readStored<StoredProgress>(page, `progress:${profileId}`))?.vocab?.items.reduce((n, item) => n + item.seen, 0))
+      .toBe(1);
     const stored = await readStored<StoredProgress>(page, `progress:${profileId}`);
-    expect(stored?.vocab?.items.reduce((n, item) => n + item.seen, 0)).toBe(1);
     expect(stored?.vocab?.topics.find((t) => t.topic === 'food')).toBeUndefined();
   });
 

@@ -1314,7 +1314,7 @@ export const learner = {
       relaxed: {
         label: 'Relaxed',
         /** `n`: the round's question count (10; 8 for the Pictures-first level). */
-        line: (n: number) => `${n} words. No clock.`,
+        line: (n: number) => `${count(n, 'word', 'words')}. No clock.`,
       },
       start: 'Start',
       /** When the round will have no sound questions (no Korean voice, or sound off). */

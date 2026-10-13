@@ -343,7 +343,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.vocab.speed.nudge.right.named': [['apple']],
   'learner.vocab.speed.nudge.miss.first': [['apple']],
   'learner.vocab.speed.nudge.miss.second': [['apple']],
-  'learner.vocab.speed.relaxed.line': [[8], [10]],
+  'learner.vocab.speed.relaxed.line': [[1], [8], [10]],
   'learner.vocab.speed.results.caught': [[0], [1], [7]],
   'learner.vocab.library.collected': [[0], [1], [12]],
   'learner.vocab.topics.collected': [[0], [5]],

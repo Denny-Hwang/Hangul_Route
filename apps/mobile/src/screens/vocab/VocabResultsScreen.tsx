@@ -46,7 +46,8 @@ export function VocabResultsScreen({ route, navigation }: Props): React.ReactEle
   const copy = messages.learner.vocab.speed;
   const locale = useLocale();
   const romanizationShown = showRomanization(useRomanizationMode(), false);
-  const view = resultsView(summary, newBest, copy);
+  // `summary` is typed as required, but a restored or hand-built route may lack it: redirect, never throw.
+  const view = summary ? resultsView(summary, newBest, copy) : null;
   const toTopic = (): void => navigation.navigate('VocabTopic', { topicKey });
 
   // A stale or broken route (nothing was played): back to the topic page, nothing written here.

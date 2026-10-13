@@ -361,6 +361,11 @@ describe('resultsView (§3.6 results, S4, S11)', () => {
     expect(resultsView(summary({ answered: 0, stars: null }), false, COPY)).toBeNull();
   });
 
+  it('the Relaxed line says the plain count, singular for a one-word round', () => {
+    expect(COPY.relaxed.line(1)).toBe('1 word. No clock.');
+    expect(COPY.relaxed.line(10)).toBe('10 words. No clock.');
+  });
+
   it('every line a learner reads passes the anti-shame scans (behaviour 16)', () => {
     const views = [
       resultsView(summary(), false, COPY),
