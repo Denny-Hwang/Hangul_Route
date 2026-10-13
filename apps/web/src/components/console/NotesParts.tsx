@@ -79,6 +79,8 @@ export const NOTES_CSS = `
 .hr-notes-status{display:flex;flex-wrap:wrap;align-items:center;column-gap:${rem(spacing.sm)};row-gap:${rem(spacing.xxs)};color:${colors.text.secondary};font-size:${rem(typography.size.bodySm)}}
 .hr-notes-sep{color:${colors.text.muted}}
 .hr-notes-answer{display:inline-flex;align-items:center;gap:${rem(spacing.xs)};font-weight:${typography.weight.semibold};color:${colors.text.primary}}
+.hr-notes-hub-title{font-size:${rem(typography.size.prompt)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight}}
+.hr-notes-hub-row{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:${rem(spacing.sm)}}
 .hr-notes-skeleton{height:${px(touchTarget.hero)};border-radius:${px(radii.lg)};background:${colors.surface.sunken}}
 .hr-notes-state{display:flex;flex-direction:column;align-items:flex-start;gap:${rem(spacing.md)};padding:${rem(spacing.xl)} ${rem(spacing.lg)};border-radius:${px(radii.lg)};background:${colors.surface.paper};border:${px(borderWidth.thin)} solid ${colors.border.subtle}}
 .hr-notes-problem{padding:${rem(spacing.sm)} ${rem(spacing.md)};border-left:${px(borderWidth.thick)} solid ${colors.feedback.nudge};border-radius:${px(radii.sm)};background:${colors.feedback.nudgeLight};color:${colors.text.primary};font-weight:${typography.weight.semibold};line-height:${typography.leading.relaxed};overflow-wrap:anywhere}
