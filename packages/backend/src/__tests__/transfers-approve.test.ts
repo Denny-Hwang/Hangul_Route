@@ -363,12 +363,13 @@ describe('approve: the learner slot of a teacher-started request (caregiver rout
     expect((await approve(FAMILY, 'mom', created.id, { slots: ['learner'], consent: { ...consent, termsDigest: await familyDigest(created.id) } })).status).toBe(200);
   });
 
-  it('checks the consent text: stale version 422 with current, unreviewed locale 422', async () => {
+  it('checks the consent text: stale version 422 with current, a locale outside the UI locales 422', async () => {
     const created = requestOf(await create(A, 'teacher-a', classCreate()));
     const stale = await approve(FAMILY, 'mom', created.id, { slots: ['learner'], consent: { ...consent, textVersion: 'transfer-1999-01' } });
     expect([stale.status, stale.body.error?.code, stale.body.error?.details]).toEqual([422, 'consent_text_stale', { current: TRANSFER_CONSENT_TEXT_VERSION }]);
-    const locale = await approve(FAMILY, 'mom', created.id, { slots: ['learner'], consent: { ...consent, locale: 'ko' } });
-    expect([locale.status, locale.body.error?.code]).toEqual([422, 'consent_locale_unavailable']);
+    // Every UI locale has a consent text (T-6d); a locale outside the UI locales is a bad body.
+    const locale = await approve(FAMILY, 'mom', created.id, { slots: ['learner'], consent: { ...consent, locale: 'fr' as never } });
+    expect([locale.status, locale.body.error?.code]).toEqual([422, 'bad_request']);
     expect((await db.getTransfer(created.id))?.learner.state).toBe('pending');
   });
 

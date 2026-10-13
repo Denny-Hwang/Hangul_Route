@@ -133,7 +133,22 @@ interface FocusTarget {
  * A modal sheet: `role="dialog"`, `aria-modal`, labelled by its heading, which takes focus on open (never the
  * primary); Tab stays inside; Escape and the 64 px close button close it; focus returns to the opener.
  */
-export function TransferSheet({ title, onClose, children, testId }: { title: string; onClose: () => void; children: ReactNode; testId?: string }): JSX.Element {
+export function TransferSheet({
+  title,
+  onClose,
+  children,
+  testId,
+  lang,
+  closeLabel,
+}: {
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
+  testId?: string;
+  /** The sheet's own language when it differs from the page (the consent sheet's switch): heading and Close follow it. */
+  lang?: string;
+  closeLabel?: string;
+}): JSX.Element {
   const { messages } = useConsoleLocale();
   const headingId = useId();
   const sheetRef = useRef<FocusTarget | null>(null);
@@ -180,6 +195,7 @@ export function TransferSheet({ title, onClose, children, testId }: { title: str
         role="dialog"
         aria-modal="true"
         aria-labelledby={headingId}
+        lang={lang}
         data-testid={testId}
         onKeyDown={onKeyDown}
       >
@@ -196,7 +212,7 @@ export function TransferSheet({ title, onClose, children, testId }: { title: str
           </h2>
           <button
             type="button"
-            aria-label={messages.console.transfer.a11y.close}
+            aria-label={closeLabel ?? messages.console.transfer.a11y.close}
             onClick={onClose}
             style={{ ...btnBase, width: touchTarget.min, height: touchTarget.min, padding: 0, borderRadius: radii.circle, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
           >
@@ -431,14 +447,14 @@ export function StartMoveSheet({ spaceId, learner, api, online, onClose, onSent,
 // ---------------------------------------------------------------------------
 // The settings learner row's Move action (start-sheet.md, "Settings learner row")
 
-export function MoveRowAction({ name, online, onMove }: { name: string; online: boolean; onMove: () => void }): JSX.Element {
+export function MoveRowAction({ name, online, onMove, family }: { name: string; online: boolean; onMove: () => void; family?: boolean }): JSX.Element {
   const { messages } = useConsoleLocale();
   const t = messages.console.transfer;
   const helpId = useId();
   return (
     <>
-      <MoveButton label={t.a11y.moveRow(name)} waiting={!online} describedBy={online ? undefined : helpId} onClick={onMove} testId="move-row">
-        {t.start.move.class.cta}
+      <MoveButton label={family ? t.a11y.moveRowFamily(name) : t.a11y.moveRow(name)} waiting={!online} describedBy={online ? undefined : helpId} onClick={onMove} testId="move-row">
+        {family ? t.start.move.family.cta : t.start.move.class.cta}
       </MoveButton>
       {!online ? (
         <span id={helpId} style={{ flexBasis: '100%', fontSize: typography.size.bodySm, color: colors.text.secondary }}>

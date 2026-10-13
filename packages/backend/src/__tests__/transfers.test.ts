@@ -418,8 +418,9 @@ describe('create', () => {
     expect(stale.status).toBe(422);
     expect(stale.body.error).toMatchObject({ code: 'consent_text_stale', details: { current: TRANSFER_CONSENT_TEXT_VERSION } });
     expect(ACCEPTED_CONSENT_TEXT_VERSIONS).toContain(TRANSFER_CONSENT_TEXT_VERSION);
-    const locale = await create(FAMILY, 'mom', familyCreate({ consent: { textVersion: TRANSFER_CONSENT_TEXT_VERSION, locale: 'ko' } }));
-    expect([locale.status, locale.body.error?.code]).toEqual([422, 'consent_locale_unavailable']);
+    // Every UI locale has a consent text (T-6d); a locale outside the UI locales is a bad body.
+    const locale = await create(FAMILY, 'mom', familyCreate({ consent: { textVersion: TRANSFER_CONSENT_TEXT_VERSION, locale: 'fr' as never } }));
+    expect([locale.status, locale.body.error?.code]).toEqual([422, 'bad_request']);
     const extra = await create(FAMILY, 'mom', familyCreate({ consent: { ...consent, attest: 'self' } }));
     expect([extra.status, extra.body.error?.code]).toEqual([422, 'bad_request']);
     expect(await stored()).toEqual([]);

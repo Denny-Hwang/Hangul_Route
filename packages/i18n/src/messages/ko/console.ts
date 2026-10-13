@@ -1268,4 +1268,31 @@ export const consoleMsgs = {
       },
     },
   },
+  /**
+   * Class moves (F-SPACE-002 T-6d): the consent sheet's frame only, in the formal polite style of the consent
+   * lines it frames (TRANSFER_CONSENT_TEXT.ko, 합니다체), so the sheet reads in one voice when its own switch
+   * picks Korean. No particle is attached to an argument. The rest of `console.transfer` falls back to English.
+   */
+  transfer: {
+    lines: { notNowEnds: '"지금은 안 함"을 누르면 이 요청이 끝납니다. 언제든지 직접 이동을 시작할 수 있습니다.' },
+    consent: {
+      title: (name: string, destination: string) => `${name} 학습자를 새 반(${destination})으로 옮기시겠습니까?`,
+      language: '언어',
+      who: '새 반은 어떤 반입니까?',
+      teacher: (owner: string) => `선생님: ${owner}`,
+      learners: (n: number) => `학습자 ${n}명`,
+      age: { days: '만든 지 일주일이 안 됨', weeks: '만든 지 몇 주 됨', months: '만든 지 몇 달 됨', years: '만든 지 1년이 넘음' },
+      visibleClass: (space: string, owner: string) => `${space} (선생님 ${owner})`,
+      visibleYou: (family: string) => `${family} (회원님)`,
+      visibleFamily: (family: string, owner: string) => `${family} (가족, ${owner})`,
+      readToEnd: '끝까지 읽으면 계속할 수 있습니다.',
+      updated: '이 내용이 바뀌었습니다. 다시 읽어 주십시오.',
+      unavailable: '아직 이 언어로는 볼 수 없습니다.',
+      yes: (name: string) => `네, ${name} 학습자를 옮깁니다`,
+      notNow: { cta: '지금은 안 함' },
+      tryAgain: { cta: '다시 시도' },
+      failed: '보내지 못했습니다',
+    },
+    a11y: { close: '닫기' },
+  },
 } satisfies DeepPartial<Messages['console']>;
