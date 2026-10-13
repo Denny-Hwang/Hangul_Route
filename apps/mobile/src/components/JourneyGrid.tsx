@@ -88,6 +88,8 @@ export interface JourneyGridProps {
    * holds the prize cards (`ownsStagePrize`); omitted: no button.
    */
   onOpenStagePrize?: () => void;
+  /** Opens the Hangul Check from a complete Stage 1's header (F-QUEST-002 §3.9); omitted: no button. */
+  onOpenHangulCheck?: () => void;
 }
 
 export function JourneyGrid({
@@ -105,6 +107,7 @@ export function JourneyGrid({
   access,
   completeStages,
   onOpenStagePrize,
+  onOpenHangulCheck,
 }: JourneyGridProps): React.ReactElement {
   const messages = useMessages();
   const locale = useLocale();
@@ -184,6 +187,10 @@ export function JourneyGrid({
                 {/* The Stage 1 ceremony, reachable again beside a complete Stage 1's pill (F-QUEST-002 §3.8). */}
                 {row.stage === 'stage1' && pill === 'complete' && onOpenStagePrize ? (
                   <Button label={m.stagePrize.cta} tone="ghost" size="sm" onPress={onOpenStagePrize} testID="journey-stage-prize" />
+                ) : null}
+                {/* The Hangul Check, beside a complete Stage 1's pill: never required (F-QUEST-002 §3.9). */}
+                {row.stage === 'stage1' && pill === 'complete' && onOpenHangulCheck ? (
+                  <Button label={m.hangulCheck.cta} tone="secondary" size="sm" onPress={onOpenHangulCheck} testID="journey-hangul-check" />
                 ) : null}
               </View>
             </View>

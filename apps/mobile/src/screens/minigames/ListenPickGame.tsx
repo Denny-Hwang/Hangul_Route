@@ -59,6 +59,8 @@ interface Props {
   host: MinigameHost;
   /** Leave an empty scope (never a dead end). */
   onBack?: () => void;
+  /** A close control at the start of the header (the Hangul Check's "Stop the check"); omitted: none. */
+  onClose?: { label: string; onPress: () => void };
 }
 
 /**
@@ -72,7 +74,7 @@ interface Focusable {
   focus?: () => void;
 }
 
-export function ListenPickGame({ scope, host, onBack }: Props): React.ReactElement {
+export function ListenPickGame({ scope, host, onBack, onClose }: Props): React.ReactElement {
   const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
   const rounds = useMemo(() => validRounds(scope).map((r, i) => shuffleOptions(r, seed + i)), [scope, seed]);
 
@@ -209,6 +211,17 @@ export function ListenPickGame({ scope, host, onBack }: Props): React.ReactEleme
   return (
     <Screen tone="canvas">
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+        {onClose ? (
+          <Pressable
+            onPress={onClose.onPress}
+            accessibilityRole="button"
+            accessibilityLabel={onClose.label}
+            testID="listen-pick-close"
+            style={{ minWidth: touchTarget.min, minHeight: touchTarget.min, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Icon name="close" size={spacing.xl} color={colors.text.secondary} />
+          </Pressable>
+        ) : null}
         <View style={{ flex: 1 }}>
           {header.kind === 'dots' ? (
             <Progress variant="dots" value={header.value} max={header.max} tone="primary" />
