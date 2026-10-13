@@ -16,7 +16,7 @@ import { levelLabel, type StageKey } from '@hangul-route/content-schema';
 import { formatDate, type Messages } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useRef } from 'react';
-import { Pressable, View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
@@ -26,6 +26,7 @@ import { grownUpEntriesOn, runGrownUpHandoff } from '../../logic/shell/entry-poi
 import { grownUpPinParams } from '../../logic/shell/handoff-rules';
 import { openGrownUpArea } from '../../platform/grown-up-handoff';
 import { FreeLessonsRow } from './FreeLessonsRow';
+import { GateLessonsButton } from './GateLessonsButton';
 import { GrownUpHomeCard } from './GrownUpHomeCard';
 import { localizeStage } from '../../logic/content-locale';
 import { bandLabel } from '../../logic/placement/copy';
@@ -199,6 +200,14 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
             <NotesDashboardRow key={p.id} profileId={p.id} name={p.displayName} onOpen={() => navigation.navigate('NotesGrownUp', { profileId: p.id })} />
           ))}
         </View>
+      ) : null}
+
+      {/* F-BROWSE-001 BR-12a (section 4.11 item 6, wireframe browse/entry-points.md panel 6): web only, after the profile cards. */}
+      {Platform.OS === 'web' ? (
+        <>
+          <Spacer size="md" />
+          <GateLessonsButton kind="open" testID="dashboard-open-all-lessons" />
+        </>
       ) : null}
 
       <Spacer size="lg" />

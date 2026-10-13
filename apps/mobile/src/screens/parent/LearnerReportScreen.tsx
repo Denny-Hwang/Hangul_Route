@@ -55,6 +55,7 @@ import { summarizeFor } from '../../store/sync-store';
 import { useAccessTier } from '../../store/tier-store';
 import { useUiStore } from '../../store/ui-store';
 import { SKILL_ACCENT } from '../my-route/SkillsCard';
+import { GateLessonsButton } from './GateLessonsButton';
 
 /**
  * LearnerReport — one learner's progress report in the learner app, behind the grown-up gate (F-REPORT-001 section
@@ -381,7 +382,9 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
       {view.wentWell !== null ? <InsightSection section={view.wentWell} marker={colors.brand.primary} testID="learner-report-went-well" /> : null}
       {view.practiceNext !== null ? (
         <InsightSection section={view.practiceNext} marker={colors.border.shape} testID="learner-report-practice-next">
-          {/* The end of this section is F-BROWSE-001 BR-12a's: one Preview lessons row, web only (design: in-app-report.md). */}
+          {/* F-BROWSE-001 BR-12a: one Preview lessons row at the end of this section, web only (design: in-app-report.md). */}
+          <Spacer size="sm" />
+          <GateLessonsButton kind="preview" target={{ kind: 'stage', stage: view.previewStage }} testID="learner-report-preview-lessons" />
         </InsightSection>
       ) : null}
       {view.thisPeriod !== null ? (

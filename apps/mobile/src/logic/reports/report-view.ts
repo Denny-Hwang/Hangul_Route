@@ -454,6 +454,11 @@ export interface InAppReportView {
   practiceNext: ReportSectionView | null;
   thisPeriod: ReportThisPeriodView | null;
   moreDetail: ReportMoreDetailView | null;
+  /**
+   * The stage the What to practice next section's Preview lessons row opens in All lessons (F-BROWSE-001
+   * section 4.11 item 2, BR-12a): `journey.here` when this build can read it, else `stage1`.
+   */
+  previewStage: StageKey;
 }
 
 const firstStep = (period: ReportPeriod, m: Messages): string =>
@@ -674,5 +679,6 @@ export function inAppReportView(input: InAppReportInput): InAppReportView {
     practiceNext: section(m.report.section.practiceNext, practiceNext(ctx)),
     thisPeriod: ready ? { heading: m.report.section.thisPeriod, figures: figuresView(report, w), calendar: calendarView(report, w), growth: growthView(report, w) } : null,
     moreDetail: summary === null ? null : detailView(report, summary, w),
+    previewStage: (summary === null ? null : emptyStageOf(summary))?.stage ?? 'stage1',
   };
 }
