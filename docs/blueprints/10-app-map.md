@@ -204,7 +204,7 @@ Hangul Route
 
 **A17. All lessons — `/browse` root (F-BROWSE-001 §4.1, 2026-10-12 BR-0b)**
 
-학습자 웹 빌드의 세 번째 root. F-APP-001 의 `pickRoot` (`platform/app-root(.web).ts`) 가 `App` 이 mount 되기 전에 고른다 (순서: `/present` · `/browse` · 어른 경로 bounce · app). `BrowseApp` 은 학습자 store 를 hydrate 하지 않고, 동기화·inbox·`PwaBanners` 를 띄우지 않으며, F-APP-001 의 `hr:grownup:unlock` 을 지우지 않는다 (BD1). 자체 native stack (`navigation/browse.tsx`, `BrowseStackParamList`, 탭 없음). `/browse/…` 의 모르는 경로는 home. `document.title` 은 고정 "Hangul Route lessons" (`caregiver.browse.documentTitle`). 웹 전용 (OD-10): 네이티브 `pickRoot` 는 늘 `'app'`. 시안: `design/screens/browse/` (#421, #441).
+학습자 웹 빌드의 세 번째 root. F-APP-001 의 `pickRoot` (`platform/app-root(.web).ts`) 가 `App` 이 mount 되기 전에 고른다 (순서: `/present` · `/browse` · 어른 경로 bounce · app). `BrowseApp` 은 학습자 store 를 hydrate 하지 않고, 동기화·inbox·`PwaBanners` 를 띄우지 않으며, 돌아갈 곳이 있는 탭에서는 F-APP-001 의 `hr:grownup:unlock` 과 `hr:console:session` 을 지우지 않는다 (BD1). 돌아갈 곳이 없는 탭(`canGoBack()` false: 새 탭, 직접 입력한 주소)은 boot 때 둘 다 지운다 (BR-6). 자체 native stack (`navigation/browse.tsx`, `BrowseStackParamList`, 탭 없음). `/browse/…` 의 모르는 경로는 home. `document.title` 은 고정 "Hangul Route lessons" (`caregiver.browse.documentTitle`). 웹 전용 (OD-10): 네이티브 `pickRoot` 는 늘 `'app'`. 시안: `design/screens/browse/` (#421, #441).
 
 | ID | 코드 라우트 (`BrowseStackParamList`) | 목표 (한 줄) | 상태 | 스펙 | WF |
 |---|---|---|---|---|---|
