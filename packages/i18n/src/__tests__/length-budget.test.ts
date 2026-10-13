@@ -450,9 +450,7 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       'console.billing.manage.cta',
       'console.billing.promo.apply.cta',
       'console.billing.promo.change.cta',
-      'console.billing.choose.cta',
       'console.billing.contact.cta',
-      'console.billing.isCurrent.pill',
     ]) {
       expect(paths).toContain(expected);
     }

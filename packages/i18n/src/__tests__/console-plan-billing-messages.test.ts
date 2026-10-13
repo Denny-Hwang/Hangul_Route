@@ -94,44 +94,21 @@ describe('billing page (teach/billing/page.tsx, billing.ts)', () => {
     expect(b.portalFailed).toBe("Couldn't open the billing portal.");
   });
 
-  it('keeps the current-plan section', () => {
-    expect(b.current.title).toBe('Current plan');
-    // The free-class cap arrives as a number (content-schema FREE_CLASS_STUDENT_CAP).
-    expect(b.current.freeLine(20)).toBe('Stage 1, local progress, Rescue Code, file backup. Classes hold up to 20 students.');
-    expect(b.current.freeLine(25)).toBe('Stage 1, local progress, Rescue Code, file backup. Classes hold up to 25 students.');
-    expect(b.yourAccount).toBe('your account');
-    // One whole sentence per provider (§3.1): the provider name is not glued after "via".
-    expect(b.source('stripe', null)).toBe('via web (Stripe)');
-    expect(b.source('stripe', 'KPCCW2026')).toBe('via web (Stripe) · code KPCCW2026');
-    expect(b.source('apple', null)).toBe('via App Store');
-    expect(b.source('google', null)).toBe('via Google Play');
-    expect(b.source('manual', null)).toBe('via contract');
-    expect(b.seats(300)).toBe('300 seats');
-    expect(b.seats(1)).toBe('1 seat');
+  // F-BILL-002 B-8c removed the old page's current-plan section, includes, sources, seats, plans section, Choose
+  // and the current pill (billing-keys-removed.test.ts in apps/web); the billing home words are in billing-messages.test.ts.
+  it('keeps Manage subscription, the plan names and the contract price', () => {
     expect(b.manage.cta).toBe('Manage subscription');
-  });
-
-  it('keeps the plan names, what each includes and the contract price', () => {
     expect(b.planTitle).toEqual({ free: 'Free', family_lifetime: 'Family Plan', group_license: 'Group License', school_seat: 'School Contract' });
-    expect(b.includes.free(20)).toBe('Stage 1, local progress, Rescue Code, file backup; classes up to 20 students');
-    expect(b.includes.free(25)).toBe('Stage 1, local progress, Rescue Code, file backup; classes up to 25 students');
-    expect(b.includes.family_lifetime(5)).toBe('Every Stage, new ones included, for one family: up to 5 learners, cloud sync, grown-up dashboard and plans');
-    expect(b.includes.group_license(10, 300, 20)).toBe('A class or school: every student premium while enrolled, no 20-student cap; a school holds up to 10 teachers / 300 students');
-    expect(b.includes.group_license(10, 300, 25)).toContain('no 25-student cap');
-    expect(b.includes.school_seat(300, 10)).toBe('Beyond 300 students or 10 teachers — seats by contract');
     expect(b.contactPrice).toBe('Contact us');
   });
 
-  it('keeps the plans section and the promo form', () => {
-    expect(b.plans.title).toBe('Plans');
+  it('keeps the promo form', () => {
     expect(b.promo.formLabel).toBe('Promo code');
     expect(b.promo.placeholder).toBe('HOYA20');
     expect(b.promo.apply.cta).toBe('Apply code');
     expect(b.promo.change.cta).toBe('Change code');
     expect(b.promo.applied('HOYA20', null)).toBe('HOYA20 applied.');
     expect(b.promo.applied('HOYA20', 'Spring')).toBe('HOYA20 applied · Spring.');
-    expect(b.choose.cta).toBe('Choose');
     expect(b.contact.cta).toBe('Contact us');
-    expect(b.isCurrent.pill).toBe('current');
   });
 });
