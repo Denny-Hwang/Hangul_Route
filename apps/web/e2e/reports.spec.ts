@@ -516,3 +516,69 @@ test.describe('the class report (RP-8)', () => {
   });
 });
 
+
+test.describe('the family report at /parent/learner and the report nav items (RP-7c)', () => {
+  test.skip(!FULL, 'needs the export built with reports on');
+
+  const familyReport = '/parent/learner?id=space%3Akim-family&learner=profile%3Amina&period=week&from=home';
+
+  test('the parent home card address opens the report under /parent, back to the parent home, Reports current', async ({ page }) => {
+    await mockReport(page, { kind: 'family' });
+    await page.goto(familyReport);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Mina: report');
+    await expect(page.getByTestId('report-back')).toHaveAttribute('href', '/parent');
+    await expect(page.getByTestId('nav-reports')).toHaveAttribute('aria-current', 'page');
+    await expect(page).toHaveTitle('Report - Hangul Route');
+  });
+
+  test('the chooser: one family learner opens that report directly', async ({ page }) => {
+    await mockReport(page, { kind: 'family' });
+    await page.goto('/parent/learner');
+    await expect(page).toHaveURL(/\/parent\/learner\?id=space%3Akim-family&learner=profile%3Amina&period=week&from=nav$/);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Mina: report');
+    await expect(page.getByTestId('report-back')).toHaveAttribute('href', '/parent');
+  });
+
+  for (const width of [320, 390]) {
+    test(`the chooser lists two learners in join order, rows at least the touch minimum, no sideways scroll at ${width} px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 700 });
+      await mockReport(page, { kind: 'family' });
+      const family = {
+        id: 'space:kim-family',
+        kind: 'family',
+        name: 'Kim family',
+        parentSpaceId: null,
+        settings: { consentMode: 'parent', anonymizeRoster: false },
+        archivedAt: null,
+        createdAt: '2026-09-01T00:00:00.000Z',
+      };
+      const learner = (id: string, name: string, joinedAt: string) => ({ id, displayName: name, avatar: 'hoya-orange', ageGroup: 'starter', joinedAt, lastActiveAt: joinedAt, lastSyncedAt: null, summary: null });
+      const reply = (data: unknown) => ({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ data }) });
+      await page.route('**/api/spaces', (route) =>
+        route.request().method() === 'OPTIONS' ? route.fallback() : route.fulfill(reply({ spaces: [{ space: family, role: 'owner', counts: { learners: 2, accounts: 1, classes: 0 } }] })),
+      );
+      await page.route('**/roster', (route) =>
+        route.request().method() === 'OPTIONS'
+          ? route.fallback()
+          : route.fulfill(reply({ space: family, learners: [learner('profile:jun', 'Jun', '2026-09-05T00:00:00.000Z'), learner('profile:mina', 'Mina', '2026-09-02T00:00:00.000Z')], joinCode: null, joinCodeExpiresAt: null })),
+      );
+      await page.goto('/parent/learner');
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('Whose report?');
+      const rows = page.getByTestId('report-chooser').getByRole('link');
+      await expect(rows).toHaveText(['Mina', 'Jun']);
+      await expect(rows.first()).toHaveAttribute('href', '/parent/learner?id=space%3Akim-family&learner=profile%3Amina&period=week&from=nav');
+      for (const box of [await rows.nth(0).boundingBox(), await rows.nth(1).boundingBox()]) expect(box?.height ?? 0).toBeGreaterThanOrEqual(touchTarget.min);
+      await expect(page.getByTestId('nav-reports')).toHaveAttribute('href', '/parent/learner');
+      await noSidewaysScroll(page);
+    });
+  }
+
+  test('the teacher frame shows Class reports, current on the class report', async ({ page }) => {
+    await mockClass(page);
+    await page.goto(classUrl('period=week'));
+    await expect(page.getByTestId('report-headline')).toBeVisible();
+    await expect(page.getByTestId('nav-classReports')).toHaveText('Class reports');
+    await expect(page.getByTestId('nav-classReports')).toHaveAttribute('href', '/teach/space/report');
+    await expect(page.getByTestId('nav-classReports')).toHaveAttribute('aria-current', 'page');
+  });
+});

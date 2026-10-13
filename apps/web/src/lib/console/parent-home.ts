@@ -57,7 +57,7 @@ export interface CardAction {
 /**
  * A learner card's actions: **See report** with reports on, else **Open** (the family roster); then
  * **Send a note** (the composer with this learner preselected) and **Learning Route**, each by flag.
- * The learner report keeps F-REPORT-001's own family address until its RP-7c.
+ * See report opens the learner report at `/parent/learner` on the week, `from=home` (F-REPORT-001 RP-7c).
  */
 export function learnerCardActions(familyId: string, learnerId: string, flags: CardFlags): { primary: CardAction; secondary: CardAction[] } {
   const primary: CardAction = flags.reports
