@@ -1022,7 +1022,7 @@ export const learner = {
         title: '여기서 멈출까요?',
         body: '답한 낱말은 그대로 저장돼요.',
         keep: '계속하기',
-        stop: '멈추기',
+        stop: '그만하기',
       },
       results: {
         caught: (n: number) => `맞힌 낱말 ${n}개`,
