@@ -7,6 +7,7 @@ import {
   type Catalog,
   type PlacementLevel,
   type PlanItem,
+  type SpaceKind,
 } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, formatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { RosterLearner, RosterSummary } from './api';
@@ -118,9 +119,9 @@ export function suggestionFor(
 /** The query key the roster sets on the existing plan builder (no new route). */
 export const SUGGEST_PARAM = 'suggest';
 
-/** `/teach/space/plan?id=<space>&suggest=<learner>`. */
-export function suggestStartHref(spaceId: string, learnerId: string): string {
-  return `${ROUTES.spacePlan(spaceId)}&${SUGGEST_PARAM}=${encodeURIComponent(learnerId)}`;
+/** `/teach/space/plan?id=<space>&suggest=<learner>` (`/parent/space/plan…` for a family, F-APP-001 A-5b). */
+export function suggestStartHref(spaceId: string, learnerId: string, kind?: SpaceKind): string {
+  return `${ROUTES.spacePlan(spaceId, undefined, kind)}&${SUGGEST_PARAM}=${encodeURIComponent(learnerId)}`;
 }
 
 /** The learner id of `?suggest=`, or null. */

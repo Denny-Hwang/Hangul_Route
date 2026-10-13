@@ -70,7 +70,7 @@ function SettingsInner(): JSX.Element {
   return (
     <AdultFrame onSignOut={signOut} title={space ? s.titleFor(space.name) : s.title}>
       <Muted>
-        <Link href={ROUTES.space(spaceId)}>{s.back(space?.name ?? null)}</Link>
+        <Link href={ROUTES.space(spaceId, space?.kind)}>{s.back(space?.name ?? null)}</Link>
       </Muted>
       {error ? <LoadErrorPanel error={error} forbidden={s.forbidden} onRetry={() => void load()} /> : null}
       {note ? <Notice tone="nudge">{s.notes[note]}</Notice> : null}

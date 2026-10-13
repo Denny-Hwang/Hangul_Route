@@ -87,7 +87,7 @@ describe('learningRouteView: which space and which learner (section 6.1)', () =>
       expect(view).toEqual({
         status: 'notFound',
         message: 'We could not find this learner in this space.',
-        back: { href: ROUTES.space('space:x'), text: kind === 'class' ? 'Back to the class' : 'Back to the family' },
+        back: { href: ROUTES.space('space:x', kind), text: kind === 'class' ? 'Back to the class' : 'Back to the family' },
       });
       expect(JSON.stringify(view)).not.toContain('Mina');
       expect(JSON.stringify(view)).not.toContain('learner:mina');
@@ -119,7 +119,7 @@ describe('learningRouteView: which space and which learner (section 6.1)', () =>
   });
 
   it('goes back to the report once F-REPORT-001 gives its address, else to the class or the family', () => {
-    expect(ready().back).toEqual({ href: '/teach/space?id=space%3Afam', text: 'Back to the family' });
+    expect(ready().back).toEqual({ href: '/parent/space?id=space%3Afam', text: 'Back to the family' });
     expect(ready({ space: { id: 'space:c', kind: 'class' } }).back).toEqual({ href: '/teach/space?id=space%3Ac', text: 'Back to the class' });
     expect(ready({ reportHref: '/teach/space/learner?id=space%3Ac&learner=learner%3Asam' }).back).toEqual({
       href: '/teach/space/learner?id=space%3Ac&learner=learner%3Asam',
@@ -152,7 +152,7 @@ describe('learningRouteView: before the first readable journey (section 6.1 "No 
         title: "Sam's Learning Route",
         updated: 'Updated Oct 11',
         message: "The Learning Route appears after Sam's next sync on the newest app.",
-        back: { href: '/teach/space?id=space%3Afam', text: 'Back to the family' },
+        back: { href: '/parent/space?id=space%3Afam', text: 'Back to the family' },
       });
       expect(JSON.stringify(view).toLowerCase()).not.toContain('no progress');
     }

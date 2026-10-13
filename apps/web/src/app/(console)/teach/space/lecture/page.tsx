@@ -148,7 +148,7 @@ function LectureInner(): JSX.Element {
 
   const back = (
     <Muted>
-      <Link href={ROUTES.space(spaceId)}>{l.back(roster?.space.name ?? null)}</Link>
+      <Link href={ROUTES.space(spaceId, roster?.space.kind)}>{l.back(roster?.space.name ?? null)}</Link>
     </Muted>
   );
 

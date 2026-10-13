@@ -1,11 +1,14 @@
+import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { LocaleProvider } from '@/lib/i18n/locale-context';
+import { GrownUpLayout } from '@/components/console/GrownUpLayout';
 
-/**
- * The `/parent` demo reads the console dictionary in the console's locale (F-I18N-001 PR 10c):
- * the same client-side `LocaleProvider` as `/teach` (stored choice, else the browser languages,
- * among the shipped locales), so the static HTML stays English.
- */
+export const metadata: Metadata = {
+  title: 'Console — Hangul Route',
+  description: 'For parents, teachers and schools: create a class or family, share a code, see progress summaries.',
+  robots: { index: false, follow: false },
+};
+
+/** `/parent` and `/parent/space/**` (F-APP-001 A-5b, the family persona): the shared grown-up layout. */
 export default function ParentLayout({ children }: { children: ReactNode }): JSX.Element {
-  return <LocaleProvider>{children}</LocaleProvider>;
+  return <GrownUpLayout>{children}</GrownUpLayout>;
 }

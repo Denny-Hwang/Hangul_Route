@@ -1,8 +1,10 @@
 import { existsSync } from 'node:fs';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import * as parentSpacePage from '@/app/(console)/parent/space/page';
+import * as teachSpacePage from '@/app/(console)/teach/space/page';
 import type { SpaceListItem } from '../api';
-import { ROUTES, groupSpaces, isKnownSpaceKind, landingAfterCreate, loadErrorKey, prefillName, presetKind, roleCards, spaceErrorText, spaceIdFrom, statusLine } from '../routing';
+import { ROUTES, spacePath, groupSpaces, isKnownSpaceKind, landingAfterCreate, loadErrorKey, prefillName, presetKind, roleCards, spaceErrorText, spaceIdFrom, statusLine } from '../routing';
 
 const item = (id: string, kind: SpaceListItem['space']['kind'], createdAt: string, over: Partial<SpaceListItem> = {}, archivedAt: string | null = null): SpaceListItem => ({
   space: { id, kind, name: id, parentSpaceId: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt, createdAt },
@@ -44,7 +46,9 @@ describe('console routing (F-CONSOLE-001)', () => {
     expect(spaceIdFrom(new URLSearchParams('id=+'))).toBe('');
     expect(spaceIdFrom(new URLSearchParams(''))).toBe('');
     expect(spaceIdFrom(null)).toBe('');
-    expect(landingAfterCreate('family', 'space:f', false)).toBe(ROUTES.home);
+    // F-APP-001 A-5b (section 3.7): a new family lands on its home, /parent.
+    expect(landingAfterCreate('family', 'space:f', false)).toBe('/parent');
+    expect(landingAfterCreate('family', 'space:f', true)).toBe('/parent');
     expect(landingAfterCreate('school', 'space:s', true)).toBe(ROUTES.home);
   });
 
@@ -149,23 +153,55 @@ describe('page load errors (settings, school admin, F-I18N-001 PR 10c)', () => {
 });
 
 
+/** F-APP-001 A-5b (section 3.8): every space page under both prefixes; links use the prefix of the space kind. */
+describe('spacePath and the kind of every space builder', () => {
+  it('spacePath puts a family under /parent/space and every other kind, or none, under /teach/space', () => {
+    expect(spacePath('', 'id=a', 'family')).toBe('/parent/space?id=a');
+    expect(spacePath('plan', 'id=a', 'family')).toBe('/parent/space/plan?id=a');
+    expect(spacePath('plan', 'id=a', 'class')).toBe('/teach/space/plan?id=a');
+    expect(spacePath('settings', 'id=a', 'school')).toBe('/teach/space/settings?id=a');
+    expect(spacePath('', 'id=a')).toBe('/teach/space?id=a');
+    expect(spacePath('route', '')).toBe('/teach/space/route');
+  });
+
+  it('every builder takes the kind as its last, optional parameter; omitted keeps /teach/space (which renders every kind)', () => {
+    const cases: Array<[string, string, string]> = [
+      [ROUTES.space('space:f', 'family'), ROUTES.space('space:f'), '/parent/space?id=space%3Af'],
+      [ROUTES.spacePlan('space:f', undefined, 'family'), ROUTES.spacePlan('space:f'), '/parent/space/plan?id=space%3Af'],
+      [ROUTES.spaceCurriculum('space:f', 'family'), ROUTES.spaceCurriculum('space:f'), '/parent/space/curriculum?id=space%3Af'],
+      [ROUTES.spaceRelink('space:f', 'family'), ROUTES.spaceRelink('space:f'), '/parent/space/relink?id=space%3Af'],
+      [ROUTES.spaceSettings('space:f', 'family'), ROUTES.spaceSettings('space:f'), '/parent/space/settings?id=space%3Af'],
+      [ROUTES.spaceLecture('space:f', undefined, undefined, 'family'), ROUTES.spaceLecture('space:f'), '/parent/space/lecture?id=space%3Af'],
+      [ROUTES.learnerRoute('space:f', 'l:1', 'family'), ROUTES.learnerRoute('space:f', 'l:1'), '/parent/space/route?id=space%3Af&learner=l%3A1'],
+      [ROUTES.classReport({ spaceId: 'space:f', kind: 'family' }), ROUTES.classReport({ spaceId: 'space:f' }), '/parent/space/report?id=space%3Af&period=week'],
+    ];
+    for (const [family, omitted, expected] of cases) {
+      expect(family).toBe(expected);
+      expect(omitted).toBe(expected.replace('/parent/space', '/teach/space'));
+    }
+    expect(ROUTES.spacePlan('space:f', 'plan:1', 'family')).toBe('/parent/space/plan?id=space%3Af&plan=plan%3A1');
+    expect(ROUTES.spaceLecture('space:c', 'plan', 'plan:1', 'class')).toBe('/teach/space/lecture?id=space%3Ac&from=plan&plan=plan%3A1');
+    expect(ROUTES.space('space:c', 'class')).toBe('/teach/space?id=space%3Ac');
+    expect(ROUTES.space('space:s', 'school')).toBe('/teach/space?id=space%3As');
+  });
+
+  it('legacy family URLs under /teach/space still render: the same page component sits at both paths', () => {
+    expect(parentSpacePage.default).toBe(teachSpacePage.default);
+  });
+});
+
 describe("one learner's Learning Route page (Learning Route amendment section 6.1, LR-7, LR-8)", () => {
-  it('lands every kind on /teach/space/route until F-APP-001 A-5b adds the /parent/space/route twin', () => {
-    // Section 2, F-APP-001 row: before A-5b the builder returns /teach/space/route for every kind (it renders a
-    // family too), so no link can open a page that does not exist yet. A-5b's `spacePath` sends a family to
-    // /parent/space/route together with the twin page, which its SPACE_PAGES test enforces.
-    expect(ROUTES.learnerRoute('space:f', 'learner:1', 'family')).toBe('/teach/space/route?id=space%3Af&learner=learner%3A1');
+  it('sends a family to /parent/space/route (F-APP-001 A-5b) and a class, or no kind, to /teach/space/route', () => {
+    expect(ROUTES.learnerRoute('space:f', 'learner:1', 'family')).toBe('/parent/space/route?id=space%3Af&learner=learner%3A1');
     expect(ROUTES.learnerRoute('space:c', 'learner:1', 'class')).toBe('/teach/space/route?id=space%3Ac&learner=learner%3A1');
     expect(ROUTES.learnerRoute('space:c', 'learner:1')).toBe('/teach/space/route?id=space%3Ac&learner=learner%3A1');
   });
 
-  // F-APP-001 A-5b restores these with the /parent/space/route twin (its SPACE_PAGES test checks the twin exists).
-  it.todo("A-5b: sends a family to /parent/space/route and never yields a /teach path for a family space");
-
   it('points only at a page this console has', () => {
-    const page = new URL('../../../app/(console)/teach/space/route/page.tsx', import.meta.url);
-    expect(existsSync(page)).toBe(true);
-    for (const kind of ['family', 'class', undefined] as const) {
+    expect(existsSync(new URL('../../../app/(console)/teach/space/route/page.tsx', import.meta.url))).toBe(true);
+    expect(existsSync(new URL('../../../app/(console)/parent/space/route/page.tsx', import.meta.url))).toBe(true);
+    expect(new URL(ROUTES.learnerRoute('s', 'l', 'family'), 'https://app.example').pathname).toBe('/parent/space/route');
+    for (const kind of ['class', undefined] as const) {
       expect(new URL(ROUTES.learnerRoute('s', 'l', kind), 'https://app.example').pathname).toBe('/teach/space/route');
     }
   });
@@ -254,9 +290,9 @@ describe('ROUTES.learnerReport and ROUTES.classReport', () => {
     type LearnerOpts = Parameters<typeof ROUTES.learnerReport>[0];
     type ClassOpts = Parameters<typeof ROUTES.classReport>[0];
     const learnerKeys: Record<keyof LearnerOpts, true> = { spaceId: true, learnerId: true, kind: true, period: true, at: true, from: true };
-    const classKeys: Record<keyof ClassOpts, true> = { spaceId: true, period: true, at: true };
+    const classKeys: Record<keyof ClassOpts, true> = { spaceId: true, kind: true, period: true, at: true };
     expect(Object.keys(learnerKeys)).toHaveLength(6);
-    expect(Object.keys(classKeys)).toHaveLength(3);
+    expect(Object.keys(classKeys)).toHaveLength(4);
     const all = { spaceId: 'space:x', learnerId: 'profile:y', kind: 'class' as const, period: 'week' as const, at: '2026-10-08', from: 'nav' as const };
     for (const url of [new URL(ROUTES.learnerReport(all), 'https://app.example'), new URL(ROUTES.classReport(all), 'https://app.example')]) {
       for (const name of ['name', 'displayName', 'learnerName', 'n']) expect(url.searchParams.has(name)).toBe(false);

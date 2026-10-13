@@ -134,7 +134,7 @@ function StartInner(): JSX.Element {
               <Button onClick={() => void copy(step.code)}>{copied ? c.joinCode.copied.cta : c.joinCode.copy.cta}</Button>
             </div>
             <Notice tone="success">{c.writeOnBoard}</Notice>
-            <Button tone="primary" onClick={() => router.replace(ROUTES.space(step.spaceId))}>
+            <Button tone="primary" onClick={() => router.replace(ROUTES.space(step.spaceId, 'class'))}>
               {c.start.goToClass.cta}
             </Button>
           </>

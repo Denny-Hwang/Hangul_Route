@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { GrownUpLayout } from '@/components/console/GrownUpLayout';
 import * as accountLayout from '../(console)/account/layout';
+import * as parentLayout from '../(console)/parent/layout';
 import * as signinLayout from '../(console)/signin/layout';
 import * as startLayout from '../(console)/start/layout';
 import * as teachLayout from '../(console)/teach/layout';
@@ -15,6 +16,7 @@ const LAYOUTS = [
   ['/signin', signinLayout],
   ['/start', startLayout],
   ['/teach', teachLayout],
+  ['/parent', parentLayout],
   ['/account', accountLayout],
 ] as const;
 

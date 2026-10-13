@@ -188,7 +188,7 @@ function CurriculumInner(): JSX.Element {
       setError('saveFailed');
       return;
     }
-    router.push(ROUTES.spacePlan(spaceId, result.data.id));
+    router.push(ROUTES.spacePlan(spaceId, result.data.id, roster?.space.kind));
   };
 
   const rows = draft ? weekGroups(draft.weeks, draft.items).rows : [];
@@ -205,7 +205,7 @@ function CurriculumInner(): JSX.Element {
   return (
     <AdultFrame onSignOut={signOut} title={roster ? c.pageTitle(roster.space.name) : c.title}>
       <Muted>
-        <Link href={ROUTES.space(spaceId)}>{c.back(roster?.space.name ?? null)}</Link>
+        <Link href={ROUTES.space(spaceId, roster?.space.kind)}>{c.back(roster?.space.name ?? null)}</Link>
       </Muted>
       {!api ? <Notice tone="nudge">{m.console.shell.noApi}</Notice> : null}
       {error === 'cantReach' ? (

@@ -162,7 +162,7 @@ function SpaceInner(): JSX.Element {
                     {weekRevisit.after}{' '}
                     {lecture ? (
                       <Link
-                        href={ROUTES.spaceLecture(spaceId, 'revisit')}
+                        href={ROUTES.spaceLecture(spaceId, 'revisit', undefined, roster.space.kind)}
                         data-testid="revisit-together"
                         style={{ display: 'inline-flex', alignItems: 'center', minHeight: spacing.xxxl, fontSize: typography.size.caption, fontWeight: typography.weight.bold, padding: `0 ${spacing.md}px`, borderRadius: radii.pill, border: `1px solid ${colors.border.strong}`, color: colors.text.primary, textDecoration: 'none', whiteSpace: 'nowrap' }}
                       >
@@ -178,21 +178,21 @@ function SpaceInner(): JSX.Element {
           ) : null}
 
           <div style={{ display: 'flex', gap: spacing.sm, marginBottom: spacing.lg, flexWrap: 'wrap', alignItems: 'center' }}>
-            <Link href={ROUTES.spacePlan(spaceId)}>
+            <Link href={ROUTES.spacePlan(spaceId, undefined, roster.space.kind)}>
               <Button tone="primary">{latestPlan ? c.space.openPlan.label(latestPlan.title) : c.planThisWeek}</Button>
             </Link>
-            <Link href={ROUTES.spaceCurriculum(spaceId)}>
+            <Link href={ROUTES.spaceCurriculum(spaceId, roster.space.kind)}>
               <Button testId="plan-term">{c.curriculum.entries.planTerm.cta}</Button>
             </Link>
             {lecture ? (
-              <Link href={ROUTES.spaceLecture(spaceId)}>
+              <Link href={ROUTES.spaceLecture(spaceId, undefined, undefined, roster.space.kind)}>
                 <Button testId="open-lecture">{c.lecture.entry.cta}</Button>
               </Link>
             ) : null}
-            <Link href={ROUTES.spaceRelink(spaceId)}>
+            <Link href={ROUTES.spaceRelink(spaceId, roster.space.kind)}>
               <Button>{pendingRelinks > 0 ? c.space.relinkPending.cta(pendingRelinks) : c.space.relinkRequests.cta}</Button>
             </Link>
-            <Link href={ROUTES.spaceSettings(spaceId)}>
+            <Link href={ROUTES.spaceSettings(spaceId, roster.space.kind)}>
               <Button>{c.space.settings.cta}</Button>
             </Link>
           </div>
@@ -217,7 +217,7 @@ function SpaceInner(): JSX.Element {
                     {l.summary ? (
                       <div style={{ color: colors.text.secondary, fontSize: typography.size.bodySm, marginTop: spacing.xs, lineHeight: typography.leading.relaxed }}>
                         <div>{c.space.learner.lastActive(relativeDay(l.summary.lastActiveAt, now, locale))}</div>
-                        <StartingSpot summary={l.summary} spaceId={spaceId} learnerId={l.id} learnerName={l.displayName} />
+                        <StartingSpot summary={l.summary} spaceId={spaceId} learnerId={l.id} learnerName={l.displayName} kind={roster.space.kind} />
                         <div>{c.space.learner.questsCards(l.summary.stage1.questsDone, l.summary.stage1.questsTotal, l.summary.cardsUnlocked)}</div>
                         <div>{c.space.learner.minutesThisWeek(l.summary.minutesLast7d)}</div>
                         <JourneyStrip kind={roster.space.kind} summary={l.summary} />
