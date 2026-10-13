@@ -80,6 +80,24 @@ describe('privacy: progress report lines (F-REPORT-001 RP-0b)', () => {
   });
 });
 
+describe('privacy: notes from grown-ups (F-FEEDBACK-001 section 8.7, FB-13; English-authoritative)', () => {
+  const bullets = l.legal.privacy.sections.collect.bullets;
+  const values = { email: 'hello@hangulroute.com', levels: 'A / B' };
+
+  it('says who can send, the only answer, what a teacher and the family see, take back, how long notes are kept, and how to hide, report, stop and delete', () => {
+    expect(typeof bullets.notes).toBe('function');
+    expect(bullets.notes(values)).toBe(
+      "Notes from grown-ups: the learner's family, and the teacher of a class the learner joined, can send the learner short notes that start from a set of reviewed messages. In a family, only the family owner and the adults the owner allows can send. The learner cannot write back: they can only pick one of four fixed answers, such as \"Thank you\". A teacher sees the notes sent in their class and, unless the family limits class notes, that answer, but never whether a note was opened. The learner's family caregivers see every note to the learner, and which family adult sent a note from home, and can hide or report a note or stop notes from one sender. A note can also be put away or reported from the learner's device. A sender can take a note back at any time: it leaves the learner's devices, and the learner's family can still see it. We keep notes for 180 days, and a reported note until 90 days after its last report so we can review it. To have a note deleted sooner, the learner's family can email hello@hangulroute.com.",
+    );
+  });
+
+  it('comes right after who can see progress, and has no es or ko leaf (English-authoritative)', () => {
+    const keys = Object.keys(bullets);
+    expect(keys.indexOf('notes')).toBe(keys.indexOf('progressWho') + 1);
+    expect(fallbackPaths('es').some((path) => path.includes('collect.bullets.notes'))).toBe(false);
+  });
+});
+
 describe('legal: payment facts (F-SITE-002 S-7, OD-13; English-authoritative, flagged for counsel)', () => {
   const CHANNELS =
     'On the web, a grown-up pays through Stripe after signing in at app.hangulroute.com. In the iPhone and Android apps, purchases (when offered) go through the App Store or Google Play.';
