@@ -17,7 +17,8 @@ const SYMBOL = /[\p{Extended_Pictographic}←-⇿⌀-⏿■-◿☀-➿️]/u;
 
 describe('screens/my-route sources', () => {
   it('has the screen and its parts', () => {
-    expect(files.sort()).toEqual(['GainsCard.tsx', 'HeroCard.tsx', 'LetterWall.tsx', 'MyRouteScreen.tsx', 'SkillsCard.tsx', 'StageBadge.tsx', 'TrailRow.tsx']);
+    // LR-5a: the route card replaces the hero card.
+    expect(files.sort()).toEqual(['GainsCard.tsx', 'LetterWall.tsx', 'MyRouteScreen.tsx', 'RouteCard.tsx', 'SkillsCard.tsx', 'StageBadge.tsx', 'TrailRow.tsx']);
   });
 
   for (const file of files) {
@@ -276,10 +277,10 @@ describe('the Route tab (LR-4)', () => {
     expect(screen).toContain('pendingWrite.current = writeSeen(');
     expect(screen).toContain('seenForView({ focusKey, seenFor, focused, seen: seenRead })');
     expect(screen).toMatch(/return \(\) => \{\s*setFocused\(false\);/);
-    // Screen-reader focus lands on the hero sentence on every focus, not only on mount (F-ROUTE-001 section 3.14).
+    // Screen-reader focus lands on the route card's summary on every focus, not only on mount (amendment section 10).
     expect(screen).toContain('focusToken={focusKey}');
-    const hero = read(join(SCREEN_DIR, 'HeroCard.tsx'));
-    expect(hero).toMatch(/focusForScreenReader\(sentenceRef\.current\);\s*\}, \[focusToken\]\);/);
+    const card = read(join(SCREEN_DIR, 'RouteCard.tsx'));
+    expect(card).toMatch(/focusForScreenReader\(summaryRef\.current\);\s*\}, \[focusToken\]\);/);
     // The one-time fill restarts from faded whenever it turns on, so it plays on a later focus too.
     const trail = read(join(SCREEN_DIR, 'TrailRow.tsx'));
     expect(trail).toMatch(/if \(!animate\) return;\s*opacity\.setValue\(FRESH_FROM\);/);
@@ -317,5 +318,69 @@ describe('the Route tab (LR-4)', () => {
       const src = read(join(SCREEN_DIR, file));
       expect(src, file).not.toMatch(/Paywall|[Bb]illing|navigate\('Plans|askGrown|askParent/);
     }
+  });
+});
+
+describe('the route card wiring (Learning Route LR-5a)', () => {
+  const screen = read(join(SCREEN_DIR, 'MyRouteScreen.tsx'));
+  const card = read(join(SCREEN_DIR, 'RouteCard.tsx'));
+  const trail = read(join(SCREEN_DIR, 'TrailRow.tsx'));
+  const home = read(join(SRC, 'screens', 'home', 'HomeScreen.tsx'));
+  const row = read(join(SRC, 'screens', 'parent', 'LearningRouteRow.tsx'));
+
+  it('the page builds F-ENT-003\'s input as Home does and passes it to the one model input', () => {
+    expect(screen).toContain('routeNextInputOf({');
+    expect(screen).toContain('buildMyRoute(routeModelInput({ snapshot, tier, localized, seen, now, next }))');
+    expect(home).toMatch(/routeNextInputOf\(\{[\s\S]*gatingActive: gatingActive\(flags, bundleOs\(\)\)/);
+    expect(screen).toContain('gatingActive: gatingActive(flags, bundleOs())');
+  });
+
+  it('quest access comes only from F-ENT-003\'s tier store: the learner\'s own, or the viewed learner\'s for a grown-up', () => {
+    expect(screen).toContain('const activeQuestOpen = useQuestAccess();');
+    expect(screen).toContain('isQuestOpen: readOnly ? questOpenFor(profileId, now, snapshot) : activeQuestOpen');
+    for (const file of files) expect(read(join(SCREEN_DIR, file)), file).not.toMatch(/questAccess\(|questOpenPredicate\(|content-access/);
+  });
+
+  it('Continue opens the one next, sends continue_tapped and route.next_started from the route surface, never read-only', () => {
+    expect(screen).toMatch(/cta\.action === 'quest' && model\.next/);
+    expect(screen).toContain("if (!readOnly) void track(nextStartedEvent(profileId, model.next.source, 'route'));");
+    expect(screen).toContain("navigation.navigate('QuestPlayer', { questId: model.next.questId, episodeId: model.next.episodeId })");
+    expect(screen).not.toMatch(/model\.cursor\.questId/);
+  });
+
+  it('the card names the next quest and the plan week; the grown-up card gets the plan end formatter', () => {
+    expect(screen).toContain('model.next ? questsAll.find((q) => q.id === model.next?.questId)');
+    expect(screen).toContain('planWeekOf(model.goal, goalSourcesOf(next), next.today)');
+    expect(screen).toContain("formatDay: (day) => formatDate(locale, `${day}T00:00:00.000Z`, 'monthDay', { utc: true })");
+    expect(screen).toContain('testID="my-route-plan-line"');
+  });
+
+  it('the card is one summary for screen readers with its glyphs, Hoya and pips hidden; one button only when not read-only', () => {
+    expect(card).toContain('accessibilityRole="summary"');
+    expect(card).toContain('accessibilityLabel={copy.a11yLabel}');
+    expect(card).toMatch(/<Icon name=\{name\}/);
+    expect(card.match(/<Button /g)).toHaveLength(1);
+    expect(card).toContain('cta !== null ?');
+    expect(card).toMatch(/importantForAccessibility="no-hide-descendants"/);
+  });
+
+  it('the trail draws the goal flag, the start pin and "In your plan" as a chip with its ring, never a bare ring', () => {
+    expect(trail).toContain('<Icon name={tag.glyph}');
+    expect(trail).toContain('{cell.inPlan !== null ? <InPlanChip label={cell.inPlan} /> : null}');
+    expect(trail).toContain('<PlanRing />');
+  });
+
+  it('the content-cannot-be-read state is Hoya, the route words and Try again (LR-D state J)', () => {
+    expect(screen).toContain('messages.caregiver.journey.error(');
+    expect(screen).toContain('m.hero.error');
+    expect(screen).toContain('testID="my-route-error"');
+  });
+
+  it('the Home strip and the parent dashboard row name the same goal from the same input', () => {
+    expect(home).toContain('homeStripView({ model, messages: m, goalStage: model.goal?.stage ?? null })');
+    expect(home).toContain('...(routeInput ? { next: routeInput } : {})');
+    expect(row).toContain('dashboardRowView({ model, messages, name, started, goalStage: model.goal?.stage ?? null })');
+    expect(row).toContain('buildMyRoute(routeModelInput({ snapshot, tier, localized, now, next }))');
+    expect(row).toContain('isQuestOpen: questOpenFor(profileId, now, snapshot)');
   });
 });

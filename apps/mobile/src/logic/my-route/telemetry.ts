@@ -19,12 +19,18 @@ export type MyRouteSource = 'tab' | 'home' | 'journey' | 'result' | 'parent';
 /** Exactly one stage is `here` (section 3.3). */
 const hereOf = (model: MyRouteModel): StageKey => (model.stages.find((s) => s.here) as StageRow).stage;
 
-export function viewedEvent(i: { profileId: string; model: MyRouteModel; source: MyRouteSource; hasPlan: boolean; readOnly: boolean }): TelemetryEvent | null {
+/**
+ * `route_map.viewed` (amendment section 8, LR-5a): `goalFrom` is which source set the goal, `'none'` at
+ * the end of the open road; `hasPlan` is true while a live weekly plan sets it. Codes only: no plan id,
+ * no date.
+ */
+export function viewedEvent(i: { profileId: string; model: MyRouteModel; source: MyRouteSource; readOnly: boolean }): TelemetryEvent | null {
   if (i.readOnly) return null;
+  const goalFrom = i.model.goal?.from ?? 'none';
   return {
     name: 'route_map.viewed',
     profileId: i.profileId,
-    payload: { source: i.source, stage: hereOf(i.model), hasStart: i.model.start !== null, hasPlan: i.hasPlan },
+    payload: { source: i.source, stage: hereOf(i.model), hasStart: i.model.start !== null, hasPlan: goalFrom !== 'none' && goalFrom !== 'default', goalFrom },
   };
 }
 
@@ -32,9 +38,13 @@ export function stageOpenedEvent(i: { profileId: string; stage: StageKey; readOn
   return i.readOnly ? null : { name: 'route_map.stage_opened', profileId: i.profileId, payload: { stage: i.stage } };
 }
 
-/** The hero button when it opens the cursor quest (hero `start` or `continue`); the rest and beyond buttons are not tracked. */
+/**
+ * The card's button when it opens the one next quest (hero `start` or `continue`), with `from`, where that
+ * next comes from (F-ENT-003 `NextSource`, amendment section 8); the rest, beyond and free-end buttons
+ * are not tracked.
+ */
 export function continueTappedEvent(i: { profileId: string; model: MyRouteModel; readOnly: boolean }): TelemetryEvent | null {
-  const { hero } = i.model;
-  if (i.readOnly || (hero !== 'start' && hero !== 'continue')) return null;
-  return { name: 'route_map.continue_tapped', profileId: i.profileId, payload: { stage: hereOf(i.model), hero } };
+  const { hero, next } = i.model;
+  if (i.readOnly || next === null || (hero !== 'start' && hero !== 'continue')) return null;
+  return { name: 'route_map.continue_tapped', profileId: i.profileId, payload: { stage: hereOf(i.model), hero, from: next.source } };
 }

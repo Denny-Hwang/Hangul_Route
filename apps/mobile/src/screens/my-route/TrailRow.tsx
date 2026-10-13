@@ -19,7 +19,7 @@ import {
 } from '@hangul-route/design-system';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, View } from 'react-native';
-import Svg, { Line } from 'react-native-svg';
+import Svg, { Circle, Line } from 'react-native-svg';
 import { useMessages } from '../../i18n/use-messages';
 import type { Connector, LaterRowView, RouteIcon, StageRowView, TagView } from '../../logic/my-route/view';
 import { LetterWall } from './LetterWall';
@@ -58,22 +58,49 @@ function TrailConnector({ look, color, badge }: { look: Exclude<Connector, null>
   );
 }
 
+/** The chip's glyph and word box; a long tag wraps inside its chip, never cut off (LR-D "Three tags at 320"). */
+const chip = {
+  flexDirection: 'row',
+  alignItems: 'center',
+  flexShrink: 1,
+  gap: spacing.xxs,
+  paddingHorizontal: spacing.sm,
+  paddingVertical: spacing.xxs,
+  borderRadius: radii.pill,
+} as const;
+
+/** "You are here" on the brand tint; "Your goal" with the flag and "You started here" with the pin on sunken. */
 export function TagChip({ tag }: { tag: TagView }): React.ReactElement {
   return (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.xxs,
-        paddingHorizontal: spacing.sm,
-        paddingVertical: spacing.xxs,
-        borderRadius: radii.pill,
-        backgroundColor: tag.pin ? colors.surface.sunken : colors.brand.primaryLight,
-      }}
-    >
-      {tag.pin ? <Icon name="pin" size={16} color={colors.text.primary} /> : null}
-      <Caption tone="primary" weight="semibold">
+    <View style={{ ...chip, backgroundColor: tag.glyph === null ? colors.brand.primaryLight : colors.surface.sunken }}>
+      {tag.glyph !== null ? <Icon name={tag.glyph} size={spacing.lg} color={colors.text.primary} /> : null}
+      <Caption tone="primary" weight="semibold" style={{ flexShrink: 1 }}>
         {tag.label}
+      </Caption>
+    </View>
+  );
+}
+
+/** The 16 dp solid ring of "In your plan" (RouteMarkers spec, "Tag marks"): a chip mark, never a bare ring in a pip row. */
+function PlanRing(): React.ReactElement {
+  const size = spacing.lg;
+  const stroke = borderWidth.base;
+  return (
+    <View aria-hidden importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={{ width: size, height: size }}>
+      <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <Circle cx={size / 2} cy={size / 2} r={size / 2 - stroke / 2} fill="none" stroke={colors.border.shape} strokeWidth={stroke} />
+      </Svg>
+    </View>
+  );
+}
+
+/** "In your plan" on a cell row (F-ENT-003 E3-D): the solid ring plus the word on a sunken chip. */
+export function InPlanChip({ label }: { label: string }): React.ReactElement {
+  return (
+    <View style={{ ...chip, alignSelf: 'flex-start', backgroundColor: colors.surface.sunken }} testID="my-route-in-plan">
+      <PlanRing />
+      <Caption tone="primary" weight="semibold" style={{ flexShrink: 1 }}>
+        {label}
       </Caption>
     </View>
   );
@@ -241,6 +268,7 @@ export function StageRowItem({ row, open, look, reducedMotion, onToggle, onOpenE
                       <Caption tone="muted">{cell.themeLabel}</Caption>
                       <Body weight="semibold">{cell.title}</Body>
                       <PipRow groups={[cell.pips]} context="cell" accent={accent} />
+                      {cell.inPlan !== null ? <InPlanChip label={cell.inPlan} /> : null}
                     </View>
                     <View style={{ alignItems: 'flex-end', gap: spacing.xxs, maxWidth: '40%' }}>
                       <Body size="sm" tone="secondary" align="right">

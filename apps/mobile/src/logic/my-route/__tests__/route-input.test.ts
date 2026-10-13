@@ -4,7 +4,8 @@ import { journeyContent } from '../../../content/sync-context';
 import { localizeEpisode, localizeStage, localizeTheme } from '../../content-locale';
 import { cursorContext } from '../../cursor-context';
 import { buildMyRoute } from '../model';
-import { localizedRouteContent, routeLetterWall, routeModelInput } from '../route-input';
+import { planView, routeNext, routeNextInputOf } from '../../route-next';
+import { goalSourcesOf, localizedRouteContent, routeLetterWall, routeModelInput } from '../route-input';
 import { startRouteOf } from '../start-marker';
 import type { SeenRecord } from '../types';
 import { emptySnapshot } from '../view';
@@ -94,5 +95,40 @@ describe('routeLetterWall (R-7c)', () => {
   it('draws nothing for a model without a Stage 1 row', () => {
     const model = build(emptySnapshot('p1'));
     expect(routeLetterWall({ ...model, stages: model.stages.filter((s) => s.stage !== 'stage1') })).toEqual([]);
+  });
+});
+
+describe('routeModelInput with F-ENT-003\'s input (LR-5a)', () => {
+  const snapshot = emptySnapshot('p1');
+  const localized = localizedRouteContent('en');
+  const next = routeNextInputOf({
+    snapshot,
+    profileId: 'p1',
+    today: '2026-10-12',
+    plans: undefined,
+    quests: questsAll,
+    episodes: episodesAll,
+    tier: 'premium',
+    gatingActive: false,
+    isQuestOpen: () => true,
+  });
+
+  it('without it: no sources, no next and no access, so the model uses the catalogue cursor and the default goal', () => {
+    const input = routeModelInput({ snapshot, tier: 'free', localized, now: NOW });
+    for (const key of ['sources', 'today', 'routeNext', 'planView', 'isQuestOpen'] as const) expect(input).not.toHaveProperty(key);
+  });
+
+  it('with it: the goal sources, the plan day, routeNext, planView and the access predicate of that input', () => {
+    const input = routeModelInput({ snapshot, tier: 'free', localized, now: NOW, next });
+    expect(input.sources).toEqual(goalSourcesOf(next));
+    expect(input.today).toBe('2026-10-12');
+    expect(input.routeNext).toEqual(routeNext(next));
+    expect(input.planView).toEqual(planView(next));
+    expect(input.isQuestOpen).toBe(next.isQuestOpen);
+    expect(buildMyRoute(input).next?.questId).toBe(routeNext(next).kind === 'quest' ? (routeNext(next) as { questId: string }).questId : undefined);
+  });
+
+  it('goalSourcesOf: a classic plan without meta reads as meta null', () => {
+    expect(goalSourcesOf({ sources: [{ id: 'plan:a', kind: 'class', assignedAt: 't', items: [] }] })).toEqual([{ id: 'plan:a', kind: 'class', assignedAt: 't', items: [], meta: null }]);
   });
 });

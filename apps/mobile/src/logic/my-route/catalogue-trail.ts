@@ -95,6 +95,8 @@ function stageRowView(row: StageRow, ctx: CopyContext, i: CatalogueTrailInput, t
         word,
         pips: cell.pips,
         episodeId: cell.state === 'later' ? null : cell.episodeId,
+        // All lessons is a grown-up's catalogue: no learner plan tag.
+        inPlan: null,
         a11yLabel: m.a11y.myRoute.cell(themeLabel, cell.title, word),
       };
     }),

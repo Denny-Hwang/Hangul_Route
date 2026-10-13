@@ -1,23 +1,26 @@
-import type { MinigameKind, ProgressSnapshot, StageKey, ThemeKey } from '@hangul-route/content-schema';
+import type { DateKey, MinigameKind, ProgressSnapshot, StageKey, ThemeKey } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import {
   canDoCopy,
   cellWord,
   heroCopy,
   newQuestsCopy,
+  routeCardCopy,
   skillCopy,
   skillsNoteCopy,
   skillsTitle,
   stageA11yLabel,
   stageCaptions,
   stageStateWord,
-  stageTags,
+  stageTagList,
   tilesCopy,
   trailEntries,
   viewingCopy,
   type CopyContext,
   type HeroCopy,
   type MyRouteMessages,
+  type RouteCardCopy,
+  type StageTagKind,
   type Viewer,
 } from './copy';
 import { letterWallView, type LetterTile, type LetterWallView } from './letter-wall';
@@ -59,8 +62,8 @@ export const stageRowLook = (windowWidth: number): 'pips' | 'bar' => (windowWidt
 
 export interface TagView {
   label: string;
-  /** "You started here" carries the pin glyph. */
-  pin: boolean;
+  /** "You started here" carries the pin glyph, "Your goal" the flag (LR-5a); "You are here" none. */
+  glyph: 'pin' | 'flag' | null;
 }
 
 export interface CellRowView {
@@ -71,6 +74,11 @@ export interface CellRowView {
   pips: Pip[];
   /** The episode to open, or null when the cell is not a button (coming later). */
   episodeId: string | null;
+  /**
+   * "In your plan" (F-ENT-003 `learner.routeNext.tag.inPlan`, the solid ring plus the word) when the
+   * cell's episode is in the plan view (amendment section 4.5); the learner's own page only.
+   */
+  inPlan: string | null;
   a11yLabel: string;
 }
 
@@ -142,7 +150,12 @@ export interface GainTileView {
 
 export interface MyRouteView {
   hero: Hero;
+  /** The card's one button (null in read-only mode); its words are `routeCard`. */
   heroCopy: HeroCopy;
+  /** The route card (amendment section 4.3; LR-D `route-card.md`). */
+  routeCard: RouteCardCopy;
+  /** "Week 3 of your weekly plan" under the card, learner only; never a Next title (section 4.3). */
+  planLine: string | null;
   pose: 'idle' | 'cheering';
   /** Read-only only: "Viewing Sam's Learning Route". */
   viewing: string | null;
@@ -167,7 +180,7 @@ export interface MyRouteViewInput {
   name: string;
   /** Theme titles in the UI locale. */
   themeTitles: Readonly<Record<ThemeKey, string>>;
-  /** The cursor quest's title in the UI locale. */
+  /** The title of the model's next quest (F-ENT-003 `routeNext`) in the UI locale. */
   nextTitle: string | null;
   /** A reviewed shelf story exists (the rest CTA and the stories note). */
   hasStories: boolean;
@@ -175,6 +188,12 @@ export interface MyRouteViewInput {
   seen: SeenRecord | undefined;
   /** The Stage 1 letter wall (`routeLetterWall`, R-7c); none draws no wall. */
   letterWall?: readonly LetterTile[];
+  /** The current week of the goal's weekly plan (`planWeekOf`); absent or null shows no plan line. */
+  week?: number | null;
+  /** Formats the plan's last day for the grown-up "Plan ends" line (LR-OD-7). */
+  formatDay?: (day: DateKey) => string;
+  /** The first visit that shows this reached goal (LR-5c); never in read-only mode. */
+  firstReached?: boolean;
 }
 
 const TONE: Readonly<Record<Exclude<StageState, 'open'>, PillTone>> = {
@@ -191,6 +210,8 @@ const BADGE: Readonly<Record<StageState, BadgeLook>> = {
   open: 'number',
 };
 export const SKILL_ICON: Readonly<Record<Skill, RouteIcon>> = { read: 'book', listen: 'ear', write: 'pencil' };
+/** The glyph beside each trail tag (LR-D `route-card.md`, "Three tags at 320"): the order no longer decides it. */
+const TAG_GLYPH: Readonly<Record<StageTagKind, TagView['glyph']>> = { here: null, goal: 'flag', start: 'pin' };
 
 type GameKey = Exclude<keyof Messages['learner']['myRoute']['games'], 'title' | 'note'>;
 
@@ -237,7 +258,7 @@ export function stageGroups(row: StageRow): Pip[][] {
 
 function stageRowView(row: StageRow, ctx: CopyContext, i: MyRouteViewInput, fresh: ReadonlySet<string>): StageRowView {
   const m = i.messages.learner.myRoute;
-  const tags = stageTags(row, ctx);
+  const inPlan = new Set(ctx.viewer === 'self' ? i.model.inPlanEpisodeIds : []);
   return {
     kind: 'stage',
     key: row.stage,
@@ -248,7 +269,7 @@ function stageRowView(row: StageRow, ctx: CopyContext, i: MyRouteViewInput, fres
     tone: row.state === 'open' ? (row.availability === 'taste' ? 'secondary' : 'primary') : TONE[row.state],
     badge: BADGE[row.state],
     captions: stageCaptions(row, ctx),
-    tags: tags.map((label, index) => ({ label, pin: row.isStart && index === tags.length - 1 })),
+    tags: stageTagList(row, ctx).map((tag) => ({ label: tag.label, glyph: TAG_GLYPH[tag.kind] })),
     a11yLabel: stageA11yLabel(row, ctx),
     groups: stageGroups(row),
     fill: stageFill(row),
@@ -257,6 +278,8 @@ function stageRowView(row: StageRow, ctx: CopyContext, i: MyRouteViewInput, fres
     cells: row.cells.map((cell) => {
       const themeLabel = i.themeTitles[cell.theme];
       const word = cellWord(cell, ctx);
+      const planTag = cell.episodeId !== null && inPlan.has(cell.episodeId) ? i.messages.learner.routeNext.tag.inPlan : null;
+      const label = i.messages.a11y.myRoute.cell(themeLabel, cell.title, word);
       return {
         key: `${cell.stage}-${cell.theme}`,
         themeLabel,
@@ -265,7 +288,8 @@ function stageRowView(row: StageRow, ctx: CopyContext, i: MyRouteViewInput, fres
         pips: cell.pips,
         // A grown-up never opens an episode from here: EpisodeDetail plays as the device's active learner (amendment 5.1, 6.2).
         episodeId: cell.state === 'later' || ctx.viewer === 'grownup' ? null : cell.episodeId,
-        a11yLabel: i.messages.a11y.myRoute.cell(themeLabel, cell.title, word),
+        inPlan: planTag,
+        a11yLabel: planTag === null ? label : `${label} ${planTag}.`,
       };
     }),
     fresh: [...row.pips, ...row.newPips].some((p) => fresh.has(p.key)),
@@ -345,7 +369,8 @@ function freshKeys(model: MyRouteModel, seen: SeenRecord | undefined): Set<strin
 
 export function myRouteView(i: MyRouteViewInput): MyRouteView {
   const { model, messages } = i;
-  const ctx: CopyContext = { viewer: i.viewer, name: i.name, m: myRouteMessages(messages) };
+  const ctx: CopyContext = { viewer: i.viewer, name: i.name, m: myRouteMessages(messages), goalStage: model.goal?.stage ?? null };
+  const week = i.week;
   const fresh = freshKeys(model, i.seen);
   const rows: TrailRowView[] = trailEntries(model, ctx).map((entry) =>
     entry.kind === 'stage' ? stageRowView(entry.row, ctx, i, fresh) : laterRowView(entry.rows, entry.label, ctx, i),
@@ -354,6 +379,13 @@ export function myRouteView(i: MyRouteViewInput): MyRouteView {
   return {
     hero: model.hero,
     heroCopy: heroCopy(model, ctx, { nextTitle: i.nextTitle, hasStories: i.hasStories }),
+    routeCard: routeCardCopy(model, ctx, {
+      nextTitle: i.nextTitle,
+      ...(i.firstReached === undefined ? {} : { firstReached: i.firstReached }),
+      ...(i.formatDay === undefined ? {} : { formatDay: i.formatDay }),
+    }),
+    // The learner's own weekly plan week only: grown-up views carry the plan end date instead (LR-OD-7).
+    planLine: i.viewer === 'self' && typeof week === 'number' && week >= 1 ? messages.learner.myRoute.home.strip.week(week) : null,
     pose: hoyaPoseFor(model, i.seen),
     viewing: viewingCopy(ctx),
     newQuests: newQuestsCopy(model, ctx),

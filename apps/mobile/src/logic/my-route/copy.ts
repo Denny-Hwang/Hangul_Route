@@ -208,14 +208,22 @@ export function stageCaptions(row: StageRow, ctx: CopyContext): string[] {
   return lines;
 }
 
-export function stageTags(row: StageRow, ctx: CopyContext): string[] {
+/** Which tag a stage row carries; the screen draws the pin beside `start` and the flag beside `goal`. */
+export type StageTagKind = 'here' | 'goal' | 'start';
+
+/** The row's tags with their kind, in the order they show: where you are, where you are going, where you began. */
+export function stageTagList(row: StageRow, ctx: CopyContext): { kind: StageTagKind; label: string }[] {
   const { learner, grownup } = ctx.m;
   const g = isGrownup(ctx);
-  const tags: string[] = [];
-  if (row.here) tags.push(g ? grownup.hereTag(ctx.name) : learner.tag.here);
-  if (isGoalRow(row, ctx)) tags.push(g ? grownup.goalTag(ctx.name) : learner.tag.goal);
-  if (row.isStart) tags.push(g ? grownup.started(ctx.name) : learner.tag.start);
+  const tags: { kind: StageTagKind; label: string }[] = [];
+  if (row.here) tags.push({ kind: 'here', label: g ? grownup.hereTag(ctx.name) : learner.tag.here });
+  if (isGoalRow(row, ctx)) tags.push({ kind: 'goal', label: g ? grownup.goalTag(ctx.name) : learner.tag.goal });
+  if (row.isStart) tags.push({ kind: 'start', label: g ? grownup.started(ctx.name) : learner.tag.start });
   return tags;
+}
+
+export function stageTags(row: StageRow, ctx: CopyContext): string[] {
+  return stageTagList(row, ctx).map((tag) => tag.label);
 }
 
 /** The goal stage's row (Learning Route amendment section 4.3): its tag sits after "You are here" and before "You started here". */

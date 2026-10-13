@@ -5,16 +5,21 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useMemo } from 'react';
 import { View } from 'react-native';
+import { bundleOs, flags, gatingActive } from '../../config/flags';
+import { episodesAll, questsAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
+import { dayKey } from '../../logic/homework/mission-builder';
 import { dashboardRowView, type DashboardRowView } from '../../logic/my-route/dashboard-row';
 import { buildMyRoute } from '../../logic/my-route/model';
 import { localizedRouteContent, routeModelInput } from '../../logic/my-route/route-input';
 import { emptySnapshot } from '../../logic/my-route/view';
 import { bandLabel } from '../../logic/placement/copy';
 import { startingSpotRow } from '../../logic/placement/report-page';
+import { routeNextInputOf } from '../../logic/route-next';
 import type { RootStackParamList } from '../../navigation/types';
+import { usePlanStore } from '../../store/plan-store';
 import { useProgressStore } from '../../store/progress-store';
-import { useAccessTier } from '../../store/tier-store';
+import { questOpenFor, useAccessTier } from '../../store/tier-store';
 import { SKILL_ACCENT } from '../my-route/SkillsCard';
 
 /**
@@ -27,8 +32,9 @@ import { SKILL_ACCENT } from '../my-route/SkillsCard';
  * grown-up gate: seven drawn segments with a text list for screen readers,
  * Now, the goal when one exists, Started when a level check exists, the read,
  * listen and write mini rows, the skills note and See Learning Route, which
- * opens the page forced read-only. It builds the same model as the page, sends
- * no telemetry and writes nothing.
+ * opens the page forced read-only. It builds the same model as the page, from
+ * the same F-ENT-003 input (LR-5a), so its goal line names the page's goal. It
+ * sends no telemetry and writes nothing.
  */
 
 /** Read by assistive tech, drawn nowhere (the 1 x 1 clipped box of the web sr-only pattern, as ExtraCardsBanner). */
@@ -144,19 +150,34 @@ export function LearningRouteRow({
   const hydrated = useProgressStore((s) => s.hydratedFor.has(profileId));
   // The learner's access tier (F-ENT-003 section 3.4); re-renders when it changes, as the page does.
   const tier = useAccessTier(profileId);
+  // This learner's cached inbox plans: the goal follows them (amendment section 4.1).
+  const plans = usePlanStore((s) => s.byLearner[profileId]);
   const localized = useMemo(() => localizedRouteContent(locale), [locale]);
 
   const view = useMemo((): DashboardRowView | null => {
     try {
       const snapshot = stored ?? emptySnapshot(profileId);
-      const model = buildMyRoute(routeModelInput({ snapshot, tier, localized, now: new Date() }));
+      const now = new Date();
+      const next = routeNextInputOf({
+        snapshot,
+        profileId,
+        today: dayKey(now.toISOString()),
+        plans,
+        quests: questsAll,
+        episodes: episodesAll,
+        tier,
+        gatingActive: gatingActive(flags, bundleOs()),
+        isQuestOpen: questOpenFor(profileId, now, snapshot),
+      });
+      const model = buildMyRoute(routeModelInput({ snapshot, tier, localized, now, next }));
       const spot = showStarted ? startingSpotRow(snapshot.placements) : null;
       const started = spot === null ? null : { stage: spot.level.stage, band: bandLabel(messages, spot.level), date: formatDate(locale, spot.takenAt, 'monthDay') };
-      return dashboardRowView({ model, messages, name, started });
+      // The same goal the page's route card shows (LR-5a; R-9b shipped the slot).
+      return dashboardRowView({ model, messages, name, started, goalStage: model.goal?.stage ?? null });
     } catch {
       return null;
     }
-  }, [stored, profileId, name, showStarted, tier, locale, localized, messages]);
+  }, [stored, profileId, name, showStarted, tier, plans, locale, localized, messages]);
 
   if (!hydrated) return null;
   const onOpen = (): void => navigation.navigate('MyRoute', { profileId, viewer: 'grownup' });
