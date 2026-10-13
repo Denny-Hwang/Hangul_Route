@@ -86,7 +86,7 @@ import { PictureArt } from '../minigames/PictureArt';
 import { LinkButton } from '../placement/parts';
 import { NotesHomeCard } from '../notes/NotesHomeCard';
 import { PlanSlotCard, usePlanSlot } from '../route/PlanPromptCard';
-import { firstFreeTopicKey, pickerTopics, topicWords } from '../vocab/topic-data';
+import { firstFreeTopicKey, pickerTopics, topicWords, wordsOffered } from '../vocab/topic-data';
 import { FreeEndCard } from './FreeEndCard';
 import { freeTopicsInBuild, samplerStoryOf } from './free-end-inputs';
 import { RouteStrip } from './RouteStrip';
@@ -285,9 +285,10 @@ export function HomeScreen(): React.ReactElement {
   );
 
   // The "Words are ready" nudge (F-VOC-005 section 3.7): which shown, open topic opens a word. Built
-  // only with Words on; with the flag off the nudge is null and Home is unchanged.
+  // only while Words is offered (`flags.vocabTopicsEnabled`, or the e2e fixture bundle, never a release
+  // build); with the flag off the nudge is null and Home is unchanged.
   const vocabTopicOf = useMemo(() => {
-    if (!flags.vocabTopicsEnabled) return null;
+    if (!wordsOffered()) return null;
     const gating = gatingActive(flags, bundleOs());
     return topicRefIndex(pickerTopics(), topicWords, (key) => !isContentLocked({ kind: 'vocab-topic', id: key, tier, gatingEnabled: gating }));
   }, [tier]);

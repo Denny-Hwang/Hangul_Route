@@ -11,7 +11,7 @@ import { caregiverWordsRow } from '../../logic/vocab/caregiver-row';
  * existing screen, no new wireframe): "N collected, M strong", the first-try rate, and up to three
  * words to look at together, each a `KoreanText` with its romanization and gloss. The same caregiver
  * typography as the Starting spot row; plain text, never a chart or a rank. A learner with no word
- * draws nothing. The caller renders it only with `flags.vocabTopicsEnabled` on.
+ * draws nothing. The caller renders it only while Words is offered (`wordsOffered`, the flag).
  */
 export function VocabDashboardRow({
   snapshot,
