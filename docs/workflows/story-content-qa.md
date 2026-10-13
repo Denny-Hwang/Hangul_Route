@@ -2,7 +2,7 @@
 
 How a heritage story goes from research to the shelf, and what "verified" means. Source of truth: `docs/specs/F-STORY-005-episode-catalogue-grid.md` §3.9 (process) and §3.10 (licensing), on top of `docs/specs/F-STORY-001-story-schema-pipeline.md` (schema §3.2, facts §3.3, verification §3.6, corrections §3.7, validators §3.8).
 
-F-STORY-001 enforces the structure: every non-framing scene cites facts, sources are https and authoritative, numbers echo their facts or are marked as approximations, versions and errata. This page is the **human process** every story goes through before it may hold a `shelf` block, and the lint rules that back it.
+F-STORY-001 enforces the structure: every non-framing scene cites facts, sources are https and authoritative, numbers echo their facts or are marked as approximations, versions and errata. This page is the **review process** every story goes through before it may hold a `shelf` block, and the lint rules that back it.
 
 ## 1. The passes
 
@@ -15,13 +15,13 @@ Every story passes through all eight steps in order. A step is never skipped, an
 | 2 Reviser | author side | `<cluster>.revised.json` and `<cluster>.changes.md` | every checker issue is marked FIXED, SOFTENED, REMOVED, REJECTED (with a reason) or EXTENDED |
 | 3 Final check | a third independent verifier | `<cluster>.final.json` with `verification { passes: 3, checked_at, notes }`, and `<cluster>.signoff.md` | every cited URL re-opened (archive copies when a site refuses connections), quotes machine-matched, a source chosen independently per episode; corrections, remaining uncertainty and a per-episode YES |
 | 4 Import | tool | `scripts/import-heritage.mjs` writes `content/stories/<slug>.json` with `state: "draft"` and the cluster `verification` copied with `scope: "cluster"` | nothing is retyped; gaps become lint findings |
-| 5 Native language review | a native Korean speaker with editorial authority (owner task) | `review.language: "native-reviewed"`, `review.reviewedBy` (initials), `review.reviewedAt` | Korean strings read for spelling (맞춤법) and naturalness; Revised Romanization is machine-checked (F-CNT-002) |
-| 6 Culture review | a reviewer for heritage accuracy and sensitivity (owner task) | `review.culture: "culture-reviewed"`, initials and date; `review.advisory` confirmed | folk-tale framing, tone, omissions, advisories for grown-ups |
+| 5 Native language review | a multi-agent review as the final review (owner decision 2026-10-12, the process of the vocabulary review #185; F-STORY-005 §3.9, F-STORY-001 §3.6) | `review.language: "native-reviewed"`, `review.reviewedBy: "MAR"`, `review.reviewedAt` | Korean strings read for spelling (맞춤법) and naturalness; Revised Romanization is machine-checked (F-CNT-002) |
+| 6 Culture review | a multi-agent review for heritage accuracy and sensitivity as the final review (owner decision 2026-10-12, same process) | `review.culture: "culture-reviewed"`, `reviewedBy: "MAR"` and date; `review.advisory` confirmed | folk-tale framing, tone, omissions, advisories for grown-ups |
 | 7 Publish | CI and owner | `state: "ready"`, a `shelf` block, green lint | the gate below |
 
 The research working files live in `content/stories/research/` (only `<cluster>.final.json`, `.signoff.md` and `.changes.md` are kept). The importer reads only `.final.json` files; `MIN_VERIFICATION_PASSES` is 3 (F-STORY-001 §3.6).
 
-Passes 5 and 6 each sign separately. The story has one `reviewedBy` / `reviewedAt` pair, so each reviewer also appends one line to `verification.notes` (initials, date, and which review) and says so in the PR description, so the earlier sign-off is never lost.
+Passes 5 and 6 are separate multi-agent reviews with separate findings, and each signs separately. Both sign as `MAR`, and the story has one `reviewedBy` / `reviewedAt` pair, so each pass also appends one line to `verification.notes` (`MAR`, the date, and which review: language or culture) and lists its findings and their outcomes in the PR description, so the two sign-offs stay distinguishable and the earlier one is never lost. `native-reviewed` and `culture-reviewed` are schema tokens meaning that pass is complete; no learner, grown-up, store or site copy may say a story was reviewed by a native speaker or a human expert (F-STORY-001 §3.6).
 
 ## 2. Sources
 
