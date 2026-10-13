@@ -43,7 +43,13 @@ export function topicRefIndex(
 /**
  * The nudge for today's plan, or null: with the flag off (Home unchanged),
  * without a snapshot or a slice, or with fewer than three due words that a
- * shown topic opens. `today` is the device's local day (P5).
+ * shown topic opens. `today` is the device's local day (P5), the day the
+ * schedule writes `due` in. Home pins the plan, and keys the collected state
+ * and the shown event, by the plan's UTC day key (`dayKey`, F-HW-001), so the
+ * card uses two day bases: far from UTC the due count frozen into a pinned
+ * plan is the local day's count, and the card appears or leaves at the UTC
+ * rollover, not at local midnight. Words are never lost and the copy names no
+ * day, so this stays until Home moves its pin to the local day.
  */
 export function homeVocabNudge(i: {
   enabled: boolean;

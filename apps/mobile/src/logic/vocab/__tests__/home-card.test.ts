@@ -65,3 +65,38 @@ describe('homeVocabNudge', () => {
     expect(homeVocabNudge({ enabled: true, snapshot: two, topicOf, now: NOW })).toBeNull();
   });
 });
+
+describe('homeVocabNudge and the time zone (two day bases, section 3.7 and P5)', () => {
+  // The due count follows the learner's local day (P5, the day the schedule writes `due` in), while
+  // Home pins the plan by its UTC day key. These pin that split, away from UTC on both sides.
+  const topicOf = topicRefIndex([food, animals, colors], wordsOf);
+  const dueOn = (day: string) => ({ vocab: progress([state('sagwa-apple', { due: day }), state('bap-rice', { due: day }), state('gae-dog', { due: day })]) });
+
+  function inZone<T>(tz: string, run: () => T): T {
+    const before = process.env.TZ;
+    process.env.TZ = tz;
+    try {
+      return run();
+    } finally {
+      if (before === undefined) delete process.env.TZ;
+      else process.env.TZ = before;
+    }
+  }
+
+  it('west of UTC: an evening after the UTC rollover still counts by the local day', () => {
+    // 2026-10-21T03:00Z is 20:00 on 2026-10-20 in Los Angeles: the plan's UTC day is the 21st.
+    const now = new Date('2026-10-21T03:00:00.000Z');
+    inZone('America/Los_Angeles', () => {
+      expect(homeVocabNudge({ enabled: true, snapshot: dueOn('2026-10-21'), topicOf, now })).toBeNull();
+      expect(homeVocabNudge({ enabled: true, snapshot: dueOn('2026-10-20'), topicOf, now })).toEqual({ topicKey: 'food', due: 3 });
+    });
+  });
+
+  it('east of UTC: a morning before the UTC rollover already counts the new local day', () => {
+    // 2026-10-20T20:00Z is 05:00 on 2026-10-21 in Seoul: the plan's UTC day is still the 20th.
+    const now = new Date('2026-10-20T20:00:00.000Z');
+    inZone('Asia/Seoul', () => {
+      expect(homeVocabNudge({ enabled: true, snapshot: dueOn('2026-10-21'), topicOf, now })).toEqual({ topicKey: 'food', due: 3 });
+    });
+  });
+});

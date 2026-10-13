@@ -126,8 +126,13 @@ describe('slot 3: the vocabulary card first (F-VOC-005 section 3.7)', () => {
   });
 
   it('comes before a replay too (an active learner has one almost every day)', () => {
-    // Slot 1 takes a story; the replay would be slot 3's next link after the next story.
-    const plan = build({ vocab: NUDGE, snapshot: snapshot([done('quest:a', YESTERDAY, 0.5)]), stories: undefined });
+    // Two replayable quests and no stories: slot 1 takes one replay, and without the nudge slot 3
+    // takes the other, so only the chain order puts the vocabulary card ahead of it.
+    const twoReplays = snapshot([done('quest:a', YESTERDAY, 0.5), done('quest:b', YESTERDAY, 0.5)]);
+    const without = build({ vocab: null, snapshot: twoReplays, stories: undefined });
+    expect(slot(without, 1)?.kind).toBe('replay');
+    expect(slot(without, 3)?.kind).toBe('replay');
+    const plan = build({ vocab: NUDGE, snapshot: twoReplays, stories: undefined });
     expect(slot(plan, 1)?.kind).toBe('replay');
     expect(slot(plan, 3)?.kind).toBe('vocab');
   });
