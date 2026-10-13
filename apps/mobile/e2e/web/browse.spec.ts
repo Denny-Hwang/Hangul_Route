@@ -109,6 +109,12 @@ function rememberPersona(page: Page, persona: 'parent' | 'teacher'): Promise<voi
   );
 }
 
+/** The tab is shown again, as a browser fires it: `visibilitychange` at the document, visible, not bubbling. */
+function showTabAgain(): void {
+  Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' });
+  document.dispatchEvent(new Event('visibilitychange'));
+}
+
 const home = (page: Page) => page.getByRole('heading', { name: 'All lessons' });
 const accessTitle = (page: Page) => page.getByRole('heading', { name: 'This page is for parents and teachers.' });
 
@@ -123,25 +129,26 @@ test('a gate pass opens All lessons: the fragment leaves the address, the title 
   expect(Object.keys(before).some((k) => k.startsWith('hr:profiles'))).toBe(true);
 
   await writeGatePass(page);
-  await page.goto('/browse#t=quest:stage1-letters-q1&s=gate');
+  // The learner app opens All lessons in this tab (BR-12a), so the tab can go back: its unlock stays (BD1).
+  await page.evaluate(() => window.location.assign('/browse#t=quest:stage1-letters-q1&s=gate'));
   await expect(home(page)).toBeVisible();
   await expect(page.getByText('Tap a lesson to see what it teaches, then play it. Nothing is saved.')).toBeVisible();
   await expect(page).toHaveURL(/\/browse$/);
   await expect(page).toHaveTitle('Hangul Route lessons');
   await shot(page, 'br6-browse-home-pixel5');
 
-  // A check that nothing was written needs a settle window: let the boot finish its reads, its event and its
-  // flush, then compare the whole store.
-  await page.waitForTimeout(1500);
+  // A check that nothing was written needs a settle window with no positive signal to wait for: let the boot
+  // finish its reads (each gives up after BOOT_READ_TIMEOUT_MS, 2.5 s), its event and its flush, then compare
+  // the whole store.
+  await page.waitForTimeout(3500);
   const after = await readAllStored(page);
   const changed = [...new Set([...Object.keys(before), ...Object.keys(after)])].filter((k) => before[k] !== after[k]);
   expect(changed.filter((k) => !k.startsWith('hr:browse:')), changed.join(', ')).toEqual([]);
   expect(after[LEARNER_QUEUE]).toBe(SEEDED_QUEUE);
-  // This build has no API address, so `track` neither posts nor queues: `browse.opened` itself (its payload,
-  // no profileId, the flush) is pinned by platform/__tests__/browse-opened.test.ts. Here: whatever the browse
-  // queue holds is a browse event that names no one, and no telemetry key other than the two queues exists.
-  const browseQueue = JSON.parse(after[BROWSE_QUEUE] ?? '[]') as Array<{ name: string; profileId?: string }>;
-  expect(browseQueue.filter((event) => !event.name.startsWith('browse.') || event.profileId !== undefined)).toEqual([]);
+  // This build has no API address, so `track` neither posts nor queues `browse.opened`: its payload (no
+  // profileId), its queue and the flush are pinned by platform/__tests__/browse-opened.test.ts, and the boot
+  // order (fences and the browse queue before anything) by platform/__tests__/browse-start.test.ts. What this
+  // case proves end to end: the learner queue is byte-identical and no other telemetry key appears.
   expect(Object.keys(after).filter((k) => k.includes('telemetry') && k !== LEARNER_QUEUE && k !== BROWSE_QUEUE)).toEqual([]);
   // All lessons never clears the grown-up unlock of its tab (F-BROWSE-001 BD1).
   expect(await page.evaluate((k) => sessionStorage.getItem(k), UNLOCK_KEY)).not.toBeNull();
@@ -228,9 +235,11 @@ test('Close goes back to the page the tab came from, else to the learner app for
   await page.getByRole('button', { name: 'Close' }).click();
   await expect(page).toHaveURL(/\/\?from=e2e$/);
 
-  // Typed into the address bar: no referrer, so a gate pass leaves for the learner app.
+  // Typed into the address bar: no referrer, so a gate pass leaves for the learner app, and the tab keeps no unlock.
+  await page.evaluate((k) => sessionStorage.setItem(k, '{"v":1,"at":1,"seen":1,"src":"pin"}'), UNLOCK_KEY);
   await page.goto('/browse');
   await expect(home(page)).toBeVisible();
+  expect(await page.evaluate((k) => sessionStorage.getItem(k), UNLOCK_KEY)).toBeNull();
   await page.getByRole('button', { name: 'Close' }).click();
   await expect(page).toHaveURL(/\/$/);
 });
@@ -252,10 +261,14 @@ test('Close after a later link skips its history entry and goes back to the page
 test('Close in a new tab opened from an app page (a referrer, nothing to go back to) leaves by address', async ({ page, context }) => {
   await page.goto('/?from=e2e');
   await writeGatePass(page);
+  await page.evaluate((k) => sessionStorage.setItem(k, '{"v":1,"at":1,"seen":1,"src":"pin"}'), UNLOCK_KEY);
   // `window.open` copies the tab's sessionStorage (the pass) and sets a same-origin referrer; the new tab's history has one entry.
   const [tab] = await Promise.all([context.waitForEvent('page'), page.evaluate(() => void window.open('/browse', '_blank'))]);
   await expect(home(tab)).toBeVisible();
   expect(await tab.evaluate(() => [document.referrer !== '', history.length])).toEqual([true, 1]);
+  // The copied unlock is gone: this tab cannot go back to a console page, so it keeps nothing (BR-6 review).
+  expect(await tab.evaluate((k) => sessionStorage.getItem(k), UNLOCK_KEY)).toBeNull();
+  expect(await page.evaluate((k) => sessionStorage.getItem(k), UNLOCK_KEY)).not.toBeNull();
   await tab.getByRole('button', { name: 'Close' }).click();
   await expect(tab).toHaveURL(/\/$/);
 });
@@ -280,13 +293,28 @@ test('a tab shown again after 15 idle minutes shows the Access screen without a 
   await expect(home(page)).toBeVisible();
 
   await page.clock.fastForward('14:00');
-  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange', { bubbles: true })));
+  await page.evaluate(showTabAgain);
   await expect(home(page)).toBeVisible();
 
   await page.clock.fastForward('01:00');
-  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange', { bubbles: true })));
+  await page.evaluate(showTabAgain);
   await expect(accessTitle(page)).toBeVisible();
   await expect(home(page)).toHaveCount(0);
+});
+
+test('a reload is not activity: 14 idle minutes, a reload, then 2 more, and the gate pass is over', async ({ page }) => {
+  await page.clock.install({ time: new Date('2026-10-12T09:00:00.000Z') });
+  await page.goto('/');
+  await writeGatePass(page);
+  await page.goto('/browse');
+  await expect(home(page)).toBeVisible();
+
+  await page.clock.fastForward('14:00');
+  await page.reload();
+  await expect(home(page)).toBeVisible();
+  await page.clock.fastForward('02:00');
+  await page.reload();
+  await expect(accessTitle(page)).toBeVisible();
 });
 
 test('at 320 wide the Access screen keeps 64 targets and nothing runs off the page', async ({ page }) => {
