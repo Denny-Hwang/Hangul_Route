@@ -391,15 +391,16 @@ DELETE FROM feedback_notes WHERE id = '<note_id>' AND NOT EXISTS (SELECT 1 FROM 
 
 ## G. Turn on the free plan (web) — 무료 플랜 켜기 (F-ENT-003 E3-11, OD-2)
 
-> 목적: 웹 앱에서 무료 플랜의 경계를 켠다. Stage 1 전체가 무료로 열리고 (OD-1), Stage 2 부터는 미리보기 (Not open yet) 가 된다. **오너만 켠다. Stripe Live 와 같은 릴리스에서만 켠다.** Stripe Live 가 꺼져 있는 동안에는 이 단계를 하지 않는다 (학습자가 결제할 수 없는 경계를 만나게 된다). 이 PR 은 단계만 적어 두며, 운영 변수는 하나도 바꾸지 않는다.
+> 목적: 웹 앱에서 무료 플랜의 경계를 켠다. Stage 1 전체가 무료로 열리고 (OD-1), Stage 2 부터는 미리보기 (Not open yet) 가 된다. **오너만 켠다. Stripe Live 와 같은 릴리스에서만 켠다.** Stripe Live 가 꺼져 있는 동안에는 이 단계를 하지 않는다 (학습자가 결제할 수 없는 경계를 만나게 된다). 이 단계는 F-ENT-003 E3-11 에서 문서로만 추가되었고, 그때 운영 변수는 하나도 바뀌지 않았다.
 
 **선행 조건 (모두 예일 때만)**
 1. F-ENT-003 E3-12b 와 E3-12c 가 머지됨 (어른 화면의 무료 레슨 줄).
 2. 다음 문구 그룹의 ko · es 오버레이가 들어 있고 원어민 검토를 마침: `console.access`, `console.curriculum.freeDays`, `caregiver.access`, `caregiver.plan.freePlan`. 없으면 한국어·스페인어 콘솔과 Plan 화면이 이 줄들을 영어로 보여 준다.
 3. 배포할 커밋에서 스위치를 켠 e2e 레인이 통과함 (저장소 쪽에서 돌리고 결과를 PR 에 남긴다):
    - 스위치를 켠 빌드 (운영과 같은 두 변수, 콘솔도 스위치가 켜진 채로 합쳐진다): `EXPO_PUBLIC_CONTENT_GATING_ENABLED=true NEXT_PUBLIC_CONTENT_GATING_ENABLED=true pnpm --filter @hangul-route/mobile build:web`, 그다음 `E2E_CONTENT_GATING=1 pnpm --filter @hangul-route/mobile exec playwright test free-days plan-next plan-free-lines free-end episode-access dashboard-free-line`
+   - 스위치를 켠 레인은 `E2E_CONTENT_GATING` 을 읽는 모든 spec 이다. 새 spec 이 빠지지 않게 목록을 `git grep -l E2E_CONTENT_GATING apps/mobile/e2e/web` 으로 다시 확인한다. 쪽지 빌드 플래그도 같은 릴리스에서 켜면 `E2E_NOTES=1 E2E_CONTENT_GATING=1 pnpm --filter @hangul-route/mobile exec playwright test notes-screens` 도 돌린다 (쪽지 플래그도 켠 빌드에서). F-ENT-003 E3-13 의 CI 레인이 생기기 전까지는 이 수동 실행이 유일한 확인이므로, 결과에 커밋 SHA 를 함께 적는다.
    - 게이팅 픽스처 번들: `pnpm --filter @hangul-route/mobile build:web:fixtures:gated`, 그다음 `STORY_FIXTURES_GATED=1 pnpm --filter @hangul-route/mobile exec playwright test story-shelf-gated.spec free-days`
-   - 같은 커밋의 CI `Build PWA · offline e2e` 가 초록 (shard 1 이 게이팅 픽스처 번들에서 `story-shelf-gated.spec` 을 돌린다, F-STORY-004 PR 4.8b 의 릴리스 게이트).
+   - 같은 커밋의 CI `Build PWA · offline e2e` 가 초록 (shard 1 이 게이팅 픽스처 번들에서 `story-shelf-gated.spec` 과 `free-days.spec` 의 직접 이동 케이스를 돌린다, F-STORY-004 PR 4.8b 의 릴리스 게이트).
 4. F-STORY-004 PR 4.8d (고정된 Home 카드의 접근 재확인, #488) 와 PR 4.8e (Home 카드를 누를 때의 접근 확인) 가 머지됨.
 5. F-ENT-003 OD-14 에 답이 있거나 기본값 그대로 둔다.
 6. Stripe Live 를 켜는 릴리스와 같은 창 (§B Step 8 의 Live 절차와 `BILLING_LIVE_ALLOWED`).
@@ -409,7 +410,7 @@ DELETE FROM feedback_notes WHERE id = '<note_id>' AND NOT EXISTS (SELECT 1 FROM 
 2. `hangul-route-web` → Settings → Build → Variables and Secrets → `NEXT_PUBLIC_CONTENT_GATING_ENABLED` = `true` → **Retry deployment**.
 3. 사이트의 무료 문구 "Stage 1 is free." (`landing.plans.free.stage1`) 는 그대로 둔다 (OD-1). 사이트 쪽 변경은 없다.
 
-**확인**: 새 학습자 프로필로 https://app.hangulroute.com 을 열면 Journey 에서 Stage 1 칸에는 고리가 없고, Stage 2 · Stage 4 칸에는 점선 고리 (Not open yet) 가 보인다. Stage 2 칸을 누르면 미리보기와 **Ask a grown-up** 이 나온다. 가격·"Premium"·"trial" 같은 말은 학습자 화면 어디에도 없다.
+**확인**: 새 아이 프로필 (My child 또는 student) 로 https://app.hangulroute.com 을 열면 Journey 에서 Stage 1 칸에는 고리가 없고, Stage 2 · Stage 4 칸에는 점선 고리 (Not open yet) 가 보인다. Stage 2 칸을 누르면 미리보기와 **Ask a grown-up** 이 나온다. (Me 프로필은 **See how to open it**, 반 프로필은 **Ask your teacher or a grown-up** 이 나오며, 이것도 정상이다.) 가격·"Premium"·"trial" 같은 말은 학습자 화면 어디에도 없다.
 
 어른 화면도 확인한다 (1단계의 `NEXT_PUBLIC_CONTENT_GATING_ENABLED` 가 빠지면 콘솔만 조용히 경계 없이 남는다): Family Plan 이 없는 가족의 오너로 https://app.hangulroute.com/parent 를 연다. 게시된 플랜에서 열린 레슨을 모두 끝낸 아이의 카드 (그리고 그 가족의 명단) 에 무료 레슨 줄과 **Open billing** 이 보인다. 같은 가족으로 커리큘럼 마법사를 열면 미리보기에 무료 플랜 안내 (free days) 가 보인다. 공동 보호자 계정에는 이 줄이 없다.
 

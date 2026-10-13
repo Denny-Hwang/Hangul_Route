@@ -27,7 +27,8 @@ import { expectNoHorizontalOverflow } from './viewport';
  *   pnpm --filter @hangul-route/mobile build:web:fixtures:gated
  *   STORY_FIXTURES_GATED=1 pnpm --filter @hangul-route/mobile exec playwright test free-days
  *
- * CI runs the release build (switch off): every lesson open, no ring and no preview.
+ * CI runs the release build (switch off): every lesson open, no ring and no preview; and shard 1's
+ * gating fixture step runs the direct-navigation case.
  */
 const GATED = process.env.E2E_CONTENT_GATING === '1';
 const GATED_FIXTURES = process.env.STORY_FIXTURES_GATED === '1';
@@ -165,7 +166,10 @@ test.describe('free plan switch on (web)', () => {
     for (const day of FREE) {
       await home(page, 'Dami');
       await openCell(page, day.stage, day.theme);
-      await expect(page.getByRole('button', { name: 'Start', exact: true })).toHaveCount(day.questIds.length);
+      // One open Start in each lesson's own row, found by quest id (not by page order).
+      for (const questId of day.questIds) {
+        await expect(page.getByTestId(`episode-quest-${questId}`).getByRole('button', { name: 'Start', exact: true })).toHaveCount(1);
+      }
       await expect(page.getByTestId('episode-preview-card')).toHaveCount(0);
       await expect(page.getByTestId('episode-quest-not-open')).toHaveCount(0);
     }
@@ -206,7 +210,8 @@ test.describe('free plan switch on (web)', () => {
     await expect(page.getByTestId('episode-quest-not-open')).toHaveCount(0);
     await expect(page.getByTestId('episode-preview-card')).toHaveCount(0);
     await page.getByRole('button', { name: 'Play again', exact: true }).first().click();
-    // The player keeps the kept quest: it is not sent back to the lesson page.
+    // The player keeps the kept quest: it opens on Discover, a step only the player shows.
+    await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Lunch Box Words' })).toHaveCount(0);
     await playToResults(page);
     await expect(page.getByRole('button', { name: 'Back home' }).first()).toBeVisible();
@@ -220,17 +225,20 @@ test.describe('free plan switch on (web)', () => {
     const last = LAST_FREE.questIds[LAST_FREE.questIds.length - 1] as string;
     const finished = FREE.flatMap((day) => day.questIds.filter((questId) => questId !== last).map((questId) => ({ questId, episodeId: day.episodeId })));
     const id = await seedFinished(page, finished);
+    // The phone size: the Results free-end card must fit at 320 px.
+    await page.setViewportSize({ width: 320, height: 568 });
     await home(page, 'Mina', false);
     // Not the end yet: no celebration on Home while one free lesson is left.
     await expect(page.getByTestId('home-free-end-card')).toHaveCount(0);
 
     await openCell(page, LAST_FREE.stage, LAST_FREE.theme);
-    await page.getByRole('button', { name: 'Start', exact: true }).last().click();
+    await page.getByTestId(`episode-quest-${last}`).getByRole('button', { name: 'Start', exact: true }).click();
     await playToResults(page);
 
     const card = page.getByTestId('results-free-end-card');
     await expect(card).toBeVisible();
     await expect(card.getByText(access.freeEnd.title)).toBeVisible();
+    await expectNoHorizontalOverflow(page);
     await expect(page.getByTestId('results-free-end-home')).toBeVisible();
     await expect(page.getByTestId('results-free-end-ask')).toHaveText(access.ask.family);
     await expect(page.getByTestId('next-up-card')).toHaveCount(0);
