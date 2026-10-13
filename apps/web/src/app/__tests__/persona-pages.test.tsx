@@ -322,7 +322,7 @@ describe('/teachers (S-4b)', () => {
 
   it('set up in minutes: three numbered steps in one row on wide screens', () => {
     expect(linesOf(html, T.setup.title)).toEqual([T.setup.steps.space, T.setup.steps.code, T.setup.steps.devices]);
-    expect(main).toMatch(/<ol class="hr-site-steps hr-site-steps-wide"/);
+    expect(main).toMatch(/<ol role="list" class="hr-site-steps hr-site-steps-wide"/);
   });
 
   it('plan and assign, privacy for classes: their bullets', () => {
