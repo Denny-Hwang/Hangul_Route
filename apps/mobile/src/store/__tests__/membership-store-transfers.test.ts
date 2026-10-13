@@ -20,7 +20,7 @@ vi.mock('../../config/flags', () => ({
 import { classScopeMarker } from '../../logic/transfers/device-scope';
 import { apiBaseUrl } from '../../platform/sync-api';
 import { track } from '../../platform/telemetry';
-import { TRANSFER_SCOPE_KEY, useMembershipStore } from '../membership-store';
+import { TRANSFERS_ON_KEY, TRANSFER_SCOPE_KEY, useMembershipStore } from '../membership-store';
 import { usePlanStore } from '../plan-store';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
@@ -118,7 +118,9 @@ describe('refresh fills transfersByLearner (section 4.12)', () => {
     signedIn(fakeApi({ getInbox: vi.fn(async () => inbox({ transfers: [req()] })) }));
     await store().refresh(L);
     expect(store().transfersByLearner[L]).toEqual({ enabled: true, deviceConsent: true, selfManaged: false, scope: 'full', requests: [req()] });
-    expect([...mem.keys()].filter((k) => /transfer/i.test(k))).toEqual([]);
+    // Only the on switch is kept across restarts: no request, no prompt.
+    expect([...mem.keys()].filter((k) => /transfer/i.test(k))).toEqual([TRANSFERS_ON_KEY(L)]);
+    expect(mem.get(TRANSFERS_ON_KEY(L))).toBe(true);
   });
 
   it('while locked it holds the off state and calls nothing else (inert)', async () => {
@@ -221,6 +223,28 @@ describe('the class tablet of the old class (section 4.6, 4.12)', () => {
     expect(store().rejoinByLearner[L]).toBe(false);
   });
 
+  it('after a cold start, a class tablet revoked while the app was closed learns it on the first read', async () => {
+    mem.set(TRANSFER_SCOPE_KEY(L), classScopeMarker('sec'));
+    mem.set(TRANSFERS_ON_KEY(L), true);
+    mem.set(`memberships:${L}`, [classA]);
+    signedIn(fakeApi({ getInbox: vi.fn(async () => ({ status: 'error', code: 'http_401' })) }));
+    await store().hydrate(L);
+    await store().refresh(L);
+    expect(store().byLearner[L]).toEqual([]);
+    expect(store().rejoinByLearner[L]).toBe(true);
+  });
+
+  it('an inbox that says moves are off again (a rollback) records it, and a later 401 changes nothing', async () => {
+    mem.set(TRANSFER_SCOPE_KEY(L), classScopeMarker('sec'));
+    signedIn(fakeApi({ getInbox: vi.fn().mockResolvedValueOnce(inbox()).mockResolvedValueOnce(inbox({ transfersEnabled: false })).mockResolvedValue({ status: 'error', code: 'http_401' }) }));
+    await store().refresh(L);
+    await store().refresh(L);
+    expect(mem.get(TRANSFERS_ON_KEY(L))).toBe(false);
+    useMembershipStore.setState({ transfersByLearner: {} });
+    await store().refresh(L);
+    expect(store().byLearner[L]).toEqual([classA]);
+  });
+
   it('while transfers are locked a class tablet keeps its classes on a 401, as before', async () => {
     mem.set(TRANSFER_SCOPE_KEY(L), classScopeMarker('sec'));
     signedIn(fakeApi({ getInbox: vi.fn().mockResolvedValueOnce(inbox({ transfersEnabled: false })).mockResolvedValue({ status: 'error', code: 'http_401' }) }));
@@ -271,6 +295,19 @@ describe('the learner switch (guard 13)', () => {
     signedIn(managed);
     await store().refresh(L);
     expect(managed.putTransferPrefs).not.toHaveBeenCalled();
+  });
+
+  it('a profile changed back to child clears the switch; a profile with no learner type leaves it', async () => {
+    const api = fakeApi({ getInbox: vi.fn(async () => inbox({ selfManaged: true })), putTransferPrefs: vi.fn(async () => ({ status: 'ok', selfManaged: false })) });
+    signedIn(api);
+    useProfileStore.setState({ profiles: [{ id: L, displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't', learnerType: 'child' }] });
+    await store().refresh(L);
+    expect(api.putTransferPrefs).toHaveBeenCalledWith(L, { selfManaged: false }, { deviceId: 'device-test', secret: 'sec' });
+    expect(store().transfersByLearner[L]?.selfManaged).toBe(false);
+    api.putTransferPrefs.mockClear();
+    useProfileStore.setState({ profiles: [{ id: L, displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't' }] });
+    await store().refresh(L);
+    expect(api.putTransferPrefs).not.toHaveBeenCalled();
   });
 
   it('a refused switch leaves the inbox value', async () => {

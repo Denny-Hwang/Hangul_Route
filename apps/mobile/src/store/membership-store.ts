@@ -51,6 +51,11 @@ export type TransferRequestOutcome = { ok: true; request: InboxTransfer } | Tran
 
 /** The device's scope marker for a learner (`logic/transfers/device-scope.ts`). */
 export const TRANSFER_SCOPE_KEY = (learnerId: string): string => `transfer-scope:${learnerId}`;
+/**
+ * Whether the last inbox said moves are on for this learner. Only this switch is kept across restarts (no request,
+ * no prompt): a class tablet revoked while the app was closed still learns on its first read that it must join again.
+ */
+export const TRANSFERS_ON_KEY = (learnerId: string): string => `transfers-on:${learnerId}`;
 
 export type LookupOutcome =
   | { ok: true; space: { id: string; kind: LearnerMembership['kind']; name: string }; full: boolean; roster: RosterName[] }
@@ -153,7 +158,7 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
     if (result.status !== 'ok') {
       // After a move the old class's tablet is revoked (section 4.6): its classes are gone until it joins again.
       // Only while the inbox says moves are on, so nothing changes for a learner while transfers are locked.
-      if (result.code === 'http_401' && get().transfersByLearner[learnerId]?.enabled === true && (await scopeOf(learnerId, creds)) === 'class') {
+      if (result.code === 'http_401' && (await transfersWereOn(learnerId)) && (await scopeOf(learnerId, creds)) === 'class') {
         put(learnerId, []);
         set((s) => ({ rejoinByLearner: { ...s.rejoinByLearner, [learnerId]: true }, transfersByLearner: withoutKey(s.transfersByLearner, learnerId) }));
       }
@@ -185,7 +190,9 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
     const enabled = raw.transfersEnabled ?? false;
     let selfManaged = raw.selfManaged ?? false;
     const scope = await scopeOf(learnerId, creds);
-    const before = get().transfersByLearner[learnerId]?.requests ?? [];
+    const previous = get().transfersByLearner[learnerId];
+    const before = previous?.requests ?? [];
+    if (previous?.enabled !== enabled) await writeJson(TRANSFERS_ON_KEY(learnerId), enabled);
     set((s) => ({
       transfersByLearner: {
         ...s.transfersByLearner,
@@ -206,10 +213,13 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       if (stale) reread = true;
     }
 
-    // The learner's own switch (guard 13): a self profile manages its own classes (spec A11).
+    // The learner's own switch (guard 13): a self profile manages its own classes (spec A11), and a profile
+    // changed back to child stops. A profile with no learner type (relinked or restored) leaves the switch alone,
+    // so a second device never undoes the learner's own choice.
     const profile = useProfileStore.getState().profiles.find((p) => p.id === learnerId);
-    if (enabled && scope === 'full' && profile?.learnerType === 'self' && !selfManaged) {
-      const sent = await client.putTransferPrefs(learnerId, { selfManaged: true }, creds);
+    const wanted = profile?.learnerType === 'self' ? true : profile?.learnerType === 'child' ? false : null;
+    if (enabled && scope === 'full' && wanted !== null && wanted !== selfManaged) {
+      const sent = await client.putTransferPrefs(learnerId, { selfManaged: wanted }, creds);
       if (sent.status === 'ok') {
         selfManaged = sent.selfManaged;
         set((s) => {
@@ -223,6 +233,13 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
     // Plans and access switch at once: read the inbox again and send the snapshot.
     useSyncStore.getState().requestSync(learnerId);
     return refreshInbox(learnerId, true);
+  }
+
+  /** Moves were on at the last inbox: in this session, or as the last session left it. */
+  async function transfersWereOn(learnerId: string): Promise<boolean> {
+    const known = get().transfersByLearner[learnerId];
+    if (known) return known.enabled;
+    return (await readJson<unknown>(TRANSFERS_ON_KEY(learnerId))) === true;
   }
 
   /** The API and this device's credentials for a move call, or why there are none (never registers: a move needs a synced learner). */
