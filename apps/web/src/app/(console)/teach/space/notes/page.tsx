@@ -8,11 +8,13 @@ import { Suspense, useCallback, useEffect, useId, useRef, useState } from 'react
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { MoveButton, TransferSheet } from '@/components/console/TransferParts';
 import { NOTES_CSS, NoteComposer, NotesTabs, SentList, type SentListState } from '@/components/console/NotesParts';
+import { ReceivedPanel } from '@/components/console/FamilyNotesParts';
 import { useConsole } from '@/components/console/use-console';
 import { useNotesApi } from '@/components/console/use-notes-api';
 import type { Roster } from '@/lib/console/api';
 import { contentGatingEnabled, notesEnabled } from '@/lib/console/config';
 import { spaceCoverage, type SpaceCoverage } from '@/lib/console/curriculum';
+import { receivedLearner, viewerSendGrant } from '@/lib/console/family-notes';
 import { questClosedLine, withdrawProblem, type SentNoteRow, type SentRowView } from '@/lib/console/notes';
 import { FAMILY_TABS, notesPageHref, notesPageQuery, notesSender, questPrefill, type FamilyTab } from '@/lib/console/notes-page';
 import { ROUTES, isKnownSpaceKind, spaceErrorText, spaceKindOfPath, type SpaceError } from '@/lib/console/routing';
@@ -25,8 +27,9 @@ const BACK_GLYPH = 20;
  * console/note-composer.md and console/family-notes.md; screen specs design/screens/notes/sent-list.md, composer.md,
  * family-notes.md): `/teach/space/notes?id=<classId>` and its `/parent/space/notes` twin.
  *
- * A class reads its sent list with **New note**; a family reads the same rows on its **Sent** tab with **Send a note**
- * (FB-12 adds the Received tab, the family default). `&compose=1` opens the composer sub-view over the list;
+ * A class reads its sent list with **New note**; a family reads the same rows on its **Sent** tab with **Send a note**,
+ * and every note one learner received on its **Received** tab, the default (FB-12, `console/family-notes.md`; the
+ * Learner select picks the learner, `&learner=`). `&compose=1` opens the composer sub-view over the list;
  * `&learner=` (an opaque id) filters the list and preselects that learner; `&quest=` prefills a catalogue quest.
  * Rendered only while `notesEnabled()`; off, the address goes back to the space page and nothing is asked of the
  * Worker. Sending also needs the Worker switch `NOTES_SEND`, which this page never changes.
@@ -47,6 +50,9 @@ function NotesInner(): JSX.Element {
   // Whether this viewer's role sends here (section 6.1). Unknown (the spaces read failed) leaves the action in place:
   // the Worker decides, and the composer words its refusal.
   const [canSend, setCanSend] = useState(true);
+  // A family caregiver's send grant (OD-17, FB-12): false only when the family's list says so; null (unknown) leaves
+  // Send a note; undefined until the list answered, so a `&compose=1` arrival never opens the composer before it.
+  const [grant, setGrant] = useState<boolean | null | undefined>(undefined);
   const [rows, setRows] = useState<SentNoteRow[]>([]);
   const [next, setNext] = useState<string | null>(null);
   const [listState, setListState] = useState<SentListState>('loading');
@@ -99,9 +105,10 @@ function NotesInner(): JSX.Element {
   }, [api, enabled, q.spaceId]);
 
   // The list waits for the roster: a school, a space this viewer cannot open or one that is gone never asks for it.
-  const rosterReady = roster !== null;
+  // A family reads its sent list on the Sent tab only; the Received tab reads its own (FB-12).
+  const rosterKind = roster?.space.kind ?? null;
   const loadList = useCallback(async (): Promise<void> => {
-    if (!notesApi || !enabled || !rosterReady) return;
+    if (!notesApi || !enabled || rosterKind === null || (rosterKind === 'family' && q.tab !== 'sent')) return;
     const call = ++latest.current;
     setListState('loading');
     setRows([]);
@@ -112,7 +119,20 @@ function NotesInner(): JSX.Element {
       setNext(result.data.next);
       setListState('ready');
     } else setListState('error');
-  }, [notesApi, enabled, rosterReady, q.spaceId, q.learner]);
+  }, [notesApi, enabled, rosterKind, q.spaceId, q.learner, q.tab]);
+
+  // Who may send in this family (panel D's list, readable by every caregiver): a caregiver without the grant sees why.
+  const accountId = session?.accountId ?? '';
+  useEffect(() => {
+    if (!notesApi || !enabled || rosterKind !== 'family') return;
+    let live = true;
+    void notesApi.noteSenders(q.spaceId).then((result) => {
+      if (live) setGrant(viewerSendGrant(result.ok ? result.data : null, accountId));
+    });
+    return () => {
+      live = false;
+    };
+  }, [notesApi, enabled, rosterKind, q.spaceId, accountId]);
 
   useEffect(() => {
     void loadRoster();
@@ -129,6 +149,12 @@ function NotesInner(): JSX.Element {
   const family = kind === 'family';
   const side = family ? 'family' : 'class';
   const tab: FamilyTab | undefined = family ? q.tab : undefined;
+  // One learner at a time on the Received tab (wireframe A); a family with no learners has no tabs at all.
+  const familyLearners = family && roster ? roster.learners : [];
+  const shown = receivedLearner(familyLearners, q.learner);
+  const noLearners = family && roster !== null && familyLearners.length === 0;
+  // Send a note stays in place for a caregiver without the grant, unavailable and described by why (screen spec, States).
+  const notGranted = family && grant === false;
 
   const openComposer = (): void => {
     openedHere.current = true;
@@ -219,12 +245,24 @@ function NotesInner(): JSX.Element {
         </Link>
         <div className="hr-notes-head">
           <h1>{title}</h1>
-          {canSend && !rosterError ? (
-            <button type="button" className="hr-notes-btn hr-notes-primary" onClick={openComposer} data-testid="notes-new">
+          {canSend && !rosterError && !noLearners ? (
+            <button
+              type="button"
+              className="hr-notes-btn hr-notes-primary"
+              onClick={notGranted ? undefined : openComposer}
+              aria-disabled={notGranted || undefined}
+              aria-describedby={notGranted ? `${panelId}-not-granted` : undefined}
+              data-testid="notes-new"
+            >
               {family ? n.sendNote.cta : n.newNote.cta}
             </button>
           ) : null}
         </div>
+        {notGranted && !rosterError && !noLearners ? (
+          <p className="hr-notes-quiet" id={`${panelId}-not-granted`}>
+            {n.composer.errors.notAllowed}
+          </p>
+        ) : null}
         {rosterError ? (
           <div className="hr-notes-state" role="alert">
             <p>{spaceErrorText(rosterError, locale)}</p>
@@ -235,8 +273,29 @@ function NotesInner(): JSX.Element {
             ) : null}
           </div>
         ) : null}
-        {rosterError ? null : family ? (
+        {rosterError ? null : noLearners ? (
+          <div className="hr-notes-state">
+            <p>{n.family.noLearners}</p>
+          </div>
+        ) : family ? (
           <>
+            {q.tab === 'received' && familyLearners.length > 1 && shown ? (
+              <label className="hr-notes-field-inline">
+                {n.family.learner}
+                <select
+                  className="hr-notes-select"
+                  data-testid="notes-learner"
+                  value={shown.id}
+                  onChange={(event) => router.replace(notesPageHref(q.spaceId, kind, { learner: event.target.value, tab: q.tab }))}
+                >
+                  {familyLearners.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.displayName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
             <NotesTabs<FamilyTab>
               tabs={FAMILY_TABS}
               current={q.tab}
@@ -246,14 +305,14 @@ function NotesInner(): JSX.Element {
               onSelect={(t) => router.replace(notesPageHref(q.spaceId, kind, { learner: q.learner, tab: t }))}
             />
             <div className="hr-notes-panel" role="tabpanel" id={panelId} aria-labelledby={`${panelId}-tab-${q.tab}`}>
-              {list}
+              {q.tab === 'sent' ? list : shown && notesApi && roster ? <ReceivedPanel key={shown.id} notesApi={notesApi} familyId={roster.space.id} learner={shown} m={m} locale={locale} /> : null}
             </div>
           </>
         ) : (
           <div className="hr-notes-panel">{list}</div>
         )}
       </div>
-      {q.compose && roster && notesApi && canSend ? (
+      {q.compose && roster && notesApi && canSend && (!family || grant !== undefined) && !notGranted ? (
         <NoteComposer
           notesApi={notesApi}
           space={{ id: roster.space.id, kind: roster.space.kind, name: roster.space.name, archived: roster.space.archivedAt !== null }}

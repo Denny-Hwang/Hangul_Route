@@ -11,11 +11,8 @@ type IconName = (typeof iconNames)[number];
  * URL says, where the page's links go and what the composer starts with. Ids only: no learner name ever reaches a URL.
  */
 
-/**
- * The family page's tabs, the default first. FB-11a builds the Sent tab; FB-12 adds `received` in front of it, the
- * default tab of section 6.13.
- */
-export const FAMILY_TABS = ['sent'] as const satisfies ReadonlyArray<'received' | 'sent'>;
+/** The family page's tabs, the default first: Received (FB-12), the default tab of section 6.13, then Sent (FB-11a). */
+export const FAMILY_TABS = ['received', 'sent'] as const satisfies ReadonlyArray<'received' | 'sent'>;
 export type FamilyTab = (typeof FAMILY_TABS)[number];
 
 export interface NotesPageQuery {
