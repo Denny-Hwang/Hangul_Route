@@ -444,8 +444,8 @@ describe('ko / es notes strings (FB-5b, OD-15)', () => {
   });
 
   it('ko: the teacher-only preset names the class, the family-only one does not; next steps carry no deadline', () => {
-    expect(ko$.common.notes.presets.warm_see_you_in_class).toMatch(/수업|반/);
-    expect(ko$.common.notes.presets.warm_learning_together).not.toMatch(/수업|반에서|선생님/);
+    expect(ko$.common.notes.presets.warm_see_you_in_class).toMatch(/수업|반에서|반 친구/);
+    expect(ko$.common.notes.presets.warm_learning_together).not.toMatch(/수업|반에서|반 |선생님/);
     for (const id of NOTE_PRESET_IDS.filter((p) => p.startsWith('next_'))) {
       expect(findWord(ko$.common.notes.presets[id], ['까지', '오늘', '내일', '지금', '당장', '이 글자', '이것들'], 'ko'), id).toBeNull();
     }
@@ -482,7 +482,12 @@ describe('ko / es notes strings (FB-5b, OD-15)', () => {
   });
 
   it('ko: pins the lines the multi-agent review changed (names never before a consonant-dependent particle)', () => {
-    expect(ko$.common.notes.familyLabels.aunt).toBe('이모');
+    // 'Aunt' covers both sides of the family: 이모 alone is only the mother's sister, 고모 the father's.
+    expect(ko$.common.notes.familyLabels.aunt).toBe('이모/고모');
+    // One field separator per line: the sender after a colon, so a class sender's own '·' stays readable.
+    expect(ko$.learner.notes.home.title('선생님 · Sunday Class A')).toBe('쪽지가 왔어요. 보낸 사람: 선생님 · Sunday Class A');
+    expect(ko$.caregiver.notes.report.emergency).toBe('누군가 위험하다면 현지 긴급 신고 번호로 연락해 주세요.');
+    expect(ko$.common.notes.new.pill).toBe('새');
     expect(ko$.caregiver.notes.disclosure('Mina')).toBe('선생님은 자기가 보낸 쪽지에서 Mina의 답을 볼 수 있어요.');
     expect(ko$.console.notes.family.disclosure('Mina')).toBe(
       '선생님은 자기가 보낸 쪽지에서 Mina의 답을 볼 수 있어요. 쪽지를 언제 읽었는지는 볼 수 없어요.',
@@ -491,6 +496,18 @@ describe('ko / es notes strings (FB-5b, OD-15)', () => {
     expect(ko$.console.notes.family.report.reasons.not_for_me('Mina')).toBe('Mina에게 보낸 쪽지가 아니에요');
     expect(ko$.caregiver.notes.empty('Mina')).toBe('아직 Mina에게 온 쪽지가 없어요.');
     expect(ko$.console.notes.family.blockConfirm.body('Mina')).toBe('이제 Mina에게는 이 사람의 쪽지가 오지 않아요. 보낸 사람에게는 알리지 않아요.');
+  });
+
+  it('es: pins the lines the Spanish review changed (one word for notes off; hide names who no longer sees the note)', () => {
+    const es$ = getMessages('es');
+    expect(es$.console.notes.composer.result.notesOff.class(1)).toBe('Notas desactivadas: 1 estudiante.');
+    expect(es$.console.notes.composer.result.notesOff.family(3)).toBe('Notas desactivadas: 3 estudiantes.');
+    for (const path of ['console.notes', 'caregiver.notes', 'learner.notes', 'common.notes']) {
+      for (const { text } of render(lookup(es$, path), path)) expect(/apagad/i.test(text), text).toBe(false);
+    }
+    expect(es$.caregiver.notes.hide.cta('Mina')).toBe('Ocultársela a Mina');
+    expect(es$.caregiver.notes.hide.confirm.title('Mina')).toBe('¿Ocultarle esta nota a Mina?');
+    expect(es$.console.notes.family.hideConfirm.title('Mina')).toBe('¿Ocultarle esta nota a Mina?');
   });
 
   it('ko: the grown-up side names a teacher by the class, never "your child" (section 8.2-a, section 9)', () => {
