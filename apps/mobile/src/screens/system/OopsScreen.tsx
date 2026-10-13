@@ -10,9 +10,11 @@ import { useMessages } from '../../i18n/use-messages';
  */
 export interface OopsScreenProps {
   onRetry: () => void;
+  /** The one action's label; default "Try again". All lessons says "Back to the lesson page" (F-BROWSE-001 section 4.7). */
+  actionLabel?: string;
 }
 
-export function OopsScreen({ onRetry }: OopsScreenProps): React.ReactElement {
+export function OopsScreen({ onRetry, actionLabel }: OopsScreenProps): React.ReactElement {
   const messages = useMessages();
   const m = messages.learner.oops;
   return (
@@ -30,7 +32,7 @@ export function OopsScreen({ onRetry }: OopsScreenProps): React.ReactElement {
         <Spacer size="xl" />
         <HoyaBubble tone="thinking" message={m.bubble} />
         <Spacer size="xl" />
-        <Button label={messages.common.buttons.tryAgain} tone="primary" size="hero" fullWidth onPress={onRetry} />
+        <Button label={actionLabel ?? messages.common.buttons.tryAgain} tone="primary" size="hero" fullWidth onPress={onRetry} />
       </View>
     </Screen>
   );

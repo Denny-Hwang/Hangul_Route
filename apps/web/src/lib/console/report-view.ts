@@ -395,8 +395,8 @@ export interface ReportSpaceRef {
 
 /**
  * The back link (section 3.1): `from=home` to the parent home; `from=roster` to the space's roster; `from=nav` or none
- * to the persona home, which is the space's roster until RP-7c (F-APP-001 A-5b) gives a family its parent home; the
- * console home when the space is not known (a failed load).
+ * to the persona home: the parent home for a family (RP-7c), the roster for a class; the console home when the space
+ * is not known (a failed load), the parent home on a family page.
  */
 export function reportBackLink(
   from: ReportFrom | null,
@@ -406,9 +406,12 @@ export function reportBackLink(
   pageKind?: 'family',
 ): ReportLink {
   const back = getMessages(locale).report.back;
-  // The parent home (F-APP-001 section 3.8, the app's route table): only RP-7c's parent home card sends `from=home`.
+  // The parent home (F-APP-001 section 3.8, the app's route table): the parent home card sends `from=home`.
   if (from === 'home') return { href: APP_ROUTES.parentHome, text: back.home };
   if (space === null) return { href: pageKind === 'family' ? APP_ROUTES.parentHome : ROUTES.home, text: back.home };
+  // From the navigation or with no `from`: the persona home, which is the parent home for a family (RP-7c) and the
+  // roster for a class. From the roster: back to the roster.
+  if (from !== 'roster' && space.kind === 'family') return { href: APP_ROUTES.parentHome, text: back.home };
   return { href: ROUTES.space(space.id, space.kind), text: back.space(space.name) };
 }
 
@@ -901,6 +904,15 @@ function emptyStageOf(summary: ReportSummary): { stage: StageKey; n: number } | 
   return parsed.success ? { stage: parsed.data, n: StageKeySchema.options.indexOf(parsed.data) + 1 } : null;
 }
 
+/**
+ * The stage a strand tip opens in All lessons (RP-13): the journey's here stage when this build can read it, else
+ * `stage1`. A stage key only: nothing of the learner reaches the link.
+ */
+export function reportBrowseStage(summary: ReportSummary | null): StageKey {
+  const parsed = StageKeySchema.safeParse(summary?.journey?.here);
+  return parsed.success ? parsed.data : 'stage1';
+}
+
 // ---------------------------------------------------------------------------------------------
 // The page (RP-7a2)
 
@@ -966,4 +978,23 @@ export function reportScreenOf(input: ReportScreenInput): ReportScreen {
   const message = problem.message ?? m.report.state.error;
   if (problem.kind === 'error' && problem.retry !== null && cached) return { kind: 'report', data: cached, busy: false, error: { message, retry: problem.retry } };
   return { kind: 'state', title: message, retry: problem.retry, back };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Shared with the class report (RP-8)
+
+/** A learner-local day key as "Oct 12" (with the year when it is not `today`'s year). */
+export function reportDayText(day: string, today: string, locale: UiLocale = DEFAULT_LOCALE): string {
+  return dayText(day, { locale, today });
+}
+
+/** The month of a day key as "October 2026". */
+export function reportMonthText(day: string, locale: UiLocale = DEFAULT_LOCALE): string {
+  return monthText(day, locale);
+}
+
+/** A letter with its number of learners, "ㅂ (b): 5" (`report.class.count`), the letter as its own part (`lang="ko"`). */
+export function countedLetter(letter: string, count: number, locale: UiLocale = DEFAULT_LOCALE): ReportSentence {
+  const m = getMessages(locale);
+  return sentence(m, (put) => m.report.class.count(put(letterPart(letter, m)), count));
 }

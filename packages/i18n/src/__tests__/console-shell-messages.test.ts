@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { en } from '../messages/en';
+import { getMessages } from '../resolve';
 
 /**
  * F-APP-001 A-5a (sections 3.8 and 3.15; design/screens/app-shell/adult-frame.md, teacher-home.md):
@@ -18,7 +19,12 @@ describe('console.shell (the adult frame)', () => {
   });
 
   it('labels every item of the navigation registry', () => {
-    expect(c.shell.nav).toEqual({ home: 'Home', reports: 'Reports', notes: 'Notes', classes: 'Classes', lessons: 'Lessons', billing: 'Billing' });
+    expect(c.shell.nav).toEqual({ home: 'Home', reports: 'Reports', notes: 'Notes', classes: 'Classes', lessons: 'Lessons', billing: 'Billing', classReports: 'Class reports' });
+  });
+
+  it('labels Class reports in every shipped locale (F-REPORT-001 RP-7c)', () => {
+    expect(getMessages('es').console.shell.nav.classReports).toBe('Informes de clase');
+    expect(getMessages('ko').console.shell.nav.classReports).toBe('반 리포트');
   });
 
   it('drops the words of the old console header: Back to site, the disabled Account button and the Billing button', () => {

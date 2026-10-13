@@ -100,6 +100,27 @@ const BR7_KEYS = [
   'facts.seeSources.cta',
 ];
 
+/** BR-8: the leave confirm and the preview end screen. */
+const BR8_KEYS = [
+  'preview.leaveConfirm.title',
+  'preview.leaveConfirm.keep.cta',
+  'preview.leaveConfirm.leave.cta',
+  'end.lesson.title',
+  'end.lesson.line',
+  'end.lesson.lineNoCard',
+  'end.story.title',
+  'end.story.line',
+  'end.next.cta',
+  'end.again.cta',
+  'end.back.cta',
+  'end.nextStory.cta',
+  'end.readAgain.cta',
+  'end.backToStory.cta',
+];
+
+/** BR-9: the word topic page's Hear button. */
+const BR9_KEYS = ['topic.hearA11y'];
+
 describe('caregiver.browse (BR-6)', () => {
   it('names the tab, the page and the preview strip as OD-8 says', () => {
     expect(browse.documentTitle).toBe('Hangul Route lessons');
@@ -145,6 +166,8 @@ describe('caregiver.browse (BR-6)', () => {
         'preview.leave.cta',
         'preview.strip',
         ...BR7_KEYS,
+        ...BR8_KEYS,
+        ...BR9_KEYS,
       ].sort(),
     );
   });
@@ -232,5 +255,28 @@ describe('console.browse (BR-10)', () => {
         }
       }
     }
+  });
+});
+
+describe('caregiver.browse (BR-8)', () => {
+  it('the preview end screen says what a learner gets, with no stars, score or card shown as earned (OD-6, BD9)', () => {
+    expect(browse.end.lesson).toEqual({
+      title: 'That is the whole lesson.',
+      line: 'At this point a learner sees 1 to 3 stars and collects:',
+      lineNoCard: 'At this point a learner sees 1 to 3 stars.',
+    });
+    expect(browse.end.story).toEqual({ title: 'That is the whole story.', line: 'A learner can read it again any time.' });
+    expect([browse.end.next.cta, browse.end.again.cta, browse.end.back.cta]).toEqual(['Next lesson', 'Preview again', 'Back to the lesson page']);
+    expect([browse.end.nextStory.cta, browse.end.readAgain.cta, browse.end.backToStory.cta]).toEqual(['Next story', 'Read again', 'Back to the story page']);
+  });
+
+  it('the leave confirm of the preview strip (mock preview-player.md C): no warning, nothing is lost', () => {
+    expect(browse.preview.leaveConfirm).toEqual({ title: 'Leave this preview?', keep: { cta: 'Keep going' }, leave: { cta: 'Leave' } });
+  });
+});
+
+describe('caregiver.browse (BR-9)', () => {
+  it('names the Hear button of a word row by its romanization, as the mock and the learner topic do', () => {
+    expect(browse.topic.hearA11y('sagwa')).toBe('Hear sagwa');
   });
 });

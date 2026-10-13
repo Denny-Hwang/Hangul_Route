@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { SettingsSections } from '@/components/console/SettingsParts';
 import { FamilyStartFlow } from '@/components/console/FamilyTransferParts';
 import { StartMoveSheet, TransferSheet, useOnline, useTransfersShown } from '@/components/console/TransferParts';
@@ -10,18 +10,23 @@ import { Button, LoadErrorPanel, Muted, Notice } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
 import type { MemberView, Roster, TransferOption } from '@/lib/console/api';
+import { archiveConfirmText, archivePlanNote, settleWithin } from '@/lib/console/archive-plan-note';
 import { schoolConsentModeEnabled } from '@/lib/console/config';
 import { personaHome, personaOfKind } from '@/lib/console/personas';
 import { ROUTES, isKnownSpaceKind, loadErrorKey, spaceIdFrom, type LoadError } from '@/lib/console/routing';
+import type { BillingSummary } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 
 type SettingsNote = keyof Messages['console']['settings']['notes'];
+
+/** F-BILL-002 B-12: how long the archive confirm waits for a billing read still under way. */
+const ARCHIVE_PLAN_WAIT_MS = 1500;
 
 /** console/space-settings — F-TCH-001 §10.3. Housekeeping only; never progress data. */
 function SettingsInner(): JSX.Element {
   const spaceId = spaceIdFrom(useSearchParams());
   const router = useRouter();
-  const { ready, session, api, signOut, m } = useConsole();
+  const { ready, session, api, signOut, m, locale } = useConsole();
   const c = m.console;
   const s = c.settings;
   const [roster, setRoster] = useState<Roster | null>(null);
@@ -39,6 +44,9 @@ function SettingsInner(): JSX.Element {
   const online = useOnline();
   // On a family (T-6d): the learners in a live class, from the class-moves list's `options`.
   const [moveOptions, setMoveOptions] = useState<TransferOption[]>([]);
+  // F-BILL-002 B-12: the billing summary read, so the archive confirm can name the plan it affects; null = no line.
+  const billingRead = useRef<Promise<BillingSummary | null> | null>(null);
+  const asking = useRef(false);
   const now = new Date();
 
   const load = useCallback(async (): Promise<void> => {
@@ -65,6 +73,14 @@ function SettingsInner(): JSX.Element {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Known once the roster loads: null until then. Only a live space reads the summary.
+  const archivedFlag = roster ? !!roster.space.archivedAt : null;
+  useEffect(() => {
+    // Once per space while it is live, not on every reload after a settings action. Read quietly
+    // (`poll`: no billing view event); a failed read keeps the plain confirm.
+    billingRead.current = api && archivedFlag === false ? api.billingSummary({ poll: true }).then((summary) => (summary.ok ? summary.data : null)) : null;
+  }, [api, spaceId, archivedFlag]);
 
   if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
 
@@ -119,7 +135,17 @@ function SettingsInner(): JSX.Element {
               if (window.confirm(s.learners.removeAsk(member.name, space.name))) void run(() => api.removeMember(spaceId, 'learner', member.memberId), 'removed', 'removeFailed');
             }}
             onArchive={() => {
-              if (archived || window.confirm(`${s.danger.archiveAsk(space.name)} ${c.archiveKeeps}`)) void run(() => api.archiveSpace(spaceId, !archived), archived ? 'unarchived' : 'archived', 'saveFailed');
+              if (archived) {
+                void run(() => api.archiveSpace(spaceId, false), 'unarchived', 'saveFailed');
+                return;
+              }
+              if (asking.current) return;
+              asking.current = true;
+              // A click that lands before the billing read settles waits for it briefly, then asks.
+              void settleWithin(billingRead.current, ARCHIVE_PLAN_WAIT_MS).then((summary) => {
+                asking.current = false;
+                if (window.confirm(archiveConfirmText(space.name, archivePlanNote(summary, spaceId, new Date(), locale), locale))) void run(() => api.archiveSpace(spaceId, true), 'archived', 'saveFailed');
+              });
             }}
             onDeleteTarget={(memberId) => {
               setDeleteTarget(memberId);

@@ -207,7 +207,7 @@ export function receiptRow(r: ReceiptView, locale: UiLocale = DEFAULT_LOCALE): R
 type OwnCoverage = Extract<Coverage, { state: 'own' }>;
 
 /** The server's activity rule for a plan the space holds (F-ENT-001 section 3.2). */
-function ownCovers(c: OwnCoverage, now: Date): boolean {
+export function ownCovers(c: OwnCoverage, now: Date): boolean {
   const t = now.getTime();
   const future = c.expiresAt ? Date.parse(c.expiresAt) > t : null;
   if (c.status === 'trial' || c.status === 'active') return future !== false;
@@ -397,8 +397,11 @@ export function summaryFailureNotice(offline: boolean, locale: UiLocale = DEFAUL
   return { text: offline ? billing.offline : billing.cantCheck, retry: billing.retry.cta };
 }
 
-/** A note above the cards after Get … or Manage subscription did not reach Stripe (section 4.4; neutral tone). */
-export type BillingActionNote = 'alreadyActive' | 'notConfigured' | 'liveOff' | 'checkoutFailed' | 'portalFailed';
+/**
+ * A note above the cards after Get … or Manage subscription did not reach Stripe (section 4.4; neutral tone), or
+ * after the grown-up closed the step-up dialog (B-8b: "Nothing was changed.").
+ */
+export type BillingActionNote = 'alreadyActive' | 'notConfigured' | 'liveOff' | 'checkoutFailed' | 'portalFailed' | 'stepUpCancelled';
 
 /** The note for a refused checkout or portal call, from the server's error code. */
 export function actionNoteFor(action: 'checkout' | 'portal', code: string | undefined): BillingActionNote {
@@ -409,5 +412,6 @@ export function actionNoteFor(action: 'checkout' | 'portal', code: string | unde
 }
 
 export function actionNoteText(note: BillingActionNote, locale: UiLocale = DEFAULT_LOCALE): string {
-  return getMessages(locale).console.billing[note];
+  const billing = getMessages(locale).console.billing;
+  return note === 'stepUpCancelled' ? billing.stepUp.cancelled : billing[note];
 }

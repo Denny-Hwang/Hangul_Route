@@ -21,10 +21,11 @@ import {
 import { useGrownUpLocation } from '@/components/console/grown-up-location';
 import { useConsole } from '@/components/console/use-console';
 import type { ApiResult, LearnerReportBody, SpaceListItem } from '@/lib/console/api';
+import { browseLinksShown } from '@/lib/console/browse-link';
 import { learningRouteEnabled, reportsEnabled } from '@/lib/console/config';
 import { learningRouteView, type LearningRouteGoal } from '@/lib/console/learning-route-view';
 import { dateKey } from '@/lib/console/plans';
-import { learnerReportView, reportBackLink, reportCacheKey, reportQueryOf, reportScreenOf, type ReportStepButton, type ReportTab } from '@/lib/console/report-view';
+import { learnerReportView, reportBackLink, reportBrowseStage, reportCacheKey, reportQueryOf, reportScreenOf, type ReportStepButton, type ReportTab } from '@/lib/console/report-view';
 import { spaceKindOfPath } from '@/lib/console/routing';
 import { signedOutTarget } from '@/lib/console/signin-flow';
 import { stageTitle } from '@/lib/console/stage-titles';
@@ -32,7 +33,8 @@ import { stageTitle } from '@/lib/console/stage-titles';
 /**
  * One learner's report (F-REPORT-001 RP-7a2, sections 3.1, 3.5, 3.6, 3.12 and 3.14; screen spec
  * `design/screens/reports/learner-report.md`): `/teach/space/learner?id=<spaceId>&learner=<learnerId>&period=<p>`,
- * ids and codes only. A family opens it here too until RP-7c adds `/parent/learner`, which re-exports this component.
+ * ids and codes only. A family opens it at `/parent/learner` (RP-7c), which renders this component when a learner is
+ * named; `/teach/space/learner?id=<family>` and the `/parent/space/learner` twin still render it, so no link breaks.
  *
  * Who: anyone who can open the roster (`summary.read`), on every plan (no entitlement call, no price). Data: the
  * learner route (`getLearnerReport`, one learner's projected summary; the Worker records one `report.viewed` per call,
@@ -96,6 +98,12 @@ function LearnerReportInner(): JSX.Element {
       live = false;
     };
   }, [api]);
+
+  // Browse links (RP-13): read after mount, so the static export and the first client render agree (both draw none).
+  const [browseOn, setBrowseOn] = useState(false);
+  useEffect(() => {
+    setBrowseOn(typeof window !== 'undefined' && browseLinksShown(window.location.origin));
+  }, []);
 
   const routeOn = learningRouteEnabled();
   useEffect(() => {
@@ -242,7 +250,7 @@ function LearnerReportInner(): JSX.Element {
   const { busy, error } = screen;
   const lines = [...(view.archived && roleKnown ? [view.archived] : []), ...view.notices];
   const selected = view.tabs?.find((tab) => tab.selected)?.period ?? period;
-  const body = busy ? <ReportSkeleton /> : <ReportBody view={view} />;
+  const body = busy ? <ReportSkeleton /> : <ReportBody view={view} browse={browseOn ? { stage: reportBrowseStage(screen.data.summary) } : null} />;
   return frame(
     <>
       <ReportHeader back={view.back} printDisabled={busy || error !== null} onPrint={() => window.print()} />

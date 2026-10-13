@@ -472,3 +472,9 @@ export function registerInboxRefresh(): () => void {
     void useMembershipStore.getState().refresh(learnerId);
   });
 }
+
+/**
+ * A learner's device credentials, or null before the first sync (F-FEEDBACK-001 FB-9: the grown-up
+ * zone's hide, report and note-prefs calls). Never registers a device.
+ */
+export const deviceCredentialsFor = (learnerId: string): Promise<DeviceCredentials | null> => credentialsFor(learnerId, false);

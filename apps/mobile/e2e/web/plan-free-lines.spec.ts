@@ -1,7 +1,7 @@
 import { CATALOG, freeLessonsFacts, freeRouteDays } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import type { Page } from '@playwright/test';
-import { FREE_VOCAB_TOPIC_IDS } from '../../src/logic/content-access';
+import { FREE_VOCAB_TOPIC_IDS, freeExtrasCount } from '../../src/logic/content-access';
 import { expect, test } from './fixtures';
 import { onboardChild, onboardSelf } from './helpers';
 
@@ -19,6 +19,8 @@ const m = getMessages('en').caregiver.plan;
 const facts = freeLessonsFacts(CATALOG);
 const LINE = m.freePlan.line(facts.lessons, facts.letters, facts.minutes);
 const TOPICS = m.freePlan.topics(FREE_VOCAB_TOPIC_IDS.length);
+/** The sampler stories in this build's bundle (`shelf.sampler`), from the same data the Plan screen reads. */
+const SAMPLERS = freeExtrasCount([]).stories;
 const SET_PLAN = m.freePlan.setPlan;
 const SET_PLAN_WEB = m.freePlan.setPlanWeb;
 
@@ -109,9 +111,8 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByText('Mina is on the free plan.')).toBeVisible();
       await expect(page.getByText(LINE)).toBeVisible();
       await expect(page.getByText('Stage 1 is always free.')).toHaveCount(0);
-      await expect(page.getByRole('list').getByRole('listitem')).toHaveText([TOPICS]);
-      // No story is bundled as a sampler today: no stories line.
-      await expect(page.getByText(/short stor/)).toHaveCount(0);
+      // The sampler stories line (the bundle's shelf samplers, F-STORY-001 PR 1.9), then the word topics line.
+      await expect(page.getByRole('list').getByRole('listitem')).toHaveText(SAMPLERS > 0 ? [m.freePlan.stories(SAMPLERS), TOPICS] : [TOPICS]);
       await expect(page.getByText(/teacher can open|finished the free lessons/)).toHaveCount(0);
       await expectCalm(page);
       await page.screenshot({ path: test.info().outputPath(`plan-free-family-${vp.width}.png`), fullPage: true });

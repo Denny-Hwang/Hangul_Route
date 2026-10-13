@@ -1,4 +1,4 @@
-import { FREE_CLASS_STUDENT_CAP } from '@hangul-route/content-schema';
+import { CATALOG, FREE_CLASS_STUDENT_CAP, teachingOrder } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, describeRelativeDay, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { RosterLearner } from './api';
 import { parseVocabSummary } from './vocab-summary';
@@ -33,7 +33,9 @@ export function classRollup(learners: readonly RosterLearner[], now: Date): Clas
   const accuracies = withSummary.map((l) => l.summary?.stage1.anchorAccuracy ?? null).filter((a): a is number => a !== null);
   const counts = new Map<string, number>();
   for (const l of withSummary) for (const jamo of l.summary?.needsPractice ?? []) counts.set(jamo, (counts.get(jamo) ?? 0) + 1);
-  const revisit = topThree(counts);
+  const order = teachingOrder(CATALOG);
+  const rank = (jamo: string): number => order.get(jamo) ?? Number.POSITIVE_INFINITY;
+  const revisit = topThree(counts, (a, b) => rank(a) - rank(b) || a.localeCompare(b));
   const wordCounts = new Map<string, number>();
   for (const l of withSummary) for (const id of wordsToRevisit(l.summary?.vocab)) wordCounts.set(id, (wordCounts.get(id) ?? 0) + 1);
   return {
@@ -46,10 +48,13 @@ export function classRollup(learners: readonly RosterLearner[], now: Date): Clas
   };
 }
 
-/** The three most frequent keys, ties by key: the result never depends on the roster order. */
-function topThree(counts: ReadonlyMap<string, number>): string[] {
+/**
+ * The three most frequent keys, ties by `tie` (by key unless given): the result never depends on the roster order.
+ * Letters tie in teaching order, as the class report's do (F-REPORT-001 RP-8; RP-2c `teachingOrder`).
+ */
+function topThree(counts: ReadonlyMap<string, number>, tie: (a: string, b: string) => number = (a, b) => a.localeCompare(b)): string[] {
   return [...counts.entries()]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .sort((a, b) => b[1] - a[1] || tie(a[0], b[0]))
     .slice(0, 3)
     .map(([key]) => key);
 }

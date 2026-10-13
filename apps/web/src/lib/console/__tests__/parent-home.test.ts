@@ -100,7 +100,7 @@ describe('learnerCardActions', () => {
 
   it('every flag on: See report, Send a note (composer, learner preselected) and Learning Route, all under /parent', () => {
     const actions = learnerCardActions('sp:f', 'profile:1', on);
-    expect(actions.primary).toEqual({ key: 'seeReport', href: '/teach/space/learner?id=sp%3Af&learner=profile%3A1&period=week&from=home' });
+    expect(actions.primary).toEqual({ key: 'seeReport', href: '/parent/learner?id=sp%3Af&learner=profile%3A1&period=week&from=home' });
     expect(actions.secondary).toEqual([
       { key: 'sendNote', href: '/parent/space/notes?id=sp%3Af&compose=1&learner=profile%3A1' },
       { key: 'route', href: '/parent/space/route?id=sp%3Af&learner=profile%3A1' },

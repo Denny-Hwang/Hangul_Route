@@ -228,6 +228,29 @@ describe("workflow hygiene", () => {
 describe("PWA e2e", () => {
   const text = read(".github/workflows/web-app.yml");
 
+  /**
+   * Lines inside a top-level describe that skips unless `E2E_MY_ROUTE=1` (`test.skip(!ROUTE_TAB, ...)`): the
+   * Learning Route flag-on blocks. CI builds with `flags.myRouteEnabled` off, so no CI run can play them on any
+   * bundle; they run on a local flag-on build that the F-ROUTE-001 R-10 flip PR links (AMENDMENTS-ROUTE-LEARNING-ROUTE
+   * LR-10). They are exempt from the "a CI fixture run selects it" checks below until R-10b turns the flag on; the
+   * R-10b flip PR must then add those blocks to the fixture and gating greps in web-app.yml (the tripwire test
+   * below fails while the flag defaults to on and any block is still exempt).
+   */
+  const flagOnOnly = (lines) => {
+    const out = new Set();
+    let start = -1;
+    let flagOn = false;
+    lines.forEach((line, i) => {
+      if (/^test\.describe\(/.test(line)) {
+        start = i;
+        flagOn = false;
+      } else if (/^\S/.test(line) && !/^\}\)/.test(line)) start = -1;
+      if (start >= 0 && /^\s+test\.skip\(\s*!ROUTE_TAB\b/.test(line)) flagOn = true;
+      if (start >= 0 && flagOn) out.add(i);
+    });
+    return out;
+  };
+
   test("the release-build share and the fixture share use the same shards, 1..N of N", () => {
     const shards = [...text.matchAll(/SHARD: \$\{\{ matrix\.(\w+) \}\}\/(\d+)/g)].map((m) => ({ key: m[1], total: Number(m[2]) }));
     assert.equal(shards.length, 2, "one SHARD for the release-build list, one for the fixture list");
@@ -271,12 +294,13 @@ describe("PWA e2e", () => {
       if ([...wholeFiles].some((flt) => f.includes(flt))) continue;
       const lines = readFileSync(join(dir, f), "utf8").split("\n");
       const mine = groups.filter((g) => f.includes(g.file));
+      const exempt = flagOnOnly(lines);
       let describe = null;
       lines.forEach((line, i) => {
         const d = line.match(/^test\.describe\((['"`])(.*?)\1/);
         if (d) describe = d[2];
         else if (/^\S/.test(line) && !/^\}\)/.test(line)) describe = null;
-        if (!/!\s*FIXTURE_BUILD\b/.test(line)) return;
+        if (!/!\s*FIXTURE_BUILD\b/.test(line) || exempt.has(i)) return;
         if (describe !== null && mine.some((g) => g.grep.test(describe))) return;
         missing.push(`${f}:${i + 1} (${describe === null ? "outside a describe" : `in '${describe}'`})`);
       });
@@ -321,7 +345,34 @@ describe("PWA e2e", () => {
 
   test("every spec that needs the gating bundle runs in the gating run", () => {
     const dir = join(ROOT, "apps", "mobile", "e2e", "web");
-    const gated = readdirSync(dir).filter((n) => n.endsWith(".spec.ts") && /!\s*GATED_BUILD\b/.test(readFileSync(join(dir, n), "utf8")));
+    const gated = readdirSync(dir).filter((n) => {
+      if (!n.endsWith(".spec.ts")) return false;
+      const lines = readFileSync(join(dir, n), "utf8").split("\n");
+      const exempt = flagOnOnly(lines);
+      return lines.some((line, i) => /!\s*GATED_BUILD\b/.test(line) && !exempt.has(i));
+    });
     assert.deepEqual(gated, ["story-shelf-gated.spec.ts"]);
+  });
+
+  test("the flag-on exemption covers only the Learning Route flag-on blocks", () => {
+    // A describe without the ROUTE_TAB skip is never exempt; one with it is exempt from its skip line on.
+    const lines = ["test.describe('a', () => {", "  test.skip(!FIXTURE_BUILD, 'x');", "});", "test.describe('b', () => {", "  test.skip(!ROUTE_TAB, 'y');", "  test.skip(!GATED_BUILD, 'z');", "});"];
+    assert.deepEqual([...flagOnOnly(lines)], [4, 5, 6]);
+  });
+
+  test("the flag-on exemption ends when flags.myRouteEnabled defaults to on (F-ROUTE-001 R-10b)", () => {
+    const flags = read("apps/mobile/src/config/flags.ts");
+    const defaults = flags.slice(flags.indexOf("launchDefaults"));
+    const value = defaults.slice(0, defaults.indexOf("};")).match(/myRouteEnabled:\s*(true|false)\b/);
+    assert.ok(value, "launchDefaults in flags.ts names myRouteEnabled");
+    const on = value[1] === "true";
+    if (!on) return;
+    const dir = join(ROOT, "apps", "mobile", "e2e", "web");
+    const stillExempt = readdirSync(dir).filter((n) => n.endsWith(".spec.ts") && flagOnOnly(readFileSync(join(dir, n), "utf8").split("\n")).size > 0);
+    assert.deepEqual(
+      stillExempt,
+      [],
+      "R-10b flip: remove the E2E_MY_ROUTE (ROUTE_TAB) gates and the flagOnOnly exemption, add route-tab case (b) to the fixture run and the my-route assumption h describe to the gating run in web-app.yml, and extend the expected gated list",
+    );
   });
 });
