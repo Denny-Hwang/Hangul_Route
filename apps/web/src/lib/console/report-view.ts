@@ -967,3 +967,22 @@ export function reportScreenOf(input: ReportScreenInput): ReportScreen {
   if (problem.kind === 'error' && problem.retry !== null && cached) return { kind: 'report', data: cached, busy: false, error: { message, retry: problem.retry } };
   return { kind: 'state', title: message, retry: problem.retry, back };
 }
+
+// ---------------------------------------------------------------------------------------------
+// Shared with the class report (RP-8)
+
+/** A learner-local day key as "Oct 12" (with the year when it is not `today`'s year). */
+export function reportDayText(day: string, today: string, locale: UiLocale = DEFAULT_LOCALE): string {
+  return dayText(day, { locale, today });
+}
+
+/** The month of a day key as "October 2026". */
+export function reportMonthText(day: string, locale: UiLocale = DEFAULT_LOCALE): string {
+  return monthText(day, locale);
+}
+
+/** A letter with its number of learners, "ㅂ (b): 5" (`report.class.count`), the letter as its own part (`lang="ko"`). */
+export function countedLetter(letter: string, count: number, locale: UiLocale = DEFAULT_LOCALE): ReportSentence {
+  const m = getMessages(locale);
+  return sentence(m, (put) => m.report.class.count(put(letterPart(letter, m)), count));
+}

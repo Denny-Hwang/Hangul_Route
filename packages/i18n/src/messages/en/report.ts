@@ -299,6 +299,15 @@ export const report = {
         one: '1 learner last saved more than 7 days ago.',
         other: `${count} learners last saved more than 7 days ago.`,
       }),
+    /**
+     * The learners with day-by-day data whose window holds nothing saved in the class (`practice.notSaved`, RP-2c): one
+     * neutral line under the day bands (RP-8). Never "Not yet": their device has not saved it, or they joined after it.
+     */
+    windowNotSaved: (count: number) =>
+      plural('en', count, {
+        one: '1 learner has nothing saved for this period yet.',
+        other: `${count} learners have nothing saved for this period yet.`,
+      }),
     /** The class page's own headings; "What went well" is `report.section.wentWell`. */
     section: {
       practiceTogether: 'Practice together',

@@ -407,6 +407,7 @@ const COUNTED: readonly [string, (m: Messages, n: number) => string][] = [
   ['report.class.learners', (m, n) => m.report.class.learners(n)],
   ['report.class.olderApp', (m, n) => m.report.class.olderApp(n)],
   ['report.class.notSaved', (m, n) => m.report.class.notSaved(n)],
+  ['report.class.windowNotSaved', (m, n) => m.report.class.windowNotSaved(n)],
   ['report.class.milestone', (m, n) => m.report.class.milestone(7, 'Self-expression', n)],
   ['report.class.minutesTotal', (m, n) => m.report.class.minutesTotal(n)],
   ['report.class.medianMinutes', (m, n) => m.report.class.medianMinutes(n)],
