@@ -254,6 +254,9 @@ test.describe('app host: the learner app and the grown-up console (F-APP-001 A-3
     await expect.poll(() => payloads.some((p) => p.path === '/signin.txt' && p.status === 200 && p.type.startsWith('text/plain'))).toBe(true);
     const documentPath = await page.evaluate(() => new URL((performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming).name).pathname);
     expect(documentPath, 'the move was a client navigation in the /parent document').toBe('/parent');
+    // TODO(F-APP-001 A-10): "Back returns in the same document" needs a signed-in client push (home → space → Back);
+    // signed-out pages only replace or load a new document, so grown-up-shell.spec.ts (A-10, dev auth bridge) owns it.
+    // Recorded in spec section 5 (the app-host.spec and grown-up-shell.spec rows).
     // The payloads and chunks went to the network: the learner worker keeps no console file.
     expect((await cachedPaths(page)).filter((path) => isConsoleFile(path) || path.endsWith('.txt'))).toEqual([]);
     expect(errors).toEqual([]);

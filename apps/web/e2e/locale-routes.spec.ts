@@ -47,7 +47,8 @@ test.describe('locale routes', () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect.poll(() => announcerConnected(page)).toBe(true);
 
-    await page.goto('/parent');
+    // A console page that needs no sign-in (since F-APP-001 A-5b `/parent` is the signed-in family home).
+    await page.goto('/signin');
     await page.locator('a[href="/"]').first().click();
     await page.waitForURL((url) => url.pathname === '/');
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
