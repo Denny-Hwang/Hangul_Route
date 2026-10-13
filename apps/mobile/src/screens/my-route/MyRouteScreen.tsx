@@ -28,12 +28,12 @@ import { useReducedMotion } from '../../platform/motion';
 import { readJson, writeJson } from '../../platform/storage';
 import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
-import { LinkButton } from '../placement/parts';
 import { usePlanStore } from '../../store/plan-store';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { questOpenFor, useAccessTier, useQuestAccess } from '../../store/tier-store';
 import { useUiStore } from '../../store/ui-store';
+import { LinkButton } from '../placement/parts';
 import { GainsCard, StoriesNote } from './GainsCard';
 import { RouteCard } from './RouteCard';
 import { SkillsCard } from './SkillsCard';
@@ -384,6 +384,7 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
           </Body>
           {view.planOpen !== null && !readOnly ? (
             // Open plan (R-7d; wireframe design/wireframes/journey/learning-route.md A): the learner's own weekly plan.
+            // The view already shows it only to the learner (viewer 'self'); `!readOnly` is belt-and-braces for the grown-up page.
             <View style={{ alignSelf: 'flex-end' }}>
               <LinkButton label={view.planOpen} onPress={() => navigation.navigate('RouteOverview', { profileId })} testID="my-route-plan-open" />
             </View>

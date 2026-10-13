@@ -389,6 +389,16 @@ describe('the route card wiring (Learning Route LR-5a)', () => {
     expect(screen).toMatch(/<LinkButton label=\{view\.planOpen\}/);
     // RouteOverview is mounted only behind the same flag, so the link never opens a missing screen.
     expect(read(join(SRC, 'navigation', 'root.tsx'))).toContain('{flags.routeEnabled ? <Stack.Screen name="RouteOverview"');
+    // Structure: the link sits inside the plan line's block (after the line, before the block closes), not elsewhere.
+    const block = screen.slice(screen.indexOf('{view.planLine !== null ? ('));
+    const blockEnd = block.indexOf('</>\n      ) : null}');
+    expect(blockEnd).toBeGreaterThan(0);
+    const inBlock = block.slice(0, blockEnd);
+    expect(inBlock.indexOf('testID="my-route-plan-line"')).toBeGreaterThan(-1);
+    expect(inBlock.indexOf('testID="my-route-plan-open"')).toBeGreaterThan(inBlock.indexOf('testID="my-route-plan-line"'));
+    expect(screen.split('testID="my-route-plan-open"')).toHaveLength(2);
+    // The profile opened is the page's own body prop, the profile whose plan line this is.
+    expect(screen).toMatch(/function MyRouteBody\(\{ profileId, readOnly, variant, navigation \}/);
   });
 
   it('the card is one summary for screen readers with its glyphs, Hoya and pips hidden; one button only when not read-only', () => {
