@@ -42,12 +42,14 @@ interface SitePageBudget {
   words: number;
   /** A persona page marks itself in the header nav. */
   current: boolean;
+  /** A persona page ends in question folds; the home has none (§3.3: each persona explains itself on its own page). */
+  folds: boolean;
 }
 
 /** Persona page budgets (§3.11): 5 screens at 375 x 812 (headroom 3,700), 3,200 px at 1280 x 800, 550 words. */
-const PERSONA = { phoneMax: 4060, phoneHeadroom: 3700, wideMax: 3200, words: 550, current: true } as const;
+const PERSONA = { phoneMax: 4060, phoneHeadroom: 3700, wideMax: 3200, words: 550, current: true, folds: true } as const;
 /** Home budgets (§3.11): about 3.5 screens at 375 x 812 (headroom 2,750), 2,100 px at 1280 x 800, 280 words. */
-const HOME = { phoneMax: 2900, phoneHeadroom: 2750, wideMax: 2100, words: 280, current: false } as const;
+const HOME = { phoneMax: 2900, phoneHeadroom: 2750, wideMax: 2100, words: 280, current: false, folds: false } as const;
 
 const PAGES: readonly SitePageBudget[] = [
   { path: '/', h1: en.home.hero.title, lead: en.home.hero.lead, primary: en.home.hero.start, ...HOME },
@@ -174,7 +176,7 @@ for (const budget of PAGES) {
       });
     }
 
-    for (const text200 of [false, true]) {
+    for (const text200 of budget.folds ? [false, true] : []) {
       test(`at 320 px${text200 ? ' with 200 % text' : ''}: every fold opened keeps its content inside its box and the screen`, async ({ page }) => {
         await page.setViewportSize({ width: 320, height: 812 });
         await page.goto(budget.path);

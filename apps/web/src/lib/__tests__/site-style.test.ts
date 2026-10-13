@@ -82,6 +82,9 @@ describe('siteCssVars', () => {
     expect(vars['--hr-site-hero-art-max']).toBe(SITE_SIZES.heroArtMax);
     expect(vars['--hr-site-hero-art-max-wide']).toBe(SITE_SIZES.heroArtMaxWide);
     expect(vars['--hr-site-hero-ratio']).toBe(SITE_SIZES.heroRatio);
+    expect(vars['--hr-site-sunken']).toBe(colors.surface.sunken);
+    expect(vars['--hr-site-size-caption']).toBe(rem(typography.size.caption));
+    expect(vars['--hr-site-size-body-sm']).toBe(rem(typography.size.bodySm));
     const tokenValues = new Set<string>([
       ...Object.values(colors).flatMap((group) => Object.values(group as Record<string, string>)),
       ...Object.values(spacing).map((v) => `${v}px`),

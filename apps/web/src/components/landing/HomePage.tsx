@@ -122,7 +122,7 @@ export function HomePage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: Home
         <h2 id="home-who" className="hr-site-h2" style={{ margin: `0 0 ${spacing.md}px`, lineHeight: typography.leading.tight }}>
           {H.who.title}
         </h2>
-        <ul className="hr-site-persona-list" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid' }}>
+        <ul role="list" className="hr-site-persona-list" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid' }}>
           {PERSONA_PAGES.map((persona) => {
             const item = H.who.items[persona];
             return (
@@ -176,7 +176,7 @@ export function HomePage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: Home
       </section>
 
       <Section id="home-how" title={H.how.title}>
-        <ol className="hr-site-steps hr-site-steps-wide" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: spacing.md }}>
+        <ol role="list" className="hr-site-steps hr-site-steps-wide" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: spacing.md }}>
           {steps.map((step, i) => (
             <li key={step.title} style={{ display: 'grid', gridTemplateColumns: `${spacing.xxl}px minmax(0, 1fr)`, columnGap: spacing.md, alignItems: 'start' }}>
               <span
@@ -208,7 +208,7 @@ export function HomePage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: Home
         <h2 id="home-promises" style={VISUALLY_HIDDEN}>
           {H.promises.label}
         </h2>
-        <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexWrap: 'wrap', gap: spacing.sm }}>
+        <ul role="list" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexWrap: 'wrap', gap: spacing.sm }}>
           {[H.promises.items.ads, H.promises.items.safety, H.promises.items.noRed].map((title) => (
             <li
               key={title}
