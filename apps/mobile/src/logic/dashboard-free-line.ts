@@ -1,6 +1,8 @@
 import { freeLessonsLine, type LearnerMembership } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import type { Tier } from './entitlement';
+import { billingHandOffStep, type BillingOpenResult } from './paywall';
+import { planOpenBlocked } from './shell/entry-points';
 
 /**
  * The free-lessons line on the on-device parent dashboard child row (F-ENT-003 section 3.9.2,
@@ -71,5 +73,72 @@ export function dashboardFreeLine(input: DashboardFreeLineInput, messages: Pick<
   return {
     line: m.access.freeEnd(input.name, m.access.product[code.product]),
     openBilling: input.platform === 'web' ? m.plan.openBilling.cta : null,
+  };
+}
+
+/** What one tap of the row's **Open billing** needs (the screen passes the live parts). */
+export interface DashboardBillingDeps {
+  /** `billingOpensSameTab()`: the grown-up area in this tab (flag on, web), else a new tab. */
+  sameTab: boolean;
+  /** The live network state at the tap, not the last render's (as the Plan screen). */
+  isOnline: () => boolean;
+  /** A ref, checked and set before the first await, so two taps in one render run it once. */
+  busy: { current: boolean };
+  /** `openBilling(sameTab, DASHBOARD_BILLING_HANDOFF)`; it opens the tab before it awaits anything. */
+  open: (sameTab: boolean) => Promise<BillingOpenResult>;
+  /** Opens the PIN screen for the grown-up area with the dashboard's billing request. */
+  askPin: () => void;
+  /** The line under the link: the address to type when the browser blocked the new tab, else null. */
+  setNote: (note: string | null) => void;
+  messages: Pick<Messages, 'caregiver'>;
+}
+
+/**
+ * One tap of **Open billing** on the dashboard row, the Plan screen's flow (F-BILL-002 section 4.7)
+ * without its `paywall.console_opened` (the dashboard is not the Plan screen): blocked in the
+ * same-tab mode while offline; a blocked new tab shows the address to type; a same-tab hand-off that
+ * needs a fresh PIN opens the PIN screen, which hands off itself; a hand-off that throws settles
+ * quietly and frees the link for another tap.
+ */
+export async function runDashboardBilling(d: DashboardBillingDeps): Promise<void> {
+  if (planOpenBlocked(d.sameTab, d.isOnline()) || d.busy.current) return;
+  d.busy.current = true;
+  d.setNote(null);
+  try {
+    // Called before the first await, so the tap's activation reaches `window.open`.
+    const step = billingHandOffStep(await d.open(d.sameTab), 'free', d.messages);
+    d.setNote(step.note);
+    if (step.askPin) d.askPin();
+  } catch {
+    // Nothing opened; the link stays usable.
+  } finally {
+    d.busy.current = false;
+  }
+}
+
+export interface FreeLessonsRowA11y {
+  /** The line's id: the link's description on the web. */
+  lineId: string;
+  /** The id of "Needs the internet" under the link while offline. */
+  offlineId: string;
+  /** `aria-describedby` on the web (the line, plus "Needs the internet" while offline); null on native. */
+  describedBy: string | null;
+  /** `accessibilityHint`: "Needs the internet" while offline, as the Plan screen's Open billing. */
+  hint: string | undefined;
+}
+
+/**
+ * How the row's link is described (section 3.14): by its own line, since several cards can each
+ * carry Open billing, and while offline by "Needs the internet" too (F-APP-001 section 3.12: the
+ * offline text is the button's description).
+ */
+export function freeLessonsRowA11y(testID: string, offline: boolean, needsInternet: string, platform: string): FreeLessonsRowA11y {
+  const lineId = `${testID}-line`;
+  const offlineId = `${testID}-offline`;
+  return {
+    lineId,
+    offlineId,
+    describedBy: platform === 'web' ? (offline ? `${lineId} ${offlineId}` : lineId) : null,
+    hint: offline ? needsInternet : undefined,
   };
 }

@@ -6,13 +6,18 @@ import { Platform, Pressable, View } from 'react-native';
 import { useOnline } from '../../components/use-online';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { useMessages } from '../../i18n/use-messages';
-import { dashboardFreeLine, ownedLearnerSpace, type DashboardFreeLineView } from '../../logic/dashboard-free-line';
-import { billingHandOffStep } from '../../logic/paywall';
+import {
+  dashboardFreeLine,
+  freeLessonsRowA11y,
+  ownedLearnerSpace,
+  runDashboardBilling,
+  type DashboardFreeLineView,
+} from '../../logic/dashboard-free-line';
 import { routeNext } from '../../logic/route-next';
 import { planOpenBlocked } from '../../logic/shell/entry-points';
 import { grownUpPinParams } from '../../logic/shell/handoff-rules';
 import type { RootStackParamList } from '../../navigation/types';
-import { BILLING_HANDOFF, billingOpensSameTab, openBilling } from '../../platform/billing-handoff';
+import { DASHBOARD_BILLING_HANDOFF, billingOpensSameTab, openBilling } from '../../platform/billing-handoff';
 import { signedInAccount } from '../../platform/device-account';
 import { isOnline } from '../../platform/online';
 import { useMembershipStore } from '../../store/membership-store';
@@ -33,7 +38,8 @@ const frame = { marginTop: spacing.md, paddingTop: spacing.sm, borderTopWidth: b
  * when F-APP-001's grown-up home is on (a PIN older than 2 minutes opens the PIN screen first, which
  * hands off itself), else the billing page in a new tab, with the address to type when the browser
  * blocks it. Offline with the same-tab hand-off, the link is disabled with "Needs the internet", as
- * on the Plan screen. Nothing on native. It sends no telemetry and writes nothing.
+ * on the Plan screen, and described by it. Nothing on native. It writes nothing; the only event is
+ * the same-tab hand-off's existing `shell.grown_up_handoff { via: 'dashboard', target: 'billing' }`.
  */
 export function FreeLessonsRowView({
   view,
@@ -50,13 +56,13 @@ export function FreeLessonsRowView({
   note: string | null;
   testID: string;
 }): React.ReactElement {
-  const lineId = `${testID}-line`;
+  const a11y = freeLessonsRowA11y(testID, offline, needsInternet, Platform.OS);
   // Several cards can each carry Open billing: on the web the link is described by its own line.
-  const describedBy: Record<string, string> = Platform.OS === 'web' ? { 'aria-describedby': lineId } : {};
+  const describedBy: Record<string, string> = a11y.describedBy !== null ? { 'aria-describedby': a11y.describedBy } : {};
   return (
     <View testID={testID} style={frame}>
-      <View nativeID={lineId}>
-        <Body testID={lineId}>{view.line}</Body>
+      <View nativeID={a11y.lineId}>
+        <Body testID={a11y.lineId}>{view.line}</Body>
       </View>
       {view.openBilling !== null ? (
         <>
@@ -67,6 +73,7 @@ export function FreeLessonsRowView({
               disabled={offline}
               accessibilityRole="link"
               accessibilityLabel={view.openBilling}
+              accessibilityHint={a11y.hint}
               accessibilityState={{ disabled: offline }}
               {...describedBy}
               style={{ minHeight: touchTarget.min, minWidth: touchTarget.min, justifyContent: 'center' }}
@@ -77,9 +84,11 @@ export function FreeLessonsRowView({
             </Pressable>
           </View>
           {offline ? (
-            <Body size="sm" tone="secondary" testID={`${testID}-offline`}>
-              {needsInternet}
-            </Body>
+            <View nativeID={a11y.offlineId}>
+              <Body size="sm" tone="secondary" testID={a11y.offlineId}>
+                {needsInternet}
+              </Body>
+            </View>
           ) : null}
           {/* A blocked tab's address to type is read out as it appears. */}
           <View accessibilityLiveRegion="polite">
@@ -99,41 +108,60 @@ export function FreeLessonsRowView({
 }
 
 /**
- * One profile's line. The account comes first: with no signed-in account (`signedInAccount`), or
- * with the switch off, nothing is read and nothing draws. Otherwise the learner's memberships and
- * plans are read, and `routeNext` (the same input Home and the Plan screen build) decides free-end.
+ * One profile's line. The account and the switch come first: with no signed-in account
+ * (`signedInAccount`) or with the switch off, the row mounts nothing below this point, so no store is
+ * subscribed or hydrated and `routeNext` never runs. Otherwise `OwnedFreeLessonsRow` reads the
+ * learner's memberships and plans, and `routeNext` (the same input Home and the Plan screen build)
+ * decides free-end.
  */
 export function FreeLessonsRow({ profileId, name, testID }: { profileId: string; name: string; testID: string }): React.ReactElement | null {
+  const account = signedInAccount();
+  if (account === null || !gatingActive(flags, bundleOs())) return null;
+  // The owned spaces by content, so a new account object with the same spaces never reruns `routeNext`.
+  return <OwnedFreeLessonsRow profileId={profileId} name={name} testID={testID} ownedKey={account.ownedSpaceIds.join('\n')} />;
+}
+
+function OwnedFreeLessonsRow({
+  profileId,
+  name,
+  testID,
+  ownedKey,
+}: {
+  profileId: string;
+  name: string;
+  testID: string;
+  ownedKey: string;
+}): React.ReactElement | null {
   const messages = useMessages();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const account = signedInAccount();
-  const gating = gatingActive(flags, bundleOs());
-  const reads = account !== null && gating;
   const tier = useAccessTier(profileId);
   const memberships = useMembershipStore((s) => s.byLearner[profileId]);
   const plans = usePlanStore((s) => s.byLearner[profileId]);
   const snapshot = useProgressStore((s) => s.byProfile[profileId]);
   useEffect(() => {
-    if (!reads) return;
     void useMembershipStore.getState().hydrate(profileId);
     void usePlanStore.getState().hydrate(profileId);
-  }, [reads, profileId]);
+  }, [profileId]);
 
+  const space = useMemo(
+    () => ownedLearnerSpace({ ownedSpaceIds: ownedKey === '' ? [] : ownedKey.split('\n') }, memberships),
+    [ownedKey, memberships],
+  );
   const view = useMemo(
     () =>
       dashboardFreeLine(
         {
           name,
-          gatingActive: gating,
+          gatingActive: true,
           tier,
-          space: ownedLearnerSpace(account, memberships),
+          space,
           // `snapshot` and `plans` are in the deps so the line follows them; the input reads the stores.
           freeEnd: () => routeNext(routeNextInputFor(profileId, new Date())).kind === 'free-end',
           platform: Platform.OS,
         },
         messages,
       ),
-    [name, gating, tier, account, memberships, snapshot, plans, profileId, messages],
+    [name, tier, space, snapshot, plans, profileId, messages],
   );
 
   const sameTab = billingOpensSameTab();
@@ -141,24 +169,15 @@ export function FreeLessonsRow({ profileId, name, testID }: { profileId: string;
   const [note, setNote] = useState<string | null>(null);
   const busy = useRef(false);
   const onOpenBilling = (): void => {
-    // The live network state, not the last render's (as the Plan screen).
-    if (planOpenBlocked(sameTab, isOnline()) || busy.current) return;
-    busy.current = true;
-    setNote(null);
-    // `openBilling` opens the tab before it awaits anything, so the tap's activation reaches it.
-    void openBilling(sameTab)
-      .then((result) => {
-        // The dashboard is not the Plan screen: no `paywall.console_opened` from here.
-        const step = billingHandOffStep(result, 'free', messages);
-        setNote(step.note);
-        if (step.askPin) navigation.navigate('PinEntry', grownUpPinParams(BILLING_HANDOFF));
-      })
-      .catch(() => {
-        // Nothing opened; the link stays usable.
-      })
-      .finally(() => {
-        busy.current = false;
-      });
+    void runDashboardBilling({
+      sameTab,
+      isOnline,
+      busy,
+      open: (same) => openBilling(same, DASHBOARD_BILLING_HANDOFF),
+      askPin: () => navigation.navigate('PinEntry', grownUpPinParams(DASHBOARD_BILLING_HANDOFF)),
+      setNote,
+      messages,
+    });
   };
 
   if (view === null) return null;
