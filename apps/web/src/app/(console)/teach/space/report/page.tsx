@@ -125,6 +125,9 @@ function ClassReportInner(): JSX.Element {
   if (!ready || !session || screen.kind === 'signedOut' || only) return <AdultFrame>{null}</AdultFrame>;
 
   const role = list?.find((item) => item.space.id === spaceId)?.role ?? null;
+  // Until the spaces answer, the role is unknown: no archived sentence is drawn (and no Plan a lesson, as `role` is null),
+  // so the owner's settings sentence never replaces the neutral one late. A failed read keeps the neutral sentence.
+  const roleKnown = spaces !== null;
   const frame = (children: JSX.Element): JSX.Element => (
     <AdultFrame onSignOut={signOut} spaces={spaces}>
       <div className="hr-report" data-testid="class-report">
@@ -214,7 +217,7 @@ function ClassReportInner(): JSX.Element {
           </p>
         ))}
       </div>
-      <ReportStateBlock lines={[...(view.archived ? [view.archived] : []), ...(view.empty ? [view.empty] : [])]} error={error} onRetry={retry} />
+      <ReportStateBlock lines={[...(view.archived && roleKnown ? [view.archived] : []), ...(view.empty ? [view.empty] : [])]} error={error} onRetry={retry} />
       {view.tabs ? (
         <>
           <ReportControls
