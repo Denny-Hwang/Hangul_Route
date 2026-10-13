@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { SettingsSections } from '@/components/console/SettingsParts';
+import { StartMoveSheet, useOnline, useTransfersShown } from '@/components/console/TransferParts';
 import { Button, LoadErrorPanel, Muted, Notice } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
@@ -30,6 +31,11 @@ function SettingsInner(): JSX.Element {
   const [busy, setBusy] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string>('');
   const [typedName, setTypedName] = useState('');
+  // Class moves (F-SPACE-002 T-6c): the learner whose start sheet is open, and the page line it left behind.
+  const [moving, setMoving] = useState<MemberView | null>(null);
+  const [moveNote, setMoveNote] = useState<'sent' | 'locked' | 'signIn' | null>(null);
+  const movesShown = useTransfersShown();
+  const online = useOnline();
   const now = new Date();
 
   const load = useCallback(async (): Promise<void> => {
@@ -76,6 +82,9 @@ function SettingsInner(): JSX.Element {
       {error ? <LoadErrorPanel error={error} forbidden={s.forbidden} onRetry={() => void load()} /> : null}
       {note ? <Notice tone="nudge">{s.notes[note]}</Notice> : null}
       {archived && space ? <Notice tone="nudge">{s.archived[space.kind]}</Notice> : null}
+      {moveNote === 'sent' ? <Notice tone="success">{c.transfer.start.sent}</Notice> : null}
+      {moveNote === 'locked' ? <Notice tone="nudge">{c.transfer.states.locked}</Notice> : null}
+      {moveNote === 'signIn' ? <Notice tone="nudge">{c.start.signInAgain}</Notice> : null}
 
       {roster && space && api ? (
         <>
@@ -107,6 +116,17 @@ function SettingsInner(): JSX.Element {
               setDeleteTarget(memberId);
               setTypedName('');
             }}
+            move={
+              movesShown
+                ? {
+                    online,
+                    onMove: (member) => {
+                      setMoveNote(null);
+                      setMoving(member);
+                    },
+                  }
+                : undefined
+            }
             onTypedName={setTypedName}
             onDelete={(member) =>
               void run(() => api.deleteLearnerData(spaceId, member.memberId), 'deleted', 'deleteFailed').then(() => {
@@ -116,6 +136,23 @@ function SettingsInner(): JSX.Element {
             }
           />
           {archived ? <Button onClick={() => router.push(personaHome(personaOfKind(space.kind)))}>{s.backToConsole.cta}</Button> : null}
+          {moving && movesShown && space.kind === 'class' && !archived ? (
+            <StartMoveSheet
+              spaceId={spaceId}
+              learner={{ id: moving.memberId, name: moving.name }}
+              api={api}
+              online={online}
+              onClose={() => setMoving(null)}
+              onSent={() => {
+                setMoving(null);
+                setMoveNote('sent');
+              }}
+              onPageState={(state) => {
+                setMoving(null);
+                setMoveNote(state);
+              }}
+            />
+          ) : null}
         </>
       ) : null}
     </AdultFrame>

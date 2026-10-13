@@ -42,6 +42,12 @@ export const ROUTES = {
   spacePlan: (id: string, planId?: string, kind?: SpaceKind) => spacePath('plan', `${idQuery(id)}${planId ? `&plan=${encodeURIComponent(planId)}` : ''}`, kind),
   spaceCurriculum: (id: string, kind?: SpaceKind) => spacePath('curriculum', idQuery(id), kind),
   spaceRelink: (id: string, kind?: SpaceKind) => spacePath('relink', idQuery(id), kind),
+  /**
+   * Class moves of a space (F-SPACE-002 section 4.8): the class page, the family page (`/parent/space/transfers` for
+   * a family) or a school's counts. The space id only, never a learner, class or teacher name (T14); a request
+   * travels by its opaque id in API paths.
+   */
+  spaceTransfers: (id: string, kind?: SpaceKind) => spacePath('transfers', idQuery(id), kind),
   spaceSettings: (id: string, kind?: SpaceKind) => spacePath('settings', idQuery(id), kind),
   /** Lecture setup (F-TCH-004 §3.11); `from` preselects the deck source, `plan` names the plan on screen (an id). Never a name in the URL. */
   spaceLecture: (id: string, from?: 'plan' | 'revisit', planId?: string, kind?: SpaceKind) =>
@@ -212,4 +218,12 @@ export function loadErrorKey(error: string): LoadError {
  */
 export function isKnownSpaceKind(kind: unknown): kind is SpaceKind {
   return SpaceKindSchema.safeParse(kind).success;
+}
+
+/**
+ * One member of a space, singular (F-SPACE-002 section 4.8 wording table): a class `student`, a family `learner`, a
+ * school `member`, so a teacher's history line reads "A student moved to another class". In `locale`.
+ */
+export function memberNounSingular(kind: SpaceKind, locale: UiLocale = DEFAULT_LOCALE): string {
+  return getMessages(locale).console.transfer.memberNoun[kind];
 }
