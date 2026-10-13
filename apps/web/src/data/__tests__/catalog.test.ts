@@ -1,7 +1,7 @@
 import { CATALOG, type Catalog } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
-import { builderEpisodes, catalogLabel, itemCategory, itemTitle, questsOf } from '../catalog';
+import { builderEpisodes, catalogLabel, itemCategory, itemTitle, plannableQuest, questsOf } from '../catalog';
 
 /** F-PLAN-002 section 3.2: the console reads the shared catalogue through this adapter (it retires `stage1-catalog.ts`). */
 describe('console catalogue adapter over the shared catalogue', () => {
@@ -68,5 +68,35 @@ describe('console catalogue adapter over the shared catalogue', () => {
     const grown: Catalog = { ...CATALOG, quests: CATALOG.quests.map((q) => (q.id === 'quest:stage1-letters-q1' ? { ...q, title: 'Meet the first letters' } : q)) };
     expect(itemTitle('quest', 'quest:stage1-letters-q1', grown)).toBe('Meet the first letters');
     expect(itemCategory('quest', 'quest:stage1-letters-q1', grown)).toBe('lesson');
+  });
+});
+
+/** F-REPORT-001 RP-10: the quests the builder may pre-add from `&add=` (the report's Add to a plan). */
+describe('plannableQuest', () => {
+  it('holds a lesson quest of a released episode, on any stage', () => {
+    expect(plannableQuest('quest:stage1-life-q2')).toBe(true);
+    expect(plannableQuest('quest:stage2-life-q1')).toBe(true);
+  });
+
+  it('refuses an id this build does not know and an empty id', () => {
+    expect(plannableQuest('quest:nope')).toBe(false);
+    expect(plannableQuest('')).toBe(false);
+    expect(plannableQuest('episode:stage1-life')).toBe(false);
+  });
+
+  it('refuses a closed quest: its episode is not released, or its story is not signed', () => {
+    const closed: Catalog = { ...CATALOG, cells: CATALOG.cells.map((c) => (c.episodeId === 'episode:stage1-life' ? { ...c, status: 'preview' } : c)) };
+    expect(plannableQuest('quest:stage1-life-q2', closed)).toBe(false);
+    const orphan: Catalog = { ...CATALOG, cells: CATALOG.cells.filter((c) => c.episodeId !== 'episode:stage1-life') };
+    expect(plannableQuest('quest:stage1-life-q2', orphan)).toBe(false);
+    const story = CATALOG.stories[0];
+    expect(story).toBeDefined();
+    if (!story) return;
+    const draft: Catalog = { ...CATALOG, stories: CATALOG.stories.map((s) => (s.id === story.id ? { ...s, status: 'draft' } : s)) };
+    expect(plannableQuest(story.questId, draft)).toBe(false);
+    const signed: Catalog = { ...CATALOG, stories: CATALOG.stories.map((s) => (s.id === story.id ? { ...s, status: 'ready' } : s)) };
+    expect(plannableQuest(story.questId, signed)).toBe(true);
+    const unlisted: Catalog = { ...CATALOG, stories: CATALOG.stories.filter((s) => s.id !== story.id) };
+    expect(plannableQuest(story.questId, unlisted)).toBe(false);
   });
 });
