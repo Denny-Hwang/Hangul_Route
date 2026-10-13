@@ -87,6 +87,7 @@ import { firstFreeTopicKey } from '../vocab/topic-data';
 import { FreeEndCard } from './FreeEndCard';
 import { freeTopicsInBuild, samplerStoryOf } from './free-end-inputs';
 import { RouteStrip } from './RouteStrip';
+import { TransferHomeLine } from '../transfer/TransferHomeLine';
 
 /** Avatar circle in the Profile entry; with its label the button clears the 64pt floor. */
 const AVATAR_SIZE = 52;
@@ -608,6 +609,8 @@ export function HomeScreen(): React.ReactElement {
 
       <Spacer size="xl" />
       <HoyaBubble tone="idle" message={m.learner.home.tip} />
+      {/* A class move the learner side must answer, or one that is planned (F-SPACE-002 T-7c); nothing while transfers are off. */}
+      {profile ? <TransferHomeLine profileId={profile.id} learnerName={profile.displayName} /> : null}
       <Spacer size="lg" />
       <Card padding="md" tone="sunken">
         <Heading level="prompt">{m.learner.home.recentStars}</Heading>

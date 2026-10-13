@@ -38,7 +38,11 @@ export type GrownUpDestination =
   /** F-REPORT-001 section 3.9 (RP-9): one learner's in-app report (`PinEntry.profileId`). */
   | 'LearnerReport'
   /** F-PLAN-002 section 3.9 (P2-7a): a child profile's "Make a weekly plan" row, through the gate when the device needs it (`PinEntry.profileId`). */
-  | 'RouteProposal';
+  | 'RouteProposal'
+  /** F-SPACE-002 section 4.12 (T-7c): a class move from this device (`PinEntry.profileId`, `PinEntry.fromSpaceId`; without a class, Set up PIN returns to the card). */
+  | 'MoveClass'
+  /** F-SPACE-002 section 4.12 (T-7c): the sheet of one open move request (`PinEntry.profileId`, `PinEntry.transferId`). */
+  | 'ApproveTransfer';
 
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
@@ -113,6 +117,10 @@ export type RootStackParamList = {
     noteId?: string;
     /** `next: 'NoteReport'`: where the report sheet came from (default `note_page`), kept when a lapsed session asks for the PIN again. */
     noteVia?: 'note_page' | 'grown_up_zone';
+    /** `next: 'MoveClass'`: the class the move starts from. */
+    fromSpaceId?: string;
+    /** `next: 'ApproveTransfer'`: the request whose sheet opens. */
+    transferId?: string;
   };
   /** Forgot PIN: Rescue Code or a 24-hour wait, then a new PIN (F-LEARN-001 §3.5). `next` is kept for the PIN screen. */
   PinReset: { next: GrownUpDestination; profileId?: string };
@@ -120,6 +128,17 @@ export type RootStackParamList = {
   Restore: { from: 'welcome' | 'settings' } | undefined;
   /** sync/save-progress — the Rescue Code, PIN-gated (F-RESTORE-001 §3.3). */
   SaveProgress: undefined;
+  /**
+   * A class move from this device (F-SPACE-002 section 4.12, T-7c; `design/screens/transfer/app-sheets.md`):
+   * enter the new class code, Find class, read the consent sheet, send. Behind the grown-up gate unless it
+   * opens directly; online only (consent is never queued).
+   */
+  MoveClass: { profileId: string; fromSpaceId: string };
+  /**
+   * The sheet of one open move request: ApproveTransfer (a yes again, route `device`), the read-only sheet
+   * whose only actions are the veto and Back (guard 11), or the planned sheet with Cancel the move.
+   */
+  ApproveTransfer: { profileId: string; transferId: string };
   /** sync/join-space — enter a class or family code (F-SPACE-001 §3.5). Not PIN-gated. */
   JoinSpace: undefined;
   /** billing/plan-status — the learner Plan screen: status only, no PIN (F-BILL-002 §4.7; F-ENT-003's "Ask a grown-up" still arrives through the gate). */
