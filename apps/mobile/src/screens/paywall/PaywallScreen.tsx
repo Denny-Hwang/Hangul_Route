@@ -92,13 +92,13 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
     return { gatingActive: gating, ...freeBundleFacts(), classOnly: classOnlyMember(memberships), freeEnd, hasPlan };
   }, [gating, learnerId, accessTier, questOpen, snap, memberships, plans]);
 
+  const from = route.params?.from ?? 'settings';
   const view = planView(
-    { tier: entitled.tier, source: entitled.source, audience, name: profile?.displayName ?? null, platform: Platform.OS, freePlan },
+    { tier: entitled.tier, source: entitled.source, audience, name: profile?.displayName ?? null, platform: Platform.OS, freePlan, from },
     messages,
   );
   const { state } = view;
   const [note, setNote] = useState<string | null>(null);
-  const from = route.params?.from ?? 'settings';
   const profileId = profile?.id;
   const sameTab = billingOpensSameTab();
   const online = useOnline();
@@ -250,7 +250,7 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
       ) : (
         <Spacer size="xl" />
       )}
-      <Button label={view.back} tone="primary" size="lg" fullWidth onPress={() => navigation.navigate('Main', { screen: 'Journey' })} />
+      <Button label={view.back} tone="primary" size="lg" fullWidth onPress={() => navigation.navigate('Main', { screen: view.backTo })} />
       <Spacer size="xl" />
     </Screen>
   );

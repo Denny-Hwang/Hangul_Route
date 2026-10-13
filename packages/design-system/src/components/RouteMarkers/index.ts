@@ -8,3 +8,5 @@ export type { RouteLegendItem, RouteLegendProps, TagMarkProps } from './RouteLeg
 export type { RouteRingProps } from './RouteRing';
 export { StickerIcon, STICKER_EDGE_UNITS } from './StickerIcon';
 export type { StickerIconProps } from './StickerIcon';
+export { RouteTag } from './RouteTag';
+export type { RouteTagProps } from './RouteTag';

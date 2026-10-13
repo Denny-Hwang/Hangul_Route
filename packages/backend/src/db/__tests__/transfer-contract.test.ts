@@ -782,6 +782,14 @@ function transferContract(name: string, make: () => Db, dropLearnerRowOnly: Drop
         expect((await db.getLearners(many)).map((l) => l.id).sort()).toEqual([...many].sort());
         expect((await db.getSpaces([FAMILY]))[0]).toEqual(await db.getSpace(FAMILY));
       });
+
+      it('getAccounts reads a set of accounts at once, skipping unknown ones', async () => {
+        expect(await db.getAccounts([])).toEqual([]);
+        const ids = Array.from({ length: 120 }, (_, i) => `acct-many-${i}`);
+        for (const id of ids) await db.putAccount({ id, email: `${id}@example.test`, displayName: id === 'acct-many-0' ? 'Ms Han' : null, consent: null, createdAt: '2026-01-01T00:00:00.000Z' });
+        expect((await db.getAccounts([...ids, 'acct-nobody', 'acct-many-0'])).map((a) => a.id).sort()).toEqual([...ids].sort());
+        expect((await db.getAccounts(['acct-many-0']))[0]).toEqual(await db.getAccount('acct-many-0'));
+      });
     });
 
     describe('retention, counters and prefs', () => {

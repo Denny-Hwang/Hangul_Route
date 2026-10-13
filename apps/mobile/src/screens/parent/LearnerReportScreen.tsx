@@ -685,7 +685,14 @@ function GrowthBlock({ growth }: { growth: ReportGrowthView }): React.ReactEleme
 
 function DetailBlock({ block }: { block: ReportDetailBlock }): React.ReactElement {
   if (block.kind === 'totals') return <Body testID="learner-report-detail-totals">{block.line}</Body>;
-  if (block.kind === 'letters') return <LetterTiles heading={block.heading} tiles={block.tiles} id={block.key} />;
+  if (block.kind === 'letters') {
+    return (
+      <>
+        <LetterTiles heading={block.heading} tiles={block.tiles} id={block.key} />
+        {block.moreLine !== null ? <Body testID={`learner-report-letters-more-${block.key}`}>{block.moreLine}</Body> : null}
+      </>
+    );
+  }
   return (
     <View testID={`learner-report-detail-${block.key}`}>
       <ReportHeading level={3}>{block.heading}</ReportHeading>

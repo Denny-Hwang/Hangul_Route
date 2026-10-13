@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:nanjung-ilgi",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "이순신 장군의 난중일기",
     "romanization": "Isunsin janggunui Nanjungilgi",
     "en": "Admiral Yi's Diary"
   },
   "summaryEn": "Hoya opens the diary that Admiral Yi Sunsin kept almost every day from 1592 to 1598, full of weather, feelings and everyday life, now a National Treasure and UNESCO Memory of the World.",
+  "hoyaIntroEn": "Do you keep a diary? Let's open the diary of Admiral Yi.",
+  "hoyaOutroEn": "Weather, feelings and everyday life: Admiral Yi wrote it all down. Maybe you can keep a diary too!",
   "theme": "letters",
   "kind": "documentary",
   "recommendedStage": 3,
@@ -24,12 +26,14 @@
     "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
   },
   "review": {
-    "language": "draft",
-    "culture": "draft",
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
     "advisory": [
       "war"
     ],
-    "advisoryNoteEn": "Briefly mentions a war from Korea's history."
+    "advisoryNoteEn": "Briefly mentions a war from Korea's history.",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-13"
   },
   "keywords": [
     {
@@ -163,7 +167,7 @@
                 "s": 1
               }
             ],
-            "altEn": "A calm Joseon naval commander stands on the shore beside a wooden panokseon warship in a quiet harbour."
+            "altEn": "A calm Joseon naval commander stands on the shore beside a wooden panokseon warship in a quiet harbor."
           }
         },
         {
@@ -506,8 +510,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-nanjung-ilgi"
+  },
+  "shelf": {
+    "category": "culture",
+    "order": 14,
+    "sampler": false,
+    "minutes": 4
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "War Diary",
+    "keywordId": "nanjung-ilgi",
+    "factId": "f3"
+  },
   "facts": [
     {
       "id": "f1",
@@ -748,7 +766,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
+    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
   },
   "authorNotes": "Kept gentle on purpose: battles, the turtle ship (거북선), and Admiral Yi's death in the final battle of 1598 are omitted to keep the story gentle; the war is only named. Coverage dates differ by source (handwritten volumes: 1592-05-01 to 1598-10-07 lunar per encykorea; UNESCO and the KHS portal give January 1592 to November 1598, which includes passages known only from the printed 이충무공전서), so narration says only '1592 to 1598'. The KHS portal MoW page notes an eighth volume (1595, 을미일기) is lost; narration says seven volumes survive. The naming year (1795, 이충무공전서) comes from encykorea only, so no year is given. The National Treasure designation covers the diary together with letters (서간첩) and war-report drafts (임진장초). Romanization: surname written 'Yi' as in KHS and UNESCO usage (strict RR would give 'I'). 장군 is glossed as the customary Korean title for him; his posts were naval commands (수군절도사, later 삼도수군통제사). REVISION: removed 'even in very hard times' (not in any source); kept UNESCO's hedge 'almost daily' because the surviving volumes have gaps (the 1595 volume is lost). Scene 5 now says he 'wrote about' family, relatives and subordinates (two sources) instead of 'visits'. Second sources added for f3, f4, f5, f6 from 우리역사넷 (국사편찬위원회) and the KHS MoW page. The identity of the person who chose the title is not stated; only 'editors of 이충무공전서' is claimed. PR 1.8c: keyword 난중일기 is kind 'term', matching the book title 동의보감.",
   "errata": []

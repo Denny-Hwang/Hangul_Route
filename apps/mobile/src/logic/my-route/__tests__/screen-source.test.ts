@@ -73,6 +73,15 @@ describe('screens/my-route sources', () => {
     expect(input).not.toMatch(/route:\s*null/);
   });
 
+  it('the page line and the Home strip read one live weekly plan week (R-7b)', () => {
+    const page = read(join(SCREEN_DIR, 'MyRouteScreen.tsx'));
+    const home = read(join(SRC, 'screens', 'home', 'HomeScreen.tsx'));
+    expect(page).toContain('week: routeWeekOf(model, next)');
+    expect(home).toMatch(/homeStripView\(\{[\s\S]*?week:\s*routeWeekOf\(\s*model,\s*routeInput/);
+    // The strip's model is built from the same input as the week, so the goal and the week name one plan.
+    expect(home).toContain('...(routeInput ? { next: routeInput } : {})');
+  });
+
   it('the Journey header button exists only behind flags.myRouteEnabled and opens the Route tab (LR-4, LR-OD-11)', () => {
     const src = read(join(SRC, 'screens', 'journey', 'JourneyScreen.tsx'));
     const at = src.indexOf("navigation.navigate('Main', { screen: 'Route' })");
@@ -274,7 +283,8 @@ describe('the Route tab (LR-4)', () => {
   it('the tab stays mounted, so each focus is a fresh open: read chained on the write, view gated, hero focus and fill per focus', () => {
     // The read scheduling and the view gate are the pure seenReadAfter / seenForView (focus.ts, unit-tested).
     expect(screen).toContain('seenReadAfter(pendingWrite.current, () => readSeen(STORAGE, profileId), () => live)');
-    expect(screen).toContain('pendingWrite.current = writeSeen(');
+    expect(screen).toContain('written = writeSeen(');
+    expect(screen).toContain('pendingWrite.current = written;');
     // The write carries the record this open read, so goalsReached survives every later focus (LR-3b, LR-5c).
     expect(screen).toContain('seenFrom(model, new Date(), seenRead)');
     expect(screen).toContain('seenForView({ focusKey, seenFor, focused, seen: seenRead })');
@@ -286,6 +296,18 @@ describe('the Route tab (LR-4)', () => {
     // The one-time fill restarts from faded whenever it turns on, so it plays on a later focus too.
     const trail = read(join(SCREEN_DIR, 'TrailRow.tsx'));
     expect(trail).toMatch(/if \(!animate\) return;\s*opacity\.setValue\(FRESH_FROM\);/);
+  });
+
+  it('the first reached goal (LR-5c): the Hoya line for that visit, the goalsReached write and route_map.goal_reached, never read-only', () => {
+    // The decision is the pure firstGoalReachedFor (focus.ts, unit-tested): only after this focus's read, never read-only.
+    expect(screen).toContain('firstGoalReachedFor({ focusKey, seenFor, focused, readOnly, goal: model?.goal ?? null, seen: seenRead })');
+    expect(screen).toMatch(/myRouteView\(\{[\s\S]*?firstReached,/);
+    // The key is written once per focus (goalRecordFor, unit-tested): with this focus's seen record, or on its
+    // own when the goal is reached mid-focus; the event is sent only after the write succeeds.
+    expect(screen).toContain('goalRecordFor({ focusKey, seenWrittenFor: seenWrittenFor.current, writeSeenNow: fx.writeSeen, firstReached, goal: model.goal, recordedFor: goalRecordedFor.current })');
+    expect(screen).toMatch(/if \(fx\.writeSeen\) \{[\s\S]*?withGoalReached\(record, goal\)/);
+    expect(screen).toMatch(/withGoalReached\(stored \?\? fallback, goal\)/);
+    expect(screen).toMatch(/goalReachedEvent\(\{ profileId, goal, firstReached, readOnly \}\)[\s\S]*?written\.then\(\(ok\) => \{\s*if \(ok\) void track\(reached\);/);
   });
 
   it('the root-stack screen is grown-up only: a learner access moves to the tab instead of opening a second copy', () => {
@@ -352,7 +374,7 @@ describe('the route card wiring (Learning Route LR-5a)', () => {
 
   it('the card names the next quest and the plan week; the grown-up card gets the plan end formatter', () => {
     expect(screen).toContain('model.next ? questsAll.find((q) => q.id === model.next?.questId)');
-    expect(screen).toContain('planWeekOf(model.goal, goalSourcesOf(next), next.today)');
+    expect(screen).toContain('week: routeWeekOf(model, next)');
     expect(screen).toContain("formatDay: (day) => formatDate(locale, `${day}T00:00:00.000Z`, 'monthDay', { utc: true })");
     expect(screen).toContain('testID="my-route-plan-line"');
   });
@@ -379,7 +401,7 @@ describe('the route card wiring (Learning Route LR-5a)', () => {
   });
 
   it('the Home strip and the parent dashboard row name the same goal from the same input', () => {
-    expect(home).toContain('homeStripView({ model, messages: m, goalStage: model.goal?.stage ?? null })');
+    expect(home).toMatch(/homeStripView\(\{\s*model,\s*messages: m,\s*goalStage: model\.goal\?\.stage \?\? null,\s*week: routeWeekOf\(\s*model,\s*routeInput/);
     expect(home).toContain('...(routeInput ? { next: routeInput } : {})');
     expect(row).toContain('dashboardRowView({ model, messages, name, started, goalStage: model.goal?.stage ?? null })');
     expect(row).toContain('buildMyRoute(routeModelInput({ snapshot, tier, localized, now, next }))');

@@ -358,3 +358,14 @@ export async function playCheckByIds(page: Page, rounds: readonly [CheckAnswer, 
 export function journeyCellName(stage: number, theme: string): RegExp {
   return new RegExp(`^Stage ${stage} [^,]+, ${theme.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
 }
+
+/**
+ * Open the Meet the Letters episode from the Journey (Stage 1, Letters & Books). Since the launch
+ * stories are reviewed (F-STORY-001 PR 1.9), Home's day-one slots 1 and 3 hold story cards, so the
+ * Letters episode is no longer a Home card; the Journey cell is the learner's own way in.
+ */
+export async function openLettersEpisode(page: Page): Promise<void> {
+  await page.getByText('Journey', { exact: true }).last().click();
+  await page.getByRole('button', { name: journeyCellName(1, 'Letters & Books') }).click();
+  await page.getByRole('button', { name: 'Start', exact: true }).first().waitFor();
+}

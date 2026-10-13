@@ -17,7 +17,7 @@ const body: LearnerReportResponse = {
 /** What the client keeps of `body`: the envelope fields the report reads, and the summary. */
 const kept = (from: LearnerReportResponse): LearnerReportBody => ({
   space: { id: from.space.id, kind: from.space.kind, name: from.space.name, archivedAt: from.space.archivedAt },
-  learner: { id: from.learner.id, displayName: from.learner.displayName },
+  learner: { id: from.learner.id, displayName: from.learner.displayName, avatar: from.learner.avatar },
   summary: from.summary,
   lastSyncedAt: from.lastSyncedAt,
   serverTime: from.serverTime,
@@ -72,7 +72,8 @@ describe('getLearnerReport', () => {
     const fetchImpl = vi.fn<typeof fetch>().mockResolvedValueOnce(json(200, { data: wider }));
     const api = createConsoleApi({ endpoint: 'https://api.example.com', token: 't', fetchImpl });
     const res = await api.getLearnerReport('space:c', 'profile:mina', 'week');
-    expect(res).toEqual({ ok: true, data: { ...kept(body), space: { ...kept(body).space, name: 'S'.repeat(60) } } });
+    // The avatar is read only for the title's chip (RP-7a2): a shape this bundle does not know reads as none.
+    expect(res).toEqual({ ok: true, data: { ...kept(body), space: { ...kept(body).space, name: 'S'.repeat(60) }, learner: { ...kept(body).learner, avatar: null } } });
   });
 
   it('drops only a summary field this bundle cannot read (a Worker deployed first with a wider schema), as the Worker does', async () => {

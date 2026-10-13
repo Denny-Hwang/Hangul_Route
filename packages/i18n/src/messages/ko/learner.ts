@@ -637,6 +637,7 @@ export const learner = {
       approximation: (text: string, rationale: string) => `“${text}”에 대해: ${rationale}`,
       dependsOnToday: '오늘 날짜에 따라 달라져요.',
       usedInQuestions: '문제와 노트에 쓰였어요',
+      onTheCard: '이야기 카드에 쓰였어요',
       highlighted: { pill: '강조됨' },
       openLink: { cta: '링크 열기' },
       copyLink: { cta: '링크 복사' },
@@ -828,7 +829,7 @@ export const learner = {
     readAgain: { cta: '다시 읽기' },
     playAgain: { cta: '다시 하기' },
     startOver: { cta: '처음부터' },
-    state: { new: '새 이야기', inProgress: '읽는 중', finished: '다 읽음', locked: '잠김' },
+    state: { new: '새 이야기', inProgress: '읽는 중', finished: '다 읽음', locked: '아직 안 열렸어요' },
     minutes: { pill: (minutes: number) => `약 ${minutes}분` },
     tileLabel: (title: string, state: string, minutes: number, stars = 0) =>
       `${title}. ${state}. 약 ${minutes}분.` + (stars > 0 ? ` 별 ${stars}개.` : ''),

@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { KIDS_ONLY_FRAMING } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
+import { stage1Cards } from '../../data/stage1-cards';
 
 /**
  * Audience copy guard — owner decision 2026-10-09 (audit UF-01..UF-04):
@@ -36,8 +37,12 @@ const PUBLIC_SURFACES = [
     join('app', group, 'privacy', 'page.tsx'),
     join('app', group, 'terms', 'page.tsx'),
     join('app', group, 'learners', 'page.tsx'),
+    join('app', group, 'parents', 'page.tsx'),
+    join('app', group, 'teachers', 'page.tsx'),
   ]),
   join('data', 'landing-copy.ts'),
+  // The Stage 1 card blurbs `/learners` shows (F-SITE-002 §3.12, OD-9).
+  join('data', 'stage1-cards.ts'),
   ...landingComponents,
 ];
 
@@ -54,9 +59,14 @@ describe('public surfaces speak to anyone learning Hangul (UF-01..UF-03, UF-09)'
   });
 
   it('scans the shared page bodies the English and locale routes render', () => {
-    for (const body of ['LandingPage', 'AboutPage', 'PrivacyPage', 'TermsPage', 'LearnersPage', 'SiteHeader', 'SiteFooter']) {
+    for (const body of ['HomePage', 'AboutPage', 'PrivacyPage', 'TermsPage', 'LearnersPage', 'ParentsPage', 'TeachersPage', 'SiteHeader', 'SiteFooter']) {
       expect(PUBLIC_SURFACES).toContain(join('components', 'landing', `${body}.tsx`));
     }
+  });
+
+  it('the Stage 1 card blurbs shown on the site name no audience: no kids or children (OD-9)', () => {
+    expect(PUBLIC_SURFACES).toContain(join('data', 'stage1-cards.ts'));
+    for (const card of stage1Cards) expect(card.blurb, card.id).not.toMatch(/\b(kids?|kid’s|kids’|child|children)\b/i);
   });
 
   it('scans the English landing messages, where the site copy lives', () => {

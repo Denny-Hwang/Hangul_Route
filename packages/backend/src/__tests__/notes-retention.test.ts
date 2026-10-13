@@ -111,6 +111,16 @@ describe('the lazy purge on every send (section 8.7 item 1)', () => {
   });
 });
 
+describe('the lazy purge on every family oversight read (section 8.7 item 1, PR FB-4b-family)', () => {
+  it('one bounded step per GET …/learners/:learnerId/notes', async () => {
+    expect(await db.insertNotes(old(230, 181 * DAY), [])).toBe(230);
+    const res = await app.request(`/api/spaces/${FAMILY}/learners/${SUNI}/notes`, { headers: { authorization: 'Bearer mom' } }, {});
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as { data: { rows: unknown[] } }).data.rows).toEqual([]);
+    expect(await countNotes()).toBe(30);
+  });
+});
+
 describe('the daily scheduled handler (section 8.7 item 2)', () => {
   it('runs at most 5 rounds of 200 rows: 1,000 of 1,100 expired notes go today, the rest tomorrow; live notes and fresh counters stay', async () => {
     const now = Date.now();

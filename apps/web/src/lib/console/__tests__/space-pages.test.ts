@@ -5,17 +5,25 @@ import { describe, expect, it } from 'vitest';
 import * as parentSpace from '@/app/(console)/parent/space/page';
 import * as parentCurriculum from '@/app/(console)/parent/space/curriculum/page';
 import * as parentLecture from '@/app/(console)/parent/space/lecture/page';
+import * as parentLearner from '@/app/(console)/parent/space/learner/page';
 import * as parentPlan from '@/app/(console)/parent/space/plan/page';
 import * as parentRelink from '@/app/(console)/parent/space/relink/page';
+import * as parentReport from '@/app/(console)/parent/space/report/page';
 import * as parentRoute from '@/app/(console)/parent/space/route/page';
 import * as parentSettings from '@/app/(console)/parent/space/settings/page';
+import * as parentTransfers from '@/app/(console)/parent/space/transfers/page';
+import * as parentNotes from '@/app/(console)/parent/space/notes/page';
 import * as teachSpace from '@/app/(console)/teach/space/page';
 import * as teachCurriculum from '@/app/(console)/teach/space/curriculum/page';
 import * as teachLecture from '@/app/(console)/teach/space/lecture/page';
+import * as teachLearner from '@/app/(console)/teach/space/learner/page';
 import * as teachPlan from '@/app/(console)/teach/space/plan/page';
 import * as teachRelink from '@/app/(console)/teach/space/relink/page';
+import * as teachReport from '@/app/(console)/teach/space/report/page';
 import * as teachRoute from '@/app/(console)/teach/space/route/page';
 import * as teachSettings from '@/app/(console)/teach/space/settings/page';
+import * as teachTransfers from '@/app/(console)/teach/space/transfers/page';
+import * as teachNotes from '@/app/(console)/teach/space/notes/page';
 import { SPACE_PAGES } from '../space-pages';
 
 /**
@@ -49,6 +57,10 @@ const PAIRS: Record<string, [unknown, unknown]> = {
   settings: [teachSettings.default, parentSettings.default],
   lecture: [teachLecture.default, parentLecture.default],
   route: [teachRoute.default, parentRoute.default],
+  transfers: [teachTransfers.default, parentTransfers.default],
+  learner: [teachLearner.default, parentLearner.default],
+  notes: [teachNotes.default, parentNotes.default],
+  report: [teachReport.default, parentReport.default],
 };
 
 describe('SPACE_PAGES and the /parent/space twins', () => {

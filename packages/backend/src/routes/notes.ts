@@ -1,12 +1,13 @@
-import { CATALOG, NOTE_LEARNER_ID_MAX, NOTE_PRESET_AUDIENCE, NOTE_PRESETS_NEED_SUGGEST, NOTE_SEND_MAX_LEARNERS, NoteSendSchema, type NotesMode, type Space } from '@hangul-route/content-schema';
+import { CATALOG, NOTE_LEARNER_ID_MAX, NOTE_PRESET_AUDIENCE, NOTE_PRESETS_NEED_SUGGEST, NOTE_SEND_MAX_LEARNERS, NoteAccountReportSchema, NoteIdSchema, NotePrefsPutSchema, NoteSendSchema, type NotesMode, type Space } from '@hangul-route/content-schema';
 import { checkNoteText } from '@hangul-route/i18n/note-text';
 import { Hono, type Context } from 'hono';
-import { dbFor, noteRateKey, noteRetentionCuts, type Db, type NewNote, type NoteCursor, type SpaceNoteListRow, type StoredNote } from '../db';
+import { dbFor, noteRateKey, noteRetentionCuts, type Db, type NewNote, type NoteCursor, type SpaceNoteListRow, type StoredNote, type StoredSenderBlock } from '../db';
 import { fail, ok } from '../envelope';
 import { requireAccount } from '../lib/access';
 import { allowedOnSpace, can, type AccountActor } from '../lib/can';
-import { accountOverLimit, learnersOverLimit, NOTE_LIMIT_SENDS_PER_MINUTE, NOTE_LIMIT_WINDOW_MS, sendCounterHits, sendCounterKeys } from '../lib/note-limits';
-import { batchStatus, encodeNoteCursor, parseNoteCursor, sentNoteReaction, sentNoteStatus, type SentNoteFacts } from '../lib/note-views';
+import { holdAfterReport } from '../lib/note-holds';
+import { accountOverLimit, learnersOverLimit, NOTE_LIMIT_FAMILY_REPORTS_PER_ACCOUNT_PER_DAY, NOTE_LIMIT_SENDS_PER_MINUTE, NOTE_LIMIT_WINDOW_MS, sendCounterHits, sendCounterKeys } from '../lib/note-limits';
+import { accountLabel, batchStatus, DEVICE_ACTOR, encodeNoteCursor, notePrefsView, oversightStatus, parseNoteCursor, senderRefFor, sentNoteReaction, sentNoteStatus, type SentNoteFacts } from '../lib/note-views';
 import { purgeNotesLazily } from '../lib/note-retention';
 import { notesSendEnabled, type NotesEnv } from '../lib/notes-switch';
 import { createRateLimiter } from '../lib/rate-limit';
@@ -301,4 +302,384 @@ notesRoutes.post('/:id/notes/:noteId/withdraw', async (c) => {
   if (body.batch) return ok(c, { withdrawn: await db.withdrawBatch(note.batchId, account.id, now) });
   if (note.status === 'reported') return fail(c, 'note_reported', 'This note is under review', 409);
   return ok(c, { withdrawn: await db.withdrawNote(note.id, now) });
+});
+
+/*
+ * The family's oversight of every note to its learner — F-FEEDBACK-001
+ * sections 6.1, 7.2, 8.2 and 8.5 (PR FB-4b-family): the family view, hide,
+ * report, stop a sender, the class-notes setting, and the owner's "Can send
+ * notes" switches. `feedback.oversee` is every family caregiver, granted or
+ * not; none of these routes is switched (decision D7).
+ */
+
+/** The viewer, the family and the learner: 404 unless the space is a family, 403 without `feedback.oversee`, 404 unless the learner is its student. */
+async function overseer(c: Ctx, db: Db, familyId: string, learnerId: string): Promise<Response | { account: Account; space: Space }> {
+  const account = await requireAccount(c);
+  if (!('id' in account)) return account;
+  const space = await db.getSpace(familyId);
+  if (!space || space.kind !== 'family') return notFound(c);
+  const actor: AccountActor = { kind: 'account', accountId: account.id, memberships: await db.membershipsOf('account', account.id) };
+  if (!allowedOnSpace(actor, { space, parent: null }).has('feedback.oversee')) return fail(c, 'not_allowed', 'You cannot see these notes', 403);
+  if ((await db.membership(space.id, 'learner', learnerId))?.role !== 'student') return notFound(c);
+  return { account, space };
+}
+
+/** A note to this learner (from any space) that every list still shows; null otherwise (the route answers 404). */
+async function noteOfLearner(db: Db, learnerId: string, noteId: string, now: Date): Promise<StoredNote | null> {
+  const note = await db.getNote(noteId);
+  if (!note || note.learnerId !== learnerId) return null;
+  if (note.status !== 'reported' && note.createdAt < noteRetentionCuts(now).notesSince) return null;
+  return note;
+}
+
+/**
+ * What delivery would do now for these notes (section 6.8 rules 2, 4, 5, 6), for `not_shown`: one read per
+ * space, member list and family caregiver who sent, whatever the number of notes.
+ */
+async function deliveryOf(db: Db, learnerId: string, notes: readonly StoredNote[]): Promise<{ spaces: Map<string, Space>; delivered: (n: StoredNote) => boolean }> {
+  const spaces = new Map((await db.getSpaces([...new Set(notes.map((n) => n.spaceId))])).map((s) => [s.id, s]));
+  const studentOf = new Set((await db.membershipsOf('learner', learnerId)).filter((m) => m.role === 'student').map((m) => m.spaceId));
+  const mode = (await db.getNotePrefs(learnerId))?.classes ?? 'all';
+  const blocked = new Set((await db.listBlocks(learnerId)).map((b) => b.senderAccountId));
+  const roles = new Map<string, Map<string, string>>();
+  for (const spaceId of spaces.keys()) roles.set(spaceId, new Map((await db.membersOf(spaceId)).filter((m) => m.memberKind === 'account').map((m) => [m.memberId, m.role])));
+  // One grant read per family caregiver who sent, whatever the number of their notes on the page.
+  const granted = new Set<string>();
+  const checked = new Set<string>();
+  for (const n of notes) {
+    const key = `${n.spaceId}\n${n.senderAccountId}`;
+    if (checked.has(key) || spaces.get(n.spaceId)?.kind !== 'family' || roles.get(n.spaceId)?.get(n.senderAccountId) !== 'caregiver') continue;
+    checked.add(key);
+    if (await db.getSendGrant(n.spaceId, n.senderAccountId)) granted.add(key);
+  }
+  const maySend = (n: StoredNote): boolean => {
+    const role = roles.get(n.spaceId)?.get(n.senderAccountId);
+    const kind = spaces.get(n.spaceId)?.kind;
+    if (kind === 'class') return n.senderRole === 'teacher' && (role === 'teacher' || role === 'owner');
+    if (kind === 'family') return n.senderRole === 'family' && (role === 'owner' || (role === 'caregiver' && granted.has(`${n.spaceId}\n${n.senderAccountId}`)));
+    return false;
+  };
+  const delivered = (n: StoredNote): boolean => {
+    const space = spaces.get(n.spaceId);
+    if (!space || space.archivedAt !== null || !studentOf.has(n.spaceId)) return false;
+    if (n.senderRole !== 'family' && mode === 'off') return false;
+    return !blocked.has(n.senderAccountId) && maySend(n);
+  };
+  return { spaces, delivered };
+}
+
+/** The notes of `noteIds` that a report from a device names (rule 8.2-c). */
+async function deviceReported(db: Db, noteIds: readonly string[]): Promise<Set<string>> {
+  if (noteIds.length === 0) return new Set();
+  return new Set((await db.reportsForNotes(noteIds)).filter((r) => r.via === 'device').map((r) => r.noteId));
+}
+
+/**
+ * Who acted, as the viewing family names them (section 8.2: adult to adult inside the family). A learner can
+ * be a student of more than one family; an adult of another of those families is named by that family
+ * space's name, never by its account name or email.
+ */
+async function familyActorNames(db: Db, familyId: string, learnerId: string): Promise<(accountId: string, reporterFamilyId?: string) => Promise<string>> {
+  const own = new Set((await db.membersOf(familyId)).filter((m) => m.memberKind === 'account').map((m) => m.memberId));
+  const learnerFamilies = (await db.membershipsOf('learner', learnerId)).filter((m) => m.role === 'student' && m.spaceId !== familyId).map((m) => m.spaceId);
+  const others = (await db.getSpaces(learnerFamilies)).filter((s) => s.kind === 'family');
+  const cache = new Map<string, string>();
+  return async (accountId, reporterFamilyId) => {
+    const key = `${accountId}\n${reporterFamilyId ?? ''}`;
+    const hit = cache.get(key);
+    if (hit !== undefined) return hit;
+    let label: string;
+    const reporterFamily = reporterFamilyId !== undefined && reporterFamilyId !== familyId ? others.find((s) => s.id === reporterFamilyId) : undefined;
+    if (reporterFamily) label = reporterFamily.name;
+    else if (own.has(accountId) || reporterFamilyId === familyId) label = accountLabel(await db.getAccount(accountId));
+    else {
+      const theirs = new Set((await db.membershipsOf('account', accountId)).map((m) => m.spaceId));
+      const other = others.find((s) => theirs.has(s.id));
+      label = other ? other.name : accountLabel(await db.getAccount(accountId));
+    }
+    cache.set(key, label);
+    return label;
+  };
+}
+
+notesRoutes.get('/:familyId/learners/:learnerId/notes', async (c) => {
+  const db = dbFor(c);
+  const learnerId = c.req.param('learnerId');
+  const who = await overseer(c, db, c.req.param('familyId'), learnerId);
+  if (who instanceof Response) return who;
+  const { account, space: family } = who;
+  const rawBefore = c.req.query('before');
+  let before: NoteCursor | null = null;
+  if (rawBefore !== undefined && rawBefore !== '') {
+    before = parseNoteCursor(rawBefore);
+    if (!before) return fail(c, 'bad_request', 'Invalid before', 422);
+  }
+
+  const now = new Date();
+  // The lazy retention step on every oversight read (section 8.7 item 1).
+  await purgeNotesLazily(db, now);
+  const notes = await db.notesForOversight(learnerId, { before, limit: SENT_LIST_PAGE, now });
+  const { spaces, delivered } = await deliveryOf(db, learnerId, notes);
+
+  // Who acted: the first report, the hiding account. Only family accounts are ever named (section 8.2-a).
+  const reports = await db.reportsForNotes(notes.filter((n) => n.status === 'reported').map((n) => n.id));
+  const firstReport = new Map<string, (typeof reports)[number]>();
+  const onDevice = new Set<string>();
+  for (const r of reports) {
+    if (!firstReport.has(r.noteId)) firstReport.set(r.noteId, r);
+    if (r.via === 'device') onDevice.add(r.noteId);
+  }
+  const nameOf = await familyActorNames(db, family.id, learnerId);
+  const familyPrefix = 'family:';
+
+  const rows = [];
+  for (const n of notes) {
+    const space = spaces.get(n.spaceId);
+    const mine = n.senderAccountId === account.id;
+    const status = oversightStatus(n, { delivered: delivered(n), viewerIsSender: mine, reportedOnDevice: onDevice.has(n.id) });
+    const first = firstReport.get(n.id);
+    // The sending adult is named inside the viewing family only (section 8.2); a note of another family of the learner names nobody.
+    const senderName = n.senderRole === 'family' && n.spaceId === family.id ? await nameOf(n.senderAccountId, family.id) : null;
+    let hiddenBy: string | null = null;
+    if (status === 'hidden') hiddenBy = n.hiddenVia === 'device' ? DEVICE_ACTOR : await nameOf(n.actedByAccountId ?? '');
+    let reportedBy: string | null = null;
+    if (status === 'reported' && first) {
+      const reporterFamily = first.reporterKey.startsWith(familyPrefix) ? first.reporterKey.slice(familyPrefix.length) : undefined;
+      reportedBy = first.via === 'device' ? DEVICE_ACTOR : await nameOf(first.evidence, reporterFamily);
+    }
+    rows.push({
+      id: n.id,
+      spaceId: n.spaceId,
+      spaceKind: space?.kind ?? 'class',
+      spaceName: space?.name ?? '',
+      from: { role: n.senderRole, label: n.senderRole === 'family' ? (n.senderLabel ?? 'family') : null },
+      senderName,
+      mine,
+      presetId: n.presetId,
+      text: n.body,
+      suggest: n.suggest,
+      createdAt: n.createdAt,
+      status,
+      reaction: n.reaction,
+      hiddenBy,
+      reportedBy,
+    });
+  }
+  const last = notes[notes.length - 1];
+  return ok(c, { rows, next: notes.length === SENT_LIST_PAGE && last ? encodeNoteCursor(last) : null });
+});
+
+notesRoutes.post('/:familyId/learners/:learnerId/notes/:noteId/hide', async (c) => {
+  const db = dbFor(c);
+  const learnerId = c.req.param('learnerId');
+  const who = await overseer(c, db, c.req.param('familyId'), learnerId);
+  if (who instanceof Response) return who;
+  const now = new Date();
+  const note = await noteOfLearner(db, learnerId, c.req.param('noteId'), now);
+  if (!note) return notFound(c);
+  // A hide is not a report and counts toward no hold (decision D8); hiding a hidden note is done already.
+  if (note.status === 'hidden') return ok(c, { hidden: true });
+  if (note.senderAccountId === who.account.id) {
+    // The sender's own note answers by what its sender sees (rule 8.2-c): any note that reads `not_shown`
+    // to them answers the same 409, so a device report cannot be told apart from a delivery rule.
+    const { delivered } = await deliveryOf(db, learnerId, [note]);
+    const seen = oversightStatus(note, { delivered: delivered(note), viewerIsSender: true, reportedOnDevice: (await deviceReported(db, [note.id])).has(note.id) });
+    if (seen === 'hidden') return ok(c, { hidden: true });
+    if (seen !== 'live' && seen !== 'opened') return fail(c, 'not_live', 'This note is not shown', 409);
+  }
+  if (note.status !== 'live' || (await db.hideNote(note.id, 'family', now, who.account.id)) === 0) return fail(c, 'not_live', 'This note is not shown', 409);
+  return ok(c, { hidden: true });
+});
+
+notesRoutes.post('/:familyId/learners/:learnerId/notes/:noteId/report', async (c) => {
+  const db = dbFor(c);
+  const learnerId = c.req.param('learnerId');
+  const who = await overseer(c, db, c.req.param('familyId'), learnerId);
+  if (who instanceof Response) return who;
+  const { account, space } = who;
+  const parsed = NoteAccountReportSchema.safeParse(await c.req.json().catch(() => null));
+  if (!parsed.success) return fail(c, 'bad_request', 'Invalid report body', 422, { issues: parsed.error.issues.map((i) => ({ path: i.path, code: i.code })) });
+  const now = new Date();
+  // Any note to the learner, a family note and a taken-back note included (section 8.3 item 3).
+  const note = await noteOfLearner(db, learnerId, c.req.param('noteId'), now);
+  if (!note) return notFound(c);
+  if (note.senderAccountId === account.id) return fail(c, 'own_note', 'Take back your own note instead', 422);
+  const counterKey = noteRateKey.reportAccount(account.id);
+  if ((await db.countRateHits(counterKey, new Date(now.getTime() - NOTE_LIMIT_WINDOW_MS))) >= NOTE_LIMIT_FAMILY_REPORTS_PER_ACCOUNT_PER_DAY) {
+    return fail(c, 'too_many', 'Too many reports today, try again tomorrow', 429, { scope: 'account', retryAfter: NOTE_LIMIT_WINDOW_MS / 1000 });
+  }
+  const report = {
+    id: `notereport:${crypto.randomUUID()}`,
+    noteId: note.id,
+    learnerId,
+    senderAccountId: note.senderAccountId,
+    reason: parsed.data.reason,
+    via: 'family' as const,
+    evidence: account.id,
+    reporterKey: `family:${space.id}`,
+    attest: null,
+    createdAt: now.toISOString(),
+    reviewedAt: null,
+    outcome: null,
+  };
+  if (!(await db.insertNoteReport(report))) return notFound(c);
+  await db.addRateHits([{ key: counterKey, at: report.createdAt }]);
+  await holdAfterReport(db, report, now);
+  return ok(c, { reported: true }, 201);
+});
+
+/**
+ * A blocked sender as the family's settings list names it: a family adult by its account, a teacher by the
+ * class it teaches the learner in, an adult of another family of the learner by that family space's name
+ * (never its account name). A sender who shares no space with the learner any more reads `former`, name null.
+ */
+async function blockLabel(db: Db, learnerId: string, familyId: string, senderAccountId: string): Promise<{ role: 'teacher' | 'family' | 'former'; name: string | null }> {
+  const senderSpaces = await db.membershipsOf('account', senderAccountId);
+  if (senderSpaces.some((m) => m.spaceId === familyId)) return { role: 'family', name: accountLabel(await db.getAccount(senderAccountId)) };
+  const learnerSpaces = new Set((await db.membershipsOf('learner', learnerId)).map((m) => m.spaceId));
+  const sharedSpaces = await db.getSpaces(senderSpaces.filter((m) => learnerSpaces.has(m.spaceId)).map((m) => m.spaceId));
+  const classSpace = sharedSpaces.find((s) => s.kind === 'class' && senderSpaces.some((m) => m.spaceId === s.id && (m.role === 'teacher' || m.role === 'owner')));
+  if (classSpace) return { role: 'teacher', name: classSpace.name };
+  const otherFamily = sharedSpaces.find((s) => s.kind === 'family');
+  if (otherFamily) return { role: 'family', name: otherFamily.name };
+  return { role: 'former', name: null };
+}
+
+/** The section 7.2 line in English; `role` and `name` let the console word it in the viewer's UI language. */
+function blockLine(role: 'teacher' | 'family' | 'former', name: string | null): string {
+  if (role === 'teacher') return name ? `Your teacher · ${name}` : 'Your teacher';
+  if (role === 'family') return name ?? 'Family';
+  return 'A former sender';
+}
+
+/** The blocks this family placed: a block another family of the learner placed is that family's to lift. */
+async function familyBlocks(db: Db, learnerId: string, familyId: string): Promise<StoredSenderBlock[]> {
+  return (await db.listBlocks(learnerId)).filter((b) => b.familySpaceId === familyId);
+}
+
+notesRoutes.get('/:familyId/learners/:learnerId/blocks', async (c) => {
+  const db = dbFor(c);
+  const learnerId = c.req.param('learnerId');
+  const who = await overseer(c, db, c.req.param('familyId'), learnerId);
+  if (who instanceof Response) return who;
+  const blocks = [];
+  for (const b of await familyBlocks(db, learnerId, who.space.id)) {
+    const { role, name } = await blockLabel(db, learnerId, who.space.id, b.senderAccountId);
+    blocks.push({ senderRef: await senderRefFor(who.space.id, b.senderAccountId), label: blockLine(role, name), role, name, createdAt: b.createdAt });
+  }
+  return ok(c, { blocks });
+});
+
+notesRoutes.post('/:familyId/learners/:learnerId/blocks', async (c) => {
+  const db = dbFor(c);
+  const learnerId = c.req.param('learnerId');
+  const who = await overseer(c, db, c.req.param('familyId'), learnerId);
+  if (who instanceof Response) return who;
+  const raw = (await c.req.json().catch(() => null)) as unknown;
+  const noteId = typeof raw === 'object' && raw !== null && !Array.isArray(raw) && Object.keys(raw).every((k) => k === 'noteId') ? (raw as { noteId?: unknown }).noteId : undefined;
+  if (!NoteIdSchema.safeParse(noteId).success) return fail(c, 'bad_request', 'Invalid block body', 422);
+  const now = new Date();
+  // The block names the sender of that note; the account id never travels to the console (section 8.5).
+  const note = await noteOfLearner(db, learnerId, String(noteId), now);
+  if (!note) return notFound(c);
+  if (note.senderAccountId === who.account.id) return fail(c, 'own_note', 'You cannot stop your own notes', 422);
+  await db.putBlock({ learnerId, senderAccountId: note.senderAccountId, familySpaceId: who.space.id, createdByAccount: who.account.id, createdAt: now.toISOString() });
+  return ok(c, { senderRef: await senderRefFor(who.space.id, note.senderAccountId) }, 201);
+});
+
+notesRoutes.delete('/:familyId/learners/:learnerId/blocks/:senderRef', async (c) => {
+  const db = dbFor(c);
+  const learnerId = c.req.param('learnerId');
+  const who = await overseer(c, db, c.req.param('familyId'), learnerId);
+  if (who instanceof Response) return who;
+  const ref = c.req.param('senderRef');
+  for (const b of await familyBlocks(db, learnerId, who.space.id)) {
+    if ((await senderRefFor(who.space.id, b.senderAccountId)) === ref) {
+      await db.deleteBlock(learnerId, b.senderAccountId);
+      return ok(c, { removed: true });
+    }
+  }
+  return notFound(c);
+});
+
+/** The class-notes setting as the family reads it: who changed it last is an account name, `"device"`, or null when never changed. */
+async function familyPrefsView(db: Db, learnerId: string): Promise<{ classes: NotesMode; acknowledged: boolean; updatedBy: string | null }> {
+  const prefs = await db.getNotePrefs(learnerId);
+  const view = notePrefsView(prefs);
+  const updatedBy = !prefs ? null : prefs.updatedVia === 'device' ? DEVICE_ACTOR : accountLabel(prefs.updatedByAccount ? await db.getAccount(prefs.updatedByAccount) : null);
+  return { classes: view.classes ?? 'all', acknowledged: view.acknowledged, updatedBy };
+}
+
+notesRoutes.get('/:familyId/learners/:learnerId/note-prefs', async (c) => {
+  const db = dbFor(c);
+  const learnerId = c.req.param('learnerId');
+  const who = await overseer(c, db, c.req.param('familyId'), learnerId);
+  if (who instanceof Response) return who;
+  return ok(c, await familyPrefsView(db, learnerId));
+});
+
+notesRoutes.put('/:familyId/learners/:learnerId/note-prefs', async (c) => {
+  const db = dbFor(c);
+  const learnerId = c.req.param('learnerId');
+  const who = await overseer(c, db, c.req.param('familyId'), learnerId);
+  if (who instanceof Response) return who;
+  const parsed = NotePrefsPutSchema.safeParse(await c.req.json().catch(() => null));
+  if (!parsed.success) return fail(c, 'bad_request', 'Invalid note prefs body', 422, { issues: parsed.error.issues.map((i) => ({ path: i.path, code: i.code })) });
+  const at = new Date().toISOString();
+  // `acknowledge: true` answers the one-time class-notes card on every device and in the console; never cleared.
+  await db.putNotePrefs({ learnerId, classes: parsed.data.classes, acknowledgedAt: parsed.data.acknowledge ? at : null, updatedAt: at, updatedVia: 'family', updatedByAccount: who.account.id });
+  return ok(c, await familyPrefsView(db, learnerId));
+});
+
+/** The family owner (`space.manage`) of a family space; 404 for any other space, 403 for anyone else. */
+async function familyOwner(c: Ctx, db: Db, familyId: string): Promise<Response | { account: Account; space: Space }> {
+  const account = await requireAccount(c);
+  if (!('id' in account)) return account;
+  const space = await db.getSpace(familyId);
+  if (!space || space.kind !== 'family') return notFound(c);
+  const actor: AccountActor = { kind: 'account', accountId: account.id, memberships: await db.membershipsOf('account', account.id) };
+  if (!allowedOnSpace(actor, { space, parent: null }).has('space.manage')) return fail(c, 'not_allowed', 'Only the family owner can change who sends notes', 403);
+  return { account, space };
+}
+
+/** Any family caregiver (`feedback.oversee`) of a family space; 404 for any other space, 403 for anyone else. */
+async function familyCaregiver(c: Ctx, db: Db, familyId: string): Promise<Response | { account: Account; space: Space }> {
+  const account = await requireAccount(c);
+  if (!('id' in account)) return account;
+  const space = await db.getSpace(familyId);
+  if (!space || space.kind !== 'family') return notFound(c);
+  const actor: AccountActor = { kind: 'account', accountId: account.id, memberships: await db.membershipsOf('account', account.id) };
+  if (!allowedOnSpace(actor, { space, parent: null }).has('feedback.oversee')) return fail(c, 'not_allowed', 'You cannot see this list', 403);
+  return { account, space };
+}
+
+// Every caregiver reads the list; only the owner changes it (rule 8.2-b, `console/family-notes.md` D).
+notesRoutes.get('/:familyId/note-senders', async (c) => {
+  const db = dbFor(c);
+  const who = await familyCaregiver(c, db, c.req.param('familyId'));
+  if (who instanceof Response) return who;
+  const adults = (await db.membersOf(who.space.id)).filter((m) => m.memberKind === 'account');
+  adults.sort((a, b) => (a.role === 'owner' ? -1 : b.role === 'owner' ? 1 : a.joinedAt.localeCompare(b.joinedAt) || a.memberId.localeCompare(b.memberId)));
+  const senders = [];
+  for (const m of adults) {
+    const isOwner = m.role === 'owner';
+    senders.push({ accountId: m.memberId, name: accountLabel(await db.getAccount(m.memberId)), isOwner, canSend: isOwner || (await db.getSendGrant(who.space.id, m.memberId)) !== null });
+  }
+  return ok(c, { senders });
+});
+
+notesRoutes.put('/:familyId/note-senders/:accountId', async (c) => {
+  const db = dbFor(c);
+  const who = await familyOwner(c, db, c.req.param('familyId'));
+  if (who instanceof Response) return who;
+  const raw = (await c.req.json().catch(() => null)) as unknown;
+  const valid = typeof raw === 'object' && raw !== null && !Array.isArray(raw) && Object.keys(raw).length === 1 && typeof (raw as { canSend?: unknown }).canSend === 'boolean';
+  if (!valid) return fail(c, 'bad_request', 'Invalid body', 422);
+  const canSend = (raw as { canSend: boolean }).canSend;
+  const target = await db.membership(who.space.id, 'account', c.req.param('accountId'));
+  if (!target) return notFound(c);
+  if (target.role === 'owner') return canSend ? ok(c, { canSend: true }) : fail(c, 'owner', 'The family owner can always send notes', 409);
+  if (canSend) await db.putSendGrant({ spaceId: who.space.id, accountId: target.memberId, grantedBy: who.account.id, grantedAt: new Date().toISOString() });
+  else await db.deleteSendGrant(who.space.id, target.memberId);
+  return ok(c, { canSend });
 });

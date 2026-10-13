@@ -317,5 +317,11 @@ export const a11y = {
     next: 'Next',
     inPlan: 'In your plan',
     notOpen: (title: string) => `${title}: not open yet. Opens the lesson page.`,
+    /**
+     * A lesson-page row with a Next or In your plan tag reads as one element (section 3.14): the title, the lines
+     * under it (blurb, builds-on, stars) and the tag words, e.g. "Family at the Table. 0 of 3 stars earned. Next."
+     */
+    row: (title: string, details: readonly string[], tags: readonly string[]) =>
+      `${[title, ...details, ...tags].map((part) => part.trim().replace(/[.!?]+$/, '')).join('. ')}.`,
   },
 } as const;

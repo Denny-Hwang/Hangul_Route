@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:shapes-of-hangeul",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "한글 모양의 비밀",
     "romanization": "Hangeul moyangui bimil",
     "en": "The Secret in the Shapes"
   },
   "summaryEn": "Hoya reads the 1446 Hunminjeongeum Haerye book and discovers that the five basic Hangul consonants copy the shapes of the tongue, mouth, teeth and throat, while the basic vowels come from the sky, the earth and a person.",
+  "hoyaIntroEn": "Did you know the letters hide secret shapes? Let's open an old book and find them!",
+  "hoyaOutroEn": "Tongue, mouth, teeth, throat, sky, earth and a person: you found the secrets in the shapes!",
   "theme": "letters",
   "kind": "documentary",
   "recommendedStage": 1,
@@ -25,9 +27,11 @@
     "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
   },
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "advisory": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "advisory": [],
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-13"
   },
   "keywords": [
     {
@@ -486,7 +490,7 @@
                 "s": 0.8
               }
             ],
-            "altEn": "Hoya juggles 24 blank tiles in a sunny classroom, 14 in one colour and 10 in another, like consonants and vowels."
+            "altEn": "Hoya juggles 24 blank tiles in a sunny classroom, 14 in one color and 10 in another, like consonants and vowels."
           },
           "captionEn": "South Korea's rules: 14 consonants, 10 vowels"
         }
@@ -616,8 +620,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-shapes-of-hangeul"
+  },
+  "shelf": {
+    "category": "culture",
+    "order": 2,
+    "sampler": false,
+    "minutes": 5
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Consonants",
+    "keywordId": "jaeum",
+    "factId": "f8"
+  },
   "facts": [
     {
       "id": "f1",
@@ -821,6 +839,36 @@
           "quoteOrLocator": "\"훈민정음 창제 당시의 28글자 가운데 지금 쓰이지 않는 'ㆆ, ㅿ, · (ᄋᆞ)'의 이름은 지어지지 않았고, 'ㅇ'과 'ㆁ'의 구별이 없어짐에 따라\""
         }
       ]
+    },
+    {
+      "id": "f8",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The five basic consonant letters were made by copying the shapes of the speech organs used to pronounce each sound.",
+      "claimKo": "기본 자음 다섯 글자는 각 소리를 낼 때 쓰는 발음 기관의 모양을 본떠 만들었다.",
+      "sources": [
+        {
+          "title": "훈민정음 28자모 — 한국민족문화대백과사전",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0074518",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"초성의 기본 문자인 'ㄱ, ㄴ, ㅁ, ㅅ, ㅇ'의 다섯 문자는 각 문자가 발음될 때의 발음 기관의 모양을 본떠 만들고\""
+        },
+        {
+          "title": "알고 싶은 한글 — 강창석, 「제자 원리의 주요 특성과 배경」 (hangeul/short/004d)",
+          "publisher": "국립국어원 (National Institute of Korean Language)",
+          "url": "https://www.korean.go.kr/hangeul/short/004d.html",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"초성의 기본자는 발음 기관의 모양을 본따 만들고, 중성의 기본자는 천, 지, 인을 상형(象形)하였다.\""
+        },
+        {
+          "title": "한글 — 한국민족문화대백과사전",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0061508",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"이리하여 'ㄱ ㄴ ㅁ ㅅ ㅇ'의 다섯 글자를 만들어내고\""
+        }
+      ]
     }
   ],
   "referenceDisplay": "Sources: 한국민족문화대백과사전(훈민정음, 훈민정음 28자모); 국가유산청 국가유산포털; UNESCO Memory of the World; 국립국어원(한글 맞춤법, 표준국어대사전); 국립한글박물관",
@@ -828,7 +876,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
+    "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-13 culture review: f8 added for the story card, a restatement of f2 without the letters, with the same sources."
   },
   "authorNotes": "The letter-shape explanations follow the Haerye's 'Jejahae' (제자해) as summarized by 한국민족문화대백과사전. The Haerye's yin-yang and five-elements philosophy is left out as too advanced. The add-a-stroke rule has exceptions (ㆁ, ㄹ, ㅿ, per 한국민족문화대백과사전), so the narration gives only the ㄴ→ㄷ→ㅌ example. The narration says 'a few old ones are no longer used' rather than naming exactly four, because ㆁ merged with ㅇ rather than disappearing. The 국립국어원 essay (004d/004g) notes that a few details of the design principle are still debated among scholars; the story keeps to the consensus points. Because illustrations must contain no text, the app should overlay the jamo (ㄱ, ㄴ, ㅏ and so on) as UI text on the scene art. REVISED: the shape descriptions now follow the Haerye wording exactly (ㄱ = root of the tongue closing the throat, 象舌根閉喉之形; ㄴ = tongue touching the upper gum, 象舌附上腭之形) and no longer promise a physical sensation or add modern phonetics ('back of the tongue blocks the throat', 'ridge behind the upper teeth' removed; narration and illustration). The summary now says 'five basic consonants' (only ㄱ ㄴ ㅁ ㅅ ㅇ copy speech organs; others add strokes). Scene 2 no longer lists 'lips' (the Haerye names tongue root, tongue, mouth, tooth, throat). Vocab 혀 removed because no scene shows it. FINAL PASS (3rd check): scene 8, goal 4 and f7 now say South Korea's spelling rules count 24 (North Korea's norms count 40). The ㄴ wording follows the standard Korean rendering of 象舌附上腭之形 ('tongue touching the upper gum'); the Chinese 上腭 literally means the upper palate/jaw, so no finer anatomical claim is made. REVIEW PASS (PR 1.8b): the old vowel arae-a is named 'the round dot' in learner text, never typed as a bare middle dot (screen readers skip it); the art overlay draws it. REVIEW FIX (PR 1.8b round 2): isolated jamo use the F-CNT-002 C6 sound-value table: ㄱ 'g/k' and ㄷ 'd/t' in keywords, the s2 keyword, the c3 target and the learning goals (ㅇ already 'silent/ng'). The goal glosses are modern reading aids; in the Haerye the throat letter ㅇ was the null letter and ng was written with the separate letter ㆁ, which the narration does not claim otherwise.",
   "errata": []

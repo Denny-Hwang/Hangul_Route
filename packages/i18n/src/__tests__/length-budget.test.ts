@@ -32,7 +32,6 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'a11y.access.next': 'read aloud in a Journey cell label, never drawn; the same word as learner.routeNext.tag.next ("Siguiente")',
   'learner.story.sequence.replay.play.cta': 'the standard Spanish player word "Reproducir", inside the 28-character cta budget',
   'learner.myRoute.gains.stars': '"Estrellas" (9) against "Stars" (5), a one-word label',
-  'landing.trust.label': 'a landmark name read aloud, never drawn ("Confianza")',
   'landing.waitlist.privacyLink': 'the document name "Política de privacidad", one letter over, a link inside the consent line',
   'console.saveDraft': '"Guardar borrador", one letter over; the button wraps',
   'console.relink.device': 'the one word "dispositivo" (11) against "device" (6)',
@@ -45,6 +44,7 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'console.notes.composer.preview.title': '"Vista previa", one letter over, a heading',
   'console.notes.family.report.why': 'Spanish questions open with "¿": "¿Por qué?" is one letter over',
   'caregiver.notes.report.why': 'Spanish questions open with "¿": "¿Por qué?" is one letter over',
+  'console.browse.preview.cta': 'the Spanish word "Vista previa" (12) against "Preview" (7), the same word as console.notes.composer.preview.title; inside the 28-character cta budget, a link that wraps',
 };
 
 const BUDGETS: Readonly<Record<string, number>> = { tab: 12, pill: 24, cta: 28 };
@@ -176,6 +176,8 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       'caregiver.pin.entry.forgot.cta',
       'caregiver.pin.reset.noCode.cta',
       'caregiver.plan.backToJourney.cta',
+      'caregiver.plan.backToLibrary.cta',
+      'caregiver.plan.backHome.cta',
       'caregiver.plan.openBilling.cta',
       'caregiver.spaces.leave.cta',
       'caregiver.spaces.join.cta',
@@ -261,11 +263,9 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
     }
   });
 
-  it('covers the landing buttons (PR 11a)', () => {
+  it('covers the landing buttons (PR 11a; the old landing buttons left in F-SITE-002 S-6)', () => {
     const paths = leafPaths(getMessages('en')).filter((p) => BUDGETS[p.split('.').pop() ?? ''] !== undefined);
-    for (const expected of ['landing.nav.playNow.cta', 'landing.hero.play.cta', 'landing.hero.seeCards.cta', 'landing.get.play.cta']) {
-      expect(paths).toContain(expected);
-    }
+    expect(paths).toContain('landing.localeBanner.close.cta');
   });
 
   // F-SITE-002 §5 (PR S-3): the site header's text links, the persona cards and the pill actions. "Start learning"

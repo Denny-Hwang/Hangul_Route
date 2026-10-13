@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, passDiscover, unlockWithPin } from './helpers';
+import { completeChildForm, openLettersEpisode, passDiscover, unlockWithPin } from './helpers';
 
 /**
  * F-LAYOUT-001 PR 6 (§3.6 game rows, PIN row, LD4 "media scales, text does not"):
@@ -93,7 +93,7 @@ for (const c of CASES) {
 
       // Quest 1, step 4: Build a Letter tiles (base touchTarget.child).
       await home(page, name);
-      await page.getByRole('button', { name: /Meet the Letters/ }).click();
+      await openLettersEpisode(page);
       await page.getByRole('button', { name: 'Start' }).first().click();
       await page.getByRole('button', { name: 'Continue' }).click();
       await passDiscover(page);
@@ -105,7 +105,7 @@ for (const c of CASES) {
 
       // Quest 2, step 4: Trace.
       await home(page, name);
-      await page.getByRole('button', { name: /Meet the Letters/ }).click();
+      await openLettersEpisode(page);
       await page.getByRole('button', { name: 'Start' }).nth(1).click();
       await page.getByRole('button', { name: 'Play anyway' }).click();
       await page.getByRole('button', { name: 'Continue' }).click();

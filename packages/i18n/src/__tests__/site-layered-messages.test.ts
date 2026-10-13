@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { LOCALES } from '../locales';
 import { getMessages } from '../resolve';
 import { leafPaths, lookup } from '../tree';
-import { LANDING_PATHS_BEFORE_SITE } from './landing-paths-before-site';
 import { SAMPLES } from './samples';
 
 // F-SITE-002 PR S-3: the English strings of the layered intro site (appendix B), written before any
@@ -70,23 +69,20 @@ describe('B.1 home: nav, hero, persona chooser, how it works, promises, plans, l
     expect(l.persona.learners.faq.offline.a).toMatch(/^On most devices, yes/);
   });
 
-  it('who is it for: three persona cards, each with a title, one line and a link label', () => {
+  it('who is it for: three persona cards, each with a title and one line (the card is the link)', () => {
     expect(l.home.who.title).toBe('Who is it for?');
     expect(l.home.who.items).toEqual({
       learners: {
         title: 'Learners',
         body: 'Five-minute quests, a guide who never scolds, and Korean culture cards to collect.',
-        linkLabel: 'For learners',
       },
       parents: {
         title: 'Parents and caregivers',
         body: 'See what your learner practises, with a grown-up gate and no ads.',
-        linkLabel: 'For parents',
       },
       teachers: {
         title: 'Teachers',
         body: 'Students join with a class code. No student emails, no accounts.',
-        linkLabel: 'For teachers',
       },
     });
     expect(Object.keys(l.home.who.items)).toEqual(['learners', 'parents', 'teachers']);
@@ -219,8 +215,11 @@ describe('B.2 learners', () => {
       q: 'Does it work offline?',
       a: 'On most devices, yes: after your first visit the app opens without a connection. Letter sounds may need a Korean voice installed on your device.',
     });
-    expect(faq.adult).toEqual(l.faq.items.adult);
-    expect(faq.korean).toEqual(l.faq.items.korean);
+    expect(faq.adult).toEqual({
+      q: 'I’m an adult beginner. Will it feel too young?',
+      a: 'No. Stage 1 teaches exactly what any beginner needs first — the letters and their sounds — with no baby talk. Hoya is friendly, and the culture cards are worth collecting at any age.',
+    });
+    expect(faq.korean.q).toBe('Do I need to know any Korean?');
   });
 
   it('the join-code answer names the labels the learner taps: Profile, Classes & family, Join a class', () => {
@@ -557,14 +556,15 @@ describe('Learning Route spelling in every landing value', () => {
   }
 });
 
-describe('no key of the current landing is removed before S-6', () => {
-  it('the frozen list holds every leaf of the landing tree as it was before S-3, once each', () => {
-    expect(LANDING_PATHS_BEFORE_SITE.length).toBe(226);
-    expect(new Set(LANDING_PATHS_BEFORE_SITE).size).toBe(LANDING_PATHS_BEFORE_SITE.length);
-    expect(LANDING_PATHS_BEFORE_SITE).toContain('legal.privacy.sections.collect.bullets.progressWho');
-  });
-
-  it.each(LANDING_PATHS_BEFORE_SITE)('landing.%s is still there', (path) => {
-    expect(lookup(l, path)).toBeDefined();
+describe('S-6 removed the old landing: no key of it is left in any locale', () => {
+  const OLD_TOP = ['hero', 'trust', 'how', 'hoya', 'parents', 'pricing', 'faq', 'get'];
+  const OLD_NAV = ['playNow', 'cards', 'games', 'dashboard'];
+  const OLD_FOOTER = ['product', 'cards', 'games', 'dashboard', 'console'];
+  it.each(LOCALES)('%s', (locale) => {
+    const tree = getMessages(locale).landing as unknown as Record<string, Record<string, unknown>>;
+    for (const key of OLD_TOP) expect(tree, `landing.${key}`).not.toHaveProperty(key);
+    for (const key of OLD_NAV) expect(tree.nav, `landing.nav.${key}`).not.toHaveProperty(key);
+    for (const key of OLD_FOOTER) expect(tree.footer, `landing.footer.${key}`).not.toHaveProperty(key);
+    expect(leafPaths(tree).filter((path) => path.endsWith('.linkLabel'))).toEqual([]);
   });
 });

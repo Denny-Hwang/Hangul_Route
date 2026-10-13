@@ -173,9 +173,6 @@ describe('the Korean review lenses, pinned (§3.10 step 3)', () => {
       ['console.school.footer', (v) => ko.console.school.footer(v)],
       ['console.lecture.source.revisitWith', (v) => ko.console.lecture.source.revisitWith(v)],
       ['landing.home.hero.bubble', (v) => ko.landing.home.hero.bubble(v, 'g/k')],
-      ['landing.hero.bubble', (v) => ko.landing.hero.bubble(v)],
-      ['landing.hero.lead', (v) => ko.landing.hero.lead(v)],
-      ['landing.hoya.points.wrong.body', (v) => ko.landing.hoya.points.wrong.body(v)],
     ];
     for (const [path, render] of SLOTTED) expect(render(SENTINEL).split(SENTINEL).length - 1, path).toBe(1);
   });
@@ -229,6 +226,12 @@ const FORMAL_ALLOWED: readonly string[] = [
   'console.billing.includes.school_seat',
   'landing.legal.englishAuthoritative',
   'landing.legal.draft',
+  // The class-move consent sheet's frame (F-SPACE-002 T-6d): one voice with the 합니다체 consent lines it frames.
+  'console.transfer.consent.failed',
+  'console.transfer.consent.readToEnd',
+  'console.transfer.consent.unavailable',
+  'console.transfer.consent.updated',
+  'console.transfer.lines.notNowEnds',
 ];
 
 /** `path|word` pairs where the glossary word is not needed, each with its reason in the review table of the PR. */

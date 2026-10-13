@@ -18,7 +18,7 @@ import {
   type PipState,
 } from '@hangul-route/design-system';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Pressable, View } from 'react-native';
+import { Animated, Pressable, View, type PressableStateCallbackType } from 'react-native';
 import Svg, { Circle, Line } from 'react-native-svg';
 import { useMessages } from '../../i18n/use-messages';
 import type { Connector, LaterRowView, RouteIcon, StageRowView, TagView } from '../../logic/my-route/view';
@@ -217,12 +217,14 @@ export function StageRowItem({ row, open, look, reducedMotion, onToggle, onOpenE
         accessibilityLabel={row.a11yLabel}
         accessibilityState={expandable ? { expanded: open } : undefined}
         aria-expanded={expandable ? open : undefined}
-        style={({ pressed }) => ({
+        style={({ pressed, focused }: PressableStateCallbackType & { focused?: boolean }) => ({
           flexDirection: 'row',
           gap: spacing.md,
           minHeight: touchTarget.min,
           borderRadius: radii.md,
           backgroundColor: pressed ? colors.surface.inkScrim : 'transparent',
+          // All lessons draws the `border.focus` ring on keyboard focus (F-BROWSE-001 design decision 20); My route is unchanged.
+          ...(expandable ? {} : { borderWidth: borderWidth.thick, borderColor: focused ? colors.border.focus : 'transparent' }),
         })}
       >
         <StageBadge look={row.badge} stage={row.stage} order={row.order} />
@@ -258,6 +260,12 @@ export function StageRowItem({ row, open, look, reducedMotion, onToggle, onOpenE
             </View>
           ) : null}
         </View>
+        {/* A row that goes somewhere else ends in an arrow (All lessons: to the Journey at that stage). */}
+        {expandable ? null : (
+          <View style={{ justifyContent: 'center' }}>
+            <Icon name="arrow-right" size={spacing.xl} color={colors.text.secondary} />
+          </View>
+        )}
       </Pressable>
 
       {expandable && open ? (
@@ -334,11 +342,32 @@ export interface LaterRowItemProps {
   row: LaterRowView;
   open: boolean;
   onToggle: () => void;
+  /**
+   * Default true: the row opens in place (My route). False: a plain row, never a button, since it has
+   * no lesson to show (All lessons, F-BROWSE-001 design decision 5, the BR-5b note's choice for BR-7).
+   */
+  expandable?: boolean;
 }
 
 /** A compact coming-later row: no pips; a run of them is one row ("Stages 5 to 7") that opens on tap. */
-export function LaterRowItem({ row, open, onToggle }: LaterRowItemProps): React.ReactElement {
+export function LaterRowItem({ row, open, onToggle, expandable = true }: LaterRowItemProps): React.ReactElement {
   const badge = useMediaSize(BADGE_SIZE);
+  if (!expandable) {
+    return (
+      <View style={{ paddingBottom: spacing.lg }} testID={`my-route-later-${row.order}`}>
+        {row.connector ? <TrailConnector look={row.connector} color={colors.stage[row.stage]} badge={badge} /> : null}
+        <View accessible accessibilityLabel={row.a11yLabel} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: touchTarget.min }}>
+          <StageBadge look="later" stage={row.stage} order={row.merged ? null : row.order} />
+          <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: spacing.sm, rowGap: spacing.xxs }}>
+            <Body weight="bold" tone="secondary">
+              {row.title}
+            </Body>
+            <Pill label={row.stateWord} tone="neutral" size="sm" />
+          </View>
+        </View>
+      </View>
+    );
+  }
   return (
     <View style={{ paddingBottom: spacing.lg }} testID={`my-route-later-${row.order}`}>
       {row.connector ? <TrailConnector look={row.connector} color={colors.stage[row.stage]} badge={badge} /> : null}

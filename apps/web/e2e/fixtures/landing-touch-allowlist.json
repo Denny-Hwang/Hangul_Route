@@ -2,44 +2,11 @@
   "note": "F-I18N-001 §3.11 locale layout matrix, landing half (landing-locales.spec.ts). Site controls under touchTarget.min (64) at 320, 375 or 768 px today, keyed by what they are and where they go (not their words; a link to the learner app is keyed <app>, whatever origin the export was built with), per English page; /es and /ko pages are held to the English page's list, and shownLocales adds the footer locale switcher, which only a build that shows every locale draws. Never add a line: a new small control fails the matrix until it is at least 64 x 64. When a listed control is fixed, the matrix fails until its line is removed, so this list only shrinks. Making these controls 64 x 64 is an open item (F-I18N-001 §10).",
   "pages": {
     "/": [
-      "a #cards",
-      "a #cards #2",
-      "a #cards #3",
-      "a #games",
-      "a #games #2",
-      "a #parents",
-      "a /about",
       "a /privacy",
-      "a /privacy #2",
-      "a /signin?persona=parent",
-      "a /signin?persona=parent #2",
-      "a /teach",
-      "a /teach #2",
-      "a /terms",
-      "a <app>",
-      "a <app> #2",
-      "a <app> #3",
       "a mailto:hello@hangulroute.com",
       "button submit",
-      "input email",
-      "summary",
-      "summary #2",
-      "summary #3",
-      "summary #4",
-      "summary #5",
-      "summary #6"
-    ],
-    "/about": [
-      "a /",
-      "a /privacy",
-      "a /terms"
+      "input email"
     ]
   },
-  "shownLocales": {
-    "/": [
-      "a hreflang=en",
-      "a hreflang=es",
-      "a hreflang=ko"
-    ]
-  }
+  "shownLocales": {}
 }

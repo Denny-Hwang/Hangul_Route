@@ -226,6 +226,196 @@ A-3 이 아니라 **A-4b 머지 후**에 한다: A-4b 의 공통 어른 레이�
 
 **되돌리기**: S-3 는 `EXPO_PUBLIC_GROWN_UP_HOME` 을 `false` 로 (또는 삭제) → Retry deployment. S-10 은 F-SITE-002 쪽 되돌리기, B-10 은 `BILLING_URL` 삭제. 앱 호스트의 어른 페이지는 남아 있어도 무해하고, 데이터는 어느 방향으로도 바뀌지 않는다. 마지막 단계 A-10 (기본값 켜기) 은 M3 후 14일 이상 지나 머지된다.
 
+## F. 어른의 쪽지 (Notes from grown-ups, F-FEEDBACK-001)
+
+> 목적: 신고 확인, 결과 기록, 보내기 정지 (hold) 와 해제, 보내기 스위치 `NOTES_SEND`, 요청에 따른 쪽지 삭제. 모든 쿼리는 대시보드 **Workers & Pages → D1 → `hangul-route` → Console** 에 한 문장씩 붙여 넣는다 (로컬 `wrangler` 는 쓰지 않는다). `<...>` 자리만 바꾼다. 시각은 앱과 같은 형식 (`2026-10-13T12:00:00.000Z`) 으로 `strftime('%Y-%m-%dT%H:%M:%fZ','now')` 가 만든다.
+> 개인정보: 신고 검토에 필요한 것 (쪽지 본문, 보낸 계정의 이메일, 공간 이름) 만 본다. 학습자 이름이나 기기 id 는 조회하지 않고, 쿼리 결과를 저장소·채팅·이슈에 붙이지 않는다.
+> 안전 경로 (받은 쪽지, 숨기기, 신고, 보내는 사람 막기, 가족 보기, 설정) 에는 스위치가 없고 항상 동작한다. 오너가 켜고 끄는 것은 **보내기** 뿐이다.
+
+### F-1. 열린 신고 보기 (매일, 5분, OD-11)
+
+보호자 확인 없는 기기의 `unsafe` 신고 (예: 교실 태블릿) 가 맨 위에 온다. 이 신고는 쪽지를 숨기기만 하고 자동 정지를 걸지 않으므로 오너가 먼저 판단한다. 그다음은 다른 `unsafe`, 그다음은 나머지를 오래된 순서로 보여 준다.
+
+```sql
+SELECT r.id AS report_id, r.note_id, r.reason, r.via, r.attest, r.created_at AS reported_at,
+       n.status, n.sender_role, n.sender_account_id, a.email AS sender_email, s.name AS space_name,
+       n.preset_id, n.body, n.created_at AS sent_at,
+       (SELECT COUNT(*) FROM feedback_reports x WHERE x.note_id = r.note_id) AS reports_on_note,
+       (SELECT h.reason FROM feedback_sender_holds h WHERE h.account_id = n.sender_account_id AND h.lifted_at IS NULL) AS hold_reason,
+       (SELECT h.created_at FROM feedback_sender_holds h WHERE h.account_id = n.sender_account_id AND h.lifted_at IS NULL) AS hold_created_at
+FROM feedback_reports r
+JOIN feedback_notes n ON n.id = r.note_id
+LEFT JOIN accounts a ON a.id = n.sender_account_id
+LEFT JOIN spaces s ON s.id = n.space_id
+WHERE r.reviewed_at IS NULL
+ORDER BY CASE WHEN r.reason = 'unsafe' AND r.via = 'device' AND COALESCE(r.attest, '') <> 'grown_up_pin' THEN 0
+              WHEN r.reason = 'unsafe' THEN 1 ELSE 2 END,
+         r.created_at, r.id
+LIMIT 100;
+```
+
+- `hold_reason` 이 비어 있지 않으면 보낸 계정이 지금 정지돼 있다 (`unsafe`·`reports` 는 자동 정지, `owner` 는 오너가 건 정지). `hold_created_at` 이 이 신고의 `reported_at` 과 같거나 바로 뒤면 이 신고가 정지를 건 것이다.
+- 결과가 없으면 끝. 신고된 쪽지는 이미 모든 기기에서 사라졌고 (다음 받은 쪽지 동기화 때), 보낸 사람 목록에는 `not_shown` 으로 보인다.
+- `body` 가 비어 있으면 미리 만든 문구 (`preset_id`) 만 있는 쪽지다. 문구는 `packages/i18n/src/messages/en/common.ts` 의 `notes.presets` 에서 찾는다.
+- 아동 안전이 걱정되는 내용 (연락 시도, 만남 제안, 성적 내용, 위협) 이면 F-2 의 `sender_held` 로 기록하고, 필요하면 해당 기관에 신고한다. 쪽지와 신고 행은 지우지 않는다 (증거; 신고 뒤 90일 동안 남는다).
+
+### F-2. 결과 기록 (쪽지 하나당, 2분)
+
+쪽지의 열린 신고를 모두 한 번에 닫는다. 결과는 셋 중 하나다.
+
+**(a) `kept_hidden` — 숨긴 채로 둔다** (가장 흔한 결과). 쪽지는 `reported` 상태 그대로 모든 기기에서 숨겨져 있고, 마지막 신고 뒤 90일에 신고 행과 함께 지워진다 (명세 8.7). 상태를 `hidden` 으로 바꾸지 않는 이유: 기기에서 신고된 가족 쪽지를 보낸 어른의 화면이 검토 뒤에 바뀌지 않게 하려는 것이다 (규칙 8.2-c — 집의 어른이 아이가 자기를 신고했다는 것을 알면 안 된다).
+
+```sql
+UPDATE feedback_reports SET reviewed_at = strftime('%Y-%m-%dT%H:%M:%fZ','now'), outcome = 'kept_hidden'
+WHERE note_id = '<note_id>' AND reviewed_at IS NULL;
+```
+
+**(b) `restored` — 되돌린다** (신고가 실수였을 때만; 예: "not_for_me" 를 잘못 누름). 쪽지는 신고 전 상태 (보이는 쪽지, 가족이 숨긴 쪽지, 또는 보낸 사람이 거둔 쪽지) 로 돌아가고, 보이는 쪽지면 학습자의 다음 동기화 때 다시 나타난다. 되돌린 신고는 자동 정지 횟수에 들어가지 않는다. 두 문장을 순서대로 실행한다.
+
+```sql
+UPDATE feedback_notes
+SET status = CASE WHEN withdrawn_at IS NOT NULL THEN 'withdrawn'
+                  WHEN hidden_at IS NOT NULL AND hidden_via IS NOT NULL THEN 'hidden'
+                  ELSE 'live' END
+WHERE id = '<note_id>' AND status = 'reported';
+```
+
+```sql
+UPDATE feedback_reports SET reviewed_at = strftime('%Y-%m-%dT%H:%M:%fZ','now'), outcome = 'restored'
+WHERE note_id = '<note_id>' AND reviewed_at IS NULL;
+```
+
+이어서 정지를 확인한다. 되돌린 신고는 다음 신고부터 횟수에 들어가지 않지만, 그 신고가 이미 건 자동 정지는 저절로 풀리지 않는다. F-1 결과에서 이 쪽지의 `hold_reason` 이 `unsafe` 또는 `reports` 이고 `hold_created_at` 이 이 신고 시각과 같거나 바로 뒤이면, 아래 문장으로 그 계정에 되돌리지 않은 다른 신고 (최근 30일) 가 있는지 본다. `0` 이면 F-3 의 **정지 풀기** 를 실행한다. `0` 이 아니면 그 신고들을 먼저 검토한다.
+
+```sql
+SELECT COUNT(*) FROM feedback_reports
+WHERE sender_account_id = '<sender_account_id>' AND COALESCE(outcome, '') <> 'restored'
+  AND created_at >= strftime('%Y-%m-%dT%H:%M:%fZ','now','-30 days');
+```
+
+**(c) `sender_held` — 숨긴 채로 두고 보낸 계정을 정지한다.** 아래 F-3 의 정지 문장을 먼저 실행하고, 이어서:
+
+```sql
+UPDATE feedback_reports SET reviewed_at = strftime('%Y-%m-%dT%H:%M:%fZ','now'), outcome = 'sender_held'
+WHERE note_id = '<note_id>' AND reviewed_at IS NULL;
+```
+
+**확인**: F-1 을 다시 실행하면 그 쪽지가 목록에서 빠져 있다.
+
+### F-3. 보내기 정지 (hold) 와 해제
+
+정지된 계정은 누구에게도 쪽지를 보낼 수 없고 (`403 sending_paused`), 콘솔에는 "Sending notes is paused for this account. Write to hello@hangulroute.com." 이 보인다. 그 계정의 다른 콘솔 기능은 그대로다. 정지는 이전 쪽지를 숨기지 않는다 (신고된 쪽지는 이미 숨겨져 있다). 자동 정지 (서로 다른 두 가족의 신고, 또는 가족·PIN 확인 기기의 `unsafe` 신고) 도 같은 표에 기록되고, 해제는 오너만 한다.
+
+정지된 계정 보기:
+
+```sql
+SELECT h.account_id, a.email, h.reason, h.created_at
+FROM feedback_sender_holds h LEFT JOIN accounts a ON a.id = h.account_id
+WHERE h.lifted_at IS NULL ORDER BY h.created_at;
+```
+
+정지 걸기 (`sender_account_id` 는 F-1 결과에서, 또는 `SELECT id FROM accounts WHERE email = '<email>';`). 이미 정지돼 있으면 아무것도 바꾸지 않는다.
+
+```sql
+INSERT INTO feedback_sender_holds (account_id, reason, created_at, lifted_at)
+VALUES ('<sender_account_id>', 'owner', strftime('%Y-%m-%dT%H:%M:%fZ','now'), NULL)
+ON CONFLICT(account_id) DO UPDATE SET reason = excluded.reason, created_at = excluded.created_at, lifted_at = NULL
+WHERE feedback_sender_holds.lifted_at IS NOT NULL;
+```
+
+정지 풀기 (그 계정과 메일로 이야기한 뒤). 해제 시각 이전의 신고는 다시 세지 않으므로, 다음 신고 하나로 곧바로 다시 정지되지 않는다.
+
+```sql
+UPDATE feedback_sender_holds SET lifted_at = strftime('%Y-%m-%dT%H:%M:%fZ','now')
+WHERE account_id = '<sender_account_id>' AND lifted_at IS NULL;
+```
+
+**확인**: "정지된 계정 보기" 에 그 계정이 보이거나 (걸기) 사라진다 (풀기). 해제된 행은 365일 뒤 자동으로 지워진다.
+
+### F-4. 보내기 스위치 `NOTES_SEND` 켜기·끄기 (1분, 배포 불필요)
+
+`NOTES_SEND` 가 없거나 `enabled` 가 아니면 아무도 쪽지를 보낼 수 없다 (보내기 두 경로가 `404`). 받은 쪽지·숨기기·신고·정지·가족 보기는 스위치와 무관하게 항상 동작한다.
+
+- **켜기는 FB-14 가 배포된 뒤, 이 절을 읽은 다음에만** (OD-19). 지금은 켜지 않는다.
+- 켜기: `hangul-route-api` → Settings → **Variables and Secrets** → Add → Type **Text**, 이름 `NOTES_SEND`, 값 `enabled` → **Deploy**. (`keep_vars = true` 라서 이후 배포에도 남는다.)
+- 끄기 (문제가 생기면 즉시): 같은 화면에서 `NOTES_SEND` 를 삭제 (또는 값을 `off` 로) → **Deploy**. 이미 보낸 쪽지는 그대로 남고, 신고·숨기기는 계속 된다.
+
+**확인**: API 주소의 `/health` 응답에서 `features.notesSend` 가 켜면 `true`, 끄면 `false`.
+
+### F-5. 요청에 따라 쪽지 지우기 (10분)
+
+요청은 `hello@hangulroute.com` 으로 온다. **요청 메일의 발신 주소가 아래 쿼리의 계정 이메일과 같은지** 먼저 확인한다. 누가 요청했는지에 따라 할 수 있는 일이 다르다. 가족의 확인 (명세 D5, D9, 8.3 항목 3) 이 보낸 사람의 요청보다 앞선다: 보낸 사람은 가족이 보기 전에 쪽지를 지울 수 없다.
+
+**보낸 사람 본인이 요청한 경우 — 지우지 않는다.** 그 계정이 보낸 쪽지:
+
+```sql
+SELECT n.id, n.created_at, n.status, n.withdrawn_at, s.name AS space_name, n.preset_id, n.body,
+       (SELECT COUNT(*) FROM feedback_reports r WHERE r.note_id = n.id) AS reports
+FROM feedback_notes n JOIN accounts a ON a.id = n.sender_account_id LEFT JOIN spaces s ON s.id = n.space_id
+WHERE a.email = '<email>' ORDER BY n.created_at DESC LIMIT 50;
+```
+
+- 답장: 콘솔의 보낸 쪽지 목록에서 **거두기** (take back) 를 하면 쪽지가 학습자의 기기에서 바로 사라진다고 안내한다. 거둔 쪽지는 학습자의 가족에게 "Taken back by the sender" 로 남고, 보낸 날부터 180일에 자동으로 지워진다.
+- `reports` 가 `0` 보다 크면 (신고된 적이 있으면, 결과와 상관없이) 그 쪽지와 신고 행은 지우지 않는다. 신고 기록은 자동 정지 횟수의 근거이고, 마지막 신고 뒤 90일 규칙을 따른다.
+- 그보다 일찍 지우는 것은 학습자의 가족 어른이 같은 쪽지의 삭제를 따로 요청했을 때만이다 (아래).
+
+**학습자의 가족 어른 (가족 공간의 owner 또는 caregiver) 이 요청한 경우 — 지운다.** 그 가족 어른이 속한 가족 공간의 학습자가 받은 쪽지:
+
+```sql
+SELECT n.id, n.created_at, n.status, s.name AS space_name, n.preset_id, n.body,
+       (SELECT COUNT(*) FROM feedback_reports r WHERE r.note_id = n.id) AS reports,
+       (SELECT COUNT(*) FROM feedback_reports r WHERE r.note_id = n.id AND r.reviewed_at IS NULL) AS open_reports
+FROM feedback_notes n
+JOIN memberships ml ON ml.member_kind = 'learner' AND ml.member_id = n.learner_id AND ml.role = 'student'
+JOIN memberships ma ON ma.space_id = ml.space_id AND ma.member_kind = 'account' AND ma.role IN ('owner','caregiver')
+JOIN accounts a ON a.id = ma.member_id
+JOIN spaces f ON f.id = ml.space_id AND f.kind = 'family'
+LEFT JOIN spaces s ON s.id = n.space_id
+WHERE a.email = '<email>' ORDER BY n.created_at DESC LIMIT 50;
+```
+
+- `open_reports` 가 `0` 보다 크면 먼저 F-2 로 결과를 기록한다. 아동 안전 사안 (F-1 의 연락 시도, 만남 제안, 성적 내용, 위협) 이면 지우지 않고 90일 규칙을 따른다 (증거).
+- 신고 행을 지우면 그 신고는 이후 자동 정지 횟수에서 빠진다. 그래서 보낸 사람이 지금 정지돼 있으면 (F-3 의 정지된 계정 보기) 정지를 유지할지 먼저 정하고 (F-3) 그다음에 지운다.
+
+요청한 날짜·공간·문구로 쪽지 하나를 고른 뒤, 두 문장을 순서대로 (신고 행은 가족의 요청이고 모든 신고에 결과가 기록된 때만 지운다):
+
+```sql
+DELETE FROM feedback_reports WHERE note_id = '<note_id>' AND reviewed_at IS NOT NULL;
+```
+
+```sql
+DELETE FROM feedback_notes WHERE id = '<note_id>' AND NOT EXISTS (SELECT 1 FROM feedback_reports r WHERE r.note_id = '<note_id>');
+```
+
+**확인**: `SELECT COUNT(*) FROM feedback_notes WHERE id = '<note_id>';` 가 `0`. `1` 이면 결과가 기록되지 않은 신고가 남아 있다는 뜻이니 F-2 부터 다시 한다. 기기의 사본은 다음 동기화 때 사라진다. 요청한 사람에게 지웠다고 (보낸 사람에게는 거두기 안내와 보관 기간을) 답장한다 (30일 안에, 개인정보 처리방침의 약속). 학습자의 데이터 전체를 지우는 요청이면 콘솔의 학습자 데이터 삭제 (`DELETE /api/spaces/:id/learners/:learnerId/data`) 가 쪽지·신고·설정·막기 행을 모두 함께 지운다.
+
+## G. Turn on the free plan (web) — 무료 플랜 켜기 (F-ENT-003 E3-11, OD-2)
+
+> 목적: 웹 앱에서 무료 플랜의 경계를 켠다. Stage 1 전체가 무료로 열리고 (OD-1), Stage 2 부터는 미리보기 (Not open yet) 가 된다. **오너만 켠다. Stripe Live 와 같은 릴리스에서만 켠다.** Stripe Live 가 꺼져 있는 동안에는 이 단계를 하지 않는다 (학습자가 결제할 수 없는 경계를 만나게 된다). 이 단계는 F-ENT-003 E3-11 에서 문서로만 추가되었고, 그때 운영 변수는 하나도 바뀌지 않았다.
+
+**선행 조건 (모두 예일 때만)**
+1. F-ENT-003 E3-12b 와 E3-12c 가 머지됨 (어른 화면의 무료 레슨 줄).
+2. 다음 문구 그룹의 ko · es 오버레이가 들어 있고 원어민 검토를 마침: `console.access`, `console.curriculum.freeDays`, `caregiver.access`, `caregiver.plan.freePlan`. 없으면 한국어·스페인어 콘솔과 Plan 화면이 이 줄들을 영어로 보여 준다.
+3. 배포할 커밋에서 스위치를 켠 e2e 레인이 통과함 (저장소 쪽에서 돌리고 결과를 PR 에 남긴다):
+   - 스위치를 켠 빌드 (운영과 같은 두 변수, 콘솔도 스위치가 켜진 채로 합쳐진다): `EXPO_PUBLIC_CONTENT_GATING_ENABLED=true NEXT_PUBLIC_CONTENT_GATING_ENABLED=true pnpm --filter @hangul-route/mobile build:web`, 그다음 `E2E_CONTENT_GATING=1 pnpm --filter @hangul-route/mobile exec playwright test free-days plan-next plan-free-lines free-end episode-access dashboard-free-line`
+   - 스위치를 켠 레인은 `E2E_CONTENT_GATING` 을 읽는 모든 spec 이다. 새 spec 이 빠지지 않게 목록을 `git grep -l E2E_CONTENT_GATING apps/mobile/e2e/web` 으로 다시 확인한다. 쪽지 빌드 플래그도 같은 릴리스에서 켜면 `E2E_NOTES=1 E2E_CONTENT_GATING=1 pnpm --filter @hangul-route/mobile exec playwright test notes-screens` 도 돌린다 (쪽지 플래그도 켠 빌드에서). F-ENT-003 E3-13 의 CI 레인이 생기기 전까지는 이 수동 실행이 유일한 확인이므로, 결과에 커밋 SHA 를 함께 적는다.
+   - 게이팅 픽스처 번들: `pnpm --filter @hangul-route/mobile build:web:fixtures:gated`, 그다음 `STORY_FIXTURES_GATED=1 pnpm --filter @hangul-route/mobile exec playwright test story-shelf-gated.spec free-days`
+   - 같은 커밋의 CI `Build PWA · offline e2e` 가 초록 (shard 1 이 게이팅 픽스처 번들에서 `story-shelf-gated.spec` 과 `free-days.spec` 의 직접 이동 케이스를 돌린다, F-STORY-004 PR 4.8b 의 릴리스 게이트).
+4. F-STORY-004 PR 4.8d (고정된 Home 카드의 접근 재확인, #488) 와 PR 4.8e (Home 카드를 누를 때의 접근 확인) 가 머지됨.
+5. F-ENT-003 OD-14 에 답이 있거나 기본값 그대로 둔다.
+6. Stripe Live 를 켜는 릴리스와 같은 창 (§B Step 8 의 Live 절차와 `BILLING_LIVE_ALLOWED`).
+
+**단계 (5분, 위 조건이 모두 예일 때)**
+1. `hangul-route-app` → Settings → Build → Variables and Secrets → `EXPO_PUBLIC_CONTENT_GATING_ENABLED` = `true`. 같은 빌드가 앱 호스트의 어른 화면 (콘솔) 도 만들므로, 여기에 `NEXT_PUBLIC_CONTENT_GATING_ENABLED` = `true` 도 넣는다. → **Retry deployment**.
+2. `hangul-route-web` → Settings → Build → Variables and Secrets → `NEXT_PUBLIC_CONTENT_GATING_ENABLED` = `true` → **Retry deployment**.
+3. 사이트의 무료 문구 "Stage 1 is free." (`landing.plans.free.stage1`) 는 그대로 둔다 (OD-1). 사이트 쪽 변경은 없다.
+
+**확인**: 새 아이 프로필 (My child 또는 student) 로 https://app.hangulroute.com 을 열면 Journey 에서 Stage 1 칸에는 고리가 없고, Stage 2 · Stage 4 칸에는 점선 고리 (Not open yet) 가 보인다. Stage 2 칸을 누르면 미리보기와 **Ask a grown-up** 이 나온다. (Me 프로필은 **See how to open it**, 반 프로필은 **Ask your teacher or a grown-up** 이 나오며, 이것도 정상이다.) 가격·"Premium"·"trial" 같은 말은 학습자 화면 어디에도 없다.
+
+어른 화면도 확인한다 (1단계의 `NEXT_PUBLIC_CONTENT_GATING_ENABLED` 가 빠지면 콘솔만 조용히 경계 없이 남는다): Family Plan 이 없는 가족의 오너로 https://app.hangulroute.com/parent 를 연다. 게시된 플랜에서 열린 레슨을 모두 끝낸 아이의 카드 (그리고 그 가족의 명단) 에 무료 레슨 줄과 **Open billing** 이 보인다. 같은 가족으로 커리큘럼 마법사를 열면 미리보기에 무료 플랜 안내 (free days) 가 보인다. 공동 보호자 계정에는 이 줄이 없다.
+
+**되돌리기**: 세 변수를 `false` 로 (또는 삭제) → 두 프로젝트 모두 Retry deployment. 학습자가 끝낸 레슨·카드·별은 어느 방향으로도 바뀌지 않는다.
+
 ## 나중에 (법률 검토 후)
 학교 동의 모드 (c) 를 열 때만: `hangul-route-api` 런타임 변수 `SCHOOL_CONSENT_MODE=enabled` + `hangul-route-web` 빌드 변수 `NEXT_PUBLIC_SCHOOL_CONSENT_MODE=enabled` (Retry deployment). 그 전엔 콘솔에서 선택 불가로 잠겨 있다.
 

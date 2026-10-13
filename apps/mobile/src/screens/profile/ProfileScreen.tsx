@@ -21,6 +21,9 @@ import { Pressable, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { bundleOs, flags } from '../../config/flags';
 import { placementEntriesOn } from '../../logic/placement/entry';
+import { effectiveLearnerType } from '../../logic/profiles/learner-type';
+import { profileRowOpens } from '../../logic/route/proposal-flow';
+import { activeSelfRoute } from '../../logic/route/self-route';
 import { planCardView } from '../../logic/paywall';
 import { effectiveTier } from '../../store/tier-store';
 import { isParentSessionValid } from '../../logic/profiles/session';
@@ -43,6 +46,7 @@ import { SpacesCard } from '../../components/SpacesCard';
 import { grownUpEntriesOn, runGrownUpHandoff } from '../../logic/shell/entry-points';
 import { grownUpPinParams } from '../../logic/shell/handoff-rules';
 import { openGrownUpArea } from '../../platform/grown-up-handoff';
+import { MyNotesRow } from '../notes/MyNotesRow';
 import { GrownUpHomeRow } from './GrownUpHomeRow';
 import { ChallengeCard } from '../vocab/ChallengeCard';
 import { wordsOffered } from '../vocab/topic-data';
@@ -218,6 +222,33 @@ export function ProfileScreen(): React.ReactElement {
         </>
       ) : null}
 
+      {active && flags.routeEnabled ? (
+        <>
+          {/* F-PLAN-002 section 3.9: always here (a Not now on Home never hides it); a child's plan goes through the gate. */}
+          <Spacer size="lg" />
+          <Card padding="md">
+            <Pressable
+              testID="profile-plan-row"
+              onPress={() => {
+                if (profileRowOpens({ learnerType: effectiveLearnerType(active), opensDirectly: opensDirectly(parentSessionOpen) }) === 'proposal') {
+                  navigation.navigate('RouteProposal', { source: 'profile', profileId: active.id });
+                } else {
+                  navigation.navigate('PinEntry', { next: 'RouteProposal', profileId: active.id });
+                }
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={activeSelfRoute(snap) ? m.learner.weeklyPlan.profileRow.open : m.learner.weeklyPlan.profileRow.make}
+              style={{ minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}
+            >
+              <Body weight="semibold" style={{ flex: 1 }}>
+                {activeSelfRoute(snap) ? m.learner.weeklyPlan.profileRow.open : m.learner.weeklyPlan.profileRow.make}
+              </Body>
+              <Icon name="arrow-right" size={24} color={colors.text.muted} />
+            </Pressable>
+          </Card>
+        </>
+      ) : null}
+
       <Spacer size="lg" />
       <Card padding="md">
         <Pressable
@@ -310,6 +341,9 @@ export function ProfileScreen(): React.ReactElement {
           <GrownUpHomeRow onOpen={openGrownUpHome} />
         </>
       ) : null}
+
+      {/* F-FEEDBACK-001 FB-8 (section 6.5 item 2): My notes, below Grown-up home; no gate (the learner's own notes). */}
+      <MyNotesRow onOpen={() => navigation.navigate('Notes')} />
 
       <Spacer size="lg" />
       <Button

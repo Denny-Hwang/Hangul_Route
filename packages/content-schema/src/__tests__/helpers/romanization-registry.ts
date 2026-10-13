@@ -45,11 +45,9 @@ export const REGISTERED_SOURCES: readonly RegisteredSource[] = [
   // B3. TS data, API (isolated jamo only: R7)
   { path: 'packages/backend/src/routes/content.ts', cls: 'B3', suite: BACKEND_SUITE, needle: 'routes/content' },
   // C. Inline literals in pages
-  { path: 'apps/web/src/components/landing/MeetHoya.tsx', cls: 'C', suite: WEB_SOURCES_SUITE, needle: 'landing/MeetHoya.tsx' },
   { path: 'apps/web/src/app/(console)/design-preview/page.tsx', cls: 'C', suite: WEB_SOURCES_SUITE, needle: 'design-preview/page.tsx' },
   { path: 'apps/web/src/app/(console)/design-preview/cards/page.tsx', cls: 'C', suite: WEB_SOURCES_SUITE, needle: 'design-preview/cards/page.tsx' },
   { path: 'apps/web/src/app/(console)/design-preview/components/page.tsx', cls: 'C', suite: WEB_SOURCES_SUITE, needle: 'design-preview/components/page.tsx' },
-  { path: 'apps/web/src/components/landing/LandingPage.tsx', cls: 'C', suite: WEB_SOURCES_SUITE, needle: 'landing/LandingPage.tsx' },
   { path: 'apps/mobile/src/screens/minigames/VoiceEchoGame.tsx', cls: 'C', suite: WEB_SOURCES_SUITE, needle: 'minigames/VoiceEchoGame.tsx' },
 ];
 
@@ -92,6 +90,7 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   { path: 'packages/i18n/src/messages/ko/landing.ts', reason: 'the whole ko UI overlay file (F-I18N-001 §3.10, PR 16): Korean site words, never taught Korean (the hero letter and Hoya phrase arrive as arguments)' },
   { path: 'packages/i18n/src/messages/ko/report.ts', reason: 'the whole ko UI overlay file (F-I18N-001 §3.10, PR 16): Korean report words, never taught Korean (letters and words arrive as arguments)' },
   { path: 'packages/i18n/src/messages/ko/index.ts', reason: 'the ko overlay barrel (F-I18N-001 PR 16): a doc comment naming the Korean registers' },
+  { path: 'packages/content-schema/src/schemas/transfer-consent-ko.ts', reason: 'the Korean consent lines (that file only) of a class move (F-SPACE-002 section 4.11, T-6d): Korean UI-locale legal text shown to a guardian, never taught Korean' },
   { path: 'content/stories/research/', reason: 'provenance data: `rr` keys and a hyphenated romanization R2 would reject (same skip as SKIPPED_DIRS in scripts/validate-content.mjs)' },
   { path: '*.md', reason: 'documentation, not shipped content' },
   // Generated from class A JSON; listed so they do not trip the check when stories and vocabulary ship.

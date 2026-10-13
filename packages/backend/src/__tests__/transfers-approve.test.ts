@@ -239,6 +239,30 @@ describe('approve: teacher slots', () => {
     expect(await db.transferEvents(created.id)).toContainEqual(expect.objectContaining({ event: 'consented', slot: 'source', actorRef: 'admin', detail: { via: 'school_admin' } }));
   });
 
+  it("each class page reflects only its own slot's school-admin answer: the destination never learns that the admin agreed for the source (T11, D17, T-5d)", async () => {
+    await db.putSpace(space(SCHOOL, 'school', 'admin'));
+    await member(SCHOOL, 'account', 'admin', 'owner');
+    const a = await db.getSpace(A);
+    const b = await db.getSpace(B);
+    await db.putSpace({ ...a!, parentSpaceId: SCHOOL });
+    await db.putSpace({ ...b!, parentSpaceId: SCHOOL });
+
+    // The admin answers for the source; B's own teacher answers for the destination.
+    const first = requestOf(await create(FAMILY, 'mom', familyCreate()));
+    expect(requestOf(await approve(A, 'admin', first.id, { slots: ['source'] }))).toMatchObject({ role: 'source', agreedBySchoolAdmin: true });
+    expect(requestsOf(await list(B, 'teacher-b')).find((r) => r.id === first.id)).toMatchObject({ role: 'destination', agreedBySchoolAdmin: false });
+    expect(requestOf(await approve(B, 'teacher-b', first.id, { slots: ['destination'] }))).toMatchObject({ role: 'destination', status: 'approved', agreedBySchoolAdmin: false });
+    expect(requestsOf(await list(B, 'teacher-b')).find((r) => r.id === first.id)).toMatchObject({ agreedBySchoolAdmin: false });
+    expect(requestsOf(await list(A, 'teacher-a')).find((r) => r.id === first.id)).toMatchObject({ role: 'source', agreedBySchoolAdmin: true });
+    expect((await cancel(FAMILY, 'mom', first.id)).status).toBe(200);
+
+    // The other way round: A's teacher answers for the source, the admin for the destination.
+    const second = requestOf(await create(FAMILY, 'mom', familyCreate()));
+    expect(requestOf(await approve(A, 'teacher-a', second.id, { slots: ['source'] }))).toMatchObject({ agreedBySchoolAdmin: false });
+    expect(requestOf(await approve(B, 'admin', second.id, { slots: ['destination'] }))).toMatchObject({ role: 'destination', agreedBySchoolAdmin: true });
+    expect(requestsOf(await list(A, 'teacher-a')).find((r) => r.id === second.id)).toMatchObject({ role: 'source', agreedBySchoolAdmin: false });
+  });
+
   it('the destination slot waits for the learner side (409 awaiting_learner); the destination cannot even see it (404)', async () => {
     await member(B, 'account', 'teacher-a', 'teacher');
     const created = requestOf(await create(A, 'teacher-a', classCreate()));
@@ -363,12 +387,13 @@ describe('approve: the learner slot of a teacher-started request (caregiver rout
     expect((await approve(FAMILY, 'mom', created.id, { slots: ['learner'], consent: { ...consent, termsDigest: await familyDigest(created.id) } })).status).toBe(200);
   });
 
-  it('checks the consent text: stale version 422 with current, unreviewed locale 422', async () => {
+  it('checks the consent text: stale version 422 with current, a locale outside the UI locales 422', async () => {
     const created = requestOf(await create(A, 'teacher-a', classCreate()));
     const stale = await approve(FAMILY, 'mom', created.id, { slots: ['learner'], consent: { ...consent, textVersion: 'transfer-1999-01' } });
     expect([stale.status, stale.body.error?.code, stale.body.error?.details]).toEqual([422, 'consent_text_stale', { current: TRANSFER_CONSENT_TEXT_VERSION }]);
-    const locale = await approve(FAMILY, 'mom', created.id, { slots: ['learner'], consent: { ...consent, locale: 'ko' } });
-    expect([locale.status, locale.body.error?.code]).toEqual([422, 'consent_locale_unavailable']);
+    // Every UI locale has a consent text (T-6d); a locale outside the UI locales is a bad body.
+    const locale = await approve(FAMILY, 'mom', created.id, { slots: ['learner'], consent: { ...consent, locale: 'fr' as never } });
+    expect([locale.status, locale.body.error?.code]).toEqual([422, 'bad_request']);
     expect((await db.getTransfer(created.id))?.learner.state).toBe('pending');
   });
 

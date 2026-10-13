@@ -77,7 +77,7 @@ export const consoleMsgs = {
     privacy: '개인정보',
     terms: '이용약관',
     persona: { parent: '가족', teacher: '선생님' },
-    nav: { home: '홈', reports: '리포트', notes: '쪽지', classes: '반', lessons: '레슨', billing: '결제' },
+    nav: { home: '홈', reports: '리포트', notes: '쪽지', classes: '반', lessons: '레슨', billing: '결제', classReports: '반 리포트' },
     noApi: '이 버전에서 콘솔을 쓰려면 API 주소(NEXT_PUBLIC_API_BASE_URL)가 필요해요.',
   },
   kind: {
@@ -473,6 +473,12 @@ export const consoleMsgs = {
       sharedDevice: '공유 기기인가요? 다 쓰면 로그아웃해 주세요.',
     },
     pastDue: '결제가 처리되지 않았어요. 구독 관리에서 카드를 바꿔 주세요. 학습자는 일주일 동안 전체 루트를 계속 이용할 수 있어요.',
+    archiveConfirm: {
+      familyLoses: (space: string) => `보관하는 동안 ${space}의 학습자는 가족 플랜을 이용할 수 없어요.`,
+      familyRenews: '플랜은 결제 화면에서 해지할 때까지 계속 갱신돼요.',
+      licenseRenews: '그룹 라이선스는 결제 화면에서 해지할 때까지 계속 갱신돼요.',
+      familyRenewsAlone: '가족 플랜은 결제 화면에서 해지할 때까지 계속 갱신돼요.',
+    },
   },
   curriculum: {
     title: '학기 계획하기',
@@ -1267,5 +1273,41 @@ export const consoleMsgs = {
         line: '가족 코드가 있으면 누구나 참여할 수 있어요. 여기서 켠 어른만 쪽지를 보낼 수 있어요.',
       },
     },
+  },
+  /**
+   * Class moves (F-SPACE-002 T-6d): the consent sheet's frame only, in the formal polite style of the consent
+   * lines it frames (TRANSFER_CONSENT_TEXT.ko, 합니다체), so the sheet reads in one voice when its own switch
+   * picks Korean. No particle is attached to an argument. The rest of `console.transfer` falls back to English.
+   */
+  transfer: {
+    lines: { notNowEnds: '"지금은 안 함"을 누르면 이 요청이 끝납니다. 언제든지 직접 이동을 시작할 수 있습니다.' },
+    consent: {
+      title: (name: string, destination: string) => `${name} 학습자를 새 반(${destination})으로 옮기시겠습니까?`,
+      language: '언어',
+      who: '새 반은 어떤 반입니까?',
+      teacher: (owner: string) => `선생님: ${owner}`,
+      learners: (n: number) => `학습자 ${n}명`,
+      age: { days: '만든 지 일주일이 안 됨', weeks: '만든 지 몇 주 됨', months: '만든 지 몇 달 됨', years: '만든 지 1년이 넘음' },
+      visibleClass: (space: string, owner: string) => `${space} (선생님 ${owner})`,
+      visibleYou: (family: string) => `${family} (회원님)`,
+      visibleFamily: (family: string, owner: string) => `${family} (가족, ${owner})`,
+      readToEnd: '끝까지 읽으면 계속할 수 있습니다.',
+      updated: '이 내용이 바뀌었습니다. 다시 읽어 주십시오.',
+      unavailable: '아직 이 언어로는 볼 수 없습니다.',
+      yes: (name: string) => `네, ${name} 학습자를 옮깁니다`,
+      notNow: { cta: '지금은 안 함' },
+      tryAgain: { cta: '다시 시도' },
+      failed: '보내지 못했습니다',
+    },
+    a11y: { close: '닫기' },
+  },
+  /** All lessons from the console (F-BROWSE-001 BR-10, BR-11). */
+  browse: {
+    checkFailed: '플랜을 확인하지 못했어요.',
+    tryAgain: { cta: '다시 해 보기' },
+    openFree: { cta: '무료 레슨 열기' },
+    storageBlocked: '브라우저가 이 페이지의 저장 공간을 막았어요. 여기서는 레슨을 열 수 없어요.',
+    preview: { cta: '미리 보기' },
+    previewLessons: { cta: '레슨 미리 보기' },
   },
 } satisfies DeepPartial<Messages['console']>;

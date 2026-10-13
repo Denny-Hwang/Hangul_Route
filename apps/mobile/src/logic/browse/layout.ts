@@ -15,3 +15,15 @@ export const PREVIEW_STRIP_MAX_HEIGHT = 135;
 
 /** Full-width actions stop at 26rem (26 x 16) from the regular class, as in the mock's `.actions .btn`. */
 export const BROWSE_ACTION_MAX_WIDTH = 416;
+
+/** The section control's track from the regular class: at most 30rem (30 x 16). */
+export const BROWSE_SECTION_TRACK_MAX = 480;
+
+/** The Library gallery card face: CardArt's gallery slot at the compact class. */
+export const BROWSE_GALLERY_FACE = 132;
+
+/** The item page's facts label column from the regular class (8rem). */
+export const BROWSE_LABEL_COLUMN = 128;
+
+/** A centred dialog sheet (Lesson display, Leave preview) from the regular class: at most 32rem. */
+export const BROWSE_DIALOG_MAX = 512;

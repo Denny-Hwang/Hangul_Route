@@ -203,6 +203,8 @@ export const SyncInboxSchema = z.object({
   transferDeviceConsent: z.boolean().default(false),
   selfManaged: z.boolean().default(false),
   transfers: lenientArray(InboxTransferSchema).default([]),
+  /** The calling device's scope (F-SPACE-002 section 4.12). Null when an older Worker omits it or sends a value the app does not know: unknown, never a guess. */
+  deviceScope: z.enum(['full', 'class']).nullable().default(null).catch(null),
   /*
    * Notes from grown-ups (F-FEEDBACK-001 section 7.1). Additive and lenient: an
    * old Worker omits both (defaults: none, all class notes, not acknowledged),

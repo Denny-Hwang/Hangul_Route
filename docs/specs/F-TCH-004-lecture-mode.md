@@ -409,7 +409,7 @@ Each PR is one reviewable change with its tests; size S < 300 changed lines, M <
 | 8 | `feat(mobile)`: presenter home (Recent + Quick lesson + language chips) | M | 6 |
 | 9 | `feat(mobile)`: quiz slides + shape markers, timer / picker / blank / pause / grid / help overlays, voice and no-Korean fallbacks; emits `lecture.tool_used` | M | 7, F-AUDIO-004 A-5a |
 | 10 | `feat(web)`: console page, `lib/console/{lecture,lecture-link}.ts`, `APP_URL` in `config.ts`, `ROUTES.spaceLecture`, entry buttons, catalogue mirror + generator, copy (`console.lecture`) | M | 1 (functionally useful after 6) |
-| 11 | `feat(mobile)`: story slides (`StoryScene`, checks) | M | 6, F-STORY-001 / 002 shipped |
+| 11 | `feat(mobile)`: story slides (`StoryScene`, checks); flips `STORIES_IN_LECTURE` to `true` in `scripts/build-lecture-catalogue.mjs` and regenerates `lecture-catalogue.generated.ts` (F-STORY-001 PR 1.9 holds stories out of the console catalogue until this adapter exists, so a chosen story is never skipped as not ready) | M | 6, F-STORY-001 / 002 shipped |
 | 12 | `feat(mobile)`: vocab topics adapter (`sources/vocab.ts`) | S | 7, F-VOC-001 |
 
 PR 0, 1, 2, 10 can run in parallel with the layout PRs; the presenter (PR 6) cannot ship before F-LAYOUT-001 PR 2a (uncapped `#root`, manifest `any`). Merge `telemetry.ts` / `index.ts` changes (PR 1) serially with the other specs' name PRs (`spec-wave-2026-10.md` §5).

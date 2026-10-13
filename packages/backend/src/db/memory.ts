@@ -478,6 +478,9 @@ export class MemoryDb implements Db {
   async getSpaces(ids: readonly string[]): Promise<Space[]> {
     return clone([...new Set(ids)].flatMap((spaceId) => this.spaces.get(spaceId) ?? []));
   }
+  async getAccounts(ids: readonly string[]): Promise<Account[]> {
+    return clone([...new Set(ids)].flatMap((accountId) => this.accounts.get(accountId) ?? []));
+  }
   async purgeTransfers(endedBefore: Date, executedBefore: Date, limit: number): Promise<number> {
     const ended = endedBefore.toISOString();
     const executed = executedBefore.toISOString();
@@ -754,6 +757,12 @@ export class MemoryDb implements Db {
     this.noteReports.set(r.id, clone(r));
     this.casNote(r.noteId, () => true, (n) => ({ ...n, status: 'reported' }));
     return true;
+  }
+  async reportsForNotes(noteIds: readonly string[]): Promise<StoredNoteReport[]> {
+    const wanted = new Set(noteIds);
+    const rows = [...this.noteReports.values()].filter((r) => wanted.has(r.noteId));
+    rows.sort((a, b) => (a.createdAt === b.createdAt ? (a.id < b.id ? -1 : 1) : a.createdAt < b.createdAt ? -1 : 1));
+    return clone(rows);
   }
   async countReportersAgainst(accountId: string, since: Date): Promise<number> {
     const from = since.toISOString();

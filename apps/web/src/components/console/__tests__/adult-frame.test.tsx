@@ -25,7 +25,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 const consoleView = vi.hoisted(() => ({
-  api: null as null | { listSpaces: () => Promise<unknown>; roster: (id: string) => Promise<unknown> },
+  api: null as null | { listSpaces: () => Promise<unknown>; roster: (id: string) => Promise<unknown>; browseScope?: () => Promise<unknown> },
   signOuts: 0,
 }));
 vi.mock('../use-console', async () => {
@@ -257,7 +257,7 @@ describe('the active persona and the navigation (section 3.8)', () => {
       },
     };
     const r = await render(fakeEnv({ pathname: '/parent' }));
-    expect(byTestId(r, 'nav-reports')[0]?.props.href).toBe('/teach/space/learner?id=sp_f&learner=lrn_1&period=week&from=nav');
+    expect(byTestId(r, 'nav-reports')[0]?.props.href).toBe('/parent/learner?id=sp_f&learner=lrn_1&period=week&from=nav');
     act(() => mounted?.unmount());
     mounted = null;
     await render(fakeEnv({ pathname: '/parent' }));
@@ -431,5 +431,96 @@ describe('the phone layout and the footer (section 3.8)', () => {
     const r = mounted as unknown as ReactTestRenderer;
     expect(textOf(byTestId(r, 'frame-title')[0] as ReactTestInstance)).toBe('Saturday class');
     expect(allText(r)).toContain('page');
+  });
+});
+
+describe('Lessons opens All lessons in the same tab with the pass (F-BROWSE-001 BR-10, section 4.3)', () => {
+  const NOW = Date.UTC(2026, 9, 13, 11, 0);
+  function withStorage(env: FakeEnv, storage: 'ok' | 'none' = 'ok'): FakeEnv & { data: Map<string, string> } {
+    const data = new Map<string, string>();
+    return Object.assign(env, {
+      data,
+      now: () => NOW,
+      sessionStorage: () =>
+        storage === 'none'
+          ? null
+          : { getItem: (k: string) => data.get(k) ?? null, setItem: (k: string, v: string) => void data.set(k, v), removeItem: (k: string) => void data.delete(k) },
+    });
+  }
+  const plain = () => {
+    const e = { button: 0, metaKey: false, ctrlKey: false, shiftKey: false, altKey: false, defaultPrevented: false, prevented: false, preventDefault: () => undefined };
+    e.preventDefault = () => {
+      e.prevented = true;
+      e.defaultPrevented = true;
+    };
+    return e;
+  };
+
+  beforeEach(async () => {
+    const { resetBrowseScopeCache } = await import('@/lib/console/browse-link');
+    resetBrowseScopeCache();
+    vi.stubEnv('NEXT_PUBLIC_BROWSE', 'enabled');
+  });
+
+  it('a plain click reads the scope, writes a full account pass and assigns /browse#s=nav', async () => {
+    consoleView.api = { listSpaces: async () => ({ ok: true, data: [family] }), roster: async () => ({ ok: false }), browseScope: async () => ({ ok: true, data: { scope: 'full' } }) };
+    const env = withStorage(fakeEnv({ pathname: '/parent' }));
+    const r = await render(env, [family]);
+    const event = plain();
+    await act(async () => {
+      byTestId(r, 'nav-lessons')[0]?.props.onClick(event);
+    });
+    expect(event.prevented).toBe(true);
+    expect(JSON.parse(env.data.get('hr:browse:pass') ?? 'null')).toEqual({ v: 1, scope: 'full', source: 'account', issuedAt: NOW, seen: NOW, uiLocale: 'en' });
+    expect(env.assigned).toEqual(['https://app.hangulroute.com/browse#s=nav']);
+    expect(env.cleared).toBe(0);
+  });
+
+  it('a modifier click is left to the browser: the new tab gets no pass from this page', async () => {
+    let reads = 0;
+    consoleView.api = { listSpaces: async () => ({ ok: true, data: [family] }), roster: async () => ({ ok: false }), browseScope: async () => ((reads += 1), { ok: true, data: { scope: 'full' } }) };
+    const env = withStorage(fakeEnv({ pathname: '/parent' }));
+    const r = await render(env, [family]);
+    const event = { ...plain(), ctrlKey: true };
+    await act(async () => {
+      byTestId(r, 'nav-lessons')[0]?.props.onClick(event);
+    });
+    expect(event.prevented).toBe(false);
+    expect(reads).toBe(0);
+    expect(env.data.size).toBe(0);
+    expect(env.assigned).toEqual([]);
+  });
+
+  it('a failed check shows the line with Try again and Open free lessons under the navigation, and stays', async () => {
+    consoleView.api = { listSpaces: async () => ({ ok: true, data: [klass] }), roster: async () => ({ ok: false }), browseScope: async () => ({ ok: false, error: 'network', status: -1 }) };
+    const env = withStorage(fakeEnv({ pathname: '/teach/home' }));
+    const r = await render(env, [klass]);
+    await act(async () => {
+      byTestId(r, 'nav-lessons')[0]?.props.onClick(plain());
+    });
+    expect(env.assigned).toEqual([]);
+    expect(textOf(byTestId(r, 'frame-lessons-notice')[0] as ReactTestInstance)).toContain('Could not check your plan.');
+    await act(async () => {
+      byTestId(r, 'frame-lessons-free')[0]?.props.onClick();
+    });
+    expect(JSON.parse(env.data.get('hr:browse:pass') ?? 'null')).toMatchObject({ scope: 'sampler', fallback: true });
+    expect(env.assigned).toEqual(['https://app.hangulroute.com/browse#s=nav']);
+  });
+
+  it('blocked storage: the storage line, no navigation', async () => {
+    consoleView.api = { listSpaces: async () => ({ ok: true, data: [family] }), roster: async () => ({ ok: false }), browseScope: async () => ({ ok: true, data: { scope: 'full' } }) };
+    const env = withStorage(fakeEnv({ pathname: '/parent' }), 'none');
+    const r = await render(env, [family]);
+    await act(async () => {
+      byTestId(r, 'nav-lessons')[0]?.props.onClick(plain());
+    });
+    expect(env.assigned).toEqual([]);
+    expect(textOf(byTestId(r, 'frame-lessons-notice')[0] as ReactTestInstance)).toBe("Your browser blocked this page's storage, so lessons cannot open here.");
+  });
+
+  it('no line region without the Lessons item', async () => {
+    vi.stubEnv('NEXT_PUBLIC_BROWSE', '');
+    const r = await render(fakeEnv({ pathname: '/parent' }), [family]);
+    expect(byTestId(r, 'frame-lessons-notice')).toHaveLength(0);
   });
 });

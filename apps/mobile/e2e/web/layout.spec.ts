@@ -1,6 +1,15 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, forgetPin, keepSidewaysIfAsked, passDiscover, playCheck, typeDigits, unlockWithPin } from './helpers';
+import {
+  completeChildForm,
+  forgetPin,
+  keepSidewaysIfAsked,
+  openLettersEpisode,
+  passDiscover,
+  playCheck,
+  typeDigits,
+  unlockWithPin,
+} from './helpers';
 import { expectNoHorizontalOverflow, expectReachable } from './viewport';
 
 /**
@@ -137,8 +146,8 @@ for (const vp of VIEWPORTS) {
       await page.goto('/');
       await expect(page.getByText('Hi, Tess!')).toBeVisible();
 
-      // Home → Meet the Letters → quest 2 → skip to its Trace game.
-      await page.getByRole('button', { name: /Meet the Letters/ }).click();
+      // Journey → Meet the Letters → quest 2 → skip to its Trace game.
+      await openLettersEpisode(page);
       await page.getByRole('button', { name: 'Start' }).nth(1).click();
       // Quest 2 builds on quest 1, which is not done yet: the soft-prerequisite sheet asks once (F-QUEST-002 §3.5).
       await page.getByRole('button', { name: 'Play anyway' }).click();

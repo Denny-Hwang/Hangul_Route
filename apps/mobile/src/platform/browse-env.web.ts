@@ -12,6 +12,7 @@ interface BrowserLike {
   history?: { replaceState?: (state: unknown, unused: string, url: string) => void; go?: (delta: number) => void; length?: number; state?: unknown };
   document?: {
     referrer?: string;
+    querySelector?: (selector: string) => { scrollIntoView?: (options?: unknown) => void } | null;
     visibilityState?: string;
     addEventListener?: (type: string, listener: () => void) => void;
     removeEventListener?: (type: string, listener: () => void) => void;
@@ -229,4 +230,44 @@ export function isOnline(): boolean {
   } catch {
     return true;
   }
+}
+
+/**
+ * Scrolls the page so the element with this `testID` (React Native Web's
+ * `data-testid`) is at the top: the Journey's stage row for "a stage row → the
+ * Journey at that stage" and the `stage` deep-link target (section 4.4,
+ * `journey-stage-<stage>`). `false` when it is not on the page yet.
+ */
+export function revealTestId(testId: string): boolean {
+  try {
+    const element = browser().document?.querySelector?.(`[data-testid="${testId}"]`);
+    if (!element?.scrollIntoView) return false;
+    element.scrollIntoView({ block: 'start' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Escape closes the Lesson display sheet and the card page (section 7). React
+ * Native's `Modal` on the web does not close on Escape by itself. Returns the
+ * unsubscribe.
+ */
+export function onEscape(handler: () => void): () => void {
+  const listener = (event?: unknown): void => {
+    if ((event as { key?: string } | undefined)?.key === 'Escape') handler();
+  };
+  try {
+    browser().addEventListener?.('keydown', listener);
+  } catch {
+    return () => undefined;
+  }
+  return () => {
+    try {
+      browser().removeEventListener?.('keydown', listener);
+    } catch {
+      // Nothing to remove.
+    }
+  };
 }

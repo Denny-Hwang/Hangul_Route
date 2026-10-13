@@ -1,7 +1,7 @@
 import type { InboxNote, NotePrefs, NoteReactionId, NoteReportReason } from '@hangul-route/content-schema';
 import { create } from 'zustand';
 import { applyInbox } from '../logic/notes/apply';
-import { enqueueReport, enqueueState, flushOrder, outcomeOf, settleWrite, staysQueued } from '../logic/notes/queue';
+import { enqueueReport, enqueueState, flushOrder, outcomeOf, settleWrite, staysQueued, type FlushOutcome } from '../logic/notes/queue';
 import { mergeUnloaded, notesKey, readStoredNotes } from '../logic/notes/stored';
 import { emptyNotes, type NoteAttest, type NotesData, type PendingWrite } from '../logic/notes/types';
 import { readJsonStrict, removeKey, writeJson } from '../platform/storage';
@@ -25,6 +25,15 @@ interface State {
   byProfile: Record<string, NotesData>;
 }
 
+/** What one flush did with each write it sent (FB-9's report sheet words its answer from it). */
+export interface FlushResult {
+  kind: PendingWrite['kind'];
+  noteId: string;
+  outcome: FlushOutcome;
+  /** The route's HTTP status (`-1`: no network): a `drop` for a gone note (404 / 409) is not a refusal. */
+  http: number;
+}
+
 /** The parts of the sync client the flush uses. */
 export type NotesClient = Pick<SyncApiClient, 'putNoteState' | 'reportNote'>;
 
@@ -43,7 +52,16 @@ interface Actions {
   /** The grown-up answered the one-time class-notes card on this device. */
   markClassNotesCardSeen: (profileId: string) => Promise<void>;
   /** Send the queued writes, reports first, at most `FLUSH_MAX_WRITES`; stops at the first write that has to wait (offline, 5xx, 401, a limited state write). */
-  flush: (profileId: string, client: NotesClient, creds: DeviceCredentials) => Promise<void>;
+  flush: (profileId: string, client: NotesClient, creds: DeviceCredentials) => Promise<FlushResult[]>;
+  /** The grown-up opened this learner's notes in the grown-up zone (FB-9): the dashboard row's "New" starts over. */
+  markGrownUpSeen: (profileId: string) => Promise<void>;
+  /**
+   * A grown-up hid the note on every device (the hide route answered): it leaves this device now, with
+   * its put-away id and a pending state write, before the next inbox says so. A pending report stays.
+   */
+  forgetNote: (profileId: string, noteId: string) => Promise<void>;
+  /** The class-notes setting the Worker accepted (FB-9); an acknowledged card does not come back. */
+  setPrefs: (profileId: string, prefs: NotePrefs) => Promise<void>;
   /** Drop a removed profile's notes from memory and storage. */
   forgetProfile: (profileId: string) => void;
 }
@@ -54,7 +72,7 @@ const persist = (profileId: string, data: NotesData): void => {
 
 export const useNotesStore = create<State & Actions>((set, get) => {
   const loading = new Map<string, Promise<NotesData>>();
-  const flushing = new Map<string, Promise<void>>();
+  const flushing = new Map<string, Promise<FlushResult[]>>();
   /** Profiles whose stored record was read (or found missing): only these are written back. */
   const loaded = new Set<string>();
   /** Bumped when a profile is removed, so work that started before the removal changes nothing. */
@@ -185,17 +203,57 @@ export const useNotesStore = create<State & Actions>((set, get) => {
       if (running) return running;
       const gen = genOf(profileId);
       const run = (async () => {
+        const results: FlushResult[] = [];
         const data = await hydrate(profileId);
         for (const write of flushOrder(data.queue)) {
           if (genOf(profileId) !== gen) break; // the profile was removed
-          const outcome = outcomeOf(await send(profileId, write, client, creds));
+          const http = await send(profileId, write, client, creds);
+          const outcome = outcomeOf(http);
           update(profileId, gen, (current) => settleWrite(current, write, outcome));
+          results.push({ kind: write.kind, noteId: write.noteId, outcome, http });
           // Offline, a server problem or stale credentials: the rest waits for the next sync, so the inbox is not held up.
           if (staysQueued(write, outcome)) break;
         }
+        return results;
       })().finally(() => flushing.delete(profileId));
       flushing.set(profileId, run);
       return run;
+    },
+
+    markGrownUpSeen: async (profileId) => {
+      const gen = genOf(profileId);
+      await hydrate(profileId);
+      update(profileId, gen, (current) => {
+        const ids = current.notes.map((n) => n.id);
+        const seen = new Set(current.grownUpSeenIds ?? []);
+        // Nothing new since the last look: no write.
+        return current.grownUpSeenIds !== undefined && ids.every((id) => seen.has(id)) ? undefined : { ...current, grownUpSeenIds: ids };
+      });
+    },
+
+    forgetNote: async (profileId, noteId) => {
+      const gen = genOf(profileId);
+      await hydrate(profileId);
+      update(profileId, gen, (current) =>
+        current.notes.some((n) => n.id === noteId)
+          ? {
+              ...current,
+              notes: current.notes.filter((n) => n.id !== noteId),
+              putAway: current.putAway.filter((id) => id !== noteId),
+              queue: current.queue.filter((w) => w.kind === 'report' || w.noteId !== noteId),
+            }
+          : undefined,
+      );
+    },
+
+    setPrefs: async (profileId, prefs) => {
+      const gen = genOf(profileId);
+      await hydrate(profileId);
+      update(profileId, gen, (current) => ({
+        ...current,
+        prefs: { classes: prefs.classes, acknowledged: prefs.acknowledged },
+        classNotesCardSeen: current.classNotesCardSeen || prefs.acknowledged,
+      }));
     },
 
     forgetProfile: (profileId) => {

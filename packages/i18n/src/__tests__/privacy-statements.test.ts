@@ -72,10 +72,6 @@ describe('every statement about where learning data lives says the same thing', 
     expect(en.landing.about.promises.localFirst).toBe(BACKUP_FIRST);
   });
 
-  it('old home, parents block: a plain title and the whole backup sentence', () => {
-    expect(en.landing.parents.points.localFirst).toEqual({ title: 'Progress is backed up.', body: BACKUP });
-  });
-
   it('new home, how it works: progress is saved and backed up', () => {
     expect(en.landing.home.how.steps.collect.body).toBe('Earn Korean culture cards. Your progress is saved and backed up.');
   });
@@ -112,9 +108,8 @@ describe('every statement about where learning data lives says the same thing', 
     expect(body).not.toMatch(/backed up|Rescue Code|our servers/);
   });
 
-  it('old home trust strip: "Child safety first" (OD-4), with no claim about which personal data we hold', () => {
-    expect(en.landing.trust.items.coppa).toEqual({ title: 'Child safety first', body: 'No third-party tracking. We collect as little as possible.' });
-    expect(en.landing.home.promises.items.safety).toBe(en.landing.trust.items.coppa.title);
+  it('home promises: "Child safety first" (OD-4), with no compliance claim', () => {
+    expect(en.landing.home.promises.items.safety).toBe('Child safety first');
   });
 });
 

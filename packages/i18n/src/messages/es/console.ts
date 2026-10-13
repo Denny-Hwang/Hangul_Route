@@ -87,7 +87,7 @@ export const consoleMsgs = {
   shell: {
     home: 'Consola',
     signOut: { cta: 'Salir' },
-    nav: { notes: 'Notas' },
+    nav: { notes: 'Notas', lessons: 'Lecciones', classReports: 'Informes de clase' },
     noApi: 'La consola necesita una dirección de API (NEXT_PUBLIC_API_BASE_URL) en esta versión.',
   },
   kind: {
@@ -484,6 +484,12 @@ export const consoleMsgs = {
       sharedDevice: '¿Dispositivo compartido? Cierra sesión al terminar.',
     },
     pastDue: 'Un pago no se realizó. Actualiza tu tarjeta en Gestionar suscripción; tus estudiantes mantienen la ruta completa una semana.',
+    archiveConfirm: {
+      familyLoses: (space: string) => `Los estudiantes de ${space} pierden el Plan Familiar mientras esté archivado.`,
+      familyRenews: 'El plan se sigue renovando hasta que lo canceles en Facturación.',
+      licenseRenews: 'La Licencia de Grupo se sigue renovando hasta que la canceles en Facturación.',
+      familyRenewsAlone: 'El Plan Familiar se sigue renovando hasta que lo canceles en Facturación.',
+    },
   },
 
   curriculum: {
@@ -1306,5 +1312,41 @@ export const consoleMsgs = {
         line: 'Cualquiera con el código familiar puede unirse. Solo los adultos que actives aquí pueden enviar notas.',
       },
     },
+  },
+  /**
+   * Class moves (F-SPACE-002 T-6d): the consent sheet's frame only, so the sheet reads in one language when its
+   * own switch picks Spanish (the lines are content-schema's TRANSFER_CONSENT_TEXT.es). The rest of
+   * `console.transfer` falls back to English until the next Spanish draft.
+   */
+  transfer: {
+    lines: { notNowEnds: 'Si eliges "Ahora no", esta solicitud termina. Puedes empezar un cambio tú cuando quieras.' },
+    consent: {
+      title: (name: string, destination: string) => `¿Cambiar a ${name} a ${destination}?`,
+      language: 'Idioma',
+      who: '¿Quién es la nueva clase?',
+      teacher: (owner: string) => `Docente: ${owner}`,
+      learners: (n: number) => plural('es', n, { one: `${n} estudiante`, other: `${n} estudiantes` }),
+      age: { days: 'Tiene menos de una semana', weeks: 'Tiene unas semanas', months: 'Tiene unos meses', years: 'Tiene más de un año' },
+      visibleClass: (space: string, owner: string) => `${space} (docente ${owner})`,
+      visibleYou: (family: string) => `${family} (tú)`,
+      visibleFamily: (family: string, owner: string) => `${family} (familia, ${owner})`,
+      readToEnd: 'Lee hasta el final para continuar.',
+      updated: 'Este texto cambió. Léelo de nuevo, por favor.',
+      unavailable: 'Aún no está disponible en tu idioma.',
+      yes: (name: string) => `Sí, cambiar a ${name}`,
+      notNow: { cta: 'Ahora no' },
+      tryAgain: { cta: 'Reintentar' },
+      failed: 'No se pudo enviar',
+    },
+    a11y: { close: 'Cerrar' },
+  },
+  /** All lessons from the console (F-BROWSE-001 BR-10, BR-11). */
+  browse: {
+    checkFailed: 'No pudimos revisar tu plan.',
+    tryAgain: { cta: 'Reintentar' },
+    openFree: { cta: 'Abrir lecciones gratis' },
+    storageBlocked: 'Tu navegador bloqueó el almacenamiento de esta página. Aquí no se pueden abrir las lecciones.',
+    preview: { cta: 'Vista previa' },
+    previewLessons: { cta: 'Ver las lecciones' },
   },
 } satisfies DeepPartial<Messages['console']>;

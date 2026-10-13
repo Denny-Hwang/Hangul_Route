@@ -2,13 +2,15 @@
   "v": 1,
   "id": "story:donguibogam",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "허준의 동의보감",
     "romanization": "Heojunui Donguibogam",
     "en": "Heo Jun's Treasured Mirror of Medicine"
   },
   "summaryEn": "Hoya learns how the royal doctor Heo Jun finished Donguibogam in 1610, a medical encyclopedia that valued staying healthy and wrote herb names in Hangul, now on UNESCO's Memory of the World Register.",
+  "hoyaIntroEn": "Let's meet a royal doctor who wrote a giant book about staying healthy.",
+  "hoyaOutroEn": "Heo Jun's book helped people care for their bodies. Stretch with me, and stay healthy!",
   "theme": "life",
   "kind": "documentary",
   "recommendedStage": 3,
@@ -17,19 +19,21 @@
     "Read and recognize 몸 (mom, body), 건강 (geongang, health), 약초 (yakcho, medicinal herb) and 책 (chaek, book).",
     "Know that Heo Jun, a Joseon royal doctor, completed Donguibogam in 1610 and that it was printed in 1613 in 25 volumes.",
     "Understand the book's idea that preventing illness and staying healthy matters before curing it.",
-    "Know that Donguibogam wrote herb names in Hangul and has been on UNESCO's Memory of the World Register, 세계기록유산 (segyegirogyusan), since 2009."
+    "Know that Donguibogam wrote herb names in Hangul and has been on UNESCO's Memory of the World Register, 세계 기록 유산 (segye girok yusan), since 2009."
   ],
   "origin": {
     "type": "documented",
     "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
   },
   "review": {
-    "language": "draft",
-    "culture": "draft",
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
     "advisory": [
       "war"
     ],
-    "advisoryNoteEn": "Briefly mentions a war from Korea's history."
+    "advisoryNoteEn": "Briefly mentions a war from Korea's history.",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-13"
   },
   "keywords": [
     {
@@ -82,9 +86,9 @@
       "kind": "phrase"
     },
     {
-      "id": "segyegirogyusan",
-      "ko": "세계기록유산",
-      "romanization": "segyegirogyusan",
+      "id": "segye-girok-yusan",
+      "ko": "세계 기록 유산",
+      "romanization": "segye girok yusan",
       "en": "Memory of the World (UNESCO documentary heritage)",
       "kind": "word"
     },
@@ -362,12 +366,12 @@
         },
         {
           "id": "s7",
-          "narrationEn": "Donguibogam was printed in 1613 in 25 volumes. Later it was printed many times in China, and in Japan too. In 2009, UNESCO added it to the Memory of the World Register, {kw:segyegirogyusan}.",
+          "narrationEn": "Donguibogam was printed in 1613 in 25 volumes. Later it was printed many times in China, and in Japan too. In 2009, UNESCO added it to the Memory of the World Register, {kw:segye-girok-yusan}.",
           "captionEn": "The book was printed many times",
           "keyword": {
-            "id": "segyegirogyusan",
-            "ko": "세계기록유산",
-            "romanization": "segyegirogyusan",
+            "id": "segye-girok-yusan",
+            "ko": "세계 기록 유산",
+            "romanization": "segye girok yusan",
             "en": "Memory of the World (UNESCO documentary heritage)",
             "kind": "word"
           },
@@ -388,7 +392,7 @@
                 "s": 1.8
               }
             ],
-            "altEn": "Rows of old thread-bound books rest in a wooden case before a sea of islands, as the book travelled abroad."
+            "altEn": "Rows of old thread-bound books rest in a wooden case before a sea of islands, as the book traveled abroad."
           }
         },
         {
@@ -523,8 +527,22 @@
     }
   ],
   "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:story-donguibogam"
+  },
+  "shelf": {
+    "category": "culture",
+    "order": 15,
+    "sampler": false,
+    "minutes": 5
+  },
   "pillarTags": [],
   "companionId": "hoya",
+  "card": {
+    "titleEn": "Medicine Book",
+    "keywordId": "donguibogam",
+    "factId": "f3"
+  },
   "facts": [
     {
       "id": "f1",
@@ -788,7 +806,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
+    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
   },
   "authorNotes": "Sources disagree on the start year of compilation (KHS designation text and encykorea: 1596; KHS portal Memory-of-the-World page: 1597) and on its length (14 vs 16 years), so narration omits both. The number of royal books given to Heo Jun ('500여 권') comes from encykorea only, so narration says 'many'. UNESCO's page says 'compiled in 1613' (the printing year); KHS and encykorea give completion in 1610 and printing in 1613. Omitted: Heo Jun's exile to Uiju (1608–1609); the Jeongyu invasion is referred to only as 'a war broke out'. No remedies or medical advice are presented; prevention is described only as the book's stated principle. Herb names in Hangul: encykorea (compiling principles) plus 우리역사넷/신편한국사 ('모든 향약명을 한글로 표시'). Theme set to 'life' (body and health); BP05 lists 동의보감 at Pillar E (6.E4), so 'crafts' is the grid-aligned alternative. Scene 7 keyword changed to 세계기록유산 so 책 is not repeated. REVISION: the folk-tale entry 허준 설화 (E0063156) was replaced by the person entry 허준 (E0063152) as f1's second source. Birth year: DROPPED in pass 3. KHS gives 1539; encykorea E0063152 is internally inconsistent (infobox 1539 labelled 중종 32 which would be 1537, summary 1539/중종 34, photo captions 1546/명종 1), and other references give 1546, so narration and f1 give no birth year. PASS 3: added 우리역사넷 (신편한국사) as a second source for f4 ('Dongui' = Korea's own medicine, 集例) and f5 (prevention over treatment). PR 1.8c: Hoya's s8 line is 보배 같은 책 rather than the research vocab 보물 같은 책, to avoid the heritage grade 보물 and to echo 보감. s3 keeps 'the doctors were scattered' (f2) and drops 'again' because the story never names an earlier war.",
   "errata": []

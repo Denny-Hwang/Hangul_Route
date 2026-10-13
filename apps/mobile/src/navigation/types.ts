@@ -1,6 +1,9 @@
 import type { PlacementSource, StageKey, StoryLevel, ThemeKey } from '@hangul-route/content-schema';
 import type { NavigatorScreenParams } from '@react-navigation/native';
+import type { AskFrom } from '../logic/access-copy';
+import type { PreviewFrom } from '../logic/episode-access';
 import type { PinResetMethod } from '../logic/profiles/pin-flow';
+import type { ProposalSource } from '../logic/route/proposal-flow';
 import type { GrownUpVia } from '../logic/shell/handoff-rules';
 import type { CellStoriesSource } from '../logic/story/cell-stories';
 import type { LibrarySectionId } from '../logic/story/library-sections';
@@ -34,12 +37,19 @@ export type GrownUpDestination =
   | 'NotesGrownUp'
   | 'NoteReport'
   /** F-REPORT-001 section 3.9 (RP-9): one learner's in-app report (`PinEntry.profileId`). */
-  | 'LearnerReport';
+  | 'LearnerReport'
+  /** F-PLAN-002 section 3.9 (P2-7a): a child profile's "Make a weekly plan" row, through the gate when the device needs it (`PinEntry.profileId`). */
+  | 'RouteProposal';
 
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
   Main: NavigatorScreenParams<MainTabParamList>;
-  EpisodeDetail: { episodeId: string };
+  /**
+   * `from`: the surface that opened the lesson page, for `access.preview_opened` (F-ENT-003 section
+   * 3.12); absent reads `journey` (the grid, its two panes and the cell pages). `player` is the quest
+   * player's guard, which sends a closed quest here (section 3.6).
+   */
+  EpisodeDetail: { episodeId: string; from?: PreviewFrom };
   /**
    * The heritage stories of one grid cell (F-STORY-005 §3.6): its lesson first, then its stories.
    * `source` is the door that opened it, for `journey.cell_stories_opened`.
@@ -67,6 +77,13 @@ export type RootStackParamList = {
     /** Answers after a round's first one — telemetry only, never scored. */
     retries?: number;
   };
+  /**
+   * The weekly plan proposal (F-PLAN-002 section 3.9, wireframe journey/my-route-overview.md K1):
+   * Hoya's recommended plan for `profileId`, with pace, length, start day and days to change, then
+   * Start this plan or Not now. `source` is the door that opened it (`route.proposed.source`). The
+   * update after a retake (`mode: 'update'`, K3) arrives with F-PLC-001 P-7b.
+   */
+  RouteProposal: { source: ProposalSource; profileId: string };
   /** The Stage 1 prize ceremony (F-QUEST-002 §3.8), opened from Results on the run that completed the stage. */
   StageComplete: { stageKey: StageKey };
   /** The Hangul Check (F-QUEST-002 §3.9), from the ceremony and the Journey Stage 1 header; never gates anything. */
@@ -86,12 +103,17 @@ export type RootStackParamList = {
     url?: string;
     /** `next: 'GrownUpArea'`: the entry that asked for the PIN (`shell.grown_up_handoff` `via`); the lock's PIN path passes `lock`. */
     grownUpVia?: GrownUpVia;
-    /** `next: 'Paywall'`: the surface that opened it, passed on to the paywall (default `'journey'`). */
-    from?: 'journey' | 'library';
+    /**
+     * `next: 'Paywall'`: the surface that opened it, passed on to the paywall (default `'journey'`).
+     * F-ENT-003's ask button adds `episode`, `home` and `results` (section 3.7, `AskFrom`).
+     */
+    from?: 'journey' | AskFrom;
     /** `next: 'EditProfile'`: the profile to edit (F-LEARN-001 §3.11); `next: 'MyRoute'`: the profile whose page opens read-only; `next: 'PlacementReport'`: whose report opens (F-PLC-001 section 3.9); `next: 'LearnerReport'`: whose progress report opens (F-REPORT-001 section 3.9). */
     profileId?: string;
     /** `next: 'NoteReport'`: the note the report sheet opens for ("Tell a grown-up", F-FEEDBACK-001 section 6.10 item 4). */
     noteId?: string;
+    /** `next: 'NoteReport'`: where the report sheet came from (default `note_page`), kept when a lapsed session asks for the PIN again. */
+    noteVia?: 'note_page' | 'grown_up_zone';
   };
   /** Forgot PIN: Rescue Code or a 24-hour wait, then a new PIN (F-LEARN-001 §3.5). `next` is kept for the PIN screen. */
   PinReset: { next: GrownUpDestination; profileId?: string };
@@ -102,7 +124,7 @@ export type RootStackParamList = {
   /** sync/join-space — enter a class or family code (F-SPACE-001 §3.5). Not PIN-gated. */
   JoinSpace: undefined;
   /** billing/plan-status — the learner Plan screen: status only, no PIN (F-BILL-002 §4.7; F-ENT-003's "Ask a grown-up" still arrives through the gate). */
-  Paywall: { from: 'journey' | 'settings' | 'library' } | undefined;
+  Paywall: { from: 'journey' | 'settings' | AskFrom } | undefined;
   ParentDashboard: undefined;
   Profile: undefined;
   /** profile/edit — name, level, cub, who is learning (F-LEARN-001 §3.11). Behind the PIN when the gate is required. */
@@ -165,6 +187,25 @@ export type RootStackParamList = {
    * `RoundSummary`; `newBest`: a Challenge round above the learner's own earlier best (read before the round wrote).
    */
   VocabResults: { topicKey: string; summary: RoundSummary; newBest?: boolean };
+  /**
+   * notes/list — My notes (F-FEEDBACK-001 section 6.5 item 2, FB-8): the active profile's notes, New then
+   * Earlier. Registered only while `flags.notesEnabled` is on. `notice: 'putAway'`: the note page just put a
+   * note away, so the list says so once (section 6.10 item 3).
+   */
+  Notes: { notice?: 'putAway' } | undefined;
+  /** notes/detail — one note of the active profile (section 6.5 item 3, FB-8). Opening it marks it read. */
+  NoteDetail: { noteId: string };
+  /**
+   * parent/note-report — the report sheet of one note (section 6.10 item 4). Reached through the gate
+   * (`PinEntry { next: 'NoteReport', noteId, profileId }`), or directly from "Report this note" on a
+   * self-managed profile. `via` (default `note_page`): where Done returns and `notes.report_sent`'s `via`.
+   */
+  NoteReport: { noteId: string; profileId: string; via?: 'note_page' | 'grown_up_zone' };
+  /**
+   * parent/notes B — Notes for <learner> in the grown-up zone (section 6.10 item 2, FB-9): every note the
+   * device holds for that profile, Hide and Report, the class-notes setting. Behind the gate.
+   */
+  NotesGrownUp: { profileId: string };
   /** Fixture builds only (`navigation/vocab-question-e2e.tsx`): the shared vocabulary question view on catalogue words. */
   VocabQuestionE2e: VocabQuestionE2eParams;
 };

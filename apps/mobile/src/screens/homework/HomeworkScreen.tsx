@@ -8,6 +8,7 @@ import {
   HoyaBubble,
   Icon,
   Pill,
+  Pip,
   Screen,
   Spacer,
   colors,
@@ -26,6 +27,7 @@ import type { RootStackParamList } from '../../navigation/types';
 import { useAudience } from '../../store/audience';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { useQuestAccess } from '../../store/tier-store';
 
 /**
  * Homework list (wireframe homework/list, F-HW-001 §3.4): the assignment
@@ -51,6 +53,8 @@ export function HomeworkScreen(): React.ReactElement {
 
   const open = (h: HomeworkAssignment): void =>
     navigation.navigate('QuestPlayer', { questId: h.questId, episodeId: h.episodeId });
+  // A closed assignment (free, effective switch on) shows Not open yet and no button (F-ENT-003 section 3.6).
+  const questOpen = useQuestAccess();
 
   return (
     <Screen tone="canvas" scrollable>
@@ -96,7 +100,7 @@ export function HomeworkScreen(): React.ReactElement {
           </View>
         </Card>
       ) : (
-        view.today.map((h) => <AssignmentRow key={h.id} assignment={h} todayKey={todayKey} onPress={open} />)
+        view.today.map((h) => <AssignmentRow key={h.id} assignment={h} todayKey={todayKey} onPress={open} closed={!questOpen(h.questId)} />)
       )}
       {view.moreToday ? (
         <Caption tone="secondary" testID="homework-more-today">
@@ -110,7 +114,7 @@ export function HomeworkScreen(): React.ReactElement {
           <Heading level="prompt">{m.section.comingUp}</Heading>
           <Spacer size="sm" />
           {view.comingUp.map((h) => (
-            <AssignmentRow key={h.id} assignment={h} todayKey={todayKey} onPress={open} />
+            <AssignmentRow key={h.id} assignment={h} todayKey={todayKey} onPress={open} closed={!questOpen(h.questId)} />
           ))}
           {view.later.length > 0 ? (
             <>
@@ -130,7 +134,7 @@ export function HomeworkScreen(): React.ReactElement {
                 </Body>
               </Pressable>
               {laterOpen
-                ? view.later.map((h) => <AssignmentRow key={h.id} assignment={h} todayKey={todayKey} onPress={open} />)
+                ? view.later.map((h) => <AssignmentRow key={h.id} assignment={h} todayKey={todayKey} onPress={open} closed={!questOpen(h.questId)} />)
                 : null}
             </>
           ) : null}
@@ -171,16 +175,42 @@ function AssignmentRow({
   assignment,
   todayKey,
   onPress,
+  closed,
 }: {
   assignment: HomeworkAssignment;
   todayKey: string;
   onPress: (h: HomeworkAssignment) => void;
+  /** The quest is not open for this learner: the row is text with Not open yet, never a button. */
+  closed: boolean;
 }): React.ReactElement {
   const messages = useMessages();
   const locale = useLocale();
   const m = messages.learner.homework;
   const title = questTitle(assignment.questId, m.questFallback, locale);
   const due = dueLabel(assignment.targetDate, todayKey, m.due);
+  if (closed) {
+    return (
+      <View style={{ marginBottom: spacing.sm }} testID="homework-row-not-open">
+        <Card padding="md">
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm }}>
+            <Body weight="semibold" style={{ flex: 1 }}>
+              {title}
+            </Body>
+            <Pill tone="nudge" label={assignedByLabel(assignment, m.from)} size="sm" />
+          </View>
+          <Spacer size="xs" />
+          <Caption tone="muted">{due}</Caption>
+          <Spacer size="sm" />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+            <Pip state="later" context="stage" />
+            <Body weight="semibold" tone="secondary">
+              {messages.learner.access.notOpen}
+            </Body>
+          </View>
+        </Card>
+      </View>
+    );
+  }
   return (
     <Pressable
       onPress={() => onPress(assignment)}

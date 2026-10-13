@@ -131,8 +131,18 @@ describe('isFreeContent (default registry)', () => {
     expect(LATER_LESSONS.length).toBeGreaterThan(0);
   });
 
-  it('has an empty sampler while the bundle has no sampler story', () => {
-    expect(isFreeContent('story', 'story:seollal-new-year')).toBe(false);
+  it('reads the sampler from the bundle: the six shelf stories flagged sampler (F-STORY-005 §3.3)', () => {
+    for (const id of [
+      'story:sejong-new-letters',
+      'story:hangeul-day',
+      'story:cheugugi-rain-gauge',
+      'story:seollal-new-year',
+      'story:chuseok-ganggangsullae',
+      'story:sun-and-moon',
+    ]) {
+      expect(isFreeContent('story', id), id).toBe(true);
+    }
+    expect(isFreeContent('story', 'story:tripitaka-koreana')).toBe(false);
   });
 });
 

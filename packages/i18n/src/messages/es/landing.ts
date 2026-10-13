@@ -2,11 +2,10 @@ import { plural } from '../../plural';
 import type { DeepPartial, Messages } from '../../types';
 
 /**
- * Spanish public site (F-I18N-001 PR 15): metadata, the layered home, the persona pages, the old landing
- * sections, About, the launch-news form and the 404 links. Public surface (CLAUDE.md section 1): anyone, at any
- * age; never kids-only framing and never an age range (KIDS_ONLY_FRAMING). The Privacy Policy and Terms stay
- * English-authoritative (decision L10): only their notice, draft line and back link are translated here, never a
- * leaf under `legal.privacy` or `legal.terms`. No price anywhere.
+ * Spanish public site (F-I18N-001 PR 15): metadata, the layered home, the persona pages, About, the launch-news form
+ * and the 404 links. Public surface (CLAUDE.md section 1): anyone, at any age; never kids-only framing and never an age
+ * range (KIDS_ONLY_FRAMING). The Privacy Policy and Terms stay English-authoritative (decision L10): only their notice,
+ * draft line and back link are translated here, never a leaf under `legal.privacy` or `legal.terms`. No price anywhere.
  */
 const FAQ_ADULT = {
   q: 'Soy una persona adulta que empieza. ¿Se sentirá infantil?',
@@ -22,10 +21,10 @@ export const landing = {
     title: 'Hangul Route: aprende hangul desde cero con Hoya',
     tagline: 'Aprende hangul desde cero, a cualquier edad.',
     description:
-      'Aprende hangul desde cero con Hoya, el tigre: para cualquier persona, a cualquier edad, familias de herencia coreana, fans de la cultura K y principiantes con curiosidad. Misiones de cinco minutos, 8 minijuegos, tarjetas de cultura coreana para coleccionar y un Recorrido del patrimonio por 7 etapas y 5 temas culturales. La Etapa 1 es gratis y vienen más etapas. Sin anuncios, nunca.',
+      'Aprende hangul desde cero con Hoya, el tigre, a cualquier edad: familias de herencia coreana, fans de la cultura K y principiantes con curiosidad. Misiones de cinco minutos enseñan el alfabeto coreano para leer, escuchar y escribir, y cada letra te da una tarjeta de cultura coreana. La Etapa 1 es gratis y vienen más etapas. Sin anuncios, nunca.',
     keywords: ['aprender hangul', 'alfabeto coreano', 'aprender coreano', 'coreano para principiantes', 'coreano de herencia', 'cultura coreana', 'Hoya'],
-    ogDescription: 'Recorrido del patrimonio + tarjetas de cultura coreana + Hoya, el tigre. Empieza el coreano desde cero, a cualquier edad. La Etapa 1 es gratis.',
-    twitterDescription: 'Recorrido del patrimonio + tarjetas de cultura coreana + Hoya, el tigre. Empieza el coreano desde cero, a cualquier edad.',
+    ogDescription: 'Aprende el alfabeto coreano desde cero con Hoya, el tigre, a cualquier edad, y colecciona tarjetas de cultura coreana. La Etapa 1 es gratis.',
+    twitterDescription: 'Aprende el alfabeto coreano desde cero con Hoya, el tigre, a cualquier edad, y colecciona tarjetas de cultura coreana.',
     pages: {
       learners: {
         title: 'Para estudiantes: Hangul Route',
@@ -47,12 +46,8 @@ export const landing = {
   },
   nav: {
     label: 'Menú',
-    playNow: { cta: 'Jugar ahora' },
-    cards: 'Tarjetas',
-    games: 'Juegos',
     learners: 'Estudiantes',
     parents: 'Familias',
-    dashboard: 'Panel',
     teachers: 'Docentes',
     signIn: 'Entrar',
     start: 'Empezar a aprender',
@@ -73,17 +68,14 @@ export const landing = {
         learners: {
           title: 'Estudiantes',
           body: 'Misiones de cinco minutos, una guía que nunca regaña y tarjetas de cultura coreana.',
-          linkLabel: 'Para estudiantes',
         },
         parents: {
           title: 'Familias',
           body: 'Mira qué practica tu estudiante, con control para adultos y sin anuncios.',
-          linkLabel: 'Para familias',
         },
         teachers: {
           title: 'Docentes',
           body: 'Los estudiantes se unen con un código. Sin correos ni cuentas.',
-          linkLabel: 'Para docentes',
         },
       },
     },
@@ -246,43 +238,6 @@ export const landing = {
       teachers: 'Lleva el hangul a tu clase esta semana.',
     },
   },
-  hero: {
-    badges: { allAges: 'Toda edad', heritage: 'Familias de herencia', fans: 'Fans de la cultura K' },
-    titleLines: ['Aprende hangul desde cero,', 'a cualquier edad.'],
-    lead: (letter: string) =>
-      `Hoya, el tigre, te guía desde ${letter} hasta el Chuseok: misiones de cinco minutos, instrucciones en español sencillo y tarjetas de cultura coreana para coleccionar en el camino. Niños, adolescentes y adultos juegan las mismas misiones. Se juega, no se estudia. Nunca un mal gesto.`,
-    play: { cta: 'Jugar en el navegador' },
-    seeCards: { cta: 'Ver las tarjetas' },
-    facts: 'Nada que descargar · Sin anuncios · Funciona sin conexión tras tu primera visita',
-    bubble: (letter: string) => `¡Annyeong! Conozcamos la letra ${letter}.`,
-  },
-  trust: {
-    label: 'Confianza',
-    items: {
-      coppa: { title: 'Seguridad infantil primero', body: 'Sin rastreo de terceros. Pedimos lo mínimo posible.' },
-      ads: { title: 'Cero anuncios', body: 'Sin anuncios de terceros. Sin venta de datos. Los ingresos son solo dentro de la app.' },
-      offline: {
-        title: 'Úsala sin conexión',
-        body: 'Después de tu primera visita la app se abre sin conexión. Los sonidos de las letras necesitan una voz coreana en tu dispositivo hasta que lleguen nuestras grabaciones.',
-      },
-      antiShame: { title: 'Diseño que no avergüenza', body: 'Si te equivocas, ves ámbar. Nada de rojo. Nada de culpa por la racha.' },
-    },
-  },
-  how: {
-    title: 'Cómo funciona',
-    steps: {
-      journey: { title: 'Recorrido del patrimonio', body: '7 etapas × 5 temas culturales. Cada estudiante traza su propia ruta por el coreano.' },
-      games: { title: 'Minijuegos', body: 'Toca, arma, traza y une: juegos de cinco minutos que caben en cualquier día, a cualquier edad.' },
-      collect: {
-        title: 'Colecciona cultura',
-        body: (cards: number) =>
-          plural('es', cards, {
-            one: `Gana ${cards} tarjeta del patrimonio en la Etapa 1: del kimchi al Chuseok y al gayageum.`,
-            other: `Gana ${cards} tarjetas del patrimonio en la Etapa 1: del kimchi al Chuseok y al gayageum.`,
-          }),
-      },
-    },
-  },
   cards: {
     eyebrow: 'El ciclo de premios',
     title: (cards: number) =>
@@ -308,76 +263,9 @@ export const landing = {
     family: { recognition: 'Reconocer', production: 'Producir', application: 'Aplicar', review: 'Repasar' },
     beta: 'Beta: opcional',
   },
-  hoya: {
-    eyebrow: 'Conoce a Hoya',
-    title: 'Un tigre que nunca dice “mal”.',
-    body: 'Hoya es un tigre joven y la única voz de la app. Los cuentos coreanos empiezan con “Hace mucho, cuando los tigres fumaban tabaco…”, así que el tigre es como el abuelo de Corea. Hoya es joven: así los estudiantes conocen a un compañero, no a una autoridad.',
-    bubble: (korean: string, romanization: string) => `${korean} · ${romanization} · ¡casi!`,
-    points: {
-      wrong: { title: '¿Te equivocaste?', body: (korean: string) => `Hoya dice “${korean}” (casi) en ámbar, nunca en rojo.` },
-      right: { title: '¿Respuesta correcta?', body: 'Una estrella, una tarjeta, un festejo tranquilo. Sin sonidos de monedas.' },
-      streak: { title: 'Rachas sin culpa.', body: 'Salta un día. Hoya se alegra de verte cuando vuelves.' },
-    },
-  },
-  parents: {
-    eyebrow: 'Para familias',
-    title: 'Cinco minutos al día. Nada invasivo.',
-    body: 'Muchos de nuestros estudiantes son niños, así que Hangul Route también está hecho para madres y padres cansados. Presta el teléfono cinco minutos y, al volver, habrá una letra coreana nueva y una tarjeta del patrimonio. ¿Tú también aprendes coreano? Juega las mismas misiones. Llévalo en un vuelo largo: la app funciona sin conexión después de tu primera visita.',
-    points: {
-      localFirst: {
-        title: 'El progreso se respalda.',
-        body: 'El apodo y el progreso de cada estudiante se guardan en el dispositivo y se respaldan en nuestros servidores, para recuperarlos con un código de rescate. Cuando un estudiante se une a una clase o familia con un código, ese espacio ve el nombre con que se une y su progreso. Los adultos de una familia también pueden recuperar su progreso.',
-      },
-      gate: { title: 'Control adulto.', body: 'Todo lo que cuesta dinero o borra datos está tras una pregunta sencilla de multiplicar.' },
-      shared: { title: 'Hermanos en un dispositivo.', body: 'Cada estudiante conserva sus estrellas y tarjetas. Sin ventas insistentes.' },
-    },
-  },
-  pricing: {
-    title: 'Precios',
-    lines: {
-      stage1: { name: 'Etapa 1', detail: 'gratis' },
-      stages: { name: 'Más etapas', detail: 'pronto' },
-      classroom: { name: 'Planes para clases', detail: 'pronto' },
-    },
-    footnote: 'Sin anuncios de terceros, nunca.',
-  },
-  faq: {
-    title: 'Preguntas frecuentes',
-    items: {
-      who: {
-        q: '¿Para quién es Hangul Route?',
-        a: 'Para cualquier persona que aprende hangul desde cero, a cualquier edad: niños, adolescentes y adultos, familias de herencia coreana y fans de la cultura K. Todos juegan las mismas misiones. La Etapa 1 (Hangul) sirve tanto para quien ya lee bien como para quien aún no lee: cada pantalla tiene voz e imágenes.',
-      },
-      adult: FAQ_ADULT,
-      different: {
-        q: '¿Qué la hace diferente de otras apps de idiomas?',
-        a: 'Casi todas empiezan con listas de vocabulario. Nosotros empezamos con el alfabeto y la cultura coreana, una tarjeta del patrimonio a la vez. Y nunca hay rojo.',
-      },
-      korean: FAQ_KOREAN,
-      session: {
-        q: '¿Cuánto dura una sesión?',
-        a: 'Una misión toma unos 5 minutos. Casi todos hacen de 1 a 3 misiones por sesión. Puedes parar cuando quieras: sin culpa por la racha.',
-      },
-      cost: {
-        q: '¿Cuánto cuesta?',
-        a: 'La Etapa 1 es gratis. Vienen más etapas y planes para clases. Sin anuncios.',
-      },
-    },
-  },
-  get: {
-    title: 'Prueba Hangul Route esta semana.',
-    body: 'Hangul Route funciona en tu navegador: ábrelo, agrégalo a tu pantalla de inicio y funciona sin conexión. Deja tu correo y te enviaremos la noticia del lanzamiento.',
-    play: { cta: 'Jugar ahora, gratis' },
-    devices: 'Funciona en iPhone, Android, iPad y Chromebook, con cualquier navegador moderno.',
-  },
   footer: {
     guide: 'Guía',
     app: 'App',
-    product: 'Producto',
-    cards: 'Tarjetas',
-    games: 'Minijuegos',
-    dashboard: 'Panel familiar',
-    console: 'Consola docente',
     company: 'Empresa',
     about: 'Nosotros',
     privacy: 'Privacidad',

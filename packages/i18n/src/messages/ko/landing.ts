@@ -1,13 +1,12 @@
 import type { DeepPartial, Messages } from '../../types';
 
 /**
- * Korean public site (F-I18N-001 PR 16): metadata, the layered home, the persona pages, the old landing sections,
- * About, the launch-news form, the 404 links and the language banner. Public surface (CLAUDE.md section 1): anyone,
- * at any age; never kids-only framing and never an age range (KIDS_ONLY_FRAMING). 해요체, plain and
- * short. The Privacy Policy and Terms stay English-authoritative (decision L10): only their notice, draft line and
- * back link are translated here, never a leaf under `legal.privacy` or `legal.terms`. No price anywhere. Taught
- * Korean (the hero letter, Hoya's phrase) arrives as an argument and never takes a particle that changes with the
- * final consonant.
+ * Korean public site (F-I18N-001 PR 16): metadata, the layered home, the persona pages, About, the launch-news form,
+ * the 404 links and the language banner. Public surface (CLAUDE.md section 1): anyone, at any age; never kids-only
+ * framing and never an age range (KIDS_ONLY_FRAMING). 해요체, plain and short. The Privacy Policy and Terms stay
+ * English-authoritative (decision L10): only their notice, draft line and back link are translated here, never a leaf under
+ * `legal.privacy` or `legal.terms`. No price anywhere. Taught Korean (the hero letter) arrives as an argument and never
+ * takes a particle that changes with the final consonant.
  */
 const FAQ_ADULT = {
   q: '어른 초보자예요. 너무 아이용 같지 않을까요?',
@@ -26,10 +25,10 @@ export const landing = {
     title: 'Hangul Route — 호야와 함께 한글을 처음부터',
     tagline: '나이와 상관없이, 한글을 처음부터 배워요.',
     description:
-      '호랑이 호야와 함께 한글을 처음부터 배워요 — 나이와 상관없이 누구나: 한국계 가족, K-컬처 팬, 호기심 많은 초보자 모두를 위해. 5분 퀘스트, 미니게임 8가지, 모으는 재미가 있는 한국 문화 카드, 7단계와 5가지 문화 주제를 잇는 문화 여정. 1단계는 무료이고 더 많은 단계가 준비되고 있어요. 광고는 절대 없어요.',
+      '호랑이 호야와 함께 나이와 상관없이 한글을 처음부터 배워요. 한국계 가족, K-컬처 팬, 호기심 많은 초보자 모두를 위해서요. 5분 퀘스트로 한글 자모를 읽기, 듣기, 쓰기로 익히고, 글자를 하나 배울 때마다 한국 문화 카드를 받아요. 1단계는 무료이고 더 많은 단계가 준비되고 있어요. 광고는 절대 없어요.',
     keywords: ['한글 배우기', '한글 자모', '한국어 배우기', '한국어 초보', '한국계 가족 한국어', 'K-컬처 학습', '호야'],
-    ogDescription: '문화 여정 + 한국 문화 카드 + 호랑이 호야. 나이와 상관없이 한국어를 처음부터 시작해요. 1단계는 무료예요.',
-    twitterDescription: '문화 여정 + 한국 문화 카드 + 호랑이 호야. 나이와 상관없이 한국어를 처음부터 시작해요.',
+    ogDescription: '호랑이 호야와 함께 나이와 상관없이 한글 자모를 처음부터 배우고, 한국 문화 카드를 모아요. 1단계는 무료예요.',
+    twitterDescription: '호랑이 호야와 함께 나이와 상관없이 한글 자모를 처음부터 배우고, 한국 문화 카드를 모아요.',
     pages: {
       learners: {
         title: '학습자를 위해 — Hangul Route',
@@ -51,12 +50,8 @@ export const landing = {
   },
   nav: {
     label: '주 메뉴',
-    playNow: { cta: '지금 해 보기' },
-    cards: '카드',
-    games: '게임',
     learners: '학습자',
     parents: '부모님',
-    dashboard: '대시보드',
     teachers: '선생님',
     signIn: '로그인',
     start: '배우기 시작하기',
@@ -77,17 +72,14 @@ export const landing = {
         learners: {
           title: '학습자',
           body: '5분 퀘스트, 절대 혼내지 않는 길잡이, 그리고 모으는 재미가 있는 한국 문화 카드.',
-          linkLabel: '학습자를 위해',
         },
         parents: {
           title: '부모님과 보호자',
           body: '어른 확인 장치와 광고 없는 환경에서, 학습자가 무엇을 연습하는지 봐요.',
-          linkLabel: '부모님을 위해',
         },
         teachers: {
           title: '선생님',
           body: '학생은 반 코드로 참여해요. 학생 이메일도, 계정도 필요 없어요.',
-          linkLabel: '선생님을 위해',
         },
       },
     },
@@ -248,39 +240,6 @@ export const landing = {
       teachers: '이번 주, 반에 한글을 가져와요.',
     },
   },
-  hero: {
-    badges: { allAges: '모든 나이', heritage: '한국계 가족', fans: 'K-컬처 팬' },
-    titleLines: ['한글을 처음부터 —', '나이와 상관없이.'],
-    lead: (letter: string) =>
-      `호랑이 호야가 ${letter}부터 추석까지 안내해요 — 5분 퀘스트, 쉬운 말로 된 안내, 그리고 길을 따라 모으는 한국 문화 카드. 아이, 청소년, 어른 모두 같은 퀘스트를 해요. 공부가 아니라 놀이처럼. 찡그릴 일은 없어요.`,
-    play: { cta: '브라우저에서 해 보기' },
-    seeCards: { cta: '카드 보기' },
-    facts: '내려받을 것이 없어요 · 광고가 없어요 · 처음 방문한 뒤에는 오프라인으로도 돼요',
-    bubble: (letter: string) => `안녕하세요! 오늘 만날 글자: ${letter}`,
-  },
-  trust: {
-    label: '믿을 수 있는 이유',
-    items: {
-      coppa: { title: '아이의 안전이 먼저예요', body: '제삼자 추적이 없어요. 정보는 꼭 필요한 만큼만 모아요.' },
-      ads: { title: '광고는 절대 없어요', body: '제삼자 광고가 없어요. 데이터를 팔지 않아요. 수익은 앱 안에서만 나와요.' },
-      offline: {
-        title: '오프라인에서도 돼요',
-        body: '처음 방문한 뒤에는 인터넷 없이도 앱이 열려요. 저희가 직접 녹음한 소리가 나오기 전까지는, 글자 소리를 들으려면 기기에 한국어 음성이 있어야 해요.',
-      },
-      antiShame: { title: '부끄럽게 하지 않는 디자인', body: '답이 다르면 주황색으로 알려 줘요. 빨간색은 없어요. 연속 기록 때문에 미안해할 일도 없어요.' },
-    },
-  },
-  how: {
-    title: '이렇게 해요',
-    steps: {
-      journey: { title: '문화 여정', body: '7단계 × 5가지 문화 주제. 학습자마다 한국어를 지나는 자기만의 루트를 그려요.' },
-      games: { title: '미니게임', body: '누르기, 만들기, 따라 쓰기, 짝짓기 — 나이와 상관없이 어느 날에나 쏙 들어가는 5분 게임이에요.' },
-      collect: {
-        title: '문화 모으기',
-        body: (cards: number) => `1단계에서 문화 카드 ${cards}장을 받아요 — 김치부터 추석, 가야금까지.`,
-      },
-    },
-  },
   cards: {
     eyebrow: '모으는 재미',
     title: (cards: number) => `문화 카드 ${cards}장. 한 장에 한국 한 조각.`,
@@ -299,76 +258,9 @@ export const landing = {
     family: { recognition: '알아보기', production: '만들기', application: '활용', review: '복습' },
     beta: '베타 — 원하면 켜기',
   },
-  hoya: {
-    eyebrow: '호야를 소개해요',
-    title: '절대 “틀렸어”라고 하지 않는 호랑이.',
-    body: '호야는 어린 호랑이이고, 앱에서 들리는 유일한 목소리예요. 한국 옛이야기는 “옛날 옛적, 호랑이 담배 피우던 시절에…”로 시작하니, 호랑이는 한국의 할머니 할아버지 같은 캐릭터예요. 호야는 그중 어린 호랑이라서, 학습자는 어른이 아니라 친구를 만나요.',
-    bubble: (korean: string, romanization: string) => `${korean} · ${romanization} · 조금만 더!`,
-    points: {
-      wrong: { title: '답이 다르면?', body: (korean: string) => `호야가 빨간색이 아니라 주황색 말풍선으로 “${korean}”(조금만 더)라고 말해요.` },
-      right: { title: '맞히면?', body: '별 하나, 카드 한 장, 조용한 응원 한 번. 동전 소리는 없어요.' },
-      streak: { title: '연속 기록 때문에 부끄러울 일은 없어요.', body: '하루 쉬어도 돼요. 다시 오면 호야가 반겨 줘요.' },
-    },
-  },
-  parents: {
-    eyebrow: '부모님을 위해',
-    title: '하루 5분. 찜찜한 건 하나도 없어요.',
-    body: '학습자 가운데 아이가 많아서, Hangul Route는 바쁜 부모님도 생각하며 만들었어요. 5분만 휴대폰을 건네주면, 새 한글 글자 하나와 문화 카드 한 장을 얻어 돌아와요. 직접 한국어를 배우고 있나요? 같은 퀘스트를 해 보세요. 긴 비행에도 가져가세요 — 처음 방문한 뒤에는 오프라인으로도 돼요.',
-    points: {
-      localFirst: {
-        title: '진도는 백업돼요.',
-        body: BACKUP,
-      },
-      gate: { title: '부모 확인 장치.', body: '돈이 드는 일이나 데이터를 지우는 일은 간단한 곱셈 문제를 풀어야 해요.' },
-      shared: { title: '형제자매가 기기를 함께 써요.', body: '학습자마다 자기 별과 카드를 따로 가져요. 추가 구매 권유는 없어요.' },
-    },
-  },
-  pricing: {
-    title: '가격',
-    lines: {
-      stage1: { name: '1단계', detail: '무료' },
-      stages: { name: '더 많은 단계', detail: '준비 중' },
-      classroom: { name: '교실 플랜', detail: '준비 중' },
-    },
-    footnote: '제삼자 광고는 절대 없어요.',
-  },
-  faq: {
-    title: '자주 묻는 질문',
-    items: {
-      who: {
-        q: 'Hangul Route는 누구를 위한 앱인가요?',
-        a: '나이와 상관없이 한글을 처음부터 배우는 누구나요 — 아이, 청소년, 어른, 한국계 가족, K-컬처 팬 모두. 모두 같은 퀘스트를 해요. 1단계(한글)는 글을 잘 읽는 사람에게도, 아직 글을 읽지 못하는 사람에게도 맞아요 — 화면마다 소리와 그림이 있어요.',
-      },
-      adult: FAQ_ADULT,
-      different: {
-        q: '다른 언어 앱과 무엇이 다른가요?',
-        a: '대부분의 앱은 단어 반복 훈련부터 시작해요. 저희는 한글 자모와 한국 문화부터 시작해요 — 모으는 문화 카드를 한 장씩. 그리고 빨간 표시는 절대 없어요.',
-      },
-      korean: FAQ_KOREAN,
-      session: {
-        q: '한 번에 얼마나 걸리나요?',
-        a: '퀘스트 하나는 5분쯤 걸려요. 대부분 한 번에 퀘스트를 1~3개 해요. 언제든지 멈춰도 돼요 — 연속 기록 때문에 부끄러울 일은 없어요.',
-      },
-      cost: {
-        q: '비용은 얼마인가요?',
-        a: '1단계는 무료예요. 더 많은 단계와 교실 플랜이 준비되고 있어요. 광고는 없어요.',
-      },
-    },
-  },
-  get: {
-    title: '이번 주에 Hangul Route를 해 보세요.',
-    body: 'Hangul Route는 브라우저에서 돼요 — 열고, 홈 화면에 추가하면 오프라인으로도 돼요. 이메일을 남겨 주시면 출시 소식을 보내 드려요.',
-    play: { cta: '지금 해 보기 — 무료' },
-    devices: 'iPhone, Android, iPad, Chromebook에서 돼요 — 최신 브라우저라면 어디서나.',
-  },
   footer: {
     guide: '안내',
     app: '앱',
-    product: '제품',
-    cards: '문화 카드',
-    games: '미니게임',
-    dashboard: '부모 대시보드',
-    console: '선생님 콘솔',
     company: '회사',
     about: '소개',
     privacy: '개인정보',

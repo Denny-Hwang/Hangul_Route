@@ -426,7 +426,8 @@ export interface ReportLetterTile extends ReportLetterLabel {
 export type ReportDetailBlock =
   /** "Since the start: 6 quests, 5 cards": leads the panel with no heading of its own. */
   | { kind: 'totals'; line: string }
-  | { kind: 'letters'; key: 'strong' | 'practising' | 'new'; heading: string; tiles: ReportLetterTile[]; more: number }
+  /** `moreLine`: "And N more letters" after the strong tiles when more are known than they show, else null. */
+  | { kind: 'letters'; key: 'strong' | 'practising' | 'new'; heading: string; tiles: ReportLetterTile[]; more: number; moreLine: string | null }
   | { kind: 'lines'; key: 'milestones' | 'levelCheck' | 'plan'; heading: string; lines: string[] };
 
 export interface ReportMoreDetailView {
@@ -544,7 +545,7 @@ function detailView(report: LearnerReport, summary: InsightSummary, w: ReportWor
   const blocks: ReportDetailBlock[] = [{ kind: 'totals', line: d.totals(detail.totals.quests, detail.totals.cards) }];
   const tiles = (list: readonly string[]): ReportLetterTile[] => list.map((letter) => ({ ...letterLabel(letter), detail: input.letterInfo(letter) }));
   const letters = (key: 'strong' | 'practising' | 'new', heading: string, list: readonly string[], more = 0): void => {
-    if (list.length) blocks.push({ kind: 'letters', key, heading, tiles: tiles(list), more });
+    if (list.length) blocks.push({ kind: 'letters', key, heading, tiles: tiles(list), more, moreLine: more > 0 ? d.lettersMore(more) : null });
   };
   letters('strong', w.voice === 'second' ? m.report.you.detail.lettersStrong : d.lettersStrong(w.name), detail.lettersStrong, detail.lettersStrongMore);
   letters('practising', d.lettersPractising, detail.lettersPractising);

@@ -68,16 +68,17 @@ test('a plain count, earn hints on locked tiles, an honest explainer, and New un
   await expect(page.getByRole('button', { name: 'Locked card. Finish every quest in Stage 1' }).first()).toBeVisible();
   await expect(page.getByText('Locked', { exact: true })).toHaveCount(0);
 
-  // The explainer: one line per rule this build can fire, no story line yet.
+  // The explainer: one line per rule this build can fire, the story line too since the launch stories
+  // are reviewed (F-STORY-001 PR 1.9).
   for (const line of [
     'Finish a quest to earn its card.',
+    'Finish a story to earn its card.',
     'Finish every quest in an episode to earn more cards.',
     'Finish all of Stage 1 for the legendary cards.',
     "Hoya's tiger card is a welcome gift.",
   ]) {
     await expect(page.getByText(line, { exact: true })).toBeVisible();
   }
-  await expect(page.getByText('Finish a story to earn its card.')).toHaveCount(0);
 
   // The welcome card is new until it is opened.
   const tigerNew = page.getByRole('button', { name: 'Tiger. New', exact: true });

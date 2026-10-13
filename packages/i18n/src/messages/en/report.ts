@@ -143,6 +143,8 @@ export const report = {
   /** More detail (layer 3). `letters` slots take taught Korean, rendered by the page. */
   detail: {
     lettersStrong: (name: string) => `Letters ${name} knows well`,
+    /** One line after the strong tiles when more letters are known than the tiles show (`lettersStrongMore`). */
+    lettersMore: (n: number) => plural('en', n, { one: 'And 1 more letter', other: `And ${n} more letters` }),
     lettersPractising: 'Letters being practiced',
     lettersNew: 'New letters this period',
     totals: (quests: number, cards: number) => `Since the start: ${questCount(quests)}, ${cardCount(cards)}`,
@@ -297,6 +299,20 @@ export const report = {
         one: '1 learner last saved more than 7 days ago.',
         other: `${count} learners last saved more than 7 days ago.`,
       }),
+    /**
+     * The learners with day-by-day data whose window holds nothing saved in the class (`practice.notSaved`, RP-2c): one
+     * neutral line under the day bands (RP-8). Never "Not yet": their device has not saved it, or they joined after it.
+     */
+    windowNotSaved: (count: number) =>
+      plural('en', count, {
+        one: '1 learner has nothing saved for this period yet.',
+        other: `${count} learners have nothing saved for this period yet.`,
+      }),
+    /**
+     * Under the All-time headline (RP-8): the class `all` figures read each learner's lifetime totals (RP-2c), while
+     * letters and milestones count from the join day, so the page says the totals reach back before joining.
+     */
+    allBeforeJoin: 'All time includes practice from before each learner joined the class.',
     /** The class page's own headings; "What went well" is `report.section.wentWell`. */
     section: {
       practiceTogether: 'Practice together',

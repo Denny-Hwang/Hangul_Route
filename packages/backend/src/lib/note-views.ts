@@ -96,3 +96,57 @@ export function parseNoteCursor(raw: string): NoteCursor | null {
   if (id !== undefined && !CURSOR_NOTE_ID.test(id)) return null;
   return { createdAt: new Date(ms).toISOString(), id: id ?? '' };
 }
+
+/*
+ * The family view of every note to a learner — F-FEEDBACK-001 sections 7.2
+ * and 8.2 (PR FB-4b-family). The family sees every status, also notes taken
+ * back, with who acted: an account name for a console action, `"device"` for a
+ * device action. Rule 8.2-c: a note the learner reported from a device reads
+ * `not_shown` to its own sender, never "reported" or "via device".
+ */
+export type OversightStatus = 'live' | 'opened' | 'hidden' | 'reported' | 'withdrawn' | 'not_shown';
+/** Who acted, for an action from the learner's device. */
+export const DEVICE_ACTOR = 'device';
+
+export interface OversightFacts {
+  /** The inbox rules would deliver it now (space, membership, mode, block, sender's right). */
+  delivered: boolean;
+  /** The viewing account sent the note. */
+  viewerIsSender: boolean;
+  /** At least one report on the note came from a device. */
+  reportedOnDevice: boolean;
+}
+
+/**
+ * The section 7.2 family status of one note. Rule 8.2-c: a device report never changes what the note's own
+ * sender sees, so a note taken back or hidden before the report keeps reading `withdrawn` or `hidden` to them
+ * (as `sentNoteStatus` does for the sent list), and any other reported note reads `not_shown`.
+ */
+export function oversightStatus(note: Pick<StoredNote, 'status' | 'readAt' | 'withdrawnAt' | 'hiddenAt'>, facts: OversightFacts): OversightStatus {
+  if (note.status === 'withdrawn' || note.status === 'hidden') return note.status;
+  if (note.status === 'reported') {
+    if (!facts.viewerIsSender || !facts.reportedOnDevice) return 'reported';
+    if (note.withdrawnAt !== null) return 'withdrawn';
+    return note.hiddenAt !== null ? 'hidden' : 'not_shown';
+  }
+  if (!facts.delivered) return 'not_shown';
+  return note.readAt === null ? 'live' : 'opened';
+}
+
+/** An account as the family view names it: its display name, else its email (adult to adult inside the family). */
+export function accountLabel(account: { displayName: string | null; email: string | null } | null): string {
+  return account?.displayName || account?.email || '';
+}
+
+const SENDER_REF_HEX = 32;
+
+/**
+ * The opaque reference of a stopped sender (section 7.2 blocks): an HMAC-SHA-256 of the account id keyed per
+ * family, so the account id never travels to the console and a reference means nothing in another family.
+ */
+export async function senderRefFor(familyId: string, accountId: string): Promise<string> {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(`note-sender-ref:${familyId}`), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const mac = new Uint8Array(await crypto.subtle.sign('HMAC', key, enc.encode(accountId)));
+  return Array.from(mac, (b) => b.toString(16).padStart(2, '0')).join('').slice(0, SENDER_REF_HEX);
+}
