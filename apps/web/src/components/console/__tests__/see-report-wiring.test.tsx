@@ -162,11 +162,11 @@ describe('the roster card See report (RP-7a2)', () => {
     expect(links[0]?.props.href).not.toContain('Mina');
   });
 
-  it('a family roster opens the same page (RP-7c moves the family branch to /parent/learner)', async () => {
+  it('a family roster opens the family report at /parent/learner (RP-7c)', async () => {
     vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'true');
     SPACE.kind = 'family';
     const root = await roster();
-    expect(seeReport(root)[0]?.props.href).toBe('/teach/space/learner?id=space%3Ac1&learner=l%3A1&period=week&from=roster');
+    expect(seeReport(root)[0]?.props.href).toBe('/parent/learner?id=space%3Ac1&learner=l%3A1&period=week&from=roster');
   });
 
   it('adds no request to the roster page', async () => {

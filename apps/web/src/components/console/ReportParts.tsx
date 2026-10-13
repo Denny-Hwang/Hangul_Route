@@ -178,6 +178,10 @@ export const REPORT_CSS = `
 .hr-report-growth-table th,.hr-report-growth-table td{padding:${rem(spacing.xs)} ${rem(spacing.sm)};overflow-wrap:anywhere;border-bottom:${px(borderWidth.thin)} solid ${colors.border.subtle};text-align:left}
 .hr-report-growth-table[hidden]{display:none}
 .hr-report-growth>.hr-report-link-button{align-self:flex-start}
+.hr-report-chooser{display:flex;flex-direction:column;gap:${rem(spacing.xs)};list-style:none;margin:0;padding:0}
+.hr-report-chooser a{display:flex;align-items:center;gap:${rem(spacing.sm)};min-height:${px(touchTarget.min)};padding:${rem(spacing.xs)} ${rem(spacing.md)};border-radius:${px(radii.md)};background:${colors.surface.paper};border:${px(borderWidth.thin)} solid ${colors.border.subtle};color:${colors.text.primary};font-weight:${typography.weight.bold};text-decoration:none;box-sizing:border-box}
+.hr-report-chooser a:focus-visible{${focusRing}}
+.hr-report-chooser a>span:not(.hr-report-chip){flex:1;min-width:0;overflow-wrap:anywhere}
 .hr-report-skeleton{height:${rem(spacing.xxxl)};border-radius:${px(radii.md)};background:${colors.surface.sunken}}
 .hr-report-skeleton-tall{height:calc(3 * ${rem(spacing.xxxl)})}
 .hr-report-skeleton-title{display:inline-block;width:50%;height:${rem(typography.size.title)};border-radius:${px(radii.sm)};background:${colors.surface.sunken}}
@@ -243,6 +247,29 @@ export function ReportHeader({ back, printDisabled, onPrint }: { back: ReportLin
 /** The decorative avatar chip before the title (`aria-hidden`: the name is the title's text). */
 function TitleChip({ avatar }: { avatar: string | null }): JSX.Element {
   return <span className="hr-report-chip" aria-hidden="true" style={{ backgroundColor: avatarChipModel(avatar ?? '').fill }} />;
+}
+
+/**
+ * The parent chooser (RP-7c; design `learner-report.md`, States): `report.chooser.learner` as the `h1`, one row per
+ * learner (avatar chip, name, `arrow-right`), at least `touchTarget.min` tall, in the order given, never a figure.
+ */
+export function ReportChooser({ title, rows }: { title: string; rows: readonly { key: string; href: string; name: string; avatar: string }[] }): JSX.Element {
+  return (
+    <>
+      <h1 className="hr-report-title">{title}</h1>
+      <ul className="hr-report-chooser" data-testid="report-chooser">
+        {rows.map((row) => (
+          <li key={row.key}>
+            <Link href={row.href}>
+              <TitleChip avatar={row.avatar} />
+              <span>{row.name}</span>
+              <IconSvg name="arrow-right" size={GLYPH} color={colors.text.secondary} />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
 }
 
 /** The page's one `h1`: "{name}: report" with the chip, or a skeleton bar on the first load (no name is known yet). */

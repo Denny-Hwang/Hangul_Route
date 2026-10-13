@@ -94,7 +94,7 @@ describe('the week report of a steady learner (behaviour 1, family viewer)', () 
       ['This month', false],
       ['All time', false],
     ]);
-    expect(v.tabs?.[2]?.href).toBe('/teach/space/learner?id=space%3Akim-family&learner=profile%3Amina&period=month');
+    expect(v.tabs?.[2]?.href).toBe('/parent/learner?id=space%3Akim-family&learner=profile%3Amina&period=month');
     expect(v.tabsLabel).toBe('Report period');
     expect(v.announce).toBe('Showing this week');
   });
@@ -102,7 +102,7 @@ describe('the week report of a steady learner (behaviour 1, family viewer)', () 
   it('names the window in the stepper and names the first step back', () => {
     expect(v.stepper).toEqual({
       range: 'Oct 9 to Oct 15',
-      prev: { href: '/teach/space/learner?id=space%3Akim-family&learner=profile%3Amina&period=week&at=2026-10-08', label: 'Last week', name: 'Show last week' },
+      prev: { href: '/parent/learner?id=space%3Akim-family&learner=profile%3Amina&period=week&at=2026-10-08', label: 'Last week', name: 'Show last week' },
       next: null,
     });
   });
@@ -269,7 +269,7 @@ describe('periods and steps', () => {
     expect(v.thisPeriod?.figures?.every((f) => f.up === null)).toBe(true);
     expect(v.stepper).toEqual({
       range: 'Oct 15',
-      prev: { href: '/teach/space/learner?id=space%3Akim-family&learner=profile%3Amina&period=day&at=2026-10-14', label: 'Yesterday', name: 'Show yesterday' },
+      prev: { href: '/parent/learner?id=space%3Akim-family&learner=profile%3Amina&period=day&at=2026-10-14', label: 'Yesterday', name: 'Show yesterday' },
       next: null,
     });
     expect(v.announce).toBe('Showing today');
@@ -281,11 +281,11 @@ describe('periods and steps', () => {
     expect(v.stepper).toEqual({
       range: 'Oct 2 to Oct 8',
       prev: {
-        href: '/teach/space/learner?id=space%3Akim-family&learner=profile%3Amina&period=week&at=2026-10-01&from=roster',
+        href: '/parent/learner?id=space%3Akim-family&learner=profile%3Amina&period=week&at=2026-10-01&from=roster',
         label: 'Sep 25 to Oct 1',
         name: 'Show Sep 25 to Oct 1',
       },
-      next: { href: '/teach/space/learner?id=space%3Akim-family&learner=profile%3Amina&period=week&from=roster', label: 'Next', name: 'Next: show this week' },
+      next: { href: '/parent/learner?id=space%3Akim-family&learner=profile%3Amina&period=week&from=roster', label: 'Next', name: 'Next: show this week' },
     });
     expect(v.thisPeriod?.figures?.find((f) => f.key === 'minutes')?.up).toBe('More than the week before');
     expect(v.wentWell?.lines.map((l) => l.code)).not.toContain('plan_done');
@@ -294,7 +294,7 @@ describe('periods and steps', () => {
   it('two weeks back: the window is named by its end date', () => {
     const v = view(STEADY, { query: { period: 'week', at: '2026-10-01', from: null } });
     expect(v.headline?.text).toBe('Mina practiced on 1 day in the week to Oct 1.');
-    expect(v.stepper?.next).toEqual({ href: '/teach/space/learner?id=space%3Akim-family&learner=profile%3Amina&period=week&at=2026-10-08', label: 'Next', name: 'Next: show last week' });
+    expect(v.stepper?.next).toEqual({ href: '/parent/learner?id=space%3Akim-family&learner=profile%3Amina&period=week&at=2026-10-08', label: 'Next', name: 'Next: show last week' });
   });
 
   it('a day back and two days back', () => {
@@ -324,7 +324,7 @@ describe('periods and steps', () => {
     expect(v.headline?.text).toBe('Mina practiced on 6 days last month.');
     expect(v.stepper?.range).toBe('September 2026');
     expect(v.stepper?.prev).toBeNull();
-    expect(v.stepper?.next).toEqual({ href: '/teach/space/learner?id=space%3Akim-family&learner=profile%3Amina&period=month', label: 'Next', name: 'Next: show this month' });
+    expect(v.stepper?.next).toEqual({ href: '/parent/learner?id=space%3Akim-family&learner=profile%3Amina&period=month', label: 'Next', name: 'Next: show this month' });
     expect(v.thisPeriod?.calendar).toBeNull();
     expect(v.thisPeriod?.figures?.map((f) => f.key)).toEqual(['days', 'minutes', 'quests', 'cards']);
   });
@@ -333,7 +333,7 @@ describe('periods and steps', () => {
     const older = { ...STEADY, activity: { ...STEADY.activity, months: [{ m: '2026-08', min: 30, q: 1, c: 0, w: 0, days: 2 }, ...STEADY.activity.months] } };
     const v = view(older, { query: { period: 'month', at: '2026-08-01', from: null } });
     expect(v.headline?.text).toBe('Mina practiced on 2 days in August 2026.');
-    expect(v.stepper?.next).toEqual({ href: '/teach/space/learner?id=space%3Akim-family&learner=profile%3Amina&period=month&at=2026-09-01', label: 'Next', name: 'Next: show last month' });
+    expect(v.stepper?.next).toEqual({ href: '/parent/learner?id=space%3Akim-family&learner=profile%3Amina&period=month&at=2026-09-01', label: 'Next', name: 'Next: show last month' });
     expect(view(older, { query: { period: 'month', at: '2026-09-01', from: null } }).stepper?.prev?.label).toBe('August 2026');
   });
 
@@ -669,9 +669,11 @@ describe('the back link (section 3.1)', () => {
     expect(reportBackLink('roster', space)).toEqual({ href: '/parent/space?id=space%3Akim-family', text: 'Back to Kim family' });
   });
 
-  it('goes to the space from the navigation or without `from` (the persona home until RP-7c)', () => {
+  it('goes to the persona home from the navigation or without `from`: the parent home for a family, the roster for a class (RP-7c)', () => {
     expect(reportBackLink('nav', cls)).toEqual({ href: '/teach/space?id=space%3Asunflower', text: 'Back to Sunflower' });
-    expect(reportBackLink(null, space)).toEqual({ href: '/parent/space?id=space%3Akim-family', text: 'Back to Kim family' });
+    expect(reportBackLink(null, cls)).toEqual({ href: '/teach/space?id=space%3Asunflower', text: 'Back to Sunflower' });
+    expect(reportBackLink('nav', space)).toEqual({ href: '/parent', text: 'Back to home' });
+    expect(reportBackLink(null, space)).toEqual({ href: '/parent', text: 'Back to home' });
   });
 
   it('goes to the console home when the space is not known (a failed load)', () => {
@@ -825,7 +827,7 @@ describe('rosterReportLink: the roster card See report (RP-7a2)', () => {
       text: 'See report',
     });
     expect(rosterReportLink({ spaceId: 'space:kim-family', kind: 'family', learnerId: 'profile:mina', enabled: true })?.href).toBe(
-      '/teach/space/learner?id=space%3Akim-family&learner=profile%3Amina&period=week&from=roster',
+      '/parent/learner?id=space%3Akim-family&learner=profile%3Amina&period=week&from=roster',
     );
   });
 
