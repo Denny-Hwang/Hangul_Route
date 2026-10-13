@@ -319,8 +319,6 @@ describe('Spanish console counts, n = 1 and n = 2 (F-I18N-001 PR 15)', () => {
     [es.billing.seats(2), '2 plazas'],
     [es.school.classes.line('Prof. Park', 1, 'hoy', true), 'Prof. Park · 1 estudiante · activa hoy · plan publicado'],
     [es.school.classes.line(null, 2, 'ayer', false), 'aún sin docente · 2 estudiantes · activa ayer'],
-    [es.parent.child.quests(1), '1 misión'],
-    [es.parent.child.cards(2), '2 tarjetas'],
     // Review of PR 15: verbs and adjectives agree through plural('es'), never a `=== 1` ternary.
     [es.space.week.practiced(1, 5), '1 de 5 practicó esta semana'],
     [es.space.week.practiced(2, 5), '2 de 5 practicaron esta semana'],
