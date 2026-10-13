@@ -66,6 +66,13 @@ export type LearnerReportResponse = z.infer<typeof LearnerReportResponseSchema>;
 export const ClassReportResponseSchema = z.object({
   space: ReportSpaceSchema,
   period: ReportPeriodSchema,
+  /**
+   * The window the figures read (RP-5b): `classAtOf(period, at, serverTime)`, the day the request asked for within
+   * the class stepper's limits (a month window starts on the 1st), or null for the current window (no `at`, or one
+   * that is malformed, after today, outside the limits, or on `all`). Optional so a console bundle cached before the
+   * field still parses the body.
+   */
+  at: z.string().nullable().optional(),
   serverTime: z.string(),
   report: ClassReportSchema,
 });

@@ -378,6 +378,20 @@ const INBOX_SQL = `SELECT p.learner_id AS p_learner_id, p.classes AS p_classes, 
 
 /** D1 binds at most 100 parameters per statement. */
 const IN_CHUNK = 90;
+/**
+ * The report reads' chunk (F-REPORT-001 section 3.8): their statements bind
+ * nothing but the ids, so a chunk fills D1's limit of 100 bound parameters.
+ */
+export const REPORT_IN_CHUNK = 100;
+
+/** `ids` without duplicates, in chunks of at most `REPORT_IN_CHUNK`. */
+function reportChunks(ids: readonly string[]): string[][] {
+  const unique = [...new Set(ids)];
+  const chunks: string[][] = [];
+  for (let i = 0; i < unique.length; i += REPORT_IN_CHUNK) chunks.push(unique.slice(i, i + REPORT_IN_CHUNK));
+  return chunks;
+}
+const placeholders = (chunk: readonly string[]): string => chunk.map(() => '?').join(', ');
 
 /**
  * Every table `reset()` empties, children before parents. The class-transfer
@@ -505,6 +519,17 @@ export class D1Db implements Db {
   /** Three columns, never `payload_json` (F-REPORT-001 section 3.8): `getSnapshot` is `SELECT *`. */
   summaryOf(learnerId: string): Promise<StoredSummary | null> {
     return this.one('SELECT learner_id, summary_json, updated_at FROM snapshots WHERE learner_id = ?', [learnerId], toStoredSummary);
+  }
+  /** The chunks are issued concurrently: ceil(n / 100) statements, each its own D1 query (no shared snapshot). */
+  async summariesOf(learnerIds: readonly string[]): Promise<StoredSummary[]> {
+    const reads = reportChunks(learnerIds).map((chunk) =>
+      this.many(`SELECT learner_id, summary_json, updated_at FROM snapshots WHERE learner_id IN (${placeholders(chunk)})`, chunk, toStoredSummary),
+    );
+    return (await Promise.all(reads)).flat();
+  }
+  async learnersOf(learnerIds: readonly string[]): Promise<string[]> {
+    const reads = reportChunks(learnerIds).map((chunk) => this.many(`SELECT id FROM learners WHERE id IN (${placeholders(chunk)})`, chunk, (r) => str(r.id)));
+    return (await Promise.all(reads)).flat();
   }
   async putSnapshot(s: SnapshotRecord, baseRev: number): Promise<boolean> {
     // One statement each, so the rev check and the write cannot interleave with another isolate (SYNC-1).

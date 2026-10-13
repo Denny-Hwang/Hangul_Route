@@ -100,6 +100,21 @@ export interface Db {
    * route never loads a learner's device state. Null when no row exists.
    */
   summaryOf(learnerId: string): Promise<StoredSummary | null>;
+  /**
+   * `summaryOf` for many learners (F-REPORT-001 section 3.8, RP-5b): the same
+   * three columns, never `payload_json`, read as `IN (...)` lists of at most
+   * `REPORT_IN_CHUNK` ids per statement (D1's bound-parameter limit), so a
+   * class of n members costs ceil(n / 100) statements. Duplicate ids are read
+   * once; ids with no row are skipped; order is not guaranteed.
+   */
+  summariesOf(learnerIds: readonly string[]): Promise<StoredSummary[]>;
+  /**
+   * The ids among these that have a learner row (RP-5b), chunked like
+   * `summariesOf`. Selects `id` only: the class report never loads a name, an
+   * avatar or anything else of a learner. Duplicates read once; order is not
+   * guaranteed.
+   */
+  learnersOf(learnerIds: readonly string[]): Promise<string[]>;
 
   // spaces + memberships (F-SPACE-001)
   getSpace(id: string): Promise<Space | null>;
