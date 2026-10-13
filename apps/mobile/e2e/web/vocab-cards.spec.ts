@@ -237,8 +237,8 @@ test.describe('Words flashcards (fixture bundle)', () => {
     await expect(page.getByTestId('vocab-cards-summary-line')).toContainText('4 new words collected');
     await expect(page.getByTestId('vocab-cards-next')).toHaveText('Next words');
     await expect(page.getByTestId('vocab-cards-topic')).toBeVisible();
-    // No Speed round button until the Speed Round screen is in the build (F-VOC-004 S-5).
-    await expect(page.getByTestId('vocab-cards-speed')).toHaveCount(0);
+    // Speed round: the Speed Round is in the build (F-VOC-004 S-5) and 4 words are collected.
+    await expect(page.getByTestId('vocab-cards-speed')).toBeVisible();
     await expectNoShame(page);
     await expectFits(page);
     await shot(page, 'vocab-cards-summary');
