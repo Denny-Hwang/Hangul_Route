@@ -39,11 +39,13 @@ import {
 
 /**
  * `new`: no plan yet; one proposal per pace chip, `pace` the pre-selected chip (OD-13).
- * `update`: a plan exists and the newest check found a later place to start (K3).
+ * `update`: a plan exists and its future no longer matches the start: a check found a later
+ * place to start (`retake`, K3), or a grown-up override put quests back or chose another start
+ * (`override`, AM-2). `input` is what the proposal was made from; the update stores exactly it.
  */
 export type PlanOffer =
   | { kind: 'new'; pace: PaceId; byPace: Partial<Record<PaceId, RouteProposal>> }
-  | { kind: 'update'; proposal: RouteProposal; source: UpdateSource };
+  | { kind: 'update'; proposal: RouteProposal; source: UpdateSource; input: ProposeInput };
 
 export type UpdateSource = 'retake' | 'override';
 
@@ -53,8 +55,10 @@ export interface PlanOfferInput {
   context: ProposalContext;
   /** The profile's active own plan (`activeSelfRoute`), or null. */
   active: SelfRoute | null;
-  /** `route-ui:<profileId>.dismissedAt`. */
+  /** The surface's dismissal: `route-ui:<profileId>.dismissedAt` (learner) or `.reportDismissedAt` (report). */
   dismissedAt: string | undefined;
+  /** `route-ui:<profileId>.keptFor`: Keep my plan / Not now on an update, for the change it answered. */
+  keptFor?: string | undefined;
   nowMs: number;
 }
 
@@ -72,6 +76,28 @@ export function startRaised(seed: SeedShape | null, stored: StoredShape, catalog
   const seedSet = new Set(seed.placedOutQuestIds);
   if (!storedSet.every((id) => seedSet.has(id))) return false;
   return seedSet.size > new Set(storedSet).size || placementLevelRank(seed.level) > placementLevelRank(stored.level);
+}
+
+/**
+ * The plan's future would gain quests: the seed no longer skips some quest the plan skips. Only a
+ * grown-up override removes ids from the placed-out set (`route-seed.ts`), so this is an override
+ * that put quests back or chose another start (AM-2: "the put-back quests then return to the plan's
+ * future queue").
+ */
+export function startPutBack(seed: SeedShape | null, stored: StoredShape, catalog: RouteCatalog): boolean {
+  if (seed === null) return false;
+  const storedSet = stored.placedOutQuestIds ?? questsPlacedOutAtLevel(stored.level, catalog);
+  const seedSet = new Set(seed.placedOutQuestIds);
+  return storedSet.some((id) => !seedSet.has(id));
+}
+
+/** The newest change to the start: a result's time or an override's, whichever is later (the key `keptFor` answers). */
+export function planChangeAt(placements: readonly PlacementResult[] | undefined): string | undefined {
+  let top: string | undefined;
+  for (const r of placements ?? []) {
+    for (const at of [r.completedAt, r.override?.at]) if (at !== undefined && (top === undefined || at > top)) top = at;
+  }
+  return top;
 }
 
 /** `proposeRoute`'s input for an existing plan (its own rhythm, minutes, goals and tier). */
@@ -94,8 +120,13 @@ export function planOfferOf(i: PlanOfferInput): PlanOffer | null {
     const proposal = safePropose(input);
     if (proposal === null || proposal.kind !== 'update') return null;
     const catalog = routeCatalogOf(i.context.catalog ?? CATALOG);
+    // Nothing in the plan's future would change (a level that rose alone): no update.
+    if (proposal.diff !== undefined && proposal.diff.itemsRemoved === 0 && proposal.diff.itemsAdded === 0) return null;
+    const changeAt = planChangeAt(i.context.placements);
+    if (changeAt !== undefined && i.keptFor === changeAt) return null;
+    if (startPutBack(input.seed, i.active.meta.params, catalog)) return { kind: 'update', proposal, source: 'override', input };
     if (!startRaised(input.seed, i.active.meta.params, catalog)) return null;
-    return { kind: 'update', proposal, source: planUpdateSource(i.context.placements) };
+    return { kind: 'update', proposal, source: planUpdateSource(i.context.placements), input };
   }
   if (planPromptHidden(i.dismissedAt, newestResultAt(i.context.placements), i.nowMs)) return null;
   const first = safePropose(proposalInputOf(i.context));

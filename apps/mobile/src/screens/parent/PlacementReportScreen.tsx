@@ -203,7 +203,7 @@ export function PlacementReportScreen({ route, navigation }: Props): React.React
           name={profile?.displayName ?? ''}
           messages={messages}
           stageTitle={stageTitle}
-          onChange={() => navigation.navigate('RouteProposal', { source: 'parent', profileId })}
+          onChange={() => navigation.navigate('RouteProposal', { source: 'parent', profileId, proposedSent: true })}
         />
       ) : null}
 

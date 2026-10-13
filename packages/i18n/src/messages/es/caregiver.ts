@@ -433,6 +433,9 @@ export const caregiver = {
       updatePlan: 'Actualizar el plan',
       updated: 'El plan semanal avanzó.',
       failed: 'No funcionó. Inténtalo de nuevo.',
+      newStart: (name: string) => `El plan de ${name} puede seguir el inicio que elegiste.`,
+      newStartLine: 'Los próximos días del plan siguen el nuevo inicio. La duración y la fecha final no cambian.',
+      followed: 'El plan semanal sigue el nuevo inicio.',
     },
   },
 

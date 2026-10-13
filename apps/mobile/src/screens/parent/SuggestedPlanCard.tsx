@@ -8,7 +8,7 @@ import { bandLabel } from '../../logic/placement/copy';
 import { draftOfOffer, grownUpWarningText, grownUpWarnings, type PlanOffer } from '../../logic/placement/plan-offer';
 import { PACE_IDS, proposalSkippedEvent, proposedEvent } from '../../logic/route/proposal-flow';
 import { track } from '../../platform/telemetry';
-import { acceptPlanOffer, applyPlanUpdate, loadPlanOffer } from '../../store/plan-offer-store';
+import { acceptPlanOffer, applyPlanUpdate, keepPlan, loadPlanOffer } from '../../store/plan-offer-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useRouteStore } from '../../store/route-store';
 import { useAccessTier } from '../../store/tier-store';
@@ -21,10 +21,13 @@ import { RadioTile } from '../placement/parts';
  * is on. The grown-up is already through the gate: **Use this plan** makes the plan at once.
  * The basis in words, the pace chips, the three lengths with the suggested one selected, the
  * warnings in plain words (no price, no plan name, no purchase button), **Change** (the
- * proposal screen) and **Not now**. After a retake that found a later start, **Update the plan**.
+ * proposal screen) and **Not now** (this card only: the learner's skip never hides it, and it never
+ * hides the learner's prompt; AM-1, AM-6). After a retake that found a later start, or a grown-up
+ * override that put quests back or chose another start (AM-2), **Update the plan** and **Not now**
+ * (hidden until the start changes again, as the learner's **Keep my plan**).
  */
 
-type Outcome = 'made' | 'updated' | 'hidden' | null;
+type Outcome = 'made' | 'updated' | 'followed' | 'hidden' | null;
 
 export interface SuggestedPlanCardProps {
   profileId: string;
@@ -44,7 +47,7 @@ export function SuggestedPlanCard({ profileId, name, messages, stageTitle, onCha
   useEffect(() => {
     if (!flags.routeEnabled) return;
     let live = true;
-    void loadPlanOffer(profileId, true, new Date()).then((next) => {
+    void loadPlanOffer(profileId, true, new Date(), 'report').then((next) => {
       if (live) setOffer(next);
     });
     return () => {
@@ -57,9 +60,9 @@ export function SuggestedPlanCard({ profileId, name, messages, stageTitle, onCha
   if (outcome === 'hidden' || (offer === null && outcome === null)) return null;
   return (
     <View style={{ marginBottom: spacing.lg }}>
-      {outcome === 'made' || outcome === 'updated' ? (
+      {outcome === 'made' || outcome === 'updated' || outcome === 'followed' ? (
         <Card padding="md" testID="placement-report-plan-done">
-          <Body weight="semibold">{outcome === 'made' ? m.made(name) : m.updated}</Body>
+          <Body weight="semibold">{outcome === 'made' ? m.made(name) : outcome === 'followed' ? m.followed : m.updated}</Body>
         </Card>
       ) : offer?.kind === 'new' ? (
         <NewPlanCard offer={offer} profileId={profileId} name={name} messages={messages} stageTitle={stageTitle} onChange={onChange} onDone={setOutcome} />
@@ -103,6 +106,12 @@ function NewPlanCard({
   const t = messages.learner.weeklyPlan.proposal;
   const [pace, setPace] = useState<PaceId>(offer.pace);
   const [picked, setPicked] = useState<DurationId | null>(null);
+  // A fresh offer (a tier or result change) may lack the chip picked: fall back to its own default.
+  useEffect(() => {
+    if (offer.byPace[pace] !== undefined) return;
+    setPace(offer.pace);
+    setPicked(null);
+  }, [offer, pace]);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   const acting = useRef(false);
@@ -130,7 +139,7 @@ function NewPlanCard({
   };
 
   const notNow = (): void => {
-    void useRouteStore.getState().markDismissed(profileId, new Date().toISOString());
+    void useRouteStore.getState().markReportDismissed(profileId, new Date().toISOString());
     const event = proposalSkippedEvent(profileId, 'parent');
     void track({ name: event.name, profileId, payload: { ...event.payload } });
     onDone('hidden');
@@ -234,17 +243,23 @@ function UpdateCard({
     acting.current = true;
     setBusy(true);
     setFailed(false);
-    const ok = await applyPlanUpdate(profileId, new Date());
+    const ok = await applyPlanUpdate(profileId, new Date(), 'report');
     acting.current = false;
     setBusy(false);
-    if (ok) onDone('updated');
+    if (ok) onDone(offer.source === 'override' ? 'followed' : 'updated');
     else setFailed(true);
   };
 
+  const notNow = (): void => {
+    void keepPlan(profileId);
+    onDone('hidden');
+  };
+  const putBack = offer.source === 'override';
+
   return (
     <Card padding="md" testID="placement-report-plan-update">
-      <Heading level="prompt">{m.laterStart(name)}</Heading>
-      <Body tone="secondary">{m.laterLine}</Body>
+      <Heading level="prompt">{putBack ? m.newStart(name) : m.laterStart(name)}</Heading>
+      <Body tone="secondary">{putBack ? m.newStartLine : m.laterLine}</Body>
       <View style={{ marginTop: spacing.lg, gap: spacing.sm }}>
         <Button label={m.updatePlan} tone="primary" size="lg" fullWidth disabled={busy} onPress={() => void update()} testID="placement-report-plan-update-cta" />
         {failed ? (
@@ -252,6 +267,7 @@ function UpdateCard({
             {m.failed}
           </Body>
         ) : null}
+        <Button label={m.notNow} tone="ghost" size="lg" fullWidth disabled={busy} onPress={notNow} testID="placement-report-plan-update-not-now" />
       </View>
     </Card>
   );

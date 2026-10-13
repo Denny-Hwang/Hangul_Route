@@ -24,10 +24,12 @@ import { localizeQuest, localizeStage } from '../../logic/content-locale';
 import { cellLook, startCell } from '../../logic/placement/cell-look';
 import { bandLabel } from '../../logic/placement/copy';
 import { stripLineOf } from '../../logic/placement/plan-offer';
-import { withPlanKept, withPlanMade, type ResultLink, type ResultPrimary } from '../../logic/placement/result-view';
+import { stripSkipped, withPlanKept, withPlanMade, type ResultLink, type ResultPrimary } from '../../logic/placement/result-view';
 import { PACE_IDS } from '../../logic/route/proposal-flow';
 import { activeSelfRoute } from '../../logic/route/self-route';
+import { keepPlan } from '../../store/plan-offer-store';
 import { useProgressStore } from '../../store/progress-store';
+import { useRouteStore } from '../../store/route-store';
 import { usePlacement, type FinishedCheck, type ResultAction } from './context';
 import { LinkButton } from './parts';
 import { PlanStrip, PlanUpdateCard } from './PlanParts';
@@ -69,10 +71,12 @@ const LINK_ACTION: Readonly<Record<ResultLink, ResultAction>> = {
 function ResultView({ check }: { check: FinishedCheck }): React.ReactElement {
   const { m, flow, say, screenReader, onResultAction, acceptPlan, updatePlan, profileId } = usePlacement();
   const copy = m.learner.placement.result;
-  // A plan made meanwhile (Change, then the proposal screen) replaces the strip with Start.
+  // A plan made meanwhile (Change, then the proposal screen), or the proposal screen's Not now
+  // after this result, replaces the strip with Start.
   const planMade = useProgressStore((s) => activeSelfRoute(s.byProfile[profileId]) !== null);
+  const skipped = useRouteStore((s) => stripSkipped(s.ui[profileId]?.dismissedAt, check.result.completedAt));
   const [kept, setKept] = useState(false);
-  const madeView = planMade ? withPlanMade(check.view) : check.view;
+  const madeView = planMade || skipped ? withPlanMade(check.view) : check.view;
   const view = kept ? withPlanKept(madeView) : madeView;
   const offer = check.offer;
   const [pace, setPace] = useState<PaceId>(offer?.kind === 'new' ? offer.pace : 'steady');
@@ -199,13 +203,31 @@ function ResultView({ check }: { check: FinishedCheck }): React.ReactElement {
             onChange={() => onResultAction('changePlan')}
           />
           <Spacer size="sm" />
-          <Button label={copy.strip.justStart} tone="ghost" size="lg" fullWidth disabled={busy} onPress={() => onResultAction('justStart')} testID="placement-plan-just-start" />
+          <Button
+            label={copy.strip.justStart}
+            tone="ghost"
+            size="lg"
+            fullWidth
+            disabled={busy}
+            onPress={() => {
+              // Once: a second tap before the stack resets would skip (and count the skip) twice.
+              if (acting.current) return;
+              acting.current = true;
+              setBusy(true);
+              onResultAction('justStart');
+            }}
+            testID="placement-plan-just-start"
+          />
         </>
       ) : null}
       {view.planUpdate ? (
         <>
           <Spacer size="lg" />
-          <PlanUpdateCard m={m} busy={busy} failed={failed} onUpdate={() => void act(updatePlan)} onKeep={() => setKept(true)} />
+          <PlanUpdateCard m={m} busy={busy} failed={failed} onUpdate={() => void act(updatePlan)} onKeep={() => {
+              setKept(true);
+              // The report's update card stays quiet for this change too.
+              void keepPlan(profileId);
+            }} />
         </>
       ) : null}
 

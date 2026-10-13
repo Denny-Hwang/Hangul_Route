@@ -546,6 +546,9 @@ export const caregiver = {
       updatePlan: 'Update the plan',
       updated: 'The weekly plan moved ahead.',
       failed: 'That did not work. Try again.',
+      newStart: (name: string) => `${name}'s plan can follow the start you chose.`,
+      newStartLine: "The plan's coming days follow the new start. The length and the end date stay the same.",
+      followed: 'The weekly plan follows the new start.',
     },
   },
 

@@ -402,6 +402,9 @@ export const caregiver = {
       updatePlan: '계획 바꾸기',
       updated: '주간 계획을 앞당겼어요.',
       failed: '잘 안 됐어요. 다시 해 보세요.',
+      newStart: (name: string) => `${name}: 고른 시작 위치에 맞춰 계획을 바꿀 수 있어요.`,
+      newStartLine: '앞으로의 계획이 새 시작 위치를 따라가요. 기간과 끝나는 날은 그대로예요.',
+      followed: '주간 계획이 새 시작 위치를 따라가요.',
     },
   },
 

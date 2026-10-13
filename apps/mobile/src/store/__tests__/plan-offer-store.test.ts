@@ -14,7 +14,7 @@ import { dayKey } from '../../logic/homework/mission-builder';
 import { selfRouteOf } from '../../logic/route/self-route';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../account-store';
-import { acceptPlanOffer, applyPlanUpdate, loadPlanOffer, planOfferNow, proposalContextFor } from '../plan-offer-store';
+import { acceptPlanOffer, applyPlanUpdate, keepPlan, loadPlanOffer, planOfferNow, proposalContextFor } from '../plan-offer-store';
 import { usePlanStore } from '../plan-store';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
@@ -166,5 +166,82 @@ describe('applyPlanUpdate (Update my plan / Update the plan: AM-2)', () => {
     seedSnapshot([result()]);
     expect(await applyPlanUpdate('profile:a', NOW)).toBe(false);
     expect(await applyPlanUpdate('profile:none', NOW)).toBe(false);
+  });
+});
+
+/** A plan made before any change, at band 0 (or with the given placed-out set). */
+function planAt(level: { stage: 'stage1'; band: 0 | 2 }, placedOutQuestIds?: string[]) {
+  const draft = generateCurriculum(
+    {
+      audience: 'self',
+      level,
+      ...(placedOutQuestIds === undefined ? {} : { placedOutQuestIds }),
+      startDate: TODAY,
+      weeks: 12,
+      sessionsPerWeek: 3,
+      minutesPerSession: 15,
+      unlockedStages: ['stage1'],
+    },
+    CATALOG,
+  );
+  return selfRouteOf(draft, 'route:abc-0003', new Date(NOW.getTime() - 3_600_000).toISOString());
+}
+
+const futureIds = (items: readonly { id: string; targetDate?: string | undefined }[] | undefined): string[] =>
+  (items ?? []).filter((item) => (item.targetDate ?? '') >= TODAY).map((item) => item.id);
+
+describe('the update after a grown-up override, Keep my plan, the report surface (AM-1, AM-2, AM-6, AM-7)', () => {
+  it('an override that put quests back: the future regains them and route.updated { source: override } counts what was stored', async () => {
+    const active = planAt({ stage: 'stage1', band: 2 }, PLACED_AT_BAND_2);
+    const at = new Date(NOW.getTime() - 60_000).toISOString();
+    seedSnapshot([
+      result({ level: { stage: 'stage1', band: 2 }, placedOutQuestIds: PLACED_AT_BAND_2, override: { by: 'parent', at, startQuestId: 'quest:stage1-letters-q1' } } as Partial<PlacementResult>),
+    ]);
+    useProgressStore.getState().setSelfRoute('profile:a', active);
+    const offer = await loadPlanOffer('profile:a', true, NOW, 'report');
+    if (offer?.kind !== 'update') throw new Error('expected an update');
+    expect(offer.source).toBe('override');
+    expect(await applyPlanUpdate('profile:a', NOW, 'report')).toBe(true);
+    const stored = useProgressStore.getState().byProfile['profile:a']?.selfRoute;
+    const before = new Set(futureIds(active.items));
+    const after = futureIds(stored?.items);
+    const added = after.filter((id) => !before.has(id)).length;
+    const removed = [...before].filter((id) => !after.includes(id)).length;
+    expect(added).toBeGreaterThan(0);
+    expect(track).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'route.updated', payload: { source: 'override', itemsRemoved: offer.proposal.diff?.itemsRemoved ?? 0, itemsAdded: offer.proposal.diff?.itemsAdded ?? 0 } }),
+    );
+    // The counts sent are the counts of the plan stored.
+    expect(offer.proposal.diff?.itemsAdded).toBe(added);
+    expect(offer.proposal.diff?.itemsRemoved).toBe(removed);
+  });
+
+  it('Keep my plan (or the report Not now) hides the update until the start changes again, on both surfaces', async () => {
+    seedSnapshot([result(), result({ id: 'placement:b', completedAt: NOW.toISOString(), level: { stage: 'stage1', band: 2 }, placedOutQuestIds: PLACED_AT_BAND_2 })]);
+    useProgressStore.getState().setSelfRoute('profile:a', planAt({ stage: 'stage1', band: 0 }));
+    expect((await loadPlanOffer('profile:a', true, NOW, 'report'))?.kind).toBe('update');
+    await keepPlan('profile:a');
+    expect(await loadPlanOffer('profile:a', true, NOW)).toBeNull();
+    expect(await loadPlanOffer('profile:a', true, NOW, 'report')).toBeNull();
+    expect(await applyPlanUpdate('profile:a', NOW)).toBe(false);
+    expect(mem.get('route-ui:profile:a')).toMatchObject({ keptFor: NOW.toISOString() });
+  });
+
+  it('keepPlan without a result stores nothing', async () => {
+    seedSnapshot([]);
+    await keepPlan('profile:a');
+    expect(mem.get('route-ui:profile:a')).toBeUndefined();
+  });
+
+  it("the learner's Just start never hides the report card; the report's Not now hides only the report card", async () => {
+    seedSnapshot([result()]);
+    await useRouteStore.getState().markDismissed('profile:a', NOW.toISOString());
+    expect(await loadPlanOffer('profile:a', true, NOW)).toBeNull();
+    expect((await loadPlanOffer('profile:a', true, NOW, 'report'))?.kind).toBe('new');
+    useRouteStore.setState({ ui: {} });
+    mem.clear();
+    await useRouteStore.getState().markReportDismissed('profile:a', NOW.toISOString());
+    expect(await loadPlanOffer('profile:a', true, NOW, 'report')).toBeNull();
+    expect((await loadPlanOffer('profile:a', true, NOW))?.kind).toBe('new');
   });
 });

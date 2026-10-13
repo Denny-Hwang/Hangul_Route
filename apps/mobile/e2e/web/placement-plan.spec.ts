@@ -167,7 +167,8 @@ test.describe('the weekly plan after the level check (route flag on)', () => {
     await expect(page.getByTestId('placement-plan-strip')).toBeVisible();
     await page.getByTestId('placement-plan-just-start').scrollIntoViewIfNeeded();
     await shot(page, 'placement-plan-strip-320');
-    await page.getByTestId('placement-plan-just-start').click();
+    // A double tap skips (and counts the skip) once.
+    await page.getByTestId('placement-plan-just-start').dblclick();
     await expect(page.getByTestId('placement-result')).toHaveCount(0);
     await expect.poll(async () => (await readStored<{ dismissedAt?: string }>(page, `route-ui:${id}`))?.dismissedAt).toBeTruthy();
     expect((await events(page)).filter((e) => e.name === 'route.proposal_skipped')).toEqual([
@@ -237,7 +238,53 @@ test.describe('the weekly plan after the level check (route flag on)', () => {
     ]);
   });
 
-  test('report: Not now hides the card', async ({ page }) => {
+  test('self: a later check with a plan offers Update my plan; Keep my plan folds into Start, Update my plan re-seeds and plays', async ({ page }) => {
+    const id = await onboardSelf(page);
+    await runACheck(page);
+    await page.getByTestId('placement-plan-use').click();
+    await expect(page.getByTestId('placement-result')).toHaveCount(0);
+    await expect.poll(async () => (await readStored<{ selfRoute?: unknown }>(page, `progress:${id}`))?.selfRoute ?? null).not.toBeNull();
+
+    // A stored check that places out the first six lessons, then a new check: the plan is behind.
+    const placedOut = ['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3', 'quest:stage1-life-q1', 'quest:stage1-life-q2', 'quest:stage1-life-q3'];
+    const now = new Date().toISOString();
+    const stored = (await readStored<{ placements: unknown[] }>(page, `progress:${id}`)) as { placements: Record<string, unknown>[] };
+    await seedStored(page, `progress:${id}`, {
+      ...stored,
+      placements: [
+        ...stored.placements,
+        storedResult({ id: 'placement:later', startedAt: now, completedAt: now, level: { stage: 'stage1', band: 2 }, startQuestId: 'quest:stage1-rites-q1', placedOutQuestIds: placedOut }),
+      ],
+    });
+    await page.goto('/');
+    await expect(page.getByText('Hi, Sam!')).toBeVisible();
+    await runACheck(page);
+    await expect(page.getByTestId('placement-plan-update')).toBeVisible();
+    // The one primary sits in the card; no pinned Start, no strip.
+    await expect(page.getByTestId('placement-result-primary')).toHaveCount(0);
+    await expect(page.getByTestId('placement-plan-strip')).toHaveCount(0);
+    expect(await screenText(page)).not.toMatch(NEVER);
+    await page.getByTestId('placement-plan-keep').click();
+    await expect(page.getByTestId('placement-plan-update')).toHaveCount(0);
+    await expect(page.getByText('Your plan stays right where it is.')).toBeVisible();
+    await expect(page.getByTestId('placement-result-primary')).toBeVisible();
+    await expect.poll(async () => (await readStored<{ keptFor?: string }>(page, `route-ui:${id}`))?.keptFor).toBeTruthy();
+
+    // The next check brings the update back (a new change); Update my plan re-seeds and opens the quest.
+    await page.goto('/');
+    await expect(page.getByText('Hi, Sam!')).toBeVisible();
+    await runACheck(page);
+    await page.getByTestId('placement-plan-update-cta').click();
+    await expect(page.getByTestId('placement-result')).toHaveCount(0);
+    await expect
+      .poll(async () => (await readStored<{ selfRoute?: { meta: { params: { level: { band: number } } } } }>(page, `progress:${id}`))?.selfRoute?.meta.params.level.band)
+      .toBe(2);
+    expect((await events(page)).filter((e) => e.name === 'route.updated')).toEqual([
+      expect.objectContaining({ profileId: id, payload: expect.objectContaining({ source: 'retake' }) }),
+    ]);
+  });
+
+  test('report: Not now hides the card (the report card only)', async ({ page }) => {
     const id = await onboardSelf(page);
     await seedResults(page, id, [storedResult({})]);
     await page.goto('/');
@@ -246,6 +293,7 @@ test.describe('the weekly plan after the level check (route flag on)', () => {
     await expect(page.getByTestId('placement-report-plan')).toBeVisible();
     await page.getByTestId('placement-report-plan-not-now').click();
     await expect(page.getByTestId('placement-report-plan')).toHaveCount(0);
-    await expect.poll(async () => (await readStored<{ dismissedAt?: string }>(page, `route-ui:${id}`))?.dismissedAt).toBeTruthy();
+    await expect.poll(async () => (await readStored<{ reportDismissedAt?: string }>(page, `route-ui:${id}`))?.reportDismissedAt).toBeTruthy();
+    expect((await readStored<{ dismissedAt?: string }>(page, `route-ui:${id}`))?.dismissedAt).toBeUndefined();
   });
 });

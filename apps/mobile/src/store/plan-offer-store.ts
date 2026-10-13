@@ -1,7 +1,7 @@
 import type { DurationId, RouteProposal, SelfRoute, StageKey } from '@hangul-route/content-schema';
 import { dayKey } from '../logic/homework/mission-builder';
-import { draftOfOffer, planOfferOf, updatedEvent, updatedRouteOf, type PlanOffer } from '../logic/placement/plan-offer';
-import { proposalInputOf, type ProposalContext } from '../logic/route/proposal-flow';
+import { draftOfOffer, planChangeAt, planOfferOf, updatedEvent, updatedRouteOf, type PlanOffer } from '../logic/placement/plan-offer';
+import type { ProposalContext } from '../logic/route/proposal-flow';
 import { activeSelfRoute } from '../logic/route/self-route';
 import { track } from '../platform/telemetry';
 import { unlockedStagesFor, usePlanStore } from './plan-store';
@@ -31,27 +31,42 @@ export function proposalContextFor(profileId: string, now: Date): ProposalContex
 }
 
 /**
- * The offer for a profile from what the stores hold now (the plan prompt's dismissal as last
- * read by `loadUi`): `enabled` is `flags.routeEnabled`.
+ * Where the offer shows. The learner's result strip follows the plan prompt's dismissal (Not now,
+ * Just start; AM-6); the grown-up report card has its own Not now, so a learner's skip never hides
+ * the grown-up's first look at the plan (AM-1).
  */
-export function planOfferNow(profileId: string, enabled: boolean, now: Date): PlanOffer | null {
+export type OfferSurface = 'learner' | 'report';
+
+/**
+ * The offer for a profile from what the stores hold now (the marks as last read by `loadUi`):
+ * `enabled` is `flags.routeEnabled`.
+ */
+export function planOfferNow(profileId: string, enabled: boolean, now: Date, surface: OfferSurface = 'learner'): PlanOffer | null {
   if (!enabled) return null;
   const context = proposalContextFor(profileId, now);
   if (context === null) return null;
+  const ui = useRouteStore.getState().ui[profileId];
   return planOfferOf({
     enabled,
     context,
     active: activeSelfRoute(useProgressStore.getState().byProfile[profileId]),
-    dismissedAt: useRouteStore.getState().ui[profileId]?.dismissedAt,
+    dismissedAt: surface === 'report' ? ui?.reportDismissedAt : ui?.dismissedAt,
+    keptFor: ui?.keptFor,
     nowMs: now.getTime(),
   });
 }
 
-/** `planOfferNow` after reading the plan prompt's dismissal from storage. */
-export async function loadPlanOffer(profileId: string, enabled: boolean, now: Date): Promise<PlanOffer | null> {
+/** `planOfferNow` after reading the marks from storage. */
+export async function loadPlanOffer(profileId: string, enabled: boolean, now: Date, surface: OfferSurface = 'learner'): Promise<PlanOffer | null> {
   if (!enabled) return null;
   await useRouteStore.getState().loadUi(profileId);
-  return planOfferNow(profileId, enabled, now);
+  return planOfferNow(profileId, enabled, now, surface);
+}
+
+/** Keep my plan / the report's Not now on an update: hidden until the start changes again. */
+export async function keepPlan(profileId: string): Promise<void> {
+  const changeAt = planChangeAt(useProgressStore.getState().byProfile[profileId]?.placements);
+  if (changeAt !== undefined) await useRouteStore.getState().markKept(profileId, changeAt);
 }
 
 /** **Use this plan**: the plan exactly as shown (its pace, the suggested length or the one picked); null when nothing was stored. */
@@ -67,17 +82,17 @@ export async function acceptPlanOffer(
 }
 
 /**
- * **Update my plan** / **Update the plan**: the active plan's future skips what the newest check
- * found known; its length, end date and past days stay. Fires `route.updated`. False when there
- * is nothing to update (no plan, no later start) or it would not be stored.
+ * **Update my plan** / **Update the plan**: the active plan's future follows the newest start (it
+ * skips what a check found known, or regains quests a grown-up put back); its length, end date and
+ * past days stay. Fires `route.updated` with the counts of the proposal whose input is stored.
+ * False when there is nothing to update or it would not be stored.
  */
-export async function applyPlanUpdate(profileId: string, now: Date): Promise<boolean> {
+export async function applyPlanUpdate(profileId: string, now: Date, surface: OfferSurface = 'learner'): Promise<boolean> {
   await useProgressStore.getState().hydrate(profileId);
-  const offer = await loadPlanOffer(profileId, true, now);
+  const offer = await loadPlanOffer(profileId, true, now, surface);
   const active = activeSelfRoute(useProgressStore.getState().byProfile[profileId]);
-  const context = proposalContextFor(profileId, now);
-  if (offer?.kind !== 'update' || active === null || context === null) return false;
-  const next = updatedRouteOf(active, proposalInputOf(context), now.toISOString());
+  if (offer?.kind !== 'update' || active === null) return false;
+  const next = updatedRouteOf(active, offer.input, now.toISOString());
   if (next === null || !useProgressStore.getState().setSelfRoute(profileId, next)) return false;
   // The new future becomes this week's homework now (F-PLAN-002 section 3.6).
   await usePlanStore.getState().rederive(profileId);

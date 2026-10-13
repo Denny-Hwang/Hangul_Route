@@ -326,14 +326,17 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
       const previous = (snapshot?.placements ?? []).filter((p) => p.id !== result.id);
       // A result that could not be stored keeps the saved run, so reopening the check records it
       // (the `finish` offer); it is not reported as complete until then.
-      if (useProgressStore.getState().recordPlacement(profile.id, result)) {
+      const stored = useProgressStore.getState().recordPlacement(profile.id, result);
+      if (stored) {
         void track(completeEvent(profile.id, result));
         store.discard(profile.id);
       }
       const { before, after } = resultRoutes(previous, result, catalog, opts);
       // The weekly plan offered with this result (P-7b): read after the result is stored, so the
-      // proposal starts from it; the dismissal was read when the check opened.
-      const offer = planOfferNow(profile.id, flags.routeEnabled, new Date());
+      // proposal starts from it. A result that was not stored offers no plan (the offer would start
+      // from older results than the screen shows). A dismissal from before this result never hides
+      // the strip (OD-16: "until the next result").
+      const offer = stored ? planOfferNow(profile.id, flags.routeEnabled, new Date()) : null;
       const view = resultView({
         result,
         before,
@@ -349,7 +352,8 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
         // A dismissal is already folded into the offer (OD-16): the strip follows `proposalAvailable`.
         planPromptDismissed: false,
         hasActivePlan: activeSelfRoute(useProgressStore.getState().byProfile[profile.id]) !== null,
-        planUpdateAvailable: offer?.kind === 'update',
+        // The learner's card speaks of a later start only; a grown-up override's update is on the report.
+        planUpdateAvailable: offer?.kind === 'update' && offer.source === 'retake',
         // The story shelf (F-STORY-004) is not in the app yet: "See the whole map".
         hasReviewedShelfStory: false,
         gateRequired: gateRequired({ profiles, parentPinHash }),
@@ -377,11 +381,6 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
   useEffect(() => {
     if (flow?.screen === 'item' && saved !== undefined && saved.run.stop !== null && finished === null) finish(saved, 'live');
   }, [flow?.screen, saved, finished, finish]);
-
-  // The plan prompt's dismissal (OD-16), read once so the result can offer the plan at once.
-  useEffect(() => {
-    if (profileId !== null && flags.routeEnabled) void useRouteStore.getState().loadUi(profileId);
-  }, [profileId]);
 
   // --- Clocks, the app leaving the foreground, the grown-up gate ------------------------
   // Not while the Resume offer waits: Continue starts the clocks again from that moment.
@@ -513,7 +512,8 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
         }
         case 'changePlan':
           // The proposal screen on top; back returns here (the strip gives way once a plan exists).
-          if (profileId !== null) navigation.navigate('RouteProposal', { source: 'placement', profileId });
+          // `route.proposed` already fired for this proposal with the result (one count per offer).
+          if (profileId !== null) navigation.navigate('RouteProposal', { source: 'placement', profileId, proposedSent: true });
           return;
         case 'justStart': {
           // Skip and play: hides the plan prompt for 14 days or until the next result (AM-6, OD-16).

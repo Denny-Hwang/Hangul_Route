@@ -80,10 +80,15 @@ Result (self, plan, later start)   [ Hoya found a later place to start. | Your w
 Result (child)               [[ Start ]] pinned; link For grown-ups: set up a weekly plan
 Report (any profile)         first card: Suggested weekly plan for <name> | Based on: <stage> · <band>, n days a week, m minutes |
                              Pace chips | Length 4 weeks / 12 weeks / 6 months (Suggested) | Good to know (plain warnings) |
-                             [[ Use this plan ]] [ Change ] [ Not now ];  after a later check: [[ Update the plan ]]
+                             [[ Use this plan ]] [ Change ] [ Not now ];  after a later check: [[ Update the plan ]] [ Not now ]
+Report (override)            after Choose a different start: <name>'s plan can follow the start you chose. | [[ Update the plan ]] [ Not now ]
 ```
 
 - **Use this plan** makes the plan with one tap and no PIN on a self profile (OD-14), then opens the start quest; the pace chip changes the length, days and minutes shown, and the plan is exactly what is shown.
 - With the strip or the update card the one primary sits inside the card and nothing is pinned at the bottom; **Just start** and **Change** are ghost buttons. **Keep my plan** folds the card into "Your plan stays right where it is." and a pinned **Start**.
-- **Change** opens the proposal screen on top; once a plan exists there, the strip gives way to **Start** on return.
+- **Change** opens the proposal screen on top; once a plan exists there, or after its **Not now**, the strip gives way to **Start** on return. The door already counted `route.proposed`, so the proposal screen does not count it again (`proposedSent`).
+- The update is read from the plan, not from the previous result: a first check after a plan made from Home, or a retake that matches the last one while the plan is still behind, offers **Update my plan**. A level that rises alone moves nothing in the plan and offers nothing.
+- A grown-up override that puts quests back (or picks another start) offers the update on the report only ("<name>'s plan can follow the start you chose."); the learner's card speaks of a later start only (AM-2, AM-7).
+- **Keep my plan** and the report's **Not now** on an update answer that change (`route-ui.keptFor`): both surfaces stay quiet until the next result or override.
+- Dismissals are per surface: **Just start** and the proposal screen's **Not now** hide the Home prompt and the result strip (AM-6); the report card's **Not now** hides only the report card (`route-ui.reportDismissedAt`), so the grown-up still finds the proposal first on the report (AM-1). Both for 14 days or until the next result.
 - The report card's warnings never name a price, a plan or a product; a stage the account does not include reads "not included with this account yet".

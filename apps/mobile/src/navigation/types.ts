@@ -87,7 +87,12 @@ export type RootStackParamList = {
    * Start this plan or Not now. `source` is the door that opened it (`route.proposed.source`). The
    * update after a retake (`mode: 'update'`, K3) arrives with F-PLC-001 P-7b.
    */
-  RouteProposal: { source: ProposalSource; profileId: string };
+  RouteProposal: {
+    source: ProposalSource;
+    profileId: string;
+    /** The door already counted `route.proposed` for this offer (the result strip's or the report card's **Change**). */
+    proposedSent?: true;
+  };
   /**
    * **Change the plan** (F-PLAN-002 section 3.9, wireframe console/curriculum-planner.md G1): four
    * steps with large chips, prefilled from the plan in force, else from the proposal and the

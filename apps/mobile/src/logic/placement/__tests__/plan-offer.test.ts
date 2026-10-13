@@ -18,8 +18,10 @@ import {
   draftOfOffer,
   grownUpWarningText,
   grownUpWarnings,
+  planChangeAt,
   planOfferOf,
   planUpdateSource,
+  startPutBack,
   startRaised,
   stripLineOf,
   updatedEvent,
@@ -127,11 +129,21 @@ describe('planOfferOf (F-PLC-001 section 3.1 step 7, AM-1, AM-2, AM-5)', () => {
     expect(offer.source).toBe('retake');
   });
 
+  it('a level that rose alone moves none of the plan\'s future: no update', () => {
+    const levelOnly = context({ placements: [result(), result({ id: 'placement:b', completedAt: '2026-10-12T08:00:00.000Z', level: { stage: 'stage1', band: 1 } })] });
+    const draft = generateCurriculum(
+      { audience: 'self', level: { stage: 'stage1', band: 0 }, placedOutQuestIds: [], startDate: '2026-10-05', weeks: 12, sessionsPerWeek: 3, minutesPerSession: 15, unlockedStages: ['stage1'] },
+      CATALOG,
+    );
+    const active = selfRouteOf(draft, 'route:abc-0004', '2026-10-05T09:00:00.000Z');
+    expect(planOfferOf(offerInput({ context: levelOnly, active }))).toBeNull();
+  });
+
   it('with a plan and nothing new: null (no strip, the plan stays)', () => {
     expect(planOfferOf(offerInput({ active: planAtBand0() }))).toBeNull();
   });
 
-  it('with a plan and a grown-up override that moved the start earlier: no "later place" update', () => {
+  it('with a plan and a grown-up override that put quests back: an override update whose future regains them (AM-2, AM-7)', () => {
     const earlier = context({
       placements: [
         result({ level: { stage: 'stage1', band: 2 }, placedOutQuestIds: PLACED_AT_BAND_2, override: { by: 'parent', at: '2026-10-12T08:00:00.000Z', startQuestId: 'quest:stage1-letters-q1' } } as Partial<PlacementResult>),
@@ -151,7 +163,48 @@ describe('planOfferOf (F-PLC-001 section 3.1 step 7, AM-1, AM-2, AM-5)', () => {
       CATALOG,
     );
     const active = selfRouteOf(draft, 'route:abc-0002', '2026-10-05T09:00:00.000Z');
-    expect(planOfferOf(offerInput({ context: earlier, active }))).toBeNull();
+    const offer = planOfferOf(offerInput({ context: earlier, active }));
+    expect(offer?.kind).toBe('update');
+    if (offer?.kind !== 'update') return;
+    expect(offer.source).toBe('override');
+    expect(offer.proposal.diff?.itemsAdded ?? 0).toBeGreaterThan(0);
+    // The stored update is built from the same input the proposal was made from.
+    const next = updatedRouteOf(active, offer.input, '2026-10-12T09:00:00.000Z');
+    if (next === null) throw new Error('expected a route');
+    const future = next.items.filter((item) => (item.targetDate ?? '') >= TODAY).map((item) => item.id);
+    expect(PLACED_AT_BAND_2.some((id) => future.includes(id))).toBe(true);
+    expect(next.meta.params.placedOutQuestIds ?? []).toEqual([]);
+  });
+
+  it('Keep my plan / Not now on an update hides it until the start changes again', () => {
+    const raised = context({
+      placements: [result(), result({ id: 'placement:b', completedAt: '2026-10-12T08:00:00.000Z', level: { stage: 'stage1', band: 2 }, placedOutQuestIds: PLACED_AT_BAND_2 })],
+    });
+    expect(planOfferOf(offerInput({ context: raised, active: planAtBand0(), keptFor: '2026-10-12T08:00:00.000Z' }))).toBeNull();
+    // Kept for an older change: the newest one is offered.
+    expect(planOfferOf(offerInput({ context: raised, active: planAtBand0(), keptFor: '2026-10-11T09:00:00.000Z' }))?.kind).toBe('update');
+  });
+
+  it('a first check after a plan made from Home: the update is read from the plan, not from a previous result', () => {
+    const first = context({ placements: [result({ level: { stage: 'stage1', band: 2 }, placedOutQuestIds: PLACED_AT_BAND_2 })] });
+    const offer = planOfferOf(offerInput({ context: first, active: planAtBand0() }));
+    expect(offer?.kind === 'update' ? offer.source : null).toBe('retake');
+  });
+});
+
+describe('startPutBack and planChangeAt', () => {
+  const stored = { level: { stage: 'stage1', band: 0 } as const, placedOutQuestIds: ['quest:a', 'quest:b'] };
+  it('a quest the plan skips that the seed no longer skips: put back; a superset or no seed: not', () => {
+    expect(startPutBack({ level: { stage: 'stage1', band: 0 }, placedOutQuestIds: ['quest:a'] }, stored, routeCatalogOf(CATALOG))).toBe(true);
+    expect(startPutBack({ level: { stage: 'stage1', band: 0 }, placedOutQuestIds: ['quest:a', 'quest:b', 'quest:c'] }, stored, routeCatalogOf(CATALOG))).toBe(false);
+    expect(startPutBack(null, stored, routeCatalogOf(CATALOG))).toBe(false);
+  });
+
+  it('planChangeAt: the newest result time or override time', () => {
+    expect(planChangeAt(undefined)).toBeUndefined();
+    expect(planChangeAt([result()])).toBe('2026-10-11T09:00:00.000Z');
+    const overridden = result({ override: { by: 'parent', at: '2026-10-12T10:00:00.000Z', startQuestId: 'quest:x' } } as Partial<PlacementResult>);
+    expect(planChangeAt([result({ id: 'placement:z', completedAt: '2026-10-12T09:00:00.000Z' }), overridden])).toBe('2026-10-12T10:00:00.000Z');
   });
 });
 

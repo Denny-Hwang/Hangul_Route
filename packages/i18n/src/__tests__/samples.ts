@@ -216,6 +216,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'caregiver.placementReport.plan.warning.didNotFit': [[1], [2]],
   'caregiver.placementReport.plan.made': [['Sam']],
   'caregiver.placementReport.plan.laterStart': [['Sam']],
+  'caregiver.placementReport.plan.newStart': [['Sam']],
   'learner.placement.result.strip.basis': [['4 weeks', 3, 15], ['12 weeks', 1, 10]],
   'learner.storyShelf.minutes.pill': [[2], [10]],
   'learner.storyShelf.tileLabel': [
