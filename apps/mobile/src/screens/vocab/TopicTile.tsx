@@ -45,6 +45,7 @@ export function TopicTile({
   width,
   artSize,
   onPress,
+  hint,
   testID,
 }: {
   view: TopicTileView;
@@ -53,6 +54,8 @@ export function TopicTile({
   /** The cover's side, already capped at the tile's inner width. */
   artSize: number;
   onPress: () => void;
+  /** A closed tile's hint: the ask by audience (`askFor`, F-ENT-003 section 3.7). */
+  hint?: string;
   testID?: string;
 }): React.ReactElement {
   return (
@@ -61,6 +64,7 @@ export function TopicTile({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={view.accessibilityLabel}
+      accessibilityHint={hint}
       style={({ pressed }) => ({
         width,
         flexGrow: 1,

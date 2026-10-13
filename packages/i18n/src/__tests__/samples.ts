@@ -702,4 +702,5 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.weeklyPlan.proposal.comingSoonItem': [['Words at Home']],
   'learner.weeklyPlan.proposal.weekRowLabel': [['Mon', 'Meet g, n, d, l']],
   'learner.weeklyPlan.proposal.pickDayLabel': [['Wed', 'Oct 14']],
+  'learner.access.practice.topicTitle': [['Food'], ['Animals']],
 };

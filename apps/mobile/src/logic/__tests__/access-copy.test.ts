@@ -74,6 +74,9 @@ describe('learner.access strings in every locale (section 3.11 banned fixture)',
       ['replay.cta', tree.replay.cta],
       ['home.cta', tree.home.cta],
       ['practice.subtitle', tree.practice.subtitle],
+      ['practice.topicTitle', tree.practice.topicTitle('Food')],
+      // The Library tile's word for a story not open yet is the same word (OD-6).
+      ['storyShelf.state.locked', getMessages(locale).learner.storyShelf.state.locked],
     ];
 
     it(`${locale}: no banned word, digit, count or emoji`, () => {
