@@ -383,8 +383,12 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
       {view.practiceNext !== null ? (
         <InsightSection section={view.practiceNext} marker={colors.border.shape} testID="learner-report-practice-next">
           {/* F-BROWSE-001 BR-12a: one Preview lessons row at the end of this section, web only (design: in-app-report.md). */}
-          <Spacer size="sm" />
-          <GateLessonsButton kind="preview" target={{ kind: 'stage', stage: view.previewStage }} testID="learner-report-preview-lessons" />
+          {Platform.OS === 'web' ? (
+            <>
+              <Spacer size="sm" />
+              <GateLessonsButton kind="preview" target={{ kind: 'stage', stage: view.previewStage }} testID="learner-report-preview-lessons" />
+            </>
+          ) : null}
         </InsightSection>
       ) : null}
       {view.thisPeriod !== null ? (

@@ -275,6 +275,29 @@ test('BR-12a: the dashboard Open all lessons writes the gate pass before it leav
   await shot(page, 'br-12a-browse-home-from-gate');
 });
 
+test('BR-12a: a dashboard left open past the 15-minute session asks for the PIN before Open all lessons writes a pass', async ({ page }) => {
+  await page.clock.install({ time: new Date('2026-10-12T09:00:00.000Z') });
+  await onboardChild(page, { name: 'Mina' });
+  await openGrownUpZone(page, 'Mina');
+  await unlockWithPin(page);
+  await expect(page.getByText('Read-only — learners on this device.')).toBeVisible();
+  await page.clock.fastForward('16:00');
+
+  await page.getByRole('button', { name: 'Open all lessons' }).click();
+  // The PIN screen, still in the app, and no pass written.
+  await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();
+  expect(page.url()).not.toContain('/browse');
+  expect(await page.evaluate((k) => sessionStorage.getItem(k), PASS_KEY)).toBeNull();
+
+  // A correct PIN writes a fresh pass and opens All lessons in the same tab.
+  await unlockWithPin(page);
+  await expect(home(page)).toBeVisible();
+  await bootSettled(page);
+  expect(page.url()).toMatch(/\/browse$/);
+  const pass = JSON.parse((await page.evaluate((k) => sessionStorage.getItem(k), PASS_KEY)) ?? 'null') as Record<string, unknown> | null;
+  expect(pass).toMatchObject({ v: 1, scope: 'sampler', source: 'gate' });
+});
+
 test('a new tab has no pass: only the Access screen, with no lesson, title or card', async ({ page, context }) => {
   await page.goto('/');
   await writeGatePass(page);

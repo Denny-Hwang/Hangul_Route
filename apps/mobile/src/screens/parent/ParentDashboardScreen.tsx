@@ -49,7 +49,7 @@ const AVATAR_SIZE = 40;
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ParentDashboard'>;
 
-export function ParentDashboardScreen({ navigation }: Props): React.ReactElement {
+export function ParentDashboardScreen({ navigation, route }: Props): React.ReactElement {
   const messages = useMessages();
   const m = messages.caregiver.dashboard;
   const locale = useLocale();
@@ -206,7 +206,7 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
       {Platform.OS === 'web' ? (
         <>
           <Spacer size="md" />
-          <GateLessonsButton kind="open" testID="dashboard-open-all-lessons" />
+          <GateLessonsButton kind="open" testID="dashboard-open-all-lessons" initialBlocked={route.params?.browseBlocked === true} />
         </>
       ) : null}
 

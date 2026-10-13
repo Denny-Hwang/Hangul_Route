@@ -1,9 +1,14 @@
 import { Body, Button, borderWidth, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
 import type { BrowseTarget } from '@hangul-route/content-schema';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
+import { gateLessonsStep } from '../../logic/browse/gate-entry';
+import type { RootStackParamList } from '../../navigation/types';
 import { openBrowseFromGate } from '../../platform/browse-handoff';
+import { gateOpensDirectlyNow } from '../../store/gate-now';
 
 /**
  * The learner app's ways into All lessons, behind the grown-up gate (F-BROWSE-001 sections 4.3 and 4.11, BR-12a).
@@ -17,15 +22,34 @@ import { openBrowseFromGate } from '../../platform/browse-handoff';
  *   of `design/screens/learning-route/stage-list.md`, drawn in `mock/stage-list-family.html`) and at the end of the
  *   in-app report's What to practice next section (`design/screens/reports/in-app-report.md`).
  *
- * Each press calls `openBrowseFromGate(target)`, which writes the gate pass and leaves in the same tab. When the
- * browser refuses this tab's storage it stays here and says so under the control (the console's line).
+ * These pages stay open after the 15-minute grown-up session ends, so each press asks the gate again
+ * (`gateOpensDirectlyNow`, as See report and the grown-up home do). Open: `openBrowseFromGate(target)` writes the gate
+ * pass and leaves in the same tab. Closed: the PIN screen for All lessons (`PinEntry { next: 'BrowseLessons' }`,
+ * the same target), and nothing is written until a correct PIN. When the browser refuses this tab's storage it stays
+ * here and says so under the control (section 4.3 item 4's line); `initialBlocked` shows that line on arrival, when
+ * the PIN screen's hand-off was the one refused.
  */
-export function GateLessonsButton({ kind, target, testID }: { kind: 'open' | 'preview'; target?: BrowseTarget; testID: string }): React.ReactElement | null {
+export function GateLessonsButton({
+  kind,
+  target,
+  testID,
+  initialBlocked = false,
+}: {
+  kind: 'open' | 'preview';
+  target?: BrowseTarget;
+  testID: string;
+  initialBlocked?: boolean;
+}): React.ReactElement | null {
   const m = useMessages().caregiver.dashboard.browse;
-  const [blocked, setBlocked] = useState(false);
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const [blocked, setBlocked] = useState(initialBlocked);
   if (Platform.OS !== 'web') return null;
 
   const open = (): void => {
+    if (gateLessonsStep(gateOpensDirectlyNow()) === 'pin') {
+      navigation.navigate('PinEntry', target === undefined ? { next: 'BrowseLessons' } : { next: 'BrowseLessons', browseTarget: target });
+      return;
+    }
     setBlocked(!openBrowseFromGate(target));
   };
   const label = kind === 'open' ? m.open.cta : m.preview.cta;

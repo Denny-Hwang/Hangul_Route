@@ -20,8 +20,8 @@ const trail = read('screens/my-route/TrailRow.tsx');
 
 describe('GateLessonsButton', () => {
   it('draws nothing off web (section 4.14) and calls only the gate hand-off', () => {
-    expect(code(button)).toContain("if (Platform.OS !== 'web') return null;");
-    expect(code(button)).toContain('setBlocked(!openBrowseFromGate(target));');
+    expect(code(button)).toMatch(/Platform\.OS !== 'web'\) return null/);
+    expect(code(button)).toMatch(/openBrowseFromGate\(target\)/);
     expect(button).toContain("from '../../platform/browse-handoff'");
     // No other way to All lessons: no hand-built address, no direct storage.
     expect(code(button)).not.toMatch(/['"`]\/browse|location\.|sessionStorage|localStorage|AsyncStorage/);
@@ -41,19 +41,51 @@ describe('GateLessonsButton', () => {
     expect(button).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/);
     expect(button).toMatch(/design\/(wireframes|screens)\//);
   });
+
+  it('asks the gate on every press: a lapsed session opens the PIN screen for All lessons, never the hand-off', () => {
+    // The decision itself is `gateLessonsStep` (logic/browse/__tests__/gate-entry.test.ts); here, that the press reads
+    // the gate fresh and that the PIN branch returns before the hand-off.
+    const press = code(button).slice(code(button).indexOf('const open = ('));
+    const pin = press.indexOf("gateLessonsStep(gateOpensDirectlyNow()) === 'pin'");
+    expect(pin).toBeGreaterThan(-1);
+    const pinBranch = press.slice(pin, press.indexOf('openBrowseFromGate('));
+    expect(pinBranch).toMatch(/navigation\.navigate\('PinEntry'/);
+    expect(pinBranch).toContain("next: 'BrowseLessons'");
+    expect(pinBranch).toContain('browseTarget: target');
+    expect(pinBranch).toMatch(/return;/);
+  });
+});
+
+describe('the PIN screen for All lessons', () => {
+  const pin = read('screens/parent/PinEntryScreen.tsx');
+  it('writes the pass only after a correct PIN, with the target the press asked for, and opens the dashboard when it is refused', () => {
+    const branch = code(pin).slice(code(pin).indexOf("route.params.next === 'BrowseLessons'"));
+    const body = branch.slice(0, branch.indexOf('} else if'));
+    expect(body).toContain('afterGateHandoff(openBrowseFromGate(route.params.browseTarget))');
+    expect(body).toMatch(/replace\('ParentDashboard', \{ browseBlocked: true \}\)/);
+    // The branch lives in `proceed`, which runs after the PIN is checked (and `openParentGate()`).
+    expect(code(pin).indexOf("route.params.next === 'BrowseLessons'")).toBeGreaterThan(code(pin).indexOf('const proceed = ('));
+  });
+
+  it('the dashboard shows the storage line on arrival after a refused pass', () => {
+    expect(code(dashboard)).toMatch(/initialBlocked=\{route\.params\?\.browseBlocked === true\}/);
+  });
 });
 
 describe('the three entries', () => {
   it('the parent dashboard shows [ Open all lessons ] with no target, web only', () => {
     expect(code(dashboard)).toContain("{Platform.OS === 'web' ? (");
-    expect(code(dashboard)).toContain('<GateLessonsButton kind="open" testID="dashboard-open-all-lessons" />');
+    expect(code(dashboard)).toMatch(/<GateLessonsButton kind="open" testID="dashboard-open-all-lessons"[^>]*\/>/);
+    expect(code(dashboard)).not.toMatch(/<GateLessonsButton[^>]*target=/);
   });
 
   it('the in-app report has one Preview lessons row at the end of What to practice next, with the journey.here stage', () => {
     const section = code(report).slice(code(report).indexOf('testID="learner-report-practice-next"'));
-    expect(section.slice(0, section.indexOf('</InsightSection>'))).toContain(
-      '<GateLessonsButton kind="preview" target={{ kind: \'stage\', stage: view.previewStage }} testID="learner-report-preview-lessons" />',
-    );
+    const inSection = section.slice(0, section.indexOf('</InsightSection>'));
+    expect(inSection).toMatch(/<GateLessonsButton kind="preview" target=\{\{ kind: 'stage', stage: view\.previewStage \}\}/);
+    // Web only with its spacing, so off web the section ends with its lines.
+    expect(inSection.slice(inSection.indexOf("Platform.OS === 'web'"))).toContain('<Spacer');
+    expect(inSection.indexOf("Platform.OS === 'web'")).toBeLessThan(inSection.indexOf('<Spacer'));
     expect(code(report).match(/<GateLessonsButton/g)).toHaveLength(1);
     // No letter or quest links: the letter chips stay disclosures (F-REPORT-001 section 3.9).
     expect(code(report)).not.toMatch(/kind: '(char|quest|jamo)'/);
