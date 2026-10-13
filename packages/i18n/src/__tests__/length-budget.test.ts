@@ -481,9 +481,6 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       'console.school.classes.assign.cta',
       'console.school.classes.open.cta',
       'console.school.classes.add.cta',
-      'console.parent.sample.pill',
-      'console.parent.viewProgress.cta',
-      'console.parent.child.assign.cta',
     ]) {
       expect(paths).toContain(expected);
     }

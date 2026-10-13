@@ -1171,44 +1171,27 @@ export const consoleMsgs = {
     footer: (link: string) => `${link} · rosters opened from here show initials by default.`,
   },
   /**
-   * The `/parent` demo (F-CONSOLE-001 §3.7, F-I18N-001 PR 10c): a preview on sample data. The
-   * demo family's names, quest titles, times, day letters and card glosses are sample data in
-   * `data/mock-family.ts`, not UI; level labels come from content-schema `levelLabel`.
+   * The family home `/parent` (F-APP-001 A-5b, section 3.8; design/screens/app-shell/parent-home.md):
+   * one section per family space, one card per learner in join order. Counts only, labelled "last 7
+   * days", never ranked or compared. Card and family actions show only with their sibling flags.
    */
-  parent: {
-    title: 'Family Dashboard',
-    demoNote: "Demo preview — the stats below are sample data. The live dashboard reads your kids' progress from this device.",
-    sample: { pill: 'Sample data' },
-    stats: { profiles: 'Profiles', cards: 'Total cards', weekMinutes: 'This week (min)', streak: 'Longest streak' },
-    kidsTitle: 'Kids',
-    kidLine: (quests: number, cards: number, streak: number) =>
-      `${plural('en', quests, { one: `${quests} quest`, other: `${quests} quests` })} · ${plural('en', cards, { one: `${cards} card`, other: `${cards} cards` })} · ${streak}-day streak`,
-    viewProgress: { cta: 'View progress →' },
-    privacy: {
-      title: 'Privacy',
-      /** The first two points are `landing.persona.parents.safe.bullets.backup`, word for word: the app backs up every learner with no sign-in. */
-      points: [
-        "Each learner's nickname and progress are kept on the device and backed up to our servers, so they can be restored with a Rescue Code.",
-        "When a learner joins a class or family with a code, that space sees the name they join with and their progress. A family's grown-ups can also restore their progress.",
-        "We never sell or share children's data with third parties.",
-        /** Removing a profile on a device leaves the backup; the server copy goes from the family space (`learner.delete`) or by email. */
-        "You can back up progress to a file at any time. To delete a learner's data on our servers, use your family space settings or email us.",
-      ],
+  parentHome: {
+    /** Visually hidden page heading; each family's name is its section heading. */
+    title: 'Family home',
+    minutes7d: (n: number) => `Minutes, last 7 days: ${n}`,
+    child: { open: 'Open', seeReport: 'See report', sendNote: 'Send a note', route: 'Learning Route' },
+    actions: { lessons: 'Lessons', planWeek: 'Plan the week', planTerm: 'Plan the term', settings: 'Family settings', addLearner: 'Add a learner' },
+    /** A family with no learner yet: the join code panel, this line and the hand-off to the learner app on this device. */
+    empty: {
+      title: 'No learner has joined yet.',
+      /** `profile`, `section` and `join` are the learner app's own labels (`learner.home.profileLabel`, `caregiver.spaces.title`, `caregiver.spaces.join.cta`). */
+      line: (profile: string, section: string, join: string) => `On the learner's own device, go to ${profile}, then ${section}, then "${join}", and enter this family code.`,
+      openApp: 'Open the app on this device',
     },
-    child: {
-      back: '← Family Dashboard',
-      quests: (n: number) => plural('en', n, { one: `${n} quest`, other: `${n} quests` }),
-      cards: (n: number) => plural('en', n, { one: `${n} card`, other: `${n} cards` }),
-      demoNote: 'Demo preview — sample data.',
-      recentTitle: 'Recent activity',
-      noRecent: 'No recent quests.',
-      stars: (n: number) => `${n}★`,
-      weeklyTitle: 'Weekly time',
-      cardsTitle: 'Cards collected',
-      homeworkTitle: 'Send homework',
-      assign: { cta: '+ Assign a quest' },
-      comingSoon: 'Coming soon — for now, Hoya picks the next quest.',
-    },
+    /** The account holds no family space (a teacher who chose Family, an old link). */
+    noFamily: { title: "You don't have a family space yet.", setUp: 'Set up my family', goTeacher: 'Go to Classes' },
+    /** The quiet cross-link at the bottom: set up a class, or switch to it. */
+    cross: { addClass: 'Also teach a class? Set up a class', toTeacher: 'Your classes are under Teacher' },
   },
   /**
    * The journey strip on a roster card (F-ROUTE-001 section 3.12, R-9a; Appendix B
