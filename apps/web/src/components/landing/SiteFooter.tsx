@@ -99,7 +99,7 @@ export function SiteFooter({ locale, page, variant = 'default' }: SiteFooterProp
                 `mailto:${CONTACT_EMAIL}`,
                 <span style={{ display: 'grid' }}>
                   <span>{t.footer.contact}</span>
-                  <span data-contact="email" style={{ fontSize: rem(typography.size.bodySm) }}>
+                  <span data-contact="email" style={{ fontSize: rem(typography.size.caption) }}>
                     {CONTACT_EMAIL}
                   </span>
                 </span>,

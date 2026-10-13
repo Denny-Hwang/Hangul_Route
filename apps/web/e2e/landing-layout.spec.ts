@@ -13,9 +13,12 @@ import { LANDING_WIDTHS } from './landing-targets';
 const HEIGHT = 800;
 /**
  * Pages whose footer or body once pushed the document wider than the screen: the English site, `src/app/(en)/`
- * (F-I18N-001 PR 11b). `/es` and `/ko` render the same bodies and are not exported until they ship.
+ * (F-I18N-001 PR 11b), and the layered site's persona pages as they ship (F-SITE-002 §3.11: `/learners` in S-4a).
+ * `/es` and `/ko` render the same bodies and are not exported until they ship.
  */
-const PAGES = ['/', '/about', '/privacy', '/terms'] as const;
+const PAGES = ['/', '/about', '/privacy', '/terms', '/learners'] as const;
+/** The persona pages and the name of each one's primary action (F-SITE-002 §3.1 rule 1). */
+const PERSONA_PAGES = [{ path: '/learners', primary: 'Start learning' }] as const;
 /** The hero and Meet Hoya stack to one column below this width (globals.css). */
 const STACK_BELOW = 720;
 
@@ -116,6 +119,51 @@ for (const width of LANDING_WIDTHS) {
     });
   });
 }
+
+for (const width of LANDING_WIDTHS) {
+  test.describe(`${width}px wide, persona pages`, () => {
+    test.use({ viewport: { width, height: HEIGHT } });
+
+    for (const { path, primary } of PERSONA_PAGES) {
+      test(`${path}: the primary action is visible, inside the screen and above the fold`, async ({ page }) => {
+        await page.goto(path);
+        const cta = page.locator('main').getByRole('link', { name: primary, exact: true }).first();
+        await expect(cta).toBeVisible();
+        const rect = await cta.boundingBox();
+        expect(rect).not.toBeNull();
+        if (!rect) return;
+        expect(rect.x).toBeGreaterThanOrEqual(0);
+        expect(rect.x + rect.width).toBeLessThanOrEqual(width);
+        expect(rect.y + rect.height).toBeLessThanOrEqual(HEIGHT);
+      });
+    }
+  });
+}
+
+test.describe('the site header: keyboard focus follows the visual order (F-SITE-002 §3.2, §6)', () => {
+  /** Header stops, then the page's first stop (its primary action). Hidden phone items are out of the Tab order. */
+  const STOPS: Record<'phone' | 'wide', string[]> = {
+    phone: ['Skip to content', 'Hangul Route', 'Sign in', 'Start learning'],
+    wide: ['Skip to content', 'Hangul Route', 'Start learning', 'Learners', 'Parents', 'Teachers', 'Sign in', 'Start learning'],
+  };
+  for (const width of [...LANDING_WIDTHS, 1280]) {
+    test(`${width}px: skip link, brand, then the header items left to right, then the page`, async ({ page }) => {
+      await page.setViewportSize({ width, height: HEIGHT });
+      await page.goto('/learners');
+      const expected = width >= 720 ? STOPS.wide : STOPS.phone;
+      const stops = await tabStops(page, expected.length);
+      // The brand mark is decorative text inside the brand link ("HR"); the name is the rest.
+      expect(stops.map((stop) => stop.name.replace(/^HR/, ''))).toEqual(expected);
+      // Reading order from the brand on (the skip link sits over the page while focused).
+      for (let i = 2; i < stops.length; i += 1) {
+        const prev = stops[i - 1];
+        const next = stops[i];
+        if (!prev || !next) throw new Error('missing tab stop');
+        expect(readsAfter(prev, next), `${prev.name} → ${next.name} jumps backwards on screen`).toBe(true);
+      }
+    });
+  }
+});
 
 test.describe('keyboard focus follows the visual order (WCAG 2.4.3 / 1.3.2)', () => {
   for (const width of [...LANDING_WIDTHS, 1280]) {
