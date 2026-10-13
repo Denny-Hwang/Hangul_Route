@@ -44,11 +44,11 @@ B-F  Question (Relaxed)                         I  Stop for now?
 
 1. **Back** top-left (`BackButton`, 64 dp): back to the topic page (or the Library's Words section with no history).
 2. **Header**: the topic's cover picture (`PictureArt`, decorative, `touchTarget.hero` 96 dp) beside the topic title (`Heading level="display"`, the UI language) and **Speed round** (`Heading level="title"`).
-3. **Mode**: "Relaxed" (`Body weight="semibold"`) and its one line, "10 words. No clock." (8 for the Pictures-first level: the number is the round's question count). Nothing mentions an age or a level name.
+3. **Mode**: "Relaxed" (`Body weight="semibold"`) and its one line, "10 words. No clock.": the number is the round's real question count. The level asks for 10 (8 for Pictures first), and the builder asks each collected word in each allowed format at most once, so a few collected words give fewer (4 words without sound at Some reading: 8). Nothing mentions an age or a level name.
 4. **No sound line** (`Body tone="secondary"`), only when the round will have no sound questions: no Korean voice and no bundled clip (`canPlayKorean`), or sound switched off. Calm, no icon of failure.
-5. **Start**: `Button tone="primary" size="lg"` (80 dp, `touchTarget.child`), full width. Start chooses the words (`selectSpeedWords`: due words first), builds the questions with `seed = Date.now()` (`buildQuestions`), emits `vocab.round.start` and shows question 1.
+5. **Start**: `Button tone="primary" size="lg"` (80 dp, `touchTarget.child`), full width. The sheet builds the round while it shows (`buildRound`: the words from `selectSpeedWords`, due words first, asked through `buildQuestions` with `seed = Date.now()` taken when the sheet opens), so its line can name the real count; Start emits `vocab.round.start` and shows question 1 of exactly those questions.
 
-The sheet decides `canPlay` once, on Start (S7): a voice that appears later does not add sound questions to a running round, and one that fails mid-round shows the word as text (the question view does that).
+`canPlay` is fixed when Start is tapped (S7): a voice that appears later does not add sound questions to a running round, and one that fails mid-round shows the word as text (the question view does that).
 
 ## Question screen
 

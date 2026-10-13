@@ -4,6 +4,7 @@ import { scanLearnerCopy } from '../../homework/banned-text';
 import type { VocabQuestion } from '../question-builder';
 import {
   CHALLENGE_COUNT,
+  buildRound,
   PICTURES_FIRST_COUNT,
   RELAXED_COUNT,
   SPARK_CAPACITY,
@@ -102,6 +103,60 @@ describe('collectedWords and sheetState (§3.1 availability)', () => {
     expect(sheetState(3, 4)).toBe('learn-first');
     expect(sheetState(4, 4)).toBe('ready');
     expect(sheetState(12, 4)).toBe('ready');
+  });
+});
+
+describe('buildRound (§3.5: selectSpeedWords, then buildQuestions)', () => {
+  const KO = ['사과', '바나나', '우유', '빵', '밥', '김치', '물', '떡'];
+  const topicWords = KO.map((ko, i) => word(String.fromCharCode(97 + i), { ko }));
+  const input = (n: number, plan = roundPlan(1, 'relaxed'), extra: Partial<Parameters<typeof buildRound>[0]> = {}) => ({
+    collected: topicWords.slice(0, n),
+    universe: topicWords,
+    progress: progress(topicWords.slice(0, n).map((w) => state(w.id.replace('vocab:', ''), { box: 1 }))),
+    today: '2026-10-12',
+    plan,
+    seed: 42,
+    canRender: () => true,
+    canPlay: false,
+    ...extra,
+  });
+
+  it('asks the collected words with the plan options, as many questions as their formats allow', () => {
+    const questions = buildRound(input(4));
+    // Two formats without a voice at level 1 (word to picture, picture to word): 4 words x 2.
+    expect(questions).toHaveLength(8);
+    for (const q of questions) {
+      expect(q.options).toHaveLength(4);
+      expect(topicWords.slice(0, 4).map((w) => w.id)).toContain(q.answerId);
+    }
+    expect(buildRound(input(5))).toHaveLength(10);
+  });
+
+  it('Pictures first without a voice: one word-to-picture question per word, 3 options', () => {
+    const questions = buildRound(input(3, roundPlan(0, 'relaxed')));
+    expect(questions).toHaveLength(3);
+    expect(questions.every((q) => q.format === 'word-to-image' && q.options.length === 3)).toBe(true);
+  });
+
+  it('a word with no saved box is asked as a new word (box 0)', () => {
+    const questions = buildRound(input(4, roundPlan(1, 'relaxed'), { progress: progress() }));
+    expect(questions.length).toBeGreaterThan(0);
+    expect(questions[0]?.format).toBe('word-to-image');
+  });
+
+  it('the same seed builds the same round', () => {
+    expect(buildRound(input(4))).toEqual(buildRound(input(4)));
+  });
+
+  it('no question at all (no picture resolves) is an empty round, never an error', () => {
+    expect(buildRound(input(4, roundPlan(1, 'relaxed'), { canRender: () => false }))).toEqual([]);
+  });
+
+  it('any other failure is not swallowed', () => {
+    const boom = (): boolean => {
+      throw new Error('boom');
+    };
+    expect(() => buildRound(input(4, roundPlan(1, 'relaxed'), { canRender: boom }))).toThrow('boom');
   });
 });
 
@@ -337,7 +392,7 @@ describe('resultsView (§3.6 results, S4, S11)', () => {
       A11Y.sparksFull,
     );
     for (const line of lines) {
-      expect(scanLearnerCopy(line), line).toEqual([]);
+      expect(scanLearnerCopy([line]), line).toEqual([]);
       expect(line, line).not.toMatch(SHAME);
       expect(line).not.toMatch(/\b(kids?|child(ren)?|ages?|years? old|adults?)\b/i);
     }

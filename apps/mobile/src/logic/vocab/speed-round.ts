@@ -2,6 +2,8 @@ import type { ClockScale, RuntimeVocabItem, VocabProgress } from '@hangul-route/
 import type { Messages } from '@hangul-route/i18n';
 import { nudgeFor, type Nudge, type VocabSpeedCopy } from './nudges';
 import type { VocabEvent } from './progress';
+import { NotEnoughWords, buildQuestions, type VocabQuestion } from './question-builder';
+import { selectSpeedWords } from './select-words';
 import type { SpeedMode } from './session-clock';
 import type { QuestionResult, SpeedState } from './speed-session';
 import type { RoundStars, RoundSummary } from './stars';
@@ -58,6 +60,48 @@ export function collectedWords(items: readonly RuntimeVocabItem[], progress: Voc
 /** §3.1: a round needs as many collected words as it has options; fewer is the learn-first card. */
 export function sheetState(collected: number, optionCount: number): 'learn-first' | 'ready' {
   return collected >= optionCount ? 'ready' : 'learn-first';
+}
+
+export interface RoundInput {
+  /** The topic's collected words (`collectedWords`). */
+  collected: readonly RuntimeVocabItem[];
+  /** Every word of the topic: the distractors (§3.3 rule 7). */
+  universe: readonly RuntimeVocabItem[];
+  progress: VocabProgress;
+  /** The device's local day (`localDay`). */
+  today: string;
+  plan: RoundPlan;
+  seed: number;
+  canRender(ref: string): boolean;
+  canPlay: boolean;
+}
+
+/**
+ * The round's questions (§3.5): the words chosen by `selectSpeedWords` (due
+ * words first), asked through `buildQuestions` with each word's box. The
+ * builder returns as many questions as the words allow (each word takes each
+ * allowed format at most once), which can be fewer than the plan's count; none
+ * at all is the "Nothing to play yet" state, never an error.
+ */
+export function buildRound(i: RoundInput): VocabQuestion[] {
+  const boxes = new Map(i.progress.items.map((s) => [s.id, s.box]));
+  const pool = selectSpeedWords({ collected: i.collected, progress: i.progress, today: i.today, count: i.plan.count, seed: i.seed });
+  try {
+    return buildQuestions({
+      pool,
+      universe: i.universe,
+      count: i.plan.count,
+      optionCount: i.plan.optionCount,
+      levelOrder: i.plan.level,
+      boxOf: (id) => boxes.get(id) ?? 0,
+      seed: i.seed,
+      canRender: i.canRender,
+      canPlay: i.canPlay,
+    });
+  } catch (e) {
+    if (e instanceof NotEnoughWords) return [];
+    throw e;
+  }
 }
 
 /** The event one first tap writes, as it happens (§3.6). */
