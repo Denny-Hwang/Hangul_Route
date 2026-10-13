@@ -144,8 +144,10 @@ describe('Send a note on the learner report (FB-11b)', () => {
     expect(links.map((a) => a.props.href)).toEqual(['/teach/space/notes?id=space%3Asunflower&compose=1&learner=profile%3Amina']);
     expect(textOf(links[0] as ReactTestInstance)).toBe(en.report.action.sendNote);
     expect(links[0]?.props.href).not.toContain('Mina');
-    // Never inside an insight line.
-    for (const line of byTestId(root, 'report-line-actions')) expect(textOf(line)).not.toContain(en.report.action.sendNote);
+    // Never inside an insight line: the fixture draws line actions, so this loop checks something.
+    const lineActions = byTestId(root, 'report-line-actions');
+    expect(lineActions.length).toBeGreaterThan(0);
+    for (const line of lineActions) expect(textOf(line)).not.toContain(en.report.action.sendNote);
   });
 
   it('a family caregiver: the family notes page', async () => {

@@ -27,8 +27,9 @@ vi.mock('next/link', () => ({
 }));
 
 const replaced: string[] = [];
+const pushed: string[] = [];
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ replace: (href: string) => replaced.push(href), push: () => undefined }),
+  useRouter: () => ({ replace: (href: string) => replaced.push(href), push: (href: string) => pushed.push(href) }),
   useSearchParams: () => new URLSearchParams(''),
   usePathname: () => '/parent/notes',
 }));
@@ -73,6 +74,7 @@ afterEach(() => {
   act(() => mounted?.unmount());
   mounted = null;
   replaced.length = 0;
+  pushed.length = 0;
   calls = 0;
   spaces = { ok: true, data: [] };
   vi.unstubAllEnvs();
@@ -106,6 +108,7 @@ describe('the notes hubs (FB-11b)', () => {
     spaces = { ok: true, data: [item(space('f1', 'family', 'Kim family'), 'caregiver'), item(space('c1', 'class', 'Room 4'), 'teacher')] };
     await render(ParentNotesHub);
     expect(replaced).toEqual(['/parent/space/notes?id=f1']);
+    expect(pushed).toEqual([]);
   });
 
   it('several classes: one row per class with Notes, archived classes left out, no counts', async () => {
