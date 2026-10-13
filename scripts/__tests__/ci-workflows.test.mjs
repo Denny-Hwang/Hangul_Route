@@ -336,10 +336,17 @@ describe("PWA e2e", () => {
     const lines = read("apps/mobile/e2e/web/my-route.spec.ts").split("\n");
     const skips = lines.flatMap((l, i) => (/!\s*GATED_BUILD\b/.test(l) ? [i] : []));
     assert.ok(skips.length > 0, "my-route.spec.ts has a GATED_BUILD skip");
+    const indent = (l) => l.length - l.trimStart().length;
     for (const at of skips) {
-      // Every gating-only block must be one the gating run's -g picks, or it runs nowhere in CI.
-      const title = lines.slice(0, at).reverse().find((l) => /^\s*test\(/.test(l)) ?? "";
-      assert.ok(title.includes(grep), `the GATED_BUILD skip on line ${at + 1} sits in a test the gating run's -g "${grep}" plays`);
+      // Every gating-only block must be one the gating run's -g picks, or it runs nowhere in CI. The block is the
+      // nearest test( or test.describe( above the skip that encloses it (less indented), so a describe-level skip
+      // is checked against its describe's title, never against an unrelated test above it.
+      const title =
+        lines
+          .slice(0, at)
+          .reverse()
+          .find((l) => /^\s*test(\.describe)?\(/.test(l) && indent(l) < indent(lines[at])) ?? "";
+      assert.ok(title.includes(grep), `the GATED_BUILD skip on line ${at + 1} sits in a block the gating run's -g "${grep}" plays`);
     }
   });
 
@@ -355,7 +362,8 @@ describe("PWA e2e", () => {
     const stillGated = readdirSync(dir).filter((n) => {
       if (!n.endsWith(".spec.ts")) return false;
       const src = readFileSync(join(dir, n), "utf8");
-      return /\bE2E_MY_ROUTE\b/.test(src) || /test\.skip\(\s*!?ROUTE_TAB\b/.test(src);
+      // Any env variable whose name holds MY_ROUTE read by a spec (E2E_MY_ROUTE or a renamed one), or the old ROUTE_TAB gate.
+      return /\bE2E_MY_ROUTE\b/.test(src) || /process\.env\.\w*MY_ROUTE\w*/.test(src) || /test\.skip\(\s*!?ROUTE_TAB\b/.test(src);
     });
     assert.deepEqual(stillGated, [], "a Learning Route block skips unless E2E_MY_ROUTE=1, so no CI run plays it");
   });
