@@ -4,7 +4,7 @@ import { DEFAULT_LOCALE, getMessages, type LegalValues, type UiLocale } from '@h
 import Link from 'next/link';
 import { CONTACT_EMAIL } from '../../data/contact';
 import { sitePath } from '../../lib/site-path';
-import { HIT } from '../../lib/site-style';
+import { HIT, rem } from '../../lib/site-style';
 import { EnglishAuthoritativeNotice } from './EnglishAuthoritativeNotice';
 import { SiteShell } from './SiteShell';
 
@@ -25,12 +25,12 @@ export function TermsPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }): J
   return (
     <SiteShell locale={locale} page="/terms" variant="legal">
       <div style={{ maxWidth: layout.maxWidth.reading, margin: '0 auto', paddingBlock: spacing.xl }}>
-        <Link href={sitePath(locale, '/')} style={{ ...HIT, justifyContent: 'flex-start', color: colors.brand.primary, fontWeight: 600 }}>
+        <Link href={sitePath(locale, '/')} style={{ ...HIT, justifyContent: 'flex-start', color: colors.brand.primary, fontWeight: typography.weight.semibold }}>
           {legal.backHome}
         </Link>
         {docLang ? <EnglishAuthoritativeNotice text={legal.englishAuthoritative} /> : null}
-        <h1 lang={docLang} style={{ fontSize: typography.size.display, marginTop: spacing.lg }}>{t.title}</h1>
-        <p lang={docLang} style={{ color: colors.text.muted, fontSize: typography.size.caption }}>
+        <h1 lang={docLang} style={{ fontSize: rem(typography.size.display), marginTop: spacing.lg }}>{t.title}</h1>
+        <p lang={docLang} style={{ color: colors.text.muted, fontSize: rem(typography.size.caption) }}>
           {t.effective}
         </p>
 
@@ -41,7 +41,7 @@ export function TermsPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }): J
             backgroundColor: colors.feedback.infoLight,
             borderRadius: radii.md,
             color: colors.text.secondary,
-            fontSize: typography.size.caption,
+            fontSize: rem(typography.size.caption),
           }}
         >
           {legal.draft}
@@ -49,16 +49,16 @@ export function TermsPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }): J
 
         {Object.values(t.sections).map((section) => (
           <section key={section.heading} lang={docLang} style={{ marginTop: spacing.xl }}>
-            <h2 style={{ fontSize: typography.size.title }}>{section.heading}</h2>
+            <h2 style={{ fontSize: rem(typography.size.title) }}>{section.heading}</h2>
             {'paragraphs' in section
               ? Object.values<LegalItem>(section.paragraphs).map((p, i) => (
-                  <p key={i} style={{ lineHeight: 1.7, color: colors.text.secondary }}>
+                  <p key={i} style={{ lineHeight: typography.leading.relaxed, color: colors.text.secondary }}>
                     {text(p)}
                   </p>
                 ))
               : null}
             {'bullets' in section ? (
-              <ul style={{ lineHeight: 1.8, color: colors.text.secondary }}>
+              <ul style={{ lineHeight: typography.leading.relaxed, color: colors.text.secondary }}>
                 {Object.values<LegalItem>(section.bullets).map((b, i) => (
                   <li key={i}>{text(b)}</li>
                 ))}
@@ -67,8 +67,8 @@ export function TermsPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }): J
           </section>
         ))}
 
-        <footer style={{ marginTop: spacing.jumbo, color: colors.text.muted, fontSize: typography.size.caption }}>
-          <Link href={sitePath(locale, '/privacy')} lang={docLang} style={{ ...HIT, justifyContent: 'flex-start', color: colors.text.secondary, fontWeight: 600 }}>
+        <footer style={{ marginTop: spacing.jumbo, color: colors.text.muted, fontSize: rem(typography.size.caption) }}>
+          <Link href={sitePath(locale, '/privacy')} lang={docLang} style={{ ...HIT, justifyContent: 'flex-start', color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
             {t.otherDocument}
           </Link>
         </footer>

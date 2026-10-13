@@ -157,8 +157,10 @@ button {
   color: var(--hr-site-text-secondary);
 }
 
-.hr-site-nav-link:hover {
-  color: var(--hr-site-text);
+@media (hover: hover) {
+  .hr-site-nav-link:hover {
+    color: var(--hr-site-text);
+  }
 }
 
 .hr-site-signin {
@@ -166,8 +168,10 @@ button {
   border-color: var(--hr-site-border-strong);
 }
 
-.hr-site-signin:hover {
-  border-color: var(--hr-site-text-secondary);
+@media (hover: hover) {
+  .hr-site-signin:hover {
+    border-color: var(--hr-site-text-secondary);
+  }
 }
 
 /* Actions: the primary pill and the outline pill. brand.primary on brand.primaryLight is below AA for normal text,
@@ -177,8 +181,10 @@ button {
   color: var(--hr-site-on-primary);
 }
 
-.hr-site-primary:hover {
-  background-color: var(--hr-site-brand-dark);
+@media (hover: hover) {
+  .hr-site-primary:hover {
+    background-color: var(--hr-site-brand-dark);
+  }
 }
 
 .hr-site-secondary {
@@ -187,9 +193,11 @@ button {
   background-color: transparent;
 }
 
-.hr-site-secondary:hover {
-  background-color: var(--hr-site-brand-light);
-  color: var(--hr-site-brand-dark);
+@media (hover: hover) {
+  .hr-site-secondary:hover {
+    background-color: var(--hr-site-brand-light);
+    color: var(--hr-site-brand-dark);
+  }
 }
 
 .hr-site-text-link {
@@ -311,8 +319,10 @@ button {
   border-color: var(--hr-site-border-subtle);
 }
 
-.hr-site-persona-card:hover {
-  border-color: var(--hr-site-border-strong);
+@media (hover: hover) {
+  .hr-site-persona-card:hover {
+    border-color: var(--hr-site-border-strong);
+  }
 }
 
 .hr-site-persona-chev {
@@ -320,9 +330,11 @@ button {
   color: var(--hr-site-brand-dark);
 }
 
-.hr-site-persona-card:hover .hr-site-persona-chev {
-  background-color: var(--hr-site-brand);
-  color: var(--hr-site-on-primary);
+@media (hover: hover) {
+  .hr-site-persona-card:hover .hr-site-persona-chev {
+    background-color: var(--hr-site-brand);
+    color: var(--hr-site-on-primary);
+  }
 }
 
 .hr-site-persona-card:active {
@@ -377,9 +389,11 @@ button {
   color: var(--hr-site-text-secondary);
 }
 
-.hr-site-footer-link:hover {
-  color: var(--hr-site-text);
-  text-decoration: underline;
+@media (hover: hover) {
+  .hr-site-footer-link:hover {
+    color: var(--hr-site-text);
+    text-decoration: underline;
+  }
 }
 
 @media (min-width: 22.5em) {

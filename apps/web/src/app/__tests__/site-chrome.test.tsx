@@ -314,10 +314,16 @@ describe('globals.css: the site rules', () => {
   /** The media queries whose rules are the site's (their first rule is an `hr-site-*` rule). */
   const siteQueries = [...rules.matchAll(/@media\s*\(([^)]*)\)\s*\{\s*\.hr-site/g)].map((m) => m[1]?.trim());
 
-  it('are mobile first, in em: only min-width queries at the S-D breakpoints', () => {
+  it('are mobile first, in em: only min-width queries at the S-D breakpoints (plus the hover-capable guard)', () => {
     expect(siteQueries.length).toBeGreaterThan(0);
-    const allowed = Object.values(SITE_BREAKPOINTS).map((em) => `min-width: ${em}em`);
+    const allowed = [...Object.values(SITE_BREAKPOINTS).map((em) => `min-width: ${em}em`), 'hover: hover'];
     for (const q of siteQueries) expect(allowed, q).toContain(q);
+  });
+
+  it('hover looks apply only on devices that hover, so a tapped card does not keep them after Back', () => {
+    const outside = rules.replace(/@media\s*\(hover: hover\)\s*\{((?:[^{}]*\{[^{}]*\})*)\s*\}/g, '');
+    expect(outside).not.toMatch(/\.hr-site[^{]*:hover/);
+    expect(rules).toMatch(/@media \(hover: hover\)\s*\{\s*\.hr-site-persona-card:hover/);
   });
 
   it('every hr-site rule inside a media query sits in one of those queries (none behind an old landing query)', () => {

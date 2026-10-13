@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { siteMetadata } from '../../data/landing-copy';
+import { SITE_CLAIMS } from '../../data/site-claims';
 import { SITE_PAGES, siteMetadataFor } from '../../lib/site-metadata';
 import AboutPage from '../(en)/about/page';
 import LearnersPage from '../(en)/learners/page';
@@ -107,5 +108,35 @@ describe('metadata truth pass (F-SITE-002 §3.12)', () => {
   it('no compliance claim while the legal documents are drafts (OD-4)', () => {
     expect(metaText).not.toMatch(/COPPA/);
     for (const [path, text] of SITE) expect(text, path).not.toMatch(/COPPA/);
+  });
+
+  // The Spanish and Korean metadata get the same truth pass, so a later edit cannot put the counts or the unbuilt
+  // journey back in a hidden locale before it ships.
+  const localeMeta = (locale: 'es' | 'ko'): string => JSON.stringify(SITE_PAGES.map((page) => siteMetadataFor(locale, page, true)));
+
+  it('es: no typed stage, theme or game counts, no unbuilt journey, no compliance claim', () => {
+    const text = localeMeta('es');
+    expect(text).not.toMatch(/\d+\s*(etapas|temas|minijuegos)/i);
+    expect(text).not.toMatch(/Recorrido del patrimonio/i);
+    expect(text).not.toMatch(/COPPA/);
+  });
+
+  it('ko: no typed stage, theme or game counts, no unbuilt journey, no compliance claim', () => {
+    const text = localeMeta('ko');
+    // "1단계" is the name Stage 1 (the free plan), not a count; any other number of stages or games is a count.
+    expect(text).not.toMatch(/(?<!\d)([2-9]|\d{2,})\s*단계|\d+\s*가지/);
+    expect(text).not.toMatch(/문화 여정/);
+    expect(text).not.toMatch(/COPPA/);
+  });
+
+  // The metadata's cost clause ("more stages are coming") is the `paidPlans: 'coming'` state. The PR that flips
+  // `paidPlans` to 'inApp' must reword it in en, es and ko (section 3.9 hand-off), or this goes red.
+  it.each([
+    ['en', /more stages are coming/i],
+    ['es', /vienen más etapas/i],
+    ['ko', /더 많은 단계가 준비되고 있어요/],
+  ] as const)('%s: the metadata cost clause follows the paidPlans claim', (locale, coming) => {
+    const text = JSON.stringify(SITE_PAGES.map((page) => siteMetadataFor(locale, page, true)));
+    expect(coming.test(text)).toBe(SITE_CLAIMS.paidPlans === 'coming');
   });
 });

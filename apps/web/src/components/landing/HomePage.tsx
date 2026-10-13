@@ -243,6 +243,8 @@ export function HomePage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: Home
           {H.news.title}
         </h2>
         <p style={{ margin: `0 auto ${spacing.lg}px`, maxWidth: SITE_SIZES.leadMeasure, lineHeight: typography.leading.relaxed }}>{H.news.body}</p>
+        {/* The pre-S-5 waitlist anchor: links shared as hangulroute.com/#get still land on the form. */}
+        <span id="get" aria-hidden="true" />
         <WaitlistForm words={t.waitlist} locale={locale} />
       </section>
     </SiteShell>
