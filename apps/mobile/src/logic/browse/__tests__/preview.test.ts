@@ -11,6 +11,8 @@ import {
   previewMinutes,
   previewStartedEvent,
   storyPreviewParams,
+  previewReturnTarget,
+  againLevel,
 } from '../preview';
 import { CULTURE_ID, TALE_ID, fixtureBundle } from './browse-fixture';
 
@@ -128,6 +130,21 @@ describe('endCardId (section 4.8: the card a learner collects)', () => {
     expect(endCardId(bundle, LETTERS_Q1)).not.toBeNull();
     expect(endCardId({ ...bundle, cards: [] }, LETTERS_Q1)).toBeNull();
     expect(endCardId(bundle, 'quest:not-bundled')).toBeNull();
+  });
+});
+
+describe('previewReturnTarget (section 4.7: Leave goes back to the page the preview started from)', () => {
+  it('a lesson returns to its own page; a story\'s questions return to the story', () => {
+    expect(previewReturnTarget(LETTERS_Q1, undefined)).toEqual({ kind: 'quest', id: LETTERS_Q1 });
+    expect(previewReturnTarget('quest:of-a-story', { kind: 'story', id: TALE_ID })).toEqual({ kind: 'story', id: TALE_ID });
+  });
+});
+
+describe('againLevel ([ Read again ] keeps the level the grown-up picked)', () => {
+  it('the level read, else the lowest', () => {
+    expect(againLevel('read', 'listen')).toBe('read');
+    expect(againLevel(undefined, 'listen')).toBe('listen');
+    expect(storyPreviewParams(TALE_ID, againLevel('read-along', 'listen')).level).toBe('read-along');
   });
 });
 

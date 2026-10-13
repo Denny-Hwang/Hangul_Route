@@ -739,6 +739,8 @@ test('a full Stage 1 lesson, its end screen and its card write nothing of a lear
   await expect(page.getByText('At this point a learner sees 1 to 3 stars and collects:')).toBeVisible();
   await expect(page.getByText('Wonderful!')).toHaveCount(0);
   await expect(page.getByTestId('preview-leave')).toHaveCount(0);
+  // The end screen's strip has no button and is announced once too.
+  await expect(announced(page)).toHaveCount(1);
   await expect(page.getByTestId('browse-end-next')).toHaveText('Next lesson');
   await shot(page, 'br8-browse-preview-end-pixel5');
   await page.getByTestId('browse-end-card').click();
@@ -813,7 +815,7 @@ test('Leave preview shows the border.focus ring on keyboard focus, and the strip
   // One announcement for the screen that has focus, with the strip's own words.
   await expect(announced(page)).toHaveCount(1);
   await expect(announced(page)).toHaveText('Preview. Nothing is saved.');
-  // The end screen's strip has no button and announces once too.
+  // Back on the item page there is no strip, so nothing is announced.
   await page.getByTestId('preview-leave').click();
   await page.getByTestId('browse-leave-confirm').click();
   await expect(announced(page)).toHaveCount(0);
@@ -859,6 +861,14 @@ test('a story plays as the learner replay reader under the strip, ends on the st
   await shot(page, 'br8-browse-story-end-pixel5');
   await page.getByTestId('browse-end-back').click();
   await expect(page.getByTestId('browse-item')).toBeVisible();
+
+  // Preview the questions plays the story's quest, and Leave returns to the story page, not the quest's page.
+  await page.getByTestId('browse-preview-questions').click();
+  await expect(page.getByTestId('preview-strip')).toBeVisible();
+  await page.getByTestId('preview-leave').click();
+  await page.getByTestId('browse-leave-confirm').click();
+  await expect(page.getByTestId('browse-preview')).toHaveText('Preview this story');
+  await expect(page.getByTestId('browse-preview-questions')).toBeVisible();
 
   const after = await readAllStored(page);
   const changed = [...new Set([...Object.keys(before), ...Object.keys(after)])].filter((k) => before[k] !== after[k]);

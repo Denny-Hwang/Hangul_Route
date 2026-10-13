@@ -43,6 +43,8 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
   const [displayOpen, setDisplayOpen] = useState(false);
   // The story level the preview opens at (section 4.7): the lowest unless the grown-up picks another.
   const [level, setLevel] = useState<StoryLevel | null>(null);
+  // The same mounted page can get new params (Next story to a closed story): the pick belongs to one story.
+  useEffect(() => setLevel(null), [kind, id]);
   const compact = useLayoutClass().width === 'compact';
   useItemViewed(facts && pass ? itemViewedEvent(kind, id, access) : null);
 
@@ -65,7 +67,8 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
   const playQuest = (questId: string): void => {
     const episodeId = facts.kind === 'quest' && facts.where?.kind === 'episode' ? facts.where.episodeId : (episodeOfQuest(bundle, questId)?.id ?? '');
     beginPreview('quest', questId);
-    navigation.navigate('PreviewQuest', { questId, episodeId });
+    // A story's questions come back to the story page (section 4.7), not to the quest's own page.
+    navigation.navigate('PreviewQuest', { questId, episodeId, ...(facts.kind === 'story' ? { returnTo: { kind: 'story' as const, id: facts.id } } : {}) });
   };
   const previewItem = (): void => {
     if (facts.kind === 'quest') playQuest(facts.id);

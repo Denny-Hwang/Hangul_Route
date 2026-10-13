@@ -80,7 +80,7 @@ export function BrowseStoryReaderScreen({ route, navigation }: ReaderProps): Rea
           onHome={() => navigation.navigate('BrowseHome', {})}
           onDone={() => {
             endPreview(true);
-            navigation.replace('PreviewEnd', { kind: 'story', id: storyId });
+            navigation.replace('PreviewEnd', { kind: 'story', id: storyId, level: route.params.level });
           }}
           onOpenSources={(params) => navigation.navigate('StorySources', params)}
           onOpenCultureNote={null}

@@ -2,6 +2,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useMessages } from '../../i18n/use-messages';
+import { previewReturnTarget } from '../../logic/browse/preview';
 import { previewQuestPorts } from '../../logic/quest-flow/quest-player-ports';
 import type { BrowseStackParamList } from '../../navigation/browse';
 import { useQuestRunStore } from '../../store/quest-run-store';
@@ -25,14 +26,15 @@ import { endPreview } from './preview-session';
 type Props = NativeStackScreenProps<BrowseStackParamList, 'PreviewQuest'>;
 
 export function PreviewQuestScreen({ route, navigation }: Props): React.ReactElement {
-  const { questId, episodeId } = route.params;
+  const { questId, episodeId, returnTo } = route.params;
   const m = useMessages().caregiver.browse;
   const [confirming, setConfirming] = useState(false);
 
   const toItem = useCallback((): void => {
     endPreview(false);
-    navigation.navigate('BrowseItem', { kind: 'quest', id: questId });
-  }, [navigation, questId]);
+    // Back to the page the preview started from: a story's questions return to the story (section 4.7).
+    navigation.navigate('BrowseItem', previewReturnTarget(questId, returnTo));
+  }, [navigation, questId, returnTo]);
 
   const ports = useMemo(
     () =>
@@ -40,11 +42,11 @@ export function PreviewQuestScreen({ route, navigation }: Props): React.ReactEle
         resetRun: () => useQuestRunStore.getState().reset(),
         toEnd: () => {
           endPreview(true);
-          navigation.replace('PreviewEnd', { kind: 'quest', id: questId, episodeId });
+          navigation.replace('PreviewEnd', { kind: 'quest', id: questId, episodeId, ...(returnTo ? { returnTo } : {}) });
         },
         toItem,
       }),
-    [navigation, questId, episodeId, toItem],
+    [navigation, questId, episodeId, returnTo, toItem],
   );
 
   // A preview left by the browser's own back still ends (once; the end screen and Leave have already ended it).
@@ -58,7 +60,7 @@ export function PreviewQuestScreen({ route, navigation }: Props): React.ReactEle
 
   return (
     <PreviewFrame onLeave={() => setConfirming(true)}>
-      <ErrorBoundary fallbackRender={() => <OopsScreen onRetry={leave} actionLabel={m.end.back.cta} />}>
+      <ErrorBoundary fallbackRender={() => <OopsScreen onRetry={leave} actionLabel={returnTo?.kind === 'story' ? m.end.backToStory.cta : m.end.back.cta} />}>
         <QuestPlayerView
           questId={questId}
           episodeId={episodeId}

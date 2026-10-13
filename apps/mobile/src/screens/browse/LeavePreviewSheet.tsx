@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { Modal, Pressable, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { onEscape } from '../../platform/browse-env';
+import { BROWSE_DIALOG_MAX } from '../../logic/browse/layout';
 
 /**
  * The leave confirm of [ Leave preview ] (F-BROWSE-001 section 4.8; mock
@@ -13,8 +14,7 @@ import { onEscape } from '../../platform/browse-env';
  * going.
  */
 
-/** The dialog width from the regular class (32rem), as the Lesson display sheet. */
-const DIALOG_MAX = 512;
+const DIALOG_MAX = BROWSE_DIALOG_MAX;
 
 export function LeavePreviewSheet({ visible, onKeep, onLeave }: { visible: boolean; onKeep: () => void; onLeave: () => void }): React.ReactElement {
   const messages = useMessages();

@@ -115,3 +115,19 @@ export function endCardId(bundle: Pick<BrowseBundle, 'quests' | 'cards'>, questI
 export function storyPreviewParams(storyId: string, level: StoryLevel): { storyId: string; level: StoryLevel; mode: 'replay'; sceneIndex: number } {
   return { storyId, level, mode: 'replay', sceneIndex: 0 };
 }
+
+/** The item page a preview was started from (section 4.7): a story's [ Preview the questions ] plays its quest but returns to the story. */
+export interface PreviewReturn {
+  kind: 'quest' | 'story';
+  id: string;
+}
+
+/** Where Leave, the lesson's own close and the end screen's Back go: the page the preview started from, else the quest's own page. */
+export function previewReturnTarget(questId: string, returnTo: PreviewReturn | undefined): PreviewReturn {
+  return returnTo ?? { kind: 'quest', id: questId };
+}
+
+/** [ Read again ] replays the level the story was read at (the one the grown-up picked), else the story's lowest. */
+export function againLevel(read: StoryLevel | undefined, defaultLevel: StoryLevel): StoryLevel {
+  return read ?? defaultLevel;
+}

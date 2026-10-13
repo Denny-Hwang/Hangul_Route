@@ -6,7 +6,7 @@ import { cardById } from '../../content';
 import { useMessages } from '../../i18n/use-messages';
 import { itemFacts } from '../../logic/browse/facts';
 import { BROWSE_ACTION_MAX_WIDTH } from '../../logic/browse/layout';
-import { endCardId, nextLesson, nextStory, storyPreviewParams } from '../../logic/browse/preview';
+import { againLevel, endCardId, nextLesson, nextStory, previewReturnTarget, storyPreviewParams } from '../../logic/browse/preview';
 import type { BrowseStackParamList } from '../../navigation/browse';
 import { useBrowseSession } from './browse-session';
 import { CardRow } from './browse-ui';
@@ -29,13 +29,15 @@ type Props = NativeStackScreenProps<BrowseStackParamList, 'PreviewEnd'>;
 export function PreviewEndScreen({ route, navigation }: Props): React.ReactElement {
   const m = useMessages().caregiver.browse.end;
   const { bundle, pass, gatingEnabled } = useBrowseSession();
-  const { kind, id, episodeId } = route.params;
+  const { kind, id, episodeId, level, returnTo } = route.params;
   const compact = useLayoutClass().width === 'compact';
   const input = { bundle, scope: pass?.scope ?? ('sampler' as const), gatingEnabled };
   const story = kind === 'story';
+  // A story's questions: Back returns to the story page, and there is no Next lesson (it is not a catalogue lesson).
+  const backToStory = story || returnTo?.kind === 'story';
 
-  const toItem = (): void => navigation.navigate('BrowseItem', { kind, id });
-  const lesson = story ? null : nextLesson(id, input);
+  const toItem = (): void => navigation.navigate('BrowseItem', kind === 'vocab-topic' ? { kind, id } : previewReturnTarget(id, story ? { kind, id } : returnTo));
+  const lesson = story || returnTo ? null : nextLesson(id, input);
   const nextTale = story ? nextStory(id, input) : null;
   const cardId = story ? null : endCardId(bundle, id);
   const card = cardId ? cardById(cardId) : undefined;
@@ -44,10 +46,10 @@ export function PreviewEndScreen({ route, navigation }: Props): React.ReactEleme
     beginPreview(kind, id);
     if (story) {
       const facts = itemFacts({ kind: 'story', id }, bundle);
-      if (facts?.kind === 'story') navigation.replace('StoryReader', storyPreviewParams(id, facts.defaultLevel));
+      if (facts?.kind === 'story') navigation.replace('StoryReader', storyPreviewParams(id, againLevel(level, facts.defaultLevel)));
       else toItem();
     } else {
-      navigation.replace('PreviewQuest', { questId: id, episodeId: episodeId ?? '' });
+      navigation.replace('PreviewQuest', { questId: id, episodeId: episodeId ?? '', ...(returnTo ? { returnTo } : {}) });
     }
   };
 
@@ -101,9 +103,9 @@ export function PreviewEndScreen({ route, navigation }: Props): React.ReactEleme
           <View style={{ alignSelf: 'stretch', alignItems: 'center', gap: spacing.sm }}>
             {hasNext ? button(story ? m.nextStory.cta : m.next.cta, next, true, 'browse-end-next') : null}
             {/* After the last one, Back leads and Preview again stays a ghost button under it (mock, variants). */}
-            {hasNext ? null : button(story ? m.backToStory.cta : m.back.cta, toItem, true, 'browse-end-back')}
+            {hasNext ? null : button(backToStory ? m.backToStory.cta : m.back.cta, toItem, true, 'browse-end-back')}
             {button(story ? m.readAgain.cta : m.again.cta, again, false, 'browse-end-again')}
-            {hasNext ? button(story ? m.backToStory.cta : m.back.cta, toItem, false, 'browse-end-back') : null}
+            {hasNext ? button(backToStory ? m.backToStory.cta : m.back.cta, toItem, false, 'browse-end-back') : null}
           </View>
           <Spacer size="xl" />
         </View>
