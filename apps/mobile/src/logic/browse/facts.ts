@@ -184,7 +184,7 @@ function scopeWords(
   const syllables: SyllableFact[] = [];
   for (const pair of scope.cardPairs ?? []) words.push(...glossed(pair.ko, pair.romanization, pair.en));
   for (const s of scope.syllables ?? []) {
-    // A built block that is a bundle word (Lunch Box Words: 산, 달, 곰) is taught as that word, with its gloss.
+    // A built block that is a bundle word (Lunch Box Words: san, dal, gom) is taught as that word, with its gloss.
     const word = wordFor(s.ko);
     if (word) words.push(word);
     else syllables.push({ ko: s.ko, romanization: s.romanization });
