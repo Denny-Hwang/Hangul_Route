@@ -19,7 +19,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
-import { bundleOs, flags } from '../../config/flags';
+import { bundleOs, flags, routeEnabledFor } from '../../config/flags';
 import { placementEntriesOn } from '../../logic/placement/entry';
 import { effectiveLearnerType } from '../../logic/profiles/learner-type';
 import { profileRowOpens } from '../../logic/route/proposal-flow';
@@ -40,7 +40,7 @@ import { useUiStore } from '../../store/ui-store';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { soundCardView, soundSwitchLabel } from '../../logic/audio/voice-help';
 import { LanguageCard } from '../../components/LanguageCard';
-import { useMessages } from '../../i18n/use-messages';
+import { useLocale, useMessages } from '../../i18n/use-messages';
 import { BackupCard } from '../../components/BackupCard';
 import { SpacesCard } from '../../components/SpacesCard';
 import { grownUpEntriesOn, runGrownUpHandoff } from '../../logic/shell/entry-points';
@@ -51,6 +51,7 @@ import { GrownUpHomeRow } from './GrownUpHomeRow';
 
 export function ProfileScreen(): React.ReactElement {
   const m = useMessages();
+  const locale = useLocale();
   const t = m.learner.profile;
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const profiles = useProfileStore((s) => s.profiles);
@@ -220,7 +221,7 @@ export function ProfileScreen(): React.ReactElement {
         </>
       ) : null}
 
-      {active && flags.routeEnabled ? (
+      {active && routeEnabledFor(locale) ? (
         <>
           {/* F-PLAN-002 section 3.9: always here (a Not now on Home never hides it); a child's plan goes through the gate. */}
           <Spacer size="lg" />

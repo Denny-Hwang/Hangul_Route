@@ -1,4 +1,4 @@
-import type { UiLocale } from '@hangul-route/i18n';
+import { showAllLocalesEnabled, type UiLocale } from '@hangul-route/i18n';
 
 /**
  * Feature flags for the mobile app.
@@ -146,8 +146,10 @@ export interface Flags {
 
   /**
    * The learner's own weekly plan (F-PLAN-002 section 3.9): the Home prompt, the Profile row
-   * "Make a weekly plan" and the proposal screen. OFF until P2-8 flips it for the beta; the Worker
-   * that keeps `selfRoute` (P2-4) is already deployed.
+   * "Make a weekly plan" and the proposal screen. ON since P2-8b (the beta flip, after OD-17 was
+   * decided 2026-10-13); the Worker that keeps `selfRoute` (P2-4) is already deployed. The learner
+   * entries read `routeEnabledFor(locale)`, which holds the plan back in a UI locale whose
+   * `learner.weeklyPlan` words have no signed review yet.
    */
   routeEnabled: boolean;
 }
@@ -167,7 +169,7 @@ const launchDefaults: Flags = {
   grownUpHomeEnabled: false,
   notesEnabled: false,
   reportsEnabled: false,
-  routeEnabled: false,
+  routeEnabled: true,
 };
 
 export const flags: Flags = {
@@ -232,4 +234,24 @@ export const REPORT_REVIEWED_LOCALES: readonly UiLocale[] = ['en'];
  */
 export function reportsEnabledFor(locale: UiLocale, f: Pick<Flags, 'reportsEnabled'> = flags): boolean {
   return f.reportsEnabled && REPORT_REVIEWED_LOCALES.includes(locale);
+}
+
+/**
+ * UI locales whose `learner.weeklyPlan` words carry a signed review (F-PLAN-002 section 6, P2-8b). The flip is
+ * English only: Spanish and Korean join when their re-review is signed.
+ */
+export const ROUTE_REVIEWED_LOCALES: readonly UiLocale[] = ['en'];
+
+/**
+ * The effective weekly plan switch for the learner entries (F-PLAN-002 P2-8b): the flag is on **and** the UI
+ * locale is in `ROUTE_REVIEWED_LOCALES`. The QA build that shows every locale (`EXPO_PUBLIC_SHOW_ALL_LOCALES=1`,
+ * never a release build) plays every locale, so the es and ko 320 px pass keeps running. Home's plan slot and the
+ * Profile row read this, never the raw flag.
+ */
+export function routeEnabledFor(
+  locale: UiLocale,
+  f: Pick<Flags, 'routeEnabled'> = flags,
+  showAll: boolean = showAllLocalesEnabled(),
+): boolean {
+  return f.routeEnabled && (showAll || ROUTE_REVIEWED_LOCALES.includes(locale));
 }
