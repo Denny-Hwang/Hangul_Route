@@ -7,8 +7,7 @@ import type { DeviceGateRead } from '@/lib/console/grown-up-lock';
 
 /**
  * F-APP-001 A-5a, sections 3.8 and 3.16 (design/screens/app-shell/adult-frame.md): the adult frame
- * that replaces `ConsoleShell`. The persona switch shows only with both personas (once the family
- * home is live, mocked on here); the active persona of a space page is the kind of its space; the
+ * that replaces `ConsoleShell`. The persona switch shows only with both personas; the active persona of a space page is the kind of its space; the
  * way back clears the tab; Language and Sign out sit in the footer at phone width.
  */
 // next/link needs the app router's context; a plain anchor keeps its href, its text and its attributes.
@@ -24,17 +23,6 @@ const nav = vi.hoisted(() => ({ pushed: [] as string[] }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: (url: string) => nav.pushed.push(url), replace: () => undefined }),
 }));
-
-const live = vi.hoisted(() => ({ value: true }));
-vi.mock('@/lib/console/personas', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/lib/console/personas')>();
-  return {
-    ...actual,
-    get FAMILY_HOME_LIVE() {
-      return live.value;
-    },
-  };
-});
 
 const consoleView = vi.hoisted(() => ({
   api: null as null | { listSpaces: () => Promise<unknown>; roster: (id: string) => Promise<unknown> },
@@ -117,7 +105,6 @@ beforeAll(() => {
 let mounted: ReactTestRenderer | null = null;
 beforeEach(() => {
   nav.pushed = [];
-  live.value = true;
   consoleView.api = null;
   consoleView.signOuts = 0;
   locales.available = ['en'];
@@ -194,13 +181,6 @@ describe('the persona switch (sections 3.8, 3.16)', () => {
       byTestId(r, 'persona-teacher')[0]?.props.onClick();
     });
     expect(nav.pushed).toEqual([]);
-  });
-
-  it('stays hidden while /parent is still the demo (both homes are the console home)', async () => {
-    live.value = false;
-    const r = await render(fakeEnv(), [family, klass]);
-    expect(byTestId(r, 'persona-switch')).toHaveLength(0);
-    expect(textOf(byTestId(r, 'frame-persona')[0] as ReactTestInstance)).toBe('Teacher');
   });
 });
 

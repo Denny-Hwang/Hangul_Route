@@ -17,7 +17,7 @@ const ALL_ON = { reports: true, notes: true, browse: true };
 const ALL_OFF = { reports: false, notes: false, browse: false };
 
 function ctx(over: Partial<NavContext>): NavContext {
-  return { persona: 'parent', spaces: [], soloLearner: null, flags: ALL_OFF, live: true, ...over };
+  return { persona: 'parent', spaces: [], soloLearner: null, flags: ALL_OFF, ...over };
 }
 
 const ids = (c: NavContext): string[] => navItemsFor(c).map((entry) => entry.id);
@@ -81,10 +81,6 @@ describe('navItemsFor', () => {
     expect(family.find((entry) => entry.id === 'billing')?.target).toEqual({ href: '/account/billing' });
     const teacher = navItemsFor(ctx({ persona: 'teacher' }));
     expect(teacher.find((entry) => entry.id === 'classes')?.target).toEqual({ href: '/teach/home' });
-  });
-
-  it('while /parent is still the demo, Home opens the console home', () => {
-    expect(navItemsFor(ctx({ live: false })).find((entry) => entry.id === 'home')?.target).toEqual({ href: '/teach/home' });
   });
 
   it('Reports opens the one learner report for one family with one learner, else the family home (the cards are the index)', () => {

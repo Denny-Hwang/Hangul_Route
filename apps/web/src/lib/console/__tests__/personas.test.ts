@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { SpaceListItem } from '../api';
 import {
-  FAMILY_HOME_LIVE,
   activePersona,
   fallbackPersona,
   heldPersonas,
@@ -46,15 +45,9 @@ describe('heldPersonas', () => {
 });
 
 describe('personaHome', () => {
-  it('sends Family to /parent and Teacher to /teach/home once the family home is live (A-5b)', () => {
-    expect(personaHome('parent', true)).toBe('/parent');
-    expect(personaHome('teacher', true)).toBe('/teach/home');
-  });
-
-  it('keeps Family on the console home while /parent is still the demo, so no real account lands on mock data', () => {
-    expect(personaHome('parent', false)).toBe('/teach/home');
-    expect(personaHome('teacher', false)).toBe('/teach/home');
-    expect(personaHome('parent')).toBe(FAMILY_HOME_LIVE ? '/parent' : '/teach/home');
+  it('sends Family to /parent (the family home, A-5b) and Teacher to /teach/home', () => {
+    expect(personaHome('parent')).toBe('/parent');
+    expect(personaHome('teacher')).toBe('/teach/home');
   });
 });
 
@@ -101,63 +94,57 @@ describe('fallbackPersona', () => {
 describe('activePersona', () => {
   const both = [family, klass];
 
-  it('on a home is the page persona when held (live family home)', () => {
-    expect(activePersona({ area: { kind: 'home', persona: 'teacher' }, spaces: both, last: 'parent', live: true })).toEqual({ persona: 'teacher', resolved: true });
-    expect(activePersona({ area: { kind: 'home', persona: 'parent' }, spaces: both, last: 'teacher', live: true })).toEqual({ persona: 'parent', resolved: true });
+  it('on a home is the page persona when held', () => {
+    expect(activePersona({ area: { kind: 'home', persona: 'teacher' }, spaces: both, last: 'parent' })).toEqual({ persona: 'teacher', resolved: true });
+    expect(activePersona({ area: { kind: 'home', persona: 'parent' }, spaces: both, last: 'teacher' })).toEqual({ persona: 'parent', resolved: true });
   });
 
   it('on a home the account does not hold, keeps the nav of what it holds (no-class / no-family states)', () => {
-    expect(activePersona({ area: { kind: 'home', persona: 'teacher' }, spaces: [family], last: null, live: true })).toEqual({ persona: 'parent', resolved: true });
-    expect(activePersona({ area: { kind: 'home', persona: 'parent' }, spaces: [klass], last: null, live: true })).toEqual({ persona: 'teacher', resolved: true });
-    expect(activePersona({ area: { kind: 'home', persona: 'teacher' }, spaces: [], last: null, live: true })).toEqual({ persona: 'teacher', resolved: true });
+    expect(activePersona({ area: { kind: 'home', persona: 'teacher' }, spaces: [family], last: null })).toEqual({ persona: 'parent', resolved: true });
+    expect(activePersona({ area: { kind: 'home', persona: 'parent' }, spaces: [klass], last: null })).toEqual({ persona: 'teacher', resolved: true });
+    expect(activePersona({ area: { kind: 'home', persona: 'teacher' }, spaces: [], last: null })).toEqual({ persona: 'teacher', resolved: true });
   });
 
   it('on a space page comes from the kind of the page space, not from the path', () => {
-    expect(activePersona({ area: { kind: 'space', spaceId: 'sp_f' }, spaces: both, last: 'teacher', live: true })).toEqual({ persona: 'parent', resolved: true });
-    expect(activePersona({ area: { kind: 'space', spaceId: 'sp_c' }, spaces: both, last: 'parent', live: true })).toEqual({ persona: 'teacher', resolved: true });
-    expect(activePersona({ area: { kind: 'space', spaceId: 'sp_s' }, spaces: [school], last: null, live: true })).toEqual({ persona: 'teacher', resolved: true });
+    expect(activePersona({ area: { kind: 'space', spaceId: 'sp_f' }, spaces: both, last: 'teacher' })).toEqual({ persona: 'parent', resolved: true });
+    expect(activePersona({ area: { kind: 'space', spaceId: 'sp_c' }, spaces: both, last: 'parent' })).toEqual({ persona: 'teacher', resolved: true });
+    expect(activePersona({ area: { kind: 'space', spaceId: 'sp_s' }, spaces: [school], last: null })).toEqual({ persona: 'teacher', resolved: true });
   });
 
   it('while the lookup is pending, or the space is not listed, uses the last persona and stays unresolved', () => {
-    expect(activePersona({ area: { kind: 'space', spaceId: 'sp_c' }, spaces: null, last: 'teacher', live: true })).toEqual({ persona: 'teacher', resolved: false });
-    expect(activePersona({ area: { kind: 'space', spaceId: 'sp_c' }, spaces: null, last: null, live: true })).toEqual({ persona: 'parent', resolved: false });
-    expect(activePersona({ area: { kind: 'space', spaceId: 'sp_zz' }, spaces: both, last: 'teacher', live: true })).toEqual({ persona: 'teacher', resolved: false });
-    expect(activePersona({ area: { kind: 'space', spaceId: 'sp_f' }, spaces: [{ ...family, space: { ...family.space, kind: 'galaxy' as never } }], last: null, live: true })).toEqual({
+    expect(activePersona({ area: { kind: 'space', spaceId: 'sp_c' }, spaces: null, last: 'teacher' })).toEqual({ persona: 'teacher', resolved: false });
+    expect(activePersona({ area: { kind: 'space', spaceId: 'sp_c' }, spaces: null, last: null })).toEqual({ persona: 'parent', resolved: false });
+    expect(activePersona({ area: { kind: 'space', spaceId: 'sp_zz' }, spaces: both, last: 'teacher' })).toEqual({ persona: 'teacher', resolved: false });
+    expect(activePersona({ area: { kind: 'space', spaceId: 'sp_f' }, spaces: [{ ...family, space: { ...family.space, kind: 'galaxy' as never } }], last: null })).toEqual({
       persona: 'parent',
       resolved: false,
     });
   });
 
   it('on any other page is the last held persona, else the first held (billing highlights in that row)', () => {
-    expect(activePersona({ area: { kind: 'other' }, spaces: both, last: 'teacher', live: true })).toEqual({ persona: 'teacher', resolved: true });
-    expect(activePersona({ area: { kind: 'other' }, spaces: [klass], last: 'parent', live: true })).toEqual({ persona: 'teacher', resolved: true });
-    expect(activePersona({ area: { kind: 'other' }, spaces: null, last: null, live: true })).toEqual({ persona: 'parent', resolved: false });
-  });
-
-  it('while /parent is still the demo, the console home is the home of a Family-only account too', () => {
-    expect(activePersona({ area: { kind: 'home', persona: 'teacher' }, spaces: [family], last: null, live: false })).toEqual({ persona: 'parent', resolved: true });
-    expect(activePersona({ area: { kind: 'home', persona: 'teacher' }, spaces: both, last: 'parent', live: false })).toEqual({ persona: 'teacher', resolved: true });
+    expect(activePersona({ area: { kind: 'other' }, spaces: both, last: 'teacher' })).toEqual({ persona: 'teacher', resolved: true });
+    expect(activePersona({ area: { kind: 'other' }, spaces: [klass], last: 'parent' })).toEqual({ persona: 'teacher', resolved: true });
+    expect(activePersona({ area: { kind: 'other' }, spaces: null, last: null })).toEqual({ persona: 'parent', resolved: false });
   });
 });
 
 describe('showPersonaSwitch', () => {
-  it('shows the switch only to an account that holds both personas, once each has its own home', () => {
-    expect(showPersonaSwitch(['parent', 'teacher'], true)).toBe(true);
-    expect(showPersonaSwitch(['teacher'], true)).toBe(false);
-    expect(showPersonaSwitch(['parent'], true)).toBe(false);
-    expect(showPersonaSwitch(['parent', 'teacher'], false)).toBe(false);
+  it('shows the switch only to an account that holds both personas', () => {
+    expect(showPersonaSwitch(['parent', 'teacher'])).toBe(true);
+    expect(showPersonaSwitch(['teacher'])).toBe(false);
+    expect(showPersonaSwitch(['parent'])).toBe(false);
+    expect(showPersonaSwitch([])).toBe(false);
   });
 });
 
 describe('homeToRecord', () => {
   it('records the persona of a home that renders with that persona held (section 3.5)', () => {
     expect(homeToRecord({ kind: 'home', persona: 'teacher' }, { persona: 'teacher', resolved: true }, ['teacher'])).toBe('teacher');
-    expect(homeToRecord({ kind: 'home', persona: 'parent' }, { persona: 'parent', resolved: true }, ['parent', 'teacher'], true)).toBe('parent');
+    expect(homeToRecord({ kind: 'home', persona: 'parent' }, { persona: 'parent', resolved: true }, ['parent', 'teacher'])).toBe('parent');
   });
 
-  it('while /parent is still the demo, the console home records Family for a Family-only account; once live it does not', () => {
-    expect(homeToRecord({ kind: 'home', persona: 'teacher' }, { persona: 'parent', resolved: true }, ['parent'], false)).toBe('parent');
-    expect(homeToRecord({ kind: 'home', persona: 'teacher' }, { persona: 'parent', resolved: true }, ['parent'], true)).toBeNull();
+  it('the no-class state of a Family-only account (nav of Family on the teacher home) records nothing', () => {
+    expect(homeToRecord({ kind: 'home', persona: 'teacher' }, { persona: 'parent', resolved: true }, ['parent'])).toBeNull();
   });
 
   it('records nothing on a home the account does not hold, on space pages, other pages, or before the spaces load', () => {

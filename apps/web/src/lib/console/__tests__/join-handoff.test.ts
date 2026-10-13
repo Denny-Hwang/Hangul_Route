@@ -1,0 +1,64 @@
+import { JOIN_HANDOFF_KEY, JoinHandoffSchema, UNLOCK_SESSION_KEY, CONSOLE_SESSION_KEY } from '@hangul-route/content-schema';
+import { describe, expect, it } from 'vitest';
+import type { KeyValueStorage } from '../../i18n/safe-storage';
+import { openAppWithJoinCode, writeJoinHandoff } from '../join-handoff';
+
+/**
+ * F-APP-001 A-5b, section 3.8: "Open the app on this device" hands the family join code to the learner
+ * app in this tab (`hr:shell:joinCode` = `{ v: 1, code, at }`, no name, no space id), clears the unlock
+ * and the console session like Back to learning, and opens the learner app.
+ */
+function memory(): KeyValueStorage & { data: Map<string, string> } {
+  const data = new Map<string, string>();
+  return { data, getItem: (k) => data.get(k) ?? null, setItem: (k, v) => void data.set(k, v), removeItem: (k) => void data.delete(k) };
+}
+
+const throwing: KeyValueStorage = {
+  getItem: () => {
+    throw new Error('blocked');
+  },
+  setItem: () => {
+    throw new Error('blocked');
+  },
+  removeItem: () => {
+    throw new Error('blocked');
+  },
+};
+
+describe('writeJoinHandoff', () => {
+  it('writes the code and the time only, in the shape the learner app reads', () => {
+    const store = memory();
+    expect(writeJoinHandoff('K7MPQ4', 1_000, store)).toBe(true);
+    const raw = store.data.get(JOIN_HANDOFF_KEY);
+    expect(JSON.parse(raw ?? 'null')).toEqual({ v: 1, code: 'K7MPQ4', at: 1_000 });
+    expect(JoinHandoffSchema.safeParse(JSON.parse(raw ?? 'null')).success).toBe(true);
+  });
+
+  it('refuses a value that is not a join code, and survives blocked storage', () => {
+    const store = memory();
+    expect(writeJoinHandoff('Kim family', 1, store)).toBe(false);
+    expect(store.data.size).toBe(0);
+    expect(writeJoinHandoff('K7MPQ4', 1, throwing)).toBe(false);
+    expect(writeJoinHandoff('K7MPQ4', 1, null)).toBe(false);
+  });
+});
+
+describe('openAppWithJoinCode', () => {
+  it('writes the hand-off, clears the unlock and the console session, then opens the learner app', () => {
+    const store = memory();
+    store.data.set(UNLOCK_SESSION_KEY, '{}');
+    store.data.set(CONSOLE_SESSION_KEY, '{}');
+    const opened: string[] = [];
+    openAppWithJoinCode({ code: 'K7MPQ4', now: 5, origin: 'https://app.hangulroute.com', storage: store, assign: (url) => opened.push(url) });
+    expect(JSON.parse(store.data.get(JOIN_HANDOFF_KEY) ?? 'null')).toEqual({ v: 1, code: 'K7MPQ4', at: 5 });
+    expect(store.data.has(UNLOCK_SESSION_KEY)).toBe(false);
+    expect(store.data.has(CONSOLE_SESSION_KEY)).toBe(false);
+    expect(opened).toEqual(['/']);
+  });
+
+  it('from the site origin (before F-SITE-002 S-10) opens the app host', () => {
+    const opened: string[] = [];
+    openAppWithJoinCode({ code: 'K7MPQ4', now: 5, origin: 'https://hangulroute.com', storage: memory(), assign: (url) => opened.push(url) });
+    expect(opened).toEqual(['https://app.hangulroute.com/']);
+  });
+});

@@ -328,19 +328,16 @@ describe('routerDestination: one location.replace after sign-in (sections 3.5, 3
     expect(routerDestination({ next: null, personas: ['teacher'], last: null, hint: null })).toBe('/teach/home');
   });
 
-  // The /parent page is the demo on mock data until A-5b replaces it with the real family home, so the
-  // Family persona's home is the existing console home (which lists Family spaces) until then.
-  it('the Family home is /teach/home until A-5b ships the real /parent', () => {
-    expect(routerDestination({ next: null, personas: ['parent', 'teacher'], last: null, hint: null })).toBe('/teach/home');
-    expect(routerDestination({ next: null, personas: ['teacher'], last: null, hint: 'parent' })).toBe('/teach/home');
-    expect(routerDestination({ next: null, personas: ['parent'], last: 'parent', hint: null })).toBe('/teach/home');
+  // F-APP-001 A-5b: /parent is the real family home, so the Family persona lands there.
+  it('the Family home is /parent: both personas with no last (OD-11), an unheld hint (behaviour 24), the last persona', () => {
+    expect(routerDestination({ next: null, personas: ['parent', 'teacher'], last: null, hint: null })).toBe('/parent');
+    expect(routerDestination({ next: null, personas: ['teacher'], last: null, hint: 'parent' })).toBe('/parent');
+    expect(routerDestination({ next: null, personas: ['parent'], last: 'parent', hint: null })).toBe('/parent');
   });
 
-  // A-5b removes this: until then a next into the /parent demo (mock data) never takes a real account there.
-  it('a next into the /parent demo falls back to the home until A-5b', () => {
-    expect(routerDestination({ next: '/parent', personas: ['parent'], last: null, hint: null })).toBe('/teach/home');
-    expect(routerDestination({ next: '/parent/child-1', personas: ['parent'], last: null, hint: null })).toBe('/teach/home');
-    expect(routerDestination({ next: '/parent?tab=week', personas: ['teacher'], last: null, hint: null })).toBe('/teach/home');
+  it('a next into a family page is followed like any other grown-up page', () => {
+    expect(routerDestination({ next: '/parent', personas: ['parent'], last: null, hint: null })).toBe('/parent');
+    expect(routerDestination({ next: '/parent/space?id=sp_f', personas: ['parent'], last: null, hint: null })).toBe('/parent/space?id=sp_f');
   });
 });
 
@@ -549,7 +546,7 @@ describe('resolveDestination: spaces, then the last persona, then routerDestinat
       listSpaces: spaces({ ok: true, data: [{ space: { kind: 'family' }, role: 'owner' }, { space: { kind: 'class' }, role: 'owner' }] }),
       readLastPersona: () => Promise.reject(new Error('blocked')),
     };
-    // Both personas, no last: Family first (OD-11), which is /teach/home until A-5b.
+    // A hint wins over Family first (OD-11).
     expect(await resolveDestination(io, { next: null, hint: 'teacher' })).toBe('/teach/home');
   });
 });

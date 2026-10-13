@@ -9,7 +9,7 @@ import { Button, Muted, Notice, buttonBase, panelStyle } from '@/components/cons
 import { useConsole } from '@/components/console/use-console';
 import type { SpaceListItem } from '@/lib/console/api';
 import { browseEntryShown, reportsEnabled, notesEnabled } from '@/lib/console/config';
-import { FAMILY_HOME_LIVE, personaHome } from '@/lib/console/personas';
+import { personaHome } from '@/lib/console/personas';
 import { ROUTES, statusLine } from '@/lib/console/routing';
 import { writeLastPersona } from '@/lib/console/shell-store';
 import { BROWSE_PATH } from '@/lib/console/shell-nav';
@@ -76,11 +76,11 @@ export default function HomePage(): JSX.Element {
   if (!ready || !session) return <AdultFrame spaces={frameSpaces}>{null}</AdultFrame>;
   const c = m.console;
   const flags = { reports: reportsEnabled(locale), notes: notesEnabled() };
-  const view = items ? teacherHomeView(items, FAMILY_HOME_LIVE) : null;
+  const view = items ? teacherHomeView(items) : null;
 
   const toFamily = (): void => {
     void writeLastPersona('parent');
-    router.push(personaHome('parent', FAMILY_HOME_LIVE));
+    router.push(personaHome('parent'));
   };
   const lessons = browseEntryShown(typeof window === 'undefined' ? '' : window.location.origin);
 
@@ -109,22 +109,15 @@ export default function HomePage(): JSX.Element {
             </p>
             <p style={{ margin: 0, color: colors.text.secondary, fontSize: typography.size.bodySm }}>{statusLine(item, locale)}</p>
           </div>
-          <div style={{ display: 'flex', gap: spacing.sm, flexWrap: 'wrap' }}>
-            {item.space.kind === 'family' && !archived ? (
-              <Link href={ROUTES.spaceCurriculum(item.space.id)} style={smallButton}>
-                {c.curriculum.entries.planTerm.cta}
-              </Link>
-            ) : null}
-            <Link href={ROUTES.space(item.space.id)} style={smallButton}>
-              {c.home.open.cta}
-            </Link>
-          </div>
+          <Link href={ROUTES.space(item.space.id, item.space.kind)} style={smallButton}>
+            {c.home.open.cta}
+          </Link>
         </div>
         {links.length > 0 ? (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.sm, paddingTop: spacing.sm, borderTop: `${borderWidth.thin}px solid ${colors.border.subtle}` }}>
             {links.map((link) =>
               link === 'classReport' ? (
-                <Link key={link} href={ROUTES.classReport({ spaceId: item.space.id })} style={smallButton} data-testid={`class-report-${item.space.id}`}>
+                <Link key={link} href={ROUTES.classReport({ spaceId: item.space.id, kind: item.space.kind })} style={smallButton} data-testid={`class-report-${item.space.id}`}>
                   {c.home.classReport}
                 </Link>
               ) : (
@@ -182,7 +175,7 @@ export default function HomePage(): JSX.Element {
               {c.home.noClass.setUp}
             </Link>
             {view.goFamily ? (
-              <Link href={personaHome('parent', FAMILY_HOME_LIVE)} style={smallButton} data-testid="no-class-go-family">
+              <Link href={personaHome('parent')} style={smallButton} data-testid="no-class-go-family">
                 {c.home.noClass.goFamily}
               </Link>
             ) : null}
@@ -199,7 +192,6 @@ export default function HomePage(): JSX.Element {
             </Link>
           </div>
           {view.classRows.length > 0 ? <div style={rowsStyle}>{view.classRows.map(row)}</div> : null}
-          {group('home-family', c.kind.group.family, view.familyRows)}
           {group('home-school', c.kind.group.school, view.schoolRows)}
           {lessons ? (
             <a href={BROWSE_PATH} style={{ ...smallButton, alignSelf: 'flex-start' }} data-testid="home-lessons">

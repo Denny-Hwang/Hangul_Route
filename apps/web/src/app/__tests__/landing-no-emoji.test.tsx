@@ -16,13 +16,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MiniGamesGallery } from '@/components/landing/MiniGamesGallery';
 import { minigameCatalog } from '@/data/minigame-catalog';
-import { mockFamily } from '@/data/mock-family';
 import { siteLocaleParams } from '@/lib/site-locales';
 // The pages are imported here, once, not inside each test: a page load pulls in the whole landing graph (i18n
 // dictionaries, content schema, design-system art), and inside a test body it counted against the 5 s test
 // timeout, which a busy CI runner exceeded. Imported at the top, they load while the file is collected.
-import * as childPage from '../(console)/parent/[childId]/page';
-import * as parentPage from '../(console)/parent/page';
 import * as enAboutPage from '../(en)/about/page';
 import * as enLandingPage from '../(en)/page';
 import * as enPrivacyPage from '../(en)/privacy/page';
@@ -36,9 +33,9 @@ import * as locLearnersPage from '../(loc)/[locale]/learners/page';
 
 /**
  * No emoji in rendered output (CLAUDE.md): the public site (landing, About, Privacy, Terms, in English
- * and under every site locale such as /es and /ko, and the /parent demo dashboard the landing links to)
- * draws Hoya and the mini-game marks with design-system art, says "no red X marks" in words, and labels
- * the demo cards with their Korean word.
+ * and under every site locale such as /es and /ko) draws Hoya and the mini-game marks with design-system
+ * art and says "no red X marks" in words. The family home source (`app/(console)/parent/page.tsx`, F-APP-001
+ * A-5b) is scanned too; the `/parent` demo left with A-5b (OD-4).
  *
  * Any Extended_Pictographic code point or the emoji variation selector U+FE0F fails. The plain
  * text symbols the site uses on purpose (©, ®, ™ in the footer and legal text) are allowed;
@@ -74,8 +71,6 @@ const SOURCES = [
   'data/contact.ts',
   'app/(console)/layout.tsx',
   'app/(console)/parent/page.tsx',
-  'app/(console)/parent/[childId]/page.tsx',
-  'data/mock-family.ts',
 ];
 
 /** A page module, typed by the params its route gives it. */
@@ -115,16 +110,9 @@ const LOCALE_PAGES: ReadonlyArray<readonly [string, () => string]> = siteLocaleP
   [`${locale}/learners`, at(locLearnersPage, { locale })] as const,
 ]);
 
-/** The /parent demo dashboard (English-only sample data), one click from the landing nav; statically exported per child. */
-const PARENT_PAGES: ReadonlyArray<readonly [string, () => string]> = [
-  ['parent', at(parentPage, {})],
-  ...mockFamily().profiles.map((p) => [`parent/${p.slug}`, at(childPage, { childId: p.slug })] as const),
-];
-
 const PAGES: ReadonlyArray<readonly [string, () => string]> = [
   ...SITE_PAGES.map(([name, page]) => [name, at(page, {})] as const),
   ...LOCALE_PAGES,
-  ...PARENT_PAGES,
 ];
 
 const found = (text: string): string[] => [...text.matchAll(EMOJI)].map((m) => `U+${m[0].codePointAt(0)!.toString(16).toUpperCase()}`);
@@ -152,7 +140,7 @@ describe('landing sources carry no emoji code point', () => {
   }
 });
 
-describe('site pages render no emoji (en, every site locale, /parent)', () => {
+describe('site pages render no emoji (en, every site locale)', () => {
   it('covers /es and /ko', () => {
     expect(LOCALE_PAGES.map(([name]) => name)).toEqual(expect.arrayContaining(['es', 'ko', 'es/about', 'ko/terms']));
   });
@@ -181,16 +169,6 @@ describe('the art that replaced the emoji is drawn', () => {
   it('mini-games gallery: one design-system icon per game', () => {
     const html = renderToStaticMarkup(<MiniGamesGallery />);
     expect(html.match(/viewBox="0 0 24 24"/g) ?? []).toHaveLength(minigameCatalog.length);
-  });
-
-  it('parent demo cards: each shows its Korean word with its romanization', () => {
-    for (const profile of mockFamily().profiles) {
-      const html = render(childPage, { childId: profile.slug });
-      for (const card of profile.recentCards) {
-        expect(html, card.title).toContain(card.ko);
-        expect(html, card.title).toContain(card.romanization);
-      }
-    }
   });
 });
 

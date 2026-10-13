@@ -29,50 +29,35 @@ const school = item('sp_s', 'school', 'admin');
 
 const ids = (rows: SpaceListItem[]): string[] => rows.map((row) => row.space.id);
 
-describe('teacherHomeView, family home live (A-5b on)', () => {
+describe('teacherHomeView', () => {
   it('lists classes (most recent first, archived last) and schools, and drops the Family group', () => {
-    const view = teacherHomeView([family, classA, archived, classB, school], true);
+    const view = teacherHomeView([family, classA, archived, classB, school]);
     expect(view.state).toBe('list');
     expect(ids(view.classRows)).toEqual(['sp_b', 'sp_a', 'sp_old']);
     expect(ids(view.schoolRows)).toEqual(['sp_s']);
-    expect(view.familyRows).toEqual([]);
+    expect(JSON.stringify(view)).not.toContain('sp_f');
     expect(view.newClassPrimary).toBe(false);
   });
 
   it('cross-links: set up a family without the Family persona; switch to Family with it', () => {
-    expect(teacherHomeView([classA], true).cross).toBe('addFamily');
-    expect(teacherHomeView([classA, family], true).cross).toBe('toFamily');
+    expect(teacherHomeView([classA]).cross).toBe('addFamily');
+    expect(teacherHomeView([classA, family]).cross).toBe('toFamily');
   });
 
   it('no class yet: a Family-only account gets the no-class state with Go to Family', () => {
-    const view = teacherHomeView([family], true);
+    const view = teacherHomeView([family]);
     expect(view).toMatchObject({ state: 'noClass', goFamily: true, cross: null, classRows: [], schoolRows: [] });
   });
 
   it('no space at all: the no-class state, no Go to Family, the cross-link to set up a family', () => {
-    expect(teacherHomeView([], true)).toMatchObject({ state: 'noClass', goFamily: false, cross: 'addFamily' });
+    expect(teacherHomeView([])).toMatchObject({ state: 'noClass', goFamily: false, cross: 'addFamily' });
   });
 
   it('teacher persona only through archived spaces: the archived rows, + New class as the primary action', () => {
-    const view = teacherHomeView([archived], true);
+    const view = teacherHomeView([archived]);
     expect(view.state).toBe('list');
     expect(ids(view.classRows)).toEqual(['sp_old']);
     expect(view.newClassPrimary).toBe(true);
-  });
-});
-
-describe('teacherHomeView while /parent is still the demo', () => {
-  it('keeps the Family group, so a family account still reaches its spaces, and shows no switch link', () => {
-    const view = teacherHomeView([family, classA]);
-    expect(ids(view.familyRows)).toEqual(['sp_f']);
-    expect(view.cross).toBeNull();
-    const familyOnly = teacherHomeView([family], false);
-    expect(familyOnly.state).toBe('list');
-    expect(ids(familyOnly.familyRows)).toEqual(['sp_f']);
-  });
-
-  it('still offers to set up a family to an account without one', () => {
-    expect(teacherHomeView([classA], false).cross).toBe('addFamily');
   });
 });
 

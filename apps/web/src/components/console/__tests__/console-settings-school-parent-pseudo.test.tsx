@@ -1,24 +1,18 @@
-import { levelLabel } from '@hangul-route/content-schema';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { SchoolAdminView } from '@/components/console/SchoolAdmin';
 import { SettingsSections, type SettingsSectionsProps } from '@/components/console/SettingsParts';
 import { LoadErrorPanel } from '@/components/console/ui';
-import { mockFamily } from '@/data/mock-family';
-import { LocaleProvider } from '@/lib/i18n/locale-context';
 import type { EntitlementView, MemberView, Roster, SchoolView } from '@/lib/console/api';
 import { expectAllPseudo, wordsOf } from './pseudo-text';
 // The pages are imported here, once, not inside each test: a page load counted against the 5 s test timeout on a
 // busy CI runner. The mocks above are hoisted above these imports, and the pages read the env flags when they render.
-import * as parentChildPage from '@/app/(console)/parent/[childId]/page';
-import * as parentLayout from '@/app/(console)/parent/layout';
-import * as parentPage from '@/app/(console)/parent/page';
 import * as settingsPage from '@/app/(console)/teach/space/settings/page';
 
 /**
- * F-I18N-001 PR 10c, §3.11: the space settings page, the school admin view and the /parent demo
- * take every word from the dictionary. Rendered in the pseudo-locale (en-XA), every text node and
+ * F-I18N-001 PR 10c, §3.11: the space settings page and the school admin view (the /parent demo left
+ * with F-APP-001 A-5b) take every word from the dictionary. Rendered in the pseudo-locale (en-XA), every text node and
  * every labelled attribute is bracketed pseudo text once the data is removed; an English literal
  * left in a part would show up unbracketed. Effects do not run in a server render, so the loaded
  * states render the parts (`SettingsSections`, `SchoolAdminView`) with data.
@@ -200,44 +194,6 @@ describe('school admin renders only dictionary text (en-XA)', () => {
   it('an empty, unlicensed school with no code, and a lapsed licence', () => {
     expectAllPseudo(schoolView({ view: school({ classes: [], license: null, limits: { licensed: false, students: null, teachers: null }, invite: { joinCode: null, joinCodeExpiresAt: null } }), members: [member({})] }), schoolData);
     expectAllPseudo(schoolView({ view: school({ license: license({ status: 'past_due', active: false }), usage: { students: 300, teachers: 4 } }) }), schoolData);
-  });
-});
-
-describe('/parent demo renders only dictionary text (en-XA)', () => {
-  const family = mockFamily();
-  // The demo family is sample data: names, level labels (content-schema), quest titles, times, day letters, cards.
-  const demoData = family.profiles.flatMap((p) => [
-    p.displayName,
-    levelLabel(p.ageGroup) ?? '',
-    ...p.recentQuests.flatMap((q) => [q.title, q.completedAt]),
-    ...p.weekly.map((w) => w.day),
-    ...p.recentCards.flatMap((card) => [card.title, card.romanization, card.ko]),
-  ]).filter((d) => d.length > 1)
-    // Longest first, so a card gloss inside a quest title ("Kite") does not cut the title apart.
-    .sort((a, b) => b.length - a.length);
-
-  it('the family dashboard', () => {
-    const Page = parentPage.default;
-    const html = renderToStaticMarkup(<Page />);
-    expect(html).toContain(`href="/parent/${family.profiles[0]!.slug}"`);
-    expectAllPseudo(html, demoData);
-  });
-
-  it('each child page', () => {
-    const Page = parentChildPage.default;
-    for (const p of family.profiles) {
-      // Day letters are one-letter sample data: drop them from the text nodes before the check.
-      const html = renderToStaticMarkup(<Page params={{ childId: p.slug }} />).replace(/>[A-Z]<\/span>/g, '></span>');
-      expectAllPseudo(html, demoData);
-    }
-  });
-
-  it('the layout wraps the demo in the console locale provider', () => {
-    const child = <p>x</p>;
-    const el = parentLayout.default({ children: child });
-    // The element itself, not its markup: a provider renders nothing of its own, so markup alone would pass without one.
-    expect(el.type).toBe(LocaleProvider);
-    expect((el.props as { children: unknown }).children).toBe(child);
   });
 });
 

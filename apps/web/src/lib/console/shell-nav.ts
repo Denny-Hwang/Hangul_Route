@@ -2,7 +2,7 @@ import { APP_ROUTES, type AdultPersona } from '@hangul-route/content-schema';
 import type { Messages, UiLocale } from '@hangul-route/i18n';
 import type { SpaceListItem } from './api';
 import { browseEntryShown, buildEnv, notesEnabled, reportsEnabled, type ConsoleEnv } from './config';
-import { FAMILY_HOME_LIVE, personaHome } from './personas';
+import { personaHome } from './personas';
 import { ROUTES } from './routing';
 
 /**
@@ -41,8 +41,6 @@ export interface NavContext {
   spaces: readonly SpaceListItem[];
   soloLearner: SoloLearner | null;
   flags: NavFlags;
-  /** Whether `/parent` is the real family home yet (`FAMILY_HOME_LIVE`). */
-  live: boolean;
 }
 
 export interface AdultNavItem {
@@ -64,7 +62,7 @@ export function soloFamilyLearnerSpace(spaces: readonly SpaceListItem[]): string
   return families.length === 1 && families[0]?.counts.learners === 1 ? families[0].space.id : null;
 }
 
-const familyHome = (ctx: NavContext): NavTarget => ({ href: personaHome('parent', ctx.live) });
+const familyHome = (): NavTarget => ({ href: personaHome('parent') });
 
 export const ADULT_NAV: readonly AdultNavItem[] = [
   { id: 'home', persona: 'parent', labelKey: 'home', target: familyHome, enabled: () => true },
@@ -73,7 +71,7 @@ export const ADULT_NAV: readonly AdultNavItem[] = [
     persona: 'parent',
     labelKey: 'reports',
     target: (ctx) =>
-      ctx.soloLearner ? { href: ROUTES.learnerReport({ spaceId: ctx.soloLearner.spaceId, learnerId: ctx.soloLearner.learnerId, kind: 'family', from: 'nav' }) } : familyHome(ctx),
+      ctx.soloLearner ? { href: ROUTES.learnerReport({ spaceId: ctx.soloLearner.spaceId, learnerId: ctx.soloLearner.learnerId, kind: 'family', from: 'nav' }) } : familyHome(),
     enabled: (ctx) => ctx.flags.reports,
   },
   {
@@ -82,7 +80,7 @@ export const ADULT_NAV: readonly AdultNavItem[] = [
     labelKey: 'notes',
     target: (ctx) => {
       const families = ownFamilySpaces(ctx.spaces);
-      return families.length === 1 && families[0] ? { href: ROUTES.spaceNotes(families[0].space.id, 'family') } : familyHome(ctx);
+      return families.length === 1 && families[0] ? { href: ROUTES.spaceNotes(families[0].space.id, 'family') } : familyHome();
     },
     enabled: (ctx) => ctx.flags.notes,
   },
@@ -128,14 +126,14 @@ const TEACHER_HOME_PAGE = /^\/teach\/home(?:\/|\.html)?$/;
  * the persona's home item only when it links to this very home: on a home the account does not
  * hold (the "not set up yet" states), the nav keeps the other persona's items and none is current.
  */
-export function currentNavItem(pathname: string, persona: AdultPersona, resolved: boolean, live: boolean = FAMILY_HOME_LIVE): NavId | null {
+export function currentNavItem(pathname: string, persona: AdultPersona, resolved: boolean): NavId | null {
   if (BILLING_PAGE.test(pathname)) return 'billing';
   if (!resolved) return null;
   if (persona === 'parent' && REPORT_PAGE.test(pathname)) return 'reports';
   if (persona === 'parent' && NOTES_PAGE.test(pathname)) return 'notes';
   const homeItem: NavId = persona === 'parent' ? 'home' : 'classes';
   const pageHome = PARENT_HOME_PAGE.test(pathname) ? APP_ROUTES.parentHome : TEACHER_HOME_PAGE.test(pathname) ? APP_ROUTES.teacherHome : null;
-  if (pageHome) return personaHome(persona, live) === pageHome ? homeItem : null;
+  if (pageHome) return personaHome(persona) === pageHome ? homeItem : null;
   if (SPACE_PAGE.test(pathname)) return homeItem;
   return null;
 }
