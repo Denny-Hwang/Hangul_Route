@@ -425,4 +425,31 @@ describe('myRouteView: the route card, the weekly plan line and the plan cells (
     const none = view({ ...model(APPENDIX_C), goal: null });
     expect(none.trail.flatMap((r) => (r.kind === 'stage' ? r.tags : [])).some((t) => t.glyph === 'flag')).toBe(false);
   });
+
+  it('a goal stage with no shipped content keeps its own compact row with the goal tag (section 4.3, collapsed goal row)', () => {
+    const goal6 = { ...model(APPENDIX_C), goal: { stage: 'stage6' as const, from: 'class' as const, sourceId: 'plan:c', endsOn: '2026-11-01', reached: false, taste: false } };
+    const later = laterRows(view(goal6));
+    expect(later.map((r) => [r.key, r.merged])).toEqual([
+      ['later:stage3', false],
+      ['later:stage5', false],
+      ['later:stage6', false],
+      ['later:stage7', false],
+    ]);
+    const s6 = later.find((r) => r.stage === 'stage6');
+    expect(s6?.tags).toEqual([{ label: 'Your goal', glyph: 'flag' }]);
+    expect(s6?.a11yLabel).toContain('Your goal.');
+    expect(later.filter((r) => r.stage !== 'stage6').every((r) => r.tags.length === 0)).toBe(true);
+    const g = laterRows(view(goal6, { viewer: 'grownup' })).find((r) => r.stage === 'stage6');
+    expect(g?.tags).toEqual([{ label: "Sam's goal", glyph: 'flag' }]);
+    expect(g?.a11yLabel).toContain("Sam's goal.");
+    // Without a goal there, Stages 5 to 7 stay one merged row with no tag.
+    const run = laterRows(view(model(APPENDIX_C))).find((r) => r.merged);
+    expect(run).toMatchObject({ key: 'later:stage5-stage6-stage7', tags: [] });
+  });
+
+  it('a cell in the plan reads "In your plan" through the dictionary', () => {
+    const planned = view({ ...model(APPENDIX_C), inPlanEpisodeIds: ['episode:stage1-life'] });
+    const cell = stageRow(planned, 'stage1').cells.find((c) => c.inPlan !== null);
+    expect(cell?.a11yLabel).toBe(EN.a11y.myRoute.cellInPlan(EN.a11y.myRoute.cell(cell?.themeLabel ?? '', cell?.title ?? '', cell?.word ?? ''), 'In your plan'));
+  });
 });

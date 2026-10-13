@@ -287,7 +287,12 @@ export function trailEntries(model: Pick<MyRouteModel, 'stages'>, ctx: CopyConte
     run = [];
   };
   for (const row of model.stages) {
-    if (row.state === 'later' && !isNotOpenYet(row)) run.push(row);
+    if (row.state === 'later' && !isNotOpenYet(row) && isGoalRow(row, ctx)) {
+      // The goal stage never hides inside a merged run: its own compact row keeps the goal tag (section 4.3).
+      flush();
+      run = [row];
+      flush();
+    } else if (row.state === 'later' && !isNotOpenYet(row)) run.push(row);
     else {
       flush();
       out.push({ kind: 'stage', row });

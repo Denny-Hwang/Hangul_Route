@@ -275,6 +275,8 @@ describe('the Route tab (LR-4)', () => {
     // The read scheduling and the view gate are the pure seenReadAfter / seenForView (focus.ts, unit-tested).
     expect(screen).toContain('seenReadAfter(pendingWrite.current, () => readSeen(STORAGE, profileId), () => live)');
     expect(screen).toContain('pendingWrite.current = writeSeen(');
+    // The write carries the record this open read, so goalsReached survives every later focus (LR-3b, LR-5c).
+    expect(screen).toContain('seenFrom(model, new Date(), seenRead)');
     expect(screen).toContain('seenForView({ focusKey, seenFor, focused, seen: seenRead })');
     expect(screen).toMatch(/return \(\) => \{\s*setFocused\(false\);/);
     // Screen-reader focus lands on the route card's summary on every focus, not only on mount (amendment section 10).

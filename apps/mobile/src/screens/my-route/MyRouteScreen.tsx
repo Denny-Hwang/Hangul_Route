@@ -234,9 +234,10 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
     }
     if (fx.writeSeen) {
       seenWrittenFor.current = focusKey;
-      pendingWrite.current = writeSeen(STORAGE, profileId, seenFrom(model, new Date()), { readOnly });
+      // The record this open read is passed on, so the goals already reached (LR-3b) are kept.
+      pendingWrite.current = writeSeen(STORAGE, profileId, seenFrom(model, new Date(), seenRead), { readOnly });
     }
-  }, [model, focusKey, seenFor, profileId, readOnly]);
+  }, [model, focusKey, seenFor, profileId, readOnly, seenRead]);
 
   // One row open at a time; the `here` stage is open on first view.
   const [openKey, setOpenKey] = useState<string | null | undefined>(undefined);

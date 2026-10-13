@@ -121,6 +121,8 @@ function laterRowView(rows: readonly StageRow[], label: string, ctx: CopyContext
     title: merged ? label : first.title,
     stateWord,
     a11yLabel: merged ? i.messages.a11y.myRoute.later(label, stateWord) : stageA11yLabel(first, ctx),
+    // A catalogue, not one learner's route: no tags, as on its stage rows.
+    tags: [],
     details: rows.map((r) => ({ stage: r.stage, order: r.order, title: r.title, canDo: m.stage.canDo[r.order], builds: buildsOf(r.builds, m) })),
     note: m.laterNote,
     connector: null,

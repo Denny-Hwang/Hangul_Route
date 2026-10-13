@@ -346,6 +346,9 @@ export function LaterRowItem({ row, open, onToggle }: LaterRowItemProps): React.
             {row.title}
           </Body>
           <Pill label={row.stateWord} tone="neutral" size="sm" />
+          {row.tags.map((tag) => (
+            <TagChip key={tag.label} tag={tag} />
+          ))}
         </View>
       </Pressable>
       {open ? (

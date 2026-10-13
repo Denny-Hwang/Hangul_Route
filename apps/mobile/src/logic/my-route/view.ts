@@ -119,6 +119,11 @@ export interface LaterRowView {
   title: string;
   stateWord: string;
   a11yLabel: string;
+  /**
+   * The trail tags of a single-stage row (amendment section 4.3, "Collapsed goal row": a goal stage
+   * with no shipped content keeps its "Your goal" tag); a merged run never holds the goal, so it has none.
+   */
+  tags: TagView[];
   /** Shown when the row is open: one line per stage, with its can-do line and what it builds. */
   details: { stage: StageKey; order: number; title: string; canDo: string; builds: { skill: Skill; label: string; icon: RouteIcon }[] }[];
   note: string;
@@ -289,7 +294,7 @@ function stageRowView(row: StageRow, ctx: CopyContext, i: MyRouteViewInput, fres
         // A grown-up never opens an episode from here: EpisodeDetail plays as the device's active learner (amendment 5.1, 6.2).
         episodeId: cell.state === 'later' || ctx.viewer === 'grownup' ? null : cell.episodeId,
         inPlan: planTag,
-        a11yLabel: planTag === null ? label : `${label} ${planTag}.`,
+        a11yLabel: planTag === null ? label : i.messages.a11y.myRoute.cellInPlan(label, planTag),
       };
     }),
     fresh: [...row.pips, ...row.newPips].some((p) => fresh.has(p.key)),
@@ -312,6 +317,7 @@ function laterRowView(rows: readonly StageRow[], label: string, ctx: CopyContext
     title: merged ? label : first.title,
     stateWord,
     a11yLabel: merged ? i.messages.a11y.myRoute.later(label, stateWord) : stageA11yLabel(first, ctx),
+    tags: merged ? [] : stageTagList(first, ctx).map((tag) => ({ label: tag.label, glyph: TAG_GLYPH[tag.kind] })),
     details: rows.map((r) => ({ stage: r.stage, order: r.order, title: r.title, canDo: m.stage.canDo[r.order], builds: buildsOf(r.builds, m) })),
     note: m.laterNote,
     connector: null,
