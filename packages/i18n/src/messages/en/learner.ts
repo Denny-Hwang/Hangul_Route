@@ -1032,6 +1032,12 @@ export const learner = {
         usePlan: 'Use this plan',
         change: 'Change',
         justStart: 'Just start',
+        /** The plan in words under the title (J1): its length, days a week and minutes. */
+        basis: (length: string, days: number, minutes: number) =>
+          plural('en', days, {
+            one: `${length}, 1 day a week, about ${minutes} minutes a day`,
+            other: `${length}, ${days} days a week, about ${minutes} minutes a day`,
+          }),
       },
     },
     homeCard: {

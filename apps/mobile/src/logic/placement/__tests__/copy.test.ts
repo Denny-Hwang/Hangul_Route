@@ -4,6 +4,7 @@ import {
   AGE_WORDS,
   PLACEMENT_DIGIT_ALLOW_LIST,
   PLACEMENT_FUNCTION_SAMPLES,
+  PLAN_DIGIT_ALLOW_LIST,
   SCREEN_READER_DIGIT_ALLOW_LIST,
   SUCCESS_WORDS,
   bandLabel,
@@ -46,7 +47,11 @@ describe('placement copy scan (F-PLC-001 section 3.12)', () => {
     expect(entries).toContainEqual(['learner.placement.item.questionLabel', 'Question, 1 choice']);
     expect(entries).toContainEqual(['learner.placement.item.pictureChoice', 'Picture 2']);
     expect([...SCREEN_READER_DIGIT_ALLOW_LIST]).toEqual(['learner.placement.item.questionLabel', 'learner.placement.item.pictureChoice']);
-    expect(Object.keys(PLACEMENT_FUNCTION_SAMPLES).sort()).toEqual([...SCREEN_READER_DIGIT_ALLOW_LIST].sort());
+    expect(Object.keys(PLACEMENT_FUNCTION_SAMPLES).sort()).toEqual([...SCREEN_READER_DIGIT_ALLOW_LIST, ...PLAN_DIGIT_ALLOW_LIST].sort());
+    // The plan line (P-7b) is a schedule: its digits are allowed, every other rule still applies.
+    expect(entries).toContainEqual(['learner.placement.result.strip.basis', '4 weeks, 3 days a week, about 15 minutes a day']);
+    expect(copyProblems(en, 'en', [['learner.placement.result.strip.basis', '2 weeks, 4 days a week']])).toEqual([]);
+    expect(copyProblems(en, 'en', [['learner.placement.result.strip.basis', '50%']])).toEqual(['learner.placement.result.strip.basis: percent']);
     // Everything else is still scanned on those lines.
     expect(copyProblems(en, 'en', [['learner.placement.item.questionLabel', 'You failed 2']])).toEqual([
       'learner.placement.item.questionLabel: banned word failed',
