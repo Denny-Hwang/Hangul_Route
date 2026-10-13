@@ -47,19 +47,20 @@ describe('learner.access (F-ENT-003 E3-6)', () => {
       readStory: { cta: 'Read a story' },
       replay: { cta: 'Play a favorite again' },
       home: { cta: 'Back home' },
-      practice: { subtitle: 'Keep practicing' },
+      practice: { subtitle: 'Keep practicing', topicTitle: expect.any(Function) },
     });
+    expect(getMessages('en').learner.access.practice.topicTitle('Food')).toBe('Food words');
   });
 
   for (const locale of LOCALES) {
     it(`${locale}: every value is a line with no banned word, digit or emoji`, () => {
       const tree = getMessages(locale).learner.access;
       const paths = leafPaths(tree);
-      expect(paths.length).toBe(13);
+      expect(paths.length).toBe(14);
       for (const path of paths) {
         const value = lookup(tree, path);
-        expect(typeof value, path).toBe('string');
-        const text = value as string;
+        const text = typeof value === 'function' ? (value as (t: string) => string)('Food') : (value as string);
+        expect(typeof text, path).toBe('string');
         expect(text.trim(), path).not.toBe('');
         for (const rule of BANNED) expect(text, `${path}: ${rule}`).not.toMatch(rule);
         expect(text, path).not.toMatch(/\p{Extended_Pictographic}/u);
@@ -68,9 +69,11 @@ describe('learner.access (F-ENT-003 E3-6)', () => {
     });
   }
 
-  it('the closed-lesson word is the Learning Route word (one word for the boundary)', () => {
+  it('the closed-lesson word is the Learning Route word and the Library tile word (one word for the boundary)', () => {
     const m = getMessages('en').learner;
     expect(m.myRoute.state.notOpen).toBe(m.access.notOpen);
+    expect(m.storyShelf.state.locked).toBe(m.access.notOpen);
+    expect(m.vocab.topics.locked).toBe(m.access.notOpen);
   });
 
   it('a tagged lesson row reads the title, its lines and the tags in order (section 3.14)', () => {
