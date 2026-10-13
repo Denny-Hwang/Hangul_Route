@@ -48,8 +48,14 @@ const SUMMARY = {
 
 const json = (route: Route, status: number, body: unknown) => route.fulfill({ status, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(body) });
 
-async function mockBilling(page: Page): Promise<{ checkouts: number }> {
-  const seen = { checkouts: 0 };
+const RECEIPT_URL = 'https://invoice.stripe.com/i/acct_e2e/test_e2e';
+const RECEIPTS = {
+  spaceName: 'Kim family',
+  receipts: [{ id: 'bev:e2e1', kind: 'purchase', planKey: 'family_lifetime', amountCents: 1530, currency: 'usd', livemode: false, occurredAt: '2026-10-01T09:00:00.000Z', hasReceipt: true }],
+};
+
+async function mockBilling(page: Page): Promise<{ checkouts: number; links: number }> {
+  const seen = { checkouts: 0, links: 0 };
   await page.addInitScript(
     ([key]) => window.sessionStorage.setItem(key as string, JSON.stringify({ token: 'acct-e2e', accountId: 'acct-e2e', displayName: 'Ms Kim' })),
     [SESSION_KEY],
@@ -63,9 +69,15 @@ async function mockBilling(page: Page): Promise<{ checkouts: number }> {
       seen.checkouts += 1;
       return seen.checkouts === 1 ? json(route, 403, HINT) : json(route, 200, { data: { url: STRIPE } });
     }
+    if (url.pathname === '/api/billing/receipts') return json(route, 200, { data: RECEIPTS });
+    if (url.pathname === '/api/billing/receipt-link') {
+      seen.links += 1;
+      return seen.links === 1 ? json(route, 403, HINT) : json(route, 200, { data: { url: RECEIPT_URL } });
+    }
     if (url.pathname === '/api/spaces') return json(route, 200, { data: { spaces: [] } });
     return json(route, 200, { data: { plans: [], requests: [], entitlements: [] } });
   });
+  await page.context().route('https://invoice.stripe.com/**', (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>Stripe receipt</title><p>Receipt</p>' }));
   await page.route('https://checkout.stripe.com/**', (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>Stripe test</title><p>Stripe test page</p>' }));
   return seen;
 }
@@ -153,3 +165,26 @@ for (const viewport of [
     });
   });
 }
+
+test.describe('step-up on the receipts page', () => {
+  test.skip(!FULL, 'needs an export built for the billing e2e (BILLING_E2E=1)');
+
+  test('View receipt on a stale sign-in: the blank tab closes before the dialog; after Continue the receipt opens in a new tab', async ({ page, context }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const seen = await mockBilling(page);
+    await page.goto('/account/billing/receipts?id=space%3Afam');
+    const blank = context.waitForEvent('page');
+    await page.getByRole('button', { name: /View receipt/ }).click();
+    const blankTab = await blank;
+    await expect(page.getByRole('dialog', { name: "Confirm it's you" })).toBeVisible();
+    // The empty tab is gone before the grown-up is asked to confirm in this one.
+    await expect.poll(() => blankTab.isClosed()).toBe(true);
+    const receipt = context.waitForEvent('page');
+    await page.getByRole('button', { name: 'Continue' }).click();
+    const receiptTab = await receipt;
+    await receiptTab.waitForURL(RECEIPT_URL);
+    expect(await receiptTab.evaluate(() => window.opener)).toBeNull();
+    expect(seen.links).toBe(2);
+    await expect(page.getByText("Can't open this receipt right now.")).toHaveCount(0);
+  });
+});
