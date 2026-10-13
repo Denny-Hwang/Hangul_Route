@@ -17,6 +17,7 @@ import { FreeLessonsLine } from '@/components/console/FreeLessonsParts';
 import { ClassGoalLineView } from '@/components/console/ClassGoalParts';
 import { StudentWordsLines, WeekWordsRevisit } from '@/components/console/VocabWordsParts';
 import { useTransfersShown } from '@/components/console/TransferParts';
+import { useMovesWaiting } from '@/components/console/MovesEntry';
 import { useConsole } from '@/components/console/use-console';
 import type { PlanView, Roster, SpaceListItem } from '@/lib/console/api';
 import { contentGatingEnabled, lectureModeEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
@@ -43,6 +44,11 @@ function SpaceInner(): JSX.Element {
   const movesShown = useTransfersShown();
   const c = m.console;
   const [roster, setRoster] = useState<Roster | null>(null);
+  // T-6b: the class roster's button beside Re-link requests, and both buttons' "N class moves waiting" (requests-page.md
+  // "Entry points"). Asked only once the roster says class or family: a school has no count of its own here.
+  const movesKind = roster?.space.kind;
+  const movesAsked = movesShown && (movesKind === 'class' || movesKind === 'family');
+  const movesWaiting = useMovesWaiting(movesAsked ? api : null, movesAsked ? [spaceId] : [])[spaceId] ?? 0;
   const [plans, setPlans] = useState<PlanView[]>([]);
   const [pendingRelinks, setPendingRelinks] = useState(0);
   // Lecture mode's entry points show for the roles that compose plans (F-TCH-004 §3.11); the free-lessons line for the owner (F-ENT-003 §3.9.2).
@@ -205,13 +211,18 @@ function SpaceInner(): JSX.Element {
             <Link href={ROUTES.spaceRelink(spaceId, roster.space.kind)}>
               <Button>{pendingRelinks > 0 ? c.space.relinkPending.cta(pendingRelinks) : c.space.relinkRequests.cta}</Button>
             </Link>
+            {movesShown && roster.space.kind === 'class' ? (
+              <Link href={ROUTES.spaceTransfers(spaceId, roster.space.kind)}>
+                <Button testId="class-moves">{movesWaiting > 0 ? c.transfer.waiting(movesWaiting) : c.transfer.entry.cta}</Button>
+              </Link>
+            ) : null}
             {notesLinks?.header ? <NotesLink href={notesLinks.header} testId="roster-notes" text={c.notes.roster.notes.cta} /> : null}
             <Link href={ROUTES.spaceSettings(spaceId, roster.space.kind)}>
               <Button>{c.space.settings.cta}</Button>
             </Link>
             {movesShown && roster.space.kind === 'family' ? (
               <Link href={ROUTES.spaceTransfers(spaceId, roster.space.kind)}>
-                <Button testId="family-moves">{c.transfer.entry.cta}</Button>
+                <Button testId="family-moves">{movesWaiting > 0 ? c.transfer.waiting(movesWaiting) : c.transfer.entry.cta}</Button>
               </Link>
             ) : null}
           </div>
