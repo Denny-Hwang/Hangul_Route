@@ -2,6 +2,7 @@ import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import Page from '@/app/(console)/teach/space/learner/page';
 import { LEGACY, NOW, STEADY, response } from '@/lib/console/__tests__/fixtures/report';
 
 /**
@@ -106,7 +107,6 @@ function textOf(node: ReactTestInstance | string): string {
 }
 
 async function page(): Promise<ReactTestInstance> {
-  const { default: Page } = await import('@/app/(console)/teach/space/learner/page');
   await act(async () => {
     mounted = create(<Page />);
   });
@@ -118,7 +118,6 @@ async function page(): Promise<ReactTestInstance> {
 async function follow(): Promise<void> {
   const to = nav.pushed[nav.pushed.length - 1] ?? '';
   nav.query = to.slice(to.indexOf('?') + 1);
-  const { default: Page } = await import('@/app/(console)/teach/space/learner/page');
   await act(async () => {
     mounted?.update(<Page />);
   });

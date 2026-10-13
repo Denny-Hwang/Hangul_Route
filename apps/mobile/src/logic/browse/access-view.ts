@@ -11,11 +11,12 @@ import type { AccessSource } from './pass';
 
 /**
  * Whether the learner app reads the `gate=browse` boot intent (PIN, then a
- * fresh gate pass). F-BROWSE-001 BR-12b adds the intent and flips this; until
- * then no action may lead to `/?gate=browse`, and the gate and unknown sources
- * lead back to the app instead (section 4.3, design README decision 4).
+ * fresh gate pass). F-BROWSE-001 BR-12b added the intent (`logic/shell/boot-intent.ts`)
+ * and turned this on, so the gate and unknown sources lead to `/?gate=browse`.
+ * With it off, no action may lead there and both lead back to the app instead
+ * (section 4.3, design README decision 4: the form before BR-12b).
  */
-export const GATE_BROWSE_INTENT_SHIPPED = false;
+export const GATE_BROWSE_INTENT_SHIPPED = true;
 
 /** `/?gate=browse`: the learner app's boot intent that opens the PIN for All lessons (BR-12b). */
 export function gateBrowseUrl(): string {

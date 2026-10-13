@@ -4,6 +4,7 @@ import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'rea
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { SpaceRole } from '@hangul-route/content-schema';
 import { meta } from '@/lib/console/__tests__/fixtures/learning-route';
+import Page from '@/app/(console)/teach/space/page';
 
 /**
  * Learning Route LR-9 (amendment section 6.3, LR-OD-10; wireframe console/learning-route.md T1), the
@@ -144,7 +145,6 @@ function textOf(node: ReactTestInstance | string): string {
 }
 
 async function roster(): Promise<ReactTestInstance> {
-  const { default: Page } = await import('@/app/(console)/teach/space/page');
   await act(async () => {
     mounted = create(<Page />);
   });

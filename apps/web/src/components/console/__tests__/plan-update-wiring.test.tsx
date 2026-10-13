@@ -5,6 +5,8 @@ import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { PlanSave } from '@/lib/console/api';
+import Page from '@/app/(console)/teach/space/page';
+import { PlanUpdateLine } from '@/components/console/PlanUpdateParts';
 
 /**
  * F-PLAN-002 PR P2-6b (section 3.8 step 4, FP-B5): a family learner card whose newest level check
@@ -140,7 +142,6 @@ function textOf(node: ReactTestInstance | string): string {
 }
 
 async function rosterPage(): Promise<ReactTestInstance> {
-  const { default: Page } = await import('@/app/(console)/teach/space/page');
   await act(async () => {
     mounted = create(<Page />);
   });
@@ -228,7 +229,6 @@ describe('Update the plan on a family learner card', () => {
 
 describe('PlanUpdateLine without an api (signed-out or loading)', () => {
   it('shows the button disabled and never saves', async () => {
-    const { PlanUpdateLine } = await import('@/components/console/PlanUpdateParts');
     await act(async () => {
       mounted = create(<PlanUpdateLine kind="family" learner={SAM as unknown as Parameters<typeof PlanUpdateLine>[0]["learner"]} plans={[samRoute()]} today={today} api={null} spaceId="space:f1" onSaved={() => undefined} />);
     });
