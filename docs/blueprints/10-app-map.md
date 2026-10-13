@@ -85,7 +85,7 @@ Hangul Route
 │   │    └─ Projection mode (자원봉사 학생이 학습자 화면을 그대로 띄우는 옵션 · 교사 역할 불필요) [D] 연기 F-TCH-001 §3.4
 │   ├─ A16. Story reader & Sources (퀘스트의 `story-read` 단계 · "Read it again" replay · 어른용 Sources · SVG 장면 그림) [S] F-STORY-002
 │   └─ A17. All lessons (`/browse`, 학습자 웹 빌드의 세 번째 root · 어른이 모든 레슨을 학습자가 보는 그대로 미리 보기 · 학습자 데이터 읽기·쓰기 없음 · 웹 전용) [R] F-BROWSE-001
-│        ├─ Pass: 같은 탭 `sessionStorage` (`hr:browse:pass`) — 콘솔 **Lessons** (계정, 서버가 `full` / `sampler` 결정) 또는 앱 어른 영역 PIN 뒤 [ Open all lessons ] (gate, 15분 idle) · 패스 없음 → Access 화면만
+│        ├─ Pass: 같은 탭 `sessionStorage` (`hr:browse:pass`) — 콘솔 **Lessons** (계정, 서버가 `full` / `sampler` 결정) 또는 앱 어른 영역 PIN 뒤 [ Open all lessons ] (gate, 15분 idle) · 학습자 root boot·Back to learning·Sign out 때 패스도 지워짐 (BR-6) · 패스 없음 → Access 화면만
 │        └─ Catalogue (home · episode · item) → Preview (학습자 퀘스트 플레이어·게임·이야기 리더, "Preview. Nothing is saved." 띠) → Preview end (별·점수·카드 없음)
 │
 ├─ B. Caregiver Console ─────────────────────────────────────────── 부모
