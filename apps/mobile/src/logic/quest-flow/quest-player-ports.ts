@@ -10,7 +10,7 @@ import { questStartStep } from '../story/resume';
  * The quest player's seam to the outside world (F-BROWSE-001 §4.7, BR-5a). `QuestPlayerView` plays
  * the steps; everything that touches a learner's record, the navigation stack or telemetry goes
  * through these ports. The learner app wires them to today's behaviour (this file); the All lessons
- * preview wires them to ports that save nothing (BR-6).
+ * preview wires them to ports that save nothing (`previewQuestPorts`, BR-8).
  */
 export interface QuestPlayerPorts {
   /**
@@ -173,5 +173,35 @@ export function learnerQuestExits(deps: LearnerExitDeps): Pick<QuestPlayerPorts,
     track: (event) => {
       void deps.track({ ...event, profileId: deps.profileId });
     },
+  };
+}
+
+export interface PreviewPortDeps {
+  /** Discard the run in `quest-run-store` (memory only). */
+  resetRun: () => void;
+  /** Replace the player with the preview end screen (`PreviewEnd`). */
+  toEnd: () => void;
+  /** Back to the lesson's item page. */
+  toItem: () => void;
+}
+
+/**
+ * The All lessons preview ports (F-BROWSE-001 section 4.7, BR-8): a preview
+ * saves nothing. `start` begins at step 0 with no session and no profile;
+ * `end` has nothing to release; `finish` resets the run itself (no Results
+ * reads it) and goes to the preview end screen; `leave` returns to the item
+ * page; `track` sends nothing (the view names no person, and a preview has
+ * none to add; the browse telemetry fence would drop a learner event anyway).
+ */
+export function previewQuestPorts(deps: PreviewPortDeps): QuestPlayerPorts {
+  return {
+    start: () => 0,
+    end: () => undefined,
+    finish: () => {
+      deps.resetRun();
+      deps.toEnd();
+    },
+    leave: () => deps.toItem(),
+    track: () => undefined,
   };
 }
