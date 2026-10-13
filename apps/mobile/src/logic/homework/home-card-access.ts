@@ -25,10 +25,12 @@ export interface HomeCardLock {
  * The tap-time access check for a Home card (F-STORY-004 PR 4.8e). The pin
  * lasts the app session day (PR 4.8c) and a closed slot (1) or (3) card whose
  * chain has nothing open stays (PR 4.8d), so a tap checks access again: a
- * story card in the index whose story is locked or whose quest closed, or a
- * quest card whose quest closed, goes to the locked path, never to
- * `QuestPlayer` or `StoryReader`. A story card that left the index is judged
- * by its quest, as Home then opens it as a quest card. Cards that open neither
+ * story card in the index whose story is locked, or a quest card whose quest
+ * closed, goes to the locked path, never to `QuestPlayer` or `StoryReader`.
+ * A story in the index is judged by `storyLockFor` alone (it already asks
+ * `isQuestOpen` for a grid book), the one rule the Library tile and the
+ * mission builder (`isClosed`, PR 4.8d) follow. A story card that left the
+ * index is judged by its quest, as Home then opens it as a quest card. Cards that open neither
  * (explore, a word topic, the daily test, the free-end card) return null.
  * Nothing is closed or locked while gating is off, so this returns null then.
  */
@@ -37,7 +39,7 @@ export function homeCardLock(input: HomeCardAccessInput): HomeCardLock | null {
   const locked = (storyId: string | null): HomeCardLock => ({ gate: askGate(input.opensDirectly, 'home'), storyId });
   if (card.kind === 'story' && card.questId) {
     const entry = entryForQuest(input.entries, card.questId);
-    if (entry) return input.isStoryLocked(entry) || !input.isQuestOpen(entry.questId) ? locked(entry.storyId) : null;
+    if (entry) return input.isStoryLocked(entry) ? locked(entry.storyId) : null;
   }
   if (card.kind === 'practice' && card.topicKey) return null;
   if (card.questId && card.episodeId && !input.isQuestOpen(card.questId)) return locked(null);

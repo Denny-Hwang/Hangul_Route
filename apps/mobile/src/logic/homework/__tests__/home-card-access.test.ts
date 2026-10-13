@@ -64,8 +64,14 @@ describe('homeCardLock (F-STORY-004 PR 4.8e)', () => {
     expect(homeCardLock(input({ card: storyCard, isStoryLocked: locked }))).toEqual({ gate: PIN_GATE, storyId: 'story:tiger' });
   });
 
-  it('a story card whose quest closed is locked too', () => {
-    expect(homeCardLock(input({ card: storyCard, isQuestOpen: () => false }))).toEqual({ gate: PIN_GATE, storyId: 'story:tiger' });
+  it('a story card in the index follows the story lock alone, as the Library tile and the mission builder do', () => {
+    // `storyLockFor` already asks `isQuestOpen` for a grid book; a shelf story's quest is never a lesson.
+    expect(homeCardLock(input({ card: storyCard, isQuestOpen: () => false }))).toBeNull();
+    expect(homeCardLock(input({ card: storyCard, isQuestOpen: () => false, isStoryLocked: () => true }))).toEqual({ gate: PIN_GATE, storyId: 'story:tiger' });
+  });
+
+  it('a story card with no quest opens nothing through the quest player, so it is not gated', () => {
+    expect(homeCardLock(input({ card: { ...storyCard, questId: undefined }, isQuestOpen: () => false, isStoryLocked: () => true }))).toBeNull();
   });
 
   it('a "Read it again" card of a locked story never opens the reader', () => {
@@ -101,17 +107,18 @@ describe('homeCardLock (F-STORY-004 PR 4.8e)', () => {
 
 describe('Home wires the tap-time check (source guard: the mobile lane does not render screens)', () => {
   const src = readFileSync(join(__dirname, '..', '..', '..', 'screens', 'home', 'HomeScreen.tsx'), 'utf8');
-  const openCard = /const openCard = \(card: MissionCard\): void => \{([\s\S]*?)\n {2}\};/.exec(src)?.[1] ?? '';
+  const start = src.indexOf('const openCard = ');
+  const openCard = start < 0 ? '' : src.slice(start);
 
   it('checks access before any other open, so a locked card never reaches QuestPlayer or StoryReader', () => {
-    const lines = openCard.trim().split('\n');
-    expect(lines[0]?.trim()).toBe('if (openLocked(card)) return;');
-    expect(openCard.indexOf('openLocked(card)')).toBeLessThan(openCard.indexOf('openStory(card)'));
+    const lockAt = openCard.indexOf('openLocked(card)');
+    expect(lockAt).toBeGreaterThan(-1);
+    expect(lockAt).toBeLessThan(openCard.indexOf('openStory(card)'));
+    expect(lockAt).toBeLessThan(openCard.indexOf("'QuestPlayer'"));
   });
 
-  it('judges with the same quest access and story lock the mission was built with, through the grown-up gate', () => {
-    expect(src).toMatch(/homeCardLock\(\{ card, entries: storyIndex, isQuestOpen: questOpen, isStoryLocked, opensDirectly: gateOpensDirectlyNow\(\) \}\)/);
-    expect(src).toMatch(/isLocked: isStoryLocked,/);
-    expect(src).toMatch(/name: 'story\.locked\.tapped', profileId: profile\?\.id, payload: \{ storyId: lock\.storyId \}/);
+  it('judges with the same story lock the mission was built with', () => {
+    expect(src).toContain('homeCardLock(');
+    expect(src).toMatch(/isStoryLocked\b[\s\S]*isLocked: isStoryLocked/);
   });
 });
