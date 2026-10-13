@@ -125,7 +125,8 @@ test.describe('free plan switch on (web)', () => {
       await openCell(page, 1, theme);
       await expect(page.getByRole('button', { name: 'Start', exact: true }).first()).toBeVisible();
       await expect(page.getByTestId('episode-preview-card')).toHaveCount(0);
-      await expect(page.getByText(access.notOpen)).toHaveCount(0);
+      // The Journey under the page keeps its legend line ("Not open yet"); the page itself has no closed row.
+      await expect(page.getByTestId('episode-quest-not-open')).toHaveCount(0);
     }
   });
 });
