@@ -87,7 +87,7 @@ export const consoleMsgs = {
   shell: {
     home: 'Consola',
     signOut: { cta: 'Salir' },
-    nav: { notes: 'Notas', lessons: 'Lecciones' },
+    nav: { notes: 'Notas', lessons: 'Lecciones', classReports: 'Informes de clase' },
     noApi: 'La consola necesita una dirección de API (NEXT_PUBLIC_API_BASE_URL) en esta versión.',
   },
   kind: {
