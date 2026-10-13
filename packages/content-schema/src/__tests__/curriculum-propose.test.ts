@@ -159,6 +159,65 @@ describe('params (rule 1)', () => {
     expect(propose({ seed: seedAt(CATALOG_2026_10, { stage: 'stage1', band: 0 }) }).params.goals).toEqual({ focus: 'balanced' });
   });
 
+  describe('focus from the oral stage (F-PLC-001 AM-4)', () => {
+    const heard = (level: PlacementLevel, oralStage: StageKey | null): Seed => ({ ...seedAt(CATALOG_2026_10, level), oralStage });
+    const stage1 = { stage: 'stage1', band: 0 } as const;
+
+    it('reads `reading` when the oral stage is exactly two stages above the level', () => {
+      expect(propose({ seed: heard(stage1, 'stage3') }).params.goals.focus).toBe('reading');
+      expect(propose({ seed: heard({ stage: 'stage2', band: 1 }, 'stage4'), unlockedStages: ALL }).params.goals.focus).toBe('reading');
+    });
+
+    it('reads `reading` when the oral stage is more than two stages above the level', () => {
+      expect(propose({ seed: heard(stage1, 'stage7') }).params.goals.focus).toBe('reading');
+    });
+
+    it('stays `balanced` one stage above, at the level, below it, and with no oral stage', () => {
+      expect(propose({ seed: heard(stage1, 'stage2') }).params.goals.focus).toBe('balanced');
+      expect(propose({ seed: heard({ stage: 'stage2', band: 0 }, 'stage3'), unlockedStages: ALL }).params.goals.focus).toBe('balanced');
+      expect(propose({ seed: heard(stage1, 'stage1') }).params.goals.focus).toBe('balanced');
+      expect(propose({ seed: heard({ stage: 'stage3', band: 0 }, 'stage1'), unlockedStages: ALL }).params.goals.focus).toBe('balanced');
+      expect(propose({ seed: heard(stage1, null) }).params.goals.focus).toBe('balanced');
+      expect(propose({ seed: null }).params.goals.focus).toBe('balanced');
+    });
+
+    it('keeps the themes and the motivation next to a reading focus', () => {
+      const seed = { ...heard(stage1, 'stage3'), themeOrder: themeOrderFor('kculture') };
+      expect(propose({ seed }).params.goals).toEqual({ focus: 'reading', themes: themeOrderFor('kculture') });
+      expect(propose({ seed, motivation: 'heritage' }).params.goals).toEqual({ focus: 'reading', motivation: 'heritage' });
+    });
+
+    it('builds the probe, defaultId and every card with the reading focus (festival weeks only, no word weeks)', () => {
+      const over = { unlockedStages: ALL, levelOrder: 1 } as const;
+      const balanced = propose({ ...over, seed: heard(stage1, 'stage2') });
+      const reading = propose({ ...over, seed: heard(stage1, 'stage3') });
+      const balancedProbe = probeOf(balanced, CATALOG_2026_10);
+      const readingProbe = probeOf(reading, CATALOG_2026_10);
+      // A reading focus has no cadence culture or word weeks; festival anchors still lead a week.
+      expect(readingProbe.stats.cultureWeeks).toBeLessThan(balancedProbe.stats.cultureWeeks);
+      expect(balancedProbe.stats.vocabWeeks).toBeGreaterThan(0);
+      expect(readingProbe.stats.vocabWeeks).toBe(0);
+      expect(reading.defaultId).toBe(defaultDurationFor(lessonWeek(readingProbe, CATALOG_2026_10)));
+      for (const option of reading.options) {
+        const card = generateCurriculum({ ...reading.params, weeks: option.weeks }, CATALOG_2026_10);
+        expect(card.params.goals.focus).toBe('reading');
+        expect(card.stats.vocabWeeks).toBe(0);
+        expect(option.stats).toEqual({
+          lessons: card.stats.lessons,
+          stories: card.stats.stories,
+          comingSoonItems: card.stats.comingSoonItems,
+          openSessions: card.stats.openSessions,
+          endsAtStage: card.stats.endsAtStage,
+        });
+      }
+      // Without cadence culture weeks the lessons finish sooner on the same catalogue (week 7, not 9).
+      expect(lessonWeek(readingProbe, CATALOG_2026_10)).toBe(7);
+      expect(lessonWeek(balancedProbe, CATALOG_2026_10)).toBe(9);
+      expect(reading.options.map((option) => option.lastLessonWeek)).toEqual([7, 7, 7]);
+      expect(balanced.options.map((option) => option.lastLessonWeek)).toEqual([9, 9, 9]);
+    });
+  });
+
   it('holds the recommended length; the review rhythm follows it', () => {
     const twelve = propose();
     expect(twelve.defaultId).toBe('12-week');
@@ -429,6 +488,17 @@ describe('existing plan: update or unchanged (rule 4)', () => {
     const ahead = plan.items.filter((item) => (item.targetDate as string) >= later);
     const proposal = propose({ seed: band0, existing: plan, today: later, completedQuestIds: [ahead[0]?.id as string, ahead[1]?.id as string] });
     expect(proposal.kind).toBe('unchanged');
+  });
+
+  it("keeps the stored plan's goals on a re-seed: the patch moves the start only (FP-B4)", () => {
+    const heardMore = { ...band3, oralStage: 'stage3' as const, themeOrder: themeOrderFor('kculture') };
+    const fresh = propose({ seed: heardMore });
+    expect(fresh.params.goals).toEqual({ focus: 'reading', themes: themeOrderFor('kculture') });
+    const proposal = propose({ seed: heardMore, existing: plan, today: later, motivation: 'heritage' });
+    expect(proposal.kind).toBe('update');
+    expect(proposal.params.goals).toEqual(plan.meta.params.goals);
+    expect(proposal.params.goals.focus).toBe('balanced');
+    expect(proposal.params.level).toEqual(band3.level);
   });
 
   it('updates after a retake with a later start, keeping the length and the end date', () => {

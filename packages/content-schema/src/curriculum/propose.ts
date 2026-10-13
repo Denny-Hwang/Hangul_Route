@@ -181,6 +181,21 @@ const headlineOf = (probe: CurriculumDraft, level: PlacementLevel, catalog: Cata
   return opening?.id === quest.id ? 'start-stage1' : 'continue-stage1';
 };
 
+/** How far the oral stage must sit above the level's stage for a reading focus (F-PLC-001 AM-4). */
+export const READING_FOCUS_ORAL_GAP = 2;
+
+/**
+ * F-PLC-001 AM-4: `reading` when the seed's oral stage is two or more stages above its
+ * level's stage (the learner hears far more than they read, so culture and word weeks
+ * give way to reading), else `balanced`; no level check or no oral stage is `balanced`.
+ */
+export const focusOfSeed = (seed: Pick<RouteSeed, 'level' | 'oralStage'> | null): 'reading' | 'balanced' =>
+  seed !== null &&
+  seed.oralStage !== null &&
+  placementStageNumber(seed.oralStage) - placementStageNumber(seed.level.stage) >= READING_FOCUS_ORAL_GAP
+    ? 'reading'
+    : 'balanced';
+
 /** The params every card shares: the pace's sessions, the minutes, the seed's start and goals, the start day. */
 const baseParamsOf = (input: ProposeInput, pace: PaceId, minutesPerSession: CurriculumParams['minutesPerSession']): CurriculumParamsInput => {
   const { seed, motivation } = input;
@@ -196,7 +211,7 @@ const baseParamsOf = (input: ProposeInput, pace: PaceId, minutesPerSession: Curr
     sessionsPerWeek: PACES[pace],
     minutesPerSession,
     goals: {
-      focus: 'balanced',
+      focus: focusOfSeed(seed),
       ...(ordered && seed !== null ? { themes: [...seed.themeOrder] } : {}),
       ...(motivation === undefined ? {} : { motivation }),
     },
@@ -251,6 +266,8 @@ export function proposeRoute(input: ProposeInput): RouteProposal | null {
   const storedSet = stored.placedOutQuestIds ?? questsPlacedOutAtLevel(stored.level, routeCatalogOf(catalog));
   const moves =
     seed !== null && (placementLevelRank(seed.level) > placementLevelRank(stored.level) || !sameSet(seed.placedOutQuestIds, storedSet));
+  // A re-seed moves the start only (FP-B4): the stored goals stay, so a grown-up's themes,
+  // focus and motivation survive a retake; goals change through the wizard or the setup.
   const paramsPatch = seed === null ? {} : { level: seed.level, placedOutQuestIds: [...seed.placedOutQuestIds] };
   const reseeded = regenerateFrom(existing, today, catalog, { mode: 'reseed', paramsPatch, completedQuestIds });
   const unchanged: RouteProposal = { kind: 'unchanged', headline, pace, params: reseeded.params, options, defaultId };
