@@ -74,6 +74,11 @@ function LayerOne({ view }: { view: ClassReportView }): JSX.Element | null {
             {headline.text}
           </p>
           {headline.up ? <p className="hr-class-up">{headline.up}</p> : null}
+          {headline.note ? (
+            <p className="hr-report-muted" data-testid="class-all-note">
+              {headline.note}
+            </p>
+          ) : null}
         </div>
       ) : null}
       {wentWell ? (

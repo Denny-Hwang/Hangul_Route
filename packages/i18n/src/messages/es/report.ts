@@ -240,6 +240,7 @@ export const report = {
         one: '1 estudiante aún no tiene nada guardado de este periodo.',
         other: `${count} estudiantes aún no tienen nada guardado de este periodo.`,
       }),
+    allBeforeJoin: 'El total incluye la práctica de cada estudiante de antes de unirse a la clase.',
     section: {
       practiceTogether: 'Practicar en grupo',
       daysPracticed: 'Días de práctica',

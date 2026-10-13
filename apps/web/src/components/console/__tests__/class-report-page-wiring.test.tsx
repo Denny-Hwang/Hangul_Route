@@ -178,13 +178,29 @@ describe('the class report page (RP-8)', () => {
     expect(h1s(root)).toEqual([en.report.state.unavailable]);
   });
 
-  it('a network error with a cached report keeps it, with the error as a state line', async () => {
+  it('a network error on the window the cached report was loaded for keeps it, the error a state line, Print disabled', async () => {
+    await page();
+    responses.report = () => ({ ok: false, error: 'network', status: -1 });
+    act(() => mounted?.unmount());
     const root = await page();
+    expect(h1s(root)).toEqual([en.report.title.class('Sunflower')]);
+    expect(textOf(byTestId(root, 'report-error-line')[0] as ReactTestInstance)).toBe(en.report.state.error);
+    expect(byTestId(root, 'report-print')[0]?.props.disabled).toBe(true);
+    expect(String(byTestId(root, 'report-retry')[0]?.props.className)).toContain('hr-report-actions');
+  });
+
+  it('a network error on another period never draws the cached figures under it: the error and Try again', async () => {
+    const root = await page();
+    expect(textOf(byTestId(root, 'report-headline')[0] as ReactTestInstance)).toContain('this week');
     responses.report = () => ({ ok: false, error: 'network', status: -1 });
     await act(async () => tabs(root)[0]?.props.onClick());
     await follow();
-    expect(h1s(root)).toEqual([en.report.title.class('Sunflower')]);
-    expect(textOf(byTestId(root, 'report-error-line')[0] as ReactTestInstance)).toBe(en.report.state.error);
+    expect(h1s(root)).toEqual([en.report.state.error]);
+    expect(byTestId(root, 'report-headline')).toHaveLength(0);
+    expect(byTestId(root, 'report-print')).toHaveLength(0);
+    responses.report = () => ok(classBody({ period: 'day' }));
+    await act(async () => byTestId(root, 'report-retry')[0]?.props.onClick());
+    expect(textOf(byTestId(root, 'report-headline')[0] as ReactTestInstance)).toContain('today');
   });
 
   it('an empty class: the empty line and the back link, no tabs, no Print', async () => {
@@ -240,6 +256,18 @@ describe('the class chooser (no id)', () => {
     responses.spaces = () => ok([spaceItem('space:f', 'family')]);
     const root = await page();
     expect(h1s(root)).toEqual([en.report.state.unavailable]);
+  });
+
+  it('a failed spaces read is an error with Try again (never "not available"), and Try again reads the spaces again', async () => {
+    nav.query = '';
+    responses.spaces = () => ({ ok: false, error: 'network', status: 0 });
+    const root = await page();
+    expect(h1s(root)).toEqual([en.report.state.error]);
+    expect(textOf(byTestId(root, 'report-retry')[0] as ReactTestInstance)).toBe(en.common.buttons.tryAgain);
+    responses.spaces = () => ok([spaceItem('space:a', 'class'), spaceItem('space:b', 'class')]);
+    await act(async () => byTestId(root, 'report-retry')[0]?.props.onClick());
+    expect(h1s(root)).toEqual([en.report.chooser.class]);
+    expect(calls.filter((c) => c.name === 'listSpaces')).toHaveLength(2);
   });
 });
 

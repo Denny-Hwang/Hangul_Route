@@ -84,7 +84,7 @@ describe('the week class report (behaviour 5 words)', () => {
   });
 
   it('reads the headline with the up-only marker, and the tabs and stepper', () => {
-    expect(v.headline).toEqual({ text: '8 of 12 learners practiced this week.', up: 'More than last week' });
+    expect(v.headline).toEqual({ text: '8 of 12 learners practiced this week.', up: 'More than last week', note: null });
     expect(v.tabs?.map((t) => [t.period, t.selected])).toEqual([
       ['day', false],
       ['week', true],
@@ -162,7 +162,7 @@ describe('periods, steps and states', () => {
   it('Today: the day bands, day words and a day back', () => {
     const day: ClassReport = { ...REPORT, period: 'day', headline: { code: 'class_practiced', practiced: 3, learners: 12 }, practice: { dayBands: [{ band: 'practiced', learners: 3 }, { band: 'not_yet', learners: 8 }], notSaved: 0 } };
     const v = view({ data: body(day), query: { period: 'day', at: null } });
-    expect(v.headline).toEqual({ text: '3 of 12 learners practiced today.', up: null });
+    expect(v.headline).toEqual({ text: '3 of 12 learners practiced today.', up: null, note: null });
     expect(v.thisPeriod?.bands?.rows).toEqual(['Practiced: 3', 'Not yet: 8']);
     expect(v.thisPeriod?.notSaved).toBeNull();
     expect(v.stepper).toEqual({ range: 'Oct 15', prev: { href: '/teach/space/report?id=space%3Asunflower&period=day&at=2026-10-14', label: 'Yesterday', name: 'Show yesterday' }, next: null });
@@ -195,12 +195,15 @@ describe('periods, steps and states', () => {
     expect(v.thisPeriod?.bands).toBeNull();
     expect(v.wentWell?.milestones?.heading).toBe('Stage milestones so far');
     expect(v.announce).toBe('Showing all time');
+    // The All-time figures read lifetime totals (RP-2c): a neutral line says so; no other period carries it.
+    expect(v.headline?.note).toBe('All time includes practice from before each learner joined the class.');
+    expect(view({ data: body() }).headline?.note).toBeNull();
   });
 
   it('no practice in the window: what went well hidden, practice together stays, the neutral line in This period', () => {
     const none: ClassReport = { ...REPORT, headline: { code: 'class_practiced', practiced: 0, learners: 12 }, wentWell: { lettersNew: [], questsNew: { count: 0 }, cardsNew: 0, milestones: [] }, time: { minutesTotal: { count: 0 }, minutesMedian: null } };
     const v = view({ data: body(none) });
-    expect(v.headline).toEqual({ text: '0 of 12 learners practiced this week.', up: null });
+    expect(v.headline).toEqual({ text: '0 of 12 learners practiced this week.', up: null, note: null });
     expect(v.wentWell).toBeNull();
     expect(v.practiceTogether?.revisit?.chips).toHaveLength(1);
     expect(v.thisPeriod?.noneYet).toBe('No practice yet this week.');
@@ -263,9 +266,20 @@ describe('classReportScreenOf', () => {
     expect(classReportScreenOf({ enabled: true, spaceId: 'space:sunflower', load: null, cached: body() })).toEqual({ kind: 'report', data: body(), busy: true, error: null });
     expect(classReportScreenOf({ enabled: true, spaceId: 'space:sunflower', load: ok, cached: null })).toEqual({ kind: 'report', data: body(), busy: false, error: null });
     expect(classReportScreenOf({ enabled: true, spaceId: 'space:sunflower', load: { ok: false, error: 'network', status: -1 }, cached: null })).toMatchObject({ kind: 'state', title: "Can't load the report right now.", retry: 'Try again' });
-    expect(classReportScreenOf({ enabled: true, spaceId: 'space:sunflower', load: { ok: false, error: 'network', status: -1 }, cached: body() })).toEqual({ kind: 'report', data: body(), busy: false, error: { message: "Can't load the report right now.", retry: 'Try again' } });
+    expect(classReportScreenOf({ enabled: true, spaceId: 'space:sunflower', load: { ok: false, error: 'network', status: -1 }, cached: body(), cachedWindow: true })).toEqual({ kind: 'report', data: body(), busy: false, error: { message: "Can't load the report right now.", retry: 'Try again' } });
     expect(classReportScreenOf({ enabled: true, spaceId: 'space:kim', load: { ok: false, error: 'unknown', status: 409, code: 'wrong_kind' }, cached: null })).toMatchObject({ kind: 'state', title: 'This report is not available.', retry: null });
     expect(classReportScreenOf({ enabled: true, spaceId: 'space:sunflower', load: { ok: false, error: 'unauthorized', status: 401 }, cached: null })).toEqual({ kind: 'signedOut' });
+  });
+
+  it('a failed load never draws the figures of another window: the cached body stays only for the same period and window', () => {
+    // The Worker computes the figures for one window, so a week's counts must never sit under a Today tab.
+    expect(classReportScreenOf({ enabled: true, spaceId: 'space:sunflower', load: { ok: false, error: 'network', status: -1 }, cached: body(), cachedWindow: false })).toEqual({
+      kind: 'state',
+      title: "Can't load the report right now.",
+      retry: 'Try again',
+      back: { href: '/teach/home', text: 'Back to home' },
+    });
+    expect(classReportScreenOf({ enabled: true, spaceId: 'space:sunflower', load: { ok: false, error: 'network', status: -1 }, cached: body() })).toMatchObject({ kind: 'state' });
   });
 
   it('a body for another kind of space is not available (a family has no class report)', () => {
