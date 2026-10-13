@@ -231,6 +231,7 @@ export interface Db {
   /** Set-based reads for building views; unknown ids are skipped, order is not guaranteed. */
   getLearners(ids: readonly string[]): Promise<Learner[]>;
   getSpaces(ids: readonly string[]): Promise<Space[]>;
+  getAccounts(ids: readonly string[]): Promise<Account[]>;
   /** Bounded retention purge (section 4.1): ended rows before `endedBefore`, executed rows before `executedBefore` whose learner left the destination. */
   purgeTransfers(endedBefore: Date, executedBefore: Date, limit: number): Promise<number>;
   recordRateHit(key: string, at: Date): Promise<void>;

@@ -27,7 +27,7 @@ import { isJoinCodeLive } from '../lib/join-code';
 import { createRateLimiter } from '../lib/rate-limit';
 import { classSeatCheck } from '../lib/seats';
 import { classTransferEnabled, learnerSideCooldown, newRequest, newTransferId, settle, transferDeviceConsentEnabled, type TransferEnv } from '../lib/transfer';
-import { destinationFacts, hasCaregiverRoute, learnerSideView, viewLookups, type TransferLearnerSideView } from '../lib/transfer-views';
+import { destinationFacts, hasCaregiverRoute, learnerSideView, primeDestinationFacts, viewLookups, type TransferLearnerSideView } from '../lib/transfer-views';
 import {
   DAY_MS,
   HOUR_MS,
@@ -148,6 +148,7 @@ const INBOX_LOCKED: InboxTransferFields = { transfersEnabled: false, transferDev
 async function deviceViews(db: Db, learnerId: string, rows: readonly StoredTransfer[], env: TransferEnv | undefined, now: Date): Promise<InboxTransfer[]> {
   if (rows.length === 0) return [];
   const [look, prefs, caregiverRoute] = await Promise.all([viewLookups(db, rows), db.getTransferPrefs(learnerId), hasCaregiverRoute(db, learnerId)]);
+  await primeDestinationFacts(db, look, rows, now);
   const ctx = { family: null, selfManaged: prefs.selfManaged, caregiverRoute, deviceConsent: transferDeviceConsentEnabled(env), now };
   const out: InboxTransfer[] = [];
   for (const t of rows) out.push(inboxTransferView(await learnerSideView(db, t, look, ctx)));
@@ -200,14 +201,19 @@ async function startDeviceMove(c: Ctx, mode: 'preview' | 'create'): Promise<Resp
   const learnerId = c.req.param('id') ?? '';
   const deviceId = await authorizeDevice(c, learnerId);
   if (typeof deviceId !== 'string') return deviceId;
-  const limit = deviceTransferLimiter.check(`device:${learnerId}:${deviceId}`);
-  if (!limit.allowed) return tooMany(c, 'too_many_attempts', limit.retryAfterSeconds);
   const parsed = await readCodeBody<DeviceMoveBody>(c, mode === 'preview' ? DeviceTransferPreviewBodySchema : DeviceTransferCreateBodySchema);
-  if (!parsed) return badRequest(c);
-  const body = parsed.data;
   const db = dbFor(c);
   const now = new Date();
   const env = c.env;
+  const limit = deviceTransferLimiter.check(`device:${learnerId}:${deviceId}`);
+  if (!limit.allowed) {
+    // A create retried after a lost answer must still get its own request back (section 4.9 idempotency).
+    const own = mode === 'create' && parsed && !parsed.codeInvalid ? await ownOpenRequest(db, learnerId, deviceId, parsed.data, env, now) : null;
+    if (own) return ok(c, { request: await deviceView(db, learnerId, own, env, now) });
+    return tooMany(c, 'too_many_attempts', limit.retryAfterSeconds);
+  }
+  if (!parsed) return badRequest(c);
+  const body = parsed.data;
 
   // Guard 2: the learner is in the named source.
   const source = await db.getSpace(body.fromSpaceId);
@@ -286,6 +292,22 @@ async function startDeviceMove(c: Ctx, mode: 'preview' | 'create'): Promise<Resp
   }
   await db.recordRateHit(transferRateKey.createLearner(learnerId), now);
   return ok(c, { request: await deviceView(db, learnerId, (await db.getTransfer(row.id)) ?? row, env, now) }, 201);
+}
+
+/** This device's own open request for exactly this move (the identity check of a repeated create), settled first. */
+async function ownOpenRequest(db: Db, learnerId: string, deviceId: string, body: DeviceMoveBody, env: TransferEnv | undefined, now: Date): Promise<StoredTransfer | null> {
+  if (body.destinationSpaceId === undefined) return null;
+  const raw = await db.openTransferOf(learnerId);
+  const open = raw ? (await settle(db, raw, now, env)).request : null;
+  if (!open || !isOpenTransfer(open)) return null;
+  const own =
+    open.sourceSpaceId === body.fromSpaceId &&
+    open.destSpaceId === body.destinationSpaceId &&
+    open.initiator === 'learner_side' &&
+    open.initiatorAccountId === null &&
+    open.learner.basis === 'device_attested' &&
+    open.learner.evidence === deviceId;
+  return own ? open : null;
 }
 
 /**

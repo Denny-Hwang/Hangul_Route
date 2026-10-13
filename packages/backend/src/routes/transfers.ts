@@ -58,6 +58,7 @@ import {
   hasCaregiverRoute,
   learnerSideTerms,
   learnerSideView,
+  primeDestinationFacts,
   sourceView,
   viewLookups,
   type TransferDestinationView,
@@ -455,6 +456,7 @@ transferSpaceRoutes.get('/:id/transfer-requests', async (c) => {
       });
       return [{ learnerId: p.learnerId, name: rosterName(space, learner.displayName), classes, selfManaged: p.prefs.selfManaged, blockTeacherRequests: p.prefs.blockTeacherRequests }];
     });
+    await primeDestinationFacts(db, look, rows, now);
     const requests: TransferLearnerSideView[] = [];
     for (const t of rows) requests.push(await learnerSideView(db, t, look, contexts.get(t.learnerId) as LearnerSideContext));
     return ok(c, { requests, options });

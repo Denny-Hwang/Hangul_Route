@@ -2,7 +2,7 @@ import { SyncInboxSchema, TRANSFER_CONSENT_TEXT_VERSION, TRANSFER_MAX_CREATED_PE
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { transferRateKey, type Db } from '../db';
 import { hashSecret } from '../lib/device-auth';
-import { deviceTransferLimiter } from '../routes/transfer-device';
+import { DEVICE_TRANSFER_LIMIT as DEVICE_LIMIT, deviceTransferLimiter } from '../routes/transfer-device';
 import { transferClientLimiter } from '../routes/transfers';
 import app from '../index';
 import { testDb as db } from './helpers/db';
@@ -12,9 +12,12 @@ import {
   B,
   CODE_A,
   CODE_B,
+  CODE_C,
   CODE_E,
+  C,
   CODE_FAMILY,
   classCreate,
+  countDbCalls,
   create,
   DAY,
   decline,
@@ -27,6 +30,8 @@ import {
   OLD,
   requestOf,
   seed,
+  seedRow,
+  space,
   SUNI,
   type Envelope,
 } from './helpers/transfer-world';
@@ -298,6 +303,29 @@ describe('the inbox (section 4.4)', () => {
     expect(row).toMatchObject({ id: created.id, status: 'executed' });
     expect(await db.membership(B, 'learner', SUNI)).not.toBeNull();
   });
+
+  it('reads the destination facts set-wise: many ended requests to different classes cost no more reads than one (D1 statement budget)', async () => {
+    const endAt = async (id: string, dest: string): Promise<void> => {
+      await seedRow({ id, initiator: 'learner_side', dest, createdAgo: 2 * DAY });
+      expect(await db.cancelTransfer(id, 'withdrawn_learner', 'family', new Date(NOW.getTime() - DAY))).toBe(1);
+    };
+    await endAt('transfer:00000000-0000-4000-8000-000000000001', B);
+    const one = await countDbCalls(async () => {
+      expect(transfersOf(await inbox(SUNI, suniPhone))).toHaveLength(1);
+    });
+    for (let i = 2; i <= 7; i += 1) {
+      const id = `space:class-d${i}`;
+      await db.putAccount({ id: `teacher-d${i}`, email: `d${i}@example.test`, displayName: `Teacher ${i}`, consent: null, createdAt: OLD });
+      await db.putSpace(space(id, 'class', `teacher-d${i}`, { parentSpaceId: i % 2 === 0 ? null : A }));
+      await endAt(`transfer:00000000-0000-4000-8000-00000000000${i}`, id);
+    }
+    const many = await countDbCalls(async () => {
+      const rows = transfersOf(await inbox(SUNI, suniPhone));
+      expect(rows).toHaveLength(7);
+      expect(rows.find((t) => t.to.spaceId === 'space:class-d2')?.to).toMatchObject({ ownerName: 'Teacher 2', schoolName: null });
+    });
+    expect(many).toBe(one);
+  });
 });
 
 describe('device preview (section 4.4)', () => {
@@ -365,6 +393,23 @@ describe('device create (sections 4.2 guard 10, 4.4)', () => {
     const events = await db.transferEvents(row?.id ?? '');
     expect(events[0]).toMatchObject({ actorKind: 'device', actorRef: JUN_PHONE, event: 'created', slot: 'learner', detail: { initiator: 'learner_side', basis: 'device_attested', attest: 'grown_up_pin' } });
     expect(await db.countRateHits(transferRateKey.createLearner(JUN), new Date(NOW.getTime() - DAY))).toBe(1);
+  });
+
+  it('a retry of a create whose answer was lost comes back even past the per-device limiter; anything else still meets it', async () => {
+    for (let i = 0; i < DEVICE_LIMIT - 1; i += 1) expect((await dPreview(JUN, junPhone, { fromSpaceId: A, code: CODE_B })).status).toBe(200);
+    const first = await dCreate(JUN, junPhone, junCreate());
+    expect(first.status).toBe(201);
+    const retry = await dCreate(JUN, junPhone, junCreate());
+    expect(retry.status).toBe(200);
+    expect(deviceRequest(retry).id).toBe(deviceRequest(first).id);
+    const other = await dCreate(JUN, junPhone, junCreate({ destinationSpaceId: C, code: CODE_C }));
+    expect([other.status, other.body.error?.code]).toEqual([429, 'too_many_attempts']);
+    const look = await dPreview(JUN, junPhone, { fromSpaceId: A, code: CODE_B });
+    expect([look.status, look.body.error?.code]).toEqual([429, 'too_many_attempts']);
+    await db.putDevice({ learnerId: JUN, deviceId: 'device-junother', secretHash: await hashSecret('other'), scope: 'full', createdAt: OLD, lastSeenAt: OLD });
+    for (let i = 0; i < DEVICE_LIMIT; i += 1) deviceTransferLimiter.check(`device:${JUN}:device-junother`);
+    const notOwn = await dCreate(JUN, deviceHeader('device-junother', 'other'), junCreate());
+    expect([notOwn.status, notOwn.body.error?.code]).toEqual([429, 'too_many_attempts']);
   });
 
   it('is idempotent for the same device; another device of the learner meets already_open', async () => {
