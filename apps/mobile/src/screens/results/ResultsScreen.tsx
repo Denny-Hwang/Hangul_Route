@@ -275,7 +275,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
     const state = navigation.getState();
     const page = episodeReturn(panes, episode.id, state.routes[state.index - 1]?.name);
     if (page.to === 'journeyPane') navigation.navigate('Main', { screen: 'Journey', params: { episodeId: page.episodeId } });
-    else navigation.navigate('EpisodeDetail', { episodeId: page.episodeId });
+    else navigation.navigate('EpisodeDetail', { episodeId: page.episodeId, from: 'results' });
   };
 
   const chooseStoryAction = (choice: StoryResultsChoice): void => {

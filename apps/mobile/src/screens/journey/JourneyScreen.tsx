@@ -35,6 +35,7 @@ import { activeProfileSelector, useProfileStore } from '../../store/profile-stor
 import { useProgressStore } from '../../store/progress-store';
 import { usePlanStore } from '../../store/plan-store';
 import { useAccessTier, useQuestAccess } from '../../store/tier-store';
+import { episodeAccessExits } from '../episode/access-exits';
 import { EpisodeDetailView } from '../episode/EpisodeDetailView';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 
@@ -216,6 +217,7 @@ export function JourneyScreen(): React.ReactElement {
       onOpenSources={(storyId) => navigation.navigate('StorySources', { storyId, from: 'episode' })}
       onOpenCultureNotes={(storyId) => navigation.push('CultureNotes', { storyId })}
       onOpenCellStories={(stage, theme, source) => navigation.navigate('CellStories', { stage, theme, source })}
+      {...episodeAccessExits(navigation, setSelected)}
     />
   ) : (
     <ComingSoonPane />

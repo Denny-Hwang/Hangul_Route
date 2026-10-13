@@ -595,6 +595,10 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.notes.reactionPicked': [['Thank you']],
   'a11y.notes.questCard': [['Meet g, n, d, l']],
   'a11y.access.notOpen': [['Lunch Box Words'], ['Around the Korean Table']],
+  'a11y.access.row': [
+    ['Family at the Table', ['Meet the family.', '0 of 3 stars earned'], ['Next']],
+    ['Lunch Box Words', ['Builds on Family at the Table', '2 of 3 stars earned'], ['Next', 'In your plan']],
+  ],
   'caregiver.notes.row.title': [['Mina']],
   'caregiver.notes.title': [['Mina']],
   'caregiver.notes.empty': [['Mina']],

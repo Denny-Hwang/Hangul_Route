@@ -1,5 +1,6 @@
 import type { RuntimeVocabItem, VocabTopic } from '@hangul-route/content-schema';
 import { flags } from '../../config/flags';
+import { isFreeContent } from '../../logic/content-access';
 import { storyFixtureIds } from '../../content/stories';
 import { visibleItems, vocabTopics } from '../../content/vocab';
 import { resolvePicture } from '../../logic/picture-ref';
@@ -68,6 +69,15 @@ const FIXTURE_BUNDLE = storyFixtureIds.length > 0;
 /** Words is on: its flag (or the e2e fixture bundle), and at least one topic to show (T1's `isAvailable`). */
 export function wordsOffered(): boolean {
   return (flags.vocabTopicsEnabled || FIXTURE_BUNDLE) && pickerTopics().length > 0;
+}
+
+/**
+ * The first free word topic the picker shows in this build (F-STORY-004 D5), or null when Words is
+ * off or no free topic is shown: where Back to open lessons and Practice words go at the end of
+ * the free lessons (F-ENT-003 sections 3.7, 3.8).
+ */
+export function firstFreeTopicKey(): string | null {
+  return wordsOffered() ? (pickerTopics().find((t) => isFreeContent('vocab-topic', t.key))?.key ?? null) : null;
 }
 
 /** Hoya's topic line once per topic per learner per app session (keyed by profile). */
