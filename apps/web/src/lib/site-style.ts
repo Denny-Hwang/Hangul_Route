@@ -111,6 +111,9 @@ export function siteCssVars(): CSSProperties {
     '--hr-site-hero-art-max': SITE_SIZES.heroArtMax,
     '--hr-site-hero-art-max-wide': SITE_SIZES.heroArtMaxWide,
     '--hr-site-hero-ratio': SITE_SIZES.heroRatio,
+    '--hr-site-sunken': colors.surface.sunken,
+    '--hr-site-size-caption': rem(typography.size.caption),
+    '--hr-site-size-body-sm': rem(typography.size.bodySm),
   };
   return vars as CSSProperties;
 }

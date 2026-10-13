@@ -103,13 +103,14 @@ describe('the blocks under the hero (L1)', () => {
     cards.forEach((m, i) => {
       expect(textOf(m[2] ?? '').trim()).toBe(`${items[i]?.title} ${items[i]?.body}`);
     });
-    expect(who).toMatch(/<ul class="hr-site-persona-list"/);
+    // role="list" keeps an unstyled list a list for VoiceOver in Safari (as the S-4a parts do).
+    expect(who).toMatch(/<ul role="list" class="hr-site-persona-list"/);
     for (const item of items) expect(who).not.toContain(item.linkLabel);
   });
 
   it('how it works: three numbered steps, title and line; the Learning Route line only with its claim', () => {
     const how = /<section[^>]*>\s*<h2[^>]*>How it works<\/h2>[\s\S]*?<\/section>/.exec(main)?.[0] ?? '';
-    expect(how).toMatch(/<ol/);
+    expect(how).toMatch(/<ol role="list"/);
     for (const step of Object.values(H.how.steps)) {
       expect(textOf(how)).toContain(step.title);
       expect(textOf(how)).toContain(step.body);
@@ -123,6 +124,7 @@ describe('the blocks under the hero (L1)', () => {
   it('the promises: three titles, no body, "Child safety first" and no compliance claim (OD-4)', () => {
     const promises = /<section[^>]*>\s*<h2[^>]*>Our promises<\/h2>([\s\S]*?)<\/section>/.exec(main)?.[1] ?? '';
     expect([...promises.matchAll(/<li[^>]*>([^<]*)<\/li>/g)].map((m) => m[1])).toEqual([H.promises.items.ads, H.promises.items.safety, H.promises.items.noRed]);
+    expect(promises).toMatch(/<ul role="list"/);
     expect(main).toMatch(/<h2[^>]*style="[^"]*position:absolute[^"]*"[^>]*>Our promises<\/h2>/);
     expect(textOf(html)).not.toMatch(/COPPA/);
   });
