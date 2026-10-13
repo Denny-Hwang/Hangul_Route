@@ -36,6 +36,7 @@ const {
   checkBudget,
   heldStoryCards,
   levelCode,
+  offShelfStory,
   renderBundle,
   slugOf,
 } = await import(SCRIPT);
@@ -658,5 +659,32 @@ describe("build-stories.mjs: the checked-in bundle", () => {
       cwd: REPO,
     });
     assert.equal(r.status, 0, r.stderr + r.stdout);
+  });
+});
+
+describe("build-stories.mjs: offShelfStory (the e2e fixture bundle)", () => {
+  const base = { id: "story:x", shelf: { category: "letters" }, card: { titleEn: "X" }, title: { ko: "x" } };
+
+  test("a story without rewardCardIds drops shelf and card and gains no rewardCardIds key", () => {
+    const out = offShelfStory(base);
+    assert.deepEqual(out, { id: "story:x", title: { ko: "x" } });
+    assert.equal("rewardCardIds" in out, false);
+  });
+
+  test("a listen-only reward is dropped with the key", () => {
+    const out = offShelfStory({ ...base, rewardCardIds: { listen: "card:x" } });
+    assert.equal("rewardCardIds" in out, false);
+  });
+
+  test("listen plus other rewards keeps the others", () => {
+    const out = offShelfStory({ ...base, rewardCardIds: { listen: "card:x", read: "card:y" } });
+    assert.deepEqual(out, { id: "story:x", title: { ko: "x" }, rewardCardIds: { read: "card:y" } });
+  });
+
+  test("does not change its input", () => {
+    const input = { ...base, rewardCardIds: { listen: "card:x" } };
+    offShelfStory(input);
+    assert.deepEqual(input.rewardCardIds, { listen: "card:x" });
+    assert.ok(input.shelf && input.card);
   });
 });
