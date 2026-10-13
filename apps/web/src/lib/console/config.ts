@@ -15,7 +15,7 @@ export interface ConsoleEnv {
   NEXT_PUBLIC_NOTES_ENABLED?: string;
   /** The grown-up Learning Route page (Learning Route amendment section 6.1, F-APP-001's reader), default off. */
   NEXT_PUBLIC_LEARNING_ROUTE_ENABLED?: string;
-  /** Progress reports (F-REPORT-001), the console twin of the learner app's `EXPO_PUBLIC_REPORTS_ENABLED`. */
+  /** Progress reports (F-REPORT-001), the console twin of the learner app's `EXPO_PUBLIC_REPORTS_ENABLED`; on unless `'false'` or `'0'`. */
   NEXT_PUBLIC_REPORTS_ENABLED?: string;
   /** All lessons, the grown-up Lessons entry (F-BROWSE-001 section 5.4; F-APP-001 section 3.8), `enabled` to show it; default off. */
   NEXT_PUBLIC_BROWSE?: string;
@@ -125,16 +125,20 @@ export function learningRouteEnabled(env: ConsoleEnv = buildEnv()): boolean {
  */
 export const REPORT_REVIEWED_LOCALES: readonly UiLocale[] = ['en'];
 
+/** The reports switch when the build sets no value (F-REPORT-001 RP-11 turned it on, with the learner app's). */
+const REPORTS_LAUNCH_DEFAULT = true;
+
 /**
- * Progress reports (F-REPORT-001 section 3.1): the report pages, their entries and navigation items render only with
- * `NEXT_PUBLIC_REPORTS_ENABLED` set to `'true'` or `'1'` (parsed like the learner app's flag; off by default, RP-11
- * turns it on) **and** a console locale in `REPORT_REVIEWED_LOCALES`. Otherwise the entries are not drawn and the
- * pages show the "not available yet" state with the back link. The Worker routes are always on; this flag never
- * changes what they serve.
+ * Progress reports (F-REPORT-001 section 3.1): the report pages, their entries and navigation items render with a
+ * console locale in `REPORT_REVIEWED_LOCALES` unless `NEXT_PUBLIC_REPORTS_ENABLED` switches them off. The value is
+ * parsed like the learner app's flag: `'false'` or `'0'` is off, `'true'` or `'1'` is on, anything else (or unset) is
+ * the launch default, on since RP-11. Switched off, the entries are not drawn and the pages show the "not available
+ * yet" state with the back link. The Worker routes are always on; this flag never changes what they serve.
  */
 export function reportsEnabled(locale: UiLocale, env: ConsoleEnv = buildEnv()): boolean {
   const raw = env.NEXT_PUBLIC_REPORTS_ENABLED;
-  return (raw === 'true' || raw === '1') && REPORT_REVIEWED_LOCALES.includes(locale);
+  const on = raw === 'false' || raw === '0' ? false : REPORTS_LAUNCH_DEFAULT;
+  return on && REPORT_REVIEWED_LOCALES.includes(locale);
 }
 
 /**

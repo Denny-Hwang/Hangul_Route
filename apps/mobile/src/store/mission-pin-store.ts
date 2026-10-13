@@ -20,7 +20,35 @@ export function pinMission(plan: MissionPlan): void {
   pins.set(plan.profileId, plan);
 }
 
-/** Drop every pin (tests). */
+/**
+ * The topics whose Speed Round reached its results today (F-VOC-005 section 3.7, PR P-3): the Home
+ * "Words are ready" card is collected once a round of its topic completes. Same lifetime as the pin
+ * (this app session, one day per profile), so it is kept here; `vocab-run-store` marks it.
+ */
+const roundsDone = new Map<string, { date: string; topics: Set<string> }>();
+const NONE: ReadonlySet<string> = new Set();
+
+/** Records a completed Speed Round of `topicKey` for this profile and day; an older day's record is dropped. */
+export function markVocabRoundDone(profileId: string, date: string, topicKey: string): void {
+  const row = roundsDone.get(profileId);
+  if (row && row.date === date) row.topics.add(topicKey);
+  else roundsDone.set(profileId, { date, topics: new Set([topicKey]) });
+}
+
+/** Takes back a mark of `markVocabRoundDone` whose progress write failed (`vocab-run-store`). */
+export function unmarkVocabRoundDone(profileId: string, date: string, topicKey: string): void {
+  const row = roundsDone.get(profileId);
+  if (row && row.date === date) row.topics.delete(topicKey);
+}
+
+/** The topics whose Speed Round completed for this profile and day this app session. */
+export function vocabRoundsDone(profileId: string, date: string): ReadonlySet<string> {
+  const row = roundsDone.get(profileId);
+  return row && row.date === date ? row.topics : NONE;
+}
+
+/** Drop every pin and every round record (tests). */
 export function clearMissionPins(): void {
   pins.clear();
+  roundsDone.clear();
 }

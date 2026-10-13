@@ -16,3 +16,19 @@ export const ALL_CLAIMS_ON: Readonly<SiteClaims> = Object.freeze({
   browseAsLearner: true,
   lectureMode: true,
 });
+
+/**
+ * Every feature claim off, paid plans coming: the shortest state of every site page, the one before any companion
+ * flip PR. Since F-REPORT-001 RP-11 the reports claims are on in `SITE_CLAIMS`, so a test of the base lines alone
+ * renders this state instead of the defaults. Test-only, like `ALL_CLAIMS_ON`.
+ */
+export const ALL_CLAIMS_OFF: Readonly<SiteClaims> = Object.freeze({
+  freePlan: 'stage1',
+  paidPlans: 'coming',
+  learningRoute: false,
+  parentReports: false,
+  teacherReports: false,
+  feedbackNotes: false,
+  browseAsLearner: false,
+  lectureMode: false,
+});

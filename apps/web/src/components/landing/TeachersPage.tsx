@@ -23,11 +23,11 @@ export function TeachersPage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: 
   const teacherSignIn = signIn('teacher');
   const classLines = [
     T.class.body,
-    ...(showsClaim(claims, 'teacherReports') ? [T.class.reports] : []),
-    ...(showsClaim(claims, 'learningRoute') ? [T.class.route] : []),
-    ...(showsClaim(claims, 'feedbackNotes') ? [T.class.notes] : []),
-    ...(showsClaim(claims, 'browseAsLearner') ? [T.class.browse] : []),
-    ...(showsClaim(claims, 'lectureMode') ? [T.class.lecture] : []),
+    ...(showsClaim(claims, 'teacherReports', locale) ? [T.class.reports] : []),
+    ...(showsClaim(claims, 'learningRoute', locale) ? [T.class.route] : []),
+    ...(showsClaim(claims, 'feedbackNotes', locale) ? [T.class.notes] : []),
+    ...(showsClaim(claims, 'browseAsLearner', locale) ? [T.class.browse] : []),
+    ...(showsClaim(claims, 'lectureMode', locale) ? [T.class.lecture] : []),
   ];
   return (
     <SiteShell locale={locale} page="/teachers" current="teachers">

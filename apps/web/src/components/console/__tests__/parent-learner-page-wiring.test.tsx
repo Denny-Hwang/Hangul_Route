@@ -236,7 +236,7 @@ describe('/parent/learner without a learner: the parent chooser (RP-7c)', () => 
   });
 
   it('reports off: not available yet, no request', async () => {
-    vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', '');
+    vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'false');
     const root = await page();
     expect(h1s(root)).toEqual([en.report.state.flagOff]);
     expect(named('listSpaces')).toEqual([]);

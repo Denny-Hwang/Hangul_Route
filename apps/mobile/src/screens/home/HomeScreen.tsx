@@ -33,6 +33,7 @@ import { episodesAll, questsAll } from '../../content';
 import { PLACEMENT_BANK } from '../../content/placement.generated';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { catchUpCard, takeCatchUpAnnouncement } from '../../logic/awards/catch-up';
+import { isContentLocked } from '../../logic/content-access';
 import { localizeMissionCard } from '../../logic/content-locale';
 import { cursorContext } from '../../logic/cursor-context';
 import {
@@ -41,6 +42,7 @@ import {
   dayKey,
   planHomeStoryOpen,
   storyCardShownEvent,
+  vocabCardShownEvent,
   type MissionCard,
 } from '../../logic/homework/mission-builder';
 import { dueTodayCount, showsTodayCount } from '../../logic/homework/assignment-groups';
@@ -66,6 +68,7 @@ import { storyCoverArt } from '../../logic/story/scene-view';
 import { defaultStoryIndex, entryForQuest } from '../../logic/story/story-index';
 import { storyFitsForSnapshot } from '../../logic/story/story-fit';
 import { storyLockFor } from '../../logic/story/story-pick';
+import { homeVocabNudge, topicRefIndex } from '../../logic/vocab/home-card';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
@@ -74,7 +77,7 @@ import { gateOpensDirectlyNow } from '../../store/gate-now';
 import { useMembershipStore } from '../../store/membership-store';
 import { usePlacementRunStore } from '../../store/placement-run-store';
 import { usePlanStore } from '../../store/plan-store';
-import { pinMission, pinnedMission } from '../../store/mission-pin-store';
+import { pinMission, pinnedMission, vocabRoundsDone } from '../../store/mission-pin-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
@@ -83,10 +86,11 @@ import { PictureArt } from '../minigames/PictureArt';
 import { LinkButton } from '../placement/parts';
 import { NotesHomeCard } from '../notes/NotesHomeCard';
 import { PlanSlotCard, usePlanSlot } from '../route/PlanPromptCard';
-import { firstFreeTopicKey } from '../vocab/topic-data';
+import { firstFreeTopicKey, pickerTopics, topicWords, wordsOffered } from '../vocab/topic-data';
 import { FreeEndCard } from './FreeEndCard';
 import { freeTopicsInBuild, samplerStoryOf } from './free-end-inputs';
 import { RouteStrip } from './RouteStrip';
+import { VocabMissionCard } from './VocabMissionCard';
 import { TransferHomeLine } from '../transfer/TransferHomeLine';
 
 /** Avatar circle in the Profile entry; with its label the button clears the 64pt floor. */
@@ -106,6 +110,8 @@ const ICON_FOR: Record<MissionCard['kind'], 'replay' | 'play' | 'library' | 'sta
   // F-ENT-003 E3-7: the free-end card draws its own card; a practice card leads with its replay icon (or the topic or story cover).
   'free-end': 'star',
   practice: 'replay',
+  // F-VOC-005 section 3.7: the vocabulary card draws its own card (`VocabMissionCard`) with this icon.
+  vocab: 'library',
 };
 /** The story card's cover thumbnail (F-STORY-004 §3.7), drawn where the icon sits. */
 const COVER_THUMB = 48;
@@ -115,6 +121,8 @@ const NO_BOOKMARKS = emptyBookmarks();
  * first pinned — the plan itself is pinned per session too (F-STORY-004 §3.7, §3.11).
  */
 const storyCardShownSent = new Set<string>();
+/** `home.vocab_card.shown` likewise, once per profile, day and app session (F-VOC-005 section 3.9). */
+const vocabCardShownSent = new Set<string>();
 /** Catch-up lines already announced this app session (`<profileId>|<line>`), so a tab switch never repeats one (F-STORY-006 §3.10). */
 const catchUpAnnounced = new Set<string>();
 
@@ -277,6 +285,15 @@ export function HomeScreen(): React.ReactElement {
     [tier, questOpen],
   );
 
+  // The "Words are ready" nudge (F-VOC-005 section 3.7): which shown, open topic opens a word. Built
+  // only while Words is offered (`flags.vocabTopicsEnabled`, or the e2e fixture bundle, never a release
+  // build); with the flag off the nudge is null and Home is unchanged.
+  const vocabTopicOf = useMemo(() => {
+    if (!wordsOffered()) return null;
+    const gating = gatingActive(flags, bundleOs());
+    return topicRefIndex(pickerTopics(), topicWords, (key) => !isContentLocked({ kind: 'vocab-topic', id: key, tier, gatingEnabled: gating }));
+  }, [tier]);
+
   // Today's mission: the plan is pinned for the day so finishing one card never reshuffles the other
   // two under the learner (F-HW-001 §3.2). The pin lives in a session store keyed by profile and day,
   // not in this screen, so Results' Back home (which mounts Home again) keeps it (F-STORY-004 PR 4.8c).
@@ -332,6 +349,10 @@ export function HomeScreen(): React.ReactElement {
         // F-STORY-005 §3.4: stories near the learner's stage come first; it only orders, never hides.
         fits: storyFitsForSnapshot(snap),
       },
+      // Slot (3) leads with "Words are ready" from three due words (F-VOC-005 section 3.7); collected once
+      // a Speed Round of its topic completed today.
+      vocab: vocabTopicOf === null ? null : homeVocabNudge({ enabled: true, snapshot: snap, topicOf: vocabTopicOf, now: new Date() }),
+      vocabRoundsDone: vocabRoundsDone(profile.id, today),
     });
     // A caregiver or class assignment for today takes card ② (F-HW-001 §3.4, F-PLAN-001 §3.4).
     const merged = mergeAssignments({
@@ -346,7 +367,7 @@ export function HomeScreen(): React.ReactElement {
     pinMission(merged);
     return merged;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, snap, tier, questOpen, routeInput, bookmarks, storyIndex, freeEndSeen, freeTopics, samplerStory, isStoryLocked]);
+  }, [profile, snap, tier, questOpen, routeInput, bookmarks, storyIndex, freeEndSeen, freeTopics, samplerStory, isStoryLocked, vocabTopicOf]);
 
   // The route strip (F-ROUTE-001 R-4b, OD-3): built from `routeModelInput`, the same input as the
   // Learning Route page, so the strip and the page always name the same stage and pips.
@@ -381,6 +402,15 @@ export function HomeScreen(): React.ReactElement {
     const key = `${mission.profileId}|${mission.date}`;
     if (!event || storyCardShownSent.has(key)) return;
     storyCardShownSent.add(key);
+    void track({ name: event.name, profileId: mission.profileId, payload: event.payload });
+  }, [mission]);
+
+  useEffect(() => {
+    if (!mission) return;
+    const event = vocabCardShownEvent(mission);
+    const key = `${mission.profileId}|${mission.date}`;
+    if (!event || vocabCardShownSent.has(key)) return;
+    vocabCardShownSent.add(key);
     void track({ name: event.name, profileId: mission.profileId, payload: event.payload });
   }, [mission]);
 
@@ -431,6 +461,12 @@ export function HomeScreen(): React.ReactElement {
   };
 
   const openCard = (card: MissionCard): void => {
+    // "Say hello again": a Relaxed Speed Round of the topic with the most due words (F-VOC-005 section 3.7).
+    // A topic locked after the pin goes to the topic page from there, which opens the grown-up gate (D5).
+    if (card.kind === 'vocab') {
+      if (card.topicKey) navigation.navigate('VocabSpeedRound', { topicKey: card.topicKey, mode: 'relaxed' });
+      return;
+    }
     if (openLocked(card)) return;
     if (card.kind === 'story' && openStory(card)) return;
     // A practice card of a word topic opens the topic page (F-ENT-003 section 3.7).
@@ -555,6 +591,7 @@ export function HomeScreen(): React.ReactElement {
                 />
               );
             }
+            if (card.kind === 'vocab') return <VocabMissionCard key={card.slot} card={card} icon={ICON_FOR.vocab} onPress={() => openCard(card)} />;
             const storyQuest = card.kind === 'story' || card.practiceKind === 'story' ? card.questId : undefined;
             const entry = storyQuest ? entryForQuest(storyIndex, storyQuest) : undefined;
             const topicCover = card.topicKey ? freeTopics.find((t) => t.key === card.topicKey)?.cover : undefined;
