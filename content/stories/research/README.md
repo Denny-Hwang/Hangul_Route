@@ -28,6 +28,6 @@ Each `*.final.json` carries `verification: { passes: 3, checked_at: "2026-10-10"
 - Quiz answer positions are varied; each question has one answer supported by a fact.
 
 ## Before an episode is shown to learners
-- **Native review** of Korean text and tone (owner).
+- **Native language and culture review** of Korean text and tone: the multi-agent final review (owner decision 2026-10-12; two separate passes signed `reviewedBy: "MAR"`, see [F-STORY-001 §3.6](../../../docs/specs/F-STORY-001-story-schema-pipeline.md) and [docs/workflows/story-content-qa.md](../../../docs/workflows/story-content-qa.md)).
 - Re-check the items listed under "remaining uncertainty" in the sign-off, in particular time-dependent facts: Haeinsa Janggyeong Panjeon visitor rules (haeinsa.or.kr) and the current location of the Hunminjeongeum Haerye (Kansong Art Museum).
 - Where a source could only be read through an archive copy (unesco.org, heritage portal descriptions), spot-check it live in a browser.

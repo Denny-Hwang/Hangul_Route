@@ -255,7 +255,7 @@ Wrong claims (not just line drift): gating reason codes (`locked`/`building`/`no
 5. **Product: Stage 1 grows from 8 to 15 quests, about 65 minutes** (F-QUEST-002 §3.6; the blueprint estimated about 52). Existing learners see episodes they had completed become incomplete (life, rites, nature, crafts gain quests). Confirm the length and that "incomplete episode" for existing testers is acceptable.
 6. **Product: Stage 1 prize is not star-gated** (F-QUEST-002 L8) and the Hangul Check verdict (`>= 27/30 symbols and >= 4/5 words first try`, caregiver-only) is the only place a threshold appears. Confirm both, or change the thresholds.
 7. **Commercial / content: the free story sampler.** The six sampler stories (F-STORY-004 §3.9) contain only one folk tale among stage-1 stories (`story-sun-and-moon`); the "two Story Time tales" idea needs a tale outside the research set (호랑이와 곶감). Confirm the six, or commission the extra tale before gating is ever switched on (gating stays off until Stripe Live and PNNL approval).
-8. **Product: Spanish and Korean reviewers** (F-I18N-001 PR 15/16). Who is the native Spanish reviewer, and is the owner the Korean reviewer? Also: should the Korean UI offer an opt-in English gloss for heritage learners (F-I18N-001 §10, default no).
+8. **Product: Spanish and Korean reviewers** (F-I18N-001 PR 15/16). Who is the native Spanish reviewer, and is the owner the Korean reviewer? (Superseded 2026-10-12: the multi-agent final review; see F-I18N-001 §3.10.) Also: should the Korean UI offer an opt-in English gloss for heritage learners (F-I18N-001 §10, default no).
 9. **Legal: legal pages in `/es` and `/ko`** (F-I18N-001 L10). They show the English text under a localized "English is authoritative" notice until counsel reviews translations. Confirm that is acceptable for launch.
 
 Recorded, no action needed unless the owner objects: the new package and directories (`packages/i18n`, `content/i18n/`, `content/stories/`, `content/vocab/`) are treated as approved under D2/D4 and listed in CLAUDE.md §2 by F-I18N-001 PR 0; F-QUEST-002 keeps Stage 1 content in TypeScript for now (a stated deviation from D4's JSON-first, F-QUEST-002 §8) because the validator reads the shipped TS directly.
@@ -268,7 +268,7 @@ Recorded, no action needed unless the owner objects: the new package and directo
 | 4 | Avatar `례이` is respelled `예리` (Yeri). |
 | 5 | Stage 1 grows from 8 to 15 quests (blueprint 04/05). |
 | 6 | Stage 1 prize is not star-gated; Hangul Check caregiver threshold as specified. |
-| 8 | Korean reviewer: the owner. Spanish reviewer: an external native speaker is still needed (owner task before F-I18N-001 PR 15). |
+| 8 | Korean reviewer: the owner. Spanish reviewer: an external native speaker is still needed (owner task before F-I18N-001 PR 15). (Superseded 2026-10-12: both reviews are the multi-agent final review; see F-I18N-001 §3.10.) |
 | 1, 9 | Still need counsel before store submission and before the legal text ships: the "I'm 13 or older" self-attestation and English-only `/es` `/ko` legal pages under an "English is authoritative" notice. Code can proceed. |
 | 7 | Free story sampler accepted as specified; an extra folk tale (호랑이와 곶감) is optional later content. |
 

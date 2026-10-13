@@ -14,6 +14,9 @@ import type { RouteCatalog, RouteQuest } from './route-seed';
 /** 1 to 7 (`stage1` is 1). Named for placement so it cannot clash with F-STORY-005's own helper. */
 export const placementStageNumber = (stage: StageKey): number => StageKeySchema.options.indexOf(stage) + 1;
 
+/** Orders placement levels (stage, then band 0 to 3): the one rule behind "the level never goes lower". */
+export const placementLevelRank = (level: PlacementLevel): number => placementStageNumber(level.stage) * 10 + level.band;
+
 /** Tags (`sym:<key>`) of a question id; the run keeps them for the questions it asked. */
 export type TagLookup = (questionId: string) => readonly string[];
 

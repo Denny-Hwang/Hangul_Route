@@ -1,5 +1,7 @@
 # Launch FAQ — One-line answers
 
+> **Stale: do not paste until rewritten.** This file predates the current charter (CLAUDE.md section 1: for anyone learning Hangul, no age framing) and the review process of 2026-10-12. Answers that still name an age range or describe how content was reviewed must be rewritten against CLAUDE.md and the specs before launch.
+
 > Have this open in another tab on launch day. When a commenter asks,
 > paste the answer, then add one sentence of warmth.
 
@@ -178,9 +180,10 @@ but I grew up in a heritage family and watched both my parents
 struggle to give me the language. This is for the next kid.
 
 **Q. Did you use AI?**
-A. Yes — to draft Hoya's dialogue variants and to validate content
-JSON against schemas. All Korean voice acting is human. All cultural
-content was reviewed by two native Korean editors.
+A. Yes. AI agents help draft content and validate it against schemas,
+and Korean language and cultural content goes through a multi-step
+review with independent AI reviewer passes checked against cited
+sources.
 
 **Q. Funding?**
 A. Bootstrapped. No outside money. May raise pre-seed after Stage 3.

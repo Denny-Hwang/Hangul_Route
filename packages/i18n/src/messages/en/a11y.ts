@@ -194,6 +194,8 @@ export const a11y = {
     /** The parent dashboard row (R-9b): its goal and started lines, read without the middle dot. */
     rowGoal: (n: number, title: string) => `Goal: Stage ${n}, ${title}.`,
     rowStarted: (n: number, band: string, date: string) => `Started: Stage ${n}, ${band}, ${date}.`,
+    /** One letter-wall tile (R-7c): the letter, its sound (with "at the end" for a final) and its state word. */
+    letter: (letter: string, sound: string, state: string) => `${letter}, ${sound}. ${state}.`,
   },
   /**
    * The vocabulary question view (F-VOC-004 §3.8, S-4b): the speaker, the outcome said in words after a
@@ -254,5 +256,15 @@ export const a11y = {
   /** The grown-up shell (F-APP-001 section 3.16): router pages announce this in a polite live region. */
   shell: {
     redirecting: 'Taking you to your home…',
+  },
+  /**
+   * The route marks read as words (F-ENT-003 section 3.7, 3.14, Appendix A; PR E3-5): a Journey cell label
+   * appends them after its own words in the order Next, In your plan, not open yet. `notOpen` is the only key
+   * for a closed cell's words; `title` is the cell's episode title in the UI locale.
+   */
+  access: {
+    next: 'Next',
+    inPlan: 'In your plan',
+    notOpen: (title: string) => `${title}: not open yet. Opens the lesson page.`,
   },
 } as const;

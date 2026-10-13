@@ -23,7 +23,8 @@ type E2eWindow = Window & {
   };
 };
 
-const LESSON_CELL = 'Stage 1 Hangul, Letters & Books: lesson, 1 heritage story';
+// A new learner's next quest is in this cell, so its label ends with the Next word (F-ENT-003 E3-5).
+const LESSON_CELL = 'Stage 1 Hangul, Letters & Books: lesson, 1 heritage story. Next.';
 const STORIES_CELL = 'Stage 2 Words, Letters & Books: 1 heritage story';
 const PLACEHOLDER = 'Stage 3 Sentences, Holidays & Traditions, coming soon';
 const LESSON_ROW = 'Heritage stories for this cell, 1 heritage story';

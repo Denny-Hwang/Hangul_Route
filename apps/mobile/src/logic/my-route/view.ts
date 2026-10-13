@@ -20,6 +20,7 @@ import {
   type MyRouteMessages,
   type Viewer,
 } from './copy';
+import { letterWallView, type LetterTile, type LetterWallView } from './letter-wall';
 import { hoyaPoseFor } from './seen';
 import { SKILL_OF_KIND } from './skills';
 import type { Hero, MyRouteModel, Pip, SeenRecord, Skill, StageRow, StageState } from './types';
@@ -95,6 +96,8 @@ export interface StageRowView {
   /** A pip in this row was done since the last open (the one-time fill). */
   fresh: boolean;
   connector: Connector;
+  /** The letter wall drawn when the stage is open (R-7c): Stage 1 only, null without tiles. */
+  letterWall: LetterWallView | null;
 }
 
 export interface LaterRowView {
@@ -170,6 +173,8 @@ export interface MyRouteViewInput {
   hasStories: boolean;
   /** The record this open started from; never written in read-only mode. */
   seen: SeenRecord | undefined;
+  /** The Stage 1 letter wall (`routeLetterWall`, R-7c); none draws no wall. */
+  letterWall?: readonly LetterTile[];
 }
 
 const TONE: Readonly<Record<Exclude<StageState, 'open'>, PillTone>> = {
@@ -265,6 +270,7 @@ function stageRowView(row: StageRow, ctx: CopyContext, i: MyRouteViewInput, fres
     }),
     fresh: [...row.pips, ...row.newPips].some((p) => fresh.has(p.key)),
     connector: null,
+    letterWall: row.stage === 'stage1' ? letterWallView(i.letterWall ?? [], i.messages) : null,
   };
 }
 

@@ -21,6 +21,18 @@ export {
 } from './summary';
 export { stagesToLatch, withStageLatches } from './latch';
 export { startMarkerOf, startRouteOf } from './start-marker';
+export {
+  jamoIdToSymbolKey,
+  letterWallOf,
+  letterWallView,
+  symbolKeyOf,
+  type LetterState,
+  type LetterTile,
+  type LetterTileView,
+  type LetterWallInput,
+  type LetterWallView,
+  type WallJamo,
+} from './letter-wall';
 export { hoyaPoseFor, newQuestsLine, newlyDoneKeys, parseSeen, readSeen, seenFrom, seenKey, writeSeen, type JsonStorage } from './seen';
 export {
   canDoCopy,

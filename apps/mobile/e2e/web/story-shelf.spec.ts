@@ -285,13 +285,11 @@ test.describe('story shelf (fixture bundle)', () => {
     expect(errors).toEqual([]);
   });
 
-  // Known bug, booked as F-STORY-004 PR 4.8c: Home pins the day's plan in a ref inside HomeScreen, and
-  // Results' Back home resets the stack to Main after every quest, which mounts Home again. The pin is
-  // lost and the plan is built again, so the finished story's slot turns into an "again" card ("Read it
-  // again") instead of keeping its story with the collected look (§3.7 "Pinned all day", F-HW-001 §3.2).
-  // Grid cards lose their pin the same way; 4.8c fixes both and adds the grid check on the regular
-  // build. Remove the fixme when 4.8c lands.
-  test.fixme('Back home after finishing the Home story card: the slot keeps "A short story", collected', async ({ page }) => {
+  // F-STORY-004 PR 4.8c: Results' Back home mounts Home again; the day's plan stays pinned (a session
+  // store keyed by profile and day), so the finished story keeps its slot with the collected look
+  // instead of turning into "Read it again" (§3.7 "Pinned all day", F-HW-001 §3.2). The grid half is
+  // home-pinned-plan.spec.ts on the regular build.
+  test('Back home after finishing the Home story card: the slot keeps "A short story", collected', async ({ page }) => {
     const id = await onboard(page);
     await expect(storyCard(page)).toHaveAccessibleName('Hangul Day. A short story.');
     await storyCard(page).click();

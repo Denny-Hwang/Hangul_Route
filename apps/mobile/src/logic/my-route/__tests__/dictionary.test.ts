@@ -70,6 +70,11 @@ const SAMPLES: Record<string, unknown[][]> = {
   'a11y.myRoute.homeStripGoal': TITLES,
   'a11y.myRoute.rowGoal': TITLES,
   'a11y.myRoute.rowStarted': [[1, 'Letters and sounds', 'Oct 9']],
+  'a11y.myRoute.letter': [
+    ['ㅏ', 'a', 'Met in a quest'],
+    ['ㄱ', 'g/k', 'Coming up in a quest'],
+    ['ㄴ', 'n, at the end', 'Already known'],
+  ],
 };
 
 type Rendered = { path: string; text: string; surface: Surface; args: unknown[] };

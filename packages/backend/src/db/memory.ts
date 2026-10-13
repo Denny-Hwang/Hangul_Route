@@ -160,6 +160,16 @@ export class MemoryDb implements Db {
     return row ? clone({ learnerId: row.learnerId, summary: row.summary, updatedAt: row.updatedAt }) : null;
   }
 
+  async summariesOf(learnerIds: readonly string[]): Promise<StoredSummary[]> {
+    return clone([...new Set(learnerIds)].flatMap((learnerId) => {
+      const row = this.snapshots.get(learnerId);
+      return row ? [{ learnerId: row.learnerId, summary: row.summary, updatedAt: row.updatedAt }] : [];
+    }));
+  }
+  async learnersOf(learnerIds: readonly string[]): Promise<string[]> {
+    return [...new Set(learnerIds)].filter((learnerId) => this.learners.has(learnerId));
+  }
+
   async getSpace(spaceId: string): Promise<Space | null> {
     return clone(this.spaces.get(spaceId) ?? null);
   }
