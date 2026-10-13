@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest";
  * collection, which has no per-test timeout, and gives the same module instance (none of these files resets the
  * module registry), with the hoisted `vi.mock` calls still applied.
  *
- * The guard matches any dynamic import (or `vi.importActual`) of a page module, awaited or not (a lazy thunk or
+ * The guard matches any dynamic import (or `require`, `vi.importActual`, `vi.importMock`) of a page module, awaited or not (a lazy thunk or
  * `.then` loads the same graph inside the test), by the `@/app/` alias or by a relative path, when the last path
  * segment is `page`. It scans every `*.test`/`*.spec` file under `src/` (ts, tsx, js, jsx, mjs); test files outside
  * `src/` (such as `scripts/__tests__`) load no pages and are not scanned. A test that resets the
@@ -31,14 +31,14 @@ function testFiles(dir: string): string[] {
 }
 
 /**
- * A dynamic import or `vi.importActual` whose specifier is a page module: the `@/app/` alias or a relative path,
+ * A dynamic import, `require`, `vi.importActual` or `vi.importMock` whose specifier is a page module: the `@/app/` alias or a relative path,
  * whose last segment is exactly `page` (with or without a `.ts`/`.tsx` extension), so `../learner-page` or
  * `@/app/(console)/layout` do not match. Quoted or template-literal specifiers both count. Two forms load nothing
  * at test time and are skipped: a type-only `typeof import('...')`, and vitest's typed `vi.mock(import('...'), ...)`,
  * which is rewritten when the mock is hoisted. Group 1 is the specifier.
  */
 const PAGE_IMPORT =
-  /(?<!typeof\s*)(?<!vi\.mock\(\s*)\b(?:import|importActual(?:<[^>]*>)?)\(\s*['"`]((?:@\/app\/|(?:\.\.?\/)+)(?:[^'"`]*\/)?page(?:\.tsx?)?)['"`]/g;
+  /(?<!typeof\s*)(?<!vi\.mock\(\s*)\b(?:import|require|(?:importActual|importMock)(?:<[^>]*>)?)\(\s*['"`]((?:@\/app\/|(?:\.\.?\/)+)(?:[^'"`]*\/)?page(?:\.tsx?)?)['"`]/g;
 
 function pageImports(source: string): string[] {
   return Array.from(source.matchAll(PAGE_IMPORT), (match) => match[1] ?? "");
@@ -118,6 +118,14 @@ describe("web tests import page modules at the top of the file", () => {
       isPageImport(
         "const actual = await vi.importActual<typeof import('../page')>('../page');",
       ),
+    ).toBe(true);
+    expect(
+      isPageImport(
+        "const mocked = await vi.importMock('@/app/(console)/teach/space/page');",
+      ),
+    ).toBe(true);
+    expect(
+      isPageImport("const { default: Page } = require('../page');"),
     ).toBe(true);
   });
 
