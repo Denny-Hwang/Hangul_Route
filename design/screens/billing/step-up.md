@@ -21,7 +21,7 @@ Code: B-8b wraps checkout and portal in Clerk's `useReverification` (`@clerk/cle
 | 2 | verifying | Clerk's own reverification UI (password, code or provider) is open. Our dialog steps aside while it runs (no scrim, nothing inert), so Clerk's modal owns focus and input; the page's buttons stay disabled. A dashed placeholder stands for Clerk's UI, which Clerk owns. Offline, or when Clerk's UI has not opened within 10 seconds (its script blocked), the dialog comes back as state 3 |
 | 3 | unavailable | Clerk unreachable, offline, or the retried request refused again: the body is replaced by "Can't confirm right now. Try again in a moment." (`stepUp.unavailable`, `role="status"`) and only **Not now** remains, focused. No second prompt, no loop |
 | 4 | cancelled or failed | the dialog closed; focus back on the button that was pressed; "Nothing was changed." (`stepUp.cancelled`) as an info note above the cards |
-| 5 | asking over the receipts page | after **View receipt**: the blank tab is already open (opened inside the tap); a cancel closes it |
+| 5 | asking over the receipts page | after **View receipt**: the blank tab opened inside the tap is closed before the dialog opens, so the grown-up is never left on an empty tab while this one asks; after step-up the receipt opens in a new tab, or the row asks for one more tap when the browser blocks it (`receipts.md`) |
 | — | success | the dialog closes and the original request runs once (checkout, portal or receipt link); no extra message |
 
 A sign-in completed in this tab less than 10 minutes ago never shows the dialog.

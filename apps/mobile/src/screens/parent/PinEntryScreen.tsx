@@ -18,6 +18,7 @@ import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PIN_PAD_GAP, PinPad } from '../../components/PinPad';
 import { useLocale, useMessages } from '../../i18n/use-messages';
+import { afterGateHandoff } from '../../logic/browse/gate-entry';
 import { pinCreated, pinResetCompleted } from '../../logic/onboarding/onboarding-events';
 import {
   forGrownUpArea as opensGrownUpArea,
@@ -37,6 +38,7 @@ import {
 import { pinKeyMax, pinPadBudget, pinPadFirstWidth, pinPadLayout } from '../../logic/profiles/pin-pad-layout';
 import { routeGateStep } from '../../logic/route/proposal-flow';
 import type { RootStackParamList } from '../../navigation/types';
+import { openBrowseFromGate } from '../../platform/browse-handoff';
 import { pinHasher } from '../../platform/crypto';
 import { continueToGrownUpPage, openGrownUpArea } from '../../platform/grown-up-handoff';
 import { track } from '../../platform/telemetry';
@@ -201,6 +203,11 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       const { profileId, transferId } = route.params;
       if (profileId === undefined || transferId === undefined) navigation.goBack();
       else navigation.replace('ApproveTransfer', { profileId, transferId });
+    } else if (route.params.next === 'BrowseLessons') {
+      // All lessons (F-BROWSE-001 section 4.3, BR-12a): the gate hand-off writes a fresh gate pass and leaves in this
+      // tab. A browser that refuses the pass opens the dashboard, which says why under Open all lessons.
+      if (afterGateHandoff(openBrowseFromGate(route.params.browseTarget)) === 'leave') navigation.goBack();
+      else navigation.replace('ParentDashboard', { browseBlocked: true });
     } else if (route.params.next === 'ExternalLink') {
       // Back to Sources with the gate open: native opens the waiting link, the web asks for one more tap (F-STORY-002 §3.8).
       navigation.goBack();

@@ -1,4 +1,4 @@
-import type { PlacementSource, StageKey, StoryLevel, ThemeKey } from '@hangul-route/content-schema';
+import type { BrowseTarget, PlacementSource, StageKey, StoryLevel, ThemeKey } from '@hangul-route/content-schema';
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { AskFrom } from '../logic/access-copy';
 import type { PreviewFrom } from '../logic/episode-access';
@@ -47,7 +47,9 @@ export type GrownUpDestination =
   /** F-PLAN-002 section 3.9 (P2-7b): a child's **Change the plan** when the gate is closed (`PinEntry.profileId`). */
   | 'RouteSetup'
   /** F-PLAN-002 section 3.9 (P2-7b): a child's **Stop this plan** when the gate is closed; back to the overview underneath (`PinEntry.profileId`). */
-  | 'RouteOverview';
+  | 'RouteOverview'
+  /** F-BROWSE-001 section 4.3 (BR-12a, web only): All lessons; a correct PIN writes a fresh gate pass (`PinEntry.browseTarget`). */
+  | 'BrowseLessons';
 
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
@@ -140,6 +142,8 @@ export type RootStackParamList = {
     fromSpaceId?: string;
     /** `next: 'ApproveTransfer'`: the request whose sheet opens. */
     transferId?: string;
+    /** `next: 'BrowseLessons'`: where All lessons opens (a content target, never a learner id); absent opens its home. */
+    browseTarget?: BrowseTarget;
   };
   /** Forgot PIN: Rescue Code or a 24-hour wait, then a new PIN (F-LEARN-001 §3.5). `next` is kept for the PIN screen. */
   PinReset: { next: GrownUpDestination; profileId?: string };
@@ -162,7 +166,8 @@ export type RootStackParamList = {
   JoinSpace: undefined;
   /** billing/plan-status — the learner Plan screen: status only, no PIN (F-BILL-002 §4.7; F-ENT-003's "Ask a grown-up" still arrives through the gate). */
   Paywall: { from: 'journey' | 'settings' | AskFrom } | undefined;
-  ParentDashboard: undefined;
+  /** `browseBlocked`: the browser refused the All lessons gate pass, so the storage line shows under Open all lessons (F-BROWSE-001 BR-12a). */
+  ParentDashboard: { browseBlocked?: true } | undefined;
   Profile: undefined;
   /** profile/edit — name, level, cub, who is learning (F-LEARN-001 §3.11). Behind the PIN when the gate is required. */
   EditProfile: { profileId: string };

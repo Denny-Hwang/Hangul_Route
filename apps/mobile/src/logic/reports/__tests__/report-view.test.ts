@@ -407,6 +407,19 @@ describe('inAppReportView: headlines, horizons and milestones', () => {
   });
 });
 
+describe('inAppReportView: the Preview lessons stage (F-BROWSE-001 BR-12a, section 4.11 item 2)', () => {
+  it('is the stage of journey.here', () => {
+    expect(inAppReportView(input({ summary: summary({ journey: { v: 1, here: 'stage2', stages: [] } }) })).previewStage).toBe('stage2');
+    expect(inAppReportView(input()).previewStage).toBe('stage1');
+  });
+
+  it('else stage1: no journey, a stage this build cannot read, or no summary', () => {
+    expect(inAppReportView(input({ summary: summary({ journey: undefined }) })).previewStage).toBe('stage1');
+    expect(inAppReportView(input({ summary: summary({ journey: { v: 1, here: 'stage9', stages: [] } }) })).previewStage).toBe('stage1');
+    expect(inAppReportView(input({ summary: null })).previewStage).toBe('stage1');
+  });
+});
+
 describe('inAppReportView: states', () => {
   it('empty: the neutral notice, Now on from the journey, no tabs and no period figures', () => {
     const s = summary({ activity: activity({ days: [], months: [], total: { since: null, min: 0, q: 0, c: 0, w: 0, days: 0 } }), lastActiveAt: '' });
