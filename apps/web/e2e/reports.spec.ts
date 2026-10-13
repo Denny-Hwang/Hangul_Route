@@ -7,7 +7,7 @@ import { EMPTY, LEGACY, PARTIAL, SESSION_KEY, mockReport, reportUrl, spaceId } f
  * the API mocked with `page.route`. Reports are a build-time switch, so the full cases need an export made with
  * `NEXT_PUBLIC_REPORTS_ENABLED=true`, `NEXT_PUBLIC_API_BASE_URL=https://api.report-e2e.test` and
  * `NEXT_PUBLIC_CONSOLE_DEV_AUTH=true`, run with `REPORTS_E2E=1`. On the default export (the preview gate's) only the
- * switched-off case runs. The print cases join with RP-7b's print stylesheet; RP-11 runs these with the flag flipped.
+ * switched-off case runs. RP-7b adds the All-time growth line and the print cases; RP-11 runs these with the flag flipped.
  */
 const FULL = process.env.REPORTS_E2E === '1';
 
@@ -251,5 +251,66 @@ test.describe('the learner report (RP-7a2)', () => {
     await expect(action).toHaveAttribute('href', /add=quest%3Astage1-life-q2/);
     const described = await action.getAttribute('aria-describedby');
     await expect(page.locator(`[id="${described}"]`)).toHaveText('ㅂ (b) and ㅅ (s): worth another visit.');
+  });
+
+  test('All time: the growth chart with its months, the table behind Show as table, no sideways scroll at 320', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await mockReport(page, { kind: 'family' });
+    await page.goto(reportUrl('family', 'period=all'));
+    await expect(page.getByRole('img', { name: 'Quests and cards by month' })).toBeVisible();
+    await expect(page.getByTestId('report-growth-table')).toBeHidden();
+    await page.getByRole('button', { name: 'Show as table' }).click();
+    await expect(page.getByRole('table', { name: 'Quests and cards by month' })).toBeVisible();
+    await expect(page.getByRole('row', { name: /October 2026/ })).toContainText('7');
+    await noSidewaysScroll(page);
+  });
+
+  test('print: the footer shows, More detail is expanded, the frame and every screen-only control are hidden', async ({ page }) => {
+    await mockReport(page, { kind: 'class', role: 'teacher' });
+    await page.goto(reportUrl('class', 'period=week&from=roster'));
+    await expect(headline(page)).toBeVisible();
+    await expect(page.getByTestId('report-print-footer')).toBeHidden();
+    await page.emulateMedia({ media: 'print' });
+    await expect(page.getByTestId('report-print-footer')).toBeVisible();
+    await expect(page.getByTestId('report-print-footer')).toHaveText('Private: shared from Hangul Route on Oct 15.');
+    await expect(page.getByTestId('report-detail')).toBeVisible();
+    await expect(page.getByText('Letters Mina knows well')).toBeVisible();
+    await expect(page.getByTestId('frame-nav')).toBeHidden();
+    await expect(page.getByTestId('frame-brand')).toBeHidden();
+    await expect(page.getByTestId('report-print')).toBeHidden();
+    await expect(page.getByTestId('report-back')).toBeHidden();
+    await expect(page.getByTestId('report-more-button')).toBeHidden();
+    await expect(page.getByTestId('report-step-prev')).toBeHidden();
+    await expect(page.getByTestId('report-line-actions').first()).toBeHidden();
+    await expect(page.getByRole('tab', { name: 'This month' })).toBeHidden();
+    await expect(page.getByRole('tab', { name: 'This week' })).toBeVisible();
+    await expect(page.getByTestId('report-range')).toBeVisible();
+    await expect(page.getByTestId('report-calendar')).toBeHidden();
+    await expect(page.getByTestId('report-calendar-text')).toBeVisible();
+    // The page padding sits inside the report; the frame main adds none.
+    expect(await page.locator('.hr-frame-main').evaluate((node) => getComputedStyle(node).paddingTop)).toBe('0px');
+    await expect(page).toHaveTitle('Report - Hangul Route');
+  });
+
+  test('print on All time: the growth table prints in place of the chart, even when it was closed', async ({ page }) => {
+    await mockReport(page, { kind: 'family' });
+    await page.goto(reportUrl('family', 'period=all'));
+    await expect(page.getByTestId('report-growth-chart')).toBeVisible();
+    await page.emulateMedia({ media: 'print' });
+    await expect(page.getByTestId('report-growth-chart')).toBeHidden();
+    await expect(page.getByTestId('report-growth-table')).toBeVisible();
+    await expect(page.getByTestId('report-growth-toggle')).toBeHidden();
+  });
+
+  test('print to PDF (Chromium): a short report fits in at most two A4 pages', async ({ page, browserName }) => {
+    test.skip(browserName !== 'chromium', 'page.pdf is Chromium only');
+    await mockReport(page, { kind: 'family' });
+    await page.goto(reportUrl('family', 'period=week&from=home'));
+    await expect(headline(page)).toBeVisible();
+    await page.emulateMedia({ media: 'print' });
+    const pdf = await page.pdf({ format: 'A4', preferCSSPageSize: true });
+    const pages = (pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) ?? []).length;
+    expect(pages).toBeGreaterThanOrEqual(1);
+    expect(pages).toBeLessThanOrEqual(2);
   });
 });
