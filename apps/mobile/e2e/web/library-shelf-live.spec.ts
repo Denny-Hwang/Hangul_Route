@@ -51,6 +51,13 @@ async function tileIds(page: Page): Promise<string[]> {
     .evaluateAll((els) => els.map((el) => (el.getAttribute('data-testid') ?? '').replace('story-tile-', '')));
 }
 
+/** Every accessible name on the story tiles: a lock shown only in an aria-label is not in innerText. */
+async function tileNames(page: Page): Promise<string[]> {
+  return page.locator('[data-testid^="story-tile-"]').evaluateAll((els) =>
+    els.flatMap((el) => [el, ...Array.from(el.querySelectorAll('[aria-label]'))].map((n) => n.getAttribute('aria-label') ?? n.textContent ?? '')),
+  );
+}
+
 test.describe('Library and Home with the reviewed launch stories (regular build)', () => {
   test.skip(FIXTURE_BUILD, 'the fixture bundle has its own shelf stories: see story-shelf.spec.ts');
 
@@ -68,6 +75,7 @@ test.describe('Library and Home with the reviewed launch stories (regular build)
     await expect(page.locator(`[data-testid="story-tile-${STORY_TIME[0]}"]`)).toBeVisible();
     expect((await tileIds(page)).sort()).toEqual([...STORY_TIME].sort());
     expect(await page.locator('body').innerText()).not.toMatch(GATING_WORDS);
+    for (const name of await tileNames(page)) expect(name).not.toMatch(GATING_WORDS);
 
     await page.getByRole('tab', { name: 'Culture', exact: true }).click();
     await expect(page.locator('[data-testid="story-tile-story:sejong-new-letters"]')).toBeVisible();
@@ -75,6 +83,9 @@ test.describe('Library and Home with the reviewed launch stories (regular build)
     expect(culture).toHaveLength(CULTURE_COUNT);
     for (const id of STORY_TIME) expect(culture).not.toContain(id);
     expect(await page.locator('body').innerText()).not.toMatch(GATING_WORDS);
+    const cultureNames = await tileNames(page);
+    expect(cultureNames.length).toBeGreaterThanOrEqual(CULTURE_COUNT);
+    for (const name of cultureNames) expect(name).not.toMatch(GATING_WORDS);
 
     expect(errors).toEqual([]);
   });
