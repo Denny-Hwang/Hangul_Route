@@ -14,6 +14,8 @@ import { ParentDashboardScreen } from '../screens/parent/ParentDashboardScreen';
 import { PinEntryScreen } from '../screens/parent/PinEntryScreen';
 import { PinResetScreen } from '../screens/parent/PinResetScreen';
 import { PlacementReportScreen } from '../screens/parent/PlacementReportScreen';
+import { LearnerReportScreen } from '../screens/parent/LearnerReportScreen';
+import { flags } from '../config/flags';
 import { RestoreScreen } from '../screens/sync/RestoreScreen';
 import { SaveProgressScreen } from '../screens/sync/SaveProgressScreen';
 import { JoinSpaceScreen } from '../screens/sync/JoinSpaceScreen';
@@ -97,6 +99,8 @@ export function RootNavigator(): React.ReactElement {
         <Stack.Screen name="CultureNotes" component={CultureNotesScreen} />
         <Stack.Screen name="Placement" component={PlacementScreen} options={{ gestureEnabled: false }} />
         <Stack.Screen name="PlacementReport" component={PlacementReportScreen} />
+        {/* F-REPORT-001 section 3.9 (RP-9): registered only with the reports flag on. */}
+        {flags.reportsEnabled ? <Stack.Screen name="LearnerReport" component={LearnerReportScreen} /> : null}
         {/* Words (F-VOC-003): reachable only from the Library Words section, which needs flags.vocabTopicsEnabled. */}
         <Stack.Screen name="VocabTopics" component={VocabTopicsScreen} />
         <Stack.Screen name="VocabTopic" component={VocabTopicScreen} />

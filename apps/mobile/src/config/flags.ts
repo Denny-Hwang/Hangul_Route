@@ -1,3 +1,5 @@
+import type { UiLocale } from '@hangul-route/i18n';
+
 /**
  * Feature flags for the mobile app.
  *
@@ -132,6 +134,15 @@ export interface Flags {
    * FB-14 flips it, after the Worker's note routes are deployed.
    */
   notesEnabled: boolean;
+
+  /**
+   * Progress reports in the learner app (F-REPORT-001 section 3.1, RP-9): the **See report** button on each
+   * grown-up dashboard card and the `LearnerReport` screen behind the gate. With it off the button is not
+   * drawn and the screen is not registered. OFF until RP-11 flips it. The stack registers the screen on this flag;
+   * the button and the screen read `reportsEnabledFor(locale)`, which also holds reports back in a UI locale whose
+   * `report.*` words are not reviewed yet.
+   */
+  reportsEnabled: boolean;
 }
 
 const launchDefaults: Flags = {
@@ -148,6 +159,7 @@ const launchDefaults: Flags = {
   vocabShowDrafts: false,
   grownUpHomeEnabled: false,
   notesEnabled: false,
+  reportsEnabled: false,
 };
 
 export const flags: Flags = {
@@ -171,6 +183,7 @@ export const flags: Flags = {
     isDevBuild() && parseBool(process.env.EXPO_PUBLIC_VOCAB_SHOW_DRAFTS, launchDefaults.vocabShowDrafts),
   grownUpHomeEnabled: parseBool(process.env.EXPO_PUBLIC_GROWN_UP_HOME, launchDefaults.grownUpHomeEnabled),
   notesEnabled: parseBool(process.env.EXPO_PUBLIC_NOTES_ENABLED, launchDefaults.notesEnabled),
+  reportsEnabled: parseBool(process.env.EXPO_PUBLIC_REPORTS_ENABLED, launchDefaults.reportsEnabled),
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;
@@ -194,4 +207,20 @@ export function bundleOs(): string | undefined {
  */
 export function gatingActive(f: Pick<Flags, 'contentGatingEnabled'>, platformOs: string | undefined): boolean {
   return f.contentGatingEnabled && platformOs === 'web';
+}
+
+/**
+ * UI locales whose `report.*` words have passed native review (F-REPORT-001 section 3.1). The same list as the
+ * console's `REPORT_REVIEWED_LOCALES` (`apps/web/src/lib/console/config.ts`): Korean and Spanish join both when
+ * their review lands, so a ko or es learner app never shows a report the console would hold back.
+ */
+export const REPORT_REVIEWED_LOCALES: readonly UiLocale[] = ['en'];
+
+/**
+ * The effective reports switch in the learner app (F-REPORT-001 section 3.1, RP-9): the flag is on **and** the UI
+ * locale is in `REPORT_REVIEWED_LOCALES`. The dashboard's **See report** and the `LearnerReport` screen read this,
+ * never the raw flag.
+ */
+export function reportsEnabledFor(locale: UiLocale, f: Pick<Flags, 'reportsEnabled'> = flags): boolean {
+  return f.reportsEnabled && REPORT_REVIEWED_LOCALES.includes(locale);
 }
