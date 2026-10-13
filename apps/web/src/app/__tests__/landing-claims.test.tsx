@@ -10,6 +10,7 @@ import ParentsPage from '../(en)/parents/page';
 import PrivacyPage from '../(en)/privacy/page';
 import TeachersPage from '../(en)/teachers/page';
 import TermsPage from '../(en)/terms/page';
+import { SITE_PRICE_PATTERNS } from './site-price-patterns';
 
 /**
  * The site promises only what the product does today (owner decisions 2026-10-10; F-SITE-002 §3.9, §3.12). This
@@ -24,8 +25,7 @@ import TermsPage from '../(en)/terms/page';
  * amounts only.
  */
 const COMMERCIAL_CLAIMS: ReadonlyArray<{ name: string; re: RegExp }> = [
-  { name: 'a dollar amount', re: /\$\s?\d/ },
-  { name: 'a price per year or month', re: /\bper\s+(year|month)\b|\/\s?(yr|year|mo|month)\b/i },
+  ...SITE_PRICE_PATTERNS,
   { name: '"every stage"', re: /\bevery\s+stage\b/i },
   { name: '"all stages"', re: /\ball\s+stages\b/i },
   { name: '"lifetime"', re: /\blifetime\b/i },

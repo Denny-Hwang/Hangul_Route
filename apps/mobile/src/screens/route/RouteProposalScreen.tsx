@@ -33,9 +33,7 @@ import { formatDate, type Messages, type UiLocale } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { episodesAll, questsAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
-import { localizeEpisode, localizeQuest } from '../../logic/content-locale';
 import { dayKey } from '../../logic/homework/mission-builder';
 import {
   CUSTOM_WEEKS_MAX,
@@ -66,7 +64,7 @@ import {
   type ProposalContext,
   type WeekRow,
 } from '../../logic/route/proposal-flow';
-import { activeSelfRoute, thisWeekRows } from '../../logic/route/self-route';
+import { activeSelfRoute, completedQuestIdsOf } from '../../logic/route/self-route';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
 import { unlockedStagesFor, usePlanStore } from '../../store/plan-store';
@@ -75,6 +73,7 @@ import { useProgressStore } from '../../store/progress-store';
 import { useRouteStore } from '../../store/route-store';
 import { useAccessTier } from '../../store/tier-store';
 import { LinkButton, RadioTile } from '../placement/parts';
+import { A_SUNDAY, DayChip, StepButton, WIDE_CHIP, WeekList, dayLabel } from './parts';
 
 /**
  * The weekly plan proposal (F-PLAN-002 section 3.9, AMENDMENTS-PLC-PLAN-HANDOFF FP-B6;
@@ -90,13 +89,7 @@ import { LinkButton, RadioTile } from '../placement/parts';
 type Props = NativeStackScreenProps<RootStackParamList, 'RouteProposal'>;
 type ProposalMessages = Messages['learner']['weeklyPlan']['proposal'];
 
-/** A Sunday, so `WEEKDAYS[i]` is this day plus i (weekday chip labels in the UI locale). */
-const A_SUNDAY = '2026-10-11';
 const LENGTHS: readonly LengthChoice[] = ['4-week', '12-week', '6-month', 'custom'];
-/** A radio chip that holds a short word beside its circle at the 18 pt body size: two to a phone row. */
-const WIDE_CHIP = touchTarget.hero + touchTarget.min;
-
-const dayLabel = (locale: UiLocale, date: DateKey): string => formatDate(locale, `${date}T00:00:00Z`, 'weekday', { utc: true });
 
 function previewText(t: ProposalMessages, line: PreviewLine): string {
   switch (line.code) {
@@ -111,110 +104,6 @@ function previewText(t: ProposalMessages, line: PreviewLine): string {
     case 'stories-and-words':
       return t.preview.storiesAndWords(line.stories);
   }
-}
-
-/** A plan item's title in the UI language; a coming-soon episode says so. */
-function rowTitle(row: WeekRow, locale: UiLocale, t: ProposalMessages, fallback: string): string {
-  if (row.kind === 'episode') {
-    const episode = episodesAll.find((e) => e.id === row.id);
-    return t.comingSoonItem(episode ? localizeEpisode(episode, locale).titleEn : fallback);
-  }
-  const quest = questsAll.find((q) => q.id === row.id);
-  return quest ? localizeQuest(quest, locale).titleEn : fallback;
-}
-
-function WeekList({ rows, locale, testID }: { rows: readonly WeekRow[]; locale: UiLocale; testID: string }): React.ReactElement {
-  const m = useMessages();
-  const t = m.learner.weeklyPlan.proposal;
-  return (
-    <View testID={testID} style={{ gap: spacing.sm }}>
-      {rows.map((row) => {
-        const day = dayLabel(locale, row.date);
-        const title = rowTitle(row, locale, t, m.learner.homework.questFallback);
-        return (
-          <View
-            key={`${row.date}|${row.id}`}
-            accessible
-            accessibilityLabel={t.weekRowLabel(day, title)}
-            style={{ flexDirection: 'row', alignItems: 'baseline', gap: spacing.md }}
-          >
-            <Caption tone="secondary" weight="semibold" style={{ minWidth: touchTarget.min }}>
-              {day}
-            </Caption>
-            <Body style={{ flex: 1 }}>{title}</Body>
-          </View>
-        );
-      })}
-    </View>
-  );
-}
-
-/** One weekday under "Change days and time": a checkbox with a visible state (fill and check), at least 64 dp. */
-function DayChip({ label, checked, onPress, testID }: { label: string; checked: boolean; onPress: () => void; testID: string }): React.ReactElement {
-  return (
-    <Pressable
-      testID={testID}
-      onPress={onPress}
-      accessibilityRole="checkbox"
-      accessibilityState={{ checked }}
-      aria-checked={checked}
-      accessibilityLabel={label}
-      style={{
-        minWidth: touchTarget.min,
-        minHeight: touchTarget.min,
-        paddingHorizontal: spacing.sm,
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: spacing.xxs,
-        borderRadius: radii.lg,
-        borderWidth: checked ? borderWidth.thick : borderWidth.base,
-        borderColor: checked ? colors.brand.primary : colors.border.subtle,
-        backgroundColor: checked ? colors.brand.primaryLight : colors.surface.paper,
-      }}
-    >
-      <Body weight="semibold">{label}</Body>
-      {checked ? <Icon name="check" size={spacing.lg} color={colors.brand.primaryDark} /> : null}
-    </Pressable>
-  );
-}
-
-/** The Choose weeks stepper: an icon button with a spoken label, at least 64 dp, quiet when it cannot step. */
-function StepButton({
-  icon,
-  label,
-  disabled,
-  onPress,
-  testID,
-}: {
-  icon: 'dash' | 'plus';
-  label: string;
-  disabled: boolean;
-  onPress: () => void;
-  testID: string;
-}): React.ReactElement {
-  return (
-    <Pressable
-      testID={testID}
-      onPress={disabled ? undefined : onPress}
-      disabled={disabled}
-      accessibilityRole="button"
-      accessibilityState={{ disabled }}
-      aria-disabled={disabled}
-      accessibilityLabel={label}
-      style={{
-        width: touchTarget.min,
-        height: touchTarget.min,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: radii.circle,
-        borderWidth: borderWidth.base,
-        borderColor: disabled ? colors.border.subtle : colors.brand.primary,
-        backgroundColor: disabled ? colors.surface.sunken : colors.surface.paper,
-      }}
-    >
-      <Icon name={icon} size={spacing.xl} color={disabled ? colors.text.muted : colors.brand.primaryDark} />
-    </Pressable>
-  );
 }
 
 export function RouteProposalScreen({ route, navigation }: Props): React.ReactElement {
@@ -240,7 +129,7 @@ export function RouteProposalScreen({ route, navigation }: Props): React.ReactEl
     if (profile === null || snapshot === undefined) return null;
     return {
       placements: snapshot.placements,
-      completedQuestIds: snapshot.quests.filter((q) => q.completedAt !== undefined).map((q) => q.questId),
+      completedQuestIds: completedQuestIdsOf(snapshot.quests),
       ageGroup: profile.ageGroup,
       unlockedStages: unlockedStagesFor(new Date(), profileId) as StageKey[],
       today,
@@ -274,6 +163,12 @@ export function RouteProposalScreen({ route, navigation }: Props): React.ReactEl
     const event = proposedEvent(profileId, source, initial);
     void track({ name: event.name, profileId, payload: { ...event.payload } });
   }, [initial, active, profileId, source]);
+
+  // A plan already in force when the screen opens: its overview instead (G3). A plan started here leaves through `leave`.
+  const started = useRef(false);
+  useEffect(() => {
+    if (context !== null && active !== null && !started.current) navigation.replace('RouteOverview', { profileId });
+  }, [context, active, navigation, profileId]);
 
   const pace = choice?.pace;
   const startDate = choice?.startDate;
@@ -320,11 +215,13 @@ export function RouteProposalScreen({ route, navigation }: Props): React.ReactEl
     starting.current = true;
     setBusy(true);
     setFailed(false);
+    started.current = true;
     const changed = firstChoice.current === null ? false : choiceChanged(firstChoice.current, current);
     const created = await useRouteStore.getState().create(profileId, draft, { from: 'proposal', changed });
     starting.current = false;
     setBusy(false);
     if (created === null) {
+      started.current = false;
       setFailed(true);
       return;
     }
@@ -358,27 +255,11 @@ export function RouteProposalScreen({ route, navigation }: Props): React.ReactEl
     );
   }
 
-  // The learner already follows an own plan (the overview and "Change the plan" arrive with P2-7b).
+  // The learner already follows an own plan: the overview shows it (the effect above moves there).
   if (active !== null) {
-    const rows = thisWeekRows(active, today);
     return (
       <Screen tone="canvas" scrollable>
         {header}
-        <View testID="route-proposal-has-plan" style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-          <Hoya pose="cheering" size={72} accessibilityLabel={m.a11y.hoya('cheering')} />
-          <View style={{ flex: 1 }}>
-            <Body weight="semibold" size="lg">
-              {t.hasPlan.title}
-            </Body>
-            <Body tone="secondary">{t.hasPlan.line}</Body>
-          </View>
-        </View>
-        <Spacer size="lg" />
-        <Heading level="prompt">{t.hasPlan.thisWeek}</Heading>
-        <Spacer size="sm" />
-        {rows.length > 0 ? <WeekList rows={rows} locale={locale} testID="route-proposal-this-week" /> : <Body tone="secondary">{t.hasPlan.nothingThisWeek}</Body>}
-        <Spacer size="xl" />
-        <Button label={t.back.cta} tone="secondary" size="lg" fullWidth onPress={leave} testID="route-proposal-done" />
       </Screen>
     );
   }
@@ -650,6 +531,15 @@ export function RouteProposalScreen({ route, navigation }: Props): React.ReactEl
         accessibilityHint={daysWaiting ? daysHint : undefined}
         onPress={() => void startPlan()}
         testID="route-proposal-start"
+      />
+      <Spacer size="sm" />
+      <Button
+        label={t.moreChoices.cta}
+        tone="ghost"
+        size="md"
+        fullWidth
+        onPress={() => navigation.navigate('RouteSetup', { profileId, choice: current })}
+        testID="route-proposal-more-choices"
       />
       <Spacer size="sm" />
       <LinkButton label={t.notNow.cta} onPress={notNow} testID="route-proposal-not-now" />
