@@ -538,6 +538,11 @@ export const consoleMsgs = {
       tooManyBreaks: '루트에는 쉬는 기간을 12개까지 넣을 수 있어요.',
       sessionsNote: (sessions: number, weeks: number) => `모두 ${weeks}주 동안 ${sessions}회예요.`,
       tooMany: '계획에 담을 수 있는 양보다 많아요. 주 수나 학습 횟수를 줄여 주세요.',
+      pace: '일주일에 며칠 할까요?',
+      paces: { gentle: '여유롭게', steady: '꾸준히', brisk: '활발하게' },
+      paceOption: (pace: string, n: number) => `${pace} · 주 ${n}일`,
+      suggested: '추천',
+      offChips: '고른 요일 수가 학습 속도를 정해요. 추천 기간을 보려면 속도를 하나 골라 주세요.',
     },
     goals: {
       title: '무엇이 가장 중요한가요?',
@@ -650,6 +655,35 @@ export const consoleMsgs = {
     entries: {
       planTerm: { cta: '이번 학기 계획하기' },
       ownRoute: (done: number, total: number, weeks: number) => `나만의 루트: 지금까지 ${done} / ${total} · ${weeks}주`,
+    },
+    proposal: {
+      lessonsAndStories: (stage: number, week: number) =>
+        stage === 1 ? `1단계는 ${week}주차쯤 끝나고, 그다음은 문화 이야기예요.` : `지금 준비된 레슨은 ${week}주차쯤 끝나고, 그다음은 문화 이야기예요.`,
+      lessonsCutShort: (weeks: number) => `${weeks}주에는 앞쪽 레슨까지 들어가요. 주를 늘리면 나머지도 담을 수 있어요.`,
+      lessonsThenFree: (weeks: number) => `지금 준비된 레슨은 약 ${weeks}주 분량이에요. 나머지는 자유 연습이에요.`,
+      lessonsFill: (weeks: number) => `${weeks}주 내내 레슨으로 채워요.`,
+      storiesAndWords: (stories: number) =>
+        stories > 0
+          ? `이 시작 위치부터는 남은 레슨이 없어요: 문화 이야기 ${stories}개와 낱말 주제.`
+          : '이 시작 위치부터는 남은 레슨이 없어요: 낱말 주제와 자유 연습.',
+    },
+    update: {
+      line: (name: string) => `${name}의 최근 수준 확인에서 더 앞선 시작 위치를 찾았어요.`,
+      cta: '계획 업데이트하기',
+      label: (name: string) => `${name}의 계획 업데이트하기`,
+      ask: (removed: number, added: number, next: string | null) => {
+        const counts =
+          removed > 0
+            ? added > 0
+              ? ` 항목 ${removed}개가 계획에서 빠지고 ${added}개가 들어와요.`
+              : ` 항목 ${removed}개가 계획에서 빠져요.`
+            : added > 0
+              ? ` 항목 ${added}개가 계획에 들어와요.`
+              : '';
+        return `계획을 업데이트할까요? 오늘부터 새 시작 위치로 이어지고, 끝나는 날은 그대로예요.${counts}${next ? ` 다음: ${next}.` : ''} 끝낸 것은 그대로 남아요.`;
+      },
+      done: '업데이트했어요. 기기는 다음 동기화 때 새 계획을 받아요.',
+      failed: '지금은 계획을 업데이트할 수 없어요. 다시 해 보세요.',
     },
     catalog: {
       comingSoon: (title: string) => `${title} (곧 나옴)`,
