@@ -21,6 +21,7 @@ import type {
   NoteDeviceScope,
   NoteRecipientRow,
   RateHitRow,
+  SpaceNoteListRow,
   StoredNote,
   StoredNotePrefs,
   StoredNoteReport,
@@ -303,6 +304,13 @@ export interface Db {
   notesForLearner(learnerId: string, scope: NoteDeviceScope, now: Date, limit: number): Promise<LearnerNotesInbox>;
   /** Notes sent in a space (optionally to one learner), newest first, older than `before` when given, at most `limit`. */
   notesForSpace(spaceId: string, options: { before: NoteCursor | null; limit: number; now: Date; learnerId?: string }): Promise<StoredNote[]>;
+  /**
+   * A space's sent list without a learner filter (section 7.2, PR FB-3b), in one statement: every note to
+   * chosen learners, and each `everyone` batch as one row (its first note, its size, live and taken-back
+   * notes), newest first by the row's note, older than `before` when given, at most `limit` rows. The work
+   * is linear in the notes the page walks (a batch's counts are read once, never once per note).
+   */
+  sentListOfSpace(spaceId: string, options: { before: NoteCursor | null; limit: number; now: Date }): Promise<SpaceNoteListRow[]>;
   /** Every note to a learner from any space, every status, newest first (the family view). */
   notesForOversight(learnerId: string, options: { before: NoteCursor | null; limit: number; now: Date }): Promise<StoredNote[]>;
   /**
@@ -342,7 +350,10 @@ export interface Db {
   getSendGrant(spaceId: string, accountId: string): Promise<StoredSendGrant | null>;
   putSendGrant(row: StoredSendGrant): Promise<void>;
   deleteSendGrant(spaceId: string, accountId: string): Promise<boolean>;
-  /** A student membership ended (section 7.5): its live, hidden and withdrawn notes go; reported ones stay for review. */
+  /**
+   * The learner left the space from its device (section 7.5): its live, hidden and withdrawn notes go. A
+   * reported note, and any note a report row names (one the owner reviewed), stays for its retention.
+   */
   deleteNotesForMembership(learnerId: string, spaceId: string): Promise<number>;
   /**
    * Bounded retention purge (section 8.7), at most `limit` rows per step: live, hidden and withdrawn notes

@@ -1,19 +1,22 @@
-import { CATALOG, NOTE_PRESET_AUDIENCE, NOTE_PRESETS_NEED_SUGGEST, NOTE_SEND_MAX_LEARNERS, NoteSendSchema, type NotesMode, type Space } from '@hangul-route/content-schema';
+import { CATALOG, NOTE_LEARNER_ID_MAX, NOTE_PRESET_AUDIENCE, NOTE_PRESETS_NEED_SUGGEST, NOTE_SEND_MAX_LEARNERS, NoteSendSchema, type NotesMode, type Space } from '@hangul-route/content-schema';
 import { checkNoteText } from '@hangul-route/i18n/note-text';
 import { Hono, type Context } from 'hono';
-import { dbFor, noteRateKey, type Db, type NewNote } from '../db';
+import { dbFor, noteRateKey, noteRetentionCuts, type Db, type NewNote, type NoteCursor, type SpaceNoteListRow, type StoredNote } from '../db';
 import { fail, ok } from '../envelope';
 import { requireAccount } from '../lib/access';
-import { can, type AccountActor } from '../lib/can';
+import { allowedOnSpace, can, type AccountActor } from '../lib/can';
 import { accountOverLimit, learnersOverLimit, NOTE_LIMIT_SENDS_PER_MINUTE, NOTE_LIMIT_WINDOW_MS, sendCounterHits, sendCounterKeys } from '../lib/note-limits';
+import { batchStatus, encodeNoteCursor, parseNoteCursor, sentNoteReaction, sentNoteStatus, type SentNoteFacts } from '../lib/note-views';
+import { purgeNotesLazily } from '../lib/note-retention';
 import { notesSendEnabled, type NotesEnv } from '../lib/notes-switch';
 import { createRateLimiter } from '../lib/rate-limit';
 import type { Account } from '../store';
 import { rosterName } from './spaces';
 
 /**
- * Notes from grown-ups, the account routes — F-FEEDBACK-001 section 7.2 (PR
- * FB-3a): the composer's recipient list and the send. Mounted at /api/spaces.
+ * Notes from grown-ups, the account routes — F-FEEDBACK-001 section 7.2: the
+ * composer's recipient list and the send (PR FB-3a), the sent list and take
+ * back (PR FB-3b). Mounted at /api/spaces.
  *
  * Both routes sit behind the Worker switch `NOTES_SEND` (section 7.8): while it
  * is off they answer 404 before reading a header, a body or the database. A
@@ -21,6 +24,10 @@ import { rosterName } from './spaces';
  * number of learners. A family's notes mode and blocks are applied here and
  * again at delivery (section 6.8); a block always reads like `off`, so it is
  * never revealed to the sender. Note text is never logged or echoed in an error.
+ *
+ * The sent list and take back are not switched (decision D7): they keep
+ * working while sending is off. Take back is soft (decision D9): the row stays
+ * for the family's view with status `withdrawn`.
  */
 export const notesRoutes = new Hono<{ Bindings: NotesEnv }>();
 
@@ -148,6 +155,10 @@ notesRoutes.post('/:id/notes', async (c) => {
   if (accountOverLimit(account.id, to.length, counts)) return fail(c, 'too_many', 'Too many notes today, try again tomorrow', 429, { scope: 'account', retryAfter: NOTE_LIMIT_WINDOW_MS / 1000 });
   if (role === 'teacher') for (const learnerId of to) if ((modes.get(learnerId) ?? 'all') === 'presets') presetsOnly.push(learnerId);
 
+  // The lazy retention step (section 8.7): one bounded purge per send, so old notes go even between daily runs.
+  // Housekeeping never fails a send: a failed step is retried by the next send and by the daily run.
+  await purgeNotesLazily(db, now).catch(() => 0);
+
   const at = now.toISOString();
   const batchId = `notebatch:${crypto.randomUUID()}`;
   const rows: NewNote[] = to.map((learnerId) => ({
@@ -169,4 +180,125 @@ notesRoutes.post('/:id/notes', async (c) => {
   const written = await db.insertNotes(rows, sendCounterHits(account.id, to, at));
   if (rows.length > 0 && written === 0) return fail(c, 'sending_paused', 'Sending notes is paused for this account', 403);
   return ok(c, { batchId, sent: written, skipped, presetsOnly }, 201);
+});
+
+/** Rows per page of the sent list (section 7.2). */
+export const SENT_LIST_PAGE = 50;
+const LEARNER_ID = /^profile:[a-z0-9-]+$/;
+/** `POST …/withdraw` body: `{}` (or none) takes back one note, `{ batch: true }` every live note of its batch; anything else is refused. */
+function withdrawBody(raw: unknown): { batch: boolean } | null {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return null;
+  const keys = Object.keys(raw);
+  if (keys.some((k) => k !== 'batch')) return null;
+  const batch = (raw as { batch?: unknown }).batch;
+  if (batch !== undefined && batch !== true) return null;
+  return { batch: batch === true };
+}
+
+/**
+ * The facts the status mapping needs for the listed notes to chosen learners, with a fixed number of
+ * statements: the space's adults (one), the grants of family caregivers who sent (one each), the learners'
+ * modes (one, class only), blocks (one per sender) and names (one per 90 learners).
+ */
+async function listFacts(db: Db, space: Space, notes: readonly StoredNote[]): Promise<{ facts: (n: StoredNote) => SentNoteFacts; names: Map<string, string> }> {
+  const learnerIds = [...new Set(notes.map((n) => n.learnerId))];
+  const senders = [...new Set(notes.map((n) => n.senderAccountId))];
+  const members = await db.membersOf(space.id);
+  const roles = new Map(members.filter((m) => m.memberKind === 'account').map((m) => [m.memberId, m.role]));
+  const students = new Set(members.filter((m) => m.memberKind === 'learner' && m.role === 'student').map((m) => m.memberId));
+  const maySend = new Set<string>();
+  for (const accountId of senders) {
+    const role = roles.get(accountId);
+    if (space.kind === 'class' && (role === 'teacher' || role === 'owner')) maySend.add(accountId);
+    if (space.kind === 'family' && (role === 'owner' || (role === 'caregiver' && (await db.getSendGrant(space.id, accountId)) !== null))) maySend.add(accountId);
+  }
+  const modes = new Map<string, NotesMode>();
+  if (space.kind === 'class' && learnerIds.length > 0) for (const p of await db.notePrefsFor(learnerIds)) modes.set(p.learnerId, p.classes);
+  const blocked = new Set<string>();
+  for (const accountId of senders) {
+    const ids = [...new Set(notes.filter((n) => n.senderAccountId === accountId).map((n) => n.learnerId))];
+    for (const learnerId of await db.blocksFor(ids, accountId)) blocked.add(`${learnerId}\n${accountId}`);
+  }
+  const names = new Map((await db.getLearners(learnerIds)).map((l) => [l.id, rosterName(space, l.displayName)]));
+  return {
+    names,
+    facts: (n) => ({
+      spaceKind: space.kind,
+      mode: modes.get(n.learnerId) ?? 'all',
+      blocked: blocked.has(`${n.learnerId}\n${n.senderAccountId}`),
+      learnerInSpace: students.has(n.learnerId),
+      senderMaySend: maySend.has(n.senderAccountId) && n.senderRole === (space.kind === 'class' ? 'teacher' : 'family'),
+    }),
+  };
+}
+
+notesRoutes.get('/:id/notes', async (c) => {
+  const db = dbFor(c);
+  const account = await requireAccount(c);
+  if (!('id' in account)) return account;
+  const space = await db.getSpace(c.req.param('id'));
+  if (!space) return notFound(c);
+  // `feedback.send`, or in a family `feedback.oversee` (a caregiver without the grant still reads the family's notes).
+  const actor: AccountActor = { kind: 'account', accountId: account.id, memberships: await db.membershipsOf('account', account.id) };
+  const rights = allowedOnSpace(actor, { space, parent: null });
+  if (!rights.has('feedback.send') && !rights.has('feedback.oversee')) return fail(c, 'not_allowed', 'You cannot see notes here', 403);
+
+  const rawBefore = c.req.query('before');
+  let before: NoteCursor | null = null;
+  if (rawBefore !== undefined && rawBefore !== '') {
+    before = parseNoteCursor(rawBefore);
+    if (!before) return fail(c, 'bad_request', 'Invalid before', 422);
+  }
+  const learnerId = c.req.query('learner');
+  if (learnerId !== undefined && (learnerId.length > NOTE_LEARNER_ID_MAX || !LEARNER_ID.test(learnerId))) return fail(c, 'bad_request', 'Invalid learner', 422);
+
+  const now = new Date();
+  // With `learner`, every note is its own row; without it, an `everyone` batch collapses to one row (no counts of opens or answers).
+  const page: SpaceNoteListRow[] =
+    learnerId === undefined
+      ? await db.sentListOfSpace(space.id, { before, limit: SENT_LIST_PAGE, now })
+      : (await db.notesForSpace(space.id, { before, limit: SENT_LIST_PAGE, now, learnerId })).map((note) => ({ note, batch: null }));
+  const { facts, names } = await listFacts(db, space, page.filter((r) => r.batch === null).map((r) => r.note));
+  const rows = page.map(({ note: n, batch }) => {
+    const common = { id: n.id, batchId: n.batchId, presetId: n.presetId, text: n.body, suggest: n.suggest, label: n.senderLabel, createdAt: n.createdAt, mine: n.senderAccountId === account.id };
+    if (batch) return { ...common, to: 'everyone' as const, size: batch.size, status: batchStatus(batch) };
+    const f = facts(n);
+    const status = sentNoteStatus(n, f);
+    return { ...common, to: 'learner' as const, learnerId: n.learnerId, displayName: names.get(n.learnerId) ?? '', status, reaction: sentNoteReaction(n, status, f) };
+  });
+  const last = page[page.length - 1];
+  return ok(c, { rows, next: page.length === SENT_LIST_PAGE && last ? encodeNoteCursor(last.note) : null });
+});
+
+notesRoutes.post('/:id/notes/:noteId/withdraw', async (c) => {
+  const db = dbFor(c);
+  const account = await requireAccount(c);
+  if (!('id' in account)) return account;
+  const space = await db.getSpace(c.req.param('id'));
+  if (!space) return notFound(c);
+  // Taking a note back only lowers exposure, so it needs no current `feedback.send`: an adult member of the space
+  // takes back its own notes even after its grant or teacher role went, and an archived space allows it too.
+  if (!(await db.membership(space.id, 'account', account.id))) return fail(c, 'not_allowed', 'You cannot take back notes here', 403);
+  // No body reads as `{}`; a body that is not JSON is refused like any other bad body.
+  const text = await c.req.text().catch(() => '');
+  let raw: unknown = {};
+  if (text.trim() !== '') {
+    try {
+      raw = JSON.parse(text);
+    } catch {
+      raw = null;
+    }
+  }
+  const body = withdrawBody(raw);
+  if (!body) return fail(c, 'bad_request', 'Invalid body', 422);
+
+  const now = new Date();
+  const note = await db.getNote(c.req.param('noteId'));
+  // Another space's note, a missing one, or one past retention: the same 404, never which.
+  if (!note || note.spaceId !== space.id || (note.status !== 'reported' && note.createdAt < noteRetentionCuts(now).notesSince)) return notFound(c);
+  if (note.senderAccountId !== account.id) return fail(c, 'not_allowed', 'You can take back only your own notes', 403);
+  // A batch take back skips reported notes (they stay for review); one reported note is refused.
+  if (body.batch) return ok(c, { withdrawn: await db.withdrawBatch(note.batchId, account.id, now) });
+  if (note.status === 'reported') return fail(c, 'note_reported', 'This note is under review', 409);
+  return ok(c, { withdrawn: await db.withdrawNote(note.id, now) });
 });

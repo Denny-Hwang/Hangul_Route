@@ -332,7 +332,11 @@ spacesRoutes.post('/:id/leave', async (c) => {
   if (!learnerId) return fail(c, 'bad_request', 'learnerId required', 422);
   const auth = await authorizeDevice(c, learnerId);
   if (typeof auth !== 'string') return auth;
-  return ok(c, { left: await db.removeMembership(space.id, 'learner', learnerId) });
+  const left = await db.removeMembership(space.id, 'learner', learnerId);
+  // F-FEEDBACK-001 section 7.5: the learner left from its own device, so its notes of the space go (reported ones,
+  // and any note a report row names, stay for review); also on a retry.
+  await db.deleteNotesForMembership(learnerId, space.id);
+  return ok(c, { left });
 });
 
 spacesRoutes.delete('/:id/members/:kind/:memberId', async (c) => {
@@ -345,7 +349,13 @@ spacesRoutes.delete('/:id/members/:kind/:memberId', async (c) => {
   const account = await requireCan(c, db, space, 'roster.manage');
   if (!('id' in account)) return account;
   if (kind === 'account' && memberId === space.ownerAccountId) return fail(c, 'owner', 'The owner cannot be removed', 409);
-  return ok(c, { removed: await db.removeMembership(space.id, kind, memberId) });
+  const removed = await db.removeMembership(space.id, kind, memberId);
+  // F-FEEDBACK-001 section 7.5: a removed learner's notes of this space are kept, not deleted, so an adult cannot
+  // erase a note (a taken-back one included) by removing the learner before the family looks (D5, D9, 8.3 item 3);
+  // delivery rule 2 already stops them, and the 180-day / 90-day retention purges them. A removed family adult
+  // loses the owner's send grant with the membership (delivery rule 6 already stops its notes).
+  if (kind === 'account' && space.kind === 'family') await db.deleteSendGrant(space.id, memberId);
+  return ok(c, { removed });
 });
 
 spacesRoutes.get('/:id/roster', async (c) => {

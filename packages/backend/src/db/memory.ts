@@ -12,6 +12,7 @@ import {
   type NoteDeviceScope,
   type NoteRecipientRow,
   type RateHitRow,
+  type SpaceNoteListRow,
   type StoredNote,
   type StoredNotePrefs,
   type StoredNoteReport,
@@ -417,6 +418,8 @@ export class MemoryDb implements Db {
         devicesRevoked += 1;
       }
     }
+    // F-FEEDBACK-001 section 7.5: the source membership ended, so its live, hidden and withdrawn notes go (not one a report row names).
+    for (const n of [...this.notes.values()]) if (n.learnerId === learnerId && n.spaceId === source && n.status !== 'reported' && !this.hasReportRow(n.id)) this.deleteNoteRow(n.id);
     this.pushTransferEvent({ transferId, at, actorKind: 'system', actorRef: null, event: 'executed', slot: null, detail: null });
     return { executed: true, devicesRevoked, relinksClosed };
   }
@@ -574,6 +577,10 @@ export class MemoryDb implements Db {
     this.notes.delete(noteId);
     for (const [k, r] of this.noteReports) if (r.noteId === noteId) this.noteReports.delete(k);
   }
+  /** Whether any report row names this note (a reviewed note keeps its reports when a membership ends, section 7.5). */
+  private hasReportRow(noteId: string): boolean {
+    return [...this.noteReports.values()].some((r) => r.noteId === noteId);
+  }
   private activeHold(accountId: string): boolean {
     const hold = this.senderHolds.get(accountId);
     return !!hold && hold.liftedAt === null;
@@ -682,6 +689,23 @@ export class MemoryDb implements Db {
     );
     return clone(rows.sort(newestNoteFirst).slice(0, options.limit));
   }
+  async sentListOfSpace(spaceId: string, options: { before: NoteCursor | null; limit: number; now: Date }): Promise<SpaceNoteListRow[]> {
+    // Map order is insertion order, the rowid order of D1: a batch's first note is its first visible one.
+    const visible = [...this.notes.values()].filter((n) => n.spaceId === spaceId && this.isVisible(n, options.now));
+    const batches = new Map<string, StoredNote[]>();
+    for (const n of visible) if (n.batchKind === 'everyone') batches.set(n.batchId, [...(batches.get(n.batchId) ?? []), n]);
+    const rows: SpaceNoteListRow[] = [];
+    for (const n of visible) {
+      if (n.batchKind !== 'everyone') {
+        rows.push({ note: n, batch: null });
+        continue;
+      }
+      const all = batches.get(n.batchId) ?? [];
+      if (all[0]?.id === n.id) rows.push({ note: n, batch: { size: all.length, live: all.filter((x) => x.status === 'live').length, withdrawn: all.filter((x) => x.withdrawnAt !== null).length } });
+    }
+    const page = rows.filter((r) => beforeCursor(r.note, options.before)).sort((a, b) => newestNoteFirst(a.note, b.note)).slice(0, options.limit);
+    return clone(page);
+  }
   async notesForOversight(learnerId: string, options: { before: NoteCursor | null; limit: number; now: Date }): Promise<StoredNote[]> {
     const rows = [...this.notes.values()].filter((n) => n.learnerId === learnerId && beforeCursor(n, options.before) && this.isVisible(n, options.now));
     return clone(rows.sort(newestNoteFirst).slice(0, options.limit));
@@ -775,7 +799,7 @@ export class MemoryDb implements Db {
     return this.sendGrants.delete(pairKey(spaceId, accountId));
   }
   async deleteNotesForMembership(learnerId: string, spaceId: string): Promise<number> {
-    const doomed = [...this.notes.values()].filter((n) => n.learnerId === learnerId && n.spaceId === spaceId && n.status !== 'reported');
+    const doomed = [...this.notes.values()].filter((n) => n.learnerId === learnerId && n.spaceId === spaceId && n.status !== 'reported' && !this.hasReportRow(n.id));
     for (const n of doomed) this.deleteNoteRow(n.id);
     return doomed.length;
   }

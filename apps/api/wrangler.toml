@@ -99,3 +99,12 @@ binding = "DB"
 database_name = "hangul-route"
 database_id = "4d338c01-0a0d-46c5-b7f4-16936cf32907"
 migrations_dir = "migrations"
+
+# ---- Cron Trigger (F-FEEDBACK-001 section 8.7, PR FB-3b) ----
+# Once a day at 11:17 UTC the Worker's `scheduled` handler (src/index.ts) runs
+# the bounded retention purge: notes past 180 days, reported notes 90 days after
+# their newest report, lifted holds after 365 days, and dead rate counters, at
+# most 5 rounds of 200 rows. Cron Triggers are allowed on the Workers Free plan;
+# the deploy command is unchanged (wrangler deploy registers the schedule).
+[triggers]
+crons = ["17 11 * * *"]

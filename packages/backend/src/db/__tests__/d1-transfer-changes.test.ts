@@ -48,7 +48,7 @@ describe('D1Db transfer writes read meta.changes', () => {
     expect(await db.executeTransfer(executeInput(at(0)))).toEqual({ executed: true, devicesRevoked: 1, relinksClosed: 1 });
     await db.deleteLearner('profile:suni');
     expect(await db.purgeTransfers(at(0), at(0), 50)).toBe(1);
-    expect(counted.batches).toEqual([2, 3, 7, 9]);
+    expect(counted.batches).toEqual([2, 3, 8, 9]);
 
     const silent = new D1Db(d1Answering(() => ({ meta: {} })).d1);
     await expect(silent.createTransfer(learnerSideRow(), created)).rejects.toThrow(/meta\.changes/);

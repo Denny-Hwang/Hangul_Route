@@ -34,6 +34,7 @@ import {
   type NoteDeviceScope,
   type NoteRecipientRow,
   type RateHitRow,
+  type SpaceNoteListRow,
   type StoredNote,
   type StoredNotePrefs,
   type StoredNoteReport,
@@ -339,6 +340,32 @@ const NOT_HELD = 'NOT EXISTS (SELECT 1 FROM feedback_sender_holds h WHERE h.acco
  * with a report of the last 90 days. Binds (notesSince, reportsSince).
  */
 const NOTE_VISIBLE = "((n.status <> 'reported' AND n.created_at >= ?) OR (n.status = 'reported' AND EXISTS (SELECT 1 FROM feedback_reports r WHERE r.note_id = n.id AND r.created_at >= ?)))";
+/** A note no report row names (the end of a membership keeps a reviewed note with its reports, section 7.5). */
+const NO_REPORT_ROW = 'NOT EXISTS (SELECT 1 FROM feedback_reports r WHERE r.note_id = feedback_notes.id)';
+/** NOTE_VISIBLE for another note `b` of the same batch. Binds (notesSince, reportsSince). */
+const BATCH_NOTE_VISIBLE = "((b.status <> 'reported' AND b.created_at >= ?) OR (b.status = 'reported' AND EXISTS (SELECT 1 FROM feedback_reports r WHERE r.note_id = b.id AND r.created_at >= ?)))";
+/**
+ * A space's sent list (section 7.2): each `everyone` batch is one row, its first note (the lowest rowid among
+ * the batch's notes every list still shows, so the row's id and its page cursor never move when a note of it
+ * is taken back), with the batch's size, live notes and taken-back notes in one JSON array.
+ *
+ * The cost is linear in the rows a page walks: the space index is read newest first, a note is a batch's
+ * first note when no visible note of the batch has a lower rowid (one seek on `idx_feedback_notes_batch`,
+ * whose entries end in the rowid), and the counts are read once per listed batch, never once per note.
+ * Binds (notesSince, reportsSince, spaceId, notesSince, reportsSince, notesSince, reportsSince), then the
+ * optional cursor and the limit.
+ */
+const SENT_LIST_SELECT = `SELECT n.*,
+    CASE WHEN n.batch_kind = 'everyone' THEN (SELECT json_array(COUNT(*), COALESCE(SUM(b.status = 'live'), 0), COALESCE(SUM(b.withdrawn_at IS NOT NULL), 0))
+      FROM feedback_notes b WHERE b.batch_id = n.batch_id AND ${BATCH_NOTE_VISIBLE}) END AS batch_counts
+  FROM feedback_notes n
+  WHERE n.space_id = ? AND ${NOTE_VISIBLE}
+    AND (n.batch_kind <> 'everyone' OR NOT EXISTS (SELECT 1 FROM feedback_notes b WHERE b.batch_id = n.batch_id AND b.rowid < n.rowid AND ${BATCH_NOTE_VISIBLE}))`;
+/** The `[size, live, withdrawn]` array of SENT_LIST_SELECT. */
+function batchCounts(raw: string): { size: number; live: number; withdrawn: number } {
+  const [size, live, withdrawn] = JSON.parse(raw) as [number, number, number];
+  return { size: Number(size), live: Number(live), withdrawn: Number(withdrawn) };
+}
 /** Keyset paging, newest first: rows strictly older than the cursor. Binds (createdAt, createdAt, id). */
 const NOTE_BEFORE = '(n.created_at < ? OR (n.created_at = ? AND n.id < ?))';
 /**
@@ -914,6 +941,8 @@ export class D1Db implements Db {
                                  WHERE r.learner_id = ? AND r.status = 'approved' AND r.space_id <> ?)`,
         [learnerId, ...g, source, learnerId, learnerId, source],
       ],
+      // F-FEEDBACK-001 section 7.5: the source membership ends, so its live, hidden and withdrawn notes go (reported ones, and any note a report row names, stay)
+      [`DELETE FROM feedback_notes WHERE learner_id = ? AND space_id = ? AND status <> 'reported' AND ${NO_REPORT_ROW} AND ${guard}`, [learnerId, source, ...g]],
       [`INSERT INTO transfer_events (transfer_id, at, actor_kind, actor_ref, event, slot, detail_json) SELECT ?, ?, 'system', NULL, 'executed', NULL, NULL WHERE ${guard}`, [transferId, at, ...g]],
       ['UPDATE transfer_requests SET block_reason = NULL WHERE id = ? AND block_reason = ?', g],
     ]);
@@ -1109,6 +1138,19 @@ export class D1Db implements Db {
     }
     return this.many(`SELECT n.* FROM feedback_notes n WHERE ${where.join(' AND ')} ORDER BY n.created_at DESC, n.id DESC LIMIT ?`, [...params, options.limit], toNote);
   }
+  sentListOfSpace(spaceId: string, options: { before: NoteCursor | null; limit: number; now: Date }): Promise<SpaceNoteListRow[]> {
+    const { notesSince, reportsSince } = noteRetentionCuts(options.now);
+    const params: unknown[] = [notesSince, reportsSince, spaceId, notesSince, reportsSince, notesSince, reportsSince];
+    let sql = SENT_LIST_SELECT;
+    if (options.before) {
+      sql += ` AND ${NOTE_BEFORE}`;
+      params.push(options.before.createdAt, options.before.createdAt, options.before.id);
+    }
+    return this.many(`${sql} ORDER BY n.created_at DESC, n.id DESC LIMIT ?`, [...params, options.limit], (r) => ({
+      note: toNote(r),
+      batch: typeof r.batch_counts === 'string' ? batchCounts(r.batch_counts) : null,
+    }));
+  }
   notesForOversight(learnerId: string, options: { before: NoteCursor | null; limit: number; now: Date }): Promise<StoredNote[]> {
     const cuts = noteRetentionCuts(options.now);
     const where = ['n.learner_id = ?', NOTE_VISIBLE];
@@ -1208,7 +1250,7 @@ export class D1Db implements Db {
     return (await this.changes('DELETE FROM feedback_send_grants WHERE space_id = ? AND account_id = ?', [spaceId, accountId])) > 0;
   }
   deleteNotesForMembership(learnerId: string, spaceId: string): Promise<number> {
-    return this.changes("DELETE FROM feedback_notes WHERE learner_id = ? AND space_id = ? AND status <> 'reported'", [learnerId, spaceId]);
+    return this.changes(`DELETE FROM feedback_notes WHERE learner_id = ? AND space_id = ? AND status <> 'reported' AND ${NO_REPORT_ROW}`, [learnerId, spaceId]);
   }
   async purgeNotes(before: Date, reportedBefore: Date, liftedBefore: Date, limit: number): Promise<number> {
     const results = await this.d1.batch([
