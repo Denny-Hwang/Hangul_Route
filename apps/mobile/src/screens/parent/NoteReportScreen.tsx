@@ -5,13 +5,14 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useOnline } from '../../components/use-online';
 import { useMessages } from '../../i18n/use-messages';
-import { attestFor, grownUpNotes, noteReportDoneTarget, reportSentEvent, type ReportAnswer } from '../../logic/notes/grown-up';
+import { attestFor, endsGateOnLeave, grownUpNotes, noteReportDoneTarget, reportSentEvent, type ReportAnswer } from '../../logic/notes/grown-up';
 import { isParentSessionValid } from '../../logic/profiles/session';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
 import { useProfileStore } from '../../store/profile-store';
 import { useUiStore } from '../../store/ui-store';
+import { backToNotes } from '../notes/back-to-notes';
 import { HideConfirmSheet } from '../notes/HideConfirmSheet';
 import { hideNoteNow, reportNoteNow } from '../notes/note-actions';
 import { useProfileNotes } from '../notes/use-notes';
@@ -55,8 +56,18 @@ export function NoteReportScreen({ navigation, route }: Props): React.ReactEleme
 
   useEffect(() => {
     if (profile === undefined) navigation.goBack();
-    else if (!gateOpen) navigation.replace('PinEntry', { next: 'NoteReport', noteId, profileId });
-  }, [gateOpen, profile, noteId, profileId, navigation]);
+    else if (!gateOpen) navigation.replace('PinEntry', { next: 'NoteReport', noteId, profileId, noteVia: via });
+  }, [gateOpen, profile, noteId, profileId, via, navigation]);
+
+  // The learner path (a note page on a gated device): the PIN was entered for this report only, so
+  // the grown-up session ends however the sheet is left (Done, the close button, a hardware or
+  // browser back), and the device goes back to the learner with the grown-up zone closed.
+  const endsGate = endsGateOnLeave(via, selfManaged);
+  useEffect(() => {
+    if (!endsGate) return undefined;
+    return navigation.addListener('beforeRemove', () => useUiStore.getState().resetParentGate());
+  }, [endsGate, navigation]);
+  useEffect(() => (endsGate ? () => useUiStore.getState().resetParentGate() : undefined), [endsGate]);
 
   const quoted = useMemo(() => (data === undefined ? null : (grownUpNotes(data, ctx).find((row) => row.id === noteId) ?? null)), [data, ctx, noteId]);
   // The report hides the note here at once: keep quoting it while the answer is on its way.
@@ -69,20 +80,24 @@ export function NoteReportScreen({ navigation, route }: Props): React.ReactEleme
   // Already gone before anything was sent here: the note left this device (hidden, withdrawn, reported elsewhere).
   const shown: Done | null = done ?? (quoted === null && !busy ? 'alreadyGone' : null);
 
-  const close = (): void => (navigation.canGoBack() ? navigation.goBack() : navigation.replace('ParentDashboard'));
+  const close = (): void => {
+    if (endsGate) useUiStore.getState().resetParentGate();
+    if (navigation.canGoBack()) navigation.goBack();
+    else navigation.replace('ParentDashboard');
+  };
   const finish = (): void => {
     if (noteReportDoneTarget(via) === 'back') return close();
-    // The learner path: the grown-up is done, so the gate session ends, and My notes shows what is left.
-    useUiStore.getState().resetParentGate();
-    if (navigation.canGoBack()) navigation.pop();
-    navigation.replace('Notes');
+    // The learner path: the grown-up is done, so the gate session ends, and the one My notes shows what is left.
+    if (endsGate) useUiStore.getState().resetParentGate();
+    backToNotes(navigation);
   };
 
   const submit = async (): Promise<void> => {
     if (reason === null || busy) return;
     setBusy(true);
-    void track(reportSentEvent(reason, via));
     const answer = await reportNoteNow(profileId, noteId, reason, attest);
+    // Counted once the report is sent or waiting to be sent, never for a note that was already gone or a limit.
+    if (answer === 'reported' || answer === 'queued') void track(reportSentEvent(reason, via));
     setBusy(false);
     setDone(answer);
   };

@@ -335,9 +335,12 @@ describe('notes-store (F-FEEDBACK-001 section 6.9)', () => {
     vi.mocked(writeJson).mockRejectedValueOnce(new Error('quota'));
     await expect(useNotesStore.getState().applyInbox('profile:a', { notes: [note('aaaaaaaa')], notePrefs: prefs })).resolves.toEqual({ added: ['note:aaaaaaaa'], removed: [] });
   });
-  it('FB-9: marks when the grown-up last looked at a learner\'s notes', async () => {
-    await useNotesStore.getState().markGrownUpSeen('profile:a', new Date('2026-10-12T10:00:00.000Z'));
-    expect(mem.get('notes:profile:a')).toMatchObject({ grownUpSeenAt: '2026-10-12T10:00:00.000Z' });
+  it('FB-9: marks the notes this device held when the grown-up last looked at a learner\'s notes', async () => {
+    await useNotesStore.getState().markGrownUpSeen('profile:a');
+    expect(mem.get('notes:profile:a')).toMatchObject({ grownUpSeenIds: [] });
+    await useNotesStore.getState().applyInbox('profile:a', { notes: [note('aaaaaaaa')], notePrefs: prefs });
+    await useNotesStore.getState().markGrownUpSeen('profile:a');
+    expect(mem.get('notes:profile:a')).toMatchObject({ grownUpSeenIds: ['note:aaaaaaaa'] });
   });
 
   it('FB-9: forgetNote drops a hidden note, its put-away id and its pending state write, but never a pending report', async () => {

@@ -26,7 +26,8 @@ export function HideConfirmSheet({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel} accessibilityViewIsModal>
       <View style={{ flex: 1, justifyContent: 'flex-end', alignItems: 'center', backgroundColor: colors.surface.overlay }} testID="notes-hide-confirm">
-        <Pressable onPress={onCancel} accessibilityRole="button" accessibilityLabel={t.cancel.cta} style={{ flex: 1, alignSelf: 'stretch' }} />
+        {/* The backdrop closes the sheet on a tap; it is not a second Cancel for a keyboard or a screen reader. */}
+        <Pressable onPress={onCancel} accessible={false} focusable={false} importantForAccessibility="no" style={{ flex: 1, alignSelf: 'stretch' }} />
         <View
           accessibilityRole="none"
           style={{

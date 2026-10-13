@@ -15,12 +15,15 @@ import { notesList, type NotesViewContext } from './view';
 
 const hasClass = (memberships: readonly LearnerMembership[]): boolean => memberships.some((row) => row.kind === 'class');
 
-/** The dashboard row "Notes for <learner>": null when the profile has no notes and no memberships. */
+/**
+ * The dashboard row "Notes for <learner>": null when the profile has no notes and no memberships.
+ * New while a note arrived on this device since the grown-up last opened this learner's notes.
+ */
 export function grownUpRow(i: { data: NotesData | null; memberships: readonly LearnerMembership[] }): { isNew: boolean } | null {
   const notes = i.data?.notes ?? [];
   if (notes.length === 0 && i.memberships.length === 0) return null;
-  const seen = i.data?.grownUpSeenAt;
-  return { isNew: notes.some((n) => seen === undefined || n.createdAt > seen) };
+  const seen = new Set(i.data?.grownUpSeenIds ?? []);
+  return { isNew: notes.some((n) => !seen.has(n.id)) };
 }
 
 export interface GrownUpNoteRow {
@@ -132,6 +135,12 @@ export function prefsChangedEvent(classes: NotesMode): { name: 'notes.prefs_chan
 
 /** The claim a device route records (`NoteAttestSchema`): the grown-up PIN, or a self-managed learner. */
 export const attestFor = (selfManaged: boolean): NoteAttest => (selfManaged ? 'self' : 'grown_up_pin');
+
+/**
+ * The report sheet ends the grown-up session when it is left (any way): on the learner path of a
+ * gated device, where the PIN was entered for this report alone (section 6.10 item 4).
+ */
+export const endsGateOnLeave = (via: ReportVia, selfManaged: boolean): boolean => via === 'note_page' && !selfManaged;
 
 /** Done on the report sheet: My notes when it came from the note page, else back to Notes for <learner>. */
 export const noteReportDoneTarget = (via: ReportVia): 'Notes' | 'back' => (via === 'note_page' ? 'Notes' : 'back');

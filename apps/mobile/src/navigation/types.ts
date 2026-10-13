@@ -111,6 +111,8 @@ export type RootStackParamList = {
     profileId?: string;
     /** `next: 'NoteReport'`: the note the report sheet opens for ("Tell a grown-up", F-FEEDBACK-001 section 6.10 item 4). */
     noteId?: string;
+    /** `next: 'NoteReport'`: where the report sheet came from (default `note_page`), kept when a lapsed session asks for the PIN again. */
+    noteVia?: 'note_page' | 'grown_up_zone';
   };
   /** Forgot PIN: Rescue Code or a 24-hour wait, then a new PIN (F-LEARN-001 §3.5). `next` is kept for the PIN screen. */
   PinReset: { next: GrownUpDestination; profileId?: string };

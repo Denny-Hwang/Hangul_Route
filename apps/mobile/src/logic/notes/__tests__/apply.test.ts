@@ -112,9 +112,9 @@ describe('applyInbox', () => {
 });
 
 describe('applyInbox keeps the grown-up zone mark (FB-9)', () => {
-  it('carries grownUpSeenAt over an inbox', () => {
-    const local = data({ grownUpSeenAt: '2026-10-10T00:00:00.000Z' });
-    expect(applyInbox(local, { notes: [note('aaaaaaaa')], notePrefs: NOTE_PREFS_DEFAULT }).data.grownUpSeenAt).toBe('2026-10-10T00:00:00.000Z');
-    expect('grownUpSeenAt' in applyInbox(data(), { notes: [], notePrefs: NOTE_PREFS_DEFAULT }).data).toBe(false);
+  it('carries grownUpSeenIds over an inbox, without ids the inbox took away', () => {
+    const local = data({ grownUpSeenIds: ['note:aaaaaaaa', 'note:gone0000'] });
+    expect(applyInbox(local, { notes: [note('aaaaaaaa'), note('bbbbbbbb')], notePrefs: NOTE_PREFS_DEFAULT }).data.grownUpSeenIds).toEqual(['note:aaaaaaaa']);
+    expect('grownUpSeenIds' in applyInbox(data(), { notes: [], notePrefs: NOTE_PREFS_DEFAULT }).data).toBe(false);
   });
 });

@@ -2,7 +2,7 @@ import type { NoteDevicePrefsPut, NoteReportReason } from '@hangul-route/content
 import { hideOutcome, prefsOutcome, reportOutcome, type ReportAnswer } from '../../logic/notes/grown-up';
 import type { NoteAttest } from '../../logic/notes/types';
 import { deviceCredentialsFor } from '../../store/membership-store';
-import { useNotesStore } from '../../store/notes-store';
+import { useNotesStore, type FlushResult } from '../../store/notes-store';
 import { syncApi } from '../../store/sync-store';
 
 /**
@@ -38,6 +38,12 @@ export async function reportNoteNow(profileId: string, noteId: string, reason: N
   const client = syncApi();
   const creds = client === null ? null : await deviceCredentialsFor(profileId);
   if (client === null || creds === null) return 'queued';
-  const results = await useNotesStore.getState().flush(profileId, client, creds).catch(() => []);
-  return reportOutcome(results.find((r) => r.kind === 'report' && r.noteId === noteId)?.outcome);
+  const flushNow = (): Promise<FlushResult[]> => useNotesStore.getState().flush(profileId, client, creds).catch(() => []);
+  const mine = (results: readonly FlushResult[]): FlushResult | undefined => results.find((r) => r.kind === 'report' && r.noteId === noteId);
+  // A flush already running started before this report was queued: wait for it, then send once more.
+  const result = mine(await flushNow()) ?? mine(await flushNow());
+  const answer = reportOutcome(result?.outcome);
+  // Already gone on the server: it leaves this device now, so Notes for <learner> no longer lists it.
+  if (answer === 'alreadyGone') await useNotesStore.getState().forgetNote(profileId, noteId);
+  return answer;
 }
