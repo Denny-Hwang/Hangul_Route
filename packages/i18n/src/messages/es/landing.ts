@@ -22,10 +22,10 @@ export const landing = {
     title: 'Hangul Route: aprende hangul desde cero con Hoya',
     tagline: 'Aprende hangul desde cero, a cualquier edad.',
     description:
-      'Aprende hangul desde cero con Hoya, el tigre: para cualquier persona, a cualquier edad, familias de herencia coreana, fans de la cultura K y principiantes con curiosidad. Misiones de cinco minutos, 8 minijuegos, tarjetas de cultura coreana para coleccionar y un Recorrido del patrimonio por 7 etapas y 5 temas culturales. La Etapa 1 es gratis y vienen más etapas. Sin anuncios, nunca.',
+      'Aprende hangul desde cero con Hoya, el tigre, a cualquier edad: familias de herencia coreana, fans de la cultura K y principiantes con curiosidad. Misiones de cinco minutos enseñan el alfabeto coreano para leer, escuchar y escribir, y cada letra te da una tarjeta de cultura coreana. La Etapa 1 es gratis y vienen más etapas. Sin anuncios, nunca.',
     keywords: ['aprender hangul', 'alfabeto coreano', 'aprender coreano', 'coreano para principiantes', 'coreano de herencia', 'cultura coreana', 'Hoya'],
-    ogDescription: 'Recorrido del patrimonio + tarjetas de cultura coreana + Hoya, el tigre. Empieza el coreano desde cero, a cualquier edad. La Etapa 1 es gratis.',
-    twitterDescription: 'Recorrido del patrimonio + tarjetas de cultura coreana + Hoya, el tigre. Empieza el coreano desde cero, a cualquier edad.',
+    ogDescription: 'Aprende el alfabeto coreano desde cero con Hoya, el tigre, a cualquier edad, y colecciona tarjetas de cultura coreana. La Etapa 1 es gratis.',
+    twitterDescription: 'Aprende el alfabeto coreano desde cero con Hoya, el tigre, a cualquier edad, y colecciona tarjetas de cultura coreana.',
     pages: {
       learners: {
         title: 'Para estudiantes: Hangul Route',
