@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { CATALOG, storyIsReady } from '@hangul-route/content-schema';
 import { touchTarget } from '@hangul-route/design-system/tokens';
 import { EMPTY, LEGACY, PARTIAL, SESSION_KEY, mockReport, reportUrl, spaceId } from './report-fixtures';
 
@@ -251,5 +252,93 @@ test.describe('the learner report (RP-7a2)', () => {
     await expect(action).toHaveAttribute('href', /add=quest%3Astage1-life-q2/);
     const described = await action.getAttribute('aria-describedby');
     await expect(page.locator(`[id="${described}"]`)).toHaveText('ㅂ (b) and ㅅ (s): worth another visit.');
+  });
+});
+
+/** RP-10: the plan builder takes `&add=<questId>` from Add to a plan and pre-adds the quest as a draft item. */
+test.describe('Add to a plan opens the builder with the quest pre-added (RP-10)', () => {
+  test.skip(!FULL, 'needs an export built with reports on (REPORTS_E2E=1)');
+
+  const planUrl = (extra: string) => `/teach/space/plan?id=${encodeURIComponent(spaceId('class'))}&${extra}`;
+  const yours = (page: Page) => page.getByLabel('Your plan', { exact: true });
+  const draft = (items: { kind: string; id: string }[], over: Record<string, unknown> = {}) => ({
+    id: 'plan:draft',
+    spaceId: spaceId('class'),
+    authorAccountId: 'acct-e2e',
+    title: 'Letters to revisit',
+    items,
+    targetLearnerIds: null,
+    publishedAt: null,
+    archivedAt: null,
+    createdAt: '2026-10-14T00:00:00.000Z',
+    updatedAt: '2026-10-14T00:00:00.000Z',
+    ...over,
+  });
+  // A story this build has not signed yet, when there is one (the unit tests cover a closed story on a fixed catalogue).
+  const closedStory = CATALOG.stories.find((story) => !storyIsReady(story))?.questId;
+
+  test('from the report: a new draft holds the quest, nothing is saved, and the address drops add', async ({ page }) => {
+    const writes: string[] = [];
+    page.on('request', (request) => {
+      if (request.method() === 'PUT' || request.method() === 'POST') writes.push(request.url());
+    });
+    await mockReport(page, { kind: 'class', role: 'teacher' });
+    await page.goto(reportUrl('class'));
+    await page.getByTestId('report-line-letters_revisit').getByRole('link', { name: 'Add to a plan' }).click();
+    await expect(page.getByRole('heading', { name: 'Your plan (1)' })).toBeVisible();
+    await expect(yours(page)).toContainText('Family at the Table');
+    await expect(page).toHaveURL(/\/teach\/space\/plan\?id=space%3Asunflower$/);
+    await expect(page.getByTestId('publish-plan')).toBeDisabled();
+    expect(writes).toEqual([]);
+  });
+
+  test('an unknown or closed quest adds nothing and the builder opens as usual', async ({ page }) => {
+    await mockReport(page, { kind: 'class', role: 'teacher' });
+    for (const id of ['quest:nope', 'episode:stage1-life', ...(closedStory ? [closedStory] : [])]) {
+      await page.goto(planUrl(`add=${encodeURIComponent(id)}`));
+      await expect(page.getByRole('heading', { name: 'Your plan (0)' })).toBeVisible();
+      await expect(page).toHaveURL(/\/teach\/space\/plan\?id=space%3Asunflower$/);
+    }
+  });
+
+  test('a duplicate add leaves the open draft as it was; another quest joins it', async ({ page }) => {
+    await mockReport(page, { kind: 'class', role: 'teacher', plans: [draft([{ kind: 'quest', id: 'quest:stage1-life-q2' }])] });
+    await page.goto(planUrl('add=quest%3Astage1-life-q2'));
+    await expect(page.getByRole('heading', { name: 'Edit plan' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Your plan (1)' })).toBeVisible();
+    await page.goto(planUrl('add=quest%3Astage1-life-q3'));
+    await expect(page.getByRole('heading', { name: 'Your plan (2)' })).toBeVisible();
+    await expect(page.getByLabel('Plan title')).toHaveValue('Letters to revisit');
+  });
+
+  test('over a published plan: a new draft holds the quest, no stored plan is marked open, and each one opens from the switcher', async ({ page }) => {
+    const writes: string[] = [];
+    page.on('request', (request) => {
+      if (request.method() === 'PUT' || request.method() === 'POST') writes.push(request.url());
+    });
+    const live = draft([{ kind: 'quest', id: 'quest:stage1-life-q1' }], { id: 'plan:live', title: 'This week', publishedAt: '2026-10-14T00:00:00.000Z', updatedAt: '2026-10-15T00:00:00.000Z' });
+    const older = draft([{ kind: 'quest', id: 'quest:stage1-life-q3' }], { id: 'plan:older', title: 'Last week', publishedAt: '2026-10-07T00:00:00.000Z', updatedAt: '2026-10-07T00:00:00.000Z' });
+    await mockReport(page, { kind: 'class', role: 'teacher', plans: [live, older] });
+    await page.goto(planUrl('add=quest%3Astage1-life-q2'));
+    await expect(page.getByRole('heading', { name: 'New plan' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Your plan (1)' })).toBeVisible();
+    await expect(page.getByTestId('plan-chip')).toHaveCount(2);
+    await expect(page.locator('[data-testid="plan-chip"][aria-current]')).toHaveCount(0);
+    // Leaving the unsaved draft asks first; Cancel is not offered, so the quest is never dropped silently.
+    await expect(page.getByRole('button', { name: 'Cancel' })).toHaveCount(0);
+    page.once('dialog', (dialog) => void dialog.accept());
+    await page.getByTestId('plan-chip').filter({ hasText: 'This week' }).click();
+    await expect(page.locator('[data-testid="plan-chip"][aria-current]')).toContainText('This week');
+    await expect(page.getByRole('heading', { name: 'Your plan (1)' })).toHaveCount(0);
+    expect(writes).toEqual([]);
+  });
+
+  test('from a family report: the parent builder opens with the quest and a clean address', async ({ page }) => {
+    await mockReport(page, { kind: 'family' });
+    await page.goto(reportUrl('family'));
+    await page.getByTestId('report-line-letters_revisit').getByRole('link', { name: 'Add to a plan' }).click();
+    await expect(page).toHaveURL(/\/parent\/space\/plan\?id=space%3Akim-family$/);
+    await expect(page.getByRole('heading', { name: 'Your plan (1)' })).toBeVisible();
+    await expect(yours(page)).toContainText('Family at the Table');
   });
 });
