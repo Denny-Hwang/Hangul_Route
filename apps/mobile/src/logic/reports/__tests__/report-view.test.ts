@@ -8,8 +8,10 @@ import {
   type StageKey,
 } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
+import { bandLabel } from '../../placement/copy';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  growthView,
   headlineText,
   inAppReportView,
   insightView,
@@ -543,5 +545,72 @@ describe('dates without Intl', () => {
     const week = inAppReportView(input());
     expect(week.thisPeriod?.calendar?.sentence).toBe('Practiced on Wednesday, Thursday and Monday.');
     expect(week.thisPeriod?.calendar?.cells[0]?.weekday).toBe('Tue');
+  });
+});
+
+describe('inAppReportView: the edges every branch of the words covers (section 5: logic/reports at 100 %)', () => {
+  const report = learnerReport({ summary: summary(), viewer: 'device', voice: 'third', period: 'week', now: NOW, catalog: CATALOG, lastSyncedAt: null });
+
+  it('a letter that is neither an initial nor a vowel shows alone', () => {
+    expect(letterLabel('ㄳ')).toEqual({ letter: 'ㄳ', romanization: null });
+    expect(letterLabel('ㄱ')).toEqual({ letter: 'ㄱ', romanization: 'g' });
+  });
+
+  it('the all-time period with nothing practiced reads noneEver; a past none_saved without a horizon reads today', () => {
+    const all = { ...report, period: 'all' as ReportPeriod, headline: { code: 'none_yet' as const, days: 0, quests: 0, stage: null } };
+    expect(headlineText(all, reportWordsOf(all, input(), '2026-10-12'))).toBe('No practice yet.');
+    const past = {
+      ...report,
+      horizon: null,
+      window: report.window === null ? null : { ...report.window, step: 'previous' as const },
+      headline: { code: 'none_saved' as const, days: 0, quests: 0, stage: null },
+    };
+    expect(headlineText(past, reportWordsOf(past, input(), '2026-10-12'))).toBe("Nothing saved from Sam's device after Oct 12 yet.");
+  });
+
+  it('Today in the second voice reads practice_day without a name', () => {
+    const day = { ...report, voice: 'second' as const, period: 'day' as ReportPeriod };
+    expect(insightView({ code: 'practice_days', params: { days: 1 } }, reportWordsOf(day, input(), '2026-10-12'))?.sentence.text).toBe('You made time to practice.');
+  });
+
+  it('the growth line counts no days when the figures are missing', () => {
+    const all = learnerReport({ summary: summary(), viewer: 'device', voice: 'third', period: 'all', now: NOW, catalog: CATALOG, lastSyncedAt: null });
+    const view = growthView({ ...all, figures: null }, reportWordsOf(all, input({ period: 'all' }), '2026-10-12'));
+    expect(view?.since).toBe('Since Sep 14: 0 practice days');
+    expect(growthView({ ...all, growth: null }, reportWordsOf(all, input({ period: 'all' }), '2026-10-12'))).toBeNull();
+  });
+
+  it('a summary without a last active time has no last practice line', () => {
+    const view = inAppReportView(input({ summary: { ...summary(), lastActiveAt: undefined } as unknown as InsightSummary }));
+    expect(view.glance?.lastPractice).toBeNull();
+  });
+
+  it('an unreadable starting stage keeps the strand lines; an out-of-range band drops the starting spot', () => {
+    const base = summary().placement as NonNullable<InsightSummary['placement']>;
+    const odd = (level: unknown) =>
+      (block(inAppReportView(input({ summary: summary({ placement: { ...base, level } as NonNullable<InsightSummary['placement']> }) })).moreDetail?.blocks, 'levelCheck') as {
+        lines: string[];
+      }).lines;
+    expect(odd({ stage: 'stage9', band: 0 })[0]).toBe('Checked Sep 14');
+    expect(odd({ stage: 'stage1', band: 7 })[0]).toBe('Checked Sep 14');
+  });
+
+  it('the starting spot uses the placement words the learner saw (bandLabel), for every stage 1 band', () => {
+    const base = summary().placement as NonNullable<InsightSummary['placement']>;
+    for (const band of [0, 1, 2, 3]) {
+      const view = inAppReportView(input({ summary: summary({ placement: { ...base, level: { stage: 'stage1', band } } }) }));
+      expect((block(view.moreDetail?.blocks, 'levelCheck') as { lines: string[] }).lines[0]).toBe(`Starting spot: Stage 1 · ${bandLabel(m, { stage: 'stage1', band })} · Sep 14`);
+    }
+  });
+
+  it('an own route alone is the only plan row', () => {
+    const view = inAppReportView(input({ summary: summary({ planProgress: {}, selfRoute: { done: 1, total: 4, notReady: 0, weeks: 2, endsOn: '2026-10-20' } }) }));
+    expect(block(view.moreDetail?.blocks, 'plan')).toMatchObject({ lines: ['Own route: 1 done, 3 ready to play'] });
+  });
+
+  it('an invalid clock without day-by-day data, and a stage this build cannot read, still draw a report', () => {
+    const view = inAppReportView(input({ now: new Date(Number.NaN), summary: summary({ activity: undefined, journey: undefined }) }));
+    expect(view.glance?.nowOn).toBeNull();
+    expect(view.title).toBe('Sam: report');
   });
 });

@@ -2,6 +2,7 @@ import {
   INITIAL_JAMO,
   INITIAL_RR,
   MEDIAL_RR,
+  PlacementLevelSchema,
   REPORT_PERIODS,
   StageKeySchema,
   learnerReport,
@@ -21,6 +22,7 @@ import {
   type StageKey,
 } from '@hangul-route/content-schema';
 import { formatDate, type Messages, type UiLocale } from '@hangul-route/i18n';
+import { bandLabel } from '../placement/copy';
 
 /**
  * The in-app learner report in words — F-REPORT-001 section 3.9 (RP-9; sections 3.5, 3.6, 3.11, 3.12; design
@@ -70,8 +72,9 @@ const IEUNG = 'ㅇ';
 /** A taught letter with its short sound value ("ㅂ (b)"), as the console reads it; null romanization when unknown. */
 export function letterLabel(letter: string): ReportLetterLabel {
   if (letter === IEUNG) return { letter, romanization: 'ng' };
-  const initial = INITIAL_JAMO.indexOf(letter);
-  if (initial >= 0) return { letter, romanization: INITIAL_RR[initial] ?? null };
+  // `INITIAL_RR` runs parallel to `INITIAL_JAMO`; index -1 (not an initial) reads undefined.
+  const initial = INITIAL_RR[INITIAL_JAMO.indexOf(letter)];
+  if (initial !== undefined) return { letter, romanization: initial };
   const vowel = letter.length === 1 ? MEDIAL_RR[letter.charCodeAt(0) - FIRST_VOWEL] : undefined;
   return { letter, romanization: vowel ?? null };
 }
@@ -109,7 +112,7 @@ export function sentenceOf(render: (put: (part: Placed) => string) => string): R
       used.add(index);
       parts.push(part);
     }
-    last = (match.index ?? 0) + match[0].length;
+    last = match.index + match[0].length;
   }
   text(raw.slice(last));
   return { text: parts.map(plainOf).join(''), parts };
@@ -506,7 +509,8 @@ function figuresView(report: LearnerReport, w: ReportWords): ReportFigureTile[] 
   });
 }
 
-function growthView(report: LearnerReport, w: ReportWords): ReportGrowthView | null {
+/** The all-time growth line (section 3.5 item 7); exported for its tests. */
+export function growthView(report: LearnerReport, w: ReportWords): ReportGrowthView | null {
   const growth = report.growth;
   if (growth === null) return null;
   const g = w.m.report.growth;
@@ -584,11 +588,13 @@ function detailView(report: LearnerReport, summary: InsightSummary, w: ReportWor
   return { button: m.report.section.moreDetail, blocks };
 }
 
-/** The level-check band in the words the learner saw (`learner.placement.band`); null for a band this build cannot name. */
+/**
+ * The level-check band in the words the learner saw: `bandLabel`, the one the placement screens and the dashboard's
+ * Starting spot row use (section 3.11), so the two never drift; null for a level this build cannot read.
+ */
 function bandWord(m: Messages, stage: StageKey, band: number): string | null {
-  const b = m.learner.placement.band;
-  if (stage === 'stage1') return [b.beginning, b.lettersAndSounds, b.everyLetter, b.readingWords][band] ?? null;
-  return stage === 'stage2' ? b.firstWords : b.firstSentences;
+  const level = PlacementLevelSchema.safeParse({ stage, band });
+  return level.success ? bandLabel(m, level.data) : null;
 }
 
 /** "Now on" for the empty state: the journey's here stage, when this build can read it. */
