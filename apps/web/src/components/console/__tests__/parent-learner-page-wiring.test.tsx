@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NOW, STEADY, response } from '@/lib/console/__tests__/fixtures/report';
+import Page from '@/app/(console)/parent/learner/page';
 
 /**
  * F-REPORT-001 RP-7c: `/parent/learner`. With a learner it is the learner report (the same component as
@@ -124,7 +125,6 @@ function textOf(node: ReactTestInstance | string): string {
 }
 
 async function page(): Promise<ReactTestInstance> {
-  const { default: Page } = await import('@/app/(console)/parent/learner/page');
   await act(async () => {
     mounted = create(<Page />);
   });
