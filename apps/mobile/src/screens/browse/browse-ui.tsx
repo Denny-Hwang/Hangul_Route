@@ -18,6 +18,7 @@ import { CardArt } from '../../components/CardArt';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeCard } from '../../logic/content-locale';
 import type { ItemViewedEvent, PlansTappedEvent } from '../../logic/browse/home-view';
+import type { PreviewEndedEvent, PreviewStartedEvent } from '../../logic/browse/preview';
 import type { Skill } from '../../logic/my-route/types';
 import { track } from '../../platform/telemetry';
 
@@ -119,12 +120,23 @@ export function SkillChips({ skills }: { skills: readonly Skill[] }): React.Reac
   );
 }
 
-/** A 64 card thumbnail with its rarity border (RouteMarkers D9). */
-const CARD_THUMB = touchTarget.min;
-const CARD_FACE = CARD_THUMB - 2 * borderWidth.thick;
+/** A 64 card thumbnail with its rarity border (RouteMarkers D9); the end screen's still card is 96 (CardArtThumb's size). */
+const CARD_THUMB = { row: touchTarget.min, end: touchTarget.hero } as const;
 
 /** One card row: the thumbnail, the English title and the Korean with its romanization; one button to the card. */
-export function CardRow({ card: source, onPress, testID }: { card: HeritageCard; onPress: () => void; testID?: string }): React.ReactElement {
+export function CardRow({
+  card: source,
+  onPress,
+  testID,
+  size = 'row',
+}: {
+  card: HeritageCard;
+  onPress: () => void;
+  testID?: string;
+  /** `end`: the preview end screen's still 96 card (mock preview-end.md), no flip, no burst. */
+  size?: keyof typeof CARD_THUMB;
+}): React.ReactElement {
+  const thumb = CARD_THUMB[size];
   const card = localizeCard(source, useLocale());
   const messages = useMessages();
   const ko = card.subtitleKo ?? '';
@@ -146,8 +158,8 @@ export function CardRow({ card: source, onPress, testID }: { card: HeritageCard;
     >
       <View
         style={{
-          width: CARD_THUMB,
-          height: CARD_THUMB,
+          width: thumb,
+          height: thumb,
           borderRadius: radii.md,
           borderWidth: borderWidth.thick,
           borderColor: colors.rarity[card.rarity],
@@ -156,10 +168,12 @@ export function CardRow({ card: source, onPress, testID }: { card: HeritageCard;
           overflow: 'hidden',
         }}
       >
-        <CardArt card={card} size={CARD_FACE} style={{ borderRadius: radii.sm }} />
+        <CardArt card={card} size={thumb - 2 * borderWidth.thick} style={{ borderRadius: radii.sm }} />
       </View>
       <View style={{ flex: 1, gap: spacing.xxs, alignItems: 'flex-start' }}>
-        <Body weight="semibold">{card.titleEn}</Body>
+        <Body weight={size === 'end' ? 'bold' : 'semibold'} size={size === 'end' ? 'lg' : 'md'}>
+          {card.titleEn}
+        </Body>
         {ko && romanization ? <KoChip ko={ko} romanization={romanization} /> : null}
       </View>
     </Pressable>
@@ -246,7 +260,7 @@ export function HeaderRow({ back, onDisplay }: { back: React.ReactNode; onDispla
 }
 
 /** Sends one browse event (the telemetry fence passes `browse.*` only; it carries no profile id). */
-export function sendBrowseEvent(event: ItemViewedEvent | PlansTappedEvent): void {
+export function sendBrowseEvent(event: ItemViewedEvent | PlansTappedEvent | PreviewStartedEvent | PreviewEndedEvent): void {
   void track(event);
 }
 
