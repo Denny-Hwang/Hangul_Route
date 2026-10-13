@@ -61,7 +61,7 @@ describe('rosterFreeLessonsLine: the plan-waiting line on a roster card', () => 
       text: 'Mina finished everything open in this plan. 3 more lessons open with a Group License.',
       billing: { label: words.openBilling.cta, href: ROUTES.billing },
     });
-    expect(ROUTES.billing).toBe('/teach/billing');
+    expect(ROUTES.billing).toBe('/account/billing');
   });
 
   it('names the Family Plan on a family card', () => {

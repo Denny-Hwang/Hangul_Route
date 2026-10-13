@@ -143,7 +143,7 @@ export function SchoolAdminView({
 
   return (
     <>
-      {view.license && !view.license.active ? <Notice tone="nudge">{c.schoolLicenceLapsed} <Link href="/teach/billing">{s.billingLink}</Link></Notice> : null}
+      {view.license && !view.license.active ? <Notice tone="nudge">{c.schoolLicenceLapsed} <Link href={ROUTES.billing}>{s.billingLink}</Link></Notice> : null}
       <section style={{ ...panelStyle, marginBottom: spacing.lg }} aria-label={s.licence.label}>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: spacing.md, flexWrap: 'wrap' }}>
           <div>
@@ -154,7 +154,7 @@ export function SchoolAdminView({
             <strong>{s.licence.seats}</strong>
             <Muted>{usageLine(view.usage, view.limits, locale)}</Muted>
           </div>
-          <Link href="/teach/billing">
+          <Link href={ROUTES.billing}>
             <Button>{s.licence.manage.cta}</Button>
           </Link>
         </div>

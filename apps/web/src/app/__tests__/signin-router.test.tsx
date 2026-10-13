@@ -106,6 +106,7 @@ vi.mock('@/lib/console/shell-store', () => ({
 
 import SignInPage from '@/app/(console)/signin/page';
 import TeachStartRedirect from '@/app/(console)/teach/start/page';
+import TeachBillingRedirect from '@/app/(console)/teach/billing/page';
 import TeachRouterPage from '@/app/(console)/teach/page';
 import { GrownUpRouter, type RouterEnvironment } from '@/components/console/GrownUpRouter';
 import { ClerkReverify } from '@/components/console/ClerkSignIn';
@@ -663,6 +664,19 @@ describe('/teach/start: a client redirect to /start with the query kept (section
   ])('%s', async (search, target) => {
     browser.search = search;
     const page = (await render(<TeachStartRedirect />)).root;
+    expect(browser.replaced).toEqual([target]);
+    expect(byTestId(page, 'signin-go-now')[0]?.props.href).toBe(target);
+  });
+});
+
+describe('/teach/billing: a client redirect to /account/billing with the query kept (F-APP-001 A-5c, sections 3.8, 3.13)', () => {
+  it.each([
+    ['', '/account/billing'],
+    ['?checkout=success', '/account/billing?checkout=success'],
+    ['?checkout=cancel&space=sp_1', '/account/billing?checkout=cancel&space=sp_1'],
+  ])('%s', async (search, target) => {
+    browser.search = search;
+    const page = (await render(<TeachBillingRedirect />)).root;
     expect(browser.replaced).toEqual([target]);
     expect(byTestId(page, 'signin-go-now')[0]?.props.href).toBe(target);
   });

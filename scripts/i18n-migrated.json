@@ -96,7 +96,8 @@
     "apps/mobile/src/screens/browse/**",
     "apps/mobile/src/navigation/browse.tsx",
     "apps/web/src/components/console/AdultFrame.tsx",
-    "apps/mobile/src/screens/reviews/**"
+    "apps/mobile/src/screens/reviews/**",
+    "apps/web/src/app/(console)/account/billing/page.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1

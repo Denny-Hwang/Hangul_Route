@@ -226,6 +226,13 @@ describe('the active persona and the navigation (section 3.8)', () => {
     expect(current(r)).toEqual([]);
   });
 
+  it('on /account/billing (A-5c) the Billing item opens and highlights the billing page in the active persona row', async () => {
+    const r = await render(fakeEnv({ pathname: '/account/billing', search: '?checkout=success', last: 'teacher' }), [family, klass]);
+    expect(navIds(r)).toEqual(['classes', 'billing']);
+    expect(current(r)).toEqual(['Billing']);
+    expect(byTestId(r, 'nav-billing')[0]?.props.href).toBe('/account/billing');
+  });
+
   it('while the spaces load with no last persona: the Family items', async () => {
     const r = await render(fakeEnv({ pathname: '/teach/space', search: '?id=sp_c' }), null);
     expect(navIds(r)).toEqual(['home', 'billing']);

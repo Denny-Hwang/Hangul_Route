@@ -38,7 +38,7 @@ describe('WarningList with the free-plan switch on', () => {
     for (const kind of ['class', 'family'] as const) {
       const html = renderToStaticMarkup(<WarningList warnings={warnings} locale={PSEUDO} billingLink={kind === 'class'} free={{ kind, firstWeek: 1, lastWeek: 7 }} />);
       expect(html).toContain(pseudo.curriculum.freeDays.warning(1, 7, 3, pseudo.access.product[kind]).replace(/&/g, '&amp;'));
-      expect(html).toContain('href="/teach/billing"');
+      expect(html).toContain('href="/account/billing"');
       expect(html).toContain(`>${pseudo.access.openBilling.cta}</a>`);
       expect(html).not.toContain(pseudo.curriculum.preview.warnings.seePlans.cta);
       expect(html).not.toContain(pseudo.curriculum.preview.warnings.premium(3));
@@ -53,7 +53,7 @@ describe('WarningList with the free-plan switch on', () => {
     expect(html).toContain(`>${pseudo.curriculum.preview.warnings.seePlans.cta}</a>`);
     expect(html).not.toContain(pseudo.access.openBilling.cta);
     const family = renderToStaticMarkup(<WarningList warnings={warnings} locale={PSEUDO} billingLink={false} free={null} />);
-    expect(family).not.toContain('href="/teach/billing"');
+    expect(family).not.toContain('href="/account/billing"');
   });
 
   it('with the switch on and the coverage unknown: neutral product words, no Premium, no link (section 3.11)', () => {

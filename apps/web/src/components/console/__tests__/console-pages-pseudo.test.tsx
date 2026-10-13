@@ -6,7 +6,7 @@ import { expectAllPseudo } from './pseudo-text';
 // The pages are imported here, once, not inside each test: a console page pulls in the dictionaries, the catalog and
 // the console parts, and inside a test body that load counted against the 5 s test timeout on a busy CI runner. The
 // mocks above are hoisted above these imports, and the pages read the env flags when they render, not when they load.
-import * as billingPage from '@/app/(console)/teach/billing/page';
+import * as billingPage from '@/app/(console)/account/billing/page';
 import * as curriculumPage from '@/app/(console)/teach/space/curriculum/page';
 import * as homePage from '@/app/(console)/teach/home/page';
 import * as lecturePage from '@/app/(console)/teach/space/lecture/page';
