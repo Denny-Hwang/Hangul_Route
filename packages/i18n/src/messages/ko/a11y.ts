@@ -52,6 +52,8 @@ export const a11y = {
   discoverLetter: (romanization: string, soundHint?: string) =>
     soundHint === undefined ? `한글 글자 ${romanization}` : `한글 글자 ${romanization}. ${soundHint}`,
   discoverFinal: (romanization: string) => `한글 받침 ${romanization}`,
+  practiceLetter: (romanization: string) => `글자 다시 연습하기: ${romanization}`,
+  practiceFinal: (romanization: string) => `받침 다시 연습하기: ${romanization}`,
   lockedCard: '잠긴 카드',
   lockedCardHint: (hint: string) => `잠긴 카드. ${hint}`,
   newCard: (title: string) => `${title}. 새 카드`,
@@ -110,21 +112,23 @@ export const a11y = {
   planStatus: (name: string, state: string) => `${name}: ${state}.`,
   myRoute: {
     tab: '학습 루트',
-    stage: (order: number, title: string, stateWord: string, here: boolean, start: boolean, played: number) =>
+    stage: (order: number, title: string, stateWord: string, here: boolean, start: boolean, played: number, goal = false) =>
       [
         `${order}단계, ${title}.`,
         `${stateWord}.`,
         here ? '지금 여기에 있어요.' : '',
+        goal ? '내 목표예요.' : '',
         start ? '여기에서 시작했어요.' : '',
         played > 0 ? `퀘스트 ${played}개를 했어요.` : '',
       ]
         .filter((part) => part !== '')
         .join(' '),
-    stageGrownup: (name: string, order: number, title: string, stateWord: string, here: boolean, start: boolean, played: number) =>
+    stageGrownup: (name: string, order: number, title: string, stateWord: string, here: boolean, start: boolean, played: number, goal = false) =>
       [
         `${order}단계, ${title}.`,
         `${stateWord}.`,
         here ? `${name}: 지금 여기에 있어요.` : '',
+        goal ? `${name}: 목표 단계예요.` : '',
         start ? `${name}: 여기에서 시작했어요.` : '',
         played > 0 ? `퀘스트 ${played}개를 했어요.` : '',
       ]
@@ -133,6 +137,31 @@ export const a11y = {
     later: (label: string, stateWord: string) => `${label}. ${stateWord}.`,
     trail: '단계 목록',
     cell: (theme: string, title: string, word: string) => `${theme}: ${title}. ${word}.`,
+    cellInPlan: (cellLabel: string, tag: string) => `${cellLabel} ${tag}.`,
+    routeCard: (
+      hoyaText: string | null,
+      nowText: string | null,
+      goalText: string | null,
+      fromText: string | null,
+      planEndsText: string | null,
+      pipsText: string | null,
+      nextText: string | null,
+    ) =>
+      [
+        hoyaText,
+        ...[nowText, goalText, fromText, planEndsText, pipsText, nextText]
+          .filter((part): part is string => part !== null && part !== '')
+          .map((part) => `${part.replace(/ · /g, ', ').replace(/[.!]$/, '')}.`),
+      ]
+        .filter((part): part is string => part !== null && part !== '')
+        .join(' '),
+    labelled: (label: string, line: string) => `${label}: ${line}`,
+    goalPips: {
+      none: '준비되면 언제든지',
+      some: '끝낸 퀘스트가 있고, 할 수 있는 퀘스트가 더 있어요',
+      someDone: '끝낸 퀘스트가 있어요',
+      all: '여기 퀘스트를 모두 끝냈어요',
+    },
     skill: (label: string, detail: string) => `${label}. ${detail}.`,
     gain: (word: string, n: number) => `${word}: ${n}`,
     homeStrip: (title: string, here: string, progress: readonly string[], goal: string | null, week: string | null) =>
