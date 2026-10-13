@@ -34,7 +34,7 @@ function SettingsInner(): JSX.Element {
   const [typedName, setTypedName] = useState('');
   // Class moves (F-SPACE-002 T-6c): the learner whose start sheet is open, and the page line it left behind.
   const [moving, setMoving] = useState<MemberView | null>(null);
-  const [moveNote, setMoveNote] = useState<'sent' | 'locked' | 'signIn' | 'familyTooNew' | 'conflicted' | null>(null);
+  const [moveNote, setMoveNote] = useState<'sent' | 'locked' | 'signIn' | 'forbidden' | 'familyTooNew' | 'conflicted' | null>(null);
   const movesShown = useTransfersShown();
   const online = useOnline();
   // On a family (T-6d): the learners in a live class, from the class-moves list's `options`.
@@ -91,6 +91,7 @@ function SettingsInner(): JSX.Element {
       {archived && space ? <Notice tone="nudge">{s.archived[space.kind]}</Notice> : null}
       {moveNote === 'sent' ? <Notice tone="success">{c.transfer.start.sent}</Notice> : null}
       {moveNote === 'locked' ? <Notice tone="nudge">{c.transfer.states.locked}</Notice> : null}
+      {moveNote === 'forbidden' ? <Notice tone="nudge">{c.transfer.states.forbidden}</Notice> : null}
       {moveNote === 'signIn' ? <Notice tone="nudge">{c.start.signInAgain}</Notice> : null}
       {moveNote === 'familyTooNew' || moveNote === 'conflicted' ? <Notice tone="nudge">{c.transfer.states[moveNote]}</Notice> : null}
 
@@ -178,7 +179,7 @@ function SettingsInner(): JSX.Element {
                 }}
                 onPageState={(state) => {
                   setMoving(null);
-                  setMoveNote(state === 'forbidden' ? 'locked' : state);
+                  setMoveNote(state);
                 }}
                 onNotice={(notice) => {
                   setMoving(null);

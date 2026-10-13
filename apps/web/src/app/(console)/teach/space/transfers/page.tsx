@@ -2,13 +2,15 @@
 
 import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { AdultFrame } from '@/components/console/AdultFrame';
+import { useConsoleAuth } from '@/components/console/auth-context';
 import { FamilyMoves, FamilyPageStateLine, type FamilyPageState } from '@/components/console/FamilyTransferParts';
-import { useOnline, useTransfersShown } from '@/components/console/TransferParts';
+import { MoveButton, useOnline, useTransfersShown } from '@/components/console/TransferParts';
 import { useConsole } from '@/components/console/use-console';
 import type { Roster } from '@/lib/console/api';
+import { signInAgainUrl } from '@/lib/console/grown-up-lock';
 import { ROUTES, isKnownSpaceKind, spaceIdFrom } from '@/lib/console/routing';
 import { TRANSFER_REFRESH_MS } from '@/lib/console/transfer';
 
@@ -21,7 +23,10 @@ import { TRANSFER_REFRESH_MS } from '@/lib/console/transfer';
  * Nothing renders and nothing is asked of the Worker while `NEXT_PUBLIC_CLASS_TRANSFER` is unset.
  */
 function TransfersInner(): JSX.Element {
-  const spaceId = spaceIdFrom(useSearchParams());
+  const params = useSearchParams();
+  const pathname = usePathname();
+  const spaceId = spaceIdFrom(params);
+  const auth = useConsoleAuth();
   const { ready, session, api, signOut, m } = useConsole();
   const c = m.console;
   const t = c.transfer;
@@ -64,7 +69,14 @@ function TransfersInner(): JSX.Element {
       {space ? <p style={{ margin: `0 0 ${spacing.md}px`, color: colors.text.secondary, fontWeight: typography.weight.semibold }}>{space.name}</p> : null}
       {stateText ? (
         <FamilyPageStateLine>{stateText}</FamilyPageStateLine>
-      ) : space && api ? (
+      ) : null}
+      {pageState === 'signIn' ? (
+        // A rejected session: sign out, then the sign-in page brings the guardian back here (spec 4.8).
+        <MoveButton primary onClick={() => void auth.signOut(signInAgainUrl(`${pathname}?${params.toString()}`))} testId="transfers-sign-in">
+          {c.lock.signInAgain.cta}
+        </MoveButton>
+      ) : null}
+      {stateText ? null :  space && api ? (
         <FamilyMoves familyId={spaceId} familyName={space.name} api={api} online={online} refreshMs={TRANSFER_REFRESH_MS} onPageState={setState} />
       ) : null}
     </AdultFrame>

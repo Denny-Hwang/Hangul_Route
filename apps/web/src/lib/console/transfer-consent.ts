@@ -43,11 +43,15 @@ function fill(template: string, data: ConsentSheetData): string {
   );
 }
 
-/** One `visible_today` row: a class or school with its teacher, the viewer's own family, another family. */
-export function visibleTodayItem(space: { kind: string; name: string; ownerName: string | null }, familyName: string, locale: UiLocale): string {
+/**
+ * One `visible_today` row: a class or school with its teacher, the viewer's own family, another family. `ownFamily`
+ * is the acting family's name, or null when it cannot be told apart (the rows carry no space id, so a name shared by
+ * two families, such as the default "Our family", marks neither as "(you)" and both keep their owner).
+ */
+export function visibleTodayItem(space: { kind: string; name: string; ownerName: string | null }, ownFamily: string | null, locale: UiLocale): string {
   const c = getMessages(locale).console.transfer.consent;
   if (space.kind === 'family') {
-    if (space.name === familyName) return c.visibleYou(space.name);
+    if (ownFamily !== null && space.name === ownFamily) return c.visibleYou(space.name);
     return space.ownerName ? c.visibleFamily(space.name, space.ownerName) : space.name;
   }
   return space.ownerName ? c.visibleClass(space.name, space.ownerName) : space.name;
@@ -58,6 +62,8 @@ export function consentLines(data: ConsentSheetData, locale: UiLocale): ConsentL
   if (!isTransferConsentLocale(locale)) return null;
   const text = TRANSFER_CONSENT_TEXT[locale];
   const ids = transferConsentLineIds({ initiator: data.initiator, ...data.terms });
+  const sameName = data.terms.visibleToday.filter((space) => space.kind === 'family' && space.name === data.familyName).length;
+  const ownFamily = sameName === 1 ? data.familyName : null;
   return ids.map((id): ConsentLine => {
     const line = WHEN.get(id);
     const conditional = line?.when !== 'always';
@@ -66,7 +72,7 @@ export function consentLines(data: ConsentSheetData, locale: UiLocale): ConsentL
       const items =
         id === 'visible_list'
           ? TEACHER_VISIBLE_ITEM_IDS.map((item) => fill(text.items[item], data))
-          : data.terms.visibleToday.map((space) => visibleTodayItem(space, data.familyName, locale));
+          : data.terms.visibleToday.map((space) => visibleTodayItem(space, ownFamily, locale));
       return { id, kind: 'list', text: sentence, items, conditional };
     }
     if (line?.kind === 'option') return { id, kind: 'option', text: sentence, conditional };

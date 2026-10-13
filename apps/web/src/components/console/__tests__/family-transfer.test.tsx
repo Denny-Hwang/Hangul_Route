@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { TRANSFER_CONSENT_TEXT, TRANSFER_CONSENT_TEXT_VERSION } from '@hangul-route/content-schema';
+import { colors } from '@hangul-route/design-system/tokens';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -170,10 +171,43 @@ describe('ConsentSheet (consent-sheet.md; spec 4.11)', () => {
     expect(calls.close).toBe(1);
   });
 
-  it('without IntersectionObserver the rule cannot be measured and Yes is not held back', () => {
+  it('without IntersectionObserver the marker is measured by scroll position: Yes waits until the marker is above the fold', () => {
     vi.stubGlobal('IntersectionObserver', undefined);
-    renderSheet();
+    vi.stubGlobal('innerHeight', 800);
+    const listeners: Array<() => void> = [];
+    vi.stubGlobal('addEventListener', (type: string, cb: () => void) => {
+      if (type === 'scroll') listeners.push(cb);
+    });
+    vi.stubGlobal('removeEventListener', () => undefined);
+    const marker = { top: 1600, getBoundingClientRect: () => ({ top: marker.top }) };
+    act(() => {
+      renderer = create(
+        <ConsentSheet data={sheetData()} initialLocale="en" notNowEnds={false} busy={false} failed={false} updated={false} onYes={() => undefined} onNotNow={() => undefined} onClose={() => undefined} />,
+        { createNodeMock: (el) => (el.props['data-testid'] === 'consent-end' ? marker : {}) },
+      );
+    });
+    expect(byTestId('consent-yes').props['aria-disabled']).toBe(true);
+    marker.top = 600;
+    act(() => listeners.forEach((cb) => cb()));
     expect(byTestId('consent-yes').props['aria-disabled']).toBeUndefined();
+  });
+
+  it('a language switch after the end marker was seen holds Yes again until the marker is seen in the new language', () => {
+    renderSheet();
+    act(() => intersect());
+    expect(byTestId('consent-yes').props['aria-disabled']).toBeUndefined();
+    act(() => root().find((n) => n.type === 'select' && n.props.name === 'consentLocale').props.onChange({ target: { value: 'ko' } }));
+    expect(byTestId('consent-yes').props['aria-disabled']).toBe(true);
+    act(() => intersect());
+    expect(byTestId('consent-yes').props['aria-disabled']).toBeUndefined();
+  });
+
+  it('the whole dialog reads in the sheet language: its lang, its heading and its Close label', () => {
+    renderSheet();
+    act(() => root().find((n) => n.type === 'select' && n.props.name === 'consentLocale').props.onChange({ target: { value: 'es' } }));
+    const dialog = root().find((n) => n.props.role === 'dialog');
+    expect(dialog.props.lang).toBe('es');
+    expect(root().find((n) => n.type === 'button' && n.props['aria-label'] === getMessages('es').console.transfer.a11y.close)).toBeTruthy();
   });
 });
 
@@ -430,11 +464,161 @@ describe('FamilyMoves (family-page.md)', () => {
   });
 });
 
+describe('FamilyMoves: answers to a request that already changed (review of #504)', () => {
+  for (const code of ['not_open', 'expired'] as const) {
+    it(`${code} on Yes closes the sheet and reloads to the ended card, with no failure line`, async () => {
+      const api = makeApi([okList([view()]), okList([view({ status: 'ended', endedAt: '2026-10-10T00:00:00.000Z' })])]);
+      api.approveTransfer.mockResolvedValueOnce(fail(code) as never);
+      await renderPage(api);
+      await click('family-review');
+      act(() => intersect());
+      await click('consent-yes');
+      expect(allTestId('consent-sheet')).toHaveLength(0);
+      expect(text(root())).not.toContain(t.states.failed);
+      expect(text(byTestId('family-history-row'))).toContain(t.history.ended);
+    });
+
+    it(`${code} on Not now or Cancel reloads with no failure line`, async () => {
+      const api = makeApi([okList([view()])]);
+      api.declineTransfer.mockResolvedValueOnce(fail(code) as never);
+      await renderPage(api);
+      const loads = api.transferRequests.mock.calls.length;
+      await click('family-not-now');
+      expect(api.transferRequests.mock.calls.length).toBe(loads + 1);
+      expect(text(root())).not.toContain(t.states.failed);
+    });
+  }
+
+  it('request_changed on Yes reloads and reopens the sheet marked updated', async () => {
+    const api = makeApi([okList([view()])]);
+    api.approveTransfer.mockResolvedValueOnce(fail('request_changed') as never);
+    await renderPage(api);
+    await click('family-review');
+    act(() => intersect());
+    await click('consent-yes');
+    expect(allTestId('consent-updated')).toHaveLength(1);
+    expect(text(root())).not.toContain(t.consent.failed);
+  });
+
+  it('request_changed on Cancel reloads with no failure line', async () => {
+    const api = makeApi([okList([view({ learnerState: 'consented' })])]);
+    api.cancelTransfer.mockResolvedValueOnce(fail('request_changed') as never);
+    await renderPage(api);
+    await click('family-cancel');
+    expect(text(root())).not.toContain(t.states.failed);
+  });
+
+  it('a retired consent text (consent_text_stale) closes the sheet and asks for a page refresh, never an endless Try again', async () => {
+    const api = makeApi([okList([view()])]);
+    api.approveTransfer.mockResolvedValue(fail('consent_text_stale', 422) as never);
+    await renderPage(api);
+    await click('family-review');
+    act(() => intersect());
+    await click('consent-yes');
+    expect(allTestId('consent-sheet')).toHaveLength(0);
+    expect(text(byTestId('family-reload-notice'))).toContain(t.states.changed);
+    expect(text(byTestId('family-reload'))).toBe(t.actions.refresh.cta);
+  });
+
+  it('Start a move: a retired consent text closes the sheet to the refresh notice', async () => {
+    const api = makeApi([okList([], [mina])]);
+    api.createTransfer.mockResolvedValueOnce(fail('consent_text_stale', 422) as never);
+    await renderPage(api);
+    act(() => root().find((n) => n.type === 'input' && n.props.name === 'classCode').props.onChange({ target: { value: 'K7PM4Q' } }));
+    await click('family-find');
+    act(() => intersect());
+    await click('consent-yes');
+    expect(allTestId('consent-sheet')).toHaveLength(0);
+    expect(api.previewTransfer).toHaveBeenCalledTimes(1);
+    expect(text(byTestId('family-reload-notice'))).toContain(t.states.changed);
+  });
+});
+
+describe('FamilyMoves: refresh (review of #504)', () => {
+  it('a later good refresh clears "Didn\'t go through"', async () => {
+    vi.useFakeTimers();
+    try {
+      const api = makeApi([okList([view()]), fail('boom', 500) as never, okList([view()])]);
+      await act(async () => {
+        renderer = create(<FamilyMoves familyId="space:f" familyName="Kim family" api={api as unknown as FamilyMovesApi} online refreshMs={1000} onPageState={() => undefined} />, nodeMock);
+      });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000);
+      });
+      expect(text(root())).toContain(t.states.failed);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000);
+      });
+      expect(text(root())).not.toContain(t.states.failed);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('pauses while the consent sheet is open, so the sheet never jumps under the guardian', async () => {
+    vi.useFakeTimers();
+    try {
+      const api = makeApi([okList([view()])]);
+      await act(async () => {
+        renderer = create(<FamilyMoves familyId="space:f" familyName="Kim family" api={api as unknown as FamilyMovesApi} online refreshMs={1000} onPageState={() => undefined} />, nodeMock);
+      });
+      await act(async () => undefined);
+      await click('family-review');
+      const loads = api.transferRequests.mock.calls.length;
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3000);
+      });
+      expect(api.transferRequests.mock.calls.length).toBe(loads);
+      await click('consent-not-now');
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000);
+      });
+      expect(api.transferRequests.mock.calls.length).toBeGreaterThan(loads + 1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+/** WCAG contrast of two #rrggbb colours (spec 4.8 Accessibility: the blocked state has a contrast test). */
+function contrast(a: string, b: string): number {
+  const lum = (hex: string): number => {
+    const [r, g, bl] = [1, 3, 5].map((i) => {
+      const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    }) as [number, number, number];
+    return 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+  };
+  const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x) as [number, number];
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+describe('FamilyRequestCard: the room block (requests-page.md "Room block", family-page.md)', () => {
+  it('an approved move waiting for room is text plus the pause glyph on the nudge fill with a nudge bar, never a live region', async () => {
+    await renderPage(makeApi([okList([view({ status: 'approved', learnerState: 'consented', blockReason: 'cap_class' })])]));
+    const block = byTestId('family-room-block');
+    expect(text(block)).toContain(t.lines.waitingRoom);
+    expect(block.props.role).toBeUndefined();
+    expect(block.props.style.backgroundColor).toBe(colors.feedback.nudgeLight);
+    expect(block.props.style.borderInlineStart).toContain(colors.feedback.nudge);
+    expect(block.findAll((n) => n.props.name === 'pause')).not.toHaveLength(0);
+    expect(contrast(colors.text.primary, colors.feedback.nudgeLight)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('cap_learner reads the learner line in the same block', async () => {
+    await renderPage(makeApi([okList([view({ status: 'approved', learnerState: 'consented', blockReason: 'cap_learner' })])]));
+    expect(text(byTestId('family-room-block'))).toContain(t.lines.learnerCap('Mina'));
+  });
+});
+
 describe('helpers', () => {
-  it('familyFailure: pages, notices, refind (incl. a stale text) and lines', () => {
+  it('familyFailure: pages, notices, ended, refind, a retired text and lines', () => {
     expect(familyFailure({ ok: true, data: 1 })).toBeNull();
     expect(familyFailure(fail('transfers_locked', 422))).toEqual({ kind: 'page', state: 'locked' });
-    expect(familyFailure(fail('consent_text_stale', 422))).toEqual({ kind: 'refind' });
+    expect(familyFailure(fail('consent_text_stale', 422))).toEqual({ kind: 'stale' });
+    expect(familyFailure(fail('not_open'))).toEqual({ kind: 'ended' });
+    expect(familyFailure(fail('expired'))).toEqual({ kind: 'ended' });
+    expect(familyFailure(fail('request_changed'))).toEqual({ kind: 'refind' });
     expect(familyFailure(fail('conflicted_guardian'))).toEqual({ kind: 'notice', notice: 'conflicted' });
     expect(familyFailure(fail('cooldown', 429))).toEqual({ kind: 'line', err: { kind: 'line', key: 'cooldown' } });
   });
@@ -465,6 +649,28 @@ describe('helpers', () => {
     act(() => root().find((n) => n.type === 'input' && n.props.name === 'classCode').props.onChange({ target: { value: 'K7PM4Q' } }));
     await click('family-find');
     expect(text(root().find((n) => n.props.role === 'alert'))).toBe(t.states.offline);
+  });
+
+  it('FamilyStartFlow with a preselected learner who is no longer movable says so, never acts on a sibling', async () => {
+    await act(async () => {
+      renderer = create(
+        <FamilyStartFlow
+          familyId="space:f"
+          familyName="Kim family"
+          options={[mina]}
+          api={makeApi([okList([])]) as never}
+          online
+          preselect={{ learnerId: 'profile:jun' }}
+          answersHidden={false}
+          onCreated={() => undefined}
+          onPageState={() => undefined}
+          onNotice={() => undefined}
+        />,
+        nodeMock,
+      );
+    });
+    expect(text(root())).toContain(t.start.noLearner);
+    expect(allTestId('family-find')).toHaveLength(0);
   });
 
   it('the new files hold tokens only and never the danger colour', () => {

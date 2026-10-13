@@ -51,6 +51,13 @@ describe('consentLines (F-SPACE-002 section 4.11, T-6d)', () => {
     expect(today?.kind === 'list' ? today.items : []).toEqual(['Sunday Class A (teacher Mr Han)', 'Kim family (you)', 'Lee family (family, Bo)']);
   });
 
+  it('visible_today marks "(you)" only when one family has that name: two families named "Our family" both keep their owner', () => {
+    const base = data();
+    const twin = { ...base, familyName: 'Our family', terms: { ...base.terms, visibleToday: [{ kind: 'family', name: 'Our family', ownerName: 'Ji' }, { kind: 'family', name: 'Our family', ownerName: 'Bo' }] } };
+    const today = (consentLines(twin, 'en') ?? []).find((l) => l.id === 'visible_today');
+    expect(today?.kind === 'list' ? today.items : []).toEqual(['Our family (family, Ji)', 'Our family (family, Bo)']);
+  });
+
   it('renders in every UI locale with the same ids; never leaves a placeholder', () => {
     for (const locale of LOCALES) {
       const lines = consentLines(data(), locale);

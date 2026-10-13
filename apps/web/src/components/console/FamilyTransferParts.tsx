@@ -22,31 +22,50 @@ import { useConsoleLocale } from '@/lib/i18n/locale-context';
 // ---------------------------------------------------------------------------
 // The reading rule: an end marker that has been in view once (consent-sheet.md, "The end sentinel")
 
+/** The parts of the window and of the marker element the no-IntersectionObserver fallback reads. */
+interface ScrollHost {
+  innerHeight?: number;
+  addEventListener?: (type: string, cb: () => void, capture?: boolean) => void;
+  removeEventListener?: (type: string, cb: () => void, capture?: boolean) => void;
+}
+
 /**
  * A scroll-position rule, as spec 4.11 words it: true once the marker has intersected the viewport (clipping by
- * the scrolling sheet included). Where the browser has no IntersectionObserver the rule cannot be measured, so the
- * button is not held back.
+ * the scrolling sheet included) while `resetKey` (the sheet language) stayed the same, so a language switch asks
+ * for the end again. Where the browser has no IntersectionObserver the marker's position is measured on every
+ * scroll (captured, so the sheet's own scrolling counts) and on resize: seen once its top is above the fold.
  */
-export function useSeenOnce(): [(el: Element | null) => void, boolean] {
+export function useSeenOnce(resetKey: string): [(el: Element | null) => void, boolean] {
   const [el, setEl] = useState<Element | null>(null);
-  const [seen, setSeen] = useState(false);
+  const [seenFor, setSeenFor] = useState<string | null>(null);
+  const seen = seenFor === resetKey;
   useEffect(() => {
-    if (seen) return undefined;
+    if (seen || !el) return undefined;
     const Observer = (globalThis as { IntersectionObserver?: typeof IntersectionObserver }).IntersectionObserver;
     if (!Observer) {
-      setSeen(true);
-      return undefined;
+      const host = globalThis as ScrollHost;
+      const marker = el as { getBoundingClientRect?: () => { top: number } };
+      const check = (): void => {
+        const top = marker.getBoundingClientRect?.().top;
+        if (typeof top === 'number' && typeof host.innerHeight === 'number' && top < host.innerHeight) setSeenFor(resetKey);
+      };
+      check();
+      host.addEventListener?.('scroll', check, true);
+      host.addEventListener?.('resize', check);
+      return () => {
+        host.removeEventListener?.('scroll', check, true);
+        host.removeEventListener?.('resize', check);
+      };
     }
-    if (!el) return undefined;
     const observer = new Observer((entries) => {
       if (entries.some((entry) => entry.isIntersecting)) {
-        setSeen(true);
+        setSeenFor(resetKey);
         observer.disconnect();
       }
     });
     observer.observe(el);
     return () => observer.disconnect();
-  }, [el, seen]);
+  }, [el, seen, resetKey]);
   return [setEl, seen];
 }
 
@@ -79,8 +98,9 @@ function LineView({ line }: { line: ConsentLine }): JSX.Element | null {
       <div data-line={line.id} style={wrap}>
         <p style={{ ...lineStyle, marginBottom: spacing.xs }}>{line.text}</p>
         <ul style={listStyle}>
-          {line.items.map((item) => (
-            <li key={item}>{item}</li>
+          {line.items.map((item, i) => (
+            // Two visible spaces can share a name, so the position is the key (the list never reorders in place).
+            <li key={i}>{item}</li>
           ))}
         </ul>
       </div>
@@ -117,7 +137,7 @@ export interface ConsentSheetProps {
 export function ConsentSheet({ data, initialLocale, notNowEnds, busy, failed, updated, onYes, onNotNow, onClose }: ConsentSheetProps): JSX.Element {
   const [locale, setLocale] = useState<UiLocale>(initialLocale);
   const [introduce, setIntroduce] = useState(false);
-  const [endRef, seen] = useSeenOnce();
+  const [endRef, seen] = useSeenOnce(locale);
   const hintId = useId();
   const switchId = useId();
   const t = getMessages(locale).console.transfer;
@@ -131,7 +151,7 @@ export function ConsentSheet({ data, initialLocale, notNowEnds, busy, failed, up
   const identity = identityLines(data.destination, locale);
 
   return (
-    <TransferSheet title={c.title(data.learnerName, data.destination.name)} onClose={onClose} testId="consent-sheet">
+    <TransferSheet title={c.title(data.learnerName, data.destination.name)} onClose={onClose} testId="consent-sheet" lang={LOCALE_META[locale].htmlLang} closeLabel={t.a11y.close}>
       <div lang={LOCALE_META[locale].htmlLang} style={locale === 'ko' ? { wordBreak: 'keep-all' } : undefined}>
         {updated ? (
           <p role="status" style={noticeStyle} data-testid="consent-updated">
@@ -229,20 +249,59 @@ const panel: CSSProperties = {
 };
 const h2Style: CSSProperties = { fontSize: typography.size.bodyLg, margin: `${spacing.lg}px 0 ${spacing.sm}px` };
 const rowStyle: CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: spacing.sm, alignItems: 'center' };
+const roomBlockStyle: CSSProperties = {
+  ...rowStyle,
+  flexWrap: 'nowrap',
+  margin: `${spacing.sm}px 0`,
+  padding: spacing.md,
+  borderRadius: radii.md,
+  backgroundColor: colors.feedback.nudgeLight,
+  borderInlineStart: `${borderWidth.thick}px solid ${colors.feedback.nudge}`,
+  color: colors.text.primary,
+};
 
 function shortDate(iso: string | null, locale: UiLocale): string {
   return iso ? formatDate(locale, iso, 'monthDay') : '';
 }
 
-/** What a failed approve / create / prefs answer means for the family page. */
-export function familyFailure(result: ApiResult<unknown>): { kind: 'page'; state: FamilyPageState } | { kind: 'notice'; notice: GuardianNotice } | { kind: 'refind' } | { kind: 'line'; err: StartError } | null {
+export type FamilyFailure =
+  | { kind: 'page'; state: FamilyPageState }
+  | { kind: 'notice'; notice: GuardianNotice }
+  | { kind: 'refind' }
+  | { kind: 'ended' }
+  | { kind: 'stale' }
+  | { kind: 'line'; err: StartError };
+
+/**
+ * What a failed approve / decline / cancel / create / prefs answer means for the family page: `ended` (the request
+ * already closed or expired: reload to its ended card, no failure text), `refind` (it or its terms changed: look
+ * again), `stale` (this page's consent text was retired: only a page refresh brings the new text, so no Try again).
+ */
+export function familyFailure(result: ApiResult<unknown>): FamilyFailure | null {
   const err = startError(result, 'family');
   if (!err) return null;
   if (err.kind === 'locked' || err.kind === 'signIn' || err.kind === 'forbidden') return { kind: 'page', state: err.kind };
   if (err.kind === 'refind') return { kind: 'refind' };
-  if (!result.ok && result.code === 'consent_text_stale') return { kind: 'refind' };
+  const code = result.ok ? '' : result.code ?? '';
+  if (code === 'not_open' || code === 'expired') return { kind: 'ended' };
+  if (code === 'request_changed') return { kind: 'refind' };
+  if (code === 'consent_text_stale') return { kind: 'stale' };
   if (err.key === 'familyTooNew' || err.key === 'conflicted') return { kind: 'notice', notice: err.key };
   return { kind: 'line', err };
+}
+
+/** "Something changed. Look again." with Refresh: the page's consent text was retired, so only a reload helps. */
+export function ReloadNotice(): JSX.Element {
+  const { messages } = useConsoleLocale();
+  const t = messages.console.transfer;
+  return (
+    <div style={{ ...noticeStyle, ...rowStyle }} data-testid="family-reload-notice">
+      <span>{t.states.changed}</span>
+      <MoveButton onClick={() => (globalThis as { location?: { reload?: () => void } }).location?.reload?.()} testId="family-reload">
+        {t.actions.refresh.cta}
+      </MoveButton>
+    </div>
+  );
 }
 
 /** The sheet data of a family card (Review and agree). */
@@ -305,6 +364,7 @@ export function FamilyRequestCard({ view, now, busy, answersHidden, onReview, on
   const line = statusLine(view, now, locale);
   const moved = view.status === 'executed';
   const planned = view.status === 'approved' && !view.blockReason;
+  const blocked = view.status === 'approved' && !!view.blockReason;
   const teacherStarted = view.initiator === 'source';
   return (
     <article style={{ ...panel, ...(moved ? { backgroundColor: colors.feedback.successLight } : {}) }} data-testid="family-move-card">
@@ -319,7 +379,13 @@ export function FamilyRequestCard({ view, now, busy, answersHidden, onReview, on
         <span>{view.to.name}</span>
       </p>
       {!moved ? <Steps view={view} /> : null}
-      {line ? (
+      {line && blocked ? (
+        // The room block (requests-page.md "Room block"): plain text, never a live region; the bar is decoration.
+        <p style={roomBlockStyle} data-testid="family-room-block">
+          <IconSvg name="pause" size={20} color={colors.text.primary} />
+          <span>{line}</span>
+        </p>
+      ) : line ? (
         <p style={{ ...rowStyle, margin: `${spacing.sm}px 0` }}>
           {planned ? <IconSvg name="check-circle" size={20} color={colors.feedback.success} /> : null}
           <span>{line}</span>
@@ -392,7 +458,8 @@ export function FamilyStartFlow({ familyId, familyName, options, api, online, pr
   const t = messages.console.transfer;
   const movable = options.filter((o) => o.classes.length > 0);
   const [learnerId, setLearnerId] = useState(preselect?.learnerId ?? movable[0]?.learnerId ?? '');
-  const learner = movable.find((o) => o.learnerId === learnerId) ?? movable[0];
+  // A preselected learner (the settings row) is the only one this flow may act on: never a sibling in its place.
+  const learner = preselect ? movable.find((o) => o.learnerId === preselect.learnerId) : movable.find((o) => o.learnerId === learnerId) ?? movable[0];
   const [fromId, setFromId] = useState(preselect?.fromSpaceId ?? learner?.classes[0]?.spaceId ?? '');
   const from = learner?.classes.find((cls) => cls.spaceId === fromId) ?? learner?.classes[0];
   const [code, setCode] = useState('');
@@ -401,6 +468,7 @@ export function FamilyStartFlow({ familyId, familyName, options, api, online, pr
   const [found, setFound] = useState<Found | null>(null);
   const [failed, setFailed] = useState(false);
   const [updated, setUpdated] = useState(false);
+  const [stale, setStale] = useState(false);
   const learnerSel = useId();
   const fromSel = useId();
 
@@ -413,7 +481,13 @@ export function FamilyStartFlow({ familyId, familyName, options, api, online, pr
         setFound(null);
         onNotice(f.notice);
       } else if (f.kind === 'refind') return 'refind';
-      else {
+      else if (f.kind === 'stale') {
+        setFound(null);
+        setStale(true);
+      } else if (f.kind === 'ended') {
+        setFound(null);
+        setError({ kind: 'line', key: 'failed' });
+      } else {
         setFound(null);
         setError(f.err);
       }
@@ -497,6 +571,7 @@ export function FamilyStartFlow({ familyId, familyName, options, api, online, pr
 
   return (
     <div>
+      {stale ? <ReloadNotice /> : null}
       {preselect ? null : (
         <div style={{ ...rowStyle, marginBottom: spacing.md }}>
           <label htmlFor={learnerSel} style={{ fontWeight: typography.weight.bold }}>
@@ -619,26 +694,30 @@ export function FamilyMoves({ familyId, familyName, api, online, refreshMs, onPa
   const [requests, setRequests] = useState<TransferLearnerSideView[] | null>(null);
   const [options, setOptions] = useState<TransferOption[]>([]);
   const [busy, setBusy] = useState(false);
-  const [note, setNote] = useState<'failed' | 'sent' | null>(null);
+  const [note, setNote] = useState<'failed' | 'loadFailed' | 'sent' | 'stale' | null>(null);
   const [notice, setNotice] = useState<GuardianNotice | null>(null);
   const [reviewing, setReviewing] = useState<{ id: string; updated: boolean } | null>(null);
   const [sheetFailed, setSheetFailed] = useState(false);
   const [announce, setAnnounce] = useState('');
   const [now, setNow] = useState(() => new Date());
   const lastJson = useRef<string | null>(null);
+  // The 30 s refresh pauses while the consent sheet is open, so the sheet never remounts under the guardian.
+  const reviewingRef = useRef(reviewing);
+  reviewingRef.current = reviewing;
 
   const load = useCallback(async (): Promise<TransferLearnerSideView[] | null> => {
     const result = await api.transferRequests(familyId);
     if (!result.ok) {
       const f = familyFailure(result);
       if (f?.kind === 'page') onPageState(f.state);
-      else setNote('failed');
+      else setNote((n) => (n === 'failed' || n === 'stale' ? n : 'loadFailed'));
       return null;
     }
     const views = result.data.requests.filter((v): v is TransferLearnerSideView => v.role === 'learner_side');
     const json = JSON.stringify(views);
     if (lastJson.current !== null && lastJson.current !== json) setAnnounce(t.a11y.updated);
     lastJson.current = json;
+    setNote((n) => (n === 'loadFailed' ? null : n));
     setRequests(views);
     setOptions(result.data.options ?? []);
     setNow(new Date());
@@ -647,7 +726,9 @@ export function FamilyMoves({ familyId, familyName, api, online, refreshMs, onPa
 
   useEffect(() => {
     void load();
-    const handle = setInterval(() => void load(), refreshMs);
+    const handle = setInterval(() => {
+      if (!reviewingRef.current) void load();
+    }, refreshMs);
     return () => clearInterval(handle);
   }, [load, refreshMs]);
 
@@ -660,7 +741,9 @@ export function FamilyMoves({ familyId, familyName, api, online, refreshMs, onPa
       const f = familyFailure(result);
       if (f?.kind === 'page') onPageState(f.state);
       else if (f?.kind === 'notice') setNotice(f.notice);
-      else if (f?.kind !== 'refind') setNote('failed');
+      else if (f?.kind === 'stale') setNote('stale');
+      // `ended` and `refind`: the reload below shows the card as it is now, with no failure line.
+      else if (f?.kind === 'line') setNote('failed');
     }
     await load();
     return result;
@@ -684,6 +767,16 @@ export function FamilyMoves({ familyId, familyName, api, online, refreshMs, onPa
       setReviewing({ id: view.id, updated: true });
       return;
     }
+    if (f?.kind === 'ended') {
+      setReviewing(null);
+      await load();
+      return;
+    }
+    if (f?.kind === 'stale') {
+      setReviewing(null);
+      setNote('stale');
+      return;
+    }
     if (f?.kind === 'page') {
       setReviewing(null);
       onPageState(f.state);
@@ -700,7 +793,7 @@ export function FamilyMoves({ familyId, familyName, api, online, refreshMs, onPa
   if (requests === null) {
     return (
       <div aria-busy="true" data-testid="family-moves-loading">
-        {note === 'failed' ? <p style={noticeStyle}>{t.states.failed}</p> : <div style={{ ...panel, minHeight: touchTarget.min * 2, backgroundColor: colors.surface.sunken }} />}
+        {note === 'loadFailed' ? <p style={noticeStyle}>{t.states.failed}</p> : <div style={{ ...panel, minHeight: touchTarget.min * 2, backgroundColor: colors.surface.sunken }} />}
       </div>
     );
   }
@@ -714,7 +807,8 @@ export function FamilyMoves({ familyId, familyName, api, online, refreshMs, onPa
         {announce}
       </p>
       {notice ? <p style={noticeStyle}>{t.states[notice]}</p> : null}
-      {note === 'failed' ? <p style={noticeStyle}>{t.states.failed}</p> : null}
+      {note === 'failed' || note === 'loadFailed' ? <p style={noticeStyle}>{t.states.failed}</p> : null}
+      {note === 'stale' ? <ReloadNotice /> : null}
       {note === 'sent' ? <p role="status" style={{ ...noticeStyle, backgroundColor: colors.feedback.successLight }}>{t.start.sent}</p> : null}
 
       <h2 style={h2Style}>{t.groups.asked}</h2>

@@ -22,7 +22,14 @@ vi.mock('next/navigation', () => ({
 }));
 vi.mock('@/components/console/AdultFrame', () => ({ AdultFrame: ({ children }: { children: ReactNode }) => <main>{children}</main> }));
 
-const state = vi.hoisted(() => ({ kind: 'family' as string, rosterError: null as string | null, calls: [] as string[] }));
+const state = vi.hoisted(() => ({ kind: 'family' as string, rosterError: null as string | null, previewError: null as string | null, signedOutTo: null as string | null, calls: [] as string[] }));
+vi.mock('@/components/console/auth-context', () => ({
+  useConsoleAuth: () => ({
+    signOut: async (url?: string) => {
+      state.signedOutTo = url ?? null;
+    },
+  }),
+}));
 vi.mock('@/components/console/use-console', async () => {
   const { getMessages: messages } = await import('@hangul-route/i18n');
   const space = () => ({ id: 'space:f', kind: state.kind, name: 'Kim family', parentSpaceId: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt: null, createdAt: '2026-09-01T00:00:00.000Z' });
@@ -40,6 +47,7 @@ vi.mock('@/components/console/use-console', async () => {
           { memberKind: 'learner', memberId: 'profile:jun', role: 'learner', joinedAt: '2026-09-20T00:00:00.000Z', name: 'Jun', isOwner: false },
         ],
       }),
+      previewTransfer: async () => (state.previewError ? { ok: false, error: state.previewError, status: 403 } : { ok: false, error: 'network', status: -1 }),
       transferRequests: async () => {
         state.calls.push('transferRequests');
         return { ok: true, data: { requests: [], options: [{ learnerId: 'profile:mina', name: 'Mina', classes: [{ spaceId: 'space:a', name: 'Sunday Class A' }], selfManaged: false, blockTeacherRequests: false }] } };
@@ -69,6 +77,8 @@ afterEach(() => {
   resetTransferLockForTests();
   state.kind = 'family';
   state.rosterError = null;
+  state.previewError = null;
+  state.signedOutTo = null;
   state.calls = [];
 });
 
@@ -114,7 +124,31 @@ describe('the class-moves page (T-6d family variant)', () => {
   });
 });
 
+describe('the class-moves page: a 401 (review of #504)', () => {
+  it('reads "Please sign in again." with a Sign in again button that comes back to this page', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
+    state.rosterError = 'unauthorized';
+    const root = await render(<TransfersPage />);
+    expect(textOf(root)).toContain(getMessages('en').console.start.signInAgain);
+    const button = root.find((n) => n.type === 'button' && n.props['data-testid'] === 'transfers-sign-in');
+    expect(textOf(button)).toBe(getMessages('en').console.lock.signInAgain.cta);
+    await act(async () => button.props.onClick());
+    expect(state.signedOutTo).toBe(`/signin?next=${encodeURIComponent('/parent/space/transfers?id=space%3Af')}`);
+  });
+});
+
 describe('the settings family row (T-6d)', () => {
+  it('a lost role in the start flow reads the forbidden line, not the lock (review of #504)', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
+    state.previewError = 'forbidden';
+    const root = await render(<SettingsPage />);
+    act(() => root.find((n) => n.type === 'button' && n.props['data-testid'] === 'move-row').props.onClick());
+    act(() => root.find((n) => n.type === 'input' && n.props.name === 'classCode').props.onChange({ target: { value: 'K7PM4Q' } }));
+    await act(async () => root.find((n) => n.type === 'button' && n.props['data-testid'] === 'family-find').props.onClick());
+    expect(textOf(root)).toContain(t.states.forbidden);
+    expect(textOf(root)).not.toContain(t.states.locked);
+  });
+
   it('Move to a class only for a learner in a live class; it opens the family start flow for that learner', async () => {
     vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
     const root = await render(<SettingsPage />);

@@ -133,7 +133,22 @@ interface FocusTarget {
  * A modal sheet: `role="dialog"`, `aria-modal`, labelled by its heading, which takes focus on open (never the
  * primary); Tab stays inside; Escape and the 64 px close button close it; focus returns to the opener.
  */
-export function TransferSheet({ title, onClose, children, testId }: { title: string; onClose: () => void; children: ReactNode; testId?: string }): JSX.Element {
+export function TransferSheet({
+  title,
+  onClose,
+  children,
+  testId,
+  lang,
+  closeLabel,
+}: {
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
+  testId?: string;
+  /** The sheet's own language when it differs from the page (the consent sheet's switch): heading and Close follow it. */
+  lang?: string;
+  closeLabel?: string;
+}): JSX.Element {
   const { messages } = useConsoleLocale();
   const headingId = useId();
   const sheetRef = useRef<FocusTarget | null>(null);
@@ -180,6 +195,7 @@ export function TransferSheet({ title, onClose, children, testId }: { title: str
         role="dialog"
         aria-modal="true"
         aria-labelledby={headingId}
+        lang={lang}
         data-testid={testId}
         onKeyDown={onKeyDown}
       >
@@ -196,7 +212,7 @@ export function TransferSheet({ title, onClose, children, testId }: { title: str
           </h2>
           <button
             type="button"
-            aria-label={messages.console.transfer.a11y.close}
+            aria-label={closeLabel ?? messages.console.transfer.a11y.close}
             onClick={onClose}
             style={{ ...btnBase, width: touchTarget.min, height: touchTarget.min, padding: 0, borderRadius: radii.circle, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
           >
