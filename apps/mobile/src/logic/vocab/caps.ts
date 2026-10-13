@@ -36,6 +36,6 @@ export const ACTIVITY_ROUTES = { learn: 'VocabCards', speed: 'VocabSpeedRound', 
  */
 export const VOCAB_SCREENS: Readonly<Record<keyof typeof ACTIVITY_ROUTES, boolean>> = {
   learn: false,
-  speed: false,
+  speed: true,
   match: false,
 };

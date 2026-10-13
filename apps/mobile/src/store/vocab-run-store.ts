@@ -1,5 +1,8 @@
 import { create } from 'zustand';
 import type { VocabEvent } from '../logic/vocab/progress';
+import { speedAnswerEvent, speedSessionEvent } from '../logic/vocab/speed-round';
+import type { QuestionResult } from '../logic/vocab/speed-session';
+import type { RoundSummary } from '../logic/vocab/stars';
 import type { MinigameHost } from '../screens/minigames/host';
 import { useProgressStore } from './progress-store';
 
@@ -10,6 +13,11 @@ import { useProgressStore } from './progress-store';
  * It is also the vocab `MinigameHost` (F-QUEST-002 section 3.12): a Match run
  * buffers the first answer per round key and `complete` writes them as
  * `answer` events (`source: 'match'`) plus one `session` event, once.
+ *
+ * A Speed Round (F-VOC-004 section 3.6) writes each first tap at once
+ * (`speedAnswer`, `source: 'speed'`), so a closed app loses nothing, and one
+ * `session` event when the round reaches its results (`finishSpeed`). A quit
+ * is `reset`: the answers already given stay written, no session is added.
  */
 
 export type VocabRunMode = 'cards' | 'speed' | 'match';
@@ -39,6 +47,13 @@ interface Actions {
    * no practice happened.
    */
   complete: (now?: Date) => void;
+  /** A Speed Round's first tap, written at once (speed runs only). */
+  speedAnswer: (result: QuestionResult, now?: Date) => void;
+  /**
+   * The end of a Speed Round that reached its results: one session event when
+   * anything was answered (stars), then the run ends (a second call writes nothing).
+   */
+  finishSpeed: (summary: RoundSummary, now?: Date) => void;
 }
 
 const EMPTY: State = { profileId: null, topicKey: null, mode: null, answers: [] };
@@ -72,6 +87,21 @@ export const useVocabRunStore = create<State & Actions>((set, get) => ({
       set(EMPTY);
     }
   },
+  speedAnswer: (result, now = new Date()) => {
+    const { profileId, mode } = get();
+    if (mode !== 'speed' || profileId === null) return;
+    useProgressStore.getState().recordVocab(profileId, [speedAnswerEvent(result)], now);
+  },
+  finishSpeed: (summary, now = new Date()) => {
+    const { profileId, topicKey, mode } = get();
+    if (mode !== 'speed' || profileId === null || topicKey === null) return;
+    const event = speedSessionEvent(topicKey, summary);
+    try {
+      if (event !== null) useProgressStore.getState().recordVocab(profileId, [event], now);
+    } finally {
+      set(EMPTY);
+    }
+  },
 }));
 
 /**
@@ -85,4 +115,16 @@ export const vocabHost: MinigameHost = {
   mode: 'vocab',
   answer: (roundKey, correct, meta) => useVocabRunStore.getState().answer(roundKey, correct, meta),
   complete: () => useVocabRunStore.getState().complete(),
+};
+
+/**
+ * The host `VocabSpeedRoundScreen` passes to `VocabQuestionView` (F-VOC-004
+ * section 3.9). It records nothing itself: the view's first tap goes to the
+ * session reducer (`onAnswer`), whose result carries the hint and the active
+ * time, and the screen writes that with `speedAnswer`.
+ */
+export const speedHost: MinigameHost = {
+  mode: 'vocab',
+  answer: () => undefined,
+  complete: () => undefined,
 };
