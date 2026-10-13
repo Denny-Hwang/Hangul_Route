@@ -552,7 +552,8 @@ test('home: the layers in order for an account pass, one-row section control, no
   await expect(page.getByTestId('browse-route')).toBeVisible();
   await group.getByRole('radio', { name: 'Journey' }).click();
   await expect(group.getByRole('radio', { name: 'Journey' })).toHaveAttribute('aria-checked', 'true');
-  // With the Route section present the Journey has no stage line: Route already lists the stages.
+  // With the Route section present the Journey has no stage line: Route already lists the stages. The kill-switch
+  // build (EXPO_PUBLIC_MY_ROUTE_ENABLED=false) brings the line back; `journeyStageLine` (home-view.test.ts) pins it.
   await expect(page.getByRole('button', { name: '7 stages, from letters to your own words' })).toHaveCount(0);
   await expect(page.getByRole('switch', { name: 'Keep lessons on this device for 7 days, also offline' })).toHaveAttribute('aria-checked', 'false');
   // Reading order: title, how-to, pointer, sections, keep switch.
@@ -605,8 +606,11 @@ test('at 320 wide the section control stays on one row and every target is at le
   const radios = page.getByRole('radiogroup', { name: 'Show lessons by' }).getByRole('radio');
   const ys = await radios.evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().top)));
   expect(new Set(ys).size).toBe(1);
-  for (const section of ['Journey', 'Library'] as const) {
-    await page.getByRole('radio', { name: section }).click();
+  // Route first: it is the section home opens on (F-ROUTE-001 R-10b), measured before any tap moves away.
+  await expect(page.getByRole('radio', { name: 'Route' })).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByTestId('browse-route')).toBeVisible();
+  for (const section of ['Route', 'Journey', 'Library'] as const) {
+    if (section !== 'Route') await page.getByRole('radio', { name: section }).click();
     for (const box of await pressableBoxes(page)) {
       // F-BROWSE-001 section 7 and section 15: the learner JourneyGrid is reused unchanged and its cells are 54 to 56
       // at 320 wide (they share the row's width), a recorded exception named by its journey-stage-<stage> row.
@@ -617,6 +621,24 @@ test('at 320 wide the section control stays on one row and every target is at le
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
   await shot(page, 'br7-browse-home-320');
+});
+
+test('a Route stage row shows that stage on the Journey: the Journey section is selected and the stage row is on screen', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await openBrowse(page, 'account');
+  const route = page.getByTestId('browse-route');
+  await expect(route).toBeVisible();
+  // The Route trail's stage rows are the learner trail's own (StageRowItem, my-route-stage-<order>); the last one's
+  // stage sits below the fold of the Journey grid, so revealing it proves the jump, not the first screen.
+  const rows = route.locator('[data-testid^="my-route-stage-"]');
+  expect(await rows.count()).toBeGreaterThan(1);
+  const last = rows.last();
+  const order = (await last.getAttribute('data-testid'))?.replace('my-route-stage-', '');
+  await last.getByRole('button').first().click();
+  await expect(page.getByRole('radio', { name: 'Journey' })).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByTestId('browse-route')).toHaveCount(0);
+  await expect(page.getByTestId(`journey-stage-stage${order}`)).toBeInViewport();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
 });
 
 test('Journey cell, episode outline, item page with Where it sits, See on the Journey and the card', async ({ page }) => {
