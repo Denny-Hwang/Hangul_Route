@@ -288,6 +288,15 @@ describe('the Route tab (LR-4)', () => {
     expect(trail).toMatch(/if \(!animate\) return;\s*opacity\.setValue\(FRESH_FROM\);/);
   });
 
+  it('the first reached goal (LR-5c): the Hoya line for that visit, the goalsReached write and route_map.goal_reached, never read-only', () => {
+    // The decision is the pure firstGoalReachedFor (focus.ts, unit-tested): only after this focus's read, never read-only.
+    expect(screen).toContain('firstGoalReachedFor({ focusKey, seenFor, focused, readOnly, goal: model?.goal ?? null, seen: seenRead })');
+    expect(screen).toMatch(/myRouteView\(\{[\s\S]*?firstReached,/);
+    // The key is written with this focus's seen record, and the event is sent with it, once per focus.
+    expect(screen).toMatch(/if \(fx\.writeSeen\) \{[\s\S]*?withGoalReached\(/);
+    expect(screen).toMatch(/if \(fx\.writeSeen\) \{[\s\S]*?goalReachedEvent\(\{ profileId, goal: model\.goal, firstReached, readOnly \}\)/);
+  });
+
   it('the root-stack screen is grown-up only: a learner access moves to the tab instead of opening a second copy', () => {
     // navigate returns to the Main route already below (replace would stack a second Main).
     expect(screen).toContain("navigation.navigate('Main', { screen: selfEntryTab(flags.myRouteEnabled) })");

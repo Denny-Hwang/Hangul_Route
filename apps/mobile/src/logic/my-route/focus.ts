@@ -1,3 +1,5 @@
+import type { RouteGoal } from '@hangul-route/content-schema';
+import { isFirstGoalReached } from './seen';
 import type { SeenRecord } from './types';
 
 /**
@@ -56,4 +58,26 @@ export async function seenReadAfter(
  */
 export function seenForView(s: { focusKey: number; seenFor: number; focused: boolean; seen: SeenRecord | undefined }): SeenRecord | undefined {
   return s.focused && s.focusKey > 0 && s.seenFor === s.focusKey ? s.seen : undefined;
+}
+
+/**
+ * The first time the tab shows a reached plan goal on this device (amendment
+ * section 4.3, LR-5c): Hoya cheers, the card reads "You reached your goal. Hoya
+ * is proud!" for that visit, the goal's key joins `seen.goalsReached` and
+ * `route_map.goal_reached` is sent. Only once this focus has read the record
+ * (before that, a missing record must not read as a first time), only while
+ * the tab is in front, never in read-only mode, and only for a plan goal (a
+ * default goal is never reached by construction, section 4.1 rule 6).
+ */
+export function firstGoalReachedFor(s: {
+  focusKey: number;
+  seenFor: number;
+  focused: boolean;
+  readOnly: boolean;
+  goal: RouteGoal | null;
+  seen: SeenRecord | undefined;
+}): boolean {
+  if (s.readOnly || !s.focused || s.focusKey === 0 || s.seenFor !== s.focusKey) return false;
+  if (s.goal === null || s.goal.from === 'default') return false;
+  return isFirstGoalReached(s.goal, s.seen);
 }

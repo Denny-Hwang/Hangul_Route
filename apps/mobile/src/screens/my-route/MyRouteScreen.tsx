@@ -12,13 +12,13 @@ import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
 import { dayKey } from '../../logic/homework/mission-builder';
 import { myRouteAccess, myRouteEntryOf, selfEntryTab } from '../../logic/my-route/access';
-import { focusEffects, seenForView, seenReadAfter } from '../../logic/my-route/focus';
+import { firstGoalReachedFor, focusEffects, seenForView, seenReadAfter } from '../../logic/my-route/focus';
 import { practiceTopicOf } from '../../logic/my-route/free-end';
 import { buildMyRoute } from '../../logic/my-route/model';
 import { planWeekOf } from '../../logic/my-route/plan-week';
 import { goalSourcesOf, localizedRouteContent, routeLetterWall, routeModelInput } from '../../logic/my-route/route-input';
-import { readSeen, seenFrom, writeSeen } from '../../logic/my-route/seen';
-import { continueTappedEvent, stageOpenedEvent, viewedEvent } from '../../logic/my-route/telemetry';
+import { readSeen, seenFrom, withGoalReached, writeSeen } from '../../logic/my-route/seen';
+import { continueTappedEvent, goalReachedEvent, stageOpenedEvent, viewedEvent } from '../../logic/my-route/telemetry';
 import type { MyRouteModel, SeenRecord } from '../../logic/my-route/types';
 import { emptySnapshot, myRouteView, stageRowLook } from '../../logic/my-route/view';
 import { isParentSessionValid } from '../../logic/profiles/session';
@@ -202,6 +202,9 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   }, [snap, profileId, tier, plans, readOnly, activeQuestOpen, localized, seen, attempt]);
   const model = 'model' in built ? built.model : null;
   const week = 'model' in built ? built.week : null;
+  // The first visit that shows a reached plan goal (LR-5c, section 4.3): Hoya cheers and the card says so for this
+  // visit only; the effect below records the goal and sends route_map.goal_reached. Never read-only.
+  const firstReached = firstGoalReachedFor({ focusKey, seenFor, focused, readOnly, goal: model?.goal ?? null, seen: seenRead });
 
   const view = useMemo(() => {
     if (model === null) return null;
@@ -218,12 +221,13 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
       hasStories: defaultStoryIndex().some((e) => e.placement === 'shelf'),
       practiceTopic,
       seen,
+      firstReached,
       letterWall: routeLetterWall(model),
       week,
       // "Plan ends {date}" on the grown-up card only (LR-OD-7); a plan day is a UTC calendar day.
       formatDay: (day) => formatDate(locale, `${day}T00:00:00.000Z`, 'monthDay', { utc: true }),
     });
-  }, [model, messages, readOnly, profile?.displayName, localized, locale, seen, week, practiceTopic]);
+  }, [model, messages, readOnly, profile?.displayName, localized, locale, seen, firstReached, week, practiceTopic]);
 
   // Once per focus: route_map.viewed from the tab, then remember what this open saw (active learner only, never
   // read-only: the grown-up screen sends and writes nothing, section 8).
@@ -239,10 +243,14 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
     }
     if (fx.writeSeen) {
       seenWrittenFor.current = focusKey;
-      // The record this open read is passed on, so the goals already reached (LR-3b) are kept.
-      pendingWrite.current = writeSeen(STORAGE, profileId, seenFrom(model, new Date(), seenRead), { readOnly });
+      // The record this open read is passed on, so the goals already reached (LR-3b) are kept; a goal reached
+      // for the first time joins them now, so the next visit no longer cheers (LR-5c).
+      const record = seenFrom(model, new Date(), seenRead);
+      pendingWrite.current = writeSeen(STORAGE, profileId, firstReached && model.goal !== null ? withGoalReached(record, model.goal) : record, { readOnly });
+      const reached = goalReachedEvent({ profileId, goal: model.goal, firstReached, readOnly });
+      if (reached) void track(reached);
     }
-  }, [model, focusKey, seenFor, profileId, readOnly, seenRead]);
+  }, [model, focusKey, seenFor, profileId, readOnly, seenRead, firstReached]);
 
   // One row open at a time; the `here` stage is open on first view.
   const [openKey, setOpenKey] = useState<string | null | undefined>(undefined);

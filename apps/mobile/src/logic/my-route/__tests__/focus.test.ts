@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { focusEffects, seenForView, seenReadAfter, type FocusState } from '../focus';
+import { firstGoalReachedFor, focusEffects, seenForView, seenReadAfter, type FocusState } from '../focus';
+import { withGoalReached } from '../seen';
+import type { RouteGoal } from '@hangul-route/content-schema';
 import type { SeenRecord } from '../types';
 
 /**
@@ -120,6 +122,15 @@ describe('seenReadAfter: each focus reads the record only after the previous foc
     await expect(result).resolves.toBeNull();
   });
 
+  it('a read that resolves after a newer focus started is dropped', async () => {
+    let live = true;
+    const result = seenReadAfter(Promise.resolve(), async () => {
+      live = false;
+      return record('late');
+    }, () => live);
+    await expect(result).resolves.toBeNull();
+  });
+
   it('a superseded focus does not read at all', async () => {
     let reads = 0;
     const result = seenReadAfter(Promise.resolve(), async () => {
@@ -159,5 +170,43 @@ describe('seenForView: the view compares against this open only', () => {
 
   it('shows nothing before the first focus', () => {
     expect(seenForView({ focusKey: 0, seenFor: 0, focused: false, seen })).toBeUndefined();
+  });
+});
+
+describe('firstGoalReachedFor: the first time the tab shows a reached plan goal (LR-5c, amendment section 4.3)', () => {
+  const goal = (over: Partial<RouteGoal> = {}): RouteGoal => ({ stage: 'stage2', from: 'class', sourceId: 'plan:c', endsOn: '2026-11-01', reached: true, taste: false, ...over });
+  const seen = record('focus-1');
+  const ready = { focusKey: 2, seenFor: 2, focused: true, readOnly: false };
+
+  it('true once this focus has read the record and the goal key is not in it yet', () => {
+    expect(firstGoalReachedFor({ ...ready, goal: goal(), seen })).toBe(true);
+    // The very first open on this device: no record at all.
+    expect(firstGoalReachedFor({ ...ready, goal: goal(), seen: undefined })).toBe(true);
+  });
+
+  it('false once the key is in goalsReached, so the line shows for that one visit only', () => {
+    expect(firstGoalReachedFor({ ...ready, goal: goal(), seen: withGoalReached(seen, goal()) })).toBe(false);
+    // Another plan reaching the same stage is a new goal.
+    expect(firstGoalReachedFor({ ...ready, goal: goal({ sourceId: 'plan:d' }), seen: withGoalReached(seen, goal()) })).toBe(true);
+  });
+
+  it('false between a focus and its read: a missing record must not read as a first time', () => {
+    expect(firstGoalReachedFor({ ...ready, seenFor: 1, goal: goal(), seen: withGoalReached(seen, goal()) })).toBe(false);
+    expect(firstGoalReachedFor({ ...ready, seenFor: 1, goal: goal(), seen: undefined })).toBe(false);
+    expect(firstGoalReachedFor({ ...ready, focusKey: 0, seenFor: 0, goal: goal(), seen })).toBe(false);
+  });
+
+  it('false while the tab is behind another screen', () => {
+    expect(firstGoalReachedFor({ ...ready, focused: false, goal: goal(), seen })).toBe(false);
+  });
+
+  it('false in read-only mode: the grown-up screen never uses up the child\'s moment', () => {
+    expect(firstGoalReachedFor({ ...ready, readOnly: true, goal: goal(), seen })).toBe(false);
+  });
+
+  it('false for a goal not reached, a default goal and no goal', () => {
+    expect(firstGoalReachedFor({ ...ready, goal: goal({ reached: false }), seen })).toBe(false);
+    expect(firstGoalReachedFor({ ...ready, goal: goal({ from: 'default', sourceId: null }), seen })).toBe(false);
+    expect(firstGoalReachedFor({ ...ready, goal: null, seen })).toBe(false);
   });
 });
