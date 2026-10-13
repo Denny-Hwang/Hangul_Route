@@ -141,6 +141,8 @@ const FRAME_CSS = `
 }`;
 
 const quietButton = {
+  alignItems: 'center',
+  justifyContent: 'center',
   minHeight: touchTarget.min,
   padding: `${spacing.sm}px ${spacing.md}px ${spacing.sm}px ${spacing.sm}px`,
   borderRadius: radii.pill,
