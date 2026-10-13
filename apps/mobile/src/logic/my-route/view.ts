@@ -60,6 +60,30 @@ export const PIP_ROW_MIN_WIDTH = 360;
 
 export const stageRowLook = (windowWidth: number): 'pips' | 'bar' => (windowWidth < PIP_ROW_MIN_WIDTH ? 'bar' : 'pips');
 
+/** How the route card is laid out at a window width: spacing token names and whether the can-do lines show. */
+export interface RouteCardLook {
+  padding: 'md' | 'lg';
+  /** The gap between the card's parts. */
+  gap: 'sm' | 'md';
+  /** The space above the button. */
+  ctaGap: 'md' | 'lg';
+  showCanDo: boolean;
+}
+
+/**
+ * The route card below `PIP_ROW_MIN_WIDTH` (LR-11, spec section 4.3 "Narrow width";
+ * design/screens/learning-route/route-card.md): with 15 Stage 1 pips on two lines, the LR-D card put Continue about
+ * 75 px under the tab bar at 320 x 568. The compact card takes the tighter padding and gaps and, when it has a button,
+ * leaves the can-do lead and line to the trail's stage rows (the open `here` row below the card, after the weekly
+ * plan line, shows its own stage's lines; a goal stage ahead shows them when opened). A card without a button (the
+ * read-only card) keeps them: hiding them would not bring any button above the bar. The card's summary label never
+ * included the can-do lines (section 10), so screen-reader output does not change.
+ */
+export const routeCardLook = (windowWidth: number, hasButton: boolean): RouteCardLook =>
+  windowWidth < PIP_ROW_MIN_WIDTH
+    ? { padding: 'md', gap: 'sm', ctaGap: 'md', showCanDo: !hasButton }
+    : { padding: 'lg', gap: 'md', ctaGap: 'lg', showCanDo: true };
+
 export interface TagView {
   label: string;
   /** "You started here" carries the pin glyph, "Your goal" the flag (LR-5a); "You are here" none. */

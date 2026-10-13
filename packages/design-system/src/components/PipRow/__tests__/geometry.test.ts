@@ -17,6 +17,7 @@ import {
   pipParts,
   pipRowBands,
   pipRowCells,
+  pipRowLines,
   pipStrokeWidth,
   STAGE_SEGMENT_STATES,
   stageSegmentParts,
@@ -316,6 +317,40 @@ describe('pipRowBands: marker room is reserved only when a marker is drawn', () 
     expect(pipRowBands([[{ key: 'a', state: 'open' }]])).toEqual({ top: false, bottom: false });
     expect(pipRowBands([[{ key: 'a', state: 'open', isCursor: true }]])).toEqual({ top: true, bottom: false });
     expect(pipRowBands([[{ key: 'a', state: 'known' }], [{ key: 'b', state: 'open', isStart: true }]])).toEqual({ top: false, bottom: true });
+  });
+});
+
+describe('pipRowLines: the lines a measured row wraps into, each with only the marker bands its own pips use', () => {
+  const gaps = { pip: 4, group: 12 };
+  const open = (key: string, extra: { isCursor?: boolean; isStart?: boolean } = {}) => ({ key, state: 'open' as const, ...extra });
+
+  it('fits as many pips on a line as the width holds, gaps between them, and wraps the rest', () => {
+    // 15 pips of 20 with 4 between: 10 fit in 236 (10 x 20 + 9 x 4), the 11th would need 260.
+    const cells = pipRowCells([Array.from({ length: 15 }, (_, i) => open(`q${i}`, i === 1 ? { isCursor: true } : i === 0 ? { isStart: true } : {}))], gaps);
+    const lines = pipRowLines(cells, 236, 20, gaps.pip);
+    expect(lines.map((l) => l.cells.length)).toEqual([10, 5]);
+    expect(lines.map((l) => l.cells.map((c) => c.key)).flat()).toEqual(cells.map((c) => c.key));
+    // The cursor and the start sit on the first line: the second line reserves no band.
+    expect(lines.map((l) => l.bands)).toEqual([
+      { top: true, bottom: true },
+      { top: false, bottom: false },
+    ]);
+    expect(pipRowLines(cells, 235, 20, gaps.pip).map((l) => l.cells.length)).toEqual([9, 6]);
+  });
+
+  it('counts the group gap that trails a pip, so a group that wraps starts flush left', () => {
+    const cells = pipRowCells([[open('a'), open('b')], [open('c', { isCursor: true })]], gaps);
+    // a (20) + 4 + b (20 + the extra 8 of the group gap) = 52; c needs 4 + 20 more.
+    expect(pipRowLines(cells, 75, 20, gaps.pip).map((l) => [l.cells.map((c) => c.key), l.bands])).toEqual([
+      [['a', 'b'], { top: false, bottom: false }],
+      [['c'], { top: true, bottom: false }],
+    ]);
+    expect(pipRowLines(cells, 76, 20, gaps.pip).map((l) => l.cells.length)).toEqual([3]);
+  });
+
+  it('puts a pip wider than the width on a line of its own, and gives no line for no pips', () => {
+    expect(pipRowLines(pipRowCells([[open('a'), open('b')]], gaps), 10, 20, gaps.pip).map((l) => l.cells.length)).toEqual([1, 1]);
+    expect(pipRowLines([], 236, 20, gaps.pip)).toEqual([]);
   });
 });
 

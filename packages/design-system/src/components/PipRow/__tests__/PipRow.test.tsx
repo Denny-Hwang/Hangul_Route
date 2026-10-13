@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { colors, spacing } from '../../../tokens';
 import { cursorMarkerParts, markerBand, pipInk, pipParts, stageSegmentParts, startBand, startMarkerParts, type PipPart } from '../geometry';
 import { Pip, PipParts, PipSvg } from '../Pip';
-import { PipRow, PipRowBody } from '../PipRow';
+import { PipRow, PipRowBody, PipRowFitted } from '../PipRow';
 import { StageSegments, StageSegmentsBody } from '../StageSegments';
 
 /**
@@ -12,6 +12,20 @@ import { StageSegments, StageSegmentsBody } from '../StageSegments';
  * replaced by plain host tags, so the layout maths (margins, svg height,
  * marker offsets) and the ink mapping are checked without a renderer.
  */
+/** PipRowFitted's measured width: the state a test hands in, and every update the row asks for (LR-11). */
+const measured = vi.hoisted(() => ({ width: undefined as number | undefined, updates: [] as Array<number | undefined> }));
+vi.mock('react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react')>();
+  const useState = <T,>(initial: T): [T, (update: T | ((prev: T) => T)) => void] => {
+    const value = (measured.width ?? initial) as T;
+    const set = (update: T | ((prev: T) => T)): void => {
+      const next = typeof update === 'function' ? (update as (prev: T) => T)(value) : update;
+      if (!Object.is(next, value)) measured.updates.push(next as number | undefined);
+    };
+    return [value, set];
+  };
+  return { ...actual, default: { ...actual, useState }, useState };
+});
 vi.mock('react-native', () => ({ View: 'View', useWindowDimensions: () => ({ width: 400, height: 800 }) }));
 vi.mock('react-native-svg', () => ({ default: 'Svg', Svg: 'Svg', Circle: 'Circle', G: 'G', Path: 'Path' }));
 // A regular-class window: every media size is scaled by 1.5 (useMediaSize rounds base x mediaScale).
@@ -132,12 +146,78 @@ describe('PipRowBody', () => {
   });
 });
 
+describe('PipRowBody with a measured width: one row per line, each with its own marker bands (LR-11)', () => {
+  const size = 20;
+  const pips = Array.from({ length: 15 }, (_, i) => ({ key: `q${i}`, state: 'open' as const, isCursor: i === 1, isStart: i === 0 }));
+
+  it('draws the lines as rows, the gaps between and inside them, and keeps the row hidden from screen readers', () => {
+    const row = PipRowBody({ groups: [pips], size, accent: ACCENT, testID: 'row', width: 236 }) as El;
+    expect(row.props).toMatchObject({ testID: 'row', importantForAccessibility: 'no-hide-descendants', accessibilityElementsHidden: true, 'aria-hidden': true });
+    expect(row.props.style).toMatchObject({ rowGap: spacing.xs });
+    const lines = kids(row);
+    expect(lines).toHaveLength(2);
+    for (const line of lines) expect(line.props.style).toMatchObject({ flexDirection: 'row', columnGap: spacing.xs });
+    expect(lines.map((l) => kids(l).length)).toEqual([10, 5]);
+  });
+
+  it('reserves the bands on the line with the cursor and the start only; the other line is just the pips', () => {
+    const [first, second] = kids(PipRowBody({ groups: [pips], size, accent: ACCENT, width: 236 }) as El);
+    const svgOf = (cell: El): El => kids(cell)[0]!;
+    expect(svgOf(kids(first!)[5]!).props).toMatchObject({ height: markerBand(size) + size + startBand(size) });
+    expect(svgOf(kids(second!)[0]!).props).toMatchObject({ height: size, viewBox: `0 0 ${size} ${size}` });
+    expect(kids(svgOf(kids(second!)[0]!)).map((p) => p.props.offsetY)).toEqual([0]);
+  });
+
+  it('without a width it stays the one wrapping row', () => {
+    const row = PipRowBody({ groups: [pips], size, accent: ACCENT }) as El;
+    expect(row.props.style).toMatchObject({ flexWrap: 'wrap' });
+    expect(kids(row)).toHaveLength(15);
+  });
+});
+
+describe('PipRowFitted: measures its width and hands it to the body (LR-11)', () => {
+  const groups = [Array.from({ length: 15 }, (_, i) => ({ key: `q${i}`, state: 'open' as const, isCursor: i === 0 }))];
+  const layout = (width: number) => ({ nativeEvent: { layout: { x: 0, y: 0, width, height: 40 } } });
+  const fitted = (): El => PipRowFitted({ groups, size: 20, accent: ACCENT, gaps: { pip: 4, group: 12 }, testID: 'row' }) as El;
+
+  it('before the first layout the body has no width, so it draws the one wrapping row', () => {
+    measured.width = undefined;
+    const wrapper = fitted();
+    expect(wrapper.props.style).toMatchObject({ alignSelf: 'stretch' });
+    const [body] = kids(wrapper);
+    expect(body!.type).toBe(PipRowBody);
+    expect(body!.props).toMatchObject({ groups, size: 20, accent: ACCENT, gaps: { pip: 4, group: 12 }, testID: 'row', width: undefined });
+  });
+
+  it('a layout stores the measured width; an unchanged width asks for no update', () => {
+    measured.width = undefined;
+    measured.updates.length = 0;
+    (fitted().props.onLayout as (e: unknown) => void)(layout(236));
+    expect(measured.updates).toEqual([236]);
+    measured.width = 236;
+    const wrapper = fitted();
+    expect(kids(wrapper)[0]!.props).toMatchObject({ width: 236 });
+    (wrapper.props.onLayout as (e: unknown) => void)(layout(236));
+    expect(measured.updates).toEqual([236]);
+    (wrapper.props.onLayout as (e: unknown) => void)(layout(300));
+    expect(measured.updates).toEqual([236, 300]);
+    measured.width = undefined;
+  });
+});
+
 describe('PipRow and Pip: context to size through useMediaSize, and the default accent', () => {
   it('a cell row passes the scaled 24 dp size, the scaled gaps and border.shape as the accent to its body', () => {
     const groups = [[{ key: 'a', state: 'done' as const }]];
     const el = PipRow({ groups, context: 'cell', testID: 'row' }) as El;
     expect(el.type).toBe(PipRowBody);
     expect(el.props).toMatchObject({ groups, size: 36, accent: colors.border.shape, testID: 'row', gaps: { pip: 6, group: 18 } });
+  });
+
+  it('bandsPerLine hands the row to the measuring PipRowFitted with the same size, gaps and accent (LR-11)', () => {
+    const groups = [[{ key: 'a', state: 'open' as const, isCursor: true }]];
+    const el = PipRow({ groups, bandsPerLine: true, accent: colors.stage.stage1, testID: 'row' }) as El;
+    expect(el.type).toBe(PipRowFitted);
+    expect(el.props).toMatchObject({ groups, size: 30, accent: colors.stage.stage1, testID: 'row', gaps: { pip: 6, group: 18 } });
   });
 
   it('a stage row (the default) passes the scaled 20 dp size and keeps a caller accent', () => {

@@ -33,6 +33,12 @@ export interface PipRowProps {
   context?: PipContext;
   /** Fill of a done pip: a colour token, usually `colors.stage[stage]` (decoration only). Default `colors.border.shape`. */
   accent?: string;
+  /**
+   * Measure the row and reserve the cursor and start bands per line, not for
+   * every line (LR-11: the route card's two lines of pips at 320). Default
+   * false: the row wraps by itself and every line keeps the bands.
+   */
+  bandsPerLine?: boolean;
   testID?: string;
 }
 
