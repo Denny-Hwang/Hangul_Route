@@ -1,7 +1,7 @@
 'use client';
 
 import { IconSvg } from '@hangul-route/design-system/icon-glyphs/dom';
-import { borderWidth, colors, radii, shadows, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
+import { borderWidth, colors, layout, radii, shadows, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import { formatDate } from '@hangul-route/i18n';
 import { useCallback, useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { AvatarChip } from '@/components/AvatarChip';
@@ -138,7 +138,9 @@ function CardLine({ view, now }: { view: ClassView; now: Date }): JSX.Element | 
   if (view.status === 'approved' && view.blockReason) {
     return (
       <p style={roomBlockStyle} data-testid="move-room-block">
-        <IconSvg name="pause" size={20} color={colors.text.primary} />
+        <span aria-hidden style={{ display: 'inline-flex', flexShrink: 0 }}>
+          <IconSvg name="pause" size={20} color={colors.text.primary} />
+        </span>
         <span>{line}</span>
       </p>
     );
@@ -146,7 +148,9 @@ function CardLine({ view, now }: { view: ClassView; now: Date }): JSX.Element | 
   if (view.status === 'approved') {
     return (
       <p style={{ ...rowStyle, ...lineStyle, flexWrap: 'nowrap' }}>
-        <IconSvg name="check-circle" size={20} color={colors.feedback.successDark} />
+        <span aria-hidden style={{ display: 'inline-flex', flexShrink: 0 }}>
+          <IconSvg name="check-circle" size={20} color={colors.feedback.successDark} />
+        </span>
         <span>{line}</span>
       </p>
     );
@@ -485,7 +489,7 @@ export function ClassMoves({ spaceId, spaceName, api, online, refreshMs, readOnl
   const card = { now, busy, online, readOnly, direct, run, api, spaceId, onRefresh: refresh };
 
   return (
-    <div>
+    <div style={{ maxWidth: layout.maxWidth.reading }}>
       <style>{STEPS_CSS}</style>
       <p aria-live="polite" style={hidden}>
         {announce}
