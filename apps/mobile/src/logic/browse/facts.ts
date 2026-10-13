@@ -105,6 +105,11 @@ export interface TopicWordFact extends WordFact {
   id: string;
   /** Picture ref (`card:` or `word:`). */
   visual: string;
+  /**
+   * What Hear plays, as the learner hears the word (section 4.7, BR-9): its recording when it has one,
+   * else the device voice says its spoken form, else its Korean (`playPrompt`'s fallback).
+   */
+  speech: { text: string; audioRef?: string };
 }
 
 export interface TopicFacts {
@@ -341,7 +346,14 @@ function topicFacts(id: string, bundle: BrowseBundle, locale: UiLocale): TopicFa
     title: local.titleEn,
     titleKo: wordOf(local.titleKo),
     count: items.length,
-    words: items.map((i) => ({ id: i.id, ko: i.ko, romanization: i.romanization, gloss: localizedGloss(i, locale), visual: i.visual })),
+    words: items.map((i) => ({
+      id: i.id,
+      ko: i.ko,
+      romanization: i.romanization,
+      gloss: localizedGloss(i, locale),
+      visual: i.visual,
+      speech: { text: i.spokenKo ?? i.ko, ...(i.audioRef !== undefined ? { audioRef: i.audioRef } : {}) },
+    })),
   };
 }
 

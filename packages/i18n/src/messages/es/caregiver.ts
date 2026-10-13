@@ -667,6 +667,9 @@ export const caregiver = {
       sources: 'Fuentes',
       seeSources: { cta: 'Ver las fuentes' },
     },
+    topic: {
+      hearA11y: (romanization: string) => `Escuchar ${romanization}`,
+    },
     preview: {
       strip: 'Vista previa. No se guarda nada.',
       leave: { cta: 'Cerrar vista previa' },
