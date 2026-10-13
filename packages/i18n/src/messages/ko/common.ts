@@ -65,6 +65,6 @@ export const common = {
     teacherLabel: (className: string) => `선생님 · ${className}`,
     teacherOnly: '선생님',
     date: { today: '오늘', yesterday: '어제' },
-    new: { pill: '새 쪽지' },
+    new: { pill: '새' },
   },
 } satisfies DeepPartial<Messages['common']>;

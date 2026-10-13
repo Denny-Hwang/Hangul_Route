@@ -363,7 +363,7 @@ describe('Korean console counts, n = 1 and n = 2 (F-I18N-001 PR 16)', () => {
     [ko.parent.child.cards(2), '카드 2장'],
     [ko.space.week.practiced(1, 5), '이번 주 학생 5명 중 1명이 연습했어요'],
     [ko.space.week.practiced(2, 5), '이번 주 학생 5명 중 2명이 연습했어요'],
-    [ko.space.learner.words(1, 1), '낱말: 1개 모음 · 1개 탄탄함'],
+    [ko.space.learner.words(1, 1), '낱말: 모은 것 1개 · 탄탄한 것 1개'],
     [ko.school.week.line(1, 1, 1, 1), '학생 1명 중 1명이 연습했어요 · 반 1개 중 1개에 게시된 계획이 있어요'],
     [ko.school.week.line(2, 5, 2, 3), '학생 5명 중 2명이 연습했어요 · 반 3개 중 2개에 게시된 계획이 있어요'],
     [ko.journey.stageLine(1, 1), '수준 확인으로 1개 알고 있음, 퀘스트 1개 완료'],
