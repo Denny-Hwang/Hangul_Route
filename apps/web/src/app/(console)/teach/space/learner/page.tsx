@@ -245,7 +245,7 @@ function LearnerReportInner(): JSX.Element {
   const body = busy ? <ReportSkeleton /> : <ReportBody view={view} />;
   return frame(
     <>
-      <ReportHeader back={view.back} printDisabled={busy} onPrint={() => window.print()} />
+      <ReportHeader back={view.back} printDisabled={busy || error !== null} onPrint={() => window.print()} />
       <div className="hr-report-glance">
         <ReportTitle title={view.title} avatar={screen.data.learner.avatar} />
         {view.glance ? <ReportGlanceBlock glance={view.glance} /> : null}
@@ -288,6 +288,10 @@ function LearnerReportInner(): JSX.Element {
           </div>
         </>
       )}
+      {/* Shown on paper only (RP-7b): "Private: shared from Hangul Route on {date}." at the foot of every printed page. */}
+      <p className="hr-report-print-footer" data-testid="report-print-footer">
+        {view.printFooter}
+      </p>
     </>,
   );
 }

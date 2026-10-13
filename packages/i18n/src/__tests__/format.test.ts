@@ -42,6 +42,14 @@ describe('formatDate: Intl path', () => {
     expect(formatDate('ko', sep3, 'monthYear')).toContain('2026');
   });
 
+  it('monthShort names a month alone, short (the report growth axis, F-REPORT-001 RP-7b)', () => {
+    expect(formatDate('en', sep3, 'monthShort')).toBe('Sep');
+    expect(formatDate('en', '2026-10-01T00:00:00.000Z', 'monthShort', { utc: true })).toBe('Oct');
+    expect(formatDate('es', sep3, 'monthShort')).toMatch(/^sept?/);
+    expect(formatDate('ko', sep3, 'monthShort')).toBe('9월');
+    expect(formatDate('en', 'not a date', 'monthShort')).toBe('');
+  });
+
   it('weekdayLong names the whole weekday (the report calendar sentence, F-REPORT-001 RP-7a1)', () => {
     expect(formatDate('en', sep3, 'weekdayLong')).toBe('Thursday');
     expect(formatDate('en', '2026-09-03T23:30:00.000Z', 'weekdayLong', { utc: true })).toBe('Thursday');
@@ -81,6 +89,7 @@ describe('formatDate: fallback tables (no Intl, or Intl throws)', () => {
       expect(formatDate('en', sep3, 'weekdayLong')).toBe('Thursday');
       expect(formatDate('en', sep3, 'weekday')).toBe('Thu');
       expect(formatDate('en', sep3, 'monthYear')).toBe('Sep 2026');
+      expect(formatDate('en', sep3, 'monthShort')).toBe('Sep');
     });
 
     it(`es (${name})`, () => {
@@ -90,6 +99,7 @@ describe('formatDate: fallback tables (no Intl, or Intl throws)', () => {
       expect(formatDate('es', sep3, 'weekdayLong')).toBe('jueves');
       expect(formatDate('es', sep3, 'weekday')).toBe('jue');
       expect(formatDate('es', sep3, 'monthYear')).toBe('sep 2026');
+      expect(formatDate('es', sep3, 'monthShort')).toBe('sep');
     });
 
     it(`ko (${name})`, () => {
@@ -99,6 +109,7 @@ describe('formatDate: fallback tables (no Intl, or Intl throws)', () => {
       expect(formatDate('ko', sep3, 'weekdayLong')).toBe('목요일');
       expect(formatDate('ko', sep3, 'weekday')).toBe('목');
       expect(formatDate('ko', sep3, 'monthYear')).toBe('2026년 9월');
+      expect(formatDate('ko', sep3, 'monthShort')).toBe('9월');
     });
   }
 
