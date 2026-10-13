@@ -115,7 +115,7 @@ export const consoleMsgs = {
     /** The persona switch and the persona name; the parent persona is labelled Family (OD-14). */
     persona: { parent: 'Family', teacher: 'Teacher' },
     /** Adult nav labels (F-APP-001 `ADULT_NAV`); an item whose sibling flag is off is not drawn. */
-    nav: { home: 'Home', reports: 'Reports', notes: 'Notes', classes: 'Classes', lessons: 'Lessons', billing: 'Billing' },
+    nav: { home: 'Home', reports: 'Reports', notes: 'Notes', classes: 'Classes', lessons: 'Lessons', billing: 'Billing', classReports: 'Class reports' },
     noApi: 'The console needs an API address (NEXT_PUBLIC_API_BASE_URL) on this build.',
   },
   /** Space kinds: a label ("Class code") and the home-page group heading. */

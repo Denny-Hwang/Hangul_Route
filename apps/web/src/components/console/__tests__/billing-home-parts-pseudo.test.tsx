@@ -3,7 +3,9 @@ import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { AccountCard, AddPlanSection, BillingCard, EmptyState, FailPanel, HelpSection, type CardHandlers } from '@/components/console/BillingHomeParts';
+import { AccountCard, AddPlanSection, BillingCard, EmptyState, FailPanel, HelpSection, ReturnNoticeRegion, type CardHandlers } from '@/components/console/BillingHomeParts';
+import { StepUpDialog } from '@/components/console/StepUpDialog';
+import { initialReturnState, returnNotice, returnStep, type ReturnState } from '@/lib/console/checkout-return';
 import { billingHomeView, summaryFailureNotice } from '@/lib/console/billing-summary';
 import { expectAllPseudo } from './pseudo-text';
 
@@ -112,5 +114,24 @@ describe('billing home parts render only dictionary text (en-XA)', () => {
       renderToStaticMarkup(<FailPanel text={failure.text} retry={failure.retry} onRetry={noop} />),
     ].join('');
     expectAllPseudo(html, data);
+  });
+
+  it('the checkout return notices and the step-up dialog (B-8b)', () => {
+    const checking = initialReturnState({ kind: 'success', plan: 'family_lifetime', spaceId: 'space:fam' }) as ReturnState;
+    const states: ReturnState[] = [
+      checking,
+      returnStep(checking, { type: 'offline' }, now),
+      returnStep(checking, { type: 'pollFailed', offline: false }, now),
+      { phase: 'stillProcessing', target: null },
+      { phase: 'done', target: null, nextStep: null },
+      { phase: 'cancelled' },
+    ];
+    const notices = states.map((state) => {
+      const notice = returnNotice(state, PSEUDO);
+      return renderToStaticMarkup(<ReturnNoticeRegion notice={notice} done={state.phase === 'done'} checking={state.phase === 'checking'} onAction={noop} />);
+    });
+    const dialogs = (['asking', 'verifying', 'unavailable'] as const).map((phase) => renderToStaticMarkup(<StepUpDialog phase={phase} onContinue={noop} onCancel={noop} />));
+    expect(dialogs.join('')).toContain('role="dialog"');
+    expectAllPseudo([...notices, ...dialogs].join(''), data);
   });
 });

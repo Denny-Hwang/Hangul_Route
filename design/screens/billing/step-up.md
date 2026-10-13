@@ -6,7 +6,7 @@ Code: B-8b wraps checkout and portal in Clerk's `useReverification` (`@clerk/cle
 
 ## Anatomy
 
-- The page behind stays where it was, dimmed by `surface.overlay` and `inert` (no focus, no clicks, hidden from assistive technology).
+- The page behind stays where it was, dimmed by `surface.overlay` and `inert` (no focus, no clicks, hidden from assistive technology). The dialog is portalled to `body`, so its fixed scrim covers the viewport whatever container the page draws it from; Clerk's own root under `body` is never made inert.
 - The dialog (`role="dialog"`, `aria-modal="true"`, labelled by its title, described by its body): `surface.paper`, `radii.lg`, `shadows.card`, padding `spacing.xl`, at most 28rem wide, centred, `spacing.md` between parts.
   1. Title (h2) "Confirm it's you" (`stepUp.title`), `size.prompt`.
   2. Body "Before a payment, a plan change or a receipt, sign in again." (`stepUp.body`).
@@ -18,7 +18,7 @@ Code: B-8b wraps checkout and portal in Clerk's `useReverification` (`@clerk/cle
 | # | State | Drawn |
 |---|---|---|
 | 1 | asking | over the billing home after **Get Family Plan**; focus on **Continue** |
-| 2 | verifying | Clerk's own reverification UI (password, code or provider) is open; the dialog's buttons are disabled. A dashed placeholder stands for Clerk's UI, which Clerk owns |
+| 2 | verifying | Clerk's own reverification UI (password, code or provider) is open. Our dialog steps aside while it runs (no scrim, nothing inert), so Clerk's modal owns focus and input; the page's buttons stay disabled. A dashed placeholder stands for Clerk's UI, which Clerk owns. Offline, or when Clerk's UI has not opened within 10 seconds (its script blocked), the dialog comes back as state 3 |
 | 3 | unavailable | Clerk unreachable, offline, or the retried request refused again: the body is replaced by "Can't confirm right now. Try again in a moment." (`stepUp.unavailable`, `role="status"`) and only **Not now** remains, focused. No second prompt, no loop |
 | 4 | cancelled or failed | the dialog closed; focus back on the button that was pressed; "Nothing was changed." (`stepUp.cancelled`) as an info note above the cards |
 | 5 | asking over the receipts page | after **View receipt**: the blank tab is already open (opened inside the tap); a cancel closes it |

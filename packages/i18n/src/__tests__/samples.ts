@@ -731,4 +731,5 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'caregiver.browse.item.focusChipA11y': [['x', 'n']],
   'caregiver.browse.home.storyTileA11y': [['The Moon Rabbit', 1], ['The Moon Rabbit', 4]],
   'caregiver.browse.item.wordCount': [[1], [12]],
+  'caregiver.browse.topic.hearA11y': [['sagwa']],
 };
