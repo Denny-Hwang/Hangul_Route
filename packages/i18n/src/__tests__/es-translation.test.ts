@@ -3,17 +3,28 @@ import { en } from '../messages/en';
 import ledger from '../messages/review-ledger.json';
 import { fallbackPaths, getMessages, isEnglishAuthoritative } from '../resolve';
 import { leafPaths, lookup } from '../tree';
+import { LOCALE_STATUS } from '../locales';
+import { esCoverageRequired, esReviewedNamespaces, esUnexpectedFallbacks } from './es-coverage';
 import { SAMPLES } from './samples';
 
 /**
  * F-I18N-001 PR 15 (Spanish): every UI key has a Spanish value, the review ledger records the review
- * of each namespace, and the literal rows the spec names read as written (§3.4, §3.10, §10).
+ * of each namespace, and the literal rows the spec names read as written (§3.4, §3.10, §10). Coverage is a
+ * ratchet (`./es-coverage`): a key English adds after the review may fall back until the next R8 draft while es
+ * is hidden (§3.10 step 4); a namespace whose English is still the reviewed text may not.
  */
 describe('Spanish dictionary (F-I18N-001 PR 15)', () => {
   const es = getMessages('es');
 
-  it('has no English fallback: every key outside the English-authoritative legal text is translated', () => {
-    expect(fallbackPaths('es')).toEqual([]);
+  it('has no English fallback in a namespace the review signed (every namespace, until English changes)', () => {
+    expect(esUnexpectedFallbacks()).toEqual([]);
+  });
+
+  it('lets a key English adds after the review wait for the next draft while es is hidden, and never once shipped', () => {
+    expect(esCoverageRequired('learner.home.newKey', ['learner'])).toBe(true);
+    expect(esCoverageRequired('learner.home.newKey', ['console'])).toBe(LOCALE_STATUS.es === 'shipped');
+    // Every reviewed namespace is a real one; a namespace drops out only when its English file changes.
+    for (const namespace of esReviewedNamespaces()) expect(Object.keys(en)).toContain(namespace);
   });
 
   it('keeps the Privacy Policy and Terms English (decision L10)', () => {
@@ -34,8 +45,10 @@ describe('Spanish dictionary (F-I18N-001 PR 15)', () => {
         return typeof value === 'string' && /^(?:[A-Z0-9 .:·,+/&()–-]*|Hangul Route|Hoya|PIN|OK|Stripe|Email|Plan|Hangul)$/.test(value);
       }),
     );
+    // A key that falls back (English added after the review, es hidden) is the ratchet's business, not this list's.
+    const fallback = new Set(fallbackPaths('es'));
     const untouched = leafPaths(en).filter((path) => {
-      if (isEnglishAuthoritative(path) || SAME_IN_BOTH.has(path)) return false;
+      if (isEnglishAuthoritative(path) || SAME_IN_BOTH.has(path) || fallback.has(path)) return false;
       const own = lookup(es, path);
       const source = lookup(en, path);
       if (typeof own === 'string') return own === source;
@@ -45,7 +58,8 @@ describe('Spanish dictionary (F-I18N-001 PR 15)', () => {
       }
       return false;
     });
-    expect([...untouched].sort()).toEqual([...LITERALLY_SHARED].sort());
+    const current = new Set(leafPaths(en));
+    expect([...untouched].sort()).toEqual(LITERALLY_SHARED.filter((path) => current.has(path)).sort());
   });
 
   it('reads the spec examples (§3.1, §3.4)', () => {

@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fallbackPaths, getMessages, type Messages, type UiLocale } from '@hangul-route/i18n';
+import { getMessages, type Messages, type UiLocale } from '@hangul-route/i18n';
 import { siteMetadata } from '../../data/landing-copy';
 import { HIDDEN_LOCALE_ATTR, siteLocaleParams } from '../../lib/site-locales';
 // Every layout and page is imported here, once, and never with a dynamic import inside a test: loading a page
@@ -202,7 +202,10 @@ describe('locale pages are the English pages with locale links', () => {
   // The same-words half holds for a locale whose landing overlay is still empty (ko until PR 16): it falls back to
   // English. A translated locale (es, PR 15) renders its own words around the same links, and the legal pages keep the
   // English-authoritative text under the localized notice (decision L10).
-  const translated = (locale: string): boolean => !fallbackPaths(locale as UiLocale).some((path) => path.startsWith('landing.'));
+  // The mode comes from a stable signal, the hero title, not from key completeness: a landing key English adds
+  // later may fall back while the locale is hidden (§3.10 step 4) without moving a translated locale to this branch.
+  const translated = (locale: string): boolean =>
+    getMessages(locale as UiLocale).landing.home.hero.title !== getMessages('en').landing.home.hero.title;
   const escapeText = (text: string): string => renderToStaticMarkup(<>{text}</>);
   const WORDS: Readonly<Record<string, (m: Messages) => { own: string; english: string }>> = {
     landing: (m) => ({ own: m.landing.home.hero.title, english: getMessages('en').landing.home.hero.title }),
@@ -245,7 +248,7 @@ describe('locale pages are the English pages with locale links', () => {
     });
   }
 
-  it('es is translated and ko still falls back to English (F-I18N-001 PR 15)', () => {
+  it('es has its own landing words and ko still falls back to English (F-I18N-001 PR 15)', () => {
     expect(translated('es')).toBe(true);
     expect(translated('ko')).toBe(false);
   });

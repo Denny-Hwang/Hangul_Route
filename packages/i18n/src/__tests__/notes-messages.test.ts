@@ -15,6 +15,7 @@ import { ko } from '../messages/ko';
 import type { NoteTextProblem } from '../note-text';
 import { getMessages } from '../resolve';
 import { isPlainObject, leafPaths, lookup } from '../tree';
+import { esCoverageRequired, esReviewedNamespaces } from './es-coverage';
 import { SAMPLES } from './samples';
 
 /**
@@ -346,7 +347,11 @@ describe('ko / es follow the F-I18N-001 review process (OD-15)', () => {
     const esNotes = new Set(leafPaths(es).filter(isNotes));
     const enNotes = leafPaths(en).filter(isNotes);
     expect(enNotes.length).toBeGreaterThan(40);
-    expect(enNotes.filter((path) => !esNotes.has(path))).toEqual([]);
+    expect(esNotes.size).toBeGreaterThan(40);
+    // The coverage ratchet (§3.10 step 4): a notes key English adds after the review may wait for the next draft
+    // while es is hidden; inside a namespace the review signed, none may fall back.
+    const reviewed = esReviewedNamespaces();
+    expect(enNotes.filter((path) => !esNotes.has(path) && esCoverageRequired(path, reviewed))).toEqual([]);
     expect(getMessages('es').common.notes.presets.effort_proud).not.toBe(en.common.notes.presets.effort_proud);
   });
 });
