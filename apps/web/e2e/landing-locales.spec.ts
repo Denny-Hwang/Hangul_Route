@@ -43,8 +43,13 @@ const PLAY_NOW = (page: Page): Locator => page.locator('header a.hr-landing-cta'
 /** About's "Back home" link, by its words in the page's locale. */
 const BACK_HOME = (page: Page, lang: LandingPage['lang']): Locator =>
   page.getByRole('link', { name: getMessages(lang).landing.about.backHome, exact: true });
+/** A layered-site page's primary action (F-SITE-002 §3.1 rule 1): the first primary pill inside `main`. */
+const SITE_PRIMARY = (page: Page): Locator => page.locator('main a.hr-site-primary');
 const PAGES: readonly LandingPage[] = [
   { path: '/', lang: 'en', cta: PLAY_NOW },
+  { path: '/learners', lang: 'en', cta: SITE_PRIMARY },
+  { path: '/es/learners', lang: 'es', cta: SITE_PRIMARY },
+  { path: '/ko/learners', lang: 'ko', cta: SITE_PRIMARY },
   { path: '/about', lang: 'en', cta: BACK_HOME },
   { path: '/es', lang: 'es', cta: PLAY_NOW },
   { path: '/ko', lang: 'ko', cta: PLAY_NOW },
@@ -52,9 +57,12 @@ const PAGES: readonly LandingPage[] = [
   { path: '/ko/about', lang: 'ko', cta: BACK_HOME },
 ];
 
-/** The learner app's origin as this export links to it (`NEXT_PUBLIC_APP_URL` at build time), read off "Play now". */
+/**
+ * The learner app's origin as this export links to it (`NEXT_PUBLIC_APP_URL` at build time), read off "Play now", or
+ * off the layered site's header Start learning (F-SITE-002 §3.2), which links to the same app.
+ */
 async function appOrigin(page: Page): Promise<string | null> {
-  const play = PLAY_NOW(page);
+  const play = (await PLAY_NOW(page).count()) > 0 ? PLAY_NOW(page) : page.locator('header a.hr-site-header-start');
   if ((await play.count()) === 0) return null;
   const href = await play.first().getAttribute('href');
   try {

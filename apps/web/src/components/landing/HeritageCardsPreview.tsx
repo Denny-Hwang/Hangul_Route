@@ -1,6 +1,7 @@
 import { colors, radii, shadows, spacing, typography } from '@hangul-route/design-system/tokens';
 import { DEFAULT_LOCALE, getMessages, type Messages, type UiLocale } from '@hangul-route/i18n';
 import { stage1Cards, type CardRarity, type LandingCard } from '../../data/stage1-cards';
+import { rem } from '../../lib/site-style';
 
 const rarityBorder: Record<CardRarity, string> = {
   common: colors.rarity.common,
@@ -11,7 +12,14 @@ const rarityBorder: Record<CardRarity, string> = {
 
 type CardWords = Messages['landing']['cards'];
 
-function CardTile({ card, t }: { card: LandingCard; t: CardWords }): JSX.Element {
+/** A text size: px on the old landing, rem inside a layered-site fold (F-SITE-002 §3.11). */
+type Size = (px: number) => number | string;
+
+/**
+ * One card: the Korean word, its romanization and its English gloss (`card.en`, CLAUDE.md §1: some card titles are
+ * romanizations, such as Bap), then the blurb.
+ */
+function CardTile({ card, t, size }: { card: LandingCard; t: CardWords; size: Size }): JSX.Element {
   return (
     <article
       style={{
@@ -30,7 +38,7 @@ function CardTile({ card, t }: { card: LandingCard; t: CardWords }): JSX.Element
         <span
           aria-label={t.cardLabel(card.romanization, card.en)}
           style={{
-            fontSize: typography.size.title,
+            fontSize: size(typography.size.title),
             fontWeight: typography.weight.bold,
             color: colors.text.primary,
             lineHeight: 1,
@@ -44,7 +52,7 @@ function CardTile({ card, t }: { card: LandingCard; t: CardWords }): JSX.Element
             display: 'inline-flex',
             alignItems: 'center',
             gap: spacing.xs,
-            fontSize: typography.size.caption,
+            fontSize: size(typography.size.caption),
             color: colors.text.secondary,
             fontWeight: typography.weight.semibold,
             textTransform: 'uppercase',
@@ -60,7 +68,7 @@ function CardTile({ card, t }: { card: LandingCard; t: CardWords }): JSX.Element
       </header>
       <div
         style={{
-          fontSize: typography.size.bodySm,
+          fontSize: size(typography.size.bodySm),
           color: colors.text.muted,
           fontVariant: 'small-caps',
         }}
@@ -69,16 +77,16 @@ function CardTile({ card, t }: { card: LandingCard; t: CardWords }): JSX.Element
       </div>
       <div
         style={{
-          fontSize: typography.size.bodyLg,
+          fontSize: size(typography.size.bodyLg),
           color: colors.text.primary,
           fontWeight: typography.weight.semibold,
         }}
       >
-        {card.title}
+        {card.en}
       </div>
       <div
         style={{
-          fontSize: typography.size.bodySm,
+          fontSize: size(typography.size.bodySm),
           color: colors.text.secondary,
           marginTop: 'auto',
           lineHeight: typography.leading.normal,
@@ -90,8 +98,14 @@ function CardTile({ card, t }: { card: LandingCard; t: CardWords }): JSX.Element
   );
 }
 
-export function HeritageCardsPreview({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }): JSX.Element {
+/**
+ * The Stage 1 Heritage Card grid. `embedded` is the grid inside the `/learners` cards fold (F-SITE-002 §3.4): the
+ * section's h2 and the fold's summary already name it, so it renders the list alone (no eyebrow, heading, body line,
+ * top margin or forward-looking Stage 2 line), with text in rem so the browser text size scales it (§3.11).
+ */
+export function HeritageCardsPreview({ locale = DEFAULT_LOCALE, embedded = false }: { locale?: UiLocale; embedded?: boolean }): JSX.Element {
   const t = getMessages(locale).landing.cards;
+  const size: Size = (px) => (embedded ? rem(px) : px);
   const rarityCounts = stage1Cards.reduce<Record<CardRarity, number>>(
     (acc, card) => {
       acc[card.rarity] += 1;
@@ -99,6 +113,26 @@ export function HeritageCardsPreview({ locale = DEFAULT_LOCALE }: { locale?: UiL
     },
     { common: 0, uncommon: 0, rare: 0, legendary: 0 },
   );
+
+  const list = (
+    <div
+      role="list"
+      aria-label={t.listLabel}
+      style={{
+        display: 'grid',
+        // min(100%, …): one column when the box is narrower than a card (a fold at 320 px), never past its edge.
+        gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 220px), 1fr))',
+        gap: spacing.md,
+      }}
+    >
+      {stage1Cards.map((card) => (
+        <div role="listitem" key={card.id}>
+          <CardTile card={card} t={t} size={size} />
+        </div>
+      ))}
+    </div>
+  );
+  if (embedded) return list;
 
   return (
     <section
@@ -136,21 +170,7 @@ export function HeritageCardsPreview({ locale = DEFAULT_LOCALE }: { locale?: UiL
         </p>
       </header>
 
-      <div
-        role="list"
-        aria-label={t.listLabel}
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-          gap: spacing.md,
-        }}
-      >
-        {stage1Cards.map((card) => (
-          <div role="listitem" key={card.id}>
-            <CardTile card={card} t={t} />
-          </div>
-        ))}
-      </div>
+      {list}
 
       <p
         style={{

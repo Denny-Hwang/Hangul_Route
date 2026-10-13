@@ -1,6 +1,6 @@
 import { iconNames } from '@hangul-route/design-system/icon-glyphs';
 import { describe, expect, it } from 'vitest';
-import { minigameCatalog, type MinigameFamily } from '../minigame-catalog';
+import { SPEAKING_GAME_KINDS, minigameCatalog, siteGames, type MinigameFamily } from '../minigame-catalog';
 
 const VALID_FAMILIES: readonly MinigameFamily[] = ['recognition', 'production', 'application', 'review'];
 
@@ -40,5 +40,17 @@ describe('minigameCatalog', () => {
     const beta = minigameCatalog.filter((m) => m.status === 'beta');
     expect(shipped.length).toBe(8);
     expect(beta.length).toBe(1);
+  });
+});
+
+describe('siteGames (F-SITE-002 §3.4: no speaking line on the site)', () => {
+  it('is the catalogue without the speaking game, in catalogue order', () => {
+    expect(SPEAKING_GAME_KINDS).toEqual(['voice-echo']);
+    expect(siteGames.map((g) => g.kind)).toEqual(minigameCatalog.filter((g) => g.kind !== 'voice-echo').map((g) => g.kind));
+    expect(siteGames).toHaveLength(minigameCatalog.length - 1);
+  });
+
+  it('holds no line about saying anything', () => {
+    for (const game of siteGames) expect(`${game.title} ${game.blurb}`).not.toMatch(/\b(say|speak|speaking|pronounce)\b/i);
   });
 });

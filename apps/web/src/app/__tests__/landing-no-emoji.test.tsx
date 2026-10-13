@@ -27,10 +27,12 @@ import * as enAboutPage from '../(en)/about/page';
 import * as enLandingPage from '../(en)/page';
 import * as enPrivacyPage from '../(en)/privacy/page';
 import * as enTermsPage from '../(en)/terms/page';
+import * as enLearnersPage from '../(en)/learners/page';
 import * as locAboutPage from '../(loc)/[locale]/about/page';
 import * as locLandingPage from '../(loc)/[locale]/page';
 import * as locPrivacyPage from '../(loc)/[locale]/privacy/page';
 import * as locTermsPage from '../(loc)/[locale]/terms/page';
+import * as locLearnersPage from '../(loc)/[locale]/learners/page';
 
 /**
  * No emoji in rendered output (CLAUDE.md): the public site (landing, About, Privacy, Terms, in English
@@ -101,6 +103,7 @@ const SITE_PAGES: ReadonlyArray<readonly [string, SitePage, string]> = [
   ['about', enAboutPage, '../(en)/about/page'],
   ['privacy', enPrivacyPage, '../(en)/privacy/page'],
   ['terms', enTermsPage, '../(en)/terms/page'],
+  ['learners', enLearnersPage, '../(en)/learners/page'],
 ];
 
 /** The same pages under `/es` and `/ko` (prerendered by the web build even while hidden). */
@@ -109,6 +112,7 @@ const LOCALE_PAGES: ReadonlyArray<readonly [string, () => string]> = siteLocaleP
   [`${locale}/about`, at(locAboutPage, { locale })] as const,
   [`${locale}/privacy`, at(locPrivacyPage, { locale })] as const,
   [`${locale}/terms`, at(locTermsPage, { locale })] as const,
+  [`${locale}/learners`, at(locLearnersPage, { locale })] as const,
 ]);
 
 /** The /parent demo dashboard (English-only sample data), one click from the landing nav; statically exported per child. */

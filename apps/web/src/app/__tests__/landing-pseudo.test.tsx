@@ -10,11 +10,12 @@ import AboutPage from '../(en)/about/page';
 import LandingPage from '../(en)/page';
 import PrivacyPage from '../(en)/privacy/page';
 import TermsPage from '../(en)/terms/page';
+import LearnersPage from '../(en)/learners/page';
 
 /**
  * F-I18N-001 PR 11a, §3.11: the site's pages take every word from `messages/*\/landing.ts`.
  * With the English dictionary swapped for its pseudo-localised copy (en-XA), every text node
- * and labelled attribute on the landing, About, Privacy and Terms pages must be bracketed
+ * and labelled attribute on the landing, About, Privacy, Terms and Learners pages must be bracketed
  * pseudo text. What may stay as it is: content (heritage cards, mini-game titles and blurbs),
  * taught Korean and its romanization, the contact address, and decoration the page passes in.
  */
@@ -26,7 +27,7 @@ vi.mock('@hangul-route/i18n', async (importOriginal) => {
 
 const CONTENT: readonly string[] = [
   CONTACT_EMAIL,
-  ...stage1Cards.flatMap((card) => [card.ko, card.romanization, card.title, card.blurb]),
+  ...stage1Cards.flatMap((card) => [card.ko, card.romanization, card.title, card.en, card.blurb]),
   ...minigameCatalog.flatMap((game) => [game.title, game.blurb]),
 ];
 
@@ -53,6 +54,7 @@ describe('site pages render only dictionary text (en-XA)', () => {
     ['about', AboutPage],
     ['privacy', PrivacyPage],
     ['terms', TermsPage],
+    ['learners', LearnersPage],
   ] as const) {
     it(name, () => {
       const words = wordsOf(render(Page));

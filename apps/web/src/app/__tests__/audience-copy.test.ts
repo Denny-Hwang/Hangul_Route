@@ -35,6 +35,7 @@ const PUBLIC_SURFACES = [
     join('app', group, 'about', 'page.tsx'),
     join('app', group, 'privacy', 'page.tsx'),
     join('app', group, 'terms', 'page.tsx'),
+    join('app', group, 'learners', 'page.tsx'),
   ]),
   join('data', 'landing-copy.ts'),
   ...landingComponents,
@@ -53,7 +54,7 @@ describe('public surfaces speak to anyone learning Hangul (UF-01..UF-03, UF-09)'
   });
 
   it('scans the shared page bodies the English and locale routes render', () => {
-    for (const body of ['LandingPage', 'AboutPage', 'PrivacyPage', 'TermsPage']) {
+    for (const body of ['LandingPage', 'AboutPage', 'PrivacyPage', 'TermsPage', 'LearnersPage', 'SiteHeader', 'SiteFooter']) {
       expect(PUBLIC_SURFACES).toContain(join('components', 'landing', `${body}.tsx`));
     }
   });
