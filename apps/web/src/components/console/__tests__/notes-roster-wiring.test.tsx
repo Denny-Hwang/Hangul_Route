@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { SpaceRole } from '@hangul-route/content-schema';
+import Page from '@/app/(console)/teach/space/page';
 
 /**
  * F-FEEDBACK-001 FB-11a (section 6.13 item 3): the roster header gains **Notes** and each student card **Send a note**
@@ -138,7 +139,6 @@ function textOf(node: ReactTestInstance | string): string {
 }
 
 async function roster(): Promise<ReactTestInstance> {
-  const { default: Page } = await import('@/app/(console)/teach/space/page');
   await act(async () => {
     mounted = create(<Page />);
   });
