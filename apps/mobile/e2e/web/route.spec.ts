@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 import type { HomeworkAssignment, ProgressSnapshot, SelfRoute } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
+import { questsAll } from '../../src/content/quests';
 import { expect, test } from './fixtures';
 import { onboardSelf, readStored, seedStored } from './helpers';
 import { shot } from './shots';
@@ -35,6 +36,17 @@ const WINDOW_DAYS = 7;
 const EMOJI = /\p{Extended_Pictographic}/u;
 /** Never on a learner plan screen: a product word, "route" (OD-7), shame words, a score shape. */
 const NEVER = /premium|\bprice\b|\broute\b|\blate\b|\bbehind\b|\bmissed\b|\boverdue\b|%|\d\s*\/\s*\d/i;
+/** A score shape in any locale. */
+const SCORE = /%|\d\s*\/\s*\d/;
+/**
+ * Shame words of the Spanish and Korean plan screens: late, behind, missed, overdue, unfinished.
+ * Korean is written as Unicode escapes (romanized: millin, neuj, nochin, mi-wallyo, jiyeon), so
+ * this file holds no Hangul outside the romanization check.
+ */
+const LOCALE_SHAME: Record<'es' | 'ko', RegExp> = {
+  es: /atrasad|retrasad|tarde\b|perdid|vencid/i,
+  ko: /\uBC00\uB9B0|\uB2A6|\uB193\uCE5C|\uBBF8\uC644\uB8CC|\uC9C0\uC5F0/,
+};
 
 const snapshotWithOneQuest = (profileId: string): ProgressSnapshot => ({
   profileId,
@@ -86,6 +98,8 @@ function pendingFromPlan(snapshot: ProgressSnapshot): HomeworkAssignment[] {
   return snapshot.homework.filter((h) => h.id.startsWith(`${route.id}#`) && h.completedAt === undefined);
 }
 
+const escapeRegExp = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 async function noBannedWords(page: Page): Promise<void> {
   const text = await page.locator('body').innerText();
   expect(text).not.toMatch(NEVER);
@@ -118,9 +132,12 @@ test.describe('the weekly plan end to end (flag on)', () => {
     for (const step of [1, 2, 3]) {
       await expect(page.getByTestId('route-setup-step')).toHaveText(`Step ${step} of 4`);
       await noBannedWords(page);
+      // A choice that is not the default (15 minutes), so Change the plan can show it came from the plan in force.
+      if (step === 2) await page.getByTestId('route-setup-minutes-20').click();
       await page.getByTestId('route-setup-next').click();
     }
     await expect(page.getByTestId('route-setup-step')).toHaveText('Step 4 of 4');
+    await noBannedWords(page);
     await page.getByTestId('route-setup-see').click();
     await expect(page.getByTestId('route-preview-stats')).toBeVisible();
     await expect(page.getByTestId('route-preview-week-1')).toBeVisible();
@@ -134,6 +151,7 @@ test.describe('the weekly plan end to end (flag on)', () => {
     await shot(page, 'route-e2e-overview');
     await expect.poll(async () => pendingFromPlan(await stored(page, profileId)).length).toBeGreaterThan(0);
     const created = (await stored(page, profileId)).selfRoute as SelfRoute;
+    expect(created.meta.params.minutesPerSession).toBe(20);
 
     // Home follows the plan: today's lesson from the plan is card (2), picked for the learner.
     await page.getByTestId('route-overview-back').click();
@@ -145,18 +163,27 @@ test.describe('the weekly plan end to end (flag on)', () => {
     const cards = page.getByTestId('home-missions').getByRole('button');
     await expect(cards).toHaveCount(3);
     await expect(cards.nth(1)).toHaveAttribute('aria-label', /Picked just for you/);
+    // Card (2) is the plan's lesson for today, not just any assigned item.
+    const first = [...today].sort((a, b) => (a.targetDate ?? '').localeCompare(b.targetDate ?? ''))[0] as HomeworkAssignment;
+    const title = questsAll.find((q) => q.id === first.questId)?.titleEn;
+    expect(title, `a title for ${first.questId}`).toBeTruthy();
+    await expect(cards.nth(1)).toHaveAttribute('aria-label', new RegExp(escapeRegExp(title as string)));
     await shot(page, 'route-e2e-home-card-2');
     await expectHomeworkWithinAWeek(page);
     await expect(page.getByRole('button', { name: /, Today$/ }).first()).toContainText('Your plan');
 
-    // Three days on, nothing played: Move my plan along lays the rest again from today; same plan.
-    const later = NOW + 3 * DAY;
+    // Two days on, nothing played: below the automatic re-pace (fewer than three pending past items), so the
+    // plan has not moved yet; Move my plan along lays the rest again from today; same plan.
+    const later = NOW + 2 * DAY;
     await page.clock.setFixedTime(later);
     await page.goto('/');
     await expect(page.getByText('Hi, Rae!')).toBeVisible();
     await closeInstallGuide(page);
     await page.getByRole('button', { name: /profile/i }).first().click();
     await page.getByTestId('profile-plan-row').click();
+    await expect(page.getByTestId('route-overview-current')).toBeVisible();
+    const beforeMove = await stored(page, profileId);
+    expect(beforeMove.selfRoute?.meta.repacedAt ?? null).toBeNull();
     await page.getByTestId('route-overview-move-along').click();
     await expect(page.getByTestId('route-overview-moved-by-hand')).toHaveText('Your plan moved along. It starts again from today.');
     await expect.poll(async () => (await stored(page, profileId)).selfRoute?.meta.repacedAt ?? null).toBe(new Date(later).toISOString());
@@ -170,12 +197,23 @@ test.describe('the weekly plan end to end (flag on)', () => {
       expect((h.targetDate ?? '') <= dayKey(later + WINDOW_DAYS * DAY)).toBe(true);
     }
 
-    // Change the plan: step 1 of the steps, from the plan in force; Back returns to the overview unchanged.
+    // Change the plan: the steps open on the plan in force (its 20 minutes, not the default 15); Back from
+    // step 2 to step 1 and out returns to the overview with the plan unchanged.
+    const beforeChange = (await stored(page, profileId)).selfRoute as SelfRoute;
     await page.getByTestId('route-overview-change').click();
+    await expect(page.getByTestId('route-setup-step')).toHaveText('Step 1 of 4');
+    await page.getByTestId('route-setup-next').click();
+    await expect(page.getByTestId('route-setup-step')).toHaveText('Step 2 of 4');
+    await expect(page.getByTestId('route-setup-minutes-20')).toHaveAttribute('aria-checked', 'true');
+    await expect(page.getByTestId('route-setup-minutes-15')).toHaveAttribute('aria-checked', 'false');
+    await page.getByTestId('route-setup-back').click();
     await expect(page.getByTestId('route-setup-step')).toHaveText('Step 1 of 4');
     await page.getByTestId('route-setup-back').click();
     await expect(page.getByTestId('route-overview-current')).toBeVisible();
-    expect((await stored(page, profileId)).selfRoute?.id).toBe(created.id);
+    const afterBack = (await stored(page, profileId)).selfRoute as SelfRoute;
+    expect(afterBack.id).toBe(created.id);
+    expect(afterBack.items).toEqual(beforeChange.items);
+    expect(afterBack.meta.params).toEqual(beforeChange.meta.params);
 
     // Stop this plan: asked once, archived (never removed), its pending items leave the list.
     await page.getByTestId('route-overview-stop').click();
@@ -240,7 +278,10 @@ for (const locale of ['es', 'ko'] as const) {
       const check = async (name: string): Promise<void> => {
         await expectNoHorizontalOverflow(page, `${name}: horizontal overflow`);
         expect(await page.evaluate(controlsPastEdge), `${name}: controls past the edge`).toEqual([]);
-        expect(await page.locator('body').innerText()).not.toMatch(EMOJI);
+        const text = await page.locator('body').innerText();
+        expect(text).not.toMatch(EMOJI);
+        expect(text, `${name}: a score shape`).not.toMatch(SCORE);
+        expect(text, `${name}: a shame word`).not.toMatch(LOCALE_SHAME[locale]);
         await shot(page, `route-e2e-320-${locale}-${name}`);
       };
 
@@ -260,6 +301,7 @@ for (const locale of ['es', 'ko'] as const) {
       await expect(page.getByText(t.overview.intro)).toBeVisible();
       await check('overview');
       await page.getByTestId('route-overview-later').click();
+      await expect(page.locator('[data-testid^="route-overview-week-"]').first()).toBeVisible();
       await check('overview-open');
       expect(errors).toEqual([]);
     });
