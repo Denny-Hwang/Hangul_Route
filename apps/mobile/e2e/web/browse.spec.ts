@@ -298,6 +298,25 @@ test('BR-12a: a dashboard left open past the 15-minute session asks for the PIN 
   expect(pass).toMatchObject({ v: 1, scope: 'sampler', source: 'gate' });
 });
 
+test('BR-12b: /?gate=browse opens the PIN for All lessons; a correct PIN opens it with a fresh gate pass, Close on the PIN writes nothing', async ({ page }) => {
+  await onboardChild(page, { name: 'Mina' });
+  await page.goto('/?gate=browse&lang=en');
+  await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();
+  // The intent leaves the address at once; other keys stay for the locale hand-off.
+  expect(new URL(page.url()).searchParams.get('gate')).toBeNull();
+  await shot(page, 'br-12b-gate-browse-pin');
+  await page.getByRole('button', { name: 'Close' }).click();
+  await expect(page.getByText('Hi, Mina!')).toBeVisible();
+  expect(await page.evaluate((k) => sessionStorage.getItem(k), PASS_KEY)).toBeNull();
+
+  await page.goto('/?gate=browse');
+  await unlockWithPin(page);
+  await expect(home(page)).toBeVisible();
+  await expect(page).toHaveURL(/\/browse$/);
+  const pass = JSON.parse((await page.evaluate((k) => sessionStorage.getItem(k), PASS_KEY)) ?? 'null') as Record<string, unknown> | null;
+  expect(pass).toMatchObject({ v: 1, scope: 'sampler', source: 'gate' });
+});
+
 test('a new tab has no pass: only the Access screen, with no lesson, title or card', async ({ page, context }) => {
   await page.goto('/');
   await writeGatePass(page);
@@ -310,19 +329,23 @@ test('a new tab has no pass: only the Access screen, with no lesson, title or ca
   await expect(other).toHaveURL(/\/browse$/);
   await expect(other).toHaveTitle('Hangul Route lessons');
   await expect(other.getByText('On a family device, open them from the grown-up area. Parents and teachers can also open them from their account.')).toBeVisible();
-  // Until BR-12b ships the gate=browse intent, the way back is the app; Sign in stays.
-  await expect(other.getByRole('button', { name: 'Back to the app' })).toBeVisible();
+  // BR-12b: the way back is the grown-up area (/?gate=browse, PIN, then a fresh gate pass); Sign in stays.
+  await expect(other.getByRole('button', { name: 'Back to the grown-up area' })).toBeVisible();
   await expect(other.getByRole('button', { name: 'Sign in' })).toBeVisible();
-  await expect(other.getByRole('button', { name: 'Back to the grown-up area' })).toHaveCount(0);
+  await expect(other.getByRole('button', { name: 'Back to the app' })).toHaveCount(0);
   await expect(home(other)).toHaveCount(0);
   await expect(other.getByRole('button', { name: 'Close' })).toHaveCount(0);
   await shot(other, 'br6-browse-access-unknown-pixel5');
 
-  await other.getByRole('button', { name: 'Back to the app' }).click();
-  await expect(other).toHaveURL(/\/$/);
+  // Back to the grown-up area is the learner app's gate=browse intent: the PIN screen over the start screen (a
+  // device with no PIN yet makes one first, as the dashboard asks), the intent gone from the address, no pass yet.
+  await other.getByRole('button', { name: 'Back to the grown-up area' }).click();
+  await expect(other.getByRole('heading', { name: 'Create a grown-up PIN' })).toBeVisible();
+  expect(new URL(other.url()).search).toBe('');
+  expect(await other.evaluate((k) => sessionStorage.getItem(k), PASS_KEY)).toBeNull();
 });
 
-test('after 15 idle minutes the gate pass is over: Access says so and leads back to the app', async ({ page }) => {
+test('after 15 idle minutes the gate pass is over: Access says so and leads back to the grown-up area or the app', async ({ page }) => {
   await page.clock.install({ time: new Date('2026-10-12T09:00:00.000Z') });
   await page.goto('/');
   await writeGatePass(page);
@@ -332,7 +355,9 @@ test('after 15 idle minutes the gate pass is over: Access says so and leads back
   await page.clock.fastForward('15:00');
   await page.reload();
   await expect(accessTitle(page)).toBeVisible();
-  await expect(page.getByText('Your time in the grown-up area ended. Go back to the app, then open the grown-up area again.')).toBeVisible();
+  await expect(page.getByText('Your time in the grown-up area ended.', { exact: true })).toBeVisible();
+  await expect(page.getByText('Go back to the app, then open the grown-up area again.', { exact: false })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Back to the grown-up area' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Back to the app' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Sign in' })).toHaveCount(0);
   // The expired pass stays in the tab, for this screen's source.
@@ -461,7 +486,7 @@ test('at 320 wide the Access screen keeps 64 targets and nothing runs off the pa
   await page.setViewportSize({ width: 320, height: 640 });
   await page.goto('/browse');
   await expect(accessTitle(page)).toBeVisible();
-  for (const name of ['Back to the app', 'Sign in']) {
+  for (const name of ['Back to the grown-up area', 'Sign in']) {
     const box = await page.getByRole('button', { name }).boundingBox();
     expect(box, name).not.toBeNull();
     expect(box?.height ?? 0, name).toBeGreaterThanOrEqual(64);
