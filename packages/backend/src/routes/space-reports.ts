@@ -2,6 +2,7 @@ import {
   CATALOG,
   ProgressSummarySchema,
   ReportSummarySchema,
+  classAtOf,
   classReport,
   reportPeriodOf,
   type ClassReportResponse,
@@ -128,6 +129,7 @@ spaceReportRoutes.get('/:id/learners/:learnerId/report', async (c) => {
  * else. Each summary is the roster's own projection for its membership
  * (`rosterSummary` with `joinedAt`), so the report can never count more than
  * the roster's consent allows; no id or name is carried into `classReport`.
+ * The body echoes `at` as `classAtOf` clamped it (null: the current window).
  */
 spaceReportRoutes.get('/:id/class-report', async (c) => {
   const db = dbFor(c);
@@ -152,11 +154,16 @@ spaceReportRoutes.get('/:id/class-report', async (c) => {
 
   const period = reportPeriodOf(c.req.query('period'));
   const now = new Date();
+  // The window is clamped here with the same `now` as `serverTime` and echoed, so the page labels the window the
+  // figures read instead of recomputing it on the browser's clock (section 3.7). `classAtOf` is idempotent, so
+  // `classReport` reads this very window.
+  const at = classAtOf(period, c.req.query('at') ?? null, now);
   const body: ClassReportResponse = {
     space: publicSpace(space),
     period,
+    at,
     serverTime: now.toISOString(),
-    report: classReport({ learners, plans, period, at: c.req.query('at') ?? null, now, catalog: CATALOG }),
+    report: classReport({ learners, plans, period, at, now, catalog: CATALOG }),
   };
   if (c.req.method === 'GET') recordServerEvent('report.viewed', { scope: 'class', space: space.kind, period });
   // A class's progress never sits in a shared browser's HTTP cache.

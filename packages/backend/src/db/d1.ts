@@ -520,7 +520,7 @@ export class D1Db implements Db {
   summaryOf(learnerId: string): Promise<StoredSummary | null> {
     return this.one('SELECT learner_id, summary_json, updated_at FROM snapshots WHERE learner_id = ?', [learnerId], toStoredSummary);
   }
-  /** The chunks run in parallel: one round trip whatever the class size. */
+  /** The chunks are issued concurrently: ceil(n / 100) statements, each its own D1 query (no shared snapshot). */
   async summariesOf(learnerIds: readonly string[]): Promise<StoredSummary[]> {
     const reads = reportChunks(learnerIds).map((chunk) =>
       this.many(`SELECT learner_id, summary_json, updated_at FROM snapshots WHERE learner_id IN (${placeholders(chunk)})`, chunk, toStoredSummary),

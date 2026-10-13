@@ -312,6 +312,13 @@ describe('ClassReportSchema and ClassReportResponseSchema (sections 3.7, 3.8)', 
     expect(ClassReportResponseSchema.parse(body)).toEqual(body);
   });
 
+  it('reads the echoed window (RP-5b): a day, null for the current window, or absent from a Worker before the field', () => {
+    const body = { space: { ...space, id: 'space:class-1', kind: 'class' as const }, period: 'month' as const, serverTime: '2026-10-12T00:00:00.000Z', report: { ...classReport, period: 'month' as const, practice: {} } };
+    for (const at of ['2026-09-01', null]) expect(ClassReportResponseSchema.parse({ ...body, at }).at).toBe(at);
+    expect(ClassReportResponseSchema.parse(body)).not.toHaveProperty('at');
+    expect(ClassReportResponseSchema.safeParse({ ...body, at: 20260901 }).success).toBe(false);
+  });
+
   const bands = (names: string[]) => names.map((band) => ({ band, learners: 1 }));
   const withBands = (period: string, names: string[] | undefined) =>
     ClassReportSchema.safeParse({ ...classReport, period, practice: names === undefined ? {} : { dayBands: bands(names) } }).success;

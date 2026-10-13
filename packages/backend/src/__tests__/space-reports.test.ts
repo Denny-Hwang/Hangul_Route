@@ -395,6 +395,15 @@ const todayActivity = (letter: string) => {
 };
 
 describe('GET /api/spaces/:id/class-report (F-REPORT-001 sections 3.7 and 3.8, RP-5b)', () => {
+  // A fixed instant, so an upload and the route's own `now` always fall on the same learner day (no flake at UTC midnight).
+  const NOW = '2026-10-15T12:00:00.000Z';
+  beforeEach(() => {
+    vi.useFakeTimers({ now: new Date(NOW), toFake: ['Date'] });
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('serves the class teacher and a school admin over the class the aggregates of every learner member: no id, no name, no payload', async () => {
     const sch = await createSpace('principal', 'school', 'School');
     await join(sch.space.id, bearer('teacher'), { code: await issueCode('principal', sch.space.id) });
@@ -483,6 +492,95 @@ describe('GET /api/spaces/:id/class-report (F-REPORT-001 sections 3.7 and 3.8, R
     expect(past.report.headline.practiced).toBe(0);
     const malformed = ClassReportResponseSchema.parse((await get(classReportPath(cls.space.id, '?period=week&at=not-a-day'), bearer('teacher'))).body.data);
     expect(malformed.report.headline.practiced).toBe(1);
+  });
+
+  it('echoes the window the figures read: a day within the limits as asked, a month from its 1st, null for the current window', async () => {
+    const cls = await createSpace('teacher', 'class', 'A');
+    const suni = await registerLearner('device-suni0001', 'Suni');
+    await join(cls.space.id, suni.auth, { code: cls.joinCode, learnerId: suni.learnerId });
+    await upload(suni, { ...baseSummary, activity: todayActivity('ㄱ') });
+    const cases = [
+      ['?period=week&at=2026-10-08', '2026-10-08'],
+      ['?period=day&at=2026-10-15', '2026-10-15'],
+      ['?period=month&at=2026-09-20', '2026-09-01'],
+      ['', null],
+      ['?period=week', null],
+      ['?period=week&at=not-a-day', null],
+      ['?period=week&at=2026-10-20', null],
+      ['?period=week&at=2020-01-07', null],
+      ['?period=all&at=2026-10-08', null],
+    ] as const;
+    const roster = (await get(`/api/spaces/${cls.space.id}/roster`, bearer('teacher'))).body.data as { learners: RosterRow[] };
+    for (const [query, at] of cases) {
+      const r = await get(classReportPath(cls.space.id, query), bearer('teacher'));
+      expect(r.status, query).toBe(200);
+      const body = ClassReportResponseSchema.parse(r.body.data);
+      expect(r.body.data, query).toEqual(body);
+      expect(body.at, query).toBe(at);
+      // The figures read exactly the echoed window.
+      const expected = classReport({
+        learners: roster.learners.map((row) => ({ summary: row.summary, lastSyncedAt: row.lastSyncedAt, joinedAt: row.joinedAt })),
+        plans: await db.plansOf(cls.space.id),
+        period: body.period,
+        at: body.at,
+        now: new Date(body.serverTime),
+        catalog: CATALOG,
+      });
+      expect(body.report, query).toEqual(expected);
+    }
+  });
+
+  it('reads each member from their join day and their last sync: no day before joining, a known 0 after it, a stale device in notSaved7d', async () => {
+    const cls = await createSpace('teacher', 'class', 'A');
+    // A long-standing member: joined on 2026-09-25, with a row from before that day (practice at home) and one today.
+    const old = await registerLearner('device-old00001', 'Old');
+    await db.addMembership({ spaceId: cls.space.id, memberKind: 'learner', memberId: old.learnerId, role: 'student', joinedAt: '2026-09-25T12:00:00.000Z' });
+    const activity = {
+      v: 1,
+      tz: 0,
+      asOf: '2026-10-15',
+      days: [
+        { d: '2026-09-20', min: 30, q: 2, c: 1, w: 0, j: ['ㄷ'] },
+        { d: '2026-10-15', min: 12, q: 1, c: 1, w: 0, j: ['ㄱ'] },
+      ],
+      months: [],
+      total: { since: '2026-09-20', min: 42, q: 3, c: 2, w: 0, days: 2 },
+      milestones: [],
+    };
+    await upload(old, { ...baseSummary, activity });
+
+    // The day before they joined: the row from home never reaches the class, and the member sits out of that window.
+    const before = ClassReportResponseSchema.parse((await get(classReportPath(cls.space.id, '?period=day&at=2026-09-20'), bearer('teacher'))).body.data);
+    expect(before.at).toBe('2026-09-20');
+    expect(before.report.headline.practiced).toBe(0);
+    expect(before.report.wentWell.lettersNew).toEqual([]);
+    expect(before.report.time.minutesTotal.count).toBe(0);
+    expect(before.report.practice).toEqual({ dayBands: [{ band: 'practiced', learners: 0 }, { band: 'not_yet', learners: 0 }], notSaved: 1 });
+
+    // A week after joining with no row: a known 0 (the class vouches for it from the join day), never "not saved".
+    const quiet = ClassReportResponseSchema.parse((await get(classReportPath(cls.space.id, '?period=week&at=2026-10-01'), bearer('teacher'))).body.data);
+    expect(quiet.report.practice.notSaved).toBe(0);
+    expect(quiet.report.practice.dayBands).toContainEqual({ band: '0', learners: 1 });
+    // Without the join day the first saved row (today) would stand in, and that week would read "not saved".
+    const roster = (await get(`/api/spaces/${cls.space.id}/roster`, bearer('teacher'))).body.data as { learners: RosterRow[] };
+    const withoutJoin = classReport({
+      learners: roster.learners.map((row) => ({ summary: row.summary, lastSyncedAt: row.lastSyncedAt, joinedAt: null })),
+      plans: [],
+      period: 'week',
+      at: '2026-10-01',
+      now: new Date(NOW),
+      catalog: CATALOG,
+    });
+    expect(withoutJoin.practice.notSaved).toBe(1);
+
+    // An older app whose last sync was ten days ago: only the sync time can say so (it has no activity to date it).
+    vi.setSystemTime(new Date('2026-10-05T12:00:00.000Z'));
+    const stale = await registerLearner('device-stale001', 'Stale');
+    await join(cls.space.id, stale.auth, { code: cls.joinCode, learnerId: stale.learnerId });
+    await upload(stale, baseSummary);
+    vi.setSystemTime(new Date(NOW));
+    const now = ClassReportResponseSchema.parse((await get(classReportPath(cls.space.id), bearer('teacher'))).body.data);
+    expect(now.report.class).toEqual({ learners: 2, withActivity: 1, olderApp: 1, notSaved7d: 1 });
   });
 
   it('answers 409 wrong_kind for a family space (siblings are never compared) and for a school space', async () => {
@@ -625,9 +723,9 @@ describe('GET /api/spaces/:id/class-report (F-REPORT-001 sections 3.7 and 3.8, R
       const run = async (spaceId: string) => {
         statements.length = 0;
         counting = true;
-        const started = Date.now();
+        const started = performance.now();
         const r = await get(classReportPath(spaceId), bearer('teacher'));
-        const ms = Date.now() - started;
+        const ms = performance.now() - started;
         counting = false;
         expect(r.status).toBe(200);
         return { body: ClassReportResponseSchema.parse(r.body.data), sql: statements.map((s) => ({ ...s })), ms };
@@ -653,7 +751,7 @@ describe('GET /api/spaces/:id/class-report (F-REPORT-001 sections 3.7 and 3.8, R
       }
       expect(on('snapshots', big.sql).every((s) => s.sql.startsWith('SELECT learner_id, summary_json, updated_at FROM snapshots WHERE learner_id IN ('))).toBe(true);
       expect(on('learners', big.sql).every((s) => s.sql.startsWith('SELECT id FROM learners WHERE id IN ('))).toBe(true);
-      // Timing note (section 6 item f): the whole 300-member call stays far inside the roster's latency budget on the shim.
+      // Timing note (section 9 assumption f): the whole 300-member call stays far inside the roster's latency budget on the shim.
       expect(big.ms).toBeLessThan(5_000);
     } finally {
       setFallbackDb(before);
