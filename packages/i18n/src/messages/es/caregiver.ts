@@ -98,6 +98,11 @@ export const caregiver = {
       bodyDeviceOnly:
         'El apodo y el progreso de cada estudiante se guardan en este dispositivo. Esta versión no tiene guardado en la nube, así que usa "Copia en un archivo" para tener una copia. No compartimos nada con terceros.',
     },
+    browse: {
+      open: { cta: 'Abrir las lecciones' },
+      preview: { cta: 'Ver las lecciones' },
+      storageBlocked: 'Tu navegador bloqueó el almacenamiento de esta página. Aquí no se pueden abrir las lecciones.',
+    },
   },
 
   plan: {
