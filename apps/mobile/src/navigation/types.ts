@@ -20,6 +20,8 @@ import type { VocabQuestionE2eParams } from './vocab-question-e2e';
  * grown-up pages on the app host; its PIN screen only verifies, never creates or resets a PIN.
  * `Billing` (F-BILL-002 §4.7, web only): back to the Plan screen, which opens the billing page for
  * the press that waited on the gate.
+ *
+ * Append-only: add a member as a new `| 'Name'` line above the marker; the lone `;` stays last.
  */
 export type GrownUpDestination =
   | 'ParentDashboard'
@@ -46,8 +48,16 @@ export type GrownUpDestination =
   /** F-PLAN-002 section 3.9 (P2-7b): a child's **Stop this plan** when the gate is closed; back to the overview underneath (`PinEntry.profileId`). */
   | 'RouteOverview'
   /** F-BROWSE-001 section 4.3 (BR-12a, web only): All lessons; a correct PIN writes a fresh gate pass (`PinEntry.browseTarget`). */
-  | 'BrowseLessons';
+  | 'BrowseLessons'
+  // add new members above this line
+;
 
+/**
+ * Append-only layout (every list in this file): add a new route as new lines just above the closing
+ * line, never by editing an existing line, so parallel PRs do not conflict on a shared last line.
+ * Unions: one `| member` per line, closed by the marker comment and a lone `;`
+ * (pinned by logic/__tests__/nav-types-append.test.ts).
+ */
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
   Main: NavigatorScreenParams<MainTabParamList>;
