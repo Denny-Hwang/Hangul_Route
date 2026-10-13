@@ -1,1 +1,2 @@
 asset_path,category,source,license,attribution,url
+apps/mobile/public/fonts/hr-presenter-kr.woff2,font,"Noto Sans KR Bold 2.004 (Google / Adobe; notofonts/noto-cjk release Sans2.004, 17_NotoSansKR.zip), subset by scripts/build-presenter-font.mjs",SIL OFL 1.1,"Copyright 2014-2021 Adobe (http://www.adobe.com/); licence text in apps/mobile/public/fonts/OFL.txt",https://github.com/notofonts/noto-cjk/releases/download/Sans2.004/17_NotoSansKR.zip

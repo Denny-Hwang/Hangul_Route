@@ -52,6 +52,8 @@ const LEARNER_DIST = {
   '_expo/static/js/web/index-abc.js': 'console.info("learner bundle");',
   'manifest.webmanifest': '{"name":"Hangul Route","id":"/","start_url":"/","scope":"/"}',
   'favicon.ico': 'icon',
+  // F-TCH-004 PR 3: the presenter font expo copies from public/fonts/ (the post-build requires it in the precache).
+  'fonts/hr-presenter-kr.woff2': 'wOF2 stand-in',
   '_headers': LEARNER_HEADERS,
 };
 

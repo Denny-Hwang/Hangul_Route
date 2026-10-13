@@ -377,6 +377,8 @@ describe('pwa-postbuild.mjs on a stand-in export', () => {
       '_expo/static/js/web/index-abc.js': 'console.info("learner bundle");',
       'teacher.html': '<!doctype html><title>near miss</title>',
       'present.html': '<!doctype html><title>learner root</title>',
+      // F-TCH-004 PR 3: expo copies public/fonts/ into the export.
+      'fonts/hr-presenter-kr.woff2': 'wOF2 stand-in',
       // What A-3 will copy in from the console build: none of it may reach the precache.
       'teach/home.html': '<!doctype html><title>console</title>',
       'teach.html': '<!doctype html><title>console</title>',
@@ -444,6 +446,37 @@ describe('pwa-postbuild.mjs on a stand-in export', () => {
     expect(index).toContain(`background: ${designTokens.colors.surface.canvas}`);
     expect(index).toContain(`<meta name="theme-color" content="${designTokens.colors.brand.primary}">`);
     expect(index).toContain("register('/sw.js')");
+  });
+
+  it('declares the presenter font in the shell styles and precaches it (F-TCH-004 PR 3)', () => {
+    const index = readFileSync(join(dist, 'index.html'), 'utf8');
+    expect(index).toContain(`font-family: "${designTokens.presenter.font}";`);
+    expect(index).toContain('src: url("/fonts/hr-presenter-kr.woff2") format("woff2");');
+    expect(index).toContain('font-display: block;');
+    expect(sw).toContain('"fonts/hr-presenter-kr.woff2"');
+  });
+});
+
+describe('pwa-postbuild.mjs refuses an export without the presenter font', () => {
+  let dist;
+  let run;
+
+  beforeAll(() => {
+    dist = mkdtempSync(join(tmpdir(), 'hr-pwa-nofont-'));
+    writeFileSync(
+      join(dist, 'index.html'),
+      '<!doctype html><html><head><meta name="viewport" content="width=device-width"></head><body><div id="root"></div></body></html>',
+    );
+    run = spawnSync(process.execPath, [postbuild, dist], { encoding: 'utf8' });
+  }, 120_000);
+
+  afterAll(() => {
+    if (dist) rmSync(dist, { recursive: true, force: true });
+  });
+
+  it('fails the build and names the file', () => {
+    expect(run.status).not.toBe(0);
+    expect(run.stderr).toContain('pwa-postbuild: the presenter font is not in the learner precache: fonts/hr-presenter-kr.woff2');
   });
 });
 
