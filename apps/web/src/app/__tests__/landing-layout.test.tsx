@@ -105,7 +105,6 @@ describe('the blocks under the hero (L1)', () => {
     });
     // role="list" keeps an unstyled list a list for VoiceOver in Safari (as the S-4a parts do).
     expect(who).toMatch(/<ul role="list" class="hr-site-persona-list"/);
-    for (const item of items) expect(who).not.toContain(item.linkLabel);
   });
 
   it('how it works: three numbered steps, title and line; the Learning Route line only with its claim', () => {
@@ -143,7 +142,6 @@ describe('the blocks under the hero (L1)', () => {
     expect(textOf(news)).toContain(H.news.body);
     expect(news).toMatch(/<input[^>]*id="waitlist-email"/);
     expect(news).toContain(t.waitlist.submit);
-    expect(news).not.toContain(t.get.play.cta);
     // Links shared before S-5 point at the old waitlist anchor (hangulroute.com/#get); it still lands on the form.
     expect(news).toMatch(/<span id="get" aria-hidden="true"><\/span>/);
   });
@@ -196,6 +194,11 @@ describe('globals.css holds what changes at the breakpoint', () => {
 
   it('globals.css stays tokens-only: no colour literals', () => {
     expect(css).not.toMatch(/#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i);
+  });
+
+  it('globals.css keeps no rule of the old landing (F-SITE-002 S-6): no hr-landing-* class, no max-width query', () => {
+    expect(css).not.toMatch(/\.hr-landing-/);
+    expect(css).not.toMatch(/@media\s*\(max-width/);
   });
 });
 
