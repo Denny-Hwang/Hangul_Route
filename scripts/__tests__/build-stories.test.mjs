@@ -507,6 +507,27 @@ describe("build-stories.mjs: --include-fixtures (F-STORY-002 PR 2.6a, e2e builds
     assert.match(r.stdout, /do not commit/i);
   });
 
+  test("content stories ship off the shelf: no shelf, card or listen reward, so the fixtures alone fill the shelf (F-STORY-001 PR 1.9)", () => {
+    const root = makeRoot();
+    putFixtures(root);
+    putStory(root, ready({ id: "story:zz-content", rewardCardIds: { listen: "card:story-zz-content" }, card: { titleEn: "Content", keywordId: "sejong", factId: "f1" } }));
+    const r = run(root, ["--include-fixtures"]);
+    assert.equal(r.status, 0, r.stderr + r.stdout);
+    const src = generatedOf(root);
+    const [content] = JSON.parse(src.match(/const contentStories: Story\[\] = ([\s\S]*?);\n\n/)[1]);
+    assert.equal(content.id, "story:zz-content");
+    assert.equal(content.shelf, undefined);
+    assert.equal(content.card, undefined);
+    assert.equal(content.rewardCardIds?.listen, undefined);
+    const episodes = JSON.parse(src.match(/export const storyEpisodes: Episode\[\] = ([\s\S]*?);\n\nexport/)[1]);
+    assert.deepEqual(episodes.map((e) => e.id), ["episode:shelf-hangul-day"]);
+    // The release bundle keeps the content story on its shelf.
+    assert.equal(run(root).status, 0);
+    const released = evaluate(generatedOf(root));
+    assert.deepEqual(released.storyEpisodes.map((e) => e.id), ["episode:shelf-zz-content"]);
+    assert.ok(released.storiesAll[0].shelf);
+  });
+
   test("the bundle without the flag never holds a fixture, so --check fails on a fixture bundle", () => {
     const root = makeRoot();
     putFixtures(root);
