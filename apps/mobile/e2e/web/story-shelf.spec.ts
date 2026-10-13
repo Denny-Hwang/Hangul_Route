@@ -24,12 +24,13 @@ import { nextPage, position } from './story-reader-helpers';
  * library-cards-only.spec.ts.
  *
  * Content gating: this suite checks the launch default (gating off: nothing is
- * locked and no "Premium" text). The fixture bundle's one shelf story is the
- * sampler, which stays open with gating on too, so this bundle cannot draw a
- * locked tile. The gated half of the row (a locked tile sends
- * `story.locked.tapped` and lands on PIN entry or the paywall) is F-STORY-004
- * PR 4.8b, on a gating fixture bundle of its own; until then the gate's rules
- * (`lockedStoryGate`, `storyTileView`) are covered by
+ * locked and no "Premium" text). This bundle is built with gating off, so it
+ * never draws a locked tile, not even for its non-sampler shelf story
+ * (`story:cell-stories-fixture`). The gated half of the row (a locked tile sends
+ * `story.locked.tapped` and lands on PIN entry or the paywall) is
+ * story-shelf-gated.spec.ts (F-STORY-004 PR 4.8b), on the gating fixture
+ * bundle (build:web:fixtures:gated, STORY_FIXTURES_GATED=1); the gate's rules
+ * (`lockedStoryGate`, `storyTileView`) are also covered by
  * logic/story/__tests__/story-tile.test.ts.
  */
 

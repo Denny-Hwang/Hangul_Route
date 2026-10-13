@@ -33,7 +33,10 @@ export interface StoryE2eHandle {
   openCellStories(params: RootStackParamList['CellStories']): void;
   /** Every bundled story with its tiers, so the e2e can smoke-read the real content too. */
   stories(): Array<{ id: string; levels: StoryLevel[]; fixture: boolean; traditional: boolean }>;
-  /** `story.*`, `culture.*` and `journey.*` telemetry events `track()` accepted since the hook mounted (the e2e build sends none). */
+  /**
+   * `story.*`, `culture.*`, `journey.*` and `paywall.*` telemetry events `track()` accepted since the hook
+   * mounted (the e2e build sends none). `paywall.viewed` carries the surface that opened it (F-STORY-004 PR 4.8b).
+   */
   events(): TelemetryEvent[];
   /** The quest run's first-try tally (F-STORY-002 PR 2.9: proves a checkpoint round was scored, or was not). */
   run(): { stepIndex: number; correctCount: number; totalCount: number; scoredRounds: string[] };
@@ -45,7 +48,7 @@ export function StoryE2eHook(): null {
     const g = globalThis as { __hrStoryE2E?: StoryE2eHandle };
     const events: TelemetryEvent[] = [];
     const stopListening = addTelemetryListener((e) => {
-      if (e.name.startsWith('story.') || e.name.startsWith('culture.') || e.name.startsWith('journey.')) events.push(e);
+      if (['story.', 'culture.', 'journey.', 'paywall.'].some((prefix) => e.name.startsWith(prefix))) events.push(e);
     });
     g.__hrStoryE2E = {
       events: () => events.map((e) => ({ ...e })),
