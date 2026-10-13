@@ -98,6 +98,28 @@ export function profileRowOpens(i: { learnerType: LearnerType; opensDirectly: bo
   return i.learnerType === 'self' || i.opensDirectly ? 'proposal' : 'gate';
 }
 
+/**
+ * Whether this learner may change the plan from here without the grown-up gate (section 3.9): the
+ * same rule as the Profile row. A child's plan is set by a grown-up, so on a device that needs the
+ * gate now the Hoya check-in is not offered and **Stop this plan** goes through the gate first.
+ */
+export function planChangesOpen(i: { learnerType: LearnerType; opensDirectly: boolean }): boolean {
+  return profileRowOpens(i) === 'proposal';
+}
+
+/** Where the grown-up gate goes for a weekly-plan destination (PinEntry `next`). */
+export type RouteGateStep = { kind: 'back' } | { kind: 'proposal'; profileId: string } | { kind: 'setup'; profileId: string };
+
+/**
+ * After the gate (section 3.9): Make a weekly plan opens the proposal, Change the plan the set-up
+ * steps, both for that profile; **Stop this plan** goes back to the overview underneath, now open.
+ * Without a profile there is nothing to open, so the gate goes back.
+ */
+export function routeGateStep(next: 'RouteProposal' | 'RouteSetup' | 'RouteOverview', profileId: string | undefined): RouteGateStep {
+  if (next === 'RouteOverview' || profileId === undefined) return { kind: 'back' };
+  return next === 'RouteProposal' ? { kind: 'proposal', profileId } : { kind: 'setup', profileId };
+}
+
 export interface ProposalContext {
   placements: readonly PlacementResult[] | undefined;
   /** The learner's finished quests (single learner). */

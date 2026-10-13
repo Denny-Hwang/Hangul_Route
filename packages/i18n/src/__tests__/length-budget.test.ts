@@ -29,6 +29,8 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'learner.placement.result.next': 'the standard Spanish button word "Siguiente" (9) against "Next" (4), inside the 28-character cta budget; it wraps',
   'learner.myRoute.legend.cursor': 'the legend word "Siguiente" (9) against "Next" (4); the legend wraps',
   'learner.routeNext.tag.next': 'the tag word "Siguiente" (9) against "Next" (4); the tag wraps',
+  'learner.weeklyPlan.setup.next.cta': 'the standard Spanish button word "Siguiente" (9) against "Next" (4), inside the 28-character cta budget; it wraps',
+  'learner.weeklyPlan.setup.likes.themeNames.nature': 'the plain Spanish word "Naturaleza" (10) against "Nature" (6); a theme chip that wraps',
   'a11y.access.next': 'read aloud in a Journey cell label, never drawn; the same word as learner.routeNext.tag.next ("Siguiente")',
   'learner.story.sequence.replay.play.cta': 'the standard Spanish player word "Reproducir", inside the 28-character cta budget',
   'learner.myRoute.gains.stars': '"Estrellas" (9) against "Stars" (5), a one-word label',
