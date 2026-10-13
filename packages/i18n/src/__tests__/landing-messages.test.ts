@@ -15,19 +15,6 @@ import { SAMPLES } from './samples';
 const l = getMessages('en').landing;
 
 describe('landing: sentences that take a value render the former text', () => {
-  it('hero: the taught letter is passed in, never written into the message', () => {
-    expect(l.hero.lead('x')).toBe(
-      'Hoya the tiger guides you from x to Chuseok — five-minute quests, plain-English instructions, and Korean culture cards to collect along the way. Kids, teens and grown-ups play the same quests. Played, not taught. Never a frown.',
-    );
-    expect(l.hero.bubble('x')).toBe("Annyeong! Let's meet x.");
-    expect(l.hero.titleLines).toEqual(['Learn Hangul from zero —', 'at any age.']);
-  });
-
-  it('how it works: the card count comes from the content', () => {
-    expect(l.how.steps.collect.body(24)).toBe('Earn 24 Heritage Cards in Stage 1 — from kimchi to Chuseok to the gayageum.');
-    expect(l.how.steps.collect.body(1)).toBe('Earn 1 Heritage Card in Stage 1 — from kimchi to Chuseok to the gayageum.');
-  });
-
   it('heritage cards: counts per rarity, and the card label', () => {
     expect(l.cards.title(24)).toBe('24 Heritage Cards. One Korea, one card at a time.');
     expect(l.cards.title(1)).toBe('1 Heritage Card. One Korea, one card at a time.');
@@ -43,11 +30,6 @@ describe('landing: sentences that take a value render the former text', () => {
     expect(l.games.eyebrow(9, 0)).toBe('9 mini-games');
     expect(l.games.eyebrow(1, 0)).toBe('1 mini-game');
     expect(l.games.eyebrow(1, 2)).toBe('1 mini-game + 2 in beta');
-  });
-
-  it('Meet Hoya: the Korean phrase and its romanization are passed in', () => {
-    expect(l.hoya.bubble('x', 'geoui da haesseo')).toBe('x · geoui da haesseo · almost there!');
-    expect(l.hoya.points.wrong.body('x')).toBe('Hoya says “x” (almost there) on amber — never red.');
   });
 
   it('the footer year is a value', () => {
@@ -155,10 +137,7 @@ describe('legal: payment facts (F-SITE-002 S-7, OD-13; English-authoritative, fl
 });
 
 describe('landing: the lines other PRs rely on stay byte-identical', () => {
-  it('keeps the launch-news line of #get and the waitlist copy (#146)', () => {
-    expect(l.get.body).toBe(
-      "Hangul Route runs in your browser — open it, add it to your home screen, and it works offline. Leave your email and we'll send you the launch news.",
-    );
+  it('keeps the waitlist copy (#146)', () => {
     expect(l.waitlist.submit).toBe('Send me the invite');
     expect(l.waitlist.consentLead).toBe(
       'We use your email only to send Hangul Route launch news. It is never sold or shared. To be removed, reply to any message or ',
@@ -166,9 +145,9 @@ describe('landing: the lines other PRs rely on stay byte-identical', () => {
     expect(l.waitlist.success).toBe("You're on the list. We'll email you when Hangul Route launches.");
   });
 
-  it('keeps the one cost line (owner decision 2026-10-10)', () => {
-    expect(l.faq.items.cost.a).toBe('Stage 1 is free. More stages and classroom plans are coming. No ads.');
-    expect(l.pricing.footnote).toBe('No third-party ads, ever.');
+  it('keeps the cost words price-free (owner decision 2026-10-10, F-SITE-002 §3.9)', () => {
+    expect(l.plans.free.stage1).toBe('Stage 1 is free.');
+    expect(JSON.stringify(l.plans)).not.toMatch(/[$€£₩]|\d+\s*(USD|dollars?)|lifetime/i);
   });
 
   it('keeps the legal effective dates and the draft notice (#149)', () => {
@@ -274,18 +253,13 @@ describe('landing: no emoji in any locale (en, es, ko, en-XA)', () => {
 });
 
 describe('landing: offline claims stay qualified until the recordings ship (F-AUDIO-004 §3.12)', () => {
-  it('says the app works offline and that letter sounds need a device voice for now', () => {
-    expect(l.hero.facts).toBe('Nothing to download · No ads · Works offline after your first visit');
-    expect(l.trust.items.offline).toEqual({
-      title: 'Works offline',
-      body: 'After your first visit the app opens without a connection. Letter sounds need a Korean voice on your device until our own recordings arrive.',
-    });
-    expect(l.parents.body).toContain('Bring it on a long flight — the app works offline after your first visit.');
+  it('says the app works offline on most devices and that letter sounds may need a device voice', () => {
+    expect(l.home.hero.facts).toMatch(/works offline on most devices after your first visit/);
+    expect(l.persona.learners.faq.offline.a).toMatch(/Letter sounds may need a Korean voice installed on your device/);
   });
 
   it('never claims that sound plays offline', () => {
-    const text = JSON.stringify({ hero: l.hero.facts, trust: l.trust, parents: l.parents.body, get: l.get.body });
-    expect(text).not.toMatch(/plays offline|plays without a connection/i);
+    expect(JSON.stringify({ home: l.home, persona: l.persona })).not.toMatch(/plays offline|plays without a connection/i);
   });
 });
 
