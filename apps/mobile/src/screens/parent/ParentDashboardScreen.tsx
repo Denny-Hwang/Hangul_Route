@@ -136,6 +136,8 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
                   testID={`dashboard-route-${p.id}`}
                 />
               ) : null}
+              {/* F-ENT-003 E3-12b: the free-lessons line, owner only (with the card's other rows; draws nothing otherwise). */}
+              <FreeLessonsRow profileId={p.id} name={p.displayName} testID={`dashboard-free-line-${p.id}`} />
               {snap && snap.quests.length > 0 ? (
                 <>
                   <Spacer size="md" />
@@ -162,8 +164,6 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
                   })}
                 </>
               ) : null}
-              {/* F-ENT-003 E3-12b: the free-lessons line, owner only (draws nothing otherwise). */}
-              <FreeLessonsRow profileId={p.id} name={p.displayName} testID={`dashboard-free-line-${p.id}`} />
             </Card>
           );
         })
