@@ -1,4 +1,4 @@
-import { levelOrder, type VocabProgress, type VocabTopic } from '@hangul-route/content-schema';
+import { levelOrder, type ClockScale, type VocabProgress, type VocabTopic } from '@hangul-route/content-schema';
 import {
   Body,
   Button,
@@ -25,7 +25,16 @@ import { isContentLocked } from '../../logic/content-access';
 import { backOrHome } from '../../logic/navigation/screen-exits';
 import { ACTIVITY_ROUTES, VOCAB_SCREENS } from '../../logic/vocab/caps';
 import { emptyVocab, localDay, vocabOf } from '../../logic/vocab/progress';
-import { clockFor } from '../../logic/vocab/session-clock';
+import {
+  TIME_UP_MS,
+  challengeLine,
+  challengeSettings,
+  clockView,
+  initialMode,
+  pausedFor,
+  scaleOnOptIn,
+} from '../../logic/vocab/challenge';
+import { clockFor, type SpeedMode } from '../../logic/vocab/session-clock';
 import {
   buildRound,
   collectedWords,
@@ -47,12 +56,14 @@ import { subscribeAppActive } from '../../platform/app-state';
 import { isScreenReaderEnabled } from '../../platform/screen-reader';
 import { track } from '../../platform/telemetry';
 import { useAudioStore } from '../../store/audio-store';
+import { useLocaleStore } from '../../store/locale-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useAccessTier } from '../../store/tier-store';
 import { speedHost, useVocabRunStore } from '../../store/vocab-run-store';
 import { PictureArt } from '../minigames/PictureArt';
 import { BackButton } from './BackButton';
+import { ChoiceChips, ClockBar, ClockDigits, PausedPanel, ScaleChips, SwitchRow } from './ChallengeControls';
 import { canRenderPicture, pickerTopic, topicWords } from './topic-data';
 import { VocabQuestionView } from './VocabQuestionView';
 import { useSpeedClock } from './useSpeedClock';
@@ -90,7 +101,7 @@ export function VocabSpeedRoundScreen({ route, navigation }: Props): React.React
 
   if (!usable) return <Screen tone="canvas" testID="vocab-speed-redirect">{null}</Screen>;
   // Keyed by topic: Play again on another topic starts a fresh sheet.
-  return <SpeedRound key={topic.key} source={topic} navigation={navigation} />;
+  return <SpeedRound key={topic.key} source={topic} requested={route.params.mode} navigation={navigation} />;
 }
 
 interface Playing {
@@ -102,7 +113,15 @@ interface Playing {
   canPlay: boolean;
 }
 
-function SpeedRound({ source, navigation }: { source: VocabTopic; navigation: Navigation }): React.ReactElement {
+function SpeedRound({
+  source,
+  requested,
+  navigation,
+}: {
+  source: VocabTopic;
+  requested: SpeedMode | undefined;
+  navigation: Navigation;
+}): React.ReactElement {
   const [playing, setPlaying] = useState<Playing | null>(null);
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
@@ -117,6 +136,7 @@ function SpeedRound({ source, navigation }: { source: VocabTopic; navigation: Na
   return (
     <StartSheet
       source={source}
+      requested={requested}
       progress={progress}
       onBack={back}
       onLearn={() => navigation.replace(ACTIVITY_ROUTES.learn, { topicKey: source.key })}
@@ -127,12 +147,14 @@ function SpeedRound({ source, navigation }: { source: VocabTopic; navigation: Na
 
 function StartSheet({
   source,
+  requested,
   progress,
   onBack,
   onLearn,
   onStart,
 }: {
   source: VocabTopic;
+  requested: SpeedMode | undefined;
   progress: VocabProgress;
   onBack: () => void;
   onLearn: () => void;
@@ -146,7 +168,15 @@ function StartSheet({
   const items = topicWords(topic.key);
   const collected = useMemo(() => collectedWords(items, progress), [items, progress]);
   const level = profile ? levelOrder(profile.ageGroup) : null;
-  const plan = useMemo(() => roundPlan(level, 'relaxed'), [level]);
+
+  // Challenge (S8): a per-profile opt-in, never preselected for a profile that has not opted in.
+  const settings = useLocaleStore((s) => (profile ? s.byProfile[profile.id] : undefined));
+  const challenge = challengeSettings(settings);
+  const setChallengeMode = useLocaleStore((s) => s.setChallengeMode);
+  const setClockScale = useLocaleStore((s) => s.setClockScale);
+  const [mode, setMode] = useState<SpeedMode>(() => initialMode(challenge.on, requested));
+  const [readerScale, setReaderScale] = useState(false);
+  const plan = useMemo(() => roundPlan(level, mode), [level, mode]);
   const state = sheetState(collected.length, plan.optionCount);
 
   // A Korean voice or a bundled clip, and sound on (S7); the round keeps what it was built with.
@@ -182,17 +212,34 @@ function StartSheet({
   );
   const nothing = state === 'ready' && questions.length === 0;
 
+  // "Try Challenge" is the explicit opt-in: it turns the profile setting on and picks Challenge for this round;
+  // with a screen reader on, the clock is set to twice as long first (§3.8).
+  const optIn = (): void => {
+    if (!profile) return;
+    const scale = scaleOnOptIn(challenge.scale, screenReader === true);
+    setChallengeMode(profile.id, true, 'start_sheet');
+    if (scale !== challenge.scale) setClockScale(profile.id, scale, 'start_sheet');
+    setReaderScale(scale !== challenge.scale);
+    setMode('challenge');
+  };
+  const chooseScale = (scale: ClockScale): void => {
+    if (!profile) return;
+    setClockScale(profile.id, scale, 'start_sheet');
+    setReaderScale(false);
+  };
+
   const start = (): void => {
     if (questions.length === 0) return;
     const config: SessionConfig = {
-      mode: 'relaxed',
+      mode,
       questions,
-      clockMs: clockFor('relaxed', 1),
-      hintsEnabled: screenReader !== true,
+      clockMs: clockFor(mode, challenge.scale),
+      // Hints are Relaxed only, and off with a screen reader (§3.6).
+      hintsEnabled: mode === 'relaxed' && screenReader !== true,
     };
     if (profile) useVocabRunStore.getState().begin(profile.id, topic.key, 'speed');
     void track({
-      ...roundStartEvent({ topicKey: topic.key, mode: 'relaxed', clockScale: 1, plan, questions: questions.length, audio: canPlay }),
+      ...roundStartEvent({ topicKey: topic.key, mode, clockScale: challenge.scale, plan, questions: questions.length, audio: canPlay }),
       profileId: profile?.id,
     });
     onStart({ config, plan, earlierBest: previousBest(progress, topic.key), canPlay });
@@ -229,10 +276,49 @@ function StartSheet({
         </View>
       ) : (
         <View style={{ gap: spacing.lg }}>
+          {challenge.on ? (
+            <ChoiceChips
+              choices={[
+                { value: 'relaxed', label: copy.relaxed.label },
+                { value: 'challenge', label: copy.challenge.label },
+              ]}
+              selected={mode}
+              onSelect={setMode}
+              groupLabel={messages.a11y.vocab.speed.modes}
+              testID="vocab-speed-modes"
+            />
+          ) : null}
           <View style={{ gap: spacing.xs }} testID="vocab-speed-mode">
-            <Body weight="semibold">{copy.relaxed.label}</Body>
-            <Body tone="secondary">{copy.relaxed.line(questions.length)}</Body>
+            {challenge.on ? null : <Body weight="semibold">{copy.relaxed.label}</Body>}
+            <Body tone="secondary">
+              {mode === 'challenge' ? challengeLine(challenge.scale, copy.challenge) : copy.relaxed.line(questions.length)}
+            </Body>
           </View>
+          {mode === 'challenge' ? (
+            <View style={{ gap: spacing.sm }} testID="vocab-speed-challenge">
+              <Body weight="semibold">{copy.challenge.scale.title}</Body>
+              <ScaleChips
+                scale={challenge.scale}
+                onSelect={chooseScale}
+                copy={copy.challenge}
+                groupLabel={messages.a11y.vocab.speed.scales}
+                testID="vocab-speed-scale"
+              />
+              {readerScale ? <Body tone="secondary">{copy.challenge.screenReaderLine}</Body> : null}
+              <Body tone="secondary">{copy.challenge.stopsLine}</Body>
+            </View>
+          ) : null}
+          {!challenge.on && profile ? (
+            <SwitchRow
+              title={copy.challenge.try}
+              line={copy.challenge.tryLine}
+              on={false}
+              onLabel={copy.challenge.profile.on}
+              offLabel={copy.challenge.profile.off}
+              onToggle={optIn}
+              testID="vocab-speed-try-challenge"
+            />
+          ) : null}
           {canPlay ? null : (
             <Body tone="secondary" testID="vocab-speed-no-sound">
               {copy.noSound}
@@ -267,13 +353,18 @@ function RoundPlay({
   const stateRef = useRef<SpeedState>(reduce(initSession(config), { type: 'start' }, config));
   const [state, setState] = useState<SpeedState>(stateRef.current);
   const [stopping, setStopping] = useState(false);
+  const [timeUp, setTimeUp] = useState(false);
   const leaving = useRef(false);
+  // When the round paused (wall clock), for the `resume` event's `pausedMs`.
+  const pausedAt = useRef<number | null>(null);
+  const timeUpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const dispatch = useCallback(
     (event: SpeedEvent): void => {
       const before = stateRef.current;
       const next = reduce(before, event, config);
       if (next === before) return;
+      if (next.phase === 'paused' && before.phase !== 'paused') pausedAt.current = Date.now();
       stateRef.current = next;
       setState(next);
       // A first tap: written at once, so a closed app loses nothing (§3.6).
@@ -315,8 +406,21 @@ function RoundPlay({
       return;
     }
     void track({ ...complete, profileId });
-    navigation.replace('VocabResults', { topicKey, summary, newBest });
+    const open = (): void => navigation.replace('VocabResults', { topicKey, summary, newBest });
+    if (state.endedBy !== 'clock') {
+      open();
+      return;
+    }
+    // The clock ended the round: a calm second of "That's the time! Nice work." first (§3.6).
+    setTimeUp(true);
+    timeUpTimer.current = setTimeout(open, TIME_UP_MS);
   }, [state, config, playing.earlierBest, topicKey, navigation, onLeave]);
+  useEffect(
+    () => () => {
+      if (timeUpTimer.current !== null) clearTimeout(timeUpTimer.current);
+    },
+    [],
+  );
 
   // Leaving before the end any other way (system back, a swipe) asks "Stop for now?" first.
   useEffect(
@@ -345,23 +449,67 @@ function RoundPlay({
     [locale],
   );
   const nudge = hoyaLine(state, glossOf, copy);
+  const clock = clockView(state.remainingMs, config.clockMs, copy.challenge, messages.a11y.vocab.speed);
+  const paused = state.phase === 'paused';
+  const resume = (): void => {
+    dispatch({ type: 'resume', pausedMs: pausedFor(pausedAt.current, Date.now()) });
+    pausedAt.current = null;
+  };
+  const meter = (
+    // Read politely when a spark lights: at most once a question; a miss changes nothing, so nothing is read.
+    <View accessibilityLiveRegion="polite">
+      <SparkMeter
+        value={state.sparks}
+        reserveRows={clock !== null}
+        accessibilityLabel={sparkLabel(state.sparks, messages.a11y.vocab.speed)}
+        testID="vocab-speed-sparks"
+      />
+    </View>
+  );
 
   return (
     <Screen tone="canvas" scrollable testID="vocab-speed-round">
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-        <BackButton onPress={() => setStopping(true)} />
-        <View style={{ flexShrink: 1, gap: spacing.xs }}>
-          {/* Read politely when a spark lights: at most once a question; a miss changes nothing, so nothing is read. */}
-          <View accessibilityLiveRegion="polite">
-            <SparkMeter value={state.sparks} accessibilityLabel={sparkLabel(state.sparks, messages.a11y.vocab.speed)} testID="vocab-speed-sparks" />
+      {clock ? (
+        // Challenge (frame G): two lines at any width; Back, the digits and Pause, then the meter and the bar.
+        <View style={{ gap: spacing.sm }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+            <BackButton onPress={() => setStopping(true)} />
+            <View style={{ flex: 1 }} />
+            <ClockDigits view={clock} />
+            {paused || timeUp ? null : (
+              <Button
+                label={copy.challenge.pause}
+                tone="secondary"
+                size="md"
+                onPress={() => dispatch({ type: 'pause', reason: 'user' })}
+                testID="vocab-speed-pause"
+              />
+            )}
           </View>
-          <View {...HIDDEN} testID="vocab-speed-dots">
-            <Progress variant="dots" value={state.results.length} max={Math.max(config.questions.length, 1)} height={DOT} />
+          {meter}
+          <ClockBar view={clock} />
+        </View>
+      ) : (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+          <BackButton onPress={() => setStopping(true)} />
+          <View style={{ flexShrink: 1, gap: spacing.xs }}>
+            {meter}
+            <View {...HIDDEN} testID="vocab-speed-dots">
+              <Progress variant="dots" value={state.results.length} max={Math.max(config.questions.length, 1)} height={DOT} />
+            </View>
           </View>
         </View>
-      </View>
+      )}
       <Spacer size="md" />
-      {question ? (
+      {timeUp ? (
+        <View accessibilityLiveRegion="polite" style={{ paddingVertical: spacing.xxl }} testID="vocab-speed-time-up">
+          <Heading level="title" align="center">
+            {copy.challenge.timeUp}
+          </Heading>
+        </View>
+      ) : paused ? (
+        <PausedPanel copy={copy.challenge} onResume={resume} onStop={() => setStopping(true)} />
+      ) : question ? (
         <VocabQuestionView
           question={question}
           mode="speed"

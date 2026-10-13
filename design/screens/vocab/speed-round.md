@@ -97,7 +97,7 @@ After the last reveal the screen summarises the round (`summarize`), writes the 
 
 ## Challenge mode (F-VOC-004 S-6)
 
-Spec: S1, S2, S8, S9, §3.1 (setters), §3.5 (switch and scale), §3.6 (clock, pause, time up), §3.8 (timing adjustable, no flashing, screen readers). Wireframe: frames A (the Challenge part) and G. Code: `VocabSpeedRoundScreen.tsx` (sheet, clock row, pause overlay, time-up beat), `components/ChallengeCard.tsx` (Profile), decisions in `logic/vocab/challenge.ts` (100 % covered), setters `setChallengeMode` / `setClockScale` in `store/locale-store.ts`.
+Spec: S1, S2, S8, S9, §3.1 (setters), §3.5 (switch and scale), §3.6 (clock, pause, time up), §3.8 (timing adjustable, no flashing, screen readers). Wireframe: frames A (the Challenge part) and G. Code: `VocabSpeedRoundScreen.tsx` (sheet, clock row, pause overlay, time-up beat), `screens/vocab/ChallengeCard.tsx` (Profile) with `ChallengeControls.tsx` (chips, switch row, clock, paused panel), decisions in `logic/vocab/challenge.ts` (100 % covered), setters `setChallengeMode` / `setClockScale` in `store/locale-store.ts`.
 
 ```
 A1 Not opted in (Relaxed)          A2 Opted in, Challenge chosen       G  Question with the clock          G' Paused                       G'' Time up

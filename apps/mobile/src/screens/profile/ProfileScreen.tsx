@@ -44,6 +44,8 @@ import { grownUpEntriesOn, runGrownUpHandoff } from '../../logic/shell/entry-poi
 import { grownUpPinParams } from '../../logic/shell/handoff-rules';
 import { openGrownUpArea } from '../../platform/grown-up-handoff';
 import { GrownUpHomeRow } from './GrownUpHomeRow';
+import { ChallengeCard } from '../vocab/ChallengeCard';
+import { wordsOffered } from '../vocab/topic-data';
 
 export function ProfileScreen(): React.ReactElement {
   const m = useMessages();
@@ -246,6 +248,14 @@ export function ProfileScreen(): React.ReactElement {
         ) : null}
       </Card>
       <VoiceHelpSheet visible={voiceHelpOpen} onClose={() => setVoiceHelpOpen(false)} />
+
+      {active && wordsOffered() ? (
+        <>
+          {/* F-VOC-004 S-6: the Speed Round's Challenge opt-in; only where Words (and so the Speed Round) is offered. */}
+          <Spacer size="lg" />
+          <ChallengeCard profileId={active.id} />
+        </>
+      ) : null}
 
       {active ? (
         <>
