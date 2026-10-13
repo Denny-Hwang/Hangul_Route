@@ -86,6 +86,22 @@ eas submit --platform ios --profile production     # TestFlight 업로드
   - Sign-in required: **No** (계정 없음)
   - Notes: `app-store-metadata.md` §6 붙여넣기 (PIN 은 사전 설정값 없음 — 리뷰어가 처음 만든다는 점 명시)
   - 연락처: 실명 · 전화 · 이메일
+- [ ] App Review Information — **어른의 쪽지 (Notes from grown-ups, F-FEEDBACK-001)** 가 켜진 빌드를 제출할 때만 (`EXPO_PUBLIC_NOTES_ENABLED` 가 켜진 FB-14 이후 빌드): 위 Notes 에 아래 영어 단락을 이어 붙인다 (Guideline 1.2, 사용자 생성 콘텐츠). 쪽지가 꺼진 빌드에는 붙이지 않는다 (없는 기능을 설명하지 않는다).
+
+  > User-generated content (Guideline 1.2): the app has one kind of user-generated content, short "notes from grown-ups". Only adults already linked to the learner can send one: the learner's family (the family owner, and other family adults only after the owner allows them) and the teacher of a class the learner joined. There is no contact with strangers, no profile search and no chat. The learner cannot write back; they can only pick one of four fixed answers, such as "Thank you".
+  >
+  > Filter: every note starts from a reviewed ready-made message; any added text is short and is checked on the server, which refuses links, email addresses, phone numbers, emoji and listed unkind words in English, Spanish and Korean. Daily limits apply per sender and per learner.
+  >
+  > Report: on the learner's device, "Tell a grown-up" opens the grown-up gate (PIN) and leads to "Report this note"; a learner who manages their own profile sees "Report this note" directly. Family adults can also report any note from the family page at app.hangulroute.com. A reported note is hidden from the learner at once.
+  >
+  > Hide: "Put this note away" removes a note from the learner's list; in the grown-up zone and on the family page, "Hide" removes it from the learner's devices.
+  >
+  > Block: on the family page, "Stop notes from this sender" stops every note from that adult to the learner; "Allow again" undoes it. The family can also limit class notes to ready-made messages only, or turn them off.
+  >
+  > Hold: an adult reported by two different families, or reported once as unsafe by a family adult (on the family page, or on a device after the grown-up gate), is paused from sending to anyone until we review it. We review open reports every day and act on them.
+  >
+  > Contact: hello@hangulroute.com, named in the Privacy Policy and on the console message an adult sees while sending is paused.
+
 - [ ] Content Rights: 서드파티 콘텐츠 없음 (일러스트 자체 제작, 공공누리 이미지 미사용)
 - [ ] Export Compliance: 자동 (usesNonExemptEncryption = false)
 
@@ -96,6 +112,7 @@ eas submit --platform ios --profile production     # TestFlight 업로드
 | 1.3 Kids Category | **해당 없음** (Education 으로 제출). 단, 아동 보호 설계는 5.1.4 근거로 유지: 부모 게이트 ✅ · 외부 링크 없음 ✅ · 서드파티 분석/광고 없음 ✅ · 자체 텔레메트리는 개인정보 미포함 ✅ |
 | 2.1 완성도 | 크래시 가드 ✅ · 데드엔드 화면 0 (#61) ✅ · placeholder 텍스트 0 ✅ |
 | 2.3 정확한 메타데이터 | 스크린샷 = 실제 화면 · "9 mini-games" 가 아니라 **8 active** 로 표기 (product-review §"카피 수치 정합성") |
+| 1.2 사용자 생성 콘텐츠 | 쪽지가 켜진 빌드만: §5 의 UGC 단락을 Notes 에 붙였다 ✅ · 필터 (미리 만든 문구 + 서버 텍스트 검사) · 신고 (기기 PIN 게이트, 가족 페이지) · 숨기기 · 막기 (Stop notes from this sender) · 자동 정지와 매일 검토 (`owner-runbook.md` §F) · 연락처 hello@hangulroute.com ✅ |
 | 3.1.1 IAP | 구매 없음, 구매 언급 없음 ✅ |
 | 5.1.1 데이터 수집 | 온보딩 동의 체크박스 + 부모 이메일 선택 ✅ · Privacy Policy URL 라이브 (§3) |
 | 5.1.4 Kids 데이터 | 이메일·이름은 기기 저장, 전송 없음 ✅ |
