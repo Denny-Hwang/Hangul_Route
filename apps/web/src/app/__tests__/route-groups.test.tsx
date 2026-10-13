@@ -216,6 +216,7 @@ describe('locale pages are the English pages with locale links', () => {
     about: (m) => ({ own: m.landing.about.title, english: getMessages('en').landing.about.title }),
     privacy: (m) => ({ own: m.landing.legal.englishAuthoritative, english: getMessages('en').landing.legal.privacy.title }),
     terms: (m) => ({ own: m.landing.legal.englishAuthoritative, english: getMessages('en').landing.legal.terms.title }),
+    learners: (m) => ({ own: m.landing.persona.learners.title, english: getMessages('en').landing.persona.learners.title }),
   };
   for (const [name, enPage, locPage] of pages) {
     it.each(SITE_LOCALES)(`${name}: /%s keeps the English links as locale links, in its own words once translated`, (locale) => {
@@ -236,8 +237,9 @@ describe('locale pages are the English pages with locale links', () => {
       if (translated(locale)) {
         const { own, english } = WORDS[name]!(getMessages(locale as UiLocale));
         expect(locHtml).toContain(escapeText(own));
-        // The landing and About are in the locale; the legal documents stay English under the localized notice.
-        if (name === 'landing' || name === 'about') expect(locHtml).not.toContain(escapeText(english));
+        // The landing, About and the persona pages are in the locale; the legal documents stay English under the
+        // localized notice.
+        if (name !== 'privacy' && name !== 'terms') expect(locHtml).not.toContain(escapeText(english));
         else expect(locHtml).toContain(escapeText(english));
         return;
       }
