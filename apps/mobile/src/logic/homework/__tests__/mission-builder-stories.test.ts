@@ -638,3 +638,150 @@ describe('planHomeStoryOpen (a tapped Home story card, §3.2, §3.7)', () => {
     expect(planHomeStoryOpen({ card: { ...story, questId: undefined }, ...world })).toBeNull();
   });
 });
+
+describe('pinned slots ① and ③ re-check access (F-STORY-004 PR 4.8d, F-ENT-003 section 3.6)', () => {
+  const lockOnly =
+    (...storyIds: string[]) =>
+    (entry: StoryIndexEntry): boolean =>
+      storyIds.includes(entry.storyId);
+
+  it('a pinned slot-① story that is now locked moves down the slot-① chain; slots ② and ③ stay', () => {
+    const first = build();
+    expect(first.cards.map((c) => c.storyId ?? c.questId)).toEqual(['story:tiger', 'quest:a', 'story:sun']);
+    const after = build({ pinned: first }, { isLocked: lockOnly('story:tiger') });
+    // `next` skips the locked Tiger and Sun, which slot ③ already holds.
+    expect(after.cards[0]).toMatchObject({ slot: 1, kind: 'story', storyId: 'story:seollal', storyReason: 'next', storyMode: 'play', collected: false });
+    expect(after.cards[1]).toEqual(first.cards[1]);
+    expect(after.cards[2]).toEqual(first.cards[2]);
+  });
+
+  it('a pinned slot-③ story that is now locked moves down the slot-③ chain; slots ① and ② stay', () => {
+    const first = build();
+    const after = build({ pinned: first }, { isLocked: lockOnly('story:sun') });
+    expect(after.cards[0]).toEqual(first.cards[0]);
+    expect(after.cards[1]).toEqual(first.cards[1]);
+    expect(after.cards[2]).toMatchObject({ slot: 3, kind: 'story', storyId: 'story:seollal', storyReason: 'next', collected: false });
+  });
+
+  it('a pinned slot-① replay whose quest is no longer open is replaced, and never by slot ②\'s quest or slot ③\'s story', () => {
+    const progress = snapshot([done('quest:a', YESTERDAY, 0.5)]);
+    const first = build({ snapshot: progress });
+    expect(first.cards.map((c) => c.storyId ?? c.questId)).toEqual(['quest:a', 'quest:b', 'story:tiger']);
+    const after = build({ snapshot: progress, pinned: first, isQuestOpen: (id) => id !== 'quest:a' });
+    expect(after.cards[0]).toMatchObject({ slot: 1, kind: 'story', storyId: 'story:sun', storyReason: 'next' });
+    expect(after.cards.slice(1)).toEqual(first.cards.slice(1));
+  });
+
+  it('a pinned slot-③ replay whose quest is no longer open is replaced down the slot-③ chain', () => {
+    const progress = snapshot([...allShelfFinished(), done('quest:a', YESTERDAY, 0.3), done('quest:b', YESTERDAY, 0.5)]);
+    const first = build({ snapshot: progress });
+    expect(first.cards[2]).toMatchObject({ kind: 'replay', questId: 'quest:b' });
+    const after = build({ snapshot: progress, pinned: first, isQuestOpen: (id) => id !== 'quest:b' });
+    expect(after.cards[0]).toEqual(first.cards[0]);
+    // No other open replay is left, so slot ③ reads a finished story again.
+    expect(after.cards[2]).toMatchObject({ slot: 3, kind: 'story', storyId: 'story:tiger', storyReason: 'again', storyMode: 'replay' });
+  });
+
+  it('a pinned explore card whose episode has no open quest left is replaced', () => {
+    const first = build({}, { isLocked: () => true });
+    expect(first.cards[2]).toMatchObject({ kind: 'explore', episodeId: 'episode:two' });
+    const after = build({ pinned: first, isQuestOpen: (id) => id !== 'quest:c' });
+    expect(after.cards[0]).toEqual(first.cards[0]);
+    expect(after.cards[2]).toMatchObject({ slot: 3, kind: 'story', storyId: 'story:tiger', storyReason: 'next' });
+  });
+
+  it('a pinned `again` card whose story is now locked is replaced: it is never collected', () => {
+    const progress = snapshot(allShelfFinished());
+    const first = build({ snapshot: progress });
+    expect(first.cards[0]).toMatchObject({ storyId: 'story:tiger', storyReason: 'again' });
+    const after = build({ snapshot: progress, pinned: first }, { isLocked: lockOnly('story:tiger') });
+    expect(after.cards[0]).toMatchObject({ slot: 1, kind: 'story', storyId: 'story:seollal', storyReason: 'again', storyMode: 'replay' });
+    expect(after.cards[2]).toEqual(first.cards[2]);
+  });
+
+  it('keeps a collected card, in either slot, even once its story or quest closes', () => {
+    const first = build();
+    const today = snapshot([done(questId('tiger'), TODAY, 1, 'episode:shelf-tiger'), done(questId('sun'), TODAY, 1, 'episode:shelf-sun')]);
+    const after = build({ snapshot: today, pinned: first }, { isLocked: () => true });
+    expect(after.cards[0]).toMatchObject({ storyId: 'story:tiger', collected: true });
+    expect(after.cards[2]).toMatchObject({ storyId: 'story:sun', collected: true });
+
+    const progress = snapshot([done('quest:a', YESTERDAY, 0.5)]);
+    const replay = build({ snapshot: progress });
+    const played = snapshot([done('quest:a', TODAY, 1)]);
+    expect(build({ snapshot: played, pinned: replay, isQuestOpen: (id) => id !== 'quest:a' }).cards[0]).toMatchObject({
+      kind: 'replay',
+      questId: 'quest:a',
+      collected: true,
+    });
+  });
+
+  it('keeps the closed card when its chain has nothing open to offer instead', () => {
+    const first = build();
+    const after = build({ pinned: first, isQuestOpen: () => false }, { isLocked: () => true });
+    expect(after.cards[0]).toMatchObject({ storyId: 'story:tiger' });
+    expect(after.cards[2]).toMatchObject({ storyId: 'story:sun' });
+  });
+
+  it('the replacement is pinned too: rebuilding from the new plan keeps it', () => {
+    const first = build();
+    const after = build({ pinned: first }, { isLocked: lockOnly('story:tiger') });
+    expect(build({ pinned: after }, { isLocked: lockOnly('story:tiger') }).cards).toEqual(after.cards);
+  });
+
+  it('never moves the daily test card', () => {
+    const first = build({ capabilities: { dailyTestAvailable: true } });
+    const after = build({ capabilities: { dailyTestAvailable: true }, pinned: first, isQuestOpen: () => false }, { isLocked: () => true });
+    expect(after.cards[2]).toEqual(first.cards[2]);
+  });
+
+  it('slots ① and ③ closing in the same build take two different cards, neither one slot ② holds', () => {
+    const first = build();
+    const after = build({ pinned: first }, { isLocked: lockOnly('story:tiger', 'story:sun') });
+    expect(after.cards[0]).toMatchObject({ slot: 1, kind: 'story', storyId: 'story:seollal' });
+    // As in a fresh build, slot ② holds its quest but not its episode.
+    expect(after.cards[2]).toMatchObject({ slot: 3, kind: 'explore', episodeId: 'episode:one' });
+    expect(after.cards[1]).toEqual(first.cards[1]);
+    const held = after.cards.map((c) => c.storyId ?? c.questId ?? c.episodeId);
+    expect(new Set(held).size).toBe(3);
+  });
+
+  it('a pinned story gone from the index falls back to its quest: replaced once that quest closes, kept while it is open', () => {
+    const first = build();
+    const entries = INDEX.filter((e) => e.storyId !== 'story:tiger');
+    const closed = build({ pinned: first, isQuestOpen: (id) => id !== questId('tiger') }, { entries });
+    expect(closed.cards[0]).toMatchObject({ slot: 1, kind: 'story', storyId: 'story:seollal' });
+    expect(closed.cards[2]).toEqual(first.cards[2]);
+    expect(build({ pinned: first, isQuestOpen: () => true }, { entries }).cards).toEqual(first.cards);
+  });
+
+  it('with no story world, a pinned story card follows its quest alone', () => {
+    const first = build();
+    const closed = build({ pinned: first, stories: undefined, isQuestOpen: (id) => id !== questId('tiger') });
+    expect(closed.cards[0]).not.toMatchObject({ storyId: 'story:tiger' });
+    expect(closed.cards[0]?.slot).toBe(1);
+    expect(closed.cards[2]).toMatchObject({ storyId: 'story:sun' });
+    expect(build({ pinned: first, stories: undefined }).cards).toEqual(first.cards);
+  });
+
+  it('keeps a card it cannot judge: a replay with no quest, an explore card whose episode left the content', () => {
+    const progress = snapshot([done('quest:a', YESTERDAY, 0.5)]);
+    const replay = build({ snapshot: progress });
+    const noQuest: MissionPlan = { ...replay, cards: replay.cards.map((c) => (c.slot === 1 ? { ...c, questId: undefined } : c)) };
+    expect(build({ snapshot: progress, pinned: noQuest, isQuestOpen: () => false }).cards[0]).toMatchObject({ kind: 'replay', questId: undefined });
+
+    const first = build({}, { isLocked: () => true });
+    expect(first.cards[2]).toMatchObject({ kind: 'explore', episodeId: 'episode:two' });
+    const episodes = [GRID_EPISODES[0]!, ...SHELF_EPISODES];
+    const after = build({ pinned: first, episodes, isQuestOpen: (id) => id !== 'quest:c' }, { isLocked: () => true });
+    expect(after.cards[2]).toMatchObject({ kind: 'explore', episodeId: 'episode:two' });
+  });
+
+  it('inert while gating is off: nothing is closed, so the pinned plan comes back as built', () => {
+    const progress = snapshot([done('quest:a', YESTERDAY, 0.5)]);
+    for (const first of [build(), build({ snapshot: progress }), build({}, { isLocked: () => true })]) {
+      const snap = first.cards[0]?.kind === 'replay' ? progress : snapshot();
+      expect(build({ snapshot: snap, pinned: first, isQuestOpen: () => true }).cards).toEqual(first.cards);
+    }
+  });
+});

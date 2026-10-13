@@ -322,8 +322,8 @@ function newCard(quest: Quest, episodes: readonly Episode[], subtitle: 'new' | '
  * card, or that quest is no longer open (the access tier changed after the
  * pin), and the learner has not played it today, card (2) moves to the
  * cursor, so Home names the same next quest as Results and My route. Cards (1)
- * and (3) never move, and the pin stays when the cursor has nothing else to
- * offer.
+ * and (3) move only when they close (`repinClosed`), and the pin stays when the
+ * cursor has nothing else to offer.
  */
 function repinPlacedOut(cards: readonly MissionCard[], input: BuildMissionInput): readonly MissionCard[] {
   const skip = input.skipQuestIds;
@@ -346,6 +346,53 @@ function use(used: Used, card: MissionCard, input: BuildMissionInput): void {
   if (card.episodeId) used.episodes.add(card.episodeId);
   const storyId = card.storyId ?? input.stories?.entries.find((e) => e.questId === card.questId)?.storyId;
   if (storyId) used.stories.add(storyId);
+}
+
+/**
+ * Is a pinned slot (1) or (3) card closed now (F-STORY-004 PR 4.8d)? A story
+ * card follows `stories.isLocked`, a replay `input.isQuestOpen`, an explore
+ * card needs one open quest in its episode, as their chain links do. A story
+ * card whose entry this build cannot find (it left the index, or there is no
+ * story world) falls back to `input.isQuestOpen` for its quest. A card with
+ * nothing to judge (no quest, an episode gone from the content) and the daily
+ * test stay open.
+ */
+function isClosed(card: MissionCard, input: BuildMissionInput): boolean {
+  if (card.kind === 'story') {
+    const stories = input.stories;
+    const entry = stories?.entries.find((e) => e.questId === card.questId);
+    if (stories !== undefined && entry !== undefined) return stories.isLocked(entry);
+  }
+  if (card.kind === 'story' || card.kind === 'replay') return card.questId !== undefined && !isOpen(input, card.questId);
+  if (card.kind === 'explore') {
+    const episode = input.episodes.find((e) => e.id === card.episodeId);
+    return episode !== undefined && !episode.questIds.some((id) => isOpen(input, id));
+  }
+  return false;
+}
+
+/**
+ * The access exception for cards (1) and (3) (F-STORY-004 PR 4.8d, F-ENT-003
+ * section 3.6): the pin lasts the app session day (PR 4.8c), so when access
+ * drops after the pin (a plan lapses, a space or inbox change), a slot (1) or
+ * (3) card the learner has not collected today and can no longer open takes
+ * the first open card of its own chain instead, never one the other cards
+ * hold. A collected card stays, and so does a closed card whose chain has
+ * nothing open to offer. Nothing is closed while gating is off, so the pin
+ * comes back as built.
+ */
+function repinClosed(cards: readonly MissionCard[], input: BuildMissionInput): readonly MissionCard[] {
+  const next = [...cards];
+  next.forEach((card, index) => {
+    if (card.slot === 2 || !isClosed(card, input)) return;
+    if (isCollected(card, input.snapshot, input.today, card.collected)) return;
+    const used: Used = { quests: new Set(), episodes: new Set(), stories: new Set() };
+    // As in a fresh build: card (2) takes its quest and story, not its episode.
+    for (const other of next) if (other !== card) use(used, other.slot === 2 ? { ...other, episodeId: undefined } : other, input);
+    const replacement = firstOf(card.slot === 1 ? SLOT_1_CHAIN : SLOT_3_CHAIN, card.slot, input, used);
+    if (replacement) next[index] = replacement;
+  });
+  return next;
 }
 
 /** An `again` card opens the unscored reader, so it is never collected (§3.7). */
@@ -377,7 +424,7 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
   if (input.pinned && input.pinned.date === today && input.pinned.profileId === profileId) {
     return {
       ...input.pinned,
-      cards: repinPlacedOut(input.pinned.cards, input).map((card) => {
+      cards: repinClosed(repinPlacedOut(input.pinned.cards, input), input).map((card) => {
         const refreshed: MissionCard = { ...card, collected: isCollected(card, snapshot, today, card.collected) };
         if (card.kind === 'story') refreshed.storyReason = refreshedReason(card, input);
         // A plan removed after the pin (unpublished, or the own plan archived): the quest stays, "Next in your plan" goes.
