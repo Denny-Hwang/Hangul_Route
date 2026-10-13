@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { Button, Muted, Notice, buttonBase, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
+import { RevisitLetterLinks } from '@/components/console/BrowseLink';
 import { AvatarChip } from '@/components/AvatarChip';
 import { SchoolAdmin } from '@/components/console/SchoolAdmin';
 import { StartingSpot } from '@/components/console/PlacementParts';
@@ -168,7 +169,7 @@ function SpaceInner(): JSX.Element {
                 {rollup.revisit.length ? (
                   <li>
                     {weekRevisit.before}
-                    {jamo(rollup.revisit)}
+                    <RevisitLetterLinks chars={rollup.revisit} />
                     {weekRevisit.after}{' '}
                     {lecture ? (
                       <Link

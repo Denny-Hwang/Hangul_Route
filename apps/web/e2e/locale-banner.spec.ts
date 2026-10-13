@@ -102,7 +102,7 @@ test.describe('on a QA build', () => {
       await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     });
 
-    test('"Play now" on /ko carries the locale to the app', async ({ page }) => {
+    test('Start learning on /ko carries the locale to the app (header, hero and footer)', async ({ page }) => {
       await page.goto('/ko');
       await expect(page.locator('a[href="https://app.hangulroute.com?lang=ko"]')).toHaveCount(3);
     });

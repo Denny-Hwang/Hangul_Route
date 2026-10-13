@@ -12,7 +12,7 @@ import { SITE_DEFAULT_LOCALE, sitePath } from '../../lib/site-path';
 import { submitSignup, type WaitlistState } from '../../lib/waitlist';
 
 /**
- * Launch-invite signup on the landing page (#get). First-party: posts JSON to
+ * Launch-invite signup on the home page (#news; the old #get anchor still lands there). First-party: posts JSON to
  * the API Worker, no third-party form and no page navigation. Design reference:
  * the existing "Email signup / get" block of design/screens landing (same
  * fields and tokens; states added). The server page passes the words (`landing.waitlist` in the

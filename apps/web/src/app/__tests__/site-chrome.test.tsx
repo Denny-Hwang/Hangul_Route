@@ -4,9 +4,14 @@ import { fileURLToPath } from 'node:url';
 import { getMessages } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_SANS } from '../../components/SiteDocument';
 import { SiteFooter } from '../../components/landing/SiteFooter';
 import { PERSONA_PAGES, SHIPPED_PERSONA_PAGES, SiteHeader } from '../../components/landing/SiteHeader';
 import { SiteShell } from '../../components/landing/SiteShell';
+import AboutPage from '../(en)/about/page';
+import PrivacyPage from '../(en)/privacy/page';
+import TermsPage from '../(en)/terms/page';
+import NotFoundPage from '../not-found';
 import { CONTACT_EMAIL } from '../../data/contact';
 import { learnerStart, signIn } from '../../lib/site-links';
 import { SITE_PAGES } from '../../lib/site-metadata';
@@ -253,15 +258,73 @@ describe('SiteShell', () => {
   });
 });
 
+describe('About, Privacy, Terms and the 404 page get the site chrome (F-SITE-002 §3.7, S-5)', () => {
+  const about = renderToStaticMarkup(<AboutPage />);
+  const legal = [
+    ['privacy', renderToStaticMarkup(<PrivacyPage />)],
+    ['terms', renderToStaticMarkup(<TermsPage />)],
+  ] as const;
+
+  it('About: the full header and footer around its body, which keeps Back home; no current persona page', () => {
+    const items = controls(about);
+    expect(items.map((c) => c.text)).toEqual(expect.arrayContaining([t.nav.start, t.nav.signIn, t.about.backHome]));
+    expect(about).toMatch(/<main id="content"[\s\S]*<h1[^>]*>[^<]*<\/h1>/);
+    expect(about).not.toContain('aria-current="page"');
+    expect(about.match(/<h1\b/g)).toHaveLength(1);
+    expect(about.match(/<main\b/g)).toHaveLength(1);
+  });
+
+  it.each(legal)('%s: the legal variant (no Sign in, no Start learning, no App group) around the unchanged document', (_name, html) => {
+    expect(html).not.toContain(`href="${signIn()}"`);
+    expect(html).not.toContain(`href="${learnerStart('en')}"`);
+    expect([...html.matchAll(/<h2 id="footer-[^"]*"[^>]*>([^<]*)<\/h2>/g)].map((m) => m[1])).toEqual([t.footer.guide, t.footer.company]);
+    expect(html.match(/<main\b/g)).toHaveLength(1);
+    expect(html).toContain(t.legal.draft);
+  });
+
+  it('every link of About and the legal pages has a 64 px hit area', () => {
+    for (const html of [about, ...legal.map(([, h]) => h)]) {
+      for (const c of controls(html)) expect(c.attrs, c.text).toMatch(/min-height:(64|80)px/);
+    }
+  });
+
+  it('404: an English document in the site chrome, with Next\'s body, our line and links to / and Start learning', () => {
+    const html = renderToStaticMarkup(<NotFoundPage />);
+    expect(html).toMatch(/^<html lang="en">/);
+    expect(html).toContain('This page could not be found.');
+    expect(html).toContain(t.notFound.body);
+    // The shared header and footer (F-SITE-002 S-5), so a lost visitor keeps the site's way around.
+    expect(controls(html)[0]?.text).toBe(t.nav.skip);
+    expect(html).toMatch(/<header\b/);
+    expect(html).toMatch(/<footer\b/);
+    const main = /<main\b[^>]*>([\s\S]*)<\/main>/.exec(html)?.[1] ?? '';
+    const links = controls(main);
+    expect(links.map((c) => [hrefOf(c), c.text])).toEqual([
+      ['/', t.notFound.home],
+      [learnerStart('en'), t.notFound.start],
+    ]);
+    for (const c of links) expect(c.attrs).toMatch(/min-height:(64|80)px/);
+    // Next's body is a full-screen box; inside the chrome it sizes to its content, so the links sit on the first screen.
+    expect(main).toMatch(/<div class="hr-site-404">/);
+    expect(css.replace(/\/\*[\s\S]*?\*\//g, '')).toMatch(/\.hr-site-404 > div\s*\{[^}]*height:\s*auto !important/);
+  });
+});
+
 describe('globals.css: the site rules', () => {
   const rules = css.replace(/\/\*[\s\S]*?\*\//g, '');
   /** The media queries whose rules are the site's (their first rule is an `hr-site-*` rule). */
   const siteQueries = [...rules.matchAll(/@media\s*\(([^)]*)\)\s*\{\s*\.hr-site/g)].map((m) => m[1]?.trim());
 
-  it('are mobile first, in em: only min-width queries at the S-D breakpoints', () => {
+  it('are mobile first, in em: only min-width queries at the S-D breakpoints (plus the hover-capable guard)', () => {
     expect(siteQueries.length).toBeGreaterThan(0);
-    const allowed = Object.values(SITE_BREAKPOINTS).map((em) => `min-width: ${em}em`);
+    const allowed = [...Object.values(SITE_BREAKPOINTS).map((em) => `min-width: ${em}em`), 'hover: hover'];
     for (const q of siteQueries) expect(allowed, q).toContain(q);
+  });
+
+  it('hover looks apply only on devices that hover, so a tapped card does not keep them after Back', () => {
+    const outside = rules.replace(/@media\s*\(hover: hover\)\s*\{((?:[^{}]*\{[^{}]*\})*)\s*\}/g, '');
+    expect(outside).not.toMatch(/\.hr-site[^{]*:hover/);
+    expect(rules).toMatch(/@media \(hover: hover\)\s*\{\s*\.hr-site-persona-card:hover/);
   });
 
   it('every hr-site rule inside a media query sits in one of those queries (none behind an old landing query)', () => {
@@ -285,5 +348,19 @@ describe('globals.css: the site rules', () => {
 
   it('never reorder (focus order = visual order)', () => {
     expect(rules).not.toMatch(/(^|[^-\w])order\s*:/);
+  });
+});
+
+describe('the site font stack (F-SITE-002 §3.11 budgets measured on Linux CI)', () => {
+  it('names Arial-metric sans faces before system-ui, so Linux does not fall back to a wide default', () => {
+    const faces = SYSTEM_SANS.split(',').map((f) => f.trim());
+    expect(faces.slice(0, 3)).toEqual(['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"']);
+    expect(faces.indexOf('Arial')).toBeGreaterThan(-1);
+    expect(faces.indexOf('Arial')).toBeLessThan(faces.indexOf('system-ui'));
+    expect(faces.at(-1)).toBe('sans-serif');
+  });
+
+  it('is the body font of every site document', () => {
+    expect(renderToStaticMarkup(<NotFoundPage />)).toContain(`font-family:${SYSTEM_SANS.replace(/"/g, '&quot;')}`);
   });
 });

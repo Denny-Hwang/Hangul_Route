@@ -158,11 +158,9 @@ describe('/learners (S-4a)', () => {
   });
 
   it('no age wording and no price on the page', () => {
-    // TODO(F-SITE-002 S-6, OD-9): the Stage 1 card blurbs in the cards fold still carry audience wording, which S-6
-    // rewords; only those blurbs are left out here, and S-6 removes this exclusion.
-    const withoutBlurbs = stage1Cards.reduce((acc, card) => acc.split(card.blurb).join(' '), text);
-    expect(withoutBlurbs).not.toMatch(/\bkids?\b|\bchild(ren)?\b|\bages? \d|\$\s?\d/i);
-    expect(text).not.toMatch(/\bages? \d|\$\s?\d/i);
+    // The whole rendered page, the cards fold and its Stage 1 blurbs included (S-6 reworded them, OD-9).
+    expect(text).toContain(stage1Cards[0]?.blurb);
+    expect(text).not.toMatch(/\bkids?\b|\bchild(ren)?\b|\bages? \d|\$\s?\d/i);
   });
 
   it('the en route renders the same page', () => {

@@ -57,6 +57,11 @@ export async function removeKey(key: string): Promise<void> {
 
 export { setWriteFence } from './storage-fence';
 
+/** Persistent storage is a web request (`storage.web.ts`); native storage is not evicted, so there is nothing to ask. */
+export async function requestPersistence(): Promise<boolean> {
+  return false;
+}
+
 export async function listKeys(): Promise<string[]> {
   const all = await AsyncStorage.getAllKeys();
   return all

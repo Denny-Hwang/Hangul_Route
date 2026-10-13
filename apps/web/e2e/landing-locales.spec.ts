@@ -34,19 +34,17 @@ const allowlist = JSON.parse(readFileSync(join(__dirname, 'fixtures', 'landing-t
 interface LandingPage {
   path: string;
   lang: 'en' | 'es' | 'ko';
-  /** The page's primary CTA: "Play now" on the landing, "Back home" on About. */
+  /** The page's primary CTA: the primary pill on the layered site's pages, "Back home" on About. */
   cta: (page: Page, lang: LandingPage['lang']) => Locator;
 }
 
-/** The header's "Play now" (its class is pinned by `landing-layout.test.tsx`), whatever app origin it links to. */
-const PLAY_NOW = (page: Page): Locator => page.locator('header a.hr-landing-cta');
 /** About's "Back home" link, by its words in the page's locale. */
 const BACK_HOME = (page: Page, lang: LandingPage['lang']): Locator =>
   page.getByRole('link', { name: getMessages(lang).landing.about.backHome, exact: true });
-/** A layered-site page's primary action (F-SITE-002 §3.1 rule 1): the first primary pill inside `main`. */
+/** A layered-site page's primary action (F-SITE-002 §3.1 rule 1): the primary pill inside `main`, whatever app origin it links to. */
 const SITE_PRIMARY = (page: Page): Locator => page.locator('main a.hr-site-primary');
 const PAGES: readonly LandingPage[] = [
-  { path: '/', lang: 'en', cta: PLAY_NOW },
+  { path: '/', lang: 'en', cta: SITE_PRIMARY },
   { path: '/learners', lang: 'en', cta: SITE_PRIMARY },
   { path: '/es/learners', lang: 'es', cta: SITE_PRIMARY },
   { path: '/ko/learners', lang: 'ko', cta: SITE_PRIMARY },
@@ -54,18 +52,18 @@ const PAGES: readonly LandingPage[] = [
     (['en', 'es', 'ko'] as const).map((lang) => ({ path: lang === 'en' ? `/${page}` : `/${lang}/${page}`, lang, cta: SITE_PRIMARY })),
   ),
   { path: '/about', lang: 'en', cta: BACK_HOME },
-  { path: '/es', lang: 'es', cta: PLAY_NOW },
-  { path: '/ko', lang: 'ko', cta: PLAY_NOW },
+  { path: '/es', lang: 'es', cta: SITE_PRIMARY },
+  { path: '/ko', lang: 'ko', cta: SITE_PRIMARY },
   { path: '/es/about', lang: 'es', cta: BACK_HOME },
   { path: '/ko/about', lang: 'ko', cta: BACK_HOME },
 ];
 
 /**
- * The learner app's origin as this export links to it (`NEXT_PUBLIC_APP_URL` at build time), read off "Play now", or
- * off the layered site's header Start learning (F-SITE-002 §3.2), which links to the same app.
+ * The learner app's origin as this export links to it (`NEXT_PUBLIC_APP_URL` at build time), read off the site
+ * header's Start learning (F-SITE-002 §3.2). The legal pages have none; they link to no app page.
  */
 async function appOrigin(page: Page): Promise<string | null> {
-  const play = (await PLAY_NOW(page).count()) > 0 ? PLAY_NOW(page) : page.locator('header a.hr-site-header-start');
+  const play = page.locator('header a.hr-site-header-start');
   if ((await play.count()) === 0) return null;
   const href = await play.first().getAttribute('href');
   try {
