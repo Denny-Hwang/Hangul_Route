@@ -395,8 +395,8 @@ export interface ReportSpaceRef {
 
 /**
  * The back link (section 3.1): `from=home` to the parent home; `from=roster` to the space's roster; `from=nav` or none
- * to the persona home, which is the space's roster until RP-7c (F-APP-001 A-5b) gives a family its parent home; the
- * console home when the space is not known (a failed load).
+ * to the persona home: the parent home for a family (RP-7c), the roster for a class; the console home when the space
+ * is not known (a failed load), the parent home on a family page.
  */
 export function reportBackLink(
   from: ReportFrom | null,
@@ -406,9 +406,12 @@ export function reportBackLink(
   pageKind?: 'family',
 ): ReportLink {
   const back = getMessages(locale).report.back;
-  // The parent home (F-APP-001 section 3.8, the app's route table): only RP-7c's parent home card sends `from=home`.
+  // The parent home (F-APP-001 section 3.8, the app's route table): the parent home card sends `from=home`.
   if (from === 'home') return { href: APP_ROUTES.parentHome, text: back.home };
   if (space === null) return { href: pageKind === 'family' ? APP_ROUTES.parentHome : ROUTES.home, text: back.home };
+  // From the navigation or with no `from`: the persona home, which is the parent home for a family (RP-7c) and the
+  // roster for a class. From the roster: back to the roster.
+  if (from !== 'roster' && space.kind === 'family') return { href: APP_ROUTES.parentHome, text: back.home };
   return { href: ROUTES.space(space.id, space.kind), text: back.space(space.name) };
 }
 
