@@ -301,3 +301,87 @@ test.describe('the Route tab and its route card (LR-10)', () => {
     await shot(page, 'my-route-not-open-and-later-320');
   });
 });
+
+/**
+ * The Home strip entry (F-ROUTE-001 R-10; R-4b, section 3.1 entry 2, OD-3; amendment LR-A6 and section 5.2): with
+ * the flag on, Home shows one tappable Learning Route card where the "Stage 1 progress" bar was, read as one button,
+ * and a tap opens the Route tab. The page then sends `route_map.viewed` with `source: 'tab'`: since LR-4 every
+ * entry of the active learner opens the tab, and the tab sends `'tab'` on each focus (amendment section 5.1, LR-A7);
+ * the R-10 row's older `source: 'home'` named the root-stack page the strip opened before LR-4.
+ *
+ * The telemetry case needs a build with an API address, so `track` posts (the route below answers it; nothing
+ * leaves the machine):
+ *
+ *   EXPO_PUBLIC_MY_ROUTE_ENABLED=true EXPO_PUBLIC_API_BASE_URL=https://api.e2e.invalid pnpm --filter @hangul-route/mobile build:web
+ *   E2E_MY_ROUTE=1 E2E_TELEMETRY=1 pnpm --filter @hangul-route/mobile exec playwright test my-route -g "Home strip"
+ */
+const TELEMETRY_BUILD = process.env.E2E_TELEMETRY === '1';
+
+test.describe('the Home strip entry (R-10)', () => {
+  test.skip(!ROUTE_TAB, 'needs a build made with EXPO_PUBLIC_MY_ROUTE_ENABLED=true (E2E_MY_ROUTE=1)');
+  test.use({ serviceWorkers: 'block' });
+
+  for (const size of [
+    { width: 320, height: 568 },
+    { width: 844, height: 390 },
+  ] as const) {
+    test(`${size.width} x ${size.height}: the strip in place of "Stage 1 progress", one button with one label, no side scroll`, async ({ page }) => {
+      await page.setViewportSize(size);
+      await learnerOnHome(page);
+
+      const strip = page.getByTestId('home-route-strip');
+      await strip.scrollIntoViewIfNeeded();
+      await expect(strip).toBeVisible();
+      await expect(page.getByText(en.learner.home.progress.heading, { exact: true })).toHaveCount(0);
+      // Its words: the page name and where the learner is (a new learner: Stage 1), Hoya's goal for Stage 1.
+      // The here line is `hero.here` for Stage 1 with the stage's title from the bundle.
+      const here = new RegExp(`^${escapeRe(m.hero.here(1, '<t>')).replace('<t>', '[^.]+')}$`);
+      await expect(strip.getByText(m.home.strip.title, { exact: true })).toBeVisible();
+      await expect(strip.getByText(here)).toBeVisible();
+      await expect(strip.getByText(m.home.strip.stages, { exact: true })).toBeVisible();
+
+      // One button: the whole card, named by one label that starts with the page name and says where the learner
+      // is; nothing inside it is a second button or link, and the drawn pips are hidden from screen readers.
+      const hereText = (await strip.getByText(here).innerText()).trim();
+      await expect(page.getByRole('button', { name: new RegExp(`^${escapeRe(`${m.home.strip.title}. ${hereText}`)}`) })).toHaveCount(1);
+      expect(await strip.getAttribute('role')).toBe('button');
+      await expect(strip.getByRole('button')).toHaveCount(0);
+      await expect(strip.getByRole('link')).toHaveCount(0);
+      await expect(page.getByRole('button', { name: m.home.strip.title, exact: true })).toHaveCount(0);
+
+      expect(await noSideScroll(page)).toBe(true);
+      await shot(page, `home-route-strip-${size.width}`);
+    });
+  }
+
+  test('a tap opens the Route tab: the page, its purpose line, no back button, and route_map.viewed once', async ({ page }) => {
+    const viewed: Array<Record<string, unknown>> = [];
+    await page.route('**/api/telemetry', async (route) => {
+      const body = route.request().postDataJSON() as { name?: string; payload?: Record<string, unknown> } | null;
+      if (body?.name === 'route_map.viewed' && body.payload) viewed.push(body.payload);
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' });
+    });
+    await page.setViewportSize({ width: 320, height: 568 });
+    await learnerOnHome(page);
+
+    const strip = page.getByTestId('home-route-strip');
+    await strip.scrollIntoViewIfNeeded();
+    await strip.click();
+    const screen = page.getByTestId('my-route-screen');
+    await expect(screen).toBeVisible();
+    await expect(screen.getByText(m.purpose, { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: en.a11y.goBack, exact: true })).toHaveCount(0);
+    await expect(page.getByRole('tablist').getByRole('link')).toHaveCount(4);
+    await expect(page.getByTestId('home-route-strip')).toBeHidden();
+    await shot(page, 'home-route-strip-opens-route-320');
+
+    if (TELEMETRY_BUILD) {
+      await expect.poll(() => viewed.length).toBe(1);
+      expect(viewed[0]).toMatchObject({ source: 'tab', stage: 'stage1' });
+    }
+  });
+});
+
+function escapeRe(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
