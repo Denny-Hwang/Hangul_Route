@@ -1192,6 +1192,12 @@ export const consoleMsgs = {
     noFamily: { title: "You don't have a family space yet.", setUp: 'Set up my family', goTeacher: 'Go to Classes' },
     /** The quiet cross-link at the bottom: set up a class, or switch to it. */
     cross: { addClass: 'Also teach a class? Set up a class', toTeacher: 'Your classes are under Teacher' },
+    /** The name of a family's side column of actions, apart from the family's own section (its heading). */
+    actionsFor: (family: string) => `Actions for ${family}`,
+    /** A caregiver who is not the owner: only the owner makes a family code (the API sends it with `space.manage`). */
+    askOwner: 'Ask the family owner for a family code.',
+    /** The clipboard refused: the code is still on screen. */
+    copyFailed: "Couldn't copy. The code is on the screen.",
   },
   /**
    * The journey strip on a roster card (F-ROUTE-001 section 3.12, R-9a; Appendix B

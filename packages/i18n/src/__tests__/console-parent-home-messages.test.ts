@@ -33,6 +33,12 @@ describe('console.parentHome (the family home)', () => {
     expect(p.cross).toEqual({ addClass: 'Also teach a class? Set up a class', toTeacher: 'Your classes are under Teacher' });
   });
 
+  it('names the actions column, asks a caregiver to get the code from the owner, and words a failed copy (A-5b review)', () => {
+    expect(p.actionsFor('Kim family')).toBe('Actions for Kim family');
+    expect(p.askOwner).toBe('Ask the family owner for a family code.');
+    expect(p.copyFailed).toBe("Couldn't copy. The code is on the screen.");
+  });
+
   it('drops the /parent demo words with the demo (OD-4)', () => {
     expect((en.console as Record<string, unknown>).parent).toBeUndefined();
   });

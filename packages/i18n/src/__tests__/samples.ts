@@ -330,6 +330,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.school.footer': [['School settings']],
   'console.parentHome.minutes7d': [[0], [1], [42]],
   'console.parentHome.empty.line': [['Profile', 'Classes & family', 'Join a class']],
+  'console.parentHome.actionsFor': [['Kim family']],
   'learner.vocab.speed.nudge.right.named': [['apple']],
   'learner.vocab.speed.nudge.miss.first': [['apple']],
   'learner.vocab.speed.nudge.miss.second': [['apple']],
