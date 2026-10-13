@@ -1603,5 +1603,107 @@ export const learner = {
         nothingThisWeek: 'Nothing is planned this week. Play anything you like.',
       },
     },
+    /**
+     * P2-7b: **Change the plan** (wireframe G1, four steps with large chips), the preview of the new
+     * plan (G2) and the overview "Your weekly plan" (G3). The level is never named ("We found a path
+     * for you"); a learner never sees the Premium notice. Moving a plan along is calm: no counts.
+     */
+    setup: {
+      title: 'Change the plan',
+      stepOf: (step: number, total: number) => `Step ${step} of ${total}`,
+      start: {
+        title: 'Where do you start?',
+        cards: {
+          'brand-new': 'Brand new',
+          'some-letters': 'Knows some letters',
+          'all-letters': 'Knows all the letters',
+          'reads-words': 'Reads words',
+          'first-words': 'Reads first words',
+          'first-sentences': 'Reads first sentences',
+        },
+        othersFirst: 'You have a plan from your class or family too. You can add your own. Theirs comes first.',
+      },
+      time: { title: 'How much time?' },
+      length: { title: 'How long?' },
+      likes: {
+        title: 'What do you like?',
+        focusTitle: 'What do you want most?',
+        focus: { balanced: 'A bit of everything', reading: 'Read Hangul', words: 'First words', culture: 'Culture and stories' },
+        themesTitle: 'Themes to start with',
+        themesHint: 'Tap them in order. Up to 5.',
+        themeNames: { letters: 'Letters', life: 'Food and daily life', rites: 'Holidays', nature: 'Nature', crafts: 'Play and crafts' },
+        themeChosen: (n: number, theme: string) => `${n}. ${theme}`,
+      },
+      tooMany: 'That is more than a plan can hold. Choose fewer weeks or days.',
+      next: { cta: 'Next' },
+      back: { cta: 'Back' },
+      see: { cta: 'See my plan' },
+    },
+    planPreview: {
+      title: 'Your new plan',
+      stats: (items: number, minutes: number) =>
+        `${plural('en', items, { one: '1 lesson or story', other: `${items} lessons and stories` })}, about ${minutes} minutes`,
+      week: (n: number) => `Week ${n}`,
+      kind: { learn: 'Learn', culture: 'Culture', review: 'Review and collect', break: 'Days off' },
+      cultureWeek: (story: string) => `Culture week: ${story}`,
+      weekEmpty: 'Free practice. Play anything you like.',
+      later: (weeks: number) => plural('en', weeks, { one: '1 more week', other: `${weeks} more weeks` }),
+      showLater: { cta: 'Show the next weeks' },
+      hideLater: { cta: 'Hide the next weeks' },
+      extras: { vocab: (topic: string) => `Words you can try: ${topic}`, wordsOptional: 'You can skip it.', hangulCheck: 'Hangul Check' },
+      notices: {
+        contentRunsOut: (week: number) => `New lessons are on the way. From week ${week} you get free practice and word topics.`,
+        moreComing: 'More lessons are coming.',
+        didNotFit: (count: number) =>
+          plural('en', count, { one: '1 lesson or story did not fit. Add a week or a day for it.', other: `${count} lessons and stories did not fit. Add a week or a day for them.` }),
+        tooShort: (count: number) =>
+          plural('en', count, { one: '1 lesson may take more than one day.', other: `${count} lessons may take more than one day.` }),
+        alreadyKnown: (count: number) =>
+          plural('en', count, { one: 'You know 1 lesson already, so it is not in the plan.', other: `You know ${count} lessons already, so they are not in the plan.` }),
+      },
+      empty: 'Nothing is ready for this start yet. Change something to try another one.',
+      start: { cta: 'Start this plan' },
+      starting: { cta: 'Starting...' },
+      change: { cta: 'Change something' },
+      saveFailed: 'That did not work. Try again.',
+    },
+    overview: {
+      title: 'Your weekly plan',
+      intro: 'We found a path for you.',
+      thisWeek: 'This week',
+      firstWeek: 'Your first week',
+      startsOn: (date: string) => `Your plan starts on ${date}.`,
+      nothingThisWeek: 'Nothing is planned this week. Play anything you like.',
+      nextWeeks: 'Next weeks',
+      finished: 'You came to the end of your plan. Well done!',
+      newPlan: { cta: 'Make a new plan' },
+      moved: 'Hoya moved your plan along.',
+      newLessons: 'New lessons are here. Move your plan along to add them.',
+      moveAlong: { cta: 'Move my plan along' },
+      movedDone: 'Your plan moved along. It starts again from today.',
+      change: { cta: 'Change the plan' },
+      stop: { cta: 'Stop this plan' },
+      stopConfirm: {
+        line: 'Stop this plan? Everything you finished stays yours.',
+        yes: { cta: 'Yes, stop it' },
+        no: { cta: 'Keep my plan' },
+      },
+      none: 'You have no weekly plan right now.',
+      make: { cta: 'Make a weekly plan' },
+      back: { cta: 'Back' },
+    },
+    /** The Hoya check-in at the start of week 5 (FP-B14): positive, once, never names a session. */
+    checkIn: {
+      lighter: { line: 'Want a lighter week?', detail: (days: number) => plural('en', days, { one: 'Gentle: 1 day a week.', other: `Gentle: ${days} days a week.` }), yes: { cta: 'Yes, lighter' } },
+      faster: {
+        line: 'Want to go a bit faster?',
+        detail: (pace: string, days: number) => plural('en', days, { one: `${pace}: 1 day a week.`, other: `${pace}: ${days} days a week.` }),
+        yes: { cta: 'Yes, a bit faster' },
+      },
+      notNow: { cta: 'Not now' },
+      done: (days: number) => plural('en', days, { one: 'Your plan now has 1 day a week.', other: `Your plan now has ${days} days a week.` }),
+    },
+    /** Home's calm line after an automatic re-pace (section 3.7). */
+    homeMoved: { line: 'Hoya moved your plan along.', open: { cta: 'See my plan' } },
   },
 } as const;
