@@ -101,3 +101,13 @@ describe('the three entries', () => {
     expect(item.indexOf('{action === undefined ? null :')).toBeGreaterThan(item.indexOf('</Pressable>'));
   });
 });
+
+/** BR-12b (section 4.3 step 3): the `gate=browse` boot intent in the learner app; its decisions are `boot-intent.test.ts`. */
+describe('the gate=browse intent in the learner app', () => {
+  const hook = read('navigation/boot-intent.tsx');
+
+  it('the boot hook reads the gate fresh and hands over through the same hand-off, passing its result on', () => {
+    expect(code(hook)).toMatch(/opensDirectly: \(\) => gateOpensDirectlyNow\(\)/);
+    expect(code(hook)).toMatch(/open: \(\) => openBrowseFromGate\(\)/);
+  });
+});

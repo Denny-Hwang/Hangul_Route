@@ -4,6 +4,7 @@ import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'rea
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NOW } from '@/lib/console/__tests__/fixtures/report';
 import { CLASS_REPORT } from '@/lib/console/__tests__/fixtures/class-report';
+import Page from '@/app/(console)/teach/space/report/page';
 
 /**
  * F-REPORT-001 RP-8: the class report page `/teach/space/report?id=&period=&at=` and the class chooser without an id.
@@ -105,7 +106,6 @@ function textOf(node: ReactTestInstance | string): string {
 }
 
 async function page(): Promise<ReactTestInstance> {
-  const { default: Page } = await import('@/app/(console)/teach/space/report/page');
   await act(async () => {
     mounted = create(<Page />);
   });
@@ -116,7 +116,6 @@ async function page(): Promise<ReactTestInstance> {
 async function follow(): Promise<void> {
   const to = nav.pushed[nav.pushed.length - 1] ?? '';
   nav.query = to.slice(to.indexOf('?') + 1);
-  const { default: Page } = await import('@/app/(console)/teach/space/report/page');
   await act(async () => {
     mounted?.update(<Page />);
   });
@@ -129,7 +128,7 @@ const tabs = (root: ReactTestInstance): ReactTestInstance[] => root.findAll((n) 
 
 describe('the class report page (RP-8)', () => {
   it('reports off: not available yet, no request', async () => {
-    vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', '');
+    vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'false');
     const root = await page();
     expect(classCalls()).toEqual([]);
     expect(h1s(root)).toEqual([en.report.state.flagOff]);

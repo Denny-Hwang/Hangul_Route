@@ -23,7 +23,9 @@ It shows **no lesson, title or card**. It is the root's only screen when no pass
 | account (an expired account pass, or `lastPersona` set) | Open lessons again from your account. | Open lessons from my account → `/parent` or `/teach/home` | Sign in → `APP_ROUTES.signIn` |
 | unknown | On a family device, open them from the grown-up area. Parents and teachers can also open them from their account. | Back to the grown-up area → `/?gate=browse` | Sign in |
 
-**Until BR-12b ships** (no `gate=browse` boot intent):
+**Shipped with BR-12b**: the table above is the live form (`GATE_BROWSE_INTENT_SHIPPED` is on). The form below was the one before BR-12b; `accessView` still builds it for `gateIntent: false` (a build without the intent).
+
+**Before BR-12b** (no `gate=browse` boot intent):
 - **gate**: the line gains "Go back to the app, then open the grown-up area again." (spec §4.3, amended: the old "Then open…" had no step before it) and the only button is [[ Back to the app ]].
 - **unknown**: the primary becomes [[ Back to the app ]] and Sign in stays as the secondary. The line is the spec's line unchanged: it already says to open lessons from the grown-up area, and "again" would be wrong for a visitor who was never there.
 

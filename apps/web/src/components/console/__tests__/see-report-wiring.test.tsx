@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { SpaceRole } from '@hangul-route/content-schema';
+import Page from '@/app/(console)/teach/space/page';
 
 /**
  * F-REPORT-001 RP-7a2 (section 3.1): each student card on the roster gains **See report**, the learner's week report
@@ -137,7 +138,6 @@ function textOf(node: ReactTestInstance | string): string {
 }
 
 async function roster(): Promise<ReactTestInstance> {
-  const { default: Page } = await import('@/app/(console)/teach/space/page');
   await act(async () => {
     mounted = create(<Page />);
   });
@@ -148,7 +148,13 @@ async function roster(): Promise<ReactTestInstance> {
 const seeReport = (root: ReactTestInstance): ReactTestInstance[] => root.findAll((n) => n.type === 'a' && textOf(n) === report.action.seeReport);
 
 describe('the roster card See report (RP-7a2)', () => {
-  it('reports off (the default): no See report link', async () => {
+  it('reports on by default (RP-11): the See report link with no build value', async () => {
+    vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', undefined);
+    expect(seeReport(await roster())).toHaveLength(1);
+  });
+
+  it('reports switched off: no See report link', async () => {
+    vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'false');
     const root = await roster();
     expect(seeReport(root)).toHaveLength(0);
   });
@@ -186,6 +192,7 @@ describe('the roll-up Class report link (RP-8)', () => {
   });
 
   it('none with reports off, and none for a family (siblings are never compared)', async () => {
+    vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'false');
     let root = await roster();
     expect(classLink(root)).toHaveLength(0);
     act(() => mounted?.unmount());

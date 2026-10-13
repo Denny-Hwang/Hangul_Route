@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LEGACY, NOW, STEADY, response } from '@/lib/console/__tests__/fixtures/report';
+import Page from '@/app/(console)/teach/space/learner/page';
 
 /**
  * F-REPORT-001 RP-7a2: the learner report page `/teach/space/learner?id=&learner=&period=`. It loads the learner route
@@ -105,7 +106,6 @@ function textOf(node: ReactTestInstance | string): string {
 }
 
 async function page(): Promise<ReactTestInstance> {
-  const { default: Page } = await import('@/app/(console)/teach/space/learner/page');
   await act(async () => {
     mounted = create(<Page />);
   });
@@ -117,7 +117,6 @@ async function page(): Promise<ReactTestInstance> {
 async function follow(): Promise<void> {
   const to = nav.pushed[nav.pushed.length - 1] ?? '';
   nav.query = to.slice(to.indexOf('?') + 1);
-  const { default: Page } = await import('@/app/(console)/teach/space/learner/page');
   await act(async () => {
     mounted?.update(<Page />);
   });
@@ -127,9 +126,9 @@ const byTestId = (root: ReactTestInstance, id: string): ReactTestInstance[] => r
 const h1s = (root: ReactTestInstance): string[] => root.findAll((n) => n.type === 'h1').map(textOf);
 const reportCalls = (): unknown[][] => calls.filter((c) => c.name === 'getLearnerReport').map((c) => c.args);
 
-describe('the reports switch (reportsEnabled, default off)', () => {
+describe('the reports switch (reportsEnabled, on by default since RP-11, "false" switches it off)', () => {
   it('off: "Reports are not available yet." as the h1 with the back link, and no request', async () => {
-    vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', '');
+    vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'false');
     const root = await page();
     expect(reportCalls()).toEqual([]);
     expect(h1s(root)).toEqual([en.report.state.flagOff]);
@@ -377,7 +376,7 @@ describe('states (section 3.14)', () => {
 
   it('the /parent/space/learner twin goes back to the parent console home when no space is known', async () => {
     vi.stubGlobal('window', { location: { pathname: '/parent/space/learner', search: `?${START}` }, print: () => undefined });
-    vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', '');
+    vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'false');
     const root = await page();
     expect(h1s(root)).toEqual([en.report.state.flagOff]);
     expect(byTestId(root, 'report-back')[0]?.props.href).toBe('/parent');

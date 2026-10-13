@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { FamilyNotePrefs, NoteBlock, NoteSender, NotesFailure, OversightNote, SentNoteRow } from '@/lib/console/notes';
+import Page from '@/app/(console)/teach/space/notes/page';
 
 /**
  * F-FEEDBACK-001 FB-12 (sections 6.10 item 5, 7.2, 7.7, 8.2 to 8.5; wireframe console/family-notes.md; screen spec
@@ -155,7 +156,6 @@ function textOf(node: ReactTestInstance | string): string {
 
 async function page(query: string): Promise<ReactTestInstance> {
   nav.query = query;
-  const { default: Page } = await import('@/app/(console)/teach/space/notes/page');
   await act(async () => {
     mounted = create(<Page />);
   });

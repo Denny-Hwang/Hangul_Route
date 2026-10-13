@@ -4,6 +4,8 @@ import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { meta as curriculumMeta } from '@/lib/console/__tests__/fixtures/learning-route';
+import Page from '@/app/(console)/teach/space/route/page';
+import { GrownUpLocationContext } from '@/components/console/grown-up-location';
 
 /**
  * Learning Route LR-8 (amendment section 6.1): the stage list page `/teach/space/route?id=&learner=`.
@@ -140,8 +142,6 @@ function textOf(node: ReactTestInstance | string): string {
 }
 
 async function page(pathname?: string): Promise<ReactTestInstance> {
-  const { default: Page } = await import('@/app/(console)/teach/space/route/page');
-  const { GrownUpLocationContext } = await import('@/components/console/grown-up-location');
   await act(async () => {
     mounted = create(
       pathname ? (
@@ -275,7 +275,6 @@ describe('the Learning Route page, switched on', () => {
     // The address changes to another space before the first roster answers.
     nav.query = 'id=space%3Ac2&learner=l%3A1';
     responses.roster = () => ok({ ...roster(), learners: [{ ...LEARNER, displayName: 'Jun' }] });
-    const { default: Page } = await import('@/app/(console)/teach/space/route/page');
     await act(async () => {
       mounted?.update(<Page />);
     });

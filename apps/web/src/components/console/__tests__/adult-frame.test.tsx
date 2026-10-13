@@ -4,6 +4,7 @@ import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'rea
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SpaceListItem } from '@/lib/console/api';
 import type { DeviceGateRead } from '@/lib/console/grown-up-lock';
+import { resetBrowseScopeCache } from '@/lib/console/browse-link';
 
 /**
  * F-APP-001 A-5a, sections 3.8 and 3.16 (design/screens/app-shell/adult-frame.md): the adult frame
@@ -110,6 +111,8 @@ beforeEach(() => {
   locales.available = ['en'];
   resetFrameMemory();
   vi.unstubAllEnvs();
+  // Reports are on by default since F-REPORT-001 RP-11; these cases start from every sibling flag off and switch on what they need.
+  vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'false');
 });
 afterEach(() => {
   act(() => mounted?.unmount());
@@ -457,7 +460,6 @@ describe('Lessons opens All lessons in the same tab with the pass (F-BROWSE-001 
   };
 
   beforeEach(async () => {
-    const { resetBrowseScopeCache } = await import('@/lib/console/browse-link');
     resetBrowseScopeCache();
     vi.stubEnv('NEXT_PUBLIC_BROWSE', 'enabled');
   });

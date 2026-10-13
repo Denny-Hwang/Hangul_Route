@@ -20,7 +20,7 @@ import {
 } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, formatDate, formatMinorAmount, formatUsd, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { CONTACT_EMAIL } from '../../data/contact';
-import { SITE_CLAIMS, type SiteClaims } from '../../data/site-claims';
+import { SITE_CLAIMS, claimLiveIn, type SiteClaims } from '../../data/site-claims';
 import { planPrice, planTitle, promoPriceLine } from './billing';
 
 /**
@@ -168,9 +168,9 @@ export function includesLines(planKey: PurchasablePlanKey, kind: SpaceKind, loca
       family.everyLesson,
       family.learners(FAMILY_LIFETIME_LEARNERS),
       family.cloudSave,
-      ...(claims.browseAsLearner ? [family.browse] : []),
-      ...(claims.parentReports ? [family.reports] : []),
-      ...(claims.feedbackNotes ? [family.notes] : []),
+      ...(claimLiveIn(claims, 'browseAsLearner', locale) ? [family.browse] : []),
+      ...(claimLiveIn(claims, 'parentReports', locale) ? [family.reports] : []),
+      ...(claimLiveIn(claims, 'feedbackNotes', locale) ? [family.notes] : []),
     ];
   }
   const license = lines.license;
@@ -178,9 +178,9 @@ export function includesLines(planKey: PurchasablePlanKey, kind: SpaceKind, loca
     license.everyStudent,
     license.noCap(FREE_CLASS_STUDENT_CAP),
     ...(kind === 'school' ? [license.school(SCHOOL_LICENSE_TEACHERS, SCHOOL_LICENSE_STUDENTS)] : []),
-    ...(claims.browseAsLearner ? [license.browse] : []),
-    ...(claims.teacherReports ? [license.reports] : []),
-    ...(claims.feedbackNotes ? [license.notes] : []),
+    ...(claimLiveIn(claims, 'browseAsLearner', locale) ? [license.browse] : []),
+    ...(claimLiveIn(claims, 'teacherReports', locale) ? [license.reports] : []),
+    ...(claimLiveIn(claims, 'feedbackNotes', locale) ? [license.notes] : []),
   ];
 }
 

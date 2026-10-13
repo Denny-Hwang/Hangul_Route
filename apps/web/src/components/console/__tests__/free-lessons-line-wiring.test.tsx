@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { SpaceRole } from '@hangul-route/content-schema';
+import Page from '@/app/(console)/teach/space/page';
 
 /**
  * F-ENT-003 E3-12, the roster page's wiring (review 2026-10-12): with the console's free-plan
@@ -136,7 +137,6 @@ function textOf(node: ReactTestInstance | string): string {
 }
 
 async function roster(): Promise<ReactTestInstance> {
-  const { default: Page } = await import('@/app/(console)/teach/space/page');
   await act(async () => {
     mounted = create(<Page />);
   });

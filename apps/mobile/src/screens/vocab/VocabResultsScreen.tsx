@@ -138,7 +138,7 @@ export function VocabResultsScreen({ route, navigation }: Props): React.ReactEle
           tone={view.playAgainPrimary || !practice ? 'primary' : 'secondary'}
           size="lg"
           fullWidth
-          onPress={() => navigation.replace('VocabSpeedRound', { topicKey })}
+          onPress={() => navigation.replace('VocabSpeedRound', { topicKey, mode: summary.mode })}
           testID="vocab-results-play-again"
         />
         <Button label={copy.results.backToTopic} tone="ghost" size="md" fullWidth onPress={toTopic} testID="vocab-results-back" />
