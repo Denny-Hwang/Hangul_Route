@@ -21,6 +21,11 @@ type Props = {
   /** Opens Sources over the reader; the learner default is the `StorySources` route. */
   onOpenSources?: (params: SourcesRouteParams) => void;
   /**
+   * Done on the end page; the learner default leaves as Close does. All lessons shows its preview end
+   * screen instead (F-BROWSE-001 section 4.8).
+   */
+  onDone?: () => void;
+  /**
    * The note card's "More in Culture notes" (F-STORY-004 PR 4.7); the learner default pushes
    * `CultureNotes { noteId }`. `null`, or no learner stack, draws no button.
    */
@@ -39,7 +44,7 @@ const NOTHING = (): void => undefined;
  * 3.3.2: a time-only session that never moves the streak).
  * Sources (top bar and end page, PR 2.7) opens `StorySources` on top of it.
  */
-export function StoryReaderScreen({ route, navigation, onOpenSources, onOpenCultureNote, ...exitProps }: Props): React.ReactElement {
+export function StoryReaderScreen({ route, navigation, onOpenSources, onOpenCultureNote, onDone, ...exitProps }: Props): React.ReactElement {
   const { storyId, level, sceneIndex } = route.params;
   const locale = useLocale();
   // The story in the UI language, with the voice of the narration shown in each scene (PR 2.8).
@@ -87,7 +92,7 @@ export function StoryReaderScreen({ route, navigation, onOpenSources, onOpenCult
       initialIndex={sceneIndex ?? 0}
       onSceneChange={NOTHING}
       onAnswer={NOTHING}
-      onFinish={leave}
+      onFinish={onDone ?? leave}
       onClose={leave}
       onOpenSources={openSources}
       onOpenCultureNote={openCultureNote}
