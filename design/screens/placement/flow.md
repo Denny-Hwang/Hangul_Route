@@ -47,7 +47,7 @@ Screenshots: `HR_SHOTS=1 STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exe
 - The pause sheet is a modal that hides while the PIN gate is on top ("For grown-ups: finish now") and shows again on return. It scrolls inside the window, drops Hoya below 400 pt of height (phone in landscape), keeps the bottom safe-area inset and stays at reading width on wide windows.
 - "Try it with the sound guide hidden" starts the retake at once (warm-up, or the hand-off for Pictures first) and keeps the last check's language.
 - The web cannot tell whether a screen reader is on (react-native-web always answers yes), so the web reads it as off; every control is still labelled. C2 has an **I use a screen reader** switch (on when the device reports one) that drives auto-play, *Take my time* and the visual rung; a screen reader turned on or off during the check is followed for auto-play and the speaker labels.
-- The weekly-plan strip (P-7b) and the placement report (P-8) are not part of these frames; "For grown-ups" opens the grown-up zone until P-8.
+- The weekly-plan strip and the report's plan card arrived with P-7b (below); "For grown-ups" opens the placement report (P-8).
 
 ## Entry points and the Journey look as built (F-PLC-001 P-7)
 
@@ -65,3 +65,25 @@ Journey (I): a dashed light outline and a small check-in-circle in the stage col
 - The fork has no back (the profile exists). Its two choices are the same size and weight, each with an icon (play; ear) and one line; neither is pre-selected. The question is spoken on open (not with a screen reader on) and on the small speaker beside it. One line below says it takes a few minutes and can be stopped.
 - Home: the card shows when no result is stored, fewer than three quests are complete and **Not now** was not tapped; it reads **Continue the level check** while a saved run can be resumed. **Not now** fires `placement.skipped { source: 'home' }`; the Profile row stays available. In two columns the card sits under the mission cards in the left column.
 - Journey: the pin marks where the route started (the effective route computed without completions, the same anchor as My route's "You started here"), so it does not move as quests are finished; a grown-up override or a higher retake moves it. The completed tint wins over the placed-out look. The explainer card gains one sentence about the pin and the outline once a result is stored. Each marked cell says so to a screen reader.
+
+## The weekly plan after the check as built (F-PLC-001 P-7b)
+
+Wireframes `journey/my-route-overview.md` J1, J3, K2, K3 (promoted into `placement/result.md` and `placement/report.md`). Code: `screens/placement/PlanParts.tsx` (pace chips, strip, update card), `screens/placement/ResultScreen.tsx`, `screens/parent/SuggestedPlanCard.tsx`; logic in `logic/placement/plan-offer.ts` and `store/plan-offer-store.ts`. Everything here is hidden while `flags.routeEnabled` is off. Screenshots: `E2E_ROUTE=1 STORY_FIXTURES=1 HR_SHOTS=1 ... playwright test placement-plan` on a fixture bundle exported with `EXPO_PUBLIC_ROUTE_ENABLED=true` (`placement-plan-strip*.png`, `placement-report-plan-*.png`).
+
+```
+Result (self, no plan)       headline, level, (not-tested line + Try it with the sound guide hidden), map, route cards
+                             [ Hoya made a weekly plan for you | 12 weeks, 3 days a week, about 15 minutes a day |
+                               (Gentle) (Steady, selected) (Brisk) | [[ Use this plan ]] | [ Change ] ]
+                             [ Just start ]   See the whole map / See Learning Route   For grown-ups
+Result (self, plan, later start)   [ Hoya found a later place to start. | Your weekly plan can move ahead ... |
+                                     [[ Update my plan ]] | [ Keep my plan ] ]
+Result (child)               [[ Start ]] pinned; link For grown-ups: set up a weekly plan
+Report (any profile)         first card: Suggested weekly plan for <name> | Based on: <stage> · <band>, n days a week, m minutes |
+                             Pace chips | Length 4 weeks / 12 weeks / 6 months (Suggested) | Good to know (plain warnings) |
+                             [[ Use this plan ]] [ Change ] [ Not now ];  after a later check: [[ Update the plan ]]
+```
+
+- **Use this plan** makes the plan with one tap and no PIN on a self profile (OD-14), then opens the start quest; the pace chip changes the length, days and minutes shown, and the plan is exactly what is shown.
+- With the strip or the update card the one primary sits inside the card and nothing is pinned at the bottom; **Just start** and **Change** are ghost buttons. **Keep my plan** folds the card into "Your plan stays right where it is." and a pinned **Start**.
+- **Change** opens the proposal screen on top; once a plan exists there, the strip gives way to **Start** on return.
+- The report card's warnings never name a price, a plan or a product; a stage the account does not include reads "not included with this account yet".
