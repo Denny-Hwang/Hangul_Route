@@ -17,6 +17,7 @@ import { episodesAll } from '../../content/episodes';
 import { setProgressPersistListener } from '../../logic/sync/persist-hook';
 import { readJson, writeJson } from '../../platform/storage';
 import { placementResult } from '../../logic/placement/__tests__/fixtures';
+import { selfRoute } from '../../logic/homework/__tests__/curriculum-fixture';
 import { track } from '../../platform/telemetry';
 import { useProfileStore } from '../profile-store';
 import { notifyProfileRemoved } from '../profile-removal';
@@ -1586,6 +1587,51 @@ describe('recordReview (F-QUEST-002 §3.9)', () => {
   it('never stores an entry the schema refuses', () => {
     const bad = { ...entry('2026-10-12T09:00:00.000Z', 2), kind: 'quiz' } as unknown as Parameters<ReturnType<typeof useProgressStore.getState>['recordReview']>[1];
     expect(useProgressStore.getState().recordReview('p1', bad)).toBe(false);
+    expect(useProgressStore.getState().byProfile['p1']).toBeUndefined();
+    expect(notified).toEqual([]);
+  });
+});
+
+describe('setSelfRoute (F-PLAN-002 section 3.9)', () => {
+  const notified: string[] = [];
+
+  beforeEach(() => {
+    resetStore();
+    notified.length = 0;
+    setProgressPersistListener((id) => notified.push(id));
+  });
+
+  afterEach(() => {
+    setProgressPersistListener(null);
+  });
+
+  it('stores the route in the snapshot, saves it and tells sync', async () => {
+    mem.set('progress:p1', savedSnapshot());
+    await useProgressStore.getState().hydrate('p1');
+    const route = selfRoute({ id: 'route:abc-0001' });
+    expect(useProgressStore.getState().setSelfRoute('p1', route)).toBe(true);
+    expect(useProgressStore.getState().byProfile['p1']?.selfRoute).toEqual(route);
+    expect(stored()?.selfRoute).toEqual(route);
+    expect(notified).toEqual(['p1']);
+  });
+
+  it('replaces an archived route with a new one and keeps the rest of the snapshot', async () => {
+    mem.set('progress:p1', { ...savedSnapshot(), selfRoute: selfRoute({ archivedAt: '2026-10-01T00:00:00.000Z' }) });
+    await useProgressStore.getState().hydrate('p1');
+    const before = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    const route = selfRoute({ id: 'route:new-0001', createdAt: '2026-10-12T00:00:00.000Z', updatedAt: '2026-10-12T00:00:00.000Z' });
+    useProgressStore.getState().setSelfRoute('p1', route);
+    const after = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    expect(after.selfRoute?.id).toBe('route:new-0001');
+    // The only other key it may add is the empty default of placements (withSnapshotDefaults).
+    expect(after.placements).toEqual([]);
+    const { selfRoute: _a, updatedAt: _b, placements: _e, ...restAfter } = after;
+    const { selfRoute: _c, updatedAt: _d, placements: _f, ...restBefore } = before;
+    expect(restAfter).toEqual(restBefore);
+  });
+
+  it('never stores a route the Worker schema would refuse', () => {
+    expect(useProgressStore.getState().setSelfRoute('p1', selfRoute({ id: 'Route:Bad' }))).toBe(false);
     expect(useProgressStore.getState().byProfile['p1']).toBeUndefined();
     expect(notified).toEqual([]);
   });

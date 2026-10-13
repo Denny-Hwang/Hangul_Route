@@ -1,4 +1,4 @@
-import { PlacementResultSchema, ReviewEntrySchema, type PlacementResult, type ProgressSnapshot, type ReviewEntry } from '@hangul-route/content-schema';
+import { PlacementResultSchema, ReviewEntrySchema, SelfRouteSchema, type PlacementResult, type ProgressSnapshot, type ReviewEntry, type SelfRoute } from '@hangul-route/content-schema';
 import { create } from 'zustand';
 import { episodesAll } from '../content/episodes';
 import { latchSnapshot } from '../logic/my-route/latch';
@@ -219,6 +219,12 @@ interface Actions {
    * whether it was.
    */
   recordReview: (profileId: string, entry: ReviewEntry) => boolean;
+  /**
+   * The learner's own weekly plan (F-PLAN-002 section 3.9): replaces `selfRoute` (a new plan, or
+   * the same plan archived) and nothing else. A route the Worker's schema would refuse is never
+   * stored; returns whether it was. Plan derivation runs separately (`usePlanStore.rederive`).
+   */
+  setSelfRoute: (profileId: string, route: SelfRoute) => boolean;
 }
 
 function blankSnapshot(profileId: string): ProgressSnapshot {
@@ -660,6 +666,16 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     announceCatchUp(profileId, added);
     void writeJson(key(profileId), snap);
     if (snap !== snapshot) notifyProgressPersisted(profileId);
+  },
+
+  setSelfRoute: (profileId, route) => {
+    const parsed = SelfRouteSchema.safeParse(route);
+    if (!parsed.success) return false;
+    const snap = withSnapshotDefaults(get().byProfile[profileId] ?? blankSnapshot(profileId));
+    const updated: ProgressSnapshot = { ...snap, selfRoute: parsed.data, updatedAt: new Date().toISOString() };
+    set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
+    persist(profileId, updated);
+    return true;
   },
 
   recordVocab: (profileId, events, now = new Date()) => {
