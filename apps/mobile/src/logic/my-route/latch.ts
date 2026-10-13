@@ -51,3 +51,17 @@ export function latchSnapshot(snapshot: ProgressSnapshot, episodes: readonly Epi
     return snapshot;
   }
 }
+
+/**
+ * The stages whose Journey header reads "Complete" (F-QUEST-002 §3.8): latched in `stageDoneAt`
+ * (so a stage stays Complete when new quests join it), or complete now by the derived rule (an
+ * `open` stage with every grid episode complete, at any star count). A latch key that is not a
+ * stage is ignored; a `taste` stage never completes from its shipped quests alone.
+ */
+export function completeStages(
+  snapshot: Pick<ProgressSnapshot, 'quests' | 'stageDoneAt'>,
+  episodes: readonly Episode[],
+): Set<StageKey> {
+  const grid = gridEpisodesOf(episodes);
+  return new Set(StageKeySchema.options.filter((stage) => hasLatch(snapshot, stage) || isDerivedComplete(stage, grid, snapshot)));
+}

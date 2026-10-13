@@ -64,6 +64,8 @@ export type RootStackParamList = {
     /** Answers after a round's first one — telemetry only, never scored. */
     retries?: number;
   };
+  /** The Stage 1 prize ceremony (F-QUEST-002 §3.8), opened from Results on the run that completed the stage. */
+  StageComplete: { stageKey: StageKey };
   CardDetail: { cardId: string };
   /** Grown-up gate (PIN). `AddProfile` continues into Onboarding/CreateProfile. */
   PinEntry: {

@@ -188,14 +188,28 @@ interface ButtonLook {
   size: 'hero' | 'md';
 }
 
-/** With a teaser the teaser CTA is the one primary; Back home and Episode page are both ghost. */
-export function resultsActions(teaser: ResultsTeaser | undefined): {
+/**
+ * One primary button. On the run that completed Stage 1 it is See your Stage 1 prize (F-QUEST-002
+ * §3.8), whatever the cursor returns, and the teaser CTA becomes a ghost; otherwise the teaser CTA
+ * when there is one, else Back home. Back home and Episode page are ghost whenever another button
+ * leads. `null`: that button is not drawn.
+ */
+export function resultsActions(
+  teaser: ResultsTeaser | undefined,
+  stagePrize = false,
+): {
+  stagePrize: ButtonLook | null;
+  teaser: ButtonLook | null;
   backHome: ButtonLook;
   episodePage: ButtonLook;
 } {
+  const ghost: ButtonLook = { tone: 'ghost', size: 'md' };
+  const primary: ButtonLook = { tone: 'primary', size: 'hero' };
   return {
-    backHome: teaser ? { tone: 'ghost', size: 'md' } : { tone: 'primary', size: 'hero' },
-    episodePage: { tone: 'ghost', size: 'md' },
+    stagePrize: stagePrize ? primary : null,
+    teaser: teaser ? (stagePrize ? ghost : primary) : null,
+    backHome: teaser || stagePrize ? ghost : primary,
+    episodePage: ghost,
   };
 }
 

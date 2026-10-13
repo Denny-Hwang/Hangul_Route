@@ -22,12 +22,23 @@ export function stageAvailability(stage: StageKey, episodes: readonly Episode[])
   return shipped.size === cells.size ? 'open' : 'taste';
 }
 
+/**
+ * What a stage header pill says: its availability word, or "Complete" once the stage is complete
+ * (F-QUEST-002 §3.8; `completeStages` in `logic/my-route/latch.ts` decides which stages are).
+ */
+export type StagePillState = StageAvailability | 'complete';
+
+/** `complete` wins over the availability word; otherwise the pill keeps it. */
+export function stagePillState(availability: StageAvailability, complete: boolean): StagePillState {
+  return complete ? 'complete' : availability;
+}
+
 /** The pill words come from the dictionary (`learner.journey.availability`), passed in as a message subtree. */
 export function stagePillLabel(
-  availability: StageAvailability,
+  state: StagePillState,
   m: Messages['learner']['journey']['availability'],
 ): string {
-  return m[availability].pill;
+  return m[state].pill;
 }
 
 export function isEpisodeComplete(

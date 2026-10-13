@@ -215,11 +215,40 @@ describe('resultsActions: what the buttons look like', () => {
   const teaser = { questId: 'quest:q2' } as ResultsTeaser;
 
   it('keeps Back home primary and Episode page ghost with no teaser', () => {
-    expect(resultsActions(undefined)).toEqual({ backHome: { tone: 'primary', size: 'hero' }, episodePage: { tone: 'ghost', size: 'md' } });
+    expect(resultsActions(undefined)).toEqual({
+      stagePrize: null,
+      teaser: null,
+      backHome: { tone: 'primary', size: 'hero' },
+      episodePage: { tone: 'ghost', size: 'md' },
+    });
   });
 
   it('demotes Back home and Episode page to ghost under a teaser', () => {
-    expect(resultsActions(teaser)).toEqual({ backHome: { tone: 'ghost', size: 'md' }, episodePage: { tone: 'ghost', size: 'md' } });
+    expect(resultsActions(teaser)).toEqual({
+      stagePrize: null,
+      teaser: { tone: 'primary', size: 'hero' },
+      backHome: { tone: 'ghost', size: 'md' },
+      episodePage: { tone: 'ghost', size: 'md' },
+    });
+  });
+
+  it('makes See your Stage 1 prize the one primary on the run that completed Stage 1, the teaser a ghost (F-QUEST-002 section 3.8)', () => {
+    const actions = resultsActions(teaser, true);
+    expect(actions).toEqual({
+      stagePrize: { tone: 'primary', size: 'hero' },
+      teaser: { tone: 'ghost', size: 'md' },
+      backHome: { tone: 'ghost', size: 'md' },
+      episodePage: { tone: 'ghost', size: 'md' },
+    });
+  });
+
+  it('keeps the prize primary when the cursor has nothing next', () => {
+    expect(resultsActions(undefined, true)).toEqual({
+      stagePrize: { tone: 'primary', size: 'hero' },
+      teaser: null,
+      backHome: { tone: 'ghost', size: 'md' },
+      episodePage: { tone: 'ghost', size: 'md' },
+    });
   });
 });
 

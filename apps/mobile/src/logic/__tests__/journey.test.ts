@@ -9,9 +9,11 @@ import {
   isEpisodeComplete,
   stageAvailability,
   stagePillLabel,
+  stagePillState,
   themeCellInitial,
   themeColumnLabel,
 } from '../journey';
+import { completeStages } from '../my-route/latch';
 
 const ep = (
   id: string,
@@ -73,6 +75,58 @@ describe('stageAvailability', () => {
     expect(stagePillLabel('taste', m)).toBe('A taste');
     expect(stagePillLabel('soon', m)).toBe('Coming later');
     expect(stagePillLabel('soon', { ...m, soon: { pill: 'Pronto' } })).toBe('Pronto');
+  });
+
+  it('reads Complete for a completed stage (F-QUEST-002 section 3.8)', () => {
+    const m = getMessages('en').learner.journey.availability;
+    expect(stagePillLabel('complete', m)).toBe('Complete');
+  });
+});
+
+describe('stagePillState', () => {
+  it('is complete when the stage is complete, whatever its availability word', () => {
+    expect(stagePillState('open', true)).toBe('complete');
+  });
+
+  it('keeps the availability word while the stage is not complete', () => {
+    expect(stagePillState('open', false)).toBe('open');
+    expect(stagePillState('taste', false)).toBe('taste');
+    expect(stagePillState('soon', false)).toBe('soon');
+  });
+});
+
+describe('completeStages: which stage rows read Complete', () => {
+  const AT = '2026-10-01T09:00:00.000Z';
+  const stage1Done = gridEpisodes(episodesAll)
+    .filter((e) => e.stage === 'stage1')
+    .flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id, startedAt: AT, completedAt: AT, stars: 1 as const, attempts: 1, accuracy: 0.5 })));
+
+  it('is empty for a new learner', () => {
+    expect(completeStages({ quests: [] }, episodesAll)).toEqual(new Set());
+  });
+
+  it('holds Stage 1 once every Stage 1 quest is complete, at any star count', () => {
+    expect(completeStages({ quests: stage1Done }, episodesAll)).toEqual(new Set(['stage1']));
+  });
+
+  it('is not complete while one Stage 1 quest is missing', () => {
+    expect(completeStages({ quests: stage1Done.slice(1) }, episodesAll).has('stage1')).toBe(false);
+  });
+
+  it('keeps a latched stage complete when new quests join it (F-ROUTE-001 stage latch)', () => {
+    const snapshot = { quests: stage1Done.slice(1), stageDoneAt: { stage1: '2026-10-01T09:00:00.000Z' } };
+    expect(completeStages(snapshot, episodesAll)).toEqual(new Set(['stage1']));
+  });
+
+  it('ignores a latch key that is not a stage', () => {
+    expect(completeStages({ quests: [], stageDoneAt: { stage9: 'x' } }, episodesAll)).toEqual(new Set());
+  });
+
+  it('never completes a taste stage from its shipped quests alone', () => {
+    const stage2 = gridEpisodes(episodesAll)
+      .filter((e) => e.stage === 'stage2')
+      .flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id, startedAt: AT, completedAt: AT, stars: 1 as const, attempts: 1, accuracy: 0.5 })));
+    expect(completeStages({ quests: stage2 }, episodesAll).has('stage2')).toBe(false);
   });
 });
 
