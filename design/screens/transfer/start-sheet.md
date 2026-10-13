@@ -38,9 +38,10 @@ On phones the two buttons share a row and grow to fill it; from 45em the row is 
     {error line, one sentence, role=alert}
  +------------------------------------------------+
  | 2. Move to "Saturday Class B"?                  |    name from the preview, never typed
- |  - The family is asked first. The other teacher |
- |    sees only initials and a level until the     |
- |    family says yes.                             |
+ |  - The family is asked first. The other class   |
+ |    sees nothing until the family says yes. Then |
+ |    it sees only initials and a level until the  |
+ |    move.                                        |
  |  - Nothing changes until everyone has said yes, |
  |    and then not for 2 days.                     |
  |  - Mina keeps cards and stars. You can cancel   |
@@ -63,6 +64,11 @@ On phones the two buttons share a row and grow to fill it; from 45em the row is 
 | `too_many_attempts` | "Too many tries. Try again later." |
 | `cannot_send` (teacher requests off, self-managed, 30-day rule) | "This request can't be sent right now." (one message, no reason, no days) |
 | `family_needed` | "A family account is needed to answer this. Ask the family to start the move from their app." |
+| `409 same_space` (the code of this class) | "That code is for the class {Name} is in now." |
+| `409 already_open` | "{Name} already has a move waiting." (the teacher's answer never says who started it) |
+| `409 destination_busy` | "That class has many moves waiting. Try again in a few days." |
+| `429 too_many_requests` (10 creates per account or 3 per learner a day) | "Too many moves were started today. Try again tomorrow." |
+| `422 not_transferable` (the code is not a live class) | "That code can't be used for a move." |
 | `destination_changed` (the code now points elsewhere) | nothing is sent; the sheet runs Find class again with the same code and redraws step 2 from the new preview, or shows the matching line above |
 | offline / network | "This needs internet." |
 
@@ -82,4 +88,4 @@ On phones the two buttons share a row and grow to fill it; from 45em the row is 
 
 ## Accessibility
 
-Every button is at least 64 x 64; the close button is a 64 px circle. At 320 with 200 % text the field takes the full width, Find class wraps under it, and nothing scrolls sideways (`start-sheet-320-text200.png`).
+Each row's Move button carries the learner's name: `aria-label="Move {Name} to another class"` (family rows: "Move {Name} to a class"), so the visible label sits inside the name and a screen reader does not hear three identical buttons; the disabled offline button keeps the same name. Every button is at least 64 x 64; the close button is a 64 px circle. At 320 with 200 % text the field takes the full width, Find class wraps under it, and nothing scrolls sideways (`start-sheet-320-text200.png`).

@@ -36,8 +36,19 @@ Same route as the class page with a family `id`; adult frame with the Family per
 ```
 
 - **The family sees names.** The learner side view carries both class names, the destination owner, school, class age and size (4.2 Views); the step list names the classes instead of "This class" / "New class".
-- **Review and agree** and **Find class** both open the consent sheet (`consent-sheet.md`). **Not now** on a teacher-started request ends it quietly for everyone (`declined`), with no one named.
-- **Start a move**: Learner, then Now in (the learner's live classes), then the code. Find class is the primary of this section. Errors as in `start-sheet.md`, plus the cooldown "You can ask again in about a week." (`429 cooldown`, learner side only).
+- **Review and agree** and **Find class** both open the consent sheet (`consent-sheet.md`). **Not now** on a teacher-started request ends it quietly for everyone (`declined`), with no one named; because it also starts the 30-day `cannot_send` rule for teachers, the card shows "Not now ends this request. You can start a move yourself any time." under its buttons, as Not now's description.
+- **Start a move**: Learner, then Now in (the learner's live classes), then the code. Find class is the primary of this section. Errors as in `start-sheet.md` (same place, one at a time), plus these learner-side answers:
+
+| Answer | Line |
+|---|---|
+| `429 cooldown` | "You can ask again in about a week." |
+| `409 learner_manages_own` | "{Name} manages their own classes. Ask them to start a move on their device." (the spec 4.8 line) |
+| `409 already_open`, started by a class | "A class already asked about moving {Name}. Its card is above." |
+| `409 already_open`, started by the learner side | "A move for {Name} is already waiting. Its card is above." |
+| `422 consent_locale_unavailable` at create | "Not available in your language yet." |
+| `422 family_too_new`, `409 conflicted_guardian` | the guardian-predicate notices below |
+
+  The `already_open` body says only which side started the open one (`class` or `learner_side`), never a name.
 - **Move requests from teachers** (`blockTeacherRequests`): one checkbox row per learner, labelled with the learner's name as the row heading and the switch words. Turning it on needs guard 9a; turning it off needs the whole guard 9 (a failure reads as the matching notice below). A self-managed learner's row has no switch, only the line.
 
 ## Cards and lines
@@ -47,7 +58,7 @@ Same route as the class page with a family `id`; adult frame with the Family per
 | A teacher asked | route line, steps, **Review and agree** (primary), **Not now** |
 | After Yes, waiting for both classes | steps, "Waiting for the other classes. The move happens after {date} if both say yes. You can cancel any time.", **Cancel** |
 | Scheduled (cooling-off) | `check-circle` + "A move is planned for {date}.", **Cancel** (any caregiver of the learner's families) |
-| Approved, no room | steps all yes, room block "Waiting for room in the new class.", **Cancel** |
+| Approved, no room | steps all yes, room block "Waiting for room in the new class." (not a live region; the page's one polite region announces changes), **Cancel** |
 | `cap_learner` at execution (rare) | room block "{Name} is in the most classes allowed. Leave one, then the move can go ahead." |
 | Consent reset (`terms_changed`, `guardian_changed`, `lapsed`) | route line, "Please check this again.", **Review and agree**, **Not now** |
 | Moved | "Moved. {Name} is now in {Class}. Cards and stars stayed with {Name}." on `feedback.successLight`; plus "A tablet that joined through {Source} needs to join again." when `relinkAffected` |

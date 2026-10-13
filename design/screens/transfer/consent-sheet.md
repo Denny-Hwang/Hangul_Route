@@ -20,7 +20,7 @@ The sheet renders `transferConsentLineIds(ctx)` in that order, the same on the c
  +--------------------------------------------------------+
  keeps          Cards, stars and finished lessons stay with Mina.
  cooling_off    The move happens after 2 days. Anyone in the family can cancel before then.
- [ visible_list  What the new teacher sees:            v ]       disclosure, open by default on the console
+ [ visible_list  What the new teacher sees:            v ]       disclosure, open by default on every surface
    - one item per TEACHER_VISIBLE_ITEM_IDS entry (8 items)
  nothing_else   Nothing else from the app is shared with the teacher.
  visible_today  Today these people can see Mina:
@@ -29,7 +29,7 @@ The sheet renders `transferConsentLineIds(ctx)` in that order, the same on the c
  +-- Who is the new class? ---------------------------------+  identity facts from the preview (not a line id)
  | Saturday Class B                                        |
  | Teacher: Ms Park · Riverside school                     |
- | Class is 3 months old · 8 learners                      |
+ | A few months old · 8 learners                           |
  | typed_names  Class and teacher names are typed by ...   |
  +---------------------------------------------------------+
  | from_teacher        (initiator source)                     conditional lines: a border.strong bar
@@ -39,19 +39,28 @@ The sheet renders `transferConsentLineIds(ctx)` in that order, the same on the c
  | homework_drops      (sourcePlansAffected)
  cannot_undo    A move can't be undone. Mina can still leave a class in Profile at any time.
  [ ] introduce  Tell Saturday Class B where Mina is coming from.   off by default
- (( Yes, move Mina ))     ( Not now )                              buttons after the last line
+ Not now ends this request. You can start a move yourself any time.   teacher-started only
+ (( Yes, move Mina ))     ( Not now )                              buttons after the last line; Yes waits for the end
 ```
 
 - **Canonical order wins over the wireframe's grouping.** The wireframe drew `keeps` and `cooling_off` in an "Also" group near the end; the code's list (and the parity test of 4.11) puts them right after the summary, so the mock does too. Changing the order would be a text-version bump and a spec change, not a layout choice.
-- **The identity block** ("Who is the new class?": class name, "Teacher: {owner}", school, "Class is {n} months old · {n} learners") sits directly above `typed_names`, which speaks about those names; it is preview data, not a consent line, and is rendered for the learner side only.
+- **The identity block** ("Who is the new class?": class name, "Teacher: {owner}", school, then the age bucket and the count) sits directly above `typed_names`, which speaks about those names; it is preview data, not a consent line, and is rendered for the learner side only.
+- **Class age is a bucket, never a number.** The server sends `ageBucket` only (`transfer-views.ts` `ageBucket()`: under 7 days `days`, under 60 `weeks`, under 365 `months`, else `years`; null when unknown), as spec 4.2 says ("class age bucket"). The block reads "Less than a week old" (`days`), "A few weeks old" (`weeks`), "A few months old" (`months`), "More than a year old" (`years`), joined to "{n} learners" by a middle dot when the count is known; with a null bucket the age is left out. The design asks for no finer field.
 - **`visible_today`** items read "{space} (teacher {owner})" for a class or school and "{family} (you)" for the viewer's own family; a family the viewer is not in reads "{family} (family, {owner})" (the app's self-managed case).
 - **Conditional lines** carry a `borderWidth.thick` `border.strong` left bar so a reader sees which sentences are about this move; the bar is decoration, the sentence carries the meaning.
 
 ## The buttons and the reading rule
 
-The spec asks that the primary is active only once the end has been reached (or the list opened) and never sits above an unread conditional line. The mock meets it by **position**: the buttons are the last element of the sheet, in the DOM and on screen, never pinned in a sticky footer, so they cannot be reached before every line has scrolled past. The button is therefore drawn enabled (no disabled puzzle). T-6d and T-7c keep a "reached the end" sentinel for the record (`l_shown_json` notes it) and test that the primary follows the last line and is not `position: sticky`.
+Spec 4.11: the primary becomes active only after the sheet has been scrolled to the end, and never sits above an unread conditional line. The mock keeps both rules on both surfaces (D2):
+
+- **Position.** The buttons are the last element of the sheet, in the DOM and on screen, never pinned in a sticky footer.
+- **The end sentinel.** An empty marker directly after `cannot_undo` (the last consent line). **Yes** stays `aria-disabled` (still focusable, so a keyboard or screen-reader user finds it and hears why) until the sentinel has been in view once, then turns active for the life of the sheet. Its description is the hint "Read to the end to continue.", shown above it while it waits. On a screen tall enough to show the whole sheet, the sentinel is in view at once and the hint never shows.
+- **The list is open by default on every surface** (spec 4.11 "expanded by default"), so "or the disclosure opened" is not a separate path: a reader who folds the list has already seen it.
+- **The record.** The client sends the consent only after the sentinel was seen; `l_shown_json` is computed by the server from the sheet terms (it is not a client field), so the sentinel is a client rule, tested by T-6d and T-7c (the primary follows the last line, is not `position: sticky`, and is `aria-disabled` until the sentinel intersects). Adding it to the record would be a strict-schema change, out of this design pass.
 
 Focus: the heading (`tabindex="-1"`) on open, never the primary; then the language switch, the disclosure, the introduce checkbox, Yes, Not now. Screen readers hear the lines in the order above.
+
+**Not now on a teacher-started sheet.** Not now there ends the request for everyone and starts the 30-day `cannot_send` rule for teachers (4.9), while on a guardian-started create it only closes the sheet. So a teacher-started sheet (and the family card's own Not now) shows one neutral line above the buttons, "Not now ends this request. You can start a move yourself any time.", which is also Not now's description. The label stays "Not now" (the wireframe's word); no reason, no blame.
 
 ## Console and app
 
@@ -59,10 +68,11 @@ Focus: the heading (`tabindex="-1"`) on open, never the primary; then the langua
 |---|---|---|
 | Frame | dialog over the family page (full screen below 45em, centred card from 45em) | a stack screen behind the grown-up gate |
 | Title | "Move {Name} to {Destination}?" | the same; self audience "Move to {Destination}?" |
-| Disclosure | open by default | folded (space), same items when opened |
+| Disclosure | open by default | open by default (the same; D15) |
 | Primary | "Yes, move {Name}" | "Yes, move {Name}"; self audience "Yes, move me" |
-| Language switch | visible select (en / ko / es) | the app's UI locale; a locale without a reviewed text shows the same notice |
-| Secondary | **Not now**: closes the sheet (guardian-started create) or ends the request quietly (teacher-started) | **Not now** |
+| Language switch | visible select (en / ko / es) | the same visible select under the title, starting at the app's UI locale (guard 7); a locale without a reviewed text shows the same notice |
+| Identity block | from the family preview | MoveClass: from the device preview (with the count); ApproveTransfer: from the inbox, no count until `to.learnerCount` ships (`app-sheets.md`) |
+| Secondary | **Not now**: closes the sheet (guardian-started create) or ends the request quietly (teacher-started, with the line above) | **Not now** |
 
 The lines themselves are third person in every audience ("Grace would move from ..."): one canonical text, one record.
 
@@ -71,7 +81,8 @@ The lines themselves are third person in every audience ("Grace would move from 
 | State | Drawn |
 |---|---|
 | guardian-started, no conditional line | the ten always lines and `introduce` |
-| every conditional line | all five, list folded by the reader |
+| every conditional line | all five, list folded by the reader; teacher-started, so the Not now line shows |
+| the last line not yet in view | Yes `aria-disabled`, the hint "Read to the end to continue." as its description |
 | locale without a reviewed text (`consent_locale_unavailable`; only `en` exists today) | "Not available in your language yet." replaces the lines; no Yes; the switch stays |
 | text version or terms changed (`consent_text_stale`, `terms_changed`) | the sheet reloads with "This text was updated. Please read it again." on top (`role="status"`) |
 | Yes failed | the sheet stays; "Didn't go through" and **Try again** |

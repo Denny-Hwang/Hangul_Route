@@ -24,7 +24,7 @@ Built by:
 | `classes-card.md` | the learner app's Classes & family card: variants (a) to (d), pending, planned, offline, after the move |
 | `app-sheets.md` | `MoveClass`, `ApproveTransfer`, the read-only sheet, the planned sheet, the Home line |
 | `mock/` | static HTML on one stylesheet, `transfer.css`: `requests.html`, `requests-states.html` (board), `settings.html`, `start-sheet.html`, `start-sheet-states.html` (board), `family.html`, `family-states.html` (board), `consent-sheet.html`, `consent-sheet-states.html` (board), `classes-card.html` (board), `app-sheets.html` (board), `check.html` |
-| `shots/` | the mock rendered in Chromium. Page shots at 2x, boards at 1x, stored as 128-colour palette PNGs (30 files, about 3.4 MB). File names give the page and the viewport width; `-first` is the first screen only; `-text200` is the browser text size at 200 % |
+| `shots/` | the mock rendered in Chromium. Page shots at 2x, boards at 1x, stored as 128-colour palette PNGs (30 files, about 4.0 MB). File names give the page and the viewport width; `-first` is the first screen only; `-text200` is the browser text size at 200 % |
 
 **The mock is a design reference, not shipped code.**
 
@@ -58,29 +58,29 @@ Values that are not tokens. Each derives from a token, the content or a measurem
 | `requests-375.png`, `-1280.png` | page | class page as both source and destination: a family-started card to agree, a waiting card, a scheduled card, history, a destination card to accept, a destination card waiting for room |
 | `requests-390-first.png` | 390 x 844, first screen | the first card with its Agree in the first screen |
 | `requests-320-text200.png` | 320, text 200 % | the same page enlarged, one column, no sideways scroll |
-| `requests-states-375.png`, `-1280.png` | board | loading, empty, every source and destination card, the reasons disclosure, both room causes, cap_learner, after a move in (New class code), failed action, ended meanwhile, 401, 403, locked, the roster button at zero and two, the teacher home and family home counts |
+| `requests-states-375.png`, `-1280.png` | board | loading, empty, every source and destination card, the reasons disclosure, both room causes, cap_learner, after a move in (New class code), failed action, request_changed, retry asked again, ended meanwhile, 401, 403, locked, the roster button at zero and two, the teacher home (school row with per-class counts) and family home counts |
 | `settings-375.png`, `-1280.png` | page | class settings with Move beside Remove, the Danger zone below |
 | `start-sheet-375.png`, `-1280.png`, `-320-text200.png` | page | the start sheet at step 2 over the overlay |
-| `start-sheet-states-375.png`, `-1280.png` | board | class, family, offline and archived rows; step 1 empty and looking; the seven error lines; step 2; sent |
+| `start-sheet-states-375.png`, `-1280.png` | board | class, family, offline and archived rows; step 1 empty and looking; the seven error sheets and the five other answers (same_space, already_open, destination_busy, too_many_requests, not_transferable); step 2; sent |
 | `family-375.png`, `-1280.png`, `-320-text200.png` | page | family page: a teacher-asked card, a waiting card, Start a move, the switch rows with a self-managed adult |
-| `family-states-375.png`, `-1280.png` | board | every family card and notice |
+| `family-states-375.png`, `-1280.png` | board | every family card and notice; the Start a move answers (learner_manages_own, both already_open variants, locale, and the shared ones) |
 | `consent-sheet-375.png`, `-1280.png`, `-320-text200.png` | page | a teacher-started sheet with four conditional lines |
 | `consent-sheet-390-first.png` | 390 x 844, first screen | the heading, language switch and the summary block in the first screen |
-| `consent-sheet-states-375.png`, `-1280.png` | board | no conditional line, all five, locale not available, text updated, Yes failed |
-| `classes-card-375.png`, `-1280.png` | board | variants (a) to (d), pending, planned, self-only, offline, after the move, flag off |
-| `app-sheets-375.png`, `-1280.png` | board | PinEntry (unchanged), MoveClass steps, the managed and self consent sheets, sent, ApproveTransfer, read-only, planned, offline, moved, the Home lines |
+| `consent-sheet-states-375.png`, `-1280.png` | board | no conditional line, all five (with the teacher-started Not now line), Yes waiting for the end, locale not available, text updated, Yes failed |
+| `classes-card-375.png`, `-1280.png` | board | (a); (b) with a teacher request; (c) with Move on every row and with a consent reset; self-only; (d) no PIN; (d') a new PIN; device consent off; learner-side waiting (both wordings); waiting for room; route none; planned; ended; offline; after the move; flag off |
+| `app-sheets-375.png`, `-1280.png` | board | PinEntry (unchanged), MoveClass steps and every answer, the managed and self consent sheets (list open, language switch), Yes waiting for the end, sent, ApproveTransfer, the read-only sheets (teacher-started, learner-side waiting, waiting for room, asked again off the device route), planned, offline, moved, the Home lines |
 | `check-375.png`, `-1280.png` | board | greyscale and protanopia check |
 
 ## Measured on the mock (Chromium)
 
 | Check | Target (spec) | Mock |
 |---|---|---|
-| Sideways scroll | none (wireframe accessibility; F-APP-001 3.16) | none on any of the 12 mocks at 320, 375, 768 and 1280, nor at 320 and 375 with 200 % text (72 renders, `scrollWidth` equals the viewport) |
+| Sideways scroll | none (wireframe accessibility; F-APP-001 3.16) | none on any of the 12 mocks at 320, 375, 768 and 1280, nor at 320 and 375 with 200 % text (72 renders, `scrollWidth` equals the viewport; measured again after the review round, with every disclosure also opened) |
 | Targets | `touchTarget.min` | every link, button, select, text input and checkbox row on the 12 mocks is at least 64 x 64 at every measured width, including the 64 px sheet close button and the app's back button |
 | ids and references | every `aria-controls`, `aria-describedby`, `aria-labelledby` and `for` names an element that exists; no id repeats | met on all 12 mocks |
 | First screen, requests page at 390 x 844 | the first answer is reachable without scrolling (wireframe: waiting for you first) | met: the first card's Agree sits in the first screen with the frame counted (`requests-390-first.png`) |
 | First screen, consent sheet at 390 x 844 | the summary (`moving`, `new_teacher`, `old_teacher`) is the first thing read (4.11 layering) | met: heading, language switch and the whole summary block fit (`consent-sheet-390-first.png`) |
-| Primary not above an unread line | 4.11 | met by position: the buttons are the last element, never sticky |
+| Primary not above an unread line | 4.11 | met by position (the buttons are the last element, never sticky) and by the end sentinel: Yes is `aria-disabled` until the line after `cannot_undo` has been in view (D2; drawn on both state boards) |
 | Colour as the only signal | never | steps: check glyph + "said yes" vs dash + "waiting"; room: pause glyph + sentence; conditional lines: the sentence (the bar is decoration); the gate: lock glyph + "(PIN required)"; no red anywhere (`feedback.danger` unused) |
 | Text length (ko, es) | the step boxes and the code row hold in every locale | measured in English only. T-6b and T-6d measure the three step boxes at 720 px and the code row with the pseudo-locale before the KO and ES review; a step box may wrap its state word under its name (the 1280 shot shows "you said yes" doing so) |
 
@@ -99,7 +99,7 @@ Greyscale keeps WCAG luminance, so its column equals the normal one.
 | Done line (`text.primary`) on `feedback.successLight` | 13.24 | 13.71 | 4.5:1 |
 | Notice (`text.primary`) on `surface.sunken` | 13.58 | 13.68 | 4.5:1 |
 | Back link (`brand.secondaryDark`) on canvas | 7.17 | 6.56 | 4.5:1 |
-| Level pill and disabled labels (`text.muted`) on `surface.sunken` | 5.07 | 5.18 | 4.5:1 (disabled exempt) |
+| Level pill, disabled labels and the waiting Yes (`text.muted`) on `surface.sunken` | 5.07 | 5.18 | 4.5:1 (disabled exempt) |
 | Card lines (`text.secondary`) on paper | 8.44 | 8.78 | 4.5:1 |
 | Code rules (`text.muted`) on canvas | 5.68 | 5.83 | 4.5:1 |
 | Primary label on `brand.primary` / fill vs canvas | 5.44 / 5.14 | 6.83 / 6.42 | 4.5:1 / 3:1 |
@@ -129,7 +129,31 @@ T-6a adds the console ones to the console message namespace (`console.transfer.*
 | "Move requests from teachers" | family page section heading over the switch rows |
 | "No learner here is in a class right now." | family page, Start a move with no learner in a live class |
 | "A tablet that joined through {Source} needs to join again." | family, after the move, when `relinkAffected` |
-| "Who is the new class?", "Teacher: {owner}", "Class is {n} months old", "{n} learners" | consent sheet identity block (wireframe drew them as data) |
+| "Who is the new class?", "Teacher: {owner}", "{n} learners" | consent sheet identity block (wireframe drew them as data) |
+| "Less than a week old", "A few weeks old", "A few months old", "More than a year old" | identity block, keyed by `ageBucket` (`days`, `weeks`, `months`, `years`); null leaves the age out |
+| "Read to the end to continue." | consent sheet, both surfaces: the waiting Yes's description (D2) |
+| "Not now ends this request. You can start a move yourself any time." | console consent sheet and family card, teacher-started only |
+| "Not now ends this request." | app read-only sheet, teacher-started |
+| "Not now, choose a reason" | `a11y`: the destination's Not now disclosure (D5) |
+| "That code is for the class {Name} is in now." | `409 same_space` (console and app) |
+| "{Name} already has a move waiting." | `409 already_open`, teacher start sheet |
+| "A class already asked about moving {Name}. Its card is above." / "... Look on the Classes card." | `409 already_open` started by a class: family page / app |
+| "A move for {Name} is already waiting. Its card is above." / "... Look on the Classes card." | `409 already_open` started by the learner side: family page / app |
+| "That class has many moves waiting. Try again in a few days." | `409 destination_busy` |
+| "Too many moves were started today. Try again tomorrow." | `429 too_many_requests` |
+| "That code can't be used for a move." | `422 not_transferable` |
+| "Ask the grown-up with the account to start this move in the console." | app, `409 caregiver_required` |
+| "Moves can't be started on this device yet." | app, `422 device_consent_locked` |
+| "Something changed. Look again.", "Refresh" | console card, `409 request_changed` |
+| "You said yes. Nothing changes until everyone says yes." | destination card after retry answered `consent_outdated` / `not_approved` |
+| "Saturday Class B: 2 class moves waiting" (`{Class}: {count}`) | teacher home, school row, one link per child class |
+| "Moves open one day after the PIN is set." | app Classes card (d'), a PIN made less than a day ago |
+| "This move can't be answered here." | app, route `none` (card row and read-only sheet) |
+| "Waiting for the classes to answer." | app, learner-side request with both classes waiting (one class left: spec's "Waiting for the other class to answer.") |
+| "Please check this again." | app card row after a consent reset (the family card's existing line) |
+| "Cancel the request" | app read-only sheet, the veto on a learner-side request |
+| "Review the move" | `a11y`: every app Review button |
+| "Move {Name} to another class", "Move {Name} to a class" | `a11y`: the settings and start-sheet row buttons |
 | "{space} (teacher {owner})", "{family} (you)", "{family} (family, {owner})" | `visible_today` items |
 | "This text was updated. Please read it again." | consent sheet after `consent_text_stale` / `terms_changed` |
 | "Sending…" | start sheet busy label |
@@ -142,20 +166,29 @@ Every other drawn string is a wireframe or spec draft (word for word) or an exis
 ## Decisions taken in this design pass
 
 - **D1. Canonical consent order.** The sheet renders `TRANSFER_CONSENT_LINES` in the code's order (`keeps` and `cooling_off` right after the summary), not the wireframe's grouping, because the order is part of the recorded text (4.11 parity test). The destination identity facts sit as a block directly above `typed_names`.
-- **D2. The primary is last, not disabled.** The spec's "active after the end is reached" is met by placing the buttons after the last line with no sticky footer; the button is drawn enabled. T-6d and T-7c still record that the end was reached and test the position.
+- **D2. The primary is last and waits for the end.** The buttons are the last element (no sticky footer), and **Yes** is `aria-disabled` with the hint "Read to the end to continue." until an end sentinel after `cannot_undo` has been in view once (spec 4.11, both surfaces). The list is open by default everywhere, so "or the disclosure opened" adds no shortcut. `l_shown_json` is server-computed, so the sentinel is a client rule that T-6d and T-7c test; recording it would be a schema change (not in this pass). *(Review round: the first draft drew Yes enabled and relied on position alone, which on a folded app list let a keyboard user reach Yes in three tab stops.)*
 - **D3. Three steps, words first.** Each step is a glyph (check or dash), the step name and a state word. One per row on phones, three boxes from 45em. No progress bar, no percentage. The family side names the classes; the source side says "This class" / "New class"; the destination has no step list (it never learns the source's answer).
 - **D4. One button for the roster entry**, as Re-link does: "Class moves" at zero, "N class moves waiting" with a count. The teacher home and the family home show the count only when it is above zero; a school row shows counts only.
-- **D5. Not now with reasons is a disclosure**, not an ARIA menu: one button opens a group of two buttons (Not now, No room). Only the receiving class has it.
+- **D5. Not now with reasons is a disclosure**, not an ARIA menu: one button opens a group of two buttons (Not now, No room). Only the receiving class has it. The disclosure's accessible name is "Not now, choose a reason" (visible "Not now" inside it), so it never reads as a duplicate of the inner Not now.
 - **D6. Waiting for room** is a `feedback.nudgeLight` block with a `pause` glyph in `text.primary` and a `feedback.nudge` bar (decoration, 1.86:1, never the signal). The source and the family read "Waiting for room in the new class."; only the destination reads "full".
 - **D7. Gate mark.** A gated button in the app carries the `lock` glyph and "(PIN required)" in its accessible name; a self-only device without a PIN opens directly and shows no glyph.
-- **D8. The veto in variant (b).** The learner's device keeps a gated Review on a pending row in (b), opening the read-only sheet whose only action is Not now (guard 11). The quiet line says where the yes happens. No PIN is asked for an answer the device cannot give.
+- **D8. The veto on every open request.** The learner's full-scope device keeps one gated Review on any pending row (routes `caregiver`, `device` and `none`), opening the read-only sheet whose only actions are the veto (Not now on a teacher-started request, Cancel the request on a learner-side one) and Back (guard 11). The quiet line says where the yes happens. No PIN is asked for a yes the device cannot give. Spec 4.12 (b) is amended to say so.
 - **D9. Class-wide lines once per card.** (a)'s rescue-code line and (d)'s PIN line appear once under the rows, not under every class row.
 - **D10. Settings row order.** Move to another class comes before Remove from class; both are secondary buttons; Move is never in the Danger zone; the archived row shows neither.
 - **D11. Find class steps down at step 2** (one primary per state: Send request).
 - **D12. History without names.** Source "A student moved to another class", destination "A student joined this class", any ending "This request ended.", each with a date only. The family alone may see "Ended from {Name}'s tablet.".
-- **D13. "Waiting for the family." is not drawn** in the app (no reachable state: a web-route request implies a family account, which is variant (b)).
+- **D13. Route `none` gets its own line.** Spec 4.12 (d) used to pair the PIN prompt with `none` and add "Waiting for the family."; but `none` is exactly the state where no PIN helps (a teacher-started request after `selfManaged` or the family left; a learner-side one with device consent off). The app draws "This move can't be answered here." with the gated veto, and the PIN prompt moves to the no-request rule (D16). Spec 4.12 (d) is amended.
 - **D14. Visible-today wording.** A class reads "{space} (teacher {owner})", the viewer's family "{family} (you)", another family "{family} (family, {owner})" (the self-managed adult's sheet).
+- **D15. The app list is open by default**, as on the console and as spec 4.11 says ("expanded by default"). The wireframe's "may fold the list for space" is withdrawn (wireframe amended); it costs only scroll length.
+- **D16. Choosing the Classes card variant** (`classes-card.md`): with an open request, its `learnerRoute`; with none, a device rule from data the app already has (scope, `transferDeviceConsent`, family memberships, `selfManaged`, and `consent-gate.ts`: self consent, PIN existence and `pinCreatedAt`). The PIN prompt shows only when a PIN would open the route; a PIN made less than a day ago reads "Moves open one day after the PIN is set."; device consent off shows nothing. No new inbox field is needed. While a request is open, no row shows Move.
+- **D17. "Agreed by the school admin." stays on its own class.** It shows only where this class's own slot was filled `via: school_admin`; the backend follow-up is in `requests-page.md`.
+- **D18. Class age is a bucket.** The identity block keys four phrases on `ageBucket`; no number is drawn and no finer field is asked for (spec 4.2 "class age bucket").
+- **D19. The app sheet has the language switch** (guard 7 "offers the language switch"), the same select as the console, starting at the UI locale. Until ko and es texts are reviewed (G2), those choices show "Not available in your language yet." on both surfaces.
+- **D20. Home never carries a yes.** The self-audience Home line opens `ApproveTransfer` ("Yes, move me" sits after the lines), so a yes always follows the consent text. Spec 4.12 Home is amended.
+- **D21. Not now says what it does when it ends a request.** On a teacher-started sheet and the family card: "Not now ends this request. You can start a move yourself any time." as Not now's description; the label stays the wireframe's "Not now".
 
 ## Review
 
-Made with a multi-agent review in place of the owner's hand mockups (owner decision 2026-10-12). Lenses (the spec's T-0b row: design, accessibility, anti-shame and copy, privacy) applied to every board before this PR: spec conformance (every state of the wireframe and of spec 4.8, 4.12 and 4.13 drawn or ruled out with a reason, D13), privacy (T8: the destination never sees a name, id, progress or source before the move; T14: no names in URLs or titles), anti-shame (no actor or reason on an ending, no red, no countdown), audience (no age wording, "learner" and "grown-up" on shared surfaces), consent text fidelity (word for word from the schema, canonical order), tokens (no literal outside the token block), and accessibility (targets, focus order, sideways scroll, 200 % text, greyscale and protanopia). Fixes found by that pass and applied here: the reasons group showed while closed (a `[hidden]` rule), the code field was too narrow for six characters, the route line sat under the steps, Find class stayed primary next to Send request, and the app variants mixed a family row into the device route.
+Made with a multi-agent review in place of the owner's hand mockups (owner decision 2026-10-12). Lenses (the spec's T-0b row: design, accessibility, anti-shame and copy, privacy) applied to every board before this PR: spec conformance (every state of the wireframe and of spec 4.8, 4.12 and 4.13 drawn or ruled out with a reason, D13), privacy (T8: the destination never sees a name, id, progress or source before the move; T14: no names in URLs or titles), anti-shame (no actor or reason on an ending, no red; no countdown on learner, family or destination surfaces, while the source teacher's card shows days left as plain meta text per `daysLeft`), audience (no age wording, "learner" and "grown-up" on shared surfaces), consent text fidelity (word for word from the schema, canonical order), tokens (no literal outside the token block), and accessibility (targets, focus order, sideways scroll, 200 % text, greyscale and protanopia). Fixes found by that pass and applied here: the reasons group showed while closed (a `[hidden]` rule), the code field was too narrow for six characters, the route line sat under the steps, Find class stayed primary next to Send request, and the app variants mixed a family row into the device route.
+
+**Review round 2 (two independent reviewers on PR #472).** Accepted and applied: the missing app states (waiting for the classes, waiting for room, ended, route `none`) and the guard-11 veto on every open request (D8, D13); every reachable error code with a drawn line (start sheet, family page, MoveClass, request_changed, retry asked again); the reading gate on both surfaces with the list open everywhere (D2, D15); the spec amendments for 4.8, 4.11 and 4.12; the variant rule and the PIN lines (D16); the step 2 privacy sentence; one live region per page; the destination disclosure name (D5); the countdown wording above; Move on every class row; the Home targets by route; per-class counts on the school row; T-7c depending on T-0b; class age as a bucket (D18); the school-admin line on its own class (D17); the inbox learner count as a T-5c follow-up (`app-sheets.md`); the app language switch (D19); learner names in the row buttons; the Not now line (D21). Nothing was rejected.

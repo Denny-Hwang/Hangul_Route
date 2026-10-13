@@ -191,3 +191,13 @@
 .code-col .code-input { flex: none; width: 100%; }
 .code-row { align-items: flex-start; }
 @media (min-width: 45em) { .code-col { flex: 0 1 var(--code-field); } }
+
+/* T-0b review round: the waiting primary (consent sheets), answer lists on the boards, the app language row */
+.rn-btn[aria-disabled="true"] { background: var(--colors-surface-sunken); border-color: transparent; color: var(--colors-text-muted); cursor: default; }
+.wait-hint { color: var(--colors-text-secondary); font-size: var(--size-bodySm); line-height: var(--leading-relaxed); }
+.answer-list { display: flex; flex-direction: column; gap: var(--spacing-md); list-style: none; padding: 0; margin: 0; }
+.answer-list li { display: flex; flex-direction: column; gap: var(--spacing-xxs); }
+.app-lang { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-sm); }
+.app-lang label { font-weight: var(--weight-semibold); }
+.pending-row .room-block { flex: 1 1 100%; }
+.school-counts { display: flex; flex-direction: column; gap: var(--spacing-xs); }
