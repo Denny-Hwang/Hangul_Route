@@ -62,7 +62,7 @@ describe('console session (F-CONSOLE-001 §3.2)', () => {
 });
 
 describe('session key (F-APP-001 section 3.14)', () => {
-  it('is the one key named in content-schema, unchanged so signed-in tabs stay signed in', async () => {
+  it('is the one key named in content-schema, unchanged so signed-in tabs stay signed in', () => {
     expect(SESSION_KEY).toBe(CONSOLE_SESSION_KEY);
     expect(SESSION_KEY).toBe('hr:console:session');
   });

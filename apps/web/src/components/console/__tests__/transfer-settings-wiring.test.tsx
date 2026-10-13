@@ -2,8 +2,7 @@ import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { resetTransferLockForTests } from '@/lib/console/transfer-lock';
-import { noteTransferResult } from '@/lib/console/transfer-lock';
+import { noteTransferResult, resetTransferLockForTests } from '@/lib/console/transfer-lock';
 
 /**
  * F-SPACE-002 T-6c, the settings page's wiring (spec 4.8 "Settings learner row"; start-sheet.md): Move to another
