@@ -1,13 +1,31 @@
 import type { DeepPartial, Messages } from '../../types';
 
 /**
- * Korean notes from grown-ups (F-FEEDBACK-001 FB-5b, sections 6.3, 6.6 and 6.11), reviewed by the multi-agent
- * ko review against section 6.3 (owner decision 2026-10-11). The other `common` keys fall back to English until
- * the F-I18N-001 translation PR (PR 16); `ko` stays hidden (`LOCALE_STATUS`) and the notes flags stay off until
- * FB-14. 해요체; a preset speaks to the learner about effort or a thing done, never about speed or talent; a sender
- * name stands before a colon or a middle dot, never before a particle that changes with the final consonant.
+ * Korean: generic buttons, time words, errors and the notes from grown-ups (F-I18N-001 PR 16). 해요체 on every
+ * app surface (§3.10 style guide). The notes strings are the FB-5b review's (F-FEEDBACK-001, section 6.3): a preset
+ * speaks to the learner about effort or a thing done, never about speed or talent; a sender name stands before a
+ * colon or a middle dot, never before a particle that changes with the final consonant.
  */
 export const common = {
+  buttons: {
+    ok: '확인',
+    cancel: '취소',
+    back: '뒤로',
+    next: '다음',
+    done: '완료',
+    close: '닫기',
+    save: '저장',
+    tryAgain: '다시 해 보기',
+    continue: '계속',
+  },
+  time: {
+    today: '오늘',
+    yesterday: '어제',
+    notYet: '아직 없음',
+  },
+  errors: {
+    generic: '문제가 생겼어요. 다시 해 보세요.',
+  },
   notes: {
     presets: {
       effort_keep_trying: '계속 도전하고 있네요. 그렇게 배우는 거예요.',
