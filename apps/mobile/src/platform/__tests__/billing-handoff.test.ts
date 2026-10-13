@@ -16,7 +16,7 @@ const openGrownUpArea = vi.fn();
 vi.mock('../grown-up-handoff', () => ({ openGrownUpArea: (request: unknown) => openGrownUpArea(request) }));
 
 const { flags } = await import('../../config/flags');
-const { BILLING_HANDOFF, billingOpensSameTab, openBilling } = await import('../billing-handoff');
+const { BILLING_HANDOFF, DASHBOARD_BILLING_HANDOFF, billingOpensSameTab, openBilling } = await import('../billing-handoff');
 
 const initialFlag = flags.grownUpHomeEnabled;
 
@@ -92,6 +92,13 @@ describe('openBilling, flag on (B-9b)', () => {
     openGrownUpArea.mockResolvedValue('pin');
     await expect(openBilling()).resolves.toEqual({ kind: 'same-tab', outcome: 'pin' });
     expect(openExternalUrl).not.toHaveBeenCalled();
+  });
+
+  it("the dashboard's free-lessons line hands off as via 'dashboard', so it is not counted as a Plan screen tap (F-ENT-003 E3-12b)", async () => {
+    expect(DASHBOARD_BILLING_HANDOFF).toEqual({ via: 'dashboard', target: APP_ROUTES.billing });
+    openGrownUpArea.mockResolvedValue('opened');
+    await expect(openBilling(true, DASHBOARD_BILLING_HANDOFF)).resolves.toEqual({ kind: 'same-tab', outcome: 'opened' });
+    expect(openGrownUpArea).toHaveBeenCalledWith({ via: 'dashboard', target: '/account/billing' });
   });
 
   it('ignores EXPO_PUBLIC_CONSOLE_URL: billing is a page of this origin', async () => {
