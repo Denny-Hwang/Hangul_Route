@@ -1388,7 +1388,7 @@ export const learner = {
   /**
    * The Stage 1 ceremony (F-QUEST-002 §3.8, wireframe results/stage1-complete): Hoya cheering, the
    * wall of every symbol (all lit, never counted) and the legendary cards. No number, no fraction,
-   * no percent, no price and no plan word (D3, D5). `seeCardA11y` names a card tile (`title` is content).
+   * no percent, no price and no plan word (D3, D5).
    */
   stageComplete: {
     title: 'Hangul complete!',
@@ -1396,7 +1396,6 @@ export const learner = {
     canDo: 'You know every letter and every final sound. Hoya is so proud of you.',
     wallTitle: 'Every letter you learned',
     cardsTitle: 'Legendary cards for you',
-    seeCardA11y: (title: string) => `Open card: ${title}`,
     seeCards: { cta: 'See my cards' },
     backHome: { cta: 'Back home' },
     notFound: 'This prize is not here yet. Keep playing your quests.',

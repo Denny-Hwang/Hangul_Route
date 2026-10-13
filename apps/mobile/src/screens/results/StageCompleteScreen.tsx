@@ -1,10 +1,10 @@
 import {
   Body,
   Button,
+  Caption,
   Heading,
   Hoya,
   HoyaBubble,
-  KoreanText,
   Screen,
   Spacer,
   borderWidth,
@@ -12,11 +12,12 @@ import {
   radii,
   spacing,
   touchTarget,
+  typography,
 } from '@hangul-route/design-system';
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useMemo } from 'react';
-import { Pressable, View, type PressableStateCallbackType } from 'react-native';
+import { Pressable, Text, View, type PressableStateCallbackType } from 'react-native';
 import { episodesAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeCard } from '../../logic/content-locale';
@@ -103,7 +104,7 @@ export function StageCompleteScreen({ route, navigation }: Props): React.ReactEl
           <Pressable
             key={card.id}
             accessibilityRole="button"
-            accessibilityLabel={m.seeCardA11y(card.titleEn)}
+            accessibilityLabel={messages.learner.results.extraCards.seeA11y(card.titleEn)}
             onPress={() => navigation.navigate('CardDetail', { cardId: card.id })}
             style={({ pressed, focused }: TileState) => ({
               alignItems: 'center',
@@ -142,28 +143,47 @@ export function StageCompleteScreen({ route, navigation }: Props): React.ReactEl
   );
 }
 
-/** One lit symbol: the glyph and its sound value, read as "Korean letter g/k" (never the glyph alone). */
+/**
+ * One lit symbol: the glyph and its sound value in the taught-Korean chip colours. The tile is one
+ * element for assistive tech, read as "Korean letter g/k" or "Korean final consonant n" (never the
+ * glyph alone). A final sits at the bottom of its block, so its tile has a heavier bottom edge (a
+ * shape cue, never colour alone).
+ */
 function WallTileView({ tile, label }: { tile: WallTile; label: string }): React.ReactElement {
   const final = tile.kind === 'batchim';
   return (
     <View
+      accessible
+      accessibilityRole="text"
+      accessibilityLabel={label}
       testID={`stage-complete-tile-${tile.id}`}
       style={{
-        minWidth: WALL_TILE,
+        width: WALL_TILE,
         minHeight: WALL_TILE,
-        paddingHorizontal: spacing.xs,
         paddingVertical: spacing.xs,
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: radii.md,
-        backgroundColor: colors.feedback.successLight,
+        backgroundColor: colors.brand.secondaryLight,
         borderWidth: borderWidth.base,
-        borderColor: colors.feedback.success,
-        // A final sits at the bottom of its block: a heavier bottom edge marks it without colour alone.
         borderBottomWidth: final ? borderWidth.thick * 2 : borderWidth.base,
+        borderColor: colors.brand.secondary,
       }}
     >
-      <KoreanText ko={tile.char} romanization={tile.romanization} size="sm" accessibilityLabel={label} />
+      <Text
+        style={{
+          fontFamily: typography.family.sansKr,
+          fontSize: typography.size.title,
+          fontWeight: typography.weight.bold,
+          color: colors.text.primary,
+          lineHeight: typography.size.title * typography.leading.normal,
+        }}
+      >
+        {tile.char}
+      </Text>
+      <Caption tone="secondary" align="center">
+        {tile.romanization}
+      </Caption>
     </View>
   );
 }
