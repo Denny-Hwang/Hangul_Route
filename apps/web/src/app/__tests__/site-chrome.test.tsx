@@ -287,17 +287,25 @@ describe('About, Privacy, Terms and the 404 page get the site chrome (F-SITE-002
     }
   });
 
-  it('404: an English document with Next\'s body, our line and links to / and Start learning', () => {
+  it('404: an English document in the site chrome, with Next\'s body, our line and links to / and Start learning', () => {
     const html = renderToStaticMarkup(<NotFoundPage />);
     expect(html).toMatch(/^<html lang="en">/);
     expect(html).toContain('This page could not be found.');
     expect(html).toContain(t.notFound.body);
-    const links = controls(html);
+    // The shared header and footer (F-SITE-002 S-5), so a lost visitor keeps the site's way around.
+    expect(controls(html)[0]?.text).toBe(t.nav.skip);
+    expect(html).toMatch(/<header\b/);
+    expect(html).toMatch(/<footer\b/);
+    const main = /<main\b[^>]*>([\s\S]*)<\/main>/.exec(html)?.[1] ?? '';
+    const links = controls(main);
     expect(links.map((c) => [hrefOf(c), c.text])).toEqual([
       ['/', t.notFound.home],
       [learnerStart('en'), t.notFound.start],
     ]);
     for (const c of links) expect(c.attrs).toMatch(/min-height:(64|80)px/);
+    // Next's body is a full-screen box; inside the chrome it sizes to its content, so the links sit on the first screen.
+    expect(main).toMatch(/<div class="hr-site-404">/);
+    expect(css.replace(/\/\*[\s\S]*?\*\//g, '')).toMatch(/\.hr-site-404 > div\s*\{[^}]*height:\s*auto !important/);
   });
 });
 
