@@ -75,6 +75,17 @@ describe('roster revisit chips (section 4.11 item 5)', () => {
     expect(html.match(/lang="ko"/g)).toHaveLength(2);
   });
 
+  it('each chip shows the romanization outside the Korean span and is described as a preview', () => {
+    const html = renderToStaticMarkup(<RevisitLetterLinks chars={['ㄷ', 'ㅂ']} shown />);
+    expect(html).toMatch(/<span lang="ko"[^>]*>ㄷ<\/span>\s*<span[^>]*>d<\/span>/);
+    expect(html).toMatch(/<span lang="ko"[^>]*>ㅂ<\/span>\s*<span[^>]*>b<\/span>/);
+    const described = [...html.matchAll(/aria-describedby="([^"]+)"/g)].map((match) => match[1]);
+    expect(described).toHaveLength(2);
+    expect(new Set(described).size).toBe(1);
+    const id = described[0] ?? '';
+    expect(html).toMatch(new RegExp(`id="${id.replace(/[^\w-]/g, (c) => `\\${c}`)}"[^>]*>Preview<`));
+  });
+
   it('off: the letters as plain Korean text, as before', () => {
     const html = renderToStaticMarkup(<RevisitLetterLinks chars={['ㄷ', 'ㅂ']} shown={false} />);
     expect(html).toBe('<span lang="ko">ㄷ · ㅂ</span>');
@@ -149,4 +160,46 @@ describe('report P1 action group: [ Preview ] (section 4.11 item 2, RP-7a2 slot)
     const none = renderToStaticMarkup(<ReportInsights section={section([], null)} kind="practice-next" preview />);
     expect(none).not.toContain('report-line-actions');
   });
+});
+
+describe('hosts with the prop left out: useBrowseLinksShown() decides after mount', () => {
+  const routeView = (): LearningRouteView => {
+    const v = learningRouteView({ space: { id: 'space:fam', kind: 'family' }, learners: [learner()], learnerId: 'learner:sam', plans: [], today: TODAY, stageTitle, catalog: ROUTE_CATALOG, locale: 'en' });
+    if (v === null || v.status !== 'ready') throw new Error('no ready view');
+    return v;
+  };
+  const reportSection: ReportSection = {
+    heading: 'What to practice next',
+    lines: [{ code: 'next_in_plan', sentence: { text: 'Next in the plan: Meet a, eo, g, n.', parts: [] }, tip: null, actions: [], preview: { kind: 'quest', id: 'quest:stage1-letters-q2' } }],
+  };
+  const hosts: Array<[string, () => JSX.Element, string]> = [
+    ['plan builder row', () => <DraftItemRow item={{ kind: 'quest', id: 'quest:stage1-letters-q2' }} number={2} canUp canDown onUp={noop} onDown={noop} onRemove={noop} onUpdate={noop} />, '/browse#t=quest:stage1-letters-q2&s=plan'],
+    ['Learning Route', () => <LearningRouteContent view={routeView()} />, '&s=route'],
+    ['report P1 group', () => <ReportInsights section={reportSection} kind="practice-next" />, '/browse#t=quest:stage1-letters-q2&s=report'],
+  ];
+
+  async function browseLinks(element: () => JSX.Element): Promise<string[]> {
+    let r: ReactTestRenderer | null = null;
+    await act(async () => {
+      r = create(element());
+    });
+    const found = (r as unknown as ReactTestRenderer).root
+      .findAll((n) => n.type === 'a' && typeof n.props.href === 'string' && n.props.href.startsWith('/browse'))
+      .map((n) => n.props.href as string);
+    act(() => (r as unknown as ReactTestRenderer).unmount());
+    return found;
+  }
+
+  for (const [name, element, expected] of hosts) {
+    it(`${name}: on at the app origin with the switch on, off on another origin`, async () => {
+      vi.stubEnv('NEXT_PUBLIC_BROWSE', 'enabled');
+      vi.stubGlobal('window', { location: { origin: 'https://app.hangulroute.com' } });
+      const on = await browseLinks(element);
+      expect(on.length).toBeGreaterThan(0);
+      expect(on.every((href) => href.includes(expected))).toBe(true);
+
+      vi.stubGlobal('window', { location: { origin: 'https://hangulroute.com' } });
+      expect(await browseLinks(element)).toEqual([]);
+    });
+  }
 });

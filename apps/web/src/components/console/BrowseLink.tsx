@@ -2,7 +2,7 @@
 
 import type { BrowseSource, BrowseTarget } from '@hangul-route/content-schema';
 import { borderWidth, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
-import { useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import {
   browseLinksShown,
   browseUrl,
@@ -15,6 +15,7 @@ import {
   type OpenBrowseResult,
 } from '@/lib/console/browse-link';
 import { browserStorage, type KeyValueStorage } from '@/lib/i18n/safe-storage';
+import { letterLabel } from '@/lib/console/report-view';
 import { useConsole } from './use-console';
 
 /**
@@ -210,14 +211,23 @@ export function BrowseLink({
  */
 export function RevisitLetterLinks({ chars, shown }: { chars: readonly string[]; /** Omitted, `browseLinksShown()` decides. */ shown?: boolean }): JSX.Element {
   const linksShown = useBrowseLinksShown();
+  const t = useConsole().m.console.browse;
+  const describedId = useId();
   if (!(shown ?? linksShown)) return <span lang="ko">{chars.join(' · ')}</span>;
   return (
     <span style={{ display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.xs, verticalAlign: 'middle' }}>
-      {chars.map((char, index) => (
-        <BrowseLink key={char} target={{ kind: 'char', char }} source="roster" testId={`roster-revisit-${index}`} style={{ fontSize: typography.size.bodyLg }}>
-          <span lang="ko">{char}</span>
-        </BrowseLink>
-      ))}
+      <span id={describedId} hidden>
+        {t.preview.cta}
+      </span>
+      {chars.map((char, index) => {
+        const { romanization } = letterLabel(char);
+        return (
+          <BrowseLink key={char} target={{ kind: 'char', char }} source="roster" describedBy={describedId} testId={`roster-revisit-${index}`} style={{ gap: spacing.xs }}>
+            <span lang="ko" style={{ fontSize: typography.size.bodyLg }}>{char}</span>
+            {romanization ? <span style={{ color: colors.text.secondary, fontWeight: typography.weight.regular }}>{romanization}</span> : null}
+          </BrowseLink>
+        );
+      })}
     </span>
   );
 }
