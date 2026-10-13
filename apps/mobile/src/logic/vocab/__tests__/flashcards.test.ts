@@ -300,6 +300,16 @@ describe('summaryPrimary (the chunk summary button)', () => {
     expect(summaryPrimary(chunks, 0, first, first)).toEqual({ kind: 'review', chunk: 0 });
   });
 
+  it('an ids run (Practice these, index -1) on a fully collected topic reviews the same words, never chunk 0', () => {
+    const all = new Set(words(8).map((w) => w.id));
+    expect(summaryPrimary(chunks, -1, all, all)).toEqual({ kind: 'review', chunk: -1 });
+  });
+
+  it('an ids run with a word of the topic still to meet offers the next words', () => {
+    const some = new Set(['vocab:w01', 'vocab:w02']);
+    expect(summaryPrimary(chunks, -1, some, some)).toEqual({ kind: 'next', chunk: 0 });
+  });
+
   it('a chunk that collected a word in this run still offers the next words', () => {
     const before = new Set(['vocab:w01', 'vocab:w02', 'vocab:w03']);
     const after = new Set([...before, 'vocab:w04']);

@@ -26,6 +26,8 @@ export interface CardsRun<T> {
   words: T[];
   /** The word that opens on its back face (a collected wall tile), when it is in the run. */
   startId: string | null;
+  /** The run's words in chunk (or `ids`) order, before `startId` moved a word first: the quick check pads from it. */
+  inOrder: T[];
 }
 
 /**
@@ -54,8 +56,8 @@ export function cardsRun<T extends Pick<RuntimeVocabItem, 'id' | 'level'>>(
     words = chunks[index] ?? [];
   }
   const start = words.find((w) => w.id === params.startId);
-  if (start === undefined) return { chunks, index, words, startId: null };
-  return { chunks, index, words: [start, ...words.filter((w) => w !== start)], startId: start.id };
+  if (start === undefined) return { chunks, index, words, startId: null, inOrder: words };
+  return { chunks, index, words: [start, ...words.filter((w) => w !== start)], startId: start.id, inOrder: words };
 }
 
 /**
@@ -210,7 +212,7 @@ export function summarySpeedShown(i: { speedScreen: boolean; collected: number; 
 
 /**
  * The column width two `lg` mark buttons need side by side: "Show me again"
- * and its longer Spanish line ("Muestramela otra vez") with the button's
+ * and its longer Spanish line ("Muéstramela otra vez") with the button's
  * padding, measured in Chromium (design/screens/vocab/cards.md).
  */
 export const MARK_PAIR_MIN_WIDTH = 400;

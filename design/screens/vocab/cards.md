@@ -59,9 +59,9 @@ F  Quick check (VocabQuestionView, check mode)        F  Summary                
 | Got it / Show me again | Accepted on the back only (T3). Writes `self` (`known: true / false`) and `introduced` if it was not yet; Show me again puts the card at the end of the chunk once. Both open the next card's front. |
 | Last card | The quick check: two word-to-picture questions (`quickCheckItems`: the Show-me-again words first) through `VocabQuestionView` `check` mode, the options from the same topic. The first answer per question writes `answer` (`format: 'word-to-image'`, `source: 'cards'`). A right answer says the word and its meaning, then the next after 700 ms. When the topic cannot build 2 picture questions, the check is skipped. |
 | Summary | Writes `session` (`kind: 'cards'`) and sends `vocab.cards.complete` once. Hoya `cheering`, "N new words collected" (the words first collected in this chunk, a count), the chunk's pictures in a row, then the buttons. |
-| Back / system back mid-chunk | The leave sheet. Keep going closes it; Stop goes back. Words already turned stay collected (their `introduced` was written when they turned). From the summary, Back leaves at once. |
+| Back / system back mid-chunk | The leave sheet. Keep going closes it; Stop goes back. Words already turned stay collected (their `introduced` was written when they turned). From the summary, Back leaves at once. System back means the Android back button and the iOS edge swipe (`beforeRemove`). On the web the browser's Back button is not part of the in-app stack (the app has no linking config), so it leaves the page as on every other screen; nothing is lost, because each turned word was written when it turned. |
 
-**Summary buttons**: primary **Next words** (the first chunk with a word still to meet) or **Review these** (`summaryPrimary`: this chunk again when it was already collected before it opened, behaviour 12, or when every word is collected); **Speed round** only when the Speed Round screen is in the build (`VOCAB_SCREENS.speed`) and the learner has as many collected words as the level's options (3 or 4, the topic page's rule); **Back to topic** (secondary).
+**Summary buttons**: primary **Next words** (the first chunk with a word still to meet) or **Review these** (`summaryPrimary`: this chunk again when it was already collected before it opened, behaviour 12, or when every word is collected; after an `ids` run, the same words again, never chunk 0); **Speed round** only when the Speed Round screen is in the build (`VOCAB_SCREENS.speed`) and the learner has as many collected words as the level's options (3 or 4, the topic page's rule); **Back to topic** (secondary).
 
 ## Accessibility
 
@@ -91,3 +91,16 @@ F  Quick check (VocabQuestionView, check mode)        F  Summary                
 - **The mark buttons stack at narrow widths.** "Show me again" is about 190 dp at `lg` in English and longer in Spanish ("Muéstramela otra vez"), so two side by side need about 400 dp; below the measured fit they stack with Got it first, each full width and 80 dp tall (the wireframe's open question 3).
 - **`ids` is honoured** (F-VOC-004 S-5's "Practice these"): the run is just those words, in that order, as one chunk; Next words then goes to the topic's first chunk with a word to meet.
 - **Telemetry**: `vocab.cards.start` `{ topicKey, chunk, chunks, words, level }` and `vocab.cards.complete` `{ topicKey, chunk, words, gotIt, again, heard, newlyCollected, checkFirstTry, checkQuestions }`; `level` is the level order, never an age; `chunk` is -1 for an `ids` run (it is not one of the topic's chunks).
+
+## Device flip pass (the C-2 carry-over)
+
+Row C-5 asks for the iOS and Android flip pass from C-2 to be recorded here. Status at C-5:
+
+- **iOS: run by the author, passed.** iOS 26.5 Simulator (iPhone 17) through Xcode, a local Release build with `EXPO_PUBLIC_VOCAB_TOPICS_ENABLED=1`, an XCUITest from onboarding through Library > Words > Food > Learn: front, tap, back, Got it, next front.
+- **Android: not run** (no Android device or emulator on the build machine).
+- **Owner-blocked, a precondition of C-7 (the `flags.vocabTopicsEnabled` flip)**. Before the flag is turned on, the owner (or a device run) checks:
+  1. Android: the card turns front, back and front again, and each face's name is read by TalkBack.
+  2. Android and iOS: a quick double tap turns the card once per tap, never skips a face.
+  3. Android and iOS with Reduce motion / Remove animations on: the card swaps at once.
+  4. CardDetail Share: the shared PNG matches the card on screen on iOS and Android (C-2's FlipCard change).
+  5. VoiceOver and TalkBack: after a flip the new face is announced; with the marks stacked, Got it is reached before Show me again.

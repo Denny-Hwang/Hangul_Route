@@ -216,7 +216,8 @@ export type SummaryPrimary = { kind: 'next' | 'review'; chunk: number };
  * The chunk summary's primary button: "Review these" (the same chunk) when the
  * chunk was a review — every word of it was collected before it opened
  * (behaviour 12, e.g. reopened from the word wall) — or when the topic has no
- * word left to meet (chunk 0 when `current` is out of range); otherwise "Next
+ * word left to meet (chunk 0 when `current` is out of range, -1 — the same
+ * words — for an `ids` run); otherwise "Next
  * words", the first chunk with a word still to meet.
  * `collectedBefore`: the ids collected when the chunk opened.
  */
@@ -232,5 +233,7 @@ export function summaryPrimary(
   }
   const toMeet = chunks.some((c) => c.some((w) => !collected.has(w.id)));
   if (toMeet) return { kind: 'next', chunk: firstChunkToMeet(chunks, collected) };
+  // An `ids` run (-1) reviews the same words; it is not one of the chunks.
+  if (current === -1) return { kind: 'review', chunk: -1 };
   return { kind: 'review', chunk: current >= 0 && current < chunks.length ? current : 0 };
 }

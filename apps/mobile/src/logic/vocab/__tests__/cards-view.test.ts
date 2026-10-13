@@ -46,6 +46,11 @@ describe('cardsRun (section 3.1 params, section 3.5 resume)', () => {
     expect(run.startId).toBe('vocab:w07');
   });
 
+  it('inOrder keeps the run in chunk (or ids) order when startId moves a word first (the quick check pads from it)', () => {
+    expect(slugs(cardsRun(items, { ...base, params: { chunk: 1, startId: 'vocab:w07' } }).inOrder)).toEqual(['w05', 'w06', 'w07', 'w08']);
+    expect(slugs(cardsRun(items, { ...base, params: { ids: ['vocab:w03', 'vocab:w04'], startId: 'vocab:w04' } }).inOrder)).toEqual(['w03', 'w04']);
+  });
+
   it('a startId outside the chunk is ignored', () => {
     const run = cardsRun(items, { ...base, params: { chunk: 0, startId: 'vocab:w09' } });
     expect(slugs(run.words)).toEqual(['w01', 'w02', 'w03', 'w04']);

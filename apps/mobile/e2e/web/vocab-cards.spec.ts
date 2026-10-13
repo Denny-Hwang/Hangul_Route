@@ -349,6 +349,12 @@ test.describe('Words flashcards (fixture bundle)', () => {
     // The same setting as the Profile screen, kept for the profile (behaviour 7).
     const id = await profileId(page);
     await expect.poll(async () => (await readStored<{ romanizationMode?: string }>(page, `settings:${id}`))?.romanizationMode).toBe('tap');
+    // ...and it survives restarting the app.
+    await page.reload();
+    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+    await learnFood(page);
+    await expect(page.getByTestId('vocab-cards-reading-practice')).toHaveAttribute('aria-checked', 'true');
+    await expect(page.getByTestId('vocab-card-reveal')).toBeVisible();
   });
 
   test('no Korean voice: the Korean and its romanization stay, with one calm line (behaviour 8)', async ({ page }) => {
@@ -428,8 +434,25 @@ test.describe('Words flashcards (fixture bundle)', () => {
     expect(got!.y + got!.height).toBeLessThanOrEqual(568);
     expect(again!.y + again!.height).toBeLessThanOrEqual(568);
     expect(got!.y).toBeLessThan(again!.y);
+    // Screen readers and Tab meet them in the drawn order: Got it, then Show me again.
+    const order = await page
+      .getByTestId('vocab-card-marks')
+      .locator('[data-testid="vocab-card-got-it"], [data-testid="vocab-card-again"]')
+      .evaluateAll((els) => els.map((el) => el.getAttribute('data-testid')));
+    expect(order).toEqual(['vocab-card-got-it', 'vocab-card-again']);
     await expectFits(page);
     await shot(page, 'vocab-cards-back-320');
+  });
+
+  test('landscape 568 x 320: the card and the marks fit with nothing past the edge', async ({ page }) => {
+    await page.setViewportSize({ width: 568, height: 320 });
+    await newLearner(page);
+    await learnFood(page);
+    await expectFits(page);
+    await flip(page);
+    await expect(page.getByTestId('vocab-card-got-it')).toBeInViewport();
+    await expect(page.getByTestId('vocab-card-again')).toBeInViewport();
+    await expectFits(page);
   });
 });
 

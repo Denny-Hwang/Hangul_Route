@@ -189,7 +189,8 @@ function CardsSession({ source, params, navigation }: SessionProps): React.React
   useEffect(() => {
     if (state.phase !== 'check' || check !== null) return;
     const questions = quickCheckQuestions({
-      chunk: run.words,
+      // Padded in chunk order (§3.5), not the order a wall tile's startId gave the cards.
+      chunk: run.inOrder,
       again: state.requeued,
       universe: items,
       optionCount,
@@ -199,7 +200,7 @@ function CardsSession({ source, params, navigation }: SessionProps): React.React
     });
     if (questions.length === 0) dispatch('check-done');
     else setCheck({ questions, index: 0, firstTry: 0, asked: new Set() });
-  }, [state.phase, state.requeued, check, run.words, items, optionCount, level, dispatch]);
+  }, [state.phase, state.requeued, check, run.inOrder, items, optionCount, level, dispatch]);
 
   const checkRef = useRef(check);
   checkRef.current = check;
@@ -312,7 +313,10 @@ function CardsSession({ source, params, navigation }: SessionProps): React.React
           collectedBefore={collectedBefore}
           optionCount={optionCount}
           onBack={back}
-          onNext={(chunk) => go(() => navigation.replace(ACTIVITY_ROUTES.learn, { topicKey, chunk }))}
+          onNext={(chunk) =>
+            // -1: "Review these" on an `ids` run opens the same words again, not chunk 0.
+            go(() => navigation.replace(ACTIVITY_ROUTES.learn, chunk < 0 ? { topicKey, ids: run.inOrder.map((w) => w.id) } : { topicKey, chunk }))
+          }
           onSpeed={() => go(() => navigation.replace(ACTIVITY_ROUTES.speed, { topicKey }))}
           onTopic={() => go(back)}
           locale={locale}
@@ -415,15 +419,21 @@ function CardsPhase({
   const speaker = useMediaSize(touchTarget.child);
   const speakerIcon = useMediaSize(spacing.xxl);
 
+  const gotIt = (
+    <View style={stacked ? undefined : { flex: 1 }}>
+      <Button label={copy.gotIt} tone="primary" size="lg" fullWidth onPress={() => dispatch('got-it')} testID="vocab-card-got-it" />
+    </View>
+  );
   const marks =
     state.face === 'back' ? (
-      <View style={{ flexDirection: stacked ? 'column-reverse' : 'row', gap: spacing.sm, paddingTop: spacing.sm }} testID="vocab-card-marks">
+      // Tree order is the drawn order, so screen readers and Tab meet the buttons as they are seen:
+      // side by side Show me again then Got it; stacked Got it on top.
+      <View style={{ flexDirection: stacked ? 'column' : 'row', gap: spacing.sm, paddingTop: spacing.sm }} testID="vocab-card-marks">
+        {stacked ? gotIt : null}
         <View style={stacked ? undefined : { flex: 1 }}>
           <Button label={copy.again} tone="secondary" size="lg" fullWidth onPress={() => dispatch('again')} testID="vocab-card-again" />
         </View>
-        <View style={stacked ? undefined : { flex: 1 }}>
-          <Button label={copy.gotIt} tone="primary" size="lg" fullWidth onPress={() => dispatch('got-it')} testID="vocab-card-got-it" />
-        </View>
+        {stacked ? null : gotIt}
       </View>
     ) : null;
 
