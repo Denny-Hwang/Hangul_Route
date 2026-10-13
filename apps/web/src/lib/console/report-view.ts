@@ -28,6 +28,7 @@ import {
 } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, formatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { ApiResult, LearnerReportBody } from './api';
+import type { LearningRouteGoal } from './learning-route-view';
 import { startingSpotLine } from './placement';
 import { ROUTES, spaceIdFrom, type ReportFrom } from './routing';
 import { consoleWord } from './vocab-words';
@@ -281,8 +282,12 @@ export interface ReportLineView {
   sentence: ReportSentence;
   /** The strand tip under P2 (`report.tip`), else null. */
   tip: ReportSentence | null;
-  /** **Add to a plan** or **Open the plan**, for a console viewer with `plan.write` on a space that is not archived. */
-  action: ReportLink | null;
+  /**
+   * The line's action group (RP-7a2): **Add to a plan** (P1, only with a quest this build's catalogue names) or **Open
+   * the plan** (P3), for a console viewer with `plan.write` on a space that is not archived. Empty: no group is drawn.
+   * F-BROWSE-001 BR-11 appends **Preview** to P1's group; each action is described by the line's sentence on the page.
+   */
+  actions: ReportLink[];
 }
 
 const strandName = (strand: PlacementStrand, m: Messages): string => m.caregiver.placementReport.strand[strand];
@@ -303,7 +308,7 @@ const questTitleOf = (id: string, catalog: Catalog): string | null => catalog.qu
  * The sentence of one insight line (section 3.6), in the report's voice; null for a line this build cannot word (a
  * quest its catalogue does not hold). Actions are added by the page view, which knows the space and the viewer's role.
  */
-export function insightView(line: InsightLine, w: ReportWords): Omit<ReportLineView, 'action'> | null {
+export function insightView(line: InsightLine, w: ReportWords): Omit<ReportLineView, 'actions'> | null {
   const { m, name } = w;
   const i = m.report.insight;
   const you = w.voice === 'second' ? m.report.you.insight : null;
@@ -468,6 +473,11 @@ export interface ReportStepper {
 export interface ReportGlance {
   /** "Now on Stage 1: Hangul"; null without a readable stage. */
   nowOn: string | null;
+  /**
+   * The Learning Route goal line under "Now on" (LR-D, `stage-list.md`; RP-7a2 lands after LR-8, so it draws it):
+   * the flag only for a goal or a plan's destination (cases 1 and 2); null when the page has no goal to show.
+   */
+  goal: { line: string; flag: boolean } | null;
   /** "Last practice: Oct 12"; null when there is none (the empty state). */
   lastPractice: string | null;
   /** **Open Learning Route**, only when that page exists on this build. */
@@ -590,6 +600,8 @@ export interface LearnerReportViewInput {
   tipGames?: ReportTipGames;
   /** The Learning Route stage list exists on this build (LR-8): the glance links to it. */
   learningRoute?: boolean;
+  /** The learner's Learning Route goal (`learningRouteView`'s card goal), when the page could read one. */
+  goal?: Pick<LearningRouteGoal, 'case' | 'line'> | null;
   catalog?: Catalog;
   locale?: UiLocale;
 }
@@ -777,12 +789,14 @@ export function learnerReportView(input: LearnerReportViewInput): LearnerReportV
     const out = insightView(line, w);
     if (out === null) return null;
     const links = 'links' in line ? line.links : undefined;
-    let action: ReportLink | null = null;
+    const actions: ReportLink[] = [];
     if (rights.planWrite && !archived && links) {
-      if ('addToPlan' in links) action = { href: `${ROUTES.spacePlan(space.id, undefined, space.kind)}&add=${encodeURIComponent(links.addToPlan)}`, text: m.report.action.addToPlan };
-      else action = { href: ROUTES.spacePlan(space.id, links.openPlan, space.kind), text: m.report.action.openPlan };
+      // A quest this build's catalogue lacks is never offered: the builder could not add it (design notes, RP-7a2).
+      if ('addToPlan' in links) {
+        if (questTitleOf(links.addToPlan, catalog) !== null) actions.push({ href: `${ROUTES.spacePlan(space.id, undefined, space.kind)}&add=${encodeURIComponent(links.addToPlan)}`, text: m.report.action.addToPlan });
+      } else actions.push({ href: ROUTES.spacePlan(space.id, links.openPlan, space.kind), text: m.report.action.openPlan });
     }
-    return { ...out, action };
+    return { ...out, actions };
   };
   const section = (heading: string, lines: InsightLine[]): ReportSection | null => {
     const views = lines.map(lineView).filter((line): line is ReportLineView => line !== null);
@@ -798,6 +812,7 @@ export function learnerReportView(input: LearnerReportViewInput): LearnerReportV
     const stage = report.glance?.nowOn ?? (report.state === 'empty' ? emptyStageOf(summary) : null);
     return {
       nowOn: stage ? m.report.glance.nowOn(stage.n, input.stageTitle(stage.stage)) : null,
+      goal: input.goal ? { line: input.goal.line, flag: input.goal.case !== 3 } : null,
       lastPractice: report.glance ? lastPracticeOf(summary, w) : null,
       route,
       region: m.console.learningRoute.section,
@@ -857,4 +872,66 @@ export function learnerReportView(input: LearnerReportViewInput): LearnerReportV
 function emptyStageOf(summary: ReportSummary): { stage: StageKey; n: number } | null {
   const parsed = StageKeySchema.safeParse(summary.journey?.here);
   return parsed.success ? { stage: parsed.data, n: StageKeySchema.options.indexOf(parsed.data) + 1 } : null;
+}
+
+// ---------------------------------------------------------------------------------------------
+// The page (RP-7a2)
+
+/**
+ * The roster card's **See report** (section 3.1): the week report with `from=roster`, ids only. Null when reports are
+ * off for this build or console locale (`reportsEnabled`), and for a school (its admin opens the class's report).
+ */
+export function rosterReportLink(opts: { spaceId: string; kind: SpaceKind; learnerId: string; enabled: boolean; locale?: UiLocale }): ReportLink | null {
+  if (!opts.enabled || viewerOf(opts.kind) === null) return null;
+  return {
+    href: ROUTES.learnerReport({ spaceId: opts.spaceId, learnerId: opts.learnerId, kind: opts.kind, period: 'week', from: 'roster' }),
+    text: getMessages(opts.locale ?? DEFAULT_LOCALE).report.action.seeReport,
+  };
+}
+
+/** The page's cache key: the report body is the learner's summary, the same for every period and step. */
+export function reportCacheKey(spaceId: string, learnerId: string): string {
+  return JSON.stringify([spaceId, learnerId]);
+}
+
+/**
+ * What the page draws (section 3.14; design `learner-report.md`, States):
+ * - `state`: a page with no learner name to show (flag off, not available, a failed first load), so the state sentence
+ *   is its `h1`, under the back link; `retry` only for an error a new try can mend;
+ * - `loading`: the first load (tabs and Print disabled, skeletons);
+ * - `report`: the report from `data`; `busy` while a later period or step loads (only the panel is busy); `error`
+ *   when that load failed and the cached report stays on screen with the error as a state line, never a second `h1`;
+ * - `signedOut`: the session is gone; the page goes to sign-in.
+ */
+export type ReportScreen =
+  | { kind: 'state'; title: string; retry: string | null; back: ReportLink }
+  | { kind: 'loading'; back: ReportLink }
+  | { kind: 'report'; data: LearnerReportBody; busy: boolean; error: { message: string; retry: string } | null }
+  | { kind: 'signedOut' };
+
+export interface ReportScreenInput {
+  /** `reportsEnabled(locale)`. */
+  enabled: boolean;
+  query: ReportQuery;
+  /** The answer to the newest load; null while it runs. */
+  load: ApiResult<LearnerReportBody> | null;
+  /** The last report this page loaded for the same space and learner (`reportCacheKey`), else null. */
+  cached: LearnerReportBody | null;
+  locale?: UiLocale;
+}
+
+export function reportScreenOf(input: ReportScreenInput): ReportScreen {
+  const locale = input.locale ?? DEFAULT_LOCALE;
+  const m = getMessages(locale);
+  const back = reportBackLink(input.query.from, null, locale);
+  if (!input.enabled) return { kind: 'state', title: m.report.state.flagOff, retry: null, back };
+  if (!input.query.spaceId || !input.query.learnerId) return { kind: 'state', title: m.report.state.unavailable, retry: null, back };
+  const { load, cached } = input;
+  if (load === null) return cached ? { kind: 'report', data: cached, busy: true, error: null } : { kind: 'loading', back };
+  if (load.ok) return { kind: 'report', data: load.data, busy: false, error: null };
+  const problem = reportLoadProblem(load, locale);
+  if (problem.kind === 'signedOut') return { kind: 'signedOut' };
+  const message = problem.message ?? m.report.state.error;
+  if (problem.kind === 'error' && problem.retry !== null && cached) return { kind: 'report', data: cached, busy: false, error: { message, retry: problem.retry } };
+  return { kind: 'state', title: message, retry: problem.retry, back };
 }

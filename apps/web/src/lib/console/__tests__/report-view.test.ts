@@ -16,8 +16,11 @@ import {
   letterLabel,
   reportBackLink,
   reportLoadProblem,
+  reportCacheKey,
   reportQueryOf,
+  reportScreenOf,
   reportViewerRights,
+  rosterReportLink,
   reportWordsOf,
   type LearnerReportView,
   type LearnerReportViewInput,
@@ -79,7 +82,7 @@ describe('the week report of a steady learner (behaviour 1, family viewer)', () 
   it('reads the headline, the two at-a-glance lines and no notice', () => {
     expect(v.state).toBe('ready');
     expect(v.headline).toEqual({ text: 'Mina practiced on 3 days this week.', horizon: null });
-    expect(v.glance).toEqual({ nowOn: 'Now on Stage 1: Hangul', lastPractice: 'Last practice: Oct 15', route: null, region: 'Learning Route' });
+    expect(v.glance).toEqual({ nowOn: 'Now on Stage 1: Hangul', goal: null, lastPractice: 'Last practice: Oct 15', route: null, region: 'Learning Route' });
     expect(v.notices).toEqual([]);
     expect(v.archived).toBeNull();
   });
@@ -117,11 +120,11 @@ describe('the week report of a steady learner (behaviour 1, family viewer)', () 
   it('lists what to practice next with the plan actions a grown-up with plan.write gets', () => {
     expect(v.practiceNext?.heading).toBe('What to practice next');
     expect(texts(v.practiceNext?.lines)).toEqual(['ㅂ (b) and ㅅ (s): worth another visit.', 'Sounds of letters is next to grow.', '4 plan items are ready to play.']);
-    expect(v.practiceNext?.lines[0]?.action).toEqual({ href: '/parent/space/plan?id=space%3Akim-family&add=quest%3Astage1-life-q2', text: 'Add to a plan' });
+    expect(v.practiceNext?.lines[0]?.actions).toEqual([{ href: '/parent/space/plan?id=space%3Akim-family&add=quest%3Astage1-life-q2', text: 'Add to a plan' }]);
     expect(v.practiceNext?.lines[1]?.tip?.text).toBe('Listening games help: try Listen and pick.');
-    expect(v.practiceNext?.lines[1]?.action).toBeNull();
+    expect(v.practiceNext?.lines[1]?.actions).toEqual([]);
     // Two plans hold the open items (the family plan and the own route): no single plan to open.
-    expect(v.practiceNext?.lines[2]?.action).toBeNull();
+    expect(v.practiceNext?.lines[2]?.actions).toEqual([]);
   });
 
   it('shows the figures with "More than last week" only where they grew, and the calendar sentence', () => {
@@ -215,15 +218,15 @@ describe('the teacher variant (class viewer)', () => {
 
   it('offers Open the plan when one class plan holds every open item', () => {
     const line = v.practiceNext?.lines.find((l) => l.code === 'plan_open');
-    expect(line?.action).toEqual({ href: '/teach/space/plan?id=space%3Asunflower&plan=plan%3Afamily-week', text: 'Open the plan' });
+    expect(line?.actions).toEqual([{ href: '/teach/space/plan?id=space%3Asunflower&plan=plan%3Afamily-week', text: 'Open the plan' }]);
   });
 
   it('draws no action without plan.write (a school admin) and none on an archived class', () => {
     const admin = view(STEADY, { kind: 'class', role: null });
-    expect(admin.practiceNext?.lines.every((line) => line.action === null)).toBe(true);
-    expect(view(STEADY, { kind: 'class', role: 'teacher' }).practiceNext?.lines.some((line) => line.action !== null)).toBe(true);
+    expect(admin.practiceNext?.lines.every((line) => line.actions.length === 0)).toBe(true);
+    expect(view(STEADY, { kind: 'class', role: 'teacher' }).practiceNext?.lines.some((line) => line.actions.length > 0)).toBe(true);
     const archived = view(STEADY, { kind: 'class', archivedAt: '2026-10-01T00:00:00.000Z' });
-    expect(archived.practiceNext?.lines.every((line) => line.action === null)).toBe(true);
+    expect(archived.practiceNext?.lines.every((line) => line.actions.length === 0)).toBe(true);
   });
 
   it('says an archived space is read-only: the settings sentence to its owner, the neutral report line to everyone else', () => {
@@ -408,7 +411,7 @@ describe('states (section 3.14)', () => {
     expect(line?.code).toBe('letters_revisit');
     expect(line?.sentence.text).toBe('ㄴ (n): worth another visit.');
     expect(line?.sentence.parts).toContainEqual(expect.objectContaining({ kind: 'letter', letter: 'ㄴ', romanization: 'n' }));
-    expect(line?.action).toBeNull();
+    expect(line?.actions).toEqual([]);
   });
 
   it('legacy and stale says the update line once', () => {
@@ -419,7 +422,7 @@ describe('states (section 3.14)', () => {
   it('empty: Now on without Last practice, the not-started line and the app\'s next quest, no tabs', () => {
     const v = view(EMPTY);
     expect(v.state).toBe('empty');
-    expect(v.glance).toEqual({ nowOn: 'Now on Stage 1: Hangul', lastPractice: null, route: null, region: 'Learning Route' });
+    expect(v.glance).toEqual({ nowOn: 'Now on Stage 1: Hangul', goal: null, lastPractice: null, route: null, region: 'Learning Route' });
     expect(v.notices).toEqual(['Mina has not started yet. The report fills in after the first practice.']);
     expect(v.tabs).toBeNull();
     expect(texts(v.practiceNext?.lines)).toEqual(['Next on the Learning Route: Meet a, eo, g, n.']);
@@ -637,8 +640,8 @@ describe('reportViewerRights: the role in listSpaces() decides the archived sent
   it('keys plan.write by kind as can.ts does: a teacher of a family or a caregiver of a class has none', () => {
     expect(reportViewerRights('teacher', 'family')).toEqual({ manage: false, planWrite: false });
     expect(reportViewerRights('caregiver', 'class')).toEqual({ manage: false, planWrite: false });
-    expect(view(STEADY, { kind: 'family', role: 'teacher' }).practiceNext?.lines.some((line) => line.action !== null)).toBe(false);
-    expect(view(STEADY, { kind: 'class', role: 'caregiver' }).practiceNext?.lines.some((line) => line.action !== null)).toBe(false);
+    expect(view(STEADY, { kind: 'family', role: 'teacher' }).practiceNext?.lines.some((line) => line.actions.length > 0)).toBe(false);
+    expect(view(STEADY, { kind: 'class', role: 'caregiver' }).practiceNext?.lines.some((line) => line.actions.length > 0)).toBe(false);
   });
 });
 
@@ -755,5 +758,116 @@ describe('the stepper buttons and the console locale', () => {
     expect(week.glance?.lastPractice).toBe('Última práctica: 15 oct');
     const month = view(STEADY, { locale: 'es', query: { period: 'month', at: null, from: null } });
     expect(month.stepper?.range).toBe('octubre de 2026');
+  });
+});
+
+/** F-REPORT-001 RP-7a2: what the page reads beyond RP-7a1's words (design `learner-report.md`, Notes for the PRs). */
+describe('the P1 action group (RP-7a2)', () => {
+  it('holds Add to a plan only when the line has a quest this build can name', () => {
+    const v = view(STEADY, { kind: 'class', role: 'teacher' });
+    expect(v.practiceNext?.lines[0]?.code).toBe('letters_revisit');
+    expect(v.practiceNext?.lines[0]?.actions).toEqual([{ href: '/teach/space/plan?id=space%3Asunflower&add=quest%3Astage1-life-q2', text: 'Add to a plan' }]);
+  });
+
+  it('has no action group for a P1 without a questId (legacy) or with a quest the catalogue lacks', () => {
+    expect(view(LEGACY, { kind: 'class', role: 'teacher' }).practiceNext?.lines[0]?.actions).toEqual([]);
+    const catalog = { ...CATALOG, quests: CATALOG.quests.filter((quest) => quest.id !== 'quest:stage1-life-q2') };
+    const line = view(STEADY, { kind: 'class', role: 'teacher', catalog }).practiceNext?.lines.find((row) => row.code === 'letters_revisit');
+    expect(line?.sentence.text).toBe('ㅂ (b) and ㅅ (s): worth another visit.');
+    expect(line?.actions).toEqual([]);
+  });
+});
+
+describe('the goal line under "Now on" (RP-7a2, LR-D)', () => {
+  const goal = (kase: 1 | 2 | 3, line: string) => ({ case: kase, line, from: null, planEnds: null, reached: null, canDoLead: null, canDo: null, familyPlan: null });
+
+  it('reads the Learning Route goal line with its flag for a goal or a plan, without one for the next open stage', () => {
+    expect(view(STEADY, { goal: goal(1, "Mina's goal: Stage 2 · Words") }).glance?.goal).toEqual({ line: "Mina's goal: Stage 2 · Words", flag: true });
+    expect(view(STEADY, { goal: goal(2, "Your class's weekly plan reaches Stage 2") }).glance?.goal).toEqual({ line: "Your class's weekly plan reaches Stage 2", flag: true });
+    expect(view(STEADY, { goal: goal(3, 'Next open stage: Stage 2 · Words') }).glance?.goal).toEqual({ line: 'Next open stage: Stage 2 · Words', flag: false });
+  });
+
+  it('has no goal line without one, and no glance at all without a summary', () => {
+    expect(view(STEADY).glance?.goal).toBeNull();
+    expect(view(STEADY, { goal: null }).glance?.goal).toBeNull();
+    expect(view(null, { goal: goal(1, 'x') }).glance).toBeNull();
+  });
+});
+
+describe('rosterReportLink: the roster card See report (RP-7a2)', () => {
+  it('opens the week report from the roster, ids only, for a class and a family', () => {
+    expect(rosterReportLink({ spaceId: 'space:sunflower', kind: 'class', learnerId: 'profile:mina', enabled: true })).toEqual({
+      href: '/teach/space/learner?id=space%3Asunflower&learner=profile%3Amina&period=week&from=roster',
+      text: 'See report',
+    });
+    expect(rosterReportLink({ spaceId: 'space:kim-family', kind: 'family', learnerId: 'profile:mina', enabled: true })?.href).toBe(
+      '/teach/space/learner?id=space%3Akim-family&learner=profile%3Amina&period=week&from=roster',
+    );
+  });
+
+  it('is not drawn with reports off (flag or locale) or for a school', () => {
+    expect(rosterReportLink({ spaceId: 'space:sunflower', kind: 'class', learnerId: 'profile:mina', enabled: false })).toBeNull();
+    expect(rosterReportLink({ spaceId: 'space:school', kind: 'school', learnerId: 'profile:mina', enabled: true })).toBeNull();
+  });
+
+  it('words the link in the console locale', () => {
+    expect(rosterReportLink({ spaceId: 's', kind: 'class', learnerId: 'l', enabled: true, locale: 'es' })?.text).toBe(getMessages('es').report.action.seeReport);
+  });
+});
+
+describe('reportScreenOf: which screen the page draws (section 3.14, RP-7a2)', () => {
+  const query = { spaceId: 'space:sunflower', learnerId: 'profile:mina', period: 'week' as const, at: null, from: 'roster' as const };
+  const body = { ...response(STEADY, { kind: 'class' }) };
+  const ok = { ok: true as const, data: body };
+  const fail = (error: 'unauthorized' | 'forbidden' | 'network', status: number) => ({ ok: false as const, error, status });
+
+  it('flag off or a locale not reviewed: the state sentence is the h1, with the back link, before any load', () => {
+    expect(reportScreenOf({ enabled: false, query, load: null, cached: body })).toEqual({ kind: 'state', title: 'Reports are not available yet.', retry: null, back: { href: '/teach/home', text: 'Back to home' } });
+  });
+
+  it('an address without a space or a learner: "This report is not available."', () => {
+    expect(reportScreenOf({ enabled: true, query: { ...query, learnerId: '' }, load: null, cached: null })).toMatchObject({ kind: 'state', title: 'This report is not available.', retry: null });
+    expect(reportScreenOf({ enabled: true, query: { ...query, spaceId: '' }, load: null, cached: null })).toMatchObject({ kind: 'state', title: 'This report is not available.' });
+  });
+
+  it('the first load: the loading screen; a later load keeps the cached report and marks only the panel busy', () => {
+    expect(reportScreenOf({ enabled: true, query, load: null, cached: null })).toEqual({ kind: 'loading', back: { href: '/teach/home', text: 'Back to home' } });
+    expect(reportScreenOf({ enabled: true, query, load: null, cached: body })).toEqual({ kind: 'report', data: body, busy: true, error: null });
+  });
+
+  it('a loaded report', () => {
+    expect(reportScreenOf({ enabled: true, query, load: ok, cached: null })).toEqual({ kind: 'report', data: body, busy: false, error: null });
+  });
+
+  it('a network error with no cached report: the error sentence is the h1, with Try again', () => {
+    expect(reportScreenOf({ enabled: true, query, load: fail('network', 0), cached: null })).toEqual({
+      kind: 'state',
+      title: "Can't load the report right now.",
+      retry: 'Try again',
+      back: { href: '/teach/home', text: 'Back to home' },
+    });
+  });
+
+  it('a network error with a cached report: that report stays, the error is a state line with Try again', () => {
+    expect(reportScreenOf({ enabled: true, query, load: fail('network', 0), cached: body })).toEqual({
+      kind: 'report',
+      data: body,
+      busy: false,
+      error: { message: "Can't load the report right now.", retry: 'Try again' },
+    });
+  });
+
+  it('not a member or a wrong kind: "This report is not available.", never the cached report', () => {
+    expect(reportScreenOf({ enabled: true, query, load: fail('forbidden', 403), cached: body })).toMatchObject({ kind: 'state', title: 'This report is not available.', retry: null });
+  });
+
+  it('a lost session goes to sign-in', () => {
+    expect(reportScreenOf({ enabled: true, query, load: fail('unauthorized', 401), cached: body })).toEqual({ kind: 'signedOut' });
+  });
+
+  it('keys the cache by space and learner only: a period or a step reuses the same summary', () => {
+    expect(reportCacheKey('space:a', 'profile:b')).toBe(reportCacheKey('space:a', 'profile:b'));
+    expect(reportCacheKey('space:a', 'profile:b')).not.toBe(reportCacheKey('space:a', 'profile:c'));
+    expect(reportCacheKey('space:a|b', 'c')).not.toBe(reportCacheKey('space:a', 'b|c'));
   });
 });
