@@ -443,7 +443,9 @@ function CardsPhase({
             style={{ minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 1 }}
           >
             <Body weight="semibold">{copy.readingPractice}</Body>
-            <Pill tone={mode === 'tap' ? 'success' : 'neutral'} label={mode === 'tap' ? messages.learner.profile.reading.on : messages.learner.profile.reading.off} size="sm" />
+            <View style={{ justifyContent: 'center' }}>
+              <Pill tone={mode === 'tap' ? 'success' : 'neutral'} label={mode === 'tap' ? messages.learner.profile.reading.on : messages.learner.profile.reading.off} size="sm" />
+            </View>
           </Pressable>
         ) : null}
       </View>
@@ -513,7 +515,10 @@ function CardsPhase({
           </>
         ) : null}
       </View>
-      <PromptPanel variant="status" view={slot.view} onAction={(action) => slot.act(action, playWord)} testID="vocab-card-sound" />
+      {/* Its one action (Turn sound on, Try again, Tap to hear) when there is one; the calm line above says the rest. */}
+      {slot.view.actionLabel !== null ? (
+        <PromptPanel variant="status" view={slot.view} onAction={(action) => slot.act(action, playWord)} testID="vocab-card-sound" />
+      ) : null}
 
       {Platform.OS === 'web' ? (
         <View accessibilityLiveRegion="polite">
