@@ -33,6 +33,7 @@ import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { questOpenFor, useAccessTier, useQuestAccess } from '../../store/tier-store';
 import { useUiStore } from '../../store/ui-store';
+import { LinkButton } from '../placement/parts';
 import { GainsCard, StoriesNote } from './GainsCard';
 import { RouteCard } from './RouteCard';
 import { SkillsCard } from './SkillsCard';
@@ -224,6 +225,8 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
       firstReached,
       letterWall: routeLetterWall(model),
       week,
+      // Open plan (R-7d) needs F-PLAN-002's RouteOverview, which the navigator mounts only behind this flag.
+      planOverview: flags.routeEnabled,
       // "Plan ends {date}" on the grown-up card only (LR-OD-7); a plan day is a UTC calendar day.
       formatDay: (day) => formatDate(locale, `${day}T00:00:00.000Z`, 'monthDay', { utc: true }),
     });
@@ -380,6 +383,13 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
           <Body tone="secondary" testID="my-route-plan-line">
             {view.planLine}
           </Body>
+          {view.planOpen !== null && !readOnly ? (
+            // Open plan (R-7d; wireframe design/wireframes/journey/learning-route.md A): the learner's own weekly plan.
+            // The view already shows it only to the learner (viewer 'self'); `!readOnly` is belt-and-braces for the grown-up page.
+            <View style={{ alignSelf: 'flex-end' }}>
+              <LinkButton label={view.planOpen} onPress={() => navigation.navigate('RouteOverview', { profileId })} testID="my-route-plan-open" />
+            </View>
+          ) : null}
         </>
       ) : null}
 
