@@ -85,6 +85,15 @@ const lessonWeek = (draft: CurriculumDraft, catalog: Catalog): number => {
 const probeOf = (proposal: RouteProposal, catalog: Catalog): CurriculumDraft =>
   generateCurriculum({ ...proposal.params, weeks: PROBE_WEEKS }, catalog);
 const planOf = (draft: CurriculumDraft) => ({ meta: toMeta(draft), items: toPlanItems(draft) });
+/** Each card's stats, drafted from the proposal's own params from `from` on. */
+const cardStatsOf = (proposal: RouteProposal, from: string, catalog: Catalog) =>
+  DURATION_IDS.map((id) => {
+    const { lessons, stories, comingSoonItems, openSessions, endsAtStage } = generateCurriculum(
+      { ...proposal.params, startDate: from, weeks: LENGTH_PRESETS[id].weeks },
+      catalog,
+    ).stats;
+    return { lessons, stories, comingSoonItems, openSessions, endsAtStage };
+  });
 
 describe('defaults: pace chips and minutes (OD-13, section 3.1)', () => {
   it('pre-selects Gentle for Pictures first and for classes, Steady otherwise', () => {
@@ -142,6 +151,12 @@ describe('params (rule 1)', () => {
     const card = generateCurriculum({ ...proposal.params, weeks: proposal.options[1].weeks }, CATALOG_2026_10);
     expect(proposal.options[1].stats.lessons).toBe(card.stats.lessons);
     expect(card.items.every((item) => item.targetDate === undefined || item.targetDate >= nextClassDay)).toBe(true);
+  });
+
+  it('never starts a new plan before today: an earlier start date counts as today', () => {
+    const early = propose({ startDate: addDays(TODAY, -11) });
+    expect(early.params.startDate).toBe(TODAY);
+    expect(early).toEqual(propose());
   });
 
   it('takes the level, the exact placed-out set and the goals from the seed', () => {
@@ -551,12 +566,70 @@ describe('existing plan: update or unchanged (rule 4)', () => {
     const fresh = propose({ seed: band0, pace: 'brisk', today: later });
     expect(unchanged.options).toEqual(fresh.options);
     expect(unchanged.defaultId).toBe(fresh.defaultId);
-    expect(unchanged.headline).toBe(fresh.headline);
-    // Sessions a week off every chip: the chosen chip names the pace and builds the cards.
+    // The headline names where the stored plan goes on: two weeks in, a later Stage 1 lesson.
+    expect(fresh.headline).toBe('start-stage1');
+    expect(unchanged.headline).toBe('continue-stage1');
+    // Sessions a week off every chip: no chip is named, and the cards keep the plan's own rhythm.
     const custom = planOf(generateCurriculum({ ...first.params, sessionsPerWeek: 5 }, CATALOG_2026_10));
     const off = propose({ seed: band3, existing: custom, today: later, pace: 'brisk' });
-    expect(off.pace).toBe('brisk');
-    expect(off.options).toEqual(propose({ seed: band3, pace: 'brisk', today: later }).options);
+    expect(off.pace).toBeNull();
+    expect(off.params.sessionsPerWeek).toBe(5);
+    expect(off.options.map((option) => option.stats)).toEqual(cardStatsOf(off, later, CATALOG_2026_10));
+  });
+
+  describe("cards, defaultId and headline describe the plan the proposal returns", () => {
+    it('a family plan made at band 2 with no seed reads as a later Stage 1 start, like a new band 2 plan', () => {
+      const band2 = seedAt(CATALOG_2026_10, { stage: 'stage1', band: 2 });
+      const fresh = propose({ seed: band2 });
+      // The wizard stores the level only (no exact set) and the device later proposes with no seed.
+      const { placedOutQuestIds: _omit, ...levelOnly } = fresh.params;
+      const made = planOf(generateCurriculum(levelOnly, CATALOG_2026_10));
+      const proposal = propose({ seed: null, existing: made });
+      expect(proposal.kind).toBe('unchanged');
+      expect(proposal.headline).toBe('continue-stage1');
+      expect(proposal.defaultId).toBe(fresh.defaultId);
+      expect(proposal.options.map((option) => option.lastLessonWeek)).toEqual(fresh.options.map((option) => option.lastLessonWeek));
+      expect(proposal.options.map((option) => option.stats)).toEqual(cardStatsOf(proposal, TODAY, CATALOG_2026_10));
+    });
+
+    it('keeps the stored entitlement: a wider `unlockedStages` on the input never reaches an existing plan', () => {
+      const stage2 = seedAt(CATALOG_2026_10, { stage: 'stage2', band: 0 });
+      const proposal = propose({ seed: stage2, existing: plan, today: later, unlockedStages: ALL });
+      expect(proposal.params.unlockedStages).toEqual(FREE);
+      expect(proposal.options.map((option) => option.stats)).toEqual(cardStatsOf(proposal, later, CATALOG_2026_10));
+      expect(proposal.options.every((option) => option.stats.lessons === 0)).toBe(true);
+      expect(proposal.headline).toBe('stories-and-words');
+      if (proposal.kind === 'update') expect(proposal.diff?.newStartQuestId).toBeNull();
+    });
+
+    it('builds the cards of an oral-stage retake with the stored balanced goals the update keeps', () => {
+      // Every stage unlocked, so the reading focus would drop culture and word weeks from the cards.
+      const allPlan = planOf(generateCurriculum(propose({ seed: band0, unlockedStages: ALL }).params, CATALOG_2026_10));
+      const heardMore = { ...seedAt(CATALOG_2026_10, { stage: 'stage1', band: 2 }), oralStage: 'stage3' as const };
+      const proposal = propose({ seed: heardMore, existing: allPlan, unlockedStages: ALL });
+      expect(proposal.kind).toBe('update');
+      expect(proposal.params.goals.focus).toBe('balanced');
+      expect(proposal.options.map((option) => option.stats)).toEqual(cardStatsOf(proposal, TODAY, CATALOG_2026_10));
+      const probe = generateCurriculum({ ...proposal.params, startDate: TODAY, weeks: PROBE_WEEKS }, CATALOG_2026_10);
+      expect(proposal.defaultId).toBe(defaultDurationFor(lessonWeek(probe, CATALOG_2026_10)));
+      expect(proposal.headline).toBe('continue-stage1');
+    });
+
+    it('takes the headline from the first lesson of the future the proposal keeps', () => {
+      const update = propose({ seed: band3, existing: plan, today: later });
+      expect(update.diff?.newStartQuestId).toBe(q('nature-q2'));
+      expect(update.headline).toBe('continue-stage1');
+      expect(propose({ seed: band0, existing: plan }).headline).toBe('start-stage1');
+    });
+
+    it('gives a plan of six or seven sessions a week its cards (the probe stays under the item cap)', () => {
+      for (const sessionDays of [['mon', 'tue', 'wed', 'thu', 'fri', 'sat'], ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']] as const) {
+        const daily = planOf(generateCurriculum({ ...first.params, sessionDays: [...sessionDays] }, CATALOG_2026_10));
+        const proposal = propose({ seed: band0, existing: daily, today: later });
+        expect(proposal.pace).toBeNull();
+        expect(proposal.options.map((option) => option.stats)).toEqual(cardStatsOf(proposal, later, CATALOG_2026_10));
+      }
+    });
   });
 
   describe('with quests finished before the plan was made', () => {
@@ -636,6 +709,11 @@ describe('existing plan: update or unchanged (rule 4)', () => {
     const beyond = propose({ catalog: CATALOG_2026_10_BUNDLE8, existing: bundlePlan, today: later, seed: seedAt(CATALOG_2026_10_BUNDLE8, { stage: 'stage2', band: 0 }) });
     expect(beyond.kind).toBe('unchanged');
     expect(beyond.diff).toBeUndefined();
+    // The rejected re-seed is never handed back: `params` is the plan as it is, re-paced.
+    expect(beyond.params).toEqual(regenerateFrom(bundlePlan, later, CATALOG_2026_10_BUNDLE8, { mode: 'shift', completedQuestIds: [] }).params);
+    expect(beyond.params.level).toEqual(bundlePlan.meta.params.level);
+    expect(generateCurriculum(beyond.params, CATALOG_2026_10_BUNDLE8).stats.lessons).toBeGreaterThan(0);
+    expect(beyond.headline).toBe('continue-stage1');
   });
 
   it('is unchanged on a plan extended by weeks, with the same start or after a lower retake', () => {
@@ -666,7 +744,9 @@ describe('existing plan: update or unchanged (rule 4)', () => {
     const exact = planOf(generateCurriculum({ ...first.params, placedOutQuestIds: band3.placedOutQuestIds }, CATALOG_2026_10));
     const proposal = propose({ seed: { ...band3, level: { stage: 'stage1', band: 3 } }, existing: exact, today: later });
     expect(proposal.kind).toBe('unchanged');
-    expect(proposal.params.level).toEqual(band3.level);
+    // Unchanged hands back the stored plan (re-paced), never the re-seed it did not take.
+    expect(proposal.params.level).toEqual(exact.meta.params.level);
+    expect(proposal.params).toEqual(regenerateFrom(exact, later, CATALOG_2026_10, { mode: 'shift', completedQuestIds: [] }).params);
   });
 });
 
@@ -796,6 +876,22 @@ describe('purity and the benchmark gate (rule 6, FP-B10)', () => {
     // Generous on purpose: a regression that makes the generator quadratic fails it; CI noise does not.
     const BUDGET_MS = 150;
     const value = input({ unlockedStages: ALL, pace: 'gentle' });
+    for (let i = 0; i < 3; i += 1) proposeRoute(value);
+    const times = Array.from({ length: 15 }, () => {
+      const start = performance.now();
+      proposeRoute(value);
+      return performance.now() - start;
+    }).sort((a, b) => a - b);
+    expect(times[7]).toBeLessThan(BUDGET_MS);
+  });
+
+  it('proposes for an existing plan within the same budget (shift, re-seed, a probe and three cards)', () => {
+    const BUDGET_MS = 150;
+    const made = proposeRoute(input({ unlockedStages: ALL, pace: 'gentle' }));
+    if (made === null) throw new Error('expected a proposal');
+    const plan = planOf(generateCurriculum(made.params, CATALOG_2026_10));
+    const value = input({ unlockedStages: ALL, seed: seedAt(CATALOG_2026_10, { stage: 'stage1', band: 3 }), existing: plan, today: addDays(TODAY, 14) });
+    expect(proposeRoute(value)?.kind).toBe('update');
     for (let i = 0; i < 3; i += 1) proposeRoute(value);
     const times = Array.from({ length: 15 }, () => {
       const start = performance.now();
