@@ -163,6 +163,7 @@ describe('platform/sync-api — spaces (F-SPACE-001)', () => {
         transferDeviceConsent: false,
         selfManaged: false,
         transfers: [],
+        deviceScope: null,
         notes: [],
         notePrefs: { classes: 'all', acknowledged: false },
       },
