@@ -256,6 +256,8 @@ test.describe('the Route tab and its route card (LR-10)', () => {
   async function ctaOverlap(page: Page, cta: Locator): Promise<number> {
     const bar = page.getByRole('tablist');
     await expect(bar).toBeVisible();
+    // Measure after the web fonts load: the longest title's line breaks depend on them.
+    await page.evaluate(() => document.fonts.ready.then(() => undefined));
     const [buttonBox, barBox] = await Promise.all([cta.boundingBox(), bar.boundingBox()]);
     if (buttonBox === null || barBox === null) throw new Error('the button or the tab bar has no box');
     const overlap = buttonBox.y + buttonBox.height - barBox.y;

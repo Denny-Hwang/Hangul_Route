@@ -13,7 +13,7 @@ Code (planned): `screens/my-route/RouteCard.tsx` (LR-5a), copy selectors in `log
    - **Goal equals Now** (collapsed): `[pin][flag]` (20 dp glyphs, `text.primary`) and the line `goal.inGoal` at `prompt` size, bold.
    - **Goal differs**: caption label "Now" over `[pin] Stage {n} · {title}`, then caption label "Goal" over `[flag] ...`, each line at `bodyLg`, bold. Labels are `text.muted`, `weight.semibold`.
    - **Source line**: `bodySm`, `text.secondary` ("From your class's weekly plan", "Hoya's suggestion", ...). Grown-up L1 adds "Plan ends {date}" under it, same style.
-3. **Can-do**: lead `canDoLead` (caption, semibold, muted) over the stage line (`body`). Taste goal: the one line `goal.tasteLine` instead. Reached goal: none. Not drawn below `PIP_ROW_MIN_WIDTH` ("Narrow width").
+3. **Can-do**: lead `canDoLead` (caption, semibold, muted) over the stage line (`body`). Taste goal: the one line `goal.tasteLine` instead. Reached goal: none. Not drawn below `PIP_ROW_MIN_WIDTH` when the card has a button ("Narrow width").
 4. **Goal pips**: the goal stage's `PipRow` at 20 dp in the stage colour, with the cursor only when Next is in that stage. No digits, no "of", no bar. The row is drawn with `bandsPerLine`: each line reserves only the cursor and start bands its own pips use (LR-11).
 5. **Next row**: with no Hoya line, Hoya 48 beside "Next: {title}" (bold). With a Hoya line, the Next or "Keep going" line alone.
 6. **Button**: `Button` `lg` (`touchTarget.child`), primary, full width, `spacing.lg` below the summary (`spacing.md` below `PIP_ROW_MIN_WIDTH`). The grown-up L1 card has none.
@@ -28,9 +28,11 @@ Code (planned): `screens/my-route/RouteCard.tsx` (LR-5a), copy selectors in `log
 |---|---|---|---|
 | Card padding | `spacing.lg` | `spacing.md` (unchanged from LR-D) | |
 | Gap between the parts | `spacing.md` | `spacing.sm` | 4 px per gap |
-| Can-do lead and line | shown | **not drawn**: the trail's open stage row right under the card (the `here` row is open on first view) shows the same lead and line. When the goal stage is ahead (A2), its own row shows them when opened. The card's summary label still reads them, so a screen reader hears the card as before | about 76 px |
+| Can-do lead and line | shown | **not drawn on a card with a button**: the trail's open `here` row below the card (after the weekly plan line; it is open on first view) shows its stage's lead and line. When the goal stage is ahead (A2), the goal's lines are in the goal stage's row, shown when it is opened; this is the accepted cost of keeping the button on the first screen (spec section 4.3, "Narrow width"). The read-only card (no button) keeps them. The card's summary label never included the can-do lines (spec section 10), so screen-reader output does not change | about 76 px |
 | Goal pips | one wrapping row; every line keeps the cursor and start bands any pip uses | `PipRow bandsPerLine` (all widths): the row measures its width and each line reserves only the bands of its own pips, so a second line without the cursor or the start pin is just the pips | 24 px (cursor and start on line 1), 9 px (cursor only) |
 | Space above the button | `spacing.lg` | `spacing.md` | 4 px |
+
+From 360 up, only the goal pips' line pitch differs from LR-D: `bandsPerLine` applies at every width, so where 15 pips still wrap (375, about 295 px inside the card) the second line drops the empty marker room. Until the row's first layout it draws the LR-D wrapping row for one pass, so the card can be up to 24 px taller on that pass and then settles.
 
 Nothing else changes: the same words, the same order of the parts, the same Hoya sizes (64 beside a Hoya line, 48 beside Next), the same 18 body floor and `touchTarget.child` button. The taste line (E) stays: it is one line and it is the card's only words about a taste goal.
 
