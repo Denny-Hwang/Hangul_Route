@@ -1,0 +1,102 @@
+{
+  "locale": "ko",
+  "domain": "stage1-quests",
+  "entries": {
+    "quest:stage1-letters-q1": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "말하는 사람 자신",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "말을 듣는 친구를 가리키는 말",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "ga 소리",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "말하는 사람 자신"
+    },
+    "quest:stage1-letters-q2": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "숫자 5, 다섯",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "줄기와 가지, 잎이 있는 키 큰 식물",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "줄기와 가지, 잎이 있는 키 큰 식물",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "숫자 5, 다섯"
+    },
+    "quest:stage1-letters-q3": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "TV에서 보는 이야기",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "나이가 어린 사람",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "걸을 때 쓰는 몸의 부분, 또는 강 위를 건너는 길",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "TV에서 보는 이야기"
+    },
+    "quest:stage1-life-q1": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "새콤달콤한 붉은 과일",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "우유로 만든 고소한 음식",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "매운맛이 나는 길쭉한 채소",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "잎을 우려 마시는 따뜻한 음료"
+    },
+    "quest:stage1-life-q2": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "껍질이 노랗고 길쭉한 과일",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "갈기가 있는 큰 동물",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "남자 부모를 부르는 말",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "아주 어린 아이",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "어머니를 다정하게 부르는 말",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "함께 사는 엄마, 아빠, 형제 같은 사람들"
+    },
+    "quest:stage1-life-q3": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "작고 바삭한 과자",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "빨갛고 동그란 열매 채소",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "초콜릿 맛이 나는 따뜻한 음료",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "노릇하게 구운 빵"
+    },
+    "quest:stage1-rites-q1": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "드나들 때 여닫는 것",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "밤하늘에 뜨는 둥근 빛",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "음력으로 새해 첫날",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "설날에 먹는, 떡을 넣은 국"
+    },
+    "quest:stage1-rites-q2": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "방망이로 공을 치고 달리는 운동",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "꼬리가 풍성하고 꾀가 많은 동물",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "작고 동그란 열매가 송이로 달리는 과일",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "추석에 빚는 반달 모양 떡",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "가을에 한 해 수확을 기뻐하는 명절",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "추석에 빚는 반달 모양 떡"
+    },
+    "quest:stage1-rites-q3": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "부모님을 공경하고 잘 모시는 일",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "소에게서 얻는 하얀 마실 것",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "한국의 전통 옷",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "한반도에 있는 나라"
+    },
+    "quest:stage1-nature-q1": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "몸집이 크고 털이 많은 동물",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "사람이 사는 건물",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "꽃이 피는 따뜻한 계절",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "쌀로 지어 먹는 음식",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "배추를 맵게 절인 한국 음식",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "어머니를 다정하게 부르는 말"
+    },
+    "quest:stage1-nature-q2": {
+      "steps.s2.discover.pages.0.items.0.word.gloss": "땅이 높이 솟은 곳",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "길게 흐르는 큰 물줄기",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "넓고 짠 물",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "머리 위로 보이는 높고 넓은 곳"
+    },
+    "quest:stage1-nature-q3": {
+      "steps.s2.discover.pages.0.items.0.word.gloss": "밤하늘에 뜨는 둥근 빛",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "밤하늘에 반짝이는 작은 빛",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "해가 진 뒤 어두운 때",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "가장 둥글게 꽉 찬 달"
+    },
+    "quest:stage1-crafts-q1": {
+      "steps.s2.discover.pages.0.items.0.word.gloss": "바람에 날리는 종이 장난감",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "차거나 던지며 노는 둥근 물건",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "길고 가는 끈",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "재미있게 노는 일"
+    },
+    "quest:stage1-crafts-q2": {
+      "steps.s2.discover.pages.0.items.0.word.gloss": "닥나무로 만든 한국 전통 종이",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "글을 쓰거나 그림을 그리는 얇은 것",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "푸른빛이 도는 옛 도자기",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "흙으로 빚어 구운 그릇"
+    },
+    "quest:stage1-crafts-q3": {
+      "steps.s2.discover.pages.0.items.0.word.gloss": "한국의 글자",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "이 앱의 호랑이 친구",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "친구를 만나거나 헤어질 때 하는 인사",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "아끼고 좋아하는 마음"
+    }
+  }
+}

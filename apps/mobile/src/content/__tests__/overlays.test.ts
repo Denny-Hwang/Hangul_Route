@@ -225,6 +225,11 @@ describe('release guard: no es/ko ship without their jamo sound-hint overlays', 
     expect(missingSoundHints('es')).toEqual([]);
   });
 
+  it('ko has its own sound hint for all 30 symbols, a Korean description (PR 16)', () => {
+    expect(missingSoundHints('ko')).toEqual([]);
+    for (const j of jamoAll) expect(OVERLAYS.ko?.[j.id]?.soundHint, j.id).not.toBe(j.char);
+  });
+
   it('would stop a locale flipped to shipped while a sound hint overlay is missing', () => {
     for (const locale of ['es', 'ko'] as const) {
       if (missingSoundHints(locale).length === 0) continue;
@@ -330,5 +335,8 @@ describe('release guard: no es/ko ship while TypeScript-resident content lacks i
     // es today: the jamo hints and glosses are done; quest, episode and stage text is the fourth flip blocker (§10).
     expect(missingContent('es').some((row) => row.startsWith('quest:'))).toBe(true);
     expect(missingContent('es').filter((row) => row.startsWith('jamo:'))).toEqual([]);
+    // ko today (PR 16): the same split as es, the jamo hints and example-word glosses done, quest text still English.
+    expect(missingContent('ko').some((row) => row.startsWith('quest:'))).toBe(true);
+    expect(missingContent('ko').filter((row) => row.startsWith('jamo:'))).toEqual([]);
   });
 });
