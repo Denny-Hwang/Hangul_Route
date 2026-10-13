@@ -194,11 +194,45 @@ describe('/parent/learner without a learner: the parent chooser (RP-7c)', () => 
     expect(rows(root)).toHaveLength(2);
   });
 
-  it('a family whose roster failed draws no rows; the others stay', async () => {
+  it('a family whose roster failed: the others stay, with the error and Try again under them, which reads again', async () => {
     responses.rosters = { 'space:a': DEFAULT_ROSTERS['space:a'] as () => Result };
     const root = await page();
     expect(rows(root).map((a) => textOf(a))).toEqual(['Name profile:1', 'Name profile:2']);
+    expect(textOf(byTestId(root, 'report-error-line')[0] as ReactTestInstance)).toBe(en.report.state.error);
     expect(nav.replaced).toEqual([]);
+    responses.rosters = { ...DEFAULT_ROSTERS };
+    await act(async () => byTestId(root, 'report-retry')[0]?.props.onClick());
+    expect(rows(root)).toHaveLength(3);
+    expect(byTestId(root, 'report-error-line')).toHaveLength(0);
+  });
+
+  it('one learner left after a failed roster: no direct open, so the failure and the other family stay reachable', async () => {
+    responses.rosters = { 'space:b': DEFAULT_ROSTERS['space:b'] as () => Result };
+    const root = await page();
+    expect(nav.replaced).toEqual([]);
+    expect(rows(root).map((a) => textOf(a))).toEqual(['Name profile:3']);
+    expect(byTestId(root, 'report-retry')).toHaveLength(1);
+  });
+
+  it('every roster failed: the error with Try again, never "not available"', async () => {
+    responses.rosters = {};
+    const root = await page();
+    expect(h1s(root)).toEqual([en.report.state.error]);
+    expect(byTestId(root, 'report-retry')).toHaveLength(1);
+  });
+
+  it('signed out (401) on the spaces or a roster read: to sign-in', async () => {
+    responses.spaces = () => ({ ok: false, error: 'unauthorized', status: 401 });
+    await page();
+    expect(nav.replaced).toHaveLength(1);
+    expect(nav.replaced[0]).toMatch(/sign-?in/i);
+    act(() => mounted?.unmount());
+    nav.replaced.length = 0;
+    responses.spaces = () => ok([family('space:a')]);
+    responses.rosters = { 'space:a': () => ({ ok: false, error: 'unauthorized', status: 401 }) };
+    await page();
+    expect(nav.replaced).toHaveLength(1);
+    expect(nav.replaced[0]).toMatch(/sign-?in/i);
   });
 
   it('reports off: not available yet, no request', async () => {

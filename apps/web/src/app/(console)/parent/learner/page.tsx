@@ -10,6 +10,7 @@ import { useConsole } from '@/components/console/use-console';
 import type { RosterLearner, SpaceListItem } from '@/lib/console/api';
 import { reportsEnabled } from '@/lib/console/config';
 import { parentChooserFamilies, parentChooserRows, type ParentChooserRow } from '@/lib/console/report-chooser';
+import { signedOutTarget } from '@/lib/console/signin-flow';
 
 /**
  * `/parent/learner` (F-REPORT-001 RP-7c, section 3.1; F-APP-001 section 3.8): the family learner report. With a
@@ -19,8 +20,11 @@ import { parentChooserFamilies, parentChooserRows, type ParentChooserRow } from 
  * directly (`replace`, so Back skips the chooser). Ids only in every link; no learner name reaches the URL.
  */
 
-/** What the chooser draws: rows once the spaces and their rosters answered, or the failed spaces read. */
-type ChooserLoad = { kind: 'rows'; rows: ParentChooserRow[] } | { kind: 'failed' } | null;
+/**
+ * What the chooser draws: rows once the spaces and their rosters answered (`partial` when a roster read failed, so the
+ * page says so and offers Try again), the failed read (the spaces, or every roster), or a signed-out answer.
+ */
+type ChooserLoad = { kind: 'rows'; rows: ParentChooserRow[]; partial: boolean } | { kind: 'failed' } | { kind: 'signedOut' } | null;
 
 function ParentChooser(): JSX.Element {
   const router = useRouter();
@@ -40,15 +44,25 @@ function ParentChooser(): JSX.Element {
       if (!live) return;
       if (!listed.ok) {
         setSpaces('failed');
-        setLoad({ kind: 'failed' });
+        setLoad(listed.error === 'unauthorized' ? { kind: 'signedOut' } : { kind: 'failed' });
         return;
       }
       setSpaces(listed.data);
       const families = parentChooserFamilies(listed.data as readonly SpaceListItem[]);
-      // One roster per family; a roster that fails leaves that family's learners out, never the others.
-      const rosters = await Promise.all(families.map((item) => api.roster(item.space.id).then((r) => [item.space.id, r.ok ? r.data.learners : []] as const)));
+      // One roster per family; a roster that fails leaves that family's learners out, never the others, and is said.
+      const results = await Promise.all(families.map((item) => api.roster(item.space.id).then((r) => [item.space.id, r] as const)));
       if (!live) return;
-      setLoad({ kind: 'rows', rows: parentChooserRows(families, new Map<string, readonly RosterLearner[]>(rosters)) });
+      if (results.some(([, r]) => !r.ok && r.error === 'unauthorized')) {
+        setLoad({ kind: 'signedOut' });
+        return;
+      }
+      const failed = results.filter(([, r]) => !r.ok).length;
+      if (families.length > 0 && failed === families.length) {
+        setLoad({ kind: 'failed' });
+        return;
+      }
+      const rosters = new Map<string, readonly RosterLearner[]>(results.map(([id, r]) => [id, r.ok ? r.data.learners : []]));
+      setLoad({ kind: 'rows', rows: parentChooserRows(families, rosters), partial: failed > 0 });
     })();
     return () => {
       live = false;
@@ -65,12 +79,17 @@ function ParentChooser(): JSX.Element {
     };
   }, [documentTitle]);
 
-  const only = load?.kind === 'rows' && load.rows.length === 1 ? load.rows[0]?.href : undefined;
+  // Exactly one learner opens that report directly, unless a roster failed: the other family's learners may be missing.
+  const only = load?.kind === 'rows' && !load.partial && load.rows.length === 1 ? load.rows[0]?.href : undefined;
   useEffect(() => {
     if (only) router.replace(only);
   }, [only, router]);
+  const signedOut = load?.kind === 'signedOut';
+  useEffect(() => {
+    if (signedOut) router.replace(signedOutTarget(window.location.pathname, window.location.search));
+  }, [signedOut, router]);
 
-  if (!ready || !session || only) return <AdultFrame>{null}</AdultFrame>;
+  if (!ready || !session || only || signedOut) return <AdultFrame>{null}</AdultFrame>;
 
   const back = { href: APP_ROUTES.parentHome, text: m.report.back.home };
   const frame = (children: JSX.Element): JSX.Element => (
@@ -97,8 +116,20 @@ function ParentChooser(): JSX.Element {
   if (!enabled) return state(m.report.state.flagOff, null);
   if (load === null) return frame(<ReportSkeleton />);
   if (load.kind === 'failed') return state(m.report.state.error, m.common.buttons.tryAgain);
-  if (load.rows.length === 0) return state(m.report.state.unavailable, null);
-  return frame(<ReportChooser title={m.report.chooser.learner} rows={load.rows} />);
+  if (load.rows.length === 0 && !load.partial) return state(m.report.state.unavailable, null);
+  return frame(
+    <>
+      <ReportChooser title={m.report.chooser.learner} rows={load.rows} />
+      {load.partial ? (
+        <div className="hr-report-state" data-testid="report-state">
+          <p data-testid="report-error-line">{m.report.state.error}</p>
+          <button type="button" className="hr-report-link-button" onClick={() => setNonce((n) => n + 1)} data-testid="report-retry">
+            {m.common.buttons.tryAgain}
+          </button>
+        </div>
+      ) : null}
+    </>,
+  );
 }
 
 function ParentLearnerInner(): JSX.Element {
