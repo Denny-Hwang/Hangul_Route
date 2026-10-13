@@ -205,12 +205,12 @@ export const TEACHER_ROSTER_ADDRESS_FIELDS = ['id'] as const;
 export type TeacherRosterAddressField = (typeof TEACHER_ROSTER_ADDRESS_FIELDS)[number];
 
 /**
- * Locales that have a consent text. English only for now; Korean (formal polite style, F-I18N-001)
- * and Spanish are added with the i18n layer, and every locale is
- * counsel-reviewed before the flag is enabled (flip gate G2). The Worker
- * answers `consent_locale_unavailable` for any other locale.
+ * Locales that have a consent text: every UI locale (F-SPACE-002 T-6d). Korean is in the formal
+ * polite style with no particle attached to a placeholder (F-I18N-001 style guide). Every locale is
+ * counsel-reviewed before the flag is enabled (flip gate G2). The Worker answers
+ * `consent_locale_unavailable` for any other locale.
  */
-export const TRANSFER_CONSENT_LOCALES = ['en'] as const;
+export const TRANSFER_CONSENT_LOCALES = ['en', 'ko', 'es'] as const;
 export type TransferConsentLocale = Extract<(typeof TRANSFER_CONSENT_LOCALES)[number], UiLocale>;
 
 const CONSENT_LOCALES: ReadonlySet<string> = new Set(TRANSFER_CONSENT_LOCALES);
@@ -254,6 +254,66 @@ export const TRANSFER_CONSENT_TEXT: Readonly<Record<TransferConsentLocale, Trans
       plan_progress: 'Progress on homework from {destination}',
       sync_time: 'When {learner} joined the class and when progress was last saved',
       note_replies: 'The answer {learner} picks on a note from the teacher',
+    },
+  },
+  ko: {
+    lines: {
+      moving: '{learner} 학습자가 {source} 반에서 {destination} 반으로 옮기게 됩니다.',
+      new_teacher: '{destination} 반 선생님이 {learner} 학습자의 진도를 보게 됩니다.',
+      old_teacher: '{source} 반 선생님은 이동이 이루어질 때부터 그 반에서 {learner} 학습자를 볼 수 없습니다. 그 전에는 볼 수 있습니다.',
+      keeps: '카드, 별, 끝낸 레슨은 {learner} 학습자에게 그대로 남습니다.',
+      cooling_off: '이동은 2일 뒤에 이루어집니다. 그 전에는 가족 누구나 취소할 수 있습니다.',
+      visible_list: '새 선생님이 보는 것:',
+      nothing_else: '그 밖에 앱의 다른 정보는 선생님과 공유하지 않습니다.',
+      visible_today: '지금 {learner} 학습자를 볼 수 있는 사람:',
+      typed_names: '반 이름과 선생님 이름은 선생님이 직접 입력합니다. 저희는 이 이름을 확인하지 않습니다. 이 선생님을 아는 경우에만 계속하십시오.',
+      from_teacher: '이 요청은 {source} 반 선생님이 보낸 것입니다. 회원님이 보낸 것이 아닙니다.',
+      premium_may_change: '{source} 반 플랜으로 열려 있던 레슨은 이동 후 닫힐 수 있습니다. 이미 끝낸 레슨은 그대로 남습니다.',
+      school_delete: '{destination} 반 선생님이 {learner} 학습자의 기록을 삭제할 수 있게 됩니다.',
+      device_relink: '{source} 반을 통해 연결한 태블릿은 {destination} 반에 다시 연결해야 할 수 있습니다.',
+      homework_drops: '{source} 반에서 받은 숙제 중 끝내지 않은 숙제는 사라집니다. 끝낸 숙제는 그대로 남습니다.',
+      cannot_undo: '이동은 되돌릴 수 없습니다. {learner} 학습자는 언제든지 프로필에서 반을 나갈 수 있습니다.',
+      introduce: '{learner} 학습자가 어느 반에서 오는지 {destination} 반에 알려 줍니다.',
+    },
+    items: {
+      name_picture_level: '{learner} 학습자의 이름, 사진, 레벨',
+      activity: '{learner} 학습자가 연습한 날, 날마다 연습한 시간, 연속으로 연습한 날 수',
+      quests: '끝낸 퀘스트와 맞힌 답의 수',
+      cards_letters: '얻은 카드, 배운 글자, 연습이 더 필요한 글자',
+      level_check: '레벨 확인 결과',
+      plan_progress: '{destination} 반에서 받은 숙제의 진도',
+      sync_time: '{learner} 학습자가 반에 들어온 때와 진도를 마지막으로 저장한 때',
+      note_replies: '선생님의 쪽지에 {learner} 학습자가 고른 답',
+    },
+  },
+  es: {
+    lines: {
+      moving: '{learner} pasaría de {source} a {destination}.',
+      new_teacher: 'El docente de {destination} verá el progreso de {learner}.',
+      old_teacher: 'El docente de {source} deja de ver a {learner} en esa clase al hacerse el cambio, no antes.',
+      keeps: 'Las tarjetas, las estrellas y las lecciones terminadas se quedan con {learner}.',
+      cooling_off: 'El cambio se hace después de 2 días. Cualquier persona de la familia puede cancelarlo antes.',
+      visible_list: 'Lo que ve el nuevo docente:',
+      nothing_else: 'No se comparte nada más de la app con el docente.',
+      visible_today: 'Hoy estas personas pueden ver a {learner}:',
+      typed_names: 'El docente escribe los nombres de la clase y del docente. No los revisamos. Continúa solo si conoces a este docente.',
+      from_teacher: 'Esta solicitud vino del docente de {source}, no de ti.',
+      premium_may_change: 'Las lecciones abiertas por el plan de {source} pueden cerrarse después del cambio. Las lecciones ya terminadas se quedan.',
+      school_delete: 'El docente de {destination} podrá borrar el registro de {learner}.',
+      device_relink: 'Una tableta que se unió por {source} quizá tenga que unirse de nuevo a {destination}.',
+      homework_drops: 'Las tareas de {source} sin terminar desaparecerán. Las tareas terminadas se quedan.',
+      cannot_undo: 'Un cambio no se puede deshacer. {learner} puede salir de una clase en Perfil cuando quiera.',
+      introduce: 'Decirle a {destination} de dónde viene {learner}.',
+    },
+    items: {
+      name_picture_level: 'El nombre, la imagen y el nivel de {learner}',
+      activity: 'Cuándo practicó {learner}, los minutos de cada día y los días seguidos',
+      quests: 'Las misiones terminadas y cuántas respuestas fueron correctas',
+      cards_letters: 'Las tarjetas ganadas, las letras aprendidas y las letras que necesitan práctica',
+      level_check: 'Los resultados de la prueba de nivel',
+      plan_progress: 'El progreso en las tareas de {destination}',
+      sync_time: 'Cuándo se unió {learner} a la clase y cuándo se guardó el progreso por última vez',
+      note_replies: 'La respuesta que elige {learner} en una nota del docente',
     },
   },
 };
