@@ -1097,6 +1097,8 @@ export const learner = {
   },
   access: {
     notOpen: '아직 안 열렸어요',
+    openForYou: '지금 열린 퀘스트를 모두 했어요.',
+    practiceWords: { cta: '낱말 연습하기' },
   },
   stageComplete: {
     title: '한글 완성!',
@@ -1107,7 +1109,7 @@ export const learner = {
     seeCards: { cta: '내 카드 보기' },
     backHome: { cta: '홈으로' },
     notFound: '이 선물은 아직 여기 없어요. 퀘스트를 계속해 봐요.',
-    hangulCheck: { cta: '한글 확인 해 보기', note: '4분쯤 걸려요. 건너뛰어도 돼요.' },
+    hangulCheck: { cta: '한글 확인해 보기', note: '4분쯤 걸려요. 건너뛰어도 돼요.' },
   },
   stageReview: {
     title: '한글 확인',
