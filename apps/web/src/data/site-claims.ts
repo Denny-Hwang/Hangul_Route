@@ -10,7 +10,7 @@
  * | Claim                              | Flipped by                                                               |
  * |------------------------------------|--------------------------------------------------------------------------|
  * | `learningRoute`                    | F-ROUTE-001 R-10 flag flip (Learning Route amendment LR-10 keeps it)     |
- * | `parentReports`, `teacherReports`  | F-REPORT-001 RP-11                                                       |
+ * | `parentReports`, `teacherReports`  | F-REPORT-001 RP-11 (flipped on)                                          |
  * | `feedbackNotes`                    | F-FEEDBACK-001 FB-14                                                     |
  * | `browseAsLearner`                  | F-BROWSE-001 BR-14 flag flip (paid line: needs `paidPlans: 'inApp'`)     |
  * | `lectureMode`                      | the PR after the owner sets `NEXT_PUBLIC_LECTURE_MODE=enabled` on the    |
@@ -53,8 +53,9 @@ export const SITE_CLAIMS: Readonly<SiteClaims> = Object.freeze({
   freePlan: 'stage1',
   paidPlans: 'coming',
   learningRoute: false,
-  parentReports: false,
-  teacherReports: false,
+  // F-REPORT-001 RP-11: both report flags are on by default in the console and the learner app.
+  parentReports: true,
+  teacherReports: true,
   feedbackNotes: false,
   browseAsLearner: false,
   lectureMode: false,

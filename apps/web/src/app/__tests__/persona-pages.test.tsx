@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LearnersPage } from '../../components/landing/LearnersPage';
 import { ParentsPage } from '../../components/landing/ParentsPage';
 import { TeachersPage } from '../../components/landing/TeachersPage';
-import { ALL_CLAIMS_ON } from '../../data/__tests__/site-claims-fixtures';
+import { ALL_CLAIMS_OFF, ALL_CLAIMS_ON } from '../../data/__tests__/site-claims-fixtures';
 import { siteGames } from '../../data/minigame-catalog';
 import { SITE_CLAIMS, type SiteClaims } from '../../data/site-claims';
 import { stage1Cards } from '../../data/stage1-cards';
@@ -69,7 +69,7 @@ describe('/learners (S-4a)', () => {
   });
 
   it('with the learningRoute claim on: the Learning Route section appears once, between Collect and the questions', () => {
-    const on = renderToStaticMarkup(<LearnersPage locale="en" claims={{ ...SITE_CLAIMS, learningRoute: true }} />);
+    const on = renderToStaticMarkup(<LearnersPage locale="en" claims={{ ...ALL_CLAIMS_OFF, learningRoute: true }} />);
     expect(sectionTitles(on)).toEqual([L.learn.title, L.quest.title, L.cards.title, L.route.title, t.persona.faqTitle]);
     expect(count(textOf(on), L.route.body)).toBe(1);
     const all = renderToStaticMarkup(<LearnersPage locale="en" claims={ALL_CLAIMS_ON} />);
@@ -194,7 +194,8 @@ function expectPlans(html: string, paidPlans: SiteClaims['paidPlans']): void {
 }
 
 describe('/parents (S-4b)', () => {
-  const html = render(ParentsPage);
+  // The base page: every claim off (the state before any companion flip PR); today's claims are tested below.
+  const html = render(ParentsPage, ALL_CLAIMS_OFF);
   const main = mainOf(html);
   const text = textOf(main);
   const follow = [P.follow.reports, P.follow.route, P.follow.notes, P.follow.browse];
@@ -247,19 +248,19 @@ describe('/parents (S-4b)', () => {
     ['learningRoute', P.follow.route],
     ['feedbackNotes', P.follow.notes],
   ] as const)('%s alone adds its one line', (claim, line) => {
-    const on = render(ParentsPage, { ...SITE_CLAIMS, [claim]: true });
+    const on = render(ParentsPage, { ...ALL_CLAIMS_OFF, [claim]: true });
     expect(linesOf(on, P.follow.title)).toEqual([P.follow.body, line]);
   });
 
   it('browseAsLearner needs paid plans on sale: absent while coming, present with inApp', () => {
-    expect(textOf(render(ParentsPage, { ...SITE_CLAIMS, browseAsLearner: true }))).not.toContain(P.follow.browse);
-    const inApp = render(ParentsPage, { ...SITE_CLAIMS, browseAsLearner: true, paidPlans: 'inApp' });
+    expect(textOf(render(ParentsPage, { ...ALL_CLAIMS_OFF, browseAsLearner: true }))).not.toContain(P.follow.browse);
+    const inApp = render(ParentsPage, { ...ALL_CLAIMS_OFF, browseAsLearner: true, paidPlans: 'inApp' });
     expect(linesOf(inApp, P.follow.title)).toEqual([P.follow.body, P.follow.browse]);
   });
 
   it('plans: both composed blocks, no price', () => {
     expectPlans(html, 'coming');
-    expectPlans(render(ParentsPage, { ...SITE_CLAIMS, paidPlans: 'inApp' }), 'inApp');
+    expectPlans(render(ParentsPage, { ...ALL_CLAIMS_OFF, paidPlans: 'inApp' }), 'inApp');
     expect(text).not.toMatch(/[$€£]\s?\d|\d+\s?(USD|dollars?)\b|per (month|year)|lifetime/i);
   });
 
@@ -270,7 +271,7 @@ describe('/parents (S-4b)', () => {
     expect(text).toContain('Learning Korean yourself? Play the same quests.');
     expect(text).toContain(P.faq.whatSee.a);
     expect(text).not.toContain(P.faq.whatSee.reports);
-    const reports = textOf(render(ParentsPage, { ...SITE_CLAIMS, parentReports: true }));
+    const reports = textOf(render(ParentsPage, { ...ALL_CLAIMS_OFF, parentReports: true }));
     expect(reports).toContain(P.faq.whatSee.reports);
     expect(reports).not.toContain(P.faq.whatSee.a);
   });
@@ -287,12 +288,13 @@ describe('/parents (S-4b)', () => {
   });
 
   it('the en route renders the same page', () => {
-    expect(renderToStaticMarkup(<EnParents />)).toBe(html);
+    expect(renderToStaticMarkup(<EnParents />)).toBe(render(ParentsPage));
   });
 });
 
 describe('/teachers (S-4b)', () => {
-  const html = render(TeachersPage);
+  // The base page: every claim off (the state before any companion flip PR); today's claims are tested below.
+  const html = render(TeachersPage, ALL_CLAIMS_OFF);
   const main = mainOf(html);
   const text = textOf(main);
   const classLines = [T.class.reports, T.class.route, T.class.notes, T.class.browse, T.class.lecture];
@@ -345,23 +347,23 @@ describe('/teachers (S-4b)', () => {
     ['feedbackNotes', T.class.notes],
     ['lectureMode', T.class.lecture],
   ] as const)('%s alone adds its one line', (claim, line) => {
-    expect(linesOf(render(TeachersPage, { ...SITE_CLAIMS, [claim]: true }), T.class.title)).toEqual([T.class.body, line]);
+    expect(linesOf(render(TeachersPage, { ...ALL_CLAIMS_OFF, [claim]: true }), T.class.title)).toEqual([T.class.body, line]);
   });
 
   it('parentReports does not touch the teacher page', () => {
-    expect(render(TeachersPage, { ...SITE_CLAIMS, parentReports: true })).toBe(html);
+    expect(render(TeachersPage, { ...ALL_CLAIMS_OFF, parentReports: true })).toBe(html);
   });
 
   it('browseAsLearner needs paid plans on sale: absent while coming, present with inApp (with the plan words)', () => {
-    expect(textOf(render(TeachersPage, { ...SITE_CLAIMS, browseAsLearner: true }))).not.toContain(T.class.browse);
-    const inApp = render(TeachersPage, { ...SITE_CLAIMS, browseAsLearner: true, paidPlans: 'inApp' });
+    expect(textOf(render(TeachersPage, { ...ALL_CLAIMS_OFF, browseAsLearner: true }))).not.toContain(T.class.browse);
+    const inApp = render(TeachersPage, { ...ALL_CLAIMS_OFF, browseAsLearner: true, paidPlans: 'inApp' });
     expect(linesOf(inApp, T.class.title)).toEqual([T.class.body, T.class.browse]);
     expect(T.class.browse).toMatch(/class or school plan/);
   });
 
   it('plans: both composed blocks, no price', () => {
     expectPlans(html, 'coming');
-    expectPlans(render(TeachersPage, { ...SITE_CLAIMS, paidPlans: 'inApp' }), 'inApp');
+    expectPlans(render(TeachersPage, { ...ALL_CLAIMS_OFF, paidPlans: 'inApp' }), 'inApp');
     expect(text).not.toMatch(/[$€£]\s?\d|per (month|year)|lifetime/i);
   });
 
@@ -382,7 +384,45 @@ describe('/teachers (S-4b)', () => {
   });
 
   it('the en route renders the same page', () => {
-    expect(renderToStaticMarkup(<EnTeachers />)).toBe(html);
+    expect(renderToStaticMarkup(<EnTeachers />)).toBe(render(TeachersPage));
+  });
+});
+
+/**
+ * The claim hand-off of F-REPORT-001 RP-11 (F-SITE-002 section 3.9): both report flags are on in production, so the
+ * pages as served (`SITE_CLAIMS`) carry the reports lines, word for word, and no other feature line.
+ */
+describe('today\'s claims: the reports lines are live (F-REPORT-001 RP-11)', () => {
+  it('/parents: the reports line under Follow along and the reports answer to "What can I see?"', () => {
+    const html = render(ParentsPage);
+    expect(SITE_CLAIMS.parentReports).toBe(true);
+    expect(linesOf(html, P.follow.title)).toEqual([P.follow.body, P.follow.reports]);
+    expect(P.follow.reports).toBe('Reports for today, this week, this month and all time show what went well and what to practise next.');
+    const text = textOf(mainOf(html));
+    expect(text).toContain(P.faq.whatSee.reports);
+    expect(text).not.toContain(P.faq.whatSee.a);
+    expect(text).not.toMatch(/ranking|leaderboard|\bkids?\b|\bages? \d/i);
+  });
+
+  it('/teachers: the reports line under See how the class is doing, never a ranking', () => {
+    const html = render(TeachersPage);
+    expect(SITE_CLAIMS.teacherReports).toBe(true);
+    expect(linesOf(html, T.class.title)).toEqual([T.class.body, T.class.reports]);
+    expect(T.class.reports).toBe('Reports for each student and statistics for the whole class, by day, week, month or all time. Never a ranking.');
+  });
+
+  it('/learners is unchanged by the reports claims', () => {
+    expect(renderToStaticMarkup(<LearnersPage locale="en" />)).toBe(renderToStaticMarkup(<LearnersPage locale="en" claims={ALL_CLAIMS_OFF} />));
+  });
+
+  it('the reports lines name no speaking and no price, in every locale', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const persona = getMessages(locale).landing.persona;
+      for (const line of [persona.parents.follow.reports, persona.parents.faq.whatSee.reports, persona.teachers.class.reports]) {
+        expect(line.length, `${locale}: ${line}`).toBeGreaterThan(0);
+        expect(line).not.toMatch(/speak|pronounc|habla|pronunci|[$€£]\s?\d/i);
+      }
+    }
   });
 });
 
