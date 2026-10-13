@@ -42,8 +42,8 @@ describe('move gate destinations', () => {
   });
 
   it('both screens send a closed gate back through the PIN screen', () => {
-    expect(read('screens/transfer/MoveClassScreen.tsx')).toContain("navigation.replace('PinEntry', { next: 'MoveClass', profileId, fromSpaceId })");
-    expect(read('screens/transfer/ApproveTransferScreen.tsx')).toContain("navigation.replace('PinEntry', { next: 'ApproveTransfer', profileId, transferId })");
+    expect(read('screens/transfer/MoveClassScreen.tsx')).toContain("if (!gateOpen && !sent && !leaving.current) navigation.replace('PinEntry', { next: 'MoveClass', profileId, fromSpaceId })");
+    expect(read('screens/transfer/ApproveTransferScreen.tsx')).toContain("if (!gateOpen && !leaving.current) navigation.replace('PinEntry', { next: 'ApproveTransfer', profileId, transferId })");
   });
 });
 
@@ -105,9 +105,9 @@ describe('review fixes (PR #563)', () => {
 
   it('a managed device asks the PIN every time and ends the session when a move screen closes', () => {
     expect(hooks()).toContain("moveEntry({ gateOpen, gated }) === 'direct'");
-    expect(hooks()).toContain("navigation.addListener('beforeRemove', () => useUiStore.getState().resetParentGate())");
-    expect(move()).toContain('useEndsGateOnLeave(navigation);');
-    expect(approve()).toContain('useEndsGateOnLeave(navigation);');
+    expect(hooks()).toMatch(/navigation\.addListener\('beforeRemove', \(\) => \{\s*leaving\.current = true;\s*useUiStore\.getState\(\)\.resetParentGate\(\);/);
+    expect(move()).toContain('const leaving = useEndsGateOnLeave(navigation);');
+    expect(approve()).toContain('const leaving = useEndsGateOnLeave(navigation);');
   });
 
   it('the PIN age and the gate are read on a coarse clock, not once per store change', () => {

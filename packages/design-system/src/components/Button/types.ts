@@ -11,8 +11,8 @@ export interface ButtonProps {
   size?: ButtonSize;
   disabled?: boolean;
   /**
-   * Drawn and announced as disabled (`aria-disabled`, `accessibilityState.disabled`) while it stays
-   * focusable, so a keyboard or screen-reader user reaches it and hears its hint; a press does nothing.
+   * Drawn and announced as disabled (`aria-disabled` on the web, `accessibilityState.disabled`) while it
+   * stays in the tab order, so a keyboard or screen-reader user reaches it and hears its hint; a press does nothing.
    * For a button that waits on something the user does (e.g. read to the end). `disabled` wins.
    */
   softDisabled?: boolean;

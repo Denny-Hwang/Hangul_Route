@@ -1,7 +1,7 @@
 import { formatDate } from '@hangul-route/i18n';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { useLocale } from '../../i18n/use-messages';
 import type { DeviceFacts } from '../../logic/transfers/consent-gate';
@@ -79,14 +79,20 @@ export function useGateOpen(): boolean {
  * session ends however the screen is left (Done, Back, a hardware or browser back), as `NoteReportScreen` does,
  * so the learner never inherits it. A self-only device with no PIN has no session to end.
  */
-export function useEndsGateOnLeave(navigation: { addListener: (event: 'beforeRemove', fn: () => void) => () => void }): void {
+export function useEndsGateOnLeave(navigation: { addListener: (event: 'beforeRemove', fn: () => void) => () => void }): { readonly current: boolean } {
   const { opensDirectly } = useAudience();
   const managed = !opensDirectly(false);
+  // Set once the screen is on its way out, so its closed-gate redirect does not reopen the PIN screen.
+  const leaving = useRef(false);
   useEffect(() => {
     if (!managed) return undefined;
-    return navigation.addListener('beforeRemove', () => useUiStore.getState().resetParentGate());
+    return navigation.addListener('beforeRemove', () => {
+      leaving.current = true;
+      useUiStore.getState().resetParentGate();
+    });
   }, [managed, navigation]);
   useEffect(() => (managed ? () => useUiStore.getState().resetParentGate() : undefined), [managed]);
+  return leaving;
 }
 
 export type MoveTarget =

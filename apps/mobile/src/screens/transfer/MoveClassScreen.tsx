@@ -47,12 +47,12 @@ export function MoveClassScreen({ route, navigation }: Props): React.ReactElemen
   // Bumped on every reload, so the sheet is drawn fresh (read to the end again) even when the digest is unchanged.
   const [reloads, setReloads] = useState(0);
 
-  // The gate guards this screen too: a closed gate sends it back through the PIN screen.
-  useEffect(() => {
-    if (!gateOpen && !sent) navigation.replace('PinEntry', { next: 'MoveClass', profileId, fromSpaceId });
-  }, [gateOpen, sent, navigation, profileId, fromSpaceId]);
   // On a managed device the PIN was entered for this move only: the grown-up session ends when the screen closes.
-  useEndsGateOnLeave(navigation);
+  const leaving = useEndsGateOnLeave(navigation);
+  // The gate guards this screen too: a closed gate sends it back through the PIN screen (not while it closes).
+  useEffect(() => {
+    if (!gateOpen && !sent && !leaving.current) navigation.replace('PinEntry', { next: 'MoveClass', profileId, fromSpaceId });
+  }, [gateOpen, sent, navigation, profileId, fromSpaceId, leaving]);
 
   const name = profile?.displayName ?? '';
   const claim = device ? deviceAttest(device) : null;

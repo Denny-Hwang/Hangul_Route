@@ -46,11 +46,11 @@ export function ApproveTransferScreen({ route, navigation }: Props): React.React
   // Bumped on every reload, so the sheet is drawn fresh (read to the end again) even when the digest is unchanged.
   const [reloads, setReloads] = useState(0);
 
-  useEffect(() => {
-    if (!gateOpen) navigation.replace('PinEntry', { next: 'ApproveTransfer', profileId, transferId });
-  }, [gateOpen, navigation, profileId, transferId]);
   // On a managed device the PIN was entered for this sheet only: the grown-up session ends when it closes.
-  useEndsGateOnLeave(navigation);
+  const leaving = useEndsGateOnLeave(navigation);
+  useEffect(() => {
+    if (!gateOpen && !leaving.current) navigation.replace('PinEntry', { next: 'ApproveTransfer', profileId, transferId });
+  }, [gateOpen, navigation, profileId, transferId, leaving]);
 
   const request = transfers?.requests.find((r) => r.id === transferId) ?? null;
   const open = request !== null && isOpenRequest(request) && transfers?.scope === 'full';

@@ -1,4 +1,4 @@
-import React, { useId } from 'react';
+import React, { useCallback, useEffect, useId, useRef, type MutableRefObject } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 import { colors, radii, spacing, touchTarget, typography } from '../../tokens';
 import type { ButtonProps, ButtonSize, ButtonTone } from './types';
@@ -75,17 +75,33 @@ export function Button({
   // react-native-web drops accessibilityHint: describe the button by a hidden copy of the hint instead.
   const webHint = accessibilityHint !== undefined && Platform.OS === 'web';
   const describedBy: Record<string, string> = webHint ? { 'aria-describedby': hintId } : {};
-  // Soft: looks and reads disabled, keeps focus (no hard `disabled`), and ignores presses.
+  // Soft: drawn and announced as disabled, a press does nothing, and it stays in the tab order. Native keeps a
+  // disabled view in the screen reader's reach, so it is plainly `disabled` there. On the web a disabled
+  // <button> leaves the tab order, so the button stays enabled and only `aria-disabled` is written to its node.
   const soft = softDisabled && !disabled;
   const looksDisabled = disabled || soft;
-  const ariaDisabled: Record<string, boolean> = soft ? { 'aria-disabled': true } : {};
+  const webSoft = soft && Platform.OS === 'web';
+  const node = useRef<View | null>(null);
+  const setNode = useCallback(
+    (v: View | null) => {
+      node.current = v;
+      if (typeof pressableRef === 'function') pressableRef(v);
+      else if (pressableRef) (pressableRef as MutableRefObject<View | null>).current = v;
+    },
+    [pressableRef],
+  );
+  useEffect(() => {
+    if (Platform.OS !== 'web' || disabled) return;
+    const el = node.current as unknown as { setAttribute?: (k: string, v: string) => void; removeAttribute?: (k: string) => void } | null;
+    if (webSoft) el?.setAttribute?.('aria-disabled', 'true');
+    else el?.removeAttribute?.('aria-disabled');
+  }, [webSoft, disabled]);
   return (
     <Pressable
       {...describedBy}
-      {...ariaDisabled}
-      ref={pressableRef}
+      ref={setNode}
       onPress={looksDisabled ? undefined : onPress}
-      disabled={disabled}
+      disabled={disabled || (soft && !webSoft)}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityHint={accessibilityHint}

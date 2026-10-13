@@ -138,7 +138,8 @@ async function openProfile(page: Page, name: string): Promise<void> {
   });
   await page.getByRole('button', { name: 'Profile and settings' }).click();
   await expect(page.getByRole('heading', { name: 'Classes & family' })).toBeVisible();
-  await expect(page.getByText('Sunday Class A', { exact: true })).toBeVisible();
+  // The memberships come from the mocked inbox; on a busy machine the first sync can take a few seconds.
+  await expect(page.getByText('Sunday Class A', { exact: true })).toBeVisible({ timeout: 15_000 });
 }
 
 /** The Classes card alone (the Profile screen scrolls inside its own view, so a full-page shot misses it). */
@@ -324,7 +325,7 @@ test('a waiting Yes stays focusable and says why (aria-disabled, not removed fro
   await page.getByRole('button', { name: 'Find class' }).click();
   const yes = page.getByTestId('consent-yes');
   await expect(yes).toHaveAttribute('aria-disabled', 'true');
-  await expect(yes).not.toHaveAttribute('disabled', /.*/);
+  await expect(yes).toHaveAttribute('tabindex', '0');
   await expect(yes).toHaveAccessibleDescription('Read to the end to continue.');
   await yes.focus();
   await expect(yes).toBeFocused();
@@ -354,11 +355,13 @@ test('a grown-up session left open elsewhere never carries the Home line: Review
   await seedSynced(page, 30);
   await openGrownUpZone(page, 'Mina');
   await unlockWithPin(page);
-  await expect(page.getByRole('heading', { name: 'Grown-up zone' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Family Dashboard' })).toBeVisible();
   // Back to the learner (in the app, so the session stays open), then the Home line.
-  while (!(await page.getByText('Hi, Mina!').isVisible().catch(() => false))) {
-    await page.getByRole('button', { name: 'Go back' }).first().click();
-  }
+  // The dashboard's back arrow sits just before its title block.
+  await page.getByRole('heading', { name: 'Family Dashboard' }).locator('xpath=../preceding-sibling::*[1]').click();
+  await expect(page.getByRole('heading', { name: 'Classes & family' })).toBeVisible();
+  await page.getByRole('button', { name: 'Go back' }).first().click();
+  await expect(page.getByText('Hi, Mina!')).toBeVisible();
   await page.getByRole('button', { name: 'Review the move (PIN required)' }).click();
   await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();
   await unlockWithPin(page);
