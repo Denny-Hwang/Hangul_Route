@@ -13,7 +13,8 @@ import type { LetterState, LetterWallView } from '../../logic/my-route/letter-wa
  * open stage stays short; each letter is read by its own label.
  */
 
-const CHECK_SIZE = spacing.md;
+/** One width for every tile, so the wall is an even grid (three across at 320 wide) and a gloss wraps under its letter. */
+const TILE_WIDTH = spacing.jumbo + spacing.sm;
 
 const frameOf = (state: LetterState) =>
   ({
@@ -23,11 +24,16 @@ const frameOf = (state: LetterState) =>
     backgroundColor: state === 'met' ? colors.brand.primaryLight : 'transparent',
   }) as const;
 
-/** The check on a lit letter: drawn, hidden from screen readers (the label names the state). */
-function MetCheck(): React.ReactElement {
+/** The check on a lit letter: a drawn badge on paper, hidden from screen readers (the label names the state). */
+function MetCheck({ size }: { size: number }): React.ReactElement {
   return (
-    <View aria-hidden importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={{ position: 'absolute', top: spacing.xxs, right: spacing.xxs }}>
-      <Icon name="check-circle" size={CHECK_SIZE} color={colors.brand.primaryDark} />
+    <View
+      aria-hidden
+      importantForAccessibility="no-hide-descendants"
+      accessibilityElementsHidden
+      style={{ position: 'absolute', top: 0, right: 0, padding: spacing.xxs, borderRadius: radii.pill, backgroundColor: colors.surface.paper }}
+    >
+      <Icon name="check-circle" size={size} color={colors.brand.primaryDark} />
     </View>
   );
 }
@@ -35,18 +41,18 @@ function MetCheck(): React.ReactElement {
 /** A small letter tile for the legend: the frame of the state around a plain chip. */
 function Swatch({ state }: { state: LetterState }): React.ReactElement {
   return (
-    <View aria-hidden importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={{ ...frameOf(state), padding: spacing.xs }}>
+    <View aria-hidden importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={{ ...frameOf(state), padding: spacing.sm }}>
       <View
         style={{
-          width: spacing.lg,
-          height: spacing.lg,
+          width: spacing.xl,
+          height: spacing.xl,
           borderRadius: radii.sm,
           borderWidth: borderWidth.thin,
           borderColor: colors.brand.secondary,
           backgroundColor: colors.brand.secondaryLight,
         }}
       />
-      {state === 'met' ? <MetCheck /> : null}
+      {state === 'met' ? <MetCheck size={spacing.md} /> : null}
     </View>
   );
 }
@@ -71,9 +77,9 @@ export function LetterWall({ wall }: { wall: LetterWallView }): React.ReactEleme
           </View>
           <View accessibilityRole="list" accessibilityLabel={wall.title} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
             {wall.tiles.map((tile) => (
-              <View key={tile.key} testID={`my-route-letter-${tile.state}`} style={{ ...frameOf(tile.state), padding: spacing.xs }}>
+              <View key={tile.key} testID={`my-route-letter-${tile.state}`} style={{ ...frameOf(tile.state), width: TILE_WIDTH, paddingVertical: spacing.xs, paddingHorizontal: spacing.xxs }}>
                 <KoreanText ko={tile.ko} romanization={tile.romanization} gloss={tile.gloss} size="sm" accessibilityLabel={tile.a11yLabel} />
-                {tile.state === 'met' ? <MetCheck /> : null}
+                {tile.state === 'met' ? <MetCheck size={spacing.lg} /> : null}
               </View>
             ))}
           </View>
