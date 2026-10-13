@@ -1,9 +1,10 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
 import { Body, Button, Heading, Spacer, borderWidth, colors, radii, shadows, spacing, touchTarget, typography, useLayoutClass } from '@hangul-route/design-system';
 import { LOCALE_META } from '@hangul-route/i18n';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { useLocale, useMessages } from '../../i18n/use-messages';
+import { onEscape } from '../../platform/browse-env';
 import { useBrowseSettings } from './BrowseSettings';
 import { focusRing, type FocusState } from './browse-ui';
 
@@ -34,11 +35,13 @@ export function LessonDisplaySheet({ visible, onClose }: { visible: boolean; onC
   const { romanization, setRomanization, languages, setLanguage } = useBrowseSettings();
   const dialog = useLayoutClass().width !== 'compact';
   const label = { always: m.always, tap: m.tap } as const;
+  // Escape closes the sheet (section 7); the web Modal does not do it by itself.
+  useEffect(() => (visible ? onEscape(onClose) : undefined), [visible, onClose]);
 
   return (
     <Modal visible={visible} transparent animationType={dialog ? 'fade' : 'slide'} onRequestClose={onClose}>
       <View style={{ flex: 1, justifyContent: dialog ? 'center' : 'flex-end', alignItems: dialog ? 'center' : 'stretch', backgroundColor: colors.surface.overlay }}>
-        <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel={m.done.cta} style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }} testID="browse-display-scrim" />
+        <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel={messages.common.buttons.close} style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }} testID="browse-display-scrim" />
         <View
           role="dialog"
           aria-modal

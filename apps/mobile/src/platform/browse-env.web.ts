@@ -248,3 +248,26 @@ export function revealTestId(testId: string): boolean {
     return false;
   }
 }
+
+/**
+ * Escape closes the Lesson display sheet and the card page (section 7). React
+ * Native's `Modal` on the web does not close on Escape by itself. Returns the
+ * unsubscribe.
+ */
+export function onEscape(handler: () => void): () => void {
+  const listener = (event?: unknown): void => {
+    if ((event as { key?: string } | undefined)?.key === 'Escape') handler();
+  };
+  try {
+    browser().addEventListener?.('keydown', listener);
+  } catch {
+    return () => undefined;
+  }
+  return () => {
+    try {
+      browser().removeEventListener?.('keydown', listener);
+    } catch {
+      // Nothing to remove.
+    }
+  };
+}

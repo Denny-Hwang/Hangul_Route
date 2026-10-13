@@ -47,3 +47,7 @@ export function isOnline(): boolean {
 export function revealTestId(_testId: string): boolean {
   return false;
 }
+
+export function onEscape(_handler: () => void): () => void {
+  return () => undefined;
+}
