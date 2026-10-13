@@ -1,4 +1,4 @@
-import { AccessibilityInfo, findNodeHandle } from 'react-native';
+import { AccessibilityInfo, Platform, findNodeHandle } from 'react-native';
 
 /**
  * Whether a screen reader is on (F-PLC-001 section 3.1 step 3 and section
@@ -32,4 +32,18 @@ export function focusForScreenReader(node: object | null): void {
   if (node === null) return;
   const tag = findNodeHandle(node as Parameters<typeof findNodeHandle>[0]);
   if (tag !== null) AccessibilityInfo.setAccessibilityFocus(tag);
+}
+
+/**
+ * Says a short status line that just appeared (a check-in answered, a change that did not save).
+ * Android and the web read the line's polite live region; iOS has no live regions, so VoiceOver is
+ * told here. Never throws.
+ */
+export function announceForScreenReader(text: string): void {
+  if (Platform.OS !== 'ios') return;
+  try {
+    AccessibilityInfo.announceForAccessibility(text);
+  } catch {
+    // Nothing to say it with: the line is still on screen.
+  }
 }

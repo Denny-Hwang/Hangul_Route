@@ -57,8 +57,11 @@ export interface BrowseOpener {
   openFree: () => void;
 }
 
-/** One entry's hand-off: its target and source, and the line it shows when it cannot open. */
-export function useBrowseOpener(target: BrowseTarget | undefined, source: BrowseSource, env?: BrowseOpenerEnv): BrowseOpener {
+/**
+ * One entry's hand-off: its target and source, and the line it shows when it cannot open. `onOpen` runs just before
+ * a hand-off starts (a host with unsaved input keeps it there, FB-15's composer).
+ */
+export function useBrowseOpener(target: BrowseTarget | undefined, source: BrowseSource, env?: BrowseOpenerEnv, onOpen?: () => void): BrowseOpener {
   const { api, locale, session } = useConsole();
   const [browser] = useState<BrowseOpenerEnv>(() => env ?? browserOpenerEnv());
   const [notice, setNotice] = useState<BrowseNotice>(null);
@@ -80,6 +83,7 @@ export function useBrowseOpener(target: BrowseTarget | undefined, source: Browse
     if (busy.current) return;
     busy.current = true;
     setChecking(true);
+    onOpen?.();
     void openBrowse(target, source, deps())
       .then(settle)
       .finally(() => {
@@ -97,7 +101,10 @@ export function useBrowseOpener(target: BrowseTarget | undefined, source: Browse
       open();
     },
     retry: open,
-    openFree: () => settle(openFreeLessons(target, source, deps())),
+    openFree: () => {
+      onOpen?.();
+      settle(openFreeLessons(target, source, deps()));
+    },
   };
 }
 
@@ -179,6 +186,7 @@ export function BrowseLink({
   className,
   style,
   children,
+  onOpen,
 }: {
   target: BrowseTarget;
   source: BrowseSource;
@@ -192,8 +200,10 @@ export function BrowseLink({
   className?: string;
   style?: CSSProperties;
   children?: ReactNode;
+  /** Runs just before a plain click (or Try again, or Open free lessons) hands off to All lessons. */
+  onOpen?: () => void;
 }): JSX.Element {
-  const opener = useBrowseOpener(target, source, env);
+  const opener = useBrowseOpener(target, source, env, onOpen);
   return (
     <span style={{ display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center' }}>
       <a

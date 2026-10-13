@@ -445,3 +445,90 @@ export function ReturnNoticeRegion({ notice, done, checking, onAction }: { notic
     </div>
   );
 }
+
+/** Back to Billing (the receipts page): the back-link look with the `arrow-left` glyph. */
+export function BackToBilling({ href }: { href: string }): JSX.Element {
+  const b = useMessages().console.billing;
+  return (
+    <Link className="hr-bill-link" href={href}>
+      <IconSvg name="arrow-left" size={GLYPH} color={colors.brand.secondaryDark} />
+      <span>{b.receipts.back.cta}</span>
+    </Link>
+  );
+}
+
+/** Loading on the receipts page: three grey row outlines, nothing moves. */
+export function ReceiptsSkeleton(): JSX.Element {
+  return (
+    <div className="hr-bill-section" aria-busy="true" data-testid="receipts-loading">
+      <div className="hr-bill-skeleton-line" />
+      <div className="hr-bill-skeleton-line" />
+      <div className="hr-bill-skeleton-line" />
+    </div>
+  );
+}
+
+/**
+ * The receipts table (B-8c; `design/screens/billing/receipts.md`, D10): one `table` with explicit ARIA roles, so the
+ * narrow-column reflow (each row a block) keeps its semantics; the date is the row header; the action column's header
+ * is hidden from assistive technology and each View receipt carries its own accessible name.
+ */
+/** A line under a row's View receipt: the lookup failed, or step-up is done and one more tap opens the receipt. */
+export type ReceiptRowNote = 'failed' | 'tapAgain';
+
+export function ReceiptsTable({ rows, notes, busyId, onView }: { rows: ReceiptRowView[]; notes: ReadonlyMap<string, ReceiptRowNote>; busyId: string | null; onView: (row: ReceiptRowView) => void }): JSX.Element {
+  const r = useMessages().console.billing.receipts;
+  return (
+    <table className="hr-bill-table" role="table">
+      <caption>{r.title}</caption>
+      <thead role="rowgroup">
+        <tr role="row">
+          <th role="columnheader" scope="col">
+            {r.column.date}
+          </th>
+          <th role="columnheader" scope="col">
+            {r.column.what}
+          </th>
+          <th role="columnheader" scope="col">
+            {r.column.plan}
+          </th>
+          <th role="columnheader" scope="col">
+            {r.column.amount}
+          </th>
+          <td role="columnheader" aria-hidden="true" />
+        </tr>
+      </thead>
+      <tbody role="rowgroup">
+        {rows.map((row) => (
+          <tr role="row" key={row.id}>
+            <th role="rowheader" scope="row">
+              {row.date}
+            </th>
+            <td role="cell" className="hr-bill-c-what">
+              <span>{row.kind}</span>
+              {row.testPill ? <span className="hr-bill-pill">{row.testPill}</span> : null}
+            </td>
+            <td role="cell" className="hr-bill-c-plan">
+              {row.plan}
+            </td>
+            <td role="cell" className="hr-bill-c-amount">
+              {row.amount}
+            </td>
+            <td role="cell" className="hr-bill-c-action">
+              {row.hasReceipt ? (
+                <>
+                  <button type="button" className="hr-bill-btn" aria-label={row.viewA11y} onClick={() => onView(row)} disabled={busyId !== null}>
+                    {row.viewLabel}
+                  </button>
+                  <p className="hr-bill-line" role="status">
+                    {notes.get(row.id) === 'failed' ? r.linkFailed : notes.get(row.id) === 'tapAgain' ? r.tapAgain : ''}
+                  </p>
+                </>
+              ) : null}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}

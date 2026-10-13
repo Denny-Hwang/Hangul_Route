@@ -12,7 +12,7 @@ Inside the adult frame (Billing current), in the reading column (`layout.maxWidt
 2. **h1** "{space} · receipts" (`receipts.pageTitle`).
 3. **Mode banner** (as on the billing home): "Test mode: no real card is charged."
 4. **The table** (caption "Receipts", `receipts.title`; columns `receipts.column.date` / `.what` / `.plan` / `.amount` and an unlabelled action column whose header cell is `<td role="columnheader" aria-hidden="true">`, so no empty cell is announced and each **View receipt** carries its own accessible name), newest first, at most `RECEIPTS_PAGE_LIMIT` (50) rows.
-5. Past 50 rows: "Older receipts: see Stripe's emails or write to us." (`receipts.beyondLimit`, `text.muted`).
+5. At 50 rows: "Older receipts: see Stripe's emails or write to us." (`receipts.beyondLimit`, `text.muted`). The list carries no "more" flag, so the line shows whenever the limit is reached, including a space with exactly 50 rows; it is guidance, true either way.
 
 ## A row
 
@@ -26,7 +26,7 @@ Inside the adult frame (Billing current), in the reading column (`layout.maxWidt
 
 - A failed payment row is plain text: no red, no failure glyph, the same neutral words as everywhere.
 - A row without a receipt (a legacy one-time sandbox payment made free by a 100%-off code) has no button; the rest of the row stays (`Oct 12, 2026 · Payment · Family Plan · $0` in the mock). This is an edge case, not the usual legacy path: a one-time Checkout session opened before BY-1 (#371) stopped creating them and completed, inside Checkout's 24-hour session life, after B-3 (#406) started writing `billing_events` (both merged and deployed Oct 11 to 12, 2026), so it has a recorded row but no receipt. The usual legacy case, a one-time payment with no recorded row at all, is billing home board item 11 (`legacyNoHistory`).
-- **View receipt** opens a blank tab inside the tap, then the receipt-link call; step-up first when needed (`step-up.md`, board 5); the tab goes to Stripe's hosted invoice or charge receipt with the opener cleared; on failure the tab closes and the row's line appears.
+- **View receipt** opens a blank tab inside the tap, then the receipt-link call; the tab goes to Stripe's hosted invoice or charge receipt with the opener cleared; on failure the tab closes and the row's line appears. When step-up is needed (`step-up.md`, board 5) the blank tab is closed before the dialog opens; after step-up the receipt opens in a new tab, and if the browser blocks it (the tap is long gone) the row says "Confirmed. Tap View receipt again to open it." (`receipts.tapAgain`), and that next tap opens it inside the tap. A blank tab the browser blocked gets one more try once the link is here; if that is blocked too, the row says "Can't open this receipt right now."
 
 ## Table and list (D10)
 
@@ -42,7 +42,7 @@ One `table` with explicit ARIA roles (`table`, `rowgroup`, `row`, `rowheader`, `
 | 4 | not yours (403) or unknown space (404) | h1 "Receipts" (no space name), a panel "This page is for the person who pays for this space." and **Back to Billing** |
 | 5 | offline | panel "You're offline. Plans and receipts need a connection." + **Try again** |
 | 6 | error | panel "Can't load receipts right now." + **Try again** |
-| 7 | past 50 rows | the last rows, then the beyond-limit line |
+| 7 | 50 rows | the last rows, then the beyond-limit line |
 | page | success | Kim family, six rows: a renewal three days after the period end (Oct 5, 2028), the failed attempt on the period end itself (Oct 2, 2028, Stripe's first try), a refund of a duplicate payment, the duplicate (with a failed lookup), the first payment, and the legacy row without a receipt |
 
 Payers only: co-parents and teachers never reach rows (the server answers 403). No Stripe id or URL is ever on the page or in its address; the id in the URL is the opaque space id.

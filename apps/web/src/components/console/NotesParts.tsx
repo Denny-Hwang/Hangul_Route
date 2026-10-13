@@ -23,8 +23,12 @@ import {
   type SentRowView,
 } from '@/lib/console/notes';
 import { composerPrefill, questOptions, reactionGlyph } from '@/lib/console/notes-page';
+import { clearComposerDraft, readComposerDraft, saveComposerDraft } from '@/lib/console/composer-draft';
+import { notesEnabled } from '@/lib/console/config';
+import { browserStorage, type KeyValueStorage } from '@/lib/i18n/safe-storage';
 import { ROUTES } from '@/lib/console/routing';
 import { stageTitle } from '@/lib/console/stage-titles';
+import { BrowseLink, useBrowseLinksShown, type BrowseOpenerEnv } from './BrowseLink';
 import { MoveButton, TransferSheet } from './TransferParts';
 
 /**
@@ -75,6 +79,8 @@ export const NOTES_CSS = `
 .hr-notes-status{display:flex;flex-wrap:wrap;align-items:center;column-gap:${rem(spacing.sm)};row-gap:${rem(spacing.xxs)};color:${colors.text.secondary};font-size:${rem(typography.size.bodySm)}}
 .hr-notes-sep{color:${colors.text.muted}}
 .hr-notes-answer{display:inline-flex;align-items:center;gap:${rem(spacing.xs)};font-weight:${typography.weight.semibold};color:${colors.text.primary}}
+.hr-notes-hub-title{font-size:${rem(typography.size.prompt)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight}}
+.hr-notes-hub-row{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:${rem(spacing.sm)}}
 .hr-notes-skeleton{height:${px(touchTarget.hero)};border-radius:${px(radii.lg)};background:${colors.surface.sunken}}
 .hr-notes-state{display:flex;flex-direction:column;align-items:flex-start;gap:${rem(spacing.md)};padding:${rem(spacing.xl)} ${rem(spacing.lg)};border-radius:${px(radii.lg)};background:${colors.surface.paper};border:${px(borderWidth.thin)} solid ${colors.border.subtle}}
 .hr-notes-problem{padding:${rem(spacing.sm)} ${rem(spacing.md)};border-left:${px(borderWidth.thick)} solid ${colors.feedback.nudge};border-radius:${px(radii.sm)};background:${colors.feedback.nudgeLight};color:${colors.text.primary};font-weight:${typography.weight.semibold};line-height:${typography.leading.relaxed};overflow-wrap:anywhere}
@@ -262,7 +268,10 @@ type ToMode = 'everyone' | 'learners';
 /**
  * The composer, a labelled dialog over the notes page (full height below 45em, `TransferSheet`): To, Pick an
  * encouragement, a few words, a quest, Sign as (family), the preview, Send. `closedLine` words a picked quest the
- * learner may not open (F-ENT-003, never a price or a link). `onClose(sent)` drops `&compose=1`.
+ * learner may not open (F-ENT-003, never a price or a link). `onClose(sent)` drops `&compose=1`. A picked quest
+ * carries [ Preview ] into All lessons (FB-15, `openBrowse({ kind: 'quest', id }, 'notes')`, the BR-11 pill), only
+ * with All lessons on for this page and the notes flag on. Preview goes in the same tab, so the form is kept first
+ * (`composer-draft`, this tab's session storage) and put back when the adult returns; close and send drop it.
  */
 export function NoteComposer({
   notesApi,
@@ -273,6 +282,9 @@ export function NoteComposer({
   m,
   locale,
   onClose,
+  preview: questPreview,
+  draftStorage,
+  browseEnv,
 }: {
   notesApi: NotesApi;
   space: ComposerSpace;
@@ -282,8 +294,16 @@ export function NoteComposer({
   m: Messages;
   locale: UiLocale;
   onClose: (sent: boolean) => void;
+  /** [ Preview ] on a picked quest (FB-15); omitted, `browseLinksShown()` for this page and `notesEnabled()` decide. */
+  preview?: boolean;
+  /** Where the draft is kept across Preview; omitted, this tab's `sessionStorage` (guarded). */
+  draftStorage?: () => KeyValueStorage | null;
+  /** The Preview link's browser (tests). */
+  browseEnv?: BrowseOpenerEnv;
 }): JSX.Element {
   const c = m.console.notes.composer;
+  const browseShown = useBrowseLinksShown();
+  const previewShown = questPreview ?? (browseShown && notesEnabled());
   const side = space.kind === 'family' ? 'family' : 'class';
   const ids = useId();
   const [recipients, setRecipients] = useState<NoteRecipient[] | null>(null);
@@ -302,6 +322,21 @@ export function NoteComposer({
   const [sentAny, setSentAny] = useState(false);
   const resultRef = useRef<{ focus?: () => void } | null>(null);
   const latest = useRef(0);
+  const [draftStore] = useState(() => draftStorage ?? (() => browserStorage('session')));
+  /** Learners from a kept draft, applied once the recipients load (only those still pickable). */
+  const restoredPicked = useRef<string[] | null>(null);
+
+  // A note kept by [ Preview ] comes back when the adult returns (read after mount; declared before the recipients load).
+  useEffect(() => {
+    const draft = readComposerDraft(draftStore(), space.id, Date.now());
+    if (!draft) return;
+    setMode(draft.mode);
+    setPresetId(draft.presetId);
+    setText(draft.text);
+    if (draft.questId) setQuestId(draft.questId);
+    setLabel(draft.label);
+    restoredPicked.current = draft.picked;
+  }, [draftStore, space.id]);
 
   const loadRecipients = useCallback(async (): Promise<void> => {
     if (space.archived) return;
@@ -315,7 +350,10 @@ export function NoteComposer({
       return;
     }
     setRecipients(r.data);
-    setPicked(composerPrefill(recipientRows(r.data, space.kind, locale), space.kind, prefillLearner));
+    const rowsNow = recipientRows(r.data, space.kind, locale);
+    const restored = restoredPicked.current;
+    restoredPicked.current = null;
+    setPicked(restored ? restored.filter((id) => rowsNow.some((row) => row.id === id && row.selectable)) : composerPrefill(rowsNow, space.kind, prefillLearner));
     // `locale` only words the problem line; a language switch must not reload or reset the form.
   }, [notesApi, space.archived, space.id, space.kind, prefillLearner]);
 
@@ -327,7 +365,14 @@ export function NoteComposer({
     if (result) resultRef.current?.focus?.();
   }, [result]);
 
-  const close = (): void => onClose(sentAny);
+  const finish = (sent: boolean): void => {
+    clearComposerDraft(draftStore(), space.id);
+    onClose(sent);
+  };
+  const close = (): void => finish(sentAny);
+  const keepDraft = (): void => {
+    saveComposerDraft(draftStore(), space.id, { mode, picked, presetId, text, questId, label }, Date.now());
+  };
   const rows = recipients ? recipientRows(recipients, space.kind, locale) : [];
   const check = composerCheck({ spaceKind: space.kind, to: mode === 'everyone' ? { kind: 'everyone' } : { kind: 'learners', ids: picked }, presetId, text, questId, label: side === 'family' ? label : null }, locale);
   const counter = textCounter(text, locale);
@@ -348,6 +393,7 @@ export function NoteComposer({
     const r = await notesApi.send(space.id, check.body);
     setSending(false);
     if (r.ok) {
+      clearComposerDraft(draftStore(), space.id);
       setResult(sendResultLines(r.data, space.kind, locale));
       if (r.data.sent > 0) setSentAny(true);
     } else setSendError(sendProblem(r.failure, space.kind, locale));
@@ -408,7 +454,7 @@ export function NoteComposer({
           <button type="button" className="hr-notes-btn" onClick={sendAnother}>
             {c.result.another.cta}
           </button>
-          <button type="button" className="hr-notes-btn hr-notes-primary" onClick={() => onClose(true)}>
+          <button type="button" className="hr-notes-btn hr-notes-primary" onClick={() => finish(true)}>
             {c.result.done.cta}
           </button>
         </div>
@@ -532,9 +578,12 @@ export function NoteComposer({
           {questId && questTitle ? (
             <div className="hr-compose-quest">
               <IconSvg name="book" size={GLYPH_ROW} color={colors.brand.primaryDark} />
-              <span className="hr-compose-quest-title" data-testid="compose-quest">
+              <span className="hr-compose-quest-title" id={`${ids}-quest`} data-testid="compose-quest">
                 {questTitleOf(questId)}
               </span>
+              {previewShown ? (
+                <BrowseLink target={{ kind: 'quest', id: questId }} source="notes" label={m.console.browse.preview.cta} describedBy={`${ids}-quest`} testId="compose-quest-preview" env={browseEnv} onOpen={keepDraft} />
+              ) : null}
               <button type="button" className="hr-notes-btn" onClick={() => setQuestId(null)}>
                 {c.quest.remove.cta}
               </button>

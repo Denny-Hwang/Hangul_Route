@@ -215,6 +215,7 @@ const KO_ALL_ARGUMENTS: readonly string[] = [
   'report.when.inMonth', // a formatted month inside a sentence
   'report.step.range', // "from~to"
   'report.list', // items joined by ", "
+  'learner.weeklyPlan.proposal.pickDayLabel', // "date (weekday)": both arrive formatted in Korean
 ];
 
 /** 합니다체 on purpose: the legal notice and the plan terms and price lines (§3.10 style guide). */
@@ -222,8 +223,6 @@ const FORMAL_ALLOWED: readonly string[] = [
   'console.familyLine',
   'console.groupLine',
   'console.contactLine',
-  'console.billing.current.freeLine',
-  'console.billing.includes.school_seat',
   'landing.legal.englishAuthoritative',
   'landing.legal.draft',
   // The class-move consent sheet's frame (F-SPACE-002 T-6d): one voice with the 합니다체 consent lines it frames.
@@ -277,6 +276,8 @@ const KO_LITERALLY_SHARED: readonly string[] = [
   'report.detail.strand',
   'report.class.count',
   'report.letter',
+  'learner.weeklyPlan.proposal.weekRowLabel',
+  'learner.weeklyPlan.setup.likes.themeChosen',
   // Names: the brand and its mark, the copyright line, and the Android platform name.
   'landing.brand.name',
   'landing.brand.mark',

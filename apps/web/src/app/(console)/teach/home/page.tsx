@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState, type CSSProperties } from 'react';
 import { AdultFrame, type FrameSpaces } from '@/components/console/AdultFrame';
 import { Button, Muted, Notice, buttonBase, panelStyle } from '@/components/console/ui';
+import { useMovesWaiting, useSchoolMoveLinks } from '@/components/console/MovesEntry';
 import { useConsole } from '@/components/console/use-console';
 import type { SpaceListItem } from '@/lib/console/api';
 import { browseEntryShown, reportsEnabled, notesEnabled } from '@/lib/console/config';
@@ -20,7 +21,9 @@ import { START_CLASS, START_FAMILY, classRowLinks, teacherHomeView } from '@/lib
  * design/screens/app-shell/teacher-home.md, wireframe design/wireframes/shell/teacher-home.md).
  * Classes, then the School group; each class row's Class report and Notes by flag; + New class;
  * Lessons; the no-class state and the quiet cross-link. Counts only: no names of learners, no
- * percentages, no ranking (F-CONSOLE-001 section 3.4).
+ * percentages, no ranking (F-CONSOLE-001 section 3.4). Class moves (F-SPACE-002 T-6b, requests-page.md "Entry
+ * points"): a class row's link line gains "N class moves waiting" and a school row one link per child class with a
+ * waiting move, each to that class's requests page; nothing while class moves are off.
  */
 
 const smallButton: CSSProperties = {
@@ -59,6 +62,9 @@ export default function HomePage(): JSX.Element {
   const router = useRouter();
   const [items, setItems] = useState<SpaceListItem[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const homeView = items ? teacherHomeView(items) : null;
+  const moves = useMovesWaiting(api, homeView?.classRows.map((item) => item.space.id) ?? []);
+  const schoolMoves = useSchoolMoveLinks(api, homeView?.schoolRows.map((item) => item.space.id) ?? []);
 
   const load = useCallback(async (): Promise<void> => {
     if (!api) return;
@@ -76,7 +82,7 @@ export default function HomePage(): JSX.Element {
   if (!ready || !session) return <AdultFrame spaces={frameSpaces}>{null}</AdultFrame>;
   const c = m.console;
   const flags = { reports: reportsEnabled(locale), notes: notesEnabled() };
-  const view = items ? teacherHomeView(items) : null;
+  const view = homeView;
 
   const toFamily = (): void => {
     void writeLastPersona('parent');
@@ -87,6 +93,8 @@ export default function HomePage(): JSX.Element {
   const row = (item: SpaceListItem): JSX.Element => {
     const archived = !!item.space.archivedAt;
     const links = classRowLinks(item, flags);
+    const waiting = moves[item.space.id] ?? 0;
+    const schoolLinks = schoolMoves[item.space.id] ?? [];
     return (
       <article
         key={item.space.id}
@@ -113,7 +121,7 @@ export default function HomePage(): JSX.Element {
             {c.home.open.cta}
           </Link>
         </div>
-        {links.length > 0 ? (
+        {links.length > 0 || waiting > 0 ? (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.sm, paddingTop: spacing.sm, borderTop: `${borderWidth.thin}px solid ${colors.border.subtle}` }}>
             {links.map((link) =>
               link === 'classReport' ? (
@@ -126,6 +134,20 @@ export default function HomePage(): JSX.Element {
                 </Link>
               ),
             )}
+            {waiting > 0 ? (
+              <Link href={ROUTES.spaceTransfers(item.space.id, 'class')} style={smallButton} data-testid={`class-moves-${item.space.id}`}>
+                {c.transfer.waiting(waiting)}
+              </Link>
+            ) : null}
+          </div>
+        ) : null}
+        {schoolLinks.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm, paddingTop: spacing.sm, borderTop: `${borderWidth.thin}px solid ${colors.border.subtle}` }}>
+            {schoolLinks.map((link) => (
+              <Link key={link.spaceId} href={ROUTES.spaceTransfers(link.spaceId, 'class')} style={smallButton} data-testid={`school-moves-${link.spaceId}`}>
+                {c.transfer.schoolRow(link.name, link.waiting)}
+              </Link>
+            ))}
           </div>
         ) : null}
       </article>

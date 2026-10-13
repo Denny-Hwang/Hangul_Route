@@ -376,3 +376,95 @@ describe("PWA e2e", () => {
     );
   });
 });
+
+// F-ENT-003 E3-13: the switch-on e2e lane. Its own workflow (switch-on-e2e.yml), nightly and on demand,
+// that builds dist/ with both content gating switches on (the production switch-on values, OD-2) on a
+// cleared Metro cache, and runs every spec that reads E2E_CONTENT_GATING with E2E_CONTENT_GATING=1, so the
+// switch-on halves stay current with main before the owner's switch-on step. It is not a required check,
+// and it lives outside web-app.yml so a schedule or dispatch run never posts the required check's name
+// on a commit it did not build (review of E3-13).
+describe("switch-on e2e lane (F-ENT-003 E3-13)", () => {
+  const FILE = ".github/workflows/switch-on-e2e.yml";
+  const text = read(FILE);
+  const all = jobs(text);
+  const lane = all["switch-on"];
+  const on = children(topBlock(text, "on"), 2);
+  /** One step of the lane, by the start of its name. */
+  const step = (name) => {
+    const at = lane.text.indexOf(`- name: ${name}`);
+    assert.ok(at >= 0, `a switch-on step named '${name}...'`);
+    return lane.text.slice(at).split(/\n\s+- name: /)[0];
+  };
+
+  test("the lane's workflow runs only on demand and nightly, never on pull requests or pushes", () => {
+    assert.deepEqual(Object.keys(on).sort(), ["schedule", "workflow_dispatch"]);
+    assert.match((on.schedule ?? []).join("\n"), /- cron: "[^"]+"/);
+    assert.deepEqual(Object.keys(all), ["switch-on"], "the lane is the only job of its workflow");
+    assert.deepEqual(topBlock(text, "permissions").map((l) => l.trim()).filter(Boolean), ["contents: read"]);
+    assert.match(lane.text, /^    timeout-minutes: \d+$/m);
+  });
+
+  test("web-app.yml (the required check's workflow) never runs on a schedule or dispatch event", () => {
+    const webOn = children(topBlock(read(".github/workflows/web-app.yml"), "on"), 2);
+    assert.deepEqual(Object.keys(webOn).sort(), ["pull_request", "push"]);
+    assert.ok(!REQUIRED.includes(lane.name), "the lane is not a required check");
+  });
+
+  test("the switch-on build is dist/ with both production switches on, on a cleared Metro and Next cache and no restored cache", () => {
+    const build = step("Build the switch-on bundle");
+    assert.match(build, /EXPO_PUBLIC_CONTENT_GATING_ENABLED: "true"/);
+    assert.match(build, /NEXT_PUBLIC_CONTENT_GATING_ENABLED: "true"/);
+    assert.match(build, /rm -rf \/tmp\/metro-cache apps\/web\/\.next\/cache/);
+    assert.match(build, /export TMPDIR="\$RUNNER_TEMP\/switch-on-tmp"/);
+    assert.match(build, /pnpm --filter @hangul-route\/mobile build:web$/m);
+    assert.doesNotMatch(lane.text, /actions\/cache(\/restore)?@/, "a restored Metro or Next cache could serve a switch-off bundle");
+    // The shared setup step may cache the pnpm store only.
+    const setup = read(".github/actions/setup-workspace/action.yml");
+    assert.doesNotMatch(setup, /actions\/cache|metro-cache|\.next\/cache/);
+  });
+
+  test("the notes flags go on only when the on-demand run asks for it, for the app and the console twin", () => {
+    assert.match(on.workflow_dispatch.join("\n"), /notes:[\s\S]*?type: boolean[\s\S]*?default: false/);
+    assert.match(lane.text, /NOTES: \$\{\{ github\.event_name == 'workflow_dispatch' && inputs\.notes && 'true' \|\| 'false' \}\}/);
+    assert.match(step("Build the switch-on bundle"), /if \[ "\$NOTES" = true \]; then\s+export EXPO_PUBLIC_NOTES_ENABLED=true NEXT_PUBLIC_NOTES_ENABLED=true/);
+    const run = step("Switch-on e2e (release dist");
+    assert.match(run, /if \[ "\$NOTES" = true \]; then\s+export E2E_NOTES=1/);
+    assert.match(run, /git grep -l E2E_NOTES -- 'e2e\/web\/\*\.spec\.ts'/);
+  });
+
+  test("the lane runs every spec that reads E2E_CONTENT_GATING, with E2E_CONTENT_GATING=1, on the release dist", () => {
+    const run = step("Switch-on e2e (release dist");
+    assert.match(run, /E2E_CONTENT_GATING: "1"/);
+    assert.match(run, /git grep -l E2E_CONTENT_GATING -- 'e2e\/web\/\*\.spec\.ts'/);
+    assert.match(run, /\$\{#specs\[@\]\}" -eq 0[\s\S]*?exit 1/, "an empty list fails the lane instead of running every spec");
+    assert.doesNotMatch(run, /STORY_FIXTURES/, "the switch-on specs run on dist/, not a fixture bundle");
+    assert.match(run, /pnpm exec playwright test --output test-results\/switch-on "\$\{specs\[@\]\}"/);
+    // The grep finds these today (the list in the spec row); a spec that stops reading the variable fails here.
+    const dir = join(ROOT, "apps", "mobile", "e2e", "web");
+    const reads = readdirSync(dir).filter((n) => n.endsWith(".spec.ts") && readFileSync(join(dir, n), "utf8").includes("E2E_CONTENT_GATING"));
+    for (const f of [
+      "dashboard-free-line.spec.ts",
+      "episode-access.spec.ts",
+      "free-days.spec.ts",
+      "free-end.spec.ts",
+      "notes-screens.spec.ts",
+      "plan-free-lines.spec.ts",
+      "plan-next.spec.ts",
+    ]) {
+      assert.ok(reads.includes(f), `${f} reads E2E_CONTENT_GATING`);
+    }
+  });
+
+  test("the lane also runs the gating fixture bundle specs, in their own output folder, and uploads results on failure", () => {
+    assert.match(step("Build the gating fixture bundle"), /pnpm --filter @hangul-route\/mobile build:web:fixtures:gated/);
+    const run = step("Switch-on e2e (gating fixture bundle");
+    assert.match(run, /STORY_FIXTURES_GATED: "1"/);
+    assert.match(run, /pnpm exec playwright test --output test-results\/gated story-shelf-gated\.spec free-days\.spec/);
+    assert.match(run, /if: \$\{\{ !cancelled\(\) \}\}/);
+    const upload = step("Upload the Playwright results");
+    assert.match(upload, /if: failure\(\)/);
+    assert.match(upload, /uses: actions\/upload-artifact@/);
+    assert.match(upload, /path: apps\/mobile\/test-results/);
+    assert.match(upload, /overwrite: true/);
+  });
+});
