@@ -153,6 +153,11 @@ export const learner = {
         assigned: 'Elegido para ti',
         dailyTest: 'Un minuto con Hoya',
       },
+      vocab: {
+        title: '¡Palabras listas!',
+        subtitle: (n: number) => plural('es', n, { one: '1 palabra quiere verte otra vez', other: `${n} palabras quieren verte otra vez` }),
+        cta: 'Salúdalas otra vez',
+      },
     },
     progress: {
       heading: 'Progreso de la Etapa 1',

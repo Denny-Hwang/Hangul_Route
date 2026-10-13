@@ -38,6 +38,7 @@ import { useAudience } from '../../store/audience';
 import { useUiStore } from '../../store/ui-store';
 import { LinkButton } from '../placement/parts';
 import { LearningRouteRow } from './LearningRouteRow';
+import { VocabDashboardRow } from './VocabDashboardRow';
 import { NotesDashboardRow } from '../notes/NotesDashboardRow';
 import type { RootStackParamList } from '../../navigation/types';
 import { useProfileStore } from '../../store/profile-store';
@@ -154,6 +155,8 @@ export function ParentDashboardScreen({ navigation, route }: Props): React.React
                   testID={`dashboard-route-${p.id}`}
                 />
               ) : null}
+              {/* F-VOC-005 section 3.8: the Words row, behind the Words flag; nothing for a learner with no word. */}
+              {flags.vocabTopicsEnabled ? <VocabDashboardRow snapshot={snap} testID={`dashboard-words-${p.id}`} /> : null}
               {/* F-ENT-003 E3-12b: the free-lessons line, owner only (with the card's other rows; draws nothing otherwise). */}
               <FreeLessonsRow profileId={p.id} name={p.displayName} testID={`dashboard-free-line-${p.id}`} />
               {snap && snap.quests.length > 0 ? (

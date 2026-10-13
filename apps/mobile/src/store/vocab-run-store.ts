@@ -1,9 +1,11 @@
 import { create } from 'zustand';
+import { dayKey } from '../logic/homework/mission-builder';
 import type { VocabEvent } from '../logic/vocab/progress';
 import { speedAnswerEvent, speedSessionEvent } from '../logic/vocab/speed-round';
 import type { QuestionResult } from '../logic/vocab/speed-session';
 import type { RoundSummary } from '../logic/vocab/stars';
 import type { MinigameHost } from '../screens/minigames/host';
+import { markVocabRoundDone } from './mission-pin-store';
 import { useProgressStore } from './progress-store';
 
 /**
@@ -97,7 +99,11 @@ export const useVocabRunStore = create<State & Actions>((set, get) => ({
     if (mode !== 'speed' || profileId === null || topicKey === null) return;
     const event = speedSessionEvent(topicKey, summary);
     try {
-      if (event !== null) useProgressStore.getState().recordVocab(profileId, [event], now);
+      if (event !== null) {
+        // Before the write, so the Home plan it re-renders already sees the round (F-VOC-005 section 3.7).
+        markVocabRoundDone(profileId, dayKey(now.toISOString()), topicKey);
+        useProgressStore.getState().recordVocab(profileId, [event], now);
+      }
     } finally {
       set(EMPTY);
     }

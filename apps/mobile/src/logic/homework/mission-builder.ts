@@ -17,7 +17,7 @@ import { storyStatus, type StoryStatus } from '../story/story-status';
  *   ② New — the one next quest (`routeNext`, F-ENT-003 section 3.5) when the
  *     caller gives `route`, else the Journey cursor (grid episodes only)
  *   ③ Daily test (F-RVW-001) when available, else
- *      next story → best remaining replay → again story → explore
+ *      vocabulary → next story → best remaining replay → again story → explore
  *
  * An unfinished story is a stronger signal than a replay, so it takes slot ①
  * first; otherwise replays (there is one almost every day for an active
@@ -30,6 +30,12 @@ import { storyStatus, type StoryStatus } from '../story/story-status';
  * story, or a learner with every offerable story finished (the story index
  * holds reviewed stories only). Since F-STORY-001 PR 1.9 production fills
  * the story slots with shelf stories.
+ *
+ * The vocabulary card ("Words are ready", F-VOC-005 §3.7, PR P-3) leads slot
+ * ③'s chain when at least three words are due (`input.vocab`); after a replay
+ * it would almost never show. This order is the review's reconciliation of
+ * F-VOC-005 and F-STORY-004 §3.7 (F-VOC-005 §8 item 7), the standing default
+ * until the owner reorders it. It never takes slot ①.
  *
  * Slot ③ is capability-gated: F-RVW-001 has not shipped, so until it does the
  * slot falls back down its own chain rather than rendering a card that
@@ -45,16 +51,16 @@ import { storyStatus, type StoryStatus } from '../story/story-status';
  * `free-end` and `practice` are card (2) at the end of the free lessons (F-ENT-003 section 3.7):
  * the celebration once per profile and device, then the practice card.
  */
-export type MissionCardKind = 'replay' | 'new' | 'daily-test' | 'story' | 'explore' | 'free-end' | 'practice';
+export type MissionCardKind = 'replay' | 'new' | 'daily-test' | 'story' | 'explore' | 'free-end' | 'practice' | 'vocab';
 
 /**
  * Keys of `learner.home.mission.subtitle`, plus `explore`, whose words are
  * `learner.storyShelf.home.explore`, and `nextInPlan`, whose words are
  * `learner.routeNext.home.subtitle` (F-ENT-003 section 3.7). A `story` card
  * with a `storyReason` reads `learner.storyShelf.home.subtitle[storyReason]`
- * (`missionCardText`).
+ * (`missionCardText`). `vocab` reads `learner.home.mission.vocab` with the card's `vocabDue`.
  */
-export type MissionSubtitle = 'replay' | 'story' | 'new' | 'assigned' | 'dailyTest' | 'explore' | 'nextInPlan' | 'freeEnd' | 'practice';
+export type MissionSubtitle = 'replay' | 'story' | 'new' | 'assigned' | 'dailyTest' | 'explore' | 'nextInPlan' | 'freeEnd' | 'practice' | 'vocab';
 
 export interface MissionCard {
   slot: 1 | 2 | 3;
@@ -76,8 +82,10 @@ export interface MissionCard {
   storyMode?: 'play' | 'replay';
   /** Practice card only: what it opens (a free word topic, a sampler story or a kept replay). */
   practiceKind?: PracticeTarget['kind'];
-  /** Practice card of a word topic: the topic it opens ("Food words"). */
+  /** Practice card of a word topic: the topic it opens ("Food words"); the vocabulary card: its Speed Round's topic. */
   topicKey?: string;
+  /** The vocabulary card only (F-VOC-005 §3.7): how many words were due when the plan was built. */
+  vocabDue?: number;
   /** The free-end card only: the learner tested out of the free letters (`routeNext` `placedOut`). */
   placedOut?: boolean;
 }
@@ -152,6 +160,14 @@ export interface BuildMissionInput {
    * practice card (`practiceTarget`). Omitted keeps today's replay fallback at `free-end`.
    */
   freeEnd?: { seen: boolean; practice: PracticeTarget | null };
+  /**
+   * The vocabulary nudge (F-VOC-005 §3.7, `homeVocabNudge`): set when at least three words are due,
+   * else null. Slot ③ then leads with the "Words are ready" card; ignored when the Daily Test is
+   * available, whose pools already hold the due words. Null or omitted with `vocabTopicsEnabled` off.
+   */
+  vocab?: { topicKey: string; due: number } | null;
+  /** The topics whose Speed Round completed today (`vocabRoundsDone`): the vocabulary card is then collected. */
+  vocabRoundsDone?: ReadonlySet<string>;
 }
 
 /** How far back a Quest counts as replayable (§3.1 — days N−1, N−2). */
@@ -267,6 +283,11 @@ function exploreCard(slot: 1 | 3, episode: Episode): MissionCard {
   };
 }
 
+/** The "Words are ready" card (F-VOC-005 §3.7): its Speed Round opens in Relaxed for `topicKey`. */
+function vocabCard(nudge: { topicKey: string; due: number }): MissionCard {
+  return { slot: 3, kind: 'vocab', titleEn: null, subtitle: 'vocab', topicKey: nudge.topicKey, vocabDue: nudge.due, collected: false };
+}
+
 /** What the plan already holds, so no card repeats a quest, an episode or a story. */
 interface Used {
   quests: Set<string>;
@@ -312,8 +333,11 @@ const exploreLink: Link = (slot, input, used) => {
   return episode ? exploreCard(slot, episode) : null;
 };
 
+/** The vocabulary card, slot ③ only: when the nudge is set (at least three words due). */
+const vocabLink: Link = (slot, input) => (slot === 3 && input.vocab ? vocabCard(input.vocab) : null);
+
 const SLOT_1_CHAIN: readonly Link[] = [storyLink('continue'), replayLink, storyLink('next'), storyLink('again'), exploreLink];
-const SLOT_3_CHAIN: readonly Link[] = [storyLink('next'), replayLink, storyLink('again'), exploreLink];
+const SLOT_3_CHAIN: readonly Link[] = [vocabLink, storyLink('next'), replayLink, storyLink('again'), exploreLink];
 
 function firstOf(chain: readonly Link[], slot: 1 | 3, input: BuildMissionInput, used: Used): MissionCard | null {
   for (const link of chain) {
@@ -371,7 +395,7 @@ function repinFreeEnd(cards: readonly MissionCard[], input: BuildMissionInput): 
   if (!input.route) return cards;
   const second = cards.find((card) => card.slot === 2);
   if (second && second.kind !== 'free-end' && second.kind !== 'practice') {
-    if (isCollected(second, input.snapshot, input.today, second.collected)) return cards;
+    if (isCollected(second, input, second.collected)) return cards;
     const end = freeEndCard(input);
     return end ? swapSecond(cards, second, end, input) : cards;
   }
@@ -470,7 +494,7 @@ function repinClosed(cards: readonly MissionCard[], input: BuildMissionInput): r
   const next = [...cards];
   next.forEach((card, index) => {
     if (card.slot === 2 || !isClosed(card, input)) return;
-    if (isCollected(card, input.snapshot, input.today, card.collected)) return;
+    if (isCollected(card, input, card.collected)) return;
     const used: Used = { quests: new Set(), episodes: new Set(), stories: new Set() };
     // As in a fresh build: card (2) takes its quest and story, not its episode.
     for (const other of next) if (other !== card) use(used, other.slot === 2 ? { ...other, episodeId: undefined } : other, input);
@@ -480,10 +504,14 @@ function repinClosed(cards: readonly MissionCard[], input: BuildMissionInput): r
   return next;
 }
 
-/** An `again` card opens the unscored reader, so it is never collected (§3.7). */
-function isCollected(card: MissionCard, snapshot: ProgressSnapshot, today: string, fallback: boolean): boolean {
+/**
+ * An `again` card opens the unscored reader, so it is never collected (§3.7). The vocabulary card is
+ * collected once a Speed Round of its topic completed today (F-VOC-005 §3.7).
+ */
+function isCollected(card: MissionCard, input: BuildMissionInput, fallback: boolean): boolean {
   if (card.storyMode === 'replay') return false;
-  return card.questId ? completedToday(snapshot, card.questId, today) : fallback;
+  if (card.kind === 'vocab') return card.topicKey !== undefined && (input.vocabRoundsDone?.has(card.topicKey) ?? false);
+  return card.questId ? completedToday(input.snapshot, card.questId, input.today) : fallback;
 }
 
 /**
@@ -510,7 +538,7 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
     return {
       ...input.pinned,
       cards: repinClosed(repinFreeEnd(repinPlacedOut(input.pinned.cards, input), input), input).map((card) => {
-        const refreshed: MissionCard = { ...card, collected: isCollected(card, snapshot, today, card.collected) };
+        const refreshed: MissionCard = { ...card, collected: isCollected(card, input, card.collected) };
         if (card.kind === 'story') refreshed.storyReason = refreshedReason(card, input);
         // A plan removed after the pin (unpublished, or the own plan archived): the quest stays, "Next in your plan" goes.
         if (card.subtitle === 'nextInPlan' && card.questId && input.route && !inAPlan(input.route, card.questId)) refreshed.subtitle = 'new';
@@ -538,7 +566,7 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
 
   if (second) cards.push(second);
 
-  // ③ Daily test when available, else next story → replay → again story → explore.
+  // ③ Daily test when available, else vocabulary → next story → replay → again story → explore.
   if (capabilities.dailyTestAvailable) {
     cards.push({
       slot: 3,
@@ -555,7 +583,7 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
   return {
     date: today,
     profileId,
-    cards: cards.map((card) => ({ ...card, collected: isCollected(card, snapshot, today, false) })),
+    cards: cards.map((card) => ({ ...card, collected: isCollected(card, input, false) })),
   };
 }
 
@@ -576,6 +604,7 @@ export function missionCardText(card: MissionCard, m: MissionMessages): { title:
     const name = card.titleEn ?? '';
     return { title: card.practiceKind === 'topic' ? m.access.practice.topicTitle(name) : name, subtitle: m.access.practice.subtitle };
   }
+  if (card.subtitle === 'vocab') return { title: mission.vocab.title, subtitle: mission.vocab.subtitle(card.vocabDue ?? 0) };
   const title = card.titleEn ?? mission.dailyTest.title;
   if (card.subtitle === 'explore') return { title, subtitle: storyHome.explore };
   if (card.subtitle === 'nextInPlan') return { title, subtitle: m.routeNext.home.subtitle };
@@ -587,7 +616,8 @@ export function missionCardText(card: MissionCard, m: MissionMessages): { title:
 export function missionCopy(plan: MissionPlan, m: MissionMessages): string[] {
   return plan.cards.flatMap((c) => {
     const { title, subtitle } = missionCardText(c, m);
-    return [title, subtitle];
+    // The vocabulary card also shows its button (F-VOC-005 §3.7).
+    return c.kind === 'vocab' ? [title, subtitle, m.home.mission.vocab.cta] : [title, subtitle];
   });
 }
 
@@ -609,6 +639,22 @@ export function storyCardShownEvent(plan: MissionPlan): StoryCardShownEvent | nu
     }
   }
   return null;
+}
+
+export interface VocabCardShownEvent {
+  name: 'home.vocab_card.shown';
+  /** A topic key and a count only (F-VOC-005 §3.9). */
+  payload: { topicKey: string; due: number };
+}
+
+/**
+ * `home.vocab_card.shown` for a plan holding the vocabulary card, or null. Home sends it once per
+ * profile and day, as `home.story_card.shown`.
+ */
+export function vocabCardShownEvent(plan: MissionPlan): VocabCardShownEvent | null {
+  const card = plan.cards.find((c) => c.kind === 'vocab');
+  if (!card?.topicKey || card.vocabDue === undefined) return null;
+  return { name: 'home.vocab_card.shown', payload: { topicKey: card.topicKey, due: card.vocabDue } };
 }
 
 /**

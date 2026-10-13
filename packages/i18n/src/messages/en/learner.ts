@@ -196,6 +196,15 @@ export const learner = {
         assigned: 'Picked just for you',
         dailyTest: 'About a minute with Hoya',
       },
+      /**
+       * The vocabulary card (F-VOC-005 section 3.7, slot 3): shown from three due words, it opens a Relaxed
+       * Speed Round. A gift, not a guilt trip: never a day count, "overdue", "missed", "behind" or "you forgot".
+       */
+      vocab: {
+        title: 'Words are ready',
+        subtitle: (n: number) => plural('en', n, { one: '1 word would like another look', other: `${n} words would like another look` }),
+        cta: 'Say hello again',
+      },
     },
     progress: {
       heading: 'Stage 1 progress',

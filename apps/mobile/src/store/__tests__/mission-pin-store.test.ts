@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { MissionPlan } from '../../logic/homework/mission-builder';
-import { clearMissionPins, pinMission, pinnedMission } from '../mission-pin-store';
+import { clearMissionPins, markVocabRoundDone, pinMission, pinnedMission, vocabRoundsDone } from '../mission-pin-store';
 
 const plan = (profileId: string, date: string, questId = 'quest:a'): MissionPlan => ({
   profileId,
@@ -69,5 +69,32 @@ describe('HomeScreen pins the plan in the session store (F-STORY-004 PR 4.8c)', 
     expect(home).not.toMatch(/useRef<\s*MissionPlan/);
     expect(home).not.toMatch(/pinned:\s*null/);
     expect(home).not.toMatch(/pinnedPlan/);
+  });
+});
+
+describe('Speed Rounds done today, for the Home vocabulary card (F-VOC-005 section 3.7, PR P-3)', () => {
+  beforeEach(() => clearMissionPins());
+
+  it('lists the topics whose round completed for that profile and day', () => {
+    expect([...vocabRoundsDone('p1', '2026-10-12')]).toEqual([]);
+    markVocabRoundDone('p1', '2026-10-12', 'food');
+    markVocabRoundDone('p1', '2026-10-12', 'animals');
+    markVocabRoundDone('p1', '2026-10-12', 'food');
+    expect([...vocabRoundsDone('p1', '2026-10-12')].sort()).toEqual(['animals', 'food']);
+  });
+
+  it('never carries over to another profile or another day', () => {
+    markVocabRoundDone('p1', '2026-10-12', 'food');
+    expect(vocabRoundsDone('p2', '2026-10-12').size).toBe(0);
+    expect(vocabRoundsDone('p1', '2026-10-13').size).toBe(0);
+    markVocabRoundDone('p1', '2026-10-13', 'colors');
+    expect([...vocabRoundsDone('p1', '2026-10-13')]).toEqual(['colors']);
+    expect(vocabRoundsDone('p1', '2026-10-12').size).toBe(0);
+  });
+
+  it('is cleared with the pins', () => {
+    markVocabRoundDone('p1', '2026-10-12', 'food');
+    clearMissionPins();
+    expect(vocabRoundsDone('p1', '2026-10-12').size).toBe(0);
   });
 });

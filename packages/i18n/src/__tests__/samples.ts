@@ -753,4 +753,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'caregiver.browse.home.storyTileA11y': [['The Moon Rabbit', 1], ['The Moon Rabbit', 4]],
   'caregiver.browse.item.wordCount': [[1], [12]],
   'caregiver.browse.topic.hearA11y': [['sagwa']],
+  'learner.home.mission.vocab.subtitle': [[1], [5]],
+  'a11y.vocabMissionCard': [['Words are ready', '5 words would like another look', false], ['Words are ready', '5 words would like another look', true]],
+  'caregiver.dashboard.words.counts': [[1, 0], [24, 7]],
+  'caregiver.dashboard.words.firstTry': [[0], [85]],
 };
