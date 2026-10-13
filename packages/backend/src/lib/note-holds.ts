@@ -8,10 +8,13 @@ import type { Db, NoteActVia, NoteHoldReason, StoredNoteReport } from '../db';
  * After every report the Worker counts reports against the sender's account in
  * the last 30 days from distinct reporting families (`reporter_key`), so one
  * parent with two children, or two profiles on one family tablet, counts once.
+ * Reports from before the owner last lifted a hold, and reports the owner
+ * restored, are not counted.
  * A hold is placed at 2 families (OD-10), or at once on an `unsafe` report from
  * a family account or from a device whose grown-up opened the gate
- * (`attest = 'grown_up_pin'`). An unattested `unsafe` device report (a class
- * tablet) only hides the note and goes to the top of the owner's review queue.
+ * (`attest = 'grown_up_pin'`, never taken from a class-scoped device). An
+ * unattested `unsafe` device report (a class tablet) only hides the note and
+ * goes to the top of the owner's review queue.
  * A hold never hides earlier notes; only the owner lifts it.
  */
 
@@ -26,12 +29,24 @@ export function holdsAtOnce(reason: NoteReportReason, via: NoteActVia, attest: S
 }
 
 /**
+ * Where the distinct families are counted from: the start of the 30-day window, or the moment the owner last
+ * lifted a hold on this sender when that is later. The reports the owner reviewed before lifting never count
+ * again, so a lift is not undone by the next single report.
+ */
+async function countFrom(db: Db, accountId: string, now: Date): Promise<Date> {
+  const windowStart = now.getTime() - NOTE_HOLD_WINDOW_MS;
+  const liftedAt = (await db.getSenderHold(accountId))?.liftedAt;
+  const lifted = liftedAt ? Date.parse(liftedAt) : Number.NaN;
+  return new Date(Number.isNaN(lifted) ? windowStart : Math.max(windowStart, lifted));
+}
+
+/**
  * The hold check after a recorded report: places a hold when a rule of section 8.4 is met and none is
  * active. Answers the reason of a hold this call placed, or null (no rule met, or a hold already active).
  */
 export async function holdAfterReport(db: Db, report: Pick<StoredNoteReport, 'senderAccountId' | 'reason' | 'via' | 'attest'>, now: Date): Promise<NoteHoldReason | null> {
   let reason: NoteHoldReason | null = holdsAtOnce(report.reason, report.via, report.attest) ? 'unsafe' : null;
-  if (reason === null && (await db.countReportersAgainst(report.senderAccountId, new Date(now.getTime() - NOTE_HOLD_WINDOW_MS))) >= NOTE_HOLD_REPORTERS) reason = 'reports';
+  if (reason === null && (await db.countReportersAgainst(report.senderAccountId, await countFrom(db, report.senderAccountId, now))) >= NOTE_HOLD_REPORTERS) reason = 'reports';
   if (reason === null) return null;
   return (await db.putSenderHold({ accountId: report.senderAccountId, reason, createdAt: now.toISOString(), liftedAt: null })) ? reason : null;
 }

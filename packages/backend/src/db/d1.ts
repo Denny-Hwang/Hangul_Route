@@ -1157,7 +1157,7 @@ export class D1Db implements Db {
     return readChanges(results[0]) === 1;
   }
   countReportersAgainst(accountId: string, since: Date): Promise<number> {
-    return this.count('SELECT COUNT(DISTINCT reporter_key) AS n FROM feedback_reports WHERE sender_account_id = ? AND created_at >= ?', [accountId, since.toISOString()]);
+    return this.count("SELECT COUNT(DISTINCT reporter_key) AS n FROM feedback_reports WHERE sender_account_id = ? AND created_at >= ? AND (outcome IS NULL OR outcome <> 'restored')", [accountId, since.toISOString()]);
   }
   getSenderHold(accountId: string): Promise<StoredSenderHold | null> {
     return this.one('SELECT * FROM feedback_sender_holds WHERE account_id = ?', [accountId], toSenderHold);

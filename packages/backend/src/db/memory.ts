@@ -733,7 +733,7 @@ export class MemoryDb implements Db {
   }
   async countReportersAgainst(accountId: string, since: Date): Promise<number> {
     const from = since.toISOString();
-    return new Set([...this.noteReports.values()].filter((r) => r.senderAccountId === accountId && r.createdAt >= from).map((r) => r.reporterKey)).size;
+    return new Set([...this.noteReports.values()].filter((r) => r.senderAccountId === accountId && r.createdAt >= from && r.outcome !== 'restored').map((r) => r.reporterKey)).size;
   }
   async getSenderHold(accountId: string): Promise<StoredSenderHold | null> {
     return clone(this.senderHolds.get(accountId) ?? null);

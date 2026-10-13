@@ -326,7 +326,7 @@ export interface Db {
    * false for a missing note or one every list already hides, which a report never brings back.
    */
   insertNoteReport(row: StoredNoteReport): Promise<boolean>;
-  /** Distinct reporting families (`reporter_key`) with a report against this sender at or after `since` (section 8.4). */
+  /** Distinct reporting families (`reporter_key`) with a report against this sender at or after `since`, a report the owner restored left out (section 8.4). */
   countReportersAgainst(accountId: string, since: Date): Promise<number>;
   getSenderHold(accountId: string): Promise<StoredSenderHold | null>;
   /** Places a hold; an active hold is never rewritten, a lifted one is replaced. Answers whether it wrote. */

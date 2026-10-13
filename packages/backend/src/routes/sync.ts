@@ -196,14 +196,16 @@ syncRoutes.post('/learners/:id/notes/:noteId/hide', async (c) => {
 });
 
 /**
- * Whether a device may report this note: one it is delivered now, or a note of this learner it can see by
- * scope that has since left the inbox by someone else's action (taken back, hidden, already reported), so a
- * report queued offline is never lost (section 6.9). A live note this device is not delivered is not its to report.
+ * Whether a device may report this note: any note to this learner that the device's scope may see (a full
+ * device: any space; a class-scoped one: class spaces only), whatever its status and whether it is still
+ * delivered. A note leaves the inbox for many reasons the learner cannot see (taken back, hidden, the class
+ * mode set to off, a block, the sender removed from the class, the class archived, the 30-note window), and
+ * a report queued offline must never be lost to any of them (section 6.9); note ids are random and reach a
+ * device only through an earlier delivery, so this widens nothing. Retention is applied by `insertNoteReport`.
  */
-function reportable(note: StoredNote | null, learnerId: string, scope: NoteDeviceScope, delivered: boolean, spaceKind: string | undefined): note is StoredNote {
+function reportable(note: StoredNote | null, learnerId: string, scope: NoteDeviceScope, spaceKind: string | undefined): note is StoredNote {
   if (!note || note.learnerId !== learnerId) return false;
-  if (delivered) return true;
-  return note.status !== 'live' && (scope === 'full' || spaceKind === 'class');
+  return scope === 'full' || spaceKind === 'class';
 }
 
 /**
@@ -223,10 +225,9 @@ syncRoutes.post('/learners/:id/notes/:noteId/report', async (c) => {
   const db = dbFor(c);
   const now = new Date();
   const scope = await noteScope(db, learnerId, auth);
-  const delivered = await isDelivered(db, learnerId, scope, noteId, now);
   const note = await db.getNote(noteId);
-  const space = note && !delivered ? await db.getSpace(note.spaceId) : null;
-  if (!reportable(note, learnerId, scope, delivered, space?.kind)) return fail(c, 'not_found', 'Note not found', 404);
+  const space = note && note.learnerId === learnerId && scope === 'class' ? await db.getSpace(note.spaceId) : null;
+  if (!reportable(note, learnerId, scope, space?.kind)) return fail(c, 'not_found', 'Note not found', 404);
 
   const counterKey = noteRateKey.reportLearner(learnerId);
   if ((await db.countRateHits(counterKey, new Date(now.getTime() - NOTE_LIMIT_WINDOW_MS))) >= NOTE_LIMIT_DEVICE_REPORTS_PER_LEARNER_PER_DAY) {
@@ -241,13 +242,18 @@ syncRoutes.post('/learners/:id/notes/:noteId/report', async (c) => {
     via: 'device' as const,
     evidence: auth,
     reporterKey: await deviceReporterKey(db, learnerId, auth),
-    attest: parsed.data.attest ?? null,
+    // A class tablet has no grown-up zone, so a PIN attestation from a class-scoped device is a bare client
+    // claim: it is not stored, and an unsafe report from there hides the note and goes to review, never an
+    // immediate hold (section 8.4).
+    attest: scope === 'class' ? null : (parsed.data.attest ?? null),
     createdAt: now.toISOString(),
     reviewedAt: null,
     outcome: null,
   };
   // Refused only for a note past the retention cut-offs (section 8.7), which every list already hides.
   if (!(await db.insertNoteReport(report))) return fail(c, 'not_found', 'Note not found', 404);
+  // The daily limit and the hold check are best-effort steps after the insert: parallel reports can pass ten
+  // by a few, and a hold check a stopped Worker missed runs again with the next report against the sender.
   await db.addRateHits([{ key: counterKey, at: report.createdAt }]);
   await holdAfterReport(db, report, now);
   return ok(c, { reported: true }, 201);

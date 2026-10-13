@@ -374,7 +374,7 @@ describe('POST /api/sync/learners/:id/notes/:noteId/report (sections 7.6 and 8.4
     expect((await db.getNote(c.id))?.status).toBe('reported');
   });
 
-  it('a note hidden or already reported in the meantime is still recorded; a family note on a class device, a live note not delivered here, an unknown note and another learner’s note are 404', async () => {
+  it('a note hidden or already reported in the meantime is still recorded; a family note on a class device, an unknown note and another learner’s note are 404', async () => {
     const hidden = note();
     const fromFamily = familyNote();
     await db.insertNotes([hidden], []);
@@ -385,16 +385,47 @@ describe('POST /api/sync/learners/:id/notes/:noteId/report (sections 7.6 and 8.4
     await db.withdrawNote(fromFamily.id, new Date());
     expect((await reportNote(fromFamily.id, { reason: 'other' }, classOnly)).status).toBe(404);
 
-    await db.putNotePrefs({ learnerId: SUNI, classes: 'off', acknowledgedAt: null, updatedAt: T, updatedVia: 'family', updatedByAccount: 'mom' });
-    const offNote = note();
-    await db.insertNotes([offNote], []);
-    expect((await reportNote(offNote.id, { reason: 'unkind' })).status).toBe(404);
     expect((await reportNote('note:missing00', { reason: 'unkind' })).status).toBe(404);
     await otherLearner('profile:min', null);
     const other = note({ learnerId: 'profile:min' });
     await db.insertNotes([other], []);
     expect((await reportNote(other.id, { reason: 'unkind' })).status).toBe(404);
     expect((await db.getNote(other.id))?.status).toBe('live');
+  });
+
+  it('a live note that left the inbox is still recorded, so a report queued offline is never lost (section 6.9)', async () => {
+    // received while delivered, then: the class mode set to off
+    const offNote = note();
+    await db.insertNotes([offNote], []);
+    expect(await noteIds()).toEqual([offNote.id]);
+    await db.putNotePrefs({ learnerId: SUNI, classes: 'off', acknowledgedAt: null, updatedAt: T, updatedVia: 'family', updatedByAccount: 'mom' });
+    expect(await noteIds()).toEqual([]);
+    expect((await reportNote(offNote.id, { reason: 'unkind' })).status).toBe(201);
+    await db.putNotePrefs({ learnerId: SUNI, classes: 'all', acknowledgedAt: null, updatedAt: T, updatedVia: 'family', updatedByAccount: 'mom' });
+
+    // a family block of the sender
+    const blockedNote = note();
+    await db.insertNotes([blockedNote], []);
+    await db.putBlock({ learnerId: SUNI, senderAccountId: 'teacher', familySpaceId: FAMILY, createdByAccount: 'mom', createdAt: T });
+    expect((await reportNote(blockedNote.id, { reason: 'unkind' }, classOnly)).status).toBe(201);
+    await db.deleteBlock(SUNI, 'teacher');
+
+    // pushed out of the 30 newest
+    const pushed = note({ createdAt: ago(2 * DAY) });
+    await db.insertNotes([pushed], []);
+    await db.insertNotes(Array.from({ length: 30 }, () => note()), []);
+    expect(await noteIds()).not.toContain(pushed.id);
+    expect((await reportNote(pushed.id, { reason: 'other' })).status).toBe(201);
+
+    // the sender removed from the class, then the class archived
+    const fromTeacher = note();
+    const fromArchived = note();
+    await db.insertNotes([fromTeacher, fromArchived], []);
+    await db.removeMembership(CLASS, 'account', 'teacher');
+    expect((await reportNote(fromTeacher.id, { reason: 'unsafe' })).status).toBe(201);
+    await db.putSpace({ ...space(CLASS, 'class', 'teacher'), archivedAt: T });
+    expect((await reportNote(fromArchived.id, { reason: 'unkind' }, classOnly)).status).toBe(201);
+    for (const n of [offNote, blockedNote, pushed, fromTeacher, fromArchived]) expect((await db.getNote(n.id))?.status, n.id).toBe('reported');
   });
 
   it('a note past retention is not recorded (404): a late report never brings a note back', async () => {
@@ -484,6 +515,49 @@ describe('the automatic hold (section 8.4, OD-10)', () => {
     await db.insertNotes([c], []);
     expect((await reportNote(c.id, { reason: 'unsafe', attest: 'grown_up_pin' })).status).toBe(201);
     expect(await held('mom')).toBe('unsafe');
+  });
+
+  it('a PIN claim from a class-scoped device is not taken: an unsafe report there hides the note and holds no one', async () => {
+    const a = note();
+    await db.insertNotes([a], []);
+    expect((await reportNote(a.id, { reason: 'unsafe', attest: 'grown_up_pin' }, classOnly)).status).toBe(201);
+    expect((await db.getNote(a.id))?.status).toBe('reported');
+    expect(await held()).toBeNull();
+  });
+
+  it('a lifted hold is not undone by the next report: reports from before the lift never count again', async () => {
+    await otherLearner('profile:min', 'space:fam-min');
+    const ana = await otherLearner('profile:ana', 'space:fam-ana');
+    const reportedEarlier = [note(), note({ learnerId: 'profile:min' })];
+    const later = note();
+    const another = note({ learnerId: 'profile:ana' });
+    await db.insertNotes([...reportedEarlier, later, another], []);
+    // two families reported two hours ago; the owner reviewed them and lifted the hold an hour ago (runbook)
+    for (const [i, n] of reportedEarlier.entries()) {
+      const family = i === 0 ? FAMILY : 'space:fam-min';
+      expect(await db.insertNoteReport({ id: `notereport:early${i}`, noteId: n.id, learnerId: n.learnerId, senderAccountId: 'teacher', reason: 'unkind', via: 'device', evidence: 'device-x', reporterKey: `family:${family}`, attest: null, createdAt: ago(2 * HOUR), reviewedAt: ago(HOUR), outcome: 'kept_hidden' })).toBe(true);
+    }
+    expect(await db.putSenderHold({ accountId: 'teacher', reason: 'reports', createdAt: ago(2 * HOUR), liftedAt: ago(HOUR) })).toBe(true);
+    expect(await reporters()).toBe(2);
+
+    // one more family now: not a hold, the lift stands
+    expect((await reportNote(later.id, { reason: 'not_for_me' })).status).toBe(201);
+    expect(await held()).toBeNull();
+    // a second distinct family after the lift holds again
+    expect((await reportNote(another.id, { reason: 'unkind' }, ana, 'profile:ana')).status).toBe(201);
+    expect(await held()).toBe('reports');
+  });
+
+  it('a report the owner restored does not count toward a hold', async () => {
+    const min = await otherLearner('profile:min', 'space:fam-min');
+    const a = note();
+    const b = note({ learnerId: 'profile:min' });
+    await db.insertNotes([a, b], []);
+    expect(await db.insertNoteReport({ id: 'notereport:restored', noteId: a.id, learnerId: SUNI, senderAccountId: 'teacher', reason: 'unkind', via: 'device', evidence: 'device-home0001', reporterKey: `family:${FAMILY}`, attest: null, createdAt: new Date().toISOString(), reviewedAt: new Date().toISOString(), outcome: 'restored' })).toBe(true);
+    expect(await reporters()).toBe(0);
+    expect((await reportNote(b.id, { reason: 'unkind' }, min, 'profile:min')).status).toBe(201);
+    expect(await reporters()).toBe(1);
+    expect(await held()).toBeNull();
   });
 
   it('a hold already in place is kept as it is; over a lifted hold a new one is placed', async () => {
