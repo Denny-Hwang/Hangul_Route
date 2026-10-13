@@ -43,3 +43,7 @@ export function goBack(_fallbackUrl: string): void {
 export function isOnline(): boolean {
   return true;
 }
+
+export function revealTestId(_testId: string): boolean {
+  return false;
+}

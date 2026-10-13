@@ -12,6 +12,7 @@ interface BrowserLike {
   history?: { replaceState?: (state: unknown, unused: string, url: string) => void; go?: (delta: number) => void; length?: number; state?: unknown };
   document?: {
     referrer?: string;
+    querySelector?: (selector: string) => { scrollIntoView?: (options?: unknown) => void } | null;
     visibilityState?: string;
     addEventListener?: (type: string, listener: () => void) => void;
     removeEventListener?: (type: string, listener: () => void) => void;
@@ -228,5 +229,22 @@ export function isOnline(): boolean {
     return browser().navigator?.onLine !== false;
   } catch {
     return true;
+  }
+}
+
+/**
+ * Scrolls the page so the element with this `testID` (React Native Web's
+ * `data-testid`) is at the top: the Journey's stage row for "a stage row → the
+ * Journey at that stage" and the `stage` deep-link target (section 4.4,
+ * `journey-stage-<stage>`). `false` when it is not on the page yet.
+ */
+export function revealTestId(testId: string): boolean {
+  try {
+    const element = browser().document?.querySelector?.(`[data-testid="${testId}"]`);
+    if (!element?.scrollIntoView) return false;
+    element.scrollIntoView({ block: 'start' });
+    return true;
+  } catch {
+    return false;
   }
 }

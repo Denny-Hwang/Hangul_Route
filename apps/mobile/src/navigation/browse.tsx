@@ -3,7 +3,10 @@ import React from 'react';
 import type { AccessSource } from '../logic/browse/pass';
 import type { BrowseHomeParams, BrowseRouteName } from '../logic/browse/boot';
 import { BrowseAccessScreen } from '../screens/browse/BrowseAccessScreen';
+import { BrowseCardScreen } from '../screens/browse/BrowseCardScreen';
+import { BrowseEpisodeScreen } from '../screens/browse/BrowseEpisodeScreen';
 import { BrowseHomeScreen } from '../screens/browse/BrowseHomeScreen';
+import { BrowseItemScreen } from '../screens/browse/BrowseItemScreen';
 import type { RootStackParamList } from './types';
 
 /**
@@ -31,7 +34,14 @@ export type BrowseStackParamList = {
 };
 
 /** The routes this build registers (each name is a key of `BrowseStackParamList`). */
-export const BROWSE_REGISTERED_ROUTES: ReadonlySet<BrowseRouteName> = new Set<BrowseRouteName & keyof BrowseStackParamList>(['BrowseHome', 'BrowseAccess']);
+export const BROWSE_REGISTERED_ROUTES: ReadonlySet<BrowseRouteName> = new Set<BrowseRouteName & keyof BrowseStackParamList>([
+  'BrowseHome',
+  'BrowseAccess',
+  // BR-7: the catalogue pages and the card.
+  'BrowseEpisode',
+  'BrowseItem',
+  'CardDetail',
+]);
 
 const Stack = createNativeStackNavigator<BrowseStackParamList>();
 
@@ -39,6 +49,9 @@ export function BrowseNavigator(): React.ReactElement {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="BrowseHome" component={BrowseHomeScreen} />
+      <Stack.Screen name="BrowseEpisode" component={BrowseEpisodeScreen} />
+      <Stack.Screen name="BrowseItem" component={BrowseItemScreen} />
+      <Stack.Screen name="CardDetail" component={BrowseCardScreen} options={{ presentation: 'modal' }} />
       <Stack.Screen name="BrowseAccess" component={BrowseAccessScreen} options={{ gestureEnabled: false }} />
     </Stack.Navigator>
   );

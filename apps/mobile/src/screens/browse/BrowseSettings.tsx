@@ -1,25 +1,106 @@
-import type { RomanizationMode } from '@hangul-route/content-schema';
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import type { RomanizationMode, UiLocale } from '@hangul-route/content-schema';
+import { availableLocales } from '@hangul-route/i18n';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { RomanizationModeOverride } from '../../i18n/use-romanization-mode';
+import { homeLines } from '../../logic/browse/home-view';
+import type { BrowsePrefs } from '../../logic/browse/prefs';
+import { keepOff, keepOn, readKeepState, savePrefs } from '../../platform/browse-keep';
+import { useLocaleStore } from '../../store/locale-store';
+import { useBrowseSession } from './browse-session';
 
 /**
- * Lesson display settings for this tab (F-BROWSE-001 section 4.9): how lessons
- * show romanization while an adult previews them. In memory only; BR-7 adds
- * the Lesson display sheet and, with the keep switch, `browse:prefs`. Every
- * learner renderer below reads the mode through `useRomanizationMode()`
- * (BR-5c), so no learner profile's setting is read or written.
+ * Lesson display settings and the keep switch for this tab (F-BROWSE-001
+ * sections 4.3 and 4.9; mocks `design/screens/browse/lesson-display.md` and
+ * `home.md`). Romanization and the UI language live in memory for the tab;
+ * with the keep switch on they are also written to `browse:prefs` and read
+ * back on the next visit. Every learner renderer below reads the mode through
+ * `useRomanizationMode()` (BR-5c), and the language is applied through the
+ * locale store's in-memory `setSessionLocale`, so no learner profile's setting
+ * and never the device locale is read or written.
  */
 export interface BrowseSettings {
   romanization: RomanizationMode;
   setRomanization: (mode: RomanizationMode) => void;
+  /** The UI languages the sheet offers (shipped ones only); one means no Language row. */
+  languages: readonly UiLocale[];
+  setLanguage: (locale: UiLocale) => void;
+  /** The keep switch: `null` while it is read (or not offered for this pass). */
+  kept: boolean | null;
+  setKept: (on: boolean) => void;
 }
 
 const BrowseSettingsContext = createContext<BrowseSettings | null>(null);
 
 export function BrowseSettingsProvider({ children }: { children: React.ReactNode }): React.ReactElement {
+  const { pass, gatingEnabled, online } = useBrowseSession();
   // The learner default with no profile (`resolveRomanizationMode`).
-  const [romanization, setRomanization] = useState<RomanizationMode>('always');
-  const value = useMemo(() => ({ romanization, setRomanization }), [romanization]);
+  const [romanization, setMode] = useState<RomanizationMode>('always');
+  const [language, setLanguageState] = useState<UiLocale | undefined>(undefined);
+  const [kept, setKeptState] = useState<boolean | null>(null);
+  const keepOffered = pass !== null && homeLines({ pass, gatingEnabled, online }).keep;
+  const languages = useMemo(() => availableLocales(), []);
+  // The latest values, for the writes that follow a change.
+  const latest = useRef({ romanization, language, kept });
+  latest.current = { romanization, language, kept };
+
+  const applyLanguage = useCallback((locale: UiLocale): void => {
+    setLanguageState(locale);
+    useLocaleStore.getState().setSessionLocale(locale);
+  }, []);
+
+  // Keep switch on: the kept settings come back with the kept pass (section 4.3).
+  useEffect(() => {
+    if (!keepOffered) return undefined;
+    let live = true;
+    void readKeepState(Date.now()).then((state) => {
+      if (!live) return;
+      setKeptState(state.kept);
+      if (state.prefs) {
+        setMode(state.prefs.romanization);
+        if (state.prefs.uiLocale && languages.includes(state.prefs.uiLocale)) applyLanguage(state.prefs.uiLocale);
+      }
+    });
+    return () => {
+      live = false;
+    };
+  }, [keepOffered, languages, applyLanguage]);
+
+  const prefsOf = (over: Partial<BrowsePrefs>): BrowsePrefs => {
+    const lang = over.uiLocale ?? latest.current.language;
+    return { v: 1, romanization: over.romanization ?? latest.current.romanization, ...(lang ? { uiLocale: lang } : {}) };
+  };
+
+  const setRomanization = useCallback((mode: RomanizationMode): void => {
+    setMode(mode);
+    void savePrefs(latest.current.kept === true, prefsOf({ romanization: mode }));
+    // prefsOf reads refs only.
+  }, []);
+
+  const setLanguage = useCallback(
+    (locale: UiLocale): void => {
+      applyLanguage(locale);
+      void savePrefs(latest.current.kept === true, prefsOf({ uiLocale: locale }));
+    },
+    [applyLanguage],
+  );
+
+  const setKept = useCallback((on: boolean): void => {
+    if (on) {
+      setKeptState(true);
+      void keepOn(Date.now(), prefsOf({})).then((ok) => {
+        if (!ok) setKeptState(false);
+      });
+    } else {
+      // The tab keeps the pass it resolved in memory until it closes or reloads (section 4.3).
+      setKeptState(false);
+      void keepOff();
+    }
+  }, []);
+
+  const value = useMemo(
+    () => ({ romanization, setRomanization, languages, setLanguage, kept: keepOffered ? kept : null, setKept }),
+    [romanization, setRomanization, languages, setLanguage, keepOffered, kept, setKept],
+  );
   return (
     <BrowseSettingsContext.Provider value={value}>
       <RomanizationModeOverride mode={romanization}>{children}</RomanizationModeOverride>
