@@ -706,10 +706,15 @@ export const caregiver = {
       /** One Words row: "· 12 words" beside the topic title. */
       wordCount: (n: number) => plural('en', n, { one: `· ${n} word`, other: `· ${n} words` }),
       wordsRowA11y: (topic: string, n: number) => plural('en', n, { one: `${topic}, ${n} word. Opens the topic.`, other: `${topic}, ${n} words. Opens the topic.` }),
+      /** A Story Time or Culture tile's one label: the title and its length, with no learner state (section 4.5). */
+      storyTileA11y: (title: string, minutes: number) =>
+        `${title}. ${plural('en', minutes, { one: `About ${minutes} minute`, other: `About ${minutes} minutes` })}.`,
     },
     /** The keep switch at the foot of home (account passes that are not a fallback). */
     keep: {
       label: 'Keep lessons on this device for 7 days, also offline',
+      /** Under the switch when turning it on did not keep the lessons (the switch is back off). */
+      failed: 'Lessons could not be kept on this device.',
     },
     /** The Lesson display sheet (section 4.9). It changes only this preview. */
     display: {
@@ -760,6 +765,8 @@ export const caregiver = {
       closed: 'Opens with the Family Plan or a Group License',
       /** Under the closed line, an account pass that is not kept and not a fallback (F-BILL-002's label). */
       openBilling: { cta: 'Open billing' },
+      /** A word topic's count beside its kind word in the item header. */
+      wordCount: (n: number) => plural('en', n, { one: `${n} word`, other: `${n} words` }),
     },
     /** The rows of "What this teaches". */
     facts: {

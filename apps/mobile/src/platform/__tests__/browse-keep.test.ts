@@ -30,7 +30,11 @@ vi.mock('../browse', () => ({
 }));
 vi.mock('../shell-store', () => ({ readLastPersona: async () => null }));
 
-const { keepOff, keepOn, readKeepState, savePrefs } = await import('../browse-keep');
+type KeepModule = typeof import('../browse-keep');
+let keepOff: KeepModule['keepOff'];
+let keepOn: KeepModule['keepOn'];
+let readKeepState: KeepModule['readKeepState'];
+let savePrefs: KeepModule['savePrefs'];
 const { BROWSE_KEPT_PASS_KEY, BROWSE_PREFS_KEY } = await import('../browse-boot');
 
 const T0 = Date.parse('2026-10-12T09:00:00.000Z');
@@ -38,9 +42,12 @@ const HOUR = 60 * 60_000;
 const account = (over: Partial<BrowsePass> = {}): BrowsePass => ({ v: 1, scope: 'full', source: 'account', issuedAt: T0, seen: T0, ...over });
 const kept = (over: Partial<BrowseKeptPass> = {}): BrowseKeptPass => ({ v: 1, scope: 'full', keptAt: T0, ...over });
 
-beforeEach(() => {
+beforeEach(async () => {
   store.clear();
   session = null;
+  // A fresh module per test: the tab's remembered kept pass is module state.
+  vi.resetModules();
+  ({ keepOff, keepOn, readKeepState, savePrefs } = await import('../browse-keep'));
 });
 
 describe('keepOn', () => {
@@ -61,6 +68,41 @@ describe('keepOn', () => {
       expect(await keepOn(now, { v: 1, romanization: 'always' }), JSON.stringify(s)).toBe(false);
       expect(store.size).toBe(0);
     }
+  });
+});
+
+describe('keep writes run in the order the switch was flipped', () => {
+  it('on then off at once, without waiting: both keys end removed', async () => {
+    session = account();
+    const on = keepOn(T0, { v: 1, romanization: 'tap' });
+    const off = keepOff();
+    await Promise.all([on, off]);
+    expect(store.has(BROWSE_KEPT_PASS_KEY)).toBe(false);
+    expect(store.has(BROWSE_PREFS_KEY)).toBe(false);
+  });
+
+  it('a settings write that fails removes the kept pass it just wrote', async () => {
+    const storage = await import('../storage');
+    session = account();
+    vi.mocked(storage.writeJson)
+      .mockImplementationOnce(async (key: string, value: unknown) => {
+        store.set(key, value);
+      })
+      .mockRejectedValueOnce(new Error('quota'));
+    expect(await keepOn(T0, { v: 1, romanization: 'tap' })).toBe(false);
+    expect(store.size).toBe(0);
+  });
+
+  it('a tab opened from a kept pass (no session pass) can turn it off and on again, with no new days', async () => {
+    store.set(BROWSE_KEPT_PASS_KEY, kept());
+    expect((await readKeepState(T0 + HOUR)).kept).toBe(true);
+    await keepOff();
+    expect(store.size).toBe(0);
+    expect(await keepOn(T0 + 2 * HOUR, { v: 1, romanization: 'always' })).toBe(true);
+    expect(store.get(BROWSE_KEPT_PASS_KEY)).toEqual(kept());
+    // Once that pass ran out it cannot be kept again.
+    await keepOff();
+    expect(await keepOn(T0 + BROWSE_KEEP_MS, { v: 1, romanization: 'always' })).toBe(false);
   });
 });
 

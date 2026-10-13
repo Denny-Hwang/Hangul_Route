@@ -45,7 +45,9 @@ const BR7_KEYS = [
   'home.cardSlotA11y',
   'home.wordCount',
   'home.wordsRowA11y',
+  'home.storyTileA11y',
   'keep.label',
+  'keep.failed',
   'display.title',
   'display.romanization',
   'display.always',
@@ -81,6 +83,7 @@ const BR7_KEYS = [
   'item.previewQuestions.cta',
   'item.closed',
   'item.openBilling.cta',
+  'item.wordCount',
   'facts.letters',
   'facts.words',
   'facts.syllables',
@@ -170,6 +173,11 @@ describe('caregiver.browse (BR-7)', () => {
     expect(browse.keep.label).toBe('Keep lessons on this device for 7 days, also offline');
     expect(browse.home.wordCount(12)).toBe('· 12 words');
     expect(browse.home.wordsRowA11y('Food', 12)).toBe('Food, 12 words. Opens the topic.');
+    expect(browse.home.storyTileA11y('The Moon Rabbit', 4)).toBe('The Moon Rabbit. About 4 minutes.');
+    expect(browse.home.storyTileA11y('The Moon Rabbit', 1)).toBe('The Moon Rabbit. About 1 minute.');
+    expect(browse.keep.failed).toBe('Lessons could not be kept on this device.');
+    expect(browse.item.wordCount(12)).toBe('12 words');
+    expect(browse.item.wordCount(1)).toBe('1 word');
   });
 
   it('names the item page parts, the grown-up closed line and the billing button (F-ENT-003 section 3.11, F-BILL-002)', () => {

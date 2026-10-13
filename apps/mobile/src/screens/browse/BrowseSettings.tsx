@@ -27,6 +27,8 @@ export interface BrowseSettings {
   /** The keep switch: `null` while it is read (or not offered for this pass). */
   kept: boolean | null;
   setKept: (on: boolean) => void;
+  /** The last switch-on could not keep the lessons (the switch went back off): the row says so. */
+  keepFailed: boolean;
 }
 
 const BrowseSettingsContext = createContext<BrowseSettings | null>(null);
@@ -37,6 +39,7 @@ export function BrowseSettingsProvider({ children }: { children: React.ReactNode
   const [romanization, setMode] = useState<RomanizationMode>('always');
   const [language, setLanguageState] = useState<UiLocale | undefined>(undefined);
   const [kept, setKeptState] = useState<boolean | null>(null);
+  const [keepFailed, setKeepFailed] = useState(false);
   const keepOffered = pass !== null && homeLines({ pass, gatingEnabled, online }).keep;
   const languages = useMemo(() => availableLocales(), []);
   // The latest values, for the writes that follow a change.
@@ -85,10 +88,15 @@ export function BrowseSettingsProvider({ children }: { children: React.ReactNode
   );
 
   const setKept = useCallback((on: boolean): void => {
+    setKeepFailed(false);
     if (on) {
       setKeptState(true);
       void keepOn(Date.now(), prefsOf({})).then((ok) => {
-        if (!ok) setKeptState(false);
+        // A later tap may have turned it off meanwhile; that tap's removal runs after this write (keepOff waits).
+        if (!ok && latest.current.kept === true) {
+          setKeptState(false);
+          setKeepFailed(true);
+        }
       });
     } else {
       // The tab keeps the pass it resolved in memory until it closes or reloads (section 4.3).
@@ -98,8 +106,8 @@ export function BrowseSettingsProvider({ children }: { children: React.ReactNode
   }, []);
 
   const value = useMemo(
-    () => ({ romanization, setRomanization, languages, setLanguage, kept: keepOffered ? kept : null, setKept }),
-    [romanization, setRomanization, languages, setLanguage, keepOffered, kept, setKept],
+    () => ({ romanization, setRomanization, languages, setLanguage, kept: keepOffered ? kept : null, setKept, keepFailed }),
+    [romanization, setRomanization, languages, setLanguage, keepOffered, kept, setKept, keepFailed],
   );
   return (
     <BrowseSettingsContext.Provider value={value}>

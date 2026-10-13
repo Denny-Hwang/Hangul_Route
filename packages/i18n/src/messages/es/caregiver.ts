@@ -599,9 +599,12 @@ export const caregiver = {
       wordCount: (n: number) => plural('es', n, { one: `· ${n} palabra`, other: `· ${n} palabras` }),
       wordsRowA11y: (topic: string, n: number) =>
         plural('es', n, { one: `${topic}, ${n} palabra. Abre el tema.`, other: `${topic}, ${n} palabras. Abre el tema.` }),
+      storyTileA11y: (title: string, minutes: number) =>
+        `${title}. ${plural('es', minutes, { one: `Cerca de ${minutes} minuto`, other: `Cerca de ${minutes} minutos` })}.`,
     },
     keep: {
       label: 'Guardar las lecciones en este dispositivo por 7 días, también sin conexión',
+      failed: 'No se pudieron guardar las lecciones en este dispositivo.',
     },
     display: {
       title: 'Vista de la lección',
@@ -644,6 +647,7 @@ export const caregiver = {
       previewQuestions: { cta: 'Vista previa: preguntas' },
       closed: 'Se abre con el Plan Familiar o una Licencia de Grupo',
       openBilling: { cta: 'Abrir facturación' },
+      wordCount: (n: number) => plural('es', n, { one: `${n} palabra`, other: `${n} palabras` }),
     },
     facts: {
       letters: 'Letras',

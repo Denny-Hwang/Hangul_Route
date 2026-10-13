@@ -7,6 +7,7 @@ import { useLocale, useMessages } from '../../i18n/use-messages';
 import { onEscape } from '../../platform/browse-env';
 import { useBrowseSettings } from './BrowseSettings';
 import { focusRing, type FocusState } from './browse-ui';
+import { BROWSE_DIALOG_MAX } from '../../logic/browse/layout';
 
 /**
  * The Lesson display sheet (F-BROWSE-001 section 4.9; wireframe
@@ -23,8 +24,7 @@ const DOT = spacing.md;
 /** The handle drawn on the phone sheet (32 x 4). */
 const HANDLE_W = spacing.xxl;
 const HANDLE_H = spacing.xs;
-/** The dialog width from the regular class (32rem). */
-const DIALOG_MAX = 512;
+const DIALOG_MAX = BROWSE_DIALOG_MAX;
 
 const MODES: readonly RomanizationMode[] = ['always', 'tap'];
 

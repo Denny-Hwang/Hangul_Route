@@ -1,6 +1,7 @@
-import type { Episode, QuestStepKind, StageDef, ThemeDef } from '@hangul-route/content-schema';
+import type { Episode, QuestStepKind, StageDef, ThemeDef, UiLocale } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import { gridEpisodes } from '../../content/episodes';
+import { localizeTheme } from '../content-locale';
 import { themeColumnLabel } from '../journey';
 import type { JourneyAccessInput } from '../journey-grid';
 import { questStepLabel } from '../quest-steps';
@@ -122,12 +123,18 @@ type BrowseMessages = Messages['caregiver']['browse'];
  * "Where it sits" (section 4.6, design decision 13): "Stage 1 · Letters ·
  * lesson 1 of 3" for a lesson in its grid episode; "Stage 3 · Life" for a
  * shelf story's quest (its story's home cell, no position). The theme word is
- * the Journey's column label.
+ * the Journey's column label, in the UI language (as on the home and the outline).
  */
-export function whereLine(place: QuestPlace | { stage: StageDef['key']; theme: ThemeDef['key'] }, stages: readonly StageDef[], themes: readonly ThemeDef[], m: BrowseMessages): string {
+export function whereLine(
+  place: QuestPlace | { stage: StageDef['key']; theme: ThemeDef['key'] },
+  stages: readonly StageDef[],
+  themes: readonly ThemeDef[],
+  m: BrowseMessages,
+  locale: UiLocale,
+): string {
   const stage = stages.find((s) => s.key === place.stage);
   const theme = themes.find((t) => t.key === place.theme);
-  const parts = [m.item.where.stage(stage?.order ?? 0), theme ? themeColumnLabel(theme) : place.theme];
+  const parts = [m.item.where.stage(stage?.order ?? 0), theme ? themeColumnLabel(localizeTheme(theme, locale)) : place.theme];
   if ('kind' in place && place.kind === 'episode') parts.push(m.item.where.lesson(place.position, place.count));
   return parts.join(' · ');
 }

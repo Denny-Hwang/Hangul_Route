@@ -526,9 +526,11 @@ export const caregiver = {
       cardSlotA11y: (rarity: string, title: string, ko: string, romanization: string) => `${rarity}, ${title}, ${ko} ${romanization}. 카드를 열어요.`,
       wordCount: (n: number) => `· 낱말 ${n}개`,
       wordsRowA11y: (topic: string, n: number) => `${topic}, 낱말 ${n}개. 주제를 열어요.`,
+      storyTileA11y: (title: string, minutes: number) => `${title}. 약 ${minutes}분.`,
     },
     keep: {
       label: '이 기기에 레슨을 7일 동안 두기, 오프라인에서도',
+      failed: '이 기기에 레슨을 두지 못했어요.',
     },
     display: {
       title: '레슨 보기 설정',
@@ -570,6 +572,7 @@ export const caregiver = {
       previewQuestions: { cta: '질문 미리 보기' },
       closed: '가족 플랜 또는 그룹 라이선스로 열려요',
       openBilling: { cta: '결제 화면 열기' },
+      wordCount: (n: number) => `낱말 ${n}개`,
     },
     facts: {
       letters: '글자',

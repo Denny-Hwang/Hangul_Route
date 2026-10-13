@@ -493,6 +493,13 @@ test('home: the layers in order for an account pass, one-row section control, no
   await expect(group.getByRole('radio', { name: 'Library' })).toBeFocused();
   await expect(page.getByRole('group', { name: 'Themes' })).toBeVisible();
   await expect(page.getByRole('button', { name: /^Food, \d+ words\. Opens the topic\.$/ })).toBeVisible();
+  // Story Time tiles carry no learner state (section 4.5, BD2): no New, Keep reading or Finished word.
+  const stories = page.locator('[data-testid^="browse-story-"]');
+  await expect(stories.first()).toBeVisible();
+  for (const tile of await stories.all()) {
+    await expect(tile).toHaveAttribute('aria-label', /^.+\. About \d+ minutes?\.$/);
+    await expect(tile).not.toContainText(/\b(New|Keep reading|Finished)\b/);
+  }
   await shot(page, 'br7-browse-home-library-pixel5');
 });
 
@@ -579,8 +586,10 @@ test('a report letter link opens the lesson that teaches it with the focus line 
 test('a lesson whose built syllables are words lists them under Words; a lesson with no letter has no Letters row', async ({ page }) => {
   await openBrowse(page, 'account', '#t=quest:stage2-life-q1&s=plan');
   await expect(page.getByRole('heading', { name: 'Lunch Box Words' })).toBeVisible();
-  for (const word of ['산, san', '달, dal', '곰, gom']) await expect(page.getByTestId('browse-facts-words').getByLabel(word)).toBeVisible();
-  await expect(page.getByTestId('browse-facts-syllables')).toHaveCount(0);
+  for (const word of ['산, san', '곰, gom']) await expect(page.getByTestId('browse-facts-words').getByLabel(word)).toBeVisible();
+  // dal is one sense of a homonym (moon or month): the built block stays a syllable, never a guessed gloss.
+  await expect(page.getByTestId('browse-facts-syllables').getByLabel('달, dal')).toBeVisible();
+  await expect(page.getByTestId('browse-facts-words').getByLabel('달, dal')).toHaveCount(0);
   await expect(page.getByTestId('browse-facts-letters')).toHaveCount(0);
   // Stage 2 games count for no skill (F-ROUTE-001 OD-5): the Skills row is hidden, never drawn empty.
   await expect(page.getByTestId('browse-facts-skills')).toHaveCount(0);

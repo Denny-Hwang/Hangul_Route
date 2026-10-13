@@ -67,12 +67,18 @@ export function storyTileView(input: {
   copy: StoryShelfCopy;
   /** The In your plan word (`learner.routeNext.tag.inPlan`) when the story's quest is in the plan; absent otherwise. */
   inPlanWord?: string | null;
+  /**
+   * The All lessons catalogue (F-BROWSE-001 section 4.5, BD2): no learner state. An open tile has no
+   * state line and this label (title and length); a closed tile still says "Not open yet".
+   */
+  catalogueLabel?: (title: string, minutes: number) => string;
 }): StoryTileView {
-  const { entry, status, locked, copy } = input;
+  const { entry, status, locked, copy, catalogueLabel } = input;
   const inPlanWord = locked ? null : (input.inPlanWord ?? null);
   const state: StoryTileState = locked ? 'locked' : status.state;
-  const stars = state === 'finished' ? status.stars : 0;
-  const stateLine = stateLineOf(state, copy);
+  const stars = state === 'finished' && !catalogueLabel ? status.stars : 0;
+  const catalogueOpen = catalogueLabel !== undefined && !locked;
+  const stateLine = catalogueOpen ? '' : stateLineOf(state, copy);
   const title = entry.story.title;
   return {
     storyId: entry.storyId,
@@ -85,7 +91,9 @@ export function storyTileView(input: {
     stateLine,
     stars,
     minutesLine: copy.minutes.pill(entry.minutes),
-    accessibilityLabel: copy.tileLabel(title.en, stateLine, entry.minutes, stars) + (inPlanWord === null ? '' : ` ${inPlanWord}.`),
+    accessibilityLabel: catalogueOpen
+      ? catalogueLabel(title.en, entry.minutes)
+      : copy.tileLabel(title.en, stateLine, entry.minutes, stars) + (inPlanWord === null ? '' : ` ${inPlanWord}.`),
     cover: coverArtOf(entry.story),
     locked,
     inPlan: inPlanWord !== null,

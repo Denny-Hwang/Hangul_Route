@@ -13,6 +13,7 @@ import { leaveTo } from '../../platform/browse-env';
 import { CardRow, HeaderBack, HeaderRow, KoChip, SkillChips, WordChip, focusRing, sendBrowseEvent, useItemViewed, type FocusState } from './browse-ui';
 import { useBrowseSession } from './browse-session';
 import { LessonDisplaySheet } from './LessonDisplaySheet';
+import { BROWSE_ACTION_MAX_WIDTH, BROWSE_LABEL_COLUMN } from '../../logic/browse/layout';
 
 /**
  * The item page (F-BROWSE-001 sections 4.2, 4.4 and 4.6; wireframe
@@ -26,10 +27,8 @@ import { LessonDisplaySheet } from './LessonDisplaySheet';
  */
 type Props = NativeStackScreenProps<BrowseStackParamList, 'BrowseItem'>;
 
-/** The primary's width from the regular class (26rem). */
-const PRIMARY_MAX = 416;
-/** The facts label column from the regular class (8rem). */
-const LABEL_COLUMN = 128;
+const PRIMARY_MAX = BROWSE_ACTION_MAX_WIDTH;
+const LABEL_COLUMN = BROWSE_LABEL_COLUMN;
 
 export function BrowseItemScreen({ route, navigation }: Props): React.ReactElement {
   const messages = useMessages();
@@ -114,7 +113,7 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
           <Spacer size="lg" />
           <Heading level="prompt">{m.item.where.title}</Heading>
           <Spacer size="xs" />
-          <WhereRow line={whereLine(facts.where, bundle.stages, bundle.themes, m)} onSee={() => facts.where && seeOnJourney(facts.where.stage)} />
+          <WhereRow line={whereLine(facts.where, bundle.stages, bundle.themes, m, locale)} onSee={() => facts.where && seeOnJourney(facts.where.stage)} />
         </>
       ) : null}
       {facts.kind === 'story' ? (
@@ -122,7 +121,7 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
           <Spacer size="lg" />
           <Heading level="prompt">{m.item.where.title}</Heading>
           <Spacer size="xs" />
-          <WhereRow line={whereLine(facts.where, bundle.stages, bundle.themes, m)} onSee={() => seeOnJourney(facts.where.stage)} />
+          <WhereRow line={whereLine(facts.where, bundle.stages, bundle.themes, m, locale)} onSee={() => seeOnJourney(facts.where.stage)} />
         </>
       ) : null}
 
@@ -167,7 +166,7 @@ function ItemHeader({ facts }: { facts: ItemFacts }): React.ReactElement {
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm }}>
         <Pill label={kindLabel} tone="info" size="sm" />
         <Body size="sm" weight="semibold">
-          {facts.kind === 'vocab-topic' ? m.home.wordCount(facts.count).replace(/^·\s*/u, '') : m.minutes(facts.minutes)}
+          {facts.kind === 'vocab-topic' ? m.item.wordCount(facts.count) : m.minutes(facts.minutes)}
         </Body>
       </View>
     </View>

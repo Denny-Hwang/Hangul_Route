@@ -22,7 +22,7 @@ import { JourneyGrid } from '../../components/JourneyGrid';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { browseLibrary, browseRouteTrail, stageOneLiners, type BrowseLibraryGroup, type BrowseSection } from '../../logic/browse/catalogue';
-import { accessOf, browseGridAccess, browseGridEpisodes, sectionAfter } from '../../logic/browse/home-view';
+import { accessOf, browseGridAccess, browseGridEpisodes, itemViewedEvent, sectionAfter } from '../../logic/browse/home-view';
 import { localizeCard, localizeStage, localizeStory, localizeTheme } from '../../logic/content-locale';
 import { themeColumnLabel } from '../../logic/journey';
 import { sectionTitle, shelfCopy } from '../../logic/story/shelf-copy';
@@ -31,8 +31,9 @@ import { storyTileView } from '../../logic/story/story-tile';
 import { LaterRowItem, StageRowItem } from '../my-route/TrailRow';
 import { StoryTile } from '../library/StoryTile';
 import { EpisodeOutlineView } from './EpisodeOutlineView';
-import { focusRing, WordChip, type FocusState } from './browse-ui';
+import { focusRing, useItemViewed, WordChip, type FocusState } from './browse-ui';
 import { useBrowseSession } from './browse-session';
+import { BROWSE_GALLERY_FACE, BROWSE_SECTION_TRACK_MAX, BROWSE_TEXT_SCALE_CAP } from '../../logic/browse/layout';
 
 /**
  * The sections of the All lessons home (F-BROWSE-001 section 4.5; mock
@@ -43,12 +44,9 @@ import { useBrowseSession } from './browse-session';
  * visuals themselves (the dotted ring, never a lock glyph on the grid).
  */
 
-/** The section control's label cap (design README, Constants): 1.3 x body. */
-const SEGMENT_FONT_CAP = 1.3;
-/** From the regular class the track is at most 30rem wide. */
-const TRACK_MAX = 480;
-/** The Library gallery card face (CardArt's gallery slot at the compact class). */
-const GALLERY_FACE = 132;
+const SEGMENT_FONT_CAP = BROWSE_TEXT_SCALE_CAP;
+const TRACK_MAX = BROWSE_SECTION_TRACK_MAX;
+const GALLERY_FACE = BROWSE_GALLERY_FACE;
 
 export interface OpenTargets {
   openEpisode: (episodeId: string) => void;
@@ -174,6 +172,9 @@ export function JourneySection({ open, withStageLine }: { open: OpenTargets; wit
   const firstOpen = gridEpisodes.find((e) => accessOf({ kind: 'episode', id: e.id }, access) !== 'later')?.id ?? null;
   const [selected, setSelected] = useState<string | null>(null);
   const selectedId = selected ?? firstOpen;
+  // A cell a person picks in the detail pane is an opened outline (section 9), as BrowseEpisode counts it on
+  // phones; the first open cell the pane shows by itself is not counted.
+  useItemViewed(paneMode && selected !== null && pass ? itemViewedEvent('episode', selected, accessOf({ kind: 'episode', id: selected }, access)) : null);
   const stages = useMemo(() => bundle.stages.map((s) => localizeStage(s, locale)), [bundle, locale]);
   const themes = useMemo(() => bundle.themes.map((t) => localizeTheme(t, locale)), [bundle, locale]);
 
@@ -393,7 +394,7 @@ function CardSlot({ card: source, basis, onPress }: { card: HeritageCard; basis:
   );
 }
 
-/** Story Time and Culture: the learner `StoryTile`, not started (no learner state), closed tiles as the learner draws them. */
+/** Story Time and Culture: the learner `StoryTile` with no learner state (no state line, no stars), closed tiles as the learner draws them. */
 function StoryTiles({ entries, open }: { entries: readonly StoryIndexEntry[]; open: OpenTargets }): React.ReactElement {
   const messages = useMessages();
   const locale = useLocale();
@@ -408,7 +409,7 @@ function StoryTiles({ entries, open }: { entries: readonly StoryIndexEntry[]; op
       {tileWidth > 0
         ? entries.map((entry) => {
             const closed = accessOf({ kind: 'story', id: entry.storyId }, { bundle, scope: pass?.scope ?? 'sampler', gatingEnabled }) === 'closed';
-            const view = storyTileView({ entry: { ...entry, story: localizeStory(entry.story, locale) }, status: { state: 'new', stars: 0 }, locked: closed, copy });
+            const view = storyTileView({ entry: { ...entry, story: localizeStory(entry.story, locale) }, status: { state: 'new', stars: 0 }, locked: closed, copy, catalogueLabel: messages.caregiver.browse.home.storyTileA11y });
             return (
               <StoryTile
                 key={entry.storyId}

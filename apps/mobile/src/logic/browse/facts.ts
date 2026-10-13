@@ -184,7 +184,7 @@ function scopeWords(
   const syllables: SyllableFact[] = [];
   for (const pair of scope.cardPairs ?? []) words.push(...glossed(pair.ko, pair.romanization, pair.en));
   for (const s of scope.syllables ?? []) {
-    // A built block that is a bundle word (Lunch Box Words: san, dal, gom) is taught as that word, with its gloss.
+    // A built block that is a bundle word (Lunch Box Words: san, gom) is taught as that word, with its gloss.
     const word = wordFor(s.ko);
     if (word) words.push(word);
     else syllables.push({ ko: s.ko, romanization: s.romanization });
@@ -216,18 +216,27 @@ function lettersOf(quest: Quest, bundle: BrowseBundle): LetterFact[] {
   });
 }
 
-/** A bundle word (a word of a topic past draft) by its Korean, with its gloss in the UI language; `null` when none. */
-function bundleWord(bundle: BrowseBundle, locale: UiLocale): (ko: string) => WordFact | null {
+/**
+ * A built syllable taught as a bundle word (a word of a topic past draft), with its gloss in the UI
+ * language; `null` keeps it a syllable. Matching is by Korean only, so it is strict (heritage accuracy):
+ * never in Stage 1, where a built block is a sound and not a word (it may spell a word of another
+ * topic by chance), and only when exactly one bundle word has that Korean and it is not one sense of
+ * a homonym (`senseGroup`), so no block is glossed with a meaning the lesson never meant.
+ */
+function bundleWord(bundle: BrowseBundle, locale: UiLocale, stage: string | undefined): (ko: string) => WordFact | null {
   return (ko) => {
-    const item = bundle.vocabItems.find((i) => koKey(i.ko) === koKey(ko));
-    return item ? { ko: item.ko, romanization: item.romanization, gloss: localizedGloss(item, locale) } : null;
+    if (stage === undefined || stage === 'stage1') return null;
+    const items = bundle.vocabItems.filter((i) => koKey(i.ko) === koKey(ko));
+    const item = items.length === 1 ? items[0] : undefined;
+    if (!item || item.senseGroup !== undefined) return null;
+    return { ko: item.ko, romanization: item.romanization, gloss: localizedGloss(item, locale) };
   };
 }
 
 /** Words and syllables of a quest already in the UI language. */
 function wordsOf(quest: Quest, bundle: BrowseBundle, locale: UiLocale): { words: WordFact[]; syllables: SyllableFact[] } {
   const local = localizeQuest(quest, locale);
-  const wordFor = bundleWord(bundle, locale);
+  const wordFor = bundleWord(bundle, locale, episodeOfQuest(bundle, quest.id)?.stage);
   const words: WordFact[] = [];
   const syllables: SyllableFact[] = [];
   for (const step of local.steps) {

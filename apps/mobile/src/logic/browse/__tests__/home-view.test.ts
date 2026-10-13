@@ -1,6 +1,7 @@
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import type { ThemeDef } from '@hangul-route/content-schema';
+import { localizeTheme } from '../../content-locale';
 import { themeColumnLabel } from '../../journey';
 import { journeyGridRows } from '../../journey-grid';
 import { questStepLabel } from '../../quest-steps';
@@ -161,17 +162,25 @@ describe('the item page lines (section 4.6, design decisions 12 and 13)', () => 
   it('"Where it sits" names the stage, the Journey column word and the lesson position', () => {
     expect(q1.where?.kind).toBe('episode');
     const place = q1.where as Extract<QuestFacts['where'], { kind: 'episode' }>;
-    expect(whereLine(place, bundle.stages, bundle.themes, m)).toBe(`Stage 1 · Letters · lesson ${place.position} of ${place.count}`);
+    expect(whereLine(place, bundle.stages, bundle.themes, m, 'en')).toBe(`Stage 1 · Letters · lesson ${place.position} of ${place.count}`);
   });
 
   it('a shelf story quest sits at its story home cell with no position', () => {
     const life = themeColumnLabel(bundle.themes.find((t) => t.key === 'life') as ThemeDef);
-    expect(whereLine({ kind: 'story-home', stage: 'stage3', theme: 'life', storyId: 'story:x' }, bundle.stages, bundle.themes, m)).toBe(`Stage 3 · ${life}`);
-    expect(whereLine({ stage: 'stage1', theme: 'letters' }, bundle.stages, bundle.themes, m)).toBe('Stage 1 · Letters');
+    expect(whereLine({ kind: 'story-home', stage: 'stage3', theme: 'life', storyId: 'story:x' }, bundle.stages, bundle.themes, m, 'en')).toBe(`Stage 3 · ${life}`);
+    expect(whereLine({ stage: 'stage1', theme: 'letters' }, bundle.stages, bundle.themes, m, 'en')).toBe('Stage 1 · Letters');
+  });
+
+  it('the column word is localized like the home and the outline (localizeTheme)', () => {
+    for (const locale of ['ko', 'es'] as const) {
+      const lm = getMessages(locale).caregiver.browse;
+      const letters = themeColumnLabel(localizeTheme(bundle.themes.find((t) => t.key === 'letters') as ThemeDef, locale));
+      expect(whereLine({ stage: 'stage1', theme: 'letters' }, bundle.stages, bundle.themes, lm, locale)).toBe(`${lm.item.where.stage(1)} · ${letters}`);
+    }
   });
 
   it('an unknown stage or theme still reads, never blank', () => {
-    expect(whereLine({ stage: 'stage9' as never, theme: 'other' as never }, bundle.stages, bundle.themes, m)).toBe('Stage 0 · other');
+    expect(whereLine({ stage: 'stage9' as never, theme: 'other' as never }, bundle.stages, bundle.themes, m, 'en')).toBe('Stage 0 · other');
   });
 
   it('the steps are the player own names, in order', () => {

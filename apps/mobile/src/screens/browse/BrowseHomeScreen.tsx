@@ -27,8 +27,8 @@ import { LessonDisplaySheet } from './LessonDisplaySheet';
  */
 type Props = NativeStackScreenProps<BrowseStackParamList, 'BrowseHome'>;
 
-/** How many frames the stage reveal waits for the Journey grid to be drawn. */
-const REVEAL_TRIES = 20;
+/** How many frames the stage reveal waits for the Journey grid to be drawn (about 3 s, for a slow phone or a cold offline load). */
+const REVEAL_TRIES = 60;
 const REVEAL_FRAME_MS = 50;
 /** The keep switch track (drawing only; the whole row is the control): 48 x 24 with a 16 thumb. */
 const TRACK_W = spacing.xxxl;
@@ -60,8 +60,11 @@ export function BrowseHomeScreen({ route, navigation }: Props): React.ReactEleme
     let tries = 0;
     const timer = setInterval(() => {
       tries += 1;
-      if (revealTestId(`journey-stage-${pendingStage}`) || tries >= REVEAL_TRIES) {
+      const shown = revealTestId(`journey-stage-${pendingStage}`);
+      if (shown || tries >= REVEAL_TRIES) {
         clearInterval(timer);
+        // The grid never drew its row: at least bring the Journey section into view.
+        if (!shown) revealTestId('browse-sections');
         setPendingStage(null);
       }
     }, REVEAL_FRAME_MS);
@@ -164,7 +167,7 @@ export function BrowseHomeScreen({ route, navigation }: Props): React.ReactEleme
 /** The keep switch (section 4.3, OD-4): the whole row is one `switch`, at least 64 tall; the track is drawing only. */
 function KeepRow(): React.ReactElement {
   const m = useMessages().caregiver.browse.keep;
-  const { kept, setKept } = useBrowseSettings();
+  const { kept, setKept, keepFailed } = useBrowseSettings();
   const on = kept === true;
   return (
     <View style={{ marginTop: spacing.xxl, borderTopWidth: borderWidth.thin, borderTopColor: colors.border.subtle, paddingTop: spacing.md }}>
@@ -202,6 +205,14 @@ function KeepRow(): React.ReactElement {
           <View style={{ width: THUMB, height: THUMB, borderRadius: radii.circle, backgroundColor: colors.surface.paper }} />
         </View>
       </Pressable>
+      {/* Why the switch went back off (no active pass to keep, or the browser refused the write); read out once. */}
+      <View aria-live="polite" accessibilityLiveRegion="polite" style={{ paddingHorizontal: spacing.xs }}>
+        {keepFailed ? (
+          <Body size="sm" tone="secondary" testID="browse-keep-failed">
+            {m.failed}
+          </Body>
+        ) : null}
+      </View>
     </View>
   );
 }
