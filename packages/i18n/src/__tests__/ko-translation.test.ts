@@ -229,6 +229,12 @@ const FORMAL_ALLOWED: readonly string[] = [
   'console.billing.includes.school_seat',
   'landing.legal.englishAuthoritative',
   'landing.legal.draft',
+  // The class-move consent sheet's frame (F-SPACE-002 T-6d): one voice with the 합니다체 consent lines it frames.
+  'console.transfer.consent.failed',
+  'console.transfer.consent.readToEnd',
+  'console.transfer.consent.unavailable',
+  'console.transfer.consent.updated',
+  'console.transfer.lines.notNowEnds',
 ];
 
 /** `path|word` pairs where the glossary word is not needed, each with its reason in the review table of the PR. */

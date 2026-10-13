@@ -4,11 +4,12 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { SettingsSections } from '@/components/console/SettingsParts';
-import { StartMoveSheet, useOnline, useTransfersShown } from '@/components/console/TransferParts';
+import { FamilyStartFlow } from '@/components/console/FamilyTransferParts';
+import { StartMoveSheet, TransferSheet, useOnline, useTransfersShown } from '@/components/console/TransferParts';
 import { Button, LoadErrorPanel, Muted, Notice } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
-import type { MemberView, Roster } from '@/lib/console/api';
+import type { MemberView, Roster, TransferOption } from '@/lib/console/api';
 import { schoolConsentModeEnabled } from '@/lib/console/config';
 import { personaHome, personaOfKind } from '@/lib/console/personas';
 import { ROUTES, isKnownSpaceKind, loadErrorKey, spaceIdFrom, type LoadError } from '@/lib/console/routing';
@@ -33,9 +34,11 @@ function SettingsInner(): JSX.Element {
   const [typedName, setTypedName] = useState('');
   // Class moves (F-SPACE-002 T-6c): the learner whose start sheet is open, and the page line it left behind.
   const [moving, setMoving] = useState<MemberView | null>(null);
-  const [moveNote, setMoveNote] = useState<'sent' | 'locked' | 'signIn' | null>(null);
+  const [moveNote, setMoveNote] = useState<'sent' | 'locked' | 'signIn' | 'forbidden' | 'familyTooNew' | 'conflicted' | null>(null);
   const movesShown = useTransfersShown();
   const online = useOnline();
+  // On a family (T-6d): the learners in a live class, from the class-moves list's `options`.
+  const [moveOptions, setMoveOptions] = useState<TransferOption[]>([]);
   const now = new Date();
 
   const load = useCallback(async (): Promise<void> => {
@@ -53,7 +56,11 @@ function SettingsInner(): JSX.Element {
     }
     setRoster(r.data);
     setMembers(mem.data);
-  }, [api, spaceId]);
+    if (r.data.space.kind === 'family' && movesShown) {
+      const moves = await api.transferRequests(spaceId);
+      setMoveOptions(moves.ok ? (moves.data.options ?? []) : []);
+    }
+  }, [api, spaceId, movesShown]);
 
   useEffect(() => {
     void load();
@@ -84,7 +91,9 @@ function SettingsInner(): JSX.Element {
       {archived && space ? <Notice tone="nudge">{s.archived[space.kind]}</Notice> : null}
       {moveNote === 'sent' ? <Notice tone="success">{c.transfer.start.sent}</Notice> : null}
       {moveNote === 'locked' ? <Notice tone="nudge">{c.transfer.states.locked}</Notice> : null}
+      {moveNote === 'forbidden' ? <Notice tone="nudge">{c.transfer.states.forbidden}</Notice> : null}
       {moveNote === 'signIn' ? <Notice tone="nudge">{c.start.signInAgain}</Notice> : null}
+      {moveNote === 'familyTooNew' || moveNote === 'conflicted' ? <Notice tone="nudge">{c.transfer.states[moveNote]}</Notice> : null}
 
       {roster && space && api ? (
         <>
@@ -120,6 +129,7 @@ function SettingsInner(): JSX.Element {
               movesShown
                 ? {
                     online,
+                    familyMovable: new Set(moveOptions.filter((o) => o.classes.length > 0 && !o.selfManaged).map((o) => o.learnerId)),
                     onMove: (member) => {
                       setMoveNote(null);
                       setMoving(member);
@@ -152,6 +162,31 @@ function SettingsInner(): JSX.Element {
                 setMoveNote(state);
               }}
             />
+          ) : null}
+          {moving && movesShown && space.kind === 'family' && !archived ? (
+            <TransferSheet title={c.transfer.start.title(moving.name)} onClose={() => setMoving(null)} testId="family-start-sheet">
+              <FamilyStartFlow
+                familyId={spaceId}
+                familyName={space.name}
+                options={moveOptions}
+                api={api}
+                online={online}
+                preselect={{ learnerId: moving.memberId }}
+                answersHidden={false}
+                onCreated={() => {
+                  setMoving(null);
+                  setMoveNote('sent');
+                }}
+                onPageState={(state) => {
+                  setMoving(null);
+                  setMoveNote(state);
+                }}
+                onNotice={(notice) => {
+                  setMoving(null);
+                  setMoveNote(notice);
+                }}
+              />
+            </TransferSheet>
           ) : null}
         </>
       ) : null}

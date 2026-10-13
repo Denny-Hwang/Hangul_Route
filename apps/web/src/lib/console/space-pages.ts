@@ -6,6 +6,6 @@
  * spec that adds a space page adds it here and adds its twin in the same PR (R-3); the
  * `space-pages` test fails otherwise.
  */
-export const SPACE_PAGES = ['', 'plan', 'curriculum', 'relink', 'settings', 'lecture', 'route'] as const;
+export const SPACE_PAGES = ['', 'plan', 'curriculum', 'relink', 'settings', 'lecture', 'route', 'transfers'] as const;
 
 export type SpacePage = (typeof SPACE_PAGES)[number];

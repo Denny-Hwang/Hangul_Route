@@ -41,6 +41,9 @@ const PINNED_HASHES: Record<string, Partial<Record<TransferConsentLocale, string
   // F-FEEDBACK-001 section 7.7: the note_replies item, added to the 10b text.
   'transfer-2026-10c': {
     en: 'dd15f08a9f2ada18e81d2ea1b4e81db3fa4cfc8d3456251f0918cf6896de521b',
+    // F-SPACE-002 T-6d: the Korean and Spanish texts of the same version (English unchanged).
+    ko: 'ad2597e8f70f4bfb0b9dc757fbf67243c24c51b4739471026bd5320e829f948f',
+    es: 'e539aef4e705240989fdec66ce241e53110b3668834197464809f63539cf7069',
   },
 };
 
@@ -166,14 +169,17 @@ describe('which lines a sheet shows', () => {
 });
 
 describe('consent text per locale', () => {
-  it('exists for English now; ko and es are added (and counsel-reviewed) before the flip', () => {
-    expect(TRANSFER_CONSENT_LOCALES).toEqual(['en']);
+  it('exists in every UI locale (en, ko, es; F-SPACE-002 T-6d); counsel reviews all three before the flip (G2)', () => {
+    expect(TRANSFER_CONSENT_LOCALES).toEqual(['en', 'ko', 'es']);
+    expect([...TRANSFER_CONSENT_LOCALES].sort()).toEqual([...UI_LOCALES].sort());
     for (const locale of TRANSFER_CONSENT_LOCALES) expect(UI_LOCALES).toContain(locale);
   });
 
   it('narrows a locale to one that has a text', () => {
     expect(isTransferConsentLocale('en')).toBe(true);
-    expect(isTransferConsentLocale('ko')).toBe(false);
+    expect(isTransferConsentLocale('ko')).toBe(true);
+    expect(isTransferConsentLocale('es')).toBe(true);
+    expect(isTransferConsentLocale('fr')).toBe(false);
     expect(isTransferConsentLocale(undefined)).toBe(false);
   });
 
@@ -205,6 +211,29 @@ describe('consent text per locale', () => {
     expect(sentenceWordCounts('{learner} would move. One two: three')).toEqual([3, 2, 1]);
     for (const text of allTexts('en')) {
       for (const count of sentenceWordCounts(text)) expect(count, text).toBeLessThanOrEqual(16);
+    }
+  });
+
+  it('writes Korean in the formal polite style with no particle attached to a placeholder (F-I18N-001 style guide)', () => {
+    const ko = TRANSFER_CONSENT_TEXT.ko;
+    for (const id of TRANSFER_CONSENT_LINE_IDS) {
+      const line = ko.lines[id];
+      expect(line, id).not.toMatch(/\}[\uAC00-\uD7A3]/);
+      const kind = TRANSFER_CONSENT_LINES.find((l) => l.id === id)?.kind;
+      if (kind === 'list') expect(line, id).toMatch(/:$/);
+      else expect(line, id).toMatch(/(니다|십시오)\.$/);
+    }
+    for (const id of TEACHER_VISIBLE_ITEM_IDS) expect(ko.items[id], id).not.toMatch(/\}[\uAC00-\uD7A3]/);
+  });
+
+  it('ko: never puts the counter word 반 after a class name (a typed name often ends in it: "햇살반 반"), and "would move" stays conditional', () => {
+    for (const text of allTexts('ko')) expect(text, text).not.toMatch(/\{(source|destination)\}\s*반/);
+    expect(TRANSFER_CONSENT_TEXT.ko.lines.moving).toMatch(/려고 합니다\.$/);
+  });
+
+  it('keeps Spanish sentences short too (at most 18 words; Spanish runs a little longer than English)', () => {
+    for (const text of allTexts('es')) {
+      for (const count of sentenceWordCounts(text)) expect(count, text).toBeLessThanOrEqual(18);
     }
   });
 
