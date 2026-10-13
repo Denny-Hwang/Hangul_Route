@@ -296,6 +296,13 @@ Display fixes (three commits inside PR P2-5):
 
 **Hoya check-in** (P2-7b, OD-13, decided 2026-10-12): once, at the start of week 5 of an active self plan, a positive card offers a pace change computed from sessions actually finished in weeks 1-4: fewer than half -> "Want a lighter week?" (Gentle); every session -> "Want to go a bit faster?" (one step up). It never names a missed or late session, can be closed with **Not now**, and applies through `regenerateFrom(..., 'shift')` with the new sessions a week. (FP-B14)
 
+P2-7b implementation notes (review of PR #545, 2026-10-13):
+- **Offline.** The automatic re-pace syncs first and runs once the sync merged; when the sync does not get through (offline, an error, a conflict to retry later) it runs on the device copy the same day. The merge rule "a stopped copy wins, a later-made plan wins" keeps the next sync right.
+- **Yes keeps every lesson.** A lighter pace adds the weeks it needs (Add N weeks), up to 52 weeks and the item cap. When even that cannot hold every remaining item, the check-in is not offered for that plan (`checkInFits`), so yes never drops a lesson.
+- **Weekdays.** A pace change has a different number of sessions a week, so the weekdays chosen in Change the plan are spread again for the new pace; the done line says the new number of days.
+- **A child's plan.** On a child profile the plan is set by a grown-up: **Stop this plan** and **Change the plan** go through the grown-up gate when the device needs it, and the Hoya check-in shows only while plan changes are open (`planChangesOpen`, the Profile row rule). Open owner item: whether a child may answer the check-in alone; until decided, the gate rule above holds, and the flag is not turned on in production before it is settled.
+- **Accepted limits.** The "answered once" mark of the check-in is kept per device (`route-ui:<profileId>`), so a second device can show it once more for the same plan (a yes there is already reflected in the new pace). Two different plans merge by `createdAt`, so a device whose clock runs far ahead can win a later merge, as with every `updatedAt` rule in the snapshot merge (assumption 6).
+
 ### 3.8 Console wizard (class and family): `/teach/space/curriculum?id=`
 
 New page `apps/web/src/app/(console)/teach/space/curriculum/page.tsx` (a client page like the plan builder, `?id=` routing, `ROUTES.spaceCurriculum(id)` in `lib/console/routing.ts`); logic in `apps/web/src/lib/console/curriculum.ts` (pure, tested): `defaultsFor(audience, learners)`, `toParams(state)`, `levelHint(learners)`, `levelFromSummary(summary)`, `previewRows(draft, catalog)`, `weekLabel(...)`, `readoutLine(row, planned)`. Wireframe `curriculum-planner.md`. `unlockedStages` for the generator comes from the space's entitlement: `unlockedStagesForSpace(entitlements, spaceId, now)` in the same file returns all seven stages when `api.entitlements()` (`lib/console/api.ts:193`) holds an active entitlement (`isActive`, `lib/console/billing.ts:44-50`) for this space or its school, else `['stage1']` (assumption 9a).
@@ -416,7 +423,7 @@ Coverage: `packages/content-schema` 100 % (including `curriculum/` and `catalog/
 | P2-6b | `feat(web)`: the wizard pre-selects pace and length with a *Suggested* tag and a per-length preview line, pace chips, themes / focus / motivation prefilled from `proposeRoute` (section 3.8 steps 1, 2 and 4); family learner card 'Update the plan' (`reseed`); the `curriculum.test.ts (extend)` row of section 5 (FP-B11). Split from P2-6 because it needs `proposeRoute` and the owner decisions (OD-12, OD-13 decided 2026-10-12) | S-M | P2-6, P2-3b |
 | P2-7a | `feat(mobile)`: `route-store`, `RouteProposalScreen`, Home prompt with eligibility and dismissal, Profile row, flag (FP-B11). **Lands before F-PLC-001 P-7b**, so the one-tap default plan exists for learners without a level check first | M-L | P2-5, P2-3b |
 | P2-7b | `feat(mobile)`: setup steps, preview, overview, auto re-pace, Hoya check-in (FP-B11) | M | P2-7a |
-| P2-8 | `test(e2e)` + wireframes promoted + flag flip for beta | S | P2-6, P2-6b, P2-7a, P2-7b |
+| P2-8 | `test(e2e)` + wireframes promoted + flag flip for beta. Before the flip: a CI job that builds with `EXPO_PUBLIC_ROUTE_ENABLED=true` and runs `route-plan` and `route-proposal` with `E2E_ROUTE=1` (a `.github/workflows` change), a 320 px pass with no horizontal overflow on set-up, preview and overview in es and ko, and the child check-in owner item of section 3.7 settled | S | P2-6, P2-6b, P2-7a, P2-7b |
 
 ## 7. Dependencies
 
