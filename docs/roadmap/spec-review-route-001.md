@@ -154,3 +154,12 @@ New in these specs (not on main, marked as new): `buildMyRoute`, `pipStateOf`, `
 4. Release checklist: the `stageDoneAt` writer reaches learners before any build that adds Stage 1 quests.
 5. es / ko review of the new strings before the R-10 flag flip (or flip for `en` only).
 6. Apply AM-13 / E-5 notes to F-QUEST-002 and F-STORY-005 dependency lines in the R-0 docs PR.
+
+## 5. P2-3b implementation review (2026-10-12, PR #467)
+
+Findings raised by the automated review and the merge verifier on `proposeRoute` (F-PLAN-002 section 3.1a, FP-B3 / FP-B4). Outcome key as in section 1.
+
+| # | Area | Severity | Finding | Outcome | Where |
+|---|---|---|---|---|---|
+| 64 | data | major | `goals.focus` was always `balanced`; `seed.oralStage` was never read (F-PLC-001 AM-4, rule 1 "goals from the seed") | fixed | `focusOfSeed`: `reading` when `placementStageNumber(oralStage) - placementStageNumber(level.stage) >= 2`, else `balanced` (no level check or no oral stage: `balanced`); the probe, `defaultId`, the three cards and `params` all use it; boundary tests (exactly 2 above, more, 1 above, equal, below, null). The section 1.2 goldens are unchanged (their seeds carry no oral stage). Rule 1 now states the focus rule inline |
+| 65 | data | minor | an existing-plan re-seed passes only `level` and `placedOutQuestIds`, not the seed's `goals` | rejected | FP-B4 defines `reseed` as replacing the stored `level` and `placedOutQuestIds`; rule 4 and AM-2 define an update as a new start ("the future skips what is now known, length and end date kept"). Goals are changeable pre-selections (AM-4) that a grown-up may have edited in the wizard; overwriting them on a retake would drop those choices silently, and `diff` (items removed / added) cannot show a re-ordered theme or a changed focus. `regenerateFrom` still accepts `goals` in the patch for the wizard's explicit change. Rule 4 now says the stored goals stay; a test pins it |
