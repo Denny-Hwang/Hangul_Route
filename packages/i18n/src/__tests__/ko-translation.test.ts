@@ -275,6 +275,5 @@ const KO_LITERALLY_SHARED: readonly string[] = [
   'console.plan.yours.remove.cta',
   'console.lecture.outline.upGlyph',
   'console.lecture.outline.downGlyph',
-  'console.parent.child.stars',
   'landing.localeBanner.close.cta',
 ];
