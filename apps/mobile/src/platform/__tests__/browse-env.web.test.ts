@@ -11,7 +11,13 @@ import { cameFromSameOrigin, canGoBack, goBack, isOnline, leaveTo, onFragmentCha
 interface FakeWindow {
   location: { hash: string; origin: string; assign: ReturnType<typeof vi.fn> };
   history: { replaceState: ReturnType<typeof vi.fn>; go: ReturnType<typeof vi.fn>; length: number; state: unknown };
-  document: { referrer: string; visibilityState?: string };
+  document: {
+    referrer: string;
+    visibilityState?: string;
+    listeners: Map<string, () => void>;
+    addEventListener: (type: string, fn: () => void) => void;
+    removeEventListener: (type: string, fn: () => void) => void;
+  };
   navigator: { onLine?: boolean };
   listeners: Map<string, () => void>;
   addEventListener: (type: string, fn: () => void) => void;
@@ -20,6 +26,7 @@ interface FakeWindow {
 
 function stubWindow(over: { hash?: string; referrer?: string; onLine?: boolean; length?: number; state?: unknown } = {}): FakeWindow {
   const listeners = new Map<string, () => void>();
+  const docListeners = new Map<string, () => void>();
   const history: FakeWindow['history'] = {
     replaceState: vi.fn((state: unknown) => {
       history.state = state;
@@ -31,7 +38,14 @@ function stubWindow(over: { hash?: string; referrer?: string; onLine?: boolean; 
   const w: FakeWindow = {
     location: { hash: over.hash ?? '', origin: 'https://app.hangulroute.com', assign: vi.fn() },
     history,
-    document: { referrer: over.referrer ?? '' },
+    document: {
+      referrer: over.referrer ?? '',
+      listeners: docListeners,
+      addEventListener: (type, fn) => docListeners.set(type, fn),
+      removeEventListener: (type, fn) => {
+        if (docListeners.get(type) === fn) docListeners.delete(type);
+      },
+    },
     navigator: over.onLine === undefined ? {} : { onLine: over.onLine },
     listeners,
     addEventListener: (type, fn) => listeners.set(type, fn),
@@ -232,20 +246,45 @@ describe('canGoBack', () => {
 });
 
 describe('onPageVisible', () => {
-  it('calls back when the tab is shown again or gains focus, and stops on unsubscribe', () => {
+  it('hears visibilitychange on the document (where the browser fires it) and focus on the window, and stops on unsubscribe', () => {
     const w = stubWindow();
     const seen = vi.fn();
     const off = onPageVisible(seen);
+    expect(w.listeners.has('visibilitychange')).toBe(false);
+    expect(w.document.listeners.has('visibilitychange')).toBe(true);
     w.document.visibilityState = 'hidden';
-    w.listeners.get('visibilitychange')?.();
+    w.document.listeners.get('visibilitychange')?.();
     expect(seen).not.toHaveBeenCalled();
     w.document.visibilityState = 'visible';
-    w.listeners.get('visibilitychange')?.();
+    w.document.listeners.get('visibilitychange')?.();
     w.listeners.get('focus')?.();
     expect(seen).toHaveBeenCalledTimes(2);
     off();
-    expect(w.listeners.has('visibilitychange')).toBe(false);
+    expect(w.document.listeners.has('visibilitychange')).toBe(false);
     expect(w.listeners.has('focus')).toBe(false);
+  });
+
+  it('a document without listeners, or one that refuses them, still has the window focus', () => {
+    const w = stubWindow();
+    vi.stubGlobal('document', { visibilityState: 'visible' });
+    const seen = vi.fn();
+    const off = onPageVisible(seen);
+    w.listeners.get('focus')?.();
+    expect(seen).toHaveBeenCalledTimes(1);
+    expect(() => off()).not.toThrow();
+    const refusing = {
+      addEventListener: () => {
+        throw new Error('refused');
+      },
+      removeEventListener: () => {
+        throw new Error('refused');
+      },
+    };
+    vi.stubGlobal('document', refusing);
+    const off2 = onPageVisible(seen);
+    w.listeners.get('focus')?.();
+    expect(seen).toHaveBeenCalledTimes(2);
+    expect(() => off2()).not.toThrow();
   });
 
   it('without window events it returns a no-op', () => {

@@ -10,7 +10,12 @@
 interface BrowserLike {
   location?: { hash?: string; origin?: string; assign?: (url: string) => void };
   history?: { replaceState?: (state: unknown, unused: string, url: string) => void; go?: (delta: number) => void; length?: number; state?: unknown };
-  document?: { referrer?: string; visibilityState?: string };
+  document?: {
+    referrer?: string;
+    visibilityState?: string;
+    addEventListener?: (type: string, listener: () => void) => void;
+    removeEventListener?: (type: string, listener: () => void) => void;
+  };
   navigator?: { onLine?: boolean };
   addEventListener?: (type: string, listener: () => void) => void;
   removeEventListener?: (type: string, listener: () => void) => void;
@@ -158,17 +163,30 @@ export function goBack(fallbackUrl: string): void {
   }
 }
 
-/** Calls `handler` when the tab is shown again or the window gains focus; returns the unsubscribe. */
+/**
+ * Calls `handler` when the tab is shown again or the window gains focus;
+ * returns the unsubscribe. `visibilitychange` is fired at the document, so it
+ * is heard there (as every other caller in the app does); `focus` on the window.
+ */
 export function onPageVisible(handler: () => void): () => void {
   const w = browser();
   if (typeof w.addEventListener !== 'function') return () => undefined;
+  const doc = w.document;
   const onVisibility = (): void => {
-    if (w.document?.visibilityState === 'visible') handler();
+    if (doc?.visibilityState === 'visible') handler();
   };
-  w.addEventListener('visibilitychange', onVisibility);
+  try {
+    doc?.addEventListener?.('visibilitychange', onVisibility);
+  } catch {
+    // A document that refuses listeners still has the window's focus.
+  }
   w.addEventListener('focus', handler);
   return () => {
-    w.removeEventListener?.('visibilitychange', onVisibility);
+    try {
+      doc?.removeEventListener?.('visibilitychange', onVisibility);
+    } catch {
+      // Nothing was added.
+    }
     w.removeEventListener?.('focus', handler);
   };
 }
