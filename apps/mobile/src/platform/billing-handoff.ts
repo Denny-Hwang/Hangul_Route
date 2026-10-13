@@ -12,6 +12,13 @@ import { openGrownUpArea } from './grown-up-handoff';
 export const BILLING_HANDOFF: GrownUpHandoffRequest = { via: 'plan', target: APP_ROUTES.billing };
 
 /**
+ * The same billing page from the parent dashboard's free-lessons line (F-ENT-003 E3-12b), so the
+ * hand-off event reads `{ via: 'dashboard', target: 'billing' }` (both values in the shipped schema)
+ * and a dashboard tap is never counted as a Plan screen tap.
+ */
+export const DASHBOARD_BILLING_HANDOFF: GrownUpHandoffRequest = { via: 'dashboard', target: APP_ROUTES.billing };
+
+/**
  * Whether Open billing hands off in the same tab (B-9b): the web with `flags.grownUpHomeEnabled` on.
  * Native builds never do (the grown-up hand-off is web only, F-APP-001 OD-6), and they render no
  * Open billing anyway (`planView`, section 4.8).
@@ -27,7 +34,7 @@ export function billingOpensSameTab(
  * The gate destination `Billing` (F-BILL-002 section 4.7): the learner Plan screen's web-only Open
  * billing.
  *
- * - B-9b, flag on: `openGrownUpArea(BILLING_HANDOFF)` in the **same tab**. It writes F-APP-001's
+ * - B-9b, flag on: `openGrownUpArea(request)` (the Plan screen's `BILLING_HANDOFF` by default) in the **same tab**. It writes F-APP-001's
  *   per-tab unlock (so `/account/billing` opens without the "Grown-ups only" lock, and the unlock
  *   survives the Stripe round trip), sends `shell.grown_up_handoff { via: 'plan', target: 'billing' }`
  *   and leaves; `pin` means a fresh PIN is needed first and nothing was written.
@@ -38,8 +45,11 @@ export function billingOpensSameTab(
  *   (`EXPO_PUBLIC_CONSOLE_URL`, default hangulroute.com): an `http://localhost` console in a dev
  *   build comes back as `failed` and the screen shows the address to type instead of opening it.
  */
-export async function openBilling(sameTab: boolean = billingOpensSameTab()): Promise<BillingOpenResult> {
-  if (sameTab) return { kind: 'same-tab', outcome: await openGrownUpArea(BILLING_HANDOFF) };
+export async function openBilling(
+  sameTab: boolean = billingOpensSameTab(),
+  request: GrownUpHandoffRequest = BILLING_HANDOFF,
+): Promise<BillingOpenResult> {
+  if (sameTab) return { kind: 'same-tab', outcome: await openGrownUpArea(request) };
   const url = consoleBillingUrl();
   const outcome = await openExternalUrl(url);
   return { kind: 'browser', outcome, url };

@@ -37,6 +37,18 @@ export {
   type JsonStorage,
 } from './seen';
 export {
+  jamoIdToSymbolKey,
+  letterWallOf,
+  letterWallView,
+  symbolKeyOf,
+  type LetterState,
+  type LetterTile,
+  type LetterTileView,
+  type LetterWallInput,
+  type LetterWallView,
+  type WallJamo,
+} from './letter-wall';
+export {
   canDoCopy,
   cellWord,
   goalPipsWord,

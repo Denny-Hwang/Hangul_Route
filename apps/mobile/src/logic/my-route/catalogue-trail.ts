@@ -100,6 +100,8 @@ function stageRowView(row: StageRow, ctx: CopyContext, i: CatalogueTrailInput, t
     }),
     fresh: false,
     connector: null,
+    // All lessons never opens a stage in place, so it draws no letter wall.
+    letterWall: null,
   };
 }
 

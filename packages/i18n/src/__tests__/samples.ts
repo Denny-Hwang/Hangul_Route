@@ -409,6 +409,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
     [null, 'Stage 1 · Hangul: Sam is in the goal stage', null, "From the class's weekly plan", 'Plan ends Dec 20', 'Some quests done', null],
   ],
   'a11y.myRoute.labelled': [['Now', 'Stage 1 · Hangul'], ['Goal', 'Explore Stage 2 · Words']],
+  // F-ROUTE-001 R-7c: one letter-wall tile.
+  'a11y.myRoute.letter': [['x', 'a', 'Met in a quest'], ['x', 'n, at the end', 'Already known']],
   'learner.results.extraCards.title': [[1], [4]],
   'learner.results.extraCards.episodeDone': [['Meet the Letters']],
   'learner.results.extraCards.more': [[1], [3]],

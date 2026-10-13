@@ -446,9 +446,9 @@ export const caregiver = {
     putAway: 'Guardar en este dispositivo',
     status: { opened: 'Abierta' },
     hide: {
-      cta: (learner: string) => `Ocultar a ${learner}`,
+      cta: (learner: string) => `Ocultársela a ${learner}`,
       confirm: {
-        title: (learner: string) => `¿Ocultar esta nota a ${learner}?`,
+        title: (learner: string) => `¿Ocultarle esta nota a ${learner}?`,
         body: "Desaparece en todos los dispositivos. Quien la envió ve 'No se mostró'.",
         cta: 'Ocultar',
         cancel: { cta: 'Cancelar' },

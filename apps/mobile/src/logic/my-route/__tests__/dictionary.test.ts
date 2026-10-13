@@ -91,6 +91,11 @@ const SAMPLES: Record<string, unknown[][]> = {
     [null, 'Stage 1 · Hangul: Sam is in the goal stage', null, "From the class's weekly plan", 'Plan ends Dec 20', 'Some quests done', null],
   ],
   'a11y.myRoute.labelled': [['Now', 'Stage 1 · Hangul'], ['Goal', 'Explore Stage 2 · Words']],
+  'a11y.myRoute.letter': [
+    ['ㅏ', 'a', 'Met in a quest'],
+    ['ㄱ', 'g/k', 'Coming up in a quest'],
+    ['ㄴ', 'n, at the end', 'Already known'],
+  ],
 };
 
 type Rendered = { path: string; text: string; surface: Surface; args: unknown[] };

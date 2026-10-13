@@ -227,6 +227,8 @@ export const a11y = {
      * of the rest open yet, so the label never says "more are ready" when none is.
      */
     goalPips: { none: 'Ready when you are', some: 'Some quests done, more are ready', someDone: 'Some quests done', all: 'Every quest here is done' },
+    /** One letter-wall tile (R-7c): the letter, its sound (with "at the end" for a final) and its state word. */
+    letter: (letter: string, sound: string, state: string) => `${letter}, ${sound}. ${state}.`,
   },
   /**
    * The vocabulary question view (F-VOC-004 §3.8, S-4b): the speaker, the outcome said in words after a

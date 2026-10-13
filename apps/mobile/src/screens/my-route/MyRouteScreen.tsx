@@ -11,7 +11,7 @@ import { localizeQuest } from '../../logic/content-locale';
 import { myRouteAccess, myRouteEntryOf, selfEntryTab } from '../../logic/my-route/access';
 import { focusEffects, seenForView, seenReadAfter } from '../../logic/my-route/focus';
 import { buildMyRoute } from '../../logic/my-route/model';
-import { localizedRouteContent, routeModelInput } from '../../logic/my-route/route-input';
+import { localizedRouteContent, routeLetterWall, routeModelInput } from '../../logic/my-route/route-input';
 import { readSeen, seenFrom, writeSeen } from '../../logic/my-route/seen';
 import { continueTappedEvent, stageOpenedEvent, viewedEvent } from '../../logic/my-route/telemetry';
 import type { MyRouteModel, SeenRecord } from '../../logic/my-route/types';
@@ -180,6 +180,7 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
       nextTitle: quest ? localizeQuest(quest, locale).titleEn : null,
       hasStories: defaultStoryIndex().some((e) => e.placement === 'shelf'),
       seen,
+      letterWall: routeLetterWall(model),
     });
   }, [model, messages, readOnly, profile?.displayName, localized, locale, seen]);
 

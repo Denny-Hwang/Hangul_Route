@@ -37,4 +37,62 @@ export const caregiver = {
     gateDone: 'PIN을 확인했어요. 결제 화면 열기를 한 번 더 눌러 주세요.',
     backToJourney: { cta: '여정으로 돌아가기' },
   },
+  /**
+   * Notes from grown-ups in the in-app grown-up zone (F-FEEDBACK-001 FB-5b; wireframes parent/notes.md and
+   * parent/note-report.md), reviewed by the multi-agent ko review. Behind the gate: it speaks to the grown-up and
+   * names the learner before a colon or before "에게" (which never changes with the final consonant).
+   */
+  notes: {
+    row: { title: (learner: string) => `받은 쪽지: ${learner}` },
+    title: (learner: string) => `받은 쪽지: ${learner}`,
+    empty: (learner: string) => `아직 ${learner}에게 온 쪽지가 없어요.`,
+    putAway: '이 기기에서 치움',
+    status: { opened: '읽음' },
+    hide: {
+      cta: (learner: string) => `${learner}에게 숨기기`,
+      confirm: {
+        title: (learner: string) => `이 쪽지를 ${learner}에게 숨길까요?`,
+        body: "모든 기기에서 사라져요. 보낸 사람에게는 '표시 안 됨'으로 보여요.",
+        cta: '숨기기',
+        cancel: { cta: '취소' },
+      },
+    },
+    report: {
+      cta: '신고',
+      title: '이 쪽지 신고하기',
+      why: '신고 이유',
+      reasons: {
+        unkind: '친절하지 않아요',
+        unsafe: '안전하지 않아요',
+        not_for_me: (learner: string) => `${learner}에게 보낸 쪽지가 아니에요`,
+        other: '기타',
+      },
+      submit: { cta: '신고하고 숨기기' },
+      line: (learner: string) => `이 쪽지가 모든 기기에서 ${learner}에게 더 이상 보이지 않아요. 신고는 저희 팀이 하나하나 확인해요.`,
+      justHide: { cta: '숨기기만 하기' },
+      close: '닫기',
+      reported: '고마워요. 쪽지가 사라졌어요.',
+      emergency: '누군가 위험하다면 현지 긴급 신고 번호로 연락해 주세요.',
+      hidden: '쪽지를 숨겼어요.',
+      done: { cta: '완료' },
+      alreadyGone: '이미 사라진 쪽지예요.',
+      queued: '신고를 보내지 못했어요. 인터넷에 연결되면 다시 보낼게요.',
+      tooMany: '오늘은 신고를 더 보낼 수 없어요. 이 기기에서는 쪽지를 숨겼어요.',
+    },
+    mode: {
+      title: '반에서 오는 쪽지',
+      options: { all: '모든 쪽지', presets: '격려 문구만', off: '받지 않기' },
+      familyAlways: '가족이 보낸 쪽지는 언제나 받아요.',
+      classScoped: '집에서 쓰는 기기에서 바꿔 주세요.',
+    },
+    oneTimeCard: {
+      line: (mode: string) => `반에서 오는 쪽지: ${mode}`,
+      keep: { cta: '그대로 두기' },
+      change: { cta: '바꾸기' },
+    },
+    disclosure: (learner: string) => `선생님은 자기가 보낸 쪽지에서 ${learner}의 답을 볼 수 있어요.`,
+    offline: '인터넷에 연결한 뒤에 할 수 있어요.',
+    saveFailed: '저장하지 못했어요. 다시 해 보세요.',
+    sendNote: { cta: '쪽지 보내기' },
+  },
 } satisfies DeepPartial<Messages['caregiver']>;

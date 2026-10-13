@@ -1,6 +1,7 @@
 import type { Episode, QuestProgress, StageDef, StageKey, ThemeDef, ThemeKey } from '@hangul-route/content-schema';
 import {
   Body,
+  Button,
   Caption,
   Icon,
   NextMarker,
@@ -19,7 +20,7 @@ import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useLocale, useMessages } from '../i18n/use-messages';
 import { localizeEpisode } from '../logic/content-locale';
-import { stagePillLabel, themeCellInitial, themeColumnLabel } from '../logic/journey';
+import { stagePillLabel, stagePillState, themeCellInitial, themeColumnLabel } from '../logic/journey';
 import { cellLabel, cellTestId, countMarkOf } from '../logic/journey-cells';
 import {
   journeyGridRows,
@@ -79,6 +80,14 @@ export interface JourneyGridProps {
   onOpenStories?: (stage: StageKey, theme: ThemeKey) => void;
   /** One learner's route marks (F-ENT-003 E3-5): Next, In your plan, Not open yet; omitted: no mark, no legend. */
   access?: JourneyAccessInput;
+  /** The learner's complete stages (`completeStages`): their pill reads Complete (F-QUEST-002 §3.8); omitted: none. */
+  completeStages?: ReadonlySet<StageKey>;
+  /**
+   * Opens the Stage 1 ceremony again from a complete Stage 1's header (F-QUEST-002 §3.8: never shown
+   * automatically a second time, always reachable here). The screen passes it only when the learner
+   * holds the prize cards (`ownsStagePrize`); omitted: no button.
+   */
+  onOpenStagePrize?: () => void;
 }
 
 export function JourneyGrid({
@@ -94,6 +103,8 @@ export function JourneyGrid({
   quests,
   onOpenStories,
   access,
+  completeStages,
+  onOpenStagePrize,
 }: JourneyGridProps): React.ReactElement {
   const messages = useMessages();
   const locale = useLocale();
@@ -128,6 +139,7 @@ export function JourneyGrid({
       {rows.map((row) => {
         const stage = stages.find((s) => s.key === row.stage) as StageDef;
         const isLocked = row.availability === 'soon';
+        const pill = stagePillState(row.availability, completeStages?.has(row.stage) ?? false);
         return (
           <View
             key={row.stage}
@@ -162,11 +174,18 @@ export function JourneyGrid({
                 </Body>
                 <Caption tone="muted">{stage.oneLinerEn}</Caption>
               </View>
-              <Pill
-                tone={row.availability === 'open' ? 'success' : row.availability === 'taste' ? 'primary' : 'neutral'}
-                label={stagePillLabel(row.availability, m.availability)}
-                size="sm"
-              />
+              <View style={{ alignItems: 'flex-end', gap: spacing.xs }}>
+                <Pill
+                  tone={pill === 'open' || pill === 'complete' ? 'success' : pill === 'taste' ? 'primary' : 'neutral'}
+                  label={stagePillLabel(pill, m.availability)}
+                  size="sm"
+                  testID={`journey-stage-pill-${row.stage}`}
+                />
+                {/* The Stage 1 ceremony, reachable again beside a complete Stage 1's pill (F-QUEST-002 §3.8). */}
+                {row.stage === 'stage1' && pill === 'complete' && onOpenStagePrize ? (
+                  <Button label={m.stagePrize.cta} tone="ghost" size="sm" onPress={onOpenStagePrize} testID="journey-stage-prize" />
+                ) : null}
+              </View>
             </View>
 
             <View style={{ flexDirection: 'row', gap: spacing.xs, width: '100%', maxWidth: gridMax }}>
