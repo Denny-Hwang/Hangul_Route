@@ -1,10 +1,11 @@
 // Self-tests for scripts/build-presenter-font.mjs (F-TCH-004 §3.6, PR 3).
 //
-// The glyph list is derived from fixtures here (pure functions), `--check` runs on a
-// temp root with an injected content loader, and the last block checks the repository
-// itself: the committed sidecar matches the shipped content, the committed font is
-// within the budget and its licence file ships beside it. No Python is needed: the
-// subsetter is injected wherever a build runs.
+// The glyph list is derived from fixtures here (pure functions), the WOFF2 cmap reader
+// runs on small fonts built here (Brotli from node:zlib), `--check` runs on a temp root
+// with an injected content loader, and the last block checks the repository itself: the
+// committed sidecar matches the shipped content, the committed font maps exactly that
+// list, it is within the budget and its licence file ships beside it. No Python is
+// needed: the subsetter is injected wherever a build runs.
 
 import { strict as assert } from "node:assert";
 import { createHash } from "node:crypto";
@@ -13,6 +14,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { after, describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
+import { brotliCompressSync } from "node:zlib";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
@@ -24,11 +26,81 @@ const {
   GLYPHS_REL,
   LICENSE_REL,
   SOURCE_FONT,
+  SUBSET_TOOLCHAIN,
   glyphList,
   main,
   presenterStrings,
   renderGlyphs,
+  woff2CodePoints,
 } = await import(SCRIPT);
+
+// ---- tiny WOFF2 fonts (only what the cmap reader looks at) -----------------------------
+
+function base128(n) {
+  const bytes = [];
+  do {
+    bytes.unshift(n & 0x7f);
+    n = Math.floor(n / 128);
+  } while (n > 0);
+  return bytes.map((b, i) => (i < bytes.length - 1 ? b | 0x80 : b));
+}
+
+const u16 = (n) => [(n >> 8) & 0xff, n & 0xff];
+const u32 = (n) => [(n >>> 24) & 0xff, (n >>> 16) & 0xff, (n >>> 8) & 0xff, n & 0xff];
+
+function cmapTable(subtable) {
+  return Buffer.from([...u16(0), ...u16(1), ...u16(3), ...u16(10), ...u32(12), ...subtable]);
+}
+
+/** Format 12: one group per code point, glyph ids from 1. */
+function cmap12(codePoints) {
+  const groups = codePoints.flatMap((cp, i) => [...u32(cp), ...u32(cp), ...u32(i + 1)]);
+  return cmapTable([...u16(12), ...u16(0), ...u32(16 + groups.length), ...u32(0), ...u32(codePoints.length), ...groups]);
+}
+
+/**
+ * Format 4: one segment per code point plus the closing 0xFFFF segment. `viaRange`
+ * looks glyphs up through idRangeOffset / glyphIdArray; `unmapped` code points get a
+ * segment whose glyph is 0 (.notdef), which a reader must not count.
+ */
+function cmap4(codePoints, { viaRange = false, unmapped = [] } = {}) {
+  const segs = [...codePoints.map((cp, i) => ({ cp, glyph: i + 1 })), ...unmapped.map((cp) => ({ cp, glyph: 0 }))].sort((a, b) => a.cp - b.cp);
+  const segCount = segs.length + 1;
+  const ends = [...segs.map((s) => s.cp), 0xffff];
+  const starts = [...segs.map((s) => s.cp), 0xffff];
+  const deltas = [...segs.map((s) => (viaRange ? 0 : (s.glyph - s.cp) & 0xffff)), 1];
+  const rangeOffsets = [...segs.map(() => (viaRange ? segCount * 2 : 0)), 0];
+  const glyphIds = viaRange ? [...segs.map((s) => s.glyph), 0] : [];
+  if (!viaRange && unmapped.length > 0) throw new Error("unmapped code points need viaRange");
+  const body = [
+    ...u16(segCount * 2), ...u16(0), ...u16(0), ...u16(0),
+    ...ends.flatMap(u16), ...u16(0), ...starts.flatMap(u16), ...deltas.flatMap(u16), ...rangeOffsets.flatMap(u16), ...glyphIds.flatMap(u16),
+  ];
+  return cmapTable([...u16(4), ...u16(6 + body.length), ...u16(0), ...body]);
+}
+
+/**
+ * A WOFF2 file: an arbitrary-tag table, a transformed glyf table (it carries a
+ * transformLength) and the cmap, so the reader must walk the directory to find it.
+ */
+function woff2(cmap) {
+  const tables = [
+    { dir: [0x3f, ..."TEST".split("").map((c) => c.charCodeAt(0)), ...base128(5)], data: Buffer.alloc(5, 7) },
+    { dir: [10, ...base128(300), ...base128(3)], data: Buffer.alloc(3, 9) },
+    { dir: [0, ...base128(cmap.length)], data: cmap },
+  ];
+  const directory = Buffer.from(tables.flatMap((t) => t.dir));
+  const compressed = brotliCompressSync(Buffer.concat(tables.map((t) => t.data)));
+  const header = Buffer.alloc(48);
+  header.write("wOF2", 0, "latin1");
+  header.write("OTTO", 4, "latin1");
+  header.writeUInt32BE(48 + directory.length + compressed.length, 8);
+  header.writeUInt16BE(tables.length, 12);
+  header.writeUInt32BE(compressed.length, 20);
+  return Buffer.concat([header, directory, compressed]);
+}
+
+const fontFor = (codePoints) => woff2(cmap12(codePoints));
 
 const roots = [];
 function makeRoot() {
@@ -88,7 +160,8 @@ const topic = (key, status, words) => ({
 
 const FIXTURE = {
   jamo: [
-    { id: "a", char: "ㅏ", exampleWordKo: "아이" },
+    { id: "a", char: "ㅏ", exampleWordKo: "아이", spokenKo: "아" },
+    { id: "kieuk", char: "ㅋ", spokenKo: "카", nameKo: "키읔" },
     { id: "giyeok", char: "ㄱ" },
   ],
   scopes: {
@@ -130,6 +203,11 @@ describe("presenterStrings (what the presenter draws in large Korean)", () => {
 
   test("takes the letters, their example words and every scope field the slides show", () => {
     for (const s of ["ㅏ", "ㄱ", "아이", "가", "ㅓ", "나무", "일어나요", "곰"]) assert.ok(strings.includes(s), s);
+  });
+
+  test("takes each letter's spoken carrier syllable (teacher-says text, Match Sound text prompt), not its name", () => {
+    assert.ok(strings.includes("카"));
+    assert.ok(!all.has("읔"), "the letter name is never projected (the deck builder speaks in sound mode)");
   });
 
   test("takes Discover words, card subtitles and the extra presenter words", () => {
@@ -180,6 +258,8 @@ describe("glyphList and renderGlyphs", () => {
     assert.ok(lines.includes("U+0023  # #"));
     assert.ok(lines.includes("U+AC00  # 가"));
     assert.match(text, /3 code points/);
+    assert.ok(lines.includes(`# Subsetter: pyftsubset (pip install ${SUBSET_TOOLCHAIN}).`), "names the pinned toolchain");
+    assert.match(SUBSET_TOOLCHAIN, /^fonttools==\d+\.\d+\.\d+ brotli==\d+\.\d+\.\d+$/);
     assert.ok(text.endsWith("\n"));
     assert.equal(renderGlyphs([0x20, 0x23, 0xac00]), text, "deterministic");
   });
@@ -195,11 +275,47 @@ describe("glyphList and renderGlyphs", () => {
   });
 });
 
+describe("woff2CodePoints (the font's character map, read in plain Node)", () => {
+  const cps = [0x20, 0x21, 0x3131, 0xac00, 0xd7a3];
+
+  test("reads a format 12 cmap", () => {
+    assert.deepEqual([...woff2CodePoints(woff2(cmap12([...cps, 0x20000])))].sort((a, b) => a - b), [...cps, 0x20000]);
+  });
+
+  test("reads a format 4 cmap through idDelta and through idRangeOffset, without .notdef entries", () => {
+    assert.deepEqual([...woff2CodePoints(woff2(cmap4(cps)))].sort((a, b) => a - b), cps);
+    assert.deepEqual([...woff2CodePoints(woff2(cmap4(cps, { viaRange: true, unmapped: [0xb098] })))].sort((a, b) => a - b), cps);
+  });
+
+  test("refuses a file that is not a readable WOFF2 font", () => {
+    assert.throws(() => woff2CodePoints(Buffer.alloc(1000)), /not a WOFF2 file/);
+    const font = fontFor(cps);
+    assert.throws(() => woff2CodePoints(font.subarray(0, 52)), /cut short|UIntBase128/);
+    const garbled = Buffer.from(font);
+    garbled.fill(0xab, garbled.length - 10);
+    assert.throws(() => woff2CodePoints(garbled), /decompress|cmap/);
+    const collection = Buffer.from(font);
+    collection.write("ttcf", 4, "latin1");
+    assert.throws(() => woff2CodePoints(collection), /collection/);
+  });
+
+  test("refuses a font without a cmap table", () => {
+    const header = Buffer.alloc(48);
+    header.write("wOF2", 0, "latin1");
+    const data = brotliCompressSync(Buffer.alloc(4));
+    header.writeUInt16BE(1, 12);
+    header.writeUInt32BE(data.length, 20);
+    assert.throws(() => woff2CodePoints(Buffer.concat([header, Buffer.from([1, 4]), data])), /no cmap/);
+  });
+});
+
 describe("main on a temp root (injected content)", () => {
   const loadContent = async () => FIXTURE;
-  const sidecar = renderGlyphs(glyphList(presenterStrings(FIXTURE)));
+  const fixtureCps = glyphList(presenterStrings(FIXTURE));
+  const sidecar = renderGlyphs(fixtureCps);
+  const fixtureFont = fontFor(fixtureCps);
 
-  function seeded({ glyphs = sidecar, font = Buffer.alloc(1000), license = "SIL OPEN FONT LICENSE Version 1.1\n" } = {}) {
+  function seeded({ glyphs = sidecar, font = fixtureFont, license = "SIL OPEN FONT LICENSE Version 1.1\n" } = {}) {
     const root = makeRoot();
     if (glyphs !== null) put(root, GLYPHS_REL, glyphs);
     if (font !== null) put(root, FONT_REL, font);
@@ -207,10 +323,36 @@ describe("main on a temp root (injected content)", () => {
     return root;
   }
 
-  test("--check passes when the sidecar matches the content", async () => {
+  test("--check passes when the sidecar matches the content and the font maps exactly that list", async () => {
     const r = await capture((io) => main(["--check"], seeded(), { ...io, loadContent }));
     assert.equal(r.status, 0, r.stdout);
-    assert.match(r.stdout, /glyph list is up to date/);
+    assert.match(r.stdout, /glyph list and font are up to date/);
+  });
+
+  test("--check fails when the list was edited by hand and the font not rebuilt", async () => {
+    const stale = fontFor(fixtureCps.filter((cp) => cp !== 0xce74));
+    const r = await capture((io) => main(["--check"], seeded({ font: stale }), { ...io, loadContent }));
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /::error file=apps\/mobile\/public\/fonts\/hr-presenter-kr\.woff2::the presenter font was not rebuilt/);
+    assert.match(r.stdout, /the font lacks U\+CE74 카/);
+  });
+
+  test("--check fails when the font maps more than the list", async () => {
+    const r = await capture((io) => main(["--check"], seeded({ font: fontFor([...fixtureCps, 0xd7a3]) }), { ...io, loadContent }));
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /the font also maps U\+D7A3/);
+  });
+
+  test("--check fails on a font file it cannot read", async () => {
+    const r = await capture((io) => main(["--check"], seeded({ font: Buffer.alloc(1000) }), { ...io, loadContent }));
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /cannot be read \(not a WOFF2 file\)/);
+  });
+
+  test("--check fails when the sidecar's text differs although its code points match", async () => {
+    const r = await capture((io) => main(["--check"], seeded({ glyphs: sidecar.replace("# GENERATED", "# EDITED") }), { ...io, loadContent }));
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /differs from the generated text/);
   });
 
   test("--check fails on a missing glyph and says how to rebuild", async () => {
@@ -244,7 +386,7 @@ describe("main on a temp root (injected content)", () => {
   });
 
   test("--report prints the size against the budget and fails over it", async () => {
-    const ok = await capture((io) => main(["--report"], seeded(), { ...io, loadContent }));
+    const ok = await capture((io) => main(["--report"], seeded({ font: Buffer.alloc(1000) }), { ...io, loadContent }));
     assert.equal(ok.status, 0);
     assert.match(ok.stdout, /1000 bytes .* budget 150000 bytes/);
     const big = await capture((io) => main(["--report"], seeded({ font: Buffer.alloc(BUDGET_BYTES + 1) }), { ...io, loadContent }));
@@ -281,30 +423,70 @@ describe("main on a temp root (injected content)", () => {
     assert.match(r.stdout, /not found/);
   });
 
-  test("a build writes the sidecar, runs the subsetter on it and reports the size", async () => {
+  const outputOf = (args) => args.find((a) => a.startsWith("--output-file=")).slice("--output-file=".length);
+  const listOf = (args) => args.find((a) => a.startsWith("--unicodes-file=")).slice("--unicodes-file=".length);
+
+  /** A subsetter that writes `font` (default: a font of the list it was given). */
+  const fakeSubset = (calls, font) => (args) => {
+    const listed = readFileSync(listOf(args), "utf8");
+    calls.push({ args, listed });
+    const cps = listed.split("\n").map((l) => l.split("#")[0].trim()).filter(Boolean).map((l) => parseInt(l.slice(2), 16));
+    writeFileSync(outputOf(args), font ?? fontFor(cps));
+    return { status: 0 };
+  };
+
+  test("a build runs the subsetter on a temporary list, then writes the font and the sidecar and reports the size", async () => {
     const root = seeded({ glyphs: null, font: null });
     const src = join(root, "src.otf");
     writeFileSync(src, "pinned bytes");
     const sha = createHash("sha256").update("pinned bytes").digest("hex");
     const calls = [];
-    const runSubset = (args) => {
-      calls.push(args);
-      const out = args.find((a) => a.startsWith("--output-file=")).slice("--output-file=".length);
-      writeFileSync(out, Buffer.alloc(4321));
-      return { status: 0 };
-    };
-    const r = await capture((io) => main(["--source", src], root, { ...io, loadContent, runSubset, expectedSha256: sha }));
+    const r = await capture((io) => main(["--source", src], root, { ...io, loadContent, runSubset: fakeSubset(calls), expectedSha256: sha }));
     assert.equal(r.status, 0, r.stdout + r.stderr);
     assert.equal(readFileSync(join(root, ...GLYPHS_REL), "utf8"), sidecar);
-    assert.equal(statSync(join(root, ...FONT_REL)).size, 4321);
+    assert.deepEqual(readFileSync(join(root, ...FONT_REL)), fixtureFont);
     assert.equal(calls.length, 1);
-    const [args] = calls;
+    const [{ args, listed }] = calls;
     assert.equal(args[0], src);
-    assert.ok(args.includes(`--unicodes-file=${join(root, ...GLYPHS_REL)}`));
+    assert.equal(listed, sidecar, "the subsetter reads the generated list");
+    assert.notEqual(listOf(args), join(root, ...GLYPHS_REL), "the committed sidecar is not written before the subset");
+    assert.notEqual(outputOf(args), join(root, ...FONT_REL), "the committed font is not written before the subset");
+    assert.equal(existsSync(listOf(args)), false, "the temporary files are removed");
     assert.ok(args.includes("--flavor=woff2"));
     assert.ok(args.includes("--no-ignore-missing-unicodes"), "a glyph missing from the source fails the build");
     assert.ok(args.some((a) => a.startsWith("--name-IDs=") && a.includes("13") && a.includes("14")), "keeps the licence name records");
-    assert.match(r.stdout, /4321 bytes/);
+    assert.match(r.stdout, new RegExp(`${fixtureFont.length} bytes`));
+    const again = await capture((io) => main(["--check"], root, { ...io, loadContent }));
+    assert.equal(again.status, 0, again.stdout);
+  });
+
+  test("a failed or wrong subset leaves the committed font and sidecar as they were", async () => {
+    const oldGlyphs = renderGlyphs(fixtureCps.filter((cp) => cp !== 0xce74));
+    const oldFont = fontFor(fixtureCps.filter((cp) => cp !== 0xce74));
+    const root = seeded({ glyphs: oldGlyphs, font: oldFont });
+    const src = join(root, "src.otf");
+    writeFileSync(src, "pinned bytes");
+    const sha = createHash("sha256").update("pinned bytes").digest("hex");
+    const unchanged = (label) => {
+      assert.equal(readFileSync(join(root, ...GLYPHS_REL), "utf8"), oldGlyphs, label);
+      assert.deepEqual(readFileSync(join(root, ...FONT_REL)), oldFont, label);
+    };
+    const failed = await capture((io) => main(["--source", src], root, { ...io, loadContent, expectedSha256: sha, runSubset: () => ({ status: 1, stderr: "brotli not installed" }) }));
+    assert.equal(failed.status, 1);
+    unchanged("subsetter exit 1");
+    const missingTool = await capture((io) => main(["--source", src], root, { ...io, loadContent, expectedSha256: sha, runSubset: () => ({ status: null, error: new Error("spawn pyftsubset ENOENT") }) }));
+    assert.equal(missingTool.status, 1);
+    unchanged("subsetter missing");
+    const wrong = await capture((io) => main(["--source", src], root, { ...io, loadContent, expectedSha256: sha, runSubset: fakeSubset([], oldFont) }));
+    assert.equal(wrong.status, 1);
+    assert.match(wrong.stdout, /character map is not the glyph list \(lacks U\+CE74/);
+    unchanged("font without the new glyph");
+    const unreadable = await capture((io) => main(["--source", src], root, { ...io, loadContent, expectedSha256: sha, runSubset: fakeSubset([], Buffer.alloc(10)) }));
+    assert.equal(unreadable.status, 1);
+    assert.match(unreadable.stdout, /cannot be read/);
+    unchanged("unreadable font");
+    const check = await capture((io) => main(["--check"], root, { ...io, loadContent }));
+    assert.equal(check.status, 1, "--check still fails after the failed builds");
   });
 
   test("a build fails when the subsetter fails or the result is over the budget", async () => {
@@ -317,14 +499,15 @@ describe("main on a temp root (injected content)", () => {
     assert.match(failed.stdout, /pyftsubset failed/);
     const missingTool = await capture((io) => main(["--source", src], root, { ...io, loadContent, expectedSha256: sha, runSubset: () => ({ status: null, error: new Error("spawn pyftsubset ENOENT") }) }));
     assert.equal(missingTool.status, 1);
-    assert.match(missingTool.stdout, /pip install fonttools brotli/);
+    assert.match(missingTool.stdout, new RegExp(`pip install ${SUBSET_TOOLCHAIN.replace(/[.]/g, "\\.")}`));
     const big = await capture((io) =>
       main(["--source", src], root, {
         ...io,
         loadContent,
         expectedSha256: sha,
         runSubset: (args) => {
-          writeFileSync(args.find((a) => a.startsWith("--output-file=")).slice(14), Buffer.alloc(BUDGET_BYTES + 1));
+          // A font of the right list, padded past the budget (the reader stops at the compressed data).
+          writeFileSync(outputOf(args), Buffer.concat([fixtureFont, Buffer.alloc(BUDGET_BYTES)]));
           return { status: 0 };
         },
       })
@@ -338,6 +521,16 @@ describe("the repository", () => {
   test("the committed glyph list is up to date with the shipped content (--check)", async () => {
     const r = await capture((io) => main(["--check"], REPO, io));
     assert.equal(r.status, 0, r.stdout + r.stderr);
+  });
+
+  test("the committed font maps exactly the committed glyph list", () => {
+    const listed = readFileSync(join(REPO, ...GLYPHS_REL), "utf8")
+      .split("\n")
+      .map((l) => l.split("#")[0].trim())
+      .filter(Boolean)
+      .map((l) => parseInt(l.slice(2), 16));
+    const mapped = [...woff2CodePoints(readFileSync(join(REPO, ...FONT_REL)))].sort((a, b) => a - b);
+    assert.deepEqual(mapped, listed);
   });
 
   test("the committed font is within the budget and is a WOFF2 file", () => {
