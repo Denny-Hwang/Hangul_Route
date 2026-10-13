@@ -127,6 +127,8 @@
 .seen-by { color: var(--colors-text-secondary); font-size: var(--size-bodySm); line-height: var(--leading-relaxed); }
 .quiet-links { display: flex; flex-direction: column; align-items: flex-start; gap: var(--spacing-xxs); padding-top: var(--spacing-sm); border-top: var(--border-width-thin) solid var(--colors-border-subtle); }
 .quiet-links .rn-link { padding-left: 0; color: var(--colors-text-secondary); font-size: var(--size-bodySm); }
+/* "Put this note away" is an in-place action: a button drawn as a quiet link. */
+button.rn-link { background: none; border: 0; text-align: start; cursor: pointer; }
 .done-line { padding: var(--spacing-md) var(--spacing-lg); border-radius: var(--radii-md); background: var(--colors-surface-sunken); color: var(--colors-text-primary); line-height: var(--leading-relaxed); }
 
 /* ------------------------------------------------------------------------------------------ */

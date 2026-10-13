@@ -44,4 +44,4 @@ Earlier                               learner.notes.list.groups.earlier
 ## Notes for FB-8
 
 - `notes.list_viewed { notes, unread }` on open (no `profileId`).
-- The My notes row on Profile uses `learner.notes.profileRow.title` with the `New` pill while something is unread, and sits below the Grown-up home row (the app-shell pass reserved that place, `design/screens/app-shell/mock/learner-entry.html`).
+- The My notes row on Profile uses `learner.notes.profileRow.title` with the `New` pill while something is unread, and sits below the Grown-up home row (the app-shell pass reserved that place, `design/screens/app-shell/mock/learner-entry.html`). Drawn on `mock/notes-list-states.html` ("Profile row" items: unread with the pill, all read, es): the app-shell `rn-row` card unchanged, the `note` glyph in `text.secondary`, the title, the `New` pill before the chevron; the row's name is its visible text.
