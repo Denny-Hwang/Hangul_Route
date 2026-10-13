@@ -35,7 +35,7 @@ export type BrowseStackParamList = {
   /** Story sources, copy-only links in All lessons. */
   StorySources: RootStackParamList['StorySources'];
   CardDetail: { cardId: string };
-  /** `level`: the level a story was read at ([ Read again ]); `returnTo` as on `PreviewQuest`. */
+  /** `level`: the level a story was read at, for Read again; `returnTo` as on `PreviewQuest`. */
   PreviewEnd: { kind: 'quest' | 'story' | 'vocab-topic'; id: string; episodeId?: string; level?: StoryLevel; returnTo?: PreviewReturn };
   BrowseAccess: { reason: 'none' | 'expired'; source: AccessSource };
 };
