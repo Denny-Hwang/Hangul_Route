@@ -90,7 +90,7 @@ const classState = (patch: Partial<WizardState> = {}): WizardState => ({
   ...patch,
 });
 
-/** Every story signed off, so culture weeks and story labels appear (the shipped catalogue still has them as drafts). */
+/** Every story signed off, so culture weeks and story labels appear. Since CATALOG_VERSION 6 the shipped catalogue has all 24 stories ready too, so this equals CATALOG for stories; it stays so these tests do not depend on the shipped review state. */
 const READY: Catalog = { ...CATALOG, stories: CATALOG.stories.map((story) => ({ ...story, status: 'ready' as const })) };
 
 function classPlan(patch: Partial<WizardState> = {}, source: Catalog = CATALOG): { id: string; meta: CurriculumMeta; items: PlanItem[] } {
@@ -476,6 +476,16 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
     expect(result.items.map((i) => i.id).sort()).toEqual(items.map((i) => i.id).sort());
     const lessonsOf = (list: readonly { id: string }[]): string[] => list.map((i) => i.id).filter((id) => !id.startsWith('quest:story-'));
     expect(lessonsOf(result.items)).toEqual(lessonsOf(items));
+    // A story stays in its week or moves to the next one, never earlier and never further.
+    const weekBefore = new Map(items.map((i) => [i.id, i.targetDate === undefined ? undefined : weekOfDate(plan.meta.weeks, i.targetDate)]));
+    const storyItems = result.items.filter((i) => i.id.startsWith('quest:story-'));
+    expect(storyItems.length).toBeGreaterThan(0);
+    for (const item of storyItems) {
+      const before = weekBefore.get(item.id);
+      const after = item.targetDate === undefined ? undefined : weekOfDate(result.meta.weeks, item.targetDate);
+      if (before === undefined || after === undefined) throw new Error(`${item.id} has no week`);
+      expect([before, before + 1], item.id).toContain(after);
+    }
     expect(result.planId).toBe('plan:route');
     expect(result.meta).toMatchObject({ kind: 'curriculum', repacedAt: '2026-10-26T09:00:00.000Z', horizonDays: plan.meta.horizonDays });
     expect(result.nextDate).toBe('2026-10-28');
@@ -507,6 +517,18 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
     expect(result.items).toHaveLength(plan.items.length - 1);
     expect(result.leftOver).toBe(1);
     expect(weeksToFit(squeezed, '2026-10-26', noStories)).toBe(1);
+  });
+
+  it('on the shipped catalogue (stories ready), a squeezed Stage 2 route counts what no longer fits and the weeks that keep it', () => {
+    const plan = classPlan({ length: '12-week', start: 'first-words' });
+    expect(plan.items.some((item) => item.id.startsWith('quest:story-'))).toBe(true);
+    const squeezed = { ...plan, meta: { ...plan.meta, params: { ...plan.meta.params, daysOff: [{ from: '2026-11-01', to: '2026-11-21' }] } } };
+    const result = repacePlan(squeezed, '2026-10-26', '2026-10-26T09:00:00.000Z');
+    expect(result.leftOver).toBeGreaterThan(0);
+    const extra = weeksToFit(squeezed, '2026-10-26');
+    if (extra === null) throw new Error('expected extra weeks');
+    expect(repacePlan(squeezed, '2026-10-26', '', extra).leftOver).toBe(0);
+    expect(repacePlan(squeezed, '2026-10-26', '', extra - 1).leftOver).toBeGreaterThan(0);
   });
 
   it('needs no extra weeks when everything fits, and finds none past 52 weeks', () => {

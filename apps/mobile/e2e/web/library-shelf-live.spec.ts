@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked } from './helpers';
+import { controlsPastEdge, expectNoHorizontalOverflow, expectReachable } from './viewport';
 
 /**
  * F-STORY-001 PR 1.9 inverts the F-STORY-004 PR 4.8 tripwire (library-cards-only.spec.ts): the
@@ -86,5 +87,34 @@ test.describe('Library and Home with the reviewed launch stories (regular build)
     expect(labels.some((label) => label.endsWith('A short story.'))).toBe(true);
     for (const label of labels) expect(label).not.toMatch(GATING_WORDS);
     await expect(missions.locator('[data-testid^="home-mission-cover-"]').first()).toBeVisible();
+  });
+
+  test('at 320 wide, Home and the Library tabs and shelf tiles stay on screen (F-STORY-004 Manual QA, 320 dp)', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await onboard(page);
+    await expectNoHorizontalOverflow(page, 'Home at 320');
+    expect(await page.evaluate(controlsPastEdge), 'Home controls past the edge').toEqual([]);
+
+    await openLibrary(page);
+    const sections = page.getByRole('tablist', { name: 'Library sections' });
+    for (const name of ['Cards', 'Story Time', 'Culture']) await expectReachable(page, sections.getByRole('tab', { name, exact: true }));
+    await expectNoHorizontalOverflow(page, 'Library at 320');
+
+    for (const [tab, last] of [
+      ['Story Time', STORY_TIME[STORY_TIME.length - 1]],
+      ['Culture', null],
+    ] as const) {
+      await page.getByRole('tab', { name: tab, exact: true }).click();
+      const tiles = page.locator('[data-testid^="story-tile-"]');
+      await expect(tiles.first()).toBeVisible();
+      const target = last === null ? tiles.last() : page.locator(`[data-testid="story-tile-${last}"]`);
+      // A tile with a long title can be taller than the screen at 320 x 568, so its last line
+      // (the minutes) is what must scroll fully into view above the tab bar.
+      // The Culture list runs past what the helper's fifteen wheel turns cover, so bring the tile near first.
+      await target.scrollIntoViewIfNeeded();
+      await expectReachable(page, target.getByText(/about \d+ min/));
+      await expectNoHorizontalOverflow(page, `${tab} at 320`);
+      expect(await page.evaluate(controlsPastEdge), `${tab} controls past the edge`).toEqual([]);
+    }
   });
 });
