@@ -68,6 +68,25 @@ keep_vars = true
 #                                    (GET /api/spaces/:id/notes/recipients, POST /api/spaces/:id/notes);
 #                                    otherwise both answer 404 before auth. Set it only after FB-14
 #                                    and the OD-19 go-ahead. GET /health shows features.notesSend.
+# CLASS_TRANSFER                     F-SPACE-002 T15: leave UNSET. Only the exact text "enabled"
+#                                    opens class moves: the console routes under
+#                                    /api/spaces/:id/transfer-requests and .../transfer-prefs, the
+#                                    learner device routes under /api/sync/learners/:id/transfer-*
+#                                    and the inbox fields (transfersEnabled, transfers). Otherwise
+#                                    every route answers 422 transfers_locked and the inbox says
+#                                    transfersEnabled: false. Only the owner sets it, after every
+#                                    flip gate of the spec (G1-G7, counsel review T-8 included),
+#                                    Worker first, then NEXT_PUBLIC_CLASS_TRANSFER on the console.
+#                                    Unsetting it is the rollback: a planned move stops at once.
+# CLASS_TRANSFER_DEVICE_CONSENT      F-SPACE-002 decision A4: leave UNSET, also after
+#                                    CLASS_TRANSFER is on. Only "enabled" lets a learner's own
+#                                    device start a move or say yes (POST .../transfer-requests and
+#                                    .../:tid/approve under /api/sync/learners/:id); otherwise both
+#                                    answer 422 device_consent_locked and a device yes already given
+#                                    is held, not acted on. A device can always decline or cancel
+#                                    (that needs only CLASS_TRANSFER). Set it only after written
+#                                    counsel sign-off that a device attestation is acceptable as
+#                                    learner-side consent (flip gate G6).
 # ENVIRONMENT                        unset = production (fail closed: no Clerk key or no
 #                                    D1 binding → 503). Only "development" / "test" turn on
 #                                    the dev fallbacks (bearer = account id, in-memory Db

@@ -1,4 +1,4 @@
-import type { HeritageCard } from '@hangul-route/content-schema';
+import { CATALOG, freeLessonsFacts, type HeritageCard } from '@hangul-route/content-schema';
 import {
   Body,
   Button,
@@ -49,7 +49,9 @@ import {
   type ResultsTeaser,
 } from '../../logic/quest-flow/results-teaser';
 import { dayKey } from '../../logic/homework/mission-builder';
-import { offplanFinishedEvent, planBeforeOf, routeNextInputOf, type PlanBefore } from '../../logic/route-next';
+import { askFor, askGate, helpAskedEvent, isClassOnly } from '../../logic/access-copy';
+import { freeEndPrimary, freeEndResults, freeLessonCards } from '../../logic/free-end';
+import { offplanFinishedEvent, planBeforeOf, routeNext, routeNextInputOf, type PlanBefore } from '../../logic/route-next';
 import { episodeReturn } from '../../logic/layout/quest-return';
 import { applyQuestResult, type QuestResultOutcome } from '../../logic/results-award';
 import { resultsCheerMessage, resultsHeadline } from '../../logic/results-copy';
@@ -63,6 +65,10 @@ import { nextStoryAfter, storyLockFor } from '../../logic/story/story-pick';
 import { useReducedMotion } from '../../platform/motion';
 import { track } from '../../platform/telemetry';
 import type { RootStackParamList } from '../../navigation/types';
+import { useAudience } from '../../store/audience';
+import { markFreeEndSeen, readFreeEndSeen } from '../../store/free-end-seen';
+import { gateOpensDirectlyNow } from '../../store/gate-now';
+import { useMembershipStore } from '../../store/membership-store';
 import { usePlanStore } from '../../store/plan-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
@@ -70,7 +76,10 @@ import { useStoryStore } from '../../store/story-store';
 import { useAccessTier, useQuestAccess } from '../../store/tier-store';
 import { CardArtThumb } from './CardArtThumb';
 import { ExtraCardsBanner } from './ExtraCardsBanner';
+import { ResultsFreeEndCelebration, ResultsOpenForYou } from './ResultsFreeEnd';
 import { StoryResultsExtras, type StoryResultsChoice } from './StoryResultsExtras';
+import { samplerStoryOf } from '../home/free-end-inputs';
+import { firstFreeTopicKey } from '../vocab/topic-data';
 
 type ResultsMessages = Messages['learner']['results'];
 
@@ -227,6 +236,54 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   const stagePrize = opensStagePrize(outcome);
   const actions = resultsActions(teaser, stagePrize);
 
+  // The end of the free lessons (F-ENT-003 section 3.8): the celebration once per profile and device
+  // after a scored quest, then the calm line. The seen key is read once, when Results opens.
+  const [freeEndSeen, setFreeEndSeen] = useState<boolean | null>(null);
+  const profileId = profile?.id;
+  useEffect(() => {
+    if (!profileId) return undefined;
+    let alive = true;
+    void readFreeEndSeen(profileId).then((seen) => {
+      if (alive) setFreeEndSeen(seen);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [profileId]);
+  const next = useMemo(() => (routeInput ? routeNext({ ...routeInput, justCompleted: questId }) : null), [routeInput, questId]);
+  const freeEnd = freeEndResults({ next, scored: total > 0, seen: freeEndSeen });
+  useEffect(() => {
+    if (freeEnd === 'celebrate' && profileId && next?.kind === 'free-end') void markFreeEndSeen(profileId, next.placedOut);
+  }, [freeEnd, profileId, next]);
+  const freeCards = useMemo(() => {
+    if (freeEnd !== 'celebrate' || !snapshot) return [];
+    return freeLessonCards(snapshot, episodesAll, freeLessonsFacts(CATALOG).episodeIds)
+      .map((id) => {
+        const card = cardById(id);
+        return card && localizeCard(card, locale);
+      })
+      .filter((c): c is HeritageCard => Boolean(c));
+  }, [freeEnd, snapshot, locale]);
+  const memberships = useMembershipStore((s) => (profileId ? s.byLearner[profileId] : undefined));
+  const { audience } = useAudience();
+  const ask = askFor(audience, isClassOnly(memberships ?? []), messages.learner.access);
+  const onAsk = (): void => {
+    void track(helpAskedEvent(profileId, 'results', ask.audience));
+    const gate = askGate(gateOpensDirectlyNow(), 'results');
+    if (gate.route === 'Paywall') navigation.navigate('Paywall', gate.params);
+    else navigation.navigate('PinEntry', gate.params);
+  };
+  // The run that finishes Stage 1 reaches the free end too: the prize stays on the free-end Results.
+  const freeEndPrize = actions.stagePrize
+    ? { label: m.stagePrize.cta, onPress: () => navigation.navigate('StageComplete', { stageKey: PRIZE_STAGE }) }
+    : null;
+  const practice = freeEndPrimary(firstFreeTopicKey(), samplerStoryOf(defaultStoryIndex()));
+  const practiceLabel = practice === null ? null : practice.kind === 'story' ? messages.learner.access.readStory.cta : messages.learner.access.practiceWords.cta;
+  const onPractice = (): void => {
+    if (practice?.kind === 'topic') navigation.navigate('VocabTopic', { topicKey: practice.topicKey });
+    else if (practice?.kind === 'story') navigation.navigate('QuestPlayer', { questId: practice.questId, episodeId: practice.episodeId });
+  };
+
   // The story variant (F-STORY-003 §3.7): a story quest whose story is bundled gets the story card and
   // its own actions (one primary: Next story, else Back home), in place of "Next up" and the two
   // generic buttons. Next story (F-STORY-004 `nextStoryAfter`) walks the same book or shelf category
@@ -376,6 +433,31 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
         <>
           <Spacer size="lg" />
           <StoryResultsExtras extras={storyResults.view} onChoose={chooseStoryAction} />
+        </>
+      ) : freeEnd === 'pending' ? null : freeEnd === 'celebrate' ? (
+        <>
+          <Spacer size="lg" />
+          <ResultsFreeEndCelebration
+            cards={freeCards}
+            practiceLabel={practiceLabel}
+            onPractice={onPractice}
+            onHome={goHome}
+            askLabel={ask.label}
+            onAsk={onAsk}
+            stagePrize={freeEndPrize}
+          />
+        </>
+      ) : freeEnd === 'open-for-you' ? (
+        <>
+          <Spacer size="lg" />
+          <ResultsOpenForYou
+            practiceLabel={practiceLabel}
+            onPractice={onPractice}
+            onHome={goHome}
+            episodeLabel={episode ? m.episodePage.cta : null}
+            onEpisode={openEpisodePage}
+            stagePrize={freeEndPrize}
+          />
         </>
       ) : (
         <>

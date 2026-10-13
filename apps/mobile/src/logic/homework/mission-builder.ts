@@ -1,5 +1,6 @@
 import type { Episode, ProgressSnapshot, Quest } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
+import { favoriteReplay, type PracticeTarget } from '../free-end';
 import { nextQuestAfter, offerableQuests, playableEpisodes } from '../next-quest';
 import { inAPlan, routeNext, type RouteNextInput } from '../route-next';
 import type { BookmarkFile } from '../story/bookmarks';
@@ -40,7 +41,11 @@ import { storyStatus, type StoryStatus } from '../story/story-status';
  * words come from the dictionary through `missionCardText`.
  */
 
-export type MissionCardKind = 'replay' | 'new' | 'daily-test' | 'story' | 'explore';
+/**
+ * `free-end` and `practice` are card (2) at the end of the free lessons (F-ENT-003 section 3.7):
+ * the celebration once per profile and device, then the practice card.
+ */
+export type MissionCardKind = 'replay' | 'new' | 'daily-test' | 'story' | 'explore' | 'free-end' | 'practice';
 
 /**
  * Keys of `learner.home.mission.subtitle`, plus `explore`, whose words are
@@ -49,7 +54,7 @@ export type MissionCardKind = 'replay' | 'new' | 'daily-test' | 'story' | 'explo
  * with a `storyReason` reads `learner.storyShelf.home.subtitle[storyReason]`
  * (`missionCardText`).
  */
-export type MissionSubtitle = 'replay' | 'story' | 'new' | 'assigned' | 'dailyTest' | 'explore' | 'nextInPlan';
+export type MissionSubtitle = 'replay' | 'story' | 'new' | 'assigned' | 'dailyTest' | 'explore' | 'nextInPlan' | 'freeEnd' | 'practice';
 
 export interface MissionCard {
   slot: 1 | 2 | 3;
@@ -69,6 +74,12 @@ export interface MissionCard {
   storyReason?: StoryReason;
   /** Story cards only: `replay` opens the unscored reader (`again`), `play` the scored quest. */
   storyMode?: 'play' | 'replay';
+  /** Practice card only: what it opens (a free word topic, a sampler story or a kept replay). */
+  practiceKind?: PracticeTarget['kind'];
+  /** Practice card of a word topic: the topic it opens ("Food words"). */
+  topicKey?: string;
+  /** The free-end card only: the learner tested out of the free letters (`routeNext` `placedOut`). */
+  placedOut?: boolean;
 }
 
 export interface MissionPlan {
@@ -119,8 +130,8 @@ export interface BuildMissionInput {
    * The one next (F-ENT-003 section 3.5, `routeNextInputOf` on the same
    * snapshot, profile and day): card (2) is its quest, "Next in your plan"
    * when it comes from a plan and "New" from the default route; at `rest`
-   * (and at `free-end` until E3-7 draws the free-end card) today's replay
-   * fallback stays. Omitted means the bare cursor, as before E3-4.
+   * (and at `free-end` without `freeEnd`) today's replay fallback stays.
+   * Omitted means the bare cursor, as before E3-4.
    */
   route?: RouteNextInput;
   /**
@@ -135,6 +146,12 @@ export interface BuildMissionInput {
     isLocked: (entry: StoryIndexEntry) => boolean;
     fits?: (entry: StoryIndexEntry) => boolean;
   };
+  /**
+   * The end of the free lessons (F-ENT-003 section 3.7, E3-7): when `route` says `free-end`,
+   * card (2) is the celebration while `seen` is false (`free-end-seen:<profileId>`), then the
+   * practice card (`practiceTarget`). Omitted keeps today's replay fallback at `free-end`.
+   */
+  freeEnd?: { seen: boolean; practice: PracticeTarget | null };
 }
 
 /** How far back a Quest counts as replayable (§3.1 — days N−1, N−2). */
@@ -318,6 +335,72 @@ function newCard(quest: Quest, episodes: readonly Episode[], subtitle: 'new' | '
   };
 }
 
+/** The practice card (F-ENT-003 section 3.7): a free word topic, a sampler story or a kept replay, "Keep practicing". */
+function practiceCard(target: PracticeTarget): MissionCard {
+  const card: MissionCard = { slot: 2, kind: 'practice', titleEn: target.title, subtitle: 'practice', practiceKind: target.kind, collected: false };
+  if (target.kind === 'topic') return { ...card, topicKey: target.topicKey };
+  if (target.kind === 'story') return { ...card, storyId: target.storyId, questId: target.questId, episodeId: target.episodeId };
+  return { ...card, questId: target.questId, episodeId: target.episodeId };
+}
+
+/** Card (2) at the end of the free lessons: the celebration once, then the practice card; null when not at `free-end`. */
+function freeEndCard(input: BuildMissionInput): MissionCard | null {
+  if (!input.route || !input.freeEnd) return null;
+  const next = routeNext(input.route);
+  if (next.kind !== 'free-end') return null;
+  if (!input.freeEnd.seen) return { slot: 2, kind: 'free-end', titleEn: null, subtitle: 'freeEnd', placedOut: next.placedOut, collected: false };
+  return input.freeEnd.practice ? practiceCard(input.freeEnd.practice) : null;
+}
+
+/** Card (2): the free-end or practice card at `free-end`, else the one next (or today's replay fallback). */
+function secondCard(input: BuildMissionInput): MissionCard | null {
+  const end = freeEndCard(input);
+  if (end) return end;
+  const upcoming = nextQuest(input);
+  return upcoming ? newCard(upcoming.quest, input.episodes, upcoming.subtitle) : null;
+}
+
+/**
+ * The end of the free lessons under the day pin: a pinned celebration gives way to the practice
+ * card once it was seen, and a pinned celebration or practice card gives way to the one next once
+ * something opens (the learner became premium). The practice card's own target stays all day. A
+ * card (2) pinned before the end was known (the access tier read after the first Home render) and
+ * not played today gives way to the celebration or the practice card.
+ */
+function repinFreeEnd(cards: readonly MissionCard[], input: BuildMissionInput): readonly MissionCard[] {
+  if (!input.route) return cards;
+  const second = cards.find((card) => card.slot === 2);
+  if (second && second.kind !== 'free-end' && second.kind !== 'practice') {
+    if (isCollected(second, input.snapshot, input.today, second.collected)) return cards;
+    const end = freeEndCard(input);
+    return end ? swapSecond(cards, second, end, input) : cards;
+  }
+  const pinned = second;
+  if (!pinned) return cards;
+  const fresh = secondCard(input);
+  if (!fresh || fresh.kind === pinned.kind) return cards;
+  return swapSecond(cards, pinned, fresh, input);
+}
+
+/**
+ * Puts `next` in card (2)'s place. A practice card that replays a quest another pinned card
+ * already offers (cards (1) and (3) were chosen before it, around a different card (2)) takes
+ * the next kept replay instead, so the row keeps three different cards; when none is left it
+ * stays as it is.
+ */
+function swapSecond(cards: readonly MissionCard[], pinned: MissionCard, next: MissionCard, input: BuildMissionInput): readonly MissionCard[] {
+  let replacement = next;
+  if (next.kind === 'practice' && next.practiceKind === 'replay' && next.questId) {
+    const taken = new Set(cards.filter((card) => card !== pinned && card.questId).map((card) => card.questId as string));
+    if (taken.has(next.questId)) {
+      const other = favoriteReplay(input.snapshot, input.quests, input.episodes, taken);
+      const episode = other ? input.episodes.find((e) => e.questIds.includes(other.id)) : undefined;
+      if (other && episode) replacement = practiceCard({ kind: 'replay', questId: other.id, episodeId: episode.id, title: other.titleEn });
+    }
+  }
+  return cards.map((card) => (card === pinned ? replacement : card));
+}
+
 /**
  * The exceptions to the day pin (F-ROUTE-001 R-4a, section 3.5; F-ENT-003
  * section 3.6): when a level check places out the quest pinned on the "New"
@@ -426,7 +509,7 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
   if (input.pinned && input.pinned.date === today && input.pinned.profileId === profileId) {
     return {
       ...input.pinned,
-      cards: repinClosed(repinPlacedOut(input.pinned.cards, input), input).map((card) => {
+      cards: repinClosed(repinFreeEnd(repinPlacedOut(input.pinned.cards, input), input), input).map((card) => {
         const refreshed: MissionCard = { ...card, collected: isCollected(card, snapshot, today, card.collected) };
         if (card.kind === 'story') refreshed.storyReason = refreshedReason(card, input);
         // A plan removed after the pin (unpublished, or the own plan archived): the quest stays, "Next in your plan" goes.
@@ -439,9 +522,9 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
   const used: Used = { quests: new Set(), episodes: new Set(), stories: new Set() };
   const cards: MissionCard[] = [];
 
-  // ② New — the Journey cursor. Chosen first so slot ①'s story never repeats its quest.
-  const upcoming = nextQuest(input);
-  const second: MissionCard | null = upcoming ? newCard(upcoming.quest, episodes, upcoming.subtitle) : null;
+  // ② New — the one next (or, at the end of the free lessons, the celebration or the practice card).
+  // Chosen first so slot ①'s story never repeats its quest.
+  const second = secondCard(input);
   // It takes its quest and, for a book story quest, its story, so no other card offers that story. Not its
   // episode: the explore card may still name the learner's current episode, so the row keeps three cards.
   if (second) use(used, { ...second, episodeId: undefined }, input);
@@ -476,17 +559,23 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
   };
 }
 
-/** The dictionary subtrees a card reads: `learner.home.mission`, `learner.storyShelf.home` and `learner.routeNext.home`. */
+/** The dictionary subtrees a card reads: `learner.home.mission`, `learner.storyShelf.home`, `learner.routeNext.home` and `learner.access`. */
 type MissionMessages = {
   home: Pick<Messages['learner']['home'], 'mission'>;
   storyShelf: Pick<Messages['learner']['storyShelf'], 'home'>;
   routeNext: Pick<Messages['learner']['routeNext'], 'home'>;
+  access: Pick<Messages['learner']['access'], 'freeEnd' | 'openForYou' | 'practice'>;
 };
 
 /** A card's title and subtitle in the UI language (`m` is `messages.learner`). */
 export function missionCardText(card: MissionCard, m: MissionMessages): { title: string; subtitle: string } {
   const mission = m.home.mission;
   const storyHome = m.storyShelf.home;
+  if (card.subtitle === 'freeEnd') return { title: m.access.freeEnd.title, subtitle: m.access.openForYou };
+  if (card.subtitle === 'practice') {
+    const name = card.titleEn ?? '';
+    return { title: card.practiceKind === 'topic' ? m.access.practice.topicTitle(name) : name, subtitle: m.access.practice.subtitle };
+  }
   const title = card.titleEn ?? mission.dailyTest.title;
   if (card.subtitle === 'explore') return { title, subtitle: storyHome.explore };
   if (card.subtitle === 'nextInPlan') return { title, subtitle: m.routeNext.home.subtitle };

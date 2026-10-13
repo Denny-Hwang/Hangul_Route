@@ -55,6 +55,8 @@ import { placementEntriesOn, questsDoneOf } from '../../logic/placement/entry';
 import { skippedEvent } from '../../logic/placement/events';
 import { homeQuietCard, levelCheckCard } from '../../logic/placement/home-card';
 import { DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
+import { askFor, askGate, helpAskedEvent, isClassOnly } from '../../logic/access-copy';
+import { favoriteReplay, freeEndPrimary, practiceTarget } from '../../logic/free-end';
 import { nextStartedEvent, qualifiesForNext, routeNext, routeNextInputOf } from '../../logic/route-next';
 import { streakSessionDates } from '../../logic/sessions/session-log';
 import { computeStreak } from '../../logic/streak';
@@ -66,6 +68,9 @@ import { storyLockFor } from '../../logic/story/story-pick';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
+import { markFreeEndSeen, readFreeEndSeen } from '../../store/free-end-seen';
+import { gateOpensDirectlyNow } from '../../store/gate-now';
+import { useMembershipStore } from '../../store/membership-store';
 import { usePlacementRunStore } from '../../store/placement-run-store';
 import { usePlanStore } from '../../store/plan-store';
 import { pinMission, pinnedMission } from '../../store/mission-pin-store';
@@ -73,8 +78,12 @@ import { activeProfileSelector, useProfileStore } from '../../store/profile-stor
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
 import { useAccessTier, useQuestAccess } from '../../store/tier-store';
+import { PictureArt } from '../minigames/PictureArt';
 import { LinkButton } from '../placement/parts';
 import { PlanPromptCard, usePlanPrompt } from '../route/PlanPromptCard';
+import { firstFreeTopicKey } from '../vocab/topic-data';
+import { FreeEndCard } from './FreeEndCard';
+import { freeTopicsInBuild, samplerStoryOf } from './free-end-inputs';
 import { RouteStrip } from './RouteStrip';
 
 /** Avatar circle in the Profile entry; with its label the button clears the 64pt floor. */
@@ -91,6 +100,9 @@ const ICON_FOR: Record<MissionCard['kind'], 'replay' | 'play' | 'library' | 'sta
   story: 'library',
   'daily-test': 'star',
   explore: 'journey',
+  // F-ENT-003 E3-7: the free-end card draws its own card; a practice card leads with its replay icon (or the topic or story cover).
+  'free-end': 'star',
+  practice: 'replay',
 };
 /** The story card's cover thumbnail (F-STORY-004 §3.7), drawn where the icon sits. */
 const COVER_THUMB = 48;
@@ -111,11 +123,14 @@ const catchUpAnnounced = new Set<string>();
 function MissionTile({
   card,
   cover,
+  picture,
   onPress,
 }: {
   card: MissionCard;
   /** A story card's cover art; null or absent keeps the icon. */
   cover?: SceneArt | null;
+  /** A practice card's word topic cover (F-ENT-003 E3-7); absent keeps the icon. */
+  picture?: { pictureRef: string | undefined } | null;
   onPress: () => void;
 }): React.ReactElement {
   const m = useMessages();
@@ -140,6 +155,8 @@ function MissionTile({
         <View style={{ width: COVER_THUMB, alignItems: 'center' }}>
           {cover ? (
             <StoryScene art={cover} variant="thumb" width={COVER_THUMB} decorative testID={`home-mission-cover-${card.slot}`} />
+          ) : picture ? (
+            <PictureArt pictureRef={picture.pictureRef} gloss={title} size={COVER_THUMB} decorative />
           ) : (
             <Icon name={ICON_FOR[card.kind]} size={32} color={colors.text.secondary} />
           )}
@@ -193,7 +210,7 @@ function CatchUpCard({
 export function HomeScreen(): React.ReactElement {
   const m = useMessages();
   const locale = useLocale();
-  const { copy } = useAudience();
+  const { copy, audience } = useAudience();
   const profile = useProfileStore(activeProfileSelector);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const ensure = useProgressStore((s) => s.ensure);
@@ -233,6 +250,24 @@ export function HomeScreen(): React.ReactElement {
     // Quest sessions only: story, game and level-check time never moves the streak (F-REPORT-001 OD-19).
     return computeStreak(streakSessionDates(snap?.sessions ?? []));
   }, [snap]);
+
+  // The end of the free lessons (F-ENT-003 section 3.7): whether this device already celebrated it for
+  // the learner, read each time Home comes into focus (Results may have just shown it). Null while read.
+  const [freeEndSeen, setFreeEndSeen] = useState<boolean | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      if (!profile) return undefined;
+      let alive = true;
+      void readFreeEndSeen(profile.id).then((seen) => {
+        if (alive) setFreeEndSeen(seen);
+      });
+      return () => {
+        alive = false;
+      };
+    }, [profile]),
+  );
+  const freeTopics = useMemo(() => freeTopicsInBuild(), []);
+  const samplerStory = useMemo(() => samplerStoryOf(storyIndex), [storyIndex]);
 
   // Today's mission: the plan is pinned for the day so finishing one card never reshuffles the other
   // two under the learner (F-HW-001 §3.2). The pin lives in a session store keyed by profile and day,
@@ -276,6 +311,11 @@ export function HomeScreen(): React.ReactElement {
       }),
       // Card (2) is the one next; "Next in your plan" when it comes from a plan.
       route: routeInput,
+      // At the end of the free lessons: the celebration once, then the practice card (an unread key reads as seen).
+      freeEnd: {
+        seen: freeEndSeen !== false,
+        practice: practiceTarget({ snapshot: snap, today, quests: questsAll, episodes: episodesAll, freeTopics, samplerStory }),
+      },
       // The story card (F-STORY-004 §3.7): never a locked story; nothing is locked while gating is off.
       stories: {
         entries: storyIndex,
@@ -303,7 +343,7 @@ export function HomeScreen(): React.ReactElement {
     pinMission(merged);
     return merged;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, snap, tier, questOpen, routeInput, bookmarks, storyIndex]);
+  }, [profile, snap, tier, questOpen, routeInput, bookmarks, storyIndex, freeEndSeen, freeTopics, samplerStory]);
 
   // The route strip (F-ROUTE-001 R-4b, OD-3): built from `routeModelInput`, the same input as the
   // Learning Route page, so the strip and the page always name the same stage and pips.
@@ -340,6 +380,30 @@ export function HomeScreen(): React.ReactElement {
     void track({ name: event.name, profileId: mission.profileId, payload: event.payload });
   }, [mission]);
 
+  // Showing the celebration marks it for this profile and device and sends access.free_end_reached once (section 3.12).
+  const freeEndShown = mission?.cards.find((c) => c.kind === 'free-end');
+  useEffect(() => {
+    if (freeEndShown && profile) void markFreeEndSeen(profile.id, freeEndShown.placedOut === true);
+  }, [freeEndShown, profile]);
+  const memberships = useMembershipStore((s) => (profile ? s.byLearner[profile.id] : undefined));
+  const ask = askFor(audience, isClassOnly(memberships ?? []), m.learner.access);
+  const onAsk = (): void => {
+    void track(helpAskedEvent(profile?.id, 'home', ask.audience));
+    const gate = askGate(gateOpensDirectlyNow(), 'home');
+    if (gate.route === 'Paywall') navigation.navigate('Paywall', gate.params);
+    else navigation.navigate('PinEntry', gate.params);
+  };
+  const primary = freeEndPrimary(firstFreeTopicKey(), samplerStory);
+  const onFreeEndPrimary = (): void => {
+    if (primary?.kind === 'topic') navigation.navigate('VocabTopic', { topicKey: primary.topicKey });
+    else if (primary?.kind === 'story') navigation.navigate('QuestPlayer', { questId: primary.questId, episodeId: primary.episodeId });
+  };
+  const onFavoriteReplay = (): void => {
+    const quest = snap ? favoriteReplay(snap, questsAll, episodesAll) : null;
+    const episode = quest ? episodesAll.find((e) => e.questIds.includes(quest.id)) : undefined;
+    if (quest && episode) navigation.navigate('QuestPlayer', { questId: quest.id, episodeId: episode.id });
+  };
+
   // A story card opens through the one story-open plan (F-STORY-004 §3.2): the quest player, or the
   // unscored reader for "Read it again"; "Keep reading" resumes at the bookmark (PR 4.4b).
   const openStory = (card: MissionCard): boolean => {
@@ -353,6 +417,11 @@ export function HomeScreen(): React.ReactElement {
 
   const openCard = (card: MissionCard): void => {
     if (card.kind === 'story' && openStory(card)) return;
+    // A practice card of a word topic opens the topic page (F-ENT-003 section 3.7).
+    if (card.kind === 'practice' && card.topicKey) {
+      navigation.navigate('VocabTopic', { topicKey: card.topicKey });
+      return;
+    }
     // Card (2) naming the one next starts it from Home (F-ENT-003 section 3.12); a day-pinned older pick does not.
     if (profile && card.slot === 2 && next?.kind === 'quest' && card.questId === next.questId) {
       void track(nextStartedEvent(profile.id, next.source, 'home'));
@@ -452,12 +521,27 @@ export function HomeScreen(): React.ReactElement {
         <Spacer size="sm" />
         <View testID="home-missions" style={{ gap: spacing.sm }}>
           {mission.cards.map((card) => {
-            const entry = card.kind === 'story' && card.questId ? entryForQuest(storyIndex, card.questId) : undefined;
+            if (card.kind === 'free-end') {
+              return (
+                <FreeEndCard
+                  key={card.slot}
+                  primary={primary === null ? null : primary.kind === 'story' ? 'story' : 'practice'}
+                  onPrimary={onFreeEndPrimary}
+                  onReplay={onFavoriteReplay}
+                  askLabel={ask.label}
+                  onAsk={onAsk}
+                />
+              );
+            }
+            const storyQuest = card.kind === 'story' || card.practiceKind === 'story' ? card.questId : undefined;
+            const entry = storyQuest ? entryForQuest(storyIndex, storyQuest) : undefined;
+            const topicCover = card.topicKey ? freeTopics.find((t) => t.key === card.topicKey)?.cover : undefined;
             return (
               <MissionTile
                 key={card.slot}
                 card={card}
                 cover={entry ? storyCoverArt(entry.story) : null}
+                picture={topicCover ?? null}
                 onPress={() => openCard(card)}
               />
             );

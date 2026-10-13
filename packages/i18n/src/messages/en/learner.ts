@@ -1062,7 +1062,8 @@ export const learner = {
     playAgain: { cta: 'Play again' },
     startOver: { cta: 'Start over' },
     /** The state line of a tile or tale row: always words, never colour alone. */
-    state: { new: 'New', inProgress: 'Keep reading', finished: 'Finished', locked: 'Locked' },
+    /** `locked` is a tile outside the free set (switch on): the closed-lesson word of F-ENT-003 section 3.11, with the dotted ring. */
+    state: { new: 'New', inProgress: 'Keep reading', finished: 'Finished', locked: 'Not open yet' },
     minutes: { pill: (minutes: number) => `about ${minutes} min` },
     /**
      * The one label of a whole story tile: `title` is the story's title (content), `state` a `state`
@@ -1448,7 +1449,8 @@ export const learner = {
     readStory: { cta: 'Read a story' },
     replay: { cta: 'Play a favorite again' },
     home: { cta: 'Back home' },
-    practice: { subtitle: 'Keep practicing' },
+    /** `topicTitle`: the practice card names a free word topic, "Food words" (E3-D D10; a function, word order differs in ko and es). */
+    practice: { subtitle: 'Keep practicing', topicTitle: (title: string) => `${title} words` },
   },
   /**
    * The Stage 1 ceremony (F-QUEST-002 §3.8, wireframe results/stage1-complete): Hoya cheering, the
