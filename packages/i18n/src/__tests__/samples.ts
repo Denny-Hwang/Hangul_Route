@@ -453,6 +453,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'report.figure.up': [['last week'], ['all of the month before']],
   'report.growth.since': [['Sep 30, 2026', 1], ['Sep 30, 2026', 12]],
   'report.detail.lettersStrong': [['Mina'], ['Alexandria Kimberley']],
+  'report.detail.lettersMore': [[1], [120]],
   'report.detail.totals': [[1, 1], [12, 24]],
   'report.detail.milestone': [[1, 'Hangul', 'Sep 30, 2026'], [7, 'Self-expression', 'Sep 30, 2026']],
   'report.detail.levelCheckOn': [['Sep 30, 2026']],

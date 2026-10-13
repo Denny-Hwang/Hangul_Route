@@ -93,6 +93,7 @@ export const report = {
   },
   detail: {
     lettersStrong: (name: string) => `${name}: 잘 아는 글자`,
+    lettersMore: (n: number) => `그 밖에 글자 ${n}개 더`,
     lettersPractising: '연습하고 있는 글자',
     lettersNew: '이 기간에 새로 배운 글자',
     totals: (quests: number, cards: number) => `처음부터 지금까지: 퀘스트 ${quests}개, 카드 ${cards}장`,

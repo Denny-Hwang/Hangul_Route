@@ -28,6 +28,7 @@ import {
 } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, formatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { ApiResult, LearnerReportBody } from './api';
+import type { LearningRouteGoal } from './learning-route-view';
 import { startingSpotLine } from './placement';
 import { ROUTES, spaceIdFrom, type ReportFrom } from './routing';
 import { consoleWord } from './vocab-words';
@@ -281,8 +282,12 @@ export interface ReportLineView {
   sentence: ReportSentence;
   /** The strand tip under P2 (`report.tip`), else null. */
   tip: ReportSentence | null;
-  /** **Add to a plan** or **Open the plan**, for a console viewer with `plan.write` on a space that is not archived. */
-  action: ReportLink | null;
+  /**
+   * The line's action group (RP-7a2): **Add to a plan** (P1, only with a quest this build's catalogue names) or **Open
+   * the plan** (P3), for a console viewer with `plan.write` on a space that is not archived. Empty: no group is drawn.
+   * F-BROWSE-001 BR-11 appends **Preview** to P1's group; each action is described by the line's sentence on the page.
+   */
+  actions: ReportLink[];
 }
 
 const strandName = (strand: PlacementStrand, m: Messages): string => m.caregiver.placementReport.strand[strand];
@@ -303,7 +308,7 @@ const questTitleOf = (id: string, catalog: Catalog): string | null => catalog.qu
  * The sentence of one insight line (section 3.6), in the report's voice; null for a line this build cannot word (a
  * quest its catalogue does not hold). Actions are added by the page view, which knows the space and the viewer's role.
  */
-export function insightView(line: InsightLine, w: ReportWords): Omit<ReportLineView, 'action'> | null {
+export function insightView(line: InsightLine, w: ReportWords): Omit<ReportLineView, 'actions'> | null {
   const { m, name } = w;
   const i = m.report.insight;
   const you = w.voice === 'second' ? m.report.you.insight : null;
@@ -387,11 +392,17 @@ export interface ReportSpaceRef {
  * to the persona home, which is the space's roster until RP-7c (F-APP-001 A-5b) gives a family its parent home; the
  * console home when the space is not known (a failed load).
  */
-export function reportBackLink(from: ReportFrom | null, space: ReportSpaceRef | null, locale: UiLocale = DEFAULT_LOCALE): ReportLink {
+export function reportBackLink(
+  from: ReportFrom | null,
+  space: ReportSpaceRef | null,
+  locale: UiLocale = DEFAULT_LOCALE,
+  /** The kind the page's own prefix tells (`spaceKindOfPath`): with no space known, a `/parent/space…` page goes home to the parent console. */
+  pageKind?: 'family',
+): ReportLink {
   const back = getMessages(locale).report.back;
   // The parent home (F-APP-001 section 3.8, the app's route table): only RP-7c's parent home card sends `from=home`.
   if (from === 'home') return { href: APP_ROUTES.parentHome, text: back.home };
-  if (space === null) return { href: ROUTES.home, text: back.home };
+  if (space === null) return { href: pageKind === 'family' ? APP_ROUTES.parentHome : ROUTES.home, text: back.home };
   return { href: ROUTES.space(space.id, space.kind), text: back.space(space.name) };
 }
 
@@ -468,6 +479,11 @@ export interface ReportStepper {
 export interface ReportGlance {
   /** "Now on Stage 1: Hangul"; null without a readable stage. */
   nowOn: string | null;
+  /**
+   * The Learning Route goal line under "Now on" (LR-D, `stage-list.md`; RP-7a2 lands after LR-8, so it draws it):
+   * the flag only for a goal or a plan's destination (cases 1 and 2); null when the page has no goal to show.
+   */
+  goal: { line: string; flag: boolean } | null;
   /** "Last practice: Oct 12"; null when there is none (the empty state). */
   lastPractice: string | null;
   /** **Open Learning Route**, only when that page exists on this build. */
@@ -502,6 +518,8 @@ export interface ReportCalendarCellView {
 export interface ReportCalendarView {
   /** Blank cells before the first one in a Monday-first grid (a month; 0 for a week, which is a row). */
   lead: number;
+  /** The short weekday names, Monday first, in the console locale: the month grid's header row. */
+  weekdays: string[];
   cells: ReportCalendarCellView[];
   /** The visible sentence under the calendar: the practiced days, or "No practice days in this period." */
   practiced: string;
@@ -535,7 +553,8 @@ export interface ReportThisPeriod {
 export type ReportDetailBlock =
   /** "Since the start: 6 quests, 5 cards": leads the panel with no heading of its own (design pass #444). */
   | { kind: 'totals'; line: string }
-  | { kind: 'letters'; heading: string; letters: ReportLetter[]; more: number }
+  /** `moreLine`: "And N more letters" after the strong tiles when more are known than they show (RP-9 log), else null. */
+  | { kind: 'letters'; heading: string; letters: ReportLetter[]; more: number; moreLine: string | null }
   | { kind: 'lines'; heading: string; lines: string[] };
 
 export interface ReportMoreDetail {
@@ -590,6 +609,8 @@ export interface LearnerReportViewInput {
   tipGames?: ReportTipGames;
   /** The Learning Route stage list exists on this build (LR-8): the glance links to it. */
   learningRoute?: boolean;
+  /** The learner's Learning Route goal (`learningRouteView`'s card goal), when the page could read one. */
+  goal?: Pick<LearningRouteGoal, 'case' | 'line'> | null;
   catalog?: Catalog;
   locale?: UiLocale;
 }
@@ -634,6 +655,9 @@ function windowName(window: NonNullable<LearnerReport['window']>, w: ReportWords
   return rangeOf(window, w);
 }
 
+/** A Monday-first week of day keys (2024-01-01 was a Monday): only their weekday names are read. */
+const MONDAY_WEEK: readonly string[] = ['2024-01-01', '2024-01-02', '2024-01-03', '2024-01-04', '2024-01-05', '2024-01-06', '2024-01-07'];
+
 function calendarView(report: LearnerReport, w: ReportWords): ReportCalendarView | null {
   const cells = report.calendar;
   if (cells === null || cells.length === 0) return null;
@@ -646,6 +670,7 @@ function calendarView(report: LearnerReport, w: ReportWords): ReportCalendarView
   const a11y = w.m.a11y.report;
   return {
     lead,
+    weekdays: MONDAY_WEEK.map((day) => weekdayText(day, w.locale)),
     cells: cells.map((cell) => ({ ...cell, weekday: weekdayText(cell.day, w.locale), date: Number(cell.day.slice(8, 10)) })),
     practiced: practiced.length ? a11y.calendar(w.m.report.list(practiced)) : a11y.calendarNone,
     notSaved: unsaved.length ? a11y.notSaved(w.m.report.list(unsaved)) : null,
@@ -689,7 +714,7 @@ function detailView(report: LearnerReport, summary: ReportSummary, w: ReportWord
   const d = m.report.detail;
   const blocks: ReportDetailBlock[] = [{ kind: 'totals', line: d.totals(detail.totals.quests, detail.totals.cards) }];
   const letters = (heading: string, list: readonly string[], more = 0): void => {
-    if (list.length) blocks.push({ kind: 'letters', heading, letters: list.map(letterLabel), more });
+    if (list.length) blocks.push({ kind: 'letters', heading, letters: list.map(letterLabel), more, moreLine: more > 0 ? d.lettersMore(more) : null });
   };
   letters(d.lettersStrong(w.name), detail.lettersStrong, detail.lettersStrongMore);
   letters(d.lettersPractising, detail.lettersPractising);
@@ -777,12 +802,14 @@ export function learnerReportView(input: LearnerReportViewInput): LearnerReportV
     const out = insightView(line, w);
     if (out === null) return null;
     const links = 'links' in line ? line.links : undefined;
-    let action: ReportLink | null = null;
+    const actions: ReportLink[] = [];
     if (rights.planWrite && !archived && links) {
-      if ('addToPlan' in links) action = { href: `${ROUTES.spacePlan(space.id, undefined, space.kind)}&add=${encodeURIComponent(links.addToPlan)}`, text: m.report.action.addToPlan };
-      else action = { href: ROUTES.spacePlan(space.id, links.openPlan, space.kind), text: m.report.action.openPlan };
+      // A quest this build's catalogue lacks is never offered: the builder could not add it (design notes, RP-7a2).
+      if ('addToPlan' in links) {
+        if (questTitleOf(links.addToPlan, catalog) !== null) actions.push({ href: `${ROUTES.spacePlan(space.id, undefined, space.kind)}&add=${encodeURIComponent(links.addToPlan)}`, text: m.report.action.addToPlan });
+      } else actions.push({ href: ROUTES.spacePlan(space.id, links.openPlan, space.kind), text: m.report.action.openPlan });
     }
-    return { ...out, action };
+    return { ...out, actions };
   };
   const section = (heading: string, lines: InsightLine[]): ReportSection | null => {
     const views = lines.map(lineView).filter((line): line is ReportLineView => line !== null);
@@ -798,6 +825,7 @@ export function learnerReportView(input: LearnerReportViewInput): LearnerReportV
     const stage = report.glance?.nowOn ?? (report.state === 'empty' ? emptyStageOf(summary) : null);
     return {
       nowOn: stage ? m.report.glance.nowOn(stage.n, input.stageTitle(stage.stage)) : null,
+      goal: input.goal ? { line: input.goal.line, flag: input.goal.case !== 3 } : null,
       lastPractice: report.glance ? lastPracticeOf(summary, w) : null,
       route,
       region: m.console.learningRoute.section,
@@ -857,4 +885,71 @@ export function learnerReportView(input: LearnerReportViewInput): LearnerReportV
 function emptyStageOf(summary: ReportSummary): { stage: StageKey; n: number } | null {
   const parsed = StageKeySchema.safeParse(summary.journey?.here);
   return parsed.success ? { stage: parsed.data, n: StageKeySchema.options.indexOf(parsed.data) + 1 } : null;
+}
+
+// ---------------------------------------------------------------------------------------------
+// The page (RP-7a2)
+
+/**
+ * The roster card's **See report** (section 3.1): the week report with `from=roster`, ids only. Null when reports are
+ * off for this build or console locale (`reportsEnabled`), and for a school (its admin opens the class's report).
+ */
+export function rosterReportLink(opts: { spaceId: string; kind: SpaceKind; learnerId: string; enabled: boolean; locale?: UiLocale }): ReportLink | null {
+  if (!opts.enabled || viewerOf(opts.kind) === null) return null;
+  return {
+    href: ROUTES.learnerReport({ spaceId: opts.spaceId, learnerId: opts.learnerId, kind: opts.kind, period: 'week', from: 'roster' }),
+    text: getMessages(opts.locale ?? DEFAULT_LOCALE).report.action.seeReport,
+  };
+}
+
+/**
+ * The page's cache key: the report body is the learner's summary, the same for every period and step. The signed-in
+ * account is part of it, so a report one account loaded never shows for another in the same tab.
+ */
+export function reportCacheKey(accountId: string, spaceId: string, learnerId: string): string {
+  return JSON.stringify([accountId, spaceId, learnerId]);
+}
+
+/**
+ * What the page draws (section 3.14; design `learner-report.md`, States):
+ * - `state`: a page with no learner name to show (flag off, not available, a failed first load), so the state sentence
+ *   is its `h1`, under the back link; `retry` only for an error a new try can mend;
+ * - `loading`: the first load (tabs and Print disabled, skeletons);
+ * - `report`: the report from `data`; `busy` while a later period or step loads (only the panel is busy); `error`
+ *   when that load failed and the cached report stays on screen with the error as a state line, never a second `h1`;
+ * - `signedOut`: the session is gone; the page goes to sign-in.
+ */
+export type ReportScreen =
+  | { kind: 'state'; title: string; retry: string | null; back: ReportLink }
+  | { kind: 'loading'; back: ReportLink }
+  | { kind: 'report'; data: LearnerReportBody; busy: boolean; error: { message: string; retry: string } | null }
+  | { kind: 'signedOut' };
+
+export interface ReportScreenInput {
+  /** `reportsEnabled(locale)`. */
+  enabled: boolean;
+  query: ReportQuery;
+  /** The answer to the newest load; null while it runs. */
+  load: ApiResult<LearnerReportBody> | null;
+  /** The last report this page loaded for the same space and learner (`reportCacheKey`), else null. */
+  cached: LearnerReportBody | null;
+  locale?: UiLocale;
+  /** The kind the page's own prefix tells (`spaceKindOfPath`): the `/parent/space/learner` twin passes `family`. */
+  pageKind?: 'family';
+}
+
+export function reportScreenOf(input: ReportScreenInput): ReportScreen {
+  const locale = input.locale ?? DEFAULT_LOCALE;
+  const m = getMessages(locale);
+  const back = reportBackLink(input.query.from, null, locale, input.pageKind);
+  if (!input.enabled) return { kind: 'state', title: m.report.state.flagOff, retry: null, back };
+  if (!input.query.spaceId || !input.query.learnerId) return { kind: 'state', title: m.report.state.unavailable, retry: null, back };
+  const { load, cached } = input;
+  if (load === null) return cached ? { kind: 'report', data: cached, busy: true, error: null } : { kind: 'loading', back };
+  if (load.ok) return { kind: 'report', data: load.data, busy: false, error: null };
+  const problem = reportLoadProblem(load, locale);
+  if (problem.kind === 'signedOut') return { kind: 'signedOut' };
+  const message = problem.message ?? m.report.state.error;
+  if (problem.kind === 'error' && problem.retry !== null && cached) return { kind: 'report', data: cached, busy: false, error: { message, retry: problem.retry } };
+  return { kind: 'state', title: message, retry: problem.retry, back };
 }

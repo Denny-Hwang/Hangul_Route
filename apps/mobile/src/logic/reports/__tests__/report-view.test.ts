@@ -188,7 +188,7 @@ describe('inAppReportView: a steady week, third person', () => {
     const blocks = view.moreDetail?.blocks;
     expect(view.moreDetail?.button).toBe('More detail');
     expect(blocks?.[0]).toEqual({ kind: 'totals', line: 'Since the start: 6 quests, 5 cards' });
-    expect(block(blocks, 'strong')).toMatchObject({ heading: 'Letters Sam knows well', more: 0 });
+    expect(block(blocks, 'strong')).toMatchObject({ heading: 'Letters Sam knows well', more: 0, moreLine: null });
     const strong = block(blocks, 'strong');
     expect(strong?.kind === 'letters' ? strong.tiles.map((t) => t.letter) : []).toEqual(['ㅏ', 'ㅓ', 'ㄱ', 'ㄴ']);
     const practising = block(blocks, 'practising');
@@ -230,6 +230,15 @@ describe('inAppReportView: the second voice (OD-17)', () => {
     expect(texts(view.wentWell?.lines)[0]).toBe('You got strong on ㅏ (a) and ㅓ (eo).');
     expect(block(view.moreDetail?.blocks, 'strong')).toMatchObject({ heading: 'Letters you know well' });
     expect(block(view.moreDetail?.blocks, 'plan')).toMatchObject({ lines: ['Plans and homework: 3 done, 2 ready to play', 'Own route: 1 done, 3 ready to play'] });
+  });
+
+  it('"And N more letters" after the strong tiles only when more are known than the 24 shown, in either voice', () => {
+    const ALL = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ', 'ㅏ', 'ㅑ', 'ㅓ', 'ㅕ', 'ㅗ', 'ㅛ', 'ㅜ', 'ㅠ', 'ㅡ', 'ㅣ', 'ㄲ', 'ㄸ', 'ㅃ'];
+    const strongOf = (count: number, voice: 'second' | 'third'): ReportDetailBlock | undefined =>
+      block(inAppReportView(input({ voice, summary: summary({ jamoRecognized: ALL.slice(0, count) }) })).moreDetail?.blocks, 'strong');
+    expect(strongOf(24, 'second')).toMatchObject({ more: 0, moreLine: null });
+    expect(strongOf(25, 'second')).toMatchObject({ more: 1, moreLine: 'And 1 more letter' });
+    expect(strongOf(27, 'third')).toMatchObject({ more: 3, moreLine: 'And 3 more letters' });
   });
 
   it('the empty state talks to the learner', () => {

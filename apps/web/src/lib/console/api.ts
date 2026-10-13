@@ -561,7 +561,8 @@ const isPlainRecord = (value: unknown): value is Record<string, unknown> => type
  */
 export interface LearnerReportBody {
   space: Pick<LearnerReportResponse['space'], 'id' | 'kind' | 'name' | 'archivedAt'>;
-  learner: Pick<LearnerReportResponse['learner'], 'id' | 'displayName'>;
+  /** `avatar` only for the title's decorative chip (RP-7a2); null when the Worker sends a value this bundle cannot read. */
+  learner: Pick<LearnerReportResponse['learner'], 'id' | 'displayName'> & { avatar: string | null };
   summary: ReportSummary | null;
   lastSyncedAt: string | null;
   serverTime: string;
@@ -579,7 +580,7 @@ function reportEnvelopeOf(raw: Record<string, unknown>): Omit<LearnerReportBody,
   if (!isStringOrNull(lastSyncedAt) || typeof serverTime !== 'string') return null;
   return {
     space: { id: space.id, kind: kind.data, name: space.name, archivedAt: space.archivedAt },
-    learner: { id: learner.id, displayName: learner.displayName },
+    learner: { id: learner.id, displayName: learner.displayName, avatar: typeof learner.avatar === 'string' ? learner.avatar : null },
     lastSyncedAt,
     serverTime,
   };

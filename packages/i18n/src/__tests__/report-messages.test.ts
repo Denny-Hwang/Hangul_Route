@@ -402,6 +402,7 @@ const COUNTED: readonly [string, (m: Messages, n: number) => string][] = [
   ['report.detail.totals (quests)', (m, n) => m.report.detail.totals(n, 7)],
   ['report.detail.totals (cards)', (m, n) => m.report.detail.totals(7, n)],
   ['report.growth.since', (m, n) => m.report.growth.since('Oct 9', n)],
+  ['report.detail.lettersMore', (m, n) => m.report.detail.lettersMore(n)],
   ['report.class.headline', (m, n) => m.report.class.headline(0, n, 'this week')],
   ['report.class.learners', (m, n) => m.report.class.learners(n)],
   ['report.class.olderApp', (m, n) => m.report.class.olderApp(n)],
