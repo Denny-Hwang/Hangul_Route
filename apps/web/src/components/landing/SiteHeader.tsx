@@ -93,7 +93,8 @@ export function SiteHeader({ locale, current, variant = 'default' }: SiteHeaderP
             >
               {t.brand.mark}
             </span>
-            <span className="hr-site-brand-name" style={{ fontWeight: typography.weight.bold, fontSize: rem(typography.size.bodyLg), whiteSpace: 'nowrap' }}>
+            {/* The name may wrap: with large text in a font wider than the system one, one line could pass 320 px. */}
+            <span className="hr-site-brand-name" style={{ fontWeight: typography.weight.bold, fontSize: rem(typography.size.bodyLg) }}>
               {t.brand.name}
             </span>
           </Link>

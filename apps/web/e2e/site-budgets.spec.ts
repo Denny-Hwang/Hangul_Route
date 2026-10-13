@@ -65,6 +65,21 @@ async function headerRows(page: Page): Promise<{ height: number; rows: number }>
   });
 }
 
+/** Elements whose right edge is past the viewport, named, so a failure points at the cause. */
+async function overflowing(page: Page, width: number): Promise<string> {
+  return page.evaluate((limit) => {
+    const names: string[] = [];
+    for (const el of Array.from(document.body.querySelectorAll('*'))) {
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 0 && rect.right > limit + 0.5) {
+        const cls = el.className && typeof el.className === 'string' ? `.${el.className.split(' ')[0]}` : '';
+        names.push(`<${el.tagName.toLowerCase()}${cls}> "${(el.textContent ?? '').trim().slice(0, 30)}" right=${Math.round(rect.right)}`);
+      }
+    }
+    return names.slice(0, 5).join('; ');
+  }, width);
+}
+
 async function setText200(page: Page): Promise<void> {
   const client = await page.context().newCDPSession(page);
   await client.send('Page.setFontSizes', { fontSizes: { standard: TEXT_200, fixed: TEXT_200 } });
@@ -133,8 +148,9 @@ for (const budget of PAGES) {
         expect(rows).toBeGreaterThanOrEqual(1);
         expect(rows).toBeLessThanOrEqual(2);
         const { doc, body } = await page.evaluate(() => ({ doc: document.documentElement.scrollWidth, body: document.body.scrollWidth }));
-        expect(doc).toBeLessThanOrEqual(width);
-        expect(body).toBeLessThanOrEqual(width);
+        const culprits = doc > width || body > width ? await overflowing(page, width) : '';
+        expect(doc, culprits).toBeLessThanOrEqual(width);
+        expect(body, culprits).toBeLessThanOrEqual(width);
         const primary = await primaryOf(page, budget).boundingBox();
         expect((primary?.x ?? -1) + (primary?.width ?? Infinity), 'the primary action is not clipped').toBeLessThanOrEqual(width);
       });
