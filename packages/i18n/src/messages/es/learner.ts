@@ -953,6 +953,7 @@ export const learner = {
       new: 'Nueva',
       later: 'Más adelante',
       cursor: 'Siguiente',
+      notOpen: 'Aún sin abrir',
     },
     gains: { stars: 'Estrellas', cards: 'Tarjetas', stories: 'Historias leídas' },
     storiesNote: 'Las historias del patrimonio están abiertas siempre.',

@@ -285,9 +285,11 @@ const SAMPLES: Record<string, unknown[][]> = {
   'caregiver.journey.endOfRoad': NAMES.map((n) => [n]),
   'caregiver.journey.error': NAMES.map((n) => [n]),
   'a11y.myRoute.routeCard': [
-    ['Now: Stage 1 · Hangul', 'Goal: Stage 2 · Words', "From your class's weekly plan", 'Some quests done, more are ready', 'Next: Family at the Table'],
-    ['Stage 1 · Hangul: you are in your goal stage', null, "Hoya's suggestion", 'Ready when you are', null],
+    [null, 'Now: Stage 1 · Hangul', 'Goal: Stage 2 · Words', "From your class's weekly plan", null, 'Some quests done, more are ready', 'Next: Family at the Table'],
+    ['Your Learning Route starts here.', 'Stage 1 · Hangul: you are in your goal stage', null, "Hoya's suggestion", null, 'Ready when you are', null],
+    [null, 'Stage 1 · Hangul: Sam is in the goal stage', null, "From the class's weekly plan", 'Plan ends Dec 20', 'Some quests done', null],
   ],
+  'a11y.myRoute.labelled': [['Now', 'Stage 1 · Hangul'], ['Goal', 'Explore Stage 2 · Words']],
 };
 
 /** Every string the drafts can render, with the realistic arguments it was called with. */
@@ -570,6 +572,26 @@ describe('routeCardCopy (Learning Route amendment sections 4.3, 6.2 and 10; LR-3
     expect(routeCardCopy(m, grownup, { nextTitle: null }).hoya).toBe('Sam reached the end of the open road. More is coming.');
   });
 
+  it('no goal left but a quest still next: the card names Next and drops the end-of-road sentence, so it matches its button', () => {
+    const m = model(ALL_8, { routeNext: nextQuest('quest:stage1-life-q2', 'episode:stage1-life', 'stage1') });
+    expect(m.goal).toBeNull();
+    expect(m.nextKind).toBe('quest');
+    expect(routeCardCopy(m, withGoal(self, m), { nextTitle: 'Family at the Table' })).toEqual({
+      hoya: null,
+      where: null,
+      from: null,
+      planEnds: null,
+      canDo: null,
+      tasteLine: null,
+      next: 'Next: Family at the Table',
+      a11yLabel: 'Next: Family at the Table.',
+    });
+    expect(routeCardCopy(m, grownup, { nextTitle: 'Family at the Table' }).next).toBe('Next: Family at the Table');
+    expect(routeCardCopy(m, grownup, { nextTitle: 'Family at the Table' }).hoya).toBeNull();
+    // Without a title to name, the end-of-road sentence stays.
+    expect(routeCardCopy(m, withGoal(self, m), { nextTitle: null }).hoya).toBe('You reached the end of the open road. More is coming.');
+  });
+
   it('free-end: the goal line only (no Now line, never collapsed), no can-do line and no Next', () => {
     const m = model(STAGE1_8, { routeNext: { kind: 'free-end', placedOut: false } }, BUNDLE_8, { stageDoneAt: { stage1: '2026-10-01T00:00:00.000Z' } });
     expect(m.goal?.stage).toBe(m.stages.find((s) => s.here)?.stage);
@@ -638,7 +660,20 @@ describe('the goal tag and the goal pips in words (sections 4.3 and 10, LR-3b)',
     expect(goalPipsWord(row(model(APPENDIX_C), 'stage1').pips, self)).toBe('Some quests done, more are ready');
     expect(goalPipsWord(row(model(STAGE1_8), 'stage1').pips, self)).toBe('Every quest here is done');
     expect(goalPipsWord(row(model([], { route: seed(STAGE1_8) }), 'stage1').pips, self)).toBe('Every quest here is done');
-    expect(goalPipsWord([], self)).toBe('Ready when you are');
-    expect(goalPipsWord([], grownup)).toBe('Ready when Sam is');
+    expect(goalPipsWord(row(model([]), 'stage1').pips, grownup)).toBe('Ready when Sam is');
+  });
+
+  it('never says "ready" when nothing is: no quest pips, or no open or new pip left', () => {
+    expect(goalPipsWord([], self)).toBeNull();
+    expect(goalPipsWord([], grownup)).toBeNull();
+    // Some quests done and the rest not open yet (a free learner past the free lessons).
+    const closed = model(APPENDIX_C, { isQuestOpen: (id: string) => APPENDIX_C.includes(id) });
+    expect(row(closed, 'stage1').pips.some((p) => p.state === 'open' || p.state === 'new')).toBe(false);
+    expect(goalPipsWord(row(closed, 'stage1').pips, self)).toBe('Some quests done');
+    expect(goalPipsWord(row(closed, 'stage1').pips, grownup)).toBe('Some quests done');
+    // Nothing done and nothing open: no pips word at all.
+    const none = model([], { isQuestOpen: () => false });
+    expect(goalPipsWord(row(none, 'stage1').pips, self)).toBeNull();
+    expect(goalPipsWord(row(none, 'stage1').pips, grownup)).toBeNull();
   });
 });

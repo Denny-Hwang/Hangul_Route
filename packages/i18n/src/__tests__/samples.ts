@@ -404,9 +404,11 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'caregiver.journey.endOfRoad': [['Sam']],
   'caregiver.journey.error': [['Sam']],
   'a11y.myRoute.routeCard': [
-    ['Now: Stage 1 · Hangul', 'Goal: Stage 2 · Words', "From your class's weekly plan", 'Some quests done, more are ready', 'Next: Family at the Table'],
-    ['Stage 1 · Hangul: you are in your goal stage', null, "Hoya's suggestion", 'Ready when you are', null],
+    [null, 'Now: Stage 1 · Hangul', 'Goal: Stage 2 · Words', "From your class's weekly plan", null, 'Some quests done, more are ready', 'Next: Family at the Table'],
+    ['Your Learning Route starts here.', 'Stage 1 · Hangul: you are in your goal stage', null, "Hoya's suggestion", null, 'Ready when you are', null],
+    [null, 'Stage 1 · Hangul: Sam is in the goal stage', null, "From the class's weekly plan", 'Plan ends Dec 20', 'Some quests done', null],
   ],
+  'a11y.myRoute.labelled': [['Now', 'Stage 1 · Hangul'], ['Goal', 'Explore Stage 2 · Words']],
   'learner.results.extraCards.title': [[1], [4]],
   'learner.results.extraCards.episodeDone': [['Meet the Letters']],
   'learner.results.extraCards.more': [[1], [3]],

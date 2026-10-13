@@ -117,11 +117,16 @@ export const DRAFT_EN: MyRouteMessages = {
       [`Stage ${order}, ${title}.`, `${stateWord}.`, here ? `${name} is here.` : '', goal ? `${name}'s goal.` : '', start ? `${name} started here.` : '', played > 0 ? `${quests(played)} played.` : '']
         .filter((part) => part !== '')
         .join(' '),
-    routeCard: (nowText, goalText, fromText, pipsText, nextText) =>
-      [nowText, goalText, fromText, pipsText, nextText]
+    routeCard: (hoyaText, nowText, goalText, fromText, planEndsText, pipsText, nextText) =>
+      [
+        hoyaText,
+        ...[nowText, goalText, fromText, planEndsText, pipsText, nextText]
+          .filter((part): part is string => part !== null && part !== '')
+          .map((part) => `${part.replace(/ · /g, ', ').replace(/[.!]$/, '')}.`),
+      ]
         .filter((part): part is string => part !== null && part !== '')
-        .map((part) => `${part.replace(/ · /g, ', ').replace(/[.!]$/, '')}.`)
         .join(' '),
-    goalPips: { none: 'Ready when you are', some: 'Some quests done, more are ready', all: 'Every quest here is done' },
+    labelled: (label, line) => `${label}: ${line}`,
+    goalPips: { none: 'Ready when you are', some: 'Some quests done, more are ready', someDone: 'Some quests done', all: 'Every quest here is done' },
   },
 };

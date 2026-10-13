@@ -199,16 +199,34 @@ export const a11y = {
     rowStarted: (n: number, band: string, date: string) => `Started: Stage ${n}, ${band}, ${date}.`,
     /**
      * The route card read as one summary (AMENDMENTS-ROUTE-LEARNING-ROUTE section 10, LR-3b): the
-     * visible parts in order, each one a sentence; a part that is not shown is passed as null. The
-     * middle dot of the visible lines is read as a comma ("Goal: Stage 2, Words").
+     * Hoya sentence as written, then the visible parts in order, each one a sentence; a part that is
+     * not shown is passed as null. The middle dot of the visible lines is read as a comma
+     * ("Goal: Stage 2, Words").
      */
-    routeCard: (nowText: string | null, goalText: string | null, fromText: string | null, pipsText: string | null, nextText: string | null) =>
-      [nowText, goalText, fromText, pipsText, nextText]
+    routeCard: (
+      hoyaText: string | null,
+      nowText: string | null,
+      goalText: string | null,
+      fromText: string | null,
+      planEndsText: string | null,
+      pipsText: string | null,
+      nextText: string | null,
+    ) =>
+      [
+        hoyaText,
+        ...[nowText, goalText, fromText, planEndsText, pipsText, nextText]
+          .filter((part): part is string => part !== null && part !== '')
+          .map((part) => `${part.replace(/ · /g, ', ').replace(/[.!]$/, '')}.`),
+      ]
         .filter((part): part is string => part !== null && part !== '')
-        .map((part) => `${part.replace(/ · /g, ', ').replace(/[.!]$/, '')}.`)
         .join(' '),
-    /** The goal stage's pips in one label, without digits. */
-    goalPips: { none: 'Ready when you are', some: 'Some quests done, more are ready', all: 'Every quest here is done' },
+    /** One labelled line of the route card's where block, read as "Goal: Stage 2 · Words". */
+    labelled: (label: string, line: string) => `${label}: ${line}`,
+    /**
+     * The goal stage's pips in one label, without digits. `someDone` is for some quests done and none
+     * of the rest open yet, so the label never says "more are ready" when none is.
+     */
+    goalPips: { none: 'Ready when you are', some: 'Some quests done, more are ready', someDone: 'Some quests done', all: 'Every quest here is done' },
   },
   /**
    * The vocabulary question view (F-VOC-004 §3.8, S-4b): the speaker, the outcome said in words after a

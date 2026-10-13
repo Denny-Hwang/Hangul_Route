@@ -56,13 +56,14 @@ export interface PipContext {
 }
 
 function questPip(entry: RouteEntry, ctx: PipContext): Pip {
-  const state = pipStateOf({
+  const facts: PipFacts = {
     done: ctx.done.has(entry.questId),
     placedOut: ctx.placedOut.has(entry.questId),
     joinedAfterLatch: ctx.latched.has(entry.stage),
     offerable: ctx.isEntitled(entry.stage),
     notOpen: ctx.isQuestOpen !== undefined && !ctx.isQuestOpen(entry.questId),
-  });
+  };
+  const state = pipStateOf(facts);
   return {
     key: entry.questId,
     kind: 'quest',
@@ -71,8 +72,10 @@ function questPip(entry: RouteEntry, ctx: PipContext): Pip {
     state,
     isCursor: entry.questId === ctx.cursorId,
     isStart: ctx.startId != null && entry.questId === ctx.startId,
-    // A playable quest that cannot be played reads "Not open yet", never "Coming later".
-    ...(state === 'later' ? { laterReason: 'notOpen' as const } : {}),
+    // A quest the access check closed reads "Not open yet", never "Coming later" (section 4.5).
+    // A quest that is `later` for another reason (a stage the learner is not entitled to under
+    // the `tier` cursor rule) carries no reason, as before this amendment.
+    ...(state === 'later' && facts.notOpen === true ? { laterReason: 'notOpen' as const } : {}),
   };
 }
 

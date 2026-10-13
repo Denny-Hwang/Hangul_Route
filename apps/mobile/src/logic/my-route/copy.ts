@@ -94,8 +94,17 @@ export interface GrownupJourneyMessages {
 export interface MyRouteA11yMessages {
   stage: (order: number, title: string, stateWord: string, here: boolean, start: boolean, played: number, goal?: boolean) => string;
   stageGrownup: (name: string, order: number, title: string, stateWord: string, here: boolean, start: boolean, played: number, goal?: boolean) => string;
-  routeCard: (nowText: string | null, goalText: string | null, fromText: string | null, pipsText: string | null, nextText: string | null) => string;
-  goalPips: { none: string; some: string; all: string };
+  routeCard: (
+    hoyaText: string | null,
+    nowText: string | null,
+    goalText: string | null,
+    fromText: string | null,
+    planEndsText: string | null,
+    pipsText: string | null,
+    nextText: string | null,
+  ) => string;
+  labelled: (label: string, line: string) => string;
+  goalPips: { none: string; some: string; someDone: string; all: string };
 }
 
 export interface MyRouteMessages {
@@ -357,18 +366,24 @@ export interface RouteCardExtra {
 
 /**
  * The goal pips in words, without digits: none filled, some, or every quest of
- * the stage. Known pips count as filled. About a child, "none" reads "Ready
- * when Sam is" (the other two never say "you").
+ * the stage. Known pips count as filled; only `open` and `new` pips count as
+ * ready, so the words never promise a quest that is not open yet. About a
+ * child, "none" reads "Ready when Sam is" (the other words never say "you").
+ * Null when the words would not be true: a stage with no quest pips, or none
+ * filled and none ready.
  */
-export function goalPipsWord(pips: readonly Pip[], ctx: CopyContext): string {
+export function goalPipsWord(pips: readonly Pip[], ctx: CopyContext): string | null {
   const words = ctx.m.a11y.goalPips;
   const quests = pips.filter((p) => p.kind === 'quest');
   const filled = quests.filter((p) => p.state === 'done' || p.state === 'known').length;
-  if (filled === 0) return isGrownup(ctx) ? ctx.m.grownup.ready(ctx.name) : words.none;
-  return filled === quests.length ? words.all : words.some;
+  const ready = quests.some((p) => p.state === 'open' || p.state === 'new');
+  if (quests.length === 0) return null;
+  if (filled === quests.length) return words.all;
+  if (filled === 0) return ready ? (isGrownup(ctx) ? ctx.m.grownup.ready(ctx.name) : words.none) : null;
+  return ready ? words.some : words.someDone;
 }
 
-const labelled = (l: RouteCardLine): string => (l.label === null ? l.line : `${l.label}: ${l.line}`);
+const labelled = (l: RouteCardLine, ctx: CopyContext): string => (l.label === null ? l.line : ctx.m.a11y.labelled(l.label, l.line));
 
 export function routeCardCopy(model: MyRouteModel, ctx: CopyContext, extra: RouteCardExtra): RouteCardCopy {
   const { learner, grownup, a11y } = ctx.m;
@@ -378,6 +393,12 @@ export function routeCardCopy(model: MyRouteModel, ctx: CopyContext, extra: Rout
   const goalRow = goal === null ? undefined : model.stages.find((s) => s.stage === goal.stage);
 
   if (goal === null || goalRow === undefined) {
+    if (model.nextKind === 'quest' && extra.nextTitle !== null) {
+      // No open stage is left to aim for, yet a quest is still next (a placed-out quest, a plan item):
+      // the card names it and says nothing about the end of the road, so its words match its button.
+      const next = g ? grownup.next(extra.nextTitle) : learner.hero.next(extra.nextTitle);
+      return { hoya: null, where: null, from: null, planEnds: null, canDo: null, tasteLine: null, next, a11yLabel: a11y.routeCard(null, null, null, null, null, null, next) };
+    }
     // The end of the open road: the card's only sentence (the rest sentence is dropped).
     const hoya = g ? grownup.endOfRoad(ctx.name) : learner.goal.endOfRoad;
     return { hoya, where: null, from: null, planEnds: null, canDo: null, tasteLine: null, next: null, a11yLabel: hoya };
@@ -423,9 +444,8 @@ export function routeCardCopy(model: MyRouteModel, ctx: CopyContext, extra: Rout
     else next = goal.reached ? learner.goal.keepGoing(extra.nextTitle) : learner.hero.next(extra.nextTitle);
   }
 
-  const nowText = where.kind === 'collapsed' ? where.line : where.now === null ? null : labelled(where.now);
-  const goalText = where.kind === 'collapsed' ? null : labelled(where.goal);
-  const fromText = [from, planEnds].filter((part): part is string => part !== null).join('. ');
-  const summary = a11y.routeCard(nowText, goalText, fromText, goalPipsWord(model.goalPips, ctx), next);
-  return { hoya, where, from, planEnds, canDo, tasteLine, next, a11yLabel: hoya === null ? summary : `${hoya} ${summary}` };
+  const nowText = where.kind === 'collapsed' ? where.line : where.now === null ? null : labelled(where.now, ctx);
+  const goalText = where.kind === 'collapsed' ? null : labelled(where.goal, ctx);
+  const a11yLabel = a11y.routeCard(hoya, nowText, goalText, from, planEnds, goalPipsWord(model.goalPips, ctx), next);
+  return { hoya, where, from, planEnds, canDo, tasteLine, next, a11yLabel };
 }
