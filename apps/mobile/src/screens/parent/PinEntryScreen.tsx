@@ -178,6 +178,16 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       const { profileId } = route.params;
       if (profileId === undefined) navigation.goBack();
       else navigation.replace('RouteProposal', { source: 'profile', profileId });
+    } else if (route.params.next === 'NoteReport') {
+      // "Tell a grown-up" on a note page (F-FEEDBACK-001 section 6.10 item 4): the report sheet of that note.
+      const { noteId, profileId, noteVia } = route.params;
+      if (noteId === undefined || profileId === undefined) navigation.goBack();
+      else navigation.replace('NoteReport', { noteId, profileId, via: noteVia ?? 'note_page' });
+    } else if (route.params.next === 'NotesGrownUp') {
+      // Notes for <learner> after the session lapsed (F-FEEDBACK-001 section 6.10 item 2).
+      const { profileId } = route.params;
+      if (profileId === undefined) navigation.replace('ParentDashboard');
+      else navigation.replace('NotesGrownUp', { profileId });
     } else if (route.params.next === 'ExternalLink') {
       // Back to Sources with the gate open: native opens the waiting link, the web asks for one more tap (F-STORY-002 §3.8).
       navigation.goBack();
