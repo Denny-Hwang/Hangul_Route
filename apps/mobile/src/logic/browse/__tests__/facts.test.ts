@@ -279,6 +279,30 @@ describe('itemFacts: quest', () => {
     }
   });
 
+  it('a Build a Letter syllable that is a bundle word is listed under Words with its gloss; a block that is not a word stays a syllable (section 4.6)', () => {
+    // Content anchors (change with the content): Lunch Box Words builds 산, 달 and 곰, which are words of the
+    // bundled word topics; Meet a, eo, g, n builds 거, which is not a word.
+    const lunch = { quest: quest('quest:stage2-life-q1') };
+    expect(scopesOf(lunch.quest).some(({ scope }) => scope.kind === 'build-letter')).toBe(true);
+    const facts = questFacts(lunch.quest.id);
+    const glossOf = (ko: string, locale: 'en' | 'es' = 'en'): string => {
+      const item = bundle.vocabItems.find((i) => i.ko === ko);
+      return item ? localizedGloss(item, locale) : '';
+    };
+    for (const ko of ['산', '달', '곰']) {
+      const item = bundle.vocabItems.find((i) => i.ko === ko);
+      expect(item, ko).toBeDefined();
+      expect(facts.words, ko).toContainEqual({ ko, romanization: item?.romanization, gloss: glossOf(ko) });
+      expect(facts.syllables.map((s) => s.ko), ko).not.toContain(ko);
+    }
+    const es = questFacts(lunch.quest.id, 'es');
+    expect(es.words.find((w) => w.ko === '곰')?.gloss).toBe(glossOf('곰', 'es'));
+    expect(questFacts(Q1).syllables.map((s) => s.ko)).toContain('거');
+    // a word of a draft topic is not a bundle word: the syllable stays a syllable
+    const noWords = itemFacts({ kind: 'quest', id: lunch.quest.id }, { ...bundle, vocabItems: [] }) as QuestFacts;
+    expect(noWords.syllables.map((s) => s.ko)).toEqual(expect.arrayContaining(['산', '달', '곰']));
+  });
+
   it('Discover glosses follow the UI language; the Korean and its romanization never change', () => {
     const es = questFacts(Q1, 'es');
     expect(es.words[0]).toEqual(asWord(discoverOf(quest(Q1), 'es')[0] as { ko: string; romanization: string; en: string }));
