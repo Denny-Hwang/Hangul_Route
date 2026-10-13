@@ -36,13 +36,18 @@ async function profileIdOf(page: Page, name: string): Promise<string> {
 
 /**
  * A family device whose learner practiced on two days, yesterday and today, so the report reads as a practicing
- * learner (with one day ever it says "just getting started", section 3.5 item 5). The browser clock starts a day
- * back: the onboarding quest's session falls yesterday; then the clock moves to now and the learner opens Home's
- * new-letters quest, a second session today. Ends on the grown-up dashboard, the PIN entered.
+ * learner (with one day ever it says "just getting started", section 3.5 item 5). The browser clock starts at noon
+ * of the previous calendar day in the browser's own time zone (never "now minus 24 hours", which a 23-hour DST day
+ * turns into two days back): the onboarding quest's session falls yesterday; then the clock moves to now and the
+ * learner opens Home's new-letters quest, a second session today. Ends on the grown-up dashboard, the PIN entered.
  */
 async function familyDashboard(page: Page, name = 'Mina'): Promise<string> {
   const now = Date.now();
-  await page.clock.install({ time: new Date(now - 24 * 3600_000) });
+  const yesterdayNoon = await page.evaluate(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1, 12).getTime();
+  });
+  await page.clock.install({ time: new Date(yesterdayNoon) });
   await onboardChild(page, { name });
   const id = await profileIdOf(page, name);
   await page.clock.setSystemTime(new Date(now));
@@ -59,15 +64,16 @@ async function familyDashboard(page: Page, name = 'Mina'): Promise<string> {
 function yesterdayThisMonth(page: Page): Promise<boolean> {
   return page.evaluate(() => {
     const today = new Date();
-    const yesterday = new Date(today.getTime() - 24 * 3600_000);
+    const yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1, 12);
     return yesterday.getMonth() === today.getMonth();
   });
 }
 
-/** The device's own local day key (YYYY-MM-DD), from the same `Date` getters the app uses; `back` days before today. */
+/** The device's own local day key (YYYY-MM-DD), from the same `Date` getters the app uses; `back` calendar days before today. */
 function localToday(page: Page, back = 0): Promise<string> {
   return page.evaluate((days) => {
-    const d = new Date(Date.now() - days * 24 * 3600_000);
+    const today = new Date();
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - days, 12);
     const pad = (n: number): string => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   }, back);
@@ -184,7 +190,7 @@ test.describe('the in-app report on a self-only device', () => {
     await page.goto('/');
     await expect(page.getByText('Hi, Sam!')).toBeVisible();
     const guide = page.getByTestId('install-guide');
-    await page.waitForTimeout(800);
+    await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
     if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
     await page.getByRole('button', { name: 'Profile and settings' }).click();
     await page.getByRole('button', { name: /^Account & backup/ }).click();
@@ -252,34 +258,43 @@ for (const timezoneId of ['Pacific/Kiritimati', 'Pacific/Pago_Pago'] as const) {
  * eligible for the back-forward cache), so in Safari a closed tab's session end stays best effort, as
  * `app-visibility.web.ts` documents: the session is never joined again and its day still counts.
  */
-/** Reads the lifecycle record from a fresh page of the context, polling: WebKit hands another page's write over a moment later. */
+/**
+ * Reads the lifecycle record from a fresh page of the context, which has no recorder: the recorder is a page-scoped
+ * init script, so reloading the reader can never write the events it looks for. Polls with a reload of the reader
+ * only, since WebKit hands another page's write over a moment later.
+ */
 async function readLifecycle(page: Page): Promise<string[]> {
+  const reader = await page.context().newPage();
+  await reader.goto('/');
   const read = async (): Promise<string[]> => {
-    const raw = await page.evaluate(() => localStorage.getItem('e2e:lifecycle'));
+    const raw = await reader.evaluate(() => localStorage.getItem('e2e:lifecycle'));
     return raw === null ? [] : (JSON.parse(raw) as string[]);
   };
   await expect
     .poll(async () => {
       const seen = await read();
-      if (!seen.includes('pagehide')) await page.reload();
+      if (!seen.includes('pagehide')) await reader.reload();
       return seen;
     })
     .toEqual(expect.arrayContaining(['pagehide', 'visibility:hidden']));
-  return read();
+  const seen = await read();
+  await reader.close();
+  return seen;
 }
 
+/** Closes the app's tab, then reads the record from a fresh page. */
 async function closeTabAndReadLifecycle(page: Page): Promise<string[]> {
   const context = page.context();
+  const keep = await context.newPage();
   await page.close({ runBeforeUnload: true });
-  const next = await context.newPage();
-  await next.goto('/');
-  return readLifecycle(next);
+  const seen = await readLifecycle(keep);
+  await keep.close();
+  return seen;
 }
 
-/** Leaves the app for another page (a link out, the address bar), then comes back and reads the record. */
+/** Leaves the app for another page (a link out, the address bar), then reads the record from a fresh page. */
 async function leaveAndReadLifecycle(page: Page): Promise<string[]> {
   await page.goto('about:blank');
-  await page.goto('/');
   return readLifecycle(page);
 }
 
@@ -296,13 +311,13 @@ async function recordLifecycle(page: Page): Promise<void> {
 }
 
 test.describe('the close paths on Chromium (assumption d)', () => {
-  test('closing the tab during a quest fires pagehide and visibilitychange to hidden', async ({ page }) => {
+  test('closing the tab on the first-quest preview fires pagehide and visibilitychange to hidden', async ({ page }) => {
     await recordLifecycle(page);
     await onboardChild(page, { name: 'Mina' });
     expect(await closeTabAndReadLifecycle(page)).toEqual(expect.arrayContaining(['pagehide', 'visibility:hidden']));
   });
 
-  test('leaving the app during a quest fires pagehide and visibilitychange to hidden', async ({ page }) => {
+  test('leaving the app on the first-quest preview fires pagehide and visibilitychange to hidden', async ({ page }) => {
     await recordLifecycle(page);
     await onboardChild(page, { name: 'Mina' });
     expect(await leaveAndReadLifecycle(page)).toEqual(expect.arrayContaining(['pagehide', 'visibility:hidden']));
@@ -332,7 +347,7 @@ async function withWebkit(playwright: Playwright, baseURL: string | undefined, r
 test.describe('WebKit (assumption d and the report)', () => {
   test.skip(!WEBKIT, 'needs E2E_WEBKIT=1 and the WebKit browser');
 
-  test('leaving the app during a quest fires pagehide and visibilitychange to hidden', async ({ playwright, baseURL }) => {
+  test('leaving the app on the first-quest preview fires pagehide and visibilitychange to hidden', async ({ playwright, baseURL }) => {
     await withWebkit(playwright, baseURL, async (page) => {
       await recordLifecycle(page);
       await onboardChild(page, { name: 'Mina' });
