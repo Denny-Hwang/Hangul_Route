@@ -76,7 +76,7 @@ async function noBannedWords(page: Page): Promise<void> {
 test.describe('weekly plan set-up, preview and overview (flag on)', () => {
   test.skip(!ROUTE, 'needs a build with EXPO_PUBLIC_ROUTE_ENABLED=true and E2E_ROUTE=1');
 
-  test('More choices: four steps, the preview, Start this plan, then Move my plan along and Stop this plan', async ({ page }) => {
+  test('More choices: four steps, the preview, Start this plan, then Move my plan along, Change the plan and Stop this plan', async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(String(e)));
     const profileId = await selfLearnerWithAQuest(page, 'Rae');
@@ -138,6 +138,24 @@ test.describe('weekly plan set-up, preview and overview (flag on)', () => {
     await expect.poll(async () => (await storedRoute(page, profileId))?.meta.repacedAt ?? null).toBe(new Date(NOW).toISOString());
     expect((await storedRoute(page, profileId))?.id).toBe(created.id);
 
+    // Change the plan: the steps start from the plan in force, and Start this plan replaces it.
+    await page.getByRole('button', { name: 'Change the plan' }).click();
+    await expect(page.getByTestId('route-setup-step')).toHaveText('Step 1 of 4');
+    await page.getByRole('button', { name: 'Next' }).click();
+    await page.getByRole('radio', { name: 'Steady, 3 days a week' }).click();
+    await page.getByRole('button', { name: 'Next' }).click();
+    await page.getByRole('button', { name: 'Next' }).click();
+    await page.getByRole('button', { name: 'See my plan' }).click();
+    await expect(page.getByText('Your new plan')).toBeVisible();
+    await page.getByRole('button', { name: 'Start this plan' }).click();
+    await expect(page.getByText('We found a path for you.')).toBeVisible();
+    await expect(page.getByText('That did not work. Try again.')).toHaveCount(0);
+    await expect.poll(async () => (await storedRoute(page, profileId))?.meta.params.sessionsPerWeek ?? 0).toBe(3);
+    const changed = (await storedRoute(page, profileId)) as SelfRoute;
+    expect(changed.id).not.toBe(created.id);
+    expect(changed.archivedAt).toBeNull();
+    expect(changed.meta.params).toMatchObject({ weeks: 4, level: { stage: 'stage1', band: 1 } });
+
     // Stop this plan: asked once; what was finished stays; the plan is archived, never removed.
     await page.getByRole('button', { name: 'Stop this plan' }).click();
     await expect(page.getByTestId('route-overview-stop-confirm')).toContainText('Everything you finished stays yours.');
@@ -146,7 +164,7 @@ test.describe('weekly plan set-up, preview and overview (flag on)', () => {
     await expect(page.getByTestId('route-overview-none')).toBeVisible();
     await expect.poll(async () => (await storedRoute(page, profileId))?.archivedAt ?? null).not.toBeNull();
     const after = (await readStored<ProgressSnapshot>(page, `progress:${profileId}`)) as ProgressSnapshot;
-    expect(after.homework.filter((h) => h.id.startsWith(`${created.id}#`) && h.completedAt === undefined)).toHaveLength(0);
+    expect(after.homework.filter((h) => (h.id.startsWith(`${created.id}#`) || h.id.startsWith(`${changed.id}#`)) && h.completedAt === undefined)).toHaveLength(0);
     expect(errors).toEqual([]);
   });
 
