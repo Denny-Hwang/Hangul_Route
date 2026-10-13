@@ -1114,4 +1114,190 @@ export const learner = {
   access: {
     notOpen: 'Aún sin abrir',
   },
+  /**
+   * The learner's own weekly plan (F-PLAN-002 P2-7a, P2-7b). "Plan semanal", never "ruta"; the pace names match
+   * the console's (Suave / Constante / Ágil); no price and no plan product name. Projections, never deadlines.
+   */
+  weeklyPlan: {
+    homePrompt: {
+      line: 'Hoya puede armarte un plan semanal',
+      make: { cta: 'Armar mi plan' },
+      notNow: { cta: 'Ahora no' },
+    },
+    profileRow: { make: 'Armar un plan semanal', open: 'Tu plan semanal' },
+    proposal: {
+      title: 'Tu plan semanal',
+      intro: 'Hoya te armó un plan semanal.',
+      otherPlanFirst: {
+        teacher: 'Tu docente tiene un plan semanal para ti. Puedes sumar el tuyo; el de tu docente va primero.',
+        home: 'Hay un plan semanal de casa para ti. Puedes sumar el tuyo; ese va primero.',
+      },
+      headline: {
+        'start-stage1': 'Empezamos con las primeras letras del hangul.',
+        'continue-stage1': 'Seguimos con el hangul desde donde estás.',
+        'continue-lessons': 'Seguimos con lecciones nuevas desde donde estás.',
+        'stories-and-words': 'Luego vienen historias del patrimonio y temas de palabras.',
+        'beyond-content': 'Luego vienen historias y práctica. Ya vienen lecciones nuevas.',
+      },
+      paceTitle: '¿Cuántos días por semana?',
+      pace: { gentle: 'Suave', steady: 'Constante', brisk: 'Ágil' },
+      paceDays: (days: number) => plural('es', days, { one: '1 día por semana', other: `${days} días por semana` }),
+      paceLabel: (pace: string, days: number) => plural('es', days, { one: `${pace}, 1 día por semana`, other: `${pace}, ${days} días por semana` }),
+      lengthTitle: '¿Cuánto dura?',
+      length: { '4-week': '4 semanas', '12-week': '12 semanas', '6-month': '6 meses', custom: 'Elegir semanas' },
+      suggested: { pill: 'Hoya sugiere' },
+      weeks: (weeks: number) => plural('es', weeks, { one: '1 semana', other: `${weeks} semanas` }),
+      fewerWeeks: 'Una semana menos',
+      moreWeeks: 'Una semana más',
+      preview: {
+        lessonsAndStories: (stage: number, week: number) => `La Etapa ${stage} termina hacia la semana ${week}. Luego, historias del patrimonio.`,
+        cutShort: (weeks: number) =>
+          plural('es', weeks, {
+            one: 'La primera parte de las lecciones cabe en 1 semana. Con más semanas, las terminas.',
+            other: `La primera parte de las lecciones cabe en ${weeks} semanas. Con más semanas, las terminas.`,
+          }),
+        freePractice: (weeks: number) =>
+          plural('es', weeks, {
+            one: 'Hay cerca de 1 semana de lecciones lista. El resto es práctica libre.',
+            other: `Hay cerca de ${weeks} semanas de lecciones listas. El resto es práctica libre.`,
+          }),
+        lessonsFill: (weeks: number) =>
+          plural('es', weeks, { one: 'Las lecciones llenan toda la semana.', other: `Las lecciones llenan las ${weeks} semanas.` }),
+        storiesAndWords: (stories: number) =>
+          stories === 0
+            ? 'Temas de palabras y práctica libre.'
+            : plural('es', stories, {
+                one: '1 historia del patrimonio y temas de palabras.',
+                other: `${stories} historias del patrimonio y temas de palabras.`,
+              }),
+        moreComing: 'Vienen más lecciones.',
+      },
+      startTitle: 'Empieza',
+      start: { today: 'Hoy', tomorrow: 'Mañana', pick: 'Elegir un día' },
+      pickDay: 'Elige el primer día',
+      pickDayLabel: (weekday: string, date: string) => `${weekday}, ${date}`,
+      changeDays: { cta: 'Cambiar días y hora' },
+      hideDays: { cta: 'Ocultar días y hora' },
+      daysTitle: '¿Qué días?',
+      daysHint: (days: number) => plural('es', days, { one: 'Elige 1 día.', other: `Elige ${days} días.` }),
+      minutesTitle: 'Minutos al día',
+      minutes: (minutes: number) => `${minutes} min`,
+      minutesLabel: (minutes: number) => `${minutes} minutos al día`,
+      firstWeek: 'Primera semana',
+      firstWeekEmpty: 'Esta semana es de práctica libre.',
+      comingSoonItem: (title: string) => `${title} (muy pronto)`,
+      weekRowLabel: (day: string, title: string) => `${day}: ${title}`,
+      startPlan: { cta: 'Empezar este plan' },
+      starting: { cta: 'Empezando...' },
+      notNow: { cta: 'Ahora no' },
+      moreChoices: { cta: 'Más opciones' },
+      saveFailed: 'No funcionó. Inténtalo de nuevo.',
+      nothingReady: 'Ya vienen lecciones nuevas. Hoya puede armar un plan cuando lleguen.',
+      back: { cta: 'Atrás' },
+    },
+    setup: {
+      title: 'Cambiar el plan',
+      stepOf: (step: number, total: number) => `Paso ${step} de ${total}`,
+      start: {
+        title: '¿Dónde empiezas?',
+        cards: {
+          'brand-new': 'Desde cero',
+          'some-letters': 'Sé algunas letras',
+          'all-letters': 'Sé todas las letras',
+          'reads-words': 'Leo palabras',
+          'first-words': 'Leo mis primeras palabras',
+          'first-sentences': 'Leo mis primeras frases',
+        },
+        othersFirst: 'También tienes un plan de tu clase o tu familia. Puedes sumar el tuyo. El de tu clase o tu familia va primero.',
+      },
+      time: { title: '¿Cuánto tiempo?' },
+      length: { title: '¿Cuánto dura?' },
+      likes: {
+        title: '¿Qué te gusta?',
+        focusTitle: '¿Qué quieres más?',
+        focus: { balanced: 'Un poco de todo', reading: 'Leer hangul', words: 'Primeras palabras', culture: 'Cultura e historias' },
+        themesTitle: 'Temas para empezar',
+        themesHint: 'Tócalos en orden. Hasta 5.',
+        themeNames: { letters: 'Letras', life: 'Comida y vida diaria', rites: 'Fiestas', nature: 'Naturaleza', crafts: 'Juegos y manualidades' },
+        themeChosen: (n: number, theme: string) => `${n}. ${theme}`,
+      },
+      tooMany: 'Eso no cabe en un plan. Elige menos semanas o días.',
+      next: { cta: 'Siguiente' },
+      back: { cta: 'Atrás' },
+      see: { cta: 'Ver mi plan' },
+    },
+    planPreview: {
+      title: 'Tu plan nuevo',
+      stats: (items: number, minutes: number, stage: number) =>
+        `${plural('es', items, { one: '1 lección o historia', other: `${items} lecciones e historias` })}, unos ${minutes} minutos, termina en la Etapa ${stage}`,
+      week: (n: number) => `Semana ${n}`,
+      kind: { learn: 'Aprender', culture: 'Cultura', review: 'Repasar y coleccionar', break: 'Días libres' },
+      cultureWeek: (story: string) => `Semana de cultura: ${story}`,
+      weekEmpty: 'Práctica libre. Juega lo que quieras.',
+      showLater: (weeks: number) => plural('es', weeks, { one: 'Mostrar 1 semana más', other: `Mostrar ${weeks} semanas más` }),
+      hideLater: { cta: 'Ocultar las demás semanas' },
+      extras: { vocab: (topic: string) => `Palabras para probar: ${topic}`, wordsOptional: 'Puedes saltarlo.', hangulCheck: 'Repaso de hangul' },
+      notices: {
+        contentRunsOut: (week: number) => `Ya vienen lecciones nuevas. Desde la semana ${week} tienes práctica libre y temas de palabras.`,
+        moreComing: 'Vienen más lecciones.',
+        didNotFit: (count: number) =>
+          plural('es', count, {
+            one: '1 lección o historia no cupo. Suma una semana o un día.',
+            other: `${count} lecciones e historias no cupieron. Suma una semana o un día.`,
+          }),
+        tooShort: (count: number) =>
+          plural('es', count, { one: '1 lección puede tomar más de un día.', other: `${count} lecciones pueden tomar más de un día.` }),
+        alreadyKnown: (count: number) =>
+          plural('es', count, {
+            one: 'Ya sabes 1 lección, así que no está en el plan.',
+            other: `Ya sabes ${count} lecciones, así que no están en el plan.`,
+          }),
+      },
+      empty: 'Aún no hay nada listo para este inicio. Cambia algo para probar otro inicio.',
+      start: { cta: 'Empezar este plan' },
+      starting: { cta: 'Empezando...' },
+      change: { cta: 'Cambiar algo' },
+      saveFailed: 'No funcionó. Inténtalo de nuevo.',
+    },
+    overview: {
+      title: 'Tu plan semanal',
+      intro: 'Encontramos un camino para ti.',
+      thisWeek: 'Esta semana',
+      firstWeek: 'Tu primera semana',
+      startsOn: (date: string) => `Tu plan empieza el ${date}.`,
+      nothingThisWeek: 'No hay nada planeado esta semana. Juega lo que quieras.',
+      nextWeeks: 'Más adelante',
+      finished: 'Llegaste al final de tu plan. ¡Muy bien!',
+      newPlan: { cta: 'Armar un plan nuevo' },
+      moved: 'Hoya avanzó tu plan.',
+      newLessons: 'Llegaron lecciones nuevas. Avanza tu plan para sumarlas.',
+      moveAlong: { cta: 'Avanzar mi plan' },
+      movedDone: 'Tu plan avanzó. Sigue desde hoy.',
+      change: { cta: 'Cambiar el plan' },
+      stop: { cta: 'Detener este plan' },
+      stopConfirm: {
+        line: '¿Detener este plan? Todo lo que terminaste sigue siendo tuyo.',
+        yes: { cta: 'Sí, detenerlo' },
+        no: { cta: 'Mantener mi plan' },
+      },
+      none: 'Ahora no tienes un plan semanal.',
+      make: { cta: 'Armar un plan semanal' },
+      back: { cta: 'Atrás' },
+    },
+    checkIn: {
+      lighter: {
+        line: '¿Una semana más ligera?',
+        detail: (days: number) => plural('es', days, { one: 'Suave: 1 día por semana.', other: `Suave: ${days} días por semana.` }),
+        yes: { cta: 'Sí, más ligera' },
+      },
+      faster: {
+        line: '¿Quieres ir un poco más rápido?',
+        detail: (pace: string, days: number) => plural('es', days, { one: `${pace}: 1 día por semana.`, other: `${pace}: ${days} días por semana.` }),
+        yes: { cta: 'Sí, un poco más rápido' },
+      },
+      notNow: { cta: 'Ahora no' },
+      done: (days: number) => plural('es', days, { one: 'Tu plan ahora tiene 1 día por semana.', other: `Tu plan ahora tiene ${days} días por semana.` }),
+    },
+    homeMoved: { line: 'Hoya avanzó tu plan.', open: { cta: 'Ver mi plan' } },
+  },
 } satisfies DeepPartial<Messages['learner']>;
