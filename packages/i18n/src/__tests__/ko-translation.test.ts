@@ -15,11 +15,18 @@ import { SAMPLES } from './samples';
 type Message = (...args: unknown[]) => string;
 const ko = getMessages('ko');
 
+/**
+ * A key English added after the review, still an English fallback while ko is hidden (`./ko-coverage`): it waits for
+ * the next Korean draft, so the lenses below judge only Korean the review wrote. `koUnexpectedFallbacks` still fails
+ * a fallback inside a namespace the review signed.
+ */
+const waiting = new Set(fallbackPaths('ko'));
+
 /** Every rendered Korean output with its path: strings, array items, and one output per SAMPLES row. */
 function outputs(): Array<[path: string, text: string, args: readonly unknown[]]> {
   const out: Array<[string, string, readonly unknown[]]> = [];
   for (const path of leafPaths(ko)) {
-    if (isEnglishAuthoritative(path)) continue;
+    if (isEnglishAuthoritative(path) || waiting.has(path)) continue;
     const value = lookup(ko, path);
     if (typeof value === 'string') out.push([path, value, []]);
     else if (Array.isArray(value)) for (const item of value) out.push([path, String(item), []]);
@@ -120,7 +127,7 @@ describe('the Korean review lenses, pinned (§3.10 step 3)', () => {
     ];
     for (const path of leafPaths(en)) {
       // A format-only template is all arguments: its words are the arguments' business.
-      if (isEnglishAuthoritative(path) || KO_LITERALLY_SHARED.includes(path)) continue;
+      if (isEnglishAuthoritative(path) || KO_LITERALLY_SHARED.includes(path) || waiting.has(path)) continue;
       const source = lookup(en, path);
       const own = lookup(ko, path);
       const rows: ReadonlyArray<readonly unknown[]> = typeof source === 'function' ? (SAMPLES[path] ?? []) : [[]];

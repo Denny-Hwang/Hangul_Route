@@ -19,6 +19,8 @@ export interface ConsoleEnv {
   NEXT_PUBLIC_REPORTS_ENABLED?: string;
   /** All lessons, the grown-up Lessons entry (F-BROWSE-001 section 5.4; F-APP-001 section 3.8), `enabled` to show it; default off. */
   NEXT_PUBLIC_BROWSE?: string;
+  /** Class moves (F-SPACE-002 section 4.8), `enabled` to show the entry points; default off, flipped by the owner after the Worker's `CLASS_TRANSFER`. */
+  NEXT_PUBLIC_CLASS_TRANSFER?: string;
   NODE_ENV?: string;
 }
 
@@ -42,6 +44,7 @@ export function buildEnv(): ConsoleEnv {
     NEXT_PUBLIC_LEARNING_ROUTE_ENABLED: process.env.NEXT_PUBLIC_LEARNING_ROUTE_ENABLED,
     NEXT_PUBLIC_REPORTS_ENABLED: process.env.NEXT_PUBLIC_REPORTS_ENABLED,
     NEXT_PUBLIC_BROWSE: process.env.NEXT_PUBLIC_BROWSE,
+    NEXT_PUBLIC_CLASS_TRANSFER: process.env.NEXT_PUBLIC_CLASS_TRANSFER,
     NODE_ENV: process.env.NODE_ENV,
   };
 }
@@ -149,6 +152,16 @@ export function browseEnabled(env: ConsoleEnv = buildEnv()): boolean {
  */
 export function browseEntryShown(origin: string, env: ConsoleEnv = buildEnv()): boolean {
   return browseEnabled(env) && origin === appUrl(env);
+}
+
+/**
+ * Class moves (F-SPACE-002 section 4.8, flag handling): the Move action, the start sheet, the requests and family
+ * pages and every count render only with `NEXT_PUBLIC_CLASS_TRANSFER=enabled` (the `lectureModeEnabled()` pattern).
+ * Off by default; the owner sets it after the Worker's `CLASS_TRANSFER` and every flip gate of section 7, never a PR.
+ * The first `422 transfers_locked` hides them for the session too (`transfer-lock.ts`).
+ */
+export function classTransferEnabled(env: ConsoleEnv = buildEnv()): boolean {
+  return env.NEXT_PUBLIC_CLASS_TRANSFER === 'enabled';
 }
 
 export const DEFAULT_APP_URL = 'https://app.hangulroute.com';
