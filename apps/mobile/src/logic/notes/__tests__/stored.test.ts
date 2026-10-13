@@ -105,3 +105,19 @@ describe('mergeUnloaded (a read that failed, then one that worked)', () => {
     expect(out.queue).toEqual([report]);
   });
 });
+
+describe('grownUpSeenIds (FB-9, section 6.9: the stored shape only gains a field)', () => {
+  it('is read when it is a list (strings only) and left out otherwise', () => {
+    expect(readStoredNotes({ notes: [], grownUpSeenIds: ['note:aaaaaaaa', 3] }).grownUpSeenIds).toEqual(['note:aaaaaaaa']);
+    expect('grownUpSeenIds' in readStoredNotes({ notes: [], grownUpSeenIds: 'note:aaaaaaaa' })).toBe(false);
+    expect('grownUpSeenIds' in readStoredNotes({ notes: [] })).toBe(false);
+  });
+
+  it('a merge keeps a note seen in either record', () => {
+    const a = data({ grownUpSeenIds: ['note:aaaaaaaa'] });
+    const b = data({ grownUpSeenIds: ['note:bbbbbbbb', 'note:aaaaaaaa'] });
+    expect(mergeUnloaded(a, b).grownUpSeenIds).toEqual(['note:aaaaaaaa', 'note:bbbbbbbb']);
+    expect(mergeUnloaded(a, data()).grownUpSeenIds).toEqual(['note:aaaaaaaa']);
+    expect('grownUpSeenIds' in mergeUnloaded(data(), data())).toBe(false);
+  });
+});
