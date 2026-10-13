@@ -116,10 +116,19 @@ const actionStyle: CSSProperties = {
 };
 
 /** The line beside an entry (section 4.3 steps 3 and 4); an empty status region until it has something to say. */
-export function BrowseNoticeLine({ opener, testId }: { opener: BrowseOpener; testId: string }): JSX.Element {
+export function BrowseNoticeLine({
+  opener,
+  testId,
+  inline = false,
+}: {
+  opener: BrowseOpener;
+  testId: string;
+  /** A link inside a sentence (the report's letters and quest title): the empty region does not break the line. */
+  inline?: boolean;
+}): JSX.Element {
   const t = useConsole().m.console.browse;
   return (
-    <span role="status" aria-live="polite" data-testid={`${testId}-notice`} style={{ display: 'block', flexBasis: '100%' }}>
+    <span role="status" aria-live="polite" data-testid={`${testId}-notice`} style={inline && opener.notice === null ? { display: 'inline' } : { display: 'block', flexBasis: '100%' }}>
       {opener.notice === 'storage_blocked' ? (
         <span style={{ display: 'block', margin: `${spacing.xs}px 0`, color: colors.text.primary, fontSize: typography.size.bodySm }}>{t.storageBlocked}</span>
       ) : opener.notice === 'check_failed' ? (

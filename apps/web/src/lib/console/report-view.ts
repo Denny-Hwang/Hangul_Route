@@ -895,6 +895,15 @@ function emptyStageOf(summary: ReportSummary): { stage: StageKey; n: number } | 
   return parsed.success ? { stage: parsed.data, n: StageKeySchema.options.indexOf(parsed.data) + 1 } : null;
 }
 
+/**
+ * The stage a strand tip opens in All lessons (RP-13): the journey's here stage when this build can read it, else
+ * `stage1`. A stage key only: nothing of the learner reaches the link.
+ */
+export function reportBrowseStage(summary: ReportSummary | null): StageKey {
+  const parsed = StageKeySchema.safeParse(summary?.journey?.here);
+  return parsed.success ? parsed.data : 'stage1';
+}
+
 // ---------------------------------------------------------------------------------------------
 // The page (RP-7a2)
 
