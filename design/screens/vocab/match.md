@@ -10,8 +10,8 @@ Screenshots: `pnpm --filter @hangul-route/mobile build:web:fixtures`, then `HR_S
 ```
 ┌────────────────────────────────┐
 │ [<-]                           │  <- Back, top-left, as on every Words screen
-│ [=======-----]  Pair 2 of 4?   │  <- the game's own header (F-QUEST-002), unchanged
-│ Match each picture to its word │
+│ [=======-----]  2 / 4   [Skip] │  <- the game's own header (F-QUEST-002), unchanged
+│ Match each picture             │
 │ ┌───────────┐  ┌───────────┐   │
 │ │   [pic]   │  │ ~~ 우유 ~~ │   │  <- pictures left, words right, tap-tap in either order
 │ └───────────┘  └───────────┘   │
@@ -44,4 +44,5 @@ As the game (design/wireframes/minigame/pic-word-match.md): every tile is a butt
 ## Decisions taken while building
 
 - **Back sits above the game's header** through a small `leading` slot added to `PicWordMatchGame` (it renders the node first inside its own `Screen`). A quest host passes nothing, so the quest screen is unchanged. Without it a web learner in a standalone PWA would have no way out of a board but finishing it.
+- **The game's header is kept**: its bar and "2 / 4" pill count the pairs matched so far on this board (fill-only: a miss never lowers them), the same progress line as in a quest, not a score; Match keeps the game exactly as F-QUEST-002 ships it.
 - **No summary screen**: the topic page is the summary (its meter and count fill as the words are practised); Match has no stars (the Speed round owns them).
