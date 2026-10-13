@@ -37,6 +37,11 @@ export interface BrowseBundle {
   /** Word topics a learner may open (`ready` or `shipped`, with words), by topic order. */
   vocabTopics: readonly VocabTopic[];
   topicItems: (key: string) => readonly RuntimeVocabItem[];
+  /**
+   * Every word of a topic past draft (the catalogue's `visibleItems`), whether or not its topic is
+   * listed: "What this teaches" looks a built syllable up here (section 4.6, a Build a Letter word).
+   */
+  vocabItems: readonly RuntimeVocabItem[];
   scopeFor: (ref: string) => MinigameScope | undefined;
   /** The free set this bundle's sampler reads: the learner's, with the sampler stories of these stories (section 4.13). */
   freeRegistry: FreeContentRegistry;
@@ -96,6 +101,7 @@ export function buildBrowseBundle(i: BrowseBundleInput): BrowseBundle {
     storyIndex,
     vocabTopics: visibleTopics(vocab.vocabTopics, vocab.topicItems, i.canRender),
     topicItems: vocab.topicItems,
+    vocabItems: vocab.visibleItems,
     scopeFor: i.scopeFor,
     freeRegistry: freeContentRegistryFor(i.stories),
   };

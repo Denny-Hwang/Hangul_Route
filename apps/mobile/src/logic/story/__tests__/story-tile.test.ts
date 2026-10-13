@@ -84,6 +84,20 @@ describe('storyTileView', () => {
     }
   });
 
+  it('the All lessons catalogue (F-BROWSE-001 4.5): no learner state word, stars or plan tag; closed still says Not open yet', () => {
+    const label = getMessages('en').caregiver.browse.home.storyTileA11y;
+    for (const status of [NEW, READING, done(3)]) {
+      const v = storyTileView({ entry, status, locked: false, copy: COPY, catalogueLabel: label, inPlanWord: 'In your plan' });
+      expect(v.stateLine).toBe('');
+      expect(v.stars).toBe(0);
+      expect(v.accessibilityLabel).toBe(`${tiger.title.en}. About 4 minutes.`);
+      for (const word of ['New', 'Keep reading', 'Finished', 'In your plan', 'star']) expect(v.accessibilityLabel).not.toContain(word);
+    }
+    const closed = storyTileView({ entry, status: NEW, locked: true, copy: COPY, catalogueLabel: label });
+    expect(closed.stateLine).toBe('Not open yet');
+    expect(closed.accessibilityLabel).toBe(`${tiger.title.en}. Not open yet. About 4 minutes.`);
+  });
+
   it('a story in the plan carries In your plan, read after the minutes; a closed tile never does', () => {
     const v = storyTileView({ entry, status: NEW, locked: false, copy: COPY, inPlanWord: 'In your plan' });
     expect(v.inPlan).toBe(true);
