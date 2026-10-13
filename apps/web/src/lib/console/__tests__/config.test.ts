@@ -130,19 +130,20 @@ describe('learningRouteEnabled', () => {
 });
 
 /**
- * F-REPORT-001 section 3.1 (RP-7a1): reports show only with `NEXT_PUBLIC_REPORTS_ENABLED` on and, until the ko / es
- * review of `report.*` lands, only on an English console.
+ * F-REPORT-001 section 3.1 (RP-7a1; RP-11 flips the default on): reports show unless `NEXT_PUBLIC_REPORTS_ENABLED`
+ * switches them off and, until the ko / es review of `report.*` lands, only on an English console.
  */
 describe('reportsEnabled', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
   });
 
-  it('is off unless NEXT_PUBLIC_REPORTS_ENABLED is "true" or "1"', () => {
-    expect(reportsEnabled('en', {})).toBe(false);
+  it('is on by default (RP-11) and parsed like the learner app flag: "false" or "0" switches it off, anything else keeps the default', () => {
+    expect(reportsEnabled('en', {})).toBe(true);
     expect(reportsEnabled('en', { NEXT_PUBLIC_REPORTS_ENABLED: 'true' })).toBe(true);
     expect(reportsEnabled('en', { NEXT_PUBLIC_REPORTS_ENABLED: '1' })).toBe(true);
-    for (const off of ['false', '0', 'enabled', 'TRUE', '', ' true']) expect(reportsEnabled('en', { NEXT_PUBLIC_REPORTS_ENABLED: off }), off).toBe(false);
+    for (const off of ['false', '0']) expect(reportsEnabled('en', { NEXT_PUBLIC_REPORTS_ENABLED: off }), off).toBe(false);
+    for (const other of ['enabled', 'TRUE', 'FALSE', '', ' false']) expect(reportsEnabled('en', { NEXT_PUBLIC_REPORTS_ENABLED: other }), other).toBe(true);
   });
 
   it('stays off for a console locale whose report words are not reviewed yet (ko, es)', () => {
@@ -152,10 +153,13 @@ describe('reportsEnabled', () => {
     expect(REPORT_REVIEWED_LOCALES).toEqual(['en']);
   });
 
-  it('reads the build value by its literal name and is off by default', () => {
+  it('reads the build value by its literal name and is on by default, so the owner can switch it off with "false"', () => {
+    vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', undefined);
+    expect(reportsEnabled('en')).toBe(true);
+    vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'false');
+    expect(buildEnv().NEXT_PUBLIC_REPORTS_ENABLED).toBe('false');
     expect(reportsEnabled('en')).toBe(false);
     vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'true');
-    expect(buildEnv().NEXT_PUBLIC_REPORTS_ENABLED).toBe('true');
     expect(reportsEnabled('en')).toBe(true);
     expect(reportsEnabled('ko')).toBe(false);
   });

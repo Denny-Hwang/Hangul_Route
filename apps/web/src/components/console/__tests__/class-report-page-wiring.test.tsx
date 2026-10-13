@@ -128,7 +128,7 @@ const tabs = (root: ReactTestInstance): ReactTestInstance[] => root.findAll((n) 
 
 describe('the class report page (RP-8)', () => {
   it('reports off: not available yet, no request', async () => {
-    vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', '');
+    vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'false');
     const root = await page();
     expect(classCalls()).toEqual([]);
     expect(h1s(root)).toEqual([en.report.state.flagOff]);
