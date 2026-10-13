@@ -117,7 +117,7 @@ export function inboxTransferView(v: TransferLearnerSideView): InboxTransfer {
     status: v.status,
     initiator: v.initiator,
     from: { spaceId: v.from.spaceId, name: v.from.name },
-    to: { spaceId: v.to.spaceId, name: v.to.name, ownerName: v.to.ownerName, schoolName: v.to.schoolName, ageBucket: v.to.ageBucket },
+    to: { spaceId: v.to.spaceId, name: v.to.name, ownerName: v.to.ownerName, schoolName: v.to.schoolName, ageBucket: v.to.ageBucket, learnerCount: v.to.learnerCount },
     learnerState: v.learnerState,
     sourceState: v.sourceState,
     destinationState: v.destinationState,

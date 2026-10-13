@@ -54,7 +54,10 @@ interface ClassViewCommon {
   id: string;
   status: TransferViewStatus;
   steps: TransferSteps | null;
-  /** "Agreed by the school admin." on both class pages (T11). */
+  /**
+   * "Agreed by the school admin." when this class's own slot was filled through the school cascade (T11,
+   * D17): never the other class's, so the destination does not learn that the source agreed (T8).
+   */
   agreedBySchoolAdmin: boolean;
   /** The earliest move date, once everyone agreed (`approved`). */
   scheduledFor: string | null;
@@ -248,15 +251,15 @@ export function learnerRouteFor(input: { initiator: TransferInitiator; selfManag
 
 const endedFromOf = (actor: TransferEndActor | null): TransferEndedFrom | null => (actor === 'family' || actor === 'device' ? actor : null);
 
-/** The shared tail of both class views; `mine` is the end actor that means "this class decided". */
-function classCommon(t: StoredTransfer, mine: TransferEndActor): ClassViewCommon {
+/** The shared tail of both class views; `mine` is this class's slot, which is also the end actor that means "this class decided". */
+function classCommon(t: StoredTransfer, mine: 'source' | 'destination'): ClassViewCommon {
   const approved = t.status === 'approved';
   const byYou = isEndedTransfer(t) && t.endActor === mine;
   return {
     id: t.id,
     status: viewStatus(t),
     steps: stepsOf(t),
-    agreedBySchoolAdmin: t.source.via === 'school_admin' || t.destination.via === 'school_admin',
+    agreedBySchoolAdmin: t[mine].via === 'school_admin',
     scheduledFor: approved ? t.executeAfter : null,
     blockReason: approved ? t.blockReason : null,
     createdAt: t.createdAt,

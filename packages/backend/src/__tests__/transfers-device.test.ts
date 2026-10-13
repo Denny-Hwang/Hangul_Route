@@ -214,6 +214,8 @@ describe('device credentials (guard 8)', () => {
 describe('the inbox (section 4.4)', () => {
   it('lists the open request in the learner-side shape the app parses, with no learner name or id beyond the request', async () => {
     await db.setTransferPref(SUNI, 'selfManaged', false, NOW);
+    // One learner in B already: the identity block shows the count (T-5d, section 4.11).
+    await member(B, 'learner', JUN, 'student');
     const created = requestOf(await create(FAMILY, 'mom', familyCreate()));
     const r = await inbox(SUNI, suniPhone);
     expect(r.body.data).toMatchObject({ transfersEnabled: true, transferDeviceConsent: true, selfManaged: false });
@@ -223,7 +225,7 @@ describe('the inbox (section 4.4)', () => {
       status: 'requested',
       initiator: 'learner_side',
       from: { spaceId: A, name: 'Sunday Class A' },
-      to: { spaceId: B, name: 'Saturday Class B', ownerName: 'Ms Park', schoolName: null, ageBucket: 'months' },
+      to: { spaceId: B, name: 'Saturday Class B', ownerName: 'Ms Park', schoolName: null, ageBucket: 'months', learnerCount: 1 },
       learnerState: 'consented',
       sourceState: 'waiting',
       destinationState: 'waiting',
@@ -267,7 +269,7 @@ describe('the inbox (section 4.4)', () => {
         'termsDigest',
       ].sort(),
     );
-    expect(Object.keys(row.to).sort()).toEqual(['ageBucket', 'name', 'ownerName', 'schoolName', 'spaceId']);
+    expect(Object.keys(row.to).sort()).toEqual(['ageBucket', 'learnerCount', 'name', 'ownerName', 'schoolName', 'spaceId']);
     expect(JSON.stringify(row)).not.toContain('Suni');
     // The installed app's schema keeps the row, memberships, plans and tier.
     const parsed = SyncInboxSchema.parse(r.body.data);
