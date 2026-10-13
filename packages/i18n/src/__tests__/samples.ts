@@ -530,6 +530,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.billing.receipts.viewA11y': [['Oct 21, 2026']],
   'console.billing.receipts.pageTitle': [['Maple Class']],
   'console.billing.help.refund': [['hello@hangulroute.com']],
+  // F-BILL-002 B-12: the space settings archive confirm (section 4.6).
+  'console.billing.archiveConfirm.familyLoses': [['Kim family']],
   'caregiver.plan.covered.title.family': [['Mina', 'Sunday Class A']],
   'caregiver.plan.covered.title.self': [['Sunday Class A']],
   'caregiver.plan.full.title.family': [['Mina']],

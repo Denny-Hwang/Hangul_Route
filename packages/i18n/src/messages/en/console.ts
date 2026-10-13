@@ -622,6 +622,17 @@ export const consoleMsgs = {
     },
     /** One neutral note above the cards while a payer card is past due (never the danger colour). */
     pastDue: "A payment didn't go through. Update your card in Manage subscription; learners keep the full route for a week.",
+    /**
+     * F-BILL-002 B-12 (section 4.6): the space settings archive confirm names the plan the archive
+     * affects. Archiving pauses the plan for learners; it never stops a subscription from renewing.
+     */
+    archiveConfirm: {
+      familyLoses: (space: string) => `Learners in ${space} lose the Family Plan while it is archived.`,
+      familyRenews: 'It keeps renewing until you cancel it in Billing.',
+      licenseRenews: 'The Group License keeps renewing until you cancel it in Billing.',
+      // A Family Plan past due beyond its grace week: learners already lost it, but Stripe still retries the renewal.
+      familyRenewsAlone: 'The Family Plan keeps renewing until you cancel it in Billing.',
+    },
   },
 
   /**
