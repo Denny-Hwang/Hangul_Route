@@ -68,7 +68,7 @@ export const learner = {
     addProfile: '+ Añadir un perfil',
     addProfileName: 'Añadir un perfil',
     statsTitle: (name: string | null) => (name === null ? 'Tus datos' : `Datos de ${name}`),
-    stats: { quests: 'Misiones hechas', cards: 'Tarjetas', threeStar: 'Misiones con 3★' },
+    stats: { quests: 'Misiones', cards: 'Tarjetas', threeStar: 'Misiones 3★' },
     sound: { label: 'Sonido', on: 'Sí', off: 'No' },
     plan: {
       free: 'Plan gratuito',

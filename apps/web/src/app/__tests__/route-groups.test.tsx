@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { fallbackPaths, getMessages, type Messages, type UiLocale } from '@hangul-route/i18n';
 import { siteMetadata } from '../../data/landing-copy';
 import { HIDDEN_LOCALE_ATTR, siteLocaleParams } from '../../lib/site-locales';
 // Every layout and page is imported here, once, and never with a dynamic import inside a test: loading a page
@@ -198,10 +199,19 @@ describe('locale pages are the English pages with locale links', () => {
 
   const hrefs = (html: string): string[] => [...html.matchAll(/href="([^"]*)"/g)].map((m) => m[1] ?? '');
 
-  // The same-words half is temporary: the es and ko overlays are empty until PRs 15 and 16, so each locale
-  // falls back to English. When an overlay gets content, replace it with a check of that locale's words.
+  // The same-words half holds for a locale whose landing overlay is still empty (ko until PR 16): it falls back to
+  // English. A translated locale (es, PR 15) renders its own words around the same links, and the legal pages keep the
+  // English-authoritative text under the localized notice (decision L10).
+  const translated = (locale: string): boolean => !fallbackPaths(locale as UiLocale).some((path) => path.startsWith('landing.'));
+  const escapeText = (text: string): string => renderToStaticMarkup(<>{text}</>);
+  const WORDS: Readonly<Record<string, (m: Messages) => { own: string; english: string }>> = {
+    landing: (m) => ({ own: m.landing.home.hero.title, english: getMessages('en').landing.home.hero.title }),
+    about: (m) => ({ own: m.landing.about.title, english: getMessages('en').landing.about.title }),
+    privacy: (m) => ({ own: m.landing.legal.englishAuthoritative, english: getMessages('en').landing.legal.privacy.title }),
+    terms: (m) => ({ own: m.landing.legal.englishAuthoritative, english: getMessages('en').landing.legal.terms.title }),
+  };
   for (const [name, enPage, locPage] of pages) {
-    it.each(SITE_LOCALES)(`${name}: /%s renders the same words (it falls back to English) with locale links`, (locale) => {
+    it.each(SITE_LOCALES)(`${name}: /%s keeps the English links as locale links, in its own words once translated`, (locale) => {
       const en = enPage as { default: () => JSX.Element };
       const loc = locPage as { default: (p: PageProps) => JSX.Element };
       const enHtml = renderToStaticMarkup(en.default());
@@ -216,6 +226,14 @@ describe('locale pages are the English pages with locale links', () => {
               ? `${href}?lang=${locale}`
               : href;
       expect(hrefs(locHtml)).toEqual(hrefs(enHtml).map(toLocale));
+      if (translated(locale)) {
+        const { own, english } = WORDS[name]!(getMessages(locale as UiLocale));
+        expect(locHtml).toContain(escapeText(own));
+        // The landing and About are in the locale; the legal documents stay English under the localized notice.
+        if (name === 'landing' || name === 'about') expect(locHtml).not.toContain(escapeText(english));
+        else expect(locHtml).toContain(escapeText(english));
+        return;
+      }
       // The legal pages add the localized English-authoritative notice and mark the English document `lang="en"`
       // (decision L10, PR 11c; checked in landing-locales.test.tsx); the rest is the same.
       const strip = (html: string): string =>
@@ -226,6 +244,11 @@ describe('locale pages are the English pages with locale links', () => {
       expect(strip(locHtml)).toBe(strip(enHtml));
     });
   }
+
+  it('es is translated and ko still falls back to English (F-I18N-001 PR 15)', () => {
+    expect(translated('es')).toBe(true);
+    expect(translated('ko')).toBe(false);
+  });
 });
 
 describe('links between groups load a new document', () => {

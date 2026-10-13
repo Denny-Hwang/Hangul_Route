@@ -65,7 +65,7 @@ export const landing = {
       start: 'Empezar a aprender',
       grownUps: '¿Familia o docente? Busca tu página',
       facts: 'Funciona en tu navegador · No hay que instalar nada · La app funciona sin conexión en la mayoría de los dispositivos después de tu primera visita',
-      bubble: (letter: string, romanization: string) => `¡Annyeong! Conozcamos ${letter} (${romanization}).`,
+      bubble: (letter: string, romanization: string) => `¡Annyeong! Conozcamos la letra ${letter}\u00a0(${romanization}).`,
     },
     who: {
       title: '¿Para quién es?',
@@ -254,7 +254,7 @@ export const landing = {
     play: { cta: 'Jugar en el navegador' },
     seeCards: { cta: 'Ver las tarjetas' },
     facts: 'Nada que descargar · Sin anuncios · Funciona sin conexión tras tu primera visita',
-    bubble: (letter: string) => `¡Annyeong! Conozcamos ${letter}.`,
+    bubble: (letter: string) => `¡Annyeong! Conozcamos la letra ${letter}.`,
   },
   trust: {
     label: 'Confianza',

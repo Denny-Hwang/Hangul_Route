@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
 import { readStored, waitForSaved } from './helpers';
 
@@ -15,11 +16,13 @@ import { readStored, waitForSaved } from './helpers';
  *   EXPO_PUBLIC_SHOW_ALL_LOCALES=1 expo export --platform web --output-dir dist-all
  *   E2E_ALL_LOCALES=1  (and serve dist-all)
  *
- * The es and ko dictionaries are empty until the translation PRs, so the text
- * itself stays English in every language; what changes is the stored choice and
- * `<html lang>`.
+ * The confirm sheet is written in the language being chosen: Spanish since the
+ * Spanish dictionary landed (F-I18N-001 PR 15); Korean still falls back to English
+ * until PR 16. The tests read those lines from the dictionary.
  */
 const ALL_LOCALES = process.env.E2E_ALL_LOCALES === '1';
+/** The Spanish language-picker lines (the sheet is drawn in the language being chosen). */
+const es = getMessages('es').learner.language;
 
 /** Welcome to Home for one child profile (PIN 1234), then the Profile screen. */
 async function onboardAndOpenProfile(page: Page): Promise<string> {
@@ -130,21 +133,21 @@ test.describe('QA build with every language shown (E2E_ALL_LOCALES=1)', () => {
     // A mis-tap: the sheet is written in the language being chosen, and "Back to English" undoes it.
     await page.getByRole('radio', { name: 'Español' }).first().click();
     await expect(page.getByTestId('language-confirm')).toBeVisible();
-    await expect(page.getByText('Use Español for this profile?')).toBeVisible();
-    await page.getByRole('button', { name: 'Back to English' }).click();
+    await expect(page.getByText(es.confirmProfile('Español'))).toBeVisible();
+    await page.getByRole('button', { name: es.confirmBack('English') }).click();
     await expect(page.getByTestId('language-confirm')).toHaveCount(0);
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 
     // Confirm: the profile gets its own language.
     await page.getByRole('radio', { name: 'Español' }).first().click();
-    await page.getByRole('button', { name: 'Use Español' }).click();
+    await page.getByRole('button', { name: es.confirmUse('Español') }).click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'es');
     await waitForSaved(page, [`settings:${id}`]);
     expect(await readStored(page, `settings:${id}`)).toEqual({ uiLocale: 'es', romanizationMode: 'always' });
     expect(await readStored(page, 'device:settings')).toBeNull();
 
-    // "Same as this device" removes the override.
-    await page.getByRole('radio', { name: /^Same as this device/ }).click();
+    // "Same as this device" removes the override (the profile is in Spanish now).
+    await page.getByRole('radio', { name: es.sameAsDevice('English') }).click();
     await page.getByRole('button', { name: 'Use English' }).click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect.poll(() => readStored(page, `settings:${id}`)).toEqual({ romanizationMode: 'always' });
