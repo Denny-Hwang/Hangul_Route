@@ -242,3 +242,32 @@ describe('the class chooser (no id)', () => {
     expect(h1s(root)).toEqual([en.report.state.unavailable]);
   });
 });
+
+describe('an archived class (section 3.14)', () => {
+  const archived = (): Result => ok(classBody({ space: { ...SPACE, archivedAt: '2026-10-01T00:00:00.000Z' } }));
+  const stateText = (root: ReactTestInstance): string => byTestId(root, 'report-state').map(textOf).join(' ');
+
+  it('the settings sentence for its owner, the neutral line for a co-teacher', async () => {
+    responses.report = archived;
+    const owner = await page();
+    expect(stateText(owner)).toContain(en.console.settings.archived.class);
+    act(() => mounted?.unmount());
+    responses.spaces = () => ok([{ space: { id: 'space:sunflower', kind: 'class' }, role: 'teacher', counts: { learners: 1, accounts: 2, classes: 0 } }]);
+    const teacher = await page();
+    expect(stateText(teacher)).toContain(en.report.state.archived.class);
+  });
+
+  it('while the spaces load, no archived sentence and no Plan a lesson; a failed read keeps the neutral one', async () => {
+    vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', 'enabled');
+    responses.report = archived;
+    let release: (r: Result) => void = () => undefined;
+    responses.spaces = () => new Promise<Result>((resolve) => (release = resolve)) as unknown as Result;
+    const pending = await page();
+    expect(stateText(pending)).not.toContain(en.report.state.archived.class);
+    expect(stateText(pending)).not.toContain(en.console.settings.archived.class);
+    expect(byTestId(pending, 'class-plan-lesson')).toHaveLength(0);
+    await act(async () => release({ ok: false, error: 'network', status: 0 }));
+    expect(stateText(pending)).toContain(en.report.state.archived.class);
+    expect(byTestId(pending, 'class-plan-lesson')).toHaveLength(0);
+  });
+});
