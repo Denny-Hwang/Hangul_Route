@@ -332,10 +332,15 @@ describe("PWA e2e", () => {
     const at = text.indexOf("- name: Offline e2e (gating fixture bundle");
     const step = text.slice(at).split(/\n\s+- name: /)[0];
     assert.match(step, /pnpm exec playwright test my-route\.spec -g "assumption h"/);
-    const spec = read("apps/mobile/e2e/web/my-route.spec.ts");
-    const line = spec.split("\n").findIndex((l) => /!\s*GATED_BUILD\b/.test(l));
-    const title = spec.split("\n").slice(0, line).reverse().find((l) => /^\s+test\(/.test(l)) ?? "";
-    assert.match(title, /assumption h/, "the only GATED_BUILD skip in my-route.spec.ts sits in the assumption h test");
+    const grep = step.match(/my-route\.spec -g "([^"]+)"/)[1];
+    const lines = read("apps/mobile/e2e/web/my-route.spec.ts").split("\n");
+    const skips = lines.flatMap((l, i) => (/!\s*GATED_BUILD\b/.test(l) ? [i] : []));
+    assert.ok(skips.length > 0, "my-route.spec.ts has a GATED_BUILD skip");
+    for (const at of skips) {
+      // Every gating-only block must be one the gating run's -g picks, or it runs nowhere in CI.
+      const title = lines.slice(0, at).reverse().find((l) => /^\s*test\(/.test(l)) ?? "";
+      assert.ok(title.includes(grep), `the GATED_BUILD skip on line ${at + 1} sits in a test the gating run's -g "${grep}" plays`);
+    }
   });
 
   test("no Learning Route flag-on gate is left while flags.myRouteEnabled defaults to on (F-ROUTE-001 R-10b)", () => {
