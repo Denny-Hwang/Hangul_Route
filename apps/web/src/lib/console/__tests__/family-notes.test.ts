@@ -134,11 +134,16 @@ describe('blockRowLabel (stopped senders, section 8.5)', () => {
     expect(blockRowLabel(block({ role: 'former', name: null }), 'en')).toBe(f.settings.stopped.former);
     expect(blockRowLabel(block({ role: 'former', name: null }), 'ko')).toBe(ko.console.notes.family.settings.stopped.former);
   });
-  it('an older Worker without role or name: its own line', () => {
+  it('a teacher or family adult without a name: the generic words in the viewer language, never the Worker English', () => {
+    expect(blockRowLabel(block({ role: 'teacher', name: null, label: 'Your teacher' }), 'en')).toBe('Your teacher');
+    expect(blockRowLabel(block({ role: 'teacher', name: null, label: 'Your teacher' }), 'ko')).toBe(ko.common.notes.teacherOnly);
+    expect(blockRowLabel(block({ role: 'family', name: null, label: 'Family' }), 'ko')).toBe(ko.common.notes.familyLabels.family);
+    expect(blockRowLabel(block({ role: 'family', name: '', label: 'Family' }), 'en')).toBe('Your family');
+    expect(ko.common.notes.teacherOnly).not.toBe('Your teacher');
+  });
+  it('an older Worker without role: its own line', () => {
     expect(blockRowLabel(block({}), 'en')).toBe('Your teacher · Sunday Class A');
-    expect(blockRowLabel(block({ role: 'teacher', name: null }), 'en')).toBe('Your teacher · Sunday Class A');
-    expect(blockRowLabel(block({ role: 'family', name: '' }), 'en')).toBe('Your teacher · Sunday Class A');
-    expect(blockRowLabel(block({ name: 'Sunday Class A' }), 'en')).toBe('Your teacher · Sunday Class A');
+    expect(blockRowLabel(block({ name: 'Sunday Class A' }), 'ko')).toBe('Your teacher · Sunday Class A');
   });
 });
 

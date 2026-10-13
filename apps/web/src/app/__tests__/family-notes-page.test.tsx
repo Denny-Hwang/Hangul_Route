@@ -106,7 +106,7 @@ const notesApi = {
   oversight: record('oversight', () => oversightQueue.shift() ?? ok({ rows, next: null })),
   prefs: record('prefs', () => prefsRead ?? ok(prefs)),
   putPrefs: record('putPrefs', () => putPrefsAnswer ?? ok({ ...prefs, acknowledged: true, updatedBy: 'Ji-woo Kim' })),
-  blocks: record('blocks', () => ok(blocks)),
+  blocks: record('blocks', (): Answer<NoteBlock[]> => ok(blocks)),
   hide: record('hide', () => actionAnswer),
   report: record('report', () => actionAnswer),
   block: record('block', () => actionAnswer),
@@ -281,6 +281,38 @@ describe('the Received tab (wireframe A), the family default', () => {
 });
 
 describe('Hide, Report and Stop (sheets)', () => {
+  it('after an action the rows read again in place, as deep as Show older had gone', async () => {
+    oversightQueue = [ok({ rows: [note()], next: 'cursor:1' }), ok({ rows: [note({ id: 'note:older001' })], next: 'cursor:2' })];
+    const root = await page('id=space%3Af1');
+    await act(async () => byText(root, 'button', f.older.cta)[0]?.props.onClick());
+    expect(receivedRows(root)).toHaveLength(2);
+    oversightQueue = [ok({ rows: [note({ status: 'hidden', hiddenBy: 'Ji-woo Kim' })], next: 'cursor:1' }), ok({ rows: [note({ id: 'note:older001' })], next: 'cursor:2' })];
+    act(() => byText(receivedRows(root)[0] as ReactTestInstance, 'button', f.actions.hide.cta)[0]?.props.onClick());
+    await act(async () => byText(dialog(root) as ReactTestInstance, 'button', f.hideConfirm.cta)[0]?.props.onClick());
+    expect(named(calls, 'oversight').slice(-2).map((c) => c.args)).toEqual([
+      ['space:f1', 'profile:mina'],
+      ['space:f1', 'profile:mina', 'cursor:1'],
+    ]);
+    expect(receivedRows(root)).toHaveLength(2);
+    expect(root.findAll((x) => x.props['data-testid'] === 'received-loading')).toHaveLength(0);
+    expect(byText(root, 'button', f.older.cta)).toHaveLength(1);
+  });
+
+  it('a failed read after an action keeps the rows drawn; a failed older page stops the read where it is', async () => {
+    oversightQueue = [ok({ rows: [note()], next: 'cursor:1' }), ok({ rows: [note({ id: 'note:older001' })], next: null })];
+    const root = await page('id=space%3Af1');
+    await act(async () => byText(root, 'button', f.older.cta)[0]?.props.onClick());
+    oversightQueue = [fail(500, null)];
+    act(() => byText(receivedRows(root)[0] as ReactTestInstance, 'button', f.actions.hide.cta)[0]?.props.onClick());
+    await act(async () => byText(dialog(root) as ReactTestInstance, 'button', f.hideConfirm.cta)[0]?.props.onClick());
+    expect(receivedRows(root)).toHaveLength(2);
+    oversightQueue = [ok({ rows: [note()], next: 'cursor:1' }), fail(500, null)];
+    act(() => byText(receivedRows(root)[0] as ReactTestInstance, 'button', f.actions.hide.cta)[0]?.props.onClick());
+    await act(async () => byText(dialog(root) as ReactTestInstance, 'button', f.hideConfirm.cta)[0]?.props.onClick());
+    expect(receivedRows(root)).toHaveLength(1);
+    expect(byText(root, 'button', f.older.cta)).toHaveLength(1);
+  });
+
   it('Hide asks first, then hides and reads the list again', async () => {
     rows = [note()];
     const root = await page('id=space%3Af1');
@@ -304,6 +336,8 @@ describe('Hide, Report and Stop (sheets)', () => {
     expect(textOf(sheet())).toContain(f.report.line);
     const submit = () => sheet().findAll((x) => x.type === 'button' && x.props['data-testid'] === 'report-submit')[0];
     expect(submit()?.props['aria-disabled']).toBe(true);
+    const why = root.findAll((x) => x.type === 'legend' && x.props.id === submit()?.props['aria-describedby'])[0];
+    expect(textOf(why as ReactTestInstance)).toBe(f.report.why);
     act(() => sheet().findAll((x) => x.type === 'input' && x.props.value === 'unsafe')[0]?.props.onChange());
     expect(submit()?.props['aria-disabled']).toBeUndefined();
     await act(async () => submit()?.props.onClick());
@@ -428,6 +462,11 @@ describe('Settings for <learner> (one disclosure, closed by default)', () => {
     expect(root.findAll((x) => x.type === 'p' && x.props.className === 'hr-fnotes-saved').map((x) => textOf(x))).toEqual([f.settings.saved]);
     expect(root.findAll((x) => x.props.role === 'status').map((x) => textOf(x))).toContain(f.settings.saved);
     expect(textOf(root)).toContain(f.settings.lastChangedBy('Ji-woo Kim'));
+    const announced = (): string => textOf(root.findAll((x) => x.props.role === 'status' && x.props['aria-live'] === 'polite')[0] as ReactTestInstance);
+    const first = announced();
+    await act(async () => root.findAll((x) => x.type === 'input' && x.props.value === 'off')[0]?.props.onChange());
+    expect(announced()).not.toBe(first);
+    expect(announced().trim()).toBe(f.settings.saved);
   });
 
   it('a refused change snaps back with the line', async () => {
@@ -465,6 +504,30 @@ describe('Settings for <learner> (one disclosure, closed by default)', () => {
     await act(async () => byText(root, 'button', f.settings.stopped.allowAgain.cta)[0]?.props.onClick());
     expect(textOf(root)).toContain(f.wait);
   });
+
+  it('an earlier stopped-senders answer arriving last never undoes a newer one', async () => {
+    const original = notesApi.blocks;
+    const answers: Array<(value: Answer<NoteBlock[]>) => void> = [];
+    notesApi.blocks = async (...args: unknown[]) => {
+      calls.push({ name: 'blocks', args });
+      return new Promise<Answer<NoteBlock[]>>((resolve) => {
+        answers.push(resolve);
+      });
+    };
+    try {
+      rows = [note()];
+      const root = await page('id=space%3Af1');
+      openSettings(root);
+      act(() => byText(receivedRows(root)[0] as ReactTestInstance, 'button', f.actions.block.cta)[0]?.props.onClick());
+      await act(async () => byText(dialog(root) as ReactTestInstance, 'button', f.blockConfirm.cta)[0]?.props.onClick());
+      expect(answers).toHaveLength(2);
+      await act(async () => answers[1]?.(ok([{ senderRef: 'ref:1', label: 'x', role: 'teacher', name: 'Saturday Class B', createdAt: iso }])));
+      await act(async () => answers[0]?.(ok([])));
+      expect(textOf(root)).toContain(f.settings.stopped.title);
+    } finally {
+      notesApi.blocks = original;
+    }
+  });
 });
 
 describe('page states (screen spec, States)', () => {
@@ -475,6 +538,8 @@ describe('page states (screen spec, States)', () => {
     expect(root.findAll((x) => x.props.role === 'tab')).toHaveLength(0);
     expect(root.findAll((x) => x.props['data-testid'] === 'notes-new')).toHaveLength(0);
     expect(named(calls, 'oversight')).toHaveLength(0);
+    const add = root.findAll((x) => x.type === 'a' && textOf(x) === en.console.parentHome.actions.addLearner)[0];
+    expect(add?.props.href).toBe('/parent/space?id=space%3Af1');
   });
 
   it('a caregiver without the send grant: Send a note unavailable and described by why; no composer even with &compose=1', async () => {
@@ -498,7 +563,68 @@ describe('page states (screen spec, States)', () => {
     const send = root.findAll((x) => x.type === 'button' && x.props['data-testid'] === 'notes-new')[0] as ReactTestInstance;
     expect(send.props['aria-disabled']).toBeUndefined();
     act(() => send.props.onClick());
-    expect(nav.pushed).toEqual(['/parent/space/notes?id=space%3Af1&compose=1&tab=received']);
+    expect(nav.pushed).toEqual(['/parent/space/notes?id=space%3Af1&compose=1&learner=profile%3Amina&tab=received']);
+  });
+
+  it('the Received tab opens the composer with the learner it shows; the Sent tab keeps its filter', async () => {
+    let root = await page('id=space%3Af1&learner=profile%3Ajun');
+    act(() => root.findAll((x) => x.type === 'button' && x.props['data-testid'] === 'notes-new')[0]?.props.onClick());
+    expect(nav.pushed.at(-1)).toBe('/parent/space/notes?id=space%3Af1&compose=1&learner=profile%3Ajun&tab=received');
+    act(() => mounted?.unmount());
+    root = await page('id=space%3Af1&tab=sent');
+    act(() => root.findAll((x) => x.type === 'button' && x.props['data-testid'] === 'notes-new')[0]?.props.onClick());
+    expect(nav.pushed.at(-1)).toBe('/parent/space/notes?id=space%3Af1&compose=1&tab=sent');
+  });
+
+  it('a note sent from the Received tab shows there: the tab reads its list again, and the sent list is not read', async () => {
+    const root = await page('id=space%3Af1&compose=1');
+    expect(named(calls, 'oversight')).toHaveLength(1);
+    const composer = root.findAll((x) => typeof x.type === 'function' && x.type.name === 'NoteComposer')[0] as ReactTestInstance;
+    await act(async () => composer.props.onClose(true));
+    expect(named(calls, 'oversight')).toHaveLength(2);
+    expect(named(calls, 'sent')).toHaveLength(0);
+  });
+
+  it('closing the composer without sending reads nothing again', async () => {
+    const root = await page('id=space%3Af1&compose=1');
+    const composer = root.findAll((x) => typeof x.type === 'function' && x.type.name === 'NoteComposer')[0] as ReactTestInstance;
+    await act(async () => composer.props.onClose(false));
+    expect(named(calls, 'oversight')).toHaveLength(1);
+  });
+
+  it('a note sent from the Sent tab reads the sent list again', async () => {
+    const root = await page('id=space%3Af1&tab=sent&compose=1');
+    const composer = root.findAll((x) => typeof x.type === 'function' && x.type.name === 'NoteComposer')[0] as ReactTestInstance;
+    await act(async () => composer.props.onClose(true));
+    expect(named(calls, 'sent')).toHaveLength(2);
+    expect(named(calls, 'oversight')).toHaveLength(0);
+  });
+
+  it('&compose=1 never opens the composer before the send grant is known; a list that cannot be read leaves sending to the Worker', async () => {
+    const original = notesApi.noteSenders;
+    let answer: (value: Answer<NoteSender[]>) => void = () => undefined;
+    notesApi.noteSenders = async (...args: unknown[]) => {
+      calls.push({ name: 'noteSenders', args });
+      return new Promise<Answer<NoteSender[]>>((resolve) => {
+        answer = resolve;
+      });
+    };
+    try {
+      const root = await page('id=space%3Af1&compose=1');
+      expect(dialog(root)).toBeUndefined();
+      await act(async () => answer(fail(500, null)));
+      expect(dialog(root)).toBeDefined();
+    } finally {
+      notesApi.noteSenders = original;
+    }
+  });
+
+  it('a caregiver without the grant has no live Send a note on an empty Sent tab either', async () => {
+    senders = ok([{ accountId: 'acct:jiwoo', name: 'Ji-woo Kim', isOwner: false, canSend: false }]);
+    const root = await page('id=space%3Af1&tab=sent');
+    expect(textOf(root)).toContain(n.sent.empty);
+    const live = root.findAll((x) => x.type === 'button' && textOf(x) === n.sendNote.cta && x.props['aria-disabled'] !== true);
+    expect(live).toHaveLength(0);
   });
 
   it('flag off: nothing is asked of the Worker', async () => {

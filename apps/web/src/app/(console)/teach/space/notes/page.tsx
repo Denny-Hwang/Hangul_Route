@@ -60,6 +60,8 @@ function NotesInner(): JSX.Element {
   const [takeBack, setTakeBack] = useState<{ view: SentRowView; name: string | null } | null>(null);
   const [takeBackBusy, setTakeBackBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  // Bumped by a send from the Received tab: the panel reads its list again, so the note just sent shows there.
+  const [receivedEpoch, setReceivedEpoch] = useState(0);
   // Only the newest list read may draw: an answer for an older filter or an earlier retry is dropped.
   const latest = useRef(0);
   // The composer opened from this page's own New note: closing it goes back, so history keeps one copy of the list.
@@ -126,6 +128,8 @@ function NotesInner(): JSX.Element {
   useEffect(() => {
     if (!notesApi || !enabled || rosterKind !== 'family') return;
     let live = true;
+    // Another family's answer never decides this one: unknown again until this family's list answers.
+    setGrant(undefined);
     void notesApi.noteSenders(q.spaceId).then((result) => {
       if (live) setGrant(viewerSendGrant(result.ok ? result.data : null, accountId));
     });
@@ -158,7 +162,9 @@ function NotesInner(): JSX.Element {
 
   const openComposer = (): void => {
     openedHere.current = true;
-    router.push(notesPageHref(q.spaceId, kind, { learner: q.learner, compose: true, tab }));
+    // The Received tab preselects the learner it shows, also when that is the default first learner (no `&learner`).
+    const learner = family && q.tab === 'received' && shown ? shown.id : q.learner;
+    router.push(notesPageHref(q.spaceId, kind, { learner, compose: true, tab }));
   };
   // Opened here: back to the list entry New note pushed over. Arrived with `&compose=1` (the roster, the report, the
   // family home): replace, so the list is where Back from it leads.
@@ -167,7 +173,9 @@ function NotesInner(): JSX.Element {
       openedHere.current = false;
       router.back();
     } else router.replace(notesPageHref(q.spaceId, kind, { learner: q.learner, tab }));
-    if (sent) void loadList();
+    if (!sent) return;
+    if (family && q.tab === 'received') setReceivedEpoch((now) => now + 1);
+    else void loadList();
   };
   const filter = (learner: string): void => router.replace(notesPageHref(q.spaceId, kind, { learner: learner || null, tab }));
 
@@ -230,7 +238,7 @@ function NotesInner(): JSX.Element {
           setNotice(null);
           setTakeBack({ view, name: raw.to === 'learner' ? raw.displayName : null });
         }}
-        onNewNote={canSend && !rosterError ? openComposer : undefined}
+        onNewNote={canSend && !rosterError && !notGranted ? openComposer : undefined}
       />
     </>
   );
@@ -276,6 +284,10 @@ function NotesInner(): JSX.Element {
         {rosterError ? null : noLearners ? (
           <div className="hr-notes-state">
             <p>{n.family.noLearners}</p>
+            {/* The existing join-code path: the family's own page holds its join code (wireframe, States). */}
+            <Link className="hr-notes-btn" href={ROUTES.space(q.spaceId, kind)} data-testid="notes-add-learner">
+              {m.console.parentHome.actions.addLearner}
+            </Link>
           </div>
         ) : family ? (
           <>
@@ -305,7 +317,7 @@ function NotesInner(): JSX.Element {
               onSelect={(t) => router.replace(notesPageHref(q.spaceId, kind, { learner: q.learner, tab: t }))}
             />
             <div className="hr-notes-panel" role="tabpanel" id={panelId} aria-labelledby={`${panelId}-tab-${q.tab}`}>
-              {q.tab === 'sent' ? list : shown && notesApi && roster ? <ReceivedPanel key={shown.id} notesApi={notesApi} familyId={roster.space.id} learner={shown} m={m} locale={locale} /> : null}
+              {q.tab === 'sent' ? list : shown && notesApi && roster ? <ReceivedPanel key={`${shown.id}:${receivedEpoch}`} notesApi={notesApi} familyId={roster.space.id} learner={shown} m={m} locale={locale} /> : null}
             </div>
           </>
         ) : (

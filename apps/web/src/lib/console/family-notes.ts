@@ -62,13 +62,15 @@ export function prefsChangedLine(updatedBy: string | null, locale: UiLocale = DE
 /**
  * A stopped sender's row (section 8.5): a teacher as "Your teacher · <class>", a family adult by the account name (or
  * another family of the learner by that space's name), a sender who left as "A former sender", all in the viewer's
- * language. An older Worker without `role` / `name` keeps its own line.
+ * language (a teacher or family adult without a name reads "Your teacher" / "Your family"). An older Worker without
+ * `role` keeps its own line.
  */
 export function blockRowLabel(block: NoteBlock, locale: UiLocale = DEFAULT_LOCALE): string {
   const m = getMessages(locale);
   if (block.role === 'former') return m.console.notes.family.settings.stopped.former;
-  if (!block.name) return block.label;
-  return block.role === 'teacher' ? m.common.notes.teacherLabel(block.name) : block.role === 'family' ? block.name : block.label;
+  if (block.role === 'teacher') return block.name ? m.common.notes.teacherLabel(block.name) : m.common.notes.teacherOnly;
+  if (block.role === 'family') return block.name || m.common.notes.familyLabels.family;
+  return block.label;
 }
 
 /** The report sheet's reasons, the app's four (section 6.10 item 4), the third named for the learner. */

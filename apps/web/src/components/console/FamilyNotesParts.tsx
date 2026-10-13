@@ -188,6 +188,11 @@ export function ReceivedPanel({
   const [reason, setReason] = useState<NoteReportReason | null>(null);
   const [busy, setBusy] = useState(false);
   const latest = useRef(0);
+  // Only the newest blocks read may draw: an earlier answer arriving last never undoes a newer one.
+  const latestBlocks = useRef(0);
+  // Each Saved is a new message: a polite region repeating the same words is not read again, so every second one
+  // carries an invisible no-break space.
+  const saves = useRef(0);
   const choiceRef = useRef<{ focus?: () => void } | null>(null);
   const [focusChoice, setFocusChoice] = useState(false);
 
@@ -204,8 +209,33 @@ export function ReceivedPanel({
     } else setListState('error');
   }, [notesApi, familyId, learner.id]);
 
+  /**
+   * After Hide, Report, Stop or Allow again: the rows read again from the Worker in place, as deep as Show older had
+   * gone, so loaded older notes stay and nothing flashes back to the skeleton. A failed read keeps the rows drawn.
+   */
+  const refreshList = useCallback(async (): Promise<void> => {
+    const call = ++latest.current;
+    const depth = rows.length;
+    const result = await notesApi.oversight(familyId, learner.id);
+    if (!result.ok) return;
+    const fresh = [...result.data.rows];
+    let cursor = result.data.next;
+    while (cursor !== null && fresh.length < depth) {
+      const more = await notesApi.oversight(familyId, learner.id, cursor);
+      if (!more.ok) break;
+      fresh.push(...more.data.rows);
+      cursor = more.data.next;
+    }
+    if (call !== latest.current) return;
+    setRows(fresh);
+    setNext(cursor);
+    setListState('ready');
+  }, [notesApi, familyId, learner.id, rows.length]);
+
   const loadBlocks = useCallback(async (): Promise<void> => {
+    const call = ++latestBlocks.current;
     const result = await notesApi.blocks(familyId, learner.id);
+    if (call !== latestBlocks.current) return;
     setBlocks(result.ok ? result.data : []);
   }, [notesApi, familyId, learner.id]);
 
@@ -253,7 +283,8 @@ export function ReceivedPanel({
     if (result.ok) {
       setPrefs(result.data);
       setSaved(true);
-      setAnnounce(f.settings.saved);
+      saves.current += 1;
+      setAnnounce(saves.current % 2 === 0 ? `${f.settings.saved}\u00a0` : f.settings.saved);
     } else {
       setPrefs(before);
       setNotice(familyActionProblem(result.failure, 'prefs', locale));
@@ -284,7 +315,7 @@ export function ReceivedPanel({
       setNotice(familyActionProblem(result.failure, kind, locale));
       return;
     }
-    void loadList();
+    void refreshList();
     if (kind === 'block') void loadBlocks();
   };
 
@@ -299,7 +330,7 @@ export function ReceivedPanel({
       return;
     }
     void loadBlocks();
-    void loadList();
+    void refreshList();
   };
 
   const lines = receivedLines(rows, new Date(), locale);
@@ -485,7 +516,7 @@ function FamilyActionSheet({
             ) : null}
           </div>
           <fieldset className="hr-fnotes-choices">
-            <legend>{f.report.why}</legend>
+            <legend id={`${ids}-why`}>{f.report.why}</legend>
             {reportReasonChoices(learner, locale).map((choice) => (
               <label key={choice.id} className="hr-fnotes-choice">
                 <input type="radio" name={`${ids}-reason`} value={choice.id} checked={reason === choice.id} onChange={() => onReason(choice.id)} />
@@ -495,7 +526,7 @@ function FamilyActionSheet({
           </fieldset>
           <p className="hr-notes-quiet">{f.report.line}</p>
           <div className="hr-compose-actions">
-            <MoveButton primary waiting={reason === null || busy} onClick={onConfirm} testId="report-submit">
+            <MoveButton primary waiting={reason === null || busy} describedBy={reason === null ? `${ids}-why` : undefined} onClick={onConfirm} testId="report-submit">
               {f.report.submit.cta}
             </MoveButton>
             <MoveButton onClick={onClose}>{f.report.cancel.cta}</MoveButton>
