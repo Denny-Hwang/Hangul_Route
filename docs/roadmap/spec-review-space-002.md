@@ -106,5 +106,5 @@ Symbols/tables/routes verified present: `Db`, `D1Db` (`changes`), `MemoryDb`, `D
 5. O-3/O-5/G4: family-code hole friction vs an F-SPACE-001 change; lookup roster exposure vs an F-TCH-001 picker redesign.
 6. B2: guardian email for class-only learners.
 7. O-8 numbers (48 h, 14 d, 72 h, 24 h, cooldowns) and A6 school admin.
-8. G2: counsel review of the consent lines in en/ko/es and the retention length; G5/T-0b: owner's mockups; B4 (13+ line).
+8. G2: counsel review of the consent lines in en/ko/es and the retention length; G5/T-0b: owner's mockups (superseded 2026-10-12: agent-made mockups approved by a multi-agent review; see F-SPACE-002 T-0b); B4 (13+ line).
 9. O-12: keep `F-SPACE-002` and renumber parent-email in four files, or take `F-SPACE-003` here.
