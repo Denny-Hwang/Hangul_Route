@@ -214,7 +214,7 @@ export function RevisitLetterLinks({ chars, shown }: { chars: readonly string[];
   return (
     <span style={{ display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.xs, verticalAlign: 'middle' }}>
       {chars.map((char, index) => (
-        <BrowseLink key={char} target={{ kind: 'char', char }} source="roster" testId={`roster-revisit-${index}`}>
+        <BrowseLink key={char} target={{ kind: 'char', char }} source="roster" testId={`roster-revisit-${index}`} style={{ fontSize: typography.size.bodyLg }}>
           <span lang="ko">{char}</span>
         </BrowseLink>
       ))}
