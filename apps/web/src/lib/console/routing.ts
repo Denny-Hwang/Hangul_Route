@@ -39,7 +39,9 @@ export const ROUTES = {
    */
   space: (id: string, kind?: SpaceKind) => spacePath('', idQuery(id), kind),
   /** With `planId` the builder opens that plan (the curriculum wizard's draft, F-PLAN-002 section 3.8). */
-  spacePlan: (id: string, planId?: string, kind?: SpaceKind) => spacePath('plan', `${idQuery(id)}${planId ? `&plan=${encodeURIComponent(planId)}` : ''}`, kind),
+  /** The plan builder; `add` pre-adds one quest as a draft item (F-REPORT-001 RP-10, the report's Add to a plan). Ids only. */
+  spacePlan: (id: string, planId?: string, kind?: SpaceKind, add?: string) =>
+    spacePath('plan', `${idQuery(id)}${planId ? `&plan=${encodeURIComponent(planId)}` : ''}${add ? `&add=${encodeURIComponent(add)}` : ''}`, kind),
   spaceCurriculum: (id: string, kind?: SpaceKind) => spacePath('curriculum', idQuery(id), kind),
   spaceRelink: (id: string, kind?: SpaceKind) => spacePath('relink', idQuery(id), kind),
   /**

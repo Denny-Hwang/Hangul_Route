@@ -138,7 +138,10 @@ export function SiteFooter({ locale, page, current, variant = 'default' }: SiteF
         <p style={{ margin: `${spacing.lg}px 0 0`, fontSize: rem(typography.size.caption), color: colors.text.muted }}>
           {t.footer.copyright(new Date().getFullYear())}
         </p>
-        <LocaleSwitcher locale={locale} page={page} label={t.footer.language} shown={shownSiteLocales()} linkStyle={FOOTER_LINK} />
+        {/* One row (label, then each locale), so the switcher adds one line once a second locale ships. */}
+        <div className="hr-site-locales">
+          <LocaleSwitcher locale={locale} page={page} label={t.footer.language} shown={shownSiteLocales()} linkStyle={FOOTER_LINK} />
+        </div>
       </div>
     </footer>
   );

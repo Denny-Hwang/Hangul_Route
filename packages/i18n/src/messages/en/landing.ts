@@ -22,8 +22,8 @@
 import { plural } from '../../plural';
 
 /**
- * Two answers the old landing's questions block and the learners page (F-SITE-002 §3.4) share word for word.
- * One object each, so the copies cannot drift; S-6 removes `faq` and these stay with `persona.learners.faq`.
+ * Two answers of the learners page's questions (F-SITE-002 §3.4), carried over word for word from the old landing's
+ * questions block, which S-6 removed.
  */
 const FAQ_ADULT = {
   q: 'I’m an adult beginner. Will it feel too young?',
@@ -54,11 +54,15 @@ export const landing = {
   meta: {
     title: 'Hangul Route — Learn Hangul from zero with Hoya',
     tagline: 'Learn Hangul from zero, at any age.',
+    /**
+     * What is built, with no typed counts (F-SITE-002 §3.12): Stage 1, the Korean culture cards, Hoya, no ads. No
+     * stage, theme or mini-game count, and no Heritage Journey grid, which is not built yet.
+     */
     description:
-      'Learn Hangul from zero with Hoya the tiger — for anyone, at any age: heritage families, K-culture fans and curious beginners. Five-minute quests, 8 mini-games, Korean culture cards to collect, and a Heritage Journey across 7 stages and 5 culture themes. Stage 1 is free and more stages are coming. No ads, ever.',
+      'Learn Hangul from zero with Hoya the tiger, at any age: heritage families, K-culture fans and curious beginners. Five-minute quests teach the Korean alphabet, for reading, listening and writing, and every letter earns a Korean culture card. Stage 1 is free and more stages are coming. No ads, ever.',
     keywords: ['learn Hangul', 'Korean alphabet', 'learn Korean', 'Korean for beginners', 'heritage Korean', 'K-culture learning', 'Hoya'],
-    ogDescription: 'Heritage Journey + Korean culture cards + Hoya the tiger. Start Korean from zero, at any age. Stage 1 is free.',
-    twitterDescription: 'Heritage Journey + Korean culture cards + Hoya the tiger. Start Korean from zero, at any age.',
+    ogDescription: 'Learn the Korean alphabet from zero with Hoya the tiger, at any age, and collect Korean culture cards. Stage 1 is free.',
+    twitterDescription: 'Learn the Korean alphabet from zero with Hoya the tiger, at any age, and collect Korean culture cards.',
     /** Per-page `<title>` and description of the three persona pages (F-SITE-002 §3.12, S-4a / S-4b). No typed counts. */
     pages: {
       learners: {
@@ -81,18 +85,13 @@ export const landing = {
     mark: 'HR',
   },
   /**
-   * The site header (F-SITE-002 §3.2). `learners`, `parents`, `teachers`, `signIn`, `start` and `skip` are the new
-   * header's; `playNow`, `cards`, `games` and `dashboard` are the old landing header's until S-6. The current page's
-   * link carries `aria-current="page"` alone (no hidden suffix: screen readers announce it).
+   * The site header (F-SITE-002 §3.2): the persona links, Sign in, Start learning and the skip link. The current
+   * page's link carries `aria-current="page"` alone (no hidden suffix: screen readers announce it).
    */
   nav: {
     label: 'Main',
-    playNow: { cta: 'Play now' },
-    cards: 'Cards',
-    games: 'Games',
     learners: 'Learners',
     parents: 'Parents',
-    dashboard: 'Dashboard',
     teachers: 'Teachers',
     signIn: 'Sign in',
     start: 'Start learning',
@@ -121,17 +120,14 @@ export const landing = {
         learners: {
           title: 'Learners',
           body: 'Five-minute quests, a guide who never scolds, and Korean culture cards to collect.',
-          linkLabel: 'For learners',
         },
         parents: {
           title: 'Parents and caregivers',
           body: 'See what your learner practises, with a grown-up gate and no ads.',
-          linkLabel: 'For parents',
         },
         teachers: {
           title: 'Teachers',
           body: 'Students join with a class code. No student emails, no accounts.',
-          linkLabel: 'For teachers',
         },
       },
     },
@@ -330,52 +326,6 @@ export const landing = {
       teachers: 'Bring Hangul to your class this week.',
     },
   },
-  hero: {
-    badges: { allAges: 'All ages', heritage: 'Heritage families', fans: 'K-culture fans' },
-    /** One heading, shown on two lines. */
-    titleLines: ['Learn Hangul from zero —', 'at any age.'],
-    /** `letter` is the taught letter the page shows (Hangul, passed in). */
-    lead: (letter: string) =>
-      `Hoya the tiger guides you from ${letter} to Chuseok — five-minute quests, plain-English instructions, and Korean culture cards to collect along the way. Kids, teens and grown-ups play the same quests. Played, not taught. Never a frown.`,
-    play: { cta: 'Play in your browser' },
-    seeCards: { cta: 'See the cards' },
-    facts: 'Nothing to download · No ads · Works offline after your first visit',
-    /** Hoya's speech bubble on the hero art; `letter` is passed in. */
-    bubble: (letter: string) => `Annyeong! Let's meet ${letter}.`,
-  },
-  trust: {
-    label: 'Trust',
-    items: {
-      /**
-       * OD-4 (F-SITE-002): no compliance claim while the policies are drafts, so the title is the new home's
-       * `home.promises.items.safety`. The body makes no claim about which personal data we hold: the app backs up
-       * each learner's nickname and progress, and the parent email stays on the device (privacy-statements.test.ts).
-       * The key keeps its name until S-6 removes the old home.
-       */
-      coppa: { title: 'Child safety first', body: 'No third-party tracking. We collect as little as possible.' },
-      ads: { title: 'No ads, ever', body: 'No third-party ads. No data sold. Revenue is in-app only.' },
-      offline: {
-        title: 'Works offline',
-        body: 'After your first visit the app opens without a connection. Letter sounds need a Korean voice on your device until our own recordings arrive.',
-      },
-      antiShame: { title: 'Anti-shame design', body: 'Wrong answers use amber. No red. No streak guilt.' },
-    },
-  },
-  how: {
-    title: 'How it works',
-    steps: {
-      journey: { title: 'Heritage Journey', body: '7 stages × 5 culture themes. Every learner draws their own route through Korean.' },
-      games: { title: 'Mini-games', body: 'Tap, build, trace, and match — five-minute games that fit into any day, at any age.' },
-      collect: {
-        title: 'Collect culture',
-        body: (cards: number) =>
-          plural('en', cards, {
-            one: `Earn ${cards} Heritage Card in Stage 1 — from kimchi to Chuseok to the gayageum.`,
-            other: `Earn ${cards} Heritage Cards in Stage 1 — from kimchi to Chuseok to the gayageum.`,
-          }),
-      },
-    },
-  },
   /** The heritage-card preview (`HeritageCardsPreview`); card titles and blurbs are content, not messages. */
   cards: {
     eyebrow: 'The reward loop',
@@ -401,84 +351,10 @@ export const landing = {
     family: { recognition: 'Recognition', production: 'Production', application: 'Application', review: 'Review' },
     beta: 'Beta — opt in',
   },
-  /** Meet Hoya (`MeetHoya`); the Korean phrase and its romanization are passed in. */
-  hoya: {
-    eyebrow: 'Meet Hoya',
-    title: 'A tiger who never says “wrong.”',
-    body: 'Hoya is a young tiger and the only voice in the app. Korean folklore opens with “Long ago, when tigers smoked tobacco…” so the tiger is Korea’s grandparent character. Hoya is a young one — so learners meet a peer, not an authority.',
-    bubble: (korean: string, romanization: string) => `${korean} · ${romanization} · almost there!`,
-    points: {
-      wrong: { title: 'Wrong answer?', body: (korean: string) => `Hoya says “${korean}” (almost there) on amber — never red.` },
-      right: { title: 'Right answer?', body: 'One star, one card, one quiet cheer. No coin sounds.' },
-      streak: { title: 'No streak shame.', body: 'Skip a day. Hoya is happy to see you when you come back.' },
-    },
-  },
-  parents: {
-    eyebrow: 'For parents',
-    title: 'Five minutes a day. Nothing creepy.',
-    body: 'Many of our learners are children, so Hangul Route is built for tired parents too. Hand the phone over for five minutes; come back to one new Korean letter and one heritage card. Learning Korean yourself? Play the same quests. Bring it on a long flight — the app works offline after your first visit.',
-    points: {
-      /**
-       * The key keeps its name until S-6 removes the old home; the words are the backup sentence, because the app backs
-       * up every learner with no sign-in (`persona.parents.safe.bullets.backup`, privacy-statements.test.ts).
-       */
-      localFirst: {
-        title: 'Progress is backed up.',
-        body: "Each learner's nickname and progress are kept on the device and backed up to our servers, so they can be restored with a Rescue Code. When a learner joins a class or family with a code, that space sees the name they join with and their progress. A family's grown-ups can also restore their progress.",
-      },
-      gate: { title: 'Parent-gate.', body: 'Anything that costs money or deletes data is behind a simple multiplication question.' },
-      shared: { title: 'Siblings share a device.', body: 'Each learner keeps their own stars and cards. No upsell.' },
-    },
-  },
-  /** The one thing the landing says about cost (owner decision 2026-10-10): no price, nothing sold that is not built. */
-  pricing: {
-    title: 'Pricing',
-    lines: {
-      stage1: { name: 'Stage 1', detail: 'free' },
-      stages: { name: 'More stages', detail: 'coming' },
-      classroom: { name: 'Classroom plans', detail: 'coming' },
-    },
-    footnote: 'No third-party ads, ever.',
-  },
-  faq: {
-    title: 'Common questions',
-    items: {
-      who: {
-        q: 'Who is Hangul Route for?',
-        a: 'Anyone learning Hangul from zero, at any age — kids, teens and adults, heritage families and K-culture fans. Everyone plays the same quests. Stage 1 (Hangul) works for confident readers and pre-readers alike — every screen has voice and visuals.',
-      },
-      adult: FAQ_ADULT,
-      different: {
-        q: 'What makes this different from other language apps?',
-        a: 'Most apps start with vocabulary drills. We start with the alphabet and Korean culture — one collectable heritage card at a time. And no red feedback, ever.',
-      },
-      korean: FAQ_KOREAN,
-      session: {
-        q: 'How long is a session?',
-        a: 'One quest takes about 5 minutes. Most learners do 1–3 quests per sitting. You can stop any time — no streak shame.',
-      },
-      cost: {
-        q: 'How much does it cost?',
-        a: 'Stage 1 is free. More stages and classroom plans are coming. No ads.',
-      },
-    },
-  },
-  /** The #get section around the launch-news form. */
-  get: {
-    title: 'Try Hangul Route this week.',
-    body: "Hangul Route runs in your browser — open it, add it to your home screen, and it works offline. Leave your email and we'll send you the launch news.",
-    play: { cta: 'Play now — free' },
-    devices: 'Works on iPhone, Android, iPad and Chromebook — any modern browser.',
-  },
   footer: {
-    /** The new footer's group headings (F-SITE-002 §3.2); `product`, `cards`, `games`, `dashboard`, `console` go in S-6. */
+    /** The footer's group headings (F-SITE-002 §3.2). */
     guide: 'Guide',
     app: 'App',
-    product: 'Product',
-    cards: 'Heritage cards',
-    games: 'Mini-games',
-    dashboard: 'Parent dashboard',
-    console: 'Teacher console',
     company: 'Company',
     about: 'About',
     privacy: 'Privacy',

@@ -39,13 +39,13 @@ otherwise, consent-gate.ts (spec 4.11, device rules):
 
 | Variant / state | Row buttons | Under the rows |
 |---|---|---|
-| (a) class tablet (`scope: 'class'`, inbox `transfers: []`) | **Leave** | "Use your grown-up's rescue code first." (once per card) |
+| (a) class tablet (`scope: 'class'`, inbox `transfers: []`) | **Leave** | "Use your rescue code first." (once per card) |
 | device consent off (launch state until G6), or (b) with nothing asked | **Leave** | nothing: the card reads as today |
 | (b) a teacher asked, learner slot waiting | **Leave** | pending row "{Source} asked about a move." with gated **Review** (ghost), then "Ask the grown-up with the account to answer this in the console." |
 | a teacher asked, learner slot consented (the grown-up said yes in the console), a class still waiting (any route) | **Leave** | pending row "{Source} asked about a move. Waiting for the other class to answer." (both classes: "Waiting for the classes to answer.") with gated **Review** (ghost) → the read-only sheet with **Not now**; no "answer in the console" line, the Home line agrees (no Home line, nothing to answer) |
 | (c) nothing asked | **Move** (gated) on **every** class row, then **Leave** | nothing |
 | (c) learner consent reset | **Leave** | "Asked: a move to {Destination}. Please check this again." with gated **Review** (primary) |
-| (d) managed, no PIN | **Leave** | "A grown-up needs to set up a PIN first. Open Profile, then Grown-ups." and **Set up PIN** (`PinEntry`, `mode: 'setup'`) |
+| (d) managed, no PIN | **Leave** | "A grown-up needs to set up a PIN first. Open Profile, then Grown-up zone." and **Set up PIN** (`PinEntry`, `mode: 'setup'`) |
 | (d') PIN made less than a day ago | **Leave** | "Moves open one day after the PIN is set." (no button) |
 | learner-side request waiting for the classes (any route) | **Leave** | "Asked: a move to {Destination}. Waiting for the classes to answer." (one class left: "Waiting for the other class to answer.", spec 4.12) with gated **Review** (ghost) |
 | approved, waiting for room (any route) | **Leave** | pending row holding the room block (`feedback.nudgeLight`, `pause` glyph, "Waiting for room in the new class.", as on the console) with gated **Review** |

@@ -15,6 +15,7 @@ import {
   A,
   ago,
   ahead,
+  approve,
   B,
   base,
   bearer,
@@ -587,6 +588,25 @@ describe('list and views', () => {
     expect((await list(SCHOOL, 'teacher-a')).status).toBe(404);
   });
 
+  it("school counts follow pendingCount: a class counts only the moves waiting on its own answer (T-5d)", async () => {
+    await db.putSpace(space(SCHOOL, 'school', 'admin'));
+    await member(SCHOOL, 'account', 'admin', 'owner');
+    await db.putSpace(space(A, 'class', 'teacher-a', { name: 'Sunday Class A', parentSpaceId: SCHOOL }));
+    await db.putSpace(space(B, 'class', 'teacher-b', { name: 'Saturday Class B', parentSpaceId: SCHOOL, joinCode: CODE_B, joinCodeExpiresAt: ahead(20 * DAY) }));
+    const counts = async () => ((await list(SCHOOL, 'admin')).body.data as { counts: Array<{ spaceId: string; waiting: number }> }).counts;
+
+    // A teacher-started request: A said yes, the family has not; B cannot see it yet. Nothing waits on either class.
+    const teacher = requestOf(await create(A, 'teacher-a', classCreate()));
+    expect(await counts()).toEqual(expect.arrayContaining([{ spaceId: A, waiting: 0 }, { spaceId: B, waiting: 0 }]));
+    // The family says yes: now it waits on B alone.
+    const digest = requestsOf(await list(FAMILY, 'mom')).find((r) => r.id === teacher.id)?.termsDigest;
+    expect((await approve(FAMILY, 'mom', teacher.id, { slots: ['learner'], consent: { ...consent, termsDigest: digest } })).status).toBe(200);
+    expect(await counts()).toEqual(expect.arrayContaining([{ spaceId: A, waiting: 0 }, { spaceId: B, waiting: 1 }]));
+    // B agrees: everyone is in, the move is scheduled, nothing waits on anyone.
+    expect((await approve(B, 'teacher-b', teacher.id, { slots: ['destination'] })).status).toBe(200);
+    expect(await counts()).toEqual(expect.arrayContaining([{ spaceId: A, waiting: 0 }, { spaceId: B, waiting: 0 }]));
+  });
+
   it('settles before listing: an expired request reads as ended, an archived destination cancels it', async () => {
     const row = await seedRow({ id: 'transfer:stale', initiator: 'learner_side', createdAgo: 15 * DAY });
     const [card] = requestsOf(await list(FAMILY, 'mom'));
@@ -666,19 +686,19 @@ describe('list and views', () => {
     const seedOpen = async (from: number, to: number) => {
       for (let i = from; i < to; i += 1) {
         await filler(`profile:sch-${i}`);
-        await seedRow({ id: `transfer:sch-${i}`, learnerId: `profile:sch-${i}`, initiator: 'source', dest: C, createdAgo: (i + 1) * 60 * 1000 });
+        await seedRow({ id: `transfer:sch-${i}`, learnerId: `profile:sch-${i}`, initiator: 'learner_side', account: `acct-${i}`, dest: C, createdAgo: (i + 1) * 60 * 1000 });
       }
     };
     await seedOpen(0, 5);
     const five = await countDbCalls(async () => {
-      expect((await list(SCHOOL, 'admin')).body.data).toEqual({ requests: [], counts: expect.arrayContaining([{ spaceId: A, waiting: 5 }, { spaceId: C, waiting: 0 }]) });
+      expect((await list(SCHOOL, 'admin')).body.data).toEqual({ requests: [], counts: expect.arrayContaining([{ spaceId: A, waiting: 5 }, { spaceId: C, waiting: 5 }]) });
     });
     await seedOpen(5, 20);
     // an expired row nobody settled is not waiting
     await filler('profile:sch-stale');
     await seedRow({ id: 'transfer:sch-stale', learnerId: 'profile:sch-stale', initiator: 'source', dest: C, createdAgo: 15 * DAY });
     const twenty = await countDbCalls(async () => {
-      expect((await list(SCHOOL, 'admin')).body.data).toEqual({ requests: [], counts: expect.arrayContaining([{ spaceId: A, waiting: 20 }, { spaceId: C, waiting: 0 }]) });
+      expect((await list(SCHOOL, 'admin')).body.data).toEqual({ requests: [], counts: expect.arrayContaining([{ spaceId: A, waiting: 20 }, { spaceId: C, waiting: 20 }]) });
     });
     expect(twenty).toBe(five);
     expect((await db.getTransfer('transfer:sch-stale'))?.status).toBe('requested');

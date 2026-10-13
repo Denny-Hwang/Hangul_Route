@@ -353,9 +353,10 @@ describe('periods and steps', () => {
       hideTable: 'Hide table',
       baseline: { quests: 0, cards: 0 },
       rows: [
-        { m: '2026-09', label: 'September 2026', quests: 3, cards: 3 },
-        { m: '2026-10', label: 'October 2026', quests: 7, cards: 5 },
+        { m: '2026-09', label: 'September 2026', short: 'Sep', quests: 3, cards: 3 },
+        { m: '2026-10', label: 'October 2026', short: 'Oct', quests: 7, cards: 5 },
       ],
+      latest: { quests: 7, cards: 5 },
     });
     expect(v.moreDetail?.blocks.map((b) => ('heading' in b ? b.heading : null))).not.toContain('New letters this period');
   });
@@ -792,6 +793,13 @@ describe('the P1 action group (RP-7a2)', () => {
     expect(line?.sentence.text).toBe('ㅂ (b) and ㅅ (s): worth another visit.');
     expect(line?.actions).toEqual([]);
   });
+
+  it('offers Add to a plan only for a quest the builder can add, never a closed one (RP-10)', () => {
+    const catalog = { ...CATALOG, cells: CATALOG.cells.map((cell) => (cell.episodeId === 'episode:stage1-life' ? { ...cell, status: 'preview' as const } : cell)) };
+    const line = view(STEADY, { kind: 'class', role: 'teacher', catalog }).practiceNext?.lines.find((row) => row.code === 'letters_revisit');
+    expect(line?.sentence.text).toBe('ㅂ (b) and ㅅ (s): worth another visit.');
+    expect(line?.actions).toEqual([]);
+  });
 });
 
 describe('the goal line under "Now on" (RP-7a2, LR-D)', () => {
@@ -896,5 +904,42 @@ describe('the month grid header (RP-7a2)', () => {
     const es = view(STEADY, { query: { period: 'month', at: null, from: null }, locale: 'es' });
     expect(es.thisPeriod?.calendar?.weekdays).toHaveLength(7);
     expect(es.thisPeriod?.calendar?.weekdays[0]).not.toBe('Mon');
+  });
+});
+
+describe('the printed footer (RP-7b, section 3.10)', () => {
+  it('reads "Private: shared from Hangul Route" with the print date on the viewer\'s day, never a name', () => {
+    expect(view(STEADY).printFooter).toBe('Private: shared from Hangul Route on Oct 15.');
+    expect(view(STEADY).printFooter).not.toContain('Mina');
+    expect(view(null).printFooter).toBe('Private: shared from Hangul Route on Oct 15.');
+  });
+
+  it('an invalid clock prints the learner\'s last saved day instead of an empty date', () => {
+    expect(view(STEADY, { now: new Date('not a time') }).printFooter).toBe('Private: shared from Hangul Route on Oct 15.');
+  });
+});
+
+describe('the growth legend (RP-7b)', () => {
+  it('names the last month\'s counts, or the earlier baseline when no month is held', () => {
+    expect(view(STEADY, { query: { period: 'all', at: null, from: null } }).thisPeriod?.growth?.latest).toEqual({ quests: 7, cards: 5 });
+    const noMonths = { ...STEADY, activity: { ...STEADY.activity, months: [] } };
+    const growth = view(noMonths, { query: { period: 'all', at: null, from: null } }).thisPeriod?.growth;
+    expect(growth?.rows).toEqual([]);
+    expect(growth?.latest).toEqual(growth?.baseline);
+  });
+});
+
+describe('F-BROWSE-001 BR-11: P1 carries its quest as an All lessons target', () => {
+  it('the P1 line with a quest this build names gets a quest target, whatever the role, archived or not', () => {
+    for (const over of [{ kind: 'family' as const, role: 'owner' as const }, { kind: 'class' as const, role: 'caregiver' as const }, { kind: 'class' as const, role: 'teacher' as const, archivedAt: '2026-10-01T00:00:00.000Z' }]) {
+      expect(view(STEADY, over).practiceNext?.lines[0]?.preview).toEqual({ kind: 'quest', id: 'quest:stage1-life-q2' });
+    }
+  });
+
+  it('no other line, and no P1 without a quest (legacy), carries one', () => {
+    const v = view(STEADY, { kind: 'class', role: 'teacher' });
+    expect(v.practiceNext?.lines.slice(1).every((line) => line.preview === null)).toBe(true);
+    expect(v.wentWell?.lines.every((line) => line.preview === null)).toBe(true);
+    expect(view(LEGACY, { kind: 'class', role: 'teacher' }).practiceNext?.lines[0]?.preview).toBeNull();
   });
 });

@@ -465,13 +465,15 @@ transferSpaceRoutes.get('/:id/transfer-requests', async (c) => {
   // A school sees how many moves wait per child class, nothing else (TransferSchoolCountView). The counts
   // are read set-based and settle nothing (a school may have many busy classes; settling every row could pass
   // the per-request query limit): a row past its expiry is left out, and the class pages settle the rest.
+  // Each class counts by the console's `pendingCount` rule (T-5d): only the moves waiting on its own answer,
+  // so a class never shows one number on its own row and another on the school row.
   if (space.archivedAt || !can(actor, 'roster.manage', { kind: 'space', ctx })) return notFound(c);
   const classes = (await db.childSpaces(space.id)).filter((cls) => cls.kind === 'class' && !cls.archivedAt);
   const ids = classes.map((cls) => cls.id);
   const [asSource, asDest] = await Promise.all([db.openTransfersOfSpaces(ids, 'source'), db.openTransfersOfSpaces(ids, 'destination')]);
   const at = now.toISOString();
-  const liveSource = asSource.filter((t) => t.expiresAt > at);
-  const liveDest = asDest.filter((t) => t.expiresAt > at && destinationSees(t));
+  const liveSource = asSource.filter((t) => t.expiresAt > at && t.source.state === 'pending');
+  const liveDest = asDest.filter((t) => t.expiresAt > at && destinationSees(t) && t.destination.state === 'pending');
   const counts = ids.map((id) => ({ spaceId: id, waiting: liveSource.filter((t) => t.sourceSpaceId === id).length + liveDest.filter((t) => t.destSpaceId === id).length }));
   return ok(c, { requests: [], counts });
 });

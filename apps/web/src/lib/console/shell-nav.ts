@@ -15,8 +15,8 @@ export type NavId = 'home' | 'reports' | 'notes' | 'classes' | 'teacherNotes' | 
 
 /**
  * A link. `document` marks a learner root of this origin (Lessons opens All lessons at `/browse`, F-BROWSE-001), a
- * plain same-tab link rather than a console client navigation; F-BROWSE-001 BR-10 adds the click that writes the
- * tab's browse pass first (`openBrowse(undefined, 'nav')`).
+ * plain same-tab link rather than a console client navigation. A plain click on it writes the tab's browse pass
+ * first (`AdultFrame`, `openBrowse(undefined, 'nav')`, F-BROWSE-001 BR-10); a modifier click opens a tab with no pass.
  */
 export type NavTarget = { href: string; document?: true };
 

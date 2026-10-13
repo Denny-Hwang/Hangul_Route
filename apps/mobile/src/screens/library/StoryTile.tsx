@@ -132,9 +132,11 @@ export function StoryTile({
         </View>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm }}>
           {view.locked ? <TagMark kind="notOpen" testID="story-tile-not-open" /> : null}
-          <Body size="sm" weight="semibold" tone="secondary">
-            {view.stateLine}
-          </Body>
+          {view.stateLine ? (
+            <Body size="sm" weight="semibold" tone="secondary">
+              {view.stateLine}
+            </Body>
+          ) : null}
           {view.stars > 0 ? <StarRow stars={view.stars} size={STAR_SIZE} /> : null}
         </View>
         <Caption tone="muted">{view.minutesLine}</Caption>

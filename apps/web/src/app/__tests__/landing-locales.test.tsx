@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LocaleBannerView } from '../../components/landing/LocaleBanner';
 import { localeBannerOffers } from '../../data/landing-copy';
-import { LandingPage } from '../../components/landing/LandingPage';
+import { HomePage as LandingPage } from '../../components/landing/HomePage';
 import { LocaleSwitcher } from '../../components/landing/LocaleSwitcher';
 import { SITE_PAGES, type SitePage, siteMetadataFor } from '../../lib/site-metadata';
 
@@ -29,6 +29,8 @@ const EN_PAGES: Record<SitePage, () => Promise<{ generateMetadata: () => Meta }>
   '/privacy': () => import('../(en)/privacy/page'),
   '/terms': () => import('../(en)/terms/page'),
   '/learners': () => import('../(en)/learners/page'),
+  '/parents': () => import('../(en)/parents/page'),
+  '/teachers': () => import('../(en)/teachers/page'),
 };
 const LOC_PAGES: Record<SitePage, () => Promise<{ generateMetadata: (p: { params: { locale: string } }) => Meta }>> = {
   '/': () => import('../(loc)/[locale]/page'),
@@ -36,6 +38,8 @@ const LOC_PAGES: Record<SitePage, () => Promise<{ generateMetadata: (p: { params
   '/privacy': () => import('../(loc)/[locale]/privacy/page'),
   '/terms': () => import('../(loc)/[locale]/terms/page'),
   '/learners': () => import('../(loc)/[locale]/learners/page'),
+  '/parents': () => import('../(loc)/[locale]/parents/page'),
+  '/teachers': () => import('../(loc)/[locale]/teachers/page'),
 };
 
 describe('every site page exports its own metadata', () => {
@@ -56,7 +60,7 @@ describe('every site page exports its own metadata', () => {
 });
 
 describe('while es and ko are hidden, the landing is unchanged', () => {
-  it('no switcher, no banner, and "Play now" goes to the app as it is', () => {
+  it('no switcher, no banner, and Start learning goes to the app as it is', () => {
     const html = renderToStaticMarkup(<LandingPage locale="en" />);
     expect(html).not.toContain('hrefLang');
     expect(html).not.toContain('hreflang');
@@ -73,7 +77,7 @@ describe('while es and ko are hidden, the landing is unchanged', () => {
   });
 });
 
-describe('"Play now" from /es and /ko hands the locale to the app (?lang=)', () => {
+describe('Start learning from /es and /ko hands the locale to the app (?lang=): header, hero and footer', () => {
   it.each(['es', 'ko'] as const)('%s', (locale) => {
     const html = renderToStaticMarkup(<LandingPage locale={locale} />);
     expect(hrefs(html).filter((h) => h.startsWith(APP_URL))).toEqual(Array(3).fill(`${APP_URL}?lang=${locale}`));

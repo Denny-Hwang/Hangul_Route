@@ -49,7 +49,7 @@ import { gridQuestProgress } from '../../logic/journey';
 import { homeColumns } from '../../logic/layout/home-columns';
 import { homeStripView, type HomeStripView } from '../../logic/my-route/home-strip';
 import { buildMyRoute } from '../../logic/my-route/model';
-import { localizedRouteContent, routeModelInput } from '../../logic/my-route/route-input';
+import { localizedRouteContent, routeModelInput, routeWeekOf } from '../../logic/my-route/route-input';
 import { emptySnapshot } from '../../logic/my-route/view';
 import { placementEntriesOn, questsDoneOf } from '../../logic/placement/entry';
 import { skippedEvent } from '../../logic/placement/events';
@@ -80,6 +80,7 @@ import { useStoryStore } from '../../store/story-store';
 import { useAccessTier, useQuestAccess } from '../../store/tier-store';
 import { PictureArt } from '../minigames/PictureArt';
 import { LinkButton } from '../placement/parts';
+import { NotesHomeCard } from '../notes/NotesHomeCard';
 import { PlanPromptCard, usePlanPrompt } from '../route/PlanPromptCard';
 import { firstFreeTopicKey } from '../vocab/topic-data';
 import { FreeEndCard } from './FreeEndCard';
@@ -355,7 +356,8 @@ export function HomeScreen(): React.ReactElement {
       const snapshot = snap ?? emptySnapshot(profile.id);
       // The same F-ENT-003 input as card (2), so the strip's goal is the Learning Route's (LR-5a).
       const model = buildMyRoute(routeModelInput({ snapshot, tier, localized: routeContent, now: new Date(), ...(routeInput ? { next: routeInput } : {}) }));
-      return homeStripView({ model, messages: m, goalStage: model.goal?.stage ?? null });
+      // The same week as the Learning Route's plan line (R-7b): the goal's plan, the class's or the learner's own.
+      return homeStripView({ model, messages: m, goalStage: model.goal?.stage ?? null, week: routeWeekOf(model, routeInput ?? undefined) });
     } catch {
       // Content that cannot be read leaves the slot empty; the page itself shows the retry.
       return null;
@@ -606,6 +608,10 @@ export function HomeScreen(): React.ReactElement {
     </>
   );
 
+  // Row 2a (F-FEEDBACK-001 FB-8, F-ROUTE-001 section 6.4): a new note from a teacher or the family,
+  // after the mission cards; in two columns it heads the right column. Nothing with the flag off.
+  const notesCard = (place: 'after' | 'top'): React.ReactElement | null => (flags.notesEnabled ? <NotesHomeCard gap={place} /> : null);
+
   // Regular and wide windows: two columns under the greeting; phones, short windows and a Home
   // with no mission cards: one column as always.
   const twoColumns = homeColumns(layoutClass, missions !== null) === 2;
@@ -662,6 +668,7 @@ export function HomeScreen(): React.ReactElement {
               ) : null}
             </View>
             <View testID="home-side-column" style={{ flex: SIDE_FLEX, minWidth: 0 }}>
+              {notesCard('top')}
               {side}
             </View>
           </View>
@@ -672,6 +679,7 @@ export function HomeScreen(): React.ReactElement {
           {catchUpView}
           {catchUpGap}
           {missions}
+          {notesCard('after')}
           {quietCard ? (
             <>
               <Spacer size="lg" />

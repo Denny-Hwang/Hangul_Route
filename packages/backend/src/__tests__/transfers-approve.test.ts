@@ -239,6 +239,30 @@ describe('approve: teacher slots', () => {
     expect(await db.transferEvents(created.id)).toContainEqual(expect.objectContaining({ event: 'consented', slot: 'source', actorRef: 'admin', detail: { via: 'school_admin' } }));
   });
 
+  it("each class page reflects only its own slot's school-admin answer: the destination never learns that the admin agreed for the source (T11, D17, T-5d)", async () => {
+    await db.putSpace(space(SCHOOL, 'school', 'admin'));
+    await member(SCHOOL, 'account', 'admin', 'owner');
+    const a = await db.getSpace(A);
+    const b = await db.getSpace(B);
+    await db.putSpace({ ...a!, parentSpaceId: SCHOOL });
+    await db.putSpace({ ...b!, parentSpaceId: SCHOOL });
+
+    // The admin answers for the source; B's own teacher answers for the destination.
+    const first = requestOf(await create(FAMILY, 'mom', familyCreate()));
+    expect(requestOf(await approve(A, 'admin', first.id, { slots: ['source'] }))).toMatchObject({ role: 'source', agreedBySchoolAdmin: true });
+    expect(requestsOf(await list(B, 'teacher-b')).find((r) => r.id === first.id)).toMatchObject({ role: 'destination', agreedBySchoolAdmin: false });
+    expect(requestOf(await approve(B, 'teacher-b', first.id, { slots: ['destination'] }))).toMatchObject({ role: 'destination', status: 'approved', agreedBySchoolAdmin: false });
+    expect(requestsOf(await list(B, 'teacher-b')).find((r) => r.id === first.id)).toMatchObject({ agreedBySchoolAdmin: false });
+    expect(requestsOf(await list(A, 'teacher-a')).find((r) => r.id === first.id)).toMatchObject({ role: 'source', agreedBySchoolAdmin: true });
+    expect((await cancel(FAMILY, 'mom', first.id)).status).toBe(200);
+
+    // The other way round: A's teacher answers for the source, the admin for the destination.
+    const second = requestOf(await create(FAMILY, 'mom', familyCreate()));
+    expect(requestOf(await approve(A, 'teacher-a', second.id, { slots: ['source'] }))).toMatchObject({ agreedBySchoolAdmin: false });
+    expect(requestOf(await approve(B, 'admin', second.id, { slots: ['destination'] }))).toMatchObject({ role: 'destination', agreedBySchoolAdmin: true });
+    expect(requestsOf(await list(A, 'teacher-a')).find((r) => r.id === second.id)).toMatchObject({ role: 'source', agreedBySchoolAdmin: false });
+  });
+
   it('the destination slot waits for the learner side (409 awaiting_learner); the destination cannot even see it (404)', async () => {
     await member(B, 'account', 'teacher-a', 'teacher');
     const created = requestOf(await create(A, 'teacher-a', classCreate()));

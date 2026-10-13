@@ -14,6 +14,8 @@ import { ROUTES } from '@/lib/console/routing';
 import { readLastPersona, writeLastPersona } from '@/lib/console/shell-store';
 import { currentNavItem, navFlags, navItemsFor, soloFamilyLearnerSpace, type NavEntry, type SoloLearner } from '@/lib/console/shell-nav';
 import { clearGrownUpTab } from '@/lib/console/unlock';
+import { browserStorage, type KeyValueStorage } from '@/lib/i18n/safe-storage';
+import { BrowseNoticeLine, useBrowseOpener } from './BrowseLink';
 import { useGrownUpLocation } from './grown-up-location';
 import { LanguageSelect } from './LanguageSelect';
 import { useConsole } from './use-console';
@@ -41,6 +43,9 @@ export interface AdultFrameEnvironment {
   writeLastPersona: (persona: AdultPersona) => void;
   clearGrownUpTab: () => void;
   assign: (url: string) => void;
+  /** The tab's `sessionStorage`, where the Lessons item writes the All lessons pass (F-BROWSE-001 BR-10). */
+  sessionStorage?: () => KeyValueStorage | null;
+  now?: () => number;
 }
 
 export function browserFrameEnvironment(): AdultFrameEnvironment {
@@ -54,6 +59,8 @@ export function browserFrameEnvironment(): AdultFrameEnvironment {
     },
     clearGrownUpTab: () => clearGrownUpTab(),
     assign: (url) => win?.location.assign(url),
+    sessionStorage: () => browserStorage('session'),
+    now: () => Date.now(),
   };
 }
 
@@ -223,6 +230,13 @@ export function AdultFrame({
   const [last, setLast] = useState<AdultPersona | null>(null);
   const [device, setDevice] = useState<DeviceGateRead | null>(null);
   const [solo, setSolo] = useState<SoloLearner | null>(null);
+  // Lessons (F-BROWSE-001 BR-10, section 4.3): a plain click writes the tab's pass, then opens All lessons here.
+  const lessons = useBrowseOpener(undefined, 'nav', {
+    origin: () => browser.location().origin,
+    now: () => (browser.now ?? Date.now)(),
+    storage: () => (browser.sessionStorage ? browser.sessionStorage() : browserStorage('session')),
+    assign: (url) => browser.assign(url),
+  });
 
   const fetchOwn = spaces === undefined;
   useEffect(() => {
@@ -346,7 +360,7 @@ export function AdultFrame({
               {items.map((entry) => (
                 <li key={entry.id}>
                   {entry.target.document ? (
-                    <a className="hr-frame-item" href={entry.target.href} data-testid={`nav-${entry.id}`}>
+                    <a className="hr-frame-item" href={entry.target.href} onClick={entry.id === 'lessons' ? lessons.onClick : undefined} aria-busy={entry.id === 'lessons' && lessons.checking ? true : undefined} data-testid={`nav-${entry.id}`}>
                       {shell.nav[entry.labelKey]}
                     </a>
                   ) : (
@@ -357,6 +371,7 @@ export function AdultFrame({
                 </li>
               ))}
             </ul>
+            {items.some((entry) => entry.id === 'lessons') ? <BrowseNoticeLine opener={lessons} testId="frame-lessons" /> : null}
           </nav>
         ) : null}
       </header>

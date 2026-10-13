@@ -33,76 +33,6 @@ button {
 }
 
 /*
- * Landing — responsive layout (audit W1 / p2-L6, roadmap PR-21).
- * Layout only: colours, spacing and type stay inline from design tokens.
- * Properties overridden at the breakpoints live here, never inline,
- * because inline styles beat stylesheet rules.
- */
-.hr-landing-logo-mark {
-  display: flex;
-}
-
-/* DOM order is visual order at every width: brand, "Play now", section
-   links. Nothing here uses `order`, so keyboard focus follows what the eye
-   sees (WCAG 2.4.3 / 1.3.2). The CTA's auto margin pushes it, and the links
-   after it, to the right of the brand. */
-.hr-landing-cta {
-  margin-left: auto;
-}
-
-.hr-landing-nav {
-  justify-content: flex-end;
-}
-
-.hr-landing-hero {
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-}
-
-.hr-landing-split {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
-}
-
-/* Brand + "Play now" + five links need ~780px. Below that, row 1 is the
-   brand and "Play now"; row 2 is the section links, wrapping as needed. */
-@media (max-width: 899px) {
-  .hr-landing-nav {
-    flex-basis: 100%;
-    justify-content: flex-start;
-  }
-}
-
-/* Phones: the hero and Meet Hoya stack to one column. */
-@media (max-width: 719px) {
-  .hr-landing-hero {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .hr-landing-split {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .hr-landing-hero-art {
-    width: 100%;
-    max-width: 360px;
-    justify-self: center;
-  }
-
-  .hr-landing-split-art {
-    width: 100%;
-    max-width: 280px;
-    justify-self: center;
-  }
-}
-
-/* 320px phones: drop the decorative logo mark so "Play now" keeps the
-   brand row. The CTA itself is never hidden. */
-@media (max-width: 359px) {
-  .hr-landing-logo-mark {
-    display: none;
-  }
-}
-
-/*
  * Layered site (F-SITE-002 §3.2 to §3.6, §3.11; design/screens/site/README.md, mock/site.css). Every value is a
  * token, read from the custom properties `siteCssVars()` sets on the site root (`.hr-site`, `SiteShell`), so this
  * block holds no colour or length of its own. Only the properties that change at a breakpoint, on hover or on focus
@@ -157,8 +87,10 @@ button {
   color: var(--hr-site-text-secondary);
 }
 
-.hr-site-nav-link:hover {
-  color: var(--hr-site-text);
+@media (hover: hover) {
+  .hr-site-nav-link:hover {
+    color: var(--hr-site-text);
+  }
 }
 
 .hr-site-signin {
@@ -166,8 +98,10 @@ button {
   border-color: var(--hr-site-border-strong);
 }
 
-.hr-site-signin:hover {
-  border-color: var(--hr-site-text-secondary);
+@media (hover: hover) {
+  .hr-site-signin:hover {
+    border-color: var(--hr-site-text-secondary);
+  }
 }
 
 /* Actions: the primary pill and the outline pill. brand.primary on brand.primaryLight is below AA for normal text,
@@ -177,8 +111,10 @@ button {
   color: var(--hr-site-on-primary);
 }
 
-.hr-site-primary:hover {
-  background-color: var(--hr-site-brand-dark);
+@media (hover: hover) {
+  .hr-site-primary:hover {
+    background-color: var(--hr-site-brand-dark);
+  }
 }
 
 .hr-site-secondary {
@@ -187,9 +123,11 @@ button {
   background-color: transparent;
 }
 
-.hr-site-secondary:hover {
-  background-color: var(--hr-site-brand-light);
-  color: var(--hr-site-brand-dark);
+@media (hover: hover) {
+  .hr-site-secondary:hover {
+    background-color: var(--hr-site-brand-light);
+    color: var(--hr-site-brand-dark);
+  }
 }
 
 .hr-site-text-link {
@@ -284,6 +222,77 @@ button {
   width: 100%;
 }
 
+/* Home hero (L0): one column on phones, text and art side by side from 45em; the art is capped so the first
+   screen keeps the header, the h1, the lead and Start learning. */
+.hr-site-hero {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--hr-site-xl);
+  padding-block: var(--hr-site-xl);
+}
+
+.hr-site-hero-art {
+  max-width: var(--hr-site-hero-art-max);
+}
+
+.hr-site-bubble {
+  font-size: var(--hr-site-size-caption);
+  padding: var(--hr-site-xs) var(--hr-site-md);
+}
+
+/* Persona cards (#who): one column on phones, three from 45em. The whole card is one link. */
+.hr-site-persona-list {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--hr-site-md);
+}
+
+.hr-site-persona-card {
+  border-color: var(--hr-site-border-subtle);
+}
+
+@media (hover: hover) {
+  .hr-site-persona-card:hover {
+    border-color: var(--hr-site-border-strong);
+  }
+}
+
+.hr-site-persona-chev {
+  background-color: var(--hr-site-brand-light);
+  color: var(--hr-site-brand-dark);
+}
+
+@media (hover: hover) {
+  .hr-site-persona-card:hover .hr-site-persona-chev {
+    background-color: var(--hr-site-brand);
+    color: var(--hr-site-on-primary);
+  }
+}
+
+.hr-site-persona-card:active {
+  background-color: var(--hr-site-sunken);
+  box-shadow: none;
+}
+
+/* The 404 page: Next's body is an inline 100vh box; inside the site chrome it sizes to its content. */
+.hr-site-404 > div {
+  height: auto !important;
+  padding-block: var(--hr-site-xxl);
+}
+
+.hr-site-promises {
+  padding-block: var(--hr-site-lg);
+}
+
+/* Launch news: the existing WaitlistForm on today's brand.primary band. border.focus is under 3:1 on
+   brand.primary, so the band's focus ring is text.onPrimary (a band rule, not a change to the form). */
+.hr-site-news {
+  margin-bottom: var(--hr-site-xl);
+  padding: var(--hr-site-lg);
+}
+
+.hr-site-news :focus-visible {
+  outline-color: var(--hr-site-on-primary);
+}
+
 /* Footer: two columns on phones (Guide and App on the left, Company on the right), one once large text makes a
    column narrower than its words, three on wide screens (the same DOM order). */
 .hr-site-footer-groups {
@@ -298,13 +307,23 @@ button {
   row-gap: var(--hr-site-lg);
 }
 
+.hr-site-locales > nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--hr-site-md);
+  margin-top: var(--hr-site-sm);
+}
+
 .hr-site-footer-link {
   color: var(--hr-site-text-secondary);
 }
 
-.hr-site-footer-link:hover {
-  color: var(--hr-site-text);
-  text-decoration: underline;
+@media (hover: hover) {
+  .hr-site-footer-link:hover {
+    color: var(--hr-site-text);
+    text-decoration: underline;
+  }
 }
 
 @media (min-width: 22.5em) {
@@ -372,6 +391,51 @@ button {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .hr-site-hero {
+    grid-template-columns: minmax(0, var(--hr-site-hero-ratio)) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--hr-site-xxl);
+    padding-block: var(--hr-site-xxxl);
+  }
+
+  .hr-site-hero-art {
+    max-width: var(--hr-site-hero-art-max-wide);
+  }
+
+  .hr-site-bubble {
+    font-size: var(--hr-site-size-body-sm);
+    padding: var(--hr-site-sm) var(--hr-site-md);
+  }
+
+  .hr-site-persona-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--hr-site-lg);
+  }
+
+  .hr-site-promises {
+    padding-block: var(--hr-site-xl);
+  }
+
+  .hr-site-news {
+    margin-bottom: var(--hr-site-xxxl);
+    padding: var(--hr-site-xxl);
+  }
+
+  /* Grown-up pages: two columns under the page head; the top rule sits above the pair, not above each column. */
+  .hr-site-row-2-wrap {
+    border-top: var(--hr-site-border-thin) solid var(--hr-site-border-subtle);
+  }
+
+  .hr-site-row-2 {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: var(--hr-site-xxxl);
+  }
+
+  .hr-site-row-2 > div > .hr-site-section:first-child {
+    border-top: 0;
+  }
+
   .hr-site-tiles {
     grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: var(--hr-site-md);
@@ -416,5 +480,117 @@ button {
   .hr-site-wrap {
     padding-left: var(--hr-site-gutter-wide);
     padding-right: var(--hr-site-gutter-wide);
+  }
+}
+
+/*
+ * Report pages — print or save as PDF (F-REPORT-001 RP-7b, section 3.10; design/screens/reports/print.md).
+ * Layout only: colours, spacing and type stay in the page's token styles (ReportParts). The page prints as the
+ * screen shows it, More detail expanded, and nothing more: the adult frame (header, navigation, footer; the old
+ * console shell's navigation too), every screen-only control (`.hr-report-actions`: the header row, line actions,
+ * step buttons, the disclosure and table buttons, Open Learning Route), the unselected period tabs, the calendar
+ * grid (its sentence prints) and the growth chart (its table prints) are hidden.
+ * Every rule here is scoped to a page that holds a report (`body:has(.hr-report)` or a `.hr-report-*` class), so
+ * any other page prints as before. `@page { margin: 0 }` lives in REPORT_CSS (ReportParts), whose style element is
+ * mounted only on report pages: a top-level @page rule here would print every page of the app edge to edge.
+ */
+@media print {
+  body:has(.hr-report) .hr-frame-top,
+  body:has(.hr-report) .hr-frame-nav,
+  body:has(.hr-report) .hr-frame-foot,
+  body:has(.hr-report) .hr-console-shell-nav,
+  .hr-report-actions,
+  .hr-report-more-heading,
+  .hr-report-tab:not([aria-selected='true']),
+  .hr-report-calendar,
+  .hr-report-growth-chart,
+  .hr-report-growth-axis,
+  .hr-report-growth-legend,
+  .hr-report-skeleton {
+    display: none !important;
+  }
+
+  body:has(.hr-report) .hr-frame-main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  /* The page padding sits inside the body (@page margin 0 leaves no room for the browser's URL and title lines);
+     clone gives every printed page the top and bottom padding, so the fixed footer never covers a block.
+     The page's token styles come after this sheet, so a print rule that overrides one of them is !important. */
+  .hr-report {
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+
+  /* The selected period prints as plain text beside the window's dates. */
+  .hr-report-controls {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: baseline !important;
+  }
+
+  .hr-report-tabs {
+    display: block !important;
+    padding: 0 !important;
+    background: none !important;
+  }
+
+  .hr-report-tab[aria-selected='true'] {
+    display: inline !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: none !important;
+  }
+
+  .hr-report-stepper {
+    display: inline-flex !important;
+  }
+
+  /* More detail always prints expanded; the growth line prints as its table. */
+  .hr-report-detail[hidden] {
+    display: grid !important;
+  }
+
+  .hr-report-growth-table[hidden] {
+    display: table !important;
+  }
+
+  .hr-report-body {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .hr-report-section,
+  .hr-report-figure,
+  .hr-report-detail-block,
+  .hr-report-headline-group,
+  .hr-report-calendar-block,
+  .hr-report-growth,
+  .hr-report-state,
+  .hr-report-insights > li {
+    break-inside: avoid;
+  }
+
+  .hr-report a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .hr-report-print-footer {
+    display: block !important;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  /* An engine without unprefixed box-decoration-break (WebKit) may not repeat the padding on every printed page,
+     so the fixed footer could cover a block there: it prints once, in normal flow, after the last block. */
+  @supports not (box-decoration-break: clone) {
+    .hr-report-print-footer {
+      position: static;
+    }
   }
 }

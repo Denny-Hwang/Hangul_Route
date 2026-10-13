@@ -174,6 +174,20 @@ export type RootStackParamList = {
   VocabMatch: { topicKey: string };
   /** vocab/speed-start — the Speed Round (F-VOC-004 section 3.1; S-5 registers the screen). The topic page launches it. */
   VocabSpeedRound: { topicKey: string; mode?: 'relaxed' | 'challenge' };
+  /**
+   * notes/list — My notes (F-FEEDBACK-001 section 6.5 item 2, FB-8): the active profile's notes, New then
+   * Earlier. Registered only while `flags.notesEnabled` is on. `notice: 'putAway'`: the note page just put a
+   * note away, so the list says so once (section 6.10 item 3).
+   */
+  Notes: { notice?: 'putAway' } | undefined;
+  /** notes/detail — one note of the active profile (section 6.5 item 3, FB-8). Opening it marks it read. */
+  NoteDetail: { noteId: string };
+  /**
+   * parent/note-report — the report sheet of one note (section 6.10 item 4). Reached through the gate
+   * (`PinEntry { next: 'NoteReport', noteId, profileId }`), or directly from "Report this note" on a
+   * self-managed profile. FB-9 registers the screen.
+   */
+  NoteReport: { noteId: string; profileId: string };
   /** Fixture builds only (`navigation/vocab-question-e2e.tsx`): the shared vocabulary question view on catalogue words. */
   VocabQuestionE2e: VocabQuestionE2eParams;
 };
