@@ -187,3 +187,11 @@ describe('route-store: re-pace and the Hoya check-in (section 3.7, FP-B14)', () 
     expect(mem.get('route-ui:profile:a')).toEqual({ movedSeenAt: NOW.toISOString() });
   });
 });
+
+describe('route-store: marks keep what is stored', () => {
+  it('a mark made before the record was read keeps the stored Not now', async () => {
+    mem.set('route-ui:profile:a', { dismissedAt: '2026-10-01T00:00:00.000Z' });
+    await useRouteStore.getState().markMovedSeen('profile:a', NOW.toISOString());
+    expect(mem.get('route-ui:profile:a')).toEqual({ dismissedAt: '2026-10-01T00:00:00.000Z', movedSeenAt: NOW.toISOString() });
+  });
+});

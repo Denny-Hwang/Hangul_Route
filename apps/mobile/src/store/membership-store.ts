@@ -11,6 +11,7 @@ import { track } from '../platform/telemetry';
 import { useNotesStore } from './notes-store';
 import { usePlanStore } from './plan-store';
 import { useProfileStore } from './profile-store';
+import { useRouteStore } from './route-store';
 import { useTierStore } from './tier-store';
 import { onSynced, syncApi, useSyncStore } from './sync-store';
 
@@ -191,10 +192,21 @@ export async function rederiveLocal(learnerId: string): Promise<boolean> {
   return outcome?.changed ?? false;
 }
 
-/** `rederiveLocal` for every learner on the device: app start and back in the foreground. */
+/**
+ * `rederiveLocal` for every learner on the device: app start and back in the foreground. A
+ * learner's own weekly plan is then moved along quietly when its items wait (at most once a UTC
+ * day, never during a session; F-PLAN-002 section 3.7), and the change is pushed.
+ */
 export async function rederiveAllLocal(): Promise<void> {
   const learners = useProfileStore.getState().profiles.filter((p) => p.role === 'learner');
-  for (const p of learners) await rederiveLocal(p.id);
+  for (const p of learners) {
+    await rederiveLocal(p.id);
+    const moved = await useRouteStore
+      .getState()
+      .autoRepace(p.id)
+      .catch(() => false);
+    if (moved) useSyncStore.getState().requestSync(p.id);
+  }
 }
 
 /** Refresh the inbox after every successful sync (call once at app start; returns the unsubscribe). */

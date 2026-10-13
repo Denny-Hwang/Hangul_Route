@@ -287,3 +287,28 @@ describe('re-link on a new device (F-TCH-001 §10.1)', () => {
     expect(await useMembershipStore.getState().pollRelink('space:cls', 'relink:1')).toEqual({ state: 'error', error: 'off' });
   });
 });
+
+describe('app start and foreground: the automatic re-pace (F-PLAN-002 section 3.7)', () => {
+  it('moves an own weekly plan along once, quietly, after the week is derived, and asks for a sync', async () => {
+    const { CATALOG, generateCurriculum } = await import('@hangul-route/content-schema');
+    const { useRouteStore } = await import('../route-store');
+    const { dayKey } = await import('../../logic/homework/mission-builder');
+    const tenDaysAgo = new Date(Date.now() - 10 * 86_400_000);
+    const draft = generateCurriculum(
+      { audience: 'self', level: { stage: 'stage1', band: 0 }, startDate: dayKey(tenDaysAgo.toISOString()), weeks: 12, sessionsPerWeek: 3, minutesPerSession: 15, unlockedStages: ['stage1'] },
+      CATALOG,
+    );
+    useRouteStore.setState({ ui: {} });
+    await useRouteStore.getState().create('profile:a', draft, { from: 'setup', changed: false }, tenDaysAgo);
+    const requestSync = vi.spyOn(useSyncStore.getState(), 'requestSync');
+    await rederiveAllLocal();
+    expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute?.meta.repacedAt?.slice(0, 10)).toBe(dayKey(new Date().toISOString()));
+    expect(requestSync).toHaveBeenCalledWith('profile:a');
+    requestSync.mockClear();
+    // Once a day: a second foreground the same day leaves the plan alone.
+    const before = useProgressStore.getState().byProfile['profile:a']?.selfRoute?.updatedAt;
+    await rederiveAllLocal();
+    expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute?.updatedAt).toBe(before);
+    requestSync.mockRestore();
+  });
+});
