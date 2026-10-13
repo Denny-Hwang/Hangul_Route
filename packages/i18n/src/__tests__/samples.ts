@@ -168,6 +168,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'landing.localeBanner.viewIn': [['Español']],
   'landing.about.feedback.body': [['hello@example.com']],
   'landing.legal.privacy.sections.collect.bullets.profile': [[{ email: 'hello@example.com', levels: 'New reader / Some reading' }]],
+  'landing.legal.privacy.sections.collect.bullets.notes': [[{ email: 'hello@example.com', levels: 'New reader / Some reading' }]],
   'landing.legal.privacy.sections.emailList.paragraphs.removal': [[{ email: 'hello@example.com', levels: 'New reader / Some reading' }]],
   'landing.legal.privacy.sections.contact.paragraphs.ask': [[{ email: 'hello@example.com', levels: 'New reader / Some reading' }]],
   'landing.legal.terms.sections.contact.paragraphs.ask': [[{ email: 'hello@example.com', levels: 'New reader / Some reading' }]],
