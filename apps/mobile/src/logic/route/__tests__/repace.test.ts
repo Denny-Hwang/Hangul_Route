@@ -6,6 +6,7 @@ import {
   CHECK_IN_WEEK,
   applyCheckIn,
   autoRepaceDue,
+  checkInFits,
   checkInOffer,
   pendingPastOf,
   repaceSelfRoute,
@@ -22,6 +23,12 @@ function routeAt(sessionsPerWeek: number, weeks = 12): SelfRoute {
     CATALOG,
   );
   return selfRouteOf(draft, 'route:r-0001', `${START}T08:00:00.000Z`);
+}
+/** `applyCheckIn` for a plan it fits; a null answer fails the test. */
+function applied(...args: Parameters<typeof applyCheckIn>): SelfRoute {
+  const next = applyCheckIn(...args);
+  if (next === null) throw new Error('the check-in did not fit');
+  return next;
 }
 const hw = (route: SelfRoute, questId: string, targetDate: string, completedAt?: string): HomeworkAssignment => ({
   id: `${route.id}#${questId}`,
@@ -162,26 +169,36 @@ describe('the Hoya check-in (FP-B14, OD-13)', () => {
   it('a lighter pace adds the weeks the plan needs, so yes never drops a lesson off the tail', () => {
     const route = routeAt(4, 12);
     const future = route.items.filter((i) => (i.targetDate ?? '') >= week5).map((i) => i.id);
-    const next = applyCheckIn(route, { kind: 'lighter', pace: 'gentle' }, [], week5, CATALOG, `${week5}T09:00:00.000Z`);
+    const next = applied(route, { kind: 'lighter', pace: 'gentle' }, [], week5, CATALOG, `${week5}T09:00:00.000Z`);
     expect(next.meta.params.weeks).toBeGreaterThan(12);
     expect(next.meta.weeks.length).toBe(next.meta.params.weeks);
     const kept = new Set(next.items.map((i) => i.id));
     for (const id of future) expect(kept.has(id), id).toBe(true);
     // A faster pace has room already: the length stays.
-    expect(applyCheckIn(routeAt(3, 12), { kind: 'faster', pace: 'brisk' }, [], week5, CATALOG, `${week5}T09:00:00.000Z`).meta.params.weeks).toBe(12);
+    expect(applied(routeAt(3, 12), { kind: 'faster', pace: 'brisk' }, [], week5, CATALOG, `${week5}T09:00:00.000Z`).meta.params.weeks).toBe(12);
   });
 
-  it('never grows a plan past what a plan can hold', () => {
-    const route = routeAt(4, 52);
-    expect(applyCheckIn(route, { kind: 'lighter', pace: 'gentle' }, [], week5, CATALOG, `${week5}T09:00:00.000Z`).meta.params.weeks).toBe(52);
+  it('never grows a plan past what a plan can hold, and never drops a lesson there: that check-in is not offered', () => {
+    const full = routeAt(4, 52);
+    const lighter = { kind: 'lighter', pace: 'gentle' } as const;
+    // A 52-week plan whose lessons all wait in its last four weeks: Gentle has 8 sessions there and no week can be added.
+    const lastWeeks = full.meta.weeks[48]?.startDate ?? '';
+    const crowded: SelfRoute = { ...full, items: full.items.map((i) => ({ ...i, targetDate: lastWeeks })) };
+    expect(applyCheckIn(crowded, lighter, [], lastWeeks, CATALOG, `${lastWeeks}T09:00:00.000Z`)).toBeNull();
+    expect(checkInFits(crowded, lighter, [], lastWeeks, CATALOG)).toBe(false);
+    expect(applied(full, lighter, [], week5, CATALOG, `${week5}T09:00:00.000Z`).meta.params.weeks).toBe(52);
+    // A plan with room left fits.
+    expect(checkInFits(routeAt(4, 12), lighter, [], week5, CATALOG)).toBe(true);
+    expect(checkInFits(routeAt(3, 12), { kind: 'faster', pace: 'brisk' }, [], week5, CATALOG)).toBe(true);
   });
 
   it('yes lays the plan\'s own future items on the new pace from today; past items stay', () => {
     const route = routeAt(3);
     const done = sessionsBefore(route).slice(0, 2);
-    const next = applyCheckIn(route, { kind: 'lighter', pace: 'gentle' }, done, week5, CATALOG, `${week5}T09:00:00.000Z`);
+    const next = applied(route, { kind: 'lighter', pace: 'gentle' }, done, week5, CATALOG, `${week5}T09:00:00.000Z`);
     expect(next.id).toBe(route.id);
     expect(next.meta.params.sessionsPerWeek).toBe(PACES.gentle);
+    // Chosen weekdays are spread again for the new number of sessions (section 3.7).
     expect(next.meta.params.sessionDays).toBeUndefined();
     expect(next.meta.repacedAt).toBe(`${week5}T09:00:00.000Z`);
     const past = route.items.filter((i) => (i.targetDate ?? '') < week5);

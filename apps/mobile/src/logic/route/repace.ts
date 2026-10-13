@@ -157,23 +157,39 @@ const MAX_WEEKS = 52;
 
 /**
  * Yes on the check-in: the plan's own future items laid on the new pace's sessions from today
- * (`regenerateFrom(..., 'shift')`) on its spread days; the past stays. A lighter pace has fewer
- * sessions before the end date, so when items would fall off the tail (`fewer-sessions-than-units`)
- * the plan gets the weeks they need (section 3.7 "Add N weeks", `params.weeks + N`, the same call),
- * within what a plan can hold. Saying yes never quietly takes lessons out of the plan.
+ * (`regenerateFrom(..., 'shift')`) on its spread days; the past stays. Weekdays chosen in Change
+ * the plan are not kept: the new pace has a different number of sessions, so its days are spread
+ * again (section 3.7). A lighter pace has fewer sessions before the end date, so when items would
+ * fall off the tail (`fewer-sessions-than-units`) the plan gets the weeks they need (section 3.7
+ * "Add N weeks", `params.weeks + N`, the same call), within what a plan can hold. Saying yes never
+ * quietly takes lessons out of the plan: when even the longest plan cannot hold them all, the
+ * answer is null and the check-in is not offered (`checkInFits`).
  */
-export function applyCheckIn(route: SelfRoute, offer: CheckInOffer, completedQuestIds: readonly string[], today: DateKey, catalog: Catalog, nowIso: string): SelfRoute {
+export function applyCheckIn(route: SelfRoute, offer: CheckInOffer, completedQuestIds: readonly string[], today: DateKey, catalog: Catalog, nowIso: string): SelfRoute | null {
   const { sessionDays: _days, ...params } = route.meta.params;
   const perWeek = PACES[offer.pace];
   const maxWeeks = Math.min(MAX_WEEKS, Math.floor(CURRICULUM_MAX_ITEMS / perWeek));
+  const lay = (weeks: number) =>
+    regenerateFrom({ ...route, meta: { ...route.meta, params: { ...params, sessionsPerWeek: perWeek, weeks } } }, today, catalog, { mode: 'shift', completedQuestIds: [...completedQuestIds] });
+  const leftOf = (draft: ReturnType<typeof regenerateFrom>): number => draft.warnings.find((w) => w.code === 'fewer-sessions-than-units')?.count ?? 0;
   let weeks = params.weeks;
-  let draft = regenerateFrom({ ...route, meta: { ...route.meta, params: { ...params, sessionsPerWeek: perWeek } } }, today, catalog, { mode: 'shift', completedQuestIds: [...completedQuestIds] });
+  let draft = lay(weeks);
   // A culture or review week can take a session, so the added weeks are checked again (a few rounds at most).
   for (let round = 0; round < 4; round += 1) {
-    const left = draft.warnings.find((w) => w.code === 'fewer-sessions-than-units')?.count ?? 0;
+    const left = leftOf(draft);
     if (left === 0 || weeks >= maxWeeks) break;
     weeks = Math.min(maxWeeks, weeks + Math.ceil(left / perWeek));
-    draft = regenerateFrom({ ...route, meta: { ...route.meta, params: { ...params, sessionsPerWeek: perWeek, weeks } } }, today, catalog, { mode: 'shift', completedQuestIds: [...completedQuestIds] });
+    draft = lay(weeks);
   }
+  if (leftOf(draft) > 0) return null;
   return withDraft(route, draft, nowIso);
+}
+
+/** Whether yes on this offer keeps every lesson of the plan (`applyCheckIn` is not null); a screen offers only such a check-in. */
+export function checkInFits(route: SelfRoute, offer: CheckInOffer, completedQuestIds: readonly string[], today: DateKey, catalog: Catalog): boolean {
+  try {
+    return applyCheckIn(route, offer, completedQuestIds, today, catalog, `${today}T00:00:00.000Z`) !== null;
+  } catch {
+    return false;
+  }
 }

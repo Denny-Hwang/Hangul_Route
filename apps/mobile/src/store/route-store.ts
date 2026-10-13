@@ -32,6 +32,9 @@ const RouteUiSchema = z.object({
 });
 export type RouteUi = z.infer<typeof RouteUiSchema>;
 
+/** How a check-in answer ended (`answerCheckIn`). */
+export type CheckInAnswer = 'answered' | 'gone' | 'failed';
+
 export interface CreateOptions {
   from: 'proposal' | 'setup';
   /** The learner changed what Hoya proposed (`route.created.changed`). */
@@ -65,8 +68,12 @@ interface Actions {
   repaceDue: (profileId: string, now?: Date) => Promise<boolean>;
   /** "Move my plan along": the same re-pace by hand; false without an active plan. */
   repaceNow: (profileId: string, now?: Date) => Promise<boolean>;
-  /** The Hoya check-in's answer: an offer applies the new pace, null is Not now; either closes it for this plan, and a second answer is false. */
-  answerCheckIn: (profileId: string, offer: CheckInOffer | null, now?: Date) => Promise<boolean>;
+  /**
+   * The Hoya check-in's answer: an offer applies the new pace, null is Not now; either closes it for
+   * this plan. `gone` when the check-in no longer applies (answered already, another plan, overlap),
+   * `failed` when the new pace could not be laid out or stored (the check-in stays open).
+   */
+  answerCheckIn: (profileId: string, offer: CheckInOffer | null, now?: Date) => Promise<CheckInAnswer>;
   /** The calm "Hoya moved your plan along" line was seen. */
   markMovedSeen: (profileId: string, at: string) => Promise<void>;
 }
@@ -75,6 +82,19 @@ const completedOf = (profileId: string): string[] => completedQuestIdsOf(useProg
 
 /** Check-in answers in flight, per learner: a second tap before the first answer lands changes nothing. */
 const answering = new Set<string>();
+/** Re-paces in flight, per learner: overlapping triggers (a sync and the foreground) move the plan, and report it, once. */
+const repacing = new Set<string>();
+
+/** Runs `work` unless a re-pace for this learner is already running; false then. */
+async function oneRepace(profileId: string, work: () => Promise<boolean>): Promise<boolean> {
+  if (repacing.has(profileId)) return false;
+  repacing.add(profileId);
+  try {
+    return await work();
+  } finally {
+    repacing.delete(profileId);
+  }
+}
 
 export const useRouteStore = create<State & Actions>((set, get) => {
   /** Merge a patch into `route-ui:<profileId>`; the stored record is read first, so no other mark is lost. */
@@ -168,52 +188,55 @@ export const useRouteStore = create<State & Actions>((set, get) => {
       await progress.hydrate(profileId);
       const active = activeSelfRoute(useProgressStore.getState().byProfile[profileId]);
       if (active === null) return false;
-      useProgressStore.getState().setSelfRoute(profileId, archivedRoute(active, now.toISOString()));
+      if (!useProgressStore.getState().setSelfRoute(profileId, archivedRoute(active, now.toISOString()))) return false;
       // The source leaves the derivation: its pending items are dropped, done ones stay (section 3.6 rule 2).
       await usePlanStore.getState().rederive(profileId);
       return true;
     },
 
-    autoRepace: async (profileId, now = new Date()) => {
-      const { due, active } = await dueNow(profileId, now);
-      if (!due || active === null) return false;
-      if (!(await repace(profileId, active, 'auto', now))) return false;
-      await mark(profileId, { movedAt: now.toISOString() });
-      return true;
-    },
+    autoRepace: (profileId, now = new Date()) =>
+      oneRepace(profileId, async () => {
+        const { due, active } = await dueNow(profileId, now);
+        if (!due || active === null) return false;
+        if (!(await repace(profileId, active, 'auto', now))) return false;
+        await mark(profileId, { movedAt: now.toISOString() });
+        return true;
+      }),
 
     repaceDue: async (profileId, now = new Date()) => (await dueNow(profileId, now)).due,
 
-    repaceNow: async (profileId, now = new Date()) => {
-      const active = await activeOf(profileId);
-      if (active === null) return false;
-      return repace(profileId, active, 'manual', now);
-    },
+    repaceNow: (profileId, now = new Date()) =>
+      oneRepace(profileId, async () => {
+        const active = await activeOf(profileId);
+        if (active === null) return false;
+        return repace(profileId, active, 'manual', now);
+      }),
 
     answerCheckIn: async (profileId, offer, now = new Date()) => {
       // Once per plan (FP-B14): a second answer, or one that overlaps the first, changes nothing.
-      if (answering.has(profileId)) return false;
+      if (answering.has(profileId)) return 'gone';
       answering.add(profileId);
       try {
         const active = await activeOf(profileId);
-        if (active === null) return false;
+        if (active === null) return 'gone';
         const today = dayKey(now.toISOString());
         // The answer is for the offer this learner's plan has now: a card kept from another
         // learner or another plan (a profile switch while the screen stayed) changes nothing.
         const current = checkInOffer({ route: active, completedQuestIds: completedOf(profileId), today, answeredFor: (await get().loadUi(profileId)).checkInFor });
-        if (current === null) return false;
-        if (offer !== null && (offer.kind !== current.kind || offer.pace !== current.pace)) return false;
+        if (current === null) return 'gone';
+        if (offer !== null && (offer.kind !== current.kind || offer.pace !== current.pace)) return 'gone';
         if (offer !== null) {
-          let next: SelfRoute;
+          let next: SelfRoute | null;
           try {
             next = applyCheckIn(active, offer, completedOf(profileId), today, CATALOG, now.toISOString());
           } catch {
-            return false;
+            return 'failed';
           }
-          if (!(await replace(profileId, next))) return false;
+          // Yes never drops a lesson (section 3.7): a pace the plan cannot hold is not applied.
+          if (next === null || !(await replace(profileId, next))) return 'failed';
         }
         await mark(profileId, { checkInFor: active.id });
-        return true;
+        return 'answered';
       } finally {
         answering.delete(profileId);
       }

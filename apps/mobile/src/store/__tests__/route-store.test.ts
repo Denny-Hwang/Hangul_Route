@@ -189,13 +189,13 @@ describe('route-store: re-pace and the Hoya check-in (section 3.7, FP-B14)', () 
 
   it('answerCheckIn applies the new pace with yes, and either answer closes the check-in for this plan', async () => {
     const created = await useRouteStore.getState().create('profile:a', plan(-29), { from: 'setup', changed: true }, new Date(NOW.getTime() - 29 * DAY));
-    expect(await useRouteStore.getState().answerCheckIn('profile:a', { kind: 'lighter', pace: 'gentle' }, NOW)).toBe(true);
+    expect(await useRouteStore.getState().answerCheckIn('profile:a', { kind: 'lighter', pace: 'gentle' }, NOW)).toBe('answered');
     expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute?.meta.params.sessionsPerWeek).toBe(2);
     expect(useRouteStore.getState().ui['profile:a']?.checkInFor).toBe(created?.id);
     // Answered once for this plan: a second card (Home and the overview both drew it) changes nothing.
     const before = useProgressStore.getState().byProfile['profile:a']?.selfRoute;
-    expect(await useRouteStore.getState().answerCheckIn('profile:a', { kind: 'faster', pace: 'steady' }, new Date(NOW.getTime() + 1000))).toBe(false);
-    expect(await useRouteStore.getState().answerCheckIn('profile:a', null, NOW)).toBe(false);
+    expect(await useRouteStore.getState().answerCheckIn('profile:a', { kind: 'faster', pace: 'steady' }, new Date(NOW.getTime() + 1000))).toBe('gone');
+    expect(await useRouteStore.getState().answerCheckIn('profile:a', null, NOW)).toBe('gone');
     expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute).toEqual(before);
   });
 
@@ -203,7 +203,7 @@ describe('route-store: re-pace and the Hoya check-in (section 3.7, FP-B14)', () 
     await useRouteStore.getState().create('profile:a', plan(-29), { from: 'setup', changed: true }, new Date(NOW.getTime() - 29 * DAY));
     const offer = { kind: 'lighter', pace: 'gentle' } as const;
     const answers = await Promise.all([useRouteStore.getState().answerCheckIn('profile:a', offer, NOW), useRouteStore.getState().answerCheckIn('profile:a', offer, NOW)]);
-    expect(answers.filter(Boolean)).toHaveLength(1);
+    expect(answers.filter((a) => a === 'answered')).toHaveLength(1);
     expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute?.meta.params.sessionsPerWeek).toBe(2);
   });
 
@@ -211,8 +211,8 @@ describe('route-store: re-pace and the Hoya check-in (section 3.7, FP-B14)', () 
     // Week 2 of a plan: there is no check-in yet, so a kept offer (from another profile's card) is not applied.
     await useRouteStore.getState().create('profile:a', plan(-10), { from: 'setup', changed: true }, new Date(NOW.getTime() - 10 * DAY));
     const before = useProgressStore.getState().byProfile['profile:a']?.selfRoute;
-    expect(await useRouteStore.getState().answerCheckIn('profile:a', { kind: 'lighter', pace: 'gentle' }, NOW)).toBe(false);
-    expect(await useRouteStore.getState().answerCheckIn('profile:a', null, NOW)).toBe(false);
+    expect(await useRouteStore.getState().answerCheckIn('profile:a', { kind: 'lighter', pace: 'gentle' }, NOW)).toBe('gone');
+    expect(await useRouteStore.getState().answerCheckIn('profile:a', null, NOW)).toBe('gone');
     expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute).toEqual(before);
     expect(useRouteStore.getState().ui['profile:a']?.checkInFor).toBeUndefined();
   });
@@ -220,10 +220,10 @@ describe('route-store: re-pace and the Hoya check-in (section 3.7, FP-B14)', () 
   it('answerCheckIn in week 5 with nothing finished takes the lighter offer only, not a faster one', async () => {
     await useRouteStore.getState().create('profile:a', plan(-29), { from: 'setup', changed: true }, new Date(NOW.getTime() - 29 * DAY));
     const before = useProgressStore.getState().byProfile['profile:a']?.selfRoute;
-    expect(await useRouteStore.getState().answerCheckIn('profile:a', { kind: 'faster', pace: 'steady' }, NOW)).toBe(false);
+    expect(await useRouteStore.getState().answerCheckIn('profile:a', { kind: 'faster', pace: 'steady' }, NOW)).toBe('gone');
     expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute).toEqual(before);
     expect(useRouteStore.getState().ui['profile:a']?.checkInFor).toBeUndefined();
-    expect(await useRouteStore.getState().answerCheckIn('profile:a', { kind: 'lighter', pace: 'gentle' }, NOW)).toBe(true);
+    expect(await useRouteStore.getState().answerCheckIn('profile:a', { kind: 'lighter', pace: 'gentle' }, NOW)).toBe('answered');
   });
 
   it('repaceDue says whether the automatic re-pace would run, without changing the plan', async () => {
@@ -245,7 +245,8 @@ describe('route-store: re-pace and the Hoya check-in (section 3.7, FP-B14)', () 
     try {
       expect(await useRouteStore.getState().autoRepace('profile:a', NOW)).toBe(false);
       expect(await useRouteStore.getState().repaceNow('profile:a', NOW)).toBe(false);
-      expect(await useRouteStore.getState().answerCheckIn('profile:a', { kind: 'lighter', pace: 'gentle' }, NOW)).toBe(false);
+      // Week 2: no check-in to answer yet.
+      expect(await useRouteStore.getState().answerCheckIn('profile:a', { kind: 'lighter', pace: 'gentle' }, NOW)).toBe('gone');
     } finally {
       setSelfRoute.mockRestore();
     }
@@ -260,7 +261,7 @@ describe('route-store: re-pace and the Hoya check-in (section 3.7, FP-B14)', () 
     vi.mocked(track).mockClear();
     const setSelfRoute = vi.spyOn(useProgressStore.getState(), 'setSelfRoute').mockReturnValue(false);
     try {
-      expect(await useRouteStore.getState().answerCheckIn('profile:a', { kind: 'lighter', pace: 'gentle' }, NOW)).toBe(false);
+      expect(await useRouteStore.getState().answerCheckIn('profile:a', { kind: 'lighter', pace: 'gentle' }, NOW)).toBe('failed');
     } finally {
       setSelfRoute.mockRestore();
     }
@@ -268,11 +269,44 @@ describe('route-store: re-pace and the Hoya check-in (section 3.7, FP-B14)', () 
     expect(useRouteStore.getState().ui['profile:a']?.checkInFor).toBeUndefined();
   });
 
-  it('answerCheckIn is false without a plan; markMovedSeen remembers the line was seen', async () => {
-    expect(await useRouteStore.getState().answerCheckIn('profile:a', null, NOW)).toBe(false);
+  it('answerCheckIn is gone without a plan; markMovedSeen remembers the line was seen', async () => {
+    expect(await useRouteStore.getState().answerCheckIn('profile:a', null, NOW)).toBe('gone');
     await useRouteStore.getState().markMovedSeen('profile:a', NOW.toISOString());
     expect(useRouteStore.getState().ui['profile:a']?.movedSeenAt).toBe(NOW.toISOString());
     expect(mem.get('route-ui:profile:a')).toEqual({ movedSeenAt: NOW.toISOString() });
+  });
+});
+
+describe('route-store: writes that are refused and triggers that overlap', () => {
+  const DAY = 86_400_000;
+  const plan = (startOffsetDays: number): CurriculumDraft =>
+    generateCurriculum(
+      { audience: 'self', level: { stage: 'stage1', band: 0 }, startDate: dayKey(new Date(NOW.getTime() + startOffsetDays * DAY).toISOString()), weeks: 12, sessionsPerWeek: 3, minutesPerSession: 15, unlockedStages: ['stage1'] },
+      CATALOG,
+    );
+
+  it('archive is false when the stopped plan could not be stored, and the plan stays active', async () => {
+    await useRouteStore.getState().create('profile:a', plan(0), { from: 'setup', changed: false }, NOW);
+    const setSelfRoute = vi.spyOn(useProgressStore.getState(), 'setSelfRoute').mockReturnValue(false);
+    try {
+      expect(await useRouteStore.getState().archive('profile:a', NOW)).toBe(false);
+    } finally {
+      setSelfRoute.mockRestore();
+    }
+    expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute?.archivedAt).toBeNull();
+  });
+
+  it('two re-paces that overlap (a sync and the foreground) move the plan and report it once', async () => {
+    await useRouteStore.getState().create('profile:a', plan(-10), { from: 'setup', changed: true }, new Date(NOW.getTime() - 10 * DAY));
+    await usePlanStore.getState().rederive('profile:a');
+    vi.mocked(track).mockClear();
+    const runs = await Promise.all([
+      useRouteStore.getState().autoRepace('profile:a', NOW),
+      useRouteStore.getState().autoRepace('profile:a', NOW),
+      useRouteStore.getState().repaceNow('profile:a', NOW),
+    ]);
+    expect(runs.filter(Boolean)).toHaveLength(1);
+    expect(vi.mocked(track).mock.calls.filter(([e]) => e.name === 'route.repaced')).toHaveLength(1);
   });
 });
 
