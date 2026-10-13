@@ -72,8 +72,6 @@ import { useSpeedClock } from './useSpeedClock';
 type Props = NativeStackScreenProps<RootStackParamList, 'VocabSpeedRound'>;
 type Navigation = NativeStackNavigationProp<RootStackParamList, 'VocabSpeedRound'>;
 
-/** The question dots under the spark meter (the `Progress` default size). */
-const DOT = 12;
 /** Hides a view and everything in it from assistive technology on the web, iOS and Android. */
 const HIDDEN = { 'aria-hidden': true, accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants' } as const;
 
@@ -187,7 +185,7 @@ function StartSheet({
   const muted = useAudioStore((s) => s.muted);
   const canPlay = canPlayKorean({ tts, clips, unlocked }) && !muted;
 
-  // Hints are off while a screen reader is on (§3.6); `null` until known reads as on, which is the safe side.
+  // Hints are off while a screen reader is on (§3.6); `null` (not known yet) counts as on, the safe side.
   const [screenReader, setScreenReader] = useState<boolean | null>(null);
   useEffect(() => {
     let live = true;
@@ -246,8 +244,9 @@ function StartSheet({
       mode,
       questions,
       clockMs: clockFor(mode, challenge.scale),
-      // Hints are Relaxed only, and off with a screen reader (§3.6).
-      hintsEnabled: mode === 'relaxed' && screenReader !== true,
+      // Hints are Relaxed only, and off with a screen reader (§3.6): only a check that has answered
+      // "no screen reader" turns them on, so a tap before it answers gets none.
+      hintsEnabled: mode === 'relaxed' && screenReader === false,
     };
     if (profile) useVocabRunStore.getState().begin(profile.id, topic.key, 'speed');
     void track({
@@ -517,7 +516,7 @@ function RoundPlay({
           <View style={{ flexShrink: 1, gap: spacing.xs }}>
             {meter}
             <View {...HIDDEN} testID="vocab-speed-dots">
-              <Progress variant="dots" value={state.results.length} max={Math.max(config.questions.length, 1)} height={DOT} />
+              <Progress variant="dots" value={state.results.length} max={Math.max(config.questions.length, 1)} />
             </View>
           </View>
         </View>
