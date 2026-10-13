@@ -1,14 +1,17 @@
 import type { Page } from '@playwright/test';
 import type { ProgressSnapshot, SelfRoute } from '@hangul-route/content-schema';
+import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
 import { onboardChild, onboardSelf, readStored, seedStored, unlockWithPin } from './helpers';
 import { shot } from './shots';
+import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
 
 /**
  * F-PLAN-002 P2-7a (section 3.9; wireframe journey/my-route-overview.md K1): the Home prompt
  * "Hoya can make a weekly plan for you", the proposal screen and the Profile row. The entries
- * live behind `flags.routeEnabled` (off), so a default build checks that none of them shows,
- * and a build made with the flag on checks the flow:
+ * live behind `flags.routeEnabled`, on by default since P2-8b (English only, `routeEnabledFor`),
+ * so the default build checks that both entries show in English, and the weekly plan build
+ * (the flag on, es and ko shown) checks the flow:
  *
  *   pnpm --filter @hangul-route/mobile build:web:route      (writes dist-e2e-route/)
  *   E2E_ROUTE=1 pnpm --filter @hangul-route/mobile exec playwright test route-proposal
@@ -69,14 +72,50 @@ async function selfLearnerWithAQuest(page: Page, name: string): Promise<string> 
   return profileId;
 }
 
-test.describe('weekly plan entries with the flag off (default build)', () => {
+test.describe('weekly plan entries on the default build (flag on by default, P2-8b)', () => {
   test.skip(ROUTE, 'runs on the default build only');
 
-  test('no Home prompt and no Profile row', async ({ page }) => {
+  test('the Home prompt and the Profile row show in English', async ({ page }) => {
     await selfLearnerWithAQuest(page, 'Rae');
-    await expect(page.getByTestId('home-plan-prompt')).toHaveCount(0);
+    await expect(page.getByTestId('home-plan-prompt')).toBeVisible();
     await page.getByRole('button', { name: /profile/i }).first().click();
-    await expect(page.getByTestId('profile-plan-row')).toHaveCount(0);
+    await expect(page.getByTestId('profile-plan-row')).toBeVisible();
+  });
+});
+
+test.describe('the weekly plan at 320 px in English on the default build (P2-8b)', () => {
+  test.skip(ROUTE, 'runs on the default build only');
+  // React Native Web draws text in px, so 200 % browser zoom of a 640 px window lays out as this 320 px window.
+  test.use({ viewport: { width: 320, height: 568 } });
+
+  test('the proposal, the four set-up steps, the preview and the overview keep every control inside the window', async ({ page }) => {
+    const t = getMessages('en').learner.weeklyPlan;
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await selfLearnerWithAQuest(page, 'Bo');
+    const check = async (name: string): Promise<void> => {
+      await expectNoHorizontalOverflow(page, `${name}: horizontal overflow`);
+      expect(await page.evaluate(controlsPastEdge), `${name}: controls past the edge`).toEqual([]);
+      const text = await page.locator('body').innerText();
+      expect(text).not.toMatch(EMOJI);
+      expect(text, `${name}: a product, shame or score word`).not.toMatch(NEVER);
+      await shot(page, `route-e2e-320-en-${name}`);
+    };
+    await page.getByTestId('home-plan-prompt-open').click();
+    await expect(page.getByTestId('route-proposal-headline')).toBeVisible();
+    await check('proposal');
+    await page.getByTestId('route-proposal-more-choices').click();
+    for (const step of [1, 2, 3, 4]) {
+      await expect(page.getByTestId('route-setup-step')).toHaveText(t.setup.stepOf(step, 4));
+      await check(`setup-${step}`);
+      await page.getByTestId(step === 4 ? 'route-setup-see' : 'route-setup-next').click();
+    }
+    await expect(page.getByText(t.planPreview.title)).toBeVisible();
+    await check('preview');
+    await page.getByTestId('route-preview-start').click();
+    await expect(page.getByText(t.overview.intro)).toBeVisible();
+    await check('overview');
+    expect(errors).toEqual([]);
   });
 });
 

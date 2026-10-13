@@ -19,7 +19,8 @@ import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
  * - The pre-flip 320 px pass (section 6, P2-8 row): set-up, preview and overview in Spanish and Korean
  *   push nothing past the side of the window.
  *
- * The screens sit behind `flags.routeEnabled` (off), so this runs on the weekly plan build:
+ * The screens sit behind `flags.routeEnabled` (on by default since P2-8b, English only); this runs
+ * on the weekly plan build, which also shows Spanish and Korean:
  *
  *   pnpm --filter @hangul-route/mobile build:web:route      (writes dist-e2e-route/)
  *   E2E_ROUTE=1 pnpm --filter @hangul-route/mobile exec playwright test route

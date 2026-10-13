@@ -1,7 +1,8 @@
 // E2E-only web build with the learner's weekly plan switched on (F-PLAN-002 P2-8).
 //
-// `flags.routeEnabled` is off in production, so the release build cannot play the weekly plan
-// specs (route-proposal, route-plan, route). This script exports the release content (no story
+// `flags.routeEnabled` is on by default since P2-8b but English only (`routeEnabledFor`), and the
+// release build hides Spanish and Korean, so the weekly plan specs (route-proposal, route-plan,
+// route) play on a build of their own. This script exports the release content (no story
 // fixtures) with EXPO_PUBLIC_ROUTE_ENABLED=true and EXPO_PUBLIC_SHOW_ALL_LOCALES=1 (the QA flag that
 // shows Spanish and Korean, for the 320 px pass of section 6) into its OWN directory
 // (dist-e2e-route/, never dist/), then runs the PWA post-build.
