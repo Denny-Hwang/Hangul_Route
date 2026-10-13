@@ -92,6 +92,8 @@ type ProposalMessages = Messages['learner']['weeklyPlan']['proposal'];
 /** A Sunday, so `WEEKDAYS[i]` is this day plus i (weekday chip labels in the UI locale). */
 const A_SUNDAY = '2026-10-11';
 const LENGTHS: readonly LengthChoice[] = ['4-week', '12-week', '6-month', 'custom'];
+/** A radio chip that holds a short word beside its circle at the 18 pt body size: two to a phone row. */
+const WIDE_CHIP = touchTarget.hero + touchTarget.min;
 
 const dayLabel = (locale: UiLocale, date: DateKey): string => formatDate(locale, `${date}T00:00:00Z`, 'weekday', { utc: true });
 
@@ -416,19 +418,20 @@ export function RouteProposalScreen({ route, navigation }: Props): React.ReactEl
       <Spacer size="lg" />
       <Heading level="prompt">{t.paceTitle}</Heading>
       <Spacer size="sm" />
-      <View accessibilityRole="radiogroup" accessibilityLabel={t.paceTitle} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+      <View accessibilityRole="radiogroup" accessibilityLabel={t.paceTitle} style={{ gap: spacing.sm }}>
         {PACE_IDS.map((id) => (
-          <View key={id} style={{ flexGrow: 1, flexBasis: touchTarget.hero }}>
-            <RadioTile
-              selected={current.pace === id}
-              onPress={() => setPace(id)}
-              accessibilityLabel={t.paceLabel(t.pace[id], PACES[id])}
-              testID={`route-proposal-pace-${id}`}
-            >
+          <RadioTile
+            key={id}
+            selected={current.pace === id}
+            onPress={() => setPace(id)}
+            accessibilityLabel={t.paceLabel(t.pace[id], PACES[id])}
+            testID={`route-proposal-pace-${id}`}
+          >
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: spacing.md }}>
               <Body weight="semibold">{t.pace[id]}</Body>
               <Caption tone="secondary">{t.paceDays(PACES[id])}</Caption>
-            </RadioTile>
-          </View>
+            </View>
+          </RadioTile>
         ))}
       </View>
 
@@ -491,7 +494,7 @@ export function RouteProposalScreen({ route, navigation }: Props): React.ReactEl
       <Spacer size="sm" />
       <View accessibilityRole="radiogroup" accessibilityLabel={t.startTitle} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
         {(['today', 'tomorrow', 'pick'] as const).map((id) => (
-          <View key={id} style={{ flexGrow: 1, flexBasis: touchTarget.hero }}>
+          <View key={id} style={{ flexGrow: 1, flexBasis: WIDE_CHIP }}>
             <RadioTile
               selected={pick === id}
               onPress={() => setStart(id === 'today' ? days.today : id === 'tomorrow' ? days.tomorrow : (days.later[0] as DateKey))}
@@ -573,7 +576,7 @@ export function RouteProposalScreen({ route, navigation }: Props): React.ReactEl
           <Spacer size="sm" />
           <View accessibilityRole="radiogroup" accessibilityLabel={t.minutesTitle} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
             {MINUTE_CHOICES.map((minutes) => (
-              <View key={minutes} style={{ flexBasis: touchTarget.hero, flexGrow: 1 }}>
+              <View key={minutes} style={{ flexBasis: WIDE_CHIP, flexGrow: 1 }}>
                 <RadioTile
                   selected={current.minutes === minutes}
                   onPress={() => setChoice({ ...current, minutes })}
