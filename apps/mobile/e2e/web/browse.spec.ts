@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { answerCheckRounds, onboardChild, passDiscover } from './helpers';
+import { answerCheckRounds, onboardChild, openGrownUpZone, passDiscover, unlockWithPin } from './helpers';
 import { shot } from './shots';
 import { nextPage, position } from './story-reader-helpers';
 
@@ -244,6 +244,35 @@ test('a gate pass opens All lessons: the fragment leaves the address, the title 
   });
   await expect(page).toHaveURL(/\/browse$/);
   await expect(page.getByTestId('browse-focus-chip')).toHaveAttribute('aria-label', 'ㄴ, n, taught here');
+});
+
+test('BR-12a: the dashboard Open all lessons writes the gate pass before it leaves and opens All lessons in the same tab', async ({ page }) => {
+  await onboardChild(page, { name: 'Mina' });
+  await openGrownUpZone(page, 'Mina');
+  await unlockWithPin(page);
+  await expect(page.getByText('Read-only — learners on this device.')).toBeVisible();
+  const open = page.getByRole('button', { name: 'Open all lessons' });
+  await open.scrollIntoViewIfNeeded();
+  const box = await open.boundingBox();
+  expect(box?.height ?? 0).toBeGreaterThanOrEqual(64);
+  await shot(page, 'br-12a-dashboard-open-all-lessons');
+
+  const addresses: string[] = [];
+  page.on('framenavigated', (frame) => {
+    if (frame === page.mainFrame()) addresses.push(frame.url());
+  });
+  await open.click();
+  await expect(home(page)).toBeVisible();
+  await bootSettled(page);
+  // Same tab, the gate fragment only (no learner, scope or locale in the address), then the root strips it.
+  expect(addresses.some((url) => url.endsWith('/browse#s=gate'))).toBe(true);
+  expect(page.url()).toMatch(/\/browse$/);
+  const pass = JSON.parse((await page.evaluate((k) => sessionStorage.getItem(k), PASS_KEY)) ?? 'null') as Record<string, unknown> | null;
+  expect(pass).toMatchObject({ v: 1, scope: 'sampler', source: 'gate', uiLocale: 'en' });
+  expect(Object.keys(pass ?? {}).sort()).toEqual(['issuedAt', 'scope', 'seen', 'source', 'uiLocale', 'v']);
+  // A gate pass: no pointer line and no keep switch (section 4.5).
+  await expect(page.getByTestId('browse-keep')).toHaveCount(0);
+  await shot(page, 'br-12a-browse-home-from-gate');
 });
 
 test('a new tab has no pass: only the Access screen, with no lesson, title or card', async ({ page, context }) => {
