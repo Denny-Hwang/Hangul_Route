@@ -14,7 +14,8 @@ import { onboardChild, onboardSelf, readStored, unlockWithPin } from './helpers'
  *   learner worker active, `/account/billing?checkout=success` is the billing page, not the learner shell.
  * - With F-APP-001's grown-up home flag on: Open billing, then the PIN, opens `/account/billing` in the same tab and
  *   the console shows it without the "Grown-ups only" lock; a PIN older than 2 minutes asks again on the grown-up
- *   area's PIN screen first. Run on a build made with the flag on and an API base (any host: the mock matches every
+ *   area's PIN screen first; offline, Open billing is disabled with "Needs the internet" and comes back online
+ *   (A-7's state). Run on a build made with the flag on and an API base (any host: the mock matches every
  *   cross-origin `/api/` call):
  *
  *   EXPO_PUBLIC_GROWN_UP_HOME=true EXPO_PUBLIC_API_BASE_URL=https://api.billing-e2e.test pnpm --filter @hangul-route/mobile build:web
@@ -23,6 +24,8 @@ import { onboardChild, onboardSelf, readStored, unlockWithPin } from './helpers'
 const ON = process.env.E2E_GROWN_UP_HOME === '1';
 const PRICE = /\$\s?\d|\d\s?\/\s?year|per year/i;
 const LOCK_TITLE = 'Grown-ups only';
+/** Open billing's hint while online (`caregiver.plan.openBilling.a11yHint`). */
+const ONLINE_HINT = 'Opens the billing page';
 const LEARNER_SHELL_MARK = '__hrApplyUpdate';
 
 const SUMMARY: BillingSummary = {
@@ -158,6 +161,10 @@ test.describe('the release build', () => {
     await expect(page.getByText('Stage 1 is always free.')).toBeVisible();
   });
 
+  // CI's PWA shards build without an API base, so there the console shows its no-API notice and the mock is never
+  // called: what this test pins on every build is the routing (the worker serves the console's billing page, not the
+  // learner shell) and the cleared return query, which the page drops before it looks for an API. The cards are
+  // checked by the flag-on group below and by apps/web/e2e/billing.spec.ts on a build with an API base.
   test('with the learner worker active, /account/billing?checkout=success is the billing page, not the learner shell', async ({ page }) => {
     await signedInGrownUp(page);
     await page.goto('/');
@@ -215,7 +222,7 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true): the same tab opens the 
     expect(tabs.seen()).toBe(0);
   });
 
-  test('a PIN older than 2 minutes asks again on the grown-up area PIN screen, then the billing page opens without the lock', async ({ page }) => {
+  test('a PIN older than 2 minutes asks again on the grown-up area PIN screen, then the billing page opens without the lock', async ({ page, context }) => {
     await page.clock.install();
     await signedInGrownUp(page);
     await onboardChild(page, { name: 'Mina' });
@@ -228,11 +235,47 @@ test.describe('flag on (EXPO_PUBLIC_GROWN_UP_HOME=true): the same tab opens the 
     await page.getByRole('button', { name: 'Go back' }).click();
     await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
     await page.clock.fastForward('03:00');
+    // Three minutes on, the 15-minute session still opens a gate with no PIN (the Plan screen's gate is one of
+    // them), so the PIN asked below can only be the grown-up area's 2-minute rule.
+    await page.getByRole('button', { name: /^Edit Mina/ }).click();
+    await expect(page.getByRole('heading', { name: 'Edit profile' })).toBeVisible();
+    await expect(page.getByText('Enter your 4-digit PIN to continue.')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Go back' }).click();
+    await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
     await openPlanDetails(page);
+    const tabs = watchTabs(context);
 
     await page.getByRole('button', { name: 'Open billing' }).click();
-    // The session is open, but the PIN is stale: the grown-up area's own PIN screen asks first.
+    // The session is open, but the PIN is stale: the grown-up area's own PIN screen asks first, and only once.
     await unlockWithPin(page);
     await expectBillingPage(page);
+    expect(tabs.seen()).toBe(0);
+    expect(JSON.parse((await page.evaluate((k) => sessionStorage.getItem(k), UNLOCK_SESSION_KEY)) ?? 'null')).toMatchObject({ v: 1, src: 'pin' });
+  });
+
+  test('offline: Open billing is disabled with "Needs the internet", a tap opens nothing, and it comes back online', async ({ page, context }) => {
+    await signedInGrownUp(page);
+    await onboardChild(page, { name: 'Mina' });
+    await openProfile(page, 'Mina');
+    await openPlanDetails(page);
+    const open = page.getByRole('button', { name: 'Open billing' });
+    await expect(open).toBeEnabled();
+    await expect(open).toHaveAccessibleDescription(ONLINE_HINT);
+    await expect(page.getByTestId('plan-open-billing-offline')).toHaveCount(0);
+    const tabs = watchTabs(context);
+
+    await context.setOffline(true);
+    await expect(open).toBeDisabled();
+    await expect(open).toHaveAccessibleDescription('Needs the internet');
+    await expect(page.getByTestId('plan-open-billing-offline')).toHaveText('Needs the internet');
+    await open.click({ force: true });
+    await expect(page.getByText('Enter your 4-digit PIN to continue.')).toHaveCount(0);
+    expect(new URL(page.url()).pathname).not.toMatch(/^\/account\//);
+    expect(tabs.seen()).toBe(0);
+
+    await context.setOffline(false);
+    await expect(open).toBeEnabled();
+    await expect(page.getByTestId('plan-open-billing-offline')).toHaveCount(0);
+    await expect(open).toHaveAccessibleDescription(ONLINE_HINT);
   });
 });

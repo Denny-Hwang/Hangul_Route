@@ -1,5 +1,5 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
-import { FAMILY_LIFETIME_LEARNERS, type BillingSpaceCard, type BillingSummary, type ReceiptView } from '@hangul-route/content-schema';
+import { APP_ROUTES, FAMILY_LIFETIME_LEARNERS, type BillingSpaceCard, type BillingSummary, type ReceiptView } from '@hangul-route/content-schema';
 
 /**
  * F-BILL-002 B-11 (section 11, `web/e2e/billing.spec.ts`): the whole billing journey of a grown-up in a real browser,
@@ -26,7 +26,8 @@ const SESSION_KEY = 'hr:console:session';
 const STRIPE_CHECKOUT = 'https://checkout.stripe.com/c/pay/cs_test_b11';
 const RECEIPT_URL = 'https://invoice.stripe.com/i/acct_b11/test_b11';
 const FAMILY = 'space:fam-b11';
-const PRICE = /\$\s?\d/;
+/** An amount or a term, as landing-claims.test.tsx bans them on the site: the caregiver card shows neither. */
+const PRICE = /\$\s?\d|\d[.,]\d{2}\b|\bper\s+(year|month)\b|\/\s?(yr|year|mo|month)\b/i;
 
 const HINT = {
   error: { code: 'reverify_required', message: 'mocked' },
@@ -169,7 +170,10 @@ test.describe('billing on the app host (B-11)', () => {
     await expect(card).toContainText('Next: connect a learner to this family.');
     const connect = card.getByRole('link', { name: 'Connect a learner' });
     await expect(connect).toBeVisible();
-    expect(new URL((await connect.getAttribute('href')) ?? '', baseURL).pathname).not.toBe('/account/billing');
+    // F-APP-001's family page with this family's join code panel (billing-summary.ts `connectLearnerHref`).
+    const connectUrl = new URL((await connect.getAttribute('href')) ?? '', baseURL);
+    expect(connectUrl.pathname).toBe(`${APP_ROUTES.parentHome}/space`);
+    expect(connectUrl.searchParams.get('id')).toBe(FAMILY);
     // Focus lands on the bought family's card heading.
     await expect(familyHeading(page)).toBeFocused();
     await expect(card.getByRole('button', { name: 'Get Family Plan' })).toHaveCount(0);
@@ -196,7 +200,10 @@ test.describe('billing on the app host (B-11)', () => {
     await page.waitForURL((url) => url.pathname === '/account/billing/receipts');
     expect(new URL(page.url()).searchParams.get('id')).toBe(FAMILY);
     await expect(page.getByRole('heading', { level: 1, name: 'Kim family · receipts' })).toBeVisible();
-    await expect(page.getByText('test', { exact: true }).first()).toBeVisible();
+    // The receipt's row carries the test-mode pill.
+    const row = page.getByRole('row').filter({ has: page.getByRole('button', { name: /View receipt/ }) });
+    await expect(row).toHaveCount(1);
+    await expect(row.locator('.hr-bill-pill')).toHaveText('test');
     // No Stripe id or URL is on the page before a tap.
     expect(await page.content()).not.toContain('stripe.com');
 
@@ -246,8 +253,8 @@ test.describe('billing on the app host (B-11)', () => {
   });
 
   for (const summary of [
-    { name: 'free family', data: FREE_FAMILY },
-    { name: 'paid family', data: PAID_FAMILY },
+    { name: 'free family', data: FREE_FAMILY, reaches: 'Get Family Plan' },
+    { name: 'paid family', data: PAID_FAMILY, reaches: 'All receipts' },
   ]) {
     test(`320 px, ${summary.name}: no sideways scroll, and the tab order follows the visual order`, async ({ page }) => {
       await page.setViewportSize({ width: 320, height: 568 });
@@ -261,19 +268,25 @@ test.describe('billing on the app host (B-11)', () => {
         h.setAttribute('tabindex', '-1');
         (h as HTMLElement).focus();
       });
+      // Every stop until focus leaves the page or comes back round; stops outside the billing body (the frame's
+      // own links) are skipped, not the end, so a control after them is still checked.
       const stops: { top: number; left: number; label: string }[] = [];
-      for (let i = 0; i < 30; i += 1) {
+      for (let i = 0; i < 60; i += 1) {
         await page.keyboard.press('Tab');
         const stop = await page.evaluate(() => {
           const el = document.activeElement as HTMLElement | null;
-          if (!el || !el.closest('.hr-bill')) return null;
+          if (!el || el === document.body) return 'end' as const;
+          if (!el.closest('.hr-bill')) return 'outside' as const;
+          if (el.tagName === 'H1') return 'end' as const;
           const r = el.getBoundingClientRect();
           return { top: r.top + window.scrollY, left: r.left, label: (el.innerText || el.getAttribute('aria-label') || el.tagName).trim() };
         });
-        if (!stop) break;
+        if (stop === 'end') break;
+        if (stop === 'outside') continue;
+        if (stops.some((s) => s.top === stop.top && s.left === stop.left && s.label === stop.label)) break;
         stops.push(stop);
       }
-      expect(stops.length).toBeGreaterThan(1);
+      expect(stops.map((s) => s.label)).toContain(summary.reaches);
       for (const [prev, next] of stops.slice(1).map((stop, i) => [stops[i] ?? stop, stop] as const)) {
         const sameLine = Math.abs(next.top - prev.top) < 4;
         expect(sameLine ? next.left > prev.left : next.top > prev.top, `${prev.label} then ${next.label}`).toBe(true);

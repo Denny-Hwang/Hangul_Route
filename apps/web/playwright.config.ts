@@ -27,7 +27,7 @@ export default defineConfig({
     launchOptions: process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {},
   },
   webServer: {
-    command: `node e2e/serve-out.mjs ${process.env.E2E_OUT ?? 'out'}`,
+    command: `node e2e/serve-out.mjs ${JSON.stringify(process.env.E2E_OUT ?? 'out')}`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: false,
     timeout: 30_000,
