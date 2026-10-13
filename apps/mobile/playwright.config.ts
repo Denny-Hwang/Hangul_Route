@@ -36,7 +36,9 @@ export default defineConfig({
     // STORY_FIXTURES_GATED=1: the gating fixture build (build:web:fixtures:gated writes dist-e2e-gated/).
     command: `node scripts/serve-dist.mjs ${serveDir()}`,
     url: 'http://localhost:4173',
-    reuseExistingServer: true,
+    // Only the release bundle may reuse a server already listening: a run that names another bundle
+    // (fixtures, gating, weekly plan) always serves that bundle, never a leftover release server.
+    reuseExistingServer: serveDir() === 'dist',
     timeout: 30_000,
   },
 });
