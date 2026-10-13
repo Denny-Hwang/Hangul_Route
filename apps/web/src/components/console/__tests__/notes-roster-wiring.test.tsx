@@ -20,7 +20,7 @@ vi.mock('@/components/console/LanguageSelect', () => ({ LanguageSelect: () => nu
 // next/link needs the app router's context; a plain anchor keeps its href, its text and its description.
 vi.mock('next/link', () => ({
   default: ({ href, children, ...rest }: { href: string; children: ReactNode; 'aria-describedby'?: string }) => (
-    <a href={href} aria-describedby={rest['aria-describedby']}>
+    <a href={href} aria-describedby={rest['aria-describedby']} data-testid={(rest as { 'data-testid'?: string })['data-testid']}>
       {children}
     </a>
   ),
@@ -148,13 +148,15 @@ async function roster(): Promise<ReactTestInstance> {
 
 
 const sendNote = (root: ReactTestInstance): ReactTestInstance[] => root.findAll((n) => n.type === 'a' && textOf(n) === notes.sendNote.cta);
-const notesAction = (root: ReactTestInstance): ReactTestInstance[] => root.findAll((n) => n.type === 'a' && textOf(n) === notes.roster.notes.cta);
+// The roster header's Notes, not the adult nav's Notes item (FB-11b) that the frame draws with the same flag.
+const notesAction = (root: ReactTestInstance): ReactTestInstance[] => root.findAll((n) => n.type === 'a' && n.props['data-testid'] === 'roster-notes');
 
 describe('the roster notes entries (FB-11a)', () => {
   it('notes off (the default): no Notes action and no Send a note', async () => {
     const root = await roster();
     expect(notesAction(root)).toHaveLength(0);
     expect(sendNote(root)).toHaveLength(0);
+    expect(root.findAll((n) => n.type === 'a' && textOf(n) === notes.roster.notes.cta)).toHaveLength(0);
   });
 
   it('notes on: Notes opens the class notes page; each card opens the composer with its learner, ids only', async () => {

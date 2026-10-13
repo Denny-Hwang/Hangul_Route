@@ -21,8 +21,9 @@ import {
 import { useGrownUpLocation } from '@/components/console/grown-up-location';
 import { useConsole } from '@/components/console/use-console';
 import type { ApiResult, LearnerReportBody, SpaceListItem } from '@/lib/console/api';
-import { learningRouteEnabled, reportsEnabled } from '@/lib/console/config';
+import { learningRouteEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
 import { learningRouteView, type LearningRouteGoal } from '@/lib/console/learning-route-view';
+import { reportNoteLink } from '@/lib/console/notes-page';
 import { dateKey } from '@/lib/console/plans';
 import { learnerReportView, reportBackLink, reportCacheKey, reportQueryOf, reportScreenOf, type ReportStepButton, type ReportTab } from '@/lib/console/report-view';
 import { spaceKindOfPath } from '@/lib/console/routing';
@@ -240,12 +241,21 @@ function LearnerReportInner(): JSX.Element {
   }
 
   const { busy, error } = screen;
+  // Send a note (F-FEEDBACK-001 FB-11b; F-REPORT-001 section 3.6): the header, by flag, role and an open space.
+  const noteLink = reportNoteLink({
+    enabled: notesEnabled(),
+    archived: screen.data.space.archivedAt !== null,
+    role,
+    kind: screen.data.space.kind,
+    spaceId: screen.data.space.id,
+    learnerId: screen.data.learner.id,
+  });
   const lines = [...(view.archived && roleKnown ? [view.archived] : []), ...view.notices];
   const selected = view.tabs?.find((tab) => tab.selected)?.period ?? period;
   const body = busy ? <ReportSkeleton /> : <ReportBody view={view} />;
   return frame(
     <>
-      <ReportHeader back={view.back} printDisabled={busy} onPrint={() => window.print()} />
+      <ReportHeader back={view.back} printDisabled={busy} onPrint={() => window.print()} sendNote={noteLink} />
       <div className="hr-report-glance">
         <ReportTitle title={view.title} avatar={screen.data.learner.avatar} />
         {view.glance ? <ReportGlanceBlock glance={view.glance} /> : null}

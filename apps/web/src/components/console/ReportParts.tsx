@@ -73,7 +73,7 @@ export const REPORT_CSS = `
 .hr-report-hint{flex:1 1 ${PRINT_HINT_MIN};font-size:${rem(typography.size.caption)};color:${colors.text.muted};line-height:${typography.leading.tight}}
 .hr-report-link-button{display:inline-flex;align-items:center;justify-content:center;min-height:${px(touchTarget.min)};padding:${rem(spacing.sm)} ${rem(spacing.lg)};border-radius:${px(radii.pill)};border:${px(borderWidth.thin)} solid ${colors.border.strong};background:${colors.surface.paper};color:${colors.text.primary};font:inherit;font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.bold};text-decoration:none;cursor:pointer}
 .hr-report-link-button:disabled{background:${colors.surface.sunken};color:${colors.text.muted};cursor:default}
-.hr-report-ghost{display:inline-flex;align-items:center;min-height:${px(touchTarget.min)};padding:${rem(spacing.xs)} ${rem(spacing.lg)};border-radius:${px(radii.pill)};background:${colors.brand.primaryLight};color:${colors.brand.primaryDark};font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.bold};text-decoration:none}
+.hr-report-ghost{display:inline-flex;align-items:center;gap:${rem(spacing.xs)};min-height:${px(touchTarget.min)};padding:${rem(spacing.xs)} ${rem(spacing.lg)};border-radius:${px(radii.pill)};background:${colors.brand.primaryLight};color:${colors.brand.primaryDark};font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.bold};text-decoration:none}
 .hr-report-glance{display:flex;flex-direction:column;gap:${rem(spacing.xs)}}
 .hr-report-title{display:flex;align-items:center;gap:${rem(spacing.sm)};font-size:${rem(typography.size.title)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight};overflow-wrap:anywhere}
 .hr-report-state-title{font-size:${rem(typography.size.bodyLg)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight}}
@@ -171,15 +171,23 @@ export function ReportBack({ link }: { link: ReportLink }): JSX.Element {
 
 /**
  * The header: the back link, then (row 2 on a phone) **Print or save as PDF** with its hint, which it names with
- * `aria-describedby`. Print is disabled while the report loads; a cached report shown with a failed later load stays printable. **Send a note** joins the second row in
- * RP-12 (after F-FEEDBACK-001 FB-11), so it is not drawn here.
+ * `aria-describedby`. Print is disabled while the report loads; a cached report shown with a failed later load stays printable.
+ * **Send a note** (F-FEEDBACK-001 FB-11b; F-REPORT-001 section 3.6) leads the second row when `sendNote` holds its
+ * address: a ghost pill with the `note` glyph, never in an insight line.
  */
-export function ReportHeader({ back, printDisabled, onPrint }: { back: ReportLink; printDisabled: boolean; onPrint: () => void }): JSX.Element {
-  const p = useMessages().report.print;
+export function ReportHeader({ back, printDisabled, onPrint, sendNote = null }: { back: ReportLink; printDisabled: boolean; onPrint: () => void; sendNote?: string | null }): JSX.Element {
+  const m = useMessages();
+  const p = m.report.print;
   return (
     <div className="hr-report-top hr-report-actions">
       <ReportBack link={back} />
       <div className="hr-report-buttons">
+        {sendNote ? (
+          <Link className="hr-report-ghost hr-report-send-note" href={sendNote} data-testid="report-send-note">
+            <IconSvg name="note" size={GLYPH} color={colors.brand.primaryDark} />
+            <span>{m.report.action.sendNote}</span>
+          </Link>
+        ) : null}
         <button type="button" className="hr-report-link-button" aria-describedby={PRINT_HINT_ID} disabled={printDisabled} onClick={onPrint} data-testid="report-print">
           {p.button}
         </button>

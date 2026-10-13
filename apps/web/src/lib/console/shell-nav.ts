@@ -11,7 +11,7 @@ import { ROUTES } from './routing';
  * whose predicate is off is not drawn (never a disabled "coming soon" button).
  */
 
-export type NavId = 'home' | 'reports' | 'notes' | 'classes' | 'lessons' | 'billing';
+export type NavId = 'home' | 'reports' | 'notes' | 'classes' | 'teacherNotes' | 'lessons' | 'billing';
 
 /**
  * A link. `document` marks a learner root of this origin (Lessons opens All lessons at `/browse`, F-BROWSE-001), a
@@ -78,13 +78,12 @@ export const ADULT_NAV: readonly AdultNavItem[] = [
     id: 'notes',
     persona: 'parent',
     labelKey: 'notes',
-    target: (ctx) => {
-      const families = ownFamilySpaces(ctx.spaces);
-      return families.length === 1 && families[0] ? { href: ROUTES.spaceNotes(families[0].space.id, 'family') } : familyHome();
-    },
+    // The hub (F-FEEDBACK-001 FB-11b) goes straight on to the one family's notes page, or lists several.
+    target: () => ({ href: ROUTES.notesHub('parent') }),
     enabled: (ctx) => ctx.flags.notes,
   },
   { id: 'classes', persona: 'teacher', labelKey: 'classes', target: () => ({ href: personaHome('teacher') }), enabled: () => true },
+  { id: 'teacherNotes', persona: 'teacher', labelKey: 'notes', target: () => ({ href: ROUTES.notesHub('teacher') }), enabled: (ctx) => ctx.flags.notes },
   { id: 'lessons', persona: 'both', labelKey: 'lessons', target: () => ({ href: BROWSE_PATH, document: true }), enabled: (ctx) => ctx.flags.browse },
   { id: 'billing', persona: 'both', labelKey: 'billing', target: () => ({ href: ROUTES.billing }), enabled: () => true },
 ];
@@ -115,13 +114,14 @@ export function navItemsFor(ctx: NavContext): NavEntry[] {
 const BILLING_PAGE = /^\/(?:account\/billing|teach\/billing)(?:[/.]|$)/;
 const SPACE_PAGE = /^\/(?:teach|parent)\/space(?:[/.]|$)/;
 const REPORT_PAGE = /^\/(?:teach|parent)\/space\/(?:learner|report)(?:[/.]|$)/;
-const NOTES_PAGE = /^\/(?:teach|parent)\/space\/notes(?:[/.]|$)/;
+const NOTES_PAGE = /^\/(?:teach|parent)\/(?:space\/)?notes(?:[/.]|$)/;
 const PARENT_HOME_PAGE = /^\/parent(?:\/|\.html)?$/;
 const TEACHER_HOME_PAGE = /^\/teach\/home(?:\/|\.html)?$/;
 
 /**
  * The item to highlight (`aria-current="page"`, section 3.8): Billing on the billing pages; on the
- * active persona's pages, Reports and Notes on theirs (Family rows only), else the persona's home
+ * active persona's pages, Reports on theirs (Family rows only), Notes on the notes pages and hubs (each
+ * persona's own Notes item, F-FEEDBACK-001 FB-11b), else the persona's home
  * item. Nothing while the persona is only a guess, and nothing on a page of no persona. On a home,
  * the persona's home item only when it links to this very home: on a home the account does not
  * hold (the "not set up yet" states), the nav keeps the other persona's items and none is current.
@@ -130,7 +130,7 @@ export function currentNavItem(pathname: string, persona: AdultPersona, resolved
   if (BILLING_PAGE.test(pathname)) return 'billing';
   if (!resolved) return null;
   if (persona === 'parent' && REPORT_PAGE.test(pathname)) return 'reports';
-  if (persona === 'parent' && NOTES_PAGE.test(pathname)) return 'notes';
+  if (NOTES_PAGE.test(pathname)) return persona === 'parent' ? 'notes' : 'teacherNotes';
   const homeItem: NavId = persona === 'parent' ? 'home' : 'classes';
   const pageHome = PARENT_HOME_PAGE.test(pathname) ? APP_ROUTES.parentHome : TEACHER_HOME_PAGE.test(pathname) ? APP_ROUTES.teacherHome : null;
   if (pageHome) return personaHome(persona) === pageHome ? homeItem : null;

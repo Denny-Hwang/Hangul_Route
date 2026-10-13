@@ -89,6 +89,11 @@ export const ROUTES = {
     `/teach/space/learner?id=${encodeURIComponent(opts.spaceId)}&learner=${encodeURIComponent(opts.learnerId)}` +
     reportWindowQuery(opts.period, opts.at) +
     `${opts.from ? `&from=${opts.from}` : ''}`,
+  /**
+   * The notes hub of a persona (F-FEEDBACK-001 FB-11b, section 6.13, console/notes-hub.md): the adult nav's Notes item.
+   * With one space of that persona it goes straight on to that space's notes page; with several it lists them.
+   */
+  notesHub: (persona: AdultPersona) => (persona === 'parent' ? '/parent/notes' : '/teach/notes'),
   /** One class's statistics (F-REPORT-001 section 3.1, RP-8): aggregates only, so the URL holds the class id and the window. */
   classReport: (opts: ClassReportRoute) => spacePath('report', `${idQuery(opts.spaceId)}${reportWindowQuery(opts.period, opts.at)}`, opts.kind),
 } as const;

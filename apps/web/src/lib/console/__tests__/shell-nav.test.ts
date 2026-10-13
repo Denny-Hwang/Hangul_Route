@@ -29,6 +29,7 @@ describe('ADULT_NAV', () => {
       ['reports', 'parent', 'reports'],
       ['notes', 'parent', 'notes'],
       ['classes', 'teacher', 'classes'],
+      ['teacherNotes', 'teacher', 'notes'],
       ['lessons', 'both', 'lessons'],
       ['billing', 'both', 'billing'],
     ]);
@@ -59,8 +60,8 @@ describe('navItemsFor', () => {
     expect(ids(ctx({ persona: 'parent', flags: ALL_ON }))).toEqual(['home', 'reports', 'notes', 'lessons', 'billing']);
   });
 
-  it('Teacher with every flag on: Classes, Lessons, Billing', () => {
-    expect(ids(ctx({ persona: 'teacher', flags: ALL_ON }))).toEqual(['classes', 'lessons', 'billing']);
+  it('Teacher with every flag on: Classes, Notes, Lessons, Billing', () => {
+    expect(ids(ctx({ persona: 'teacher', flags: ALL_ON }))).toEqual(['classes', 'teacherNotes', 'lessons', 'billing']);
   });
 
   it('with the flags off (today): Home and Billing, or Classes and Billing; an item whose page is not built is not drawn', () => {
@@ -71,6 +72,7 @@ describe('navItemsFor', () => {
   it('each predicate shows only its own item', () => {
     expect(ids(ctx({ flags: { ...ALL_OFF, reports: true } }))).toEqual(['home', 'reports', 'billing']);
     expect(ids(ctx({ flags: { ...ALL_OFF, notes: true } }))).toEqual(['home', 'notes', 'billing']);
+    expect(ids(ctx({ persona: 'teacher', flags: { ...ALL_OFF, notes: true } }))).toEqual(['classes', 'teacherNotes', 'billing']);
     expect(ids(ctx({ flags: { ...ALL_OFF, browse: true } }))).toEqual(['home', 'lessons', 'billing']);
   });
 
@@ -90,11 +92,11 @@ describe('navItemsFor', () => {
     expect(many.find((entry) => entry.id === 'reports')?.target).toEqual({ href: '/parent' });
   });
 
-  it('Notes opens the notes page of the one family space, else the family home', () => {
+  it('Notes opens the notes hub of the persona (FB-11b), which goes straight on with one space and lists several', () => {
     const one = navItemsFor(ctx({ flags: ALL_ON, spaces: [item('sp_f', 'family', 'caregiver'), item('sp_c', 'class', 'teacher')] }));
-    expect(one.find((entry) => entry.id === 'notes')?.target).toEqual({ href: '/parent/space/notes?id=sp_f' });
-    const two = navItemsFor(ctx({ flags: ALL_ON, spaces: [item('sp_f', 'family', 'owner'), item('sp_g', 'family', 'owner')] }));
-    expect(two.find((entry) => entry.id === 'notes')?.target).toEqual({ href: '/parent' });
+    expect(one.find((entry) => entry.id === 'notes')?.target).toEqual({ href: '/parent/notes' });
+    const teacher = navItemsFor(ctx({ persona: 'teacher', flags: ALL_ON, spaces: [item('sp_c', 'class', 'teacher')] }));
+    expect(teacher.find((entry) => entry.id === 'teacherNotes')?.target).toEqual({ href: '/teach/notes' });
   });
 });
 
@@ -133,9 +135,15 @@ describe('currentNavItem', () => {
     expect(currentNavItem('/account/billing/receipts', 'parent', true)).toBe('billing');
   });
 
-  it('a class report or class notes page keeps Classes, which is the Teacher row item for them', () => {
+  it('a class report keeps Classes; the class notes page and the teacher hub highlight the Teacher Notes item (FB-11b)', () => {
     expect(currentNavItem('/teach/space/report', 'teacher', true)).toBe('classes');
-    expect(currentNavItem('/teach/space/notes', 'teacher', true)).toBe('classes');
+    expect(currentNavItem('/teach/space/notes', 'teacher', true)).toBe('teacherNotes');
+    expect(currentNavItem('/teach/notes', 'teacher', true)).toBe('teacherNotes');
+  });
+
+  it('the parent notes hub highlights Notes', () => {
+    expect(currentNavItem('/parent/notes', 'parent', true)).toBe('notes');
+    expect(currentNavItem('/parent/notes.html', 'parent', true)).toBe('notes');
   });
 
   it('on a home the account does not hold, highlights no item: the home item of the other persona links elsewhere', () => {
