@@ -96,7 +96,7 @@ Companion stories:
 ### 3.6 Data residency
 
 - Phase 2 — class metadata + roster live in **Cloudflare D1** as `spaces` / `memberships` / `plans` (schema v2, roadmap `multi-persona-sync-platform.md` §2 — supersedes the five tables the draft listed).
-- Learner progress data continues to live local-first; only summary aggregates (`stage_anchor_accuracy`, week summary) are synced to D1 for class roll-up.
+- Learner progress data continues to live local-first; only summary aggregates (week summary) are synced to D1 for class roll-up. (Amended 2026-10-12 by F-QUEST-002 PR Q-11: `stage_anchor_accuracy` no longer exists; its replacement `stage1Anchor` is a family-channel key in `TEACHER_HIDDEN_SUMMARY_KEYS`, never rolled up for a class.)
 - Privacy: a teacher can never read a learner's raw Quest history, only aggregates. Same lint as F-PAR-001 §3.6.
 
 ## 4. Out of scope

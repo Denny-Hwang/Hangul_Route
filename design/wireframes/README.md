@@ -25,7 +25,7 @@
 | `story/reader.md` · `story/term-gloss.md` · `story/sources.md` | S | F-STORY-002 §3.3-3.8 (PR 2.0; briefs `screens/21-story-reader`, `screens/26-story-sources`, `components/story-scene`, `illustrations/scene-art-style`) |
 | `quest/discover.md` · `quest/check.md` | S | F-QUEST-002 §3.2-3.3 (built in Q-5a; split out of the drafted file in Q-11) |
 | `results/next-quest-teaser.md` | S | F-QUEST-002 §3.5 (Q-5b) |
-| `results/stage1-complete.md` | R | F-QUEST-002 §3.8 (Q-9: ceremony, Results prize button, Journey Complete pill) |
+| `results/stage1-complete.md` | R | F-QUEST-002 §3.8 (Q-9: ceremony, Results prize button, Journey Complete pill and its See your prize entry) |
 | `reviews/hangul-check.md` | R | F-QUEST-002 §3.9 (Q-10b: the Stage 1 configuration of `reviews/stage-review.md`, 35 items) |
 | `minigame/build-letter.md` | R | F-QUEST-002 §3.7 (Q-7a) |
 | `minigame/listen-pick.md` | R | F-QUEST-002 §3.10 (Q-3b) |
