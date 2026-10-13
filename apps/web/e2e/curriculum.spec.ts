@@ -4,7 +4,7 @@ import { API, NOW, SESSION_KEY } from './report-fixtures';
 
 /**
  * F-PLAN-002 section 5, `web/e2e/curriculum.spec.ts` (PR P2-8): the console wizard for a family and for a class,
- * end to end on a mocked API: the four steps, the preview, **Use this plan** (a draft), the plan builder's week
+ * end to end on a mocked API: the four steps, the preview, **Use this route** (a draft), the plan builder's week
  * groups, **Publish plan**, and the published readout. Wireframes `console/curriculum-wizard.md` and
  * `console/plan-builder.md` (E and F). The learner side (a device lists one week at a time) is
  * `apps/mobile/e2e/web/route.spec.ts` and `homework-window.spec.ts`; here the saved plan carries the seven-day
@@ -50,7 +50,7 @@ const json = (route: Route, status: number, data: unknown) =>
   route.fulfill({ status, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(status < 300 ? { data } : { error: 'mocked' }) });
 
 /** A signed-in dev session and one space with two learners; plans are kept in memory as the Worker would keep them. */
-async function mockSpace(page: Page, kind: Kind): Promise<SavedBody[]> {
+async function mockSpace(page: Page, kind: Kind): Promise<{ saved: SavedBody[]; unexpected: string[] }> {
   await page.clock.setFixedTime(new Date(NOW));
   await page.addInitScript(
     ([key]) => window.sessionStorage.setItem(key as string, JSON.stringify({ token: 'acct-e2e', accountId: 'acct-e2e', displayName: 'Ms Kim' })),
@@ -68,6 +68,7 @@ async function mockSpace(page: Page, kind: Kind): Promise<SavedBody[]> {
   const learner = (id: string, displayName: string) => ({ id, displayName, avatar: 'hoya-orange', joinedAt: '2026-09-02T00:00:00.000Z', lastActiveAt: SUMMARY.lastActiveAt, ageGroup: 'starter', lastSyncedAt: SUMMARY.lastActiveAt, summary: SUMMARY });
   const learners = [learner('profile:mina', 'Mina'), learner('profile:joon', 'Joon')];
   const saved: SavedBody[] = [];
+  const unexpected: string[] = [];
   const plans = new Map<string, Record<string, unknown>>();
   await page.route(`${API}/**`, async (route) => {
     const request = route.request();
@@ -99,9 +100,12 @@ async function mockSpace(page: Page, kind: Kind): Promise<SavedBody[]> {
     }
     if (/\/plans$/.test(url.pathname)) return json(route, 200, { plans: [...plans.values()] });
     if (url.pathname === '/api/spaces') return json(route, 200, { spaces: [{ space, role: kind === 'class' ? 'teacher' : 'owner', counts: { learners: 2, accounts: 1, classes: 0 } }] });
-    return json(route, 200, { plans: [], requests: [], entitlements: [] });
+    // The console's plan check (no paid plan on this account).
+    if (url.pathname === '/api/entitlements' && request.method() === 'GET') return json(route, 200, { entitlements: [] });
+    unexpected.push(`${request.method()} ${url.pathname}`);
+    return json(route, 404, null);
   });
-  return saved;
+  return { saved, unexpected };
 }
 
 async function noSidewaysScroll(page: Page): Promise<void> {
@@ -114,11 +118,11 @@ test.describe('the console wizard: steps, preview, draft, publish (F-PLAN-002 P2
 
   for (const kind of ['family', 'class'] as const) {
     for (const width of [320, 1280]) {
-      test(`${kind} at ${width}: four steps, the preview, Use this plan, week groups, Publish plan`, async ({ page }) => {
+      test(`${kind} at ${width}: four steps, the preview, Use this route, week groups, Publish plan`, async ({ page }) => {
         await page.setViewportSize({ width, height: width === 320 ? 568 : 800 });
         const errors: string[] = [];
         page.on('pageerror', (e) => errors.push(String(e)));
-        const saved = await mockSpace(page, kind);
+        const { saved, unexpected } = await mockSpace(page, kind);
         await page.goto(`${SPACE[kind].prefix}/curriculum?id=${encodeURIComponent(SPACE[kind].id)}`);
 
         // Step 1: where they start (a family picks the learner first).
@@ -149,7 +153,11 @@ test.describe('the console wizard: steps, preview, draft, publish (F-PLAN-002 P2
         expect(draft.meta?.kind).toBe('curriculum');
         expect(draft.meta?.params.weeks).toBe(12);
         // Devices list one week of the plan at a time (section 3.6).
-        expect(draft.meta?.horizonDays ?? 7).toBeLessThanOrEqual(7);
+        expect(draft.meta?.horizonDays).toBeDefined();
+        expect(draft.meta?.horizonDays).toBeLessThanOrEqual(7);
+        // A plan starts today or later: a class on its next class day, a family today (section 3.8 rule 1).
+        const firstDate = draft.items.map((item) => item.targetDate ?? '').filter((d) => d !== '').sort()[0] ?? '';
+        expect(firstDate >= new Date(NOW).toISOString().slice(0, 10)).toBe(true);
         expect(draft.items.length).toBeGreaterThan(0);
         expect(draft.items.every((item) => typeof item.week === 'number' && item.week >= 1 && item.week <= 12)).toBe(true);
         expect(draft.targetLearnerIds).toEqual(kind === 'family' ? ['profile:mina'] : null);
@@ -171,6 +179,8 @@ test.describe('the console wizard: steps, preview, draft, publish (F-PLAN-002 P2
         const text = await page.getByRole('main').innerText();
         expect(text).not.toMatch(/%|\bbehind\b|\blate\b|\bmissed\b|\boverdue\b/i);
         expect(errors).toEqual([]);
+        // Every call the console made is one this mock answers on purpose.
+        expect(unexpected).toEqual([]);
       });
     }
   }
