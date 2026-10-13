@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { answerCheckRounds, onboardChild, passDiscover } from './helpers';
 import { shot } from './shots';
+import { nextPage, position } from './story-reader-helpers';
 
 /**
  * F-BROWSE-001 BR-6 (sections 4.1, 4.3, 4.4, 4.10): the All lessons root at
@@ -719,7 +720,7 @@ test('a full Stage 1 lesson, its end screen and its card write nothing of a lear
 
   // The learner player, unchanged, under the strip: Hello, Look and learn, the games, the Check, Finish.
   await expect(strip(page)).toBeVisible();
-  await expect(page.getByText('Preview. Nothing is saved.', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('preview-strip-text')).toHaveText('Preview. Nothing is saved.');
   await expect(announced(page)).toHaveCount(1);
   await page.getByRole('button', { name: 'Continue' }).click();
   await passDiscover(page);
@@ -816,4 +817,51 @@ test('Leave preview shows the border.focus ring on keyboard focus, and the strip
   await page.getByTestId('preview-leave').click();
   await page.getByTestId('browse-leave-confirm').click();
   await expect(announced(page)).toHaveCount(0);
+});
+
+/** A reviewed Story Time tale of the release build (content anchor: changes with the shelf). */
+const STORY_ID = 'story:chuseok-ganggangsullae';
+
+test('a story plays as the learner replay reader under the strip, ends on the story end screen and writes nothing', async ({ page }) => {
+  await onboardChild(page, { name: 'Mina' });
+  await page.goto('/');
+  await expect(page.getByText('Hi, Mina!')).toBeVisible();
+  await putStored(page, LEARNER_QUEUE, SEEDED_QUEUE);
+  const before = await readAllStored(page);
+  await writeGatePass(page);
+  await page.evaluate((id) => window.location.assign(`/browse#t=${id}&s=gate`), STORY_ID);
+  await expect(page.getByTestId('browse-item')).toBeVisible();
+  await bootSettled(page);
+
+  // The sources page from the item page: Copy link only, no Open, and no strip (it is not a lesson screen).
+  await page.getByTestId('browse-see-sources').click();
+  await expect(page.getByTestId('story-sources-title')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Open link' })).toHaveCount(0);
+  await expect(page.getByTestId('preview-strip')).toHaveCount(0);
+  await page.getByTestId('story-sources-back').click();
+  await expect(page.getByTestId('browse-preview')).toHaveText('Preview this story');
+  await expect(page.getByTestId('browse-preview-questions')).toBeVisible();
+
+  // The replay reader at scene 1 of the lowest level, under the strip.
+  await page.getByTestId('browse-preview').click();
+  await expect(page.getByTestId('preview-strip')).toBeVisible();
+  await expect(position(page)).toHaveText(/^1 \/ \d+$/);
+  await shot(page, 'br8-browse-story-reader-pixel5');
+  const total = Number(/\/ (\d+)$/.exec(await position(page).innerText())?.[1] ?? '0');
+  for (let i = 1; i <= total; i += 1) await nextPage(page);
+  await page.getByTestId('story-reader-end-primary').click();
+
+  // The story form of the end screen: no stars, no card.
+  await expect(page.getByRole('heading', { name: 'That is the whole story.' })).toBeVisible();
+  await expect(page.getByText('A learner can read it again any time.')).toBeVisible();
+  await expect(page.getByTestId('browse-end-card')).toHaveCount(0);
+  await expect(page.getByTestId('browse-end-again')).toHaveText('Read again');
+  await shot(page, 'br8-browse-story-end-pixel5');
+  await page.getByTestId('browse-end-back').click();
+  await expect(page.getByTestId('browse-item')).toBeVisible();
+
+  const after = await readAllStored(page);
+  const changed = [...new Set([...Object.keys(before), ...Object.keys(after)])].filter((k) => before[k] !== after[k]);
+  expect(changed.filter((k) => !k.startsWith('hr:browse:'))).toEqual([]);
+  expect(after[LEARNER_QUEUE]).toBe(SEEDED_QUEUE);
 });

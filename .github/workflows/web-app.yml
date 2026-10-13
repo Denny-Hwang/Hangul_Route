@@ -291,9 +291,6 @@ jobs:
             # card, resume, Library Story Time and Culture, the story episode page, Culture notes).
             # Anchored on ".spec" so a later story-shelf-*.spec.ts (row 4.8b) is not pulled in here.
             story-shelf.spec
-            # F-BROWSE-001 BR-8: a story previewed in All lessons writes nothing (the release build has no
-            # reviewed story yet; the fixture story passes the review gate).
-            browse-story
           )
           list() { pnpm exec playwright test --list "$@"; }
           {
