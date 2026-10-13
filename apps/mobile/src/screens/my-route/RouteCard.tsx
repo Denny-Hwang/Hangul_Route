@@ -52,7 +52,7 @@ export interface RouteCardProps {
 /** A 20 dp glyph beside the where line, hidden from screen readers (the summary label reads the words). */
 function Glyph({ name }: { name: 'pin' | 'flag' }): React.ReactElement {
   return (
-    <View aria-hidden importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+    <View aria-hidden importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={{ paddingTop: spacing.xxs }}>
       <Icon name={name} size={spacing.lg + spacing.xxs} color={colors.text.primary} />
     </View>
   );
@@ -67,7 +67,7 @@ function LabelledLine({ line, glyph, testID }: { line: RouteCardLine; glyph: 'pi
           {line.label}
         </Caption>
       ) : null}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs }}>
         <Glyph name={glyph} />
         <Body size="lg" weight="bold" style={{ flex: 1 }}>
           {line.line}
@@ -123,7 +123,7 @@ export function RouteCard({ copy, pips, goalStage, cta, pose, onAction, focusTok
         {where !== null ? (
           <View style={{ gap: spacing.xs }}>
             {where.kind === 'collapsed' ? (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }} testID={`${testID}-collapsed`}>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs }} testID={`${testID}-collapsed`}>
                 <Glyph name="pin" />
                 <Glyph name="flag" />
                 <Heading level="prompt" style={{ flex: 1 }}>
