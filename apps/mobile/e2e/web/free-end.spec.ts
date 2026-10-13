@@ -20,7 +20,7 @@ const access = getMessages('en').learner.access;
 const GATED = process.env.E2E_CONTENT_GATING === '1';
 const AT = '2026-10-01T00:00:00.000Z';
 
-/** A learner who finished every free lesson; returns the profile id. */
+/** A learner who finished every free lesson, with the app reloaded on Home; returns the profile id. */
 async function finishedFreeLessons(page: Page, name: string): Promise<string> {
   await onboardChild(page, { name, startJourney: false });
   const profiles = await readStored<Array<{ id: string }>>(page, 'profiles');
@@ -38,13 +38,14 @@ async function finishedFreeLessons(page: Page, name: string): Promise<string> {
     reviews: [],
     streakDays: 0,
   };
-  await seedStored(page, `progress:${id}`, { ...snapshot, quests, updatedAt: new Date().toISOString() });
+  // The tier first: the progress seed reloads the app, and that first Home is where the celebration shows.
   await seedStored(page, `tier:${id}`, { tier: 'free', source: null, validUntil: null, fetchedAt: new Date().toISOString() });
+  await seedStored(page, `progress:${id}`, { ...snapshot, quests, updatedAt: new Date().toISOString() });
   return id;
 }
 
-async function home(page: Page, name: string): Promise<void> {
-  await page.goto('/');
+async function home(page: Page, name: string, reload = true): Promise<void> {
+  if (reload) await page.goto('/');
   await expect(page.getByText(`Hi, ${name}!`)).toBeVisible();
   const guide = page.getByTestId('install-guide');
   await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
@@ -58,7 +59,7 @@ test.describe('release build (switch off)', () => {
 
   test('a learner who finished Stage 1 gets no free-end card and no practice card', async ({ page }) => {
     const id = await finishedFreeLessons(page, 'Mina');
-    await home(page, 'Mina');
+    await home(page, 'Mina', false);
     await expect(page.getByTestId('home-free-end-card')).toHaveCount(0);
     await expect(page.getByText(access.freeEnd.title)).toHaveCount(0);
     await expect(page.getByText(access.practice.subtitle)).toHaveCount(0);
@@ -78,7 +79,7 @@ test.describe('free plan switch on (web)', () => {
       page.on('pageerror', (e) => errors.push(String(e)));
       await page.setViewportSize(viewport);
       const id = await finishedFreeLessons(page, 'Mina');
-      await home(page, 'Mina');
+      await home(page, 'Mina', false);
 
       const card = page.getByTestId('home-free-end-card');
       await expect(card).toBeVisible();
@@ -105,7 +106,7 @@ test.describe('free plan switch on (web)', () => {
 
   test('the ask on the celebration goes through the PIN screen to the Plan screen', async ({ page }) => {
     await finishedFreeLessons(page, 'Mina');
-    await home(page, 'Mina');
+    await home(page, 'Mina', false);
     await page.getByTestId('home-free-end-ask').click();
     await expect(page.getByRole('heading', { name: 'Grown-up zone' })).toBeVisible();
     await unlockWithPin(page);
