@@ -253,7 +253,7 @@ Each line is `{ code, params, links? }`. Rules run in table order; the first thr
 
 | # | Code | Fires when (in the window, days up to `asOf`) | Params | Periods |
 |---|---|---|---|---|
-| W1 | `stage_done` | a milestone falls in the window, and the headline is not `stage_done` (which already names the stage; RP-2b2) | `stage` | all four |
+| W1 | `stage_done` | a milestone falls in the window, and the headline is not `stage_done` (which already names the stage; RP-2b2). Unreachable while the headline names every in-window milestone; kept as a guard for a future headline change | `stage` | all four |
 | W2 | `letters_new` | at least 1 letter in `days[].j` (`all`: the day rows the summary holds, the last 35 days) | `letters` (up to 5, in order learned) | all four (not on a totals-only month) |
 | W3 | `practice_days` | practice days >= 1 (day), >= 2 (week), >= 4 (month), >= 5 (all), and the headline is not `practiced` (which already states the days) | `days` | all four |
 | W4 | `minutes_up` | minutes > previous window's minutes, previous > 0 | `minutes`, `period` | week, month |

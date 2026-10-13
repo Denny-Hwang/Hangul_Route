@@ -259,6 +259,16 @@ describe('went well, rule by rule', () => {
     expect(codes(well(at({ summary: learner({ '2026-10-15': { q: 1 } }, {}, { milestones: [{ stage: 'stage1', on: '2026-10-15' }] }), period: 'day' })))).toEqual(['practice_days', 'quests_new']);
   });
 
+  it('W1 is unreachable from a learner report: the frozen learners, every period and viewer, never show a stage_done line', () => {
+    const periods: readonly ReportPeriod[] = ['day', 'week', 'month', 'all'];
+    for (const [name, summary] of [['steady', STEADY], ['gap', GAP], ['legacy', LEGACY], ['stale4', STALE4]] as const)
+      for (const period of periods)
+        for (const viewer of ['family', 'class', 'device'] as const) {
+          const ctx = ctxOf({ summary, period, viewer });
+          expect(codes(wentWell(ctx)), `${name} ${period} ${viewer}`).not.toContain('stage_done');
+        }
+  });
+
   it('W2 letters_new: at least one letter, up to 5 in the order learned', () => {
     const s = learner({ '2026-10-13': { j: ['ㄱ', 'ㄴ', 'ㄷ'] }, '2026-10-14': { j: ['ㄹ', 'ㅁ', 'ㅂ'] } });
     expect(well(at({ summary: s }))[0]).toEqual({ code: 'letters_new', params: { letters: ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ'] } });
