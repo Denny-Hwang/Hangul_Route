@@ -261,7 +261,6 @@ const COUNTED: readonly [string, (m: Messages, n: number) => string][] = [
   ['console.plan.summary.some.family', (m, n) => m.console.plan.summary.some.family(7, n)],
   ['console.plan.summary.some.class', (m, n) => m.console.plan.summary.some.class(7, n)],
   ['console.plan.summary.some.school', (m, n) => m.console.plan.summary.some.school(7, n)],
-  ['console.billing.seats', (m, n) => m.console.billing.seats(n)],
   ['console.school.classes.line', (m, n) => m.console.school.classes.line('Ms Park', n, 'today', true)],
 ];
 
@@ -315,8 +314,6 @@ describe('Spanish console counts, n = 1 and n = 2 (F-I18N-001 PR 15)', () => {
     [es.spaceCounts.students(1), '1 estudiante'],
     [es.plan.summary.some.class(7, 1), '7 elementos · para 1 estudiante'],
     [es.plan.summary.some.class(1, 2), '1 elemento · para 2 estudiantes'],
-    [es.billing.seats(1), '1 plaza'],
-    [es.billing.seats(2), '2 plazas'],
     [es.school.classes.line('Prof. Park', 1, 'hoy', true), 'Prof. Park · 1 estudiante · activa hoy · plan publicado'],
     [es.school.classes.line(null, 2, 'ayer', false), 'aún sin docente · 2 estudiantes · activa ayer'],
     // Review of PR 15: verbs and adjectives agree through plural('es'), never a `=== 1` ternary.
@@ -355,8 +352,6 @@ describe('Korean console counts, n = 1 and n = 2 (F-I18N-001 PR 16)', () => {
     [ko.spaceCounts.students(1), '학생 1명'],
     [ko.plan.summary.some.class(7, 1), '항목 7개 · 학생 1명에게'],
     [ko.plan.summary.some.class(1, 2), '항목 1개 · 학생 2명에게'],
-    [ko.billing.seats(1), '좌석 1개'],
-    [ko.billing.seats(2), '좌석 2개'],
     [ko.school.classes.line('Ms Park', 1, '오늘', true), 'Ms Park · 학생 1명 · 활동: 오늘 · 계획 게시됨'],
     [ko.school.classes.line(null, 2, '어제', false), '아직 선생님 없음 · 학생 2명 · 활동: 어제'],
     [ko.parentHome.minutes7d(1), '최근 7일 학습 시간: 1분'],

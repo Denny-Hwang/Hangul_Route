@@ -237,7 +237,7 @@ describe('the active persona and the navigation (section 3.8)', () => {
     expect(lessons.type).toBe('a');
     expect(lessons.props.href).toBe('/browse');
     expect(lessons.props.target).toBeUndefined();
-    expect(byTestId(r, 'nav-notes')[0]?.props.href).toBe('/parent/space/notes?id=sp_f');
+    expect(byTestId(r, 'nav-notes')[0]?.props.href).toBe('/parent/notes');
   });
 
   it('keeps Lessons out on any origin but the app host (the site still serving the console)', async () => {
