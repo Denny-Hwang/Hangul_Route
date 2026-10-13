@@ -15,8 +15,7 @@ import { myRouteAccess, myRouteEntryOf, selfEntryTab } from '../../logic/my-rout
 import { firstGoalReachedFor, focusEffects, goalRecordFor, seenForView, seenReadAfter } from '../../logic/my-route/focus';
 import { practiceTopicOf } from '../../logic/my-route/free-end';
 import { buildMyRoute } from '../../logic/my-route/model';
-import { planWeekOf } from '../../logic/my-route/plan-week';
-import { goalSourcesOf, localizedRouteContent, routeLetterWall, routeModelInput } from '../../logic/my-route/route-input';
+import { localizedRouteContent, routeLetterWall, routeModelInput, routeWeekOf } from '../../logic/my-route/route-input';
 import { readSeen, seenFrom, withGoalReached, writeSeen } from '../../logic/my-route/seen';
 import { continueTappedEvent, goalReachedEvent, stageOpenedEvent, viewedEvent } from '../../logic/my-route/telemetry';
 import type { MyRouteModel, SeenRecord } from '../../logic/my-route/types';
@@ -194,7 +193,7 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
         isQuestOpen: readOnly ? questOpenFor(profileId, now, snapshot) : activeQuestOpen,
       });
       const model = buildMyRoute(routeModelInput({ snapshot, tier, localized, seen, now, next }));
-      return { model, week: planWeekOf(model.goal, goalSourcesOf(next), next.today) };
+      return { model, week: routeWeekOf(model, next) };
     } catch {
       return { error: true };
     }
