@@ -47,3 +47,6 @@ export function accountOverLimit(accountId: string, count: number, counts: Reado
 export function sendCounterHits(accountId: string, learnerIds: readonly string[], at: string): Array<{ key: string; at: string }> {
   return learnerIds.flatMap((learnerId) => [noteRateKey.account(accountId), noteRateKey.pair(learnerId, accountId), noteRateKey.learner(learnerId)].map((key) => ({ key, at })));
 }
+
+/** Device reports for one learner per day (section 7.3): `429 too_many { scope: 'learner' }`. */
+export const NOTE_LIMIT_DEVICE_REPORTS_PER_LEARNER_PER_DAY = 10;
