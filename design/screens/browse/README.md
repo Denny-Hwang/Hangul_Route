@@ -119,7 +119,7 @@ All of them pass the caregiver banned list (`behind`, `lazy`) and the spec's lis
 1. **Header in two rows.** Close (or the back arrow) sits in the one fixed top-left position, and Lesson display is the chip button at the right of the same row. The title sits below them, with the Offline chip beside it. "All lessons" between two 64-tall buttons does not fit 320 on one row. The order the spec gives (Close, title, Lesson display) is kept for reading and focus order. At 200 % text the row wraps.
 2. **The section control is a segmented track, not `SectionTabs`.** `SectionTabs` is a wrapping tablist; section 7 asks for a radiogroup that never wraps. The selected segment takes `SectionTabs`' selected look (`brand.primary` fill, `text.onPrimary`, bold), so it reads like the learner Library's tabs. From the regular class the track is capped at 30rem, so it does not stretch across a wide window.
 3. **The pointer line is a link sentence with an arrow.** It is underlined in `brand.primary` (the ghost-label pair on canvas) and is 64 tall. It is drawn for account passes that are not kept (a fallback included, since a fallback is still an account pass), and never for a gate or kept pass, nor offline (decision 24). This narrows spec §4.5 item 4, which a kept pass would otherwise meet (§4.3 counts a kept pass as an account pass): §8 says no account surface is reachable from a kept pass, and the persona home is one. The spec is amended to match (§4.5, §11 design-pass note).
-4. **Access until BR-12b, unknown source.** The spec names the pre-BR-12b form only for the gate source. The unknown source's primary also goes to `/?gate=browse`, so until BR-12b ships its primary becomes [[ Back to the app ]] and Sign in stays. Its line is the spec's line unchanged: it already says to open lessons from the grown-up area, and "again" would be wrong for a visitor who was never there. BR-6 builds both.
+4. **Access until BR-12b, unknown source** (historical: BR-12b shipped the `gate=browse` intent, so the gate and unknown sources now lead to [[ Back to the grown-up area ]]). The spec names the pre-BR-12b form only for the gate source. The unknown source's primary also goes to `/?gate=browse`, so until BR-12b ships its primary becomes [[ Back to the app ]] and Sign in stays. Its line is the spec's line unchanged: it already says to open lessons from the grown-up area, and "again" would be wrong for a visitor who was never there. BR-6 builds both.
 5. **Route rows go to the Journey; later rows are not buttons.** A stage row with a chevron is one button ("…. Shows it on the Journey."). Coming-later rows (Sentences, Stages 5 to 7) have no lesson to show, so they are plain rows. This matches `expandable={false}` (spec section 11, BR-5b note): no row opens in place.
 6. **No pips on the browse trail.** `browseRouteTrail` returns no pip groups and no fill (the browse state). Each row is its badge, title, state pill and one-liner.
 7. **Journey cells keep E3-D's shapes.** Coming later is an empty `surface.sunken` cell with no lock glyph (E3-D D5). A closed cell is the dotted ring at the class sizes 40, 48 and 56. The legend line ("Not open yet") shows only while the grid draws a ring (E3-D D4). The taste note shows only on a row with an open cell (E3-D D11), so it is left out on Stages 2 and 4 in the sampler frame.
@@ -145,7 +145,7 @@ All of them pass the caregiver banned list (`behind`, `lazy`) and the spec's lis
 
 ## Deviations from the spec and wireframes (also in spec §11, design-pass note)
 
-- The unknown source's pre-BR-12b Access form (decision 4).
+- The unknown source's pre-BR-12b Access form (decision 4; replaced by the spec's form once BR-12b shipped).
 - A separate Syllables row on the item page (decision 11).
 - Step labels are the player's own `questStepLabel` names, not the wireframe's sample (decision 12).
 - An empty Skills row is hidden (decision 11).
@@ -157,7 +157,7 @@ All of them pass the caregiver banned list (`behind`, `lazy`) and the spec's lis
 - A Build a Letter syllable that is a bundle word sits under Words with its gloss (decision 11).
 - A closed topic drops its Hear buttons (decision 23).
 - No pointer line offline (decision 24); Close from a kept pass with no referrer goes to `/` (decision 25).
-- The gate line until BR-12b reads "Go back to the app, then open the grown-up area again." (spec §4.3 amended).
+- The gate line until BR-12b read "Go back to the app, then open the grown-up area again." (spec §4.3 amended); since BR-12b it is the spec's "Your time in the grown-up area ended." with [[ Back to the grown-up area ]].
 - Journey cells are 54 to 56 at 320, under 64 (Measured, Targets; spec §15).
 
 ## Notes for the PRs
