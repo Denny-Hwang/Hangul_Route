@@ -61,6 +61,8 @@ interface Actions {
    * when three or more past-dated plan items wait or the oldest is a week old. True when it ran.
    */
   autoRepace: (profileId: string, now?: Date) => Promise<boolean>;
+  /** Whether `autoRepace` would run now (read-only): the caller syncs first, so the re-pace works on the newest copy. */
+  repaceDue: (profileId: string, now?: Date) => Promise<boolean>;
   /** "Move my plan along": the same re-pace by hand; false without an active plan. */
   repaceNow: (profileId: string, now?: Date) => Promise<boolean>;
   /** The Hoya check-in's answer: an offer applies the new pace, null is Not now; either closes it for this plan, and a second answer is false. */
@@ -70,6 +72,9 @@ interface Actions {
 }
 
 const completedOf = (profileId: string): string[] => completedQuestIdsOf(useProgressStore.getState().byProfile[profileId]?.quests);
+
+/** Check-in answers in flight, per learner: a second tap before the first answer lands changes nothing. */
+const answering = new Set<string>();
 
 export const useRouteStore = create<State & Actions>((set, get) => {
   /** Merge a patch into `route-ui:<profileId>`; the stored record is read first, so no other mark is lost. */
@@ -87,19 +92,40 @@ export const useRouteStore = create<State & Actions>((set, get) => {
     return activeSelfRoute(useProgressStore.getState().byProfile[profileId]);
   };
 
-  /** Store the changed plan and derive its week again (section 3.6 rule 2 reconciles the dates). */
-  const replace = async (profileId: string, route: SelfRoute): Promise<void> => {
-    useProgressStore.getState().setSelfRoute(profileId, route);
+  /** Store the changed plan and derive its week again (section 3.6 rule 2 reconciles the dates); false when it was not stored. */
+  const replace = async (profileId: string, route: SelfRoute): Promise<boolean> => {
+    if (!useProgressStore.getState().setSelfRoute(profileId, route)) return false;
     await usePlanStore.getState().rederive(profileId);
+    return true;
   };
 
-  const repace = async (profileId: string, active: SelfRoute, mode: 'auto' | 'manual', now: Date): Promise<void> => {
+  /** The re-pace itself; false when the plan could not be laid out again or stored (no event then). */
+  const repace = async (profileId: string, active: SelfRoute, mode: 'auto' | 'manual', now: Date): Promise<boolean> => {
     const today = dayKey(now.toISOString());
     const homework = useProgressStore.getState().byProfile[profileId]?.homework ?? [];
     const pending = pendingPastOf(active, homework, today).length;
-    await replace(profileId, repaceSelfRoute(active, completedOf(profileId), today, CATALOG, now.toISOString()));
+    let next: SelfRoute;
+    try {
+      next = repaceSelfRoute(active, completedOf(profileId), today, CATALOG, now.toISOString());
+    } catch {
+      return false;
+    }
+    if (!(await replace(profileId, next))) return false;
     const event = repacedEvent(profileId, mode, pending);
     void track({ name: event.name, profileId, payload: { ...event.payload } });
+    return true;
+  };
+
+  const dueNow = async (profileId: string, now: Date): Promise<{ due: boolean; active: SelfRoute | null }> => {
+    const active = await activeOf(profileId);
+    const progress = useProgressStore.getState();
+    const due = autoRepaceDue({
+      route: active,
+      homework: progress.byProfile[profileId]?.homework ?? [],
+      today: dayKey(now.toISOString()),
+      sessionOpen: progress.openSession?.profileId === profileId,
+    });
+    return { due, active };
   };
 
   return {
@@ -149,37 +175,43 @@ export const useRouteStore = create<State & Actions>((set, get) => {
     },
 
     autoRepace: async (profileId, now = new Date()) => {
-      const active = await activeOf(profileId);
-      const progress = useProgressStore.getState();
-      const due = autoRepaceDue({
-        route: active,
-        homework: progress.byProfile[profileId]?.homework ?? [],
-        today: dayKey(now.toISOString()),
-        sessionOpen: progress.openSession?.profileId === profileId,
-      });
+      const { due, active } = await dueNow(profileId, now);
       if (!due || active === null) return false;
-      await repace(profileId, active, 'auto', now);
+      if (!(await repace(profileId, active, 'auto', now))) return false;
       await mark(profileId, { movedAt: now.toISOString() });
       return true;
     },
 
+    repaceDue: async (profileId, now = new Date()) => (await dueNow(profileId, now)).due,
+
     repaceNow: async (profileId, now = new Date()) => {
       const active = await activeOf(profileId);
       if (active === null) return false;
-      await repace(profileId, active, 'manual', now);
-      return true;
+      return repace(profileId, active, 'manual', now);
     },
 
     answerCheckIn: async (profileId, offer, now = new Date()) => {
-      const active = await activeOf(profileId);
-      if (active === null) return false;
-      // Once per plan (FP-B14): a second card drawn before the first answer changes nothing.
-      if ((await get().loadUi(profileId)).checkInFor === active.id) return false;
-      if (offer !== null) {
-        await replace(profileId, applyCheckIn(active, offer, completedOf(profileId), dayKey(now.toISOString()), CATALOG, now.toISOString()));
+      // Once per plan (FP-B14): a second answer, or one that overlaps the first, changes nothing.
+      if (answering.has(profileId)) return false;
+      answering.add(profileId);
+      try {
+        const active = await activeOf(profileId);
+        if (active === null) return false;
+        if ((await get().loadUi(profileId)).checkInFor === active.id) return false;
+        if (offer !== null) {
+          let next: SelfRoute;
+          try {
+            next = applyCheckIn(active, offer, completedOf(profileId), dayKey(now.toISOString()), CATALOG, now.toISOString());
+          } catch {
+            return false;
+          }
+          if (!(await replace(profileId, next))) return false;
+        }
+        await mark(profileId, { checkInFor: active.id });
+        return true;
+      } finally {
+        answering.delete(profileId);
       }
-      await mark(profileId, { checkInFor: active.id });
-      return true;
     },
   };
 });
