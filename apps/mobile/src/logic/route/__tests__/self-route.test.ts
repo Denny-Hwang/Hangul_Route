@@ -1,7 +1,7 @@
 import { CATALOG, SelfRouteSchema, generateCurriculum, toMeta, toPlanItems } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { selfRoute } from '../../homework/__tests__/curriculum-fixture';
-import { activeSelfRoute, archivedRoute, newSelfRouteId, selfRouteOf, thisWeekRows } from '../self-route';
+import { activeSelfRoute, archivedRoute, completedQuestIdsOf, newSelfRouteId, selfRouteOf } from '../self-route';
 
 const draft = generateCurriculum(
   {
@@ -49,16 +49,13 @@ describe('self-route (F-PLAN-002 section 3.5, 3.9)', () => {
     expect(activeSelfRoute(undefined)).toBeNull();
   });
 
-  it('this week of a plan: the items of the plan week that holds today, by date', () => {
-    const route = selfRouteOf(draft, 'route:abc-0001', '2026-10-12T09:00:00.000Z');
-    const week1 = thisWeekRows(route, '2026-10-14');
-    expect(week1.length).toBeGreaterThan(0);
-    expect(week1.every((row) => row.date >= '2026-10-12' && row.date <= '2026-10-18')).toBe(true);
-    expect(week1).toEqual([...week1].sort((a, b) => a.date.localeCompare(b.date)));
-    const week2 = thisWeekRows(route, '2026-10-19');
-    expect(week2.every((row) => row.date >= '2026-10-19' && row.date <= '2026-10-25')).toBe(true);
-    expect(thisWeekRows(route, '2026-10-01')).toEqual([]);
-    expect(thisWeekRows(route, '2027-01-01')).toEqual([]);
-    expect(thisWeekRows({ ...route, items: [{ kind: 'quest', id: 'quest:x' }] }, '2026-10-14')).toEqual([]);
+  it('the finished quests the plan logic reads: completed ones only, none without a snapshot', () => {
+    const quests = [
+      { questId: 'quest:a', completedAt: 't' },
+      { questId: 'quest:b' },
+      { questId: 'quest:c', completedAt: 't' },
+    ];
+    expect(completedQuestIdsOf(quests)).toEqual(['quest:a', 'quest:c']);
+    expect(completedQuestIdsOf(undefined)).toEqual([]);
   });
 });

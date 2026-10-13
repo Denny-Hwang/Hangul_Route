@@ -13,6 +13,7 @@ import { useAccountStore } from './account-store';
 import { useNotesStore } from './notes-store';
 import { usePlanStore } from './plan-store';
 import { useProfileStore } from './profile-store';
+import { useRouteStore } from './route-store';
 import { useTierStore } from './tier-store';
 import { onSynced, syncApi, useSyncStore } from './sync-store';
 
@@ -460,16 +461,59 @@ export async function rederiveLocal(learnerId: string): Promise<boolean> {
   return outcome?.changed ?? false;
 }
 
-/** `rederiveLocal` for every learner on the device: app start and back in the foreground. */
-export async function rederiveAllLocal(): Promise<void> {
-  const learners = useProfileStore.getState().profiles.filter((p) => p.role === 'learner');
-  for (const p of learners) await rederiveLocal(p.id);
+/**
+ * The automatic re-pace of a learner's own weekly plan (F-PLAN-002 section 3.7: at most once a
+ * UTC day, never during a session), only while `flags.routeEnabled` is on. It runs on the newest
+ * copy: after a successful sync merged the server's plan (a stale device never brings back a plan
+ * stopped or replaced on another one), or straight away on a build without sync. A moved plan is
+ * pushed. True when it moved.
+ */
+export async function repaceAfterSync(learnerId: string): Promise<boolean> {
+  if (!flags.routeEnabled) return false;
+  const moved = await useRouteStore
+    .getState()
+    .autoRepace(learnerId)
+    .catch(() => false);
+  if (moved && syncApi()) useSyncStore.getState().requestSync(learnerId);
+  return moved;
 }
 
-/** Refresh the inbox after every successful sync (call once at app start; returns the unsubscribe). */
+/**
+ * `rederiveLocal` for every learner on the device: app start and back in the foreground. When a
+ * learner's own weekly plan is due to move along, it syncs first and the re-pace runs once the sync
+ * merged (`repaceAfterSync` from `onSynced`). A sync that does not get through (offline, an error,
+ * a conflict to retry later) never holds the plan back: the re-pace runs on this copy, and the
+ * stopped-or-replaced rule of the merge keeps a later sync right (section 3.7). Without sync it
+ * runs here.
+ */
+export async function rederiveAllLocal(): Promise<void> {
+  const learners = useProfileStore.getState().profiles.filter((p) => p.role === 'learner');
+  for (const p of learners) {
+    await rederiveLocal(p.id);
+    if (!flags.routeEnabled) continue;
+    if (!syncApi()) {
+      await repaceAfterSync(p.id);
+      continue;
+    }
+    const due = await useRouteStore
+      .getState()
+      .repaceDue(p.id)
+      .catch(() => false);
+    if (!due) continue;
+    const synced = await useSyncStore
+      .getState()
+      .syncNow(p.id)
+      .then((r) => r.status === 'synced')
+      .catch(() => false);
+    if (!synced) await repaceAfterSync(p.id);
+  }
+}
+
+/** After every successful sync (call once at app start; returns the unsubscribe): refresh the inbox, then move an own weekly plan along when due. */
 export function registerInboxRefresh(): () => void {
   return onSynced((learnerId) => {
     void useMembershipStore.getState().refresh(learnerId);
+    void repaceAfterSync(learnerId);
   });
 }
 

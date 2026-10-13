@@ -581,6 +581,20 @@ describe('selfRoute, the learner weekly plan (F-PLAN-002 section 3.5)', () => {
     expect(mergeSnapshots(base({ selfRoute: offset }), base({ selfRoute: zulu }), { now: NOW }).selfRoute?.id).toBe('route:zulu');
   });
 
+  it('a stale copy moved along later never brings back a plan stopped or replaced on another device', () => {
+    const plan = selfRoute({ id: 'route:a', createdAt: '2026-09-01T00:00:00.000Z', updatedAt: '2026-09-01T00:00:00.000Z' });
+    const stopped = { ...plan, archivedAt: '2026-10-12T09:00:00.000Z', updatedAt: '2026-10-12T09:00:00.000Z' };
+    const repaced = { ...plan, updatedAt: '2026-10-12T10:00:00.000Z' };
+    expect(mergeSnapshots(base({ selfRoute: repaced }), base({ selfRoute: stopped }), { now: NOW }).selfRoute?.archivedAt).toBe(stopped.archivedAt);
+    expect(mergeSnapshots(base({ selfRoute: stopped }), base({ selfRoute: repaced }), { now: NOW }).selfRoute?.archivedAt).toBe(stopped.archivedAt);
+    const replacement = selfRoute({ id: 'route:b', createdAt: '2026-10-12T09:00:00.000Z', updatedAt: '2026-10-12T09:00:00.000Z' });
+    expect(mergeSnapshots(base({ selfRoute: repaced }), base({ selfRoute: replacement }), { now: NOW }).selfRoute?.id).toBe('route:b');
+    expect(mergeSnapshots(base({ selfRoute: replacement }), base({ selfRoute: repaced }), { now: NOW }).selfRoute?.id).toBe('route:b');
+    // Both stopped: the newest edit, as before.
+    const stoppedLater = { ...stopped, updatedAt: '2026-10-12T11:00:00.000Z' };
+    expect(mergeSnapshots(base({ selfRoute: stopped }), base({ selfRoute: stoppedLater }), { now: NOW }).selfRoute?.updatedAt).toBe(stoppedLater.updatedAt);
+  });
+
   it('isSubsetOf compares id and updatedAt, treating a missing key as null', () => {
     const route = selfRoute();
     const edited = selfRoute({ updatedAt: '2026-09-22T00:00:00.000Z' });
