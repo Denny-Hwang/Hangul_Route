@@ -9,7 +9,7 @@ import {
   type CatalogStory,
   type FestivalAnchor,
 } from '../catalog/schema';
-import { placementStageNumber, questsPlacedOutAtLevel } from '../placement/level-map';
+import { placementLevelRank, placementStageNumber, questsPlacedOutAtLevel } from '../placement/level-map';
 import type { PlacementLevel } from '../schemas/placement';
 import { themeOrderFor } from '../placement/route-seed';
 import { StageKeySchema, ThemeKeySchema, type StageKey, type ThemeKey } from '../schemas/heritage-card';
@@ -596,8 +596,6 @@ export interface RegenerateOptions {
   paramsPatch?: ReseedPatch;
 }
 
-const levelRank = (level: PlacementLevel): number => placementStageNumber(level.stage) * 10 + level.band;
-
 /**
  * Re-pacing (section 3.7) from `today`: sessions before today keep their items,
  * weeks before the current week keep their metadata, and the end date stays.
@@ -614,7 +612,10 @@ const levelRank = (level: PlacementLevel): number => placementStageNumber(level.
  * catalogue minus the done set, the patched placed-out set and those past items.
  * The caller keeps the placed-out set a superset of the stored one except after
  * an override (`effectiveRoute` does), so put-back quests return to the queue.
- * A `reseed` with an empty patch is a `shift`.
+ * A raised `level` sent without `placedOutQuestIds`, on a plan that stores an
+ * exact set, adds the new level's placed-out quests to that set, so the start
+ * still moves. Pass the learner's `completedQuestIds` so finished quests stay
+ * out of the rebuilt queue. A `reseed` with an empty patch is a `shift`.
  *
  * In `requeue`, past coming-soon placeholders stay on their dates (nothing can
  * complete them, so moving them would never settle), and when no session is
@@ -639,10 +640,16 @@ export function regenerateFrom(
       return regenerateFrom(plan, today, catalog, { mode: 'shift', completedQuestIds: completed });
     }
     const stored = plan.meta.params.level;
+    const raised = level !== undefined && placementLevelRank(level) > placementLevelRank(stored) ? level : undefined;
+    const storedSet = plan.meta.params.placedOutQuestIds;
+    // A raised level without a set, on a plan with an exact set: the level's quests join the stored set.
+    const placed = placedOutQuestIds ?? (raised !== undefined && storedSet !== undefined
+      ? [...new Set([...storedSet, ...questsPlacedOutAtLevel(raised, routeCatalogOf(catalog))])]
+      : undefined);
     const reseeded: CurriculumParamsInput = {
       ...params,
-      level: level !== undefined && levelRank(level) > levelRank(stored) ? level : stored,
-      ...(placedOutQuestIds === undefined ? {} : { placedOutQuestIds: [...placedOutQuestIds] }),
+      level: raised ?? stored,
+      ...(placed === undefined ? {} : { placedOutQuestIds: [...placed] }),
       ...(goals === undefined ? {} : { goals }),
     };
     return build(reseeded, catalog, { ...base, history: past });

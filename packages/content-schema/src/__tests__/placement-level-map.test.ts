@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   coveredSymbols,
   placedOutQuestIds,
+  placementLevelRank,
   placementStageNumber,
   questsPlacedOutAtLevel,
   RUNG_SYMBOLS,
@@ -54,6 +55,21 @@ describe('placementStageNumber', () => {
     expect(placementStageNumber('stage1')).toBe(1);
     expect(placementStageNumber('stage4')).toBe(4);
     expect(placementStageNumber('stage7')).toBe(7);
+  });
+});
+
+describe('placementLevelRank', () => {
+  it('orders levels by stage, then band', () => {
+    const levels: PlacementLevel[] = [
+      { stage: 'stage1', band: 0 },
+      { stage: 'stage1', band: 3 },
+      { stage: 'stage2', band: 0 },
+      { stage: 'stage2', band: 1 },
+      { stage: 'stage7', band: 0 },
+    ];
+    const ranks = levels.map(placementLevelRank);
+    expect([...ranks].sort((a, b) => a - b)).toEqual(ranks);
+    expect(new Set(ranks).size).toBe(levels.length);
   });
 });
 

@@ -375,6 +375,19 @@ describe('regenerateFrom: reseed (after a retake or an override, FP-B4)', () => 
     expect(ahead[4]).toBe(future(placed, today)[0]);
   });
 
+  it('moves the start after a raised level alone on a plan that stores an exact set', () => {
+    const today = '2026-10-19';
+    const exact = generateCurriculum({ ...SELF_0, placedOutQuestIds: [q('letters-q1')] }, CATALOG_2026_10);
+    const raised = regenerateFrom(planOf(exact), today, CATALOG_2026_10, { mode: 'reseed', paramsPatch: { level: band3 } });
+    expect(raised.params.level).toEqual(band3);
+    expect(new Set(raised.params.placedOutQuestIds)).toEqual(new Set(placedAtBand3));
+    expect(past(raised, today)).toEqual(past(exact, today));
+    expect(future(raised, today)[0]).toBe(q('nature-q2'));
+    // A lower level alone keeps the stored set as it is.
+    const lower = regenerateFrom(planOf(exact), today, CATALOG_2026_10, { mode: 'reseed', paramsPatch: { level: { stage: 'stage1', band: 0 } } });
+    expect(lower.params.placedOutQuestIds).toEqual([q('letters-q1')]);
+  });
+
   it('never re-queues an item dated before today, done or not', () => {
     const today = '2026-10-26';
     const again = regenerateFrom(planOf(S), today, CATALOG_2026_10, { mode: 'reseed', completedQuestIds: [], paramsPatch: { level: { stage: 'stage1', band: 1 } } });
