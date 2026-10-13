@@ -134,9 +134,9 @@ describe('console pages render only dictionary text (en-XA)', () => {
     expectAllPseudo(html, builderEpisodes().flatMap((e) => [e.title, ...questsOf(e.episodeId).map((q) => q.title)]));
   });
 
-  it('billing, before the plans load', () => {
+  it('billing, before the summary loads (F-BILL-002 B-8a: the h1 over the busy outlines)', () => {
     const html = render(billingPage);
-    expect(html).toContain('name="promo"');
+    expect(html).toContain('aria-busy="true"');
     expectAllPseudo(html);
   });
 });
