@@ -300,14 +300,15 @@ describe('states (section 3.14)', () => {
     expect(h1s(root)).toEqual([en.report.title.learner('Mina')]);
   });
 
-  it('a network error with a cached report: the report keeps its h1, the error is a state line, Print stays enabled', async () => {
+  it('a network error with a cached report: the report keeps its h1, the error is a state line, Print is disabled (print.md States) and Try again is screen-only', async () => {
     const root = await page();
     responses.report = () => ({ ok: false, error: 'network', status: 0 });
     await act(async () => root.findAll((n) => n.type === 'button' && n.props.role === 'tab')[2]?.props.onClick());
     await follow();
     expect(h1s(root)).toEqual([en.report.title.learner('Mina')]);
     expect(textOf(byTestId(root, 'report-error-line')[0] as ReactTestInstance)).toBe(en.report.state.error);
-    expect(byTestId(root, 'report-print')[0]?.props.disabled).toBe(false);
+    expect(byTestId(root, 'report-print')[0]?.props.disabled).toBe(true);
+    expect(String(byTestId(root, 'report-retry')[0]?.props.className)).toContain('hr-report-actions');
     // The viewer who pressed the tab hears why nothing changed: the error is read out by the status line.
     expect(textOf(byTestId(root, 'report-status')[0] as ReactTestInstance)).toBe(en.report.state.error);
   });
@@ -388,3 +389,36 @@ describe('states (section 3.14)', () => {
     expect(h1s(root)).toEqual([en.report.state.unavailable]);
   });
 });
+
+describe('RP-7b: the growth line and the printed footer', () => {
+  it('All time draws the growth chart named by its table, the months under it, and a table behind Show as table', async () => {
+    nav.query = 'id=space%3Asunflower&learner=profile%3Amina&period=all&from=roster';
+    responses.report = () => ok(response(STEADY, { kind: 'family' }));
+    const root = await page();
+    const chart = byTestId(root, 'report-growth-chart')[0] as ReactTestInstance;
+    expect(chart.props.role).toBe('img');
+    expect(chart.props['aria-label']).toBe(en.a11y.report.growthTable);
+    expect(chart.findAll((n) => n.type === 'polyline')).toHaveLength(2);
+    const table = byTestId(root, 'report-growth-table')[0] as ReactTestInstance;
+    expect(table.props.hidden).toBe(true);
+    expect(table.findAll((n) => n.type === 'tr').map(textOf)).toEqual(['MonthQuestsCards', 'September 202633', 'October 202675']);
+    const toggle = byTestId(root, 'report-growth-toggle')[0] as ReactTestInstance;
+    expect(toggle.props['aria-expanded']).toBe(false);
+    expect(toggle.props['aria-controls']).toBe(table.props.id);
+    expect(textOf(toggle)).toBe(en.report.growth.showTable);
+    act(() => toggle.props.onClick());
+    expect(byTestId(root, 'report-growth-table')[0]?.props.hidden).toBe(false);
+    expect(textOf(byTestId(root, 'report-growth-toggle')[0] as ReactTestInstance)).toBe(en.report.growth.hideTable);
+    // The week has no growth block.
+    expect(byTestId(root, 'report-calendar')).toHaveLength(0);
+  });
+
+  it('carries the printed footer with the print day and no name; the screen-only controls are marked for the print rules', async () => {
+    const root = await page();
+    expect(textOf(byTestId(root, 'report-print-footer')[0] as ReactTestInstance)).toBe('Private: shared from Hangul Route on Oct 15.');
+    const marked = root.findAll((n) => typeof n.props.className === 'string' && n.props.className.split(' ').includes('hr-report-actions'));
+    expect(marked.length).toBeGreaterThanOrEqual(3);
+    expect(byTestId(root, 'report-print')[0] && marked.some((n) => n.findAll((c) => c.props['data-testid'] === 'report-print').length > 0)).toBe(true);
+  });
+});
+
