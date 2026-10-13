@@ -466,11 +466,13 @@ export function routeCardCopy(model: MyRouteModel, ctx: CopyContext, extra: Rout
   const withoutNow = model.hero === 'start' || freeEnd;
   const open = !goal.reached;
   let hoya: string | null = null;
-  if (model.hero === 'start') hoya = g ? grownup.start(ctx.name) : learner.hero.start;
+  // The first reached visit (LR-5c) uses up the moment (key written, event sent), so its line comes first:
+  // the learner sees it even when the hero rests, goes beyond or is free-end. The button stays the hero's.
+  if (!g && goal.reached && extra.firstReached === true) hoya = learner.goal.reachedHoya;
+  else if (model.hero === 'start') hoya = g ? grownup.start(ctx.name) : learner.hero.start;
   else if (model.hero === 'rest' || (freeEnd && g)) hoya = g ? grownup.rest(ctx.name) : learner.hero.rest;
   else if (freeEnd) hoya = ctx.m.access.openForYou;
   else if (model.hero === 'beyond') hoya = g ? grownup.beyond(ctx.name) : learner.hero.beyond;
-  else if (!g && goal.reached && extra.firstReached === true) hoya = learner.goal.reachedHoya;
 
   let where: RouteCardCopy['where'];
   if (!withoutNow && open && goal.stage === here.stage) {

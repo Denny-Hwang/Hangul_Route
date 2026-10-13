@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { isTelemetryEventName } from '@hangul-route/content-schema';
 import { buildMyRoute } from '../model';
 import type { MyRouteInput, MyRouteModel } from '../types';
-import { continueTappedEvent, stageOpenedEvent, viewedEvent } from '../telemetry';
+import { continueTappedEvent, goalReachedEvent, stageOpenedEvent, viewedEvent } from '../telemetry';
+import type { RouteGoal } from '@hangul-route/content-schema';
 import { BUNDLE_8, STAGE_DEFS, THEME_DEFS, catalogOf, snapshotWith } from './fixtures/bundle-2026-10';
 
 const model = (done: string[], over: Partial<MyRouteInput> = {}): MyRouteModel =>
@@ -69,5 +70,29 @@ describe('route_map.* events (F-ROUTE-001 section 3.16: stage keys, booleans and
     expect(viewedEvent({ profileId: 'p2', model: model([]), source: 'parent', readOnly: true })).toBeNull();
     expect(stageOpenedEvent({ profileId: 'p2', stage: 'stage1', readOnly: true })).toBeNull();
     expect(continueTappedEvent({ profileId: 'p2', model: model([]), readOnly: true })).toBeNull();
+  });
+});
+
+describe('route_map.goal_reached (LR-5c, amendment section 8)', () => {
+  const goal = (over: Partial<RouteGoal> = {}): RouteGoal => ({ stage: 'stage2', from: 'class', sourceId: 'plan:x', endsOn: '2026-11-01', reached: true, taste: false, ...over });
+
+  it('the stage and which plan set the goal; a name the Worker knows', () => {
+    for (const from of ['class', 'school', 'family', 'self'] as const) {
+      const e = goalReachedEvent({ profileId: 'p1', goal: goal({ from }), firstReached: true, readOnly: false });
+      expect(e).toEqual({ name: 'route_map.goal_reached', profileId: 'p1', payload: { stage: 'stage2', goalFrom: from } });
+      expect(isTelemetryEventName(e?.name)).toBe(true);
+    }
+  });
+
+  it('codes only: no plan id and no date', () => {
+    expect(JSON.stringify(goalReachedEvent({ profileId: 'p1', goal: goal(), firstReached: true, readOnly: false })?.payload)).not.toMatch(/plan:x|2026/);
+  });
+
+  it('nothing unless this is the first reached visit, never read-only, never for a default or missing goal', () => {
+    expect(goalReachedEvent({ profileId: 'p1', goal: goal(), firstReached: false, readOnly: false })).toBeNull();
+    expect(goalReachedEvent({ profileId: 'p1', goal: goal(), firstReached: true, readOnly: true })).toBeNull();
+    expect(goalReachedEvent({ profileId: 'p1', goal: goal({ reached: false }), firstReached: true, readOnly: false })).toBeNull();
+    expect(goalReachedEvent({ profileId: 'p1', goal: goal({ from: 'default', sourceId: null }), firstReached: true, readOnly: false })).toBeNull();
+    expect(goalReachedEvent({ profileId: 'p1', goal: null, firstReached: true, readOnly: false })).toBeNull();
   });
 });
