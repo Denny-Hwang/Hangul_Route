@@ -23,6 +23,27 @@ async function noSidewaysScroll(page: Page): Promise<void> {
   expect(scroll).toBeLessThanOrEqual(inner);
 }
 
+/** The `@page` rules that set a zero margin, wherever they sit (top level or inside `@media print`). */
+async function zeroMarginPageRules(page: Page): Promise<number> {
+  return page.evaluate(() => {
+    let found = 0;
+    const walk = (rules: CSSRuleList): void => {
+      for (const rule of Array.from(rules)) {
+        if (rule instanceof CSSPageRule && /^0(px)?$/.test(rule.style.getPropertyValue('margin-top').trim())) found += 1;
+        else if ('cssRules' in rule && (rule as CSSGroupingRule).cssRules) walk((rule as CSSGroupingRule).cssRules);
+      }
+    };
+    for (const sheet of Array.from(document.styleSheets)) {
+      try {
+        walk(sheet.cssRules);
+      } catch {
+        // A cross-origin sheet (fonts) cannot be read and holds no page rule of ours.
+      }
+    }
+    return found;
+  });
+}
+
 const headline = (page: Page) => page.getByTestId('report-headline');
 
 test.describe('reports switched off (the default export)', () => {
@@ -37,6 +58,12 @@ test.describe('reports switched off (the default export)', () => {
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Reports are not available yet.');
     await expect(page.getByTestId('report-back')).toBeVisible();
     await expect(page).toHaveTitle('Report - Hangul Route');
+  });
+
+  test('a page that is not a report keeps the default print margins: no zero-margin @page rule is loaded', async ({ page }) => {
+    await page.goto('/');
+    await page.emulateMedia({ media: 'print' });
+    expect(await zeroMarginPageRules(page)).toBe(0);
   });
 });
 
@@ -192,7 +219,7 @@ test.describe('the learner report (RP-7a2)', () => {
     await expect(page.getByTestId('report-error-line')).toHaveText("Can't load the report right now.");
     await expect(page.getByTestId('report-status')).toHaveText("Can't load the report right now.");
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Mina: report');
-    await expect(page.getByTestId('report-print')).toBeEnabled();
+    await expect(page.getByTestId('report-print')).toBeDisabled();
   });
 
   test('not a member: "This report is not available."', async ({ page }) => {
@@ -289,6 +316,8 @@ test.describe('the learner report (RP-7a2)', () => {
     await expect(page.getByTestId('report-calendar-text')).toBeVisible();
     // The page padding sits inside the report; the frame main adds none.
     expect(await page.locator('.hr-frame-main').evaluate((node) => getComputedStyle(node).paddingTop)).toBe('0px');
+    // The zero page margin comes with the report's own style element, never from the global sheet.
+    expect(await zeroMarginPageRules(page)).toBe(1);
     await expect(page).toHaveTitle('Report - Hangul Route');
   });
 
@@ -309,7 +338,12 @@ test.describe('the learner report (RP-7a2)', () => {
     await expect(headline(page)).toBeVisible();
     await page.emulateMedia({ media: 'print' });
     const pdf = await page.pdf({ format: 'A4', preferCSSPageSize: true });
-    const pages = (pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) ?? []).length;
+    // The page tree's /Count (the root /Pages dictionary), not a scan for /Page objects, which may sit in compressed
+    // object streams.
+    const text = pdf.toString('latin1');
+    const counts = [...text.matchAll(/<<[^<>]*\/Type\s*\/Pages\b[^<>]*>>/g)].map((m) => Number(/\/Count\s+(\d+)/.exec(m[0])?.[1] ?? NaN));
+    expect(counts.length).toBeGreaterThan(0);
+    const pages = Math.max(...counts);
     expect(pages).toBeGreaterThanOrEqual(1);
     expect(pages).toBeLessThanOrEqual(2);
   });

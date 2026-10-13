@@ -44,3 +44,16 @@ export function growthChart(rows: readonly { quests: number; cards: number }[]):
   const grid = Array.from({ length: GRID_LINES }, (_, index) => round(top + ((bottom - top) * index) / (GRID_LINES - 1)));
   return { quests, cards, questsPoints: pointsOf(quests), cardsPoints: pointsOf(cards), grid, top, bottom };
 }
+
+/**
+ * The most month labels the axis carries. Up to 24 months fit the chart's equal columns, but at 320 px a label per
+ * month would overlap its neighbours, so past this many months only every nth month is labelled (the table names
+ * every month with its year).
+ */
+export const GROWTH_AXIS_LABELS = 6;
+
+/** Which months carry their short label under the chart: all up to the cap, then every nth counted back from the latest. */
+export function growthAxisShown(count: number): boolean[] {
+  const step = Math.max(1, Math.ceil(count / GROWTH_AXIS_LABELS));
+  return Array.from({ length: count }, (_, index) => (count - 1 - index) % step === 0);
+}

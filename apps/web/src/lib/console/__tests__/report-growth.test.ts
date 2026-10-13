@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { GROWTH_BOX, growthChart } from '../report-growth';
+import { GROWTH_AXIS_LABELS, GROWTH_BOX, growthAxisShown, growthChart } from '../report-growth';
 
 /** F-REPORT-001 RP-7b: the All-time growth line's drawing (design `learner-report.md`, "All time: the growth block"). */
 
@@ -45,5 +45,24 @@ describe('growthChart: two cumulative lines in a 300 x 150 box', () => {
     expect(growthChart(rows.slice(2)).quests).toEqual([{ x: 150, y: expect.any(Number) }]);
     expect(growthChart([]).quests).toEqual([]);
     expect(growthChart([]).questsPoints).toBe('');
+  });
+});
+
+describe('growthAxisShown: month labels thin out so they never overlap at 320 px', () => {
+  it('labels every month up to the cap', () => {
+    expect(growthAxisShown(3)).toEqual([true, true, true]);
+    expect(growthAxisShown(GROWTH_AXIS_LABELS)).toEqual(Array.from({ length: GROWTH_AXIS_LABELS }, () => true));
+    expect(growthAxisShown(0)).toEqual([]);
+  });
+
+  it('past the cap labels every nth month counted back from the latest, so the latest month is always labelled', () => {
+    const shown = growthAxisShown(24);
+    expect(shown).toHaveLength(24);
+    expect(shown.at(-1)).toBe(true);
+    expect(shown.filter(Boolean).length).toBeLessThanOrEqual(GROWTH_AXIS_LABELS);
+    expect(shown.map((on, index) => (on ? index : -1)).filter((index) => index >= 0)).toEqual([3, 7, 11, 15, 19, 23]);
+    const seven = growthAxisShown(7);
+    expect(seven.filter(Boolean).length).toBeLessThanOrEqual(GROWTH_AXIS_LABELS);
+    expect(seven.at(-1)).toBe(true);
   });
 });

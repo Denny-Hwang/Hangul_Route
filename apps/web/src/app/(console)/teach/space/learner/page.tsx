@@ -245,7 +245,7 @@ function LearnerReportInner(): JSX.Element {
   const body = busy ? <ReportSkeleton /> : <ReportBody view={view} />;
   return frame(
     <>
-      <ReportHeader back={view.back} printDisabled={busy} onPrint={() => window.print()} />
+      <ReportHeader back={view.back} printDisabled={busy || error !== null} onPrint={() => window.print()} />
       <div className="hr-report-glance">
         <ReportTitle title={view.title} avatar={screen.data.learner.avatar} />
         {view.glance ? <ReportGlanceBlock glance={view.glance} /> : null}

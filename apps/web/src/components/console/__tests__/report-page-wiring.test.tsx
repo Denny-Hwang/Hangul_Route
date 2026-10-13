@@ -300,14 +300,15 @@ describe('states (section 3.14)', () => {
     expect(h1s(root)).toEqual([en.report.title.learner('Mina')]);
   });
 
-  it('a network error with a cached report: the report keeps its h1, the error is a state line, Print stays enabled', async () => {
+  it('a network error with a cached report: the report keeps its h1, the error is a state line, Print is disabled (print.md States) and Try again is screen-only', async () => {
     const root = await page();
     responses.report = () => ({ ok: false, error: 'network', status: 0 });
     await act(async () => root.findAll((n) => n.type === 'button' && n.props.role === 'tab')[2]?.props.onClick());
     await follow();
     expect(h1s(root)).toEqual([en.report.title.learner('Mina')]);
     expect(textOf(byTestId(root, 'report-error-line')[0] as ReactTestInstance)).toBe(en.report.state.error);
-    expect(byTestId(root, 'report-print')[0]?.props.disabled).toBe(false);
+    expect(byTestId(root, 'report-print')[0]?.props.disabled).toBe(true);
+    expect(String(byTestId(root, 'report-retry')[0]?.props.className)).toContain('hr-report-actions');
     // The viewer who pressed the tab hears why nothing changed: the error is read out by the status line.
     expect(textOf(byTestId(root, 'report-status')[0] as ReactTestInstance)).toBe(en.report.state.error);
   });

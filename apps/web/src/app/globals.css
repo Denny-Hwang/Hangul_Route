@@ -426,16 +426,15 @@ button {
  * console shell's navigation too), every screen-only control (`.hr-report-actions`: the header row, line actions,
  * step buttons, the disclosure and table buttons, Open Learning Route), the unselected period tabs, the calendar
  * grid (its sentence prints) and the growth chart (its table prints) are hidden.
+ * Every rule here is scoped to a page that holds a report (`body:has(.hr-report)` or a `.hr-report-*` class), so
+ * any other page prints as before. `@page { margin: 0 }` lives in REPORT_CSS (ReportParts), whose style element is
+ * mounted only on report pages: a top-level @page rule here would print every page of the app edge to edge.
  */
-@page {
-  margin: 0;
-}
-
 @media print {
-  .hr-frame-top,
-  .hr-frame-nav,
-  .hr-frame-foot,
-  .hr-console-shell-nav,
+  body:has(.hr-report) .hr-frame-top,
+  body:has(.hr-report) .hr-frame-nav,
+  body:has(.hr-report) .hr-frame-foot,
+  body:has(.hr-report) .hr-console-shell-nav,
   .hr-report-actions,
   .hr-report-more-heading,
   .hr-report-tab:not([aria-selected='true']),
@@ -447,7 +446,7 @@ button {
     display: none !important;
   }
 
-  .hr-frame-main {
+  body:has(.hr-report) .hr-frame-main {
     max-width: none !important;
     padding: 0 !important;
   }
@@ -521,5 +520,13 @@ button {
     left: 0;
     right: 0;
     bottom: 0;
+  }
+
+  /* An engine without unprefixed box-decoration-break (WebKit) may not repeat the padding on every printed page,
+     so the fixed footer could cover a block there: it prints once, in normal flow, after the last block. */
+  @supports not (box-decoration-break: clone) {
+    .hr-report-print-footer {
+      position: static;
+    }
   }
 }

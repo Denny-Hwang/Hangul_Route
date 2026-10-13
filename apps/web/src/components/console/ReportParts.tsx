@@ -6,7 +6,7 @@ import { borderWidth, colors, layout, radii, spacing, touchTarget, typography } 
 import Link from 'next/link';
 import { forwardRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { avatarChipModel } from '@/lib/console/avatar-chip';
-import { GROWTH_BOX, growthChart } from '@/lib/console/report-growth';
+import { GROWTH_BOX, growthAxisShown, growthChart } from '@/lib/console/report-growth';
 import type {
   LearnerReportView,
   ReportCalendarView,
@@ -167,6 +167,7 @@ export const REPORT_CSS = `
 .hr-report-skeleton-title{display:inline-block;width:50%;height:${rem(typography.size.title)};border-radius:${px(radii.sm)};background:${colors.surface.sunken}}
 @media screen{.hr-report-print-footer{display:none}}
 @media print{
+@page{margin:0}
 .hr-report{padding:${rem(spacing.xxl)} ${rem(spacing.xxl)} ${rem(spacing.jumbo)};background:${colors.surface.paper};color:${colors.text.primary}}
 .hr-report-tab[aria-selected="true"]{font-size:${rem(typography.size.body)}}
 .hr-report-controls{gap:${rem(spacing.sm)}}
@@ -288,7 +289,7 @@ export function ReportStateBlock({ lines, error, onRetry }: { lines: string[]; e
       {error ? (
         <>
           <p data-testid="report-error-line">{error.message}</p>
-          <button type="button" className="hr-report-link-button" onClick={onRetry} data-testid="report-retry">
+          <button type="button" className="hr-report-link-button hr-report-actions" onClick={onRetry} data-testid="report-retry">
             {error.retry}
           </button>
         </>
@@ -544,6 +545,7 @@ function CalendarBlock({ calendar, month }: { calendar: ReportCalendarView; mont
 export function ReportGrowthBlock({ growth }: { growth: ReportGrowthView }): JSX.Element {
   const [open, setOpen] = useState(false);
   const chart = growthChart(growth.rows);
+  const shown = growthAxisShown(growth.rows.length);
   const line = (points: string, color: string, dashed: boolean): JSX.Element => (
     <polyline points={points} fill="none" stroke={color} strokeWidth={GROWTH_LINE} strokeLinejoin="round" strokeLinecap="round" strokeDasharray={dashed ? GROWTH_DASH : undefined} />
   );
@@ -573,8 +575,8 @@ export function ReportGrowthBlock({ growth }: { growth: ReportGrowthView }): JSX
             {markers(chart.cards, colors.brand.secondary, 'c')}
           </svg>
           <ol className="hr-report-growth-axis" aria-hidden="true">
-            {growth.rows.map((row) => (
-              <li key={row.m}>{row.short}</li>
+            {growth.rows.map((row, index) => (
+              <li key={row.m}>{shown[index] ? row.short : null}</li>
             ))}
           </ol>
         </>
