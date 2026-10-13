@@ -378,6 +378,7 @@ describe('action notes after checkout or Manage subscription (B-8a)', () => {
       liveOff: b.liveOff,
       checkoutFailed: b.checkoutFailed,
       portalFailed: b.portalFailed,
+      stepUpCancelled: b.stepUp.cancelled,
     };
     for (const [note, text] of Object.entries(notes)) expect(actionNoteText(note as BillingActionNote, 'en')).toBe(text);
     expect(actionNoteText('alreadyActive')).toBe(b.alreadyActive);

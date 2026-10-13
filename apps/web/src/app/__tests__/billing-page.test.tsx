@@ -35,10 +35,24 @@ vi.mock('@/components/console/AdultFrame', () => ({
   },
 }));
 
+// Clerk's reverification sits behind `useConsoleAuth().reverify` (its own test: auth-reverify.test.tsx).
+const auth = vi.hoisted(() => ({ outcome: 'retry' as 'retry' | 'cancelled' | 'unavailable', calls: 0 }));
+vi.mock('@/components/console/auth-context', () => ({
+  useConsoleAuth: () => ({
+    reverify: async (fetcher: () => Promise<unknown>) => {
+      auth.calls += 1;
+      if (auth.outcome === 'cancelled') return { kind: 'cancelled' };
+      if (auth.outcome === 'unavailable') return { kind: 'unavailable' };
+      return { kind: 'result', result: await fetcher() };
+    },
+  }),
+}));
+
 type Result = { ok: true; data: unknown } | { ok: false; error: string; status: number; code?: string };
 const calls = vi.hoisted(() => ({
   summaries: [] as Array<() => Promise<unknown>>,
   summaryCalls: 0,
+  summaryArgs: [] as unknown[],
   checkout: [] as unknown[],
   checkoutResult: null as unknown,
   portal: [] as unknown[],
@@ -50,8 +64,9 @@ const calls = vi.hoisted(() => ({
 vi.mock('@/components/console/use-console', async () => {
   const { getMessages: messages } = await import('@hangul-route/i18n');
   const api = {
-    billingSummary: () => {
+    billingSummary: (options?: unknown) => {
       calls.summaryCalls += 1;
+      calls.summaryArgs.push(options);
       const next = calls.summaries.length > 1 ? calls.summaries.shift() : calls.summaries[0];
       return next ? next() : Promise.resolve({ ok: false, error: 'network', status: -1 });
     },
@@ -111,18 +126,19 @@ const summary = (cards: BillingSpaceCard[], over: Partial<BillingSummary> = {}):
 const ok = (s: BillingSummary): (() => Promise<Result>) => () => Promise.resolve({ ok: true, data: s });
 const failed = (error = 'network'): (() => Promise<Result>) => () => Promise.resolve({ ok: false, error, status: error === 'network' ? -1 : 500 });
 
-const browser = vi.hoisted(() => ({ assigned: [] as string[], online: true }));
+const browser = vi.hoisted(() => ({ assigned: [] as string[], online: true, search: '', replaced: [] as string[] }));
 
 beforeAll(() => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 });
 
 let mounted: ReactTestRenderer | null = null;
-let win: EventTarget & { location: { assign: (url: string) => void; search: string; pathname: string }; history: { replaceState: () => void } };
+let win: EventTarget & { location: { assign: (url: string) => void; search: string; pathname: string; hash: string }; history: { state: null; replaceState: (state: unknown, title: string, url: string) => void } };
 beforeEach(() => {
   frame.spaces = [];
   calls.summaries = [ok(summary([card()]))];
   calls.summaryCalls = 0;
+  calls.summaryArgs = [];
   calls.checkout = [];
   calls.checkoutResult = { ok: true, data: { url: 'https://checkout.stripe.com/c/pay/cs_test_1' } };
   calls.portal = [];
@@ -132,9 +148,20 @@ beforeEach(() => {
   calls.api = true;
   browser.assigned = [];
   browser.online = true;
+  browser.search = '';
+  browser.replaced = [];
+  auth.outcome = 'retry';
+  auth.calls = 0;
   win = Object.assign(new EventTarget(), {
-    location: { assign: (url: string) => void browser.assigned.push(url), search: '', pathname: '/account/billing' },
-    history: { replaceState: () => undefined },
+    location: {
+      assign: (url: string) => void browser.assigned.push(url),
+      get search() {
+        return browser.search;
+      },
+      pathname: '/account/billing',
+      hash: '',
+    },
+    history: { state: null, replaceState: (_state: unknown, _title: string, url: string) => void browser.replaced.push(url) },
   });
   vi.stubGlobal('window', win);
   vi.stubGlobal('navigator', {
@@ -149,9 +176,14 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+// Headings and buttons get a focus spy (the page moves focus to the bought card's heading; the dialog to its buttons).
+const focusedOn: string[] = [];
 async function render(): Promise<ReactTestInstance> {
+  focusedOn.length = 0;
   await act(async () => {
-    mounted = create(<BillingPage />);
+    mounted = create(<BillingPage />, {
+      createNodeMock: (el) => ({ focus: () => void focusedOn.push(`${String(el.type)}:${typeof el.props.children === 'string' ? el.props.children : ''}`) }),
+    });
   });
   return (mounted as unknown as ReactTestRenderer).root;
 }
@@ -452,5 +484,242 @@ describe('buying', () => {
       buttonNamed(root, b.buy.group_license.cta).props.onClick();
     });
     expect(calls.checkout).toEqual([{ planKey: 'group_license', subjectKind: 'space', subjectId: 'space:cls' }]);
+  });
+});
+
+const HINT = {
+  ok: false,
+  error: 'forbidden',
+  status: 403,
+  code: 'reverify_required',
+  clerk_error: { type: 'forbidden', reason: 'reverification-error', metadata: { reverification: { level: 'first_factor', afterMinutes: 10 } } },
+};
+
+describe('coming back from Stripe (B-8b)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const tick = async (): Promise<void> => {
+    await act(async () => {
+      vi.advanceTimersByTime(2000);
+    });
+    await flush();
+  };
+  const activeFamily = (learners = 2) => summary([card({ coverage: own(), usage: { learners, learnerCap: FAMILY_LIFETIME_LEARNERS, teachers: null, teacherCap: null }, actions: { buy: null, manage: true, contact: false } })]);
+  const returnText = (root: ReactTestInstance): string => textOf(byTestId(root, 'bill-return')[0] as ReactTestInstance);
+
+  it('checking, then done: the query is cleared, the card is marked and busy, polls send poll=1, focus moves to the heading', async () => {
+    browser.search = '?checkout=success&plan=family_lifetime&id=space%3Afam';
+    calls.summaries = [ok(summary([card()])), ok(summary([card()])), ok(activeFamily())];
+    const root = await render();
+    expect(browser.replaced).toEqual(['/account/billing']);
+    expect(returnText(root)).toContain(b.checking);
+    const marked = byTestId(root, 'bill-card')[0] as ReactTestInstance;
+    expect(String(marked.props.className)).toContain('hr-bill-card-marked');
+    expect(marked.props['aria-busy']).toBe(true);
+    expect(buttonNamed(root, b.buy.family_lifetime.cta).props.disabled).toBe(true);
+    expect(buttonNamed(root, b.promo.apply.cta).props.disabled).toBe(true);
+    await tick();
+    expect(returnText(root)).toContain(b.checking);
+    await tick();
+    expect(returnText(root)).toContain(b.done);
+    expect(calls.summaryCalls).toBe(3);
+    // The first read is a page view; the checks after it are polls (no view event).
+    expect(calls.summaryArgs).toEqual([{}, { poll: true }, { poll: true }]);
+    expect(focusedOn).toContain(`h3:${b.kind.family} · Kim family`);
+    expect(pageText()).toContain(b.coverage.family);
+    expect(buttonNamed(root, b.manage.cta).props.disabled).toBe(false);
+  });
+
+  it('done with a family that has no learner yet: Connect a learner is the next step', async () => {
+    browser.search = '?checkout=success&plan=family_lifetime&id=space%3Afam';
+    calls.summaries = [ok(activeFamily(0))];
+    const root = await render();
+    expect(returnText(root)).toContain(b.done);
+    expect(root.find((n) => n.type === 'a' && textOf(n) === b.connectLearner.cta).props.href).toBe('/parent/space?id=space%3Afam');
+  });
+
+  it('ten checks and still not active: still processing with Check again, which starts another round', async () => {
+    browser.search = '?checkout=success&plan=family_lifetime&id=space%3Afam';
+    calls.summaries = [ok(summary([card()]))];
+    const root = await render();
+    for (let i = 0; i < 9; i += 1) await tick();
+    expect(returnText(root)).toContain(b.stillProcessing);
+    expect(returnText(root)).not.toContain(b.done);
+    const before = calls.summaryCalls;
+    await tick();
+    expect(calls.summaryCalls).toBe(before);
+    await act(async () => {
+      buttonNamed(byTestId(root, 'bill-return')[0] as ReactTestInstance, b.checkAgain.cta).props.onClick();
+    });
+    await tick();
+    expect(calls.summaryCalls).toBe(before + 1);
+    expect(returnText(root)).toContain(b.checking);
+  });
+
+  it('offline while checking: polling pauses without using attempts and resumes on online', async () => {
+    browser.search = '?checkout=success&plan=family_lifetime&id=space%3Afam';
+    calls.summaries = [ok(summary([card()])), ok(summary([card()])), ok(activeFamily())];
+    const root = await render();
+    await act(async () => {
+      browser.online = false;
+      win.dispatchEvent(new Event('offline'));
+    });
+    expect(returnText(root)).toContain(b.offline);
+    // One offline line, in the return notice.
+    expect(pageText().split(b.offline).length - 1).toBe(1);
+    const paused = calls.summaryCalls;
+    await tick();
+    await tick();
+    expect(calls.summaryCalls).toBe(paused);
+    await act(async () => {
+      browser.online = true;
+      win.dispatchEvent(new Event('online'));
+    });
+    await tick();
+    await tick();
+    expect(returnText(root)).toContain(b.done);
+  });
+
+  it('a poll fails while online: Can’t check your plan with Try again, which checks again', async () => {
+    browser.search = '?checkout=success&plan=family_lifetime&id=space%3Afam';
+    calls.summaries = [ok(summary([card()])), failed('unknown'), ok(activeFamily())];
+    const root = await render();
+    await tick();
+    expect(returnText(root)).toContain(b.cantCheck);
+    // The cards stay: only the return notice speaks.
+    expect(byTestId(root, 'bill-card').length).toBe(1);
+    await act(async () => {
+      buttonNamed(byTestId(root, 'bill-return')[0] as ReactTestInstance, b.retry.cta).props.onClick();
+    });
+    await tick();
+    expect(returnText(root)).toContain(b.done);
+  });
+
+  it('cancelled: Nothing was charged; no polling', async () => {
+    browser.search = '?checkout=cancel';
+    const root = await render();
+    expect(returnText(root)).toContain(en.console.billingCancelled);
+    expect(browser.replaced).toEqual(['/account/billing']);
+    await tick();
+    expect(calls.summaryCalls).toBe(1);
+  });
+
+  it('success without plan and id (an older session): done after one reload, no marked card', async () => {
+    browser.search = '?checkout=success';
+    const root = await render();
+    expect(returnText(root)).toContain(b.done);
+    expect(String((byTestId(root, 'bill-card')[0] as ReactTestInstance).props.className)).not.toContain('marked');
+  });
+
+  it('no return query: no notice and the address is left alone', async () => {
+    const root = await render();
+    expect(returnText(root)).toBe('');
+    expect(browser.replaced).toEqual([]);
+  });
+});
+
+describe('step-up before money moves (B-8b)', () => {
+  const dialog = (root: ReactTestInstance): ReactTestInstance | undefined => byTestId(root, 'step-up')[0];
+
+  it('a stale sign-in: Confirm it’s you; Continue runs reverification and the retried checkout goes to Stripe', async () => {
+    let first = true;
+    calls.checkoutResult = null;
+    const checkoutAnswers = (): unknown => {
+      if (first) {
+        first = false;
+        return HINT;
+      }
+      return { ok: true, data: { url: 'https://checkout.stripe.com/c/pay/cs_test_2' } };
+    };
+    Object.defineProperty(calls, 'checkoutResult', { get: checkoutAnswers, configurable: true });
+    const root = await render();
+    await act(async () => {
+      buttonNamed(root, b.buy.family_lifetime.cta).props.onClick();
+    });
+    const open = dialog(root) as ReactTestInstance;
+    expect(open.props.role).toBe('dialog');
+    expect(open.props['aria-modal']).toBe('true');
+    expect(textOf(open)).toContain(b.stepUp.title);
+    expect(textOf(open)).toContain(b.stepUp.reason);
+    expect(focusedOn).toContain(`button:${b.stepUp.cta}`);
+    await act(async () => {
+      buttonNamed(open, b.stepUp.cta).props.onClick();
+    });
+    await flush();
+    expect(auth.calls).toBe(1);
+    expect(dialog(root)).toBeUndefined();
+    expect(browser.assigned).toEqual(['https://checkout.stripe.com/c/pay/cs_test_2']);
+    Object.defineProperty(calls, 'checkoutResult', { value: null, writable: true, configurable: true });
+  });
+
+  it('the retry is refused again: Can’t confirm right now, only Not now; closing says Nothing was changed', async () => {
+    calls.checkoutResult = HINT;
+    auth.outcome = 'unavailable';
+    const root = await render();
+    await act(async () => {
+      buttonNamed(root, b.buy.family_lifetime.cta).props.onClick();
+    });
+    await act(async () => {
+      buttonNamed(dialog(root) as ReactTestInstance, b.stepUp.cta).props.onClick();
+    });
+    await flush();
+    const open = dialog(root) as ReactTestInstance;
+    expect(textOf(open)).toContain(b.stepUp.unavailable);
+    expect(buttons(open).map(textOf)).toEqual([b.stepUp.cancel.cta]);
+    expect(auth.calls).toBe(1);
+    await act(async () => {
+      buttonNamed(open, b.stepUp.cancel.cta).props.onClick();
+    });
+    await flush();
+    expect(dialog(root)).toBeUndefined();
+    expect(pageText()).toContain(b.stepUp.cancelled);
+    expect(browser.assigned).toEqual([]);
+  });
+
+  it('Not now (or Escape) before verifying: Nothing was changed, no second request', async () => {
+    calls.checkoutResult = HINT;
+    const root = await render();
+    await act(async () => {
+      buttonNamed(root, b.buy.family_lifetime.cta).props.onClick();
+    });
+    await act(async () => {
+      (dialog(root) as ReactTestInstance).props.onKeyDown({ key: 'Escape', preventDefault: () => undefined });
+    });
+    await flush();
+    expect(dialog(root)).toBeUndefined();
+    expect(pageText()).toContain(b.stepUp.cancelled);
+    expect(calls.checkout.length).toBe(1);
+    expect(auth.calls).toBe(0);
+    expect(buttonNamed(root, b.buy.family_lifetime.cta).props.disabled).toBe(false);
+  });
+
+  it('a cancelled Clerk verification: Nothing was changed', async () => {
+    calls.checkoutResult = HINT;
+    auth.outcome = 'cancelled';
+    const root = await render();
+    await act(async () => {
+      buttonNamed(root, b.buy.family_lifetime.cta).props.onClick();
+    });
+    await act(async () => {
+      buttonNamed(dialog(root) as ReactTestInstance, b.stepUp.cta).props.onClick();
+    });
+    await flush();
+    expect(dialog(root)).toBeUndefined();
+    expect(pageText()).toContain(b.stepUp.cancelled);
+  });
+
+  it('Manage subscription goes through the same step-up', async () => {
+    calls.summaries = [ok(summary([card({ coverage: own(), actions: { buy: null, manage: true, contact: false } })]))];
+    calls.portalResult = HINT;
+    const root = await render();
+    await act(async () => {
+      buttonNamed(root, b.manage.cta).props.onClick();
+    });
+    expect(textOf(dialog(root) as ReactTestInstance)).toContain(b.stepUp.body);
   });
 });
