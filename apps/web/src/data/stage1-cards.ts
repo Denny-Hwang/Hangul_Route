@@ -5,6 +5,11 @@
  * Mirrored here so the web app's build doesn't reach across the
  * monorepo into `content/`. When `packages/content-schema` grows a
  * loader, this file becomes a thin re-export.
+ *
+ * The `blurb` values (F-SITE-002 S-6, OD-9: no audience words) and the
+ * short `en` glosses are site wording and intentionally differ from the
+ * app's cards.json; the ids, titles, Korean, romanization, theme, rarity
+ * and unlock must match it (stage1-cards.test.ts checks this).
  */
 
 export type CardTheme = 'letters' | 'life' | 'rites' | 'nature' | 'crafts';
@@ -35,7 +40,7 @@ export const stage1Cards: LandingCard[] = [
   { id: 'card:chaek', title: 'Book', ko: '책', romanization: 'chaek', en: 'Book', blurb: 'Korea loves books so much it has Book Festivals every year.', theme: 'letters', rarity: 'common', unlockedBy: 'jamo:chieut' },
   { id: 'card:kpop', title: 'K-pop', ko: '케이팝', romanization: 'keipap', en: 'K-pop music', blurb: 'Big songs, big dances. How the world hears Korean daily.', theme: 'letters', rarity: 'rare', unlockedBy: 'jamo:kieuk' },
   { id: 'card:taegeukgi', title: 'Taegeukgi', ko: '태극기', romanization: 'taegeukgi', en: 'The Korean flag', blurb: 'A red-and-blue swirl with four black symbols.', theme: 'rites', rarity: 'rare', unlockedBy: 'jamo:tieut' },
-  { id: 'card:paengi', title: 'Paengi', ko: '팽이', romanization: 'paengi', en: 'Spinning top', blurb: 'Wooden tops spun on frozen ground in winter.', theme: 'crafts', rarity: 'uncommon', unlockedBy: 'jamo:pieup' },
+  { id: 'card:paengi', title: 'Paengi', ko: '팽이', romanization: 'paengi', en: 'Spinning top', blurb: 'Wooden tops spun on the ice in winter.', theme: 'crafts', rarity: 'uncommon', unlockedBy: 'jamo:pieup' },
   { id: 'card:horangi', title: 'Tiger', ko: '호랑이', romanization: 'horangi', en: 'Tiger — like Hoya!', blurb: 'Korea’s old tales all start with "Long ago, when tigers smoked tobacco..."', theme: 'letters', rarity: 'legendary', unlockedBy: 'jamo:hieut' },
   { id: 'card:arirang', title: 'Arirang', ko: '아리랑', romanization: 'arirang', en: 'Korea’s most loved folk song', blurb: 'A song about missing home. UNESCO world heritage.', theme: 'rites', rarity: 'rare', unlockedBy: 'jamo:a' },
   { id: 'card:yagu', title: 'Yagu', ko: '야구', romanization: 'yagu', en: 'Baseball', blurb: 'Korea’s loudest sport. Fans bring drums.', theme: 'crafts', rarity: 'common', unlockedBy: 'jamo:ya' },
