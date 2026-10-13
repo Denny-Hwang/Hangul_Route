@@ -17,7 +17,7 @@ export const learner = {
    */
   notes: {
     home: {
-      title: (sender: string) => `쪽지가 왔어요 · ${sender}`,
+      title: (sender: string) => `쪽지가 왔어요. 보낸 사람: ${sender}`,
       newCount: (n: number) => `새 쪽지 ${n}개`,
       from: (sender: string) => `보낸 사람: ${sender}`,
       read: { cta: '읽기' },

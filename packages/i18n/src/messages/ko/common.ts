@@ -39,7 +39,7 @@ export const common = {
       dad: '아빠',
       grandma: '할머니',
       grandpa: '할아버지',
-      aunt: '이모',
+      aunt: '이모/고모',
       uncle: '삼촌',
       guardian: '보호자',
       partner: '파트너',
@@ -47,6 +47,6 @@ export const common = {
     teacherLabel: (className: string) => `선생님 · ${className}`,
     teacherOnly: '선생님',
     date: { today: '오늘', yesterday: '어제' },
-    new: { pill: '새 쪽지' },
+    new: { pill: '새' },
   },
 } satisfies DeepPartial<Messages['common']>;

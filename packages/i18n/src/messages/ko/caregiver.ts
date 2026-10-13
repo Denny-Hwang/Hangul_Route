@@ -72,7 +72,7 @@ export const caregiver = {
       justHide: { cta: '숨기기만 하기' },
       close: '닫기',
       reported: '고마워요. 쪽지가 사라졌어요.',
-      emergency: '누군가 위험하다면 지역 긴급 구조 기관에 연락해 주세요.',
+      emergency: '누군가 위험하다면 현지 긴급 신고 번호로 연락해 주세요.',
       hidden: '쪽지를 숨겼어요.',
       done: { cta: '완료' },
       alreadyGone: '이미 사라진 쪽지예요.',
