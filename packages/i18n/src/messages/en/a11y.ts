@@ -72,6 +72,8 @@ export const a11y = {
   discoverLetter: (romanization: string, soundHint?: string) =>
     soundHint === undefined ? `Korean letter ${romanization}` : `Korean letter ${romanization}. ${soundHint}`,
   discoverFinal: (romanization: string) => `Korean final consonant ${romanization}`,
+  /** A Hangul Check tip letter (F-QUEST-002 §3.9): opens the quest that teaches it. */
+  practiceLetter: (romanization: string) => `Practice the letter ${romanization} again`,
   lockedCard: 'Locked card',
   /** A locked Library tile or card page, with how it is earned (an earn hint, F-STORY-006 §3.7). */
   lockedCardHint: (hint: string) => `Locked card. ${hint}`,

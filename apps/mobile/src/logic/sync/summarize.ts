@@ -4,11 +4,14 @@ import {
   type PlacementSummary,
   type ProgressSnapshot,
   type ProgressSummary,
+  type ReviewEntry,
   type VocabProgress,
   type VocabSummary,
 } from '@hangul-route/content-schema';
+import { findJamo } from '../../content/jamo';
 import { planIdOf } from '../homework/plan-derivation';
 import { countedSeconds } from '../sessions/session-log';
+import { symbolKey } from '../stage1/hangul';
 import { codePoint, localDay, vocabOf } from '../vocab/progress';
 import { addDays } from '../vocab/srs';
 import { compareInstant } from './merge';
@@ -157,6 +160,31 @@ export function letterSignalsOf(
   return { jamoRecognized: [...recognized].sort(), needsPractice: [...new Set([...practiced, ...seeded])].slice(0, 3) };
 }
 
+/** Hangul Check thresholds (F-QUEST-002 §3.9): >= 90 % of the 30 symbols, and 4 of the 5 words (blueprint 05 §1.4). */
+const ANCHOR_SYMBOLS = 27;
+const ANCHOR_WORDS = 4;
+
+/**
+ * The verdict of the newest Hangul Check (a `stage-certificate` review of `stage1`), for the
+ * caregiver channel only. Not `stage1.anchorAccuracy` (the average accuracy of Stage 1 quests):
+ * a dashboard must not conflate them. `tricky` holds the symbol keys missed on the first try.
+ * Undefined with no check, so the summary of a learner who never took one is unchanged.
+ */
+export function stage1AnchorOf(reviews: readonly ReviewEntry[]): ProgressSummary['stage1Anchor'] {
+  const checks = reviews.filter((r) => r.kind === 'stage-certificate' && r.scope === 'stage1');
+  const newest = checks.reduce<ReviewEntry | undefined>((best, r) => (!best || compareInstant(r.generatedAt, best.generatedAt) > 0 ? r : best), undefined);
+  if (!newest) return undefined;
+  const missed = new Set(newest.missedItemIds ?? []);
+  const isSymbol = (id: string): boolean => id.startsWith('jamo:');
+  const symbolsRight = newest.itemIds.filter((id) => isSymbol(id) && !missed.has(id)).length;
+  const wordsRight = newest.itemIds.filter((id) => !isSymbol(id) && !missed.has(id)).length;
+  const tricky = newest.itemIds.flatMap((id) => {
+    const jamo = isSymbol(id) && missed.has(id) ? findJamo(id) : undefined;
+    return jamo ? [symbolKey(jamo)] : [];
+  });
+  return { met: symbolsRight >= ANCHOR_SYMBOLS && wordsRight >= ANCHOR_WORDS, checkedAt: newest.generatedAt, tricky };
+}
+
 export function summarize({ snapshot, now, stage1QuestIds, questJamo, planNotReady, journey, routeGoal, activity }: SummarizeInput): ProgressSummary {
   const completed = snapshot.quests.filter((q) => q.completedAt);
   const stage1Set = new Set(stage1QuestIds);
@@ -172,6 +200,7 @@ export function summarize({ snapshot, now, stage1QuestIds, questJamo, planNotRea
   const { jamoRecognized, needsPractice } = letterSignalsOf(snapshot, questJamo);
 
   const placement = placementSummaryOf(snapshot.placements);
+  const stage1Anchor = stage1AnchorOf(snapshot.reviews);
   const words = vocabOf(snapshot);
 
   const lastSession = snapshot.sessions[snapshot.sessions.length - 1];
@@ -192,6 +221,7 @@ export function summarize({ snapshot, now, stage1QuestIds, questJamo, planNotRea
     jamoRecognized,
     needsPractice,
     planProgress: planProgressOf(snapshot, planNotReady),
+    ...(stage1Anchor ? { stage1Anchor } : {}),
     ...(placement ? { placement } : {}),
     ...(journey ? { journey } : {}),
     ...(routeGoal ? { routeGoal } : {}),

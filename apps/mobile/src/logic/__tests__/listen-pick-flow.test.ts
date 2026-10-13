@@ -286,13 +286,19 @@ describe('headerView', () => {
     expect(headerView('check', next).value).toBe(1);
   });
 
+  it('is fill-only dots with no number and no title for the Hangul Check (review mode, F-QUEST-002 §3.10)', () => {
+    expect(headerView('review', startFlow(7))).toEqual({ kind: 'dots', title: undefined, value: 0, max: 7, label: undefined });
+    const resolved = run(startFlow(7), [tap('a', 100)]).state;
+    expect(headerView('review', resolved).value).toBe(1);
+  });
+
   it('fills the last dot once the final round is done', () => {
     const done = run(startFlow(2), [tap('a', 100), { type: 'advance' }, tap('a', 5000), { type: 'advance' }]).state;
     expect(headerView('check', done).value).toBe(2);
   });
 
   it('keeps the bar for the other modes', () => {
-    for (const mode of ['review', 'vocab', 'preview'] as const) {
+    for (const mode of ['vocab', 'preview'] as const) {
       expect(headerView(mode, startFlow(3)).kind).toBe('bar');
     }
   });

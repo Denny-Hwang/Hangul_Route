@@ -3,10 +3,12 @@ import {
   VocabSummarySchema,
   type ActivitySummary,
   type ProgressSnapshot,
+  type ReviewEntry,
   type VocabItemState,
   type VocabProgress,
 } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
+import { jamoAll } from '../../../content/jamo';
 import { placementResult } from '../../placement/__tests__/fixtures';
 import { letterSignalsOf, placementSummaryOf, planProgressOf, summarize, vocabSummaryOf } from '../summarize';
 
@@ -372,5 +374,55 @@ describe('summarize with words (F-VOC-005 section 3.8)', () => {
       if (tz === undefined) delete process.env.TZ;
       else process.env.TZ = tz;
     }
+  });
+});
+
+describe('summarize: stage1Anchor, the Hangul Check verdict (F-QUEST-002 §3.9)', () => {
+  const SYMBOLS = jamoAll.map((j) => j.id);
+  const WORDS = ['word:hangeul', 'word:bap', 'word:hanbok', 'word:san', 'word:yeon'];
+  const review = (at: string, missed: string[], extra: Partial<ReviewEntry> = {}): ReviewEntry => ({
+    id: `review:stage1:${at}`,
+    kind: 'stage-certificate',
+    generatedAt: at,
+    scope: 'stage1',
+    itemIds: [...SYMBOLS, ...WORDS],
+    resultStars: 3,
+    missedItemIds: missed,
+    ...extra,
+  });
+  const run = (reviews: ReviewEntry[]) => summarize({ snapshot: { ...snap, reviews }, now: NOW, stage1QuestIds: ['q1'], questJamo: {} });
+
+  it('is left out with no Hangul Check, so other summaries stay byte-identical', () => {
+    expect(run([])).not.toHaveProperty('stage1Anchor');
+    expect(run([{ ...review('2026-09-20T10:00:00.000Z', []), kind: 'daily' }])).not.toHaveProperty('stage1Anchor');
+  });
+
+  it('met at 27 of 30 symbols and 4 of 5 words; not met at 26 symbols, nor at 3 words', () => {
+    const three = SYMBOLS.slice(0, 3);
+    expect(run([review('2026-09-20T10:00:00.000Z', [...three, 'word:bap'])]).stage1Anchor?.met).toBe(true);
+    expect(run([review('2026-09-20T10:00:00.000Z', SYMBOLS.slice(0, 4))]).stage1Anchor?.met).toBe(false);
+    expect(run([review('2026-09-20T10:00:00.000Z', WORDS.slice(0, 2))]).stage1Anchor?.met).toBe(false);
+    // Every symbol right but one word missed: met (4 of 5).
+    expect(run([review('2026-09-20T10:00:00.000Z', ['word:yeon'])]).stage1Anchor?.met).toBe(true);
+  });
+
+  it('reads the newest check and lists its missed symbols as symbol keys, a final as "x/final"', () => {
+    const older = review('2026-09-19T10:00:00.000Z', SYMBOLS);
+    const newest = review('2026-09-20T10:00:00.000Z', ['jamo:tieut', 'jamo:nieun-batchim', 'word:san']);
+    const out = run([newest, older]);
+    expect(out.stage1Anchor).toEqual({ met: true, checkedAt: '2026-09-20T10:00:00.000Z', tricky: ['ㅌ', 'ㄴ/final'] });
+    expect(ProgressSummarySchema.parse(out).stage1Anchor).toEqual(out.stage1Anchor);
+    // stage1.anchorAccuracy is a different thing and is unchanged.
+    expect(out.stage1).toEqual(run([]).stage1);
+  });
+
+  it('an entry from before missedItemIds counts as nothing missed; an unknown symbol id is never a tricky key', () => {
+    const { missedItemIds: _m, ...old } = review('2026-09-20T10:00:00.000Z', []);
+    expect(run([old]).stage1Anchor?.met).toBe(true);
+    expect(run([review('2026-09-20T10:00:00.000Z', ['jamo:nope'])]).stage1Anchor?.tricky).toEqual([]);
+  });
+
+  it('ignores a check of another scope', () => {
+    expect(run([review('2026-09-20T10:00:00.000Z', [], { scope: 'stage2' })])).not.toHaveProperty('stage1Anchor');
   });
 });

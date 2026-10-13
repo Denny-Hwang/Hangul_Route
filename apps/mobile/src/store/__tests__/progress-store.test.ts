@@ -1531,3 +1531,62 @@ describe('session ownership (F-REPORT-001 section 3.3.2, RP-3b)', () => {
     expect(useProgressStore.getState().openSession?.profileId).toBe('p1');
   });
 });
+
+describe('recordReview (F-QUEST-002 §3.9)', () => {
+  const notified: string[] = [];
+  const entry = (at: string, stars: 1 | 2 | 3, missed: string[] = []) => ({
+    id: `review:stage1:${at}`,
+    kind: 'stage-certificate' as const,
+    generatedAt: at,
+    scope: 'stage1',
+    itemIds: ['jamo:giyeok', 'word:bap'],
+    resultStars: stars,
+    missedItemIds: missed,
+  });
+
+  beforeEach(() => {
+    resetStore();
+    notified.length = 0;
+    setProgressPersistListener((id) => notified.push(id));
+  });
+
+  afterEach(() => {
+    setProgressPersistListener(null);
+  });
+
+  it('appends the entry to reviews only, persists it and tells sync', async () => {
+    mem.set('progress:p1', savedSnapshot());
+    await useProgressStore.getState().hydrate('p1');
+    const before = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    expect(useProgressStore.getState().recordReview('p1', entry('2026-10-12T09:00:00.000Z', 2, ['word:bap']))).toBe(true);
+    const after = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    expect(after.reviews).toEqual([entry('2026-10-12T09:00:00.000Z', 2, ['word:bap'])]);
+    // The only other keys it may add are the empty defaults of withSnapshotDefaults.
+    expect(after.placements ?? []).toEqual([]);
+    const { reviews: _r, updatedAt: _u, selfRoute: _s, placements: _p, ...restAfter } = after;
+    const { reviews: _q, updatedAt: _v, placements: _w, ...restBefore } = before;
+    expect(restAfter).toEqual(restBefore);
+    expect(stored()?.reviews).toHaveLength(1);
+    expect(notified).toEqual(['p1']);
+  });
+
+  it('two attempts are two entries; the same id twice keeps one, the higher stars', async () => {
+    await useProgressStore.getState().hydrate('p1');
+    const s = useProgressStore.getState();
+    s.recordReview('p1', entry('2026-10-12T09:00:00.000Z', 1));
+    s.recordReview('p1', entry('2026-10-13T09:00:00.000Z', 3));
+    s.recordReview('p1', entry('2026-10-12T09:00:00.000Z', 2));
+    s.recordReview('p1', entry('2026-10-13T09:00:00.000Z', 1));
+    expect(stored()?.reviews.map((r) => [r.id, r.resultStars])).toEqual([
+      ['review:stage1:2026-10-12T09:00:00.000Z', 2],
+      ['review:stage1:2026-10-13T09:00:00.000Z', 3],
+    ]);
+  });
+
+  it('never stores an entry the schema refuses', () => {
+    const bad = { ...entry('2026-10-12T09:00:00.000Z', 2), kind: 'quiz' } as unknown as Parameters<ReturnType<typeof useProgressStore.getState>['recordReview']>[1];
+    expect(useProgressStore.getState().recordReview('p1', bad)).toBe(false);
+    expect(useProgressStore.getState().byProfile['p1']).toBeUndefined();
+    expect(notified).toEqual([]);
+  });
+});

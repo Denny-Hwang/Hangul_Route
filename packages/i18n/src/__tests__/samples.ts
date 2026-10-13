@@ -62,6 +62,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.hearExample': [['na, na, I']],
   'a11y.discoverLetter': [['g/k'], ['g/k', 'like g in go']],
   'a11y.discoverFinal': [['k']],
+  'a11y.practiceLetter': [['t']],
   'caregiver.audience.shared.journeyLockedA11y': [['Word']],
   'caregiver.audience.gated': [['Add a profile', true], ['Add a profile', false], ['Save my progress', true, 'rescue code'], ['Save my progress', false, 'rescue code']],
   'caregiver.pin.entry.triesLeft': [[1], [4]],

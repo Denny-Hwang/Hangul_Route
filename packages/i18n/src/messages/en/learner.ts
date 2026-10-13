@@ -236,6 +236,8 @@ export const learner = {
     storiesNote: 'Heritage stories are open in the cells with the books icon.',
     /** The count mark in a cell's corner: how many heritage stories call the cell home, "5+" from 6 (F-STORY-005 §3.6). */
     countMark: (value: number, more: boolean) => (more ? `${value}+` : `${value}`),
+    /** Beside the Stage 1 pill once the stage is complete (F-QUEST-002 §3.9): opens the Hangul Check. */
+    hangulCheck: { cta: 'Hangul Check' },
     /** Landmark names of the two panes on a wide window (F-LAYOUT-001 §3.13). */
     panes: { master: 'Journey map', detail: 'Episode details' },
     how: {
@@ -1413,5 +1415,49 @@ export const learner = {
     seeCards: { cta: 'See my cards' },
     backHome: { cta: 'Back home' },
     notFound: 'This prize is not here yet. Keep playing your quests.',
+    /** The ceremony's primary from PR Q-10b (F-QUEST-002 §3.8): the Hangul Check, never required. */
+    hangulCheck: { cta: 'Take the Hangul Check', note: 'About four minutes. You can skip it.' },
+  },
+  /**
+   * The Hangul Check (F-QUEST-002 §3.9, wireframe reviews/hangul-check): a short, skippable look
+   * back over every letter. It never gates anything. The learner sees stars, Hoya, a certificate
+   * and the Stage 1 cards: never a number of right answers, a fraction or a percent (D3); those
+   * reach the grown-up channel only. Taught Korean (the tip letters) is drawn with KoreanText,
+   * never inside these strings.
+   */
+  stageReview: {
+    title: 'Hangul Check',
+    intro: {
+      body: 'About four minutes. Pictures and sounds. No timer.',
+      hideRomanization: 'Reading practice: hide the romanization until I tap',
+      start: { cta: "Let's go" },
+      later: { cta: 'Maybe later' },
+    },
+    /** Hoya between the parts of the check: one line, one button. */
+    pause: {
+      first: 'Nice listening! Ready for more?',
+      second: 'You are doing great. Keep going?',
+      third: 'Hoya loves this part. More letters?',
+      fourth: 'Almost done. One more part!',
+      keepGoing: { cta: 'Keep going' },
+    },
+    leave: {
+      close: 'Stop the check',
+      title: 'Stop the check?',
+      body: 'You can take it again any time.',
+      stop: { cta: 'Stop' },
+      stay: { cta: 'Keep going' },
+    },
+    result: {
+      headline: { three: 'Wonderful!', two: 'Great work!', one: 'You did it!' },
+      cheer: 'You looked at every letter of Hangul. Hoya is proud of you.',
+      certificate: { title: 'Certificate', stage: 'Stage 1: Hangul' },
+      wallTitle: 'Your Hangul cards',
+      tipTitle: "Hoya's tip",
+      tryAgain: 'Try again:',
+      everyLetter: 'Every letter!',
+      backHome: { cta: 'Back home' },
+      seeCards: { cta: 'See my cards' },
+    },
   },
 } as const;
