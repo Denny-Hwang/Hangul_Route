@@ -1181,7 +1181,7 @@ export const learner = {
           'first-words': 'Leo mis primeras palabras',
           'first-sentences': 'Leo mis primeras frases',
         },
-        othersFirst: 'También tienes un plan de tu clase o tu familia. Puedes sumar el tuyo. Ese va primero.',
+        othersFirst: 'También tienes un plan de tu clase o tu familia. Puedes sumar el tuyo. El de tu clase o tu familia va primero.',
       },
       time: { title: '¿Cuánto tiempo?' },
       length: { title: '¿Cuánto dura?' },
@@ -1201,8 +1201,8 @@ export const learner = {
     },
     planPreview: {
       title: 'Tu plan nuevo',
-      stats: (items: number, minutes: number) =>
-        `${plural('es', items, { one: '1 lección o historia', other: `${items} lecciones e historias` })}, unos ${minutes} minutos`,
+      stats: (items: number, minutes: number, stage: number) =>
+        `${plural('es', items, { one: '1 lección o historia', other: `${items} lecciones e historias` })}, unos ${minutes} minutos, termina en la Etapa ${stage}`,
       week: (n: number) => `Semana ${n}`,
       kind: { learn: 'Aprender', culture: 'Cultura', review: 'Repasar y coleccionar', break: 'Días libres' },
       cultureWeek: (story: string) => `Semana de cultura: ${story}`,

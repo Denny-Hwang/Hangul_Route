@@ -1636,8 +1636,8 @@ export const learner = {
     },
     planPreview: {
       title: 'Your new plan',
-      stats: (items: number, minutes: number) =>
-        `${plural('en', items, { one: '1 lesson or story', other: `${items} lessons and stories` })}, about ${minutes} minutes`,
+      stats: (items: number, minutes: number, stage: number) =>
+        `${plural('en', items, { one: '1 lesson or story', other: `${items} lessons and stories` })}, about ${minutes} minutes, ends in Stage ${stage}`,
       week: (n: number) => `Week ${n}`,
       kind: { learn: 'Learn', culture: 'Culture', review: 'Review and collect', break: 'Days off' },
       cultureWeek: (story: string) => `Culture week: ${story}`,

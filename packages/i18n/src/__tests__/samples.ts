@@ -718,7 +718,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'caregiver.transfer.a11y.move': [['Sunday Class A']],
   'learner.weeklyPlan.setup.stepOf': [[1, 4], [4, 4]],
   'learner.weeklyPlan.setup.likes.themeChosen': [[1, 'Nature']],
-  'learner.weeklyPlan.planPreview.stats': [[1, 15], [18, 270]],
+  'learner.weeklyPlan.planPreview.stats': [[1, 15, 1], [18, 270, 2]],
   'learner.weeklyPlan.planPreview.week': [[1], [12]],
   'learner.weeklyPlan.planPreview.cultureWeek': [['The New Year']],
   'learner.weeklyPlan.planPreview.showLater': [[1], [8]],

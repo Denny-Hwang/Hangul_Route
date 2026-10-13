@@ -87,6 +87,16 @@ describe('learner.weeklyPlan (F-PLAN-002 P2-7a)', () => {
     expect(en.homeMoved.line).toBe('Hoya moved your plan along.');
   });
 
+  it('the other plan comes first, named in every language (section 3.10 precedence), and the stats line ends with its stage', () => {
+    const [en, es, ko] = (['en', 'es', 'ko'] as const).map((l) => getMessages(l).learner.weeklyPlan);
+    expect(en?.setup.start.othersFirst).toBe('You have a plan from your class or family too. You can add your own. Theirs comes first.');
+    expect(es?.setup.start.othersFirst).toBe('También tienes un plan de tu clase o tu familia. Puedes sumar el tuyo. El de tu clase o tu familia va primero.');
+    expect(ko?.setup.start.othersFirst).toBe('반이나 가족이 만든 계획도 있어요. 내 계획도 더할 수 있어요. 반이나 가족 계획이 먼저예요.');
+    expect(en?.planPreview.stats(18, 270, 2)).toBe('18 lessons and stories, about 270 minutes, ends in Stage 2');
+    expect(es?.planPreview.stats(1, 15, 1)).toBe('1 lección o historia, unos 15 minutos, termina en la Etapa 1');
+    expect(ko?.planPreview.stats(18, 270, 2)).toBe('레슨과 이야기 18개, 약 270분, 2단계에서 끝나요');
+  });
+
   it('the check-in and the moved line carry no count of sessions done or not done', () => {
     const en = getMessages('en').learner.weeklyPlan;
     for (const text of [en.checkIn.lighter.line, en.checkIn.faster.line, en.overview.moved, en.overview.movedDone, en.homeMoved.line]) {

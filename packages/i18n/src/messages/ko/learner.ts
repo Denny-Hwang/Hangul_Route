@@ -1227,7 +1227,7 @@ export const learner = {
           'first-words': '첫 낱말을 읽어요',
           'first-sentences': '첫 문장을 읽어요',
         },
-        othersFirst: '반이나 가족이 만든 계획도 있어요. 내 계획도 더할 수 있어요. 그 계획이 먼저예요.',
+        othersFirst: '반이나 가족이 만든 계획도 있어요. 내 계획도 더할 수 있어요. 반이나 가족 계획이 먼저예요.',
       },
       time: { title: '시간은 얼마나 할까요?' },
       length: { title: '얼마 동안 할까요?' },
@@ -1247,7 +1247,7 @@ export const learner = {
     },
     planPreview: {
       title: '새 계획',
-      stats: (items: number, minutes: number) => `레슨과 이야기 ${items}개, 약 ${minutes}분`,
+      stats: (items: number, minutes: number, stage: number) => `레슨과 이야기 ${items}개, 약 ${minutes}분, ${stage}단계에서 끝나요`,
       week: (n: number) => `${n}주 차`,
       kind: { learn: '배우기', culture: '문화', review: '복습하고 모으기', break: '쉬는 날' },
       cultureWeek: (story: string) => `문화 주간: ${story}`,
