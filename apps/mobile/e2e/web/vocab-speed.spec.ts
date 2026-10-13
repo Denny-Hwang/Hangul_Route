@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Page } from '@playwright/test';
+import { availableLocales } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored } from './helpers';
 import { shot } from './shots';
@@ -516,8 +517,10 @@ test.describe('Speed Round, Challenge (fixture bundle)', () => {
       const [m = '0', sec = '0'] = digits.split(':');
       return Number(m) * 60 + Number(sec);
     };
-    expect(seconds(frozen) - seconds(await clock.innerText())).toBeGreaterThanOrEqual(0);
-    expect(seconds(frozen) - seconds(await clock.innerText())).toBeLessThanOrEqual(1);
+    // One reading, with room for a slow runner between the click and the read (the digits round up).
+    const resumed = seconds(await clock.innerText());
+    expect(seconds(frozen) - resumed).toBeGreaterThanOrEqual(0);
+    expect(seconds(frozen) - resumed).toBeLessThanOrEqual(2);
 
     // The app going to the background pauses the round; coming back shows the paused panel until Resume.
     await setVisible(page, false);
@@ -526,6 +529,18 @@ test.describe('Speed Round, Challenge (fixture bundle)', () => {
     await expect(page.getByTestId('vocab-speed-paused')).toBeVisible();
     await page.getByTestId('vocab-speed-resume').click();
     await expect(page.getByTestId('vocab-question')).toBeVisible();
+
+    // "Stop for now?" pauses the round first: the question is hidden under the sheet and the time stands still;
+    // Keep playing lands on Resume.
+    await page.getByTestId('vocab-speed-round').getByTestId('vocab-back').click();
+    await expect(page.getByTestId('vocab-speed-keep')).toBeVisible();
+    await expect(page.getByTestId('vocab-question')).toHaveCount(0);
+    const atStop = await clock.innerText();
+    await page.waitForTimeout(1200);
+    expect(await clock.innerText()).toBe(atStop);
+    await page.getByTestId('vocab-speed-keep').click();
+    await expect(page.getByTestId('vocab-speed-paused')).toBeVisible();
+    await expect(page.getByTestId('vocab-question')).toHaveCount(0);
 
     // Stop from the round: no results, the answer given stays written.
     await page.getByTestId('vocab-speed-round').getByTestId('vocab-back').click();
@@ -598,6 +613,37 @@ test.describe('Speed Round, Challenge (fixture bundle)', () => {
     await expect(page.getByTestId('vocab-results-new-best')).toHaveCount(0);
     await expectNoShame(page);
   });
+
+  // The Challenge sheet (the wrapping scale chips) and the two-line round header at the narrowest phone, in each
+  // UI locale the build ships (es and ko with EXPO_PUBLIC_SHOW_ALL_LOCALES=1 and E2E_ALL_LOCALES=1). Test ids only,
+  // so the walk does not depend on the locale's words.
+  for (const locale of availableLocales(process.env.E2E_ALL_LOCALES === '1')) {
+    test(`320 x 568, ${locale}: the Challenge sheet and the round header fit; Pause stays on screen`, async ({ page }) => {
+      await page.setViewportSize({ width: 320, height: 568 });
+      await newLearner(page);
+      if (locale !== 'en') {
+        // The locale is read at start-up: store it, then reload so the whole app comes up in it.
+        await seedStored(page, 'device:settings', { uiLocale: locale });
+        await page.reload();
+        const guide = page.getByTestId('install-guide');
+        await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+        if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+      }
+      await expect(page.locator('html')).toHaveAttribute('lang', new RegExp(`^${locale}`));
+      await collect(page, FOOD_IDS);
+      await openSpeed(page, 'food');
+      await page.getByTestId('vocab-speed-try-challenge').click();
+      await expect(page.getByTestId('vocab-speed-scale')).toBeVisible();
+      await expectFits(page);
+      await shot(page, `vocab-speed-sheet-challenge-320-${locale}`);
+
+      await page.getByTestId('vocab-speed-start').click();
+      await expect(page.getByTestId('vocab-question')).toBeVisible();
+      await expect(page.getByTestId('vocab-speed-pause')).toBeInViewport();
+      await expectFits(page);
+      await shot(page, `vocab-speed-challenge-question-320-${locale}`);
+    });
+  }
 
   test('the Profile switch turns Challenge on and off and sets the clock length; the sheet follows', async ({ page }) => {
     const profileId = await newLearner(page);

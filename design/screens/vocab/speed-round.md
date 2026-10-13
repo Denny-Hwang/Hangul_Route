@@ -137,6 +137,8 @@ A1 Not opted in (Relaxed)          A2 Opted in, Challenge chosen       G  Questi
 - **Pause** button or the app going to the background (`subscribeAppActive`, already wired in S-5) dispatches `pause`; a pause during a reveal waits for the reveal to end (the reducer queues it).
 - The question is **replaced** (not dimmed) by a centred block: "Paused" (`Heading level="title"`), **Resume** (`Button tone="primary" size="lg"`, 80 dp) and **Stop** (`Button tone="ghost"`), so a pause cannot be used to study the answer. Header digits and meter stay; Pause is hidden while paused.
 - **Resume** sends `resume` with the paused wall time (`pausedFor`); the remaining time is what it was. A paused round never runs out. **Stop** opens the same "Stop for now?" sheet.
+- **Back** and the system back in Challenge pause the round **before** "Stop for now?" opens, so the paused block (not the question) sits under the sheet and **Keep playing** lands on Resume: the stop sheet cannot be used to study the answer either. A Back during a reveal queues the pause like the Pause button.
+- **Deviation from §3.8 "sticky header"** (recorded in the S-6 review): the two-line header scrolls with the question inside `Screen scrollable`, because `Screen` has a sticky footer slot but no sticky header slot, and adding one is a design-system change outside S-6. At 320 x 568 the header and Pause are on screen when a question appears (the e2e checks Pause is in the viewport in each shipped locale); at 200 % text a learner scrolls up to reach Pause, and the system back still pauses the round at once. A sticky header slot in `Screen` is the follow-up that removes this deviation.
 
 ### Time up (frame G'')
 

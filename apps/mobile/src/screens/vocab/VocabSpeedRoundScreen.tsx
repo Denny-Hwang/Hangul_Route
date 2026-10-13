@@ -391,6 +391,13 @@ function RoundPlay({
     [config],
   );
 
+  // "Stop for now?" pauses a clocked round first, so the question is hidden under the sheet (a pause cannot be
+  // used to study the answer, §3.6) and Keep playing lands on Resume. Relaxed has no clock: the reducer ignores it.
+  const askStop = useCallback((): void => {
+    dispatch({ type: 'pause', reason: 'user' });
+    setStopping(true);
+  }, [dispatch]);
+
   // Active time only: a question on screen and nothing over it (the reveal, the stop sheet).
   useSpeedClock(state.phase === 'question' && !stopping, (dtMs) => dispatch({ type: 'tick', dtMs }));
 
@@ -448,9 +455,9 @@ function RoundPlay({
       navigation.addListener('beforeRemove', (e) => {
         if (leaving.current || stateRef.current.phase === 'done') return;
         e.preventDefault();
-        setStopping(true);
+        askStop();
       }),
-    [navigation],
+    [navigation, askStop],
   );
   // Unmounted mid-round (the app closed the screen): the run ends; the answers given are already written.
   useEffect(
@@ -494,7 +501,7 @@ function RoundPlay({
         <View style={{ gap: spacing.sm }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
             {/* The time-up beat (frame G''): the round is over and saved, so there is nothing to stop. */}
-            {timeUp ? null : <BackButton onPress={() => setStopping(true)} />}
+            {timeUp ? null : <BackButton onPress={askStop} />}
             <View style={{ flex: 1 }} />
             <ClockDigits view={clock} />
             {paused || timeUp ? null : (
@@ -512,7 +519,7 @@ function RoundPlay({
         </View>
       ) : (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-          <BackButton onPress={() => setStopping(true)} />
+          <BackButton onPress={askStop} />
           <View style={{ flexShrink: 1, gap: spacing.xs }}>
             {meter}
             <View {...HIDDEN} testID="vocab-speed-dots">
@@ -529,7 +536,7 @@ function RoundPlay({
           </Heading>
         </View>
       ) : paused ? (
-        <PausedPanel copy={copy.challenge} onResume={resume} onStop={() => setStopping(true)} />
+        <PausedPanel copy={copy.challenge} onResume={resume} onStop={askStop} />
       ) : question ? (
         <VocabQuestionView
           question={question}
