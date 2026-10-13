@@ -634,7 +634,7 @@
   "card": {
     "titleEn": "Consonants",
     "keywordId": "jaeum",
-    "factId": "f1"
+    "factId": "f8"
   },
   "facts": [
     {
@@ -837,6 +837,36 @@
           "url": "https://encykorea.aks.ac.kr/Article/E0061508",
           "accessed": "2026-10-09",
           "quoteOrLocator": "\"훈민정음 창제 당시의 28글자 가운데 지금 쓰이지 않는 'ㆆ, ㅿ, · (ᄋᆞ)'의 이름은 지어지지 않았고, 'ㅇ'과 'ㆁ'의 구별이 없어짐에 따라\""
+        }
+      ]
+    },
+    {
+      "id": "f8",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The five basic consonant letters were made by copying the shapes of the speech organs used to pronounce each sound.",
+      "claimKo": "기본 자음 다섯 글자는 각 소리를 낼 때 쓰는 발음 기관의 모양을 본떠 만들었다.",
+      "sources": [
+        {
+          "title": "훈민정음 28자모 — 한국민족문화대백과사전",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0074518",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"초성의 기본 문자인 'ㄱ, ㄴ, ㅁ, ㅅ, ㅇ'의 다섯 문자는 각 문자가 발음될 때의 발음 기관의 모양을 본떠 만들고\""
+        },
+        {
+          "title": "알고 싶은 한글 — 강창석, 「제자 원리의 주요 특성과 배경」 (hangeul/short/004d)",
+          "publisher": "국립국어원 (National Institute of Korean Language)",
+          "url": "https://www.korean.go.kr/hangeul/short/004d.html",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"초성의 기본자는 발음 기관의 모양을 본따 만들고, 중성의 기본자는 천, 지, 인을 상형(象形)하였다.\""
+        },
+        {
+          "title": "한글 — 한국민족문화대백과사전",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0061508",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"이리하여 'ㄱ ㄴ ㅁ ㅅ ㅇ'의 다섯 글자를 만들어내고\""
         }
       ]
     }

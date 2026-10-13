@@ -570,7 +570,7 @@
   "card": {
     "titleEn": "National Treasure",
     "keywordId": "gukbo",
-    "factId": "f4"
+    "factId": "f11"
   },
   "facts": [
     {
@@ -842,6 +842,29 @@
           "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1004964480",
           "accessed": "2026-10-10",
           "quoteOrLocator": "\"한글날은 반포일, 북한의 한글날은 글을 만든 창제일입니다. 이름도 북한에선 '조선글날'입니다.\"; 前 북한 아나운서: \"1월 15일 한글 창제 일을 조선글날이라고 해서 달력에만 표기해놓고 쉬지는 않거든요.\""
+        }
+      ]
+    },
+    {
+      "id": "f11",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The Hunminjeongeum Haerye book is a National Treasure of Korea and is listed on UNESCO's Memory of the World Register.",
+      "claimKo": "훈민정음 해례본은 국보이며, 유네스코 세계기록유산에 등재되어 있다.",
+      "sources": [
+        {
+          "title": "국보 훈민정음 (訓民正音) — 국가유산 상세 정보 및 국가유산 설명",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111100700000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"국보 훈민정음\"; 지정(등록)일 1962.12.20; 분류 기록유산"
+        },
+        {
+          "title": "Hunminjeongum Manuscript",
+          "publisher": "UNESCO — Memory of the World",
+          "url": "https://www.unesco.org/en/memory-world/hunminjeongum-manuscript",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"Registration Year: 1997\""
         }
       ]
     }

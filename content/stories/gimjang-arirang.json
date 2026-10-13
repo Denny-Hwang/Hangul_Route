@@ -613,7 +613,7 @@
   "card": {
     "titleEn": "Making Winter Kimchi",
     "keywordId": "gimjang",
-    "factId": "f8"
+    "factId": "f11"
   },
   "facts": [
     {
@@ -906,6 +906,36 @@
           "url": "https://ich.unesco.org/en/decisions/9.COM/10.14",
           "accessed": "2026-10-10",
           "quoteOrLocator": "Decision on the nomination of Arirang folk song in the Democratic People's Republic of Korea (No. 00914) for the Representative List"
+        }
+      ]
+    },
+    {
+      "id": "f11",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Gimjang is the custom of making a large amount of kimchi at once in late autumn to early winter, so that families have kimchi to eat all through the winter.",
+      "claimKo": "김장은 늦가을에서 초겨울에 겨우내 먹을 김치를 한꺼번에 많이 담가 두는 풍습이다.",
+      "sources": [
+        {
+          "title": "김장",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0010314",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "정의: ‘겨우내 먹을 김치를 한목에 담가두는 풍습.’ / ‘겨울철에는 신선한 채소를 구하기 어려웠으므로, 초겨울에 김치를 많이 담가서 저장하는 풍습이 발달하게 되었다.’"
+        },
+        {
+          "title": "Kimjang, making and sharing kimchi in the Republic of Korea",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/00881",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘Late autumn is Kimjang season, when communities collectively make and share large quantities of kimchi’ … ‘to sustain it through the long, harsh winter.’"
+        },
+        {
+          "title": "국가무형유산 김치 담그기 (Kimchi Making)",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001330000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01330000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘Kimchi making takes place on a large scale in early winter. This seasonal kimchi-making practice, or kimjang’"
         }
       ]
     }

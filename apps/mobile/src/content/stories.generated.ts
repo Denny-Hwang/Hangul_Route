@@ -1220,7 +1220,7 @@ export const storiesAll: Story[] = [
     "card": {
       "titleEn": "Rain Gauge",
       "keywordId": "cheugugi",
-      "factId": "f2"
+      "factId": "f7"
     },
     "facts": [
       {
@@ -1379,6 +1379,29 @@ export const storiesAll: Story[] = [
             "url": "https://science.kma.go.kr/museum/",
             "accessed": "2026-10-10",
             "quoteOrLocator": "English name as printed in the page footer: \"Copyright ⓒ National Meteorological Museum of Korea All rights reserved\""
+          }
+        ]
+      },
+      {
+        "id": "f7",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "In 1442 a cast-metal rain gauge, named cheugugi ('rain-measuring instrument'), was set on a stand; after each rain an official measured the water in it and wrote it down.",
+        "claimKo": "1442년(세종 24) 쇠로 주조한 비 재는 기구에 측우기라는 이름을 붙여 대 위에 두고, 비가 온 뒤마다 관원이 고인 물의 깊이를 재어 기록하였다.",
+        "sources": [
+          {
+            "title": "세종실록 96권, 세종 24년(1442) 5월 8일 정묘 1번째 기사 「호조에서 우량을 측정하는 일에 관해 아뢰다」",
+            "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+            "url": "https://sillok.history.go.kr/id/kda_12405008_001",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "국역: \"서울에서는 쇠를 주조(鑄造)하여 기구(器具)를 만들어 명칭을 측우기(測雨器)라 하니 … 서운관(書雲觀)에 대(臺)를 만들어 측우기를 대(臺) 위에 두고 매양 비가 온 후에는 본관(本觀)의 관원이 친히 비가 내린 상황을 보고는, 주척(周尺)으로써 물의 깊고 얕은 것을 측량하여 … 상세히 써서 … 기록해 둘 것이며\""
+          },
+          {
+            "title": "국보 공주 충청감영 측우기 (Rain Gauge of Chungcheong Provincial Office, Gongju)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111103290000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"1442년(세종 24)에 발명된 측우기는 … 땅에 스며든 물의 깊이를 측정하던 이전의 비합리적인 강우 측정방식에서 벗어나 본격적으로 강수량을 정량적으로 측정 가능케 한 발명품\""
           }
         ]
       }
@@ -4723,7 +4746,7 @@ export const storiesAll: Story[] = [
     "card": {
       "titleEn": "Making Winter Kimchi",
       "keywordId": "gimjang",
-      "factId": "f8"
+      "factId": "f11"
     },
     "facts": [
       {
@@ -5016,6 +5039,36 @@ export const storiesAll: Story[] = [
             "url": "https://ich.unesco.org/en/decisions/9.COM/10.14",
             "accessed": "2026-10-10",
             "quoteOrLocator": "Decision on the nomination of Arirang folk song in the Democratic People's Republic of Korea (No. 00914) for the Representative List"
+          }
+        ]
+      },
+      {
+        "id": "f11",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Gimjang is the custom of making a large amount of kimchi at once in late autumn to early winter, so that families have kimchi to eat all through the winter.",
+        "claimKo": "김장은 늦가을에서 초겨울에 겨우내 먹을 김치를 한꺼번에 많이 담가 두는 풍습이다.",
+        "sources": [
+          {
+            "title": "김장",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0010314",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "정의: ‘겨우내 먹을 김치를 한목에 담가두는 풍습.’ / ‘겨울철에는 신선한 채소를 구하기 어려웠으므로, 초겨울에 김치를 많이 담가서 저장하는 풍습이 발달하게 되었다.’"
+          },
+          {
+            "title": "Kimjang, making and sharing kimchi in the Republic of Korea",
+            "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+            "url": "https://ich.unesco.org/en/RL/00881",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘Late autumn is Kimjang season, when communities collectively make and share large quantities of kimchi’ … ‘to sustain it through the long, harsh winter.’"
+          },
+          {
+            "title": "국가무형유산 김치 담그기 (Kimchi Making)",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001330000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01330000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘Kimchi making takes place on a large scale in early winter. This seasonal kimchi-making practice, or kimjang’"
           }
         ]
       }
@@ -5602,7 +5655,7 @@ export const storiesAll: Story[] = [
     "card": {
       "titleEn": "National Treasure",
       "keywordId": "gukbo",
-      "factId": "f4"
+      "factId": "f11"
     },
     "facts": [
       {
@@ -5874,6 +5927,29 @@ export const storiesAll: Story[] = [
             "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1004964480",
             "accessed": "2026-10-10",
             "quoteOrLocator": "\"한글날은 반포일, 북한의 한글날은 글을 만든 창제일입니다. 이름도 북한에선 '조선글날'입니다.\"; 前 북한 아나운서: \"1월 15일 한글 창제 일을 조선글날이라고 해서 달력에만 표기해놓고 쉬지는 않거든요.\""
+          }
+        ]
+      },
+      {
+        "id": "f11",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The Hunminjeongeum Haerye book is a National Treasure of Korea and is listed on UNESCO's Memory of the World Register.",
+        "claimKo": "훈민정음 해례본은 국보이며, 유네스코 세계기록유산에 등재되어 있다.",
+        "sources": [
+          {
+            "title": "국보 훈민정음 (訓民正音) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111100700000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"국보 훈민정음\"; 지정(등록)일 1962.12.20; 분류 기록유산"
+          },
+          {
+            "title": "Hunminjeongum Manuscript",
+            "publisher": "UNESCO — Memory of the World",
+            "url": "https://www.unesco.org/en/memory-world/hunminjeongum-manuscript",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"Registration Year: 1997\""
           }
         ]
       }
@@ -15749,7 +15825,7 @@ export const storiesAll: Story[] = [
     "card": {
       "titleEn": "Consonants",
       "keywordId": "jaeum",
-      "factId": "f1"
+      "factId": "f8"
     },
     "facts": [
       {
@@ -15952,6 +16028,36 @@ export const storiesAll: Story[] = [
             "url": "https://encykorea.aks.ac.kr/Article/E0061508",
             "accessed": "2026-10-09",
             "quoteOrLocator": "\"훈민정음 창제 당시의 28글자 가운데 지금 쓰이지 않는 'ㆆ, ㅿ, · (ᄋᆞ)'의 이름은 지어지지 않았고, 'ㅇ'과 'ㆁ'의 구별이 없어짐에 따라\""
+          }
+        ]
+      },
+      {
+        "id": "f8",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The five basic consonant letters were made by copying the shapes of the speech organs used to pronounce each sound.",
+        "claimKo": "기본 자음 다섯 글자는 각 소리를 낼 때 쓰는 발음 기관의 모양을 본떠 만들었다.",
+        "sources": [
+          {
+            "title": "훈민정음 28자모 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0074518",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"초성의 기본 문자인 'ㄱ, ㄴ, ㅁ, ㅅ, ㅇ'의 다섯 문자는 각 문자가 발음될 때의 발음 기관의 모양을 본떠 만들고\""
+          },
+          {
+            "title": "알고 싶은 한글 — 강창석, 「제자 원리의 주요 특성과 배경」 (hangeul/short/004d)",
+            "publisher": "국립국어원 (National Institute of Korean Language)",
+            "url": "https://www.korean.go.kr/hangeul/short/004d.html",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"초성의 기본자는 발음 기관의 모양을 본따 만들고, 중성의 기본자는 천, 지, 인을 상형(象形)하였다.\""
+          },
+          {
+            "title": "한글 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0061508",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"이리하여 'ㄱ ㄴ ㅁ ㅅ ㅇ'의 다섯 글자를 만들어내고\""
           }
         ]
       }
@@ -17713,7 +17819,7 @@ export const storiesAll: Story[] = [
         "loss",
         "trickery"
       ],
-      "advisoryNoteEn": "A tricky tiger and a moment of danger, told gently. In the traditional tale the mother does not come home; this retelling leaves it out.",
+      "advisoryNoteEn": "A tricky tiger and a moment of danger, told gently. Older versions of this tale are darker; this retelling is softened.",
       "reviewedBy": "MAR",
       "reviewedAt": "2026-10-13"
     },

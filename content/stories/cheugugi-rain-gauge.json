@@ -509,7 +509,7 @@
   "card": {
     "titleEn": "Rain Gauge",
     "keywordId": "cheugugi",
-    "factId": "f2"
+    "factId": "f7"
   },
   "facts": [
     {
@@ -668,6 +668,29 @@
           "url": "https://science.kma.go.kr/museum/",
           "accessed": "2026-10-10",
           "quoteOrLocator": "English name as printed in the page footer: \"Copyright ⓒ National Meteorological Museum of Korea All rights reserved\""
+        }
+      ]
+    },
+    {
+      "id": "f7",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "In 1442 a cast-metal rain gauge, named cheugugi ('rain-measuring instrument'), was set on a stand; after each rain an official measured the water in it and wrote it down.",
+      "claimKo": "1442년(세종 24) 쇠로 주조한 비 재는 기구에 측우기라는 이름을 붙여 대 위에 두고, 비가 온 뒤마다 관원이 고인 물의 깊이를 재어 기록하였다.",
+      "sources": [
+        {
+          "title": "세종실록 96권, 세종 24년(1442) 5월 8일 정묘 1번째 기사 「호조에서 우량을 측정하는 일에 관해 아뢰다」",
+          "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+          "url": "https://sillok.history.go.kr/id/kda_12405008_001",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "국역: \"서울에서는 쇠를 주조(鑄造)하여 기구(器具)를 만들어 명칭을 측우기(測雨器)라 하니 … 서운관(書雲觀)에 대(臺)를 만들어 측우기를 대(臺) 위에 두고 매양 비가 온 후에는 본관(本觀)의 관원이 친히 비가 내린 상황을 보고는, 주척(周尺)으로써 물의 깊고 얕은 것을 측량하여 … 상세히 써서 … 기록해 둘 것이며\""
+        },
+        {
+          "title": "국보 공주 충청감영 측우기 (Rain Gauge of Chungcheong Provincial Office, Gongju)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111103290000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"1442년(세종 24)에 발명된 측우기는 … 땅에 스며든 물의 깊이를 측정하던 이전의 비합리적인 강우 측정방식에서 벗어나 본격적으로 강수량을 정량적으로 측정 가능케 한 발명품\""
         }
       ]
     }
