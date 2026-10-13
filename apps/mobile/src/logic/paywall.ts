@@ -1,5 +1,6 @@
 import type { Tier, TierSource } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
+import type { AskFrom } from './access-copy';
 import { planFreeLines, type FreePlanContext, type FreeSlot } from './plan-free-lines';
 import type { DeviceAudience } from './profiles/learner-type';
 import type { OpenLinkOutcome } from './story/source-link';
@@ -45,6 +46,8 @@ export interface PlanView {
    */
   billing: { caption: string; cta: string; hint: string; gateDone: string } | null;
   back: string;
+  /** Where the back button goes (`planBack`). */
+  backTo: PlanBackTarget;
 }
 
 export interface PlanViewInput {
@@ -57,6 +60,25 @@ export interface PlanViewInput {
   platform: string;
   /** F-ENT-003 section 3.9.1's data for the slots; omitted or null keeps F-BILL-002's lines. */
   freePlan?: FreePlanContext | null;
+  /** The surface that opened the screen (the route's `from`); it picks the way back (`planBack`). */
+  from?: PlanFrom;
+}
+
+/** Every surface that opens the Plan screen (the `Paywall` route's `from`). */
+export type PlanFrom = 'journey' | 'settings' | AskFrom;
+
+/** The tab the way back opens. */
+export type PlanBackTarget = 'Journey' | 'Library' | 'Home';
+
+/**
+ * The way back names where it goes (F-ENT-003 E3-6, seen in F-STORY-004 PR 4.8b): the Library for
+ * a closed Library tile, Home for the Home and Results asks, else the Journey (the Journey, the
+ * lesson page, Settings and no `from`).
+ */
+export function planBack(from: PlanFrom | undefined, m: Messages['caregiver']['plan']): { label: string; target: PlanBackTarget } {
+  if (from === 'library') return { label: m.backToLibrary.cta, target: 'Library' };
+  if (from === 'home' || from === 'results') return { label: m.backHome.cta, target: 'Home' };
+  return { label: m.backToJourney.cta, target: 'Journey' };
 }
 
 const named = (value: string | null | undefined): string | null => (value === null || value === undefined || value.trim() === '' ? null : value);
@@ -79,6 +101,7 @@ export function planView(input: PlanViewInput, messages: Pick<Messages, 'caregiv
   } else {
     title = family ? m.free.title.family(name) : m.free.title.self;
   }
+  const back = planBack(input.from, m);
   const slots = planFreeLines({ state, audience: input.audience, name, platform: input.platform, context: input.freePlan ?? null }, m);
   return {
     state,
@@ -98,7 +121,8 @@ export function planView(input: PlanViewInput, messages: Pick<Messages, 'caregiv
             gateDone: m.gateDone,
           }
         : null,
-    back: m.backToJourney.cta,
+    back: back.label,
+    backTo: back.target,
   };
 }
 

@@ -1,5 +1,7 @@
 import type { PlacementSource, StageKey, StoryLevel, ThemeKey } from '@hangul-route/content-schema';
 import type { NavigatorScreenParams } from '@react-navigation/native';
+import type { AskFrom } from '../logic/access-copy';
+import type { PreviewFrom } from '../logic/episode-access';
 import type { PinResetMethod } from '../logic/profiles/pin-flow';
 import type { GrownUpVia } from '../logic/shell/handoff-rules';
 import type { CellStoriesSource } from '../logic/story/cell-stories';
@@ -38,7 +40,12 @@ export type GrownUpDestination =
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
   Main: NavigatorScreenParams<MainTabParamList>;
-  EpisodeDetail: { episodeId: string };
+  /**
+   * `from`: the surface that opened the lesson page, for `access.preview_opened` (F-ENT-003 section
+   * 3.12); absent reads `journey` (the grid, its two panes and the cell pages). `player` is the quest
+   * player's guard, which sends a closed quest here (section 3.6).
+   */
+  EpisodeDetail: { episodeId: string; from?: PreviewFrom };
   /**
    * The heritage stories of one grid cell (F-STORY-005 §3.6): its lesson first, then its stories.
    * `source` is the door that opened it, for `journey.cell_stories_opened`.
@@ -85,8 +92,11 @@ export type RootStackParamList = {
     url?: string;
     /** `next: 'GrownUpArea'`: the entry that asked for the PIN (`shell.grown_up_handoff` `via`); the lock's PIN path passes `lock`. */
     grownUpVia?: GrownUpVia;
-    /** `next: 'Paywall'`: the surface that opened it, passed on to the paywall (default `'journey'`). */
-    from?: 'journey' | 'library';
+    /**
+     * `next: 'Paywall'`: the surface that opened it, passed on to the paywall (default `'journey'`).
+     * F-ENT-003's ask button adds `episode`, `home` and `results` (section 3.7, `AskFrom`).
+     */
+    from?: 'journey' | AskFrom;
     /** `next: 'EditProfile'`: the profile to edit (F-LEARN-001 §3.11); `next: 'MyRoute'`: the profile whose page opens read-only; `next: 'PlacementReport'`: whose report opens (F-PLC-001 section 3.9); `next: 'LearnerReport'`: whose progress report opens (F-REPORT-001 section 3.9). */
     profileId?: string;
     /** `next: 'NoteReport'`: the note the report sheet opens for ("Tell a grown-up", F-FEEDBACK-001 section 6.10 item 4). */
@@ -101,7 +111,7 @@ export type RootStackParamList = {
   /** sync/join-space — enter a class or family code (F-SPACE-001 §3.5). Not PIN-gated. */
   JoinSpace: undefined;
   /** billing/plan-status — the learner Plan screen: status only, no PIN (F-BILL-002 §4.7; F-ENT-003's "Ask a grown-up" still arrives through the gate). */
-  Paywall: { from: 'journey' | 'settings' | 'library' } | undefined;
+  Paywall: { from: 'journey' | 'settings' | AskFrom } | undefined;
   ParentDashboard: undefined;
   Profile: undefined;
   /** profile/edit — name, level, cub, who is learning (F-LEARN-001 §3.11). Behind the PIN when the gate is required. */

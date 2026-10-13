@@ -170,6 +170,9 @@ export const caregiver = {
     /** Web only: back from a correct PIN, a browser may block a tab opened outside a tap, so one more tap opens it (as Sources' gateDone). */
     gateDone: 'PIN accepted. Tap Open billing again.',
     backToJourney: { cta: 'Back to journey' },
+    /** The way back when the Plan screen was opened from the Library or from the Home and Results asks (F-ENT-003 E3-6): it names where it goes. */
+    backToLibrary: { cta: 'Back to library' },
+    backHome: { cta: 'Back home' },
     /**
      * F-ENT-003 section 3.9.1 (E3-8; wireframe billing/plan-status-free-lessons): the lines on what
      * is free, shown in the Plan screen's slots only while F-ENT-003's effective switch is on. `line`

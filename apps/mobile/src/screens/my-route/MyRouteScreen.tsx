@@ -377,7 +377,7 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
               look={look}
               reducedMotion={reducedMotion}
               onToggle={() => toggle(row.key, row.stage)}
-              onOpenEpisode={(episodeId) => navigation.navigate('EpisodeDetail', { episodeId })}
+              onOpenEpisode={(episodeId) => navigation.navigate('EpisodeDetail', { episodeId, from: 'route' })}
             />
           ) : (
             <LaterRowItem key={row.key} row={row} open={current === row.key} onToggle={() => toggle(row.key, row.stage)} />
