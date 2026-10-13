@@ -901,6 +901,15 @@ function emptyStageOf(summary: ReportSummary): { stage: StageKey; n: number } | 
   return parsed.success ? { stage: parsed.data, n: StageKeySchema.options.indexOf(parsed.data) + 1 } : null;
 }
 
+/**
+ * The stage a strand tip opens in All lessons (RP-13): the journey's here stage when this build can read it, else
+ * `stage1`. A stage key only: nothing of the learner reaches the link.
+ */
+export function reportBrowseStage(summary: ReportSummary | null): StageKey {
+  const parsed = StageKeySchema.safeParse(summary?.journey?.here);
+  return parsed.success ? parsed.data : 'stage1';
+}
+
 // ---------------------------------------------------------------------------------------------
 // The page (RP-7a2)
 
@@ -966,4 +975,23 @@ export function reportScreenOf(input: ReportScreenInput): ReportScreen {
   const message = problem.message ?? m.report.state.error;
   if (problem.kind === 'error' && problem.retry !== null && cached) return { kind: 'report', data: cached, busy: false, error: { message, retry: problem.retry } };
   return { kind: 'state', title: message, retry: problem.retry, back };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Shared with the class report (RP-8)
+
+/** A learner-local day key as "Oct 12" (with the year when it is not `today`'s year). */
+export function reportDayText(day: string, today: string, locale: UiLocale = DEFAULT_LOCALE): string {
+  return dayText(day, { locale, today });
+}
+
+/** The month of a day key as "October 2026". */
+export function reportMonthText(day: string, locale: UiLocale = DEFAULT_LOCALE): string {
+  return monthText(day, locale);
+}
+
+/** A letter with its number of learners, "ㅂ (b): 5" (`report.class.count`), the letter as its own part (`lang="ko"`). */
+export function countedLetter(letter: string, count: number, locale: UiLocale = DEFAULT_LOCALE): ReportSentence {
+  const m = getMessages(locale);
+  return sentence(m, (put) => m.report.class.count(put(letterPart(letter, m)), count));
 }

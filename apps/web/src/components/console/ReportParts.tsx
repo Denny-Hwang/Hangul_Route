@@ -1,12 +1,20 @@
 'use client';
 
-import { REPORT_PERIODS, type ReportPeriod } from '@hangul-route/content-schema';
+import { BrowseTargetSchema, REPORT_PERIODS, type BrowseTarget, type ReportPeriod, type StageKey } from '@hangul-route/content-schema';
 import { IconSvg } from '@hangul-route/design-system/icon-glyphs/dom';
 import { borderWidth, colors, layout, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
-import { forwardRef, useState, type KeyboardEvent, type ReactNode } from 'react';
-import { BrowseLink, useBrowseLinksShown } from '@/components/console/BrowseLink';
+import { createContext, forwardRef, useContext, useState, type KeyboardEvent, type ReactNode } from 'react';
+import {
+  BrowseLink,
+  BrowseNoticeLine,
+  useBrowseLinksShown,
+  useBrowseOpener,
+  type BrowseOpener,
+  type BrowseOpenerEnv,
+} from '@/components/console/BrowseLink';
 import { avatarChipModel } from '@/lib/console/avatar-chip';
+import { browseUrl } from '@/lib/console/browse-link';
 import { GROWTH_BOX, growthAxisShown, growthChart } from '@/lib/console/report-growth';
 import type {
   LearnerReportView,
@@ -14,6 +22,7 @@ import type {
   ReportDetailBlock,
   ReportGlance,
   ReportGrowthView,
+  ReportLetter,
   ReportLineView,
   ReportLink,
   ReportMoreDetail,
@@ -117,6 +126,12 @@ export const REPORT_CSS = `
 .hr-report-tip{font-size:${rem(typography.size.bodySm)};color:${colors.text.secondary}}
 .hr-report-line-actions{display:flex;flex-wrap:wrap;gap:${rem(spacing.xs)}}
 .hr-report-letter{white-space:nowrap}
+.hr-report-letter-link,.hr-report-quest-link,.hr-report-tip-link{color:${colors.brand.secondaryDark};text-decoration:underline;text-decoration-thickness:${px(borderWidth.thin)};text-underline-offset:${rem(spacing.xxs)}}
+.hr-report-tip-link{display:inline-flex;align-items:center;min-height:${px(touchTarget.min)}}
+.hr-report-tile-link{color:${colors.text.primary};text-decoration:none}
+.hr-report-tiles .hr-report-tile-link{display:inline-flex}
+.hr-report-tiles .hr-report-tile-cell-notice{flex-basis:100%}
+.hr-report-letter-link:focus-visible,.hr-report-quest-link:focus-visible,.hr-report-tip-link:focus-visible,.hr-report-tile-link:focus-visible{${focusRing}}
 .hr-report [lang="ko"]{font-weight:${typography.weight.bold}}
 .hr-report-figures{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,${FIGURE_MIN}),1fr));gap:${rem(spacing.sm)}}
 .hr-report-figure{display:flex;flex-direction:column;gap:${rem(spacing.xxs)};padding:${rem(spacing.sm)} ${rem(spacing.md)};border-radius:${px(radii.md)};background:${colors.surface.paper};border:${px(borderWidth.thin)} solid ${colors.border.subtle}}
@@ -175,6 +190,9 @@ export const REPORT_CSS = `
 .hr-report-figure,.hr-report-tile{border-color:${colors.border.strong}}
 .hr-report-insight-text>p:first-child::before,.hr-report-chip{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .hr-report .hr-report-print-footer{padding:${rem(spacing.md)} ${rem(spacing.xxl)};font-size:${rem(typography.size.caption)};color:${colors.text.secondary};border-top:${px(borderWidth.thin)} solid ${colors.border.strong};background:${colors.surface.paper}}
+.hr-report-letter-link,.hr-report-quest-link,.hr-report-tip-link,.hr-report-tile-link{color:inherit;text-decoration:none}
+.hr-report-tip-link{display:inline;min-height:0}
+.hr-report [data-testid$="-link-notice"]{display:none!important}
 }
 @media (min-width:${WIDE}){
 .hr-report-top{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between;column-gap:${rem(spacing.sm)}}
@@ -426,23 +444,89 @@ export function loadingTabs(period: ReportPeriod, labels: Record<ReportPeriod, s
 // ---------------------------------------------------------------------------------------------
 // The report body
 
-/** A sentence with its taught parts: letters and words in `lang="ko"`, a quest by its catalogue title. */
+/**
+ * Browse links on the report (F-REPORT-001 RP-13, section 3.6; F-BROWSE-001 section 4.11 item 2): present while the
+ * page's All lessons entries render (`browseLinksShown()`), else null and every letter, quest title and tip stays text.
+ * `stage` is the strand tip's target (`reportBrowseStage`); `env` is the browser, injectable for tests.
+ */
+export interface ReportBrowse {
+  stage: StageKey;
+  env?: BrowseOpenerEnv;
+}
+
+const ReportBrowseContext = createContext<ReportBrowse | null>(null);
+
+/** The target when it is a content id All lessons can open (BD7), else null: the part then stays text. */
+function browseTargetOf(target: BrowseTarget): BrowseTarget | null {
+  return BrowseTargetSchema.safeParse(target).success ? target : null;
+}
+
+/**
+ * One link into All lessons, source `report`: a real `/browse#…` link (content ids only) that a plain click opens
+ * through `openBrowse`, then its status line. `inline` keeps the empty line from breaking a sentence.
+ */
+function ReportBrowseLink({ target, className, testId, inline = false, children }: { target: BrowseTarget; className: string; testId: string; inline?: boolean; children: ReactNode }): JSX.Element {
+  const browse = useContext(ReportBrowseContext);
+  const opener = useBrowseOpener(target, 'report', browse?.env);
+  return (
+    <>
+      <ReportBrowseAnchor target={target} opener={opener} className={className} testId={testId}>
+        {children}
+      </ReportBrowseAnchor>
+      <BrowseNoticeLine opener={opener} testId={testId} inline={inline} />
+    </>
+  );
+}
+
+/** The anchor alone: content ids only in its href, a plain click goes through the opener. */
+function ReportBrowseAnchor({ target, opener, className, testId, ariaLabel, children }: { target: BrowseTarget; opener: BrowseOpener; className: string; testId: string; ariaLabel?: string; children: ReactNode }): JSX.Element {
+  return (
+    <a href={browseUrl('', target, 'report')} className={className} onClick={opener.onClick} aria-label={ariaLabel} aria-busy={opener.checking || undefined} data-testid={testId}>
+      {children}
+    </a>
+  );
+}
+
+/**
+ * A sentence with its taught parts: letters and words in `lang="ko"`, a quest by its catalogue title. With Browse
+ * links on (RP-13) each letter opens its letter and the quest title (P4) its quest; words stay text.
+ */
 export function ReportSentenceText({ sentence }: { sentence: ReportSentence }): JSX.Element {
+  const browse = useContext(ReportBrowseContext);
   return (
     <>
       {sentence.parts.map((part, index) => {
         const key = `${part.kind}-${index}`;
         if (part.kind === 'text') return <span key={key}>{part.text}</span>;
         if (part.kind === 'letter') {
-          return (
-            <span key={key} className="hr-report-letter">
+          const letter = (
+            <>
               {part.before}
               <span lang="ko">{part.letter}</span>
               {part.after}
+            </>
+          );
+          const target = browse ? browseTargetOf({ kind: 'char', char: part.letter }) : null;
+          return target ? (
+            <ReportBrowseLink key={key} target={target} className="hr-report-letter hr-report-letter-link" testId="report-letter-link" inline>
+              {letter}
+            </ReportBrowseLink>
+          ) : (
+            <span key={key} className="hr-report-letter">
+              {letter}
             </span>
           );
         }
-        if (part.kind === 'quest') return <span key={key}>{part.title}</span>;
+        if (part.kind === 'quest') {
+          const target = browse ? browseTargetOf({ kind: 'quest', id: part.id }) : null;
+          return target ? (
+            <ReportBrowseLink key={key} target={target} className="hr-report-quest-link" testId="report-quest-link" inline>
+              {part.title}
+            </ReportBrowseLink>
+          ) : (
+            <span key={key}>{part.title}</span>
+          );
+        }
         return (
           <span key={key}>
             {part.ko === null ? null : (
@@ -474,6 +558,7 @@ function WordGloss({ romanization, gloss }: { romanization: string; gloss: strin
  * an action.
  */
 function InsightLine({ line, id, preview }: { line: ReportLineView; id: string; preview: boolean }): JSX.Element {
+  const browse = useContext(ReportBrowseContext);
   const label = useMessages().console.browse.preview.cta;
   const target = preview ? (line.preview ?? null) : null;
   return (
@@ -484,7 +569,16 @@ function InsightLine({ line, id, preview }: { line: ReportLineView; id: string; 
         </p>
         {line.tip ? (
           <p className="hr-report-tip">
-            <ReportSentenceText sentence={line.tip} />
+            {browse ? (
+              <ReportBrowseLink target={{ kind: 'stage', stage: browse.stage }} className="hr-report-tip-link" testId="report-tip-link">
+                {/* No link inside the tip's link: its parts render as text (no nested anchors). */}
+                <ReportBrowseContext.Provider value={null}>
+                  <ReportSentenceText sentence={line.tip} />
+                </ReportBrowseContext.Provider>
+              </ReportBrowseLink>
+            ) : (
+              <ReportSentenceText sentence={line.tip} />
+            )}
           </p>
         ) : null}
       </div>
@@ -660,6 +754,39 @@ export function ReportThisPeriodBlock({ block, month }: { block: ReportThisPerio
   );
 }
 
+function letterFace(letter: ReportLetter): JSX.Element {
+  return (
+    <>
+      <span lang="ko">{letter.letter}</span>
+      {letter.romanization ? <span className="hr-report-rom">{letter.romanization}</span> : null}
+    </>
+  );
+}
+
+/** A More detail letter tile: with Browse links on (RP-13) the tile is the link to its letter. */
+function LetterTile({ letter }: { letter: ReportLetter }): JSX.Element {
+  const browse = useContext(ReportBrowseContext);
+  const target = browse ? browseTargetOf({ kind: 'char', char: letter.letter }) : null;
+  return target ? <LinkedLetterTile letter={letter} target={target} env={browse?.env} /> : <li className="hr-report-tile">{letterFace(letter)}</li>;
+}
+
+/**
+ * The linked tile. Its name reads "letter (romanization)" (`report.letter`), not the face run together. While its
+ * line shows, the cell takes the whole row, so the line sits under the tile and the other tiles keep their places.
+ */
+function LinkedLetterTile({ letter, target, env }: { letter: ReportLetter; target: BrowseTarget; env: BrowseOpenerEnv | undefined }): JSX.Element {
+  const opener = useBrowseOpener(target, 'report', env);
+  const words = useMessages().report;
+  return (
+    <li className={opener.notice === null ? undefined : 'hr-report-tile-cell-notice'}>
+      <ReportBrowseAnchor target={target} opener={opener} className="hr-report-tile hr-report-tile-link" testId="report-tile-link" ariaLabel={letter.romanization ? words.letter(letter.letter, letter.romanization) : undefined}>
+        {letterFace(letter)}
+      </ReportBrowseAnchor>
+      <BrowseNoticeLine opener={opener} testId="report-tile-link" />
+    </li>
+  );
+}
+
 function DetailBlock({ block }: { block: Exclude<ReportDetailBlock, { kind: 'totals' }> }): JSX.Element {
   return (
     <div className="hr-report-detail-block">
@@ -668,10 +795,7 @@ function DetailBlock({ block }: { block: Exclude<ReportDetailBlock, { kind: 'tot
         <>
           <ul className="hr-report-tiles">
             {block.letters.map((letter) => (
-              <li key={letter.letter} className="hr-report-tile">
-                <span lang="ko">{letter.letter}</span>
-                {letter.romanization ? <span className="hr-report-rom">{letter.romanization}</span> : null}
-              </li>
+              <LetterTile key={letter.letter} letter={letter} />
             ))}
           </ul>
           {block.moreLine !== null ? (
@@ -717,8 +841,19 @@ export function ReportMoreDetailBlock({ detail }: { detail: ReportMoreDetail }):
   );
 }
 
-/** The headline, the two insight sections, This period and More detail: the report under the controls. */
-export function ReportBody({ view }: { view: LearnerReportView }): JSX.Element {
+/**
+ * The headline, the two insight sections, This period and More detail: the report under the controls. `browse` turns
+ * the letters, the P4 quest title and the strand tip into All lessons links (RP-13); null or omitted, they are text.
+ */
+export function ReportBody({ view, browse = null }: { view: LearnerReportView; browse?: ReportBrowse | null }): JSX.Element {
+  return (
+    <ReportBrowseContext.Provider value={browse}>
+      <ReportBodyLayers view={view} />
+    </ReportBrowseContext.Provider>
+  );
+}
+
+function ReportBodyLayers({ view }: { view: LearnerReportView }): JSX.Element {
   const month = view.tabs?.find((tab) => tab.selected)?.period === 'month';
   return (
     <div className="hr-report-body">

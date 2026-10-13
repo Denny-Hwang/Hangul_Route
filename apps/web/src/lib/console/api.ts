@@ -1,6 +1,7 @@
-import { ProgressSummarySchema, ReportSummarySchema, ReceiptViewSchema, SpaceKindSchema, parseBillingSummary, type BillingSummary, type ReceiptView } from '@hangul-route/content-schema';
+import { ClassReportSchema, ProgressSummarySchema, ReportPeriodSchema, ReportSummarySchema, isDateKey, ReceiptViewSchema, SpaceKindSchema, parseBillingSummary, type BillingSummary, type ReceiptView } from '@hangul-route/content-schema';
 import { noteTransferResult } from './transfer-lock';
 import type {
+  ClassReport,
   CurriculumMeta,
   Entitlement,
   InboxVisibleSpace,
@@ -386,6 +387,21 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
             : BAD_RESPONSE;
         },
       ),
+    /**
+     * One class's statistics (F-REPORT-001 section 3.8, RP-8): aggregates only, never a learner id, name or per-learner
+     * row. `at` (a day key) selects a past window on the day, week and month tabs; the Worker echoes the window it
+     * read (`classAtOf`). The report is parsed with its schema; the envelope keeps only the space fields the page reads.
+     */
+    getClassReport: (spaceId: string, period: ReportPeriod, at: string | null): Promise<ApiResult<ClassReportBody>> =>
+      call<unknown>(
+        `${base}/${encodeURIComponent(spaceId)}/class-report?period=${period}${period !== 'all' && at !== null && isDateKey(at) ? `&at=${at}` : ''}`,
+        { method: 'GET' },
+        [200],
+      ).then((r): ApiResult<ClassReportBody> => {
+        if (!r.ok) return r;
+        const data = parseClassReport(r.data);
+        return data === null ? { ok: false, error: 'unknown', status: 200, code: 'bad_response' } : { ok: true, data };
+      }),
   };
 
   function transfers(spaceId: string): string {
@@ -556,6 +572,28 @@ function readTransferList(raw: unknown): TransferList {
     list.counts = data.counts.filter((c): c is TransferSchoolCount => isPlainRecord(c) && typeof c.spaceId === 'string' && typeof c.waiting === 'number');
   }
   return list;
+}
+
+/** The part of `ClassReportResponse` the class report page reads (RP-8): the space's id, kind, name and archived time. */
+export interface ClassReportBody {
+  space: LearnerReportBody['space'];
+  period: ReportPeriod;
+  /** The window the figures read (null: the current one, or a Worker from before the echo). */
+  at: string | null;
+  serverTime: string;
+  report: ClassReport;
+}
+
+function parseClassReport(raw: unknown): ClassReportBody | null {
+  if (!isPlainRecord(raw) || !isPlainRecord(raw.space)) return null;
+  const { space } = raw;
+  const kind = SpaceKindSchema.safeParse(space.kind);
+  if (!kind.success || typeof space.id !== 'string' || typeof space.name !== 'string' || !isStringOrNull(space.archivedAt)) return null;
+  const period = ReportPeriodSchema.safeParse(raw.period);
+  const report = ClassReportSchema.safeParse(raw.report);
+  if (!period.success || !report.success || typeof raw.serverTime !== 'string') return null;
+  const at = typeof raw.at === 'string' && isDateKey(raw.at) ? raw.at : null;
+  return { space: { id: space.id, kind: kind.data, name: space.name, archivedAt: space.archivedAt }, period: period.data, at, serverTime: raw.serverTime, report: report.data };
 }
 
 export type ConsoleApi = ReturnType<typeof createConsoleApi>;

@@ -21,11 +21,12 @@ import {
 import { useGrownUpLocation } from '@/components/console/grown-up-location';
 import { useConsole } from '@/components/console/use-console';
 import type { ApiResult, LearnerReportBody, SpaceListItem } from '@/lib/console/api';
+import { browseLinksShown } from '@/lib/console/browse-link';
 import { learningRouteEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
 import { learningRouteView, type LearningRouteGoal } from '@/lib/console/learning-route-view';
 import { reportNoteLink } from '@/lib/console/notes-page';
 import { dateKey } from '@/lib/console/plans';
-import { learnerReportView, reportBackLink, reportCacheKey, reportQueryOf, reportScreenOf, type ReportStepButton, type ReportTab } from '@/lib/console/report-view';
+import { learnerReportView, reportBackLink, reportBrowseStage, reportCacheKey, reportQueryOf, reportScreenOf, type ReportStepButton, type ReportTab } from '@/lib/console/report-view';
 import { spaceKindOfPath } from '@/lib/console/routing';
 import { signedOutTarget } from '@/lib/console/signin-flow';
 import { stageTitle } from '@/lib/console/stage-titles';
@@ -97,6 +98,12 @@ function LearnerReportInner(): JSX.Element {
       live = false;
     };
   }, [api]);
+
+  // Browse links (RP-13): read after mount, so the static export and the first client render agree (both draw none).
+  const [browseOn, setBrowseOn] = useState(false);
+  useEffect(() => {
+    setBrowseOn(typeof window !== 'undefined' && browseLinksShown(window.location.origin));
+  }, []);
 
   const routeOn = learningRouteEnabled();
   useEffect(() => {
@@ -252,7 +259,7 @@ function LearnerReportInner(): JSX.Element {
   });
   const lines = [...(view.archived && roleKnown ? [view.archived] : []), ...view.notices];
   const selected = view.tabs?.find((tab) => tab.selected)?.period ?? period;
-  const body = busy ? <ReportSkeleton /> : <ReportBody view={view} />;
+  const body = busy ? <ReportSkeleton /> : <ReportBody view={view} browse={browseOn ? { stage: reportBrowseStage(screen.data.summary) } : null} />;
   return frame(
     <>
       <ReportHeader back={view.back} printDisabled={busy || error !== null} onPrint={() => window.print()} sendNote={noteLink} />
