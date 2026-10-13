@@ -92,7 +92,7 @@ eas submit --platform ios --profile production     # TestFlight 업로드
   >
   > Filter: every note starts from a reviewed ready-made message; any added text is short and is checked on the server, which refuses links, email addresses, phone numbers, emoji and listed unkind words in English, Spanish and Korean. Daily limits apply per sender and per learner.
   >
-  > Report: on the learner's device, "Tell a grown-up" opens the grown-up gate (PIN) and leads to "Report this note"; a learner who manages their own profile sees "Report this note" directly. Family adults can also report any note from the family page at app.hangulroute.com. A reported note is hidden from the learner at once.
+  > Report: on the learner's device, "Tell a grown-up" opens the grown-up gate (PIN) and leads to "Report this note"; a learner who manages their own profile sees "Report this note" directly. Family adults can also report any note from the family page at app.hangulroute.com. A reported note is hidden at once on the device that reported it, and from the learner's other devices at their next sync.
   >
   > Hide: "Put this note away" removes a note from the learner's list; in the grown-up zone and on the family page, "Hide" removes it from the learner's devices.
   >
