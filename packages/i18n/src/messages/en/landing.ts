@@ -54,11 +54,15 @@ export const landing = {
   meta: {
     title: 'Hangul Route — Learn Hangul from zero with Hoya',
     tagline: 'Learn Hangul from zero, at any age.',
+    /**
+     * What is built, with no typed counts (F-SITE-002 §3.12): Stage 1, the Korean culture cards, Hoya, no ads. No
+     * stage, theme or mini-game count, and no Heritage Journey grid, which is not built yet.
+     */
     description:
-      'Learn Hangul from zero with Hoya the tiger — for anyone, at any age: heritage families, K-culture fans and curious beginners. Five-minute quests, 8 mini-games, Korean culture cards to collect, and a Heritage Journey across 7 stages and 5 culture themes. Stage 1 is free and more stages are coming. No ads, ever.',
+      'Learn Hangul from zero with Hoya the tiger, at any age: heritage families, K-culture fans and curious beginners. Five-minute quests teach the Korean alphabet, for reading, listening and writing, and every letter earns a Korean culture card. Stage 1 is free and more stages are coming. No ads, ever.',
     keywords: ['learn Hangul', 'Korean alphabet', 'learn Korean', 'Korean for beginners', 'heritage Korean', 'K-culture learning', 'Hoya'],
-    ogDescription: 'Heritage Journey + Korean culture cards + Hoya the tiger. Start Korean from zero, at any age. Stage 1 is free.',
-    twitterDescription: 'Heritage Journey + Korean culture cards + Hoya the tiger. Start Korean from zero, at any age.',
+    ogDescription: 'Learn the Korean alphabet from zero with Hoya the tiger, at any age, and collect Korean culture cards. Stage 1 is free.',
+    twitterDescription: 'Learn the Korean alphabet from zero with Hoya the tiger, at any age, and collect Korean culture cards.',
     /** Per-page `<title>` and description of the three persona pages (F-SITE-002 §3.12, S-4a / S-4b). No typed counts. */
     pages: {
       learners: {

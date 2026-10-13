@@ -56,7 +56,7 @@ describe('public surfaces speak to anyone learning Hangul (UF-01..UF-03, UF-09)'
   });
 
   it('scans the shared page bodies the English and locale routes render', () => {
-    for (const body of ['LandingPage', 'AboutPage', 'PrivacyPage', 'TermsPage', 'LearnersPage', 'ParentsPage', 'TeachersPage', 'SiteHeader', 'SiteFooter']) {
+    for (const body of ['HomePage', 'LandingPage', 'AboutPage', 'PrivacyPage', 'TermsPage', 'LearnersPage', 'ParentsPage', 'TeachersPage', 'SiteHeader', 'SiteFooter']) {
       expect(PUBLIC_SURFACES).toContain(join('components', 'landing', `${body}.tsx`));
     }
   });
