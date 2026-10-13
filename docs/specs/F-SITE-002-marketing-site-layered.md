@@ -370,7 +370,7 @@ Coverage: `apps/web` new `lib/` and `data/` modules at 100 % lines (pure); page 
 | S-10 | `feat(web)`: `SITE_DEFAULT_CONSOLE_ORIGIN = APP_ORIGIN`; `docs/launch/web-app-launch.md` updated | XS | S-9; the three gate items of section 3.10; same release as F-APP-001 A-10 |
 | S-11 | *removed in review (2026-10-11): redirect status belongs to F-APP-001's stubs* | — | — |
 
-**Claim hand-offs (not PRs of this spec):** the table of section 3.9. Each flip PR changes one line of `SITE_CLAIMS` (and `CLAIM_REQUIRES_PAID` when its feature is paid-only) with its copy test and runs `site-budgets.spec.ts` with the claim on.
+**Claim hand-offs (not PRs of this spec):** the table of section 3.9. Each flip PR changes one line of `SITE_CLAIMS` (and `CLAIM_REQUIRES_PAID` when its feature is paid-only) with its copy test and runs `site-budgets.spec.ts` with the claim on. The `paidPlans: 'inApp'` flip also rewords the metadata cost clause ("more stages are coming" in `landing.meta.description`, en, es and ko); `landing-claims.test.tsx` ties that clause to the claim, so the flip goes red until it does.
 
 ### 9.3 Sequence notes
 

@@ -168,10 +168,9 @@ describe('the art that replaced the emoji is drawn', () => {
     return html.slice(start, html.indexOf('</svg>', start) + 6);
   };
 
-  it('hero: Hoya waving; Meet Hoya: Hoya idle', () => {
-    const html = render(enLandingPage, {});
-    expect(inside(html, 'hr-landing-hero-art')).toContain('data-pose="waving"');
-    expect(inside(html, 'hr-landing-split-art')).toContain('data-pose="idle"');
+  it('home hero: Hoya waving (F-SITE-002 §3.3); /learners: Hoya waving beside the quest line (§3.4)', () => {
+    expect(inside(render(enLandingPage, {}), 'hr-site-hero-art')).toContain('data-pose="waving"');
+    expect(render(enLearnersPage, {})).toMatch(/<span aria-hidden="true"[^>]*><svg[^>]*data-pose="waving"/);
   });
 
   it('mini-games gallery: one design-system icon per game', () => {
