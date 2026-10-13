@@ -69,12 +69,14 @@ describe('learner.access (F-ENT-003 E3-6)', () => {
     });
   }
 
-  it('the closed-lesson word is the Learning Route word and the Library tile word (one word for the boundary)', () => {
-    const m = getMessages('en').learner;
-    expect(m.myRoute.state.notOpen).toBe(m.access.notOpen);
-    expect(m.storyShelf.state.locked).toBe(m.access.notOpen);
-    expect(m.vocab.topics.locked).toBe(m.access.notOpen);
-  });
+  for (const locale of LOCALES) {
+    it(`${locale}: the closed-lesson word is the Learning Route word and the Library tile word (one word for the boundary)`, () => {
+      const m = getMessages(locale).learner;
+      expect(m.myRoute.state.notOpen).toBe(m.access.notOpen);
+      expect(m.storyShelf.state.locked).toBe(m.access.notOpen);
+      expect(m.vocab.topics.locked).toBe(m.access.notOpen);
+    });
+  }
 
   it('a tagged lesson row reads the title, its lines and the tags in order (section 3.14)', () => {
     const a = getMessages('en').a11y.access;

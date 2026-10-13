@@ -828,7 +828,7 @@ export const learner = {
     readAgain: { cta: '다시 읽기' },
     playAgain: { cta: '다시 하기' },
     startOver: { cta: '처음부터' },
-    state: { new: '새 이야기', inProgress: '읽는 중', finished: '다 읽음', locked: '잠김' },
+    state: { new: '새 이야기', inProgress: '읽는 중', finished: '다 읽음', locked: '아직 안 열렸어요' },
     minutes: { pill: (minutes: number) => `약 ${minutes}분` },
     tileLabel: (title: string, state: string, minutes: number, stars = 0) =>
       `${title}. ${state}. 약 ${minutes}분.` + (stars > 0 ? ` 별 ${stars}개.` : ''),

@@ -841,7 +841,7 @@ export const learner = {
     readAgain: { cta: 'Leer otra vez' },
     playAgain: { cta: 'Jugar otra vez' },
     startOver: { cta: 'Empezar de cero' },
-    state: { new: 'Nueva', inProgress: 'Seguir leyendo', finished: 'Terminada', locked: 'Bloqueada' },
+    state: { new: 'Nueva', inProgress: 'Seguir leyendo', finished: 'Terminada', locked: 'Aún sin abrir' },
     minutes: { pill: (minutes: number) => `cerca de ${minutes} min` },
     tileLabel: (title: string, state: string, minutes: number, stars = 0) =>
       `${title}. ${state}. ${plural('es', minutes, { one: 'Cerca de 1 minuto', other: `Unos ${minutes} minutos` })}.` +
