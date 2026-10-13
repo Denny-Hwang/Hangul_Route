@@ -652,6 +652,9 @@ export const caregiver = {
     disclosure: (learner: string) => `Teachers see the answer ${learner} picks on their notes.`,
     offline: 'Connect to the internet to do this.',
     saveFailed: 'That did not save. Try again.',
+    /** The device's notes could not be read (the console's family notes wording). */
+    error: 'Notes could not load. Try again.',
+    retry: { cta: 'Try again' },
     /** Web only: opens the family notes on app.hangulroute.com. */
     sendNote: { cta: 'Send a note' },
   },
@@ -787,6 +790,32 @@ export const caregiver = {
     preview: {
       strip: 'Preview. Nothing is saved.',
       leave: { cta: 'Leave preview' },
+      /** [ Leave preview ] asks once (mock preview-player.md C); Leave goes to the item page, no end screen. */
+      leaveConfirm: {
+        title: 'Leave this preview?',
+        keep: { cta: 'Keep going' },
+        leave: { cta: 'Leave' },
+      },
+    },
+    /** The preview end screen (section 4.8, BD9): what a learner gets here, never stars, a score or an earned card. */
+    end: {
+      lesson: {
+        title: 'That is the whole lesson.',
+        line: 'At this point a learner sees 1 to 3 stars and collects:',
+        /** A lesson that awards no card. */
+        lineNoCard: 'At this point a learner sees 1 to 3 stars.',
+      },
+      story: {
+        title: 'That is the whole story.',
+        line: 'A learner can read it again any time.',
+      },
+      next: { cta: 'Next lesson' },
+      again: { cta: 'Preview again' },
+      /** Also the error screen's way out of a lesson that fails to render (section 4.7). */
+      back: { cta: 'Back to the lesson page' },
+      nextStory: { cta: 'Next story' },
+      readAgain: { cta: 'Read again' },
+      backToStory: { cta: 'Back to the story page' },
     },
     /** The Access screen: no active pass. No lesson, title or card is shown (section 4.3). */
     access: {

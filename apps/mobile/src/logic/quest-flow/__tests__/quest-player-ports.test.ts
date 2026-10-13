@@ -2,10 +2,12 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import type { Quest } from '@hangul-route/content-schema';
+import { useProgressStore } from '../../../store/progress-store';
 import type { Bookmark } from '../../story/bookmarks';
 import {
   learnerQuestExits,
   learnerQuestSession,
+  previewQuestPorts,
   questFinish,
   resultsReset,
   runQuestFinish,
@@ -270,6 +272,68 @@ describe('learnerQuestExits', () => {
     const deps = exitDeps({ profileId: undefined });
     learnerQuestExits(deps).track({ name: 'quest.check_completed' });
     expect(deps.track).toHaveBeenCalledWith({ name: 'quest.check_completed', profileId: undefined });
+  });
+});
+
+describe('previewQuestPorts (F-BROWSE-001 BR-8, section 4.7: a preview saves nothing)', () => {
+  function previewDeps() {
+    return { resetRun: vi.fn(), toEnd: vi.fn(), toItem: vi.fn() };
+  }
+
+  /** Every writer of the learner progress store, spied: a preview may call none of them. */
+  function spyProgressWriters(): ReturnType<typeof vi.fn>[] {
+    const state = useProgressStore.getState() as unknown as Record<string, unknown>;
+    return Object.keys(state)
+      .filter((key) => typeof state[key] === 'function')
+      .map((key) => vi.spyOn(state as Record<string, (...args: unknown[]) => unknown>, key) as unknown as ReturnType<typeof vi.fn>);
+  }
+
+  it('starts at step 0 with no session and no profile, and ends with nothing to release', () => {
+    const deps = previewDeps();
+    const ports = previewQuestPorts(deps);
+    expect(ports.start('quest:stage1-letters-q1', 'episode:stage1-letters')).toBe(0);
+    ports.end();
+    expect(deps.resetRun).not.toHaveBeenCalled();
+    expect(deps.toEnd).not.toHaveBeenCalled();
+    expect(deps.toItem).not.toHaveBeenCalled();
+  });
+
+  it('finish resets the run itself and goes to the preview end screen, never Results', () => {
+    const deps = previewDeps();
+    const order: string[] = [];
+    deps.resetRun.mockImplementation(() => order.push('reset'));
+    deps.toEnd.mockImplementation(() => order.push('end'));
+    previewQuestPorts(deps).finish(questFinish({ correctCount: 2, totalCount: 2, retryCount: 1 }));
+    expect(order).toEqual(['reset', 'end']);
+    expect(deps.toItem).not.toHaveBeenCalled();
+  });
+
+  it('leave goes back to the item page (the view has already discarded the run)', () => {
+    const deps = previewDeps();
+    const reset = vi.fn();
+    runQuestLeave(reset, previewQuestPorts(deps));
+    expect(reset).toHaveBeenCalledOnce();
+    expect(deps.toItem).toHaveBeenCalledOnce();
+    expect(deps.toEnd).not.toHaveBeenCalled();
+  });
+
+  it('track sends nothing: the view names no person and the preview adds none', () => {
+    const deps = previewDeps();
+    const ports = previewQuestPorts(deps);
+    expect(ports.track({ name: 'quest.discover_completed', payload: { questId: 'quest:x', pages: 1, heard: 0 } })).toBeUndefined();
+  });
+
+  it('a whole preview run (start, end, finish, leave, track) calls no learner store writer', () => {
+    const spies = spyProgressWriters();
+    expect(spies.length).toBeGreaterThan(0);
+    const ports = previewQuestPorts(previewDeps());
+    const cleanup = runQuestStart(ports, vi.fn(), 'quest:stage1-letters-q1', 'episode:stage1-letters');
+    runQuestFinish({ correctCount: 2, totalCount: 2, retryCount: 0 }, ports);
+    runQuestLeave(vi.fn(), ports);
+    ports.track({ name: 'quest.check_completed', payload: { questId: 'quest:x', correct: 2, retries: 0 } });
+    cleanup?.();
+    for (const spy of spies) expect(spy).not.toHaveBeenCalled();
+    for (const spy of spies) spy.mockRestore();
   });
 });
 

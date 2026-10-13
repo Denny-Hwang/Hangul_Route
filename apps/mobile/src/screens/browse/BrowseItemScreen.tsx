@@ -8,12 +8,14 @@ import { useLocale, useMessages } from '../../i18n/use-messages';
 import { episodeOfQuest } from '../../logic/browse/bundle';
 import { itemFacts, type ItemFacts, type QuestFacts, type StoryFacts, type TopicFacts } from '../../logic/browse/facts';
 import { accessOf, billingShown, itemViewedEvent, plansTappedEvent, stepsLine, whereLine } from '../../logic/browse/home-view';
+import { storyPreviewParams } from '../../logic/browse/preview';
 import { BROWSE_REGISTERED_ROUTES, type BrowseStackParamList } from '../../navigation/browse';
 import { leaveTo } from '../../platform/browse-env';
 import { CardRow, HeaderBack, HeaderRow, KoChip, SkillChips, WordChip, focusRing, sendBrowseEvent, useItemViewed, type FocusState } from './browse-ui';
 import { useBrowseSession } from './browse-session';
 import { LessonDisplaySheet } from './LessonDisplaySheet';
 import { BROWSE_ACTION_MAX_WIDTH, BROWSE_LABEL_COLUMN } from '../../logic/browse/layout';
+import { beginPreview } from './preview-session';
 
 /**
  * The item page (F-BROWSE-001 sections 4.2, 4.4 and 4.6; wireframe
@@ -39,6 +41,10 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
   const facts = itemFacts({ kind, id, ...(focusJamoId !== undefined ? { focusJamoId } : {}) }, bundle, locale);
   const access = pass ? accessOf({ kind, id }, { bundle, scope: pass.scope, gatingEnabled }) : 'access';
   const [displayOpen, setDisplayOpen] = useState(false);
+  // The story level the preview opens at (section 4.7): the lowest unless the grown-up picks another.
+  const [level, setLevel] = useState<StoryLevel | null>(null);
+  // The same mounted page can get new params (Next story to a closed story): the pick belongs to one story.
+  useEffect(() => setLevel(null), [kind, id]);
   const compact = useLayoutClass().width === 'compact';
   useItemViewed(facts && pass ? itemViewedEvent(kind, id, access) : null);
 
@@ -56,11 +62,20 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
     navigation.navigate('BrowseHome', { section: 'journey', stage });
 
   const closed = access === 'closed';
-  const canPreview = facts.kind === 'quest' && BROWSE_REGISTERED_ROUTES.has('PreviewQuest');
-  const previewQuest = (): void => {
-    if (facts.kind !== 'quest') return;
-    const episodeId = facts.where?.kind === 'episode' ? facts.where.episodeId : (episodeOfQuest(bundle, facts.id)?.id ?? '');
-    navigation.navigate('PreviewQuest', { questId: facts.id, episodeId });
+  const canPreview = (facts.kind === 'quest' && BROWSE_REGISTERED_ROUTES.has('PreviewQuest')) || (facts.kind === 'story' && BROWSE_REGISTERED_ROUTES.has('StoryReader'));
+  const storyLevel = facts.kind === 'story' ? (level ?? facts.defaultLevel) : null;
+  const playQuest = (questId: string): void => {
+    const episodeId = facts.kind === 'quest' && facts.where?.kind === 'episode' ? facts.where.episodeId : (episodeOfQuest(bundle, questId)?.id ?? '');
+    beginPreview('quest', questId);
+    // A story's questions come back to the story page (section 4.7), not to the quest's own page.
+    navigation.navigate('PreviewQuest', { questId, episodeId, ...(facts.kind === 'story' ? { returnTo: { kind: 'story' as const, id: facts.id } } : {}) });
+  };
+  const previewItem = (): void => {
+    if (facts.kind === 'quest') playQuest(facts.id);
+    if (facts.kind === 'story' && storyLevel) {
+      beginPreview('story', facts.id);
+      navigation.navigate('StoryReader', storyPreviewParams(facts.id, storyLevel));
+    }
   };
 
   const action = closed ? (
@@ -81,7 +96,13 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
     </View>
   ) : canPreview ? (
     <View style={{ width: '100%', maxWidth: compact ? undefined : PRIMARY_MAX }}>
-      <Button label={m.item.preview.cta} tone="primary" size="lg" fullWidth onPress={previewQuest} testID="browse-preview" />
+      <Button label={facts.kind === 'story' ? m.item.previewStory.cta : m.item.preview.cta} tone="primary" size="lg" fullWidth onPress={previewItem} testID="browse-preview" />
+      {facts.kind === 'story' && BROWSE_REGISTERED_ROUTES.has('PreviewQuest') ? (
+        <>
+          <Spacer size="sm" />
+          <Button label={m.item.previewQuestions.cta} tone="ghost" size="md" fullWidth onPress={() => playQuest(facts.questId)} testID="browse-preview-questions" />
+        </>
+      ) : null}
     </View>
   ) : null;
 
@@ -104,7 +125,9 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
       <Spacer size="sm" />
       <Card padding="md">
         {facts.kind === 'quest' ? <QuestRows facts={facts} /> : null}
-        {facts.kind === 'story' ? <StoryRows facts={facts} /> : null}
+        {facts.kind === 'story' && storyLevel ? (
+          <StoryRows facts={facts} level={storyLevel} onLevel={setLevel} onSources={() => navigation.navigate('StorySources', { storyId: facts.id, from: 'episode' })} />
+        ) : null}
         {facts.kind === 'vocab-topic' ? <TopicRows facts={facts} /> : null}
       </Card>
 
@@ -246,9 +269,19 @@ function QuestRows({ facts }: { facts: QuestFacts }): React.ReactElement {
 
 const LEVEL_KEY: Readonly<Record<StoryLevel, 'listen' | 'readAlong' | 'read'>> = { listen: 'listen', 'read-along': 'readAlong', read: 'read' };
 
-function StoryRows({ facts }: { facts: StoryFacts }): React.ReactElement {
+function StoryRows({
+  facts,
+  level,
+  onLevel: setLevel,
+  onSources,
+}: {
+  facts: StoryFacts;
+  level: StoryLevel;
+  onLevel: (level: StoryLevel) => void;
+  /** [ See the sources ]: the sources page, copy-only links (section 4.7). */
+  onSources: () => void;
+}): React.ReactElement {
   const m = useMessages().caregiver.browse;
-  const [level, setLevel] = useState<StoryLevel>(facts.defaultLevel);
   const scenes = facts.levels.find((l) => l.level === level)?.scenes ?? 0;
   return (
     <View>
@@ -290,6 +323,13 @@ function StoryRows({ facts }: { facts: StoryFacts }): React.ReactElement {
               <WordChip key={w.ko} ko={w.ko} romanization={w.romanization} gloss={w.gloss} />
             ))}
           </Chips>
+        </FactRow>
+      ) : null}
+      {BROWSE_REGISTERED_ROUTES.has('StorySources') ? (
+        <FactRow label={m.facts.sources}>
+          <View style={{ flexDirection: 'row' }}>
+            <Button label={m.facts.seeSources.cta} tone="ghost" size="sm" onPress={onSources} testID="browse-see-sources" />
+          </View>
         </FactRow>
       ) : null}
     </View>

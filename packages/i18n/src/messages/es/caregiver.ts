@@ -490,6 +490,8 @@ export const caregiver = {
     disclosure: (learner: string) => `Los docentes ven la respuesta que ${learner} elige en sus notas.`,
     offline: 'Conéctate a internet para hacer esto.',
     saveFailed: 'No se guardó. Reintenta.',
+    error: 'No se pudieron cargar las notas. Reintenta.',
+    retry: { cta: 'Reintentar' },
     sendNote: { cta: 'Enviar una nota' },
   },
   /**
@@ -668,6 +670,28 @@ export const caregiver = {
     preview: {
       strip: 'Vista previa. No se guarda nada.',
       leave: { cta: 'Cerrar vista previa' },
+      leaveConfirm: {
+        title: '¿Salir de esta vista previa?',
+        keep: { cta: 'Seguir' },
+        leave: { cta: 'Salir' },
+      },
+    },
+    end: {
+      lesson: {
+        title: 'Esa es toda la lección.',
+        line: 'Aquí un estudiante ve de 1 a 3 estrellas y recibe:',
+        lineNoCard: 'Aquí un estudiante ve de 1 a 3 estrellas.',
+      },
+      story: {
+        title: 'Esa es toda la historia.',
+        line: 'Un estudiante puede leerla otra vez cuando quiera.',
+      },
+      next: { cta: 'Siguiente lección' },
+      again: { cta: 'Repetir vista previa' },
+      back: { cta: 'Volver a la lección' },
+      nextStory: { cta: 'Otra historia' },
+      readAgain: { cta: 'Leer otra vez' },
+      backToStory: { cta: 'Volver a la historia' },
     },
     access: {
       title: 'Esta página es para madres, padres y docentes.',

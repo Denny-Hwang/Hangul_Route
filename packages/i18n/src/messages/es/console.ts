@@ -484,6 +484,12 @@ export const consoleMsgs = {
       sharedDevice: '¿Dispositivo compartido? Cierra sesión al terminar.',
     },
     pastDue: 'Un pago no se realizó. Actualiza tu tarjeta en Gestionar suscripción; tus estudiantes mantienen la ruta completa una semana.',
+    archiveConfirm: {
+      familyLoses: (space: string) => `Los estudiantes de ${space} pierden el Plan Familiar mientras esté archivado.`,
+      familyRenews: 'El plan se sigue renovando hasta que lo canceles en Facturación.',
+      licenseRenews: 'La Licencia de Grupo se sigue renovando hasta que la canceles en Facturación.',
+      familyRenewsAlone: 'El Plan Familiar se sigue renovando hasta que lo canceles en Facturación.',
+    },
   },
 
   curriculum: {

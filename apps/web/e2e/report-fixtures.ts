@@ -200,3 +200,72 @@ export async function mockReport(page: Page, first: ReportMock, later: ReportMoc
 export function reportUrl(kind: Kind, extra = 'period=week'): string {
   return `/teach/space/learner?id=${encodeURIComponent(spaceId(kind))}&learner=profile%3Amina&${extra}`;
 }
+
+/** A week class report (F-REPORT-001 RP-8): 12 members, 8 practiced, one older app; aggregates only. */
+export const CLASS_REPORT = {
+  v: 1,
+  period: 'week',
+  headline: { code: 'class_practiced', practiced: 8, learners: 12, up: true },
+  class: { learners: 12, withActivity: 11, olderApp: 1, notSaved7d: 2 },
+  wentWell: {
+    lettersNew: [
+      { letter: 'ㅂ', learners: 5 },
+      { letter: 'ㅅ', learners: 4 },
+    ],
+    questsNew: { count: 14, up: true },
+    cardsNew: 9,
+    milestones: [{ stage: 'stage1', count: 2 }],
+  },
+  revisit: [{ letter: 'ㅊ', learners: 4 }],
+  practice: {
+    dayBands: [
+      { band: '0', learners: 3 },
+      { band: '1-2', learners: 3 },
+      { band: '3-4', learners: 3 },
+      { band: '5-7', learners: 2 },
+    ],
+    notSaved: 0,
+  },
+  time: { minutesTotal: { count: 212, up: true }, minutesMedian: 24 },
+  levelCheck: [{ strand: 'sound-letter', secure: 3, gettingThere: 2, notYet: 1, notTested: 0 }],
+  plans: [{ planId: 'plan:week-3', title: 'Week three', assigned: 12, started: 9, finished: 6, itemsDone: 30 }],
+};
+
+export interface ClassMock {
+  /** A status for the class route instead of a body (409 for a family). */
+  status?: number;
+  spaces?: { id: string; kind: Kind; name: string }[];
+}
+
+/** The class route mocked: the week report for any period (the period echoed), and the spaces list. */
+export async function mockClass(page: Page, mock: ClassMock = {}): Promise<{ calls: string[] }> {
+  const calls: string[] = [];
+  await page.clock.setFixedTime(new Date(NOW));
+  await page.addInitScript(
+    ([key]) => window.sessionStorage.setItem(key as string, JSON.stringify({ token: 'acct-e2e', accountId: 'acct-e2e', displayName: 'Ms Kim' })),
+    [SESSION_KEY],
+  );
+  const space = (id: string, kind: Kind, name: string) => ({ id, kind, name, parentSpaceId: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt: null, createdAt: '2026-09-01T00:00:00.000Z' });
+  await page.route(`${API}/**`, async (route) => {
+    const request = route.request();
+    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' } });
+    const url = new URL(request.url());
+    if (url.pathname.endsWith('/class-report')) {
+      calls.push(url.search);
+      if (mock.status) return json(route, mock.status, null);
+      const period = url.searchParams.get('period') ?? 'week';
+      const bands = period === 'month' ? [{ band: '0', learners: 3 }, { band: '1-4', learners: 8 }] : period === 'day' ? [{ band: 'practiced', learners: 3 }, { band: 'not_yet', learners: 8 }] : CLASS_REPORT.practice.dayBands;
+      const report = { ...CLASS_REPORT, period, practice: period === 'all' ? {} : { dayBands: bands, notSaved: 0 } };
+      return json(route, 200, { space: space('space:sunflower', 'class', 'Sunflower'), period, at: url.searchParams.get('at'), serverTime: NOW, report });
+    }
+    if (url.pathname === '/api/spaces') {
+      const list = mock.spaces ?? [{ id: 'space:sunflower', kind: 'class' as Kind, name: 'Sunflower' }];
+      return json(route, 200, { spaces: list.map((s) => ({ space: space(s.id, s.kind, s.name), role: 'teacher', counts: { learners: 12, accounts: 1, classes: 0 } })) });
+    }
+    return json(route, 200, { plans: [], requests: [], entitlements: [] });
+  });
+  return { calls };
+}
+
+/** The class report address: the class id and codes only. */
+export const classUrl = (extra = 'period=week'): string => `/teach/space/report?id=space%3Asunflower&${extra}`;

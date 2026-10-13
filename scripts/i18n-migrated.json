@@ -101,7 +101,11 @@
     "apps/web/src/app/(console)/teach/space/learner/page.tsx",
     "apps/web/src/components/console/ReportParts.tsx",
     "apps/mobile/src/screens/route/**",
-    "apps/mobile/src/screens/notes/**"
+    "apps/mobile/src/screens/notes/**",
+    "apps/mobile/src/screens/parent/NotesGrownUpScreen.tsx",
+    "apps/mobile/src/screens/parent/NoteReportScreen.tsx",
+    "apps/web/src/app/(console)/teach/space/report/page.tsx",
+    "apps/web/src/components/console/ClassReportParts.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1

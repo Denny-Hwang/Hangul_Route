@@ -6,13 +6,17 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { AvatarChip } from '@/components/AvatarChip';
 import { AdultFrame, type FrameSpaces } from '@/components/console/AdultFrame';
+import { FreeLessonsLine } from '@/components/console/FreeLessonsParts';
 import { Button, Muted, buttonBase, panelStyle } from '@/components/console/ui';
 import { useConsole } from '@/components/console/use-console';
-import type { Roster, RosterLearner, SpaceListItem } from '@/lib/console/api';
-import { browseEntryShown, learningRouteEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
+import type { EntitlementView, PlanView, Roster, RosterLearner, SpaceListItem } from '@/lib/console/api';
+import { browseEntryShown, contentGatingEnabled, learningRouteEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
+import { spaceCoverage } from '@/lib/console/curriculum';
+import { rosterFreeLessonsLine } from '@/lib/console/free-lessons-line-view';
 import { openAppWithJoinCode } from '@/lib/console/join-handoff';
 import { familyActionLinks, isArchivedFamily, joinOrder, learnerCardActions, managesJoinCode, parentHomeView, type CardFlags } from '@/lib/console/parent-home';
 import { personaHome } from '@/lib/console/personas';
+import { dateKey, livePublished } from '@/lib/console/plans';
 import { codeExpiry, relativeDay } from '@/lib/console/rollup';
 import { spaceErrorText } from '@/lib/console/routing';
 import { writeLastPersona } from '@/lib/console/shell-store';
@@ -26,6 +30,11 @@ import { START_CLASS, START_FAMILY } from '@/lib/console/teacher-home';
  * no comparison. Card actions and Lessons show only with their sibling flags. A family with no learner gets
  * the join code and the hand-off to the learner app on this device; an account with no family the
  * "no family yet" panel. Ids only in links (R-2).
+ *
+ * With the console's free-plan switch on (F-ENT-003 E3-12c, section 3.9.2 Console), the page also reads each
+ * family's plans and the account's entitlements, and a child card shows the `plan-waiting` free-lessons line
+ * under its figures for the owner of a family no Family Plan covers, with **Open billing** described by it.
+ * With the switch off it reads neither and shows no line.
  */
 
 /** One family's roster read: loading, failed (that section alone shows Try again) or loaded. */
@@ -112,12 +121,18 @@ export default function ParentHomePage(): JSX.Element {
   const [codeBusy, setCodeBusy] = useState<string | null>(null);
   const codeBusyRef = useRef<string | null>(null);
   const [codeFailed, setCodeFailed] = useState<string | null>(null);
+  // The free-lessons line (F-ENT-003 section 3.9.2): each family's plans and the account's entitlements, read only with the switch on.
+  const [plans, setPlans] = useState<Record<string, PlanView[]>>({});
+  const [entitlements, setEntitlements] = useState<EntitlementView[] | null>(null);
 
   const loadRoster = useCallback(
-    async (spaceId: string): Promise<void> => {
+    async (spaceId: string, role: SpaceListItem['role']): Promise<void> => {
       if (!api) return;
       setRosters((prev) => ({ ...prev, [spaceId]: { state: 'loading' } }));
-      const result = await api.roster(spaceId).catch(() => null);
+      // Plans only for a family this account owns: the line is owner only, so a co-caregiver's family needs no plan read.
+      const readPlans = contentGatingEnabled() && role === 'owner';
+      const [result, planList] = await Promise.all([api.roster(spaceId).catch(() => null), readPlans ? api.listPlans(spaceId).catch(() => null) : null]);
+      if (planList?.ok) setPlans((prev) => ({ ...prev, [spaceId]: planList.data }));
       setRosters((prev) => ({ ...prev, [spaceId]: result?.ok ? { state: 'ready', roster: result.data } : { state: 'failed' } }));
     },
     [api],
@@ -126,14 +141,15 @@ export default function ParentHomePage(): JSX.Element {
   const load = useCallback(async (): Promise<void> => {
     if (!api) return;
     setFailed(false);
-    const result = await api.listSpaces();
+    const [result, owned] = await Promise.all([api.listSpaces(), contentGatingEnabled() ? api.entitlements().catch(() => null) : null]);
+    setEntitlements(owned?.ok ? owned.data : null);
     if (!result.ok) {
       setFailed(true);
       return;
     }
     setItems(result.data);
     const view = parentHomeView(result.data);
-    if (view.state === 'families') await Promise.all(view.families.map((family) => loadRoster(family.space.id)));
+    if (view.state === 'families') await Promise.all(view.families.map((family) => loadRoster(family.space.id, family.role)));
   }, [api, loadRoster]);
 
   useEffect(() => {
@@ -147,6 +163,8 @@ export default function ParentHomePage(): JSX.Element {
   const p = c.parentHome;
   const now = new Date();
   const flags: CardFlags = { reports: reportsEnabled(locale), notes: notesEnabled(), route: learningRouteEnabled() };
+  const gating = contentGatingEnabled();
+  const today = dateKey(now);
   const lessons = browseEntryShown(typeof window === 'undefined' ? '' : window.location.origin);
   const view = items ? parentHomeView(items) : null;
   const joinLine = p.empty.line(m.learner.home.profileLabel, m.caregiver.spaces.title, m.caregiver.spaces.join.cta);
@@ -227,8 +245,16 @@ export default function ParentHomePage(): JSX.Element {
     );
   };
 
-  const card = (familyId: string, learner: RosterLearner): JSX.Element => {
+  const card = (family: SpaceListItem, learner: RosterLearner): JSX.Element => {
+    const familyId = family.space.id;
     const actions = learnerCardActions(familyId, learner.id, flags);
+    // Owner only, an uncovered family only, the switch on only (F-ENT-003 section 3.9.2): rosterFreeLessonsLine says null otherwise.
+    const freeLine = gating
+      ? rosterFreeLessonsLine(
+          { gating, role: family.role, coverage: spaceCoverage(entitlements, items, family.space, now), spaceKind: family.space.kind, learner, plans: livePublished(plans[familyId] ?? []), today },
+          locale,
+        )
+      : null;
     const label = (key: 'seeReport' | 'open' | 'sendNote' | 'route'): string => p.child[key];
     return (
       <article key={learner.id} data-testid="learner-card" aria-label={learner.displayName} style={cardStyle}>
@@ -240,6 +266,7 @@ export default function ParentHomePage(): JSX.Element {
           <span>{c.space.learner.lastActive(relativeDay(learner.lastActiveAt, now, locale))}</span>
           {learner.summary ? <span>{p.minutes7d(learner.summary.minutesLast7d)}</span> : null}
         </div>
+        <FreeLessonsLine line={freeLine} />
         <Link href={actions.primary.href} style={primary}>
           {label(actions.primary.key)}
         </Link>
@@ -318,7 +345,7 @@ export default function ParentHomePage(): JSX.Element {
           {entry.state === 'failed' ? (
             <div style={{ ...panelStyle, margin: 0 }}>
               <p style={{ margin: `0 0 ${spacing.sm}px` }}>{c.cantReach}</p>
-              <Button testId={`family-retry-${id}`} onClick={() => void loadRoster(id)}>
+              <Button testId={`family-retry-${id}`} onClick={() => void loadRoster(id, family.role)}>
                 {c.tryAgain}
               </Button>
             </div>
@@ -340,7 +367,7 @@ export default function ParentHomePage(): JSX.Element {
               ) : null}
             </>
           ) : null}
-          {learners.length > 0 ? <div className="hr-ph-cards">{learners.map((learner) => card(id, learner))}</div> : null}
+          {learners.length > 0 ? <div className="hr-ph-cards">{learners.map((learner) => card(family, learner))}</div> : null}
         </div>
         <aside aria-label={p.actionsFor(family.space.name)} className="hr-ph-side">
           {actions}
