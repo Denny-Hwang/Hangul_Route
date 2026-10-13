@@ -244,7 +244,7 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
   const billing = `${opts.endpoint}/api/billing`;
   const resolveToken = async (): Promise<string | null> => (typeof opts.token === 'string' ? opts.token : opts.token().catch(() => null));
 
-  async function call<T>(url: string, init: RequestInit, okStatus: number[], opts: { details?: boolean } = {}): Promise<ApiResult<T>> {
+  async function call<T>(url: string, init: RequestInit, okStatus: number[], callOpts: { details?: boolean } = {}): Promise<ApiResult<T>> {
     try {
       const token = await resolveToken();
       if (!token) return { ok: false, error: 'unauthorized', status: 401 }; // signed out mid-flight: no request leaves
@@ -254,7 +254,7 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
       if (!okStatus.includes(res.status) || body.data === undefined) {
         const code = typeof body.error?.code === 'string' ? body.error.code : undefined;
         const hint = body.clerk_error && typeof body.clerk_error === 'object' ? { clerk_error: body.clerk_error as ClerkErrorHint } : {};
-        const details = opts.details && isPlainRecord(body.error?.details) ? { details: body.error.details } : {};
+        const details = callOpts.details && isPlainRecord(body.error?.details) ? { details: body.error.details } : {};
         return { ok: false, error: mapError(res.status), status: res.status, ...(code ? { code } : {}), ...hint, ...details };
       }
       return { ok: true, data: body.data };
