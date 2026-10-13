@@ -227,7 +227,7 @@ describe('the Learning Route page, switched on', () => {
     expect(textOf(card)).toContain(lr.learnerGoal('Mina', 2, 'Words'));
     expect(textOf(card)).toContain(lr.fromLead.class);
     const back = root.findAll((n) => n.type === 'a').find((a) => textOf(a) === lr.back.family);
-    expect(back?.props.href).toBe('/teach/space?id=space%3Ac1');
+    expect(back?.props.href).toBe('/parent/space?id=space%3Ac1');
   });
 
   it('loading: the kind-neutral way back to the space, then the placeholders', async () => {

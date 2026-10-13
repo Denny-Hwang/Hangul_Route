@@ -632,11 +632,11 @@ describe('/teach: a router page with the hint of persona or as, none otherwise (
     expect(browser.replaced).toEqual([target]);
   });
 
-  it('a teacher with a hint for Family lands on the Family home (the console home until A-5b)', async () => {
+  it('a teacher with a hint for Family lands on the Family home, which shows its no-family state (behaviour 24)', async () => {
     nav.params = new URLSearchParams('persona=parent');
     api.spaces = { ok: true, data: [CLASS] };
     await render(<TeachRouterPage />);
-    expect(browser.replaced).toEqual(['/teach/home']);
+    expect(browser.replaced).toEqual(['/parent']);
   });
 
   it('an OAuth sign-in record that reaches /teach on a locked device runs the same reverification (behaviour 21)', async () => {
