@@ -557,6 +557,12 @@ BR-1, BR-3, BR-4, BR-5a, BR-5b and BR-5c can run in parallel. Merge BR-1's `tele
 - Review of #531: [ Preview the questions ] passes `returnTo: { kind: 'story', id }` to `PreviewQuest` and on to `PreviewEnd` (`previewReturnTarget`), so Leave, the lesson's own close, the Oops action and the end screen's Back return to the story page, labelled Back to the story page, and that end screen has no Next lesson. `PreviewEnd` carries the `level` the story was read at, and [ Read again ] replays it (`againLevel`); the item page resets its level pick when the same mounted page gets another story. `LeavePreviewSheet` shares `BROWSE_DIALOG_MAX` with the Lesson display sheet.
 - With this row merged and deployed, BR-12a (the in-app [ Open all lessons ]) and, after BR-10 and BR-11, BR-14 can follow; `browseEnabled()` stays off.
 
+**BR-9 as built, notes for F-VOC-003 C-5 and BR-13**:
+- A word topic's item page lists every word in a paper card, one row each: the 64 picture tile (`PictureArt`, decorative, the gloss beside it names the word), the Korean with its romanization, the gloss in the UI language and a 64 Hear button ("Hear {romanization}", `caregiver.browse.topic.hearA11y`). Hear plays the word as the learner hears it through `playPrompt` (`topicHearSpec` in `logic/browse/topic-view.ts`): the bundled recording when the word has an `audioRef`, else the device voice says its `spokenKo`, else its Korean; the status panel and voice help of the learner audio say why it is silent. It writes nothing (`browse.spec.ts` compares the device before and after two Hear presses).
+- A closed topic (switch on, sampler pass) keeps every word, picture, romanization and gloss and drops only the Hear buttons (`topicHearShown`, design decision 23).
+- No flashcard preview yet: [[ Preview the flashcards ]] (`MinigameHost` mode `'preview'`) arrives once F-VOC-003's flashcards ship (its C-5); until then the topic page has no primary action.
+- The Korean chip keeps a Korean word whole on a narrow row: its romanization moves under the Korean instead (all catalogue chips).
+
 ## 12. Dependencies
 
 - **Upstream (hard)**: F-APP-001 A-3 and A-5a for the console entry (BR-10); F-APP-001 A-6 for the boot intent (BR-12b); F-TCH-004 PR 6 for BR-13; F-VOC-003 screens for flashcard preview (BR-9).
@@ -630,3 +636,4 @@ BR-1, BR-3, BR-4, BR-5a, BR-5b and BR-5c can run in parallel. Merge BR-1's `tele
 - 2026-10-13: review of #495 (section 11 BR-7 note): catalogue story tiles with no learner state, the pane outline counted in `browse.item_viewed`, a localized "Where it sits", stricter Build a Letter word matching (not Stage 1, not a homonym; the mock's 달 under Words is superseded), and an ordered keep switch with a failure line.
 - 2026-10-13: BR-8 as built (section 11 note): the preview routes and ports, the leave confirm, the end screen and its Next order, the preview events, the lesson, story and card e2e on the release build.
 - 2026-10-13: review of #531 (section 11 BR-8 note): a story's questions return to the story page, Read again keeps the level read.
+- 2026-10-13: BR-9 as built (section 11 note): the word topic list with Hear through `playPrompt`, no flashcard preview until F-VOC-003 C-5.
