@@ -63,6 +63,25 @@ jobs:
           test -f apps/web/out/design-preview/scenes.html
           test -f apps/web/out/design-preview/scenes/library.html
 
+      # F-SITE-002 S-9: the site pages and the metadata routes are in the export. Names are whole segments, so
+      # `teachers.html` and `parents.html` never stand in for `teach.html` or `parent.html`.
+      - name: Site pages, robots.txt and sitemap.xml exist (F-SITE-002 S-9)
+        run: |
+          for f in index.html learners.html parents.html teachers.html robots.txt sitemap.xml; do
+            test -f "apps/web/out/$f" || { echo "missing apps/web/out/$f"; exit 1; }
+          done
+          grep -qx 'Disallow: /design-preview' apps/web/out/robots.txt
+          grep -qx 'Sitemap: https://hangulroute.com/sitemap.xml' apps/web/out/robots.txt
+          for page in '' /learners /parents /teachers /about /privacy /terms; do
+            grep -q "<loc>https://hangulroute.com${page:-/}</loc>" apps/web/out/sitemap.xml || { echo "sitemap misses ${page:-/}"; exit 1; }
+          done
+          # never a grown-up path or the contact sheets, at the root or under a locale prefix (whole segments).
+          # The alternation is GROWN_UP_PREFIXES (packages/content-schema app-shell.ts) plus design-preview;
+          # site-surface.test.ts fails when the two drift apart.
+          if grep -Eq 'hangulroute\.com(/[a-z]{2})?/(signin|start|teach|parent|account|design-preview)([/.?"<]|$)' apps/web/out/sitemap.xml; then
+            echo "sitemap.xml lists a grown-up path or /design-preview"; exit 1
+          fi
+
       # There is no per-PR preview URL (Workers Builds deploys main only), so the
       # built export is attached to the run: art reviewers download it, run
       # `tar -xzf web-export.tgz` and `node apps/web/e2e/serve-out.mjs out`, then
@@ -114,3 +133,6 @@ jobs:
           done
           grep -q 'href="/es/about"' apps/web/out/es.html
           grep -q 'href="/ko/privacy"' apps/web/out/ko.html
+          # F-SITE-002 S-9: the QA sitemap names the shown locales with hreflang alternates
+          grep -q '<loc>https://hangulroute.com/es/teachers</loc>' apps/web/out/sitemap.xml
+          grep -q 'hreflang="ko" href="https://hangulroute.com/ko/learners"' apps/web/out/sitemap.xml

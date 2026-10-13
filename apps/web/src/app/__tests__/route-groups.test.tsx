@@ -85,7 +85,8 @@ describe('three route groups, each with its own document', () => {
   });
 
   it('every page and layout lives in a group: the top layout renders no document, so one outside would ship without <html>', () => {
-    const TOP_LEVEL = new Set(['layout.tsx', 'not-found.tsx', 'globals.css']);
+    // `robots.ts` and `sitemap.ts` are metadata routes (F-SITE-002 S-9): they write `robots.txt` and `sitemap.xml`, no document.
+    const TOP_LEVEL = new Set(['layout.tsx', 'not-found.tsx', 'globals.css', 'robots.ts', 'sitemap.ts']);
     const IN_A_GROUP = /^(\(en\)|\(loc\)\/\[locale\]|\(console\))\//;
     const misplaced = walk(appDir).filter(
       (file) => !TOP_LEVEL.has(file) && !file.startsWith('__tests__/') && !IN_A_GROUP.test(file),
