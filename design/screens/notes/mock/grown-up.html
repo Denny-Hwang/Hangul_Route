@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notes for a learner (F-FEEDBACK-001 mock)</title>
+<link rel="stylesheet" href="notes.css">
+</head>
+<body>
+<div class="gz"><main class="gz-screen"><div class="back-row"><button type="button" class="icon-button" aria-label="Back"><svg class="icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg></button></div><h1 class="gz-title">Notes for Mina</h1><section class="one-time" aria-label="Notes from classes"><p>Notes from classes: All notes.</p><div class="row-wrap"><button type="button" class="btn">Keep</button><button type="button" class="btn">Change</button></div></section><ul class="stack-md"><li class="gz-card"><p class="gz-meta" id="gzn-46">Your teacher · Saturday Class B · Today</p><p class="gz-preset">Your reading is getting stronger.</p><p class="note-words" lang="en">Loved your reading in class today</p><p class="status-line"><span>Opened</span></p><div class="gz-actions"><button type="button" class="btn btn-small" aria-describedby="gzn-46">Hide from Mina</button><button type="button" class="btn btn-small" aria-describedby="gzn-46">Report</button></div></li><li class="gz-card put-away"><p class="gz-meta" id="gzn-47">Grandma · Today</p><p class="gz-preset">Thinking of you. Have fun learning today.</p><p class="note-words" lang="ko">할머니가 많이 사랑해</p><p class="status-line"><span>Put away on this device</span></p><div class="gz-actions"><button type="button" class="btn btn-small" aria-describedby="gzn-47">Hide from Mina</button><button type="button" class="btn btn-small" aria-describedby="gzn-47">Report</button></div></li><li class="gz-card"><p class="gz-meta" id="gzn-48">Your teacher · Saturday Class B · Yesterday</p><p class="gz-preset">See you in class soon.</p><p class="status-line"><span>Opened</span><span class="sep" aria-hidden="true">·</span><span class="answer"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 20.5 C9 17.5 3.5 13.5 3.5 8.75 A4.25 4.25 0 0 1 12 8.75 A4.25 4.25 0 0 1 20.5 8.75 C20.5 13.5 15 17.5 12 20.5 Z" style="fill: none; stroke: var(--colors-text-primary); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round"/></svg>Thank you</span></p><div class="gz-actions"><button type="button" class="btn btn-small" aria-describedby="gzn-48">Hide from Mina</button><button type="button" class="btn btn-small" aria-describedby="gzn-48">Report</button></div></li><li class="gz-card"><p class="gz-meta" id="gzn-49">Mom · Oct 9</p><p class="gz-preset">I am proud of how hard you worked.</p><p class="note-words" lang="en">So proud of your neat writing this week</p><p class="status-line"><span>Opened</span><span class="sep" aria-hidden="true">·</span><span class="answer"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2 L13 9 L20 10 L13 11 L12 18 L11 11 L4 10 L11 9 Z" style="fill: var(--colors-text-primary)"/></svg>This made me happy</span></p><div class="gz-actions"><button type="button" class="btn btn-small" aria-describedby="gzn-49">Hide from Mina</button><button type="button" class="btn btn-small" aria-describedby="gzn-49">Report</button></div></li></ul><fieldset class="choices"><legend>Notes from classes</legend><label class="choice"><input type="radio" name="mode-50" checked><span>All notes</span></label><label class="choice"><input type="radio" name="mode-50"><span>Encouragements only</span></label><label class="choice"><input type="radio" name="mode-50"><span>Off</span></label><p class="quiet-line">Notes from your family always arrive.</p><p class="quiet-line">Teachers see the answer Mina picks on their notes.</p></fieldset><div><button type="button" class="btn">Send a note</button></div></main></div>
+<script>
+document.addEventListener('click', function (e) {
+  var t = e.target.closest('[data-toggle]');
+  if (t) {
+    var p = document.getElementById(t.getAttribute('aria-controls'));
+    var open = t.getAttribute('aria-expanded') !== 'true';
+    t.setAttribute('aria-expanded', String(open));
+    if (p) p.hidden = !open;
+    return;
+  }
+  var r = e.target.closest('[role="radio"]');
+  if (r && !r.hasAttribute('aria-disabled')) {
+    var g = r.closest('[role="radiogroup"]');
+    g.querySelectorAll('[role="radio"]').forEach(function (x) { x.setAttribute('aria-checked', String(x === r)); x.tabIndex = x === r ? 0 : -1; });
+    var live = g.querySelector('[data-live]');
+    if (live) live.textContent = r.getAttribute('data-picked');
+  }
+});
+</script>
+</body>
+</html>
