@@ -335,4 +335,35 @@ describe('notes-store (F-FEEDBACK-001 section 6.9)', () => {
     vi.mocked(writeJson).mockRejectedValueOnce(new Error('quota'));
     await expect(useNotesStore.getState().applyInbox('profile:a', { notes: [note('aaaaaaaa')], notePrefs: prefs })).resolves.toEqual({ added: ['note:aaaaaaaa'], removed: [] });
   });
+  it('FB-9: marks when the grown-up last looked at a learner\'s notes', async () => {
+    await useNotesStore.getState().markGrownUpSeen('profile:a', new Date('2026-10-12T10:00:00.000Z'));
+    expect(mem.get('notes:profile:a')).toMatchObject({ grownUpSeenAt: '2026-10-12T10:00:00.000Z' });
+  });
+
+  it('FB-9: forgetNote drops a hidden note, its put-away id and its pending state write, but never a pending report', async () => {
+    await useNotesStore.getState().applyInbox('profile:a', { notes: [note('aaaaaaaa'), note('bbbbbbbb')], notePrefs: prefs });
+    await useNotesStore.getState().markRead('profile:a', 'note:aaaaaaaa');
+    await useNotesStore.getState().putAway('profile:a', 'note:aaaaaaaa');
+    await useNotesStore.getState().queueReport('profile:a', 'note:bbbbbbbb', 'unkind');
+    await useNotesStore.getState().forgetNote('profile:a', 'note:aaaaaaaa');
+    await useNotesStore.getState().forgetNote('profile:a', 'note:bbbbbbbb');
+    const d = useNotesStore.getState().byProfile['profile:a'];
+    expect(d?.notes).toEqual([]);
+    expect(d?.putAway).toEqual([]);
+    expect(d?.queue).toEqual([expect.objectContaining({ kind: 'report', noteId: 'note:bbbbbbbb' })]);
+  });
+
+  it('FB-9: setPrefs stores the class-notes choice the Worker accepted', async () => {
+    await useNotesStore.getState().applyInbox('profile:a', { notes: [], notePrefs: prefs });
+    await useNotesStore.getState().setPrefs('profile:a', { classes: 'presets', acknowledged: true });
+    expect(useNotesStore.getState().byProfile['profile:a']).toMatchObject({ prefs: { classes: 'presets', acknowledged: true }, classNotesCardSeen: true });
+  });
+
+  it('FB-9: flush answers what happened to each write it sent', async () => {
+    await useNotesStore.getState().applyInbox('profile:a', { notes: [note('aaaaaaaa')], notePrefs: prefs });
+    await useNotesStore.getState().queueReport('profile:a', 'note:aaaaaaaa', 'unsafe', 'grown_up_pin');
+    const c = client({ reportNote: vi.fn<NotesClient['reportNote']>(async () => ({ status: 'error', http: 429, code: 'too_many' })) });
+    const outcomes = await useNotesStore.getState().flush('profile:a', c, creds);
+    expect(outcomes).toEqual([{ kind: 'report', noteId: 'note:aaaaaaaa', outcome: 'limited' }]);
+  });
 });
