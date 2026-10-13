@@ -43,9 +43,11 @@ export const GENERATED_HEADER =
  * Bundle budget (F-STORY-001 §3.9): the launch set of 24 stories. Raising a
  * ceiling is a reviewed one-line change. `artRaw` is the scene-art share
  * (F-STORY-002 §3.9.7): the compact JSON of every bundled scene's `art`.
+ * `totalRaw` was 1.0 MB until PR 1.9 gave all 24 stories a shelf block: their
+ * derived shelf episodes and quests add about 50 KB raw (gzip stays in budget).
  */
 export const BUDGET = Object.freeze({
-  totalRaw: 1_000_000,
+  totalRaw: 1_100_000,
   totalGzip: 260_000,
   perStoryRaw: 60_000,
   artRaw: 130_000,
