@@ -16,7 +16,12 @@ vi.mock('react-native', () => ({ View: 'View', Text: 'Text', Pressable: 'Pressab
 vi.mock('react', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react')>();
   const useId = (): string => ':hint:';
-  return { ...actual, default: { ...actual, useId }, useId };
+  // Called outside a render here: the ref, effect and callback hooks are plain stand-ins.
+  const useRef = <T,>(v: T): { current: T } => ({ current: v });
+  const useEffect = (): void => undefined;
+  const useCallback = <T,>(fn: T): T => fn;
+  const hooks = { useId, useRef, useEffect, useCallback };
+  return { ...actual, ...hooks, default: { ...actual, ...hooks } };
 });
 
 type Props = Record<string, unknown>;
@@ -73,5 +78,41 @@ describe('Button accessibilityHint', () => {
         expect(body(el).map((c) => c.type), os).toEqual(['Text']);
       }
     }
+  });
+});
+
+describe('Button softDisabled (a waiting button that stays focusable)', () => {
+  it('web: stays an enabled <button> in the tab order (aria-disabled is written to its node), announced disabled, a press does nothing', () => {
+    platform.OS = 'web';
+    const onPress = vi.fn();
+    const el = pressable({ softDisabled: true, onPress, accessibilityHint: HINT });
+    expect(el.props.disabled).toBe(false);
+    expect(el.props.accessibilityState).toEqual({ disabled: true });
+    expect(el.props.onPress).toBeUndefined();
+    expect(el.props['aria-describedby']).toBe(':hint:');
+  });
+
+  it('native: plainly disabled (a screen reader still reaches a disabled view)', () => {
+    platform.OS = 'ios';
+    const el = pressable({ softDisabled: true });
+    expect(el.props.disabled).toBe(true);
+    expect(el.props.accessibilityState).toEqual({ disabled: true });
+    platform.OS = 'web';
+  });
+
+  it('a hard disabled wins, and a plain button is enabled', () => {
+    platform.OS = 'web';
+    expect(pressable({ softDisabled: true, disabled: true }).props.disabled).toBe(true);
+    expect(pressable({}).props.disabled).toBe(false);
+    expect(pressable({}).props.accessibilityState).toEqual({ disabled: false });
+  });
+
+  it('forwards the node to a callback or object pressableRef', () => {
+    const fn = vi.fn();
+    ((pressable({ pressableRef: fn }) as unknown as { ref: (v: unknown) => void }).ref)('node');
+    expect(fn).toHaveBeenCalledWith('node');
+    const obj = { current: null as unknown };
+    ((pressable({ pressableRef: obj as unknown as ButtonProps['pressableRef'] }) as unknown as { ref: (v: unknown) => void }).ref)('node2');
+    expect(obj.current).toBe('node2');
   });
 });

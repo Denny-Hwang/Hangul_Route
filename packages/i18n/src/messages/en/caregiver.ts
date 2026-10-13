@@ -977,6 +977,7 @@ export const caregiver = {
       destinationBusy: 'That class has many moves waiting. Try again in a few days.',
       tooManyRequests: 'Too many moves were started today. Try again tomorrow.',
       localeUnavailable: 'Not available in your language yet.',
+      updateApp: 'Update the app to see the new text.',
     },
     /** The self-audience consent frame; the rest of the frame is `console.transfer.consent`. */
     consent: {
