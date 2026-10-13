@@ -19,6 +19,20 @@ button {
 }
 
 /*
+ * Korean wraps at spaces, never inside a word (F-I18N-001 PR 16, the length and layout lens of the Korean
+ * review): the default breaks between any two syllables ("처음부 / 터"). A word longer than the line still
+ * breaks rather than overflowing. Applies to the /ko pages and to any `lang="ko"` element. `anywhere` comes
+ * last and wins where supported: unlike `break-word` it lowers min-content, so a flex or grid item holding a long
+ * unspaced run ("app.hangulroute.com에서") can still shrink at 200% text (WCAG 1.4.4 / 1.4.10) and this rule does
+ * not override `.hr-site`'s own `anywhere`. `break-word` stays as the fallback for Safari before 15.4.
+ */
+:lang(ko) {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+/*
  * Landing — responsive layout (audit W1 / p2-L6, roadmap PR-21).
  * Layout only: colours, spacing and type stay inline from design tokens.
  * Properties overridden at the breakpoints live here, never inline,

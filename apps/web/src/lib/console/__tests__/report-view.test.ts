@@ -737,12 +737,12 @@ describe('the stepper buttons and the console locale', () => {
     expect(checked).toBeGreaterThanOrEqual(10);
   });
 
-  it('formats every date in Korean (the report words stay English until their translations land)', () => {
+  it('formats every date in Korean, inside the Korean report words (F-I18N-001 PR 16)', () => {
     const week = view(STEADY, { locale: 'ko' });
-    expect(week.stepper?.range).toBe('10월 9일 to 10월 15일');
+    expect(week.stepper?.range).toBe('10월 9일~10월 15일');
     expect(week.thisPeriod?.calendar?.cells.map((cell) => cell.weekday)).toEqual(['금', '토', '일', '월', '화', '수', '목']);
-    expect(week.thisPeriod?.calendar?.practiced).toBe('Practiced on 월요일, 수요일 and 목요일.');
-    expect(week.glance?.lastPractice).toBe('Last practice: 10월 15일');
+    expect(week.thisPeriod?.calendar?.practiced).toBe('연습한 날: 월요일, 수요일, 목요일.');
+    expect(week.glance?.lastPractice).toBe('마지막 연습: 10월 15일');
     const month = view(STEADY, { locale: 'ko', query: { period: 'month', at: null, from: null } });
     expect(month.stepper?.range).toBe('2026년 10월');
   });

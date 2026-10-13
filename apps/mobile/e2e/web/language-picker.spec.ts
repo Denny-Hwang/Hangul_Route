@@ -17,12 +17,14 @@ import { readStored, waitForSaved } from './helpers';
  *   E2E_ALL_LOCALES=1  (and serve dist-all)
  *
  * The confirm sheet is written in the language being chosen: Spanish since the
- * Spanish dictionary landed (F-I18N-001 PR 15); Korean still falls back to English
- * until PR 16. The tests read those lines from the dictionary.
+ * Spanish dictionary landed (F-I18N-001 PR 15), Korean since the Korean one did
+ * (PR 16). The tests read those lines from the dictionary.
  */
 const ALL_LOCALES = process.env.E2E_ALL_LOCALES === '1';
 /** The Spanish language-picker lines (the sheet is drawn in the language being chosen). */
 const es = getMessages('es').learner.language;
+/** The Korean language-picker lines (F-I18N-001 PR 16). */
+const ko = getMessages('ko').learner.language;
 
 /** Welcome to Home for one child profile (PIN 1234), then the Profile screen. */
 async function onboardAndOpenProfile(page: Page): Promise<string> {
@@ -158,8 +160,8 @@ test.describe('QA build with every language shown (E2E_ALL_LOCALES=1)', () => {
     await onboardAndOpenProfile(page);
 
     await page.getByTestId('language-device-ko').click();
-    await expect(page.getByText('Use 한국어 on this device?')).toBeVisible();
-    await page.getByRole('button', { name: 'Use 한국어' }).click();
+    await expect(page.getByText(ko.confirmDevice('한국어'))).toBeVisible();
+    await page.getByRole('button', { name: ko.confirmUse('한국어') }).click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'ko');
     await waitForSaved(page, ['device:settings']);
     expect(await readStored(page, 'device:settings')).toEqual({ uiLocale: 'ko' });

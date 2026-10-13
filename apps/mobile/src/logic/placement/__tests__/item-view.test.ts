@@ -212,7 +212,8 @@ describe('optionViews', () => {
     const es = optionViews(READ_WORD, { ...base, testLocale: 'es', m: getMessages('es'), overlays });
     expect(es[0]?.label).toBe('Kimchi (es)');
     const ko = optionViews(READ_WORD, { ...base, testLocale: 'ko', m: getMessages('ko') });
-    expect(ko.map((o) => o.label)).toEqual(['Picture 1', 'Picture 2', 'Picture 3', 'Picture 4']);
+    // With Korean as the test language a picture is named by its position, in the Korean dictionary (F-I18N-001 PR 16).
+    expect(ko.map((o) => o.label)).toEqual(['그림 1', '그림 2', '그림 3', '그림 4']);
     const noGloss = optionViews({ ...READ_WORD, options: READ_WORD.options.map((o) => ({ ...o, en: undefined })) }, base);
     expect(noGloss[1]?.label).toBe('Picture 2');
   });
