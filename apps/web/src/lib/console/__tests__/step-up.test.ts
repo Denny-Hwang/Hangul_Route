@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { isReverificationCancelled, isStepUpHint, settleReverify } from '../step-up';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { CLERK_MODAL_SELECTOR, CLERK_UI_OPEN_TIMEOUT_MS, CLERK_UI_POLL_MS, clerkUiOpen, guardReverify, isReverificationCancelled, isStepUpHint, settleReverify, type ReverifyOutcome } from '../step-up';
 
 /**
  * F-BILL-002 B-8b (sections 4.4, 4.12; wireframe billing/step-up): money calls answer `403` with Clerk's
@@ -73,5 +73,78 @@ describe('settleReverify', () => {
         throw new Error('network');
       }),
     ).toEqual({ kind: 'unavailable' });
+  });
+});
+
+describe('guardReverify: a way out when Clerk cannot be reached (section 4.12)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  const never = (): Promise<ReverifyOutcome<string>> => new Promise(() => undefined);
+
+  it('offline: unavailable at once, and Clerk is never asked', async () => {
+    let asked = 0;
+    const outcome = await guardReverify(
+      async () => {
+        asked += 1;
+        return { kind: 'result', result: 'x' };
+      },
+      { online: () => false, uiOpen: () => false },
+    );
+    expect(outcome).toEqual({ kind: 'unavailable' });
+    expect(asked).toBe(0);
+  });
+
+  it('the attempt settles: its outcome, and the timer is gone', async () => {
+    const outcome = guardReverify(async () => ({ kind: 'result', result: 'url' }) as const, { online: () => true, uiOpen: () => false });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(await outcome).toEqual({ kind: 'result', result: 'url' });
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('Clerk’s UI never opens (its script blocked): unavailable after the open timeout, not before', async () => {
+    let done: ReverifyOutcome<string> | null = null;
+    void guardReverify(never, { online: () => true, uiOpen: () => false }).then((o) => {
+      done = o;
+    });
+    await vi.advanceTimersByTimeAsync(CLERK_UI_OPEN_TIMEOUT_MS - CLERK_UI_POLL_MS);
+    expect(done).toBeNull();
+    await vi.advanceTimersByTimeAsync(CLERK_UI_POLL_MS);
+    expect(done).toEqual({ kind: 'unavailable' });
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('Clerk’s UI opened: no timeout, however long the grown-up takes; the late answer is the outcome', async () => {
+    let resolveAttempt: (o: ReverifyOutcome<string>) => void = () => undefined;
+    let done: ReverifyOutcome<string> | null = null;
+    let open = false;
+    void guardReverify<string>(() => new Promise<ReverifyOutcome<string>>((r) => (resolveAttempt = r)), { online: () => true, uiOpen: () => open }).then((o) => {
+      done = o;
+    });
+    open = true;
+    await vi.advanceTimersByTimeAsync(CLERK_UI_OPEN_TIMEOUT_MS * 6);
+    expect(done).toBeNull();
+    resolveAttempt({ kind: 'cancelled' });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(done).toEqual({ kind: 'cancelled' });
+  });
+
+  it('an attempt that throws: unavailable', async () => {
+    const outcome = guardReverify(() => Promise.reject(new Error('boom')), { online: () => true, uiOpen: () => false });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(await outcome).toEqual({ kind: 'unavailable' });
+  });
+
+  it('clerkUiOpen looks for Clerk’s modal backdrop; false without a DOM', () => {
+    expect(clerkUiOpen()).toBe(false);
+    const seen: string[] = [];
+    vi.stubGlobal('document', { querySelector: (q: string) => (seen.push(q), q === CLERK_MODAL_SELECTOR ? {} : null) });
+    expect(clerkUiOpen()).toBe(true);
+    expect(seen).toEqual([CLERK_MODAL_SELECTOR]);
   });
 });

@@ -51,6 +51,8 @@ export default function BillingPage(): JSX.Element {
   retRef.current = ret;
   const headings = useRef(new Map<string, HTMLHeadingElement>());
   const focused = useRef<string | null>(null);
+  // Summary reads in flight: a poll never starts while one runs (its answer schedules the next poll).
+  const reading = useRef(0);
 
   const dispatch = useCallback((event: ReturnEvent): void => {
     setRet((state) => (state ? returnStep(state, event, new Date()) : state));
@@ -60,7 +62,10 @@ export default function BillingPage(): JSX.Element {
   const load = useCallback(
     async (poll = false): Promise<void> => {
       if (!api) return;
-      const result = await api.billingSummary(poll ? { poll: true } : {});
+      reading.current += 1;
+      const result = await api.billingSummary(poll ? { poll: true } : {}).finally(() => {
+        reading.current -= 1;
+      });
       if (result.ok) {
         setSummary(result.data);
         setFailure(null);
@@ -91,7 +96,10 @@ export default function BillingPage(): JSX.Element {
   // While checking, one poll every CHECKOUT_POLL_MS; each answer is a new state, which schedules the next.
   useEffect(() => {
     if (!api || !shouldPoll(ret)) return undefined;
-    const timer = setTimeout(() => void load(true), POLL_INTERVAL_MS);
+    const timer = setTimeout(() => {
+      // A slower read is still out (the first one, or one after `online`): its answer is the next state.
+      if (reading.current === 0) void load(true);
+    }, POLL_INTERVAL_MS);
     return () => clearTimeout(timer);
   }, [api, ret, load]);
 

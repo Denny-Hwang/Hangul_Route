@@ -1,12 +1,12 @@
 'use client';
 
 import { ClerkProvider, useAuth, useClerk, useReverification, useUser } from '@clerk/clerk-react';
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { sessionFromClerkUser } from '@/lib/console/clerk';
 import { clerkPublishableKey } from '@/lib/console/config';
 import { ROUTES } from '@/lib/console/routing';
 import { readSession, writeSession, type ConsoleSession } from '@/lib/console/session';
-import { settleReverify, type ReverifyOutcome } from '@/lib/console/step-up';
+import { browserOnline, clerkUiOpen, guardReverify, settleReverify, type ReverifyOutcome } from '@/lib/console/step-up';
 import { clearSignInTab } from '@/lib/console/signin-record';
 import { clearGrownUpTab } from '@/lib/console/unlock';
 
@@ -41,10 +41,12 @@ export interface ConsoleAuth {
   devSignIn: (session: ConsoleSession) => void;
   /**
    * F-BILL-002 B-8b: after the page's "Confirm it's you", runs `fetcher` through Clerk's `useReverification`
-   * (Clerk's own verification, then one retry). Dev mode has no token to step up (the Worker skips step-up there,
+   * (Clerk's own verification, then one retry). `first` is the hint answer the page already has: Clerk's handler is
+   * given it instead of sending the refused request a second time. Offline, or when Clerk's UI never opens, the
+   * outcome is `unavailable` (section 4.12). Dev mode has no token to step up (the Worker skips step-up there,
    * section 4.4), so it simply runs `fetcher` once more.
    */
-  reverify: <T>(fetcher: () => Promise<T>) => Promise<ReverifyOutcome<T>>;
+  reverify: <T>(fetcher: () => Promise<T>, first: T) => Promise<ReverifyOutcome<T>>;
 }
 
 const SIGNED_OUT: ConsoleAuth = {
@@ -68,12 +70,18 @@ function ClerkBridge({ children }: { children: ReactNode }): JSX.Element {
   const { isLoaded, user } = useUser();
   const { getToken, sessionId } = useAuth();
   const clerk = useClerk();
-  // One enhanced fetcher for the whole tab; each step-up hands it the request to retry.
-  const pending = useRef<() => Promise<unknown>>(async () => undefined);
-  const enhanced = useReverification(() => pending.current());
-  const reverify = useCallback(<T,>(fetcher: () => Promise<T>): Promise<ReverifyOutcome<T>> => {
-    pending.current = fetcher;
-    return settleReverify(() => enhanced() as Promise<T>);
+  // One enhanced fetcher for the whole tab; each step-up passes it the call to make (Clerk hands its arguments to
+  // both the first call and the retry), so an attempt that never settled cannot retry a later request.
+  const enhanced = useReverification((call: () => Promise<unknown>) => call());
+  const reverify = useCallback(<T,>(fetcher: () => Promise<T>, first: T): Promise<ReverifyOutcome<T>> => {
+    // Clerk's first call answers with the hint already in hand; only the retry reaches the Worker.
+    let replay = true;
+    const call = (): Promise<T> => {
+      if (!replay) return fetcher();
+      replay = false;
+      return Promise.resolve(first);
+    };
+    return guardReverify(() => settleReverify(() => enhanced(call) as Promise<T>), { online: browserOnline, uiOpen: clerkUiOpen });
   }, [enhanced]);
   const value = useMemo<ConsoleAuth>(
     () => ({

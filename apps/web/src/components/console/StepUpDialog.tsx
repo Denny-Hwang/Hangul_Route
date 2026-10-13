@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { isStepUpHint } from '@/lib/console/step-up';
 import { useMessages } from '@/lib/i18n/locale-context';
 import { useConsoleAuth } from './auth-context';
@@ -12,8 +13,11 @@ import { useConsoleAuth } from './auth-context';
  * through `useConsoleAuth().reverify`), which retries the request once; **Not now** or Escape closes it ("Nothing
  * was changed."). A second refusal, or Clerk out of reach, shows "Can't confirm right now" and only Not now: no loop.
  *
- * The page behind is inert while the dialog is open (every sibling on the way up to `body`), focus stays inside it,
- * and on close focus goes back to the button that was pressed.
+ * The dialog is portalled to `body`, so its fixed scrim covers the viewport whatever container it is rendered in.
+ * While it asks (or says it cannot confirm), the page behind is inert (every sibling on the way up to `body`, never
+ * Clerk's own root), focus stays inside it, and on close focus goes back to the button that was pressed. While
+ * Clerk's verification runs, the dialog steps aside entirely (no scrim, nothing inert), so Clerk's modal owns focus;
+ * if Clerk's UI never opens, the guard in `useConsoleAuth().reverify` turns it into "Can't confirm right now".
  */
 
 export type StepUpPhase = 'asking' | 'verifying' | 'unavailable';
@@ -23,12 +27,19 @@ export type StepUpResult<T> = { kind: 'result'; result: T } | { kind: 'cancelled
 
 interface Pending<T> {
   fetcher: () => Promise<T>;
+  /** The hint answer in hand, handed to Clerk so the refused request is not sent twice. */
+  first: T;
   resolve: (result: StepUpResult<T>) => void;
+}
+
+export interface StepUpRunOptions {
+  /** Called once, before the dialog opens, when the answer is the reverification hint. */
+  onHint?: () => void;
 }
 
 export interface StepUpControl {
   /** Runs `fetcher`; on a reverification hint, asks first and resolves once the dialog settles. */
-  run: <T>(fetcher: () => Promise<T>) => Promise<StepUpResult<T>>;
+  run: <T>(fetcher: () => Promise<T>, options?: StepUpRunOptions) => Promise<StepUpResult<T>>;
   /** The open dialog, or null. */
   dialog: { phase: StepUpPhase; onContinue: () => void; onCancel: () => void } | null;
 }
@@ -40,13 +51,14 @@ export function useStepUp(): StepUpControl {
   const opener = useRef<HTMLElement | null>(null);
   const restore = useRef(false);
 
-  const run = useCallback(async <T,>(fetcher: () => Promise<T>): Promise<StepUpResult<T>> => {
+  const run = useCallback(async <T,>(fetcher: () => Promise<T>, options?: StepUpRunOptions): Promise<StepUpResult<T>> => {
     // The pressed button, before the page disables it while the request runs.
     opener.current = typeof HTMLElement !== 'undefined' && typeof document !== 'undefined' && document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const first = await fetcher();
     if (!isStepUpHint(first)) return { kind: 'result', result: first };
+    options?.onHint?.();
     return new Promise<StepUpResult<T>>((resolve) => {
-      pending.current = { fetcher, resolve: resolve as (result: StepUpResult<unknown>) => void };
+      pending.current = { fetcher, first, resolve: resolve as (result: StepUpResult<unknown>) => void };
       setPhase('asking');
     });
   }, []);
@@ -63,7 +75,9 @@ export function useStepUp(): StepUpControl {
     const current = pending.current;
     if (!current) return;
     setPhase('verifying');
-    void reverify(current.fetcher).then((outcome) => {
+    void reverify(current.fetcher, current.first).then((outcome) => {
+      // A late answer for a request the grown-up already closed changes nothing.
+      if (pending.current !== current) return;
       if (outcome.kind === 'result') settle(outcome);
       else if (outcome.kind === 'cancelled') settle({ kind: 'cancelled' });
       else setPhase('unavailable');
@@ -87,6 +101,16 @@ export function useStepUp(): StepUpControl {
 }
 
 /** Makes every element outside the dialog's ancestor chain inert; returns the undo. */
+/**
+ * Clerk mounts its UI in a root of its own under `body` (`#clerk-components`, elements carrying `data-clerk-*` or a
+ * `cl-` class). It is never made inert: a Clerk modal must stay usable whenever it shows.
+ */
+function isClerkRoot(el: Element): boolean {
+  if (el.id.startsWith('clerk')) return true;
+  if (Array.from(el.attributes).some((a) => a.name.startsWith('data-clerk'))) return true;
+  return Array.from(el.classList).some((c) => c.startsWith('cl-'));
+}
+
 function inertOutside(dialog: HTMLElement): () => void {
   const changed: Element[] = [];
   let node: HTMLElement | null = dialog;
@@ -94,7 +118,7 @@ function inertOutside(dialog: HTMLElement): () => void {
     const parent: HTMLElement | null = node.parentElement;
     if (!parent) break;
     for (const sibling of Array.from(parent.children)) {
-      if (sibling === node || sibling.hasAttribute('inert') || sibling.tagName === 'SCRIPT' || sibling.tagName === 'STYLE') continue;
+      if (sibling === node || sibling.hasAttribute('inert') || sibling.tagName === 'SCRIPT' || sibling.tagName === 'STYLE' || isClerkRoot(sibling)) continue;
       sibling.setAttribute('inert', '');
       changed.push(sibling);
     }
@@ -105,7 +129,7 @@ function inertOutside(dialog: HTMLElement): () => void {
   };
 }
 
-export function StepUpDialog({ phase, onContinue, onCancel }: { phase: StepUpPhase; onContinue: () => void; onCancel: () => void }): JSX.Element {
+export function StepUpDialog({ phase, onContinue, onCancel }: { phase: StepUpPhase; onContinue: () => void; onCancel: () => void }): JSX.Element | null {
   const s = useMessages().console.billing.stepUp;
   const titleId = useId();
   const bodyId = useId();
@@ -113,11 +137,13 @@ export function StepUpDialog({ phase, onContinue, onCancel }: { phase: StepUpPha
   const continueRef = useRef<HTMLButtonElement | null>(null);
   const cancelRef = useRef<HTMLButtonElement | null>(null);
 
+  // Clerk's verification owns the screen while it runs: no scrim, nothing inert.
+  const verifying = phase === 'verifying';
   useEffect(() => {
     const el = box.current;
-    if (!el || typeof document === 'undefined') return undefined;
+    if (verifying || !el || typeof document === 'undefined') return undefined;
     return inertOutside(el);
-  }, []);
+  }, [verifying]);
 
   // Asking: focus on Continue. Unavailable: only Not now remains, focused.
   useEffect(() => {
@@ -128,7 +154,7 @@ export function StepUpDialog({ phase, onContinue, onCancel }: { phase: StepUpPha
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     if (event.key === 'Escape') {
       event.preventDefault();
-      if (phase !== 'verifying') onCancel();
+      onCancel();
       return;
     }
     if (event.key !== 'Tab') return;
@@ -148,8 +174,8 @@ export function StepUpDialog({ phase, onContinue, onCancel }: { phase: StepUpPha
     }
   };
 
-  const verifying = phase === 'verifying';
-  return (
+  if (verifying) return null;
+  const dialog = (
     <div className="hr-bill-scrim" ref={box}>
       <div className="hr-bill-dialog" role="dialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={bodyId} onKeyDown={onKeyDown} data-testid="step-up">
         <h2 id={titleId}>{s.title}</h2>
@@ -165,15 +191,17 @@ export function StepUpDialog({ phase, onContinue, onCancel }: { phase: StepUpPha
         )}
         <div className="hr-bill-dialog-actions">
           {phase === 'unavailable' ? null : (
-            <button type="button" ref={continueRef} className="hr-bill-btn hr-bill-btn-primary hr-bill-btn-block" onClick={onContinue} disabled={verifying}>
+            <button type="button" ref={continueRef} className="hr-bill-btn hr-bill-btn-primary hr-bill-btn-block" onClick={onContinue}>
               {s.cta}
             </button>
           )}
-          <button type="button" ref={cancelRef} className="hr-bill-btn hr-bill-btn-block" onClick={onCancel} disabled={verifying}>
+          <button type="button" ref={cancelRef} className="hr-bill-btn hr-bill-btn-block" onClick={onCancel}>
             {s.cancel.cta}
           </button>
         </div>
       </div>
     </div>
   );
+  // Out of any size container on the page (a container is the containing block of a fixed descendant).
+  return typeof document === 'undefined' ? dialog : createPortal(dialog, document.body);
 }

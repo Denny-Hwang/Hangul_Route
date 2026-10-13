@@ -36,11 +36,13 @@ vi.mock('@/components/console/AdultFrame', () => ({
 }));
 
 // Clerk's reverification sits behind `useConsoleAuth().reverify` (its own test: auth-reverify.test.tsx).
-const auth = vi.hoisted(() => ({ outcome: 'retry' as 'retry' | 'cancelled' | 'unavailable', calls: 0 }));
+const auth = vi.hoisted(() => ({ outcome: 'retry' as 'retry' | 'cancelled' | 'unavailable', calls: 0, firsts: [] as unknown[], hold: null as Promise<void> | null }));
 vi.mock('@/components/console/auth-context', () => ({
   useConsoleAuth: () => ({
-    reverify: async (fetcher: () => Promise<unknown>) => {
+    reverify: async (fetcher: () => Promise<unknown>, first: unknown) => {
       auth.calls += 1;
+      auth.firsts.push(first);
+      if (auth.hold) await auth.hold;
       if (auth.outcome === 'cancelled') return { kind: 'cancelled' };
       if (auth.outcome === 'unavailable') return { kind: 'unavailable' };
       return { kind: 'result', result: await fetcher() };
@@ -152,6 +154,8 @@ beforeEach(() => {
   browser.replaced = [];
   auth.outcome = 'retry';
   auth.calls = 0;
+  auth.firsts = [];
+  auth.hold = null;
   win = Object.assign(new EventTarget(), {
     location: {
       assign: (url: string) => void browser.assigned.push(url),
@@ -652,6 +656,9 @@ describe('step-up before money moves (B-8b)', () => {
     });
     await flush();
     expect(auth.calls).toBe(1);
+    // Clerk is handed the hint in hand: the refused request went out once, then the one retry.
+    expect(auth.firsts).toEqual([HINT]);
+    expect(calls.checkout.length).toBe(2);
     expect(dialog(root)).toBeUndefined();
     expect(browser.assigned).toEqual(['https://checkout.stripe.com/c/pay/cs_test_2']);
     Object.defineProperty(calls, 'checkoutResult', { value: null, writable: true, configurable: true });
@@ -713,6 +720,28 @@ describe('step-up before money moves (B-8b)', () => {
     expect(pageText()).toContain(b.stepUp.cancelled);
   });
 
+  it('while Clerk verifies, the dialog steps aside (no scrim over Clerk’s modal); Can’t confirm brings it back', async () => {
+    calls.checkoutResult = HINT;
+    auth.outcome = 'unavailable';
+    let release: () => void = () => undefined;
+    auth.hold = new Promise<void>((resolve) => (release = resolve));
+    const root = await render();
+    await act(async () => {
+      buttonNamed(root, b.buy.family_lifetime.cta).props.onClick();
+    });
+    await act(async () => {
+      buttonNamed(dialog(root) as ReactTestInstance, b.stepUp.cta).props.onClick();
+    });
+    expect(dialog(root)).toBeUndefined();
+    expect(root.findAll((n) => n.props.className === 'hr-bill-scrim').length).toBe(0);
+    expect(buttonNamed(root, b.buy.family_lifetime.cta).props.disabled).toBe(true);
+    await act(async () => {
+      release();
+    });
+    await flush();
+    expect(textOf(dialog(root) as ReactTestInstance)).toContain(b.stepUp.unavailable);
+  });
+
   it('Manage subscription goes through the same step-up', async () => {
     calls.summaries = [ok(summary([card({ coverage: own(), actions: { buy: null, manage: true, contact: false } })]))];
     calls.portalResult = HINT;
@@ -721,5 +750,105 @@ describe('step-up before money moves (B-8b)', () => {
       buttonNamed(root, b.manage.cta).props.onClick();
     });
     expect(textOf(dialog(root) as ReactTestInstance)).toContain(b.stepUp.body);
+  });
+});
+
+describe('more answers (review round)', () => {
+  it('checkout answers promo_invalid: the code is dropped, the invalid note shows, the plain price is back', async () => {
+    const promo: Promo = { id: 'promo_1', code: 'HOYA20', name: null, percentOff: 20, amountOffCents: null, duration: 'once' };
+    calls.promoResult = { ok: true, data: { promo } };
+    calls.checkoutResult = { ok: false, error: 'bad_request', status: 400, code: 'promo_invalid' };
+    const root = await render();
+    act(() => root.find((n) => n.type === 'input' && n.props.name === 'promo').props.onChange({ target: { value: 'HOYA20' } }));
+    await act(async () => {
+      root.find((n) => n.type === 'form').props.onSubmit({ preventDefault: () => undefined });
+    });
+    expect(pageText()).toContain(promoPriceLine('family_lifetime', promo, 'en') as string);
+    await act(async () => {
+      buttonNamed(root, b.buy.family_lifetime.cta).props.onClick();
+    });
+    expect(pageText()).toContain(en.console.promoInvalid);
+    expect(pageText()).not.toContain(promoPriceLine('family_lifetime', promo, 'en') as string);
+    expect(pageText()).toContain(planPrice('family_lifetime', 'en'));
+    expect(browser.assigned).toEqual([]);
+  });
+
+  it('a refused portal call: Couldn’t open, live off and not configured each say so; nothing opens', async () => {
+    calls.summaries = [ok(summary([card({ coverage: own(), actions: { buy: null, manage: true, contact: false } })]))];
+    for (const [code, words] of [
+      ['stripe_error', b.portalFailed],
+      ['live_not_enabled', b.liveOff],
+      ['not_configured', b.notConfigured],
+    ] as const) {
+      calls.portalResult = { ok: false, error: 'refused', status: 503, code };
+      const root = await render();
+      await act(async () => {
+        buttonNamed(root, b.manage.cta).props.onClick();
+      });
+      expect(pageText()).toContain(words);
+      expect(browser.assigned).toEqual([]);
+      act(() => mounted?.unmount());
+      mounted = null;
+    }
+  });
+
+  it('the legacy account card: Manage subscription opens the portal for the account', async () => {
+    calls.summaries = [ok(summary([], { account: [{ coverage: own(), actions: { manage: true }, receipts: [], legacyNoHistory: true }] }))];
+    const root = await render();
+    expect(pageText()).toContain(b.accountCard.title);
+    await act(async () => {
+      buttonNamed(root, b.manage.cta).props.onClick();
+    });
+    expect(calls.portal).toEqual([{ subjectKind: 'account', subjectId: 'acc_1' }]);
+    expect(browser.assigned).toEqual(['https://billing.stripe.com/p/session/test_1']);
+  });
+
+  describe('back from Stripe', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('the first read fails: only the return notice with Try again (no cards, no skeleton); Try again checks and shows the cards', async () => {
+      browser.search = '?checkout=success&plan=family_lifetime&id=space%3Afam';
+      calls.summaries = [failed('unknown'), ok(summary([card()]))];
+      const root = await render();
+      expect(textOf(byTestId(root, 'bill-return')[0] as ReactTestInstance)).toContain(b.cantCheck);
+      expect(byTestId(root, 'bill-card')).toEqual([]);
+      expect(byTestId(root, 'bill-loading')).toEqual([]);
+      expect(buttons(root).filter((n) => textOf(n) === b.retry.cta).length).toBe(1);
+      await act(async () => {
+        buttonNamed(root, b.retry.cta).props.onClick();
+      });
+      await act(async () => {
+        vi.advanceTimersByTime(2000);
+      });
+      await flush();
+      expect(calls.summaryArgs).toEqual([{}, { poll: true }]);
+      expect(byTestId(root, 'bill-card').length).toBe(1);
+    });
+
+    it('a slow first read: the poll timer never starts a second read while it is out', async () => {
+      browser.search = '?checkout=success&plan=family_lifetime&id=space%3Afam';
+      let answer: (r: unknown) => void = () => undefined;
+      calls.summaries = [() => new Promise((resolve) => (answer = resolve)), ok(summary([card()]))];
+      await render();
+      await act(async () => {
+        vi.advanceTimersByTime(10_000);
+      });
+      expect(calls.summaryCalls).toBe(1);
+      await act(async () => {
+        answer({ ok: true, data: summary([card()]) });
+      });
+      await flush();
+      await act(async () => {
+        vi.advanceTimersByTime(2000);
+      });
+      await flush();
+      expect(calls.summaryCalls).toBe(2);
+      expect(calls.summaryArgs).toEqual([{}, { poll: true }]);
+    });
   });
 });
