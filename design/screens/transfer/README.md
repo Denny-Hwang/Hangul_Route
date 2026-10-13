@@ -137,8 +137,8 @@ T-6a adds the console ones to the console message namespace (`console.transfer.*
 | "Not now, choose a reason" | `a11y`: the destination's Not now disclosure (D5) |
 | "That code is for the class {Name} is in now." | `409 same_space` (console and app) |
 | "{Name} already has a move waiting." | `409 already_open`, teacher start sheet |
-| "A class already asked about moving {Name}. Its card is above." / "... Look on the Classes card." | `409 already_open` started by a class: family page / app |
-| "A move for {Name} is already waiting. Its card is above." / "... Look on the Classes card." | `409 already_open` started by the learner side: family page / app |
+| "A class already asked about moving {Name}. Its card is above." / "... Look on the Classes & family card." | `409 already_open` started by a class: family page / app |
+| "A move for {Name} is already waiting. Its card is above." / "... Look on the Classes & family card." | `409 already_open` started by the learner side: family page / app |
 | "That class has many moves waiting. Try again in a few days." | `409 destination_busy` |
 | "Too many moves were started today. Try again tomorrow." | `429 too_many_requests` |
 | "That code can't be used for a move." | `422 not_transferable` |

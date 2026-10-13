@@ -509,7 +509,7 @@ export const caregiver = {
       cancel: { cta: 'Cancelar' },
     },
     card: {
-      classScope: 'Primero usa el código de rescate de un adulto.',
+      classScope: 'Primero usa tu código de rescate.',
       askConsole: 'Pide al adulto que tiene la cuenta que responda en la consola.',
       needsPin: 'Primero un adulto debe crear un PIN. Abre Perfil y luego Zona de adultos.',
       pinTooNew: 'Los cambios se abren un día después de crear el PIN.',
@@ -532,7 +532,7 @@ export const caregiver = {
     },
     move: {
       title: 'Cambiar a otra clase',
-      step1: 'Pide al nuevo docente el código de su clase.',
+      step1: 'Pide el código a quien enseña en la nueva clase.',
       codeLabel: 'Código de clase',
       sent: 'Solicitud enviada. Nada cambia hasta que todos digan que sí.',
     },
@@ -564,7 +564,7 @@ export const caregiver = {
     },
     a11y: {
       review: 'Revisar el cambio',
-      move: (space: string) => `Cambiar de clase: ${space}`,
+      move: (space: string) => `Cambiar desde ${space}`,
     },
   },
 } satisfies DeepPartial<Messages['caregiver']>;

@@ -521,7 +521,7 @@ export const caregiver = {
   },
   /**
    * Class moves in the learner app (F-SPACE-002 T-7d), 해요체 like the rest of the app (the consent lines and the
-   * console frame keep their 합니다체). A class name stands before 에서, 에 or a colon, a learner's name before 의, 에게 or a colon, never
+   * console frame keep their 합니다체; the self consent title and Yes follow that frame's 합니다체, so one sheet keeps one register). A class name stands before 에서, 에 or a colon, a learner's name before 의, 에게 or a colon, never
    * before a particle that changes with the final consonant; no 반 after a class name.
    */
   transfer: {
@@ -537,12 +537,12 @@ export const caregiver = {
       cancel: { cta: '취소' },
     },
     card: {
-      classScope: '먼저 어른의 복구 코드를 사용해 주세요.',
+      classScope: '먼저 복구 코드를 사용해 주세요.',
       askConsole: '계정이 있는 어른에게 콘솔에서 답해 달라고 해 주세요.',
       needsPin: '먼저 어른이 PIN을 만들어야 해요. 프로필에서 어른 공간을 열어 주세요.',
       pinTooNew: 'PIN을 만들고 하루가 지나면 이동할 수 있어요.',
       sourceAsked: (source: string) => `${source}에서 반 이동을 물어봤어요.`,
-      learnerAsked: (destination: string) => `요청한 이동: ${destination}`,
+      learnerAsked: (destination: string) => `요청한 이동: ${destination}.`,
     },
     lines: {
       checkAgain: '다시 한번 확인해 주세요.',
@@ -554,7 +554,7 @@ export const caregiver = {
       ended: '이 요청은 끝났어요.',
       joinAgain: '새 반에 다시 참여해 주세요.',
       moved: (name: string, destination: string) => `반을 옮겼어요. ${name}의 새 반: ${destination}. 카드와 별은 ${name}에게 그대로 있어요.`,
-      askedMoving: (source: string, name: string, destination: string) => `${source}에서 ${name}의 반 이동을 물어봤어요. 새 반: ${destination}`,
+      askedMoving: (source: string, name: string, destination: string) => `${source}에서 ${name}의 반 이동을 물어봤어요. 새 반: ${destination}.`,
       consoleAnswers: '계정이 있는 어른이 콘솔에서 답해요.',
       notNowEnds: '"지금은 안 함"을 누르면 이 요청이 끝나요.',
     },
@@ -582,12 +582,12 @@ export const caregiver = {
       localeUnavailable: '아직 이 언어로는 볼 수 없어요.',
     },
     consent: {
-      titleSelf: (destination: string) => `새 반(${destination})으로 옮기시겠어요?`,
-      yesSelf: '네, 옮겨 주세요',
+      titleSelf: (destination: string) => `새 반(${destination})으로 옮기시겠습니까?`,
+      yesSelf: '네, 옮깁니다',
     },
     readOnly: { title: '기다리는 이동이 있어요' },
     home: {
-      learnerWaiting: (destination: string) => `기다리는 이동이 있어요. 새 반: ${destination}`,
+      learnerWaiting: (destination: string) => `기다리는 이동이 있어요. 새 반: ${destination}.`,
       selfWaiting: '나를 기다리는 이동이 있어요.',
     },
     a11y: {

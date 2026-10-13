@@ -721,9 +721,9 @@ export const caregiver = {
     },
     /** Classes card quiet lines (variants a, b, d, d') and the pending row's first line. */
     card: {
-      classScope: "Use your grown-up's rescue code first.",
+      classScope: 'Use your rescue code first.',
       askConsole: 'Ask the grown-up with the account to answer this in the console.',
-      needsPin: 'A grown-up needs to set up a PIN first. Open Profile, then Grown-ups.',
+      needsPin: 'A grown-up needs to set up a PIN first. Open Profile, then Grown-up zone.',
       pinTooNew: 'Moves open one day after the PIN is set.',
       /** Teacher-started (`initiator: 'source'`). */
       sourceAsked: (source: string) => `${source} asked about a move.`,
@@ -766,8 +766,8 @@ export const caregiver = {
       cooldown: 'You can ask again in about a week.',
       caregiverRequired: 'Ask the grown-up with the account to start this move in the console.',
       deviceConsentLocked: "Moves can't be started on this device yet.",
-      alreadyOpenClass: (name: string) => `A class already asked about moving ${name}. Look on the Classes card.`,
-      alreadyOpenLearner: (name: string) => `A move for ${name} is already waiting. Look on the Classes card.`,
+      alreadyOpenClass: (name: string) => `A class already asked about moving ${name}. Look on the Classes & family card.`,
+      alreadyOpenLearner: (name: string) => `A move for ${name} is already waiting. Look on the Classes & family card.`,
       sameSpace: (name: string) => `That code is for the class ${name} is in now.`,
       notTransferable: "That code can't be used for a move.",
       destinationBusy: 'That class has many moves waiting. Try again in a few days.',

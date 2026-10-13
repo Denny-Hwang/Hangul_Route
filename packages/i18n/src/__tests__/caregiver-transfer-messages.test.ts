@@ -43,9 +43,9 @@ describe('caregiver.transfer (English, F-SPACE-002 section 4.12)', () => {
     expect(t.actions.move.cta).toBe('Move');
     expect(t.actions.review.cta).toBe('Review');
     expect(t.actions.setUpPin.cta).toBe('Set up PIN');
-    expect(t.card.classScope).toBe("Use your grown-up's rescue code first.");
+    expect(t.card.classScope).toBe('Use your rescue code first.');
     expect(t.card.askConsole).toBe('Ask the grown-up with the account to answer this in the console.');
-    expect(t.card.needsPin).toBe('A grown-up needs to set up a PIN first. Open Profile, then Grown-ups.');
+    expect(t.card.needsPin).toBe('A grown-up needs to set up a PIN first. Open Profile, then Grown-up zone.');
     expect(t.card.pinTooNew).toBe('Moves open one day after the PIN is set.');
   });
 
@@ -78,8 +78,8 @@ describe('caregiver.transfer (English, F-SPACE-002 section 4.12)', () => {
     expect(e.cooldown).toBe('You can ask again in about a week.');
     expect(e.caregiverRequired).toBe('Ask the grown-up with the account to start this move in the console.');
     expect(e.deviceConsentLocked).toBe("Moves can't be started on this device yet.");
-    expect(e.alreadyOpenClass('Mina')).toBe('A class already asked about moving Mina. Look on the Classes card.');
-    expect(e.alreadyOpenLearner('Mina')).toBe('A move for Mina is already waiting. Look on the Classes card.');
+    expect(e.alreadyOpenClass('Mina')).toBe('A class already asked about moving Mina. Look on the Classes & family card.');
+    expect(e.alreadyOpenLearner('Mina')).toBe('A move for Mina is already waiting. Look on the Classes & family card.');
     expect(e.sameSpace('Mina')).toBe('That code is for the class Mina is in now.');
     expect(e.notTransferable).toBe("That code can't be used for a move.");
     expect(e.destinationBusy).toBe('That class has many moves waiting. Try again in a few days.');
@@ -172,5 +172,72 @@ describe('caregiver.transfer in Korean and Spanish (same PR, F-I18N-001 section 
     const ko = getMessages('ko').caregiver.transfer;
     expect(ko.consent.titleSelf('{b}')).not.toMatch(/\{b\}\s*반/);
     expect(ko.home.learnerWaiting('{b}')).not.toMatch(/\{b\}\s*반/);
+  });
+
+  it('ko and es: no blame word, no countdown and no age range either (anti-shame in every locale)', () => {
+    const LOCAL: Record<'ko' | 'es', RegExp[]> = {
+      ko: [/거절/, /늦었/, /실패/, /남았/, /마감/, /서둘러/, /\d+\s*(일|시간)\s*남/, /\d+\s*(살|세)/],
+      es: [/rechaz/i, /atrasad/i, /fall(ó|aste|aron)/i, /plazo/i, /date prisa/i, /quedan\s+\d/i, /\d+\s*años/i],
+    };
+    for (const locale of ['ko', 'es'] as const) {
+      for (const { path, text } of outputsOf(getMessages(locale).caregiver.transfer, 'caregiver.transfer')) {
+        for (const re of LOCAL[locale]) expect(re.test(text), `${locale} ${path}: ${text}`).toBe(false);
+      }
+    }
+  });
+
+  it('every locale: static lines carry no digit (no count, no timer)', () => {
+    for (const locale of LOCALES) {
+      const tree = getMessages(locale).caregiver.transfer as unknown as Record<string, unknown>;
+      for (const path of leafPaths(tree)) {
+        const value = lookup(tree, path);
+        if (typeof value === 'string') expect(/\p{Nd}/u.test(value), `${locale} ${path}: ${value}`).toBe(false);
+      }
+    }
+  });
+
+  it('every locale: the who-asked line, then a state line, ends its own sentence, so the state line stays a sentence of its own', () => {
+    for (const locale of LOCALES) {
+      const own = getMessages(locale).caregiver.transfer;
+      const firsts = [
+        own.card.learnerAsked('Saturday Class B'),
+        own.card.sourceAsked('Sunday Class A'),
+        own.lines.askedMoving('Sunday Class A', 'Mina', 'Saturday Class B'),
+        own.home.learnerWaiting('Saturday Class B'),
+      ];
+      for (const first of firsts) {
+        expect(first, `${locale}: ${first}`).toMatch(/[.?!]$/);
+        for (const state of [own.lines.checkAgain, own.lines.waitingClasses, own.lines.waitingOther]) {
+          expect(`${first} ${state}`.split(/(?<=[.?!])\s+/), `${locale}: ${first} ${state}`).toEqual([...first.split(/(?<=[.?!])\s+/), state]);
+        }
+      }
+    }
+  });
+
+  it('ko: the self consent title and Yes keep the shared consent frame register (hamnida-che)', () => {
+    const ko = getMessages('ko');
+    expect(ko.caregiver.transfer.consent.titleSelf('{b}')).toMatch(/습니까\?$/);
+    expect(ko.caregiver.transfer.consent.yesSelf).toMatch(/니다$/);
+    expect(ko.console.transfer.consent.readToEnd).toMatch(/니다\.$/);
+  });
+
+  it('en: the app answers that the console also gives read the same words (one source of copy)', () => {
+    const app = getMessages('en').caregiver.transfer.errors;
+    const web = getMessages('en').console.transfer.errors;
+    const SHARED = ['codeNotFound', 'codeExpired', 'full', 'tooManyAttempts', 'destinationBusy', 'tooManyRequests', 'notTransferable', 'cooldown', 'localeUnavailable'] as const;
+    for (const key of SHARED) expect(app[key], key).toBe(web[key]);
+    expect(app.alreadyMember('Mina')).toBe(web.alreadyMember('Mina'));
+    expect(app.sameSpace('Mina')).toBe(web.sameSpace('Mina'));
+  });
+
+  it('en: navigation hints name the labels the app really shows', () => {
+    const en = getMessages('en').caregiver;
+    expect(t.card.needsPin).toContain(en.audience.family.zoneLabel);
+    expect(t.errors.alreadyOpenClass('Mina')).toContain(en.spaces.title);
+    expect(t.errors.alreadyOpenLearner('Mina')).toContain(en.spaces.title);
+  });
+
+  it('es: the screen reader name of Move puts the class after "desde", the class being left', () => {
+    expect(getMessages('es').caregiver.transfer.a11y.move('{s}')).toMatch(/^Cambiar desde \{s\}$/);
   });
 });
