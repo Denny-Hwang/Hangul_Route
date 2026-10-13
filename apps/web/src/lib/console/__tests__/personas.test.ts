@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { SpaceListItem } from '../api';
 import {
+  homeOfHint,
   activePersona,
   fallbackPersona,
   heldPersonas,
@@ -41,6 +42,14 @@ describe('heldPersonas', () => {
     expect(heldPersonas([item('sp_x', 'family', 'student')])).toEqual([]);
     expect(heldPersonas([{ ...family, space: { ...family.space, kind: 'galaxy' as never } }])).toEqual([]);
     expect(heldPersonas(null)).toEqual([]);
+  });
+});
+
+describe('homeOfHint (the way back from /start, A-5b review)', () => {
+  it('the home of the hinted persona; the teacher home with no hint', () => {
+    expect(homeOfHint('parent')).toBe('/parent');
+    expect(homeOfHint('teacher')).toBe('/teach/home');
+    expect(homeOfHint(null)).toBe('/teach/home');
   });
 });
 

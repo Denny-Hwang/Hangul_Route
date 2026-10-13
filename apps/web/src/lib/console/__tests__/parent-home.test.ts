@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { RosterLearner, SpaceListItem } from '../api';
-import { familyActionLinks, joinOrder, learnerCardActions, parentHomeView } from '../parent-home';
+import { familyActionLinks, isArchivedFamily, joinOrder, learnerCardActions, managesJoinCode, parentHomeView } from '../parent-home';
 
 /**
  * F-APP-001 A-5b, section 3.8 (design/screens/app-shell/parent-home.md): what the family home draws.
@@ -42,6 +42,23 @@ describe('parentHomeView', () => {
     expect(view.state).toBe('families');
     if (view.state !== 'families') return;
     expect(view.families.map((f) => f.space.id)).toEqual(['sp_0', 'sp_a', 'sp_b']);
+  });
+
+  it('archived families come after the live ones, each group oldest first (review: an archived family is never drawn as live)', () => {
+    const archived = (entry: SpaceListItem): SpaceListItem => ({ ...entry, space: { ...entry.space, archivedAt: '2026-10-09T00:00:00Z' } });
+    const view = parentHomeView([
+      archived(item('sp_old', 'family', 'owner', '2026-08-01T00:00:00Z')),
+      item('sp_b', 'family', 'owner', '2026-10-02T00:00:00Z'),
+      item('sp_a', 'family', 'caregiver', '2026-09-02T00:00:00Z'),
+    ]);
+    if (view.state !== 'families') throw new Error('expected families');
+    expect(view.families.map((f) => f.space.id)).toEqual(['sp_a', 'sp_b', 'sp_old']);
+    expect(view.families.map(isArchivedFamily)).toEqual([false, false, true]);
+  });
+
+  it('only the family owner manages the join code (the backend sends it with space.manage alone)', () => {
+    expect(managesJoinCode(item('sp_f', 'family', 'owner'))).toBe(true);
+    expect(managesJoinCode(item('sp_f', 'family', 'caregiver'))).toBe(false);
   });
 
   it('cross-links: Also teach a class without the teacher persona; the switch with it', () => {

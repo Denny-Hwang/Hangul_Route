@@ -4,6 +4,7 @@ import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'rea
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Roster, RosterLearner, SpaceListItem } from '@/lib/console/api';
 import { findBannedWord } from '@/lib/console/banned-text';
+import { codeExpiry } from '@/lib/console/rollup';
 
 /**
  * F-APP-001 A-5b, section 3.8 (design/screens/app-shell/parent-home.md): the family home. Cards in
@@ -53,18 +54,21 @@ const data = vi.hoisted(() => ({
   rosters: {} as Record<string, unknown>,
   rosterCalls: [] as string[],
   regenerated: [] as string[],
+  regenerate: null as null | (() => Promise<unknown>),
+  listPending: false,
 }));
 vi.mock('@/components/console/use-console', async () => {
   const { getMessages: messages } = await import('@hangul-route/i18n');
   // One api object for the whole test, as the real hook keeps it (the page's load depends on it).
   const api = {
-    listSpaces: async () => data.list,
+    listSpaces: () => (data.listPending ? new Promise(() => undefined) : Promise.resolve(data.list)),
     roster: async (id: string) => {
       data.rosterCalls.push(id);
       return data.rosters[id] ?? { ok: false, error: 'network' };
     },
     regenerateCode: async (id: string) => {
       data.regenerated.push(id);
+      if (data.regenerate) return data.regenerate();
       return { ok: true, data: { joinCode: 'NEWCD7', expiresAt: '2026-11-01T00:00:00Z' } };
     },
   };
@@ -126,6 +130,8 @@ beforeEach(() => {
   data.rosters = {};
   data.rosterCalls = [];
   data.regenerated = [];
+  data.regenerate = null;
+  data.listPending = false;
   vi.unstubAllEnvs();
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(new Date('2026-10-12T12:00:00Z'));
@@ -211,11 +217,116 @@ describe('the family home (F-APP-001 A-5b)', () => {
     act(() => button.props.onClick());
     expect((byTestId(r, 'family-add-learner')[0] as ReactTestInstance).props['aria-expanded']).toBe(true);
     const panel = byTestId(r, 'join-panel')[0] as ReactTestInstance;
-    expect(panel.props.id).toBe(button.props['aria-controls']);
+    const region = r.root.findAll((n) => typeof n.type === 'string' && n.props.id === button.props['aria-controls']);
+    expect(region).toHaveLength(1);
+    expect(region[0]?.props.hidden).toBeUndefined();
+    expect(region[0]?.findAll((n) => n === panel)).toHaveLength(1);
     expect(textOf(panel)).toContain('K7MPQ4');
     expect(byTestId(r, 'open-app')).toHaveLength(0);
     act(() => (byTestId(r, 'family-add-learner')[0] as ReactTestInstance).props.onClick());
     expect(byTestId(r, 'join-panel')).toHaveLength(0);
+  });
+
+  it('Add a learner points aria-controls at a region that is in the page while collapsed, hidden until opened', async () => {
+    data.rosters = { sp_f: roster(family, [sam]) };
+    const r = await render([family]);
+    const button = byTestId(r, 'family-add-learner')[0] as ReactTestInstance;
+    const region = r.root.findAll((n) => typeof n.type === 'string' && n.props.id === button.props['aria-controls']);
+    expect(region).toHaveLength(1);
+    expect(region[0]?.props.hidden).toBe(true);
+  });
+
+  it("names each family's actions apart from its section, so two landmarks never share a name", async () => {
+    data.rosters = { sp_f: roster(family, [sam]) };
+    const r = await render([family]);
+    const aside = r.root.findByType('aside');
+    expect(aside.props['aria-label']).toBe(p.actionsFor('Kim family'));
+    expect(aside.props['aria-label']).not.toBe('Kim family');
+  });
+
+  it('shows when the join code expires under the code', async () => {
+    data.rosters = { sp_f: roster(family, []) };
+    const r = await render([family]);
+    expect(allText(r)).toContain(codeExpiry('2026-11-01T00:00:00Z', new Date('2026-10-12T12:00:00Z'), 'en'));
+  });
+
+  it('draws no minutes line for a learner with no summary yet (never a 0 that was not measured)', async () => {
+    data.rosters = { sp_f: roster(family, [{ ...sam, summary: null } as RosterLearner, mina]) };
+    const r = await render([family]);
+    const [samCard, minaCard] = byTestId(r, 'learner-card') as [ReactTestInstance, ReactTestInstance];
+    expect(textOf(samCard)).not.toContain('Minutes, last 7 days');
+    expect(textOf(minaCard)).toContain('Minutes, last 7 days: 15');
+  });
+
+  it('cards carry the card shadow token', async () => {
+    data.rosters = { sp_f: roster(family, [sam]) };
+    const r = await render([family]);
+    expect(String((byTestId(r, 'learner-card')[0] as ReactTestInstance).props.style.boxShadow)).toMatch(/^0 2px 8px #2A1F14/);
+  });
+
+  it('loading: skeleton cards with no numbers and aria-busy, no learner card', async () => {
+    data.listPending = true;
+    const r = await render([family]);
+    expect(r.root.findAll((n) => typeof n.type === 'string' && n.props['aria-busy'] === true).length).toBeGreaterThan(0);
+    expect(byTestId(r, 'learner-card')).toHaveLength(0);
+    const visible = (n: ReactTestInstance): string => (n.type === 'style' ? '' : n.children.map((child) => (typeof child === 'string' ? child : visible(child))).join(''));
+    expect(visible(r.root)).not.toMatch(/\d/);
+  });
+
+  it('an archived family: after the live ones, labelled archived, with Family settings only (no join code, no hand-off, no plans, no Add a learner)', async () => {
+    const archived: SpaceListItem = { ...item('sp_old', 'family', 'owner', 'Old family', '2026-08-01T00:00:00Z'), space: { ...item('sp_old', 'family', 'owner', 'Old family', '2026-08-01T00:00:00Z').space, archivedAt: '2026-10-09T00:00:00Z' } };
+    data.rosters = { sp_f: roster(family, [sam]), sp_old: roster(archived, []) };
+    const r = await render([archived, family]);
+    const sections = r.root.findAll((n) => n.type === 'section' && typeof n.props['aria-labelledby'] === 'string');
+    expect(sections.map((section) => textOf(section.findByType('h2')))).toEqual(['Kim family', `Old family ${en.console.home.archived}`]);
+    const old = sections[1] as ReactTestInstance;
+    const ids = old.findAll((n) => typeof n.type === 'string' && typeof n.props['data-testid'] === 'string').map((n) => n.props['data-testid'] as string);
+    expect(ids).toContain('family-settings');
+    for (const hidden of ['join-panel', 'open-app', 'create-code', 'family-plan-week', 'family-plan-term', 'family-add-learner']) expect(ids).not.toContain(hidden);
+    expect(textOf(old)).not.toContain('K7MPQ4');
+  });
+
+  it('an archived family with learners keeps their cards and Family settings, and no Add a learner', async () => {
+    const archived: SpaceListItem = { ...family, space: { ...family.space, archivedAt: '2026-10-09T00:00:00Z' } };
+    data.rosters = { sp_f: roster(archived, [sam]) };
+    const r = await render([archived]);
+    expect(cardNames(r)).toEqual(['Sam']);
+    expect(byTestId(r, 'family-add-learner')).toHaveLength(0);
+    expect(byTestId(r, 'family-settings')).toHaveLength(1);
+  });
+
+  it('a caregiver (not the owner) gets no Create a code: a line asks the family owner instead (the API answers 403)', async () => {
+    data.rosters = { sp_g: roster(grandma, [], null) };
+    const r = await render([grandma]);
+    expect(byTestId(r, 'create-code')).toHaveLength(0);
+    expect(byTestId(r, 'open-app')).toHaveLength(0);
+    expect(allText(r)).toContain(p.askOwner);
+  });
+
+  it('Create a code is disabled while it runs (no second code on a double tap) and says so when it fails', async () => {
+    let finish: (value: unknown) => void = () => undefined;
+    data.regenerate = () => new Promise((resolve) => (finish = resolve));
+    data.rosters = { sp_f: roster(family, [], null) };
+    const r = await render([family]);
+    await act(async () => (byTestId(r, 'create-code')[0] as ReactTestInstance).props.onClick());
+    expect((byTestId(r, 'create-code')[0] as ReactTestInstance).props.disabled).toBe(true);
+    await act(async () => (byTestId(r, 'create-code')[0] as ReactTestInstance).props.onClick());
+    expect(data.regenerated).toEqual(['sp_f']);
+    await act(async () => finish({ ok: false, status: 403, error: 'forbidden' }));
+    expect((byTestId(r, 'create-code')[0] as ReactTestInstance).props.disabled).toBe(false);
+    expect(allText(r)).toContain(en.console.space.regenerateFailed);
+    expect(byTestId(r, 'open-app')).toHaveLength(0);
+  });
+
+  it('a failed copy says so; the code stays on screen', async () => {
+    vi.stubGlobal('navigator', { clipboard: { writeText: async () => Promise.reject(new Error('denied')) } });
+    data.rosters = { sp_f: roster(family, []) };
+    const r = await render([family]);
+    const copyButton = r.root.findAll((n) => n.type === 'button' && textOf(n) === en.console.joinCode.copy.cta)[0] as ReactTestInstance;
+    await act(async () => copyButton.props.onClick());
+    expect(allText(r)).toContain(p.copyFailed);
+    expect(allText(r)).toContain('K7MPQ4');
+    vi.unstubAllGlobals();
   });
 
   it('a family with no learner: the join code large, the line with the learner app labels, and Open the app on this device (behaviour 28)', async () => {

@@ -115,5 +115,10 @@ const SITE_ORIGINS: ReadonlySet<string> = new Set([SITE_ORIGIN, SITE_ORIGIN.repl
  * never leaves for production (A-4a review 2026-10-12, refines section 3.8).
  */
 export function learnerHome(origin: string): string {
-  return SITE_ORIGINS.has(origin) ? `${APP_ORIGIN}${APP_ROUTES.learn}` : APP_ROUTES.learn;
+  return isSiteOrigin(origin) ? `${APP_ORIGIN}${APP_ROUTES.learn}` : APP_ROUTES.learn;
+}
+
+/** Whether this page runs on a site origin (the console there until F-SITE-002 S-10), not on the learner app's origin. */
+export function isSiteOrigin(origin: string): boolean {
+  return SITE_ORIGINS.has(origin);
 }

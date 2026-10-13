@@ -16,12 +16,25 @@ export type ParentHomeView =
 
 const byCreatedThenId = (a: SpaceListItem, b: SpaceListItem): number => a.space.createdAt.localeCompare(b.space.createdAt) || a.space.id.localeCompare(b.space.id);
 
+/** An archived family: its pages stay reachable read-only; the home labels it and offers Family settings only. */
+export function isArchivedFamily(family: SpaceListItem): boolean {
+  return family.space.archivedAt !== null;
+}
+
+/** Only the owner makes and sees the family join code (`space.manage`; a caregiver's roster has no code). */
+export function managesJoinCode(family: SpaceListItem): boolean {
+  return family.role === 'owner';
+}
+
+/** Families held as owner or caregiver: the live ones first, then the archived ones, each oldest first, then by id. */
 export function parentHomeView(items: readonly SpaceListItem[]): ParentHomeView {
   const held = heldPersonas(items);
   const holdsTeacher = held.includes('teacher');
   const families = items.filter((entry) => entry.space.kind === 'family' && (entry.role === 'owner' || entry.role === 'caregiver'));
   if (families.length === 0) return { state: 'noFamily', goTeacher: holdsTeacher };
-  return { state: 'families', families: [...families].sort(byCreatedThenId), cross: holdsTeacher ? 'toTeacher' : 'addClass' };
+  const live = families.filter((family) => !isArchivedFamily(family)).sort(byCreatedThenId);
+  const archived = families.filter(isArchivedFamily).sort(byCreatedThenId);
+  return { state: 'families', families: [...live, ...archived], cross: holdsTeacher ? 'toTeacher' : 'addClass' };
 }
 
 /** Learners in the order they joined the family (`joinedAt`, then id): stable, never by activity or minutes. */

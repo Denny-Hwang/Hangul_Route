@@ -14,6 +14,11 @@ export function personaHome(persona: AdultPersona): string {
   return persona === 'parent' ? APP_ROUTES.parentHome : APP_ROUTES.teacherHome;
 }
 
+/** The home a persona hint (`?persona=` / `?as=`) points at: its persona's home, the teacher home with none (`/start`'s way back). */
+export function homeOfHint(hint: AdultPersona | null): string {
+  return hint ? personaHome(hint) : APP_ROUTES.teacherHome;
+}
+
 /** The persona a space belongs to (section 3.8): a family is Family; a class or a school is Teacher. */
 export function personaOfKind(kind: SpaceKind): AdultPersona {
   return kind === 'family' ? 'parent' : 'teacher';

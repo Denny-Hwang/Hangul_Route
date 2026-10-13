@@ -56,10 +56,17 @@ describe('openAppWithJoinCode', () => {
     expect(opened).toEqual(['/']);
   });
 
-  it('from the site origin (before F-SITE-002 S-10) opens the app host', () => {
+  it('from the site origin (before F-SITE-002 S-10) writes no hand-off (sessionStorage is per origin, the app host could not read it) and opens the app host', () => {
     const opened: string[] = [];
-    openAppWithJoinCode({ code: 'K7MPQ4', now: 5, origin: 'https://hangulroute.com', storage: memory(), assign: (url) => opened.push(url) });
+    const store = memory();
+    store.data.set(UNLOCK_SESSION_KEY, '{}');
+    openAppWithJoinCode({ code: 'K7MPQ4', now: 5, origin: 'https://hangulroute.com', storage: store, assign: (url) => opened.push(url) });
+    expect(store.data.has(JOIN_HANDOFF_KEY)).toBe(false);
+    expect(store.data.has(UNLOCK_SESSION_KEY)).toBe(false);
     expect(opened).toEqual(['https://app.hangulroute.com/']);
+    const www = memory();
+    openAppWithJoinCode({ code: 'K7MPQ4', now: 5, origin: 'https://www.hangulroute.com', storage: www, assign: () => undefined });
+    expect(www.data.has(JOIN_HANDOFF_KEY)).toBe(false);
   });
 
   afterEach(() => {

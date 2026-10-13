@@ -7,6 +7,7 @@ import { personaHint, type SpaceKind } from '@hangul-route/content-schema';
 import { Button, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
+import { homeOfHint } from '@/lib/console/personas';
 import { codeExpiry } from '@/lib/console/rollup';
 import { ROUTES, landingAfterCreate, prefillName, presetKind, roleCards } from '@/lib/console/routing';
 
@@ -101,7 +102,7 @@ function StartInner(): JSX.Element {
               >
                 {c.start.continue.cta}
               </Button>
-              {fromHome ? <Button onClick={() => router.push(ROUTES.home)}>{c.start.back.cta}</Button> : null}
+              {fromHome ? <Button onClick={() => router.push(homeOfHint(personaHint(params)))}>{c.start.back.cta}</Button> : null}
             </div>
           </>
         ) : step.at === 'name' ? (

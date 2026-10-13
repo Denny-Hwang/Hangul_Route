@@ -16,6 +16,14 @@ export function spacePath(sub: string, query: string, kind?: SpaceKind): string 
   return `${kind === 'family' ? '/parent/space' : '/teach/space'}${sub ? `/${sub}` : ''}${query ? `?${query}` : ''}`;
 }
 
+/**
+ * The space kind a page's own prefix tells before any data names it: a `/parent/space…` page belongs to a
+ * family (F-APP-001 A-5b); `/teach/space…` renders every kind, so it tells nothing.
+ */
+export function spaceKindOfPath(pathname: string): 'family' | undefined {
+  return /^\/parent\/space(?:[/.]|$)/.test(pathname) ? 'family' : undefined;
+}
+
 /** Where the console sends an adult — F-CONSOLE-001 §3.2–3.4. */
 export const ROUTES = {
   /** Grown-up sign-in and the router into the grown-up area (F-APP-001 A-4b, section 3.7). */

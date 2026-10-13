@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { CONTACT_EMAIL } from '../../data/contact';
 import { landingCopy, localeBannerOffers } from '../../data/landing-copy';
 import { appUrl } from '../../lib/console/config';
+import { signIn } from '../../lib/site-links';
 import { shownSiteLocales } from '../../lib/site-metadata';
 import { appEntryUrl, sitePath } from '../../lib/site-path';
 import { HeritageCardsPreview } from './HeritageCardsPreview';
@@ -32,6 +33,8 @@ export function LandingPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }):
   const { tagline, audienceBadges, trustItems, howItWorks, faqs, pricingLines, sharedDeviceBullet, pricingFootnote } = landingCopy(locale);
   const shown = shownSiteLocales();
   const playHref = appEntryUrl(APP_URL, locale);
+  // `/parent` is the signed-in family home (F-APP-001 A-5b): the old "Dashboard" links open the family sign-in until S-6.
+  const familySignIn = signIn('parent');
   return (
     <main
       style={{
@@ -114,7 +117,7 @@ export function LandingPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }):
           <Link href="#parents" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
             {t.home.who.items.parents.linkLabel}
           </Link>
-          <a href="/parent" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
+          <a href={familySignIn} style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
             {t.nav.dashboard}
           </a>
           <a href="/teach" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
@@ -626,7 +629,7 @@ export function LandingPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }):
             </Link>
           </div>
           <div>
-            <a href="/parent" style={{ color: colors.text.secondary }}>
+            <a href={familySignIn} style={{ color: colors.text.secondary }}>
               {t.footer.dashboard}
             </a>
           </div>

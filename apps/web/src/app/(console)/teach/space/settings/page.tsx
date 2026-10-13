@@ -9,6 +9,7 @@ import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
 import type { MemberView, Roster } from '@/lib/console/api';
 import { schoolConsentModeEnabled } from '@/lib/console/config';
+import { personaHome, personaOfKind } from '@/lib/console/personas';
 import { ROUTES, isKnownSpaceKind, loadErrorKey, spaceIdFrom, type LoadError } from '@/lib/console/routing';
 import type { Messages } from '@hangul-route/i18n';
 
@@ -114,7 +115,7 @@ function SettingsInner(): JSX.Element {
               })
             }
           />
-          {archived ? <Button onClick={() => router.push(ROUTES.home)}>{s.backToConsole.cta}</Button> : null}
+          {archived ? <Button onClick={() => router.push(personaHome(personaOfKind(space.kind)))}>{s.backToConsole.cta}</Button> : null}
         </>
       ) : null}
     </AdultFrame>

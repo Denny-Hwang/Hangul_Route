@@ -1,19 +1,20 @@
 'use client';
 
-import { borderWidth, colors, layout, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
+import { borderWidth, colors, layout, radii, shadows, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { AvatarChip } from '@/components/AvatarChip';
 import { AdultFrame, type FrameSpaces } from '@/components/console/AdultFrame';
-import { Button, buttonBase, panelStyle } from '@/components/console/ui';
+import { Button, Muted, buttonBase, panelStyle } from '@/components/console/ui';
 import { useConsole } from '@/components/console/use-console';
 import type { Roster, RosterLearner, SpaceListItem } from '@/lib/console/api';
 import { browseEntryShown, learningRouteEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
 import { openAppWithJoinCode } from '@/lib/console/join-handoff';
-import { familyActionLinks, joinOrder, learnerCardActions, parentHomeView, type CardFlags } from '@/lib/console/parent-home';
+import { familyActionLinks, isArchivedFamily, joinOrder, learnerCardActions, managesJoinCode, parentHomeView, type CardFlags } from '@/lib/console/parent-home';
 import { personaHome } from '@/lib/console/personas';
-import { relativeDay } from '@/lib/console/rollup';
+import { codeExpiry, relativeDay } from '@/lib/console/rollup';
+import { spaceErrorText } from '@/lib/console/routing';
 import { writeLastPersona } from '@/lib/console/shell-store';
 import { BROWSE_PATH } from '@/lib/console/shell-nav';
 import { START_CLASS, START_FAMILY } from '@/lib/console/teacher-home';
@@ -79,11 +80,16 @@ const textLink: CSSProperties = {
   cursor: 'pointer',
   textAlign: 'left',
 };
+/** `shadows.card` (a React Native shadow tuple) as a CSS box shadow: the colour token with the token's opacity as alpha (mock: Tokens, Card). */
+const cardShadow = `0 ${shadows.card.shadowOffset.height}px ${shadows.card.shadowRadius}px ${shadows.card.shadowColor}${Math.round(shadows.card.shadowOpacity * 255)
+  .toString(16)
+  .padStart(2, '0')}`;
 const familyHeading: CSSProperties = { margin: 0, fontSize: typography.size.title, lineHeight: typography.leading.tight, fontWeight: typography.weight.bold, overflowWrap: 'anywhere' };
 const cardStyle: CSSProperties = {
   backgroundColor: colors.surface.paper,
   border: `${borderWidth.thin}px solid ${colors.border.subtle}`,
   borderRadius: radii.lg,
+  boxShadow: cardShadow,
   padding: spacing.lg,
   display: 'flex',
   flexDirection: 'column',
@@ -91,7 +97,7 @@ const cardStyle: CSSProperties = {
   minWidth: 0,
 };
 const facts: CSSProperties = { display: 'flex', flexDirection: 'column', gap: spacing.xxs, color: colors.text.secondary, fontSize: typography.size.bodySm };
-const skeleton: CSSProperties = { ...cardStyle, backgroundColor: colors.surface.sunken, minHeight: touchTarget.min * 3 };
+const skeleton: CSSProperties = { ...cardStyle, boxShadow: 'none', backgroundColor: colors.surface.sunken, minHeight: touchTarget.min * 3 };
 
 export default function ParentHomePage(): JSX.Element {
   const { ready, session, api, signOut, m, locale } = useConsole();
@@ -101,6 +107,11 @@ export default function ParentHomePage(): JSX.Element {
   const [rosters, setRosters] = useState<Record<string, FamilyRoster>>({});
   const [openPanel, setOpenPanel] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [copyFailed, setCopyFailed] = useState<string | null>(null);
+  // Create a code: the family whose request is running (one at a time, so a double tap never makes two codes) and the one that failed.
+  const [codeBusy, setCodeBusy] = useState<string | null>(null);
+  const codeBusyRef = useRef<string | null>(null);
+  const [codeFailed, setCodeFailed] = useState<string | null>(null);
 
   const loadRoster = useCallback(
     async (spaceId: string): Promise<void> => {
@@ -148,40 +159,73 @@ export default function ParentHomePage(): JSX.Element {
     try {
       await navigator.clipboard.writeText(code);
       setCopied(spaceId);
+      setCopyFailed(null);
     } catch {
       setCopied(null);
+      setCopyFailed(spaceId);
     }
   };
   const createCode = async (spaceId: string): Promise<void> => {
-    if (!api) return;
-    const result = await api.regenerateCode(spaceId);
-    if (!result.ok) return;
+    if (!api || codeBusyRef.current) return;
+    codeBusyRef.current = spaceId;
+    setCodeBusy(spaceId);
+    setCodeFailed(null);
+    const result = await api.regenerateCode(spaceId).catch(() => null);
+    codeBusyRef.current = null;
+    setCodeBusy(null);
+    if (!result?.ok) {
+      setCodeFailed(spaceId);
+      return;
+    }
     setRosters((prev) => {
       const entry = prev[spaceId];
       return entry?.state === 'ready' ? { ...prev, [spaceId]: { state: 'ready', roster: { ...entry.roster, joinCode: result.data.joinCode, joinCodeExpiresAt: result.data.expiresAt } } } : prev;
     });
   };
 
-  /** The family join code: the visible code is hidden from screen readers, which read the spaced copy one character at a time. */
-  const joinPanel = (family: SpaceListItem, roster: Roster, id?: string): JSX.Element => (
-    <section id={id} data-testid="join-panel" aria-label={c.space.codeLabel.family} style={{ ...panelStyle, margin: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: spacing.sm, padding: `${spacing.xl}px ${spacing.lg}px`, textAlign: 'center' }}>
-      <span style={{ fontSize: typography.size.caption, fontWeight: typography.weight.semibold, color: colors.text.muted }}>{c.space.codeLabel.family}</span>
-      {roster.joinCode ? (
-        <>
-          <span data-testid="join-code" aria-hidden={true} style={{ fontFamily: typography.family.mono, fontSize: typography.size.display, fontWeight: typography.weight.bold, letterSpacing: typography.tracking.wide }}>
-            {roster.joinCode}
-          </span>
-          <span className="hr-ph-hidden">{roster.joinCode.split('').join(' ')}</span>
-          <Button onClick={() => void copy(family.space.id, roster.joinCode as string)}>{copied === family.space.id ? c.joinCode.copied.cta : c.joinCode.copy.cta}</Button>
-        </>
-      ) : (
-        <Button testId="create-code" onClick={() => void createCode(family.space.id)}>
-          {c.space.createCode.cta}
-        </Button>
-      )}
-      <p style={{ margin: 0, color: colors.text.secondary, maxWidth: layout.pane.master }}>{joinLine}</p>
-    </section>
-  );
+  /**
+   * The family join code: the visible code is hidden from screen readers, which read the spaced copy one character at a
+   * time; its expiry under it. Only the owner makes a code (`space.manage`): a caregiver is asked to get it from them.
+   */
+  const joinPanel = (family: SpaceListItem, roster: Roster): JSX.Element => {
+    const id = family.space.id;
+    return (
+      <section data-testid="join-panel" aria-label={c.space.codeLabel.family} style={{ ...panelStyle, margin: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: spacing.sm, padding: `${spacing.xl}px ${spacing.lg}px`, textAlign: 'center' }}>
+        <span style={{ fontSize: typography.size.caption, fontWeight: typography.weight.semibold, color: colors.text.muted }}>{c.space.codeLabel.family}</span>
+        {roster.joinCode ? (
+          <>
+            <span data-testid="join-code" aria-hidden={true} style={{ fontFamily: typography.family.mono, fontSize: typography.size.display, fontWeight: typography.weight.bold, letterSpacing: typography.tracking.wide }}>
+              {roster.joinCode}
+            </span>
+            <span className="hr-ph-hidden">{roster.joinCode.split('').join(' ')}</span>
+            <Muted>{codeExpiry(roster.joinCodeExpiresAt, now, locale)}</Muted>
+            <Button onClick={() => void copy(id, roster.joinCode as string)}>{copied === id ? c.joinCode.copied.cta : c.joinCode.copy.cta}</Button>
+            {copyFailed === id ? (
+              <p role="status" style={{ margin: 0, color: colors.text.secondary }}>
+                {p.copyFailed}
+              </p>
+            ) : null}
+          </>
+        ) : managesJoinCode(family) ? (
+          <>
+            <Button testId="create-code" disabled={codeBusy !== null} onClick={() => void createCode(id)}>
+              {c.space.createCode.cta}
+            </Button>
+            {codeFailed === id ? (
+              <p role="status" style={{ margin: 0, color: colors.text.secondary }}>
+                {spaceErrorText('regenerateFailed', locale)}
+              </p>
+            ) : null}
+          </>
+        ) : (
+          <p data-testid="ask-owner" style={{ margin: 0, fontWeight: typography.weight.semibold }}>
+            {p.askOwner}
+          </p>
+        )}
+        <p style={{ margin: 0, color: colors.text.secondary, maxWidth: layout.pane.master }}>{joinLine}</p>
+      </section>
+    );
+  };
 
   const card = (familyId: string, learner: RosterLearner): JSX.Element => {
     const actions = learnerCardActions(familyId, learner.id, flags);
@@ -194,7 +238,7 @@ export default function ParentHomePage(): JSX.Element {
         </div>
         <div style={facts}>
           <span>{c.space.learner.lastActive(relativeDay(learner.lastActiveAt, now, locale))}</span>
-          <span>{p.minutes7d(learner.summary?.minutesLast7d ?? 0)}</span>
+          {learner.summary ? <span>{p.minutes7d(learner.summary.minutesLast7d)}</span> : null}
         </div>
         <Link href={actions.primary.href} style={primary}>
           {label(actions.primary.key)}
@@ -220,7 +264,10 @@ export default function ParentHomePage(): JSX.Element {
     const links = familyActionLinks(id);
     const learners = entry.state === 'ready' ? joinOrder(entry.roster.learners) : [];
     const empty = entry.state === 'ready' && learners.length === 0;
-    const expanded = openPanel === id;
+    // An archived family is read-only (the API refuses a join to it): its label, its cards and Family settings only.
+    const archived = isArchivedFamily(family);
+    const expanded = openPanel === id && !archived;
+    const canAdd = entry.state === 'ready' && !empty && !archived;
     const actions = (
       <div className="hr-ph-actions">
         {lessons ? (
@@ -228,16 +275,20 @@ export default function ParentHomePage(): JSX.Element {
             {p.actions.lessons}
           </a>
         ) : null}
-        <Link href={links.planWeek} style={button} data-testid="family-plan-week">
-          {p.actions.planWeek}
-        </Link>
-        <Link href={links.planTerm} style={button} data-testid="family-plan-term">
-          {p.actions.planTerm}
-        </Link>
+        {archived ? null : (
+          <>
+            <Link href={links.planWeek} style={button} data-testid="family-plan-week">
+              {p.actions.planWeek}
+            </Link>
+            <Link href={links.planTerm} style={button} data-testid="family-plan-term">
+              {p.actions.planTerm}
+            </Link>
+          </>
+        )}
         <Link href={links.settings} style={button} data-testid="family-settings">
           {p.actions.settings}
         </Link>
-        {entry.state === 'ready' && !empty ? (
+        {canAdd ? (
           <button
             type="button"
             aria-expanded={expanded}
@@ -256,6 +307,7 @@ export default function ParentHomePage(): JSX.Element {
         <div className="hr-ph-main" aria-busy={entry.state === 'loading' ? true : undefined}>
           <h2 id={headingId} style={familyHeading}>
             {family.space.name}
+            {archived ? <span style={{ color: colors.text.muted, fontSize: typography.size.bodySm, fontWeight: typography.weight.semibold }}> {c.home.archived}</span> : null}
           </h2>
           {entry.state === 'loading' ? (
             <div className="hr-ph-cards">
@@ -271,7 +323,8 @@ export default function ParentHomePage(): JSX.Element {
               </Button>
             </div>
           ) : null}
-          {entry.state === 'ready' && empty ? (
+          {entry.state === 'ready' && empty && archived ? <p style={{ margin: 0, color: colors.text.secondary }}>{p.empty.title}</p> : null}
+          {entry.state === 'ready' && empty && !archived ? (
             <>
               <p style={{ margin: 0, color: colors.text.secondary }}>{p.empty.title}</p>
               {joinPanel(family, entry.roster)}
@@ -289,9 +342,13 @@ export default function ParentHomePage(): JSX.Element {
           ) : null}
           {learners.length > 0 ? <div className="hr-ph-cards">{learners.map((learner) => card(id, learner))}</div> : null}
         </div>
-        <aside aria-label={family.space.name} className="hr-ph-side">
+        <aside aria-label={p.actionsFor(family.space.name)} className="hr-ph-side">
           {actions}
-          {expanded && entry.state === 'ready' ? joinPanel(family, entry.roster, panelId) : null}
+          {canAdd ? (
+            <div id={panelId} hidden={expanded ? undefined : true}>
+              {expanded && entry.state === 'ready' ? joinPanel(family, entry.roster) : null}
+            </div>
+          ) : null}
           {isLast ? cross : null}
         </aside>
       </section>

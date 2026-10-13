@@ -139,10 +139,19 @@ function textOf(node: ReactTestInstance | string): string {
   return node.children.map((child) => textOf(child)).join('');
 }
 
-async function page(): Promise<ReactTestInstance> {
+async function page(pathname?: string): Promise<ReactTestInstance> {
   const { default: Page } = await import('@/app/(console)/teach/space/route/page');
+  const { GrownUpLocationContext } = await import('@/components/console/grown-up-location');
   await act(async () => {
-    mounted = create(<Page />);
+    mounted = create(
+      pathname ? (
+        <GrownUpLocationContext.Provider value={{ pathname, search: nav.query }}>
+          <Page />
+        </GrownUpLocationContext.Provider>
+      ) : (
+        <Page />
+      ),
+    );
   });
   if (!mounted) throw new Error('not mounted');
   return mounted.root;
@@ -160,6 +169,25 @@ describe('the Learning Route page switch (learningRouteEnabled, default off)', (
     nav.query = '';
     await page();
     expect(nav.replaced).toEqual(['/teach/home']);
+  });
+
+  it('off under /parent/space/route: back to the family page and, with no space id, the family home (the prefix of the page)', async () => {
+    await page('/parent/space/route');
+    expect(nav.replaced).toEqual(['/parent/space?id=space%3Ac1']);
+    act(() => mounted?.unmount());
+    nav.replaced.length = 0;
+    nav.query = '';
+    await page('/parent/space/route');
+    expect(nav.replaced).toEqual(['/parent']);
+  });
+});
+
+describe('the way back before the roster names the kind, under /parent/space/route (A-5b review)', () => {
+  it('cannot reach the roster: the way back stays under /parent/space', async () => {
+    vi.stubEnv('NEXT_PUBLIC_LEARNING_ROUTE_ENABLED', 'true');
+    responses.roster = () => ({ ok: false, error: 'network', status: -1 });
+    const root = await page('/parent/space/route');
+    expect(root.findAll((n) => n.type === 'a' && n.props.href === '/parent/space?id=space%3Ac1' && textOf(n) === lr.back.space)).toHaveLength(1);
   });
 });
 
