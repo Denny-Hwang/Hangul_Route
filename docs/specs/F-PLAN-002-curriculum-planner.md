@@ -105,24 +105,25 @@ export interface ProposeInput {
   pace?: 'gentle' | 'steady' | 'brisk';          // the chip the learner picked; absent = the default
   rosterLevelOrders?: readonly (0 | 1 | 2)[];
   unlockedStages: readonly StageKey[];
-  catalog: Catalog; today: DateKey;
+  catalog: Catalog; today: DateKey;            // today: the freeze point for an existing plan
+  startDate?: DateKey;                           // a new plan's first day, on or after today (class: the next class day, from the wizard); absent = today
   existing?: { meta: CurriculumMeta; items: PlanItem[] } | null;
 }
 export type DurationId = '4-week' | '12-week' | '6-month';
 export interface DurationOption { id: DurationId; weeks: 4 | 12 | 26; stats: Pick<CurriculumDraft['stats'], 'lessons' | 'stories' | 'comingSoonItems' | 'openSessions' | 'endsAtStage'>; lastLessonWeek: number; lastContentWeek: number; preview: 'lessons-and-stories' | 'lessons-cut-short' | 'lessons-then-free-practice' | 'stories-and-words'; warnings: WarningCode[] }
 export interface RouteProposal {
   kind: 'new' | 'update' | 'unchanged';
-  headline: 'start-stage1' | 'continue-stage1' | 'stories-and-words' | 'beyond-content';
+  headline: 'start-stage1' | 'continue-stage1' | 'continue-lessons' | 'stories-and-words' | 'beyond-content';
   pace: 'gentle' | 'steady' | 'brisk';
   params: CurriculumParams;
   options: readonly [DurationOption, DurationOption, DurationOption];
   defaultId: DurationId;
   diff?: { itemsRemoved: number; itemsAdded: number; newStartQuestId: string | null };   // 'update' only
 }
-export function proposeRoute(input: ProposeInput): RouteProposal | null;   // null = nothing ready to schedule
+export function proposeRoute(input: ProposeInput): RouteProposal | null;   // null = no plan yet and nothing ready to schedule
 ```
 
-Rules: (1) `params`: the pace's sessions a week, the minutes of section 3.1, `level`, `placedOutQuestIds`, `goals` from the seed, `startDate = today` (class: next class day), no `sessionDays`. (2) `defaultId` by the rule of `AMENDMENTS-PLC-PLAN-HANDOFF.md` section 1.1 from a 52-week probe. (3) `options` are three real drafts; each `preview` code follows section 1.3 of `AMENDMENTS-PLC-PLAN-HANDOFF.md`. (4) With `existing`: `unchanged` when `regenerateFrom(..., { mode: 'reseed', paramsPatch })` yields the same future items, else `update` with the length and end date of `existing`. **Without an override** the level never decreases and `placedOutQuestIds` is a superset; **with an override** the placed-out set may shrink, the put-back quests go into the future queue, and `diff.itemsAdded` counts them. (5) `null` when the draft schedules no ready item. (6) No clock, no randomness, no locale.
+Rules: (1) `params`: the pace's sessions a week, the minutes of section 3.1, `level`, `placedOutQuestIds`, `goals` from the seed, `startDate` from the input, else `today` (class: the wizard passes the next class day), no `sessionDays`. (2) `defaultId` by the rule of `AMENDMENTS-PLC-PLAN-HANDOFF.md` section 1.1 from a 52-week probe. (3) `options` are three real drafts; each `preview` code follows section 1.3 of `AMENDMENTS-PLC-PLAN-HANDOFF.md`. (4) With `existing`: `unchanged` when the seed moves neither the stored level (it never goes lower) nor the stored placed-out set, or when `regenerateFrom(..., { mode: 'reseed', paramsPatch, completedQuestIds })` yields the same future items as `regenerateFrom(..., { mode: 'shift', completedQuestIds })` (so a plan extended by weeks, a grown-up's hand edits or new catalogue lessons never read as a new start), else `update` with the length and end date of `existing`; `diff` and `newStartQuestId` leave the learner's finished quests out. The pace, the cards and `defaultId` follow the stored plan's chip and minutes. **Without an override** the level never decreases and `placedOutQuestIds` is a superset; **with an override** the placed-out set may shrink, the put-back quests go into the future queue, and `diff.itemsAdded` counts them. (5) `null` when no plan exists and the draft schedules no ready item; with `existing` it is always `update` or `unchanged`, and a re-seed whose future holds no lesson or story is `unchanged` (no update empties a plan). Headline: `start-stage1` / `continue-stage1` when the first lesson is the opening or a later Stage 1 lesson, `continue-lessons` when it belongs to a later stage, and with no lesson `stories-and-words` (a level below Stage 3) or `beyond-content` (Stage 3 or higher). (6) No clock, no randomness, no locale.
 
 ### 3.2 The shared catalogue (`packages/content-schema/src/catalog/`)
 
