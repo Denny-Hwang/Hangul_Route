@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { effectiveRoute, type ProgressSnapshot, type StageKey } from '@hangul-route/content-schema';
+import { effectiveRoute, type CurriculumMeta, type GoalSource, type ProgressSnapshot, type StageKey } from '@hangul-route/content-schema';
+import type { NextSource, PlanView, RouteNext } from '../../route-next';
 import { buildMyRoute } from '../model';
-import type { MyRouteInput, SeenRecord } from '../types';
+import { summarizeJourney } from '../summary';
+import type { MyRouteInput, MyRouteModel, Pip, SeenRecord } from '../types';
 import { BUNDLE_15, BUNDLE_8, STAGE1_8, STAGE_DEFS, THEME_DEFS, catalogOf, snapshotWith, type Bundle } from './fixtures/bundle-2026-10';
 import { result, seed } from './fixtures/route';
 
@@ -237,5 +239,205 @@ describe('the shared cursor context (R-3: My route spreads cursorContext, as Hom
     const m = build(STAGE1_8.slice(0, 4), { skipQuestIds: new Set(BUNDLE_8.quests.map((q) => q.id)) });
     expect(m.cursor).toBeNull();
     expect(m.hero).toBe('rest');
+  });
+});
+
+/** A four-week curriculum meta starting on `start` (the shape `CurriculumMetaSchema` stores). */
+const meta = (start = '2026-10-05', weeks = 4): CurriculumMeta => ({
+  kind: 'curriculum',
+  generatorVersion: 1,
+  catalogVersion: 4,
+  params: {
+    audience: 'class',
+    level: { stage: 'stage1', band: 0 },
+    startDate: start,
+    weeks,
+    sessionsPerWeek: 2,
+    minutesPerSession: 10,
+    daysOff: [],
+    goals: { focus: 'balanced' },
+    includeComingSoon: true,
+    culturalAnchors: true,
+    unlockedStages: ['stage1'],
+  },
+  weeks: Array.from({ length: weeks }, (_, i) => ({
+    index: i + 1,
+    startDate: new Date(Date.parse(`${start}T00:00:00.000Z`) + 7 * i * 86_400_000).toISOString().slice(0, 10),
+    kind: 'learn' as const,
+    focus: { episodeId: null, storyIds: [], festival: null },
+    extras: [],
+  })),
+  horizonDays: 7,
+  repacedAt: null,
+});
+const source = (o: Partial<GoalSource> & Pick<GoalSource, 'id' | 'kind'>): GoalSource => ({
+  assignedAt: '2026-10-05T09:00:00.000Z',
+  items: [{ kind: 'quest', id: 'quest:stage2-life-q1' }],
+  meta: meta(),
+  ...o,
+});
+const questNext = (questId: string, episodeId: string, stage: StageKey, src: NextSource): RouteNext => ({
+  kind: 'quest',
+  questId,
+  episodeId,
+  stage,
+  source: src,
+  sourceId: src === 'cursor' ? null : `plan:${src}`,
+});
+const allPips = (m: MyRouteModel): Pip[] => m.stages.flatMap((s) => [...s.pips, ...s.newPips, ...s.cells.flatMap((c) => c.pips)]);
+const cursorKeys = (m: MyRouteModel): string[] => [...new Set(allPips(m).filter((p) => p.isCursor).map((p) => p.key))];
+
+describe('the goal and the one next (Learning Route amendment sections 4.1 and 4.4, LR-3b)', () => {
+  it('without an injected next: the catalogue cursor with source cursor, the default goal, no plan cells', () => {
+    const m = build(['quest:stage1-letters-q1']);
+    expect(m.nextKind).toBe('quest');
+    expect(m.next).toEqual({ questId: 'quest:stage1-letters-q2', episodeId: 'episode:stage1-letters', stage: 'stage1', source: 'cursor' });
+    expect(m.goal).toEqual({ stage: 'stage1', from: 'default', sourceId: null, endsOn: null, reached: false, taste: false });
+    expect(m.inPlanEpisodeIds).toEqual([]);
+    expect(cursorKeys(m)).toEqual(['quest:stage1-letters-q2']);
+  });
+
+  it('goalPips are the goal row\'s own pip objects: the earned group, then the joined group', () => {
+    const m = build(STAGE1_8, {}, BUNDLE_15, { stageDoneAt: { stage1: '2026-10-01T00:00:00.000Z' } });
+    // Stage 1 is complete, so the default goal moves on to Stage 2.
+    expect(m.goal?.stage).toBe('stage2');
+    const s2 = row(m, 'stage2');
+    expect(m.goalPips).toEqual([...(s2?.pips ?? []), ...(s2?.newPips ?? [])]);
+    m.goalPips.forEach((pip, i) => expect(pip).toBe(s2?.pips[i]));
+    const planned = build([], { sources: [source({ id: 'plan:c', kind: 'class', items: [{ kind: 'quest', id: 'quest:stage1-life-q1' }] })] }, BUNDLE_15, {
+      stageDoneAt: { stage1: '2026-10-01T00:00:00.000Z' },
+    });
+    const s1 = row(planned, 'stage1');
+    expect(planned.goal?.stage).toBe('stage1');
+    expect(planned.goalPips).toEqual([...(s1?.pips ?? []), ...(s1?.newPips ?? [])]);
+    expect(s1?.newPips.length).toBeGreaterThan(0);
+  });
+
+  for (const src of ['class', 'school', 'family', 'self', 'cursor'] as const) {
+    it(`a ${src} next from F-ENT-003 is the page's next; its pip alone carries the marker; here stays the catalogue cursor's stage`, () => {
+      const routeNext = questNext('quest:stage2-life-q1', 'episode:stage2-life', 'stage2', src);
+      const m = build(['quest:stage1-letters-q1'], { routeNext });
+      expect(m.next).toEqual({ questId: 'quest:stage2-life-q1', episodeId: 'episode:stage2-life', stage: 'stage2', source: src });
+      expect(m.nextKind).toBe('quest');
+      expect(m.hero).toBe('continue');
+      expect(cursorKeys(m)).toEqual(['quest:stage2-life-q1']);
+      expect(m.cursor?.questId).toBe('quest:stage1-letters-q2');
+      const without = build(['quest:stage1-letters-q1']);
+      expect(summarizeJourney(m).here).toBe(summarizeJourney(without).here);
+      expect(summarizeJourney(m).here).toBe('stage1');
+    });
+  }
+
+  it('a new learner with a plan next still gets the start hero', () => {
+    const m = build([], { routeNext: questNext('quest:stage1-life-q1', 'episode:stage1-life', 'stage1', 'class') });
+    expect(m.hero).toBe('start');
+    expect(m.next?.questId).toBe('quest:stage1-life-q1');
+  });
+
+  it('free-end: the freeEnd hero, no next and no marker anywhere', () => {
+    const m = build(STAGE1_8, { routeNext: { kind: 'free-end', placedOut: false } });
+    expect(m.hero).toBe('freeEnd');
+    expect(m.nextKind).toBe('free-end');
+    expect(m.next).toBeNull();
+    expect(cursorKeys(m)).toEqual([]);
+    expect(m.cursor).not.toBeNull();
+  });
+
+  it('rest: the rest hero, or beyond when the level check placed past the content', () => {
+    const m = build(['quest:stage1-letters-q1'], { routeNext: { kind: 'rest' } });
+    expect(m.hero).toBe('rest');
+    expect(m.nextKind).toBe('rest');
+    expect(m.next).toBeNull();
+    expect(cursorKeys(m)).toEqual([]);
+    const beyond = build([], { routeNext: { kind: 'rest' }, route: seed([], { beyondContent: true, needsStage: null }) });
+    expect(beyond.hero).toBe('beyond');
+  });
+
+  it('inPlanEpisodeIds is the plan view\'s episode set', () => {
+    const planView: PlanView = {
+      leadingSourceId: 'plan:c',
+      leadingKind: 'class',
+      inPlanQuestIds: new Set(['quest:stage1-life-q1']),
+      inPlanEpisodeIds: new Set(['episode:stage1-life', 'episode:stage2-life']),
+    };
+    expect(build([], { planView }).inPlanEpisodeIds).toEqual(['episode:stage1-life', 'episode:stage2-life']);
+  });
+
+  it('a live class curriculum plan sets the goal: its highest lesson stage, a taste, not reached', () => {
+    const m = build(['quest:stage1-letters-q1'], { sources: [source({ id: 'plan:c', kind: 'class' })] });
+    expect(m.goal).toEqual({ stage: 'stage2', from: 'class', sourceId: 'plan:c', endsOn: '2026-11-01', reached: false, taste: true });
+    expect(m.goalPips).toEqual(row(m, 'stage2')?.pips);
+  });
+
+  it('a class plan leads a family and a self plan, as on Home', () => {
+    const m = build([], {
+      sources: [
+        source({ id: 'route:own', kind: 'self', items: [{ kind: 'quest', id: 'quest:stage4-rites-q1' }], assignedAt: '2026-10-07T00:00:00.000Z' }),
+        source({ id: 'plan:f', kind: 'family', items: [{ kind: 'quest', id: 'quest:stage4-rites-q1' }] }),
+        source({ id: 'plan:c', kind: 'class', items: [{ kind: 'quest', id: 'quest:stage1-life-q1' }], assignedAt: '2026-09-30T00:00:00.000Z' }),
+      ],
+    });
+    expect(m.goal).toMatchObject({ stage: 'stage1', from: 'class', sourceId: 'plan:c' });
+  });
+
+  it('a reached taste goal: every playable quest of the plan stage done (explored)', () => {
+    const m = build(['quest:stage2-life-q1', 'quest:stage2-nature-q1'], { sources: [source({ id: 'plan:c', kind: 'class' })] });
+    expect(row(m, 'stage2')?.state).toBe('explored');
+    expect(m.goal).toMatchObject({ stage: 'stage2', reached: true, taste: true });
+  });
+
+  it('a finished plan sets no goal: the day after its last day the default rule applies; today defaults to the UTC day of now', () => {
+    const sources = [source({ id: 'plan:c', kind: 'class', meta: meta('2026-09-14') })];
+    expect(build([], { sources, now: new Date('2026-10-11T23:59:00.000Z') }).goal?.from).toBe('class');
+    expect(build([], { sources, now: new Date('2026-10-12T00:30:00.000Z') }).goal?.from).toBe('default');
+    expect(build([], { sources, now: new Date('2026-10-12T00:30:00.000Z'), today: '2026-10-11' }).goal?.from).toBe('class');
+  });
+
+  it('the goal is null at the end of the open road, with no goal pips', () => {
+    const all = BUNDLE_8.quests.map((q) => q.id);
+    const m = build(all);
+    expect(m.stages.map((s) => s.state)).toEqual(['complete', 'explored', 'later', 'explored', 'later', 'later', 'later']);
+    expect(m.goal).toBeNull();
+    expect(m.goalPips).toEqual([]);
+  });
+});
+
+describe('access (Learning Route amendment section 4.5, LR-3b): not-open pips', () => {
+  const stage2Closed = (id: string) => !id.startsWith('quest:stage2-');
+
+  it('a quest that is not open is a later pip with laterReason notOpen; cell pips are soon; open pips have no reason', () => {
+    const m = build(['quest:stage1-letters-q1'], { isQuestOpen: stage2Closed });
+    const s2 = row(m, 'stage2');
+    expect(s2?.pips.map((p) => [p.state, p.laterReason])).toEqual([
+      ['later', 'notOpen'],
+      ['later', 'notOpen'],
+      ['later', 'soon'],
+      ['later', 'soon'],
+      ['later', 'soon'],
+    ]);
+    expect(row(m, 'stage1')?.pips.every((p) => p.laterReason === undefined)).toBe(true);
+    expect(build([]).stages.flatMap((s) => s.pips).filter((p) => p.kind === 'quest').every((p) => p.laterReason === undefined)).toBe(true);
+  });
+
+  it('at free-end no pip is the marker, and a stage of not-open quests keeps its pips (never coming later)', () => {
+    const m = build(STAGE1_8, { isQuestOpen: stage2Closed, routeNext: { kind: 'free-end', placedOut: false } });
+    expect(row(m, 'stage2')?.state).toBe('open');
+    expect(row(m, 'stage2')?.pips.some((p) => p.isCursor)).toBe(false);
+  });
+
+  it('kept and known quests are never not open: done and placed-out pips stay filled', () => {
+    const route = effectiveRoute([result({ placedOutQuestIds: ['quest:stage2-nature-q1'] })], catalogOf(BUNDLE_8), { isEntitled: () => true, completedQuestIds: new Set() });
+    const m = build(['quest:stage2-life-q1'], { isQuestOpen: () => false, route });
+    expect(states(m, 'stage2')?.slice(0, 2).sort()).toEqual(['done', 'known']);
+  });
+
+  it('access shrinking never empties a done pip or a latch', () => {
+    const latched = { stageDoneAt: { stage1: '2026-10-01T00:00:00.000Z' } };
+    const open = build(STAGE1_8, {}, BUNDLE_15, latched);
+    const closed = build(STAGE1_8, { isQuestOpen: () => false }, BUNDLE_15, latched);
+    expect(row(closed, 'stage1')?.state).toBe('complete');
+    expect(row(closed, 'stage1')?.pips.map((p) => p.state)).toEqual(row(open, 'stage1')?.pips.map((p) => p.state));
+    // The quests that joined after the latch and cannot be played are not-open, in the joined group.
+    expect(row(closed, 'stage1')?.newPips.map((p) => [p.state, p.laterReason])).toEqual(Array(7).fill(['later', 'notOpen']));
   });
 });

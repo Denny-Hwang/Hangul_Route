@@ -22,6 +22,21 @@ export {
 export { stagesToLatch, withStageLatches } from './latch';
 export { startMarkerOf, startRouteOf } from './start-marker';
 export {
+  goalReachedKey,
+  goalsReachedOf,
+  hoyaPoseFor,
+  isFirstGoalReached,
+  newQuestsLine,
+  newlyDoneKeys,
+  parseSeen,
+  readSeen,
+  seenFrom,
+  seenKey,
+  withGoalReached,
+  writeSeen,
+  type JsonStorage,
+} from './seen';
+export {
   jamoIdToSymbolKey,
   letterWallOf,
   letterWallView,
@@ -33,12 +48,13 @@ export {
   type LetterWallView,
   type WallJamo,
 } from './letter-wall';
-export { hoyaPoseFor, newQuestsLine, newlyDoneKeys, parseSeen, readSeen, seenFrom, seenKey, writeSeen, type JsonStorage } from './seen';
 export {
   canDoCopy,
   cellWord,
+  goalPipsWord,
   heroCopy,
   newQuestsCopy,
+  routeCardCopy,
   skillCopy,
   skillsNoteCopy,
   skillsTitle,
@@ -55,6 +71,9 @@ export {
   type LearnerRouteMessages,
   type MyRouteA11yMessages,
   type MyRouteMessages,
+  type RouteCardCopy,
+  type RouteCardExtra,
+  type RouteCardLine,
   type TrailEntry,
   type Viewer,
 } from './copy';

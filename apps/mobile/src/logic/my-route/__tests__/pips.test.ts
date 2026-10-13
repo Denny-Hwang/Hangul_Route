@@ -80,6 +80,17 @@ describe('cellRowsOf', () => {
     expect(s2[3]?.pips[0]?.kind).toBe('quest');
   });
 
+  it('gives laterReason notOpen only to a quest the access check closed, never to one later for want of entitlement', () => {
+    // The `tier` cursor rule with no access check (switch off): a stage the learner is not entitled
+    // to but has a quest done in keeps its other quests later with no reason, as before LR-3b.
+    const tier = cells('stage2', ctxOf({ isEntitled: (s) => s === 'stage1', done: new Set(['quest:stage2-life-q1']) }));
+    expect(tier[3]?.pips[0]).toMatchObject({ kind: 'quest', state: 'later' });
+    expect(tier.flatMap((c) => c.pips).some((p) => p.laterReason === 'notOpen')).toBe(false);
+    // The same stage with the access check closing that quest: Not open yet.
+    const closed = cells('stage2', ctxOf({ isEntitled: (s) => s === 'stage1', isQuestOpen: () => false }));
+    expect(closed[3]?.pips[0]).toMatchObject({ kind: 'quest', state: 'later', laterReason: 'notOpen' });
+  });
+
   it('uses the episode title, else the theme title, and a null episode for a missing cell', () => {
     const episodes = BUNDLE_8.episodes.filter((e) => e.id !== 'episode:stage3-crafts');
     const s3 = cells('stage3', ctxOf(), episodes);

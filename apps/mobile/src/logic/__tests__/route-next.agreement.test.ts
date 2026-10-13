@@ -11,13 +11,15 @@ import { placementStart } from '../placement/session';
 import { resultsTeaser } from '../quest-flow/results-teaser';
 import { offplanFinishedEvent, planBeforeOf, planView, qualifiesForNext, routeNext, type RouteNext, type RouteNextInput } from '../route-next';
 import { selfRoute } from '../homework/__tests__/curriculum-fixture';
+import { journeyContent } from '../../content/sync-context';
+import { buildMyRoute } from '../my-route/model';
 
 /**
  * F-ENT-003 section 3.5, the cross-spec golden (PR E3-4): on each snapshot below, Home card (2)
  * (`buildTodaysMission` with today's assignment merged), the Results teaser target and the placement
  * result's primary action name the quest `routeNext` names, on the shipped bundle. The Journey mark
- * model and the episode tag model join this file with E3-5 and E3-6, and `buildMyRoute().next` and
- * `.inPlanEpisodeIds` once LR-3b imports this module.
+ * model and the episode tag model join this file with E3-5 and E3-6. The Learning Route's
+ * `buildMyRoute().next` and `.inPlanEpisodeIds` (LR-3b) are asserted below.
  */
 
 const P = 'profile:p1';
@@ -190,6 +192,28 @@ describe('routeNext agreement across surfaces (F-ENT-003 section 3.5)', () => {
         const teaser = resultsTeaser({ snapshot: input.snapshot, quests: questsAll, episodes: input.episodes, questId: next.questId, total: 5, route: input, planBefore: before });
         expect(teaser?.caption).not.toBe('backToPlan');
         expect(offplanFinishedEvent(P, before, next.questId, input.episodes)).toBeNull();
+      });
+
+      it('the Learning Route names routeNext and marks planView\'s episodes (LR-3b)', () => {
+        const model = buildMyRoute({
+          ...journeyContent,
+          episodes: input.episodes,
+          snapshot: input.snapshot,
+          route: null,
+          skipQuestIds: input.cursor.skipQuestIds,
+          now: new Date(`${TODAY}T08:00:00.000Z`),
+          sources: input.sources.map((s) => ({ ...s, meta: s.meta ?? null })),
+          today: TODAY,
+          routeNext: next,
+          planView: planView(input),
+          isQuestOpen: input.isQuestOpen,
+        });
+        expect(model.next?.questId).toBe(questOf(next));
+        expect(model.nextKind).toBe(next.kind);
+        if (next.kind === 'quest') expect(model.next?.source).toBe(next.source);
+        expect(new Set(model.inPlanEpisodeIds)).toEqual(new Set(planView(input).inPlanEpisodeIds));
+        const markers = model.stages.flatMap((s) => [...s.pips, ...s.newPips]).filter((p) => p.isCursor);
+        expect(markers.map((p) => p.questId)).toEqual(next.kind === 'quest' ? [next.questId] : []);
       });
 
       it('the placement result with a closed start quest starts routeNext', () => {

@@ -1,5 +1,7 @@
-import { StageKeySchema, type StageKey } from '@hangul-route/content-schema';
+import { pickGoal, StageKeySchema, type RouteGoal, type StageKey } from '@hangul-route/content-schema';
+import { dayKey } from '../homework/mission-builder';
 import { offerableQuests } from '../next-quest';
+import type { RouteNext } from '../route-next';
 import { routeCursor } from './cursor';
 import { gainsOf } from './gains';
 import { gridEpisodesOf, routeOrder, type RouteEntry } from './order';
@@ -7,7 +9,7 @@ import { skillRows, tilesCount } from './skills';
 import { stagesToLatch } from './latch';
 import { buildStageRows } from './stage-rows';
 import { startMarkerOf } from './start-marker';
-import type { Hero, MyRouteInput, MyRouteModel, StageRow } from './types';
+import type { Hero, MyRouteInput, MyRouteModel, Pip, RouteNextQuest, StageRow } from './types';
 
 /**
  * `buildMyRoute` (F-ROUTE-001 section 3.2): the snapshot, the bundled
@@ -18,11 +20,47 @@ import type { Hero, MyRouteInput, MyRouteModel, StageRow } from './types';
 
 const isStageKey = (key: string): key is StageKey => StageKeySchema.safeParse(key).success;
 
-/** `start` only for a learner with nothing done and no start marker (section 3.5); a start marker means `continue`. */
-function heroOf(m: { cursor: MyRouteModel['cursor']; anyDone: boolean; hasStart: boolean; route: MyRouteInput['route'] }): Hero {
-  if (m.cursor === null) return m.route?.beyondContent === true && m.route.needsStage === null ? 'beyond' : 'rest';
+/**
+ * The hero kind from F-ENT-003's next (Learning Route amendment section 4.4):
+ * `start` or `continue` for a quest (`start` only for a learner with nothing
+ * done and no start marker, section 3.5), `freeEnd` for `free-end`, and the
+ * unchanged `rest` or `beyond` rule for `rest`.
+ */
+function heroOf(m: { nextKind: MyRouteModel['nextKind']; anyDone: boolean; hasStart: boolean; route: MyRouteInput['route'] }): Hero {
+  if (m.nextKind === 'free-end') return 'freeEnd';
+  if (m.nextKind === 'rest') return m.route?.beyondContent === true && m.route.needsStage === null ? 'beyond' : 'rest';
   return m.anyDone || m.hasStart ? 'continue' : 'start';
 }
+
+/** The injected `RouteNext`, or the catalogue cursor (source `cursor`) when the caller passes none. */
+function nextOf(routeNext: RouteNext | undefined, cursor: MyRouteModel['cursor']): { next: RouteNextQuest | null; nextKind: MyRouteModel['nextKind'] } {
+  if (routeNext === undefined) return cursor === null ? { next: null, nextKind: 'rest' } : { next: { ...cursor, source: 'cursor' }, nextKind: 'quest' };
+  if (routeNext.kind !== 'quest') return { next: null, nextKind: routeNext.kind };
+  const { questId, episodeId, stage, source } = routeNext;
+  return { next: { questId, episodeId, stage, source }, nextKind: 'quest' };
+}
+
+/**
+ * The goal over this model's own stage rows and the bundle's availability
+ * (Learning Route amendment section 4.1), on the plan day: the same inputs
+ * `routeGoalSummaryOf` reads, so the tab and the family card name one goal.
+ */
+function goalOf(input: MyRouteInput, stages: readonly StageRow[]): RouteGoal | null {
+  // The rows are always the seven stages, so every stage has its availability.
+  const availability = new Map(stages.map((s) => [s.stage, s.availability]));
+  return pickGoal({
+    sources: input.sources ?? [],
+    catalog: input.catalog,
+    stages: stages.map((s) => ({ stage: s.stage, state: s.state })),
+    availability: (stage) => availability.get(stage) as StageRow['availability'],
+    today: input.today ?? dayKey(input.now.toISOString()),
+  });
+}
+
+const goalPipsOf = (goal: RouteGoal | null, stages: readonly StageRow[]): Pip[] => {
+  const row = goal === null ? undefined : stages.find((s) => s.stage === goal.stage);
+  return row === undefined ? [] : [...row.pips, ...row.newPips];
+};
 
 /**
  * The connector fills down to the highest stage with a done or known pip. With
@@ -64,10 +102,21 @@ export function buildMyRoute(input: MyRouteInput): MyRouteModel {
   const cursorEntry = order.find((e) => e.questId === cursorQuest?.id);
   const cursor = cursorEntry ? { questId: cursorEntry.questId, episodeId: cursorEntry.episodeId, stage: cursorEntry.stage } : null;
   const start = startMarkerOf(route, order);
+  const { next, nextKind } = nextOf(input.routeNext, cursor);
 
   const stages = buildStageRows(input, {
     gridEpisodes,
-    pips: { order, done, placedOut, latched, isEntitled: input.isEntitled, cursorId: cursor?.questId ?? null, startId: start?.questId ?? null },
+    pips: {
+      order,
+      done,
+      placedOut,
+      latched,
+      isEntitled: input.isEntitled,
+      // One marker: the pip of the one next (section 4.4); `here` stays the catalogue cursor's stage.
+      cursorId: next?.questId ?? null,
+      startId: start?.questId ?? null,
+      ...(input.isQuestOpen === undefined ? {} : { isQuestOpen: input.isQuestOpen }),
+    },
     cursorStage: cursor?.stage ?? null,
     // One start marker feeds both `here` (with nothing done) and the tag, so they never disagree.
     startStage: start?.stage ?? null,
@@ -75,8 +124,9 @@ export function buildMyRoute(input: MyRouteInput): MyRouteModel {
   });
 
   const open = new Set(offerableQuests(input.quests, input.episodes, isEntitled).map((q) => q.id));
+  const goal = goalOf(input, stages);
   return {
-    hero: heroOf({ cursor, anyDone: stages.some((s) => s.done > 0), hasStart: start !== null, route }),
+    hero: heroOf({ nextKind, anyDone: stages.some((s) => s.done > 0), hasStart: start !== null, route }),
     cursor,
     stages,
     trailReached: trailReachedOf(stages, input, order),
@@ -85,5 +135,10 @@ export function buildMyRoute(input: MyRouteInput): MyRouteModel {
     gains: gainsOf({ snapshot, episodes: input.episodes }),
     start,
     latchesToWrite: stagesToLatch(snapshot, input.episodes),
+    goal,
+    goalPips: goalPipsOf(goal, stages),
+    next,
+    nextKind,
+    inPlanEpisodeIds: [...(input.planView?.inPlanEpisodeIds ?? [])],
   };
 }

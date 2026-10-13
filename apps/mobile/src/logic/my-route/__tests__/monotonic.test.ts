@@ -9,7 +9,9 @@ import { result } from './fixtures/route';
 /**
  * Fill-only guarantees (F-ROUTE-001 section 3.4) as a property test: random
  * runs of "finish a quest", "ship a cell", "grow a cell", "entitlement change",
- * "placement" and "override", with the latch writer applied after every step.
+ * "placement", "override" and "access shrinks" (F-ENT-003 closes a quest:
+ * Learning Route amendment section 4.5), with the latch writer applied after
+ * every step.
  */
 
 const mulberry32 = (seed: number) => () => {
@@ -19,8 +21,8 @@ const mulberry32 = (seed: number) => () => {
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 };
 
-type Action = 'finish' | 'ship' | 'grow' | 'entitlement' | 'placement' | 'override';
-const ACTIONS: readonly Action[] = ['finish', 'finish', 'finish', 'ship', 'grow', 'entitlement', 'placement', 'override'];
+type Action = 'finish' | 'ship' | 'grow' | 'entitlement' | 'placement' | 'override' | 'access';
+const ACTIONS: readonly Action[] = ['finish', 'finish', 'finish', 'ship', 'grow', 'entitlement', 'placement', 'override', 'access'];
 const CONTENT: ReadonlySet<Action> = new Set(['ship', 'grow']);
 
 interface World {
@@ -29,6 +31,8 @@ interface World {
   stageDoneAt: Record<string, string>;
   placements: PlacementResult[];
   entitled: Set<StageKey>;
+  /** Quests F-ENT-003's access no longer opens; it only grows (access shrinks). */
+  closed: Set<string>;
   fresh: number;
 }
 
@@ -46,6 +50,7 @@ const modelOf = (w: World): MyRouteModel => {
     isEntitled,
     route: effectiveRoute(w.placements, catalog, { isEntitled, completedQuestIds: new Set() }),
     now: new Date('2026-10-11T00:00:00.000Z'),
+    isQuestOpen: (id) => !w.closed.has(id),
   });
 };
 
@@ -91,6 +96,12 @@ function step(w: World, action: Action, rnd: () => number): void {
       if (chosen) w.placements.push(result({ override: { by: 'parent', at: 't', startQuestId: chosen.questId } }));
       break;
     }
+    case 'access': {
+      // Any quest, done or not: a lapsed plan closes what it opened, and a done pip must stay done.
+      const id = pick(order.map((o) => o.questId));
+      if (id) w.closed.add(id);
+      break;
+    }
   }
 }
 
@@ -98,7 +109,7 @@ describe('my-route is fill-only (property)', () => {
   it('holds over 80 random runs of 30 steps', () => {
     for (let run = 0; run < 80; run += 1) {
       const rnd = mulberry32(run + 1);
-      const w: World = { bundle: BUNDLE_8, done: [], stageDoneAt: {}, placements: [], entitled: new Set(StageKeySchema.options), fresh: 0 };
+      const w: World = { bundle: BUNDLE_8, done: [], stageDoneAt: {}, placements: [], entitled: new Set(StageKeySchema.options), closed: new Set(), fresh: 0 };
       let prev = modelOf(w);
       for (let i = 0; i < 30; i += 1) {
         const action = ACTIONS[Math.floor(rnd() * ACTIONS.length)] as Action;

@@ -1137,8 +1137,37 @@ export const learner = {
       rest: 'You did everything that is open right now. More is coming.',
       beyond: 'You know a lot! More adventures are coming.',
       cta: { start: 'Start', continue: 'Continue' },
+      /** The content cannot be read (F-ROUTE-001 section 3.17, LR-D state J); the button is `common.buttons.tryAgain`. */
+      error: 'Hoya could not open your Learning Route.',
     },
     cta: { stories: 'Open stories', library: 'Open Library' },
+    /**
+     * The route card (AMENDMENTS-ROUTE-LEARNING-ROUTE sections 4.3 and 11.1, LR-3b): where you are
+     * and where you are going. A stage and a can-do line, never a number to the goal, a date or a
+     * distance. `now.label`, `goal.label`, `goal.stage`, `goal.reachedStage`, `goal.explore` and
+     * `goal.tasteLine` never say "you", so the grown-up card uses them too.
+     */
+    now: { label: 'Now' },
+    goal: {
+      label: 'Goal',
+      stage: (n: number, title: string) => `Stage ${n} · ${title}`,
+      inGoal: (n: number, title: string) => `Stage ${n} · ${title}: you are in your goal stage`,
+      explore: (n: number, title: string) => `Explore Stage ${n} · ${title}`,
+      exploreInGoal: (n: number, title: string) => `Explore Stage ${n} · ${title}: you are in your goal stage`,
+      tasteLine: 'Try the first quests of this stage.',
+      reachedStage: (n: number, title: string) => `Stage ${n} · ${title} · reached`,
+      keepGoing: (title: string) => `Keep going: ${title}`,
+      reachedHoya: 'You reached your goal. Hoya is proud!',
+      endOfRoad: 'You reached the end of the open road. More is coming.',
+      /** The source line: who set the goal, as a weekly plan (never "family plan" or "class plan"). */
+      from: {
+        class: "From your class's weekly plan",
+        school: "From your school's weekly plan",
+        family: "From your family's weekly plan",
+        self: 'From your own weekly plan',
+        default: "Hoya's suggestion",
+      },
+    },
     /** The stage and cell words (section 3.3). `notOpen` is used only under OD-4's other branch. */
     state: {
       complete: 'Complete',
@@ -1149,7 +1178,8 @@ export const learner = {
       later: 'Coming later',
       notOpen: 'Not open yet',
     },
-    tag: { here: 'You are here', start: 'You started here' },
+    /** Trail tags in the order they show: where you are, where you are going, where you began (LR-3b adds `goal`). */
+    tag: { here: 'You are here', goal: 'Your goal', start: 'You started here' },
     cell: { playing: 'Playing' },
     caption: {
       played: (n: number) => `${count(n, 'quest', 'quests')} played`,
@@ -1205,6 +1235,8 @@ export const learner = {
       new: 'New',
       later: 'Coming later',
       cursor: 'Next',
+      /** The same value as `state.notOpen` and F-ENT-003's `learner.access.notOpen` (amendment section 7.3). */
+      notOpen: 'Not open yet',
     },
     /** Gains (section 3.8): absolute numbers, shown only when greater than zero. */
     gains: { stars: 'Stars', cards: 'Cards', stories: 'Stories read' },

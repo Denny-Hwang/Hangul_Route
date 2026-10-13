@@ -159,21 +159,24 @@ export const a11y = {
   myRoute: {
     /** The Route tab's accessibility label: the full page name (LR-OD-1). */
     tab: 'Learning Route',
-    stage: (order: number, title: string, stateWord: string, here: boolean, start: boolean, played: number) =>
+    /** `goal` (LR-3b, trailing and optional so existing callers do not change) is spoken between the here and start parts, the order the tags show. */
+    stage: (order: number, title: string, stateWord: string, here: boolean, start: boolean, played: number, goal = false) =>
       [
         `Stage ${order}, ${title}.`,
         `${stateWord}.`,
         here ? 'You are here.' : '',
+        goal ? 'Your goal.' : '',
         start ? 'You started here.' : '',
         played > 0 ? `${plural('en', played, { one: '1 quest', other: `${played} quests` })} played.` : '',
       ]
         .filter((part) => part !== '')
         .join(' '),
-    stageGrownup: (name: string, order: number, title: string, stateWord: string, here: boolean, start: boolean, played: number) =>
+    stageGrownup: (name: string, order: number, title: string, stateWord: string, here: boolean, start: boolean, played: number, goal = false) =>
       [
         `Stage ${order}, ${title}.`,
         `${stateWord}.`,
         here ? `${name} is here.` : '',
+        goal ? `${name}'s goal.` : '',
         start ? `${name} started here.` : '',
         played > 0 ? `${plural('en', played, { one: '1 quest', other: `${played} quests` })} played.` : '',
       ]
@@ -194,6 +197,36 @@ export const a11y = {
     /** The parent dashboard row (R-9b): its goal and started lines, read without the middle dot. */
     rowGoal: (n: number, title: string) => `Goal: Stage ${n}, ${title}.`,
     rowStarted: (n: number, band: string, date: string) => `Started: Stage ${n}, ${band}, ${date}.`,
+    /**
+     * The route card read as one summary (AMENDMENTS-ROUTE-LEARNING-ROUTE section 10, LR-3b): the
+     * Hoya sentence as written, then the visible parts in order, each one a sentence; a part that is
+     * not shown is passed as null. The middle dot of the visible lines is read as a comma
+     * ("Goal: Stage 2, Words").
+     */
+    routeCard: (
+      hoyaText: string | null,
+      nowText: string | null,
+      goalText: string | null,
+      fromText: string | null,
+      planEndsText: string | null,
+      pipsText: string | null,
+      nextText: string | null,
+    ) =>
+      [
+        hoyaText,
+        ...[nowText, goalText, fromText, planEndsText, pipsText, nextText]
+          .filter((part): part is string => part !== null && part !== '')
+          .map((part) => `${part.replace(/ · /g, ', ').replace(/[.!]$/, '')}.`),
+      ]
+        .filter((part): part is string => part !== null && part !== '')
+        .join(' '),
+    /** One labelled line of the route card's where block, read as "Goal: Stage 2 · Words". */
+    labelled: (label: string, line: string) => `${label}: ${line}`,
+    /**
+     * The goal stage's pips in one label, without digits. `someDone` is for some quests done and none
+     * of the rest open yet, so the label never says "more are ready" when none is.
+     */
+    goalPips: { none: 'Ready when you are', some: 'Some quests done, more are ready', someDone: 'Some quests done', all: 'Every quest here is done' },
     /** One letter-wall tile (R-7c): the letter, its sound (with "at the end" for a final) and its state word. */
     letter: (letter: string, sound: string, state: string) => `${letter}, ${sound}. ${state}.`,
   },

@@ -407,7 +407,7 @@ export const caregiver = {
     viewing: (name: string) => `Viendo la Ruta de aprendizaje de ${name}`,
     tiles: (n: number) => `Deletrear con fichas: ${plural('es', n, { one: '1 misión', other: `${n} misiones` })}`,
     start: (name: string) => `La Ruta de aprendizaje de ${name} empieza aquí.`,
-    goal: 'Primera meta: leer cada letra del hangul.',
+    goal: { first: 'Primera meta: leer cada letra del hangul.' },
     rest: (name: string) => `${name} hizo todo lo que está abierto ahora. Viene más.`,
     beyond: (name: string) => `¡${name} sabe mucho! Vienen más aventuras.`,
     hereTag: (name: string) => `${name} está aquí`,

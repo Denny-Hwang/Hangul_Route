@@ -1,4 +1,4 @@
-import { StageKeySchema, type StageKey } from '@hangul-route/content-schema';
+import { StageKeySchema, type RouteGoal, type StageKey } from '@hangul-route/content-schema';
 import type { MyRouteModel, SeenRecord } from './types';
 
 /**
@@ -30,7 +30,10 @@ export function parseSeen(raw: unknown): SeenRecord | undefined {
     const n = raw.totals[stage];
     if (typeof n === 'number' && Number.isInteger(n) && n >= 0) totals[stage] = n;
   }
-  return { totals, doneKeys: [...doneKeys], at: raw.at };
+  // A malformed `goalsReached` is dropped on its own: it never costs the rest of the record.
+  const { goalsReached } = raw;
+  const goals = Array.isArray(goalsReached) ? goalsReached.filter((k): k is string => typeof k === 'string') : undefined;
+  return { totals, doneKeys: [...doneKeys], at: raw.at, ...(goals === undefined ? {} : { goalsReached: goals }) };
 }
 
 export async function readSeen(storage: JsonStorage, profileId: string): Promise<SeenRecord | undefined> {
@@ -60,11 +63,34 @@ export async function writeSeen(
 const donePipKeys = (model: MyRouteModel): string[] =>
   model.stages.flatMap((s) => [...s.pips, ...s.newPips]).filter((p) => p.state === 'done').map((p) => p.key);
 
-/** What the page saw on this open: the grid quest total per stage, the done pips, the time. */
-export function seenFrom(model: MyRouteModel, now: Date): SeenRecord {
+/**
+ * What the page saw on this open: the grid quest total per stage, the done
+ * pips, the time. The goals already celebrated carry over from `previous`, so
+ * a new open never shows a first reached moment twice.
+ */
+export function seenFrom(model: MyRouteModel, now: Date, previous?: SeenRecord): SeenRecord {
   const totals: Partial<Record<StageKey, number>> = {};
   for (const s of model.stages) totals[s.stage] = s.pips.filter((p) => p.kind === 'quest').length + s.newPips.length;
-  return { totals, doneKeys: donePipKeys(model), at: now.toISOString() };
+  const goals = previous?.goalsReached;
+  return { totals, doneKeys: donePipKeys(model), at: now.toISOString(), ...(goals === undefined ? {} : { goalsReached: [...goals] }) };
+}
+
+/** The `goalsReached` key of a goal (Learning Route amendment section 4.5): `${from}:${sourceId ?? '-'}:${stage}`. */
+export const goalReachedKey = (goal: Pick<RouteGoal, 'from' | 'sourceId' | 'stage'>): string => `${goal.from}:${goal.sourceId ?? '-'}:${goal.stage}`;
+
+/** The goals this device already celebrated; a missing value reads as `[]`. */
+export const goalsReachedOf = (seen: SeenRecord | undefined): string[] => [...(seen?.goalsReached ?? [])];
+
+/** True the first time a reached goal shows on this device: reached, and its key not yet in `goalsReached`. */
+export function isFirstGoalReached(goal: RouteGoal | null, seen: SeenRecord | undefined): boolean {
+  return goal !== null && goal.reached && !goalsReachedOf(seen).includes(goalReachedKey(goal));
+}
+
+/** The record with the goal's key added once; the same record when the key is already there. */
+export function withGoalReached(record: SeenRecord, goal: Pick<RouteGoal, 'from' | 'sourceId' | 'stage'>): SeenRecord {
+  const key = goalReachedKey(goal);
+  const goals = goalsReachedOf(record);
+  return goals.includes(key) ? record : { ...record, goalsReached: [...goals, key] };
 }
 
 /** The one calm line under the hero: the first stage with new quests since the last open. */
