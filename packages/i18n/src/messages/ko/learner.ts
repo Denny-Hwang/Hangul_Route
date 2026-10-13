@@ -809,6 +809,7 @@ export const learner = {
         usePlan: '이 계획 쓰기',
         change: '바꾸기',
         justStart: '그냥 시작하기',
+        basis: (length: string, days: number, minutes: number) => `${length} · 일주일에 ${days}일 · 하루 ${minutes}분쯤`,
       },
     },
     homeCard: {
@@ -964,6 +965,7 @@ export const learner = {
     },
     gains: { stars: '별', cards: '카드', stories: '읽은 이야기' },
     storiesNote: '문화 이야기는 언제든지 열려 있어요.',
+    plan: { open: '계획 열기' },
     home: {
       strip: {
         title: '학습 루트',
@@ -1005,6 +1007,33 @@ export const learner = {
           one: '잘했어요. 낱말 하나하나가 도움이 돼요.',
           firstStar: '잘 도전했어요! 별을 하나 모았어요!',
         },
+      },
+      title: '스피드 라운드',
+      relaxed: {
+        label: '느긋하게',
+        line: (n: number) => `낱말 ${n}개. 시간 제한이 없어요.`,
+      },
+      start: '시작',
+      noSound: '이 기기에서는 소리가 안 나요. 그림과 글로만 해요.',
+      learnFirst: '먼저 낱말을 몇 개 더 배워요',
+      learn: '배우기',
+      nothingToPlay: '아직 할 수 있는 게 없어요',
+      back: '뒤로',
+      backToTopic: '주제로 돌아가기',
+      stop: {
+        title: '여기서 멈출까요?',
+        body: '답한 낱말은 그대로 저장돼요.',
+        keep: '계속하기',
+        stop: '그만하기',
+      },
+      results: {
+        caught: (n: number) => `맞힌 낱말 ${n}개`,
+        timeUp: '시간이 다 됐어요. 이만큼 맞혔어요.',
+        newBest: '새 최고 기록!',
+        seeAgain: '다시 볼 낱말',
+        practice: '이 낱말 연습하기',
+        playAgain: '다시 하기',
+        backToTopic: '주제로 돌아가기',
       },
     },
     library: {

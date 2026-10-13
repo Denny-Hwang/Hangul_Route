@@ -253,6 +253,11 @@ export const a11y = {
       rightPlain: 'Right.',
       revealPlain: 'Not this one.',
     },
+    /** The Speed Round's spark meter (F-VOC-004 §3.8): one image, read politely once when a spark lights. */
+    speed: {
+      sparks: (n: number) => plural('en', n, { one: '1 spark', other: `${n} sparks` }),
+      sparksFull: 'Full of sparks',
+    },
   },
   /**
    * Progress reports (F-REPORT-001 section 3.12, RP-6): the period tabs and stepper, the live region, and the

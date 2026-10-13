@@ -3,10 +3,10 @@ import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { AccountCard, AddPlanSection, BillingCard, EmptyState, FailPanel, HelpSection, ReturnNoticeRegion, type CardHandlers } from '@/components/console/BillingHomeParts';
+import { AccountCard, AddPlanSection, BackToBilling, BillingCard, EmptyState, FailPanel, HelpSection, ReceiptsTable, ReturnNoticeRegion, type CardHandlers } from '@/components/console/BillingHomeParts';
 import { StepUpDialog } from '@/components/console/StepUpDialog';
 import { initialReturnState, returnNotice, returnStep, type ReturnState } from '@/lib/console/checkout-return';
-import { billingHomeView, summaryFailureNotice } from '@/lib/console/billing-summary';
+import { billingHomeView, receiptRow, summaryFailureNotice } from '@/lib/console/billing-summary';
 import { expectAllPseudo } from './pseudo-text';
 
 /**
@@ -133,5 +133,14 @@ describe('billing home parts render only dictionary text (en-XA)', () => {
     const dialogs = (['asking', 'verifying', 'unavailable'] as const).map((phase) => renderToStaticMarkup(<StepUpDialog phase={phase} onContinue={noop} onCancel={noop} />));
     expect(dialogs.join('')).toContain('role="dialog"');
     expectAllPseudo([...notices, ...dialogs].join(''), data);
+  });
+
+  it('the receipts page: Back to Billing and the table with a failed lookup line (B-8c)', () => {
+    const rows = (['purchase', 'renewal', 'refund', 'failed'] as const).map((kind, i) =>
+      receiptRow({ id: `bev:r${i}`, kind, planKey: 'family_lifetime', amountCents: 1530, currency: 'usd', livemode: false, occurredAt: '2028-10-02T09:00:00.000Z', hasReceipt: kind !== 'failed' }, PSEUDO),
+    );
+    const html = renderToStaticMarkup(<BackToBilling href="/account/billing" />) + renderToStaticMarkup(<ReceiptsTable rows={rows} notes={new Map([['bev:r0', 'failed'], ['bev:r1', 'tapAgain']] as const)} busyId={null} onView={noop} />);
+    expect(html).toContain('role="rowheader"');
+    expectAllPseudo(html, data);
   });
 });

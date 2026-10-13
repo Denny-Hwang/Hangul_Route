@@ -1,18 +1,16 @@
 import { formatDate as realFormatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { CurrentPlanList, PlanRowList } from '@/components/console/BillingParts';
 import { PlanDraftItems, PlanReadout } from '@/components/console/PlanParts';
 import { builderEpisodes, questsOf } from '@/data/catalog';
-import type { EntitlementView, PlanView, SpaceListItem } from '@/lib/console/api';
-import { currentPlanCards, planRowsFor } from '@/lib/console/billing';
+import type { PlanView } from '@/lib/console/api';
 import type { ReadoutRow } from '@/lib/console/plans';
 import { expectAllPseudo } from './pseudo-text';
 
 /**
- * F-I18N-001 PR 10b, §3.11: the loaded states of the plan and billing pages — the published
- * readout, the draft's item rows, the current-plan cards and the plan rows — take every word
- * from the dictionary. The page tests (console-pages-pseudo.test.tsx) only reach first paint,
+ * F-I18N-001 PR 10b, §3.11: the loaded states of the plan page — the published readout and
+ * the draft's item rows — take every word from the dictionary (the billing home's parts:
+ * billing-home-parts-pseudo.test.tsx). The page tests (console-pages-pseudo.test.tsx) only reach first paint,
  * because effects do not run in a server render; these render the parts with data, in en-XA.
  */
 const PSEUDO = 'en-XA' as UiLocale;
@@ -88,56 +86,5 @@ describe('plan parts render only dictionary text (en-XA)', () => {
     const html = renderToStaticMarkup(<PlanDraftItems items={[]} onMove={noop} onRemove={noop} onUpdate={noop} />);
     // One line only; expectAllPseudo needs several words, so check it directly.
     expect(html).toMatch(/^<p[^>]*>\[[^\]]*\]<\/p>$/);
-  });
-});
-
-const ent = (over: Partial<EntitlementView>): EntitlementView => ({
-  id: 'ent:1',
-  subjectKind: 'space',
-  subjectId: 'space:cls',
-  planKey: 'group_license',
-  status: 'active',
-  provider: 'stripe',
-  providerRef: 'sub',
-  customerRef: 'cus',
-  seats: null,
-  expiresAt: null,
-  promoCode: null,
-  updatedAt: '2026-10-01T00:00:00.000Z',
-  subjectName: 'Class A',
-  ...over,
-});
-const space = (id: string, kind: SpaceListItem['space']['kind']): SpaceListItem => ({
-  space: { id, kind, name: id, parentSpaceId: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt: null, createdAt: 't' },
-  role: 'owner',
-  counts: { learners: 0, accounts: 1, classes: 0 },
-  joinCode: null,
-  joinCodeExpiresAt: null,
-});
-// Data on the billing page: space names, promo codes and prices (formatUsd digits).
-const billingData = ['Class A', 'Kim family', 'KPCCW2026', 'space:fam', 'space:cls', 'space:sch'];
-
-describe('billing parts render only dictionary text (en-XA)', () => {
-  it('the free card when nothing is active', () => {
-    expectAllPseudo(renderToStaticMarkup(<CurrentPlanList cards={[]} showFree busy={false} onManage={noop} />), billingData, 2);
-  });
-
-  it('current-plan cards: manage, seats, a promo code, every provider', () => {
-    const entitlements = [
-      ent({}),
-      ent({ id: 'ent:2', planKey: 'family_lifetime', subjectId: 'space:fam', subjectName: 'Kim family', provider: 'apple', customerRef: null, promoCode: 'KPCCW2026' }),
-      ent({ id: 'ent:3', planKey: 'school_seat', subjectKind: 'account', subjectId: 'me', subjectName: null, provider: 'manual', customerRef: null, seats: 300 }),
-      ent({ id: 'ent:4', provider: 'google', status: 'cancelled' }),
-    ];
-    const html = renderToStaticMarkup(<CurrentPlanList cards={currentPlanCards(entitlements, now, PSEUDO)} showFree={false} busy={false} onManage={noop} />);
-    expect(html).toContain('data-testid="plan-card"');
-    expectAllPseudo(html, billingData);
-  });
-
-  it('plan rows: choose, contact, current', () => {
-    const spaces = [space('space:fam', 'family'), space('space:cls', 'class'), space('space:sch', 'school')];
-    const rows = planRowsFor('me', spaces, [ent({})], now, PSEUDO);
-    expect(rows.map((r) => r.action)).toEqual(expect.arrayContaining(['choose', 'contact', 'current']));
-    expectAllPseudo(renderToStaticMarkup(<PlanRowList rows={rows} promo={null} disabled={false} onChoose={noop} />), billingData);
   });
 });

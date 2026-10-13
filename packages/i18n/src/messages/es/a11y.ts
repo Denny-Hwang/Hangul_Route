@@ -180,6 +180,10 @@ export const a11y = {
       rightPlain: 'Correcto.',
       revealPlain: 'Esta no.',
     },
+    speed: {
+      sparks: (n: number) => plural('es', n, { one: '1 chispa', other: `${n} chispas` }),
+      sparksFull: 'Chispas al máximo',
+    },
   },
   report: {
     periods: 'Periodo del informe',

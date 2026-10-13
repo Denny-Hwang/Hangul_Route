@@ -1,4 +1,4 @@
-import type { PlacementSource, StageKey, StoryLevel, ThemeKey } from '@hangul-route/content-schema';
+import type { BrowseTarget, PlacementSource, StageKey, StoryLevel, ThemeKey } from '@hangul-route/content-schema';
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { AskFrom } from '../logic/access-copy';
 import type { PreviewFrom } from '../logic/episode-access';
@@ -9,6 +9,7 @@ import type { GrownUpVia } from '../logic/shell/handoff-rules';
 import type { CellStoriesSource } from '../logic/story/cell-stories';
 import type { LibrarySectionId } from '../logic/story/library-sections';
 import type { SourcesRouteParams } from '../logic/story/source-link';
+import type { RoundSummary } from '../logic/vocab/stars';
 import type { VocabQuestionE2eParams } from './vocab-question-e2e';
 
 /**
@@ -43,7 +44,9 @@ export type GrownUpDestination =
   /** F-PLAN-002 section 3.9 (P2-7b): a child's **Change the plan** when the gate is closed (`PinEntry.profileId`). */
   | 'RouteSetup'
   /** F-PLAN-002 section 3.9 (P2-7b): a child's **Stop this plan** when the gate is closed; back to the overview underneath (`PinEntry.profileId`). */
-  | 'RouteOverview';
+  | 'RouteOverview'
+  /** F-BROWSE-001 section 4.3 (BR-12a, web only): All lessons; a correct PIN writes a fresh gate pass (`PinEntry.browseTarget`). */
+  | 'BrowseLessons';
 
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
@@ -87,7 +90,12 @@ export type RootStackParamList = {
    * Start this plan or Not now. `source` is the door that opened it (`route.proposed.source`). The
    * update after a retake (`mode: 'update'`, K3) arrives with F-PLC-001 P-7b.
    */
-  RouteProposal: { source: ProposalSource; profileId: string };
+  RouteProposal: {
+    source: ProposalSource;
+    profileId: string;
+    /** The door already counted `route.proposed` for this offer (the result strip's or the report card's **Change**). */
+    proposedSent?: true;
+  };
   /**
    * **Change the plan** (F-PLAN-002 section 3.9, wireframe console/curriculum-planner.md G1): four
    * steps with large chips, prefilled from the plan in force, else from the proposal and the
@@ -132,6 +140,8 @@ export type RootStackParamList = {
     noteId?: string;
     /** `next: 'NoteReport'`: where the report sheet came from (default `note_page`), kept when a lapsed session asks for the PIN again. */
     noteVia?: 'note_page' | 'grown_up_zone';
+    /** `next: 'BrowseLessons'`: where All lessons opens (a content target, never a learner id); absent opens its home. */
+    browseTarget?: BrowseTarget;
   };
   /** Forgot PIN: Rescue Code or a 24-hour wait, then a new PIN (F-LEARN-001 §3.5). `next` is kept for the PIN screen. */
   PinReset: { next: GrownUpDestination; profileId?: string };
@@ -143,7 +153,8 @@ export type RootStackParamList = {
   JoinSpace: undefined;
   /** billing/plan-status — the learner Plan screen: status only, no PIN (F-BILL-002 §4.7; F-ENT-003's "Ask a grown-up" still arrives through the gate). */
   Paywall: { from: 'journey' | 'settings' | AskFrom } | undefined;
-  ParentDashboard: undefined;
+  /** `browseBlocked`: the browser refused the All lessons gate pass, so the storage line shows under Open all lessons (F-BROWSE-001 BR-12a). */
+  ParentDashboard: { browseBlocked?: true } | undefined;
   Profile: undefined;
   /** profile/edit — name, level, cub, who is learning (F-LEARN-001 §3.11). Behind the PIN when the gate is required. */
   EditProfile: { profileId: string };
@@ -189,12 +200,21 @@ export type RootStackParamList = {
   /**
    * vocab/cards — flashcards (F-VOC-003 section 3.5; C-5 registers the screen). `chunk` is 0-based, absent = the
    * suggested chunk; `startId` opens the chunk at that word on its back face (a collected word wall tile).
+   * `ids`: only these words, in this order (the Speed Round results' "Practice these", F-VOC-004 section 3.6).
    */
-  VocabCards: { topicKey: string; chunk?: number; startId?: string };
+  VocabCards: { topicKey: string; chunk?: number; startId?: string; ids?: string[] };
   /** vocab/match — Pic-Word Match on the topic's collected words (F-VOC-003 section 3.9; C-6 registers the screen). */
   VocabMatch: { topicKey: string };
-  /** vocab/speed-start — the Speed Round (F-VOC-004 section 3.1; S-5 registers the screen). The topic page launches it. */
+  /**
+   * vocab/speed-start — the Speed Round (F-VOC-004 section 3.1, S-5): the start sheet, then the questions. The topic
+   * page launches it. `mode` is read once Challenge ships (S-6); until then every round is Relaxed.
+   */
   VocabSpeedRound: { topicKey: string; mode?: 'relaxed' | 'challenge' };
+  /**
+   * vocab/speed-results — a Speed Round's results (F-VOC-004 section 3.6, S-5). `summary` is the plain serialisable
+   * `RoundSummary`; `newBest`: a Challenge round above the learner's own earlier best (read before the round wrote).
+   */
+  VocabResults: { topicKey: string; summary: RoundSummary; newBest?: boolean };
   /**
    * notes/list — My notes (F-FEEDBACK-001 section 6.5 item 2, FB-8): the active profile's notes, New then
    * Earlier. Registered only while `flags.notesEnabled` is on. `notice: 'putAway'`: the note page just put a

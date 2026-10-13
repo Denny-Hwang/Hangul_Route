@@ -822,6 +822,11 @@ export const learner = {
         usePlan: 'Usar este plan',
         change: 'Cambiar',
         justStart: 'Solo empezar',
+        basis: (length: string, days: number, minutes: number) =>
+          plural('es', days, {
+            one: `${length}, 1 día por semana, unos ${minutes} minutos al día`,
+            other: `${length}, ${days} días por semana, unos ${minutes} minutos al día`,
+          }),
       },
     },
     homeCard: {
@@ -979,6 +984,7 @@ export const learner = {
     },
     gains: { stars: 'Estrellas', cards: 'Tarjetas', stories: 'Historias leídas' },
     storiesNote: 'Las historias del patrimonio están abiertas siempre.',
+    plan: { open: 'Abrir el plan' },
     home: {
       strip: {
         title: 'Ruta de aprendizaje',
@@ -1020,6 +1026,33 @@ export const learner = {
           one: 'Buena ronda. Cada palabra ayuda.',
           firstStar: '¡Buen intento! ¡Ganaste una estrella!',
         },
+      },
+      title: 'Ronda rápida',
+      relaxed: {
+        label: 'Con calma',
+        line: (n: number) => `${plural('es', n, { one: '1 palabra', other: `${n} palabras` })}. Sin reloj.`,
+      },
+      start: 'Empezar',
+      noSound: 'Este dispositivo no tiene sonido. Solo imágenes y palabras.',
+      learnFirst: 'Primero aprende unas palabras más',
+      learn: 'Aprender',
+      nothingToPlay: 'Aún no hay nada para jugar',
+      back: 'Atrás',
+      backToTopic: 'Volver al tema',
+      stop: {
+        title: '¿Paras por ahora?',
+        body: 'Las palabras que respondiste quedan guardadas.',
+        keep: 'Seguir jugando',
+        stop: 'Parar',
+      },
+      results: {
+        caught: (n: number) => plural('es', n, { one: '1 palabra atrapada', other: `${n} palabras atrapadas` }),
+        timeUp: 'Se acabó el tiempo. Mira lo que atrapaste.',
+        newBest: '¡Nuevo récord!',
+        seeAgain: 'Palabras para ver otra vez',
+        practice: 'Practicar estas',
+        playAgain: 'Jugar otra vez',
+        backToTopic: 'Volver al tema',
       },
     },
     library: {

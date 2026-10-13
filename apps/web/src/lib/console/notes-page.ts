@@ -1,5 +1,6 @@
-import { CATALOG, type Catalog, type NoteReactionId, type SpaceKind, type SpaceRole, type StageKey } from '@hangul-route/content-schema';
+import { APP_ROUTES, CATALOG, type AdultPersona, type Catalog, type NoteReactionId, type SpaceKind, type SpaceRole, type StageKey } from '@hangul-route/content-schema';
 import type { iconNames } from '@hangul-route/design-system/icon-glyphs';
+import type { SpaceListItem } from './api';
 import type { RecipientRow } from './notes';
 import { ROUTES, spaceIdFrom } from './routing';
 
@@ -11,11 +12,8 @@ type IconName = (typeof iconNames)[number];
  * URL says, where the page's links go and what the composer starts with. Ids only: no learner name ever reaches a URL.
  */
 
-/**
- * The family page's tabs, the default first. FB-11a builds the Sent tab; FB-12 adds `received` in front of it, the
- * default tab of section 6.13.
- */
-export const FAMILY_TABS = ['sent'] as const satisfies ReadonlyArray<'received' | 'sent'>;
+/** The family page's tabs, the default first: Received (FB-12), the default tab of section 6.13, then Sent (FB-11a). */
+export const FAMILY_TABS = ['received', 'sent'] as const satisfies ReadonlyArray<'received' | 'sent'>;
 export type FamilyTab = (typeof FAMILY_TABS)[number];
 
 export interface NotesPageQuery {
@@ -129,4 +127,38 @@ export function rosterNotesLinks(opts: { enabled: boolean; archived: boolean; ro
     header: ROUTES.spaceNotes(opts.spaceId, opts.kind),
     card: (learnerId) => (opts.archived ? null : ROUTES.spaceNotes(opts.spaceId, opts.kind, { compose: true, learner: learnerId })),
   };
+}
+
+/** What the notes hub shows (FB-11b, console/notes-hub.md): straight on (A), one row per space (B), or how to start (C). */
+export type NotesHubView =
+  | { kind: 'redirect'; href: string }
+  | { kind: 'list'; rows: Array<{ id: string; name: string; href: string }> }
+  | { kind: 'none'; start: string };
+
+/**
+ * The spaces of a persona where the account may send or oversee notes, in the API order: a family held as owner or
+ * caregiver (oversight needs no send grant, section 6.1), a class taught or owned. Archived spaces are left out; a
+ * school has no notes page of its own.
+ */
+export function notesHubView(spaces: readonly SpaceListItem[], persona: AdultPersona): NotesHubView {
+  const own = spaces.filter((item) => {
+    if (item.space.archivedAt) return false;
+    if (persona === 'parent') return item.space.kind === 'family' && (item.role === 'owner' || item.role === 'caregiver');
+    return item.space.kind === 'class' && (item.role === 'owner' || item.role === 'teacher');
+  });
+  const only = own.length === 1 ? own[0] : undefined;
+  if (only) return { kind: 'redirect', href: ROUTES.spaceNotes(only.space.id, only.space.kind) };
+  if (own.length === 0) return { kind: 'none', start: `${APP_ROUTES.start}?persona=${persona}` };
+  return { kind: 'list', rows: own.map((item) => ({ id: item.space.id, name: item.space.name, href: ROUTES.spaceNotes(item.space.id, item.space.kind) })) };
+}
+
+/**
+ * **Send a note** on the learner report (section 6.13 entry 4; F-REPORT-001 section 3.6): the composer with the learner
+ * preselected, ids only, never a preset (section 9). Its place is the report header beside Print, never an insight
+ * line. Only with the notes flag, a space that is not archived and a role that may send (`feedback.send`: a family
+ * owner or caregiver, a class owner or teacher; never a school admin: `notesSender`, the roster's rule too).
+ */
+export function reportNoteLink(opts: { enabled: boolean; archived: boolean; role: SpaceRole | null; kind: SpaceKind; spaceId: string; learnerId: string }): string | null {
+  if (!opts.enabled || opts.archived || !notesSender(opts.role, opts.kind)) return null;
+  return ROUTES.spaceNotes(opts.spaceId, opts.kind, { compose: true, learner: opts.learnerId });
 }

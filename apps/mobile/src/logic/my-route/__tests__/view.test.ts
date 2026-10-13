@@ -12,6 +12,7 @@ import {
   gamesFor,
   myRouteMessages,
   myRouteView,
+  routeCardLook,
   stageFill,
   stageGroups,
   stageRowLook,
@@ -90,6 +91,26 @@ describe('stageRowLook (section 3.4: below 360 a bar, else the pips)', () => {
     expect(stageRowLook(359)).toBe('bar');
     expect(stageRowLook(360)).toBe('pips');
     expect(stageRowLook(1180)).toBe('pips');
+  });
+});
+
+describe('routeCardLook (LR-11: the route card fits 320 x 568 with Continue above the tab bar)', () => {
+  it('below 360 a card with a button is compact: tighter padding and gaps, the can-do lines left to the stage rows', () => {
+    const narrow = { padding: 'md', gap: 'sm', ctaGap: 'md', showCanDo: false };
+    expect(routeCardLook(320, true)).toEqual(narrow);
+    expect(routeCardLook(PIP_ROW_MIN_WIDTH - 1, true)).toEqual(narrow);
+  });
+
+  it('below 360 a card without a button (read-only) keeps its can-do lines: hiding them would bring no button up', () => {
+    expect(routeCardLook(320, false)).toEqual({ padding: 'md', gap: 'sm', ctaGap: 'md', showCanDo: true });
+  });
+
+  it('from 360 the card keeps the LR-D layout, with or without a button', () => {
+    const wide = { padding: 'lg', gap: 'md', ctaGap: 'lg', showCanDo: true };
+    expect(routeCardLook(PIP_ROW_MIN_WIDTH, true)).toEqual(wide);
+    expect(routeCardLook(375, true)).toEqual(wide);
+    expect(routeCardLook(1180, true)).toEqual(wide);
+    expect(routeCardLook(375, false)).toEqual(wide);
   });
 });
 
@@ -411,6 +432,34 @@ describe('myRouteView: the route card, the weekly plan line and the plan cells (
     expect(view(model(APPENDIX_C)).planLine).toBeNull();
     expect(view(model(APPENDIX_C), { week: 0 }).planLine).toBeNull();
     expect(view(model(APPENDIX_C), { viewer: 'grownup', week: 3 }).planLine).toBeNull();
+  });
+
+  it('Open plan (R-7d) sits on the plan line only for the learner\'s own weekly plan, and only when the plan screen is on', () => {
+    const goal = (from: 'self' | 'class' | 'family' | 'school') => ({ stage: 'stage1' as const, from, sourceId: 'route:1', endsOn: '2026-11-01', reached: false, taste: false });
+    const own = { ...model(APPENDIX_C), goal: goal('self') };
+    const v = view(own, { week: 3, planOverview: true });
+    expect(v.planOpen).toBe('Open plan');
+    expect(v.planLine).toBe('Week 3 of your weekly plan');
+    // RouteOverview shows the learner's own plan only: a class, school or family plan line has no link.
+    for (const from of ['class', 'family', 'school'] as const) {
+      expect(view({ ...model(APPENDIX_C), goal: goal(from) }, { week: 3, planOverview: true }).planOpen).toBeNull();
+    }
+    // No plan line, no link: no week, the default goal, the grown-up view, or the plan screen off (flags.routeEnabled).
+    expect(view(own, { week: null, planOverview: true }).planOpen).toBeNull();
+    expect(view(model(APPENDIX_C), { week: 3, planOverview: true }).planOpen).toBeNull();
+    expect(view(own, { viewer: 'grownup', week: 3, planOverview: true }).planOpen).toBeNull();
+    expect(view(own, { week: 3, planOverview: false }).planOpen).toBeNull();
+    expect(view(own, { week: 3 }).planOpen).toBeNull();
+  });
+
+  it('Open plan reads in every UI locale', () => {
+    const own = { ...model(APPENDIX_C), goal: { stage: 'stage1' as const, from: 'self' as const, sourceId: 'route:1', endsOn: '2026-11-01', reached: false, taste: false } };
+    for (const locale of ['es', 'ko'] as const) {
+      const words = getMessages(locale);
+      const open = view(own, { week: 3, planOverview: true, messages: words }).planOpen;
+      expect(open).toBe(words.learner.myRoute.plan.open);
+      expect(open).not.toBe('Open plan');
+    }
   });
 
   it('cells of the plan view carry "In your plan" with the word in their label; the grown-up view never does', () => {

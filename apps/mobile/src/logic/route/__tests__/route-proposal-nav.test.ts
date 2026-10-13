@@ -10,7 +10,8 @@ import type { SetupState } from '../setup-flow';
  */
 describe('RouteProposal navigation', () => {
   it('takes a source and a profile, and is a grown-up gate destination', () => {
-    expectTypeOf<RootStackParamList['RouteProposal']>().toEqualTypeOf<{ source: ProposalSource; profileId: string }>();
+    // `proposedSent`: the door already counted `route.proposed` (F-PLC-001 P-7b, the result strip's and report card's Change).
+    expectTypeOf<RootStackParamList['RouteProposal']>().toEqualTypeOf<{ source: ProposalSource; profileId: string; proposedSent?: true }>();
     expectTypeOf<'RouteProposal'>().toMatchTypeOf<GrownUpDestination>();
     const gate: RootStackParamList['PinEntry'] = { next: 'RouteProposal', profileId: 'profile:a' };
     const sources: ProposalSource[] = ['placement', 'home', 'profile', 'parent'];

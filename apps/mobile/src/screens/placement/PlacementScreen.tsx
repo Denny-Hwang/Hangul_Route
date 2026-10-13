@@ -3,6 +3,7 @@ import {
   finishRun,
   levelOrder,
   startRun,
+  type PaceId,
   type PlacementEvent,
   type PlacementResult,
   type PlacementRunState,
@@ -37,6 +38,8 @@ import {
 } from '../../logic/placement/flow';
 import { bankHasClips, flowCapability, placementKoreanAudio, speechLangOf } from '../../logic/placement/options-view';
 import { resultView } from '../../logic/placement/result-view';
+import { proposalSkippedEvent, proposedEvent } from '../../logic/route/proposal-flow';
+import { activeSelfRoute } from '../../logic/route/self-route';
 import { completedAtOf, newResponse, placementStart, resultRoutes, rungPosition, startTarget } from '../../logic/placement/session';
 import { isFreeContent } from '../../logic/content-access';
 import { nextStartedEvent, routeNext } from '../../logic/route-next';
@@ -49,6 +52,8 @@ import { CONTENT_VERSION } from '../../platform/sync-api';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
 import { usePlacementRunStore } from '../../store/placement-run-store';
+import { acceptPlanOffer, applyPlanUpdate, planOfferNow } from '../../store/plan-offer-store';
+import { useRouteStore } from '../../store/route-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { usePracticeSession } from '../use-practice-session';
@@ -321,11 +326,17 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
       const previous = (snapshot?.placements ?? []).filter((p) => p.id !== result.id);
       // A result that could not be stored keeps the saved run, so reopening the check records it
       // (the `finish` offer); it is not reported as complete until then.
-      if (useProgressStore.getState().recordPlacement(profile.id, result)) {
+      const stored = useProgressStore.getState().recordPlacement(profile.id, result);
+      if (stored) {
         void track(completeEvent(profile.id, result));
         store.discard(profile.id);
       }
       const { before, after } = resultRoutes(previous, result, catalog, opts);
+      // The weekly plan offered with this result (P-7b): read after the result is stored, so the
+      // proposal starts from it. A result that was not stored offers no plan (the offer would start
+      // from older results than the screen shows). A dismissal from before this result never hides
+      // the strip (OD-16: "until the next result").
+      const offer = stored ? planOfferNow(profile.id, flags.routeEnabled, new Date()) : null;
       const view = resultView({
         result,
         before,
@@ -333,13 +344,16 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
         catalog,
         completedQuestIds: completed,
         profileType: effectiveLearnerType(profile),
-        // The weekly-plan strip arrives with F-PLAN-002 (P-7b). "See Learning Route" opens the Route tab, which
+        // The weekly-plan strip (P-7b) behind `flags.routeEnabled`. "See Learning Route" opens the Route tab, which
         // exists only while `flags.myRouteEnabled` is on (AMENDMENTS-ROUTE-LEARNING-ROUTE section 5.2, LR-4).
-        routeEnabled: false,
+        routeEnabled: flags.routeEnabled,
         myRouteEnabled: flags.myRouteEnabled,
-        proposalAvailable: false,
+        proposalAvailable: offer?.kind === 'new',
+        // A dismissal is already folded into the offer (OD-16): the strip follows `proposalAvailable`.
         planPromptDismissed: false,
-        hasActivePlan: false,
+        hasActivePlan: activeSelfRoute(useProgressStore.getState().byProfile[profile.id]) !== null,
+        // The learner's card speaks of a later start only; a grown-up override's update is on the report.
+        planUpdateAvailable: offer?.kind === 'update' && offer.source === 'retake',
         // The story shelf (F-STORY-004) is not in the app yet: "See the whole map".
         hasReviewedShelfStory: false,
         gateRequired: gateRequired({ profiles, parentPinHash }),
@@ -351,7 +365,14 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
         placedOut: new Set(after.placedOutQuestIds),
         completed,
         startQuest: startTarget(after),
+        offer,
       });
+      // `route.proposed` once, for the proposal the learner sees (the strip or the update card).
+      const shown = view.strip && offer?.kind === 'new' ? offer.byPace[offer.pace] : view.planUpdate && offer?.kind === 'update' ? offer.proposal : undefined;
+      if (shown !== undefined) {
+        const event = proposedEvent(profile.id, 'placement', shown);
+        void track({ name: event.name, profileId: profile.id, payload: { ...event.payload } });
+      }
       dispatch({ type: 'runFinished' });
     },
     [profile, profiles, parentPinHash, leave, dispatch],
@@ -489,10 +510,44 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
           navigation.replace('Placement', { source, ...(mode === 'standard' || mode === 'deep' ? { retakeMode: mode } : {}) });
           return;
         }
+        case 'changePlan':
+          // The proposal screen on top; back returns here (the strip gives way once a plan exists).
+          // `route.proposed` already fired for this proposal with the result (one count per offer).
+          if (profileId !== null) navigation.navigate('RouteProposal', { source: 'placement', profileId, proposedSent: true });
+          return;
+        case 'justStart': {
+          // Skip and play: hides the plan prompt for 14 days or until the next result (AM-6, OD-16).
+          if (profileId !== null) {
+            void useRouteStore.getState().markDismissed(profileId, new Date().toISOString());
+            const event = proposalSkippedEvent(profileId, 'placement');
+            void track({ name: event.name, profileId, payload: { ...event.payload } });
+          }
+          onResultAction('start');
+          return;
+        }
       }
     },
     [finished, resetTo, navigation, profiles, parentPinHash, source, profileId],
   );
+
+  const acceptPlan = useCallback(
+    async (pace: PaceId): Promise<boolean> => {
+      const offer = finished?.offer ?? null;
+      const proposal = offer?.kind === 'new' ? offer.byPace[pace] : undefined;
+      if (profileId === null || offer?.kind !== 'new' || proposal === undefined) return false;
+      const route = await acceptPlanOffer(profileId, proposal, { changed: pace !== offer.pace }, new Date());
+      if (route === null) return false;
+      onResultAction('start');
+      return true;
+    },
+    [finished, profileId, onResultAction],
+  );
+
+  const updatePlan = useCallback(async (): Promise<boolean> => {
+    if (profileId === null || !(await applyPlanUpdate(profileId, new Date()))) return false;
+    onResultAction('start');
+    return true;
+  }, [profileId, onResultAction]);
 
   const continueRun = useCallback((): void => {
     const base = baseFlow.current;
@@ -551,6 +606,8 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
     markGesture: () => setNeedsGesture(false),
     finishForGrownUp,
     onResultAction,
+    acceptPlan,
+    updatePlan,
     leave,
     target,
   };

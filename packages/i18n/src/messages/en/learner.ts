@@ -1032,6 +1032,12 @@ export const learner = {
         usePlan: 'Use this plan',
         change: 'Change',
         justStart: 'Just start',
+        /** The plan in words under the title (J1): its length, days a week and minutes. */
+        basis: (length: string, days: number, minutes: number) =>
+          plural('en', days, {
+            one: `${length}, 1 day a week, about ${minutes} minutes a day`,
+            other: `${length}, ${days} days a week, about ${minutes} minutes a day`,
+          }),
       },
     },
     homeCard: {
@@ -1247,6 +1253,11 @@ export const learner = {
     gains: { stars: 'Stars', cards: 'Cards', stories: 'Stories read' },
     storiesNote: 'Heritage stories are open any time.',
     /**
+     * The link on the weekly plan line (R-7d, section 3.9): opens F-PLAN-002's `RouteOverview`. Shown only for the
+     * learner's own weekly plan. Its accessible name is these same words.
+     */
+    plan: { open: 'Open plan' },
+    /**
      * The Home route strip (R-4b, section 3.1 entry 2; amendment LR-A6): the page's name, the goal
      * line from the goal source and the weekly plan week. No count of what is left, no date.
      */
@@ -1307,6 +1318,42 @@ export const learner = {
           /** One star with no first-try right answer (F-RVW-001 §3.1's line). */
           firstStar: 'Good try! You collected a star!',
         },
+      },
+      /**
+       * The start sheet, the stop sheet and the results (F-VOC-004 §3.5, §3.6; design/screens/vocab/speed-round.md,
+       * results.md). Counts only: never "n of m", a percentage, a time per word or a number of misses (D3); the
+       * results never say "wrong", "missed" or "failed" (S11). No age words, no level names.
+       */
+      title: 'Speed round',
+      relaxed: {
+        label: 'Relaxed',
+        /** `n`: the round's question count (10; 8 for the Pictures-first level). */
+        line: (n: number) => `${count(n, 'word', 'words')}. No clock.`,
+      },
+      start: 'Start',
+      /** When the round will have no sound questions (no Korean voice, or sound off). */
+      noSound: 'No sound on this device. Pictures and words only.',
+      learnFirst: 'Learn a few more words first',
+      learn: 'Learn',
+      nothingToPlay: 'Nothing to play yet',
+      back: 'Back',
+      backToTopic: 'Back to topic',
+      stop: {
+        title: 'Stop for now?',
+        body: 'The words you answered stay saved.',
+        keep: 'Keep playing',
+        stop: 'Stop',
+      },
+      results: {
+        caught: (n: number) => count(n, 'word caught', 'words caught'),
+        /** A Challenge round the clock ended. */
+        timeUp: "Time's up. Here is what you caught.",
+        /** Challenge only, against the learner's own earlier best (S9). */
+        newBest: 'New best!',
+        seeAgain: 'Words to see again',
+        practice: 'Practice these',
+        playAgain: 'Play again',
+        backToTopic: 'Back to topic',
       },
     },
     /**

@@ -379,6 +379,28 @@ describe('the route card wiring (Learning Route LR-5a)', () => {
     expect(screen).toContain('testID="my-route-plan-line"');
   });
 
+  it('Open plan (R-7d) opens F-PLAN-002 RouteOverview for this learner, behind flags.routeEnabled, never read-only', () => {
+    // The view decides when it shows (own plan, learner view); the screen passes the flag and opens the plan.
+    expect(screen).toContain('planOverview: flags.routeEnabled');
+    expect(screen).toMatch(/view\.planOpen !== null && !readOnly/);
+    expect(screen).toContain("navigation.navigate('RouteOverview', { profileId })");
+    expect(screen).toContain('testID="my-route-plan-open"');
+    // The accessible name is the visible words (section 3.9), with the link role from LinkButton.
+    expect(screen).toMatch(/<LinkButton label=\{view\.planOpen\}/);
+    // RouteOverview is mounted only behind the same flag, so the link never opens a missing screen.
+    expect(read(join(SRC, 'navigation', 'root.tsx'))).toContain('{flags.routeEnabled ? <Stack.Screen name="RouteOverview"');
+    // Structure: the link sits inside the plan line's block (after the line, before the block closes), not elsewhere.
+    const block = screen.slice(screen.indexOf('{view.planLine !== null ? ('));
+    const blockEnd = block.indexOf('</>\n      ) : null}');
+    expect(blockEnd).toBeGreaterThan(0);
+    const inBlock = block.slice(0, blockEnd);
+    expect(inBlock.indexOf('testID="my-route-plan-line"')).toBeGreaterThan(-1);
+    expect(inBlock.indexOf('testID="my-route-plan-open"')).toBeGreaterThan(inBlock.indexOf('testID="my-route-plan-line"'));
+    expect(screen.split('testID="my-route-plan-open"')).toHaveLength(2);
+    // The profile opened is the page's own body prop, the profile whose plan line this is.
+    expect(screen).toMatch(/function MyRouteBody\(\{ profileId, readOnly, variant, navigation \}/);
+  });
+
   it('the card is one summary for screen readers with its glyphs, Hoya and pips hidden; one button only when not read-only', () => {
     expect(card).toContain('accessibilityRole="summary"');
     expect(card).toContain('accessibilityLabel={copy.a11yLabel}');
@@ -406,6 +428,21 @@ describe('the route card wiring (Learning Route LR-5a)', () => {
     expect(row).toContain('dashboardRowView({ model, messages, name, started, goalStage: model.goal?.stage ?? null })');
     expect(row).toContain('buildMyRoute(routeModelInput({ snapshot, tier, localized, now, next }))');
     expect(row).toContain('isQuestOpen: questOpenFor(profileId, now, snapshot)');
+  });
+});
+
+describe('the narrow-width route card (Learning Route LR-11)', () => {
+  const card = read(join(SCREEN_DIR, 'RouteCard.tsx'));
+
+  it('takes its padding, gaps and can-do lines from routeCardLook (unit-tested) and draws the goal pips with bands per line', () => {
+    expect(card).toContain('const look = routeCardLook(windowWidth, cta !== null);');
+    expect(card).toContain('<Card padding={look.padding}');
+    expect(card).toContain('gap: spacing[look.gap]');
+    expect(card).toContain('marginTop: spacing[look.ctaGap]');
+    expect(card).toContain('copy.canDo !== null && look.showCanDo');
+    expect(card).toMatch(/<PipRow groups=\{\[\[\.\.\.pips\]\]\}[^>]*bandsPerLine/);
+    // The summary label is the same at every width; it never included the can-do lines (spec section 10).
+    expect(card).toContain('accessibilityLabel={copy.a11yLabel}');
   });
 });
 

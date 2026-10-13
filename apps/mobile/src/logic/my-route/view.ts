@@ -60,6 +60,30 @@ export const PIP_ROW_MIN_WIDTH = 360;
 
 export const stageRowLook = (windowWidth: number): 'pips' | 'bar' => (windowWidth < PIP_ROW_MIN_WIDTH ? 'bar' : 'pips');
 
+/** How the route card is laid out at a window width: spacing token names and whether the can-do lines show. */
+export interface RouteCardLook {
+  padding: 'md' | 'lg';
+  /** The gap between the card's parts. */
+  gap: 'sm' | 'md';
+  /** The space above the button. */
+  ctaGap: 'md' | 'lg';
+  showCanDo: boolean;
+}
+
+/**
+ * The route card below `PIP_ROW_MIN_WIDTH` (LR-11, spec section 4.3 "Narrow width";
+ * design/screens/learning-route/route-card.md): with 15 Stage 1 pips on two lines, the LR-D card put Continue about
+ * 75 px under the tab bar at 320 x 568. The compact card takes the tighter padding and gaps and, when it has a button,
+ * leaves the can-do lead and line to the trail's stage rows (the open `here` row below the card, after the weekly
+ * plan line, shows its own stage's lines; a goal stage ahead shows them when opened). A card without a button (the
+ * read-only card) keeps them: hiding them would not bring any button above the bar. The card's summary label never
+ * included the can-do lines (section 10), so screen-reader output does not change.
+ */
+export const routeCardLook = (windowWidth: number, hasButton: boolean): RouteCardLook =>
+  windowWidth < PIP_ROW_MIN_WIDTH
+    ? { padding: 'md', gap: 'sm', ctaGap: 'md', showCanDo: !hasButton }
+    : { padding: 'lg', gap: 'md', ctaGap: 'lg', showCanDo: true };
+
 export interface TagView {
   label: string;
   /** "You started here" carries the pin glyph, "Your goal" the flag (LR-5a); "You are here" none. */
@@ -166,6 +190,11 @@ export interface MyRouteView {
   routeCard: RouteCardCopy;
   /** "Week 3 of your weekly plan" under the card, learner only; never a Next title (section 4.3). */
   planLine: string | null;
+  /**
+   * "Open plan" on the plan line (R-7d): opens F-PLAN-002's `RouteOverview`. Only when the line shows the
+   * learner's own weekly plan (`goal.from === 'self'`): `RouteOverview` shows that plan and no other.
+   */
+  planOpen: string | null;
   pose: 'idle' | 'cheering';
   /** Read-only only: "Viewing Sam's Learning Route". */
   viewing: string | null;
@@ -200,6 +229,8 @@ export interface MyRouteViewInput {
   letterWall?: readonly LetterTile[];
   /** The current week of the goal's weekly plan (`planWeekOf`); absent or null shows no plan line. */
   week?: number | null;
+  /** F-PLAN-002's `RouteOverview` is in the navigator (`flags.routeEnabled`); false or absent shows no Open plan link. */
+  planOverview?: boolean;
   /** Formats the plan's last day for the grown-up "Plan ends" line (LR-OD-7). */
   formatDay?: (day: DateKey) => string;
   /** The first visit that shows this reached goal (LR-5c); never in read-only mode. */
@@ -399,6 +430,7 @@ export function myRouteView(i: MyRouteViewInput): MyRouteView {
   const { model, messages } = i;
   const ctx: CopyContext = { viewer: i.viewer, name: i.name, m: myRouteMessages(messages), goalStage: model.goal?.stage ?? null };
   const week = i.week;
+  const planLine = i.viewer === 'self' && typeof week === 'number' && week >= 1 ? messages.learner.myRoute.home.strip.week(week) : null;
   const fresh = freshKeys(model, i.seen);
   const rows: TrailRowView[] = trailEntries(model, ctx).map((entry) =>
     entry.kind === 'stage' ? stageRowView(entry.row, ctx, i, fresh) : laterRowView(entry.rows, entry.label, ctx, i),
@@ -413,7 +445,8 @@ export function myRouteView(i: MyRouteViewInput): MyRouteView {
       ...(i.formatDay === undefined ? {} : { formatDay: i.formatDay }),
     }),
     // The learner's own weekly plan week only: grown-up views carry the plan end date instead (LR-OD-7).
-    planLine: i.viewer === 'self' && typeof week === 'number' && week >= 1 ? messages.learner.myRoute.home.strip.week(week) : null,
+    planLine,
+    planOpen: planLine !== null && i.planOverview === true && model.goal?.from === 'self' ? messages.learner.myRoute.plan.open : null,
     // Hoya cheers on the first visit that shows a reached goal (LR-5c), as after a newly completed episode.
     pose: i.viewer === 'self' && i.firstReached === true ? 'cheering' : hoyaPoseFor(model, i.seen),
     viewing: viewingCopy(ctx),

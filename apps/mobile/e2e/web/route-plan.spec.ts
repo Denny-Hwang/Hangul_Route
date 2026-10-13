@@ -276,3 +276,41 @@ test.describe('weekly plan set-up, preview and overview (flag on)', () => {
     await expect.poll(async () => (await storedRoute(page, profileId))?.archivedAt ?? null).not.toBeNull();
   });
 });
+
+/**
+ * F-ROUTE-001 R-7d: **Open plan** on the Learning Route's weekly plan line opens "Your weekly plan"
+ * (`RouteOverview`) for the learner's own plan. The Route tab needs `flags.myRouteEnabled` as well, so
+ * this runs on a build with both flags on:
+ *
+ *   EXPO_PUBLIC_ROUTE_ENABLED=true EXPO_PUBLIC_MY_ROUTE_ENABLED=true pnpm --filter @hangul-route/mobile build:web
+ *   E2E_ROUTE=1 E2E_MY_ROUTE=1 pnpm --filter @hangul-route/mobile exec playwright test route-plan -g "Open plan"
+ */
+const ROUTE_TAB = process.env.E2E_MY_ROUTE === '1';
+
+test.describe('Open plan on the Learning Route (flags on)', () => {
+  test.skip(!ROUTE_TAB, 'needs a build made with EXPO_PUBLIC_MY_ROUTE_ENABLED=true (E2E_MY_ROUTE=1)');
+  test.skip(!ROUTE, 'needs a build with EXPO_PUBLIC_ROUTE_ENABLED=true and E2E_ROUTE=1');
+
+  test('the plan line names the week and Open plan opens the weekly plan; back returns to the Route tab', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    const profileId = await selfLearnerWithAQuest(page, 'Noa');
+    await page.getByRole('button', { name: 'Make my plan' }).click();
+    await page.getByRole('button', { name: 'Start this plan' }).click();
+    await expect(page.getByText('Hi, Noa!')).toBeVisible();
+    await expect.poll(async () => (await storedRoute(page, profileId))?.id ?? null).not.toBeNull();
+
+    await page.getByRole('tablist').getByRole('link', { name: 'Learning Route' }).click();
+    await expect(page.getByTestId('my-route-plan-line')).toHaveText('Week 1 of your weekly plan');
+    const open = page.getByRole('button', { name: 'Open plan', exact: true });
+    await expect(open).toBeVisible();
+    await open.scrollIntoViewIfNeeded();
+    await shot(page, 'my-route-open-plan');
+    await open.click();
+
+    await expect(page.getByText('We found a path for you.')).toBeVisible();
+    await page.getByTestId('route-overview-back').click();
+    await expect(page.getByTestId('my-route-plan-line')).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+});

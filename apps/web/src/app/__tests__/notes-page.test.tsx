@@ -90,6 +90,11 @@ const notesApi = {
     calls.push({ name: 'withdraw', args });
     return withdrawAnswer;
   },
+  // The family Received tab and the send grant (FB-12; its own tests are in family-notes-page.test.tsx).
+  noteSenders: async () => ok([]),
+  oversight: async () => ok({ rows: [], next: null }),
+  prefs: async () => ok({ classes: 'all', acknowledged: true, updatedBy: null }),
+  blocks: async () => ok([]),
 };
 vi.mock('@/components/console/use-notes-api', () => ({ useNotesApi: () => notesApi }));
 
@@ -259,10 +264,10 @@ describe('family view (console/family-notes.md, Sent tab)', () => {
     role = 'owner';
     SPACE.name = 'Kim family';
     sentRows = [rowOf({ status: 'opened', label: 'grandma' })];
-    const root = await page('id=space%3Af1', '/parent/space/notes');
+    const root = await page('id=space%3Af1&tab=sent', '/parent/space/notes');
     const tabs = root.findAll((x) => x.props.role === 'tab');
-    expect(tabs.map((t) => textOf(t))).toEqual([n.family.tabs.sent]);
-    expect(tabs[0]?.props['aria-selected']).toBe(true);
+    expect(tabs.map((t) => textOf(t))).toEqual([n.family.tabs.received, n.family.tabs.sent]);
+    expect(tabs[1]?.props['aria-selected']).toBe(true);
     expect(root.findAll((x) => x.props.role === 'tablist')[0]?.props['aria-label']).toBe(n.family.tabs.label);
     expect(byText(root, 'p', n.sent.disclosure)).toHaveLength(0);
     expect(root.findAll((x) => x.type === 'button' && x.props['data-testid'] === 'notes-new').map((b) => textOf(b))).toEqual([n.sendNote.cta]);
@@ -435,7 +440,7 @@ describe('review follow-ups: who sees what, and the list states', () => {
   it('a family empty Sent tab offers the page primary, Send a note', async () => {
     SPACE.kind = 'family';
     role = 'owner';
-    const root = await page('id=space%3Af1', '/parent/space/notes');
+    const root = await page('id=space%3Af1&tab=sent', '/parent/space/notes');
     expect(textOf(root)).toContain(n.sent.empty);
     expect(byText(root, 'button', n.sendNote.cta)).toHaveLength(2);
     expect(byText(root, 'button', n.newNote.cta)).toHaveLength(0);
@@ -509,7 +514,7 @@ describe('review follow-ups: who sees what, and the list states', () => {
     expect(byText(dialog(root) as ReactTestInstance, 'button', n.composer.send.cta)[0]?.props['aria-disabled']).toBe(true);
   });
 
-  it('a caregiver without the send grant (unreadable to them: note-senders is owner-only) gets the not-granted line', async () => {
+  it('a caregiver whose grant the family list does not show gets the not-granted line from the Worker', async () => {
     SPACE.kind = 'family';
     role = 'caregiver';
     rosterLearners = [learner('profile:mina', 'Mina')];

@@ -20,7 +20,7 @@ Last practice: Oct 12
 ( < Last week )  Oct 6 to Oct 12
 Sam practiced on 3 days this week.
 What went well / What to practice next  no line actions, no notes, no Browse link on a letter
-( Preview lessons )                     BR-12a's row, web only, behind the browse flag (below)
+( Preview lessons )                     BR-12a's row, web only (OD-5 default on, below)
 This period: figures, calendar
 [ More detail v ]                       letters, totals, starting spot, level check, plan rows, skills rows
 ```
@@ -45,7 +45,7 @@ The link navigates on the root stack to `MyRoute { source: 'parent', profileId: 
 
 ## Preview lessons (reserved for F-BROWSE-001 BR-12a)
 
-F-BROWSE-001 section 4.11 item 2 (amended with this design, see its review log) and its BR-12a row put one **Preview lessons** entry in the in-app report. Its place is drawn here: one LR-D `link-button` (`touchTarget.min` tall) at the end of the What to practice next section, after its lines, never inside a line. It calls `openBrowseFromGate({ kind: 'stage', stage: journey.here ?? 'stage1' })`, F-BROWSE-001 section 4.3's gate hand-off with its optional target: the pass source is `'gate'` (`BrowsePassSchema` is unchanged) and so is the fragment source (`/browse#t=stage:stage1&s=gate`), content ids only. It renders only where BR-12a renders it, on web with the browse flag on, and only when the What to practice next section itself renders: in the empty state (no practice ever, no P4 line) there is no section and no row; otherwise, off web or with the flag off, the section ends with its lines. Letters stay disclosures (section 3.9) and no quest is linked, so this row is the app report's only way into Browse. RP-9 leaves the slot to BR-12a (it does not render the row itself); the label is F-BROWSE-001's word (its "One name everywhere" rule), added by BR-12a.
+F-BROWSE-001 section 4.11 item 2 (amended with this design, see its review log) and its BR-12a row put one **Preview lessons** entry in the in-app report. Its place is drawn here: one LR-D `link-button` (`touchTarget.min` tall) at the end of the What to practice next section, after its lines, never inside a line. It calls `openBrowseFromGate({ kind: 'stage', stage: journey.here ?? 'stage1' })`, F-BROWSE-001 section 4.3's gate hand-off with its optional target: the pass source is `'gate'` (`BrowsePassSchema` is unchanged) and so is the fragment source (`/browse#t=stage:stage1&s=gate`), content ids only. It renders only where BR-12a renders it, on web (the learner app has no browse flag; OD-5's default is on), and only when the What to practice next section itself renders: in the empty state (no practice ever, no P4 line) there is no section and no row; otherwise, off web, the section ends with its lines (no spacer either). A press asks the grown-up gate again: when the 15-minute session has lapsed it opens the PIN screen first, with the same target. Letters stay disclosures (section 3.9) and no quest is linked, so this row is the app report's only way into Browse. RP-9 leaves the slot to BR-12a (it does not render the row itself); the label is F-BROWSE-001's word (its "One name everywhere" rule), added by BR-12a.
 
 ## Skills rows (device only, OD-8)
 
