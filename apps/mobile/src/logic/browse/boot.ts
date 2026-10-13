@@ -119,12 +119,21 @@ function withPage(home: BrowseEntryRoute, page: BrowseEntryRoute, registered: Re
  */
 export const BROWSE_LESSON_ROUTES = ['PreviewQuest', 'Minigame', 'StoryReader', 'StorySources', 'PreviewEnd'] as const satisfies readonly BrowseRouteName[];
 
-const IN_LESSON: ReadonlySet<string> = new Set<string>(['PreviewQuest', 'Minigame', 'StoryReader', 'StorySources']);
+/** The screens that are always a step of a lesson under way. */
+const LESSON_STEPS: ReadonlySet<string> = new Set<string>(['PreviewQuest', 'Minigame', 'StoryReader']);
 const LESSON: ReadonlySet<string> = new Set<string>(BROWSE_LESSON_ROUTES);
 
-/** A step inside a lesson that already started: from a lesson screen to another one, or to its end screen. */
-function continuesLesson(from: BrowseRouteName | null, to: BrowseRouteName): boolean {
-  return from !== null && IN_LESSON.has(from) && LESSON.has(to);
+/**
+ * Whether the visit is inside a lesson that already started once it shows
+ * `to`, given whether it was before. The quest, game and story screens are
+ * lesson steps. The story sources page is one only when a lesson step opened
+ * it: opened from the item page ([ See the sources ], section 4.6) it is a
+ * catalogue page, not a preview. Every other screen (the end screen included)
+ * ends the lesson. Decided by how the visit got there, not by the route name.
+ */
+export function lessonAfter(inLesson: boolean, to: BrowseRouteName): boolean {
+  if (LESSON_STEPS.has(to)) return true;
+  return to === 'StorySources' && inLesson;
 }
 
 export interface NavigationCheck {
@@ -137,21 +146,25 @@ export interface NavigationCheck {
 /**
  * Every browse navigation (section 4.3): an active session pass gets a fresh
  * `seen` at most once a minute; a session pass that ran out ends the visit at
- * the next navigation, except inside a lesson that already started. A kept
- * pass holds for the tab (it was active when the tab resolved it, and turning
- * the keep switch off keeps it in memory too).
+ * the next navigation, except a step inside a lesson that already started
+ * (`inLesson`, from `lessonAfter`) to another lesson screen or its end screen.
+ * Only a navigation is activity (`activity`): the first screen of a page load
+ * (a reload) and a tab shown again check the pass but refresh no `seen`. A
+ * kept pass holds for the tab (it was active when the tab resolved it, and
+ * turning the keep switch off keeps it in memory too).
  */
 export function navigationCheck(i: {
   resolved: ResolvedPass;
   session: BrowsePass | null;
   now: number;
-  from: BrowseRouteName | null;
+  inLesson: boolean;
   to: BrowseRouteName;
+  activity: boolean;
 }): NavigationCheck {
   const { resolved, session, now } = i;
   if (resolved.status !== 'active' || resolved.from === 'kept' || session === null) return { write: null, expired: false };
-  if (passActive(session, now)) return { write: refreshSeen(session, now), expired: false };
-  return { write: null, expired: !continuesLesson(i.from, i.to) };
+  if (passActive(session, now)) return { write: i.activity ? refreshSeen(session, now) : null, expired: false };
+  return { write: null, expired: !(i.inLesson && LESSON.has(i.to)) };
 }
 
 export type CloseAction = { kind: 'back'; fallbackUrl: string } | { kind: 'assign'; url: string };

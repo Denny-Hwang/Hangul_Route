@@ -4,6 +4,7 @@ import {
   BROWSE_LESSON_ROUTES,
   closeAction,
   entryStack,
+  lessonAfter,
   navigationCheck,
   openedEvent,
   readBootFragment,
@@ -102,41 +103,66 @@ describe('entryStack', () => {
 });
 
 describe('navigationCheck', () => {
+  const nav = { inLesson: false, activity: true } as const;
+
   it('an active session pass gets a fresh seen at most once a minute', () => {
-    expect(navigationCheck({ resolved: active({ from: 'gate' }), session: gatePass(), now: T0 + 30_000, from: 'BrowseHome', to: 'BrowseHome' })).toEqual({ write: null, expired: false });
-    expect(navigationCheck({ resolved: active({ from: 'gate' }), session: gatePass(), now: T0 + MIN, from: 'BrowseHome', to: 'BrowseItem' })).toEqual({
+    expect(navigationCheck({ ...nav, resolved: active({ from: 'gate' }), session: gatePass(), now: T0 + 30_000, to: 'BrowseHome' })).toEqual({ write: null, expired: false });
+    expect(navigationCheck({ ...nav, resolved: active({ from: 'gate' }), session: gatePass(), now: T0 + MIN, to: 'BrowseItem' })).toEqual({
       write: gatePass({ seen: T0 + MIN }),
       expired: false,
     });
-    expect(navigationCheck({ resolved: active(), session: accountPass(), now: T0 + 2 * MIN, from: null, to: 'BrowseHome' })).toEqual({
+    expect(navigationCheck({ ...nav, resolved: active(), session: accountPass(), now: T0 + 2 * MIN, to: 'BrowseHome' })).toEqual({
       write: accountPass({ seen: T0 + 2 * MIN }),
       expired: false,
     });
   });
 
+  it('only a navigation is activity: a reload (the first screen) or a tab shown again checks the pass but refreshes no seen', () => {
+    const idle = { resolved: active({ from: 'gate' }), session: gatePass(), inLesson: false, to: 'BrowseHome' as const, activity: false };
+    expect(navigationCheck({ ...idle, now: T0 + 14 * MIN })).toEqual({ write: null, expired: false });
+    // 14 idle minutes, a reload, then 2 more: the reload kept nothing alive.
+    expect(navigationCheck({ ...idle, now: T0 + 16 * MIN })).toEqual({ write: null, expired: true });
+  });
+
   it('a pass that ran out sends the next navigation to the Access screen', () => {
-    expect(navigationCheck({ resolved: active({ from: 'gate' }), session: gatePass(), now: T0 + 15 * MIN, from: 'BrowseHome', to: 'BrowseItem' })).toEqual({ write: null, expired: true });
-    expect(navigationCheck({ resolved: active(), session: accountPass(), now: T0 + 12 * 60 * MIN, from: 'BrowseItem', to: 'BrowseHome' })).toEqual({ write: null, expired: true });
+    expect(navigationCheck({ ...nav, resolved: active({ from: 'gate' }), session: gatePass(), now: T0 + 15 * MIN, to: 'BrowseItem' })).toEqual({ write: null, expired: true });
+    expect(navigationCheck({ ...nav, resolved: active(), session: accountPass(), now: T0 + 12 * 60 * MIN, to: 'BrowseHome' })).toEqual({ write: null, expired: true });
   });
 
   it('a lesson that started before the pass ran out continues to its end; the end screen is the last step', () => {
-    const late = { resolved: active({ from: 'gate' }), session: gatePass(), now: T0 + 16 * MIN };
-    expect(navigationCheck({ ...late, from: 'PreviewQuest', to: 'Minigame' })).toEqual({ write: null, expired: false });
-    expect(navigationCheck({ ...late, from: 'Minigame', to: 'PreviewQuest' })).toEqual({ write: null, expired: false });
-    expect(navigationCheck({ ...late, from: 'StoryReader', to: 'StorySources' })).toEqual({ write: null, expired: false });
-    expect(navigationCheck({ ...late, from: 'PreviewQuest', to: 'PreviewEnd' })).toEqual({ write: null, expired: false });
+    const late = { resolved: active({ from: 'gate' }), session: gatePass(), now: T0 + 16 * MIN, activity: true };
+    expect(navigationCheck({ ...late, inLesson: true, to: 'Minigame' })).toEqual({ write: null, expired: false });
+    expect(navigationCheck({ ...late, inLesson: true, to: 'PreviewQuest' })).toEqual({ write: null, expired: false });
+    expect(navigationCheck({ ...late, inLesson: true, to: 'StorySources' })).toEqual({ write: null, expired: false });
+    expect(navigationCheck({ ...late, inLesson: true, to: 'PreviewEnd' })).toEqual({ write: null, expired: false });
     // After the end screen, and when a new lesson starts, the pass decides again.
-    expect(navigationCheck({ ...late, from: 'PreviewEnd', to: 'PreviewQuest' })).toEqual({ write: null, expired: true });
-    expect(navigationCheck({ ...late, from: 'PreviewEnd', to: 'BrowseItem' })).toEqual({ write: null, expired: true });
-    expect(navigationCheck({ ...late, from: 'BrowseItem', to: 'PreviewQuest' })).toEqual({ write: null, expired: true });
+    expect(navigationCheck({ ...late, inLesson: lessonAfter(true, 'PreviewEnd'), to: 'PreviewQuest' })).toEqual({ write: null, expired: true });
+    expect(navigationCheck({ ...late, inLesson: lessonAfter(true, 'PreviewEnd'), to: 'BrowseItem' })).toEqual({ write: null, expired: true });
+    expect(navigationCheck({ ...late, inLesson: lessonAfter(false, 'BrowseItem'), to: 'PreviewQuest' })).toEqual({ write: null, expired: true });
     expect(BROWSE_LESSON_ROUTES).toEqual(['PreviewQuest', 'Minigame', 'StoryReader', 'StorySources', 'PreviewEnd']);
   });
 
+  it('the sources page is a lesson step only when a lesson step opened it, not from the item page', () => {
+    expect(lessonAfter(false, 'PreviewQuest')).toBe(true);
+    expect(lessonAfter(false, 'Minigame')).toBe(true);
+    expect(lessonAfter(false, 'StoryReader')).toBe(true);
+    expect(lessonAfter(lessonAfter(false, 'StoryReader'), 'StorySources')).toBe(true);
+    expect(lessonAfter(lessonAfter(false, 'BrowseItem'), 'StorySources')).toBe(false);
+    expect(lessonAfter(true, 'PreviewEnd')).toBe(false);
+    expect(lessonAfter(true, 'BrowseHome')).toBe(false);
+    // BrowseItem -> StorySources, the pass runs out, the tab is shown again: Access.
+    const inLesson = lessonAfter(lessonAfter(false, 'BrowseItem'), 'StorySources');
+    expect(navigationCheck({ resolved: active({ from: 'gate' }), session: gatePass(), now: T0 + 16 * MIN, inLesson, to: 'StorySources', activity: false })).toEqual({
+      write: null,
+      expired: true,
+    });
+  });
+
   it('a kept pass holds for the tab; no pass, nothing to check', () => {
-    expect(navigationCheck({ resolved: active({ from: 'kept' }), session: null, now: T0 + 30 * 24 * 60 * MIN, from: 'BrowseHome', to: 'BrowseItem' })).toEqual({ write: null, expired: false });
-    expect(navigationCheck({ resolved: none, session: null, now: T0, from: null, to: 'BrowseAccess' })).toEqual({ write: null, expired: false });
+    expect(navigationCheck({ resolved: active({ from: 'kept' }), session: null, now: T0 + 30 * 24 * 60 * MIN, ...nav, to: 'BrowseItem' })).toEqual({ write: null, expired: false });
+    expect(navigationCheck({ resolved: none, session: null, now: T0, ...nav, to: 'BrowseAccess' })).toEqual({ write: null, expired: false });
     // A kept pass that took over from an expired session pass never reads that session pass again.
-    expect(navigationCheck({ resolved: active({ from: 'kept' }), session: gatePass(), now: T0 + 20 * MIN, from: 'BrowseHome', to: 'BrowseItem' })).toEqual({ write: null, expired: false });
+    expect(navigationCheck({ resolved: active({ from: 'kept' }), session: gatePass(), now: T0 + 20 * MIN, ...nav, to: 'BrowseItem' })).toEqual({ write: null, expired: false });
   });
 });
 
