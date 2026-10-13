@@ -105,6 +105,20 @@ describe('classMoveGroups', () => {
     expect(classMoveGroups(after, ['b', 'a']).leaving.map((v) => v.id)).toEqual(['b', 'a', 'n']);
     expect(classMoveGroups(after).leaving.map((v) => v.id)).toEqual(['a', 'n', 'b']);
   });
+
+  it('nothing auto-dismisses: a drawn card that finished stays a card until a manual refresh (no stay set)', () => {
+    const views = [source({ id: 'a', status: 'ended', steps: null, endedAt: '2026-10-12T00:00:00.000Z' }), destination({ id: 'd', status: 'executed', executedAt: '2026-10-12T00:00:00.000Z' })];
+    const kept = classMoveGroups(views, null, new Set(['a', 'd']));
+    expect(kept.leaving.map((v) => v.id)).toEqual(['a']);
+    expect(kept.leavingHistory).toEqual([]);
+    expect(kept.joining.map((v) => v.id)).toEqual(['d']);
+    expect(kept.joiningHistory).toEqual([]);
+    expect(kept.movedIn).toBe(true);
+    const manual = classMoveGroups(views);
+    expect(manual.leaving).toEqual([]);
+    expect(manual.leavingHistory.map((v) => v.id)).toEqual(['a']);
+    expect(manual.joiningHistory.map((v) => v.id)).toEqual(['d']);
+  });
 });
 
 describe('historyDate', () => {
@@ -124,15 +138,20 @@ describe('the answers a card offers', () => {
     expect(ownAnswerWaits(destination())).toBe(true);
   });
 
-  it('canAgreeBoth: the family said yes, both class steps wait, and this account owns or teaches the named new class directly', () => {
-    const ids = new Set(['space:b']);
+  it('canAgreeBoth: the family said yes, both class steps wait, and this account owns or teaches both classes directly', () => {
+    const ids = new Set(['space:a', 'space:b']);
     const named = source({ destination: { spaceId: 'space:b', name: 'Saturday Class B' } });
-    expect(canAgreeBoth(named, ids)).toBe(true);
-    expect(canAgreeBoth(named, new Set())).toBe(false);
-    expect(canAgreeBoth(source(), ids)).toBe(false);
-    expect(canAgreeBoth(source({ ...named, steps: { learner: 'waiting', source: 'waiting', destination: 'waiting' } }), ids)).toBe(false);
-    expect(canAgreeBoth(source({ ...named, steps: { learner: 'yes', source: 'waiting', destination: 'yes' } }), ids)).toBe(false);
-    expect(canAgreeBoth(source({ ...named, status: 'approved' }), ids)).toBe(false);
+    expect(canAgreeBoth(named, 'space:a', ids)).toBe(true);
+    expect(canAgreeBoth(named, 'space:a', new Set())).toBe(false);
+    expect(canAgreeBoth(source(), 'space:a', ids)).toBe(false);
+    expect(canAgreeBoth(source({ ...named, steps: { learner: 'waiting', source: 'waiting', destination: 'waiting' } }), 'space:a', ids)).toBe(false);
+    expect(canAgreeBoth(source({ ...named, steps: { learner: 'yes', source: 'waiting', destination: 'yes' } }), 'space:a', ids)).toBe(false);
+    expect(canAgreeBoth(source({ ...named, status: 'approved' }), 'space:a', ids)).toBe(false);
+  });
+
+  it('canAgreeBoth: a school admin who reaches this class through the school never gets it, even owning the new class', () => {
+    const named = source({ destination: { spaceId: 'space:b', name: 'Saturday Class B' } });
+    expect(canAgreeBoth(named, 'space:a', new Set(['space:b']))).toBe(false);
   });
 
   it('directClassIds: classes this account holds as owner or teacher itself (never through the school)', () => {
@@ -165,6 +184,7 @@ describe('actionOutcome (requests-page.md "States")', () => {
     expect(actionOutcome(fail(422, 'awaiting_learner'))).toBe('changed');
     expect(actionOutcome(fail(409, 'consent_outdated'))).toBe('reload');
     expect(actionOutcome(fail(409, 'not_approved'))).toBe('reload');
+    expect(actionOutcome(fail(422, 'one_slot_per_action'))).toBe('failed');
     expect(actionOutcome(fail(403, 'forbidden', 'forbidden'))).toBe('forbidden');
     expect(actionOutcome(fail(404, 'not_found', 'not_found'))).toBe('forbidden');
     expect(actionOutcome(fail(409, 'one_slot_per_action'))).toBe('failed');

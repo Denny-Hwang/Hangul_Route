@@ -47,17 +47,22 @@ function byRank<T extends ClassView>(views: T[], keep: readonly string[] | null)
 
 const newestFirst = <T extends ClassView>(views: T[]): T[] => [...views].sort((a, b) => Date.parse(historyDate(b)) - Date.parse(historyDate(a)));
 
-/** The page's two groups and their histories. `keep` is the card order of the last draw, kept while focus is in a card. */
-export function classMoveGroups(views: readonly TransferView[], keep: readonly string[] | null = null): ClassMoveGroups {
+/**
+ * The page's two groups and their histories. `keep` is the card order of the last draw, kept while focus is in a card.
+ * `stay` is the cards drawn before an automatic refresh: nothing auto-dismisses (spec 4.8), so a card that finished
+ * meanwhile stays a card (with its ended or moved line and no actions) until the next manual refresh moves it into the
+ * history.
+ */
+export function classMoveGroups(views: readonly TransferView[], keep: readonly string[] | null = null, stay: ReadonlySet<string> | null = null): ClassMoveGroups {
+  const card = (v: ClassView): boolean => isOpenTransfer(v) || (stay?.has(v.id) ?? false);
   const source = views.filter((v): v is TransferSourceView => v.role === 'source');
   const dest = views.filter((v): v is TransferDestinationView => v.role === 'destination');
-  const joiningHistory = newestFirst(dest.filter((v) => !isOpenTransfer(v)));
   return {
-    leaving: byRank(source.filter(isOpenTransfer), keep),
-    leavingHistory: newestFirst(source.filter((v) => !isOpenTransfer(v))),
-    joining: byRank(dest.filter(isOpenTransfer), keep),
-    joiningHistory,
-    movedIn: joiningHistory.some((v) => v.status === 'executed'),
+    leaving: byRank(source.filter(card), keep),
+    leavingHistory: newestFirst(source.filter((v) => !card(v))),
+    joining: byRank(dest.filter(card), keep),
+    joiningHistory: newestFirst(dest.filter((v) => !card(v))),
+    movedIn: dest.some((v) => v.status === 'executed'),
   };
 }
 
@@ -67,12 +72,14 @@ export function directClassIds(items: readonly SpaceListItem[] | null): Set<stri
 }
 
 /**
- * **Agree for both classes** (T11): the family said yes, both class steps still wait, and the new class (named on
- * this card) is one this account owns or teaches directly. A school admin's cascade never qualifies.
+ * **Agree for both classes** (T11): the family said yes, both class steps still wait, and both this class (`spaceId`,
+ * the page's class) and the new class (named on this card) are ones this account owns or teaches directly. A school
+ * admin's cascade never qualifies: the Worker fills a school-reached slot via `school_admin` and refuses two slots in
+ * one action then (`one_slot_per_action`).
  */
-export function canAgreeBoth(view: TransferSourceView, direct: ReadonlySet<string>): boolean {
+export function canAgreeBoth(view: TransferSourceView, spaceId: string, direct: ReadonlySet<string>): boolean {
   if (!ownAnswerWaits(view) || !view.destination || !view.steps) return false;
-  return view.steps.learner === 'yes' && view.steps.destination === 'waiting' && direct.has(view.destination.spaceId);
+  return view.steps.learner === 'yes' && view.steps.destination === 'waiting' && direct.has(spaceId) && direct.has(view.destination.spaceId);
 }
 
 /** **Try again** on the destination of an agreed move that waits for its own class's or school's room (not `cap_learner`). */

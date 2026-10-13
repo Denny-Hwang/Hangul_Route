@@ -8,7 +8,7 @@ import { AvatarChip } from '@/components/AvatarChip';
 import { MoveButton } from '@/components/console/TransferParts';
 import type { ApiResult, ConsoleApi, TransferDestinationView, TransferSourceView, TransferView } from '@/lib/console/api';
 import { levelPillLabel } from '@/lib/console/level-label';
-import { canCancel, daysLeft, daysSince, slotLabel, statusLine, stepWord } from '@/lib/console/transfer';
+import { canCancel, daysLeft, daysSince, isOpenTransfer, slotLabel, statusLine, stepWord } from '@/lib/console/transfer';
 import { actionOutcome, canAgreeBoth, classMoveGroups, historyDate, ownAnswerWaits, retryShown, type ClassView } from '@/lib/console/transfer-requests';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 
@@ -168,7 +168,8 @@ interface CardProps {
   readOnly: boolean;
   direct: ReadonlySet<string>;
   note: Note | null;
-  run: (view: ClassView, call: () => Promise<ApiResult<unknown>>) => void;
+  /** `oneSlot` is the single-slot answer Try again sends when the Worker refuses two slots (`one_slot_per_action`). */
+  run: (view: ClassView, call: () => Promise<ApiResult<unknown>>, oneSlot?: () => Promise<ApiResult<unknown>>) => void;
   api: ClassMovesApi;
   spaceId: string;
   onRefresh: () => void;
@@ -199,11 +200,13 @@ function SourceCard({ view, now, busy, online, readOnly, direct, note, run, api,
   const { messages } = useConsoleLocale();
   const t = messages.console.transfer;
   const whoId = useId();
-  const open = view.status === 'requested' || !!view.blockReason;
+  const open = view.status === 'requested' || (view.status === 'approved' && !!view.blockReason);
   const scheduled = view.status === 'approved' && !view.blockReason;
+  // The mock's scheduled card of a class-started request keeps its "asked" meta; days left only while it waits.
+  const meta = open || (scheduled && view.initiator === 'source');
   const days = daysSince(view.createdAt, now);
   const answers = !readOnly && ownAnswerWaits(view);
-  const both = answers && canAgreeBoth(view, direct);
+  const both = answers && canAgreeBoth(view, spaceId, direct);
   const cancel = !readOnly && canCancel(view);
   const off = busy || !online;
   return (
@@ -215,14 +218,14 @@ function SourceCard({ view, now, busy, online, readOnly, direct, note, run, api,
             {view.learner?.name ?? ''}
           </strong>
         </span>
-        {open ? (
+        {meta ? (
           <span style={metaStyle}>
             <span>{view.initiator === 'source' ? t.meta.asked(days) : t.meta.askedByFamily(days)}</span>
-            {view.initiator === 'source' ? <span>{t.meta.daysLeft(daysLeft(view.expiresAt, now))}</span> : null}
+            {open && view.initiator === 'source' ? <span>{t.meta.daysLeft(daysLeft(view.expiresAt, now))}</span> : null}
           </span>
         ) : null}
       </div>
-      {!scheduled && view.steps ? <Steps view={view} /> : null}
+      {!scheduled && isOpenTransfer(view) && view.steps ? <Steps view={view} /> : null}
       <CardLine view={view} now={now} />
       {view.initiator === 'source' && view.destination && view.status === 'requested' && view.steps?.learner === 'waiting' ? (
         <p style={lineStyle}>{t.lines.newClass(view.destination.name)}</p>
@@ -233,7 +236,18 @@ function SourceCard({ view, now, busy, online, readOnly, direct, note, run, api,
         <div style={rowStyle}>
           {answers ? (
             <>
-              <MoveButton primary disabled={off} onClick={() => run(view, () => api.approveTransfer(spaceId, view.id, { slots: both ? ['source', 'destination'] : ['source'] }))} testId="move-agree">
+              <MoveButton
+                primary
+                disabled={off}
+                onClick={() =>
+                  run(
+                    view,
+                    () => api.approveTransfer(spaceId, view.id, { slots: both ? ['source', 'destination'] : ['source'] }),
+                    () => api.approveTransfer(spaceId, view.id, { slots: ['source'] }),
+                  )
+                }
+                testId="move-agree"
+              >
                 {both ? t.actions.agreeBoth.cta : t.actions.agree.cta}
               </MoveButton>
               <span style={{ marginInlineStart: 'auto' }}>
@@ -372,6 +386,9 @@ function Group({ title, children, empty }: { title: string; children: ReactNode;
 // ---------------------------------------------------------------------------
 // The page body
 
+/** The live region is cleared, then written this long after: a repeated message still reads as new. */
+const ANNOUNCE_GAP_MS = 100;
+
 /** Whether keyboard or pointer focus sits inside a card: the 30 s refresh keeps the card order then. */
 function focusInCard(): boolean {
   if (typeof document === 'undefined') return false;
@@ -393,14 +410,19 @@ export function ClassMoves({ spaceId, spaceName, api, online, refreshMs, readOnl
   const [busy, setBusy] = useState(false);
   const [notes, setNotes] = useState<Record<string, Note>>({});
   const [announce, setAnnounce] = useState('');
+  const [announced, setAnnounced] = useState(0);
   const [codeDone, setCodeDone] = useState(false);
   const [codeFailed, setCodeFailed] = useState(false);
   const [now, setNow] = useState(() => new Date());
   const lastJson = useRef<string | null>(null);
   const order = useRef<string[]>([]);
   const keep = useRef<string[] | null>(null);
+  // The cards drawn before an automatic refresh; null after a manual one (first read, Refresh, an answer).
+  const stay = useRef<Set<string> | null>(null);
+  const onlineNow = useRef(online);
+  onlineNow.current = online;
 
-  const load = useCallback(async (): Promise<void> => {
+  const load = useCallback(async (manual = true): Promise<void> => {
     const result = await api.transferRequests(spaceId);
     if (!result.ok) {
       const outcome = actionOutcome(result);
@@ -409,9 +431,15 @@ export function ClassMoves({ spaceId, spaceName, api, online, refreshMs, readOnl
       return;
     }
     const json = JSON.stringify(result.data.requests);
-    if (lastJson.current !== null && lastJson.current !== json) setAnnounce(t.a11y.updated);
+    if (lastJson.current !== null && lastJson.current !== json) {
+      // Clear, then write on the next tick: the same words twice in a row are still a new announcement.
+      setAnnounce('');
+      setAnnounced((n) => n + 1);
+      setTimeout(() => setAnnounce(t.a11y.updated), ANNOUNCE_GAP_MS);
+    }
     lastJson.current = json;
     keep.current = focusInCard() ? order.current : null;
+    stay.current = manual ? null : new Set(order.current);
     setLoadFailed(false);
     setViews(result.data.requests);
     setNow(new Date());
@@ -419,11 +447,14 @@ export function ClassMoves({ spaceId, spaceName, api, online, refreshMs, readOnl
 
   useEffect(() => {
     void load();
-    const handle = setInterval(() => void load(), refreshMs);
+    // Offline, the timer reads nothing (the page already says "This needs internet.").
+    const handle = setInterval(() => {
+      if (onlineNow.current) void load(false);
+    }, refreshMs);
     return () => clearInterval(handle);
   }, [load, refreshMs]);
 
-  const run = (view: ClassView, call: () => Promise<ApiResult<unknown>>): void => {
+  const run = (view: ClassView, call: () => Promise<ApiResult<unknown>>, oneSlot?: () => Promise<ApiResult<unknown>>): void => {
     const go = async (): Promise<void> => {
       setBusy(true);
       setNotes((n) => {
@@ -439,7 +470,9 @@ export function ClassMoves({ spaceId, spaceName, api, online, refreshMs, readOnl
         return;
       }
       if (outcome === 'failed') {
-        setNotes((n) => ({ ...n, [view.id]: { kind: 'failed', again: () => void go() } }));
+        // A refused two-slot answer is tried again with this class's slot only, so Try again never repeats the refusal.
+        const again = !result.ok && result.code === 'one_slot_per_action' && oneSlot ? () => run(view, oneSlot) : () => void go();
+        setNotes((n) => ({ ...n, [view.id]: { kind: 'failed', again } }));
         return;
       }
       if (outcome === 'changed') {
@@ -469,9 +502,14 @@ export function ClassMoves({ spaceId, spaceName, api, online, refreshMs, readOnl
 
   if (views === null) {
     return (
-      <div aria-busy="true" data-testid="class-moves-loading">
+      <div aria-busy={loadFailed ? 'false' : 'true'} data-testid="class-moves-loading">
         {loadFailed ? (
-          <p style={sunkenStyle}>{t.states.failed}</p>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: spacing.sm }}>
+            <p style={{ ...sunkenStyle, margin: 0 }}>{t.states.failed}</p>
+            <MoveButton primary disabled={!online} onClick={refresh} testId="move-load-again">
+              {t.actions.tryAgain.cta}
+            </MoveButton>
+          </div>
         ) : (
           [0, 1].map((i) => (
             <div key={i} style={{ ...cardStyle, boxShadow: 'none' }}>
@@ -484,17 +522,17 @@ export function ClassMoves({ spaceId, spaceName, api, online, refreshMs, readOnl
     );
   }
 
-  const groups = classMoveGroups(views, keep.current);
+  const groups = classMoveGroups(views, keep.current, stay.current);
   order.current = [...groups.leaving, ...groups.joining].map((v) => v.id);
   const card = { now, busy, online, readOnly, direct, run, api, spaceId, onRefresh: refresh };
 
   return (
     <div style={{ maxWidth: layout.maxWidth.reading }}>
       <style>{STEPS_CSS}</style>
-      <p aria-live="polite" style={hidden}>
+      <p aria-live="polite" style={hidden} data-announced={announced}>
         {announce}
       </p>
-      {loadFailed ? <p style={sunkenStyle}>{t.states.failed}</p> : null}
+      {loadFailed && online ? <p style={sunkenStyle}>{t.states.failed}</p> : null}
       {!online ? <p style={sunkenStyle}>{t.states.offline}</p> : null}
       <Group title={t.groups.leaving} empty={groups.leaving.length === 0 && groups.leavingHistory.length === 0}>
         {groups.leaving.map((view) => (

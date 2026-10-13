@@ -38,8 +38,10 @@ function TransfersInner(): JSX.Element {
   const online = useOnline();
   const [roster, setRoster] = useState<Roster | null>(null);
   const [state, setState] = useState<FamilyPageState | 'failed' | null>(null);
-  // Agree for both classes (T11) needs the classes this account owns or teaches itself.
+  // Agree for both classes (T11) needs the classes this account owns or teaches itself. The class page waits for this
+  // read (or its failure, which means plain Agree) so a card's Agree never changes its words under the pointer.
   const [spaces, setSpaces] = useState<SpaceListItem[] | null>(null);
+  const [spacesRead, setSpacesRead] = useState(false);
 
   const loadRoster = useCallback(async (): Promise<void> => {
     if (!api || !shown) return;
@@ -56,6 +58,7 @@ function TransfersInner(): JSX.Element {
     if (r.data.space.kind === 'class') {
       const list = await api.listSpaces();
       if (list.ok) setSpaces(list.data);
+      setSpacesRead(true);
     }
   }, [api, shown, spaceId]);
 
@@ -88,7 +91,7 @@ function TransfersInner(): JSX.Element {
       ) : null}
       {stateText ? null : space && api && space.kind === 'family' ? (
         <FamilyMoves familyId={spaceId} familyName={space.name} api={api} online={online} refreshMs={TRANSFER_REFRESH_MS} onPageState={setState} />
-      ) : space && api && space.kind === 'class' ? (
+      ) : space && api && space.kind === 'class' && spacesRead ? (
         <ClassMoves
           spaceId={spaceId}
           spaceName={space.name}

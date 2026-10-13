@@ -38,6 +38,7 @@ const state = vi.hoisted(() => ({
   requests: {} as Record<string, unknown[]>,
   counts: [] as Array<{ spaceId: string; waiting: number }>,
   spaces: [] as unknown[],
+  spacesFail: false,
   signedOutTo: null as string | null,
   calls: [] as string[],
 }));
@@ -66,7 +67,7 @@ vi.mock('@/components/console/use-console', async () => {
         if (state.rosterError) return { ok: false, ...state.rosterError };
         return { ok: true, data: { space: space(id, state.kind, id === 'space:a' ? 'Sunday Class A' : 'Kim family'), learners: [], joinCode: null, joinCodeExpiresAt: null } };
       },
-      listSpaces: async () => ({ ok: true, data: state.spaces }),
+      listSpaces: async () => (state.spacesFail ? { ok: false, error: 'network', status: -1 } : { ok: true, data: state.spaces }),
       transferRequests: async (id: string) => {
         state.calls.push(`transfers:${id}`);
         if (state.listError) return { ok: false, ...state.listError };
@@ -109,7 +110,7 @@ afterEach(() => {
   renderer = null;
   vi.unstubAllEnvs();
   resetTransferLockForTests();
-  Object.assign(state, { kind: 'class', archived: false, rosterError: null, listError: null, requests: {}, counts: [], spaces: [], signedOutTo: null, calls: [] });
+  Object.assign(state, { kind: 'class', archived: false, rosterError: null, listError: null, requests: {}, counts: [], spaces: [], spacesFail: false, signedOutTo: null, calls: [] });
 });
 
 async function render(node: JSX.Element): Promise<ReactTestInstance> {
@@ -171,6 +172,30 @@ describe('the requests page, class variant (spec section 5: locked, 401, 403, an
     expect(body).toContain(t.lines.familyAsked('Jun'));
     expect(root.findAll((n) => n.type === 'a')[0]?.props.href).toBe('/teach/space?id=space%3Aa');
     expect(state.calls).toContain('transfers:space:a');
+  });
+
+  it('this account owns both classes (its space list): Agree for both classes', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
+    state.spaces = [item('space:a', 'class', 'owner', 'Sunday Class A'), item('space:b', 'class', 'teacher', 'Saturday Class B')];
+    state.requests['space:a'] = [waitingView({ destination: { spaceId: 'space:b', name: 'Saturday Class B' } })];
+    const root = await render(<TransfersPage />);
+    expect(textOf(byTestId(root, 'move-agree')[0] as ReactTestInstance)).toBe(t.actions.agreeBoth.cta);
+  });
+
+  it('the space list cannot be read: plain Agree', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
+    state.spacesFail = true;
+    state.requests['space:a'] = [waitingView({ destination: { spaceId: 'space:b', name: 'Saturday Class B' } })];
+    const root = await render(<TransfersPage />);
+    expect(textOf(byTestId(root, 'move-agree')[0] as ReactTestInstance)).toBe(t.actions.agree.cta);
+  });
+
+  it('a school admin reaching this class through the school, owning only the new class: plain Agree', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
+    state.spaces = [item('space:s', 'school', 'admin', 'Riverside school'), item('space:b', 'class', 'owner', 'Saturday Class B')];
+    state.requests['space:a'] = [waitingView({ destination: { spaceId: 'space:b', name: 'Saturday Class B' } })];
+    const root = await render(<TransfersPage />);
+    expect(textOf(byTestId(root, 'move-agree')[0] as ReactTestInstance)).toBe(t.actions.agree.cta);
   });
 
   it('an archived class is read-only: no Agree', async () => {

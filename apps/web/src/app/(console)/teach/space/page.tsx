@@ -41,10 +41,13 @@ function SpaceInner(): JSX.Element {
   const { ready, session, api, signOut, m, locale } = useConsole();
   // Class moves (F-SPACE-002 T-6d): the family roster's permanent Class moves button, next to Settings (family-page.md).
   const movesShown = useTransfersShown();
-  // T-6b: the class roster's button beside Re-link requests, and both buttons' "N class moves waiting" (requests-page.md "Entry points").
-  const movesWaiting = useMovesWaiting(movesShown ? api : null, movesShown ? [spaceId] : [])[spaceId] ?? 0;
   const c = m.console;
   const [roster, setRoster] = useState<Roster | null>(null);
+  // T-6b: the class roster's button beside Re-link requests, and both buttons' "N class moves waiting" (requests-page.md
+  // "Entry points"). Asked only once the roster says class or family: a school has no count of its own here.
+  const movesKind = roster?.space.kind;
+  const movesAsked = movesShown && (movesKind === 'class' || movesKind === 'family');
+  const movesWaiting = useMovesWaiting(movesAsked ? api : null, movesAsked ? [spaceId] : [])[spaceId] ?? 0;
   const [plans, setPlans] = useState<PlanView[]>([]);
   const [pendingRelinks, setPendingRelinks] = useState(0);
   // Lecture mode's entry points show for the roles that compose plans (F-TCH-004 §3.11); the free-lessons line for the owner (F-ENT-003 §3.9.2).

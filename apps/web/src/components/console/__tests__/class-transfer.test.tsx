@@ -163,10 +163,16 @@ describe('page states', () => {
     expect(states).toEqual([state]);
   });
 
-  it('a failed read that is none of those: "Didn\'t go through", no card', async () => {
-    const { api } = fakeApi([{ ok: false, error: 'network', status: -1 }]);
+  it('a failed read that is none of those: "Didn\'t go through", no card, not busy, and Try again reads again', async () => {
+    const { api, calls } = fakeApi([{ ok: false, error: 'network', status: -1 }, list(source())]);
     await renderMoves(api);
     expect(text(root())).toContain(t.states.failed);
+    expect(byTestId('class-moves-loading').props['aria-busy']).toBe('false');
+    expect(allTestId('move-card')).toEqual([]);
+    await act(async () => byTestId('move-load-again').props.onClick());
+    expect(calls.filter((c) => c[0] === 'list')).toHaveLength(2);
+    expect(allTestId('move-card')).toHaveLength(1);
+    expect(text(root())).not.toContain(t.states.failed);
   });
 
   it('empty: both groups say "Nothing waiting."', async () => {
@@ -229,6 +235,29 @@ describe('Leaving this class', () => {
     expect(calls).toContainEqual(['approve', 'space:a', 'transfer:s1', { slots: ['source', 'destination'] }]);
   });
 
+  it('a school admin on a child class who owns the new class: plain Agree with this class\'s slot only (T11)', async () => {
+    const { api, calls } = fakeApi([list(source({ destination: { spaceId: 'space:b', name: 'Saturday Class B' } }))]);
+    await renderMoves(api, { direct: new Set(['space:b']) });
+    expect(buttons(byTestId('move-card'))).toEqual([t.actions.agree.cta, t.actions.notNow.cta]);
+    await act(async () => byTestId('move-agree').props.onClick());
+    expect(calls).toContainEqual(['approve', 'space:a', 'transfer:s1', { slots: ['source'] }]);
+  });
+
+  it('two slots refused (one_slot_per_action): "Didn\'t go through", and Try again names this class\'s slot only', async () => {
+    const { api, calls } = fakeApi([list(source({ destination: { spaceId: 'space:b', name: 'Saturday Class B' } }))], {
+      approve: [{ ok: false, error: 'unknown', status: 422, code: 'one_slot_per_action' }],
+    });
+    await renderMoves(api, { direct: new Set(['space:a', 'space:b']) });
+    await act(async () => byTestId('move-agree').props.onClick());
+    expect(text(byTestId('move-card').find((n) => n.props.role === 'alert'))).toBe(t.states.failed);
+    await act(async () => byTestId('move-try-again').props.onClick());
+    const approves = calls.filter((c) => c[0] === 'approve');
+    expect(approves).toEqual([
+      ['approve', 'space:a', 'transfer:s1', { slots: ['source', 'destination'] }],
+      ['approve', 'space:a', 'transfer:s1', { slots: ['source'] }],
+    ]);
+  });
+
   it('waiting for others after this class said yes: "Nothing changes until all three say yes." and no answer', async () => {
     const { api } = fakeApi([list(source({ steps: { learner: 'yes', source: 'yes', destination: 'waiting' } }))]);
     await renderMoves(api);
@@ -251,6 +280,10 @@ describe('Leaving this class', () => {
     expect((cards[0] as ReactTestInstance).findAll((n) => n.type === 'ol')).toEqual([]);
     expect(buttons(cards[0] as ReactTestInstance)).toEqual([]);
     expect(buttons(cards[1] as ReactTestInstance)).toEqual([t.actions.cancelRequest.cta]);
+    // The class-started scheduled card keeps its "asked" meta (the mock); no days left once scheduled.
+    expect(text(cards[1] as ReactTestInstance)).toContain(t.meta.asked(2));
+    expect(text(cards[1] as ReactTestInstance)).not.toContain(t.meta.daysLeft(12));
+    expect(text(cards[0] as ReactTestInstance)).not.toContain(t.meta.askedByFamily(2));
   });
 
   it('blocked for room: the room block in nudge tint with words, never "full" on the source', async () => {
@@ -351,6 +384,14 @@ describe('Joining this class', () => {
     expect(allTestId('move-new-code')).toEqual([]);
   });
 
+  it('New class code that does not go through: "Didn\'t go through" and the button stays', async () => {
+    const { api } = fakeApi([list(destination({ status: 'executed', executedAt: '2026-10-11T12:00:00.000Z' }))], { regenerate: [{ ok: false, error: 'network', status: -1 }] });
+    await renderMoves(api);
+    await act(async () => byTestId('move-new-code-button').props.onClick());
+    expect(text(byTestId('move-new-code'))).toContain(t.states.failed);
+    expect(allTestId('move-new-code-button')).toHaveLength(1);
+  });
+
   it('New class code asks first; No keeps the code', async () => {
     const { api, calls } = fakeApi([list(destination({ status: 'executed', executedAt: '2026-10-11T12:00:00.000Z' }))]);
     await renderMoves(api, { confirm: () => false });
@@ -434,8 +475,83 @@ describe('refresh', () => {
     await act(async () => {
       vi.advanceTimersByTime(30_000);
     });
-    await act(async () => undefined);
+    await act(async () => {
+      vi.advanceTimersByTime(200);
+    });
     expect(text(live()[0] as ReactTestInstance)).toBe(t.a11y.updated);
     expect(root().findAll((n) => n.props.role === 'status')).toEqual([]);
+  });
+});
+
+describe('refresh, continued', () => {
+  const mount = async (api: ClassMovesApi, online = true): Promise<void> => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+    await act(async () => {
+      renderer = create(
+        <ClassMoves spaceId="space:a" spaceName="A" api={api} online={online} refreshMs={30_000} readOnly={false} direct={new Set()} confirm={() => true} onPageState={() => undefined} />,
+        { createNodeMock: () => ({}) },
+      );
+    });
+  };
+  const tick = async (): Promise<void> => {
+    await act(async () => {
+      vi.advanceTimersByTime(30_000);
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(200);
+    });
+  };
+  const live = (): ReactTestInstance => root().find((n) => n.props['aria-live'] === 'polite');
+
+  it('every change is announced again: the region is cleared and rewritten each time', async () => {
+    const { api } = fakeApi([
+      list(source()),
+      list(source({ steps: { learner: 'yes', source: 'yes', destination: 'waiting' } })),
+      list(source({ steps: { learner: 'yes', source: 'yes', destination: 'yes' }, status: 'approved', scheduledFor: '2026-10-14T12:00:00.000Z' })),
+    ]);
+    await mount(api);
+    await tick();
+    expect(text(live())).toBe(t.a11y.updated);
+    expect(live().props['data-announced']).toBe(1);
+    await act(async () => {
+      vi.advanceTimersByTime(30_000);
+    });
+    expect(text(live())).toBe('');
+    await act(async () => {
+      vi.advanceTimersByTime(200);
+    });
+    expect(text(live())).toBe(t.a11y.updated);
+    expect(live().props['data-announced']).toBe(2);
+  });
+
+  it('nothing auto-dismisses: a card that ends between timer reads stays a card, without answers, until a manual read', async () => {
+    const ended = source({ status: 'ended', steps: null, endedAt: '2026-10-12T11:00:00.000Z' });
+    const other = destination();
+    const { api } = fakeApi([list(source(), other), list(ended, other)]);
+    await mount(api);
+    expect(allTestId('move-card')).toHaveLength(2);
+    await tick();
+    await tick();
+    const cards = allTestId('move-card');
+    expect(cards).toHaveLength(2);
+    expect(text(cards[0] as ReactTestInstance)).toContain(t.history.ended);
+    expect(buttons(cards[0] as ReactTestInstance)).toEqual([]);
+    expect((cards[0] as ReactTestInstance).findAll((n) => n.type === 'ol')).toEqual([]);
+    expect(allTestId('move-history-row')).toEqual([]);
+    // An answer on another card is a manual read: the finished card joins the history.
+    await act(async () => byTestId('move-accept').props.onClick());
+    expect(allTestId('move-card')).toHaveLength(1);
+    expect(text(byTestId('move-history-row'))).toContain(t.history.ended);
+  });
+
+  it('offline: the timer reads nothing and no "Didn\'t go through" joins "This needs internet."', async () => {
+    const { api, calls } = fakeApi([list(source()), { ok: false, error: 'network', status: -1 }]);
+    await mount(api, false);
+    await tick();
+    await tick();
+    expect(calls.filter((c) => c[0] === 'list')).toHaveLength(1);
+    expect(text(root())).toContain(t.states.offline);
+    expect(text(root())).not.toContain(t.states.failed);
   });
 });
