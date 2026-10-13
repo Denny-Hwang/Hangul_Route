@@ -18,7 +18,7 @@ import { expectNoHorizontalOverflow } from './viewport';
  * The switch is a build flag, so the switch-on half runs only against such a build (the
  * switch-on lane of the owner runbook, docs/launch/owner-runbook.md, "Turn on the free plan (web)"):
  *
- *   EXPO_PUBLIC_CONTENT_GATING_ENABLED=true pnpm --filter @hangul-route/mobile build:web
+ *   EXPO_PUBLIC_CONTENT_GATING_ENABLED=true NEXT_PUBLIC_CONTENT_GATING_ENABLED=true pnpm --filter @hangul-route/mobile build:web
  *   E2E_CONTENT_GATING=1 pnpm --filter @hangul-route/mobile exec playwright test free-days
  *
  * Direct navigation to a closed quest (the QuestPlayer guard) needs the fixture bundle's e2e hook,
@@ -256,12 +256,15 @@ test.describe('free plan switch on (web)', () => {
     await home(page, 'Dami');
     await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller), undefined, { timeout: 30_000 });
     await context.setOffline(true);
-    await home(page, 'Dami');
-    await openJourney(page);
-    await expect(page.locator('[data-testid^="journey-ring-notOpen-"]')).toHaveCount(CLOSED_CELLS.length);
-    await page.getByRole('button', { name: journeyCellName(2, themeTitle('life')) }).click();
-    await expect(page.getByTestId('episode-preview-card').getByText(access.preview.line)).toBeVisible();
-    await context.setOffline(false);
+    try {
+      await home(page, 'Dami');
+      await openJourney(page);
+      await expect(page.locator('[data-testid^="journey-ring-notOpen-"]')).toHaveCount(CLOSED_CELLS.length);
+      await page.getByRole('button', { name: journeyCellName(2, themeTitle('life')) }).click();
+      await expect(page.getByTestId('episode-preview-card').getByText(access.preview.line)).toBeVisible();
+    } finally {
+      await context.setOffline(false);
+    }
   });
 });
 

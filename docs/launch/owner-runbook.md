@@ -397,7 +397,7 @@ DELETE FROM feedback_notes WHERE id = '<note_id>' AND NOT EXISTS (SELECT 1 FROM 
 1. F-ENT-003 E3-12b 와 E3-12c 가 머지됨 (어른 화면의 무료 레슨 줄).
 2. 다음 문구 그룹의 ko · es 오버레이가 들어 있고 원어민 검토를 마침: `console.access`, `console.curriculum.freeDays`, `caregiver.access`, `caregiver.plan.freePlan`. 없으면 한국어·스페인어 콘솔과 Plan 화면이 이 줄들을 영어로 보여 준다.
 3. 배포할 커밋에서 스위치를 켠 e2e 레인이 통과함 (저장소 쪽에서 돌리고 결과를 PR 에 남긴다):
-   - 스위치를 켠 빌드: `EXPO_PUBLIC_CONTENT_GATING_ENABLED=true pnpm --filter @hangul-route/mobile build:web`, 그다음 `E2E_CONTENT_GATING=1 pnpm --filter @hangul-route/mobile exec playwright test free-days plan-next plan-free-lines free-end episode-access dashboard-free-line`
+   - 스위치를 켠 빌드 (운영과 같은 두 변수, 콘솔도 스위치가 켜진 채로 합쳐진다): `EXPO_PUBLIC_CONTENT_GATING_ENABLED=true NEXT_PUBLIC_CONTENT_GATING_ENABLED=true pnpm --filter @hangul-route/mobile build:web`, 그다음 `E2E_CONTENT_GATING=1 pnpm --filter @hangul-route/mobile exec playwright test free-days plan-next plan-free-lines free-end episode-access dashboard-free-line`
    - 게이팅 픽스처 번들: `pnpm --filter @hangul-route/mobile build:web:fixtures:gated`, 그다음 `STORY_FIXTURES_GATED=1 pnpm --filter @hangul-route/mobile exec playwright test story-shelf-gated.spec free-days`
    - 같은 커밋의 CI `Build PWA · offline e2e` 가 초록 (shard 1 이 게이팅 픽스처 번들에서 `story-shelf-gated.spec` 을 돌린다, F-STORY-004 PR 4.8b 의 릴리스 게이트).
 4. F-STORY-004 PR 4.8d (고정된 Home 카드의 접근 재확인, #488) 와 PR 4.8e (Home 카드를 누를 때의 접근 확인) 가 머지됨.
@@ -410,6 +410,8 @@ DELETE FROM feedback_notes WHERE id = '<note_id>' AND NOT EXISTS (SELECT 1 FROM 
 3. 사이트의 무료 문구 "Stage 1 is free." (`landing.plans.free.stage1`) 는 그대로 둔다 (OD-1). 사이트 쪽 변경은 없다.
 
 **확인**: 새 학습자 프로필로 https://app.hangulroute.com 을 열면 Journey 에서 Stage 1 칸에는 고리가 없고, Stage 2 · Stage 4 칸에는 점선 고리 (Not open yet) 가 보인다. Stage 2 칸을 누르면 미리보기와 **Ask a grown-up** 이 나온다. 가격·"Premium"·"trial" 같은 말은 학습자 화면 어디에도 없다.
+
+어른 화면도 확인한다 (1단계의 `NEXT_PUBLIC_CONTENT_GATING_ENABLED` 가 빠지면 콘솔만 조용히 경계 없이 남는다): Family Plan 이 없는 가족의 오너로 https://app.hangulroute.com/parent 를 연다. 게시된 플랜에서 열린 레슨을 모두 끝낸 아이의 카드 (그리고 그 가족의 명단) 에 무료 레슨 줄과 **Open billing** 이 보인다. 같은 가족으로 커리큘럼 마법사를 열면 미리보기에 무료 플랜 안내 (free days) 가 보인다. 공동 보호자 계정에는 이 줄이 없다.
 
 **되돌리기**: 세 변수를 `false` 로 (또는 삭제) → 두 프로젝트 모두 Retry deployment. 학습자가 끝낸 레슨·카드·별은 어느 방향으로도 바뀌지 않는다.
 

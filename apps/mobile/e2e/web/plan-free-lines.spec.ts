@@ -109,9 +109,16 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByText('Mina is on the free plan.')).toBeVisible();
       await expect(page.getByText(LINE)).toBeVisible();
       await expect(page.getByText('Stage 1 is always free.')).toHaveCount(0);
-      await expect(page.getByRole('list').getByRole('listitem')).toHaveText([TOPICS]);
-      // No story is bundled as a sampler today: no stories line.
-      await expect(page.getByText(/short stor/)).toHaveCount(0);
+      // The sampler stories line (since F-STORY-001 PR 1.9 marks shelf samplers), then the word topics line.
+      const items = page.getByRole('list').getByRole('listitem');
+      await expect(items.last()).toHaveText(TOPICS);
+      const texts = await items.allInnerTexts();
+      expect(texts.length).toBeLessThanOrEqual(2);
+      if (texts.length === 2) {
+        const stories = Number(/^(\d+) /.exec(texts[0] ?? '')?.[1] ?? 0);
+        expect(stories).toBeGreaterThan(0);
+        expect(texts[0]).toBe(m.freePlan.stories(stories));
+      }
       await expect(page.getByText(/teacher can open|finished the free lessons/)).toHaveCount(0);
       await expectCalm(page);
       await page.screenshot({ path: test.info().outputPath(`plan-free-family-${vp.width}.png`), fullPage: true });

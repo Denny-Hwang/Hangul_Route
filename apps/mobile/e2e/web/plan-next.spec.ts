@@ -18,7 +18,7 @@ import { expectNoHorizontalOverflow } from './viewport';
  * ring. With the free-plan switch on, the off-plan lesson is a Stage 1 one (open on the free plan),
  * and the cells past Stage 1 carry the dotted ring:
  *
- *   EXPO_PUBLIC_CONTENT_GATING_ENABLED=true pnpm --filter @hangul-route/mobile build:web
+ *   EXPO_PUBLIC_CONTENT_GATING_ENABLED=true NEXT_PUBLIC_CONTENT_GATING_ENABLED=true pnpm --filter @hangul-route/mobile build:web
  *   E2E_CONTENT_GATING=1 pnpm --filter @hangul-route/mobile exec playwright test plan-next
  */
 const GATED = process.env.E2E_CONTENT_GATING === '1';
@@ -26,8 +26,14 @@ const GATED_FIXTURES = process.env.STORY_FIXTURES_GATED === '1';
 const learner = getMessages('en').learner;
 const PLAN_NEXT = 'quest:stage1-life-q2';
 const PLAN_NEXT_TITLE = questsAll.find((q) => q.id === PLAN_NEXT)?.titleEn ?? '';
+if (!PLAN_NEXT_TITLE) throw new Error(`no quest title for ${PLAN_NEXT}`);
+/** A literal string as a RegExp source. */
+const literal = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 /** Not in the plan, open on every build. */
 const OFF_PLAN_CELL = { stage: 1, theme: 'Nature & Animals' } as const;
+
+/** The browser's day is UTC too, so the plan's dates and the app's "today" agree on any host time zone. */
+test.use({ timezoneId: 'UTC' });
 
 const dayKey = (offset: number): string => {
   const d = new Date();
@@ -40,7 +46,7 @@ const dayKey = (offset: number): string => {
  * Home pins the day's cards per tab (F-STORY-004 PR 4.8c), and the first Home before the seed pinned
  * the cursor's card, so Home is opened in a new tab of the same device: the plan is what it reads.
  */
-async function learnerWithPlan(first: Page): Promise<Page> {
+async function learnerWithPlan(first: Page, errors?: string[]): Promise<Page> {
   const page = first;
   await onboardSelf(page, { name: 'Alex', startJourney: false });
   const id = (await readStored<Array<{ id: string }>>(page, 'profiles'))?.[0]?.id;
@@ -79,6 +85,7 @@ async function learnerWithPlan(first: Page): Promise<Page> {
   await seedStored(page, `progress:${id}`, { ...progress, selfRoute: route });
   await expect(page.getByText('Hi, Alex!')).toBeVisible();
   const tab = await page.context().newPage();
+  if (errors) tab.on('pageerror', (e) => errors.push(String(e)));
   await page.close();
   await home(tab);
   return tab;
@@ -124,13 +131,12 @@ test.describe(`a self plan leads Next (${GATED ? 'switch on' : 'release build, s
   test.skip(GATED_FIXTURES, 'runs on the release build or a switch-on build, not the gating fixture bundle');
 
   test('Home card (2) and the Journey follow the plan', async ({ page: first }) => {
-    const page = await learnerWithPlan(first);
     const errors: string[] = [];
-    page.on('pageerror', (e) => errors.push(String(e)));
+    const page = await learnerWithPlan(first, errors);
     await page.setViewportSize({ width: 320, height: 568 });
 
     // Home card (2): the plan's next lesson with "Next in your plan".
-    const card = page.getByRole('button', { name: new RegExp(`^${PLAN_NEXT_TITLE}\\. ${learner.routeNext.home.subtitle}\\.`) });
+    const card = page.getByRole('button', { name: new RegExp(`^${literal(PLAN_NEXT_TITLE)}\\. ${literal(learner.routeNext.home.subtitle)}\\.`) });
     await expect(card).toBeVisible();
     await shot(page, 'plan-next-home-320');
 
