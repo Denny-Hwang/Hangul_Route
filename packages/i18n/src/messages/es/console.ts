@@ -87,7 +87,7 @@ export const consoleMsgs = {
   shell: {
     home: 'Consola',
     signOut: { cta: 'Salir' },
-    nav: { notes: 'Notas' },
+    nav: { notes: 'Notas', lessons: 'Lecciones' },
     noApi: 'La consola necesita una dirección de API (NEXT_PUBLIC_API_BASE_URL) en esta versión.',
   },
   kind: {
@@ -1333,5 +1333,14 @@ export const consoleMsgs = {
       failed: 'No se pudo enviar',
     },
     a11y: { close: 'Cerrar' },
+  },
+  /** All lessons from the console (F-BROWSE-001 BR-10, BR-11). */
+  browse: {
+    checkFailed: 'No pudimos revisar tu plan.',
+    tryAgain: { cta: 'Reintentar' },
+    openFree: { cta: 'Abrir lecciones gratis' },
+    storageBlocked: 'Tu navegador bloqueó el almacenamiento de esta página. Aquí no se pueden abrir las lecciones.',
+    preview: { cta: 'Vista previa' },
+    previewLessons: { cta: 'Ver las lecciones' },
   },
 } satisfies DeepPartial<Messages['console']>;

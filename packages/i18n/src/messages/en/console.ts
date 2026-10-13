@@ -1826,4 +1826,17 @@ export const consoleMsgs = {
       },
     },
   },
+  /**
+   * All lessons from the console (F-BROWSE-001 sections 4.3, 4.11 and 6; wireframe browse/entry-points.md): the
+   * line beside an entry when the plan check failed or the browser blocks this page's storage, and the deep-link
+   * buttons (BR-11). One name everywhere: the navigation item is `shell.nav.lessons`; "Browse" is in no string.
+   */
+  browse: {
+    checkFailed: 'Could not check your plan.',
+    tryAgain: { cta: 'Try again' },
+    openFree: { cta: 'Open free lessons' },
+    storageBlocked: "Your browser blocked this page's storage, so lessons cannot open here.",
+    preview: { cta: 'Preview' },
+    previewLessons: { cta: 'Preview lessons' },
+  },
 } as const;
