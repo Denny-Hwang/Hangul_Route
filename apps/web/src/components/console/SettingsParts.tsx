@@ -38,8 +38,9 @@ export interface SettingsSectionsProps {
    * Class moves (F-SPACE-002 section 4.8, T-6c; design/screens/transfer/start-sheet.md): when set, a live class's
    * learner rows show **Move to another class** before Remove (never in the Danger zone); offline it is disabled
    * with "This needs internet.". Absent while `NEXT_PUBLIC_CLASS_TRANSFER` is unset or the session is locked.
+   * `familyMovable` (T-6d): on a family, the learners in a live class, whose rows show **Move to a class**.
    */
-  move?: { online: boolean; onMove: (member: MemberView) => void };
+  move?: { online: boolean; onMove: (member: MemberView) => void; familyMovable?: ReadonlySet<string> };
 }
 
 const h2Style = { fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.xs}px` } as const;
@@ -138,6 +139,7 @@ export function SettingsSections({
             </span>
             <span style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.sm, alignItems: 'center' }}>
               {move && space.kind === 'class' && !archived ? <MoveRowAction name={l.name} online={move.online} onMove={() => move.onMove(l)} /> : null}
+              {move && space.kind === 'family' && !archived && move.familyMovable?.has(l.memberId) ? <MoveRowAction family name={l.name} online={move.online} onMove={() => move.onMove(l)} /> : null}
               <Button disabled={busy || archived} onClick={() => onRemoveLearner(l)}>
                 {s.learners.remove[space.kind].cta}
               </Button>

@@ -3,6 +3,7 @@ import type { UiLocale } from './locale';
 import type { SpaceSettings } from './space';
 import type { ProgressSummary } from './sync';
 import type { TransferInitiator, TransferPremiumChange } from './transfer';
+import { TRANSFER_CONSENT_TEXT_KO } from './transfer-consent-ko';
 
 /**
  * Learner-side consent for a class move — F-SPACE-002 §4.11 (T18). One keyed
@@ -205,12 +206,13 @@ export const TEACHER_ROSTER_ADDRESS_FIELDS = ['id'] as const;
 export type TeacherRosterAddressField = (typeof TEACHER_ROSTER_ADDRESS_FIELDS)[number];
 
 /**
- * Locales that have a consent text. English only for now; Korean (formal polite style, F-I18N-001)
- * and Spanish are added with the i18n layer, and every locale is
- * counsel-reviewed before the flag is enabled (flip gate G2). The Worker
- * answers `consent_locale_unavailable` for any other locale.
+ * Locales that have a consent text: every UI locale (F-SPACE-002 T-6d). Korean is in the formal
+ * polite style with no particle attached to a placeholder (F-I18N-001 style guide). Every locale is
+ * counsel-reviewed before the flag is enabled (flip gate G2). Any other locale never reaches the
+ * consent check: the request body (`TransferConsentSchema`, UI locales only) rejects it as `bad_request`.
+ * The Korean text lives in `transfer-consent-ko.ts`, so the romanization scan skips that file only.
  */
-export const TRANSFER_CONSENT_LOCALES = ['en'] as const;
+export const TRANSFER_CONSENT_LOCALES = ['en', 'ko', 'es'] as const;
 export type TransferConsentLocale = Extract<(typeof TRANSFER_CONSENT_LOCALES)[number], UiLocale>;
 
 const CONSENT_LOCALES: ReadonlySet<string> = new Set(TRANSFER_CONSENT_LOCALES);
@@ -254,6 +256,37 @@ export const TRANSFER_CONSENT_TEXT: Readonly<Record<TransferConsentLocale, Trans
       plan_progress: 'Progress on homework from {destination}',
       sync_time: 'When {learner} joined the class and when progress was last saved',
       note_replies: 'The answer {learner} picks on a note from the teacher',
+    },
+  },
+  ko: TRANSFER_CONSENT_TEXT_KO,
+  es: {
+    lines: {
+      moving: '{learner} pasaría de {source} a {destination}.',
+      new_teacher: 'El docente de {destination} verá el progreso de {learner}.',
+      old_teacher: 'El docente de {source} deja de ver a {learner} en esa clase al hacerse el cambio, no antes.',
+      keeps: 'Las tarjetas, las estrellas y las lecciones terminadas se quedan con {learner}.',
+      cooling_off: 'El cambio se hace después de 2 días. Cualquier persona de la familia puede cancelarlo antes.',
+      visible_list: 'Lo que ve el nuevo docente:',
+      nothing_else: 'No se comparte nada más de la app con el docente.',
+      visible_today: 'Hoy estas personas pueden ver a {learner}:',
+      typed_names: 'El docente escribe los nombres de la clase y del docente. No los revisamos. Continúa solo si conoces a este docente.',
+      from_teacher: 'Esta solicitud vino del docente de {source}, no de ti.',
+      premium_may_change: 'Las lecciones abiertas por el plan de {source} pueden cerrarse después del cambio. Las lecciones ya terminadas se quedan.',
+      school_delete: 'El docente de {destination} podrá borrar el registro de {learner}.',
+      device_relink: 'Una tableta que se unió por {source} quizá tenga que unirse de nuevo a {destination}.',
+      homework_drops: 'Las tareas de {source} sin terminar desaparecerán. Las tareas terminadas se quedan.',
+      cannot_undo: 'Un cambio no se puede deshacer. {learner} puede salir de una clase en Perfil cuando quiera.',
+      introduce: 'Decirle a {destination} de dónde viene {learner}.',
+    },
+    items: {
+      name_picture_level: 'El nombre, la imagen y el nivel de {learner}',
+      activity: 'Cuándo practicó {learner}, los minutos de cada día y los días seguidos',
+      quests: 'Las misiones terminadas y cuántas respuestas fueron correctas',
+      cards_letters: 'Las tarjetas ganadas, las letras aprendidas y las letras que necesitan práctica',
+      level_check: 'Los resultados de la prueba de nivel',
+      plan_progress: 'El progreso en las tareas de {destination}',
+      sync_time: 'Cuándo se unió {learner} a la clase y cuándo se guardó el progreso por última vez',
+      note_replies: 'La respuesta que elige {learner} en una nota del docente',
     },
   },
 };

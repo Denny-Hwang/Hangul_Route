@@ -14,6 +14,7 @@ import { JourneyStrip } from '@/components/console/JourneyParts';
 import { FreeLessonsLine } from '@/components/console/FreeLessonsParts';
 import { ClassGoalLineView } from '@/components/console/ClassGoalParts';
 import { StudentWordsLines, WeekWordsRevisit } from '@/components/console/VocabWordsParts';
+import { useTransfersShown } from '@/components/console/TransferParts';
 import { useConsole } from '@/components/console/use-console';
 import type { PlanView, Roster, SpaceListItem } from '@/lib/console/api';
 import { contentGatingEnabled, lectureModeEnabled } from '@/lib/console/config';
@@ -33,6 +34,8 @@ import { aroundSlot } from '@/lib/i18n/slot';
 function SpaceInner(): JSX.Element {
   const spaceId = spaceIdFrom(useSearchParams());
   const { ready, session, api, signOut, m, locale } = useConsole();
+  // Class moves (F-SPACE-002 T-6d): the family roster's permanent Class moves button, next to Settings (family-page.md).
+  const movesShown = useTransfersShown();
   const c = m.console;
   const [roster, setRoster] = useState<Roster | null>(null);
   const [plans, setPlans] = useState<PlanView[]>([]);
@@ -196,6 +199,11 @@ function SpaceInner(): JSX.Element {
             <Link href={ROUTES.spaceSettings(spaceId, roster.space.kind)}>
               <Button>{c.space.settings.cta}</Button>
             </Link>
+            {movesShown && roster.space.kind === 'family' ? (
+              <Link href={ROUTES.spaceTransfers(spaceId, roster.space.kind)}>
+                <Button testId="family-moves">{c.transfer.entry.cta}</Button>
+              </Link>
+            ) : null}
           </div>
 
           {!empty ? (
