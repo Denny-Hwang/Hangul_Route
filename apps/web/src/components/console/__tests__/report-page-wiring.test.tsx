@@ -422,3 +422,32 @@ describe('RP-7b: the growth line and the printed footer', () => {
   });
 });
 
+describe('Browse links on the report (RP-13, behind browseEnabled() on the app origin)', () => {
+  const browseHrefs = (root: ReactTestInstance): string[] =>
+    root.findAll((n) => n.type === 'a' && typeof n.props.href === 'string' && (n.props.href as string).startsWith('/browse')).map((n) => n.props.href as string);
+  const appWindow = (origin: string) => ({ location: { origin, pathname: '/teach/space/learner', search: `?${START}` }, print: () => undefined });
+
+  it('on: the letters link to All lessons with source report, content ids only', async () => {
+    vi.stubEnv('NEXT_PUBLIC_BROWSE', 'enabled');
+    vi.stubGlobal('window', appWindow('https://app.hangulroute.com'));
+    const root = await page();
+    const hrefs = browseHrefs(root);
+    expect(hrefs).toContain('/browse#t=char:%E3%85%82&s=report');
+    expect(hrefs.every((href) => href.endsWith('&s=report'))).toBe(true);
+    expect(hrefs.join(' ')).not.toMatch(/profile|mina|space|sunflower/i);
+  });
+
+  it('off: browseEnabled() unset draws no link; letters stay text', async () => {
+    vi.stubGlobal('window', appWindow('https://app.hangulroute.com'));
+    const root = await page();
+    expect(browseHrefs(root)).toEqual([]);
+    expect(textOf(byTestId(root, 'report-line-letters_revisit')[0] as ReactTestInstance)).toContain('ㅂ (b)');
+  });
+
+  it('off the app origin (the site host) draws no link, even with browseEnabled()', async () => {
+    vi.stubEnv('NEXT_PUBLIC_BROWSE', 'enabled');
+    vi.stubGlobal('window', appWindow('https://hangulroute.com'));
+    const root = await page();
+    expect(browseHrefs(root)).toEqual([]);
+  });
+});
