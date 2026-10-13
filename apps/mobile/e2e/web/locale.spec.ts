@@ -43,9 +43,8 @@ import { controlsPastEdge, expectNoHorizontalOverflow, expectReachable } from '.
  *   EXPO_PUBLIC_PSEUDO_LOCALE=1    expo export --platform web --output-dir dist   ->  E2E_PSEUDO_LOCALE=1
  *
  * (`node scripts/pwa-postbuild.mjs dist` after each export; `--clear` keeps Metro from reusing
- * a transform made with other flags.) The es and ko dictionaries are empty until PR 15 / 16, so
- * those runs still read English; the matrix finds every control by its dictionary message, so it
- * keeps working once they are filled.
+ * a transform made with other flags.) The es and ko dictionaries are filled (PR 15 / 16); the matrix
+ * finds every control by its dictionary message, so those runs read Spanish and Korean.
  */
 const ALL_LOCALES = process.env.E2E_ALL_LOCALES === '1';
 const PSEUDO = process.env.E2E_PSEUDO_LOCALE === '1';

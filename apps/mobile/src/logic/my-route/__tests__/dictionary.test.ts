@@ -9,8 +9,8 @@ import { DRAFT_EN } from './fixtures/messages-draft';
  * F-ROUTE-001 section 5, `copy.test.ts` split (R-3 part): the copy rules and
  * the length budget on the real `learner.myRoute` / `a11y.myRoute`
  * dictionary (and the grown-up slice the read-only page reads) in en / es /
- * ko. es / ko fall back to English until their native-reviewed overlays land
- * (F-I18N-001 PR 15); the rules then run on the translations unchanged.
+ * ko. The es (F-I18N-001 PR 15) and ko (PR 16) overlays are filled, so the
+ * rules run on the translations unchanged.
  */
 
 const LOCALES: readonly UiLocale[] = ['en', 'es', 'ko'];

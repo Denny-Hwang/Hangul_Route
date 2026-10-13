@@ -93,7 +93,8 @@ test.describe('on a QA build', () => {
 
     test('the footer switcher links every locale and loads it as its own document', async ({ page }) => {
       await page.goto('/ko');
-      const nav = page.locator('nav[aria-label="Language"]');
+      // The switcher is named in the page's language: Korean on /ko since F-I18N-001 PR 16.
+      const nav = page.locator(`nav[aria-label="${getMessages('ko').landing.footer.language}"]`);
       await expect(nav.locator('a')).toHaveText(['English', 'Español', '한국어']);
       await expect(nav.locator('a[aria-current="page"]')).toHaveAttribute('hreflang', 'ko');
       await nav.locator('a[href="/"]').click();

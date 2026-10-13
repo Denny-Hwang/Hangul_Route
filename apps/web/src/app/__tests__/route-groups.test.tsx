@@ -203,8 +203,8 @@ describe('locale pages are the English pages with locale links', () => {
 
   const hrefs = (html: string): string[] => [...html.matchAll(/href="([^"]*)"/g)].map((m) => m[1] ?? '');
 
-  // The same-words half holds for a locale whose landing overlay is still empty (ko until PR 16): it falls back to
-  // English. A translated locale (es, PR 15) renders its own words around the same links, and the legal pages keep the
+  // The same-words half holds for a locale whose landing overlay is still empty: it falls back to English. A
+  // translated locale (es, PR 15; ko, PR 16) renders its own words around the same links, and the legal pages keep the
   // English-authoritative text under the localized notice (decision L10).
   // The mode comes from a stable signal, the hero title, not from key completeness: a landing key English adds
   // later may fall back while the locale is hidden (§3.10 step 4) without moving a translated locale to this branch.
@@ -254,9 +254,9 @@ describe('locale pages are the English pages with locale links', () => {
     });
   }
 
-  it('es has its own landing words and ko still falls back to English (F-I18N-001 PR 15)', () => {
+  it('es (F-I18N-001 PR 15) and ko (PR 16) have their own landing words', () => {
     expect(translated('es')).toBe(true);
-    expect(translated('ko')).toBe(false);
+    expect(translated('ko')).toBe(true);
   });
 });
 

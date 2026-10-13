@@ -1,0 +1,191 @@
+{
+  "locale": "ko",
+  "domain": "minigames",
+  "entries": {
+    "minigame:s1-letters-q1-check": {
+      "listenPick.rounds.lp-sym-jamo-eo.prompt": "글자 eo",
+      "listenPick.rounds.1.prompt": "말을 듣는 친구를 가리키는 말"
+    },
+    "minigame:s1-letters-q2-check": {
+      "listenPick.rounds.lp-sym-jamo-u.prompt": "글자 u",
+      "listenPick.rounds.1.prompt": "줄기와 가지, 잎이 있는 키 큰 식물"
+    },
+    "minigame:s1-letters-q3-check": {
+      "listenPick.rounds.lp-sym-jamo-eu.prompt": "글자 eu",
+      "listenPick.rounds.1.prompt": "걸을 때 쓰는 몸의 부분, 또는 강 위를 건너는 길"
+    },
+    "minigame:s1-life-q1-check": {
+      "listenPick.rounds.lp-sym-jamo-chieut.prompt": "글자 chieut",
+      "listenPick.rounds.1.prompt": "우유로 만든 고소한 음식"
+    },
+    "minigame:s1-life-q2-check": {
+      "listenPick.rounds.lp-sym-jamo-siot.prompt": "글자 siot",
+      "listenPick.rounds.1.prompt": "아빠를 높여 부르는 말"
+    },
+    "minigame:s1-life-q3-apply": {
+      "cardPairs.tomato.gloss": "빨갛고 동그란 열매 채소",
+      "cardPairs.kokoa.gloss": "초콜릿 맛이 나는 따뜻한 음료",
+      "cardPairs.kuki.gloss": "작고 바삭한 과자",
+      "cardPairs.toseuteu.gloss": "노릇하게 구운 빵",
+      "cardPairs.gimbap.gloss": "김에 밥과 재료를 넣고 말아 만든 음식"
+    },
+    "minigame:s1-life-q3-check": {
+      "listenPick.rounds.lp-sym-jamo-kieuk.prompt": "글자 kieuk",
+      "listenPick.rounds.1.prompt": "빨갛고 동그란 열매 채소"
+    },
+    "minigame:s1-rites-q1-play": {
+      "listenPick.rounds.0.prompt": "밤하늘에 뜨는 둥근 빛",
+      "listenPick.rounds.1.prompt": "글자 dan",
+      "listenPick.rounds.2.prompt": "마시거나 씻을 때 쓰는 맑은 액체",
+      "listenPick.rounds.3.prompt": "드나들 때 여닫는 것",
+      "listenPick.rounds.4.prompt": "땅이 높이 솟은 곳",
+      "listenPick.rounds.5.prompt": "글자 sal"
+    },
+    "minigame:s1-rites-q1-check": {
+      "listenPick.rounds.0.prompt": "밤하늘에 뜨는 둥근 빛",
+      "listenPick.rounds.1.prompt": "음력으로 새해 첫날"
+    },
+    "minigame:s1-rites-q2-check": {
+      "listenPick.rounds.0.prompt": "글자 song",
+      "listenPick.rounds.1.prompt": "추석에 빚는 반달 모양 떡"
+    },
+    "minigame:s1-rites-q3-play": {
+      "listenPick.rounds.lp-sym-jamo-hieut.prompt": "글자 hieut",
+      "listenPick.rounds.lp-sym-jamo-yo.prompt": "글자 yo",
+      "listenPick.rounds.lp-sym-jamo-yu.prompt": "글자 yu",
+      "listenPick.rounds.3.prompt": "좋은 일이 생기는 운",
+      "listenPick.rounds.4.prompt": "글자 han",
+      "listenPick.rounds.5.prompt": "글자 hak"
+    },
+    "minigame:s1-rites-q3-apply": {
+      "storySteps.a.label": "전통 옷 차려입기",
+      "storySteps.b.label": "어른께 새해 큰절 올리기",
+      "storySteps.c.label": "새해 아침에 떡을 넣은 국 먹기",
+      "storySteps.d.label": "어른께 새해 용돈 받기"
+    },
+    "minigame:s1-rites-q3-check": {
+      "listenPick.rounds.lp-sym-jamo-yo.prompt": "글자 yo",
+      "listenPick.rounds.1.prompt": "한국의 전통 옷"
+    },
+    "minigame:s1-nature-q1-play": {
+      "listenPick.rounds.0.prompt": "몸집이 크고 털이 많은 동물",
+      "listenPick.rounds.1.prompt": "꽃이 피는 따뜻한 계절",
+      "listenPick.rounds.2.prompt": "쌀로 지어 먹는 음식",
+      "listenPick.rounds.3.prompt": "사람이 사는 건물",
+      "listenPick.rounds.4.prompt": "먹고 말할 때 쓰는 얼굴의 부분",
+      "listenPick.rounds.5.prompt": "가을에 익는 주황색 과일"
+    },
+    "minigame:s1-nature-q1-check": {
+      "listenPick.rounds.0.prompt": "몸집이 크고 털이 많은 동물",
+      "listenPick.rounds.1.prompt": "사람이 사는 건물"
+    },
+    "minigame:s1-nature-q2-play": {
+      "listenPick.rounds.0.prompt": "땅이 높이 솟은 곳",
+      "listenPick.rounds.1.prompt": "길게 흐르는 큰 물줄기",
+      "listenPick.rounds.2.prompt": "넓고 짠 물",
+      "listenPick.rounds.3.prompt": "머리 위로 보이는 높고 넓은 곳",
+      "listenPick.rounds.4.prompt": "밤하늘에 반짝이는 작은 빛",
+      "listenPick.rounds.5.prompt": "몸집이 크고 털이 많은 동물"
+    },
+    "minigame:s1-nature-q2-check": {
+      "listenPick.rounds.0.prompt": "땅이 높이 솟은 곳",
+      "listenPick.rounds.1.prompt": "길게 흐르는 큰 물줄기"
+    },
+    "minigame:s1-nature-q3-play": {
+      "listenPick.rounds.0.prompt": "밤하늘에 뜨는 둥근 빛",
+      "listenPick.rounds.1.prompt": "밤하늘에 반짝이는 작은 빛",
+      "listenPick.rounds.2.prompt": "해가 진 뒤 어두운 때",
+      "listenPick.rounds.3.prompt": "가장 둥글게 꽉 찬 달",
+      "listenPick.rounds.4.prompt": "머리 위로 보이는 높고 넓은 곳",
+      "listenPick.rounds.5.prompt": "땅이 높이 솟은 곳"
+    },
+    "minigame:s1-nature-q3-check": {
+      "listenPick.rounds.0.prompt": "밤하늘에 뜨는 둥근 빛",
+      "listenPick.rounds.1.prompt": "가장 둥글게 꽉 찬 달"
+    },
+    "minigame:s1-crafts-q1-check": {
+      "listenPick.rounds.0.prompt": "바람에 날리는 종이 장난감",
+      "listenPick.rounds.1.prompt": "재미있게 노는 일"
+    },
+    "minigame:s1-crafts-q2-play": {
+      "listenPick.rounds.0.prompt": "닥나무로 만든 한국 전통 종이",
+      "listenPick.rounds.1.prompt": "글을 쓰거나 그림을 그리는 얇은 것",
+      "listenPick.rounds.2.prompt": "푸른빛이 도는 옛 도자기",
+      "listenPick.rounds.3.prompt": "흙으로 빚어 구운 그릇",
+      "listenPick.rounds.4.prompt": "바람에 날리는 종이 장난감",
+      "listenPick.rounds.5.prompt": "차거나 던지며 노는 둥근 물건"
+    },
+    "minigame:s1-crafts-q2-check": {
+      "listenPick.rounds.0.prompt": "푸른빛이 도는 옛 도자기",
+      "listenPick.rounds.1.prompt": "닥나무로 만든 한국 전통 종이"
+    },
+    "minigame:s1-crafts-q3-play": {
+      "listenPick.rounds.0.prompt": "한국의 글자",
+      "listenPick.rounds.1.prompt": "이 앱의 호랑이 친구",
+      "listenPick.rounds.2.prompt": "친구를 만나거나 헤어질 때 하는 인사",
+      "listenPick.rounds.3.prompt": "아끼고 좋아하는 마음",
+      "listenPick.rounds.4.prompt": "한반도에 있는 나라",
+      "listenPick.rounds.5.prompt": "한국의 전통 옷"
+    },
+    "minigame:s1-crafts-q3-check": {
+      "listenPick.rounds.0.prompt": "한국의 글자",
+      "listenPick.rounds.1.prompt": "친구를 만나거나 헤어질 때 하는 인사"
+    },
+    "minigame:s2-life-card-1": {
+      "cardPairs.sagwa.gloss": "빨갛고 둥근 과일",
+      "cardPairs.uyu.gloss": "소에게서 얻는 하얀 마실 것",
+      "cardPairs.ppang.gloss": "밀가루로 구운 음식",
+      "cardPairs.gimbap.gloss": "김에 밥과 재료를 넣고 말아 만든 음식",
+      "cardPairs.bap.gloss": "쌀로 지어 먹는 음식"
+    },
+    "minigame:s2-life-quiz-1": {
+      "cardPairs.sagwa.gloss": "빨갛고 둥근 과일",
+      "cardPairs.uyu.gloss": "소에게서 얻는 하얀 마실 것",
+      "cardPairs.ppang.gloss": "밀가루로 구운 음식",
+      "cardPairs.gimchi.gloss": "배추를 맵게 절인 한국 음식",
+      "cardPairs.mul.gloss": "마시거나 씻을 때 쓰는 맑은 액체"
+    },
+    "minigame:s2-nature-card-1": {
+      "cardPairs.haneul.gloss": "머리 위로 보이는 높고 넓은 곳",
+      "cardPairs.kkot.gloss": "예쁜 색으로 피는 식물의 부분",
+      "cardPairs.namu.gloss": "줄기와 가지, 잎이 있는 키 큰 식물",
+      "cardPairs.san.gloss": "땅이 높이 솟은 곳",
+      "cardPairs.bada.gloss": "넓고 짠 물"
+    },
+    "minigame:s2-nature-quiz-1": {
+      "cardPairs.haneul.gloss": "머리 위로 보이는 높고 넓은 곳",
+      "cardPairs.byeol.gloss": "밤하늘에 반짝이는 작은 빛",
+      "cardPairs.gang.gloss": "길게 흐르는 큰 물줄기",
+      "cardPairs.bom.gloss": "꽃이 피는 따뜻한 계절",
+      "cardPairs.nun.gloss": "겨울에 하늘에서 내리는 하얀 것"
+    },
+    "minigame:s4-rites-respond-1": {
+      "dialogue.0.npc": "반갑게 건네는 인사",
+      "dialogue.1.npc": "이름을 묻는 말",
+      "dialogue.2.npc": "처음 만나서 기쁘다는 말",
+      "dialogue.0.options.annyeonghaseyo.gloss": "만났을 때 하는 공손한 인사",
+      "dialogue.0.options.jal-gayo.gloss": "헤어질 때 하는 인사",
+      "dialogue.0.options.gomawoyo.gloss": "고마운 마음을 전하는 말",
+      "dialogue.1.options.jeoneun-hoyayeyo.gloss": "내 이름을 알려 주는 말",
+      "dialogue.1.options.ne-joayo.gloss": "좋다고 대답하는 말",
+      "dialogue.1.options.sagwa-juseyo.gloss": "사과를 달라고 부탁하는 말",
+      "dialogue.2.options.jeodo-bangawoyo.gloss": "나도 만나서 기쁘다는 말",
+      "dialogue.2.options.aniyo.gloss": "아니라고 대답하는 말",
+      "dialogue.2.options.mollayo.gloss": "잘 모른다고 대답하는 말"
+    },
+    "minigame:s4-rites-card-1": {
+      "cardPairs.annyeong.gloss": "친구를 만나거나 헤어질 때 하는 인사",
+      "cardPairs.gamsa.gloss": "고마운 마음",
+      "cardPairs.chingu.gloss": "가깝게 지내는 사람",
+      "cardPairs.ireum.gloss": "사람이나 물건을 부르는 말",
+      "cardPairs.insa.gloss": "만날 때 서로 나누는 말이나 행동"
+    },
+    "minigame:s4-rites-quiz-1": {
+      "cardPairs.annyeong.gloss": "친구를 만나거나 헤어질 때 하는 인사",
+      "cardPairs.gamsa.gloss": "고마운 마음",
+      "cardPairs.chingu.gloss": "가깝게 지내는 사람",
+      "cardPairs.ireum.gloss": "사람이나 물건을 부르는 말",
+      "cardPairs.insa.gloss": "만날 때 서로 나누는 말이나 행동"
+    }
+  }
+}

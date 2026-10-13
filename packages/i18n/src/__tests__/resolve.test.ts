@@ -69,8 +69,9 @@ describe('getMessages', () => {
     expect(en.common.buttons.ok).toBe('OK');
   });
 
-  it('ko (empty overlay) equals English until PR 16', () => {
-    expect(getMessages('ko').common.buttons.ok).toBe(en.common.buttons.ok);
+  it('ko reads its own overlay (F-I18N-001 PR 16)', () => {
+    expect(getMessages('ko').common.buttons.ok).toBe('확인');
+    expect(getMessages('ko').common.buttons.ok).not.toBe(en.common.buttons.ok);
   });
 
   it('is an explicit-locale API: any locale at any time', () => {
@@ -99,9 +100,8 @@ describe('fallbackPaths', () => {
     expect(paths).not.toContain('a11y.stars');
   });
 
-  it('ko with no overlay falls back everywhere; en and en-XA never fall back', () => {
-    expect(fallbackPaths('ko').length).toBeGreaterThan(0);
-    expect(fallbackPaths('ko')).toContain('common.buttons.ok');
+  it('ko translates every key it reviewed (PR 16); en and en-XA never fall back', () => {
+    expect(fallbackPaths('ko')).not.toContain('common.buttons.ok');
     expect(fallbackPaths('en')).toEqual([]);
     expect(fallbackPaths('en-XA')).toEqual([]);
   });

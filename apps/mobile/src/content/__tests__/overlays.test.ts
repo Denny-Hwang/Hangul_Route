@@ -225,6 +225,28 @@ describe('release guard: no es/ko ship without their jamo sound-hint overlays', 
     expect(missingSoundHints('es')).toEqual([]);
   });
 
+  it('ko has its own sound hint for all 30 symbols, a Korean description (PR 16)', () => {
+    expect(missingSoundHints('ko')).toEqual([]);
+    for (const j of jamoAll) expect(OVERLAYS.ko?.[j.id]?.soundHint, j.id).not.toBe(j.char);
+  });
+
+  it('a ko sound hint never types a jamo and quotes only Korean the page already shows (PR 16 review)', () => {
+    // Discover shows the jamo's example word and spoken syllable through KoreanText with romanization and
+    // meaning; a hint that quotes any other word would type taught Korean the page never explains.
+    const problems: string[] = [];
+    for (const j of jamoAll) {
+      const hint = OVERLAYS.ko?.[j.id]?.soundHint;
+      if (typeof hint !== 'string') continue;
+      if (/[\u1100-\u11FF\u3131-\u318E]/.test(hint)) problems.push(`${j.id}: types a jamo`);
+      if (!/[\uAC00-\uD7A3]/.test(hint)) problems.push(`${j.id}: no Hangul syllable`);
+      const shown = new Set([j.exampleWordKo, j.spokenKo].filter((w): w is string => typeof w === 'string'));
+      for (const [, word] of hint.matchAll(/[\u2018']([^\u2019']+)[\u2019']/g)) {
+        if (word !== undefined && !shown.has(word)) problems.push(`${j.id}: quotes ${word}, not its example word or spoken syllable`);
+      }
+    }
+    expect(problems).toEqual([]);
+  });
+
   it('would stop a locale flipped to shipped while a sound hint overlay is missing', () => {
     for (const locale of ['es', 'ko'] as const) {
       if (missingSoundHints(locale).length === 0) continue;
@@ -330,5 +352,8 @@ describe('release guard: no es/ko ship while TypeScript-resident content lacks i
     // es today: the jamo hints and glosses are done; quest, episode and stage text is the fourth flip blocker (§10).
     expect(missingContent('es').some((row) => row.startsWith('quest:'))).toBe(true);
     expect(missingContent('es').filter((row) => row.startsWith('jamo:'))).toEqual([]);
+    // ko today (PR 16): the same split as es, the jamo hints and example-word glosses done, quest text still English.
+    expect(missingContent('ko').some((row) => row.startsWith('quest:'))).toBe(true);
+    expect(missingContent('ko').filter((row) => row.startsWith('jamo:'))).toEqual([]);
   });
 });
