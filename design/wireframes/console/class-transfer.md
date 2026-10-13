@@ -45,8 +45,9 @@ Then: only when the learner side, A and B have all said yes **and two days have 
 |     Class code [ ______ ]                  [ Find class ]  |   <- ONE field, box-like spacing, paste fills; same component as join
 |                                                            |
 |  2. (after Find class)  Move to "<Class name>"?            |   <- name from the server preview, never typed
-|     - The family is asked first. The other teacher sees    |
-|       only initials and a level until the family says yes. |
+|     - The family is asked first. The other class sees      |
+|       nothing until the family says yes. Then it sees only |
+|       initials and a level until the move.                 |
 |     - Nothing changes until everyone has said yes, and     |
 |       then not for 2 days.                                 |
 |     - <Name> keeps cards and stars. You can cancel any     |
@@ -176,7 +177,7 @@ Then: only when the learner side, A and B have all said yes **and two days have 
 |                                                            |
 |  [ ] introduce   Tell B where <Name> is coming from  (optional, off) |
 |                                                            |
-|       [[ YES, MOVE <NAME> ]] (active after the end is reached or the list is opened)   [ Not now ] |
+|       [[ YES, MOVE <NAME> ]] (active once the end has been in view)   [ Not now ] |
 +------------------------------------------------------------+
 ```
 
@@ -200,7 +201,7 @@ The route is decided from the inbox **before** any tap, so no PIN is spent on a 
 |  first.                              |     |  to answer this in the console.      |
 +--------------------------------------+     +--------------------------------------+
 
-(c) this device can answer                   (d) nobody can answer yet
+(c) this device can answer                   (d) a PIN would open the route; none yet
 +--------------------------------------+     +--------------------------------------+
 |  Sunday Class A            Class     |     |  Sunday Class A            Class     |
 |                 [ Move ]   [ Leave ] |     |                        [ Leave ]     |
@@ -210,7 +211,7 @@ The route is decided from the inbox **before** any tap, so no PIN is spent on a 
                                              +--------------------------------------+
 ```
 
-- No Move button on a class-scoped device (a) and in (b) and (d); no PIN screen before a dead end. `[ Move ]` / `[ Review ]` appear only in (c), through the grown-up gate on a managed device (new `GrownUpDestination`s `MoveClass` and `ApproveTransfer`) and directly on a self-only device with no PIN (`gateOpensDirectly`, `gate-route.ts:11-17`). `[ Set up PIN ]` opens `PinEntry` in `mode: 'setup'`; the device route becomes available 24 hours after the PIN is created.
+- No Move button on a class-scoped device (a) and in (b) and (d); no PIN screen before a dead end. (d) shows only when a PIN would open the route (device consent on, a managed profile, no PIN); a PIN younger than a day reads "Moves open one day after the PIN is set."; a request nobody can answer (route `none`) reads "This move can't be answered here." with the gated veto. Every open request keeps a gated Review for the veto (guard 11). The mockups `design/screens/transfer/classes-card.md` (T-0b, D8, D13, D16) are the detailed reference. `[ Move ]` / `[ Review ]` appear only in (c), through the grown-up gate on a managed device (new `GrownUpDestination`s `MoveClass` and `ApproveTransfer`) and directly on a self-only device with no PIN (`gateOpensDirectly`, `gate-route.ts:11-17`). `[ Set up PIN ]` opens `PinEntry` in `mode: 'setup'`; the device route becomes available 24 hours after the PIN is created.
 - Nothing is shown at all while `transfersEnabled` is false in the inbox.
 - Leave keeps its confirm dialog; a failure now shows "This needs internet." instead of nothing.
 - A request a teacher started appears here **read-only**, with a quiet Decline inside the gated sheet; it can only be answered in the console.
@@ -235,7 +236,7 @@ The route is decided from the inbox **before** any tap, so no PIN is spent on a 
                                      +----------------------------------+
 ```
 
-- The app sheet may fold the list behind a disclosure for space; it renders **every id that applies, in the same order, with the same words** as the console, and sends the same version and locale. The button is active once the sheet has been scrolled to the end or the disclosure opened.
+- The app sheet shows the list open by default, as the console does (T-0b D15); it renders **every id that applies, in the same order, with the same words** as the console, carries the same language switch, and sends the same version and locale. The button is active once the end of the sheet has been in view (T-0b D2).
 - Offered only when the inbox says this device may answer (variant (c) of screen 4). The PIN branch needs a PIN created at least a day ago (a legacy PIN counts as old enough); `self` attestation needs a self-managed profile with its consent timestamp.
 - **Decline** and **Cancel** live inside this gated sheet and the console only; there is no un-gated button. A device decline never says "the family said no" to anyone.
 
