@@ -4,7 +4,7 @@ Wireframe: `design/wireframes/console/class-transfer.md` screens 5, 6, 7 · spec
 
 ## The gate
 
-`GrownUpDestination` gains `MoveClass` and `ApproveTransfer`; `PinEntryScreen.proceed()` routes to them. The PIN screen itself is unchanged (drawn as a dashed "unchanged" box). A self-only device with no PIN opens them directly. The device route needs a PIN made at least a day ago (a PIN older than this feature counts as old enough) or a self-managed profile with its consent time. The read-only sheet sits behind the same gate (its veto is an answer too).
+`GrownUpDestination` gains `MoveClass` and `ApproveTransfer`; `PinEntryScreen.proceed()` routes to them. The PIN screen itself is unchanged (drawn as a dashed "unchanged" box). A self-only device with no PIN opens them directly. The device route needs a PIN made at least a day ago (a PIN older than this feature counts as old enough) or a self-managed profile with its consent time. The read-only sheet sits behind the same gate (its veto is an answer too). On a managed device with no PIN the gate starts the existing PIN setup first (`initialPinMode` `setup-1`, `pin-flow.ts`), then continues to the destination; for the read-only sheet that PIN guards only the veto, never a yes (D24, `classes-card.md`). An inbox value this app does not know reads as route `none`, learner-side wording and no age (`classes-card.md`, Unknown values).
 
 ## MoveClass (device route, learner-started only)
 
@@ -52,7 +52,8 @@ Title "A move is waiting". It states the request, says where the yes happens whe
 | Request (inbox `initiator`, state, `learnerRoute`) | Body | Veto |
 |---|---|---|
 | `source`, learner slot waiting, `caregiver` | "{Source} asked about moving {Name} to {Destination}." · "A grown-up with an account answers this in the console." | **Not now** (device decline), with "Not now ends this request." as its description |
-| `source`, `none` | the same first line · "This move can't be answered here." | **Not now** |
+| `source`, learner slot consented, a class still waiting (any route) | the same first line · "Waiting for the other class to answer." (both classes: "Waiting for the classes to answer.") | **Not now** |
+| `source`, learner slot waiting, `none` | the same first line · "This move can't be answered here." | **Not now** |
 | `learner_side`, waiting for the classes (any route) | "Asked: a move to {Destination}." · "Waiting for the classes to answer." (one class left: "Waiting for the other class to answer.") | **Cancel the request** (device cancel, `withdrawn_learner`) |
 | approved, waiting for room (any route) | "Asked: a move to {Destination}." · the room block "Waiting for room in the new class." | **Cancel the request** |
 | `learner_side`, consent reset, `caregiver` | "Asked: a move to {Destination}. Please check this again." · "A grown-up with an account answers this in the console." | **Cancel the request** |

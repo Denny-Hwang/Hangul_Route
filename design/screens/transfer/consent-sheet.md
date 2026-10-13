@@ -20,7 +20,7 @@ The sheet renders `transferConsentLineIds(ctx)` in that order, the same on the c
  +--------------------------------------------------------+
  keeps          Cards, stars and finished lessons stay with Mina.
  cooling_off    The move happens after 2 days. Anyone in the family can cancel before then.
- [ visible_list  What the new teacher sees:            v ]       disclosure, open by default on every surface
+ visible_list   What the new teacher sees:                       plain line and list, always open, no toggle (D15)
    - one item per TEACHER_VISIBLE_ITEM_IDS entry (8 items)
  nothing_else   Nothing else from the app is shared with the teacher.
  visible_today  Today these people can see Mina:
@@ -55,10 +55,11 @@ Spec 4.11: the primary becomes active only after the sheet has been scrolled to 
 
 - **Position.** The buttons are the last element of the sheet, in the DOM and on screen, never pinned in a sticky footer.
 - **The end sentinel.** An empty marker directly after `cannot_undo` (the last consent line). **Yes** stays `aria-disabled` (still focusable, so a keyboard or screen-reader user finds it and hears why) until the sentinel has been in view once, then turns active for the life of the sheet. Its description is the hint "Read to the end to continue.", shown above it while it waits. On a screen tall enough to show the whole sheet, the sentinel is in view at once and the hint never shows.
-- **The list is open by default on every surface** (spec 4.11 "expanded by default"), so "or the disclosure opened" is not a separate path: a reader who folds the list has already seen it.
-- **The record.** The client sends the consent only after the sentinel was seen; `l_shown_json` is computed by the server from the sheet terms (it is not a client field), so the sentinel is a client rule, tested by T-6d and T-7c (the primary follows the last line, is not `position: sticky`, and is `aria-disabled` until the sentinel intersects). Adding it to the record would be a strict-schema change, out of this design pass.
+- **What the sentinel is not.** It is a scroll-position rule, as spec 4.11 words it, not evidence of reading. It does not stop a keyboard skip: tabbing to the `introduce` checkbox or to Yes scrolls that control into view, which brings the sentinel (just above it) into view too, and Yes turns active. Whether that is enough is counsel's call at G2.
+- **The list is always open on every surface** (spec 4.11 "expanded by default", D15): "What the new teacher sees:" is a plain line followed by the list, with no toggle, so nobody can fold the core disclosure on a sheet that records a yes.
+- **The record.** The client sends the consent only after the sentinel was seen; `l_shown_json` is computed by the server from the sheet terms (it is not a client field), so the sentinel is a client rule, tested by T-6d and T-7c with tests that can fail: on a sheet taller than the viewport, Yes starts `aria-disabled` and turns active only after the sentinel intersects; on a sheet shorter than the viewport, Yes starts active; the primary follows the last line and is not `position: sticky`. Adding it to the record would be a strict-schema change, out of this design pass.
 
-Focus: the heading (`tabindex="-1"`) on open, never the primary; then the language switch, the disclosure, the introduce checkbox, Yes, Not now. Screen readers hear the lines in the order above.
+Focus: the heading (`tabindex="-1"`) on open, never the primary; then the language switch, the introduce checkbox, Yes, Not now. Screen readers hear the lines in the order above.
 
 **Not now on a teacher-started sheet.** Not now there ends the request for everyone and starts the 30-day `cannot_send` rule for teachers (4.9), while on a guardian-started create it only closes the sheet. So a teacher-started sheet (and the family card's own Not now) shows one neutral line above the buttons, "Not now ends this request. You can start a move yourself any time.", which is also Not now's description. The label stays "Not now" (the wireframe's word); no reason, no blame.
 
@@ -68,7 +69,7 @@ Focus: the heading (`tabindex="-1"`) on open, never the primary; then the langua
 |---|---|---|
 | Frame | dialog over the family page (full screen below 45em, centred card from 45em) | a stack screen behind the grown-up gate |
 | Title | "Move {Name} to {Destination}?" | the same; self audience "Move to {Destination}?" |
-| Disclosure | open by default | open by default (the same; D15) |
+| Visible list | always open, no toggle | always open, no toggle (the same; D15) |
 | Primary | "Yes, move {Name}" | "Yes, move {Name}"; self audience "Yes, move me" |
 | Language switch | visible select (en / ko / es) | the same visible select under the title, starting at the app's UI locale (guard 7); a locale without a reviewed text shows the same notice |
 | Identity block | from the family preview | MoveClass: from the device preview (with the count); ApproveTransfer: from the inbox, no count until `to.learnerCount` ships (`app-sheets.md`) |
@@ -81,7 +82,7 @@ The lines themselves are third person in every audience ("Grace would move from 
 | State | Drawn |
 |---|---|
 | guardian-started, no conditional line | the ten always lines and `introduce` |
-| every conditional line | all five, list folded by the reader; teacher-started, so the Not now line shows |
+| every conditional line | all five, the list open as everywhere; teacher-started, so the Not now line shows |
 | the last line not yet in view | Yes `aria-disabled`, the hint "Read to the end to continue." as its description |
 | locale without a reviewed text (`consent_locale_unavailable`; only `en` exists today) | "Not available in your language yet." replaces the lines; no Yes; the switch stays |
 | text version or terms changed (`consent_text_stale`, `terms_changed`) | the sheet reloads with "This text was updated. Please read it again." on top (`role="status"`) |
@@ -94,7 +95,7 @@ The lines themselves are third person in every audience ("Grace would move from 
 |---|---|
 | Summary block | `brand.secondaryLight`, `radii.md`, padding `spacing.lg`, `text.primary` `size.body` `leading.relaxed`, first line bold |
 | Lines | `size.body`, `leading.relaxed`, gap `spacing.md` |
-| Disclosure | 64 px, `borderWidth.thin` `border.strong`, `radii.md`, bold, chevron turns down when open |
+| Visible list heading | a plain `consent-line` (`leading.relaxed`), as the `visible_today` heading; the list below in `text.secondary` |
 | Item lists | `text.secondary`, disc bullets |
 | Identity block | `borderWidth.thin` `border.subtle`, `radii.md`; class name `size.bodyLg` semibold |
 | Conditional bar | `borderWidth.thick` `border.strong`, `spacing.md` inset |

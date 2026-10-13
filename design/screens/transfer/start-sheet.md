@@ -40,8 +40,8 @@ On phones the two buttons share a row and grow to fill it; from 45em the row is 
  | 2. Move to "Saturday Class B"?                  |    name from the preview, never typed
  |  - The family is asked first. The other class   |
  |    sees nothing until the family says yes. Then |
- |    it sees only initials and a level until the  |
- |    move.                                        |
+ |    it sees only initials, a picture and a level |
+ |    until the move.                              |
  |  - Nothing changes until everyone has said yes, |
  |    and then not for 2 days.                     |
  |  - Mina keeps cards and stars. You can cancel   |

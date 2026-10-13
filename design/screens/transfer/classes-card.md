@@ -15,7 +15,8 @@ There are two questions, and they have different inputs.
 | `caregiver` (b) | gated **Review** → the read-only sheet; its only action is the veto | the yes happens in the console; guard 11 keeps the veto on the device |
 | `device` (c), learner consent reset | gated **Review** (primary) → `ApproveTransfer` | only a learner-started request can be `device` |
 | `device` (c), any other state | gated **Review** → the read-only sheet with the veto | the learner side already said yes; nothing to answer |
-| `none` | gated **Review** → the read-only sheet with the veto, and the line "This move can't be answered here." | nobody can say yes right now (a teacher-started request after `selfManaged` was set or the family left; a learner-side one with device consent off). Never a PIN prompt for setup |
+| `none` | gated **Review** → the read-only sheet with the veto, and the line "This move can't be answered here." | nobody can say yes right now (a teacher-started request after `selfManaged` was set or the family left; a learner-side one with device consent off). Never a PIN prompt for a yes (a managed device with no PIN makes one first for the veto, below) |
+| any value this app does not know (a newer server) | as `none`: gated **Review** → the read-only sheet with the veto | an older app never falls through to Move, a yes or an empty row |
 
 **2. With no open request**, the inbox has no `learnerRoute`, so T-7a computes the Move rule on the device from what it already has (no new field):
 
@@ -28,6 +29,8 @@ otherwise, consent-gate.ts (spec 4.11, device rules):
   managed, PIN exists, pinCreatedAt absent or >= 24 h  -> (c) Move (gated)
   managed, PIN exists, pinCreatedAt < 24 h             -> (d') "Moves open one day after the PIN is set." (no button)
   managed, no PIN                                      -> (d) the PIN line and Set up PIN
+  otherwise (e.g. learnerType 'self' without
+    selfConsentAcceptedAt)                             -> nothing (no Move, no line)
 ```
 
 "Has a family membership" reads the inbox memberships of kind `family`; the server decides the same thing from caregiver accounts (`hasCaregiverRoute`), so a race (a family made after the inbox was read) answers `409 caregiver_required`, whose line is in `app-sheets.md`.
@@ -38,7 +41,8 @@ otherwise, consent-gate.ts (spec 4.11, device rules):
 |---|---|---|
 | (a) class tablet (`scope: 'class'`, inbox `transfers: []`) | **Leave** | "Use your grown-up's rescue code first." (once per card) |
 | device consent off (launch state until G6), or (b) with nothing asked | **Leave** | nothing: the card reads as today |
-| (b) a teacher asked | **Leave** | pending row "{Source} asked about a move." with gated **Review** (ghost), then "Ask the grown-up with the account to answer this in the console." |
+| (b) a teacher asked, learner slot waiting | **Leave** | pending row "{Source} asked about a move." with gated **Review** (ghost), then "Ask the grown-up with the account to answer this in the console." |
+| a teacher asked, learner slot consented (the grown-up said yes in the console), a class still waiting (any route) | **Leave** | pending row "{Source} asked about a move. Waiting for the other class to answer." (both classes: "Waiting for the classes to answer.") with gated **Review** (ghost) → the read-only sheet with **Not now**; no "answer in the console" line, the Home line agrees (no Home line, nothing to answer) |
 | (c) nothing asked | **Move** (gated) on **every** class row, then **Leave** | nothing |
 | (c) learner consent reset | **Leave** | "Asked: a move to {Destination}. Please check this again." with gated **Review** (primary) |
 | (d) managed, no PIN | **Leave** | "A grown-up needs to set up a PIN first. Open Profile, then Grown-ups." and **Set up PIN** (`PinEntry`, `mode: 'setup'`) |
@@ -52,6 +56,9 @@ otherwise, consent-gate.ts (spec 4.11, device rules):
 | after the move, class tablet of the old class (401 on the inbox) | none | "Join your new class again." (`role="status"`, a one-off) |
 
 - **The veto in (b) and `none`.** Guard 11 lets the learner's full-scope device decline or cancel any open request. So every pending row keeps one gated **Review** opening the read-only sheet, whose only actions are the veto (**Not now** for a teacher-started request, **Cancel the request** for a learner-side one) and **Back** (`app-sheets.md`). No PIN is asked for a yes the device cannot give (spec 4.12 (b), amended with D8).
+- **A managed device with no PIN** (D24). The gate never opens directly there (`gateOpensDirectly` is false and `initialPinMode` returns `setup-1` when no PIN is stored, `pin-flow.ts`), so a gated **Review** on an open request first runs the existing PIN setup (`PinEntry`, unchanged, the same first-use flow as every gated destination today), then opens the read-only sheet. That keeps the guard-11 veto on the device. The PIN is only ever asked for the veto or a Cancel there, never for a yes the device cannot give; drawn on `classes-card.html`.
+- **Unknown values** (an older app, a newer server: `InboxTransferSchema.learnerRoute`, `initiator` and `to.ageBucket` are lenient strings). An unknown `learnerRoute` is drawn as `none` (above); an unknown `initiator` uses the learner-side wording and the **Cancel the request** veto; an unknown `ageBucket` leaves the age out. T-7a unit-tests these fallbacks.
+- **Who can make the PIN.** (d)'s **Set up PIN** and the no-PIN Review open the existing `PinEntry` setup, which is the same flow as Profile, then Grown-ups: a learner holding the device could make the PIN that later, after 24 hours, attests a device consent. This is the A4 / G6 risk of spec section 9 (recorded there for counsel); the device route stays off until G6.
 - **"Waiting for the family."** is not drawn in the app: the state the spec once named for it is route `none`, drawn above with its own line (D13).
 - **Gate mark.** A button behind the grown-up gate carries the `lock` glyph (16 px, the label's colour) before its label, and its accessible name ends with "(PIN required)" (`caregiver.gated`). On a self-only device with no PIN the gate opens directly (`gate-route.ts`), so the glyph is not drawn.
 - **Leave** keeps its confirm dialog; a failure now shows `caregiver.retry.offline` under the rows instead of nothing (the small `SpacesCard.tsx:36` fix).

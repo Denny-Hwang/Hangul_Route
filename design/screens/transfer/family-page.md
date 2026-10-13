@@ -23,6 +23,7 @@ Same route as the class page with a family `id`; adult frame with the Family per
  | Sunday Class A  >  Saturday Class B              |
  |  v Family said yes · - Sunday Class A waiting · - Saturday Class B waiting
  |  Waiting for the other classes. The move happens after Oct 14 if both say yes. You can cancel any time.
+ |  (one class left: "Waiting for the other class. The move happens after {date} if it says yes. ...")
  |                                      ( Cancel )  |
  +--------------------------------------------------+
  Start a move (h2)
@@ -57,6 +58,7 @@ Same route as the class page with a family `id`; adult frame with the Family per
 |---|---|
 | A teacher asked | route line, steps, **Review and agree** (primary), **Not now** |
 | After Yes, waiting for both classes | steps, "Waiting for the other classes. The move happens after {date} if both say yes. You can cancel any time.", **Cancel** |
+| After Yes, one class still waiting (the usual teacher-started case: the source already said yes) | steps, "Waiting for the other class. The move happens after {date} if it says yes. You can cancel any time.", **Cancel** |
 | Scheduled (cooling-off) | `check-circle` + "A move is planned for {date}.", **Cancel** (any caregiver of the learner's families) |
 | Approved, no room | steps all yes, room block "Waiting for room in the new class." (not a live region; the page's one polite region announces changes), **Cancel** |
 | `cap_learner` at execution (rare) | room block "{Name} is in the most classes allowed. Leave one, then the move can go ahead." |
