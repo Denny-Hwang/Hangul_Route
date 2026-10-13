@@ -6,7 +6,8 @@ import { defineConfig } from '@playwright/test';
  *
  * `PORT` moves the server if the default is taken. A busy port fails loudly
  * (reuseExistingServer is off) instead of testing whatever else is listening.
- * The Chromium binary is overridable because some CI images ship their own
+ * `E2E_OUT` serves another export dir instead of ./out, such as F-APP-001's merged app-host build
+ * (`../mobile/dist`) for billing.spec.ts. The Chromium binary is overridable because some CI images ship their own
  * build (PW_CHROMIUM).
  *
  * Every spec runs as an en-US browser (F-I18N-001 §3.11), so a QA export never shows
@@ -26,7 +27,7 @@ export default defineConfig({
     launchOptions: process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {},
   },
   webServer: {
-    command: 'node e2e/serve-out.mjs out',
+    command: `node e2e/serve-out.mjs ${process.env.E2E_OUT ?? 'out'}`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: false,
     timeout: 30_000,
