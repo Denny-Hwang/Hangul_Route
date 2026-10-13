@@ -133,9 +133,9 @@ describe('English-authoritative legal text (decision L10)', () => {
   });
 
   it('the legal text never counts as a fallback (key coverage, §3.10)', () => {
-    for (const locale of ['es', 'ko'] as const) {
-      expect(fallbackPaths(locale).filter(isEnglishAuthoritative)).toEqual([]);
-      expect(fallbackPaths(locale)).toContain('landing.legal.draft');
-    }
+    for (const locale of ['es', 'ko'] as const) expect(fallbackPaths(locale).filter(isEnglishAuthoritative)).toEqual([]);
+    // ko has no landing overlay yet; es translates the notice around the English text (F-I18N-001 PR 15).
+    expect(fallbackPaths('ko')).toContain('landing.legal.draft');
+    expect(fallbackPaths('es')).not.toContain('landing.legal.draft');
   });
 });

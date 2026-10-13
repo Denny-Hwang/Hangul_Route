@@ -1,0 +1,102 @@
+{
+  "locale": "es",
+  "domain": "stage1-quests",
+  "entries": {
+    "quest:stage1-letters-q1": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "yo",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "tú",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "el sonido ga",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "yo"
+    },
+    "quest:stage1-letters-q2": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "cinco",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "árbol",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "árbol",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "cinco"
+    },
+    "quest:stage1-letters-q3": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "drama, serie",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "niño o niña",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "pierna, puente",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "drama, serie"
+    },
+    "quest:stage1-life-q1": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "ciruela",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "queso",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "chile, ají",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "té"
+    },
+    "quest:stage1-life-q2": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "plátano, banana",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "león",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "padre",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "bebé",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "mamá",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "familia"
+    },
+    "quest:stage1-life-q3": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "galleta",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "tomate",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "cacao",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "pan tostado"
+    },
+    "quest:stage1-rites-q1": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "puerta",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "luna",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "Año Nuevo lunar",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "sopa de masa de arroz"
+    },
+    "quest:stage1-rites-q2": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "béisbol",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "zorro",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "uva",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "masa de arroz en media luna",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "fiesta de la cosecha",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "masa de arroz en media luna"
+    },
+    "quest:stage1-rites-q3": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "respeto a los padres",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "leche",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "hanbok, ropa tradicional",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "Corea"
+    },
+    "quest:stage1-nature-q1": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "oso",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "casa",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "primavera (estación)",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "arroz",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "kimchi",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "mamá"
+    },
+    "quest:stage1-nature-q2": {
+      "steps.s2.discover.pages.0.items.0.word.gloss": "montaña",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "río",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "mar",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "cielo"
+    },
+    "quest:stage1-nature-q3": {
+      "steps.s2.discover.pages.0.items.0.word.gloss": "luna",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "estrella",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "noche",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "luna llena"
+    },
+    "quest:stage1-crafts-q1": {
+      "steps.s2.discover.pages.0.items.0.word.gloss": "cometa",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "pelota",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "cuerda",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "juego"
+    },
+    "quest:stage1-crafts-q2": {
+      "steps.s2.discover.pages.0.items.0.word.gloss": "papel coreano",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "papel",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "cerámica celadón",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "cerámica"
+    },
+    "quest:stage1-crafts-q3": {
+      "steps.s2.discover.pages.0.items.0.word.gloss": "el alfabeto coreano",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "Hoya, el tigre",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "hola, adiós (entre amigos)",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "amor"
+    }
+  }
+}

@@ -1,0 +1,65 @@
+import type { DeepPartial, Messages } from '../../types';
+
+/** Spanish: generic buttons, time words, errors and the notes from grown-ups (F-I18N-001 PR 15). */
+export const common = {
+  buttons: {
+    ok: 'OK',
+    cancel: 'Cancelar',
+    back: 'Atrás',
+    next: 'Siguiente',
+    done: 'Listo',
+    close: 'Cerrar',
+    save: 'Guardar',
+    tryAgain: 'Reintentar',
+    continue: 'Continuar',
+  },
+  time: {
+    today: 'hoy',
+    yesterday: 'ayer',
+    notYet: 'aún no',
+  },
+  errors: {
+    generic: 'Algo salió mal. Inténtalo de nuevo.',
+  },
+  notes: {
+    presets: {
+      effort_keep_trying: 'Sigues intentándolo. Así se aprende.',
+      effort_proud: 'Me llena de orgullo tu esfuerzo.',
+      effort_practice_helps: 'Tu práctica te está ayudando.',
+      progress_new_letters: 'Aprendiste letras nuevas. ¡Muy bien!',
+      progress_reading: 'Lees cada vez mejor.',
+      progress_writing: 'Tu letra se ve clara y ordenada.',
+      progress_listening: 'Escuchas con mucha atención.',
+      progress_new_card: 'Ganaste una tarjeta nueva. ¡Bien hecho!',
+      next_try_this: 'Prueba esta misión. Creo que te gustará.',
+      next_look_again: 'Miremos tus letras otra vez, tú y yo.',
+      next_take_time: 'Tómate tu tiempo. No hay prisa.',
+      warm_thinking_of_you: 'Pienso en ti. Diviértete aprendiendo hoy.',
+      warm_cheering: 'Hoya y yo te animamos.',
+      warm_see_you_in_class: 'Nos vemos pronto en clase.',
+      warm_learning_together: 'Nos encanta aprender coreano contigo.',
+    },
+    presetFallback: 'Una nota para ti.',
+    reactions: {
+      thanks: 'Gracias',
+      will_try: 'Lo voy a intentar',
+      did_it: 'Lo logré',
+      happy: 'Esto me alegró',
+    },
+    familyLabels: {
+      family: 'Tu familia',
+      mom: 'Mamá',
+      dad: 'Papá',
+      grandma: 'Abuela',
+      grandpa: 'Abuelo',
+      aunt: 'Tía',
+      uncle: 'Tío',
+      guardian: 'Quien te cuida',
+      partner: 'Tu pareja',
+    },
+    teacherLabel: (className: string) => `Tu docente · ${className}`,
+    teacherOnly: 'Tu docente',
+    date: { today: 'Hoy', yesterday: 'Ayer' },
+    new: { pill: 'Nueva' },
+  },
+} satisfies DeepPartial<Messages['common']>;

@@ -71,6 +71,19 @@ TypeScript-only jamo lands nowhere and fails the mobile overlay test. Describe a
 Discover uses when the page shows that jamo's own example word. A Discover page's other example
 and word glosses are translated on the quest (`steps.<stepId>.discover.pages...`).
 
+`exampleWord.gloss` follows the **TypeScript** jamo the app ships (`exampleWordKo`: 가족 for
+`jamo:giyeok`), not the JSON jamo, whose example words are an older, different set (강아지 for the
+same id). The same overlay key would land on the JSON `exampleWord.en` too, so a consumer that
+localizes the JSON jamo (none does today; F-CNT-002 generation would be the first) must reconcile the
+two sets of example words first (open item, F-I18N-001 §10).
+
+**Positional entries are pinned.** A Listen & Pick round or a Discover item that carries Korean is
+named by its position (`listenPick.rounds.1.prompt`), so a reorder would move the translation to
+another word. `apps/mobile/src/content/__tests__/fixtures/overlay-ko-pins.json` records the Korean
+each positional entry (and each jamo `exampleWord.gloss`) was written for, and the mobile overlay
+test fails when the base Korean at that position changes. Add a pin with every new positional entry,
+after checking the translation against that Korean.
+
 **Not yet translatable.** The Journey and Library theme labels shorten the theme title to its first
 word (an English-only rule); a theme overlay must not ship before a short-label field replaces
 that rule (open item for F-I18N-001 PR 15/16).

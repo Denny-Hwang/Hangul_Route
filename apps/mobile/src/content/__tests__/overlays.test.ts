@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import {
   OVERLAYS,
   isOverlayFieldAllowed,
@@ -5,6 +6,7 @@ import {
   overlayElementKey,
   overlayPrefix,
   overlayTargets,
+  translatableFields,
   type Overlays,
 } from '@hangul-route/content-schema';
 import { LOCALE_STATUS, type LocaleStatus } from '@hangul-route/i18n';
@@ -206,7 +208,7 @@ describe('content overlays for TypeScript-resident content (F-I18N-001 §3.6)', 
 /**
  * The English sound hints are English sound-alikes (F-QUEST-002 Appendix A), wrong for a
  * Spanish or Korean reader (F-I18N-001 §3.5.6). Until every symbol has its own
- * `jamo:*.soundHint` overlay (F-I18N-001 PR 15), a locale must not ship: Discover and its
+ * `jamo:*.soundHint` overlay (es: PR 15; ko: PR 16), a locale must not ship: Discover and its
  * screen-reader label would fall back to the English hint.
  */
 describe('release guard: no es/ko ship without their jamo sound-hint overlays', () => {
@@ -219,11 +221,114 @@ describe('release guard: no es/ko ship without their jamo sound-hint overlays', 
     expect(blockers(LOCALE_STATUS)).toEqual([]);
   });
 
+  it('es has its own sound hint for all 30 symbols (PR 15)', () => {
+    expect(missingSoundHints('es')).toEqual([]);
+  });
+
   it('would stop a locale flipped to shipped while a sound hint overlay is missing', () => {
     for (const locale of ['es', 'ko'] as const) {
       if (missingSoundHints(locale).length === 0) continue;
       expect(blockers({ es: 'hidden', ko: 'hidden', [locale]: 'shipped' })).toEqual([locale]);
     }
     expect(jamoAll.filter((j) => j.soundHint !== undefined)).toHaveLength(30);
+  });
+});
+
+/**
+ * Overlay entries whose element is named by its position (a Listen & Pick round or a Discover item that
+ * carries Korean has no ASCII id), and the jamo example-word gloss, are pinned to the Korean they were written
+ * for (review of PR 15). If the English content reorders or inserts a round, or a jamo gets another example
+ * word, the translation would quietly move to another Korean target (a learner asked to pick "árbol" for the
+ * wrong word); this pin fails first. Rewording the English is fine: the pin is the Korean, not the English.
+ * Regenerate a row only after checking the translation against the new Korean.
+ */
+const OVERLAY_KO_PINS: Readonly<Record<string, string>> = JSON.parse(
+  readFileSync(new URL('./fixtures/overlay-ko-pins.json', import.meta.url), 'utf8'),
+) as Record<string, string>;
+
+/** Whether an overlay field names its element by position, or is a jamo example word (the TypeScript jamo's word). */
+const pinned = (id: string, field: string): boolean => field.split('.').some((seg) => /^\d+$/.test(seg)) || (id.startsWith('jamo:') && field === 'exampleWord.gloss');
+
+/** The Korean an overlay target explains: the holder's `ko`, or the `<name>Ko` beside a `<name>En` target. */
+function koAt(entity: object, path: ReadonlyArray<string | number>): string | undefined {
+  const holder = getIn(entity, path.slice(0, -1)) as Rec | undefined;
+  const key = String(path[path.length - 1]);
+  const ko = key.endsWith('En') ? holder?.[`${key.slice(0, -2)}Ko`] : holder?.ko;
+  return typeof ko === 'string' ? ko : undefined;
+}
+
+function pinProblems(overlays: Overlays, pins: Readonly<Record<string, string>>, shippedByPrefix: Shipped = SHIPPED): string[] {
+  const problems: string[] = [];
+  for (const [locale, entries] of Object.entries(overlays)) {
+    for (const [id, fields] of Object.entries(entries)) {
+      const entity = shippedByPrefix[overlayPrefix(id)]?.get(id);
+      if (entity === undefined) continue;
+      for (const field of Object.keys(fields)) {
+        if (!pinned(id, field)) continue;
+        const key = `${id} ${field}`;
+        const ko = overlayTargets(entity, field).map((path) => koAt(entity, path))[0];
+        if (pins[key] === undefined) problems.push(`${locale} ${key}: no Korean pin (add "${key}": "${ko ?? '?'}" after checking the translation)`);
+        else if (ko !== pins[key]) problems.push(`${locale} ${key}: written for ${pins[key]}, now lands on ${ko ?? 'nothing'}`);
+      }
+    }
+  }
+  return problems;
+}
+
+describe('positional overlay entries stay on the Korean they translate (review of PR 15)', () => {
+  it('every positional entry and jamo example-word gloss lands on its pinned Korean', () => {
+    expect(pinProblems(OVERLAYS, OVERLAY_KO_PINS)).toEqual([]);
+  });
+
+  it('reports a round that moved: the Spanish prompt would explain another word', () => {
+    const scope: MinigameScope = { kind: 'listen-pick', rounds: 2, listenPick: { rounds: [lp.syl('달', ['다', '단']), lp.syl('물', ['무', '문'])] } };
+    const shipped: Shipped = { ...SHIPPED, minigame: new Map([['minigame:lp-demo', scope]]) };
+    const overlays: Overlays = { es: { 'minigame:lp-demo': { 'listenPick.rounds.1.prompt': 'luna' } }, ko: {} };
+    expect(pinProblems(overlays, { 'minigame:lp-demo listenPick.rounds.1.prompt': '달' }, shipped)).toEqual([
+      'es minigame:lp-demo listenPick.rounds.1.prompt: written for 달, now lands on 물',
+    ]);
+    expect(pinProblems(overlays, {}, shipped)).toEqual([
+      'es minigame:lp-demo listenPick.rounds.1.prompt: no Korean pin (add "minigame:lp-demo listenPick.rounds.1.prompt": "물" after checking the translation)',
+    ]);
+  });
+
+  it('pins the jamo example-word gloss to the TypeScript jamo the app ships, not the JSON jamo', () => {
+    const giyeok = jamoAll.find((j) => j.id === 'jamo:giyeok')!;
+    expect(OVERLAY_KO_PINS['jamo:giyeok exampleWord.gloss']).toBe(giyeok.exampleWordKo);
+  });
+});
+
+/**
+ * The second release guard (review of PR 15): Spanish learner content that still lives in TypeScript (quest
+ * titles, blurbs, steps and Hoya lines, episode and stage titles, heritage cards, minigame glosses) has no JSON
+ * for `HANGUL_ROUTE_STRICT_LOCALES` to count, so the strict validator never sees it. A locale must not ship while
+ * one of these English fields has no overlay. Themes are left out: a theme overlay must not ship before a
+ * short-label field replaces the first-word rule (content/i18n/README.md, "Not yet translatable").
+ */
+describe('release guard: no es/ko ship while TypeScript-resident content lacks its overlay', () => {
+  const GUARDED = ['jamo', 'card', 'episode', 'quest', 'minigame', 'stage'] as const;
+  const missingContent = (locale: 'es' | 'ko'): string[] =>
+    GUARDED.flatMap((prefix) =>
+      [...SHIPPED[prefix]!.entries()].flatMap(([id, entity]) =>
+        translatableFields(id, entity)
+          .filter(({ field }) => OVERLAYS[locale]?.[id]?.[field] === undefined)
+          .map(({ field }) => `${id} ${field}`),
+      ),
+    );
+  const blockers = (status: Readonly<Record<'es' | 'ko', LocaleStatus>>): string[] =>
+    (['es', 'ko'] as const).filter((locale) => status[locale] === 'shipped' && missingContent(locale).length > 0);
+
+  it('holds for the current LOCALE_STATUS', () => {
+    expect(blockers(LOCALE_STATUS)).toEqual([]);
+  });
+
+  it('would stop a locale flipped to shipped while a quest, episode or stage field is still English', () => {
+    for (const locale of ['es', 'ko'] as const) {
+      if (missingContent(locale).length === 0) continue;
+      expect(blockers({ es: 'hidden', ko: 'hidden', [locale]: 'shipped' })).toEqual([locale]);
+    }
+    // es today: the jamo hints and glosses are done; quest, episode and stage text is the fourth flip blocker (§10).
+    expect(missingContent('es').some((row) => row.startsWith('quest:'))).toBe(true);
+    expect(missingContent('es').filter((row) => row.startsWith('jamo:'))).toEqual([]);
   });
 });

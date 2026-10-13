@@ -119,7 +119,7 @@ describe('on a QA build every locale is offered', () => {
     const html = renderToStaticMarkup(<LocaleBannerView offer={offer} onDismiss={() => undefined} />);
     expect(html).toContain(`aria-label="${offer.label}"`);
     expect(html).toContain('lang="es"');
-    expect(html).toMatch(/<a [^>]*href="\/es"[^>]*hrefLang="es"[^>]*>View in Español<\/a>/);
+    expect(html).toMatch(/<a [^>]*href="\/es"[^>]*hrefLang="es"[^>]*>Ver en Español<\/a>/);
     expect(html).toContain(`<button type="button" aria-label="${offer.dismiss}"`);
   });
 

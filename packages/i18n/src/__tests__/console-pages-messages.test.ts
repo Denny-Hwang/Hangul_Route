@@ -303,3 +303,45 @@ describe('console counts use plural() in every locale (en, es, ko, en-XA)', () =
     }
   });
 });
+
+// F-I18N-001 §10: the every-locale check above passed on the English fallback until the Spanish overlay landed
+// (PR 15). These literal rows pin the Spanish n = 1 / n = 2 wording of the console counts.
+describe('Spanish console counts, n = 1 and n = 2 (F-I18N-001 PR 15)', () => {
+  const es = getMessages('es').console;
+  it.each([
+    [es.space.title.family('Familia Kim', 1), 'Familia Kim · 1 estudiante'],
+    [es.space.title.family('Familia Kim', 2), 'Familia Kim · 2 estudiantes'],
+    [es.space.title.school('Escuela Seúl', 1), 'Escuela Seúl · 1 miembro'],
+    [es.space.week.notSynced(1), '1 no sincroniza desde hace una semana'],
+    [es.space.week.notSynced(2), '2 no sincronizan desde hace una semana'],
+    [es.space.learner.questsCards(7, 24, 1), 'Misiones 7 / 24 · 1 tarjeta'],
+    [es.space.learner.questsCards(7, 24, 2), 'Misiones 7 / 24 · 2 tarjetas'],
+    [es.planCounts.items(1), '1 elemento'],
+    [es.planCounts.items(2), '2 elementos'],
+    [es.planCounts.targets('school', 2), '2 miembros'],
+    [es.spaceCounts.students(1), '1 estudiante'],
+    [es.plan.summary.some.class(7, 1), '7 elementos · para 1 estudiante'],
+    [es.plan.summary.some.class(1, 2), '1 elemento · para 2 estudiantes'],
+    [es.billing.seats(1), '1 plaza'],
+    [es.billing.seats(2), '2 plazas'],
+    [es.school.classes.line('Prof. Park', 1, 'hoy', true), 'Prof. Park · 1 estudiante · activa hoy · plan publicado'],
+    [es.school.classes.line(null, 2, 'ayer', false), 'aún sin docente · 2 estudiantes · activa ayer'],
+    [es.parent.child.quests(1), '1 misión'],
+    [es.parent.child.cards(2), '2 tarjetas'],
+    // Review of PR 15: verbs and adjectives agree through plural('es'), never a `=== 1` ternary.
+    [es.space.week.practiced(1, 5), '1 de 5 practicó esta semana'],
+    [es.space.week.practiced(2, 5), '2 de 5 practicaron esta semana'],
+    [es.space.learner.words(1, 1), 'Palabras: 1 conseguida · 1 firme'],
+    [es.space.learner.words(2, 2), 'Palabras: 2 conseguidas · 2 firmes'],
+    [es.school.week.line(1, 1, 1, 1), '1 de 1 estudiante practicó · 1 de 1 clase tiene un plan publicado'],
+    [es.school.week.line(2, 5, 2, 3), '2 de 5 estudiantes practicaron · 2 de 3 clases tienen un plan publicado'],
+    [es.journey.stageLine(1, 1), '1 dominada según la prueba de nivel, 1 misión hecha'],
+    [es.journey.stageLine(2, 2), '2 dominadas según la prueba de nivel, 2 misiones hechas'],
+    [es.learningRoute.knownLine(1), '1 dominada según la prueba de nivel'],
+    [es.learningRoute.knownLine(2), '2 dominadas según la prueba de nivel'],
+    [es.curriculum.readout.line(1, 2, 1), '1 / 2 hasta ahora · 1 planeado'],
+    [es.curriculum.readout.line(1, 2, 36), '1 / 2 hasta ahora · 36 planeados'],
+    [es.curriculum.preview.stats(1, 1, 1), '1 lección o historia · cerca de 1 minuto · termina en la Etapa 1'],
+    [es.curriculum.preview.stats(2, 40, 2), '2 lecciones e historias · cerca de 40 minutos · termina en la Etapa 2'],
+  ])('%s', (actual, expected) => expect(actual).toBe(expected));
+});

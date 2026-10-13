@@ -5,7 +5,47 @@ import { leafPaths, lookup } from '../tree';
 import { SAMPLES } from './samples';
 
 /** Strings allowed to exceed 1.5x the English length, each with a reason. */
-const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {};
+const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
+  // F-I18N-001 PR 15: Spanish strings a few letters over 1.5x the English, each still inside its drawn budget or never drawn.
+  'common.buttons.next': 'the standard Spanish button word "Siguiente" (9) against "Next" (4); buttons wrap (Button sizes by minHeight)',
+  'report.step.next': 'the standard Spanish button word "Siguiente", inside the 16-character stepper budget',
+  'report.when.prevWeek': '"la semana pasada" needs its article inside the sentence; inside the 32-character words-in-a-sentence budget',
+  'report.previous.week': '"la semana pasada" needs its article inside the sentence; inside the 32-character words-in-a-sentence budget',
+  'report.figure.cards': '"Tarjetas nuevas", one letter over, inside the 20-character report label budget',
+  'report.figure.words': '"Palabras nuevas", one letter over, inside the 20-character report label budget',
+  'a11y.minigame.strokeOrder.loop': 'read aloud by a screen reader, never drawn ("un círculo")',
+  'a11y.minigame.strokeOrder.direction.right': 'read aloud, never drawn; a Spanish direction needs "a la" ("a la derecha")',
+  'a11y.minigame.strokeOrder.direction.left': 'read aloud, never drawn; a Spanish direction needs "a la" ("a la izquierda")',
+  'a11y.minigame.strokeOrder.direction.upLeft': 'read aloud, never drawn ("arriba a la izquierda")',
+  'a11y.minigame.strokeOrder.direction.upRight': 'read aloud, never drawn ("arriba a la derecha")',
+  'caregiver.pin.entry.unlock.cta': 'the standard Spanish button word "Desbloquear", inside the 28-character cta budget',
+  'caregiver.saveProgress.share.cta': 'the standard Spanish button word "Compartir", inside the 28-character cta budget',
+  'learner.cardDetail.share.cta': 'the standard Spanish button word "Compartir", inside the 28-character cta budget',
+  'learner.quest.discover.heard.pill': '"Escuchado", one letter over, inside the 24-character pill budget',
+  'learner.story.check.next.cta': 'the standard Spanish button word "Siguiente" (9) against "Next" (4), inside the 28-character cta budget; it wraps',
+  'learner.story.sequence.replay.next.cta': 'the standard Spanish button word "Siguiente" (9) against "Next" (4), inside the 28-character cta budget; it wraps',
+  'learner.story.reader.next.cta': 'the standard Spanish button word "Siguiente" (9) against "Next" (4), inside the 28-character cta budget; it wraps',
+  'learner.placement.options.next.cta': 'the standard Spanish button word "Siguiente" (9) against "Next" (4), inside the 28-character cta budget; it wraps',
+  'learner.placement.result.next': 'the standard Spanish button word "Siguiente" (9) against "Next" (4), inside the 28-character cta budget; it wraps',
+  'learner.myRoute.legend.cursor': 'the legend word "Siguiente" (9) against "Next" (4); the legend wraps',
+  'learner.routeNext.tag.next': 'the tag word "Siguiente" (9) against "Next" (4); the tag wraps',
+  'learner.story.sequence.replay.play.cta': 'the standard Spanish player word "Reproducir", inside the 28-character cta budget',
+  'learner.myRoute.gains.stars': '"Estrellas" (9) against "Stars" (5), a one-word label',
+  'landing.trust.label': 'a landmark name read aloud, never drawn ("Confianza")',
+  'landing.waitlist.privacyLink': 'the document name "Política de privacidad", one letter over, a link inside the consent line',
+  'console.saveDraft': '"Guardar borrador", one letter over; the button wraps',
+  'console.relink.device': 'the one word "dispositivo" (11) against "device" (6)',
+  'console.planCounts.items': '"1 elemento" against "1 item": the Spanish noun is longer; the count line wraps',
+  'console.billing.promo.formLabel': 'the field label "Código promocional", a form label above its field',
+  'console.curriculum.next.cta': 'the standard Spanish button word "Siguiente" (9) against "Next" (4), inside the 28-character cta budget; it wraps',
+  'console.curriculum.goals.themeNames.nature': 'the one word "Naturaleza" (10) against "Nature" (6)',
+  'console.curriculum.preview.table.items': 'the table header "Elementos" (9) against "Items" (5); the table scrolls',
+  'console.lecture.outline.block.cards': '"tarjetas del patrimonio", one letter over, an outline row that wraps',
+  'console.parent.kidsTitle': '"Estudiantes" replaces "Kids" under the owner audience rule (no age wording); a heading',
+  'console.notes.composer.preview.title': '"Vista previa", one letter over, a heading',
+  'console.notes.family.report.why': 'Spanish questions open with "¿": "¿Por qué?" is one letter over',
+  'caregiver.notes.report.why': 'Spanish questions open with "¿": "¿Por qué?" is one letter over',
+};
 
 const BUDGETS: Readonly<Record<string, number>> = { tab: 12, pill: 24, cta: 28 };
 

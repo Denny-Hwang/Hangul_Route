@@ -3,6 +3,305 @@ import type { Overlays } from './schemas/locale-overlay';
 
 export const OVERLAYS: Overlays = {
   "es": {
+    "jamo:a": {
+      "exampleWord.gloss": "papá",
+      "soundHint": "como la a de «casa»"
+    },
+    "jamo:bieup": {
+      "exampleWord.gloss": "arroz",
+      "soundHint": "una b suave y ligera, entre la b de «bebé» y la p de «papá»"
+    },
+    "jamo:bieup-batchim": {
+      "soundHint": "una p corta y cerrada, con los labios juntos"
+    },
+    "jamo:chieut": {
+      "exampleWord.gloss": "libro",
+      "soundHint": "como la ch de «chocolate», con un soplo de aire"
+    },
+    "jamo:digeut": {
+      "exampleWord.gloss": "luna",
+      "soundHint": "una d suave y ligera, entre la d de «dedo» y la t de «taza»"
+    },
+    "jamo:eo": {
+      "exampleWord.gloss": "mamá",
+      "soundHint": "entre la o y la a, con la boca bien abierta"
+    },
+    "jamo:eu": {
+      "exampleWord.gloss": "lo mejor, lo primero",
+      "soundHint": "di «u» con los labios estirados, sin redondear"
+    },
+    "jamo:giyeok": {
+      "exampleWord.gloss": "familia",
+      "soundHint": "una g suave y ligera, entre la g de «gato» y la c de «casa»"
+    },
+    "jamo:giyeok-batchim": {
+      "soundHint": "una k corta y cerrada, sin soltar el aire"
+    },
+    "jamo:hieut": {
+      "exampleWord.gloss": "cielo",
+      "soundHint": "como una j muy suave, casi solo aire"
+    },
+    "jamo:i": {
+      "exampleWord.gloss": "nombre",
+      "soundHint": "como la i de «isla»"
+    },
+    "jamo:ieung": {
+      "exampleWord.gloss": "niño o niña",
+      "soundHint": "muda al inicio de un bloque; al final suena como la n de «tengo»"
+    },
+    "jamo:ieung-batchim": {
+      "soundHint": "termina como la n de «tengo»"
+    },
+    "jamo:jieut": {
+      "exampleWord.gloss": "casa",
+      "soundHint": "una ch suave y ligera, sin soplo de aire"
+    },
+    "jamo:kieuk": {
+      "exampleWord.gloss": "nariz",
+      "soundHint": "como la c de «casa», con un soplo de aire"
+    },
+    "jamo:mieum": {
+      "exampleWord.gloss": "agua",
+      "soundHint": "como la m de «mamá»"
+    },
+    "jamo:mieum-batchim": {
+      "soundHint": "termina como la m de «álbum», con los labios cerrados"
+    },
+    "jamo:nieun": {
+      "exampleWord.gloss": "árbol",
+      "soundHint": "como la n de «nube»"
+    },
+    "jamo:nieun-batchim": {
+      "soundHint": "termina como la n de «pan»"
+    },
+    "jamo:o": {
+      "exampleWord.gloss": "pato",
+      "soundHint": "como la o de «oso», con los labios redondos"
+    },
+    "jamo:pieup": {
+      "exampleWord.gloss": "uva",
+      "soundHint": "como la p de «papá», con un soplo de aire"
+    },
+    "jamo:rieul": {
+      "exampleWord.gloss": "ramen coreano",
+      "soundHint": "un toque rápido de la lengua, como la r de «cara»"
+    },
+    "jamo:rieul-batchim": {
+      "soundHint": "termina como la l de «sol»"
+    },
+    "jamo:siot": {
+      "exampleWord.gloss": "montaña",
+      "soundHint": "como la s de «sol»"
+    },
+    "jamo:tieut": {
+      "exampleWord.gloss": "conejo",
+      "soundHint": "como la t de «taza», con un soplo de aire"
+    },
+    "jamo:u": {
+      "exampleWord.gloss": "leche",
+      "soundHint": "como la u de «luna»"
+    },
+    "jamo:ya": {
+      "exampleWord.gloss": "béisbol",
+      "soundHint": "como «ya» en «yate»"
+    },
+    "jamo:yeo": {
+      "exampleWord.gloss": "zorro",
+      "soundHint": "como «yo», con la boca bien abierta"
+    },
+    "jamo:yo": {
+      "exampleWord.gloss": "cocinar, platillo",
+      "soundHint": "como «yo» en «yogur»"
+    },
+    "jamo:yu": {
+      "exampleWord.gloss": "vidrio",
+      "soundHint": "como «yu» en «yuca»"
+    },
+    "minigame:s1-crafts-q1-check": {
+      "listenPick.rounds.0.prompt": "cometa",
+      "listenPick.rounds.1.prompt": "juego"
+    },
+    "minigame:s1-crafts-q2-check": {
+      "listenPick.rounds.0.prompt": "cerámica celadón",
+      "listenPick.rounds.1.prompt": "papel coreano"
+    },
+    "minigame:s1-crafts-q2-play": {
+      "listenPick.rounds.0.prompt": "papel coreano",
+      "listenPick.rounds.1.prompt": "papel",
+      "listenPick.rounds.2.prompt": "cerámica celadón",
+      "listenPick.rounds.3.prompt": "cerámica",
+      "listenPick.rounds.4.prompt": "cometa",
+      "listenPick.rounds.5.prompt": "pelota"
+    },
+    "minigame:s1-crafts-q3-check": {
+      "listenPick.rounds.0.prompt": "el alfabeto coreano",
+      "listenPick.rounds.1.prompt": "hola, adiós (entre amigos)"
+    },
+    "minigame:s1-crafts-q3-play": {
+      "listenPick.rounds.0.prompt": "el alfabeto coreano",
+      "listenPick.rounds.1.prompt": "Hoya, el tigre",
+      "listenPick.rounds.2.prompt": "hola, adiós (entre amigos)",
+      "listenPick.rounds.3.prompt": "amor",
+      "listenPick.rounds.4.prompt": "Corea",
+      "listenPick.rounds.5.prompt": "hanbok, ropa tradicional"
+    },
+    "minigame:s1-letters-q1-check": {
+      "listenPick.rounds.1.prompt": "tú",
+      "listenPick.rounds.lp-sym-jamo-eo.prompt": "la letra eo"
+    },
+    "minigame:s1-letters-q2-check": {
+      "listenPick.rounds.1.prompt": "árbol",
+      "listenPick.rounds.lp-sym-jamo-u.prompt": "la letra u"
+    },
+    "minigame:s1-letters-q3-check": {
+      "listenPick.rounds.1.prompt": "pierna, puente",
+      "listenPick.rounds.lp-sym-jamo-eu.prompt": "la letra eu"
+    },
+    "minigame:s1-life-q1-check": {
+      "listenPick.rounds.1.prompt": "queso",
+      "listenPick.rounds.lp-sym-jamo-chieut.prompt": "la letra chieut"
+    },
+    "minigame:s1-life-q2-check": {
+      "listenPick.rounds.1.prompt": "padre",
+      "listenPick.rounds.lp-sym-jamo-siot.prompt": "la letra siot"
+    },
+    "minigame:s1-life-q3-apply": {
+      "cardPairs.gimbap.gloss": "Kimbap",
+      "cardPairs.kokoa.gloss": "Cacao",
+      "cardPairs.kuki.gloss": "Galleta",
+      "cardPairs.tomato.gloss": "Tomate",
+      "cardPairs.toseuteu.gloss": "Pan tostado"
+    },
+    "minigame:s1-life-q3-check": {
+      "listenPick.rounds.1.prompt": "tomate",
+      "listenPick.rounds.lp-sym-jamo-kieuk.prompt": "la letra kieuk"
+    },
+    "minigame:s1-nature-q1-check": {
+      "listenPick.rounds.0.prompt": "oso",
+      "listenPick.rounds.1.prompt": "casa"
+    },
+    "minigame:s1-nature-q1-play": {
+      "listenPick.rounds.0.prompt": "oso",
+      "listenPick.rounds.1.prompt": "primavera (estación)",
+      "listenPick.rounds.2.prompt": "arroz",
+      "listenPick.rounds.3.prompt": "casa",
+      "listenPick.rounds.4.prompt": "boca",
+      "listenPick.rounds.5.prompt": "caqui (fruta)"
+    },
+    "minigame:s1-nature-q2-check": {
+      "listenPick.rounds.0.prompt": "montaña",
+      "listenPick.rounds.1.prompt": "río"
+    },
+    "minigame:s1-nature-q2-play": {
+      "listenPick.rounds.0.prompt": "montaña",
+      "listenPick.rounds.1.prompt": "río",
+      "listenPick.rounds.2.prompt": "mar",
+      "listenPick.rounds.3.prompt": "cielo",
+      "listenPick.rounds.4.prompt": "estrella",
+      "listenPick.rounds.5.prompt": "oso"
+    },
+    "minigame:s1-nature-q3-check": {
+      "listenPick.rounds.0.prompt": "luna",
+      "listenPick.rounds.1.prompt": "luna llena"
+    },
+    "minigame:s1-nature-q3-play": {
+      "listenPick.rounds.0.prompt": "luna",
+      "listenPick.rounds.1.prompt": "estrella",
+      "listenPick.rounds.2.prompt": "noche",
+      "listenPick.rounds.3.prompt": "luna llena",
+      "listenPick.rounds.4.prompt": "cielo",
+      "listenPick.rounds.5.prompt": "montaña"
+    },
+    "minigame:s1-rites-q1-check": {
+      "listenPick.rounds.0.prompt": "luna",
+      "listenPick.rounds.1.prompt": "Año Nuevo lunar"
+    },
+    "minigame:s1-rites-q1-play": {
+      "listenPick.rounds.0.prompt": "luna",
+      "listenPick.rounds.1.prompt": "la sílaba dan",
+      "listenPick.rounds.2.prompt": "agua",
+      "listenPick.rounds.3.prompt": "puerta",
+      "listenPick.rounds.4.prompt": "montaña",
+      "listenPick.rounds.5.prompt": "la sílaba sal"
+    },
+    "minigame:s1-rites-q2-check": {
+      "listenPick.rounds.0.prompt": "la sílaba song",
+      "listenPick.rounds.1.prompt": "masa de arroz en media luna"
+    },
+    "minigame:s1-rites-q3-apply": {
+      "storySteps.a.label": "Ponerse el hanbok",
+      "storySteps.b.label": "Saludar a los mayores con una reverencia",
+      "storySteps.c.label": "Comer tteokguk",
+      "storySteps.d.label": "Recibir dinero de la suerte"
+    },
+    "minigame:s1-rites-q3-check": {
+      "listenPick.rounds.1.prompt": "hanbok, ropa tradicional",
+      "listenPick.rounds.lp-sym-jamo-yo.prompt": "la letra yo"
+    },
+    "minigame:s1-rites-q3-play": {
+      "listenPick.rounds.3.prompt": "suerte",
+      "listenPick.rounds.4.prompt": "la sílaba han",
+      "listenPick.rounds.5.prompt": "la sílaba hak",
+      "listenPick.rounds.lp-sym-jamo-hieut.prompt": "la letra hieut",
+      "listenPick.rounds.lp-sym-jamo-yo.prompt": "la letra yo",
+      "listenPick.rounds.lp-sym-jamo-yu.prompt": "la letra yu"
+    },
+    "minigame:s2-life-card-1": {
+      "cardPairs.bap.gloss": "Arroz",
+      "cardPairs.gimbap.gloss": "Kimbap",
+      "cardPairs.ppang.gloss": "Pan",
+      "cardPairs.sagwa.gloss": "Manzana",
+      "cardPairs.uyu.gloss": "Leche"
+    },
+    "minigame:s2-life-quiz-1": {
+      "cardPairs.gimchi.gloss": "Kimchi",
+      "cardPairs.mul.gloss": "Agua",
+      "cardPairs.ppang.gloss": "Pan",
+      "cardPairs.sagwa.gloss": "Manzana",
+      "cardPairs.uyu.gloss": "Leche"
+    },
+    "minigame:s2-nature-card-1": {
+      "cardPairs.bada.gloss": "Mar",
+      "cardPairs.haneul.gloss": "Cielo",
+      "cardPairs.kkot.gloss": "Flor",
+      "cardPairs.namu.gloss": "Árbol",
+      "cardPairs.san.gloss": "Montaña"
+    },
+    "minigame:s2-nature-quiz-1": {
+      "cardPairs.bom.gloss": "Primavera",
+      "cardPairs.byeol.gloss": "Estrella",
+      "cardPairs.gang.gloss": "Río",
+      "cardPairs.haneul.gloss": "Cielo",
+      "cardPairs.nun.gloss": "Nieve"
+    },
+    "minigame:s4-rites-card-1": {
+      "cardPairs.annyeong.gloss": "Hola",
+      "cardPairs.chingu.gloss": "Amigo, amiga",
+      "cardPairs.gamsa.gloss": "Gracias",
+      "cardPairs.insa.gloss": "Saludo",
+      "cardPairs.ireum.gloss": "Nombre"
+    },
+    "minigame:s4-rites-quiz-1": {
+      "cardPairs.annyeong.gloss": "Hola",
+      "cardPairs.chingu.gloss": "Amigo, amiga",
+      "cardPairs.gamsa.gloss": "Gracias",
+      "cardPairs.insa.gloss": "Saludo",
+      "cardPairs.ireum.gloss": "Nombre"
+    },
+    "minigame:s4-rites-respond-1": {
+      "dialogue.0.npc": "¡Hola!",
+      "dialogue.0.options.annyeonghaseyo.gloss": "Hola",
+      "dialogue.0.options.gomawoyo.gloss": "Gracias",
+      "dialogue.0.options.jal-gayo.gloss": "Adiós",
+      "dialogue.1.npc": "¿Cómo te llamas?",
+      "dialogue.1.options.jeoneun-hoyayeyo.gloss": "Soy Hoya",
+      "dialogue.1.options.ne-joayo.gloss": "Sí, está bien",
+      "dialogue.1.options.sagwa-juseyo.gloss": "Una manzana, por favor",
+      "dialogue.2.npc": "¡Mucho gusto!",
+      "dialogue.2.options.aniyo.gloss": "No",
+      "dialogue.2.options.jeodo-bangawoyo.gloss": "Igualmente, mucho gusto",
+      "dialogue.2.options.mollayo.gloss": "No sé"
+    },
     "pitem:recog-odd-a-eo": {
       "gloss": "Encuentra la diferente: a entre eo"
     },
@@ -1187,6 +1486,102 @@ export const OVERLAYS: Overlays = {
       "options.moon.gloss": "Luna",
       "options.rice.gloss": "Arroz",
       "options.tiger.gloss": "Tigre"
+    },
+    "quest:stage1-crafts-q1": {
+      "steps.s2.discover.pages.0.items.0.word.gloss": "cometa",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "pelota",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "cuerda",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "juego"
+    },
+    "quest:stage1-crafts-q2": {
+      "steps.s2.discover.pages.0.items.0.word.gloss": "papel coreano",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "papel",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "cerámica celadón",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "cerámica"
+    },
+    "quest:stage1-crafts-q3": {
+      "steps.s2.discover.pages.0.items.0.word.gloss": "el alfabeto coreano",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "Hoya, el tigre",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "hola, adiós (entre amigos)",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "amor"
+    },
+    "quest:stage1-letters-q1": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "yo",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "tú",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "el sonido ga",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "yo"
+    },
+    "quest:stage1-letters-q2": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "cinco",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "árbol",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "árbol",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "cinco"
+    },
+    "quest:stage1-letters-q3": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "drama, serie",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "niño o niña",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "pierna, puente",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "drama, serie"
+    },
+    "quest:stage1-life-q1": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "ciruela",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "queso",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "chile, ají",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "té"
+    },
+    "quest:stage1-life-q2": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "plátano, banana",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "león",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "padre",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "bebé",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "mamá",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "familia"
+    },
+    "quest:stage1-life-q3": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "galleta",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "tomate",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "cacao",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "pan tostado"
+    },
+    "quest:stage1-nature-q1": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "oso",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "casa",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "primavera (estación)",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "arroz",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "kimchi",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "mamá"
+    },
+    "quest:stage1-nature-q2": {
+      "steps.s2.discover.pages.0.items.0.word.gloss": "montaña",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "río",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "mar",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "cielo"
+    },
+    "quest:stage1-nature-q3": {
+      "steps.s2.discover.pages.0.items.0.word.gloss": "luna",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "estrella",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "noche",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "luna llena"
+    },
+    "quest:stage1-rites-q1": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "puerta",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "luna",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "Año Nuevo lunar",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "sopa de masa de arroz"
+    },
+    "quest:stage1-rites-q2": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "béisbol",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "zorro",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "uva",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "masa de arroz en media luna",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "fiesta de la cosecha",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "masa de arroz en media luna"
+    },
+    "quest:stage1-rites-q3": {
+      "steps.s2.discover.pages.0.items.0.example.gloss": "respeto a los padres",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "leche",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "hanbok, ropa tradicional",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "Corea"
     },
     "vocab-topic:animals": {
       "blurb": "Palabras para animales, de las mascotas al zoológico.",

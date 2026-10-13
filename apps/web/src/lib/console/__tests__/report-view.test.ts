@@ -749,10 +749,10 @@ describe('the stepper buttons and the console locale', () => {
 
   it('formats every date in Spanish', () => {
     const week = view(STEADY, { locale: 'es' });
-    expect(week.stepper?.range).toBe('9 oct to 15 oct');
+    expect(week.stepper?.range).toBe('9 oct a 15 oct');
     expect(week.thisPeriod?.calendar?.cells.map((cell) => cell.weekday)).toEqual(['vie', 'sáb', 'dom', 'lun', 'mar', 'mié', 'jue']);
-    expect(week.thisPeriod?.calendar?.practiced).toBe('Practiced on lunes, miércoles and jueves.');
-    expect(week.glance?.lastPractice).toBe('Last practice: 15 oct');
+    expect(week.thisPeriod?.calendar?.practiced).toBe('Practicó: lunes, miércoles y jueves.');
+    expect(week.glance?.lastPractice).toBe('Última práctica: 15 oct');
     const month = view(STEADY, { locale: 'es', query: { period: 'month', at: null, from: null } });
     expect(month.stepper?.range).toBe('octubre de 2026');
   });

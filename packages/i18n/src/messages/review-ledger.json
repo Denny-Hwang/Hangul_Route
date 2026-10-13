@@ -1,1 +1,40 @@
-{ "es": {}, "ko": {} }
+{
+  "es": {
+    "common": {
+      "enSha": "1cc27ec985725b0941a961556f89c4405c2f1ad4ff896b1497ffad11fbcfc7b0",
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-12"
+    },
+    "a11y": {
+      "enSha": "24b839fca49e0c168f7826852dbde0fb9e0ea27baef4b986a7a27d034f73a36e",
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-12"
+    },
+    "learner": {
+      "enSha": "c691c3bdf2be4e49c54a0d34526b37ac669ce79c0d3cce167c4b9ae2eadbc359",
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-12"
+    },
+    "caregiver": {
+      "enSha": "2c0646b7dd12a910f9dd17ae26c48d4f4ce7ed19f0f638325d8180aa6c247a87",
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-12"
+    },
+    "console": {
+      "enSha": "a86beec3b233af26e8bfb4dc5fa848d0dccd4705f5e650cf7cf5d9829aa73025",
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-12"
+    },
+    "landing": {
+      "enSha": "65940b890d7620e28b612abc5a23d3393a99b355fd3af5598b0add7ff9f957e2",
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-12"
+    },
+    "report": {
+      "enSha": "02e826a47ecba9b91356597d9c8bf9185dc261d8266f0668538182435fb75b77",
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-12"
+    }
+  },
+  "ko": {}
+}

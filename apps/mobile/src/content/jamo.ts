@@ -18,9 +18,10 @@ type SpokenKind = Jamo['spokenKind'];
  * a Discover page and read in its screen-reader label. Wording rule (audit F15): the soft
  * stops ㄱ ㄷ ㅂ ㅈ are "soft and light", the aspirated ㅋ ㅌ ㅍ ㅊ come "with a puff of air";
  * no "voiced English" claims. Spanish and Korean readers need their own hint, a
- * F-I18N-001 overlay (`jamo:*.soundHint`, PR 15, not written yet), never a translation of
- * these English sound-alikes; until then `localize` falls back to English, so es and ko must
- * stay hidden (the release guard in `__tests__/overlays.test.ts`).
+ * F-I18N-001 overlay (`jamo:*.soundHint`), never a translation of these English sound-alikes:
+ * the Spanish hints are written (`content/i18n/es/stage1-jamo.json`, PR 15); the Korean ones are
+ * pending (PR 16), and until then `localize` falls back to English, so ko must stay hidden (the
+ * release guard in `__tests__/overlays.test.ts`).
  */
 const SOUND_HINTS: Readonly<Record<string, string>> = {
   'jamo:giyeok': 'a soft, light g (between g and k)',

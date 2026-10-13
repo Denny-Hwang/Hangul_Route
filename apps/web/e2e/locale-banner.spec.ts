@@ -1,3 +1,4 @@
+import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from '@playwright/test';
 
 /**
@@ -6,7 +7,10 @@ import { expect, test } from '@playwright/test';
  * (`NEXT_PUBLIC_SHOW_ALL_LOCALES=1`) shows all three locales.
  */
 const QA = process.env.NEXT_PUBLIC_SHOW_ALL_LOCALES === '1';
-const banner = 'aside[aria-label="Language suggestion"]';
+/** The banner is worded in the locale it suggests (its own dictionary): Spanish since F-I18N-001 PR 15. */
+const banner = `aside[aria-label="${getMessages('es').landing.localeBanner.label}"]`;
+/** Any banner, whatever language it is worded in (the hidden-locale build must show none). */
+const anyBanner = 'aside[lang]';
 
 test.describe('while es and ko are hidden', () => {
   test.skip(QA, 'a QA build shows every locale');
@@ -15,7 +19,7 @@ test.describe('while es and ko are hidden', () => {
   test('/ shows no banner and no switcher, even to a Spanish browser', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('footer')).toBeVisible();
-    await expect(page.locator(banner)).toHaveCount(0);
+    await expect(page.locator(anyBanner)).toHaveCount(0);
     await expect(page.locator('nav[aria-label="Language"]')).toHaveCount(0);
     await expect(page.locator('a[href^="https://app.hangulroute.com?lang="]')).toHaveCount(0);
   });
@@ -63,7 +67,7 @@ test.describe('on a QA build', () => {
 
     test('choosing English in the footer switcher on /es is not undone by the banner', async ({ page }) => {
       await page.goto('/es');
-      await page.locator('nav[aria-label="Language"] a[href="/"]').click();
+      await page.locator(`nav[aria-label="${getMessages('es').landing.footer.language}"] a[href="/"]`).click();
       await page.waitForURL((url) => url.pathname === '/');
       await expect(page.locator('footer')).toBeVisible();
       await page.waitForTimeout(300);
@@ -84,7 +88,7 @@ test.describe('on a QA build', () => {
       await page.goto('/');
       await expect(page.locator('footer')).toBeVisible();
       await page.waitForTimeout(300);
-      await expect(page.locator(banner)).toHaveCount(0);
+      await expect(page.locator(anyBanner)).toHaveCount(0);
     });
 
     test('the footer switcher links every locale and loads it as its own document', async ({ page }) => {

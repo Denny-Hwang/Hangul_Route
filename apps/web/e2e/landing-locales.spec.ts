@@ -128,7 +128,8 @@ test.describe('the locale switcher on /es and /ko', () => {
     test(`/${lang}: links every locale's landing, marks its own, and fits a 320 px screen`, async ({ page }) => {
       await page.setViewportSize({ width: 320, height: HEIGHT });
       await page.goto(`/${lang}`);
-      const nav = page.locator('nav[aria-label="Language"]');
+      // The switcher is named in the page's language (Spanish since F-I18N-001 PR 15; ko falls back to English).
+      const nav = page.locator(`nav[aria-label="${getMessages(lang).landing.footer.language}"]`);
       await expect(nav.locator('a')).toHaveText(['English', 'Español', '한국어']);
       for (const [hreflang, href] of [
         ['en', '/'],
