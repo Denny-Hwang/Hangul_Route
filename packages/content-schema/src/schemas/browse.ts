@@ -44,7 +44,8 @@ export type BrowseEventName = (typeof BROWSE_EVENT_NAMES)[number];
 export const BrowseScopeSchema = z.enum(['full', 'sampler', 'none']);
 export type BrowseScope = z.infer<typeof BrowseScopeSchema>;
 
-export const BrowseSourceSchema = z.enum(['nav', 'report', 'route', 'plan', 'roster', 'gate', 'direct']);
+/** Where an entry into All lessons came from; `notes` is the note composer's quest Preview (F-FEEDBACK-001 FB-15), appended last. */
+export const BrowseSourceSchema = z.enum(['nav', 'report', 'route', 'plan', 'roster', 'gate', 'direct', 'notes']);
 export type BrowseSource = z.infer<typeof BrowseSourceSchema>;
 
 /** A deep-link target: a stage key, one content id, or one compatibility jamo character (§4.4). */
