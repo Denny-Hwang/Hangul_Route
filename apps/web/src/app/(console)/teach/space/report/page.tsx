@@ -26,8 +26,11 @@ import { stageTitle } from '@/lib/console/stage-titles';
  * and the cached-error rule are the learner report's (RP-7a2).
  */
 
-/** The last class report each account loaded per class in this tab, for the cached-error rule. */
-const CLASS_CACHE = new Map<string, ClassReportBody>();
+/**
+ * The last class report each account loaded per class in this tab, with the window it was loaded for: the cached-error
+ * rule keeps it on screen only for that same period and window (the Worker computes the figures for one window).
+ */
+const CLASS_CACHE = new Map<string, { period: ReportPeriod; at: string | null; data: ClassReportBody }>();
 
 function ClassReportInner(): JSX.Element {
   const params = useSearchParams();
@@ -40,6 +43,7 @@ function ClassReportInner(): JSX.Element {
   const [load, setLoad] = useState<{ key: string; period: ReportPeriod; at: string | null; result: ApiResult<ClassReportBody> } | null>(null);
   const [spaces, setSpaces] = useState<FrameSpaces>(null);
   const [nonce, setNonce] = useState(0);
+  const [spacesNonce, setSpacesNonce] = useState(0);
   const [changed, setChanged] = useState(false);
   const latest = useRef(0);
   const prev = useRef<HTMLButtonElement | null>(null);
@@ -52,7 +56,7 @@ function ClassReportInner(): JSX.Element {
     setLoad(null);
     void api.getClassReport(spaceId, period, at).then((result) => {
       if (call !== latest.current) return;
-      if (result.ok) CLASS_CACHE.set(key, result.data);
+      if (result.ok) CLASS_CACHE.set(key, { period, at, data: result.data });
       setLoad({ key, period, at, result });
     });
     // `nonce` is not read here, but each Try again is a new view (one `report.viewed`), as each step is.
@@ -68,7 +72,8 @@ function ClassReportInner(): JSX.Element {
     return () => {
       live = false;
     };
-  }, [api]);
+    // `spacesNonce` is not read here: each Try again on the chooser reads the spaces again.
+  }, [api, spacesNonce]);
 
   const documentTitle = m.report.documentTitle;
   useEffect(() => {
@@ -80,7 +85,8 @@ function ClassReportInner(): JSX.Element {
   }, [documentTitle]);
 
   const current = load !== null && load.key === key && load.period === period && load.at === at ? load.result : null;
-  const screen = classReportScreenOf({ enabled, spaceId, load: current, cached: CLASS_CACHE.get(key) ?? null, locale });
+  const entry = CLASS_CACHE.get(key) ?? null;
+  const screen = classReportScreenOf({ enabled, spaceId, load: current, cached: entry?.data ?? null, cachedWindow: entry !== null && entry.period === period && entry.at === at, locale });
   const list = Array.isArray(spaces) ? (spaces as readonly SpaceListItem[]) : null;
   const chooserRows = screen.kind === 'chooser' && list ? classChooserRows(list) : null;
   const only = chooserRows?.length === 1 ? chooserRows[0]?.href : undefined;
@@ -139,6 +145,23 @@ function ClassReportInner(): JSX.Element {
 
   if (screen.kind === 'chooser') {
     if (chooserRows === null && spaces === null) return frame(<ReportSkeleton />);
+    if (spaces === 'failed') {
+      const again = (): void => {
+        setSpaces(null);
+        setSpacesNonce((n) => n + 1);
+      };
+      return frame(
+        <>
+          <ReportBack link={reportBackLink(null, null, locale)} />
+          <div className="hr-report-state" data-testid="report-state">
+            <h1 className="hr-report-state-title">{m.report.state.error}</h1>
+            <button type="button" className="hr-report-link-button" onClick={again} data-testid="report-retry">
+              {m.common.buttons.tryAgain}
+            </button>
+          </div>
+        </>,
+      );
+    }
     const rows = chooserRows ?? [];
     if (rows.length === 0) {
       return frame(
@@ -208,7 +231,7 @@ function ClassReportInner(): JSX.Element {
   return frame(
     <>
       {/* An empty class has nothing to print: the back link alone goes to the roster, where the join code is. */}
-      {view.empty ? <ReportBack link={view.back} /> : <ReportHeader back={view.back} printDisabled={busy} onPrint={() => window.print()} />}
+      {view.empty ? <ReportBack link={view.back} /> : <ReportHeader back={view.back} printDisabled={busy || error !== null} onPrint={() => window.print()} />}
       <div className="hr-report-glance">
         <h1 className="hr-report-title">{view.title}</h1>
         {view.classLines.map((line) => (

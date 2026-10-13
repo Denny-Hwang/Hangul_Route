@@ -66,7 +66,8 @@ export interface ClassReportView {
   tabs: ReportTab[] | null;
   stepper: ReportStepper | null;
   announce: string | null;
-  headline: { text: string; up: string | null } | null;
+  /** `note`: on All time, the neutral line that the totals include practice from before joining (RP-2c). */
+  headline: { text: string; up: string | null; note: string | null } | null;
   /** Hidden with no practice in the window (no heading). */
   wentWell: {
     heading: string;
@@ -287,7 +288,7 @@ export function classReportView(input: ClassReportViewInput): ClassReportView {
     tabs: REPORT_PERIODS.map((p) => ({ period: p, label: m.report.period[p], selected: p === period, href: ROUTES.classReport({ spaceId: space.id, period: p }) })),
     stepper: stepperOf(period, at, now, href, w),
     announce: period === 'all' ? m.a11y.report.periodChangedAll : m.a11y.report.periodChanged(windowName(period, at, w)),
-    headline: { text: c.headline(r.headline.practiced, r.headline.learners, when), up: up(r.headline.up) },
+    headline: { text: c.headline(r.headline.practiced, r.headline.learners, when), up: up(r.headline.up), note: period === 'all' ? c.allBeforeJoin : null },
     wentWell: practiced
       ? {
           heading: m.report.section.wentWell,
@@ -324,7 +325,10 @@ export interface ClassReportScreenInput {
   enabled: boolean;
   spaceId: string;
   load: ApiResult<ClassReportBody> | null;
+  /** The last body this tab loaded for the class (any window): drawn as a skeleton's frame while a later load runs. */
   cached: ClassReportBody | null;
+  /** Whether `cached` was loaded for the address's period and window: only then does it stay under a failed load. */
+  cachedWindow?: boolean;
   locale?: UiLocale;
 }
 
@@ -340,7 +344,8 @@ export function classReportScreenOf(input: ClassReportScreenInput): ClassReportS
   const problem = reportLoadProblem(load, locale);
   if (problem.kind === 'signedOut') return { kind: 'signedOut' };
   const message = problem.message ?? m.report.state.error;
-  if (problem.kind === 'error' && problem.retry !== null && cached) return { kind: 'report', data: cached, busy: false, error: { message, retry: problem.retry } };
+  // The Worker computes the figures for one window: a cached body stays under the error only for the same window.
+  if (problem.kind === 'error' && problem.retry !== null && cached && input.cachedWindow === true) return { kind: 'report', data: cached, busy: false, error: { message, retry: problem.retry } };
   return { kind: 'state', title: message, retry: problem.retry, back };
 }
 
