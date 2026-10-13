@@ -75,7 +75,7 @@ const head = `
     #trace-canvas { touch-action: none; }
     /* Korean wraps at spaces, never inside a word ("호 / 야예요"), and a word longer than the line
        still breaks (F-I18N-001 PR 16): <html lang="ko"> in the Korean UI, lang="ko" on taught Korean. */
-    :lang(ko) { word-break: keep-all; overflow-wrap: break-word; }
+    :lang(ko) { word-break: keep-all; overflow-wrap: break-word; overflow-wrap: anywhere; }
     /* NEVER add a max-width / border rule on #root here (F-LAYOUT-001 LD3): the content width
        is capped inside Screen (design-system layout.maxWidth) so backgrounds, the tab bar,
        banners and the lecture presenter use the whole window. */${presenterFontFace(tokens.presenter.font)}

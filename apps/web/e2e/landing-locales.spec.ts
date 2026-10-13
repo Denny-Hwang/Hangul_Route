@@ -152,3 +152,30 @@ test.describe('the locale switcher on /es and /ko', () => {
     });
   }
 });
+
+/**
+ * F-I18N-001 PR 16 (the Korean layout lens, adjudicated): `:lang(ko)` sets `word-break: keep-all`, which makes
+ * each unspaced Korean run (an address plus its particle, "app.hangulroute.com에서") one unbreakable word. The
+ * rule must keep `.hr-site`'s `overflow-wrap: anywhere`, or such a run cannot shrink inside a flex or grid item
+ * and the page scrolls sideways at large text (WCAG 1.4.4 / 1.4.10). The matrix above runs at default text size,
+ * so this runs the Korean pages at 320 px with the root font at 200%.
+ */
+test.describe('Korean pages at 200% text', () => {
+  test.skip(!QA, 'needs NEXT_PUBLIC_SHOW_ALL_LOCALES=1');
+
+  for (const path of ['/ko', '/ko/about', '/ko/learners']) {
+    test(`${path} at 320 px and 200% text: no sideways scroll`, async ({ page }) => {
+      await page.setViewportSize({ width: 320, height: HEIGHT });
+      await page.goto(path);
+      await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
+      const { doc, body, wrap } = await page.evaluate(() => ({
+        doc: document.documentElement.scrollWidth,
+        body: document.body.scrollWidth,
+        wrap: getComputedStyle(document.body).overflowWrap,
+      }));
+      expect(wrap, `${path}: Korean keeps overflow-wrap anywhere`).toBe('anywhere');
+      expect(doc, `${path} at 200% text: document scrollWidth`).toBeLessThanOrEqual(320);
+      expect(body, `${path} at 200% text: body scrollWidth`).toBeLessThanOrEqual(320);
+    });
+  }
+});

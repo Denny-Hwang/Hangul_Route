@@ -450,7 +450,7 @@ describe('pwa-postbuild.mjs on a stand-in export', () => {
 
   it('wraps Korean at spaces, never inside a word (F-I18N-001 PR 16, the Korean layout review)', () => {
     const index = readFileSync(join(dist, 'index.html'), 'utf8');
-    expect(index).toMatch(/:lang\(ko\)\s*\{\s*word-break: keep-all; overflow-wrap: break-word;\s*\}/);
+    expect(index).toMatch(/:lang\(ko\)\s*\{\s*word-break: keep-all; overflow-wrap: break-word; overflow-wrap: anywhere;\s*\}/);
   });
 
   it('declares the presenter font in the shell styles and precaches it (F-TCH-004 PR 3)', () => {

@@ -195,5 +195,8 @@ describe('Korean line breaks (F-I18N-001 PR 16)', () => {
     const korean = /:lang\(ko\)\s*\{([^}]*)\}/.exec(css)?.[1] ?? '';
     expect(korean).toMatch(/word-break:\s*keep-all/);
     expect(korean).toMatch(/overflow-wrap:\s*break-word/);
+    // `anywhere` must come last: it lowers min-content so a flex or grid item holding a long Korean run
+    // can still shrink at 200% text (WCAG 1.4.4 / 1.4.10); break-word stays only as the older-Safari fallback.
+    expect(korean).toMatch(/overflow-wrap:\s*break-word;\s*overflow-wrap:\s*anywhere;?\s*$/);
   });
 });
