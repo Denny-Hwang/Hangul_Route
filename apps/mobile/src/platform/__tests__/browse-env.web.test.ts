@@ -9,7 +9,9 @@ import {
   markBootSettled,
   onFragmentChange,
   onPageRestored,
+  onEscape,
   onPageVisible,
+  revealTestId,
   takeFragment,
 } from '../browse-env.web';
 
@@ -359,6 +361,53 @@ describe('isOnline', () => {
   });
 });
 
+describe('revealTestId (BR-7: a stage row, or a stage link, shows the Journey at that stage)', () => {
+  it('scrolls the element with that test id to the top', () => {
+    const scrollIntoView = vi.fn();
+    const querySelector = vi.fn(() => ({ scrollIntoView }));
+    vi.stubGlobal('document', { querySelector });
+    expect(revealTestId('journey-stage-stage2')).toBe(true);
+    expect(querySelector).toHaveBeenCalledWith('[data-testid="journey-stage-stage2"]');
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
+  });
+
+  it('false when the element is not on the page, or the browser refuses', () => {
+    vi.stubGlobal('document', { querySelector: () => null });
+    expect(revealTestId('journey-stage-stage2')).toBe(false);
+    vi.stubGlobal('document', {
+      querySelector: () => {
+        throw new Error('refused');
+      },
+    });
+    expect(revealTestId('x')).toBe(false);
+  });
+});
+
+describe('onEscape (BR-7: Escape closes the Lesson display sheet and the card page)', () => {
+  it('calls the handler for Escape only, until unsubscribed', () => {
+    const w = stubWindow();
+    const handler = vi.fn();
+    const off = onEscape(handler);
+    const keydown = w.listeners.get('keydown') as unknown as (e: unknown) => void;
+    keydown({ key: 'Enter' });
+    keydown({ key: 'Escape' });
+    expect(handler).toHaveBeenCalledTimes(1);
+    off();
+    expect(w.listeners.has('keydown')).toBe(false);
+  });
+
+  it('a refusing window never throws', () => {
+    vi.stubGlobal('addEventListener', () => {
+      throw new Error('refused');
+    });
+    vi.stubGlobal('removeEventListener', () => {
+      throw new Error('refused');
+    });
+    const off = onEscape(() => undefined);
+    expect(() => off()).not.toThrow();
+  });
+});
+
 describe('native stub (All lessons is web only, OD-10)', () => {
   it('has no fragment, no referrer and nowhere to go', () => {
     expect(nativeEnv.takeFragment()).toBe('');
@@ -371,5 +420,7 @@ describe('native stub (All lessons is web only, OD-10)', () => {
     expect(() => nativeEnv.onFragmentChange(() => undefined)()).not.toThrow();
     expect(() => nativeEnv.leaveTo('/')).not.toThrow();
     expect(() => nativeEnv.goBack('/')).not.toThrow();
+    expect(nativeEnv.revealTestId('journey-stage-stage1')).toBe(false);
+    expect(() => nativeEnv.onEscape(() => undefined)()).not.toThrow();
   });
 });
