@@ -4,6 +4,8 @@ import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NoteRecipient, NoteSendResult, NotesFailure, SentNoteRow } from '@/lib/console/notes';
+import Page from '@/app/(console)/teach/space/notes/page';
+import { NotesTabs } from '@/components/console/NotesParts';
 
 /**
  * F-FEEDBACK-001 FB-11a (section 6.13; wireframes console/notes-sent.md and console/note-composer.md; screen specs
@@ -142,7 +144,6 @@ function textOf(node: ReactTestInstance | string): string {
 async function page(query: string, path = '/teach/space/notes'): Promise<ReactTestInstance> {
   nav.query = query;
   nav.path = path;
-  const { default: Page } = await import('@/app/(console)/teach/space/notes/page');
   await act(async () => {
     mounted = create(<Page />);
   });
@@ -495,7 +496,6 @@ describe('review follow-ups: who sees what, and the list states', () => {
     expect(nav.pushed).toEqual(['/teach/space/notes?id=space%3Ac1&compose=1']);
     // The pushed address renders the composer over the same page instance.
     nav.query = 'id=space%3Ac1&compose=1';
-    const { default: Page } = await import('@/app/(console)/teach/space/notes/page');
     await act(async () => mounted?.update(<Page />));
     await act(async () => undefined);
     act(() => byText(dialog(root) as ReactTestInstance, 'button', n.composer.cancel.cta)[0]?.props.onClick());
@@ -540,7 +540,6 @@ describe('review follow-ups: who sees what, and the list states', () => {
 
 describe('NotesTabs (section 6.12, arrow-key tabs)', () => {
   it('arrows, Home and End select the next tab and move the focus onto it', async () => {
-    const { NotesTabs } = await import('@/components/console/NotesParts');
     const focused: string[] = [];
     const selected: string[] = [];
     const tabs = ['received', 'sent'] as const;
