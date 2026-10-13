@@ -225,7 +225,8 @@ test.describe('weekly plan set-up, preview and overview (flag on)', () => {
 
     // Back to Home through the app (no reload): the card is gone, the plan kept its pace.
     await page.getByTestId('route-overview-back').click();
-    await page.getByRole('button', { name: /home/i }).first().click();
+    await expect(page.getByTestId('profile-plan-row')).toBeVisible();
+    await page.getByRole('button', { name: 'Go back' }).first().click();
     await expect(page.getByText('Hi, Ida!')).toBeVisible();
     await expect(page.getByTestId('home-plan-check-in')).toHaveCount(0);
     expect((await storedRoute(page, profileId))?.meta.params.sessionsPerWeek).toBe(3);
