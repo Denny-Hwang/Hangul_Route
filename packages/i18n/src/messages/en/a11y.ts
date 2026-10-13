@@ -194,6 +194,8 @@ export const a11y = {
     /** The parent dashboard row (R-9b): its goal and started lines, read without the middle dot. */
     rowGoal: (n: number, title: string) => `Goal: Stage ${n}, ${title}.`,
     rowStarted: (n: number, band: string, date: string) => `Started: Stage ${n}, ${band}, ${date}.`,
+    /** One letter-wall tile (R-7c): the letter, its sound (with "at the end" for a final) and its state word. */
+    letter: (letter: string, sound: string, state: string) => `${letter}, ${sound}. ${state}.`,
   },
   /**
    * The vocabulary question view (F-VOC-004 §3.8, S-4b): the speaker, the outcome said in words after a

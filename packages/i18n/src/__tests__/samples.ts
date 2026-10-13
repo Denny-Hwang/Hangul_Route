@@ -388,6 +388,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'caregiver.journey.row.started': [[1, 'Letters and sounds', 'Oct 9']],
   'a11y.myRoute.rowGoal': [[2, 'Words']],
   'a11y.myRoute.rowStarted': [[1, 'Letters and sounds', 'Oct 9']],
+  // F-ROUTE-001 R-7c: one letter-wall tile.
+  'a11y.myRoute.letter': [['ㅏ', 'a', 'Met in a quest'], ['ㄴ', 'n, at the end', 'Already known']],
   'learner.results.extraCards.title': [[1], [4]],
   'learner.results.extraCards.episodeDone': [['Meet the Letters']],
   'learner.results.extraCards.more': [[1], [3]],

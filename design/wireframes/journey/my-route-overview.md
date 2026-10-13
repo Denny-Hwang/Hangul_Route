@@ -132,11 +132,26 @@ Default entitlement (every shipped stage playable, as the app does today), no le
 │   ┃   │ [ What the shapes mean ]│ │   pip legend (drawn shapes + words)
 │   ┃   └────────────────────────┘ │
 │   ┃   Letter wall  (R-7c: after F-QUEST-002 Q-6a, lit symbols only; complete after Q-8)
+│   ┃   [ Letter wall ]            │   ghost button, opens in place (like the legend)
+│   ┃   Each letter lights up once │
+│   ┃   a quest uses it.           │
+│   ┃   [#] Met in a quest         │   legend: a small tile per state shown
+│   ┃   [o] Already known          │
+│   ┃   [ ] Coming up in a quest   │
 │   ┃   ┌────────────────────────┐ │
 │   ┃   │ ~~ ㅏ a ~~  ~~ ㅓ eo ~~ │ │   lit = met in a finished quest
 │   ┃   │ ~~ ㄱ g ~~  ...         │ │   outlined = taught by a quest the level check placed out
 │   ┃   └────────────────────────┘ │
 ```
+
+Letter wall rules (R-7c):
+
+- The 30 Stage 1 symbols in teaching order, each one `KoreanText` size `sm`: the letter, its sound, and the gloss "at the end" for a final consonant, so `ㄴ` and the final `ㄴ` never read alike. Romanization always shows (the letters are taught content).
+- **Lit** (`[#]`): a warm fill (`brand.primaryLight`) and a drawn check; met in a finished quest, that is, taught by the furthest finished Stage 1 quest or a quest before it (`symbolsMetThrough`).
+- **Outlined** (`[o]`): a ring in `border.shape`; covered by the level check (the `teaches` of a placed-out quest). Lit wins over outlined.
+- **Plain** (`[ ]`): no frame; not met yet. Never greyed out and never counted ("12 to go" is banned).
+- Closed by default, so the open stage stays short on a phone; the legend lists only the states the wall shows. Each letter is one screen-reader item: "ㄴ, n, at the end. Already known."
+- No wall when no quest has a Discover step; All lessons (expandable off) never draws it.
 
 A `later` stage expands to its can-do line, its chips and "It will appear here when it is ready." No lock icon, no price.
 

@@ -1218,6 +1218,18 @@ export const learner = {
         stages: 'Seven stages',
       },
     },
+    /**
+     * The letter wall in the open Stage 1 (R-7c, section 3.11): every Stage 1 letter, drawn with
+     * KoreanText. A letter is lit when a finished quest used it and outlined when the level check
+     * covered it. No "you", so the grown-up view reads the same words; no count of what is not lit.
+     */
+    wall: {
+      title: 'Letter wall',
+      lead: 'Each letter lights up once a quest uses it.',
+      state: { met: 'Met in a quest', known: 'Already known', ahead: 'Coming up in a quest' },
+      /** The gloss of a final consonant (batchim), so it never reads as the same letter at the start. */
+      final: 'at the end',
+    },
   },
 
   /**
