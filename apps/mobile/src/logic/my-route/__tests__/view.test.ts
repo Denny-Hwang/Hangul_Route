@@ -413,6 +413,34 @@ describe('myRouteView: the route card, the weekly plan line and the plan cells (
     expect(view(model(APPENDIX_C), { viewer: 'grownup', week: 3 }).planLine).toBeNull();
   });
 
+  it('Open plan (R-7d) sits on the plan line only for the learner\'s own weekly plan, and only when the plan screen is on', () => {
+    const goal = (from: 'self' | 'class' | 'family' | 'school') => ({ stage: 'stage1' as const, from, sourceId: 'route:1', endsOn: '2026-11-01', reached: false, taste: false });
+    const own = { ...model(APPENDIX_C), goal: goal('self') };
+    const v = view(own, { week: 3, planOverview: true });
+    expect(v.planOpen).toBe('Open plan');
+    expect(v.planLine).toBe('Week 3 of your weekly plan');
+    // RouteOverview shows the learner's own plan only: a class, school or family plan line has no link.
+    for (const from of ['class', 'family', 'school'] as const) {
+      expect(view({ ...model(APPENDIX_C), goal: goal(from) }, { week: 3, planOverview: true }).planOpen).toBeNull();
+    }
+    // No plan line, no link: no week, the default goal, the grown-up view, or the plan screen off (flags.routeEnabled).
+    expect(view(own, { week: null, planOverview: true }).planOpen).toBeNull();
+    expect(view(model(APPENDIX_C), { week: 3, planOverview: true }).planOpen).toBeNull();
+    expect(view(own, { viewer: 'grownup', week: 3, planOverview: true }).planOpen).toBeNull();
+    expect(view(own, { week: 3, planOverview: false }).planOpen).toBeNull();
+    expect(view(own, { week: 3 }).planOpen).toBeNull();
+  });
+
+  it('Open plan reads in every UI locale', () => {
+    const own = { ...model(APPENDIX_C), goal: { stage: 'stage1' as const, from: 'self' as const, sourceId: 'route:1', endsOn: '2026-11-01', reached: false, taste: false } };
+    for (const locale of ['es', 'ko'] as const) {
+      const words = getMessages(locale);
+      const open = view(own, { week: 3, planOverview: true, messages: words }).planOpen;
+      expect(open).toBe(words.learner.myRoute.plan.open);
+      expect(open).not.toBe('Open plan');
+    }
+  });
+
   it('cells of the plan view carry "In your plan" with the word in their label; the grown-up view never does', () => {
     const v = view(model(APPENDIX_C, { routeNext, planView }));
     const cells = stageRow(v, 'stage1').cells;

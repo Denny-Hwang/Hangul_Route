@@ -379,6 +379,18 @@ describe('the route card wiring (Learning Route LR-5a)', () => {
     expect(screen).toContain('testID="my-route-plan-line"');
   });
 
+  it('Open plan (R-7d) opens F-PLAN-002 RouteOverview for this learner, behind flags.routeEnabled, never read-only', () => {
+    // The view decides when it shows (own plan, learner view); the screen passes the flag and opens the plan.
+    expect(screen).toContain('planOverview: flags.routeEnabled');
+    expect(screen).toMatch(/view\.planOpen !== null && !readOnly/);
+    expect(screen).toContain("navigation.navigate('RouteOverview', { profileId })");
+    expect(screen).toContain('testID="my-route-plan-open"');
+    // The accessible name is the visible words (section 3.9), with the link role from LinkButton.
+    expect(screen).toMatch(/<LinkButton label=\{view\.planOpen\}/);
+    // RouteOverview is mounted only behind the same flag, so the link never opens a missing screen.
+    expect(read(join(SRC, 'navigation', 'root.tsx'))).toContain('{flags.routeEnabled ? <Stack.Screen name="RouteOverview"');
+  });
+
   it('the card is one summary for screen readers with its glyphs, Hoya and pips hidden; one button only when not read-only', () => {
     expect(card).toContain('accessibilityRole="summary"');
     expect(card).toContain('accessibilityLabel={copy.a11yLabel}');
