@@ -21,3 +21,8 @@ export function focusForScreenReader(node: object | null): void {
   const focusable = node as { focus?: () => void } | null;
   focusable?.focus?.();
 }
+
+/** The web reads the line's polite live region (`aria-live`); nothing more to do here. */
+export function announceForScreenReader(_text: string): void {
+  return undefined;
+}

@@ -6,20 +6,24 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsoleAuth } from '@/components/console/auth-context';
+import { ClassMoves } from '@/components/console/ClassTransferParts';
 import { FamilyMoves, FamilyPageStateLine, type FamilyPageState } from '@/components/console/FamilyTransferParts';
 import { MoveButton, useOnline, useTransfersShown } from '@/components/console/TransferParts';
 import { useConsole } from '@/components/console/use-console';
-import type { Roster } from '@/lib/console/api';
+import type { Roster, SpaceListItem } from '@/lib/console/api';
 import { signInAgainUrl } from '@/lib/console/grown-up-lock';
 import { ROUTES, isKnownSpaceKind, spaceIdFrom } from '@/lib/console/routing';
 import { TRANSFER_REFRESH_MS } from '@/lib/console/transfer';
+import { directClassIds } from '@/lib/console/transfer-requests';
 
 /**
  * console/class-moves, F-SPACE-002 section 4.8 (wireframe `console/class-transfer.md` screen 3; mockups
- * `design/screens/transfer/family-page.md` and `consent-sheet.md`, T-0b). This PR (T-6d) draws the family variant:
- * a family `id` shows its learners' requests, Start a move and the teacher-requests switch. The class and school
- * variants (the requests page) are T-6b; until then such an id reads "Class moves aren't available yet." The URL
- * carries the space id only (T14); the heading names the family from the roster, never a literal "Our family".
+ * `design/screens/transfer/family-page.md` and `consent-sheet.md`, T-0b). A family `id` shows its learners' requests,
+ * Start a move and the teacher-requests switch (T-6d); a class `id` the requests page, *Leaving this class* and
+ * *Joining this class* (T-6b, `requests-page.md`; an archived class is read-only). A school has no page of its own:
+ * its home row links straight to each child class's page (counts only), so a school id reads "Class moves aren't
+ * available yet." The URL carries the space id only (T14); the heading names the space from the roster, never a
+ * literal "Our family".
  * Nothing renders and nothing is asked of the Worker while `NEXT_PUBLIC_CLASS_TRANSFER` is unset.
  */
 function TransfersInner(): JSX.Element {
@@ -34,6 +38,10 @@ function TransfersInner(): JSX.Element {
   const online = useOnline();
   const [roster, setRoster] = useState<Roster | null>(null);
   const [state, setState] = useState<FamilyPageState | 'failed' | null>(null);
+  // Agree for both classes (T11) needs the classes this account owns or teaches itself. The class page waits for this
+  // read (or its failure, which means plain Agree) so a card's Agree never changes its words under the pointer.
+  const [spaces, setSpaces] = useState<SpaceListItem[] | null>(null);
+  const [spacesRead, setSpacesRead] = useState(false);
 
   const loadRoster = useCallback(async (): Promise<void> => {
     if (!api || !shown) return;
@@ -47,6 +55,11 @@ function TransfersInner(): JSX.Element {
       return;
     }
     setRoster(r.data);
+    if (r.data.space.kind === 'class') {
+      const list = await api.listSpaces();
+      if (list.ok) setSpaces(list.data);
+      setSpacesRead(true);
+    }
   }, [api, shown, spaceId]);
 
   useEffect(() => {
@@ -56,7 +69,7 @@ function TransfersInner(): JSX.Element {
   if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
 
   const space = roster?.space ?? null;
-  const pageState: FamilyPageState | 'failed' | null = !shown ? 'locked' : state ?? (space && space.kind !== 'family' ? 'locked' : null);
+  const pageState: FamilyPageState | 'failed' | null = !shown ? 'locked' : state ?? (space && space.kind === 'school' ? 'locked' : null);
   const stateText =
     pageState === 'locked' ? t.states.locked : pageState === 'signIn' ? c.start.signInAgain : pageState === 'forbidden' ? t.states.forbidden : pageState === 'failed' ? c.cantReach : null;
 
@@ -76,8 +89,20 @@ function TransfersInner(): JSX.Element {
           {c.lock.signInAgain.cta}
         </MoveButton>
       ) : null}
-      {stateText ? null :  space && api ? (
+      {stateText ? null : space && api && space.kind === 'family' ? (
         <FamilyMoves familyId={spaceId} familyName={space.name} api={api} online={online} refreshMs={TRANSFER_REFRESH_MS} onPageState={setState} />
+      ) : space && api && space.kind === 'class' && spacesRead ? (
+        <ClassMoves
+          spaceId={spaceId}
+          spaceName={space.name}
+          api={api}
+          online={online}
+          refreshMs={TRANSFER_REFRESH_MS}
+          readOnly={space.archivedAt !== null}
+          direct={directClassIds(spaces)}
+          confirm={(question) => typeof window !== 'undefined' && window.confirm(question)}
+          onPageState={setState}
+        />
       ) : null}
     </AdultFrame>
   );

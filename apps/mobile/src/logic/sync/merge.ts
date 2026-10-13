@@ -196,14 +196,24 @@ export function withSnapshotDefaults(
 }
 
 /**
- * The learner's weekly plan on both sides (F-PLAN-002 section 3.5): the newest
- * `updatedAt` as an instant wins, a tie keeps the local copy. A missing or
- * null side never replaces a held route: a stopped route is archived, never
- * set to null, so null only means "this copy has none".
+ * The learner's weekly plan on both sides (F-PLAN-002 section 3.5). Two different
+ * plans: the one made later (`createdAt`) wins, since Change the plan replaces the
+ * plan in force. The same plan: a stopped copy wins over a running one (a plan is
+ * never restarted), so an edit made on a device that had not heard of the stop
+ * (a re-pace) never brings it back. Otherwise the newest `updatedAt` as an instant
+ * wins, and a tie keeps the local copy. A missing or null side never replaces a
+ * held route: a stopped route is archived, never set to null, so null only means
+ * "this copy has none".
  */
 export function mergeSelfRoute(l: SelfRoute | null | undefined, s: SelfRoute | null | undefined): SelfRoute | null {
   if (!l) return s ?? null;
   if (!s) return l;
+  if (l.id !== s.id) {
+    const made = compareInstant(s.createdAt, l.createdAt);
+    if (made !== 0) return made > 0 ? s : l;
+  } else if ((l.archivedAt === null) !== (s.archivedAt === null)) {
+    return l.archivedAt === null ? s : l;
+  }
   return compareInstant(s.updatedAt, l.updatedAt) > 0 ? s : l;
 }
 

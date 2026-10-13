@@ -25,10 +25,12 @@ import {
   planPromptEligible,
   planPromptHidden,
   previewLineOf,
+  planChangesOpen,
   profileRowOpens,
   proposalInputOf,
   proposalSkippedEvent,
   proposedEvent,
+  routeGateStep,
   safePropose,
   startDaysOf,
   startPickOf,
@@ -132,6 +134,25 @@ describe('the Profile row (F-PLAN-002 section 3.9)', () => {
   it('asks a child profile for the grown-up gate only when the gate is needed', () => {
     expect(profileRowOpens({ learnerType: 'child', opensDirectly: false })).toBe('gate');
     expect(profileRowOpens({ learnerType: 'child', opensDirectly: true })).toBe('proposal');
+  });
+
+  it('plan changes (the check-in, Stop this plan) are open to a self profile, and to a child only when the gate is open', () => {
+    expect(planChangesOpen({ learnerType: 'self', opensDirectly: false })).toBe(true);
+    expect(planChangesOpen({ learnerType: 'child', opensDirectly: true })).toBe(true);
+    expect(planChangesOpen({ learnerType: 'child', opensDirectly: false })).toBe(false);
+  });
+});
+
+describe('the grown-up gate continues to the weekly plan (PinEntry next, section 3.9)', () => {
+  it('opens the proposal or the set-up steps for that profile', () => {
+    expect(routeGateStep('RouteProposal', 'profile:a')).toEqual({ kind: 'proposal', profileId: 'profile:a' });
+    expect(routeGateStep('RouteSetup', 'profile:a')).toEqual({ kind: 'setup', profileId: 'profile:a' });
+  });
+
+  it('goes back to the overview underneath for Stop this plan, and goes back without a profile', () => {
+    expect(routeGateStep('RouteOverview', 'profile:a')).toEqual({ kind: 'back' });
+    expect(routeGateStep('RouteProposal', undefined)).toEqual({ kind: 'back' });
+    expect(routeGateStep('RouteSetup', undefined)).toEqual({ kind: 'back' });
   });
 });
 

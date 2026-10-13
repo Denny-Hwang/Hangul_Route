@@ -82,7 +82,7 @@ import { useAccessTier, useQuestAccess } from '../../store/tier-store';
 import { PictureArt } from '../minigames/PictureArt';
 import { LinkButton } from '../placement/parts';
 import { NotesHomeCard } from '../notes/NotesHomeCard';
-import { PlanPromptCard, usePlanPrompt } from '../route/PlanPromptCard';
+import { PlanSlotCard, usePlanSlot } from '../route/PlanPromptCard';
 import { firstFreeTopicKey } from '../vocab/topic-data';
 import { FreeEndCard } from './FreeEndCard';
 import { freeTopicsInBuild, samplerStoryOf } from './free-end-inputs';
@@ -479,9 +479,9 @@ export function HomeScreen(): React.ReactElement {
           dismissedAt: placementUi.dismissedAt,
           resumable,
         });
-  // F-PLAN-002's weekly-plan prompt shares the slot; the level check wins while it is eligible (AM-6).
-  const planPrompt = usePlanPrompt(profile, snap, plans);
-  const quiet = homeQuietCard(levelCheck, planPrompt);
+  // F-PLAN-002's weekly plan card (prompt, check-in or moved line) shares the slot; the level check wins while it is eligible (AM-6).
+  const { slot: planSlot, closeCheckIn } = usePlanSlot(profile, snap, plans);
+  const quiet = homeQuietCard(levelCheck, planSlot !== null);
   const levelCheckCopy = m.learner.placement.homeCard;
   const quietCard =
     quiet === 'level-check' && profileId !== null ? (
@@ -506,8 +506,14 @@ export function HomeScreen(): React.ReactElement {
           />
         </View>
       </Card>
-    ) : quiet === 'plan-prompt' && profileId !== null ? (
-      <PlanPromptCard profileId={profileId} onOpen={() => navigation.navigate('RouteProposal', { source: 'home', profileId })} />
+    ) : quiet === 'plan-prompt' && profileId !== null && planSlot !== null ? (
+      <PlanSlotCard
+        slot={planSlot}
+        profileId={profileId}
+        onOpen={() => navigation.navigate('RouteProposal', { source: 'home', profileId })}
+        onOverview={() => navigation.navigate('RouteOverview', { profileId })}
+        onCloseCheckIn={closeCheckIn}
+      />
     ) : null;
 
   const layoutClass = useLayoutClass();
