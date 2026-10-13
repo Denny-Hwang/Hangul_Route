@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { colors, spacing } from '../../../tokens';
 import { cursorMarkerParts, markerBand, pipInk, pipParts, stageSegmentParts, startBand, startMarkerParts, type PipPart } from '../geometry';
 import { Pip, PipParts, PipSvg } from '../Pip';
-import { PipRow, PipRowBody } from '../PipRow';
+import { PipRow, PipRowBody, PipRowFitted } from '../PipRow';
 import { StageSegments, StageSegmentsBody } from '../StageSegments';
 
 /**
@@ -132,12 +132,48 @@ describe('PipRowBody', () => {
   });
 });
 
+describe('PipRowBody with a measured width: one row per line, each with its own marker bands (LR-11)', () => {
+  const size = 20;
+  const pips = Array.from({ length: 15 }, (_, i) => ({ key: `q${i}`, state: 'open' as const, isCursor: i === 1, isStart: i === 0 }));
+
+  it('draws the lines as rows, the gaps between and inside them, and keeps the row hidden from screen readers', () => {
+    const row = PipRowBody({ groups: [pips], size, accent: ACCENT, testID: 'row', width: 236 }) as El;
+    expect(row.props).toMatchObject({ testID: 'row', importantForAccessibility: 'no-hide-descendants', accessibilityElementsHidden: true, 'aria-hidden': true });
+    expect(row.props.style).toMatchObject({ rowGap: spacing.xs });
+    const lines = kids(row);
+    expect(lines).toHaveLength(2);
+    for (const line of lines) expect(line.props.style).toMatchObject({ flexDirection: 'row', columnGap: spacing.xs });
+    expect(lines.map((l) => kids(l).length)).toEqual([10, 5]);
+  });
+
+  it('reserves the bands on the line with the cursor and the start only; the other line is just the pips', () => {
+    const [first, second] = kids(PipRowBody({ groups: [pips], size, accent: ACCENT, width: 236 }) as El);
+    const svgOf = (cell: El): El => kids(cell)[0]!;
+    expect(svgOf(kids(first!)[5]!).props).toMatchObject({ height: markerBand(size) + size + startBand(size) });
+    expect(svgOf(kids(second!)[0]!).props).toMatchObject({ height: size, viewBox: `0 0 ${size} ${size}` });
+    expect(kids(svgOf(kids(second!)[0]!)).map((p) => p.props.offsetY)).toEqual([0]);
+  });
+
+  it('without a width it stays the one wrapping row', () => {
+    const row = PipRowBody({ groups: [pips], size, accent: ACCENT }) as El;
+    expect(row.props.style).toMatchObject({ flexWrap: 'wrap' });
+    expect(kids(row)).toHaveLength(15);
+  });
+});
+
 describe('PipRow and Pip: context to size through useMediaSize, and the default accent', () => {
   it('a cell row passes the scaled 24 dp size, the scaled gaps and border.shape as the accent to its body', () => {
     const groups = [[{ key: 'a', state: 'done' as const }]];
     const el = PipRow({ groups, context: 'cell', testID: 'row' }) as El;
     expect(el.type).toBe(PipRowBody);
     expect(el.props).toMatchObject({ groups, size: 36, accent: colors.border.shape, testID: 'row', gaps: { pip: 6, group: 18 } });
+  });
+
+  it('bandsPerLine hands the row to the measuring PipRowFitted with the same size, gaps and accent (LR-11)', () => {
+    const groups = [[{ key: 'a', state: 'open' as const, isCursor: true }]];
+    const el = PipRow({ groups, bandsPerLine: true, accent: colors.stage.stage1, testID: 'row' }) as El;
+    expect(el.type).toBe(PipRowFitted);
+    expect(el.props).toMatchObject({ groups, size: 30, accent: colors.stage.stage1, testID: 'row', gaps: { pip: 6, group: 18 } });
   });
 
   it('a stage row (the default) passes the scaled 20 dp size and keeps a caller accent', () => {

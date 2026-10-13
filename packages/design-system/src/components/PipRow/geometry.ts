@@ -234,6 +234,43 @@ export function pipRowCells(groups: readonly (readonly PipView[])[], gaps: { pip
   );
 }
 
+/** One line of a measured row (`pipRowLines`): its pips and the marker bands they use. */
+export interface PipRowLine {
+  cells: PipCell[];
+  bands: { top: boolean; bottom: boolean };
+}
+
+/**
+ * The lines a row of `width` wraps its cells into, the way the wrapping row
+ * fills them (route order, `pipGap` between pips, a trailing group gap counted
+ * with its pip). Each line reserves only the marker bands its own pips use, so
+ * a second line without the cursor or the start pin is just the pips
+ * (AMENDMENTS-ROUTE-LEARNING-ROUTE LR-11: the route card at 320). A pip wider
+ * than the width takes a line of its own.
+ */
+export function pipRowLines(cells: readonly PipCell[], width: number, size: number, pipGap: number): PipRowLine[] {
+  const lines: PipCell[][] = [];
+  let line: PipCell[] = [];
+  let used = 0;
+  for (const cell of cells) {
+    const outer = size + Math.max(0, cell.trailingGap - pipGap);
+    const needed = line.length === 0 ? outer : used + pipGap + outer;
+    if (line.length > 0 && needed > width) {
+      lines.push(line);
+      line = [cell];
+      used = outer;
+    } else {
+      line.push(cell);
+      used = needed;
+    }
+  }
+  if (line.length > 0) lines.push(line);
+  return lines.map((cellsOfLine) => ({
+    cells: cellsOfLine,
+    bands: { top: cellsOfLine.some((c) => c.isCursor), bottom: cellsOfLine.some((c) => c.isStart) },
+  }));
+}
+
 /** Which marker bands the row reserves: only the ones a pip uses. */
 export function pipRowBands(groups: readonly (readonly PipView[])[]): { top: boolean; bottom: boolean } {
   const all = groups.flat();
