@@ -123,8 +123,9 @@ describe('the shipped catalogue data', () => {
     ]);
   });
 
-  it('keeps every story a draft until PR 1.9 adds its shelf block and both sign-offs (no story is offered yet)', () => {
-    expect(CATALOG.stories.every((s) => s.status === 'draft')).toBe(true);
+  it('offers every story since PR 1.9 added the shelf blocks and both review sign-offs (F-STORY-001 PR 1.9)', () => {
+    expect(CATALOG.stories).toHaveLength(24);
+    expect(CATALOG.stories.every((s) => s.status === 'ready')).toBe(true);
   });
 
   it('has the 12 launch topics in order, the first four free, none with a quest yet', () => {
@@ -425,6 +426,7 @@ describe('routeCatalogOf', () => {
     const catalog = clone();
     cellOf(catalog, 'episode:stage2-life').status = 'preview';
     (catalog.stories[0] as CatalogStory).status = 'ready';
+    (catalog.stories[1] as CatalogStory).status = 'draft';
     const route = routeCatalogOf(catalog);
     expect(route.quests.find((q) => q.id === 'quest:stage2-life-q1')?.playable).toBe(false);
     expect(route.quests.find((q) => q.id === 'quest:stage1-life-q1')?.playable).toBe(true);

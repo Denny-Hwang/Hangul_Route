@@ -6,13 +6,15 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:angbuilgu-sundial",
     "state": "ready",
-    "contentVer": 2,
+    "contentVer": 3,
     "title": {
       "ko": "하늘을 바라보는 해시계, 앙부일구",
       "romanization": "Haneureul baraboneun haesigye, angbuilgu",
       "en": "The Sky-Facing Pot That Told the Time"
     },
     "summaryEn": "Hoya discovers King Sejong's bowl-shaped sundials, set beside busy streets in 1434 with animal pictures so that people who could not read could still tell the time.",
+    "hoyaIntroEn": "Can a shadow tell the time? Let's look at a sundial shaped like a bowl!",
+    "hoyaOutroEn": "The sun's shadow told the time, even for people who could not read. Clever, right?",
     "theme": "nature",
     "kind": "science",
     "recommendedStage": 2,
@@ -28,9 +30,11 @@ export const storiesAll: Story[] = [
       "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
     },
     "review": {
-      "language": "draft",
-      "culture": "draft",
-      "advisory": []
+      "language": "native-reviewed",
+      "culture": "culture-reviewed",
+      "advisory": [],
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
     },
     "keywords": [
       {
@@ -472,8 +476,22 @@ export const storiesAll: Story[] = [
       }
     ],
     "coverSceneId": "s1",
+    "rewardCardIds": {
+      "listen": "card:story-angbuilgu-sundial"
+    },
+    "shelf": {
+      "category": "culture",
+      "order": 11,
+      "sampler": false,
+      "minutes": 4
+    },
     "pillarTags": [],
     "companionId": "hoya",
+    "card": {
+      "titleEn": "Sundial",
+      "keywordId": "angbuilgu",
+      "factId": "f1"
+    },
     "facts": [
       {
         "id": "f1",
@@ -686,7 +704,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
+      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
     },
     "authorNotes": "Makers deliberately not named: KHS entries list different makers (1985 Treasure: 장영실·이천·김조; 2022-1 Treasure: 장영실·이천·이순지) and encykorea says the maker is unclear (citing the Sejo Sillok, 이순지 led instrument-making). The Sillok inscription says '神의 몸을 그렸으니 어리석은 백성을 위한 것' (drew the bodies of spirits, for ordinary people); KHS and encykorea interpret these as the twelve zodiac animal spirits; narration follows them. Omitted: KHS's description of it as Korea's first public clock ('first' claim); line counts (KHS 1985: 7 vertical/13 horizontal; KHS 2022-1: 15-minute hour lines), because they vary by instrument; the sundial returned from the United States in 2020 (KHS 2022-1). Surviving Treasures date from the 17th–18th centuries (KHS). Theme set to 'nature' (sun, sky, seasons, zodiac animals); BP04 places Sejong science under Pillar E, so 'crafts' is an alternative. REVISION: 'seasons' replaced by 'time of year' (KHS: 계절선; encykorea: 13 절기선). Scene 5 now says explicitly that the animal-picture dials are those of Sejong's time (encykorea notes later versions used written characters). The reading of 'drew the bodies of spirits (신의 몸)' as the twelve zodiac animals is the interpretation of KHS and encykorea, not stated in the Sillok inscription itself. PR 1.8c: keyword gloss 'bowl-shaped sundial' replaces the research vocab 'hemispherical sundial' as plainer English consistent with f2 (cauldron-like bowl). s3 says 'pointer' (f3: pointer, yeongchim) to match check c1. s5 and c2 say 'twelve zodiac animal spirits' and keep the Sejong-era qualifier (f5).",
     "errata": []
@@ -695,13 +713,15 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:cheugugi-rain-gauge",
     "state": "ready",
-    "contentVer": 3,
+    "contentVer": 4,
     "title": {
       "ko": "비를 재는 그릇, 측우기",
       "romanization": "Bireul jaeneun geureut, cheugugi",
       "en": "The Bowl That Measured the Rain"
     },
     "summaryEn": "Hoya follows the Joseon crown prince's rain experiments to the 1442 rain gauge, the cheugugi, and meets the only Joseon rain-gauge vessel known to survive.",
+    "hoyaIntroEn": "Pitter-patter! Let's find out how Joseon measured the rain.",
+    "hoyaOutroEn": "Now you know how people in Joseon measured the rain. Listen for the raindrops next time it rains!",
     "theme": "crafts",
     "kind": "science",
     "recommendedStage": 1,
@@ -717,9 +737,11 @@ export const storiesAll: Story[] = [
       "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
     },
     "review": {
-      "language": "draft",
-      "culture": "draft",
-      "advisory": []
+      "language": "native-reviewed",
+      "culture": "culture-reviewed",
+      "advisory": [],
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
     },
     "keywords": [
       {
@@ -1184,8 +1206,22 @@ export const storiesAll: Story[] = [
       }
     ],
     "coverSceneId": "s1",
+    "rewardCardIds": {
+      "listen": "card:story-cheugugi-rain-gauge"
+    },
+    "shelf": {
+      "category": "culture",
+      "order": 6,
+      "sampler": true,
+      "minutes": 4
+    },
     "pillarTags": [],
     "companionId": "hoya",
+    "card": {
+      "titleEn": "Rain Gauge",
+      "keywordId": "cheugugi",
+      "factId": "f2"
+    },
     "facts": [
       {
         "id": "f1",
@@ -1352,7 +1388,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
+      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
     },
     "authorNotes": "Attribution: popular retellings often say Jang Yeong-sil invented the rain gauge, but the Sejong Sillok (1441-04-29, lunar) credits the crown prince's (later King Munjong's) experiments and encykorea's 통영 측우대 entry says the system was made under the crown prince's lead; Jang Yeong-sil is therefore not mentioned. Deliberately omitted: the KHS description's comparative claim that the cheugugi was the world's first scientific rain gauge, about 200 years before the West (priority claims are contested); the 1441-08-18 proposal's dimensions and the 1442 standard size (1 cheok 5 chon by 7 chon); the Gongju gauge's removal to Japan (KHS: c.1915; encykorea: early 1910s) and return in 1971 (colonial-era history is out of scope); the 1770/1771 revival under King Yeongjo (sources differ on the year). Materials: the Sillok uses 銅 (copper/bronze) for the crown prince's 1441 vessel and 鐵 (cast metal/iron) for the 1442 standard, so narration says 'copper' and 'metal' respectively; the Gongju gauge is bronze (encykorea). All Sillok dates are lunar. Theme set to 'crafts' to match BP04/BP05 Pillar E (E3 측우기). REVISION: (a) Scene 6/summary/learning goal now say only one gauge VESSEL survives; stone stands (대석/측우대) also survive (encykorea E0007902; Tongyeong stand is a Treasure, E0068941). (b) Museum English name 'National Meteorological Museum of Korea' taken from the museum's own website footer (science.kma.go.kr/museum/); the KHS portal lists only the Korean name. (c) Romanization of 서운관 is Seoun-gwan (seo-un-gwan); 'Seounwan' (proposed by one fact-check) would transcribe 서운완, so it was not adopted. (d) Second source added for f2 (신편한국사 via 우리역사넷); new sources accessed 2026-10-10. PR 1.8c: check c1 distractors replaced with options the story contradicts (s2: the water soaked in; the crown prince dug), so the item has one answer from the story text.",
     "errata": []
@@ -1361,13 +1397,15 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:chuseok-ganggangsullae",
     "state": "ready",
-    "contentVer": 3,
+    "contentVer": 4,
     "title": {
       "ko": "추석 송편과 보름달",
       "romanization": "Chuseok songpyeongwa boreumdal",
       "en": "Chuseok: Songpyeon and the Full Moon"
     },
     "summaryEn": "At Chuseok (Hangawi), Hoya joins a family going back to their hometown, makes songpyeon steamed on pine needles, and watches women dance Ganggangsullae hand in hand under the full moon.",
+    "hoyaIntroEn": "It's Chuseok! Let's make songpyeon and watch the full moon together.",
+    "hoyaOutroEn": "Songpyeon, the full moon and a circle dance. Happy Chuseok!",
     "theme": "rites",
     "kind": "intangible",
     "recommendedStage": 1,
@@ -1383,9 +1421,11 @@ export const storiesAll: Story[] = [
       "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
     },
     "review": {
-      "language": "draft",
-      "culture": "draft",
-      "advisory": []
+      "language": "native-reviewed",
+      "culture": "culture-reviewed",
+      "advisory": [],
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
     },
     "keywords": [
       {
@@ -1999,8 +2039,22 @@ export const storiesAll: Story[] = [
       }
     ],
     "coverSceneId": "s1",
+    "rewardCardIds": {
+      "listen": "card:story-chuseok-ganggangsullae"
+    },
+    "shelf": {
+      "category": "story-time",
+      "order": 2,
+      "sampler": true,
+      "minutes": 5
+    },
     "pillarTags": [],
     "companionId": "hoya",
+    "card": {
+      "titleEn": "Circle Dance",
+      "keywordId": "ganggangsullae",
+      "factId": "f11"
+    },
     "facts": [
       {
         "id": "f1",
@@ -2319,7 +2373,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
+      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
     },
     "authorNotes": "Left out on purpose: the popular claim that Ganggangsullae began as Admiral Yi Sun-sin's military trick. The 국가유산포털 mentions it only as one theory and says an origin in ancient moonlit-night festivals is more plausible, so it isn't used. Also left out are folk etymologies of 'ganggangsullae' (UNESCO says the meaning is unknown), songpyeon fortune-telling beliefs (spouse looks, pregnancy divination), and specific 차례 table rules. Songpyeon shape symbolism (half-moon) isn't claimed because the sources don't support it. The 국가유산포털 actually links songpyeon to the full moon in general terms. The existing heritage-cards.ts text 'half-moon rice cakes' and 'steamed on pine needles for fragrance' is only partly supported: pine-needle steaming is supported, but the shape and fragrance claims weren't verified. UNESCO describes the original dancers as young unmarried village women; today mostly middle-aged women in cities keep it alive. The narration says 'women'. 'Tile treading' was skipped because explaining it (walking on bent backs) needs care for young children. REVISION 2026-10-10: \"comes from the southwest coast\" -> \"has long been done along the southwestern coast\" (origin is uncertain per KHS and 한국세시풍속사전). Yeoryang sesigi saying: verified in the text quoted by 한국세시풍속사전 (Gim Mae-sun, 8th month entry; the Hanja there is printed 減夜勿, apparently a typo for 減也勿) - narration says the book \"records an old saying like this\" and gives the modern wording. Songpyeon: half-moon shape and pine scent are supported by the National Folk Museum (어린이민속사전; 한국세시풍속사전); the older note saying shape/fragrance were unverified is superseded. \"warm and chewy\" removed (not sourced). AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. REVIEW 2026-10-11 (PR 1.8d review fixes): title is now 'Chuseok: Songpyeon and the Full Moon' (추석 송편과 보름달), because songpyeon are made on the evening before Chuseok under 'the bright moon' (f4) and the full moon belongs to Chuseok night (f1, f6); the catalogue row and F-STORY-005 table follow. s3 and s5 name their nights; s4 says 'many' songpyeon are half-moons (f5 'often'); s7 and s8 use plainer words; checks 2 and 3 have one clearly correct answer and only taught distractors; the gohyang and dal keywords are used as tokens; learning goals use receptive verbs. PR #208 REVIEW FIXES 2026-10-11: s7 names the games 'fern picking' and 'herring tying' (f8: bracken picking, herring tying; bracken is a fern); check 1 distractor 'Bamboo mats' replaced by 'Paper sheets' because songpyeon steam over a bamboo steamer base.",
     "errata": []
@@ -2328,13 +2382,15 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:dano-ssireum",
     "state": "ready",
-    "contentVer": 3,
+    "contentVer": 4,
     "title": {
       "ko": "단옷날의 그네, 탈, 씨름",
       "romanization": "Danonnarui geune, tal, ssireum",
       "en": "Dano Day: Swings, Masks and Ssireum"
     },
     "summaryEn": "Hoya celebrates Dano, Korea's early-summer holiday: hair washed in changpo water, high-flying swings, ssireum wrestling, and the UNESCO-listed Gangneung Danoje with its wordless Gwanno mask drama.",
+    "hoyaIntroEn": "Dano is here! Let's swing high, watch a mask play and cheer at ssireum.",
+    "hoyaOutroEn": "Swings, masks and ssireum: what a fun Dano Day!",
     "theme": "rites",
     "kind": "intangible",
     "recommendedStage": 2,
@@ -2350,9 +2406,11 @@ export const storiesAll: Story[] = [
       "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
     },
     "review": {
-      "language": "draft",
-      "culture": "draft",
-      "advisory": []
+      "language": "native-reviewed",
+      "culture": "culture-reviewed",
+      "advisory": [],
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
     },
     "keywords": [
       {
@@ -2916,8 +2974,22 @@ export const storiesAll: Story[] = [
       }
     ],
     "coverSceneId": "s1",
+    "rewardCardIds": {
+      "listen": "card:story-dano-ssireum"
+    },
+    "shelf": {
+      "category": "story-time",
+      "order": 4,
+      "sampler": false,
+      "minutes": 5
+    },
     "pillarTags": [],
     "companionId": "hoya",
+    "card": {
+      "titleEn": "Dano",
+      "keywordId": "dano",
+      "factId": "f2"
+    },
     "facts": [
       {
         "id": "f1",
@@ -3218,7 +3290,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
+      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
     },
     "authorNotes": "Left out on purpose: the story that Dano comes from China (Qu Yuan), folk etymology of 수릿날, the 석전 (stone fight) custom, shamanic (굿) details, the festival's deities by name (김유신, 범일국사, 정씨 처녀), and how long the festival lasts. Sources describe its length differently (UNESCO says four weeks; the 국가유산포털 says 5 days of rites at the 단오장). The 'only silent mask drama' claim comes from one official source (국가유산청 국가유산포털), so the narration hedges it as 'known as'. The knee rule describes modern competition ssireum (Encyclopedia of Korean Culture). The narration uses 'east coast' and doesn't name the sea. 단오 was also designated National Intangible Heritage on 2023-12-18. That's covered in the Seollal episode and not repeated here. The 2023 Dano designation (KHS press release) is available if wanted. Standard spelling note: 단옷날 (with 사이시옷) is the dictionary form, and the title now uses it: 단옷날의 그네, 탈, 씨름 (Danonnarui geune, tal, ssireum), matching the English title. REVISION 2026-10-10: \"four great holidays\" now dated to the late-Joseon Dongguk sesigi (1518 list had three); knee rule labelled modern competition rule and phrased \"from the knee up\"; Gwanno illustration now nobleman (yangban) mask + young-lady (somae-gaksi) mask; \"only silent mask drama\" kept hedged and now has two sources (KHS portal; 국립민속박물관 한국세시풍속사전). UNESCO: Danoje proclaimed 2005, inscribed 2008 (stated both). Ox: UNESCO says ox; encykorea says 황소 (bull) - narration follows UNESCO. Check 3 changed to a question that does not rely on \"from Gangneung\". AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean spacing: learner terms are written 강릉 단오제 and 인류 무형 유산 (spaced by word, 한글 맞춤법 제49항/제50항) so each word lines up with Gangneung Danoje and illyu muhyeong yusan; the facts keep the official spellings. REVIEW 2026-10-11 (PR 1.8d review fixes): the learner keyword stays 인류 무형 유산 (illyu muhyeong yusan, the Korea Heritage Service's current term, spaced by word) with the gloss 'Intangible Heritage of Humanity (UNESCO list)'; f9 and f10 keep the researched 인류무형문화유산. s8 is rewritten in short sentences with the same years; check options are of even length; geune and chukje are used as tokens; learning goals use receptive verbs.",
     "errata": []
@@ -3227,13 +3299,15 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:donguibogam",
     "state": "ready",
-    "contentVer": 3,
+    "contentVer": 4,
     "title": {
       "ko": "허준의 동의보감",
       "romanization": "Heojunui Donguibogam",
       "en": "Heo Jun's Treasured Mirror of Medicine"
     },
     "summaryEn": "Hoya learns how the royal doctor Heo Jun finished Donguibogam in 1610, a medical encyclopedia that valued staying healthy and wrote herb names in Hangul, now on UNESCO's Memory of the World Register.",
+    "hoyaIntroEn": "Let's meet a royal doctor who wrote a giant book about staying healthy.",
+    "hoyaOutroEn": "Heo Jun's book helped people care for their bodies. Stretch with me, and stay healthy!",
     "theme": "life",
     "kind": "documentary",
     "recommendedStage": 3,
@@ -3242,19 +3316,21 @@ export const storiesAll: Story[] = [
       "Read and recognize 몸 (mom, body), 건강 (geongang, health), 약초 (yakcho, medicinal herb) and 책 (chaek, book).",
       "Know that Heo Jun, a Joseon royal doctor, completed Donguibogam in 1610 and that it was printed in 1613 in 25 volumes.",
       "Understand the book's idea that preventing illness and staying healthy matters before curing it.",
-      "Know that Donguibogam wrote herb names in Hangul and has been on UNESCO's Memory of the World Register, 세계기록유산 (segyegirogyusan), since 2009."
+      "Know that Donguibogam wrote herb names in Hangul and has been on UNESCO's Memory of the World Register, 세계 기록 유산 (segye girok yusan), since 2009."
     ],
     "origin": {
       "type": "documented",
       "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
     },
     "review": {
-      "language": "draft",
-      "culture": "draft",
+      "language": "native-reviewed",
+      "culture": "culture-reviewed",
       "advisory": [
         "war"
       ],
-      "advisoryNoteEn": "Briefly mentions a war from Korea's history."
+      "advisoryNoteEn": "Briefly mentions a war from Korea's history.",
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
     },
     "keywords": [
       {
@@ -3307,9 +3383,9 @@ export const storiesAll: Story[] = [
         "kind": "phrase"
       },
       {
-        "id": "segyegirogyusan",
-        "ko": "세계기록유산",
-        "romanization": "segyegirogyusan",
+        "id": "segye-girok-yusan",
+        "ko": "세계 기록 유산",
+        "romanization": "segye girok yusan",
         "en": "Memory of the World (UNESCO documentary heritage)",
         "kind": "word"
       },
@@ -3587,12 +3663,12 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s7",
-            "narrationEn": "Donguibogam was printed in 1613 in 25 volumes. Later it was printed many times in China, and in Japan too. In 2009, UNESCO added it to the Memory of the World Register, {kw:segyegirogyusan}.",
+            "narrationEn": "Donguibogam was printed in 1613 in 25 volumes. Later it was printed many times in China, and in Japan too. In 2009, UNESCO added it to the Memory of the World Register, {kw:segye-girok-yusan}.",
             "captionEn": "The book was printed many times",
             "keyword": {
-              "id": "segyegirogyusan",
-              "ko": "세계기록유산",
-              "romanization": "segyegirogyusan",
+              "id": "segye-girok-yusan",
+              "ko": "세계 기록 유산",
+              "romanization": "segye girok yusan",
               "en": "Memory of the World (UNESCO documentary heritage)",
               "kind": "word"
             },
@@ -3613,7 +3689,7 @@ export const storiesAll: Story[] = [
                   "s": 1.8
                 }
               ],
-              "altEn": "Rows of old thread-bound books rest in a wooden case before a sea of islands, as the book travelled abroad."
+              "altEn": "Rows of old thread-bound books rest in a wooden case before a sea of islands, as the book traveled abroad."
             }
           },
           {
@@ -3748,8 +3824,22 @@ export const storiesAll: Story[] = [
       }
     ],
     "coverSceneId": "s1",
+    "rewardCardIds": {
+      "listen": "card:story-donguibogam"
+    },
+    "shelf": {
+      "category": "culture",
+      "order": 15,
+      "sampler": false,
+      "minutes": 5
+    },
     "pillarTags": [],
     "companionId": "hoya",
+    "card": {
+      "titleEn": "Medicine Book",
+      "keywordId": "donguibogam",
+      "factId": "f3"
+    },
     "facts": [
       {
         "id": "f1",
@@ -4013,7 +4103,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
+      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
     },
     "authorNotes": "Sources disagree on the start year of compilation (KHS designation text and encykorea: 1596; KHS portal Memory-of-the-World page: 1597) and on its length (14 vs 16 years), so narration omits both. The number of royal books given to Heo Jun ('500여 권') comes from encykorea only, so narration says 'many'. UNESCO's page says 'compiled in 1613' (the printing year); KHS and encykorea give completion in 1610 and printing in 1613. Omitted: Heo Jun's exile to Uiju (1608–1609); the Jeongyu invasion is referred to only as 'a war broke out'. No remedies or medical advice are presented; prevention is described only as the book's stated principle. Herb names in Hangul: encykorea (compiling principles) plus 우리역사넷/신편한국사 ('모든 향약명을 한글로 표시'). Theme set to 'life' (body and health); BP05 lists 동의보감 at Pillar E (6.E4), so 'crafts' is the grid-aligned alternative. Scene 7 keyword changed to 세계기록유산 so 책 is not repeated. REVISION: the folk-tale entry 허준 설화 (E0063156) was replaced by the person entry 허준 (E0063152) as f1's second source. Birth year: DROPPED in pass 3. KHS gives 1539; encykorea E0063152 is internally inconsistent (infobox 1539 labelled 중종 32 which would be 1537, summary 1539/중종 34, photo captions 1546/명종 1), and other references give 1546, so narration and f1 give no birth year. PASS 3: added 우리역사넷 (신편한국사) as a second source for f4 ('Dongui' = Korea's own medicine, 集例) and f5 (prevention over treatment). PR 1.8c: Hoya's s8 line is 보배 같은 책 rather than the research vocab 보물 같은 책, to avoid the heritage grade 보물 and to echo 보감. s3 keeps 'the doctors were scattered' (f2) and drops 'again' because the story never names an earlier war.",
     "errata": []
@@ -4022,13 +4112,15 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:gimjang-arirang",
     "state": "ready",
-    "contentVer": 3,
+    "contentVer": 4,
     "title": {
       "ko": "김장하는 날과 아리랑",
       "romanization": "Gimjanghaneun nalgwa Arirang",
       "en": "Gimjang Day: Sharing Kimchi, Singing Arirang"
     },
     "summaryEn": "As winter comes, Hoya helps relatives and neighbors make and share kimchi for gimjang (UNESCO 2013), then hears Arirang, the folk song shared across Korea (South Korea's UNESCO entry, 2012).",
+    "hoyaIntroEn": "Winter is coming! Let's make kimchi with neighbors and hear a song shared across Korea.",
+    "hoyaOutroEn": "Making kimchi together and singing Arirang: sharing makes it special!",
     "theme": "life",
     "kind": "intangible",
     "recommendedStage": 2,
@@ -4044,9 +4136,11 @@ export const storiesAll: Story[] = [
       "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
     },
     "review": {
-      "language": "draft",
-      "culture": "draft",
-      "advisory": []
+      "language": "native-reviewed",
+      "culture": "culture-reviewed",
+      "advisory": [],
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
     },
     "keywords": [
       {
@@ -4615,8 +4709,22 @@ export const storiesAll: Story[] = [
       }
     ],
     "coverSceneId": "s1",
+    "rewardCardIds": {
+      "listen": "card:story-gimjang-arirang"
+    },
+    "shelf": {
+      "category": "story-time",
+      "order": 5,
+      "sampler": false,
+      "minutes": 5
+    },
     "pillarTags": [],
     "companionId": "hoya",
+    "card": {
+      "titleEn": "Making Winter Kimchi",
+      "keywordId": "gimjang",
+      "factId": "f8"
+    },
     "facts": [
       {
         "id": "f1",
@@ -4917,7 +5025,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
+      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
     },
     "authorNotes": "Spelling: RR for 김장/김치 is gimjang/gimchi. UNESCO's official title uses 'Kimjang', and 'kimchi' is the usual English word. The narration uses 'gimjang' and 'kimchi'; UNESCO's spelling 'Kimjang' stays in f1, f6 and the Sources screen (review 2026-10-11: the spoken aside was removed). Grandma humming Arirang at the end of the day is a story moment. The narration does not claim Arirang is a gimjang work song. The sources don't link the two, though some Arirang types are work songs (Encyclopedia of Korean Culture). The refrain quoted is the widely known one. The Encyclopedia notes the best-known 'Arirang' (경기/본조 아리랑) is a new folk-song (신민요) form; traditional regional ones include Jeongseon, Jindo and Miryang. Left out on purpose: UNESCO's estimate of 'some 3,600 variations'. Only one authoritative source for it was found, so it isn't in the narration. Also left out: theories about what 'Arirang' means (folk etymology), the DPRK listings (Arirang 2014; kimchi-making 2015), and the old practice of burying kimchi jars in the ground. National designations: 아리랑 (2015-09-22) and 김치 담그기 (2017-11-15) are National Intangible Heritage per the 국가유산포털. They aren't used in the narration. REVISION 2026-10-10: 'takes all year' -> 'takes months' (Encyclopedia: more than half a year; UNESCO: yearly cycle); 'sweet' and 'everyone' removed from scene 5; UNESCO title 'Kimjang, making and sharing kimchi in the Republic of Korea' (2013) and the Korea Heritage Service's Korean name 김치와 김장문화 now used; Arirang 2012 labelled South Korea's entry and the separate DPRK entry (2014) added as f10 (narration mentions 'separate listing' only; the 2014 year lives in f10); 'no exact translation' replaced by 'sung syllables' (encykorea: meaningless refrain, origin theories = folk etymology; 한국민속문학사전: 입타령 refrain). AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean name (review 2026-10-11): the learner term shows the Korea Heritage Service's official form 김치와 김장문화 (gimchiwa gimjangmunhwa, keyword id gimchiwa-gimjangmunhwa), the same spelling as f6. REVIEW 2026-10-11 (PR 1.8d review fixes): s5 follows f5 (on gimjang day the host family serves the helpers); s6 and s8 say 'added to its heritage list' in plain words, and the exact UNESCO titles stay in f6, f9, f10; the iut and gyeoul keywords are used as tokens; learning goals use receptive verbs. PR #208 REVIEW FIXES 2026-10-11: s6 says the Heritage Service calls this listing 김치와 김장문화 (f6), so the Korean name is not read as gimjang's own name (김장, s1).",
     "errata": []
@@ -4926,13 +5034,15 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:hangeul-day",
     "state": "ready",
-    "contentVer": 2,
+    "contentVer": 3,
     "title": {
       "ko": "한글날을 축하해요!",
       "romanization": "Hangeullareul chukhahaeyo!",
       "en": "Happy Hangul Day!"
     },
     "summaryEn": "Hoya finds out why South Korea celebrates Hangul Day on October 9: it is based on a date written at the end of the 1446 Haerye book, which was found around 1940. The day began as 'Gagyanal' in 1926.",
+    "hoyaIntroEn": "Let's find out why Hangul has its own special day!",
+    "hoyaOutroEn": "Happy Hangul Day! Now you know why South Korea celebrates it every October.",
     "theme": "letters",
     "kind": "documentary",
     "recommendedStage": 1,
@@ -4948,9 +5058,11 @@ export const storiesAll: Story[] = [
       "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
     },
     "review": {
-      "language": "draft",
-      "culture": "draft",
-      "advisory": []
+      "language": "native-reviewed",
+      "culture": "culture-reviewed",
+      "advisory": [],
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
     },
     "keywords": [
       {
@@ -5476,8 +5588,22 @@ export const storiesAll: Story[] = [
       }
     ],
     "coverSceneId": "s1",
+    "rewardCardIds": {
+      "listen": "card:story-hangeul-day"
+    },
+    "shelf": {
+      "category": "culture",
+      "order": 3,
+      "sampler": true,
+      "minutes": 4
+    },
     "pillarTags": [],
     "companionId": "hoya",
+    "card": {
+      "titleEn": "National Treasure",
+      "keywordId": "gukbo",
+      "factId": "f4"
+    },
     "facts": [
       {
         "id": "f1",
@@ -5757,7 +5883,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
+      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
     },
     "authorNotes": "REVISED. (1) The narration no longer says the date conversion is settled: it says People converted the last of the ten days to the solar calendar and 'by the method they used' got October 9. The conversion method is not treated as settled: earlier observances (which assumed the last day of the lunar 9th month) used Oct 29, then Oct 28, before Oct 9 was adopted (encykorea E0061511, 국립국어원 origin/001); one fact-checker also found press commentary arguing that Oct 9 does not match a strict Julian or Gregorian conversion (low-authority sources, not re-verified here). f3 records the first point and the narration says only 'by the method they used'. (2) 'Korea celebrates' -> 'South Korea celebrates'; North Korea's January 15 (조선글날) is stated in scene 1 (f10, sourced to 국립국어원 KTV programme and 서울신문 1990). Caveat: the 국립한글박물관 webzine 59 calls one theory about how that North Korean date is derived 'unconfirmed' (확인되지 않은 것), so the story states only that the day is marked on January 15, not how it was derived. (3) 'Kansong Art Museum in Seoul' -> 'kept by the Kansong Art Museum': in 2024 the book travelled to the new Kansong Art Museum in Daegu for its opening show (서울신문 2024-05-08), and UNESCO gives no city. RR would be 'Gansong'; the museum's own English spelling 'Kansong' (used by UNESCO) is kept. (4) Scene 4 no longer says 'nobody knew the exact day'. The sources disagree on when October 9 was first celebrated (1945 according to 국립한글박물관, 1946 according to 한국민족문화대백과사전), so no year is given. 'Said to' in scene 6 hedges the 'ga-gya-geo-gyeo' origin, as the museum itself reports it as hearsay. The second, privately held Haerye copy (the 'Sangju copy') is left out because its status is unresolved. The purchase by Jeon Hyeong-pil is left out for brevity. The founding year of the King Sejong Literacy Prize (1989) is on the UNESCO page only, so the narration does not give it. The UNESCO 'country overview' source in f7 was dropped because its page could not be loaded. The official title in the heritage register is simply 'Hunminjeongeum' (국보 훈민정음). Fact f3 also names the Gregorian calendar (second-checker request); the narration keeps the simpler 'solar calendar'. FINAL PASS (3rd check): f3 no longer says 'Gregorian' because no cited source states the calendar used for the October 9 conversion (encykorea: 1932-33 Julian -> Oct 29, 1934-45 Gregorian -> Oct 28; 국립국어원: Oct 9 = Oct 29 minus about 20 days). f10 now has three sources. Book location: 국가유산포털 still lists Seoul (성북동), while the book was shown at the new Kansong Art Museum in Daegu in autumn 2024; the story only says 'kept by the Kansong Art Museum' (UNESCO wording). REVIEW PASS (PR 1.8b): c2 explanation keeps the hedge (converted when the holiday was set) and names the 9th lunar month; s3 caption says the date was set, not that it simply is October 9. ROUND 2: s2 drops once more; c2 says the last of them (the ten days), not the last day (the superseded Oct 29/28 reading), and names both calendars.",
     "errata": []
@@ -5766,13 +5892,15 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:ilseongnok-daily-reflection",
     "state": "ready",
-    "contentVer": 2,
+    "contentVer": 3,
     "title": {
       "ko": "하루를 돌아본 정조의 일기, 일성록",
       "romanization": "Harureul dorabon Jeongjoui ilgi, Ilseongnok",
       "en": "King Jeongjo's Diary of Daily Reflection"
     },
     "summaryEn": "As a young royal heir, Jeongjo kept a diary to look back on each day. It grew into the Ilseongnok, an official record of the court from 1760 to 1910.",
+    "hoyaIntroEn": "Let's read about a young royal heir who looked back on each day in his diary.",
+    "hoyaOutroEn": "Looking back on each day helped Jeongjo. What went well for you today?",
     "theme": "letters",
     "kind": "documentary",
     "recommendedStage": 4,
@@ -5788,9 +5916,11 @@ export const storiesAll: Story[] = [
       "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
     },
     "review": {
-      "language": "draft",
-      "culture": "draft",
-      "advisory": []
+      "language": "native-reviewed",
+      "culture": "culture-reviewed",
+      "advisory": [],
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
     },
     "keywords": [
       {
@@ -6003,7 +6133,7 @@ export const storiesAll: Story[] = [
                   "s": 0.85
                 }
               ],
-              "altEn": "King Jeongjo writes his diary by lamplight. Apart from him, Hoya tries it too and wonders what he did today."
+              "altEn": "King Jeongjo writes his diary by lamplight. Nearby, Hoya tries it too and wonders what he did today."
             }
           },
           {
@@ -6277,8 +6407,22 @@ export const storiesAll: Story[] = [
       }
     ],
     "coverSceneId": "s1",
+    "rewardCardIds": {
+      "listen": "card:story-ilseongnok-daily-reflection"
+    },
+    "shelf": {
+      "category": "culture",
+      "order": 16,
+      "sampler": false,
+      "minutes": 4
+    },
     "pillarTags": [],
     "companionId": "hoya",
+    "card": {
+      "titleEn": "Daily Reflections",
+      "keywordId": "ilseongnok",
+      "factId": "f1"
+    },
     "facts": [
       {
         "id": "f1",
@@ -6528,7 +6672,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification."
+      "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
     },
     "authorNotes": "The Analects line: the Korean portal and Encyclopedia texts say '세 가지 기준' ('three standards'), Legge translates Analects 1.4 as 'on three points', and the Encyclopedia also glosses 日三省吾身 as 'three times a day'; because translations differ, the number is DROPPED from narration and the claim, and the Korean quotes in the sources are kept as printed. 'Why?' now says 'One reason': the Encyclopedia also records other readings (the word 省 may echo Yeongjo's 어제자성편; a political motive is also suggested). Naming: 한국민족문화대백과사전 says the final decision on the title cannot be confirmed (in 1781 others proposed 일성록 or 월계록, and Jeongjo objected only to the combined 일월통편), so 'Jeongjo named it' was REMOVED; the story says only that the title is 일성록 and UNESCO translates it as 'Records of Daily Reflections'. The 1783 transition and 'state business grew' are supported by the portal's Korean description and by the Encyclopedia (quoting Jeongjo's 군서표기 in the 홍재전서). The post-accession diary claim (f3) is supported by the portal and by the Encyclopedia ('정조의 일기는 즉위 후에도 계속되었는데'). The Chinese- and Japanese-language machine-translated portal descriptions were removed as sources (f6, f7). 'Every five days' and the 1776 accession year appear only in the portal text and are not in narration. UNESCO page wording is paraphrased (unesco.org unreachable for re-quoting). Framing 'Hoya opens an old book' keeps the story from presenting an imagined meeting with Jeongjo as fact. Omitted: 21 months of missing records; Jeongjo's father's story (tragic).",
     "errata": []
@@ -6537,13 +6681,15 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:jagyeongnu-water-clock",
     "state": "ready",
-    "contentVer": 2,
+    "contentVer": 3,
     "title": {
       "ko": "장영실과 스스로 울리는 물시계, 자격루",
       "romanization": "Jangyeongsilgwa seuseuro ullineun mulsigye, jagyeongnu",
       "en": "Jang Yeongsil and the Clock That Rang by Itself"
     },
     "summaryEn": "Hoya meets Jang Yeongsil, the skilled craftsman King Sejong praised, and watches how flowing water, rolling balls and wooden figures made the jagyeongnu water clock strike the time.",
+    "hoyaIntroEn": "Drip, drip! Let's see a water clock that rang all by itself.",
+    "hoyaOutroEn": "Flowing water, rolling balls and little wooden figures told the time. What a clever clock!",
     "theme": "crafts",
     "kind": "science",
     "recommendedStage": 2,
@@ -6559,12 +6705,14 @@ export const storiesAll: Story[] = [
       "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
     },
     "review": {
-      "language": "draft",
-      "culture": "draft",
+      "language": "native-reviewed",
+      "culture": "culture-reviewed",
       "advisory": [
         "historical-hardship"
       ],
-      "advisoryNoteEn": "Mentions that Jang Yeongsil was first a servant owned by the government."
+      "advisoryNoteEn": "Mentions that Jang Yeongsil was first a servant owned by the government.",
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
     },
     "keywords": [
       {
@@ -7030,8 +7178,22 @@ export const storiesAll: Story[] = [
       }
     ],
     "coverSceneId": "s1",
+    "rewardCardIds": {
+      "listen": "card:story-jagyeongnu-water-clock"
+    },
+    "shelf": {
+      "category": "culture",
+      "order": 12,
+      "sampler": false,
+      "minutes": 5
+    },
     "pillarTags": [],
     "companionId": "hoya",
+    "card": {
+      "titleEn": "Water Clock",
+      "keywordId": "jagyeongnu",
+      "factId": "f1"
+    },
     "facts": [
       {
         "id": "f1",
@@ -7242,7 +7404,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
+      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
     },
     "authorNotes": "Dating: the Sillok entry in which Sejong praises Jang and grants the rank 호군 is dated 1433-09-16 (lunar), while KHS and encykorea give 1434 as the year the clock was made/completed; narration avoids a making year and gives only the start of use (1434-07-01 lunar), on which the Sillok and encykorea agree. Other makers: encykorea's 자격루 entry lists 장영실·이천·김조 and its 장영실 entry mentions 김빈; the story names only Jang Yeong-sil, whom the Sillok (1433, 1434) and KHS credit. Location: encykorea says the 1536 vessels are at Deoksugung (outdated); KHS lists the National Palace Museum of Korea. Simplified mechanism: the Sillok distinguishes small copper balls and large iron balls and also describes 12 zodiac figures holding time plaques; narration says 'metal balls'. Jang Yeong-sil's later career and other instruments (e.g., 옥루, 혼천의) omitted.  REVISION: 관노 is described as a government-owned servant (Sillok 1434: 동래현 관노), worded neutrally; encykorea adds he was later freed and given a court post, so narration says 'first a servant owned by the government'. Illustration of the 1536 vessels no longer shows dragons: KHS describes plain bronze vessels, and the only decoration mention found is an encykorea image caption ('수수통의 용문양'), which is not in the KHS text, so decoration is left out entirely. PASS 3: scene 3/f3 now say the king 'decided to give' the rank (Sillok 1433-09-16: 'I wish to add the post of hogun'; Hwang Hui and others agreed and 'the king followed'). PR 1.8c: s2 now says 'first a servant owned by the government in Dongnae' and adds the encykorea ending from f2 ('Later he was freed and given a post at court'); the bare romanized 'gwanno' was removed; advisory 'historical-hardship' added. s6 says the gate drums and bells 'repeated the sound' (f6: relayed). s1 now tokens 시간 so the s7 line builds on a known word.",
     "errata": []
@@ -7251,13 +7413,15 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:janggyeong-panjeon",
     "state": "ready",
-    "contentVer": 3,
+    "contentVer": 4,
     "title": {
       "ko": "바람이 지키는 장경판전",
       "romanization": "Barami jikineun Janggyeongpanjeon",
       "en": "Guarded by the Wind"
     },
     "summaryEn": "Hoya explores Janggyeong Panjeon, the 15th-century halls at Haeinsa whose clever windows and layered floors have protected the Tripitaka Koreana woodblocks for some 500 years.",
+    "hoyaIntroEn": "How do you keep old woodblocks safe? Let's ask the wind at Haeinsa!",
+    "hoyaOutroEn": "Windows, floors and fresh air keep the woodblocks safe. Thanks for exploring with me!",
     "theme": "crafts",
     "kind": "site",
     "recommendedStage": 2,
@@ -7273,9 +7437,11 @@ export const storiesAll: Story[] = [
       "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
     },
     "review": {
-      "language": "draft",
-      "culture": "draft",
-      "advisory": []
+      "language": "native-reviewed",
+      "culture": "culture-reviewed",
+      "advisory": [],
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
     },
     "keywords": [
       {
@@ -7803,8 +7969,22 @@ export const storiesAll: Story[] = [
       }
     ],
     "coverSceneId": "s1",
+    "rewardCardIds": {
+      "listen": "card:story-janggyeong-panjeon"
+    },
+    "shelf": {
+      "category": "culture",
+      "order": 10,
+      "sampler": false,
+      "minutes": 5
+    },
     "pillarTags": [],
     "companionId": "hoya",
+    "card": {
+      "titleEn": "Wind",
+      "keywordId": "baram",
+      "factId": "f5"
+    },
     "facts": [
       {
         "id": "f1",
@@ -8068,7 +8248,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
+      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
     },
     "authorNotes": "Theme is set to 'crafts' because the episode is about building and conservation design; switch it to 'letters' if the cluster should stay in one theme. The original construction date is unknown (국가유산포털), so the narration says '15th century' (UNESCO WHC, 국가유산포털). The sources consulted do not say which wall or row has the larger windows, so the narration only says the sizes differ, and illustrations should not suggest a specific pattern. 국가유산포털 also calls it the 'world's only building for storing Tripitaka woodblocks'; the narration uses UNESCO's more conservative wording, 'oldest depository of the Tripitaka', instead. The building's survival through the 1592 war is left out, because the story avoids war content. The visitor-entry restriction is as stated on the WHC page on the access date; rules may change. The official heritage name is 합천 해인사 장경판전 (National Treasure, designated 1962). REVISED: 'oldest buildings' -> 'oldest buildings still standing at Haeinsa' (국가유산포털: 해인사에 남아있는 건물 중 가장 오래 되었다; verified in the portal's description text and its UNESCO page). Visitor restriction (f9): the UNESCO WHC text, re-read on an Internet Archive snapshot, says restrictions exist 'in order to control the temperature and humidity within the depositories'; the fire-protection measures on the same page (guards, surveillance, lightning rod) are a separate sentence. Narration now says visitors 'cannot walk inside' to match the UNESCO wording, and the old 'to keep the air just right inside' phrase was replaced. Only UNESCO is cited for this restriction; no 국가유산청 page with it was found, and rules may change. Check distractors replaced with plausible wrong answers. Vocab 소금/습기 dropped (not shown in a scene) and 세계유산 added. FINAL PASS (3rd check): scene 8 now says 'visitor entry is restricted' (UNESCO wording) instead of 'visitors cannot walk inside', because Haeinsa runs pre-booked guided tours inside Beopbojeon (since 2021-06, 경향신문). Current rules should be checked on haeinsa.or.kr before any release. REVIEW PASS (PR 1.8b): s1 no longer assumes the learner read story-tripitaka-koreana; s7 narrates UNESCO's 'oldest depository' as 'the oldest place built to store the Tripitaka'; s8 says only a few visitors may go in (f9: entry restricted, small pre-booked tours), to keep heat and dampness steady. REVIEW FIX (PR 1.8b round 2): s7 renders UNESCO's 'oldest depository' as 'the oldest storehouse of the Tripitaka' (no added 'built to' inside the UNESCO attribution). s8 is back to the time-independent UNESCO wording, 'visitor entry is limited' (f9), not 'only a few visitors may go in', which leaned on the 2021 tour reports; caption to match. The gloss of 'Uriga jikyeoyo' is now 'we protect it!' (no 'together' in the Korean). c1/c2 options rebalanced for length. Release check before PR 1.9 flips the catalogue status: re-check entry rules on haeinsa.or.kr; s8 holds either way.",
     "errata": []
@@ -8077,13 +8257,15 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:jikji-metal-type",
     "state": "ready",
-    "contentVer": 3,
+    "contentVer": 4,
     "title": {
       "ko": "직지, 금속활자로 찍은 책",
       "romanization": "Jikji, geumsokhwaljaro jjigeun chaek",
       "en": "Jikji: Printed with Metal Type"
     },
     "summaryEn": "Hoya visits Heungdeoksa Temple in Cheongju, where Jikji was printed with metal movable type in 1377. It is the world's oldest surviving book of its kind, and its one remaining volume is kept in Paris.",
+    "hoyaIntroEn": "Let's visit a temple where people printed a book with metal type!",
+    "hoyaOutroEn": "Now you know the story of Jikji and the metal type that printed it!",
     "theme": "letters",
     "kind": "documentary",
     "recommendedStage": 2,
@@ -8099,9 +8281,11 @@ export const storiesAll: Story[] = [
       "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
     },
     "review": {
-      "language": "draft",
-      "culture": "draft",
-      "advisory": []
+      "language": "native-reviewed",
+      "culture": "culture-reviewed",
+      "advisory": [],
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
     },
     "keywords": [
       {
@@ -8662,8 +8846,22 @@ export const storiesAll: Story[] = [
       }
     ],
     "coverSceneId": "s1",
+    "rewardCardIds": {
+      "listen": "card:story-jikji-metal-type"
+    },
+    "shelf": {
+      "category": "culture",
+      "order": 9,
+      "sampler": false,
+      "minutes": 5
+    },
     "pillarTags": [],
     "companionId": "hoya",
+    "card": {
+      "titleEn": "Metal Type",
+      "keywordId": "geumsokhwalja",
+      "factId": "f1"
+    },
     "facts": [
       {
         "id": "f1",
@@ -8927,7 +9125,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
+      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
     },
     "authorNotes": "There is no comparison with Gutenberg because official Korean sources give different gaps: '70여년' and '80여년' on the 국가유산포털 Jikji page, and '78년' on the Heungdeoksa site signboard text. How the book reached France is left out as a sensitive topic for young learners; per 국가유산포털 it was collected by Collin de Plancy, passed to Henri Vever, and went to the BnF under his will after his death in 1950. It can be added later with that source. The 1972 'International Book Year' exhibition and the old misnomer 'Jikji Simgyeong' are also left out. The surviving volume has lost its first leaf (38 of 39 leaves remain, per 국가유산포털), which is left out too. The casting method (wax versus sand) is not described because it is debated, and earlier metal-type evidence (the 1239 colophon) is mentioned only in general terms. The full title is 백운화상초록불조직지심체요절 (Baegun Hwasang Chorok Buljo Jikji Simche Yojeol). REVISED: the names of Baegun's disciples are no longer given in the narration. 국가유산포털 writes the second disciple 달담 and the Cheongju Early Printing Museum writes 달잠 (達湛); the museum names Seokchan and Daljam as disciples and Myodeok as donor. Scene 8: 'diggers' -> 'archaeologists'; 'The temple itself disappeared long ago' -> 'seems to have been lost in a fire long ago' (encykorea: 폐사된 것으로 보이며); 'bronze piece' -> 'metal piece' because 국가유산포털 describes the 금구 as a 쇠북(금구) fragment. Vocab 종이/인쇄/금속 replaced by 제자/금속활자/직지 so that every vocab word appears in a scene. FINAL PASS (3rd check): f8 quote no longer repeats the prize amount (UNESCO page copies show US$ 30,000 and US$ 40,000 at different times). All other facts re-verified unchanged. REVIEW PASS (PR 1.8b): title.en and s1 say 'metal type', not 'letters made of metal' (Jikji predates Hangul and its type pieces are characters). s8 now says the temple seems to have closed after a fire (f9: abandoned after a fire). Advisory: the fire in s8 (proposed in F-STORY-001 §3.6) was reviewed and cleared; the scene names no person, harm or danger, only that a building closed long ago.",
     "errata": []
@@ -8936,13 +9134,15 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:joseon-records-today",
     "state": "ready",
-    "contentVer": 3,
+    "contentVer": 4,
     "title": {
       "ko": "오래된 기록, 새로운 발견",
       "romanization": "Oraedoen girok, saeroun balgyeon",
       "en": "Old Records, New Discoveries"
     },
     "summaryEn": "How do Joseon records help people today? Hoya sees a fortress repaired from uigwe drawings, a festival that recreates a royal procession, scientists reading old weather notes, and the Annals open to everyone online.",
+    "hoyaIntroEn": "What do old records do for us today? Let's go and see!",
+    "hoyaOutroEn": "Records written long ago still help us today. What will you write down?",
     "theme": "letters",
     "kind": "documentary",
     "recommendedStage": 6,
@@ -8957,9 +9157,11 @@ export const storiesAll: Story[] = [
       "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
     },
     "review": {
-      "language": "draft",
-      "culture": "draft",
-      "advisory": []
+      "language": "native-reviewed",
+      "culture": "culture-reviewed",
+      "advisory": [],
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
     },
     "keywords": [
       {
@@ -9524,8 +9726,22 @@ export const storiesAll: Story[] = [
       }
     ],
     "coverSceneId": "s1",
+    "rewardCardIds": {
+      "listen": "card:story-joseon-records-today"
+    },
+    "shelf": {
+      "category": "culture",
+      "order": 18,
+      "sampler": false,
+      "minutes": 4
+    },
     "pillarTags": [],
     "companionId": "hoya",
+    "card": {
+      "titleEn": "Hwaseong Fortress",
+      "keywordId": "hwaseong",
+      "factId": "f2"
+    },
     "facts": [
       {
         "id": "f1",
@@ -9727,7 +9943,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification."
+      "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
     },
     "authorNotes": "The restoration years (1975-1979) appear in only one Korean source, so narration gives no year. Causes of the fortress damage (colonial period and Korean War) are omitted as out of scope; narration says only 'parts were damaged'. Festival: the official Korean name is 수원화성문화제 (the draft's '화성문화제' was the English-page rendering and the Encyclopedia headword); the claim is now backed by the KHS English page, the Suwon City page for the procession (which states it is based on the uigwe) and the Encyclopedia entry on the festival; 'every year in October' and any dates are left out of narration because the schedule can change (2026 events were held in early October). The translation completion year (1993) is single-source and omitted. Scenes 1 and 8 are story framing with no factual claims. UNESCO register pages are cited for registration years only (page wording not quoted; unesco.org was unreachable on 2026-10-10), and the NIKH list of Korean Memory of the World items is a second source for all four years. PASS 3: the festival-includes-procession link is now backed by the festival's own official site (63rd festival, 2026) in addition to the KHS English page and the Encyclopedia; Suwon City's tourism site lists the two as separate menu items, so the narration keeps the neutral 'includes'.",
     "errata": []
@@ -9736,13 +9952,15 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:kim-hongdo-genre-paintings",
     "state": "ready",
-    "contentVer": 3,
+    "contentVer": 4,
     "title": {
       "ko": "김홍도의 풍속화, 씨름과 서당",
       "romanization": "Gimhongdoui pungsokhwa, ssireumgwa seodang",
       "en": "Kim Hongdo's Pictures of Everyday Life"
     },
     "summaryEn": "Hoya looks closely at Ssireum and Seodang from Danwon's genre painting album at the National Museum of Korea, spotting a taffy seller, shoes that someone has taken off, and a sniffling schoolboy.",
+    "hoyaIntroEn": "Let's look closely at old pictures of everyday life. What can you spot?",
+    "hoyaOutroEn": "A taffy seller, shoes taken off, a sniffling schoolboy: you have sharp eyes!",
     "theme": "life",
     "kind": "art",
     "recommendedStage": 1,
@@ -9758,9 +9976,11 @@ export const storiesAll: Story[] = [
       "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
     },
     "review": {
-      "language": "draft",
-      "culture": "draft",
-      "advisory": []
+      "language": "native-reviewed",
+      "culture": "culture-reviewed",
+      "advisory": [],
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
     },
     "keywords": [
       {
@@ -10260,8 +10480,22 @@ export const storiesAll: Story[] = [
       }
     ],
     "coverSceneId": "s1",
+    "rewardCardIds": {
+      "listen": "card:story-kim-hongdo-genre-paintings"
+    },
+    "shelf": {
+      "category": "culture",
+      "order": 7,
+      "sampler": false,
+      "minutes": 5
+    },
     "pillarTags": [],
     "companionId": "hoya",
+    "card": {
+      "titleEn": "Genre Painting",
+      "keywordId": "pungsokhwa",
+      "factId": "f4"
+    },
     "facts": [
       {
         "id": "f1",
@@ -10444,7 +10678,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
+      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
     },
     "authorNotes": "Attribution caution: NMK and encykorea both report scholarly debate about the album (differences in skill between leaves, retouching, many similar copies); some scholars regard leaves such as Ssireum and Mudong as genuine and weaker leaves as copies, and one view treats the whole album as a later model book. Only 13 of the 25 leaves bear the seal 김홍도인 (encykorea). Narration therefore calls it the album 'known as' Danwon's album and describes what the paintings show; the fact claim says 'attributed to'. The KHS designation text names the school leaf 〈글방〉; NMK and encykorea use 서당. Omitted: the switch (회초리) mentioned in an encykorea media caption for 서당; the album's purchase history (1918) and the 1957 remounting that separated two 군선도 leaves (NMK); Kim Hong-do's death (c.1806 per encykorea; KHS gives '?'). The 2018 UNESCO inscription was a joint inscription by both Koreas; this is not mentioned in narration. Scene 5 claim about shoes follows NMK ('벗어 놓은 신발'), without saying whose shoes they are. REVISION: (a) 'kicked-off shoes' removed; museum text says only 벗어 놓은 신발 (shoes taken off), at the right, narrowing the open space (NMK relicId=551); seller at the left, 'outside the spectators' attention'. 우리역사넷 says the shoes are the two wrestlers' and the seller looks into the distance; NMK's curator page says the seller looks outward, but narration stays with the museum's catalog wording. (b) Seodang layout softened to 'gathered around' because NMK says 둥글게 배치 around the boy while an encykorea caption says pupils sit side by side on both sides of the teacher. (c) Ssireum crowd: NMK says two groups arranged roundly above and below; narration says 'two curved groups'. (d) Quiz distractor for museum changed to other national museums. PR 1.8c review: check c3 now asks who stands at the left of Ssireum (f5), because three similar museum names tested memory of a name rather than the story. Check c3 says 'outside the crowd's attention', following f5 and the museum text, not 'away from the crowd'.",
     "errata": []
@@ -10453,13 +10687,15 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:nanjung-ilgi",
     "state": "ready",
-    "contentVer": 3,
+    "contentVer": 4,
     "title": {
       "ko": "이순신 장군의 난중일기",
       "romanization": "Isunsin janggunui Nanjungilgi",
       "en": "Admiral Yi's Diary"
     },
     "summaryEn": "Hoya opens the diary that Admiral Yi Sunsin kept almost every day from 1592 to 1598, full of weather, feelings and everyday life, now a National Treasure and UNESCO Memory of the World.",
+    "hoyaIntroEn": "Do you keep a diary? Let's open the diary of Admiral Yi.",
+    "hoyaOutroEn": "Weather, feelings and everyday life: Admiral Yi wrote it all down. Maybe you can keep a diary too!",
     "theme": "letters",
     "kind": "documentary",
     "recommendedStage": 3,
@@ -10475,12 +10711,14 @@ export const storiesAll: Story[] = [
       "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
     },
     "review": {
-      "language": "draft",
-      "culture": "draft",
+      "language": "native-reviewed",
+      "culture": "culture-reviewed",
       "advisory": [
         "war"
       ],
-      "advisoryNoteEn": "Briefly mentions a war from Korea's history."
+      "advisoryNoteEn": "Briefly mentions a war from Korea's history.",
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
     },
     "keywords": [
       {
@@ -10614,7 +10852,7 @@ export const storiesAll: Story[] = [
                   "s": 1
                 }
               ],
-              "altEn": "A calm Joseon naval commander stands on the shore beside a wooden panokseon warship in a quiet harbour."
+              "altEn": "A calm Joseon naval commander stands on the shore beside a wooden panokseon warship in a quiet harbor."
             }
           },
           {
@@ -10957,8 +11195,22 @@ export const storiesAll: Story[] = [
       }
     ],
     "coverSceneId": "s1",
+    "rewardCardIds": {
+      "listen": "card:story-nanjung-ilgi"
+    },
+    "shelf": {
+      "category": "culture",
+      "order": 14,
+      "sampler": false,
+      "minutes": 4
+    },
     "pillarTags": [],
     "companionId": "hoya",
+    "card": {
+      "titleEn": "War Diary",
+      "keywordId": "nanjung-ilgi",
+      "factId": "f3"
+    },
     "facts": [
       {
         "id": "f1",
@@ -11199,7 +11451,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
+      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
     },
     "authorNotes": "Kept gentle on purpose: battles, the turtle ship (거북선), and Admiral Yi's death in the final battle of 1598 are omitted to keep the story gentle; the war is only named. Coverage dates differ by source (handwritten volumes: 1592-05-01 to 1598-10-07 lunar per encykorea; UNESCO and the KHS portal give January 1592 to November 1598, which includes passages known only from the printed 이충무공전서), so narration says only '1592 to 1598'. The KHS portal MoW page notes an eighth volume (1595, 을미일기) is lost; narration says seven volumes survive. The naming year (1795, 이충무공전서) comes from encykorea only, so no year is given. The National Treasure designation covers the diary together with letters (서간첩) and war-report drafts (임진장초). Romanization: surname written 'Yi' as in KHS and UNESCO usage (strict RR would give 'I'). 장군 is glossed as the customary Korean title for him; his posts were naval commands (수군절도사, later 삼도수군통제사). REVISION: removed 'even in very hard times' (not in any source); kept UNESCO's hedge 'almost daily' because the surviving volumes have gaps (the 1595 volume is lost). Scene 5 now says he 'wrote about' family, relatives and subordinates (two sources) instead of 'visits'. Second sources added for f3, f4, f5, f6 from 우리역사넷 (국사편찬위원회) and the KHS MoW page. The identity of the person who chose the title is not stated; only 'editors of 이충무공전서' is claimed. PR 1.8c: keyword 난중일기 is kind 'term', matching the book title 동의보감.",
     "errata": []
@@ -11208,13 +11460,15 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:pansori-tales",
     "state": "ready",
-    "contentVer": 3,
+    "contentVer": 4,
     "title": {
       "ko": "판소리로 듣는 흥부와 놀부, 토끼와 자라",
       "romanization": "Pansoriro deunneun Heungbuwa Nolbu, tokkiwa jara",
       "en": "Pansori Tales: Heungbu's Swallow and the Clever Rabbit (Traditional Tales)"
     },
     "summaryEn": "Hoya visits a pansori performance (UNESCO 2003/2008) and hears two traditional stories from its five surviving works: kind Heungbu and the grateful swallow, and the clever rabbit who escapes the Dragon King's palace. This Korean rabbit-and-turtle tale is a different story from Aesop's 'The Tortoise and the Hare'.",
+    "hoyaIntroEn": "Let's listen to pansori! One singer and one drummer tell two old tales.",
+    "hoyaOutroEn": "A kind brother, a grateful swallow and a clever rabbit. Eolssigu, what a show!",
     "theme": "crafts",
     "kind": "folk-tale",
     "recommendedStage": 2,
@@ -11231,13 +11485,15 @@ export const storiesAll: Story[] = [
       "retellingNoteEn": "Shortened and made gentler; versions differ."
     },
     "review": {
-      "language": "draft",
-      "culture": "draft",
+      "language": "native-reviewed",
+      "culture": "culture-reviewed",
       "advisory": [
         "mild-peril",
         "trickery"
       ],
-      "advisoryNoteEn": "Tricksters, a swallow hurt on purpose and a moment of danger, told gently; the harshest parts are left out."
+      "advisoryNoteEn": "Tricksters, a swallow hurt on purpose and a moment of danger, told gently; the harshest parts are left out.",
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
     },
     "keywords": [
       {
@@ -11822,8 +12078,22 @@ export const storiesAll: Story[] = [
       }
     ],
     "coverSceneId": "s1",
+    "rewardCardIds": {
+      "listen": "card:story-pansori-tales"
+    },
+    "shelf": {
+      "category": "story-time",
+      "order": 6,
+      "sampler": false,
+      "minutes": 6
+    },
     "pillarTags": [],
     "companionId": "hoya",
+    "card": {
+      "titleEn": "Pansori",
+      "keywordId": "pansori",
+      "factId": "f1"
+    },
     "facts": [
       {
         "id": "f1",
@@ -12198,7 +12468,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
+      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
     },
     "authorNotes": "REVISED 2026-10-10. Traditional stories: narration describes the tales' content (basic plot per the Encyclopedia of Korean Culture and the National Folk Museum's folk-literature dictionary), not history. Names: the pansori work is 흥보가 (Heungbo/Nolbo) and the novel is 흥부전 (Heungbu/Nolbu); narration uses Heungbu/Nolbu. Ending: the repentance/reconciliation is in the basic plot of the novel Heungbu-jeon (E0066012) AND in the Park Bong-sul and Jeong Gwang-su sung texts (한국민속문학사전 '놀보박타령'); the Encyclopedia's Heungboga entry itself says only that Nolbo is ruined; endings differ (e.g. the 경판본 version ends differently; 신재효's text is described as similar to Jeong Gwang-su's), so narration says 'In well-known versions'. Softened on purpose: Heungbu being beaten and his paid stand-in beatings (매품팔이); Nolbu breaking the swallow's leg is shown only as 'hurt a swallow on purpose'; harmful things from Nolbu's gourds not detailed. Rabbit tale: 'liver' kept because the plot needs it, with a reassurance line right after; the turtle's fate (dies on land or returns empty-handed; in some versions the rabbit's droppings cure the king) is left out. 별주부 (鼈主簿) is the turtle's title, not a name; the 도사 is a sage (道士: one who cultivates the Way). The Korean tale is explicitly distinguished from Aesop's race (summary, scene 6, reference_display, f11). 구토지설: 한국민속문학사전 '수궁가' says Sugungga's frame is the 구토지설 told by Seon Do-hae to Kim Chun-chu and recorded in the Samguk sagi's biographies; the Encyclopedia ('토끼전') names the 구토 tale in the Kim Yu-sin biography as a documented example - narration says only 'an early form is recorded in the Samguk sagi'. Both sources note the older Indian Buddhist (Jataka) roots; not used. 추임새 is now taught in scene 2 and added to vocab (형제 dropped from vocab; it remains the scene 5 Korean word). Combined in one episode to keep the cluster at 6. Theme 'crafts' because the app files performing arts under Play & Crafts. FINAL PASS (3rd check, 2026-10-10): scene 2 now says UNESCO named pansori a masterpiece in 2003 and added it to the Representative List in 2008 (UNESCO page: inscribed 2008, originally proclaimed 2003). f11 now gives the Aesop title as in the cited Townsend text ('The Hare and the Tortoise', also known as 'The Tortoise and the Hare'). 'Greedy' for Nolbu rests on the NFM 놀보박타령 entry, which was added to f5. AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Fact scope: f1-f3, f5, f8 (the works and novels), f11 and f12 are documented; f6, f7, f9, f10 (plot) are in-the-tale. 'Let's hear two' (s2) carries an approximation entry. Advisory note now names the hurt swallow. REVIEW 2026-10-11 (PR 1.8d): narration spells Heungbujeon, Tokkijeon; s3 'One day' (rescue undated); s5 follows f7; s6-s8 past tense; PR #208 fixes: s6 caption drops 'loyal' (f8); 'the rabbit' in s7-s8.",
     "errata": []
@@ -12207,13 +12477,15 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:sejong-new-letters",
     "state": "ready",
-    "contentVer": 2,
+    "contentVer": 3,
     "title": {
       "ko": "세종대왕의 새 글자",
       "romanization": "Sejongdaewangui sae geulja",
       "en": "King Sejong's New Letters"
     },
     "summaryEn": "Hoya travels back to Joseon to learn why King Sejong created 28 new letters in 1443, and how the book Hunminjeongeum explained them in 1446.",
+    "hoyaIntroEn": "Come with me to Joseon! Let's find out why King Sejong made new letters.",
+    "hoyaOutroEn": "Now you know where Hangul began. King Sejong made letters for everyone, and you are reading them!",
     "theme": "letters",
     "kind": "documentary",
     "recommendedStage": 1,
@@ -12229,9 +12501,11 @@ export const storiesAll: Story[] = [
       "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
     },
     "review": {
-      "language": "draft",
-      "culture": "draft",
-      "advisory": []
+      "language": "native-reviewed",
+      "culture": "culture-reviewed",
+      "advisory": [],
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
     },
     "keywords": [
       {
@@ -12364,7 +12638,7 @@ export const storiesAll: Story[] = [
                   "s": 1.1
                 }
               ],
-              "altEn": "Hoya steps out of a glowing open book into a Joseon palace courtyard, where King Sejong stands in his red robe."
+              "altEn": "Hoya steps out of a glowing open book into a Joseon palace courtyard, where King Sejong stands in his royal robe."
             },
             "captionEn": "Hoya lands in King Sejong's Joseon"
           },
@@ -12793,8 +13067,22 @@ export const storiesAll: Story[] = [
       }
     ],
     "coverSceneId": "s1",
+    "rewardCardIds": {
+      "listen": "card:story-sejong-new-letters"
+    },
+    "shelf": {
+      "category": "culture",
+      "order": 1,
+      "sampler": true,
+      "minutes": 4
+    },
     "pillarTags": [],
     "companionId": "hoya",
+    "card": {
+      "titleEn": "King Sejong",
+      "keywordId": "sejong-daewang",
+      "factId": "f1"
+    },
     "facts": [
       {
         "id": "f1",
@@ -13058,7 +13346,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
+      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
     },
     "authorNotes": "Revised after two independent checks. 'Promulgation' wording removed from the narration and summary: the Sillok 1446/9 entry only records that Hunminjeongeum was completed ('是月, 訓民正音成'), and 국립국어원 says no official promulgation ceremony is recorded and that a September 1446 promulgation is unsupported; UNESCO, 국가유산포털 and 국립한글박물관 do use 'published/promulgated 1446', so f7 states both. Scene 2 now gives both reasons from Sejong's preface (Korean differs from Chinese; the characters were hard to learn). Scene 5 phrase fixed to 배우기 쉬워요 (baeugi swiwoyo, 'it's easy to learn'). The word 백성 now appears in scene 4 narration; scene 6 key word is 집현전. The 1443 and 1446 Sillok entries are month-end entries in the lunar calendar with no specific day (the 12th lunar month of Sejong 25 falls in early 1444 in the Gregorian calendar, but UNESCO, 국가유산포털 and encykorea all say 1443, so the story follows that convention). Scene 5 quotes only the first half of Jeong In-ji's line. The 'almost 600 years ago' wording is worked out from 1443. The companion 훈이 ('Sejong's cat' in BP04) was deliberately not used. Illustrations must not show a proclamation ceremony. Do not name a specific palace or a royal robe colour. f9: the 표준국어대사전 quotation could not be read (dynamic page) and was replaced by the UNESCO wording ('now called han-gul'); the 한국민족문화대백과사전 한글 entry also states the point. The 국가유산포털 description text quoted in f1, f7, f8 was re-read from the portal's description fragment (hub_img/html/cul_1111100700000) in the research folder. FINAL PASS (3rd check): scene 4 now says 'An old-fashioned word for the people is baekseong' and f4 cites 표준국어대사전 for 백성. All other facts re-verified unchanged. REVIEW PASS (PR 1.8b): learner prose writes the scholar's name Jeong Inji (F-CNT-002 rule 8); f6 and f8 keep the researched spelling Jeong In-ji. Check c3 options rebalanced so the answer is not the longest.",
     "errata": []
@@ -13067,13 +13355,15 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:seollal-new-year",
     "state": "ready",
-    "contentVer": 3,
+    "contentVer": 4,
     "title": {
       "ko": "호야의 설날 아침",
       "romanization": "Hoyaui Seollal achim",
       "en": "Hoya's Seollal Morning"
     },
     "summaryEn": "Hoya spends Seollal, the Lunar New Year, with a family: new seolbim clothes, a New Year bow (sebae), a warm bowl of tteokguk, and a lively game of yunnori.",
+    "hoyaIntroEn": "Happy New Year! Spend Seollal morning with me and a family.",
+    "hoyaOutroEn": "New clothes, a New Year bow, a bowl of tteokguk and a game of yunnori. What a happy Seollal!",
     "theme": "rites",
     "kind": "intangible",
     "recommendedStage": 1,
@@ -13089,9 +13379,11 @@ export const storiesAll: Story[] = [
       "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
     },
     "review": {
-      "language": "draft",
-      "culture": "draft",
-      "advisory": []
+      "language": "native-reviewed",
+      "culture": "culture-reviewed",
+      "advisory": [],
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
     },
     "keywords": [
       {
@@ -13660,8 +13952,22 @@ export const storiesAll: Story[] = [
       }
     ],
     "coverSceneId": "s1",
+    "rewardCardIds": {
+      "listen": "card:story-seollal-new-year"
+    },
+    "shelf": {
+      "category": "story-time",
+      "order": 1,
+      "sampler": true,
+      "minutes": 4
+    },
     "pillarTags": [],
     "companionId": "hoya",
+    "card": {
+      "titleEn": "Words of Blessing",
+      "keywordId": "deokdam",
+      "factId": "f5"
+    },
     "facts": [
       {
         "id": "f1",
@@ -13941,7 +14247,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
+      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
     },
     "authorNotes": "Romanization: 윷놀이 is pronounced [윤노리], so RR (the repo converter) gives 'yunnori', and yunnori is the app-wide romanization (the yut heritage card also stores yunnori). 'Yut nori' (Korea Heritage Service) and 'yutnori' appear only as alternate English spellings. 'Saehae bok mani badeuseyo' is the greeting most people use today, but the Encyclopedia of Korean Culture calls it a modern greeting (older ones include '과세 안녕히 하셨습니까'). The narration keeps that in facts and doesn't call it ancient. The tteokguk age saying is presented only as a saying. Sebae money (세뱃돈) is described the way the Encyclopedia does: 'a little money, or rice cakes and fruit'. Left out on purpose: the sources don't explain which way up the yut sticks count for each throw (엎어지다/젖혀지다), so the narration doesn't say. Also left out are 차례 table details, 복조리, and 안택 rites. Note for existing content: heritage-cards.ts says tteokguk slices 'look like coins for good luck'. None of the sources checked here supports that, so it's not used here; please review it. REVISION 2026-10-10: \"four great holidays\" now stated as the late-Joseon Dongguk sesigi listing (the 1518 list had three: Seol, Dano, Chuseok, per the KHS portal). Check 3 reworded to an in-story question; \"Everyone\" softened to \"People\". AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean spacing: the learner term is written 국가 무형 유산 (spaced by word, 한글 맞춤법 제50항) so each word lines up with gukga muhyeong yusan; the facts keep the official 국가무형유산. REVIEW 2026-10-11 (PR 1.8d review fixes): s7 also cites f7 (the winning rule); s8 says 'listed' in short sentences; check 1 uses only words this story teaches; s4 now uses the halmeoni keyword as a token; learning goals use receptive verbs (Know, Understand, Read and recognize). PR #208 REVIEW FIXES 2026-10-11: s8 caption 'Two National Intangible Heritage listings' (f9's item is Seol and Daeboreum, not Seol alone; the full name exceeds the 48-character caption cap).",
     "errata": []
@@ -13950,13 +14256,15 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:seungjeongwon-ilgi-every-day",
     "state": "ready",
-    "contentVer": 2,
+    "contentVer": 3,
     "title": {
       "ko": "날마다 쓴 승정원 일기",
       "romanization": "Nalmada sseun Seungjeongwon Ilgi",
       "en": "The Royal Secretariat's Everyday Diary"
     },
     "summaryEn": "At the Royal Secretariat, scribes wrote down the king's working day, every day, even the weather. Hoya learns why this giant diary is a treasure.",
+    "hoyaIntroEn": "Let's visit the Royal Secretariat, where the king's working day was written down.",
+    "hoyaOutroEn": "Even the weather went into the diary! Now you know why it is a treasure.",
     "theme": "letters",
     "kind": "documentary",
     "recommendedStage": 3,
@@ -13973,12 +14281,14 @@ export const storiesAll: Story[] = [
       "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
     },
     "review": {
-      "language": "draft",
-      "culture": "draft",
+      "language": "native-reviewed",
+      "culture": "culture-reviewed",
       "advisory": [
         "loss"
       ],
-      "advisoryNoteEn": "Mentions fires at the Royal Secretariat that destroyed many old diaries, told briefly and calmly."
+      "advisoryNoteEn": "Mentions fires at the Royal Secretariat that destroyed many old diaries, told briefly and calmly.",
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
     },
     "keywords": [
       {
@@ -14505,8 +14815,22 @@ export const storiesAll: Story[] = [
       }
     ],
     "coverSceneId": "s1",
+    "rewardCardIds": {
+      "listen": "card:story-seungjeongwon-ilgi-every-day"
+    },
+    "shelf": {
+      "category": "culture",
+      "order": 13,
+      "sampler": false,
+      "minutes": 5
+    },
     "pillarTags": [],
     "companionId": "hoya",
+    "card": {
+      "titleEn": "Royal Secretariat",
+      "keywordId": "seungjeongwon",
+      "factId": "f1"
+    },
     "facts": [
       {
         "id": "f1",
@@ -14784,7 +15108,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification."
+      "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
     },
     "authorNotes": "Character counts are omitted because sources differ (UNESCO nomination: about 242.5 million; NIKH table: 243 million). Transcription start year differs (NIKH: 1960; Encyclopedia and UNESCO nomination: 1961), so narration says 'in modern times'. Specific weather categories are not asserted; the Korean line '날씨가 맑아요' is a language example, not a quoted entry. 'Largest/greatest record in the world' claims are avoided. Revision: (1) 'one special job' removed - sources only say the juseo wrote the diary, not that it was their only duty ('junior' also dropped; juseo are 7th rank); (2) 'there is only one original set' REMOVED - it rests only on the UNESCO nomination form's rarity statement ('There is only one set of original diaries...') and no second authoritative source states it; replaced by the sourced fact that the originals are kept at Seoul National University's Gyujanggak; (3) 'rebuilt them ... and noted which sources they had used' softened to 'worked to rebuild them, partly using other records such as the court gazette' - the 1744 rebuilding restored only 548 volumes (< 1/3 of the loss) per NIKH and the Encyclopedia, and the 'sources noted' statement exists only in the UNESCO nomination form (§3.4) so it was dropped; (4) robe colours removed from the illustration brief; (5) 'scribes wrote fast' removed (not in sources); (6) goal pattern changed to 일기를 다시 써요 to match scene 6. Changes of office name after 1894 are omitted.",
     "errata": []
@@ -14793,13 +15117,15 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:shapes-of-hangeul",
     "state": "ready",
-    "contentVer": 3,
+    "contentVer": 4,
     "title": {
       "ko": "한글 모양의 비밀",
       "romanization": "Hangeul moyangui bimil",
       "en": "The Secret in the Shapes"
     },
     "summaryEn": "Hoya reads the 1446 Hunminjeongeum Haerye book and discovers that the five basic Hangul consonants copy the shapes of the tongue, mouth, teeth and throat, while the basic vowels come from the sky, the earth and a person.",
+    "hoyaIntroEn": "Did you know the letters hide secret shapes? Let's open an old book and find them!",
+    "hoyaOutroEn": "Tongue, mouth, teeth, throat, sky, earth and a person: you found the secrets in the shapes!",
     "theme": "letters",
     "kind": "documentary",
     "recommendedStage": 1,
@@ -14816,9 +15142,11 @@ export const storiesAll: Story[] = [
       "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
     },
     "review": {
-      "language": "draft",
-      "culture": "draft",
-      "advisory": []
+      "language": "native-reviewed",
+      "culture": "culture-reviewed",
+      "advisory": [],
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
     },
     "keywords": [
       {
@@ -15277,7 +15605,7 @@ export const storiesAll: Story[] = [
                   "s": 0.8
                 }
               ],
-              "altEn": "Hoya juggles 24 blank tiles in a sunny classroom, 14 in one colour and 10 in another, like consonants and vowels."
+              "altEn": "Hoya juggles 24 blank tiles in a sunny classroom, 14 in one color and 10 in another, like consonants and vowels."
             },
             "captionEn": "South Korea's rules: 14 consonants, 10 vowels"
           }
@@ -15407,8 +15735,22 @@ export const storiesAll: Story[] = [
       }
     ],
     "coverSceneId": "s1",
+    "rewardCardIds": {
+      "listen": "card:story-shapes-of-hangeul"
+    },
+    "shelf": {
+      "category": "culture",
+      "order": 2,
+      "sampler": false,
+      "minutes": 5
+    },
     "pillarTags": [],
     "companionId": "hoya",
+    "card": {
+      "titleEn": "Consonants",
+      "keywordId": "jaeum",
+      "factId": "f1"
+    },
     "facts": [
       {
         "id": "f1",
@@ -15619,7 +15961,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
+      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
     },
     "authorNotes": "The letter-shape explanations follow the Haerye's 'Jejahae' (제자해) as summarized by 한국민족문화대백과사전. The Haerye's yin-yang and five-elements philosophy is left out as too advanced. The add-a-stroke rule has exceptions (ㆁ, ㄹ, ㅿ, per 한국민족문화대백과사전), so the narration gives only the ㄴ→ㄷ→ㅌ example. The narration says 'a few old ones are no longer used' rather than naming exactly four, because ㆁ merged with ㅇ rather than disappearing. The 국립국어원 essay (004d/004g) notes that a few details of the design principle are still debated among scholars; the story keeps to the consensus points. Because illustrations must contain no text, the app should overlay the jamo (ㄱ, ㄴ, ㅏ and so on) as UI text on the scene art. REVISED: the shape descriptions now follow the Haerye wording exactly (ㄱ = root of the tongue closing the throat, 象舌根閉喉之形; ㄴ = tongue touching the upper gum, 象舌附上腭之形) and no longer promise a physical sensation or add modern phonetics ('back of the tongue blocks the throat', 'ridge behind the upper teeth' removed; narration and illustration). The summary now says 'five basic consonants' (only ㄱ ㄴ ㅁ ㅅ ㅇ copy speech organs; others add strokes). Scene 2 no longer lists 'lips' (the Haerye names tongue root, tongue, mouth, tooth, throat). Vocab 혀 removed because no scene shows it. FINAL PASS (3rd check): scene 8, goal 4 and f7 now say South Korea's spelling rules count 24 (North Korea's norms count 40). The ㄴ wording follows the standard Korean rendering of 象舌附上腭之形 ('tongue touching the upper gum'); the Chinese 上腭 literally means the upper palate/jaw, so no finer anatomical claim is made. REVIEW PASS (PR 1.8b): the old vowel arae-a is named 'the round dot' in learner text, never typed as a bare middle dot (screen readers skip it); the art overlay draws it. REVIEW FIX (PR 1.8b round 2): isolated jamo use the F-CNT-002 C6 sound-value table: ㄱ 'g/k' and ㄷ 'd/t' in keywords, the s2 keyword, the c3 target and the learning goals (ㅇ already 'silent/ng'). The goal glosses are modern reading aids; in the Haerye the throat letter ㅇ was the null letter and ng was written with the separate letter ㆁ, which the narration does not claim otherwise.",
     "errata": []
@@ -15628,13 +15970,15 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:sillok-mountain-archives",
     "state": "ready",
-    "contentVer": 2,
+    "contentVer": 3,
     "title": {
       "ko": "산으로 간 실록",
       "romanization": "Saneuro gan sillok",
       "en": "The Annals Hide in the Mountains"
     },
     "summaryEn": "After a king died, officials turned the historians' notes into the Annals and guarded the books in archives far away in the mountains. Hoya follows the Annals from draft to mountain archive.",
+    "hoyaIntroEn": "Where did the Annals go to stay safe? Let's follow them into the mountains!",
+    "hoyaOutroEn": "From notes to books to mountain archives: you followed the Annals all the way!",
     "theme": "letters",
     "kind": "documentary",
     "recommendedStage": 2,
@@ -15651,13 +15995,15 @@ export const storiesAll: Story[] = [
       "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
     },
     "review": {
-      "language": "draft",
-      "culture": "draft",
+      "language": "native-reviewed",
+      "culture": "culture-reviewed",
       "advisory": [
         "war",
         "loss"
       ],
-      "advisoryNoteEn": "Mentions a king's death and a war in which some books were lost, told briefly and with no violent detail."
+      "advisoryNoteEn": "Mentions a king's death and a war in which some books were lost, told briefly and with no violent detail.",
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
     },
     "keywords": [
       {
@@ -16235,8 +16581,22 @@ export const storiesAll: Story[] = [
       }
     ],
     "coverSceneId": "s1",
+    "rewardCardIds": {
+      "listen": "card:story-sillok-mountain-archives"
+    },
+    "shelf": {
+      "category": "culture",
+      "order": 8,
+      "sampler": false,
+      "minutes": 5
+    },
     "pillarTags": [],
     "companionId": "hoya",
+    "card": {
+      "titleEn": "History Archive",
+      "keywordId": "sago",
+      "factId": "f7"
+    },
     "facts": [
       {
         "id": "f1",
@@ -16516,7 +16876,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification."
+      "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
     },
     "authorNotes": "Sources disagree on how many sets were newly printed in 1603-1606 (Korea Heritage Service and National Archives: four; Encyclopedia of Korean Culture: three printed plus the original and a proof copy); all agree on five sets in five archives, so narration says 'making five sets'. Poswae frequency also differs slightly (every 3 years in NIKH and the Annals entry; every 2-3 years in National Archives; the 진술축미 schedule of the Encyclopedia's poswae entry, i.e. every third year, though it often slipped), so narration says 'every few years'. Revision: 'red silk' changed to 'red cloth' (the poswae entry says 홍보 'red wrapping cloth'; only the National Archives says silk); the herbs' purpose is now stated generally ('protect from bugs and rot', per the poswae entry and the National Archives) rather than the National Archives' split into cheongung = insects and changpo = germs/fragrance; 'on a sunny day' replaced by 'on a clear day' (supported by two sources); the closing sentence 'Thanks to such care, the Annals survive today' was removed because it was not backed by a fact entry. Secho by washing is limited to early Joseon (later drafts were mostly burned). The Imjin War is mentioned only as 'a great war' with no violent detail. Omitted as out of scope or tragic: later moves to Jeongjoksan/Jeoksangsan, the Qing invasion, colonial-era removal of the Odaesan copy and its loss in the 1923 Kanto earthquake, the Korean War, and the 2006 return.",
     "errata": []
@@ -16525,13 +16885,15 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:sillok-royal-historians",
     "state": "ready",
-    "contentVer": 3,
+    "contentVer": 4,
     "title": {
       "ko": "호야, 사관을 만나다",
       "romanization": "Hoya, sagwaneul mannada",
       "en": "Hoya Meets the Royal Historians"
     },
     "summaryEn": "Hoya learns who wrote down the words of Joseon kings and why even the king could not read their notes. A real 1404 entry from the Annals shows how faithfully they recorded.",
+    "hoyaIntroEn": "How do we know what kings said long ago? Let's meet the people who wrote it all down!",
+    "hoyaOutroEn": "The historians wrote it all down, day after day. Now you know where the Annals came from!",
     "theme": "letters",
     "kind": "documentary",
     "recommendedStage": 1,
@@ -16548,12 +16910,14 @@ export const storiesAll: Story[] = [
       "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
     },
     "review": {
-      "language": "draft",
-      "culture": "draft",
+      "language": "native-reviewed",
+      "culture": "culture-reviewed",
       "advisory": [
         "mild-peril"
       ],
-      "advisoryNoteEn": "A king falls from his horse while hunting; he is not hurt."
+      "advisoryNoteEn": "A king falls from his horse while hunting; he is not hurt.",
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
     },
     "keywords": [
       {
@@ -17006,8 +17370,22 @@ export const storiesAll: Story[] = [
       }
     ],
     "coverSceneId": "s1",
+    "rewardCardIds": {
+      "listen": "card:story-sillok-royal-historians"
+    },
+    "shelf": {
+      "category": "culture",
+      "order": 5,
+      "sampler": false,
+      "minutes": 4
+    },
     "pillarTags": [],
     "companionId": "hoya",
+    "card": {
+      "titleEn": "Royal Historian",
+      "keywordId": "sagwan",
+      "factId": "f1"
+    },
     "facts": [
       {
         "id": "f1",
@@ -17294,7 +17672,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification."
+      "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
     },
     "authorNotes": "Taejong's fall is told exactly as the entry states (不傷, not hurt); the deer-shooting detail and season are omitted (lunar-to-solar conversion not verified from two sources). The secrecy rule is narrated as a rule ('supposed to'): the NIKH introduction notes that in practice some historians avoided frank writing out of fear and that leaks led to tragic purges (e.g., 1498), which are omitted as out of scope for a gentle all-ages story. Revision: the English-language portal description quote ('Nobody was allowed to read the sacho...') was dropped from f4; the portal's Korean description sentence is kept in f5/f8/f9/f10 (re-checked against a saved copy of the portal page, 2026-10-09/10). The NIKH f9 quote was corrected to '일컫는다'. UNESCO Annals page is paraphrased, not quoted (unesco.org was unreachable on 2026-10-10 for re-quoting). Added 'from Taejo to Cheoljong' (the Annals do not include the Gojong/Sunjong reigns' records, so 25 kings, not 27). Alignment flag: BP05 1.A3 describes the Sillok as 'a diary people wrote every day' - inaccurate; the Sillok was compiled after each king's death from daily drafts (see story-sillok-mountain-archives). Designation numbers are deliberately not used. Narration scene 2: 'with brush and paper' removed (not stated in the cited sources).",
     "errata": []
@@ -17303,13 +17681,15 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:sun-and-moon",
     "state": "ready",
-    "contentVer": 3,
+    "contentVer": 4,
     "title": {
       "ko": "해님 달님",
       "romanization": "Haenim Dallim",
       "en": "The Sun and the Moon (A Traditional Tale)"
     },
     "summaryEn": "A gentle, simplified retelling of the traditional Korean folk tale Haenim Dallim: a brother and sister outwit a tricky tiger, climb a rope into the sky, and become the sun and the moon.",
+    "hoyaIntroEn": "Story time! Here is an old folk tale about a brother, a sister and a tricky tiger.",
+    "hoyaOutroEn": "The brother and sister are safe in the sky. That is the end of our tale!",
     "theme": "nature",
     "kind": "folk-tale",
     "recommendedStage": 1,
@@ -17326,14 +17706,16 @@ export const storiesAll: Story[] = [
       "retellingNoteEn": "Shortened and made gentler; versions differ."
     },
     "review": {
-      "language": "draft",
-      "culture": "draft",
+      "language": "native-reviewed",
+      "culture": "culture-reviewed",
       "advisory": [
         "mild-peril",
         "loss",
         "trickery"
       ],
-      "advisoryNoteEn": "A tricky tiger and a moment of danger, told gently. In the traditional tale the mother does not come home; this retelling leaves it out."
+      "advisoryNoteEn": "A tricky tiger and a moment of danger, told gently. In the traditional tale the mother does not come home; this retelling leaves it out.",
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
     },
     "keywords": [
       {
@@ -17916,8 +18298,22 @@ export const storiesAll: Story[] = [
       }
     ],
     "coverSceneId": "s1",
+    "rewardCardIds": {
+      "listen": "card:story-sun-and-moon"
+    },
+    "shelf": {
+      "category": "story-time",
+      "order": 3,
+      "sampler": true,
+      "minutes": 5
+    },
     "pillarTags": [],
     "companionId": "hoya",
+    "card": {
+      "titleEn": "Strong Rope",
+      "keywordId": "dongajul",
+      "factId": "f5"
+    },
     "facts": [
       {
         "id": "f1",
@@ -18086,7 +18482,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
+      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
     },
     "authorNotes": "REVISED 2026-10-10. Traditional tale: narration describes what happens in the tale, not history. Two authoritative sources now: the Encyclopedia of Korean Culture (E0062663; basic version with three siblings) and the National Folk Museum's 한국민속문학사전 entry by 조현설 (topic 6006; summary with two children, whose folk-literature dictionary cites 한국구비문학대계 1-4, 811; 1-5, 308; 2-6, 473; 2-7, 513 as its sources - the 구비문학대계 recordings themselves could not be opened with the tools used, gubi.aks.ac.kr returned nothing). The sesame-oil episode (f4) rests on the Encyclopedia only (the NFM summary does not mention it); claims kept minimal. Differences between sources, stated openly in the facts: Encyclopedia - mother met at successive hill passes with demands rice cake, clothes, arms, legs, torso; children open the door when the tiger says it must nurse the baby; the sun-sister pricks people's eyes with needles. NFM - children see the tiger through a hole in the door and flee by the back door; the sun-sister gives off a strong light. This retelling follows the gentler options where they exist. Softened on purpose: the tiger eating the mother and the baby; the demands for clothes, arms, legs and torso; the axe; the tiger's death on the sorghum stalks (told as 'the end of its tricks'); the needles. Three siblings (삼 남매) in the Encyclopedia vs. two (오누이) in the NFM summary: narration says 'the children' (s3: 'a brother and sister') and does not mention the baby (review 2026-10-11: naming the baby made listeners ask what happened to it). 님 is a gender-neutral respectful suffix; in this retelling the sun is the sister and the moon the brother, so the 'Mr. Sun, Ms. Moon' gloss was removed. Reassurance beats added in scenes 4, 7 and 8. The line '떡 하나 주면 안 잡아먹지' is not used (not in the sources; too scary for young children). Hoya's 'not like me!' is character banter. Stage 5 'Tiger Folktales' is a natural placement, but the language is at Listen level, hence recommended_stage 1. AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Fact scope: f1 (the tale exists and is told widely) is documented; f3 and f7 (what happens in the tale) are in-the-tale. Title: 해님 달님 (Haenim Dallim); the 'traditional tale' label lives in title.en and origin, not in brackets in the Korean title. 'these two' (s4) carries an approximation entry. REVIEW 2026-10-11 (PR 1.8d review fixes): advisory adds 'loss' and the note names the mother's fate as left out; s2 and s8 in plainer sentences; the hae, dal, onui, namu and dongajul keywords appear as tokens; -nim glossed as an honorific suffix; learning goals use receptive verbs. PR #208 fixes: s3 'played a clever trick' generalises f3's nursing excuse (baby kept out, no invented cause); the advisory gives the mother's fate as the traditional tale's, not 'older versions'.",
     "errata": []
@@ -18095,13 +18491,15 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:tripitaka-koreana",
     "state": "ready",
-    "contentVer": 3,
+    "contentVer": 4,
     "title": {
       "ko": "팔만대장경",
       "romanization": "Palmandaejanggyeong",
       "en": "Eighty Thousand Woodblocks"
     },
     "summaryEn": "At Haeinsa Temple, Hoya discovers the Tripitaka Koreana: more than 80,000 woodblocks of Buddhist scriptures carved between 1237 and 1248, still kept safe today.",
+    "hoyaIntroEn": "Let's climb a mountain to a temple full of carved wooden blocks!",
+    "hoyaOutroEn": "So many blocks, carved so long ago and still safe today. Thank you for exploring Haeinsa with me!",
     "theme": "letters",
     "kind": "documentary",
     "recommendedStage": 1,
@@ -18117,12 +18515,14 @@ export const storiesAll: Story[] = [
       "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
     },
     "review": {
-      "language": "draft",
-      "culture": "draft",
+      "language": "native-reviewed",
+      "culture": "culture-reviewed",
       "advisory": [
         "war"
       ],
-      "advisoryNoteEn": "Mentions that Mongol armies invaded Korea long ago. No fighting is shown."
+      "advisoryNoteEn": "Mentions that Mongol armies invaded Korea long ago. No fighting is shown.",
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
     },
     "keywords": [
       {
@@ -18641,8 +19041,22 @@ export const storiesAll: Story[] = [
       }
     ],
     "coverSceneId": "s1",
+    "rewardCardIds": {
+      "listen": "card:story-tripitaka-koreana"
+    },
+    "shelf": {
+      "category": "culture",
+      "order": 4,
+      "sampler": false,
+      "minutes": 5
+    },
     "pillarTags": [],
     "companionId": "hoya",
+    "card": {
+      "titleEn": "Tripitaka Koreana",
+      "keywordId": "daejanggyeong",
+      "factId": "f1"
+    },
     "facts": [
       {
         "id": "f1",
@@ -18911,7 +19325,7 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
+      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
     },
     "authorNotes": "The carving period follows 국가유산포털, 한국민족문화대백과사전 and UNESCO WHC (1237–1248). Some accounts count the whole project, preparation included, as about 16 years ending in 1251, so the narration gives only 1237–1248. The count of 81,258 comes from a survey made under Japanese rule and includes some blocks re-carved in Joseon (국가유산포털), so the narration says 'more than 80,000'. Where the carving took place (Ganghwa versus Namhae) is treated differently across sources and is left out. The 1398 move to Haeinsa appears only on 국가유산포털 pages, so it is left out too. The earlier set of blocks lost to fire in 1232 is left out to keep the war content mild. UNESCO's Memory of the World page places Haeinsa in the 'southwest' of the peninsula, but Haeinsa is in South Gyeongsang Province in the southeast, so that phrase was not used. 'Almost 800 years later' is worked out from 1248. The official heritage name is 합천 해인사 대장경판 (Hapcheon Haeinsa Daejanggyeongpan). REVISED: scene 1 no longer puts Hoya 'inside' the hall (visitor entry is restricted, see story-janggyeong-panjeon). f5 attributes the exact figure 81,258 to UNESCO (verified on the Memory of the World page) and records the Korea Heritage Service caveat; other published counts (about 81,350; 81,352) were reported by one fact-checker but not verified here, so no exact number appears in the narration. Second sources added for lacquer (f6) and the tens of millions of characters (f7: 5,200여 만자, 국가유산포털). The wild-cherry wood and corner metal plates (f6) still rest on one authoritative source (한국민족문화대백과사전; spelled 산벗나무 there). The UNESCO WHC page blocks automated access; its text was re-read on an Internet Archive snapshot. Vocab 새기다 dropped and 경판 added to scene 5 so every vocab word appears in a scene. FINAL PASS (3rd check): wild cherry wood (about 64-70% of blocks) and corner metal plates (copper) now rest on three sources (한국민족문화대백과사전, 정책브리핑, 박상진 study). The purpose of the lacquer is stated by 한국민족문화대백과사전 and the 국가유산포털 MoW page (preserves the carving); 박상진 doubts its protective effect, so treat 'to protect them' as the official wording. REVIEW PASS (PR 1.8b): s8 no longer points to a 'next time' story (shelf stories open in any order). REVIEW FIX (PR 1.8b round 2): c1 options are now parallel ('More than ...') so the wording does not give the answer away. Name romanization follows the converter ('Palmandaejanggyeong') in the title and goals; s4 keeps the two-word 'Palman Daejanggyeong' on purpose, because the next sentence explains 'Palman means eighty thousand'.",
     "errata": []
@@ -18920,13 +19334,15 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:uigwe-royal-birthday",
     "state": "ready",
-    "contentVer": 2,
+    "contentVer": 3,
     "title": {
       "ko": "왕실 잔치를 그림으로 남긴 의궤",
       "romanization": "Wangsil janchireul geurimeuro namgin uigwe",
       "en": "A Picture Record of a Royal Birthday"
     },
     "summaryEn": "Uigwe were detailed reports, full of pictures, of royal ceremonies and projects. Hoya opens the Wonhaeng Eulmyo Jeongni Uigwe, the record of King Jeongjo's 1795 celebration for his mother's 60th birthday.",
+    "hoyaIntroEn": "Let's open a royal report full of pictures, made for a big birthday celebration!",
+    "hoyaOutroEn": "Words and pictures kept the royal celebration alive. Now you know what an uigwe is!",
     "theme": "rites",
     "kind": "documentary",
     "recommendedStage": 5,
@@ -18943,9 +19359,11 @@ export const storiesAll: Story[] = [
       "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
     },
     "review": {
-      "language": "draft",
-      "culture": "draft",
-      "advisory": []
+      "language": "native-reviewed",
+      "culture": "culture-reviewed",
+      "advisory": [],
+      "reviewedBy": "MAR",
+      "reviewedAt": "2026-10-13"
     },
     "keywords": [
       {
@@ -19270,7 +19688,7 @@ export const storiesAll: Story[] = [
                   "flip": true
                 }
               ],
-              "altEn": "Court dancers perform beside a feast table, and a fine curtain screens the seat of Lady Hyegyeong, the guest of honour."
+              "altEn": "Court dancers perform beside a feast table, and a fine curtain screens the seat of Lady Hyegyeong, the guest of honor."
             }
           },
           {
@@ -19493,8 +19911,22 @@ export const storiesAll: Story[] = [
       }
     ],
     "coverSceneId": "s1",
+    "rewardCardIds": {
+      "listen": "card:story-uigwe-royal-birthday"
+    },
+    "shelf": {
+      "category": "culture",
+      "order": 17,
+      "sampler": false,
+      "minutes": 5
+    },
     "pillarTags": [],
     "companionId": "hoya",
+    "card": {
+      "titleEn": "Royal Picture Record",
+      "keywordId": "uigwe",
+      "factId": "f1"
+    },
     "facts": [
       {
         "id": "f1",
@@ -19744,15 +20176,1601 @@ export const storiesAll: Story[] = [
       "passes": 3,
       "checkedAt": "2026-10-10",
       "scope": "cluster",
-      "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification."
+      "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
     },
     "authorNotes": "Narration omits the ages in the silk-gift entry (70+ and those turning 61) because they come from a single source; the Korean line '어르신' is a vocabulary item. 회갑 (source term) and 환갑 (everyday term) both mean the 60th birthday; 환갑 is taught. The feast date is given on the lunar calendar as recorded; the KHS English page says 'February 1795', which refers to the lunar leap 2nd month. The leap-month wording was rewritten simply ('an extra leap month after the second month'). The Hwaseong feast (13th of the leap 2nd month) took place during the 1795 trip celebrating her 60th year; her actual birthday fell in the 6th lunar month and the Encyclopedia notes a formal feast on 6/18 in Seoul, so narration says 'a celebration of her 60th birthday' and never says the Hwaseong feast was on the birthday itself. Revision: the uigwe is now named (원행을묘정리의궤); banchado described as 'long pictures' not paintings; 'woodblock' was REMOVED - Korean authorities (Encyclopedia of Korean Culture) say only 판화 (prints), and no Korean institutional source found says woodblock specifically (a Cambridge/Amsterdam UP page suggested by a checker did not mention woodcuts when re-fetched). The encyclopedia calls this 'the first uigwe printed with movable type'; narration says 'unusually' to stay conservative. UNESCO page text is paraphrased (unesco.org unreachable for re-quoting); UNESCO nomination-form quotes were re-checked against a saved copy of the PDF; the draft's banchado caption quote ('Banchado in color ... excellent clarity') could not be found in the PDF text and was replaced by the §1 Summary sentence on Banchado and Doseol. Omitted: the length of a painting (15.4 m, single source), page counts beyond f7, the story of Prince Sado (tragic), and the 1866 removal of Oegyujanggak uigwe to France and their 2011 return (war-related). PASS 3: second source for 판화 found (정병모, 판화사적 연구: 'prints' - and specifically 목판화, woodblock prints, with 정리자 metal type); narration stays at the more general 'prints'. Silk gifts (f6) confirmed directly in the original Annals entry text (命進饌時參班老人, 七十以上及六十一歲人, 各賜帛一匹); single primary source kept, no numbers in narration.",
     "errata": []
   }
 ];
 
-export const storyEpisodes: Episode[] = [];
+export const storyEpisodes: Episode[] = [
+  {
+    "id": "episode:shelf-angbuilgu-sundial",
+    "stage": "stage1",
+    "theme": "nature",
+    "order": 111,
+    "titleEn": "The Sky-Facing Pot That Told the Time",
+    "hoyaIntroEn": "Can a shadow tell the time? Let's look at a sundial shaped like a bowl!",
+    "questIds": [
+      "quest:story-angbuilgu-sundial-listen"
+    ],
+    "rewardCardIds": [
+      "card:story-angbuilgu-sundial"
+    ],
+    "estimatedMinutes": 4,
+    "status": "ready",
+    "format": "story",
+    "placement": "shelf",
+    "pillarTags": [],
+    "companionId": "hoya"
+  },
+  {
+    "id": "episode:shelf-cheugugi-rain-gauge",
+    "stage": "stage1",
+    "theme": "crafts",
+    "order": 106,
+    "titleEn": "The Bowl That Measured the Rain",
+    "hoyaIntroEn": "Pitter-patter! Let's find out how Joseon measured the rain.",
+    "questIds": [
+      "quest:story-cheugugi-rain-gauge-listen"
+    ],
+    "rewardCardIds": [
+      "card:story-cheugugi-rain-gauge"
+    ],
+    "estimatedMinutes": 4,
+    "status": "ready",
+    "format": "story",
+    "placement": "shelf",
+    "pillarTags": [],
+    "companionId": "hoya"
+  },
+  {
+    "id": "episode:shelf-chuseok-ganggangsullae",
+    "stage": "stage1",
+    "theme": "rites",
+    "order": 102,
+    "titleEn": "Chuseok: Songpyeon and the Full Moon",
+    "hoyaIntroEn": "It's Chuseok! Let's make songpyeon and watch the full moon together.",
+    "questIds": [
+      "quest:story-chuseok-ganggangsullae-listen"
+    ],
+    "rewardCardIds": [
+      "card:story-chuseok-ganggangsullae"
+    ],
+    "estimatedMinutes": 5,
+    "status": "ready",
+    "format": "story",
+    "placement": "shelf",
+    "pillarTags": [],
+    "companionId": "hoya"
+  },
+  {
+    "id": "episode:shelf-dano-ssireum",
+    "stage": "stage1",
+    "theme": "rites",
+    "order": 104,
+    "titleEn": "Dano Day: Swings, Masks and Ssireum",
+    "hoyaIntroEn": "Dano is here! Let's swing high, watch a mask play and cheer at ssireum.",
+    "questIds": [
+      "quest:story-dano-ssireum-listen"
+    ],
+    "rewardCardIds": [
+      "card:story-dano-ssireum"
+    ],
+    "estimatedMinutes": 5,
+    "status": "ready",
+    "format": "story",
+    "placement": "shelf",
+    "pillarTags": [],
+    "companionId": "hoya"
+  },
+  {
+    "id": "episode:shelf-donguibogam",
+    "stage": "stage1",
+    "theme": "life",
+    "order": 115,
+    "titleEn": "Heo Jun's Treasured Mirror of Medicine",
+    "hoyaIntroEn": "Let's meet a royal doctor who wrote a giant book about staying healthy.",
+    "questIds": [
+      "quest:story-donguibogam-listen"
+    ],
+    "rewardCardIds": [
+      "card:story-donguibogam"
+    ],
+    "estimatedMinutes": 5,
+    "status": "ready",
+    "format": "story",
+    "placement": "shelf",
+    "pillarTags": [],
+    "companionId": "hoya"
+  },
+  {
+    "id": "episode:shelf-gimjang-arirang",
+    "stage": "stage1",
+    "theme": "life",
+    "order": 105,
+    "titleEn": "Gimjang Day: Sharing Kimchi, Singing Arirang",
+    "hoyaIntroEn": "Winter is coming! Let's make kimchi with neighbors and hear a song shared across Korea.",
+    "questIds": [
+      "quest:story-gimjang-arirang-listen"
+    ],
+    "rewardCardIds": [
+      "card:story-gimjang-arirang"
+    ],
+    "estimatedMinutes": 5,
+    "status": "ready",
+    "format": "story",
+    "placement": "shelf",
+    "pillarTags": [],
+    "companionId": "hoya"
+  },
+  {
+    "id": "episode:shelf-hangeul-day",
+    "stage": "stage1",
+    "theme": "letters",
+    "order": 103,
+    "titleEn": "Happy Hangul Day!",
+    "hoyaIntroEn": "Let's find out why Hangul has its own special day!",
+    "questIds": [
+      "quest:story-hangeul-day-listen"
+    ],
+    "rewardCardIds": [
+      "card:story-hangeul-day"
+    ],
+    "estimatedMinutes": 4,
+    "status": "ready",
+    "format": "story",
+    "placement": "shelf",
+    "pillarTags": [],
+    "companionId": "hoya"
+  },
+  {
+    "id": "episode:shelf-ilseongnok-daily-reflection",
+    "stage": "stage1",
+    "theme": "letters",
+    "order": 116,
+    "titleEn": "King Jeongjo's Diary of Daily Reflection",
+    "hoyaIntroEn": "Let's read about a young royal heir who looked back on each day in his diary.",
+    "questIds": [
+      "quest:story-ilseongnok-daily-reflection-listen"
+    ],
+    "rewardCardIds": [
+      "card:story-ilseongnok-daily-reflection"
+    ],
+    "estimatedMinutes": 4,
+    "status": "ready",
+    "format": "story",
+    "placement": "shelf",
+    "pillarTags": [],
+    "companionId": "hoya"
+  },
+  {
+    "id": "episode:shelf-jagyeongnu-water-clock",
+    "stage": "stage1",
+    "theme": "crafts",
+    "order": 112,
+    "titleEn": "Jang Yeongsil and the Clock That Rang by Itself",
+    "hoyaIntroEn": "Drip, drip! Let's see a water clock that rang all by itself.",
+    "questIds": [
+      "quest:story-jagyeongnu-water-clock-listen"
+    ],
+    "rewardCardIds": [
+      "card:story-jagyeongnu-water-clock"
+    ],
+    "estimatedMinutes": 5,
+    "status": "ready",
+    "format": "story",
+    "placement": "shelf",
+    "pillarTags": [],
+    "companionId": "hoya"
+  },
+  {
+    "id": "episode:shelf-janggyeong-panjeon",
+    "stage": "stage1",
+    "theme": "crafts",
+    "order": 110,
+    "titleEn": "Guarded by the Wind",
+    "hoyaIntroEn": "How do you keep old woodblocks safe? Let's ask the wind at Haeinsa!",
+    "questIds": [
+      "quest:story-janggyeong-panjeon-listen"
+    ],
+    "rewardCardIds": [
+      "card:story-janggyeong-panjeon"
+    ],
+    "estimatedMinutes": 5,
+    "status": "ready",
+    "format": "story",
+    "placement": "shelf",
+    "pillarTags": [],
+    "companionId": "hoya"
+  },
+  {
+    "id": "episode:shelf-jikji-metal-type",
+    "stage": "stage1",
+    "theme": "letters",
+    "order": 109,
+    "titleEn": "Jikji: Printed with Metal Type",
+    "hoyaIntroEn": "Let's visit a temple where people printed a book with metal type!",
+    "questIds": [
+      "quest:story-jikji-metal-type-listen"
+    ],
+    "rewardCardIds": [
+      "card:story-jikji-metal-type"
+    ],
+    "estimatedMinutes": 5,
+    "status": "ready",
+    "format": "story",
+    "placement": "shelf",
+    "pillarTags": [],
+    "companionId": "hoya"
+  },
+  {
+    "id": "episode:shelf-joseon-records-today",
+    "stage": "stage1",
+    "theme": "letters",
+    "order": 118,
+    "titleEn": "Old Records, New Discoveries",
+    "hoyaIntroEn": "What do old records do for us today? Let's go and see!",
+    "questIds": [
+      "quest:story-joseon-records-today-listen"
+    ],
+    "rewardCardIds": [
+      "card:story-joseon-records-today"
+    ],
+    "estimatedMinutes": 4,
+    "status": "ready",
+    "format": "story",
+    "placement": "shelf",
+    "pillarTags": [],
+    "companionId": "hoya"
+  },
+  {
+    "id": "episode:shelf-kim-hongdo-genre-paintings",
+    "stage": "stage1",
+    "theme": "life",
+    "order": 107,
+    "titleEn": "Kim Hongdo's Pictures of Everyday Life",
+    "hoyaIntroEn": "Let's look closely at old pictures of everyday life. What can you spot?",
+    "questIds": [
+      "quest:story-kim-hongdo-genre-paintings-listen"
+    ],
+    "rewardCardIds": [
+      "card:story-kim-hongdo-genre-paintings"
+    ],
+    "estimatedMinutes": 5,
+    "status": "ready",
+    "format": "story",
+    "placement": "shelf",
+    "pillarTags": [],
+    "companionId": "hoya"
+  },
+  {
+    "id": "episode:shelf-nanjung-ilgi",
+    "stage": "stage1",
+    "theme": "letters",
+    "order": 114,
+    "titleEn": "Admiral Yi's Diary",
+    "hoyaIntroEn": "Do you keep a diary? Let's open the diary of Admiral Yi.",
+    "questIds": [
+      "quest:story-nanjung-ilgi-listen"
+    ],
+    "rewardCardIds": [
+      "card:story-nanjung-ilgi"
+    ],
+    "estimatedMinutes": 4,
+    "status": "ready",
+    "format": "story",
+    "placement": "shelf",
+    "pillarTags": [],
+    "companionId": "hoya"
+  },
+  {
+    "id": "episode:shelf-pansori-tales",
+    "stage": "stage1",
+    "theme": "crafts",
+    "order": 106,
+    "titleEn": "Pansori Tales: Heungbu's Swallow and the Clever Rabbit (Traditional Tales)",
+    "hoyaIntroEn": "Let's listen to pansori! One singer and one drummer tell two old tales.",
+    "questIds": [
+      "quest:story-pansori-tales-listen"
+    ],
+    "rewardCardIds": [
+      "card:story-pansori-tales"
+    ],
+    "estimatedMinutes": 6,
+    "status": "ready",
+    "format": "story",
+    "placement": "shelf",
+    "pillarTags": [],
+    "companionId": "hoya"
+  },
+  {
+    "id": "episode:shelf-sejong-new-letters",
+    "stage": "stage1",
+    "theme": "letters",
+    "order": 101,
+    "titleEn": "King Sejong's New Letters",
+    "hoyaIntroEn": "Come with me to Joseon! Let's find out why King Sejong made new letters.",
+    "questIds": [
+      "quest:story-sejong-new-letters-listen"
+    ],
+    "rewardCardIds": [
+      "card:story-sejong-new-letters"
+    ],
+    "estimatedMinutes": 4,
+    "status": "ready",
+    "format": "story",
+    "placement": "shelf",
+    "pillarTags": [],
+    "companionId": "hoya"
+  },
+  {
+    "id": "episode:shelf-seollal-new-year",
+    "stage": "stage1",
+    "theme": "rites",
+    "order": 101,
+    "titleEn": "Hoya's Seollal Morning",
+    "hoyaIntroEn": "Happy New Year! Spend Seollal morning with me and a family.",
+    "questIds": [
+      "quest:story-seollal-new-year-listen"
+    ],
+    "rewardCardIds": [
+      "card:story-seollal-new-year"
+    ],
+    "estimatedMinutes": 4,
+    "status": "ready",
+    "format": "story",
+    "placement": "shelf",
+    "pillarTags": [],
+    "companionId": "hoya"
+  },
+  {
+    "id": "episode:shelf-seungjeongwon-ilgi-every-day",
+    "stage": "stage1",
+    "theme": "letters",
+    "order": 113,
+    "titleEn": "The Royal Secretariat's Everyday Diary",
+    "hoyaIntroEn": "Let's visit the Royal Secretariat, where the king's working day was written down.",
+    "questIds": [
+      "quest:story-seungjeongwon-ilgi-every-day-listen"
+    ],
+    "rewardCardIds": [
+      "card:story-seungjeongwon-ilgi-every-day"
+    ],
+    "estimatedMinutes": 5,
+    "status": "ready",
+    "format": "story",
+    "placement": "shelf",
+    "pillarTags": [],
+    "companionId": "hoya"
+  },
+  {
+    "id": "episode:shelf-shapes-of-hangeul",
+    "stage": "stage1",
+    "theme": "letters",
+    "order": 102,
+    "titleEn": "The Secret in the Shapes",
+    "hoyaIntroEn": "Did you know the letters hide secret shapes? Let's open an old book and find them!",
+    "questIds": [
+      "quest:story-shapes-of-hangeul-listen"
+    ],
+    "rewardCardIds": [
+      "card:story-shapes-of-hangeul"
+    ],
+    "estimatedMinutes": 5,
+    "status": "ready",
+    "format": "story",
+    "placement": "shelf",
+    "pillarTags": [],
+    "companionId": "hoya"
+  },
+  {
+    "id": "episode:shelf-sillok-mountain-archives",
+    "stage": "stage1",
+    "theme": "letters",
+    "order": 108,
+    "titleEn": "The Annals Hide in the Mountains",
+    "hoyaIntroEn": "Where did the Annals go to stay safe? Let's follow them into the mountains!",
+    "questIds": [
+      "quest:story-sillok-mountain-archives-listen"
+    ],
+    "rewardCardIds": [
+      "card:story-sillok-mountain-archives"
+    ],
+    "estimatedMinutes": 5,
+    "status": "ready",
+    "format": "story",
+    "placement": "shelf",
+    "pillarTags": [],
+    "companionId": "hoya"
+  },
+  {
+    "id": "episode:shelf-sillok-royal-historians",
+    "stage": "stage1",
+    "theme": "letters",
+    "order": 105,
+    "titleEn": "Hoya Meets the Royal Historians",
+    "hoyaIntroEn": "How do we know what kings said long ago? Let's meet the people who wrote it all down!",
+    "questIds": [
+      "quest:story-sillok-royal-historians-listen"
+    ],
+    "rewardCardIds": [
+      "card:story-sillok-royal-historians"
+    ],
+    "estimatedMinutes": 4,
+    "status": "ready",
+    "format": "story",
+    "placement": "shelf",
+    "pillarTags": [],
+    "companionId": "hoya"
+  },
+  {
+    "id": "episode:shelf-sun-and-moon",
+    "stage": "stage1",
+    "theme": "nature",
+    "order": 103,
+    "titleEn": "The Sun and the Moon (A Traditional Tale)",
+    "hoyaIntroEn": "Story time! Here is an old folk tale about a brother, a sister and a tricky tiger.",
+    "questIds": [
+      "quest:story-sun-and-moon-listen"
+    ],
+    "rewardCardIds": [
+      "card:story-sun-and-moon"
+    ],
+    "estimatedMinutes": 5,
+    "status": "ready",
+    "format": "story",
+    "placement": "shelf",
+    "pillarTags": [],
+    "companionId": "hoya"
+  },
+  {
+    "id": "episode:shelf-tripitaka-koreana",
+    "stage": "stage1",
+    "theme": "letters",
+    "order": 104,
+    "titleEn": "Eighty Thousand Woodblocks",
+    "hoyaIntroEn": "Let's climb a mountain to a temple full of carved wooden blocks!",
+    "questIds": [
+      "quest:story-tripitaka-koreana-listen"
+    ],
+    "rewardCardIds": [
+      "card:story-tripitaka-koreana"
+    ],
+    "estimatedMinutes": 5,
+    "status": "ready",
+    "format": "story",
+    "placement": "shelf",
+    "pillarTags": [],
+    "companionId": "hoya"
+  },
+  {
+    "id": "episode:shelf-uigwe-royal-birthday",
+    "stage": "stage1",
+    "theme": "rites",
+    "order": 117,
+    "titleEn": "A Picture Record of a Royal Birthday",
+    "hoyaIntroEn": "Let's open a royal report full of pictures, made for a big birthday celebration!",
+    "questIds": [
+      "quest:story-uigwe-royal-birthday-listen"
+    ],
+    "rewardCardIds": [
+      "card:story-uigwe-royal-birthday"
+    ],
+    "estimatedMinutes": 5,
+    "status": "ready",
+    "format": "story",
+    "placement": "shelf",
+    "pillarTags": [],
+    "companionId": "hoya"
+  }
+];
 
-export const storyQuests: Quest[] = [];
+export const storyQuests: Quest[] = [
+  {
+    "id": "quest:story-angbuilgu-sundial-listen",
+    "titleEn": "The Sky-Facing Pot That Told the Time",
+    "estimatedMinutes": 4,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Story time",
+        "hoyaLineEn": "Can a shadow tell the time? Let's look at a sundial shaped like a bowl!",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "present",
+        "titleEn": "Read the story",
+        "minigameKind": "story-read",
+        "minigameRef": "minigame:story-read-listen-angbuilgu-sundial",
+        "durationSeconds": 150
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "A few questions",
+        "minigameKind": "story-check",
+        "minigameRef": "minigame:story-check-listen-angbuilgu-sundial",
+        "durationSeconds": 60
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the story in order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:story-seq-listen-angbuilgu-sundial",
+        "durationSeconds": 45
+      },
+      {
+        "id": "s5",
+        "kind": "reward",
+        "titleEn": "Well done",
+        "hoyaLineEn": "The sun's shadow told the time, even for people who could not read. Clever, right?",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:story-angbuilgu-sundial"
+  },
+  {
+    "id": "quest:story-cheugugi-rain-gauge-listen",
+    "titleEn": "The Bowl That Measured the Rain",
+    "estimatedMinutes": 4,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Story time",
+        "hoyaLineEn": "Pitter-patter! Let's find out how Joseon measured the rain.",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "present",
+        "titleEn": "Read the story",
+        "minigameKind": "story-read",
+        "minigameRef": "minigame:story-read-listen-cheugugi-rain-gauge",
+        "durationSeconds": 150
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "A few questions",
+        "minigameKind": "story-check",
+        "minigameRef": "minigame:story-check-listen-cheugugi-rain-gauge",
+        "durationSeconds": 60
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the story in order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:story-seq-listen-cheugugi-rain-gauge",
+        "durationSeconds": 45
+      },
+      {
+        "id": "s5",
+        "kind": "reward",
+        "titleEn": "Well done",
+        "hoyaLineEn": "Now you know how people in Joseon measured the rain. Listen for the raindrops next time it rains!",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:story-cheugugi-rain-gauge"
+  },
+  {
+    "id": "quest:story-chuseok-ganggangsullae-listen",
+    "titleEn": "Chuseok: Songpyeon and the Full Moon",
+    "estimatedMinutes": 5,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Story time",
+        "hoyaLineEn": "It's Chuseok! Let's make songpyeon and watch the full moon together.",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "present",
+        "titleEn": "Read the story",
+        "minigameKind": "story-read",
+        "minigameRef": "minigame:story-read-listen-chuseok-ganggangsullae",
+        "durationSeconds": 150
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "A few questions",
+        "minigameKind": "story-check",
+        "minigameRef": "minigame:story-check-listen-chuseok-ganggangsullae",
+        "durationSeconds": 60
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the story in order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:story-seq-listen-chuseok-ganggangsullae",
+        "durationSeconds": 45
+      },
+      {
+        "id": "s5",
+        "kind": "reward",
+        "titleEn": "Well done",
+        "hoyaLineEn": "Songpyeon, the full moon and a circle dance. Happy Chuseok!",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:story-chuseok-ganggangsullae"
+  },
+  {
+    "id": "quest:story-dano-ssireum-listen",
+    "titleEn": "Dano Day: Swings, Masks and Ssireum",
+    "estimatedMinutes": 5,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Story time",
+        "hoyaLineEn": "Dano is here! Let's swing high, watch a mask play and cheer at ssireum.",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "present",
+        "titleEn": "Read the story",
+        "minigameKind": "story-read",
+        "minigameRef": "minigame:story-read-listen-dano-ssireum",
+        "durationSeconds": 150
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "A few questions",
+        "minigameKind": "story-check",
+        "minigameRef": "minigame:story-check-listen-dano-ssireum",
+        "durationSeconds": 60
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the story in order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:story-seq-listen-dano-ssireum",
+        "durationSeconds": 45
+      },
+      {
+        "id": "s5",
+        "kind": "reward",
+        "titleEn": "Well done",
+        "hoyaLineEn": "Swings, masks and ssireum: what a fun Dano Day!",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:story-dano-ssireum"
+  },
+  {
+    "id": "quest:story-donguibogam-listen",
+    "titleEn": "Heo Jun's Treasured Mirror of Medicine",
+    "estimatedMinutes": 5,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Story time",
+        "hoyaLineEn": "Let's meet a royal doctor who wrote a giant book about staying healthy.",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "present",
+        "titleEn": "Read the story",
+        "minigameKind": "story-read",
+        "minigameRef": "minigame:story-read-listen-donguibogam",
+        "durationSeconds": 150
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "A few questions",
+        "minigameKind": "story-check",
+        "minigameRef": "minigame:story-check-listen-donguibogam",
+        "durationSeconds": 60
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the story in order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:story-seq-listen-donguibogam",
+        "durationSeconds": 45
+      },
+      {
+        "id": "s5",
+        "kind": "reward",
+        "titleEn": "Well done",
+        "hoyaLineEn": "Heo Jun's book helped people care for their bodies. Stretch with me, and stay healthy!",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:story-donguibogam"
+  },
+  {
+    "id": "quest:story-gimjang-arirang-listen",
+    "titleEn": "Gimjang Day: Sharing Kimchi, Singing Arirang",
+    "estimatedMinutes": 5,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Story time",
+        "hoyaLineEn": "Winter is coming! Let's make kimchi with neighbors and hear a song shared across Korea.",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "present",
+        "titleEn": "Read the story",
+        "minigameKind": "story-read",
+        "minigameRef": "minigame:story-read-listen-gimjang-arirang",
+        "durationSeconds": 150
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "A few questions",
+        "minigameKind": "story-check",
+        "minigameRef": "minigame:story-check-listen-gimjang-arirang",
+        "durationSeconds": 60
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the story in order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:story-seq-listen-gimjang-arirang",
+        "durationSeconds": 45
+      },
+      {
+        "id": "s5",
+        "kind": "reward",
+        "titleEn": "Well done",
+        "hoyaLineEn": "Making kimchi together and singing Arirang: sharing makes it special!",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:story-gimjang-arirang"
+  },
+  {
+    "id": "quest:story-hangeul-day-listen",
+    "titleEn": "Happy Hangul Day!",
+    "estimatedMinutes": 4,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Story time",
+        "hoyaLineEn": "Let's find out why Hangul has its own special day!",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "present",
+        "titleEn": "Read the story",
+        "minigameKind": "story-read",
+        "minigameRef": "minigame:story-read-listen-hangeul-day",
+        "durationSeconds": 150
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "A few questions",
+        "minigameKind": "story-check",
+        "minigameRef": "minigame:story-check-listen-hangeul-day",
+        "durationSeconds": 60
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the story in order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:story-seq-listen-hangeul-day",
+        "durationSeconds": 45
+      },
+      {
+        "id": "s5",
+        "kind": "reward",
+        "titleEn": "Well done",
+        "hoyaLineEn": "Happy Hangul Day! Now you know why South Korea celebrates it every October.",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:story-hangeul-day"
+  },
+  {
+    "id": "quest:story-ilseongnok-daily-reflection-listen",
+    "titleEn": "King Jeongjo's Diary of Daily Reflection",
+    "estimatedMinutes": 4,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Story time",
+        "hoyaLineEn": "Let's read about a young royal heir who looked back on each day in his diary.",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "present",
+        "titleEn": "Read the story",
+        "minigameKind": "story-read",
+        "minigameRef": "minigame:story-read-listen-ilseongnok-daily-reflection",
+        "durationSeconds": 150
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "A few questions",
+        "minigameKind": "story-check",
+        "minigameRef": "minigame:story-check-listen-ilseongnok-daily-reflection",
+        "durationSeconds": 60
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the story in order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:story-seq-listen-ilseongnok-daily-reflection",
+        "durationSeconds": 45
+      },
+      {
+        "id": "s5",
+        "kind": "reward",
+        "titleEn": "Well done",
+        "hoyaLineEn": "Looking back on each day helped Jeongjo. What went well for you today?",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:story-ilseongnok-daily-reflection"
+  },
+  {
+    "id": "quest:story-jagyeongnu-water-clock-listen",
+    "titleEn": "Jang Yeongsil and the Clock That Rang by Itself",
+    "estimatedMinutes": 5,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Story time",
+        "hoyaLineEn": "Drip, drip! Let's see a water clock that rang all by itself.",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "present",
+        "titleEn": "Read the story",
+        "minigameKind": "story-read",
+        "minigameRef": "minigame:story-read-listen-jagyeongnu-water-clock",
+        "durationSeconds": 150
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "A few questions",
+        "minigameKind": "story-check",
+        "minigameRef": "minigame:story-check-listen-jagyeongnu-water-clock",
+        "durationSeconds": 60
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the story in order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:story-seq-listen-jagyeongnu-water-clock",
+        "durationSeconds": 45
+      },
+      {
+        "id": "s5",
+        "kind": "reward",
+        "titleEn": "Well done",
+        "hoyaLineEn": "Flowing water, rolling balls and little wooden figures told the time. What a clever clock!",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:story-jagyeongnu-water-clock"
+  },
+  {
+    "id": "quest:story-janggyeong-panjeon-listen",
+    "titleEn": "Guarded by the Wind",
+    "estimatedMinutes": 5,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Story time",
+        "hoyaLineEn": "How do you keep old woodblocks safe? Let's ask the wind at Haeinsa!",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "present",
+        "titleEn": "Read the story",
+        "minigameKind": "story-read",
+        "minigameRef": "minigame:story-read-listen-janggyeong-panjeon",
+        "durationSeconds": 150
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "A few questions",
+        "minigameKind": "story-check",
+        "minigameRef": "minigame:story-check-listen-janggyeong-panjeon",
+        "durationSeconds": 60
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the story in order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:story-seq-listen-janggyeong-panjeon",
+        "durationSeconds": 45
+      },
+      {
+        "id": "s5",
+        "kind": "reward",
+        "titleEn": "Well done",
+        "hoyaLineEn": "Windows, floors and fresh air keep the woodblocks safe. Thanks for exploring with me!",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:story-janggyeong-panjeon"
+  },
+  {
+    "id": "quest:story-jikji-metal-type-listen",
+    "titleEn": "Jikji: Printed with Metal Type",
+    "estimatedMinutes": 5,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Story time",
+        "hoyaLineEn": "Let's visit a temple where people printed a book with metal type!",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "present",
+        "titleEn": "Read the story",
+        "minigameKind": "story-read",
+        "minigameRef": "minigame:story-read-listen-jikji-metal-type",
+        "durationSeconds": 150
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "A few questions",
+        "minigameKind": "story-check",
+        "minigameRef": "minigame:story-check-listen-jikji-metal-type",
+        "durationSeconds": 60
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the story in order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:story-seq-listen-jikji-metal-type",
+        "durationSeconds": 45
+      },
+      {
+        "id": "s5",
+        "kind": "reward",
+        "titleEn": "Well done",
+        "hoyaLineEn": "Now you know the story of Jikji and the metal type that printed it!",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:story-jikji-metal-type"
+  },
+  {
+    "id": "quest:story-joseon-records-today-listen",
+    "titleEn": "Old Records, New Discoveries",
+    "estimatedMinutes": 4,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Story time",
+        "hoyaLineEn": "What do old records do for us today? Let's go and see!",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "present",
+        "titleEn": "Read the story",
+        "minigameKind": "story-read",
+        "minigameRef": "minigame:story-read-listen-joseon-records-today",
+        "durationSeconds": 150
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "A few questions",
+        "minigameKind": "story-check",
+        "minigameRef": "minigame:story-check-listen-joseon-records-today",
+        "durationSeconds": 60
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the story in order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:story-seq-listen-joseon-records-today",
+        "durationSeconds": 45
+      },
+      {
+        "id": "s5",
+        "kind": "reward",
+        "titleEn": "Well done",
+        "hoyaLineEn": "Records written long ago still help us today. What will you write down?",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:story-joseon-records-today"
+  },
+  {
+    "id": "quest:story-kim-hongdo-genre-paintings-listen",
+    "titleEn": "Kim Hongdo's Pictures of Everyday Life",
+    "estimatedMinutes": 5,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Story time",
+        "hoyaLineEn": "Let's look closely at old pictures of everyday life. What can you spot?",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "present",
+        "titleEn": "Read the story",
+        "minigameKind": "story-read",
+        "minigameRef": "minigame:story-read-listen-kim-hongdo-genre-paintings",
+        "durationSeconds": 150
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "A few questions",
+        "minigameKind": "story-check",
+        "minigameRef": "minigame:story-check-listen-kim-hongdo-genre-paintings",
+        "durationSeconds": 60
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the story in order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:story-seq-listen-kim-hongdo-genre-paintings",
+        "durationSeconds": 45
+      },
+      {
+        "id": "s5",
+        "kind": "reward",
+        "titleEn": "Well done",
+        "hoyaLineEn": "A taffy seller, shoes taken off, a sniffling schoolboy: you have sharp eyes!",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:story-kim-hongdo-genre-paintings"
+  },
+  {
+    "id": "quest:story-nanjung-ilgi-listen",
+    "titleEn": "Admiral Yi's Diary",
+    "estimatedMinutes": 4,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Story time",
+        "hoyaLineEn": "Do you keep a diary? Let's open the diary of Admiral Yi.",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "present",
+        "titleEn": "Read the story",
+        "minigameKind": "story-read",
+        "minigameRef": "minigame:story-read-listen-nanjung-ilgi",
+        "durationSeconds": 150
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "A few questions",
+        "minigameKind": "story-check",
+        "minigameRef": "minigame:story-check-listen-nanjung-ilgi",
+        "durationSeconds": 60
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the story in order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:story-seq-listen-nanjung-ilgi",
+        "durationSeconds": 45
+      },
+      {
+        "id": "s5",
+        "kind": "reward",
+        "titleEn": "Well done",
+        "hoyaLineEn": "Weather, feelings and everyday life: Admiral Yi wrote it all down. Maybe you can keep a diary too!",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:story-nanjung-ilgi"
+  },
+  {
+    "id": "quest:story-pansori-tales-listen",
+    "titleEn": "Pansori Tales: Heungbu's Swallow and the Clever Rabbit (Traditional Tales)",
+    "estimatedMinutes": 6,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Story time",
+        "hoyaLineEn": "Let's listen to pansori! One singer and one drummer tell two old tales.",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "present",
+        "titleEn": "Read the story",
+        "minigameKind": "story-read",
+        "minigameRef": "minigame:story-read-listen-pansori-tales",
+        "durationSeconds": 150
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "A few questions",
+        "minigameKind": "story-check",
+        "minigameRef": "minigame:story-check-listen-pansori-tales",
+        "durationSeconds": 60
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the story in order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:story-seq-listen-pansori-tales",
+        "durationSeconds": 45
+      },
+      {
+        "id": "s5",
+        "kind": "reward",
+        "titleEn": "Well done",
+        "hoyaLineEn": "A kind brother, a grateful swallow and a clever rabbit. Eolssigu, what a show!",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:story-pansori-tales"
+  },
+  {
+    "id": "quest:story-sejong-new-letters-listen",
+    "titleEn": "King Sejong's New Letters",
+    "estimatedMinutes": 4,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Story time",
+        "hoyaLineEn": "Come with me to Joseon! Let's find out why King Sejong made new letters.",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "present",
+        "titleEn": "Read the story",
+        "minigameKind": "story-read",
+        "minigameRef": "minigame:story-read-listen-sejong-new-letters",
+        "durationSeconds": 150
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "A few questions",
+        "minigameKind": "story-check",
+        "minigameRef": "minigame:story-check-listen-sejong-new-letters",
+        "durationSeconds": 60
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the story in order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:story-seq-listen-sejong-new-letters",
+        "durationSeconds": 45
+      },
+      {
+        "id": "s5",
+        "kind": "reward",
+        "titleEn": "Well done",
+        "hoyaLineEn": "Now you know where Hangul began. King Sejong made letters for everyone, and you are reading them!",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:story-sejong-new-letters"
+  },
+  {
+    "id": "quest:story-seollal-new-year-listen",
+    "titleEn": "Hoya's Seollal Morning",
+    "estimatedMinutes": 4,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Story time",
+        "hoyaLineEn": "Happy New Year! Spend Seollal morning with me and a family.",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "present",
+        "titleEn": "Read the story",
+        "minigameKind": "story-read",
+        "minigameRef": "minigame:story-read-listen-seollal-new-year",
+        "durationSeconds": 150
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "A few questions",
+        "minigameKind": "story-check",
+        "minigameRef": "minigame:story-check-listen-seollal-new-year",
+        "durationSeconds": 60
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the story in order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:story-seq-listen-seollal-new-year",
+        "durationSeconds": 45
+      },
+      {
+        "id": "s5",
+        "kind": "reward",
+        "titleEn": "Well done",
+        "hoyaLineEn": "New clothes, a New Year bow, a bowl of tteokguk and a game of yunnori. What a happy Seollal!",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:story-seollal-new-year"
+  },
+  {
+    "id": "quest:story-seungjeongwon-ilgi-every-day-listen",
+    "titleEn": "The Royal Secretariat's Everyday Diary",
+    "estimatedMinutes": 5,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Story time",
+        "hoyaLineEn": "Let's visit the Royal Secretariat, where the king's working day was written down.",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "present",
+        "titleEn": "Read the story",
+        "minigameKind": "story-read",
+        "minigameRef": "minigame:story-read-listen-seungjeongwon-ilgi-every-day",
+        "durationSeconds": 150
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "A few questions",
+        "minigameKind": "story-check",
+        "minigameRef": "minigame:story-check-listen-seungjeongwon-ilgi-every-day",
+        "durationSeconds": 60
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the story in order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:story-seq-listen-seungjeongwon-ilgi-every-day",
+        "durationSeconds": 45
+      },
+      {
+        "id": "s5",
+        "kind": "reward",
+        "titleEn": "Well done",
+        "hoyaLineEn": "Even the weather went into the diary! Now you know why it is a treasure.",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:story-seungjeongwon-ilgi-every-day"
+  },
+  {
+    "id": "quest:story-shapes-of-hangeul-listen",
+    "titleEn": "The Secret in the Shapes",
+    "estimatedMinutes": 5,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Story time",
+        "hoyaLineEn": "Did you know the letters hide secret shapes? Let's open an old book and find them!",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "present",
+        "titleEn": "Read the story",
+        "minigameKind": "story-read",
+        "minigameRef": "minigame:story-read-listen-shapes-of-hangeul",
+        "durationSeconds": 150
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "A few questions",
+        "minigameKind": "story-check",
+        "minigameRef": "minigame:story-check-listen-shapes-of-hangeul",
+        "durationSeconds": 60
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the story in order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:story-seq-listen-shapes-of-hangeul",
+        "durationSeconds": 45
+      },
+      {
+        "id": "s5",
+        "kind": "reward",
+        "titleEn": "Well done",
+        "hoyaLineEn": "Tongue, mouth, teeth, throat, sky, earth and a person: you found the secrets in the shapes!",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:story-shapes-of-hangeul"
+  },
+  {
+    "id": "quest:story-sillok-mountain-archives-listen",
+    "titleEn": "The Annals Hide in the Mountains",
+    "estimatedMinutes": 5,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Story time",
+        "hoyaLineEn": "Where did the Annals go to stay safe? Let's follow them into the mountains!",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "present",
+        "titleEn": "Read the story",
+        "minigameKind": "story-read",
+        "minigameRef": "minigame:story-read-listen-sillok-mountain-archives",
+        "durationSeconds": 150
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "A few questions",
+        "minigameKind": "story-check",
+        "minigameRef": "minigame:story-check-listen-sillok-mountain-archives",
+        "durationSeconds": 60
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the story in order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:story-seq-listen-sillok-mountain-archives",
+        "durationSeconds": 45
+      },
+      {
+        "id": "s5",
+        "kind": "reward",
+        "titleEn": "Well done",
+        "hoyaLineEn": "From notes to books to mountain archives: you followed the Annals all the way!",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:story-sillok-mountain-archives"
+  },
+  {
+    "id": "quest:story-sillok-royal-historians-listen",
+    "titleEn": "Hoya Meets the Royal Historians",
+    "estimatedMinutes": 4,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Story time",
+        "hoyaLineEn": "How do we know what kings said long ago? Let's meet the people who wrote it all down!",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "present",
+        "titleEn": "Read the story",
+        "minigameKind": "story-read",
+        "minigameRef": "minigame:story-read-listen-sillok-royal-historians",
+        "durationSeconds": 150
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "A few questions",
+        "minigameKind": "story-check",
+        "minigameRef": "minigame:story-check-listen-sillok-royal-historians",
+        "durationSeconds": 60
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the story in order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:story-seq-listen-sillok-royal-historians",
+        "durationSeconds": 45
+      },
+      {
+        "id": "s5",
+        "kind": "reward",
+        "titleEn": "Well done",
+        "hoyaLineEn": "The historians wrote it all down, day after day. Now you know where the Annals came from!",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:story-sillok-royal-historians"
+  },
+  {
+    "id": "quest:story-sun-and-moon-listen",
+    "titleEn": "The Sun and the Moon (A Traditional Tale)",
+    "estimatedMinutes": 5,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Story time",
+        "hoyaLineEn": "Story time! Here is an old folk tale about a brother, a sister and a tricky tiger.",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "present",
+        "titleEn": "Read the story",
+        "minigameKind": "story-read",
+        "minigameRef": "minigame:story-read-listen-sun-and-moon",
+        "durationSeconds": 150
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "A few questions",
+        "minigameKind": "story-check",
+        "minigameRef": "minigame:story-check-listen-sun-and-moon",
+        "durationSeconds": 60
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the story in order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:story-seq-listen-sun-and-moon",
+        "durationSeconds": 45
+      },
+      {
+        "id": "s5",
+        "kind": "reward",
+        "titleEn": "Well done",
+        "hoyaLineEn": "The brother and sister are safe in the sky. That is the end of our tale!",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:story-sun-and-moon"
+  },
+  {
+    "id": "quest:story-tripitaka-koreana-listen",
+    "titleEn": "Eighty Thousand Woodblocks",
+    "estimatedMinutes": 5,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Story time",
+        "hoyaLineEn": "Let's climb a mountain to a temple full of carved wooden blocks!",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "present",
+        "titleEn": "Read the story",
+        "minigameKind": "story-read",
+        "minigameRef": "minigame:story-read-listen-tripitaka-koreana",
+        "durationSeconds": 150
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "A few questions",
+        "minigameKind": "story-check",
+        "minigameRef": "minigame:story-check-listen-tripitaka-koreana",
+        "durationSeconds": 60
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the story in order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:story-seq-listen-tripitaka-koreana",
+        "durationSeconds": 45
+      },
+      {
+        "id": "s5",
+        "kind": "reward",
+        "titleEn": "Well done",
+        "hoyaLineEn": "So many blocks, carved so long ago and still safe today. Thank you for exploring Haeinsa with me!",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:story-tripitaka-koreana"
+  },
+  {
+    "id": "quest:story-uigwe-royal-birthday-listen",
+    "titleEn": "A Picture Record of a Royal Birthday",
+    "estimatedMinutes": 5,
+    "steps": [
+      {
+        "id": "s1",
+        "kind": "intro",
+        "titleEn": "Story time",
+        "hoyaLineEn": "Let's open a royal report full of pictures, made for a big birthday celebration!",
+        "durationSeconds": 8
+      },
+      {
+        "id": "s2",
+        "kind": "present",
+        "titleEn": "Read the story",
+        "minigameKind": "story-read",
+        "minigameRef": "minigame:story-read-listen-uigwe-royal-birthday",
+        "durationSeconds": 150
+      },
+      {
+        "id": "s3",
+        "kind": "practice",
+        "titleEn": "A few questions",
+        "minigameKind": "story-check",
+        "minigameRef": "minigame:story-check-listen-uigwe-royal-birthday",
+        "durationSeconds": 60
+      },
+      {
+        "id": "s4",
+        "kind": "apply",
+        "titleEn": "Put the story in order",
+        "minigameKind": "story-sequence",
+        "minigameRef": "minigame:story-seq-listen-uigwe-royal-birthday",
+        "durationSeconds": 45
+      },
+      {
+        "id": "s5",
+        "kind": "reward",
+        "titleEn": "Well done",
+        "hoyaLineEn": "Words and pictures kept the royal celebration alive. Now you know what an uigwe is!",
+        "durationSeconds": 8
+      }
+    ],
+    "rewardCardId": "card:story-uigwe-royal-birthday"
+  }
+];
 
 export const heldStoryCards: HeldStoryCard[] = [];

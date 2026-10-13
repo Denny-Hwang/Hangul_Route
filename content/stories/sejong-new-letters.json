@@ -26,9 +26,11 @@
     "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
   },
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "advisory": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "advisory": [],
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-13"
   },
   "keywords": [
     {
@@ -161,7 +163,7 @@
                 "s": 1.1
               }
             ],
-            "altEn": "Hoya steps out of a glowing open book into a Joseon palace courtyard, where King Sejong stands in his red robe."
+            "altEn": "Hoya steps out of a glowing open book into a Joseon palace courtyard, where King Sejong stands in his royal robe."
           },
           "captionEn": "Hoya lands in King Sejong's Joseon"
         },
@@ -869,7 +871,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
+    "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
   },
   "authorNotes": "Revised after two independent checks. 'Promulgation' wording removed from the narration and summary: the Sillok 1446/9 entry only records that Hunminjeongeum was completed ('是月, 訓民正音成'), and 국립국어원 says no official promulgation ceremony is recorded and that a September 1446 promulgation is unsupported; UNESCO, 국가유산포털 and 국립한글박물관 do use 'published/promulgated 1446', so f7 states both. Scene 2 now gives both reasons from Sejong's preface (Korean differs from Chinese; the characters were hard to learn). Scene 5 phrase fixed to 배우기 쉬워요 (baeugi swiwoyo, 'it's easy to learn'). The word 백성 now appears in scene 4 narration; scene 6 key word is 집현전. The 1443 and 1446 Sillok entries are month-end entries in the lunar calendar with no specific day (the 12th lunar month of Sejong 25 falls in early 1444 in the Gregorian calendar, but UNESCO, 국가유산포털 and encykorea all say 1443, so the story follows that convention). Scene 5 quotes only the first half of Jeong In-ji's line. The 'almost 600 years ago' wording is worked out from 1443. The companion 훈이 ('Sejong's cat' in BP04) was deliberately not used. Illustrations must not show a proclamation ceremony. Do not name a specific palace or a royal robe colour. f9: the 표준국어대사전 quotation could not be read (dynamic page) and was replaced by the UNESCO wording ('now called han-gul'); the 한국민족문화대백과사전 한글 entry also states the point. The 국가유산포털 description text quoted in f1, f7, f8 was re-read from the portal's description fragment (hub_img/html/cul_1111100700000) in the research folder. FINAL PASS (3rd check): scene 4 now says 'An old-fashioned word for the people is baekseong' and f4 cites 표준국어대사전 for 백성. All other facts re-verified unchanged. REVIEW PASS (PR 1.8b): learner prose writes the scholar's name Jeong Inji (F-CNT-002 rule 8); f6 and f8 keep the researched spelling Jeong In-ji. Check c3 options rebalanced so the answer is not the longest.",
   "errata": []

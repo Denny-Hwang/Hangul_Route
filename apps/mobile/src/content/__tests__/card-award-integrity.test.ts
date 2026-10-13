@@ -74,11 +74,20 @@ function finished(ids: readonly string[], stars: 1 | 2 | 3, episodes: readonly E
   };
 }
 
+/**
+ * Every episode a learner can play: the playable grid episodes and the shelf
+ * story episodes (F-STORY-004 §3.1), whose quests award the story cards.
+ */
+function offeredEpisodes(episodes: readonly Episode[]): Episode[] {
+  const shelf = episodes.filter((e) => e.placement === 'shelf' && (e.status === 'shipped' || e.status === 'ready'));
+  return [...playableEpisodes(episodes), ...shelf];
+}
+
 /** T-AWARD-1 over a world: each card in `cards` is listed to a learner who owns nothing, and finishing every playable quest at 1 star earns it. */
 function expectEarnable(w: AwardWorld, cards: readonly HeritageCard[]): void {
   const listed = new Set(obtainableCards(w, new Set()).map((c) => c.id));
   expect(cards.map((c) => c.id).filter((id) => !listed.has(id))).toEqual([]);
-  const all = playableEpisodes([...w.episodes]).flatMap((e) => e.questIds);
+  const all = offeredEpisodes(w.episodes).flatMap((e) => e.questIds);
   const earned = new Set(derivedAwards(w, finished(all, 1, w.episodes), PROFILE).map((a) => a.cardId));
   expect(cards.map((c) => c.id).filter((id) => !earned.has(id))).toEqual([]);
 }
@@ -94,7 +103,7 @@ describe('card award integrity (F-STORY-006 T-AWARD-1..5)', () => {
   });
 
   it('T-AWARD-1: finishing every playable quest, even at 1 star, earns every card', () => {
-    const all = playableEpisodes(episodesAll).flatMap((e) => e.questIds);
+    const all = offeredEpisodes(episodesAll).flatMap((e) => e.questIds);
     const earned = new Set(derivedAwards(world, finished(all, 1), PROFILE).map((a) => a.cardId));
     expect(earnable.map((c) => c.id).filter((id) => !earned.has(id))).toEqual([]);
   });
@@ -375,7 +384,8 @@ describe('heritage story cards (F-STORY-006 T-AWARD-6, T-AWARD-7)', () => {
     const shelfWorld = (shelved: readonly Story[], cardsOf: { cards: HeritageCard[]; sets: AwardWorld['sets'] }): AwardWorld => ({
       cards: [...handWritten, ...cardsOf.cards],
       episodes: [
-        ...episodesAll,
+        // The grid as shipped; the shelf is exactly the stories given here.
+        ...episodesAll.filter((e) => e.placement !== 'shelf'),
         ...shelved.map((s) => ({
           ...episodesAll[0]!,
           id: `episode:shelf-${slugOf(s.id)}`,

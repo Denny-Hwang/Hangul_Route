@@ -27,9 +27,11 @@
     "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
   },
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "advisory": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "advisory": [],
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-13"
   },
   "keywords": [
     {
@@ -488,7 +490,7 @@
                 "s": 0.8
               }
             ],
-            "altEn": "Hoya juggles 24 blank tiles in a sunny classroom, 14 in one colour and 10 in another, like consonants and vowels."
+            "altEn": "Hoya juggles 24 blank tiles in a sunny classroom, 14 in one color and 10 in another, like consonants and vowels."
           },
           "captionEn": "South Korea's rules: 14 consonants, 10 vowels"
         }
@@ -844,7 +846,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
+    "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
   },
   "authorNotes": "The letter-shape explanations follow the Haerye's 'Jejahae' (제자해) as summarized by 한국민족문화대백과사전. The Haerye's yin-yang and five-elements philosophy is left out as too advanced. The add-a-stroke rule has exceptions (ㆁ, ㄹ, ㅿ, per 한국민족문화대백과사전), so the narration gives only the ㄴ→ㄷ→ㅌ example. The narration says 'a few old ones are no longer used' rather than naming exactly four, because ㆁ merged with ㅇ rather than disappearing. The 국립국어원 essay (004d/004g) notes that a few details of the design principle are still debated among scholars; the story keeps to the consensus points. Because illustrations must contain no text, the app should overlay the jamo (ㄱ, ㄴ, ㅏ and so on) as UI text on the scene art. REVISED: the shape descriptions now follow the Haerye wording exactly (ㄱ = root of the tongue closing the throat, 象舌根閉喉之形; ㄴ = tongue touching the upper gum, 象舌附上腭之形) and no longer promise a physical sensation or add modern phonetics ('back of the tongue blocks the throat', 'ridge behind the upper teeth' removed; narration and illustration). The summary now says 'five basic consonants' (only ㄱ ㄴ ㅁ ㅅ ㅇ copy speech organs; others add strokes). Scene 2 no longer lists 'lips' (the Haerye names tongue root, tongue, mouth, tooth, throat). Vocab 혀 removed because no scene shows it. FINAL PASS (3rd check): scene 8, goal 4 and f7 now say South Korea's spelling rules count 24 (North Korea's norms count 40). The ㄴ wording follows the standard Korean rendering of 象舌附上腭之形 ('tongue touching the upper gum'); the Chinese 上腭 literally means the upper palate/jaw, so no finer anatomical claim is made. REVIEW PASS (PR 1.8b): the old vowel arae-a is named 'the round dot' in learner text, never typed as a bare middle dot (screen readers skip it); the art overlay draws it. REVIEW FIX (PR 1.8b round 2): isolated jamo use the F-CNT-002 C6 sound-value table: ㄱ 'g/k' and ㄷ 'd/t' in keywords, the s2 keyword, the c3 target and the learning goals (ㅇ already 'silent/ng'). The goal glosses are modern reading aids; in the Haerye the throat letter ㅇ was the null letter and ng was written with the separate letter ㆁ, which the narration does not claim otherwise.",
   "errata": []

@@ -26,9 +26,11 @@
     "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
   },
   "review": {
-    "language": "draft",
-    "culture": "draft",
-    "advisory": []
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "advisory": [],
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-13"
   },
   "keywords": [
     {
@@ -675,7 +677,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
+    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
   },
   "authorNotes": "Attribution: popular retellings often say Jang Yeong-sil invented the rain gauge, but the Sejong Sillok (1441-04-29, lunar) credits the crown prince's (later King Munjong's) experiments and encykorea's 통영 측우대 entry says the system was made under the crown prince's lead; Jang Yeong-sil is therefore not mentioned. Deliberately omitted: the KHS description's comparative claim that the cheugugi was the world's first scientific rain gauge, about 200 years before the West (priority claims are contested); the 1441-08-18 proposal's dimensions and the 1442 standard size (1 cheok 5 chon by 7 chon); the Gongju gauge's removal to Japan (KHS: c.1915; encykorea: early 1910s) and return in 1971 (colonial-era history is out of scope); the 1770/1771 revival under King Yeongjo (sources differ on the year). Materials: the Sillok uses 銅 (copper/bronze) for the crown prince's 1441 vessel and 鐵 (cast metal/iron) for the 1442 standard, so narration says 'copper' and 'metal' respectively; the Gongju gauge is bronze (encykorea). All Sillok dates are lunar. Theme set to 'crafts' to match BP04/BP05 Pillar E (E3 측우기). REVISION: (a) Scene 6/summary/learning goal now say only one gauge VESSEL survives; stone stands (대석/측우대) also survive (encykorea E0007902; Tongyeong stand is a Treasure, E0068941). (b) Museum English name 'National Meteorological Museum of Korea' taken from the museum's own website footer (science.kma.go.kr/museum/); the KHS portal lists only the Korean name. (c) Romanization of 서운관 is Seoun-gwan (seo-un-gwan); 'Seounwan' (proposed by one fact-check) would transcribe 서운완, so it was not adopted. (d) Second source added for f2 (신편한국사 via 우리역사넷); new sources accessed 2026-10-10. PR 1.8c: check c1 distractors replaced with options the story contradicts (s2: the water soaked in; the crown prince dug), so the item has one answer from the story text.",
   "errata": []
