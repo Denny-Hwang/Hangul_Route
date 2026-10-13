@@ -22,7 +22,7 @@ import { useConsole } from './use-console';
  * a plain click checks the account's plan, writes the tab's pass and goes; a modifier click, a middle click or a
  * long-press is left to the browser, so that tab opens with no pass and All lessons shows its Access screen.
  * When the check fails or the browser blocks this page's storage, the line sits beside the control (a status
- * region) and nothing navigates. Callers render an entry only while `browseLinksShown()` is true.
+ * region, present from the first render so a screen reader announces the line when it appears) and nothing navigates. Callers render an entry only while `browseLinksShown()` is true.
  */
 
 /** Everything an entry touches in the browser, injectable for tests. */
@@ -47,6 +47,8 @@ export type BrowseNotice = 'check_failed' | 'storage_blocked' | null;
 
 export interface BrowseOpener {
   notice: BrowseNotice;
+  /** True while the plan check is in flight (the entry is `aria-busy`; further clicks wait for it). */
+  checking: boolean;
   /** A plain click opens through `openBrowse`; any other click is the browser's. */
   onClick: (event: MouseEvent<HTMLAnchorElement> | ClickLike & { preventDefault: () => void }) => void;
   retry: () => void;
@@ -55,9 +57,10 @@ export interface BrowseOpener {
 
 /** One entry's hand-off: its target and source, and the line it shows when it cannot open. */
 export function useBrowseOpener(target: BrowseTarget | undefined, source: BrowseSource, env?: BrowseOpenerEnv): BrowseOpener {
-  const { api, locale } = useConsole();
+  const { api, locale, session } = useConsole();
   const [browser] = useState<BrowseOpenerEnv>(() => env ?? browserOpenerEnv());
   const [notice, setNotice] = useState<BrowseNotice>(null);
+  const [checking, setChecking] = useState(false);
   const busy = useRef(false);
 
   const deps = (): BrowseLinkDeps => ({
@@ -66,7 +69,7 @@ export function useBrowseOpener(target: BrowseTarget | undefined, source: Browse
     storage: browser.storage(),
     locale,
     assign: browser.assign,
-    readScope: scopeReader(api),
+    readScope: scopeReader(api, session?.accountId ?? null),
   });
   const settle = (result: OpenBrowseResult): void => {
     setNotice(result === 'opened' ? null : result);
@@ -74,15 +77,18 @@ export function useBrowseOpener(target: BrowseTarget | undefined, source: Browse
   const open = (): void => {
     if (busy.current) return;
     busy.current = true;
+    setChecking(true);
     void openBrowse(target, source, deps())
       .then(settle)
       .finally(() => {
         busy.current = false;
+        setChecking(false);
       });
   };
 
   return {
     notice,
+    checking,
     onClick: (event) => {
       if (!isPlainClick(event)) return;
       event.preventDefault();
@@ -113,21 +119,21 @@ const actionStyle: CSSProperties = {
 export function BrowseNoticeLine({ opener, testId }: { opener: BrowseOpener; testId: string }): JSX.Element {
   const t = useConsole().m.console.browse;
   return (
-    <div role="status" aria-live="polite" data-testid={`${testId}-notice`} style={{ flexBasis: '100%' }}>
+    <span role="status" aria-live="polite" data-testid={`${testId}-notice`} style={{ display: 'block', flexBasis: '100%' }}>
       {opener.notice === 'storage_blocked' ? (
-        <p style={{ margin: `${spacing.xs}px 0`, color: colors.text.primary, fontSize: typography.size.bodySm }}>{t.storageBlocked}</p>
+        <span style={{ display: 'block', margin: `${spacing.xs}px 0`, color: colors.text.primary, fontSize: typography.size.bodySm }}>{t.storageBlocked}</span>
       ) : opener.notice === 'check_failed' ? (
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, margin: `${spacing.xs}px 0` }}>
-          <p style={{ margin: 0, flexBasis: '100%', color: colors.text.primary, fontSize: typography.size.bodySm }}>{t.checkFailed}</p>
+        <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, margin: `${spacing.xs}px 0` }}>
+          <span style={{ display: 'block', margin: 0, flexBasis: '100%', color: colors.text.primary, fontSize: typography.size.bodySm }}>{t.checkFailed}</span>
           <button type="button" style={actionStyle} onClick={opener.retry} data-testid={`${testId}-retry`}>
             {t.tryAgain.cta}
           </button>
           <button type="button" style={actionStyle} onClick={opener.openFree} data-testid={`${testId}-free`}>
             {t.openFree.cta}
           </button>
-        </div>
+        </span>
       ) : null}
-    </div>
+    </span>
   );
 }
 
@@ -160,7 +166,7 @@ export function BrowseLink({
   const opener = useBrowseOpener(target, source, env);
   return (
     <span style={{ display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center' }}>
-      <a href={browseUrl('', target, source)} onClick={opener.onClick} aria-label={ariaLabel} data-testid={testId} style={{ ...linkStyle, ...style }}>
+      <a href={browseUrl('', target, source)} onClick={opener.onClick} aria-label={ariaLabel} aria-busy={opener.checking || undefined} data-testid={testId} style={{ ...linkStyle, ...style }}>
         {children ?? label}
       </a>
       <BrowseNoticeLine opener={opener} testId={testId} />

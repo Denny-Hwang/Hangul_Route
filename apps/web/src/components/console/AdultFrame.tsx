@@ -360,7 +360,7 @@ export function AdultFrame({
               {items.map((entry) => (
                 <li key={entry.id}>
                   {entry.target.document ? (
-                    <a className="hr-frame-item" href={entry.target.href} onClick={entry.id === 'lessons' ? lessons.onClick : undefined} data-testid={`nav-${entry.id}`}>
+                    <a className="hr-frame-item" href={entry.target.href} onClick={entry.id === 'lessons' ? lessons.onClick : undefined} aria-busy={entry.id === 'lessons' && lessons.checking ? true : undefined} data-testid={`nav-${entry.id}`}>
                       {shell.nav[entry.labelKey]}
                     </a>
                   ) : (

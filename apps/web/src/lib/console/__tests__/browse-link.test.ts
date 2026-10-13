@@ -1,5 +1,5 @@
 import { BROWSE_PASS_SESSION_KEY, BrowsePassSchema, decodeBrowseFragment } from '@hangul-route/content-schema';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ApiResult } from '../api';
 import {
   accountPass,
@@ -8,6 +8,8 @@ import {
   isPlainClick,
   openBrowse,
   openFreeLessons,
+  BROWSE_SCOPE_TIMEOUT_MS,
+  BROWSE_SCOPE_TTL_MS,
   resetBrowseScopeCache,
   scopeReader,
   writeBrowsePass,
@@ -188,29 +190,81 @@ describe('openFreeLessons, the fallback (section 4.3 step 3)', () => {
 });
 
 describe('scopeReader: the scope is read once per page', () => {
+  function countingApi(answers: Array<ApiResult<{ scope: 'full' | 'sampler' }>>): { api: { browseScope: BrowseScopeRead }; calls: () => number } {
+    let calls = 0;
+    return {
+      calls: () => calls,
+      api: {
+        browseScope: async (): Promise<ApiResult<{ scope: 'full' | 'sampler' }>> => {
+          const answer = answers[calls] ?? answers[answers.length - 1];
+          calls += 1;
+          return answer as ApiResult<{ scope: 'full' | 'sampler' }>;
+        },
+      },
+    };
+  }
+
   it('keeps a successful read for the page; a failed read is asked again (Try again)', async () => {
-    const answers: Array<ApiResult<{ scope: 'full' | 'sampler' }>> = [
+    const { api, calls } = countingApi([
       { ok: false, error: 'network', status: -1 },
       { ok: true, data: { scope: 'full' } },
       { ok: true, data: { scope: 'sampler' } },
-    ];
-    let calls = 0;
-    const api = {
-      browseScope: async (): Promise<ApiResult<{ scope: 'full' | 'sampler' }>> => {
-        const answer = answers[calls] ?? answers[answers.length - 1];
-        calls += 1;
-        return answer as ApiResult<{ scope: 'full' | 'sampler' }>;
-      },
-    };
-    const read: BrowseScopeRead = scopeReader(api);
+    ]);
+    const read: BrowseScopeRead = scopeReader(api, 'acct_1');
     expect((await read()).ok).toBe(false);
     expect(await read()).toEqual({ ok: true, data: { scope: 'full' } });
-    expect(await scopeReader(api)()).toEqual({ ok: true, data: { scope: 'full' } });
-    expect(calls).toBe(2);
+    expect(await scopeReader(api, 'acct_1')()).toEqual({ ok: true, data: { scope: 'full' } });
+    expect(calls()).toBe(2);
+  });
+
+  it('is shared by every control of the page even when each holds its own API client', async () => {
+    const first = countingApi([{ ok: true, data: { scope: 'full' } }]);
+    const second = countingApi([{ ok: true, data: { scope: 'sampler' } }]);
+    expect(await scopeReader(first.api, 'acct_1')()).toEqual({ ok: true, data: { scope: 'full' } });
+    expect(await scopeReader(second.api, 'acct_1')()).toEqual({ ok: true, data: { scope: 'full' } });
+    expect(first.calls() + second.calls()).toBe(1);
+  });
+
+  it('asks again for another account (a new sign-in) and after the entry expires', async () => {
+    let clock = NOW;
+    const { api, calls } = countingApi([
+      { ok: true, data: { scope: 'sampler' } },
+      { ok: true, data: { scope: 'full' } },
+      { ok: true, data: { scope: 'full' } },
+    ]);
+    const options = { now: () => clock };
+    expect(await scopeReader(api, 'acct_1', options)()).toEqual({ ok: true, data: { scope: 'sampler' } });
+    expect(await scopeReader(api, 'acct_2', options)()).toEqual({ ok: true, data: { scope: 'full' } });
+    clock += BROWSE_SCOPE_TTL_MS - 1;
+    await scopeReader(api, 'acct_2', options)();
+    expect(calls()).toBe(2);
+    clock += 2;
+    await scopeReader(api, 'acct_2', options)();
+    expect(calls()).toBe(3);
+  });
+
+  it('a read that does not answer in time is a failed check and is not kept', async () => {
+    vi.useFakeTimers();
+    try {
+      let calls = 0;
+      const api = {
+        browseScope: (): Promise<ApiResult<{ scope: 'full' | 'sampler' }>> => {
+          calls += 1;
+          return new Promise(() => undefined);
+        },
+      };
+      const pending = scopeReader(api, 'acct_1')();
+      await vi.advanceTimersByTimeAsync(BROWSE_SCOPE_TIMEOUT_MS);
+      expect(await pending).toMatchObject({ ok: false, error: 'network' });
+      void scopeReader(api, 'acct_1')();
+      expect(calls).toBe(2);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('with no API (no API address on this build) the check fails', async () => {
-    const read = scopeReader(null);
+    const read = scopeReader(null, null);
     expect(await read()).toMatchObject({ ok: false });
   });
 });

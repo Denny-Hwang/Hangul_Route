@@ -16,11 +16,13 @@ const consoleView = vi.hoisted(() => ({
   answers: [] as Scope[],
   reads: 0,
   locale: 'en' as 'en' | 'es' | 'ko',
+  hold: null as Promise<void> | null,
 }));
 vi.mock('../use-console', async () => {
   const { getMessages: messages } = await import('@hangul-route/i18n');
   const api = {
     browseScope: async (): Promise<Scope> => {
+      if (consoleView.hold) await consoleView.hold;
       const answer = consoleView.answers[Math.min(consoleView.reads, consoleView.answers.length - 1)] as Scope;
       consoleView.reads += 1;
       return answer;
@@ -72,6 +74,7 @@ beforeEach(() => {
   consoleView.answers = [{ ok: true, data: { scope: 'full' } }];
   consoleView.reads = 0;
   consoleView.locale = 'en';
+  consoleView.hold = null;
   resetBrowseScopeCache();
 });
 afterEach(() => {
@@ -123,6 +126,24 @@ describe('BrowseLink (section 4.11): one link, same tab, content ids only', () =
     expect(event.prevented).toBe(true);
     expect(JSON.parse(env.data.get(BROWSE_PASS_SESSION_KEY) ?? 'null')).toEqual({ v: 1, scope: 'full', source: 'account', issuedAt: NOW, seen: NOW, uiLocale: 'en' });
     expect(env.assigned).toEqual(['https://app.hangulroute.com/browse#t=quest:stage1-letters-q2&s=plan']);
+  });
+
+  it('is aria-busy while the plan check runs, and not after it settles', async () => {
+    let release: () => void = () => undefined;
+    consoleView.hold = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const env = fakeEnv();
+    const r = await render(env);
+    expect((byTestId(r, 'plan-preview')[0] as ReactTestInstance).props['aria-busy']).toBeUndefined();
+    await click(r, 'plan-preview');
+    expect((byTestId(r, 'plan-preview')[0] as ReactTestInstance).props['aria-busy']).toBe(true);
+    await act(async () => {
+      release();
+      await consoleView.hold;
+    });
+    expect((byTestId(r, 'plan-preview')[0] as ReactTestInstance).props['aria-busy']).toBeUndefined();
+    expect(env.assigned).toHaveLength(1);
   });
 
   it('carries the console locale into the pass', async () => {

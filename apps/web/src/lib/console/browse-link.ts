@@ -1,6 +1,6 @@
 import { BROWSE_PASS_SESSION_KEY, buildBrowseUrl, type BrowsePass, type BrowseSource, type BrowseTarget } from '@hangul-route/content-schema';
 import type { UiLocale } from '@hangul-route/i18n';
-import { browserStorage, writeItem, type KeyValueStorage } from '../i18n/safe-storage';
+import { writeItem, type KeyValueStorage } from '../i18n/safe-storage';
 import type { ApiResult } from './api';
 import { browseEntryShown, buildEnv, type ConsoleEnv } from './config';
 
@@ -78,27 +78,57 @@ interface ScopeSource {
   browseScope: BrowseScopeRead;
 }
 
-/** The successful scope read of this page, per API client (a new sign-in makes a new client). */
-let cache = new WeakMap<ScopeSource, Promise<ApiResult<{ scope: PassScope }>>>();
+/** How long a successful scope read is reused (section 4.3 step 2: cached for the page, refreshed after a plan change). */
+export const BROWSE_SCOPE_TTL_MS = 60_000;
+/** A scope read that has not answered by then is a failed check, so the entry shows Try again instead of hanging. */
+export const BROWSE_SCOPE_TIMEOUT_MS = 8_000;
 
-/** Test hook: forget the page's scope reads. */
-export function resetBrowseScopeCache(): void {
-  cache = new WeakMap();
+interface CachedScope {
+  key: string;
+  at: number;
+  read: Promise<ApiResult<{ scope: PassScope }>>;
 }
 
 /**
- * The account scope, cached for the page (section 4.3 step 2). Only a successful read is kept, so
- * [ Try again ] asks the Worker again. With no API client (no API address on this build) the check fails.
+ * The page's one scope read, shared by every entry (each `useConsole()` holds its own API client, so the cache is
+ * keyed by the signed-in account, not by the client). A new account replaces it.
  */
-export function scopeReader(api: ScopeSource | null): BrowseScopeRead {
+let cached: CachedScope | null = null;
+
+/** Forget the page's scope read (tests, and anywhere the console learns the plan changed). */
+export function resetBrowseScopeCache(): void {
+  cached = null;
+}
+
+export interface ScopeReaderOptions {
+  now?: () => number;
+}
+
+function withTimeout(read: Promise<ApiResult<{ scope: PassScope }>>): Promise<ApiResult<{ scope: PassScope }>> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<ApiResult<{ scope: PassScope }>>((resolve) => {
+    timer = setTimeout(() => resolve({ ok: false, error: 'network', status: -1 }), BROWSE_SCOPE_TIMEOUT_MS);
+  });
+  return Promise.race([read, late])
+    .catch((): ApiResult<{ scope: PassScope }> => ({ ok: false, error: 'network', status: -1 }))
+    .finally(() => clearTimeout(timer));
+}
+
+/**
+ * The account scope, cached for the page per signed-in account for `BROWSE_SCOPE_TTL_MS` (section 4.3 step 2).
+ * Only a successful read is kept, so [ Try again ] asks the Worker again; a read slower than
+ * `BROWSE_SCOPE_TIMEOUT_MS` is a failed check. With no API client (no API address on this build) the check fails.
+ */
+export function scopeReader(api: ScopeSource | null, accountKey: string | null, options: ScopeReaderOptions = {}): BrowseScopeRead {
+  const now = options.now ?? (() => Date.now());
   return async () => {
-    if (!api) return { ok: false, error: 'unknown', status: -1 };
-    const held = cache.get(api);
-    if (held) return held;
-    const pending = api.browseScope();
-    cache.set(api, pending);
-    const result = await pending.catch((): ApiResult<{ scope: PassScope }> => ({ ok: false, error: 'network', status: -1 }));
-    if (!result.ok) cache.delete(api);
+    if (!api || !accountKey) return { ok: false, error: 'unknown', status: -1 };
+    const held = cached;
+    if (held && held.key === accountKey && now() - held.at < BROWSE_SCOPE_TTL_MS) return held.read;
+    const entry: CachedScope = { key: accountKey, at: now(), read: withTimeout(api.browseScope()) };
+    cached = entry;
+    const result = await entry.read;
+    if (!result.ok && cached === entry) cached = null;
     return result;
   };
 }
@@ -124,17 +154,4 @@ export interface ClickLike {
  */
 export function isPlainClick(event: ClickLike): boolean {
   return !event.defaultPrevented && event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
-}
-
-/** The browser's dependencies for `openBrowse`. */
-export function browserBrowseDeps(locale: UiLocale, readScope: BrowseScopeRead): BrowseLinkDeps {
-  const win = typeof window === 'undefined' ? null : window;
-  return {
-    origin: win?.location.origin ?? '',
-    now: () => Date.now(),
-    storage: browserStorage('session'),
-    locale,
-    assign: (url) => win?.location.assign(url),
-    readScope,
-  };
 }
