@@ -1,11 +1,13 @@
-import type { Episode, ProgressSnapshot, StageDef, ThemeDef, UiLocale } from '@hangul-route/content-schema';
-import { episodesAll, heritageCardsAll, questsAll, stages, themes } from '../../content';
+import { CATALOG, routeCatalogOf, type Episode, type ProgressSnapshot, type StageDef, type ThemeDef, type UiLocale } from '@hangul-route/content-schema';
+import { episodesAll, heritageCardsAll, jamoAll, questsAll, stages, themes } from '../../content';
 import { journeyContent } from '../../content/sync-context';
 import { localizeEpisode, localizeStage, localizeTheme } from '../content-locale';
 import { cursorContext } from '../cursor-context';
 import type { Tier } from '../entitlement';
+import { STAGE1_QUESTS } from '../stage1/curriculum';
+import { letterWallOf, type LetterTile } from './letter-wall';
 import { startRouteOf } from './start-marker';
-import type { MyRouteInput, SeenRecord } from './types';
+import type { MyRouteInput, MyRouteModel, SeenRecord } from './types';
 
 /**
  * The one `buildMyRoute` input for the Learning Route page (R-3) and the Home
@@ -54,4 +56,20 @@ export function routeModelInput(i: RouteModelInputArgs): MyRouteInput {
     seen: i.seen,
     now: i.now,
   };
+}
+
+/**
+ * The shared route catalogue: its `teaches` spell the symbol keys of each lesson
+ * (`catalog/data.ts`), where the app's own route catalogue leaves them empty.
+ */
+const SHARED_ROUTE = routeCatalogOf(CATALOG);
+
+/**
+ * The Stage 1 letter wall of a built page model (R-7c, section 3.11): lit from the
+ * row's done pips, outlined from the catalogue `teaches` of its known (placed-out)
+ * pips. Empty when the model has no Stage 1 row.
+ */
+export function routeLetterWall(model: Pick<MyRouteModel, 'stages'>): LetterTile[] {
+  const row = model.stages.find((s) => s.stage === 'stage1');
+  return row === undefined ? [] : letterWallOf({ row, quests: STAGE1_QUESTS, catalog: SHARED_ROUTE, jamo: jamoAll });
 }

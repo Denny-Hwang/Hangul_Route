@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { availableLocales, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { onboardChild, seedStored } from './helpers';
+import { onboardChild, readStored, seedStored } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -130,6 +130,77 @@ test.describe('flag on: the Route tab (LR-4)', () => {
     await page.getByTestId('home-route-strip').click();
     await expect(purpose).toBeVisible();
     await expect(page.getByRole('button', { name: en.a11y.goBack, exact: true })).toHaveCount(0);
+  });
+
+  test('the open Stage 1 draws the letter wall (R-7c): lit, outlined and plain letters, each one KoreanText', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await learnerOnHome(page);
+    const profileId = (await readStored<Array<{ id: string }>>(page, 'profiles'))?.[0]?.id ?? '';
+    const at = '2026-10-09T10:00:00.000Z';
+    // Finished: letters q1 (lights its four letters). The level check placed out letters q2 and q3 (outlines their eight).
+    await seedStored(page, `progress:${profileId}`, {
+      profileId,
+      updatedAt: at,
+      episodes: [],
+      quests: [{ questId: 'quest:stage1-letters-q1', episodeId: 'episode:stage1-letters', startedAt: at, completedAt: at, stars: 3, attempts: 1, accuracy: 1 }],
+      cards: [],
+      sessions: [],
+      homework: [],
+      reviews: [],
+      streakDays: 0,
+      placements: [
+        {
+          id: 'placement:seeded',
+          startedAt: at,
+          completedAt: at,
+          source: 'home',
+          testLocale: 'en',
+          length: 'full',
+          mode: 'standard',
+          revealMode: 'tap',
+          bankVersion: 1,
+          contentVer: 'e2e',
+          responses: [],
+          gates: [],
+          strands: { 'hangul-recognition': 'not-tested', 'sound-letter': 'not-tested', 'syllable-reading': 'not-tested', vocabulary: 'not-tested', sentences: 'not-tested' },
+          level: { stage: 'stage1', band: 1 },
+          oralStage: null,
+          beyondContent: false,
+          startQuestId: 'quest:stage1-life-q1',
+          placedOutQuestIds: ['quest:stage1-letters-q2', 'quest:stage1-letters-q3'],
+          priorityTokens: [],
+          needsStage: null,
+          stopReason: 'complete',
+        },
+      ],
+    });
+    await closeInstallGuide(page);
+    await page.getByRole('tablist').getByRole('link', { name: en.a11y.myRoute.tab }).click();
+    const wall = page.getByTestId('my-route-letter-wall');
+    const toggle = wall.getByRole('button', { name: en.learner.myRoute.wall.title, exact: true });
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(wall.getByText(en.learner.myRoute.wall.lead, { exact: true })).toBeVisible();
+    // One list of the 30 letters, each tile a list item.
+    await expect(wall.getByRole('list', { name: en.learner.myRoute.wall.title, exact: true }).getByRole('listitem')).toHaveCount(30);
+    await expect(wall.getByTestId('my-route-letter-met')).toHaveCount(4);
+    await expect(wall.getByTestId('my-route-letter-known')).toHaveCount(8);
+    await expect(wall.getByTestId('my-route-letter-ahead')).toHaveCount(18);
+    for (const word of Object.values(en.learner.myRoute.wall.state)) await expect(wall.getByText(word, { exact: true })).toBeVisible();
+    // Each letter carries its own label: the sound, the gloss of a final consonant, and the state word.
+    const w = en.learner.myRoute.wall;
+    const labelled = (label: string) => wall.locator(`[aria-label="${label}"]`);
+    await expect(labelled(`ㄴ, n. ${w.state.met}.`)).toBeVisible();
+    await expect(labelled(`ㅇ, silent/ng. ${w.state.known}.`)).toBeVisible();
+    await expect(labelled(`ㄴ, n, ${w.final}. ${w.state.ahead}.`)).toBeVisible();
+    expect(await noSideScroll(page)).toBe(true);
+    await toggle.scrollIntoViewIfNeeded();
+    await shot(page, 'route-letter-wall-320');
+    await labelled(`ㄴ, n, ${w.final}. ${w.state.ahead}.`).scrollIntoViewIfNeeded();
+    await shot(page, 'route-letter-wall-320-finals');
+    await labelled(`ㅇ, silent/ng. ${w.state.known}.`).scrollIntoViewIfNeeded();
+    await shot(page, 'route-letter-wall-320-known');
   });
 
   for (const size of [

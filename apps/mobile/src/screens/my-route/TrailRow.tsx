@@ -22,6 +22,7 @@ import { Animated, Pressable, View } from 'react-native';
 import Svg, { Line } from 'react-native-svg';
 import { useMessages } from '../../i18n/use-messages';
 import type { Connector, LaterRowView, RouteIcon, StageRowView, TagView } from '../../logic/my-route/view';
+import { LetterWall } from './LetterWall';
 import { BADGE_SIZE, StageBadge } from './StageBadge';
 
 /**
@@ -216,7 +217,7 @@ export function StageRowItem({ row, open, look, reducedMotion, onToggle, onOpenE
       </Pressable>
 
       {expandable && open ? (
-        <View style={{ marginLeft: badge + spacing.md, marginTop: spacing.sm }}>
+        <View style={{ marginLeft: badge + spacing.md, marginTop: spacing.sm, gap: spacing.sm }}>
           <View
             style={{
               backgroundColor: colors.surface.paper,
@@ -277,6 +278,7 @@ export function StageRowItem({ row, open, look, reducedMotion, onToggle, onOpenE
             </View>
             <PipLegend accent={accent} />
           </View>
+          {row.letterWall ? <LetterWall wall={row.letterWall} /> : null}
         </View>
       ) : null}
     </View>

@@ -17,7 +17,7 @@ const SYMBOL = /[\p{Extended_Pictographic}←-⇿⌀-⏿■-◿☀-➿️]/u;
 
 describe('screens/my-route sources', () => {
   it('has the screen and its parts', () => {
-    expect(files.sort()).toEqual(['GainsCard.tsx', 'HeroCard.tsx', 'MyRouteScreen.tsx', 'SkillsCard.tsx', 'StageBadge.tsx', 'TrailRow.tsx']);
+    expect(files.sort()).toEqual(['GainsCard.tsx', 'HeroCard.tsx', 'LetterWall.tsx', 'MyRouteScreen.tsx', 'SkillsCard.tsx', 'StageBadge.tsx', 'TrailRow.tsx']);
   });
 
   for (const file of files) {
@@ -46,6 +46,21 @@ describe('screens/my-route sources', () => {
     expect(src).toContain('routeModelInput(');
     expect(read(join(SRC, 'logic', 'my-route', 'route-input.ts'))).toContain('cursorContext(');
     expect(src).not.toMatch(/AsyncStorage|localStorage/);
+  });
+
+  it('the open Stage 1 draws the R-7c letter wall from the page model, each letter with KoreanText', () => {
+    const screen = read(join(SCREEN_DIR, 'MyRouteScreen.tsx'));
+    const trail = read(join(SCREEN_DIR, 'TrailRow.tsx'));
+    const wall = read(join(SCREEN_DIR, 'LetterWall.tsx'));
+    expect(screen).toContain('letterWall: routeLetterWall(model)');
+    expect(trail).toMatch(/row\.letterWall[^\n]*<LetterWall /);
+    expect(wall).toContain('<KoreanText');
+    expect(wall).toContain('accessibilityLabel={tile.a11yLabel}');
+    // The tile list carries its items (ARIA list needs listitem children), and a tile grows with the device text size.
+    expect(wall).toContain('role="listitem"');
+    expect(wall).toContain('letterTileWidth(TILE_WIDTH, fontScale)');
+    // Romanization and gloss always show on the wall: the letters are taught content (CLAUDE.md section 1).
+    expect(wall).not.toContain('romanizationShown={false}');
   });
 
   it('the screen feeds the R-7a start route, so the start tag and known pips show', () => {
