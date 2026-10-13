@@ -29,7 +29,7 @@ export interface DeviceFacts {
   profiles: readonly ProfileLike[];
   selfConsentAcceptedAt: string | null;
   parentPinHash: string | null;
-  /** `account:pinCreatedAt` (epoch ms); null for a PIN set before this feature, which counts as old enough. */
+  /** `account:pinCreatedAt` (epoch ms), else the PIN epoch `account:pinSetAt`; null for a PIN older than both keys, which counts as old enough. */
   pinCreatedAt: number | null;
   now: number;
 }

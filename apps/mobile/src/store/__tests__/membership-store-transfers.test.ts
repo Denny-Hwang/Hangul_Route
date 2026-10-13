@@ -20,7 +20,8 @@ vi.mock('../../config/flags', () => ({
 import { classScopeMarker } from '../../logic/transfers/device-scope';
 import { apiBaseUrl } from '../../platform/sync-api';
 import { track } from '../../platform/telemetry';
-import { TRANSFERS_ON_KEY, TRANSFER_SCOPE_KEY, useMembershipStore } from '../membership-store';
+import { useAccountStore } from '../account-store';
+import { TRANSFERS_ON_KEY, TRANSFER_SCOPE_KEY, TRANSFER_SELF_SET_KEY, useMembershipStore } from '../membership-store';
 import { usePlanStore } from '../plan-store';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
@@ -46,7 +47,7 @@ const req = (over: Partial<InboxTransfer> = {}): InboxTransfer => ({
   status: 'requested',
   initiator: 'learner_side',
   from: { spaceId: 'space:a', name: 'Sunday Class A' },
-  to: { spaceId: 'space:b', name: 'Saturday Class B', ownerName: 'Ms Park', schoolName: null, ageBucket: 'months' },
+  to: { spaceId: 'space:b', name: 'Saturday Class B', ownerName: 'Ms Park', schoolName: null, ageBucket: 'months', learnerCount: 12 },
   learnerState: 'consented',
   sourceState: 'waiting',
   destinationState: 'waiting',
@@ -62,6 +63,7 @@ const req = (over: Partial<InboxTransfer> = {}): InboxTransfer => ({
   learnerRoute: 'device',
   canVeto: true,
   endedFrom: null,
+  termsDigest: null,
   ...over,
 });
 
@@ -102,6 +104,7 @@ beforeEach(() => {
   useMembershipStore.setState({ byLearner: {}, transfersByLearner: {}, movedByLearner: {}, rejoinByLearner: {}, executedSeen: {} });
   usePlanStore.setState({ byLearner: {}, notReady: {} });
   useTierStore.setState({ byLearner: {}, spaceMembers: {} });
+  useAccountStore.setState({ selfConsentAcceptedAt: null });
   useSyncStore.setState({ byLearner: {} });
   useProfileStore.setState({ profiles: [{ id: L, displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't' }], activeId: L, hydrated: true });
   useProgressStore.setState({ byProfile: { [L]: snap }, hydratedFor: new Set([L]) });
@@ -202,6 +205,19 @@ describe('an executed move (section 4.12, app-sheets.md Moved)', () => {
     expect(store().movedByLearner[L]).toMatchObject({ id: TID });
   });
 
+  it('a move seen open is stale while the old class is still listed, even when the learner had also joined the new one (behaviour 25)', async () => {
+    const getInbox = vi
+      .fn()
+      .mockResolvedValueOnce(inbox({ transfers: [req({ status: 'approved' })] }))
+      .mockResolvedValueOnce(inbox({ memberships: [classA, classB], transfers: [req({ status: 'executed' })] }))
+      .mockResolvedValueOnce(inbox({ memberships: [classB], transfers: [req({ status: 'executed' })] }));
+    signedIn(fakeApi({ getInbox }));
+    await store().refresh(L);
+    expect((await store().refresh(L))?.map((r) => r.spaceId)).toEqual(['space:b']);
+    expect(getInbox).toHaveBeenCalledTimes(3);
+    expect(store().movedByLearner[L]).toMatchObject({ id: TID });
+  });
+
   it('stale memberships twice in a row read the inbox at most once more', async () => {
     const getInbox = vi.fn(async () => inbox({ memberships: [classA], transfers: [req({ status: 'executed' })] }));
     signedIn(fakeApi({ getInbox }));
@@ -215,8 +231,11 @@ describe('the class tablet of the old class (section 4.6, 4.12)', () => {
     mem.set(TRANSFER_SCOPE_KEY(L), classScopeMarker('sec'));
     signedIn(fakeApi({ getInbox: vi.fn().mockResolvedValueOnce(inbox()).mockResolvedValue({ status: 'error', code: 'http_401' }) }));
     expect(await store().refresh(L)).toEqual([classA]);
+    usePlanStore.setState({ byLearner: { [L]: [{ id: 'plan:a' } as never] } });
     expect(await store().refresh(L)).toBeNull();
     expect(store().byLearner[L]).toEqual([]);
+    // The old class's plans go too: this device gets no other inbox to clear them.
+    expect(usePlanStore.getState().byLearner[L]).toEqual([]);
     expect(store().rejoinByLearner[L]).toBe(true);
     expect(store().transfersByLearner[L]).toBeUndefined();
     store().clearRejoin(L);
@@ -265,7 +284,12 @@ describe('the class tablet of the old class (section 4.6, 4.12)', () => {
 });
 
 describe('the learner switch (guard 13)', () => {
-  const self = () => useProfileStore.setState({ profiles: [{ id: L, displayName: 'Suni', ageGroup: '10-11', avatar: 'hoya-orange', role: 'learner', createdAt: 't', learnerType: 'self' }] });
+  const selfProfile = () => useProfileStore.setState({ profiles: [{ id: L, displayName: 'Suni', ageGroup: '10-11', avatar: 'hoya-orange', role: 'learner', createdAt: 't', learnerType: 'self' }] });
+  const self = () => {
+    selfProfile();
+    useAccountStore.setState({ selfConsentAcceptedAt: '2026-10-01T00:00:00.000Z' });
+  };
+  const child = () => useProfileStore.setState({ profiles: [{ id: L, displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't', learnerType: 'child' }] });
 
   it('a self profile sends selfManaged when the inbox says it differs, then reads it back', async () => {
     self();
@@ -274,6 +298,16 @@ describe('the learner switch (guard 13)', () => {
     await store().refresh(L);
     expect(api.putTransferPrefs).toHaveBeenCalledWith(L, { selfManaged: true }, { deviceId: 'device-test', secret: 'sec' });
     expect(store().transfersByLearner[L]?.selfManaged).toBe(true);
+    expect(mem.get(TRANSFER_SELF_SET_KEY(L))).toBe(true);
+  });
+
+  it('a self profile without the self consent sends nothing (guard 13: only a consented self profile)', async () => {
+    selfProfile();
+    const api = fakeApi();
+    signedIn(api);
+    await store().refresh(L);
+    expect(api.putTransferPrefs).not.toHaveBeenCalled();
+    expect(store().transfersByLearner[L]?.selfManaged).toBe(false);
   });
 
   it('nothing is sent when the server already agrees, for a managed profile, or from a class tablet', async () => {
@@ -297,17 +331,40 @@ describe('the learner switch (guard 13)', () => {
     expect(managed.putTransferPrefs).not.toHaveBeenCalled();
   });
 
-  it('a profile changed back to child clears the switch; a profile with no learner type leaves it', async () => {
+  it('the device that turned the switch on clears it once its profile is changed back to child; a profile with no learner type leaves it', async () => {
+    mem.set(TRANSFER_SELF_SET_KEY(L), true);
     const api = fakeApi({ getInbox: vi.fn(async () => inbox({ selfManaged: true })), putTransferPrefs: vi.fn(async () => ({ status: 'ok', selfManaged: false })) });
     signedIn(api);
-    useProfileStore.setState({ profiles: [{ id: L, displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't', learnerType: 'child' }] });
+    child();
     await store().refresh(L);
     expect(api.putTransferPrefs).toHaveBeenCalledWith(L, { selfManaged: false }, { deviceId: 'device-test', secret: 'sec' });
     expect(store().transfersByLearner[L]?.selfManaged).toBe(false);
+    expect(mem.get(TRANSFER_SELF_SET_KEY(L))).toBe(false);
     api.putTransferPrefs.mockClear();
+    mem.set(TRANSFER_SELF_SET_KEY(L), true);
     useProfileStore.setState({ profiles: [{ id: L, displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't' }] });
     await store().refresh(L);
     expect(api.putTransferPrefs).not.toHaveBeenCalled();
+  });
+
+  it("a child profile on another device never undoes the learner's own switch, so two devices do not flip it back and forth", async () => {
+    const api = fakeApi({ getInbox: vi.fn(async () => inbox({ selfManaged: true })) });
+    signedIn(api);
+    child();
+    await store().refresh(L);
+    await store().refresh(L);
+    expect(api.putTransferPrefs).not.toHaveBeenCalled();
+    expect(store().transfersByLearner[L]?.selfManaged).toBe(true);
+  });
+
+  it('two refreshes in a row with the same profile send the switch at most once', async () => {
+    self();
+    const getInbox = vi.fn().mockResolvedValueOnce(inbox()).mockResolvedValue(inbox({ selfManaged: true }));
+    const api = fakeApi({ getInbox });
+    signedIn(api);
+    await store().refresh(L);
+    await store().refresh(L);
+    expect(api.putTransferPrefs).toHaveBeenCalledTimes(1);
   });
 
   it('a refused switch leaves the inbox value', async () => {
@@ -365,6 +422,18 @@ describe('the device calls (online only, never queued)', () => {
       { name: 'space.transfer.cancelled', payload: {} },
     ]);
     expect(vi.mocked(track).mock.calls.every(([e]) => e.profileId === undefined)).toBe(true);
+  });
+
+  it('approve ties the consent to the sheet the inbox row carries (4.11), unless the caller already did', async () => {
+    const digest = 'a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1';
+    const api = fakeApi({ getInbox: vi.fn(async () => inbox({ transfers: [req({ learnerState: 'pending', termsDigest: digest })] })), approveTransfer: vi.fn(async () => ({ status: 'ok', request: req() })) });
+    signedIn(api);
+    await store().refresh(L);
+    await store().approveMove(L, TID, consent);
+    expect(api.approveTransfer).toHaveBeenLastCalledWith(L, TID, { consent: { ...consent, termsDigest: digest } }, { deviceId: 'device-test', secret: 'sec' });
+    const own = { ...consent, termsDigest: 'b2'.repeat(32) };
+    await store().approveMove(L, TID, own);
+    expect(api.approveTransfer).toHaveBeenLastCalledWith(L, TID, { consent: own }, { deviceId: 'device-test', secret: 'sec' });
   });
 
   it('refusals keep their code and who started the open request; nothing is reported', async () => {

@@ -62,6 +62,18 @@ describe('getInbox: the transfer fields (section 4.4)', () => {
     expect(r.status === 'ok' && r.inbox).toMatchObject({ transfersEnabled: true, transferDeviceConsent: true, selfManaged: true, transfers: [{ id: TID, learnerRoute: 'device' }] });
   });
 
+  it('reads the learner count and the sheet digest, and an older Worker without them reads both as null', async () => {
+    const digest = 'a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1';
+    const { api } = apiWith(
+      json(200, { data: { ...inbox, transfersEnabled: true, transfers: [{ ...row, to: { ...row.to, learnerCount: 12 }, termsDigest: digest }] } }),
+      json(200, { data: { ...inbox, transfersEnabled: true, transfers: [row] } }),
+    );
+    const now = await api.getInbox('profile:a', creds);
+    expect(now.status === 'ok' && now.inbox.transfers[0]).toMatchObject({ to: { learnerCount: 12 }, termsDigest: digest });
+    const older = await api.getInbox('profile:a', creds);
+    expect(older.status === 'ok' && older.inbox.transfers[0]).toMatchObject({ id: TID, to: { learnerCount: null }, termsDigest: null });
+  });
+
   it('an older Worker without them reads off and empty; a malformed row or an unknown status never costs the plans, memberships or tier', async () => {
     const { api } = apiWith(
       json(200, { data: inbox }),

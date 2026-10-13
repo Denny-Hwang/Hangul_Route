@@ -9,6 +9,7 @@ import { readJson, writeJson } from '../platform/storage';
 import { classScopeMarker, deviceScopeOf } from '../logic/transfers/device-scope';
 import type { DeviceCredentials, DeviceTransferPreview, RosterName, SyncApiClient, TransferCallError } from '../platform/sync-api';
 import { track } from '../platform/telemetry';
+import { useAccountStore } from './account-store';
 import { useNotesStore } from './notes-store';
 import { usePlanStore } from './plan-store';
 import { useProfileStore } from './profile-store';
@@ -56,6 +57,11 @@ export const TRANSFER_SCOPE_KEY = (learnerId: string): string => `transfer-scope
  * no prompt): a class tablet revoked while the app was closed still learns on its first read that it must join again.
  */
 export const TRANSFERS_ON_KEY = (learnerId: string): string => `transfers-on:${learnerId}`;
+/**
+ * Set when this device turned the learner switch on (guard 13). Only that device turns it off again, when its
+ * profile is no longer a consented self profile, so two devices with different profile types never flip it back and forth.
+ */
+export const TRANSFER_SELF_SET_KEY = (learnerId: string): string => `transfer-self-set:${learnerId}`;
 
 export type LookupOutcome =
   | { ok: true; space: { id: string; kind: LearnerMembership['kind']; name: string }; full: boolean; roster: RosterName[] }
@@ -117,9 +123,14 @@ async function scopeOf(learnerId: string, creds: DeviceCredentials): Promise<'fu
   return deviceScopeOf(await readJson<unknown>(TRANSFER_SCOPE_KEY(learnerId)), creds.secret);
 }
 
-/** An executed move whose memberships in the same answer still show the old class: the Worker moved the learner after reading them. */
-const membershipsBeforeMove = (t: InboxTransfer, rows: readonly LearnerMembership[]): boolean =>
-  rows.some((m) => m.spaceId === t.from.spaceId) && !rows.some((m) => m.spaceId === t.to.spaceId);
+/**
+ * An executed move whose memberships in the same answer still show the old class: an older Worker moved the learner
+ * after reading them (the current one settles first). After the swap the learner is never in the source, so a move this
+ * device saw open is stale whenever the source is still there, even if the learner had also joined the destination by
+ * code meanwhile (behaviour 25); for a move never seen open, only when the destination is missing too.
+ */
+const membershipsBeforeMove = (t: InboxTransfer, rows: readonly LearnerMembership[], seenOpen: boolean): boolean =>
+  rows.some((m) => m.spaceId === t.from.spaceId) && (seenOpen || !rows.some((m) => m.spaceId === t.to.spaceId));
 
 function withoutKey<T>(record: Record<string, T>, key: string): Record<string, T> {
   const { [key]: _drop, ...rest } = record;
@@ -160,6 +171,8 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       // Only while the inbox says moves are on, so nothing changes for a learner while transfers are locked.
       if (result.code === 'http_401' && (await transfersWereOn(learnerId)) && (await scopeOf(learnerId, creds)) === 'class') {
         put(learnerId, []);
+        // Its class plans go with the classes: this device gets no other inbox to clear them.
+        await usePlanStore.getState().applyPlans(learnerId, []);
         set((s) => ({ rejoinByLearner: { ...s.rejoinByLearner, [learnerId]: true }, transfersByLearner: withoutKey(s.transfersByLearner, learnerId) }));
       }
       return offline();
@@ -205,23 +218,28 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       const seenKey = `${learnerId}|${t.id}`;
       if (t.status !== 'executed' || get().executedSeen[seenKey]) continue;
       set((s) => ({ executedSeen: { ...s.executedSeen, [seenKey]: true } }));
-      const stale = membershipsBeforeMove(t, rows);
+      const seenOpen = before.some((b) => b.id === t.id);
+      const stale = membershipsBeforeMove(t, rows, seenOpen);
       // A move done long ago (already in the memberships, never seen open here) is not news.
-      if (!stale && !before.some((b) => b.id === t.id)) continue;
+      if (!stale && !seenOpen) continue;
       set((s) => ({ movedByLearner: { ...s.movedByLearner, [learnerId]: t } }));
       void track({ name: 'space.transfer.completed', payload: {} });
       if (stale) reread = true;
     }
 
-    // The learner's own switch (guard 13): a self profile manages its own classes (spec A11), and a profile
-    // changed back to child stops. A profile with no learner type (relinked or restored) leaves the switch alone,
-    // so a second device never undoes the learner's own choice.
+    // The learner's own switch (guard 13, sections 4.2 and 4.11): sent on only for a self profile whose self consent
+    // was given on this device (spec A11). It is sent off only by the device that turned it on, once its profile is no
+    // longer a consented self profile; any other device (a family tablet with a child profile, a relinked profile with
+    // no type) leaves the learner's own choice alone, so two devices never flip it back and forth.
     const profile = useProfileStore.getState().profiles.find((p) => p.id === learnerId);
-    const wanted = profile?.learnerType === 'self' ? true : profile?.learnerType === 'child' ? false : null;
+    const consentedSelf = profile?.learnerType === 'self' && useAccountStore.getState().selfConsentAcceptedAt !== null;
+    const setHere = (await readJson<unknown>(TRANSFER_SELF_SET_KEY(learnerId))) === true;
+    const wanted = consentedSelf ? true : setHere && profile !== undefined && profile.learnerType !== undefined ? false : null;
     if (enabled && scope === 'full' && wanted !== null && wanted !== selfManaged) {
       const sent = await client.putTransferPrefs(learnerId, { selfManaged: wanted }, creds);
       if (sent.status === 'ok') {
         selfManaged = sent.selfManaged;
+        await writeJson(TRANSFER_SELF_SET_KEY(learnerId), wanted);
         set((s) => {
           const current = s.transfersByLearner[learnerId];
           return current ? { transfersByLearner: { ...s.transfersByLearner, [learnerId]: { ...current, selfManaged } } } : {};
@@ -320,8 +338,12 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       return { ok: true, request: result.request };
     },
 
-    approveMove: (learnerId, transferId, consent) =>
-      answerMove(learnerId, (client, creds) => client.approveTransfer(learnerId, transferId, { consent }, creds), { name: 'space.transfer.consented', payload: { slot: 'learner', basis: 'device_attested' } }),
+    approveMove: (learnerId, transferId, consent) => {
+      // Tie the record to the sheet the device showed (4.11): the inbox row carries its digest while the slot is pending.
+      const shown = get().transfersByLearner[learnerId]?.requests.find((t) => t.id === transferId)?.termsDigest ?? null;
+      const tied: DeviceTransferConsent = consent.termsDigest === undefined && shown !== null ? { ...consent, termsDigest: shown } : consent;
+      return answerMove(learnerId, (client, creds) => client.approveTransfer(learnerId, transferId, { consent: tied }, creds), { name: 'space.transfer.consented', payload: { slot: 'learner', basis: 'device_attested' } });
+    },
 
     declineMove: (learnerId, transferId) => answerMove(learnerId, (client, creds) => client.declineTransfer(learnerId, transferId, creds), { name: 'space.transfer.declined', payload: { slot: 'learner' } }),
 

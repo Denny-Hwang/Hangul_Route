@@ -62,7 +62,7 @@ const req = (over: Partial<InboxTransfer> = {}): InboxTransfer => ({
   status: 'requested',
   initiator: 'learner_side',
   from: { spaceId: 'space:a', name: 'Sunday Class A' },
-  to: { spaceId: 'space:b', name: 'Saturday Class B', ownerName: 'Ms Park', schoolName: null, ageBucket: 'months' },
+  to: { spaceId: 'space:b', name: 'Saturday Class B', ownerName: 'Ms Park', schoolName: null, ageBucket: 'months', learnerCount: 12 },
   learnerState: 'consented',
   sourceState: 'waiting',
   destinationState: 'waiting',
@@ -78,6 +78,7 @@ const req = (over: Partial<InboxTransfer> = {}): InboxTransfer => ({
   learnerRoute: 'device',
   canVeto: true,
   endedFrom: null,
+  termsDigest: null,
   ...over,
 });
 

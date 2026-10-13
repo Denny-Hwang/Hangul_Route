@@ -162,7 +162,9 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
       parentPinHash: pinHash.hash,
       pinHashReadFailed: pinHash.failed,
       pinSetAt: pinSetAtOf(pinSetAt),
-      pinCreatedAt: pinSetAtOf(pinCreatedAt),
+      // A PIN made after the PIN epoch (F-APP-001 A-6) but before this key falls back to that epoch, so a PIN made
+      // just before the upgrade still waits its day (F-SPACE-002 4.11); absent both, it predates them and counts as old enough.
+      pinCreatedAt: pinSetAtOf(pinCreatedAt) ?? pinSetAtOf(pinSetAt),
       pinHashSeen,
       pinAttempts: pinAttempts ?? INITIAL_ATTEMPT_STATE,
       hydrated: true,

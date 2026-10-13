@@ -1,3 +1,4 @@
+import { PIN_SET_AT_KEY } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../platform/storage', () => ({
@@ -71,6 +72,17 @@ describe('account-store pinCreatedAt', () => {
     vi.mocked(readJson).mockImplementation(async () => null);
     await useAccountStore.getState().hydrate();
     expect(useAccountStore.getState().pinCreatedAt).toBeNull();
+  });
+
+  it('hydrate falls back to the PIN epoch for a PIN made after it but before this key, so it still waits its day', async () => {
+    vi.mocked(readJson).mockImplementation(async (key: string) => (key === PIN_SET_AT_KEY ? 1_760_000_000_000 : null));
+    await useAccountStore.getState().hydrate();
+    expect(useAccountStore.getState().pinCreatedAt).toBe(1_760_000_000_000);
+    // The creation time wins when both are known.
+    vi.mocked(readJson).mockImplementation(async (key: string) => (key === PIN_SET_AT_KEY ? 5 : key === PIN_CREATED_AT_KEY ? 9 : null));
+    await useAccountStore.getState().hydrate();
+    expect(useAccountStore.getState().pinCreatedAt).toBe(9);
+    expect(written(PIN_CREATED_AT_KEY)).toEqual([]);
   });
 
   it('a PIN an older bundle changed counts as made now (the epoch moves, so does the creation time)', () => {
