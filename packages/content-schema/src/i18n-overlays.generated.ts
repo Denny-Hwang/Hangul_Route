@@ -110,7 +110,7 @@ export const OVERLAYS: Overlays = {
       "soundHint": "como «yo», con la boca bien abierta"
     },
     "jamo:yo": {
-      "exampleWord.gloss": "cocina, comida",
+      "exampleWord.gloss": "cocinar, platillo",
       "soundHint": "como «yo» en «yogur»"
     },
     "jamo:yu": {
@@ -226,7 +226,7 @@ export const OVERLAYS: Overlays = {
     },
     "minigame:s1-rites-q2-check": {
       "listenPick.rounds.0.prompt": "la sílaba song",
-      "listenPick.rounds.1.prompt": "pastel de arroz en media luna"
+      "listenPick.rounds.1.prompt": "masa de arroz en media luna"
     },
     "minigame:s1-rites-q3-apply": {
       "storySteps.a.label": "Ponerse el hanbok",
@@ -1567,15 +1567,15 @@ export const OVERLAYS: Overlays = {
       "steps.s2.discover.pages.0.items.0.example.gloss": "puerta",
       "steps.s2.discover.pages.0.items.1.example.gloss": "luna",
       "steps.s2.discover.pages.1.items.0.word.gloss": "Año Nuevo lunar",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "sopa de pastel de arroz"
+      "steps.s2.discover.pages.1.items.1.word.gloss": "sopa de masa de arroz"
     },
     "quest:stage1-rites-q2": {
       "steps.s2.discover.pages.0.items.0.example.gloss": "béisbol",
       "steps.s2.discover.pages.0.items.1.example.gloss": "zorro",
       "steps.s2.discover.pages.1.items.0.example.gloss": "uva",
-      "steps.s2.discover.pages.1.items.1.example.gloss": "pastel de arroz en media luna",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "masa de arroz en media luna",
       "steps.s2.discover.pages.2.items.0.word.gloss": "fiesta de la cosecha",
-      "steps.s2.discover.pages.2.items.1.word.gloss": "pastel de arroz en media luna"
+      "steps.s2.discover.pages.2.items.1.word.gloss": "masa de arroz en media luna"
     },
     "quest:stage1-rites-q3": {
       "steps.s2.discover.pages.0.items.0.example.gloss": "respeto a los padres",
