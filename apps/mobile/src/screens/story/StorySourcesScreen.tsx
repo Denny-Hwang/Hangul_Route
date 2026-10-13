@@ -256,10 +256,10 @@ export function StorySourcesScreen({ route, navigation, ...exitProps }: Props): 
 
         {view.sections.map((section, s) => (
           <View
-            key={section.kind === 'scene' ? `scene-${section.sceneIndex}` : 'used'}
+            key={section.kind === 'scene' ? `scene-${section.sceneIndex}` : section.kind}
             onLayout={onSectionLayout(s)}
             style={{ gap: spacing.md }}
-            testID={section.kind === 'scene' ? `story-sources-scene-${section.sceneIndex}` : 'story-sources-used'}
+            testID={section.kind === 'scene' ? `story-sources-scene-${section.sceneIndex}` : `story-sources-${section.kind}`}
           >
             <View style={{ gap: spacing.xxs }}>
               <SourcesHeading level={2}>{section.heading}</SourcesHeading>
