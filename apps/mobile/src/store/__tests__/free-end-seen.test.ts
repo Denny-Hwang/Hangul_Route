@@ -7,6 +7,9 @@ vi.mock('../../platform/storage', () => ({
   writeJson: vi.fn(async (k: string, v: unknown) => {
     mem.set(k, v);
   }),
+  removeKey: vi.fn(async (k: string) => {
+    mem.delete(k);
+  }),
 }));
 vi.mock('../../platform/telemetry', () => ({
   track: vi.fn(async (e: { name: string; payload?: Record<string, unknown> }) => {
@@ -15,8 +18,9 @@ vi.mock('../../platform/telemetry', () => ({
   }),
 }));
 
-import { readJsonStrict, writeJson } from '../../platform/storage';
+import { readJsonStrict, removeKey, writeJson } from '../../platform/storage';
 import { markFreeEndSeen, readFreeEndSeen, resetFreeEndSessionForTests } from '../free-end-seen';
+import { notifyProfileRemoved } from '../profile-removal';
 
 beforeEach(() => {
   mem.clear();
@@ -53,5 +57,20 @@ describe('free-end-seen (F-ENT-003 sections 3.7, 3.8, 3.16)', () => {
   it('an unreadable key reads as seen (the practice card, never the celebration twice)', async () => {
     vi.mocked(readJsonStrict).mockRejectedValueOnce(new Error('io'));
     expect(await readFreeEndSeen('p1')).toBe(true);
+  });
+
+  it('a read that never answers reads as seen after the timeout (Home and Results keep their buttons)', async () => {
+    vi.mocked(readJsonStrict).mockImplementationOnce(() => new Promise(() => undefined));
+    expect(await readFreeEndSeen('p1', 5)).toBe(true);
+  });
+
+  it('removing a profile removes its key and forgets this session', async () => {
+    await markFreeEndSeen('gone', false);
+    expect(mem.get('free-end-seen:gone')).toBe(true);
+    notifyProfileRemoved('gone');
+    await Promise.resolve();
+    expect(vi.mocked(removeKey)).toHaveBeenCalledWith('free-end-seen:gone');
+    expect(mem.has('free-end-seen:gone')).toBe(false);
+    expect(await readFreeEndSeen('gone')).toBe(false);
   });
 });
