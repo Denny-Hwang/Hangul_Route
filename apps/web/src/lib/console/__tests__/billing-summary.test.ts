@@ -258,6 +258,14 @@ describe('includesLines: feature lines only while SITE_CLAIMS says the feature i
     expect(includesLines('group_license', 'class', 'en', { ...OFF, parentReports: true })).toEqual(base);
   });
 
+  it.each(['ko', 'es'] as const)('%s: no reports line while reports render only in a reviewed locale', (locale) => {
+    const lines = getMessages(locale).console.billing.includesLines;
+    expect(includesLines('family_lifetime', 'family', locale, SITE_CLAIMS)).toEqual(includesLines('family_lifetime', 'family', locale, OFF));
+    expect(includesLines('family_lifetime', 'family', locale, ALL_ON)).not.toContain(lines.family.reports);
+    expect(includesLines('group_license', 'class', locale, SITE_CLAIMS)).not.toContain(lines.license.reports);
+    expect(includesLines('group_license', 'class', locale, ALL_ON)).toEqual([...includesLines('group_license', 'class', locale, OFF), lines.license.browse, lines.license.notes]);
+  });
+
   it('reads SITE_CLAIMS by default, where the reports claims are on (F-REPORT-001 RP-11)', () => {
     expect(billingHomeView(summary([card()]), { now }).cards[0]?.offer?.includes).toEqual(includesLines('family_lifetime', 'family', 'en', SITE_CLAIMS));
     expect(includesLines('family_lifetime', 'family', 'en')).toEqual([...includesLines('family_lifetime', 'family', 'en', OFF), b.includesLines.family.reports]);

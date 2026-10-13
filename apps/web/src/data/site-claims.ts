@@ -19,7 +19,12 @@
  *
  * Page components take `claims` as a prop that defaults to `SITE_CLAIMS`. F-BILL-002 B-7 reads the boolean
  * claims for its signed-in "what the plan includes" lines; `CLAIM_REQUIRES_PAID` applies to the public site only.
+ * A claim whose feature is live in some UI locales only (`CLAIM_LOCALES`) shows in those locales only, on the site
+ * and in the billing lines alike (`claimLiveIn`).
  */
+import type { UiLocale } from '@hangul-route/i18n';
+import { REPORT_REVIEWED_LOCALES } from '../lib/console/config';
+
 export interface SiteClaims {
   /**
    * The free-plan line. One value: all of Stage 1 is free, before and after F-ENT-003 turns its free boundary
@@ -73,7 +78,26 @@ export const CLAIM_REQUIRES_PAID: Readonly<Record<keyof SiteClaims, boolean>> = 
   lectureMode: false,
 });
 
-/** True when the site shows the feature line of `key`: its claim is on, and paid plans are on sale if it is a paid feature. */
-export function showsClaim(claims: Readonly<SiteClaims>, key: BooleanClaimKey): boolean {
-  return claims[key] && (!CLAIM_REQUIRES_PAID[key] || claims.paidPlans === 'inApp');
+/**
+ * Claims whose feature is live in some UI locales only. Reports render only in a locale whose `report.*` words
+ * passed native review (F-REPORT-001 section 3.1), so the report lines follow the same list: a ko or es page never
+ * promises a report its console holds back. A key not listed here is live in every locale.
+ */
+export const CLAIM_LOCALES: Readonly<Partial<Record<BooleanClaimKey, readonly UiLocale[]>>> = Object.freeze({
+  parentReports: REPORT_REVIEWED_LOCALES,
+  teacherReports: REPORT_REVIEWED_LOCALES,
+});
+
+/** True when the claim of `key` is on and its feature is live in `locale` (the paid rule left aside). */
+export function claimLiveIn(claims: Readonly<SiteClaims>, key: BooleanClaimKey, locale: UiLocale): boolean {
+  const locales = CLAIM_LOCALES[key];
+  return claims[key] && (locales === undefined || locales.includes(locale));
+}
+
+/**
+ * True when the site shows the feature line of `key` in `locale`: its claim is on and live in that locale, and paid
+ * plans are on sale if it is a paid feature.
+ */
+export function showsClaim(claims: Readonly<SiteClaims>, key: BooleanClaimKey, locale: UiLocale): boolean {
+  return claimLiveIn(claims, key, locale) && (!CLAIM_REQUIRES_PAID[key] || claims.paidPlans === 'inApp');
 }
