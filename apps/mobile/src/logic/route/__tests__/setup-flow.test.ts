@@ -170,6 +170,23 @@ describe('what the set-up steps start from (section 3.9: the proposal or the pla
     expect(basis?.state).toMatchObject({ pace: 'brisk', length: '6-month', minutes: 10, start: 'first-words', focus: 'culture', startDate: TODAY });
   });
 
+  it('a newer level check that found a later place to start moves the start there; an older or equal one does not', () => {
+    const ahead = { ...proposal, params: { ...proposal.params, level: { stage: 'stage3' as const, band: 0 }, placedOutQuestIds: ['quest:later'] } };
+    const basis = setupBasisOf({ active: stored, proposal: ahead, completedQuestIds: [], unlockedStages: ['stage1'], today: TODAY });
+    expect(basis?.ctx).toMatchObject({ level: { stage: 'stage3', band: 0 }, placedOutQuestIds: ['quest:later'], motivation: 'kculture' });
+    expect(basis?.state).toMatchObject({ start: 'first-sentences', pace: 'brisk', focus: 'culture' });
+    // The new start keeps the level check's exact placed-out set.
+    expect(setupParams(basis!.ctx, basis!.state)).toMatchObject({ level: { stage: 'stage3', band: 0 }, placedOutQuestIds: ['quest:later'] });
+    const behind = { ...proposal, params: { ...proposal.params, level: { stage: 'stage1' as const, band: 2 } } };
+    expect(setupBasisOf({ active: stored, proposal: behind, completedQuestIds: [], unlockedStages: ['stage1'], today: TODAY })?.ctx.level).toEqual({ stage: 'stage2', band: 1 });
+  });
+
+  it('a plan that has not started yet keeps its first day; a running one starts again from today', () => {
+    const upcoming = { ...stored, meta: { ...stored.meta, params: { ...stored.meta.params, startDate: '2026-10-19' } } };
+    expect(setupBasisOf({ active: upcoming, proposal: null, completedQuestIds: [], unlockedStages: ['stage1'], today: TODAY })?.state.startDate).toBe('2026-10-19');
+    expect(setupBasisOf({ active: stored, proposal: null, completedQuestIds: [], unlockedStages: ['stage1'], today: TODAY })?.state.startDate).toBe(TODAY);
+  });
+
   it('without a plan: the proposal\'s params, and the choice made on it when one is passed', () => {
     const basis = setupBasisOf({ active: null, proposal, completedQuestIds: [], unlockedStages: ['stage1'], today: TODAY });
     expect(basis?.ctx).toEqual({ completedQuestIds: [], unlockedStages: ['stage1'], level: proposal.params.level });

@@ -1,6 +1,7 @@
 import { CATALOG, generateCurriculum, type CurriculumDraft } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { PREVIEW_OPEN_WEEKS, draftWeeks, learnerNotices, planOverview, previewStats, previewWeeks } from '../plan-view';
+import { vocabTopic } from '../../../content/vocab';
+import { PREVIEW_OPEN_WEEKS, draftWeeks, learnerNotices, openableTopicKey, planOverview, previewStats, previewWeeks } from '../plan-view';
 import { selfRouteOf } from '../self-route';
 
 const draft = (weeks: number, over: Partial<Parameters<typeof generateCurriculum>[0]> = {}): CurriculumDraft =>
@@ -35,6 +36,19 @@ describe('the plan preview (wireframe G2)', () => {
     const meta = d.weeks.find((w) => w.focus.storyIds.length > 0);
     const lead = CATALOG.stories.find((s) => s.id === meta?.focus.storyIds[0]);
     expect(weeks.find((w) => w.index === meta?.index)?.storyQuestId).toBe(lead?.questId);
+  });
+
+  it('a culture week whose story is not in this catalogue has no story to name', () => {
+    const d = draft(26, { goals: { focus: 'culture' }, unlockedStages: ['stage1'] });
+    const at = d.weeks.findIndex((w) => w.focus.storyIds.length > 0);
+    const odd = { ...d, weeks: d.weeks.map((w, i) => (i === at ? { ...w, focus: { ...w.focus, storyIds: ['story:not-in-catalog'] } } : w)) };
+    expect(draftWeeks(odd)[at]?.storyQuestId).toBeNull();
+  });
+
+  it('an optional word topic opens its Words page when it is bundled, and is text otherwise', () => {
+    const bundled = (key: string): boolean => vocabTopic(key) !== undefined;
+    expect(openableTopicKey('topic:food', bundled)).toBe('food');
+    expect(openableTopicKey('topic:not-bundled-here', bundled)).toBeNull();
   });
 
   it('the stats line: ready items, their minutes and the stage the lessons reach', () => {

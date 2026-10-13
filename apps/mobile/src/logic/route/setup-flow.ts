@@ -3,6 +3,7 @@ import {
   LENGTH_PRESETS,
   PACES,
   ThemeKeySchema,
+  placementLevelRank,
   sessionsPerWeekOf,
   type CurriculumParams,
   type CurriculumParamsInput,
@@ -161,7 +162,10 @@ export const SETUP_LENGTHS: readonly LengthChoice[] = ['4-week', '12-week', '6-m
 export interface SetupBasisInput {
   /** The plan in force; its answers win, so "Change the plan" starts from what the learner follows. */
   active: SelfRoute | null;
-  /** Hoya's proposal for a learner with no plan yet. */
+  /**
+   * Hoya's proposal from the learner's newest level check (`effectiveRoute`): the start of a learner
+   * with no plan yet, and the start of Change the plan when that check found a later place to start.
+   */
   proposal: RouteProposal | null;
   /** The choice already shaped on the proposal screen, when the steps were opened from there. */
   choice?: PlanChoice;
@@ -171,21 +175,29 @@ export interface SetupBasisInput {
 }
 
 /**
- * The context and the first answers of the set-up steps (section 3.9: "prefilled from the
- * proposal"; G1 "pre-selected from the level check"): the plan in force first, else the proposal
- * with the choice made on it; null when there is neither.
+ * The context and the first answers of the set-up steps (section 3.9: where to start "prefilled
+ * from `effectiveRoute`"; G1 "pre-selected from the level check"): the plan in force first, else
+ * the proposal with the choice made on it; null when there is neither. With a plan in force, a
+ * newer level check that found a later place to start moves the start there (with its own
+ * placed-out set), and a plan that has not started yet keeps its first day.
  */
 export function setupBasisOf(i: SetupBasisInput): { ctx: SetupContext; state: SetupState } | null {
-  const params = i.active?.meta.params ?? i.proposal?.params ?? null;
+  const stored = i.active?.meta.params ?? null;
+  const later = stored !== null && i.proposal !== null && placementLevelRank(i.proposal.params.level) > placementLevelRank(stored.level) ? i.proposal.params : null;
+  const params = stored ?? i.proposal?.params ?? null;
   if (params === null) return null;
+  const startFrom = later ?? params;
   const ctx: SetupContext = {
     completedQuestIds: [...i.completedQuestIds],
     unlockedStages: [...i.unlockedStages],
-    level: params.level,
-    ...(params.placedOutQuestIds === undefined ? {} : { placedOutQuestIds: [...params.placedOutQuestIds] }),
+    level: startFrom.level,
+    ...(startFrom.placedOutQuestIds === undefined ? {} : { placedOutQuestIds: [...startFrom.placedOutQuestIds] }),
     ...(params.goals.motivation === undefined ? {} : { motivation: params.goals.motivation }),
   };
-  if (i.active !== null) return { ctx, state: setupFromStored(i.active.meta.params, i.today) };
+  if (stored !== null) {
+    const state = setupFromStored(stored, i.today);
+    return { ctx, state: { ...state, start: startingPointOf(startFrom.level), startDate: stored.startDate > i.today ? stored.startDate : i.today } };
+  }
   const proposal = i.proposal as RouteProposal;
   return { ctx, state: setupFromChoice(i.choice ?? initialChoice(proposal), proposal.params) };
 }

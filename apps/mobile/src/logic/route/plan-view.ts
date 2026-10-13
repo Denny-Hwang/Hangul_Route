@@ -48,6 +48,15 @@ function weeksOf(meta: Pick<CurriculumMeta, 'weeks'>, items: readonly PlanItem[]
   });
 }
 
+/**
+ * The Words topic a week's optional word topic opens (section 3.9 Overview: "opens the Library
+ * topic"), or null when that catalogue topic is not bundled in this build (it then reads as text).
+ */
+export function openableTopicKey(topicId: string, isBundled: (topicKey: string) => boolean): string | null {
+  const key = topicId.replace(/^topic:/, '');
+  return isBundled(key) ? key : null;
+}
+
 /** Every week of a draft with its items (G2's later weeks, once opened). */
 export function draftWeeks(draft: CurriculumDraft): PlanWeek[] {
   return weeksOf(draft, toPlanItems(draft));

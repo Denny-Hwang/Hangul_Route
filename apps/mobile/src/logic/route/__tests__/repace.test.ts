@@ -157,6 +157,23 @@ describe('the Hoya check-in (FP-B14, OD-13)', () => {
     expect(checkInOffer({ route: shaped, completedQuestIds: doneLater, today: week5, answeredFor: undefined })).toBeNull();
   });
 
+  it('a lighter pace adds the weeks the plan needs, so yes never drops a lesson off the tail', () => {
+    const route = routeAt(4, 12);
+    const future = route.items.filter((i) => (i.targetDate ?? '') >= week5).map((i) => i.id);
+    const next = applyCheckIn(route, { kind: 'lighter', pace: 'gentle' }, [], week5, CATALOG, `${week5}T09:00:00.000Z`);
+    expect(next.meta.params.weeks).toBeGreaterThan(12);
+    expect(next.meta.weeks.length).toBe(next.meta.params.weeks);
+    const kept = new Set(next.items.map((i) => i.id));
+    for (const id of future) expect(kept.has(id), id).toBe(true);
+    // A faster pace has room already: the length stays.
+    expect(applyCheckIn(routeAt(3, 12), { kind: 'faster', pace: 'brisk' }, [], week5, CATALOG, `${week5}T09:00:00.000Z`).meta.params.weeks).toBe(12);
+  });
+
+  it('never grows a plan past what a plan can hold', () => {
+    const route = routeAt(4, 52);
+    expect(applyCheckIn(route, { kind: 'lighter', pace: 'gentle' }, [], week5, CATALOG, `${week5}T09:00:00.000Z`).meta.params.weeks).toBe(52);
+  });
+
   it('yes lays the plan\'s own future items on the new pace from today; past items stay', () => {
     const route = routeAt(3);
     const done = sessionsBefore(route).slice(0, 2);

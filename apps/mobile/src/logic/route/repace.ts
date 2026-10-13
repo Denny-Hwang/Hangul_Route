@@ -1,4 +1,5 @@
 import {
+  CURRICULUM_MAX_ITEMS,
   PACES,
   addDays,
   regenerateFrom,
@@ -130,13 +131,28 @@ export function checkInOffer(i: CheckInInput): CheckInOffer | null {
   return null;
 }
 
+/** The longest plan the schema holds (`weeks` max 52). */
+const MAX_WEEKS = 52;
+
 /**
  * Yes on the check-in: the plan's own future items laid on the new pace's sessions from today
- * (`regenerateFrom(..., 'shift')`), its spread days, the same end date; the past stays.
+ * (`regenerateFrom(..., 'shift')`) on its spread days; the past stays. A lighter pace has fewer
+ * sessions before the end date, so when items would fall off the tail (`fewer-sessions-than-units`)
+ * the plan gets the weeks they need (section 3.7 "Add N weeks", `params.weeks + N`, the same call),
+ * within what a plan can hold. Saying yes never quietly takes lessons out of the plan.
  */
 export function applyCheckIn(route: SelfRoute, offer: CheckInOffer, completedQuestIds: readonly string[], today: DateKey, catalog: Catalog, nowIso: string): SelfRoute {
   const { sessionDays: _days, ...params } = route.meta.params;
-  const paced = { ...route, meta: { ...route.meta, params: { ...params, sessionsPerWeek: PACES[offer.pace] } } };
-  const draft = regenerateFrom(paced, today, catalog, { mode: 'shift', completedQuestIds: [...completedQuestIds] });
+  const perWeek = PACES[offer.pace];
+  const maxWeeks = Math.min(MAX_WEEKS, Math.floor(CURRICULUM_MAX_ITEMS / perWeek));
+  let weeks = params.weeks;
+  let draft = regenerateFrom({ ...route, meta: { ...route.meta, params: { ...params, sessionsPerWeek: perWeek } } }, today, catalog, { mode: 'shift', completedQuestIds: [...completedQuestIds] });
+  // A culture or review week can take a session, so the added weeks are checked again (a few rounds at most).
+  for (let round = 0; round < 4; round += 1) {
+    const left = draft.warnings.find((w) => w.code === 'fewer-sessions-than-units')?.count ?? 0;
+    if (left === 0 || weeks >= maxWeeks) break;
+    weeks = Math.min(maxWeeks, weeks + Math.ceil(left / perWeek));
+    draft = regenerateFrom({ ...route, meta: { ...route.meta, params: { ...params, sessionsPerWeek: perWeek, weeks } } }, today, catalog, { mode: 'shift', completedQuestIds: [...completedQuestIds] });
+  }
   return withDraft(route, draft, nowIso);
 }
