@@ -1,3 +1,4 @@
+import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from '@playwright/test';
 
 /**
@@ -22,6 +23,20 @@ test.describe('locale routes', () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect(page.getByText('This page could not be found.')).toBeVisible();
   });
+
+  // The 404 body is Next's own component, a full-screen inline box that `.hr-site-404` sizes to its content. If a
+  // Next upgrade changes that markup, the two ways on would drop below the fold again; this pins them on screen.
+  const notFound = getMessages('en').landing.notFound;
+  for (const [width, height] of [[320, 568], [375, 812]] as const) {
+    test(`the 404 page shows its two ways on in the first screen at ${width} x ${height}`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await page.goto('/no-such-page');
+      for (const name of [notFound.home, notFound.start]) {
+        const link = page.getByRole('main').getByRole('link', { name, exact: true });
+        await expect(link).toBeInViewport({ ratio: 1 });
+      }
+    });
+  }
 
   for (const path of HIDDEN) {
     test(`${path} is not served while the locale is hidden`, async ({ page }) => {

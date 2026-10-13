@@ -144,6 +144,8 @@ describe('the blocks under the hero (L1)', () => {
     expect(news).toMatch(/<input[^>]*id="waitlist-email"/);
     expect(news).toContain(t.waitlist.submit);
     expect(news).not.toContain(t.get.play.cta);
+    // Links shared before S-5 point at the old waitlist anchor (hangulroute.com/#get); it still lands on the form.
+    expect(news).toMatch(/<span id="get" aria-hidden="true"><\/span>/);
   });
 
   it('every claim on: still one h1, no section grows by more than its one line', () => {
