@@ -19,6 +19,8 @@ import { shot } from './shots';
  */
 
 const ROUTE_TAB = process.env.E2E_MY_ROUTE === '1';
+/** The gating fixture bundle (`build:web:fixtures:gated`, served from dist-e2e-gated/): the free-plan switch on. */
+const GATED_BUILD = process.env.STORY_FIXTURES_GATED === '1';
 const en = getMessages('en');
 const m = en.learner.myRoute;
 const AT = '2026-10-09T10:00:00.000Z';
@@ -35,9 +37,13 @@ const VIEWPORTS = [
  * the fit test below runs in the en UI. Once R-10 ships es and ko, the fit is measured again with each locale's
  * longest localized Stage 1 title (`localizeQuest`), which may be longer.
  */
-const LONGEST_STAGE1 = [...CATALOG.quests]
-  .filter((q) => q.stage === 'stage1' && q.kind === 'lesson')
-  .sort((a, b) => b.title.length - a.title.length || a.id.localeCompare(b.id))[0];
+const LONGEST_STAGE1 = (() => {
+  const longest = [...CATALOG.quests]
+    .filter((q) => q.stage === 'stage1' && q.kind === 'lesson')
+    .sort((a, b) => b.title.length - a.title.length || a.id.localeCompare(b.id))[0];
+  if (longest === undefined) throw new Error('the catalogue has no Stage 1 lesson');
+  return longest;
+})();
 
 const noSideScroll = (page: Page): Promise<boolean> => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 
@@ -260,5 +266,38 @@ test.describe('the Route tab and its route card (LR-10)', () => {
     const overlap = buttonBox.y + buttonBox.height - barBox.y;
     test.info().annotations.push({ type: 'overlap-px', description: String(Math.round(overlap)) });
     expect(overlap, 'LR-10 finding: Continue ends under the tab bar at 320 x 568').toBeGreaterThan(0);
+  });
+
+  test('320 x 568: "Not open yet" and "Coming later" share the dotted ring and are told apart by their words and the legend (assumption h)', async ({ page }) => {
+    // A free learner on the gating fixture bundle: Stage 2's playable quests are not open (F-ENT-003), its other
+    // cells are coming later. Build it with the flag on:
+    //   EXPO_PUBLIC_MY_ROUTE_ENABLED=true pnpm --filter @hangul-route/mobile build:web:fixtures:gated
+    //   STORY_FIXTURES_GATED=1 E2E_MY_ROUTE=1 pnpm --filter @hangul-route/mobile exec playwright test my-route -g "assumption h"
+    test.skip(!GATED_BUILD, 'needs the gating fixture bundle (STORY_FIXTURES_GATED=1, dist-e2e-gated/)');
+    await page.setViewportSize({ width: 320, height: 568 });
+    await learnerOnHome(page);
+    await openRouteTab(page);
+
+    expect(m.state.notOpen).not.toBe(m.state.later);
+    expect(m.legend.notOpen).not.toBe(m.legend.later);
+    const row = page.getByTestId('my-route-stage-2');
+    await row.getByRole('button').first().click();
+    // The cells: each pip group carries its word, so the two kinds read differently while their rings match.
+    await expect(row.getByText(m.state.notOpen, { exact: true }).first()).toBeVisible();
+    await expect(row.getByText(m.state.later, { exact: true }).first()).toBeVisible();
+    // The legend lists both, "Not open yet" just before "Coming later".
+    await row.getByRole('button', { name: m.legend.title, exact: true }).click();
+    const notOpen = row.getByTestId('my-route-legend-not-open');
+    await notOpen.scrollIntoViewIfNeeded();
+    await expect(notOpen).toHaveText(m.legend.notOpen);
+    const later = row.getByText(m.legend.later, { exact: true }).last();
+    await expect(later).toBeVisible();
+    const [a, b] = await Promise.all([notOpen.boundingBox(), later.boundingBox()]);
+    if (a === null || b === null) throw new Error('a legend line has no box');
+    expect(a.y).toBeLessThan(b.y);
+    // A stage that is coming later says so on its own row, in its own words.
+    await expect(page.getByTestId('my-route-later-3').getByText(m.state.later, { exact: true })).toBeVisible();
+    expect(await noSideScroll(page)).toBe(true);
+    await shot(page, 'my-route-not-open-and-later-320');
   });
 });
