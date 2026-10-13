@@ -583,7 +583,9 @@ describe('routeCardCopy (Learning Route amendment sections 4.3, 6.2 and 10; LR-3
   it('rest and beyond keep their sentence above the goal', () => {
     const rest = model(APPENDIX_C, { routeNext: { kind: 'rest' } });
     expect(routeCardCopy(rest, self, { nextTitle: null }).hoya).toBe('You did everything that is open right now. More is coming.');
+    expect(routeCardCopy(rest, grownup, { nextTitle: null }).hoya).toBe('Sam did everything that is open right now. More is coming.');
     const beyond = model(APPENDIX_C, { routeNext: { kind: 'rest' }, route: seed([], { beyondContent: true, needsStage: null }) });
+    expect(routeCardCopy(beyond, self, { nextTitle: null }).hoya).toBe('You know a lot! More adventures are coming.');
     expect(routeCardCopy(beyond, grownup, { nextTitle: null }).hoya).toBe('Sam knows a lot! More adventures are coming.');
   });
 

@@ -46,12 +46,13 @@ function nextOf(routeNext: RouteNext | undefined, cursor: MyRouteModel['cursor']
  * `routeGoalSummaryOf` reads, so the tab and the family card name one goal.
  */
 function goalOf(input: MyRouteInput, stages: readonly StageRow[]): RouteGoal | null {
+  // The rows are always the seven stages, so every stage has its availability.
   const availability = new Map(stages.map((s) => [s.stage, s.availability]));
   return pickGoal({
     sources: input.sources ?? [],
     catalog: input.catalog,
     stages: stages.map((s) => ({ stage: s.stage, state: s.state })),
-    availability: (stage) => availability.get(stage) ?? 'soon',
+    availability: (stage) => availability.get(stage) as StageRow['availability'],
     today: input.today ?? dayKey(input.now.toISOString()),
   });
 }
