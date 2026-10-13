@@ -875,3 +875,59 @@ test('a story plays as the learner replay reader under the strip, ends on the st
   expect(changed.filter((k) => !k.startsWith('hr:browse:'))).toEqual([]);
   expect(after[LEARNER_QUEUE]).toBe(SEEDED_QUEUE);
 });
+
+/* ---------------------------------------------------------------------------------------------
+ * BR-9: the word topic page (section 4.6 topic, section 4.7 vocabulary topic; mock
+ * design/screens/browse/topic.md). Every word with its picture, romanization, gloss and a Hear
+ * button; until F-VOC-003's flashcards come here (its C-5) the list is the topic's preview, so it
+ * has no primary action.
+ * ------------------------------------------------------------------------------------------- */
+
+test('a word topic lists every word with its Hear button, keeps 64 targets at 320 and writes nothing when heard', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await onboardChild(page, { name: 'Mina' });
+  await page.goto('/');
+  await expect(page.getByText('Hi, Mina!')).toBeVisible();
+  await putStored(page, LEARNER_QUEUE, SEEDED_QUEUE);
+  const deviceBefore = await snapshotDevice(page);
+  await writeAccountPass(page);
+  await page.evaluate(() => window.location.assign('/browse#t=vocab-topic:food&s=report'));
+  await expect(page.getByRole('heading', { name: 'Food' })).toBeVisible();
+  await bootSettled(page);
+
+  const rows = page.locator('[data-testid^="browse-topic-word-"]');
+  await expect(rows).toHaveCount(12);
+  await expect(page.getByRole('button', { name: /^Hear / })).toHaveCount(12);
+  const sagwa = page.getByRole('button', { name: 'Hear sagwa' });
+  await expect(sagwa).toBeVisible();
+  // No flashcard button and no preview primary until F-VOC-003 C-5.
+  await expect(page.getByTestId('browse-preview')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /flashcards/i })).toHaveCount(0);
+
+  for (const box of await pressableBoxes(page)) {
+    expect(box.height, box.name).toBeGreaterThanOrEqual(64);
+    expect(box.width, box.name).toBeGreaterThanOrEqual(64);
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
+  await shot(page, 'br9-browse-topic-320');
+
+  // Hearing a word plays it through the learner audio and saves nothing of a learner's.
+  await sagwa.click();
+  await page.getByRole('button', { name: 'Hear uyu' }).click();
+  // Playback writes asynchronously: compare only once nothing more changes for 500 ms.
+  let previous = '';
+  await expect
+    .poll(
+      async () => {
+        const now = JSON.stringify(await snapshotDevice(page));
+        const settled = now === previous;
+        previous = now;
+        return settled;
+      },
+      { intervals: [500], timeout: 10_000 },
+    )
+    .toBe(true);
+  const deviceAfter = await snapshotDevice(page);
+  expect(changedOutsideBrowse(deviceBefore, deviceAfter).filter((k) => !k.startsWith('session:hr:grownup') && !k.startsWith('session:hr:console'))).toEqual([]);
+  expect((await readAllStored(page))[LEARNER_QUEUE]).toBe(SEEDED_QUEUE);
+});
