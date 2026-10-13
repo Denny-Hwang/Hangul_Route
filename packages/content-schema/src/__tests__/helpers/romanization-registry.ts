@@ -83,10 +83,11 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   { path: 'packages/i18n/src/locales.ts', reason: 'the Korean locale endonym (한국어) in the locale table (F-I18N-001)' },
   { path: 'packages/i18n/src/note-text.ts', reason: 'the NOTE_TONE_ALLOW word (뒤처리) and comments of the note text guard (F-FEEDBACK-001 §6.4), not taught content' },
   // Listed file by file, never the directory: a later ko namespace file opts in on purpose, so taught Korean cannot slip past the scan.
-  { path: 'packages/i18n/src/messages/ko/console.ts', reason: 'Korean UI words of the F-BILL-002 B-6 overlay (F-I18N-001 §3.10), not taught Korean: billing page words' },
-  { path: 'packages/i18n/src/messages/ko/caregiver.ts', reason: 'Korean UI words of the F-BILL-002 B-6 overlay (F-I18N-001 §3.10), not taught Korean: learner Plan screen words' },
-  { path: 'packages/i18n/src/messages/ko/learner.ts', reason: 'Korean UI words of the F-BILL-002 B-6 overlay (F-I18N-001 §3.10), not taught Korean: Profile plan card words' },
-  { path: 'packages/i18n/src/messages/ko/a11y.ts', reason: 'Korean UI words of the F-BILL-002 B-6 overlay (F-I18N-001 §3.10), not taught Korean: the Plan screen summary heading' },
+  { path: 'packages/i18n/src/messages/ko/console.ts', reason: 'the whole ko UI overlay file (F-I18N-001 §3.10): Korean interface words, never taught Korean; a ko draft that adds keys here re-checks this' },
+  { path: 'packages/i18n/src/messages/ko/caregiver.ts', reason: 'the whole ko UI overlay file (F-I18N-001 §3.10): Korean interface words, never taught Korean; a ko draft that adds keys here re-checks this' },
+  { path: 'packages/i18n/src/messages/ko/learner.ts', reason: 'the whole ko UI overlay file (F-I18N-001 §3.10): Korean interface words, never taught Korean; a ko draft that adds keys here re-checks this' },
+  { path: 'packages/i18n/src/messages/ko/a11y.ts', reason: 'the whole ko UI overlay file (F-I18N-001 §3.10): Korean interface words, never taught Korean; a ko draft that adds keys here re-checks this' },
+  { path: 'packages/i18n/src/messages/ko/common.ts', reason: 'the whole ko UI overlay file (F-I18N-001 §3.10): Korean interface words, never taught Korean; a ko draft that adds keys here re-checks this' },
   { path: 'content/stories/research/', reason: 'provenance data: `rr` keys and a hyphenated romanization R2 would reject (same skip as SKIPPED_DIRS in scripts/validate-content.mjs)' },
   { path: '*.md', reason: 'documentation, not shipped content' },
   // Generated from class A JSON; listed so they do not trip the check when stories and vocabulary ship.

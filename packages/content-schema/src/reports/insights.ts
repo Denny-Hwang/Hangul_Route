@@ -212,6 +212,11 @@ type Rule<C extends InsightCode> = (f: Facts) => LineOf<C> | null;
 type WellRule<C extends WentWellCode> = (f: WellFacts) => LineOf<C> | null;
 
 const W1: WellRule<'stage_done'> = (f) => {
+  // A `stage_done` headline already names the stage ("Sam finished Stage 1: Hangul this week!"): the line would say it
+  // again, so the next rule moves up, as W3 does under `practiced` (RP-2b2). `learnerReport` gives that headline to
+  // every window with a milestone, so this rule is unreachable from a learner report today: it is kept as the guard
+  // for a context whose headline does not name the stage (a test pins the invariant over the frozen learners).
+  if (f.headline.code === 'stage_done') return null;
   const newest = f.milestones[f.milestones.length - 1];
   return newest ? { code: 'stage_done', params: { stage: { stage: newest.stage, n: newest.n } } } : null;
 };

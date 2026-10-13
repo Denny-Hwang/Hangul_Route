@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { MinigameKindSchema, type ProgressSnapshot, type StageKey, type ThemeKey } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { buildMyRoute } from '../model';
+import { letterWallView, type LetterTile } from '../letter-wall';
 import { SKILL_OF_KIND } from '../skills';
 import type { MyRouteInput, MyRouteModel, SeenRecord } from '../types';
 import {
@@ -327,5 +328,29 @@ describe('the pieces', () => {
     ]);
     expect(gamesFor('listen', games)).toEqual(['Hear a sound, find its letter', 'Hear it, then tap the answer', 'Listen and pick']);
     expect(gamesFor('write', games)).toEqual(['Trace a letter']);
+  });
+});
+
+describe('the letter wall on the open Stage 1 (R-7c, section 3.11)', () => {
+  const tiles: LetterTile[] = [
+    { key: 'ㅏ', jamoId: 'jamo:a', char: 'ㅏ', romanization: 'a', final: false, state: 'met' },
+    { key: 'ㄴ/final', jamoId: 'jamo:nieun-batchim', char: 'ㄴ', romanization: 'n', final: true, state: 'ahead' },
+  ];
+
+  it('rides on the Stage 1 row only, as letterWallView draws it', () => {
+    const v = view(model(APPENDIX_C), { letterWall: tiles });
+    expect(stageRow(v, 'stage1').letterWall).toEqual(letterWallView(tiles, EN));
+    expect(stageRow(v, 'stage2').letterWall).toBeNull();
+    expect(stageRow(v, 'stage4').letterWall).toBeNull();
+  });
+
+  it('is absent without tiles (no Discover step, or a caller that passes none)', () => {
+    expect(stageRow(view(model(APPENDIX_C)), 'stage1').letterWall).toBeNull();
+    expect(stageRow(view(model(APPENDIX_C), { letterWall: [] }), 'stage1').letterWall).toBeNull();
+  });
+
+  it('is the same wall in the grown-up view (its words never say "you")', () => {
+    const v = view(model(APPENDIX_C), { letterWall: tiles, viewer: 'grownup' });
+    expect(stageRow(v, 'stage1').letterWall).toEqual(letterWallView(tiles, EN));
   });
 });

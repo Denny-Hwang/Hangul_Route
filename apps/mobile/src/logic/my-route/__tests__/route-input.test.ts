@@ -4,7 +4,7 @@ import { journeyContent } from '../../../content/sync-context';
 import { localizeEpisode, localizeStage, localizeTheme } from '../../content-locale';
 import { cursorContext } from '../../cursor-context';
 import { buildMyRoute } from '../model';
-import { localizedRouteContent, routeModelInput } from '../route-input';
+import { localizedRouteContent, routeLetterWall, routeModelInput } from '../route-input';
 import { startRouteOf } from '../start-marker';
 import type { SeenRecord } from '../types';
 import { emptySnapshot } from '../view';
@@ -58,5 +58,41 @@ describe('routeModelInput', () => {
     const model = buildMyRoute(routeModelInput({ snapshot, tier: 'free', localized, now: NOW }));
     expect(model.stages).toHaveLength(7);
     expect(model.stages.filter((s) => s.here)).toHaveLength(1);
+  });
+});
+
+describe('routeLetterWall (R-7c)', () => {
+  const localized = localizedRouteContent('en');
+  const build = (snapshot: ReturnType<typeof emptySnapshot>) => buildMyRoute(routeModelInput({ snapshot, tier: 'free', localized, now: NOW }));
+
+  it('draws the 30 Stage 1 letters of the shipped bundle, none lit for a new learner', () => {
+    const tiles = routeLetterWall(build(emptySnapshot('p1')));
+    expect(tiles).toHaveLength(30);
+    expect(tiles.every((t) => t.state === 'ahead')).toBe(true);
+  });
+
+  it('lights the letters of a finished quest from the page model', () => {
+    const snapshot = emptySnapshot('p1');
+    const done = {
+      ...snapshot,
+      quests: [
+        {
+          questId: 'quest:stage1-letters-q1',
+          episodeId: 'episode:stage1-letters',
+          startedAt: '2026-10-10T00:00:00.000Z',
+          completedAt: '2026-10-10T00:05:00.000Z',
+          stars: 3 as const,
+          attempts: 1,
+          accuracy: 1,
+        },
+      ],
+    };
+    const lit = routeLetterWall(build(done)).filter((t) => t.state === 'met').map((t) => t.key);
+    expect(lit).toEqual(['ㅏ', 'ㅓ', 'ㄱ', 'ㄴ']);
+  });
+
+  it('draws nothing for a model without a Stage 1 row', () => {
+    const model = build(emptySnapshot('p1'));
+    expect(routeLetterWall({ ...model, stages: model.stages.filter((s) => s.stage !== 'stage1') })).toEqual([]);
   });
 });

@@ -1,9 +1,14 @@
 import type { Episode, QuestProgress, StageDef, StageKey, ThemeDef, ThemeKey } from '@hangul-route/content-schema';
 import {
   Body,
+  Button,
   Caption,
   Icon,
+  NextMarker,
   Pill,
+  RouteLegend,
+  RouteRing,
+  StickerIcon,
   borderWidth,
   colors,
   layout,
@@ -13,10 +18,19 @@ import {
 } from '@hangul-route/design-system';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { useMessages } from '../i18n/use-messages';
-import { stagePillLabel, themeCellInitial, themeColumnLabel } from '../logic/journey';
+import { useLocale, useMessages } from '../i18n/use-messages';
+import { localizeEpisode } from '../logic/content-locale';
+import { stagePillLabel, stagePillState, themeCellInitial, themeColumnLabel } from '../logic/journey';
 import { cellLabel, cellTestId, countMarkOf } from '../logic/journey-cells';
-import { journeyGridRows, type JourneyCellView, type JourneyMarksOf } from '../logic/journey-grid';
+import {
+  journeyGridRows,
+  journeyLegend,
+  labelMarksOf,
+  withAccessWords,
+  type JourneyAccessInput,
+  type JourneyCellView,
+  type JourneyMarksOf,
+} from '../logic/journey-grid';
 import { journeyGridMaxWidth } from '../logic/layout/pane-sizes';
 import type { StoryIndexEntry } from '../logic/story/story-index';
 
@@ -25,17 +39,23 @@ import type { StoryIndexEntry } from '../logic/story/story-index';
  * availability pill), its five cells and the taste note. Wireframes `design/wireframes/journey/grid.md`
  * (the learner Journey), `design/wireframes/journey/grid-with-stories.md` A (heritage stories on the
  * map, F-STORY-005 PR 5.5a) and `design/wireframes/browse/home.md` B (All lessons, F-BROWSE-001 BR-5b).
- * It reads no learner store and no navigation: what a learner has done arrives through `marksOf` and
- * `quests` (none: nothing done), a tap goes to `onOpen`, and a stories-only cell to `onOpenStories`.
+ * The route marks (F-ENT-003 E3-5; `design/wireframes/journey/grid-plan-and-access.md`,
+ * `design/components/RouteMarkers/spec.md`): the legend line above the column labels, the Next triangle,
+ * the In your plan solid ring and the Not open yet dotted ring, and no lock glyph on any cell.
+ * It reads no learner store and no navigation: what a learner has done arrives through `marksOf`,
+ * `quests` and `access` (none: nothing done, no mark), a tap goes to `onOpen`, and a stories-only
+ * cell to `onOpenStories`.
  */
 
 /** The start pin and the placed-out check sit in the cell's corners. */
 const MARK_SIZE = spacing.lg;
 /** The story count mark: a 20 dp circle in the top-right corner (F-STORY-005 §3.6). */
 const COUNT_MARK = spacing.lg + spacing.xs;
-/** The glyph a stories-only or not-yet-open cell draws in place of its letter (books, lock). */
+/** The glyph a stories-only cell draws in place of its letter (books). A coming-later cell is empty (E3-D D5). */
 const CELL_GLYPH = spacing.lg + spacing.xs;
 const STAGE_RING = 32;
+/** A cell's border (`border.focus` at `borderWidth.thick` when selected in two panes). */
+const CELL_EDGE = borderWidth.base;
 
 export interface JourneyGridProps {
   /** Stage definitions in the UI locale. */
@@ -58,6 +78,16 @@ export interface JourneyGridProps {
   quests?: readonly Pick<QuestProgress, 'questId' | 'episodeId' | 'completedAt'>[];
   /** A stories-only cell's tap (`CellStories`); omitted: such a cell is drawn but not a button. */
   onOpenStories?: (stage: StageKey, theme: ThemeKey) => void;
+  /** One learner's route marks (F-ENT-003 E3-5): Next, In your plan, Not open yet; omitted: no mark, no legend. */
+  access?: JourneyAccessInput;
+  /** The learner's complete stages (`completeStages`): their pill reads Complete (F-QUEST-002 §3.8); omitted: none. */
+  completeStages?: ReadonlySet<StageKey>;
+  /**
+   * Opens the Stage 1 ceremony again from a complete Stage 1's header (F-QUEST-002 §3.8: never shown
+   * automatically a second time, always reachable here). The screen passes it only when the learner
+   * holds the prize cards (`ownsStagePrize`); omitted: no button.
+   */
+  onOpenStagePrize?: () => void;
 }
 
 export function JourneyGrid({
@@ -72,14 +102,29 @@ export function JourneyGrid({
   storyEntries,
   quests,
   onOpenStories,
+  access,
+  completeStages,
+  onOpenStagePrize,
 }: JourneyGridProps): React.ReactElement {
-  const m = useMessages().learner.journey;
+  const messages = useMessages();
+  const locale = useLocale();
+  const m = messages.learner.journey;
   const gridMax = journeyGridMaxWidth(spacing.xs, layout.columns.journeyCellMax);
-  const rows = journeyGridRows({ stages, themes, gridEpisodes, paneMode, selectedId, marksOf, storyEntries, quests });
+  const rows = journeyGridRows({ stages, themes, gridEpisodes, paneMode, selectedId, marksOf, storyEntries, quests, access });
   const themeOf = new Map(themes.map((t) => [t.key, t]));
+  // Each mark's word, so the words are on the page (section 3.14); the cell labels carry them for screen readers.
+  const words = { next: messages.learner.routeNext.tag.next, inPlan: messages.learner.routeNext.tag.inPlan, notOpen: messages.learner.access.notOpen };
+  const legend = journeyLegend(rows).map((kind) => ({ kind, label: words[kind] }));
+  const episodeTitleOf = (id: string | null): string => {
+    const episode = id === null ? undefined : gridEpisodes.find((e) => e.id === id);
+    return episode ? localizeEpisode(episode, locale).titleEn : '';
+  };
 
   return (
     <>
+      {/* The legend line (E3-D D4): under the intro, above the column labels; nothing when no mark is drawn. */}
+      <RouteLegend items={legend} testID="journey-legend" />
+
       {/* Same row geometry as the cells below, so each label sits over its column. */}
       <View style={{ flexDirection: 'row', gap: spacing.xs, marginBottom: spacing.sm, width: '100%', maxWidth: gridMax }}>
         {themes.map((t) => (
@@ -94,6 +139,7 @@ export function JourneyGrid({
       {rows.map((row) => {
         const stage = stages.find((s) => s.key === row.stage) as StageDef;
         const isLocked = row.availability === 'soon';
+        const pill = stagePillState(row.availability, completeStages?.has(row.stage) ?? false);
         return (
           <View
             key={row.stage}
@@ -128,11 +174,18 @@ export function JourneyGrid({
                 </Body>
                 <Caption tone="muted">{stage.oneLinerEn}</Caption>
               </View>
-              <Pill
-                tone={row.availability === 'open' ? 'success' : row.availability === 'taste' ? 'primary' : 'neutral'}
-                label={stagePillLabel(row.availability, m.availability)}
-                size="sm"
-              />
+              <View style={{ alignItems: 'flex-end', gap: spacing.xs }}>
+                <Pill
+                  tone={pill === 'open' || pill === 'complete' ? 'success' : pill === 'taste' ? 'primary' : 'neutral'}
+                  label={stagePillLabel(pill, m.availability)}
+                  size="sm"
+                  testID={`journey-stage-pill-${row.stage}`}
+                />
+                {/* The Stage 1 ceremony, reachable again beside a complete Stage 1's pill (F-QUEST-002 §3.8). */}
+                {row.stage === 'stage1' && pill === 'complete' && onOpenStagePrize ? (
+                  <Button label={m.stagePrize.cta} tone="ghost" size="sm" onPress={onOpenStagePrize} testID="journey-stage-prize" />
+                ) : null}
+              </View>
             </View>
 
             <View style={{ flexDirection: 'row', gap: spacing.xs, width: '100%', maxWidth: gridMax }}>
@@ -145,11 +198,13 @@ export function JourneyGrid({
                   paneMode={paneMode}
                   onOpen={onOpen}
                   onOpenStories={onOpenStories}
+                  // A closed cell's label names its episode in the UI locale (a11y.access.notOpen).
+                  episodeTitle={cell.access.notOpen ? episodeTitleOf(cell.episodeId) : ''}
                 />
               ))}
             </View>
 
-            {row.availability === 'taste' ? (
+            {row.tasteNote ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.xs }}>
                 <Caption tone="muted">{m.tasteNote}</Caption>
               </View>
@@ -180,11 +235,15 @@ interface GridCellProps {
   paneMode: boolean;
   onOpen: (episodeId: string) => void;
   onOpenStories?: (stage: StageKey, theme: ThemeKey) => void;
+  /** The episode title in the UI locale, for a closed cell's label; empty otherwise. */
+  episodeTitle: string;
 }
 
-function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories }: GridCellProps): React.ReactElement {
+function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories, episodeTitle }: GridCellProps): React.ReactElement {
   const messages = useMessages();
   const { completed, placedOut, isStart } = cell.marks;
+  const { next, inPlan, notOpen } = cell.access;
+  const ring = inPlan ? 'inPlan' : notOpen ? 'notOpen' : null;
   const { model } = cell;
   const storiesOnly = model.kind === 'stories-only';
   const isLater = cell.state === 'later' && !storiesOnly;
@@ -205,7 +264,12 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories }: GridC
       disabled={disabled}
       accessibilityRole="button"
       aria-selected={paneMode && !storiesOnly ? cell.selected : undefined}
-      accessibilityLabel={cellLabel(model, stage, theme, messages.a11y.journeyCell, cell.marks)}
+      accessibilityLabel={withAccessWords(
+        cellLabel(model, stage, theme, messages.a11y.journeyCell, labelMarksOf(cell)),
+        cell.access,
+        episodeTitle,
+        messages.a11y.access,
+      )}
       testID={cellTestId(model.kind, cell.stage, cell.theme, cell.marks)}
       style={{
         flex: 1,
@@ -213,7 +277,7 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories }: GridC
         borderRadius: radii.md,
         backgroundColor: isLater ? colors.surface.sunken : completed ? colors.feedback.successLight : colors.surface.paper,
         borderStyle: placedOut && !cell.selected ? 'dashed' : 'solid',
-        borderWidth: cell.selected ? borderWidth.thick : 2,
+        borderWidth: cell.selected ? borderWidth.thick : CELL_EDGE,
         borderColor: cell.selected
           ? colors.border.focus
           : isLater || storiesOnly
@@ -228,19 +292,29 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories }: GridC
     >
       {storiesOnly ? (
         <Icon name="library" size={CELL_GLYPH} color={colors.text.secondary} />
-      ) : isLater ? (
-        <Icon name="lock" size={CELL_GLYPH} color={colors.text.muted} />
-      ) : (
+      ) : isLater ? null : (
+        // A coming-later cell stays sunken and empty (E3-D D5, OD-6): no lock glyph on a learner screen.
         <Text style={{ fontSize: typography.size.title, fontWeight: '700', color: colors.text.primary }}>{themeCellInitial(theme)}</Text>
       )}
+      {ring !== null ? (
+        // Around the initial: the solid ring (In your plan) or the dotted ring (Not open yet). Never both.
+        <View pointerEvents="none" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center' }}>
+          <RouteRing kind={ring} testID={`journey-ring-${ring}-${cell.stage}-${cell.theme}`} />
+        </View>
+      ) : null}
+      {/* Corner glyphs sit over a ring as paper stickers (E3-D D3). */}
       {isStart ? (
         <View pointerEvents="none" style={{ position: 'absolute', top: spacing.xxs, left: spacing.xxs }}>
-          <Icon name="pin" size={MARK_SIZE} color={colors.brand.primary} />
+          {ring !== null ? (
+            <StickerIcon name="pin" size={MARK_SIZE} color={colors.brand.primary} />
+          ) : (
+            <Icon name="pin" size={MARK_SIZE} color={colors.brand.primary} />
+          )}
         </View>
       ) : null}
       {placedOut ? (
         <View pointerEvents="none" style={{ position: 'absolute', top: spacing.xxs, right: spacing.xxs }}>
-          <Icon name="check-circle" size={MARK_SIZE} color={tone} />
+          {ring !== null ? <StickerIcon name="check-circle" size={MARK_SIZE} color={tone} /> : <Icon name="check-circle" size={MARK_SIZE} color={tone} />}
         </View>
       ) : null}
       {count !== null ? (
@@ -273,6 +347,9 @@ function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories }: GridC
           </Text>
         </View>
       ) : null}
+      {/* The Next triangle over the top edge, the top layer (E3-D D1: the pip rows' cursor, not the pin).
+          Its tip is placed from the cell's outer edge, so the cell's own border comes off the offset. */}
+      {next ? <NextMarker edge={cell.selected ? borderWidth.thick : CELL_EDGE} testID={`journey-next-${cell.stage}-${cell.theme}`} /> : null}
     </Pressable>
   );
 }

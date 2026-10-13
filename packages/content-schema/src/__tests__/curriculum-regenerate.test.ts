@@ -298,3 +298,121 @@ describe('regenerateFrom: requeue (the device re-pace)', () => {
     expect(again.items.find((item) => (item.targetDate as string) >= '2026-11-11')?.id).toBe(story('chuseok-ganggangsullae'));
   });
 });
+
+describe('regenerateFrom: reseed (after a retake or an override, FP-B4)', () => {
+  const SELF_0: CurriculumParamsInput = { ...SELF_B, level: { stage: 'stage1', band: 0 }, weeks: 12 };
+  const S = generateCurriculum(SELF_0, CATALOG_2026_10);
+  const band3 = { stage: 'stage1', band: 3 } as const;
+  const placedAtBand3 = [
+    q('letters-q1'), q('letters-q2'), q('letters-q3'), q('life-q1'), q('life-q2'), q('life-q3'),
+    q('rites-q1'), q('rites-q2'), q('rites-q3'), q('nature-q1'),
+  ];
+  const future = (draft: CurriculumDraft, today: string): string[] =>
+    draft.items.filter((item) => (item.targetDate as string) >= today).map((item) => item.id);
+  const past = (draft: CurriculumDraft, today: string): Array<[string | undefined, string]> =>
+    dated(draft).filter(([date]) => (date as string) < today);
+
+  it('re-seeds a fresh plan on its start day with the same start to the same plan', () => {
+    const sameA = regenerateFrom(planOf(A), A.params.startDate, CATALOG_2026_10, {
+      mode: 'reseed',
+      paramsPatch: { level: { stage: 'stage1', band: 0 } },
+    });
+    expect(toPlanItems(sameA)).toEqual(toPlanItems(A));
+    expect(sameA.weeks).toEqual(A.weeks);
+    const sameB = regenerateFrom(planOf(B), B.params.startDate, CATALOG_2026_10, { mode: 'reseed', paramsPatch: { level: band3 } });
+    expect(toPlanItems(sameB)).toEqual(toPlanItems(B));
+    expect(sameB.weeks).toEqual(B.weeks);
+  });
+
+  it('equals shift with an empty patch', () => {
+    const plan = withParams(planOf(A), { daysOff: [...A.params.daysOff, { from: '2026-12-13', to: '2026-12-26' }] });
+    for (const paramsPatch of [undefined, {}, { level: undefined }]) {
+      const reseeded = regenerateFrom(plan, '2026-12-13', CATALOG_2026_10, { mode: 'reseed', paramsPatch });
+      expect(reseeded).toEqual(regenerateFrom(plan, '2026-12-13', CATALOG_2026_10, { mode: 'shift' }));
+    }
+  });
+
+  it('moves the future ahead after a higher level: history frozen, placed-out quests gone, same end date', () => {
+    const today = '2026-10-26';
+    const again = regenerateFrom(planOf(S), today, CATALOG_2026_10, { mode: 'reseed', paramsPatch: { level: band3 } });
+    expect(past(again, today)).toEqual(past(S, today));
+    expect(again.params.level).toEqual(band3);
+    expect(again.weeks).toHaveLength(S.weeks.length);
+    expect(again.weeks.at(-1)?.startDate).toBe(S.weeks.at(-1)?.startDate);
+    const ahead = future(again, today);
+    expect(ahead[0]).toBe(q('nature-q2'));
+    for (const id of placedAtBand3) {
+      if (!past(S, today).some(([, done]) => done === id)) expect(ahead).not.toContain(id);
+    }
+  });
+
+  it('never lowers the stored level', () => {
+    const today = '2026-11-02';
+    const lower = regenerateFrom(planOf(B), today, CATALOG_2026_10, { mode: 'reseed', paramsPatch: { level: { stage: 'stage1', band: 0 } } });
+    expect(lower.params.level).toEqual(band3);
+    expect(toPlanItems(lower)).toEqual(toPlanItems(B));
+    const higher = regenerateFrom(planOf(B), today, CATALOG_2026_10, { mode: 'reseed', paramsPatch: { level: { stage: 'stage2', band: 0 } } });
+    expect(higher.params.level).toEqual({ stage: 'stage2', band: 0 });
+  });
+
+  it('drops a grown placed-out set from the future, and puts back what an override removed', () => {
+    const today = '2026-10-19';
+    const grown = regenerateFrom(planOf(S), today, CATALOG_2026_10, {
+      mode: 'reseed',
+      paramsPatch: { placedOutQuestIds: placedAtBand3 },
+    });
+    expect(grown.params.placedOutQuestIds).toEqual(placedAtBand3);
+    expect(future(grown, today)[0]).toBe(q('nature-q2'));
+
+    const placed = generateCurriculum({ ...SELF_0, placedOutQuestIds: placedAtBand3 }, CATALOG_2026_10);
+    const override = placedAtBand3.slice(0, 6);
+    const back = regenerateFrom(planOf(placed), today, CATALOG_2026_10, { mode: 'reseed', paramsPatch: { placedOutQuestIds: override } });
+    expect(past(back, today)).toEqual(past(placed, today));
+    const ahead = future(back, today);
+    for (const id of placedAtBand3.slice(6)) expect(ahead).toContain(id);
+    // The put-back quests come first, in canonical order, before what the plan had next.
+    expect(ahead.slice(0, 4)).toEqual(placedAtBand3.slice(6));
+    expect(ahead[4]).toBe(future(placed, today)[0]);
+  });
+
+  it('moves the start after a raised level alone on a plan that stores an exact set', () => {
+    const today = '2026-10-19';
+    const exact = generateCurriculum({ ...SELF_0, placedOutQuestIds: [q('letters-q1')] }, CATALOG_2026_10);
+    const raised = regenerateFrom(planOf(exact), today, CATALOG_2026_10, { mode: 'reseed', paramsPatch: { level: band3 } });
+    expect(raised.params.level).toEqual(band3);
+    expect(new Set(raised.params.placedOutQuestIds)).toEqual(new Set(placedAtBand3));
+    expect(past(raised, today)).toEqual(past(exact, today));
+    expect(future(raised, today)[0]).toBe(q('nature-q2'));
+    // A lower level alone keeps the stored set as it is.
+    const lower = regenerateFrom(planOf(exact), today, CATALOG_2026_10, { mode: 'reseed', paramsPatch: { level: { stage: 'stage1', band: 0 } } });
+    expect(lower.params.placedOutQuestIds).toEqual([q('letters-q1')]);
+  });
+
+  it('never re-queues an item dated before today, done or not', () => {
+    const today = '2026-10-26';
+    const again = regenerateFrom(planOf(S), today, CATALOG_2026_10, { mode: 'reseed', completedQuestIds: [], paramsPatch: { level: { stage: 'stage1', band: 1 } } });
+    const before = past(S, today).map(([, id]) => id);
+    expect(past(again, today).map(([, id]) => id)).toEqual(before);
+    for (const id of before) expect(future(again, today)).not.toContain(id);
+  });
+
+  it('skips future items the learner already finished and says how many', () => {
+    const today = '2026-10-19';
+    const ahead = future(S, today);
+    const again = regenerateFrom(planOf(S), today, CATALOG_2026_10, {
+      mode: 'reseed',
+      completedQuestIds: [ahead[0] as string],
+      paramsPatch: { level: { stage: 'stage1', band: 0 } },
+    });
+    expect(future(again, today)).not.toContain(ahead[0]);
+    expect(future(again, today)[0]).toBe(ahead[1]);
+    expect(again.warnings).toContainEqual({ code: 'already-done-skipped', count: 1 });
+  });
+
+  it('takes new goals from the patch', () => {
+    const goals = { focus: 'culture' as const, motivation: 'heritage' as const };
+    const again = regenerateFrom(planOf(S), '2026-10-19', CATALOG_2026_10, { mode: 'reseed', paramsPatch: { goals } });
+    expect(again.params.goals).toEqual(goals);
+    expect(again.weeks.slice(2).some((week) => week.kind === 'culture')).toBe(true);
+  });
+});

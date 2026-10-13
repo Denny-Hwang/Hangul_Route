@@ -2,7 +2,7 @@ import type { AssessmentResponse } from '../assessment/question';
 import type { StageKey, ThemeKey } from '../schemas/heritage-card';
 import { ThemeKeySchema } from '../schemas/heritage-card';
 import type { GateResult, Motivation, PlacementLevel, PlacementResult } from '../schemas/placement';
-import { inRouteOrder, placementStageNumber, type TagLookup } from './level-map';
+import { inRouteOrder, placementLevelRank, placementStageNumber, type TagLookup } from './level-map';
 import { modeCeiling, modeOf } from './rungs';
 import { rowsPassed } from './scoring';
 
@@ -144,7 +144,7 @@ export const seedRoute = (result: PlacementResult, catalog: RouteCatalog, opts: 
     opts,
   );
 
-const rank = (level: PlacementLevel): number => placementStageNumber(level.stage) * 10 + level.band;
+const rank = placementLevelRank;
 const higher = (a: PlacementLevel, b: PlacementLevel): PlacementLevel => (rank(b) > rank(a) ? b : a);
 
 /**
