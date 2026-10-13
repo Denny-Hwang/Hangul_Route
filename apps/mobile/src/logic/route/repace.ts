@@ -95,21 +95,35 @@ export interface CheckInInput {
  * actually finished, fewer than half offers a lighter week (Gentle) and every one offers a bit
  * faster (one step up). Nothing in between, nothing past Brisk or below Gentle, and nothing for a
  * plan off the chips. A coming-soon placeholder is not a session anyone can finish, so it does
- * not count. It never names a session that was not done.
+ * not count. A re-pace moves unfinished items out of the weeks before it, so such a week counts
+ * at least its sessions a week when its (frozen) meta shows it held lessons. It never names a
+ * session that was not done.
  */
 export function checkInOffer(i: CheckInInput): CheckInOffer | null {
   const route = i.route;
   if (route === null || route.archivedAt !== null || i.answeredFor === route.id) return null;
   const week = route.meta.weeks.find((w) => w.index === CHECK_IN_WEEK);
   if (week === undefined || i.today < week.startDate || i.today >= addDays(week.startDate, 7)) return null;
-  const sessions = route.items.filter((item) => item.kind === 'quest' && item.targetDate !== undefined && item.targetDate < week.startDate);
-  if (sessions.length === 0) return null;
+  const perWeek = sessionsPerWeekOf(route.meta.params);
+  const repacedOn = route.meta.repacedAt === null ? null : route.meta.repacedAt.slice(0, 10);
   const done = new Set(i.completedQuestIds);
-  const finished = sessions.filter((item) => done.has(item.id)).length;
-  const pace = PACE_IDS.find((id) => PACES[id] === sessionsPerWeekOf(route.meta.params));
+  let planned = 0;
+  let finished = 0;
+  for (const w of route.meta.weeks) {
+    if (w.index >= CHECK_IN_WEEK) continue;
+    const end = addDays(w.startDate, 7);
+    const items = route.items.filter((item) => item.kind === 'quest' && item.targetDate !== undefined && item.targetDate >= w.startDate && item.targetDate < end);
+    finished += items.filter((item) => done.has(item.id)).length;
+    // A re-pace moves unfinished items out of the weeks before it; their frozen week meta still says the week had lessons.
+    const hadLessons = (w.kind === 'learn' || w.kind === 'culture') && (w.focus.episodeId !== null || w.focus.storyIds.length > 0);
+    const movedOut = repacedOn !== null && w.startDate < repacedOn && hadLessons;
+    planned += movedOut ? Math.max(items.length, perWeek) : items.length;
+  }
+  if (planned === 0) return null;
+  const pace = PACE_IDS.find((id) => PACES[id] === perWeek);
   if (pace === undefined) return null;
-  if (finished * 2 < sessions.length) return pace === 'gentle' ? null : { kind: 'lighter', pace: 'gentle' };
-  if (finished === sessions.length && pace !== 'brisk') return { kind: 'faster', pace: PACE_IDS[PACE_IDS.indexOf(pace) + 1] as PaceId };
+  if (finished * 2 < planned) return pace === 'gentle' ? null : { kind: 'lighter', pace: 'gentle' };
+  if (finished >= planned && pace !== 'brisk') return { kind: 'faster', pace: PACE_IDS[PACE_IDS.indexOf(pace) + 1] as PaceId };
   return null;
 }
 

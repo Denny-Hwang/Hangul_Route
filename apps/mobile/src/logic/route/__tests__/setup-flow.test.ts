@@ -200,5 +200,6 @@ describe('leaving the plan screens after Start this plan', () => {
       { name: 'Main' },
       { name: 'RouteOverview' },
     ]);
+    expect(routesAfterStart([{ name: 'Main' }], { name: 'RouteOverview' })).toEqual([{ name: 'Main' }, { name: 'RouteOverview' }]);
   });
 });

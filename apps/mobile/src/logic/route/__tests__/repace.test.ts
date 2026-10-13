@@ -122,6 +122,33 @@ describe('the Hoya check-in (FP-B14, OD-13)', () => {
     expect(checkInOffer({ route: empty, completedQuestIds: [], today: week5, answeredFor: undefined })).toBeNull();
   });
 
+  it('after a re-pace moved unfinished items forward, the weeks before it still count their sessions', () => {
+    const route = routeAt(3);
+    // Nothing done by the third week: Hoya moved the plan along; weeks 1 and 2 now hold no items.
+    const moved = repaceSelfRoute(route, [], '2026-09-23', CATALOG, '2026-09-23T06:00:00.000Z');
+    expect(moved.items.filter((i) => (i.targetDate ?? '') < '2026-09-21')).toHaveLength(0);
+    expect(checkInOffer({ route: moved, completedQuestIds: [], today: week5, answeredFor: undefined })).toEqual({ kind: 'lighter', pace: 'gentle' });
+    // Finishing only what was laid out after the re-pace is not every session of weeks 1 to 4.
+    const after = moved.items.filter((i) => i.kind === 'quest' && (i.targetDate ?? '') < '2026-10-05').map((i) => i.id);
+    expect(after.length).toBeGreaterThan(0);
+    expect(checkInOffer({ route: moved, completedQuestIds: after, today: week5, answeredFor: undefined })?.kind).not.toBe('faster');
+  });
+
+  it('a moved-out culture week counts its sessions; a week that held no lesson or story does not', () => {
+    const route = routeAt(3);
+    const weeks = route.meta.weeks.map((w) =>
+      w.index === 1
+        ? { ...w, kind: 'culture' as const, focus: { ...w.focus, episodeId: null, storyIds: ['quest:story'] } }
+        : w.index === 2
+          ? { ...w, focus: { ...w.focus, episodeId: null, storyIds: [] } }
+          : w,
+    );
+    const shaped = { ...route, meta: { ...route.meta, weeks, repacedAt: '2026-10-05T06:00:00.000Z' }, items: route.items.filter((i) => (i.targetDate ?? '') >= '2026-09-21') };
+    // Week 1 counts 3 (moved out), week 2 counts its items (none now), weeks 3 and 4 count theirs; all of those done is not every session.
+    const doneLater = shaped.items.filter((i) => i.kind === 'quest' && (i.targetDate ?? '') < '2026-10-05').map((i) => i.id);
+    expect(checkInOffer({ route: shaped, completedQuestIds: doneLater, today: week5, answeredFor: undefined })).toBeNull();
+  });
+
   it('yes lays the plan\'s own future items on the new pace from today; past items stay', () => {
     const route = routeAt(3);
     const done = sessionsBefore(route).slice(0, 2);
