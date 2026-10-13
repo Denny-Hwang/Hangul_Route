@@ -44,6 +44,11 @@ export function scaleOptions(copy: ChallengeCopy): Array<{ scale: ClockScale; la
   return CLOCK_SCALES.map((scale) => ({ scale, label: labels[scale] }));
 }
 
+/** "Adds a 60-second clock. ...": the clock an opt-in would give now (the stored scale, or 2x with a screen reader). */
+export function tryChallengeLine(stored: ClockScale, screenReader: boolean, copy: ChallengeCopy): string {
+  return copy.tryLine((CLOCK_BASE_MS * scaleOnOptIn(stored, screenReader)) / 1_000);
+}
+
 /** "One clock: 90 seconds for the whole round." */
 export function challengeLine(scale: ClockScale, copy: ChallengeCopy): string {
   return copy.line((CLOCK_BASE_MS * scale) / 1_000);

@@ -1351,7 +1351,8 @@ export const learner = {
         line: (seconds: number) => `One clock: ${seconds} seconds for the whole round.`,
         /** The quiet switch for a profile that has not opted in; turning it on changes the profile setting. */
         try: 'Try Challenge',
-        tryLine: 'Adds a 60-second clock. You can turn it off any time.',
+        /** `seconds`: the clock an opt-in gives (60 at the default scale; more for a stored or screen-reader scale). */
+        tryLine: (seconds: number) => `Adds a ${seconds}-second clock. You can turn it off any time.`,
         scale: {
           title: 'Clock',
           normal: 'Normal',

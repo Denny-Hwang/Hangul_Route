@@ -15,7 +15,7 @@ import {
 import { romanizationShown as showRomanization } from '@hangul-route/i18n';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Modal, Pressable, View } from 'react-native';
+import { AccessibilityInfo, Modal, Platform, Pressable, View } from 'react-native';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { localizedGloss, vocabItem } from '../../content/vocab';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -33,6 +33,7 @@ import {
   initialMode,
   pausedFor,
   scaleOnOptIn,
+  tryChallengeLine,
 } from '../../logic/vocab/challenge';
 import { clockFor, type SpeedMode } from '../../logic/vocab/session-clock';
 import {
@@ -53,7 +54,7 @@ import { summarize } from '../../logic/vocab/stars';
 import { localizedTopic } from '../../logic/vocab/topic-view';
 import type { RootStackParamList } from '../../navigation/types';
 import { subscribeAppActive } from '../../platform/app-state';
-import { isScreenReaderEnabled } from '../../platform/screen-reader';
+import { focusForScreenReader, isScreenReaderEnabled } from '../../platform/screen-reader';
 import { track } from '../../platform/telemetry';
 import { useAudioStore } from '../../store/audio-store';
 import { useLocaleStore } from '../../store/locale-store';
@@ -214,14 +215,25 @@ function StartSheet({
 
   // "Try Challenge" is the explicit opt-in: it turns the profile setting on and picks Challenge for this round;
   // with a screen reader on, the clock is set to twice as long first (§3.8).
-  const optIn = (): void => {
+  // A tap before the screen-reader check resolves asks again, so a fast opt-in still gets 2x; the mode and the
+  // scale are written together, so one `vocab.challenge_toggled` reports the clock the round will use.
+  const optIn = async (): Promise<void> => {
     if (!profile) return;
-    const scale = scaleOnOptIn(challenge.scale, screenReader === true);
-    setChallengeMode(profile.id, true, 'start_sheet');
-    if (scale !== challenge.scale) setClockScale(profile.id, scale, 'start_sheet');
+    const reader = screenReader ?? (await isScreenReaderEnabled());
+    const scale = scaleOnOptIn(challenge.scale, reader);
+    setChallengeMode(profile.id, true, 'start_sheet', scale);
     setReaderScale(scale !== challenge.scale);
     setMode('challenge');
   };
+  // The switch that was tapped is replaced by the Relaxed | Challenge control: screen-reader focus goes to the
+  // Challenge line (with "Twice as long is chosen for you" when the clock was doubled), not back to the top.
+  const modeRef = useRef<View>(null);
+  const focusMode = useRef(false);
+  useEffect(() => {
+    if (!focusMode.current || mode !== 'challenge') return;
+    focusMode.current = false;
+    focusForScreenReader(modeRef.current);
+  }, [mode]);
   const chooseScale = (scale: ClockScale): void => {
     if (!profile) return;
     setClockScale(profile.id, scale, 'start_sheet');
@@ -288,7 +300,7 @@ function StartSheet({
               testID="vocab-speed-modes"
             />
           ) : null}
-          <View style={{ gap: spacing.xs }} testID="vocab-speed-mode">
+          <View ref={modeRef} accessible={Platform.OS !== 'web'} style={{ gap: spacing.xs }} testID="vocab-speed-mode">
             {challenge.on ? null : <Body weight="semibold">{copy.relaxed.label}</Body>}
             <Body tone="secondary">
               {mode === 'challenge' ? challengeLine(challenge.scale, copy.challenge) : copy.relaxed.line(questions.length)}
@@ -304,18 +316,24 @@ function StartSheet({
                 groupLabel={messages.a11y.vocab.speed.scales}
                 testID="vocab-speed-scale"
               />
-              {readerScale ? <Body tone="secondary">{copy.challenge.screenReaderLine}</Body> : null}
+              {/* Said when the clock was doubled for a screen reader (§3.8 "and says so"). */}
+              <View accessibilityLiveRegion="polite">
+                {readerScale ? <Body tone="secondary">{copy.challenge.screenReaderLine}</Body> : null}
+              </View>
               <Body tone="secondary">{copy.challenge.stopsLine}</Body>
             </View>
           ) : null}
           {!challenge.on && profile ? (
             <SwitchRow
               title={copy.challenge.try}
-              line={copy.challenge.tryLine}
+              line={tryChallengeLine(challenge.scale, screenReader === true, copy.challenge)}
               on={false}
               onLabel={copy.challenge.profile.on}
               offLabel={copy.challenge.profile.off}
-              onToggle={optIn}
+              onToggle={() => {
+                focusMode.current = true;
+                void optIn();
+              }}
               testID="vocab-speed-try-challenge"
             />
           ) : null}
@@ -413,8 +431,11 @@ function RoundPlay({
     }
     // The clock ended the round: a calm second of "That's the time! Nice work." first (§3.6).
     setTimeUp(true);
+    setStopping(false);
+    // A live region mounted with its text is not read by every screen reader, so native says it as well.
+    if (Platform.OS !== 'web') AccessibilityInfo.announceForAccessibility(copy.challenge.timeUp);
     timeUpTimer.current = setTimeout(open, TIME_UP_MS);
-  }, [state, config, playing.earlierBest, topicKey, navigation, onLeave]);
+  }, [state, config, playing.earlierBest, topicKey, navigation, onLeave, copy.challenge.timeUp]);
   useEffect(
     () => () => {
       if (timeUpTimer.current !== null) clearTimeout(timeUpTimer.current);
@@ -473,7 +494,8 @@ function RoundPlay({
         // Challenge (frame G): two lines at any width; Back, the digits and Pause, then the meter and the bar.
         <View style={{ gap: spacing.sm }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-            <BackButton onPress={() => setStopping(true)} />
+            {/* The time-up beat (frame G''): the round is over and saved, so there is nothing to stop. */}
+            {timeUp ? null : <BackButton onPress={() => setStopping(true)} />}
             <View style={{ flex: 1 }} />
             <ClockDigits view={clock} />
             {paused || timeUp ? null : (
@@ -530,6 +552,8 @@ function RoundPlay({
         onKeep={() => setStopping(false)}
         onStop={() => {
           setStopping(false);
+          // A round the clock already ended keeps its results (the session is written).
+          if (stateRef.current.phase === 'done') return;
           dispatch({ type: 'quit' });
         }}
       />

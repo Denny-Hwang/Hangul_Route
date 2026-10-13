@@ -10,6 +10,7 @@ import {
   initialMode,
   pausedFor,
   scaleOnOptIn,
+  tryChallengeLine,
   scaleOptions,
 } from '../challenge';
 
@@ -107,6 +108,14 @@ describe('pausedFor (resume carries the paused wall time)', () => {
   });
 });
 
+describe('tryChallengeLine (§3.5: the Try Challenge line names the clock the learner will get)', () => {
+  it('names the stored scale, or twice as long with a screen reader on', () => {
+    expect(tryChallengeLine(1, false, COPY)).toBe('Adds a 60-second clock. You can turn it off any time.');
+    expect(tryChallengeLine(1.5, false, COPY)).toBe('Adds a 90-second clock. You can turn it off any time.');
+    expect(tryChallengeLine(1, true, COPY)).toBe('Adds a 120-second clock. You can turn it off any time.');
+  });
+});
+
 describe('Challenge copy (D3, §3.8)', () => {
   it('the time-up beat is one second', () => {
     expect(TIME_UP_MS).toBe(1_000);
@@ -116,7 +125,8 @@ describe('Challenge copy (D3, §3.8)', () => {
     const lines = [
       COPY.label,
       COPY.try,
-      COPY.tryLine,
+      COPY.tryLine(60),
+      COPY.tryLine(120),
       COPY.scale.title,
       COPY.scale.normal,
       COPY.scale.longer,

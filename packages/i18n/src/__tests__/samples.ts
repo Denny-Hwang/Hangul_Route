@@ -346,6 +346,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.vocab.speed.relaxed.line': [[1], [8], [10]],
   'learner.vocab.speed.results.caught': [[0], [1], [7]],
   'learner.vocab.speed.challenge.line': [[60], [90], [120]],
+  'learner.vocab.speed.challenge.tryLine': [[60], [90], [120]],
   'learner.vocab.library.collected': [[0], [1], [12]],
   'learner.vocab.topics.collected': [[0], [5]],
   'learner.vocab.topics.tileA11y': [['Food', 1], ['Food', 5]],

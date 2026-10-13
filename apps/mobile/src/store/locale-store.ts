@@ -55,7 +55,11 @@ interface Actions {
   /** The story reader's Read to me switch (F-STORY-002 §3.4); no telemetry. */
   setReadToMe: (profileId: string, readToMe: boolean) => void;
   /** The Speed Round's Challenge opt-in (F-VOC-004 S8); reports `vocab.challenge_toggled` when it changes. */
-  setChallengeMode: (profileId: string, on: boolean, source: ChallengeSource) => void;
+  /**
+   * `scale`, when given, is written with the mode in one step (the screen-reader opt-in pre-selects 2x, §3.8),
+   * so one `vocab.challenge_toggled` reports the clock the learner will actually get.
+   */
+  setChallengeMode: (profileId: string, on: boolean, source: ChallengeSource, scale?: ClockScale) => void;
   /** The Challenge clock scale (F-VOC-004 §3.1); reports `vocab.challenge_toggled` when it changes. */
   setClockScale: (profileId: string, scale: ClockScale, source?: ChallengeSource) => void;
   /** Profile removal: drop that profile's settings (and their stored key). */
@@ -199,13 +203,14 @@ export const useLocaleStore = create<State & Actions>((set, get) => ({
     persist(writeJson(profileKey(profileId), next));
   },
 
-  setChallengeMode: (profileId, on, source) => {
+  setChallengeMode: (profileId, on, source, scale) => {
     const { byProfile } = get();
     const previous = byProfile[profileId];
-    const next: ProfileSettings = { romanizationMode: 'always', ...previous, challengeMode: on };
+    const next: ProfileSettings = { romanizationMode: 'always', ...previous, challengeMode: on, ...(scale === undefined ? {} : { clockScale: scale }) };
     set({ byProfile: { ...byProfile, [profileId]: next } });
     persist(writeJson(profileKey(profileId), next));
-    if ((previous?.challengeMode ?? DEFAULT_CHALLENGE_MODE) !== on) {
+    const scaleChanged = scale !== undefined && (previous?.clockScale ?? DEFAULT_CLOCK_SCALE) !== scale;
+    if ((previous?.challengeMode ?? DEFAULT_CHALLENGE_MODE) !== on || scaleChanged) {
       reportChallenge(profileId, on, source, next.clockScale ?? DEFAULT_CLOCK_SCALE);
     }
   },

@@ -295,6 +295,23 @@ describe('locale-store: setters', () => {
     expect(track).not.toHaveBeenCalled();
   });
 
+  it('setChallengeMode with a scale (a screen-reader opt-in) writes both at once and reports one event with the final scale', () => {
+    useLocaleStore.getState().setClockScale('profile:a', 1);
+    track.mockClear();
+    useLocaleStore.getState().setChallengeMode('profile:a', true, 'start_sheet', 2);
+    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'always', clockScale: 2, challengeMode: true });
+    expect(useLocaleStore.getState().byProfile['profile:a']).toMatchObject({ challengeMode: true, clockScale: 2 });
+    expect(track).toHaveBeenCalledTimes(1);
+    expect(track).toHaveBeenCalledWith({
+      name: 'vocab.challenge_toggled',
+      profileId: 'profile:a',
+      payload: { on: true, source: 'start_sheet', clockScale: 2 },
+    });
+    track.mockClear();
+    useLocaleStore.getState().setChallengeMode('profile:a', true, 'profile', 2);
+    expect(track).not.toHaveBeenCalled();
+  });
+
   it('setClockScale persists the scale and reports it with the current Challenge state', () => {
     useLocaleStore.getState().setChallengeMode('profile:a', true, 'profile');
     track.mockClear();
