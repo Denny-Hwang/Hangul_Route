@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Page } from '@playwright/test';
-import { availableLocales } from '@hangul-route/i18n';
+import { availableLocales, getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored } from './helpers';
 import { shot } from './shots';
@@ -627,7 +627,8 @@ test.describe('Speed Round, Challenge (fixture bundle)', () => {
         await page.reload();
         const guide = page.getByTestId('install-guide');
         await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
-        if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+        const notNow = getMessages(locale).caregiver.install.notNow.cta;
+        if (await guide.isVisible()) await guide.getByRole('button', { name: notNow }).click();
       }
       await expect(page.locator('html')).toHaveAttribute('lang', new RegExp(`^${locale}`));
       await collect(page, FOOD_IDS);
