@@ -1,6 +1,6 @@
 import { routeCatalogOf } from '../catalog/route-catalog';
 import type { Catalog } from '../catalog/schema';
-import { inRouteOrder, placementStageNumber } from '../placement/level-map';
+import { inRouteOrder, placementLevelRank, placementStageNumber, questsPlacedOutAtLevel } from '../placement/level-map';
 import { themeOrderFor, type RouteSeed } from '../placement/route-seed';
 import type { StageKey } from '../schemas/heritage-card';
 import type { PlanItem } from '../schemas/plan-item';
@@ -36,7 +36,13 @@ export const DURATION_IDS: readonly DurationId[] = ['4-week', '12-week', '6-mont
 export const PROBE_WEEKS = 52;
 
 export type ProposalPreview = 'lessons-and-stories' | 'lessons-cut-short' | 'lessons-then-free-practice' | 'stories-and-words';
-export type ProposalHeadline = 'start-stage1' | 'continue-stage1' | 'stories-and-words' | 'beyond-content';
+/**
+ * Where the plan starts (section 3.1a): `start-stage1` at the opening Stage 1 lesson,
+ * `continue-stage1` at a later Stage 1 lesson, `continue-lessons` at a lesson of a later
+ * stage; with no lesson to schedule, `stories-and-words` (a level below Stage 3) or
+ * `beyond-content` (Stage 3 or higher, past the published lessons).
+ */
+export type ProposalHeadline = 'start-stage1' | 'continue-stage1' | 'continue-lessons' | 'stories-and-words' | 'beyond-content';
 
 export interface ProposeInput {
   audience: CurriculumAudience;
@@ -52,7 +58,10 @@ export interface ProposeInput {
   rosterLevelOrders?: readonly (0 | 1 | 2)[];
   unlockedStages: readonly StageKey[];
   catalog: Catalog;
+  /** The freeze point for an existing plan, and a new plan's start unless `startDate` is given. */
   today: DateKey;
+  /** A new plan's first day, on or after `today` (a class: its next class day, from the wizard); absent = `today`. */
+  startDate?: DateKey;
   existing?: { meta: CurriculumMeta; items: PlanItem[] } | null;
 }
 
@@ -75,11 +84,17 @@ export interface RouteProposal {
   kind: 'new' | 'update' | 'unchanged';
   headline: ProposalHeadline;
   pace: PaceId;
-  /** `new`: the recommended card's params; `update` / `unchanged`: the re-seeded plan's (its length and end date). */
+  /** `new`: the recommended card's params; `update` / `unchanged`: the re-seeded plan's (its length and end date). Every kind carries the learner's completions. */
   params: CurriculumParams;
   options: readonly [DurationOption, DurationOption, DurationOption];
   defaultId: DurationId;
-  /** `update` only: future items (dated today or later) that leave and join the plan, and its next lesson. */
+  /**
+   * `update` only: future items (dated today or later, the learner's finished quests left out)
+   * that leave and join the plan, and its next lesson. Applying an update is
+   * `regenerateFrom(existing, today, catalog, { mode: 'reseed', paramsPatch, completedQuestIds })`,
+   * which rebuilds the future from the catalogue (hand-picked future items included), so the
+   * screen shows `itemsRemoved` before the grown-up confirms.
+   */
   diff?: { itemsRemoved: number; itemsAdded: number; newStartQuestId: string | null };
 }
 
@@ -156,19 +171,18 @@ const optionOf = (id: DurationId, base: CurriculumParamsInput, catalog: Catalog,
   };
 };
 
-/** Stage 1 from its first quest, Stage 1 from later on, or no Stage 1 lesson left (by the level's stage). */
+/** The stage of the probe's first lesson; with no lesson, the level's stage (see `ProposalHeadline`). */
 const headlineOf = (probe: CurriculumDraft, level: PlacementLevel, catalog: Catalog, m: Measures): ProposalHeadline => {
   const first = probe.items.find(m.isLesson);
   const quest = first === undefined ? undefined : catalog.quests.find((candidate) => candidate.id === first.id);
-  if (quest?.stage === 'stage1') {
-    const opening = inRouteOrder(routeCatalogOf(catalog)).find((candidate) => candidate.grid && candidate.playable);
-    return opening?.id === quest.id ? 'start-stage1' : 'continue-stage1';
-  }
-  return placementStageNumber(level.stage) >= 3 ? 'beyond-content' : 'stories-and-words';
+  if (quest === undefined) return placementStageNumber(level.stage) >= 3 ? 'beyond-content' : 'stories-and-words';
+  if (quest.stage !== 'stage1') return 'continue-lessons';
+  const opening = inRouteOrder(routeCatalogOf(catalog)).find((candidate) => candidate.grid && candidate.playable);
+  return opening?.id === quest.id ? 'start-stage1' : 'continue-stage1';
 };
 
-/** The params every card shares: the pace's sessions, the minutes, the seed's start and goals, today. */
-const baseParamsOf = (input: ProposeInput, pace: PaceId): CurriculumParamsInput => {
+/** The params every card shares: the pace's sessions, the minutes, the seed's start and goals, the start day. */
+const baseParamsOf = (input: ProposeInput, pace: PaceId, minutesPerSession: number): CurriculumParamsInput => {
   const { seed, motivation } = input;
   // The seed's theme order carries the newest result's motivation; a motivation given here wins.
   const ordered = seed !== null && motivation === undefined && seed.themeOrder.some((theme, i) => theme !== CANONICAL_ORDER[i]);
@@ -177,10 +191,10 @@ const baseParamsOf = (input: ProposeInput, pace: PaceId): CurriculumParamsInput 
     level: seed?.level ?? START_LEVEL,
     ...(seed === null ? {} : { placedOutQuestIds: [...seed.placedOutQuestIds] }),
     completedQuestIds: [...input.completedQuestIds],
-    startDate: input.today,
+    startDate: input.startDate ?? input.today,
     weeks: PROBE_WEEKS,
     sessionsPerWeek: PACES[pace],
-    minutesPerSession: defaultMinutesFor(input.audience, input.levelOrder, input.rosterLevelOrders),
+    minutesPerSession,
     goals: {
       focus: 'balanced',
       ...(ordered && seed !== null ? { themes: [...seed.themeOrder] } : {}),
@@ -190,13 +204,34 @@ const baseParamsOf = (input: ProposeInput, pace: PaceId): CurriculumParamsInput 
   };
 };
 
-/** One recommended weekly plan, or null when nothing ready can be scheduled (and no plan exists yet). */
+const sameSet = (a: readonly string[], b: readonly string[]): boolean => {
+  const left = new Set(a);
+  const right = new Set(b);
+  return left.size === right.size && [...left].every((id) => right.has(id));
+};
+
+/**
+ * One recommended weekly plan, or null when no plan exists and the probe schedules
+ * no ready item. With `existing` it is always `update` or `unchanged`.
+ *
+ * With `existing`, the kind follows the start alone (rule 4): `unchanged` when the seed
+ * would not move the stored level (it never goes lower) or the stored placed-out set,
+ * when the re-seed lays out the same future as re-pacing the plan as it is, or when the
+ * re-seeded future would hold no lesson or story (no update empties a plan). A
+ * grown-up's hand edits, a plan extended by weeks and new catalogue lessons never read
+ * as a new start. `params` is the re-seeded plan's, with the learner's completions.
+ * The pace, the cards, `defaultId` and `headline` follow the stored plan: its chip (else
+ * the chosen one) and its minutes, so the selected chip and the cards always agree; a
+ * pace picked for an existing plan is a separate change of the plan, not of its start.
+ */
 export function proposeRoute(input: ProposeInput): RouteProposal | null {
   const { catalog, today } = input;
   const existing = input.existing ?? null;
   const m = measuresOf(catalog);
   const chosen = input.pace ?? defaultPaceFor(input.audience, input.levelOrder);
-  const base = baseParamsOf(input, chosen);
+  const pace = existing === null ? chosen : (paceOfSessions(sessionsPerWeekOf(existing.meta.params)) ?? chosen);
+  const minutes = existing?.meta.params.minutesPerSession ?? defaultMinutesFor(input.audience, input.levelOrder, input.rosterLevelOrders);
+  const base = baseParamsOf(input, pace, minutes);
 
   const probe = generateCurriculum(base, catalog);
   if (existing === null && probe.stats.readyItems === 0) return null;
@@ -207,34 +242,35 @@ export function proposeRoute(input: ProposeInput): RouteProposal | null {
 
   if (existing === null) {
     const params = CurriculumParamsSchema.parse({ ...base, weeks: LENGTH_PRESETS[defaultId].weeks });
-    return { kind: 'new', headline, pace: chosen, params, options, defaultId };
+    return { kind: 'new', headline, pace, params, options, defaultId };
   }
 
-  // Exactly `regenerateFrom(existing, today, catalog, { mode: 'reseed', paramsPatch })`: the learner's
-  // completions are left out, so a quest finished early never reads as a new place to start
-  // (derivation marks a finished quest done on any date).
+  const completedQuestIds = [...input.completedQuestIds];
   const seed = input.seed;
-  const reseeded = regenerateFrom(existing, today, catalog, {
-    mode: 'reseed',
-    paramsPatch: seed === null ? {} : { level: seed.level, placedOutQuestIds: [...seed.placedOutQuestIds] },
-  });
-  const ahead = (items: readonly PlanItem[]): PlanItem[] => items.filter((item) => item.targetDate === undefined || item.targetDate >= today);
-  const before = ahead(existing.items);
-  const after = ahead(reseeded.items);
+  const stored = existing.meta.params;
+  const storedSet = stored.placedOutQuestIds ?? questsPlacedOutAtLevel(stored.level, routeCatalogOf(catalog));
+  const moves =
+    seed !== null && (placementLevelRank(seed.level) > placementLevelRank(stored.level) || !sameSet(seed.placedOutQuestIds, storedSet));
+  const paramsPatch = seed === null ? {} : { level: seed.level, placedOutQuestIds: [...seed.placedOutQuestIds] };
+  const reseeded = regenerateFrom(existing, today, catalog, { mode: 'reseed', paramsPatch, completedQuestIds });
+  const unchanged: RouteProposal = { kind: 'unchanged', headline, pace, params: reseeded.params, options, defaultId };
+  if (!moves) return unchanged;
+
+  const finished = new Set(completedQuestIds);
+  const ahead = (draft: CurriculumDraft): PlanItem[] =>
+    draft.items.filter((item) => item.targetDate !== undefined && item.targetDate >= today && !finished.has(item.id));
+  const before = ahead(regenerateFrom(existing, today, catalog, { mode: 'shift', completedQuestIds }));
+  const after = ahead(reseeded);
+  if (!after.some(m.isContent)) return unchanged;
   const key = (item: PlanItem): string => `${item.kind}|${item.id}|${String(item.targetDate)}`;
-  const pace = paceOfSessions(sessionsPerWeekOf(existing.meta.params)) ?? chosen;
   const same = before.length === after.length && before.every((item, i) => key(item) === key(after[i] as PlanItem));
-  if (same) return { kind: 'unchanged', headline, pace, params: reseeded.params, options, defaultId };
+  if (same) return unchanged;
 
   const beforeIds = new Set(before.map((item) => item.id));
   const afterIds = new Set(after.map((item) => item.id));
   return {
+    ...unchanged,
     kind: 'update',
-    headline,
-    pace,
-    params: reseeded.params,
-    options,
-    defaultId,
     diff: {
       itemsRemoved: before.filter((item) => !afterIds.has(item.id)).length,
       itemsAdded: after.filter((item) => !beforeIds.has(item.id)).length,
