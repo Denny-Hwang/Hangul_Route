@@ -5,7 +5,7 @@ import { speedAnswerEvent, speedSessionEvent } from '../logic/vocab/speed-round'
 import type { QuestionResult } from '../logic/vocab/speed-session';
 import type { RoundSummary } from '../logic/vocab/stars';
 import type { MinigameHost } from '../screens/minigames/host';
-import { markVocabRoundDone } from './mission-pin-store';
+import { markVocabRoundDone, unmarkVocabRoundDone, vocabRoundsDone } from './mission-pin-store';
 import { useProgressStore } from './progress-store';
 
 /**
@@ -100,9 +100,17 @@ export const useVocabRunStore = create<State & Actions>((set, get) => ({
     const event = speedSessionEvent(topicKey, summary);
     try {
       if (event !== null) {
-        // Before the write, so the Home plan it re-renders already sees the round (F-VOC-005 section 3.7).
-        markVocabRoundDone(profileId, dayKey(now.toISOString()), topicKey);
-        useProgressStore.getState().recordVocab(profileId, [event], now);
+        // Before the write, so the Home plan it re-renders already sees the round (F-VOC-005 section 3.7);
+        // taken back when the write throws, unless an earlier round of the topic today stands.
+        const day = dayKey(now.toISOString());
+        const earlier = vocabRoundsDone(profileId, day).has(topicKey);
+        markVocabRoundDone(profileId, day, topicKey);
+        try {
+          useProgressStore.getState().recordVocab(profileId, [event], now);
+        } catch (error) {
+          if (!earlier) unmarkVocabRoundDone(profileId, day, topicKey);
+          throw error;
+        }
       }
     } finally {
       set(EMPTY);

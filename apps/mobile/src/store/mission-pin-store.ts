@@ -35,6 +35,12 @@ export function markVocabRoundDone(profileId: string, date: string, topicKey: st
   else roundsDone.set(profileId, { date, topics: new Set([topicKey]) });
 }
 
+/** Takes back a mark of `markVocabRoundDone` whose progress write failed (`vocab-run-store`). */
+export function unmarkVocabRoundDone(profileId: string, date: string, topicKey: string): void {
+  const row = roundsDone.get(profileId);
+  if (row && row.date === date) row.topics.delete(topicKey);
+}
+
 /** The topics whose Speed Round completed for this profile and day this app session. */
 export function vocabRoundsDone(profileId: string, date: string): ReadonlySet<string> {
   const row = roundsDone.get(profileId);

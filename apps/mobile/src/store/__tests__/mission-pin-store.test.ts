@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { MissionPlan } from '../../logic/homework/mission-builder';
-import { clearMissionPins, markVocabRoundDone, pinMission, pinnedMission, vocabRoundsDone } from '../mission-pin-store';
+import { clearMissionPins, markVocabRoundDone, pinMission, pinnedMission, unmarkVocabRoundDone, vocabRoundsDone } from '../mission-pin-store';
 
 const plan = (profileId: string, date: string, questId = 'quest:a'): MissionPlan => ({
   profileId,
@@ -90,6 +90,15 @@ describe('Speed Rounds done today, for the Home vocabulary card (F-VOC-005 secti
     markVocabRoundDone('p1', '2026-10-13', 'colors');
     expect([...vocabRoundsDone('p1', '2026-10-13')]).toEqual(['colors']);
     expect(vocabRoundsDone('p1', '2026-10-12').size).toBe(0);
+  });
+
+  it('takes back one topic of that day only', () => {
+    markVocabRoundDone('p1', '2026-10-12', 'food');
+    markVocabRoundDone('p1', '2026-10-12', 'animals');
+    unmarkVocabRoundDone('p1', '2026-10-11', 'food');
+    unmarkVocabRoundDone('p2', '2026-10-12', 'food');
+    unmarkVocabRoundDone('p1', '2026-10-12', 'food');
+    expect([...vocabRoundsDone('p1', '2026-10-12')]).toEqual(['animals']);
   });
 
   it('is cleared with the pins', () => {

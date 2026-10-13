@@ -191,6 +191,29 @@ describe('vocab-run-store, Speed Round (F-VOC-004 section 3.6)', () => {
     expect([...vocabRoundsDone('p1', '2026-10-11')]).toEqual(['food']);
   });
 
+  it('a write that throws leaves the topic not done, so Home never shows a round the progress lacks', () => {
+    clearMissionPins();
+    recordVocab.mockImplementationOnce(() => {
+      throw new Error('quota');
+    });
+    useVocabRunStore.getState().begin('p1', 'food', 'speed');
+    expect(() => useVocabRunStore.getState().finishSpeed(summary, NOW)).toThrow('quota');
+    expect(vocabRoundsDone('p1', '2026-10-11').size).toBe(0);
+    expect(useVocabRunStore.getState()).toMatchObject({ profileId: null, mode: null });
+  });
+
+  it('a failed write keeps a round of the topic completed earlier today', () => {
+    clearMissionPins();
+    useVocabRunStore.getState().begin('p1', 'food', 'speed');
+    useVocabRunStore.getState().finishSpeed(summary, NOW);
+    recordVocab.mockImplementationOnce(() => {
+      throw new Error('quota');
+    });
+    useVocabRunStore.getState().begin('p1', 'food', 'speed');
+    expect(() => useVocabRunStore.getState().finishSpeed(summary, NOW)).toThrow('quota');
+    expect([...vocabRoundsDone('p1', '2026-10-11')]).toEqual(['food']);
+  });
+
   it('a round with no answer marks nothing done', () => {
     clearMissionPins();
     useVocabRunStore.getState().begin('p1', 'food', 'speed');
