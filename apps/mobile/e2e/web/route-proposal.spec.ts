@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import type { ProgressSnapshot, SelfRoute } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
-import { onboardChild, onboardSelf, readStored, seedStored } from './helpers';
+import { onboardChild, onboardSelf, readStored, seedStored, unlockWithPin } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -120,6 +120,12 @@ test.describe('weekly plan proposal (flag on)', () => {
     await expect(page.getByText('Pick 4 days.')).toBeVisible();
     await expect(page.getByRole('checkbox', { checked: true })).toHaveCount(4);
     await shot(page, 'route-proposal-days');
+    // One day unticked: the plan waits for the day count and says so beside Start, never "free practice".
+    await page.getByRole('checkbox', { checked: true }).first().click();
+    await page.getByRole('button', { name: 'Hide days and time' }).click();
+    await expect(page.getByTestId('route-proposal-days-waiting')).toHaveText('Pick 4 days.');
+    await expect(page.getByText('This week is free practice.')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /^Start this plan/ })).toBeDisabled();
     await page.getByRole('radio', { name: 'Steady, 3 days a week' }).click();
 
     await page.getByRole('button', { name: 'Start this plan' }).click();
@@ -179,6 +185,8 @@ test.describe('weekly plan proposal (flag on)', () => {
     await expect(page.getByTestId('home-plan-prompt')).toHaveCount(0);
     await page.getByRole('button', { name: /profile/i }).first().click();
     await page.getByTestId('profile-plan-row').click();
-    await expect(page.getByText(/PIN/).first()).toBeVisible();
+    await expect(page.getByTestId('route-proposal-headline')).toHaveCount(0);
+    await unlockWithPin(page);
+    await expect(page.getByTestId('route-proposal-headline')).toBeVisible();
   });
 });

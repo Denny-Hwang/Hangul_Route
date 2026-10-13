@@ -94,6 +94,24 @@ describe('route-store: create and archive (F-PLAN-002 section 3.9)', () => {
     expect(track).not.toHaveBeenCalled();
   });
 
+  it('create never replaces an active plan: it returns null and keeps the first one (a plan stops only by archiving it)', async () => {
+    const first = await useRouteStore.getState().create('profile:a', draftFrom(TODAY), { from: 'proposal', changed: false }, NOW);
+    vi.mocked(track).mockClear();
+    const later = new Date(NOW.getTime() + 1000);
+    expect(await useRouteStore.getState().create('profile:a', draftFrom(TODAY), { from: 'setup', changed: true }, later)).toBeNull();
+    expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute?.id).toBe(first?.id);
+    expect(track).not.toHaveBeenCalled();
+  });
+
+  it('create works again once the active plan is archived', async () => {
+    await useRouteStore.getState().create('profile:a', draftFrom(TODAY), { from: 'proposal', changed: false }, NOW);
+    await useRouteStore.getState().archive('profile:a', NOW);
+    const later = new Date(NOW.getTime() + 1000);
+    const next = await useRouteStore.getState().create('profile:a', draftFrom(TODAY), { from: 'proposal', changed: false }, later);
+    expect(next).not.toBeNull();
+    expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute?.archivedAt).toBeNull();
+  });
+
   it('archive stops the active plan: pending plan homework goes, history stays', async () => {
     const route = await useRouteStore.getState().create('profile:a', draftFrom(TODAY), { from: 'proposal', changed: false }, NOW);
     expect(await useRouteStore.getState().archive('profile:a', NOW)).toBe(true);

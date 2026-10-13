@@ -103,7 +103,7 @@ export function RootNavigator(): React.ReactElement {
         {/* F-REPORT-001 section 3.9 (RP-9): registered only with the reports flag on. */}
         {flags.reportsEnabled ? <Stack.Screen name="LearnerReport" component={LearnerReportScreen} /> : null}
         {/* The weekly plan proposal (F-PLAN-002 P2-7a): its entries (Home prompt, Profile row) need flags.routeEnabled. */}
-        <Stack.Screen name="RouteProposal" component={RouteProposalScreen} />
+        {flags.routeEnabled ? <Stack.Screen name="RouteProposal" component={RouteProposalScreen} /> : null}
         {/* Words (F-VOC-003): reachable only from the Library Words section, which needs flags.vocabTopicsEnabled. */}
         <Stack.Screen name="VocabTopics" component={VocabTopicsScreen} />
         <Stack.Screen name="VocabTopic" component={VocabTopicScreen} />

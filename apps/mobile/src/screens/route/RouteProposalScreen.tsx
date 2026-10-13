@@ -49,6 +49,7 @@ import {
   initialChoice,
   moreLessonsComing,
   paramsOfChoice,
+  otherPlanFrom,
   previewLineOf,
   proposalInputOf,
   proposalSkippedEvent,
@@ -68,7 +69,7 @@ import {
 import { activeSelfRoute, thisWeekRows } from '../../logic/route/self-route';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
-import { unlockedStagesFor } from '../../store/plan-store';
+import { unlockedStagesFor, usePlanStore } from '../../store/plan-store';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useRouteStore } from '../../store/route-store';
@@ -222,6 +223,8 @@ export function RouteProposalScreen({ route, navigation }: Props): React.ReactEl
   const t = m.learner.weeklyPlan.proposal;
   const locale = useLocale();
   const profile = useProfileStore((s) => s.profiles.find((p) => p.id === profileId) ?? null);
+  const profilesReady = useProfileStore((s) => s.hydrated);
+  const plans = usePlanStore((s) => s.byLearner[profileId]);
   const snapshot = useProgressStore((s) => s.byProfile[profileId]);
   // The access tier re-renders the screen when the inbox or the subscription changes it (F-ENT-003 section 3.4).
   const tier = useAccessTier(profileId);
@@ -229,6 +232,7 @@ export function RouteProposalScreen({ route, navigation }: Props): React.ReactEl
 
   useEffect(() => {
     void useProgressStore.getState().hydrate(profileId);
+    void usePlanStore.getState().hydrate(profileId);
   }, [profileId]);
 
   const active = activeSelfRoute(snapshot);
@@ -253,6 +257,8 @@ export function RouteProposalScreen({ route, navigation }: Props): React.ReactEl
   const [failed, setFailed] = useState(false);
   const firstChoice = useRef<PlanChoice | null>(null);
   const proposedSent = useRef(false);
+  // Two taps in one frame both see `busy` false; the ref lets only the first one create a plan.
+  const starting = useRef(false);
 
   useEffect(() => {
     if (initial === null || choice !== null) return;
@@ -294,6 +300,14 @@ export function RouteProposalScreen({ route, navigation }: Props): React.ReactEl
     else navigation.navigate('Main', { screen: 'Home' });
   };
 
+  // The profile was removed or switched away while this screen was open: nothing to plan for.
+  const gone = profilesReady && profile === null;
+  useEffect(() => {
+    if (gone) leave();
+    // `leave` only reads `navigation`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gone]);
+
   const notNow = (): void => {
     void useRouteStore.getState().markDismissed(profileId, new Date().toISOString());
     const event = proposalSkippedEvent(profileId, source);
@@ -302,11 +316,13 @@ export function RouteProposalScreen({ route, navigation }: Props): React.ReactEl
   };
 
   const startPlan = async (): Promise<void> => {
-    if (draft === null || current === null || busy) return;
+    if (draft === null || current === null || starting.current) return;
+    starting.current = true;
     setBusy(true);
     setFailed(false);
     const changed = firstChoice.current === null ? false : choiceChanged(firstChoice.current, current);
     const created = await useRouteStore.getState().create(profileId, draft, { from: 'proposal', changed });
+    starting.current = false;
     setBusy(false);
     if (created === null) {
       setFailed(true);
@@ -386,6 +402,10 @@ export function RouteProposalScreen({ route, navigation }: Props): React.ReactEl
   const pick = startPickOf(current.startDate, today);
   const chosenDays = current.days ?? defaultDaysFor(current.startDate, current.pace);
   const rows = draft === null ? [] : firstWeekRows(draft);
+  // The picked days do not match the pace yet: say so where the plan and the Start button are.
+  const daysWaiting = !daysReady(current);
+  const daysHint = t.daysHint(PACES[current.pace]);
+  const otherPlan = otherPlanFrom(plans);
   const optionOf = (id: LengthChoice) => proposal.options.find((o) => o.id === id);
   const maxCustom = Math.min(CUSTOM_WEEKS_MAX, Math.floor(CURRICULUM_MAX_ITEMS / PACES[current.pace]));
 
@@ -414,6 +434,14 @@ export function RouteProposalScreen({ route, navigation }: Props): React.ReactEl
           </Body>
         </View>
       </View>
+      {otherPlan !== null ? (
+        <>
+          <Spacer size="sm" />
+          <Body tone="secondary" testID="route-proposal-other-plan">
+            {t.otherPlanFirst[otherPlan]}
+          </Body>
+        </>
+      ) : null}
 
       <Spacer size="lg" />
       <Heading level="prompt">{t.paceTitle}</Heading>
@@ -594,7 +622,15 @@ export function RouteProposalScreen({ route, navigation }: Props): React.ReactEl
       <Spacer size="lg" />
       <Heading level="prompt">{t.firstWeek}</Heading>
       <Spacer size="sm" />
-      {rows.length > 0 ? <WeekList rows={rows} locale={locale} testID="route-proposal-first-week" /> : <Body tone="secondary">{t.firstWeekEmpty}</Body>}
+      {daysWaiting ? (
+        <Body tone="secondary" testID="route-proposal-days-waiting">
+          {daysHint}
+        </Body>
+      ) : rows.length > 0 ? (
+        <WeekList rows={rows} locale={locale} testID="route-proposal-first-week" />
+      ) : (
+        <Body tone="secondary">{t.firstWeekEmpty}</Body>
+      )}
 
       <Spacer size="xl" />
       {failed ? (
@@ -611,6 +647,7 @@ export function RouteProposalScreen({ route, navigation }: Props): React.ReactEl
         size="lg"
         fullWidth
         disabled={busy || draft === null}
+        accessibilityHint={daysWaiting ? daysHint : undefined}
         onPress={() => void startPlan()}
         testID="route-proposal-start"
       />

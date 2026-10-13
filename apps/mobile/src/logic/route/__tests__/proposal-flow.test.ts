@@ -20,6 +20,7 @@ import {
   initialChoice,
   moreLessonsComing,
   newestResultAt,
+  otherPlanFrom,
   paramsOfChoice,
   planPromptEligible,
   planPromptHidden,
@@ -356,5 +357,18 @@ describe('telemetry (section 3.11, FP-B7): codes and counts only', () => {
   it('agrees with proposeRoute itself (the same function the console calls)', () => {
     const input = proposalInputOf({ placements: undefined, completedQuestIds: [], ageGroup: '8-9', unlockedStages: ['stage1'], today: TODAY });
     expect(safePropose(input)).toEqual(proposeRoute(input));
+  });
+});
+
+describe('otherPlanFrom (section 3.10: a class or home plan comes first)', () => {
+  const plan = (spaceKind: 'class' | 'family' | 'school') => ({ spaceKind });
+  it('is null with no inbox plan or while the plans load', () => {
+    expect(otherPlanFrom(undefined)).toBeNull();
+    expect(otherPlanFrom([])).toBeNull();
+  });
+  it('names the teacher when any class plan is there, else home', () => {
+    expect(otherPlanFrom([plan('family'), plan('class')])).toBe('teacher');
+    expect(otherPlanFrom([plan('family')])).toBe('home');
+    expect(otherPlanFrom([plan('school')])).toBe('home');
   });
 });

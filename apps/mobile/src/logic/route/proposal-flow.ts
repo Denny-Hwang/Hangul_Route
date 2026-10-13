@@ -365,3 +365,13 @@ export function createdEvent(profileId: string, draft: CurriculumDraft, from: 'p
     },
   };
 }
+
+/**
+ * Section 3.10: a learner who already has a class or home plan may add an own plan, and is told
+ * the other one comes first. `teacher` when any class plan is in the inbox, else `home`
+ * (a school space reads as home, like its `assignedBy`); null with none or while plans load.
+ */
+export function otherPlanFrom(plans: readonly { spaceKind: 'class' | 'family' | 'school' }[] | undefined): 'teacher' | 'home' | null {
+  if (plans === undefined || plans.length === 0) return null;
+  return plans.some((p) => p.spaceKind === 'class') ? 'teacher' : 'home';
+}

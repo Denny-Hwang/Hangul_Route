@@ -37,7 +37,7 @@ interface Actions {
   loadUi: (profileId: string) => Promise<RouteUi>;
   /** Not now (the Home prompt or the proposal screen): hides the prompt for 14 days or until the next result. */
   markDismissed: (profileId: string, at: string) => Promise<void>;
-  /** A new active plan from a draft; null when it would not parse (nothing is stored then). */
+  /** A new active plan from a draft; null when one is already active or it would not parse (nothing is stored then). */
   create: (profileId: string, draft: CurriculumDraft, opts: CreateOptions, now?: Date) => Promise<SelfRoute | null>;
   /** Stop the active plan; false when there is none. */
   archive: (profileId: string, now?: Date) => Promise<boolean>;
@@ -63,6 +63,8 @@ export const useRouteStore = create<State & Actions>((set, get) => ({
   create: async (profileId, draft, opts, now = new Date()) => {
     const progress = useProgressStore.getState();
     await progress.hydrate(profileId);
+    // A plan stops only by archiving it (section 3.9): never overwrite an active one here.
+    if (activeSelfRoute(useProgressStore.getState().byProfile[profileId]) !== null) return null;
     let route: SelfRoute;
     try {
       route = selfRouteOf(draft, newSelfRouteId(now.getTime()), now.toISOString());

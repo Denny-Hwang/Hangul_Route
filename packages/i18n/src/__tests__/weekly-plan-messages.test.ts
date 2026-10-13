@@ -58,6 +58,8 @@ describe('learner.weeklyPlan (F-PLAN-002 P2-7a)', () => {
     expect(en.profileRow.make).toBe('Make a weekly plan');
     expect(en.proposal.intro).toBe('Hoya made a weekly plan for you.');
     expect(en.proposal.suggested.pill).toBe('Hoya suggests');
+    expect(en.proposal.otherPlanFirst.teacher).toBe('Your teacher has a weekly plan for you. You can add your own; theirs comes first.');
+    expect(en.proposal.daysHint(3)).toBe('Pick 3 days.');
     expect(en.proposal.startPlan.cta).toBe('Start this plan');
     expect(en.proposal.notNow.cta).toBe('Not now');
     expect(en.proposal.changeDays.cta).toBe('Change days and time');

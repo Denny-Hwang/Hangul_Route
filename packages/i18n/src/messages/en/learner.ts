@@ -1526,6 +1526,11 @@ export const learner = {
     proposal: {
       title: 'Your weekly plan',
       intro: 'Hoya made a weekly plan for you.',
+      /** Section 3.10: a class or home plan is already there; it comes first on a day. */
+      otherPlanFirst: {
+        teacher: 'Your teacher has a weekly plan for you. You can add your own; theirs comes first.',
+        home: 'There is a weekly plan from home for you. You can add your own; that one comes first.',
+      },
       /** Where the plan starts, by `RouteProposal.headline`; the level is never named. */
       headline: {
         'start-stage1': 'We start with the first Hangul letters.',
