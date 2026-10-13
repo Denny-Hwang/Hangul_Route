@@ -24,6 +24,7 @@ import { cursorEntitlement } from '../../logic/cursor-context';
 import { dayKey } from '../../logic/homework/mission-builder';
 import { learnerCellMarks, type JourneyAccessInput } from '../../logic/journey-grid';
 import { completeStages } from '../../logic/my-route/latch';
+import { PRIZE_STAGE, ownsStagePrize } from '../../logic/stage1/stage-complete';
 import { initialEpisode, latchedSelection, reconcileSelection, requestedSelection, type PaneLatch } from '../../logic/layout/pane-selection';
 import { journeyMarks } from '../../logic/placement/cell-look';
 import { appRouteCatalog } from '../../logic/placement/route-skip';
@@ -102,6 +103,9 @@ export function JourneyScreen(): React.ReactElement {
   );
   // A complete stage's pill reads Complete (F-QUEST-002 §3.8): the stage latch, or every grid episode done.
   const doneStages = useMemo(() => (snap === undefined ? undefined : completeStages(snap, episodesAll)), [snap]);
+  // The ceremony stays reachable from the Stage 1 header once its prize cards are held (§3.8).
+  const snapCards = snap?.cards;
+  const hasPrize = useMemo(() => (snapCards === undefined ? false : ownsStagePrize(snapCards, PRIZE_STAGE)), [snapCards]);
   const marksOf = useMemo(
     () => learnerCellMarks({ quests: snapQuests ?? [], marks, catalog: ROUTE_CATALOG, completedIds }),
     [snapQuests, marks, completedIds],
@@ -166,6 +170,7 @@ export function JourneyScreen(): React.ReactElement {
         storyEntries={STORY_ENTRIES}
         quests={snapQuests}
         completeStages={doneStages}
+        onOpenStagePrize={hasPrize ? () => navigation.navigate('StageComplete', { stageKey: PRIZE_STAGE }) : undefined}
         // A stories-only cell opens its cell page on one pane and on two (F-STORY-005 §3.6).
         onOpenStories={(stage, theme) => navigation.navigate('CellStories', { stage, theme, source: 'cell' })}
         access={access}

@@ -92,8 +92,8 @@ test('the last Stage 1 quest opens the prize: Hoya, every symbol lit, the legend
   await expect(ceremony.getByLabel('Hoya the tiger, cheering')).toBeVisible();
   const wall = page.getByTestId('stage-complete-wall');
   await expect(wall.locator('[data-testid^="stage-complete-tile-"]')).toHaveCount(30);
-  await expect(wall.getByLabel('Korean letter g/k', { exact: true })).toBeVisible();
-  await expect(wall.getByLabel('Korean letter silent/ng', { exact: true })).toBeVisible();
+  await expect(wall.getByLabel('Korean letter g/k. a soft, light g (between g and k)', { exact: true })).toBeVisible();
+  await expect(wall.getByLabel('Korean letter silent/ng. silent at the start of a block; "ng" in "sing" at the end', { exact: true })).toBeVisible();
   await expect(wall.getByLabel('Korean final consonant ng', { exact: true })).toBeVisible();
   const cards = page.getByTestId('stage-complete-cards');
   for (const title of LEGENDARY) await expect(cards.getByRole('button', { name: `Open card: ${title}` })).toBeVisible();
@@ -109,15 +109,25 @@ test('the last Stage 1 quest opens the prize: Hoya, every symbol lit, the legend
   await cards.scrollIntoViewIfNeeded();
   await page.screenshot({ path: test.info().outputPath('stage1-complete-cards.png') });
 
-  // See my cards opens the Library.
+  // See my cards opens the Library on its Cards section.
   await page.getByRole('button', { name: 'See my cards' }).click();
   await expect(page.getByTestId('stage-complete')).toHaveCount(0);
+  await expect(page.getByText('Hangul Day').filter({ visible: true }).first()).toBeVisible();
 
   // The Journey's Stage 1 header reads Complete.
   await page.getByText('Journey', { exact: true }).last().click();
   await expect(page.getByTestId('journey-stage-pill-stage1')).toHaveText('Complete');
   await expect(page.getByTestId('journey-stage-pill-stage2')).not.toHaveText('Complete');
   await page.getByTestId('journey-stage-stage1').screenshot({ path: test.info().outputPath('journey-stage1-complete.png') });
+
+  // The ceremony stays reachable from the Stage 1 header (§3.8); no other stage has the button.
+  const again = page.getByTestId('journey-stage-prize');
+  await expect(again).toHaveCount(1);
+  await expect(again).toHaveText('See your prize');
+  await again.click();
+  await expect(page.getByTestId('stage-complete')).toBeVisible();
+  await expect(page.getByTestId('stage-complete-wall').locator('[data-testid^="stage-complete-tile-"]')).toHaveCount(30);
+  for (const title of LEGENDARY) await expect(page.getByTestId('stage-complete-cards').getByRole('button', { name: `Open card: ${title}` })).toBeVisible();
 
   // A replay is ordinary Results: no prize.
   await page.goto('/');
@@ -126,6 +136,22 @@ test('the last Stage 1 quest opens the prize: Hoya, every symbol lit, the legend
   await expect(page.getByText('Wonderful!').or(page.getByText('All done!')).or(page.getByText('Great!'))).toBeVisible();
   await expect(page.getByRole('button', { name: 'See your Stage 1 prize' })).toHaveCount(0);
   expect(errors).toEqual([]);
+});
+
+test('a learner who finished Stage 1 before the prize existed gets the cards caught up and opens the ceremony from the Journey', async ({ page }) => {
+  await learnerOneQuestShort(page);
+  const profileId = (await readStored<string>(page, 'profiles:active')) as string;
+  // Every Stage 1 quest saved as done but no card held: the awards catch-up grants the prize on load.
+  const all = fourteenDone(profileId);
+  const last = { questId: 'quest:stage1-crafts-q3', episodeId: 'episode:stage1-crafts', startedAt: AT, completedAt: AT, stars: 1 as const, attempts: 1, accuracy: 0.5 };
+  await seedStored(page, `progress:${profileId}`, { ...all, quests: [...all.quests, last] });
+  await page.goto('/');
+  await expect(page.getByText('Hi, Dami!')).toBeVisible();
+  await page.getByText('Journey', { exact: true }).last().click();
+  await expect(page.getByTestId('journey-stage-pill-stage1')).toHaveText('Complete');
+  await page.getByTestId('journey-stage-prize').click();
+  await expect(page.getByTestId('stage-complete')).toBeVisible();
+  for (const title of LEGENDARY) await expect(page.getByTestId('stage-complete-cards').getByRole('button', { name: `Open card: ${title}` })).toBeVisible();
 });
 
 test('the ceremony fits 320 wide with no sideways scroll', async ({ page }) => {

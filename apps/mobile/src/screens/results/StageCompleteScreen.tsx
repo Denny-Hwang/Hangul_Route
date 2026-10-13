@@ -22,7 +22,14 @@ import { episodesAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeCard } from '../../logic/content-locale';
 import { completeStages } from '../../logic/my-route/latch';
-import { stageCompleteActions, stagePrizeCards, symbolWall, wallTileLabel, type WallTile } from '../../logic/stage1/stage-complete';
+import {
+  ownsStagePrize,
+  stageCompleteActions,
+  stagePrizeCards,
+  symbolWall,
+  wallTileLabel,
+  type WallTile,
+} from '../../logic/stage1/stage-complete';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
@@ -30,7 +37,8 @@ import { CardArtThumb } from './CardArtThumb';
 
 /**
  * F-QUEST-002 §3.8 — the Stage 1 prize ceremony (wireframe `design/wireframes/results/stage1-complete.md`).
- * Opened from Results on the run that completed Stage 1. Hoya cheering, the wall of all 30
+ * Opened from Results on the run that completed Stage 1, and again from the Journey Stage 1 header
+ * (never automatically a second time). It shows only to a learner who holds the prize cards. Hoya cheering, the wall of all 30
  * symbols (every one lit, never counted, D3), the legendary cards (each opens its card), one
  * primary See my cards and Back home as a ghost. No Premium pill and no purchase (D5). It writes
  * nothing: the awards were written with the Results score.
@@ -54,12 +62,15 @@ export function StageCompleteScreen({ route, navigation }: Props): React.ReactEl
   const complete = useMemo(() => (snapshot ? completeStages(snapshot, episodesAll).has(stageKey) : false), [snapshot, stageKey]);
   const cards = useMemo(() => stagePrizeCards(stageKey).map((c) => localizeCard(c, locale)), [stageKey, locale]);
   const wall = useMemo(() => symbolWall(), []);
-  const ready = complete && cards.length > 0;
+  // The learner holds every prize card: a stage Complete by the old latch alone never shows cards it does not own.
+  const owned = useMemo(() => (snapshot ? ownsStagePrize(snapshot.cards, stageKey) : false), [snapshot, stageKey]);
+  const ready = complete && owned && cards.length > 0;
 
   const goHome = (): void => {
     navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'Main' }] }));
   };
-  const seeCards = (): void => navigation.navigate('Main', { screen: 'Library' });
+  // The Library opens on its Cards section, whichever section it was left on.
+  const seeCards = (): void => navigation.navigate('Main', { screen: 'Library', params: { section: 'cards' } });
 
   if (!ready) {
     return (

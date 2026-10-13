@@ -25,6 +25,8 @@ export interface WallTile {
   /** The sound value (`g/k`, `silent/ng`, the final's `n`). */
   romanization: string;
   kind: JamoKind;
+  /** The content sound hint (every one of the 30 has one), read after the sound value so `silent/ng` is never read alone. */
+  soundHint?: string;
   /** Always true: the wall only fills (D3). */
   lit: true;
 }
@@ -37,18 +39,46 @@ export function symbolWall(jamo: readonly Jamo[] = jamoAll): WallTile[] {
     jamo
       .filter((j) => j.kind === kind)
       .sort((a, b) => a.order - b.order)
-      .map((j) => ({ id: j.id, char: j.char, romanization: j.romanization, kind: j.kind, lit: true as const })),
+      .map((j) => ({
+        id: j.id,
+        char: j.char,
+        romanization: j.romanization,
+        kind: j.kind,
+        ...(j.soundHint === undefined ? {} : { soundHint: j.soundHint }),
+        lit: true as const,
+      })),
   );
 }
 
-/** A tile's screen-reader name: its sound value, a final named as a final, never the glyph alone. */
-export function wallTileLabel(tile: Pick<WallTile, 'romanization' | 'kind'>, a11y: Messages['a11y']): string {
-  return tile.kind === 'batchim' ? a11y.discoverFinal(tile.romanization) : a11y.discoverLetter(tile.romanization);
+/**
+ * A tile's screen-reader name, as Discover reads the symbol: a letter by its sound value and its
+ * sound hint ("Korean letter silent/ng. silent at the start of a block; ..."), a final named as a
+ * final, never the glyph alone (F-QUEST-002 §3.14).
+ */
+export function wallTileLabel(tile: Pick<WallTile, 'romanization' | 'kind' | 'soundHint'>, a11y: Messages['a11y']): string {
+  if (tile.kind === 'batchim') return a11y.discoverFinal(tile.romanization);
+  return tile.soundHint === undefined ? a11y.discoverLetter(tile.romanization) : a11y.discoverLetter(tile.romanization, tile.soundHint);
 }
 
 /** Every card that completing the stage unlocks (`unlockedBy: '<stage>-complete'`), in content order. */
 export function stagePrizeCards(stage: StageKey, cards: readonly HeritageCard[] = heritageCardsAll): HeritageCard[] {
   return cards.filter((c) => c.unlockedBy === `${stage}-complete`);
+}
+
+/**
+ * True when the learner owns every card that completing the stage awards. The ceremony (and its
+ * Journey header entry) opens only then, so a learner whose stage reads Complete through the old
+ * stage latch alone never sees "Legendary cards for you" over cards they do not hold.
+ */
+export function ownsStagePrize(
+  owned: readonly { cardId: string }[],
+  stage: StageKey,
+  cards: readonly HeritageCard[] = heritageCardsAll,
+): boolean {
+  const prize = stagePrizeCards(stage, cards);
+  if (prize.length === 0) return false;
+  const have = new Set(owned.map((c) => c.cardId));
+  return prize.every((c) => have.has(c.id));
 }
 
 export interface CeremonyAction {

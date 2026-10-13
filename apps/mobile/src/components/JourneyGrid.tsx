@@ -1,6 +1,7 @@
 import type { Episode, QuestProgress, StageDef, StageKey, ThemeDef, ThemeKey } from '@hangul-route/content-schema';
 import {
   Body,
+  Button,
   Caption,
   Icon,
   NextMarker,
@@ -81,6 +82,12 @@ export interface JourneyGridProps {
   access?: JourneyAccessInput;
   /** The learner's complete stages (`completeStages`): their pill reads Complete (F-QUEST-002 §3.8); omitted: none. */
   completeStages?: ReadonlySet<StageKey>;
+  /**
+   * Opens the Stage 1 ceremony again from a complete Stage 1's header (F-QUEST-002 §3.8: never shown
+   * automatically a second time, always reachable here). The screen passes it only when the learner
+   * holds the prize cards (`ownsStagePrize`); omitted: no button.
+   */
+  onOpenStagePrize?: () => void;
 }
 
 export function JourneyGrid({
@@ -97,6 +104,7 @@ export function JourneyGrid({
   onOpenStories,
   access,
   completeStages,
+  onOpenStagePrize,
 }: JourneyGridProps): React.ReactElement {
   const messages = useMessages();
   const locale = useLocale();
@@ -166,12 +174,18 @@ export function JourneyGrid({
                 </Body>
                 <Caption tone="muted">{stage.oneLinerEn}</Caption>
               </View>
-              <Pill
-                tone={pill === 'open' || pill === 'complete' ? 'success' : pill === 'taste' ? 'primary' : 'neutral'}
-                label={stagePillLabel(pill, m.availability)}
-                size="sm"
-                testID={`journey-stage-pill-${row.stage}`}
-              />
+              <View style={{ alignItems: 'flex-end', gap: spacing.xs }}>
+                <Pill
+                  tone={pill === 'open' || pill === 'complete' ? 'success' : pill === 'taste' ? 'primary' : 'neutral'}
+                  label={stagePillLabel(pill, m.availability)}
+                  size="sm"
+                  testID={`journey-stage-pill-${row.stage}`}
+                />
+                {/* The Stage 1 ceremony, reachable again beside a complete Stage 1's pill (F-QUEST-002 §3.8). */}
+                {row.stage === 'stage1' && pill === 'complete' && onOpenStagePrize ? (
+                  <Button label={m.stagePrize.cta} tone="ghost" size="sm" onPress={onOpenStagePrize} testID="journey-stage-prize" />
+                ) : null}
+              </View>
             </View>
 
             <View style={{ flexDirection: 'row', gap: spacing.xs, width: '100%', maxWidth: gridMax }}>

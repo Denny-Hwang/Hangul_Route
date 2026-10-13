@@ -229,6 +229,8 @@ export const learner = {
      * never a commerce word; "A taste" and "Coming later" are the My route words (F-ROUTE-001 R-J, OD-8).
      */
     availability: { open: { pill: 'Open' }, taste: { pill: 'A taste' }, soon: { pill: 'Coming later' }, complete: { pill: 'Complete' } },
+    /** Beside a complete Stage 1's pill: opens the Stage 1 ceremony again (F-QUEST-002 §3.8). No number, no price. */
+    stagePrize: { cta: 'See your prize' },
     tasteNote: 'A taste of this stage is open now. More episodes are coming.',
     /** Under a stage row with a stories-only cell (F-STORY-005 §3.5); the books are the `library` glyph. */
     storiesNote: 'Heritage stories are open in the cells with the books icon.',

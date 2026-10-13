@@ -6,6 +6,7 @@ import { jamoAll } from '../../../content/jamo';
 import {
   PRIZE_STAGE,
   opensStagePrize,
+  ownsStagePrize,
   stageCompleteActions,
   stagePrizeCards,
   symbolWall,
@@ -71,12 +72,21 @@ describe('symbolWall: the 30 symbols, every one lit', () => {
 });
 
 describe('wallTileLabel: what a screen reader says for a tile', () => {
-  it('reads a letter by its sound value and a final as a final, never the glyph alone', () => {
+  it('reads a letter by its sound value and its sound hint, a final as a final, never the glyph alone', () => {
     const wall = symbolWall();
     const g = wall.find((t) => t.id === 'jamo:giyeok');
     const finalN = wall.find((t) => t.id === 'jamo:nieun-batchim');
-    expect(wallTileLabel(g!, m.a11y)).toBe('Korean letter g/k');
+    expect(wallTileLabel(g!, m.a11y)).toBe('Korean letter g/k. a soft, light g (between g and k)');
     expect(wallTileLabel(finalN!, m.a11y)).toBe('Korean final consonant n');
+  });
+
+  it('glosses ㅇ with its hint, so silent/ng is never read alone', () => {
+    const ieung = symbolWall().find((t) => t.id === 'jamo:ieung');
+    expect(wallTileLabel(ieung!, m.a11y)).toBe('Korean letter silent/ng. silent at the start of a block; "ng" in "sing" at the end');
+  });
+
+  it('reads the sound value alone when a letter has no hint', () => {
+    expect(wallTileLabel({ romanization: 'g/k', kind: 'consonant' }, m.a11y)).toBe('Korean letter g/k');
   });
 });
 
@@ -92,6 +102,23 @@ describe('stagePrizeCards: the three legendary cards', () => {
   it('reads the cards it is given', () => {
     const one = { ...heritageCardsAll[0], id: 'card:x', unlockedBy: 'stage2-complete' } as HeritageCard;
     expect(stagePrizeCards('stage2', [one]).map((c) => c.id)).toEqual(['card:x']);
+  });
+});
+
+describe('ownsStagePrize: the ceremony opens only for a learner who holds every prize card', () => {
+  const owned = (ids: readonly string[]) => ids.map((cardId) => ({ cardId }));
+
+  it('is true when the learner owns all three legendary cards', () => {
+    expect(ownsStagePrize(owned(['card:hangul-day', 'card:lantern', 'card:gayageum', 'card:other']), 'stage1')).toBe(true);
+  });
+
+  it('is false when a prize card is missing (Complete only by the old stage latch)', () => {
+    expect(ownsStagePrize(owned([]), 'stage1')).toBe(false);
+    expect(ownsStagePrize(owned(['card:hangul-day', 'card:lantern']), 'stage1')).toBe(false);
+  });
+
+  it('is false for a stage with no prize cards', () => {
+    expect(ownsStagePrize(owned(['card:hangul-day']), 'stage7')).toBe(false);
   });
 });
 
@@ -124,5 +151,13 @@ describe('ceremony copy (D3, D5)', () => {
 
   it('labels the Results button "See your Stage 1 prize"', () => {
     expect(m.learner.results.stagePrize.cta).toBe('See your Stage 1 prize');
+  });
+
+  it('labels the Journey Stage 1 header button "See your prize", with no number, price or plan word', () => {
+    const cta = m.learner.journey.stagePrize.cta;
+    expect(cta).toBe('See your prize');
+    expect(cta).not.toMatch(/[0-9]|%/u);
+    expect(cta.toLowerCase()).not.toMatch(/premium|price|buy|upgrade|plan\b/u);
+    expect(findBannedWord(cta, 'en', 'learner')).toBeNull();
   });
 });
