@@ -72,6 +72,12 @@ export const DRAFT_EN: MyRouteMessages = {
     skills: { title: 'What your quests practice' },
     skill: { read: 'Read', listen: 'Listen', write: 'Write', quests: (n) => `In ${quests(n)} you finished` },
   },
+  // F-ENT-003 Appendix A access words the route page reads (LR-5b).
+  access: {
+    notOpen: 'Not open yet',
+    openForYou: 'You played every quest that is open for you.',
+    practiceWords: { cta: 'Practice words' },
+  },
   grownup: {
     here: (name, n, title) => `${name} is on Stage ${n}: ${title}.`,
     next: (title) => `Next: ${title}`,

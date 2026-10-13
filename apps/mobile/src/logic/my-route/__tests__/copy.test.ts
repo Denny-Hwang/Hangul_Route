@@ -93,6 +93,32 @@ describe('heroCopy (F-ROUTE-001 section 3.5)', () => {
   });
 });
 
+describe('heroCopy: the free-end hero (Learning Route amendment section 4.5, LR-5b)', () => {
+  const freeEnd = (): MyRouteModel => model(STAGE1_8, { routeNext: { kind: 'free-end', placedOut: false } });
+
+  it('the calm open-for-you line and Practice words when a free word topic is playable in this build', () => {
+    expect(heroCopy(freeEnd(), self, { nextTitle: null, hasStories: true, canPracticeWords: true })).toEqual({
+      lines: ['You played every quest that is open for you.'],
+      cta: { action: 'practice', label: 'Practice words' },
+    });
+  });
+
+  it('Open Library when no free word topic is playable, whatever stories exist (never stories, never an ask)', () => {
+    expect(heroCopy(freeEnd(), self, { nextTitle: null, hasStories: true })).toEqual({
+      lines: ['You played every quest that is open for you.'],
+      cta: { action: 'library', label: 'Open Library' },
+    });
+    expect(heroCopy(freeEnd(), self, { nextTitle: null, hasStories: false, canPracticeWords: false }).cta).toEqual({ action: 'library', label: 'Open Library' });
+  });
+
+  it('about a child (read-only): the third-person rest line and no button; never the learner\'s access words', () => {
+    expect(heroCopy(freeEnd(), grownup, { nextTitle: null, hasStories: true, canPracticeWords: true })).toEqual({
+      lines: ['Sam did everything that is open right now. More is coming.'],
+      cta: null,
+    });
+  });
+});
+
 describe('stage words, captions and tags (sections 3.3, 3.11)', () => {
   it('Appendix C: Stage 1 open with "4 quests played", Stage 2 a taste, Stage 3 coming later with its can-do line', () => {
     const m = model(APPENDIX_C);
@@ -104,6 +130,22 @@ describe('stage words, captions and tags (sections 3.3, 3.11)', () => {
     expect(stageStateWord(row(m, 'stage3'), self)).toBe('Coming later');
     expect(stageCaptions(row(m, 'stage3'), self)).toEqual(['Read and build short, simple sentences.', 'Coming later']);
     expect(stageTags(row(m, 'stage3'), self)).toEqual([]);
+  });
+
+  it('LR-5b: a stage whose every playable quest is not open reads "Not open yet" as its caption; its pill keeps the stage word', () => {
+    const closed = model(['quest:stage1-letters-q1'], { isQuestOpen: (id) => !id.startsWith('quest:stage2-') });
+    expect(stageStateWord(row(closed, 'stage2'), self)).toBe('A taste');
+    expect(stageCaptions(row(closed, 'stage2'), self)).toEqual(['Not open yet']);
+    expect(stageCaptions(row(closed, 'stage2'), grownup)).toEqual(['Not open yet']);
+    // Stage 1 is open: its caption is unchanged.
+    expect(stageCaptions(row(closed, 'stage1'), self)).toEqual(['1 quest played']);
+  });
+
+  it('LR-5b: a kept quest is open, so a stage with one kept quest and the rest not open keeps its played caption', () => {
+    const kept = model(['quest:stage2-life-q1'], { isQuestOpen: (id) => !id.startsWith('quest:stage2-') });
+    expect(stageCaptions(row(kept, 'stage2'), self)).toEqual(['1 quest played']);
+    // Every quest open (subscribers, or the switch off): nothing reads "Not open yet".
+    expect(stageCaptions(row(model([]), 'stage2'), self)).toEqual(['Ready when you are']);
   });
 
   it('complete, latched with new quests: "New quests joined" is added', () => {
@@ -497,6 +539,7 @@ describe('routeCardCopy (Learning Route amendment sections 4.3, 6.2 and 10; LR-3
       canDo: null,
       tasteLine: 'Try the first quests of this stage.',
       next: 'Next: Family at the Table',
+      showPips: true,
       a11yLabel: "Now: Stage 1, Hangul. Goal: Explore Stage 2, Words. From your class's weekly plan. Ready when you are. Next: Family at the Table.",
     });
   });
@@ -567,6 +610,7 @@ describe('routeCardCopy (Learning Route amendment sections 4.3, 6.2 and 10; LR-3
       canDo: null,
       tasteLine: null,
       next: null,
+      showPips: false,
       a11yLabel: 'You reached the end of the open road. More is coming.',
     });
     expect(routeCardCopy(m, grownup, { nextTitle: null }).hoya).toBe('Sam reached the end of the open road. More is coming.');
@@ -600,6 +644,22 @@ describe('routeCardCopy (Learning Route amendment sections 4.3, 6.2 and 10; LR-3
     expect(card.canDo).toBeNull();
     expect(card.tasteLine).toBeNull();
     expect(card.next).toBeNull();
+  });
+
+  it('LR-5b free-end: the open-for-you line over the goal, no pips, and a summary without a pips word (LR-D state D)', () => {
+    const m = model(STAGE1_8, { routeNext: { kind: 'free-end', placedOut: false } }, BUNDLE_8, { stageDoneAt: { stage1: '2026-10-01T00:00:00.000Z' } });
+    const card = routeCardCopy(m, withGoal(self, m), { nextTitle: null });
+    expect(card.hoya).toBe('You played every quest that is open for you.');
+    expect(card.showPips).toBe(false);
+    expect(card.a11yLabel).toBe("You played every quest that is open for you. Goal: Explore Stage 2, Words. Hoya's suggestion.");
+    // About a child: the third-person rest line, never the learner's access words.
+    expect(routeCardCopy(m, withGoal(grownup, m), { nextTitle: null }).hoya).toBe('Sam did everything that is open right now. More is coming.');
+  });
+
+  it('LR-5b: every card with a goal and not at free-end shows its goal pips', () => {
+    expect(routeCardCopy(model(APPENDIX_C), withGoal(self, model(APPENDIX_C)), { nextTitle: null }).showPips).toBe(true);
+    const rest = model(APPENDIX_C, { routeNext: { kind: 'rest' } });
+    expect(routeCardCopy(rest, withGoal(self, rest), { nextTitle: null }).showPips).toBe(true);
   });
 
   it('rest and beyond keep their sentence above the goal', () => {

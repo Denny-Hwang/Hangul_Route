@@ -386,3 +386,37 @@ describe('the route card wiring (Learning Route LR-5a)', () => {
     expect(row).toContain('isQuestOpen: questOpenFor(profileId, now, snapshot)');
   });
 });
+
+describe('not-open pips and the free-end hero (Learning Route LR-5b)', () => {
+  const screen = read(join(SCREEN_DIR, 'MyRouteScreen.tsx'));
+  const card = read(join(SCREEN_DIR, 'RouteCard.tsx'));
+  const trail = read(join(SCREEN_DIR, 'TrailRow.tsx'));
+
+  it('the legend draws "Not open yet" with the dotted ring, before "Coming later", only for a row that has a not-open pip', () => {
+    expect(trail).toContain('<PipLegend accent={accent} notOpen={row.notOpenLegend} />');
+    expect(trail).toMatch(/notOpen \? \([\s\S]*<Pip state="later"[\s\S]*\{m\.notOpen\}/);
+    // The not-open row comes before the coming-later row: the word, not the shape, tells them apart.
+    expect(trail.indexOf('{m.notOpen}')).toBeLessThan(trail.indexOf("LEGEND_AFTER.map"));
+  });
+
+  it('the free-end card hides the goal pips; the button is Practice words (the first free word topic) or Open Library', () => {
+    expect(card).toContain('copy.showPips &&');
+    expect(screen).toContain('practiceTopicOf(vocabTopics.map((t) => t.key))');
+    expect(screen).toMatch(/cta\.action === 'practice' && practiceTopic !== null/);
+    expect(screen).toContain("navigation.navigate('VocabTopic', { topicKey: practiceTopic })");
+  });
+
+  it('the route page never shows the first-lessons celebration, never sets its key and never sends free_end_reached', () => {
+    for (const file of files) {
+      const src = read(join(SCREEN_DIR, file));
+      expect(src, file).not.toMatch(/free-end-seen|freeEndSeen|freeEnd\.title|free_end_reached|freeEndReached/);
+    }
+  });
+
+  it('no lock glyph and no ask anywhere under screens/my-route/ (F-ENT-003 OD-6, LR-OD-8)', () => {
+    for (const file of files) {
+      const src = read(join(SCREEN_DIR, file));
+      expect(src, file).not.toMatch(/name=["']lock["']|name=\{?['"]lock|askFor\(|help_asked|helpAsked|access\.ask/);
+    }
+  });
+});

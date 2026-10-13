@@ -107,8 +107,19 @@ export interface MyRouteA11yMessages {
   goalPips: { none: string; some: string; someDone: string; all: string };
 }
 
+/**
+ * `learner.access`: F-ENT-003's access words (section 3.11) the route page reads (LR-5b). The page
+ * never names a product, a price or an ask; these are the calm words only.
+ */
+export interface AccessRouteMessages {
+  notOpen: string;
+  openForYou: string;
+  practiceWords: { cta: string };
+}
+
 export interface MyRouteMessages {
   learner: LearnerRouteMessages;
+  access: AccessRouteMessages;
   grownup: GrownupJourneyMessages;
   /** `caregiver.skillsNote`: the one wording of this sentence, everywhere. */
   skillsNote: string;
@@ -126,13 +137,23 @@ export interface CopyContext {
 
 export interface HeroCopy {
   lines: string[];
-  /** Null in read-only mode. `quest` opens the cursor quest. */
-  cta: { action: 'quest' | 'stories' | 'library'; label: string } | null;
+  /**
+   * Null in read-only mode. `quest` opens the one next quest; `practice` opens the first free word
+   * topic (the free-end hero, LR-5b).
+   */
+  cta: { action: 'quest' | 'stories' | 'library' | 'practice'; label: string } | null;
 }
 
 const isGrownup = (ctx: CopyContext): boolean => ctx.viewer === 'grownup';
 
-export function heroCopy(model: MyRouteModel, ctx: CopyContext, extra: { nextTitle: string | null; hasStories: boolean }): HeroCopy {
+export interface HeroExtra {
+  nextTitle: string | null;
+  hasStories: boolean;
+  /** A free word topic is playable in this build (`practiceTopicOf`): the free-end hero offers Practice words. */
+  canPracticeWords?: boolean;
+}
+
+export function heroCopy(model: MyRouteModel, ctx: CopyContext, extra: HeroExtra): HeroCopy {
   const { learner, grownup } = ctx.m;
   const g = isGrownup(ctx);
   const restCta = { action: extra.hasStories ? ('stories' as const) : ('library' as const), label: extra.hasStories ? learner.cta.stories : learner.cta.library };
@@ -150,9 +171,18 @@ export function heroCopy(model: MyRouteModel, ctx: CopyContext, extra: { nextTit
       cta = { action: 'quest', label: learner.hero.cta.continue };
       break;
     }
-    // `freeEnd` exists only once the screen passes F-ENT-003's `routeNext` (LR-5a); its own hero
-    // (`learner.access.openForYou`, Practice words) is LR-5b's. Until then it reads as rest.
+    // The free-end hero (amendment section 4.5, LR-5b; F-ENT-003 E3-10 is withdrawn): the calm
+    // open-for-you line and one button, Practice words or Open Library. Never stories, never an ask.
+    // About a child it reads as rest: the learner's access words are never spoken about them.
     case 'freeEnd':
+      if (g) {
+        lines = [grownup.rest(ctx.name)];
+        cta = null;
+      } else {
+        lines = [ctx.m.access.openForYou];
+        cta = extra.canPracticeWords === true ? { action: 'practice', label: ctx.m.access.practiceWords.cta } : { action: 'library', label: learner.cta.library };
+      }
+      break;
     case 'rest':
       lines = [g ? grownup.rest(ctx.name) : learner.hero.rest];
       cta = restCta;
@@ -174,6 +204,16 @@ export function heroCopy(model: MyRouteModel, ctx: CopyContext, extra: { nextTit
 const hasQuestPips = (pips: readonly { kind: 'quest' | 'cell' }[]): boolean => pips.some((p) => p.kind === 'quest');
 const isNotOpenYet = (row: StageRow): boolean => row.state === 'later' && row.cells.some((c) => hasQuestPips(c.pips));
 const laterWord = (row: StageRow, ctx: CopyContext): string => (isNotOpenYet(row) ? ctx.m.learner.state.notOpen : ctx.m.learner.state.later);
+
+/**
+ * Every playable quest of the stage is not open for this learner (F-ENT-003's switch on, a free
+ * learner past the free lessons; amendment section 4.5): a kept or finished quest is open, so one of
+ * those keeps the stage's own caption.
+ */
+const allQuestsNotOpen = (row: StageRow): boolean => {
+  const quests = row.cells.flatMap((c) => c.pips).filter((p) => p.kind === 'quest');
+  return quests.length > 0 && quests.every((p) => p.laterReason === 'notOpen');
+};
 
 const knownWord = (ctx: CopyContext): string => (isGrownup(ctx) ? ctx.m.grownup.known(ctx.name) : ctx.m.learner.state.known);
 
@@ -202,6 +242,7 @@ export function stageCaptions(row: StageRow, ctx: CopyContext): string[] {
   if (row.state === 'later') lines = [learner.stage.canDo[row.order], laterWord(row, ctx)];
   else if (row.state === 'known') lines = [knownWord(ctx)];
   else if (row.state === 'explored') lines = [g ? grownup.explored(ctx.name) : learner.caption.explored];
+  else if (allQuestsNotOpen(row)) lines = [ctx.m.access.notOpen];
   else if (row.done > 0) lines = [learner.caption.played(row.done)];
   else lines = [g ? grownup.ready(ctx.name) : learner.caption.ready];
   if (row.latched && row.newPips.length > 0) lines.push(learner.caption.newJoined);
@@ -364,6 +405,8 @@ export interface RouteCardCopy {
   tasteLine: string | null;
   /** "Next: {title}", or "Keep going: {title}" once the goal is reached; null without a next quest. */
   next: string | null;
+  /** The goal pips show under the goal; hidden at the end of the open road and on the free-end hero (LR-D state D). */
+  showPips: boolean;
   /** The card as one summary label, without digits for the pips (section 10). */
   a11yLabel: string;
 }
@@ -410,11 +453,11 @@ export function routeCardCopy(model: MyRouteModel, ctx: CopyContext, extra: Rout
       // No open stage is left to aim for, yet a quest is still next (a placed-out quest, a plan item):
       // the card names it and says nothing about the end of the road, so its words match its button.
       const next = g ? grownup.next(extra.nextTitle) : learner.hero.next(extra.nextTitle);
-      return { hoya: null, where: null, from: null, planEnds: null, canDo: null, tasteLine: null, next, a11yLabel: a11y.routeCard(null, null, null, null, null, null, next) };
+      return { hoya: null, where: null, from: null, planEnds: null, canDo: null, tasteLine: null, next, showPips: false, a11yLabel: a11y.routeCard(null, null, null, null, null, null, next) };
     }
     // The end of the open road: the card's only sentence (the rest sentence is dropped).
     const hoya = g ? grownup.endOfRoad(ctx.name) : learner.goal.endOfRoad;
-    return { hoya, where: null, from: null, planEnds: null, canDo: null, tasteLine: null, next: null, a11yLabel: hoya };
+    return { hoya, where: null, from: null, planEnds: null, canDo: null, tasteLine: null, next: null, showPips: false, a11yLabel: hoya };
   }
 
   const freeEnd = model.hero === 'freeEnd';
@@ -422,7 +465,8 @@ export function routeCardCopy(model: MyRouteModel, ctx: CopyContext, extra: Rout
   const open = !goal.reached;
   let hoya: string | null = null;
   if (model.hero === 'start') hoya = g ? grownup.start(ctx.name) : learner.hero.start;
-  else if (model.hero === 'rest') hoya = g ? grownup.rest(ctx.name) : learner.hero.rest;
+  else if (model.hero === 'rest' || (freeEnd && g)) hoya = g ? grownup.rest(ctx.name) : learner.hero.rest;
+  else if (freeEnd) hoya = ctx.m.access.openForYou;
   else if (model.hero === 'beyond') hoya = g ? grownup.beyond(ctx.name) : learner.hero.beyond;
   else if (!g && goal.reached && extra.firstReached === true) hoya = learner.goal.reachedHoya;
 
@@ -459,6 +503,7 @@ export function routeCardCopy(model: MyRouteModel, ctx: CopyContext, extra: Rout
 
   const nowText = where.kind === 'collapsed' ? where.line : where.now === null ? null : labelled(where.now, ctx);
   const goalText = where.kind === 'collapsed' ? null : labelled(where.goal, ctx);
-  const a11yLabel = a11y.routeCard(hoya, nowText, goalText, from, planEnds, goalPipsWord(model.goalPips, ctx), next);
-  return { hoya, where, from, planEnds, canDo, tasteLine, next, a11yLabel };
+  const showPips = !freeEnd;
+  const a11yLabel = a11y.routeCard(hoya, nowText, goalText, from, planEnds, showPips ? goalPipsWord(model.goalPips, ctx) : null, next);
+  return { hoya, where, from, planEnds, canDo, tasteLine, next, showPips, a11yLabel };
 }
