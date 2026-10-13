@@ -80,6 +80,7 @@ import { useStoryStore } from '../../store/story-store';
 import { useAccessTier, useQuestAccess } from '../../store/tier-store';
 import { PictureArt } from '../minigames/PictureArt';
 import { LinkButton } from '../placement/parts';
+import { NotesHomeCard } from '../notes/NotesHomeCard';
 import { PlanPromptCard, usePlanPrompt } from '../route/PlanPromptCard';
 import { firstFreeTopicKey } from '../vocab/topic-data';
 import { FreeEndCard } from './FreeEndCard';
@@ -606,6 +607,10 @@ export function HomeScreen(): React.ReactElement {
     </>
   );
 
+  // Row 2a (F-FEEDBACK-001 FB-8, F-ROUTE-001 section 6.4): a new note from a teacher or the family,
+  // after the mission cards; in two columns it heads the right column. Nothing with the flag off.
+  const notesCard = (place: 'after' | 'top'): React.ReactElement | null => (flags.notesEnabled ? <NotesHomeCard gap={place} /> : null);
+
   // Regular and wide windows: two columns under the greeting; phones, short windows and a Home
   // with no mission cards: one column as always.
   const twoColumns = homeColumns(layoutClass, missions !== null) === 2;
@@ -662,6 +667,7 @@ export function HomeScreen(): React.ReactElement {
               ) : null}
             </View>
             <View testID="home-side-column" style={{ flex: SIDE_FLEX, minWidth: 0 }}>
+              {notesCard('top')}
               {side}
             </View>
           </View>
@@ -672,6 +678,7 @@ export function HomeScreen(): React.ReactElement {
           {catchUpView}
           {catchUpGap}
           {missions}
+          {notesCard('after')}
           {quietCard ? (
             <>
               <Spacer size="lg" />
