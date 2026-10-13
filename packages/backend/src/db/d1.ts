@@ -1027,7 +1027,7 @@ export class D1Db implements Db {
       e.detail === null ? null : JSON.stringify(e.detail),
     ]);
   }
-  private async byIds<T>(table: 'learners' | 'spaces', ids: readonly string[], map: (r: Row) => T): Promise<T[]> {
+  private async byIds<T>(table: 'learners' | 'spaces' | 'accounts', ids: readonly string[], map: (r: Row) => T): Promise<T[]> {
     const unique = [...new Set(ids)];
     const out: T[] = [];
     for (let i = 0; i < unique.length; i += IN_CHUNK) {
@@ -1041,6 +1041,9 @@ export class D1Db implements Db {
   }
   getSpaces(ids: readonly string[]): Promise<Space[]> {
     return this.byIds('spaces', ids, toSpace);
+  }
+  getAccounts(ids: readonly string[]): Promise<Account[]> {
+    return this.byIds('accounts', ids, toAccount);
   }
   purgeTransfers(endedBefore: Date, executedBefore: Date, limit: number): Promise<number> {
     // One bounded statement (section 4.1); the events go with their rows through ON DELETE CASCADE.
