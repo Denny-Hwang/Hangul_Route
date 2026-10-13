@@ -317,13 +317,15 @@ jobs:
       # short spec, so shard 1 runs it whole. Anchored on ".spec", and the
       # spec skips unless STORY_FIXTURES_GATED is set, so the other runs never
       # run it and this run never runs theirs. Release gate: a build that turns
-      # contentGatingEnabled on depends on it.
+      # contentGatingEnabled on depends on it. F-ENT-003 E3-11: free-days.spec
+      # runs here too; only its gating fixture group (the QuestPlayer guard on a
+      # closed quest) runs on this bundle, its other groups skip.
       - name: Offline e2e (gating fixture bundle, shard 1)
         if: ${{ !cancelled() && matrix.shard == 1 }}
         working-directory: apps/mobile
         env:
           STORY_FIXTURES_GATED: "1"
-        run: pnpm exec playwright test story-shelf-gated.spec
+        run: pnpm exec playwright test story-shelf-gated.spec free-days.spec
 
       - name: Save the Playwright browsers (main only)
         if: github.event_name == 'push' && steps.pw-cache.outputs.cache-hit != 'true' && success()

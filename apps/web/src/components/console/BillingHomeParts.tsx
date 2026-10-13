@@ -352,7 +352,22 @@ export function AccountCard({ card, onManage, actionsDisabled }: { card: Billing
   );
 }
 
-export function AddPlanSection({ offers, contact, promo, onBuy, disabled }: { offers: BillingOfferView[]; contact: ContactRowView[]; promo: PromoFormProps | null; onBuy: (offer: BillingOfferView) => void; disabled: boolean }): JSX.Element {
+export function AddPlanSection({
+  offers,
+  contact,
+  promo,
+  onBuy,
+  disabled,
+  waitingSpaceId = null,
+}: {
+  offers: BillingOfferView[];
+  contact: ContactRowView[];
+  promo: PromoFormProps | null;
+  onBuy: (offer: BillingOfferView) => void;
+  disabled: boolean;
+  /** The space a checkout return waits on (B-8b): its row's button stays off. */
+  waitingSpaceId?: string | null;
+}): JSX.Element {
   const b = useMessages().console.billing;
   const id = useId();
   return (
@@ -361,7 +376,7 @@ export function AddPlanSection({ offers, contact, promo, onBuy, disabled }: { of
       <div className="hr-bill-cards">
         {offers.map((offer, i) => (
           <div className="hr-bill-add-row" key={`${offer.spaceId}-${offer.planKey}`}>
-            <OfferBlock offer={offer} level="h3" promo={i === 0 ? promo : null} onBuy={() => onBuy(offer)} disabled={disabled} />
+            <OfferBlock offer={offer} level="h3" promo={i === 0 ? promo : null} onBuy={() => onBuy(offer)} disabled={disabled || offer.spaceId === waitingSpaceId} />
           </div>
         ))}
         {contact.map((row) => (
@@ -404,5 +419,29 @@ export function EmptyState({ empty }: { empty: NonNullable<BillingHomeView['empt
         </Link>
       </div>
     </section>
+  );
+}
+
+/**
+ * The checkout return's one polite live region (B-8b; `design/screens/billing/checkout-return.md`): mounted for the
+ * whole page so each state change is announced once. The words and the button come from `returnNotice`.
+ */
+export function ReturnNoticeRegion({ notice, done, checking, onAction }: { notice: { text: string; action: { label: string } | null } | null; done: boolean; checking: boolean; onAction: () => void }): JSX.Element {
+  return (
+    <div role="status" aria-live="polite" data-testid="bill-return">
+      {notice ? (
+        <div className={done ? 'hr-bill-notice hr-bill-notice-success' : 'hr-bill-notice'}>
+          <p className="hr-bill-notice-line">
+            {done ? <IconSvg name="check-circle" size={GLYPH} color={colors.feedback.successDark} /> : checking ? <IconSvg name="replay" size={GLYPH} color={colors.text.secondary} /> : null}
+            <span>{notice.text}</span>
+          </p>
+          {notice.action ? (
+            <button type="button" className="hr-bill-btn" onClick={onAction}>
+              {notice.action.label}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
   );
 }

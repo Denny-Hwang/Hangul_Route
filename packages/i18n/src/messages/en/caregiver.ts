@@ -786,6 +786,10 @@ export const caregiver = {
       sources: 'Sources',
       seeSources: { cta: 'See the sources' },
     },
+    /** The word topic page (BR-9): each word row's Hear button, named by the romanization. */
+    topic: {
+      hearA11y: (romanization: string) => `Hear ${romanization}`,
+    },
     /** The preview strip on lesson screens and the preview end screen (`PreviewFrame`). */
     preview: {
       strip: 'Preview. Nothing is saved.',
