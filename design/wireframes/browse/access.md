@@ -61,7 +61,7 @@ Then: the visitor learns that the page is for parents and teachers and gets the 
 
 ## Interaction points
 
-- [[ Back to the grown-up area ]] -> learner app boot intent `gate=browse`: PIN entry over the start screen; correct PIN -> a fresh gate pass -> `browse/home`; cancel -> learner home, nothing written. Until BR-12b ships: [[ Back to the app ]] with "Go back to the app, then open the grown-up area again."
+- [[ Back to the grown-up area ]] -> learner app boot intent `gate=browse`: PIN entry over the start screen; correct PIN -> a fresh gate pass -> `browse/home`; cancel -> learner home, nothing written. Before BR-12b shipped: [[ Back to the app ]] with "Go back to the app, then open the grown-up area again."
 - [[ Open lessons from my account ]] -> the persona home; Clerk sign-in and F-APP-001's grown-up lock (PIN or fresh sign-in on a device with learner profiles) apply there, so a child cannot reach billing or account pages through this screen
 - [ Sign in ] -> `/signin`; a signed-in visitor is routed to their persona home, which carries **Lessons**
 - [ Back to the app ] -> `/`

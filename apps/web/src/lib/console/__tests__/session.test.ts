@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SESSION_KEY, clearSession, readSession, writeSession, type KeyValueStorage } from '../session';
+import { CONSOLE_SESSION_KEY } from '@hangul-route/content-schema';
 
 function fakeStorage(): KeyValueStorage & { map: Map<string, string> } {
   const map = new Map<string, string>();
@@ -61,8 +62,7 @@ describe('console session (F-CONSOLE-001 §3.2)', () => {
 });
 
 describe('session key (F-APP-001 section 3.14)', () => {
-  it('is the one key named in content-schema, unchanged so signed-in tabs stay signed in', async () => {
-    const { CONSOLE_SESSION_KEY } = await import('@hangul-route/content-schema');
+  it('is the one key named in content-schema, unchanged so signed-in tabs stay signed in', () => {
     expect(SESSION_KEY).toBe(CONSOLE_SESSION_KEY);
     expect(SESSION_KEY).toBe('hr:console:session');
   });

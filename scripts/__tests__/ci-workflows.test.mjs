@@ -375,6 +375,52 @@ describe("PWA e2e", () => {
       "R-10b flip: remove the E2E_MY_ROUTE (ROUTE_TAB) gates and the flagOnOnly exemption, add route-tab case (b) to the fixture run and the my-route assumption h describe to the gating run in web-app.yml, and extend the expected gated list",
     );
   });
+
+  // F-PLAN-002 P2-8 (section 6, the pre-flip CI job): the weekly plan bundle (release content with
+  // EXPO_PUBLIC_ROUTE_ENABLED=true and es / ko shown, dist-e2e-route/) has its own build, its own artifact
+  // and its own e2e line with E2E_ROUTE=1, which plays every spec gated on E2E_ROUTE.
+  test("the weekly plan bundle is built into its own directory with the plan flag on, on a Metro cache of its own", () => {
+    assert.ok(text.includes("- name: Build the weekly plan bundle"), "a build step for the weekly plan bundle");
+    const step = text.slice(text.indexOf("- name: Build the weekly plan bundle"));
+    assert.match(step.split("\n- name:")[0], /pnpm --filter @hangul-route\/mobile build:web:route/);
+    const pkg = JSON.parse(read("apps/mobile/package.json"));
+    assert.equal(pkg.scripts["build:web:route"], "node scripts/build-web-route.mjs");
+    const script = read("apps/mobile/scripts/build-web-route.mjs");
+    assert.match(script, /EXPO_PUBLIC_ROUTE_ENABLED: 'true'/);
+    assert.match(script, /EXPO_PUBLIC_SHOW_ALL_LOCALES: '1'/);
+    assert.match(script, /TMPDIR: ownTmp/);
+    assert.match(script, /const out = 'dist-e2e-route';/);
+    assert.match(text, /name: pwa-dist-e2e-route\n\s+path: apps\/mobile\/dist-e2e-route/);
+    assert.match(read("apps/mobile/playwright.config.ts"), /E2E_ROUTE === '1'\) return 'dist-e2e-route'/);
+  });
+
+  test("the weekly plan run serves its bundle with E2E_ROUTE=1 and plays every spec gated on E2E_ROUTE", () => {
+    const at = text.indexOf("- name: Offline e2e (weekly plan bundle");
+    assert.ok(at >= 0, "an e2e step for the weekly plan bundle");
+    const step = text.slice(at).split(/\n\s+- name: /)[0];
+    assert.match(step, /if: \$\{\{ !cancelled\(\) && matrix\.shard == 2 \}\}/);
+    assert.match(step, /E2E_ROUTE: "1"/);
+    assert.doesNotMatch(step, /STORY_FIXTURES/);
+    const run = step.match(/pnpm exec playwright test ([^\n]+)/)?.[1] ?? "";
+    const listed = run.split(/\s+/).filter(Boolean);
+    const dir = join(ROOT, "apps", "mobile", "e2e", "web");
+    const routeSpecs = readdirSync(dir).filter((n) => n.endsWith(".spec.ts") && /process\.env\.E2E_ROUTE === '1'/.test(readFileSync(join(dir, n), "utf8")));
+    // A spec that also needs STORY_FIXTURES=1 runs on the fixture bundle exported with the plan flag on
+    // (placement-plan.spec.ts, F-PLC-001 P-7b; P-10 adds it to the nightly run), not on dist-e2e-route/.
+    const needsFixtures = (n) => /process\.env\.STORY_FIXTURES === '1'/.test(readFileSync(join(dir, n), "utf8"));
+    assert.deepEqual(routeSpecs.filter(needsFixtures).sort(), ["placement-plan.spec.ts"]);
+    const gated = routeSpecs.filter((n) => !needsFixtures(n));
+    assert.deepEqual(gated.sort(), ["route-plan.spec.ts", "route-proposal.spec.ts", "route.spec.ts"]);
+    for (const spec of gated) {
+      const selectors = listed.filter((s) => `e2e/web/${spec}`.includes(s));
+      assert.equal(selectors.length, 1, `exactly one selector of the weekly plan run matches ${spec}`);
+    }
+    // No selector pulls in another spec (my-route.spec.ts holds "route.spec").
+    for (const s of listed) {
+      const hits = readdirSync(dir).filter((n) => n.endsWith(".spec.ts") && `e2e/web/${n}`.includes(s));
+      assert.equal(hits.length, 1, `${s} selects exactly one spec file, got ${hits.join(", ")}`);
+    }
+  });
 });
 
 // F-ENT-003 E3-13: the switch-on e2e lane. Its own workflow (switch-on-e2e.yml), nightly and on demand,

@@ -12,7 +12,8 @@ name: Web App (PWA)
 # to 4 parallel e2e shards; each runs its share of the release-build suite
 # and of the fixture-bundle specs (dealt round-robin by test,
 # scripts/e2e-shard-list.mjs, so the shards come out even); shard 1 also
-# runs the gating-bundle spec. The required check
+# runs the gating-bundle spec, and shard 2 the weekly plan bundle's specs
+# (dist-e2e-route/, F-PLAN-002 P2-8). The required check
 # 'Build PWA · offline e2e' is the last job: it always runs and passes only
 # when every job above passed (or when nothing the PWA depends on changed, and
 # the build job skipped its steps on purpose).
@@ -129,6 +130,16 @@ jobs:
         if: steps.changes.outputs.run == 'true'
         run: pnpm --filter @hangul-route/mobile build:web:fixtures:gated
 
+      # F-PLAN-002 P2-8: the release content with the learner's weekly plan on
+      # (EXPO_PUBLIC_ROUTE_ENABLED=true) and Spanish and Korean shown
+      # (EXPO_PUBLIC_SHOW_ALL_LOCALES=1), in dist-e2e-route/, for the weekly plan
+      # specs (route-proposal, route-plan, route). Like the gating bundle it is
+      # exported on a Metro cache of its own, so no flag-on transform reaches
+      # the cache the release build reads or the one main saves.
+      - name: Build the weekly plan bundle (dist-e2e-route, e2e only)
+        if: steps.changes.outputs.run == 'true'
+        run: pnpm --filter @hangul-route/mobile build:web:route
+
       # dist/ holds dot folders (audio clips), so hidden files are included.
       - name: Upload the release build
         if: steps.changes.outputs.run == 'true'
@@ -158,6 +169,17 @@ jobs:
         with:
           name: pwa-dist-e2e-gated
           path: apps/mobile/dist-e2e-gated
+          include-hidden-files: true
+          overwrite: true
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Upload the weekly plan build
+        if: steps.changes.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pwa-dist-e2e-route
+          path: apps/mobile/dist-e2e-route
           include-hidden-files: true
           overwrite: true
           if-no-files-found: error
@@ -227,6 +249,13 @@ jobs:
         with:
           name: pwa-dist-e2e-gated
           path: apps/mobile/dist-e2e-gated
+
+      - name: Download the weekly plan build (shard 2)
+        if: matrix.shard == 2
+        uses: actions/download-artifact@v4
+        with:
+          name: pwa-dist-e2e-route
+          path: apps/mobile/dist-e2e-route
 
       # Each shard runs its share of the release-build suite, then its share of
       # the fixture-bundle specs. The shares come from scripts/e2e-shard-list.mjs,
@@ -330,6 +359,19 @@ jobs:
         env:
           STORY_FIXTURES_GATED: "1"
         run: pnpm exec playwright test story-shelf-gated.spec free-days.spec
+
+      # F-PLAN-002 P2-8 (section 6, before the flip of flags.routeEnabled): the
+      # weekly plan bundle. E2E_ROUTE=1 serves dist-e2e-route/ and turns on the
+      # flag-on describes: the proposal, the set-up steps, the preview, the
+      # overview, the Hoya check-in, the seven-day window and the 320 px pass in
+      # Spanish and Korean. One spec path each, anchored on the directory so
+      # "route.spec" never pulls in my-route.spec.ts.
+      - name: Offline e2e (weekly plan bundle, shard 2)
+        if: ${{ !cancelled() && matrix.shard == 2 }}
+        working-directory: apps/mobile
+        env:
+          E2E_ROUTE: "1"
+        run: pnpm exec playwright test e2e/web/route-proposal.spec e2e/web/route-plan.spec e2e/web/route.spec
 
       - name: Save the Playwright browsers (main only)
         if: github.event_name == 'push' && steps.pw-cache.outputs.cache-hit != 'true' && success()

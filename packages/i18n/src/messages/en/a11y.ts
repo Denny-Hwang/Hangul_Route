@@ -260,6 +260,11 @@ export const a11y = {
     speed: {
       sparks: (n: number) => plural('en', n, { one: '1 spark', other: `${n} sparks` }),
       sparksFull: 'Full of sparks',
+      /** The Challenge clock (§3.8): read on focus only, never a live region; `seconds` rounded up. */
+      timeLeft: (seconds: number) => plural('en', seconds, { one: 'Time left: 1 second', other: `Time left: ${seconds} seconds` }),
+      /** The start sheet's round type choice and the clock scale choice. */
+      modes: 'Round type',
+      scales: 'Clock length',
     },
   },
   /**

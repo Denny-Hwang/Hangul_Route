@@ -82,3 +82,22 @@ Exit to:    `quest/player` · `home/todays-mission` (back) · `reviews/daily-tes
 - **Discrepancy**: shipped rows are not tappable and show every uncompleted assignment under "Today" regardless of `targetDate`; `dueAt` is rendered raw. The wireframe assumes the §3.4 grouping.
 - The shipped subtitle and Hoya copy mention a *streak* ("or Hoya if you have a streak"). Streak framing is close to the F-RVW-001 §4 anti-pattern; replace with neutral "Hoya sometimes adds a review" copy?
 - Does the child need "Coming up" at all, or is that a caregiver-only view (`console/plan-builder`)? Default: show it, since it explains why a parent-assigned item is not on Home today.
+
+---
+
+## F-PLAN-002: the week window (promoted in P2-8)
+
+Promoted from `console/curriculum-planner.md` H (with the review amendment of PR #254), drawn as P2-5 shipped (`logic/homework/assignment-groups.ts` `homeworkWindow`, `UPCOMING_WINDOW_DAYS = 7`; the device derives a plan only up to today + 7, `HORIZON_DAYS`).
+
+```
+ Today (at most 3)
+   <quest title>   From class
+   <quest title>   Your plan                   <- the learner's own weekly plan
+   "More are waiting. They come one at a time."   (no number)
+ Coming up (the next 7 days only)
+   <quest title>   In 3 days
+ Later  [ > ]                                  <- one collapsed row; class and home items too
+```
+
+- The three Today rows keep the first class item and the first home item (F-TCH-001 section 3.5), then fill in precedence order.
+- Beta check (F-PLAN-002 section 6): no learner screen lists more than seven days of items. Checked by `apps/mobile/e2e/web/route.spec.ts` (a 6-month Brisk plan, today and a week later) and `homework-window.spec.ts`.

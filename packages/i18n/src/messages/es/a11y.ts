@@ -185,6 +185,10 @@ export const a11y = {
     speed: {
       sparks: (n: number) => plural('es', n, { one: '1 chispa', other: `${n} chispas` }),
       sparksFull: 'Chispas al máximo',
+      timeLeft: (seconds: number) =>
+        plural('es', seconds, { one: 'Tiempo restante: 1 segundo', other: `Tiempo restante: ${seconds} segundos` }),
+      modes: 'Tipo de ronda',
+      scales: 'Duración del reloj',
     },
   },
   report: {
