@@ -72,6 +72,24 @@ async function selfLearnerWithAQuest(page: Page, name: string): Promise<string> 
   return profileId;
 }
 
+/** A child profile never gets the Home prompt; the Profile row opens the plan only past the grown-up PIN. */
+async function childSeesNoPromptAndThePinGate(page: Page): Promise<void> {
+  await page.clock.setFixedTime(NOW);
+  await onboardChild(page, { name: 'Dani', startJourney: false });
+  await page.goto('/');
+  await expect(page.getByText('Hi, Dani!')).toBeVisible();
+  const profileId = (await readStored<string>(page, 'profiles:active')) as string;
+  await seedStored(page, `progress:${profileId}`, snapshotWithOneQuest(profileId));
+  await expect(page.getByText('Hi, Dani!')).toBeVisible();
+  await closeInstallGuide(page);
+  await expect(page.getByTestId('home-plan-prompt')).toHaveCount(0);
+  await page.getByRole('button', { name: /profile/i }).first().click();
+  await page.getByTestId('profile-plan-row').click();
+  await expect(page.getByTestId('route-proposal-headline')).toHaveCount(0);
+  await unlockWithPin(page);
+  await expect(page.getByTestId('route-proposal-headline')).toBeVisible();
+}
+
 test.describe('weekly plan entries on the default build (flag on by default, P2-8b)', () => {
   test.skip(ROUTE, 'runs on the default build only');
 
@@ -80,6 +98,10 @@ test.describe('weekly plan entries on the default build (flag on by default, P2-
     await expect(page.getByTestId('home-plan-prompt')).toBeVisible();
     await page.getByRole('button', { name: /profile/i }).first().click();
     await expect(page.getByTestId('profile-plan-row')).toBeVisible();
+  });
+
+  test('a child profile sees no prompt, and the Profile row asks for the grown-up PIN', async ({ page }) => {
+    await childSeesNoPromptAndThePinGate(page);
   });
 });
 
@@ -214,19 +236,6 @@ test.describe('weekly plan proposal (flag on)', () => {
   });
 
   test('a child profile sees no prompt, and the Profile row asks for the grown-up PIN', async ({ page }) => {
-    await page.clock.setFixedTime(NOW);
-    await onboardChild(page, { name: 'Dani', startJourney: false });
-    await page.goto('/');
-    await expect(page.getByText('Hi, Dani!')).toBeVisible();
-    const profileId = (await readStored<string>(page, 'profiles:active')) as string;
-    await seedStored(page, `progress:${profileId}`, snapshotWithOneQuest(profileId));
-    await expect(page.getByText('Hi, Dani!')).toBeVisible();
-    await closeInstallGuide(page);
-    await expect(page.getByTestId('home-plan-prompt')).toHaveCount(0);
-    await page.getByRole('button', { name: /profile/i }).first().click();
-    await page.getByTestId('profile-plan-row').click();
-    await expect(page.getByTestId('route-proposal-headline')).toHaveCount(0);
-    await unlockWithPin(page);
-    await expect(page.getByTestId('route-proposal-headline')).toBeVisible();
+    await childSeesNoPromptAndThePinGate(page);
   });
 });
