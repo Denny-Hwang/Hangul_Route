@@ -145,9 +145,13 @@ const LITERALLY_SHARED: readonly string[] = [
   'report.detail.strand',
   'report.class.count',
   'report.letter',
+  'learner.weeklyPlan.proposal.pickDayLabel',
+  'learner.weeklyPlan.proposal.weekRowLabel',
+  'learner.weeklyPlan.setup.likes.themeChosen',
   // Words Spanish uses as they are: the minute abbreviation "min", "final", "Plan", "Extras", "Quiz", "admin", "App", "Android".
   'a11y.minigame.finalTile',
   'learner.storyShelf.episode.minutes.pill',
+  'learner.weeklyPlan.proposal.minutes',
   'console.space.openPlan.label',
   'console.plan.catalog.questLine',
   'console.curriculum.rhythm.minutesOption',

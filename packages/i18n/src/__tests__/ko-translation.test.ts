@@ -218,6 +218,7 @@ const KO_ALL_ARGUMENTS: readonly string[] = [
   'report.when.inMonth', // a formatted month inside a sentence
   'report.step.range', // "from~to"
   'report.list', // items joined by ", "
+  'learner.weeklyPlan.proposal.pickDayLabel', // "date (weekday)": both arrive formatted in Korean
 ];
 
 /** 합니다체 on purpose: the legal notice and the plan terms and price lines (§3.10 style guide). */
@@ -280,6 +281,8 @@ const KO_LITERALLY_SHARED: readonly string[] = [
   'report.detail.strand',
   'report.class.count',
   'report.letter',
+  'learner.weeklyPlan.proposal.weekRowLabel',
+  'learner.weeklyPlan.setup.likes.themeChosen',
   // Names: the brand and its mark, the copyright line, and the Android platform name.
   'landing.brand.name',
   'landing.brand.mark',
