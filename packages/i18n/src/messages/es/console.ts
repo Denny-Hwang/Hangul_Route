@@ -37,7 +37,7 @@ export const consoleMsgs = {
   tryAgain: 'Reintentar',
   noSpaces: 'Aún no estás en ningún espacio.',
   createSpace: 'Crear un espacio',
-  writeOnBoard: 'Escríbelo en el pizarrón. Los estudiantes se unen desde Perfil → Clases y familia → Unirme a una clase.',
+  writeOnBoard: 'Escríbelo en la pizarra. Los estudiantes se unen desde Perfil → Clases y familia → Unirme a una clase.',
   oldCodeStops: 'El código anterior deja de funcionar en cuanto se crea uno nuevo.',
   notSyncedYet: 'aún sin sincronizar',
   comingWithPlans: 'Llega con los planes',
@@ -185,7 +185,7 @@ export const consoleMsgs = {
     week: {
       title: 'Esta semana',
       practiced: (practiced: number, students: number) => `${practiced} de ${students} ${practiced === 1 ? 'practicó' : 'practicaron'} esta semana`,
-      anchor: (accuracy: string) => `Base de la Etapa 1: ${accuracy}`,
+      anchor: (accuracy: string) => `Clave de la Etapa 1: ${accuracy}`,
       revisit: (jamo: string) => `Jamo para repasar en grupo: ${jamo}`,
       notSynced: (count: number) =>
         plural('es', count, { one: `${count} no sincroniza desde hace una semana`, other: `${count} no sincronizan desde hace una semana` }),
@@ -232,7 +232,7 @@ export const consoleMsgs = {
     cardsLabel: 'Tarjetas y progreso',
     expired: 'expiró',
     expiresIn: (minutes: number) => `expira en ${minutes} min`,
-    askedJustNow: 'pidió ahora',
+    askedJustNow: 'pidió hace un momento',
     askedAgo: (minutes: number) => `pidió hace ${minutes} min`,
     closed: 'Esta solicitud ya se cerró: el estudiante puede pedir otra vez.',
     failed: 'No se realizó. Reintenta.',

@@ -262,7 +262,7 @@ export const learner = {
       start: { cta: 'Empezar' },
       playAgain: { cta: 'Jugar otra vez' },
     },
-    buildsOn: (title: string) => `Sigue a: ${title}`,
+    buildsOn: (title: string) => `Se basa en: ${title}`,
     cards: { heading: 'Tarjetas de este episodio', waiting: 'Termina todas las misiones para ganarla' },
     prereq: {
       message: (title: string) => `Esta usa letras de ${title}. ¿Empiezas por ahí?`,
@@ -365,7 +365,7 @@ export const learner = {
         skip: { cta: 'Saltar por ahora' },
       },
       check: {
-        heading: 'Dos rapiditas',
+        heading: 'Dos preguntas rápidas',
         go: { cta: 'Vamos' },
       },
     },
@@ -925,7 +925,7 @@ export const learner = {
     laterNote: 'Aparecerá aquí cuando esté lista.',
     newQuests: (n: number, stage: number) =>
       plural('es', n, { one: `1 misión nueva llegó a la Etapa ${stage}.`, other: `${n} misiones nuevas llegaron a la Etapa ${stage}.` }),
-    builds: 'Esta etapa trabaja',
+    builds: 'Lo que trabaja esta etapa',
     skills: { title: 'Qué practican tus misiones' },
     skill: {
       read: 'Leer',
@@ -970,7 +970,7 @@ export const learner = {
     speed: {
       nudge: {
         right: {
-          lines: ['¡Bien!', 'Buena atrapada.'],
+          lines: ['¡Bien!', '¡Buen ojo!'],
           named: (gloss: string) => `¡Sí, ${gloss}!`,
         },
         milestone: {
@@ -980,8 +980,8 @@ export const learner = {
           ten: '¡Cuántas chispas!',
         },
         miss: {
-          first: (gloss: string) => `Esa es ${gloss}. ¡La próxima!`,
-          second: (gloss: string) => `Buen intento. Ahora sabes ${gloss}.`,
+          first: (gloss: string) => `Esa palabra es «${gloss}». ¡A la próxima!`,
+          second: (gloss: string) => `Buen intento. Ahora ya sabes: ${gloss}.`,
         },
         idle: 'Tómate tu tiempo.',
         start: 'Cuando quieras.',

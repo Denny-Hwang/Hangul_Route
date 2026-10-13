@@ -311,7 +311,7 @@ export const landing = {
   hoya: {
     eyebrow: 'Conoce a Hoya',
     title: 'Un tigre que nunca dice “mal”.',
-    body: 'Hoya es un tigre joven y la única voz de la app. Los cuentos coreanos empiezan con “Hace mucho, cuando los tigres fumaban tabaco…”, así que el tigre es el personaje abuelo de Corea. Hoya es joven: así los estudiantes conocen a un compañero, no a una autoridad.',
+    body: 'Hoya es un tigre joven y la única voz de la app. Los cuentos coreanos empiezan con “Hace mucho, cuando los tigres fumaban tabaco…”, así que el tigre es como el abuelo de Corea. Hoya es joven: así los estudiantes conocen a un compañero, no a una autoridad.',
     bubble: (korean: string, romanization: string) => `${korean} · ${romanization} · ¡casi!`,
     points: {
       wrong: { title: '¿Te equivocaste?', body: (korean: string) => `Hoya dice “${korean}” (casi) en ámbar, nunca en rojo.` },
@@ -321,8 +321,8 @@ export const landing = {
   },
   parents: {
     eyebrow: 'Para familias',
-    title: 'Cinco minutos al día. Nada raro.',
-    body: 'Muchos de nuestros estudiantes son niños, así que Hangul Route también está hecho para madres y padres cansados. Presta el teléfono cinco minutos y vuelve a encontrar una letra coreana nueva y una tarjeta del patrimonio. ¿Tú también aprendes coreano? Juega las mismas misiones. Llévalo en un vuelo largo: la app funciona sin conexión después de tu primera visita.',
+    title: 'Cinco minutos al día. Nada invasivo.',
+    body: 'Muchos de nuestros estudiantes son niños, así que Hangul Route también está hecho para madres y padres cansados. Presta el teléfono cinco minutos y, al volver, habrá una letra coreana nueva y una tarjeta del patrimonio. ¿Tú también aprendes coreano? Juega las mismas misiones. Llévalo en un vuelo largo: la app funciona sin conexión después de tu primera visita.',
     points: {
       localFirst: {
         title: 'El progreso se respalda.',
