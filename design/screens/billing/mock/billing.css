@@ -94,7 +94,7 @@
 .price { font-size: var(--size-prompt); font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
 .price.promo { font-size: var(--size-body); }
 .renew { color: var(--colors-text-secondary); font-size: var(--size-bodySm); }
-.add-plan { display: flex; flex-direction: column; gap: var(--spacing-lg); }
+.add-plan { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--plan-card-min)), 1fr)); gap: var(--spacing-lg); align-items: start; }
 .add-row { padding: var(--spacing-lg); background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); }
 
 /* Disclosures (Receipts, Have a code?): native details / summary, the summary a full-height target. */
