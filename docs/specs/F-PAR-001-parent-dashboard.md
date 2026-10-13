@@ -161,7 +161,7 @@ Wireframes authored (T-014 — v0, low-fi; PIN gate screen lives at `design/wire
 
 - **F-PROF-001** — parent role + linked-learners model + PIN gate.
 - **F-HW-001** — homework assignment data model (Phase 2 wiring only).
-- **F-RVW-001** — `stage_anchor_accuracy` event + `ReviewSummary` aggregate.
+- **F-RVW-001** — ~~`stage_anchor_accuracy` event~~ `ProgressSummary.stage1Anchor { met, checkedAt, tricky }` (the Hangul Check verdict; amended 2026-10-12 by F-QUEST-002 PR Q-11, which replaced the event) + `ReviewSummary` aggregate.
 - **packages/content-schema** — needs `WeekSummary`, `Suggestion`, `ParentMessage` types.
 
 ### Downstream

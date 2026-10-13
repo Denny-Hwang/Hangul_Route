@@ -9,6 +9,8 @@ Parent doc: `docs/blueprints/09-homework-review-profiles-addendum.md` §2.
 
 > **Amended 2026-10-11 by F-PLC-001 appendix B (B1 to B9, PR P-0).** The attempt session, selection helpers, seeded RNG and session clock are shared with the placement check and already live in `packages/content-schema/src/assessment/` (F-PLC-001 PR P-1, #161). This spec stays `draft` until its own PR 1; no review code is in the tree, so nothing shipped changes.
 
+> **Amended 2026-10-12 by F-QUEST-002 (PR Q-11).** §3.3: a quest with a Check step shows no Feedback Review (decision L13). §3.4: for Stage 1 the Stage Review is the **Hangul Check**, 35 items (F-QUEST-002 §3.9, PR Q-10b), superseding "N = 4 to 6" for Stage 1 only. The `stage_anchor_accuracy` event is replaced by `review.complete` (analytics) and `ProgressSummary.stage1Anchor` (the caregiver channel). F-QUEST-002 Q-10b built the minimal engine files this spec names, `logic/reviews/star-calc.ts` and `logic/reviews/banned-text.ts`; this spec's PR 1 extends them.
+
 ---
 
 ## 1. Context
@@ -72,6 +74,7 @@ Companion stories:
 - **Given** the learner answers the Feedback Review,
   **when** the answer registers,
   **then** Hoya delivers a recap line (e.g. *"You saw ㅂ four times today!"* — English frame, the jamo is the taught content) regardless of correctness. **No extra stars** — Quest score absorbs the result.
+- **Amended 2026-10-12 (F-QUEST-002 decision L13, PR Q-11): a quest that has a Check step (F-QUEST-002 §3.3, every Stage 1 quest) does not also show this Feedback Review.** The Check's two scored rounds are that quest's recall, so the learner answers one recall per quest, not two. A quest without a Check step (the Stage 2 / Stage 4 taste quests today) keeps the rule above.
 - Feedback Review must complete in ≤ 45 s wall-clock, including animation. If the learner doesn't answer within 15 s, the system auto-marks `skipped` (not wrong) and proceeds to Hoya recap. The auto-skip is recorded through the shared `session.skip` (F-PLC-001 B9): the shared outcome set is `correct`, `wrong`, `skipped`, and there is no `timeout` outcome.
 
 ### 3.4 Stage Review — anchor audit
@@ -88,7 +91,8 @@ Companion stories:
   - 3-star tier (per §3.1) — never the accuracy number
   - the **Stage Certificate** (their name, Hoya stage form, date)
   - a horizontally-scrollable **collection wall** of every Heritage card earned in that Stage
-- The caregiver dashboard (F-PAR-001) receives a `stage_anchor_accuracy` event with the actual percentage.
+- ~~The caregiver dashboard (F-PAR-001) receives a `stage_anchor_accuracy` event with the actual percentage.~~ **Replaced 2026-10-12 (F-QUEST-002 §3.9, PR Q-11):** the attempt is saved as a `stage-certificate` review entry (`progress-store.recordReview`: `itemIds`, `resultStars`, `missedItemIds`), `summarize` writes `ProgressSummary.stage1Anchor { met, checkedAt, tricky }` from the newest one that carries `missedItemIds` for the caregiver dashboard (F-PAR-001; `missedItemIds` means "not right on the first try", the misses plus any item never asked, and an entry an older build stripped of the field gives no verdict), and `review.complete { kind, stageKey, symbolsCorrect, wordsCorrect, retries, stars }` goes to internal analytics. No `stage_anchor_accuracy` event exists (it was never in `TELEMETRY_EVENT_NAMES`). `stage1Anchor` is not `stage1.anchorAccuracy` (the average accuracy of completed Stage 1 quests); a dashboard must not conflate them.
+- **Stage 1 configuration (F-QUEST-002 §3.9, amended 2026-10-12 by PR Q-11): the Hangul Check.** For Stage 1 the item count is **35, not 4 to 6**: 30 symbol items (one per symbol: hear the sound, pick the written letter among the target and its first three confusables; a final as the syllable ㅇ + ㅏ + final among syllables that differ only in the final) and 5 word items, one per theme pillar (hear the word, pick the picture), which satisfies "each pillar contributes ≥ 1". Seven items per chunk (6 symbols + 1 word), 5 chunks, a Hoya pause between chunks. Stars by §3.1 over the 35 items (1-star floor). Entry from the Stage 1 ceremony and the Journey Stage 1 header, never gating (Stage 2 is not unlocked by it). Built by `logic/stage1/hangul-check.ts` (`buildHangulCheck`), played by `screens/reviews/StageReviewScreen.tsx`; wireframe `design/wireframes/reviews/hangul-check.md`. Other stages keep N = 4 to 6.
 
 ### 3.5 Engine separation (testability)
 
@@ -173,7 +177,7 @@ The shared reducer's own tests (`startSession`, `answer`, `skip`, `expire`, `tal
 ### Downstream
 
 - **F-PAR-001** consumes per-profile review history for the caregiver dashboard.
-- **F-TCH-001** consumes class-aggregated `stage_anchor_accuracy`.
+- **F-TCH-001** ~~consumes class-aggregated `stage_anchor_accuracy`~~ (amended 2026-10-12, F-QUEST-002 PR Q-11): no class aggregate of the anchor verdict; `stage1Anchor` is a family-channel key (`TEACHER_HIDDEN_SUMMARY_KEYS`, `packages/content-schema/src/schemas/transfer-consent.ts`), so a teacher never receives it.
 - **F-INFRA-004** (D1 sync) — Phase 2 dual-write target.
 
 ### Content

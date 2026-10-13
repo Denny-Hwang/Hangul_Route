@@ -7,7 +7,7 @@
 - 규약: `.claude/skills/wireframe-skill/SKILL.md` (필수 8 섹션 · ASCII 박스 · 색/폰트/px 금지 · success/empty/error 상태).
 - 각 파일의 **Open questions** 에 코드 ↔ 스펙 불일치가 기록되어 있다. 스펙을 `ready` 로 올리기 전에 거기서부터 본다.
 
-## 인덱스 (2026-10-11 갱신 · 화면 수 = `design/wireframes/**/*.md` 파일 수, README 제외)
+## 인덱스 (2026-10-12 갱신 · 화면 수 = `design/wireframes/**/*.md` 파일 수, README 제외)
 
 상태: **S** shipped(코드 존재, back-fill) · **D** spec draft · **R** spec ready · **P** proposal
 
@@ -23,6 +23,10 @@
 | `journey/grid-with-stories.md` · `story/cell-stories.md` · `episode/detail-cell-stories-row.md` | R | F-STORY-005 §3.6 (PR 5.0; brief `screens/27-cell-stories`, story sections in `05-journey-grid` and `06-episode-detail`) |
 | `quest/player.md` · `minigame/shell.md` · `minigame/families.md` | S | content-skill · 06 |
 | `story/reader.md` · `story/term-gloss.md` · `story/sources.md` | S | F-STORY-002 §3.3-3.8 (PR 2.0; briefs `screens/21-story-reader`, `screens/26-story-sources`, `components/story-scene`, `illustrations/scene-art-style`) |
+| `quest/discover.md` · `quest/check.md` | S | F-QUEST-002 §3.2-3.3 (built in Q-5a; split out of the drafted file in Q-11) |
+| `results/next-quest-teaser.md` | S | F-QUEST-002 §3.5 (Q-5b) |
+| `results/stage1-complete.md` | R | F-QUEST-002 §3.8 (Q-9: ceremony, Results prize button, Journey Complete pill and its See your prize entry) |
+| `reviews/hangul-check.md` | R | F-QUEST-002 §3.9 (Q-10b: the Stage 1 configuration of `reviews/stage-review.md`, 35 items) |
 | `minigame/build-letter.md` | R | F-QUEST-002 §3.7 (Q-7a) |
 | `minigame/listen-pick.md` | R | F-QUEST-002 §3.10 (Q-3b) |
 | `minigame/pic-word-match.md` | R | F-QUEST-002 §3.11 (Q-4) |
