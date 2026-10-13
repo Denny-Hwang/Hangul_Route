@@ -314,6 +314,8 @@ jobs:
             vocab-speed
             # F-VOC-003 C-5: the flashcards, the quick check and the chunk summary (Words stays behind its flag until C-7).
             vocab-cards
+            # F-VOC-003 C-6: Words Match, Pic-Word Match on a topic's collected words (Words stays behind its flag until C-7).
+            vocab-match
             # F-STORY-005 PR 5.5b: stories on the Journey, the cell page and its three doors (the fixture shelf stories).
             journey-stories
             # F-STORY-003 PR 3.7 / F-STORY-004 PR 4.6, 4.7: story Results after the fixture story's
