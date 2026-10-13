@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { create } from 'zustand';
 import { dayKey } from '../logic/homework/mission-builder';
 import { createdEvent } from '../logic/route/proposal-flow';
-import { applyCheckIn, autoRepaceDue, pendingPastOf, repaceSelfRoute, repacedEvent, type CheckInOffer } from '../logic/route/repace';
+import { applyCheckIn, autoRepaceDue, checkInOffer, pendingPastOf, repaceSelfRoute, repacedEvent, type CheckInOffer } from '../logic/route/repace';
 import { activeSelfRoute, archivedRoute, completedQuestIdsOf, newSelfRouteId, selfRouteOf } from '../logic/route/self-route';
 import { readJson, writeJson } from '../platform/storage';
 import { track } from '../platform/telemetry';
@@ -197,11 +197,16 @@ export const useRouteStore = create<State & Actions>((set, get) => {
       try {
         const active = await activeOf(profileId);
         if (active === null) return false;
-        if ((await get().loadUi(profileId)).checkInFor === active.id) return false;
+        const today = dayKey(now.toISOString());
+        // The answer is for the offer this learner's plan has now: a card kept from another
+        // learner or another plan (a profile switch while the screen stayed) changes nothing.
+        const current = checkInOffer({ route: active, completedQuestIds: completedOf(profileId), today, answeredFor: (await get().loadUi(profileId)).checkInFor });
+        if (current === null) return false;
+        if (offer !== null && (offer.kind !== current.kind || offer.pace !== current.pace)) return false;
         if (offer !== null) {
           let next: SelfRoute;
           try {
-            next = applyCheckIn(active, offer, completedOf(profileId), dayKey(now.toISOString()), CATALOG, now.toISOString());
+            next = applyCheckIn(active, offer, completedOf(profileId), today, CATALOG, now.toISOString());
           } catch {
             return false;
           }

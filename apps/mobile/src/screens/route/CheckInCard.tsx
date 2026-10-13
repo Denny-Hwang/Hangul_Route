@@ -3,7 +3,7 @@ import { PACES } from '@hangul-route/content-schema';
 import React, { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
-import type { CheckInOffer } from '../../logic/route/repace';
+import { retainedOfferStep, type CheckInOffer, type RetainedOffer } from '../../logic/route/repace';
 import { useRouteStore } from '../../store/route-store';
 import { LinkButton } from '../placement/parts';
 
@@ -76,19 +76,18 @@ export function CheckInCard({
 
 /**
  * The offer a screen keeps showing once it appeared: answering closes the check-in for the plan
- * (so the computed offer turns null), and the card stays to say what changed until `close`.
+ * (so the computed offer turns null), and the card stays to say what changed until `close`. It is
+ * kept per learner and plan (`key`): a profile switch or a replaced plan never shows the old card.
  */
-export function useShownOffer(offer: CheckInOffer | null): [CheckInOffer | null, () => void] {
-  const [shown, setShown] = useState<CheckInOffer | null>(null);
-  const [closed, setClosed] = useState(false);
+export function useShownOffer(offer: CheckInOffer | null, key: string): [CheckInOffer | null, () => void] {
+  const [kept, setKept] = useState<RetainedOffer>({ key, shown: null, closed: false });
   useEffect(() => {
-    if (offer !== null && shown === null && !closed) setShown(offer);
-    // Once the answer has landed the computed offer is null: a later plan's own check-in may show again.
-    else if (offer === null && closed) setClosed(false);
-  }, [offer, shown, closed]);
+    setKept((prev) => retainedOfferStep(prev, offer, key));
+  }, [offer, key]);
   const close = useCallback(() => {
-    setClosed(true);
-    setShown(null);
+    setKept((prev) => ({ ...prev, shown: null, closed: true }));
   }, []);
-  return [closed ? null : shown, close];
+  // Before the effect catches up with a new learner or plan, show that plan's own offer, never the kept one.
+  if (kept.key !== key) return [offer, close];
+  return [kept.closed ? null : kept.shown, close];
 }

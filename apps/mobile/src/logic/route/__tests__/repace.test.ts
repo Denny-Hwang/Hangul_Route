@@ -10,6 +10,8 @@ import {
   pendingPastOf,
   repaceSelfRoute,
   repacedEvent,
+  retainedOfferStep,
+  type RetainedOffer,
 } from '../repace';
 import { selfRouteOf } from '../self-route';
 
@@ -186,5 +188,28 @@ describe('the Hoya check-in (FP-B14, OD-13)', () => {
     for (const item of past) expect(next.items.find((i) => i.id === item.id && i.targetDate === item.targetDate)).toBeDefined();
     const nextWeek = next.items.filter((i) => (i.targetDate ?? '') >= '2026-10-12' && (i.targetDate ?? '') < '2026-10-19');
     expect(nextWeek.length).toBeLessThanOrEqual(PACES.gentle);
+  });
+});
+
+describe('retainedOfferStep: the check-in a screen keeps showing, per learner and plan', () => {
+  const lighter = { kind: 'lighter', pace: 'gentle' } as const;
+  const faster = { kind: 'faster', pace: 'brisk' } as const;
+  const start: RetainedOffer = { key: 'profile:a|route:1', shown: null, closed: false };
+
+  it('keeps the first offer it saw and lets it go only on close', () => {
+    const shown = retainedOfferStep(start, lighter, 'profile:a|route:1');
+    expect(shown).toEqual({ key: 'profile:a|route:1', shown: lighter, closed: false });
+    // Answered: the computed offer turns null, the card stays to say what changed.
+    expect(retainedOfferStep(shown, null, 'profile:a|route:1')).toBe(shown);
+    const closed = { ...shown, shown: null, closed: true };
+    expect(retainedOfferStep(closed, lighter, 'profile:a|route:1')).toBe(closed);
+    expect(retainedOfferStep(closed, null, 'profile:a|route:1')).toEqual({ key: 'profile:a|route:1', shown: null, closed: false });
+  });
+
+  it('another learner or another plan drops the kept offer and takes the new one as it is', () => {
+    const shown = retainedOfferStep(start, lighter, 'profile:a|route:1');
+    expect(retainedOfferStep(shown, null, 'profile:b|route:2')).toEqual({ key: 'profile:b|route:2', shown: null, closed: false });
+    expect(retainedOfferStep(shown, faster, 'profile:b|route:2')).toEqual({ key: 'profile:b|route:2', shown: faster, closed: false });
+    expect(retainedOfferStep({ ...shown, shown: null, closed: true }, faster, 'profile:a|route:9')).toEqual({ key: 'profile:a|route:9', shown: faster, closed: false });
   });
 });

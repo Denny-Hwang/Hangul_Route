@@ -207,6 +207,25 @@ describe('route-store: re-pace and the Hoya check-in (section 3.7, FP-B14)', () 
     expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute?.meta.params.sessionsPerWeek).toBe(2);
   });
 
+  it('answerCheckIn takes only the offer this plan has now: a card kept from another learner or plan changes nothing', async () => {
+    // Week 2 of a plan: there is no check-in yet, so a kept offer (from another profile's card) is not applied.
+    await useRouteStore.getState().create('profile:a', plan(-10), { from: 'setup', changed: true }, new Date(NOW.getTime() - 10 * DAY));
+    const before = useProgressStore.getState().byProfile['profile:a']?.selfRoute;
+    expect(await useRouteStore.getState().answerCheckIn('profile:a', { kind: 'lighter', pace: 'gentle' }, NOW)).toBe(false);
+    expect(await useRouteStore.getState().answerCheckIn('profile:a', null, NOW)).toBe(false);
+    expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute).toEqual(before);
+    expect(useRouteStore.getState().ui['profile:a']?.checkInFor).toBeUndefined();
+  });
+
+  it('answerCheckIn in week 5 with nothing finished takes the lighter offer only, not a faster one', async () => {
+    await useRouteStore.getState().create('profile:a', plan(-29), { from: 'setup', changed: true }, new Date(NOW.getTime() - 29 * DAY));
+    const before = useProgressStore.getState().byProfile['profile:a']?.selfRoute;
+    expect(await useRouteStore.getState().answerCheckIn('profile:a', { kind: 'faster', pace: 'steady' }, NOW)).toBe(false);
+    expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute).toEqual(before);
+    expect(useRouteStore.getState().ui['profile:a']?.checkInFor).toBeUndefined();
+    expect(await useRouteStore.getState().answerCheckIn('profile:a', { kind: 'lighter', pace: 'gentle' }, NOW)).toBe(true);
+  });
+
   it('repaceDue says whether the automatic re-pace would run, without changing the plan', async () => {
     expect(await useRouteStore.getState().repaceDue('profile:a', NOW)).toBe(false);
     await useRouteStore.getState().create('profile:a', plan(-10), { from: 'setup', changed: true }, new Date(NOW.getTime() - 10 * DAY));
@@ -234,6 +253,19 @@ describe('route-store: re-pace and the Hoya check-in (section 3.7, FP-B14)', () 
     expect(useRouteStore.getState().ui['profile:a']?.movedAt).toBeUndefined();
     expect(useRouteStore.getState().ui['profile:a']?.checkInFor).toBeUndefined();
     expect(await useRouteStore.getState().repaceDue('profile:a', NOW)).toBe(true);
+  });
+
+  it('a check-in yes that is not stored fires nothing and leaves the check-in open', async () => {
+    await useRouteStore.getState().create('profile:a', plan(-29), { from: 'setup', changed: true }, new Date(NOW.getTime() - 29 * DAY));
+    vi.mocked(track).mockClear();
+    const setSelfRoute = vi.spyOn(useProgressStore.getState(), 'setSelfRoute').mockReturnValue(false);
+    try {
+      expect(await useRouteStore.getState().answerCheckIn('profile:a', { kind: 'lighter', pace: 'gentle' }, NOW)).toBe(false);
+    } finally {
+      setSelfRoute.mockRestore();
+    }
+    expect(track).not.toHaveBeenCalled();
+    expect(useRouteStore.getState().ui['profile:a']?.checkInFor).toBeUndefined();
   });
 
   it('answerCheckIn is false without a plan; markMovedSeen remembers the line was seen', async () => {

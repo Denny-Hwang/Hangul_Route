@@ -77,7 +77,7 @@ export function RouteOverviewScreen({ route, navigation }: Props): React.ReactEl
   const completed = useMemo(() => completedQuestIdsOf(snapshot?.quests), [snapshot]);
   const view = useMemo(() => (active === null ? null : planOverview(active, today)), [active, today]);
   const offer = ui === undefined ? null : checkInOffer({ route: active, completedQuestIds: completed, today, answeredFor: ui.checkInFor });
-  const [shownOffer, closeOffer] = useShownOffer(offer);
+  const [shownOffer, closeOffer] = useShownOffer(offer, `${profileId}|${active?.id ?? ''}`);
   const stale = active !== null && active.meta.catalogVersion !== CATALOG.version;
 
   const leave = (): void => {

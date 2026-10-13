@@ -107,7 +107,7 @@ export function usePlanSlot(
     active === null || ui === undefined || snapshot === undefined
       ? null
       : checkInOffer({ route: active, completedQuestIds: completedQuestIdsOf(snapshot.quests), today, answeredFor: ui.checkInFor });
-  const [shownOffer, closeOffer] = useShownOffer(offer);
+  const [shownOffer, closeOffer] = useShownOffer(offer, `${profileId ?? ''}|${active?.id ?? ''}`);
   const [moved, setMoved] = useState(false);
   const movedNow = active !== null && ui !== undefined && movedLineVisible(ui);
   // Kept for this visit; it is marked seen only by the card that draws it (`MovedLine`), so a line the
@@ -147,7 +147,7 @@ export function PlanSlotCard({
   onCloseCheckIn: () => void;
 }): React.ReactElement | null {
   if (slot.kind === 'prompt') return <PlanPromptCard profileId={profileId} onOpen={onOpen} />;
-  if (slot.kind === 'check-in') return <CheckInCard profileId={profileId} offer={slot.offer} onClose={onCloseCheckIn} testID="home-plan-check-in" />;
+  if (slot.kind === 'check-in') return <CheckInCard key={profileId} profileId={profileId} offer={slot.offer} onClose={onCloseCheckIn} testID="home-plan-check-in" />;
   return <MovedLine profileId={profileId} onOverview={onOverview} />;
 }
 

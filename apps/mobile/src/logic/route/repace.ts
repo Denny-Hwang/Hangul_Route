@@ -131,6 +131,27 @@ export function checkInOffer(i: CheckInInput): CheckInOffer | null {
   return null;
 }
 
+/**
+ * What a screen keeps of the check-in it showed (`useShownOffer`): the offer stays after it is
+ * answered (the card says what changed) until it is closed. It belongs to one learner's plan
+ * (`key` = profile id and plan id): when the learner or the plan changes, the kept offer goes and
+ * the new plan's own offer, or none, is taken as it is.
+ */
+export interface RetainedOffer {
+  key: string;
+  shown: CheckInOffer | null;
+  closed: boolean;
+}
+
+/** The next kept state for the offer computed now; the same object when nothing changes. */
+export function retainedOfferStep(prev: RetainedOffer, offer: CheckInOffer | null, key: string): RetainedOffer {
+  if (prev.key !== key) return { key, shown: offer, closed: false };
+  if (offer !== null && prev.shown === null && !prev.closed) return { ...prev, shown: offer };
+  // Once the answer has landed the computed offer is null: a later plan's own check-in may show again.
+  if (offer === null && prev.closed) return { ...prev, closed: false };
+  return prev;
+}
+
 /** The longest plan the schema holds (`weeks` max 52). */
 const MAX_WEEKS = 52;
 
