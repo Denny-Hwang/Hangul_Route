@@ -95,17 +95,22 @@ describe('stageRowLook (section 3.4: below 360 a bar, else the pips)', () => {
 });
 
 describe('routeCardLook (LR-11: the route card fits 320 x 568 with Continue above the tab bar)', () => {
-  it('below 360 the card is compact: tighter padding and gaps, the can-do lines left to the open stage row', () => {
+  it('below 360 a card with a button is compact: tighter padding and gaps, the can-do lines left to the stage rows', () => {
     const narrow = { padding: 'md', gap: 'sm', ctaGap: 'md', showCanDo: false };
-    expect(routeCardLook(320)).toEqual(narrow);
-    expect(routeCardLook(PIP_ROW_MIN_WIDTH - 1)).toEqual(narrow);
+    expect(routeCardLook(320, true)).toEqual(narrow);
+    expect(routeCardLook(PIP_ROW_MIN_WIDTH - 1, true)).toEqual(narrow);
   });
 
-  it('from 360 the card keeps the LR-D layout', () => {
+  it('below 360 a card without a button (read-only) keeps its can-do lines: hiding them would bring no button up', () => {
+    expect(routeCardLook(320, false)).toEqual({ padding: 'md', gap: 'sm', ctaGap: 'md', showCanDo: true });
+  });
+
+  it('from 360 the card keeps the LR-D layout, with or without a button', () => {
     const wide = { padding: 'lg', gap: 'md', ctaGap: 'lg', showCanDo: true };
-    expect(routeCardLook(PIP_ROW_MIN_WIDTH)).toEqual(wide);
-    expect(routeCardLook(375)).toEqual(wide);
-    expect(routeCardLook(1180)).toEqual(wide);
+    expect(routeCardLook(PIP_ROW_MIN_WIDTH, true)).toEqual(wide);
+    expect(routeCardLook(375, true)).toEqual(wide);
+    expect(routeCardLook(1180, true)).toEqual(wide);
+    expect(routeCardLook(375, false)).toEqual(wide);
   });
 });
 

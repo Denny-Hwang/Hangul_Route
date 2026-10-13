@@ -12,6 +12,20 @@ import { StageSegments, StageSegmentsBody } from '../StageSegments';
  * replaced by plain host tags, so the layout maths (margins, svg height,
  * marker offsets) and the ink mapping are checked without a renderer.
  */
+/** PipRowFitted's measured width: the state a test hands in, and every update the row asks for (LR-11). */
+const measured = vi.hoisted(() => ({ width: undefined as number | undefined, updates: [] as Array<number | undefined> }));
+vi.mock('react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react')>();
+  const useState = <T,>(initial: T): [T, (update: T | ((prev: T) => T)) => void] => {
+    const value = (measured.width ?? initial) as T;
+    const set = (update: T | ((prev: T) => T)): void => {
+      const next = typeof update === 'function' ? (update as (prev: T) => T)(value) : update;
+      if (!Object.is(next, value)) measured.updates.push(next as number | undefined);
+    };
+    return [value, set];
+  };
+  return { ...actual, default: { ...actual, useState }, useState };
+});
 vi.mock('react-native', () => ({ View: 'View', useWindowDimensions: () => ({ width: 400, height: 800 }) }));
 vi.mock('react-native-svg', () => ({ default: 'Svg', Svg: 'Svg', Circle: 'Circle', G: 'G', Path: 'Path' }));
 // A regular-class window: every media size is scaled by 1.5 (useMediaSize rounds base x mediaScale).
@@ -158,6 +172,36 @@ describe('PipRowBody with a measured width: one row per line, each with its own 
     const row = PipRowBody({ groups: [pips], size, accent: ACCENT }) as El;
     expect(row.props.style).toMatchObject({ flexWrap: 'wrap' });
     expect(kids(row)).toHaveLength(15);
+  });
+});
+
+describe('PipRowFitted: measures its width and hands it to the body (LR-11)', () => {
+  const groups = [Array.from({ length: 15 }, (_, i) => ({ key: `q${i}`, state: 'open' as const, isCursor: i === 0 }))];
+  const layout = (width: number) => ({ nativeEvent: { layout: { x: 0, y: 0, width, height: 40 } } });
+  const fitted = (): El => PipRowFitted({ groups, size: 20, accent: ACCENT, gaps: { pip: 4, group: 12 }, testID: 'row' }) as El;
+
+  it('before the first layout the body has no width, so it draws the one wrapping row', () => {
+    measured.width = undefined;
+    const wrapper = fitted();
+    expect(wrapper.props.style).toMatchObject({ alignSelf: 'stretch' });
+    const [body] = kids(wrapper);
+    expect(body!.type).toBe(PipRowBody);
+    expect(body!.props).toMatchObject({ groups, size: 20, accent: ACCENT, gaps: { pip: 4, group: 12 }, testID: 'row', width: undefined });
+  });
+
+  it('a layout stores the measured width; an unchanged width asks for no update', () => {
+    measured.width = undefined;
+    measured.updates.length = 0;
+    (fitted().props.onLayout as (e: unknown) => void)(layout(236));
+    expect(measured.updates).toEqual([236]);
+    measured.width = 236;
+    const wrapper = fitted();
+    expect(kids(wrapper)[0]!.props).toMatchObject({ width: 236 });
+    (wrapper.props.onLayout as (e: unknown) => void)(layout(236));
+    expect(measured.updates).toEqual([236]);
+    (wrapper.props.onLayout as (e: unknown) => void)(layout(300));
+    expect(measured.updates).toEqual([236, 300]);
+    measured.width = undefined;
   });
 });
 

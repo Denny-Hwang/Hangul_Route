@@ -88,7 +88,7 @@ function Decorative({ children }: { children: React.ReactNode }): React.ReactEle
 export function RouteCard({ copy, pips, goalStage, cta, pose, onAction, focusToken, testID = 'my-route-card' }: RouteCardProps): React.ReactElement {
   const { windowWidth } = useLayoutClass();
   // Below 360 the compact card (LR-11): Continue (or Start) stays above the tab bar at 320 x 568.
-  const look = routeCardLook(windowWidth);
+  const look = routeCardLook(windowWidth, cta !== null);
   const hoyaLine = useMediaSize(64);
   const hoyaNext = useMediaSize(48);
   const summaryRef = useRef<object | null>(null);

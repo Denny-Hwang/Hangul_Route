@@ -413,13 +413,13 @@ describe('the narrow-width route card (Learning Route LR-11)', () => {
   const card = read(join(SCREEN_DIR, 'RouteCard.tsx'));
 
   it('takes its padding, gaps and can-do lines from routeCardLook (unit-tested) and draws the goal pips with bands per line', () => {
-    expect(card).toContain('const look = routeCardLook(windowWidth);');
+    expect(card).toContain('const look = routeCardLook(windowWidth, cta !== null);');
     expect(card).toContain('<Card padding={look.padding}');
     expect(card).toContain('gap: spacing[look.gap]');
     expect(card).toContain('marginTop: spacing[look.ctaGap]');
     expect(card).toContain('copy.canDo !== null && look.showCanDo');
     expect(card).toMatch(/<PipRow groups=\{\[\[\.\.\.pips\]\]\}[^>]*bandsPerLine/);
-    // The summary label is not narrowed: it still reads the can-do lines the open stage row shows.
+    // The summary label is the same at every width; it never included the can-do lines (spec section 10).
     expect(card).toContain('accessibilityLabel={copy.a11yLabel}');
   });
 });
