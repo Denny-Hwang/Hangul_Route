@@ -230,6 +230,18 @@ describe('the learner report page, switched on', () => {
     expect(byTestId(root, 'report-detail')[0]?.props.hidden).toBe(false);
     expect(byTestId(root, 'report-detail')[0]?.props.id).toBe(button.props['aria-controls']);
   });
+
+  it('"And N more letters" follows the strong tiles only when more are known than they show', async () => {
+    const few = await page();
+    expect(byTestId(few, 'report-letters-more')).toHaveLength(0);
+    act(() => mounted?.unmount());
+    const ALL = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ', 'ㅏ', 'ㅑ', 'ㅓ', 'ㅕ', 'ㅗ', 'ㅛ', 'ㅜ', 'ㅠ', 'ㅡ', 'ㅣ', 'ㄲ', 'ㄸ'];
+    responses.report = () => ok(response({ ...STEADY, jamoRecognized: ALL }, { kind: 'class' }));
+    const many = await page();
+    const lines = byTestId(many, 'report-letters-more');
+    expect(lines.map((line) => textOf(line))).toEqual([en.report.detail.lettersMore(2)]);
+    expect(textOf(lines[0]?.parent as ReactTestInstance)).toContain(en.report.detail.lettersStrong('Mina'));
+  });
 });
 
 describe('the Learning Route seam', () => {
@@ -243,6 +255,13 @@ describe('the Learning Route seam', () => {
     expect(textOf(byTestId(root, 'report-goal')[0] as ReactTestInstance)).toBe('Next open stage: Stage 1 · Hangul');
     // Case 3 names no goal, so it has no flag.
     expect(byTestId(root, 'report-goal')[0]?.findAll((n) => n.type === 'svg')).toHaveLength(0);
+  });
+
+  it('a failed roster read draws no goal line', async () => {
+    vi.stubEnv('NEXT_PUBLIC_LEARNING_ROUTE_ENABLED', 'true');
+    const root = await page();
+    expect(byTestId(root, 'report-open-route')).toHaveLength(1);
+    expect(byTestId(root, 'report-goal')).toHaveLength(0);
   });
 
   it('with the Learning Route off: neither the link nor the goal line', async () => {
@@ -289,6 +308,8 @@ describe('states (section 3.14)', () => {
     expect(h1s(root)).toEqual([en.report.title.learner('Mina')]);
     expect(textOf(byTestId(root, 'report-error-line')[0] as ReactTestInstance)).toBe(en.report.state.error);
     expect(byTestId(root, 'report-print')[0]?.props.disabled).toBe(false);
+    // The viewer who pressed the tab hears why nothing changed: the error is read out by the status line.
+    expect(textOf(byTestId(root, 'report-status')[0] as ReactTestInstance)).toBe(en.report.state.error);
   });
 
   it('not a member or a wrong kind: "This report is not available." as the h1', async () => {
@@ -337,6 +358,28 @@ describe('states (section 3.14)', () => {
     responses.spaces = () => ok([{ space: { id: 'space:sunflower', kind: 'class' }, role: 'teacher', counts: { learners: 1, accounts: 2, classes: 0 } }]);
     const teacher = await page();
     expect(textOf(byTestId(teacher, 'report-state')[0] as ReactTestInstance)).toContain(en.report.state.archived.class);
+  });
+
+  it('while the spaces load, an archived report draws no archived sentence and no plan action; a failed read keeps the neutral one', async () => {
+    responses.report = () => ok(response(STEADY, { kind: 'class', archivedAt: '2026-10-01T00:00:00.000Z' }));
+    let release: (r: Result) => void = () => undefined;
+    responses.spaces = () => new Promise<Result>((resolve) => (release = resolve)) as unknown as Result;
+    const pending = await page();
+    const stateText = (root: ReactTestInstance): string => byTestId(root, 'report-state').map(textOf).join(' ');
+    expect(stateText(pending)).not.toContain(en.report.state.archived.class);
+    expect(stateText(pending)).not.toContain(en.console.settings.archived.class);
+    expect(byTestId(pending, 'report-line-actions')).toHaveLength(0);
+    await act(async () => release({ ok: false, error: 'network', status: 0 }));
+    expect(stateText(pending)).toContain(en.report.state.archived.class);
+    expect(byTestId(pending, 'report-line-actions')).toHaveLength(0);
+  });
+
+  it('the /parent/space/learner twin goes back to the parent console home when no space is known', async () => {
+    vi.stubGlobal('window', { location: { pathname: '/parent/space/learner', search: `?${START}` }, print: () => undefined });
+    vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', '');
+    const root = await page();
+    expect(h1s(root)).toEqual([en.report.state.flagOff]);
+    expect(byTestId(root, 'report-back')[0]?.props.href).toBe('/parent');
   });
 
   it('a school space has no learner report', async () => {

@@ -172,6 +172,11 @@ export async function mockReport(page: Page, first: ReportMock, later: ReportMoc
       if (held) await new Promise<void>((resolve) => waiting.push(resolve));
       return mock.status ? json(route, mock.status, null) : json(route, 200, body(mock));
     }
+    if (/\/roster$/.test(url.pathname)) {
+      // The roster card of the same learner (assumption e: See report on the card at 280 px).
+      const { space, learner, summary, lastSyncedAt } = body(first) as { space: unknown; learner: Record<string, unknown>; summary: unknown; lastSyncedAt: string };
+      return json(route, 200, { space, learners: [{ ...learner, ageGroup: 'starter', lastSyncedAt, summary }], joinCode: null, joinCodeExpiresAt: null });
+    }
     if (url.pathname === '/api/spaces') {
       const { space } = body(first) as { space: unknown };
       return json(route, 200, { spaces: [{ space, role: first.role ?? 'owner', counts: { learners: 1, accounts: 1, classes: 0 } }] });

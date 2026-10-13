@@ -18,12 +18,14 @@ import {
   loadingTabs,
   reportTabId,
 } from '@/components/console/ReportParts';
+import { useGrownUpLocation } from '@/components/console/grown-up-location';
 import { useConsole } from '@/components/console/use-console';
 import type { ApiResult, LearnerReportBody, SpaceListItem } from '@/lib/console/api';
 import { learningRouteEnabled, reportsEnabled } from '@/lib/console/config';
 import { learningRouteView, type LearningRouteGoal } from '@/lib/console/learning-route-view';
 import { dateKey } from '@/lib/console/plans';
 import { learnerReportView, reportBackLink, reportCacheKey, reportQueryOf, reportScreenOf, type ReportStepButton, type ReportTab } from '@/lib/console/report-view';
+import { spaceKindOfPath } from '@/lib/console/routing';
 import { signedOutTarget } from '@/lib/console/signin-flow';
 import { stageTitle } from '@/lib/console/stage-titles';
 
@@ -55,6 +57,9 @@ function LearnerReportInner(): JSX.Element {
   const enabled = reportsEnabled(locale);
   const accountId = session?.accountId ?? '';
   const key = reportCacheKey(accountId, spaceId, learnerId);
+  // The `/parent/space/learner` twin: with no space known yet, its back link goes to the parent console home.
+  const routed = useGrownUpLocation();
+  const pageKind = spaceKindOfPath(routed?.pathname ?? (typeof window === 'undefined' ? '' : window.location.pathname));
 
   // The answer to the newest load, with the address it answers: an answer for another period or window never draws.
   const [load, setLoad] = useState<{ key: string; period: ReportPeriod; at: string | null; result: ApiResult<LearnerReportBody> } | null>(null);
@@ -94,6 +99,8 @@ function LearnerReportInner(): JSX.Element {
 
   const routeOn = learningRouteEnabled();
   useEffect(() => {
+    // The goal belongs to one space and learner: it never outlives them, and a failed read draws none.
+    setGoal(null);
     if (!api || !enabled || !routeOn || !spaceId || !learnerId) return undefined;
     let live = true;
     void Promise.all([api.roster(spaceId), api.listPlans(spaceId)]).then(([roster, plans]) => {
@@ -117,7 +124,7 @@ function LearnerReportInner(): JSX.Element {
   }, [documentTitle]);
 
   const current = load !== null && load.key === key && load.period === period && load.at === at ? load.result : null;
-  const screen = reportScreenOf({ enabled, query, load: current, cached: REPORT_CACHE.get(key) ?? null, locale });
+  const screen = reportScreenOf({ enabled, query, load: current, cached: REPORT_CACHE.get(key) ?? null, locale, pageKind });
 
   useEffect(() => {
     if (screen.kind === 'signedOut') router.replace(signedOutTarget(window.location.pathname, window.location.search));
@@ -156,6 +163,9 @@ function LearnerReportInner(): JSX.Element {
   if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
 
   const role = Array.isArray(spaces) ? ((spaces as readonly SpaceListItem[]).find((item) => item.space.id === spaceId)?.role ?? null) : null;
+  // Until the spaces answer, the role is unknown: neither the archived sentence nor a plan action is drawn, so the owner's
+  // settings sentence never replaces the neutral one and no action pops in late. A failed read keeps the neutral sentence.
+  const roleKnown = spaces !== null;
   const frame = (children: JSX.Element): JSX.Element => (
     <AdultFrame onSignOut={signOut} spaces={spaces}>
       <div className="hr-report" data-testid="learner-report">
@@ -184,10 +194,11 @@ function LearnerReportInner(): JSX.Element {
     );
   }
 
-  const status = (busy: boolean): JSX.Element => (
-    // The busy line sits right before the panel, its sibling, never inside the busy subtree (design, decisions).
+  const status = (busy: boolean, failed: string | null = null): JSX.Element => (
+    // The busy line sits right before the panel, its sibling, never inside the busy subtree (design, decisions). A later
+    // load that failed is announced here too, so the viewer who pressed a tab or a step hears why nothing changed.
     <p className="hr-report-hidden" role="status" data-testid="report-status">
-      {busy ? m.a11y.report.loading : ''}
+      {busy ? m.a11y.report.loading : (failed ?? '')}
     </p>
   );
 
@@ -220,7 +231,7 @@ function LearnerReportInner(): JSX.Element {
     // A space kind with no learner report (a school): the same words as any report this viewer cannot open.
     return frame(
       <>
-        <ReportBack link={reportBackLink(query.from, null, locale)} />
+        <ReportBack link={reportBackLink(query.from, null, locale, pageKind)} />
         <div className="hr-report-state" data-testid="report-state">
           <h1 className="hr-report-state-title">{m.report.state.unavailable}</h1>
         </div>
@@ -229,7 +240,7 @@ function LearnerReportInner(): JSX.Element {
   }
 
   const { busy, error } = screen;
-  const lines = [...(view.archived ? [view.archived] : []), ...view.notices];
+  const lines = [...(view.archived && roleKnown ? [view.archived] : []), ...view.notices];
   const selected = view.tabs?.find((tab) => tab.selected)?.period ?? period;
   const body = busy ? <ReportSkeleton /> : <ReportBody view={view} />;
   return frame(
@@ -257,7 +268,7 @@ function LearnerReportInner(): JSX.Element {
             }}
             announce={changed && !busy && view.announce ? view.announce : ''}
           />
-          {status(busy)}
+          {status(busy, error?.message ?? null)}
           <div
             className="hr-report-panel"
             role="tabpanel"
@@ -271,7 +282,7 @@ function LearnerReportInner(): JSX.Element {
         </>
       ) : (
         <>
-          {status(busy)}
+          {status(busy, error?.message ?? null)}
           <div className="hr-report-panel" aria-busy={busy ? 'true' : undefined} data-testid="report-panel">
             {body}
           </div>

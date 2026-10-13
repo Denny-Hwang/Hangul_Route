@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
-import { EMPTY, LEGACY, PARTIAL, SESSION_KEY, mockReport, reportUrl } from './report-fixtures';
+import { touchTarget } from '@hangul-route/design-system/tokens';
+import { EMPTY, LEGACY, PARTIAL, SESSION_KEY, mockReport, reportUrl, spaceId } from './report-fixtures';
 
 /**
  * F-REPORT-001 section 5, `web/e2e/reports.spec.ts` (RP-7a2 cases): the learner report page on the static export,
@@ -210,6 +211,30 @@ test.describe('the learner report (RP-7a2)', () => {
     await expect(other.getByTestId('report-state')).toContainText('This class is archived. Its report is read-only.');
     await other.close();
   });
+
+  for (const kind of ['class', 'family'] as const) {
+    for (const width of [280, 320]) {
+      test(`the ${kind} roster card has room for See report at ${width} px (assumption e)`, async ({ page }) => {
+        await page.setViewportSize({ width, height: 800 });
+        await mockReport(page, { kind });
+        await page.goto(`/teach/space?id=${encodeURIComponent(spaceId(kind))}`);
+        const link = page.getByTestId('student-card').getByTestId('see-report');
+        await expect(link).toBeVisible();
+        await expect(link).toHaveText('See report');
+        const box = await link.boundingBox();
+        expect(box && box.height >= touchTarget.min).toBe(true);
+        expect(box && box.x >= 0 && box.x + box.width <= width).toBe(true);
+        // Ids and codes only: the learner's name never reaches the address.
+        const href = (await link.getAttribute('href')) ?? '';
+        expect(href).toContain(`id=${encodeURIComponent(spaceId(kind))}`);
+        expect(href).toContain('learner=profile%3Amina');
+        expect(href).toContain('period=week');
+        expect(href).toContain('from=roster');
+        expect(href).not.toContain('Mina');
+        await noSidewaysScroll(page);
+      });
+    }
+  }
 
   test('P1: Add to a plan, described by its sentence, for a viewer with plan.write', async ({ page }) => {
     await mockReport(page, { kind: 'class', role: 'teacher' });
