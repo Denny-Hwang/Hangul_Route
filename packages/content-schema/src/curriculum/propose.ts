@@ -182,7 +182,7 @@ const headlineOf = (probe: CurriculumDraft, level: PlacementLevel, catalog: Cata
 };
 
 /** The params every card shares: the pace's sessions, the minutes, the seed's start and goals, the start day. */
-const baseParamsOf = (input: ProposeInput, pace: PaceId, minutesPerSession: number): CurriculumParamsInput => {
+const baseParamsOf = (input: ProposeInput, pace: PaceId, minutesPerSession: CurriculumParams['minutesPerSession']): CurriculumParamsInput => {
   const { seed, motivation } = input;
   // The seed's theme order carries the newest result's motivation; a motivation given here wins.
   const ordered = seed !== null && motivation === undefined && seed.themeOrder.some((theme, i) => theme !== CANONICAL_ORDER[i]);
