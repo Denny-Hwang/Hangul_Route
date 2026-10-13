@@ -18,8 +18,9 @@ import { StudentWordsLines, WeekWordsRevisit } from '@/components/console/VocabW
 import { useTransfersShown } from '@/components/console/TransferParts';
 import { useConsole } from '@/components/console/use-console';
 import type { PlanView, Roster, SpaceListItem } from '@/lib/console/api';
-import { contentGatingEnabled, lectureModeEnabled, reportsEnabled } from '@/lib/console/config';
+import { contentGatingEnabled, lectureModeEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
 import { canComposeIn } from '@/lib/console/lecture';
+import { rosterNotesLinks } from '@/lib/console/notes-page';
 import { levelPillLabel } from '@/lib/console/level-label';
 import { rosterReportLink } from '@/lib/console/report-view';
 import { capState, classRollup, codeExpiry, percent, relativeDay } from '@/lib/console/rollup';
@@ -118,6 +119,8 @@ function SpaceInner(): JSX.Element {
   const today = dateKey(now);
   // One line about the newest live whole-class plan (Learning Route section 6.3, LR-9); a class only, never about learners.
   const goalLine = roster ? classGoalLine({ kind: roster.space.kind, plans, today, stageTitle, locale }) : null;
+  // Notes (F-FEEDBACK-001 FB-11a, section 6.13 item 3): the roster header's Notes and each card's Send a note, by flag.
+  const notesLinks = roster ? rosterNotesLinks({ enabled: notesEnabled(), archived: roster.space.archivedAt !== null, spaceId, kind: roster.space.kind }) : null;
 
   return (
     <AdultFrame onSignOut={signOut} title={roster ? c.space.title[roster.space.kind](roster.space.name, roster.learners.length) : c.space.loading}>
@@ -198,6 +201,7 @@ function SpaceInner(): JSX.Element {
             <Link href={ROUTES.spaceRelink(spaceId, roster.space.kind)}>
               <Button>{pendingRelinks > 0 ? c.space.relinkPending.cta(pendingRelinks) : c.space.relinkRequests.cta}</Button>
             </Link>
+            {notesLinks?.header ? <NotesLink href={notesLinks.header} testId="roster-notes" text={c.notes.roster.notes.cta} /> : null}
             <Link href={ROUTES.spaceSettings(spaceId, roster.space.kind)}>
               <Button>{c.space.settings.cta}</Button>
             </Link>
@@ -212,12 +216,12 @@ function SpaceInner(): JSX.Element {
             <section aria-label={c.space.studentsLabel}>
               <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.sm}px` }}>{c.space.recentFirst}</h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: spacing.md }}>
-                {roster.learners.map((l) => (
+                {roster.learners.map((l, index) => (
                   <article key={l.id} style={panelStyle} data-testid="student-card">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, minWidth: 0 }}>
                         <AvatarChip avatar={l.avatar} />
-                        <strong>{l.displayName}</strong>
+                        <strong id={`roster-learner-${index}`}>{l.displayName}</strong>
                       </span>
                       {levelPillLabel(l.ageGroup) ? (
                         <span style={{ fontSize: typography.size.caption, color: colors.text.muted, padding: `${spacing.xxs}px ${spacing.sm}px`, backgroundColor: colors.surface.sunken, borderRadius: radii.pill }}>
@@ -260,6 +264,7 @@ function SpaceInner(): JSX.Element {
                       </Muted>
                     )}
                     <SeeReport spaceId={spaceId} kind={roster.space.kind} learnerId={l.id} locale={locale} />
+                    {notesLinks?.card(l.id) ? <NotesLink href={notesLinks.card(l.id) ?? ''} testId="send-note" text={c.notes.sendNote.cta} describedBy={`roster-learner-${index}`} /> : null}
                   </article>
                 ))}
               </div>
@@ -285,6 +290,23 @@ function SeeReport({ spaceId, kind, learnerId, locale }: { spaceId: string; kind
       style={{ ...buttonBase, display: 'inline-flex', alignItems: 'center', minHeight: touchTarget.min, marginTop: spacing.sm, textDecoration: 'none', boxSizing: 'border-box' }}
     >
       {link.text}
+    </Link>
+  );
+}
+
+/**
+ * A notes entry of the roster (F-FEEDBACK-001 FB-11a): a secondary pill that navigates, ids only in its address. A card's
+ * Send a note is described by the learner's name, so a links list says whom it is for (design pass N7).
+ */
+function NotesLink({ href, testId, text, describedBy }: { href: string; testId: string; text: string; describedBy?: string }): JSX.Element {
+  return (
+    <Link
+      href={href}
+      data-testid={testId}
+      aria-describedby={describedBy}
+      style={{ ...buttonBase, display: 'inline-flex', alignItems: 'center', minHeight: touchTarget.min, ...(describedBy ? { marginTop: spacing.sm, marginLeft: spacing.xs } : {}), textDecoration: 'none', boxSizing: 'border-box' }}
+    >
+      {text}
     </Link>
   );
 }
