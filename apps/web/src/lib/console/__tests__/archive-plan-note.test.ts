@@ -1,7 +1,7 @@
 import { FAMILY_LIFETIME_LEARNERS, PAST_DUE_GRACE_MS, type BillingSpaceCard, type BillingSummary } from '@hangul-route/content-schema';
 import { getMessages, UI_LOCALES } from '@hangul-route/i18n';
-import { describe, expect, it } from 'vitest';
-import { archiveConfirmText, archivePlanNote } from '../archive-plan-note';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { archiveConfirmText, archivePlanNote, settleWithin } from '../archive-plan-note';
 
 /**
  * F-BILL-002 B-12 (section 4.6): the space settings archive confirm names the
@@ -61,8 +61,22 @@ describe('archivePlanNote: the Family Plan (section 4.6)', () => {
   it('a plan that already ended affects nothing: no line', () => {
     expect(archivePlanNote(summary([card({ coverage: own({ status: 'expired', expiresAt: PAST }) })]), 'space:fam', now, 'en')).toBeNull();
     expect(archivePlanNote(summary([card({ coverage: own({ status: 'cancelled', expiresAt: PAST }) })]), 'space:fam', now, 'en')).toBeNull();
+  });
+
+  it('past due beyond the grace week: the learners already lost it, but Stripe still retries the renewal', () => {
     const longAgo = new Date(now.getTime() - PAST_DUE_GRACE_MS * 2).toISOString();
-    expect(archivePlanNote(summary([card({ coverage: own({ status: 'past_due', statusSince: longAgo }) })]), 'space:fam', now, 'en')).toBeNull();
+    expect(archivePlanNote(summary([card({ coverage: own({ status: 'past_due', statusSince: longAgo }) })]), 'space:fam', now, 'en')).toBe(a.familyRenewsAlone);
+  });
+
+  it('a trial covers and renews', () => {
+    expect(archivePlanNote(summary([card({ coverage: own({ status: 'trial' }) })]), 'space:fam', now, 'en')).toBe(`${a.familyLoses('Kim family')} ${a.familyRenews}`);
+  });
+
+  it('a dated row Billing cannot cancel (not a Stripe subscription, `actions.manage` off): no renewing line', () => {
+    const fixed = card({ actions: { buy: null, manage: false, contact: false } });
+    expect(archivePlanNote(summary([fixed]), 'space:fam', now, 'en')).toBe(a.familyLoses('Kim family'));
+    const longAgo = new Date(now.getTime() - PAST_DUE_GRACE_MS * 2).toISOString();
+    expect(archivePlanNote(summary([card({ actions: { buy: null, manage: false, contact: false }, coverage: own({ status: 'past_due', statusSince: longAgo }) })]), 'space:fam', now, 'en')).toBeNull();
   });
 });
 
@@ -71,8 +85,29 @@ describe('archivePlanNote: the Group License (section 4.6)', () => {
     expect(archivePlanNote(summary([license()]), 'space:cls', now, 'en')).toBe(a.licenseRenews);
   });
 
-  it('a license that does not renew (cancelled at period end): no line', () => {
+  it('a license that does not renew (cancelled at period end or cancelled): no line', () => {
     expect(archivePlanNote(summary([license({ endsAtPeriodEnd: true })]), 'space:cls', now, 'en')).toBeNull();
+    expect(archivePlanNote(summary([license({ status: 'cancelled' })]), 'space:cls', now, 'en')).toBeNull();
+  });
+
+  it('a license on trial, or past due inside the grace week, keeps renewing', () => {
+    expect(archivePlanNote(summary([license({ status: 'trial' })]), 'space:cls', now, 'en')).toBe(a.licenseRenews);
+    const since = new Date(now.getTime() - PAST_DUE_GRACE_MS / 2).toISOString();
+    expect(archivePlanNote(summary([license({ status: 'past_due', statusSince: since })]), 'space:cls', now, 'en')).toBe(a.licenseRenews);
+  });
+
+  it('a license past due beyond the grace week: Stripe still retries it, so it still says it renews', () => {
+    const longAgo = new Date(now.getTime() - PAST_DUE_GRACE_MS * 2).toISOString();
+    expect(archivePlanNote(summary([license({ status: 'past_due', statusSince: longAgo })]), 'space:cls', now, 'en')).toBe(a.licenseRenews);
+  });
+
+  it('a license that already ended: no line', () => {
+    expect(archivePlanNote(summary([license({ status: 'expired', expiresAt: PAST })]), 'space:cls', now, 'en')).toBeNull();
+  });
+
+  it('a dated license Billing cannot cancel (`actions.manage` off): no line', () => {
+    const fixed = { ...license(), actions: { buy: null, manage: false, contact: false } };
+    expect(archivePlanNote(summary([fixed]), 'space:cls', now, 'en')).toBeNull();
   });
 });
 
@@ -90,9 +125,9 @@ describe('archivePlanNote: nothing to name', () => {
     expect(archivePlanNote(summary([card()]), 'space:other', now, 'en')).toBeNull();
   });
 
-  it('a viewer card names the plan too: the archive affects learners whoever pays', () => {
+  it('a viewer card names the loss but not the renewal: only a payer can cancel in Billing', () => {
     expect(archivePlanNote(summary([card({ payer: false, role: 'caregiver', readOnlyReason: 'family', actions: { buy: null, manage: false, contact: false } })]), 'space:fam', now, 'en')).toBe(
-      `${a.familyLoses('Kim family')} ${a.familyRenews}`,
+      a.familyLoses('Kim family'),
     );
   });
 });
@@ -114,5 +149,31 @@ describe('archivePlanNote: every UI locale has the words', () => {
     expect(archivePlanNote(summary([card()]), 'space:fam', now, locale)).toBe(`${words.familyLoses('Kim family')} ${words.familyRenews}`);
     expect(words.familyLoses('Kim family')).toContain('Kim family');
     expect(archivePlanNote(summary([license()]), 'space:cls', now, locale)).toBe(words.licenseRenews);
+  });
+});
+
+describe('settleWithin: the archive confirm waits briefly for the billing read', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('no read under way: null at once', async () => {
+    await expect(settleWithin(null, 1000)).resolves.toBeNull();
+  });
+
+  it('a read that settles in time: its value', async () => {
+    await expect(settleWithin(Promise.resolve('summary'), 1000)).resolves.toBe('summary');
+  });
+
+  it('a read that fails: null', async () => {
+    await expect(settleWithin(Promise.reject(new Error('offline')), 1000)).resolves.toBeNull();
+  });
+
+  it('a read slower than the wait: null, so the plain confirm still shows', async () => {
+    vi.useFakeTimers();
+    const slow = new Promise<string>(() => undefined);
+    const settled = settleWithin(slow, 1000);
+    await vi.advanceTimersByTimeAsync(1000);
+    await expect(settled).resolves.toBeNull();
   });
 });

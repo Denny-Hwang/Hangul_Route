@@ -630,6 +630,8 @@ export const consoleMsgs = {
       familyLoses: (space: string) => `Learners in ${space} lose the Family Plan while it is archived.`,
       familyRenews: 'It keeps renewing until you cancel it in Billing.',
       licenseRenews: 'The Group License keeps renewing until you cancel it in Billing.',
+      // A Family Plan past due beyond its grace week: learners already lost it, but Stripe still retries the renewal.
+      familyRenewsAlone: 'The Family Plan keeps renewing until you cancel it in Billing.',
     },
   },
 

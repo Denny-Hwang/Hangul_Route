@@ -17,6 +17,8 @@ describe('console.billing.archiveConfirm (B-12)', () => {
     const a = en.console.billing.archiveConfirm;
     expect(`${a.familyLoses('Kim family')} ${a.familyRenews}`).toBe('Learners in Kim family lose the Family Plan while it is archived. It keeps renewing until you cancel it in Billing.');
     expect(a.licenseRenews).toBe('The Group License keeps renewing until you cancel it in Billing.');
+    // Past due beyond the grace week: the learners already lost the plan, Stripe still retries it.
+    expect(a.familyRenewsAlone).toBe('The Family Plan keeps renewing until you cancel it in Billing.');
   });
 
   it('es and ko are written in their overlays, not English fallbacks', () => {
@@ -26,6 +28,7 @@ describe('console.billing.archiveConfirm (B-12)', () => {
       expect(a?.familyLoses?.('Kim family'), name).not.toBe(en.console.billing.archiveConfirm.familyLoses('Kim family'));
       expect(a?.familyRenews, name).not.toBe(en.console.billing.archiveConfirm.familyRenews);
       expect(a?.licenseRenews, name).not.toBe(en.console.billing.archiveConfirm.licenseRenews);
+      expect(a?.familyRenewsAlone, name).not.toBe(en.console.billing.archiveConfirm.familyRenewsAlone);
     }
   });
 
@@ -36,14 +39,15 @@ describe('console.billing.archiveConfirm (B-12)', () => {
       expect(a.familyLoses('Kim family'), locale).toContain('Kim family');
       expect(a.familyLoses('Kim family'), locale).toContain(m.billing.coverage.family);
       expect(a.licenseRenews, locale).toContain(m.billing.coverage.license);
-      for (const line of [a.familyRenews, a.licenseRenews]) expect(line, locale).toContain(m.billing.title);
+      expect(a.familyRenewsAlone, locale).toContain(m.billing.coverage.family);
+      for (const line of [a.familyRenews, a.licenseRenews, a.familyRenewsAlone]) expect(line, locale).toContain(m.billing.title);
     }
   });
 
   it('no price, no lifetime wording, no grown-up word; Hangul only in ko', () => {
     for (const locale of LOCALES) {
       const a = getMessages(locale).console.billing.archiveConfirm;
-      for (const line of [a.familyLoses('Kim family'), a.familyRenews, a.licenseRenews]) {
+      for (const line of [a.familyLoses('Kim family'), a.familyRenews, a.licenseRenews, a.familyRenewsAlone]) {
         expect(line, locale).not.toMatch(/[$€£₩]\s?\d|lifetime|vitalicio|평생|grown-?up|adult[oa]s?|보호자|어른/i);
         if (locale === 'ko') expect(line).toMatch(HANGUL);
         else expect(line, locale).not.toMatch(HANGUL);

@@ -477,6 +477,7 @@ export const consoleMsgs = {
       familyLoses: (space: string) => `보관하는 동안 ${space}의 학습자는 가족 플랜을 이용할 수 없어요.`,
       familyRenews: '플랜은 결제 화면에서 해지할 때까지 계속 갱신돼요.',
       licenseRenews: '그룹 라이선스는 결제 화면에서 해지할 때까지 계속 갱신돼요.',
+      familyRenewsAlone: '가족 플랜은 결제 화면에서 해지할 때까지 계속 갱신돼요.',
     },
   },
   curriculum: {

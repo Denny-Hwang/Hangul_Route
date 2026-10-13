@@ -21,6 +21,9 @@ const state = vi.hoisted(() => ({
   name: 'Kim family',
   archivedAt: null as string | null,
   summary: null as unknown,
+  locale: 'en' as 'en' | 'ko' | 'es',
+  // When set, the summary read waits for the test to call it.
+  hold: null as null | ((release: () => void) => void),
   summaryCalls: [] as unknown[],
   archiveCalls: [] as unknown[],
 }));
@@ -39,6 +42,7 @@ vi.mock('@/components/console/use-console', async () => {
     members: async () => ({ ok: true, data: [{ memberKind: 'account', memberId: 'acc_1', role: 'owner', joinedAt: '2026-09-01T00:00:00.000Z', name: 'Kim', isOwner: true }] }),
     billingSummary: async (options: unknown) => {
       state.summaryCalls.push(options);
+      if (state.hold) await new Promise<void>((release) => state.hold?.(release));
       return state.summary;
     },
     archiveSpace: async (...args: unknown[]) => {
@@ -48,7 +52,7 @@ vi.mock('@/components/console/use-console', async () => {
     transferRequests: async () => ({ ok: true, data: { requests: [], options: [] } }),
   };
   const session = { accountId: 'acc_1', displayName: 'Kim' };
-  return { useConsole: () => ({ ready: true, session, api, signOut: () => undefined, m: messages('en'), locale: 'en' }) };
+  return { useConsole: () => ({ ready: true, session, api, signOut: () => undefined, m: messages(state.locale), locale: state.locale }) };
 });
 
 import SettingsPage from '@/app/(console)/teach/space/settings/page';
@@ -88,6 +92,8 @@ afterEach(() => {
   state.name = 'Kim family';
   state.archivedAt = null;
   state.summary = null;
+  state.locale = 'en';
+  state.hold = null;
   state.summaryCalls = [];
   state.archiveCalls = [];
 });
@@ -111,6 +117,7 @@ async function clickArchive(answer = false): Promise<string[]> {
   await act(async () => {
     button.props.onClick();
   });
+  await act(async () => undefined);
   return asked;
 }
 
@@ -132,6 +139,34 @@ describe('the archive confirm names the plan (F-BILL-002 B-12)', () => {
     const asked = await clickArchive(true);
     expect(asked).toEqual([`${plainAsk('Spring Class')}\n\n${words.licenseRenews}`]);
     expect(state.archiveCalls).toEqual([['space:fam', true]]);
+    // The page reloads after the archive; the summary is not read again (the space is archived now).
+    expect(state.summaryCalls).toEqual([{ poll: true }]);
+  });
+
+  it('a click before the summary read settles waits for it, then names the plan', async () => {
+    let release: (() => void) | null = null;
+    state.hold = (r) => {
+      release = r;
+    };
+    state.summary = okSummary([card(own('family_lifetime'))]);
+    const asked = await clickArchive();
+    expect(asked).toEqual([]);
+    await act(async () => {
+      (release as unknown as () => void)();
+    });
+    await act(async () => undefined);
+    expect(asked).toEqual([`${plainAsk('Kim family')}\n\n${words.familyLoses('Kim family')} ${words.familyRenews}`]);
+    expect(state.archiveCalls).toEqual([]);
+  });
+
+  it('in Korean: the Korean ask, keeps line and plan line, a blank line apart', async () => {
+    state.locale = 'ko';
+    state.summary = okSummary([card(own('family_lifetime'))]);
+    const ko = getMessages('ko').console;
+    // The settings parts read the header language context (English here); the confirm follows the console locale.
+    const asked = await clickArchive();
+    const k = ko.billing.archiveConfirm;
+    expect(asked).toEqual([`${ko.settings.danger.archiveAsk('Kim family')} ${ko.archiveKeeps}\n\n${k.familyLoses('Kim family')} ${k.familyRenews}`]);
   });
 
   it('a free space: the plain confirm', async () => {
