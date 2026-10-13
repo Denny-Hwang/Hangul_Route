@@ -1082,4 +1082,7 @@ export const learner = {
     home: { subtitle: 'Lo siguiente en tu plan' },
     results: { caption: 'Lo siguiente en tu plan', backToPlan: 'Volver a tu plan' },
   },
+  access: {
+    notOpen: 'Aún sin abrir',
+  },
 } satisfies DeepPartial<Messages['learner']>;

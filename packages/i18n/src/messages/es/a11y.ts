@@ -177,4 +177,9 @@ export const a11y = {
   shell: {
     redirecting: 'Te llevamos a tu inicio…',
   },
+  access: {
+    next: 'Siguiente',
+    inPlan: 'En tu plan',
+    notOpen: (title: string) => `${title}: aún sin abrir. Abre la página de la lección.`,
+  },
 } satisfies DeepPartial<Messages['a11y']>;

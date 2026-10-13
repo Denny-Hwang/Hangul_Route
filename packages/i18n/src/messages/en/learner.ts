@@ -1375,4 +1375,12 @@ export const learner = {
     home: { subtitle: 'Next in your plan' },
     results: { caption: 'Next in your plan', backToPlan: 'Back to your plan' },
   },
+  /**
+   * Lessons a learner cannot start yet (F-ENT-003 section 3.11, Appendix A). One calm word for the boundary,
+   * with the dotted ring; never a lock, a price or a product name. E3-5 draws `notOpen` in the Journey legend
+   * line; the episode page, Home and Library words join this group in E3-6 and E3-7.
+   */
+  access: {
+    notOpen: 'Not open yet',
+  },
 } as const;
