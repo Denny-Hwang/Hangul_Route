@@ -664,13 +664,13 @@ export const consoleMsgs = {
       lessonsFill: (weeks: number) => `${weeks}주 내내 레슨으로 채워요.`,
       storiesAndWords: (stories: number) =>
         stories > 0
-          ? `이 시작 위치부터는 남은 레슨이 없어요: 문화 이야기 ${stories}개와 낱말 주제.`
-          : '이 시작 위치부터는 남은 레슨이 없어요: 낱말 주제와 자유 연습.',
+          ? `이 시작 위치부터는 남은 레슨이 없어서 문화 이야기 ${stories}개와 낱말 주제로 채워요.`
+          : '이 시작 위치부터는 남은 레슨이 없어서 낱말 주제와 자유 연습으로 채워요.',
     },
     update: {
-      line: (name: string) => `${name}의 최근 수준 확인에서 더 앞선 시작 위치를 찾았어요.`,
+      line: (name: string) => `${name}의 최근 수준 확인에서 더 나아간 시작 위치를 찾았어요.`,
       cta: '계획 업데이트하기',
-      label: (name: string) => `${name}의 계획 업데이트하기`,
+      label: (name: string) => `계획 업데이트하기: ${name}`,
       ask: (removed: number, added: number, next: string | null) => {
         const counts =
           removed > 0
