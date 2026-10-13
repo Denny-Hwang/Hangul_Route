@@ -5,12 +5,14 @@ name: Web App (PWA)
 # Cloudflare Workers Builds (Connect GitHub) on every push to main — see
 # docs/launch/web-app-launch.md §2 — so this workflow never uploads.
 #
-# Layout (CI speed-up, 2026-10-12): one `build` job writes both bundles (the
+# Layout (CI speed-up, 2026-10-12): one `build` job writes the bundles (the
 # release build dist/ and the fixture build dist-e2e/, back to back so the
-# second reuses the warm Metro cache) and hands them to 4 parallel e2e
-# shards; each runs its share of the release-build suite and of the
-# fixture-bundle specs (dealt round-robin by test, scripts/e2e-shard-list.mjs,
-# so the shards come out even). The required check
+# second reuses the warm Metro cache; then the gating fixture build
+# dist-e2e-gated/ on a cache of its own, F-STORY-004 PR 4.8b) and hands them
+# to 4 parallel e2e shards; each runs its share of the release-build suite
+# and of the fixture-bundle specs (dealt round-robin by test,
+# scripts/e2e-shard-list.mjs, so the shards come out even); shard 1 also
+# runs the gating-bundle spec. The required check
 # 'Build PWA · offline e2e' is the last job: it always runs and passes only
 # when every job above passed (or when nothing the PWA depends on changed, and
 # the build job skipped its steps on purpose).
@@ -118,6 +120,15 @@ jobs:
         if: steps.changes.outputs.run == 'true'
         run: pnpm --filter @hangul-route/mobile build:web:fixtures
 
+      # F-STORY-004 PR 4.8b: the same fixtures with content gating on
+      # (EXPO_PUBLIC_CONTENT_GATING_ENABLED=true), in dist-e2e-gated/, for
+      # story-shelf-gated.spec.ts. The script exports it on a Metro cache of its
+      # own (a fresh TMPDIR), so the gating-on transforms never reach the cache
+      # the other two builds read or the one main saves.
+      - name: Build the gating fixture bundle (dist-e2e-gated, e2e only)
+        if: steps.changes.outputs.run == 'true'
+        run: pnpm --filter @hangul-route/mobile build:web:fixtures:gated
+
       # dist/ holds dot folders (audio clips), so hidden files are included.
       - name: Upload the release build
         if: steps.changes.outputs.run == 'true'
@@ -136,6 +147,17 @@ jobs:
         with:
           name: pwa-dist-e2e
           path: apps/mobile/dist-e2e
+          include-hidden-files: true
+          overwrite: true
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Upload the gating fixture build
+        if: steps.changes.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pwa-dist-e2e-gated
+          path: apps/mobile/dist-e2e-gated
           include-hidden-files: true
           overwrite: true
           if-no-files-found: error
@@ -198,6 +220,13 @@ jobs:
         with:
           name: pwa-dist-e2e
           path: apps/mobile/dist-e2e
+
+      - name: Download the gating fixture build (shard 1)
+        if: matrix.shard == 1
+        uses: actions/download-artifact@v4
+        with:
+          name: pwa-dist-e2e-gated
+          path: apps/mobile/dist-e2e-gated
 
       # Each shard runs its share of the release-build suite, then its share of
       # the fixture-bundle specs. The shares come from scripts/e2e-shard-list.mjs,
@@ -282,6 +311,19 @@ jobs:
             exit 1
           fi
           pnpm exec playwright test --fully-parallel --test-list "$RUNNER_TEMP/shard-tests.txt"
+
+      # F-STORY-004 PR 4.8b: the gating fixture bundle (content gating on, a
+      # non-sampler shelf story): the locked tile and its grown-up gate. One
+      # short spec, so shard 1 runs it whole. Anchored on ".spec", and the
+      # spec skips unless STORY_FIXTURES_GATED is set, so the other runs never
+      # run it and this run never runs theirs. Release gate: a build that turns
+      # contentGatingEnabled on depends on it.
+      - name: Offline e2e (gating fixture bundle, shard 1)
+        if: ${{ !cancelled() && matrix.shard == 1 }}
+        working-directory: apps/mobile
+        env:
+          STORY_FIXTURES_GATED: "1"
+        run: pnpm exec playwright test story-shelf-gated.spec
 
       - name: Save the Playwright browsers (main only)
         if: github.event_name == 'push' && steps.pw-cache.outputs.cache-hit != 'true' && success()
