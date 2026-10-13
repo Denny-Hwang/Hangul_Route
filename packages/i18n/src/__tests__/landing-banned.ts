@@ -10,7 +10,6 @@ import type { UiLocale } from '../locales';
  * in an es / ko overlay, still fails.
  */
 export const SPATIAL_BEHIND_PATHS: ReadonlySet<string> = new Set([
-  'landing.parents.points.gate.body',
   'landing.about.promises.gate',
   'landing.legal.privacy.sections.account.paragraphs.p1',
   'landing.legal.terms.sections.accounts.paragraphs.p1',

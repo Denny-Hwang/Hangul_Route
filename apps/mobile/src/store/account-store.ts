@@ -33,6 +33,12 @@ const SUBSCRIPTION_KEY = 'account:subscription';
 // cannot clear an active cooldown (§3.1).
 export const PIN_HASH_KEY = 'account:parentPinHash';
 const PIN_ATTEMPTS_KEY = 'account:pinAttempts';
+/**
+ * When the current PIN was made (epoch ms), F-SPACE-002 section 4.11: a PIN made less than a day ago
+ * cannot attest a class move. Written with every new PIN, and moved with the epoch when an older bundle
+ * changed the PIN; absent on a PIN set before this key, which counts as old enough.
+ */
+export const PIN_CREATED_AT_KEY = 'account:pinCreatedAt';
 // The PIN epoch behind the device gate marker (F-APP-001 section 3.9): when the current PIN was
 // set (`account:pinSetAt`, epoch ms), and the fingerprint of the hash this app last saw
 // (`account:pinHashSeen`), so a PIN changed by an older bundle still moves the epoch.
@@ -79,6 +85,8 @@ interface State {
   parentPinHash: string | null;
   /** Epoch ms the current PIN was set; null for a PIN set before F-APP-001 A-6 (read as epoch 0) or no PIN yet. */
   pinSetAt: number | null;
+  /** Epoch ms the current PIN was made (`account:pinCreatedAt`); null when unknown (a PIN older than the key, or no PIN). */
+  pinCreatedAt: number | null;
   /** Fingerprint of the stored PIN hash last seen (`NO_PIN_SEEN` without a PIN); null before the first look, `PIN_HASH_UNREAD` when the read failed. */
   pinHashSeen: string | null;
   /**
@@ -119,6 +127,7 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
   subscription: null,
   parentPinHash: null,
   pinSetAt: null,
+  pinCreatedAt: null,
   pinHashSeen: null,
   pinHashReadFailed: false,
   pinAttempts: INITIAL_ATTEMPT_STATE,
@@ -134,6 +143,7 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     const pinHash = await readPinHash();
     const pinAttempts = await readJson<AttemptState | null>(PIN_ATTEMPTS_KEY);
     const pinSetAt = await readJson<unknown>(PIN_SET_AT_KEY);
+    const pinCreatedAt = await readJson<unknown>(PIN_CREATED_AT_KEY);
     const pinHashSeen = await readPinHashSeen();
     set({
       parentEmail: parentEmail ?? null,
@@ -152,6 +162,9 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
       parentPinHash: pinHash.hash,
       pinHashReadFailed: pinHash.failed,
       pinSetAt: pinSetAtOf(pinSetAt),
+      // A PIN made after the PIN epoch (F-APP-001 A-6) but before this key falls back to that epoch, so a PIN made
+      // just before the upgrade still waits its day (F-SPACE-002 4.11); absent both, it predates them and counts as old enough.
+      pinCreatedAt: pinSetAtOf(pinCreatedAt) ?? pinSetAtOf(pinSetAt),
       pinHashSeen,
       pinAttempts: pinAttempts ?? INITIAL_ATTEMPT_STATE,
       hydrated: true,
@@ -203,10 +216,12 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     // A new PIN gets a new epoch (F-APP-001 section 3.9), so a PIN a child set or reset never
     // opens the grown-up area until a grown-up signs in again; removing the PIN keeps the epoch.
     const pinSetAt = hash === null ? get().pinSetAt : Date.now();
+    const pinCreatedAt = hash === null ? get().pinCreatedAt : pinSetAt;
     const pinHashSeen = pinHashFingerprint(hash);
     set({
       parentPinHash: hash,
       pinSetAt,
+      pinCreatedAt,
       pinHashSeen,
       pinHashReadFailed: false,
       pinAttempts: INITIAL_ATTEMPT_STATE,
@@ -214,6 +229,7 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     });
     void writeJson(PIN_HASH_KEY, hash);
     if (hash !== null) void writeJson(PIN_SET_AT_KEY, pinSetAt);
+    if (hash !== null) void writeJson(PIN_CREATED_AT_KEY, pinCreatedAt);
     void writeJson(PIN_HASH_SEEN_KEY, pinHashSeen);
     void writeJson(PIN_ATTEMPTS_KEY, INITIAL_ATTEMPT_STATE);
     if (hadReset) void writeJson(PIN_RESET_KEY, null);
@@ -230,8 +246,11 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     if (pinHashReadFailed) return;
     const next = nextPinEpoch({ parentPinHash, pinSetAt, pinHashSeen }, now);
     if (next === null) return;
-    set(next);
-    if (next.pinSetAt !== pinSetAt && next.pinSetAt !== null) void writeJson(PIN_SET_AT_KEY, next.pinSetAt);
+    const moved = next.pinSetAt !== pinSetAt && next.pinSetAt !== null;
+    // A PIN an older bundle changed is a new PIN: it is made now for the move rules too.
+    set(moved ? { ...next, pinCreatedAt: next.pinSetAt } : next);
+    if (moved) void writeJson(PIN_SET_AT_KEY, next.pinSetAt);
+    if (moved) void writeJson(PIN_CREATED_AT_KEY, next.pinSetAt);
     void writeJson(PIN_HASH_SEEN_KEY, next.pinHashSeen);
   },
 }));

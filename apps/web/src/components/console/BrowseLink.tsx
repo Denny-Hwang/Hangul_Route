@@ -2,8 +2,9 @@
 
 import type { BrowseSource, BrowseTarget } from '@hangul-route/content-schema';
 import { borderWidth, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
-import { useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import {
+  browseLinksShown,
   browseUrl,
   isPlainClick,
   openBrowse,
@@ -14,6 +15,7 @@ import {
   type OpenBrowseResult,
 } from '@/lib/console/browse-link';
 import { browserStorage, type KeyValueStorage } from '@/lib/i18n/safe-storage';
+import { letterLabel } from '@/lib/console/report-view';
 import { useConsole } from './use-console';
 
 /**
@@ -137,6 +139,19 @@ export function BrowseNoticeLine({ opener, testId }: { opener: BrowseOpener; tes
   );
 }
 
+/**
+ * Whether this page draws its All lessons deep links (BR-11): `browseLinksShown()` for the page's origin, read after
+ * mount so the static export and the first client render agree (both draw none).
+ */
+export function useBrowseLinksShown(origin: () => string = () => (typeof window === 'undefined' ? '' : window.location.origin)): boolean {
+  const [shown, setShown] = useState(false);
+  const [read] = useState(() => origin);
+  useEffect(() => {
+    setShown(browseLinksShown(read()));
+  }, [read]);
+  return shown;
+}
+
 /** The look of a deep-link entry: a small secondary button (plan rows, report slot, route rows) or a letter chip. */
 const linkStyle: CSSProperties = { ...actionStyle, textDecoration: 'none' };
 
@@ -149,8 +164,10 @@ export function BrowseLink({
   source,
   label,
   ariaLabel,
+  describedBy,
   testId,
   env,
+  className,
   style,
   children,
 }: {
@@ -158,18 +175,59 @@ export function BrowseLink({
   source: BrowseSource;
   label?: string;
   ariaLabel?: string;
+  /** The id of the text that says what this link opens (a row title, a report line). */
+  describedBy?: string;
   testId: string;
   env?: BrowseOpenerEnv;
+  /** A host's own link class (the report's ghost button); the default look is then left out. */
+  className?: string;
   style?: CSSProperties;
   children?: ReactNode;
 }): JSX.Element {
   const opener = useBrowseOpener(target, source, env);
   return (
     <span style={{ display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center' }}>
-      <a href={browseUrl('', target, source)} onClick={opener.onClick} aria-label={ariaLabel} aria-busy={opener.checking || undefined} data-testid={testId} style={{ ...linkStyle, ...style }}>
+      <a
+        href={browseUrl('', target, source)}
+        onClick={opener.onClick}
+        aria-label={ariaLabel}
+        aria-describedby={describedBy}
+        aria-busy={opener.checking || undefined}
+        className={className}
+        data-testid={testId}
+        style={className ? style : { ...linkStyle, ...style }}
+      >
         {children ?? label}
       </a>
       <BrowseNoticeLine opener={opener} testId={testId} />
+    </span>
+  );
+}
+
+/**
+ * The roster's "Revisit together" letters (`classRollup().revisit`, up to three; F-BROWSE-001 section 4.11 item 5):
+ * with All lessons on, each letter is a chip that opens the lesson teaching it (`{ kind: 'char' }`, source `roster`;
+ * no learner name in the link); otherwise the letters as text. The letters are marked Korean either way.
+ */
+export function RevisitLetterLinks({ chars, shown }: { chars: readonly string[]; /** Omitted, `browseLinksShown()` decides. */ shown?: boolean }): JSX.Element {
+  const linksShown = useBrowseLinksShown();
+  const t = useConsole().m.console.browse;
+  const describedId = useId();
+  if (!(shown ?? linksShown)) return <span lang="ko">{chars.join(' · ')}</span>;
+  return (
+    <span style={{ display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.xs, verticalAlign: 'middle' }}>
+      <span id={describedId} hidden>
+        {t.preview.cta}
+      </span>
+      {chars.map((char, index) => {
+        const { romanization } = letterLabel(char);
+        return (
+          <BrowseLink key={char} target={{ kind: 'char', char }} source="roster" describedBy={describedId} testId={`roster-revisit-${index}`} style={{ gap: spacing.xs }}>
+            <span lang="ko" style={{ fontSize: typography.size.bodyLg }}>{char}</span>
+            {romanization ? <span style={{ color: colors.text.secondary, fontWeight: typography.weight.regular }}>{romanization}</span> : null}
+          </BrowseLink>
+        );
+      })}
     </span>
   );
 }

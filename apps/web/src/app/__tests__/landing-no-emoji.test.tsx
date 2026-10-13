@@ -136,7 +136,7 @@ describe('landing sources carry no emoji code point', () => {
   it('lists real files', () => {
     for (const file of SOURCES) expect(statSync(join(src, file)).isFile(), file).toBe(true);
     expect(SOURCES.filter((f) => f.startsWith('components/landing/')).length).toBeGreaterThanOrEqual(4);
-    expect(SOURCES).toEqual(expect.arrayContaining(['components/landing/LandingPage.tsx', 'components/landing/AboutPage.tsx', 'app/(en)/page.tsx', 'app/(loc)/[locale]/page.tsx']));
+    expect(SOURCES).toEqual(expect.arrayContaining(['components/landing/HomePage.tsx', 'components/landing/AboutPage.tsx', 'app/(en)/page.tsx', 'app/(loc)/[locale]/page.tsx']));
   });
 
   for (const file of SOURCES) {

@@ -105,13 +105,13 @@ describe('content rules for every locale', () => {
   });
 
   it('the landing exemption is narrow: only the English spatial "behind" on the listed paths (self-check)', () => {
-    const gate = 'landing.parents.points.gate.body';
+    const gate = 'landing.about.promises.gate';
     expect(landingBannedWord('Purchases sit behind a parent-gate.', 'en', gate)).toBeNull();
     expect(landingBannedWord('Hoya never calls you lazy.', 'en', gate)).toBe('lazy');
-    expect(landingBannedWord('Never fall behind.', 'en', 'landing.hero.lead')).toBe('behind');
+    expect(landingBannedWord('Never fall behind.', 'en', 'landing.home.hero.lead')).toBe('behind');
     expect(landingBannedWord('Nadie es vago aquí.', 'es', gate)).toBe('vago');
-    expect(landingBannedWord('Nadie es vago aquí.', 'es', 'landing.faq.items.who.a')).toBe('vago');
-    expect(landingBannedWord('게으른 사람은 없어요.', 'ko', 'landing.faq.items.who.a')).not.toBeNull();
+    expect(landingBannedWord('Nadie es vago aquí.', 'es', 'landing.home.who.items.learners.body')).toBe('vago');
+    expect(landingBannedWord('게으른 사람은 없어요.', 'ko', 'landing.home.who.items.learners.body')).not.toBeNull();
     expect(findBannedWord('behind', 'en', 'caregiver')).toBe('behind');
   });
 });

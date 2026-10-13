@@ -1,0 +1,260 @@
+import type { HeritageCard } from '@hangul-route/content-schema';
+import {
+  Body,
+  Icon,
+  KOREAN_LANGUAGE,
+  borderWidth,
+  colors,
+  koreanTextLabel,
+  radii,
+  spacing,
+  touchTarget,
+  typography,
+  type IconName,
+} from '@hangul-route/design-system';
+import React, { useEffect } from 'react';
+import { Pressable, Text, View, type PressableStateCallbackType, type ViewStyle } from 'react-native';
+import { CardArt } from '../../components/CardArt';
+import { useLocale, useMessages } from '../../i18n/use-messages';
+import { localizeCard } from '../../logic/content-locale';
+import type { ItemViewedEvent, PlansTappedEvent } from '../../logic/browse/home-view';
+import type { Skill } from '../../logic/my-route/types';
+import { track } from '../../platform/telemetry';
+
+/**
+ * Small parts the All lessons catalogue screens share (F-BROWSE-001 sections
+ * 4.5 and 4.6; mocks `design/screens/browse/home.md`, `episode.md`,
+ * `item.md`): the keyboard focus ring (design README decision 20), the header
+ * row, the Korean chip, the skills chips, the card row and the item telemetry.
+ */
+
+/** react-native-web adds `focused` (keyboard focus) to the pressable's state. */
+export type FocusState = PressableStateCallbackType & { focused?: boolean };
+
+/** The `border.focus` ring at `borderWidth.thick` on keyboard focus; clear at rest so nothing moves. */
+export function focusRing(focused: boolean | undefined, rest: string = 'transparent'): ViewStyle {
+  return { borderWidth: borderWidth.thick, borderColor: focused ? colors.border.focus : rest };
+}
+
+/** Taught Korean as a chip: the Hangul (`lang="ko"`) with its romanization beside it, never colour alone. */
+export function KoChip({
+  ko,
+  romanization,
+  marked = false,
+  accessibilityLabel,
+  testID,
+}: {
+  ko: string;
+  romanization: string;
+  /** The focus letter (section 4.6): a thick `text.primary` outline, and the label says so. */
+  marked?: boolean;
+  accessibilityLabel?: string;
+  testID?: string;
+}): React.ReactElement {
+  return (
+    <View
+      accessible
+      accessibilityLabel={koreanTextLabel(ko, romanization, accessibilityLabel)}
+      testID={testID}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'baseline',
+        gap: spacing.xs,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xxs,
+        borderRadius: radii.md,
+        backgroundColor: colors.brand.secondaryLight,
+        borderWidth: borderWidth.thick,
+        borderColor: marked ? colors.text.primary : colors.brand.secondaryLight,
+      }}
+    >
+      <Text
+        {...{ lang: KOREAN_LANGUAGE }}
+        style={{ fontFamily: typography.family.sansKr, fontSize: typography.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}
+      >
+        {ko}
+      </Text>
+      <Text style={{ fontSize: typography.size.bodySm, fontWeight: typography.weight.medium, color: colors.text.secondary }}>{romanization}</Text>
+    </View>
+  );
+}
+
+/** A word: its chip, then the gloss in the UI language. */
+export function WordChip({ ko, romanization, gloss }: { ko: string; romanization: string; gloss: string }): React.ReactElement {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexShrink: 1 }}>
+      <KoChip ko={ko} romanization={romanization} />
+      <Body tone="secondary">{gloss}</Body>
+    </View>
+  );
+}
+
+const SKILL_ICON: Readonly<Record<Skill, IconName>> = { read: 'book', listen: 'ear', write: 'pencil' };
+
+/** Read, listen, write as outlined chips with a glyph and the word (speaking is never a skill). Nothing for none. */
+export function SkillChips({ skills }: { skills: readonly Skill[] }): React.ReactElement | null {
+  const m = useMessages().learner.myRoute.skill;
+  if (skills.length === 0) return null;
+  return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
+      {skills.map((skill) => (
+        <View
+          key={skill}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.xxs,
+            paddingHorizontal: spacing.sm,
+            paddingVertical: spacing.xxs,
+            borderRadius: radii.pill,
+            borderWidth: borderWidth.thin,
+            borderColor: colors.border.strong,
+          }}
+        >
+          <Icon name={SKILL_ICON[skill]} size={spacing.lg} color={colors.text.primary} />
+          <Text style={{ fontSize: typography.size.bodySm, fontWeight: typography.weight.semibold, color: colors.text.primary }}>{m[skill]}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/** A 64 card thumbnail with its rarity border (RouteMarkers D9). */
+const CARD_THUMB = touchTarget.min;
+const CARD_FACE = CARD_THUMB - 2 * borderWidth.thick;
+
+/** One card row: the thumbnail, the English title and the Korean with its romanization; one button to the card. */
+export function CardRow({ card: source, onPress, testID }: { card: HeritageCard; onPress: () => void; testID?: string }): React.ReactElement {
+  const card = localizeCard(source, useLocale());
+  const messages = useMessages();
+  const ko = card.subtitleKo ?? '';
+  const romanization = card.romanization ?? '';
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={messages.caregiver.browse.cardRowA11y(card.titleEn, ko, romanization)}
+      testID={testID}
+      style={({ focused }: FocusState) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.md,
+        minHeight: touchTarget.min,
+        borderRadius: radii.md,
+        ...focusRing(focused),
+      })}
+    >
+      <View
+        style={{
+          width: CARD_THUMB,
+          height: CARD_THUMB,
+          borderRadius: radii.md,
+          borderWidth: borderWidth.thick,
+          borderColor: colors.rarity[card.rarity],
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+        }}
+      >
+        <CardArt card={card} size={CARD_FACE} style={{ borderRadius: radii.sm }} />
+      </View>
+      <View style={{ flex: 1, gap: spacing.xxs, alignItems: 'flex-start' }}>
+        <Body weight="semibold">{card.titleEn}</Body>
+        {ko && romanization ? <KoChip ko={ko} romanization={romanization} /> : null}
+      </View>
+    </Pressable>
+  );
+}
+
+/** The header's one fixed top-left position: [ < Close ] on home, the back arrow (named) on the other pages. */
+export function HeaderBack({
+  label,
+  showLabel,
+  onPress,
+  testID,
+}: {
+  label: string;
+  /** Home shows "Close" beside the arrow; the outline and the item page show the arrow alone, named. */
+  showLabel: boolean;
+  onPress: () => void;
+  testID: string;
+}): React.ReactElement {
+  return (
+    <Pressable
+      testID={testID}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={showLabel ? undefined : label}
+      style={({ focused }: FocusState) => ({
+        minHeight: touchTarget.min,
+        minWidth: touchTarget.min,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: showLabel ? 'flex-start' : 'center',
+        gap: spacing.xs,
+        paddingLeft: spacing.xs,
+        paddingRight: showLabel ? spacing.sm : spacing.xs,
+        borderRadius: radii.md,
+        ...focusRing(focused),
+      })}
+    >
+      <Icon name="arrow-left" size={spacing.xl} color={colors.text.primary} />
+      {showLabel ? (
+        <Text style={{ color: colors.text.primary, fontSize: typography.size.body, fontWeight: typography.weight.semibold }}>{label}</Text>
+      ) : null}
+    </Pressable>
+  );
+}
+
+/** [ Lesson display ]: the pill chip at the right of the header row. */
+export function LessonDisplayButton({ onPress }: { onPress: () => void }): React.ReactElement {
+  const m = useMessages().caregiver.browse.home;
+  return (
+    <Pressable
+      testID="browse-lesson-display"
+      onPress={onPress}
+      accessibilityRole="button"
+      aria-haspopup="dialog"
+      style={({ focused }: FocusState) => ({
+        minHeight: touchTarget.min,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs,
+        paddingHorizontal: spacing.lg,
+        borderRadius: radii.pill,
+        backgroundColor: colors.surface.paper,
+        ...focusRing(focused, colors.border.strong),
+        borderWidth: focused ? borderWidth.thick : borderWidth.base,
+      })}
+    >
+      <Icon name="settings" size={spacing.lg + spacing.xxs} color={colors.text.primary} />
+      <Text maxFontSizeMultiplier={1.3} style={{ color: colors.text.primary, fontSize: typography.size.body, fontWeight: typography.weight.semibold }}>
+        {m.lessonDisplay.cta}
+      </Text>
+    </Pressable>
+  );
+}
+
+/** The header row: the back position at the left, [ Lesson display ] at the right when given. Wraps at large text. */
+export function HeaderRow({ back, onDisplay }: { back: React.ReactNode; onDisplay?: () => void }): React.ReactElement {
+  return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
+      {back}
+      {onDisplay ? <LessonDisplayButton onPress={onDisplay} /> : null}
+    </View>
+  );
+}
+
+/** Sends one browse event (the telemetry fence passes `browse.*` only; it carries no profile id). */
+export function sendBrowseEvent(event: ItemViewedEvent | PlansTappedEvent): void {
+  void track(event);
+}
+
+/** `browse.item_viewed` once when the page opens (section 9). */
+export function useItemViewed(event: ItemViewedEvent | null): void {
+  const key = event ? `${event.payload.kind}|${event.payload.itemId}|${event.payload.access}` : null;
+  useEffect(() => {
+    if (event) sendBrowseEvent(event);
+    // One event per opened item: the key holds everything the event carries.
+  }, [key]);
+}
