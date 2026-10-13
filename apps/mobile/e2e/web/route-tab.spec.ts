@@ -35,18 +35,23 @@ const en = getMessages('en');
 const tabLinks = (page: Page) => page.getByRole('tablist').getByRole('link');
 
 /** Each tab's label text, and whether it fits its item: not cut, not wider than the item. */
-function labelFit(page: Page): Promise<Array<{ text: string; fits: boolean; inItem: boolean }>> {
+function labelFit(page: Page): Promise<Array<{ text: string; fits: boolean; inItem: boolean; lines: number }>> {
   return page.evaluate(() =>
     [...document.querySelectorAll('[role="tablist"] a')].map((item) => {
       const leaves = [...item.querySelectorAll('div, span')].filter((el) => el.children.length === 0 && (el.textContent ?? '').trim() !== '');
       const label = leaves[leaves.length - 1] as HTMLElement | undefined;
-      if (label === undefined) return { text: '', fits: false, inItem: false };
+      if (label === undefined) return { text: '', fits: false, inItem: false, lines: 0 };
       const box = label.getBoundingClientRect();
       const itemBox = item.getBoundingClientRect();
+      // The rendered lines of the label's text: one client rect per line box, so a wrapped label counts two.
+      const range = document.createRange();
+      range.selectNodeContents(label);
+      const tops = new Set([...range.getClientRects()].filter((r) => r.width > 0).map((r) => Math.round(r.top)));
       return {
         text: label.textContent ?? '',
         fits: label.scrollWidth <= label.clientWidth,
         inItem: box.left >= itemBox.left - 0.5 && box.right <= itemBox.right + 0.5,
+        lines: tops.size,
       };
     }),
   );
@@ -121,6 +126,7 @@ test.describe('the Route tab (LR-4)', () => {
       for (const label of labels) {
         expect(label.fits, `${label.text} is cut off`).toBe(true);
         expect(label.inItem, `${label.text} is wider than its item`).toBe(true);
+        expect(label.lines, `${label.text} wraps`).toBe(1);
       }
       await expect(tabLinks(page).nth(1)).toHaveAccessibleName(m.a11y.myRoute.tab);
       expect(await noSideScroll(page)).toBe(true);
@@ -164,6 +170,7 @@ test.describe('the Route tab (LR-4)', () => {
       for (const label of labels) {
         expect(label.fits, `${label.text} is cut off at 1.3 x caption`).toBe(true);
         expect(label.inItem, `${label.text} at 1.3 x caption is wider than its item`).toBe(true);
+        expect(label.lines, `${label.text} at 1.3 x caption wraps`).toBe(1);
       }
       expect(await noSideScroll(page)).toBe(true);
       await shot(page, `route-tab-bar-320-cap-${locale}`);
