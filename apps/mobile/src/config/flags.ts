@@ -143,6 +143,13 @@ export interface Flags {
    * `report.*` words are not reviewed yet.
    */
   reportsEnabled: boolean;
+
+  /**
+   * The learner's own weekly plan (F-PLAN-002 section 3.9): the Home prompt, the Profile row
+   * "Make a weekly plan" and the proposal screen. OFF until P2-8 flips it for the beta; the Worker
+   * that keeps `selfRoute` (P2-4) is already deployed.
+   */
+  routeEnabled: boolean;
 }
 
 const launchDefaults: Flags = {
@@ -160,6 +167,7 @@ const launchDefaults: Flags = {
   grownUpHomeEnabled: false,
   notesEnabled: false,
   reportsEnabled: false,
+  routeEnabled: false,
 };
 
 export const flags: Flags = {
@@ -184,6 +192,7 @@ export const flags: Flags = {
   grownUpHomeEnabled: parseBool(process.env.EXPO_PUBLIC_GROWN_UP_HOME, launchDefaults.grownUpHomeEnabled),
   notesEnabled: parseBool(process.env.EXPO_PUBLIC_NOTES_ENABLED, launchDefaults.notesEnabled),
   reportsEnabled: parseBool(process.env.EXPO_PUBLIC_REPORTS_ENABLED, launchDefaults.reportsEnabled),
+  routeEnabled: parseBool(process.env.EXPO_PUBLIC_ROUTE_ENABLED, launchDefaults.routeEnabled),
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;

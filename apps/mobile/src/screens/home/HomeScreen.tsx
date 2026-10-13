@@ -74,6 +74,7 @@ import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
 import { useAccessTier, useQuestAccess } from '../../store/tier-store';
 import { LinkButton } from '../placement/parts';
+import { PlanPromptCard, usePlanPrompt } from '../route/PlanPromptCard';
 import { RouteStrip } from './RouteStrip';
 
 /** Avatar circle in the Profile entry; with its label the button clears the 64pt floor. */
@@ -393,8 +394,9 @@ export function HomeScreen(): React.ReactElement {
           dismissedAt: placementUi.dismissedAt,
           resumable,
         });
-  // F-PLAN-002's weekly-plan prompt joins this slot with P2-7a; until then only the level check.
-  const quiet = homeQuietCard(levelCheck, false);
+  // F-PLAN-002's weekly-plan prompt shares the slot; the level check wins while it is eligible (AM-6).
+  const planPrompt = usePlanPrompt(profile, snap, plans);
+  const quiet = homeQuietCard(levelCheck, planPrompt);
   const levelCheckCopy = m.learner.placement.homeCard;
   const quietCard =
     quiet === 'level-check' && profileId !== null ? (
@@ -419,6 +421,8 @@ export function HomeScreen(): React.ReactElement {
           />
         </View>
       </Card>
+    ) : quiet === 'plan-prompt' && profileId !== null ? (
+      <PlanPromptCard profileId={profileId} onOpen={() => navigation.navigate('RouteProposal', { source: 'home', profileId })} />
     ) : null;
 
   const layoutClass = useLayoutClass();

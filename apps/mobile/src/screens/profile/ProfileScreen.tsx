@@ -21,6 +21,9 @@ import { Pressable, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { bundleOs, flags } from '../../config/flags';
 import { placementEntriesOn } from '../../logic/placement/entry';
+import { effectiveLearnerType } from '../../logic/profiles/learner-type';
+import { profileRowOpens } from '../../logic/route/proposal-flow';
+import { activeSelfRoute } from '../../logic/route/self-route';
 import { planCardView } from '../../logic/paywall';
 import { effectiveTier } from '../../store/tier-store';
 import { isParentSessionValid } from '../../logic/profiles/session';
@@ -209,6 +212,33 @@ export function ProfileScreen(): React.ReactElement {
             >
               <Body weight="semibold" style={{ flex: 1 }}>
                 {m.learner.placement.profileRow}
+              </Body>
+              <Icon name="arrow-right" size={24} color={colors.text.muted} />
+            </Pressable>
+          </Card>
+        </>
+      ) : null}
+
+      {active && flags.routeEnabled ? (
+        <>
+          {/* F-PLAN-002 section 3.9: always here (a Not now on Home never hides it); a child's plan goes through the gate. */}
+          <Spacer size="lg" />
+          <Card padding="md">
+            <Pressable
+              testID="profile-plan-row"
+              onPress={() => {
+                if (profileRowOpens({ learnerType: effectiveLearnerType(active), opensDirectly: opensDirectly(parentSessionOpen) }) === 'proposal') {
+                  navigation.navigate('RouteProposal', { source: 'profile', profileId: active.id });
+                } else {
+                  navigation.navigate('PinEntry', { next: 'RouteProposal', profileId: active.id });
+                }
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={activeSelfRoute(snap) ? m.learner.weeklyPlan.profileRow.open : m.learner.weeklyPlan.profileRow.make}
+              style={{ minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}
+            >
+              <Body weight="semibold" style={{ flex: 1 }}>
+                {activeSelfRoute(snap) ? m.learner.weeklyPlan.profileRow.open : m.learner.weeklyPlan.profileRow.make}
               </Body>
               <Icon name="arrow-right" size={24} color={colors.text.muted} />
             </Pressable>
