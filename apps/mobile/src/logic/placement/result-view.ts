@@ -75,6 +75,8 @@ export interface ResultViewInput {
   planPromptDismissed: boolean;
   /** The profile has an active self plan. */
   hasActivePlan: boolean;
+  /** `planOfferOf` offers a later-start update of that plan (`source: 'retake'`; the re-seed moves its future; P-7b). */
+  planUpdateAvailable: boolean;
   /** A reviewed shelf story exists (the "You know a lot!" destination). */
   hasReviewedShelfStory: boolean;
   /** Device-level (a PIN or a child on the device): never changes what shows, only whether "For grown-ups" needs the PIN. */
@@ -96,7 +98,7 @@ export interface ResultView {
   cards: { startHere: string | null; next: string[]; laterStage: StageKey | null };
   /** A retake that changed nothing. */
   routeLine: 'routeStays' | 'planStays' | null;
-  /** A retake that raised the start with an active self plan: "Hoya found a later place to start." */
+  /** The newest start is later than the active self plan's: "Hoya found a later place to start." */
   planUpdate: boolean;
   /** The weekly-plan strip. */
   strip: boolean;
@@ -138,13 +140,13 @@ function routeCards(input: ResultViewInput): ResultView['cards'] {
 
 export function resultView(input: ResultViewInput): ResultView {
   const self = input.profileType === 'self';
-  const retake = input.before !== null;
   const unchanged = input.before !== null && sameRoute(input.before, input.after);
   const noStart = input.after.startQuestId === null;
   const notTested = decodingNotTested(input.result);
-  // "Hoya found a later place to start": only when the start itself moved to a quest.
-  const startMoved = input.before !== null && !noStart && input.after.startQuestId !== input.before.startQuestId;
-  const planUpdate = retake && startMoved && self && input.hasActivePlan;
+  // "Hoya found a later place to start": read from the plan, not from the previous result, so a
+  // first check after a plan made from Home, or a retake that matches the last one while the plan
+  // is still behind, offers the update too (AM-7).
+  const planUpdate = self && !noStart && input.hasActivePlan && input.planUpdateAvailable;
   const strip =
     input.routeEnabled &&
     self &&
@@ -179,7 +181,7 @@ export function resultView(input: ResultViewInput): ResultView {
     retryHidden: notTested && !noStart && self,
     level: input.after.level,
     cards: routeCards(input),
-    routeLine: unchanged ? (input.hasActivePlan ? 'planStays' : 'routeStays') : null,
+    routeLine: unchanged && !planUpdate ? (input.hasActivePlan ? 'planStays' : 'routeStays') : null,
     planUpdate,
     strip,
     primary,
@@ -187,6 +189,27 @@ export function resultView(input: ResultViewInput): ResultView {
     links,
     grownUpsNeedsPin: input.gateRequired,
   };
+}
+
+/**
+ * A plan now exists (made through **Change** and the proposal screen, then back here): the
+ * strip and **Just start** give way to **Start**; the links stay.
+ */
+export function withPlanMade(view: ResultView): ResultView {
+  return view.strip ? { ...view, strip: false, primary: 'start', secondary: null } : view;
+}
+
+/**
+ * The proposal screen's **Not now** (reached through **Change**) after this result: the strip
+ * folds into **Start** as when a plan was made. A dismissal from before the result never hides it.
+ */
+export function stripSkipped(dismissedAt: string | undefined, resultCompletedAt: string): boolean {
+  return dismissedAt !== undefined && dismissedAt > resultCompletedAt;
+}
+
+/** **Keep my plan**: the update card folds into "Your plan stays right where it is." and **Start**. */
+export function withPlanKept(view: ResultView): ResultView {
+  return view.planUpdate ? { ...view, planUpdate: false, primary: 'start', secondary: null, routeLine: 'planStays' } : view;
 }
 
 // ---------------------------------------------------------------------------

@@ -15,7 +15,7 @@ export interface PlacementE2eHandle {
   open(source: PlacementSource): void;
   /** The grown-up report of a profile (F-PLC-001 P-8); the dashboard row stays hidden while the flag is off. */
   openReport(profileId: string): void;
-  /** `placement.*` telemetry events `track()` accepted since the hook mounted. */
+  /** `placement.*` and `route.*` telemetry events `track()` accepted since the hook mounted. */
   events(): TelemetryEvent[];
 }
 
@@ -25,7 +25,8 @@ export function PlacementE2eHook(): null {
     const g = globalThis as { __hrPlacementE2E?: PlacementE2eHandle };
     const events: TelemetryEvent[] = [];
     const stopListening = addTelemetryListener((e) => {
-      if (e.name.startsWith('placement.')) events.push(e);
+      // The level check's events and the weekly plan's it offers (F-PLC-001 P-7b).
+      if (e.name.startsWith('placement.') || e.name.startsWith('route.')) events.push(e);
     });
     g.__hrPlacementE2E = {
       open: (source) => navigation.navigate('Placement', { source }),

@@ -107,7 +107,7 @@ function previewText(t: ProposalMessages, line: PreviewLine): string {
 }
 
 export function RouteProposalScreen({ route, navigation }: Props): React.ReactElement {
-  const { source, profileId } = route.params;
+  const { source, profileId, proposedSent: sentBefore } = route.params;
   const m = useMessages();
   const t = m.learner.weeklyPlan.proposal;
   const locale = useLocale();
@@ -145,7 +145,7 @@ export function RouteProposalScreen({ route, navigation }: Props): React.ReactEl
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   const firstChoice = useRef<PlanChoice | null>(null);
-  const proposedSent = useRef(false);
+  const proposedSent = useRef(sentBefore === true);
   // Two taps in one frame both see `busy` false; the ref lets only the first one create a plan.
   const starting = useRef(false);
 
@@ -156,7 +156,7 @@ export function RouteProposalScreen({ route, navigation }: Props): React.ReactEl
     setChoice(start);
   }, [initial, choice]);
 
-  // `route.proposed` once per open, for the proposal Hoya made before any change.
+  // `route.proposed` once per offer, for the proposal Hoya made before any change (not again when the door already sent it).
   useEffect(() => {
     if (initial === null || active !== null || proposedSent.current) return;
     proposedSent.current = true;

@@ -292,12 +292,24 @@ ol, ul { padding: var(--spacing-none); list-style: none; }
  * pips on the first screens. Mobile first: the narrow rule is the default and a min-width query overrides it,
  * so no fractional width falls between two queries. The width is in px, like the app's window classes.
  */
-.route-card { padding: var(--spacing-md); }
+/*
+ * LR-11 (route-card.md "Narrow width"): with 15 Stage 1 pips on two lines, the narrow card also takes spacing.sm
+ * between its parts and spacing.md above the button, and leaves the can-do lead and line to the open stage row under
+ * it, so Continue (or Start) ends above the tab bar at 320 x 568. A pip without a marker is drawn without the marker
+ * bands and the row aligns pips to the line's end, so a line reserves only the bands its own pips use. This
+ * bottom alignment holds for the cursor band only; the mock's route card has no start pin (a bottom band would lift
+ * its circle). The app's per-line bands are `pipRowLines` (design/components/PipRow/spec.md), not this rule.
+ */
+.route-card { padding: var(--spacing-md); gap: var(--spacing-sm); }
+.route-card > .can-do { display: none; }
+.route-card .pip-group { align-items: flex-end; }
+.route-card > .button { margin-top: var(--spacing-xs); }
 .trail-row.bar-when-narrow .pip-row { display: none; }
 .fill-bar { display: block; height: var(--spacing-sm); border-radius: var(--radii-pill); background: var(--colors-surface-sunken); overflow: hidden; }
 .fill-bar-value { display: block; height: 100%; background: var(--colors-brand-primary); }
 @media (min-width: 360px) {
-  .route-card { padding: var(--spacing-lg); }
+  .route-card { padding: var(--spacing-lg); gap: var(--spacing-md); }
+  .route-card > .can-do { display: flex; }
   .trail-row.bar-when-narrow .pip-row { display: inline-flex; }
   .fill-bar { display: none; }
 }

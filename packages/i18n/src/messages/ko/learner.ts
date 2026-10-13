@@ -809,6 +809,7 @@ export const learner = {
         usePlan: '이 계획 쓰기',
         change: '바꾸기',
         justStart: '그냥 시작하기',
+        basis: (length: string, days: number, minutes: number) => `${length} · 일주일에 ${days}일 · 하루 ${minutes}분쯤`,
       },
     },
     homeCard: {

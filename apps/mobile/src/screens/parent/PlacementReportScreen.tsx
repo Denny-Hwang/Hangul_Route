@@ -46,6 +46,7 @@ import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useAccessTier } from '../../store/tier-store';
 import { LinkButton, RadioTile } from '../placement/parts';
+import { SuggestedPlanCard } from './SuggestedPlanCard';
 
 /**
  * The grown-up report of the level check (F-PLC-001 section 3.9, wireframe
@@ -59,7 +60,9 @@ import { LinkButton, RadioTile } from '../placement/parts';
  * "Choose a different start" (the only action that moves the start earlier).
  * Retakes: "Take the check again" (the length is pre-selected by
  * `defaultMode`), the Short hint, and on a child profile the retake with the
- * sound guide hidden. Never a comparison with other learners.
+ * sound guide hidden. Never a comparison with other learners. With
+ * `flags.routeEnabled` the report opens with the "Suggested weekly plan" card
+ * (P-7b, AM-5).
  */
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PlacementReport'>;
@@ -193,6 +196,16 @@ export function PlacementReportScreen({ route, navigation }: Props): React.React
         </View>
       </View>
       <Spacer size="md" />
+
+      {page.kind === 'report' ? (
+        <SuggestedPlanCard
+          profileId={profileId}
+          name={profile?.displayName ?? ''}
+          messages={messages}
+          stageTitle={stageTitle}
+          onChange={() => navigation.navigate('RouteProposal', { source: 'parent', profileId, proposedSent: true })}
+        />
+      ) : null}
 
       {page.kind === 'empty' ? (
         <Body testID="placement-report-empty">{m.noCheck}</Body>
