@@ -120,6 +120,10 @@ export interface NoteBlock {
   senderRef: string;
   label: string;
   createdAt: string;
+  /** Who the stopped sender is to the learner, so the console words the row in its own language (FB-12); absent from an older Worker. */
+  role?: 'teacher' | 'family' | 'former';
+  /** The class name for a teacher, the account or family space name for a family adult, null for a former sender. */
+  name?: string | null;
 }
 
 export interface FamilyNotePrefs {

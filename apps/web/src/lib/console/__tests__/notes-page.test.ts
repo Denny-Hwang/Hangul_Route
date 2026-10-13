@@ -46,6 +46,12 @@ describe('notesPageQuery', () => {
     expect(notesPageQuery(params('id=s&tab=other&compose=yes&learner=%20&quest='))).toEqual({ spaceId: 's', learner: null, quest: null, compose: false, tab: FAMILY_TABS[0] });
   });
 
+  it('the family tabs: Received first, the default of section 6.13, then Sent (FB-12)', () => {
+    expect(FAMILY_TABS).toEqual(['received', 'sent']);
+    expect(notesPageQuery(params('id=s&tab=received')).tab).toBe('received');
+    expect(notesPageQuery(params('id=s')).tab).toBe('received');
+  });
+
   it('null params (a static prerender) read as an empty page', () => {
     expect(notesPageQuery(null).spaceId).toBe('');
   });

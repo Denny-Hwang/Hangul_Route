@@ -1229,7 +1229,7 @@ export const consoleMsgs = {
         lastChangedBy: (account: string) => `마지막으로 바꾼 사람: ${account}`,
         lastChangedOnDevice: '마지막으로 기기에서 바꿈',
         saved: '저장했어요',
-        stopped: { title: '쪽지를 받지 않는 사람', allowAgain: { cta: '다시 받기' } },
+        stopped: { title: '쪽지를 받지 않는 사람', allowAgain: { cta: '다시 받기' }, former: '이전에 보낸 사람' },
       },
       disclosure: (learner: string) => `선생님은 자기가 보낸 쪽지에서 ${learner}의 답을 볼 수 있어요. 쪽지를 언제 읽었는지는 볼 수 없어요.`,
       oneTimeCard: {
