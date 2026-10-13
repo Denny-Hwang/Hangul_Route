@@ -53,12 +53,12 @@ export const consoleMsgs = {
   archivePlanConfirm: '¿Archivar este plan? Los estudiantes conservan lo que terminaron; lo pendiente desaparece de su lista.',
   noPlanYet: 'Aún no hay plan. Elige unas misiones, reparte las fechas y publica antes de la clase.',
   relinkApproveHint: 'Aprueba solo si este estudiante está contigo o esperas este dispositivo.',
-  relinkNothing: 'Nada pendiente. Las solicitudes aparecen aquí durante 10 minutos después de que un estudiante pregunta.',
+  relinkNothing: 'Nada pendiente. Las solicitudes aparecen aquí durante 10 minutos desde que un estudiante la envía.',
   relinkAnotherWay: 'Otra opción: crea un código de rescate nuevo y díctaselo al estudiante. El código anterior deja de funcionar.',
   relinkCardsComeBack:
     'Al aprobar, el estudiante vuelve a esta clase. Sus tarjetas vuelven con el código de rescate que su adulto guarda en la app (Guardar mi progreso); los docentes no pueden verlo ni crearlo de nuevo.',
   rescueIssued: 'Díctale esto ahora al estudiante o a su adulto: se muestra una sola vez.',
-  archiveKeeps: 'Conserva todo y frena las nuevas uniones. Puedes desarchivar después.',
+  archiveKeeps: 'Conserva todo y nadie nuevo puede unirse. Puedes desarchivar después.',
   deleteLearnerWarn: 'Permanente. Borra a este estudiante en todas partes: dispositivos, progreso y membresías.',
   deleteAskParent: 'En esta clase, solo una madre, un padre o un tutor puede borrar a un estudiante (consentimiento: familia).',
   anonymizeHint: 'Muestra iniciales en lugar de nombres en la lista y en la lista de reconexión.',
@@ -142,7 +142,7 @@ export const consoleMsgs = {
     },
     continue: { cta: 'Continuar' },
     back: { cta: 'Atrás' },
-    nameTitle: { family: 'Nombra a tu familia', class: 'Nombra a tu clase', school: 'Nombra a tu escuela' },
+    nameTitle: { family: 'Nombre de tu familia', class: 'Nombre de tu clase', school: 'Nombre de tu escuela' },
     nameLabel: 'Nombre',
     classJoinHint: 'Los estudiantes se unen con un código, sin cuentas de estudiantes.',
     create: { cta: 'Crear' },
@@ -309,7 +309,7 @@ export const consoleMsgs = {
     readout: {
       waiting: 'esperando la próxima sincronización',
       progress: (done: number, total: number) => `${done} / ${total}`,
-      withNotReady: (done: number, total: number, notReady: number) => `${done} / ${total} · ${notReady} aún no listos`,
+      withNotReady: (done: number, total: number, notReady: number) => `${done} / ${total} · ${plural('es', notReady, { one: `${notReady} aún no está listo`, other: `${notReady} aún no están listos` })}`,
     },
     builderLabel: 'Creador de planes',
     editTitle: 'Editar plan',
@@ -511,8 +511,8 @@ export const consoleMsgs = {
         'some-letters': { title: 'Conoce algunas letras', line: 'Conoce unas letras y sus sonidos.' },
         'all-letters': { title: 'Conoce todas las letras', line: 'Conoce las letras; las sílabas aún le toman tiempo.' },
         'reads-words': { title: 'Lee palabras', line: 'Lee sílabas, también con letra final.' },
-        'first-words': { title: 'Lee primeras palabras', line: 'Para palabras de cada día.' },
-        'first-sentences': { title: 'Lee primeras oraciones', line: 'Para oraciones cortas.' },
+        'first-words': { title: 'Lee primeras palabras', line: 'Empieza con palabras de cada día.' },
+        'first-sentences': { title: 'Lee primeras oraciones', line: 'Empieza con oraciones cortas.' },
       },
       hint: {
         class: (point: string) => `Casi todos tus estudiantes empiezan aquí: ${point}`,
@@ -554,7 +554,7 @@ export const consoleMsgs = {
       breakReversed: 'Una pausa termina antes de empezar. Revisa sus fechas.',
       tooManyBreaks: 'Una ruta admite hasta 12 pausas.',
       sessionsNote: (sessions: number, weeks: number) =>
-        `Son ${plural('es', sessions, { one: `${sessions} sesión`, other: `${sessions} sesiones` })} en ${plural('es', weeks, { one: `${weeks} semana`, other: `${weeks} semanas` })}.`,
+        `En total: ${plural('es', sessions, { one: `${sessions} sesión`, other: `${sessions} sesiones` })} en ${plural('es', weeks, { one: `${weeks} semana`, other: `${weeks} semanas` })}.`,
       tooMany: 'Es más de lo que cabe en un plan. Elige menos semanas o sesiones.',
     },
     goals: {
@@ -584,7 +584,7 @@ export const consoleMsgs = {
     preview: {
       title: 'Tu ruta',
       stats: (items: number, minutes: number, stage: number) =>
-        `${plural('es', items, { one: `${items} lección o historia`, other: `${items} lecciones e historias` })} · unos ${minutes} minutos · termina en la Etapa ${stage}`,
+        `${plural('es', items, { one: `${items} lección o historia`, other: `${items} lecciones e historias` })} · cerca de ${minutes} minutos · termina en la Etapa ${stage}`,
       empty: 'Aún no hay nada listo para planear desde este punto de partida. Cambia algo para probar otro rango.',
       table: {
         label: 'Las semanas de la ruta',
@@ -670,7 +670,7 @@ export const consoleMsgs = {
       allWeeks: 'Ver todas',
       line: (done: number, total: number, planned: number) => `${done} / ${total} hasta ahora · ${planned} planeados`,
       lineNotReady: (done: number, total: number, planned: number, notReady: number) =>
-        `${done} / ${total} hasta ahora · ${planned} planeados · ${notReady} aún no listos`,
+        `${done} / ${total} hasta ahora · ${planned} planeados · ${plural('es', notReady, { one: `${notReady} aún no está listo`, other: `${notReady} aún no están listos` })}`,
       waiting: 'esperando la próxima sincronización',
       repace: { cta: 'Reajustar desde hoy' },
       repaceHint: 'Mantiene lo hecho y ordena el resto desde la próxima sesión.',
@@ -767,7 +767,7 @@ export const consoleMsgs = {
     },
     outline: {
       title: 'Esquema',
-      about: (minutes: number) => `unos ${minutes} min`,
+      about: (minutes: number) => `cerca de ${minutes} min`,
       empty: 'Añade algo para enseñar.',
       minutes: (minutes: number | null) => `${minutes === null ? '?' : minutes} min`,
       up: 'Subir',
@@ -1244,7 +1244,7 @@ export const consoleMsgs = {
       actions: {
         hide: { cta: 'Ocultar' },
         report: { cta: 'Reportar' },
-        block: { cta: 'Frenar notas de esta persona' },
+        block: { cta: 'Bloquear sus notas' },
       },
       hideConfirm: {
         title: (learner: string) => `¿Ocultar esta nota a ${learner}?`,
@@ -1253,9 +1253,9 @@ export const consoleMsgs = {
         cancel: { cta: 'Cancelar' },
       },
       blockConfirm: {
-        title: '¿Frenar las notas de esta persona?',
+        title: '¿Bloquear las notas de esta persona?',
         body: (learner: string) => `${learner} no recibirá notas de esta persona. No se le avisa.`,
-        cta: 'Frenar notas',
+        cta: 'Bloquear notas',
         cancel: { cta: 'Cancelar' },
       },
       report: {
@@ -1281,7 +1281,7 @@ export const consoleMsgs = {
         lastChangedBy: (account: string) => `Último cambio: ${account}`,
         lastChangedOnDevice: 'Último cambio en un dispositivo',
         saved: 'Guardado',
-        stopped: { title: 'Personas frenadas', allowAgain: { cta: 'Permitir otra vez' } },
+        stopped: { title: 'Personas bloqueadas', allowAgain: { cta: 'Permitir otra vez' } },
       },
       disclosure: (learner: string) => `Los docentes ven la respuesta que ${learner} elige en sus notas. No ven cuándo se leyó una nota.`,
       oneTimeCard: {

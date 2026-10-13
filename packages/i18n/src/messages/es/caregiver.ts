@@ -132,6 +132,30 @@ export const caregiver = {
     needsConnection: 'Para abrir la facturación hace falta conexión.',
     gateDone: 'PIN aceptado. Toca Abrir facturación otra vez.',
     backToJourney: { cta: 'Volver al recorrido' },
+    freePlan: {
+      line: (lessons: number, letters: number, minutes: number) =>
+        `La Etapa 1 es gratis: ${plural('es', lessons, { one: `${lessons} lección`, other: `${lessons} lecciones` })}, ${plural('es', letters, {
+          one: `${letters} letra`,
+          other: `${letters} letras`,
+        })}, cerca de ${plural('es', minutes, { one: `${minutes} minuto`, other: `${minutes} minutos` })}. Todo lo terminado se queda.`,
+      lineNoLetters: (lessons: number, minutes: number) =>
+        `La Etapa 1 es gratis: ${plural('es', lessons, { one: `${lessons} lección`, other: `${lessons} lecciones` })}, cerca de ${plural('es', minutes, {
+          one: `${minutes} minuto`,
+          other: `${minutes} minutos`,
+        })}. Todo lo terminado se queda.`,
+      stories: (n: number) => plural('es', n, { one: `${n} historia corta`, other: `${n} historias cortas` }),
+      topics: (n: number) => plural('es', n, { one: `${n} tema de palabras`, other: `${n} temas de palabras` }),
+      classLine: {
+        family: (name: string) => `En la clase de ${name}, su docente puede abrir todas las lecciones.`,
+        self: 'En tu clase, tu docente puede abrir todas las lecciones.',
+      },
+      freeEnd: {
+        family: (name: string) => `${name} terminó las lecciones gratuitas.`,
+        self: 'Terminaste las lecciones gratuitas.',
+      },
+      setPlan: 'Crea un plan para guiar lo que sigue.',
+      setPlanWeb: 'Los planes se crean en la zona de adultos: Planear este periodo.',
+    },
   },
 
   spaces: {
@@ -171,7 +195,7 @@ export const caregiver = {
       retrying: 'No se pudo llegar a la nube. Se volverá a intentar.',
       saving: 'Guardando en la nube…',
       waiting: 'Esperando el primer guardado en la nube.',
-      justNow: 'Guardado en la nube · ahora',
+      justNow: 'Guardado en la nube · hace un momento',
       minutesAgo: (minutes: number) =>
         plural('es', minutes, {
           one: `Guardado en la nube · hace ${minutes} min`,
@@ -215,7 +239,7 @@ export const caregiver = {
           cards > 0 ? plural('es', cards, { one: `${cards} tarjeta`, other: `${cards} tarjetas` }) : null,
           quests > 0 ? plural('es', quests, { one: `${quests} misión`, other: `${quests} misiones` }) : null,
         ].filter((p): p is string => p !== null);
-        return `¡Encontramos el progreso de ${name}! Se añadieron ${parts.join(' y ')}.`;
+        return `¡Encontramos el progreso de ${name}! Añadimos ${parts.join(' y ')}.`;
       },
       relinked: (name: string) => `¡Hola de nuevo, ${name}! Ya estás otra vez en la clase.`,
     },
@@ -360,7 +384,7 @@ export const caregiver = {
     noCheck: 'Aún no hay ninguna prueba.',
     retryHidden: 'Probar con la guía de sonido oculta',
     needsStage: (name: string, stage: number) =>
-      `${name} está en el punto para la Etapa ${stage}. Las lecciones de la Etapa ${stage} aún no están incluidas en esta cuenta.`,
+      `${name} ya puede empezar la Etapa ${stage}. Las lecciones de la Etapa ${stage} aún no están incluidas en esta cuenta.`,
     noStart: (name: string) => `${name} sabe todo lo que está abierto ahora. Viene más.`,
     examples: { known: 'Sabe', fresh: 'Nuevas por ahora' },
     chooseStart: 'Elegir otro inicio',

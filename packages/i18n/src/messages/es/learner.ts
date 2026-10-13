@@ -55,7 +55,7 @@ export const learner = {
     bubble: 'En tu primera misión vas a conocer letras coreanas y ganar una tarjeta del patrimonio.',
     bubbleNoQuest: '¡Primero te muestro todo!',
     summary: (quests: number, minutes: number, cards: number) =>
-      `${count(quests, 'misión', 'misiones')} · unos ${count(minutes, 'minuto', 'minutos')} · ${plural('es', cards, { one: '1 tarjeta te espera', other: `${cards} tarjetas te esperan` })}`,
+      `${count(quests, 'misión', 'misiones')} · cerca de ${count(minutes, 'minuto', 'minutos')} · ${plural('es', cards, { one: '1 tarjeta te espera', other: `${cards} tarjetas te esperan` })}`,
     firstUp: 'Primero',
     questLine: (title: string, blurb: string | null) => (blurb === null || blurb === '' ? title : `${title}: ${blurb}`),
     cta: 'Empezar mi recorrido',
@@ -279,7 +279,7 @@ export const learner = {
       tried: '¡Lo intentaste!',
     },
     cheer: {
-      noGames: '¡La próxima vez juega los juegos para ganar estrellas y una tarjeta!',
+      noGames: '¡La próxima vez, haz los juegos para ganar estrellas y una tarjeta!',
       perfect: '¡Perfecto! ¡Acertaste todas!',
       nice: '¡Buen trabajo! Prueba una vez más para tres estrellas.',
       goodStart: 'Buen comienzo. ¿Quieres jugarla otra vez?',
@@ -717,7 +717,7 @@ export const learner = {
         },
         deep: {
           label: 'Completa',
-          help: 'Más preguntas, para estar más seguros. Hoya descansa a la mitad.',
+          help: 'Más preguntas, para tener más certeza. Hoya descansa a la mitad.',
           duration: 'Casi siempre menos de 20 minutos.',
         },
       },
@@ -774,7 +774,7 @@ export const learner = {
     pause: {
       title: '¿Un descanso?',
       keepGoing: 'Seguir',
-      enough: 'Ya basta, a aprender',
+      enough: 'Ya está, a aprender',
       grownUp: 'Para adultos: terminar ya',
     },
     rest: { line: 'Hoya se está estirando. ¿Seguimos?' },
@@ -842,7 +842,7 @@ export const learner = {
     playAgain: { cta: 'Jugar otra vez' },
     startOver: { cta: 'Empezar de cero' },
     state: { new: 'Nueva', inProgress: 'Seguir leyendo', finished: 'Terminada', locked: 'Bloqueada' },
-    minutes: { pill: (minutes: number) => `unos ${minutes} min` },
+    minutes: { pill: (minutes: number) => `cerca de ${minutes} min` },
     tileLabel: (title: string, state: string, minutes: number, stars = 0) =>
       `${title}. ${state}. ${plural('es', minutes, { one: 'Cerca de 1 minuto', other: `Unos ${minutes} minutos` })}.` +
       (stars > 0 ? ` ${plural('es', stars, { one: '1 estrella', other: `${stars} estrellas` })}.` : ''),
@@ -899,7 +899,7 @@ export const learner = {
       open: 'Abierta',
       taste: 'Una muestra',
       later: 'Más adelante',
-      notOpen: 'Aún no abre',
+      notOpen: 'Aún sin abrir',
     },
     tag: { here: 'Estás aquí', start: 'Empezaste aquí' },
     cell: { playing: 'Jugando' },
@@ -1005,8 +1005,8 @@ export const learner = {
       tileA11y: (title: string, n: number) => `${title}. ${plural('es', n, { one: '1 palabra conseguida', other: `${n} palabras conseguidas` })}.`,
       empty: 'Las palabras vienen en camino.',
       back: 'Atrás',
-      locked: 'Aún no abre',
-      lockedA11y: (title: string) => `${title}. Aún no abre.`,
+      locked: 'Aún sin abrir',
+      lockedA11y: (title: string) => `${title}. Aún sin abrir.`,
     },
     topic: {
       notFound: 'No se encontró el tema',

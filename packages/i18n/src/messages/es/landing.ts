@@ -262,10 +262,10 @@ export const landing = {
       coppa: { title: 'Seguridad infantil primero', body: 'Sin rastreo de terceros. Pedimos lo mínimo posible.' },
       ads: { title: 'Cero anuncios', body: 'Sin anuncios de terceros. Sin venta de datos. Los ingresos son solo dentro de la app.' },
       offline: {
-        title: 'Sirve sin conexión',
+        title: 'Úsala sin conexión',
         body: 'Después de tu primera visita la app se abre sin conexión. Los sonidos de las letras necesitan una voz coreana en tu dispositivo hasta que lleguen nuestras grabaciones.',
       },
-      antiShame: { title: 'Diseño sin vergüenza', body: 'Si te equivocas, ves ámbar. Nada de rojo. Nada de culpa por la racha.' },
+      antiShame: { title: 'Diseño que no avergüenza', body: 'Si te equivocas, ves ámbar. Nada de rojo. Nada de culpa por la racha.' },
     },
   },
   how: {
@@ -356,7 +356,7 @@ export const landing = {
       korean: FAQ_KOREAN,
       session: {
         q: '¿Cuánto dura una sesión?',
-        a: 'Una misión toma unos 5 minutos. Casi todos hacen de 1 a 3 misiones por sesión. Puedes parar cuando quieras: sin vergüenza por la racha.',
+        a: 'Una misión toma unos 5 minutos. Casi todos hacen de 1 a 3 misiones por sesión. Puedes parar cuando quieras: sin culpa por la racha.',
       },
       cost: {
         q: '¿Cuánto cuesta?',
@@ -405,7 +405,7 @@ export const landing = {
   about: {
     backHome: '← Ir al inicio',
     title: 'Acerca de Hangul Route',
-    lead: 'Hecho por un equipo pequeño (casi siempre una persona y un tigre). Para cualquier persona que aprende hangul desde cero, a cualquier edad: familias de herencia cuyos padres o abuelos hablan coreano, fans del K-pop, la comida coreana y todo lo K, y principiantes con curiosidad que buscan una entrada amable y sin vergüenza.',
+    lead: 'Hecho por un equipo pequeño (casi siempre una persona y un tigre). Para cualquier persona que aprende hangul desde cero, a cualquier edad: familias de herencia cuyos padres o abuelos hablan coreano, fans del K-pop, la comida coreana y todo lo K, y principiantes con curiosidad que buscan una forma amable de empezar, sin culpas.',
     promises: {
       title: 'Nuestras promesas',
       plainEnglish: 'Los menús y las instrucciones usan un español sencillo y claro (CEFR Pre-A1).',

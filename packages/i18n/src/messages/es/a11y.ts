@@ -158,6 +158,7 @@ export const a11y = {
     periodChanged: (window: string) => `Se muestra: ${window}`,
     periodChangedAll: 'Se muestra el total',
     step: (window: string) => `Ver ${window}`,
+    stepNext: (window: string) => `Siguiente: ver ${window}`,
     calendar: (days: string) => `Practicó: ${days}.`,
     calendarNone: 'No hay días de práctica en este periodo.',
     notSaved: (days: string) => `Aún sin guardar: ${days}.`,

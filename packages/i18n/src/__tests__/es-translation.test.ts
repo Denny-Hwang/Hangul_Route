@@ -53,6 +53,22 @@ describe('Spanish dictionary (F-I18N-001 PR 15)', () => {
     expect(es.learner.home.streak.pill(5)).toBe('Racha de 5 días');
   });
 
+  it('agrees with a count of 1 and of 2 in the sentences the language review fixed', () => {
+    expect(es.learner.firstQuest.summary(1, 1, 1)).toBe('1 misión · cerca de 1 minuto · 1 tarjeta te espera');
+    expect(es.learner.firstQuest.summary(2, 2, 2)).toBe('2 misiones · cerca de 2 minutos · 2 tarjetas te esperan');
+    expect(es.learner.storyShelf.minutes.pill(1)).toBe('cerca de 1 min');
+    expect(es.caregiver.restore.notice.added('Suni', 1, 0)).toBe('¡Encontramos el progreso de Suni! Añadimos 1 tarjeta.');
+    expect(es.caregiver.restore.notice.added('Suni', 2, 1)).toBe('¡Encontramos el progreso de Suni! Añadimos 2 tarjetas y 1 misión.');
+    expect(es.console.plan.readout.withNotReady(0, 2, 1)).toBe('0 / 2 · 1 aún no está listo');
+    expect(es.console.plan.readout.withNotReady(0, 3, 2)).toBe('0 / 3 · 2 aún no están listos');
+    expect(es.console.curriculum.readout.lineNotReady(4, 6, 36, 1)).toBe('4 / 6 hasta ahora · 36 planeados · 1 aún no está listo');
+    expect(es.console.curriculum.rhythm.sessionsNote(1, 1)).toBe('En total: 1 sesión en 1 semana.');
+    expect(es.console.curriculum.rhythm.sessionsNote(2, 3)).toBe('En total: 2 sesiones en 3 semanas.');
+    expect(es.console.lecture.outline.about(1)).toBe('cerca de 1 min');
+    expect(es.caregiver.plan.freePlan.line(1, 1, 1)).toBe('La Etapa 1 es gratis: 1 lección, 1 letra, cerca de 1 minuto. Todo lo terminado se queda.');
+    expect(es.caregiver.plan.freePlan.line(15, 24, 65)).toBe('La Etapa 1 es gratis: 15 lecciones, 24 letras, cerca de 65 minutos. Todo lo terminado se queda.');
+  });
+
   it('has a review-ledger entry for every namespace (§3.10 step 3)', () => {
     const entries = (ledger as Record<string, Record<string, { enSha: string; reviewedBy: string; reviewedAt: string }>>).es ?? {};
     expect(Object.keys(entries).sort()).toEqual(Object.keys(en).sort());

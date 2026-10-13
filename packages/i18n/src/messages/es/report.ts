@@ -40,7 +40,7 @@ export const report = {
     prevWeek: 'la semana pasada',
     prevMonth: 'el mes pasado',
     onDay: (date: string) => `el ${date}`,
-    weekTo: (date: string) => `en la semana al ${date}`,
+    weekTo: (date: string) => `la semana hasta el ${date}`,
     inMonth: (month: string) => `en ${month}`,
   },
   step: {
@@ -215,6 +215,10 @@ export const report = {
     unavailable: 'Este informe no está disponible.',
     error: 'Ahora no se puede cargar el informe.',
     flagOff: 'Los informes aún no están disponibles.',
+    archived: {
+      family: 'Este espacio familiar está archivado. Su informe es de solo lectura.',
+      class: 'Esta clase está archivada. Su informe es de solo lectura.',
+    },
   },
   class: {
     headline: (count: number, total: number, when: string) =>
