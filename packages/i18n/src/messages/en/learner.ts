@@ -228,7 +228,7 @@ export const learner = {
      * Keyed by `StageAvailability`. Every stage row shows its availability word,
      * never a commerce word; "A taste" and "Coming later" are the My route words (F-ROUTE-001 R-J, OD-8).
      */
-    availability: { open: { pill: 'Open' }, taste: { pill: 'A taste' }, soon: { pill: 'Coming later' } },
+    availability: { open: { pill: 'Open' }, taste: { pill: 'A taste' }, soon: { pill: 'Coming later' }, complete: { pill: 'Complete' } },
     tasteNote: 'A taste of this stage is open now. More episodes are coming.',
     /** Under a stage row with a stories-only cell (F-STORY-005 §3.5); the books are the `library` glyph. */
     storiesNote: 'Heritage stories are open in the cells with the books icon.',
@@ -373,6 +373,8 @@ export const learner = {
     },
     backHome: { cta: 'Back home' },
     episodePage: { cta: 'Episode page' },
+    /** The one primary on the run that completed Stage 1: opens the ceremony (F-QUEST-002 §3.8). */
+    stagePrize: { cta: 'See your Stage 1 prize' },
     /** The "Next up" teaser (F-QUEST-002 §3.5); the letters after `newLetters` are taught content. */
     nextUp: {
       title: 'Next up',
@@ -1382,5 +1384,21 @@ export const learner = {
    */
   access: {
     notOpen: 'Not open yet',
+  },
+  /**
+   * The Stage 1 ceremony (F-QUEST-002 §3.8, wireframe results/stage1-complete): Hoya cheering, the
+   * wall of every symbol (all lit, never counted) and the legendary cards. No number, no fraction,
+   * no percent, no price and no plan word (D3, D5). `seeCardA11y` names a card tile (`title` is content).
+   */
+  stageComplete: {
+    title: 'Hangul complete!',
+    headline: 'You can read Hangul now!',
+    canDo: 'You know every letter and every final sound. Hoya is so proud of you.',
+    wallTitle: 'Every letter you learned',
+    cardsTitle: 'Legendary cards for you',
+    seeCardA11y: (title: string) => `Open card: ${title}`,
+    seeCards: { cta: 'See my cards' },
+    backHome: { cta: 'Back home' },
+    notFound: 'This prize is not here yet. Keep playing your quests.',
   },
 } as const;
