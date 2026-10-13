@@ -4,11 +4,13 @@ import { describe, expect, it } from 'vitest';
 import { scanLearnerCopy } from '../../homework/banned-text';
 import {
   TIME_UP_MS,
+  beatRemoval,
   challengeLine,
   challengeSettings,
   clockView,
   initialMode,
   pausedFor,
+  roundExit,
   scaleOnOptIn,
   tryChallengeLine,
   scaleOptions,
@@ -150,5 +152,32 @@ describe('Challenge copy (D3, §3.8)', () => {
       expect(line, line).not.toMatch(/\b(wrong|fail\w*|missed|lost|lose|streak|combo|lives|hurry)\b|%|\d\s*\/\s*\d/i);
       expect(line).not.toMatch(/\b(kids?|child(ren)?|ages?|years? old|adults?)\b/i);
     }
+  });
+});
+
+describe('roundExit (§3.6: the end of a round never vanishes without a word)', () => {
+  it('a quit, or no end, goes back with no results', () => {
+    expect(roundExit('quit', true)).toBe('leave');
+    expect(roundExit(null, false)).toBe('leave');
+  });
+
+  it('the last question answered opens the results at once; a round with no answer goes back', () => {
+    expect(roundExit('questions', true)).toBe('results');
+    expect(roundExit('questions', false)).toBe('leave');
+  });
+
+  it('the clock always shows the calm time-up beat first, also when nothing was answered', () => {
+    expect(roundExit('clock', true)).toBe('beat-then-results');
+    expect(roundExit('clock', false)).toBe('beat-then-leave');
+  });
+});
+
+describe('beatRemoval (system back or a swipe during the time-up beat)', () => {
+  it('lands on the results the learner earned, never skips them', () => {
+    expect(beatRemoval('beat-then-results')).toBe('open-results');
+  });
+
+  it('lets a beat with nothing to show go back as asked', () => {
+    expect(beatRemoval('beat-then-leave')).toBe('allow');
   });
 });

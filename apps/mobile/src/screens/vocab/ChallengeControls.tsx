@@ -10,11 +10,13 @@ import {
   radii,
   spacing,
   touchTarget,
+  typography,
 } from '@hangul-route/design-system';
 import type { ClockScale } from '@hangul-route/content-schema';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Pressable, View } from 'react-native';
 import { scaleOptions, type ChallengeCopy, type ClockView } from '../../logic/vocab/challenge';
+import { focusForScreenReader } from '../../platform/screen-reader';
 
 /**
  * The Challenge mode pieces shared by the Speed Round and the Profile card
@@ -143,14 +145,22 @@ export function SwitchRow({
 }
 
 /**
- * The Challenge clock (frame G): the digits as one element read on focus only
- * (never a live region), a bar in 1/60 steps in `brand.secondary` that never
- * changes colour, and the static words of the last ten seconds.
+ * The Challenge clock (frame G): the digits as one `timer` element named
+ * "Time left: N seconds", read on focus only (a timer's implicit `aria-live`
+ * is off, and nothing here sets one), a bar in 1/60 steps in
+ * `brand.secondary` that never changes colour, and the static words of the
+ * last ten seconds. The digits are plain text at the title size, not a
+ * heading, so heading navigation never lands on a ticking clock.
  */
 export function ClockDigits({ view }: { view: ClockView }): React.ReactElement {
   return (
-    <View accessible accessibilityLabel={view.label} testID="vocab-speed-clock">
-      <Heading level="title">{view.digits}</Heading>
+    <View accessible accessibilityRole="timer" accessibilityLabel={view.label} testID="vocab-speed-clock">
+      <Body
+        weight="bold"
+        style={{ fontSize: typography.size.title, lineHeight: typography.size.title * typography.leading.tight }}
+      >
+        {view.digits}
+      </Body>
     </View>
   );
 }
@@ -176,14 +186,45 @@ export function ClockBar({ view }: { view: ClockView }): React.ReactElement {
   );
 }
 
-/** Frame G': the question is replaced, so a pause cannot be used to study the answer. */
-export function PausedPanel({ copy, onResume, onStop }: { copy: ChallengeCopy; onResume: () => void; onStop: () => void }): React.ReactElement {
+/**
+ * Frame G': the question is replaced, so a pause cannot be used to study the answer. Pause unmounts the
+ * control that was tapped, so focus moves to Resume (web: the DOM focus; native: the screen reader's) and
+ * is never lost; `focusResume` is false while the "Stop for now?" sheet is over the panel, and Keep playing
+ * lands on Resume when it closes (§3.8). A change of `focusKey` moves focus there again: the web modal gives
+ * focus back to the control that opened it when it finishes closing, so the round bumps it on the sheet's
+ * dismiss.
+ */
+export function PausedPanel({
+  copy,
+  focusResume,
+  focusKey,
+  onResume,
+  onStop,
+}: {
+  copy: ChallengeCopy;
+  focusResume: boolean;
+  focusKey: number;
+  onResume: () => void;
+  onStop: () => void;
+}): React.ReactElement {
+  const resumeRef = useRef<View>(null);
+  useEffect(() => {
+    if (focusResume) focusForScreenReader(resumeRef.current);
+  }, [focusResume, focusKey]);
   return (
     <View style={{ alignItems: 'stretch', gap: spacing.md, paddingVertical: spacing.xl }} testID="vocab-speed-paused">
       <Heading level="title" align="center">
         {copy.paused}
       </Heading>
-      <Button label={copy.resume} tone="primary" size="lg" fullWidth onPress={onResume} testID="vocab-speed-resume" />
+      <Button
+        label={copy.resume}
+        tone="primary"
+        size="lg"
+        fullWidth
+        onPress={onResume}
+        pressableRef={resumeRef}
+        testID="vocab-speed-resume"
+      />
       <Button label={copy.stop} tone="ghost" size="md" fullWidth onPress={onStop} testID="vocab-speed-paused-stop" />
     </View>
   );

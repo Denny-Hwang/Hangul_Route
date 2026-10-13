@@ -27,11 +27,13 @@ import { ACTIVITY_ROUTES, VOCAB_SCREENS } from '../../logic/vocab/caps';
 import { emptyVocab, localDay, vocabOf } from '../../logic/vocab/progress';
 import {
   TIME_UP_MS,
+  beatRemoval,
   challengeLine,
   challengeSettings,
   clockView,
   initialMode,
   pausedFor,
+  roundExit,
   scaleOnOptIn,
   tryChallengeLine,
 } from '../../logic/vocab/challenge';
@@ -371,10 +373,14 @@ function RoundPlay({
   const [state, setState] = useState<SpeedState>(stateRef.current);
   const [stopping, setStopping] = useState(false);
   const [timeUp, setTimeUp] = useState(false);
+  // Bumped when the stop sheet has finished closing, so focus goes (back) to Resume on the paused panel.
+  const [resumeFocus, setResumeFocus] = useState(0);
   const leaving = useRef(false);
   // When the round paused (wall clock), for the `resume` event's `pausedMs`.
   const pausedAt = useRef<number | null>(null);
   const timeUpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // During the time-up beat: where it goes next, and how to get there at once (system back during the beat).
+  const beat = useRef<{ exit: 'beat-then-results' | 'beat-then-leave'; go: () => void } | null>(null);
 
   const dispatch = useCallback(
     (event: SpeedEvent): void => {
@@ -425,22 +431,30 @@ function RoundPlay({
     const profileId = run.profileId ?? undefined;
     run.finishSpeed(summary);
     const complete = roundCompleteEvent({ topicKey, summary, pauses: state.pauses, activeMs: state.totalActiveMs, newBest });
-    if (complete === null) {
+    if (complete !== null) void track({ ...complete, profileId });
+    const open = (): void => navigation.replace('VocabResults', { topicKey, summary, newBest });
+    const exit = roundExit(state.endedBy, complete !== null);
+    if (exit === 'leave') {
       onLeave();
       return;
     }
-    void track({ ...complete, profileId });
-    const open = (): void => navigation.replace('VocabResults', { topicKey, summary, newBest });
-    if (state.endedBy !== 'clock') {
+    if (exit === 'results') {
       open();
       return;
     }
-    // The clock ended the round: a calm second of "That's the time! Nice work." first (§3.6).
+    // The clock ended the round: a calm second of "That's the time! Nice work." first (§3.6), also with no answer,
+    // so the round never vanishes without a word; then the results, or the topic page when there is nothing to show.
+    const go = exit === 'beat-then-results' ? open : onLeave;
+    beat.current = { exit, go };
     setTimeUp(true);
     setStopping(false);
-    // A live region mounted with its text is not read by every screen reader, so native says it as well.
+    // The web reads the polite region kept mounted for the round; iOS has no live regions, so native says it.
     if (Platform.OS !== 'web') AccessibilityInfo.announceForAccessibility(copy.challenge.timeUp);
-    timeUpTimer.current = setTimeout(open, TIME_UP_MS);
+    timeUpTimer.current = setTimeout(() => {
+      timeUpTimer.current = null;
+      beat.current = null;
+      go();
+    }, TIME_UP_MS);
   }, [state, config, playing.earlierBest, topicKey, navigation, onLeave, copy.challenge.timeUp]);
   useEffect(
     () => () => {
@@ -449,10 +463,21 @@ function RoundPlay({
     [],
   );
 
-  // Leaving before the end any other way (system back, a swipe) asks "Stop for now?" first.
+  // Leaving before the end any other way (system back, a swipe) asks "Stop for now?" first. During the time-up
+  // beat the round is over and saved: leaving lands on the results at once instead of skipping them.
   useEffect(
     () =>
       navigation.addListener('beforeRemove', (e) => {
+        const during = beat.current;
+        if (during !== null) {
+          beat.current = null;
+          if (timeUpTimer.current !== null) clearTimeout(timeUpTimer.current);
+          timeUpTimer.current = null;
+          if (beatRemoval(during.exit) === 'allow') return;
+          e.preventDefault();
+          during.go();
+          return;
+        }
         if (leaving.current || stateRef.current.phase === 'done') return;
         e.preventDefault();
         askStop();
@@ -529,14 +554,21 @@ function RoundPlay({
         </View>
       )}
       <Spacer size="md" />
-      {timeUp ? (
-        <View accessibilityLiveRegion="polite" style={{ paddingVertical: spacing.xxl }} testID="vocab-speed-time-up">
-          <Heading level="title" align="center">
-            {copy.challenge.timeUp}
-          </Heading>
+      {clock ? (
+        // Mounted empty for the whole Challenge round, so the web reads the line when it appears (a live region
+        // mounted with its text already in it is not read by every screen reader).
+        <View accessibilityLiveRegion="polite">
+          {timeUp ? (
+            <View style={{ paddingVertical: spacing.xxl }} testID="vocab-speed-time-up">
+              <Heading level="title" align="center">
+                {copy.challenge.timeUp}
+              </Heading>
+            </View>
+          ) : null}
         </View>
-      ) : paused ? (
-        <PausedPanel copy={copy.challenge} onResume={resume} onStop={askStop} />
+      ) : null}
+      {timeUp ? null : paused ? (
+        <PausedPanel copy={copy.challenge} focusResume={!stopping} focusKey={resumeFocus} onResume={resume} onStop={askStop} />
       ) : question ? (
         <VocabQuestionView
           question={question}
@@ -556,6 +588,7 @@ function RoundPlay({
         visible={stopping}
         copy={copy.stop}
         onKeep={() => setStopping(false)}
+        onDismissed={() => setResumeFocus((n) => n + 1)}
         onStop={() => {
           setStopping(false);
           // A round the clock already ended keeps its results (the session is written).
@@ -573,14 +606,17 @@ function StopSheet({
   copy,
   onKeep,
   onStop,
+  onDismissed,
 }: {
   visible: boolean;
   copy: ReturnType<typeof useMessages>['learner']['vocab']['speed']['stop'];
   onKeep: () => void;
   onStop: () => void;
+  /** The sheet has finished closing (web and iOS). */
+  onDismissed: () => void;
 }): React.ReactElement {
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onKeep} accessibilityViewIsModal>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onKeep} onDismiss={onDismissed} accessibilityViewIsModal>
       <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: colors.surface.overlay }} testID="vocab-speed-stop">
         {/* A tap on the dimmed area keeps playing; hidden from assistive tech, which has the Keep playing button. */}
         <Pressable onPress={onKeep} focusable={false} {...HIDDEN} style={{ flex: 1 }} />

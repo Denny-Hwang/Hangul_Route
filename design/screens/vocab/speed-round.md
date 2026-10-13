@@ -123,11 +123,11 @@ A1 Not opted in (Relaxed)          A2 Opted in, Challenge chosen       G  Questi
 - **Challenge only**: the **Clock** title and three chips, Normal / A bit longer / Twice as long (a radiogroup named "Clock length"; the stored `clockScale` is selected; a tap calls `setClockScale(profileId, scale, 'start_sheet')`), then "The clock stops while you read the answer."
 - **Screen reader on** when Challenge is turned on from the sheet: the scale is set to **Twice as long** (`scaleOnOptIn`) and the line "Twice as long is chosen for you. You can change it." shows under the chips.
 - The Challenge round asks up to 40 questions (`roundPlan(level, 'challenge')`) and stops at the clock; `vocab.round.start` carries `mode: 'challenge'` and the scale.
-- Leaving Challenge: the Profile switch (below). Choosing Relaxed on the sheet plays one Relaxed round and leaves the setting on.
+- Leaving Challenge: the Profile switch (below). Choosing Relaxed on the sheet plays one Relaxed round and leaves the setting on. This is how §3.8's "the start sheet switch" is read once a profile has opted in: the quiet switch is the opt-in, and after it the sheet's way to leave Challenge is choosing **Relaxed** for the round; the setting itself is turned off on Profile (recorded in the S-6 review).
 
 ### Question screen (Challenge, frame G)
 
-- **Header, two lines** (320 wide does not fit Back + meter + Pause on one line): line 1 Back (64), the digits "0:42" (`Heading level="title"`, `fontVariant: tabular-nums` through the token type, one element named "Time left: 42 seconds", **not** a live region) and **Pause** (`Button tone="secondary" size="md"`, 64 dp, right); line 2 the `SparkMeter` with `reserveRows` (the question never moves when a row is added), then the clock bar: a track `colors.surface.sunken`, fill `colors.brand.secondary`, height `spacing.sm`, `radii.pill`, width in 1/60 steps. **No question dots** (the round has no fixed length).
+- **Header, two lines** (320 wide does not fit Back + meter + Pause on one line): line 1 Back (64), the digits "0:42" (`Body weight="bold"` at `typography.size.title`, plain text and not a heading, so heading navigation never lands on a ticking clock; one `accessibilityRole="timer"` element named "Time left: 42 seconds", read on focus only: a timer's implicit `aria-live` is off and **no** live region is set) and **Pause** (`Button tone="secondary" size="md"`, 64 dp, right); line 2 the `SparkMeter` with `reserveRows` (the question never moves when a row is added), then the clock bar: a track `colors.surface.sunken`, fill `colors.brand.secondary`, height `spacing.sm`, `radii.pill`, width in 1/60 steps. **No question dots** (the round has no fixed length).
 - In the last 10 seconds the static words "A few seconds left" (`Caption tone="muted"`) show under the bar. Nothing blinks, pulses, shakes or changes colour; no sound.
 - **No hints** and no idle line in Challenge (`hintsEnabled: false`).
 - The clock runs only while a question is on screen: never during the reveal (600 / 1000 ms), the stop sheet or a pause.
@@ -135,7 +135,7 @@ A1 Not opted in (Relaxed)          A2 Opted in, Challenge chosen       G  Questi
 ### Pause (frame G')
 
 - **Pause** button or the app going to the background (`subscribeAppActive`, already wired in S-5) dispatches `pause`; a pause during a reveal waits for the reveal to end (the reducer queues it).
-- The question is **replaced** (not dimmed) by a centred block: "Paused" (`Heading level="title"`), **Resume** (`Button tone="primary" size="lg"`, 80 dp) and **Stop** (`Button tone="ghost"`), so a pause cannot be used to study the answer. Header digits and meter stay; Pause is hidden while paused.
+- The question is **replaced** (not dimmed) by a centred block: "Paused" (`Heading level="title"`), **Resume** (`Button tone="primary" size="lg"`, 80 dp) and **Stop** (`Button tone="ghost"`), so a pause cannot be used to study the answer. Header digits and meter stay; Pause is hidden while paused, so focus moves to **Resume** (web: the DOM focus; native: `focusForScreenReader`) and is never lost; Keep playing on the stop sheet lands on Resume too.
 - **Resume** sends `resume` with the paused wall time (`pausedFor`); the remaining time is what it was. A paused round never runs out. **Stop** opens the same "Stop for now?" sheet.
 - **Back** and the system back in Challenge pause the round **before** "Stop for now?" opens, so the paused block (not the question) sits under the sheet and **Keep playing** lands on Resume: the stop sheet cannot be used to study the answer either. A Back during a reveal queues the pause like the Pause button.
 - **Deviation from §3.8 "sticky header"** (recorded in the S-6 review): the two-line header scrolls with the question inside `Screen scrollable`, because `Screen` has a sticky footer slot but no sticky header slot, and adding one is a design-system change outside S-6. At 320 x 568 the header and Pause are on screen when a question appears (the e2e checks Pause is in the viewport in each shipped locale); at 200 % text a learner scrolls up to reach Pause, and the system back still pauses the round at once. A sticky header slot in `Screen` is the follow-up that removes this deviation.
@@ -143,6 +143,9 @@ A1 Not opted in (Relaxed)          A2 Opted in, Challenge chosen       G  Questi
 ### Time up (frame G'')
 
 - When the clock reaches zero the question on screen is dropped (never a miss). The round screen shows the calm line "That's the time! Nice work." (`Heading level="title"`, centred, a polite live region) for 1 s (`TIME_UP_MS`), then the results, whose line reads "Time's up. Here is what you caught." and, above the learner's own earlier Challenge best for this topic, "New best!".
+- The polite region is mounted (empty) for the whole Challenge round and the line is put into it at time up, so web screen readers read it (a live region mounted with its text already in it is not read by every one); native also calls `announceForAccessibility` (iOS has no live regions).
+- A round the clock ends **with no answer** still shows the beat, then goes back to the topic page (no results, no `vocab.round.complete`): the round never vanishes without a word (`roundExit`).
+- System back or a swipe **during the beat** opens the results at once instead of skipping them (`beatRemoval`); with no answer it goes back as asked.
 
 ## Profile: the Challenge card
 
