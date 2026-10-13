@@ -111,11 +111,15 @@ export function MoveButton({
 // ---------------------------------------------------------------------------
 // The sheet frame
 
-/** Below 45em the sheet fills the screen; from 45em a centred card at most `layout.maxWidth.reading` wide (start-sheet.md). */
+/**
+ * Below 45em the sheet fills the screen; from 45em a centred card at most `layout.maxWidth.reading` wide (start-sheet.md).
+ * The card centres with auto margins, never a transform: a transformed card would become the containing block of a
+ * sheet opened inside it (the family consent sheet) and clip it.
+ */
 const SHEET_CSS =
   `.hr-move-sheet{position:fixed;inset:0;overflow-y:auto;background:${colors.surface.paper};padding:${spacing.lg}px ${layout.gutter.compact}px}` +
   `@media (min-width:45em){.hr-move-scrim{position:fixed;inset:0;background:${colors.surface.overlay}}` +
-  `.hr-move-sheet{inset:auto;top:${spacing.xxl}px;left:50%;transform:translateX(-50%);width:calc(100% - ${2 * layout.gutter.regular}px);max-width:${layout.maxWidth.reading}px;max-height:calc(100% - ${2 * spacing.xxl}px);border-radius:${radii.lg}px;padding:${spacing.xl}px ${spacing.xxl}px;box-shadow:${MODAL_SHADOW}}}`;
+  `.hr-move-sheet{inset:auto;top:${spacing.xxl}px;left:0;right:0;margin-inline:auto;width:calc(100% - ${2 * layout.gutter.regular}px);max-width:${layout.maxWidth.reading}px;max-height:calc(100% - ${2 * spacing.xxl}px);border-radius:${radii.lg}px;padding:${spacing.xl}px ${spacing.xxl}px;box-shadow:${MODAL_SHADOW}}}`;
 
 const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -387,6 +391,8 @@ export function StartMoveSheet({ spaceId, learner, api, online, onClose, onSent,
         onChange={(next) => {
           setCode(next);
           setError(null);
+          // A different code drops step 2, so Send request never goes to a class the field no longer shows.
+          setFound((prev) => (prev && normalizeJoinCode(next) !== prev.code ? null : prev));
         }}
         label={messages.console.space.codeLabel.class}
         rules={messages.caregiver.join.code.rules}
@@ -431,7 +437,7 @@ export function MoveRowAction({ name, online, onMove }: { name: string; online: 
   const helpId = useId();
   return (
     <>
-      <MoveButton label={t.a11y.moveRow(name)} disabled={!online} describedBy={online ? undefined : helpId} onClick={onMove} testId="move-row">
+      <MoveButton label={t.a11y.moveRow(name)} waiting={!online} describedBy={online ? undefined : helpId} onClick={onMove} testId="move-row">
         {t.start.move.class.cta}
       </MoveButton>
       {!online ? (

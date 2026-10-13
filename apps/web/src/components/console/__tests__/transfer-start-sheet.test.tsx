@@ -264,17 +264,49 @@ describe('MoveRowAction (start-sheet.md, the settings learner row)', () => {
     expect(onMove).toHaveBeenCalledTimes(1);
   });
 
-  it('offline: disabled, described by "This needs internet." and keeps its name', () => {
+  it('offline: aria-disabled (still focusable), described by "This needs internet." and keeps its name', () => {
     const onMove = vi.fn();
     act(() => {
       renderer = create(<MoveRowAction name="Mina" online={false} onMove={onMove} />);
     });
     const button = byTestId('move-row');
-    expect(button.props.disabled).toBe(true);
+    expect(button.props.disabled).toBeFalsy();
+    expect(button.props['aria-disabled']).toBe(true);
     expect(button.props['aria-label']).toBe('Move Mina to another class');
     const help = root().find((n) => n.props.id === button.props['aria-describedby']);
     expect(text(help)).toBe('This needs internet.');
     expect(button.props.onClick).toBeUndefined();
+  });
+});
+
+describe('StartMoveSheet: an edited code drops the found class (review of #500)', () => {
+  it('editing the code after step 2 hides Send request, so a request never goes to a class the field no longer shows', async () => {
+    const { api, createTransfer } = makeApi([found()]);
+    render(api);
+    typeCode('abc234');
+    await click('move-find');
+    expect(queryTestId('move-send')).toHaveLength(1);
+    typeCode('XYZ789');
+    expect(queryTestId('move-send')).toHaveLength(0);
+    expect(queryTestId('move-found')).toHaveLength(0);
+    expect(createTransfer).not.toHaveBeenCalled();
+  });
+
+  it('retyping the same code keeps step 2', async () => {
+    render(makeApi([found()]).api);
+    typeCode('ABC234');
+    await click('move-find');
+    typeCode('ABC234');
+    expect(queryTestId('move-send')).toHaveLength(1);
+  });
+});
+
+describe('the sheet frame centres without a transform (a transformed card would trap a nested fixed sheet)', () => {
+  it('SHEET_CSS never uses transform', () => {
+    const source = readFileSync(new URL('../TransferParts.tsx', import.meta.url), 'utf8');
+    const css = source.slice(source.indexOf('const SHEET_CSS'), source.indexOf(';\n', source.indexOf('const SHEET_CSS')));
+    expect(css).toContain('margin-inline:auto');
+    expect(css).not.toContain('transform');
   });
 });
 
