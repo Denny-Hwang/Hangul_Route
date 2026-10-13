@@ -1810,7 +1810,8 @@ export const consoleMsgs = {
         lastChangedBy: (account: string) => `Last changed by ${account}`,
         lastChangedOnDevice: 'Last changed on a device',
         saved: 'Saved',
-        stopped: { title: 'Stopped senders', allowAgain: { cta: 'Allow again' } },
+        /** `former`: a stopped sender who shares no space with the learner any more (the blocks list's `role: 'former'`). */
+        stopped: { title: 'Stopped senders', allowAgain: { cta: 'Allow again' }, former: 'A former sender' },
       },
       disclosure: (learner: string) => `Teachers see the answer ${learner} picks on their notes. They do not see when a note was read.`,
       /** The one-time class-notes card; `mode` is a `settings.options` value. */

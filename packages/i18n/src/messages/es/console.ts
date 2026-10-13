@@ -1289,7 +1289,7 @@ export const consoleMsgs = {
         lastChangedBy: (account: string) => `Último cambio: ${account}`,
         lastChangedOnDevice: 'Último cambio en un dispositivo',
         saved: 'Guardado',
-        stopped: { title: 'Personas bloqueadas', allowAgain: { cta: 'Permitir otra vez' } },
+        stopped: { title: 'Personas bloqueadas', allowAgain: { cta: 'Permitir otra vez' }, former: 'Alguien que ya no participa' },
       },
       disclosure: (learner: string) => `Los docentes ven la respuesta que ${learner} elige en sus notas. No ven cuándo se leyó una nota.`,
       oneTimeCard: {
