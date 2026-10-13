@@ -1,7 +1,7 @@
 import { Body, Button, Icon, KoreanText, borderWidth, colors, radii, spacing } from '@hangul-route/design-system';
 import React, { useState } from 'react';
-import { View } from 'react-native';
-import type { LetterState, LetterWallView } from '../../logic/my-route/letter-wall';
+import { View, useWindowDimensions } from 'react-native';
+import { letterTileWidth, type LetterState, type LetterWallView } from '../../logic/my-route/letter-wall';
 
 /**
  * The letter wall of the open Stage 1 (F-ROUTE-001 R-7c, section 3.11;
@@ -13,7 +13,11 @@ import type { LetterState, LetterWallView } from '../../logic/my-route/letter-wa
  * open stage stays short; each letter is read by its own label.
  */
 
-/** One width for every tile, so the wall is an even grid (three across at 320 wide) and a gloss wraps under its letter. */
+/**
+ * One width for every tile, so the wall is an even grid (three across at 320 wide) and a gloss
+ * wraps under its letter. It grows with the device text size (`letterTileWidth`), so a large
+ * letter chip stays inside its tile and the row wraps to fewer tiles instead.
+ */
 const TILE_WIDTH = spacing.jumbo + spacing.sm;
 
 const frameOf = (state: LetterState) =>
@@ -59,6 +63,8 @@ function Swatch({ state }: { state: LetterState }): React.ReactElement {
 
 export function LetterWall({ wall }: { wall: LetterWallView }): React.ReactElement {
   const [open, setOpen] = useState(false);
+  const { fontScale } = useWindowDimensions();
+  const tileWidth = letterTileWidth(TILE_WIDTH, fontScale);
   return (
     <View testID="my-route-letter-wall">
       <Button label={wall.title} tone="ghost" size="sm" onPress={() => setOpen((v) => !v)} expanded={open} />
@@ -77,7 +83,12 @@ export function LetterWall({ wall }: { wall: LetterWallView }): React.ReactEleme
           </View>
           <View accessibilityRole="list" accessibilityLabel={wall.title} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
             {wall.tiles.map((tile) => (
-              <View key={tile.key} testID={`my-route-letter-${tile.state}`} style={{ ...frameOf(tile.state), width: TILE_WIDTH, paddingVertical: spacing.xs, paddingHorizontal: spacing.xxs }}>
+              <View
+                key={tile.key}
+                role="listitem"
+                testID={`my-route-letter-${tile.state}`}
+                style={{ ...frameOf(tile.state), width: tileWidth, maxWidth: '100%', paddingVertical: spacing.xs, paddingHorizontal: spacing.xxs }}
+              >
                 <KoreanText ko={tile.ko} romanization={tile.romanization} gloss={tile.gloss} size="sm" accessibilityLabel={tile.a11yLabel} />
                 {tile.state === 'met' ? <MetCheck size={spacing.lg} /> : null}
               </View>

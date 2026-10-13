@@ -56,6 +56,9 @@ describe('screens/my-route sources', () => {
     expect(trail).toMatch(/row\.letterWall[^\n]*<LetterWall /);
     expect(wall).toContain('<KoreanText');
     expect(wall).toContain('accessibilityLabel={tile.a11yLabel}');
+    // The tile list carries its items (ARIA list needs listitem children), and a tile grows with the device text size.
+    expect(wall).toContain('role="listitem"');
+    expect(wall).toContain('letterTileWidth(TILE_WIDTH, fontScale)');
     // Romanization and gloss always show on the wall: the letters are taught content (CLAUDE.md section 1).
     expect(wall).not.toContain('romanizationShown={false}');
   });

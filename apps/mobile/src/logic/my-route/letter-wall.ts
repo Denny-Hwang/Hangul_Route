@@ -1,16 +1,18 @@
 import type { Jamo, Quest, RouteCatalog } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
-import { questTeaches, symbolsMetThrough } from '../stage1/curriculum';
+import { questTeaches } from '../stage1/curriculum';
 import type { StageRow } from './types';
 
 /**
  * The letter wall (F-ROUTE-001 R-7c, section 3.11; wireframe
  * `design/wireframes/journey/my-route-overview.md` B): the Stage 1 symbols in
- * teaching order, shown when Stage 1 is open. A symbol is lit when it was met
- * in a finished quest (`symbolsMetThrough` the furthest finished Stage 1
- * quest: a later quest reads the letters taught before it) and outlined when
- * the level check covered it. The stored result keeps no symbol list, so
- * "covered" is the `teaches` of the placed-out quests the row draws as known.
+ * teaching order, shown when Stage 1 is open. A symbol is lit when a finished
+ * quest teaches it (the union of `questTeaches` over the done quests) and
+ * outlined when the level check covered it. The stored result keeps no symbol
+ * list, so "covered" is the `teaches` of the placed-out quests the row draws as
+ * known. Every Stage 1 quest is open, so play need not follow the teaching
+ * order: one finished later quest lights only its own letters, never the
+ * letters before it (for in-order play this equals `symbolsMetThrough`).
  *
  * Two spellings meet here: the bundle's Discover steps name jamo ids
  * (`questTeaches`, `jamo:nieun-batchim`), the route catalogue names symbol
@@ -58,8 +60,7 @@ export function letterWallOf(i: LetterWallInput): LetterTile[] {
   const done = new Set(pips.filter((p) => p.state === 'done').map((p) => p.questId));
   const knownQuests = new Set(pips.filter((p) => p.state === 'known').map((p) => p.questId));
 
-  const furthest = [...i.quests].reverse().find((q) => done.has(q.id));
-  const met = new Set(furthest === undefined ? [] : symbolsMetThrough(furthest.id, i.quests));
+  const met = new Set(i.quests.filter((q) => done.has(q.id)).flatMap(questTeaches));
   const covered = new Set(i.catalog.quests.filter((q) => knownQuests.has(q.id)).flatMap((q) => q.teaches));
 
   const seen = new Set<string>();
@@ -73,6 +74,17 @@ export function letterWallOf(i: LetterWallInput): LetterTile[] {
     tiles.push({ key, jamoId, char: jamo.char, romanization: jamo.romanization, final: jamo.kind === 'batchim', state });
   }
   return tiles;
+}
+
+/**
+ * The width of one wall tile at the device text size (`useWindowDimensions().fontScale`):
+ * the base width at 1x and wider in step with larger text, so a grown letter chip never
+ * spills into the next tile; the row then wraps to fewer tiles across. Never narrower
+ * than the base, and a missing or broken scale reads as 1x.
+ */
+export function letterTileWidth(base: number, fontScale = 1): number {
+  const scale = Number.isFinite(fontScale) ? Math.max(fontScale, 1) : 1;
+  return Math.ceil(base * scale);
 }
 
 export interface LetterTileView {

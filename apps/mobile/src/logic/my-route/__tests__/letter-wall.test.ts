@@ -6,6 +6,7 @@ import { STAGE1_QUESTS, questTeaches } from '../../stage1/curriculum';
 import { discoverQuest } from '../../stage1/__tests__/fixtures';
 import {
   jamoIdToSymbolKey,
+  letterTileWidth,
   letterWallOf,
   letterWallView,
   symbolKeyOf,
@@ -15,8 +16,9 @@ import {
 import type { Pip, PipState } from '../types';
 
 /**
- * The letter wall (F-ROUTE-001 R-7c, section 3.11): lit when met
- * (`symbolsMetThrough` the furthest finished Stage 1 quest), outlined when a
+ * The letter wall (F-ROUTE-001 R-7c, section 3.11): lit when a finished
+ * Stage 1 quest teaches the letter (every Stage 1 quest is open, so play may
+ * skip ahead and a later quest never lights earlier letters), outlined when a
  * placed-out quest's catalogue `teaches` covers it, and the jamo-id to
  * symbol-key adapter that joins the two spellings.
  */
@@ -114,12 +116,31 @@ describe('letterWallOf', () => {
     expect(tiles.find((t) => t.key === 'ㄴ')?.final).toBe(false);
   });
 
-  it('lights what the furthest finished quest and the quests before it teach', () => {
+  it('lights what the finished quests teach, and only that', () => {
     expect(stateOf(wall({ 'quest:one': 'done' }))).toEqual({ ㅏ: 'met', ㅓ: 'met', ㄱ: 'met', ㄴ: 'met', ㅗ: 'ahead', 'ㄴ/final': 'ahead', ㅜ: 'ahead', ㅣ: 'ahead' });
-    // A word-reading quest further on reads every letter taught before it.
-    const tiles = wall({ 'quest:three': 'done' });
-    expect(tiles.filter((t) => t.state === 'met').map((t) => t.key)).toEqual(['ㅏ', 'ㅓ', 'ㄱ', 'ㄴ', 'ㅗ', 'ㄴ/final']);
-    expect(wall({ 'quest:four': 'done' }).every((t) => t.state === 'met')).toBe(true);
+    // A word-reading quest teaches no letter, so finishing it lights none.
+    expect(wall({ 'quest:three': 'done' }).every((t) => t.state === 'ahead')).toBe(true);
+    // In teaching order the lit letters are every letter taught through the quest (symbolsMetThrough).
+    const inOrder = wall({ 'quest:one': 'done', 'quest:two': 'done', 'quest:three': 'done', 'quest:four': 'done' });
+    expect(inOrder.every((t) => t.state === 'met')).toBe(true);
+  });
+
+  it('a quest finished out of order lights only its own letters, never the ones before it', () => {
+    expect(stateOf(wall({ 'quest:four': 'done' }))).toEqual({ ㅏ: 'ahead', ㅓ: 'ahead', ㄱ: 'ahead', ㄴ: 'ahead', ㅗ: 'ahead', 'ㄴ/final': 'ahead', ㅜ: 'met', ㅣ: 'met' });
+    expect(stateOf(wall({ 'quest:two': 'done', 'quest:four': 'done' }))).toEqual({ ㅏ: 'ahead', ㅓ: 'ahead', ㄱ: 'ahead', ㄴ: 'ahead', ㅗ: 'met', 'ㄴ/final': 'met', ㅜ: 'met', ㅣ: 'met' });
+  });
+
+  it('lists a letter taught by two quests once, at its first place', () => {
+    const again = discoverQuest('quest:again', ['jamo:a', 'jamo:u']);
+    const tiles = letterWallOf({
+      row: { pips: [pip('quest:again', 'done')], newPips: [] },
+      quests: [...QUESTS, again],
+      catalog: FIXTURE_CATALOG,
+      jamo: JAMO,
+    });
+    expect(tiles.map((t) => t.key)).toEqual(['ㅏ', 'ㅓ', 'ㄱ', 'ㄴ', 'ㅗ', 'ㄴ/final', 'ㅜ', 'ㅣ']);
+    expect(tiles.filter((t) => t.key === 'ㅏ')).toHaveLength(1);
+    expect(stateOf(tiles)).toMatchObject({ ㅏ: 'met', ㅓ: 'ahead', ㅜ: 'met' });
   });
 
   it('outlines the catalogue teaches of the quests the level check placed out', () => {
@@ -135,9 +156,17 @@ describe('letterWallOf', () => {
     });
   });
 
-  it('a lit letter wins over an outlined one; a quest that joined a latched stage counts too', () => {
-    const tiles = wall({ 'quest:one': 'known', 'quest:two': 'done' });
-    expect(tiles.every((t) => t.key === 'ㅜ' || t.key === 'ㅣ' ? t.state === 'ahead' : t.state === 'met')).toBe(true);
+  it('finishing a later quest keeps the placed-out letters outlined; a quest that joined a latched stage counts too', () => {
+    expect(stateOf(wall({ 'quest:one': 'known', 'quest:two': 'done' }))).toEqual({
+      ㅏ: 'known',
+      ㅓ: 'known',
+      ㄱ: 'known',
+      ㄴ: 'known',
+      ㅗ: 'met',
+      'ㄴ/final': 'met',
+      ㅜ: 'ahead',
+      ㅣ: 'ahead',
+    });
     const joined = letterWallOf({
       row: { pips: [pip('quest:one', 'done')], newPips: [pip('quest:four', 'known')] },
       quests: QUESTS,
@@ -174,9 +203,17 @@ describe('letterWallOf', () => {
     const known = new Set(SHARED.quests.filter((q) => STAGE1_QUESTS.slice(0, 6).some((s) => s.id === q.id)).flatMap((q) => q.teaches));
     expect(known.size).toBeGreaterThan(0);
     for (const t of tiles) expect(t.state, t.key).toBe(known.has(t.key) ? 'known' : 'ahead');
-    const last = STAGE1_QUESTS[STAGE1_QUESTS.length - 1];
-    const allMet = letterWallOf({ row: { pips: [pip(last?.id ?? '', 'done')], newPips: [] }, quests: STAGE1_QUESTS, catalog: SHARED, jamo: jamoAll });
+    const allMet = letterWallOf({ row: { pips: STAGE1_QUESTS.map((q) => pip(q.id, 'done')), newPips: [] }, quests: STAGE1_QUESTS, catalog: SHARED, jamo: jamoAll });
     expect(allMet.every((t) => t.state === 'met')).toBe(true);
+  });
+
+  it('on the shipped bundle one finished later quest lights only its own letters', () => {
+    const later = [...STAGE1_QUESTS].reverse().find((q) => questTeaches(q).length > 0);
+    expect(later).toBeDefined();
+    const own = new Set(questTeaches(later as (typeof STAGE1_QUESTS)[number]).map((id) => jamoIdToSymbolKey(id, jamoAll)));
+    const tiles = letterWallOf({ row: { pips: [pip(later?.id ?? '', 'done')], newPips: [] }, quests: STAGE1_QUESTS, catalog: SHARED, jamo: jamoAll });
+    expect(tiles.filter((t) => t.state === 'met').map((t) => t.key).sort()).toEqual([...own].sort());
+    expect(tiles.filter((t) => t.state === 'ahead').length).toBe(30 - own.size);
   });
 });
 
@@ -193,7 +230,8 @@ describe('letterWallView', () => {
       { state: 'met', word: EN.learner.myRoute.wall.state.met },
       { state: 'ahead', word: EN.learner.myRoute.wall.state.ahead },
     ]);
-    expect(letterWallView(wall({ 'quest:one': 'known', 'quest:four': 'done' }), EN)?.legend.map((l) => l.state)).toEqual(['met']);
+    expect(letterWallView(wall({ 'quest:one': 'done', 'quest:two': 'done', 'quest:four': 'done' }), EN)?.legend.map((l) => l.state)).toEqual(['met']);
+    expect(letterWallView(wall({ 'quest:one': 'known', 'quest:two': 'known', 'quest:four': 'done' }), EN)?.legend.map((l) => l.state)).toEqual(['met', 'known']);
     expect(letterWallView(wall({ 'quest:one': 'known' }), EN)?.legend.map((l) => l.state)).toEqual(['known', 'ahead']);
   });
 
@@ -212,5 +250,16 @@ describe('letterWallView', () => {
     expect(final?.gloss).toBe(EN.learner.myRoute.wall.final);
     expect(final?.a11yLabel).toBe(EN.a11y.myRoute.letter('ㄴ', `n, ${EN.learner.myRoute.wall.final}`, EN.learner.myRoute.wall.state.known));
     expect(final?.a11yLabel).toBe('ㄴ, n, at the end. Already known.');
+  });
+});
+
+describe('letterTileWidth', () => {
+  it('keeps the base width at 1x and grows with larger device text, never narrower', () => {
+    expect(letterTileWidth(72)).toBe(72);
+    expect(letterTileWidth(72, 1)).toBe(72);
+    expect(letterTileWidth(72, 0.85)).toBe(72);
+    expect(letterTileWidth(72, 1.5)).toBe(108);
+    expect(letterTileWidth(72, 2.2)).toBe(159);
+    expect(letterTileWidth(72, Number.NaN)).toBe(72);
   });
 });

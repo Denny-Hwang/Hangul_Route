@@ -182,6 +182,8 @@ test.describe('flag on: the Route tab (LR-4)', () => {
     await toggle.click();
     await expect(toggle).toHaveAttribute('aria-expanded', 'true');
     await expect(wall.getByText(en.learner.myRoute.wall.lead, { exact: true })).toBeVisible();
+    // One list of the 30 letters, each tile a list item.
+    await expect(wall.getByRole('list', { name: en.learner.myRoute.wall.title, exact: true }).getByRole('listitem')).toHaveCount(30);
     await expect(wall.getByTestId('my-route-letter-met')).toHaveCount(4);
     await expect(wall.getByTestId('my-route-letter-known')).toHaveCount(8);
     await expect(wall.getByTestId('my-route-letter-ahead')).toHaveCount(18);
