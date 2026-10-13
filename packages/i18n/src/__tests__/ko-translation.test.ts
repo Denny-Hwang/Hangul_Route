@@ -112,9 +112,15 @@ describe('the Korean review lenses, pinned (§3.10 step 3)', () => {
       [/\bHoya\b/, '호야'],
       [/Hangul Route/, 'Hangul Route'],
       [/grown-up PIN/i, '어른용 PIN'],
+      // The rest of the §3.10 Korean glossary (PR 16 review).
+      [/heritage card/i, '문화 카드'],
+      [/level check/i, '수준 확인'],
+      [/\bStage \d/, '단계'],
+      [/\bgrown-up\b/i, '어른'],
     ];
     for (const path of leafPaths(en)) {
-      if (isEnglishAuthoritative(path)) continue;
+      // A format-only template is all arguments: its words are the arguments' business.
+      if (isEnglishAuthoritative(path) || KO_LITERALLY_SHARED.includes(path)) continue;
       const source = lookup(en, path);
       const own = lookup(ko, path);
       const rows: ReadonlyArray<readonly unknown[]> = typeof source === 'function' ? (SAMPLES[path] ?? []) : [[]];
@@ -127,6 +133,10 @@ describe('the Korean review lenses, pinned (§3.10 step 3)', () => {
         for (const [term, word] of GLOSSARY) if (term.test(enOwn) && !GLOSSARY_EXEMPT.has(`${path}|${word}`)) expect(koText, `${path}: ${koText}`).toContain(word);
       }
     }
+  });
+
+  it('lens 1, glossary: a count of items never reads "n개 모음" (모음 also means vowel; finding R1)', () => {
+    for (const [path, text] of outputs()) expect(/개 모음|\d+\s*모음/.test(text), `${path}: ${text}`).toBe(false);
   });
 
   it('lens 2, anti-shame: never a failure, deadline or comparison word on any surface', () => {
