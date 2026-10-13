@@ -1313,6 +1313,42 @@ export const learner = {
           firstStar: 'Good try! You collected a star!',
         },
       },
+      /**
+       * The start sheet, the stop sheet and the results (F-VOC-004 §3.5, §3.6; design/screens/vocab/speed-round.md,
+       * results.md). Counts only: never "n of m", a percentage, a time per word or a number of misses (D3); the
+       * results never say "wrong", "missed" or "failed" (S11). No age words, no level names.
+       */
+      title: 'Speed round',
+      relaxed: {
+        label: 'Relaxed',
+        /** `n`: the round's question count (10; 8 for the Pictures-first level). */
+        line: (n: number) => `${count(n, 'word', 'words')}. No clock.`,
+      },
+      start: 'Start',
+      /** When the round will have no sound questions (no Korean voice, or sound off). */
+      noSound: 'No sound on this device. Pictures and words only.',
+      learnFirst: 'Learn a few more words first',
+      learn: 'Learn',
+      nothingToPlay: 'Nothing to play yet',
+      back: 'Back',
+      backToTopic: 'Back to topic',
+      stop: {
+        title: 'Stop for now?',
+        body: 'The words you answered stay saved.',
+        keep: 'Keep playing',
+        stop: 'Stop',
+      },
+      results: {
+        caught: (n: number) => count(n, 'word caught', 'words caught'),
+        /** A Challenge round the clock ended. */
+        timeUp: "Time's up. Here is what you caught.",
+        /** Challenge only, against the learner's own earlier best (S9). */
+        newBest: 'New best!',
+        seeAgain: 'Words to see again',
+        practice: 'Practice these',
+        playAgain: 'Play again',
+        backToTopic: 'Back to topic',
+      },
     },
     /**
      * Words: the Library entry, the topic picker, the topic page and the flashcards (F-VOC-003 §3.1-§3.5).

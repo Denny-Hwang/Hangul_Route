@@ -9,6 +9,7 @@ import type { GrownUpVia } from '../logic/shell/handoff-rules';
 import type { CellStoriesSource } from '../logic/story/cell-stories';
 import type { LibrarySectionId } from '../logic/story/library-sections';
 import type { SourcesRouteParams } from '../logic/story/source-link';
+import type { RoundSummary } from '../logic/vocab/stars';
 import type { VocabQuestionE2eParams } from './vocab-question-e2e';
 
 /**
@@ -194,12 +195,21 @@ export type RootStackParamList = {
   /**
    * vocab/cards — flashcards (F-VOC-003 section 3.5; C-5 registers the screen). `chunk` is 0-based, absent = the
    * suggested chunk; `startId` opens the chunk at that word on its back face (a collected word wall tile).
+   * `ids`: only these words, in this order (the Speed Round results' "Practice these", F-VOC-004 section 3.6).
    */
-  VocabCards: { topicKey: string; chunk?: number; startId?: string };
+  VocabCards: { topicKey: string; chunk?: number; startId?: string; ids?: string[] };
   /** vocab/match — Pic-Word Match on the topic's collected words (F-VOC-003 section 3.9; C-6 registers the screen). */
   VocabMatch: { topicKey: string };
-  /** vocab/speed-start — the Speed Round (F-VOC-004 section 3.1; S-5 registers the screen). The topic page launches it. */
+  /**
+   * vocab/speed-start — the Speed Round (F-VOC-004 section 3.1, S-5): the start sheet, then the questions. The topic
+   * page launches it. `mode` is read once Challenge ships (S-6); until then every round is Relaxed.
+   */
   VocabSpeedRound: { topicKey: string; mode?: 'relaxed' | 'challenge' };
+  /**
+   * vocab/speed-results — a Speed Round's results (F-VOC-004 section 3.6, S-5). `summary` is the plain serialisable
+   * `RoundSummary`; `newBest`: a Challenge round above the learner's own earlier best (read before the round wrote).
+   */
+  VocabResults: { topicKey: string; summary: RoundSummary; newBest?: boolean };
   /**
    * notes/list — My notes (F-FEEDBACK-001 section 6.5 item 2, FB-8): the active profile's notes, New then
    * Earlier. Registered only while `flags.notesEnabled` is on. `notice: 'putAway'`: the note page just put a
