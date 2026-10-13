@@ -4,7 +4,7 @@ import { APP_ROUTES, RECEIPTS_PAGE_LIMIT, type BillingSummary } from '@hangul-ro
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AdultFrame } from '@/components/console/AdultFrame';
-import { BackToBilling, BillingNote, BillingStyles, FailPanel, ModeBanner, ReceiptsSkeleton, ReceiptsTable } from '@/components/console/BillingHomeParts';
+import { BackToBilling, BillingNote, BillingStyles, FailPanel, ModeBanner, ReceiptsSkeleton, ReceiptsTable, type ReceiptRowNote } from '@/components/console/BillingHomeParts';
 import { StepUpDialog, useStepUp } from '@/components/console/StepUpDialog';
 import { Notice } from '@/components/console/ui';
 import { useConsole } from '@/components/console/use-console';
@@ -17,8 +17,11 @@ import { modeBanner, receiptRow, type ReceiptRowView } from '@/lib/console/billi
  * the Worker answers anyone else with 403, which reads "This page is for the person who pays for this space."
  *
  * **View receipt** opens a blank tab inside the tap (so it is not blocked as a pop-up) and clears its opener, then
- * asks `POST /api/billing/receipt-link` for a fresh Stripe link behind step-up, and sends the tab there. No Stripe id
- * or URL is ever on this page or in its address; a failed lookup closes the tab and says so on that row.
+ * asks `POST /api/billing/receipt-link` for a fresh Stripe link behind step-up, and sends the tab there. When the
+ * Worker asks for step-up, the blank tab is closed before "Confirm it's you" opens (the grown-up is never left on an
+ * empty tab while this one asks), and after step-up the receipt opens in a new tab; if the browser blocks that tab
+ * (the tap is long gone), the row says one more tap opens it. No Stripe id or URL is ever on this page or in its
+ * address; a failed lookup closes the tab and says so on that row.
  */
 
 type Failure = 'offline' | 'error' | 'notYours';
@@ -43,7 +46,7 @@ function ReceiptsInner(): JSX.Element {
   const [data, setData] = useState<ReceiptsView | null>(null);
   const [summary, setSummary] = useState<BillingSummary | null>(null);
   const [failure, setFailure] = useState<Failure | null>(null);
-  const [failed, setFailed] = useState<ReadonlySet<string>>(new Set());
+  const [notes, setNotes] = useState<ReadonlyMap<string, ReceiptRowNote>>(new Map());
   const [busyId, setBusyId] = useState<string | null>(null);
   const [cancelled, setCancelled] = useState(false);
   const failureRef = useRef<Failure | null>(null);
@@ -84,24 +87,39 @@ function ReceiptsInner(): JSX.Element {
 
   if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
 
-  const markFailed = (id: string, on: boolean): void =>
-    setFailed((current) => {
-      const next = new Set(current);
-      if (on) next.add(id);
+  const noteRow = (id: string, note: ReceiptRowNote | null): void =>
+    setNotes((current) => {
+      const next = new Map(current);
+      if (note) next.set(id, note);
       else next.delete(id);
       return next;
     });
 
+  /** A new tab for `url` with its opener cleared; null when the browser blocked it. */
+  const openTab = (url: string): ReceiptTab | null => {
+    // No `noopener` feature: with it `window.open` returns null even when the tab opens, so success is unknowable.
+    const opened = window.open(url, '_blank') as ReceiptTab | null;
+    if (opened) opened.opener = null;
+    return opened;
+  };
+
   const view = async (row: ReceiptRowView): Promise<void> => {
     if (!api) return;
     // Inside the tap, before any await: a tab opened later would be blocked as a pop-up.
-    const tab = window.open('', '_blank') as ReceiptTab | null;
-    if (tab) tab.opener = null;
+    const flow: { tab: ReceiptTab | null; steppedUp: boolean } = { tab: openTab(''), steppedUp: false };
     setBusyId(row.id);
     setCancelled(false);
-    markFailed(row.id, false);
-    const step = await stepUp.run(() => api.receiptLink(row.id));
+    noteRow(row.id, null);
+    const step = await stepUp.run(() => api.receiptLink(row.id), {
+      // Step-up first: close the empty tab before the dialog opens in this one.
+      onHint: () => {
+        flow.steppedUp = true;
+        flow.tab?.close();
+        flow.tab = null;
+      },
+    });
     setBusyId(null);
+    const { tab } = flow;
     if (step.kind === 'cancelled') {
       tab?.close();
       setCancelled(true);
@@ -113,13 +131,14 @@ function ReceiptsInner(): JSX.Element {
         tab.location.href = url;
         return;
       }
-      // The blank tab was blocked: one more try now that the link is here; if that is blocked too, say so.
-      if (window.open(url, '_blank', 'noopener,noreferrer')) return;
-      markFailed(row.id, true);
+      // No blank tab (step-up closed it, or the browser blocked it): one try now that the link is here.
+      if (openTab(url)) return;
+      // Blocked after step-up: a fresh tap opens it (no step-up again within 10 minutes). Blocked without one: say so.
+      noteRow(row.id, flow.steppedUp ? 'tapAgain' : 'failed');
       return;
     }
     tab?.close();
-    markFailed(row.id, true);
+    noteRow(row.id, 'failed');
   };
 
   const banner = summary ? modeBanner(summary, locale) : null;
@@ -150,7 +169,7 @@ function ReceiptsInner(): JSX.Element {
             {rows.length === 0 ? (
               <p>{legacy ? r.older : r.empty}</p>
             ) : (
-              <ReceiptsTable rows={rows} failed={failed} busyId={busyId} onView={(row) => void view(row)} />
+              <ReceiptsTable rows={rows} notes={notes} busyId={busyId} onView={(row) => void view(row)} />
             )}
             {rows.length >= RECEIPTS_PAGE_LIMIT ? <p className="hr-bill-line">{r.beyondLimit}</p> : null}
           </>

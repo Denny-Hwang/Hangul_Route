@@ -473,7 +473,10 @@ export function ReceiptsSkeleton(): JSX.Element {
  * narrow-column reflow (each row a block) keeps its semantics; the date is the row header; the action column's header
  * is hidden from assistive technology and each View receipt carries its own accessible name.
  */
-export function ReceiptsTable({ rows, failed, busyId, onView }: { rows: ReceiptRowView[]; failed: ReadonlySet<string>; busyId: string | null; onView: (row: ReceiptRowView) => void }): JSX.Element {
+/** A line under a row's View receipt: the lookup failed, or step-up is done and one more tap opens the receipt. */
+export type ReceiptRowNote = 'failed' | 'tapAgain';
+
+export function ReceiptsTable({ rows, notes, busyId, onView }: { rows: ReceiptRowView[]; notes: ReadonlyMap<string, ReceiptRowNote>; busyId: string | null; onView: (row: ReceiptRowView) => void }): JSX.Element {
   const r = useMessages().console.billing.receipts;
   return (
     <table className="hr-bill-table" role="table">
@@ -518,7 +521,7 @@ export function ReceiptsTable({ rows, failed, busyId, onView }: { rows: ReceiptR
                     {row.viewLabel}
                   </button>
                   <p className="hr-bill-line" role="status">
-                    {failed.has(row.id) ? r.linkFailed : ''}
+                    {notes.get(row.id) === 'failed' ? r.linkFailed : notes.get(row.id) === 'tapAgain' ? r.tapAgain : ''}
                   </p>
                 </>
               ) : null}

@@ -431,6 +431,7 @@ export const consoleMsgs = {
       view: { cta: '영수증 보기' },
       viewA11y: (date: string) => `영수증 보기, ${date} (새 탭에서 Stripe가 열려요)`,
       linkFailed: '지금은 이 영수증을 열 수 없어요.',
+      tapAgain: '확인됐어요. 영수증 보기를 한 번 더 누르면 열려요.',
       pageTitle: (space: string) => `${space} · 영수증`,
       notYours: '이 페이지는 이 공간의 요금을 내는 분을 위한 페이지예요.',
       cantLoad: '지금은 영수증을 불러올 수 없어요.',

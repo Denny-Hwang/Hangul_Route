@@ -441,6 +441,7 @@ export const consoleMsgs = {
       view: { cta: 'Ver recibo' },
       viewA11y: (date: string) => `Ver el recibo del ${date} (abre Stripe en una pestaña nueva)`,
       linkFailed: 'Ahora no se puede abrir este recibo.',
+      tapAgain: 'Listo. Toca Ver recibo otra vez para abrirlo.',
       pageTitle: (space: string) => `${space} · recibos`,
       notYours: 'Esta página es para la persona que paga este espacio.',
       cantLoad: 'Ahora no se pueden cargar los recibos.',
