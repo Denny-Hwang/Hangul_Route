@@ -9,6 +9,7 @@ import {
   typography,
   z,
 } from '@hangul-route/design-system/tokens';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import React from 'react';
 import { HoyaSvg } from '../../../components/design-preview/HoyaReference';
@@ -19,6 +20,11 @@ import { HoyaSvg } from '../../../components/design-preview/HoyaReference';
  * Renders equivalent HTML/CSS using the same token values so the design
  * system can be reviewed in a browser by designer / parent / dev.
  */
+
+/** Not for search engines: robots.txt disallows `/design-preview` too (F-SITE-002 OD-10). */
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default function DesignPreviewPage(): JSX.Element {
   return (

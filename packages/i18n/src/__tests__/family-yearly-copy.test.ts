@@ -25,7 +25,7 @@ function billingStrings(): Array<[string, string]> {
   const c = en.console as Tree;
   // The learner Plan screen (F-BILL-002 B-9 removed the price-bearing paywall and its keys).
   strings(en.caregiver.plan, 'caregiver.plan', out);
-  for (const key of ['billing', 'entitlementStatus', 'price', 'promoPrice', 'familyLine', 'groupLine', 'contactLine', 'billingSuccess', 'billingCancelled']) strings(c[key], `console.${key}`, out);
+  for (const key of ['billing', 'entitlementStatus', 'price', 'promoPrice', 'familyLine', 'groupLine', 'contactLine', 'billingCancelled']) strings(c[key], `console.${key}`, out);
   return out.filter(([path]) => !UNUSED_ONCE_FORMATTERS.has(path));
 }
 

@@ -1,0 +1,121 @@
+name: Switch-on e2e (content gating on)
+
+# F-ENT-003 E3-13: the switch-on e2e lane, nightly and on demand only. It
+# builds dist/ with both content gating switches on (the values the owner's
+# switch-on step sets in production, OD-2; docs/launch/owner-runbook.md
+# section G) on a cleared Metro and Next cache, and runs every spec that reads
+# E2E_CONTENT_GATING with E2E_CONTENT_GATING=1, so the switch-on halves stay
+# current with main. Then it runs the gating fixture bundle specs of the same
+# precondition.
+#
+# It is its own workflow on purpose (review of E3-13): web-app.yml holds the
+# required check 'Build PWA · offline e2e', and a run of that workflow on a
+# schedule or dispatch event would post that check name on a commit without
+# building it. This file has no required check and never runs on pull
+# requests or pushes. scripts/__tests__/ci-workflows.test.mjs keeps it honest.
+
+on:
+  workflow_dispatch:
+    inputs:
+      notes:
+        description: "Also turn on the notes build flags (EXPO_PUBLIC_NOTES_ENABLED and the console twin NEXT_PUBLIC_NOTES_ENABLED) and run every spec that reads E2E_NOTES with E2E_NOTES=1, for a release that ships both"
+        type: boolean
+        default: false
+  schedule:
+    - cron: "23 9 * * *"
+
+concurrency:
+  group: switch-on-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  switch-on:
+    name: PWA · switch-on e2e (content gating on, nightly and on demand)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      WRANGLER_SEND_METRICS: "false"
+      # Scheduled runs have no inputs: the notes flags stay off there.
+      NOTES: ${{ github.event_name == 'workflow_dispatch' && inputs.notes && 'true' || 'false' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # setup-workspace caches only the pnpm store; this job restores no
+      # Metro or Next cache, which could serve switch-off values inlined into
+      # the bundle.
+      - name: Setup pnpm, Node and dependencies
+        uses: ./.github/actions/setup-workspace
+
+      # EXPO_PUBLIC_CONTENT_GATING_ENABLED for the learner app and
+      # NEXT_PUBLIC_CONTENT_GATING_ENABLED for the app-host console, which
+      # build:web builds into dist/ (merge-console.mjs passes the environment
+      # through). Metro inlines EXPO_PUBLIC_* values and caches its transforms
+      # in os.tmpdir()/metro-cache, so the build runs on a fresh, empty TMPDIR.
+      - name: Build the switch-on bundle (dist, both content gating switches on, Metro cache cleared)
+        env:
+          EXPO_PUBLIC_CONTENT_GATING_ENABLED: "true"
+          NEXT_PUBLIC_CONTENT_GATING_ENABLED: "true"
+        shell: bash
+        run: |
+          rm -rf /tmp/metro-cache apps/web/.next/cache
+          export TMPDIR="$RUNNER_TEMP/switch-on-tmp"
+          rm -rf "$TMPDIR" && mkdir -p "$TMPDIR"
+          if [ "$NOTES" = true ]; then
+            export EXPO_PUBLIC_NOTES_ENABLED=true NEXT_PUBLIC_NOTES_ENABLED=true
+          fi
+          pnpm --filter @hangul-route/mobile build:web
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @hangul-route/mobile exec playwright install --with-deps chromium
+
+      # Every spec that reads E2E_CONTENT_GATING, found afresh on each run, so a
+      # new switch-on half joins the lane without an edit here. With the notes
+      # input, every spec that reads E2E_NOTES joins too (notes-screens is in
+      # both lists; notes-grown-up reads only E2E_NOTES).
+      - name: Switch-on e2e (release dist, E2E_CONTENT_GATING=1)
+        working-directory: apps/mobile
+        env:
+          E2E_CONTENT_GATING: "1"
+        shell: bash
+        run: |
+          mapfile -t specs < <(git grep -l E2E_CONTENT_GATING -- 'e2e/web/*.spec.ts')
+          if [ "${#specs[@]}" -eq 0 ]; then
+            echo "::error::no spec reads E2E_CONTENT_GATING"
+            exit 1
+          fi
+          if [ "$NOTES" = true ]; then
+            export E2E_NOTES=1
+            mapfile -t specs < <({ printf '%s\n' "${specs[@]}"; git grep -l E2E_NOTES -- 'e2e/web/*.spec.ts'; } | sort -u)
+          fi
+          printf 'switch-on spec: %s\n' "${specs[@]}"
+          pnpm exec playwright test --output test-results/switch-on "${specs[@]}"
+
+      # The gating fixture bundle half of the switch-on precondition (the same
+      # run as shard 1 of the pull-request e2e): the locked story tile and the
+      # QuestPlayer guard on a closed quest. Its own output folder, so a failure
+      # of the step above keeps its traces for the upload.
+      - name: Build the gating fixture bundle (dist-e2e-gated)
+        if: ${{ !cancelled() }}
+        run: pnpm --filter @hangul-route/mobile build:web:fixtures:gated
+
+      - name: Switch-on e2e (gating fixture bundle, STORY_FIXTURES_GATED=1)
+        if: ${{ !cancelled() }}
+        working-directory: apps/mobile
+        env:
+          STORY_FIXTURES_GATED: "1"
+        run: pnpm exec playwright test --output test-results/gated story-shelf-gated.spec free-days.spec
+
+      - name: Upload the Playwright results (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: switch-on-e2e-results
+          path: apps/mobile/test-results
+          overwrite: true
+          if-no-files-found: ignore
+          retention-days: 7

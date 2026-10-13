@@ -3,7 +3,7 @@ import { formatDate, formatMinorAmount, getMessages, UI_LOCALES } from '@hangul-
 import { describe, expect, it } from 'vitest';
 import { CONTACT_EMAIL } from '../../../data/contact';
 import { SITE_CLAIMS, type SiteClaims } from '../../../data/site-claims';
-import { actionNoteFor, actionNoteText, billingHomeView, contactHref, includesLines, receiptRow, summaryFailureNotice, type BillingActionNote, type BillingHomeView } from '../billing-summary';
+import { actionNoteFor, actionNoteText, billingHomeView, modeBanner, contactHref, includesLines, receiptRow, summaryFailureNotice, type BillingActionNote, type BillingHomeView } from '../billing-summary';
 import { planPrice, promoPriceLine } from '../billing';
 
 /**
@@ -383,5 +383,14 @@ describe('action notes after checkout or Manage subscription (B-8a)', () => {
     for (const [note, text] of Object.entries(notes)) expect(actionNoteText(note as BillingActionNote, 'en')).toBe(text);
     expect(actionNoteText('alreadyActive')).toBe(b.alreadyActive);
     expect(actionNoteText('alreadyActive', 'ko')).toBe(getMessages('ko').console.billing.alreadyActive);
+  });
+});
+
+describe('modeBanner (the receipts page reuses it, B-8c)', () => {
+  it('test, none, live not open, live open', () => {
+    expect(modeBanner({ mode: 'test', purchasesOpen: true })).toBe(b.testMode);
+    expect(modeBanner({ mode: 'none', purchasesOpen: false }, 'en')).toBe(b.notConfigured);
+    expect(modeBanner({ mode: 'live', purchasesOpen: false }, 'en')).toBe(b.liveOff);
+    expect(modeBanner({ mode: 'live', purchasesOpen: true }, 'en')).toBeNull();
   });
 });

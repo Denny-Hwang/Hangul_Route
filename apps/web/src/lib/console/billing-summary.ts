@@ -327,7 +327,8 @@ function accountCardView(card: BillingAccountCard, now: Date, locale: UiLocale):
   };
 }
 
-function bannerFor(summary: BillingSummary, locale: UiLocale): string | null {
+/** The one-line mode banner (section 4.3 item 2), also on the receipts page; null when live and open. */
+export function modeBanner(summary: Pick<BillingSummary, 'mode' | 'purchasesOpen'>, locale: UiLocale = DEFAULT_LOCALE): string | null {
   const billing = getMessages(locale).console.billing;
   if (summary.mode === 'test') return billing.testMode;
   if (summary.mode === 'none') return billing.notConfigured;
@@ -379,7 +380,7 @@ export function billingHomeView(summary: BillingSummary, options: BillingHomeOpt
       : null;
 
   return {
-    banner: bannerFor(summary, locale),
+    banner: modeBanner(summary, locale),
     // Section 4.3 item 2: off with no key, and in live mode until the owner opens purchases; test mode always works.
     actionsEnabled: summary.mode === 'test' || (summary.mode === 'live' && summary.purchasesOpen),
     pastDueNote: pastDue ? billing.pastDue : null,
