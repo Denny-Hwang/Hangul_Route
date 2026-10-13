@@ -166,6 +166,11 @@ export interface MyRouteView {
   routeCard: RouteCardCopy;
   /** "Week 3 of your weekly plan" under the card, learner only; never a Next title (section 4.3). */
   planLine: string | null;
+  /**
+   * "Open plan" on the plan line (R-7d): opens F-PLAN-002's `RouteOverview`. Only when the line shows the
+   * learner's own weekly plan (`goal.from === 'self'`): `RouteOverview` shows that plan and no other.
+   */
+  planOpen: string | null;
   pose: 'idle' | 'cheering';
   /** Read-only only: "Viewing Sam's Learning Route". */
   viewing: string | null;
@@ -200,6 +205,8 @@ export interface MyRouteViewInput {
   letterWall?: readonly LetterTile[];
   /** The current week of the goal's weekly plan (`planWeekOf`); absent or null shows no plan line. */
   week?: number | null;
+  /** F-PLAN-002's `RouteOverview` is in the navigator (`flags.routeEnabled`); false or absent shows no Open plan link. */
+  planOverview?: boolean;
   /** Formats the plan's last day for the grown-up "Plan ends" line (LR-OD-7). */
   formatDay?: (day: DateKey) => string;
   /** The first visit that shows this reached goal (LR-5c); never in read-only mode. */
@@ -399,6 +406,7 @@ export function myRouteView(i: MyRouteViewInput): MyRouteView {
   const { model, messages } = i;
   const ctx: CopyContext = { viewer: i.viewer, name: i.name, m: myRouteMessages(messages), goalStage: model.goal?.stage ?? null };
   const week = i.week;
+  const planLine = i.viewer === 'self' && typeof week === 'number' && week >= 1 ? messages.learner.myRoute.home.strip.week(week) : null;
   const fresh = freshKeys(model, i.seen);
   const rows: TrailRowView[] = trailEntries(model, ctx).map((entry) =>
     entry.kind === 'stage' ? stageRowView(entry.row, ctx, i, fresh) : laterRowView(entry.rows, entry.label, ctx, i),
@@ -413,7 +421,8 @@ export function myRouteView(i: MyRouteViewInput): MyRouteView {
       ...(i.formatDay === undefined ? {} : { formatDay: i.formatDay }),
     }),
     // The learner's own weekly plan week only: grown-up views carry the plan end date instead (LR-OD-7).
-    planLine: i.viewer === 'self' && typeof week === 'number' && week >= 1 ? messages.learner.myRoute.home.strip.week(week) : null,
+    planLine,
+    planOpen: planLine !== null && i.planOverview === true && model.goal?.from === 'self' ? messages.learner.myRoute.plan.open : null,
     // Hoya cheers on the first visit that shows a reached goal (LR-5c), as after a newly completed episode.
     pose: i.viewer === 'self' && i.firstReached === true ? 'cheering' : hoyaPoseFor(model, i.seen),
     viewing: viewingCopy(ctx),
