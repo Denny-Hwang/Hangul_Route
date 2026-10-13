@@ -20,7 +20,7 @@ export function FamilyDashboard({ family }: { family: MockFamily }): JSX.Element
       <header style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.md, justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xxl }}>
         <div>
           <a href="/" style={{ color: colors.text.muted, fontSize: typography.size.caption }}>
-            {c.shell.backToSite}
+            {c.shell.aboutSite}
           </a>
           <h1 style={{ fontSize: typography.size.display, margin: `${spacing.xs}px 0 0` }}>
             {p.title}

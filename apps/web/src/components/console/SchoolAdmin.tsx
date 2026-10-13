@@ -4,7 +4,8 @@ import type { Messages } from '@hangul-route/i18n';
 import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
-import { Button, ConsoleShell, Field, LoadErrorPanel, Muted, Notice, panelStyle } from '@/components/console/ui';
+import { Button, Field, LoadErrorPanel, Muted, Notice, panelStyle } from '@/components/console/ui';
+import { AdultFrame } from '@/components/console/AdultFrame';
 import type { ConsoleApi, MemberView, SchoolView } from '@/lib/console/api';
 import { planTitle, statusLine as entitlementStatus } from '@/lib/console/billing';
 import { codeExpiry, relativeDay } from '@/lib/console/rollup';
@@ -65,7 +66,7 @@ export function SchoolAdmin({ api, spaceId, onSignOut }: { api: ConsoleApi; spac
   };
 
   return (
-    <ConsoleShell onSignOut={onSignOut} title={view ? s.titleFor(view.school.name) : s.title}>
+    <AdultFrame onSignOut={onSignOut} title={view ? s.titleFor(view.school.name) : s.title}>
       {error ? <LoadErrorPanel error={error} forbidden={s.forbidden} onRetry={() => void load()} /> : null}
       {note ? <Notice tone="nudge">{s.notes[note]}</Notice> : null}
       {view ? (
@@ -88,7 +89,7 @@ export function SchoolAdmin({ api, spaceId, onSignOut }: { api: ConsoleApi; spac
           onCreateClass={(name) => void run(() => api.createSpace({ kind: 'class', name, parentSpaceId: spaceId }), 'classCreated', 'createFailed').then(() => setNewClass(''))}
         />
       ) : null}
-    </ConsoleShell>
+    </AdultFrame>
   );
 }
 

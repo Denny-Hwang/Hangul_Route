@@ -5,7 +5,8 @@ import type { CurriculumMeta, PlanItem } from '@hangul-route/content-schema';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { Button, ConsoleShell, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
+import { Button, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
+import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConsole } from '@/components/console/use-console';
 import { PlanDraftItems, PlanReadout } from '@/components/console/PlanParts';
 import { PlanSwitcher, RouteDraftItems, RouteReadout } from '@/components/console/RoutePlanParts';
@@ -120,7 +121,7 @@ function PlanInner(): JSX.Element {
     void load();
   }, [load]);
 
-  if (!ready || !session) return <ConsoleShell>{null}</ConsoleShell>;
+  if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
 
   const current = plans ? selectedPlan(plans, selectedId) : null;
   const presentable = lectureModeEnabled() && canComposeIn(spaces, spaceId);
@@ -221,7 +222,7 @@ function PlanInner(): JSX.Element {
   const suggestNotice = suggestionNoticeShown(draft, suggestedFor) ? (suggestionFor(learners, suggestedFor, locale)?.notice ?? null) : null;
 
   return (
-    <ConsoleShell onSignOut={signOut} title={roster ? p.titleFor(roster.space.name) : p.title}>
+    <AdultFrame onSignOut={signOut} title={roster ? p.titleFor(roster.space.name) : p.title}>
       <Muted>
         <Link href={ROUTES.space(spaceId)}>{p.back(roster?.space.name ?? null)}</Link>
       </Muted>
@@ -373,13 +374,13 @@ function PlanInner(): JSX.Element {
           </div>
         </section>
       )}
-    </ConsoleShell>
+    </AdultFrame>
   );
 }
 
 export default function PlanPage(): JSX.Element {
   return (
-    <Suspense fallback={<ConsoleShell>{null}</ConsoleShell>}>
+    <Suspense fallback={<AdultFrame>{null}</AdultFrame>}>
       <PlanInner />
     </Suspense>
   );

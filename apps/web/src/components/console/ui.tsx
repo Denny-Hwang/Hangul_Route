@@ -1,11 +1,9 @@
 'use client';
 
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
-import Link from 'next/link';
 import type { CSSProperties, ReactNode } from 'react';
 import type { LoadError } from '@/lib/console/routing';
 import { useMessages } from '@/lib/i18n/locale-context';
-import { LanguageSelect } from './LanguageSelect';
 
 /** Token-only building blocks for the console — F-CONSOLE-001. */
 export const panelStyle: CSSProperties = {
@@ -78,34 +76,6 @@ export function Notice({ children, tone = 'info' }: { children: ReactNode; tone?
     <div role="status" style={{ ...panelStyle, backgroundColor: bg, borderColor: 'transparent', marginBottom: spacing.md }}>
       {children}
     </div>
-  );
-}
-
-export function ConsoleShell({ children, onSignOut, title }: { children: ReactNode; onSignOut?: () => void; title?: string }): JSX.Element {
-  const shell = useMessages().console.shell;
-  return (
-    <main style={{ maxWidth: 960, margin: '0 auto', padding: `${spacing.xl}px ${spacing.lg}px` }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xl, gap: spacing.md, flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: spacing.md }}>
-          <a href="/" style={{ color: colors.text.muted, fontSize: typography.size.caption }}>
-            {shell.backToSite}
-          </a>
-          <Link href="/teach/home" style={{ fontWeight: typography.weight.bold, fontSize: typography.size.bodyLg, color: colors.text.primary }}>
-            {shell.home}
-          </Link>
-          {title ? <span style={{ color: colors.text.secondary }}>· {title}</span> : null}
-        </div>
-        <nav style={{ display: 'flex', gap: spacing.sm, alignItems: 'center', flexWrap: 'wrap' }}>
-          <LanguageSelect />
-          <Button disabled>{shell.account.cta}</Button>
-          <Link href="/teach/billing">
-            <Button>{shell.billing.cta}</Button>
-          </Link>
-          {onSignOut ? <Button onClick={onSignOut}>{shell.signOut.cta}</Button> : null}
-        </nav>
-      </header>
-      {children}
-    </main>
   );
 }
 

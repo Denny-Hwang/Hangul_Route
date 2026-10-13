@@ -20,6 +20,10 @@ vi.mock('@/lib/i18n/locale-context', async () => {
 
 vi.mock('@/components/console/LanguageSelect', () => ({ LanguageSelect: () => null }));
 
+// The adult frame (F-APP-001 A-5a) reads the spaces list and draws its own links; adult-frame.test.tsx covers it.
+// Here it passes the page through, so the calls and the links below are the page's own.
+vi.mock('@/components/console/AdultFrame', () => ({ AdultFrame: ({ children }: { children: ReactNode }) => <>{children}</> }));
+
 vi.mock('next/link', () => ({
   default: ({ href, children }: { href: string; children: ReactNode }) => <a href={href}>{children}</a>,
 }));
@@ -173,8 +177,8 @@ describe('the Learning Route page, switched on', () => {
     expect(root.findAll((n) => n.type === 'li')).toHaveLength(3);
     const back = root.findAll((n) => n.type === 'a').find((a) => textOf(a) === lr.back.class);
     expect(back?.props.href).toBe('/teach/space?id=space%3Ac1');
-    // No billing link on the page body (owner item 12, LR-OD-8): the only billing link is the shell's own.
-    expect(root.findAll((n) => n.type === 'a' && String(n.props.href).includes('billing'))).toHaveLength(1);
+    // No billing link on the page body (owner item 12, LR-OD-8): the only billing link is the frame's own (passed through here).
+    expect(root.findAll((n) => n.type === 'a' && String(n.props.href).includes('billing'))).toHaveLength(0);
   });
 
   it('a classic plan (no curriculum meta) is homework, not a route: still case 3, no Plan goal tag', async () => {
