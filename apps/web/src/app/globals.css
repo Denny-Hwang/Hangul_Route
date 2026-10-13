@@ -95,14 +95,18 @@ button {
  * live here; the rest is inline from tokens. Mobile first: the narrow rule is the default and a `min-width` query in
  * em overrides it (no `max-width` query, so no fractional width falls between two rules). Breakpoints in em and text
  * in rem, so a visitor's browser text size moves the layout switches with the text. Nothing uses `order`: the DOM
- * order is the visual order and the Tab order (WCAG 2.4.3).
+ * order is the visual order and the Tab order (WCAG 2.4.3). Physical sides, not logical properties: iOS 14.0 to 14.4
+ * Safari lacks padding-inline and margin-block, and every site locale is left to right. On those versions a flex
+ * `gap` is also ignored, so header items and actions sit flush (each keeps its own 64 px hit area).
  */
 .hr-site-wide-only {
   display: none;
 }
 
 .hr-site {
-  /* Long words (app.hangulroute.com, the contact address) wrap instead of scrolling sideways at 200 % text. */
+  /* Long words (app.hangulroute.com, the contact address) wrap instead of scrolling sideways at 200 % text.
+     word-break: break-word first: Safari before 15.4 ignores overflow-wrap: anywhere and keeps it. */
+  word-break: break-word;
   overflow-wrap: anywhere;
 }
 
@@ -113,7 +117,8 @@ button {
 }
 
 .hr-site-wrap {
-  padding-inline: var(--hr-site-gutter-compact);
+  padding-left: var(--hr-site-gutter-compact);
+  padding-right: var(--hr-site-gutter-compact);
 }
 
 /* Skip link: the first Tab stop, off screen until it has keyboard focus. */
@@ -179,7 +184,8 @@ button {
 
 /* Page head, sections and actions (full width on phones). */
 .hr-site-page-head {
-  padding-block: var(--hr-site-xl);
+  padding-top: var(--hr-site-xl);
+  padding-bottom: var(--hr-site-xl);
 }
 
 .hr-site-h1 {
@@ -195,7 +201,8 @@ button {
 }
 
 .hr-site-section {
-  padding-block: var(--hr-site-lg);
+  padding-top: var(--hr-site-lg);
+  padding-bottom: var(--hr-site-lg);
   border-top: var(--hr-site-border-thin) solid var(--hr-site-border-subtle);
 }
 
@@ -254,7 +261,8 @@ button {
   display: grid;
   justify-items: start;
   gap: var(--hr-site-lg);
-  margin-block: var(--hr-site-xxl);
+  margin-top: var(--hr-site-xxl);
+  margin-bottom: var(--hr-site-xxl);
   padding: var(--hr-site-xl);
 }
 
@@ -305,7 +313,7 @@ button {
     margin-left: var(--hr-site-xs);
   }
 
-  /* 720 to 959 px: the brand shows the mark only; the name stays the link's accessible name. */
+  /* 720 to 959 px: the brand shows the mark only; the mark and the name stay the link's accessible name. */
   .hr-site-brand-name {
     position: absolute;
     width: var(--hr-site-border-thin);
@@ -316,11 +324,13 @@ button {
   }
 
   .hr-site-wrap {
-    padding-inline: var(--hr-site-gutter-regular);
+    padding-left: var(--hr-site-gutter-regular);
+    padding-right: var(--hr-site-gutter-regular);
   }
 
   .hr-site-page-head {
-    padding-block: var(--hr-site-xxxl);
+    padding-top: var(--hr-site-xxxl);
+    padding-bottom: var(--hr-site-xxxl);
   }
 
   .hr-site-h1 {
@@ -336,7 +346,8 @@ button {
   }
 
   .hr-site-section {
-    padding-block: var(--hr-site-xxxl);
+    padding-top: var(--hr-site-xxxl);
+    padding-bottom: var(--hr-site-xxxl);
   }
 
   .hr-site-h2 {
@@ -359,7 +370,8 @@ button {
   .hr-site-closing {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    margin-block: var(--hr-site-xxxl);
+    margin-top: var(--hr-site-xxxl);
+    margin-bottom: var(--hr-site-xxxl);
     padding: var(--hr-site-xxl);
   }
 
@@ -388,6 +400,7 @@ button {
 
 @media (min-width: 70em) {
   .hr-site-wrap {
-    padding-inline: var(--hr-site-gutter-wide);
+    padding-left: var(--hr-site-gutter-wide);
+    padding-right: var(--hr-site-gutter-wide);
   }
 }

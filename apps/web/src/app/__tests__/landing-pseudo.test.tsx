@@ -27,7 +27,7 @@ vi.mock('@hangul-route/i18n', async (importOriginal) => {
 
 const CONTENT: readonly string[] = [
   CONTACT_EMAIL,
-  ...stage1Cards.flatMap((card) => [card.ko, card.romanization, card.title, card.blurb]),
+  ...stage1Cards.flatMap((card) => [card.ko, card.romanization, card.title, card.en, card.blurb]),
   ...minigameCatalog.flatMap((game) => [game.title, game.blurb]),
 ];
 

@@ -42,8 +42,11 @@ export const SITE_SIZES = {
   leadMeasure: '34em',
   /** Footer column minimum: 2 x `spacing.jumbo` at default text, in rem so large text falls back to one column. */
   footerColumnMin: rem(2 * spacing.jumbo),
-  /** Card tile minimum on `/learners`: three across at 320 px, fewer as text grows (88 px at default text). */
-  tileMin: rem(88),
+  /**
+   * Card tile minimum on `/learners`: `touchTarget.child` plus `spacing.sm` (88 px at default text), so three tiles
+   * fit across at 320 px and fewer as text grows.
+   */
+  tileMin: rem(touchTarget.child + spacing.sm),
 } as const;
 
 /** `#RRGGBB` as `r, g, b`, so a shadow can take the token colour with the token opacity. */
@@ -72,9 +75,6 @@ export function siteCssVars(): CSSProperties {
     '--hr-site-on-primary': colors.text.onPrimary,
     '--hr-site-border-strong': colors.border.strong,
     '--hr-site-focus': colors.border.focus,
-    '--hr-site-sunken': colors.surface.sunken,
-    '--hr-site-canvas': colors.surface.canvas,
-    '--hr-site-muted': colors.text.muted,
     '--hr-site-border-subtle': colors.border.subtle,
     '--hr-site-xxs': `${spacing.xxs}px`,
     '--hr-site-xs': `${spacing.xs}px`,
@@ -90,10 +90,7 @@ export function siteCssVars(): CSSProperties {
     '--hr-site-border-thin': `${borderWidth.thin}px`,
     '--hr-site-border-base': `${borderWidth.base}px`,
     '--hr-site-border-thick': `${borderWidth.thick}px`,
-    '--hr-site-surface-paper': colors.surface.paper,
     '--hr-site-touch-min': `${touchTarget.min}px`,
-    '--hr-site-size-caption': rem(typography.size.caption),
-    '--hr-site-size-body-sm': rem(typography.size.bodySm),
     '--hr-site-size-body': rem(typography.size.body),
     '--hr-site-size-body-lg': rem(typography.size.bodyLg),
     '--hr-site-size-prompt': rem(typography.size.prompt),
@@ -121,10 +118,15 @@ export const HIT_SIZE: CSSProperties = {
 /** `HIT_SIZE` as an inline-flex box: every link and button the stylesheet does not show or hide. */
 export const HIT: CSSProperties = { display: 'inline-flex', ...HIT_SIZE };
 
-/** The page column: content up to `layout.maxWidth.full`, centred; the side gutter is set by `globals.css` (`hr-site-wrap`). */
+/**
+ * The page column: content up to `layout.maxWidth.full`, centred; the side gutter is set by `globals.css`
+ * (`hr-site-wrap`). Physical margins, not `margin-inline`: iOS 14.0 to 14.4 Safari lacks the logical properties, and
+ * every site locale is left to right.
+ */
 export const WRAP: CSSProperties = {
   maxWidth: layout.maxWidth.full,
-  marginInline: 'auto',
+  marginLeft: 'auto',
+  marginRight: 'auto',
 };
 
 /** Visually hidden but read by screen readers (a heading that keeps the outline in order). */

@@ -1,4 +1,7 @@
 import { borderWidth, colors, layout, radii, shadows, spacing, touchTarget, typography, z } from '@hangul-route/design-system/tokens';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
   HIT,
@@ -36,6 +39,7 @@ describe('SITE_BREAKPOINTS', () => {
 describe('SITE_SIZES', () => {
   it('derive from tokens and scale with text', () => {
     expect(SITE_SIZES.footerColumnMin).toBe(rem(2 * spacing.jumbo));
+    expect(SITE_SIZES.tileMin).toBe(rem(touchTarget.child + spacing.sm));
     expect(SITE_SIZES.tileMin).toBe('5.5rem');
     expect(SITE_SIZES.leadMeasure).toBe('34em');
   });
@@ -49,43 +53,39 @@ describe('cardShadow', () => {
 });
 
 describe('siteCssVars', () => {
+  const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'app', 'globals.css'), 'utf8');
   const vars = siteCssVars() as Record<string, string>;
 
-  it('names every value globals.css reads, each one a token', () => {
+  it('sets exactly the custom properties globals.css reads (none unused, none missing)', () => {
+    const read = new Set([...css.matchAll(/var\((--hr-site-[a-z0-9-]+)\)/g)].map((m) => m[1]));
+    expect(new Set(Object.keys(vars))).toEqual(read);
+  });
+
+  it('each one is a token value', () => {
     expect(vars['--hr-site-brand']).toBe(colors.brand.primary);
-    expect(vars['--hr-site-brand-dark']).toBe(colors.brand.primaryDark);
-    expect(vars['--hr-site-brand-light']).toBe(colors.brand.primaryLight);
-    expect(vars['--hr-site-text']).toBe(colors.text.primary);
-    expect(vars['--hr-site-text-secondary']).toBe(colors.text.secondary);
-    expect(vars['--hr-site-on-primary']).toBe(colors.text.onPrimary);
-    expect(vars['--hr-site-border-strong']).toBe(colors.border.strong);
     expect(vars['--hr-site-focus']).toBe(colors.border.focus);
-    expect(vars['--hr-site-sunken']).toBe(colors.surface.sunken);
+    expect(vars['--hr-site-border-subtle']).toBe(colors.border.subtle);
     for (const key of ['xxs', 'xs', 'sm', 'md', 'lg', 'xl', 'xxl', 'xxxl'] as const) {
       expect(vars[`--hr-site-${key}`]).toBe(`${spacing[key]}px`);
     }
-    expect(vars['--hr-site-gutter-regular']).toBe(`${layout.gutter.regular}px`);
-    expect(vars['--hr-site-gutter-wide']).toBe(`${layout.gutter.wide}px`);
-    expect(vars['--hr-site-border-base']).toBe(`${borderWidth.base}px`);
-    expect(vars['--hr-site-border-thick']).toBe(`${borderWidth.thick}px`);
-    expect(vars['--hr-site-surface-paper']).toBe(colors.surface.paper);
-    expect(vars['--hr-site-size-body']).toBe(rem(typography.size.body));
-    expect(vars['--hr-site-size-body-lg']).toBe(rem(typography.size.bodyLg));
-    expect(vars['--hr-site-size-prompt']).toBe(rem(typography.size.prompt));
-    expect(vars['--hr-site-size-display']).toBe(rem(typography.size.display));
-    expect(vars['--hr-site-footer-col-min']).toBe(SITE_SIZES.footerColumnMin);
-    expect(vars['--hr-site-tile-min']).toBe(SITE_SIZES.tileMin);
-    expect(vars['--hr-site-size-title']).toBe(rem(typography.size.title));
-    expect(vars['--hr-site-size-hero']).toBe(rem(typography.size.hero));
-    expect(vars['--hr-site-z-sticky']).toBe(String(z.sticky));
-    expect(vars['--hr-site-canvas']).toBe(colors.surface.canvas);
-    expect(vars['--hr-site-muted']).toBe(colors.text.muted);
-    expect(vars['--hr-site-border-subtle']).toBe(colors.border.subtle);
     expect(vars['--hr-site-gutter-compact']).toBe(`${layout.gutter.compact}px`);
-    expect(vars['--hr-site-border-thin']).toBe(`${borderWidth.thin}px`);
+    expect(vars['--hr-site-border-thick']).toBe(`${borderWidth.thick}px`);
     expect(vars['--hr-site-touch-min']).toBe(`${touchTarget.min}px`);
-    expect(vars['--hr-site-size-caption']).toBe(rem(typography.size.caption));
-    expect(vars['--hr-site-size-body-sm']).toBe(rem(typography.size.bodySm));
+    expect(vars['--hr-site-size-prompt']).toBe(rem(typography.size.prompt));
+    expect(vars['--hr-site-z-sticky']).toBe(String(z.sticky));
+    expect(vars['--hr-site-tile-min']).toBe(SITE_SIZES.tileMin);
+    const tokenValues = new Set<string>([
+      ...Object.values(colors).flatMap((group) => Object.values(group as Record<string, string>)),
+      ...Object.values(spacing).map((v) => `${v}px`),
+      ...Object.values(layout.gutter).map((v) => `${v}px`),
+      ...Object.values(borderWidth).map((v) => `${v}px`),
+      ...Object.values(typography.size).map((v) => rem(v)),
+      `${touchTarget.min}px`,
+      String(z.sticky),
+      SITE_SIZES.footerColumnMin,
+      SITE_SIZES.tileMin,
+    ]);
+    for (const [key, value] of Object.entries(vars)) expect(tokenValues, key).toContain(value);
   });
 
   it('every custom property is in the --hr-site- namespace', () => {
@@ -118,7 +118,7 @@ describe('shared style objects', () => {
   });
 
   it('the column is capped at layout.maxWidth.full and centred', () => {
-    expect(WRAP).toEqual({ maxWidth: layout.maxWidth.full, marginInline: 'auto' });
+    expect(WRAP).toEqual({ maxWidth: layout.maxWidth.full, marginLeft: 'auto', marginRight: 'auto' });
   });
 
   it('visually hidden text keeps a 1 px box', () => {

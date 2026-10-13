@@ -11,7 +11,11 @@ import { MiniGamesGallery } from './MiniGamesGallery';
 import { SiteShell } from './SiteShell';
 import { Body, Bullets, Closing, Fold, Folds, PageHead, PrimaryAction, Section, Steps } from './site-parts';
 
-/** The teaser row: the first six Stage 1 cards by unlock order (what a new learner earns first; S-D decision). */
+/**
+ * The teaser row: the first six Stage 1 cards by unlock order (what a new learner earns first; S-D decision). Each
+ * tile is the Korean word, its romanization and its English gloss (`card.en`, never `card.title`, which for some
+ * cards is the romanization again: CLAUDE.md §1).
+ */
 const TEASER_CARDS = 6;
 
 export interface LearnersPageProps {
@@ -59,13 +63,13 @@ export function LearnersPage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: 
           <p style={{ margin: 0, lineHeight: typography.leading.normal }}>{L.quest.hoya}</p>
         </div>
         <Fold summary={L.quest.gamesFold}>
-          <MiniGamesGallery locale={locale} games={siteGames} />
+          <MiniGamesGallery locale={locale} games={siteGames} embedded />
         </Fold>
       </Section>
 
       <Section id="learners-cards" title={L.cards.title}>
         <Body>{L.cards.body}</Body>
-        <ul className="hr-site-tiles" style={{ listStyle: 'none', margin: `${spacing.md}px 0`, padding: 0, display: 'grid' }}>
+        <ul role="list" className="hr-site-tiles" style={{ listStyle: 'none', margin: `${spacing.md}px 0`, padding: 0, display: 'grid' }}>
           {stage1Cards.slice(0, TEASER_CARDS).map((card) => (
             <li
               className="hr-site-tile"
@@ -96,13 +100,13 @@ export function LearnersPage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: 
               </span>
               <span style={{ fontSize: rem(typography.size.caption), color: colors.text.muted }}>{card.romanization}</span>
               <span style={{ fontSize: rem(typography.size.bodySm), fontWeight: typography.weight.semibold, lineHeight: typography.leading.tight }}>
-                {card.title}
+                {card.en}
               </span>
             </li>
           ))}
         </ul>
         <Fold summary={L.cards.seeAll(stage1Cards.length)}>
-          <HeritageCardsPreview locale={locale} />
+          <HeritageCardsPreview locale={locale} embedded />
         </Fold>
       </Section>
 

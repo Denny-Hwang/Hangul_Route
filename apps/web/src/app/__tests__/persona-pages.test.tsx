@@ -6,6 +6,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LearnersPage } from '../../components/landing/LearnersPage';
 import { ALL_CLAIMS_ON } from '../../data/__tests__/site-claims-fixtures';
+import { siteGames } from '../../data/minigame-catalog';
 import { SITE_CLAIMS } from '../../data/site-claims';
 import { stage1Cards } from '../../data/stage1-cards';
 import { learnerStart } from '../../lib/site-links';
@@ -85,21 +86,46 @@ describe('/learners (S-4a)', () => {
     expect(main).toMatch(new RegExp(`<summary[^>]*><span[^>]*>${L.quest.gamesFold}</span></summary>`));
   });
 
-  it('collect: six card tiles, each the Korean word (lang="ko") with its romanization and English name', () => {
+  it('collect: six card tiles, each the Korean word (lang="ko") with its romanization and English gloss (CLAUDE.md §1)', () => {
+    expect(main).toMatch(/<ul role="list" class="hr-site-tiles"/);
     const tiles = [...main.matchAll(/<li class="hr-site-tile"[^>]*>([\s\S]*?)<\/li>/g)].map((m) => m[1] ?? '');
     expect(tiles).toHaveLength(6);
     stage1Cards.slice(0, 6).forEach((card, i) => {
-      expect(tiles[i]).toContain(`<span lang="ko"`);
-      expect(tiles[i]).toContain(`>${card.ko}<`);
-      expect(tiles[i]).toContain(`>${card.romanization}<`);
-      expect(decode(tiles[i] ?? '')).toContain(`>${card.title}<`);
+      const tile = decode(tiles[i] ?? '');
+      expect(tile).toContain(`<span lang="ko"`);
+      expect(tile).toContain(`>${card.ko}<`);
+      expect(tile).toContain(`>${card.romanization}<`);
+      expect(tile).toContain(`>${card.en}<`);
+      // The gloss is a meaning, never the romanization again (card.title is "Bap" for 밥).
+      const spans = [...tile.matchAll(/<span[^>]*>([^<]*)<\/span>/g)].map((m) => m[1] ?? '');
+      expect(spans).toHaveLength(3);
+      expect(spans[2]?.toLowerCase(), card.id).not.toBe(card.romanization.toLowerCase());
     });
   });
 
-  it('the cards fold names the count from data, and holds the full card grid', () => {
+  it('the cards fold names the count from data, and holds the full card grid with no heading or teaser of its own', () => {
     expect(main).toMatch(new RegExp(`<summary[^>]*><span[^>]*>${L.cards.seeAll(stage1Cards.length)}</span></summary>`));
     const fold = /<details[^>]*>(?:(?!<\/details>)[\s\S])*?See all[\s\S]*?<\/details>/.exec(main)?.[0] ?? '';
     for (const card of stage1Cards) expect(fold).toContain(card.ko);
+    expect(fold).not.toMatch(/<h2\b|<section\b/);
+    expect(decode(fold)).not.toContain(t.cards.more);
+    expect(decode(fold)).not.toContain(t.cards.eyebrow);
+  });
+
+  it('the games fold: the games without a speaking one, titles as h3 under the section h2, no heading, eyebrow or beta', () => {
+    const fold = decode(new RegExp(`<details[^>]*>(?:(?!</details>)[\\s\\S])*?${esc(L.quest.gamesFold)}[\\s\\S]*?</details>`).exec(main)?.[0] ?? '');
+    expect(fold).not.toBe('');
+    expect(fold).not.toMatch(/<h2\b|<section\b/);
+    expect(fold.match(/<h3\b/g)).toHaveLength(siteGames.length);
+    for (const game of siteGames) expect(fold).toContain(`>${game.title}<`);
+    expect(fold).not.toContain(t.games.title);
+    expect(fold).not.toContain(t.games.body);
+    expect(fold).not.toContain(t.games.beta);
+    expect(fold).not.toMatch(/in beta/i);
+  });
+
+  it('every styled list keeps its list role (VoiceOver drops it with list-style: none)', () => {
+    for (const m of main.matchAll(/<(ul|ol)\b([^>]*)>/g)) expect(m[2], m[0]).toContain('role="list"');
   });
 
   it('five folded questions, in order, each a native details', () => {
@@ -128,10 +154,10 @@ describe('/learners (S-4a)', () => {
   });
 
   it('no age wording and no price on the page', () => {
-    // The full card grid in its fold shows the Stage 1 card blurbs, whose audience wording S-6 rewords (OD-9); the
-    // rest of the page is checked here.
-    const withoutCardGrid = textOf(main.replace(/<details[^>]*>(?:(?!<\/details>)[\s\S])*?See all[\s\S]*?<\/details>/, ''));
-    expect(withoutCardGrid).not.toMatch(/\bkids?\b|\bchild(ren)?\b|\bages? \d|\$\s?\d/i);
+    // TODO(F-SITE-002 S-6, OD-9): the Stage 1 card blurbs in the cards fold still carry audience wording, which S-6
+    // rewords; only those blurbs are left out here, and S-6 removes this exclusion.
+    const withoutBlurbs = stage1Cards.reduce((acc, card) => acc.split(card.blurb).join(' '), text);
+    expect(withoutBlurbs).not.toMatch(/\bkids?\b|\bchild(ren)?\b|\bages? \d|\$\s?\d/i);
     expect(text).not.toMatch(/\bages? \d|\$\s?\d/i);
   });
 

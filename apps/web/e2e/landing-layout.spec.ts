@@ -144,7 +144,8 @@ test.describe('the site header: keyboard focus follows the visual order (F-SITE-
   /** Header stops, then the page's first stop (its primary action). Hidden phone items are out of the Tab order. */
   const STOPS: Record<'phone' | 'wide', string[]> = {
     phone: ['Skip to content', 'Hangul Route', 'Sign in', 'Start learning'],
-    wide: ['Skip to content', 'Hangul Route', 'Start learning', 'Learners', 'Parents', 'Teachers', 'Sign in', 'Start learning'],
+    // The shipped persona pages only (SHIPPED_PERSONA_PAGES); S-4b adds Parents and Teachers.
+    wide: ['Skip to content', 'Hangul Route', 'Start learning', 'Learners', 'Sign in', 'Start learning'],
   };
   for (const width of [...LANDING_WIDTHS, 1280]) {
     test(`${width}px: skip link, brand, then the header items left to right, then the page`, async ({ page }) => {
@@ -152,8 +153,8 @@ test.describe('the site header: keyboard focus follows the visual order (F-SITE-
       await page.goto('/learners');
       const expected = width >= 720 ? STOPS.wide : STOPS.phone;
       const stops = await tabStops(page, expected.length);
-      // The brand mark is decorative text inside the brand link ("HR"); the name is the rest.
-      expect(stops.map((stop) => stop.name.replace(/^HR/, ''))).toEqual(expected);
+      // The brand mark ("HR", from 360 px) is part of the brand link's name (WCAG 2.5.3); the name is the rest.
+      expect(stops.map((stop) => stop.name.replace(/^HR\s*/, ''))).toEqual(expected);
       // Reading order from the brand on (the skip link sits over the page while focused).
       for (let i = 2; i < stops.length; i += 1) {
         const prev = stops[i - 1];

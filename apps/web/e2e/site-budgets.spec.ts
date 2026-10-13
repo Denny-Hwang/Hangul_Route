@@ -16,6 +16,8 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
  *   override (em breakpoints ignore that one). Chromium drops the CDP sizes when the view is resized, so the
  *   viewport is set first and the sizes after it.
  *
+ * - At 320 px, at default and 200 % text, every fold opened keeps its content inside the fold's content box.
+ *
  * S-4a measures `/learners`; S-4b adds `/parents` and `/teachers`; S-5 adds `/`.
  */
 const en = getMessages('en').landing;
@@ -156,6 +158,42 @@ for (const budget of PAGES) {
       });
     }
 
+    for (const text200 of [false, true]) {
+      test(`at 320 px${text200 ? ' with 200 % text' : ''}: every fold opened keeps its content inside its box and the screen`, async ({ page }) => {
+        await page.setViewportSize({ width: 320, height: 812 });
+        await page.goto(budget.path);
+        if (text200) await setText200(page);
+        const folds = await page.evaluate(() => {
+          const all = Array.from(document.querySelectorAll('main details'));
+          for (const fold of all) (fold as HTMLDetailsElement).open = true;
+          return all.length;
+        });
+        expect(folds).toBeGreaterThan(0);
+        // Each fold's body (the div after its summary) against its content box: padding is not room for content.
+        const spills = await page.evaluate(() => {
+          const out: string[] = [];
+          for (const body of Array.from(document.querySelectorAll('main details > div'))) {
+            const box = body.getBoundingClientRect();
+            const style = getComputedStyle(body);
+            const left = box.left + Number.parseFloat(style.paddingLeft);
+            const right = box.right - Number.parseFloat(style.paddingRight);
+            for (const el of Array.from(body.querySelectorAll('*'))) {
+              const r = el.getBoundingClientRect();
+              if (r.width > 0 && (r.right > right + 0.5 || r.left < left - 0.5)) {
+                out.push(`<${el.tagName.toLowerCase()}> "${(el.textContent ?? '').trim().slice(0, 30)}" ${Math.round(r.left)}..${Math.round(r.right)} vs ${Math.round(left)}..${Math.round(right)}`);
+              }
+            }
+          }
+          return out.slice(0, 5).join('; ');
+        });
+        expect(spills).toBe('');
+        const { doc, body } = await page.evaluate(() => ({ doc: document.documentElement.scrollWidth, body: document.body.scrollWidth }));
+        const culprits = doc > 320 || body > 320 ? await overflowing(page, 320) : '';
+        expect(doc, culprits).toBeLessThanOrEqual(320);
+        expect(body, culprits).toBeLessThanOrEqual(320);
+      });
+    }
+
     test('at 1280 px the header is one row with every item, the current page marked', async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto(budget.path);
@@ -163,7 +201,8 @@ for (const budget of PAGES) {
       expect(rows).toBe(1);
       expect(height).toBeLessThanOrEqual(HEADER_MAX);
       const nav = page.getByRole('navigation', { name: en.nav.label });
-      await expect(nav.getByRole('link')).toHaveText([en.nav.learners, en.nav.parents, en.nav.teachers]);
+      // The shipped persona pages only (SHIPPED_PERSONA_PAGES); S-4b adds Parents and Teachers.
+      await expect(nav.getByRole('link')).toHaveText([en.nav.learners]);
       await expect(nav.locator('a[aria-current="page"]')).toHaveAttribute('href', budget.path);
     });
   });

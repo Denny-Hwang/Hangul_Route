@@ -73,10 +73,13 @@ export function Body({ children }: { children: ReactNode }): JSX.Element {
   return <p style={{ margin: 0, lineHeight: typography.leading.relaxed }}>{children}</p>;
 }
 
-/** A short bullet list: a decorative `brand.primary` dot, then the line. */
+/**
+ * A short bullet list: a decorative `brand.primary` dot, then the line. `role="list"`: Safari with VoiceOver drops the
+ * list role of a list with `list-style: none` (the same on `Steps` and the `/learners` card tiles).
+ */
 export function Bullets({ items }: { items: readonly string[] }): JSX.Element {
   return (
-    <ul style={{ listStyle: 'none', margin: `${spacing.md}px 0 0`, padding: 0, display: 'grid', gap: spacing.sm }}>
+    <ul role="list" style={{ listStyle: 'none', margin: `${spacing.md}px 0 0`, padding: 0, display: 'grid', gap: spacing.sm }}>
       {items.map((item) => (
         <li key={item} style={{ display: 'grid', gridTemplateColumns: `${spacing.sm}px minmax(0, 1fr)`, columnGap: spacing.md, lineHeight: typography.leading.normal }}>
           <span
@@ -93,7 +96,7 @@ export function Bullets({ items }: { items: readonly string[] }): JSX.Element {
 /** Numbered steps, one line each; `wide` puts them in three columns from 720 px. */
 export function Steps({ items, wide = false }: { items: readonly string[]; wide?: boolean }): JSX.Element {
   return (
-    <ol className={wide ? 'hr-site-steps hr-site-steps-wide' : 'hr-site-steps'} style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: spacing.md }}>
+    <ol role="list" className={wide ? 'hr-site-steps hr-site-steps-wide' : 'hr-site-steps'} style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: spacing.md }}>
       {items.map((item, i) => (
         <li key={item} style={{ display: 'grid', gridTemplateColumns: `${spacing.xxl}px minmax(0, 1fr)`, columnGap: spacing.md, alignItems: 'start' }}>
           <span

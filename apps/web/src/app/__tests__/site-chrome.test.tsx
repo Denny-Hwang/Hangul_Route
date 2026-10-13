@@ -5,10 +5,12 @@ import { getMessages } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SiteFooter } from '../../components/landing/SiteFooter';
-import { SiteHeader } from '../../components/landing/SiteHeader';
+import { PERSONA_PAGES, SHIPPED_PERSONA_PAGES, SiteHeader } from '../../components/landing/SiteHeader';
 import { SiteShell } from '../../components/landing/SiteShell';
 import { CONTACT_EMAIL } from '../../data/contact';
 import { learnerStart, signIn } from '../../lib/site-links';
+import { SITE_PAGES } from '../../lib/site-metadata';
+import { sitePath } from '../../lib/site-path';
 import { SITE_BREAKPOINTS } from '../../lib/site-style';
 
 /**
@@ -43,23 +45,43 @@ function controls(html: string): Control[] {
   }));
 }
 const hrefOf = (c: Control | undefined): string => /href="([^"]*)"/.exec(c?.attrs ?? '')?.[1] ?? '';
+/** The shipped persona pages' labels and paths, in nav order (S-4a: Learners; S-4b adds Parents and Teachers). */
+const personaLabels = SHIPPED_PERSONA_PAGES.map((page) => t.nav[page]);
+const personaPaths = (locale: 'en' | 'es'): string[] => SHIPPED_PERSONA_PAGES.map((page) => sitePath(locale, `/${page}`));
+
+describe('SHIPPED_PERSONA_PAGES', () => {
+  it('are the persona pages whose path is in SITE_PAGES, in nav order', () => {
+    expect(SHIPPED_PERSONA_PAGES).toEqual(PERSONA_PAGES.filter((page) => (SITE_PAGES as readonly string[]).includes(`/${page}`)));
+    expect(SHIPPED_PERSONA_PAGES).toContain('learners');
+  });
+});
+
+describe('every internal site link in the header and footer resolves to an exported page', () => {
+  const external = (href: string): boolean => /^(https?:|mailto:|#)/.test(href) || href === signIn() || href.startsWith('/signin');
+  for (const locale of ['en', 'es'] as const) {
+    it(`${locale}: each one is sitePath(locale, page) for a page in SITE_PAGES`, () => {
+      const pages = new Set(SITE_PAGES.map((page) => sitePath(locale, page)));
+      const html = [
+        renderToStaticMarkup(<SiteHeader locale={locale} />),
+        renderToStaticMarkup(<SiteHeader locale={locale} variant="legal" />),
+        renderToStaticMarkup(<SiteFooter locale={locale} page="/learners" />),
+        renderToStaticMarkup(<SiteFooter locale={locale} page="/privacy" variant="legal" />),
+      ].join('');
+      const internal = controls(html).map(hrefOf).filter((href) => !external(href) && href !== learnerStart(locale));
+      expect(internal.length).toBeGreaterThan(0);
+      for (const href of internal) expect(pages, href).toContain(href);
+    });
+  }
+});
 const classOf = (c: Control | undefined): string => /class="([^"]*)"/.exec(c?.attrs ?? '')?.[1] ?? '';
 
 describe('SiteHeader', () => {
   const html = renderToStaticMarkup(<SiteHeader locale="en" current="learners" />);
   const items = controls(html);
 
-  it('DOM order = visual order: skip link, brand, Start learning, the three persona links, Sign in', () => {
-    expect(items.map((c) => c.text)).toEqual([
-      t.nav.skip,
-      `${t.brand.mark}${t.brand.name}`,
-      t.nav.start,
-      t.nav.learners,
-      t.nav.parents,
-      t.nav.teachers,
-      t.nav.signIn,
-    ]);
-    expect(items.map(hrefOf)).toEqual(['#content', '/', learnerStart('en'), '/learners', '/parents', '/teachers', signIn()]);
+  it('DOM order = visual order: skip link, brand, Start learning, the shipped persona links, Sign in', () => {
+    expect(items.map((c) => c.text)).toEqual([t.nav.skip, `${t.brand.mark}${t.brand.name}`, t.nav.start, ...personaLabels, t.nav.signIn]);
+    expect(items.map(hrefOf)).toEqual(['#content', '/', learnerStart('en'), ...personaPaths('en'), signIn()]);
   });
 
   it('Sign in is the neutral grown-up sign-in (no persona hint), never /teach or /parent', () => {
@@ -67,15 +89,17 @@ describe('SiteHeader', () => {
     expect(html).not.toMatch(/href="\/(teach|parent)(\/|"|\?)/);
   });
 
-  it('the skip link is the first Tab stop and the brand mark is decorative', () => {
+  it('the skip link is the first Tab stop; the brand mark is part of the brand link\'s name (WCAG 2.5.3)', () => {
     expect(html.indexOf('href="#content"')).toBeLessThan(html.indexOf('<header'));
-    expect(html).toMatch(/<span aria-hidden="true" class="hr-site-brand-mark"/);
+    expect(html).toMatch(/<span class="hr-site-brand-mark"/);
+    expect(html).not.toMatch(/<span aria-hidden="true" class="hr-site-brand-mark"/);
+    expect(items[1]?.attrs).not.toContain('aria-label');
   });
 
   it('Start learning and the persona links are the phone-hidden items (one class the stylesheet hides below 720 px)', () => {
     expect(classOf(items[2])).toContain('hr-site-wide-only');
     expect(html).toMatch(/<nav aria-label="Main" class="[^"]*hr-site-wide-only/);
-    for (const i of [1, 6]) expect(classOf(items[i])).not.toContain('hr-site-wide-only');
+    for (const i of [1, items.length - 1]) expect(classOf(items[i])).not.toContain('hr-site-wide-only');
     // display is the stylesheet's: an inline display would beat the media query.
     expect(items[2]?.attrs).not.toMatch(/style="[^"]*display:/);
     expect(html).not.toMatch(/<nav[^>]*style="[^"]*display:/);
@@ -108,13 +132,14 @@ describe('SiteHeader', () => {
 
   it('a locale page links its locale: brand and persona links prefixed, the app link carries ?lang=', () => {
     const es = controls(renderToStaticMarkup(<SiteHeader locale="es" current="learners" />));
-    expect(es.map(hrefOf)).toEqual(['#content', '/es', learnerStart('es'), '/es/learners', '/es/parents', '/es/teachers', signIn()]);
+    expect(es.map(hrefOf)).toEqual(['#content', '/es', learnerStart('es'), ...personaPaths('es'), signIn()]);
+    expect(personaPaths('es')).toContain('/es/learners');
     expect(learnerStart('es')).toContain('lang=es');
   });
 
   it('the legal variant: brand and the persona links only, no Sign in and no Start learning (OD-14)', () => {
     const legal = controls(renderToStaticMarkup(<SiteHeader locale="en" variant="legal" />));
-    expect(legal.map((c) => c.text)).toEqual([t.nav.skip, `${t.brand.mark}${t.brand.name}`, t.nav.learners, t.nav.parents, t.nav.teachers]);
+    expect(legal.map((c) => c.text)).toEqual([t.nav.skip, `${t.brand.mark}${t.brand.name}`, ...personaLabels]);
     expect(legal.map(hrefOf)).not.toContain(signIn());
     expect(legal.map(hrefOf)).not.toContain(learnerStart('en'));
   });
@@ -131,9 +156,7 @@ describe('SiteFooter', () => {
 
   it('Guide: the persona pages; App: Start learning and Sign in; Company: About, Privacy, Terms and Contact', () => {
     expect(items.map((c) => c.text)).toEqual([
-      t.nav.learners,
-      t.nav.parents,
-      t.nav.teachers,
+      ...personaLabels,
       t.nav.start,
       t.nav.signIn,
       t.footer.about,
@@ -142,9 +165,7 @@ describe('SiteFooter', () => {
       `${t.footer.contact}${CONTACT_EMAIL}`,
     ]);
     expect(items.map(hrefOf)).toEqual([
-      '/learners',
-      '/parents',
-      '/teachers',
+      ...personaPaths('en'),
       learnerStart('en'),
       signIn(),
       '/about',
@@ -157,6 +178,25 @@ describe('SiteFooter', () => {
   it('no console, demo or billing link and no old anchors', () => {
     expect(html).not.toMatch(/href="\/(teach|parent|account|billing)(\/|"|\?|#)/);
     expect(html).not.toMatch(/href="#(cards|games|parents)"/);
+  });
+
+  it('only Guide is a landmark (nav, the page navigation on phones); App and Company add no region', () => {
+    expect(html).toMatch(/<nav aria-labelledby="footer-guide"><h2 id="footer-guide"/);
+    expect(html).not.toMatch(/<section\b/);
+    expect(html).not.toMatch(/aria-labelledby="footer-(app|company)"/);
+  });
+
+  it('every footer list keeps its list role', () => {
+    for (const m of html.matchAll(/<ul\b([^>]*)>/g)) expect(m[1]).toContain('role="list"');
+  });
+
+  it('marks the current persona page in Guide (the header nav is hidden on phones), bold and not by colour alone', () => {
+    expect(html).not.toContain('aria-current="page"');
+    const marked = controls(renderToStaticMarkup(<SiteFooter locale="en" page="/learners" current="learners" />)).filter((c) =>
+      c.attrs.includes('aria-current="page"'),
+    );
+    expect(marked.map((c) => c.text)).toEqual([t.nav.learners]);
+    expect(marked[0]?.attrs).toContain('font-weight:700');
   });
 
   it('the brand line and the copyright', () => {

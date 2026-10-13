@@ -2,12 +2,22 @@ import { borderWidth, colors, radii, spacing, typography } from '@hangul-route/d
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import Link from 'next/link';
 import { learnerStart, signIn } from '../../lib/site-links';
+import { SITE_PAGES } from '../../lib/site-metadata';
 import { sitePath } from '../../lib/site-path';
 import { HIT, HIT_SIZE, WRAP, rem } from '../../lib/site-style';
 
 /** The persona pages, in nav order (F-SITE-002 §3.4 to §3.6). */
 export const PERSONA_PAGES = ['learners', 'parents', 'teachers'] as const;
 export type PersonaPage = (typeof PERSONA_PAGES)[number];
+
+/**
+ * The persona pages the export holds, in nav order: those whose path is in `SITE_PAGES`. The header and the footer
+ * link only these, so no site link points at a page that has not shipped (S-4b adds `/parents` and `/teachers` to
+ * `SITE_PAGES`, and their links appear with them).
+ */
+export const SHIPPED_PERSONA_PAGES: readonly PersonaPage[] = PERSONA_PAGES.filter((page) =>
+  (SITE_PAGES as readonly string[]).includes(`/${page}`),
+);
 
 /** `default` on every site page; `legal` on /privacy and /terms: no Sign in and no Start learning (OD-14). */
 export type SiteChromeVariant = 'default' | 'legal';
@@ -31,7 +41,7 @@ const CURRENT_MARK = {
 /**
  * The site header (F-SITE-002 §3.2, §6; wireframe design/wireframes/site/header-footer.md; mock
  * design/screens/site/header.md). DOM order is the visual order at every width: skip link, brand, Start learning,
- * the three persona links, Sign in. Below 720 px (45em) Start learning and the nav carry `hr-site-wide-only`, which
+ * the persona links (the shipped ones), Sign in. Below 720 px (45em) Start learning and the nav carry `hr-site-wide-only`, which
  * `globals.css` sets to `display: none` (out of layout and the Tab order), so phones get one row: the brand and
  * Sign in. Nothing is behind a menu. The legal variant drops Sign in and Start learning (OD-14).
  *
@@ -76,8 +86,9 @@ export function SiteHeader({ locale, current, variant = 'default' }: SiteHeaderP
             className="hr-site-brand"
             style={{ ...HIT, justifyContent: 'flex-start', gap: spacing.sm, paddingRight: spacing.sm, color: colors.text.primary }}
           >
+            {/* Not aria-hidden: from 720 to 959 px the mark is the brand's only visible label, so it is part of the
+                link's accessible name (WCAG 2.5.3 Label in Name). */}
             <span
-              aria-hidden="true"
               className="hr-site-brand-mark"
               style={{
                 alignItems: 'center',
@@ -108,7 +119,7 @@ export function SiteHeader({ locale, current, variant = 'default' }: SiteHeaderP
             </a>
           ) : null}
           <nav aria-label={t.nav.label} className="hr-site-wide-only hr-site-nav" style={{ alignItems: 'center', columnGap: spacing.xxs }}>
-            {PERSONA_PAGES.map((page) => (
+            {SHIPPED_PERSONA_PAGES.map((page) => (
               <Link
                 href={sitePath(locale, `/${page}`)}
                 key={page}

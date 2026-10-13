@@ -9,7 +9,7 @@ import { SiteHeader, type PersonaPage, type SiteChromeVariant } from './SiteHead
 export interface SiteShellProps {
   locale: UiLocale;
   page: SitePage;
-  /** The persona page being shown (marked in the header nav). */
+  /** The persona page being shown (marked in the header nav and the footer Guide group). */
   current?: PersonaPage;
   variant?: SiteChromeVariant;
   children: ReactNode;
@@ -27,7 +27,7 @@ export function SiteShell({ locale, page, current, variant = 'default', children
       <main id="content" tabIndex={-1} className="hr-site-wrap" style={{ ...WRAP, outline: 'none' }}>
         {children}
       </main>
-      <SiteFooter locale={locale} page={page} variant={variant} />
+      <SiteFooter locale={locale} page={page} current={current} variant={variant} />
     </div>
   );
 }

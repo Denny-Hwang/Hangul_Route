@@ -8,27 +8,49 @@ import { shownSiteLocales, type SitePage } from '../../lib/site-metadata';
 import { sitePath } from '../../lib/site-path';
 import { HIT, WRAP, rem } from '../../lib/site-style';
 import { LocaleSwitcher } from './LocaleSwitcher';
-import { PERSONA_PAGES, type SiteChromeVariant } from './SiteHeader';
+import { SHIPPED_PERSONA_PAGES, type PersonaPage, type SiteChromeVariant } from './SiteHeader';
 
 export interface SiteFooterProps {
   locale: UiLocale;
   /** The page being shown: the locale switcher links the same page in each shown locale. */
   page: SitePage;
+  /** The persona page being shown: its Guide link carries `aria-current="page"` (on phones the header nav is hidden). */
+  current?: PersonaPage;
   variant?: SiteChromeVariant;
 }
 
 /** A footer link: 64 px tall, left-aligned; its colours change on hover, so they are the stylesheet's. */
 const FOOTER_LINK = { ...HIT, justifyContent: 'flex-start' } as const;
 
-/** One footer group: a small h2 and a list of links. */
-function Group({ id, title, children }: { id: string; title: string; children: ReactNode }): JSX.Element {
-  return (
-    <section aria-labelledby={id}>
-      <h2 id={id} style={{ margin: 0, fontSize: rem(typography.size.bodySm), fontWeight: typography.weight.bold, color: colors.text.primary }}>
-        {title}
-      </h2>
-      <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>{children}</ul>
-    </section>
+/** The current page's Guide link: bold in the primary text colour (a weight change, not colour alone). */
+const FOOTER_CURRENT = { color: colors.text.primary, fontWeight: typography.weight.bold } as const;
+
+/**
+ * One footer group: a small h2 and a list of links. Only Guide is a landmark (`nav`, the site's page navigation on
+ * phones, where the header nav is hidden); App and Company are plain groups, so the footer adds no region landmarks.
+ * `role="list"` keeps the unstyled list a list for VoiceOver in Safari.
+ */
+function Group({ id, title, nav = false, children }: { id: string; title: string; nav?: boolean; children: ReactNode }): JSX.Element {
+  const heading = (
+    <h2 id={id} style={{ margin: 0, fontSize: rem(typography.size.bodySm), fontWeight: typography.weight.bold, color: colors.text.primary }}>
+      {title}
+    </h2>
+  );
+  const list = (
+    <ul role="list" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+      {children}
+    </ul>
+  );
+  return nav ? (
+    <nav aria-labelledby={id}>
+      {heading}
+      {list}
+    </nav>
+  ) : (
+    <div>
+      {heading}
+      {list}
+    </div>
   );
 }
 
@@ -36,10 +58,10 @@ function Group({ id, title, children }: { id: string; title: string; children: R
  * The site footer (F-SITE-002 §3.2; wireframe design/wireframes/site/header-footer.md; mock
  * design/screens/site/header.md). Three groups in one DOM order, Guide, App, Company: on phones Guide and App stack
  * in the left column and Company sits on the right, on wide screens they are three columns (`hr-site-footer-*` in
- * `globals.css`). Then the copyright line and the locale switcher (shown once a second locale ships). The legal
+ * `globals.css`). Guide links the shipped persona pages only. Then the copyright line and the locale switcher (shown once a second locale ships). The legal
  * variant drops the App group (OD-14). No console, demo or billing link, and no old in-page anchors.
  */
-export function SiteFooter({ locale, page, variant = 'default' }: SiteFooterProps): JSX.Element {
+export function SiteFooter({ locale, page, current, variant = 'default' }: SiteFooterProps): JSX.Element {
   const t = getMessages(locale).landing;
   const link = (href: string, label: ReactNode, internal: boolean): JSX.Element => (
     <li>
@@ -62,10 +84,15 @@ export function SiteFooter({ locale, page, variant = 'default' }: SiteFooterProp
         </p>
         <div className="hr-site-footer-groups">
           <div className="hr-site-footer-col">
-            <Group id="footer-guide" title={t.footer.guide}>
-              {PERSONA_PAGES.map((persona) => (
+            <Group id="footer-guide" title={t.footer.guide} nav>
+              {SHIPPED_PERSONA_PAGES.map((persona) => (
                 <li key={persona}>
-                  <Link href={sitePath(locale, `/${persona}`)} className="hr-site-footer-link" style={FOOTER_LINK}>
+                  <Link
+                    href={sitePath(locale, `/${persona}`)}
+                    className="hr-site-footer-link"
+                    aria-current={persona === current ? 'page' : undefined}
+                    style={persona === current ? { ...FOOTER_LINK, ...FOOTER_CURRENT } : FOOTER_LINK}
+                  >
                     {t.nav[persona]}
                   </Link>
                 </li>
