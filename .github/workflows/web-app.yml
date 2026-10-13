@@ -18,6 +18,13 @@ name: Web App (PWA)
 # the build job skipped its steps on purpose).
 # A failed shard can be re-run alone; it downloads the same bundles.
 # scripts/__tests__/ci-workflows.test.mjs keeps this layout honest.
+#
+# Switch-on lane (F-ENT-003 E3-13): nightly and on demand only, the job
+# switch-on builds dist/ with both content gating switches on (the values the
+# owner's switch-on step sets in production, OD-2) and runs every spec that
+# reads E2E_CONTENT_GATING with E2E_CONTENT_GATING=1, so the switch-on halves
+# stay current with main. It is not a required check, and on those runs the
+# pipeline above skips its build and e2e (the required check reports success).
 
 on:
   # No path filter: this job is a required check on main, and a required
@@ -33,9 +40,20 @@ on:
       - "packages/**"
       - "content/**"
       - "scripts/build-stories.mjs"
+  # F-ENT-003 E3-13: the switch-on lane (job switch-on), on demand and nightly.
+  workflow_dispatch:
+    inputs:
+      notes:
+        description: "Also turn on the notes build flag (EXPO_PUBLIC_NOTES_ENABLED) and run notes-screens with E2E_NOTES=1, for a release that ships both"
+        type: boolean
+        default: false
+  schedule:
+    - cron: "23 9 * * *"
 
+# The event is part of the group, so a nightly or on-demand run on main and a
+# push run on main never cancel each other.
 concurrency:
-  group: web-app-${{ github.ref }}
+  group: web-app-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -62,9 +80,15 @@ jobs:
         id: changes
         shell: bash
         run: |
-          if [ "${{ github.event_name }}" != "pull_request" ]; then
-            echo "run=true" >> "$GITHUB_OUTPUT"; exit 0
-          fi
+          case "${{ github.event_name }}" in
+            schedule|workflow_dispatch)
+              # F-ENT-003 E3-13: these runs are the switch-on lane only (job switch-on).
+              echo "run=false" >> "$GITHUB_OUTPUT"
+              echo "::notice::Nightly or on-demand run: only the switch-on lane runs; the release-build pipeline is skipped."
+              exit 0 ;;
+            pull_request) ;;
+            *) echo "run=true" >> "$GITHUB_OUTPUT"; exit 0 ;;
+          esac
           git fetch --no-tags --depth=1 origin "${{ github.event.pull_request.base.sha }}"
           changed=$(git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}")
           echo "$changed"
@@ -333,6 +357,89 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-chromium-${{ runner.os }}-${{ steps.pw.outputs.version }}
+
+  # F-ENT-003 E3-13: the switch-on e2e lane. Nightly and on demand only; not a
+  # required check, and the job 'Build PWA · offline e2e' does not need it.
+  # It restores no cache: a Metro or Next cache from a switch-off build could
+  # serve the switch-off values inlined into the bundle.
+  switch-on:
+    name: PWA · switch-on e2e (content gating on, nightly and on demand)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      WRANGLER_SEND_METRICS: "false"
+      NOTES: ${{ github.event_name == 'workflow_dispatch' && inputs.notes && 'true' || 'false' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm, Node and dependencies
+        uses: ./.github/actions/setup-workspace
+
+      # The production switch-on values (docs/launch/owner-runbook.md section G):
+      # EXPO_PUBLIC_CONTENT_GATING_ENABLED for the learner app and
+      # NEXT_PUBLIC_CONTENT_GATING_ENABLED for the app-host console, which
+      # build:web builds into dist/ (merge-console.mjs passes the environment
+      # through). Metro inlines EXPO_PUBLIC_* values and caches its transforms
+      # in os.tmpdir()/metro-cache, so the build runs on a fresh, empty TMPDIR.
+      - name: Build the switch-on bundle (dist, both content gating switches on, Metro cache cleared)
+        env:
+          EXPO_PUBLIC_CONTENT_GATING_ENABLED: "true"
+          NEXT_PUBLIC_CONTENT_GATING_ENABLED: "true"
+        shell: bash
+        run: |
+          rm -rf /tmp/metro-cache apps/web/.next/cache
+          export TMPDIR="$RUNNER_TEMP/switch-on-tmp"
+          rm -rf "$TMPDIR" && mkdir -p "$TMPDIR"
+          if [ "$NOTES" = true ]; then export EXPO_PUBLIC_NOTES_ENABLED=true; fi
+          pnpm --filter @hangul-route/mobile build:web
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @hangul-route/mobile exec playwright install --with-deps chromium
+
+      # Every spec that reads E2E_CONTENT_GATING, found afresh on each run, so a
+      # new switch-on half joins the lane without an edit here. notes-screens is
+      # one of them: its notes half runs only with E2E_NOTES=1 (the notes input).
+      - name: Switch-on e2e (release dist, E2E_CONTENT_GATING=1)
+        working-directory: apps/mobile
+        env:
+          E2E_CONTENT_GATING: "1"
+        shell: bash
+        run: |
+          if [ "$NOTES" = true ]; then export E2E_NOTES=1; fi
+          mapfile -t specs < <(git grep -l E2E_CONTENT_GATING -- 'e2e/web/*.spec.ts')
+          if [ "${#specs[@]}" -eq 0 ]; then
+            echo "::error::no spec reads E2E_CONTENT_GATING"
+            exit 1
+          fi
+          printf 'switch-on spec: %s\n' "${specs[@]}"
+          pnpm exec playwright test "${specs[@]}"
+
+      # The gating fixture bundle half of the switch-on precondition (the same
+      # run as shard 1 of the pull-request e2e): the locked story tile and the
+      # QuestPlayer guard on a closed quest.
+      - name: Build the gating fixture bundle (dist-e2e-gated)
+        if: ${{ !cancelled() }}
+        run: pnpm --filter @hangul-route/mobile build:web:fixtures:gated
+
+      - name: Switch-on e2e (gating fixture bundle, STORY_FIXTURES_GATED=1)
+        if: ${{ !cancelled() }}
+        working-directory: apps/mobile
+        env:
+          STORY_FIXTURES_GATED: "1"
+        run: pnpm exec playwright test story-shelf-gated.spec free-days.spec
+
+      - name: Upload the Playwright results (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: switch-on-e2e-results
+          path: apps/mobile/test-results
+          overwrite: true
+          if-no-files-found: ignore
+          retention-days: 7
 
   pwa:
     name: Build PWA · offline e2e
