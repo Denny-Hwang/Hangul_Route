@@ -41,12 +41,15 @@ export interface AutoRepaceInput {
 
 /**
  * At most once per UTC day (a re-pace of either kind today counts), never while a session is
- * open, and only when three or more past-dated items wait or the oldest is a week old.
+ * open or after the plan's last week, and only when three or more past-dated items wait or the oldest is a week old.
  */
 export function autoRepaceDue(i: AutoRepaceInput): boolean {
   const route = i.route;
   if (route === null || route.archivedAt !== null || i.sessionOpen) return false;
   if (route.meta.repacedAt !== null && route.meta.repacedAt.slice(0, 10) === i.today) return false;
+  // Past the last week nothing is left to move along: a re-pace would change nothing but its marks.
+  const last = route.meta.weeks[route.meta.weeks.length - 1];
+  if (last === undefined || addDays(last.startDate, 7) <= i.today) return false;
   const pending = pendingPastOf(route, i.homework, i.today);
   if (pending.length >= AUTO_REPACE_PENDING) return true;
   const oldest = pending.reduce<string | null>((min, h) => (min === null || h.targetDate < min ? h.targetDate : min), null);

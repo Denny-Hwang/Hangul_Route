@@ -19,7 +19,7 @@ import { usePlanBasis } from './use-plan-basis';
  * G2): the first four weeks open and the later ones behind one row, the stats and the notices in
  * the UI language. The Premium warning is never shown here: locked and unreleased parts read
  * only "More lessons are coming." **Start this plan** stores it (`routeStore.create`, from
- * `setup`), derives its first week and opens the overview; **Change something** goes back.
+ * `setup`, replacing the plan in force when there is one), derives its first week and opens the overview; **Change something** goes back.
  */
 
 type Props = NativeStackScreenProps<RootStackParamList, 'RoutePreview'>;
@@ -45,7 +45,7 @@ export function RoutePreviewScreen({ route, navigation }: Props): React.ReactEle
   const m = useMessages();
   const t = m.learner.weeklyPlan.planPreview;
   const locale = useLocale();
-  const { basis } = usePlanBasis(profileId);
+  const { basis, active } = usePlanBasis(profileId);
   const [showLater, setShowLater] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -68,7 +68,10 @@ export function RoutePreviewScreen({ route, navigation }: Props): React.ReactEle
     if (draft === null || busy) return;
     setBusy(true);
     setFailed(false);
-    const created = await useRouteStore.getState().create(profileId, draft, { from: 'setup', changed: true });
+    // Change the plan replaces the plan these steps started from (section 3.9), and only that one.
+    const created = await useRouteStore
+      .getState()
+      .create(profileId, draft, { from: 'setup', changed: true, ...(active === null ? {} : { replacing: active.id }) });
     setBusy(false);
     if (created === null) {
       setFailed(true);

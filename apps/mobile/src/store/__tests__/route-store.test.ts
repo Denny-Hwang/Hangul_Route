@@ -103,6 +103,22 @@ describe('route-store: create and archive (F-PLAN-002 section 3.9)', () => {
     expect(track).not.toHaveBeenCalled();
   });
 
+  it('create replaces the active plan only when told which one (Change the plan); a stale id changes nothing', async () => {
+    const first = await useRouteStore.getState().create('profile:a', draftFrom(TODAY), { from: 'proposal', changed: false }, NOW);
+    vi.mocked(track).mockClear();
+    const later = new Date(NOW.getTime() + 1000);
+    expect(await useRouteStore.getState().create('profile:a', draftFrom(TODAY), { from: 'setup', changed: true, replacing: 'route:not-this-one' }, later)).toBeNull();
+    expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute?.id).toBe(first?.id);
+    const next = await useRouteStore.getState().create('profile:a', draftFrom(TODAY), { from: 'setup', changed: true, replacing: first?.id }, later);
+    expect(next).not.toBeNull();
+    expect(next?.id).not.toBe(first?.id);
+    const snap = useProgressStore.getState().byProfile['profile:a'];
+    expect(snap?.selfRoute?.id).toBe(next?.id);
+    // The old plan's pending items leave; the new plan's first week is homework now.
+    expect((snap?.homework ?? []).filter((h) => !h.completedAt).every((h) => h.id.startsWith(`${next?.id}#`))).toBe(true);
+    expect(track).toHaveBeenCalledWith(expect.objectContaining({ name: 'route.created', payload: expect.objectContaining({ from: 'setup' }) }));
+  });
+
   it('create works again once the active plan is archived', async () => {
     await useRouteStore.getState().create('profile:a', draftFrom(TODAY), { from: 'proposal', changed: false }, NOW);
     await useRouteStore.getState().archive('profile:a', NOW);
@@ -176,8 +192,11 @@ describe('route-store: re-pace and the Hoya check-in (section 3.7, FP-B14)', () 
     expect(await useRouteStore.getState().answerCheckIn('profile:a', { kind: 'lighter', pace: 'gentle' }, NOW)).toBe(true);
     expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute?.meta.params.sessionsPerWeek).toBe(2);
     expect(useRouteStore.getState().ui['profile:a']?.checkInFor).toBe(created?.id);
-    expect(await useRouteStore.getState().answerCheckIn('profile:a', null, NOW)).toBe(true);
-    expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute?.meta.params.sessionsPerWeek).toBe(2);
+    // Answered once for this plan: a second card (Home and the overview both drew it) changes nothing.
+    const before = useProgressStore.getState().byProfile['profile:a']?.selfRoute;
+    expect(await useRouteStore.getState().answerCheckIn('profile:a', { kind: 'faster', pace: 'steady' }, new Date(NOW.getTime() + 1000))).toBe(false);
+    expect(await useRouteStore.getState().answerCheckIn('profile:a', null, NOW)).toBe(false);
+    expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute).toEqual(before);
   });
 
   it('answerCheckIn is false without a plan; markMovedSeen remembers the line was seen', async () => {

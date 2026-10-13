@@ -52,6 +52,14 @@ describe('automatic re-pace (section 3.7)', () => {
     expect(autoRepaceDue({ route, homework: [], today, sessionOpen: false })).toBe(false);
   });
 
+  it('never once the plan\'s last week is over: nothing is left to move along', () => {
+    const short = routeAt(3, 4); // weeks 1 to 4: 2026-09-07 to 2026-10-04
+    const waiting = [hw(short, 'q1', '2026-09-29'), hw(short, 'q2', '2026-09-30'), hw(short, 'q3', '2026-10-01')];
+    expect(autoRepaceDue({ route: short, homework: waiting, today: '2026-10-04', sessionOpen: false })).toBe(true);
+    expect(autoRepaceDue({ route: short, homework: waiting, today: '2026-10-05', sessionOpen: false })).toBe(false);
+    expect(autoRepaceDue({ route: short, homework: waiting, today: '2026-11-20', sessionOpen: false })).toBe(false);
+  });
+
   it('never with no plan, a stopped plan, an open session, or a second time the same day', () => {
     const three = [hw(route, 'q1', '2026-09-17'), hw(route, 'q2', '2026-09-18'), hw(route, 'q3', '2026-09-19')];
     expect(autoRepaceDue({ route: null, homework: three, today, sessionOpen: false })).toBe(false);

@@ -1,7 +1,7 @@
 import { Body, Button, Card, Spacer, spacing } from '@hangul-route/design-system';
 import type { InboxPlan, Profile, ProgressSnapshot } from '@hangul-route/content-schema';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { flags } from '../../config/flags';
 import { useMessages } from '../../i18n/use-messages';
@@ -12,7 +12,8 @@ import { effectiveLearnerType } from '../../logic/profiles/learner-type';
 import { movedLineVisible, planSlotOf, type PlanSlot } from '../../logic/route/home-slot';
 import { newestResultAt, planPromptEligible, proposalSkippedEvent } from '../../logic/route/proposal-flow';
 import { checkInOffer } from '../../logic/route/repace';
-import { activeSelfRoute } from '../../logic/route/self-route';
+import { activeSelfRoute, completedQuestIdsOf } from '../../logic/route/self-route';
+import { subscribeAppVisibility } from '../../platform/app-visibility';
 import { track } from '../../platform/telemetry';
 import { usePlanStore } from '../../store/plan-store';
 import { useRouteStore } from '../../store/route-store';
@@ -83,7 +84,7 @@ export function PlanPromptCard({ profileId, onOpen }: { profileId: string; onOpe
  * Home's one quiet card for the weekly plan (F-PLAN-002 sections 3.7 and 3.9): the prompt before a
  * plan exists; with a plan, the Hoya check-in of week 5 (FP-B14) or, once after an automatic
  * re-pace, "Hoya moved your plan along". A card that appeared stays for this visit while it is
- * answered or read; the moved line is marked seen when it first shows.
+ * answered or read; the moved line is marked seen when its card is drawn.
  */
 export function usePlanSlot(
   profile: Profile | null,
@@ -93,20 +94,29 @@ export function usePlanSlot(
   const prompt = usePlanPrompt(profile, snapshot, plans);
   const profileId = profile?.id ?? null;
   const ui = useRouteStore((s) => (profileId === null ? undefined : s.ui[profileId]));
-  const today = useMemo(() => dayKey(new Date().toISOString()), []);
+  // Home stays mounted across days: the day is read again on focus and when the app comes back to the front.
+  const [today, setToday] = useState(() => dayKey(new Date().toISOString()));
+  useFocusEffect(
+    useCallback(() => {
+      setToday(dayKey(new Date().toISOString()));
+      return subscribeAppVisibility((visible) => {
+        if (visible) setToday(dayKey(new Date().toISOString()));
+      });
+    }, []),
+  );
   const active = flags.routeEnabled ? activeSelfRoute(snapshot) : null;
   const offer =
     active === null || ui === undefined || snapshot === undefined
       ? null
-      : checkInOffer({ route: active, completedQuestIds: snapshot.quests.filter((q) => q.completedAt !== undefined).map((q) => q.questId), today, answeredFor: ui.checkInFor });
+      : checkInOffer({ route: active, completedQuestIds: completedQuestIdsOf(snapshot.quests), today, answeredFor: ui.checkInFor });
   const [shownOffer] = useShownOffer(offer);
   const [moved, setMoved] = useState(false);
   const movedNow = active !== null && ui !== undefined && movedLineVisible(ui);
+  // Kept for this visit; it is marked seen only by the card that draws it (`MovedLine`), so a line the
+  // check-in or the level check kept off the slot still shows later.
   useEffect(() => {
-    if (!movedNow || profileId === null) return;
-    setMoved(true);
-    void useRouteStore.getState().markMovedSeen(profileId, new Date().toISOString());
-  }, [movedNow, profileId]);
+    if (movedNow) setMoved(true);
+  }, [movedNow]);
   return planSlotOf({ prompt, offer: shownOffer, moved: moved && active !== null });
 }
 
@@ -124,11 +134,19 @@ export function PlanSlotCard({
   /** The overview (See my plan). */
   onOverview: () => void;
 }): React.ReactElement | null {
-  const t = useMessages().learner.weeklyPlan.homeMoved;
   const [closed, setClosed] = useState(false);
   if (closed) return null;
   if (slot.kind === 'prompt') return <PlanPromptCard profileId={profileId} onOpen={onOpen} />;
   if (slot.kind === 'check-in') return <CheckInCard profileId={profileId} offer={slot.offer} onClose={() => setClosed(true)} testID="home-plan-check-in" />;
+  return <MovedLine profileId={profileId} onOverview={onOverview} />;
+}
+
+/** "Hoya moved your plan along" with See my plan; drawing it marks the line seen (section 3.7). */
+function MovedLine({ profileId, onOverview }: { profileId: string; onOverview: () => void }): React.ReactElement {
+  const t = useMessages().learner.weeklyPlan.homeMoved;
+  useEffect(() => {
+    void useRouteStore.getState().markMovedSeen(profileId, new Date().toISOString());
+  }, [profileId]);
   return (
     <Card padding="md" tone="sunken" testID="home-plan-moved">
       <Body weight="semibold">{t.line}</Body>

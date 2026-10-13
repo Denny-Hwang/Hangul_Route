@@ -24,10 +24,17 @@ describe('the plan preview (wireframe G2)', () => {
     expect(draftWeeks(d).slice(0, PREVIEW_OPEN_WEEKS)).toEqual(open);
   });
 
-  it('keeps a culture week\'s lead story for its label', () => {
+  it('keeps a culture week\'s lead story as its quest id, so the label can name the story', () => {
     const d = draft(26, { goals: { focus: 'culture' }, unlockedStages: ['stage1'] });
-    const weeks = previewWeeks(d).open;
-    for (const w of weeks) expect(w.storyId === null || typeof w.storyId === 'string').toBe(true);
+    const weeks = draftWeeks(d);
+    const withStory = weeks.filter((w) => w.storyQuestId !== null);
+    expect(withStory.length).toBeGreaterThan(0);
+    const storyQuests = new Set(CATALOG.stories.map((s) => s.questId));
+    for (const w of withStory) expect(storyQuests.has(w.storyQuestId ?? '')).toBe(true);
+    // The lead story of the week is the first of the week's focus stories.
+    const meta = d.weeks.find((w) => w.focus.storyIds.length > 0);
+    const lead = CATALOG.stories.find((s) => s.id === meta?.focus.storyIds[0]);
+    expect(weeks.find((w) => w.index === meta?.index)?.storyQuestId).toBe(lead?.questId);
   });
 
   it('the stats line: ready items, their minutes and the stage the lessons reach', () => {

@@ -149,7 +149,7 @@ function extraText(extra: WeekExtra, locale: UiLocale, t: Messages['learner']['w
 export function PlanWeekCard({ week, locale, testID }: { week: PlanWeek; locale: UiLocale; testID: string }): React.ReactElement {
   const m = useMessages();
   const t = m.learner.weeklyPlan.planPreview;
-  const story = week.storyId === null ? undefined : questsAll.find((q) => q.id === week.storyId);
+  const story = week.storyQuestId === null ? undefined : questsAll.find((q) => q.id === week.storyQuestId);
   const kind = week.kind === 'culture' && story !== undefined ? t.cultureWeek(localizeQuest(story, locale).titleEn) : t.kind[week.kind];
   const firstDay = formatDate(locale, `${week.startDate}T00:00:00Z`, 'monthDay', { utc: true });
   return (

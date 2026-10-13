@@ -1,4 +1,5 @@
 import {
+  CATALOG,
   addDays,
   placementStageNumber,
   toPlanItems,
@@ -23,14 +24,18 @@ export interface PlanWeek {
   index: number;
   startDate: DateKey;
   kind: WeekKind;
-  /** The week's lead story (a culture week), for its label. */
-  storyId: string | null;
+  /** The quest of the week's lead story (a culture week), for its label "Culture week: <title>". */
+  storyQuestId: string | null;
   rows: WeekRow[];
   extras: WeekExtra[];
 }
 
 /** How many weeks the preview opens; later weeks sit behind one collapsed row (G2). */
 export const PREVIEW_OPEN_WEEKS = 4;
+
+/** A catalogue story id (`story:<slug>`) to the quest that tells it. */
+const storyQuestOf = (storyId: string | undefined): string | null =>
+  storyId === undefined ? null : (CATALOG.stories.find((story) => story.id === storyId)?.questId ?? null);
 
 function weeksOf(meta: Pick<CurriculumMeta, 'weeks'>, items: readonly PlanItem[]): PlanWeek[] {
   return meta.weeks.map((week) => {
@@ -39,7 +44,7 @@ function weeksOf(meta: Pick<CurriculumMeta, 'weeks'>, items: readonly PlanItem[]
       .filter((item): item is PlanItem & { targetDate: string } => item.targetDate !== undefined && item.targetDate >= week.startDate && item.targetDate < end)
       .map((item) => ({ date: item.targetDate, kind: item.kind, id: item.id }))
       .sort((a, b) => a.date.localeCompare(b.date));
-    return { index: week.index, startDate: week.startDate, kind: week.kind, storyId: week.focus.storyIds[0] ?? null, rows, extras: [...week.extras] };
+    return { index: week.index, startDate: week.startDate, kind: week.kind, storyQuestId: storyQuestOf(week.focus.storyIds[0]), rows, extras: [...week.extras] };
   });
 }
 

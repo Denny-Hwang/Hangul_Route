@@ -13,7 +13,7 @@ import { movedLineVisible } from '../../logic/route/home-slot';
 import { planOverview } from '../../logic/route/plan-view';
 import { profileRowOpens } from '../../logic/route/proposal-flow';
 import { checkInOffer } from '../../logic/route/repace';
-import { activeSelfRoute } from '../../logic/route/self-route';
+import { activeSelfRoute, completedQuestIdsOf } from '../../logic/route/self-route';
 import type { RootStackParamList } from '../../navigation/types';
 import { useAudience } from '../../store/audience';
 import { useProfileStore } from '../../store/profile-store';
@@ -72,7 +72,7 @@ export function RouteOverviewScreen({ route, navigation }: Props): React.ReactEl
   );
 
   const active = activeSelfRoute(snapshot);
-  const completed = useMemo(() => (snapshot?.quests ?? []).filter((q) => q.completedAt !== undefined).map((q) => q.questId), [snapshot]);
+  const completed = useMemo(() => completedQuestIdsOf(snapshot?.quests), [snapshot]);
   const view = useMemo(() => (active === null ? null : planOverview(active, today)), [active, today]);
   const offer = ui === undefined ? null : checkInOffer({ route: active, completedQuestIds: completed, today, answeredFor: ui.checkInFor });
   const [shownOffer, closeOffer] = useShownOffer(offer);
@@ -83,15 +83,19 @@ export function RouteOverviewScreen({ route, navigation }: Props): React.ReactEl
     else navigation.navigate('Main', { screen: 'Home' });
   };
 
-  const changePlan = (): void => {
+  // Change the plan, Make a new plan and Make a weekly plan: a child's plan goes through the grown-up gate (section 3.9).
+  const openGated = (next: 'RouteSetup' | 'RouteProposal'): void => {
     if (profile === null) return;
     const sessionOpen = isParentSessionValid(parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' }, Date.now());
-    if (profileRowOpens({ learnerType: effectiveLearnerType(profile), opensDirectly: opensDirectly(sessionOpen) }) === 'proposal') {
+    if (profileRowOpens({ learnerType: effectiveLearnerType(profile), opensDirectly: opensDirectly(sessionOpen) }) !== 'proposal') {
+      navigation.navigate('PinEntry', { next, profileId });
+    } else if (next === 'RouteSetup') {
       navigation.navigate('RouteSetup', { profileId });
     } else {
-      navigation.navigate('PinEntry', { next: 'RouteSetup', profileId });
+      navigation.replace('RouteProposal', { source: 'profile', profileId });
     }
   };
+  const changePlan = (): void => openGated('RouteSetup');
 
   const moveAlong = async (): Promise<void> => {
     if (busy) return;
@@ -147,7 +151,7 @@ export function RouteOverviewScreen({ route, navigation }: Props): React.ReactEl
           tone="primary"
           size="lg"
           fullWidth
-          onPress={() => navigation.replace('RouteProposal', { source: 'profile', profileId })}
+          onPress={() => openGated('RouteProposal')}
           testID="route-overview-make"
         />
         <Spacer size="sm" />
@@ -195,7 +199,7 @@ export function RouteOverviewScreen({ route, navigation }: Props): React.ReactEl
             tone="primary"
             size="lg"
             fullWidth
-            onPress={() => navigation.navigate('RouteSetup', { profileId })}
+            onPress={changePlan}
             testID="route-overview-new-plan"
           />
         </>

@@ -1,5 +1,4 @@
-import { SelfRouteSchema, addDays, toMeta, toPlanItems, type CurriculumDraft, type DateKey, type SelfRoute } from '@hangul-route/content-schema';
-import type { WeekRow } from './proposal-flow';
+import { SelfRouteSchema, toMeta, toPlanItems, type CurriculumDraft, type SelfRoute } from '@hangul-route/content-schema';
 
 /**
  * The learner's own weekly plan as it is stored in the progress snapshot (F-PLAN-002
@@ -38,13 +37,7 @@ export function activeSelfRoute(snapshot: { selfRoute?: SelfRoute | null } | und
   return route !== null && route.archivedAt === null ? route : null;
 }
 
-/** The items of the plan week that holds `today`, by date; empty before the plan starts or after it ends. */
-export function thisWeekRows(route: Pick<SelfRoute, 'meta' | 'items'>, today: DateKey): WeekRow[] {
-  const week = route.meta.weeks.find((w) => w.startDate <= today && today < addDays(w.startDate, 7));
-  if (week === undefined) return [];
-  const end = addDays(week.startDate, 7);
-  return route.items
-    .filter((item): item is typeof item & { targetDate: string } => item.targetDate !== undefined && item.targetDate >= week.startDate && item.targetDate < end)
-    .map((item) => ({ date: item.targetDate, kind: item.kind, id: item.id }))
-    .sort((a, b) => a.date.localeCompare(b.date));
+/** The quests a learner finished, the one rule the plan's re-pace, check-in, proposal and preview read. */
+export function completedQuestIdsOf(quests: ReadonlyArray<{ questId: string; completedAt?: string }> | undefined): string[] {
+  return (quests ?? []).filter((q) => q.completedAt !== undefined).map((q) => q.questId);
 }

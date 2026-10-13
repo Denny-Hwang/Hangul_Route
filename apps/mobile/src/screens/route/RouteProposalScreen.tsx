@@ -64,7 +64,7 @@ import {
   type ProposalContext,
   type WeekRow,
 } from '../../logic/route/proposal-flow';
-import { activeSelfRoute } from '../../logic/route/self-route';
+import { activeSelfRoute, completedQuestIdsOf } from '../../logic/route/self-route';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
 import { unlockedStagesFor, usePlanStore } from '../../store/plan-store';
@@ -129,7 +129,7 @@ export function RouteProposalScreen({ route, navigation }: Props): React.ReactEl
     if (profile === null || snapshot === undefined) return null;
     return {
       placements: snapshot.placements,
-      completedQuestIds: snapshot.quests.filter((q) => q.completedAt !== undefined).map((q) => q.questId),
+      completedQuestIds: completedQuestIdsOf(snapshot.quests),
       ageGroup: profile.ageGroup,
       unlockedStages: unlockedStagesFor(new Date(), profileId) as StageKey[],
       today,

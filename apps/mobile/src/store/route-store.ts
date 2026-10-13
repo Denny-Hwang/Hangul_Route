@@ -4,7 +4,7 @@ import { create } from 'zustand';
 import { dayKey } from '../logic/homework/mission-builder';
 import { createdEvent } from '../logic/route/proposal-flow';
 import { applyCheckIn, autoRepaceDue, pendingPastOf, repaceSelfRoute, repacedEvent, type CheckInOffer } from '../logic/route/repace';
-import { activeSelfRoute, archivedRoute, newSelfRouteId, selfRouteOf } from '../logic/route/self-route';
+import { activeSelfRoute, archivedRoute, completedQuestIdsOf, newSelfRouteId, selfRouteOf } from '../logic/route/self-route';
 import { readJson, writeJson } from '../platform/storage';
 import { track } from '../platform/telemetry';
 import { usePlanStore } from './plan-store';
@@ -36,6 +36,11 @@ export interface CreateOptions {
   from: 'proposal' | 'setup';
   /** The learner changed what Hoya proposed (`route.created.changed`). */
   changed: boolean;
+  /**
+   * Change the plan (section 3.9): the id of the active plan this one replaces. Without it, or with
+   * an id that is no longer the active plan, an active plan is never overwritten.
+   */
+  replacing?: string;
 }
 
 interface State {
@@ -47,7 +52,7 @@ interface Actions {
   loadUi: (profileId: string) => Promise<RouteUi>;
   /** Not now (the Home prompt or the proposal screen): hides the prompt for 14 days or until the next result. */
   markDismissed: (profileId: string, at: string) => Promise<void>;
-  /** A new active plan from a draft; null when one is already active or it would not parse (nothing is stored then). */
+  /** A new active plan from a draft; null when another plan is active (unless `replacing` names it) or it would not parse (nothing is stored then). */
   create: (profileId: string, draft: CurriculumDraft, opts: CreateOptions, now?: Date) => Promise<SelfRoute | null>;
   /** Stop the active plan; false when there is none. */
   archive: (profileId: string, now?: Date) => Promise<boolean>;
@@ -58,14 +63,13 @@ interface Actions {
   autoRepace: (profileId: string, now?: Date) => Promise<boolean>;
   /** "Move my plan along": the same re-pace by hand; false without an active plan. */
   repaceNow: (profileId: string, now?: Date) => Promise<boolean>;
-  /** The Hoya check-in's answer: an offer applies the new pace, null is Not now; either closes it for this plan. */
+  /** The Hoya check-in's answer: an offer applies the new pace, null is Not now; either closes it for this plan, and a second answer is false. */
   answerCheckIn: (profileId: string, offer: CheckInOffer | null, now?: Date) => Promise<boolean>;
   /** The calm "Hoya moved your plan along" line was seen. */
   markMovedSeen: (profileId: string, at: string) => Promise<void>;
 }
 
-const completedOf = (profileId: string): string[] =>
-  (useProgressStore.getState().byProfile[profileId]?.quests ?? []).filter((q) => q.completedAt !== undefined).map((q) => q.questId);
+const completedOf = (profileId: string): string[] => completedQuestIdsOf(useProgressStore.getState().byProfile[profileId]?.quests);
 
 export const useRouteStore = create<State & Actions>((set, get) => {
   /** Merge a patch into `route-ui:<profileId>`; the stored record is read first, so no other mark is lost. */
@@ -116,8 +120,9 @@ export const useRouteStore = create<State & Actions>((set, get) => {
     create: async (profileId, draft, opts, now = new Date()) => {
       const progress = useProgressStore.getState();
       await progress.hydrate(profileId);
-      // A plan stops only by archiving it (section 3.9): never overwrite an active one here.
-      if (activeSelfRoute(useProgressStore.getState().byProfile[profileId]) !== null) return null;
+      // A plan stops only by archiving it or by Change the plan naming it (section 3.9): never overwrite another one here.
+      const active = activeSelfRoute(useProgressStore.getState().byProfile[profileId]);
+      if (active !== null && active.id !== opts.replacing) return null;
       let route: SelfRoute;
       try {
         route = selfRouteOf(draft, newSelfRouteId(now.getTime()), now.toISOString());
@@ -168,6 +173,8 @@ export const useRouteStore = create<State & Actions>((set, get) => {
     answerCheckIn: async (profileId, offer, now = new Date()) => {
       const active = await activeOf(profileId);
       if (active === null) return false;
+      // Once per plan (FP-B14): a second card drawn before the first answer changes nothing.
+      if ((await get().loadUi(profileId)).checkInFor === active.id) return false;
       if (offer !== null) {
         await replace(profileId, applyCheckIn(active, offer, completedOf(profileId), dayKey(now.toISOString()), CATALOG, now.toISOString()));
       }

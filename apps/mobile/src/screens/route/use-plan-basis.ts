@@ -2,7 +2,7 @@ import type { SelfRoute, StageKey } from '@hangul-route/content-schema';
 import { useEffect, useMemo } from 'react';
 import { dayKey } from '../../logic/homework/mission-builder';
 import { proposalInputOf, safePropose, type PlanChoice } from '../../logic/route/proposal-flow';
-import { activeSelfRoute } from '../../logic/route/self-route';
+import { activeSelfRoute, completedQuestIdsOf } from '../../logic/route/self-route';
 import { setupBasisOf, type SetupContext, type SetupState } from '../../logic/route/setup-flow';
 import { unlockedStagesFor } from '../../store/plan-store';
 import { useProfileStore } from '../../store/profile-store';
@@ -37,7 +37,7 @@ export function usePlanBasis(profileId: string, choice?: PlanChoice): PlanBasis 
   const active = activeSelfRoute(snapshot);
   const basis = useMemo(() => {
     if (profile === null || snapshot === undefined) return null;
-    const completedQuestIds = snapshot.quests.filter((q) => q.completedAt !== undefined).map((q) => q.questId);
+    const completedQuestIds = completedQuestIdsOf(snapshot.quests);
     const unlockedStages = unlockedStagesFor(new Date(), profileId) as StageKey[];
     const proposal =
       active !== null ? null : safePropose(proposalInputOf({ placements: snapshot.placements, completedQuestIds, ageGroup: profile.ageGroup, unlockedStages, today }));
