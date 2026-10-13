@@ -275,6 +275,41 @@ describe('caregiver.browse (BR-8)', () => {
   });
 });
 
+describe('caregiver.dashboard.browse (BR-12a)', () => {
+  const gate = (locale: 'en' | 'es' | 'ko') => getMessages(locale).caregiver.dashboard.browse;
+
+  it('uses the "One name everywhere" words of section 6: Open all lessons, Preview lessons', () => {
+    expect(gate('en')).toEqual({
+      open: { cta: 'Open all lessons' },
+      preview: { cta: 'Preview lessons' },
+      storageBlocked: "Your browser blocked this page's storage, so lessons cannot open here.",
+    });
+  });
+
+  it('Spanish and Korean carry every key, in the words the console uses for Preview lessons and the storage line', () => {
+    expect(gate('es')).toEqual({
+      open: { cta: 'Abrir las lecciones' },
+      preview: { cta: 'Ver las lecciones' },
+      storageBlocked: 'Tu navegador bloqueó el almacenamiento de esta página. Aquí no se pueden abrir las lecciones.',
+    });
+    expect(gate('ko')).toEqual({
+      open: { cta: '모든 레슨 열기' },
+      preview: { cta: '레슨 미리 보기' },
+      storageBlocked: '브라우저가 이 페이지의 저장 공간을 막았어요. 여기서는 레슨을 열 수 없어요.',
+    });
+  });
+
+  it('passes the caregiver ban list; no "Browse", no age, no price, no Hangul in English', () => {
+    for (const path of leafPaths(gate('en'))) {
+      const s = lookup(gate('en'), path) as string;
+      expect(findBannedWord(s, 'en', 'caregiver'), `${path}: ${s}`).toBeNull();
+      for (const { name, re } of KIDS_ONLY_FRAMING) expect(re.test(s), `${path} matches ${name}`).toBe(false);
+      expect(s, path).not.toMatch(/\bbrowse\b|\bkids?\b|premium|upgrade|unlock|\bfail|wrong|behind|\$|\d+\s*[-–]\s*\d+/i);
+      expect(s, path).not.toMatch(/[ᄀ-ᇿ㄰-㆏가-힯]/);
+    }
+  });
+});
+
 describe('caregiver.browse (BR-9)', () => {
   it('names the Hear button of a word row by its romanization, as the mock and the learner topic do', () => {
     expect(browse.topic.hearA11y('sagwa')).toBe('Hear sagwa');

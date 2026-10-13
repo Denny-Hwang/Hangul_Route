@@ -37,6 +37,7 @@ import { GainsCard, StoriesNote } from './GainsCard';
 import { RouteCard } from './RouteCard';
 import { SkillsCard } from './SkillsCard';
 import { LaterRowItem, StageRowItem } from './TrailRow';
+import { GateLessonsButton } from '../parent/GateLessonsButton';
 
 /**
  * My route (F-ROUTE-001 R-3): where the learner is in the whole journey, at a
@@ -406,6 +407,8 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
               reducedMotion={reducedMotion}
               onToggle={() => toggle(row.key, row.stage)}
               onOpenEpisode={(episodeId) => navigation.navigate('EpisodeDetail', { episodeId, from: 'route' })}
+              // F-BROWSE-001 BR-12a (section 4.11 item 3): the grown-up read-only page only, web only; the learner's own Route tab never shows it.
+              action={readOnly ? <GateLessonsButton kind="preview" target={{ kind: 'stage', stage: row.stage }} testID={`my-route-preview-${row.order}`} /> : undefined}
             />
           ) : (
             <LaterRowItem key={row.key} row={row} open={current === row.key} onToggle={() => toggle(row.key, row.stage)} />
