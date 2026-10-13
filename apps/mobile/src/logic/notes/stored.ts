@@ -67,7 +67,14 @@ export function readStoredNotes(raw: unknown): NotesData {
     putAway: (Array.isArray(raw.putAway) ? raw.putAway : []).filter((id): id is string => typeof id === 'string'),
     classNotesCardSeen: raw.classNotesCardSeen === true,
     queue,
+    ...(typeof raw.grownUpSeenAt === 'string' ? { grownUpSeenAt: raw.grownUpSeenAt } : {}),
   };
+}
+
+/** The later of two grown-up zone marks (ISO times compare as strings). */
+function laterMark(a: string | undefined, b: string | undefined): { grownUpSeenAt?: string } {
+  const later = a === undefined ? b : b === undefined ? a : a > b ? a : b;
+  return later === undefined ? {} : { grownUpSeenAt: later };
 }
 
 /**
@@ -97,5 +104,6 @@ export function mergeUnloaded(stored: NotesData, memory: NotesData): NotesData {
     putAway: [...new Set([...stored.putAway, ...memory.putAway])].filter((id) => ids.has(id)),
     classNotesCardSeen: fresh ? memory.classNotesCardSeen : stored.classNotesCardSeen || memory.classNotesCardSeen,
     queue,
+    ...laterMark(stored.grownUpSeenAt, memory.grownUpSeenAt),
   };
 }

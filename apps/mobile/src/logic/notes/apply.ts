@@ -50,6 +50,8 @@ export function applyInbox(local: NotesData, inbox: { notes: readonly InboxNote[
       // A true mirror of the server: a local mark whose PUT never landed lets the card come back (section 6.10 item 5).
       classNotesCardSeen: inbox.notePrefs.acknowledged,
       queue: local.queue.filter((write) => write.kind === 'report' || seen.has(write.noteId)),
+      // Device state of the grown-up zone (FB-9), never on the server.
+      ...(local.grownUpSeenAt === undefined ? {} : { grownUpSeenAt: local.grownUpSeenAt }),
     },
     added: [...seen].filter((id) => !cached.has(id)),
     removed: local.notes.filter((n) => !seen.has(n.id)).map((n) => n.id),

@@ -110,3 +110,11 @@ describe('applyInbox', () => {
     expect(JSON.stringify(local)).toBe(before);
   });
 });
+
+describe('applyInbox keeps the grown-up zone mark (FB-9)', () => {
+  it('carries grownUpSeenAt over an inbox', () => {
+    const local = data({ grownUpSeenAt: '2026-10-10T00:00:00.000Z' });
+    expect(applyInbox(local, { notes: [note('aaaaaaaa')], notePrefs: NOTE_PREFS_DEFAULT }).data.grownUpSeenAt).toBe('2026-10-10T00:00:00.000Z');
+    expect('grownUpSeenAt' in applyInbox(data(), { notes: [], notePrefs: NOTE_PREFS_DEFAULT }).data).toBe(false);
+  });
+});
